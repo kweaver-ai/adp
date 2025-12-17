@@ -341,3 +341,13 @@ func BoolToInt8(t bool) int8 {
 	}
 	return 0
 }
+
+// GetWithDefault 尝试从 map 中取值
+// 如果存在，返回 (值, true)
+// 如果不存在，返回 (defaultVal, false)
+func GetWithDefault[K comparable, V any](m map[K]V, key K, defaultVal V) (V, bool) {
+	if val, ok := m[key]; ok {
+		return val, true
+	}
+	return defaultVal, false
+}

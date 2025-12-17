@@ -102,6 +102,7 @@ config:
     - 12h
     - 1d
     watchMetadataInterval: 60  # 单位为秒
+    watchMetadataEnabled: true
   log:
     logLevel: info
     developMode: false
