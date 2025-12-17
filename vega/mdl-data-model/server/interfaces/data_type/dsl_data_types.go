@@ -18,9 +18,10 @@ const (
 	IndexBase_DataType_Date     = "date"
 	IndexBase_DataType_DateTime = "datetime"
 
-	IndexBase_DataType_Ip       = "ip"
-	IndexBase_DataType_GeoPoint = "geo_point"
-	IndexBase_DataType_GeoShape = "geo_shape"
+	IndexBase_DataType_Ip        = "ip"
+	IndexBase_DataType_GeoPoint  = "geo_point"
+	IndexBase_DataType_GeoShape  = "geo_shape"
+	IndexBase_DataType_KNNVector = "knn_vector"
 )
 
 // 索引库类型映射为统一类型

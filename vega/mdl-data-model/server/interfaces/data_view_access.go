@@ -158,7 +158,34 @@ type ViewField struct {
 	BusinessTimestamp bool         `json:"business_timestamp"`
 	SrcNodeID         string       `json:"src_node_id,omitempty"`
 	SrcNodeName       string       `json:"src_node_name,omitempty"`
-	PrimaryKey        sql.NullBool `json:"-"`
+	IsPrimaryKey      sql.NullBool `json:"is_primary_key,omitempty"`
+
+	Features []FieldFeature `json:"features,omitempty"`
+}
+
+// 字段特征
+type FieldFeature struct {
+	FeatureName string           `json:"name"`       // 特征名称
+	FeatureType FieldFeatureType `json:"type"`       // 特征类型：keyword, fulltext, vector
+	Comment     string           `json:"comment"`    // 特征描述
+	RefField    string           `json:"ref_field"`  // 核心：引用的字段名
+	IsDefault   bool             `json:"is_default"` //  同类型下只能有一个为 true
+	IsNative    bool             `json:"is_native"`  // 是否为底层物理同步生成的（true:系统, false:手动）
+	Config      map[string]any   `json:"config"`     // 特有配置（如分词器、权重、向量维度）
+}
+
+type KeywordConfig struct {
+	IgnoreAboveLen int `json:"ignore_above_len" mapstructure:"ignore_above_len"`
+}
+
+type FulltextConfig struct {
+	Analyzer string `json:"analyzer" mapstructure:"analyzer"`
+}
+
+type VectorConfig struct {
+	ModelID string `json:"model_id" mapstructure:"model_id"`
+
+	//Model *SmallModel `json:"-"`
 }
 
 func (v *ViewField) String() string {

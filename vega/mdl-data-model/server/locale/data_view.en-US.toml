@@ -1,4 +1,9 @@
 # 逻辑视图
+[DataModel.DataView.InvalidParameter.FieldFeatureName]
+Description = "Invalid Field Feature Name"
+Solution = "Please check whether the parameter is correct."
+ErrorLink = "None"
+
 [DataModel.DataView.InvalidParameter.FieldName]
 Description = "Invalid Field Name"
 Solution = "Please check whether the parameter is correct."
@@ -56,6 +61,21 @@ ErrorLink = "None"
 
 [DataModel.DataView.LengthExceeded.Comment]
 Description = "The Length of Comment Out of Limit"
+Solution = "Please check whether the parameter is correct."
+ErrorLink = "None"
+
+[DataModel.DataView.LengthExceeded.FieldComment]
+Description = "The Length of Field Comment Out of Limit"
+Solution = "Please check whether the parameter is correct."
+ErrorLink = "None"
+
+[DataModel.DataView.LengthExceeded.FieldFeatureComment]
+Description = "The Length of Field Feature Comment Out of Limit"
+Solution = "Please check whether the parameter is correct."
+ErrorLink = "None"
+
+[DataModel.DataView.LengthExceeded.FieldFeatureName]
+Description = "The Length of Field Feature Name Out of Limit"
 Solution = "Please check whether the parameter is correct."
 ErrorLink = "None"
 
@@ -176,6 +196,11 @@ ErrorLink = "None"
 
 [DataModel.DataView.Duplicated.FieldDisplayName]
 Description = "Field Name '{{.FieldName}}' Display Name {{.DisplayName}} Already Exists"
+Solution = "Please check whether the parameter is correct."
+ErrorLink = "None"
+
+[DataModel.DataView.Duplicated.FieldFeatureName]
+Description = "Field Feature Name '{{.FieldFeatureName}}' Already Exists"
 Solution = "Please check whether the parameter is correct."
 ErrorLink = "None"
 

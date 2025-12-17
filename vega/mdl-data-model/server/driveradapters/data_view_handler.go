@@ -836,12 +836,10 @@ func (r *restHandler) UpdateAtomicDataView(c *gin.Context) {
 	}
 	// accountID 存入 context 中
 	ctx = context.WithValue(ctx, interfaces.ACCOUNT_INFO_KEY, accountInfo)
-
 	o11y.AddHttpAttrs4API(span, o11y.GetAttrsByGinCtx(c))
 
 	viewIDsStr := c.Param("view_id")
 	span.SetAttributes(attr.Key("view_id").String(viewIDsStr))
-
 	viewIDs := common.StringToStringSlice(viewIDsStr)
 
 	if len(viewIDs) != 1 {
@@ -869,6 +867,17 @@ func (r *restHandler) UpdateAtomicDataView(c *gin.Context) {
 
 		o11y.Error(ctx, fmt.Sprintf("%s. %v", httpErr.BaseError.Description, httpErr.BaseError.ErrorDetails))
 
+		o11y.AddHttpAttrs4HttpError(span, httpErr)
+		rest.ReplyError(c, httpErr)
+		return
+	}
+
+	// 校验原子视图的更新参数
+	err = validateAtomicViewUpdateReq(ctx, &viewUpdateReq)
+	if err != nil {
+		httpErr := err.(*rest.HTTPError)
+		audit.NewWarnLogWithError(audit.OPERATION, audit.UPDATE, audit.TransforOperator(visitor),
+			GenerateDataViewAuditObject(viewIDs[0], viewUpdateReq.ViewName), &httpErr.BaseError)
 		o11y.AddHttpAttrs4HttpError(span, httpErr)
 		rest.ReplyError(c, httpErr)
 		return

@@ -1,11 +1,11 @@
-package data_view
+package worker
 
 import (
 	"context"
 	"database/sql"
 	"errors"
 	"fmt"
-	"regexp"
+	"reflect"
 	"sync"
 	"time"
 
@@ -16,7 +16,9 @@ import (
 
 	"data-model/common"
 	"data-model/interfaces"
+	dtype "data-model/interfaces/data_type"
 	"data-model/logics"
+	"data-model/logics/data_view"
 	"data-model/logics/permission"
 )
 
@@ -44,8 +46,8 @@ func NewDataViewMonitorService(appSetting *common.AppSetting) interfaces.DataVie
 	dvmServiceOnce.Do(func() {
 		dvmService = &dataViewMonitorService{
 			appSetting:   appSetting,
-			dvs:          NewDataViewService(appSetting),
-			dvgs:         NewDataViewGroupService(appSetting),
+			dvs:          data_view.NewDataViewService(appSetting),
+			dvgs:         data_view.NewDataViewGroupService(appSetting),
 			ps:           permission.NewPermissionService(appSetting),
 			dsa:          logics.DSA,
 			vma:          logics.VMA,
@@ -56,17 +58,20 @@ func NewDataViewMonitorService(appSetting *common.AppSetting) interfaces.DataVie
 			lastSyncTime: "",
 		}
 
-		logger.Infof("Sync service initialized. Will perform full sync on first run")
+		if appSetting.ServerSetting.WatchMetadataEnabled {
+			logger.Infof("Watch metadata enabled, Sync service initialized. Will perform full sync on first run")
+			// accountID 存入 context 中
+			ctx := context.WithValue(context.Background(), interfaces.ACCOUNT_INFO_KEY,
+				interfaces.AccountInfo{
+					ID:   interfaces.ADMIN_ID,
+					Type: interfaces.ACCESSOR_TYPE_USER,
+				})
 
-		// accountID 存入 context 中
-		ctx := context.WithValue(context.Background(), interfaces.ACCOUNT_INFO_KEY,
-			interfaces.AccountInfo{
-				ID:   interfaces.ADMIN_ID,
-				Type: interfaces.ACCESSOR_TYPE_USER,
-			})
-
-		// 轮询元数据管理接口，常驻进程
-		go dvmService.PollingMetadata(ctx)
+			// 轮询元数据管理接口，常驻进程
+			go dvmService.PollingMetadata(ctx)
+		} else {
+			logger.Infof("Watch metadata disabled, will not start polling metadata table")
+		}
 	})
 
 	return dvmService
@@ -138,6 +143,7 @@ func (dvmService *dataViewMonitorService) Sync(ctx context.Context, syncType str
 		logger.Errorf("Error getting data source list: %v", err)
 		return fmt.Errorf("failed to get data source list: %w", err)
 	}
+	logger.Infof("Successfully got data source list, count: %d", len(dataSourceList.Entries))
 
 	// 获取内置的分组列表
 	builtinGroups, _, err := dvmService.dvgs.ListDataViewGroups(ctx, &interfaces.ListViewGroupQueryParams{
@@ -164,7 +170,7 @@ func (dvmService *dataViewMonitorService) Sync(ctx context.Context, syncType str
 	// 记录一个flag，是否全部更新成功
 	allSuccess := true
 	successCount := 0
-	totalCount := len(dataSourceList.Entries)
+	totalCount := len(dataSourceList.Entries) - 1 // 去掉index_base数据源
 
 	for _, dataSource := range dataSourceList.Entries {
 		// 跳过index_base数据源
@@ -214,12 +220,13 @@ func (dvmService *dataViewMonitorService) syncDataSource(ctx context.Context, da
 		return fmt.Errorf("failed to get data views: %w", err)
 	}
 
+	// 这个数据源下的所有视图，用技术名称作为key
 	dataViewsMap := make(map[string]*interfaces.DataView)
 	// 维护业务名称和业务id的map，避免新生成的业务名称会在分组内重复
-	dataViewBusinessNameMap := make(map[string]string)
+	// dataViewBusinessNameMap := make(map[string]string)
 	for _, dView := range dataViews {
 		dataViewsMap[dView.TechnicalName] = dView
-		dataViewBusinessNameMap[dView.ViewName] = dView.ViewID
+		// dataViewBusinessNameMap[dView.ViewName] = dView.ViewID
 	}
 
 	// 标记源表被删除的视图
@@ -248,7 +255,7 @@ func (dvmService *dataViewMonitorService) syncDataSource(ctx context.Context, da
 	}
 
 	// 处理数据源的元数据
-	err = dvmService.processMetadataByDataSource(ctx, metadataList, dataSource, dataViewsMap, dataViewBusinessNameMap)
+	err = dvmService.processMetadataByDataSource(ctx, metadataList, dataSource, dataViewsMap)
 	if err != nil {
 		return fmt.Errorf("failed to process metadata: %w", err)
 	}
@@ -366,7 +373,7 @@ func (dvmService *dataViewMonitorService) compareDataSourceAndBuiltinGroups(ctx 
 	}
 
 	for _, dataSource := range dataSourceMap {
-		dataSourceName := common.CutStringByCharCount(dataSource.Name, interfaces.NameCharCountLimit)
+		dataSourceName := common.CutStringByCharCount(dataSource.Name, interfaces.MaxLength_ViewGroupName)
 		if group, ok := builtinGroupMap[dataSource.ID]; !ok {
 			// 创建分组
 			_, err := dvmService.dvgs.CreateDataViewGroup(ctx, nil, &interfaces.DataViewGroup{
@@ -398,7 +405,7 @@ func (dvmService *dataViewMonitorService) compareDataSourceAndBuiltinGroups(ctx 
 
 // 对于每个数据源的元数据，进行批量处理
 func (dvmService *dataViewMonitorService) processMetadataByDataSource(ctx context.Context, metadataList []interfaces.SimpleMetadataTable,
-	dataSource *interfaces.DataSource, dataViewsMap map[string]*interfaces.DataView, dataViewBusinessNameMap map[string]string) error {
+	dataSource *interfaces.DataSource, dataViewsMap map[string]*interfaces.DataView) error {
 	// 将元数据分批次
 	batches := chunkMetadata(metadataList, dvmService.batchSize)
 	logger.Infof("Batch size: %d, Split into %d batches", dvmService.batchSize, len(batches))
@@ -410,7 +417,7 @@ func (dvmService *dataViewMonitorService) processMetadataByDataSource(ctx contex
 	// 处理每个批次
 	for i, batch := range batches {
 		batchResult, err := dvmService.processBatch(ctx, i+1, batch,
-			dataSource, dataViewsMap, dataViewBusinessNameMap)
+			dataSource, dataViewsMap)
 		if err != nil {
 			logger.Errorf("Error processing batch %d: %v", i+1, err)
 			return err
@@ -453,8 +460,9 @@ func (dvmService *dataViewMonitorService) processMetadataByDataSource(ctx contex
 		// 	}
 		// }
 
-		logger.Infof("Batch %d/%d completed: %d success, %d errors",
-			i+1, len(batches), batchResult.SuccessCount, batchResult.ErrorCount)
+		logger.Infof("Batch %d/%d completed: %d success, %d errors, created %d views, updated %d views",
+			i+1, len(batches), batchResult.SuccessCount, batchResult.ErrorCount, batchResult.NeedCreatedCount,
+			batchResult.NeedUpdatedCount)
 	}
 
 	// 更新内存中的同步状态
@@ -474,7 +482,7 @@ func (dvmService *dataViewMonitorService) processMetadataByDataSource(ctx contex
 
 // processBatch 处理单个批次
 func (dvmService *dataViewMonitorService) processBatch(ctx context.Context, batchID int, metadataList []interfaces.SimpleMetadataTable,
-	dataSource *interfaces.DataSource, dataViewsMap map[string]*interfaces.DataView, dataViewBusinessNameMap map[string]string) (interfaces.BatchResult, error) {
+	dataSource *interfaces.DataSource, dataViewsMap map[string]*interfaces.DataView) (interfaces.BatchResult, error) {
 	batchStart := time.Now()
 
 	logger.Infof("Processing batch %d with %d metadata records for data source '%s'",
@@ -504,6 +512,9 @@ func (dvmService *dataViewMonitorService) processBatch(ctx context.Context, batc
 			} else {
 				needUpdatedTables = append(needUpdatedTables, table)
 			}
+		} else {
+			logger.Warnf("meta table id '%s', name '%s' in data source '%s' fields are empty, skip",
+				table.TableID, table.Table.Name, dataSource.Name)
 		}
 	}
 
@@ -518,14 +529,14 @@ func (dvmService *dataViewMonitorService) processBatch(ctx context.Context, batc
 	}
 
 	// 批量创建视图
-	err = dvmService.createViews(ctx, needCreatedTables, dataSource, dataViewBusinessNameMap)
+	err = dvmService.createViews(ctx, needCreatedTables, dataSource)
 	if err != nil {
 		logger.Errorf("create views failed, err: %v", err)
 		return interfaces.BatchResult{}, err
 	}
 
 	// 批量更新视图
-	err = dvmService.updateViews(ctx, needUpdatedTables, dataViewBusinessNameMap)
+	err = dvmService.updateViews(ctx, needUpdatedTables, dataViewsMap)
 	if err != nil {
 		logger.Errorf("update views failed, err: %v", err)
 		return interfaces.BatchResult{}, err
@@ -562,7 +573,7 @@ func (dvmService *dataViewMonitorService) getMetadataBySourceID(ctx context.Cont
 
 // createViews 创建视图
 func (dvmService *dataViewMonitorService) createViews(ctx context.Context, tables []interfaces.MetadataTable,
-	dataSource *interfaces.DataSource, dataViewBusinessNameMap map[string]string) (err error) {
+	dataSource *interfaces.DataSource) (err error) {
 	ctx, span := ar_trace.Tracer.Start(ctx, "Create data views")
 	defer span.End()
 
@@ -573,7 +584,7 @@ func (dvmService *dataViewMonitorService) createViews(ctx context.Context, table
 	}
 	ctx = context.WithValue(ctx, interfaces.ACCOUNT_INFO_KEY, accountInfo)
 
-	createViews, err := dvmService.initViews(ctx, tables, dataViewBusinessNameMap)
+	createViews, err := dvmService.initCreatedViews(tables)
 	if err != nil {
 		logger.Errorf("init views failed, err: %v", err)
 		return err
@@ -595,11 +606,11 @@ func (dvmService *dataViewMonitorService) createViews(ctx context.Context, table
 
 // 批量更新视图
 func (dvmService *dataViewMonitorService) updateViews(ctx context.Context, tables []interfaces.MetadataTable,
-	dataViewBusinessNameMap map[string]string) error {
+	dataViewsMap map[string]*interfaces.DataView) error {
 	ctx, span := ar_trace.Tracer.Start(ctx, "Atomic View Sync: Update data views")
 	defer span.End()
 
-	updateViews, err := dvmService.initViews(ctx, tables, dataViewBusinessNameMap)
+	updateViews, err := dvmService.initUpdatedViews(tables, dataViewsMap)
 	if err != nil {
 		logger.Errorf("init views failed, err: %v", err)
 		return err
@@ -618,42 +629,49 @@ func (dvmService *dataViewMonitorService) updateViews(ctx context.Context, table
 	return nil
 }
 
-func (dvmService *dataViewMonitorService) initViews(ctx context.Context, tables []interfaces.MetadataTable,
-	dataViewBusinessNameMap map[string]string) ([]*interfaces.DataView, error) {
+// initCreatedViews 初始化需要创建的视图
+func (dvmService *dataViewMonitorService) initCreatedViews(tables []interfaces.MetadataTable) ([]*interfaces.DataView, error) {
 	atomicViews := make([]*interfaces.DataView, 0, len(tables))
 	for _, table := range tables {
 		var selectFields string
 		fields := make([]*interfaces.ViewField, len(table.FieldList))
 		primaryKeys := make([]string, 0)
-		fieldDisplayNameMap := make(map[string]struct{})
-		for i, field := range table.FieldList {
-			fieldType := field.AdvancedParams.GetValue(interfaces.VirtualDataType).(string)
-			isNullable := field.AdvancedParams.GetValue(interfaces.IsNullable).(string)
+		// fieldDisplayNameMap := make(map[string]struct{})
+		for i, mField := range table.FieldList {
+			fieldType := mField.AdvancedParams.GetValue(interfaces.FieldAdvancedParams_VirtualDataType).(string)
+			isNullable := mField.AdvancedParams.GetValue(interfaces.FieldAdvancedParams_IsNullable).(string)
 			if fieldType == "" {
-				logger.Warnf("table '%s' field '%s' type is empty", table.Table.Name, field.FieldName)
+				logger.Warnf("table '%s' field '%s' type is empty", table.Table.Name, mField.FieldName)
 			}
+
+			var features []interfaces.FieldFeature
+			if isOpenSearchOrIndexBaseDataSource(table.DataSource.Type) {
+				features = generateNativeFieldFeatures(fieldType, mField)
+			}
+
 			fields[i] = &interfaces.ViewField{
-				Name:         field.FieldName,
-				DisplayName:  dvmService.AutomaticallyField(ctx, field, fieldDisplayNameMap),
-				OriginalName: field.FieldName,
-				Comment:      common.CutStringByCharCount(field.FieldComment, interfaces.CommentCharCountLimit),
+				Name:         mField.FieldName,
+				DisplayName:  mField.FieldName,
+				OriginalName: mField.FieldName,
+				Comment:      common.CutStringByCharCount(mField.FieldComment, interfaces.MaxLength_ViewFieldComment),
 				Status:       interfaces.ViewScanStatus_New,
-				PrimaryKey:   sql.NullBool{Bool: field.AdvancedParams.IsPrimaryKey(), Valid: true},
+				IsPrimaryKey: sql.NullBool{Bool: mField.AdvancedParams.IsPrimaryKey(), Valid: true},
 				Type:         fieldType,
-				DataLength:   field.FieldLength,
-				DataAccuracy: field.FieldPrecision,
+				DataLength:   mField.FieldLength,
+				DataAccuracy: mField.FieldPrecision,
 				IsNullable:   isNullable,
+				Features:     features,
 			}
 
 			if fieldType == "" { //不支持的类型设置状态
 				fields[i].Status = interfaces.FieldScanStatus_NotSupport
 			} else {
-				selectFields = common.CE(selectFields == "", common.QuotationMark(field.FieldName),
-					fmt.Sprintf("%s,%s", selectFields, common.QuotationMark(field.FieldName))).(string)
+				selectFields = common.CE(selectFields == "", common.QuotationMark(mField.FieldName),
+					fmt.Sprintf("%s,%s", selectFields, common.QuotationMark(mField.FieldName))).(string)
 			}
 
-			if field.AdvancedParams.IsPrimaryKey() {
-				primaryKeys = append(primaryKeys, field.FieldName)
+			if mField.AdvancedParams.IsPrimaryKey() {
+				primaryKeys = append(primaryKeys, mField.FieldName)
 			}
 		}
 
@@ -663,18 +681,18 @@ func (dvmService *dataViewMonitorService) initViews(ctx context.Context, tables 
 		if table.DataSource.Type == interfaces.DataSourceType_Excel {
 			tableAdvanced := table.Table.AdvancedParams
 			excelConfig = &interfaces.ExcelConfig{
-				Sheet:            tableAdvanced.GetValue(interfaces.ExcelSheet).(string),
-				StartCell:        tableAdvanced.GetValue(interfaces.ExcelStartCell).(string),
-				EndCell:          tableAdvanced.GetValue(interfaces.ExcelEndCell).(string),
-				HasHeaders:       tableAdvanced.GetValue(interfaces.ExcelHasHeaders).(bool),
-				SheetAsNewColumn: tableAdvanced.GetValue(interfaces.ExcelSheetAsNewColumn).(bool),
+				Sheet:            tableAdvanced.GetValue(interfaces.TableAdvancedParams_ExcelSheet).(string),
+				StartCell:        tableAdvanced.GetValue(interfaces.TableAdvancedParams_ExcelStartCell).(string),
+				EndCell:          tableAdvanced.GetValue(interfaces.TableAdvancedParams_ExcelEndCell).(string),
+				HasHeaders:       tableAdvanced.GetValue(interfaces.TableAdvancedParams_ExcelHasHeaders).(bool),
+				SheetAsNewColumn: tableAdvanced.GetValue(interfaces.TableAdvancedParams_ExcelSheetAsNewColumn).(bool),
 			}
-			excelFileName = tableAdvanced.GetValue(interfaces.ExcelFileName).(string)
+			excelFileName = tableAdvanced.GetValue(interfaces.TableAdvancedParams_ExcelFileName).(string)
 		}
 
 		// 如果数据源类型是opensearch，query_type为DSL
 		var queryType string
-		if table.DataSource.Type == "opensearch" {
+		if table.DataSource.Type == interfaces.DataSourceType_OpenSearch {
 			queryType = interfaces.QueryType_DSL
 		} else {
 			queryType = interfaces.QueryType_SQL
@@ -684,7 +702,7 @@ func (dvmService *dataViewMonitorService) initViews(ctx context.Context, tables 
 			SimpleDataView: interfaces.SimpleDataView{
 				ViewID:         table.TableID, // 使用元数据表id
 				TechnicalName:  table.Table.Name,
-				ViewName:       dvmService.AutomaticallyForm(ctx, table.Table, dataViewBusinessNameMap),
+				ViewName:       table.Table.Name,
 				Builtin:        true,
 				GroupID:        table.DataSource.DataSourceID,
 				GroupName:      table.DataSource.DataSourceName,
@@ -694,7 +712,7 @@ func (dvmService *dataViewMonitorService) initViews(ctx context.Context, tables 
 				DataSourceType: table.DataSource.Type,
 				FileName:       excelFileName,
 				Status:         interfaces.ViewScanStatus_New,
-				Comment:        common.CutStringByCharCount(table.Table.Description, interfaces.CommentCharCountLimit),
+				Comment:        common.CutStringByCharCount(table.Table.Description, interfaces.MaxLength_ViewComment),
 			},
 			ExcelConfig:    excelConfig,
 			Fields:         fields,
@@ -721,87 +739,179 @@ func (dvmService *dataViewMonitorService) initViews(ctx context.Context, tables 
 	return atomicViews, nil
 }
 
-// dataViewBusinessNameMap 用于记录已存在的业务名称，避免重复, 以数据源为单位
-func (dvmService *dataViewMonitorService) AutomaticallyForm(ctx context.Context, table *interfaces.TableInfo,
-	dataViewBusinessNameMap map[string]string) string {
-	/*
-		表业务名称按以下顺序自动生成：
-		    来自加工模型关联的业务表名称
-		    表注释
-		    数据理解
-		    表技术名称
-	*/
-
-	cleanedDescription := CleanDisplayName(table.Description)
-
-	businessName := common.CutStringByCharCount(cleanedDescription, interfaces.BusinessNameCharCountLimit)
-	if businessName == "" {
-		businessName = common.CutStringByCharCount(table.Name, interfaces.BusinessNameCharCountLimit)
-	}
-
-	if oldID, ok := dataViewBusinessNameMap[businessName]; ok {
-		// 如果id变化了且存在重复的视图名称，前面拼接上表技术名称
-		if oldID != table.ID {
-			businessName = common.CutStringByCharCount(fmt.Sprintf("%s_%s", table.Name, businessName),
-				interfaces.BusinessNameCharCountLimit)
+// initUpdatedViews 初始化需要更新的视图, 实现“增量更新”且“不覆盖用户自定义配置”
+func (dvmService *dataViewMonitorService) initUpdatedViews(tables []interfaces.MetadataTable,
+	dataViewsMap map[string]*interfaces.DataView) ([]*interfaces.DataView, error) {
+	atomicViews := make([]*interfaces.DataView, 0, len(tables))
+	for _, table := range tables {
+		existingView, ok := dataViewsMap[table.Table.Name]
+		if !ok {
+			continue
 		}
+
+		// 已有的字段列表
+		existingFieldsMap := make(map[string]*interfaces.ViewField)
+		for _, vfield := range existingView.Fields {
+			existingFieldsMap[vfield.OriginalName] = vfield
+		}
+		logger.Debugf("update view metadata table %s fields count is %d, view %s fields count is %d",
+			table.Table.Name, len(table.FieldList), existingView.ViewName, len(existingView.Fields))
+
+		var selectFields string
+		// fields := make([]*interfaces.ViewField, len(table.FieldList))
+		primaryKeys := make([]string, 0)
+		final_view_fields := make([]*interfaces.ViewField, 0, len(table.FieldList))
+		for _, mField := range table.FieldList {
+			if oldField, ok := existingFieldsMap[mField.FieldName]; !ok {
+				//field new
+				logger.Debugf("update view, table name: %s, field name: %s, field not exist in view",
+					table.Table.Name, mField.FieldName)
+				fieldType := mField.AdvancedParams.GetValue(interfaces.FieldAdvancedParams_VirtualDataType).(string)
+				isNullable := mField.AdvancedParams.GetValue(interfaces.FieldAdvancedParams_IsNullable).(string)
+				if fieldType == "" {
+					logger.Warnf("table '%s' field '%s' type is empty", table.Table.Name, mField.FieldName)
+				}
+
+				var osFeatures []interfaces.FieldFeature
+				if isOpenSearchOrIndexBaseDataSource(table.DataSource.Type) {
+					osFeatures = generateNativeFieldFeatures(fieldType, mField)
+				}
+
+				newField := &interfaces.ViewField{
+					Name:         mField.FieldName,
+					DisplayName:  mField.FieldName,
+					OriginalName: mField.FieldName,
+					Comment:      common.CutStringByCharCount(mField.FieldComment, interfaces.MaxLength_ViewFieldComment),
+					Status:       interfaces.FieldScanStatus_New,
+					IsPrimaryKey: sql.NullBool{Bool: mField.AdvancedParams.IsPrimaryKey(), Valid: true},
+					Type:         fieldType,
+					DataLength:   mField.FieldLength,
+					DataAccuracy: mField.FieldPrecision,
+					IsNullable:   isNullable,
+					Features:     osFeatures,
+				}
+
+				if fieldType == "" { //不支持的类型设置状态
+					newField.Status = interfaces.FieldScanStatus_NotSupport
+				} else {
+					selectFields = common.CE(selectFields == "", common.QuotationMark(mField.FieldName),
+						fmt.Sprintf("%s,%s", selectFields, common.QuotationMark(mField.FieldName))).(string)
+				}
+				// 新增字段加入最终字段列表
+				final_view_fields = append(final_view_fields, newField)
+
+				if mField.AdvancedParams.IsPrimaryKey() {
+					primaryKeys = append(primaryKeys, mField.FieldName)
+				}
+			} else {
+				// field update
+				logger.Debugf("update view, table name: %s, field name: %s, field already exists in view",
+					table.Table.Name, mField.FieldName)
+				fieldType := mField.AdvancedParams.GetValue(interfaces.FieldAdvancedParams_VirtualDataType).(string)
+				isNullable := mField.AdvancedParams.GetValue(interfaces.FieldAdvancedParams_IsNullable).(string)
+				if fieldType == "" {
+					logger.Warnf("table '%s' field '%s' type is empty", table.Table.Name, mField.FieldName)
+				}
+
+				var mergedFeatures []interfaces.FieldFeature
+				if isOpenSearchOrIndexBaseDataSource(table.DataSource.Type) {
+					osFeatures := generateNativeFieldFeatures(fieldType, mField)
+					mergedFeatures = MergeFeaturesOptimized(oldField.Features, osFeatures)
+				}
+
+				updateField := &interfaces.ViewField{
+					Name:         mField.FieldName,
+					DisplayName:  oldField.DisplayName,
+					OriginalName: mField.FieldName,
+					Comment:      oldField.Comment,
+					Status:       interfaces.FieldScanStatus_Modify,
+					IsPrimaryKey: sql.NullBool{Bool: mField.AdvancedParams.IsPrimaryKey(), Valid: true},
+					Type:         fieldType,
+					DataLength:   mField.FieldLength,
+					DataAccuracy: mField.FieldPrecision,
+					IsNullable:   isNullable,
+					Features:     mergedFeatures,
+				}
+
+				if fieldType == "" { //不支持的类型设置状态
+					updateField.Status = interfaces.FieldScanStatus_NotSupport
+				} else {
+					selectFields = common.CE(selectFields == "", common.QuotationMark(mField.FieldName),
+						fmt.Sprintf("%s,%s", selectFields, common.QuotationMark(mField.FieldName))).(string)
+				}
+				// 更新的字段加入最终字段列表
+				final_view_fields = append(final_view_fields, updateField)
+
+				if mField.AdvancedParams.IsPrimaryKey() {
+					primaryKeys = append(primaryKeys, mField.FieldName)
+				}
+			}
+		}
+
+		// 获取 excel 数据源的excelConfig
+		var excelFileName string
+		var excelConfig *interfaces.ExcelConfig
+		if table.DataSource.Type == interfaces.DataSourceType_Excel {
+			tableAdvanced := table.Table.AdvancedParams
+			excelConfig = &interfaces.ExcelConfig{
+				Sheet:            tableAdvanced.GetValue(interfaces.TableAdvancedParams_ExcelSheet).(string),
+				StartCell:        tableAdvanced.GetValue(interfaces.TableAdvancedParams_ExcelStartCell).(string),
+				EndCell:          tableAdvanced.GetValue(interfaces.TableAdvancedParams_ExcelEndCell).(string),
+				HasHeaders:       tableAdvanced.GetValue(interfaces.TableAdvancedParams_ExcelHasHeaders).(bool),
+				SheetAsNewColumn: tableAdvanced.GetValue(interfaces.TableAdvancedParams_ExcelSheetAsNewColumn).(bool),
+			}
+			excelFileName = tableAdvanced.GetValue(interfaces.TableAdvancedParams_ExcelFileName).(string)
+		}
+
+		// 如果数据源类型是opensearch，query_type为DSL
+		var queryType string
+		if table.DataSource.Type == interfaces.DataSourceType_OpenSearch {
+			queryType = interfaces.QueryType_DSL
+		} else {
+			queryType = interfaces.QueryType_SQL
+		}
+
+		view := &interfaces.DataView{
+			SimpleDataView: interfaces.SimpleDataView{
+				ViewID:         table.TableID, // 使用元数据表id
+				TechnicalName:  table.Table.Name,
+				ViewName:       existingView.ViewName,
+				Builtin:        true,
+				GroupID:        table.DataSource.DataSourceID,
+				GroupName:      table.DataSource.DataSourceName,
+				Type:           interfaces.ViewType_Atomic,
+				QueryType:      queryType,
+				DataSourceID:   table.DataSource.DataSourceID,
+				DataSourceType: table.DataSource.Type,
+				FileName:       excelFileName,
+				Status:         interfaces.ViewScanStatus_Modify,
+				// Comment:        common.CutStringByCharCount(table.Table.Description, interfaces.CommentCharCountLimit),
+				Comment: existingView.Comment,
+			},
+			ExcelConfig: excelConfig,
+			// Fields:         fields,
+			Fields:         final_view_fields,
+			MetadataFormID: table.TableID,
+			PrimaryKeys:    primaryKeys,
+		}
+
+		catalogName := table.DataSource.Catalog
+		schemaName := table.DataSource.Schema
+		// 先用schema，没有再用database
+		if schemaName == "" {
+			schemaName = table.DataSource.Database
+		}
+
+		// 补齐 sqlstr 和 metatable name
+		metaTableName := fmt.Sprintf("%s.%s.%s", catalogName, common.QuotationMark(schemaName), common.QuotationMark(table.Table.Name))
+		view.SQLStr = fmt.Sprintf("SELECT * FROM %s", metaTableName)
+		view.MetaTableName = metaTableName
+
+		atomicViews = append(atomicViews, view)
+
 	}
 
-	dataViewBusinessNameMap[businessName] = table.ID
-
-	return businessName
-}
-
-func (dvmService *dataViewMonitorService) AutomaticallyField(ctx context.Context, field *interfaces.MetaField,
-	fieldDisplayNameMap map[string]struct{}) string {
-	/*
-		列业务名称按以下顺序自动生成：
-		    来自加工模型关联的业务表“字段中文名称
-		    字段注释
-		    数据理解
-		    列技术名称
-	*/
-
-	cleanedFieldComment := CleanDisplayName(field.FieldComment)
-
-	displayName := common.CutStringByCharCount(cleanedFieldComment, interfaces.BusinessNameCharCountLimit)
-
-	if displayName == "" {
-		displayName = common.CutStringByCharCount(field.FieldName, interfaces.BusinessNameCharCountLimit)
-	}
-
-	if _, ok := fieldDisplayNameMap[displayName]; ok {
-		// 如果存在重复的字段名称，业务名称前面拼接上字段的原始名称
-		displayName = common.CutStringByCharCount(fmt.Sprintf("%s_%s", field.FieldName, displayName),
-			interfaces.BusinessNameCharCountLimit)
-	}
-
-	fieldDisplayNameMap[displayName] = struct{}{}
-
-	return displayName
-}
-
-// CleanDisplayName 清洗显示名称，移除所有不安全字符
-// 只保留：字母、数字、下划线、短横线、点、中文（包含日文、韩文等）
-// 空格会被移除
-func CleanDisplayName(input string) string {
-	if input == "" {
-		return input
-	}
-
-	// 构建白名单正则表达式
-	// \p{L} : 所有字母（包括中文、日文、韩文等）
-	// \p{N} : 所有数字
-	// 加上：下划线 _、短横线 -、点 .
-	pattern := `[^\p{L}\p{N}_\-\.]`
-
-	// 编译正则表达式
-	re := regexp.MustCompile(pattern)
-
-	// 移除所有不在白名单中的字符
-	cleaned := re.ReplaceAllString(input, "")
-
-	return cleaned
+	return atomicViews, nil
 }
 
 // chunkMetadata 将元数据列表分批次
@@ -861,6 +971,198 @@ func (dvmService *dataViewMonitorService) setLastSyncTime(lastSyncTime string) {
 	dvmService.lastSyncTime = lastSyncTime
 }
 
+// isOpenSearchOrIndexBaseDataSource 判断是否是opensearch或index_base数据源
+func isOpenSearchOrIndexBaseDataSource(dataSourceType string) bool {
+	return dataSourceType == interfaces.DataSourceType_OpenSearch || dataSourceType == interfaces.DataSourceType_IndexBase
+}
+
+// 扫描同步初始化字段特征
+func generateNativeFieldFeatures(fieldType string, metaField *interfaces.MetaField) []interfaces.FieldFeature {
+	advancedParams := metaField.AdvancedParams
+	features := []interfaces.FieldFeature{}
+	mappingConfig := advancedParams.GetValue(interfaces.FieldAdvancedParams_MappingConfig).(map[string]any)
+
+	// 类型本身具有的特征
+	// 1. 全文特征
+	if fieldType == dtype.DataType_Text {
+		analyzer, _ := common.GetWithDefault(mappingConfig, interfaces.FieldProperty_Analyzer, "standard")
+		features = append(features, interfaces.FieldFeature{
+			FeatureName: fmt.Sprintf("autoFulltext_%s", metaField.FieldName),
+			FeatureType: interfaces.FieldFeatureType_Fulltext,
+			Comment:     "自动同步生成的全文检索特征",
+			RefField:    metaField.FieldName,
+			IsDefault:   false,
+			IsNative:    true,
+			Config:      map[string]any{interfaces.FieldProperty_Analyzer: analyzer},
+		})
+	}
+
+	// 2. 精确匹配特征
+	if fieldType == dtype.DataType_String {
+		fieldsKeywordIgnoreAbove, _ := common.GetWithDefault(mappingConfig, interfaces.FieldProperty_IgnoreAbove, 1024)
+		features = append(features, interfaces.FieldFeature{
+			FeatureName: fmt.Sprintf("autoKeyword_%s", metaField.FieldName),
+			FeatureType: interfaces.FieldFeatureType_Keyword,
+			Comment:     "自动同步生成的精确匹配特征",
+			RefField:    metaField.FieldName,
+			IsDefault:   false,
+			IsNative:    true,
+			Config:      map[string]any{interfaces.FieldProperty_IgnoreAbove: fieldsKeywordIgnoreAbove},
+		})
+	}
+
+	// 3. 向量特征
+	if fieldType == dtype.DataType_Vector {
+		features = append(features, interfaces.FieldFeature{
+			FeatureName: fmt.Sprintf("autoVector_%s", metaField.FieldName),
+			FeatureType: interfaces.FieldFeatureType_Vector,
+			Comment:     "自动同步生成的向量特征",
+			RefField:    metaField.FieldName,
+			IsDefault:   false,
+			IsNative:    true,
+			Config:      map[string]any{},
+		})
+	}
+
+	// 子字段
+	if subFields, ok := mappingConfig[interfaces.FieldProperty_Fields].(map[string]any); ok {
+		for subFieldName, subField := range subFields {
+			var fture interfaces.FieldFeature
+			if subFieldMap, ok := subField.(map[string]any); ok {
+				subFieldType := subFieldMap[interfaces.FieldProperty_Type].(string)
+				switch subFieldType {
+				case dtype.IndexBase_DataType_Keyword:
+					fieldsKeywordIgnoreAbove, _ := common.GetWithDefault(subFieldMap,
+						interfaces.FieldProperty_IgnoreAbove, 1024)
+					fture = interfaces.FieldFeature{
+						FeatureName: fmt.Sprintf("autoKeyword_%s.%s", metaField.FieldName, subFieldName),
+						FeatureType: interfaces.FieldFeatureType_Keyword,
+						Comment:     "自动同步生成的子字段精确匹配特征",
+						RefField:    fmt.Sprintf("%s.%s", metaField.FieldName, subFieldName),
+						IsDefault:   false,
+						IsNative:    true,
+						Config:      map[string]any{interfaces.FieldProperty_IgnoreAbove: fieldsKeywordIgnoreAbove},
+					}
+				case dtype.IndexBase_DataType_Text:
+					analyzer, _ := common.GetWithDefault(subFieldMap, interfaces.FieldProperty_Analyzer, "standard")
+					fture = interfaces.FieldFeature{
+						FeatureName: fmt.Sprintf("autoFulltext_%s.%s", metaField.FieldName, subFieldName),
+						FeatureType: interfaces.FieldFeatureType_Fulltext,
+						Comment:     "自动同步生成的子字段全文检索特征",
+						RefField:    fmt.Sprintf("%s.%s", metaField.FieldName, subFieldName),
+						IsDefault:   false,
+						IsNative:    true,
+						Config:      map[string]any{interfaces.FieldProperty_Analyzer: analyzer},
+					}
+				case dtype.IndexBase_DataType_KNNVector:
+					fture = interfaces.FieldFeature{
+						FeatureName: fmt.Sprintf("autoVector_%s.%s", metaField.FieldName, subFieldName),
+						FeatureType: interfaces.FieldFeatureType_Vector,
+						Comment:     "自动同步生成的子字段向量特征",
+						RefField:    fmt.Sprintf("%s.%s", metaField.FieldName, subFieldName),
+						IsDefault:   false,
+						IsNative:    true,
+						Config:      map[string]any{},
+					}
+				}
+			}
+			features = append(features, fture)
+		}
+	}
+
+	// 启用每个类型的第一个特征
+	enableFirstFeatureOfEachType(features)
+
+	return features
+}
+
+// 启用每个类型的第一个特征
+func enableFirstFeatureOfEachType(features []interfaces.FieldFeature) {
+	// 使用map记录每种类型是否已经设置了默认特征
+	typeProcessed := make(map[interfaces.FieldFeatureType]bool)
+
+	for i := range features {
+		featureType := features[i].FeatureType
+
+		if !typeProcessed[featureType] {
+			features[i].IsDefault = true
+			typeProcessed[featureType] = true
+		}
+	}
+}
+
+// MergeFeaturesOptimized 执行优化后的合并逻辑：Add + Delete + Patch(Config)
+func MergeFeaturesOptimized(dbFeatures []interfaces.FieldFeature, osFeatures []interfaces.FieldFeature) []interfaces.FieldFeature {
+	result := make([]interfaces.FieldFeature, 0)
+
+	// dbNativeMap 用于存放数据库中已有的原生特征
+	// Key 生成逻辑：Type + RefField (物理指纹)
+	dbNativeMap := make(map[string]interfaces.FieldFeature)
+	usedNames := make(map[string]bool) // 记录已占用的名称
+	var customFeatures []interfaces.FieldFeature
+
+	// 1. 预处理：先锁定所有 CUSTOM 特征和已存在的 NATIVE 特征名称
+	for _, f := range dbFeatures {
+		usedNames[f.FeatureName] = true
+		if f.IsNative {
+			// 指纹：Type + RefField
+			fingerprint := fmt.Sprintf("%s|%s", f.FeatureType, f.RefField)
+			dbNativeMap[fingerprint] = f
+		} else {
+			customFeatures = append(customFeatures, f)
+		}
+	}
+
+	// 标记哪些指纹在同步中依然有效
+	activeFingerprints := make(map[string]bool)
+
+	// 1. 处理 OpenSearch 最新生成的原生特征
+	for _, osF := range osFeatures {
+		fingerprint := fmt.Sprintf("%s|%s", osF.FeatureType, osF.RefField)
+
+		if existing, exists := dbNativeMap[fingerprint]; exists {
+			// 保留用户修改后的 Name, Comment和启用状态,更新物理层面的 Config (分词器、ignore_above 等)
+			if !reflect.DeepEqual(existing.Config, osF.Config) {
+				logger.Infof("检测到特征 [%s] 的物理配置变更，已同步新参数", existing.FeatureName)
+				existing.Config = osF.Config
+			}
+
+			result = append(result, existing)
+		} else {
+			// 指纹不存在，说明是新增物理映射，执行 ADD, 确保特征名称不重复
+			baseName := osF.FeatureName
+			osF.FeatureName = GenerateUniqueName(baseName, usedNames)
+			result = append(result, osF)
+		}
+		activeFingerprints[fingerprint] = true
+	}
+
+	// 2. 补回自定义特征
+	result = append(result, customFeatures...)
+
+	// 3. 消失的指纹不进入 result，即实现 DELETE
+	// 数据库中原有的原生特征，如果不在 activeFingerprints 里，就不再加入 result
+
+	return result
+}
+
+// GenerateUniqueName 确保名称在字段内不重复
+func GenerateUniqueName(baseName string, usedNames map[string]bool) string {
+	if !usedNames[baseName] {
+		usedNames[baseName] = true
+		return baseName
+	}
+
+	// 如果重复，尝试加后缀 2, 3...
+	for i := 2; ; i++ {
+		newName := fmt.Sprintf("%s_%d", baseName, i)
+		if !usedNames[newName] {
+			usedNames[newName] = true
+			return newName
+		}
+	}
+}
+
 // // findMaxUpdatedTimeInBatch 在批次中找到最大的更新时间
 // func (dvmService *dataViewMonitorService) findMaxUpdatedTimeInBatch(metadataList []interfaces.SimpleMetadataTable) string {
 // 	if len(metadataList) == 0 {
@@ -879,4 +1181,87 @@ func (dvmService *dataViewMonitorService) setLastSyncTime(lastSyncTime string) {
 // 		}
 // 	}
 // 	return maxTime
+// }
+
+// // dataViewBusinessNameMap 用于记录已存在的业务名称，避免重复, 以数据源为单位
+// func (dvmService *dataViewMonitorService) AutomaticallyForm(ctx context.Context, table *interfaces.TableInfo,
+// 	dataViewBusinessNameMap map[string]string) string {
+// 	/*
+// 		表业务名称按以下顺序自动生成：
+// 		    来自加工模型关联的业务表名称
+// 		    表注释
+// 		    数据理解
+// 		    表技术名称
+// 	*/
+
+// 	cleanedDescription := CleanDisplayName(table.Description)
+
+// 	businessName := common.CutStringByCharCount(cleanedDescription, interfaces.BusinessNameCharCountLimit)
+// 	if businessName == "" {
+// 		businessName = common.CutStringByCharCount(table.Name, interfaces.BusinessNameCharCountLimit)
+// 	}
+
+// 	if oldID, ok := dataViewBusinessNameMap[businessName]; ok {
+// 		// 如果id变化了且存在重复的视图名称，前面拼接上表技术名称
+// 		if oldID != table.ID {
+// 			businessName = common.CutStringByCharCount(fmt.Sprintf("%s_%s", table.Name, businessName),
+// 				interfaces.BusinessNameCharCountLimit)
+// 		}
+// 	}
+
+// 	dataViewBusinessNameMap[businessName] = table.ID
+
+// 	return businessName
+// }
+
+// func (dvmService *dataViewMonitorService) AutomaticallyField(ctx context.Context, field *interfaces.MetaField,
+// 	fieldDisplayNameMap map[string]struct{}) string {
+// 	/*
+// 		列业务名称按以下顺序自动生成：
+// 		    来自加工模型关联的业务表“字段中文名称
+// 		    字段注释
+// 		    数据理解
+// 		    列技术名称
+// 	*/
+
+// 	cleanedFieldComment := CleanDisplayName(field.FieldComment)
+
+// 	displayName := common.CutStringByCharCount(cleanedFieldComment, interfaces.BusinessNameCharCountLimit)
+
+// 	if displayName == "" {
+// 		displayName = common.CutStringByCharCount(field.FieldName, interfaces.BusinessNameCharCountLimit)
+// 	}
+
+// 	if _, ok := fieldDisplayNameMap[displayName]; ok {
+// 		// 如果存在重复的字段名称，业务名称前面拼接上字段的原始名称
+// 		displayName = common.CutStringByCharCount(fmt.Sprintf("%s_%s", field.FieldName, displayName),
+// 			interfaces.BusinessNameCharCountLimit)
+// 	}
+
+// 	fieldDisplayNameMap[displayName] = struct{}{}
+
+// 	return displayName
+// }
+
+// // CleanDisplayName 清洗显示名称，移除所有不安全字符
+// // 只保留：字母、数字、下划线、短横线、点、中文（包含日文、韩文等）
+// // 空格会被移除
+// func CleanDisplayName(input string) string {
+// 	if input == "" {
+// 		return input
+// 	}
+
+// 	// 构建白名单正则表达式
+// 	// \p{L} : 所有字母（包括中文、日文、韩文等）
+// 	// \p{N} : 所有数字
+// 	// 加上：下划线 _、短横线 -、点 .
+// 	pattern := `[^\p{L}\p{N}_\-\.]`
+
+// 	// 编译正则表达式
+// 	re := regexp.MustCompile(pattern)
+
+// 	// 移除所有不在白名单中的字符
+// 	cleaned := re.ReplaceAllString(input, "")
+
+// 	return cleaned
 // }
