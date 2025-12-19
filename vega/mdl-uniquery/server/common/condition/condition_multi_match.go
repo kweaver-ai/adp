@@ -25,7 +25,6 @@ func NewMultiMatchCond(ctx context.Context, cfg *CondCfg, vType string, fieldsMa
 			return nil, fmt.Errorf("condition [multi_match] 'fields' value should be an array")
 		}
 		// 字段数组里的需要是个字符串数组
-
 		for _, cfgField := range cfgFields.([]any) {
 			field, ok := cfgField.(string)
 			if !ok {
@@ -33,7 +32,11 @@ func NewMultiMatchCond(ctx context.Context, cfg *CondCfg, vType string, fieldsMa
 			}
 
 			// 字段数组里的每个元素都需要是字符串
-			name := getFilterFieldName(ctx, field, fieldsMap, true)
+			// name := getFilterFieldName(ctx, field, fieldsMap, true)
+			name, err := GetQueryField(ctx, field, fieldsMap, FieldFeatureType_Fulltext)
+			if err != nil {
+				return nil, fmt.Errorf("condition [multi_match], %v", err)
+			}
 			if name == AllField && vType == vType_Custom {
 				fields = make([]string, 0, len(fieldsMap))
 				for fieldName := range fieldsMap {

@@ -239,23 +239,14 @@ func (vga *vegaGatewayAccess) handleResponse(ctx context.Context, span trace.Spa
 
 // handleErrorResponse 处理错误响应
 func (vga *vegaGatewayAccess) handleErrorResponse(ctx context.Context, span trace.Span, respCode int, result []byte) ([]byte, error) {
-	var vegaError VegaError
+	var vegaError *VegaError
 	if err := sonic.Unmarshal(result, &vegaError); err != nil {
 		vga.logError(ctx, span, respCode, "Unmalshal VegaError failed", err)
 		return nil, err
 	}
 
-	httpErr := &rest.HTTPError{
-		HTTPCode: respCode,
-		BaseError: rest.BaseError{
-			ErrorCode:    vegaError.Code,
-			Description:  vegaError.Description,
-			ErrorDetails: vegaError.Detail,
-		},
-	}
-
-	vga.logError(ctx, span, respCode, "Http status is not 200", httpErr)
-	return nil, fmt.Errorf("fetch data from vega gateway Error: %v", httpErr.Error())
+	vga.logError(ctx, span, respCode, "Http status is not 200", vegaError)
+	return nil, fmt.Errorf("fetch data from vega gateway Error: %v", vegaError.Error())
 }
 
 // logError 统一错误日志记录

@@ -8,7 +8,8 @@ import (
 	vopt "uniquery/common/value_opt"
 )
 
-type contextKey string // 自定义专属的key类型
+type contextKey string       // 自定义专属的key类型
+type FieldFeatureType string // 特征类型
 
 const (
 	vType_Atomic = "atomic"
@@ -17,6 +18,11 @@ const (
 	QueryType_DSL       = "DSL"
 	QueryType_SQL       = "SQL"
 	QueryType_IndexBase = "IndexBase"
+
+	FieldFeatureType_Keyword  FieldFeatureType = "keyword"
+	FieldFeatureType_Fulltext FieldFeatureType = "fulltext"
+	FieldFeatureType_Vector   FieldFeatureType = "vector"
+	FieldFeatureType_Raw      FieldFeatureType = "raw" // 无特征，直接用原字段
 )
 
 const (
@@ -26,8 +32,7 @@ const (
 
 	AllField = "*"
 
-	MetaField_ID = "__id"
-
+	MetaField_ID    = "__id"
 	OS_MetaField_ID = "_id"
 )
 
@@ -180,9 +185,36 @@ type ViewField struct {
 	BusinessTimestamp bool         `json:"business_timestamp,omitempty" mapstructure:"business_timestamp"`
 	SrcNodeID         string       `json:"src_node_id,omitempty"  mapstructure:"src_node_id"`
 	SrcNodeName       string       `json:"src_node_name,omitempty" mapstructure:"src_node_name"`
-	PrimaryKey        sql.NullBool `json:"-" mapstructure:"-"`
+	IsPrimaryKey      sql.NullBool `json:"is_primary_key,omitempty" mapstructure:"is_primary_key"`
+
+	Features []FieldFeature `json:"features,omitempty"`
 
 	Path []string `json:"-" mapstructure:"-"`
+}
+
+// 字段特征
+type FieldFeature struct {
+	FeatureName string           `json:"name"`       // 特征名称
+	FeatureType FieldFeatureType `json:"type"`       // 特征类型：keyword, fulltext, vector
+	Comment     string           `json:"comment"`    // 特征描述
+	RefField    string           `json:"ref_field"`  // 核心：引用的字段名
+	IsDefault   bool             `json:"is_default"` //  同类型下只能有一个为 true
+	IsNative    bool             `json:"is_native"`  // 是否为底层物理同步生成的（true:系统, false:手动）
+	Config      map[string]any   `json:"config"`     // 特有配置（如分词器、权重、向量维度）
+}
+
+type KeywordConfig struct {
+	IgnoreAboveLen int `json:"ignore_above_len" mapstructure:"ignore_above_len"`
+}
+
+type FulltextConfig struct {
+	Analyzer string `json:"analyzer" mapstructure:"analyzer"`
+}
+
+type VectorConfig struct {
+	ModelID string `json:"model_id" mapstructure:"model_id"`
+
+	//Model *SmallModel `json:"-"`
 }
 
 func (field *ViewField) InitFieldPath() {
