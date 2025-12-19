@@ -31,9 +31,16 @@ type vegaViewAccess struct {
 }
 
 type VegaError struct {
-	Code        string      `json:"code"`        // 错误码
-	Description string      `json:"description"` // 错误描述
-	Detail      interface{} `json:"detail"`      // 详细内容
+	rest.BaseError
+	Code        string      `json:"code,omitempty"`        // 错误码
+	Description string      `json:"description,omitempty"` // 错误描述
+	Detail      interface{} `json:"detail,omitempty"`      // 详细内容
+	Solution    string      `json:"solution,omitempty"`    // 解决方案
+}
+
+func (e *VegaError) Error() string {
+	errStr, _ := sonic.MarshalString(e)
+	return errStr
 }
 
 func NewVegaAccess(appSetting *common.AppSetting) interfaces.VegaAccess {

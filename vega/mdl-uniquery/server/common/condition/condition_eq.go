@@ -22,9 +22,19 @@ func NewEqCond(ctx context.Context, cfg *CondCfg, fieldsMap map[string]*ViewFiel
 		return nil, fmt.Errorf("condition [eq] only supports single value")
 	}
 
+	featureType := FieldFeatureType_Raw
+	if IsTextType(fieldsMap[cfg.Name]) {
+		featureType = FieldFeatureType_Keyword
+	}
+
+	fName, err := GetQueryField(ctx, cfg.Name, fieldsMap, featureType)
+	if err != nil {
+		return nil, fmt.Errorf("condition [eq], %v", err)
+	}
+
 	return &EqCond{
 		mCfg:             cfg,
-		mFilterFieldName: getFilterFieldName(ctx, cfg.Name, fieldsMap, false),
+		mFilterFieldName: fName,
 	}, nil
 
 }

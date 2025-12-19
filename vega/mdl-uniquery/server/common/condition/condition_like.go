@@ -38,11 +38,22 @@ func NewLikeCond(ctx context.Context, cfg *CondCfg, fieldsMap map[string]*ViewFi
 		}
 	}
 
+	featureType := FieldFeatureType_Raw
+	if IsTextType(fieldsMap[cfg.Name]) {
+		featureType = FieldFeatureType_Keyword
+	}
+
+	fName, err := GetQueryField(ctx, cfg.Name, fieldsMap, featureType)
+	if err != nil {
+		return nil, fmt.Errorf("condition [like], %v", err)
+	}
+
 	return &LikeCond{
 		mCfg:             cfg,
 		mValue:           val,
 		mRealValue:       realVal,
-		mFilterFieldName: getFilterFieldName(ctx, cfg.Name, fieldsMap, false),
+		mFilterFieldName: fName,
+		// mFilterFieldName: getFilterFieldName(ctx, cfg.Name, fieldsMap, false),
 	}, nil
 }
 
