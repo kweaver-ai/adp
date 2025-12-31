@@ -6,14 +6,38 @@
 
 The Ontology Engine is a distributed business knowledge network management system developed in Go, providing ontology modeling, data management, and intelligent query capabilities. The system adopts a microservices architecture, divided into ontology management and ontology query modules, supporting the construction, storage, and querying of large-scale knowledge networks.
 
+As a core component of the KWeaver AI platform, the Ontology Engine focuses on building enterprise-level business knowledge networks, enabling business knowledge modeling, storage, querying, and application. The system follows clean architecture principles and SOLID design, offering excellent scalability and maintainability.
+
 ### Core Features
 
-- **Ontology Modeling & Management**: Supports definition and management of object types, relation types, and action types
-- **Knowledge Network Construction**: Build multi-domain knowledge networks with complex semantic relationships
-- **Intelligent Query Engine**: Provides powerful knowledge network query capabilities, supporting complex relationship queries
-- **Data Integration**: Integrates multiple data sources through the VEGA virtualization engine
-- **Distributed Architecture**: Microservices-based design supporting horizontal scaling
-- **OpenSearch Integration**: Integrated OpenSearch for efficient search capabilities
+#### Ontology Modeling & Management
+- **Multi-dimensional Ontology Definition**: Supports complete definition and management of object types, relation types, and action types
+- **Branch Management**: Supports branch development and merging of ontology models
+- **Visual Configuration**: Provides intuitive visual configuration interface for ontology models
+
+#### Knowledge Network Construction
+- **Multi-domain Knowledge Networks**: Supports building cross-domain complex knowledge networks
+- **Semantic Relationship Management**: Supports defining and managing complex semantic relationships
+- **Topology Analysis**: Provides topology structure analysis and optimization for knowledge networks
+- **Auto-sync**: Supports automatic synchronization between ontology models and data sources
+
+#### Intelligent Query Engine
+- **Complex Relationship Queries**: Supports multi-hop relationship path queries and subgraph queries
+- **Semantic Search**: Intelligent semantic search based on vector similarity
+- **Pattern Matching**: Supports intelligent pattern matching queries for graphs
+- **Performance Optimization**: High-performance query engine based on OpenSearch
+
+#### Data Integration & Application
+- **VEGA Virtualization**: Integrates multiple data sources through the VEGA virtualization engine
+- **Data Sync**: Supports real-time synchronization between ontology data and business data
+- **Job Scheduling**: Supports complex background job scheduling and execution
+- **Permission Management**: Role-based fine-grained permission control
+
+#### System Features
+- **Microservices Architecture**: Microservices-based design supporting horizontal scaling
+- **High Availability**: Supports distributed deployment and fault recovery
+- **Monitoring Integration**: Integrated with OpenTelemetry for full-link monitoring
+- **Internationalization Support**: Multi-language support and localization configuration
 
 ## System Architecture
 
@@ -23,7 +47,9 @@ The Ontology Engine is a distributed business knowledge network management syste
 kweaver/
 └── ontology/
     ├── ontology-manager/     # Ontology Management Module
-    └── ontology-query/       # Ontology Query Module
+    ├── ontology-query/       # Ontology Query Module
+    ├── README.md             # Project documentation
+    └── README.zh.md          # Chinese documentation
 ```
 
 ### Ontology Manager Module (ontology-manager)
@@ -49,11 +75,12 @@ Provides efficient knowledge graph query services. Main features include:
 
 ### Prerequisites
 
-- Go 1.23.0 or higher
-- MariaDB 11.4+ or DM8 (for data storage)
-- OpenSearch 2.x (for search and indexing)
-- Docker (optional, for containerized deployment)
-- Kubernetes (optional, for cluster deployment)
+- **Go**: 1.24.0 or higher
+- **Database**: MariaDB 11.4+ or DM8 (for data storage)
+- **Search Engine**: OpenSearch 2.x (for search and indexing)
+- **Dependency Services**: Requires other KWeaver platform services
+- **Docker**: Optional, for containerized deployment
+- **Kubernetes**: Optional, for cluster deployment
 
 ### Local Development
 
@@ -66,12 +93,34 @@ cd kweaver/ontology
 
 #### 2. Configure environment
 
-Each module has its own configuration file:
+Each module has its own configuration file that needs to be configured according to the actual environment:
 
-- `ontology-manager/server/config/ontology-manager-config.yaml`
-- `ontology-query/server/config/ontology-query-config.yaml`
+```yaml
+# Ontology Manager configuration
+ontology-manager/server/config/ontology-manager-config.yaml
 
-#### 3. Run the Ontology Manager module
+# Ontology Query configuration
+ontology-query/server/config/ontology-query-config.yaml
+```
+
+**Key configuration items**:
+- Database connection information (host, port, user, password)
+- OpenSearch connection information
+- Dependency service addresses (user-management, data-model, etc.)
+- Service port configuration
+
+#### 3. Initialize database
+
+```bash
+# Execute database initialization scripts
+# MariaDB
+mysql -u root -p < ontology-manager/migrations/mariadb/6.0.0/pre/init.sql
+
+# DM8
+disql SYSDBA/SYSDBA@localhost:5236 < ontology-manager/migrations/dm8/6.0.0/pre/init.sql
+```
+
+#### 4. Run the Ontology Manager module
 
 ```bash
 cd ontology-manager/server
@@ -81,7 +130,12 @@ go run main.go
 
 The service will start at `http://localhost:13014`
 
-#### 4. Run the Ontology Query module
+**Health Check**:
+```bash
+curl http://localhost:13014/health
+```
+
+#### 5. Run the Ontology Query module
 
 ```bash
 cd ../ontology-query/server
@@ -90,6 +144,11 @@ go run main.go
 ```
 
 The service will start at `http://localhost:13018`
+
+**Health Check**:
+```bash
+curl http://localhost:13018/health
+```
 
 ### Docker Deployment
 
@@ -129,19 +188,53 @@ helm3 install ontology-query ontology-query/helm/ontology-query/
 
 ## API Documentation
 
-The system provides complete RESTful API documentation:
+The system provides complete RESTful API documentation supporting OpenAPI 3.0 specification:
 
 ### Ontology Manager APIs
 
-- [Knowledge Network API](ontology-manager/api_doc/ontology-manager-network.html)
-- [Object Type API](ontology-manager/api_doc/ontology-manager-object-type.html)
-- [Relation Type API](ontology-manager/api_doc/ontology-manager-relation-type.json)
-- [Action Type API](ontology-manager/api_doc/ontology-manager-action-type.html)
-- [Job Management API](ontology-manager/api_doc/ontology-manager-job-api.html)
+- **Knowledge Network API**: [Knowledge Network API](ontology-manager/api_doc/ontology-manager-network.html)
+  - Supports creation, query, update, and deletion of knowledge networks
+
+- **Object Type API**: [Object Type API](ontology-manager/api_doc/ontology-manager-object-type.html)
+  - Supports definition and management of object types
+
+- **Relation Type API**: [Relation Type API](ontology-manager/api_doc/ontology-manager-relation-type.html)
+  - Supports definition and management of relation types
+  - Provides directionality and multiplicity configuration
+
+- **Action Type API**: [Action Type API](ontology-manager/api_doc/ontology-manager-action-type.html)
+  - Supports definition and management of action types
+
+- **Job Management API**: [Job Management API](ontology-manager/api_doc/ontology-manager-job-api.html)
+  - Supports creation and scheduling of background jobs
 
 ### Ontology Query APIs
 
-- [Query Service API](ontology-query/api/ontology-query.html)
+- **Query Service API**: [Query Service API](ontology-query/api_doc/ontology-query.html)
+  - Supports complex relationship path queries
+  - Provides semantic search and pattern matching
+  - Supports multi-dimensional data filtering and retrieval
+  - Provides high-performance pagination queries
+
+### API Access Methods
+
+**Local Development Environment**:
+```
+# Ontology Manager API
+http://localhost:13014/api/ontology-manager/v1/
+
+# Ontology Query API
+http://localhost:13018/api/ontology-query/v1/
+```
+
+**Production Environment**:
+```
+# Ontology Manager API
+https://your-domain.com/api/ontology-manager/v1/
+
+# Ontology Query API
+https://your-domain.com/api/ontology-query/v1/
+```
 
 ## Database Support
 
@@ -166,40 +259,58 @@ Database migration scripts are located at:
 
 ### Code Structure
 
+The project follows clean architecture principles and SOLID design, with a clear and maintainable code structure:
+
 ```text
 server/
-├── common/          # Common configuration and constants
-├── config/          # Configuration files
-├── drivenadapters/  # Data access layer
-├── driveradapters/  # Interface adapter layer
-├── errors/          # Error definitions
-├── interfaces/      # Interface definitions
-├── locale/          # Internationalization
-├── logics/          # Business logic layer
-├── main.go          # Application entry point
-├── version/         # Version information
-└── worker/          # Background tasks
+├── common/              # Common configuration, utility functions, and constants
+├── config/              # Configuration files and configuration loading
+├── drivenadapters/      # Data access layer (driven adapters)
+├── driveradapters/      # Interface adapter layer (driver adapters)
+├── errors/              # Error definitions and handling mechanisms
+├── interfaces/          # Interface definitions and abstractions
+├── locale/              # Internationalization support and multi-language configuration
+├── logics/              # Business logic layer
+├── main.go              # Application entry point and startup logic
+├── version/             # Version information and build details
+└── worker/              # Background tasks and job executors
 ```
 
 ### Development Standards
 
-1. **Modular Design**: Follow clean architecture principles
-2. **Interface Isolation**: Clearly define interfaces and implementations
-3. **Error Handling**: Unified error handling mechanism
-4. **Logging Standards**: Structured logging
-5. **Test Coverage**: Unit tests and integration tests
+1. **Clean Architecture**: Follow clean architecture principles, separating concerns
+2. **Interface Isolation**: Clearly define interfaces and implementations, depend on abstractions rather than concrete implementations
+3. **Error Handling**: Unified error handling mechanism using custom error types
+4. **Logging Standards**: Structured logging using Zap logging library
+5. **Test Coverage**: Unit tests and integration tests, aiming for high test coverage
+6. **Code Style**: Follow Go official code style, format code with go fmt
+7. **Comment Standards**: Clear comments including function comments and complex logic explanations
+8. **Version Control**: Follow Git Flow workflow, use semantic versioning
+
+### Testing Guide
+
+```bash
+# Run unit tests
+cd ontology-manager/server
+go test ./... -v
+
+# Run integration tests
+cd ontology-manager/server
+go test ./... -v -tags=integration
+
+# Generate test coverage report
+cd ontology-manager/server
+go test ./... -coverprofile=coverage.out
+go tool cover -html=coverage.out
+```
 
 ### Contributing
 
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add some amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Create a Pull Request
+Refer to the KWeaver project content
 
 ## Version History
 
-- **v6.1.0**: Current version, based on Go 1.23
+- **v6.2.0**: Current version, based on Go 1.24
 
 ## License
 

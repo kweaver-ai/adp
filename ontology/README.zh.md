@@ -6,14 +6,36 @@
 
 本体引擎是一个基于Go语言开发的分布式业务知识网络管理系统，提供本体建模、数据管理和智能查询功能。该系统采用微服务架构，分为本体管理模块和本体查询模块，支持大规模知识网络的构建、存储和查询。
 
+本体引擎是KWeaver AI平台的核心组件，专注于构建企业级业务知识网络，实现业务知识的建模、存储、查询和应用。系统采用清洁架构设计，遵循SOLID原则，具有良好的可扩展性和可维护性。
+
 ### 核心特性
 
-- **本体建模与管理**: 支持对象类、关系类、行动类的定义和管理
-- **知识网络构建**: 构建多领域的知识网络，支持复杂的语义关系
-- **智能查询引擎**: 提供强大的知识网络查询能力，支持复杂的关系查询
-- **数据集成**: 通过VEGA虚拟化引擎集成多种数据源
-- **分布式架构**: 基于微服务设计，支持水平扩展
-- **OpenSearch集成**: 集成OpenSearch提供高效的搜索能力
+#### 本体建模与管理
+- **多维度本体定义**: 支持对象类、关系类、行动类的完整定义和管理
+- **分支管理**: 支持本体模型的分支开发和合并
+- **可视化配置**: 提供直观的本体模型可视化配置界面
+
+#### 知识网络构建
+- **多领域知识网络**: 支持构建跨领域的复杂知识网络
+- **语义关系管理**: 支持定义和管理复杂的语义关系
+- **拓扑分析**: 提供知识网络的拓扑结构分析和优化
+
+#### 智能查询引擎
+- **复杂关系查询**: 支持多跳关系路径查询和子图查询
+- **语义搜索**: 基于向量相似度的智能语义搜索
+- **性能优化**: 基于OpenSearch的高性能查询引擎
+
+#### 数据集成与应用
+- **VEGA虚拟化**: 通过VEGA虚拟化引擎集成多种数据源
+- **数据同步**: 支持本体数据与业务数据的实时同步
+- **任务调度**: 支持复杂的后台任务调度和执行
+- **权限管理**: 基于角色的细粒度权限控制
+
+#### 系统特性
+- **微服务架构**: 基于微服务设计，支持水平扩展
+- **高可用性**: 支持分布式部署和故障恢复
+- **监控集成**: 集成OpenTelemetry实现全链路监控
+- **国际化支持**: 多语言支持和本地化配置
 
 ## 系统架构
 
@@ -23,7 +45,9 @@
 kweaver/
 └── ontology/
     ├── ontology-manager/     # 本体管理模块
-    └── ontology-query/       # 本体查询模块
+    ├── ontology-query/       # 本体查询模块
+    ├── README.md             # 项目说明文档
+    └── README.zh.md          # 中文说明文档
 ```
 
 ### 本体管理模块 (ontology-manager)
@@ -49,29 +73,52 @@ kweaver/
 
 ### 环境要求
 
-- Go 1.23.0 或更高版本
-- MariaDB 11.4+ 或 DM8（用于数据存储）
-- OpenSearch 2.x（用于搜索和索引）
-- Docker（可选，用于容器化部署）
-- Kubernetes（可选，用于集群部署）
+- **Go**: 1.24.0 或更高版本
+- **数据库**: MariaDB 11.4+ 或 DM8（用于数据存储）
+- **搜索引擎**: OpenSearch 2.x（用于搜索和索引）
+- **依赖服务**: 需要KWeaver平台的其他服务支持
+- **Docker**: 可选，用于容器化部署
+- **Kubernetes**: 可选，用于集群部署
 
 ### 本地开发
 
 #### 1. 克隆代码库
 
 ```bash
-git clone https://github.com/kweaver-ai/kweaver.git
-cd kweaver/ontology
+git clone https://github.com/kweaver-ai/vega.git
+cd vega/ontology
 ```
 
 #### 2. 配置环境
 
-每个模块都有独立的配置文件：
+每个模块都有独立的配置文件，需要根据实际环境进行配置：
 
-- `ontology-manager/server/config/ontology-manager-config.yaml`
-- `ontology-query/server/config/ontology-query-config.yaml`
+```yaml
+# 本体管理模块配置
+ontology-manager/server/config/ontology-manager-config.yaml
 
-#### 3. 运行本体管理模块
+# 本体查询模块配置
+ontology-query/server/config/ontology-query-config.yaml
+```
+
+**关键配置项**：
+- 数据库连接信息（host、port、user、password）
+- OpenSearch连接信息
+- 依赖服务地址（如user-management、data-model等）
+- 服务端口配置
+
+#### 3. 初始化数据库
+
+```bash
+# 执行数据库初始化脚本
+# MariaDB
+mysql -u root -p < ontology-manager/migrations/mariadb/6.x.x/pre/init.sql
+
+# DM8
+disql SYSDBA/SYSDBA@localhost:5236 < ontology-manager/migrations/dm8/6.x.x/pre/init.sql
+```
+
+#### 4. 运行本体管理模块
 
 ```bash
 cd ontology-manager/server
@@ -81,7 +128,12 @@ go run main.go
 
 服务将在 `http://localhost:13014` 启动
 
-#### 4. 运行本体查询模块
+**健康检查**：
+```bash
+curl http://localhost:13014/health
+```
+
+#### 5. 运行本体查询模块
 
 ```bash
 cd ../ontology-query/server
@@ -90,6 +142,11 @@ go run main.go
 ```
 
 服务将在 `http://localhost:13018` 启动
+
+**健康检查**：
+```bash
+curl http://localhost:13018/health
+```
 
 ### Docker 部署
 
@@ -129,19 +186,53 @@ helm3 install ontology-query ontology-query/helm/ontology-query/
 
 ## API 文档
 
-系统提供完整的RESTful API文档：
+系统提供完整的RESTful API文档，支持OpenAPI 3.0规范：
 
 ### 本体管理API
 
-- [知识网络API](ontology-manager/api_doc/ontology-manager-network.html)
-- [对象类API](ontology-manager/api_doc/ontology-manager-object-type.html)
-- [关系类API](ontology-manager/api_doc/ontology-manager-relation-type.json)
-- [动作类API](ontology-manager/api_doc/ontology-manager-action-type.html)
-- [任务管理API](ontology-manager/api_doc/ontology-manager-job-api.html)
+- **知识网络API**: [知识网络API](ontology-manager/api_doc/ontology-manager-network.html)
+  - 支持知识网络的创建、查询、更新和删除
+
+- **对象类API**: [对象类API](ontology-manager/api_doc/ontology-manager-object-type.html)
+  - 支持对象类的定义和管理
+
+- **关系类API**: [关系类API](ontology-manager/api_doc/ontology-manager-relation-type.html)
+  - 支持关系类的定义和管理
+  - 提供方向性和多重性配置
+
+- **动作类API**: [动作类API](ontology-manager/api_doc/ontology-manager-action-type.html)
+  - 支持动作类的定义和管理
+
+- **任务管理API**: [任务管理API](ontology-manager/api_doc/ontology-manager-job-api.html)
+  - 支持后台任务的创建和调度
 
 ### 本体查询API
 
-- [查询服务API](ontology-query/api/ontology-query.html)
+- **查询服务API**: [查询服务API](ontology-query/api_doc/ontology-query.html)
+  - 支持复杂的关系路径查询
+  - 提供语义搜索和模式匹配
+  - 支持多维度数据过滤和检索
+  - 提供高性能的分页查询
+
+### API访问方式
+
+**本地开发环境**:
+```
+# 本体管理API
+http://localhost:13014/api/ontology-manager/v1/
+
+# 本体查询API
+http://localhost:13018/api/ontology-query/v1/
+```
+
+**生产环境**:
+```
+# 本体管理API
+https://your-domain.com/api/ontology-manager/v1/
+
+# 本体查询API
+https://your-domain.com/api/ontology-query/v1/
+```
 
 ## 数据库支持
 
@@ -166,40 +257,58 @@ helm3 install ontology-query ontology-query/helm/ontology-query/
 
 ### 代码结构
 
+项目采用清洁架构设计，遵循SOLID原则，代码结构清晰，易于维护和扩展：
+
 ```text
 server/
-├── common/          # 公共配置和常量
-├── config/          # 配置文件
-├── drivenadapters/  # 数据访问层
-├── driveradapters/  # 接口适配层
-├── errors/          # 错误定义
-├── interfaces/      # 接口定义
-├── locale/          # 国际化
-├── logics/          # 业务逻辑层
-├── main.go          # 应用入口
-├── version/         # 版本信息
-└── worker/          # 后台任务
+├── common/              # 公共配置、工具函数和常量
+├── config/              # 配置文件和配置加载
+├── drivenadapters/      # 数据访问层（驱动适配器）
+├── driveradapters/      # 接口适配层（驱动适配器）
+├── errors/              # 错误定义和处理机制
+├── interfaces/          # 接口定义和抽象
+├── locale/              # 国际化支持和多语言配置
+├── logics/              # 业务逻辑层
+├── main.go              # 应用入口和启动逻辑
+├── version/             # 版本信息和构建信息
+└── worker/              # 后台任务和作业执行器
 ```
 
 ### 开发规范
 
-1. **模块化设计**: 遵循清洁架构原则
-2. **接口隔离**: 明确定义接口和实现
-3. **错误处理**: 统一的错误处理机制
-4. **日志规范**: 结构化的日志记录
-5. **测试覆盖**: 单元测试和集成测试
+1. **清洁架构**: 遵循清洁架构原则，分离关注点
+2. **接口隔离**: 明确定义接口和实现，依赖抽象而非具体实现
+3. **错误处理**: 统一的错误处理机制，使用自定义错误类型
+4. **日志规范**: 结构化的日志记录，使用Zap日志库
+5. **测试覆盖**: 单元测试和集成测试，追求高测试覆盖率
+6. **代码风格**: 遵循Go官方代码风格，使用go fmt格式化代码
+7. **注释规范**: 清晰的注释，包括函数注释和复杂逻辑注释
+8. **版本控制**: 遵循Git Flow工作流，使用语义化版本
+
+### 测试指南
+
+```bash
+# 运行单元测试
+cd ontology-manager/server
+go test ./... -v
+
+# 运行集成测试
+cd ontology-manager/server
+go test ./... -v -tags=integration
+
+# 生成测试覆盖率报告
+cd ontology-manager/server
+go test ./... -coverprofile=coverage.out
+go tool cover -html=coverage.out
+```
 
 ### 贡献指南
 
-1. Fork 代码库
-2. 创建特性分支 (`git checkout -b feature/amazing-feature`)
-3. 提交更改 (`git commit -m 'Add some amazing feature'`)
-4. 推送到分支 (`git push origin feature/amazing-feature`)
-5. 创建 Pull Request
+参考kweaver项目内容
 
 ## 版本历史
 
-- **v6.1.0**: 当前版本，基于Go 1.23
+- **v6.2.0**: 当前版本，基于Go 1.24
 
 ## 许可证
 
