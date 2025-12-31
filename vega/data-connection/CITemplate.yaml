@@ -1,0 +1,85 @@
+parameters:
+  - name: pool
+    type: string
+  - name: compileContainer
+    type: string
+  - name: artifactName
+    type: string
+  - name: imageRegistry
+    type: string
+  - name: imageRepository
+    type: string
+  - name: imageTags
+    type: object
+  - name: rsaPublicKey
+    type: string
+  - name: rsaPrivateKey
+    type: string
+jobs:
+  - job: buildImage
+    displayName: 构建镜像
+    pool: ${{ parameters.pool }}
+    container: ${{ parameters.compileContainer }}
+    workspace:
+      clean: all
+    steps:
+      - task: Bash@3
+        displayName: 编译文件
+        inputs:
+          targetType: 'inline'
+          script: |
+            set -ex
+            
+            echo "${{ parameters.rsaPublicKey }}" > ./dc-main/src/main/resources/public_key.pem
+            echo "${{ parameters.rsaPrivateKey }}" > ./dc-main/src/main/resources/private_key.pem
+            
+            mvn clean install -T 4 -Dmaven.test.skip=true
+            cp -rf dc-main/target/data-connection.jar .
+            rm -rf README.md Dockerfile *.yaml pom.xml dc-* migrations
+            ls -lrt ./
+            md5sum ./data-connection.jar
+      - task: CopyFiles@2
+        inputs:
+          # 这里填需要放到镜像中的路径，一行一个
+          contents: data-connection.jar
+          targetFolder: $(Build.BinariesDirectory)
+          overWrite: true
+      - task: PublishBuildArtifacts@1
+        inputs:
+          pathToPublish: $(Build.BinariesDirectory)
+          artifactName: ${{ parameters.artifactName }}
+  - job: pushImage
+    displayName: 推送镜像
+    dependsOn: buildImage
+    pool: ${{ parameters.pool }}
+    workspace:
+      clean: all
+    steps:
+      - task: DownloadBuildArtifacts@0
+        inputs:
+          artifactName: ${{ parameters.artifactName }}
+          downloadPath: $(Build.BinariesDirectory)
+      - task: Docker@2
+        displayName: 登录容器仓库
+        inputs:
+          command: login
+          containerRegistry: ${{ parameters.imageRegistry }}
+      - task: Bash@3
+        displayName: 推送镜像
+        inputs:
+          targetType: 'inline'
+          script: |
+            set -ex
+            
+            tags='${{ convertToJson(parameters.imageTags) }}'
+
+            image=${{ parameters.imageRegistry }}/${{ parameters.imageRepository }}:latest
+            docker build --no-cache -f ./Dockerfile -t $image $(Build.BinariesDirectory)/${{ parameters.artifactName }}
+
+            
+            echo "$tags" | jq -r '.[]' | while read tag; do
+              image_tag=${{ parameters.imageRegistry }}/${{ parameters.imageRepository }}:$tag
+              docker tag $image $image_tag
+              docker push $image_tag
+              docker rmi $image_tag
+            done

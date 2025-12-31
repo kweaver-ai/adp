@@ -1,0 +1,242 @@
+[
+  {
+    "db_name": "vega",
+    "table_name": "t_data_quality_model",
+    "object_type": "TABLE",
+    "operation_type": "RENAME",
+    "new_name": "adp.t_data_quality_model",
+    "object_name": "",
+    "object_property": "",
+    "object_comment": ""
+  },
+  {
+    "db_name": "vega",
+    "table_name": "t_data_quality_rule",
+    "object_type": "TABLE",
+    "operation_type": "RENAME",
+    "new_name": "adp.t_data_quality_rule",
+    "object_name": "",
+    "object_property": "",
+    "object_comment": ""
+  },
+  {
+    "db_name": "vega",
+    "table_name": "t_data_source",
+    "object_type": "TABLE",
+    "operation_type": "RENAME",
+    "new_name": "adp.t_data_source",
+    "object_name": "",
+    "object_property": "",
+    "object_comment": ""
+  },
+  {
+    "db_name": "vega",
+    "table_name": "t_dict",
+    "object_type": "TABLE",
+    "operation_type": "RENAME",
+    "new_name": "adp.t_dict",
+    "object_name": "",
+    "object_property": "",
+    "object_comment": ""
+  },
+  {
+    "db_name": "vega",
+    "table_name": "t_indicator",
+    "object_type": "TABLE",
+    "operation_type": "RENAME",
+    "new_name": "adp.t_indicator",
+    "object_name": "",
+    "object_property": "",
+    "object_comment": ""
+  },
+  {
+    "db_name": "vega",
+    "table_name": "t_lineage_edge_column",
+    "object_type": "TABLE",
+    "operation_type": "RENAME",
+    "new_name": "adp.t_lineage_edge_column",
+    "object_name": "",
+    "object_property": "",
+    "object_comment": ""
+  },
+  {
+    "db_name": "vega",
+    "table_name": "t_lineage_edge_column_table_relation",
+    "object_type": "TABLE",
+    "operation_type": "RENAME",
+    "new_name": "adp.t_lineage_edge_column_table_relation",
+    "object_name": "",
+    "object_property": "",
+    "object_comment": ""
+  },
+  {
+    "db_name": "vega",
+    "table_name": "t_lineage_edge_table",
+    "object_type": "TABLE",
+    "operation_type": "RENAME",
+    "new_name": "adp.t_lineage_edge_table",
+    "object_name": "",
+    "object_property": "",
+    "object_comment": ""
+  },
+  {
+    "db_name": "vega",
+    "table_name": "t_lineage_graph_info",
+    "object_type": "TABLE",
+    "operation_type": "RENAME",
+    "new_name": "adp.t_lineage_graph_info",
+    "object_name": "",
+    "object_property": "",
+    "object_comment": ""
+  },
+  {
+    "db_name": "vega",
+    "table_name": "t_lineage_log",
+    "object_type": "TABLE",
+    "operation_type": "RENAME",
+    "new_name": "adp.t_lineage_log",
+    "object_name": "",
+    "object_property": "",
+    "object_comment": ""
+  },
+  {
+    "db_name": "vega",
+    "table_name": "t_lineage_relation",
+    "object_type": "TABLE",
+    "operation_type": "RENAME",
+    "new_name": "adp.t_lineage_relation",
+    "object_name": "",
+    "object_property": "",
+    "object_comment": ""
+  },
+  {
+    "db_name": "vega",
+    "table_name": "t_lineage_tag_column",
+    "object_type": "TABLE",
+    "operation_type": "RENAME",
+    "new_name": "adp.t_lineage_tag_column",
+    "object_name": "",
+    "object_property": "",
+    "object_comment": ""
+  },
+  {
+    "db_name": "vega",
+    "table_name": "t_lineage_tag_table",
+    "object_type": "TABLE",
+    "operation_type": "RENAME",
+    "new_name": "adp.t_lineage_tag_table",
+    "object_name": "",
+    "object_property": "",
+    "object_comment": ""
+  },
+  {
+    "db_name": "vega",
+    "table_name": "t_indicator2",
+    "object_type": "TABLE",
+    "operation_type": "RENAME",
+    "new_name": "adp.t_indicator2",
+    "object_name": "",
+    "object_property": "",
+    "object_comment": ""
+  },
+  {
+    "db_name": "vega",
+    "table_name": "t_lineage_tag_column2",
+    "object_type": "TABLE",
+    "operation_type": "RENAME",
+    "new_name": "adp.t_lineage_tag_column2",
+    "object_name": "",
+    "object_property": "",
+    "object_comment": ""
+  },
+  {
+    "db_name": "vega",
+    "table_name": "t_lineage_tag_indicator2",
+    "object_type": "TABLE",
+    "operation_type": "RENAME",
+    "new_name": "adp.t_lineage_tag_indicator2",
+    "object_name": "",
+    "object_property": "",
+    "object_comment": ""
+  },
+  {
+    "db_name": "vega",
+    "table_name": "t_lineage_tag_table2",
+    "object_type": "TABLE",
+    "operation_type": "RENAME",
+    "new_name": "adp.t_lineage_tag_table2",
+    "object_name": "",
+    "object_property": "",
+    "object_comment": ""
+  },
+  {
+    "db_name": "vega",
+    "table_name": "t_live_ddl",
+    "object_type": "TABLE",
+    "operation_type": "RENAME",
+    "new_name": "adp.t_live_ddl",
+    "object_name": "",
+    "object_property": "",
+    "object_comment": ""
+  },
+  {
+    "db_name": "vega",
+    "table_name": "t_schema",
+    "object_type": "TABLE",
+    "operation_type": "RENAME",
+    "new_name": "adp.t_schema",
+    "object_name": "",
+    "object_property": "",
+    "object_comment": ""
+  },
+  {
+    "db_name": "vega",
+    "table_name": "t_table",
+    "object_type": "TABLE",
+    "operation_type": "RENAME",
+    "new_name": "adp.t_table",
+    "object_name": "",
+    "object_property": "",
+    "object_comment": ""
+  },
+  {
+    "db_name": "vega",
+    "table_name": "t_table_field",
+    "object_type": "TABLE",
+    "operation_type": "RENAME",
+    "new_name": "adp.t_table_field",
+    "object_name": "",
+    "object_property": "",
+    "object_comment": ""
+  },
+  {
+    "db_name": "vega",
+    "table_name": "t_table_field_his",
+    "object_type": "TABLE",
+    "operation_type": "RENAME",
+    "new_name": "adp.t_table_field_his",
+    "object_name": "",
+    "object_property": "",
+    "object_comment": ""
+  },
+  {
+    "db_name": "vega",
+    "table_name": "t_task",
+    "object_type": "TABLE",
+    "operation_type": "RENAME",
+    "new_name": "adp.t_task",
+    "object_name": "",
+    "object_property": "",
+    "object_comment": ""
+  },
+  {
+    "db_name": "vega",
+    "table_name": "t_task_log",
+    "object_type": "TABLE",
+    "operation_type": "RENAME",
+    "new_name": "adp.t_task_log",
+    "object_name": "",
+    "object_property": "",
+    "object_comment": ""
+  }
+]

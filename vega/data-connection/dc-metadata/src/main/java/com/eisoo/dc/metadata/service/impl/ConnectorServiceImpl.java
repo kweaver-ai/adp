@@ -1,16 +1,16 @@
 package com.eisoo.dc.metadata.service.impl;
 
 import cn.hutool.json.JSONUtil;
+import com.eisoo.dc.common.exception.vo.AiShuException;
+import com.eisoo.dc.common.util.StringUtils;
+import com.eisoo.dc.common.constant.CatalogConstant;
+import com.eisoo.dc.common.constant.Detail;
 import com.eisoo.dc.common.connector.ConnectorConfig;
 import com.eisoo.dc.common.connector.ConnectorConfigCache;
 import com.eisoo.dc.common.connector.TypeConfig;
 import com.eisoo.dc.common.connector.mapping.TypeMapping;
 import com.eisoo.dc.common.connector.mapping.TypeMappingFactory;
-import com.eisoo.dc.common.constant.CatalogConstant;
-import com.eisoo.dc.common.constant.Detail;
 import com.eisoo.dc.common.exception.enums.ErrorCodeEnum;
-import com.eisoo.dc.common.exception.vo.AiShuException;
-import com.eisoo.dc.common.util.StringUtils;
 import com.eisoo.dc.metadata.domain.dto.SourceTypeDto;
 import com.eisoo.dc.metadata.domain.dto.TypeMappingDto;
 import com.eisoo.dc.metadata.domain.vo.TargetMappingVo;
@@ -23,8 +23,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * @Author zdh

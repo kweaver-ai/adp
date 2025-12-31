@@ -1,0 +1,190 @@
+parameters:
+  - name: pool
+    default:
+  - name: compileContainer
+    default:
+  - name: utArtifactName
+    default:
+  - name: utReportName
+    default:
+  - name: lintReportName
+    default:
+  - name: coverageReportName
+    default:
+jobs:
+  - job: Code_Check
+    displayName: Code Check
+    pool:
+      name: ${{ parameters.pool }}
+    container: ${{ parameters.compileContainer }}
+    workspace:
+      clean: all
+    steps:
+      - checkout: self
+      - script: |
+          set -ex
+          mvn clean org.apache.maven.plugins:maven-pmd-plugin:3.19.0:pmd install -Dmaven.test.skip=true
+          rm -rf coverage_report
+          mkdir -p coverage_report/metadata-manage-util
+          mkdir -p coverage_report/metadata-manage-db
+          mkdir -p coverage_report/metadata-manage-lib
+          mkdir -p coverage_report/metadata-manage-sdk
+          mkdir -p coverage_report/metadata-manage-web
+          mkdir -p coverage_report/metadata-manage-lineage
+          mkdir -p coverage_report/reports
+
+          cp metadata-manage-util/target/pmd.xml coverage_report/metadata-manage-util/${{parameters.lintReportName}}
+          cp metadata-manage-db/target/pmd.xml coverage_report/metadata-manage-db/${{parameters.lintReportName}}
+          cp metadata-manage-lib/target/pmd.xml coverage_report/metadata-manage-lib/${{parameters.lintReportName}}
+          cp metadata-manage-sdk/target/pmd.xml coverage_report/metadata-manage-sdk/${{parameters.lintReportName}}
+          cp metadata-manage-web/target/pmd.xml coverage_report/metadata-manage-web/${{parameters.lintReportName}}
+          cp metadata-manage-lineage/target/pmd.xml coverage_report/metadata-manage-lineage/${{parameters.lintReportName}}
+
+
+        continueOnError: false
+        displayName: Check Code
+      # 执行UT
+      - script: |
+          set -ex
+          mv pom.xml ci-pom.xml
+          mv ut-pom.xml pom.xml
+          mvn clean org.apache.maven.plugins:maven-surefire-report-plugin:3.0.0-M7:report org.codehaus.mojo:cobertura-maven-plugin:2.7:cobertura -DshowSuccess=false -Dcobertura.report.format=xml
+          mv pom.xml ut-pom.xml
+          mv ci-pom.xml pom.xml
+          jrm coverage_report/${{ parameters.utReportName }} ./**/target/surefire-reports/*.xml
+
+          cp metadata-manage-util/target/site/cobertura/coverage.xml coverage_report/reports/coverage-util.xml
+          cp metadata-manage-db/target/site/cobertura/coverage.xml coverage_report/reports/coverage-db.xml
+          cp metadata-manage-lib/target/site/cobertura/coverage.xml coverage_report/reports/coverage-lib.xml
+          cp metadata-manage-sdk/target/site/cobertura/coverage.xml coverage_report/reports/coverage-sdk.xml
+          cp metadata-manage-web/target/site/cobertura/coverage.xml coverage_report/reports/coverage-web.xml
+          cp metadata-manage-lineage/target/site/cobertura/coverage.xml coverage_report/reports/coverage-lineage.xml
+        displayName: 生成单元测试结果及覆盖率报告
+      - task: CopyFiles@2
+        inputs:
+          SourceFolder: $(Build.SourcesDirectory)
+          contents: |
+            coverage_report/**
+          targetFolder: $(Build.BinariesDirectory)
+      - task: PublishBuildArtifacts@1
+        inputs:
+          pathToPublish: $(Build.BinariesDirectory)
+          artifactName: ${{ parameters.utArtifactName }}
+
+  - job: Lint_Check
+    displayName: Lint Reports and Quality Gates
+    container: dotnet
+    pool:
+      name: ${{ parameters.pool }}
+    dependsOn: Code_Check
+    workspace:
+      clean: all
+    steps:
+      - task: DownloadBuildArtifacts@0
+        inputs:
+          artifactName: ${{ parameters.utArtifactName }}
+          downloadPath: $(Build.BinariesDirectory)
+
+      - task: PublishTestResults@2
+        displayName: Publish Lint Report
+        inputs:
+          testResultsFormat: "JUnit"
+          testResultsFiles: '$(Build.BinariesDirectory)/${{ parameters.utArtifactName }}/coverage_report/**/${{ parameters.lintReportName }}'
+          testRunTitle: Lint
+          failTaskOnFailedTests: false
+
+      - task: BuildQualityChecks@8
+        displayName: Quality Gate Lint
+        inputs:
+          checkWarnings: true
+          warningFailOption: 'fixed'
+          warningThreshold: '1000'
+          showStatistics: false
+          evaluateTaskWarnings: false
+          evaluateFileWarnings: true
+          warningFilesFolder: '$(Build.BinariesDirectory)'
+          warningFiles: '${{ parameters.utArtifactName }}/coverage_report/**/${{parameters.lintReportName}}'
+          warningFileFilters: '/^<\/violation>.*?$/'
+          warningFilesArtifact: '${{ parameters.utArtifactName }}'
+
+  - job: UT_Check
+    displayName: UT Reports and Quality Gates
+    pool:
+      name: ${{ parameters.pool }}
+    container: dotnet
+    dependsOn: Code_Check
+    workspace:
+      clean: all
+    steps:
+      - task: DownloadBuildArtifacts@0
+        inputs:
+          artifactName: ${{ parameters.utArtifactName }}
+          downloadPath: $(Build.BinariesDirectory)
+
+      - task: PublishTestResults@2
+        displayName: Publish UT Report
+        inputs:
+          testResultsFormat: "JUnit"
+          testResultsFiles: '$(Build.BinariesDirectory)/${{ parameters.utArtifactName }}/coverage_report/${{ parameters.utReportName }}'
+          testRunTitle: UT
+          failTaskOnFailedTests: false
+
+      - task: BuildQualityChecks@8
+        displayName: Quality Gate UT
+        inputs:
+          checkWarnings: true
+          warningFailOption: 'fixed'
+          warningThreshold: '1000'
+          showStatistics: false
+          evaluateTaskWarnings: false
+          evaluateFileWarnings: true
+          warningFilesFolder: '$(Build.BinariesDirectory)'
+          warningFiles: '${{ parameters.utArtifactName }}/coverage_report/${{ parameters.utReportName }}'
+          warningFileFilters: '/^<\/error>.*?$/'
+          warningFilesArtifact: '${{ parameters.utArtifactName }}'
+
+  - job: Coverage_Check
+    displayName: Coverage Reports and Quality Gates
+    pool:
+      name: ${{ parameters.pool }}
+    container: dotnet
+    dependsOn: Code_Check
+    workspace:
+      clean: all
+    steps:
+      - checkout: self
+        fetchDepth: 1
+      - task: DownloadBuildArtifacts@0
+        inputs:
+          artifactName: ${{ parameters.utArtifactName }}
+          downloadPath: $(Build.SourcesDirectory)
+
+      - task: reportgenerator@5
+        inputs:
+          reports: '$(Build.SourcesDirectory)/${{ parameters.utArtifactName }}/coverage_report/reports/coverage-*.xml'
+          targetdir: '$(Build.SourcesDirectory)/${{ parameters.utArtifactName }}/coverage_report/coveragereport'
+          sourcedirs: '$(Build.SourcesDirectory)'
+          title: 'Generate Summary report'
+
+      - task: PublishBuildArtifacts@1
+        displayName: Publish Summary Reports To Artifacts
+        condition: succeeded()
+        inputs:
+          PathToPublish: '$(Build.SourcesDirectory)/${{ parameters.utArtifactName }}/coverage_report/coveragereport'
+          ArtifactsName: coveragereports
+
+      - task: PublishCodeCoverageResults@1
+        displayName: Publish Coverage Report
+        condition: succeeded()
+        inputs:
+          codeCoverageTool: 'Cobertura'
+          summaryFileLocation: '$(Build.SourcesDirectory)/${{ parameters.utArtifactName }}/coverage_report/coveragereport/Cobertura.xml'
+          failIfCoverageEmpty: false
+
+      - task: BuildQualityChecks@8
+        displayName: Quality Gate Coverage
+        inputs:
+          coverageType: 'lines'
+          coverageFailOption: 'fixed'
+          checkCoverage: true
+          coverageThreshold: '0.0'

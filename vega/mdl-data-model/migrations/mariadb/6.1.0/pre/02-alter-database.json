@@ -1,0 +1,119 @@
+[
+  {
+    "db_name": "dip_mdl",
+    "table_name": "t_metric_model",
+    "object_type": "COLUMN",
+    "operation_type": "ADD",
+    "object_name": "f_creator_type",
+    "object_property": "varchar(20) NOT NULL DEFAULT ''",
+    "object_comment": "创建者类型"
+  },
+  {
+    "db_name": "dip_mdl",
+    "table_name": "t_metric_model_task",
+    "object_type": "COLUMN",
+    "operation_type": "ADD",
+    "object_name": "f_creator_type",
+    "object_property": "varchar(20) NOT NULL DEFAULT ''",
+    "object_comment": "创建者类型"
+  },
+  {
+    "db_name": "dip_mdl",
+    "table_name": "t_event_models",
+    "object_type": "COLUMN",
+    "operation_type": "ADD",
+    "object_name": "f_creator_type",
+    "object_property": "varchar(20) NOT NULL DEFAULT ''",
+    "object_comment": "创建者类型"
+  },
+  {
+    "db_name": "dip_mdl",
+    "table_name": "t_event_model_task",
+    "object_type": "COLUMN",
+    "operation_type": "ADD",
+    "object_name": "f_creator_type",
+    "object_property": "varchar(20) NOT NULL DEFAULT ''",
+    "object_comment": "创建者类型"
+  },
+  {
+    "db_name": "dip_mdl",
+    "table_name": "t_data_view",
+    "object_type": "COLUMN",
+    "operation_type": "ADD",
+    "object_name": "f_creator_type",
+    "object_property": "varchar(20) NOT NULL DEFAULT ''",
+    "object_comment": "创建者类型"
+  },
+  {
+    "db_name": "dip_mdl",
+    "table_name": "t_data_view",
+    "object_type": "COLUMN",
+    "operation_type": "ADD",
+    "object_name": "f_updater_type",
+    "object_property": "varchar(20) NOT NULL DEFAULT ''",
+    "object_comment": "更新者类型"
+  },
+  {
+    "db_name": "dip_mdl",
+    "table_name": "t_data_dict",
+    "object_type": "COLUMN",
+    "operation_type": "ADD",
+    "object_name": "f_creator_type",
+    "object_property": "varchar(20) NOT NULL DEFAULT ''",
+    "object_comment": "创建者类型"
+  },
+  {
+    "db_name": "dip_mdl",
+    "table_name": "t_trace_model",
+    "object_type": "COLUMN",
+    "operation_type": "ADD",
+    "object_name": "f_creator_type",
+    "object_property": "varchar(20) NOT NULL DEFAULT ''",
+    "object_comment": "创建者类型"
+  },
+  {
+    "db_name": "dip_mdl",
+    "table_name": "t_data_model_job",
+    "object_type": "COLUMN",
+    "operation_type": "ADD",
+    "object_name": "f_creator_type",
+    "object_property": "varchar(20) NOT NULL DEFAULT ''",
+    "object_comment": "创建者类型"
+  },
+  {
+    "db_name": "dip_mdl",
+    "table_name": "t_objective_model",
+    "object_type": "COLUMN",
+    "operation_type": "ADD",
+    "object_name": "f_creator_type",
+    "object_property": "varchar(20) NOT NULL DEFAULT ''",
+    "object_comment": "创建者类型"
+  },
+  {
+    "db_name": "dip_mdl",
+    "table_name": "t_metric_model",
+    "object_type": "COLUMN",
+    "operation_type": "ADD",
+    "object_name": "f_order_by_fields",
+    "object_property": "varchar(4096) DEFAULT NULL",
+    "object_comment": "排序字段"
+  },
+  {
+    "db_name": "dip_mdl",
+    "table_name": "t_metric_model",
+    "object_type": "COLUMN",
+    "operation_type": "ADD",
+    "object_name": "f_having_condition",
+    "object_property": "varchar(2048) DEFAULT NULL",
+    "object_comment": "值过滤"
+  },
+  {
+    "db_name": "dip_mdl",
+    "table_name": "t_metric_model",
+    "object_type": "COLUMN",
+    "operation_type": "MODIFY",
+    "object_name": "f_measure_name",
+    "object_property": "varchar(50) NOT NULL DEFAULT ''",
+    "object_comment": "度量名称"
+  }
+]

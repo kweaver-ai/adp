@@ -295,7 +295,6 @@ public class TableScanServiceImpl extends ServiceImpl<TableScanMapper, TableScan
         return ResponseEntity.ok(response);
     }
 
-
     public ResponseEntity<?> getTableOldListByDsId(String userId, String dsId, String keyword, int limit,
                                                    int offset, String sort, String direction) {
         JSONArray entries = new JSONArray();

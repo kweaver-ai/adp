@@ -1,0 +1,17 @@
+{{- $fullName := print (include "vega-metadata.fullname" .) "" -}}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ $fullName }}
+  namespace: {{.Values.namespace}}
+  labels:
+    {{- include "vega-metadata.labels.backend" . | nindent 4 }}
+spec:
+  type: ClusterIP
+  ports:
+    - port: 80
+      targetPort: http
+      protocol: TCP
+      name: http
+  selector:
+    {{- include "vega-metadata.backend.selectorLabels" . | nindent 4 }}

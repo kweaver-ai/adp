@@ -1,0 +1,274 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "vega-metadata.fullname" . }}
+  namespace: {{.Values.namespace}}
+  labels:
+    {{ include "vega-metadata.labels.backend" . | nindent 4 }}
+data:
+  config-yml: |
+    server:
+      port: 8080
+      servlet:
+        context-path: /api/metadata-manage
+    spring:
+      application:
+        name: vega-metadata
+        version: 1.0.0
+      mvc:
+        throw-exception-if-no-handler-found: true
+        pathmatch:
+          matching-strategy: ANT_PATH_MATCHER
+      servlet:
+        multipart:
+          max-file-size: 100MB
+          max-request-size: 100MB
+      db-config:
+        type: {{ index .Values "depServices" "rds" "type" }}
+        {{- if eq .Values.depServices.rds.type "DM8" }}
+        url: jdbc:dm://{{ .Values.depServices.rds.host }}:{{ .Values.depServices.rds.port }}?schema=adp
+        {{- else }}
+        url: jdbc:mariadb://{{ .Values.depServices.rds.host }}:{{ .Values.depServices.rds.port }}/adp?useUnicode=true&useSSL=false&characterEncoding=utf8mb4&serverTimezone=GMT%2B8&&allowMultiQueries=true&rewriteBatchedStatements=true&socketTimeout=0&autoReconnect=true&defaultFetchSize=200
+        {{- end }}
+        username: {{ .Values.depServices.rds.user | quote }}
+        password: {{ .Values.depServices.rds.password | quote }}
+        pool:
+          #初始化时建立物理连接的个数
+          initial-size: 5
+          #最小连接池数量
+          min-idle: 5
+          #最大连接池数量 maxIdle已经不再使用
+          max-active: 20
+          #获取连接时最大等待时间，单位毫秒
+          max-wait: 60000
+          #申请连接的时候检测，如果空闲时间大于timeBetweenEvictionRunsMillis，执行validationQuery检测连接是否有效。
+          test-while-idle: true
+          #既作为检测的间隔时间又作为testWhileIdel执行的依据
+          time-between-eviction-runs-millis: 60000
+          #销毁线程时检测当前连接的最后活动时间和当前时间差大于该值时，关闭当前连接
+          min-evictable-idle-time-millis: 30000
+          #用来检测连接是否有效的sql 必须是一个查询语句
+          #mysql中为 select 'x'
+          #oracle中为 select 1 from dual
+          validation-query: select 'x'
+          #申请连接时会执行validationQuery检测连接是否有效,开启会降低性能,默认为true
+          test-on-borrow: false
+          #归还连接时会执行validationQuery检测连接是否有效,开启会降低性能,默认为true
+          test-on-return: false
+          #是否缓存preparedStatement,mysql5.5+建议开启
+          pool-prepared-statements: true
+          #当值大于0时poolPreparedStatements会自动修改为true
+          max-pool-prepared-statement-per-connection-size: 20
+      kafka:
+        enable: {{ index .Values "depServices" "kafka" "enable" }}
+        # kafka地址先填写大数据测试环境地址，现修改为proton地址
+        bootstrap-servers: kafka-external-31000.resource:9098
+        listener:
+          ack-mode: manual_immediate
+          type: batch
+        producer:
+          # 重试次数
+          retries: 3
+          # 批量发送的消息数量
+          batch-size: 16384
+          # 32MB的批处理缓冲区
+          buffer-memory: 33554432
+          key-serializer: org.apache.kafka.common.serialization.StringSerializer
+          value-serializer: org.apache.kafka.common.serialization.StringSerializer
+          properties:
+            sasl:
+              mechanism: PLAIN
+              jaas.config: 'org.apache.kafka.common.security.plain.PlainLoginModule required username=kafkaclient password=eisoo.com123;'
+            security.protocol: SASL_PLAINTEXT
+
+        consumer:
+          # 最早未被消费的offset
+          auto-offset-reset: earliest
+          # 批量一次最大拉取数据量
+          max-poll-records: 3000
+          # 禁止自动提交
+          enable-auto-commit: false
+          # 批量拉取间隔，要大于批量拉取数据的处理时间，时间间隔太小会有重复消费
+          max.poll.interval.ms: 5000
+          key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+          value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+          properties:
+            sasl:
+              mechanism: PLAIN
+              jaas.config: 'org.apache.kafka.common.security.plain.PlainLoginModule required username=kafkaclient password=eisoo.com123;'
+            security.protocol: SASL_PLAINTEXT
+      sql:
+        init:
+          schema-locations:
+            - classpath:sql/t_lineage_tag_column2.sql
+            - classpath:sql/t_lineage_tag_indicator2.sql
+            - classpath:sql/t_lineage_tag_table2.sql
+            - classpath:sql/t_lineage_graph_info.sql
+          mode: always
+          continue-on-error: true
+
+    #mybatis-plus配置
+    mybatis-plus:
+      mapper-locations: classpath*:com/**/mapper/xml/*.xml,classpath*:mapper/*.xml
+      configuration:
+        #log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+        log-impl: org.apache.ibatis.logging.slf4j.Slf4jImpl
+    #表元数据多线程excel导入配置
+    excel-multi-thread-import:
+      batch-import-size: 1
+      max-thread-num-per-task: 2
+    token:
+      check:
+        enable: false
+        url: http://hydra-admin:4445/oauth2/introspect
+    dolphinscheduler:
+      host: {{ index .Values "depServices" "dolphinscheduler" "host" }}
+      port: {{ index .Values "depServices" "dolphinscheduler" "port" }}
+      token: {{ index .Values "depServices" "dolphinscheduler" "token" }}
+      user: {{ index .Values "depServices" "dolphinscheduler" "user" }}
+    hostAliases: []
+    anyrobot:
+      log:
+        enabled: {{ .Values.service.telemetry.log.enabled | quote }}
+        endpoint: {{ .Values.service.telemetry.log.endpoint | quote }}
+        level: {{ .Values.service.telemetry.log.level | quote }}
+      trace:
+        enabled: {{ .Values.service.telemetry.trace.enabled | quote }}
+        endpoint: {{ .Values.service.telemetry.trace.endpoint | quote }}
+    dpDataSource:
+      host: {{ index .Values "depServices" "dpDataSourceService" "host" }}
+      port: {{ index .Values "depServices" "dpDataSourceService" "port" }}
+      #dp-data-source的catalog列表查询接口
+      catalogApi : /api/data-connection/v1/datasource
+      #dp-data-source获取所有支持connector入口
+      connectorsApi: /api/data-connection/v1/datasource/connectors
+      protocol: {{ index .Values "depServices" "dpDataSourceService" "protocol" }}
+      #虚拟化上注册的元数据库连接器
+      collector: {{ index .Values "depServices" "dpDataSourceService" "collector" }}
+      #元数据库地址
+      metaDataHost: {{ index .Values "depServices" "rds" "host" }}
+      #元数据库端口
+      metaDataPort: {{ index .Values "depServices" "rds" "port" }}
+      #元数据库用户
+      metaDataUser: {{ index .Values "depServices" "rds" "user" }}
+      #元数据库密码
+      metaDataPassWord: {{ index .Values "depServices" "rds" "password" }}
+      #元数据采集器类型
+      metaDataConnector: {{ index .Values "depServices" "rds" "type" }}
+
+    virtualization:
+      host: {{ index .Values "depServices" "virtualizationEngine" "host" }}
+      port: {{ index .Values "depServices" "virtualizationEngine" "port" }}
+      #网络协议
+      protocol: {{ index .Values "depServices" "virtualizationEngine" "protocol" }}
+      #虚拟化用户
+      user: async_task_user
+      #虚拟化schema列表查询接口
+      schemaApi: /v1/metadata/schemas/%s
+      #虚拟化table列表查询接口
+      tableApi: /v1/metadata/tables/%s/%s
+      #虚拟化column列表查询入口
+      columnApi: /v1/metadata/columns/%s/%s/%s
+      #虚拟化column采集入口 /tables/{collector}/{catalog}/{schema}
+      collectorApi: /v1/metadata/tables/%s/%s/%s
+      #是否设为自动采集通道
+      isAuto: true
+    anydata:
+      initMaxCount: 3
+      BASE_URL: https://127.0.0.1:8444
+      url: ${anydata.BASE_URL}/api/builder/v1/open/graph/data
+      userName: liberly
+      password: eisoo.com123
+      appIdURL: ${anydata.BASE_URL}/api/rbac/v1/user/login/appId
+      neighborsURL: ${anydata.BASE_URL}/api/engine/v1/open/graph-explore/kgs/%s/neighbors
+      nodesInfoURL: ${anydata.BASE_URL}/api/engine/v1/open/basic-search/kgs/%s/vids
+      nodeInfoCommonURL: ${anydata.BASE_URL}/api/engine/v1/open/basic-search/kgs/%s/full-text
+      edgeBatchDeleteURL: ${anydata.BASE_URL}/api/builder/v1/graph/data/batch_del_relation
+      anyDataLineageQueryURL: ${anydata.BASE_URL}/api/engine/v1/open/custom-search/services/query_by_name
+      kafka:
+        enable: {{ index .Values "depServices" "kafka" "enable" }}
+        bootstrap-servers: kafka-external-31000.resource:9098
+        group-topic: meta_lineage
+        producer:
+          acks: all
+          batch-size: 16384
+          buffer-memory: 33554432
+          key-serializer: org.apache.kafka.common.serialization.StringSerializer
+          value-serializer: org.apache.kafka.common.serialization.StringSerializer
+          retries: 5
+          transaction-timeout: 300000
+          transaction-id-prefix: TN-1
+          max-block-ms: 600000
+          properties:
+            sasl:
+              mechanism: PLAIN
+              jaas-config: 'org.apache.kafka.common.security.plain.PlainLoginModule required username=kafkaclient password=eisoo.com123;'
+            security:
+              protocol: SASL_PLAINTEXT
+        consumer:
+          group-id: meta_lineage_1
+          enable-auto-commit: false
+          max-poll-interval-ms: 18000000
+          auto-offset-reset: earliest
+          session-timeout-ms: 600000
+          request-timeout-ms: 60000
+          max-poll-records: 50
+          isolation-level: read_committed
+          heartbeat-interval-ms: 4000
+          allow-auto-create-topics: true
+          listener:
+            type: batch
+            concurrency: 1
+          properties:
+            sasl:
+              mechanism: PLAIN
+              jaas-config: 'org.apache.kafka.common.security.plain.PlainLoginModule required username=kafkaclient password=eisoo.com123;'
+            security:
+              protocol: SASL_PLAINTEXT
+      build:
+        graphName: 血缘图谱
+        graphDesc: 这是一个血缘图谱
+        upLoadGraphPath: classpath:graph/lineage_graph.json
+        upLoadGraphServicePath: classpath:graph/lineage_service.json
+        networkURL: ${anydata.BASE_URL}/api/builder/v1/open/knw/network
+        networkGetIdByNameURL: ${anydata.BASE_URL}/api/builder/v1/open/knw/get_by_name
+        dsURL: ${anydata.BASE_URL}/api/builder/v1/open/ds
+        dsGetInfoURL: ${anydata.BASE_URL}/api/builder/v1/open/ds
+        dsDeleteURL: ${anydata.BASE_URL}/api/builder/v1/open/ds/delbydsids
+        uploadURL: ${anydata.BASE_URL}/api/builder/v1/open/graph/input
+        startBuildURL: ${anydata.BASE_URL}/api/builder/v1/open/task/%s
+        startBuildProgressURL: ${anydata.BASE_URL}/api/builder/v1/open/graph/info/basic
+        startDeleteURL: ${anydata.BASE_URL}/api/builder/v1/open/graph/delbyids
+        startQueryAllGraphURL: ${anydata.BASE_URL}/api/builder/v1/open/knw/get_graph_by_knw
+        serviceBuildURL: ${anydata.BASE_URL}/api/engine/v1/open/services/import-service/file
+        serviceQueryURL: ${anydata.BASE_URL}/api/cognitive-service/v1/services/list
+        serviceCancelURL: ${anydata.BASE_URL}/api/cognitive-service/v1/services/%s/cancel-service
+        serviceDeletelURL: ${anydata.BASE_URL}/api/cognitive-service/v1/services/%s/delete-service
+        dataSource:
+          dataSource: mysql
+          dsAddress: {{ index .Values "depServices" "rds" "host" }}
+          dsPassword: {{ .Values.depServices.rds.password | quote }}
+          dsPath: adp
+          dsPort: 3330
+          dsUser: {{ .Values.depServices.rds.user | quote }}
+          dsName: 血缘mysql
+          extractType: standardExtraction
+          dsOldId: 112
+    af-data-view:
+      indicator-lineage: http://indicator-management:8213/api/internal/indicator-management/v1/indicator/%s/lineage
+      data-lineage: http://data-view:8123/api/internal/data-view/v1/data-lineage/parser
+      table-column-info-lineage: http://business-grooming:8213/api/internal/business-grooming/v1/lineage/table?id=%s
+      check-task-lineage: http://data-sync-connect:80/api/data-sync/v1/compose/model/history?offset=1&limit=10&direction=desc&sort=start_time&model_uuid=%s&step=INSERT
+    scheduler:
+      trigger: {{ .Values.scheduler.trigger | quote }}
+      cron: {{ .Values.scheduler.cron | quote }}
+      projectName: {{ .Values.scheduler.projectName | quote }}
+      taskName: updateMetadataTrigger
+      taskUuid: updateMetadataTrigger-task-001
+      processName: updateMetadataTriggerProcess
+      processUuid: updateMetadataTrigger-process-001
+      taskUrl: http://vega-metadata:80/api/metadata-manage/v1/task/updateMetaData
+      token: {{ index .Values "depServices" "dolphinscheduler" "token" }}
+      schedulerModelUrl: http://data-sync-connect:80/api/data-sync/v2/model
+      schedulerProcessUrl: http://data-sync-connect:80/api/data-sync/v2/process
+      autoMonitorTrigger: {{ .Values.scheduler.autoMonitorTrigger | quote }}

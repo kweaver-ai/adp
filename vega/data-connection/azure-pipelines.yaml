@@ -1,0 +1,221 @@
+trigger:
+  batch: true
+  branches:
+    include:
+      - develop
+      - release/*
+
+
+variables:
+  # 针对服务的全局配置
+  - group: global-dip
+  - name: X86Pool
+    value: dip-centos7-x86_64
+  - name: ARMPool
+    value: dip-centos7-arm
+  - name: imageRegistry
+    value: "acr.aishu.cn"
+  - name: imageRepository
+    value: "dip/data-connection"
+  - name: version
+    value: 3.2.0
+  - name: branchName
+    value: $[lower(replace(replace(variables['Build.SourceBranch'], 'refs/heads/', ''), '/', '-'))]
+  - name: UTArtifactName
+    value: coverageFiles
+  - name: UTReportName
+    value: ut_report.xml
+  - name: LintReportName
+    value: lint_report.xml
+  - name: CoverageReportName
+    value: coverage_report.xml
+  - name: RsaPublicKey
+    value: |
+      -----BEGIN PUBLIC KEY-----
+      MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA22GOSQ1jeDhpdzxhJddS
+      f+U10F4Ivut7giYhchFAIJgRonMamDT86MSqQUc8DdTFdPGLm7M3GUKcsG1qbC3S
+      qk4XJ9NjmQXbs7IMWyWEWQrN7Iv7S2QjDYJI+ppvIN03I0Km3WKsmnrle2bLzT/V
+      G8e72YX69dfXAeiX6uDhht1va/JxZVFMIV3pHa6AQQ9gn5SAUTX2akEhRfe1bPJj
+      fVyoM+dfNtvgdfaraqV1rOhVDEqd0NlOWt2RHwETQwU8gIJib2baj2MtyIAY+fQw
+      KlKWxUs1GcFbECnhVPiVN6BEhXD7OhRt9QE/cuYl5v4a6ypugGaMBK6VKOqFHDvf
+      mwIDAQAB
+      -----END PUBLIC KEY-----
+  - name: RsaPrivateKey
+    value: |
+      -----BEGIN PRIVATE KEY-----
+      MIIEwAIBADANBgkqhkiG9w0BAQEFAASCBKowggSmAgEAAoIBAQDbYY5JDWN4OGl3
+      PGEl11J/5TXQXgi+63uCJiFyEUAgmBGicxqYNPzoxKpBRzwN1MV08YubszcZQpyw
+      bWpsLdKqThcn02OZBduzsgxbJYRZCs3si/tLZCMNgkj6mm8g3TcjQqbdYqyaeuV7
+      ZsvNP9Ubx7vZhfr119cB6Jfq4OGG3W9r8nFlUUwhXekdroBBD2CflIBRNfZqQSFF
+      97Vs8mN9XKgz51822+B19qtqpXWs6FUMSp3Q2U5a3ZEfARNDBTyAgmJvZtqPYy3I
+      gBj59DAqUpbFSzUZwVsQKeFU+JU3oESFcPs6FG31AT9y5iXm/hrrKm6AZowErpUo
+      6oUcO9+bAgMBAAECggEBAMXsiwlfeemBw60enWsdi8H1koqN/Af7vi9apXwbEicV
+      63sLq+e8jpyWqiBA226DEy6BqfnsQ36XuXP3EzfMU67wyzVUIxxwy5mgvkMRYwlO
+      lSCf3jVTf8h1TdBCupYE3vUB8jf0CVNKI3Yk9SQVPfhVSCZlGVjpxYJkTYNMJkyc
+      GMYAdZFCEV43mIm+ev4GaepR+d/syeXL/SZfFa0uEy8SFChrehRDhdVVkn+dRzeg
+      O6tbDkTFYtOpi+UI5obcGsVXEN3ZAZzaOKrB2TPwU1Ei5sIcWZhvKEfJkpiKIdpe
+      eLztYSaRB6gjCqhYQ3wzaJQCnoNVz+XqVaRTcPdZfBECgYEA+34Xo43WjhSdWR/P
+      laqleXfcwCmsF4Za+2qZjXLW//D2SXQylRv6hMAcVg7qCJM5a95X5VTr5H7pQNHN
+      ungE5Oi9lvYlZYb+pmG2wRn+/ufBs6OjwR6aDw/bsqeDHVjPeFIrxFPeXNllEHe1
+      xtZuhXvxFjDXqIwzQa2WijT8hjMCgYEA31Ag3lj9bAF7dBTJn8yRPhZX4v3I5N3x
+      H7G5XVj75cwMk4RB1s4WN/uLsuVDzXmG7NXjZ2c6kMYk658TTPKznQwhDx3Jq7Mh
+      HSJklWDtcPOioFZzFkikfqHseAWGf9s/HxBgieLa3IuGR9hEJ4EjDHa43UDXGQD2
+      90QGX7qlSPkCgYEAh9FL8N8LzQVjCJu+XqSe4t+RjxGyR64eeoLSVGp9pBE84ORo
+      4NAQVhrt8qfxShpAO3oDW+2ly2uiiogDo71nXzw2D031WkQySCajLNveM0lz+ZDZ
+      QdVF+/ZjfrMqgvHQcblmu4tTni8lfmQ3/h8V5u7Nf193SCYXFFQr5Y3CBrMCgYEA
+      wBgWXg3g2WKhBqbHFd4L5oOj0FAM2ssMGv5vfJwJ+4++FbtEQ3n95ORONHJBE+SB
+      KwOGXTGQUG8R3Vl2ac+wr9x6J52xGDC7wGsQaOr69RmvAAu9biLI1WGGn2vpWdyI
+      fLlCwfnR2LtwpCal4fGU66jItxKKtSh+SQ9MCFbuzUkCgYEAvUZaQDKmjdSbtR7J
+      yRXWfXPf0DpUqYKDzP40VoPcoQVGBmZAmq92yl1DMqFBfYCueCv1aA7Ozt+RFgyV
+      bMdUcJ0qzhKdCnEaonlpJPlnZkfATj5vOLs+nwfsmyO0iwcjA2zjJHmBZM+Xg+tl
+      enZgox36xuiZZrGQd0jXRt134QM=
+      -----END PRIVATE KEY-----
+
+parameters:
+  - name: codeCheck
+    displayName: 代码检查
+    type: boolean
+    default: false
+    values:
+      - true
+      - false
+
+resources:
+  containers:
+    - container: dotnet
+      endpoint: ${{ variables.imageRegistry }}
+      image: wing-biz/euop/dotnet-runtime:3.1
+    - container: builder
+      endpoint: ${{ variables.imageRegistry }}
+      image: af/javabuilder:openjdk-8-maven-3.8.6-npm-jrm
+    - container: checker
+      endpoint: ${{ variables.imageRegistry }}
+      image: af/javabuilder@sha256:5309d606784aeb6ef81054f6108b87b6894c668cfd5142ce9f9675a98bc12562
+
+stages:
+  - stage: InitVariable
+    displayName: 初始化参数
+    jobs:
+      - job: InitVersion
+        displayName: 初始化编译版本
+        pool: ${{ variables.X86Pool }}
+        steps:
+          - task: Bash@3
+            name: SetImageTag
+            inputs:
+              targetType: 'inline'
+              script: |
+                set -ex
+                
+                if [[ $(branchName) == release* ]];then
+                  # 前置release的版本信息，贴合现有使用习惯
+                  str=$(branchName)
+                  first="${str%%-*}"
+                  rest="${str#*-}"
+                  tag="$rest-$first"
+                
+                  current_tag="$tag.$(Build.BuildNumber)"
+                  latest_tag="$tag"
+                else
+                  current_tag="$(version)-$(branchName).$(Build.BuildNumber)"
+                  latest_tag="$(version)-$(branchName)"
+                fi
+                
+                echo "##vso[task.setvariable variable=currentTag;isoutput=true]$current_tag"
+                echo "##vso[task.setvariable variable=latestTag;isoutput=true]$latest_tag"
+                
+                echo "初始化版本号完成, currentTag:$current_tag, latestTag: $latest_tag"
+
+  - stage: CheckSource
+    displayName: 代码检查
+    condition: eq('${{ parameters.codeCheck }}', 'true')
+    jobs:
+      - template: codeCheck.yaml
+        parameters:
+          pool: ${{ variables.X86Pool }}
+          compileContainer: builder
+          utArtifactName: ${{ variables.UTArtifactName }}
+          utReportName: ${{ variables.UTReportName }}
+          lintReportName: ${{ variables.LintReportName }}
+          coverageReportName: ${{ variables.CoverageReportName }}
+
+  - stage: BuildImageOnX86
+    displayName: 构建并推送x86镜像
+    dependsOn:
+      - InitVariable
+      - ${{ if eq(parameters.codeCheck, true) }}:
+        - CheckSource
+    variables:
+      currentTag: $[stageDependencies.InitVariable.InitVersion.outputs['SetImageTag.currentTag']]
+      latestTag: $[stageDependencies.InitVariable.InitVersion.outputs['SetImageTag.latestTag']]
+    jobs:
+      - template: CITemplate.yaml
+        parameters:
+          pool: ${{ variables.X86Pool }}
+          compileContainer: builder
+          artifactName: "artifact-$(currentTag).x86"
+          imageRegistry: ${{ variables.imageRegistry }}
+          imageRepository: ${{ variables.imageRepository }}
+          imageTags:
+            - "$(currentTag).x86"
+            - "$(latestTag).x86"
+          rsaPublicKey: ${{ variables.rsaPublicKey }}
+          rsaPrivateKey: ${{ variables.rsaPrivateKey }}
+
+  - stage: BuildImageOnARM
+    displayName: 构建并推送ARM镜像
+    dependsOn:
+      - InitVariable
+      - ${{ if eq(parameters.codeCheck, true) }}:
+          - CheckSource
+    variables:
+      currentTag: $[stageDependencies.InitVariable.InitVersion.outputs['SetImageTag.currentTag']]
+      latestTag: $[stageDependencies.InitVariable.InitVersion.outputs['SetImageTag.latestTag']]
+    jobs:
+      - template: CITemplate.yaml
+        parameters:
+          pool: ${{ variables.ARMPool }}
+          compileContainer: builder
+          artifactName: "artifact-$(currentTag).arm"
+          imageRegistry: ${{ variables.imageRegistry }}
+          imageRepository: ${{ variables.imageRepository }}
+          imageTags:
+            - "$(currentTag).arm"
+            - "$(latestTag).arm"
+          rsaPublicKey: ${{ variables.rsaPublicKey }}
+          rsaPrivateKey: ${{ variables.rsaPrivateKey }}
+
+  - stage: MakeManifest
+    displayName: 制作多架构镜像
+    dependsOn:
+      - InitVariable
+      - BuildImageOnX86
+      - BuildImageOnARM
+    variables:
+      currentTag: $[stageDependencies.InitVariable.InitVersion.outputs['SetImageTag.currentTag']]
+      latestTag: $[stageDependencies.InitVariable.InitVersion.outputs['SetImageTag.latestTag']]
+    jobs:
+      - job: MakeManifest
+        displayName: 制作多架构镜像
+        pool: ${{ variables.X86Pool }}
+        steps:
+          - task: Docker@2
+            displayName: 登录容器仓库
+            inputs:
+              containerRegistry: ${{ variables.imageRegistry }}
+              command: login
+          - task: Bash@3
+            displayName: 制作多架构镜像
+            inputs:
+              targetType: inline
+              script: |
+                set -ex
+
+                current_image=${{ variables.imageRegistry }}/${{ variables.imageRepository }}:$(currentTag)
+                latest_image=${{ variables.imageRegistry }}/${{ variables.imageRepository }}:$(latestTag)
+
+                docker manifest create --amend $current_image $current_image.x86 $current_image.arm
+                docker manifest create --amend $latest_image $latest_image.x86 $latest_image.arm
+
+                docker manifest push -p $current_image
+                docker manifest push -p $latest_image

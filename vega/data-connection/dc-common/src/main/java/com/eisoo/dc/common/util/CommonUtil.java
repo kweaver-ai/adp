@@ -319,7 +319,7 @@ public class CommonUtil {
         FieldScanEntity fieldScanEntity = new FieldScanEntity();
         fieldScanEntity.setFId(UUID.randomUUID().toString());
         fieldScanEntity.setFFieldName(fieldName);
-        fieldScanEntity.setFFieldType("keyword");
+        fieldScanEntity.setFFieldType("Keyword");
         JSONArray result = new JSONArray();
         JSONObject o1 = new JSONObject();
         o1.put("key", "originFieldType");

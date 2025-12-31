@@ -1,0 +1,176 @@
+trigger:
+  batch: true
+  branches:
+    include:
+      - develop
+      - release/*
+
+
+variables:
+  # 针对服务的全局配置
+  - group: global-dip
+  - name: X86Pool
+    value: dip-centos7-x86_64
+  - name: ARMPool
+    value: dip-centos7-arm
+  - name: imageRegistry
+    value: "acr.aishu.cn"
+  - name: imageRepository
+    value: "dip/vega-metadata"
+  - name: version
+    value: 3.2.0
+  - name: branchName
+    value: $[lower(replace(replace(variables['Build.SourceBranch'], 'refs/heads/', ''), '/', '-'))]
+  - name: UTArtifactName
+    value: coverageFiles
+  - name: UTReportName
+    value: ut_report.xml
+  - name: LintReportName
+    value: lint_report.xml
+  - name: CoverageReportName
+    value: coverage_report.xml
+
+parameters:
+  - name: codeCheck
+    displayName: 代码检查
+    type: boolean
+    default: false
+    values:
+      - true
+      - false
+
+resources:
+  containers:
+    - container: dotnet
+      endpoint: ${{ variables.imageRegistry }}
+      image: wing-biz/euop/dotnet-runtime:3.1
+    - container: builder
+      endpoint: ${{ variables.imageRegistry }}
+      image: af/javabuilder:openjdk-8-maven-3.8.6-npm-jrm
+    - container: checker
+      endpoint: ${{ variables.imageRegistry }}
+      image: af/javabuilder@sha256:5309d606784aeb6ef81054f6108b87b6894c668cfd5142ce9f9675a98bc12562
+
+stages:
+  - stage: InitVariable
+    displayName: 初始化参数
+    jobs:
+      - job: InitVersion
+        displayName: 初始化编译版本
+        pool: ${{ variables.X86Pool }}
+        steps:
+          - task: Bash@3
+            name: SetImageTag
+            inputs:
+              targetType: 'inline'
+              script: |
+                set -ex
+                
+                if [[ $(branchName) == release* ]];then
+                  # 前置release的版本信息，贴合现有使用习惯
+                  str=$(branchName)
+                  first="${str%%-*}"
+                  rest="${str#*-}"
+                  tag="$rest-$first"
+                
+                  current_tag="$tag.$(Build.BuildNumber)"
+                  latest_tag="$tag"
+                else
+                  current_tag="$(version)-$(branchName).$(Build.BuildNumber)"
+                  latest_tag="$(version)-$(branchName)"
+                fi
+                
+                echo "##vso[task.setvariable variable=currentTag;isoutput=true]$current_tag"
+                echo "##vso[task.setvariable variable=latestTag;isoutput=true]$latest_tag"
+                
+                echo "初始化版本号完成, currentTag:$current_tag, latestTag: $latest_tag"
+
+  - stage: CheckSource
+    displayName: 代码检查
+    condition: eq('${{ parameters.codeCheck }}', 'true')
+    jobs:
+      - template: codeCheck.yaml
+        parameters:
+          pool: ${{ variables.X86Pool }}
+          compileContainer: builder
+          utArtifactName: ${{ variables.UTArtifactName }}
+          utReportName: ${{ variables.UTReportName }}
+          lintReportName: ${{ variables.LintReportName }}
+          coverageReportName: ${{ variables.CoverageReportName }}
+
+  - stage: BuildImageOnX86
+    displayName: 构建并推送x86镜像
+    dependsOn:
+      - InitVariable
+      - ${{ if eq(parameters.codeCheck, true) }}:
+          - CheckSource
+    variables:
+      currentTag: $[stageDependencies.InitVariable.InitVersion.outputs['SetImageTag.currentTag']]
+      latestTag: $[stageDependencies.InitVariable.InitVersion.outputs['SetImageTag.latestTag']]
+    jobs:
+      - template: CITemplate.yaml
+        parameters:
+          pool: ${{ variables.X86Pool }}
+          compileContainer: builder
+          artifactName: "artifact-$(currentTag).x86"
+          imageRegistry: ${{ variables.imageRegistry }}
+          imageRepository: ${{ variables.imageRepository }}
+          imageTags:
+            - "$(currentTag).x86"
+            - "$(latestTag).x86"
+
+  - stage: BuildImageOnARM
+    displayName: 构建并推送ARM镜像
+    dependsOn:
+      - InitVariable
+      - ${{ if eq(parameters.codeCheck, true) }}:
+          - CheckSource
+    variables:
+      currentTag: $[stageDependencies.InitVariable.InitVersion.outputs['SetImageTag.currentTag']]
+      latestTag: $[stageDependencies.InitVariable.InitVersion.outputs['SetImageTag.latestTag']]
+    jobs:
+      - template: CITemplate.yaml
+        parameters:
+          pool: ${{ variables.ARMPool }}
+          compileContainer: builder
+          artifactName: "artifact-$(currentTag).arm"
+          imageRegistry: ${{ variables.imageRegistry }}
+          imageRepository: ${{ variables.imageRepository }}
+          imageTags:
+            - "$(currentTag).arm"
+            - "$(latestTag).arm"
+
+  - stage: MakeManifest
+    displayName: 制作多架构镜像
+    dependsOn:
+      - InitVariable
+      - BuildImageOnX86
+      - BuildImageOnARM
+    variables:
+      currentTag: $[stageDependencies.InitVariable.InitVersion.outputs['SetImageTag.currentTag']]
+      latestTag: $[stageDependencies.InitVariable.InitVersion.outputs['SetImageTag.latestTag']]
+    jobs:
+      - job: MakeManifest
+        displayName: 制作多架构镜像
+        pool: ${{ variables.X86Pool }}
+        steps:
+          - task: Docker@2
+            displayName: 登录容器仓库
+            inputs:
+              containerRegistry: ${{ variables.imageRegistry }}
+              command: login
+          - task: Bash@3
+            displayName: 制作多架构镜像
+            inputs:
+              targetType: inline
+              script: |
+                set -ex
+
+                current_image=${{ variables.imageRegistry }}/${{ variables.imageRepository }}:$(currentTag)
+                latest_image=${{ variables.imageRegistry }}/${{ variables.imageRepository }}:$(latestTag)
+
+                docker manifest create --amend $current_image $current_image.x86 $current_image.arm
+                docker manifest create --amend $latest_image $latest_image.x86 $latest_image.arm
+
+                docker manifest push -p $current_image
+                docker manifest push -p $latest_image

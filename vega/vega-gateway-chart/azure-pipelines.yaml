@@ -1,0 +1,105 @@
+# Starter pipeline
+# Start with a minimal pipeline that you can customize to build and deploy your code.
+# Add steps that build, run tests, deploy, and more:
+# https://aka.ms/yaml
+
+trigger:
+  batch: true
+  branches:
+    include:
+      - develop
+      - release/*
+
+variables:
+  - group: global-dip
+  - name: X86Pool
+    value: dip-centos7-x86_64
+  - name: ARMPool
+    value: dip-centos7-arm
+  - name: imageRegistry
+    value: "acr.aishu.cn"
+  - name: imageRepository
+    value: "dip/vega-gateway"
+  - name: chartRepo
+    value: "https://acr.aishu.cn/api/chartrepo/dip/charts"
+  - name: chartName
+    value: "vega-gateway"
+  - name: version
+    value: 3.2.0
+  - name: branchName
+    value: $[lower(replace(replace(variables['Build.SourceBranch'], 'refs/heads/', ''), '/', '-'))]
+
+stages:
+  - stage: BuildChart
+    displayName: chart包构建
+    pool: ${{ variables.X86Pool }}
+    jobs:
+      - job: BuildChart
+        workspace:
+          clean: all
+        steps:
+          - checkout: self
+            fetchDepth: 1
+
+          - task: Bash@3
+            displayName: 初始化版本号
+            inputs:
+              targetType: 'inline'
+              script: |
+                set -ex
+
+                if [[ $(branchName) == release* ]];then
+                  # 前置release的版本信息，贴合现有使用习惯
+                  str=$(branchName)
+                  first="${str%%-*}"
+                  rest="${str#*-}"
+                  tag="$rest-$first"
+
+                  current_tag="$tag.$(Build.BuildNumber)"
+                  latest_tag="$tag"
+                else
+                  current_tag="$(version)-$(branchName).$(Build.BuildNumber)"
+                  latest_tag="$(version)-$(branchName)"
+                fi
+                
+                echo "##vso[task.setvariable variable=currentTag]$current_tag"
+                echo "##vso[task.setvariable variable=latestTag]$latest_tag"
+                
+                echo "初始化版本号完成, currentTag:$current_tag, latestTag: $latest_tag"
+
+          - task: Bash@3
+            displayName: 执行构建
+            inputs:
+              targetType: 'inline'
+              script: |
+                set -ex
+                
+                # 由于chart与镜像分别构建，构建号不同步，此处分别设置
+                yq e -i '.image.registry = "$(imageRegistry)"' $(chartName)/values.yaml
+                yq e -i '.image.repository = "$(imageRepository)"' $(chartName)/values.yaml
+                yq e -i '.image.tag = "$(latestTag)"' $(chartName)/values.yaml
+                yq e -i '.version = "$(currentTag)"' $(chartName)/Chart.yaml
+                yq e -i '.version = "$(currentTag)"' $(chartName)/_componentMeta.json
+
+                tar -czvf $(chartName)-$(currentTag).tar.gz $(chartName)
+                
+                curlOptions="-s -u $(registry.username):$(registry.password) -H \"Content-Type:multipart/form-data\""
+                curl $curlOptions -F "chart=@$(chartName)-$(currentTag).tar.gz;type=application/x-compressed-tar" -X POST "$(chartRepo)"
+
+          - task: Bash@3
+            displayName: 执行构建
+            inputs:
+              targetType: 'inline'
+              script: |
+                set -ex
+                
+                yq e -i '.image.registry = "$(imageRegistry)"' $(chartName)/values.yaml
+                yq e -i '.image.repository = "$(imageRepository)"' $(chartName)/values.yaml
+                yq e -i '.image.tag = "$(latestTag)"' $(chartName)/values.yaml
+                yq e -i '.version = "$(latestTag)"' $(chartName)/Chart.yaml
+                yq e -i '.version = "$(latestTag)"' $(chartName)/_componentMeta.json
+
+                tar -czvf $(chartName)-$(latestTag).tar.gz $(chartName)
+                
+                curlOptions="-s -u $(registry.username):$(registry.password) -H \"Content-Type:multipart/form-data\""
+                curl $curlOptions -F "chart=@$(chartName)-$(latestTag).tar.gz;type=application/x-compressed-tar" -X POST "$(chartRepo)"

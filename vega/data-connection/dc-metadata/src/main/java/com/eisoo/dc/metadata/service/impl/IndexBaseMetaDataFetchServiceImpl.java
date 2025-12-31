@@ -19,10 +19,15 @@ import com.eisoo.dc.common.util.LockUtil;
 import com.eisoo.dc.common.util.http.IndexbaseHttpUtils;
 import com.eisoo.dc.common.vo.HttpResInfo;
 import com.eisoo.dc.metadata.domain.dto.TaskStatusInfoDto;
+import com.eisoo.dc.common.metadata.mapper.TableScanMapper;
 import com.eisoo.dc.metadata.service.IMetaDataFetchService;
 import com.eisoo.dc.metadata.service.ITableScanService;
 import com.eisoo.dc.metadata.service.ITaskScanService;
 import com.eisoo.dc.metadata.service.ITaskScanTableService;
+import com.eisoo.dc.common.util.LockUtil;
+import com.eisoo.dc.common.enums.OperationTyeEnum;
+import com.eisoo.dc.common.enums.ScanStatusEnum;
+
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;

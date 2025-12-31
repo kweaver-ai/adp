@@ -1,0 +1,114 @@
+replicaCount: $(config.replicaCount)
+global:
+  namespace: $(deploy.namespace)
+image:
+  backend:
+    repository: "$(image.registry)/$(image.repository.backend)"
+    tag: "$(backendTag)"
+imagePullSecrets:
+  - name: acr-secret
+config:
+  backend:
+    health: $(server.liveness.probe)
+    config_yml:
+      server:
+        port: 8080
+        servlet:
+          context-path: $(server.servlet.context.path)
+      spring:
+        mvc:
+          throw-exception-if-no-handler-found: true
+          pathmatch:
+            matching-strategy: ANT_PATH_MATCHER
+        servlet:
+          multipart:
+            max-file-size: 100MB
+            max-request-size: 100MB
+        datasource:
+          type: com.alibaba.druid.pool.DruidDataSource #引入自定义的Druid数据源
+          druid:
+            #初始化时建立物理连接的个数
+            initial-size: 5
+            #最小连接池数量
+            min-idle: 5
+            #最大连接池数量 maxIdle已经不再使用
+            max-active: 20
+            #获取连接时最大等待时间，单位毫秒
+            max-wait: 60000
+            #申请连接的时候检测，如果空闲时间大于timeBetweenEvictionRunsMillis，执行validationQuery检测连接是否有效。
+            test-while-idle: true
+            #既作为检测的间隔时间又作为testWhileIdel执行的依据
+            time-between-eviction-runs-millis: 60000
+            #销毁线程时检测当前连接的最后活动时间和当前时间差大于该值时，关闭当前连接
+            min-evictable-idle-time-millis: 30000
+            #用来检测连接是否有效的sql 必须是一个查询语句
+            #mysql中为 select 'x'
+            #oracle中为 select 1 from dual
+            validation-query: select 'x'
+            #申请连接时会执行validationQuery检测连接是否有效,开启会降低性能,默认为true
+            test-on-borrow: false
+            #归还连接时会执行validationQuery检测连接是否有效,开启会降低性能,默认为true
+            test-on-return: false
+            #是否缓存preparedStatement,mysql5.5+建议开启
+            pool-prepared-statements: true
+            #当值大于0时poolPreparedStatements会自动修改为true
+            max-pool-prepared-statement-per-connection-size: 20
+          driver-class-name: org.mariadb.jdbc.Driver
+          url: jdbc:mariadb://$(mysql.host):$(mysql.port)/$(mysql.dbName)?useUnicode=true&useSSL=false&characterEncoding=utf8mb4&serverTimezone=GMT%2B8
+          username: $(mysql.user)
+          password: $(mysql.password)
+      #mybatis-plus配置
+      mybatis-plus:
+        mapper-locations: classpath*:com/**/mapper/xml/*.xml
+        configuration:
+          #log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+          log-impl: org.apache.ibatis.logging.slf4j.Slf4jImpl
+      #表元数据多线程excel导入配置
+      excel-multi-thread-import:
+        batch-import-size: $(excel.import.batchImportSize)
+        max-thread-num-per-task: $(excel.import.maxThreadNumPerTask)
+    hostAliases: []
+  frontend:
+    nginx_conf: |
+      server {
+        listen       8080;
+        location / {
+            root   /usr/share/nginx/html;
+            index  index.html index.htm;
+            try_files $uri $uri/ /index.html;
+
+            if ($request_filename ~ .*\.(htm|html)$)
+            {
+                add_header Cache-Control no-store;
+            }
+        }
+        error_page   500 502 503 504  /50x.html;
+        location = /50x.html {
+            root   /usr/share/nginx/html;
+        }
+      }
+securityContext:
+  runAsNonRoot: true
+  runAsUser: 1000
+isDemo: $(isDemo)
+ingress:
+  host: $(metadata.host)
+  tls:
+    enabled: $(metadata.host.tls)
+    secretName: $(metadata.host.tlsSecretName)
+  annotations:
+    kubernetes.io/ingress.class: nginx
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 100
+  targetCPUUtilizationPercentage: 80
+  targetMemoryUtilizationPercentage: 80
+serviceAccount:
+  # Specifies whether a service account should be created
+  create: true
+  # Annotations to add to the service account
+  annotations: {}
+  # The name of the service account to use.
+  # If not set and create is true, a name is generated using the fullname template
+  name: ""

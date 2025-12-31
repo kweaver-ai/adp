@@ -1,0 +1,11 @@
+[
+  {
+    "db_name": "adp",
+    "table_name": "t_table",
+    "object_type": "COLUMN",
+    "operation_type": "ADD",
+    "object_name": "f_scan_source",
+    "object_property": "TINYINT DEFAULT NULL",
+    "object_comment": "扫描来源"
+  }
+]

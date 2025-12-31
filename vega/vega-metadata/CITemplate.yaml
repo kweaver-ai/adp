@@ -1,0 +1,77 @@
+parameters:
+  - name: pool
+    type: string
+  - name: compileContainer
+    type: string
+  - name: artifactName
+    type: string
+  - name: imageRegistry
+    type: string
+  - name: imageRepository
+    type: string
+  - name: imageTags
+    type: object
+jobs:
+  - job: buildImage
+    displayName: 构建镜像
+    pool: ${{ parameters.pool }}
+    container: ${{ parameters.compileContainer }}
+    workspace:
+      clean: all
+    steps:
+      - task: Bash@3
+        displayName: 编译文件
+        inputs:
+          targetType: 'inline'
+          script: |
+            set -ex
+            mvn clean package -Dmaven.test.skip=true
+            cp metadata-manage-web/target/metadata-manage-web-*.jar .
+            cp -rf metadata-manage-web/target/classes config
+            rm -rf config/com
+            mvn deploy:deploy-file -Dmaven.test.skip=true -Dfile="metadata-manage-sdk/target/metadata-manage-sdk-0.0.1-SNAPSHOT.jar" -DgroupId=com.eisoo -DartifactId=metadata-manage-sdk -Dversion=0.0.1-releases -Dpackaging=jar -DrepositoryId=nexus-release -Durl=http://maven-af:eisoo.com123@repository.aishu.cn:8081/repository/maven-releases/
+      - task: CopyFiles@2
+        inputs:
+          # 这里填需要放到镜像中的路径，一行一个
+          contents: |
+            metadata-manage-web-0.0.1-SNAPSHOT.jar
+            config/**
+          targetFolder: $(Build.BinariesDirectory)
+          overWrite: true
+      - task: PublishBuildArtifacts@1
+        inputs:
+          pathToPublish: $(Build.BinariesDirectory)
+          artifactName: ${{ parameters.artifactName }}
+  - job: pushImage
+    displayName: 推送镜像
+    dependsOn: buildImage
+    pool: ${{ parameters.pool }}
+    workspace:
+      clean: all
+    steps:
+      - task: DownloadBuildArtifacts@0
+        inputs:
+          artifactName: ${{ parameters.artifactName }}
+          downloadPath: $(Build.BinariesDirectory)
+      - task: Docker@2
+        displayName: 登录容器仓库
+        inputs:
+          command: login
+          containerRegistry: ${{ parameters.imageRegistry }}
+      - task: Bash@3
+        displayName: 推送镜像
+        inputs:
+          targetType: 'inline'
+          script: |
+            set -ex
+
+            image=${{ parameters.imageRegistry }}/${{ parameters.imageRepository }}:latest
+            docker build --no-cache -f ./Dockerfile -t $image $(Build.BinariesDirectory)/${{ parameters.artifactName }}
+
+            tags='${{ convertToJson(parameters.imageTags) }}'
+            echo "$tags" | jq -r '.[]' | while read tag; do
+              image_tag=${{ parameters.imageRegistry }}/${{ parameters.imageRepository }}:$tag
+              docker tag $image $image_tag
+              docker push $image_tag
+              docker rmi $image_tag
+            done
