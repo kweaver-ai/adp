@@ -1,0 +1,110 @@
+[
+  {
+    "db_name": "adp",
+    "table_name": "t_object_type",
+    "object_type": "COLUMN",
+    "operation_type": "ADD",
+    "object_name": "f_incremental_key",
+    "object_property": "VARCHAR(40) NOT NULL DEFAULT ''",
+    "object_comment": "对象类增量键"
+  },
+  {
+    "db_name": "adp",
+    "table_name": "t_kn_task",
+    "object_type": "COLUMN",
+    "operation_type": "ADD",
+    "object_name": "f_doc_count",
+    "object_property": "BIGINT(20) NOT NULL DEFAULT 0",
+    "object_comment": "文档数量"
+  },
+  {
+    "db_name": "adp",
+    "table_name": "t_knowledge_network",
+    "object_type": "COLUMN",
+    "operation_type": "DROP",
+    "object_name": "f_base_branch",
+    "object_property": "",
+    "object_comment": ""
+  },
+  {
+    "db_name": "adp",
+    "table_name": "t_object_type",
+    "object_type": "COLUMN",
+    "operation_type": "DROP",
+    "object_name": "f_index",
+    "object_property": "",
+    "object_comment": ""
+  },
+  {
+    "db_name": "adp",
+    "table_name": "t_object_type",
+    "object_type": "COLUMN",
+    "operation_type": "DROP",
+    "object_name": "f_index_available",
+    "object_property": "",
+    "object_comment": ""
+  },
+  {
+    "db_name": "adp",
+    "table_name": "t_kn_task",
+    "object_type": "COLUMN",
+    "operation_type": "DROP",
+    "object_name": "f_branch",
+    "object_property": "",
+    "object_comment": ""
+  },
+  {
+    "db_name": "dip",
+    "table_name": "t_knowledge_network",
+    "object_type": "TABLE",
+    "operation_type": "DROP",
+    "object_name": "",
+    "object_property": "",
+    "object_comment": ""
+  },
+  {
+    "db_name": "dip",
+    "table_name": "t_object_type",
+    "object_type": "TABLE",
+    "operation_type": "DROP",
+    "object_name": "",
+    "object_property": "",
+    "object_comment": ""
+  },
+  {
+    "db_name": "dip",
+    "table_name": "t_relation_type",
+    "object_type": "TABLE",
+    "operation_type": "DROP",
+    "object_name": "",
+    "object_property": "",
+    "object_comment": ""
+  },
+  {
+    "db_name": "dip",
+    "table_name": "t_action_type",
+    "object_type": "TABLE",
+    "operation_type": "DROP",
+    "object_name": "",
+    "object_property": "",
+    "object_comment": ""
+  },
+  {
+    "db_name": "dip",
+    "table_name": "t_kn_job",
+    "object_type": "TABLE",
+    "operation_type": "DROP",
+    "object_name": "",
+    "object_property": "",
+    "object_comment": ""
+  },
+  {
+    "db_name": "dip",
+    "table_name": "t_kn_task",
+    "object_type": "TABLE",
+    "operation_type": "DROP",
+    "object_name": "",
+    "object_property": "",
+    "object_comment": ""
+  }
+]

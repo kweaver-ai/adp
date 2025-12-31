@@ -1,0 +1,62 @@
+[
+  {
+    "db_name": "dip",
+    "table_name": "t_knowledge_network",
+    "object_type": "TABLE",
+    "operation_type": "RENAME",
+    "new_name": "adp.t_knowledge_network",
+    "object_name": "",
+    "object_property": "",
+    "object_comment": ""
+  },
+  {
+    "db_name": "dip",
+    "table_name": "t_object_type",
+    "object_type": "TABLE",
+    "operation_type": "RENAME",
+    "new_name": "adp.t_object_type",
+    "object_name": "",
+    "object_property": "",
+    "object_comment": ""
+  },
+  {
+    "db_name": "dip",
+    "table_name": "t_relation_type",
+    "object_type": "TABLE",
+    "operation_type": "RENAME",
+    "new_name": "adp.t_relation_type",
+    "object_name": "",
+    "object_property": "",
+    "object_comment": ""
+  },
+  {
+    "db_name": "dip",
+    "table_name": "t_action_type",
+    "object_type": "TABLE",
+    "operation_type": "RENAME",
+    "new_name": "adp.t_action_type",
+    "object_name": "",
+    "object_property": "",
+    "object_comment": ""
+  },
+  {
+    "db_name": "dip",
+    "table_name": "t_kn_job",
+    "object_type": "TABLE",
+    "operation_type": "RENAME",
+    "new_name": "adp.t_kn_job",
+    "object_name": "",
+    "object_property": "",
+    "object_comment": ""
+  },
+  {
+    "db_name": "dip",
+    "table_name": "t_kn_task",
+    "object_type": "TABLE",
+    "operation_type": "RENAME",
+    "new_name": "adp.t_kn_task",
+    "object_name": "",
+    "object_property": "",
+    "object_comment": ""
+  }
+]
