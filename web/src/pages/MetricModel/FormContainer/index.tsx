@@ -391,7 +391,7 @@ const FormContainer = () => {
             size="small"
             current={currentStep}
             items={[
-              { title: intl.get('Global.baseConfig') },
+              { title: intl.get('Global.basicConfig') },
               { title: intl.get('MetricModel.modelConfig') },
               { title: intl.get('MetricModel.persistenceConfig') },
             ]}

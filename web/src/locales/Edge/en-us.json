@@ -22,8 +22,6 @@
     "selectSourcePoint": "Please select source",
     "selectSourceProperty": "Please select source property",
     "selectTargetPoint": "Please select target",
-    "selectTargetProperty": "Please select target property",
-    "sourceObjectType": "Source Object Class",
-    "targetObjectType": "Target Object Class"
+    "selectTargetProperty": "Please select target property"
   }
 }

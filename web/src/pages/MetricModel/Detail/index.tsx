@@ -50,7 +50,7 @@ const Detail = (props: any) => {
     const { name, groupName, measureName, tags, comment, createTime, updateTime } = data;
 
     return {
-      title: intl.get('Global.baseConfig'),
+      title: intl.get('Global.basicConfig'),
       content: [
         { name: intl.get('Global.name'), value: name },
         { name: 'ID', value: sourceData.id },

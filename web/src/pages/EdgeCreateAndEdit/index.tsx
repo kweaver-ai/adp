@@ -118,7 +118,7 @@ const EdgeCreateAndEdit = () => {
   const StepsContent: any = {
     0: {
       content: <BasicInformation form={basicForm} values={basicValue} isEditPage={isEditPage} />,
-      nextText: intl.get('Global.nextStep'),
+      nextText: intl.get('Global.next'),
       nextClick: () => {
         basicForm.validateFields().then((values) => {
           console.log('BasicInformation values', values);
@@ -150,7 +150,7 @@ const EdgeCreateAndEdit = () => {
           <div />
         ) : (
           <Button onClick={onPrev} loading={loading} disabled={loading}>
-            {intl.get('Global.prevStep')}
+            {intl.get('Global.prev')}
           </Button>
         )}
         <div className="g-flex-align-center">

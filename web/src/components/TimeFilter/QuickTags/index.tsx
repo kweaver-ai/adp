@@ -5,10 +5,17 @@ import classNames from 'classnames';
 import _ from 'lodash';
 import styles from './index.module.less';
 import quickRange from './quickRange';
+import enUS from '../locale/en-us.json';
+import zhCN from '../locale/zh-cn.json';
+import zhTW from '../locale/zh-tw.json';
 
 const QuickTags = (props: any) => {
   const { timeRange, onFilterChange } = props;
   const lastindex = quickRange.length - 1;
+
+  // 初始化国际化
+  intl.load({ 'zh-cn': zhCN, 'en-us': enUS, 'zh-tw': zhTW });
+  const getIntl = (key: string) => intl.get(`TimeFilter.${key}`);
 
   return (
     <Row>
@@ -25,7 +32,7 @@ const QuickTags = (props: any) => {
                     className={classNames(styles['quick-tags-li'], { [styles['quick-tags-li-active']]: isActive })}
                     onClick={() => onFilterChange(item)}
                   >
-                    {intl.get(`Components.quickRangeTime.${item.label}`)}
+                    {getIntl(`quickRangeTime.${item.label}`)}
                   </li>
                 );
               })}

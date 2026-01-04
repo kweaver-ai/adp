@@ -139,7 +139,7 @@ const BasicInfo: React.FC<{ form: any; filedsValue?: any }> = ({ form, filedsVal
             <Input.TextArea rows={4} maxLength={255} showCount placeholder={intl.get('Global.pleaseInput')} />
           </Form.Item>
           {/* 查询类型 */}
-          <Form.Item name="query_type" label={intl.get('Global.queryTypeLabel')} required>
+          <Form.Item name="query_type" label={intl.get('Global.queryType')} required>
             <Select
               disabled={!!id}
               options={[

@@ -63,7 +63,7 @@ const ScheduleExpression = ({ scheduleType }: any): JSX.Element => {
       <Col span={7}>
         {type === ScheduleType.FIX_RATE && (
           <Form.Item name="schedule.FIX_RATE.expression" preserve={true} className={styles['expression-wrapper']} wrapperCol={{ span: 6 }}>
-            <ARInputNumberUnit textBefore={intl.get('Global.every')} min={1} placeholder={intl.get('Global.placeholder')} style={{ minWidth: 120 }} />
+            <ARInputNumberUnit textBefore={intl.get('Global.every')} min={1} placeholder={intl.get('Global.pleaseInput')} style={{ minWidth: 120 }} />
           </Form.Item>
         )}
         {type === ScheduleType.CRON && (

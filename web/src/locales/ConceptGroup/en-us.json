@@ -22,10 +22,6 @@
     "createButton": "【Create】",
     "addConceptGroupTip": "Button to add concept group",
     "relatedResource": "Related Resources",
-    "sourceObjectType": "Source Object Type",
-    "targetObjectType": "Target Object Type",
-    "bindObjectType": "Bound Object Type",
-    "removeSuccess": "Removed successfully",
     "importConflictTip": "Select <b>Overwrite</b> to replace existing items, select <b>Ignore</b> to skip duplicates."
   }
 }

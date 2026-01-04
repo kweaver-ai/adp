@@ -101,7 +101,7 @@ const Detail = (props: TDetailProps) => {
       key: 'name',
     },
     {
-      title: intl.get('ConceptGroup.sourceObjectType'),
+      title: intl.get('Global.sourceObjectType'),
       dataIndex: 'source_object_type_id',
       __selected: true,
       render: (value: string, data: any) => {
@@ -115,7 +115,7 @@ const Detail = (props: TDetailProps) => {
       },
     },
     {
-      title: intl.get('ConceptGroup.targetObjectType'),
+      title: intl.get('Global.targetObjectType'),
       dataIndex: 'target_object_type_id',
       __selected: true,
       render: (value: string, data: any) => {
@@ -165,7 +165,7 @@ const Detail = (props: TDetailProps) => {
       render: (_value: ActionType.ActionTypeEnum) => actionTypeLabels[_value] || '--',
     },
     {
-      title: intl.get('ConceptGroup.bindObjectType'),
+      title: intl.get('Global.bindObjectType'),
       dataIndex: 'object_type',
       width: 240,
       __selected: true,
@@ -239,7 +239,7 @@ const Detail = (props: TDetailProps) => {
 
     try {
       await api.removeObjectTypesFromGroup(knId!, id, selectedRowKeys as string[]);
-      message.success(intl.get('ConceptGroup.removeSuccess'));
+      message.success(intl.get('Global.removeSuccess'));
       setSelectedRowKeys([]);
       onRefresh(id);
     } catch (error) {

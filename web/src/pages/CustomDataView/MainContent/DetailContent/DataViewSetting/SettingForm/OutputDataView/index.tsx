@@ -165,7 +165,7 @@ const OutputDataView = () => {
   return (
     <div className={styles.mainBox} ref={mainBoxRef}>
       <FormHeader
-        title={intl.get('CustomDataView.GraphBox.outputView')}
+        title={intl.get('CustomDataView.outputView')}
         icon="icon-dip-color-shuchushitu"
         showSubmitButton={outputFields?.length > 0}
         onSubmit={handleSubmit}
@@ -175,7 +175,7 @@ const OutputDataView = () => {
       <div className={styles.contentBox}>
         <div className={styles.headerBox}>
           <div className={styles.titleBox}>
-            <span>{intl.get('CustomDataView.FieldJoin.fieldList')}</span>
+            <span>{intl.get('Global.fieldList')}</span>
           </div>
           <Input.Search
             style={{ width: '272px' }}

@@ -86,7 +86,6 @@
     "libraryTableStructureTip": "Displays the table structure from the latest successful scan",
     "searchFieldNameOrComment": "Search field name or comment",
     "fieldListEmptyTip": "Field list is empty",
-    "viewSourceHasViewTip": "View exists under view source, cannot delete!",
-    "connect_protocol": "Connection Method"
+    "viewSourceHasViewTip": "View exists under view source, cannot delete!"
   }
 }

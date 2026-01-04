@@ -86,7 +86,6 @@
     "libraryTableStructureTip": "展示最近一次扫描成功的库表结构",
     "searchFieldNameOrComment": "搜索字段名称或注释",
     "fieldListEmptyTip": "字段列表为空",
-    "viewSourceHasViewTip": "视图源下存在视图，不能删除!",
-    "connect_protocol": "连接方式"
+    "viewSourceHasViewTip": "视图源下存在视图，不能删除!"
   }
 }

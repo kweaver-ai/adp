@@ -9,10 +9,10 @@ const InputWithError = ({
 }) => {
   return error ? (
     <Popover content={error} placement="topLeft">
-      <Input placeholder={intl.get('Global.placeholder')} status="error" {...rest} />
+      <Input placeholder={intl.get('Global.pleaseInput')} status="error" {...rest} />
     </Popover>
   ) : (
-    <Input placeholder={intl.get('Global.placeholder')} {...rest} />
+    <Input placeholder={intl.get('Global.pleaseInput')} {...rest} />
   );
 };
 

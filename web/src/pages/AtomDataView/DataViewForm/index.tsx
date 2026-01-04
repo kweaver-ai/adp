@@ -89,7 +89,7 @@ const DataViewForm = ({ visible, onClose, id, checkDatasource }: PropType): JSX.
         <Form form={form} {...FORM_LAYOUT}>
           <div className={styles['title']}>
             <span> </span>
-            {intl.get('Global.baseConfig')}
+            {intl.get('Global.basicConfig')}
           </div>
           <Form.Item
             label={intl.get('Global.name')}
@@ -152,8 +152,7 @@ const DataViewForm = ({ visible, onClose, id, checkDatasource }: PropType): JSX.
             </Row>
             <Row gutter={24} style={{ marginBottom: 12 }}>
               <Col span={12}>
-                <b>{intl.get('DataView.hasHeaders')}</b>:{' '}
-                {detail?.excel_config?.has_headers ? intl.get('DataView.hasHeadersTrue') : intl.get('DataView.hasHeadersFalse')}
+                <b>{intl.get('DataView.hasHeaders')}</b>: {detail?.excel_config?.has_headers ? intl.get('Global.selectFirstRow') : intl.get('Global.custom')}
               </Col>
               <Col span={12}>
                 <b>{intl.get('DataView.sheetAsNewColumn')}</b>: {detail?.excel_config?.sheet_as_new_column ? intl.get('Global.yes') : intl.get('Global.no')}

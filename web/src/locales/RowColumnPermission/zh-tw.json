@@ -14,8 +14,7 @@
     "fetchRulesFailed": "獲取行列規則列表失敗",
     "pleaseCompleteFilterCondition": "請完善過濾條件",
     "transfer": {
-      "item": "項",
-      "items": "項"
+      "item": "項"
     },
     "visitor": "訪問者",
     "from": "來自",

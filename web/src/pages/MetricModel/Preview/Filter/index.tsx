@@ -157,7 +157,7 @@ const Filter = (props: any) => {
       <div style={{ width: '100%', height: '100%', overflowY: 'auto', paddingRight: 24 }}>
         {/* 查询类型变更 */}
         <div>
-          <Text className={styles['search-label']}>{intl.get('Global.queryTypeLabel')}</Text>
+          <Text className={styles['search-label']}>{intl.get('Global.queryType')}</Text>
           <Radio.Group
             value={searchType}
             block
@@ -238,7 +238,7 @@ const Filter = (props: any) => {
               mode="tags"
               allowClear
               value={analysisDimensions}
-              placeholder={intl.get('Global.pleaseSelectOption')}
+              placeholder={intl.get('Global.pleaseSelect')}
               options={_.map(analysisDimensionsOptions, (item) => {
                 const icon = UTILS.formatIconByType(item?.type);
                 return {

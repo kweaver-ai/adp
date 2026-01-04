@@ -347,7 +347,7 @@ const EditDrawer: React.FC<{
               <Input
                 style={{ width: '100%' }}
                 value={record.value}
-                placeholder={intl.get('Global.placeholder')}
+                placeholder={intl.get('Global.pleaseInput')}
                 onChange={(e) => {
                   updateSettingData(record.id, { value: e.target.value });
                 }}
@@ -491,7 +491,7 @@ const EditDrawer: React.FC<{
                   (item.type && FIELD_TYPE_INPUT.number.includes(item.type) ? (
                     <InputNumber
                       style={{ width: 256 }}
-                      placeholder={intl.get('Global.placeholder')}
+                      placeholder={intl.get('Global.pleaseInput')}
                       value={item.value}
                       onChange={(value) => {
                         updateSettingData(item?.id, { value });
@@ -516,7 +516,7 @@ const EditDrawer: React.FC<{
                   ) : (
                     <Input
                       style={{ width: 256 }}
-                      placeholder={intl.get('Global.placeholder')}
+                      placeholder={intl.get('Global.pleaseInput')}
                       value={item.value}
                       onChange={(e) => {
                         updateSettingData(item?.id, { value: e.target.value });

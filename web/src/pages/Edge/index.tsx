@@ -157,7 +157,7 @@ const Edge = (props: TProps) => {
     const name = _.map(items, (item) => `「${item?.name}」`).join('、');
     const length = items.length || 0;
     modal.confirm({
-      title: intl.get('Global.deleteConfirmTitle'),
+      title: intl.get('Global.deleteConfirm'),
       closable: true,
       icon: <ExclamationCircleFilled />,
       content: length > 1 ? intl.get('Global.deleteConfirmMultiple', { count: length }) : intl.get('Global.deleteConfirm', { name }),
@@ -222,7 +222,7 @@ const Edge = (props: TProps) => {
       },
     },
     {
-      title: intl.get('Edge.sourceObjectType'),
+      title: intl.get('Global.sourceObjectType'),
       dataIndex: 'source_object_type_id',
       width: 200,
       __selected: true,
@@ -237,7 +237,7 @@ const Edge = (props: TProps) => {
       },
     },
     {
-      title: intl.get('Edge.targetObjectType'),
+      title: intl.get('Global.targetObjectType'),
       dataIndex: 'target_object_type_id',
       width: 200,
       __selected: true,
@@ -322,14 +322,14 @@ const Edge = (props: TProps) => {
           )}
           <Select.LabelSelect
             key="source_object_type_id"
-            label={intl.get('Edge.sourceObjectType')}
+            label={intl.get('Global.sourceObjectType')}
             defaultValue="all"
             style={{ width: 190 }}
             options={[{ value: 'all', label: intl.get('Global.all') }, ...objectOptions]}
           />
           <Select.LabelSelect
             key="target_object_type_id"
-            label={intl.get('Edge.targetObjectType')}
+            label={intl.get('Global.targetObjectType')}
             defaultValue="all"
             style={{ width: 190 }}
             options={[{ value: 'all', label: intl.get('Global.all') }, ...objectOptions]}

@@ -194,7 +194,7 @@ const CreateRuleDrawer: React.FC<CreateRuleDrawerProps & { dataViewId: string }>
               }}
               locale={{
                 itemUnit: intl.get('RowColumnPermission.transfer.item'),
-                itemsUnit: intl.get('RowColumnPermission.transfer.items'),
+                itemsUnit: intl.get('RowColumnPermission.transfer.item'),
                 searchPlaceholder: intl.get('Global.searchFieldPlaceholder'),
                 notFoundContent: (
                   <>

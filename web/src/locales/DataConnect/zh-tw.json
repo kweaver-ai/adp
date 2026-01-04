@@ -86,7 +86,6 @@
     "libraryTableStructureTip": "展示最近一次掃描成功的庫表結構",
     "searchFieldNameOrComment": "搜索字段名稱或註釋",
     "fieldListEmptyTip": "字段列表為空",
-    "viewSourceHasViewTip": "視圖源下存在視圖，不能刪除!",
-    "connect_protocol": "連接方式"
+    "viewSourceHasViewTip": "視圖源下存在視圖，不能刪除!"
   }
 }

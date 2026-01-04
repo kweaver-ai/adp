@@ -60,7 +60,7 @@ export const CreateTask: React.FC<NewTaskModalProps> = ({ detail, open, onCancel
             { max: 40, message: intl.get('Global.nameCannotOverFourty') },
           ]}
         >
-          <Input placeholder={intl.get('Global.placeholder')} className={styles.taskInput} />
+          <Input placeholder={intl.get('Global.pleaseInput')} className={styles.taskInput} />
         </Form.Item>
         <Form.Item label={intl.get('Task.buildMethod')} name="jobType" required>
           <div className={styles.buildTypeContainer}>

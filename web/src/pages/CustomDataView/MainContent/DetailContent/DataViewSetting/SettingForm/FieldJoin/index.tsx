@@ -207,7 +207,7 @@ const FieldJoin = () => {
       ),
     },
     {
-      title: intl.get('Global.fieldOriginalName'),
+      title: intl.get('Global.fieldTechnicalName'),
       dataIndex: 'original_name',
       key: 'original_name',
     },
@@ -293,7 +293,7 @@ const FieldJoin = () => {
               />
               <div className={styles.line}></div>
               <Select
-                placeholder={intl.get('CustomDataView.FieldJoin.selectJoinField2')}
+                placeholder={intl.get('CustomDataView.FieldJoin.selectJoinFields')}
                 value={rightField}
                 onChange={setRightField}
                 showSearch

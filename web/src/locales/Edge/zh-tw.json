@@ -22,8 +22,6 @@
     "selectSourcePoint": "請選擇起點",
     "selectSourceProperty": "請選擇起點屬性",
     "selectTargetPoint": "請選擇終點",
-    "selectTargetProperty": "請選擇終點屬性",
-    "sourceObjectType": "起點對象類",
-    "targetObjectType": "終點對象類"
+    "selectTargetProperty": "請選擇終點屬性"
   }
 }

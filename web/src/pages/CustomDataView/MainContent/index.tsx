@@ -69,7 +69,7 @@ export const MainContent: React.FC = () => {
   /** 删除弹窗 */
   const deleteConfirm = (record: any): void => {
     modal.confirm({
-      content: intl.get('Global.deleteConfirmTitle', { name: record?.name || selectedRows?.map((item) => item.name).join(',') || '' }),
+      content: intl.get('Global.deleteConfirm', { name: record?.name || selectedRows?.map((item) => item.name).join(',') || '' }),
       icon: <IconFont type="icon-about" />,
       okText: intl.get('Global.ok'),
       okButtonProps: {

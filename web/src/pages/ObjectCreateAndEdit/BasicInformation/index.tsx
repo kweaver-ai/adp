@@ -25,7 +25,7 @@ const BasicInformation = (props: any) => {
             { max: 40, message: intl.get('Global.lenErr', { len: 40 }) },
           ]}
         >
-          <Input placeholder={intl.get('Global.placeholder')} autoComplete="off" aria-autocomplete="none" />
+          <Input placeholder={intl.get('Global.pleaseInput')} autoComplete="off" aria-autocomplete="none" />
         </Form.Item>
         <Form.Item
           label="ID"
@@ -35,7 +35,7 @@ const BasicInformation = (props: any) => {
             { pattern: ENUMS.REGEXP.LOWER_NUMBER, message: intl.get('Global.idLowercaseLetterNumberOnly') },
           ]}
         >
-          <Input placeholder={intl.get('Global.placeholder')} disabled={isEditPage} autoComplete="off" aria-autocomplete="none" />
+          <Input placeholder={intl.get('Global.pleaseInput')} disabled={isEditPage} autoComplete="off" aria-autocomplete="none" />
         </Form.Item>
         <Form.Item label={intl.get('Global.icon')} name="icon">
           <IconSelect />
@@ -69,7 +69,7 @@ const BasicInformation = (props: any) => {
           />
         </Form.Item>
         <Form.Item label={intl.get('Global.comment')} name="comment">
-          <Input.TextArea placeholder={intl.get('Global.placeholder')} />
+          <Input.TextArea placeholder={intl.get('Global.pleaseInput')} />
         </Form.Item>
       </Form>
     </div>

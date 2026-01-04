@@ -303,7 +303,7 @@ const ObjectCreateAndEdit = () => {
   const StepsContent: any = {
     0: {
       content: <DataView form={dataViewForm} dataSource={dataSource} isEditPage={isEditPage} />,
-      nextText: intl.get('Global.nextStep'),
+      nextText: intl.get('Global.next'),
       nextClick: () => {
         dataViewForm.validateFields().then((values: { dataViewId: string; dataViewName: string }) => {
           if (values.dataViewId && values.dataViewId !== dataViewId) {
@@ -337,8 +337,8 @@ const ObjectCreateAndEdit = () => {
           conceptGroupsLoading={conceptGroupsLoading}
         />
       ),
-      prevText: intl.get('Global.prevStep'),
-      nextText: intl.get('Global.nextStep'),
+      prevText: intl.get('Global.prev'),
+      nextText: intl.get('Global.next'),
       prevClick: () => {
         onPrev();
       },
@@ -351,8 +351,8 @@ const ObjectCreateAndEdit = () => {
     },
     2: {
       content: <AttrDef fields={attrData} ref={attrDefRef} />,
-      prevText: intl.get('Global.prevStep'),
-      nextText: intl.get('Global.nextStep'),
+      prevText: intl.get('Global.prev'),
+      nextText: intl.get('Global.next'),
       saveText: intl.get('Global.saveAndExit'),
       prevClick: () => {
         const fields = attrDefRef.current.getFields();
@@ -378,7 +378,7 @@ const ObjectCreateAndEdit = () => {
           dataSource={dataSource}
         />
       ),
-      prevText: intl.get('Global.prevStep'),
+      prevText: intl.get('Global.prev'),
       saveText: intl.get('Global.saveAndExit'),
       prevClick: () => {
         mappingRef.current

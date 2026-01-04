@@ -31,11 +31,8 @@
     },
     "GraphBox": {
       "referenceView": "引用视图",
-      "outputView": "输出视图",
       "mergeView": "合并视图",
       "relationView": "关联视图",
-      "dataJoin": "数据关联",
-      "dataMerge": "数据合并",
       "pleaseSelectReferenceView": "请先选择引用视图",
       "confirmDeleteNode": "确认要删除该节点吗?",
       "deleteNodeWarning": "节点及其配置信息将被删除,无法找回,请谨慎操作!",
@@ -65,12 +62,10 @@
       "originalFieldName": "字段原名",
       "joinType": "关联方式",
       "selectJoinField1": "请选择关联字段1",
-      "selectJoinField2": "请选择关联字段",
       "leftJoin": "左联接",
       "rightJoin": "右联接",
       "innerJoin": "内联接",
       "fullOuterJoin": "全外联接",
-      "fieldList": "字段列表",
       "fieldListHelp": "（被勾选的字段会作为下一个节点/算子的输入字段）"
     },
     "FieldMerge": {
@@ -83,7 +78,6 @@
       "addMergeRule": "请添加合并规则",
       "completeMergeConfig": "请填写完整字段合并配置",
       "outputFieldName": "输出字段名称",
-      "outputFieldNamePlaceholder": "输出字段名称",
       "selectFieldName": "请选择字段名称",
       "sameTypeFieldsOnly": "您仅可选择数据类型相同的字段进行合并",
       "mergeOutputType": "合并输出方式",

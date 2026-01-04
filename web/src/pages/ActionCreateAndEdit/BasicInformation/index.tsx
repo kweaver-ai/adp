@@ -64,7 +64,7 @@ const BasicInformation = (props: any) => {
                 { max: 40, message: intl.get('Global.lenErr', { len: 40 }) },
               ]}
             >
-              <Input placeholder={intl.get('Global.placeholder')} />
+              <Input placeholder={intl.get('Global.pleaseInput')} />
             </Form.Item>
           </Col>
           <Col span={12}>
@@ -79,7 +79,7 @@ const BasicInformation = (props: any) => {
                 },
               ]}
             >
-              <Input placeholder={intl.get('Global.placeholder')} disabled={isEditPage} />
+              <Input placeholder={intl.get('Global.pleaseInput')} disabled={isEditPage} />
             </Form.Item>
           </Col>
           <Col span={12}>
@@ -110,7 +110,7 @@ const BasicInformation = (props: any) => {
           </Col>
           <Col span={24}>
             <Form.Item name="comment" label={intl.get('Global.comment')}>
-              <Input.TextArea rows={4} maxLength={255} placeholder={intl.get('Global.placeholder')} />
+              <Input.TextArea rows={4} maxLength={255} placeholder={intl.get('Global.pleaseInput')} />
             </Form.Item>
           </Col>
           <Col span={12}>
@@ -150,7 +150,7 @@ const BasicInformation = (props: any) => {
           </Col>
           <Col span={24}>
             <Form.Item name="affect.comment" label={intl.get('Action.affectDescription')}>
-              <Input.TextArea rows={4} maxLength={255} placeholder={intl.get('Global.placeholder')} />
+              <Input.TextArea rows={4} maxLength={255} placeholder={intl.get('Global.pleaseInput')} />
             </Form.Item>
           </Col>
         </Row>

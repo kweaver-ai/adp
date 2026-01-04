@@ -59,7 +59,7 @@ namespace OntologyObjectType {
   export interface DataProperty {
     name: string; // 字段英文名
     display_name: string; // 中文显示名
-    original_name: string;
+    original_name?: string;
     type?: string; // 数据类型
     comment?: string;
     mapped_field?: ViewField; // 映射到数据视图的字段

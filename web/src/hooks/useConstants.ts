@@ -192,9 +192,9 @@ export const useConstants = () => {
 
   const NODE_TYPE_TITLE_MAP = {
     view: intl.get('CustomDataView.GraphBox.referenceView'),
-    output: intl.get('CustomDataView.GraphBox.outputView'),
-    join: intl.get('CustomDataView.GraphBox.dataJoin'),
-    union: intl.get('CustomDataView.GraphBox.dataMerge'),
+    output: intl.get('CustomDataView.outputView'),
+    join: intl.get('CustomDataView.OperateBox.dataRelation'),
+    union: intl.get('CustomDataView.OperateBox.dataMerge'),
     sql: 'SQL',
   };
 

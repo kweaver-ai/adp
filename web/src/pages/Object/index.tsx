@@ -109,7 +109,7 @@ const KnowledgeNetwork = (props: TProps) => {
     const name = _.map(items, (item) => `「${item?.name}」`).join('、');
     const length = items.length || 0;
     modal.confirm({
-      title: intl.get('Global.deleteConfirmTitle'),
+      title: intl.get('Global.deleteConfirm'),
       closable: true,
       icon: <ExclamationCircleFilled />,
       content: length > 1 ? intl.get('Global.deleteConfirmMultiple', { count: length }) : intl.get('Global.deleteConfirm', { name }),

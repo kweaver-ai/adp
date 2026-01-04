@@ -57,8 +57,6 @@
     "metricModel": "指标模型",
     "objectiveModel": "目标模型",
     "metricModelDataPreview": "指标模型数据预览",
-    "ns": "纳秒",
-    "μs": "微秒",
     "week": "周",
     "month": "月",
     "quarter": "季",
@@ -79,12 +77,7 @@
       "index": "时间单位",
       "ns": "纳秒",
       "ms": "毫秒",
-      "μs": "微秒",
-      "s": "秒",
-      "m": "分",
-      "h": "时",
-      "d": "天",
-      "quarter": "季"
+      "μs": "微秒"
     },
     "percentageUnit": {
       "index": "比例单位",
@@ -96,7 +89,6 @@
       "household": "户",
       "transaction": "笔",
       "piece": "件",
-      "item": "个",
       "times": "次",
       "man_day": "人日",
       "family ": "家",

@@ -14,8 +14,7 @@
     "fetchRulesFailed": "获取行列规则列表失败",
     "pleaseCompleteFilterCondition": "请完善过滤条件",
     "transfer": {
-      "item": "项",
-      "items": "项"
+      "item": "项"
     },
     "visitor": "访问者",
     "from": "来自",

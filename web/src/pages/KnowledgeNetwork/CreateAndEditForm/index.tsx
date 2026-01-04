@@ -135,7 +135,7 @@ const CreateAndEditForm = (props: any) => {
                 { max: 40, message: intl.get('Global.lenErr', { len: 40 }) },
               ]}
             >
-              <Input placeholder={intl.get('Global.placeholder')} />
+              <Input placeholder={intl.get('Global.pleaseInput')} />
             </Form.Item>
             <Form.Item
               label="ID"
@@ -145,7 +145,7 @@ const CreateAndEditForm = (props: any) => {
                 { pattern: ENUMS.REGEXP.LOWER_NUMBER, message: intl.get('Global.idLowercaseLetterNumberOnly') },
               ]}
             >
-              <Input placeholder={intl.get('Global.placeholder')} disabled={!!id} />
+              <Input placeholder={intl.get('Global.pleaseInput')} disabled={!!id} />
             </Form.Item>
             <Row gutter={20}>
               <Col span={12}>
@@ -171,7 +171,7 @@ const CreateAndEditForm = (props: any) => {
               <TagsSelector />
             </Form.Item>
             <Form.Item label={intl.get('Global.comment')} name="comment">
-              <Input.TextArea placeholder={intl.get('Global.placeholder')} />
+              <Input.TextArea placeholder={intl.get('Global.pleaseInput')} />
             </Form.Item>
           </Form>
         ) : (

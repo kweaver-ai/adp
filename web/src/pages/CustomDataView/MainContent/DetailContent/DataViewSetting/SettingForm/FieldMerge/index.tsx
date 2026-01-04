@@ -251,7 +251,7 @@ const FiledMerge = () => {
             return (
               <div className={styles.resultItem}>
                 <Input
-                  placeholder={intl.get('CustomDataView.FieldMerge.outputFieldNamePlaceholder')}
+                  placeholder={intl.get('CustomDataView.FieldMerge.outputFieldName')}
                   maxLength={255}
                   style={{ width: '100%' }}
                   defaultValue={record.outputName}

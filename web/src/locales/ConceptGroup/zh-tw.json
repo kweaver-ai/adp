@@ -22,10 +22,6 @@
     "createButton": "【新建】",
     "addConceptGroupTip": "按鈕添加概念分組",
     "relatedResource": "關聯資源",
-    "sourceObjectType": "起點對象類",
-    "targetObjectType": "終點對象類",
-    "bindObjectType": "綁定對象類",
-    "removeSuccess": "移除成功",
     "importConflictTip": "選擇<b>覆蓋</b>將替換已有項，選擇<b>忽略</b>將跳過重複項。"
   }
 }

@@ -14,8 +14,7 @@
     "fetchRulesFailed": "Failed to fetch row/column rule list",
     "pleaseCompleteFilterCondition": "Please complete filter conditions",
     "transfer": {
-      "item": "item",
-      "items": "items"
+      "item": "item"
     },
     "visitor": "Visitor",
     "from": "From",

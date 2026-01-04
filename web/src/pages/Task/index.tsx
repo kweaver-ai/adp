@@ -159,7 +159,7 @@ const Task = (props: TProps) => {
   const onDeleteConfirm = (record: any) => {
     if (!record?.id) return;
     modal.confirm({
-      title: intl.get('Global.deleteConfirmTitle'),
+      title: intl.get('Global.deleteConfirm'),
       closable: true,
       icon: <ExclamationCircleFilled />,
       content: intl.get('Global.deleteConfirm', { name: `"${record?.name}"` }),

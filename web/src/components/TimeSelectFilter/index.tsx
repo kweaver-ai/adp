@@ -5,6 +5,9 @@ import { Button } from 'antd';
 import dayjs from 'dayjs';
 import TimeFilter from '@/components/TimeFilter';
 import { IconFont } from '@/web-library/common';
+import enUS from './locale/en-us.json';
+import zhCN from './locale/zh-cn.json';
+import zhTW from './locale/zh-tw.json';
 
 export interface TimeRange {
   label: string;
@@ -22,9 +25,12 @@ interface Props {
 
 const TimeSelectFilter = (props: Props): JSX.Element => {
   const { timeRange, disabled, style, getTimeRange } = props;
-
   const [visible, setVisible] = useState(false);
   const [timeValue, setTimeValue] = useState({ label: 'last1Hour', value: [dayjs().subtract(1, 'h'), dayjs()], timeInterval: 1, timeUnit: 'h' });
+
+  // 初始化国际化
+  intl.load({ 'zh-cn': zhCN, 'en-us': enUS, 'zh-tw': zhTW });
+  const getIntl = (key: string) => intl.get(`TimeFilter.${key}`);
 
   useEffect(() => {
     timeRange ? JSON.stringify(timeRange) !== JSON.stringify(timeValue.value) && setTimeValue(timeRange) : getTimeRange(timeValue);
@@ -46,7 +52,7 @@ const TimeSelectFilter = (props: Props): JSX.Element => {
     <React.Fragment>
       <TimeFilter visible={visible} timeRange={timeValue} onFilterChange={handleFilterChange}>
         <Button style={{ width: isTimeRange ? 300 : 120, ...style }} disabled={disabled} onClick={changeTimeFilterVis}>
-          {intl.get(`MetricModel.quickRangeTime.${timeValue.label}`) || timeValue.label}
+          {getIntl(`quickRangeTime.${timeValue.label}`) || timeValue.label}
           {timeValue.label ? <IconFont type="icon-clock" /> : <IconFont type="icon-clock" style={{ margin: 0 }} />}
         </Button>
       </TimeFilter>

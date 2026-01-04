@@ -9,7 +9,7 @@ export default defineConfig({
     template: './public/index.html',
   },
   dev: {
-    assetPrefix: '/vega/',
+    assetPrefix: '/ontology/',
     client: { protocol: 'ws', host: 'localhost', port: 3010 },
   },
   server: {

@@ -163,7 +163,7 @@ const AtomDataView = (): JSX.Element => {
 
   const deleteConfirm = async (record?: any): Promise<void> => {
     modal.confirm({
-      content: intl.get('Global.deleteConfirmTitle', { name: record?.name || selectedRows.map((item) => item.name).join(',') }),
+      content: intl.get('Global.deleteConfirm', { name: record?.name || selectedRows.map((item) => item.name).join(',') }),
       icon: <IconFont type="icon-about" />,
       okText: intl.get('Global.ok'),
       okButtonProps: {
@@ -197,7 +197,7 @@ const AtomDataView = (): JSX.Element => {
     };
 
     const baseConfigContent = {
-      title: intl.get('Global.baseConfig'),
+      title: intl.get('Global.basicConfig'),
       content: [
         {
           name: intl.get('Global.name'),
@@ -261,7 +261,7 @@ const AtomDataView = (): JSX.Element => {
               },
               {
                 name: intl.get('DataView.hasHeaders'),
-                value: val?.excel_config?.has_headers ? intl.get('DataView.hasHeadersTrue') : intl.get('DataView.hasHeadersFalse'),
+                value: val?.excel_config?.has_headers ? intl.get('Global.selectFirstRow') : intl.get('Global.custom'),
               },
               {
                 name: intl.get('DataView.sheetAsNewColumn'),

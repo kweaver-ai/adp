@@ -166,10 +166,10 @@ const IndexSetting: React.FC<Props> = ({ open, values, onClose, onOK }) => {
     (props: any) =>
       props?.error ? (
         <Popover content={props.error} placement="bottomLeft">
-          <InputNumber style={{ width: '100%' }} placeholder={intl.get('Global.placeholder')} {...props} status={'error'} />
+          <InputNumber style={{ width: '100%' }} placeholder={intl.get('Global.pleaseInput')} {...props} status={'error'} />
         </Popover>
       ) : (
-        <InputNumber style={{ width: '100%' }} placeholder={intl.get('Global.placeholder')} {...props} autoFocus />
+        <InputNumber style={{ width: '100%' }} placeholder={intl.get('Global.pleaseInput')} {...props} autoFocus />
       ),
     []
   );

@@ -57,8 +57,6 @@
     "metricModel": "Metric Model",
     "objectiveModel": "Objective Model",
     "metricModelDataPreview": "Metric Model Data Preview",
-    "ns": "Nanosecond",
-    "μs": "Microsecond",
     "week": "Week",
     "month": "Month",
     "quarter": "Quarter",
@@ -79,12 +77,7 @@
       "index": "Time Unit",
       "ns": "Nanosecond",
       "ms": "Millisecond",
-      "μs": "Microsecond",
-      "s": "Second",
-      "m": "Minute",
-      "h": "Hour",
-      "d": "Day",
-      "quarter": "Quarter"
+      "μs": "Microsecond"
     },
     "percentageUnit": {
       "index": "Percentage Unit",
@@ -96,7 +89,6 @@
       "household": "Household",
       "transaction": "Transaction",
       "piece": "Piece",
-      "item": "Item",
       "times": "Times",
       "man_day": "Man-day",
       "family ": "Family",

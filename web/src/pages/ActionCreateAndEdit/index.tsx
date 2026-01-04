@@ -147,7 +147,7 @@ const ActionCreateAndEdit: FC = () => {
   const StepsContent: any = {
     0: {
       content: <BasicInformation form={basicForm} value={basicValue} knId={knId} atId={atId} conditionVisible={conditionVisible} isEditPage={isEditPage} />,
-      nextText: intl.get('Global.nextStep'),
+      nextText: intl.get('Global.next'),
       nextClick: onNext,
     },
     1: {
@@ -188,7 +188,7 @@ const ActionCreateAndEdit: FC = () => {
               onPrev();
             }}
           >
-            {intl.get('Global.prevStep')}
+            {intl.get('Global.prev')}
           </Button>
         )}
         <div className="g-flex-align-center">
