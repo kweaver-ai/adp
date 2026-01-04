@@ -1,0 +1,13 @@
+{
+  "Components": {
+    "dataViewSource": {
+      "checkedListTitle": "本次已選：{count} 個",
+      "checkedTip": "已選中",
+      "clearAll": "清空",
+      "detail": "您可點擊視圖名稱查看詳情",
+      "preview": "預覽",
+      "previewTip": "（展示部分數據）",
+      "title": "選擇數據視圖"
+    }
+  }
+}

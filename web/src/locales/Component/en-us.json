@@ -1,0 +1,13 @@
+{
+  "Components": {
+    "dataViewSource": {
+      "checkedListTitle": "Selected: {count}",
+      "checkedTip": "Selected",
+      "clearAll": "Clear All",
+      "detail": "You can click the view name to see details",
+      "preview": "Preview",
+      "previewTip": "(Display partial data)",
+      "title": "Select Data View"
+    }
+  }
+}
