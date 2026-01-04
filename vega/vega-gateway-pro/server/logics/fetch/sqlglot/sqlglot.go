@@ -3,6 +3,7 @@ package sqlglot
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"github.com/kweaver-ai/kweaver-go-lib/logger"
 	"os/exec"
@@ -78,7 +79,7 @@ except Exception as e:
 
 	if result.Error != "" {
 		logger.Errorf("ExtractTables failed, %s", result.Error)
-		return nil, fmt.Errorf(result.Error)
+		return nil, errors.New(result.Error)
 	}
 
 	return &result, nil
@@ -148,7 +149,7 @@ except Exception as e:
 
 	if result.Error != "" {
 		logger.Errorf("TranspileSQL failed, %s", result.Error)
-		return nil, fmt.Errorf(result.Error)
+		return nil, errors.New(result.Error)
 	}
 
 	return &result, nil

@@ -2,11 +2,12 @@ package fetch
 
 import (
 	"context"
+	cryptoRand "crypto/rand"
 	"fmt"
 	"github.com/kweaver-ai/kweaver-go-lib/logger"
 	"github.com/kweaver-ai/kweaver-go-lib/rest"
 	"github.com/panjf2000/ants/v2"
-	"math/rand"
+	mathRand "math/rand"
 	"net/http"
 	"strings"
 	"sync"
@@ -73,18 +74,15 @@ func (fs *Service) startCacheCleaner(interval time.Duration) {
 	ticker := time.NewTicker(interval)
 	defer ticker.Stop()
 
-	for {
-		select {
-		case <-ticker.C:
-			logger.Debugf("Clean query cache, query size: %d", fs.QuerySize)
-			fs.queryCache.Range(func(key, value interface{}) bool {
-				if resultCache, ok := value.(*interfaces.ResultCache); ok && time.Now().After(resultCache.MaxRunTime) {
-					fs.cleanQuery(key, resultCache) // 清理查询
-				}
-				return true
-			})
-			logger.Debugf("Clean query cache done, query size: %d", fs.QuerySize)
-		}
+	for range ticker.C {
+		logger.Debugf("Clean query cache, query size: %d", fs.QuerySize)
+		fs.queryCache.Range(func(key, value interface{}) bool {
+			if resultCache, ok := value.(*interfaces.ResultCache); ok && time.Now().After(resultCache.MaxRunTime) {
+				fs.cleanQuery(key, resultCache) // 清理查询
+			}
+			return true
+		})
+		logger.Debugf("Clean query cache done, query size: %d", fs.QuerySize)
 	}
 }
 
@@ -334,6 +332,7 @@ func (fs *Service) getDataFromQueryResult(ctx context.Context, connector connect
 				fs.storeToCache(resultCache, nil, nil, nil, err)
 				connector.Close()
 			}
+			logger.Debugf("QueryId: %s, slug: %s, direct query goroutine exit", queryId, slug)
 		}()
 
 		// 获取列信息
@@ -397,13 +396,10 @@ func (fs *Service) checkCachePeriodically(cache *interfaces.ResultCache) {
 	ticker := time.NewTicker(100 * time.Millisecond)
 	defer ticker.Stop()
 
-	for {
-		select {
-		case <-ticker.C:
-			// 定期检查是否有数据
-			if len(cache.ResultChan) < fs.appSetting.QuerySetting.DataQuerySize {
-				return
-			}
+	for range ticker.C {
+		// 定期检查是否有数据
+		if len(cache.ResultChan) < fs.appSetting.QuerySetting.DataQuerySize {
+			return
 		}
 	}
 }
@@ -469,6 +465,8 @@ func (fs *Service) getDataFromEtrinoExecutingNextUri(ctx context.Context, nextUr
 				logger.Error(err)
 				fs.storeToCache(resultCache, nil, nil, nil, err)
 			}
+
+			logger.Debugf("QueryId: %s, slug: %s, etrino query goroutine exit", queryId, slug)
 		}()
 
 		var columns []*interfaces.Column
@@ -731,7 +729,7 @@ func generateRandomCoordId() string {
 	const letters = "abcdefghijklmnopqrstuvwxyz0123456789"
 	b := make([]byte, 5)
 	for i := range b {
-		b[i] = letters[rand.Intn(len(letters))]
+		b[i] = letters[mathRand.Intn(len(letters))]
 	}
 	return string(b)
 }
@@ -739,7 +737,7 @@ func generateRandomCoordId() string {
 func generateSlug() string {
 	// 生成UUID
 	uuid := make([]byte, 16)
-	_, err := rand.Read(uuid)
+	_, err := cryptoRand.Read(uuid)
 	if err != nil {
 		panic(fmt.Sprintf("生成UUID失败: %v", err))
 	}

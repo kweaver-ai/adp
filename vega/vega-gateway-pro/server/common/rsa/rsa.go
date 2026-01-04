@@ -6,7 +6,6 @@ import (
 	"encoding/base64"
 	"fmt"
 	"github.com/kweaver-ai/kweaver-go-lib/logger"
-	"io/ioutil"
 	"os"
 	"strings"
 )
@@ -18,7 +17,7 @@ var (
 // InitKeys 从文件加载密钥
 func InitKeys(privateKeyPath string) error {
 	workDir, _ := os.Getwd()
-	privateKeyBytes, err := ioutil.ReadFile(workDir + privateKeyPath)
+	privateKeyBytes, err := os.ReadFile(workDir + privateKeyPath)
 	if err != nil {
 		return fmt.Errorf("read private key file failed: %w", err)
 	}

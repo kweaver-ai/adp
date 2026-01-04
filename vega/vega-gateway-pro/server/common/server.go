@@ -22,8 +22,7 @@ func ReplyOK(c *gin.Context, statusCode int, body interface{}) {
 
 // ReplyError 响应错误
 func ReplyError(c *gin.Context, statusCode int, err error) {
-	var body string
-	body = err.Error()
+	body := err.Error()
 
 	c.Writer.Header().Set("Content-Type", "application/json")
 	c.String(statusCode, body)
