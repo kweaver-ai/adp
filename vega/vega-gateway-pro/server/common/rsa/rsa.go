@@ -36,6 +36,11 @@ func cleanPemKey(pemKey string) string {
 
 // Decrypt RSA解密
 func Decrypt(encryptedData string) (string, error) {
+
+	if encryptedData == "" {
+		return "", nil
+	}
+
 	cleanPrivateKey := cleanPemKey(encryptPrivateKey)
 	keyBytes, err := base64.StdEncoding.DecodeString(cleanPrivateKey)
 	if err != nil {

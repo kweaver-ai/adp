@@ -52,8 +52,8 @@ func NewFetchService(appSetting *common.AppSetting) interfaces.FetchService {
 		}
 		fetchService = service
 
-		service.InitQueryPool(appSetting.PoolSetting)                       // 初始化查询协程池
-		go service.startCacheCleaner(appSetting.QuerySetting.CleanInterval) // 启动缓存清理器
+		service.InitQueryPool(appSetting.PoolSetting)                           // 初始化查询协程池
+		go service.startCacheCleaner(appSetting.QuerySetting.CleanIntervalTime) // 启动缓存清理器
 	})
 	return fetchService
 }
@@ -77,7 +77,7 @@ func (fs *Service) startCacheCleaner(interval time.Duration) {
 	for range ticker.C {
 		logger.Debugf("Clean query cache, query size: %d", fs.QuerySize)
 		fs.queryCache.Range(func(key, value interface{}) bool {
-			if resultCache, ok := value.(*interfaces.ResultCache); ok && time.Now().After(resultCache.MaxRunTime) {
+			if resultCache, ok := value.(*interfaces.ResultCache); ok && time.Now().After(resultCache.MaxExceedTime) {
 				fs.cleanQuery(key, resultCache) // 清理查询
 			}
 			return true
@@ -123,12 +123,12 @@ func (fs *Service) FetchQuery(ctx context.Context, query *interfaces.FetchQueryR
 	queryCacheKey := fmt.Sprintf("%s_%s", queryId, slug)
 	resultChan := make(chan *[]any, fs.appSetting.QuerySetting.DataCacheSize)
 	resultCache := &interfaces.ResultCache{
-		ResultSet:  nil,
-		Token:      0,
-		Columns:    nil,
-		ResultChan: resultChan,
-		Error:      nil,
-		MaxRunTime: time.Now().Add(fs.appSetting.QuerySetting.MaxRunTime),
+		ResultSet:     nil,
+		Token:         0,
+		Columns:       nil,
+		ResultChan:    resultChan,
+		Error:         nil,
+		MaxExceedTime: time.Now().Add(fs.appSetting.QuerySetting.MaxIntervalTime),
 	}
 	fs.queryCache.Store(queryCacheKey, resultCache)
 
@@ -667,6 +667,16 @@ func (fs *Service) NextQuery(ctx context.Context, req *interfaces.NextQueryReq) 
 			WithErrorDetails("Token not match")
 	}
 
+	// 检查查询是否超过查询最大超时时间
+	if time.Now().After(resultCache.MaxExceedTime) {
+		logger.Errorf("QueryId: %s, slug: %s, token: %d, query timeout", req.QueryId, req.Slug, req.Token)
+		fs.cleanQuery(queryCacheKey, resultCache) // 清理查询
+		return nil, rest.NewHTTPError(ctx, http.StatusRequestTimeout, rest.PublicError_NotFound).
+			WithErrorDetails("Query timeout")
+	} else {
+		resultCache.MaxExceedTime = time.Now().Add(fs.appSetting.QuerySetting.MaxIntervalTime)
+	}
+
 	defer func() {
 
 		if r := recover(); r != nil { // 处理查询中的panic
@@ -681,6 +691,9 @@ func (fs *Service) NextQuery(ctx context.Context, req *interfaces.NextQueryReq) 
 		} else if resultCache.ResultSet == nil && len(resultCache.ResultChan) == 0 { // 处理查询完成
 			logger.Debugf("QueryId: %s, slug: %s, token: %d, query completed", req.QueryId, req.Slug, req.Token)
 			fs.cleanQuery(queryCacheKey, resultCache)
+		} else { // 处理查询未结束
+			logger.Debugf("QueryId: %s, slug: %s, token: %d, refresh query max exceed time", req.QueryId, req.Slug, req.Token)
+			resultCache.MaxExceedTime = time.Now().Add(fs.appSetting.QuerySetting.MaxIntervalTime)
 		}
 
 		// 记录执行耗时

@@ -45,10 +45,10 @@ type QueryResult struct {
 }
 
 type ResultCache struct {
-	ResultSet  any         // 存储结果集，具体类型根据连接器实现而定
-	Token      int         // 查询下标
-	Columns    []*Column   // 列信息
-	ResultChan chan *[]any // 查询结果通道
-	Error      error       // 存储查询错误
-	MaxRunTime time.Time   // 查询最大运行时间
+	ResultSet     any         // 存储结果集，具体类型根据连接器实现而定
+	Token         int         // 查询下标
+	Columns       []*Column   // 列信息
+	ResultChan    chan *[]any // 查询结果通道
+	Error         error       // 存储查询错误
+	MaxExceedTime time.Time   // 查询最大超时时间
 }

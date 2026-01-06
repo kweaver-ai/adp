@@ -30,10 +30,10 @@ type PoolSetting struct {
 
 // 查询配置项
 type QuerySetting struct {
-	CleanInterval time.Duration `mapstructure:"cleanInterval"`
-	MaxRunTime    time.Duration `mapstructure:"maxRunTime"`
-	DataQuerySize int           `mapstructure:"dataQuerySize"`
-	DataCacheSize int           `mapstructure:"dataCacheSize"`
+	CleanIntervalTime time.Duration `mapstructure:"cleanIntervalTime"`
+	MaxIntervalTime   time.Duration `mapstructure:"maxIntervalTime"`
+	DataQuerySize     int           `mapstructure:"dataQuerySize"`
+	DataCacheSize     int           `mapstructure:"dataCacheSize"`
 }
 
 type KafkaSetting struct {

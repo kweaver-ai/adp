@@ -11,8 +11,8 @@ log:
 pool:
   queryPoolSize: 100                   # 查询池大小
 query:
-  cleanInterval: 5m                   # 查询清理间隔
-  maxRunTime: 4h                       # 单个查询最大运行时间
+  cleanIntervalTime: 5m                # 查询清理间隔
+  maxIntervalTime: 1h                  # 查询取数最大间隔时间
   dataQuerySize: 10000                 # 单次内部查询数据量及再次查询临界值
   dataCacheSize: 20000                 # 单个查询内部缓存数据量
 trace:
