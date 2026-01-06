@@ -11,7 +11,10 @@ echo "工作目录: $ADP_DIR"
 # 来源目录列表
 SRC_DIRS=(
     "ontology/ontology-manager/migrations"
+    "vega/data-connection/migrations"
     "vega/mdl-data-model/migrations"
+    "vega/vega-gateway/migrations"
+    "vega/vega-metadata/migrations"
 )
 
 # 数据库类型列表
@@ -83,6 +86,10 @@ for dir in "${SRC_DIRS[@]}"; do
         RELATIVE_PATH="${INIT_SQL#$ADP_DIR/}"
         
         # 写入对应的临时文件
+        # 如果文件不为空，先添加一个换行符
+        if [ -s "${TMP_FILES[$db_type]}" ]; then
+            echo "" >> "${TMP_FILES[$db_type]}"
+        fi
         echo "-- Source: $RELATIVE_PATH" >> "${TMP_FILES[$db_type]}"
         cat "$INIT_SQL" | tr -d '\r' >> "${TMP_FILES[$db_type]}"
     done

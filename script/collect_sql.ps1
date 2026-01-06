@@ -11,7 +11,10 @@ Write-Host "工作目录: $AdpDir"
 # 来源目录列表
 $SrcDirs = @(
     "ontology\ontology-manager\migrations",
-    "vega\mdl-data-model\migrations"
+    "vega\data-connection\migrations",
+    "vega\mdl-data-model\migrations",
+    "vega\vega-gateway\migrations",
+    "vega\vega-metadata\migrations"
 )
 
 # 数据库类型列表
@@ -78,6 +81,13 @@ try {
             $relativePath = $initSql.Substring($AdpDir.Length + 1)
             
             # 写入对应的临时文件（使用 UTF-8 without BOM 编码）
+            # 如果文件不为空，先添加一个换行符
+            if ([System.IO.File]::Exists($TmpFiles[$dbType])) {
+                $fileInfo = Get-Item $TmpFiles[$dbType]
+                if ($fileInfo.Length -gt 0) {
+                    [System.IO.File]::AppendAllText($TmpFiles[$dbType], "`n", $utf8NoBom)
+                }
+            }
             [System.IO.File]::AppendAllText($TmpFiles[$dbType], "-- Source: $relativePath`n", $utf8NoBom)
             $content = [System.IO.File]::ReadAllText($initSql, [System.Text.Encoding]::UTF8)
             $content = $content.Replace("`r`n", "`n")
