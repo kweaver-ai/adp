@@ -4,13 +4,13 @@ import (
 	"context"
 	"fmt"
 
-	commonErrors "devops.aishu.cn/AISHUDevOps/AnyShareFamily/_git/ContentAutomation/errors"
-	"devops.aishu.cn/AISHUDevOps/AnyShareFamily/_git/ContentAutomation/pkg/entity"
-	"devops.aishu.cn/AISHUDevOps/AnyShareFamily/_git/ContentAutomation/pkg/vm/errors"
-	"devops.aishu.cn/AISHUDevOps/AnyShareFamily/_git/ContentAutomation/pkg/vm/funcs"
-	"devops.aishu.cn/AISHUDevOps/AnyShareFamily/_git/ContentAutomation/pkg/vm/hook"
-	"devops.aishu.cn/AISHUDevOps/AnyShareFamily/_git/ContentAutomation/pkg/vm/opcode"
-	"devops.aishu.cn/AISHUDevOps/AnyShareFamily/_git/ContentAutomation/pkg/vm/state"
+	commonErrors "github.com/kweaver-ai/adp/autoflow/flow-automation/errors"
+	"github.com/kweaver-ai/adp/autoflow/flow-automation/pkg/entity"
+	"github.com/kweaver-ai/adp/autoflow/flow-automation/pkg/vm/errors"
+	"github.com/kweaver-ai/adp/autoflow/flow-automation/pkg/vm/funcs"
+	"github.com/kweaver-ai/adp/autoflow/flow-automation/pkg/vm/hook"
+	"github.com/kweaver-ai/adp/autoflow/flow-automation/pkg/vm/opcode"
+	"github.com/kweaver-ai/adp/autoflow/flow-automation/pkg/vm/state"
 )
 
 type ContextKey string

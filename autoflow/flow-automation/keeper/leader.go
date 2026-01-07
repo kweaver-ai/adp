@@ -8,12 +8,12 @@ import (
 	"sync/atomic"
 	"time"
 
-	"devops.aishu.cn/AISHUDevOps/AnyShareFamily/_git/ContentAutomation/pkg/event"
-	"devops.aishu.cn/AISHUDevOps/AnyShareFamily/_git/ContentAutomation/store"
-	lock "devops.aishu.cn/AISHUDevOps/DIP/_git/ide-go-lib/lock"
-	commonLog "devops.aishu.cn/AISHUDevOps/DIP/_git/ide-go-lib/log"
-	rds "devops.aishu.cn/AISHUDevOps/DIP/_git/ide-go-lib/store"
 	redis_v8 "github.com/go-redis/redis/v8"
+	"github.com/kweaver-ai/adp/autoflow/flow-automation/pkg/event"
+	"github.com/kweaver-ai/adp/autoflow/flow-automation/store"
+	lock "github.com/kweaver-ai/adp/autoflow/ide-go-lib/lock"
+	commonLog "github.com/kweaver-ai/adp/autoflow/ide-go-lib/log"
+	rds "github.com/kweaver-ai/adp/autoflow/ide-go-lib/store"
 	"github.com/shiningrush/goevent"
 )
 

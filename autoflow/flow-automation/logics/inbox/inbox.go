@@ -5,12 +5,12 @@ import (
 	"context"
 	"sync"
 
-	"devops.aishu.cn/AISHUDevOps/AnyShareFamily/_git/ContentAutomation/common"
-	"devops.aishu.cn/AISHUDevOps/AnyShareFamily/_git/ContentAutomation/drivenadapters"
-	"devops.aishu.cn/AISHUDevOps/AnyShareFamily/_git/ContentAutomation/pkg/entity"
-	"devops.aishu.cn/AISHUDevOps/AnyShareFamily/_git/ContentAutomation/pkg/mod"
-	traceLog "devops.aishu.cn/AISHUDevOps/DIP/_git/ide-go-lib/telemetry/log"
-	"devops.aishu.cn/AISHUDevOps/DIP/_git/ide-go-lib/telemetry/trace"
+	"github.com/kweaver-ai/adp/autoflow/flow-automation/common"
+	"github.com/kweaver-ai/adp/autoflow/flow-automation/drivenadapters"
+	"github.com/kweaver-ai/adp/autoflow/flow-automation/pkg/entity"
+	"github.com/kweaver-ai/adp/autoflow/flow-automation/pkg/mod"
+	traceLog "github.com/kweaver-ai/adp/autoflow/ide-go-lib/telemetry/log"
+	"github.com/kweaver-ai/adp/autoflow/ide-go-lib/telemetry/trace"
 )
 
 // CheckAuthRes 鉴权结果信息

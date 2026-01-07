@@ -5,7 +5,7 @@ import (
 	"strings"
 	"testing"
 
-	"devops.aishu.cn/AISHUDevOps/AnyShareFamily/_git/ContentAutomation/pkg/vm/opcode"
+	"github.com/kweaver-ai/adp/autoflow/flow-automation/pkg/vm/opcode"
 )
 
 func assertInstructionsEqual(t *testing.T, actual []*opcode.Instruction, expected []*opcode.Instruction) {

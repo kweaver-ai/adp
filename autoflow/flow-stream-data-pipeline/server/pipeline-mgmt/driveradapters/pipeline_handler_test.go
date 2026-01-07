@@ -7,12 +7,12 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"devops.aishu.cn/AISHUDevOps/DIP/_git/mdl-go-lib/rest"
-	rmock "devops.aishu.cn/AISHUDevOps/DIP/_git/mdl-go-lib/rest/mock"
 	. "github.com/agiledragon/gomonkey/v2"
 	"github.com/bytedance/sonic"
 	"github.com/gin-gonic/gin"
 	"github.com/golang/mock/gomock"
+	"github.com/kweaver-ai/kweaver-go-lib/rest"
+	rmock "github.com/kweaver-ai/kweaver-go-lib/rest/mock"
 	. "github.com/smartystreets/goconvey/convey"
 
 	"flow-stream-data-pipeline/common"

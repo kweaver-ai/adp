@@ -12,17 +12,18 @@ import (
 
 	"go.mongodb.org/mongo-driver/bson/primitive"
 
-	"github.com/golang/mock/gomock"
+	"go.uber.org/mock/gomock"
 
 	. "github.com/agiledragon/gomonkey/v2"
 	"github.com/gin-gonic/gin"
 
-	"devops.aishu.cn/AISHUDevOps/AnyShareFamily/_git/ContentAutomation/drivenadapters"
-	ierrors "devops.aishu.cn/AISHUDevOps/AnyShareFamily/_git/ContentAutomation/errors"
-	"devops.aishu.cn/AISHUDevOps/AnyShareFamily/_git/ContentAutomation/logics/mgnt"
-	"devops.aishu.cn/AISHUDevOps/AnyShareFamily/_git/ContentAutomation/pkg/entity"
-	"devops.aishu.cn/AISHUDevOps/AnyShareFamily/_git/ContentAutomation/tests/mock_drivenadapters"
-	"devops.aishu.cn/AISHUDevOps/AnyShareFamily/_git/ContentAutomation/tests/mock_logics"
+	"github.com/kweaver-ai/adp/autoflow/flow-automation/drivenadapters"
+	"github.com/kweaver-ai/adp/autoflow/flow-automation/driveradapters/middleware"
+	ierrors "github.com/kweaver-ai/adp/autoflow/flow-automation/errors"
+	"github.com/kweaver-ai/adp/autoflow/flow-automation/logics/mgnt"
+	"github.com/kweaver-ai/adp/autoflow/flow-automation/pkg/entity"
+	"github.com/kweaver-ai/adp/autoflow/flow-automation/tests/mock_drivenadapters"
+	"github.com/kweaver-ai/adp/autoflow/flow-automation/tests/mock_logics"
 )
 
 // MockLogger 实现 commonLog.Logger 接口
@@ -96,6 +97,8 @@ func mockPublicRestHandlerRouter(t *testing.T) (MockDependency, *gin.Engine) {
 		hydraAdmin: dep.hydraAdmin,
 		userMgnt:   dep.userMgnt,
 	}
+
+	middleware.SetMiddlewareMock(dep.hydraAdmin, dep.userMgnt)
 	handler.RegisterAPI(group)
 
 	return dep, engine
@@ -458,6 +461,15 @@ func TestSecurityPolicyPublicAPI(t *testing.T) {
 				"status": "canceled",
 			},
 			setupMock: func() {
+				// Mock the user info call
+				dep.userMgnt.EXPECT().
+					GetUserInfo("test-user").
+					Return(drivenadapters.UserInfo{
+						UserID:   "test-user",
+						UserName: "testuser",
+						Roles:    []string{"super_admin"},
+					}, nil)
+
 				dep.mgnt.EXPECT().
 					StopSecurityPolicyFlowProc(gomock.Any(), "proc123", gomock.Any()).
 					Return(nil)

@@ -11,10 +11,10 @@ import (
 	"net/http"
 	"sync"
 
-	"devops.aishu.cn/AISHUDevOps/AnyShareFamily/_git/ContentAutomation/common"
-	"devops.aishu.cn/AISHUDevOps/AnyShareFamily/_git/ContentAutomation/errors"
-	otelHttp "devops.aishu.cn/AISHUDevOps/DIP/_git/ide-go-lib/http"
-	traceLog "devops.aishu.cn/AISHUDevOps/DIP/_git/ide-go-lib/telemetry/log"
+	"github.com/kweaver-ai/adp/autoflow/flow-automation/common"
+	"github.com/kweaver-ai/adp/autoflow/flow-automation/errors"
+	otelHttp "github.com/kweaver-ai/adp/autoflow/ide-go-lib/http"
+	traceLog "github.com/kweaver-ai/adp/autoflow/ide-go-lib/telemetry/log"
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 )
 

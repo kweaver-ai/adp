@@ -4,9 +4,9 @@ import (
 	"net/http"
 	"sync"
 
-	"devops.aishu.cn/AISHUDevOps/AnyShareFamily/_git/ContentAutomation/driveradapters/middleware"
-	"devops.aishu.cn/AISHUDevOps/AnyShareFamily/_git/ContentAutomation/errors"
-	"devops.aishu.cn/AISHUDevOps/AnyShareFamily/_git/ContentAutomation/pkg/dependency"
+	"github.com/kweaver-ai/adp/autoflow/flow-automation/driveradapters/middleware"
+	"github.com/kweaver-ai/adp/autoflow/flow-automation/errors"
+	"github.com/kweaver-ai/adp/autoflow/flow-automation/pkg/dependency"
 	"github.com/gin-gonic/gin"
 )
 

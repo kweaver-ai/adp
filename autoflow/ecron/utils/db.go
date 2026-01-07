@@ -5,12 +5,12 @@ import (
 	"strings"
 	"time"
 
-	"devops.aishu.cn/AISHUDevOps/AnyShareFamily/_git/ECron/common"
-	"devops.aishu.cn/AISHUDevOps/ONE-Architecture/_git/proton-rds-sdk-go/sqlx"
+	"github.com/kweaver-ai/adp/autoflow/ecron/common"
+	"github.com/kweaver-ai/proton-rds-sdk-go/sqlx"
 
 	//_ 注册mysql驱动
-	_ "devops.aishu.cn/AISHUDevOps/ONE-Architecture/_git/proton-rds-sdk-go/driver"
 	jsoniter "github.com/json-iterator/go"
+	_ "github.com/kweaver-ai/proton-rds-sdk-go/driver"
 	"github.com/robfig/cron/v3"
 )
 
@@ -41,6 +41,7 @@ type ecronDB struct {
 	jobInfo   jobInfoFields
 	jobStatus jobStatusFields
 	parser    cron.Parser
+	connector func(*sqlx.DBConfig) (*sqlx.DB, error)
 }
 
 type jobInfoFields struct {
@@ -97,7 +98,8 @@ func NewDBClient() DBClient {
 				5: "`f_begin_time`", 6: "`f_end_time`", 7: "`f_executor`", 8: "`f_execute_times`", 9: "`f_ext_info`",
 			},
 		},
-		parser: cron.NewParser(cron.Second | cron.Minute | cron.Hour | cron.Dom | cron.Month | cron.Dow | cron.Descriptor),
+		parser:    cron.NewParser(cron.Second | cron.Minute | cron.Hour | cron.Dom | cron.Month | cron.Dow | cron.Descriptor),
+		connector: sqlx.NewDB,
 	}
 }
 
@@ -117,7 +119,7 @@ func (d *ecronDB) Connect() *common.ECronError {
 	}
 
 	var sqlErr error
-	d.db, sqlErr = sqlx.NewDB(&connInfo)
+	d.db, sqlErr = d.connector(&connInfo)
 	if sqlErr != nil {
 		dbLog.Errorf("[Connect] connect mysql failed, sqlErr: %v", sqlErr)
 		return NewECronError(common.ErrOpenDataBase, common.InternalError, nil)

@@ -5,12 +5,12 @@ import (
 	"os"
 	"testing"
 
-	"devops.aishu.cn/AISHUDevOps/AnyShareFamily/_git/ContentAutomation/common"
-	"devops.aishu.cn/AISHUDevOps/AnyShareFamily/_git/ContentAutomation/errors"
-	commonLog "devops.aishu.cn/AISHUDevOps/DIP/_git/ide-go-lib/log"
 	"github.com/go-playground/assert/v2"
-	"github.com/golang/mock/gomock"
+	"github.com/kweaver-ai/adp/autoflow/flow-automation/common"
+	"github.com/kweaver-ai/adp/autoflow/flow-automation/errors"
+	commonLog "github.com/kweaver-ai/adp/autoflow/ide-go-lib/log"
 	. "github.com/smartystreets/goconvey/convey"
+	"go.uber.org/mock/gomock"
 )
 
 func InitLogger() {

@@ -6,12 +6,12 @@ import (
 	"net/http"
 	"sync"
 
-	"devops.aishu.cn/AISHUDevOps/AnyShareFamily/_git/ContentAutomation/drivenadapters"
-	"devops.aishu.cn/AISHUDevOps/AnyShareFamily/_git/ContentAutomation/driveradapters/middleware"
-	"devops.aishu.cn/AISHUDevOps/AnyShareFamily/_git/ContentAutomation/errors"
-	"devops.aishu.cn/AISHUDevOps/AnyShareFamily/_git/ContentAutomation/logics/auth"
-	commonLog "devops.aishu.cn/AISHUDevOps/DIP/_git/ide-go-lib/log"
 	"github.com/gin-gonic/gin"
+	"github.com/kweaver-ai/adp/autoflow/flow-automation/drivenadapters"
+	"github.com/kweaver-ai/adp/autoflow/flow-automation/driveradapters/middleware"
+	"github.com/kweaver-ai/adp/autoflow/flow-automation/errors"
+	"github.com/kweaver-ai/adp/autoflow/flow-automation/logics/auth"
+	commonLog "github.com/kweaver-ai/adp/autoflow/ide-go-lib/log"
 )
 
 // RESTHandler 公共RESTful api Handler接口

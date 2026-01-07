@@ -11,15 +11,15 @@ import (
 	"strings"
 	"time"
 
-	"devops.aishu.cn/AISHUDevOps/AnyShareFamily/_git/ECron/common"
-	"devops.aishu.cn/AISHUDevOps/AnyShareFamily/_git/go-lib/rest"
+	"github.com/kweaver-ai/adp/autoflow/ecron/common"
+	"github.com/kweaver-ai/adp/autoflow/ide-go-lib/rest"
 
 	jsoniter "github.com/json-iterator/go"
 )
 
 //go:generate mockgen -package mock -source ../utils/httpclient.go -destination ../mock/mock_httpclient.go
 
-//HTTPClient HTTP客户端服务接口
+// HTTPClient HTTP客户端服务接口
 type HTTPClient interface {
 	Get(url string, headers map[string]string, respParam interface{}) (err error)
 	Post(url string, headers map[string]string, reqParam interface{}, respParam interface{}) (err error)
@@ -28,7 +28,7 @@ type HTTPClient interface {
 	Delete(url string, headers map[string]string, respParam interface{}) (err error)
 }
 
-//NewHTTPClient 创建HTTP客户端服务句柄
+// NewHTTPClient 创建HTTP客户端服务句柄
 func NewHTTPClient() HTTPClient {
 	return &HTTPCli{
 		client: &http.Client{
@@ -45,12 +45,12 @@ func NewHTTPClient() HTTPClient {
 	}
 }
 
-//HTTPCli HTTP客户端结构
+// HTTPCli HTTP客户端结构
 type HTTPCli struct {
 	client *http.Client
 }
 
-//Get http client get
+// Get http client get
 func (c *HTTPCli) Get(url string, headers map[string]string, respParam interface{}) (err error) {
 	req, err := http.NewRequest("GET", url, nil)
 	if nil != err {
@@ -59,7 +59,7 @@ func (c *HTTPCli) Get(url string, headers map[string]string, respParam interface
 	return c.httpDo(req, headers, &respParam)
 }
 
-//Post http client post
+// Post http client post
 func (c *HTTPCli) Post(url string, headers map[string]string, reqParam interface{}, respParam interface{}) (err error) {
 	reqBody := c.prepareBody(headers, reqParam)
 	req, err := http.NewRequest("POST", url, reqBody)
@@ -82,7 +82,7 @@ func (c *HTTPCli) PostV2(url string, headers map[string]string, reqParam interfa
 	return
 }
 
-//Put http client put
+// Put http client put
 func (c *HTTPCli) Put(url string, headers map[string]string, reqParam interface{}, respParam interface{}) (err error) {
 	reqBody := c.prepareBody(headers, reqParam)
 	req, err := http.NewRequest("PUT", url, reqBody)
@@ -92,7 +92,7 @@ func (c *HTTPCli) Put(url string, headers map[string]string, reqParam interface{
 	return c.httpDo(req, headers, &respParam)
 }
 
-//Delete http client delete
+// Delete http client delete
 func (c *HTTPCli) Delete(url string, headers map[string]string, respParam interface{}) (err error) {
 	req, err := http.NewRequest("DELETE", url, nil)
 	if nil != err {

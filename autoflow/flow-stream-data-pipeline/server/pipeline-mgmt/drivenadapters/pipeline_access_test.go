@@ -8,12 +8,12 @@ import (
 	"testing"
 	"time"
 
-	libcomm "devops.aishu.cn/AISHUDevOps/DIP/_git/mdl-go-lib/common"
-	"devops.aishu.cn/AISHUDevOps/DIP/_git/mdl-go-lib/rest"
 	"github.com/DATA-DOG/go-sqlmock"
 	sq "github.com/Masterminds/squirrel"
 	. "github.com/agiledragon/gomonkey/v2"
 	"github.com/bytedance/sonic"
+	libcomm "github.com/kweaver-ai/kweaver-go-lib/common"
+	"github.com/kweaver-ai/kweaver-go-lib/rest"
 	. "github.com/smartystreets/goconvey/convey"
 
 	"flow-stream-data-pipeline/pipeline-mgmt/interfaces"

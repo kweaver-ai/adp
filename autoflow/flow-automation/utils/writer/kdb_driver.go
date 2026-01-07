@@ -6,7 +6,7 @@ import (
 	"strings"
 	"time"
 
-	kdb "devops.aishu.cn/AISHUDevOps/DIP/_git/ide-go-lib/dialect/kdb"
+	kdb "github.com/kweaver-ai/adp/autoflow/ide-go-lib/dialect/kdb"
 	"gorm.io/gorm"
 )
 

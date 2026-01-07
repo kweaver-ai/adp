@@ -13,29 +13,29 @@ import (
 	"testing"
 	"time"
 
-	monkey "devops.aishu.cn/AISHUDevOps/AnyShareFamily/_git/Monkey"
 	"github.com/gin-gonic/gin"
-	"github.com/golang/mock/gomock"
 	jsoniter "github.com/json-iterator/go"
 	uuid "github.com/satori/go.uuid"
 	"github.com/stretchr/testify/assert"
+	"go.uber.org/mock/gomock"
 
-	"devops.aishu.cn/AISHUDevOps/AnyShareFamily/_git/ECron/common"
-	"devops.aishu.cn/AISHUDevOps/AnyShareFamily/_git/ECron/mock"
-	"devops.aishu.cn/AISHUDevOps/AnyShareFamily/_git/ECron/utils"
+	"github.com/kweaver-ai/adp/autoflow/ecron/common"
+	"github.com/kweaver-ai/adp/autoflow/ecron/mock"
+	"github.com/kweaver-ai/adp/autoflow/ecron/utils"
 	. "github.com/smartystreets/goconvey/convey"
 )
 
-func newManagement(m utils.MsmqClient, d utils.DBClient, e Executor, a utils.OAuthClient) *management {
+func newManagement(m utils.MsmqClient, d utils.DBClient, e Executor, a utils.OAuthClient, h utils.HTTPServerStarter) *management {
 	return &management{
-		mapRequest:     make(map[string][]map[string]func(c *gin.Context)),
-		msmqClient:     m,
-		dbClient:       d,
-		executor:       e,
-		authClient:     a,
-		chJobMsg:       make(chan common.JobMsg, 1),
-		chJobStatus:    make(chan common.JobStatus, 1),
-		chJobImmediate: make(chan common.JobInfo, 1),
+		mapRequest:        make(map[string][]map[string]func(c *gin.Context)),
+		msmqClient:        m,
+		dbClient:          d,
+		executor:          e,
+		authClient:        a,
+		httpServerStarter: h,
+		chJobMsg:          make(chan common.JobMsg, 1),
+		chJobStatus:       make(chan common.JobStatus, 1),
+		chJobImmediate:    make(chan common.JobInfo, 1),
 	}
 }
 
@@ -63,17 +63,14 @@ func TestManagementStart(t *testing.T) {
 		d := mock.NewMockDBClient(ctrl)
 		e := mock.NewMockExecutor(ctrl)
 		a := mock.NewMockOAuthClient(ctrl)
-		timer := newManagement(m, d, e, a)
+		h := mock.NewMockHTTPServerStarter(ctrl)
+		timer := newManagement(m, d, e, a, h)
 
 		d.EXPECT().Upgrade().AnyTimes().Return()
 		d.EXPECT().Ping().AnyTimes().Return(nil)
 		d.EXPECT().Connect().AnyTimes().Return(nil)
 		a.EXPECT().VerifyHydraVersion().AnyTimes().Return("/admin/oauth2/introspect", true)
-
-		guard := monkey.Patch(utils.NewHTTPServer, func(svr common.ServerInfo, opf map[string][]map[string]func(c *gin.Context)) error {
-			return nil
-		})
-		defer guard.Unpatch()
+		h.EXPECT().Start(gomock.Any(), gomock.Any()).AnyTimes().Return(nil)
 
 		Convey("multimode is true", func() {
 			cronSvr.MultiNode = true
@@ -90,7 +87,7 @@ func TestManagementStart(t *testing.T) {
 func TestManagementStop(t *testing.T) {
 	Convey("Stop", t, func() {
 		Convey("uninitialized", func() {
-			timer := newManagement(nil, nil, nil, nil)
+			timer := newManagement(nil, nil, nil, nil, nil)
 			timer.Stop()
 		})
 
@@ -102,7 +99,7 @@ func TestManagementStop(t *testing.T) {
 			d := mock.NewMockDBClient(ctrl)
 			e := mock.NewMockExecutor(ctrl)
 			a := mock.NewMockOAuthClient(ctrl)
-			timer := newManagement(m, d, e, a)
+			timer := newManagement(m, d, e, a, nil)
 
 			d.EXPECT().Release().AnyTimes()
 			a.EXPECT().Release().AnyTimes()
@@ -113,7 +110,7 @@ func TestManagementStop(t *testing.T) {
 
 func TestManagementGetFreePort(t *testing.T) {
 	Convey("getFreePort", t, func() {
-		timer := newManagement(nil, nil, nil, nil)
+		timer := newManagement(nil, nil, nil, nil, nil)
 		port, err := timer.getFreePort()
 		assert.Equal(t, err, nil)
 		assert.NotEqual(t, port, 0)
@@ -129,7 +126,7 @@ func TestManagementInit(t *testing.T) {
 		d := mock.NewMockDBClient(ctrl)
 		e := mock.NewMockExecutor(ctrl)
 		a := mock.NewMockOAuthClient(ctrl)
-		timer := newManagement(m, d, e, a)
+		timer := newManagement(m, d, e, a, nil)
 
 		d.EXPECT().Connect().AnyTimes().Return(nil)
 		d.EXPECT().Ping().AnyTimes().Return(nil)
@@ -149,7 +146,7 @@ func TestManagementPublishJobMsg(t *testing.T) {
 		d := mock.NewMockDBClient(ctrl)
 		e := mock.NewMockExecutor(ctrl)
 		a := mock.NewMockOAuthClient(ctrl)
-		timer := newManagement(m, d, e, a)
+		timer := newManagement(m, d, e, a, nil)
 
 		m.EXPECT().Publish(gomock.Any(), gomock.Any()).AnyTimes().Return(nil)
 		timer.publishJobMsg(common.JobMsg{
@@ -170,7 +167,7 @@ func TestManagementgPublishJobImmediate(t *testing.T) {
 		d := mock.NewMockDBClient(ctrl)
 		e := mock.NewMockExecutor(ctrl)
 		a := mock.NewMockOAuthClient(ctrl)
-		timer := newManagement(m, d, e, a)
+		timer := newManagement(m, d, e, a, nil)
 		m.EXPECT().Publish(gomock.Any(), gomock.Any()).AnyTimes().Return(nil)
 		timer.publishJobImmediate(common.JobInfo{
 			JobID: uuid.NewV4().String(),
@@ -187,7 +184,7 @@ func TestManagementgPublishJobStatus(t *testing.T) {
 		d := mock.NewMockDBClient(ctrl)
 		e := mock.NewMockExecutor(ctrl)
 		a := mock.NewMockOAuthClient(ctrl)
-		timer := newManagement(m, d, e, a)
+		timer := newManagement(m, d, e, a, nil)
 		m.EXPECT().Publish(gomock.Any(), gomock.Any()).AnyTimes().Return(nil)
 
 		timer.publishJobStatus(common.JobStatus{
@@ -199,7 +196,7 @@ func TestManagementgPublishJobStatus(t *testing.T) {
 func TestManagementIsEcronDBAvailable(t *testing.T) {
 	Convey("isEcronDBAvailable", t, func() {
 		Convey("uninitialized", func() {
-			pt := newManagement(nil, nil, nil, nil)
+			pt := newManagement(nil, nil, nil, nil, nil)
 			err := pt.isEcronDBAvailable()
 			assert.Equal(t, err.Cause, common.ErrDataBaseUnavailable)
 			assert.Equal(t, err.Code, common.InternalError)
@@ -214,7 +211,7 @@ func TestManagementIsEcronDBAvailable(t *testing.T) {
 		a := mock.NewMockOAuthClient(ctrl)
 
 		Convey("initialized", func() {
-			timer := newManagement(m, d, e, a)
+			timer := newManagement(m, d, e, a, nil)
 			d.EXPECT().Ping().AnyTimes().Return(nil)
 			err := timer.isEcronDBAvailable()
 			assert.Equal(t, err, (*common.ECronError)(nil))
@@ -224,7 +221,7 @@ func TestManagementIsEcronDBAvailable(t *testing.T) {
 
 func TestManagementCode(t *testing.T) {
 	Convey("code", t, func() {
-		timer := newManagement(nil, nil, nil, nil)
+		timer := newManagement(nil, nil, nil, nil, nil)
 
 		Convey("code, err is nil, created is true", func() {
 			c := timer.code(nil, true)
@@ -259,7 +256,7 @@ func TestManagementAuth(t *testing.T) {
 		a := mock.NewMockOAuthClient(ctrl)
 
 		Convey("normal", func() {
-			timer := newManagement(m, d, e, a)
+			timer := newManagement(m, d, e, a, nil)
 
 			a.EXPECT().VerifyToken(gomock.Any()).AnyTimes().Return(common.Visitor{}, nil)
 			a.EXPECT().VerifyCode(gomock.Any(), gomock.Any()).AnyTimes().Return(true, nil)
@@ -269,7 +266,7 @@ func TestManagementAuth(t *testing.T) {
 		})
 
 		Convey("authClient is null", func() {
-			timer := newManagement(m, d, e, nil)
+			timer := newManagement(m, d, e, nil, nil)
 			_, err := timer.auth("123456", "", "")
 			assert.Equal(t, err.Cause, common.ErrAuthClientUnavailable)
 		})
@@ -285,7 +282,7 @@ func TestManagementExecuteJob(t *testing.T) {
 		d := mock.NewMockDBClient(ctrl)
 		e := mock.NewMockExecutor(ctrl)
 		a := mock.NewMockOAuthClient(ctrl)
-		timer := newManagement(m, d, e, a)
+		timer := newManagement(m, d, e, a, nil)
 		e.EXPECT().ExecuteJob(gomock.Any()).AnyTimes().Return(true, errors.New("failed"))
 		id := uuid.NewV4().String()
 		executeID := uuid.NewV4().String()
@@ -318,7 +315,7 @@ func TestManagementHandleWebhook(t *testing.T) {
 		d := mock.NewMockDBClient(ctrl)
 		e := mock.NewMockExecutor(ctrl)
 		a := mock.NewMockOAuthClient(ctrl)
-		timer := newManagement(m, d, e, a)
+		timer := newManagement(m, d, e, a, nil)
 
 		timer.handleWebhook(id, map[string]interface{}{"hello": "world"})
 		time.Sleep(time.Second)
@@ -347,7 +344,7 @@ func TestManagementGetJobTotal(t *testing.T) {
 		d := mock.NewMockDBClient(ctrl)
 		e := mock.NewMockExecutor(ctrl)
 		a := mock.NewMockOAuthClient(ctrl)
-		timer := newManagement(m, d, e, a)
+		timer := newManagement(m, d, e, a, nil)
 
 		d.EXPECT().Ping().AnyTimes().Return(nil)
 
@@ -429,7 +426,7 @@ func TestManagementGetJobInfo(t *testing.T) {
 		d := mock.NewMockDBClient(ctrl)
 		e := mock.NewMockExecutor(ctrl)
 		a := mock.NewMockOAuthClient(ctrl)
-		timer := newManagement(m, d, e, a)
+		timer := newManagement(m, d, e, a, nil)
 
 		d.EXPECT().Ping().AnyTimes().Return(nil)
 
@@ -510,7 +507,7 @@ func TestManagementGetJobInfo(t *testing.T) {
 					Page:      1,
 					TimeStamp: beginTime,
 					JobType:   common.TIMING,
-					JobID:     make([]string, 0),
+					JobID:     []string(nil),
 				}
 				target := fmt.Sprintf("%v?timestamp=%v&job_type=%v",
 					jobInfoPATH, url.QueryEscape(reqParam.TimeStamp), reqParam.JobType)
@@ -630,7 +627,7 @@ func TestManagementGetJobStatus(t *testing.T) {
 		d := mock.NewMockDBClient(ctrl)
 		e := mock.NewMockExecutor(ctrl)
 		a := mock.NewMockOAuthClient(ctrl)
-		timer := newManagement(m, d, e, a)
+		timer := newManagement(m, d, e, a, nil)
 
 		d.EXPECT().Ping().AnyTimes().Return(nil)
 
@@ -722,7 +719,7 @@ func TestManagementPostJobInfo(t *testing.T) {
 		d := mock.NewMockDBClient(ctrl)
 		e := mock.NewMockExecutor(ctrl)
 		a := mock.NewMockOAuthClient(ctrl)
-		timer := newManagement(m, d, e, a)
+		timer := newManagement(m, d, e, a, nil)
 		stubNSQConnected(true, t)
 
 		d.EXPECT().Ping().AnyTimes().Return(nil)
@@ -846,7 +843,7 @@ func TestManagementPostJobExecution(t *testing.T) {
 		d := mock.NewMockDBClient(ctrl)
 		e := mock.NewMockExecutor(ctrl)
 		a := mock.NewMockOAuthClient(ctrl)
-		timer := newManagement(m, d, e, a)
+		timer := newManagement(m, d, e, a, nil)
 
 		d.EXPECT().Ping().AnyTimes().Return(nil)
 
@@ -986,7 +983,7 @@ func TestManagementPostWebhook(t *testing.T) {
 		d := mock.NewMockDBClient(ctrl)
 		e := mock.NewMockExecutor(ctrl)
 		a := mock.NewMockOAuthClient(ctrl)
-		timer := newManagement(m, d, e, a)
+		timer := newManagement(m, d, e, a, nil)
 
 		stubNSQConnected(true, t)
 
@@ -1049,7 +1046,7 @@ func TestManagementPutJobInfo(t *testing.T) {
 		d := mock.NewMockDBClient(ctrl)
 		e := mock.NewMockExecutor(ctrl)
 		a := mock.NewMockOAuthClient(ctrl)
-		timer := newManagement(m, d, e, a)
+		timer := newManagement(m, d, e, a, nil)
 		stubNSQConnected(true, t)
 
 		d.EXPECT().Ping().AnyTimes().Return(nil)
@@ -1196,7 +1193,7 @@ func TestManagementPutJobStatus(t *testing.T) {
 		d := mock.NewMockDBClient(ctrl)
 		e := mock.NewMockExecutor(ctrl)
 		a := mock.NewMockOAuthClient(ctrl)
-		timer := newManagement(m, d, e, a)
+		timer := newManagement(m, d, e, a, nil)
 
 		d.EXPECT().Ping().AnyTimes().Return(nil)
 		d.EXPECT().UpdateJobStatus(gomock.Any(), gomock.Any()).AnyTimes().Return(nil, utils.NewECronError("unknown", common.InternalError, nil))
@@ -1257,7 +1254,7 @@ func TestManagementPutJobEnable(t *testing.T) {
 		d := mock.NewMockDBClient(ctrl)
 		e := mock.NewMockExecutor(ctrl)
 		a := mock.NewMockOAuthClient(ctrl)
-		timer := newManagement(m, d, e, a)
+		timer := newManagement(m, d, e, a, nil)
 		stubNSQConnected(true, t)
 
 		d.EXPECT().Ping().AnyTimes().Return(nil)
@@ -1381,7 +1378,7 @@ func TestManagementPutJobNotify(t *testing.T) {
 		d := mock.NewMockDBClient(ctrl)
 		e := mock.NewMockExecutor(ctrl)
 		a := mock.NewMockOAuthClient(ctrl)
-		timer := newManagement(m, d, e, a)
+		timer := newManagement(m, d, e, a, nil)
 		stubNSQConnected(true, t)
 
 		d.EXPECT().Ping().AnyTimes().Return(nil)
@@ -1518,7 +1515,7 @@ func TestManagementDeleteJobInfo(t *testing.T) {
 		d := mock.NewMockDBClient(ctrl)
 		e := mock.NewMockExecutor(ctrl)
 		a := mock.NewMockOAuthClient(ctrl)
-		timer := newManagement(m, d, e, a)
+		timer := newManagement(m, d, e, a, nil)
 		stubNSQConnected(true, t)
 
 		d.EXPECT().Ping().AnyTimes().Return(nil)

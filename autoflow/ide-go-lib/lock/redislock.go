@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"time"
 
-	"devops.aishu.cn/AISHUDevOps/DIP/_git/ide-go-lib/store"
+	"github.com/kweaver-ai/adp/autoflow/ide-go-lib/store"
 )
 
 const internalTime = 3 * time.Second

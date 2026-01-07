@@ -5,9 +5,9 @@ import (
 	"strings"
 	"sync"
 
-	"devops.aishu.cn/AISHUDevOps/AnyShareFamily/_git/ContentAutomation/store/rds"
-	traceLog "devops.aishu.cn/AISHUDevOps/DIP/_git/ide-go-lib/telemetry/log"
-	"devops.aishu.cn/AISHUDevOps/DIP/_git/ide-go-lib/telemetry/trace"
+	"github.com/kweaver-ai/adp/autoflow/flow-automation/store/rds"
+	traceLog "github.com/kweaver-ai/adp/autoflow/ide-go-lib/telemetry/log"
+	"github.com/kweaver-ai/adp/autoflow/ide-go-lib/telemetry/trace"
 )
 
 type ConfigHandler interface {

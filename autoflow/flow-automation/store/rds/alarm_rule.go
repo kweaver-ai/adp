@@ -7,10 +7,10 @@ import (
 	"strings"
 	"sync"
 
-	"devops.aishu.cn/AISHUDevOps/AnyShareFamily/_git/ContentAutomation/common"
-	cdb "devops.aishu.cn/AISHUDevOps/DIP/_git/ide-go-lib/db"
-	"devops.aishu.cn/AISHUDevOps/DIP/_git/ide-go-lib/telemetry/trace"
 	jsoniter "github.com/json-iterator/go"
+	"github.com/kweaver-ai/adp/autoflow/flow-automation/common"
+	cdb "github.com/kweaver-ai/adp/autoflow/ide-go-lib/db"
+	"github.com/kweaver-ai/adp/autoflow/ide-go-lib/telemetry/trace"
 	"go.opentelemetry.io/otel/attribute"
 	"gorm.io/gorm"
 )

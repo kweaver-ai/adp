@@ -1,13 +1,10 @@
-module devops.aishu.cn/AISHUDevOps/AnyShareFamily/_git/ContentAutomation
+module github.com/kweaver-ai/adp/autoflow/flow-automation
 
 go 1.24.0
 
 godebug x509negativeserial=1
 
 require (
-	// devops.aishu.cn/AISHUDevOps/AnyShareFamily/_git/go-lib v0.0.0-20240930090910-25e9e55d25e4
-	devops.aishu.cn/AISHUDevOps/DIP/_git/ide-go-lib v0.0.0-20251205073737-deda9386d59e
-	// devops.aishu.cn/AISHUDevOps/ONE-Architecture/_git/proton_kdb_dialect_go v0.0.3 // disabled: internal dependency
 	github.com/agiledragon/gomonkey v2.0.2+incompatible
 	github.com/agiledragon/gomonkey/v2 v2.14.0
 	github.com/cenkalti/backoff/v4 v4.3.0
@@ -21,6 +18,8 @@ require (
 	github.com/google/uuid v1.6.0
 	github.com/joho/godotenv v1.3.0
 	github.com/json-iterator/go v1.1.12
+	// devops.aishu.cn/AISHUDevOps/AnyShareFamily/_git/go-lib v0.0.0-20240930090910-25e9e55d25e4
+	github.com/kweaver-ai/adp/autoflow/ide-go-lib v0.0.0-20251205073737-deda9386d59e
 	github.com/microsoft/go-mssqldb v1.9.3
 	github.com/mitchellh/mapstructure v1.5.0
 	github.com/opensearch-project/opensearch-go/v2 v2.3.0
@@ -98,6 +97,7 @@ require (
 	github.com/kweaver-ai/proton-mq-sdk-go v1.9.1
 	github.com/kweaver-ai/proton-rds-sdk-go v1.4.2
 	github.com/lib/pq v1.10.9
+	go.uber.org/mock v0.5.2
 )
 
 require (
@@ -199,4 +199,4 @@ require (
 	gopkg.in/yaml.v2 v2.4.0
 )
 
-replace devops.aishu.cn/AISHUDevOps/DIP/_git/ide-go-lib => ../ide-go-lib
+replace github.com/kweaver-ai/adp/autoflow/ide-go-lib => ../ide-go-lib

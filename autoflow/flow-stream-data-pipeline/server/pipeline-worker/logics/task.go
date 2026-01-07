@@ -11,11 +11,11 @@ import (
 	"sync"
 	"time"
 
-	libcomm "devops.aishu.cn/AISHUDevOps/DIP/_git/mdl-go-lib/common"
-	"devops.aishu.cn/AISHUDevOps/DIP/_git/mdl-go-lib/logger"
 	"github.com/bytedance/sonic"
 	"github.com/bytedance/sonic/ast"
 	"github.com/confluentinc/confluent-kafka-go/v2/kafka"
+	libcomm "github.com/kweaver-ai/kweaver-go-lib/common"
+	"github.com/kweaver-ai/kweaver-go-lib/logger"
 	osutil "github.com/opensearch-project/opensearch-go/v2/opensearchutil"
 
 	"flow-stream-data-pipeline/common"

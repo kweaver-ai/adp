@@ -6,13 +6,13 @@ import (
 	"sync"
 	"time"
 
-	"devops.aishu.cn/AISHUDevOps/AnyShareFamily/_git/ContentAutomation/common"
-	"devops.aishu.cn/AISHUDevOps/AnyShareFamily/_git/ContentAutomation/logics/alarm"
-	"devops.aishu.cn/AISHUDevOps/AnyShareFamily/_git/ContentAutomation/logics/cronjob"
-	"devops.aishu.cn/AISHUDevOps/AnyShareFamily/_git/ContentAutomation/logics/outbox"
-	lock "devops.aishu.cn/AISHUDevOps/DIP/_git/ide-go-lib/lock"
-	commonLog "devops.aishu.cn/AISHUDevOps/DIP/_git/ide-go-lib/log"
-	store "devops.aishu.cn/AISHUDevOps/DIP/_git/ide-go-lib/store"
+	"github.com/kweaver-ai/adp/autoflow/flow-automation/common"
+	"github.com/kweaver-ai/adp/autoflow/flow-automation/logics/alarm"
+	"github.com/kweaver-ai/adp/autoflow/flow-automation/logics/cronjob"
+	"github.com/kweaver-ai/adp/autoflow/flow-automation/logics/outbox"
+	lock "github.com/kweaver-ai/adp/autoflow/ide-go-lib/lock"
+	commonLog "github.com/kweaver-ai/adp/autoflow/ide-go-lib/log"
+	store "github.com/kweaver-ai/adp/autoflow/ide-go-lib/store"
 )
 
 const defaultInternal = 30 * time.Second

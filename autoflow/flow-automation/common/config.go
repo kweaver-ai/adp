@@ -7,7 +7,7 @@ import (
 	"reflect"
 	"strings"
 
-	wlCommon "devops.aishu.cn/AISHUDevOps/DIP/_git/ide-go-lib/telemetry/common"
+	wlCommon "github.com/kweaver-ai/adp/autoflow/ide-go-lib/telemetry/common"
 	"github.com/spf13/viper"
 	"gopkg.in/yaml.v2"
 )

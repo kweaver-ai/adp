@@ -5,12 +5,12 @@ import (
 	"net/http"
 	"time"
 
-	libCommon "devops.aishu.cn/AISHUDevOps/DIP/_git/mdl-go-lib/common"
-	"devops.aishu.cn/AISHUDevOps/DIP/_git/mdl-go-lib/logger"
-	"devops.aishu.cn/AISHUDevOps/DIP/_git/mdl-go-lib/middleware"
-	o11y "devops.aishu.cn/AISHUDevOps/DIP/_git/mdl-go-lib/observability"
-	"devops.aishu.cn/AISHUDevOps/DIP/_git/mdl-go-lib/rest"
 	"github.com/gin-gonic/gin"
+	libCommon "github.com/kweaver-ai/kweaver-go-lib/common"
+	"github.com/kweaver-ai/kweaver-go-lib/logger"
+	"github.com/kweaver-ai/kweaver-go-lib/middleware"
+	o11y "github.com/kweaver-ai/kweaver-go-lib/observability"
+	"github.com/kweaver-ai/kweaver-go-lib/rest"
 
 	"flow-stream-data-pipeline/common"
 	"flow-stream-data-pipeline/pipeline-mgmt/interfaces"

@@ -5,10 +5,10 @@ import (
 	"fmt"
 	"sync"
 
-	"devops.aishu.cn/AISHUDevOps/AnyShareFamily/_git/ContentAutomation/common"
-	otelHttp "devops.aishu.cn/AISHUDevOps/DIP/_git/ide-go-lib/http"
-	commonLog "devops.aishu.cn/AISHUDevOps/DIP/_git/ide-go-lib/log"
-	traceLog "devops.aishu.cn/AISHUDevOps/DIP/_git/ide-go-lib/telemetry/log"
+	"github.com/kweaver-ai/adp/autoflow/flow-automation/common"
+	otelHttp "github.com/kweaver-ai/adp/autoflow/ide-go-lib/http"
+	commonLog "github.com/kweaver-ai/adp/autoflow/ide-go-lib/log"
+	traceLog "github.com/kweaver-ai/adp/autoflow/ide-go-lib/telemetry/log"
 )
 
 //go:generate mockgen -package mock_drivenadapters -source ../drivenadapters/appstore.go -destination ../tests/mock_drivenadapters/appstore_mock.go

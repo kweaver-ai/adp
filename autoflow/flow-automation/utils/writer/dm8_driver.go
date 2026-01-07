@@ -7,8 +7,8 @@ import (
 	"time"
 
 	// DM8 and KDB drivers are now implemented in this package
-	dm "devops.aishu.cn/AISHUDevOps/DIP/_git/ide-go-lib/dialect/dm"
 	"github.com/go-sql-driver/mysql"
+	dm "github.com/kweaver-ai/adp/autoflow/ide-go-lib/dialect/dm"
 	"gorm.io/gorm"
 )
 

@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"sync"
 
-	"devops.aishu.cn/AISHUDevOps/DIP/_git/mdl-go-lib/rest"
+	"github.com/kweaver-ai/kweaver-go-lib/rest"
 	opensearch "github.com/opensearch-project/opensearch-go/v2"
 
 	"flow-stream-data-pipeline/common"

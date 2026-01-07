@@ -2,22 +2,22 @@ package main
 
 import (
 	"errors"
-	"os/exec"
-	"reflect"
 	"testing"
 
-	"devops.aishu.cn/AISHUDevOps/AnyShareFamily/_git/ECron/common"
-	"devops.aishu.cn/AISHUDevOps/AnyShareFamily/_git/ECron/mock"
-	"devops.aishu.cn/AISHUDevOps/AnyShareFamily/_git/ECron/utils"
-	monkey "devops.aishu.cn/AISHUDevOps/AnyShareFamily/_git/Monkey"
-	"github.com/golang/mock/gomock"
-	"github.com/mitchellh/mapstructure"
+	"github.com/kweaver-ai/adp/autoflow/ecron/common"
+	"github.com/kweaver-ai/adp/autoflow/ecron/mock"
+	"github.com/kweaver-ai/adp/autoflow/ecron/utils"
+	"go.uber.org/mock/gomock"
 	. "github.com/smartystreets/goconvey/convey"
 	"github.com/stretchr/testify/assert"
 )
 
-func newExecutor(h utils.HTTPClient) *executor {
-	return &executor{httpClient: h}
+func newExecutor(h utils.HTTPClient, c CommandRunner, m MapDecoder) *executor {
+	return &executor{
+		httpClient:    h,
+		commandRunner: c,
+		mapDecoder:    m,
+	}
 }
 
 func TestExecuteJob(t *testing.T) {
@@ -26,7 +26,9 @@ func TestExecuteJob(t *testing.T) {
 		defer ctrl.Finish()
 
 		h := mock.NewMockHTTPClient(ctrl)
-		executor := newExecutor(h)
+		c := mock.NewMockCommandRunner(ctrl)
+		m := mock.NewMockMapDecoder(ctrl)
+		executor := newExecutor(h, c, m)
 
 		Convey("not supported execution mode", func() {
 			reqParam := common.JobInfo{
@@ -95,10 +97,7 @@ func TestExecuteJob(t *testing.T) {
 			}
 
 			Convey("mapstructure decode failed", func() {
-				guard := monkey.Patch(mapstructure.Decode, func(input interface{}, output interface{}) error {
-					return errors.New("failed")
-				})
-				defer guard.Unpatch()
+				m.EXPECT().Decode(gomock.Any(), gomock.Any()).Return(errors.New("failed"))
 
 				reply, err := executor.ExecuteJob(job)
 				assert.NotEqual(t, err, nil)
@@ -106,6 +105,7 @@ func TestExecuteJob(t *testing.T) {
 			})
 
 			h.EXPECT().Post(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).AnyTimes().Return(nil)
+			m.EXPECT().Decode(gomock.Any(), gomock.Any()).AnyTimes().Return(nil)
 
 			Convey("normal, no body", func() {
 				reply, err := executor.ExecuteJob(job)
@@ -125,12 +125,7 @@ func TestExecuteJob(t *testing.T) {
 
 		Convey("exe mode, local job", func() {
 			h.EXPECT().Post(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).AnyTimes().Return(nil)
-
-			var c *exec.Cmd
-			guard := monkey.PatchInstanceMethod(reflect.TypeOf(c), "Run", func(_ *exec.Cmd) error {
-				return nil
-			})
-			defer guard.Unpatch()
+			c.EXPECT().Run(gomock.Any(), gomock.Any()).Return(nil)
 
 			job := common.JobInfo{
 				JobName:     "test",
@@ -159,7 +154,9 @@ func TestGetCmd(t *testing.T) {
 		defer ctrl.Finish()
 
 		h := mock.NewMockHTTPClient(ctrl)
-		executor := newExecutor(h)
+		c := mock.NewMockCommandRunner(ctrl)
+		m := mock.NewMockMapDecoder(ctrl)
+		executor := newExecutor(h, c, m)
 
 		name, args, command := executor.getCmd("python -a 1 -b 2", map[string]string{
 			"p1": "-c",

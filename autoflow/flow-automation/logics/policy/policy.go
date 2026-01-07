@@ -4,8 +4,8 @@ package policy
 import (
 	"sync"
 
-	"devops.aishu.cn/AISHUDevOps/AnyShareFamily/_git/ContentAutomation/pkg/mod"
-	commonLog "devops.aishu.cn/AISHUDevOps/DIP/_git/ide-go-lib/log"
+	"github.com/kweaver-ai/adp/autoflow/flow-automation/pkg/mod"
+	commonLog "github.com/kweaver-ai/adp/autoflow/ide-go-lib/log"
 )
 
 //go:generate mockgen -package mock_logics -source ../../logics/policy/policy.go -destination ../../tests/mock_logics/policy_mock.go

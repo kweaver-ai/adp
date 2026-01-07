@@ -5,11 +5,11 @@ import (
 	"fmt"
 	"testing"
 
-	"devops.aishu.cn/AISHUDevOps/AnyShareFamily/_git/ContentAutomation/tests/mock_httpclient"
-	mhttp "devops.aishu.cn/AISHUDevOps/DIP/_git/ide-go-lib/mock/mock_httpclient"
 	"github.com/go-playground/assert/v2"
-	"github.com/golang/mock/gomock"
+	"github.com/kweaver-ai/adp/autoflow/flow-automation/tests/mock_httpclient"
+	mhttp "github.com/kweaver-ai/adp/autoflow/ide-go-lib/mock/mock_httpclient"
 	. "github.com/smartystreets/goconvey/convey"
+	"go.uber.org/mock/gomock"
 )
 
 type HttpClientMock struct {

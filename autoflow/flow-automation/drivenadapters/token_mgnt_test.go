@@ -5,9 +5,9 @@ import (
 	"sync"
 	"testing"
 
-	commonLog "devops.aishu.cn/AISHUDevOps/DIP/_git/ide-go-lib/log"
 	. "github.com/agiledragon/gomonkey/v2"
 	"github.com/go-playground/assert/v2"
+	commonLog "github.com/kweaver-ai/adp/autoflow/ide-go-lib/log"
 	. "github.com/smartystreets/goconvey/convey"
 )
 

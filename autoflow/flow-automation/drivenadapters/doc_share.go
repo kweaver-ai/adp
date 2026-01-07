@@ -8,11 +8,11 @@ import (
 	"strings"
 	"sync"
 
-	"devops.aishu.cn/AISHUDevOps/AnyShareFamily/_git/ContentAutomation/common"
-	"devops.aishu.cn/AISHUDevOps/AnyShareFamily/_git/ContentAutomation/utils"
-	otelHttp "devops.aishu.cn/AISHUDevOps/DIP/_git/ide-go-lib/http"
-	traceLog "devops.aishu.cn/AISHUDevOps/DIP/_git/ide-go-lib/telemetry/log"
 	jsoniter "github.com/json-iterator/go"
+	"github.com/kweaver-ai/adp/autoflow/flow-automation/common"
+	"github.com/kweaver-ai/adp/autoflow/flow-automation/utils"
+	otelHttp "github.com/kweaver-ai/adp/autoflow/ide-go-lib/http"
+	traceLog "github.com/kweaver-ai/adp/autoflow/ide-go-lib/telemetry/log"
 )
 
 //go:generate mockgen -package mock_drivenadapters -source ../drivenadapters/doc_share.go -destination ../tests/mock_drivenadapters/doc_share_mock.go

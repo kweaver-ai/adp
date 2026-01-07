@@ -11,7 +11,7 @@ import (
 
 //go:generate mockgen -package mock -source ../utils/log.go -destination ../mock/mock_log.go
 
-//Logger 定时服务日志服务，可适配其他日志组件
+// Logger 定时服务日志服务，可适配其他日志组件
 type Logger interface {
 	Infof(format string, args ...interface{})
 	Infoln(args ...interface{})
@@ -29,7 +29,7 @@ type Logger interface {
 	Fatalln(args ...interface{})
 }
 
-//NewLogger 获取日志句柄
+// NewLogger 获取日志句柄
 func NewLogger() Logger {
 	return newLogger()
 }
@@ -63,11 +63,15 @@ func newLogger() *ecronLog {
 			err := os.MkdirAll(logDir, 0755)
 			if nil != err {
 				fmt.Println("mkdir err", err)
+				logHandle.logger.SetOutput(os.Stdout)
+				return logHandle
 			}
 			logFileName := path.Join(logDir, logName)
 			logFile, err := os.OpenFile(logFileName, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0)
 			if nil != err {
 				fmt.Println("open log file err", err)
+				logHandle.logger.SetOutput(os.Stdout)
+				return logHandle
 			}
 			logHandle.logger.SetOutput(logFile)
 		}
@@ -76,7 +80,7 @@ func newLogger() *ecronLog {
 	return logHandle
 }
 
-//Infof 普通信息
+// Infof 普通信息
 func (l *ecronLog) Infof(format string, args ...interface{}) {
 	if nil == l.logger {
 		return
@@ -84,7 +88,7 @@ func (l *ecronLog) Infof(format string, args ...interface{}) {
 	l.logger.Infof(format, args...)
 }
 
-//Infoln 普通信息
+// Infoln 普通信息
 func (l *ecronLog) Infoln(args ...interface{}) {
 	if nil == l.logger {
 		return
@@ -92,7 +96,7 @@ func (l *ecronLog) Infoln(args ...interface{}) {
 	l.logger.Infoln(args...)
 }
 
-//Warnf 警告信息
+// Warnf 警告信息
 func (l *ecronLog) Warnf(format string, args ...interface{}) {
 	if nil == l.logger {
 		return
@@ -100,7 +104,7 @@ func (l *ecronLog) Warnf(format string, args ...interface{}) {
 	l.logger.Warnf(format, args...)
 }
 
-//Warnln 警告信息
+// Warnln 警告信息
 func (l *ecronLog) Warnln(args ...interface{}) {
 	if nil == l.logger {
 		return
@@ -108,7 +112,7 @@ func (l *ecronLog) Warnln(args ...interface{}) {
 	l.logger.Warnln(args...)
 }
 
-//Errorf 错误信息
+// Errorf 错误信息
 func (l *ecronLog) Errorf(format string, args ...interface{}) {
 	if nil == l.logger {
 		return
@@ -116,7 +120,7 @@ func (l *ecronLog) Errorf(format string, args ...interface{}) {
 	l.logger.Errorf(format, args...)
 }
 
-//Errorln 错误信息
+// Errorln 错误信息
 func (l *ecronLog) Errorln(args ...interface{}) {
 	if nil == l.logger {
 		return
@@ -124,7 +128,7 @@ func (l *ecronLog) Errorln(args ...interface{}) {
 	l.logger.Errorln(args...)
 }
 
-//Debugf 调试信息
+// Debugf 调试信息
 func (l *ecronLog) Debugf(format string, args ...interface{}) {
 	if nil == l.logger {
 		return
@@ -132,7 +136,7 @@ func (l *ecronLog) Debugf(format string, args ...interface{}) {
 	l.logger.Debugf(format, args...)
 }
 
-//Debugln 调试信息
+// Debugln 调试信息
 func (l *ecronLog) Debugln(args ...interface{}) {
 	if nil == l.logger {
 		return
@@ -140,7 +144,7 @@ func (l *ecronLog) Debugln(args ...interface{}) {
 	l.logger.Debugln(args...)
 }
 
-//Tracef 跟踪信息
+// Tracef 跟踪信息
 func (l *ecronLog) Tracef(format string, args ...interface{}) {
 	if nil == l.logger {
 		return
@@ -148,7 +152,7 @@ func (l *ecronLog) Tracef(format string, args ...interface{}) {
 	l.logger.Tracef(format, args...)
 }
 
-//Traceln 跟踪信息
+// Traceln 跟踪信息
 func (l *ecronLog) Traceln(args ...interface{}) {
 	if nil == l.logger {
 		return
@@ -156,7 +160,7 @@ func (l *ecronLog) Traceln(args ...interface{}) {
 	l.logger.Traceln(args...)
 }
 
-//Fatalf 致命错误
+// Fatalf 致命错误
 func (l *ecronLog) Fatalf(format string, args ...interface{}) {
 	if nil == l.logger {
 		return
@@ -164,7 +168,7 @@ func (l *ecronLog) Fatalf(format string, args ...interface{}) {
 	l.logger.Fatalf(format, args...)
 }
 
-//Fatalln 致命错误
+// Fatalln 致命错误
 func (l *ecronLog) Fatalln(args ...interface{}) {
 	if nil == l.logger {
 		return
@@ -172,7 +176,7 @@ func (l *ecronLog) Fatalln(args ...interface{}) {
 	l.logger.Fatalln(args...)
 }
 
-//Panicf 恐慌错误
+// Panicf 恐慌错误
 func (l *ecronLog) Panicf(format string, args ...interface{}) {
 	if nil == l.logger {
 		return
@@ -180,7 +184,7 @@ func (l *ecronLog) Panicf(format string, args ...interface{}) {
 	l.logger.Panicf(format, args...)
 }
 
-//Panicln 恐慌错误
+// Panicln 恐慌错误
 func (l *ecronLog) Panicln(args ...interface{}) {
 	if nil == l.logger {
 		return

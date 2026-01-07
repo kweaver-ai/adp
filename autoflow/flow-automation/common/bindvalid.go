@@ -8,9 +8,9 @@ import (
 	"os"
 	"strconv"
 
-	"devops.aishu.cn/AISHUDevOps/AnyShareFamily/_git/ContentAutomation/errors"
-	ierr "devops.aishu.cn/AISHUDevOps/DIP/_git/ide-go-lib/errors"
 	"github.com/gin-gonic/gin"
+	"github.com/kweaver-ai/adp/autoflow/flow-automation/errors"
+	ierr "github.com/kweaver-ai/adp/autoflow/ide-go-lib/errors"
 	"github.com/xeipuuv/gojsonschema"
 )
 

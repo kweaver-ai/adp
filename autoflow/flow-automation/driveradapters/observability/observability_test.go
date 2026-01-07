@@ -8,19 +8,19 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"devops.aishu.cn/AISHUDevOps/AnyShareFamily/_git/ContentAutomation/common"
-	"devops.aishu.cn/AISHUDevOps/AnyShareFamily/_git/ContentAutomation/drivenadapters"
-	"devops.aishu.cn/AISHUDevOps/AnyShareFamily/_git/ContentAutomation/driveradapters/middleware"
-	"devops.aishu.cn/AISHUDevOps/AnyShareFamily/_git/ContentAutomation/logics/observability"
-	"devops.aishu.cn/AISHUDevOps/AnyShareFamily/_git/ContentAutomation/tests/mock_drivenadapters"
-	"devops.aishu.cn/AISHUDevOps/AnyShareFamily/_git/ContentAutomation/tests/mock_logics/mock_observability"
-	ierr "devops.aishu.cn/AISHUDevOps/DIP/_git/ide-go-lib/errors"
-	i18n "devops.aishu.cn/AISHUDevOps/DIP/_git/ide-go-lib/i18n"
 	. "github.com/agiledragon/gomonkey/v2"
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/assert/v2"
-	"github.com/golang/mock/gomock"
+	"github.com/kweaver-ai/adp/autoflow/flow-automation/common"
+	"github.com/kweaver-ai/adp/autoflow/flow-automation/drivenadapters"
+	"github.com/kweaver-ai/adp/autoflow/flow-automation/driveradapters/middleware"
+	"github.com/kweaver-ai/adp/autoflow/flow-automation/logics/observability"
+	"github.com/kweaver-ai/adp/autoflow/flow-automation/tests/mock_drivenadapters"
+	"github.com/kweaver-ai/adp/autoflow/flow-automation/tests/mock_logics/mock_observability"
+	ierr "github.com/kweaver-ai/adp/autoflow/ide-go-lib/errors"
+	i18n "github.com/kweaver-ai/adp/autoflow/ide-go-lib/i18n"
 	. "github.com/smartystreets/goconvey/convey"
+	"go.uber.org/mock/gomock"
 )
 
 func setGinMode() func() {
@@ -96,6 +96,7 @@ func TestFullView(t *testing.T) {
 		Convey("Token Expired", func() {
 			dep.hydraAdmin.EXPECT().Introspect(gomock.All(), gomock.All()).Times(1).Return(userInfo, nil)
 			req := httptest.NewRequest(http.MethodGet, "/api/automation/v1/observability/full-view", http.NoBody)
+			req.Header.Set("X-Business-Domain", "test")
 			resp := httptest.NewRecorder()
 			engine.ServeHTTP(resp, req)
 			assert.Equal(t, 401, resp.Code)
@@ -109,6 +110,7 @@ func TestFullView(t *testing.T) {
 			dep.hydraAdmin.EXPECT().Introspect(gomock.All(), gomock.All()).Times(1).Return(userInfo, nil)
 			dep.userMgnt.EXPECT().GetUserInfo(gomock.All()).Times(1).Return(userDetail, nil)
 			req := httptest.NewRequest(http.MethodGet, "/api/automation/v1/observability/full-view?type=dag", http.NoBody)
+			req.Header.Set("X-Business-Domain", "test")
 			resp := httptest.NewRecorder()
 			engine.ServeHTTP(resp, req)
 			assert.Equal(t, 400, resp.Code)
@@ -118,6 +120,7 @@ func TestFullView(t *testing.T) {
 			dep.hydraAdmin.EXPECT().Introspect(gomock.All(), gomock.All()).Times(1).Return(userInfo, nil)
 			dep.userMgnt.EXPECT().GetUserInfo(gomock.All()).Times(1).Return(userDetail, nil)
 			req := httptest.NewRequest(http.MethodGet, "/api/automation/v1/observability/full-view?page=-1", http.NoBody)
+			req.Header.Set("X-Business-Domain", "test")
 			resp := httptest.NewRecorder()
 			engine.ServeHTTP(resp, req)
 			assert.Equal(t, 400, resp.Code)
@@ -127,6 +130,7 @@ func TestFullView(t *testing.T) {
 			dep.hydraAdmin.EXPECT().Introspect(gomock.All(), gomock.All()).Times(1).Return(userInfo, nil)
 			dep.userMgnt.EXPECT().GetUserInfo(gomock.All()).Times(1).Return(userDetail, nil)
 			req := httptest.NewRequest(http.MethodGet, "/api/automation/v1/observability/full-view?page=0&limit=101", http.NoBody)
+			req.Header.Set("X-Business-Domain", "test")
 			resp := httptest.NewRecorder()
 			engine.ServeHTTP(resp, req)
 			assert.Equal(t, 400, resp.Code)
@@ -137,6 +141,7 @@ func TestFullView(t *testing.T) {
 			dep.userMgnt.EXPECT().GetUserInfo(gomock.All()).Times(1).Return(userDetail, nil)
 			dep.observability.EXPECT().FullView(gomock.Any(), gomock.Any(), gomock.Any()).Return(observability.FullViewRes{}, fmt.Errorf("Full View Error"))
 			req := httptest.NewRequest(http.MethodGet, "/api/automation/v1/observability/full-view?page=0&limit=10&type=data-flow", http.NoBody)
+			req.Header.Set("X-Business-Domain", "test")
 			resp := httptest.NewRecorder()
 			engine.ServeHTTP(resp, req)
 			assert.Equal(t, 500, resp.Code)
@@ -160,6 +165,7 @@ func TestFullView(t *testing.T) {
 			dep.userMgnt.EXPECT().GetUserInfo(gomock.All()).Times(1).Return(userDetail, nil)
 			dep.observability.EXPECT().FullView(gomock.Any(), gomock.Any(), gomock.Any()).Return(mockRes, nil)
 			req := httptest.NewRequest(http.MethodGet, "/api/automation/v1/observability/full-view?page=0&limit=10&type=data-flow", http.NoBody)
+			req.Header.Set("X-Business-Domain", "test")
 			resp := httptest.NewRecorder()
 			engine.ServeHTTP(resp, req)
 			result := resp.Result()
@@ -193,6 +199,7 @@ func TestRunTime(t *testing.T) {
 		Convey("Token Expired", func() {
 			dep.hydraAdmin.EXPECT().Introspect(gomock.All(), gomock.All()).Times(1).Return(userInfo, nil)
 			req := httptest.NewRequest(http.MethodGet, "/api/automation/v1/observability/runtime-view", http.NoBody)
+			req.Header.Set("X-Business-Domain", "test")
 			resp := httptest.NewRecorder()
 			engine.ServeHTTP(resp, req)
 			assert.Equal(t, 401, resp.Code)
@@ -206,6 +213,7 @@ func TestRunTime(t *testing.T) {
 			dep.hydraAdmin.EXPECT().Introspect(gomock.All(), gomock.All()).Times(1).Return(userInfo, nil)
 			dep.userMgnt.EXPECT().GetUserInfo(gomock.All()).Times(1).Return(userDetail, nil)
 			req := httptest.NewRequest(http.MethodGet, "/api/automation/v1/observability/runtime-view?type=dag", http.NoBody)
+			req.Header.Set("X-Business-Domain", "test")
 			resp := httptest.NewRecorder()
 			engine.ServeHTTP(resp, req)
 			assert.Equal(t, 400, resp.Code)
@@ -214,6 +222,7 @@ func TestRunTime(t *testing.T) {
 			dep.hydraAdmin.EXPECT().Introspect(gomock.All(), gomock.All()).Times(1).Return(userInfo, nil)
 			dep.userMgnt.EXPECT().GetUserInfo(gomock.All()).Times(1).Return(userDetail, nil)
 			req := httptest.NewRequest(http.MethodGet, "/api/automation/v1/observability/runtime-view?page=-1", http.NoBody)
+			req.Header.Set("X-Business-Domain", "test")
 			resp := httptest.NewRecorder()
 			engine.ServeHTTP(resp, req)
 			assert.Equal(t, 400, resp.Code)
@@ -223,6 +232,7 @@ func TestRunTime(t *testing.T) {
 			dep.hydraAdmin.EXPECT().Introspect(gomock.All(), gomock.All()).Times(1).Return(userInfo, nil)
 			dep.userMgnt.EXPECT().GetUserInfo(gomock.All()).Times(1).Return(userDetail, nil)
 			req := httptest.NewRequest(http.MethodGet, "/api/automation/v1/observability/runtime-view?page=0&limit=101", http.NoBody)
+			req.Header.Set("X-Business-Domain", "test")
 			resp := httptest.NewRecorder()
 			engine.ServeHTTP(resp, req)
 			assert.Equal(t, 400, resp.Code)
@@ -233,6 +243,7 @@ func TestRunTime(t *testing.T) {
 			dep.userMgnt.EXPECT().GetUserInfo(gomock.All()).Times(1).Return(userDetail, nil)
 			dep.observability.EXPECT().RuntimeView(gomock.Any(), gomock.Any(), gomock.Any()).Return(observability.RuntimeViewRes{}, fmt.Errorf("Full View Error"))
 			req := httptest.NewRequest(http.MethodGet, "/api/automation/v1/observability/runtime-view?page=0&limit=10&type=data-flow", http.NoBody)
+			req.Header.Set("X-Business-Domain", "test")
 			resp := httptest.NewRecorder()
 			engine.ServeHTTP(resp, req)
 			assert.Equal(t, 500, resp.Code)
@@ -266,6 +277,7 @@ func TestRunTime(t *testing.T) {
 			dep.userMgnt.EXPECT().GetUserInfo(gomock.All()).Times(1).Return(userDetail, nil)
 			dep.observability.EXPECT().RuntimeView(gomock.Any(), gomock.Any(), gomock.Any()).Return(mockRes, nil)
 			req := httptest.NewRequest(http.MethodGet, "/api/automation/v1/observability/runtime-view?page=0&limit=10&type=data-flow", http.NoBody)
+			req.Header.Set("X-Business-Domain", "test")
 			resp := httptest.NewRecorder()
 			engine.ServeHTTP(resp, req)
 			result := resp.Result()
@@ -300,6 +312,7 @@ func TestRecent(t *testing.T) {
 		Convey("Token Expired", func() {
 			dep.hydraAdmin.EXPECT().Introspect(gomock.All(), gomock.All()).Times(1).Return(userInfo, nil)
 			req := httptest.NewRequest(http.MethodGet, "/api/automation/v1/observability/recent", http.NoBody)
+			req.Header.Set("X-Business-Domain", "test")
 			resp := httptest.NewRecorder()
 			engine.ServeHTTP(resp, req)
 			assert.Equal(t, 401, resp.Code)
@@ -314,6 +327,7 @@ func TestRecent(t *testing.T) {
 			dep.userMgnt.EXPECT().GetUserInfo(gomock.All()).Times(1).Return(userDetail, nil)
 			dep.observability.EXPECT().RecentRunView(gomock.Any(), gomock.Any(), gomock.Any()).Return([]*observability.RuntimeViewItem{}, fmt.Errorf("Recent View Error"))
 			req := httptest.NewRequest(http.MethodGet, "/api/automation/v1/observability/recent?trigger=cron", http.NoBody)
+			req.Header.Set("X-Business-Domain", "test")
 			resp := httptest.NewRecorder()
 			engine.ServeHTTP(resp, req)
 			assert.Equal(t, 500, resp.Code)
@@ -343,6 +357,7 @@ func TestRecent(t *testing.T) {
 			dep.userMgnt.EXPECT().GetUserInfo(gomock.All()).Times(1).Return(userDetail, nil)
 			dep.observability.EXPECT().RecentRunView(gomock.Any(), gomock.Any(), gomock.Any()).Return(mockRes, nil)
 			req := httptest.NewRequest(http.MethodGet, "/api/automation/v1/observability/recent?trigger=cron", http.NoBody)
+			req.Header.Set("X-Business-Domain", "test")
 			resp := httptest.NewRecorder()
 			engine.ServeHTTP(resp, req)
 			result := resp.Result()

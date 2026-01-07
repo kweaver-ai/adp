@@ -10,9 +10,9 @@ import (
 	"strconv"
 	"sync"
 
-	"devops.aishu.cn/AISHUDevOps/AnyShareFamily/_git/ContentAutomation/tapi/sharemgnt"
+	"github.com/kweaver-ai/adp/autoflow/flow-automation/tapi/sharemgnt"
 	"devops.aishu.cn/AISHUDevOps/AnyShareFamily/_git/go-lib/tclient"
-	commonLog "devops.aishu.cn/AISHUDevOps/DIP/_git/ide-go-lib/log"
+	commonLog "github.com/kweaver-ai/adp/autoflow/ide-go-lib/log"
 )
 
 //go:generate mockgen -package mock_drivenadapters -source ../drivenadapters/sharemgnt.go -destination ../tests/mock_drivenadapters/sharemgnt_mock.go

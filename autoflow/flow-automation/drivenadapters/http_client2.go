@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"strings"
 
-	otelHttp "devops.aishu.cn/AISHUDevOps/DIP/_git/ide-go-lib/http"
+	otelHttp "github.com/kweaver-ai/adp/autoflow/ide-go-lib/http"
 )
 
 type HTTPClient2 interface {

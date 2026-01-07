@@ -3,13 +3,13 @@ package utils
 import (
 	"fmt"
 
-	"devops.aishu.cn/AISHUDevOps/AnyShareFamily/_git/ECron/common"
+	"github.com/kweaver-ai/adp/autoflow/ecron/common"
 
 	"github.com/gin-gonic/gin"
 	"github.com/unrolled/secure"
 )
 
-//NewHTTPServer 一键创建HTTP服务器
+// NewHTTPServer 一键创建HTTP服务器
 func NewHTTPServer(svr common.ServerInfo, opf map[string][]map[string]func(c *gin.Context)) error {
 	r := gin.New()
 	r.Use(gin.Recovery())

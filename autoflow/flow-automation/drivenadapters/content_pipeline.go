@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"sync"
 
-	"devops.aishu.cn/AISHUDevOps/AnyShareFamily/_git/ContentAutomation/common"
+	"github.com/kweaver-ai/adp/autoflow/flow-automation/common"
 )
 
 var (

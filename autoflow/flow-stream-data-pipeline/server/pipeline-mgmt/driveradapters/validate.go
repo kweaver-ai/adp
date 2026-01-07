@@ -8,9 +8,9 @@ import (
 	"strings"
 	"unicode/utf8"
 
-	libCommon "devops.aishu.cn/AISHUDevOps/DIP/_git/mdl-go-lib/common"
-	"devops.aishu.cn/AISHUDevOps/DIP/_git/mdl-go-lib/rest"
 	"github.com/dlclark/regexp2"
+	libCommon "github.com/kweaver-ai/kweaver-go-lib/common"
+	"github.com/kweaver-ai/kweaver-go-lib/rest"
 
 	serrors "flow-stream-data-pipeline/errors"
 	"flow-stream-data-pipeline/pipeline-mgmt/interfaces"

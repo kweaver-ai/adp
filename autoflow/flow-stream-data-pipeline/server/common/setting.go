@@ -6,13 +6,13 @@ import (
 	"sync"
 	"time"
 
-	libdb "devops.aishu.cn/AISHUDevOps/DIP/_git/mdl-go-lib/db"
-	"devops.aishu.cn/AISHUDevOps/DIP/_git/mdl-go-lib/logger"
-	libmq "devops.aishu.cn/AISHUDevOps/DIP/_git/mdl-go-lib/mq"
-	o11y "devops.aishu.cn/AISHUDevOps/DIP/_git/mdl-go-lib/observability"
-	"devops.aishu.cn/AISHUDevOps/DIP/_git/mdl-go-lib/rest"
 	"github.com/bytedance/sonic"
 	"github.com/fsnotify/fsnotify"
+	libdb "github.com/kweaver-ai/kweaver-go-lib/db"
+	"github.com/kweaver-ai/kweaver-go-lib/logger"
+	libmq "github.com/kweaver-ai/kweaver-go-lib/mq"
+	o11y "github.com/kweaver-ai/kweaver-go-lib/observability"
+	"github.com/kweaver-ai/kweaver-go-lib/rest"
 	"github.com/spf13/viper"
 
 	"flow-stream-data-pipeline/version"

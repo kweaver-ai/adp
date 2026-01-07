@@ -7,9 +7,9 @@ import (
 	"os"
 	"sync"
 
-	"devops.aishu.cn/AISHUDevOps/AnyShareFamily/_git/ContentAutomation/errors"
-	"devops.aishu.cn/AISHUDevOps/AnyShareFamily/_git/ContentAutomation/utils"
-	commonLog "devops.aishu.cn/AISHUDevOps/DIP/_git/ide-go-lib/log"
+	"github.com/kweaver-ai/adp/autoflow/flow-automation/errors"
+	"github.com/kweaver-ai/adp/autoflow/flow-automation/utils"
+	commonLog "github.com/kweaver-ai/adp/autoflow/ide-go-lib/log"
 )
 
 //go:generate mockgen -package mock_drivenadapters -source ../drivenadapters/eacp.go -destination ../tests/mock_drivenadapters/eacp_mock.go

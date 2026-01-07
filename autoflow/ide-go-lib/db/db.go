@@ -9,10 +9,10 @@ import (
 	"strings"
 	"time"
 
-	dm "devops.aishu.cn/AISHUDevOps/DIP/_git/ide-go-lib/dialect/dm"
-	kdb "devops.aishu.cn/AISHUDevOps/DIP/_git/ide-go-lib/dialect/kdb"
-	"devops.aishu.cn/AISHUDevOps/DIP/_git/ide-go-lib/utils"
 	"github.com/go-sql-driver/mysql"
+	dm "github.com/kweaver-ai/adp/autoflow/ide-go-lib/dialect/dm"
+	kdb "github.com/kweaver-ai/adp/autoflow/ide-go-lib/dialect/kdb"
+	"github.com/kweaver-ai/adp/autoflow/ide-go-lib/utils"
 	_ "github.com/kweaver-ai/proton-rds-sdk-go/driver" // 注册数据库驱动
 	mysqld "gorm.io/driver/mysql"
 	"gorm.io/gorm"

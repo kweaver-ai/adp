@@ -3,17 +3,15 @@ package utils
 import (
 	"errors"
 	"fmt"
-	"reflect"
 	"testing"
 	"time"
 
-	"devops.aishu.cn/AISHUDevOps/AnyShareFamily/_git/ECron/common"
-	"devops.aishu.cn/AISHUDevOps/AnyShareFamily/_git/ECron/mock"
-	monkey "devops.aishu.cn/AISHUDevOps/AnyShareFamily/_git/Monkey"
-	"github.com/golang/mock/gomock"
 	jsoniter "github.com/json-iterator/go"
+	"github.com/kweaver-ai/adp/autoflow/ecron/common"
+	"github.com/kweaver-ai/adp/autoflow/ecron/mock"
 	. "github.com/smartystreets/goconvey/convey"
 	"github.com/stretchr/testify/assert"
+	"go.uber.org/mock/gomock"
 )
 
 func newOAuthClient(h HTTPClient) *oauth {
@@ -26,6 +24,12 @@ func newOAuthClient(h HTTPClient) *oauth {
 }
 
 func TestAuthInit(t *testing.T) {
+	// Reset logger state before test
+	logMutex.Lock()
+	logHandle.logger = nil
+	logMutex.Unlock()
+
+	t.Setenv("LOGOUT", "1")
 	Convey("init", t, func() {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
@@ -35,13 +39,7 @@ func TestAuthInit(t *testing.T) {
 		o := newOAuthClient(h)
 		assert.NotEqual(t, o, nil)
 
-		h.EXPECT().Post(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).AnyTimes().Return(nil)
-
-		guard := monkey.PatchInstanceMethod(reflect.TypeOf(o), "RequestToken", func(_ *oauth, id string, secret string, scope []string) (token string, duration time.Duration, err error) {
-			return "123", time.Duration(3599), nil
-		})
-		defer guard.Unpatch()
-		// o.init()
+		// Test that Release doesn't panic when timer is nil
 		o.Release()
 	})
 }
@@ -52,20 +50,19 @@ func TestAuthRequestToken(t *testing.T) {
 		defer ctrl.Finish()
 
 		Convey("request success", func() {
-			o := newOAuthClient(nil)
+			mockHTTP := mock.NewMockHTTPClient(ctrl)
+			o := newOAuthClient(mockHTTP)
 			assert.NotEqual(t, o, nil)
 
-			o.httpClient = NewHTTPClient()
-			assert.NotEqual(t, o.httpClient, nil)
-
-			guard := monkey.PatchInstanceMethod(reflect.TypeOf(NewHTTPClient()), "Post", func(_ *HTTPCli, url string, headers map[string]string, reqParam interface{}, respParam interface{}) (err error) {
-				data := make(map[string]interface{})
-				data["access_token"] = "123456"
-				data["expires_in"] = 3599
-				body, _ := jsoniter.Marshal(data)
-				return jsoniter.Unmarshal(body, &respParam)
-			})
-			defer guard.Unpatch()
+			// Mock the Post method to return success response
+			mockHTTP.EXPECT().Post(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).DoAndReturn(
+				func(url string, headers map[string]string, reqParam interface{}, respParam interface{}) error {
+					data := make(map[string]interface{})
+					data["access_token"] = "123456"
+					data["expires_in"] = 3599
+					body, _ := jsoniter.Marshal(data)
+					return jsoniter.Unmarshal(body, respParam)
+				})
 
 			token, duration, err := o.RequestToken("123", "456", []string{"789"})
 			assert.Equal(t, token, "123456")
@@ -74,16 +71,12 @@ func TestAuthRequestToken(t *testing.T) {
 		})
 
 		Convey("request failed", func() {
-			o := newOAuthClient(nil)
+			mockHTTP := mock.NewMockHTTPClient(ctrl)
+			o := newOAuthClient(mockHTTP)
 			assert.NotEqual(t, o, nil)
 
-			o.httpClient = NewHTTPClient()
-			assert.NotEqual(t, o.httpClient, nil)
-
-			guard := monkey.PatchInstanceMethod(reflect.TypeOf(NewHTTPClient()), "Post", func(_ *HTTPCli, url string, headers map[string]string, reqParam interface{}, respParam interface{}) (err error) {
-				return errors.New("failed")
-			})
-			defer guard.Unpatch()
+			// Mock the Post method to return error
+			mockHTTP.EXPECT().Post(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(errors.New("failed"))
 
 			_, _, err := o.RequestToken("123", "456", []string{"789"})
 			assert.NotEqual(t, err, nil)
@@ -96,40 +89,51 @@ func TestAuthVerifyToken(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 
-		o := newOAuthClient(nil)
-		o.httpClient = NewHTTPClient()
-		assert.NotEqual(t, o, nil)
-
 		Convey("authOn is true, o.token is empty", func() {
+			mockHTTP := mock.NewMockHTTPClient(ctrl)
+			o := newOAuthClient(mockHTTP)
+			assert.NotEqual(t, o, nil)
+
 			_, err := o.VerifyToken("")
 			assert.Equal(t, err.Cause, common.ErrTokenEmpty)
 		})
 
 		Convey("the token parameter is invalid", func() {
+			mockHTTP := mock.NewMockHTTPClient(ctrl)
+			o := newOAuthClient(mockHTTP)
+			assert.NotEqual(t, o, nil)
+
 			_, err := o.VerifyToken("123")
 			assert.Equal(t, err.Cause, common.ErrInvalidToken)
 			assert.Equal(t, err.Code, common.Unauthorized)
 		})
 
 		Convey("http post err", func() {
-			guard := monkey.PatchInstanceMethod(reflect.TypeOf(NewHTTPClient()), "Post", func(_ *HTTPCli, url string, headers map[string]string, reqParam interface{}, respParam interface{}) (err error) {
-				return errors.New("failed")
-			})
-			defer guard.Unpatch()
+			mockHTTP := mock.NewMockHTTPClient(ctrl)
+			o := newOAuthClient(mockHTTP)
+			assert.NotEqual(t, o, nil)
+
+			// Mock Post to return error
+			mockHTTP.EXPECT().Post(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(errors.New("failed"))
 
 			_, err := o.VerifyToken(fmt.Sprintf("%v %v", common.Bearer, "123"))
 			assert.Equal(t, err.Cause, "failed")
 		})
 
 		Convey("token active false", func() {
-			guard := monkey.PatchInstanceMethod(reflect.TypeOf(NewHTTPClient()), "Post", func(_ *HTTPCli, url string, headers map[string]string, reqParam interface{}, respParam interface{}) (err error) {
-				data := map[string]interface{}{
-					"active": false,
-				}
-				body, _ := jsoniter.Marshal(data)
-				return jsoniter.Unmarshal(body, &respParam)
-			})
-			defer guard.Unpatch()
+			mockHTTP := mock.NewMockHTTPClient(ctrl)
+			o := newOAuthClient(mockHTTP)
+			assert.NotEqual(t, o, nil)
+
+			// Mock Post to return inactive token
+			mockHTTP.EXPECT().Post(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).DoAndReturn(
+				func(url string, headers map[string]string, reqParam interface{}, respParam interface{}) error {
+					data := map[string]interface{}{
+						"active": false,
+					}
+					body, _ := jsoniter.Marshal(data)
+					return jsoniter.Unmarshal(body, respParam)
+				})
 
 			_, err := o.VerifyToken(fmt.Sprintf("%v %v", common.Bearer, "123"))
 			assert.Equal(t, err.Cause, common.ErrTokenExpired)
@@ -137,14 +141,19 @@ func TestAuthVerifyToken(t *testing.T) {
 		})
 
 		Convey("no client id", func() {
-			guard := monkey.PatchInstanceMethod(reflect.TypeOf(NewHTTPClient()), "Post", func(_ *HTTPCli, url string, headers map[string]string, reqParam interface{}, respParam interface{}) (err error) {
-				data := map[string]interface{}{
-					"active": true,
-				}
-				body, _ := jsoniter.Marshal(data)
-				return jsoniter.Unmarshal(body, &respParam)
-			})
-			defer guard.Unpatch()
+			mockHTTP := mock.NewMockHTTPClient(ctrl)
+			o := newOAuthClient(mockHTTP)
+			assert.NotEqual(t, o, nil)
+
+			// Mock Post to return active but no client_id
+			mockHTTP.EXPECT().Post(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).DoAndReturn(
+				func(url string, headers map[string]string, reqParam interface{}, respParam interface{}) error {
+					data := map[string]interface{}{
+						"active": true,
+					}
+					body, _ := jsoniter.Marshal(data)
+					return jsoniter.Unmarshal(body, respParam)
+				})
 
 			_, err := o.VerifyToken(fmt.Sprintf("%v %v", common.Bearer, "123"))
 			assert.Equal(t, err.Cause, common.ErrInvalidToken)
@@ -152,15 +161,20 @@ func TestAuthVerifyToken(t *testing.T) {
 		})
 
 		Convey("pass", func() {
-			guard := monkey.PatchInstanceMethod(reflect.TypeOf(NewHTTPClient()), "Post", func(_ *HTTPCli, url string, headers map[string]string, reqParam interface{}, respParam interface{}) (err error) {
-				data := map[string]interface{}{
-					"active":    true,
-					"client_id": "123456",
-				}
-				body, _ := jsoniter.Marshal(data)
-				return jsoniter.Unmarshal(body, &respParam)
-			})
-			defer guard.Unpatch()
+			mockHTTP := mock.NewMockHTTPClient(ctrl)
+			o := newOAuthClient(mockHTTP)
+			assert.NotEqual(t, o, nil)
+
+			// Mock Post to return valid token with client_id
+			mockHTTP.EXPECT().Post(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).DoAndReturn(
+				func(url string, headers map[string]string, reqParam interface{}, respParam interface{}) error {
+					data := map[string]interface{}{
+						"active":    true,
+						"client_id": "123456",
+					}
+					body, _ := jsoniter.Marshal(data)
+					return jsoniter.Unmarshal(body, respParam)
+				})
 
 			visitor, err := o.VerifyToken(fmt.Sprintf("%v %v", common.Bearer, "123"))
 			assert.Equal(t, err, (*common.ECronError)(nil))
@@ -174,25 +188,20 @@ func TestVerifyHydraVersion(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 
-		o := newOAuthClient(nil)
-		o.httpClient = NewHTTPClient()
-		assert.NotEqual(t, o, nil)
-
 		oldVerifyTokenPath := "/oauth2/introspect"
 		newVerifyTokenPath := "/admin/oauth2/introspect"
-		oldUrl := fmt.Sprintf("%s%s", o.adminAddress, oldVerifyTokenPath)
-		newUrl := fmt.Sprintf("%s%s", o.adminAddress, newVerifyTokenPath)
+
 		Convey("return newVerifyTokenPath", func() {
-			guard := monkey.PatchInstanceMethod(reflect.TypeOf(NewHTTPClient()), "PostV2", func(_ *HTTPCli, url string, headers map[string]string, reqParam interface{}) (code int, respParam interface{}, err error) {
-				if url == oldUrl {
-					return 404, nil, errors.New("failed")
-				}
-				if url == newUrl {
-					return 200, nil, errors.New("failed")
-				}
-				return 500, nil, errors.New("failed")
-			})
-			defer guard.Unpatch()
+			mockHTTP := mock.NewMockHTTPClient(ctrl)
+			o := newOAuthClient(mockHTTP)
+			assert.NotEqual(t, o, nil)
+
+			oldUrl := fmt.Sprintf("%s%s", o.adminAddress, oldVerifyTokenPath)
+			newUrl := fmt.Sprintf("%s%s", o.adminAddress, newVerifyTokenPath)
+
+			// Mock PostV2 to return 404 for old URL and 200 for new URL
+			mockHTTP.EXPECT().PostV2(newUrl, gomock.Any(), gomock.Any()).Return(200, nil, errors.New("failed"))
+			mockHTTP.EXPECT().PostV2(oldUrl, gomock.Any(), gomock.Any()).Return(404, nil, errors.New("failed")).MaxTimes(1)
 
 			path, success := o.VerifyHydraVersion()
 			assert.Equal(t, path, newVerifyTokenPath)
@@ -200,16 +209,16 @@ func TestVerifyHydraVersion(t *testing.T) {
 		})
 
 		Convey("return oldVerifyTokenPath", func() {
-			guard := monkey.PatchInstanceMethod(reflect.TypeOf(NewHTTPClient()), "PostV2", func(_ *HTTPCli, url string, headers map[string]string, reqParam interface{}) (code int, respParam interface{}, err error) {
-				if url == oldUrl {
-					return 200, nil, errors.New("failed")
-				}
-				if url == newUrl {
-					return 404, nil, errors.New("failed")
-				}
-				return 500, nil, errors.New("failed")
-			})
-			defer guard.Unpatch()
+			mockHTTP := mock.NewMockHTTPClient(ctrl)
+			o := newOAuthClient(mockHTTP)
+			assert.NotEqual(t, o, nil)
+
+			oldUrl := fmt.Sprintf("%s%s", o.adminAddress, oldVerifyTokenPath)
+			newUrl := fmt.Sprintf("%s%s", o.adminAddress, newVerifyTokenPath)
+
+			// Mock PostV2 to return 404 for new URL and 200 for old URL
+			mockHTTP.EXPECT().PostV2(newUrl, gomock.Any(), gomock.Any()).Return(404, nil, errors.New("failed"))
+			mockHTTP.EXPECT().PostV2(oldUrl, gomock.Any(), gomock.Any()).Return(200, nil, errors.New("failed"))
 
 			path, success := o.VerifyHydraVersion()
 			assert.Equal(t, path, oldVerifyTokenPath)
@@ -217,16 +226,16 @@ func TestVerifyHydraVersion(t *testing.T) {
 		})
 
 		Convey("return false", func() {
-			guard := monkey.PatchInstanceMethod(reflect.TypeOf(NewHTTPClient()), "PostV2", func(_ *HTTPCli, url string, headers map[string]string, reqParam interface{}) (code int, respParam interface{}, err error) {
-				if url == oldUrl {
-					return 500, nil, errors.New("failed")
-				}
-				if url == newUrl {
-					return 500, nil, errors.New("failed")
-				}
-				return 500, nil, errors.New("failed")
-			})
-			defer guard.Unpatch()
+			mockHTTP := mock.NewMockHTTPClient(ctrl)
+			o := newOAuthClient(mockHTTP)
+			assert.NotEqual(t, o, nil)
+
+			oldUrl := fmt.Sprintf("%s%s", o.adminAddress, oldVerifyTokenPath)
+			newUrl := fmt.Sprintf("%s%s", o.adminAddress, newVerifyTokenPath)
+
+			// Mock PostV2 to return 500 for both URLs
+			mockHTTP.EXPECT().PostV2(newUrl, gomock.Any(), gomock.Any()).Return(500, nil, errors.New("failed"))
+			mockHTTP.EXPECT().PostV2(oldUrl, gomock.Any(), gomock.Any()).Return(500, nil, errors.New("failed"))
 
 			path, success := o.VerifyHydraVersion()
 			assert.Equal(t, path, "")

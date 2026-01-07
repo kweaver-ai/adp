@@ -5,8 +5,8 @@ import (
 	"strings"
 	"testing"
 
-	rmock "devops.aishu.cn/AISHUDevOps/DIP/_git/mdl-go-lib/rest/mock"
 	"github.com/golang/mock/gomock"
+	rmock "github.com/kweaver-ai/kweaver-go-lib/rest/mock"
 	. "github.com/smartystreets/goconvey/convey"
 
 	"flow-stream-data-pipeline/common"

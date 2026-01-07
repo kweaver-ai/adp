@@ -9,8 +9,8 @@ import (
 	"strings"
 	"sync"
 
-	"devops.aishu.cn/AISHUDevOps/AnyShareFamily/_git/ContentAutomation/common"
-	otelHttp "devops.aishu.cn/AISHUDevOps/DIP/_git/ide-go-lib/http"
+	"github.com/kweaver-ai/adp/autoflow/flow-automation/common"
+	otelHttp "github.com/kweaver-ai/adp/autoflow/ide-go-lib/http"
 )
 
 //go:generate mockgen -package mock_drivenadapters -source ../drivenadapters/uniquery.go -destination ../tests/mock_drivenadapters/uniquery_mock.go

@@ -3,7 +3,7 @@ package entity
 import (
 	"strings"
 
-	"devops.aishu.cn/AISHUDevOps/AnyShareFamily/_git/ContentAutomation/pkg/render"
+	"github.com/kweaver-ai/adp/autoflow/flow-automation/pkg/render"
 )
 
 type ParamsRender struct {

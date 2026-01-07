@@ -8,13 +8,13 @@ import (
 	"sync"
 	"time"
 
-	"devops.aishu.cn/AISHUDevOps/AnyShareFamily/_git/ContentAutomation/common"
-	"devops.aishu.cn/AISHUDevOps/AnyShareFamily/_git/ContentAutomation/drivenadapters"
-	"devops.aishu.cn/AISHUDevOps/AnyShareFamily/_git/ContentAutomation/pkg/entity"
-	"devops.aishu.cn/AISHUDevOps/AnyShareFamily/_git/ContentAutomation/utils"
-	lock "devops.aishu.cn/AISHUDevOps/DIP/_git/ide-go-lib/lock"
-	commonLog "devops.aishu.cn/AISHUDevOps/DIP/_git/ide-go-lib/log"
-	rds "devops.aishu.cn/AISHUDevOps/DIP/_git/ide-go-lib/store"
+	"github.com/kweaver-ai/adp/autoflow/flow-automation/common"
+	"github.com/kweaver-ai/adp/autoflow/flow-automation/drivenadapters"
+	"github.com/kweaver-ai/adp/autoflow/flow-automation/pkg/entity"
+	"github.com/kweaver-ai/adp/autoflow/flow-automation/utils"
+	lock "github.com/kweaver-ai/adp/autoflow/ide-go-lib/lock"
+	commonLog "github.com/kweaver-ai/adp/autoflow/ide-go-lib/log"
+	rds "github.com/kweaver-ai/adp/autoflow/ide-go-lib/store"
 )
 
 // tokenMgntMap key[ip:port:clientID:secret]

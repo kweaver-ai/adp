@@ -2,24 +2,21 @@ package main
 
 import (
 	"fmt"
-	"reflect"
 	"sync"
 	"testing"
 
 	"time"
 
-	monkey "devops.aishu.cn/AISHUDevOps/AnyShareFamily/_git/Monkey"
-
-	"devops.aishu.cn/AISHUDevOps/AnyShareFamily/_git/ECron/common"
-	"devops.aishu.cn/AISHUDevOps/AnyShareFamily/_git/ECron/mock"
-	"devops.aishu.cn/AISHUDevOps/AnyShareFamily/_git/ECron/utils"
-	"github.com/golang/mock/gomock"
 	jsoniter "github.com/json-iterator/go"
+	"github.com/kweaver-ai/adp/autoflow/ecron/common"
+	"github.com/kweaver-ai/adp/autoflow/ecron/mock"
+	"github.com/kweaver-ai/adp/autoflow/ecron/utils"
 	cmap "github.com/orcaman/concurrent-map"
 	"github.com/robfig/cron/v3"
 	uuid "github.com/satori/go.uuid"
 	. "github.com/smartystreets/goconvey/convey"
 	"github.com/stretchr/testify/assert"
+	"go.uber.org/mock/gomock"
 )
 
 func newAnalysis(m utils.MsmqClient, h utils.HTTPClient, a utils.OAuthClient) *eanalysis {
@@ -148,22 +145,23 @@ func TestAnalysisGetJobTotal(t *testing.T) {
 			defer ctrl.Finish()
 
 			m := mock.NewMockMsmqClient(ctrl)
+			h := mock.NewMockHTTPClient(ctrl)
 			a := mock.NewMockOAuthClient(ctrl)
-			pa := newAnalysis(m, nil, a)
-			pa.initHTTPClient()
+			pa := newAnalysis(m, h, a)
 
 			a.EXPECT().GetSecret().AnyTimes().Return("")
 			a.EXPECT().GetCode(gomock.Any()).AnyTimes().Return("", nil)
 
-			guard := monkey.PatchInstanceMethod(reflect.TypeOf(utils.NewHTTPClient()), "Get", func(_ *utils.HTTPCli, url string, headers map[string]string, respParam interface{}) (err error) {
-				params := common.JobTotal{
-					Total:     100,
-					TimeStamp: timestamp,
-				}
-				body, _ := jsoniter.Marshal(params)
-				return jsoniter.Unmarshal(body, &respParam)
-			})
-			defer guard.Unpatch()
+			h.EXPECT().Get(gomock.Any(), gomock.Any(), gomock.Any()).DoAndReturn(
+				func(url string, headers map[string]string, respParam interface{}) error {
+					params := common.JobTotal{
+						Total:     100,
+						TimeStamp: timestamp,
+					}
+					body, _ := jsoniter.Marshal(params)
+					return jsoniter.Unmarshal(body, respParam)
+				},
+			)
 
 			total, err := pa.getJobTotal()
 			assert.Equal(t, total.Total, 100)
@@ -191,23 +189,24 @@ func TestAnalysisGetJobInfoByPage(t *testing.T) {
 			defer ctrl.Finish()
 
 			m := mock.NewMockMsmqClient(ctrl)
+			h := mock.NewMockHTTPClient(ctrl)
 			a := mock.NewMockOAuthClient(ctrl)
-			pa := newAnalysis(m, nil, a)
-			pa.initHTTPClient()
+			pa := newAnalysis(m, h, a)
 
 			a.EXPECT().GetSecret().AnyTimes().Return("")
 			a.EXPECT().GetCode(gomock.Any()).AnyTimes().Return("", nil)
 
-			guard := monkey.PatchInstanceMethod(reflect.TypeOf(utils.NewHTTPClient()), "Get", func(_ *utils.HTTPCli, url string, headers map[string]string, respParam interface{}) (err error) {
-				params := []common.JobInfo{
-					0: {
-						JobID: uuid.NewV4().String(),
-					},
-				}
-				body, _ := jsoniter.Marshal(params)
-				return jsoniter.Unmarshal(body, &respParam)
-			})
-			defer guard.Unpatch()
+			h.EXPECT().Get(gomock.Any(), gomock.Any(), gomock.Any()).DoAndReturn(
+				func(url string, headers map[string]string, respParam interface{}) error {
+					params := []common.JobInfo{
+						0: {
+							JobID: uuid.NewV4().String(),
+						},
+					}
+					body, _ := jsoniter.Marshal(params)
+					return jsoniter.Unmarshal(body, respParam)
+				},
+			)
 
 			pos, err := pa.getJobInfoByPage(page, limit, timestamp)
 			assert.Equal(t, pos, 10)
@@ -256,10 +255,6 @@ func TestAnalysisCronJob(t *testing.T) {
 			})
 
 			Convey("cron a new job, but failed", func() {
-				guard := monkey.PatchInstanceMethod(reflect.TypeOf(pa.cronClient), "AddFunc", func(_ *cron.Cron, spec string, cmd func()) (cron.EntryID, error) {
-					return cron.EntryID(1), nil
-				})
-				defer guard.Unpatch()
 				pa.cronJob(common.JobInfo{
 					JobID: id,
 				})
@@ -451,9 +446,9 @@ func TestAnalysisExecuteImmediateJob(t *testing.T) {
 			defer ctrl.Finish()
 
 			m := mock.NewMockMsmqClient(ctrl)
+			h := mock.NewMockHTTPClient(ctrl)
 			a := mock.NewMockOAuthClient(ctrl)
-			pa := newAnalysis(m, nil, a)
-			pa.initHTTPClient()
+			pa := newAnalysis(m, h, a)
 
 			a.EXPECT().GetSecret().AnyTimes().Return("")
 			a.EXPECT().GetCode(gomock.Any()).AnyTimes().Return("", nil)
@@ -487,26 +482,27 @@ func TestAnalysisExecuteImmediateJob(t *testing.T) {
 			pa.mapJobInfo.Set(id[0], common.JobInfo{JobID: id[0]})
 			pa.mapJobInfo.Set(id[1], common.JobInfo{JobID: id[1]})
 
-			guard := monkey.PatchInstanceMethod(reflect.TypeOf(utils.NewHTTPClient()), "Post", func(_ *utils.HTTPCli, url string, headers map[string]string, reqParam interface{}, respParam interface{}) (err error) {
-				status.ExecuteID = executeID
-				status.Executor = append(status.Executor, map[string]interface{}{
-					"executor_id":  serviceID,
-					"execute_time": beginTime,
-				})
-				status.BeginTime = beginTime
-				status.JobID = job.JobID
-				status.JobName = job.JobName
-				status.JobType = job.JobType
-				status.JobStatus = common.EXECUTING
-				status.ExecuteTimes = 1
-				status.ExtInfo = map[string]interface{}{
-					common.IsDeleted: 0,
-				}
+			h.EXPECT().Post(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).DoAndReturn(
+				func(url string, headers map[string]string, reqParam interface{}, respParam interface{}) error {
+					status.ExecuteID = executeID
+					status.Executor = append(status.Executor, map[string]interface{}{
+						"executor_id":  serviceID,
+						"execute_time": beginTime,
+					})
+					status.BeginTime = beginTime
+					status.JobID = job.JobID
+					status.JobName = job.JobName
+					status.JobType = job.JobType
+					status.JobStatus = common.EXECUTING
+					status.ExecuteTimes = 1
+					status.ExtInfo = map[string]interface{}{
+						common.IsDeleted: 0,
+					}
 
-				body, _ := jsoniter.Marshal(status)
-				return jsoniter.Unmarshal(body, &respParam)
-			})
-			defer guard.Unpatch()
+					body, _ := jsoniter.Marshal(status)
+					return jsoniter.Unmarshal(body, respParam)
+				},
+			)
 
 			pa.executeImmediateJob(job)
 			after, ok := pa.mapJobStatus.Get(executeID)
@@ -1043,12 +1039,14 @@ func TestAnalysisHandleStatus(t *testing.T) {
 		defer ctrl.Finish()
 
 		m := mock.NewMockMsmqClient(ctrl)
+		h := mock.NewMockHTTPClient(ctrl)
 		a := mock.NewMockOAuthClient(ctrl)
-		pa := newAnalysis(m, nil, a)
-		pa.initHTTPClient()
+		pa := newAnalysis(m, h, a)
 
 		a.EXPECT().GetSecret().AnyTimes().Return("")
 		a.EXPECT().GetCode(gomock.Any()).AnyTimes().Return("", nil)
+
+		h.EXPECT().Put(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).AnyTimes().Return(nil)
 
 		jobID := uuid.NewV4().String()
 		beginTime := time.Now().Format(time.RFC3339)
@@ -1070,11 +1068,6 @@ func TestAnalysisHandleStatus(t *testing.T) {
 		}
 		pa.mapJobStatus.Set(executeID[0], status)
 		pa.mapJobStatus.Set(executeID[1001], status)
-
-		guard := monkey.PatchInstanceMethod(reflect.TypeOf(utils.NewHTTPClient()), "Put", func(_ *utils.HTTPCli, url string, headers map[string]string, reqParam interface{}, respParam interface{}) (err error) {
-			return nil
-		})
-		defer guard.Unpatch()
 
 		Convey("less than 1000", func() {
 			mapStatus := make(map[string]interface{})

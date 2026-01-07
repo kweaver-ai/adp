@@ -12,9 +12,9 @@ import (
 	"sync"
 	"time"
 
-	"devops.aishu.cn/AISHUDevOps/DIP/_git/ide-go-lib/errors"
-	"devops.aishu.cn/AISHUDevOps/DIP/_git/ide-go-lib/log"
 	jsoniter "github.com/json-iterator/go"
+	"github.com/kweaver-ai/adp/autoflow/ide-go-lib/errors"
+	"github.com/kweaver-ai/adp/autoflow/ide-go-lib/log"
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 )
 

@@ -4,9 +4,9 @@ import (
 	"context"
 	"sync"
 
-	"devops.aishu.cn/AISHUDevOps/DIP/_git/ide-go-lib/db"
-	traceLog "devops.aishu.cn/AISHUDevOps/DIP/_git/ide-go-lib/telemetry/log"
-	"devops.aishu.cn/AISHUDevOps/DIP/_git/ide-go-lib/telemetry/trace"
+	"github.com/kweaver-ai/adp/autoflow/ide-go-lib/db"
+	traceLog "github.com/kweaver-ai/adp/autoflow/ide-go-lib/telemetry/log"
+	"github.com/kweaver-ai/adp/autoflow/ide-go-lib/telemetry/trace"
 	"go.opentelemetry.io/otel/attribute"
 	"gorm.io/gorm"
 )

@@ -6,10 +6,10 @@ import (
 	"net/http"
 	"sync"
 
-	"devops.aishu.cn/AISHUDevOps/DIP/_git/mdl-go-lib/logger"
-	"devops.aishu.cn/AISHUDevOps/DIP/_git/mdl-go-lib/rest"
-	mqclient "devops.aishu.cn/AISHUDevOps/ONE-Architecture/_git/proton-mq-go"
 	"github.com/bytedance/sonic"
+	"github.com/kweaver-ai/kweaver-go-lib/logger"
+	"github.com/kweaver-ai/kweaver-go-lib/rest"
+	mqclient "github.com/kweaver-ai/proton-mq-sdk-go"
 
 	"flow-stream-data-pipeline/common"
 	serrors "flow-stream-data-pipeline/errors"

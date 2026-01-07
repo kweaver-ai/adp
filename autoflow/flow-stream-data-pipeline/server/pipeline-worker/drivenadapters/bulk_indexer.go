@@ -6,9 +6,9 @@ import (
 	"fmt"
 	"io"
 
-	"devops.aishu.cn/AISHUDevOps/DIP/_git/mdl-go-lib/logger"
 	"github.com/bytedance/sonic"
 	"github.com/bytedance/sonic/decoder"
+	"github.com/kweaver-ai/kweaver-go-lib/logger"
 	opensearch "github.com/opensearch-project/opensearch-go/v2"
 	osapi "github.com/opensearch-project/opensearch-go/v2/opensearchapi"
 	osutil "github.com/opensearch-project/opensearch-go/v2/opensearchutil"

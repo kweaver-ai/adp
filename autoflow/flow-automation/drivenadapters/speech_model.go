@@ -10,9 +10,9 @@ import (
 	"sync"
 	"time"
 
-	"devops.aishu.cn/AISHUDevOps/AnyShareFamily/_git/ContentAutomation/common"
-	otelHttp "devops.aishu.cn/AISHUDevOps/DIP/_git/ide-go-lib/http"
-	traceLog "devops.aishu.cn/AISHUDevOps/DIP/_git/ide-go-lib/telemetry/log"
+	"github.com/kweaver-ai/adp/autoflow/flow-automation/common"
+	otelHttp "github.com/kweaver-ai/adp/autoflow/ide-go-lib/http"
+	traceLog "github.com/kweaver-ai/adp/autoflow/ide-go-lib/telemetry/log"
 )
 
 // SpeechModel 音频转文字模型接口

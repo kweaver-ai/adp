@@ -6,8 +6,8 @@ import (
 	"fmt"
 	"strings"
 
-	"devops.aishu.cn/AISHUDevOps/AnyShareFamily/_git/ContentAutomation/utils"
-	liberrors "devops.aishu.cn/AISHUDevOps/DIP/_git/ide-go-lib/errors"
+	"github.com/kweaver-ai/adp/autoflow/flow-automation/utils"
+	liberrors "github.com/kweaver-ai/adp/autoflow/ide-go-lib/errors"
 )
 
 var (

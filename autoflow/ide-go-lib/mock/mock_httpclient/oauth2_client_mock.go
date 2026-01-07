@@ -7,7 +7,7 @@ package mock_httpclient
 import (
 	reflect "reflect"
 
-	gomock "github.com/golang/mock/gomock"
+	gomock "go.uber.org/mock/gomock"
 )
 
 // MockOAuth2Client is a mock of OAuth2Client interface.

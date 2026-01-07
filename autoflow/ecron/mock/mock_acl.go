@@ -7,8 +7,8 @@ package mock
 import (
 	reflect "reflect"
 
-	common "devops.aishu.cn/AISHUDevOps/AnyShareFamily/_git/ECron/common"
 	gomock "github.com/golang/mock/gomock"
+	common "github.com/kweaver-ai/adp/autoflow/ecron/common"
 )
 
 // MockACLClient is a mock of ACLClient interface.

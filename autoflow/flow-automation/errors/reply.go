@@ -5,8 +5,8 @@ import (
 	"net/http"
 	"strings"
 
-	liberrors "devops.aishu.cn/AISHUDevOps/DIP/_git/ide-go-lib/errors"
 	"github.com/gin-gonic/gin"
+	liberrors "github.com/kweaver-ai/adp/autoflow/ide-go-lib/errors"
 )
 
 func GetLanguageFromRequest(c *gin.Context) (string, bool) {

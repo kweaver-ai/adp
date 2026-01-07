@@ -8,14 +8,14 @@ import (
 	"sync"
 	"time"
 
-	"devops.aishu.cn/AISHUDevOps/AnyShareFamily/_git/ContentAutomation/pkg/entity"
-	"devops.aishu.cn/AISHUDevOps/AnyShareFamily/_git/ContentAutomation/pkg/log"
-	"devops.aishu.cn/AISHUDevOps/AnyShareFamily/_git/ContentAutomation/pkg/vm"
-	"devops.aishu.cn/AISHUDevOps/AnyShareFamily/_git/ContentAutomation/pkg/vm/opcode"
-	"devops.aishu.cn/AISHUDevOps/AnyShareFamily/_git/ContentAutomation/pkg/vm/state"
-	"devops.aishu.cn/AISHUDevOps/AnyShareFamily/_git/ContentAutomation/store/rds"
-	liberrors "devops.aishu.cn/AISHUDevOps/DIP/_git/ide-go-lib/errors"
-	traceLog "devops.aishu.cn/AISHUDevOps/DIP/_git/ide-go-lib/telemetry/log"
+	"github.com/kweaver-ai/adp/autoflow/flow-automation/pkg/entity"
+	"github.com/kweaver-ai/adp/autoflow/flow-automation/pkg/log"
+	"github.com/kweaver-ai/adp/autoflow/flow-automation/pkg/vm"
+	"github.com/kweaver-ai/adp/autoflow/flow-automation/pkg/vm/opcode"
+	"github.com/kweaver-ai/adp/autoflow/flow-automation/pkg/vm/state"
+	"github.com/kweaver-ai/adp/autoflow/flow-automation/store/rds"
+	liberrors "github.com/kweaver-ai/adp/autoflow/ide-go-lib/errors"
+	traceLog "github.com/kweaver-ai/adp/autoflow/ide-go-lib/telemetry/log"
 	"go.mongodb.org/mongo-driver/mongo"
 )
 

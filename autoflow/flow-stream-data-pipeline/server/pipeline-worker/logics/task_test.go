@@ -7,12 +7,12 @@ import (
 	"testing"
 	"time"
 
-	libmq "devops.aishu.cn/AISHUDevOps/DIP/_git/mdl-go-lib/mq"
 	. "github.com/agiledragon/gomonkey/v2"
 	"github.com/bytedance/sonic"
 	"github.com/bytedance/sonic/ast"
 	"github.com/confluentinc/confluent-kafka-go/v2/kafka"
 	"github.com/golang/mock/gomock"
+	libmq "github.com/kweaver-ai/kweaver-go-lib/mq"
 	osutil "github.com/opensearch-project/opensearch-go/v2/opensearchutil"
 	. "github.com/smartystreets/goconvey/convey"
 

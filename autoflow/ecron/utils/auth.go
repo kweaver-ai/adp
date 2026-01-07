@@ -14,7 +14,7 @@ import (
 	"strings"
 	"time"
 
-	"devops.aishu.cn/AISHUDevOps/AnyShareFamily/_git/ECron/common"
+	"github.com/kweaver-ai/adp/autoflow/ecron/common"
 )
 
 //go:generate mockgen -package mock -source ../utils/auth.go -destination ../mock/mock_auth.go

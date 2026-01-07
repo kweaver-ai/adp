@@ -3,32 +3,35 @@ package main
 import (
 	"errors"
 	"fmt"
-	"os/exec"
 	"strings"
 
-	"devops.aishu.cn/AISHUDevOps/AnyShareFamily/_git/ECron/common"
-	"devops.aishu.cn/AISHUDevOps/AnyShareFamily/_git/ECron/utils"
 	jsoniter "github.com/json-iterator/go"
+	"github.com/kweaver-ai/adp/autoflow/ecron/common"
+	"github.com/kweaver-ai/adp/autoflow/ecron/utils"
 	"github.com/mitchellh/mapstructure"
 )
 
 //go:generate mockgen -package mock -source ../management/execution.go -destination ../mock/mock_execution.go
 
-//Executor 任务执行服务
+// Executor 任务执行服务
 type Executor interface {
 	ExecuteJob(job common.JobInfo) (reply bool, err error)
 }
 
-//NewExecutor 创建任务执行服务
+// NewExecutor 创建任务执行服务
 func NewExecutor() Executor {
 	return &executor{
-		httpClient: utils.NewHTTPClient(),
+		httpClient:    utils.NewHTTPClient(),
+		commandRunner: NewCommandRunner(),
+		mapDecoder:    NewMapDecoder(),
 	}
 }
 
-//Executor 任务执行者结构
+// Executor 任务执行者结构
 type executor struct {
-	httpClient utils.HTTPClient
+	httpClient    utils.HTTPClient
+	commandRunner CommandRunner
+	mapDecoder    MapDecoder
 }
 
 type kubernetes struct {
@@ -41,7 +44,7 @@ var (
 	exeLog = utils.NewLogger()
 )
 
-//ExecuteJob 执行任务
+// ExecuteJob 执行任务
 func (e *executor) ExecuteJob(job common.JobInfo) (reply bool, err error) {
 	if nil == e.httpClient {
 		err = errors.New(common.ErrHTTPClientUnavailable)
@@ -111,11 +114,11 @@ func (e *executor) exeJob(job common.JobInfo) (reply bool, err error) {
 	if nil == k8s || 0 == len(k8s) {
 		name, args, _ := e.getCmd(path, params)
 		exeLog.Infof("[exeJob] getCmd params, name: %v, args: %v", name, args)
-		return true, exec.Command(name, args...).Run()
+		return true, e.commandRunner.Run(name, args...)
 	}
 
 	k8sInfo := kubernetes{}
-	err = mapstructure.Decode(k8s, &k8sInfo)
+	err = e.mapDecoder.Decode(k8s, &k8sInfo)
 	if nil != err {
 		return false, err
 	}
@@ -181,4 +184,9 @@ func (e *executor) getCmd(path string, params map[string]string) (name string, a
 	}
 	fields, _ := jsoniter.Marshal(cmdFields)
 	return name, args, string(fields)
+}
+
+// decodeMap 包装 mapstructure.Decode 以便于测试
+func decodeMap(input interface{}, output interface{}) error {
+	return mapstructure.Decode(input, output)
 }

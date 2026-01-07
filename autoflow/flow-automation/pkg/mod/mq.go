@@ -4,9 +4,9 @@ import (
 	"context"
 	"sync"
 
-	"devops.aishu.cn/AISHUDevOps/AnyShareFamily/_git/ContentAutomation/pkg/entity"
-	commonLog "devops.aishu.cn/AISHUDevOps/DIP/_git/ide-go-lib/log"
-	cmq "devops.aishu.cn/AISHUDevOps/DIP/_git/ide-go-lib/mq"
+	"github.com/kweaver-ai/adp/autoflow/flow-automation/pkg/entity"
+	commonLog "github.com/kweaver-ai/adp/autoflow/ide-go-lib/log"
+	cmq "github.com/kweaver-ai/adp/autoflow/ide-go-lib/mq"
 )
 
 // MQHandler interface

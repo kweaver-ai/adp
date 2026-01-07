@@ -5,11 +5,11 @@ import (
 	"fmt"
 	"testing"
 
-	"devops.aishu.cn/AISHUDevOps/AnyShareFamily/_git/ContentAutomation/drivenadapters"
-	"devops.aishu.cn/AISHUDevOps/AnyShareFamily/_git/ContentAutomation/tests/mock_drivenadapters"
-	ierr "devops.aishu.cn/AISHUDevOps/DIP/_git/ide-go-lib/errors"
 	"github.com/go-playground/assert/v2"
-	"github.com/golang/mock/gomock"
+	"go.uber.org/mock/gomock"
+	"github.com/kweaver-ai/adp/autoflow/flow-automation/drivenadapters"
+	"github.com/kweaver-ai/adp/autoflow/flow-automation/tests/mock_drivenadapters"
+	ierr "github.com/kweaver-ai/adp/autoflow/ide-go-lib/errors"
 	. "github.com/smartystreets/goconvey/convey"
 )
 

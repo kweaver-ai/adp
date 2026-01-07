@@ -7,7 +7,7 @@ import (
 	"sync"
 	"time"
 
-	"devops.aishu.cn/AISHUDevOps/AnyShareFamily/_git/ContentAutomation/common"
+	"github.com/kweaver-ai/adp/autoflow/flow-automation/common"
 	"github.com/kweaver-ai/TelemetrySDK-Go/span/v2/field"
 	spanLog "github.com/kweaver-ai/TelemetrySDK-Go/span/v2/log"
 )

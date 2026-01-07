@@ -7,17 +7,18 @@ import (
 	"sync"
 	"time"
 
-	"devops.aishu.cn/AISHUDevOps/AnyShareFamily/_git/ContentAutomation/common"
-	"devops.aishu.cn/AISHUDevOps/AnyShareFamily/_git/ContentAutomation/drivenadapters"
-	// "devops.aishu.cn/AISHUDevOps/AnyShareFamily/_git/ContentAutomation/drivenadapters/thirft" // disabled: go-lib dependency
-	"devops.aishu.cn/AISHUDevOps/AnyShareFamily/_git/ContentAutomation/errors"
-	"devops.aishu.cn/AISHUDevOps/AnyShareFamily/_git/ContentAutomation/pkg/entity"
-	"devops.aishu.cn/AISHUDevOps/AnyShareFamily/_git/ContentAutomation/pkg/mod"
-	"devops.aishu.cn/AISHUDevOps/AnyShareFamily/_git/ContentAutomation/store/rds"
-	"devops.aishu.cn/AISHUDevOps/AnyShareFamily/_git/ContentAutomation/utils"
-	commonLog "devops.aishu.cn/AISHUDevOps/DIP/_git/ide-go-lib/log"
-	traceLog "devops.aishu.cn/AISHUDevOps/DIP/_git/ide-go-lib/telemetry/log"
-	"devops.aishu.cn/AISHUDevOps/DIP/_git/ide-go-lib/telemetry/trace"
+	"github.com/kweaver-ai/adp/autoflow/flow-automation/common"
+	"github.com/kweaver-ai/adp/autoflow/flow-automation/drivenadapters"
+
+	// "github.com/kweaver-ai/adp/autoflow/flow-automation/drivenadapters/thirft" // disabled: go-lib dependency
+	"github.com/kweaver-ai/adp/autoflow/flow-automation/errors"
+	"github.com/kweaver-ai/adp/autoflow/flow-automation/pkg/entity"
+	"github.com/kweaver-ai/adp/autoflow/flow-automation/pkg/mod"
+	"github.com/kweaver-ai/adp/autoflow/flow-automation/store/rds"
+	"github.com/kweaver-ai/adp/autoflow/flow-automation/utils"
+	commonLog "github.com/kweaver-ai/adp/autoflow/ide-go-lib/log"
+	traceLog "github.com/kweaver-ai/adp/autoflow/ide-go-lib/telemetry/log"
+	"github.com/kweaver-ai/adp/autoflow/ide-go-lib/telemetry/trace"
 	"go.mongodb.org/mongo-driver/bson"
 	"gorm.io/gorm"
 )
@@ -96,7 +97,7 @@ type alarm struct {
 	store        mod.Store
 	alarmRuleDao rds.AlarmRuleDao
 	// sharemgnt    thirft.ShareMgnt // disabled: go-lib dependency
-	userMgnt     drivenadapters.UserManagement
+	userMgnt drivenadapters.UserManagement
 	// 告警任务
 	task chan *TriggerAlarmTask
 }
@@ -115,8 +116,8 @@ func NewAlarm() Alarm {
 			store:        mod.GetStore(),
 			alarmRuleDao: rds.NewAlarmRule(),
 			// sharemgnt:    thirft.NewShareMgnt(), // disabled: go-lib dependency
-			userMgnt:     drivenadapters.NewUserManagement(),
-			task:         make(chan *TriggerAlarmTask, 100),
+			userMgnt: drivenadapters.NewUserManagement(),
+			task:     make(chan *TriggerAlarmTask, 100),
 		}
 	})
 

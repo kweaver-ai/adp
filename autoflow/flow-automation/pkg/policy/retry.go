@@ -4,7 +4,7 @@ import (
 	"context"
 	"time"
 
-	"devops.aishu.cn/AISHUDevOps/DIP/_git/ide-go-lib/telemetry/trace"
+	"github.com/kweaver-ai/adp/autoflow/ide-go-lib/telemetry/trace"
 )
 
 const RetryPolicyName = "RetryPolicy"

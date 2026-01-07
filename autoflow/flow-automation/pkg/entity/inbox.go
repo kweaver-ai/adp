@@ -1,6 +1,6 @@
 package entity
 
-import "devops.aishu.cn/AISHUDevOps/AnyShareFamily/_git/ContentAutomation/common"
+import "github.com/kweaver-ai/adp/autoflow/flow-automation/common"
 
 // InBox 消息队列
 type InBox struct {

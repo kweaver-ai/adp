@@ -6,7 +6,7 @@ import (
 	"regexp"
 	"strings"
 
-	"devops.aishu.cn/AISHUDevOps/AnyShareFamily/_git/ECron/common"
+	"github.com/kweaver-ai/adp/autoflow/ecron/common"
 )
 
 var (

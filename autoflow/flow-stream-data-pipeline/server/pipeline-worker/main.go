@@ -9,8 +9,8 @@ import (
 	"os/signal"
 	"syscall"
 
-	"devops.aishu.cn/AISHUDevOps/DIP/_git/mdl-go-lib/logger"
-	"devops.aishu.cn/AISHUDevOps/DIP/_git/mdl-go-lib/rest"
+	"github.com/kweaver-ai/kweaver-go-lib/logger"
+	"github.com/kweaver-ai/kweaver-go-lib/rest"
 	"github.com/spf13/cobra"
 	_ "go.uber.org/automaxprocs"
 

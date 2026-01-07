@@ -6,10 +6,9 @@ import (
 	"testing"
 	"time"
 
-	"devops.aishu.cn/AISHUDevOps/AnyShareFamily/_git/ECron/common"
-	monkey "devops.aishu.cn/AISHUDevOps/AnyShareFamily/_git/Monkey"
-	"devops.aishu.cn/AISHUDevOps/ONE-Architecture/_git/proton-rds-sdk-go/sqlx"
 	"github.com/DATA-DOG/go-sqlmock"
+	"github.com/kweaver-ai/adp/autoflow/ecron/common"
+	"github.com/kweaver-ai/proton-rds-sdk-go/sqlx"
 	"github.com/robfig/cron/v3"
 	uuid "github.com/satori/go.uuid"
 	. "github.com/smartystreets/goconvey/convey"
@@ -33,7 +32,8 @@ func newDB() *ecronDB {
 				5: "`f_begin_time`", 6: "`f_end_time`", 7: "`f_executor`", 8: "`f_execute_times`", 9: "`f_ext_info`",
 			},
 		},
-		parser: cron.NewParser(cron.Second | cron.Minute | cron.Hour | cron.Dom | cron.Month | cron.Dow | cron.Descriptor),
+		parser:    cron.NewParser(cron.Second | cron.Minute | cron.Hour | cron.Dom | cron.Month | cron.Dow | cron.Descriptor),
+		connector: sqlx.NewDB,
 	}
 }
 
@@ -51,12 +51,10 @@ func TestECronDBConnect(t *testing.T) {
 			assert.Equal(t, err, nil)
 			defer db.Close()
 
-			guard := monkey.Patch(sqlx.NewDB, func(connInfo *sqlx.DBConfig) (*sqlx.DB, error) {
-				return db, errors.New(common.ErrDataBaseUnavailable)
-			})
-			defer guard.Unpatch()
-
 			edb := newDB()
+			edb.connector = func(connInfo *sqlx.DBConfig) (*sqlx.DB, error) {
+				return db, errors.New(common.ErrDataBaseUnavailable)
+			}
 			assert.NotEqual(t, edb, nil)
 			ecronErr := edb.Connect()
 			assert.Equal(t, ecronErr.Code, common.InternalError)
@@ -67,12 +65,10 @@ func TestECronDBConnect(t *testing.T) {
 			assert.Equal(t, err, nil)
 			defer db.Close()
 
-			guard := monkey.Patch(sqlx.NewDB, func(connInfo *sqlx.DBConfig) (*sqlx.DB, error) {
-				return db, nil
-			})
-			defer guard.Unpatch()
-
 			edb := newDB()
+			edb.connector = func(connInfo *sqlx.DBConfig) (*sqlx.DB, error) {
+				return db, nil
+			}
 			assert.NotEqual(t, edb, nil)
 			ecronErr := edb.Connect()
 			assert.Equal(t, ecronErr, (*common.ECronError)(nil))
@@ -93,12 +89,10 @@ func TestECronDBRelease(t *testing.T) {
 			assert.Equal(t, err, nil)
 			defer db.Close()
 
-			guard := monkey.Patch(sqlx.NewDB, func(connInfo *sqlx.DBConfig) (*sqlx.DB, error) {
-				return db, nil
-			})
-			defer guard.Unpatch()
-
 			edb := newDB()
+			edb.connector = func(connInfo *sqlx.DBConfig) (*sqlx.DB, error) {
+				return db, nil
+			}
 			assert.NotEqual(t, edb, nil)
 			ecronErr := edb.Connect()
 			assert.Equal(t, ecronErr, (*common.ECronError)(nil))
@@ -121,12 +115,10 @@ func TestECronDBPing(t *testing.T) {
 			assert.Equal(t, err, nil)
 			defer db.Close()
 
-			guard := monkey.Patch(sqlx.NewDB, func(connInfo *sqlx.DBConfig) (*sqlx.DB, error) {
-				return db, nil
-			})
-			defer guard.Unpatch()
-
 			edb := newDB()
+			edb.connector = func(connInfo *sqlx.DBConfig) (*sqlx.DB, error) {
+				return db, nil
+			}
 			assert.NotEqual(t, edb, nil)
 			ecronErr := edb.Connect()
 			assert.Equal(t, ecronErr, (*common.ECronError)(nil))
@@ -152,12 +144,10 @@ func TestECronDBIsDataBaseAvailable(t *testing.T) {
 			assert.Equal(t, err, nil)
 			defer db.Close()
 
-			guard := monkey.Patch(sqlx.NewDB, func(connInfo *sqlx.DBConfig) (*sqlx.DB, error) {
-				return db, nil
-			})
-			defer guard.Unpatch()
-
 			edb := newDB()
+			edb.connector = func(connInfo *sqlx.DBConfig) (*sqlx.DB, error) {
+				return db, nil
+			}
 			assert.NotEqual(t, edb, nil)
 			ecronErr := edb.Connect()
 			assert.Equal(t, ecronErr, (*common.ECronError)(nil))
@@ -175,12 +165,10 @@ func TestECronDBInsertJob(t *testing.T) {
 		assert.Equal(t, err, nil)
 		defer db.Close()
 
-		guard := monkey.Patch(sqlx.NewDB, func(connInfo *sqlx.DBConfig) (*sqlx.DB, error) {
-			return db, nil
-		})
-		defer guard.Unpatch()
-
 		edb := newDB()
+		edb.connector = func(connInfo *sqlx.DBConfig) (*sqlx.DB, error) {
+			return db, nil
+		}
 		assert.NotEqual(t, edb, nil)
 		ecronErr := edb.Connect()
 		assert.Equal(t, ecronErr, (*common.ECronError)(nil))
@@ -317,12 +305,10 @@ func TestECronDBUpdateJob(t *testing.T) {
 		assert.Equal(t, err, nil)
 		defer db.Close()
 
-		guard := monkey.Patch(sqlx.NewDB, func(connInfo *sqlx.DBConfig) (*sqlx.DB, error) {
-			return db, nil
-		})
-		defer guard.Unpatch()
-
 		edb := newDB()
+		edb.connector = func(connInfo *sqlx.DBConfig) (*sqlx.DB, error) {
+			return db, nil
+		}
 		assert.NotEqual(t, edb, nil)
 		ecronErr := edb.Connect()
 		assert.Equal(t, ecronErr, (*common.ECronError)(nil))
@@ -475,12 +461,10 @@ func TestECronDBDeleteJob(t *testing.T) {
 		assert.Equal(t, err, nil)
 		defer db.Close()
 
-		guard := monkey.Patch(sqlx.NewDB, func(connInfo *sqlx.DBConfig) (*sqlx.DB, error) {
-			return db, nil
-		})
-		defer guard.Unpatch()
-
 		edb := newDB()
+		edb.connector = func(connInfo *sqlx.DBConfig) (*sqlx.DB, error) {
+			return db, nil
+		}
 		assert.NotEqual(t, edb, nil)
 		ecronErr := edb.Connect()
 		assert.Equal(t, ecronErr, (*common.ECronError)(nil))
@@ -509,12 +493,10 @@ func TestECronDBGetJob(t *testing.T) {
 		assert.Equal(t, err, nil)
 		defer db.Close()
 
-		guard := monkey.Patch(sqlx.NewDB, func(connInfo *sqlx.DBConfig) (*sqlx.DB, error) {
-			return db, nil
-		})
-		defer guard.Unpatch()
-
 		edb := newDB()
+		edb.connector = func(connInfo *sqlx.DBConfig) (*sqlx.DB, error) {
+			return db, nil
+		}
 		assert.NotEqual(t, edb, nil)
 		ecronErr := edb.Connect()
 		assert.Equal(t, ecronErr, (*common.ECronError)(nil))
@@ -606,12 +588,10 @@ func TestECronDBGetJobTotal(t *testing.T) {
 		assert.Equal(t, err, nil)
 		defer db.Close()
 
-		guard := monkey.Patch(sqlx.NewDB, func(connInfo *sqlx.DBConfig) (*sqlx.DB, error) {
-			return db, nil
-		})
-		defer guard.Unpatch()
-
 		edb := newDB()
+		edb.connector = func(connInfo *sqlx.DBConfig) (*sqlx.DB, error) {
+			return db, nil
+		}
 		assert.NotEqual(t, edb, nil)
 		ecronErr := edb.Connect()
 		assert.Equal(t, ecronErr, (*common.ECronError)(nil))
@@ -661,12 +641,10 @@ func TestECronDBGetJobStatus(t *testing.T) {
 		assert.Equal(t, err, nil)
 		defer db.Close()
 
-		guard := monkey.Patch(sqlx.NewDB, func(connInfo *sqlx.DBConfig) (*sqlx.DB, error) {
-			return db, nil
-		})
-		defer guard.Unpatch()
-
 		edb := newDB()
+		edb.connector = func(connInfo *sqlx.DBConfig) (*sqlx.DB, error) {
+			return db, nil
+		}
 		assert.NotEqual(t, edb, nil)
 		ecronErr := edb.Connect()
 		assert.Equal(t, ecronErr, (*common.ECronError)(nil))
@@ -770,12 +748,10 @@ func TestECronDBUpdateJobStatus(t *testing.T) {
 		assert.Equal(t, err, nil)
 		defer db.Close()
 
-		guard := monkey.Patch(sqlx.NewDB, func(connInfo *sqlx.DBConfig) (*sqlx.DB, error) {
-			return db, nil
-		})
-		defer guard.Unpatch()
-
 		edb := newDB()
+		edb.connector = func(connInfo *sqlx.DBConfig) (*sqlx.DB, error) {
+			return db, nil
+		}
 		assert.NotEqual(t, edb, nil)
 		ecronErr := edb.Connect()
 		assert.Equal(t, ecronErr, (*common.ECronError)(nil))
@@ -795,12 +771,10 @@ func TestECronDBBatchJobEnable(t *testing.T) {
 		assert.Equal(t, err, nil)
 		defer db.Close()
 
-		guard := monkey.Patch(sqlx.NewDB, func(connInfo *sqlx.DBConfig) (*sqlx.DB, error) {
-			return db, nil
-		})
-		defer guard.Unpatch()
-
 		edb := newDB()
+		edb.connector = func(connInfo *sqlx.DBConfig) (*sqlx.DB, error) {
+			return db, nil
+		}
 		assert.NotEqual(t, edb, nil)
 		ecronErr := edb.Connect()
 		assert.Equal(t, ecronErr, (*common.ECronError)(nil))
@@ -852,12 +826,10 @@ func TestECronDBBatchJobNotify(t *testing.T) {
 		assert.Equal(t, err, nil)
 		defer db.Close()
 
-		guard := monkey.Patch(sqlx.NewDB, func(connInfo *sqlx.DBConfig) (*sqlx.DB, error) {
-			return db, nil
-		})
-		defer guard.Unpatch()
-
 		edb := newDB()
+		edb.connector = func(connInfo *sqlx.DBConfig) (*sqlx.DB, error) {
+			return db, nil
+		}
 		assert.NotEqual(t, edb, nil)
 		ecronErr := edb.Connect()
 		assert.Equal(t, ecronErr, (*common.ECronError)(nil))
@@ -1063,7 +1035,8 @@ func TestSQLInject(t *testing.T) {
 					5: "`f_begin_time`", 6: "`f_end_time`", 7: "`f_executor`", 8: "`f_execute_times`", 9: "`f_ext_info`",
 				},
 			},
-			parser: cron.NewParser(cron.Second | cron.Minute | cron.Hour | cron.Dom | cron.Month | cron.Dow | cron.Descriptor),
+			parser:    cron.NewParser(cron.Second | cron.Minute | cron.Hour | cron.Dom | cron.Month | cron.Dow | cron.Descriptor),
+			connector: sqlx.NewDB,
 		}
 		err := realDB.Connect()
 		if nil != err {

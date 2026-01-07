@@ -3,7 +3,7 @@ package entity
 import (
 	"testing"
 
-	"devops.aishu.cn/AISHUDevOps/AnyShareFamily/_git/ContentAutomation/store"
+	"github.com/kweaver-ai/adp/autoflow/flow-automation/store"
 	"github.com/stretchr/testify/assert"
 )
 

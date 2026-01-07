@@ -9,9 +9,9 @@ import (
 	"strings"
 	"time"
 
-	"devops.aishu.cn/AISHUDevOps/AnyShareFamily/_git/ECron/common"
-	"devops.aishu.cn/AISHUDevOps/AnyShareFamily/_git/ECron/utils"
-	"devops.aishu.cn/AISHUDevOps/AnyShareFamily/_git/go-lib/rest"
+	"github.com/kweaver-ai/adp/autoflow/ecron/common"
+	"github.com/kweaver-ai/adp/autoflow/ecron/utils"
+	"github.com/kweaver-ai/adp/autoflow/ide-go-lib/rest"
 
 	"github.com/gin-gonic/gin"
 	jsoniter "github.com/json-iterator/go"
@@ -56,26 +56,28 @@ type ManagementService interface {
 // NewManagementService 创建定时服务对象
 func NewManagementService() ManagementService {
 	return &management{
-		mapRequest:     make(map[string][]map[string]func(c *gin.Context)),
-		msmqClient:     nil,
-		dbClient:       nil,
-		executor:       nil,
-		authClient:     nil,
-		chJobMsg:       make(chan common.JobMsg, 1),
-		chJobStatus:    make(chan common.JobStatus, 1),
-		chJobImmediate: make(chan common.JobInfo, 1),
+		mapRequest:        make(map[string][]map[string]func(c *gin.Context)),
+		msmqClient:        nil,
+		dbClient:          nil,
+		executor:          nil,
+		authClient:        nil,
+		httpServerStarter: utils.NewHTTPServerStarter(),
+		chJobMsg:          make(chan common.JobMsg, 1),
+		chJobStatus:       make(chan common.JobStatus, 1),
+		chJobImmediate:    make(chan common.JobInfo, 1),
 	}
 }
 
 type management struct {
-	mapRequest     map[string][]map[string]func(c *gin.Context)
-	msmqClient     utils.MsmqClient
-	dbClient       utils.DBClient
-	executor       Executor
-	authClient     utils.OAuthClient
-	chJobMsg       chan common.JobMsg
-	chJobStatus    chan common.JobStatus
-	chJobImmediate chan common.JobInfo
+	mapRequest        map[string][]map[string]func(c *gin.Context)
+	msmqClient        utils.MsmqClient
+	dbClient          utils.DBClient
+	executor          Executor
+	authClient        utils.OAuthClient
+	httpServerStarter utils.HTTPServerStarter
+	chJobMsg          chan common.JobMsg
+	chJobStatus       chan common.JobStatus
+	chJobImmediate    chan common.JobInfo
 }
 
 func (t *management) Start() {
@@ -92,7 +94,7 @@ func (t *management) Start() {
 
 	t.init()
 	gin.SetMode(gin.ReleaseMode)
-	err := utils.NewHTTPServer(cronSvr, t.mapRequest)
+	err := t.httpServerStarter.Start(cronSvr, t.mapRequest)
 	if nil != err {
 		storageLog.Errorln(err)
 	}

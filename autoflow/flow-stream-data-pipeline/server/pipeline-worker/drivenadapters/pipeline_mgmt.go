@@ -7,9 +7,9 @@ import (
 	"net/url"
 	"sync"
 
-	"devops.aishu.cn/AISHUDevOps/DIP/_git/mdl-go-lib/logger"
-	"devops.aishu.cn/AISHUDevOps/DIP/_git/mdl-go-lib/rest"
 	"github.com/bytedance/sonic"
+	"github.com/kweaver-ai/kweaver-go-lib/logger"
+	"github.com/kweaver-ai/kweaver-go-lib/rest"
 
 	"flow-stream-data-pipeline/common"
 	"flow-stream-data-pipeline/pipeline-worker/interfaces"

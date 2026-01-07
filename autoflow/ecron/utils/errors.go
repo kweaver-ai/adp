@@ -1,14 +1,14 @@
 package utils
 
 import (
-	"devops.aishu.cn/AISHUDevOps/AnyShareFamily/_git/ECron/common"
+	"github.com/kweaver-ai/adp/autoflow/ecron/common"
 )
 
 var (
 	errorConfig = NewConfiger()
 )
 
-//NewECronError 生成定时服务错误
+// NewECronError 生成定时服务错误
 func NewECronError(cause string, code int, detail map[string]interface{}) (err *common.ECronError) {
 	message := ""
 	switch code {

@@ -3,8 +3,8 @@ package utils
 import (
 	"sync"
 
-	"devops.aishu.cn/AISHUDevOps/AnyShareFamily/_git/ECron/common"
-	msqclient "devops.aishu.cn/AISHUDevOps/ONE-Architecture/_git/proton-mq-go"
+	"github.com/kweaver-ai/adp/autoflow/ecron/common"
+	msqclient "github.com/kweaver-ai/proton-mq-sdk-go"
 )
 
 //go:generate mockgen -package mock -source ../utils/msmq.go -destination ../mock/mock_msmq.go

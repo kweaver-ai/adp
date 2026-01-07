@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"strings"
 
-	"devops.aishu.cn/AISHUDevOps/DIP/_git/ide-go-lib/i18n"
+	"github.com/kweaver-ai/adp/autoflow/ide-go-lib/i18n"
 )
 
 const PublicErrorType = "Public"

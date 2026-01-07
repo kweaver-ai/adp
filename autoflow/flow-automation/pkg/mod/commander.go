@@ -8,7 +8,7 @@ import (
 	"strings"
 	"time"
 
-	"devops.aishu.cn/AISHUDevOps/AnyShareFamily/_git/ContentAutomation/pkg/entity"
+	"github.com/kweaver-ai/adp/autoflow/flow-automation/pkg/entity"
 )
 
 // DefCommander used to execute command

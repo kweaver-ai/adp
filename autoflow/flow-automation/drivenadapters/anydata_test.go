@@ -6,8 +6,8 @@ import (
 	"testing"
 
 	"github.com/go-playground/assert/v2"
-	"github.com/golang/mock/gomock"
 	. "github.com/smartystreets/goconvey/convey"
+	"go.uber.org/mock/gomock"
 )
 
 func NewMockAnyData(clients *HttpClientMock) AnyData {

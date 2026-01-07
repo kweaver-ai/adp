@@ -1,6 +1,6 @@
 package event
 
-import "devops.aishu.cn/AISHUDevOps/AnyShareFamily/_git/ContentAutomation/pkg/entity"
+import "github.com/kweaver-ai/adp/autoflow/flow-automation/pkg/entity"
 
 const (
 	KeyDagInstanceUpdated = "DagInstanceUpdated"

@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"sync"
 
-	"devops.aishu.cn/AISHUDevOps/AnyShareFamily/_git/ContentAutomation/common"
-	commonLog "devops.aishu.cn/AISHUDevOps/DIP/_git/ide-go-lib/log"
+	"github.com/kweaver-ai/adp/autoflow/flow-automation/common"
+	commonLog "github.com/kweaver-ai/adp/autoflow/ide-go-lib/log"
 )
 
 //go:generate mockgen -package mock_drivenadapters -source ../drivenadapters/authentication.go -destination ../tests/mock_drivenadapters/authentication_mock.go

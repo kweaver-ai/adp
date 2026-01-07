@@ -9,11 +9,11 @@ import (
 	"encoding/base64"
 	"sync"
 
-	"devops.aishu.cn/AISHUDevOps/AnyShareFamily/_git/ContentAutomation/common"
-	"devops.aishu.cn/AISHUDevOps/AnyShareFamily/_git/ContentAutomation/tapi/sharemgnt"
+	"github.com/kweaver-ai/adp/autoflow/flow-automation/common"
+	"github.com/kweaver-ai/adp/autoflow/flow-automation/tapi/sharemgnt"
 	"devops.aishu.cn/AISHUDevOps/AnyShareFamily/_git/go-lib/tclient"
-	traceLog "devops.aishu.cn/AISHUDevOps/DIP/_git/ide-go-lib/telemetry/log"
-	"devops.aishu.cn/AISHUDevOps/DIP/_git/ide-go-lib/telemetry/trace"
+	traceLog "github.com/kweaver-ai/adp/autoflow/ide-go-lib/telemetry/log"
+	"github.com/kweaver-ai/adp/autoflow/ide-go-lib/telemetry/trace"
 )
 
 //go:generate mockgen -package mock_thirft -source ../../drivenadapters/thirft/sharemgnt.go -destination ../../tests/mock_thirft/sharemgnt_mock.go

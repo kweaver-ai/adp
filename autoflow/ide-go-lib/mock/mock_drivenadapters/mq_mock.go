@@ -7,7 +7,7 @@ package mock_drivenadapters
 import (
 	reflect "reflect"
 
-	gomock "github.com/golang/mock/gomock"
+	gomock "go.uber.org/mock/gomock"
 )
 
 // MockMQClient is a mock of MQClient interface.

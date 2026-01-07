@@ -4,7 +4,7 @@ import (
 	"io/ioutil"
 	"sync"
 
-	"devops.aishu.cn/AISHUDevOps/AnyShareFamily/_git/ECron/common"
+	"github.com/kweaver-ai/adp/autoflow/ecron/common"
 	"gopkg.in/yaml.v2"
 )
 

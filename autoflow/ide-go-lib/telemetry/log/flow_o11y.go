@@ -6,7 +6,6 @@ import (
 	"sync"
 	"time"
 
-	"devops.aishu.cn/AISHUDevOps/DIP/_git/ide-go-lib/telemetry/common"
 	"github.com/kweaver-ai/TelemetrySDK-Go/exporter/v2/ar_log"
 	"github.com/kweaver-ai/TelemetrySDK-Go/exporter/v2/config"
 	"github.com/kweaver-ai/TelemetrySDK-Go/exporter/v2/public"
@@ -17,6 +16,7 @@ import (
 	spanLog "github.com/kweaver-ai/TelemetrySDK-Go/span/v2/log"
 	"github.com/kweaver-ai/TelemetrySDK-Go/span/v2/open_standard"
 	"github.com/kweaver-ai/TelemetrySDK-Go/span/v2/runtime"
+	"github.com/kweaver-ai/adp/autoflow/ide-go-lib/telemetry/common"
 )
 
 var (

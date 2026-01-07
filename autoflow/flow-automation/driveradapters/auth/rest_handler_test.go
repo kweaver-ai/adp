@@ -9,15 +9,16 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"devops.aishu.cn/AISHUDevOps/AnyShareFamily/_git/ContentAutomation/drivenadapters"
-	"devops.aishu.cn/AISHUDevOps/AnyShareFamily/_git/ContentAutomation/logics/auth"
-	"devops.aishu.cn/AISHUDevOps/AnyShareFamily/_git/ContentAutomation/tests/mock_drivenadapters"
-	"devops.aishu.cn/AISHUDevOps/AnyShareFamily/_git/ContentAutomation/tests/mock_logics"
-	commonLog "devops.aishu.cn/AISHUDevOps/DIP/_git/ide-go-lib/log"
 	. "github.com/agiledragon/gomonkey/v2"
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/assert/v2"
-	"github.com/golang/mock/gomock"
+	"github.com/kweaver-ai/adp/autoflow/flow-automation/drivenadapters"
+	"github.com/kweaver-ai/adp/autoflow/flow-automation/driveradapters/middleware"
+	"github.com/kweaver-ai/adp/autoflow/flow-automation/logics/auth"
+	"github.com/kweaver-ai/adp/autoflow/flow-automation/tests/mock_drivenadapters"
+	"github.com/kweaver-ai/adp/autoflow/flow-automation/tests/mock_logics"
+	commonLog "github.com/kweaver-ai/adp/autoflow/ide-go-lib/log"
+	"go.uber.org/mock/gomock"
 )
 
 func initCommonLog() commonLog.Logger {
@@ -40,18 +41,20 @@ func setGinMode() func() {
 }
 
 type MockDependency struct {
-	auth       *mock_logics.MockAuthHandler
-	hydra      *mock_drivenadapters.MockHydraPublic
-	hydraAdmin *mock_drivenadapters.MockHydraAdmin
+	auth           *mock_logics.MockAuthHandler
+	hydra          *mock_drivenadapters.MockHydraPublic
+	hydraAdmin     *mock_drivenadapters.MockHydraAdmin
+	userManagement *mock_drivenadapters.MockUserManagement
 }
 
 func NewDependency(t *testing.T) MockDependency {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 	return MockDependency{
-		auth:       mock_logics.NewMockAuthHandler(ctrl),
-		hydra:      mock_drivenadapters.NewMockHydraPublic(ctrl),
-		hydraAdmin: mock_drivenadapters.NewMockHydraAdmin(ctrl),
+		auth:           mock_logics.NewMockAuthHandler(ctrl),
+		hydra:          mock_drivenadapters.NewMockHydraPublic(ctrl),
+		hydraAdmin:     mock_drivenadapters.NewMockHydraAdmin(ctrl),
+		userManagement: mock_drivenadapters.NewMockUserManagement(ctrl),
 	}
 }
 
@@ -65,6 +68,7 @@ func mockRestHandlerRouter(t *testing.T) (MockDependency, *gin.Engine) {
 
 	var h RESTHandler
 	dep := NewDependency(t)
+	middleware.SetMiddlewareMock(dep.hydraAdmin, dep.userManagement)
 	group := engine.Group("/api/automation/v1")
 	h = &restHandler{
 		auth:       dep.auth,
@@ -139,6 +143,10 @@ func TestCheckAuth(t *testing.T) {
 	params := map[string]interface{}{"redirect_uri": "http://10.4.107.97"}
 	paramsByte, _ := json.Marshal(params)
 	dep.hydraAdmin.EXPECT().Introspect(gomock.All(), gomock.All()).Times(1).Return(userInfo, nil)
+	dep.userManagement.EXPECT().GetUserInfo(gomock.Any()).Return(drivenadapters.UserInfo{
+		UserName: "test",
+		Roles:    []string{"admin"},
+	}, nil)
 	req = httptest.NewRequest(http.MethodPost, "/api/automation/v1/oauth2/auth", bytes.NewReader(paramsByte))
 	resp = httptest.NewRecorder()
 	engine.ServeHTTP(resp, req)

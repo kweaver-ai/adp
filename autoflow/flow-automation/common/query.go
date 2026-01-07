@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	"devops.aishu.cn/AISHUDevOps/AnyShareFamily/_git/ContentAutomation/utils"
+	"github.com/kweaver-ai/adp/autoflow/flow-automation/utils"
 )
 
 var dagFieldQueryLimits = []string{"name", "description", "status", "created_at", "updated_at", "type", "creator", "trigger"}

@@ -7,11 +7,11 @@ import (
 	"runtime"
 	"strings"
 
-	commonLog "devops.aishu.cn/AISHUDevOps/DIP/_git/ide-go-lib/log"
-	"devops.aishu.cn/AISHUDevOps/DIP/_git/ide-go-lib/telemetry/common"
 	"github.com/gin-gonic/gin"
 	"github.com/kweaver-ai/TelemetrySDK-Go/exporter/v2/ar_trace"
 	"github.com/kweaver-ai/TelemetrySDK-Go/exporter/v2/public"
+	commonLog "github.com/kweaver-ai/adp/autoflow/ide-go-lib/log"
+	"github.com/kweaver-ai/adp/autoflow/ide-go-lib/telemetry/common"
 	"github.com/labstack/gommon/log"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
