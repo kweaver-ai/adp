@@ -1,3 +1,8 @@
+// Copyright The kweaver.ai Authors.
+//
+// Licensed under the Apache License, Version 2.0.
+// See the LICENSE file in the project root for details.
+
 // Package rest 响应处理
 // @file rest.go
 // @description: 响应处理
@@ -10,11 +15,11 @@ import (
 	"net/http"
 	"strings"
 
-	"devops.aishu.cn/AISHUDevOps/DIP/_git/agent-retrieval/server/infra/common"
-	myErr "devops.aishu.cn/AISHUDevOps/DIP/_git/agent-retrieval/server/infra/errors"
-	"devops.aishu.cn/AISHUDevOps/DIP/_git/agent-retrieval/server/infra/localize"
-	"devops.aishu.cn/AISHUDevOps/DIP/_git/agent-retrieval/server/infra/logger"
-	validatorv "devops.aishu.cn/AISHUDevOps/DIP/_git/agent-retrieval/server/infra/validator"
+	"github.com/kweaver-ai/adp/context-loader/agent-retrieval/server/infra/common"
+	myErr "github.com/kweaver-ai/adp/context-loader/agent-retrieval/server/infra/errors"
+	"github.com/kweaver-ai/adp/context-loader/agent-retrieval/server/infra/localize"
+	"github.com/kweaver-ai/adp/context-loader/agent-retrieval/server/infra/logger"
+	validatorv "github.com/kweaver-ai/adp/context-loader/agent-retrieval/server/infra/validator"
 	"github.com/bytedance/sonic"
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"

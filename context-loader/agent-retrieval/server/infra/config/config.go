@@ -1,3 +1,8 @@
+// Copyright The kweaver.ai Authors.
+//
+// Licensed under the Apache License, Version 2.0.
+// See the LICENSE file in the project root for details.
+
 package config
 
 import (
@@ -9,17 +14,17 @@ import (
 	"strconv"
 	"sync"
 
-	"devops.aishu.cn/AISHUDevOps/DIP/_git/agent-retrieval/server/infra/logger"
-	"devops.aishu.cn/AISHUDevOps/DIP/_git/agent-retrieval/server/infra/telemetry"
-	"devops.aishu.cn/AISHUDevOps/DIP/_git/agent-retrieval/server/interfaces"
-	"devops.aishu.cn/AISHUDevOps/DIP/_git/agent-retrieval/server/utils"
-	o11y "devops.aishu.cn/AISHUDevOps/DIP/_git/mdl-go-lib/observability"
+	"github.com/kweaver-ai/adp/context-loader/agent-retrieval/server/infra/logger"
+	"github.com/kweaver-ai/adp/context-loader/agent-retrieval/server/infra/telemetry"
+	"github.com/kweaver-ai/adp/context-loader/agent-retrieval/server/interfaces"
+	"github.com/kweaver-ai/adp/context-loader/agent-retrieval/server/utils"
 	"github.com/creasty/defaults"
+	o11y "github.com/kweaver-ai/kweaver-go-lib/observability"
 	"github.com/spf13/viper"
 	"gopkg.in/yaml.v3"
 )
 
-// Config 配置
+// Config configuration
 type Config struct {
 	Project             Project               `yaml:"project"`
 	OAuth               OAuthConfig           `yaml:"oauth"`
@@ -27,22 +32,22 @@ type Config struct {
 	OntologyManager     PrivateBaseConfig     `yaml:"ontology_manager"`
 	OntologyQuery       PrivateBaseConfig     `yaml:"ontology_query"`
 	AgentApp            PrivateBaseConfig     `yaml:"agent_app"`
-	OperatorIntegration PrivateBaseConfig     `yaml:"operator_integration"` // 算子集成服务配置
+	OperatorIntegration PrivateBaseConfig     `yaml:"operator_integration"` // Operator integration service configuration
 	RedisConfig         RedisConfig           `yaml:"redis"`
 	Logger              interfaces.Logger     `yaml:"-"`
-	DeployAgent         DeployAgentConfig     `yaml:"deploy_agent"`          // 依赖智能体配置
-	ConceptSearchConfig KnConceptSearchConfig `yaml:"concept_search_config"` // 业务知识网络概念搜索配置
-	DataRetrieval       PrivateBaseConfig     `yaml:"data_retrieval"`        // 数据检索配置
+	DeployAgent         DeployAgentConfig     `yaml:"deploy_agent"`          // Dependent agent configuration
+	ConceptSearchConfig KnConceptSearchConfig `yaml:"concept_search_config"` // Knowledge network concept search configuration
+	DataRetrieval       PrivateBaseConfig     `yaml:"data_retrieval"`        // Data retrieval configuration
 	Observability       ObservabilityConfig   `yaml:"-"`
 }
 
-// ObservabilityConfig 跟踪配置
+// ObservabilityConfig trace configuration
 type ObservabilityConfig struct {
 	TraceType                 telemetry.ExporterType `mapstructure:"traceType"`
 	o11y.ObservabilitySetting `mapstructure:",squash"`
 }
 
-// Project 项目配置
+// Project configuration
 type Project struct {
 	Host        string              `yaml:"host"`
 	Port        int                 `yaml:"port"`
@@ -55,7 +60,7 @@ type Project struct {
 	CommitInfo  utils.GitCommitInfo `yaml:"-"`
 }
 
-// GetLogger 获取Logger
+// GetLogger gets logger
 func (conf *Config) GetLogger() interfaces.Logger {
 	if conf.Logger == nil {
 		return logger.DefaultLogger()
@@ -63,7 +68,7 @@ func (conf *Config) GetLogger() interfaces.Logger {
 	return conf.Logger
 }
 
-// OAuthConfig OAuth连接信息
+// OAuthConfig OAuth connection info
 type OAuthConfig struct {
 	PublicBaseConfig `yaml:",inline"`
 	AdminHost        string `yaml:"admin_host"`
@@ -72,21 +77,21 @@ type OAuthConfig struct {
 	AdminPrefix      string `yaml:"admin_prefix"`
 }
 
-// PublicBaseConfig public 基础配置
+// PublicBaseConfig public base configuration
 type PublicBaseConfig struct {
 	PublicHost     string `yaml:"public_host"`
 	PublicPort     int    `yaml:"public_port"`
 	PublicProtocol string `yaml:"public_protocol"`
 }
 
-// PrivateBaseConfig private 基础配置
+// PrivateBaseConfig private base configuration
 type PrivateBaseConfig struct {
 	PrivateHost     string `yaml:"private_host"`
 	PrivatePort     int    `yaml:"private_port"`
 	PrivateProtocol string `yaml:"private_protocol"`
 }
 
-// OpenSearchConfig OpenSearch配置
+// OpenSearchConfig OpenSearch configuration
 type OpenSearchConfig struct {
 	Protocol string `yaml:"protocol"`
 	Host     string `yaml:"host"`
@@ -95,20 +100,20 @@ type OpenSearchConfig struct {
 	Password string `yaml:"password"`
 }
 
-// KnConceptSearchConfig 业务知识网络概念搜索配置
+// KnConceptSearchConfig knowledge network concept search configuration
 type KnConceptSearchConfig struct {
-	ConceptRecallSize int `yaml:"concept_recall_size"` // 概念粗召回数量
-	KnnKValue         int `yaml:"knn_k"`               // knn k值
+	ConceptRecallSize int `yaml:"concept_recall_size"` // Concept rough recall size
+	KnnKValue         int `yaml:"knn_k"`               // knn k value
 }
 
-// SetMachineID 设置机器ID
+// SetMachineID sets machine ID
 func (conf *Project) SetMachineID() {
-	// 生成MachineID
+	// Generate MachineID
 	if conf.MachineID == "" {
 		mid := os.Getenv(conf.PodID)
 		if mid == "" {
 			mid, _ = os.Hostname()
-			// 为空也可以
+			// Empty is allowed
 			mid = utils.MD5(mid)
 			mid = mid[:8]
 		}
@@ -116,17 +121,17 @@ func (conf *Project) SetMachineID() {
 	}
 }
 
-// GetMachineID 获取机器ID
+// GetMachineID gets machine ID
 func (conf *Project) GetMachineID() string {
 	return conf.MachineID
 }
 
-// DeployAgentConfig 依赖智能体配置
+// DeployAgentConfig dependent agent configuration
 type DeployAgentConfig struct {
-	ConceptIntentionAnalysisAgentKey   string `yaml:"concept_intention_analysis_agent_key"`   // 概念意图分析智能体Key
-	ConceptRetrievalStrategistAgentKey string `yaml:"concept_retrieval_strategist_agent_key"` // 概念召回策略智能体Key
-	MetricDynamicParamsGeneratorKey    string `yaml:"metric_dynamic_params_generator_key"`    // Metric 动态参数生成智能体Key
-	OperatorDynamicParamsGeneratorKey  string `yaml:"operator_dynamic_params_generator_key"`  // Operator 动态参数生成智能体Key
+	ConceptIntentionAnalysisAgentKey   string `yaml:"concept_intention_analysis_agent_key"`   // Concept intention analysis agent Key
+	ConceptRetrievalStrategistAgentKey string `yaml:"concept_retrieval_strategist_agent_key"` // Concept retrieval strategist agent Key
+	MetricDynamicParamsGeneratorKey    string `yaml:"metric_dynamic_params_generator_key"`    // Metric dynamic params generator Key
+	OperatorDynamicParamsGeneratorKey  string `yaml:"operator_dynamic_params_generator_key"`  // Operator dynamic params generator Key
 }
 
 var (
@@ -134,13 +139,13 @@ var (
 	configLoader *Config
 )
 
-// NewConfigLoader 获取配置
+// NewConfigLoader gets configuration
 func NewConfigLoader() *Config {
 	once.Do(func() {
 		configFilePath := "/sysvol/config/agent-retrieval.yaml"
 		secretFilePath := "/sysvol/secret/agent-retrieval-secret.yaml"
 
-		// 设置默认配置
+		// Set default configuration
 		configLoader = &Config{}
 		err := configLoader.localConfig(configFilePath)
 		if err != nil {
@@ -152,9 +157,9 @@ func NewConfigLoader() *Config {
 			log.Panicln("Error: load local secret failed: ", err)
 			return
 		}
-		// 初始化可观测性相关配置
+		// Initialize observability related configuration
 		configLoader.initO11yAndLog()
-		// 设置机器ID
+		// Set machine ID
 		configLoader.Project.SetMachineID()
 		overrideWithEnv(configLoader)
 	})
@@ -175,9 +180,9 @@ func (conf *Config) localConfig(path string) (err error) {
 	return
 }
 
-// overrideWithEnv 自动遍历结构体，用反射根据 tag 进行环境变量覆盖
+// overrideWithEnv automatically traverses struct, using reflection to override with env variables based on tags
 func overrideWithEnv(cfg interface{}) {
-	v := reflect.ValueOf(cfg).Elem() // 获取指向结构体的指针
+	v := reflect.ValueOf(cfg).Elem() // Get pointer to struct
 	t := v.Type()
 
 	for i := 0; i < v.NumField(); i++ {
@@ -185,30 +190,30 @@ func overrideWithEnv(cfg interface{}) {
 		fieldType := t.Field(i)
 
 		if field.Kind() == reflect.Struct {
-			// 递归处理嵌套结构体
+			// Recursively handle nested struct
 			overrideWithEnv(field.Addr().Interface())
 			continue
 		}
 
-		// 获取字段的 env 标签
+		// Get env tag of field
 		envTag := fieldType.Tag.Get("env")
 		if envTag == "" {
-			continue // 如果没有定义 env 标签，跳过
+			continue // Skip if env tag is not defined
 		}
 
-		// 判断环境变量是否存在
+		// Check if env variable exists
 		envValue, exists := os.LookupEnv(envTag)
 		if !exists {
-			continue // 如果环境变量 key 不存在，跳过
+			continue // Skip if env key does not exist
 		}
 
-		// 如果 key 存在但值为空，则将字段设为类型的零值
+		// If key exists but value is empty, set field to zero value of type
 		if envValue == "" {
 			field.Set(reflect.Zero(field.Type()))
 			continue
 		}
 
-		// 使用反射直接设置字段值，要求类型匹配
+		// Use reflection to set field value directly, type match required
 		switch field.Kind() {
 		case reflect.String:
 			field.SetString(envValue)
@@ -228,15 +233,15 @@ func overrideWithEnv(cfg interface{}) {
 	}
 }
 
-// 加载&初始化可观测性相关配置
+// Load & Initialize observability related configuration
 func (conf *Config) initO11yAndLog() {
-	// 初始化日志
+	// Initialize logger
 	level := logger.Level(configLoader.Project.LoggerLevel)
 	if configLoader.Project.Debug {
 		level = logger.LevelDebug
 	}
 
-	// 加载配置文件
+	// Load configuration file
 	viper.SetConfigName("observability")
 	viper.SetConfigType("yaml")
 	viper.AddConfigPath("/sysvol/config/")
@@ -254,7 +259,7 @@ func (conf *Config) initO11yAndLog() {
 		GoArch:        runtime.GOARCH,
 	}
 
-	// 初始化可观测性
+	// Initialize observability
 	if conf.Observability.TraceEnabled && conf.Observability.TraceType == telemetry.ExporterTypeJaeger {
 		_, err := telemetry.InitJaegerExporter(conf.Project.Name, conf.Observability.TraceProvider, conf.Observability.GrpcTraceFeedIngesterUrl)
 		if err != nil {
@@ -263,7 +268,7 @@ func (conf *Config) initO11yAndLog() {
 		conf.Observability.TraceEnabled = false
 	}
 	o11y.Init(serverInfo, conf.Observability.ObservabilitySetting)
-	// 初始化日志
+	// Initialize logger
 	if conf.Observability.LogEnabled {
 		configLoader.Logger = telemetry.NewSamplerLogger(logger.NewLogger(level, logger.MaxCalldepth))
 		return

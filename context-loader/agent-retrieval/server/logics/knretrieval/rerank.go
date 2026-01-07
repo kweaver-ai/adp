@@ -1,10 +1,15 @@
+// Copyright The kweaver.ai Authors.
+//
+// Licensed under the Apache License, Version 2.0.
+// See the LICENSE file in the project root for details.
+
 package knretrieval
 
 import (
 	"context"
 	"sort"
 
-	"devops.aishu.cn/AISHUDevOps/DIP/_git/agent-retrieval/server/interfaces"
+	"github.com/kweaver-ai/adp/context-loader/agent-retrieval/server/interfaces"
 )
 
 // 收集不同概念类集合，并进行排序，每个概念集取前limit个

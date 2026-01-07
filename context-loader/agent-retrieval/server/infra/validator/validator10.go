@@ -1,7 +1,12 @@
+// Copyright The kweaver.ai Authors.
+//
+// Licensed under the Apache License, Version 2.0.
+// See the LICENSE file in the project root for details.
+
 package validator
 
 import (
-	myErr "devops.aishu.cn/AISHUDevOps/DIP/_git/agent-retrieval/server/infra/errors"
+	myErr "github.com/kweaver-ai/adp/context-loader/agent-retrieval/server/infra/errors"
 )
 
 // TagToErrorType Validate tag 映射到错误分类

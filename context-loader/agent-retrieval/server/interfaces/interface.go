@@ -1,9 +1,14 @@
+// Copyright The kweaver.ai Authors.
+//
+// Licensed under the Apache License, Version 2.0.
+// See the LICENSE file in the project root for details.
+
 package interfaces
 
 //go:generate mockgen -source=interface.go -destination=../mocks/interface.go -package=mocks
 import "context"
 
-// App 应用接口
+// App Application interface
 type App interface {
 	Start() error
 	Stop(context.Context)
@@ -15,14 +20,14 @@ func (r ResourceDeployType) String() string {
 	return string(r)
 }
 
-// IKnQuerySubgraphService 子图查询服务接口
+// IKnQuerySubgraphService Subgraph query service interface
 type IKnQuerySubgraphService interface {
-	// QueryInstanceSubgraph 查询对象子图
+	// QueryInstanceSubgraph Query object subgraph
 	QueryInstanceSubgraph(ctx context.Context, req *QueryInstanceSubgraphReq) (resp *QueryInstanceSubgraphResp, err error)
 }
 
-// IKnSearchService kn_search 服务接口
+// IKnSearchService kn_search service interface
 type IKnSearchService interface {
-	// KnSearch 知识网络检索
+	// KnSearch Knowledge network retrieval
 	KnSearch(ctx context.Context, req *KnSearchReq) (resp *KnSearchResp, err error)
 }

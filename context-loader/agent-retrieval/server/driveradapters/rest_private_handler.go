@@ -1,16 +1,21 @@
+// Copyright The kweaver.ai Authors.
+//
+// Licensed under the Apache License, Version 2.0.
+// See the LICENSE file in the project root for details.
+
 // Package driveradapters 定义驱动适配器
 // @file rest_private_handler.go
 // @description: 定义rest私有接口适配器
 package driveradapters
 
 import (
-	"devops.aishu.cn/AISHUDevOps/DIP/_git/agent-retrieval/server/driveradapters/knactionrecall"
-	"devops.aishu.cn/AISHUDevOps/DIP/_git/agent-retrieval/server/driveradapters/knlogicpropertyresolver"
-	"devops.aishu.cn/AISHUDevOps/DIP/_git/agent-retrieval/server/driveradapters/knqueryobjectinstance"
-	"devops.aishu.cn/AISHUDevOps/DIP/_git/agent-retrieval/server/driveradapters/knquerysubgraph"
-	"devops.aishu.cn/AISHUDevOps/DIP/_git/agent-retrieval/server/driveradapters/knretrieval"
-	"devops.aishu.cn/AISHUDevOps/DIP/_git/agent-retrieval/server/driveradapters/knsearch"
-	"devops.aishu.cn/AISHUDevOps/DIP/_git/agent-retrieval/server/interfaces"
+	"github.com/kweaver-ai/adp/context-loader/agent-retrieval/server/driveradapters/knactionrecall"
+	"github.com/kweaver-ai/adp/context-loader/agent-retrieval/server/driveradapters/knlogicpropertyresolver"
+	"github.com/kweaver-ai/adp/context-loader/agent-retrieval/server/driveradapters/knqueryobjectinstance"
+	"github.com/kweaver-ai/adp/context-loader/agent-retrieval/server/driveradapters/knquerysubgraph"
+	"github.com/kweaver-ai/adp/context-loader/agent-retrieval/server/driveradapters/knretrieval"
+	"github.com/kweaver-ai/adp/context-loader/agent-retrieval/server/driveradapters/knsearch"
+	"github.com/kweaver-ai/adp/context-loader/agent-retrieval/server/interfaces"
 	"github.com/gin-gonic/gin"
 )
 

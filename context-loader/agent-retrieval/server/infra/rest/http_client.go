@@ -1,3 +1,8 @@
+// Copyright The kweaver.ai Authors.
+//
+// Licensed under the Apache License, Version 2.0.
+// See the LICENSE file in the project root for details.
+
 package rest
 
 import (
@@ -11,11 +16,11 @@ import (
 	"net/url"
 	"time"
 
-	infraErr "devops.aishu.cn/AISHUDevOps/DIP/_git/agent-retrieval/server/infra/errors"
-	"devops.aishu.cn/AISHUDevOps/DIP/_git/agent-retrieval/server/infra/logger"
-	"devops.aishu.cn/AISHUDevOps/DIP/_git/agent-retrieval/server/infra/telemetry"
-	"devops.aishu.cn/AISHUDevOps/DIP/_git/agent-retrieval/server/interfaces"
-	"devops.aishu.cn/AISHUDevOps/DIP/_git/agent-retrieval/server/utils"
+	infraErr "github.com/kweaver-ai/adp/context-loader/agent-retrieval/server/infra/errors"
+	"github.com/kweaver-ai/adp/context-loader/agent-retrieval/server/infra/logger"
+	"github.com/kweaver-ai/adp/context-loader/agent-retrieval/server/infra/telemetry"
+	"github.com/kweaver-ai/adp/context-loader/agent-retrieval/server/interfaces"
+	"github.com/kweaver-ai/adp/context-loader/agent-retrieval/server/utils"
 	"github.com/bytedance/sonic"
 )
 

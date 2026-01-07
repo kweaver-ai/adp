@@ -1,3 +1,8 @@
+// Copyright The kweaver.ai Authors.
+//
+// Licensed under the Apache License, Version 2.0.
+// See the LICENSE file in the project root for details.
+
 package interfaces
 
 import (
@@ -11,56 +16,56 @@ import (
 type ContextKey string
 
 const (
-	// KeyToken context中token key
+	// KeyToken token key in context
 	KeyToken ContextKey = "token"
-	// KeyIP context中ip key
+	// KeyIP ip key in context
 	KeyIP ContextKey = "ip"
-	// OperationID API操作唯一标识
+	// OperationID API operation unique identifier
 	OperationID ContextKey = "operationID"
-	// XLanguageKey 语言类型
+	// XLanguageKey Language type
 	XLanguageKey ContextKey = "X-Language"
-	// FileNameKey 文件名
+	// FileNameKey File name
 	FileNameKey ContextKey = "FileName"
-	// Headers header 请求参数
+	// Headers header request parameters
 	Headers ContextKey = "headers"
 	// UserAgent user agent
 	UserAgent ContextKey = "User-Agent"
-	// KeyTokenInfo token信息
+	// KeyTokenInfo token info
 	// KeyTokenInfo ContextKey = "Token-Info"
 	// KeyUserID userID
 	// KeyUserID ContextKey = "user_id"
-	// IsPublic 是否公开
+	// IsPublic Whether public
 	IsPublic ContextKey = "is_public"
-	// // XUserID 内部接口传参XUserID
+	// // XUserID internal interface parameter XUserID
 	// XUserID ContextKey = "x-user"
-	// // XVisitorType 内部接口传参XVisitorType，表示账户类型
+	// // XVisitorType internal interface parameter XVisitorType, indicates account type
 	// XVisitorType ContextKey = "x-visitor-type"
-	// // KeyVisitorType 账户类型
+	// // KeyVisitorType Account Type
 	// KeyVisitorType ContextKey = "visitor_type"
-	// KeyRequestID 请求ID
+	// KeyRequestID Request ID
 	KeyRequestID ContextKey = "request_id"
-	// KeyAccountAuthContext 账户认证上下文
+	// KeyAccountAuthContext Account authentication context
 	KeyAccountAuthContext ContextKey = "account_auth_context"
 )
 
-// HeaderKey 上下文键
+// HeaderKey Context Key
 type HeaderKey string
 
 const (
-	// HeaderXAccountID 账户ID头参数
+	// HeaderXAccountID Account ID header parameter
 	HeaderXAccountID HeaderKey = "x-account-id"
-	// HeaderXAccountType 账户类型头参数
+	// HeaderXAccountType Account Type header parameter
 	HeaderXAccountType HeaderKey = "x-account-type"
-	// HeaderUserID 用户ID
+	// HeaderUserID User ID
 	HeaderUserID HeaderKey = "user_id"
 )
 
 const (
-	HTTP  = "http"  // http协议
-	HTTPS = "https" // https协议
+	HTTP  = "http"  // http protocol
+	HTTPS = "https" // https protocol
 )
 
-// Logger 日志接口
+// Logger Logger Interface
 type Logger interface {
 	Debug(v ...interface{})
 	Info(v ...interface{})
@@ -73,7 +78,7 @@ type Logger interface {
 	WithContext(ctx context.Context) Logger
 }
 
-// HTTPClient HTTP客户端服务接口
+// HTTPClient HTTP Client Service Interface
 type HTTPClient interface {
 	Get(ctx context.Context, url string, queryValues url.Values, headers map[string]string) (respCode int, respData interface{}, err error)
 	GetNoUnmarshal(ctx context.Context, url string, queryValues url.Values, headers map[string]string) (respCode int, respBody []byte, err error)

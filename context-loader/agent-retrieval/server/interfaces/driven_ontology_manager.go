@@ -1,21 +1,26 @@
+// Copyright The kweaver.ai Authors.
+//
+// Licensed under the Apache License, Version 2.0.
+// See the LICENSE file in the project root for details.
+
 package interfaces
 
 import (
 	"context"
 )
 
-// 业务知识网络操作符
+// KnOperationType Business knowledge network operator
 type KnOperationType string
 
 const (
-	KnOperationTypeAnd            KnOperationType = "and"       // 与
-	KnOperationTypeOr             KnOperationType = "or"        // 或
-	KnOperationTypeEqual          KnOperationType = "=="        // 等于
-	KnOperationTypeNotEqual       KnOperationType = "!="        // 不等于
-	KnOperationTypeGreater        KnOperationType = ">"         // 大于
-	KnOperationTypeLess           KnOperationType = "<"         // 小于
-	KnOperationTypeGreaterOrEqual KnOperationType = ">="        // 大于等于
-	KnOperationTypeLessOrEqual    KnOperationType = "<="        // 小于等于
+	KnOperationTypeAnd            KnOperationType = "and"       // AND
+	KnOperationTypeOr             KnOperationType = "or"        // OR
+	KnOperationTypeEqual          KnOperationType = "=="        // Equal
+	KnOperationTypeNotEqual       KnOperationType = "!="        // Not Equal
+	KnOperationTypeGreater        KnOperationType = ">"         // Greater than
+	KnOperationTypeLess           KnOperationType = "<"         // Less than
+	KnOperationTypeGreaterOrEqual KnOperationType = ">="        // Greater than or equal
+	KnOperationTypeLessOrEqual    KnOperationType = "<="        // Less than or equal
 	KnOperationTypeIn             KnOperationType = "in"        // in
 	KnOperationTypeNotIn          KnOperationType = "not_in"    // not_in
 	KnOperationTypeLike           KnOperationType = "like"      // like
@@ -29,28 +34,28 @@ const (
 	KnOperationTypeKnn            KnOperationType = "knn"       // knn
 )
 
-// 逻辑属性类型
+// LogicPropertyType Logic property type
 type LogicPropertyType string
 
 const (
-	LogicPropertyTypeMetric   LogicPropertyType = "metric"   // 指标类型
-	LogicPropertyTypeOperator LogicPropertyType = "operator" // 算子类型
+	LogicPropertyTypeMetric   LogicPropertyType = "metric"   // Metric type
+	LogicPropertyTypeOperator LogicPropertyType = "operator" // Operator type
 )
 
 type KnBaseError struct {
-	ErrorCode               string         `json:"error_code"`    // 错误码
-	Description             string         `json:"description"`   // 错误描述
-	Solution                string         `json:"solution"`      // 解决方法
-	ErrorLink               string         `json:"error_link"`    // 错误链接
-	ErrorDetails            interface{}    `json:"error_details"` // 详细内容
-	DescriptionTemplateData map[string]any `json:"-"`             // 错误描述参数
-	SolutionTemplateData    map[string]any `json:"-"`             // 解决方法参数
+	ErrorCode               string         `json:"error_code"`    // Error code
+	Description             string         `json:"description"`   // Error description
+	Solution                string         `json:"solution"`      // Solution
+	ErrorLink               string         `json:"error_link"`    // Error link
+	ErrorDetails            interface{}    `json:"error_details"` // Detail content
+	DescriptionTemplateData map[string]any `json:"-"`             // Description parameters
+	SolutionTemplateData    map[string]any `json:"-"`             // Solution parameters
 }
 
 type ResourceInfo struct {
-	Type string `json:"type"` // 数据来源类型
-	ID   string `json:"id"`   // 数据视图id
-	Name string `json:"name"` // 视图名称
+	Type string `json:"type"` // Data source type
+	ID   string `json:"id"`   // Data view ID
+	Name string `json:"name"` // View name
 }
 
 type SimpleObjectType struct {
@@ -60,27 +65,27 @@ type SimpleObjectType struct {
 	Color  string `json:"color"`
 }
 
-// DataProperty 数据属性结构定义
+// DataProperty Data property structure definition
 type DataProperty struct {
-	Name                string            `json:"name"`                 // 属性名称。只能包含小写英文字母、数字、下划线（_）、连字符（-），且不能以下划线和连字符开头
-	DisplayName         string            `json:"display_name"`         // 属性显示名称
-	Type                string            `json:"type"`                 // 属性数据类型。除了视图的字段类型之外，还有 metric、objective、event、trace、log、operator
-	Comment             string            `json:"comment"`              // 备注
-	MappedField         any               `json:"mapped_field"`         // 视图字段信息
-	ConditionOperations []KnOperationType `json:"condition_operations"` // 该数据属性支持的查询条件操作符列表
+	Name                string            `json:"name"`                 // Property name. Can only contain lowercase letters, numbers, underscores (_), hyphens (-), and cannot start with underscore or hyphen
+	DisplayName         string            `json:"display_name"`         // Property display name
+	Type                string            `json:"type"`                 // Property data type. In addition to view field types, there are metric, objective, event, trace, log, operator
+	Comment             string            `json:"comment"`              // Comment
+	MappedField         any               `json:"mapped_field"`         // View field info
+	ConditionOperations []KnOperationType `json:"condition_operations"` // List of query condition operators supported by this data property
 }
 
-// LogicPropertyDef 逻辑属性定义（从对象类定义中提取）
+// LogicPropertyDef Logic property definition (extracted from object type definition)
 type LogicPropertyDef struct {
 	Name        string              `json:"name"`
 	DisplayName string              `json:"display_name,omitempty"`
-	Type        LogicPropertyType   `json:"type"` // 逻辑属性类型：metric 或 operator
+	Type        LogicPropertyType   `json:"type"` // Logic property type: metric or operator
 	Comment     string              `json:"comment,omitempty"`
 	DataSource  map[string]any      `json:"data_source,omitempty"`
 	Parameters  []PropertyParameter `json:"parameters,omitempty"`
 }
 
-// PropertyParameter 属性参数定义
+// PropertyParameter Property parameter definition
 type PropertyParameter struct {
 	Name             string `json:"name"`
 	Type             string `json:"type"`
@@ -90,47 +95,47 @@ type PropertyParameter struct {
 	Comment          string `json:"comment,omitempty"`
 }
 
-// ObjectType 对象类结构定义
+// ObjectType Object type structure definition
 type ObjectType struct {
-	ModuleType      string              `json:"module_type"` // 模块类型
-	ID              string              `json:"id"`          // 对象id
-	Name            string              `json:"name"`        // 对象名称
-	Tags            []string            `json:"tags"`        // 标签
-	Comment         string              `json:"comment"`     // 备注
-	Score           float64             `json:"_score"`      // 分数
+	ModuleType      string              `json:"module_type"` // Module type
+	ID              string              `json:"id"`          // Object ID
+	Name            string              `json:"name"`        // Object name
+	Tags            []string            `json:"tags"`        // Tags
+	Comment         string              `json:"comment"`     // Comment
+	Score           float64             `json:"_score"`      // Score
 	DataSource      *ResourceInfo       `json:"data_source"`
-	DataProperties  []*DataProperty     `json:"data_properties,omitempty"`  // 数据属性
-	LogicProperties []*LogicPropertyDef `json:"logic_properties,omitempty"` // 逻辑属性
-	PrimaryKeys     []string            `json:"primary_keys"`               // 主键字段
+	DataProperties  []*DataProperty     `json:"data_properties,omitempty"`  // Data properties
+	LogicProperties []*LogicPropertyDef `json:"logic_properties,omitempty"` // Logic properties
+	PrimaryKeys     []string            `json:"primary_keys"`               // Primary key fields
 }
 
-// RelationType 关系类结构定义
+// RelationType Relation type structure definition
 type RelationType struct {
-	ModuleType string   `json:"module_type"` // 模块类型
-	ID         string   `json:"id"`          // 关系类id
-	Name       string   `json:"name"`        // 关系类名称
-	Tags       []string `json:"tags"`        // 标签
-	Comment    string   `json:"comment"`     // 备注
-	Score      float64  `json:"_score"`      // 分数
+	ModuleType string   `json:"module_type"` // Module type
+	ID         string   `json:"id"`          // Relation type ID
+	Name       string   `json:"name"`        // Relation type name
+	Tags       []string `json:"tags"`        // Tags
+	Comment    string   `json:"comment"`     // Comment
+	Score      float64  `json:"_score"`      // Score
 
-	SourceObjectTypeId string `json:"source_object_type_id"`        // 起点对象类ID
-	TargetObjectTypeId string `json:"target_object_type_id"`        // 目标对象类ID
-	SourceObjectType   any    `json:"source_object_type,omitempty"` // 查看详情的时候给出名称
-	TargetObjectType   any    `json:"target_object_type,omitempty"` // 查看详情的时候给出名称
-	MappingRules       any    `json:"mapping_rules"`                // 根据type来决定是不同的映射方式，direct对应的结构体是[]Mapping
-	Type               string `json:"type"`                         // 关系类型
+	SourceObjectTypeId string `json:"source_object_type_id"`        // Source object type ID
+	TargetObjectTypeId string `json:"target_object_type_id"`        // Target object type ID
+	SourceObjectType   any    `json:"source_object_type,omitempty"` // Provide name when viewing details
+	TargetObjectType   any    `json:"target_object_type,omitempty"` // Provide name when viewing details
+	MappingRules       any    `json:"mapping_rules"`                // Mapping rules based on type, direct corresponds to []Mapping structure
+	Type               string `json:"type"`                         // Relation type
 }
 
-// ActionType 行动类结构定义
+// ActionType Action type structure definition
 type ActionType struct {
-	ModuleType string   `json:"module_type"` // 模块类型
-	ID         string   `json:"id"`          // 行动类ID
-	Name       string   `json:"name"`        // 行动类名称
-	Tags       []string `json:"tags"`        // 标签
-	Comment    string   `json:"comment"`     // 备注
-	Score      float64  `json:"_score"`      // 分数
+	ModuleType string   `json:"module_type"` // Module type
+	ID         string   `json:"id"`          // Action type ID
+	Name       string   `json:"name"`        // Action type name
+	Tags       []string `json:"tags"`        // Tags
+	Comment    string   `json:"comment"`     // Comment
+	Score      float64  `json:"_score"`      // Score
 
-	ObjectTypeId string `json:"object_type_id"` // 行动类所绑定的对象类ID
+	ObjectTypeId string `json:"object_type_id"` // Object type ID bound to action type
 }
 
 type KnCondValueFrom string
@@ -142,18 +147,18 @@ const (
 type KnCondLimitKey string
 
 const (
-	CondLimitKeyK           KnCondLimitKey = "k"            // 分页key
-	CondLimitKeyMinScore    KnCondLimitKey = "min_score"    // 最小分数
-	CondLimitKeyMinDistance KnCondLimitKey = "min_distance" // 最小距离
+	CondLimitKeyK           KnCondLimitKey = "k"            // Pagination key
+	CondLimitKeyMinScore    KnCondLimitKey = "min_score"    // Min score
+	CondLimitKeyMinDistance KnCondLimitKey = "min_distance" // Min distance
 )
 
-// KnCondition 检索条件
+// KnCondition Retrieval condition
 type KnCondition struct {
-	Field         string          `json:"field"`          // 字段名
-	Operation     KnOperationType `json:"operation"`      // 操作符
-	SubConditions []*KnCondition  `json:"sub_conditions"` // 子过滤条件
-	Value         any             `json:"value"`          // 字段值
-	ValueFrom     KnCondValueFrom `json:"value_from"`     // 字段值来源
+	Field         string          `json:"field"`          // Field name
+	Operation     KnOperationType `json:"operation"`      // Operator
+	SubConditions []*KnCondition  `json:"sub_conditions"` // Sub filtering conditions
+	Value         any             `json:"value"`          // Field value
+	ValueFrom     KnCondValueFrom `json:"value_from"`     // Field value source
 	LimitKey      KnCondLimitKey  `json:"limit_key"`
 	LimitValue    any             `json:"limit_value"`
 }
@@ -163,16 +168,16 @@ type KnSortParams struct {
 	Direction string `json:"direction"`
 }
 
-// QueryConceptsReq 查询概念类请求
+// QueryConceptsReq Query concepts request
 type QueryConceptsReq struct {
-	KnID      string          `json:"-"`         // 知识网络ID
-	Cond      *KnCondition    `json:"condition"` // 检索条件
+	KnID      string          `json:"-"`         // Knowledge network ID
+	Cond      *KnCondition    `json:"condition"` // Retrieval condition
 	Sort      []*KnSortParams `json:"sort"`
-	Limit     int             `json:"limit"`      // 返回熟练，默认值10。范围1-10000
-	NeedTotal bool            `json:"need_total"` // 是否需要总数，默认false
+	Limit     int             `json:"limit"`      // Return count, default 10. Range 1-10000
+	NeedTotal bool            `json:"need_total"` // Whether total count is needed, default false
 }
 
-// Concepts 检索的概念类列表
+// Concepts Retrieved concepts list
 type Concepts struct {
 	Entries     []any `json:"entries"`
 	TotalCount  int64 `json:"total_count,omitempty"`
@@ -180,38 +185,38 @@ type Concepts struct {
 	OverallMs   int64 `json:"overall_ms"`
 }
 
-// ObjectConcepts 对象类概念列表
+// ObjectTypeConcepts Object type concepts list
 type ObjectTypeConcepts struct {
-	Entries    []*ObjectType `json:"entries"`               // 对象类数据
-	TotalCount int64         `json:"total_count,omitempty"` // 总数量
+	Entries    []*ObjectType `json:"entries"`               // Object type data
+	TotalCount int64         `json:"total_count,omitempty"` // Total count
 }
 
-// RelationTypeConcepts 关系类概念列表
+// RelationTypeConcepts Relation type concepts list
 type RelationTypeConcepts struct {
-	Entries    []*RelationType `json:"entries"`               // 关系类数据
-	TotalCount int64           `json:"total_count,omitempty"` // 总数量
+	Entries    []*RelationType `json:"entries"`               // Relation type data
+	TotalCount int64           `json:"total_count,omitempty"` // Total count
 }
 
-// ActionTypeConcepts 行动类概念列表
+// ActionTypeConcepts Action type concepts list
 type ActionTypeConcepts struct {
-	Entries    []*ActionType `json:"entries"`               // 关系行动类数据
-	TotalCount int64         `json:"total_count,omitempty"` // 总数量
+	Entries    []*ActionType `json:"entries"`               // Action type data
+	TotalCount int64         `json:"total_count,omitempty"` // Total count
 }
 
-// OntologyManagerAccess 本体管理接口
+// OntologyManagerAccess Ontology management interface
 type OntologyManagerAccess interface {
-	// SearchObjectTypes 搜索对象类
+	// SearchObjectTypes Search object types
 	SearchObjectTypes(ctx context.Context, query *QueryConceptsReq) (objectTypes *ObjectTypeConcepts, err error)
-	// GetObjectTypeDetail 获取对象类详情
+	// GetObjectTypeDetail Get object type details
 	GetObjectTypeDetail(ctx context.Context, knId string, otIds []string, includeDetail bool) ([]*ObjectType, error)
 
-	// SearchRelationTypes 搜索关系类
+	// SearchRelationTypes Search relation types
 	SearchRelationTypes(ctx context.Context, query *QueryConceptsReq) (releationTypes *RelationTypeConcepts, err error)
-	// GetRelationTypeDetail 获取关系类详情
+	// GetRelationTypeDetail Get relation type details
 	GetRelationTypeDetail(ctx context.Context, knId string, rtIDs []string, includeDetail bool) ([]*RelationType, error)
 
-	// SearchRelationTypes 搜索行动类
+	// SearchActionTypes Search action types
 	SearchActionTypes(ctx context.Context, query *QueryConceptsReq) (actionTypes *ActionTypeConcepts, err error)
-	// GetActionTypeDetail 获取行动类详情
+	// GetActionTypeDetail Get action type details
 	GetActionTypeDetail(ctx context.Context, knId string, atIDs []string, includeDetail bool) ([]*ActionType, error)
 }

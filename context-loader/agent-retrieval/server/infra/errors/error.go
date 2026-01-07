@@ -1,3 +1,8 @@
+// Copyright The kweaver.ai Authors.
+//
+// Licensed under the Apache License, Version 2.0.
+// See the LICENSE file in the project root for details.
+
 // Package errors 定义错误码
 // @file errors.go
 // @description: 错误码统一处理
@@ -8,8 +13,8 @@ import (
 	"fmt"
 	"net/http"
 
-	"devops.aishu.cn/AISHUDevOps/DIP/_git/agent-retrieval/server/infra/common"
-	"devops.aishu.cn/AISHUDevOps/DIP/_git/agent-retrieval/server/infra/localize"
+	"github.com/kweaver-ai/adp/context-loader/agent-retrieval/server/infra/common"
+	"github.com/kweaver-ai/adp/context-loader/agent-retrieval/server/infra/localize"
 	jsoniter "github.com/json-iterator/go"
 )
 

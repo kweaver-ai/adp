@@ -1,3 +1,8 @@
+// Copyright The kweaver.ai Authors.
+//
+// Licensed under the Apache License, Version 2.0.
+// See the LICENSE file in the project root for details.
+
 // Package knretrieval 基于业务知识网络实现统一检索
 // file: index.go
 package knretrieval
@@ -5,9 +10,9 @@ package knretrieval
 import (
 	"sync"
 
-	"devops.aishu.cn/AISHUDevOps/DIP/_git/agent-retrieval/server/drivenadapters"
-	"devops.aishu.cn/AISHUDevOps/DIP/_git/agent-retrieval/server/infra/config"
-	"devops.aishu.cn/AISHUDevOps/DIP/_git/agent-retrieval/server/interfaces"
+	"github.com/kweaver-ai/adp/context-loader/agent-retrieval/server/drivenadapters"
+	"github.com/kweaver-ai/adp/context-loader/agent-retrieval/server/infra/config"
+	"github.com/kweaver-ai/adp/context-loader/agent-retrieval/server/interfaces"
 )
 
 type knRetrievalServiceImpl struct {

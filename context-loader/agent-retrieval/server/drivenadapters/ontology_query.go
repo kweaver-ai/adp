@@ -1,3 +1,8 @@
+// Copyright The kweaver.ai Authors.
+//
+// Licensed under the Apache License, Version 2.0.
+// See the LICENSE file in the project root for details.
+
 package drivenadapters
 
 import (
@@ -7,12 +12,12 @@ import (
 	"net/http"
 	"sync"
 
-	"devops.aishu.cn/AISHUDevOps/DIP/_git/agent-retrieval/server/infra/common"
-	"devops.aishu.cn/AISHUDevOps/DIP/_git/agent-retrieval/server/infra/config"
-	infraErr "devops.aishu.cn/AISHUDevOps/DIP/_git/agent-retrieval/server/infra/errors"
-	"devops.aishu.cn/AISHUDevOps/DIP/_git/agent-retrieval/server/infra/rest"
-	"devops.aishu.cn/AISHUDevOps/DIP/_git/agent-retrieval/server/interfaces"
-	"devops.aishu.cn/AISHUDevOps/DIP/_git/agent-retrieval/server/utils"
+	"github.com/kweaver-ai/adp/context-loader/agent-retrieval/server/infra/common"
+	"github.com/kweaver-ai/adp/context-loader/agent-retrieval/server/infra/config"
+	infraErr "github.com/kweaver-ai/adp/context-loader/agent-retrieval/server/infra/errors"
+	"github.com/kweaver-ai/adp/context-loader/agent-retrieval/server/infra/rest"
+	"github.com/kweaver-ai/adp/context-loader/agent-retrieval/server/interfaces"
+	"github.com/kweaver-ai/adp/context-loader/agent-retrieval/server/utils"
 )
 
 type ontologyQueryClient struct {

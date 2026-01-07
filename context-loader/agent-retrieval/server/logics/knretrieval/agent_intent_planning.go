@@ -1,11 +1,16 @@
+// Copyright The kweaver.ai Authors.
+//
+// Licensed under the Apache License, Version 2.0.
+// See the LICENSE file in the project root for details.
+
 package knretrieval
 
 import (
 	"context"
 	"fmt"
 
-	"devops.aishu.cn/AISHUDevOps/DIP/_git/agent-retrieval/server/interfaces"
-	o11y "devops.aishu.cn/AISHUDevOps/DIP/_git/mdl-go-lib/observability"
+	"github.com/kweaver-ai/adp/context-loader/agent-retrieval/server/interfaces"
+	o11y "github.com/kweaver-ai/kweaver-go-lib/observability"
 )
 
 // AgentIntentPlanning 语义搜索: 基于意图分析智能体+规划策略

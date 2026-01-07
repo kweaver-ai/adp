@@ -1,38 +1,43 @@
+// Copyright The kweaver.ai Authors.
+//
+// Licensed under the Apache License, Version 2.0.
+// See the LICENSE file in the project root for details.
+
 package interfaces
 
 import "context"
 
-const MaxMatchScore float64 = 100 // 最大匹配分
+const MaxMatchScore float64 = 100 // Maximum match score
 
-// SemanticQueryStrategyType 语义查询策略类型
+// SemanticQueryStrategyType Semantic query strategy type
 type SemanticQueryStrategyType string
 
 const (
-	ConceptGetStrategy              SemanticQueryStrategyType = "concept_get"               // 概念获取
-	ConceptDiscoveryStrategy        SemanticQueryStrategyType = "concept_discovery"         // 概念发现
-	ObjectInstanceDiscoveryStrategy SemanticQueryStrategyType = "object_instance_discovery" // 对象实例发现
+	ConceptGetStrategy              SemanticQueryStrategyType = "concept_get"               // Concept get
+	ConceptDiscoveryStrategy        SemanticQueryStrategyType = "concept_discovery"         // Concept discovery
+	ObjectInstanceDiscoveryStrategy SemanticQueryStrategyType = "object_instance_discovery" // Object instance discovery
 )
 
-// KnBaseConceptField 业务知识网络概念基础字段
+// KnBaseConceptField Knowledge network base concept field
 type KnBaseConceptField string
 
 const (
-	ConceptFieldID    KnBaseConceptField = "id"     // 概念ID
-	ConceptFieldName  KnBaseConceptField = "name"   // 概念名称
-	ConceptFieldScore KnBaseConceptField = "_score" // 匹配分数
-	ConceptFieldAny   KnBaseConceptField = "*"      // 任意字段
+	ConceptFieldID    KnBaseConceptField = "id"     // Concept ID
+	ConceptFieldName  KnBaseConceptField = "name"   // Concept Name
+	ConceptFieldScore KnBaseConceptField = "_score" // Match score
+	ConceptFieldAny   KnBaseConceptField = "*"      // Any field
 )
 
-// SemanticQueryMode 语义检索策略模式
+// SemanticQueryMode Semantic query strategy mode
 type SemanticQueryMode string
 
 const (
-	AgentIntentPlanning    SemanticQueryMode = "agent_intent_planning"    // 基于智能体意图分析与规划策略
-	AgentIntentRetrieval   SemanticQueryMode = "agent_intent_retrieval"   // 意图分析智能体 + 传统召回策略
-	KeywordVectorRetrieval SemanticQueryMode = "keyword_vector_retrieval" // 基于关键词+向量召回
+	AgentIntentPlanning    SemanticQueryMode = "agent_intent_planning"    // Strategy based on agent intent analysis and planning
+	AgentIntentRetrieval   SemanticQueryMode = "agent_intent_retrieval"   // Intent analysis agent + traditional retrieval strategy
+	KeywordVectorRetrieval SemanticQueryMode = "keyword_vector_retrieval" // Keyword + Vector retrieval
 )
 
-// SearchScopeConfig 搜索域配置
+// SearchScopeConfig Search scope configuration
 type SearchScopeConfig struct {
 	ConceptGroups        []string `json:"concept_groups"`
 	IncludeObjectTypes   *bool    `json:"include_object_types" default:"true"`
@@ -40,87 +45,87 @@ type SearchScopeConfig struct {
 	IncludeActionTypes   *bool    `json:"include_action_types" default:"true"`
 }
 
-// KnowledgeConcept 业务知识网络概念定义
+// KnowledgeConcept Knowledge network concept definition
 type KnowledgeConcept struct {
-	ConceptType KnConceptType `json:"concept_type"` // 概念类型
-	ConceptID   string        `json:"concept_id"`   // 概念id
-	ConceptName string        `json:"concept_name"` // 概念名称
+	ConceptType KnConceptType `json:"concept_type"` // Concept type
+	ConceptID   string        `json:"concept_id"`   // Concept ID
+	ConceptName string        `json:"concept_name"` // Concept Name
 }
 
-// SemanticQueryIntent 语义查询意图
+// SemanticQueryIntent Semantic query intent
 type SemanticQueryIntent struct {
-	QuerySegment      string              `json:"query_segment"`      // 查询片段
-	Confidence        float32             `json:"confidence"`         // 置信度
-	Reasoning         string              `json:"reasoning"`          // 推理
-	RequiresReasoning bool                `json:"requires_reasoning"` // 是否需要进一步推理
-	RelatedConcepts   []*KnowledgeConcept `json:"related_concepts"`   // 相关概念
+	QuerySegment      string              `json:"query_segment"`      // Query segment
+	Confidence        float32             `json:"confidence"`         // Confidence
+	Reasoning         string              `json:"reasoning"`          // Reasoning
+	RequiresReasoning bool                `json:"requires_reasoning"` // Whether further reasoning is required
+	RelatedConcepts   []*KnowledgeConcept `json:"related_concepts"`   // Related concepts
 }
 
-// QueryStrategyCondition 策略筛选条件
+// QueryStrategyCondition Strategy filtering condition
 type QueryStrategyCondition struct {
-	Field     string `json:"field"`     // 字段名称
-	Operation string `json:"operation"` // 操作符
-	Value     any    `json:"value"`     // 字段值
+	Field     string `json:"field"`     // Field name
+	Operation string `json:"operation"` // Operator
+	Value     any    `json:"value"`     // Field value
 }
 
-// QueryStrategyFilter 查询策略筛选项
+// QueryStrategyFilter Query strategy filter item
 type QueryStrategyFilter struct {
-	ConceptType KnConceptType             `json:"concept_type"` // 概念类型
-	ConceptID   string                    `json:"concept_id"`   // 概念类ID
-	ConceptIDs  []string                  `json:"concept_ids"`  // 概念类IDs
-	Conditions  []*QueryStrategyCondition `json:"conditions"`   // 筛选条件
+	ConceptType KnConceptType             `json:"concept_type"` // Concept type
+	ConceptID   string                    `json:"concept_id"`   // Concept ID
+	ConceptIDs  []string                  `json:"concept_ids"`  // Concept IDs
+	Conditions  []*QueryStrategyCondition `json:"conditions"`   // Filtering conditions
 }
 
-// SemanticQueryStrategy 语义查询策略
+// SemanticQueryStrategy Semantic query strategy
 type SemanticQueryStrategy struct {
-	StrategyType SemanticQueryStrategyType `json:"strategy_type"` // 策略类型
-	Filter       *QueryStrategyFilter      `json:"filter"`        // 筛选条件
+	StrategyType SemanticQueryStrategyType `json:"strategy_type"` // Strategy type
+	Filter       *QueryStrategyFilter      `json:"filter"`        // Filtering conditions
 }
 
-// QueryUnderstanding 查询理解
+// QueryUnderstanding Query understanding
 type QueryUnderstanding struct {
-	OriginQuery    string                   `json:"origin_query"`    // 原始Query
-	ProcessedQuery string                   `json:"processed_query"` // 处理后的Query
-	Intent         []*SemanticQueryIntent   `json:"intent"`          // 语义查询意图
-	QueryStrategys []*SemanticQueryStrategy `json:"query_strategy"`  // 语义查询策略
+	OriginQuery    string                   `json:"origin_query"`    // Original Query
+	ProcessedQuery string                   `json:"processed_query"` // Processed Query
+	Intent         []*SemanticQueryIntent   `json:"intent"`          // Semantic query intent
+	QueryStrategys []*SemanticQueryStrategy `json:"query_strategy"`  // Semantic query strategies
 }
 
-// SemanticSearchRequest 语义搜索请求
+// SemanticSearchRequest Semantic search request
 type SemanticSearchRequest struct {
-	Mode                     SemanticQueryMode         `form:"mode" validate:"required,oneof=keyword_vector_retrieval agent_intent_planning agent_intent_retrieval" default:"keyword_vector_retrieval"` // 语义检索策略模式
-	RerankAction             KnowledgeRerankActionType `json:"rerank_action" validate:"required,oneof=llm vector" default:"vector"`                                                                     // 操作:llm基于大模型做排序，vector基于向量
-	ReturnQueryUnderstanding *bool                     `json:"return_query_understanding" default:"false"`                                                                                              // 是否返回查询理解信息
-	Query                    string                    `json:"query" validate:"required"`                                                                                                               // 用户Query
-	KnID                     string                    `json:"kn_id" validate:"required"`                                                                                                               // 业务知识网络id
-	PreviousQueries          []string                  `json:"previous_queries"`                                                                                                                        // 历史Query
-	SearchScope              *SearchScopeConfig        `json:"search_scope"`                                                                                                                            // 搜索域配置
-	MaxConcepts              int                       `json:"max_concepts" default:"10"`                                                                                                               // 最大概念数
+	Mode                     SemanticQueryMode         `form:"mode" validate:"required,oneof=keyword_vector_retrieval agent_intent_planning agent_intent_retrieval" default:"keyword_vector_retrieval"` // Semantic retrieval strategy mode
+	RerankAction             KnowledgeRerankActionType `json:"rerank_action" validate:"required,oneof=llm vector" default:"vector"`                                                                     // Action: llm based rerank, vector based rerank
+	ReturnQueryUnderstanding *bool                     `json:"return_query_understanding" default:"false"`                                                                                              // Whether to return query understanding information
+	Query                    string                    `json:"query" validate:"required"`                                                                                                               // User Query
+	KnID                     string                    `json:"kn_id" validate:"required"`                                                                                                               // Knowledge network ID
+	PreviousQueries          []string                  `json:"previous_queries"`                                                                                                                        // History Queries
+	SearchScope              *SearchScopeConfig        `json:"search_scope"`                                                                                                                            // Search scope configuration
+	MaxConcepts              int                       `json:"max_concepts" default:"10"`                                                                                                               // Max concepts count
 }
 
-// ConceptResult 概念结果
+// ConceptResult Concept result
 type ConceptResult struct {
-	ConceptType   KnConceptType `json:"concept_type"`   //概念类型
-	ConceptID     string        `json:"concept_id"`     //概念id
-	ConceptName   string        `json:"concept_name"`   // 概念名称
-	ConceptDetail any           `json:"concept_detail"` //概念详情
-	IntentScore   float64       `json:"intent_score"`   // 意图分
-	MatchScore    float64       `json:"match_score"`    // 匹配分
-	RerankScore   float64       `json:"rerank_score"`   // 重排分
-	Samples       []any         `json:"samples"`        // 样本
+	ConceptType   KnConceptType `json:"concept_type"`   // Concept type
+	ConceptID     string        `json:"concept_id"`     // Concept ID
+	ConceptName   string        `json:"concept_name"`   // Concept Name
+	ConceptDetail any           `json:"concept_detail"` // Concept Detail
+	IntentScore   float64       `json:"intent_score"`   // Intent Score
+	MatchScore    float64       `json:"match_score"`    // Match Score
+	RerankScore   float64       `json:"rerank_score"`   // Rerank Score
+	Samples       []any         `json:"samples"`        // Samples
 }
 
 type SemanticSearchResponse struct {
-	QueryUnderstanding *QueryUnderstanding `json:"query_understanding,omitempty" validate:"required"` // 查询理解
-	KnowledgeConcepts  []*ConceptResult    `json:"concepts" validate:"required"`                      // 业务知识网络概念
-	HitsTotal          int                 `json:"hits_total"`                                        // 概念命中总数
+	QueryUnderstanding *QueryUnderstanding `json:"query_understanding,omitempty" validate:"required"` // Query understanding
+	KnowledgeConcepts  []*ConceptResult    `json:"concepts" validate:"required"`                      // Knowledge network concepts
+	HitsTotal          int                 `json:"hits_total"`                                        // Total hits
 }
 
-// IKnRetrievalService 基于业务知识网络检索服务
+// IKnRetrievalService Knowledge network based retrieval service
 type IKnRetrievalService interface {
-	// AgentIntentPlanning 语义检索: 基于意图分析智能体+规划策略
+	// AgentIntentPlanning Semantic retrieval: Intent analysis agent + Planning strategy
 	AgentIntentPlanning(ctx context.Context, req *SemanticSearchRequest) (*SemanticSearchResponse, error)
-	// AgentIntentRetrieval 语义检索: 基于意图分析智能体+召回策略
+	// AgentIntentRetrieval Semantic retrieval: Intent analysis agent + Retrieval strategy
 	AgentIntentRetrieval(ctx context.Context, req *SemanticSearchRequest) (resp *SemanticSearchResponse, err error)
-	// KeywordVectorRetrieval 语义检索: 基于关键词+向量召回
+	// KeywordVectorRetrieval Semantic retrieval: Keyword + Vector retrieval
 	KeywordVectorRetrieval(ctx context.Context, req *SemanticSearchRequest) (resp *SemanticSearchResponse, err error)
 }

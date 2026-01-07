@@ -1,14 +1,19 @@
+// Copyright The kweaver.ai Authors.
+//
+// Licensed under the Apache License, Version 2.0.
+// See the LICENSE file in the project root for details.
+
 package knsearch
 
 import (
 	"net/http"
 	"sync"
 
-	"devops.aishu.cn/AISHUDevOps/DIP/_git/agent-retrieval/server/infra/config"
-	"devops.aishu.cn/AISHUDevOps/DIP/_git/agent-retrieval/server/infra/errors"
-	"devops.aishu.cn/AISHUDevOps/DIP/_git/agent-retrieval/server/infra/rest"
-	"devops.aishu.cn/AISHUDevOps/DIP/_git/agent-retrieval/server/interfaces"
-	logicskn "devops.aishu.cn/AISHUDevOps/DIP/_git/agent-retrieval/server/logics/knsearch"
+	"github.com/kweaver-ai/adp/context-loader/agent-retrieval/server/infra/config"
+	"github.com/kweaver-ai/adp/context-loader/agent-retrieval/server/infra/errors"
+	"github.com/kweaver-ai/adp/context-loader/agent-retrieval/server/infra/rest"
+	"github.com/kweaver-ai/adp/context-loader/agent-retrieval/server/interfaces"
+	logicskn "github.com/kweaver-ai/adp/context-loader/agent-retrieval/server/logics/knsearch"
 	"github.com/creasty/defaults"
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"

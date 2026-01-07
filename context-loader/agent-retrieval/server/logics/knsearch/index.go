@@ -1,15 +1,20 @@
+// Copyright The kweaver.ai Authors.
+//
+// Licensed under the Apache License, Version 2.0.
+// See the LICENSE file in the project root for details.
+
 package knsearch
 
 import (
 	"context"
 	"sync"
 
-	"devops.aishu.cn/AISHUDevOps/DIP/_git/agent-retrieval/server/drivenadapters"
-	"devops.aishu.cn/AISHUDevOps/DIP/_git/agent-retrieval/server/infra/config"
-	"devops.aishu.cn/AISHUDevOps/DIP/_git/agent-retrieval/server/interfaces"
+	"github.com/kweaver-ai/adp/context-loader/agent-retrieval/server/drivenadapters"
+	"github.com/kweaver-ai/adp/context-loader/agent-retrieval/server/infra/config"
+	"github.com/kweaver-ai/adp/context-loader/agent-retrieval/server/interfaces"
 )
 
-// KnSearchService kn_search 服务
+// KnSearchService kn_search service
 type KnSearchService interface {
 	KnSearch(ctx context.Context, req *interfaces.KnSearchReq) (resp *interfaces.KnSearchResp, err error)
 }
@@ -24,7 +29,7 @@ var (
 	ksService     KnSearchService
 )
 
-// NewKnSearchService 新建 KnSearchService
+// NewKnSearchService creates new KnSearchService
 func NewKnSearchService() KnSearchService {
 	ksServiceOnce.Do(func() {
 		conf := config.NewConfigLoader()
@@ -36,9 +41,9 @@ func NewKnSearchService() KnSearchService {
 	return ksService
 }
 
-// KnSearch 知识网络检索
+// KnSearch Knowledge network retrieval
 func (s *knSearchService) KnSearch(ctx context.Context, req *interfaces.KnSearchReq) (resp *interfaces.KnSearchResp, err error) {
-	// 将 kn_id 转换为 kn_ids 数组（内部使用，不对外暴露）
+	// Convert kn_id to kn_ids array (internal use, not exposed)
 	knIDs := []*interfaces.KnDataSourceConfig{
 		{
 			KnowledgeNetworkID: req.KnID,

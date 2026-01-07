@@ -1,3 +1,8 @@
+// Copyright The kweaver.ai Authors.
+//
+// Licensed under the Apache License, Version 2.0.
+// See the LICENSE file in the project root for details.
+
 package interfaces
 
 //go:generate mockgen -source=error.go -destination=../mocks/error.go -package=mocks
@@ -43,12 +48,12 @@ func mustECode(str string) string {
 	return str
 }
 
-// Error 输出Error字符串
+// Error output error string
 func (e *EOut) Error() string {
 	return fmt.Sprintf(e.Description, e.Fields)
 }
 
-// New 生成一个新的 EOut
+// New generate a new EOut
 func (e *EOut) New(err error) *EOut {
 	ne := *e
 	ne.isFromNew = true
@@ -65,12 +70,12 @@ func (e *EOut) AddField(k string, v interface{}) *EOut {
 	return e
 }
 
-// Unwrap 解包
+// Unwrap unwrap error
 func (e *EOut) Unwrap() error {
 	return e.Err
 }
 
-// CommonError 通用错误
+// CommonError common error
 type CommonError struct {
 	ErrorCode    string      `json:"ErrorCode"`
 	Description  string      `json:"Description"`
@@ -79,7 +84,7 @@ type CommonError struct {
 	Solution     string      `json:"Solution"`
 }
 
-// Error 输出Error字符串
+// Error output error string
 func (err CommonError) Error() string {
 	return err.Description
 }
@@ -124,15 +129,15 @@ type HTTPError struct {
 // BaseError http error
 type BaseError struct {
 	Code                    string         `json:"code"`
-	Description             string         `json:"description"` // 错误描述
-	Solution                string         `json:"solution"`    // 解决方法
-	ErrorLink               string         `json:"link"`        // 错误链接
-	ErrorDetails            interface{}    `json:"details"`     // 详细内容
-	DescriptionTemplateData map[string]any `json:"-"`           // 错误描述参数
-	SolutionTemplateData    map[string]any `json:"-"`           // 解决方法参数
+	Description             string         `json:"description"` // Error description
+	Solution                string         `json:"solution"`    // Solution
+	ErrorLink               string         `json:"link"`        // Error link
+	ErrorDetails            interface{}    `json:"details"`     // Detail content
+	DescriptionTemplateData map[string]any `json:"-"`           // Description parameters
+	SolutionTemplateData    map[string]any `json:"-"`           // Solution parameters
 }
 
-// Error 返回错误信息
+// Error return error message
 func (err *HTTPError) Error() string {
 	errBys, _ := jsoniter.Marshal(err.BaseError)
 	return string(errBys)

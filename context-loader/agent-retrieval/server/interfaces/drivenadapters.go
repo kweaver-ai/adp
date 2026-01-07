@@ -1,6 +1,11 @@
-// Package interfaces 定义接口
+// Copyright The kweaver.ai Authors.
+//
+// Licensed under the Apache License, Version 2.0.
+// See the LICENSE file in the project root for details.
+
+// Package interfaces defines interfaces
 // @file drivenadapters.go
-// @description: 入站接口定义
+// @description: Inbound interface definition
 package interfaces
 
 //go:generate mockgen -source=drivenadapters.go -destination=../mocks/drivenadapters.go -package=mocks
@@ -8,34 +13,34 @@ import (
 	"context"
 )
 
-// AccountAuthContext 账户认证上下文
+// AccountAuthContext Account authentication context
 type AccountAuthContext struct {
-	// AccountID 账户唯一标识符
+	// AccountID Account unique identifier
 	AccountID string `json:"account_id"`
-	// AccountType 账户类型
+	// AccountType Account Type
 	AccountType AccessorType `json:"account_type"`
-	// Token信息
+	// TokenInfo Token information
 	TokenInfo *TokenInfo `json:"token_info"`
 }
 
 const (
-	// SystemUser 系统
+	// SystemUser System
 	SystemUser = "system"
-	// UnknownUser 未知
+	// UnknownUser Unknown
 	UnknownUser = "unknown"
 )
 
-// VisitorType 访问者类型
+// VisitorType Visitor Type
 type VisitorType string
 
-// 访问者类型定义
+// Visitor type definitions
 const (
-	RealName  VisitorType = "realname"  // 实名用户
-	Anonymous VisitorType = "anonymous" // 匿名用户
-	Business  VisitorType = "business"  // 应用账户
+	RealName  VisitorType = "realname"  // Real-name user
+	Anonymous VisitorType = "anonymous" // Anonymous user
+	Business  VisitorType = "business"  // Application account
 )
 
-// ToAccessorType 转换为访问者类型
+// ToAccessorType Converts to AccessorType
 func (v VisitorType) ToAccessorType() AccessorType {
 	switch v {
 	case RealName:
@@ -45,24 +50,24 @@ func (v VisitorType) ToAccessorType() AccessorType {
 	case Anonymous:
 		return AccessorTypeAnonymous
 	default:
-		// 未知访问者类型，默认匿名用户
+		// Unknown visitor type, default to anonymous user
 		return AccessorTypeAnonymous
 	}
 }
 
-// AccessorType 访问类型
+// AccessorType Accessor Type
 type AccessorType string
 
 const (
-	AccessorTypeUser       AccessorType = "user"       // 实名用户
-	AccessorTypeDepartment AccessorType = "department" // 部门
-	AccessorTypeGroup      AccessorType = "group"      // 组织
-	AccessorTypeRole       AccessorType = "role"       // 角色
-	AccessorTypeApp        AccessorType = "app"        // 应用账户
-	AccessorTypeAnonymous  AccessorType = "anonymous"  // 匿名访问
+	AccessorTypeUser       AccessorType = "user"       // Real-name user
+	AccessorTypeDepartment AccessorType = "department" // Department
+	AccessorTypeGroup      AccessorType = "group"      // Organization
+	AccessorTypeRole       AccessorType = "role"       // Role
+	AccessorTypeApp        AccessorType = "app"        // Application account
+	AccessorTypeAnonymous  AccessorType = "anonymous"  // Anonymous access
 )
 
-// ToVisitorType 将AccessorType转换为VisitorType
+// ToVisitorType Converts AccessorType to VisitorType
 func (a AccessorType) ToVisitorType() VisitorType {
 	switch a {
 	case AccessorTypeUser:
@@ -78,26 +83,26 @@ func (a AccessorType) ToVisitorType() VisitorType {
 	}
 }
 
-// AccountType 登录账号类型
+// AccountType Login account type
 type AccountType int32
 
-// 登录账号类型定义
+// Login account type definition
 const (
 	Other  AccountType = 0
 	IDCard AccountType = 1
 )
 
 const (
-	// AccessedByUser 实名用户
+	// AccessedByUser Real-name user
 	AccessedByUser string = "accessed_by_users"
-	// AccessedByAnyOne 匿名用户
+	// AccessedByAnyOne Anonymous user
 	AccessedByAnyOne string = "accessed_by_anyone"
 )
 
-// ClientType 设备类型
+// ClientType Device type
 type ClientType int32
 
-// ClientTypeMap 客户端类型表
+// ClientTypeMap Client type map
 var ClientTypeMap = map[ClientType]string{
 	Unknown:      "unknown",
 	IOS:          "ios",
@@ -114,7 +119,7 @@ var ClientTypeMap = map[ClientType]string{
 	APP:          "app",
 }
 
-// ReverseClientTypeMap 客户端类型字符串反查表
+// ReverseClientTypeMap Reverse client type map
 var ReverseClientTypeMap = map[string]ClientType{
 	"unknown":       Unknown,
 	"ios":           IOS,
@@ -131,13 +136,13 @@ var ReverseClientTypeMap = map[string]ClientType{
 	"app":           APP,
 }
 
-// AccountTypeMap 账户类型表
+// AccountTypeMap Account type map
 var AccountTypeMap = map[AccountType]string{
 	Other:  "other_category",
 	IDCard: "id_card",
 }
 
-// ReverseAccountTypeMap 账户类型字符串反查表
+// ReverseAccountTypeMap Reverse account type map
 var ReverseAccountTypeMap = map[string]AccountType{
 	"other_category": Other,
 	"id_card":        IDCard,
@@ -151,7 +156,7 @@ func (typ ClientType) String() string {
 	return str
 }
 
-// 设备类型定义
+// Device type definition
 const (
 	Unknown ClientType = iota
 	IOS
@@ -168,49 +173,49 @@ const (
 	APP
 )
 
-// TokenInfo 授权验证信息
+// TokenInfo Authorization verification information
 type TokenInfo struct {
-	Active     bool        // 令牌状态
-	VisitorID  string      // 访问者ID
-	Scope      string      // 权限范围
-	ClientID   string      // 客户端ID
-	VisitorTyp VisitorType // 访问者类型
-	// 以下字段只在visitorType=realname，即实名用户时才存在
-	LoginIP     string      // 登陆IP
-	Udid        string      // 设备码
-	AccountTyp  AccountType // 账户类型
-	ClientTyp   ClientType  // 设备类型
-	PhoneNumber string      // 匿名用户的电话号码
-	VisitorName string      // 匿名外链，访问者的昵称
-	MAC         string      // MAC地址
-	UserAgent   string      // 代理信息
+	Active     bool        // Token status
+	VisitorID  string      // Visitor ID
+	Scope      string      // Permission scope
+	ClientID   string      // Client ID
+	VisitorTyp VisitorType // Visitor type
+	// Following fields exist only when visitorType=realname (real-name user)
+	LoginIP     string      // Login IP
+	Udid        string      // Device ID
+	AccountTyp  AccountType // Account type
+	ClientTyp   ClientType  // Device type
+	PhoneNumber string      // Phone number for anonymous users
+	VisitorName string      // Nickname for anonymous visitors
+	MAC         string      // MAC address
+	UserAgent   string      // User agent info
 }
 
-// Hydra 授权服务接口
+// Hydra Authorization service interface
 type Hydra interface {
 	Introspect(ctx context.Context, token string) (tokenInfo *TokenInfo, err error)
 }
 
 const (
-	// DisplayName 用户显示名称
+	// DisplayName User display name
 	DisplayName = "name"
 )
 
-// UserInfo 用户信息
+// UserInfo User information
 type UserInfo struct {
-	UserID      string   `json:"id"`    // 用户ID
-	DisplayName string   `json:"name"`  // 用户显示名称
-	Roles       []string `json:"roles"` // 角色
+	UserID      string   `json:"id"`    // User ID
+	DisplayName string   `json:"name"`  // User display name
+	Roles       []string `json:"roles"` // Roles
 	Account     string   `json:"account"`
 }
 
-// AppInfo 应用账号信息
+// AppInfo App account information
 type AppInfo struct {
 	ID   string `json:"id"`
 	Name string `json:"name"`
 }
 
-// ErrorResponse 错误响应
+// ErrorResponse Error response
 type ErrorResponse struct {
 	Code    int    `json:"code"`
 	Message string `json:"message"`
@@ -219,7 +224,7 @@ type ErrorResponse struct {
 	} `json:"detail"`
 }
 
-// UserManagement 用户管理接口
+// UserManagement User management interface
 type UserManagement interface {
 	GetAppInfo(ctx context.Context, appID string) (appInfo *AppInfo, err error)
 	GetUserInfo(ctx context.Context, userID string, fields ...string) (info *UserInfo, err error)
@@ -227,38 +232,38 @@ type UserManagement interface {
 	GetUsersName(ctx context.Context, userIDs []string) (userMap map[string]string, err error)
 }
 
-// KnowledgeRerankActionType 基于业务知识网络结果集排序类型
+// KnowledgeRerankActionType Result set rerank type based on business knowledge network
 type KnowledgeRerankActionType string
 
 const (
-	KnowledgeRerankActionLLM     KnowledgeRerankActionType = "llm"     // 基于大模型做排序
-	KnowledgeRerankActionVector  KnowledgeRerankActionType = "vector"  // 基于向量做排序
-	KnowledgeRerankActionDefault KnowledgeRerankActionType = "default" // 默认排序
+	KnowledgeRerankActionLLM     KnowledgeRerankActionType = "llm"     // Rerank based on LLM
+	KnowledgeRerankActionVector  KnowledgeRerankActionType = "vector"  // Rerank based on vector
+	KnowledgeRerankActionDefault KnowledgeRerankActionType = "default" // Default rerank
 )
 
-// KnowledgeRerankReq 知识重排请求
+// KnowledgeRerankReq Knowledge rerank request
 type KnowledgeRerankReq struct {
-	QueryUnderstanding *QueryUnderstanding       `json:"query_understanding" validate:"required"`                      // 查询理解
-	KnowledgeConcepts  []*ConceptResult          `json:"concepts" validate:"required"`                                 // 业务知识网络概念
-	Action             KnowledgeRerankActionType `json:"action" validate:"required,oneof=llm vector" default:"vector"` // 操作:llm基于大模型做排序，vector基于向量
+	QueryUnderstanding *QueryUnderstanding       `json:"query_understanding" validate:"required"`                      // Query understanding
+	KnowledgeConcepts  []*ConceptResult          `json:"concepts" validate:"required"`                                 // Business knowledge network concepts
+	Action             KnowledgeRerankActionType `json:"action" validate:"required,oneof=llm vector" default:"vector"` // Action: llm based rerank, vector based rerank
 }
 
-// KnDataSourceConfig 知识网络数据源配置
+// KnDataSourceConfig Knowledge network data source configuration
 type KnDataSourceConfig struct {
-	KnowledgeNetworkID string `json:"knowledge_network_id"` // 知识网络ID
+	KnowledgeNetworkID string `json:"knowledge_network_id"` // Knowledge Network ID
 }
 
-// KnSearchReq kn_search 请求
+// KnSearchReq kn_search request
 type KnSearchReq struct {
-	// Header 参数
+	// Header Parameters
 	XAccountID   string `header:"x-account-id"`
 	XAccountType string `header:"x-account-type"`
 
-	// Body 参数 - 使用 any 避免明确定义复杂结构
-	// 对应 data-retrieval 接口的完整请求结构
+	// Body Parameters - use any to avoid defining complex structures explicitly
+	// Corresponds to the complete request structure of data-retrieval interface
 	Query             string                `json:"query" validate:"required"`
 	KnID              string                `json:"kn_id" validate:"required"`
-	knIDs             []*KnDataSourceConfig // 内部使用，由 KnID 转换而来，不对外暴露
+	knIDs             []*KnDataSourceConfig // Internal use, converted from KnID, not exposed
 	SessionID         *string               `json:"session_id,omitempty"`
 	AdditionalContext *string               `json:"additional_context,omitempty"`
 	RetrievalConfig   any                   `json:"retrieval_config,omitempty"`
@@ -266,20 +271,20 @@ type KnSearchReq struct {
 	EnableRerank      *bool                 `json:"enable_rerank,omitempty"`
 }
 
-// SetKnIDs 设置 knIDs（内部使用，由 KnID 转换而来）
+// SetKnIDs Sets knIDs (internal use, converted from KnID)
 func (r *KnSearchReq) SetKnIDs(knIDs []*KnDataSourceConfig) {
 	r.knIDs = knIDs
 }
 
-// GetKnIDs 获取 knIDs（内部使用）
+// GetKnIDs Gets knIDs (internal use)
 func (r *KnSearchReq) GetKnIDs() []*KnDataSourceConfig {
 	return r.knIDs
 }
 
-// KnSearchResp kn_search 响应
+// KnSearchResp kn_search response
 type KnSearchResp struct {
-	// 使用 any 直接返回底层接口的原始结构
-	// 对应 data-retrieval 接口的完整响应结构
+	// Use any to directly return the original structure from the underlying interface
+	// Corresponds to the complete response structure of data-retrieval interface
 	ObjectTypes   any     `json:"object_types,omitempty"`
 	RelationTypes any     `json:"relation_types,omitempty"`
 	ActionTypes   any     `json:"action_types,omitempty"`
@@ -287,9 +292,9 @@ type KnSearchResp struct {
 	Message       *string `json:"message,omitempty"`
 }
 
-// DataRetrieval 数据检索接口
+// DataRetrieval Data retrieval interface
 type DataRetrieval interface {
 	KnowledgeRerank(ctx context.Context, req *KnowledgeRerankReq) (results []*ConceptResult, err error)
-	// KnSearch 知识网络检索
+	// KnSearch Knowledge network retrieval
 	KnSearch(ctx context.Context, req *KnSearchReq) (resp *KnSearchResp, err error)
 }

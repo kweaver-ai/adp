@@ -1,16 +1,21 @@
+// Copyright The kweaver.ai Authors.
+//
+// Licensed under the Apache License, Version 2.0.
+// See the LICENSE file in the project root for details.
+
 package interfaces
 
 import "context"
 
-// ==================== 工具箱服务相关结构 ====================
+// ==================== Toolbox Service Related Structures ====================
 
-// GetToolDetailRequest 获取工具详情请求
+// GetToolDetailRequest Get tool detail request
 type GetToolDetailRequest struct {
 	BoxID  string
 	ToolID string
 }
 
-// GetToolDetailResponse 获取工具详情响应
+// GetToolDetailResponse Get tool detail response
 type GetToolDetailResponse struct {
 	ToolID       string         `json:"tool_id"`
 	Name         string         `json:"name"`
@@ -27,7 +32,7 @@ type GetToolDetailResponse struct {
 	ExtendInfo   map[string]any `json:"extend_info,omitempty"`
 }
 
-// ToolMetadata 工具元数据
+// ToolMetadata Tool metadata
 type ToolMetadata struct {
 	Version     string         `json:"version"`
 	Summary     string         `json:"summary"`
@@ -39,13 +44,13 @@ type ToolMetadata struct {
 	UpdateTime  int64          `json:"update_time"`
 	CreateUser  string         `json:"create_user"`
 	UpdateUser  string         `json:"update_user"`
-	ApiSpec     map[string]any `json:"api_spec"` // OpenAPI 规范
+	ApiSpec     map[string]any `json:"api_spec"` // OpenAPI specification
 }
 
-// ==================== Driven Adapters 接口 ====================
+// ==================== Driven Adapters Interface ====================
 
-// DrivenOperatorIntegration 算子集成服务接口
+// DrivenOperatorIntegration Operator integration service interface
 type DrivenOperatorIntegration interface {
-	// GetToolDetail 获取工具详情
+	// GetToolDetail Get tool detail
 	GetToolDetail(ctx context.Context, req *GetToolDetailRequest) (*GetToolDetailResponse, error)
 }
