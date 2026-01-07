@@ -1,4 +1,5 @@
-FROM acr.aishu.cn/public/ubuntu:22.04.20241202
+ARG BASE_IMAGE=acr.aishu.cn/public/ubuntu:22.04.20241202
+FROM ${BASE_IMAGE}
 
 ADD config /workflowconfig
 

@@ -1,4 +1,5 @@
-FROM acr.aishu.cn/public/nginx:1.22.1-alpine-latest
+ARG BASE_IMAGE=acr.aishu.cn/public/nginx:1.22.1-alpine-latest
+FROM ${BASE_IMAGE}
 
 # 给nginx添加权限
 RUN chown root /usr/sbin/nginx && \

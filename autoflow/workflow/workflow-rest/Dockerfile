@@ -1,4 +1,5 @@
-FROM acr.aishu.cn/public/openjdk-temurin:8u422-b05-jdk
+ARG BASE_IMAGE=acr.aishu.cn/public/openjdk-temurin:8u422-b05-jdk
+FROM ${BASE_IMAGE}
 ENV TZ "Asia/Shanghai"
 
 #RUN apt-get update && apt-get install ttf-dejavu fontconfig -y

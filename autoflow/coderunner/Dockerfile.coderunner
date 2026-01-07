@@ -1,4 +1,5 @@
-FROM acr.aishu.cn/dip/python:3.9.13-ubuntu22.04.20251014-1
+ARG BASE_IMAGE=acr.aishu.cn/dip/python:3.9.13-ubuntu22.04.20251014-1
+FROM ${BASE_IMAGE}
 
 WORKDIR /opt
 
