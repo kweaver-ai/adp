@@ -49,16 +49,16 @@
     },
     "dependence": [
         {
+            "name": "class-443"
+        },
+        {
             "name": "rds"
         },
         {
             "name": "mq"
         },
         {
-            "name": "class-443"
-        },
-        {
-            "name": "mdl-dm-pre"
+            "name": "vega-dm-pre"
         }
     ]
 }

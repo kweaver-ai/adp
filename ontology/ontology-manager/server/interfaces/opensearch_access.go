@@ -19,6 +19,8 @@ type IndexStats struct {
 
 // OpenSearchAccess 定义OpenSearch访问接口
 type OpenSearchAccess interface {
+	PutIndexTemplate(ctx context.Context, indexTemplateName string, body any) error
+
 	CreateIndex(ctx context.Context, indexName string, body any) error
 
 	// IndexExists 检查指定索引是否存在

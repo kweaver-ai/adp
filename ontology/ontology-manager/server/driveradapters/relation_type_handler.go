@@ -640,7 +640,7 @@ func (r *restHandler) ListRelationTypes(c *gin.Context, visitor rest.Visitor) {
 		parameter.SourceObjectTypeIDs = []string{sourceObjectTypeID}
 	}
 	if targetObjectTypeID != "" {
-		parameter.SourceObjectTypeIDs = []string{targetObjectTypeID}
+		parameter.TargetObjectTypeIDs = []string{targetObjectTypeID}
 	}
 	parameter.Sort = pageParam.Sort
 	parameter.Direction = pageParam.Direction

@@ -468,6 +468,6 @@ func (ott *ObjectTypeTask) GetObjectID(objectData map[string]any) string {
 }
 
 func (ott *ObjectTypeTask) generateTaskIndexName(knID string, branch string, otID string, task_id string) string {
-	// dip-kn_<kn_id>_<object_type_id>_<task_id>
-	return fmt.Sprintf("dip-kn_ot_index-%s-%s-%s-%s", knID, branch, otID, task_id)
+	// adp-kn_<kn_id>_<object_type_id>_<task_id>
+	return fmt.Sprintf("adp-kn_ot_index-%s-%s-%s-%s", knID, branch, otID, task_id)
 }

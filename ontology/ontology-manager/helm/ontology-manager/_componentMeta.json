@@ -55,6 +55,9 @@
             "name": "rds"
         },
         {
+            "name": "mq"
+        },
+        {
             "name": "opensearch"
         }
     ]

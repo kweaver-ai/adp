@@ -201,6 +201,27 @@ func (dvmService *dataViewMonitorService) Sync(ctx context.Context, syncType str
 
 // 同步单个数据源
 func (dvmService *dataViewMonitorService) syncDataSource(ctx context.Context, dataSource *interfaces.DataSource, syncType string, lastSyncTime string) error {
+	// 先操作标记源表删除，源表删除需要全量获取表，不能拿增量查询的库表和全量视图对比
+	// 获取这个数据源（分组）下的所有视图
+	dataViews, err := dvmService.dvs.GetDataViewsBySourceID(ctx, dataSource.ID)
+	if err != nil {
+		return fmt.Errorf("failed to get data views: %w", err)
+	}
+
+	dataViewsMap := make(map[string]*interfaces.DataView)
+	// 维护业务名称和业务id的map，避免新生成的业务名称会在分组内重复
+	dataViewBusinessNameMap := make(map[string]string)
+	for _, dView := range dataViews {
+		dataViewsMap[dView.TechnicalName] = dView
+		dataViewBusinessNameMap[dView.ViewName] = dView.ViewID
+	}
+
+	// 标记源表被删除的视图
+	err = dvmService.markDeletedTablesAsSourceDeleted(ctx, dataSource, dataViewsMap)
+	if err != nil {
+		return fmt.Errorf("failed to mark deleted tables: %w", err)
+	}
+
 	metadataList, err := dvmService.getMetadataBySourceID(ctx, dataSource.ID, lastSyncTime)
 	if err != nil {
 		return fmt.Errorf("failed to get metadata: %w", err)
@@ -220,26 +241,6 @@ func (dvmService *dataViewMonitorService) syncDataSource(ctx context.Context, da
 		return nil
 	}
 
-	// 获取这个数据源（分组）下的所有视图
-	dataViews, err := dvmService.dvs.GetDataViewsBySourceID(ctx, dataSource.ID)
-	if err != nil {
-		return fmt.Errorf("failed to get data views: %w", err)
-	}
-
-	dataViewsMap := make(map[string]*interfaces.DataView)
-	// 维护业务名称和业务id的map，避免新生成的业务名称会在分组内重复
-	dataViewBusinessNameMap := make(map[string]string)
-	for _, dView := range dataViews {
-		dataViewsMap[dView.TechnicalName] = dView
-		dataViewBusinessNameMap[dView.ViewName] = dView.ViewID
-	}
-
-	// 标记源表被删除的视图
-	err = dvmService.markDeletedTablesAsSourceDeleted(ctx, metadataList, dataViewsMap)
-	if err != nil {
-		return fmt.Errorf("failed to mark deleted tables: %w", err)
-	}
-
 	// 处理数据源的元数据
 	err = dvmService.processMetadataByDataSource(ctx, metadataList, dataSource, dataViewsMap, dataViewBusinessNameMap)
 	if err != nil {
@@ -250,10 +251,18 @@ func (dvmService *dataViewMonitorService) syncDataSource(ctx context.Context, da
 }
 
 // 标记源表被删除的视图
-func (dvmService *dataViewMonitorService) markDeletedTablesAsSourceDeleted(ctx context.Context, metadataList []interfaces.SimpleMetadataTable, dataViewsMap map[string]*interfaces.DataView) error {
+func (dvmService *dataViewMonitorService) markDeletedTablesAsSourceDeleted(ctx context.Context, dataSource *interfaces.DataSource, dataViewsMap map[string]*interfaces.DataView) error {
+	allMetadata, err := dvmService.getMetadataBySourceID(ctx, dataSource.ID, "")
+	if err != nil {
+		return fmt.Errorf("failed to get metadata when mark deleted tables: %w", err)
+	}
+
+	logger.Infof("data source '%s' metadata records count: %d, data views count: %d",
+		dataSource.Name, len(allMetadata), len(dataViewsMap))
+
 	// table.Name 是视图的技术名称
 	tablesMap := make(map[string]interfaces.SimpleMetadataTable)
-	for _, table := range metadataList {
+	for _, table := range allMetadata {
 		tablesMap[table.Name] = table
 	}
 
@@ -266,16 +275,17 @@ func (dvmService *dataViewMonitorService) markDeletedTablesAsSourceDeleted(ctx c
 	}
 
 	if len(deleteViewIDs) == 0 {
+		logger.Infof("No views need to be marked as source deleted for data source '%s'", dataSource.Name)
 		return nil
 	}
 
 	// 更新视图状态为源表删除
-	err := dvmService.MarkViewAsSourceDeleted(ctx, deleteViewIDs)
+	err = dvmService.MarkViewAsSourceDeleted(ctx, deleteViewIDs)
 	if err != nil {
 		return fmt.Errorf("failed to mark views as source deleted: %w", err)
 	}
 
-	logger.Infof("Marked %d views as source deleted", len(deleteViewIDs))
+	logger.Infof("Marked %d views as source deleted for data source '%s'", len(deleteViewIDs), dataSource.Name)
 	return nil
 }
 

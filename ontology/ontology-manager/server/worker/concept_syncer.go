@@ -3,6 +3,7 @@ package worker
 import (
 	"context"
 	"fmt"
+	"runtime/debug"
 	"strings"
 	"sync"
 	"time"
@@ -88,6 +89,7 @@ func (cs *ConceptSyncer) handleKNs() error {
 	defer func() {
 		if rerr := recover(); rerr != nil {
 			logger.Errorf("[handleKNs] Failed: %v", rerr)
+			debug.PrintStack()
 			return
 		}
 	}()
@@ -119,7 +121,7 @@ func (cs *ConceptSyncer) handleKNs() error {
 
 		err := cs.handleKnowledgeNetwork(ctx, knInDB, need_update)
 		if err != nil {
-			logger.Errorf("Failed to handle knowledge network %s: %v", knInDB.KNName, err)
+			logger.Errorf("Failed to handle knowledge network %s (%s %s): %v", knInDB.KNName, knInDB.KNID, knInDB.Branch, err)
 			continue
 		}
 	}
@@ -130,12 +132,12 @@ func (cs *ConceptSyncer) handleKNs() error {
 
 // handleKnowledgeNetwork 处理单个知识网络
 func (cs *ConceptSyncer) handleKnowledgeNetwork(ctx context.Context, kn *interfaces.KN, need_update bool) error {
-	logger.Debugf("Handle knowledge network: %s (%s)", kn.KNName, kn.KNID)
+	logger.Debugf("Handle knowledge network: %s (%s %s), %s", kn.KNName, kn.KNID, kn.Branch)
 
 	// 获取对象类型列表
 	objectTypes, ot_need_update, err := cs.handleObjectTypes(ctx, kn.KNID, kn.Branch)
 	if err != nil {
-		logger.Errorf("Failed to handle object types %s: %v", kn.KNID, err)
+		logger.Errorf("Failed to handle object types %s %s: %v", kn.KNID, kn.Branch, err)
 		return err
 	}
 	objectTypesMap := map[string]string{}
@@ -146,25 +148,25 @@ func (cs *ConceptSyncer) handleKnowledgeNetwork(ctx context.Context, kn *interfa
 	// 获取关系类型列表
 	relationTypes, rt_need_update, err := cs.handleRelationTypes(ctx, kn.KNID, kn.Branch, objectTypesMap)
 	if err != nil {
-		logger.Errorf("Failed to handle relation types %s: %v", kn.KNID, err)
+		logger.Errorf("Failed to handle relation types %s %s: %v", kn.KNID, kn.Branch, err)
 		return err
 	}
 
 	// 获取行动类型列表
 	actionTypes, at_need_update, err := cs.handleActionTypes(ctx, kn.KNID, kn.Branch, objectTypesMap)
 	if err != nil {
-		logger.Errorf("Failed to handle action types %s: %v", kn.KNID, err)
+		logger.Errorf("Failed to handle action types %s %s: %v", kn.KNID, kn.Branch, err)
 		return err
 	}
 
 	conceptGroups, cg_need_update, err := cs.handleConceptGroups(ctx, kn.KNID, kn.Branch)
 	if err != nil {
-		logger.Errorf("Failed to handle concept groups %s: %v", kn.KNID, err)
+		logger.Errorf("Failed to handle concept groups %s %s: %v", kn.KNID, kn.Branch, err)
 		return err
 	}
 
 	if !need_update && !ot_need_update && !rt_need_update && !at_need_update && !cg_need_update {
-		logger.Debugf("Knowledge network %s (%s) does not need update", kn.KNName, kn.KNID)
+		logger.Debugf("Knowledge network %s (%s %s) does not need update", kn.KNName, kn.KNID, kn.Branch)
 		return nil
 	}
 
@@ -197,22 +199,23 @@ func (cs *ConceptSyncer) handleKnowledgeNetwork(ctx context.Context, kn *interfa
 	kn.Detail = jsonData
 	err = cs.kna.UpdateKNDetail(ctx, kn.KNID, kn.Branch, jsonData)
 	if err != nil {
-		logger.Errorf("Failed to update KN detail for %s: %v", kn.KNName, err)
+		logger.Errorf("Failed to update KN detail for %s (%s %s): %v", kn.KNName, kn.KNID, kn.Branch, err)
 		return err
 	}
 
 	err = cs.insertOpenSearchDataForKN(ctx, kn)
 	if err != nil {
-		logger.Errorf("Failed to insert open search data for KN %s: %v", kn.KNName, err)
+		logger.Errorf("Failed to insert open search data for KN %s (%s %s): %v", kn.KNName, kn.KNID, kn.Branch, err)
 		return err
 	}
 
-	logger.Debugf("Generated KN detail for %s: %s", kn.KNName, string(jsonData))
+	logger.Debugf("Generated KN detail for %s (%s %s): %s", kn.KNName, kn.KNID, kn.Branch, string(jsonData))
 	return nil
 }
 
 // handleObjectTypes 获取知识网络的对象类型
 func (cs *ConceptSyncer) handleObjectTypes(ctx context.Context, knID string, branch string) ([]SimpleItem, bool, error) {
+	logger.Debugf("Handle object types for knowledge network %s %s", knID, branch)
 	objectTypesInDB, err := cs.ota.GetAllObjectTypesByKnID(ctx, knID, branch)
 	if err != nil {
 		return []SimpleItem{}, false, err
@@ -234,6 +237,7 @@ func (cs *ConceptSyncer) handleObjectTypes(ctx context.Context, knID string, bra
 		}
 	}
 	if len(add_list) > 0 {
+		logger.Debugf("Need add (%d) object types to OpenSearch", len(add_list))
 		need_update = true
 	}
 	// TODO 获取opensearch 中 list
@@ -256,13 +260,14 @@ func (cs *ConceptSyncer) handleObjectTypes(ctx context.Context, knID string, bra
 		simpleObjectTypes = append(simpleObjectTypes, simpleItem)
 	}
 
+	logger.Debugf("Handle object types for knowledge network %s %s done", knID, branch)
 	return simpleObjectTypes, need_update, nil
 }
 
 // handleRelationTypes 获取知识网络的关系类型
 func (cs *ConceptSyncer) handleRelationTypes(ctx context.Context, knID string,
 	branch string, objectTypesMap map[string]string) ([]SimpleItem, bool, error) {
-
+	logger.Debugf("Handle relation types for knowledge network %s %s", knID, branch)
 	relationTypesInDB, err := cs.rta.GetAllRelationTypesByKnID(ctx, knID, branch)
 	if err != nil {
 		return []SimpleItem{}, false, err
@@ -284,6 +289,7 @@ func (cs *ConceptSyncer) handleRelationTypes(ctx context.Context, knID string,
 		}
 	}
 	if len(add_list) > 0 {
+		logger.Debugf("Need add (%d) relation types to OpenSearch", len(add_list))
 		need_update = true
 	}
 
@@ -308,13 +314,14 @@ func (cs *ConceptSyncer) handleRelationTypes(ctx context.Context, knID string,
 		simpleRelationTypes = append(simpleRelationTypes, simpleItem)
 	}
 
+	logger.Debugf("Handle relation types for knowledge network %s %s done", knID, branch)
 	return simpleRelationTypes, need_update, nil
 }
 
 // handleActionTypes 获取知识网络的行动类型
 func (cs *ConceptSyncer) handleActionTypes(ctx context.Context, knID string,
 	branch string, objectTypesMap map[string]string) ([]SimpleItem, bool, error) {
-
+	logger.Debugf("Handle action types for knowledge network %s %s", knID, branch)
 	actionTypesInDB, err := cs.ata.GetAllActionTypesByKnID(ctx, knID, branch)
 	if err != nil {
 		return []SimpleItem{}, false, err
@@ -336,6 +343,7 @@ func (cs *ConceptSyncer) handleActionTypes(ctx context.Context, knID string,
 		}
 	}
 	if len(add_list) > 0 {
+		logger.Debugf("Need add (%d) action types to OpenSearch", len(add_list))
 		need_update = true
 	}
 
@@ -358,11 +366,13 @@ func (cs *ConceptSyncer) handleActionTypes(ctx context.Context, knID string,
 		simpleActionTypes = append(simpleActionTypes, simpleItem)
 	}
 
+	logger.Debugf("Handle action types for knowledge network %s %s done", knID, branch)
 	return simpleActionTypes, need_update, nil
 }
 
 // handleConceptGroups 获取知识网络的概念组
 func (cs *ConceptSyncer) handleConceptGroups(ctx context.Context, knID string, branch string) ([]SimpleItem, bool, error) {
+	logger.Debugf("Handle concept groups for knowledge network %s %s", knID, branch)
 	conceptGroupsInDB, err := cs.cga.GetAllConceptGroupsByKnID(ctx, knID, branch)
 	if err != nil {
 		return []SimpleItem{}, false, err
@@ -384,6 +394,7 @@ func (cs *ConceptSyncer) handleConceptGroups(ctx context.Context, knID string, b
 		}
 	}
 	if len(add_list) > 0 {
+		logger.Debugf("Need add (%d) concept groups to OpenSearch", len(add_list))
 		need_update = true
 	}
 
@@ -407,6 +418,7 @@ func (cs *ConceptSyncer) handleConceptGroups(ctx context.Context, knID string, b
 		simpleConceptGroups = append(simpleConceptGroups, simpleItem)
 	}
 
+	logger.Debugf("Handle concept groups for knowledge network %s %s done", knID, branch)
 	return simpleConceptGroups, need_update, nil
 }
 

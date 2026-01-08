@@ -43,6 +43,39 @@ func NewOpenSearchAccess(appSetting *common.AppSetting) interfaces.OpenSearchAcc
 	return osAccess
 }
 
+func (o *openSearchAccess) PutIndexTemplate(ctx context.Context, indexTemplateName string, body any) error {
+	ctx, span := ar_trace.Tracer.Start(ctx, "PutIndexTemplate", trace.WithSpanKind(trace.SpanKindClient))
+	defer span.End()
+
+	span.SetAttributes(attr.Key("index_template_name").String(indexTemplateName))
+
+	// 将body转换为JSON字节
+	bodyBytes, err := sonic.Marshal(body)
+	if err != nil {
+		return fmt.Errorf("failed to marshal index template body: %w", err)
+	}
+
+	// 创建索引模板请求
+	req := opensearchapi.IndicesPutIndexTemplateRequest{
+		Name: indexTemplateName,
+		Body: bytes.NewBuffer(bodyBytes),
+	}
+
+	// 执行创建索引模板请求
+	res, err := req.Do(ctx, o.client)
+	if err != nil {
+		return fmt.Errorf("failed to put index template %s: %w", indexTemplateName, err)
+	}
+	defer res.Body.Close()
+
+	// 检查响应状态
+	if res.IsError() {
+		return fmt.Errorf("put index template %s failed: %s, %s", indexTemplateName, res.Status(), res.String())
+	}
+
+	return nil
+}
+
 // CreateIndex 创建指定名称和配置的索引
 // 根据提供的索引名称和body配置创建新的OpenSearch索引
 // 参数：

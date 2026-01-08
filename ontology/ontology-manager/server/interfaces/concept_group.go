@@ -20,10 +20,10 @@ type ConceptGroup struct {
 	RelationTypes []*RelationType `json:"relation_types,omitempty" mapstructure:"relation_types"`
 	ActionTypes   []*ActionType   `json:"action_types,omitempty" mapstructure:"action_types"`
 
-	Creator    *AccountInfo `json:"creator,omitempty" mapstructure:"creator"`
-	CreateTime int64        `json:"create_time,omitempty" mapstructure:"create_time"`
-	Updater    *AccountInfo `json:"updater,omitempty" mapstructure:"updater"`
-	UpdateTime int64        `json:"update_time,omitempty" mapstructure:"update_time"`
+	Creator    AccountInfo `json:"creator,omitempty" mapstructure:"creator"`
+	CreateTime int64       `json:"create_time,omitempty" mapstructure:"create_time"`
+	Updater    AccountInfo `json:"updater,omitempty" mapstructure:"updater"`
+	UpdateTime int64       `json:"update_time,omitempty" mapstructure:"update_time"`
 
 	ModuleType string `json:"module_type" mapstructure:"module_type"`
 
