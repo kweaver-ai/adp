@@ -62,8 +62,6 @@ spec:
           volumeMounts:
             - name: {{ include "flow-automation.fullname" . }}-ca
               mountPath: /opt/ssl
-            - name: service-access
-              mountPath: /conf/service-access
             - mountPath: /tmp
               name: tmp-volume
             - mountPath: /opt/osslog
@@ -106,9 +104,6 @@ spec:
         - name: {{ include "flow-automation.fullname" . }}-ca
           secret:
             secretName: {{ include "flow-automation.fullname" . }}-ca
-        - name: service-access
-          secret:
-            secretName: cms-release-config-service-access
         - name: pythonlib
           hostPath:
             path: /sysvol/coderunner/pythonlib
