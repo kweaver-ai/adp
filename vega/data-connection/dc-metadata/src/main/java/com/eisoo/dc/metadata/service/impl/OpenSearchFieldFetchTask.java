@@ -66,7 +66,7 @@ public class OpenSearchFieldFetchTask implements Callable<String> {
 
             String fieldName = entry.getKey();
             Property property = entry.getValue();
-            String typeName = property._kind().name();
+            String typeName = property._kind().jsonValue();
             if (parentName.length() != 0) {
                 fieldName = parentName + "." + fieldName;
             }
