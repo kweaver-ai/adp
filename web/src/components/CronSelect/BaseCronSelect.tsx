@@ -4,7 +4,7 @@ import intl from 'react-intl-universal';
 import { useControllableValue } from 'ahooks';
 import { Button } from 'antd';
 import classNames from 'classnames';
-import { defaultTo } from 'lodash';
+import { defaultTo } from 'lodash-es';
 import Cron from './Cron';
 import locales from './locales';
 import type { CronFns } from './Cron/types';

@@ -1,14 +1,3 @@
-/**
- * @description 导出文件
- * @param {*} content 文件内容
- * @param {*} name 文件名字
- * @param {*} type 文件类型 txt json csv
- *
- * @author tian.yuanfeng
- * @date 2019.03.13
- * @version 3.0.7
- */
-
 export default function (content, name, type) {
   let blob;
 

@@ -85,7 +85,7 @@ const DataViewDetail: React.FC<{
           <Descriptions labelStyle={{ width: '120px' }} contentStyle={{ width: '300px' }} items={baseInfoItems} />
         </Panel>
         <Panel header={intl.get('Global.fieldInfo')} key="2" style={{ background: '#fff' }}>
-          <Table size="small" dataSource={dataSource} columns={columns} />
+          <Table size="small" dataSource={dataSource} columns={columns} rowKey="name" />
         </Panel>
       </Collapse>
     </Drawer>

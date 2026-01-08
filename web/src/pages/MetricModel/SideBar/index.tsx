@@ -3,7 +3,7 @@ import intl from 'react-intl-universal';
 import { EllipsisOutlined } from '@ant-design/icons';
 import { Dropdown, Checkbox, Select, Form, Divider, Button } from 'antd';
 import classNames from 'classnames';
-import _ from 'lodash';
+import { forEach, map } from 'lodash-es';
 import { arNotification } from '@/components/ARNotification';
 import { FORM_LAYOUT } from '@/hooks/useConstants';
 import downFile from '@/utils/down-file';
@@ -210,7 +210,7 @@ const SideBar: React.FC<SideBarProps> = (props) => {
     const buildInAndNameList: any = [];
     const notBuildInList: any = []; // 除了默认分组之外的非内置分组 除了默认分组之外的其他分组
 
-    _.forEach(showGroupList, (item) => {
+    forEach(showGroupList, (item) => {
       if (!item.id) defaultList.push(item);
       if (item.builtin && !item.id) buildInList.push(item);
       if (item.builtin && item.name) buildInAndNameList.push(item);
@@ -235,7 +235,7 @@ const SideBar: React.FC<SideBarProps> = (props) => {
         <div className={classNames(styles['group-item'], { [styles['group-item-active']]: currentId === undefined })} onClick={() => setCurrentSelectGroup({})}>
           {`${intl.get('MetricModel.allMetricModel')} (${allMetricModelCount})`}
         </div>
-        {_.map(defaultList, (item, index) => (
+        {map(defaultList, (item, index) => (
           <div
             key={index}
             className={classNames(styles['group-item'], { [styles['group-item-active']]: currentId === item.id })}
@@ -245,7 +245,7 @@ const SideBar: React.FC<SideBarProps> = (props) => {
           </div>
         ))}
         <Divider style={{ margin: '8px 0' }} />
-        {_.map(buildInList, (item, index) => (
+        {map(buildInList, (item, index) => (
           <GroupItem
             key={index}
             item={item}
@@ -256,7 +256,7 @@ const SideBar: React.FC<SideBarProps> = (props) => {
           />
         ))}
         {buildInAndNameList.length > 0 && <Divider style={{ margin: '8px 0' }} />}
-        {_.map(notBuildInList, (item, index) => (
+        {map(notBuildInList, (item, index) => (
           <GroupItem
             key={index}
             item={item}

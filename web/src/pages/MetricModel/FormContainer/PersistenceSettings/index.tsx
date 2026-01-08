@@ -1,7 +1,7 @@
 import React, { forwardRef, useEffect, useImperativeHandle, useState } from 'react';
 import intl from 'react-intl-universal';
 import { Form, Switch, Select, Modal } from 'antd';
-import _ from 'lodash';
+import { map } from 'lodash-es';
 import { MEASURE_NAME_PREFIX, METRIC_ID_REGEX } from '@/hooks/useConstants';
 import fullTip from '@/assets/images/fullTip.svg';
 import { Input } from '@/web-library/common';
@@ -153,7 +153,7 @@ const PersistenceSettings = forwardRef((props: any, ref): JSX.Element => {
                 },
               ]}
             >
-              <Select mode="multiple" options={_.map(stepList, (item) => ({ value: item, label: getNewStr(item) }))} />
+              <Select mode="multiple" options={map(stepList, (item) => ({ value: item, label: getNewStr(item) }))} />
             </Form.Item>
             {/* 追溯时长 */}
             <Form.Item

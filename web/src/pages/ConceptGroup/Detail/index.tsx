@@ -2,7 +2,7 @@ import { useState, useMemo } from 'react';
 import intl from 'react-intl-universal';
 import { Divider, Table, Tabs, Input, Empty, message, Dropdown, Tag } from 'antd';
 import { TableRowSelection } from 'antd/es/table/interface';
-import _ from 'lodash';
+import { map } from 'lodash-es';
 import ObjectIcon from '@/components/ObjectIcon';
 import { renderObjectTypeLabel } from '@/components/ObjectSelector';
 import * as ActionType from '@/services/action/type';
@@ -64,7 +64,7 @@ const Detail = (props: TDetailProps) => {
   // 基础信息
   const baseInfo = [
     { label: 'ID', value: id || 'aishu0001_hrbp' },
-    { label: intl.get('Global.tag'), value: Array.isArray(tags) && tags.length ? _.map(tags, (i) => <Tag key={i}>{i}</Tag>) : '--' },
+    { label: intl.get('Global.tag'), value: Array.isArray(tags) && tags.length ? map(tags, (i) => <Tag key={i}>{i}</Tag>) : '--' },
     { label: intl.get('Global.comment'), value: comment || intl.get('Global.noComment') },
   ];
 
@@ -298,7 +298,7 @@ const Detail = (props: TDetailProps) => {
         </div>
         <Divider className="g-mt-4 g-mb-4" />
         <div>
-          {_.map(baseInfo, (item) => {
+          {map(baseInfo, (item) => {
             const { label, value } = item;
             return (
               <div key={label} className={styles['base-info-item']}>

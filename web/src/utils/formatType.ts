@@ -1,4 +1,4 @@
-import _ from 'lodash';
+import { includes } from 'lodash-es';
 
 const boolean = ['true', 'false', 'boolean'];
 const date = ['date', 'datetime', 'timestamp', 'time with time zone', 'timestamp with time zone'];
@@ -28,9 +28,9 @@ const formatType = (type: any): any => {
   if (!type) return '';
   const value = type?.toLowerCase();
 
-  if (_.includes(boolean, value)) return 'boolean';
-  if (_.includes(date, value)) return 'date';
-  if (_.includes(number, value)) return 'number';
+  if (includes(boolean, value)) return 'boolean';
+  if (includes(date, value)) return 'date';
+  if (includes(number, value)) return 'number';
 
   return 'string';
 };

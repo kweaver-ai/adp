@@ -1,33 +1,3 @@
-/*
- * @Author: LiuShangdong
- * @Date: 2023-09-13
- * @Description: 标签选择器，可以创建新标签或选择“标签管理服务”中的已有标签
-
-    // 使用方式，示例：
-
-    import TagsSelector, { tagsSelectorValidator } from 'PublicComponents/TagsSelector';
-
-    <Form.Item label={formatMessage(intlMessage.tag)}>
-        {getFieldDecorator('tags', {
-            rules: [{ validator: tagsSelectorValidator }]
-        })(<TagsSelector />)}
-    </Form.Item>
-
-    // 或自定义validator与placeholder：
-
-    import TagsSelector from 'PublicComponents/TagsSelector';
-
-    const myValidator = (rule, value, callback) => {
-      // ...
-    };
-
-    <Form.Item label="Tag">
-        {getFieldDecorator('usedTags', {
-            rules: [{ validator: myValidator }]
-        })(<TagsSelector placeholder={formatMessage(intlMessage.pleaseInput)} />)}
-    </Form.Item>
- */
-
 import React, { useState, useEffect } from 'react';
 import intl from 'react-intl-universal';
 import { Select } from 'antd';

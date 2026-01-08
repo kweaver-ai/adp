@@ -1,6 +1,6 @@
 import React, { createContext, useContext } from 'react';
 import { useSetState } from 'ahooks';
-import { noop } from 'lodash';
+import { noop } from 'lodash-es';
 import { defaultValue, getOptionsWithDefaultValue } from '../utils';
 import type { CronProps, Options } from '../types';
 import type { SetState } from 'ahooks/lib/useSetState';

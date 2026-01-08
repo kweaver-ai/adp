@@ -7,7 +7,7 @@ import React, { useRef, useState, useEffect } from 'react';
 import intl from 'react-intl-universal';
 import { Table as AntdTable, type TableProps as AntdTableProps } from 'antd';
 import classNames from 'classnames';
-import _ from 'lodash';
+import { map, filter, isEmpty, cloneDeep, forEach } from 'lodash-es';
 import ColumnsController from './ColumnsController';
 import styles from './index.module.less';
 import ResizableTitle from './ResizableTitle';
@@ -42,7 +42,7 @@ const PageTable: React.FC<CustomTableProps> = (props) => {
 
   const tableColumnsHeight = 38.03 + (dataSource?.length || 0) * 48.8; // 通过列的数量计算表格应有高度
   const headerOffset = (props.children ? operationBarHeight : 0) + 40; // 表格头部高度
-  const footerOffset = _.isEmpty(pagination) ? 0 : 56; // 分页器高度
+  const footerOffset = isEmpty(pagination) ? 0 : 56; // 分页器高度
   const viewportHeight = containerHeight - headerOffset - footerOffset; // 表格允许设置的最大视口高度
   const hasScrollY = viewportHeight < tableColumnsHeight; // 是否开启纵向滚动
   const containerWidth = (containerRef?.current?.getBoundingClientRect()?.width || 0) - (hasScrollY ? 6 : 0) || 0;
@@ -54,8 +54,8 @@ const PageTable: React.FC<CustomTableProps> = (props) => {
   const sessionColumnsController = UTILS.SessionStorage.get(SESSION_COLUMNS_CONTROLLER_KEY) || {};
   /** 构造表格宽度的 session 数据 */
   const constructSessionColumnsWidth = (columns: any[]) => {
-    const temp: any = _.cloneDeep(sessionColumnsWidth);
-    _.forEach(columns, (item) => {
+    const temp: any = cloneDeep(sessionColumnsWidth);
+    forEach(columns, (item) => {
       if (item.dataIndex === '__empty__') return;
       temp[item.dataIndex] = {
         width: item.width,
@@ -84,11 +84,11 @@ const PageTable: React.FC<CustomTableProps> = (props) => {
 
   /** 构造表格列是否展示的 session 数据 */
   const initSessionColumnsController = (columns: any[]) => {
-    const temp: any = _.cloneDeep(columnsController);
+    const temp: any = cloneDeep(columnsController);
     if (!temp.checkbox && _rowSelection) {
       temp.checkbox = { dataIndex: 'checkbox', index: -1, title: '复选框', checked: true, disabled: true };
     }
-    _.forEach(columns, (item, index: number) => {
+    forEach(columns, (item, index: number) => {
       const { dataIndex, title, __selected, __fixed } = item;
       if (dataIndex === '__empty__') return;
       temp[dataIndex] = { index, dataIndex, title, checked: !!__selected, disabled: !!__fixed };
@@ -96,16 +96,16 @@ const PageTable: React.FC<CustomTableProps> = (props) => {
     return temp;
   };
   const init = () => {
-    let newColumns = _.cloneDeep(_columns);
-    let newColumnsController = _.cloneDeep(columnsController);
-    let tableColumnsWidth = _.isEmpty(rowSelection) ? 0 : 32;
+    let newColumns = cloneDeep(_columns);
+    let newColumnsController = cloneDeep(columnsController);
+    let tableColumnsWidth = isEmpty(rowSelection) ? 0 : 32;
 
     // 初始化表格列显示控制器数据
-    if (_.isEmpty(newColumnsController)) {
+    if (isEmpty(newColumnsController)) {
       newColumnsController = initSessionColumnsController(newColumns);
     } else {
       // 检查是否有新增加的列，如果有则合并到 controller 中
-      _.forEach(newColumns, (item: any, index: number) => {
+      forEach(newColumns, (item: any, index: number) => {
         const { dataIndex, title, __selected, __fixed } = item;
         if (dataIndex === '__empty__') return;
 
@@ -122,8 +122,8 @@ const PageTable: React.FC<CustomTableProps> = (props) => {
     }
 
     // 过滤掉不展示的列，然后添加列的默认属性
-    newColumns = _.filter(newColumns, (item: any) => !!newColumnsController[item.dataIndex]?.checked);
-    newColumns = _.map(newColumns, (item: any) => {
+    newColumns = filter(newColumns, (item: any) => !!newColumnsController[item.dataIndex]?.checked);
+    newColumns = map(newColumns, (item: any) => {
       item.ellipsis = true;
       item.textWrap = 'word-break';
       item.width = sessionColumnsWidth?.[item.dataIndex]?.width || item.width || 150;
@@ -135,10 +135,10 @@ const PageTable: React.FC<CustomTableProps> = (props) => {
     });
 
     // 如果表格列总宽度小于表格容器宽度，则为每列增加平均差值宽度
-    if (tableColumnsWidth < containerWidth && _.isEmpty(sessionColumnsWidth)) {
+    if (tableColumnsWidth < containerWidth && isEmpty(sessionColumnsWidth)) {
       // 计算平均插值，最后减去 6 是考虑到表格的边框宽度
       const offsetWidth = Math.round((containerWidth - tableColumnsWidth) / _columns.length) - 6;
-      newColumns = _.map(newColumns, (item: any) => {
+      newColumns = map(newColumns, (item: any) => {
         item.width = item.width + offsetWidth;
         return item;
       });
@@ -153,7 +153,7 @@ const PageTable: React.FC<CustomTableProps> = (props) => {
 
   // 拖动调整columns宽度
   const handleResize = (index: number, width: any) => {
-    const newColumns = _.cloneDeep(columns);
+    const newColumns = cloneDeep(columns);
     newColumns[index].width = width;
 
     setColumns(newColumns);
@@ -195,11 +195,11 @@ const PageTable: React.FC<CustomTableProps> = (props) => {
   }, [containerRef.current]);
   /** 重置表格列宽度 */
   const onResetWidth = () => {
-    const newSessionColumnsWidth = _.cloneDeep(sessionColumnsWidth);
-    _.forEach(newSessionColumnsWidth, (item) => {
+    const newSessionColumnsWidth = cloneDeep(sessionColumnsWidth);
+    forEach(newSessionColumnsWidth, (item) => {
       item.width = item.initWidth;
     });
-    const newColumns = _.map(_.cloneDeep(columns), (item) => {
+    const newColumns = map(cloneDeep(columns), (item) => {
       if (item.dataIndex !== '__empty__') item.width = newSessionColumnsWidth?.[item.dataIndex]?.width;
       return item;
     });
@@ -210,14 +210,14 @@ const PageTable: React.FC<CustomTableProps> = (props) => {
   };
   /** 适配表格列宽度 */
   const onAdapterWidth = () => {
-    const _containerWidth = containerWidth - (_.isEmpty(rowSelection) ? 0 : 32);
+    const _containerWidth = containerWidth - (isEmpty(rowSelection) ? 0 : 32);
     const width = _containerWidth / (columns.length - 1);
 
-    const newSessionColumnsWidth = _.cloneDeep(sessionColumnsWidth);
-    _.forEach(newSessionColumnsWidth, (item) => {
+    const newSessionColumnsWidth = cloneDeep(sessionColumnsWidth);
+    forEach(newSessionColumnsWidth, (item) => {
       item.width = width;
     });
-    const newColumns = _.map(_.cloneDeep(columns), (item) => {
+    const newColumns = map(cloneDeep(columns), (item) => {
       if (item.dataIndex !== '__empty__') item.width = width;
       return item;
     });
@@ -240,7 +240,7 @@ const PageTable: React.FC<CustomTableProps> = (props) => {
         style={{ width: '100%', height: `calc(100% - ${operationBarHeight}px)`, ...style }}
         components={{ header: { cell: canResize ? ResizableTitle : (props: any) => <th {...props} /> } }}
         scroll={autoScroll ? (hasScrollY ? { x: 'max-content', y: viewportHeight } : { x: 'max-content' }) : scroll}
-        columns={_.map(columns, (item: any, index: number) => {
+        columns={map(columns, (item: any, index: number) => {
           if (!canResize) return item;
           return {
             ...item,

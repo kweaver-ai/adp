@@ -2,11 +2,13 @@ import { useState, useEffect } from 'react';
 import intl from 'react-intl-universal';
 import { CaretRightOutlined } from '@ant-design/icons';
 import { useAsyncEffect } from 'ahooks';
-import _ from 'lodash';
+import { map, isArray, debounce, cloneDeep, filter, isString } from 'lodash-es';
 import api from '@/services/metricModel';
 import { Button, Drawer, Input, Table, IconFont, Title, Text } from '@/web-library/common';
 import Detail, { logWareHouseExpandData } from './Detail';
 import styles from './index.module.less';
+
+const _ = { map, isArray, debounce, cloneDeep, filter, isString };
 
 const paginationDefault = {
   current: 1,

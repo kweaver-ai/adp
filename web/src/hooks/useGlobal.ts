@@ -1,5 +1,5 @@
 import { useContext, createContext } from 'react';
-import _ from 'lodash';
+import { cloneDeep, forEach } from 'lodash-es';
 import UTILS from '@/utils';
 
 export type GlobalStore = object;
@@ -25,8 +25,8 @@ export const globalConfigReduce = (state: any, action: any) => {
       state = payload;
       return state;
     case 'update': {
-      const newState = _.cloneDeep(state);
-      _.forEach(Object.keys(payload), (key) => {
+      const newState = cloneDeep(state);
+      forEach(Object.keys(payload), (key) => {
         const keys = key.split('.');
         if (keys.length > 0) {
           UTILS.mergeObjectBasePath(newState, keys, payload[key]);

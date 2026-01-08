@@ -1,4 +1,4 @@
-import _ from 'lodash';
+import { upperFirst, toLower } from 'lodash-es';
 import * as ActionType from '@/services/action/type';
 
 interface InputItem {
@@ -77,7 +77,7 @@ export function getInputParamsFromToolOpenAPISpec(apiSpec: any) {
       const resolvedParam = resolveRef(param, apiSpec);
       const key = resolvedParam.name;
       // 首字母大写，其它字母小写
-      const source = _.upperFirst(_.toLower(resolvedParam.in));
+      const source = upperFirst(toLower(resolvedParam.in));
 
       return {
         name: resolvedParam.name,

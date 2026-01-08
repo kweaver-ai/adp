@@ -5,7 +5,7 @@ import { DragOutlined, EllipsisOutlined } from '@ant-design/icons';
 import { Flex, Upload, Splitter, Tag, Dropdown, MenuProps } from 'antd';
 import dayjs from 'dayjs';
 import Cookie from 'js-cookie';
-import _ from 'lodash';
+import { map } from 'lodash-es';
 import { arNotification } from '@/components/ARNotification';
 import ContainerIsVisible, { getTypePermissionOperation, matchPermission, PERMISSION_CODES } from '@/components/ContainerIsVisible';
 import { DATE_FORMAT, PAGINATION_DEFAULT } from '@/hooks/useConstants';
@@ -52,7 +52,7 @@ const MetricModel = () => {
     // 从标签管理服务中get当前模块已经使用过的tag
     const getMetricModelTags = async (): Promise<void> => {
       const res = await api.getMetricModelTags();
-      setTagsData(_.map(res.entries, (item) => ({ value: item.tag, label: item.tag })));
+      setTagsData(map(res.entries, (item) => ({ value: item.tag, label: item.tag })));
     };
 
     getMetricModelTags();
@@ -253,7 +253,7 @@ const MetricModel = () => {
           { key: 'edit', label: intl.get('Global.edit'), visible: matchPermission(PERMISSION_CODES.MODIFY, record.operations) },
           { key: 'delete', label: intl.get('Global.delete'), visible: matchPermission(PERMISSION_CODES.DELETE, record.operations) },
         ];
-        const dropdownMenu: any = allOperations.filter((val: any) => val.visible);
+        const dropdownMenu: any = allOperations.filter((val: any) => val.visible).map(({ key, label }: any) => ({ key, label }));
         return (
           <Dropdown
             trigger={['click']}
@@ -277,7 +277,7 @@ const MetricModel = () => {
       __fixed: true,
       __selected: true,
       render: (text: any): React.ReactNode => {
-        return Array.isArray(text) && text.length ? _.map(text, (i) => <Tag key={i}>{i}</Tag>) : '--';
+        return Array.isArray(text) && text.length ? map(text, (i) => <Tag key={i}>{i}</Tag>) : '--';
       },
     },
     {

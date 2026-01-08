@@ -1,11 +1,10 @@
 /** 文件上传 */
 
-import React from 'react';
+import React, { useEffect } from 'react';
+import intl from 'react-intl-universal';
 import { Upload, Tooltip, Modal, message } from 'antd';
+import locales from './locales';
 import { IconFont } from '../../common';
-import localeEn from './locale/en-US';
-import localeZh from './locale/zh-CN';
-import getLocaleValue from '../../utils/get-locale-value';
 
 enum File {
   Json = 'json',
@@ -28,13 +27,17 @@ const ImportFile = ({
   customRequest: (param: any, name: any) => Promise<unknown | void>;
   [key: string]: any;
 }): JSX.Element => {
+  useEffect(() => {
+    intl.load(locales);
+  }, []);
+
   const uploadFile = (e: any): void => {
     const strArr = e.file.name.split('.');
     const name = strArr[0];
     const fileType = strArr[strArr.length - 1];
 
     if (fileType !== accept) {
-      message.error(getLocaleValue('fileAccept', { localeZh, value: { accept } }, { localeEn, value: { accept } }));
+      message.error(intl.get('ImportFile.fileAccept', { accept }));
       return;
     }
 
@@ -44,7 +47,7 @@ const ImportFile = ({
 
     const resolve = (): void => {
       getData();
-      message.success(getLocaleValue('importSuccess', { localeZh }, { localeEn }));
+      message.success(intl.get('ImportFile.importSuccess'));
     };
 
     const reject = () => {};
@@ -73,7 +76,7 @@ const ImportFile = ({
             customRequest(e.target?.result, name).then(resolve, reject);
           }
         } catch (e) {
-          message.error(getLocaleValue('fileError', { localeZh }, { localeEn }));
+          message.error(intl.get('ImportFile.fileError'));
         }
       };
 
@@ -84,7 +87,7 @@ const ImportFile = ({
   return (
     <Upload accept={accept} showUploadList={false} customRequest={uploadFile} {...props}>
       {children || (
-        <Tooltip title={getLocaleValue('import', { localeZh }, { localeEn })}>
+        <Tooltip title={intl.get('ImportFile.import')}>
           <IconFont type="icon-upload"></IconFont>
         </Tooltip>
       )}

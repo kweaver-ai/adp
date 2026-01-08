@@ -4,7 +4,7 @@
 import { useRef, useState, useEffect, forwardRef, useImperativeHandle } from 'react';
 import Editor from '@monaco-editor/react';
 import classNames from 'classnames';
-import _ from 'lodash';
+import { isArray, includes, debounce, isEmpty } from 'lodash-es';
 import styles from './index.module.less';
 import type { EditorProps } from '@monaco-editor/react';
 
@@ -71,16 +71,16 @@ const Compound: React.FC<any> = forwardRef((props, ref) => {
   }, [JSON.stringify(variables)]);
 
   const pushItem = (item: string, items: any) => {
-    if (_.isArray(items)) {
-      if (!_.includes(items, item)) items.push(item);
+    if (isArray(items)) {
+      if (!includes(items, item)) items.push(item);
     } else {
       items = [item];
     }
   };
 
   /** 更新装饰器，为变量添加背景色 */
-  const updateDecorations = _.debounce(() => {
-    if (!editorRef.current || !monacoRef.current || (variables !== undefined && _.isEmpty(variables))) return;
+  const updateDecorations = debounce(() => {
+    if (!editorRef.current || !monacoRef.current || (variables !== undefined && isEmpty(variables))) return;
 
     const model = editorRef.current.getModel();
     const text = model.getValue();

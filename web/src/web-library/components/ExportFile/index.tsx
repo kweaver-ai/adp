@@ -1,28 +1,31 @@
 /** 导出文件 */
-import React, { memo } from 'react';
+import React, { memo, useEffect } from 'react';
+import intl from 'react-intl-universal';
 import { message, Tooltip } from 'antd';
+import locales from './locales';
 import { IconFont } from '../../common';
-import localeEn from './locale/en-US';
-import localeZh from './locale/zh-CN';
 import downFile from '../../utils/down-file';
-import getLocaleValue from '../../utils/get-locale-value';
 
 const ExportFile = memo(
   ({ customRequest, children, name }: { name: string; customRequest: () => Promise<any>; children?: React.ReactElement; [key: string]: any }) => {
+    useEffect(() => {
+      intl.load(locales);
+    }, []);
+
     const exportData = async (e: any): Promise<void> => {
       e.stopPropagation();
 
       customRequest().then((res) => {
         if (res.code || res.error_code) return;
         downFile(JSON.stringify(res, null, 2), name, 'json');
-        message.success(getLocaleValue('exportSuccess', { localeZh }, { localeEn }));
+        message.success(intl.get('ExportFile.exportSuccess'));
       });
     };
 
     return (
       <span onClick={exportData}>
         {children || (
-          <Tooltip title={getLocaleValue('export', { localeZh }, { localeEn })}>
+          <Tooltip title={intl.get('ExportFile.export')}>
             <IconFont type="icon-download"></IconFont>
           </Tooltip>
         )}

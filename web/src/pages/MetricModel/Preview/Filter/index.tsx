@@ -3,7 +3,7 @@ import { useEffect, useMemo, useState } from 'react';
 import intl from 'react-intl-universal';
 import { CloseOutlined } from '@ant-design/icons';
 import { Radio, Select, Dropdown } from 'antd';
-import _ from 'lodash';
+import { keyBy, forEach, map, cloneDeep, filter } from 'lodash-es';
 import AddTag from '@/components/AddTag';
 import AddTagBySort from '@/components/AddTagBySort';
 import ResultFilter from '@/components/ResultFilter';
@@ -16,6 +16,14 @@ import { Text, Button, IconFont } from '@/web-library/common';
 import UTILS from '@/web-library/utils';
 import CustomMetrics from './CustomMetrics';
 import styles from './index.module.less';
+
+const _ = {
+  keyBy,
+  forEach,
+  map,
+  cloneDeep,
+  filter,
+};
 
 const Filter = (props: any) => {
   const { INIT_FILTER, source, loading, previewData, filter, stepsOptionsIsSql, SEARCH_TYPE, getData, onChangeFilter } = props;

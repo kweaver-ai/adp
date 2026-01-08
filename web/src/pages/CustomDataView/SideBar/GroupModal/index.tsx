@@ -1,4 +1,4 @@
-import React from 'react';
+import { useEffect } from 'react';
 import intl from 'react-intl-universal';
 import { Modal, Form, Input } from 'antd';
 import { FORM_LAYOUT } from '@/hooks/useConstants';
@@ -15,8 +15,7 @@ interface Props {
 export const GroupModal: React.FC<Props> = ({ visible, title, onOk, onCancel, initialValue = '' }) => {
   const [form] = Form.useForm();
 
-  // 当visible状态改变时，重置表单
-  React.useEffect(() => {
+  useEffect(() => {
     if (visible) {
       form.setFieldsValue({ name: initialValue });
     } else {

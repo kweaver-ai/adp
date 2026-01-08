@@ -16,3 +16,5 @@ Thumbs.db
 # configuration files
 pnpm-lock.yaml
 *.lock
+
+/dist

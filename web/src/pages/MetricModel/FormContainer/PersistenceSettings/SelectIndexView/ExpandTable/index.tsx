@@ -2,7 +2,7 @@
 import { ReactNode, useState } from 'react';
 import { CaretRightOutlined } from '@ant-design/icons';
 import { Table } from 'antd';
-import _ from 'lodash';
+import { map } from 'lodash-es';
 import { IconFont } from '@/web-library/common';
 
 interface ExpandDataItem {
@@ -26,7 +26,7 @@ const ARExpandTable = (props: any) => {
 
   /** 全部展开 */
   const handleExpandAll = (): void => {
-    setExpandedRowKeys(_.map(dataSource, (i: any) => i[rowKey]));
+    setExpandedRowKeys(map(dataSource, (i: any) => i[rowKey]));
     setIsExpandAll(true);
   };
   /** 全部收起 */
@@ -39,7 +39,7 @@ const ARExpandTable = (props: any) => {
     const data = expandData(record);
     return (
       <div className="g-p-2">
-        {_.map(data, (item: any, index: any) => {
+        {map(data, (item: any, index: any) => {
           const { name, content } = item;
           return (
             <div key={index} className="g-p-1 g-ellipsis-1" style={{ flexBasis: '100%' }} title={content}>

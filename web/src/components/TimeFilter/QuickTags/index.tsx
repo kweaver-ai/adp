@@ -3,7 +3,7 @@ import { useEffect } from 'react';
 import intl from 'react-intl-universal';
 import { Row, Col } from 'antd';
 import classNames from 'classnames';
-import _ from 'lodash';
+import { map } from 'lodash-es';
 import styles from './index.module.less';
 import quickRange from './quickRange';
 import locales from '../locales';
@@ -18,7 +18,7 @@ const QuickTags = (props: any) => {
 
   return (
     <Row>
-      {_.map(quickRange, ({ section, span, list }, index) => {
+      {map(quickRange, ({ section, span, list }, index) => {
         const isLast = index === lastindex;
         return (
           <Col className={styles['quick-tags-col']} key={section} span={span}>

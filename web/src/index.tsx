@@ -9,6 +9,15 @@ import '@/style/reset.less';
 import '@/style/global.less';
 import UTILS from '@/utils';
 
+// 过滤掉 findDOMNode 警告
+const originalError = console.error;
+console.error = (...args: any[]) => {
+  if (typeof args[0] === 'string' && args[0].includes('findDOMNode')) {
+    return;
+  }
+  originalError.call(console, ...args);
+};
+
 const init = async () => {
   try {
     const userPermissionOperation = await api.getResourceTypeOperation();
@@ -28,14 +37,15 @@ const render = (props: any) => {
 };
 
 if (!(window as any).__POWERED_BY_QIANKUN__) {
-  // 这里是为了本地调试时，有一个session的key做占位用
-  if (!UTILS.SessionStorage.get('language')) UTILS.SessionStorage.set('language', 'zh-cn');
-  if (!UTILS.SessionStorage.get('token')) UTILS.SessionStorage.set('token', '');
-  if (!UTILS.SessionStorage.get('studio.userid', true)) UTILS.SessionStorage.set('studio.userid', '', true);
-
-  baseConfig.lang = UTILS.SessionStorage.get('language') || 'zh-cn';
-  baseConfig.token = UTILS.SessionStorage.get('token') || '';
-  baseConfig.userid = UTILS.SessionStorage.get('studio.userid', true) || '';
+  // 本地调试，手动填入token
+  baseConfig.lang = 'zh-cn';
+  baseConfig.token = 'ory_at_zjdd2eVkqceS7XAlo37WAcU4LiVWky8em0l5Q69e3o0.8v479LUUhzC78Rk7K085aPoM-ymUXLCsl59K8_PmIjU';
+  baseConfig.userid = '488c973e-6f67-11f0-b0dc-36fa540cff80';
+  baseConfig.roles = [];
+  baseConfig.toggleSideBarShow = () => {};
+  baseConfig.businessDomainID = 'bd_public';
+  UTILS.SessionStorage.set('language', 'zh-cn');
+  UTILS.SessionStorage.set('token', baseConfig.token);
 
   init().finally(() => {
     render({});

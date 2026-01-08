@@ -3,7 +3,7 @@ import intl from 'react-intl-universal';
 import { DownOutlined } from '@ant-design/icons';
 import { Modal, Tree, Empty, Tabs } from 'antd';
 import classNames from 'classnames';
-import _ from 'lodash';
+import { debounce, omit } from 'lodash-es';
 import api from '@/services/tool';
 import HOOKS from '@/hooks';
 import { IconFont, Input } from '@/web-library/common';
@@ -114,7 +114,7 @@ const AddToolModal: FC<AddToolModalProps> = ({ onCancel, onOk, initialValue }) =
   const fetchToolBoxList = async () => {
     try {
       const { data } = await api.getToolBoxList({ page: 1, page_size: 100, status: 'published', all: true });
-      setTreeData(data.map((box: any) => formatBox(_.omit(box, 'tools'))));
+      setTreeData(data.map((box: any) => formatBox(omit(box, 'tools'))));
       setExpandedKeys([]);
       setLoadedKeys([]);
 
@@ -182,7 +182,7 @@ const AddToolModal: FC<AddToolModalProps> = ({ onCancel, onOk, initialValue }) =
     } catch {}
   };
 
-  const debounceSearch = useMemo(() => _.debounce(searchTool, 300), []);
+  const debounceSearch = useMemo(() => debounce(searchTool, 300), []);
 
   // 获取MCP市场列表
   const fetchMcpMarketList = async (name?: string) => {
@@ -241,7 +241,7 @@ const AddToolModal: FC<AddToolModalProps> = ({ onCancel, onOk, initialValue }) =
     });
   };
 
-  const debounceMcpSearch = useMemo(() => _.debounce((value: string) => fetchMcpMarketList(value), 300), []);
+  const debounceMcpSearch = useMemo(() => debounce((value: string) => fetchMcpMarketList(value), 300), []);
 
   useEffect(() => {
     if (activeTab === 'tool') {

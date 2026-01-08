@@ -1,13 +1,15 @@
 import { useState, useEffect } from 'react';
 import intl from 'react-intl-universal';
 import { Tag } from 'antd';
-import _ from 'lodash';
+import { map, isArray, debounce, cloneDeep, filter, isString, omit } from 'lodash-es';
 import { PAGINATION_DEFAULT } from '@/hooks/useConstants';
 import { formatKeyOfObjectToCamel } from '@/utils/format-objectkey-structure';
 import api from '@/services/metricModel';
 import { Button, Drawer, Title, Text, Input } from '@/web-library/common';
 import ExpandTable from './ExpandTable';
 import styles from './index.module.less';
+
+const _ = { map, isArray, debounce, cloneDeep, filter, isString, omit };
 
 const SelectIndexView = (props: any) => {
   const { value, onChange } = props;

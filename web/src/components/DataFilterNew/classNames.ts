@@ -1,9 +1,3 @@
-/*
- * @Description: className拼接
- * @Author: li.kexin
- * @Date: 2023-05-26 11:13:40
- */
-
 type Params = (string | { [key: string]: boolean })[];
 
 function classNames(...params: Params): string {

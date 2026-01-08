@@ -1,7 +1,7 @@
 import { useState, useMemo, useEffect, useRef } from 'react';
 import intl from 'react-intl-universal';
 import { Tag, Table, Divider, Dropdown, Segmented, Input, TableColumnProps, Form, Switch } from 'antd';
-import _ from 'lodash';
+import { map } from 'lodash-es';
 import ObjectIcon from '@/components/ObjectIcon';
 import { formatKeyOfObjectToLine } from '@/utils/format-objectkey-structure';
 import formatFileSize from '@/utils/formatFileSize';
@@ -70,7 +70,7 @@ const Detail = (props: TDetailProps) => {
     };
     const res = await listObjects(params);
     if (res) {
-      setData(res.datas || []);
+      setData(res.datas?.map((item, index) => ({ ...item, _tempId: item.id || index })) || []);
       setDataColumns(
         res.object_type?.data_properties.map((item) => ({
           title: item.name,
@@ -131,7 +131,7 @@ const Detail = (props: TDetailProps) => {
   /** 基础数据 */
   const baseInfo = [
     { label: 'ID', value: id },
-    { label: intl.get('Global.tag'), value: Array.isArray(tags) && tags.length ? _.map(tags, (i) => <Tag key={i}>{i}</Tag>) : '--' },
+    { label: intl.get('Global.tag'), value: Array.isArray(tags) && tags.length ? map(tags, (i) => <Tag key={i}>{i}</Tag>) : '--' },
     {
       label: intl.get('Global.index'),
       value: intl.get('Object.indexInfo', { docCount: status?.doc_count || 0, storageSize: formatFileSize(status?.storage_size || 0) || '0 B' }),
@@ -205,7 +205,7 @@ const Detail = (props: TDetailProps) => {
         </div>
         <Divider className="g-mt-4 g-mb-4" />
         <div>
-          {_.map(baseInfo, (item) => {
+          {map(baseInfo, (item) => {
             const { label, value } = item;
             return (
               <div key={label} className={styles['object-root-drawer-base-info']}>
@@ -232,7 +232,7 @@ const Detail = (props: TDetailProps) => {
             onChange={handleSearch}
           />
         </div>
-        <Table size="small" rowKey="id" columns={columns} scroll={{ y: 400 }} dataSource={dataSource} />
+        <Table size="small" rowKey="name" columns={columns} scroll={{ y: 400 }} dataSource={dataSource} />
         {/* <Divider className="g-mb-4" /> */}
         {data_source?.id && (
           <div className="g-mb-12">
@@ -269,7 +269,7 @@ const Detail = (props: TDetailProps) => {
                 </Form>
               </div>
             )}
-            <Table size="small" rowKey="id" columns={dataColumns} scroll={{ y: 400, x: '100%' }} dataSource={data as any[]} />
+            <Table size="small" rowKey="_tempId" columns={dataColumns} scroll={{ y: 400, x: '100%' }} dataSource={data as any[]} />
           </div>
         )}
       </div>
@@ -277,7 +277,9 @@ const Detail = (props: TDetailProps) => {
   );
 };
 
-export default (props: any) => {
+const ObjectDetailWrapper = (props: any) => {
   if (!props.open) return null;
   return <Detail {...props} />;
 };
+
+export default ObjectDetailWrapper;

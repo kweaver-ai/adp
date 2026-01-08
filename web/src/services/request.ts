@@ -8,7 +8,7 @@ export interface BaseConfig {
   userid: string;
   roles: { id: string; name: string }[];
   refresh: () => Promise<any>;
-  toggleSideBarShow: (bool: boolean) => void;
+  toggleSideBarShow: (bool?: boolean) => void;
   businessDomainID: string;
   history: any;
   navigate: any;
@@ -20,7 +20,7 @@ export const baseConfig: BaseConfig = {
   userid: '',
   roles: [],
   refresh: () => Promise.resolve(),
-  toggleSideBarShow: (bool: boolean) => {},
+  toggleSideBarShow: () => {},
   businessDomainID: '',
   history: null,
   navigate: null,

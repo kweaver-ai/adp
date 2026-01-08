@@ -2,7 +2,7 @@
 import { useMemo, useState } from 'react';
 import intl from 'react-intl-universal';
 import { Spin, Select } from 'antd';
-import _ from 'lodash';
+import { forEach, includes, isEmpty } from 'lodash-es';
 import noData from '@/assets/images/no-data.svg';
 import ChartLine from './ChartLine';
 
@@ -11,20 +11,20 @@ const PreviewGraph = (props: any) => {
 
   const [selectTags, setSelectTags] = useState<number[]>([1]);
   const { selectOption } = useMemo(() => {
-    const selectOption: any = [];
-    _.forEach(sourceData, (item, index) => {
+    const selectOption: { value: number; label: string }[] = [];
+    forEach(sourceData, (item, index) => {
       if (item.number !== sourceData[index + 1]?.number) selectOption.push({ value: item.number, label: `${intl.get('Global.number')}${item.number}` });
     });
     return { selectOption };
   }, [sourceData]);
 
   const { data } = useMemo(() => {
-    const data: any = [];
-    _.forEach(sourceData, (item) => {
-      if (_.includes(selectTags, item.number)) data.push(item);
+    const data: any[] = [];
+    forEach(sourceData, (item) => {
+      if (includes(selectTags, item.number)) data.push(item);
     });
     return { data };
-  }, [JSON.stringify(selectTags), sourceData]);
+  }, [selectTags, sourceData]);
 
   const onChangeSelectTag = (value: number[]) => {
     setSelectTags(value);
@@ -45,7 +45,7 @@ const PreviewGraph = (props: any) => {
           onChange={onChangeSelectTag}
         />
       </div>
-      {_.isEmpty(data) ? (
+      {isEmpty(data) ? (
         <div className="g-flex-center g-c-text-sub" style={{ flexDirection: 'column', height: 100, marginTop: 12 }}>
           <img src={noData} />
           <div>{intl.get('Global.noData')}</div>

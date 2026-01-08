@@ -24,7 +24,7 @@ export const MoveToGroupModal: React.FC<Props> = ({ visible, title, onOk, onCanc
       });
       form.setFieldsValue({ moveToGroupName: undefined });
     }
-  }, [visible]);
+  }, [visible, form]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();

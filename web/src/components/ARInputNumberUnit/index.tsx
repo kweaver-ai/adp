@@ -1,8 +1,3 @@
-/**
- * @description 数字输入框，加单位，可自定义单位选项, 可固定一个单位后缀 (新UI样式)
- * @author Shaonan.yuan
- * @date 2024/05/09
- */
 import React, { useRef, useEffect } from 'react';
 import intl from 'react-intl-universal';
 import { Select, Space, InputNumber } from 'antd';

@@ -3,7 +3,7 @@ import intl from 'react-intl-universal';
 import { useHistory, useParams } from 'react-router-dom';
 import { LeftOutlined } from '@ant-design/icons';
 import { Divider, Form } from 'antd';
-import _ from 'lodash';
+import { cloneDeep } from 'lodash-es';
 import { arNotification } from '@/components/ARNotification';
 import { formatNodePosition } from '@/utils/dataView';
 import api from '@/services/customDataView/index';
@@ -47,7 +47,7 @@ export const initDataViewTotalInfo = () => ({
   group_name: '',
   module_type: 'data_view',
   primary_keys: [],
-  data_scope: _.cloneDeep(getInitDataScope()),
+  data_scope: cloneDeep(getInitDataScope()),
 });
 
 const DetailContent = () => {
@@ -144,7 +144,7 @@ const DetailContent = () => {
         };
 
         if (cleanValues.query_type !== dataViewTotalInfo.query_type) {
-          dataViewTotalInfo.data_scope = _.cloneDeep(getInitDataScope());
+          dataViewTotalInfo.data_scope = cloneDeep(getInitDataScope());
         }
 
         setDataViewTotalInfo({ ...dataViewTotalInfo, ...cleanValues });

@@ -38,8 +38,8 @@ const EdgeCreateAndEdit = () => {
   const [mappingForm] = Form.useForm();
 
   useEffect(() => {
-    baseProps.toggleSideBarShow(false);
-    return () => baseProps.toggleSideBarShow(true);
+    baseProps?.toggleSideBarShow?.(false);
+    return () => baseProps?.toggleSideBarShow?.(true);
   }, []);
 
   useEffect(() => {

@@ -1,19 +1,18 @@
 /** @Description: 多级过滤器 */
 
 import React, { useEffect, useImperativeHandle, forwardRef, useRef } from 'react';
+import intl from 'react-intl-universal';
 import { useDynamicList, useUpdateEffect } from 'ahooks';
 import classNames from 'classnames';
-import _ from 'lodash';
+import { map, debounce } from 'lodash-es';
 import { formatKeyOfObjectToLine } from '@/utils/format-objectkey-structure';
 import DataFilterItem from './DataFilterItem';
 import styles from './index.module.less';
-import localeEn from './locale/en-US';
-import localeZh from './locale/zh-CN';
+import locales from './locales';
 import LogicalOperation from './LogicalOperation';
 import { DataFilterProps, PrimaryFilterItem, PrimaryFilterValue, DataFilterValue } from './type';
 import { transformType as defaultTransformType } from './utils';
 import { Button, IconFont } from '../../common';
-import getLocaleValue from '../../utils/get-locale-value';
 
 const MultistageFilter = forwardRef((props: DataFilterProps, ref) => {
   const {
@@ -49,9 +48,13 @@ const MultistageFilter = forwardRef((props: DataFilterProps, ref) => {
   useImperativeHandle(ref, () => ({ validate }));
 
   useEffect(() => {
+    intl.load(locales);
+  }, []);
+
+  useEffect(() => {
     onProxyChange();
   }, [JSON.stringify(list)]);
-  const onProxyChange = _.debounce(() => {
+  const onProxyChange = debounce(() => {
     onChange && onChange(list.length > 1 ? { ...value, sub_conditions: list } : list[0]);
     if (list.length === 1 && list[0]?.sub_conditions) resetList(list[0]?.sub_conditions);
   }, 100);
@@ -153,10 +156,10 @@ const MultistageFilter = forwardRef((props: DataFilterProps, ref) => {
         />
       )}
       <div className={styles['filter-wrapper']}>
-        {_.map(list, (item, index) => RowItem(item, index))}
+        {map(list, (item, index) => RowItem(item, index))}
         {(isShowAdd || isShowHidden) && !disabled ? (
           <Button.Link icon={<IconFont type="icon-add" />} onClick={() => push(defaultValue)}>
-            {btnText || getLocaleValue('addFilter', { localeZh }, { localeEn })}
+            {btnText || intl.get('DataFilter.addFilter')}
           </Button.Link>
         ) : null}
       </div>

@@ -1,5 +1,5 @@
 import dayjs from 'dayjs';
-import { filter, indexOf } from 'lodash';
+import { filter, indexOf } from 'lodash-es';
 import { getCategories } from './categories';
 
 function getDecimalsForValue(value: number): number {

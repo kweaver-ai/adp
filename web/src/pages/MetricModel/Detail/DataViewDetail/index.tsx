@@ -3,7 +3,7 @@ import intl from 'react-intl-universal';
 import { CaretRightOutlined } from '@ant-design/icons';
 import { useAsyncEffect } from 'ahooks';
 import { Collapse, Tag } from 'antd';
-import _ from 'lodash';
+import { map } from 'lodash-es';
 import { formatKeyOfObjectToCamel } from '@/utils/format-objectkey-structure';
 import SERVICE from '@/services';
 import DataFilterDetail from '@/web-library/components/DataFilter/indexDetail';
@@ -58,7 +58,7 @@ const DataViewDetail = (props: { dataSourceId?: string }) => {
 
     return (
       <div className="g-p-2">
-        {_.map(data, (item: any, index) => {
+        {map(data, (item: any, index) => {
           const { name, content } = item;
           return (
             <div key={index} className="g-p-1 g-ellipsis-1" style={{ flexBasis: '100%' }} title={content}>

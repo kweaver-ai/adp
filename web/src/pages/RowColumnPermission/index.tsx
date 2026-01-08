@@ -5,7 +5,7 @@ import { EllipsisOutlined, LeftOutlined } from '@ant-design/icons';
 import { Dropdown, MenuProps, Tag } from 'antd';
 import { TablePaginationConfig } from 'antd/es/table';
 import dayjs from 'dayjs';
-import _ from 'lodash';
+import { map } from 'lodash-es';
 import useAuthorization from '@/hooks/useAuthorization';
 import { DATE_FORMAT } from '@/hooks/useConstants';
 import { formatKeyOfObjectToLine } from '@/utils/format-objectkey-structure';
@@ -241,7 +241,7 @@ const RowColumnPermission: React.FC = (): JSX.Element => {
       __fixed: true,
       __selected: true,
       render: (text: any): React.ReactNode => {
-        return Array.isArray(text) && text.length ? _.map(text, (i) => <Tag key={i}>{i}</Tag>) : '--';
+        return Array.isArray(text) && text.length ? map(text, (i) => <Tag key={i}>{i}</Tag>) : '--';
       },
     },
     // {

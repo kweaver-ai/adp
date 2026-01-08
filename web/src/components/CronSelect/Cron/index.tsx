@@ -4,7 +4,7 @@ import intl from 'react-intl-universal';
 import { useDeepCompareEffect, useSetState } from 'ahooks';
 import { Button, Card, Tabs } from 'antd';
 import classNames from 'classnames';
-import { compact, defaultTo, map, zipObject } from 'lodash';
+import { compact, defaultTo, map, zipObject } from 'lodash-es';
 import DayConfigPanel from './components/DayConfigPanel';
 import HourPane from './components/HourPane';
 import MinutePane from './components/MinutePane';

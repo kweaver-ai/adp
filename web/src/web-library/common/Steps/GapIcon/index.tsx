@@ -1,6 +1,6 @@
 import { DoubleRightOutlined } from '@ant-design/icons';
 import { Steps as AntdSteps, type StepsProps as AntdStepsProps } from 'antd';
-import _ from 'lodash';
+import { map } from 'lodash-es';
 import styles from './index.module.less';
 
 export type StepsProps = AntdStepsProps & {
@@ -11,7 +11,7 @@ const GapIcon: React.FC<StepsProps> = (props) => {
   const { icon, items, ...otherProps } = props;
 
   const length = items?.length ? items?.length - 1 : 0;
-  const STEPS_ITEMS = _.map(items, (item, index) => {
+  const STEPS_ITEMS = map(items, (item, index) => {
     return {
       ...item,
       title: (

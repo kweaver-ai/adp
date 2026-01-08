@@ -1,9 +1,3 @@
-/*
- * @Description: 转换对象key的结构
- * @Author: Tyrone
- * @Date: 2022-05-13 15:22:32
- */
-
 /**
  * @description 将字段名中带有_下划线的字段替换为驼峰格式：ingest_id => ingestId
  * @param {string} field 要替换的字段

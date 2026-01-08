@@ -36,10 +36,12 @@ const CreateAndEditForm = (props: any) => {
   };
 
   useEffect(() => {
-    form.resetFields();
-    setCreateMode('standard');
-    if (id) {
-      getDetail();
+    if (open) {
+      form.resetFields();
+      setCreateMode('standard');
+      if (id) {
+        getDetail();
+      }
     }
   }, [id, open]);
 

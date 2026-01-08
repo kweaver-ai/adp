@@ -364,7 +364,7 @@ const AtomDataView = (): JSX.Element => {
             visible: matchPermission(PERMISSION_CODES.AUTHORIZE, record.operations),
           },
         ];
-        const dropdownMenu: any = allOperations.filter((val) => val.visible);
+        const dropdownMenu: any = allOperations.filter((val) => val.visible).map(({ key, label }: any) => ({ key, label }));
         return (
           <Dropdown
             trigger={['click']}

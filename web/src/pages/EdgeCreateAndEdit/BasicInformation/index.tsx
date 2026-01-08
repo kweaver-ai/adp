@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import intl from 'react-intl-universal';
 import { Form } from 'antd';
-import _ from 'lodash';
+import { isArray, some } from 'lodash-es';
 import TagsSelector from '@/components/TagsSelector';
 import ENUMS from '@/enums';
 import { Input } from '@/web-library/common';
@@ -42,9 +42,9 @@ const BasicInformation = (props: any) => {
           rules={[
             {
               validator: (_rule: any, value: string) => {
-                if (_.isArray(value) && value.length === 0) return Promise.resolve();
+                if (isArray(value) && value.length === 0) return Promise.resolve();
                 if (value && value.length > 5) return Promise.reject(new Error(intl.get('Global.tagMaxError')));
-                if (value && _.some(value, (str) => str.length > 40)) return Promise.reject(new Error(intl.get('Global.tagLengthError')));
+                if (value && some(value, (str) => str.length > 40)) return Promise.reject(new Error(intl.get('Global.tagLengthError')));
                 if (value && !ENUMS.REGEXP.EXCLUDE_CHARACTERS.test(value)) {
                   return Promise.reject(new Error(intl.get('Global.tagCharacterError')));
                 }

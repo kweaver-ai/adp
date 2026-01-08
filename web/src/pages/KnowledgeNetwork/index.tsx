@@ -65,7 +65,7 @@ const KnowledgeNetwork = () => {
   };
 
   useEffect(() => {
-    baseConfig.toggleSideBarShow(true);
+    baseConfig?.toggleSideBarShow(true);
     getTableData();
   }, []);
 
@@ -138,7 +138,7 @@ const KnowledgeNetwork = () => {
       render: (value: string, record: KnowledgeNetworkType.KnowledgeNetwork) => (
         <div className="g-flex-align-center" style={{ lineHeight: '22px' }} title={value}>
           <div className={styles['name-icon']} style={{ background: record.color }}>
-            <IconFont type={record.icon} style={{ color: '#fff', fontSize: 20 }} />
+            {record.icon && <IconFont type={record.icon} style={{ color: '#fff', fontSize: 20 }} />}
           </div>
           <div style={{ flex: 1 }}>
             <a style={{ fontSize: 14, color: '#000' }} onClick={() => onOperate('view', record)}>
@@ -165,7 +165,7 @@ const KnowledgeNetwork = () => {
           { key: 'export', label: intl.get('Global.export'), visible: matchPermission(PERMISSION_CODES.EXPORT, record.operations) },
           { key: 'delete', label: intl.get('Global.delete'), visible: matchPermission(PERMISSION_CODES.DELETE, record.operations) },
         ];
-        const dropdownMenu: any = allOperations.filter((val) => val.visible);
+        const dropdownMenu: any = allOperations.filter((val) => val.visible).map(({ key, label }: any) => ({ key, label }));
         return (
           <Dropdown
             trigger={['click']}

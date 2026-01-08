@@ -1,13 +1,8 @@
-/*
- * @Description: 数据过滤项
- * @Author: coco.chen
- * @Date: 2023-08-07 11:00:07
- */
 import { forwardRef, useImperativeHandle, useMemo, useState, useEffect } from 'react';
 import intl from 'react-intl-universal';
 import { Input, Select } from 'antd';
 import classNames from 'classnames';
-import _ from 'lodash';
+import { groupBy, map, filter } from 'lodash-es';
 import ObjectSelector from '@/components/ObjectSelector';
 import DateBefore from './components/DateBefore';
 import DateBetween from './components/DateBetween';
@@ -64,15 +59,15 @@ const DataFilterItem = forwardRef(
         ...property,
         formateTypeLabel: typeLabels[transformType?.(property.type) || property.type] || '',
       }));
-      return _.groupBy(dataProperties || [], 'formateTypeLabel');
-    }, [objectTarget?.data_properties]);
+      return groupBy(dataProperties || [], 'formateTypeLabel');
+    }, [objectTarget?.data_properties, transformType]);
 
     const [fieldType, formatType] = useMemo(() => {
       const fieldType = objectTarget?.data_properties.find((property: any) => property.name === value.field)?.type || '';
       const formatType = transformType?.(fieldType) || fieldType;
 
       return [fieldType, formatType];
-    }, [value]);
+    }, [objectTarget?.data_properties, value.field, transformType]);
 
     useImperativeHandle(ref, () => ({ validate: () => false }));
 
@@ -139,13 +134,13 @@ const DataFilterItem = forwardRef(
             disabled={disabled}
             onChange={(value) => {
               if (formatType === 'number') {
-                value = _.map(value, (item) => {
+                value = map(value, (item) => {
                   const match = item.match(/-?\d+(\.\d+)?/);
                   if (match) return Number.parseFloat(item);
                   return '';
                 });
               }
-              value = _.filter(value, (item) => !!item);
+              value = filter(value, (item) => !!item);
               handleValueChange(value);
             }}
           />
@@ -185,11 +180,11 @@ const DataFilterItem = forwardRef(
             placeholder={intl.get('DataFilterNew.pleaseSelectValue')}
             getPopupContainer={(triggerNode): HTMLElement => triggerNode.parentNode as HTMLElement}
             onChange={handleChangeField}
-            options={_.map(Object.keys(fields), (key) => {
+            options={map(Object.keys(fields), (key) => {
               return {
                 label: key,
                 title: key,
-                options: _.map(fields?.[key], (item) => {
+                options: map(fields?.[key], (item) => {
                   const { name, display_name } = item;
                   return { value: name, label: display_name };
                 }),
@@ -207,7 +202,7 @@ const DataFilterItem = forwardRef(
                 disabled={disabled}
                 placeholder="请选择"
                 onChange={handleChangeOperation}
-                options={_.map(typeOption[formatType], (item) => ({ value: item, label: intl.get(`DataFilterNew.${item}`) }))}
+                options={map(typeOption[formatType], (item) => ({ value: item, label: intl.get(`DataFilterNew.${item}`) }))}
               />
             </div>
           )

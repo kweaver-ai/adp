@@ -5,7 +5,7 @@ import { DragOutlined, EllipsisOutlined } from '@ant-design/icons';
 import { Upload, Tag, Dropdown } from 'antd';
 import dayjs from 'dayjs';
 import Cookie from 'js-cookie';
-import _ from 'lodash';
+import { map } from 'lodash-es';
 import { arNotification } from '@/components/ARNotification';
 import ContainerIsVisible, { getTypePermissionOperation, matchPermission, PERMISSION_CODES } from '@/components/ContainerIsVisible';
 import { useAuthorization } from '@/hooks/useAuthorization';
@@ -54,7 +54,7 @@ export const MainContent: React.FC = () => {
   useEffect(() => {
     const getTagList = async (): Promise<void> => {
       const res = await api.getTagList();
-      setTagsData(_.map(res.entries, (item) => ({ value: item.tag, label: item.tag })));
+      setTagsData(map(res.entries, (item) => ({ value: item.tag, label: item.tag })));
     };
     getTagList();
   }, []);
@@ -147,7 +147,7 @@ export const MainContent: React.FC = () => {
             visible: matchPermission(PERMISSION_CODES.AUTHORIZE, record.operations),
           },
         ];
-        const dropdownMenu: any = allOperations.filter((val: any) => val.visible);
+        const dropdownMenu: any = allOperations.filter((val: any) => val.visible).map((item: any) => ({ key: item.key, label: item.label }));
         return (
           <Dropdown
             trigger={['click']}
@@ -179,7 +179,7 @@ export const MainContent: React.FC = () => {
       __fixed: true,
       __selected: true,
       render: (text: any): React.ReactNode => {
-        return Array.isArray(text) && text.length ? _.map(text, (i) => <Tag key={i}>{i}</Tag>) : '--';
+        return Array.isArray(text) && text.length ? map(text, (i) => <Tag key={i}>{i}</Tag>) : '--';
       },
     },
     {
