@@ -18,9 +18,6 @@ spec:
         {{- toYaml . | nindent 8 }}
       {{- end }}
       volumes:
-        - name: service-access
-          secret:
-            secretName: cms-release-config-service-access
         - name: tmp-logs
           emptyDir: {}
       containers:
@@ -30,8 +27,6 @@ spec:
           image: "{{ .Values.image.registry }}/{{ .Values.image.repository }}:{{ .Values.image.tag }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           volumeMounts:
-            - mountPath: /conf/service-access
-              name: service-access
             - mountPath: /tmp
               name: tmp-logs
           resources:

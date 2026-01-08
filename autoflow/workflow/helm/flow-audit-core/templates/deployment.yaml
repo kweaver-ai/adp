@@ -41,9 +41,6 @@ spec:
           name: workflowconfig-volume
         - emptyDir: {}
           name: tmp-logs
-        - name: service-access
-          secret:
-            secretName: cms-release-config-service-access
       containers:
         - name: flow-audit-core
           securityContext:
@@ -61,8 +58,6 @@ spec:
           volumeMounts:
             - mountPath: /conf
               name: workflowconfig-volume
-            - mountPath: /conf/service-access
-              name: service-access
             - mountPath: /tmp
               name: tmp-logs
           startupProbe:
