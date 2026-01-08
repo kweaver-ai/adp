@@ -2,7 +2,7 @@ import React, { useEffect, useState, useMemo } from 'react';
 import intl from 'react-intl-universal';
 import { Checkbox, Divider, Button } from 'antd';
 import classNames from 'classnames';
-import _ from 'lodash';
+import { forEach, map } from 'lodash-es';
 import { arNotification } from '@/components/ARNotification';
 import downFile from '@/utils/down-file';
 import api from '@/services/customDataView/index';
@@ -45,7 +45,7 @@ export const SideBar: React.FC = () => {
     let noGroupDataList: GroupType = {} as GroupType;
     const groupDataList: GroupType[] = [];
 
-    _.forEach(showGroupList, (item) => {
+    forEach(showGroupList, (item) => {
       if (!item.id) noGroupDataList = item;
       if (!item.builtin && item.id) groupDataList.push(item);
     });
@@ -182,7 +182,7 @@ export const SideBar: React.FC = () => {
         </div>
         <Divider style={{ margin: '8px 0' }} />
         {/* 分组列表 */}
-        {_.map(groupDataList, (item, index) => (
+        {map(groupDataList, (item, index) => (
           <GroupItem
             currentId={currentSelectGroup?.id}
             key={index}

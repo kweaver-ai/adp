@@ -1,4 +1,4 @@
-import _ from 'lodash';
+import { includes } from 'lodash-es';
 import Fields from './index';
 
 /** 旧版数据类型 */
@@ -34,9 +34,9 @@ const formatType = (type: string) => {
   const cur = Fields.DataType_All.find((item) => item.name === type)?.type;
   if (cur) return cur;
   // 旧版类型
-  if (_.includes(boolean, value)) return 'boolean';
-  if (_.includes(date, value)) return 'date';
-  if (_.includes(number, value)) return 'number';
+  if (includes(boolean, value)) return 'boolean';
+  if (includes(date, value)) return 'date';
+  if (includes(number, value)) return 'number';
 
   return 'string';
 };

@@ -1,7 +1,7 @@
 import { useState, useEffect, forwardRef, useImperativeHandle, useRef, useCallback, useMemo } from 'react';
 import { Select, Table, Empty, Space, Input, Tooltip } from 'antd';
 import classNames from 'classnames';
-import _ from 'lodash';
+import { keyBy } from 'lodash-es';
 import { extractParamsByToolList } from '@/utils/extractSchemaParams';
 import * as ActionType from '@/services/action/type';
 import objectApi from '@/services/object';
@@ -139,7 +139,7 @@ const ToolParamsTable = forwardRef(({ onChange, value, actionSource, overflowYHe
     (inputParams: any[]) => {
       if (!disabled) {
         // 编辑：使用inputParams作为主数据，同时value作为辅助补充信息
-        const valueMapByName = _.keyBy(value || [], 'name');
+        const valueMapByName = keyBy(value || [], 'name');
 
         const processNode = (item: any): any => {
           // 根据参数结构选择合适的键名
@@ -174,7 +174,7 @@ const ToolParamsTable = forwardRef(({ onChange, value, actionSource, overflowYHe
         };
         inputParams.forEach((param) => loop(param));
 
-        const inputParamsMapByName = _.keyBy(formatInputParams, 'key');
+        const inputParamsMapByName = keyBy(formatInputParams, 'key');
 
         const newTableData = transformInput(
           value?.map((item) => {

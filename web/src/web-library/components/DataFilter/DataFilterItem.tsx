@@ -1,23 +1,17 @@
-/*
- * @Description: 数据过滤项
- * @Author: coco.chen
- * @Date: 2023-08-07 11:00:07
- */
 import { forwardRef, useImperativeHandle, useMemo, useEffect, useState } from 'react';
+import intl from 'react-intl-universal';
 import { useUpdateEffect } from 'ahooks';
 import { Input, Select } from 'antd';
 import classNames from 'classnames';
-import _ from 'lodash';
+import { map, filter, groupBy } from 'lodash-es';
 import DateBefore from './components/DateBefore';
 import DateBetween from './components/DateBetween';
 import DateCurrent from './components/DateCurrent';
 import NumberItem from './components/NumberItem';
 import styles from './index.module.less';
-import localeEn from './locale/en-US';
-import localeZh from './locale/zh-CN';
+import locales from './locales';
 import { FieldList, Item } from './type';
 import { defaultTypeOption } from './utils';
-import getLocaleValue from '../../utils/get-locale-value';
 
 // 右侧值为数组的操作符
 const aryOperation = ['in', 'not_in', 'contain', 'not_contain'];
@@ -41,6 +35,10 @@ interface DataFilterItemProps {
 
 const DataFilterItem = forwardRef(
   ({ value, fieldList, disabled = false, transformType, required: defaultRequired, typeOption = defaultTypeOption, onChange }: DataFilterItemProps, ref) => {
+    useEffect(() => {
+      intl.load(locales);
+    }, []);
+
     const fieldListFilter = (val: any): FieldList => {
       return fieldList?.filter((i) => (i.name && i.name === val) || i.display_name === val)[0];
     };
@@ -54,7 +52,7 @@ const DataFilterItem = forwardRef(
       const error: { value?: string } = {};
 
       if (required && (isEmpty(value) || (!Array.isArray(value) && typeof value === 'object' && !value.label && (isEmpty(value.from) || isEmpty(value.to))))) {
-        error.value = getLocaleValue('valueCannotEmpty', { localeZh }, { localeEn });
+        error.value = intl.get('DataFilter.valueCannotEmpty');
       } else {
         error.value = '';
       }
@@ -66,9 +64,9 @@ const DataFilterItem = forwardRef(
       const error: { name?: string } = {};
 
       if (!value && required) {
-        error.name = getLocaleValue('fieldCannotEmpty', { localeZh }, { localeEn });
+        error.name = intl.get('DataFilter.fieldCannotEmpty');
       } else if (value && !fieldList?.find((i) => (i.name || i.display_name) === value)) {
-        error.name = getLocaleValue('fieldsNotExist', { localeZh }, { localeEn });
+        error.name = intl.get('DataFilter.fieldsNotExist');
       } else {
         error.name = '';
       }
@@ -166,7 +164,7 @@ const DataFilterItem = forwardRef(
       onChange({ ...value, value: e.target.value });
     };
 
-    const fields = _.groupBy(fieldList || [], 'type');
+    const fields = groupBy(fieldList || [], 'type');
 
     const renderItem = (formatType: any, operation: any): JSX.Element => {
       if (formatType === 'boolean') {
@@ -184,13 +182,13 @@ const DataFilterItem = forwardRef(
             disabled={disabled}
             onChange={(value) => {
               if (formatType === 'number') {
-                value = _.map(value, (item) => {
+                value = map(value, (item) => {
                   const match = item.match(/-?\d+(\.\d+)?/);
                   if (match) return Number.parseFloat(item);
                   return '';
                 });
               }
-              value = _.filter(value, (item) => !!item);
+              value = filter(value, (item) => !!item);
               handleValueChange(value);
             }}
           />
@@ -211,14 +209,7 @@ const DataFilterItem = forwardRef(
         return <DateBetween value={value.value ?? undefined} onChange={handleValueChange} />;
       }
 
-      return (
-        <Input
-          value={value?.value}
-          disabled={disabled}
-          onChange={handleStringValueChange}
-          placeholder={getLocaleValue('pleaseInputValue', { localeZh }, { localeEn })}
-        />
-      );
+      return <Input value={value?.value} disabled={disabled} onChange={handleStringValueChange} placeholder={intl.get('DataFilter.pleaseInputValue')} />;
     };
 
     const hasValue = value.operation !== 'exist' && value.operation !== 'not_exist' && value.operation !== 'not_empty' && value.operation !== 'empty';
@@ -230,14 +221,14 @@ const DataFilterItem = forwardRef(
             showSearch
             value={value?.field}
             disabled={disabled}
-            placeholder={getLocaleValue('pleaseSelectValue', { localeZh }, { localeEn })}
+            placeholder={intl.get('DataFilter.pleaseSelectValue')}
             getPopupContainer={(triggerNode): HTMLElement => triggerNode.parentNode as HTMLElement}
             onChange={handleChangeField}
-            options={_.map(Object.keys(fields), (key) => {
+            options={map(Object.keys(fields), (key) => {
               return {
                 label: key,
                 title: key,
-                options: _.map(fields?.[key], (item) => {
+                options: map(fields?.[key], (item) => {
                   const { name, display_name } = item;
                   return { value: name || display_name, label: display_name || name };
                 }),
@@ -252,7 +243,7 @@ const DataFilterItem = forwardRef(
             disabled={disabled}
             placeholder="请选择"
             onChange={handleChangeOperation}
-            options={_.map(typeOption[formatType], (item) => ({ value: item, label: getLocaleValue(item, { localeZh }, { localeEn }) }))}
+            options={map(typeOption[formatType], (item) => ({ value: item, label: intl.get(`DataFilter.${item}`) }))}
           />
         </div>
         {hasValue && (
@@ -261,7 +252,7 @@ const DataFilterItem = forwardRef(
               value={valueForms[0]}
               disabled={disabled}
               onChange={handleChangeValueFrom}
-              options={_.map(valueForms, (item) => ({ value: item, label: getLocaleValue(item, { localeZh }, { localeEn }) }))}
+              options={map(valueForms, (item) => ({ value: item, label: intl.get(`DataFilter.${item}`) }))}
             />
           </div>
         )}

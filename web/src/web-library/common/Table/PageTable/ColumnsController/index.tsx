@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Dropdown, Checkbox, MenuProps } from 'antd';
-import _ from 'lodash';
+import { map, filter, sortBy, isEmpty, cloneDeep, forEach } from 'lodash-es';
 import UTILS from '../../../../utils';
 
 const ColumnsController = (props: any) => {
@@ -16,11 +16,11 @@ const ColumnsController = (props: any) => {
   // 初始化选中列，如果有复选框列，则默认选中复选框列
   const [status, setStatus] = useState<any>({});
   useEffect(() => {
-    if (!_.isEmpty(sessionColumns)) setStatus(sessionColumns);
+    if (!isEmpty(sessionColumns)) setStatus(sessionColumns);
   }, [JSON.stringify(sessionColumns)]);
 
-  const sortedMenuItems = _.sortBy(sessionColumns, (column: any) => column.index);
-  const checkedItems = _.filter(status, (column: any) => column?.checked);
+  const sortedMenuItems = sortBy(sessionColumns, (column: any) => column.index);
+  const checkedItems = filter(status, (column: any) => column?.checked);
   const allChecked = checkedItems.length === sortedMenuItems.length;
   const indeterminate = !allChecked && checkedItems.length > 1;
 
@@ -36,7 +36,7 @@ const ColumnsController = (props: any) => {
         </Checkbox>
       ),
     },
-    ..._.map(sortedMenuItems, (column: any) => {
+    ...map(sortedMenuItems, (column: any) => {
       const key = column.dataIndex;
       return {
         key: key,
@@ -56,8 +56,8 @@ const ColumnsController = (props: any) => {
     } else if (key === 'adapter') {
       onAdapterWidth();
     } else if (key === 'all') {
-      const newStatus = _.cloneDeep(status);
-      _.forEach(newStatus, (column: any) => {
+      const newStatus = cloneDeep(status);
+      forEach(newStatus, (column: any) => {
         if (allChecked) {
           if (!column.disabled) column.checked = false;
         } else {
@@ -85,8 +85,10 @@ const ColumnsController = (props: any) => {
   );
 };
 
-export default (props: any) => {
+const ColumnsControllerWrapper = (props: any) => {
   const sessionColumns = UTILS.SessionStorage.get(props.SESSION_COLUMNS_CONTROLLER_KEY) || {};
-  if (_.isEmpty(sessionColumns)) return null;
+  if (isEmpty(sessionColumns)) return null;
   return <ColumnsController {...props} sessionColumns={sessionColumns} />;
 };
+
+export default ColumnsControllerWrapper;

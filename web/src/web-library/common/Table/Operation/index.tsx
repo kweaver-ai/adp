@@ -7,7 +7,7 @@
  */
 import React, { useMemo, useState, ReactElement, useCallback } from 'react';
 import { RedoOutlined } from '@ant-design/icons';
-import _ from 'lodash';
+import { map, debounce, forEach, isEmpty, isArray } from 'lodash-es';
 import styles from './index.module.less';
 import Items from './Items';
 import SortButton, { type SortButtonProps } from './SortButton';
@@ -46,7 +46,7 @@ const Operation: React.FC<OperationProps> = (props) => {
     forceUpdate();
   };
 
-  const onSearch = _.debounce((e) => {
+  const onSearch = debounce((e) => {
     const value = e?.target?.value;
     setFilterValue(value);
     handleChange(ncKey || 'name', value);
@@ -57,8 +57,8 @@ const Operation: React.FC<OperationProps> = (props) => {
     const filterItems: ReactElement[] = [];
 
     // 遍历子元素，筛选出 Button 组件和 Select 组件
-    const _children = _.isArray(children) ? children : [children];
-    _.forEach(_children as ReactElement[], (child: ReactElement) => {
+    const _children = isArray(children) ? children : [children];
+    forEach(_children as ReactElement[], (child: ReactElement) => {
       if (child?.type === Select.LabelSelect) {
         filterItems.push(child);
       } else {
@@ -70,8 +70,8 @@ const Operation: React.FC<OperationProps> = (props) => {
 
   // 为 select 组件添加 onChange 事件，统一处理 filter
   const filterElement = React.useMemo(() => {
-    if (_.isEmpty(filterItems)) return null;
-    return _.map(filterItems, (child: ReactElement) => {
+    if (isEmpty(filterItems)) return null;
+    return map(filterItems, (child: ReactElement) => {
       if (!React.isValidElement(child)) return child;
 
       const key = child.key || '';
@@ -96,7 +96,7 @@ const Operation: React.FC<OperationProps> = (props) => {
   const noFilter = filterLength === 0; // 没有筛选条件的时候
   const oneFilter = filterLength === 1; // 只有一个筛选条件的时候
   const moreFilter = filterLength > 1; // 有多个筛选条件的时候
-  const hasSortButton = !_.isEmpty(sortConfig); // 是否展示排序按钮
+  const hasSortButton = !isEmpty(sortConfig); // 是否展示排序按钮
   const hasRefreshButton = !!onRefresh; // 是否展示刷新按钮
   const pageSize = 3; // 每页展示的筛选条件数量
 

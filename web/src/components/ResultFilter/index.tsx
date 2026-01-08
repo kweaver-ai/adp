@@ -2,7 +2,7 @@ import { forwardRef, useMemo, useCallback, useImperativeHandle, useEffect } from
 import intl from 'react-intl-universal';
 import { MinusOutlined } from '@ant-design/icons';
 import { InputNumber, Select } from 'antd';
-import _ from 'lodash';
+import { map } from 'lodash-es';
 import styles from './index.module.less';
 import locales from './locales';
 
@@ -24,8 +24,10 @@ const aryOperation = ['in', 'not_in'];
 // 右侧值为范围的操作符
 const rangeOperation = ['range', 'out_range'];
 
+const DEFAULT_VALUE = { operation: '==', value: '', field: '__value' };
+
 const ResultFilter = forwardRef((props: ResultFilterProps, ref) => {
-  const { value = { operation: '==', value: '', field: '__value' }, onChange, layout = 'horizontal' } = props;
+  const { value = DEFAULT_VALUE, onChange, layout = 'horizontal' } = props;
 
   useEffect(() => {
     intl.load(locales);
@@ -35,14 +37,14 @@ const ResultFilter = forwardRef((props: ResultFilterProps, ref) => {
     (e: string) => {
       onChange?.({ operation: e, value: '', field: value.field });
     },
-    [onChange, value.value]
+    [onChange, value.field]
   );
 
   const handleValueChange = useCallback(
     (e: any) => {
       onChange?.({ operation: value.operation, value: e, field: value.field });
     },
-    [onChange, value.operation]
+    [onChange, value.operation, value.field]
   );
 
   const validate = useCallback(() => {
@@ -114,7 +116,7 @@ const ResultFilter = forwardRef((props: ResultFilterProps, ref) => {
         />
       );
     }
-  }, [value?.operation, value?.value, handleValueChange]);
+  }, [value, handleValueChange]);
 
   return layout === 'horizontal' ? (
     <div className={styles['result-filter-horizontal']}>
@@ -123,7 +125,7 @@ const ResultFilter = forwardRef((props: ResultFilterProps, ref) => {
         value={value?.operation}
         placeholder="请选择"
         onChange={handleChangeOperation}
-        options={_.map(operateOption, (item) => ({ value: item, label: intl.get(`ResultFilter.${item}`) }))}
+        options={map(operateOption, (item: string) => ({ value: item, label: intl.get(`ResultFilter.${item}`) }))}
       />
       {ValueInput}
     </div>
@@ -134,7 +136,7 @@ const ResultFilter = forwardRef((props: ResultFilterProps, ref) => {
         value={value?.operation}
         placeholder="请选择"
         onChange={handleChangeOperation}
-        options={_.map(operateOption, (item) => ({ value: item, label: intl.get(`ResultFilter.${item}`) }))}
+        options={map(operateOption, (item: string) => ({ value: item, label: intl.get(`ResultFilter.${item}`) }))}
       />
       {ValueInput}
     </div>

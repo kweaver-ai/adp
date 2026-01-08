@@ -7,7 +7,7 @@ import { useHistory } from 'react-router-dom';
 import { EllipsisOutlined } from '@ant-design/icons';
 import { Dropdown, Tag, Popover, Empty } from 'antd';
 import dayjs from 'dayjs';
-import _ from 'lodash';
+import { map } from 'lodash-es';
 import { renderObjectTypeLabel } from '@/components/ObjectSelector';
 import api from '@/services/action';
 import * as ActionType from '@/services/action/type';
@@ -74,9 +74,9 @@ const Action: FC<TProps> = ({ detail, isPermission }) => {
   const [sortOrder, setSortOrder] = useState<ActionType.DirectionEnum>(ActionType.DirectionEnum.DESC); // 排序方向，默认降序
 
   const dropdownMenu: any = [
-    { key: OperationEnum.View, label: intl.get('Global.view') },
-    { key: OperationEnum.Edit, label: intl.get('Global.edit'), hidden: !hasModifyPerm },
-    { key: OperationEnum.Delete, label: intl.get('Global.delete'), hidden: !hasModifyPerm },
+    { key: OperationEnum.View, label: intl.get('Global.view'), visible: true },
+    { key: OperationEnum.Edit, label: intl.get('Global.edit'), visible: hasModifyPerm },
+    { key: OperationEnum.Delete, label: intl.get('Global.delete'), visible: hasModifyPerm },
   ];
 
   const columns: any = [
@@ -107,7 +107,7 @@ const Action: FC<TProps> = ({ detail, isPermission }) => {
           <Dropdown
             trigger={['click']}
             menu={{
-              items: dropdownMenu,
+              items: dropdownMenu.filter((item: any) => item.visible).map(({ key, label }: any) => ({ key, label })),
               onClick: (event: any) => {
                 event.domEvent.stopPropagation();
                 handleOperationEvent(event.key, record);
@@ -231,7 +231,7 @@ const Action: FC<TProps> = ({ detail, isPermission }) => {
   const getObjectList = async () => {
     try {
       const result = await SERVICE.object.objectGet(knId, { offset: 0, limit: -1 });
-      const objectOptions = _.map(result?.entries, (item) => {
+      const objectOptions = map(result?.entries, (item) => {
         const { id, name, icon, data_properties, color } = item;
         return {
           value: id,

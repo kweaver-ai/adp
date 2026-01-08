@@ -3,7 +3,7 @@ import intl from 'react-intl-universal';
 import { MinusCircleFilled } from '@ant-design/icons';
 import { Button, Col, Form, Input, InputNumber, Row, Select, Table, TableColumnProps } from 'antd';
 import classnames from 'classnames';
-import _, { groupBy } from 'lodash';
+import { groupBy, keyBy } from 'lodash-es';
 import { nanoid } from 'nanoid';
 import { getInputParamsFromToolOpenAPISpec } from '@/components/ToolParamsTable/utils';
 import { isEmptyExceptZero } from '@/utils/common';
@@ -113,7 +113,7 @@ const EditDrawer: React.FC<{
     const inputParams: any[] = getInputParamsFromToolOpenAPISpec(api_spec);
 
     const params = attrInfo?.parameters || [];
-    const valueMapByName = _.keyBy(params || [], 'name');
+    const valueMapByName = keyBy(params || [], 'name');
 
     const processNode = (item: any): any => {
       const matchedParam = valueMapByName[item.key];
@@ -226,7 +226,6 @@ const EditDrawer: React.FC<{
       if (!node.name || (node.value_from !== 'input' && isEmptyExceptZero(node.value))) {
         hasError = true;
       }
-      console.log(node.value, '1111', !node.value);
       return {
         ...node,
         error: {

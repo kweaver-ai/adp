@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import intl from 'react-intl-universal';
-import _ from 'lodash';
+import { forEach } from 'lodash-es';
 import { Select } from '@/web-library/common';
 import UTILS from '@/web-library/utils';
 
@@ -12,7 +12,7 @@ const AggrExpression = (props: any) => {
   const { optionsFields, optionsFieldsKV } = useMemo(() => {
     const optionsFields: any = [];
     const optionsFieldsKV: any = {};
-    _.forEach(fields, (item) => {
+    forEach(fields, (item) => {
       optionsFields.push({ value: item.name, label: item.displayName });
       optionsFieldsKV[item.name] = item;
     });

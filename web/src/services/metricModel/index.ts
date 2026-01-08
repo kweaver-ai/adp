@@ -1,4 +1,4 @@
-import _ from 'lodash';
+import { pickBy, cloneDeep } from 'lodash-es';
 import { formatKeyOfObjectToCamel, formatKeyOfObjectToLine, formatCamelToLine } from '@/utils/format-objectkey-structure';
 import * as MetricModelType from './type';
 import Request from '../request';
@@ -66,7 +66,7 @@ export const getMetricModelByIds = async (ids: string[]): Promise<any> => {
 };
 
 export const createMetricModel = async (values: MetricModelType.CreateMetricModelRequest): Promise<{ id: string }[]> => {
-  return await Request.post(BASE_URL, [formatKeyOfObjectToLine(_.cloneDeep(values))]);
+  return await Request.post(BASE_URL, [formatKeyOfObjectToLine(cloneDeep(values))]);
 };
 
 export const updateMetricModel = async (values: MetricModelType.UpdateMetricModelRequest, id: string): Promise<any> => {
@@ -166,7 +166,7 @@ export const getIndexBaseList = async (params: MetricModelType.GetIndexBaseListP
     name_pattern,
   };
 
-  const filteredParams = _.pickBy(queryParams, (value) => value !== '' && value !== null && value !== undefined);
+  const filteredParams = pickBy(queryParams, (value) => value !== '' && value !== null && value !== undefined);
 
   return await Request.get(INDEX_BASE_URL, filteredParams);
 };

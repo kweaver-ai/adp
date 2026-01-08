@@ -2,7 +2,7 @@ import { useRef, useEffect } from 'react';
 import intl from 'react-intl-universal';
 import dayjs from 'dayjs';
 import * as echarts from 'echarts';
-import _ from 'lodash';
+import { forEach } from 'lodash-es';
 import { DATE_FORMAT } from '@/hooks/useConstants';
 
 interface ChartLineProps {
@@ -50,7 +50,7 @@ const ChartLine = (props: ChartLineProps) => {
     /** 计算当前页面数据，要计算前一页和后一页的合并掉的数据 */
     // const startIndex = (current - 1) * pageSize;
     // const endIndex = startIndex + pageSize;
-    // const list: any = _.slice(sourceData, startIndex, endIndex);
+    // const list: any = slice(sourceData, startIndex, endIndex);
 
     // const startItem = list[0];
     // const entItem = list[list.length - 1];
@@ -73,7 +73,7 @@ const ChartLine = (props: ChartLineProps) => {
     let currentNumber: any = lineList[0].number || 0; // 当前
     let seriesDataIndex = 0;
     const firstNumber = lineList[0].number || 0;
-    _.forEach(lineList, (item: any) => {
+    forEach(lineList, (item: any) => {
       const number = item?.number;
       if (number === firstNumber) xAxisData.push(dayjs(item?.time).format(DATE_FORMAT.FULL_TIMESTAMP));
 

@@ -1,8 +1,8 @@
 import { useRef, useMemo } from 'react';
 import intl from 'react-intl-universal';
 import { Spin, Menu, MenuProps } from 'antd';
-import _ from 'lodash';
-import MonacoEditor from '@/components/MonacoEditor';
+import { map, debounce, trim } from 'lodash-es';
+import MonacoEditor from '@/components/MonacoEditor/lazy';
 import { TEMPLATE_REGEX } from '@/hooks/useConstants';
 import { Input } from '@/web-library/common';
 import styles from './index.module.less';
@@ -25,7 +25,7 @@ const CompoundExpression = (props: any) => {
   }, [value, menuItemsKV]);
 
   // 按名称筛选指标
-  const onChangeInput = _.debounce((data: any) => {
+  const onChangeInput = debounce((data: any) => {
     const value = data.target.value;
     getMetricList(value);
   }, 300);
@@ -38,10 +38,10 @@ const CompoundExpression = (props: any) => {
   };
 
   const onChangeEditor = (data: any) => {
-    if (onChange) onChange(_.trim(data));
+    if (onChange) onChange(trim(data));
   };
 
-  const items: MenuProps['items'] = _.map(menuItems, (item: any) => {
+  const items: MenuProps['items'] = map(menuItems, (item: any) => {
     const { id, name } = item;
     return { key: id, label: name, title: name, data: item };
   });

@@ -3,7 +3,7 @@ import intl from 'react-intl-universal';
 import { useHistory, useParams } from 'react-router-dom';
 import { LeftOutlined } from '@ant-design/icons';
 import { Divider, Steps as Antd_Steps } from 'antd';
-import _ from 'lodash';
+import { isEmpty, cloneDeep, debounce } from 'lodash-es';
 import { arNotification } from '@/components/ARNotification';
 import { SCHEDULE_TYPE } from '@/hooks/useConstants';
 import api from '@/services/metricModel';
@@ -37,6 +37,19 @@ const FormContainer = () => {
   const basicInfoRef = useRef(null) as any;
   const modelRef = useRef(null) as any;
   const persistenceRef = useRef(null) as any;
+
+  const getMetricModel = useCallback(async (id: any): Promise<void> => {
+    const result = await api.getMetricModelById(id);
+    //基本配置的回填
+    const basicInfoData = backfillBasicData(result);
+    setBasicInfoData(basicInfoData);
+    //模型配置的回填
+    const modeData = backfillModelData(result);
+    setModelData({ ...modeData, isCalendarInterval: result.isCalendarInterval });
+    // 模型配置的回填
+    const taskData = backfillTaskData(result);
+    setTaskData(taskData);
+  }, []);
 
   useEffect(() => {
     if (id) getMetricModel(id);
@@ -81,7 +94,7 @@ const FormContainer = () => {
         newModelData.conditionType = 'conditionStr';
         newModelData.conditionStr = formulaConfig?.conditionStr;
       }
-      if (!_.isEmpty(formulaConfig?.condition)) {
+      if (!isEmpty(formulaConfig?.condition)) {
         newModelData.dataFilter = true;
         newModelData.conditionType = 'condition';
         newModelData.condition = formulaConfig?.condition;
@@ -91,7 +104,7 @@ const FormContainer = () => {
         newModelData.aggrExpressionType = 'aggrExpressionStr';
         newModelData.aggrExpressionStr = formulaConfig?.aggrExpressionStr;
       }
-      if (!_.isEmpty(formulaConfig?.aggrExpression)) {
+      if (!isEmpty(formulaConfig?.aggrExpression)) {
         newModelData.aggrExpressionType = 'aggrExpression';
         newModelData.aggrExpression = formulaConfig?.aggrExpression;
       }
@@ -99,7 +112,7 @@ const FormContainer = () => {
       newModelData.analysisDimensions = analysisDimensions;
 
       // 分组字段
-      if (!_.isEmpty(formulaConfig?.groupByFields)) {
+      if (!isEmpty(formulaConfig?.groupByFields)) {
         newModelData.groupByFields = formulaConfig?.groupByFields;
       }
       if (dateField) newModelData.dateField = dateField;
@@ -162,25 +175,13 @@ const FormContainer = () => {
       return undefined;
     }
   };
-  const getMetricModel = useCallback(async (id: any): Promise<void> => {
-    const result = await api.getMetricModelById(id);
-    //基本配置的回填
-    const basicInfoData = backfillBasicData(result);
-    setBasicInfoData(basicInfoData);
-    //模型配置的回填
-    const modeData = backfillModelData(result);
-    setModelData({ ...modeData, isCalendarInterval: result.isCalendarInterval });
-    // 模型配置的回填
-    const taskData = backfillTaskData(result);
-    setTaskData(taskData);
-  }, []);
 
   /** 退出编辑页 */
   const goBack = () => history.goBack();
 
   /** 格式化基本配置数据 */
   const formatBasicData = () => {
-    const { name, id, groupName, tags = [], comment = '' } = _.cloneDeep(basicInfoData) || {};
+    const { name, id, groupName, tags = [], comment = '' } = cloneDeep(basicInfoData) || {};
     return { name, id, groupName, tags, comment };
   };
 
@@ -206,7 +207,7 @@ const FormContainer = () => {
       orderByFields,
       resultFilter,
       havingCondition,
-    } = _.cloneDeep(modelData) || {};
+    } = cloneDeep(modelData) || {};
 
     // 数据源信息
     const dataSource =
@@ -252,7 +253,7 @@ const FormContainer = () => {
       orderByFields,
       resultFilter,
       havingCondition,
-    } = _.cloneDeep(modelData) || {};
+    } = cloneDeep(modelData) || {};
     const formulaConfig: any = {
       dependMetricModel: { id: dataViewId?.[0]?.id, name: dataViewId?.[0]?.name },
     };
@@ -267,7 +268,7 @@ const FormContainer = () => {
   };
   /** 格式化模型配置数据 -- composite 复合指标 */
   const format_composite = () => {
-    const { metricType, formula, analysisDimensions = [], unitType, unit, orderByFields, resultFilter, havingCondition } = _.cloneDeep(modelData) || {};
+    const { metricType, formula, analysisDimensions = [], unitType, unit, orderByFields, resultFilter, havingCondition } = cloneDeep(modelData) || {};
     return { metricType, formula, analysisDimensions, unitType, unit, orderByFields, havingCondition: resultFilter ? havingCondition : undefined };
   };
   /** 格式化模型配置数据 */
@@ -369,7 +370,7 @@ const FormContainer = () => {
   const onPrev = () => setCurrentStep(currentStep - 1);
 
   /** 下一步 */
-  const onNext = _.debounce(async () => {
+  const onNext = debounce(async () => {
     stepValues[currentStep].nextClick();
   }, 300);
 

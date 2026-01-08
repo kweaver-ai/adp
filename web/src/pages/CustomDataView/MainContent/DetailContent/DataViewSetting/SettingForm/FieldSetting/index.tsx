@@ -74,7 +74,7 @@ const FiledSetting = () => {
     } else {
       setSwitchSelect(false);
     }
-  }, [selectedDataView]);
+  }, [selectedDataView, form]);
 
   useEffect(() => {
     if (!switchSelect) {

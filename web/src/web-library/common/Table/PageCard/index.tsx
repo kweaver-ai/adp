@@ -1,7 +1,7 @@
 import { useRef } from 'react';
 import intl from 'react-intl-universal';
 import { Col, Row, Checkbox, Pagination, type PaginationProps } from 'antd';
-import _ from 'lodash';
+import { map, filter, includes } from 'lodash-es';
 import styles from './index.module.less';
 import HOOKS from '../../../hooks';
 
@@ -36,7 +36,7 @@ const PageCard = (props: PageCardProps) => {
 
   const onRowSelectionChange = (key: string, checked: boolean) => {
     if (checked) {
-      rowSelection.onChange(_.filter(rowSelection.selectedRowKeys, (item) => item !== key));
+      rowSelection.onChange(filter(rowSelection.selectedRowKeys, (item) => item !== key));
     } else {
       rowSelection.onChange([...rowSelection.selectedRowKeys, key]);
     }
@@ -52,9 +52,9 @@ const PageCard = (props: PageCardProps) => {
       )}
       <div className={styles['common-table-page-card-content']} style={{ maxHeight: viewportHeight }}>
         <Row gutter={[16, 16]}>
-          {_.map(items, (item) => {
+          {map(items, (item) => {
             const key = item[colKey];
-            const checked = _.includes(rowSelection?.selectedRowKeys, key);
+            const checked = includes(rowSelection?.selectedRowKeys, key);
             return (
               <Col
                 key={key}

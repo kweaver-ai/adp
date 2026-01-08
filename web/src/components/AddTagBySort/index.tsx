@@ -2,11 +2,13 @@ import { useEffect, useState } from 'react';
 import intl from 'react-intl-universal';
 import { Dropdown } from 'antd';
 import classNames from 'classnames';
-import _ from 'lodash';
+import { cloneDeep, keyBy, map, filter, includes } from 'lodash-es';
 import { Button, IconFont, Input } from '@/web-library/common';
 import UTILS from '@/web-library/utils';
 import styles from './index.module.less';
 import locales from './locales';
+
+const _ = { cloneDeep, keyBy, map, filter, includes };
 
 const TagItem = (props: any) => {
   const { data, onDelete, onSort } = props;

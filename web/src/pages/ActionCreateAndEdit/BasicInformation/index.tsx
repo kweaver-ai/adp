@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import intl from 'react-intl-universal';
 import { Form, Row, Col, Select } from 'antd';
-import _ from 'lodash';
+import { map, some } from 'lodash-es';
 import ColorSelect from '@/components/ColorSelect';
 import DataFilterNew from '@/components/DataFilterNew';
 import ObjectSelector, { renderObjectTypeLabel } from '@/components/ObjectSelector';
@@ -31,7 +31,7 @@ const BasicInformation = (props: any) => {
   const getObjectList = async () => {
     try {
       const result = await SERVICE.object.objectGet(knId, { offset: 0, limit: -1 });
-      const objectOptions = _.map(result?.entries, (item) => {
+      const objectOptions = map(result?.entries, (item) => {
         const { id, name, icon, data_properties, color } = item;
         return {
           value: id,
@@ -91,7 +91,7 @@ const BasicInformation = (props: any) => {
                   validator: (_rule: any, value: string) => {
                     if (value?.length === 0) return Promise.resolve();
                     if (value && value.length > 5) return Promise.reject(new Error(intl.get('Global.tagMaxError')));
-                    if (value && _.some(value, (str) => str.length > 40)) return Promise.reject(new Error(intl.get('Global.tagLengthError')));
+                    if (value && some(value, (str) => str.length > 40)) return Promise.reject(new Error(intl.get('Global.tagLengthError')));
                     if (value && !ENUMS.REGEXP.EXCLUDE_CHARACTERS.test(value)) {
                       return Promise.reject(new Error(intl.get('Global.tagCharacterError')));
                     }

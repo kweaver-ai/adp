@@ -4,7 +4,7 @@ import { useHistory } from 'react-router-dom';
 import { EllipsisOutlined, ExclamationCircleFilled } from '@ant-design/icons';
 import { Dropdown, Empty } from 'antd';
 import dayjs from 'dayjs';
-import _ from 'lodash';
+import { map, filter, includes } from 'lodash-es';
 import ObjectIcon from '@/components/ObjectIcon';
 import Tags from '@/components/Tags';
 import createImage from '@/assets/images/common/create.svg';
@@ -84,7 +84,7 @@ const Edge = (props: TProps) => {
   const getObjectList = async () => {
     try {
       const result = await SERVICE.object.objectGet(knId, { offset: 0, limit: -1 });
-      const objectOptions = _.map(result?.entries, (item) => {
+      const objectOptions = map(result?.entries, (item) => {
         const { id, name, icon, color, data_properties } = item;
         return {
           value: id,
@@ -142,7 +142,7 @@ const Edge = (props: TProps) => {
   /** 删除 */
   const onDelete = async (items: any, isBatch?: boolean) => {
     try {
-      const edgesIds = _.map(items, (item) => item?.id);
+      const edgesIds = map(items, (item) => item?.id);
       await SERVICE.edge.deleteEdge(knId, edgesIds);
       getList();
       message.success(intl.get('Global.deleteSuccess'));
@@ -154,7 +154,7 @@ const Edge = (props: TProps) => {
 
   /** 删除 */
   const onDeleteConfirm = (items: any, isBatch?: boolean, callBack?: () => void) => {
-    const name = _.map(items, (item) => `「${item?.name}」`).join('、');
+    const name = map(items, (item) => `「${item?.name}」`).join('、');
     const length = items.length || 0;
     modal.confirm({
       title: intl.get('Global.tipTitle'),
@@ -209,7 +209,7 @@ const Edge = (props: TProps) => {
           <Dropdown
             trigger={['click']}
             menu={{
-              items: dropdownMenu.filter((item: { visible: boolean }) => item.visible),
+              items: dropdownMenu.filter((item: { visible: boolean }) => item.visible).map(({ key, label }: any) => ({ key, label })),
               onClick: (event: any) => {
                 event.domEvent.stopPropagation();
                 onOperate(event?.key, record);
@@ -299,7 +299,7 @@ const Edge = (props: TProps) => {
                 }
               />
             ) : (
-              <Empty image={emptyImage} description={intl.get('Edge.emptyDescription')} />
+              <Empty image={emptyImage} description={intl.get('Global.noData')} />
             ),
         }}
       >
@@ -315,7 +315,7 @@ const Edge = (props: TProps) => {
             <Button.Delete
               disabled={selectedRowKeys.length <= 0}
               onClick={() => {
-                const items = _.filter(dataSource, (item: any) => _.includes(selectedRowKeys, item.id));
+                const items = filter(dataSource, (item: any) => includes(selectedRowKeys, item.id));
                 onDeleteConfirm(items, true);
               }}
             />

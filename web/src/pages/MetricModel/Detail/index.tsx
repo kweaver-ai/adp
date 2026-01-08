@@ -5,7 +5,7 @@ import { Spin, Input, Tag, Divider } from 'antd';
 import { DrawerProps } from 'antd/lib/drawer';
 import classNames from 'classnames';
 import dayjs from 'dayjs';
-import _ from 'lodash';
+import { map } from 'lodash-es';
 import AddTag from '@/components/AddTag';
 import JsonCodeInput from '@/components/JsonCodeInput';
 import { formatKeyOfObjectToLine } from '@/utils/format-objectkey-structure';
@@ -138,7 +138,7 @@ const Detail = (props: any) => {
           value:
             analysisDimensions.length > 0 ? (
               <div style={{ width: '100%', display: 'flex', flexWrap: 'wrap' }}>
-                {_.map(analysisDimensions, (item, index) => (
+                {map(analysisDimensions, (item, index) => (
                   <Tag key={index} style={{ marginBottom: 2 }} title={fields_map[item.name]?.comment || ''}>
                     {item.displayName}
                   </Tag>
@@ -157,7 +157,7 @@ const Detail = (props: any) => {
           value:
             formulaConfig?.groupByFieldsDetail.length > 0 ? (
               <div style={{ width: '100%', display: 'flex', flexWrap: 'wrap' }}>
-                {_.map(formulaConfig?.groupByFieldsDetail, (item, index) => (
+                {map(formulaConfig?.groupByFieldsDetail, (item, index) => (
                   <Tag key={index} style={{ marginBottom: 2 }} title={fields_map[item.name]?.comment || ''}>
                     {item.displayName}
                   </Tag>
@@ -375,12 +375,12 @@ const Detail = (props: any) => {
   return (
     <div className={styles['metric-detail-root']}>
       <Spin spinning={loading}>
-        {_.map(data, (item: any, index: number) => {
+        {map(data, (item: any, index: number) => {
           return renderCollapseCard(
             item,
             <React.Fragment>
               <div className={styles['metric-detail-content']}>
-                {_.map(item.content, (contentItem: any, index: number) => {
+                {map(item.content, (contentItem: any, index: number) => {
                   return renderCollapseCard(
                     contentItem,
                     <div key={index.toString()} className={classNames(styles['config-item'], { 'g-w-100': contentItem.isOneLine })}>

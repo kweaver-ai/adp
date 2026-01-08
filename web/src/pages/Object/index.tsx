@@ -6,7 +6,7 @@ import { Dropdown, Empty, message } from 'antd';
 import { SorterResult } from 'antd/es/table/interface';
 import { TableProps } from 'antd/lib/table';
 import dayjs from 'dayjs';
-import _ from 'lodash';
+import { map } from 'lodash-es';
 import Tags from '@/components/Tags';
 import api from '@/services/object';
 import * as ObjectType from '@/services/object/type';
@@ -94,7 +94,7 @@ const KnowledgeNetwork = (props: TProps) => {
   /** 删除 */
   const onDelete = async (items: any, isBatch?: boolean) => {
     try {
-      const objectIds = _.map(items, (item) => item?.id);
+      const objectIds = map(items, (item) => item?.id);
       await api.deleteObjectTypes(knId as string, objectIds);
       getTableData();
       message.success(intl.get('Global.deleteSuccess'));
@@ -106,7 +106,7 @@ const KnowledgeNetwork = (props: TProps) => {
 
   /** 删除 */
   const onDeleteConfirm = (items: ObjectType.Detail[], isBatch?: boolean, callBack?: () => void) => {
-    const name = _.map(items, (item) => `「${item?.name}」`).join('、');
+    const name = map(items, (item) => `「${item?.name}」`).join('、');
     const length = items.length || 0;
     modal.confirm({
       title: intl.get('Global.tipTitle'),
@@ -181,7 +181,7 @@ const KnowledgeNetwork = (props: TProps) => {
           { key: 'index', label: intl.get('Object.indexConfiguration'), visible: isPermission },
           { key: 'delete', label: intl.get('Global.delete'), visible: isPermission },
         ];
-        const dropdownMenu: any = allOperations.filter((item) => item.visible);
+        const dropdownMenu: any = allOperations.filter((item) => item.visible).map(({ key, label }: any) => ({ key, label }));
         return (
           <Dropdown
             trigger={['click']}
@@ -285,7 +285,7 @@ const KnowledgeNetwork = (props: TProps) => {
                 }
               />
             ) : (
-              <Empty image={emptyImage} description={intl.get('Object.emptyDescription')} />
+              <Empty image={emptyImage} description={intl.get('Global.noData')} />
             ),
         }}
       >
@@ -295,6 +295,7 @@ const KnowledgeNetwork = (props: TProps) => {
           initialFilter={filterValues}
           onChange={onChangeTableOperation}
           onRefresh={getTableData}
+          isControlFilter
         >
           {isPermission && <Button.Create onClick={() => toCreateOrEdit()} />}
           {/* <Button

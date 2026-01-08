@@ -4,7 +4,7 @@ import { DoubleRightOutlined } from '@ant-design/icons';
 import { Tabs } from 'antd';
 import classNames from 'classnames';
 import dayjs from 'dayjs';
-import _ from 'lodash';
+import { forEach, map, cloneDeep, filter, every } from 'lodash-es';
 import arGuid from '@/utils/ar-guid';
 import api from '@/services/metricModel';
 import { Button, Title } from '@/web-library/common';
@@ -14,6 +14,8 @@ import { getStep } from './getStep';
 import styles from './index.module.less';
 import PreviewGraph from './PreviewGraph';
 import PreviewTable from './PreviewTable';
+
+const _ = { forEach, map, cloneDeep, filter, every };
 
 export interface PreviewDataItem {
   id: string;

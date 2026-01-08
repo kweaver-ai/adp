@@ -1,7 +1,7 @@
 import { useMemo, useState, useEffect } from 'react';
 import intl from 'react-intl-universal';
 import { Form, Switch } from 'antd';
-import _ from 'lodash';
+import { keyBy } from 'lodash-es';
 import AddTag from '@/components/AddTag';
 import AddTagBySort from '@/components/AddTagBySort';
 import ResultFilter from '@/components/ResultFilter';
@@ -57,7 +57,7 @@ const MetricComposite = (props: any) => {
   const [loading, setLoading] = useState(false);
   const [menuItems, setMenuItems] = useState([]);
   const { menuItemsKV, menuItems_nameKV }: any = useMemo(() => {
-    return { menuItemsKV: _.keyBy(menuItems, 'id'), menuItems_nameKV: _.keyBy(menuItems, 'name') };
+    return { menuItemsKV: keyBy(menuItems, 'id'), menuItems_nameKV: keyBy(menuItems, 'name') };
   }, [menuItems]);
   const [fieldsMap, setFieldsMap] = useState<any>({});
 
@@ -170,13 +170,7 @@ const MetricComposite = (props: any) => {
       <Form.Item name="orderByFields" label={intl.get('MetricModel.resultSort')}>
         <AddTagBySort options={sortFieldList} onAddBtnClick={() => handleAddBtnClick()} />
       </Form.Item>
-      <Form.Item
-        name="resultFilter"
-        layout="horizontal"
-        label={intl.get('MetricModel.resultFilter')}
-        initialValue={false}
-        style={!!resultFilter ? { marginBottom: 0 } : {}}
-      >
+      <Form.Item name="resultFilter" layout="horizontal" label={intl.get('MetricModel.resultFilter')} style={!!resultFilter ? { marginBottom: 0 } : {}}>
         <Switch />
       </Form.Item>
       {resultFilter && (

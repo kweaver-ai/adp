@@ -2,7 +2,7 @@ import { useRef, useState } from 'react';
 import intl from 'react-intl-universal';
 import { Input } from 'antd';
 import classnames from 'classnames';
-import { noop } from 'lodash';
+import { noop } from 'lodash-es';
 import styles from './styles.module.less';
 
 // 单元格范围选择

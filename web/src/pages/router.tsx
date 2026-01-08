@@ -2,7 +2,6 @@ import { useEffect, lazy, Suspense } from 'react';
 import intl from 'react-intl-universal';
 import { BrowserRouter as Router, Route, Switch } from 'react-router-dom';
 import '@aishu-tech/components/dist/dip-components.full.css';
-import { apis } from '@aishu-tech/components/dist/dip-components.min.js';
 import { message, ConfigProvider, ThemeConfig, Spin } from 'antd';
 import enUS from 'antd/lib/locale/en_US';
 import zhCN from 'antd/lib/locale/zh_CN';
@@ -11,6 +10,15 @@ import locales from '@/locales';
 import THEME from '@/theme.ts';
 import UTILS from '@/utils';
 import { Modal } from '@/web-library/common';
+
+// 异步加载 @aishu-tech/components
+let aishuComponentsPromise: Promise<any> | null = null;
+const loadAishuComponents = () => {
+  if (!aishuComponentsPromise) {
+    aishuComponentsPromise = import('@aishu-tech/components/dist/dip-components.min.js');
+  }
+  return aishuComponentsPromise;
+};
 
 const ActionCreateAndEdit = lazy(() => import('./ActionCreateAndEdit'));
 const AtomDataView = lazy(() => import('./AtomDataView'));
@@ -55,17 +63,22 @@ const App = (props: AppProps) => {
     });
     intl.init({ currentLocale: language, locales, warningHandler: () => '' });
     UTILS.initMessage(messageApi);
-    apis.setup({
-      protocol,
-      host,
-      port,
-      lang: language,
-      getToken: () => token?.getToken.access_token,
-      prefix,
-      theme: oemConfigs?.theme,
-      popupContainer: document.getElementById('vega-root'),
-      refreshToken: token?.refreshOauth2Token,
-      onTokenExpired: token?.onTokenExpired,
+
+    // 异步加载并初始化 @aishu-tech/components
+    loadAishuComponents().then((module) => {
+      const { apis } = module;
+      apis.setup({
+        protocol,
+        host,
+        port,
+        lang: language,
+        getToken: () => token?.getToken.access_token,
+        prefix,
+        theme: oemConfigs?.theme,
+        popupContainer: document.getElementById('vega-root'),
+        refreshToken: token?.refreshOauth2Token,
+        onTokenExpired: token?.onTokenExpired,
+      });
     });
   }, []);
 
@@ -89,6 +102,7 @@ const App = (props: AppProps) => {
             }
           >
             <Switch>
+              <Route exact path="/" render={() => <KnowledgeNetwork />} />
               <Route exact path="/ontology" render={() => <KnowledgeNetwork />} />
               <Route path="/ontology/main" render={() => <KnowledgeNetworkMain />} />
               <Route exact path="/ontology/edge/create" render={() => <EdgeCreateAndEdit />} />

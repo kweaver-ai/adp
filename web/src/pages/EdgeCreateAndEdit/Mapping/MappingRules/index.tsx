@@ -1,10 +1,12 @@
 import { useMemo, useState, useEffect } from 'react';
 import intl from 'react-intl-universal';
 import { Table } from 'antd';
-import _ from 'lodash';
+import { map, keyBy, cloneDeep, filter, uniqueId, forEach } from 'lodash-es';
 import ObjectIcon from '@/components/ObjectIcon';
 import SERVICE from '@/services';
 import { Text, Title, IconFont, Button, Select } from '@/web-library/common';
+
+const _ = { map, keyBy, cloneDeep, filter, uniqueId, forEach };
 
 const uniqueIdPrefix = 'mappingRules';
 const MappingRules = (props: any) => {

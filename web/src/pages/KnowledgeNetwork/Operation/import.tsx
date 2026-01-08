@@ -46,7 +46,7 @@ const ImportCom = (props: TProps) => {
             {res.description}。{intl.get('KnowledgeNetwork.importConflictTip')}
           </>
         ),
-        icon: ' ',
+        icon: null,
         footer: (
           <div style={{ display: 'flex', marginTop: 20, justifyContent: 'flex-end' }}>
             <Button type="primary" className="g-mr-2" onClick={() => confirm('overwrite', modalContext)}>

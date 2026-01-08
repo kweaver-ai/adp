@@ -80,7 +80,7 @@ const ObjectCreateAndEdit = () => {
   }, []);
 
   useEffect(() => {
-    baseConfig.toggleSideBarShow(false);
+    baseConfig?.toggleSideBarShow(false);
     fetchConceptGroups();
     if (!id) return;
     getObjectDetail();

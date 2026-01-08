@@ -78,7 +78,7 @@ const PreviewData: React.FC<{ open: boolean; id: string; name?: string; params?:
       setSwitchFilter(false);
       form.setFieldValue('dataFilter', INIT_FILTER);
     }
-  }, [open]);
+  }, [open, form]);
 
   const handleSearch = () => {
     if (switchFilter && dataFilterRef.current) {

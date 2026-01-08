@@ -1,7 +1,7 @@
 import { useMemo, useState, useEffect } from 'react';
 import intl from 'react-intl-universal';
 import { Tag, Table, Divider, Dropdown } from 'antd';
-import _ from 'lodash';
+import { map, uniqueId } from 'lodash-es';
 import ObjectIcon from '@/components/ObjectIcon';
 import ENUMS from '@/enums';
 import SERVICE from '@/services';
@@ -48,7 +48,7 @@ const Detail = (props: any) => {
   /** 基础数据 */
   const baseInfo = [
     { label: intl.get('Global.id'), value: id },
-    { label: intl.get('Global.tag'), value: Array.isArray(tags) && tags.length ? _.map(tags, (i) => <Tag key={i}>{i}</Tag>) : '--' },
+    { label: intl.get('Global.tag'), value: Array.isArray(tags) && tags.length ? map(tags, (i) => <Tag key={i}>{i}</Tag>) : '--' },
     { label: intl.get('Global.comment'), value: comment || '--' },
   ];
 
@@ -86,7 +86,7 @@ const Detail = (props: any) => {
     /** 直接连接的表格数据 */
     const dataSource = [
       {
-        id: _.uniqueId(uniqueIdPrefix),
+        id: uniqueId(uniqueIdPrefix),
         name: intl.get('Global.objectClass'),
         type: 'object',
         source_object_type,
@@ -94,7 +94,7 @@ const Detail = (props: any) => {
         source: source_object_type?.display_name || source_object_type?.name || source_object_type_id,
         target: target_object_type?.display_name || target_object_type?.name || target_object_type_id,
       },
-      ..._.map(mapping_rules, (item, index) => {
+      ...map(mapping_rules, (item, index) => {
         const { source_property, target_property } = item;
         return {
           id: index,
@@ -165,7 +165,7 @@ const Detail = (props: any) => {
     /** 数据视图的表格数据 */
     const dataSource = [
       {
-        id: _.uniqueId(uniqueIdPrefix),
+        id: uniqueId(uniqueIdPrefix),
         type: 'object',
         source_object_type,
         target_object_type,
@@ -173,7 +173,7 @@ const Detail = (props: any) => {
         target: target_object_type?.display_name || target_object_type?.name || target_object_type_id,
         dataView: backing_data_source?.display_name || backing_data_source?.name || backing_data_source?.id,
       },
-      ..._.map(source_mapping_rules, (item, index) => {
+      ...map(source_mapping_rules, (item, index) => {
         const targetMapping = target_mapping_rules?.[index];
         return {
           id: index,
@@ -218,7 +218,7 @@ const Detail = (props: any) => {
         </div>
         <Divider className="g-mt-4 g-mb-4" />
         <div>
-          {_.map(baseInfo, (item) => {
+          {map(baseInfo, (item) => {
             const { label, value } = item;
             return (
               <div key={label} className={styles['edge-root-drawer-base-info']}>

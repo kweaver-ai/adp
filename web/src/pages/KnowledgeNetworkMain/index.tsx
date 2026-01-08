@@ -70,7 +70,7 @@ const KnowledgeNetworkOverview = () => {
   }, [pathname]);
 
   useEffect(() => {
-    baseConfig.toggleSideBarShow(false);
+    baseConfig?.toggleSideBarShow(false);
     const query = new URLSearchParams(window.location.search);
     const id = query.get('id');
     const paramId = id || localStorage.getItem('KnowledgeNetwork.id');
@@ -88,7 +88,7 @@ const KnowledgeNetworkOverview = () => {
       <div className={styles['main-header']}>
         <LeftOutlined onClick={goback} />
         <div className={styles['name-icon']} style={{ background: detail?.color }}>
-          <IconFont type={detail?.icon || ''} style={{ color: '#fff', fontSize: 14 }} />
+          {detail?.icon && <IconFont type={detail.icon} style={{ color: '#fff', fontSize: 14 }} />}
         </div>
         <h4 style={{ fontSize: 14 }}>{detail?.name}</h4>
       </div>

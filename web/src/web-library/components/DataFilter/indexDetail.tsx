@@ -1,4 +1,5 @@
-import React, { Fragment } from 'react';
+import React, { Fragment, useEffect } from 'react';
+import intl from 'react-intl-universal';
 import { CaretRightOutlined } from '@ant-design/icons';
 import { useDynamicList } from 'ahooks';
 import { Collapse } from 'antd';
@@ -6,12 +7,10 @@ import classNames from 'classnames';
 import _classNames from './classNames';
 import DataFilterItem from './DataFilterItemDetail';
 import styles from './index.module.less';
-import localeEn from './locale/en-US';
-import localeZh from './locale/zh-CN';
+import locales from './locales';
 import LogicalOperationDetail from './LogicalOperationDetail';
 import { DataFilterProps, PrimaryFilterItem, PrimaryFilterValue, DataFilterValue } from './type';
 import { transformType as defaultTransformType } from './utils';
-import getLocaleValue from '../../utils/get-locale-value';
 
 const cs = _classNames.bind(styles);
 
@@ -33,6 +32,10 @@ const MultistageFilter = ({
   collapseLabel,
   ...restProps
 }: DataFilterProps): JSX.Element => {
+  useEffect(() => {
+    intl.load(locales);
+  }, []);
+
   const getValue = (value: any): PrimaryFilterItem[] => (value as PrimaryFilterValue)?.sub_conditions || [value || defaultValue];
 
   const { list, remove, getKey, replace } = useDynamicList<DataFilterValue>(getValue(value));
@@ -85,7 +88,7 @@ const MultistageFilter = ({
         className={styles['filter-transparent']}
         expandIcon={({ isActive }): JSX.Element => <CaretRightOutlined rotate={isActive ? 90 : 0} />}
       >
-        <Collapse.Panel header={collapseLabel ?? getLocaleValue('filter', { localeZh }, { localeEn })} key="filter">
+        <Collapse.Panel header={collapseLabel ?? intl.get('DataFilter.filter')} key="filter">
           <div className={cs({ 'logical-wrapper-detail': isShow })}>
             {isShow && (
               <LogicalOperationDetail className={classNames({ 'g-mb-5': isShowAdd })} value={(value as PrimaryFilterValue)?.operation}></LogicalOperationDetail>

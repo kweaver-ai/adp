@@ -1,6 +1,6 @@
 import { SortAscendingOutlined, SortDescendingOutlined } from '@ant-design/icons';
 import { Dropdown } from 'antd';
-import _ from 'lodash';
+import { map } from 'lodash-es';
 import { Button, IconFont } from '../../../index';
 import type { MenuProps } from 'antd';
 
@@ -20,7 +20,7 @@ const SortButton: React.FC<SortButtonProps> = (props) => {
       trigger={['click']}
       placement="bottomRight"
       menu={{
-        items: _.map(items, (item: any) => {
+        items: map(items, (item: any) => {
           return {
             ...item,
             ...(rule === item.key

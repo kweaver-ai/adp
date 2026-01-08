@@ -2,13 +2,15 @@ import { useMemo, useState, useEffect } from 'react';
 import intl from 'react-intl-universal';
 import { DownOutlined } from '@ant-design/icons';
 import { Table } from 'antd';
-import _ from 'lodash';
+import { map, keyBy, cloneDeep, filter, uniqueId, forEach } from 'lodash-es';
 import { DataViewSource } from '@/components/DataViewSource';
 import ObjectIcon from '@/components/ObjectIcon';
 import ENUMS from '@/enums';
 import SERVICE from '@/services';
 import { Text, IconFont, Button, Select } from '@/web-library/common';
 import styles from './index.module.less';
+
+const _ = { map, keyBy, cloneDeep, filter, uniqueId, forEach };
 
 const uniqueIdPrefix = 'mappingRulesDataViewM';
 const MappingRulesDataView = (props: any) => {
@@ -278,7 +280,7 @@ const MappingRulesDataView = (props: any) => {
         if (data?.type === 'object') {
           return (
             <div className={styles['data-view-button']} onClick={() => setOpenDataView(true)}>
-              {value ? <Text>{viewData?.name || value}</Text> : <span className="g-c-disabled">{intl.get('Edge.selectDataView')}</span>}
+              {value ? <Text>{viewData?.name || value}</Text> : <span className="g-c-disabled">{intl.get('Global.chooseDataView')}</span>}
               <DownOutlined style={{ color: '#d9d9d9' }} />
             </div>
           );

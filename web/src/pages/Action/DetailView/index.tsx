@@ -5,7 +5,7 @@ import { useEffect, useState, FC } from 'react';
 import intl from 'react-intl-universal';
 import { Tag, Divider, Modal, Spin, Dropdown } from 'antd';
 import classNames from 'classnames';
-import _ from 'lodash';
+import { map } from 'lodash-es';
 import DataFilterNew from '@/components/DataFilterNew';
 import { renderObjectTypeLabel } from '@/components/ObjectSelector';
 import ToolParamsTable from '@/components/ToolParamsTable';
@@ -62,7 +62,7 @@ const DetailView: FC<DetailViewProps> = ({ atId, knId, hasModifyPerm, onClose, o
   const getObjectList = async () => {
     try {
       const result = await SERVICE.object.objectGet(knId, { offset: 0, limit: -1 });
-      const objectOptions = _.map(result?.entries, (item) => {
+      const objectOptions = map(result?.entries, (item) => {
         const { id, name, icon, data_properties, color } = item;
         return {
           value: id,

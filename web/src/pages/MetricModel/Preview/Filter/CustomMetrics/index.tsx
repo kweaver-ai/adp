@@ -4,7 +4,7 @@ import intl from 'react-intl-universal';
 import { CloseOutlined } from '@ant-design/icons';
 import { Space, Select, Checkbox, InputNumber } from 'antd';
 import dayjs from 'dayjs';
-import _ from 'lodash';
+import { cloneDeep, isEmpty } from 'lodash-es';
 import { Title, Text, Button } from '@/web-library/common';
 import styles from './index.module.less';
 
@@ -23,14 +23,14 @@ const CustomMetrics = (props: any) => {
 
   /** 计算类型变更 */
   const onChangeCheckbox = (value: any) => {
-    if (_.isEmpty(value)) {
+    if (isEmpty(value)) {
       setErrorData({ method: intl.get('MetricModel.calculationTypeCannotBeEmpty') });
     } else {
-      const newErrorData = _.cloneDeep(errorData);
+      const newErrorData = cloneDeep(errorData);
       delete newErrorData.method;
       setErrorData(newErrorData);
     }
-    const newData = _.cloneDeep(data);
+    const newData = cloneDeep(data);
     newData.sameperiod_config.method = value;
     setData(newData);
   };
@@ -40,20 +40,20 @@ const CustomMetrics = (props: any) => {
   };
   /** 偏移量变更 */
   const onChangeInput = (value: any) => {
-    const newData = _.cloneDeep(data);
+    const newData = cloneDeep(data);
     newData.sameperiod_config.offset = value;
     setData(newData);
   };
   /** 时间粒度变更 */
   const onChangeSelect = (value: any) => {
-    const newData = _.cloneDeep(data);
+    const newData = cloneDeep(data);
     newData.sameperiod_config.time_granularity = value;
     setData(newData);
   };
 
   /** 提交 */
   const onSubmit = () => {
-    if (_.isEmpty(data?.sameperiod_config?.method)) return;
+    if (isEmpty(data?.sameperiod_config?.method)) return;
     onSubmitCustom(data);
     onCloseCustom();
   };

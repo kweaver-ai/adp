@@ -2,7 +2,7 @@ import { useState, useRef, useEffect, FC } from 'react';
 import intl from 'react-intl-universal';
 import { useHistory, useParams } from 'react-router-dom';
 import { Form } from 'antd';
-import _ from 'lodash';
+import { pick, omit } from 'lodash-es';
 import api from '@/services/action';
 import * as ActionType from '@/services/action/type';
 import HOOKS from '@/hooks';
@@ -100,7 +100,7 @@ const ActionCreateAndEdit: FC = () => {
     const { 'affect.object_type_id': affectObjectType, 'affect.comment': affectComment, condition } = basicValue;
     const affect = affectObjectType || affectComment ? { object_type_id: affectObjectType, comment: affectComment } : undefined;
     const step1Params = {
-      ..._.pick(basicValue, 'id', 'name', 'tags', 'comment', 'color', 'action_type', 'object_type_id'),
+      ...pick(basicValue, 'id', 'name', 'tags', 'comment', 'color', 'action_type', 'object_type_id'),
       affect,
       condition: condition?.field || condition?.operation ? condition : undefined,
     };
@@ -129,7 +129,7 @@ const ActionCreateAndEdit: FC = () => {
     try {
       if (atId) {
         // 编辑
-        await api.editActionType(knId, atId, _.omit({ ...step1Params, ...step2Params, branch: 'main' }, 'id'));
+        await api.editActionType(knId, atId, omit({ ...step1Params, ...step2Params, branch: 'main' }, 'id'));
       } else {
         // 新建
         await api.createActionType(knId, [{ ...step1Params, ...step2Params, branch: 'main' }]);

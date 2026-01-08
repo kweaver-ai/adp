@@ -16,7 +16,6 @@
     "emptyDescription": "暂无可使用的关系类",
     "mappingStep": "关系映射",
     "relationAssociation": "关系关联",
-    "selectDataView": "请选择数据视图",
     "selectDataViewSource": "请选择数据视图起点",
     "selectDataViewTarget": "请选择数据视图终点",
     "selectSourcePoint": "请选择起点",

@@ -2,7 +2,7 @@
 import React, { useRef, useEffect, useState } from 'react';
 import intl from 'react-intl-universal';
 import { Form, Switch, Radio, Input, Tooltip } from 'antd';
-import _ from 'lodash';
+import { map, isEmpty, filter, includes } from 'lodash-es';
 import AddTag from '@/components/AddTag';
 import AddTagBySort from '@/components/AddTagBySort';
 import ResultFilter from '@/components/ResultFilter';
@@ -37,7 +37,7 @@ const VegaModelFromItem = (props: any) => {
 
   const dataSource = dataViewId?.[0] || {};
   useEffect(() => {
-    if (_.isEmpty(dataSource) || dataSource.__isEdit) return;
+    if (isEmpty(dataSource) || dataSource.__isEdit) return;
     const fields = dataSource?.fields;
 
     if (conditionType === 'condition') form.setFieldValue('condition', false);
@@ -48,8 +48,8 @@ const VegaModelFromItem = (props: any) => {
   }, [JSON.stringify(dataSource)]);
 
   const fields = (dataViewId?.[0] || {})?.fields;
-  const optionsDate = _.map(
-    _.filter(fields, (item) => UTILS.formatType(item.type) === 'date'),
+  const optionsDate = map(
+    filter(fields, (item) => UTILS.formatType(item.type) === 'date'),
     (item) => {
       return {
         value: item.name,
@@ -65,7 +65,7 @@ const VegaModelFromItem = (props: any) => {
   );
 
   useEffect(() => {
-    const data = _.filter(fields, (item) => _.includes(groupByFields, item.name));
+    const data = filter(fields, (item) => includes(groupByFields, item.name));
     form.setFieldValue('groupByFieldsDetail', data);
     const filedList = [
       {
@@ -184,7 +184,6 @@ const VegaModelFromItem = (props: any) => {
             </Tooltip>
           </>
         }
-        initialValue={false}
         style={!!resultFilter ? { marginBottom: 0 } : {}}
       >
         <Switch />

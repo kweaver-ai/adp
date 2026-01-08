@@ -3,7 +3,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import intl from 'react-intl-universal';
 import { Checkbox, InputNumber, Radio, Row, Col } from 'antd';
-import { isEmpty } from 'lodash';
+import { isEmpty } from 'lodash-es';
 import locales from '../../locales';
 import type { BaseConfigProps } from '../types';
 import type { InputNumberProps } from 'antd';

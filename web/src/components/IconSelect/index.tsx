@@ -33,7 +33,6 @@ const IconfontSelect: React.FC<IconfontSelectProps> = ({ value, onChange, isPopU
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      console.log(selectRef.current, containerRef.current, 'selectRef');
       if (
         selectRef.current &&
         !selectRef.current.nativeElement.contains(event.target as Node) &&

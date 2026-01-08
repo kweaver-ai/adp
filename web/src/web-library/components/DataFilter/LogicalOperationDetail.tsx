@@ -1,11 +1,10 @@
+import { useEffect } from 'react';
+import intl from 'react-intl-universal';
 import { Divider } from 'antd';
 import classNames from './classNames';
 import styles from './index.module.less';
-import english from './locale/en-US';
-import chinese from './locale/zh-CN';
-import getLocaleValue from '../../utils/get-locale-value/getLocaleValue';
+import locales from './locales';
 
-const getIntl = getLocaleValue.bind(null, chinese, english);
 const cs = classNames.bind(styles);
 
 interface Props {
@@ -14,10 +13,14 @@ interface Props {
 }
 
 const LogicalOperation = ({ value = 'and', className }: Props): JSX.Element => {
+  useEffect(() => {
+    intl.load(locales);
+  }, []);
+
   return (
     <div className={cs('logical-content-detail', 'logical-content-disabled', className ?? '')}>
       <Divider type="vertical" />
-      <div className={cs('logical-select-detail', 'logical-select-disabled')}>{getIntl(value)}</div>
+      <div className={cs('logical-select-detail', 'logical-select-disabled')}>{intl.get(`DataFilter.${value}`)}</div>
       <Divider type="vertical" />
     </div>
   );

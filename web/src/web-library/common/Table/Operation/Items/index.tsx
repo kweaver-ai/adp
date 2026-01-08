@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
 import classNames from 'classnames';
-import _ from 'lodash';
+import { map } from 'lodash-es';
 
 const Items = (props: any) => {
   const childrenList = useMemo(() => React.Children.toArray(props.children), [props.children]);
@@ -8,7 +8,7 @@ const Items = (props: any) => {
 
   return (
     <div className="g-flex-center">
-      {_.map(childrenList, (child: React.ReactNode, index: number) => {
+      {map(childrenList, (child: React.ReactNode, index: number) => {
         if (!React.isValidElement(child)) return null;
         if (!child || child?.props?.visible === false) return null;
         return (

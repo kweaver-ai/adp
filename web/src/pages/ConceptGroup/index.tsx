@@ -12,6 +12,7 @@ import api from '@/services/conceptGroup';
 import * as ConceptGroupType from '@/services/conceptGroup/type';
 import * as KnowledgeNetworkType from '@/services/knowledgeNetwork/type';
 import createImage from '@/assets/images/common/create.svg';
+import emptyImage from '@/assets/images/common/empty.png';
 import noSearchResultImage from '@/assets/images/common/no_search_result.svg';
 import ENUMS from '@/enums';
 import HOOKS from '@/hooks';
@@ -200,7 +201,7 @@ const ConceptGroup = (props: ConceptGroupProps) => {
           { key: 'export', label: intl.get('Global.export'), visible: true },
           { key: 'delete', label: intl.get('Global.delete'), visible: isPermission },
         ];
-        const dropdownMenu: any = allOperations.filter((val) => val.visible);
+        const dropdownMenu: any = allOperations.filter((val) => val.visible).map(({ key, label }: any) => ({ key, label }));
         return (
           <Dropdown
             trigger={['click']}
@@ -299,7 +300,7 @@ const ConceptGroup = (props: ConceptGroupProps) => {
             emptyText:
               filterValues.name_pattern || filterValues.tag !== 'all' ? (
                 <Empty image={noSearchResultImage} description={intl.get('Global.noResult')} />
-              ) : (
+              ) : isPermission ? (
                 <Empty
                   image={createImage}
                   description={
@@ -312,6 +313,8 @@ const ConceptGroup = (props: ConceptGroupProps) => {
                     </span>
                   }
                 />
+              ) : (
+                <Empty image={emptyImage} description={intl.get('Global.noData')} />
               ),
           }}
         >

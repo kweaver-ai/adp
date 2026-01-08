@@ -16,7 +16,6 @@
     "emptyDescription": "No available relationship classes",
     "mappingStep": "Relationship Mapping",
     "relationAssociation": "Relationship Association",
-    "selectDataView": "Please select a data view",
     "selectDataViewSource": "Please select data view source",
     "selectDataViewTarget": "Please select data view target",
     "selectSourcePoint": "Please select source",

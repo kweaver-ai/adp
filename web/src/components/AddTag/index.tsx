@@ -3,11 +3,19 @@ import intl from 'react-intl-universal';
 import { CloseOutlined } from '@ant-design/icons';
 import { Dropdown } from 'antd';
 import classNames from 'classnames';
-import _ from 'lodash';
+import { cloneDeep, keyBy, map, filter, includes } from 'lodash-es';
 import { Button, IconFont, Input } from '@/web-library/common';
 import UTILS from '@/web-library/utils';
 import styles from './index.module.less';
 import locales from './locales';
+
+const _ = {
+  cloneDeep,
+  keyBy,
+  map,
+  filter,
+  includes,
+};
 
 interface TagItemProps {
   data: { type?: string; displayName?: string; display_name?: string; comment?: string };

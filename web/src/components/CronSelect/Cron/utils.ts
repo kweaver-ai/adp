@@ -1,5 +1,5 @@
 import intl from 'react-intl-universal';
-import { defaultsDeep } from 'lodash';
+import { defaultsDeep } from 'lodash-es';
 import type { BaseDetailConfig, CronProps, Options } from './types';
 
 /**

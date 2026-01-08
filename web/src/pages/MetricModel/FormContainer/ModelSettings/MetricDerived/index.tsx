@@ -2,7 +2,7 @@ import { useRef, useEffect, useState } from 'react';
 import intl from 'react-intl-universal';
 import { Form, Switch, Radio, Input } from 'antd';
 import classNames from 'classnames';
-import _ from 'lodash';
+import { isEmpty, filter } from 'lodash-es';
 import AddTag from '@/components/AddTag';
 import AddTagBySort from '@/components/AddTagBySort';
 import ResultFilter from '@/components/ResultFilter';
@@ -14,6 +14,8 @@ import DataFilter from '@/web-library/components/DataFilter';
 import UTILS from '@/web-library/utils';
 import styles from './index.module.less';
 import SelectModel from './SelectModel';
+
+const _ = { isEmpty, filter };
 
 const DATA_FILTER_DEFAULT_OPTION = {
   number: ['<', '<=', '>', '>=', '==', '!=', 'exist', 'not_exist', 'in', 'not_in'],
@@ -183,7 +185,9 @@ const MetricDerived = (props: any) => {
                 },
               },
             ]}
-          />
+          >
+            <span />
+          </Form.Item>
         </div>
       )}
       <div style={{ clear: 'both' }} />
@@ -192,13 +196,7 @@ const MetricDerived = (props: any) => {
       <Form.Item name="orderByFields" label={intl.get('MetricModel.resultSort')}>
         <AddTagBySort options={sortFieldList} onAddBtnClick={() => handleAddBtnClick()} />
       </Form.Item>
-      <Form.Item
-        name="resultFilter"
-        layout="horizontal"
-        label={intl.get('MetricModel.resultFilter')}
-        initialValue={false}
-        style={!!resultFilter ? { marginBottom: 0 } : {}}
-      >
+      <Form.Item name="resultFilter" layout="horizontal" label={intl.get('MetricModel.resultFilter')} style={!!resultFilter ? { marginBottom: 0 } : {}}>
         <Switch />
       </Form.Item>
       {resultFilter && (

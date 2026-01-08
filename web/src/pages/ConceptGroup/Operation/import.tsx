@@ -61,7 +61,7 @@ const ImportCom = (props: ImportComProps) => {
             {res.description}。{intl.get('ConceptGroup.importConflictTip')}
           </>
         ),
-        icon: ' ',
+        icon: null,
         footer: (
           <div>
             <div style={{ marginTop: 10 }}>

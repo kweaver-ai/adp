@@ -3,23 +3,23 @@ import { useMemo } from 'react';
 import intl from 'react-intl-universal';
 import { Spin, Table } from 'antd';
 import dayjs from 'dayjs';
-import _ from 'lodash';
+import { keyBy, forEach } from 'lodash-es';
 import { DATE_FORMAT } from '@/hooks/useConstants';
 import noData from '@/assets/images/no-data.svg';
+import type { ColumnsType } from 'antd/es/table';
 
 const PreviewTable = (props: any) => {
   const { loading, filter, previewData, dataSource, pagination, onChangePagination } = props;
-  const { metrics, analysisDimensions } = filter || {};
-
-  const groupByFields = previewData?.formulaConfig?.groupByFieldsDetail || previewData?.groupByFieldsDetail;
-  const analysisDimensionsOptions = previewData?.analysisDimensions;
-  const groupByFieldsKV = { ..._.keyBy(groupByFields, 'name'), ..._.keyBy(analysisDimensionsOptions, 'name') };
-
   const { expandColumns } = useMemo(() => {
-    const expandColumns: any = [];
-    const keys = analysisDimensions || [];
-    keys?.sort();
-    _.forEach(keys, (key) => {
+    const { metrics, analysisDimensions } = filter || {};
+    const groupByFields = previewData?.formulaConfig?.groupByFieldsDetail || previewData?.groupByFieldsDetail;
+    const analysisDimensionsOptions = previewData?.analysisDimensions;
+    const groupByFieldsKV = { ...keyBy(groupByFields, 'name'), ...keyBy(analysisDimensionsOptions, 'name') };
+
+    const expandColumns: ColumnsType<any> = [];
+    const keys = analysisDimensions ? [...analysisDimensions] : [];
+    keys.sort();
+    forEach(keys, (key: string) => {
       expandColumns.push({
         title: groupByFieldsKV?.[key]?.displayName || key,
         dataIndex: key,
@@ -35,7 +35,7 @@ const PreviewTable = (props: any) => {
         { key: 'growth_values', label: intl.get('MetricModel.growth') },
         { key: 'growth_rates', label: intl.get('MetricModel.growthRate') },
       ];
-      _.forEach(defaultGrowth, (item) => {
+      forEach(defaultGrowth, (item: { key: string; label: string }) => {
         const { key, label } = item;
         expandColumns.push({
           title: label,
@@ -46,7 +46,7 @@ const PreviewTable = (props: any) => {
     }
 
     return { expandColumns };
-  }, [dataSource]);
+  }, [filter, previewData]);
 
   const columns = [
     {

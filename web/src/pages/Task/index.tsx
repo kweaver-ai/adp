@@ -215,7 +215,7 @@ const Task = (props: TProps) => {
           <Dropdown
             trigger={['click']}
             menu={{
-              items: dropdownMenu.filter((item: { visible: boolean }) => item.visible),
+              items: dropdownMenu.filter((item: { visible: boolean }) => item.visible).map(({ key, label }: any) => ({ key, label })),
               onClick: (event: any) => {
                 event.domEvent.stopPropagation();
                 onOperate(event?.key, record);
@@ -307,7 +307,7 @@ const Task = (props: TProps) => {
                 }
               />
             ) : (
-              <Empty image={emptyImage} description={intl.get('Task.emptyDescription')} />
+              <Empty image={emptyImage} description={intl.get('Global.noData')} />
             ),
         }}
       >

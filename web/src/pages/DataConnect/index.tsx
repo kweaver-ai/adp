@@ -320,7 +320,7 @@ const DataSource = (props: DataSourceProps): JSX.Element => {
           { key: 'test', label: intl.get('Global.testConnector'), visible: matchPermission(PERMISSION_CODES.MODIFY, record.operations) },
           { key: 'delete', label: intl.get('Global.delete'), visible: matchPermission(PERMISSION_CODES.DELETE, record.operations) },
         ];
-        const dropdownMenu: any = allOperations.filter((val) => val.visible);
+        const dropdownMenu: any = allOperations.filter((val) => val.visible).map(({ key, label }: any) => ({ key, label }));
         return (
           <Dropdown
             trigger={['click']}

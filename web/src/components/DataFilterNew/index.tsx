@@ -4,7 +4,7 @@ import React, { useEffect, useImperativeHandle, forwardRef, useRef } from 'react
 import intl from 'react-intl-universal';
 import { useDynamicList } from 'ahooks';
 import classNames from 'classnames';
-import _ from 'lodash';
+import { debounce, map } from 'lodash-es';
 import { Button, IconFont } from '@/web-library/common';
 import DataFilterItem from './DataFilterItem';
 import styles from './index.module.less';
@@ -51,7 +51,7 @@ const MultistageFilter = forwardRef((props: DataFilterProps, ref) => {
   useEffect(() => {
     onProxyChange();
   }, [JSON.stringify(list)]);
-  const onProxyChange = _.debounce(() => {
+  const onProxyChange = debounce(() => {
     onChange && onChange(list.length > 1 ? { ...value, sub_conditions: list } : list[0]);
     if (list.length === 1 && list[0]?.sub_conditions) resetList(list[0]?.sub_conditions);
   }, 100);
@@ -156,7 +156,7 @@ const MultistageFilter = forwardRef((props: DataFilterProps, ref) => {
         />
       )}
       <div className={styles['filter-wrapper']}>
-        {_.map(list, (item, index) => RowItem(item, index, list.length))}
+        {map(list, (item, index) => RowItem(item, index, list.length))}
         {(isShowAdd || isShowHidden) && !disabled ? (
           <Button.Link icon={<IconFont type="icon-add" />} onClick={() => push(defaultValue)}>
             {btnText || intl.get('DataFilterNew.addFilter')}

@@ -25,11 +25,11 @@ const BarItem = (props: TBarItem) => {
   const curCount = new Intl.NumberFormat('en-US').format(count || 0);
 
   const toPath = () => {
-    history.push(url);
+    url && history.push(url);
   };
 
   return (
-    <div className={styles['bar-item']} onClick={toPath}>
+    <div className={styles['bar-item']}>
       <dl>
         <dt style={{ background: iconColor }}>
           <IconFont type={icon} style={{ color: '#fff', fontSize: 32 }} />
@@ -40,7 +40,7 @@ const BarItem = (props: TBarItem) => {
         </dd>
       </dl>
       {url && (
-        <Button.Create style={{ padding: 0, height: 40 }} type="link" onClick={toPath}>
+        <Button.Create className={styles['bar-item-btn']} type="link" onClick={toPath}>
           {btnText}
         </Button.Create>
       )}
@@ -79,7 +79,7 @@ const Overview = (props: TProps) => {
       render: (value: string, record: ObjectType.Detail) => (
         <div className="g-flex" style={{ lineHeight: '22px' }} title={value}>
           <div className={styles['name-icon']} style={{ background: record.color }}>
-            <IconFont type={record.icon} style={{ color: '#fff', fontSize: 16 }} />
+            {record.icon && <IconFont type={record.icon} style={{ color: '#fff', fontSize: 16 }} />}
           </div>
           <span>{record.name}</span>
         </div>
@@ -120,7 +120,7 @@ const Overview = (props: TProps) => {
         <div className={styles['header-title']}>
           <div className={styles['header-title-left']}>
             <div className={styles['name-icon']} style={{ background: detail?.color }}>
-              <IconFont type={detail?.icon || ''} style={{ color: '#fff', fontSize: 16 }} />
+              {detail?.icon && <IconFont type={detail.icon} style={{ color: '#fff', fontSize: 16 }} />}
             </div>
             <div className={styles['name-text']}>{detail?.name}</div>
           </div>
@@ -172,7 +172,7 @@ const Overview = (props: TProps) => {
       </div>
       <div className={styles['overview-box-content']}>
         <Title className={styles['overview-box-content-title']}>{intl.get('KnowledgeNetwork.recentlyModifiedObjectType')}</Title>
-        <Table size="small" dataSource={tableData} columns={columns} pagination={false} />
+        <Table size="small" dataSource={tableData} columns={columns} pagination={false} rowKey="id" />
       </div>
       <CreateAndEditForm open={open} onCancel={onCancel} id={checkId} callBack={() => callback(localStorage.getItem('KnowledgeNetwork.id') || '')} />
     </div>

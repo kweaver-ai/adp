@@ -87,12 +87,12 @@ const DataAttribute: React.FC<TProps> = ({ nodes: nodesProps, edges: edgesProps,
       if (sourceId?.startsWith('data') && targetId?.startsWith('view')) {
         const exists = edges.some((edge) => edge.sourceHandle === sourceId || edge.targetHandle === targetId);
         const dataType = nodes
-          .find((node) => node.id === params.source)
-          .data.attributes.find((attr: { id: string | null; type: string }) => 'data-' + attr.id === params.sourceHandle)?.type;
+          .find((node: any) => node.id === params.source)
+          ?.data.attributes.find((attr: { id: string | null; type: string }) => 'data-' + attr.id === params.sourceHandle)?.type;
         const viewType = nodes
-          .find((node) => node.id === params.target)
-          .data.attributes.find((attr: { id: string | null; type: string }) => 'view-' + attr.id === params.targetHandle)?.type;
-        const equalType = dataType != viewType;
+          .find((node: any) => node.id === params.target)
+          ?.data.attributes.find((attr: { id: string | null; type: string }) => 'view-' + attr.id === params.targetHandle)?.type;
+        const equalType = dataType !== viewType;
         if (!exists && !equalType) {
           setEdges((prev) =>
             addEdge(
@@ -112,14 +112,12 @@ const DataAttribute: React.FC<TProps> = ({ nodes: nodesProps, edges: edgesProps,
         }
       }
     },
-    [edges, setEdges]
+    [edges, setEdges, nodes, message]
   );
 
   const onNodesChange: OnNodesChange = useCallback(
     (changes) =>
       setNodes((nds): any => {
-        console.log(nds, 'nds');
-
         const updatedNodes = applyNodeChanges(changes, nds);
         return updatedNodes.map((node) => ({
           ...node,

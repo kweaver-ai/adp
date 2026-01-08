@@ -35,8 +35,7 @@
       "relationView": "關聯視圖",
       "pleaseSelectReferenceView": "請先選擇引用視圖",
       "confirmDeleteNode": "確認要刪除該節點嗎?",
-      "deleteNodeWarning": "節點及其配置信息將被刪除,無法找回,請謹慎操作!",
-      "selectDataView": "選擇數據視圖"
+      "deleteNodeWarning": "節點及其配置信息將被刪除,無法找回,請謹慎操作!"
     },
     "FieldSetting": {
       "dataFilterDescription": "開啟後，將基於條件篩選數據，且作為下一個配置的輸入字段",

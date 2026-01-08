@@ -1,5 +1,13 @@
-import { apis, components } from '@aishu-tech/components/dist/dip-components.min.js';
 import { baseConfig } from '@/services/request';
+
+// 异步导入 @aishu-tech/components，减少主包大小
+let apisPromise: Promise<any> | null = null;
+const loadAishuComponents = () => {
+  if (!apisPromise) {
+    apisPromise = import('@aishu-tech/components/dist/dip-components.min.js');
+  }
+  return apisPromise;
+};
 
 interface AuthorizationOptions {
   /** 弹窗标题 */
@@ -43,7 +51,10 @@ export const useAuthorization = (options: AuthorizationOptions = {}) => {
   });
 
   /** 打开权限管理弹窗 */
-  const openModal = (id: string) => {
+  const openModal = async (id: string) => {
+    // 异步加载组件库
+    const { apis, components } = await loadAishuComponents();
+
     // 挂载权限配置组件
     const unmount = apis.mountComponent(
       components.PermConfig,
