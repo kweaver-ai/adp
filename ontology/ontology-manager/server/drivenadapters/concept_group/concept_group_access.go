@@ -266,8 +266,6 @@ func (cga *conceptGroupAccess) ListConceptGroups(ctx context.Context, query inte
 		conceptGroup := interfaces.ConceptGroup{
 			ModuleType: interfaces.MODULE_TYPE_CONCEPT_GROUP,
 		}
-		creator := &interfaces.AccountInfo{}
-		updater := &interfaces.AccountInfo{}
 		tagsStr := ""
 		err := rows.Scan(
 			&conceptGroup.CGID,
@@ -279,11 +277,11 @@ func (cga *conceptGroupAccess) ListConceptGroups(ctx context.Context, query inte
 			&conceptGroup.Detail,
 			&conceptGroup.KNID,
 			&conceptGroup.Branch,
-			&creator.ID,
-			&creator.Type,
+			&conceptGroup.Creator.ID,
+			&conceptGroup.Creator.Type,
 			&conceptGroup.CreateTime,
-			&updater.ID,
-			&updater.Type,
+			&conceptGroup.Updater.ID,
+			&conceptGroup.Updater.Type,
 			&conceptGroup.UpdateTime,
 		)
 		if err != nil {
@@ -295,8 +293,6 @@ func (cga *conceptGroupAccess) ListConceptGroups(ctx context.Context, query inte
 
 		// tags string 转成数组的格式
 		conceptGroup.Tags = libCommon.TagString2TagSlice(tagsStr)
-		conceptGroup.Creator = creator
-		conceptGroup.Updater = updater
 
 		conceptGroups = append(conceptGroups, &conceptGroup)
 	}
@@ -347,7 +343,7 @@ func (cga *conceptGroupAccess) GetConceptGroupsByIDs(ctx context.Context, tx *sq
 
 	// 记录处理的 sql 字符串
 	o11y.Info(ctx, fmt.Sprintf("批量查询概念分组信息的 sql 语句: %s.", sqlStr))
-	rows, err := cga.db.Query(sqlStr, vals...)
+	rows, err := tx.Query(sqlStr, vals...)
 	if err != nil {
 		logger.Errorf("list data error: %v\n", err)
 		o11y.Error(ctx, fmt.Sprintf("List data error: %v", err))
@@ -361,8 +357,6 @@ func (cga *conceptGroupAccess) GetConceptGroupsByIDs(ctx context.Context, tx *sq
 		conceptGroup := interfaces.ConceptGroup{
 			ModuleType: interfaces.MODULE_TYPE_CONCEPT_GROUP,
 		}
-		creator := &interfaces.AccountInfo{}
-		updater := &interfaces.AccountInfo{}
 		tagsStr := ""
 		err := rows.Scan(
 			&conceptGroup.CGID,
@@ -374,11 +368,11 @@ func (cga *conceptGroupAccess) GetConceptGroupsByIDs(ctx context.Context, tx *sq
 			&conceptGroup.Detail,
 			&conceptGroup.KNID,
 			&conceptGroup.Branch,
-			&creator.ID,
-			&creator.Type,
+			&conceptGroup.Creator.ID,
+			&conceptGroup.Creator.Type,
 			&conceptGroup.CreateTime,
-			&updater.ID,
-			&updater.Type,
+			&conceptGroup.Updater.ID,
+			&conceptGroup.Updater.Type,
 			&conceptGroup.UpdateTime,
 		)
 		if err != nil {
@@ -390,8 +384,6 @@ func (cga *conceptGroupAccess) GetConceptGroupsByIDs(ctx context.Context, tx *sq
 
 		// tags string 转成数组的格式
 		conceptGroup.Tags = libCommon.TagString2TagSlice(tagsStr)
-		conceptGroup.Creator = creator
-		conceptGroup.Updater = updater
 
 		conceptGroups = append(conceptGroups, &conceptGroup)
 	}
@@ -478,8 +470,6 @@ func (cga *conceptGroupAccess) GetConceptGroupByID(ctx context.Context, knID str
 	conceptGroup := &interfaces.ConceptGroup{
 		ModuleType: interfaces.MODULE_TYPE_CONCEPT_GROUP,
 	}
-	creator := &interfaces.AccountInfo{}
-	updater := &interfaces.AccountInfo{}
 	err = cga.db.QueryRow(sqlStr, vals...).Scan(
 		&conceptGroup.CGID,
 		&conceptGroup.CGName,
@@ -490,11 +480,11 @@ func (cga *conceptGroupAccess) GetConceptGroupByID(ctx context.Context, knID str
 		&conceptGroup.Detail,
 		&conceptGroup.KNID,
 		&conceptGroup.Branch,
-		&creator.ID,
-		&creator.Type,
+		&conceptGroup.Creator.ID,
+		&conceptGroup.Creator.Type,
 		&conceptGroup.CreateTime,
-		&updater.ID,
-		&updater.Type,
+		&conceptGroup.Updater.ID,
+		&conceptGroup.Updater.Type,
 		&conceptGroup.UpdateTime,
 	)
 	if err == sql.ErrNoRows {
@@ -510,8 +500,6 @@ func (cga *conceptGroupAccess) GetConceptGroupByID(ctx context.Context, knID str
 
 	// tags string 转成数组的格式
 	conceptGroup.Tags = libCommon.TagString2TagSlice(tagsStr)
-	conceptGroup.Creator = creator
-	conceptGroup.Updater = updater
 
 	span.SetStatus(codes.Ok, "")
 	return conceptGroup, nil

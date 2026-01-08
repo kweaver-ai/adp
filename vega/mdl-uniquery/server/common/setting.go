@@ -123,7 +123,7 @@ const (
 	vegaGatewayServiceName        string = "vega-gateway"
 	vegaViewServiceName           string = "vega-logic-view"
 
-	DATA_BASE_NAME string = "dip_mdl"
+	DATA_BASE_NAME string = "adp"
 )
 
 var (

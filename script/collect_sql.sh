@@ -10,16 +10,16 @@ echo "工作目录: $ADP_DIR"
 
 # 来源目录列表
 SRC_DIRS=(
+    "autoflow/coderunner/migrations"
+    "autoflow/ecron/migrations"
+    "autoflow/flow-automation/migrations"
+    "autoflow/flow-stream-data-pipeline/migrations"
+    "autoflow/workflow/migrations"
     "ontology/ontology-manager/migrations"
     "vega/data-connection/migrations"
     "vega/mdl-data-model/migrations"
     "vega/vega-gateway/migrations"
     "vega/vega-metadata/migrations"
-    "autoflow/coderunner/migrations"
-    "autoflow/ecron/migrations"
-    "autoflow/flow-automation/migrations"
-    "autoflow/workflow/migrations"
-    "autoflow/flow-stream-data-pipeline/migrations"
 )
 
 # 数据库类型列表

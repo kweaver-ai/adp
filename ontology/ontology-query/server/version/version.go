@@ -8,7 +8,7 @@ import (
 
 var (
 	ServerName    string = "ontology-query"
-	ServerVersion string = "6.2.0"
+	ServerVersion string = "6.0.0"
 	LanguageGo    string = "go"
 	GoVersion     string = runtime.Version()
 	GoArch        string = runtime.GOARCH

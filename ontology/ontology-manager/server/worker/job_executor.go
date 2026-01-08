@@ -197,6 +197,7 @@ func (je *jobExecutor) HandleTaskCallback(task Task) {
 	defer func() {
 		if rerr := recover(); rerr != nil {
 			logger.Errorf("[handleTaskCallback] Failed: %v", rerr)
+			debug.PrintStack()
 			return
 		}
 	}()

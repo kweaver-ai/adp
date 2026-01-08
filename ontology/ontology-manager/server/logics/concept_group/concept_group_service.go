@@ -159,8 +159,8 @@ func (cgs *conceptGroupService) CreateConceptGroup(ctx context.Context, tx *sql.
 	if ctx.Value(interfaces.ACCOUNT_INFO_KEY) != nil {
 		accountInfo = ctx.Value(interfaces.ACCOUNT_INFO_KEY).(interfaces.AccountInfo)
 	}
-	conceptGroup.Creator = &accountInfo
-	conceptGroup.Updater = &accountInfo
+	conceptGroup.Creator = accountInfo
+	conceptGroup.Updater = accountInfo
 
 	conceptGroup.CreateTime = currentTime
 	conceptGroup.UpdateTime = currentTime
@@ -386,7 +386,7 @@ func (cgs *conceptGroupService) ListConceptGroups(ctx context.Context,
 
 	accountInfos := make([]*interfaces.AccountInfo, 0, len(conceptGroups)*2)
 	for _, cg := range conceptGroups {
-		accountInfos = append(accountInfos, cg.Creator, cg.Updater)
+		accountInfos = append(accountInfos, &cg.Creator, &cg.Updater)
 	}
 
 	err = cgs.uma.GetAccountNames(ctx, accountInfos)
@@ -605,7 +605,7 @@ func (cgs *conceptGroupService) UpdateConceptGroup(ctx context.Context, tx *sql.
 	if ctx.Value(interfaces.ACCOUNT_INFO_KEY) != nil {
 		accountInfo = ctx.Value(interfaces.ACCOUNT_INFO_KEY).(interfaces.AccountInfo)
 	}
-	conceptGroup.Updater = &accountInfo
+	conceptGroup.Updater = accountInfo
 
 	currentTime := time.Now().UnixMilli() // 概念分组的update_time是int类型
 	conceptGroup.UpdateTime = currentTime

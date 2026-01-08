@@ -91,23 +91,26 @@ func (ots *objectTypeService) GetObjectsByObjectTypeID(ctx context.Context,
 	}
 
 	// 3.1 处理对象类，转成view field 到 object type property的映射
-	fieldPropMap := map[string]string{}
+	viewFieldPropMap := map[string]string{}
+	indexPropMap := map[string]string{} // 索引字段到对象类属性的映射
 	propMap := map[string]cond.DataProperty{}
 	for _, prop := range objectType.DataProperties {
 		propMap[prop.Name] = prop
 		if len(query.Properties) == 0 { // 未指定属性集时，认为是拿全部属性
-			fieldPropMap[prop.MappedField.Name] = prop.Name
+			viewFieldPropMap[prop.MappedField.Name] = prop.Name
+			indexPropMap[prop.Name] = prop.Name
 		} else {
 			for _, requestProp := range query.Properties {
 				if prop.Name == requestProp {
-					fieldPropMap[prop.MappedField.Name] = prop.Name
+					viewFieldPropMap[prop.MappedField.Name] = prop.Name
+					indexPropMap[prop.Name] = prop.Name
 				}
 			}
 		}
 	}
 
 	// 补充 _score 字段
-	fieldPropMap[interfaces.SORT_FIELD_SCORE] = interfaces.SORT_FIELD_SCORE
+	viewFieldPropMap[interfaces.SORT_FIELD_SCORE] = interfaces.SORT_FIELD_SCORE
 
 	// 构造数据属性的字段集
 	if !query.IgnoringStore && objectType.Status != nil && objectType.Status.IndexAvailable {
@@ -118,7 +121,7 @@ func (ots *objectTypeService) GetObjectsByObjectTypeID(ctx context.Context,
 		}
 
 		// 持久化查询,转成dsl,直接查 opensearch
-		err = ots.getObjectsFromObjectIndex(ctx, query, objectType, &resps, fieldPropMap)
+		err = ots.getObjectsFromObjectIndex(ctx, query, objectType, &resps, indexPropMap)
 		if err != nil {
 			return resps, err
 		}
@@ -131,7 +134,7 @@ func (ots *objectTypeService) GetObjectsByObjectTypeID(ctx context.Context,
 			query.Sort = logics.BuildViewSort(objectType)
 		}
 		// 3. 请求视图获取数据，获取指定字段
-		err = ots.getObjectsFromDataView(ctx, query, objectType, &resps, fieldPropMap)
+		err = ots.getObjectsFromDataView(ctx, query, objectType, &resps, viewFieldPropMap)
 		if err != nil {
 			return resps, err
 		}
@@ -337,7 +340,7 @@ func (ots *objectTypeService) getObjectsFromDataView(ctx context.Context, query 
 
 // 从对象类索引中获取对象数据
 func (ots *objectTypeService) getObjectsFromObjectIndex(ctx context.Context, query *interfaces.ObjectQueryBaseOnObjectType,
-	objectType interfaces.ObjectType, resps *interfaces.Objects, fieldPropMap map[string]string) error {
+	objectType interfaces.ObjectType, resps *interfaces.Objects, indexPropMap map[string]string) error {
 
 	objects := []map[string]any{}
 
@@ -391,7 +394,7 @@ func (ots *objectTypeService) getObjectsFromObjectIndex(ctx context.Context, que
 		object := map[string]any{}
 		for k, v := range hit.Source {
 			// k 是视图的字段名，v是此字段的字段值
-			if propName, exists := fieldPropMap[k]; exists {
+			if propName, exists := indexPropMap[k]; exists {
 				// 字段属于请求的properties才set
 				// 存在映射，则组装到对象属性中
 				object[propName] = v
@@ -402,7 +405,7 @@ func (ots *objectTypeService) getObjectsFromObjectIndex(ctx context.Context, que
 		if len(object) > 0 {
 			objects = append(objects, object)
 		} else {
-			logger.Warnf("将视图行数据转成对象时，对象类属性映射的字段没有一个属性能正确映射到视图上，配置的字段属性映射关系为: %v", fieldPropMap)
+			logger.Warnf("将视图行数据转成对象时，对象类属性映射的字段没有一个属性能正确映射到视图上，配置的字段属性映射关系为: %v", indexPropMap)
 		}
 	}
 

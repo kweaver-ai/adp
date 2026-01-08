@@ -633,7 +633,7 @@ func buildSQLSortParams(sort []*interfaces.SortParamsV2) string {
 		if i > 0 {
 			sortSql.WriteString(", ")
 		}
-		sortSql.WriteString(fmt.Sprintf("%s %s", sortParam.Field, sortParam.Direction))
+		sortSql.WriteString(fmt.Sprintf("%s %s", common.QuotationMark(sortParam.Field), sortParam.Direction))
 	}
 
 	return sortSql.String()

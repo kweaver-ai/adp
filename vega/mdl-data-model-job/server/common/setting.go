@@ -5,12 +5,12 @@ import (
 	"sync"
 	"time"
 
+	"github.com/bytedance/sonic"
+	"github.com/fsnotify/fsnotify"
 	libdb "github.com/kweaver-ai/kweaver-go-lib/db"
 	"github.com/kweaver-ai/kweaver-go-lib/logger"
 	libmq "github.com/kweaver-ai/kweaver-go-lib/mq"
 	"github.com/kweaver-ai/kweaver-go-lib/rest"
-	"github.com/bytedance/sonic"
-	"github.com/fsnotify/fsnotify"
 	"github.com/spf13/viper"
 )
 
@@ -84,7 +84,7 @@ const (
 	uniQueryServiceName   string = "uniquery"
 	hydraAdminServiceName string = "hydra-admin"
 
-	DATA_BASE_NAME string = "dip_mdl"
+	DATA_BASE_NAME string = "adp"
 )
 
 var (

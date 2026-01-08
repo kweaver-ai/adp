@@ -46,14 +46,22 @@ func (u *userMgmtAccess) GetAccountNames(ctx context.Context, accountInfos []*in
 	// 构建请求URL
 	httpUrl := fmt.Sprintf("%s/api/user-management/v2/names", u.userMgmtUrl)
 
+	userIDMap := map[string]string{}
+	appIDMap := map[string]string{}
 	userIDs := []string{}
 	appIDs := []string{}
 	for _, accountInfo := range accountInfos {
 		switch accountInfo.Type {
 		case interfaces.ACCESSOR_TYPE_USER:
-			userIDs = append(userIDs, accountInfo.ID)
+			if _, ok := userIDMap[accountInfo.ID]; !ok {
+				userIDMap[accountInfo.ID] = "-"
+				userIDs = append(userIDs, accountInfo.ID)
+			}
 		case interfaces.ACCESSOR_TYPE_APP:
-			appIDs = append(appIDs, accountInfo.ID)
+			if _, ok := appIDMap[accountInfo.ID]; !ok {
+				appIDMap[accountInfo.ID] = "-"
+				appIDs = append(appIDs, accountInfo.ID)
+			}
 		}
 	}
 
@@ -102,8 +110,6 @@ func (u *userMgmtAccess) GetAccountNames(ctx context.Context, accountInfos []*in
 		return fmt.Errorf("unmarshal account names response failed: %w", err)
 	}
 
-	userIDMap := make(map[string]string)
-	appIDMap := make(map[string]string)
 	for _, user := range response.UserNames {
 		userIDMap[user.ID] = user.Name
 	}

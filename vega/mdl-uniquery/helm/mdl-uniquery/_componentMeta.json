@@ -49,6 +49,9 @@
     },
     "dependence": [
         {
+            "name": "class-443"
+        },
+        {
             "name": "rds"
         },
         {
@@ -56,15 +59,6 @@
         },
         {
             "name": "opensearch"
-        },
-        {
-            "name": "class-443"
-        },
-        {
-            "name": "mdl-dm-pre"
-        },
-        {
-            "name": "mdl-shared-configmap"
         }
     ]
 }
