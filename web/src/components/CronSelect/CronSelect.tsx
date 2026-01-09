@@ -13,9 +13,12 @@ import type { CronSelectProps } from './types';
 
 const CronSelect = React.memo<CronSelectProps>((props): JSX.Element => {
   const { inputProps, cronSelectProps, value, onChange } = props;
+  const [i18nLoaded, setI18nLoaded] = React.useState(false);
 
   useEffect(() => {
+    // 加载国际化文件，完成后更新状态触发重新渲染
     intl.load(locales);
+    setI18nLoaded(true);
   }, []);
 
   const [visible, setVisible] = useControllableValue(props, {
@@ -48,7 +51,7 @@ const CronSelect = React.memo<CronSelectProps>((props): JSX.Element => {
       allowClear
       placeholder={intl.get('CronSelect.pleaseInput')}
       addonAfter={
-        <Popover destroyOnHidden content={content} trigger="click" open={visible} overlayClassName={styles['ar-cron-wrapper']}>
+        <Popover destroyOnHidden content={i18nLoaded ? content : null} trigger="click" open={visible} overlayClassName={styles['ar-cron-wrapper']}>
           <EditOutlined onClick={() => setVisible(!visible)} />
         </Popover>
       }

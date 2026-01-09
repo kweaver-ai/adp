@@ -1,4 +1,4 @@
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect, useState } from 'react';
 import intl from 'react-intl-universal';
 import { Select, Space, InputNumber } from 'antd';
 import { InputNumberProps } from 'antd/lib/input-number';
@@ -58,21 +58,27 @@ const InputNumberUnit: React.FC<PropType> = (props: PropType): JSX.Element => {
     ...other
   } = props;
 
+  const [i18nLoaded, setI18nLoaded] = useState(false);
+
   useEffect(() => {
+    // 加载国际化文件，完成后更新状态触发重新渲染
     intl.load(locales);
+    setI18nLoaded(true);
   }, []);
 
-  // 全部时间单位
-  const timeUnit = [
-    { label: intl.get('ARInputNumberUnit.seconds'), value: 's' },
-    { label: intl.get('ARInputNumberUnit.mins'), value: 'm' },
-    { label: intl.get('ARInputNumberUnit.hours'), value: 'h' },
-    { label: intl.get('ARInputNumberUnit.days'), value: 'd' },
-    { label: intl.get('ARInputNumberUnit.week'), value: 'w' },
-    { label: intl.get('ARInputNumberUnit.month'), value: 'M' },
-    { label: intl.get('ARInputNumberUnit.year'), value: 'y' },
-    ...storageUnit,
-  ];
+  // 全部时间单位 - 国际化加载完成后再构建，避免显示空白标签
+  const timeUnit = i18nLoaded
+    ? [
+        { label: intl.get('ARInputNumberUnit.seconds'), value: 's' },
+        { label: intl.get('ARInputNumberUnit.mins'), value: 'm' },
+        { label: intl.get('ARInputNumberUnit.hours'), value: 'h' },
+        { label: intl.get('ARInputNumberUnit.days'), value: 'd' },
+        { label: intl.get('ARInputNumberUnit.week'), value: 'w' },
+        { label: intl.get('ARInputNumberUnit.month'), value: 'M' },
+        { label: intl.get('ARInputNumberUnit.year'), value: 'y' },
+        ...storageUnit,
+      ]
+    : [...storageUnit];
 
   // 初始化数值和单位
   const num = useRef<number>();

@@ -69,10 +69,14 @@ const DataFilterItem = forwardRef(
       return [fieldType, formatType];
     }, [objectTarget?.data_properties, value.field, transformType]);
 
+    const [i18nLoaded, setI18nLoaded] = React.useState(false);
+
     useImperativeHandle(ref, () => ({ validate: () => false }));
 
     useEffect(() => {
+      // 加载国际化文件，完成后更新状态触发重新渲染
       intl.load(locales);
+      setI18nLoaded(true);
     }, []);
 
     /** 更换对象类 */

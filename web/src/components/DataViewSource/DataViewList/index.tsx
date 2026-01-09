@@ -18,6 +18,13 @@ const DataViewList: React.FC<{
   const [loading, setLoading] = useState<boolean>(false);
   const [searchValue, setSearchValue] = useState('');
   const [pagination, setPagination] = useState<any>({ pageSize: 10, page: 1 });
+  const [i18nLoaded, setI18nLoaded] = useState(false);
+
+  useEffect(() => {
+    // 加载国际化文件，完成后更新状态触发重新渲染
+    intl.load(require('../locales').default);
+    setI18nLoaded(true);
+  }, []);
 
   const ListItem = ({ item, onChecked }: { item: any; onChecked: (checked: boolean) => void }) => {
     return (

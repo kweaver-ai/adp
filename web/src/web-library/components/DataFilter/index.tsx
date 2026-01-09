@@ -1,6 +1,6 @@
 /** @Description: 多级过滤器 */
 
-import React, { useEffect, useImperativeHandle, forwardRef, useRef } from 'react';
+import React, { useEffect, useImperativeHandle, forwardRef, useRef, useState } from 'react';
 import intl from 'react-intl-universal';
 import { useDynamicList, useUpdateEffect } from 'ahooks';
 import classNames from 'classnames';
@@ -47,8 +47,12 @@ const MultistageFilter = forwardRef((props: DataFilterProps, ref) => {
 
   useImperativeHandle(ref, () => ({ validate }));
 
+  const [i18nLoaded, setI18nLoaded] = useState(false);
+
   useEffect(() => {
+    // 加载国际化文件，完成后更新状态触发重新渲染
     intl.load(locales);
+    setI18nLoaded(true);
   }, []);
 
   useEffect(() => {

@@ -9,6 +9,13 @@ const DATE_FORMAT = 'YYYY-MM-DD HH:mm:ss'; // 日期格式化
 const DateRange = (props: any) => {
   const { timeRange, onFilterChange } = props;
   const [timeValue, setTimeValue] = useState<any>([null, null]);
+  const [i18nLoaded, setI18nLoaded] = useState(false);
+
+  useEffect(() => {
+    // 加载国际化文件，完成后更新状态触发重新渲染
+    intl.load(require('../locales').default);
+    setI18nLoaded(true);
+  }, []);
 
   useEffect(() => {
     if (timeRange?.label?.indexOf('-') < 0) {

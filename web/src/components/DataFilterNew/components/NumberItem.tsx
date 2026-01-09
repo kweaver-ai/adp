@@ -1,4 +1,4 @@
-import { memo, useEffect } from 'react';
+import { memo, useEffect, useState } from 'react';
 import intl from 'react-intl-universal';
 import { InputNumber } from 'antd';
 import styles from '../index.module.less';
@@ -17,8 +17,12 @@ const NumberItem = memo(
     validateValueError: (val: any) => void;
     disabled: boolean;
   }) => {
+    const [i18nLoaded, setI18nLoaded] = useState(false);
+
     useEffect(() => {
+      // 加载国际化文件，完成后更新状态触发重新渲染
       intl.load(locales);
+      setI18nLoaded(true);
     }, []);
 
     const handleFromChange = (val: any): void => {

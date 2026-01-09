@@ -25,9 +25,12 @@ const TimeSelectFilter = (props: Props): JSX.Element => {
   const { timeRange, disabled, style, getTimeRange } = props;
   const [visible, setVisible] = useState(false);
   const [timeValue, setTimeValue] = useState({ label: 'last1Hour', value: [dayjs().subtract(1, 'h'), dayjs()], timeInterval: 1, timeUnit: 'h' });
+  const [i18nLoaded, setI18nLoaded] = useState(false);
 
   useEffect(() => {
+    // 加载国际化文件，完成后更新状态触发重新渲染
     intl.load(locales);
+    setI18nLoaded(true);
   }, []);
 
   useEffect(() => {

@@ -29,6 +29,13 @@ const Cron = React.memo<CronProps>((props): JSX.Element => {
 
   const [currentTab, setCurrentTab] = useState<CronFieldName>(defaultTab);
   const [state, setState] = useSetState<CronFieldValues>(DEFAULTS);
+  const [i18nLoaded, setI18nLoaded] = useState(false);
+
+  useEffect(() => {
+    // 加载国际化文件，完成后更新状态触发重新渲染
+    intl.load(require('../locales').default);
+    setI18nLoaded(true);
+  }, []);
 
   const { second, minute, hour, day, month, week, year } = state;
 
@@ -105,6 +112,10 @@ const Cron = React.memo<CronProps>((props): JSX.Element => {
   );
 
   const tabItems = useMemo((): any => {
+    // 国际化未加载完成时返回空数组，避免标签显示空白
+    if (!i18nLoaded) {
+      return [];
+    }
     const items = compact([
       panesShow.second && {
         label: intl.get('CronSelect.second'),
@@ -151,7 +162,7 @@ const Cron = React.memo<CronProps>((props): JSX.Element => {
     ]);
 
     return items;
-  }, [panesShow]);
+  }, [panesShow, i18nLoaded, second, minute, hour, day, week, month, year]);
 
   return (
     <Card

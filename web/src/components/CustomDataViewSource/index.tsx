@@ -25,9 +25,12 @@ export const DataViewSource: React.FC<{
   const [selectedKeys, setSelectedKeys] = useState([]);
   const [conditionParam, setConditionParam] = useState<any>({});
   const [previewId, setPreviewId] = useState<string>('');
+  const [i18nLoaded, setI18nLoaded] = useState(false);
 
   useEffect(() => {
+    // 加载国际化文件，完成后更新状态触发重新渲染
     intl.load(locales);
+    setI18nLoaded(true);
   }, []);
 
   useEffect(() => {
@@ -141,6 +144,11 @@ export const DataViewSource: React.FC<{
   const onPreview = (id: string): void => {
     setPreviewId(id);
   };
+
+  // 国际化未加载完成时不渲染 Modal 内容，避免显示空白
+  if (!i18nLoaded) {
+    return null;
+  }
 
   return (
     <Modal

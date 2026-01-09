@@ -1,6 +1,6 @@
 /** 文件上传 */
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import intl from 'react-intl-universal';
 import { Upload, Tooltip, Modal, message } from 'antd';
 import locales from './locales';
@@ -27,8 +27,12 @@ const ImportFile = ({
   customRequest: (param: any, name: any) => Promise<unknown | void>;
   [key: string]: any;
 }): JSX.Element => {
+  const [i18nLoaded, setI18nLoaded] = useState(false);
+
   useEffect(() => {
+    // 加载国际化文件，完成后更新状态触发重新渲染
     intl.load(locales);
+    setI18nLoaded(true);
   }, []);
 
   const uploadFile = (e: any): void => {

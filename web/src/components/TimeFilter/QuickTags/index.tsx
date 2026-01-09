@@ -1,5 +1,5 @@
 /** 快速选择标签组件 */
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import intl from 'react-intl-universal';
 import { Row, Col } from 'antd';
 import classNames from 'classnames';
@@ -11,10 +11,18 @@ import locales from '../locales';
 const QuickTags = (props: any) => {
   const { timeRange, onFilterChange } = props;
   const lastindex = quickRange.length - 1;
+  const [i18nLoaded, setI18nLoaded] = useState(false);
 
   useEffect(() => {
+    // 加载国际化文件，完成后更新状态触发重新渲染
     intl.load(locales);
+    setI18nLoaded(true);
   }, []);
+
+  // 国际化未加载完成时不渲染内容，避免显示空白或key值
+  if (!i18nLoaded) {
+    return null;
+  }
 
   return (
     <Row>

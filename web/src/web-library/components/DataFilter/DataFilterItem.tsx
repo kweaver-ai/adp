@@ -35,8 +35,12 @@ interface DataFilterItemProps {
 
 const DataFilterItem = forwardRef(
   ({ value, fieldList, disabled = false, transformType, required: defaultRequired, typeOption = defaultTypeOption, onChange }: DataFilterItemProps, ref) => {
+    const [i18nLoaded, setI18nLoaded] = useState(false);
+
     useEffect(() => {
+      // 加载国际化文件，完成后更新状态触发重新渲染
       intl.load(locales);
+      setI18nLoaded(true);
     }, []);
 
     const fieldListFilter = (val: any): FieldList => {

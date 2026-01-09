@@ -30,6 +30,8 @@ const MultistageFilter = forwardRef((props: DataFilterProps, ref) => {
     isFirst = false,
   } = props;
 
+  const [i18nLoaded, setI18nLoaded] = React.useState(false);
+
   const getValue = (value: any): PrimaryFilterItem[] => (value as PrimaryFilterValue)?.sub_conditions || [value || defaultValue];
 
   const { list, remove, getKey, push, replace, resetList } = useDynamicList<DataFilterValue>(getValue(value));
@@ -45,7 +47,9 @@ const MultistageFilter = forwardRef((props: DataFilterProps, ref) => {
   useImperativeHandle(ref, () => ({ validate }));
 
   useEffect(() => {
+    // 加载国际化文件，完成后更新状态触发重新渲染
     intl.load(locales);
+    setI18nLoaded(true);
   }, []);
 
   useEffect(() => {

@@ -25,15 +25,22 @@ interface NotificationParams extends Omit<ArgsProps, 'type'> {
   type: Type;
   detail?: string;
 }
-class Collapse extends React.Component<Pick<NotificationParams, 'description' | 'detail' | 'message'>, { isShow: boolean }> {
+class Collapse extends React.Component<Pick<NotificationParams, 'description' | 'detail' | 'message'>, { isShow: boolean; i18nLoaded: boolean }> {
   constructor(props: any) {
     super(props);
+    // 加载国际化文件
     intl.load(locales);
   }
 
   public state = {
     isShow: false,
+    i18nLoaded: false,
   };
+
+  componentDidMount(): void {
+    // 组件挂载后标记国际化已加载完成，触发重新渲染
+    this.setState({ i18nLoaded: true });
+  }
 
   public onClick = (): void => {
     this.setState((preState) => ({ isShow: !preState.isShow }));

@@ -1,4 +1,4 @@
-import { forwardRef, useMemo, useCallback, useImperativeHandle, useEffect } from 'react';
+import { forwardRef, useMemo, useCallback, useImperativeHandle, useEffect, useState } from 'react';
 import intl from 'react-intl-universal';
 import { MinusOutlined } from '@ant-design/icons';
 import { InputNumber, Select } from 'antd';
@@ -28,9 +28,12 @@ const DEFAULT_VALUE = { operation: '==', value: '', field: '__value' };
 
 const ResultFilter = forwardRef((props: ResultFilterProps, ref) => {
   const { value = DEFAULT_VALUE, onChange, layout = 'horizontal' } = props;
+  const [i18nLoaded, setI18nLoaded] = useState(false);
 
   useEffect(() => {
+    // 加载国际化文件，完成后更新状态触发重新渲染
     intl.load(locales);
+    setI18nLoaded(true);
   }, []);
 
   const handleChangeOperation = useCallback(
@@ -64,6 +67,11 @@ const ResultFilter = forwardRef((props: ResultFilterProps, ref) => {
   }));
 
   const ValueInput = useMemo(() => {
+    // 国际化未加载完成时返回 null，避免显示空白
+    if (!i18nLoaded) {
+      return null;
+    }
+
     if (!value?.operation) {
       return null;
     }
@@ -116,7 +124,7 @@ const ResultFilter = forwardRef((props: ResultFilterProps, ref) => {
         />
       );
     }
-  }, [value, handleValueChange]);
+  }, [value, handleValueChange, i18nLoaded]);
 
   return layout === 'horizontal' ? (
     <div className={styles['result-filter-horizontal']}>
@@ -125,7 +133,7 @@ const ResultFilter = forwardRef((props: ResultFilterProps, ref) => {
         value={value?.operation}
         placeholder="请选择"
         onChange={handleChangeOperation}
-        options={map(operateOption, (item: string) => ({ value: item, label: intl.get(`ResultFilter.${item}`) }))}
+        options={i18nLoaded ? map(operateOption, (item: string) => ({ value: item, label: intl.get(`ResultFilter.${item}`) })) : []}
       />
       {ValueInput}
     </div>
@@ -136,7 +144,7 @@ const ResultFilter = forwardRef((props: ResultFilterProps, ref) => {
         value={value?.operation}
         placeholder="请选择"
         onChange={handleChangeOperation}
-        options={map(operateOption, (item: string) => ({ value: item, label: intl.get(`ResultFilter.${item}`) }))}
+        options={i18nLoaded ? map(operateOption, (item: string) => ({ value: item, label: intl.get(`ResultFilter.${item}`) })) : []}
       />
       {ValueInput}
     </div>
