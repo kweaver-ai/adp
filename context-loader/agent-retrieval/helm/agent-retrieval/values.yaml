@@ -132,6 +132,8 @@ depServices:
     caName: ""
     certName: ""
     keyName: ""
+  class-443:
+    ingressClass: class-443
 
 env:
   language: en_US.UTF-8
