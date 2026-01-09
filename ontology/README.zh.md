@@ -42,7 +42,7 @@
 ### 模块组成
 
 ```text
-kweaver/
+adp/
 └── ontology/
     ├── ontology-manager/     # 本体管理模块
     ├── ontology-query/       # 本体查询模块
@@ -85,8 +85,8 @@ kweaver/
 #### 1. 克隆代码库
 
 ```bash
-git clone https://github.com/kweaver-ai/vega.git
-cd vega/ontology
+git clone https://github.com/kweaver-ai/adp.git
+cd adp/ontology
 ```
 
 #### 2. 配置环境
@@ -308,7 +308,7 @@ go tool cover -html=coverage.out
 
 ## 版本历史
 
-- **v6.2.0**: 当前版本，基于Go 1.24
+- **v0.1.0**: 当前版本，基于Go 1.24
 
 ## 许可证
 

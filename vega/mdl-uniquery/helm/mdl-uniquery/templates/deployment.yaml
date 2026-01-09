@@ -30,7 +30,7 @@ spec:
           - name: use-vc
       securityContext:
         runAsNonRoot: true
-        runAsUser: 1000
+        runAsUser: 1001
       {{- if .Values.antiAffinity.enabled }}
       affinity:
         {{- if eq .Values.antiAffinity.rule "soft" }}

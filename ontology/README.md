@@ -44,7 +44,7 @@ As a core component of the KWeaver AI platform, the Ontology Engine focuses on b
 ### Module Structure
 
 ```text
-kweaver/
+adp/
 └── ontology/
     ├── ontology-manager/     # Ontology Management Module
     ├── ontology-query/       # Ontology Query Module
@@ -87,8 +87,8 @@ Provides efficient knowledge graph query services. Main features include:
 #### 1. Clone the repository
 
 ```bash
-git clone https://github.com/kweaver-ai/kweaver.git
-cd kweaver/ontology
+git clone https://github.com/kweaver-ai/adp.git
+cd adp/ontology
 ```
 
 #### 2. Configure environment
@@ -310,7 +310,7 @@ Refer to the KWeaver project content
 
 ## Version History
 
-- **v6.2.0**: Current version, based on Go 1.24
+- **v0.1.0**: Current version, based on Go 1.24
 
 ## License
 

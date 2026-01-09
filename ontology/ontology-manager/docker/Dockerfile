@@ -6,10 +6,7 @@ FROM ${BUILD_IMAGE} AS builder
 
 COPY ./server /go/src
 
-COPY .netrc /root/.netrc
-COPY id_rsa /root/.ssh/id_rsa
-
-ARG SERVER_VERSION=6.0.0
+ARG SERVER_VERSION=0.1.0
 ARG GOPROXY_URL="http://goproxy.cn,direct"
 
 ENV GOPROXY=${GOPROXY_URL}
@@ -33,7 +30,6 @@ COPY --from=builder --chown=$UID:$GID /go/src/bin /opt/ontology-manager
 
 ADD server/config/ontology-manager-config.yaml /opt/ontology-manager/config/
 ADD server/locale /opt/ontology-manager/locale
-
 
 # 指定工作目录
 WORKDIR /opt/ontology-manager/
