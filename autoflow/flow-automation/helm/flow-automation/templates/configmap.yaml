@@ -240,6 +240,11 @@ data:
   BUSINESS_DOMAIN_HOST: {{ index .Values "depServices" "business-system-service" "host" | quote }}
   BUSINESS_DOMAIN_PORT: {{ index .Values "depServices" "business-system-service" "port" | quote }}
 
+  ACCESS_ADDRESS_HOST: {{ .Values.accessAddress.host | quote }}
+  ACCESS_ADDRESS_PORT: {{ .Values.accessAddress.port | quote }}
+  ACCESS_ADDRESS_SCHEMA: {{ .Values.accessAddress.schema | quote }}
+  ACCESS_ADDRESS_PATH: {{ .Values.accessAddress.path | quote }}
+
   flow_o11y_data.yaml: |
     log_level: {{ index .Values "flow-o11y-data-log" "log_level"}}
     {{- with index .Values "flow-o11y-data-log" "exporters" }}

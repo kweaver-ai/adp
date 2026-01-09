@@ -76,7 +76,7 @@ type UpdateFileReq struct {
 func NewCodeRunner() CodeRunner {
 	cOnce.Do(func() {
 		config := common.NewConfig()
-		anyshareAddress = fmt.Sprintf("https://%s:%v", config.DeployService.Host, config.DeployService.Port)
+		anyshareAddress = fmt.Sprintf("%s://%s:%v", config.AccessAddress.Schema, config.AccessAddress.Host, config.AccessAddress.Port)
 		c = &coderunner{
 			crPrivateAddress:  fmt.Sprintf("http://%s:%v", config.CodeRunner.PrivateHost, config.CodeRunner.PrivatePort),
 			dftPrivateAddress: fmt.Sprintf("http://%s:%v", config.DataFlowTools.PrivateHost, config.DataFlowTools.PrivatePort),
@@ -269,7 +269,7 @@ func (c *coderunner) setHeader(ctx context.Context, headers map[string]string) {
 	}
 
 	config := common.NewConfig()
-	anyshareAddress = fmt.Sprintf("https://%s:%v", config.DeployService.Host, config.DeployService.Port)
+	anyshareAddress = fmt.Sprintf("%s://%s:%v%s", config.AccessAddress.Schema, config.AccessAddress.Host, config.AccessAddress.Port, config.AccessAddress.Path)
 
 	headers[common.AnyshareAddress] = anyshareAddress
 }

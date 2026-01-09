@@ -56,7 +56,7 @@ redis_configs = {
     "redis_cluster_mode": os.getenv("REDIS_CLUSTER_MODE", "sentinel"),
     "redis_host": os.getenv("REDIS_HOST", "proton-redis-proton-redis-sentinel.resource"),
     "redis_port": os.getenv("REDIS_PORT", "26379"),
-    "redis_user": os.getenv("REDIS_USER", "root"),
+    "redis_user": os.getenv("REDIS_USERNAME", "root"),
     "redis_password": os.getenv("REDIS_PASSWORD", "eisoo.com123"),
     "redis_sentinel_host": os.getenv("REDIS_SENTINEL_HOST", "proton-redis-proton-redis-sentinel.resource"),
     "redis_sentinel_port": os.getenv("REDIS_SENTINEL_PORT", "26379"),

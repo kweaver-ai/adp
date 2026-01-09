@@ -437,6 +437,11 @@ func initInternalAccount(config *common.Config) { //nolint
 }
 
 func initCluster(config *common.Config) {
+	// 如果配置了access address，直接使用配置的地址
+	if config.AccessAddress.Host != "" {
+		return
+	}
+
 	var addr drivenadapters.ClusterAccess
 
 	addr, err := drivenadapters.NewAnyshare().ClusterAccess()
@@ -452,14 +457,18 @@ func initCluster(config *common.Config) {
 		for range ticker.C {
 			addr, derr := drivenadapters.NewAnyshare().ClusterAccess()
 			if derr == nil {
-				config.DeployService.Host = addr.Host
-				config.DeployService.Port = addr.Port
+				config.AccessAddress.Host = addr.Host
+				config.AccessAddress.Port = addr.Port
+				config.AccessAddress.Schema = "https"
+				config.AccessAddress.Path = ""
 			}
 		}
 	}()
 
-	config.DeployService.Host = addr.Host
-	config.DeployService.Port = addr.Port
+	config.AccessAddress.Host = addr.Host
+	config.AccessAddress.Port = addr.Port
+	config.AccessAddress.Schema = "https"
+	config.AccessAddress.Path = ""
 }
 
 func initLeaderChangedHandler(opt *InitialOption) {

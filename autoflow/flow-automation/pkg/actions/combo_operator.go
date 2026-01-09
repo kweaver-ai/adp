@@ -251,7 +251,7 @@ func callOperator(ctx context.Context,
 			taskID = fmt.Sprintf("DEBUG:%v", taskIns.ID)
 		}
 
-		callback := fmt.Sprintf("https://%s:%s/api/automation/v1/continuations/%s", config.DeployService.Host, config.DeployService.Port, taskID)
+		callback := fmt.Sprintf("%s://%s:%s/api/automation/v1/continuations/%s", config.AccessAddress.Schema, config.AccessAddress.Host, config.AccessAddress.Port, taskID)
 		req.Header.Add("X-Callback-URL", callback)
 	}
 

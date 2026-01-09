@@ -73,6 +73,7 @@ type Config struct {
 	StructureExtractor       StructureExtractor       `mapstructure:"structureextractor"`
 	MfModelApi               MfModelApi               `mapstructure:"mfmodelapi"`
 	BusinessDomain           BusinessDomain           `mapstructure:"business_domain"`
+	AccessAddress            AccessAddress            `mapstructure:"access_address"`
 }
 
 // Server 服务基础配置
@@ -478,6 +479,13 @@ type StructureExtractor struct {
 type BusinessDomain struct {
 	Host string `mapstructure:"host"`
 	Port string `mapstructure:"port"`
+}
+
+type AccessAddress struct {
+	Host   string `mapstructure:"host"`
+	Port   string `mapstructure:"port"`
+	Schema string `mapstructure:"schema"`
+	Path   string `mapstructure:"path"`
 }
 
 // DSN 获取连接地址
