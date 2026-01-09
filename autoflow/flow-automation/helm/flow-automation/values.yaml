@@ -60,6 +60,7 @@ service:
   deleteExtDataCron: "0 1 * * *"
   deleteExpiredTaskCacheCron: "0 3 * * *"
   dagInstanceEventMaxInlineSize: 262144
+  dagInstanceEventArchivePolicy: successOnly
 
 flow-o11y-data-log:
   log_level: "INFO"

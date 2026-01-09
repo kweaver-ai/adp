@@ -23,6 +23,10 @@ func UploadDagInstanceEvents(ctx context.Context, dagIns *entity.DagInstance) er
 	eventRepo := rds.NewDagInstanceEventRepository()
 	extDataRepo := rds.NewDagInstanceExtDataDao()
 
+	if config.Server.DagInstanceEventArchivePolicy == common.DagInstanceEventArchivePolicyNever {
+		return nil
+	}
+
 	ossId, err := og.GetAvaildOSS(ctx)
 
 	if err != nil {

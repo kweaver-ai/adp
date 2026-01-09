@@ -216,8 +216,18 @@
                     "dagInstanceEventMaxInlineSize":  {
                         "type": "integer",
                         "title": "DagInstanceEvent 最大内联数据比特数",
-                        "description": "超过此大小的事件数据上传到对象存储, 默认 256K",
+                        "description": "超过此大小的事件数据上传到对象存储, 默认 256K, 设置为 -1 则始终内联",
                         "default": 262144
+                    },
+                    "dagInstanceEventArchivePolicy": {
+                        "title": "DagInstanceEvent 归档策略",
+                        "description": "运行完成后将事件归档到对象存储, never - 从不, successOnly - 仅归档执行成功的, 默认 successOnly",
+                        "type": "string",
+                        "enum": [
+                            "never",
+                            "successOnly"
+                        ],
+                        "default": "successOnly"
                     }
                 }
             },

@@ -758,7 +758,7 @@ func ToRdsEvent(ctx context.Context, ev *DagInstanceEvent) (*rds.DagInstanceEven
 		b, _ := json.Marshal(ev.Data)
 		event.Data = string(b)
 		event.Size = len(event.Data)
-		if event.Size > config.Server.DagInstanceEventMaxInlineSize {
+		if config.Server.DagInstanceEventMaxInlineSize != -1 && event.Size > config.Server.DagInstanceEventMaxInlineSize {
 			ossID, err := og.GetAvaildOSS(ctx)
 			if err != nil {
 				return nil, err
