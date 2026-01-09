@@ -1,0 +1,100 @@
+{{- if semverCompare ">=1.19-0" .Capabilities.KubeVersion.GitVersion }}
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ .Release.Name }}
+  namespace: {{.Release.Namespace}}
+  annotations:
+    nginx.ingress.kubernetes.io/configuration-snippet: 'more_set_headers ''Access-Control-Expose-Headers:
+      Location'';'
+    nginx.ingress.kubernetes.io/cors-allow-credentials: "true"
+    nginx.ingress.kubernetes.io/cors-allow-headers: DNT,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Authorization,Location,pragma,X-Language
+    nginx.ingress.kubernetes.io/cors-allow-methods: GET,PUT,POST,DELETE,HEAD,OPTIONS
+    nginx.ingress.kubernetes.io/cors-allow-origin: '*'
+    nginx.ingress.kubernetes.io/enable-cors: "true"
+    nginx.ingress.kubernetes.io/force-ssl-redirect: "false"
+    nginx.ingress.kubernetes.io/proxy-body-size: 2048m
+spec:
+  ingressClassName: {{ index .Values.depServices "class-443" "ingressClass" }}
+  rules:
+  - http:
+      paths:
+      - backend:
+          service:
+            name: flow-automation
+            port:
+              number: 8680
+        path: /api/automation
+        pathType: Prefix
+      - backend:
+          service:
+            name: dataflowtools-public
+            port:
+              number: 8682
+        path: /api/coderunner/v1
+        pathType: Prefix
+      - backend:
+          service:
+            name: doc-audit-mobile
+            port:
+              number: 3048
+        path: /doc-audit-mobile
+        pathType: Prefix
+      - backend:
+          service:
+            name: doc-audit-client
+            port:
+              number: 1105
+        path: /doc-audit-client
+        pathType: Prefix
+      - backend:
+          service:
+            name: workflow-manage-front
+            port:
+              number: 1110
+        path: /workflow-manage-front
+        pathType: Prefix
+      - backend:
+          service:
+            name: workflow-manage-client
+            port:
+              number: 1104
+        path: /workflow-manage-client
+        pathType: Prefix
+      - backend:
+          service:
+            name: flow-audit-core
+            port:
+              number: 9800
+        path: /api/doc-audit-rest
+        pathType: Prefix
+      - backend:
+          service:
+            name: flow-audit-config
+            port:
+              number: 9800
+        path: /api/workflow-rest
+        pathType: Prefix
+      - backend:
+          service:
+            name: ecron-management
+            port:
+              number: 32345
+        path: /api/ecron-management
+        pathType: Prefix
+      - backend:
+          service:
+            name: flow-stream-data-pipeline-svc
+            port:
+              number: 13012
+        path: /api/flow-stream-data-pipeline/v1
+        pathType: Prefix
+      - backend:
+          service:
+            name: flow-web
+            port:
+              number: 3045
+        path: /flow-web
+        pathType: Prefix
+{{- end }}

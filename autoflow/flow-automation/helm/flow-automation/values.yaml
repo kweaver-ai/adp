@@ -336,6 +336,8 @@ depServices:
   business-system-service:
     host: business-system-service
     port: 80
+  class-443:
+    ingressClass: class-443
 
 env:
   language: en_US.UTF-8
