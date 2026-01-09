@@ -93,7 +93,7 @@ type QueryUnderstanding struct {
 // SemanticSearchRequest Semantic search request
 type SemanticSearchRequest struct {
 	Mode                     SemanticQueryMode         `form:"mode" validate:"required,oneof=keyword_vector_retrieval agent_intent_planning agent_intent_retrieval" default:"keyword_vector_retrieval"` // Semantic retrieval strategy mode
-	RerankAction             KnowledgeRerankActionType `json:"rerank_action" validate:"required,oneof=llm vector" default:"vector"`                                                                     // Action: llm based rerank, vector based rerank
+	RerankAction             KnowledgeRerankActionType `json:"rerank_action" validate:"required,oneof=default llm vector" default:"vector"`                                                             // Action: llm based rerank, vector based rerank
 	ReturnQueryUnderstanding *bool                     `json:"return_query_understanding" default:"false"`                                                                                              // Whether to return query understanding information
 	Query                    string                    `json:"query" validate:"required"`                                                                                                               // User Query
 	KnID                     string                    `json:"kn_id" validate:"required"`                                                                                                               // Knowledge network ID
