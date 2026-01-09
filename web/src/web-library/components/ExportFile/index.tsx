@@ -1,5 +1,5 @@
 /** 导出文件 */
-import React, { memo, useEffect } from 'react';
+import React, { memo, useEffect, useState } from 'react';
 import intl from 'react-intl-universal';
 import { message, Tooltip } from 'antd';
 import locales from './locales';
@@ -8,8 +8,12 @@ import downFile from '../../utils/down-file';
 
 const ExportFile = memo(
   ({ customRequest, children, name }: { name: string; customRequest: () => Promise<any>; children?: React.ReactElement; [key: string]: any }) => {
+    const [i18nLoaded, setI18nLoaded] = useState(false);
+
     useEffect(() => {
+      // 加载国际化文件，完成后更新状态触发重新渲染
       intl.load(locales);
+      setI18nLoaded(true);
     }, []);
 
     const exportData = async (e: any): Promise<void> => {

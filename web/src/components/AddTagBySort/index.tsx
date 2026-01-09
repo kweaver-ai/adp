@@ -54,9 +54,12 @@ const AddTagBySort = (props: AddTagBySortProps) => {
   const { value = [], onChange, options, onAddBtnClick } = props;
 
   const [filterOptions, setFilterOptions] = useState(_.cloneDeep(options));
+  const [i18nLoaded, setI18nLoaded] = useState(false);
 
   useEffect(() => {
+    // 加载国际化文件，完成后更新状态触发重新渲染
     intl.load(locales);
+    setI18nLoaded(true);
   }, []);
 
   useEffect(() => {
@@ -111,35 +114,41 @@ const AddTagBySort = (props: AddTagBySortProps) => {
         trigger={['click']}
         destroyOnHidden
         getPopupContainer={(triggerNode): HTMLElement => triggerNode.parentNode as HTMLElement}
-        popupRender={() => (
-          <div className="g-dropdown-menu-root" style={{ width: 260 }}>
-            <Input.Search className="g-mt-2 g-mb-4" allowClear placeholder={intl.get('AddTagBySort.search')} onChange={onSearchChange} />
-            <div className={styles['vega-form-tag-options-container']}>
-              {_.map(filterOptions, (item, index) => {
-                const icon = UTILS.formatIconByType(item?.type);
-                const selected = _.includes(valueString, item.name);
-                return (
-                  <div
-                    key={index}
-                    className={classNames(styles['vega-form-tag-options'], { [styles['vega-form-tag-options-disabled']]: selected })}
-                    onClick={() => {
-                      if (!selected) onAdd(item);
-                    }}
-                    title={item.comment}
-                  >
-                    <div style={{ display: 'flex', alignItems: 'flex-start' }}>
-                      <IconFont className="g-mr-1 g-mt-1" type={icon} style={{ fontSize: 18 }} />
-                      <div>
-                        <div className="g-ellipsis-1">{item?.displayName}</div>
-                        <div className="g-ellipsis-1 g-c-text-sub">{item?.name}</div>
+        popupRender={() => {
+          // 国际化未加载完成时不渲染 Dropdown 内容，避免显示空白或key值
+          if (!i18nLoaded) {
+            return null;
+          }
+          return (
+            <div className="g-dropdown-menu-root" style={{ width: 260 }}>
+              <Input.Search className="g-mt-2 g-mb-4" allowClear placeholder={intl.get('AddTagBySort.search')} onChange={onSearchChange} />
+              <div className={styles['vega-form-tag-options-container']}>
+                {_.map(filterOptions, (item, index) => {
+                  const icon = UTILS.formatIconByType(item?.type);
+                  const selected = _.includes(valueString, item.name);
+                  return (
+                    <div
+                      key={index}
+                      className={classNames(styles['vega-form-tag-options'], { [styles['vega-form-tag-options-disabled']]: selected })}
+                      onClick={() => {
+                        if (!selected) onAdd(item);
+                      }}
+                      title={item.comment}
+                    >
+                      <div style={{ display: 'flex', alignItems: 'flex-start' }}>
+                        <IconFont className="g-mr-1 g-mt-1" type={icon} style={{ fontSize: 18 }} />
+                        <div>
+                          <div className="g-ellipsis-1">{item?.displayName}</div>
+                          <div className="g-ellipsis-1 g-c-text-sub">{item?.name}</div>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                );
-              })}
+                  );
+                })}
+              </div>
             </div>
-          </div>
-        )}
+          );
+        }}
       >
         <Button className="g-mr-2 g-mb-2" icon={<IconFont type="icon-add" />} onClick={() => onAddBtnClick?.()}>
           {intl.get('AddTagBySort.add')}

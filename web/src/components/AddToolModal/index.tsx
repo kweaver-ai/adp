@@ -80,9 +80,12 @@ const updateTreeData = (list: DataNode[], key: React.Key, children: DataNode[]):
 
 const AddToolModal: FC<AddToolModalProps> = ({ onCancel, onOk, initialValue }) => {
   const { message } = HOOKS.useGlobalContext();
+  const [i18nLoaded, setI18nLoaded] = useState(false);
 
   useEffect(() => {
+    // 加载国际化文件，完成后更新状态触发重新渲染
     intl.load(locales);
+    setI18nLoaded(true);
   }, []);
 
   const [activeTab, setActiveTab] = useState<'tool' | 'mcp'>(initialValue?.type || 'tool');
@@ -250,6 +253,11 @@ const AddToolModal: FC<AddToolModalProps> = ({ onCancel, onOk, initialValue }) =
       fetchMcpMarketList();
     }
   }, [activeTab]);
+
+  // 国际化未加载完成时不渲染 Modal 内容，避免显示空白或key值
+  if (!i18nLoaded) {
+    return null;
+  }
 
   return (
     <Modal

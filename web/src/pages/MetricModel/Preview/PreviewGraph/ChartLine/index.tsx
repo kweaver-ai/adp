@@ -1,7 +1,13 @@
 import { useRef, useEffect } from 'react';
 import intl from 'react-intl-universal';
 import dayjs from 'dayjs';
-import * as echarts from 'echarts';
+// 按需引入 echarts 核心和必要组件
+import { LineChart } from 'echarts/charts';
+import { GridComponent, TooltipComponent, DataZoomComponent } from 'echarts/components';
+import * as echarts from 'echarts/core';
+import { CanvasRenderer } from 'echarts/renderers';
+// 注册必要的组件
+echarts.use([LineChart, GridComponent, TooltipComponent, DataZoomComponent, CanvasRenderer]);
 import { forEach } from 'lodash-es';
 import { DATE_FORMAT } from '@/hooks/useConstants';
 

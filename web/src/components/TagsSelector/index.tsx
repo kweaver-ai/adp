@@ -6,9 +6,12 @@ import locales from './locales'; // 国际化
 
 const TagsSelector: React.FC<any> = (props: any) => {
   const [tagsData, setTagsData] = useState<Array<{ tag: string; count: number }>>([]);
+  const [i18nLoaded, setI18nLoaded] = useState(false);
 
   useEffect(() => {
+    // 加载国际化文件，完成后更新状态触发重新渲染
     intl.load(locales);
+    setI18nLoaded(true);
   }, []);
 
   useEffect(() => {

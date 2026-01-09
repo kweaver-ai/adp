@@ -11,6 +11,13 @@ const DateViewPreview: React.FC<{ id: string }> = ({ id }) => {
   const [tableData, setTableData] = useState<any>([]);
   const [dataViewInfo, setDataViewInfo] = useState<any>({});
   const [empty, setEmpty] = useState<boolean>(true);
+  const [i18nLoaded, setI18nLoaded] = useState(false);
+
+  useEffect(() => {
+    // 加载国际化文件，完成后更新状态触发重新渲染
+    intl.load(require('../locales').default);
+    setI18nLoaded(true);
+  }, []);
 
   const getDetail = async (): Promise<void> => {
     setLoading(true);

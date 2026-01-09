@@ -126,7 +126,7 @@ const GraphBox = forwardRef<X6CanvasRef, X6CanvasProps>((props, ref) => {
                 >
                   <div className={styles['custom-node-content-choose']}>
                     <IconFont type="icon-dip-add" style={{ fontSize: '14px' }} />
-                    <div>{intl.get('CustomDataView.Global.chooseDataView')}</div>
+                    <div>{intl.get('Global.chooseDataView')}</div>
                   </div>
                 </div>
               )}

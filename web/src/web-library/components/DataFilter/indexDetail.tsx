@@ -1,4 +1,4 @@
-import React, { Fragment, useEffect } from 'react';
+import React, { Fragment, useEffect, useState } from 'react';
 import intl from 'react-intl-universal';
 import { CaretRightOutlined } from '@ant-design/icons';
 import { useDynamicList } from 'ahooks';
@@ -32,8 +32,12 @@ const MultistageFilter = ({
   collapseLabel,
   ...restProps
 }: DataFilterProps): JSX.Element => {
+  const [i18nLoaded, setI18nLoaded] = useState(false);
+
   useEffect(() => {
+    // 加载国际化文件，完成后更新状态触发重新渲染
     intl.load(locales);
+    setI18nLoaded(true);
   }, []);
 
   const getValue = (value: any): PrimaryFilterItem[] => (value as PrimaryFilterValue)?.sub_conditions || [value || defaultValue];

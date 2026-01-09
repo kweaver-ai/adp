@@ -17,6 +17,13 @@ const getIconCom = (type: string): JSX.Element => {
 
 const DataViewGroup: React.FC<{ onSelect: (selectedKeys: any, info?: any) => void; selectedKeys: any[] }> = ({ onSelect, selectedKeys }) => {
   const [treeData, setTreeData] = useState<any[]>([]);
+  const [i18nLoaded, setI18nLoaded] = useState(false);
+
+  useEffect(() => {
+    // 加载国际化文件，完成后更新状态触发重新渲染
+    intl.load(require('../locales').default);
+    setI18nLoaded(true);
+  }, []);
   const getTreeData = async (): Promise<void> => {
     const res = await api.getDatasourceConnection({});
     const cur: TDatasource[] = res.entries.map((val: { bin_data: any; name: any; id: any; type: string }) => ({
