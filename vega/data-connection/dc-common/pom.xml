@@ -123,6 +123,20 @@
             <!--            <scope>system</scope>-->
             <!--            <systemPath>D:/dip/vega-calculate/config/inceptorlib/inceptor-driver-8.37.3.jar</systemPath>-->
         </dependency>
+        <dependency>
+            <groupId>mysql</groupId>
+            <artifactId>mysql-connector-java</artifactId>
+            <!-- 或者如果是较新的版本 8.0.x -->
+            <!-- <artifactId>mysql-connector-j</artifactId> -->
+            <version>8.0.33</version> <!-- 版本号可能不同 -->
+        </dependency>
+        <!-- PostgreSQL 驱动依赖 -->
+        <dependency>
+            <groupId>org.postgresql</groupId>
+            <artifactId>postgresql</artifactId>
+            <version>42.6.0</version> <!-- 你可以根据需要选择较新的稳定版本 -->
+        </dependency>
+
     </dependencies>
 
 </project>
