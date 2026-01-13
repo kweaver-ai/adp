@@ -4,6 +4,10 @@ import cn.hutool.json.JSONArray;
 import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.JSONObject;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.eisoo.dc.common.config.MetaDataConfig;
+import com.eisoo.dc.common.config.ScanTaskPoolConfig;
+import com.eisoo.dc.common.connector.ConnectorConfig;
+import com.eisoo.dc.common.connector.ConnectorConfigCache;
 import com.eisoo.dc.common.constant.Description;
 import com.eisoo.dc.common.constant.Detail;
 import com.eisoo.dc.common.constant.Message;
@@ -12,32 +16,32 @@ import com.eisoo.dc.common.driven.Authorization;
 import com.eisoo.dc.common.driven.UserManagement;
 import com.eisoo.dc.common.driven.service.ServiceEndpoints;
 import com.eisoo.dc.common.enums.ConnectorEnums;
+import com.eisoo.dc.common.enums.ScanStatusEnum;
 import com.eisoo.dc.common.exception.enums.ErrorCodeEnum;
 import com.eisoo.dc.common.exception.vo.AiShuException;
-import com.eisoo.dc.common.util.*;
-import com.eisoo.dc.common.config.MetaDataConfig;
-import com.eisoo.dc.common.config.OpenSearchClientCfg;
-import com.eisoo.dc.common.config.ScanTaskPoolConfig;
 import com.eisoo.dc.common.metadata.entity.DataSourceEntity;
-import com.eisoo.dc.common.metadata.mapper.DataSourceMapper;
-import com.eisoo.dc.common.util.http.MetadataHttpUtils;
-import com.eisoo.dc.common.util.http.OpensearchHttpUtils;
-import com.eisoo.dc.common.vo.IntrospectInfo;
-import com.eisoo.dc.common.vo.ResourceAuthVo;
-import com.eisoo.dc.common.connector.ConnectorConfig;
-import com.eisoo.dc.common.connector.ConnectorConfigCache;
-import com.eisoo.dc.metadata.domain.dto.*;
 import com.eisoo.dc.common.metadata.entity.TaskScanEntity;
 import com.eisoo.dc.common.metadata.entity.TaskScanTableEntity;
+import com.eisoo.dc.common.metadata.mapper.DataSourceMapper;
+import com.eisoo.dc.common.metadata.mapper.TaskScanMapper;
+import com.eisoo.dc.common.metadata.mapper.TaskScanTableMapper;
+import com.eisoo.dc.common.util.CommonUtil;
+import com.eisoo.dc.common.util.LockUtil;
+import com.eisoo.dc.common.util.StringUtils;
+import com.eisoo.dc.common.util.http.MetadataHttpUtils;
+import com.eisoo.dc.common.util.http.OpensearchHttpUtils;
+import com.eisoo.dc.common.util.jdbc.db.DbConnectionStrategyFactory;
+import com.eisoo.dc.common.vo.IntrospectInfo;
+import com.eisoo.dc.common.vo.ResourceAuthVo;
+import com.eisoo.dc.metadata.domain.dto.*;
 import com.eisoo.dc.metadata.domain.vo.QueryStatementVO;
 import com.eisoo.dc.metadata.domain.vo.TableRetryVO;
 import com.eisoo.dc.metadata.domain.vo.TableStatusVO;
 import com.eisoo.dc.metadata.domain.vo.TaskScanVO;
-import com.eisoo.dc.common.metadata.mapper.TaskScanMapper;
-import com.eisoo.dc.common.metadata.mapper.TaskScanTableMapper;
-import com.eisoo.dc.metadata.service.*;
-import com.eisoo.dc.common.enums.ScanStatusEnum;
-
+import com.eisoo.dc.metadata.service.IFieldScanService;
+import com.eisoo.dc.metadata.service.ITableScanService;
+import com.eisoo.dc.metadata.service.ITaskScanService;
+import com.eisoo.dc.metadata.service.ITaskScanTableService;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
@@ -82,8 +86,7 @@ public class TaskScanServiceImpl extends ServiceImpl<TaskScanMapper, TaskScanEnt
     @Qualifier("scanTaskExecutor") // 按名称注入
     private ListeningExecutorService scanTaskExecutor;
     @Autowired
-    private IMetaDataFetchService openSearchMetaDataFetchServiceImpl;
-
+    private MetaDataFetchServiceBase metaDataFetchServiceBase;
     @Autowired(required = false)
     private DataSourceMapper dataSourceMapper;
     @Autowired(required = false)
@@ -293,7 +296,7 @@ public class TaskScanServiceImpl extends ServiceImpl<TaskScanMapper, TaskScanEnt
                     t.getType(),
                     t.getName(),
                     ds.getFType(),
-                    ds.getFType().equals(CommonUtil.OPEN_SEARCH),
+                    ds.getFType().equals(ConnectorEnums.OPENSEARCH.getConnector()),
                     userName,
                     ScanStatusEnum.fromCode(t.getScanStatus()),
                     t.getStartTime(),
@@ -326,7 +329,7 @@ public class TaskScanServiceImpl extends ServiceImpl<TaskScanMapper, TaskScanEnt
                     Message.MESSAGE_INTERNAL_ERROR);
         }
         String fType = dataSourceEntity.getFType();
-        if (CommonUtil.OPEN_SEARCH.equals(fType)) {
+        if (ConnectorEnums.OPENSEARCH.getConnector().equals(fType)) {
             try {
                 response = OpensearchHttpUtils.queryStatement(dataSourceEntity, index, statement);
             } catch (Exception e) {
@@ -383,7 +386,7 @@ public class TaskScanServiceImpl extends ServiceImpl<TaskScanMapper, TaskScanEnt
         // 1.2,ds扫描，首先获取所有的table
         if (0 == type) {
             try {
-                openSearchMetaDataFetchServiceImpl.getTables(taskScanEntityStart, userId);
+                metaDataFetchServiceBase.getTables(taskScanEntityStart, userId);
             } catch (Exception e) {
                 log.error("【元数据扫描:stage-1】dsId:{};dsType:{};taskId:{}  获取table失败,退出!",
                         dsId,
@@ -419,8 +422,10 @@ public class TaskScanServiceImpl extends ServiceImpl<TaskScanMapper, TaskScanEnt
         updateById(taskScanEntity);
     }
 
-    private void submitTablesScanTaskInner(List<TaskScanTableEntity> taskScanTableEntities, Integer type, String userId, boolean isRetry) {
-        ConnectorConfig connectorConfig = connectorConfigCache.getConnectorConfig(CommonUtil.OPEN_SEARCH);
+    private void submitTablesScanTaskInner(List<TaskScanTableEntity> taskScanTableEntities,
+                                           Integer type,
+                                           String userId,
+                                           boolean isRetry) {
         List<TaskScanTableEntity> waitingTableEntities = new ArrayList<>(taskScanTableEntities.size());
         List<ListenableFuture<String>> futures = new ArrayList<>();
         List<String> lockIds = new ArrayList<>();
@@ -431,7 +436,8 @@ public class TaskScanServiceImpl extends ServiceImpl<TaskScanMapper, TaskScanEnt
             taskId = tableEntity.getTaskId();
             String tableName = tableEntity.getTableName();
             String dsId = tableEntity.getDsId();
-            OpenSearchClientCfg openSearchClientCfg = getOpenSearchCfg(dsId);
+            DataSourceEntity dataSourceEntity = dataSourceMapper.selectById(dsId);
+            ConnectorConfig connectorConfig = connectorConfigCache.getConnectorConfig(dataSourceEntity.getFType());
             boolean getLock = LockUtil.GLOBAL_MULTI_TASK_LOCK.tryLock(tableId, 2, TimeUnit.SECONDS, true);
             if (getLock) {
                 // 这个后面要释放
@@ -440,18 +446,19 @@ public class TaskScanServiceImpl extends ServiceImpl<TaskScanMapper, TaskScanEnt
                         tableId,
                         tableName);
                 lockIds.add(tableId);
-                OpenSearchFieldFetchTask openSearchFieldFetchTask = new OpenSearchFieldFetchTask(tableEntity,
+                FieldFetchCallable fieldFetchCallable = new FieldFetchCallable(
+                        tableEntity,
                         tableScanService,
                         fieldScanService,
                         taskScanTableService,
-                        openSearchClientCfg,
+                        dataSourceEntity,
                         userId,
                         connectorConfig
                 );
                 if (type == 1) {
-                    futures.add(tableScanExecutor.submit(openSearchFieldFetchTask));
+                    futures.add(tableScanExecutor.submit(fieldFetchCallable));
                 } else if (type == 0) {
-                    futures.add(dsScanExecutor.submit(openSearchFieldFetchTask));
+                    futures.add(dsScanExecutor.submit(fieldFetchCallable));
                 }
                 log.info("【元数据扫描:stage-2】采集任务获取锁成功，已经提交到pool执行:taskId:{};tableId:{};tableName:{}",
                         taskId,
@@ -482,7 +489,6 @@ public class TaskScanServiceImpl extends ServiceImpl<TaskScanMapper, TaskScanEnt
                                     id);
                         }
                     }
-
                     // 更新中间任务状态信息
                     if (!isRetry) {
                         updateScanTaskProcessInfo(taskId, totalCount, waitMainThread);
@@ -587,19 +593,8 @@ public class TaskScanServiceImpl extends ServiceImpl<TaskScanMapper, TaskScanEnt
         taskScanEntity.setEndTime(new Date());
         taskScanEntity.setTaskResultInfo(JSONObject.toJSONString(taskResultInfo, WriteMapNullValue));
         taskScanMapper.updateById(taskScanEntity);
-        log.info("【元数据扫描】taskId:{}-采集任务成功!ask信息如下：\n{}", taskId, taskScanEntity);
+        log.info("【元数据扫描】taskId:{}-采集任务成功!Task信息如下：\n{}", taskId, taskScanEntity);
     }
-
-    private OpenSearchClientCfg getOpenSearchCfg(String dsId) {
-        DataSourceEntity dataSourceEntity = dataSourceMapper.selectById(dsId);
-        return new OpenSearchClientCfg(dataSourceEntity.getFConnectProtocol(),
-                dataSourceEntity.getFHost(),
-                dataSourceEntity.getFPort(),
-                dataSourceEntity.getFAccount(),
-                RSAUtil.decrypt(dataSourceEntity.getFPassword())
-        );
-    }
-
 
     private void validateParam(TaskScanVO taskScanVO, IntrospectInfo introspectInfo) {
         String userId = StringUtils.defaultString(introspectInfo.getSub());
@@ -681,7 +676,7 @@ public class TaskScanServiceImpl extends ServiceImpl<TaskScanMapper, TaskScanEnt
                     Message.MESSAGE_INTERNAL_ERROR);
         }
         // 非 OPEN_SEARCH只支持数据源类型扫描任务
-        if (!CommonUtil.OPEN_SEARCH.equals(dsType) && type != 0) {
+        if (!DbConnectionStrategyFactory.supportNewScan(dsType) && type != 0) {
             throw new AiShuException(ErrorCodeEnum.BadRequest,
                     Description.DS_SCAN_SUPPORTED_ERROR,
                     String.format(Detail.META_DATA_SCAN_UNSUPPORTED, dsType),
@@ -751,7 +746,8 @@ public class TaskScanServiceImpl extends ServiceImpl<TaskScanMapper, TaskScanEnt
                 ScanStatusEnum.WAIT.getDesc()
         );
         log.info("创建扫描任务成功:{}", taskScanEntity);
-        if (!CommonUtil.OPEN_SEARCH.equals(dsType)) {
+        // 目前支持的：maria mysql opensearch
+        if (!DbConnectionStrategyFactory.supportNewScan(dsType)) {
             try {
                 MetadataHttpUtils.sendMetaDataScan(metaDataConfig, taskId, token);
             } catch (Exception e) {

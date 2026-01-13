@@ -1,16 +1,16 @@
 package com.eisoo.dc.metadata.service.impl;
 
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.eisoo.dc.common.enums.ConnectorEnums;
+import com.eisoo.dc.common.enums.ScanStatusEnum;
 import com.eisoo.dc.common.metadata.entity.DataSourceEntity;
-import com.eisoo.dc.common.metadata.mapper.DataSourceMapper;
 import com.eisoo.dc.common.metadata.entity.TableScanEntity;
 import com.eisoo.dc.common.metadata.entity.TaskScanTableEntity;
-import com.eisoo.dc.common.enums.ScanStatusEnum;
+import com.eisoo.dc.common.metadata.mapper.DataSourceMapper;
 import com.eisoo.dc.common.metadata.mapper.TableScanMapper;
 import com.eisoo.dc.common.metadata.mapper.TaskScanTableMapper;
-import com.eisoo.dc.common.util.CommonUtil;
+import com.eisoo.dc.metadata.service.ITableScanService;
 import com.eisoo.dc.metadata.service.ITaskScanTableService;
-
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -28,6 +28,9 @@ public class TaskScanTableServiceImpl extends ServiceImpl<TaskScanTableMapper, T
     DataSourceMapper dataSourceMapper;
     @Autowired(required = false)
     private TableScanMapper tableScanMapper;
+    @Autowired(required = false)
+    private ITableScanService tableScanService;
+
 
     @Transactional(rollbackFor = Exception.class)
     @Override
@@ -35,7 +38,7 @@ public class TaskScanTableServiceImpl extends ServiceImpl<TaskScanTableMapper, T
         DataSourceEntity dataSourceEntity = dataSourceMapper.selectById(dsId);
         String fSchema = dataSourceEntity.getFSchema();
         String fType = dataSourceEntity.getFType();
-        if (CommonUtil.OPEN_SEARCH.equalsIgnoreCase(fType)) {
+        if (ConnectorEnums.OPENSEARCH.getConnector().equalsIgnoreCase(fType)) {
             fSchema = "default";
         }
         List<TaskScanTableEntity> data = new ArrayList<>(tables.size());
@@ -90,5 +93,12 @@ public class TaskScanTableServiceImpl extends ServiceImpl<TaskScanTableMapper, T
     @Transactional(rollbackFor = Exception.class, propagation = Propagation.REQUIRES_NEW)
     public void updateByIdNewRequires(TaskScanTableEntity taskScanTableEntity) {
         updateById(taskScanTableEntity);
+    }
+
+    @Transactional(rollbackFor = Exception.class)
+    @Override
+    public void updateScanStatusBothTable(TaskScanTableEntity taskScanTableEntity, TableScanEntity tableScanEntity) {
+        this.updateById(taskScanTableEntity);
+        tableScanService.updateById(tableScanEntity);
     }
 }

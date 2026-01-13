@@ -6,6 +6,7 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.eisoo.dc.common.connector.ConnectorConfig;
 import com.eisoo.dc.common.connector.ConnectorConfigCache;
 import com.eisoo.dc.common.connector.TypeConfig;
+import com.eisoo.dc.common.enums.ScanStatusEnum;
 import com.eisoo.dc.common.exception.vo.AiShuException;
 import com.eisoo.dc.common.metadata.entity.FieldScanEntity;
 import com.eisoo.dc.common.metadata.entity.TableScanEntity;
@@ -45,6 +46,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
 import static org.apache.poi.ss.usermodel.CellType.STRING;
 
 /**
@@ -389,7 +391,7 @@ public class ExcelServiceImpl implements ExcelService {
     public String createTable(String userId, ExcelTableConfigDto excelTableConfigDto) {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
         // 3. 格式化输出
-        String now =  LocalDateTime.now().format(formatter);
+        String now = LocalDateTime.now().format(formatter);
         TableScanEntity tableScanEntity = new TableScanEntity();
         tableScanEntity.setFId(UUID.randomUUID().toString());
         tableScanEntity.setFName(excelTableConfigDto.getTableName());
@@ -403,8 +405,8 @@ public class ExcelServiceImpl implements ExcelService {
         tableScanEntity.setFOperationTime(now);
         tableScanEntity.setFOperationUser(userId);
         tableScanEntity.setFOperationType(0);
-        tableScanEntity.setFStatus(0);
-        tableScanEntity.setFStatusChange(0);
+        tableScanEntity.setFStatus(ScanStatusEnum.SUCCESS.getCode());
+        tableScanEntity.setFStatusChange(1);
         tableScanEntity.setFAdvancedParams(getAdvancedParams(excelTableConfigDto));
         tableScanMapper.insert(tableScanEntity);
 
@@ -449,7 +451,7 @@ public class ExcelServiceImpl implements ExcelService {
         return array.toJSONString();
     }
 
-    public void initTypeMapping () {
+    public void initTypeMapping() {
         if (sourceTypeVegaTypeMapping == null) {
             sourceTypeVegaTypeMapping = new HashMap<>();
             ConnectorConfig connectorConfig = connectorConfigCache.getConnectorConfig(CatalogConstant.EXCEL_CATALOG);

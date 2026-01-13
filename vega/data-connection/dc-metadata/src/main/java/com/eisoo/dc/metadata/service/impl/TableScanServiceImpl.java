@@ -23,7 +23,6 @@ import com.eisoo.dc.metadata.domain.dto.TableScanDto;
 import com.eisoo.dc.metadata.domain.vo.DataSourceIdsVo;
 import com.eisoo.dc.metadata.domain.vo.TableIdsVo;
 import com.eisoo.dc.metadata.service.ITableScanService;
-
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -208,11 +207,13 @@ public class TableScanServiceImpl extends ServiceImpl<TableScanMapper, TableScan
         // 查询所有
         // TODO:这里可以根据userId过滤资源
         Set<String> ids = new HashSet<>(tableIds);
-
         HashMap<String, Boolean> tableExistMap = new HashMap<>(ids.size());
-
         List<TableScanEntity> tableScanEntities = tableScanMapper.selectPageBatchIds(ids);
-
+        if (tableScanEntities == null || tableScanEntities.size() == 0) {
+            response.put("entries", null);
+            response.put("total_count", 0);
+            return ResponseEntity.ok(response);
+        }
         HashMap<String, TableScanEntity> mapTab = new HashMap<>(tableScanEntities.size());
         HashMap<String, DataSourceEntity> mapDs = new HashMap<>(tableScanEntities.size());
         HashMap<String, DataSourceEntity> mapDsTmp = new HashMap<>(tableScanEntities.size());

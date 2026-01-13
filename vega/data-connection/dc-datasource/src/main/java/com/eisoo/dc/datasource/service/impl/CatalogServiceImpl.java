@@ -252,7 +252,7 @@ public class CatalogServiceImpl implements CatalogService {
             dataSourceMessage.set("header", header);
             dataSourceMessage.set("payload", payload);
 
-        // 发送消息的代码示例（根据实际需求调整）
+            // 发送消息的代码示例（根据实际需求调整）
             try {
                 mqClient.pub(Topic.AF_DATASOURCE_MESSAGE_TOPIC.getTopicName(), dataSourceMessage.toString());
             } catch (Exception e) {
@@ -991,9 +991,9 @@ public class CatalogServiceImpl implements CatalogService {
                 properties.set(CatalogConstant.PUSH_DOWN_MODULE, pushDownModule);
             }
 
-            if (StringUtils.equalsIgnoreCase(CatalogConstant.ORACLE_CATALOG, type)) {
-                properties.set(CatalogConstant.CASE_INSENSITIVE_NAME, false);
-            }
+//            if (StringUtils.equalsIgnoreCase(CatalogConstant.ORACLE_CATALOG, type)) {
+//                properties.set(CatalogConstant.CASE_INSENSITIVE_NAME, false);
+//            }
 
             if (StringUtils.equalsIgnoreCase(CatalogConstant.MAXCOMPUTE_CATALOG, type)
                     || StringUtils.equalsIgnoreCase(CatalogConstant.HOLOGRES_CATALOG, type)

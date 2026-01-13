@@ -11,6 +11,6 @@ import java.util.List;
  */
 public interface IFieldScanService extends IService<FieldScanEntity> {
     List<FieldScanEntity> selectByTableId(String tableId);
-
+    void fieldScanBatch(List<FieldScanEntity> deletes, List<FieldScanEntity> updateList, List<FieldScanEntity> saveList);
     ResponseEntity<?> getFieldListByTableId(String userId, String tableId, String keyword, int limit, int offset, String sort, String direction);
 }

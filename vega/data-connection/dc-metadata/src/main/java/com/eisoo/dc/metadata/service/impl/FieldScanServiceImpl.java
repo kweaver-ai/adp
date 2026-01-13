@@ -21,6 +21,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Set;
@@ -42,6 +43,20 @@ public class FieldScanServiceImpl extends ServiceImpl<FieldScanMapper, FieldScan
     @Override
     public List<FieldScanEntity> selectByTableId(String tableId) {
         return fieldScanMapper.selectByTableId(tableId);
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void fieldScanBatch(List<FieldScanEntity> deletes, List<FieldScanEntity> updateList, List<FieldScanEntity> saveList) {
+        if (deletes != null && !deletes.isEmpty()) {
+            this.updateBatchById(deletes);
+        }
+        if (!updateList.isEmpty()) {
+            updateBatchById(updateList, 100);
+        }
+        if (!saveList.isEmpty()) {
+            this.saveBatch(saveList, 1000);
+        }
     }
 
     @Override

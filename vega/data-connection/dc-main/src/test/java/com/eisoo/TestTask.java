@@ -1,17 +1,14 @@
 package com.eisoo;
 
-import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.JSONObject;
 import com.eisoo.dc.common.metadata.entity.TaskScanTableEntity;
 import com.eisoo.dc.common.metadata.mapper.DataSourceMapper;
-import com.eisoo.dc.datasource.service.CatalogService;
 import com.eisoo.dc.datasource.service.impl.CatalogServiceImpl;
 import com.eisoo.dc.main.Application;
 import com.eisoo.dc.metadata.domain.vo.*;
 import com.eisoo.dc.common.metadata.mapper.TableScanMapper;
 import com.eisoo.dc.common.metadata.mapper.TaskScanTableMapper;
 import com.eisoo.dc.metadata.service.ITableScanService;
-import com.eisoo.dc.metadata.service.impl.OpenSearchMetaDataFetchServiceImpl;
 import com.eisoo.dc.metadata.service.impl.TaskScanServiceImpl;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
