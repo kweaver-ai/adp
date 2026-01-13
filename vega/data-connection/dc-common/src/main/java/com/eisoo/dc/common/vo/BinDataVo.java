@@ -1,4 +1,4 @@
-package com.eisoo.dc.datasource.domain.vo;
+package com.eisoo.dc.common.vo;
 
 import com.eisoo.dc.common.constant.Message;
 import com.eisoo.dc.common.deserializer.IntegerDeserializer;
