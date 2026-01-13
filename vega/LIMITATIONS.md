@@ -2,15 +2,30 @@
 
 本文档列出了Vega平台当前不支持或有限支持的场景、数据源和其他功能限制。
 
-## 不支持的数据源
+## 支持的数据源
+- mysql
+- opensearch
+- maria
 
-以下数据源当前不在支持范围内：
+## 支持需要安装扩展包
+- oracle
+- postgresql
+- sqlserver
+- doris
+- hologres
+- opengauss
+- dameng
+- gaussdb
+- mongodb
+- hive
+- clickhouse
+- clickhouse
+- maxcompute
+- excel
+- anyshare7
+- tingyun
 
-- Oracle 旧版本 (如 11g 及更早版本)
-- SQL Server 2008 及更早版本
-- MySQL 5.5 及更早版本
-- PostgreSQL 9.4 及更早版本
-- 其他未明确支持的数据库系统
+
 
 ## 功能限制
 
