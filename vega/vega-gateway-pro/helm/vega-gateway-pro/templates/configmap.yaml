@@ -23,8 +23,6 @@ data:
       {{- toYaml .Values.config.trace | nindent 6 }}
     observability:
       {{- toYaml .Values.config.observability | nindent 6 }}
-    kafka:
-      {{- toYaml .Values.config.kafka | nindent 6 }}
     depServices: 
       {{- toYaml .Values.depServices | nindent 6 }}
     rsa:

@@ -1,4 +1,4 @@
-package connectors
+package sql_connectors
 
 import (
 	"fmt"
@@ -7,7 +7,7 @@ import (
 	"vega-gateway-pro/interfaces"
 )
 
-// ConnectorHandler 定义连接器接口
+// ConnectorHandler is an interface for handling SQL queries
 type ConnectorHandler interface {
 	GetResultSet(sql string) (any, error)
 	GetColumns(resultSet any) ([]*interfaces.Column, error)
@@ -15,7 +15,7 @@ type ConnectorHandler interface {
 	Close() error
 }
 
-// NewConnectorHandler 根据数据源类型创建对应的处理器
+// NewConnectorHandler returns a new ConnectorHandler based on the given DataSource
 func NewConnectorHandler(dataSource *interfaces.DataSource) (ConnectorHandler, error) {
 	switch dataSource.Type {
 	case "mysql":

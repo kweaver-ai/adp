@@ -1,4 +1,4 @@
-package connectors
+package sql_connectors
 
 import (
 	"context"
