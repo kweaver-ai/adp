@@ -23,18 +23,23 @@ import com.eisoo.dc.common.exception.enums.ErrorCodeEnum;
 import com.eisoo.dc.common.exception.vo.AiShuException;
 import com.eisoo.dc.common.metadata.entity.*;
 import com.eisoo.dc.common.metadata.mapper.*;
+import com.eisoo.dc.common.util.RSAUtil;
 import com.eisoo.dc.common.msq.ProtonMQClient;
 import com.eisoo.dc.common.msq.Topic;
+import com.eisoo.dc.common.util.http.ExcelHttpUtils;
 import com.eisoo.dc.common.util.CommonUtil;
 import com.eisoo.dc.common.util.LockUtil;
 import com.eisoo.dc.common.util.RSAUtil;
 import com.eisoo.dc.common.util.StringUtils;
 import com.eisoo.dc.common.util.http.ExcelHttpUtils;
 import com.eisoo.dc.common.util.http.TingYunHttpUtils;
-import com.eisoo.dc.common.vo.CatalogDto;
-import com.eisoo.dc.common.vo.IntrospectInfo;
-import com.eisoo.dc.common.vo.ResourceAuthVo;
+import com.eisoo.dc.common.driven.UserManagement;
+import com.eisoo.dc.common.vo.*;
+import com.eisoo.dc.common.constant.CatalogConstant;
+import com.eisoo.dc.common.constant.ResourceAuthConstant;
+import com.eisoo.dc.common.connector.DataSourceDriverManager;
 import com.eisoo.dc.datasource.domain.vo.*;
+import com.eisoo.dc.common.enums.ConnectorEnums;
 import com.eisoo.dc.datasource.enums.DsBuiltInStatus;
 import com.eisoo.dc.datasource.enums.MetadataObtainLevel;
 import com.eisoo.dc.datasource.service.CatalogService;
@@ -56,6 +61,13 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.apache.hc.client5.http.auth.AuthScope;
+import org.apache.hc.client5.http.auth.UsernamePasswordCredentials;
+import org.apache.hc.client5.http.impl.auth.BasicCredentialsProvider;
+import org.apache.hc.core5.http.HttpHost;
+import org.opensearch.client.opensearch.OpenSearchClient;
+import org.opensearch.client.opensearch.cluster.HealthResponse;
+import org.opensearch.client.transport.OpenSearchTransport;
 
 import javax.servlet.http.HttpServletRequest;
 import java.time.Instant;
@@ -99,6 +111,9 @@ public class CatalogServiceImpl implements CatalogService {
 
     @Autowired
     private ServiceEndpoints serviceEndpoints;
+
+    @Autowired
+    private DataSourceDriverManager driverManager;
 
     @Value(value = "${openlookeng.jdbc.pushdown-module}")
     private String pushDownModule;
@@ -272,32 +287,32 @@ public class CatalogServiceImpl implements CatalogService {
         String typeWithUnderscore = dataSourceVo.getType().replace("-", "_");
         String randomString = RandomStringUtils.randomAlphanumeric(8).toLowerCase();
         String catalogName = typeWithUnderscore + "_" + randomString;
-        if (Calculate.getCatalogNameList(serviceEndpoints.getVegaCalculateCoordinator()).contains(catalogName)) {
-            log.error("数据源已存在catalogName:{}", catalogName);
-            throw new AiShuException(ErrorCodeEnum.Conflict, Description.CATALOG_EXIST, catalogName, Message.MESSAGE_DATANOTEXIST_ERROR_SOLUTION);
-        }
+//        if (Calculate.getCatalogNameList(serviceEndpoints.getVegaCalculateCoordinator()).contains(catalogName)) {
+//            log.error("数据源已存在catalogName:{}", catalogName);
+//            throw new AiShuException(ErrorCodeEnum.Conflict, Description.CATALOG_EXIST, catalogName, Message.MESSAGE_DATANOTEXIST_ERROR_SOLUTION);
+//        }
+//
+//        //opensearch 只需要生成catalogName，统一数据查询传参
+//        if (dataSourceVo.getType().equals(CatalogConstant.OPENSEARCH_CATALOG)) {
+//            return catalogName;
+//        }
+//
+//        CatalogDto catalogDto = buildCatalogDto(token, dataSourceVo.getType(), dataSourceVo.getBinData(), catalogName);
+//
+//        //创建catalog
+//        Calculate.createCatalog(serviceEndpoints.getVegaCalculateCoordinator(), catalogDto);
+//        log.info("数据源catalog添加成功:{}", catalogDto.getCatalogName());
+//
+//        //初始化下推规则
+//        try {
+//            insertCatalogRule(catalogDto.getCatalogName(), catalogDto.getConnectorName());
+//        } catch (Exception e) {
+//            Calculate.deleteCatalog(serviceEndpoints.getVegaCalculateCoordinator(), catalogDto.getCatalogName());
+//            log.info("catalogName:{},新增数据源时添加下推规则失败，并删除数据源成功!", catalogDto.getCatalogName());
+//            throw new AiShuException(ErrorCodeEnum.InternalServerError, Description.DATABASE_ERROR, Detail.DB_ERROR, Message.MESSAGE_DATABASE_ERROR_SOLUTION);
+//        }
 
-        //opensearch 只需要生成catalogName，统一数据查询传参
-        if (dataSourceVo.getType().equals(CatalogConstant.OPENSEARCH_CATALOG)) {
-            return catalogName;
-        }
-
-        CatalogDto catalogDto = buildCatalogDto(token, dataSourceVo.getType(), dataSourceVo.getBinData(), catalogName);
-
-        //创建catalog
-        Calculate.createCatalog(serviceEndpoints.getVegaCalculateCoordinator(), catalogDto);
-        log.info("数据源catalog添加成功:{}", catalogDto.getCatalogName());
-
-        //初始化下推规则
-        try {
-            insertCatalogRule(catalogDto.getCatalogName(), catalogDto.getConnectorName());
-        } catch (Exception e) {
-            Calculate.deleteCatalog(serviceEndpoints.getVegaCalculateCoordinator(), catalogDto.getCatalogName());
-            log.info("catalogName:{},新增数据源时添加下推规则失败，并删除数据源成功!", catalogDto.getCatalogName());
-            throw new AiShuException(ErrorCodeEnum.InternalServerError, Description.DATABASE_ERROR, Detail.DB_ERROR, Message.MESSAGE_DATABASE_ERROR_SOLUTION);
-        }
-
-        return catalogDto.getCatalogName();
+        return catalogName;
     }
 
     private CatalogDto buildCatalogDto(String token, String type, BinDataVo binData, String CatalogName) {
@@ -359,6 +374,7 @@ public class CatalogServiceImpl implements CatalogService {
 
         //测试连接
         JSONObject result = new JSONObject();
+        binData.setPassword(decryptPassword(binData.getPassword()));
         Boolean testResult = connect(CommonUtil.getToken(request), type, binData);
 
         result.set("status", testResult);
@@ -391,7 +407,7 @@ public class CatalogServiceImpl implements CatalogService {
             String host = binDataVo.getHost();
             String port = String.valueOf(binDataVo.getPort());
             String username = binDataVo.getAccount();
-            String password = decryptPassword(binDataVo.getPassword());
+            String password = binDataVo.getPassword();
             token = ExcelHttpUtils.getToken(host, port, username, password);
             url = ExcelHttpUtils.getUrl(binDataVo.getConnectProtocol(), host, port);
         }
@@ -430,7 +446,7 @@ public class CatalogServiceImpl implements CatalogService {
         String host = binDataVo.getHost();
         String port = String.valueOf(binDataVo.getPort());
         String username = binDataVo.getAccount();
-        String password = decryptPassword(binDataVo.getPassword());
+        String password = binDataVo.getPassword();
         String base = binDataVo.getStorageBase();
         String token = ExcelHttpUtils.getToken(host, port, username, password);
         String url = ExcelHttpUtils.getUrl(binDataVo.getConnectProtocol(), host, port);
@@ -448,7 +464,7 @@ public class CatalogServiceImpl implements CatalogService {
         String host = binDataVo.getHost();
         int port = binDataVo.getPort();
         String apiKey = binDataVo.getAccount();
-        String secretKey = decryptPassword(binDataVo.getPassword());
+        String secretKey = binDataVo.getPassword();
         try {
             String accessToken = TingYunHttpUtils.getAccessToken(protocol, host, port, apiKey, secretKey);
             TingYunHttpUtils.ping(protocol, host, port, accessToken);
@@ -459,6 +475,24 @@ public class CatalogServiceImpl implements CatalogService {
     }
 
     private Boolean tryConnectCatalog(String type, BinDataVo binData) {
+        // 优先尝试使用新的驱动架构进行连接测试
+        try {
+            // 验证连接参数
+            driverManager.validateConnectionParams(type, binData);
+            
+            // 使用新驱动测试连接
+            if (driverManager.testConnection(type, binData)) {
+                return true;
+            }
+            
+            log.warn("使用新驱动测试连接失败，回退到原有方法");
+        } catch (IllegalArgumentException e) {
+            log.warn("新驱动不支持该类型数据源: {}, 使用原有方法进行测试", type);
+        } catch (Exception e) {
+            log.error("使用新驱动测试连接时发生错误: {}, 回退到原有方法", e.getMessage());
+        }
+        
+        // 回退到原有的连接测试方法
         String typeWithUnderscore = type.replace("-", "_");
         String randomString = RandomStringUtils.randomAlphanumeric(8).toLowerCase();
         String catalogName = CatalogConstant.TEST_CATALOG_PREFIX + typeWithUnderscore + "_" + randomString;
@@ -475,7 +509,6 @@ public class CatalogServiceImpl implements CatalogService {
     }
 
     private Boolean tryConnectOpenSearch(BinDataVo binData) {
-        String password = decryptPassword(binData.getPassword());
 
         try {
             HttpHost host = new HttpHost(binData.getConnectProtocol(), binData.getHost(), binData.getPort());
@@ -483,7 +516,7 @@ public class CatalogServiceImpl implements CatalogService {
             BasicCredentialsProvider credentialsProvider = new BasicCredentialsProvider();
             credentialsProvider.setCredentials(
                     new AuthScope(host),
-                    new UsernamePasswordCredentials(binData.getAccount(), password.toCharArray())
+                    new UsernamePasswordCredentials(binData.getAccount(), binData.getPassword().toCharArray())
             );
 
             try (RestClient restClient = RestClient.builder(host)
@@ -840,8 +873,9 @@ public class CatalogServiceImpl implements CatalogService {
         if (!type.equals(CatalogConstant.TINGYUN_CATALOG)
                 && !type.equals(CatalogConstant.ANYSHARE7_CATALOG)
                 && !type.equals(CatalogConstant.OPENSEARCH_CATALOG)) {
+            binData.setPassword(decryptPassword(binData.getPassword()));
             CatalogDto newCatalog = buildCatalogDto(token, type, binData, dataSourceEntity.getFCatalog());
-            Calculate.updateCatalog(serviceEndpoints.getVegaCalculateCoordinator(), newCatalog);
+           // Calculate.updateCatalog(serviceEndpoints.getVegaCalculateCoordinator(), newCatalog);
             log.info("数据源catalog更新成功:{}", newCatalog.getCatalogName());
         }
 
@@ -909,8 +943,6 @@ public class CatalogServiceImpl implements CatalogService {
     private JSONObject buildProperties(String token, String catalogName, String type, BinDataVo params) {
         JSONObject properties = new JSONObject();
 
-        String password = decryptPassword(params.getPassword());
-
         if (type.equals(CatalogConstant.EXCEL_CATALOG)) {
             properties.set("excel.catalog", catalogName);
             properties.set("excel.protocol", params.getStorageProtocol());
@@ -925,12 +957,12 @@ public class CatalogServiceImpl implements CatalogService {
                 properties.set("excel.host", params.getHost());
                 properties.set("excel.port", params.getPort());
                 properties.set("excel.username", params.getAccount());
-                properties.set("excel.password", password);
+                properties.set("excel.password", params.getPassword());
                 properties.set("excel.base", params.getStorageBase());
             }
         } else if (type.equals(CatalogConstant.MONGO_CATALOG)) {
             properties.set("mongodb.seeds", params.getHost() + ":" + params.getPort());
-            properties.set("mongodb.credentials", params.getAccount() + ":" + password + "@" + params.getDatabaseName());
+            properties.set("mongodb.credentials", params.getAccount() + ":" + params.getPassword() + "@" + params.getDatabaseName());
             if (StringUtils.isNotBlank(params.getReplicaSet())) {
                 properties.set("mongodb.required-replica-set", params.getReplicaSet());
             }
@@ -975,7 +1007,7 @@ public class CatalogServiceImpl implements CatalogService {
 
             if (StringUtils.isNotBlank(params.getAccount())) {
                 properties.set(CatalogConstant.USER, params.getAccount());
-                properties.set(CatalogConstant.PASSWORD, password);
+                properties.set(CatalogConstant.PASSWORD, params.getPassword());
             } else {
                 properties.set(CatalogConstant.CONNECTION_URL, jdbcUrl + ";guardianToken=" + params.getToken());
                 properties.set(CatalogConstant.USER, "");
@@ -1053,12 +1085,12 @@ public class CatalogServiceImpl implements CatalogService {
             throw new AiShuException(ErrorCodeEnum.BadRequest, Detail.BUILT_IN_CATALOG_DEL_UNSUPPORTED);
         }
 
-        if (!Calculate.getCatalogNameList(serviceEndpoints.getVegaCalculateCoordinator()).contains(name)) {
-            log.error("数据源不存在,catalogName:{}", name);
-            throw new AiShuException(ErrorCodeEnum.InternalServerError, Description.CATALOG_NOT_EXIST, name, Message.MESSAGE_DATANOTEXIST_ERROR_SOLUTION);
-        }
+//        if (!Calculate.getCatalogNameList(serviceEndpoints.getVegaCalculateCoordinator()).contains(name)) {
+//            log.error("数据源不存在,catalogName:{}", name);
+//            throw new AiShuException(ErrorCodeEnum.InternalServerError, Description.CATALOG_NOT_EXIST, name, Message.MESSAGE_DATANOTEXIST_ERROR_SOLUTION);
+//        }
 
-        Calculate.deleteCatalog(serviceEndpoints.getVegaCalculateCoordinator(), name);
+        //Calculate.deleteCatalog(serviceEndpoints.getVegaCalculateCoordinator(), name);
     }
 
     @Override

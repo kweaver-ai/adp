@@ -1,7 +1,8 @@
-package com.eisoo.dc.datasource.domain.vo;
+package com.eisoo.dc.common.vo;
 
 import com.eisoo.dc.common.constant.Message;
 import com.eisoo.dc.common.deserializer.StringDeserializer;
+import com.eisoo.dc.common.vo.BinDataVo;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
