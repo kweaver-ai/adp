@@ -13,10 +13,10 @@ import (
 	"sync"
 	"time"
 	"vega-gateway-pro/common"
-	"vega-gateway-pro/common/rsa"
 	"vega-gateway-pro/interfaces"
 	"vega-gateway-pro/logics"
-	"vega-gateway-pro/logics/fetch/connectors"
+	"vega-gateway-pro/logics/fetch/connectors/dsl_connectors"
+	"vega-gateway-pro/logics/fetch/connectors/sql_connectors"
 	"vega-gateway-pro/logics/fetch/sqlglot"
 	"vega-gateway-pro/version"
 )
@@ -116,6 +116,52 @@ func (fs *Service) FetchQuery(ctx context.Context, query *interfaces.FetchQueryR
 	fs.QuerySize++
 	fs.querySizeLock.Unlock()
 
+	if query.Type == 3 {
+		return fs.fetchDslQuery(ctx, query)
+	}
+	return fs.fetchSqlQuery(ctx, query)
+}
+
+// fetchDslQuery dsl query
+func (fs *Service) fetchDslQuery(ctx context.Context, query *interfaces.FetchQueryReq) (resp *interfaces.FetchResp, err error) {
+	logger.Debugf("Fetch dsl query, dsl: %s, tables: %s", query.Dsl, query.TableNames)
+	// 记录开始时间
+	startTime := time.Now()
+	defer func() {
+		// 减少查询数量
+		fs.querySizeLock.Lock()
+		fs.QuerySize--
+		fs.querySizeLock.Unlock()
+		// 记录执行耗时
+		logger.Debugf("Fetch dsl query in %v, dsl: %s, tables: %s", time.Since(startTime), query.Dsl, query.TableNames)
+	}()
+
+	dataSource, err := fs.dataConnectionAccess.GetDataSourceById(ctx, query.DataSourceId)
+	if err != nil {
+		logger.Errorf("Get data source failed: %s", err.Error())
+		return nil, rest.NewHTTPError(ctx, http.StatusInternalServerError, rest.PublicError_InternalServerError).
+			WithErrorDetails(err.Error())
+	}
+
+	connector, err := dsl_connectors.NewConnectorHandler(dataSource)
+	dslResp, err := connector.QueryStatement(query.TableNames, query.Dsl)
+	if err != nil {
+		logger.Errorf("Query dsl failed, %s", err.Error())
+		return nil, rest.NewHTTPError(ctx, http.StatusInternalServerError, rest.PublicError_InternalServerError).
+			WithErrorDetails(err.Error())
+	}
+	res := &interfaces.FetchResp{
+		Entries:    []interface{}{dslResp},
+		TotalCount: 0,
+	}
+
+	return res, nil
+}
+
+// fetchSqlQuery sql query
+func (fs *Service) fetchSqlQuery(ctx context.Context, query *interfaces.FetchQueryReq) (resp *interfaces.FetchResp, err error) {
+	logger.Debugf("Fetch sql query, sql: %s, batchSize: %d, timeout: %d", query.Sql, query.BatchSize, query.Timeout)
+
 	queryId := fs.generateQueryId()
 	slug := generateSlug()
 
@@ -151,10 +197,8 @@ func (fs *Service) FetchQuery(ctx context.Context, query *interfaces.FetchQueryR
 		}
 
 		// 记录执行耗时
-		logger.Debugf("Fetch query in %v, sql: %s, queryId: %s, slug: %s", time.Since(startTime), query.Sql, queryId, slug)
+		logger.Debugf("Fetch sql query in %v, sql: %s, queryId: %s, slug: %s", time.Since(startTime), query.Sql, queryId, slug)
 	}()
-
-	catalog := ""
 
 	logger.Infof("Original SQL: %s", query.Sql)
 
@@ -179,6 +223,8 @@ func (fs *Service) FetchQuery(ctx context.Context, query *interfaces.FetchQueryR
 		return nil, rest.NewHTTPError(ctx, http.StatusBadRequest, rest.PublicError_BadRequest).
 			WithErrorDetails("Sql not contain table")
 	}
+
+	catalog := ""
 	for _, table := range tablesResult.Tables {
 		if catalog == "" && table.Catalog != "" {
 			catalog = table.Catalog
@@ -198,11 +244,6 @@ func (fs *Service) FetchQuery(ctx context.Context, query *interfaces.FetchQueryR
 			return nil, rest.NewHTTPError(ctx, http.StatusInternalServerError, rest.PublicError_InternalServerError).
 				WithErrorDetails(err.Error())
 		}
-		if dataSource == nil {
-			logger.Errorf("Get data source failed: data source not found")
-			return nil, rest.NewHTTPError(ctx, http.StatusNotFound, rest.PublicError_NotFound).
-				WithErrorDetails("data source not found")
-		}
 
 		//校验data_source_id和catalog是否匹配
 		if dataSource.BinData.CatalogName != catalog {
@@ -211,15 +252,8 @@ func (fs *Service) FetchQuery(ctx context.Context, query *interfaces.FetchQueryR
 				WithErrorDetails("catalog name not match")
 		}
 
-		dataSource.BinData.Password, err = rsa.Decrypt(dataSource.BinData.Password)
-		if err != nil {
-			logger.Errorf("Decrypt password failed: %s", err.Error())
-			return nil, rest.NewHTTPError(ctx, http.StatusInternalServerError, rest.PublicError_InternalServerError).
-				WithErrorDetails(err.Error())
-		}
-
 		//根据数据源类型创建连接器
-		connector, err := connectors.NewConnectorHandler(dataSource)
+		connector, err := sql_connectors.NewConnectorHandler(dataSource)
 		if err != nil {
 			logger.Errorf("New connector handler failed: %s", err.Error())
 
@@ -257,7 +291,7 @@ func (fs *Service) FetchQuery(ctx context.Context, query *interfaces.FetchQueryR
 				} else {
 					// 直连查询获取结果集
 					logger.Infof("Transpiled SQL query, SQL: %s", sqlParseResult.SQL)
-					connector, err = connectors.NewConnectorHandler(dataSource)
+					connector, err = sql_connectors.NewConnectorHandler(dataSource)
 					if err != nil {
 						logger.Errorf("New connector handler failed: %s", err.Error())
 
@@ -309,7 +343,7 @@ func (fs *Service) FetchQuery(ctx context.Context, query *interfaces.FetchQueryR
 }
 
 // getDataFromQueryResult 从查询结果集中获取数据
-func (fs *Service) getDataFromQueryResult(ctx context.Context, connector connectors.ConnectorHandler, resultSet any, queryType int, queryId string, slug string) error {
+func (fs *Service) getDataFromQueryResult(ctx context.Context, connector sql_connectors.ConnectorHandler, resultSet any, queryType int, queryId string, slug string) error {
 
 	queryCacheKey := fmt.Sprintf("%s_%s", queryId, slug)
 

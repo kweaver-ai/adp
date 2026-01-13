@@ -12,6 +12,7 @@ import (
 	"net/http"
 	"sync"
 	"vega-gateway-pro/common"
+	"vega-gateway-pro/common/rsa"
 	"vega-gateway-pro/interfaces"
 )
 
@@ -100,15 +101,6 @@ func (dca *dataConnectionAccess) GetDataSourceById(ctx context.Context, dataSour
 		return nil, fmt.Errorf("get Vega DataSource Error: %v", httpErr.Error())
 	}
 
-	if respData == nil {
-		// 添加异常时的 trace 属性
-		o11y.AddHttpAttrs4Ok(span, respCode)
-		// 记录模型不存在的日志
-		o11y.Warn(ctx, "Http response body is null")
-
-		return nil, nil
-	}
-
 	var res interfaces.DataSource
 	if err = sonic.Unmarshal(respData, &res); err != nil {
 		logger.Errorf("DrivenMetadata GetDataSourceById sonic.Unmarshal error: %v", err)
@@ -117,6 +109,14 @@ func (dca *dataConnectionAccess) GetDataSourceById(ctx context.Context, dataSour
 		o11y.Error(ctx, fmt.Sprintf("Unmalshal DataSource failed: %v", err))
 
 		return nil, err
+	}
+
+	// 解密密码
+	res.BinData.Password, err = rsa.Decrypt(res.BinData.Password)
+	if err != nil {
+		logger.Errorf("Decrypt password failed: %s", err.Error())
+		return nil, rest.NewHTTPError(ctx, http.StatusInternalServerError, rest.PublicError_InternalServerError).
+			WithErrorDetails(err.Error())
 	}
 
 	o11y.AddHttpAttrs4Ok(span, respCode)
