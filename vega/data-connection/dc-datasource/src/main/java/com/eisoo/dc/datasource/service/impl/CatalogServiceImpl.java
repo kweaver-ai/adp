@@ -145,6 +145,8 @@ public class CatalogServiceImpl implements CatalogService {
 
         String type = params.getType();
         BinDataVo binData = params.getBinData();
+        String encryptedPassword = binData.getPassword();
+        binData.setPassword(decryptPassword(binData.getPassword()));
 
         //在创建前先判断是否支持的数据源类型
         try {
@@ -185,7 +187,7 @@ public class CatalogServiceImpl implements CatalogService {
                 binData.getHost(),
                 binData.getPort(),
                 binData.getAccount(),
-                binData.getPassword(),
+                encryptedPassword,
                 binData.getStorageProtocol(),
                 binData.getStorageBase(),
                 binData.getToken(),
@@ -831,6 +833,8 @@ public class CatalogServiceImpl implements CatalogService {
 
         String type = params.getType();
         BinDataVo binData = params.getBinData();
+        String encryptedPassword = binData.getPassword();
+        binData.setPassword(decryptPassword(binData.getPassword()));
 
         try {
             ConnectorEnums.checkSupportedConnector(type);
@@ -874,7 +878,7 @@ public class CatalogServiceImpl implements CatalogService {
         dataSourceEntity.setFHost(binData.getHost());
         dataSourceEntity.setFPort(binData.getPort());
         dataSourceEntity.setFAccount(binData.getAccount());
-        dataSourceEntity.setFPassword(binData.getPassword());
+        dataSourceEntity.setFPassword(encryptedPassword);
         dataSourceEntity.setFStorageBase(binData.getStorageBase());
         dataSourceEntity.setFToken(binData.getToken());
         dataSourceEntity.setFReplicaSet(binData.getReplicaSet());
@@ -895,7 +899,6 @@ public class CatalogServiceImpl implements CatalogService {
         if (!type.equals(CatalogConstant.TINGYUN_CATALOG)
                 && !type.equals(CatalogConstant.ANYSHARE7_CATALOG)
                 && !type.equals(CatalogConstant.OPENSEARCH_CATALOG)) {
-            binData.setPassword(decryptPassword(binData.getPassword()));
             CatalogDto newCatalog = buildCatalogDto(token, type, binData, dataSourceEntity.getFCatalog());
            // Calculate.updateCatalog(serviceEndpoints.getVegaCalculateCoordinator(), newCatalog);
             log.info("数据源catalog更新成功:{}", newCatalog.getCatalogName());
