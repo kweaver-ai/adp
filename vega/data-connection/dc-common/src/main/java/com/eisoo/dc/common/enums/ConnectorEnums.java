@@ -3,6 +3,8 @@ package com.eisoo.dc.common.enums;
 import com.baomidou.mybatisplus.annotation.EnumValue;
 
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -79,4 +81,24 @@ public enum ConnectorEnums {
                 .collect(Collectors.toSet());
     }
 
+    /**
+     * 检查连接器是否被支持
+     *
+     * @param connector 连接器名称
+     * @return 如果支持则返回true
+     * @throws IllegalArgumentException 如果不支持则抛出异常，提示安装Etrino可选包
+     */
+    public static boolean checkSupportedConnector(String connector) {
+        ConnectorEnums connectorEnum = fromConnector(connector);
+        Set<String> supportedConnectors = Collections.unmodifiableSet(new HashSet<>(Arrays.asList("mysql", "maria", "opensearch")));
+        
+        if (!supportedConnectors.contains(connectorEnum.getConnector().toLowerCase())) {
+            throw new IllegalArgumentException(
+                String.format("Connector '%s' is not supported in the current installation. " +
+                    "Please install the Etrino optional package to enable support for this connector.", 
+                    connectorEnum.getMapping())
+            );
+        }
+        return true;
+    }
 }
