@@ -63,9 +63,6 @@ var (
 		UpdateTime: testUpdateTime,
 		ModuleType: interfaces.MODULE_TYPE_ACTION_TYPE,
 	}
-	emptyActionType = &interfaces.ActionType{
-		ModuleType: interfaces.MODULE_TYPE_ACTION_TYPE,
-	}
 )
 
 func MockNewActionTypeAccess(appSetting *common.AppSetting) (*actionTypeAccess, sqlmock.Sqlmock) {
