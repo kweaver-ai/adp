@@ -69,18 +69,18 @@ func (mr *MockObjectTypeServiceMockRecorder) CheckObjectTypeExistByName(ctx, knI
 }
 
 // CreateObjectTypes mocks base method.
-func (m *MockObjectTypeService) CreateObjectTypes(ctx context.Context, tx *sql.Tx, objectTypes []*interfaces.ObjectType, mode string) ([]string, error) {
+func (m *MockObjectTypeService) CreateObjectTypes(ctx context.Context, tx *sql.Tx, objectTypes []*interfaces.ObjectType, mode string, needCreateConceptGroupRelation bool) ([]string, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "CreateObjectTypes", ctx, tx, objectTypes, mode)
+	ret := m.ctrl.Call(m, "CreateObjectTypes", ctx, tx, objectTypes, mode, needCreateConceptGroupRelation)
 	ret0, _ := ret[0].([]string)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // CreateObjectTypes indicates an expected call of CreateObjectTypes.
-func (mr *MockObjectTypeServiceMockRecorder) CreateObjectTypes(ctx, tx, objectTypes, mode interface{}) *gomock.Call {
+func (mr *MockObjectTypeServiceMockRecorder) CreateObjectTypes(ctx, tx, objectTypes, mode, needCreateConceptGroupRelation interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateObjectTypes", reflect.TypeOf((*MockObjectTypeService)(nil).CreateObjectTypes), ctx, tx, objectTypes, mode)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateObjectTypes", reflect.TypeOf((*MockObjectTypeService)(nil).CreateObjectTypes), ctx, tx, objectTypes, mode, needCreateConceptGroupRelation)
 }
 
 // DeleteObjectTypesByIDs mocks base method.
@@ -144,18 +144,18 @@ func (mr *MockObjectTypeServiceMockRecorder) GetObjectTypeIDsByKnID(ctx, knID, b
 }
 
 // GetObjectTypesByIDs mocks base method.
-func (m *MockObjectTypeService) GetObjectTypesByIDs(ctx context.Context, knID, branch string, otIDs []string) ([]*interfaces.ObjectType, error) {
+func (m *MockObjectTypeService) GetObjectTypesByIDs(ctx context.Context, tx *sql.Tx, knID, branch string, otIDs []string) ([]*interfaces.ObjectType, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetObjectTypesByIDs", ctx, knID, branch, otIDs)
+	ret := m.ctrl.Call(m, "GetObjectTypesByIDs", ctx, tx, knID, branch, otIDs)
 	ret0, _ := ret[0].([]*interfaces.ObjectType)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetObjectTypesByIDs indicates an expected call of GetObjectTypesByIDs.
-func (mr *MockObjectTypeServiceMockRecorder) GetObjectTypesByIDs(ctx, knID, branch, otIDs interface{}) *gomock.Call {
+func (mr *MockObjectTypeServiceMockRecorder) GetObjectTypesByIDs(ctx, tx, knID, branch, otIDs interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetObjectTypesByIDs", reflect.TypeOf((*MockObjectTypeService)(nil).GetObjectTypesByIDs), ctx, knID, branch, otIDs)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetObjectTypesByIDs", reflect.TypeOf((*MockObjectTypeService)(nil).GetObjectTypesByIDs), ctx, tx, knID, branch, otIDs)
 }
 
 // GetObjectTypesMapByIDs mocks base method.
@@ -188,9 +188,9 @@ func (mr *MockObjectTypeServiceMockRecorder) InsertOpenSearchData(ctx, objectTyp
 }
 
 // ListObjectTypes mocks base method.
-func (m *MockObjectTypeService) ListObjectTypes(ctx context.Context, query interfaces.ObjectTypesQueryParams) ([]*interfaces.ObjectType, int, error) {
+func (m *MockObjectTypeService) ListObjectTypes(ctx context.Context, tx *sql.Tx, query interfaces.ObjectTypesQueryParams) ([]*interfaces.ObjectType, int, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "ListObjectTypes", ctx, query)
+	ret := m.ctrl.Call(m, "ListObjectTypes", ctx, tx, query)
 	ret0, _ := ret[0].([]*interfaces.ObjectType)
 	ret1, _ := ret[1].(int)
 	ret2, _ := ret[2].(error)
@@ -198,9 +198,9 @@ func (m *MockObjectTypeService) ListObjectTypes(ctx context.Context, query inter
 }
 
 // ListObjectTypes indicates an expected call of ListObjectTypes.
-func (mr *MockObjectTypeServiceMockRecorder) ListObjectTypes(ctx, query interface{}) *gomock.Call {
+func (mr *MockObjectTypeServiceMockRecorder) ListObjectTypes(ctx, tx, query interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListObjectTypes", reflect.TypeOf((*MockObjectTypeService)(nil).ListObjectTypes), ctx, query)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListObjectTypes", reflect.TypeOf((*MockObjectTypeService)(nil).ListObjectTypes), ctx, tx, query)
 }
 
 // SearchObjectTypes mocks base method.

@@ -121,10 +121,6 @@ func (r *restHandler) CreateActionTypes(c *gin.Context, visitor rest.Visitor) {
 	}
 
 	// 接受绑定参数
-	// reqBody := []*interfaces.ActionType{}
-	// err = c.ShouldBindJSON(&reqBody)
-
-	// 参数动态绑定
 	var requestData struct {
 		Entries []*interfaces.ActionType `json:"entries"`
 	}
@@ -840,7 +836,7 @@ func (r *restHandler) SearchActionTypes(c *gin.Context, visitor rest.Visitor) {
 
 	// todo: 校验：概念类型非空时，需要是指定的枚举类型；过滤条件的字段只能是type_id, type_name, property_name, property_dispaly_name, comment, *
 	if query.Limit == 0 {
-		query.Limit = 10
+		query.Limit = interfaces.DEFAULT_CONCEPT_SEARCH_LIMIT
 	}
 
 	if query.Sort == nil {
@@ -850,7 +846,7 @@ func (r *restHandler) SearchActionTypes(c *gin.Context, visitor rest.Visitor) {
 				Direction: interfaces.DESC_DIRECTION,
 			},
 			{
-				Field:     "id",
+				Field:     interfaces.CONCEPT_ID_FIELD,
 				Direction: interfaces.ASC_DIRECTION,
 			},
 		}

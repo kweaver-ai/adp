@@ -1,5 +1,7 @@
 package interfaces
 
+import "ontology-manager/interfaces/data_type"
+
 const (
 
 	// 逻辑属性类型
@@ -11,6 +13,55 @@ var (
 	OBJECT_TYPE_SORT = map[string]string{
 		"name":        "f_name",
 		"update_time": "f_update_time",
+	}
+
+	// 主键的属性的类型只能是: integer, unsigned integer, string
+	ValidPrimaryKeyTypes = map[string]bool{
+		data_type.DATATYPE_INTEGER:          true,
+		data_type.DATATYPE_UNSIGNED_INTEGER: true,
+		data_type.DATATYPE_STRING:           true,
+	}
+
+	//  标题的属性的类型支持： integer, unsigned integer, float, decimal, string, text, date, timestamp, time, datetime, boolean
+	ValidDisplayKeyTypes = map[string]bool{
+		data_type.DATATYPE_INTEGER:          true,
+		data_type.DATATYPE_UNSIGNED_INTEGER: true,
+		data_type.DATATYPE_FLOAT:            true,
+		data_type.DATATYPE_DECIMAL:          true,
+		data_type.DATATYPE_STRING:           true,
+		data_type.DATATYPE_TEXT:             true,
+		data_type.DATATYPE_DATE:             true,
+		data_type.DATATYPE_TIMESTAMP:        true,
+		data_type.DATATYPE_TIME:             true,
+		data_type.DATATYPE_DATETIME:         true,
+		data_type.DATATYPE_BOOLEAN:          true,
+	}
+
+	// 逻辑资源类型需有效，当前支持 metric, operator
+	ValidLogicSourceTypes = map[string]bool{
+		LOGIC_PROPERTY_TYPE_METRIC:   true,
+		LOGIC_PROPERTY_TYPE_OPERATOR: true,
+	}
+
+	// 有效的属性类型：integer, unsigned integer, float, decimal, string, text, date, timestamp, time, datetime, boolean, binary, json, vector, point, shape, ip。
+	ValidDataPropertyTypes = map[string]bool{
+		data_type.DATATYPE_INTEGER:          true,
+		data_type.DATATYPE_UNSIGNED_INTEGER: true,
+		data_type.DATATYPE_STRING:           true,
+		data_type.DATATYPE_FLOAT:            true,
+		data_type.DATATYPE_DECIMAL:          true,
+		data_type.DATATYPE_TEXT:             true,
+		data_type.DATATYPE_DATE:             true,
+		data_type.DATATYPE_TIMESTAMP:        true,
+		data_type.DATATYPE_TIME:             true,
+		data_type.DATATYPE_DATETIME:         true,
+		data_type.DATATYPE_BOOLEAN:          true,
+		data_type.DATATYPE_BINARY:           true,
+		data_type.DATATYPE_JSON:             true,
+		data_type.DATATYPE_VECTOR:           true,
+		data_type.DATATYPE_POINT:            true,
+		data_type.DATATYPE_SHAPE:            true,
+		data_type.DATATYPE_IP:               true,
 	}
 )
 
@@ -76,7 +127,7 @@ type DataProperty struct {
 	Type        string `json:"type" mapstructure:"type"`
 	Comment     string `json:"comment" mapstructure:"comment"`
 
-	MappedField Field `json:"mapped_field" mapstructure:"mapped_field"`
+	MappedField *Field `json:"mapped_field,omitempty" mapstructure:"mapped_field,omitempty"`
 
 	IndexConfig *IndexConfig `json:"index_config,omitempty" mapstructure:"index_config,omitempty"`
 

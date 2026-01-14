@@ -70,5 +70,15 @@ func ValidateActionType(ctx context.Context, actionType *interfaces.ActionType) 
 		}
 	}
 
+	// parameters 非空时：参数名称非空
+	if len(actionType.Parameters) > 0 {
+		for _, param := range actionType.Parameters {
+			if param.Name == "" {
+				return rest.NewHTTPError(ctx, http.StatusBadRequest, oerrors.OntologyManager_ActionType_InvalidParameter).
+					WithErrorDetails(fmt.Sprintf("行动类[%s]行动资源参数名称不能为空", actionType.ATName))
+			}
+		}
+	}
+
 	return nil
 }

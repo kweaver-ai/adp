@@ -161,8 +161,6 @@ func (kns *knowledgeNetworkService) CreateKN(ctx context.Context, kn *interfaces
 	kn.CreateTime = currentTime
 	kn.UpdateTime = currentTime
 
-	// todo: 处理版本
-
 	// 0. 开始事务
 	tx, err := kns.db.Begin()
 	if err != nil {
@@ -1079,6 +1077,7 @@ func (kns *knowledgeNetworkService) GetRelationTypePaths(ctx context.Context,
 			currentNode := currentPath.ObjectTypes[len(currentPath.ObjectTypes)-1]
 			// 获取当前节点的信息（按需查询）
 			if currentNode.OTName == "" {
+				// 若currentNode.OTID不存在，此函数会报错： objetc type not found
 				objectType, err := kns.ots.GetObjectTypesByIDs(ctx, nil, query.KNID, query.Branch, []string{currentNode.OTID})
 				if err != nil {
 					return nil, err

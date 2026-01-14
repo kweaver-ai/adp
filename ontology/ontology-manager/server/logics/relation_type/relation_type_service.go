@@ -124,26 +124,6 @@ func (rts *relationTypeService) CreateRelationTypes(ctx context.Context, tx *sql
 		return []string{}, err
 	}
 
-	currentTime := time.Now().UnixMilli()
-	for _, relationType := range relationTypes {
-		// 若提交的模型id为空，生成分布式ID
-		if relationType.RTID == "" {
-			relationType.RTID = xid.New().String()
-		}
-
-		accountInfo := interfaces.AccountInfo{}
-		if ctx.Value(interfaces.ACCOUNT_INFO_KEY) != nil {
-			accountInfo = ctx.Value(interfaces.ACCOUNT_INFO_KEY).(interfaces.AccountInfo)
-		}
-		relationType.Creator = accountInfo
-		relationType.Updater = accountInfo
-
-		relationType.CreateTime = currentTime
-		relationType.UpdateTime = currentTime
-
-		// todo: 处理版本
-	}
-
 	// 0. 开始事务
 	if tx == nil {
 		tx, err = rts.db.Begin()
@@ -180,6 +160,30 @@ func (rts *relationTypeService) CreateRelationTypes(ctx context.Context, tx *sql
 		}()
 	}
 
+	currentTime := time.Now().UnixMilli()
+	for _, relationType := range relationTypes {
+		// 若提交的模型id为空，生成分布式ID
+		if relationType.RTID == "" {
+			relationType.RTID = xid.New().String()
+		}
+
+		accountInfo := interfaces.AccountInfo{}
+		if ctx.Value(interfaces.ACCOUNT_INFO_KEY) != nil {
+			accountInfo = ctx.Value(interfaces.ACCOUNT_INFO_KEY).(interfaces.AccountInfo)
+		}
+		relationType.Creator = accountInfo
+		relationType.Updater = accountInfo
+
+		relationType.CreateTime = currentTime
+		relationType.UpdateTime = currentTime
+
+		// 校验起点对象类、终点对象类非空时，需校验存在性
+		err = rts.validateDependency(ctx, tx, relationType)
+		if err != nil {
+			return []string{}, err
+		}
+	}
+
 	createRelationTypes, updateRelationTypes, err := rts.handleRelationTypeImportMode(ctx, mode, relationTypes)
 	if err != nil {
 		return []string{}, err
@@ -201,7 +205,6 @@ func (rts *relationTypeService) CreateRelationTypes(ctx context.Context, tx *sql
 
 	// 更新
 	for _, relationType := range updateRelationTypes {
-		// todo: 提交的已存在，需要更新，则版本号+1
 		err = rts.UpdateRelationType(ctx, tx, relationType)
 		if err != nil {
 			return []string{}, err
@@ -532,6 +535,12 @@ func (rts *relationTypeService) UpdateRelationType(ctx context.Context,
 		}()
 	}
 
+	// 校验起点对象类、终点对象类非空时，需校验存在性
+	err = rts.validateDependency(ctx, tx, relationType)
+	if err != nil {
+		return err
+	}
+
 	// 更新模型信息
 	err = rts.rta.UpdateRelationType(ctx, tx, relationType)
 	if err != nil {
@@ -809,24 +818,27 @@ func (rts *relationTypeService) SearchRelationTypes(ctx context.Context,
 	}
 
 	// 转换到dsl
-	conditionDslStr, err := condtion.Convert(ctx, func(ctx context.Context, words []string) ([]*cond.VectorResp, error) {
-		if !rts.appSetting.ServerSetting.DefaultSmallModelEnabled {
-			err = errors.New("DefaultSmallModelEnabled is false, does not support knn condition")
-			span.SetStatus(codes.Error, err.Error())
-			return nil, err
-		}
-		dftModel, err := rts.mfa.GetDefaultModel(ctx)
+	conditionDslStr := "{}"
+	if condtion != nil {
+		conditionDslStr, err = condtion.Convert(ctx, func(ctx context.Context, words []string) ([]*cond.VectorResp, error) {
+			if !rts.appSetting.ServerSetting.DefaultSmallModelEnabled {
+				err = errors.New("DefaultSmallModelEnabled is false, does not support knn condition")
+				span.SetStatus(codes.Error, err.Error())
+				return nil, err
+			}
+			dftModel, err := rts.mfa.GetDefaultModel(ctx)
+			if err != nil {
+				logger.Errorf("GetDefaultModel error: %s", err.Error())
+				span.SetStatus(codes.Error, "获取默认模型失败")
+				return nil, err
+			}
+			return rts.mfa.GetVector(ctx, dftModel, words)
+		})
 		if err != nil {
-			logger.Errorf("GetDefaultModel error: %s", err.Error())
-			span.SetStatus(codes.Error, "获取默认模型失败")
-			return nil, err
+			return response, rest.NewHTTPError(ctx, http.StatusBadRequest,
+				oerrors.OntologyManager_RelationType_InvalidParameter_ConceptCondition).
+				WithErrorDetails(fmt.Sprintf("failed to convert condition to dsl, %s", err.Error()))
 		}
-		return rts.mfa.GetVector(ctx, dftModel, words)
-	})
-	if err != nil {
-		return response, rest.NewHTTPError(ctx, http.StatusBadRequest,
-			oerrors.OntologyManager_RelationType_InvalidParameter_ConceptCondition).
-			WithErrorDetails(fmt.Sprintf("failed to convert condition to dsl, %s", err.Error()))
 	}
 
 	// 1. 获取组下的关系类
@@ -990,22 +1002,22 @@ func (rts *relationTypeService) GetTotal(ctx context.Context, dsl map[string]any
 	totalBytes, err := rts.osa.Count(ctx, interfaces.KN_CONCEPT_INDEX_NAME, dsl)
 	if err != nil {
 		span.SetStatus(codes.Error, "Search total documents count failed")
-		// return total, rest.NewHTTPError(ctx, http.StatusInternalServerError, oerrors.Uniquery_InternalError_CountFailed).
-		// 	WithErrorDetails(err.Error())
+		return total, rest.NewHTTPError(ctx, http.StatusInternalServerError, oerrors.OntologyManager_RelationType_InternalError).
+			WithErrorDetails(err.Error())
 	}
 
 	totalNode, err := sonic.Get(totalBytes, "count")
 	if err != nil {
 		span.SetStatus(codes.Error, "Get total documents count failed")
-		// return total, rest.NewHTTPError(ctx, http.StatusInternalServerError, uerrors.Uniquery_InternalError_CountFailed).
-		// 	WithErrorDetails(err.Error())
+		return total, rest.NewHTTPError(ctx, http.StatusInternalServerError, oerrors.OntologyManager_RelationType_InternalError).
+			WithErrorDetails(err.Error())
 	}
 
 	total, err = totalNode.Int64()
 	if err != nil {
 		span.SetStatus(codes.Error, "Convert total documents count to type int64 failed")
-		// return total, rest.NewHTTPError(ctx, http.StatusInternalServerError, uerrors.Uniquery_InternalError_CountFailed).
-		// 	WithErrorDetails(err.Error())
+		return total, rest.NewHTTPError(ctx, http.StatusInternalServerError, oerrors.OntologyManager_RelationType_InternalError).
+			WithErrorDetails(err.Error())
 	}
 
 	span.SetStatus(codes.Ok, "")
@@ -1103,4 +1115,100 @@ func (rts *relationTypeService) GetTotalWithRTIDs(ctx context.Context,
 	}
 
 	return total, nil
+}
+
+// 校验关系类相关的对象类、数据视图存在性
+func (rts *relationTypeService) validateDependency(ctx context.Context, tx *sql.Tx, relationType *interfaces.RelationType) error {
+	var sourceObjectType *interfaces.ObjectType
+	var targetObjectType *interfaces.ObjectType
+	if relationType.SourceObjectTypeID != "" {
+		// 导入时未提交，在一个事务中get
+		sourceObjectTypes, err := rts.ots.GetObjectTypesByIDs(ctx, tx, relationType.KNID, relationType.Branch, []string{relationType.SourceObjectTypeID})
+		if err != nil {
+			return err
+		}
+		if len(sourceObjectTypes) == 0 {
+			return rest.NewHTTPError(ctx, http.StatusBadRequest, oerrors.OntologyManager_RelationType_InvalidParameter).
+				WithErrorDetails(fmt.Sprintf("起点对象类[%s]不存在", relationType.SourceObjectTypeID))
+		}
+		sourceObjectType = sourceObjectTypes[0]
+	}
+	if relationType.TargetObjectTypeID != "" {
+		targetObjectTypes, err := rts.ots.GetObjectTypesByIDs(ctx, tx, relationType.KNID, relationType.Branch, []string{relationType.TargetObjectTypeID})
+		if err != nil {
+			return err
+		}
+		if len(targetObjectTypes) == 0 {
+			return rest.NewHTTPError(ctx, http.StatusBadRequest, oerrors.OntologyManager_RelationType_InvalidParameter).
+				WithErrorDetails(fmt.Sprintf("终点对象类[%s]不存在", relationType.TargetObjectTypeID))
+		}
+		targetObjectType = targetObjectTypes[0]
+	}
+	// 当关联关系非空时，校验起点对象类、终点对象类的属性存在性
+	if relationType.MappingRules != nil {
+		switch relationType.Type {
+		case interfaces.RELATION_TYPE_DIRECT:
+			directMappingRules := relationType.MappingRules.([]interfaces.Mapping)
+			for _, mapping := range directMappingRules {
+				if sourceObjectType != nil {
+					// 检查起点属性是否在起点对象类的数据属性中存在
+					if _, exist := sourceObjectType.PropertyMap[mapping.SourceProp.Name]; !exist {
+						return rest.NewHTTPError(ctx, http.StatusBadRequest, oerrors.OntologyManager_RelationType_InvalidParameter).
+							WithErrorDetails(fmt.Sprintf("起点关联属性[%s]在起点对象类[%s]中不存在", mapping.SourceProp.Name, sourceObjectType.OTName))
+					}
+				}
+
+				if targetObjectType != nil {
+					// 检查终点属性是否在终点对象类的数据属性中存在
+					if _, exist := targetObjectType.PropertyMap[mapping.TargetProp.Name]; !exist {
+						return rest.NewHTTPError(ctx, http.StatusBadRequest, oerrors.OntologyManager_RelationType_InvalidParameter).
+							WithErrorDetails(fmt.Sprintf("终点关联属性[%s]在终点对象类[%s]中不存在", mapping.TargetProp.Name, targetObjectType.OTName))
+					}
+				}
+			}
+		case interfaces.RELATION_TYPE_DATA_VIEW:
+			inDirectMappingRules := relationType.MappingRules.(interfaces.InDirectMapping)
+			// 校验数据视图存在
+			dataView, err := rts.dva.GetDataViewByID(ctx, inDirectMappingRules.BackingDataSource.ID)
+			if err != nil {
+				return err
+			}
+			if dataView == nil {
+				return rest.NewHTTPError(ctx, http.StatusBadRequest, oerrors.OntologyManager_RelationType_InvalidParameter).
+					WithErrorDetails(fmt.Sprintf("关系类中的[%s]数据视图[%s]不存在", relationType.RTID, inDirectMappingRules.BackingDataSource.ID))
+			}
+
+			// 校验起点属性在起点对象类中存在，校验关联字段在视图中存在
+			for _, mapping := range inDirectMappingRules.SourceMappingRules {
+				if sourceObjectType != nil {
+					// 检查起点属性是否在起点对象类的数据属性中存在
+					if _, exist := sourceObjectType.PropertyMap[mapping.SourceProp.Name]; !exist {
+						return rest.NewHTTPError(ctx, http.StatusBadRequest, oerrors.OntologyManager_RelationType_InvalidParameter).
+							WithErrorDetails(fmt.Sprintf("起点关联属性[%s]在起点对象类[%s]中不存在", mapping.SourceProp.Name, sourceObjectType.OTName))
+					}
+				}
+
+				// 检查关联字段是否在视图中存在
+				if _, exist := dataView.FieldsMap[mapping.TargetProp.Name]; !exist {
+					return rest.NewHTTPError(ctx, http.StatusBadRequest, oerrors.OntologyManager_RelationType_InvalidParameter).
+						WithErrorDetails(fmt.Sprintf("中间关联字段[%s]在视图[%s]中不存在", mapping.SourceProp.Name, dataView.ViewName))
+				}
+			}
+			for _, mapping := range inDirectMappingRules.TargetMappingRules {
+				if targetObjectType != nil {
+					// 检查中间关联字段是否在视图中存在
+					if _, exist := dataView.FieldsMap[mapping.SourceProp.Name]; !exist {
+						return rest.NewHTTPError(ctx, http.StatusBadRequest, oerrors.OntologyManager_RelationType_InvalidParameter).
+							WithErrorDetails(fmt.Sprintf("中间关联字段[%s]在视图[%s]中不存在", mapping.SourceProp.Name, dataView.ViewName))
+					}
+					// 检查终点属性是否在终点对象类的数据属性中存在
+					if _, exist := targetObjectType.PropertyMap[mapping.TargetProp.Name]; !exist {
+						return rest.NewHTTPError(ctx, http.StatusBadRequest, oerrors.OntologyManager_RelationType_InvalidParameter).
+							WithErrorDetails(fmt.Sprintf("终点关联属性[%s]在终点对象类[%s]中不存在", mapping.TargetProp.Name, targetObjectType.OTName))
+					}
+				}
+			}
+		}
+	}
+	return nil
 }

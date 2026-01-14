@@ -44,6 +44,11 @@ var objectNameErrorCode = map[string][]string{
 		oerrors.OntologyManager_Job_NullParameter_Name,
 		oerrors.OntologyManager_Job_LengthExceeded_Name,
 	},
+
+	interfaces.MODULE_TYPE_CONCEPT_GROUP: {
+		oerrors.OntologyManager_ConceptGroup_NullParameter_Name,
+		oerrors.OntologyManager_ConceptGroup_LengthExceeded_Name,
+	},
 }
 
 // 校验的导入模式
@@ -337,5 +342,20 @@ func validateID(ctx context.Context, id string) error {
 		}
 	}
 
+	return nil
+}
+
+// 校验 x-http-method-override 重载方法，只在 header里传递
+func ValidateHeaderMethodOverride(ctx context.Context, methodOverride string) error {
+
+	if methodOverride == "" {
+		return rest.NewHTTPError(ctx, http.StatusBadRequest, oerrors.OntologyManager_InvalidParameter_OverrideMethod).
+			WithErrorDetails("x-http-method-override must be set")
+	}
+
+	if methodOverride != "GET" {
+		return rest.NewHTTPError(ctx, http.StatusBadRequest, oerrors.OntologyManager_InvalidParameter_OverrideMethod).
+			WithErrorDetails(fmt.Sprintf("x-http-method-overide is expected to be GET, but got %s", methodOverride))
+	}
 	return nil
 }
