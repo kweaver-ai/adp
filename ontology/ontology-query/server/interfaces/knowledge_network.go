@@ -24,6 +24,7 @@ type SubGraphQueryBaseOnSource struct {
 
 	ActualCondition *cond.CondCfg `json:"-"`
 	KNID            string        `json:"-"`
+	Branch          string        `json:"-"`
 	CommonQueryParameters
 	*PathQuotaManager
 	BatchQueryState
@@ -31,8 +32,9 @@ type SubGraphQueryBaseOnSource struct {
 
 // 基于路径查子图的请求体
 type SubGraphQueryBaseOnTypePath struct {
-	Paths QueryRelationTypePaths
-	KNID  string
+	Paths  QueryRelationTypePaths
+	KNID   string
+	Branch string
 	CommonQueryParameters
 }
 

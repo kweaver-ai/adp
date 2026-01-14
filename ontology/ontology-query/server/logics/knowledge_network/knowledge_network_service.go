@@ -55,7 +55,7 @@ func (kns *knowledgeNetworkService) SearchSubgraph(ctx context.Context,
 	var resps interfaces.ObjectSubGraph
 
 	// 1. 在指定的业务知识网络下，根据起点对象类、方向、路径长度获取所有路径。
-	typePaths, err := kns.omAccess.GetRelationTypePathsBaseOnSource(ctx, query.KNID,
+	typePaths, err := kns.omAccess.GetRelationTypePathsBaseOnSource(ctx, query.KNID, query.Branch,
 		interfaces.PathsQueryBaseOnSource{
 			ConceptGroups:     query.ConceptGroups,
 			SourceObjecTypeId: query.SourceObjecTypeId,
@@ -67,6 +67,7 @@ func (kns *knowledgeNetworkService) SearchSubgraph(ctx context.Context,
 
 		// 添加异常时的 trace 属性
 		span.SetAttributes(attribute.Key("kn_id").String(query.KNID))
+		span.SetAttributes(attribute.Key("branch").String(query.Branch))
 		span.SetStatus(codes.Error, "Get RelationTypePathsBaseOnSource error")
 		span.End()
 		// 记录异常日志
@@ -81,6 +82,7 @@ func (kns *knowledgeNetworkService) SearchSubgraph(ctx context.Context,
 		ActualCondition: query.ActualCondition,
 		PageQuery:       query.PageQuery,
 		KNID:            query.KNID,
+		Branch:          query.Branch,
 		ObjectTypeID:    query.SourceObjecTypeId,
 		CommonQueryParameters: interfaces.CommonQueryParameters{
 			IncludeTypeInfo:    true,
@@ -92,6 +94,7 @@ func (kns *knowledgeNetworkService) SearchSubgraph(ctx context.Context,
 		startObjectQuery.Limit = interfaces.DEFAULT_LIMIT
 	}
 
+	// 排序字段的校验在获取对象类的对象数据的时候校验，在当前层不用校验
 	startObjects, err := kns.ots.GetObjectsByObjectTypeID(ctx, startObjectQuery)
 	if err != nil {
 		return resps, err
@@ -182,7 +185,7 @@ func (kns *knowledgeNetworkService) buildObjectSubgraphByTypePaths(
 	}
 	for j, edge := range path.Edges {
 		// 获取关系类信息
-		relationType, exists, err := kns.omAccess.GetRelationType(ctx, query.KNID, edge.RelationTypeId)
+		relationType, exists, err := kns.omAccess.GetRelationType(ctx, query.KNID, query.Branch, edge.RelationTypeId)
 		if err != nil {
 			logger.Errorf("Get relation type error: %s", err.Error())
 
@@ -229,6 +232,7 @@ func (kns *knowledgeNetworkService) buildObjectSubgraphByTypePaths(
 		ActualCondition: path.ObjectTypes[0].ActualCondition,
 		PageQuery:       path.ObjectTypes[0].PageQuery,
 		KNID:            query.KNID,
+		Branch:          query.Branch,
 		ObjectTypeID:    path.Edges[0].SourceObjectTypeId,
 		CommonQueryParameters: interfaces.CommonQueryParameters{
 			IncludeTypeInfo:    true,
@@ -248,6 +252,7 @@ func (kns *knowledgeNetworkService) buildObjectSubgraphByTypePaths(
 	// 3. 构建查询
 	subGraphquery := &interfaces.SubGraphQueryBaseOnSource{
 		KNID:              query.KNID,
+		Branch:            query.Branch,
 		SourceObjecTypeId: path.Edges[0].SourceObjectTypeId,
 		ActualCondition:   path.ObjectTypes[0].ActualCondition,
 		PageQuery: interfaces.PageQuery{
@@ -392,6 +397,7 @@ func (kns *knowledgeNetworkService) buildSingleTypePathObjects(
 
 	localQuery := &interfaces.SubGraphQueryBaseOnSource{
 		KNID:                  query.KNID,
+		Branch:                query.Branch,
 		SourceObjecTypeId:     query.SourceObjecTypeId,
 		Direction:             query.Direction,
 		PathLength:            query.PathLength,
@@ -703,6 +709,7 @@ func (kns *knowledgeNetworkService) getNextObjectsBatchByRelation(ctx context.Co
 
 	nextObjectQuery := &interfaces.ObjectQueryBaseOnObjectType{
 		KNID:         query.KNID,
+		Branch:       query.Branch,
 		ObjectTypeID: nextObjectTypeID,
 		CommonQueryParameters: interfaces.CommonQueryParameters{
 			IncludeTypeInfo:    true,

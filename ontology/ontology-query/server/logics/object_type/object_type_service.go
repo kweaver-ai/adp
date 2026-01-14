@@ -63,7 +63,7 @@ func (ots *objectTypeService) GetObjectsByObjectTypeID(ctx context.Context,
 
 	var resps interfaces.Objects
 
-	objectType, exists, err := ots.omAccess.GetObjectType(ctx, query.KNID, query.ObjectTypeID)
+	objectType, exists, err := ots.omAccess.GetObjectType(ctx, query.KNID, query.Branch, query.ObjectTypeID)
 	if err != nil {
 		logger.Errorf("Get Object Type error: %s", err.Error())
 
@@ -90,9 +90,18 @@ func (ots *objectTypeService) GetObjectsByObjectTypeID(ctx context.Context,
 		return resps, rest.NewHTTPError(ctx, http.StatusNotFound, oerrors.OntologyQuery_ObjectType_ObjectTypeNotFound)
 	}
 
+	// /排序字段可以是对象类的数据属性, _score
+
 	// 3.1 处理对象类，转成view field 到 object type property的映射
-	viewFieldPropMap := map[string]string{}
-	indexPropMap := map[string]string{} // 索引字段到对象类属性的映射
+	// 视图字段到对象类属性的映射
+	viewFieldPropMap := map[string]string{
+		interfaces.SORT_FIELD_SCORE: interfaces.SORT_FIELD_SCORE, //  _score 字段
+	}
+	// 对象类属性名到属性名的映射，便于case到索引查询时使用。对象索引的字段名与属性名保持一直
+	indexPropMap := map[string]string{
+		interfaces.SORT_FIELD_SCORE: interfaces.SORT_FIELD_SCORE, //  _score 字段
+	}
+	// 对象类数据属性名到对象类数据属性的映射
 	propMap := map[string]cond.DataProperty{}
 	for _, prop := range objectType.DataProperties {
 		propMap[prop.Name] = prop
@@ -109,10 +118,49 @@ func (ots *objectTypeService) GetObjectsByObjectTypeID(ctx context.Context,
 		}
 	}
 
-	// 补充 _score 字段
-	viewFieldPropMap[interfaces.SORT_FIELD_SCORE] = interfaces.SORT_FIELD_SCORE
+	// 排序字段非空时，排序字段必须是对象类的数据属性, _score
+	if len(query.Sort) > 0 {
+		for _, sp := range query.Sort {
+			if _, exists := indexPropMap[sp.Field]; !exists {
+				return resps, rest.NewHTTPError(ctx, http.StatusBadRequest, oerrors.OntologyQuery_ObjectType_InvalidParameter).
+					WithErrorDetails(fmt.Sprintf("排序字段[%s]不是对象类的数据属性", sp.Field))
+			}
+		}
+	}
+	// 指定的属性集需在对象类的数据属性中存在
+	if len(query.Properties) > 0 {
+		for _, prop := range query.Properties {
+			if _, exists := propMap[prop]; !exists {
+				return resps, rest.NewHTTPError(ctx, http.StatusBadRequest, oerrors.OntologyQuery_ObjectType_InvalidParameter).
+					WithErrorDetails(fmt.Sprintf("指定的属性[%s]不是对象类的数据属性", prop))
+			}
+		}
+	}
 
-	// 构造数据属性的字段集
+	// 对于数据属性的查询的参数校验
+	if query.ObjectQueryInfo != nil {
+		// 唯一标识包含主键字段
+		for i, uniqueIdentity := range query.ObjectQueryInfo.UniqueIdentities {
+			for _, key := range objectType.PrimaryKeys {
+				if _, exist := uniqueIdentity[key]; !exist {
+					return resps, rest.NewHTTPError(ctx, http.StatusBadRequest, oerrors.OntologyQuery_ObjectType_InvalidParameter).
+						WithErrorDetails(fmt.Sprintf("第%d个对象的的唯一标识字段[%s]不能为空", i+1, key))
+				}
+			}
+		}
+		// 属性列表包含对象类的数据属性和逻辑属性
+		logicPropMap := make(map[string]bool)
+		for _, prop := range objectType.LogicProperties {
+			logicPropMap[prop.Name] = true
+		}
+		for _, prop := range query.ObjectQueryInfo.Properties {
+			if _, exist := propMap[prop]; !exist && !logicPropMap[prop] {
+				return resps, rest.NewHTTPError(ctx, http.StatusBadRequest, oerrors.OntologyQuery_ObjectType_InvalidParameter).
+					WithErrorDetails(fmt.Sprintf("属性查询的属性[%s]不是对象类的属性", prop))
+			}
+		}
+	}
+
 	if !query.IgnoringStore && objectType.Status != nil && objectType.Status.IndexAvailable {
 		// 2. 构造排序字段
 		if query.Sort == nil {
@@ -298,7 +346,7 @@ func (ots *objectTypeService) getObjectsFromDataView(ctx context.Context, query 
 		viewQuery.Filters = rewriteCondition
 	}
 
-	if objectType.DataSource.ID == "" {
+	if objectType.DataSource == nil || objectType.DataSource.ID == "" {
 		// 视图为空，返回异常，不请求
 		return rest.NewHTTPError(ctx, http.StatusBadRequest,
 			oerrors.OntologyQuery_ObjectType_InvalidParameter).
@@ -507,10 +555,15 @@ func (ots *objectTypeService) GetObjectPropertyValue(ctx context.Context,
 			NeedTotal: true,
 		},
 		KNID:         query.KNID,
+		Branch:       query.Branch,
 		ObjectTypeID: query.ObjectTypeID,
 		CommonQueryParameters: interfaces.CommonQueryParameters{
 			IncludeTypeInfo:    true, // 需要把对象类信息返回
 			IncludeLogicParams: true, // 需要把逻辑属性的计算参数返回
+		},
+		ObjectQueryInfo: &interfaces.ObjectQueryInfo{
+			UniqueIdentities: query.UniqueIdentities,
+			Properties:       query.Properties,
 		},
 	}
 	objects, err := ots.GetObjectsByObjectTypeID(ctx, objectQuery)

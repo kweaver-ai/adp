@@ -7,6 +7,7 @@ require (
 	github.com/dlclark/regexp2 v1.11.5
 	github.com/fsnotify/fsnotify v1.9.0
 	github.com/gin-gonic/gin v1.11.0
+	github.com/golang/mock v1.6.0
 	github.com/kweaver-ai/TelemetrySDK-Go/exporter/v2 v2.10.3
 	github.com/kweaver-ai/kweaver-go-lib v1.0.2
 	github.com/mitchellh/mapstructure v1.5.0
