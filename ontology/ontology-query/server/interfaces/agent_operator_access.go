@@ -65,7 +65,7 @@ type OperatorExecutionRequest struct {
 	Timeout int64          `json:"timeout"` // 超时时间，单位秒
 }
 
-//go:generate mockgen -source ../interfaces/metric_model_access.go -destination ../interfaces/mock/mock_metric_model_access.go
+//go:generate mockgen -source ../interfaces/agent_operator_access.go -destination ../interfaces/mock/mock_agent_operator_access.go
 type AgentOperatorAccess interface {
 	GetAgentOperatorByID(ctx context.Context, operatorID string) (AgentOperator, error)
 	ExecuteOperator(ctx context.Context, operatorID string, execRequest OperatorExecutionRequest) (any, error)

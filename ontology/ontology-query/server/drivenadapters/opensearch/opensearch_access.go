@@ -236,10 +236,10 @@ func (o *openSearchAccess) BulkInsertData(ctx context.Context, indexName string,
 
 	for _, data := range dataList {
 		// 准备元数据
-		meta := map[string]interface{}{
-			"index": map[string]interface{}{
+		meta := map[string]any{
+			"index": map[string]any{
 				"_index": indexName,
-				"_id":    data.(map[string]interface{})["id"],
+				"_id":    data.(map[string]any)["__id"],
 			},
 		}
 
@@ -263,7 +263,7 @@ func (o *openSearchAccess) BulkInsertData(ctx context.Context, indexName string,
 	// 创建批量请求
 	req := opensearchapi.BulkRequest{
 		Body:    &buf,
-		Refresh: "true", // 立即刷新，使数据可搜索
+		Refresh: "true",
 	}
 
 	// 执行请求
@@ -275,6 +275,25 @@ func (o *openSearchAccess) BulkInsertData(ctx context.Context, indexName string,
 
 	if res.IsError() {
 		return fmt.Errorf("bulk insert data failed: %s, %s", res.Status(), res.String())
+	}
+
+	resBody, err := io.ReadAll(res.Body)
+	if err != nil {
+		return fmt.Errorf("failed to read response body: %w", err)
+	}
+
+	var resp struct {
+		Took   int             `json:"took"`
+		Errors bool            `json:"errors"`
+		Items  json.RawMessage `json:"items"`
+	}
+
+	if err := sonic.Unmarshal(resBody, &resp); err != nil {
+		return fmt.Errorf("failed to unmarshal response body: %w", err)
+	}
+
+	if resp.Errors {
+		return fmt.Errorf("bulk insert data failed: %s", resp.Items)
 	}
 
 	return nil

@@ -84,6 +84,10 @@ func (r *restHandler) GetObjectsSubgraph(c *gin.Context, visitor rest.Visitor) {
 	knID := c.Param("kn_id")
 	span.SetAttributes(attr.Key("kn_id").String(knID))
 
+	// 接受 branch 参数
+	branch := c.DefaultQuery("branch", interfaces.MAIN_BRANCH)
+	span.SetAttributes(attr.Key("branch").String(branch))
+
 	// 是否包含逻辑属性计算参数
 	includeLogicParams := c.DefaultQuery("include_logic_params", interfaces.DEFAULT_INCLUDE_LOGIC_PARAMS)
 	// 是否忽略持久化数据,走虚拟化查询,默认是false,不忽略
@@ -133,6 +137,7 @@ func (r *restHandler) GetObjectsSubgraph(c *gin.Context, visitor rest.Visitor) {
 	}
 
 	query.KNID = knID
+	query.Branch = branch
 	query.CommonQueryParameters = queryParams
 	query.PathQuotaManager = &interfaces.PathQuotaManager{
 		TotalLimit: interfaces.MAX_PATHS,
@@ -197,6 +202,10 @@ func (r *restHandler) GetObjectsSubgraphByTypePath(c *gin.Context, visitor rest.
 	knID := c.Param("kn_id")
 	span.SetAttributes(attr.Key("kn_id").String(knID))
 
+	// 接受 branch 参数
+	branch := c.DefaultQuery("branch", interfaces.MAIN_BRANCH)
+	span.SetAttributes(attr.Key("branch").String(branch))
+
 	// 是否包含逻辑属性计算参数
 	includeLogicParams := c.DefaultQuery("include_logic_params", interfaces.DEFAULT_INCLUDE_LOGIC_PARAMS)
 	// 是否忽略持久化数据,走虚拟化查询,默认是false,不忽略
@@ -247,6 +256,7 @@ func (r *restHandler) GetObjectsSubgraphByTypePath(c *gin.Context, visitor rest.
 	query := interfaces.SubGraphQueryBaseOnTypePath{
 		Paths:                 paths,
 		KNID:                  knID,
+		Branch:                branch,
 		CommonQueryParameters: queryParams,
 	}
 

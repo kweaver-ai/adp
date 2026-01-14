@@ -72,6 +72,10 @@ func (r *restHandler) GetObjectsInObjectType(c *gin.Context, visitor rest.Visito
 	otID := c.Param("ot_id")
 	span.SetAttributes(attr.Key("ot_id").String(otID))
 
+	// 接受 branch 参数
+	branch := c.DefaultQuery("branch", interfaces.MAIN_BRANCH)
+	span.SetAttributes(attr.Key("branch").String(branch))
+
 	// todo: 分页查询
 
 	// 是否包含对象类信息
@@ -126,6 +130,7 @@ func (r *restHandler) GetObjectsInObjectType(c *gin.Context, visitor rest.Visito
 	}
 
 	query.KNID = knID
+	query.Branch = branch
 	query.ObjectTypeID = otID
 	query.CommonQueryParameters = objectsQueryParas
 
@@ -218,6 +223,10 @@ func (r *restHandler) GetObjectsProperties(c *gin.Context, visitor rest.Visitor)
 	otID := c.Param("ot_id")
 	span.SetAttributes(attr.Key("ot_id").String(otID))
 
+	// 接受 branch 参数
+	branch := c.DefaultQuery("branch", interfaces.MAIN_BRANCH)
+	span.SetAttributes(attr.Key("branch").String(branch))
+
 	// 是否包含对象类信息
 	includeTypeInfo := c.DefaultQuery("include_type_info", interfaces.DEFAULT_INCLUDE_TYPE_INFO)
 
@@ -267,6 +276,7 @@ func (r *restHandler) GetObjectsProperties(c *gin.Context, visitor rest.Visitor)
 	}
 
 	query.KNID = knID
+	query.Branch = branch
 	query.ObjectTypeID = otID
 	query.CommonQueryParameters = objectsQueryParas
 

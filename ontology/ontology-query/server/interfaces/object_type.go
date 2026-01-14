@@ -26,25 +26,19 @@ type ObjectQueryBaseOnObjectType struct {
 	PageQuery
 
 	KNID            string        `json:"-"`
+	Branch          string        `json:"-"`
 	ObjectTypeID    string        `json:"-"`
 	ActualCondition *cond.CondCfg `json:"-"`
 	CommonQueryParameters
+
+	// 兼容属性查询时提交唯一标识和属性集的校验
+	ObjectQueryInfo *ObjectQueryInfo `json:"-"`
 }
 
-// type CondCfg struct {
-// 	ObjectTypeID string     `json:"object_type_id,omitempty" mapstructure:"object_type_id"` // 行动条件需要标记是哪个行动类的
-// 	Field        string     `json:"field,omitempty" mapstructure:"field"`
-// 	Operation    string     `json:"operation,omitempty" mapstructure:"operation"`
-// 	SubConds     []*CondCfg `json:"sub_conditions,omitempty" mapstructure:"sub_conditions"`
-// 	ValueOptCfg  `mapstructure:",squash"`
-
-// 	// NameField *ViewField `json:"-" mapstructure:"-"`
-// }
-
-// type ValueOptCfg struct {
-// 	ValueFrom string `json:"value_from,omitempty" mapstructure:"value_from"`
-// 	Value     any    `json:"value,omitempty" mapstructure:"value"`
-// }
+type ObjectQueryInfo struct {
+	UniqueIdentities []map[string]any `json:"unique_identities,omitempty"`
+	Properties       []string         `json:"properties,omitempty"`
+}
 
 type Objects struct {
 	ObjectType      *ObjectType      `json:"object_type,omitempty"`
@@ -164,6 +158,7 @@ type ObjectPropertyValueQuery struct {
 	DynamicParams    map[string]map[string]any `json:"dynamic_params"`
 
 	KNID         string `json:"-"`
+	Branch       string `json:"-"`
 	ObjectTypeID string `json:"-"`
 	CommonQueryParameters
 }

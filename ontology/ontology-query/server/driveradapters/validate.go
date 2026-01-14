@@ -113,6 +113,35 @@ func validateSubgraphSearchRequest(ctx context.Context, query *interfaces.SubGra
 			WithErrorDetails(fmt.Sprintf("路径长度不超过3, 请求的路径长度为%d", query.PathLength))
 	}
 
+	// sort 非空时，排序字段非空，排序方向非空，排序字段可以是对象类的数据属性, _score
+	if len(query.Sort) > 0 {
+		for _, sp := range query.Sort {
+			if sp.Field == "" {
+				return rest.NewHTTPError(ctx, http.StatusBadRequest, oerrors.OntologyQuery_ObjectType_InvalidParameter).
+					WithErrorDetails("排序字段不能为空")
+			}
+			if sp.Direction == "" {
+				return rest.NewHTTPError(ctx, http.StatusBadRequest, oerrors.OntologyQuery_ObjectType_InvalidParameter).
+					WithErrorDetails("排序方向不能为空")
+			}
+			if sp.Direction != interfaces.DESC_DIRECTION && sp.Direction != interfaces.ASC_DIRECTION {
+				return rest.NewHTTPError(ctx, http.StatusBadRequest, oerrors.OntologyQuery_ObjectType_InvalidParameter).
+					WithErrorDetails(fmt.Sprintf("排序方向只能是desc或asc, 当前排序方向为%s", sp.Direction))
+			}
+
+			// 排序字段可以是对象类的数据属性, _score，放在service层 get 到对象类信息后校验。
+		}
+	}
+
+	// limit 可选值 1-10000, 默认值为 1000
+	if query.Limit == 0 {
+		query.Limit = interfaces.DEFAULT_LIMIT
+	}
+	if query.Limit < 1 || query.Limit > interfaces.MAX_LIMIT {
+		return rest.NewHTTPError(ctx, http.StatusBadRequest, oerrors.OntologyQuery_ObjectType_InvalidParameter).
+			WithErrorDetails(fmt.Sprintf("limit可选值 1-10000, 当前limit为 %d", query.Limit))
+	}
+
 	return nil
 
 }
@@ -142,6 +171,22 @@ func validateSubgraphQueryByPathRequest(ctx context.Context, query *interfaces.S
 
 		// 3. 路径的起始点在边中需存在且位置正确
 		for i, edge := range path.Edges {
+			// 关系类id非空, 关系类存在在service层校验
+			if edge.RelationTypeId == "" {
+				return rest.NewHTTPError(ctx, http.StatusBadRequest, oerrors.OntologyQuery_KnowledgeNetwork_InvalidParameter).
+					WithErrorDetails(fmt.Sprintf("关系类id不能为空, 当前第%d条边的关系类id为%s", i+1, edge.RelationTypeId))
+			}
+			// 起点对象类id非空，对象类存在在service层校验
+			if edge.SourceObjectTypeId == "" {
+				return rest.NewHTTPError(ctx, http.StatusBadRequest, oerrors.OntologyQuery_KnowledgeNetwork_InvalidParameter).
+					WithErrorDetails(fmt.Sprintf("起点对象类id不能为空, 当前第%d条边的起点对象类id为%s", i+1, edge.SourceObjectTypeId))
+			}
+			// 终点对象类id非空，对象类存在在service层校验
+			if edge.TargetObjectTypeId == "" {
+				return rest.NewHTTPError(ctx, http.StatusBadRequest, oerrors.OntologyQuery_KnowledgeNetwork_InvalidParameter).
+					WithErrorDetails(fmt.Sprintf("终点对象类id不能为空, 当前第%d条边的终点对象类id为%s", i+1, edge.TargetObjectTypeId))
+			}
+
 			// 第i条边的起点等于第i个位置的对象类
 			if edge.SourceObjectTypeId != path.ObjectTypes[i].OTID {
 				return rest.NewHTTPError(ctx, http.StatusBadRequest,
@@ -176,6 +221,33 @@ func validateSubgraphQueryByPathRequest(ctx context.Context, query *interfaces.S
 					WithErrorDetails(fmt.Sprintf("mapstructure decode condition failed: %s", err.Error()))
 			}
 			query.Paths.TypePaths[pathIndex].ObjectTypes[i].ActualCondition = actualCond
+
+			// 排序字段的校验在获取对象类的对象数据的时候校验，在当前层不用校验
+			if len(path.ObjectTypes[i].Sort) > 0 {
+				for _, sp := range path.ObjectTypes[i].Sort {
+					if sp.Field == "" {
+						return rest.NewHTTPError(ctx, http.StatusBadRequest, oerrors.OntologyQuery_ObjectType_InvalidParameter).
+							WithErrorDetails("排序字段不能为空")
+					}
+					if sp.Direction == "" {
+						return rest.NewHTTPError(ctx, http.StatusBadRequest, oerrors.OntologyQuery_ObjectType_InvalidParameter).
+							WithErrorDetails("排序方向不能为空")
+					}
+					if sp.Direction != interfaces.DESC_DIRECTION && sp.Direction != interfaces.ASC_DIRECTION {
+						return rest.NewHTTPError(ctx, http.StatusBadRequest, oerrors.OntologyQuery_ObjectType_InvalidParameter).
+							WithErrorDetails(fmt.Sprintf("排序方向只能是desc或asc, 当前第%d个对象类上指定的排序方向为%s", i+1, sp.Direction))
+					}
+				}
+			}
+
+			// limit 可选值 1-10000, 默认值为 1000
+			if path.ObjectTypes[i].Limit == 0 {
+				path.ObjectTypes[i].Limit = interfaces.DEFAULT_LIMIT
+			}
+			if path.ObjectTypes[i].Limit < 1 || path.ObjectTypes[i].Limit > interfaces.MAX_LIMIT {
+				return rest.NewHTTPError(ctx, http.StatusBadRequest, oerrors.OntologyQuery_ObjectType_InvalidParameter).
+					WithErrorDetails(fmt.Sprintf("limit可选值 1-10000, 当前limit为 %d", path.ObjectTypes[i].Limit))
+			}
 		}
 	}
 
@@ -194,38 +266,66 @@ func validateObjectSearchRequest(ctx context.Context, query *interfaces.ObjectQu
 	}
 	query.ActualCondition = actualCond
 
+	// sort 非空时，排序字段非空，排序方向非空，排序字段可以是对象类的数据属性, _score
+	if len(query.Sort) > 0 {
+		for _, sp := range query.Sort {
+			if sp.Field == "" {
+				return rest.NewHTTPError(ctx, http.StatusBadRequest, oerrors.OntologyQuery_ObjectType_InvalidParameter).
+					WithErrorDetails("排序字段不能为空")
+			}
+			if sp.Direction == "" {
+				return rest.NewHTTPError(ctx, http.StatusBadRequest, oerrors.OntologyQuery_ObjectType_InvalidParameter).
+					WithErrorDetails("排序方向不能为空")
+			}
+			if sp.Direction != interfaces.DESC_DIRECTION && sp.Direction != interfaces.ASC_DIRECTION {
+				return rest.NewHTTPError(ctx, http.StatusBadRequest, oerrors.OntologyQuery_ObjectType_InvalidParameter).
+					WithErrorDetails(fmt.Sprintf("排序方向只能是desc或asc, 当前排序方向为%s", sp.Direction))
+			}
+
+			// 排序字段可以是对象类的数据属性, _score，放在service层 get 到对象类信息后校验。
+		}
+	}
+
+	// limit 可选值 1-10000, 默认值为 10
+	if query.Limit < 1 || query.Limit > interfaces.MAX_LIMIT {
+		return rest.NewHTTPError(ctx, http.StatusBadRequest, oerrors.OntologyQuery_ObjectType_InvalidParameter).
+			WithErrorDetails(fmt.Sprintf("limit可选值 1-10000, 当前limit为 %d", query.Limit))
+	}
+	if query.Limit == 0 {
+		query.Limit = interfaces.DEFAULT_OBJECT_LIMIT
+	}
+
 	return nil
 }
 
 // 基于行动类的行动数据查询的参数校验
 func validateActionQuery(ctx context.Context, query *interfaces.ActionQuery) error {
 
-	// 校验查询时间范围的相关参数
-	// err := validateQueryTimeParam(ctx, &query.QueryTimeParams)
-	// if err != nil {
-	// 	return err
-	// }
-
-	// // 校验 filters
-	// err = validateFilters(ctx, query.Filters)
-	// if err != nil {
-	// 	return err
-	// }
-
-	// // 校验同环比参数
-	// err = validateRequestMetrics(ctx, query)
-	// if err != nil {
-	// 	return err
-	// }
-
+	// 唯一标识非空
+	if len(query.UniqueIdentities) == 0 {
+		return rest.NewHTTPError(ctx, http.StatusBadRequest, oerrors.OntologyQuery_ActionType_InvalidParameter).
+			WithErrorDetails("行动查询的唯一标识不能为空")
+	}
 	return nil
 }
 
 // 属性值查询的参数校验
 func validateObjectPropertyValueQuery(ctx context.Context, query *interfaces.ObjectPropertyValueQuery) error {
 
+	// 唯一标识非空
+	if len(query.UniqueIdentities) == 0 {
+		return rest.NewHTTPError(ctx, http.StatusBadRequest, oerrors.OntologyQuery_ObjectType_InvalidParameter).
+			WithErrorDetails("属性查询的唯一标识不能为空")
+	}
+
+	// 属性列表非空
+	if len(query.Properties) == 0 {
+		return rest.NewHTTPError(ctx, http.StatusBadRequest, oerrors.OntologyQuery_ObjectType_InvalidParameter).
+			WithErrorDetails("属性查询的属性列表不能为空")
+	}
+
 	// 处理 start end instant 和 step
-	// 如果没给参数，那么给默认参数
+	// 如果没给参数，那么给默认参数， 放在service层获取到对象类信息之后再校验
 
 	return nil
 }

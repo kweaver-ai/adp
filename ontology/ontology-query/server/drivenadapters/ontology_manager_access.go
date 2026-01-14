@@ -42,8 +42,9 @@ func NewOntologyManagerAccess(appSetting *common.AppSetting) interfaces.Ontology
 }
 
 // 获取对象类信息
-func (oma *ontologyManagerAccess) GetObjectType(ctx context.Context, knID string, otID string) (interfaces.ObjectType, bool, error) {
-	httpUrl := fmt.Sprintf("%s/%s/object-types/%s", oma.ontologyManagerUrl, knID, otID)
+func (oma *ontologyManagerAccess) GetObjectType(ctx context.Context, knID string, branch string, otID string) (interfaces.ObjectType, bool, error) {
+
+	httpUrl := fmt.Sprintf("%s/%s/object-types/%s?branch=%s", oma.ontologyManagerUrl, knID, otID, branch)
 	// http client 发送请求时，在 RoundTrip 时是用 transport 在 RoundTrip，此时的 transport 是 otelhttp.NewTransport 的，
 	// otelhttp.NewTransport 的 RoundTrip 时会对 propagator 做 inject, 即 t.propagators.Inject
 	ctx, span := ar_trace.Tracer.Start(ctx, "请求 ontology-manager 获取对象类信息", trace.WithSpanKind(trace.SpanKindClient))
@@ -156,9 +157,9 @@ func (oma *ontologyManagerAccess) GetObjectType(ctx context.Context, knID string
 }
 
 func (oma *ontologyManagerAccess) GetRelationTypePathsBaseOnSource(ctx context.Context, knID string,
-	query interfaces.PathsQueryBaseOnSource) ([]interfaces.RelationTypePath, error) {
+	branch string, query interfaces.PathsQueryBaseOnSource) ([]interfaces.RelationTypePath, error) {
 
-	url := fmt.Sprintf("%s/%s/relation-type-paths", oma.ontologyManagerUrl, knID)
+	url := fmt.Sprintf("%s/%s/relation-type-paths?branch=%s", oma.ontologyManagerUrl, knID, branch)
 
 	ctx, span := ar_trace.Tracer.Start(ctx, "请求 ontology-manager 获取关系类路径信息", trace.WithSpanKind(trace.SpanKindClient))
 	o11y.AddAttrs4InternalHttp(span, o11y.TraceAttrs{
@@ -288,9 +289,9 @@ func (oma *ontologyManagerAccess) GetRelationTypePathsBaseOnSource(ctx context.C
 }
 
 func (oma *ontologyManagerAccess) GetRelationType(ctx context.Context, knID string,
-	rtID string) (interfaces.RelationType, bool, error) {
+	branch string, rtID string) (interfaces.RelationType, bool, error) {
 
-	httpUrl := fmt.Sprintf("%s/%s/relation-types/%s", oma.ontologyManagerUrl, knID, rtID)
+	httpUrl := fmt.Sprintf("%s/%s/relation-types/%s?branch=%s", oma.ontologyManagerUrl, knID, rtID, branch)
 	// http client 发送请求时，在 RoundTrip 时是用 transport 在 RoundTrip，此时的 transport 是 otelhttp.NewTransport 的，
 	// otelhttp.NewTransport 的 RoundTrip 时会对 propagator 做 inject, 即 t.propagators.Inject
 	ctx, span := ar_trace.Tracer.Start(ctx, "请求 ontology-manager 获取关系类信息", trace.WithSpanKind(trace.SpanKindClient))
@@ -428,9 +429,9 @@ func (oma *ontologyManagerAccess) GetRelationType(ctx context.Context, knID stri
 }
 
 func (oma *ontologyManagerAccess) GetActionType(ctx context.Context, knID string,
-	atID string) (interfaces.ActionType, bool, error) {
+	branch string, atID string) (interfaces.ActionType, bool, error) {
 
-	httpUrl := fmt.Sprintf("%s/%s/action-types/%s", oma.ontologyManagerUrl, knID, atID)
+	httpUrl := fmt.Sprintf("%s/%s/action-types/%s?branch=%s", oma.ontologyManagerUrl, knID, atID, branch)
 	// http client 发送请求时，在 RoundTrip 时是用 transport 在 RoundTrip，此时的 transport 是 otelhttp.NewTransport 的，
 	// otelhttp.NewTransport 的 RoundTrip 时会对 propagator 做 inject, 即 t.propagators.Inject
 	ctx, span := ar_trace.Tracer.Start(ctx, "请求 ontology-manager 获取行动类信息", trace.WithSpanKind(trace.SpanKindClient))
