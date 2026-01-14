@@ -47,4 +47,5 @@ public class Detail {
     public final static String PORT_NOT_EMPLOY = "连接端口不能为空。";
     public final static String BUILT_IN_DATASOURCE_CANNOT_MODIFY = "内置数据源[%s]不能修改。";
     public final static String BUILT_IN_DATASOURCE_CANNOT_DELETE = "内置数据源[%s]不能删除。";
+    public static final String NOT_SUPPORT_CONNECTOR = "不支持的数据源类型:%s。若要支持请安装Etrino可选包";
 }
