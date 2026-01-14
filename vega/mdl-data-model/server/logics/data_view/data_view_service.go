@@ -1076,31 +1076,43 @@ func (dvs *dataViewService) ListDataViews(ctx context.Context, param *interfaces
 		resMids = append(resMids, v.ViewID)
 	}
 
-	var matchResouces map[string]interfaces.ResourceOps
-	if len(param.Operations) > 0 {
-		matchResouces, err = dvs.ps.FilterResources(ctx, interfaces.RESOURCE_TYPE_DATA_VIEW,
-			resMids, param.Operations, true)
-		if err != nil {
-			return nil, 0, err
-		}
-	} else {
-		matchResouces, err = dvs.ps.FilterResources(ctx, interfaces.RESOURCE_TYPE_DATA_VIEW,
-			resMids, []string{interfaces.OPERATION_TYPE_VIEW_DETAIL}, true)
-		if err != nil {
-			return nil, 0, err
-		}
-	}
-
+	// 分批处理，每批1万个resmids, fix权限接口报错prepared statement contains too many placeholders
+	batchSize := 10000
 	// 所有有权限的视图id
-	idMap := make(map[string]interfaces.ResourceOps)
-	for _, resourceOps := range matchResouces {
-		idMap[resourceOps.ResourceID] = resourceOps
+	matchResouceIDMap := make(map[string]interfaces.ResourceOps)
+
+	for i := 0; i < len(resMids); i += batchSize {
+		end := i + batchSize
+		if end > len(resMids) {
+			end = len(resMids)
+		}
+		batchResMids := resMids[i:end]
+
+		var batchMatchResources map[string]interfaces.ResourceOps
+		if len(param.Operations) > 0 {
+			batchMatchResources, err = dvs.ps.FilterResources(ctx, interfaces.RESOURCE_TYPE_DATA_VIEW,
+				batchResMids, param.Operations, true)
+			if err != nil {
+				return nil, 0, err
+			}
+		} else {
+			batchMatchResources, err = dvs.ps.FilterResources(ctx, interfaces.RESOURCE_TYPE_DATA_VIEW,
+				batchResMids, []string{interfaces.OPERATION_TYPE_VIEW_DETAIL}, true)
+			if err != nil {
+				return nil, 0, err
+			}
+		}
+
+		// 合并结果
+		for _, resourceOps := range batchMatchResources {
+			matchResouceIDMap[resourceOps.ResourceID] = resourceOps
+		}
 	}
 
 	// 遍历对象
 	results := make([]*interfaces.SimpleDataView, 0)
 	for _, v := range views {
-		if resrc, exist := idMap[v.ViewID]; exist {
+		if resrc, exist := matchResouceIDMap[v.ViewID]; exist {
 			v.Operations = resrc.Operations // 用户当前有权限的操作
 			if dataSource, ok := dataSourceMap[v.DataSourceID]; ok {
 				v.DataSourceName = dataSource.Name
@@ -1126,15 +1138,6 @@ func (dvs *dataViewService) ListDataViews(ctx context.Context, param *interfaces
 	if end > len(results) {
 		end = len(results)
 	}
-
-	// total, err := dvs.dva.GetDataViewsTotal(ctx, param)
-	// if err != nil {
-	// 	logger.Errorf("GetDataViewsTotal error: %s", err.Error())
-
-	// 	span.SetStatus(codes.Error, "Get data views total failed")
-	// 	return nil, 0, rest.NewHTTPError(ctx, http.StatusInternalServerError,
-	// 		derrors.DataModel_DataView_InternalError_GetDataViewsTotalFailed).WithErrorDetails(err.Error())
-	// }
 
 	span.SetStatus(codes.Ok, "")
 	return results[param.Offset:end], len(results), nil
@@ -1870,23 +1873,37 @@ func (dvs *dataViewService) ListDataViewSrcs(ctx context.Context, params *interf
 	for _, v := range views {
 		resMids = append(resMids, v.ViewID)
 	}
-	// 校验权限管理的操作权限
-	matchResouces, err := dvs.ps.FilterResources(ctx, interfaces.RESOURCE_TYPE_DATA_VIEW, resMids,
-		[]string{interfaces.OPERATION_TYPE_VIEW_DETAIL}, false)
-	if err != nil {
-		return nil, 0, err
-	}
-	// 所有有权限的模型数组
-	// id转map
-	idMap := make(map[string]bool)
-	for _, resourceOps := range matchResouces {
-		idMap[resourceOps.ResourceID] = true
+
+	// 分批处理，每批1万个resmids, fix权限接口报错prepared statement contains too many placeholders
+	batchSize := 10000
+	// 所有有权限的视图id
+	matchResouceIDMap := make(map[string]bool)
+
+	for i := 0; i < len(resMids); i += batchSize {
+		end := i + batchSize
+		if end > len(resMids) {
+			end = len(resMids)
+		}
+		batchResMids := resMids[i:end]
+
+		var batchMatchResources map[string]interfaces.ResourceOps
+		// 校验权限管理的操作权限
+		batchMatchResources, err = dvs.ps.FilterResources(ctx, interfaces.RESOURCE_TYPE_DATA_VIEW,
+			batchResMids, []string{interfaces.OPERATION_TYPE_VIEW_DETAIL}, false)
+		if err != nil {
+			return nil, 0, err
+		}
+
+		// 合并结果
+		for _, resourceOps := range batchMatchResources {
+			matchResouceIDMap[resourceOps.ResourceID] = true
+		}
 	}
 
 	// 遍历对象
 	results := make([]*interfaces.Resource, 0)
 	for _, view := range views {
-		if idMap[view.ViewID] {
+		if matchResouceIDMap[view.ViewID] {
 			results = append(results, &interfaces.Resource{
 				ID:   view.ViewID,
 				Type: interfaces.RESOURCE_TYPE_DATA_VIEW,
