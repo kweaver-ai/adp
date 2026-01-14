@@ -202,18 +202,18 @@ func (mr *MockObjectTypeAccessMockRecorder) GetObjectTypesTotal(ctx, query inter
 }
 
 // ListObjectTypes mocks base method.
-func (m *MockObjectTypeAccess) ListObjectTypes(ctx context.Context, query interfaces.ObjectTypesQueryParams) ([]*interfaces.ObjectType, error) {
+func (m *MockObjectTypeAccess) ListObjectTypes(ctx context.Context, tx *sql.Tx, query interfaces.ObjectTypesQueryParams) ([]*interfaces.ObjectType, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "ListObjectTypes", ctx, query)
+	ret := m.ctrl.Call(m, "ListObjectTypes", ctx, tx, query)
 	ret0, _ := ret[0].([]*interfaces.ObjectType)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // ListObjectTypes indicates an expected call of ListObjectTypes.
-func (mr *MockObjectTypeAccessMockRecorder) ListObjectTypes(ctx, query interface{}) *gomock.Call {
+func (mr *MockObjectTypeAccessMockRecorder) ListObjectTypes(ctx, tx, query interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListObjectTypes", reflect.TypeOf((*MockObjectTypeAccess)(nil).ListObjectTypes), ctx, query)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListObjectTypes", reflect.TypeOf((*MockObjectTypeAccess)(nil).ListObjectTypes), ctx, tx, query)
 }
 
 // UpdateDataProperties mocks base method.

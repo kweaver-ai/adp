@@ -722,24 +722,27 @@ func (ats *actionTypeService) SearchActionTypes(ctx context.Context,
 	}
 
 	// 转换到dsl
-	conditionDslStr, err := condtion.Convert(ctx, func(ctx context.Context, words []string) ([]*cond.VectorResp, error) {
-		if !ats.appSetting.ServerSetting.DefaultSmallModelEnabled {
-			err = errors.New("DefaultSmallModelEnabled is false, does not support knn condition")
-			span.SetStatus(codes.Error, err.Error())
-			return nil, err
-		}
-		dftModel, err := ats.mfa.GetDefaultModel(ctx)
+	conditionDslStr := "{}"
+	if condtion != nil {
+		conditionDslStr, err = condtion.Convert(ctx, func(ctx context.Context, words []string) ([]*cond.VectorResp, error) {
+			if !ats.appSetting.ServerSetting.DefaultSmallModelEnabled {
+				err = errors.New("DefaultSmallModelEnabled is false, does not support knn condition")
+				span.SetStatus(codes.Error, err.Error())
+				return nil, err
+			}
+			dftModel, err := ats.mfa.GetDefaultModel(ctx)
+			if err != nil {
+				logger.Errorf("GetDefaultModel error: %s", err.Error())
+				span.SetStatus(codes.Error, "获取默认模型失败")
+				return nil, err
+			}
+			return ats.mfa.GetVector(ctx, dftModel, words)
+		})
 		if err != nil {
-			logger.Errorf("GetDefaultModel error: %s", err.Error())
-			span.SetStatus(codes.Error, "获取默认模型失败")
-			return nil, err
+			return response, rest.NewHTTPError(ctx, http.StatusBadRequest,
+				oerrors.OntologyManager_ActionType_InvalidParameter_ConceptCondition).
+				WithErrorDetails(fmt.Sprintf("failed to convert condition to dsl, %s", err.Error()))
 		}
-		return ats.mfa.GetVector(ctx, dftModel, words)
-	})
-	if err != nil {
-		return response, rest.NewHTTPError(ctx, http.StatusBadRequest,
-			oerrors.OntologyManager_ActionType_InvalidParameter_ConceptCondition).
-			WithErrorDetails(fmt.Sprintf("failed to convert condition to dsl, %s", err.Error()))
 	}
 
 	// 1. 获取组下的关系类
@@ -784,7 +787,7 @@ func (ats *actionTypeService) SearchActionTypes(ctx context.Context,
 			span.End()
 
 			return response, rest.NewHTTPError(ctx, http.StatusInternalServerError,
-				oerrors.OntologyManager_ObjectType_InternalError).WithErrorDetails(errStr)
+				oerrors.OntologyManager_ActionType_InternalError).WithErrorDetails(errStr)
 		}
 		if len(atIDArr) == 0 {
 			// 概念分组下没有对象类,返回空
@@ -906,22 +909,22 @@ func (ats *actionTypeService) GetTotal(ctx context.Context, dsl map[string]any) 
 	totalBytes, err := ats.osa.Count(ctx, interfaces.KN_CONCEPT_INDEX_NAME, dsl)
 	if err != nil {
 		span.SetStatus(codes.Error, "Search total documents count failed")
-		// return total, rest.NewHTTPError(ctx, http.StatusInternalServerError, oerrors.Uniquery_InternalError_CountFailed).
-		// 	WithErrorDetails(err.Error())
+		return total, rest.NewHTTPError(ctx, http.StatusInternalServerError, oerrors.OntologyManager_ActionType_InternalError).
+			WithErrorDetails(err.Error())
 	}
 
 	totalNode, err := sonic.Get(totalBytes, "count")
 	if err != nil {
 		span.SetStatus(codes.Error, "Get total documents count failed")
-		// return total, rest.NewHTTPError(ctx, http.StatusInternalServerError, uerrors.Uniquery_InternalError_CountFailed).
-		// 	WithErrorDetails(err.Error())
+		return total, rest.NewHTTPError(ctx, http.StatusInternalServerError, oerrors.OntologyManager_ActionType_InternalError).
+			WithErrorDetails(err.Error())
 	}
 
 	total, err = totalNode.Int64()
 	if err != nil {
 		span.SetStatus(codes.Error, "Convert total documents count to type int64 failed")
-		// return total, rest.NewHTTPError(ctx, http.StatusInternalServerError, uerrors.Uniquery_InternalError_CountFailed).
-		// 	WithErrorDetails(err.Error())
+		return total, rest.NewHTTPError(ctx, http.StatusInternalServerError, oerrors.OntologyManager_ActionType_InternalError).
+			WithErrorDetails(err.Error())
 	}
 
 	span.SetStatus(codes.Ok, "")

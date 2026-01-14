@@ -8,23 +8,22 @@ const (
 	DATATYPE_KEYWORD = "keyword"
 	DATATYPE_TEXT    = "text"
 	DATATYPE_BINARY  = "binary"
+	DATATYPE_JSON    = "json"
+	DATATYPE_VECTOR  = "vector"
+	DATATYPE_POINT   = "point"
+	DATATYPE_SHAPE   = "shape"
+	DATATYPE_IP      = "ip"
 
-	DATATYPE_BYTE       = "byte"
-	DATATYPE_SHORT      = "short"
-	DATATYPE_INTEGER    = "integer"
-	DATATYPE_LONG       = "long"
-	DATATYPE_HALF_FLOAT = "half_float"
-	DATATYPE_FLOAT      = "float"
-	DATATYPE_DOUBLE     = "double"
-
-	DATATYPE_BOOLEAN = "boolean"
-
-	DATATYPE_DATE     = "date"
-	DATATYPE_DATETIME = "datetime"
-
-	DATATYPE_IP        = "ip"
-	DATATYPE_GEO_POINT = "geo_point"
-	DATATYPE_GEO_SHAPE = "geo_shape"
+	DATATYPE_INTEGER          = "integer"
+	DATATYPE_UNSIGNED_INTEGER = "unsigned integer"
+	DATATYPE_STRING           = "string"
+	DATATYPE_FLOAT            = "float"
+	DATATYPE_DECIMAL          = "decimal"
+	DATATYPE_DATE             = "date"
+	DATATYPE_DATETIME         = "datetime"
+	DATATYPE_TIMESTAMP        = "timestamp"
+	DATATYPE_TIME             = "time"
+	DATATYPE_BOOLEAN          = "boolean"
 
 	//字符型
 	CHAR    = "char"
@@ -78,15 +77,15 @@ var (
 		DATATYPE_BINARY:  {},
 	}
 
-	NUMBER_TYPES = map[string]struct{}{
-		DATATYPE_BYTE:       {},
-		DATATYPE_SHORT:      {},
-		DATATYPE_INTEGER:    {},
-		DATATYPE_LONG:       {},
-		DATATYPE_HALF_FLOAT: {},
-		DATATYPE_FLOAT:      {},
-		DATATYPE_DOUBLE:     {},
-	}
+	// NUMBER_TYPES = map[string]struct{}{
+	// 	DATATYPE_BYTE:       {},
+	// 	DATATYPE_SHORT:      {},
+	// 	DATATYPE_INTEGER:    {},
+	// 	DATATYPE_LONG:       {},
+	// 	DATATYPE_HALF_FLOAT: {},
+	// 	DATATYPE_FLOAT:      {},
+	// 	DATATYPE_DOUBLE:     {},
+	// }
 
 	// BOOLEAN_TYPES = map[string]struct{}{
 	// 	DATATYPE_BOOLEAN: {},
@@ -229,7 +228,7 @@ func DataType_IsString(t string) bool {
 	return ok
 }
 
-func DataType_IsNumber(t string) bool {
-	_, ok := NUMBER_TYPES[t]
-	return ok
-}
+// func DataType_IsNumber(t string) bool {
+// 	_, ok := NUMBER_TYPES[t]
+// 	return ok
+// }

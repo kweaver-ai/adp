@@ -1,0 +1,806 @@
+package relation_type
+
+import (
+	"context"
+	"testing"
+
+	"github.com/DATA-DOG/go-sqlmock"
+	"github.com/golang/mock/gomock"
+	"github.com/kweaver-ai/kweaver-go-lib/rest"
+	. "github.com/smartystreets/goconvey/convey"
+
+	"ontology-manager/common"
+	cond "ontology-manager/common/condition"
+	oerrors "ontology-manager/errors"
+	"ontology-manager/interfaces"
+	dmock "ontology-manager/interfaces/mock"
+)
+
+func Test_relationTypeService_CheckRelationTypeExistByID(t *testing.T) {
+	Convey("Test CheckRelationTypeExistByID\n", t, func() {
+		ctx := context.Background()
+		mockCtrl := gomock.NewController(t)
+		defer mockCtrl.Finish()
+
+		appSetting := &common.AppSetting{}
+		rta := dmock.NewMockRelationTypeAccess(mockCtrl)
+
+		service := &relationTypeService{
+			appSetting: appSetting,
+			rta:        rta,
+		}
+
+		Convey("Success when relation type exists\n", func() {
+			knID := "kn1"
+			branch := interfaces.MAIN_BRANCH
+			rtID := "rt1"
+			rtName := "relation_type1"
+
+			rta.EXPECT().CheckRelationTypeExistByID(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(rtName, true, nil)
+
+			name, exist, err := service.CheckRelationTypeExistByID(ctx, knID, branch, rtID)
+			So(err, ShouldBeNil)
+			So(exist, ShouldBeTrue)
+			So(name, ShouldEqual, rtName)
+		})
+
+		Convey("Success when relation type does not exist\n", func() {
+			knID := "kn1"
+			branch := interfaces.MAIN_BRANCH
+			rtID := "rt1"
+
+			rta.EXPECT().CheckRelationTypeExistByID(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return("", false, nil)
+
+			name, exist, err := service.CheckRelationTypeExistByID(ctx, knID, branch, rtID)
+			So(err, ShouldBeNil)
+			So(exist, ShouldBeFalse)
+			So(name, ShouldEqual, "")
+		})
+
+		Convey("Failed when access layer returns error\n", func() {
+			knID := "kn1"
+			branch := interfaces.MAIN_BRANCH
+			rtID := "rt1"
+
+			rta.EXPECT().CheckRelationTypeExistByID(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return("", false, rest.NewHTTPError(ctx, 500, oerrors.OntologyManager_RelationType_InternalError))
+
+			name, exist, err := service.CheckRelationTypeExistByID(ctx, knID, branch, rtID)
+			So(err, ShouldNotBeNil)
+			So(exist, ShouldBeFalse)
+			So(name, ShouldEqual, "")
+			httpErr := err.(*rest.HTTPError)
+			So(httpErr.BaseError.ErrorCode, ShouldEqual, oerrors.OntologyManager_RelationType_InternalError_CheckRelationTypeIfExistFailed)
+		})
+	})
+}
+
+func Test_relationTypeService_CheckRelationTypeExistByName(t *testing.T) {
+	Convey("Test CheckRelationTypeExistByName\n", t, func() {
+		ctx := context.Background()
+		mockCtrl := gomock.NewController(t)
+		defer mockCtrl.Finish()
+
+		appSetting := &common.AppSetting{}
+		rta := dmock.NewMockRelationTypeAccess(mockCtrl)
+
+		service := &relationTypeService{
+			appSetting: appSetting,
+			rta:        rta,
+		}
+
+		Convey("Success when relation type exists\n", func() {
+			knID := "kn1"
+			branch := interfaces.MAIN_BRANCH
+			rtName := "relation_type1"
+			rtID := "rt1"
+
+			rta.EXPECT().CheckRelationTypeExistByName(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(rtID, true, nil)
+
+			id, exist, err := service.CheckRelationTypeExistByName(ctx, knID, branch, rtName)
+			So(err, ShouldBeNil)
+			So(exist, ShouldBeTrue)
+			So(id, ShouldEqual, rtID)
+		})
+
+		Convey("Success when relation type does not exist\n", func() {
+			knID := "kn1"
+			branch := interfaces.MAIN_BRANCH
+			rtName := "relation_type1"
+
+			rta.EXPECT().CheckRelationTypeExistByName(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return("", false, nil)
+
+			id, exist, err := service.CheckRelationTypeExistByName(ctx, knID, branch, rtName)
+			So(err, ShouldBeNil)
+			So(exist, ShouldBeFalse)
+			So(id, ShouldEqual, "")
+		})
+
+		Convey("Failed when access layer returns error\n", func() {
+			knID := "kn1"
+			branch := interfaces.MAIN_BRANCH
+			rtName := "relation_type1"
+
+			rta.EXPECT().CheckRelationTypeExistByName(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return("", false, rest.NewHTTPError(ctx, 500, oerrors.OntologyManager_RelationType_InternalError))
+
+			id, exist, err := service.CheckRelationTypeExistByName(ctx, knID, branch, rtName)
+			So(err, ShouldNotBeNil)
+			So(exist, ShouldBeFalse)
+			So(id, ShouldEqual, "")
+			httpErr := err.(*rest.HTTPError)
+			So(httpErr.BaseError.ErrorCode, ShouldEqual, oerrors.OntologyManager_RelationType_InternalError_CheckRelationTypeIfExistFailed)
+		})
+	})
+}
+
+func Test_relationTypeService_GetRelationTypeIDsByKnID(t *testing.T) {
+	Convey("Test GetRelationTypeIDsByKnID\n", t, func() {
+		ctx := context.Background()
+		mockCtrl := gomock.NewController(t)
+		defer mockCtrl.Finish()
+
+		appSetting := &common.AppSetting{}
+		rta := dmock.NewMockRelationTypeAccess(mockCtrl)
+
+		service := &relationTypeService{
+			appSetting: appSetting,
+			rta:        rta,
+		}
+
+		Convey("Success getting relation type IDs\n", func() {
+			knID := "kn1"
+			branch := interfaces.MAIN_BRANCH
+			rtIDs := []string{"rt1", "rt2"}
+
+			rta.EXPECT().GetRelationTypeIDsByKnID(gomock.Any(), gomock.Any(), gomock.Any()).Return(rtIDs, nil)
+
+			result, err := service.GetRelationTypeIDsByKnID(ctx, knID, branch)
+			So(err, ShouldBeNil)
+			So(result, ShouldResemble, rtIDs)
+		})
+
+		Convey("Success with empty result\n", func() {
+			knID := "kn1"
+			branch := interfaces.MAIN_BRANCH
+
+			rta.EXPECT().GetRelationTypeIDsByKnID(gomock.Any(), gomock.Any(), gomock.Any()).Return([]string{}, nil)
+
+			result, err := service.GetRelationTypeIDsByKnID(ctx, knID, branch)
+			So(err, ShouldBeNil)
+			So(len(result), ShouldEqual, 0)
+		})
+
+		Convey("Failed when access layer returns error\n", func() {
+			knID := "kn1"
+			branch := interfaces.MAIN_BRANCH
+
+			rta.EXPECT().GetRelationTypeIDsByKnID(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil, rest.NewHTTPError(ctx, 500, oerrors.OntologyManager_RelationType_InternalError))
+
+			result, err := service.GetRelationTypeIDsByKnID(ctx, knID, branch)
+			So(err, ShouldNotBeNil)
+			So(result, ShouldBeNil)
+			httpErr := err.(*rest.HTTPError)
+			So(httpErr.BaseError.ErrorCode, ShouldEqual, oerrors.OntologyManager_RelationType_InternalError_GetRelationTypesByIDsFailed)
+		})
+	})
+}
+
+func Test_relationTypeService_GetRelationTypesByIDs(t *testing.T) {
+	Convey("Test GetRelationTypesByIDs\n", t, func() {
+		ctx := context.Background()
+		mockCtrl := gomock.NewController(t)
+		defer mockCtrl.Finish()
+
+		appSetting := &common.AppSetting{}
+		rta := dmock.NewMockRelationTypeAccess(mockCtrl)
+		ps := dmock.NewMockPermissionService(mockCtrl)
+		ots := dmock.NewMockObjectTypeService(mockCtrl)
+
+		service := &relationTypeService{
+			appSetting: appSetting,
+			rta:        rta,
+			ps:         ps,
+			ots:        ots,
+		}
+
+		Convey("Success getting relation types by IDs\n", func() {
+			knID := "kn1"
+			branch := interfaces.MAIN_BRANCH
+			rtIDs := []string{"rt1", "rt2"}
+			rtArr := []*interfaces.RelationType{
+				{
+					RelationTypeWithKeyField: interfaces.RelationTypeWithKeyField{
+						RTID:   "rt1",
+						RTName: "rt1",
+					},
+				},
+				{
+					RelationTypeWithKeyField: interfaces.RelationTypeWithKeyField{
+						RTID:   "rt2",
+						RTName: "rt2",
+					},
+				},
+			}
+
+			ps.EXPECT().CheckPermission(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
+			rta.EXPECT().GetRelationTypesByIDs(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(rtArr, nil)
+			ots.EXPECT().GetObjectTypesMapByIDs(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(map[string]*interfaces.ObjectType{}, nil).AnyTimes()
+
+			result, err := service.GetRelationTypesByIDs(ctx, knID, branch, rtIDs)
+			So(err, ShouldBeNil)
+			So(len(result), ShouldEqual, 2)
+		})
+
+		Convey("Failed when relation types count mismatch\n", func() {
+			knID := "kn1"
+			branch := interfaces.MAIN_BRANCH
+			rtIDs := []string{"rt1", "rt2"}
+			rtArr := []*interfaces.RelationType{
+				{
+					RelationTypeWithKeyField: interfaces.RelationTypeWithKeyField{
+						RTID:   "rt1",
+						RTName: "rt1",
+					},
+				},
+			}
+
+			ps.EXPECT().CheckPermission(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
+			rta.EXPECT().GetRelationTypesByIDs(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(rtArr, nil)
+
+			result, err := service.GetRelationTypesByIDs(ctx, knID, branch, rtIDs)
+			So(err, ShouldNotBeNil)
+			So(result, ShouldNotBeNil)
+			httpErr := err.(*rest.HTTPError)
+			So(httpErr.BaseError.ErrorCode, ShouldEqual, oerrors.OntologyManager_RelationType_RelationTypeNotFound)
+		})
+	})
+}
+
+func Test_relationTypeService_ListRelationTypes(t *testing.T) {
+	Convey("Test ListRelationTypes\n", t, func() {
+		ctx := context.Background()
+		mockCtrl := gomock.NewController(t)
+		defer mockCtrl.Finish()
+
+		appSetting := &common.AppSetting{}
+		rta := dmock.NewMockRelationTypeAccess(mockCtrl)
+		ps := dmock.NewMockPermissionService(mockCtrl)
+		ots := dmock.NewMockObjectTypeService(mockCtrl)
+		uma := dmock.NewMockUserMgmtAccess(mockCtrl)
+
+		service := &relationTypeService{
+			appSetting: appSetting,
+			rta:        rta,
+			ps:         ps,
+			ots:        ots,
+			uma:        uma,
+		}
+
+		Convey("Success listing relation types\n", func() {
+			query := interfaces.RelationTypesQueryParams{
+				KNID:   "kn1",
+				Branch: interfaces.MAIN_BRANCH,
+				PaginationQueryParameters: interfaces.PaginationQueryParameters{
+					Limit:  10,
+					Offset: 0,
+				},
+			}
+			rtArr := []*interfaces.RelationType{
+				{
+					RelationTypeWithKeyField: interfaces.RelationTypeWithKeyField{
+						RTID:               "rt1",
+						RTName:             "rt1",
+						SourceObjectTypeID: "ot1",
+						TargetObjectTypeID: "ot2",
+					},
+				},
+			}
+
+			ps.EXPECT().CheckPermission(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
+			rta.EXPECT().ListRelationTypes(gomock.Any(), gomock.Any()).Return(rtArr, nil)
+			ots.EXPECT().GetObjectTypesMapByIDs(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(map[string]*interfaces.ObjectType{}, nil)
+			uma.EXPECT().GetAccountNames(gomock.Any(), gomock.Any()).Return(nil)
+
+			rts, total, err := service.ListRelationTypes(ctx, query)
+			So(err, ShouldBeNil)
+			So(total, ShouldEqual, 1)
+			So(len(rts), ShouldEqual, 1)
+		})
+
+		Convey("Success with empty result\n", func() {
+			query := interfaces.RelationTypesQueryParams{
+				KNID:   "kn1",
+				Branch: interfaces.MAIN_BRANCH,
+				PaginationQueryParameters: interfaces.PaginationQueryParameters{
+					Limit:  10,
+					Offset: 0,
+				},
+			}
+
+			ps.EXPECT().CheckPermission(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
+			rta.EXPECT().ListRelationTypes(gomock.Any(), gomock.Any()).Return([]*interfaces.RelationType{}, nil)
+
+			rts, total, err := service.ListRelationTypes(ctx, query)
+			So(err, ShouldBeNil)
+			So(total, ShouldEqual, 0)
+			So(len(rts), ShouldEqual, 0)
+		})
+	})
+}
+
+func Test_relationTypeService_CreateRelationTypes(t *testing.T) {
+	Convey("Test CreateRelationTypes\n", t, func() {
+		ctx := context.Background()
+		mockCtrl := gomock.NewController(t)
+		defer mockCtrl.Finish()
+
+		appSetting := &common.AppSetting{
+			ServerSetting: common.ServerSetting{
+				DefaultSmallModelEnabled: false,
+			},
+		}
+		rta := dmock.NewMockRelationTypeAccess(mockCtrl)
+		ps := dmock.NewMockPermissionService(mockCtrl)
+		ots := dmock.NewMockObjectTypeService(mockCtrl)
+		osa := dmock.NewMockOpenSearchAccess(mockCtrl)
+		db, smock, _ := sqlmock.New(sqlmock.QueryMatcherOption(sqlmock.QueryMatcherEqual))
+
+		service := &relationTypeService{
+			appSetting: appSetting,
+			db:         db,
+			rta:        rta,
+			ps:         ps,
+			ots:        ots,
+			osa:        osa,
+		}
+
+		Convey("Success creating relation types with normal mode\n", func() {
+			relationTypes := []*interfaces.RelationType{
+				{
+					RelationTypeWithKeyField: interfaces.RelationTypeWithKeyField{
+						RTID:               "rt1",
+						RTName:             "relation_type1",
+						SourceObjectTypeID: "ot1",
+						TargetObjectTypeID: "ot2",
+					},
+					KNID:   "kn1",
+					Branch: interfaces.MAIN_BRANCH,
+				},
+			}
+
+			smock.ExpectBegin()
+			ps.EXPECT().CheckPermission(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
+			ots.EXPECT().GetObjectTypesByIDs(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return([]*interfaces.ObjectType{{ObjectTypeWithKeyField: interfaces.ObjectTypeWithKeyField{OTID: "ot1"}}}, nil).AnyTimes()
+			ots.EXPECT().CheckObjectTypeExistByID(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return("", true, nil).AnyTimes()
+			rta.EXPECT().CheckRelationTypeExistByID(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return("", false, nil).AnyTimes()
+			rta.EXPECT().CheckRelationTypeExistByName(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return("", false, nil).AnyTimes()
+			rta.EXPECT().CreateRelationType(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
+			osa.EXPECT().InsertData(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
+			smock.ExpectCommit()
+
+			result, err := service.CreateRelationTypes(ctx, nil, relationTypes, interfaces.ImportMode_Normal)
+			So(err, ShouldBeNil)
+			So(len(result), ShouldEqual, 1)
+			So(result[0], ShouldEqual, "rt1")
+		})
+
+		Convey("Failed when permission check fails\n", func() {
+			relationTypes := []*interfaces.RelationType{
+				{
+					RelationTypeWithKeyField: interfaces.RelationTypeWithKeyField{
+						RTID:   "rt1",
+						RTName: "relation_type1",
+					},
+					KNID:   "kn1",
+					Branch: interfaces.MAIN_BRANCH,
+				},
+			}
+
+			ps.EXPECT().CheckPermission(gomock.Any(), gomock.Any(), gomock.Any()).Return(rest.NewHTTPError(ctx, 403, oerrors.OntologyManager_InternalError_CheckPermissionFailed))
+
+			result, err := service.CreateRelationTypes(ctx, nil, relationTypes, interfaces.ImportMode_Normal)
+			So(err, ShouldNotBeNil)
+			So(len(result), ShouldEqual, 0)
+		})
+
+		Convey("Failed when relation type ID already exists in normal mode\n", func() {
+			relationTypes := []*interfaces.RelationType{
+				{
+					RelationTypeWithKeyField: interfaces.RelationTypeWithKeyField{
+						RTID:   "rt1",
+						RTName: "relation_type1",
+					},
+					KNID:   "kn1",
+					Branch: interfaces.MAIN_BRANCH,
+				},
+			}
+
+			smock.ExpectBegin()
+			ps.EXPECT().CheckPermission(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
+			rta.EXPECT().CheckRelationTypeExistByID(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return("rt1", true, nil)
+			rta.EXPECT().CheckRelationTypeExistByName(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return("", false, nil)
+			smock.ExpectRollback()
+
+			result, err := service.CreateRelationTypes(ctx, nil, relationTypes, interfaces.ImportMode_Normal)
+			So(err, ShouldNotBeNil)
+			So(len(result), ShouldEqual, 0)
+			httpErr := err.(*rest.HTTPError)
+			So(httpErr.BaseError.ErrorCode, ShouldEqual, oerrors.OntologyManager_RelationType_RelationTypeIDExisted)
+		})
+
+		Convey("Success with ignore mode when relation type exists\n", func() {
+			relationTypes := []*interfaces.RelationType{
+				{
+					RelationTypeWithKeyField: interfaces.RelationTypeWithKeyField{
+						RTID:   "rt1",
+						RTName: "relation_type1",
+					},
+					KNID:   "kn1",
+					Branch: interfaces.MAIN_BRANCH,
+				},
+			}
+
+			smock.ExpectBegin()
+			ps.EXPECT().CheckPermission(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
+			rta.EXPECT().CheckRelationTypeExistByID(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return("rt1", true, nil)
+			rta.EXPECT().CheckRelationTypeExistByName(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return("rt1", true, nil)
+			smock.ExpectCommit()
+
+			result, err := service.CreateRelationTypes(ctx, nil, relationTypes, interfaces.ImportMode_Ignore)
+			So(err, ShouldBeNil)
+			So(len(result), ShouldEqual, 0)
+		})
+	})
+}
+
+func Test_relationTypeService_UpdateRelationType(t *testing.T) {
+	Convey("Test UpdateRelationType\n", t, func() {
+		ctx := context.Background()
+		mockCtrl := gomock.NewController(t)
+		defer mockCtrl.Finish()
+
+		appSetting := &common.AppSetting{
+			ServerSetting: common.ServerSetting{
+				DefaultSmallModelEnabled: false,
+			},
+		}
+		rta := dmock.NewMockRelationTypeAccess(mockCtrl)
+		ps := dmock.NewMockPermissionService(mockCtrl)
+		ots := dmock.NewMockObjectTypeService(mockCtrl)
+		osa := dmock.NewMockOpenSearchAccess(mockCtrl)
+		db, smock, _ := sqlmock.New(sqlmock.QueryMatcherOption(sqlmock.QueryMatcherEqual))
+
+		service := &relationTypeService{
+			appSetting: appSetting,
+			db:         db,
+			rta:        rta,
+			ps:         ps,
+			ots:        ots,
+			osa:        osa,
+		}
+
+		Convey("Success updating relation type\n", func() {
+			relationType := &interfaces.RelationType{
+				RelationTypeWithKeyField: interfaces.RelationTypeWithKeyField{
+					RTID:               "rt1",
+					RTName:             "relation_type1",
+					SourceObjectTypeID: "ot1",
+					TargetObjectTypeID: "ot2",
+				},
+				KNID:   "kn1",
+				Branch: interfaces.MAIN_BRANCH,
+			}
+
+			smock.ExpectBegin()
+			ps.EXPECT().CheckPermission(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
+			ots.EXPECT().GetObjectTypesByIDs(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return([]*interfaces.ObjectType{{ObjectTypeWithKeyField: interfaces.ObjectTypeWithKeyField{OTID: "ot1"}}}, nil).AnyTimes()
+			ots.EXPECT().CheckObjectTypeExistByID(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return("", true, nil).AnyTimes()
+			rta.EXPECT().UpdateRelationType(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
+			osa.EXPECT().InsertData(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
+			smock.ExpectCommit()
+
+			err := service.UpdateRelationType(ctx, nil, relationType)
+			So(err, ShouldBeNil)
+		})
+
+		Convey("Failed when permission check fails\n", func() {
+			relationType := &interfaces.RelationType{
+				RelationTypeWithKeyField: interfaces.RelationTypeWithKeyField{
+					RTID:   "rt1",
+					RTName: "relation_type1",
+				},
+				KNID:   "kn1",
+				Branch: interfaces.MAIN_BRANCH,
+			}
+
+			ps.EXPECT().CheckPermission(gomock.Any(), gomock.Any(), gomock.Any()).Return(rest.NewHTTPError(ctx, 403, oerrors.OntologyManager_InternalError_CheckPermissionFailed))
+
+			err := service.UpdateRelationType(ctx, nil, relationType)
+			So(err, ShouldNotBeNil)
+		})
+	})
+}
+
+func Test_relationTypeService_DeleteRelationTypesByIDs(t *testing.T) {
+	Convey("Test DeleteRelationTypesByIDs\n", t, func() {
+		ctx := context.Background()
+		mockCtrl := gomock.NewController(t)
+		defer mockCtrl.Finish()
+
+		appSetting := &common.AppSetting{}
+		rta := dmock.NewMockRelationTypeAccess(mockCtrl)
+		ps := dmock.NewMockPermissionService(mockCtrl)
+		osa := dmock.NewMockOpenSearchAccess(mockCtrl)
+		db, smock, _ := sqlmock.New(sqlmock.QueryMatcherOption(sqlmock.QueryMatcherEqual))
+
+		service := &relationTypeService{
+			appSetting: appSetting,
+			db:         db,
+			rta:        rta,
+			ps:         ps,
+			osa:        osa,
+		}
+
+		Convey("Success deleting relation types\n", func() {
+			knID := "kn1"
+			branch := interfaces.MAIN_BRANCH
+			rtIDs := []string{"rt1", "rt2"}
+
+			smock.ExpectBegin()
+			ps.EXPECT().CheckPermission(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
+			rta.EXPECT().DeleteRelationTypesByIDs(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(int64(2), nil)
+			osa.EXPECT().DeleteData(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).Times(2)
+			smock.ExpectCommit()
+
+			result, err := service.DeleteRelationTypesByIDs(ctx, nil, knID, branch, rtIDs)
+			So(err, ShouldBeNil)
+			So(result, ShouldEqual, 2)
+		})
+
+		Convey("Failed when permission check fails\n", func() {
+			knID := "kn1"
+			branch := interfaces.MAIN_BRANCH
+			rtIDs := []string{"rt1"}
+
+			ps.EXPECT().CheckPermission(gomock.Any(), gomock.Any(), gomock.Any()).Return(rest.NewHTTPError(ctx, 403, oerrors.OntologyManager_InternalError_CheckPermissionFailed))
+
+			result, err := service.DeleteRelationTypesByIDs(ctx, nil, knID, branch, rtIDs)
+			So(err, ShouldNotBeNil)
+			So(result, ShouldEqual, 0)
+		})
+	})
+}
+
+func Test_relationTypeService_InsertOpenSearchData(t *testing.T) {
+	Convey("Test InsertOpenSearchData\n", t, func() {
+		ctx := context.Background()
+		mockCtrl := gomock.NewController(t)
+		defer mockCtrl.Finish()
+
+		appSetting := &common.AppSetting{
+			ServerSetting: common.ServerSetting{
+				DefaultSmallModelEnabled: false,
+			},
+		}
+		osa := dmock.NewMockOpenSearchAccess(mockCtrl)
+
+		service := &relationTypeService{
+			appSetting: appSetting,
+			osa:        osa,
+		}
+
+		Convey("Success inserting empty list\n", func() {
+			relationTypes := []*interfaces.RelationType{}
+
+			err := service.InsertOpenSearchData(ctx, relationTypes)
+			So(err, ShouldBeNil)
+		})
+
+		Convey("Success inserting relation types\n", func() {
+			relationTypes := []*interfaces.RelationType{
+				{
+					RelationTypeWithKeyField: interfaces.RelationTypeWithKeyField{
+						RTID:   "rt1",
+						RTName: "relation_type1",
+					},
+					KNID:   "kn1",
+					Branch: interfaces.MAIN_BRANCH,
+				},
+			}
+
+			osa.EXPECT().InsertData(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
+
+			err := service.InsertOpenSearchData(ctx, relationTypes)
+			So(err, ShouldBeNil)
+		})
+	})
+}
+
+func Test_relationTypeService_GetTotal(t *testing.T) {
+	Convey("Test GetTotal\n", t, func() {
+		ctx := context.Background()
+		mockCtrl := gomock.NewController(t)
+		defer mockCtrl.Finish()
+
+		appSetting := &common.AppSetting{}
+		osa := dmock.NewMockOpenSearchAccess(mockCtrl)
+
+		service := &relationTypeService{
+			appSetting: appSetting,
+			osa:        osa,
+		}
+
+		Convey("Success getting total\n", func() {
+			dsl := map[string]any{
+				"query": map[string]any{
+					"match_all": map[string]any{},
+				},
+			}
+			countResponse := []byte(`{"count": 10}`)
+
+			osa.EXPECT().Count(gomock.Any(), gomock.Any(), gomock.Any()).Return(countResponse, nil)
+
+			total, err := service.GetTotal(ctx, dsl)
+			So(err, ShouldBeNil)
+			So(total, ShouldEqual, 10)
+		})
+
+		Convey("Failed when count fails\n", func() {
+			dsl := map[string]any{}
+
+			osa.EXPECT().Count(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil, rest.NewHTTPError(ctx, 500, oerrors.OntologyManager_RelationType_InternalError))
+
+			total, err := service.GetTotal(ctx, dsl)
+			So(err, ShouldNotBeNil)
+			So(total, ShouldEqual, 0)
+		})
+	})
+}
+
+func Test_relationTypeService_GetTotalWithLargeRTIDs(t *testing.T) {
+	Convey("Test GetTotalWithLargeRTIDs\n", t, func() {
+		ctx := context.Background()
+		mockCtrl := gomock.NewController(t)
+		defer mockCtrl.Finish()
+
+		appSetting := &common.AppSetting{}
+		osa := dmock.NewMockOpenSearchAccess(mockCtrl)
+
+		service := &relationTypeService{
+			appSetting: appSetting,
+			osa:        osa,
+		}
+
+		Convey("Success getting total with large RTIDs\n", func() {
+			conditionDslStr := `{"query":{"match_all":{}}}`
+			rtIDs := []string{"rt1", "rt2", "rt3"}
+
+			// Mock GetTotalWithRTIDs calls
+			countResponse := []byte(`{"count": 5}`)
+			osa.EXPECT().Count(gomock.Any(), gomock.Any(), gomock.Any()).Return(countResponse, nil).Times(1)
+
+			total, err := service.GetTotalWithLargeRTIDs(ctx, conditionDslStr, rtIDs)
+			So(err, ShouldBeNil)
+			So(total, ShouldEqual, 5)
+		})
+	})
+}
+
+func Test_relationTypeService_GetTotalWithRTIDs(t *testing.T) {
+	Convey("Test GetTotalWithRTIDs\n", t, func() {
+		ctx := context.Background()
+		mockCtrl := gomock.NewController(t)
+		defer mockCtrl.Finish()
+
+		appSetting := &common.AppSetting{}
+		osa := dmock.NewMockOpenSearchAccess(mockCtrl)
+
+		service := &relationTypeService{
+			appSetting: appSetting,
+			osa:        osa,
+		}
+
+		Convey("Success getting total with RTIDs\n", func() {
+			conditionDslStr := `{"query":{"match_all":{}}}`
+			rtIDs := []string{"rt1", "rt2"}
+
+			countResponse := []byte(`{"count": 2}`)
+			osa.EXPECT().Count(gomock.Any(), gomock.Any(), gomock.Any()).Return(countResponse, nil)
+
+			total, err := service.GetTotalWithRTIDs(ctx, conditionDslStr, rtIDs)
+			So(err, ShouldBeNil)
+			So(total, ShouldEqual, 2)
+		})
+
+		Convey("Failed when invalid DSL\n", func() {
+			conditionDslStr := `invalid json`
+			rtIDs := []string{"rt1"}
+
+			total, err := service.GetTotalWithRTIDs(ctx, conditionDslStr, rtIDs)
+			So(err, ShouldNotBeNil)
+			So(total, ShouldEqual, 0)
+		})
+	})
+}
+
+func Test_relationTypeService_SearchRelationTypes(t *testing.T) {
+	Convey("Test SearchRelationTypes\n", t, func() {
+		ctx := context.Background()
+		mockCtrl := gomock.NewController(t)
+		defer mockCtrl.Finish()
+
+		appSetting := &common.AppSetting{
+			ServerSetting: common.ServerSetting{
+				DefaultSmallModelEnabled: false,
+			},
+		}
+		cga := dmock.NewMockConceptGroupAccess(mockCtrl)
+		osa := dmock.NewMockOpenSearchAccess(mockCtrl)
+
+		service := &relationTypeService{
+			appSetting: appSetting,
+			cga:        cga,
+			osa:        osa,
+		}
+
+		Convey("Success searching relation types without concept groups\n", func() {
+			query := &interfaces.ConceptsQuery{
+				KNID:   "kn1",
+				Branch: interfaces.MAIN_BRANCH,
+				Limit:  10,
+			}
+
+			osa.EXPECT().SearchData(gomock.Any(), gomock.Any(), gomock.Any()).Return([]interfaces.Hit{}, nil)
+
+			result, err := service.SearchRelationTypes(ctx, query)
+			So(err, ShouldBeNil)
+			So(result.Entries, ShouldNotBeNil)
+			So(len(result.Entries), ShouldEqual, 0)
+		})
+
+		Convey("Success searching relation types with concept groups\n", func() {
+			query := &interfaces.ConceptsQuery{
+				KNID:          "kn1",
+				Branch:        interfaces.MAIN_BRANCH,
+				Limit:         10,
+				ConceptGroups: []string{"cg1"},
+				ActualCondition: &cond.CondCfg{
+					Operation: "and",
+					SubConds: []*cond.CondCfg{
+						{
+							Name:      "name",
+							Operation: cond.OperationEq,
+							ValueOptCfg: cond.ValueOptCfg{
+								ValueFrom: "const",
+								Value:     "rt1",
+							},
+						},
+					},
+				},
+			}
+
+			cga.EXPECT().GetConceptGroupsTotal(gomock.Any(), gomock.Any()).Return(1, nil)
+			cga.EXPECT().GetRelationTypeIDsFromConceptGroupRelation(gomock.Any(), gomock.Any()).Return([]string{"rt1"}, nil)
+			osa.EXPECT().SearchData(gomock.Any(), gomock.Any(), gomock.Any()).Return([]interfaces.Hit{}, nil)
+
+			result, err := service.SearchRelationTypes(ctx, query)
+			So(err, ShouldBeNil)
+			So(result.Entries, ShouldNotBeNil)
+		})
+
+		Convey("Failed when concept groups not found\n", func() {
+			query := &interfaces.ConceptsQuery{
+				KNID:          "kn1",
+				Branch:        interfaces.MAIN_BRANCH,
+				NeedTotal:     false,
+				Limit:         10,
+				ConceptGroups: []string{"cg1"},
+			}
+
+			cga.EXPECT().GetConceptGroupsTotal(gomock.Any(), gomock.Any()).Return(0, nil)
+
+			result, err := service.SearchRelationTypes(ctx, query)
+			So(err, ShouldNotBeNil)
+			So(len(result.Entries), ShouldEqual, 0)
+		})
+	})
+}

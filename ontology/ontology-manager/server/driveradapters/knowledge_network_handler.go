@@ -452,14 +452,13 @@ func (r *restHandler) ListKNs(c *gin.Context, visitor rest.Visitor) {
 		NamePattern:    namePattern,
 		Tag:            tag,
 		BusinessDomain: businessDomain,
+		Branch:         interfaces.MAIN_BRANCH,
 	}
 	parameter.Sort = pageParam.Sort
 	parameter.Direction = pageParam.Direction
 	parameter.Limit = pageParam.Limit
 	parameter.Offset = pageParam.Offset
 
-	// var result map[string]any
-	// if simpleInfo {
 	// 获取业务知识网络简单信息
 	knList, total, err := r.kns.ListKNs(ctx, parameter)
 	result := map[string]any{"entries": knList, "total_count": total}
@@ -651,12 +650,37 @@ func (r *restHandler) GetRelationTypePaths(c *gin.Context, visitor rest.Visitor)
 	query.KNID = knID
 	query.Branch = branch
 
-	// todo： validate: 路径长度默认是1度，最大可查3度。
+	// 校验 x-http-method-override 有效性
+	err = ValidateHeaderMethodOverride(ctx, c.GetHeader(interfaces.HTTP_HEADER_METHOD_OVERRIDE))
+	if err != nil {
+		httpErr := err.(*rest.HTTPError)
+		o11y.AddHttpAttrs4HttpError(span, httpErr)
+		rest.ReplyError(c, httpErr)
+		return
+	}
+
+	// validate: 路径长度默认是1度，最大可查3度。
 	err = ValidateRelationTypePathsQuery(ctx, &query)
 	if err != nil {
 		httpErr := err.(*rest.HTTPError)
 
 		// 设置 trace 的错误信息的 attributes
+		o11y.AddHttpAttrs4HttpError(span, httpErr)
+		rest.ReplyError(c, httpErr)
+		return
+	}
+
+	// 校验业务知识网络存在性
+	kn, err := r.kns.GetKNByID(ctx, knID, branch, "")
+	if err != nil {
+		httpErr := err.(*rest.HTTPError)
+		o11y.AddHttpAttrs4HttpError(span, httpErr)
+		rest.ReplyError(c, httpErr)
+		return
+	}
+	if kn == nil {
+		httpErr := rest.NewHTTPError(ctx, http.StatusNotFound, oerrors.OntologyManager_KnowledgeNetwork_NotFound).
+			WithErrorDetails(fmt.Sprintf("Business knowledge network with id %s not found", knID))
 		o11y.AddHttpAttrs4HttpError(span, httpErr)
 		rest.ReplyError(c, httpErr)
 		return

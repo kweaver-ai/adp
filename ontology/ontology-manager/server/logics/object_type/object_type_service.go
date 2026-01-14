@@ -472,10 +472,10 @@ func (ots *objectTypeService) GetObjectTypesByIDs(ctx context.Context, tx *sql.T
 
 	// 获取对象类所属的分组
 	otGroups, err := ots.cga.GetConceptGroupsByOTIDs(ctx, tx, interfaces.ConceptGroupRelationsQueryParams{
-		KNID: knID,
-		// Branch: query.Branch,
-		OTIDs: otIDs,
-	}) // todo: 分支
+		KNID:   knID,
+		Branch: branch,
+		OTIDs:  otIDs,
+	})
 	if err != nil {
 		span.SetStatus(codes.Error, "GetConceptGroupsByOTIDs error")
 
@@ -853,7 +853,7 @@ func (ots *objectTypeService) DeleteObjectTypesByIDs(ctx context.Context, tx *sq
 	// 删除对象类与分组的绑定关系
 	rowsAffect, err = ots.cga.DeleteObjectTypesFromGroup(ctx, tx, interfaces.ConceptGroupRelationsQueryParams{
 		KNID:        knID,
-		Branch:      "main", //todo: 后续需补充这个字段
+		Branch:      branch,
 		ConceptType: interfaces.MODULE_TYPE_OBJECT_TYPE,
 		OTIDs:       otIDs,
 	})
@@ -1097,24 +1097,27 @@ func (ots *objectTypeService) SearchObjectTypes(ctx context.Context,
 	}
 
 	// 转换到dsl
-	conditionDslStr, err := condtion.Convert(ctx, func(ctx context.Context, words []string) ([]*cond.VectorResp, error) {
-		if !ots.appSetting.ServerSetting.DefaultSmallModelEnabled {
-			err = errors.New("DefaultSmallModelEnabled is false, does not support knn condition")
-			span.SetStatus(codes.Error, err.Error())
-			return nil, err
-		}
-		dftModel, err := ots.mfa.GetDefaultModel(ctx)
+	conditionDslStr := "{}"
+	if condtion != nil {
+		conditionDslStr, err = condtion.Convert(ctx, func(ctx context.Context, words []string) ([]*cond.VectorResp, error) {
+			if !ots.appSetting.ServerSetting.DefaultSmallModelEnabled {
+				err = errors.New("DefaultSmallModelEnabled is false, does not support knn condition")
+				span.SetStatus(codes.Error, err.Error())
+				return nil, err
+			}
+			dftModel, err := ots.mfa.GetDefaultModel(ctx)
+			if err != nil {
+				logger.Errorf("GetDefaultModel error: %s", err.Error())
+				span.SetStatus(codes.Error, "获取默认模型失败")
+				return nil, err
+			}
+			return ots.mfa.GetVector(ctx, dftModel, words)
+		})
 		if err != nil {
-			logger.Errorf("GetDefaultModel error: %s", err.Error())
-			span.SetStatus(codes.Error, "获取默认模型失败")
-			return nil, err
+			return response, rest.NewHTTPError(ctx, http.StatusBadRequest,
+				oerrors.OntologyManager_ObjectType_InvalidParameter_ConceptCondition).
+				WithErrorDetails(fmt.Sprintf("failed to convert condition to dsl, %s", err.Error()))
 		}
-		return ots.mfa.GetVector(ctx, dftModel, words)
-	})
-	if err != nil {
-		return response, rest.NewHTTPError(ctx, http.StatusBadRequest,
-			oerrors.OntologyManager_ObjectType_InvalidParameter_ConceptCondition).
-			WithErrorDetails(fmt.Sprintf("failed to convert condition to dsl, %s", err.Error()))
 	}
 
 	// 1. 获取组下的对象类
@@ -1360,22 +1363,22 @@ func (ots *objectTypeService) GetTotal(ctx context.Context, dsl map[string]any) 
 	totalBytes, err := ots.osa.Count(ctx, interfaces.KN_CONCEPT_INDEX_NAME, dsl)
 	if err != nil {
 		span.SetStatus(codes.Error, "Search total documents count failed")
-		// return total, rest.NewHTTPError(ctx, http.StatusInternalServerError, oerrors.Uniquery_InternalError_CountFailed).
-		// 	WithErrorDetails(err.Error())
+		return total, rest.NewHTTPError(ctx, http.StatusInternalServerError, oerrors.OntologyManager_ObjectType_InternalError).
+			WithErrorDetails(err.Error())
 	}
 
 	totalNode, err := sonic.Get(totalBytes, "count")
 	if err != nil {
 		span.SetStatus(codes.Error, "Get total documents count failed")
-		// return total, rest.NewHTTPError(ctx, http.StatusInternalServerError, uerrors.Uniquery_InternalError_CountFailed).
-		// 	WithErrorDetails(err.Error())
+		return total, rest.NewHTTPError(ctx, http.StatusInternalServerError, oerrors.OntologyManager_ObjectType_InternalError).
+			WithErrorDetails(err.Error())
 	}
 
 	total, err = totalNode.Int64()
 	if err != nil {
 		span.SetStatus(codes.Error, "Convert total documents count to type int64 failed")
-		// return total, rest.NewHTTPError(ctx, http.StatusInternalServerError, uerrors.Uniquery_InternalError_CountFailed).
-		// 	WithErrorDetails(err.Error())
+		return total, rest.NewHTTPError(ctx, http.StatusInternalServerError, oerrors.OntologyManager_ObjectType_InternalError).
+			WithErrorDetails(err.Error())
 	}
 
 	span.SetStatus(codes.Ok, "")
@@ -1452,6 +1455,12 @@ func (ots *objectTypeService) GetObjectTypeByID(ctx context.Context,
 		return nil, rest.NewHTTPError(ctx, http.StatusInternalServerError,
 			oerrors.OntologyManager_ObjectType_InternalError_GetObjectTypeByIDFailed).WithErrorDetails(err.Error())
 	}
+
+	propMap := map[string]string{}
+	for _, prop := range objectType.DataProperties {
+		propMap[prop.Name] = prop.DisplayName
+	}
+	objectType.PropertyMap = propMap
 
 	span.SetStatus(codes.Ok, "")
 	return objectType, nil

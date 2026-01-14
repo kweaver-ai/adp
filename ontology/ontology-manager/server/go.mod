@@ -3,6 +3,7 @@ module ontology-manager
 go 1.24.0
 
 require (
+	github.com/DATA-DOG/go-sqlmock v1.5.2
 	github.com/Masterminds/squirrel v1.5.4
 	github.com/bytedance/sonic v1.14.2
 	github.com/dlclark/regexp2 v1.11.5
