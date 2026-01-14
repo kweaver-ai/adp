@@ -75,23 +75,10 @@ data:
 
     af-auth:
       is-open: true
-      pwd-auth-url: {{ .Values.depServices.authentication.publicProtocol }}://{{ .Values.depServices.authentication.publicHost }}:{{ .Values.depServices.authentication.publicPort }}/api/authentication/v1/pwd-auth
-      data-view-url: {{ .Values.depServices.dataView.protocol }}://{{ .Values.depServices.dataView.host }}:{{ .Values.depServices.dataView.port }}/api/data-view/v1/user/form-view
       register-clientid-url: {{ .Values.depServices.hydra.administrativeProtocol }}://{{ .Values.depServices.hydra.administrativeHost }}:{{ .Values.depServices.hydra.administrativePort }}/admin/clients
       clientid-token: {{ .Values.depServices.hydra.publicProtocol }}://{{ .Values.depServices.hydra.publicHost }}:{{ .Values.depServices.hydra.publicPort }}/oauth2/token
       token-introspect: {{ .Values.depServices.hydra.administrativeProtocol }}://{{ .Values.depServices.hydra.administrativeHost }}:{{ .Values.depServices.hydra.administrativePort }}/admin/oauth2/introspect
       row-column-rule: {{ .Values.depServices.authService.protocol }}://{{ .Values.depServices.authService.host }}:{{ .Values.depServices.authService.port }}/api/auth-service/v1/sub-views
-
-    queue:
-      name: {{ .Values.depServices.vega_schedule.queued }}
-
-    schedule:
-      url: {{ .Values.depServices.vega_schedule.protocol }}://{{ .Values.depServices.vega_schedule.host }}:{{ .Values.depServices.vega_schedule.port }}
-      host: {{ .Values.depServices.vega_schedule.protocol }}://{{ .Values.depServices.vega_schedule.engine_host }}
-
-    gateway-jdbc:
-      ip: {{ .Values.depServices.vega_jdbc.host }}
-      port: {{ .Values.depServices.vega_jdbc.port }}
 
     anyrobot:
       log:

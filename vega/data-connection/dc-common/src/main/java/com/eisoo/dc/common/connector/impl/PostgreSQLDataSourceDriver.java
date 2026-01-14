@@ -27,7 +27,7 @@ public class PostgreSQLDataSourceDriver implements DataSourceDriver {
     }
 
     @Override
-    public boolean testConnection(BinDataVo binData) {
+    public boolean testConnection(BinDataVo binData) throws SQLException {
         // 验证参数
         validateConnectionParams(binData);
 
@@ -45,7 +45,7 @@ public class PostgreSQLDataSourceDriver implements DataSourceDriver {
             return true;
         } catch (SQLException e) {
             log.error("PostgreSQL连接测试失败: {}, 错误信息: {}", url, e.getMessage());
-            return false;
+            throw e;
         } finally {
             // 关闭连接
             if (connection != null) {

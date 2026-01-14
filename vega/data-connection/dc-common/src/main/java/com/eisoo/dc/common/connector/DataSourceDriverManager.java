@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
+import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -53,7 +54,7 @@ public class DataSourceDriverManager {
      * @return 连接测试结果，true表示连接成功，false表示连接失败
      * @throws IllegalArgumentException 如果不支持该类型的数据源
      */
-    public boolean testConnection(String type, BinDataVo binData) {
+    public boolean testConnection(String type, BinDataVo binData) throws SQLException {
         DataSourceDriver driver = getDriver(type);
         if (driver == null) {
             throw new IllegalArgumentException("不支持的数据源类型: " + type);

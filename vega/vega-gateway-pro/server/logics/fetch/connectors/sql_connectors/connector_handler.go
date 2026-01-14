@@ -11,7 +11,7 @@ import (
 type ConnectorHandler interface {
 	GetResultSet(sql string) (any, error)
 	GetColumns(resultSet any) ([]*interfaces.Column, error)
-	GetData(resultSet any, columnSize int, queryType int, batchSize int) (any, []*[]any, error)
+	GetData(resultSet any, columnSize int, batchSize int) (any, []*[]any, error)
 	Close() error
 }
 

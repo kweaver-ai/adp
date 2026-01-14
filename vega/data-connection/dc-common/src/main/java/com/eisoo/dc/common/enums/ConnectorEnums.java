@@ -1,11 +1,9 @@
 package com.eisoo.dc.common.enums;
 
 import com.baomidou.mybatisplus.annotation.EnumValue;
+import com.eisoo.dc.common.constant.CatalogConstant;
 
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public enum ConnectorEnums {
@@ -90,7 +88,7 @@ public enum ConnectorEnums {
      */
     public static boolean checkSupportedConnector(String connector) {
         ConnectorEnums connectorEnum = fromConnector(connector);
-        Set<String> supportedConnectors = Collections.unmodifiableSet(new HashSet<>(Arrays.asList("mysql", "maria", "opensearch")));
+        Set<String> supportedConnectors = Collections.unmodifiableSet(new HashSet<>(getNonEtrinoConnectors()));
         
         if (!supportedConnectors.contains(connectorEnum.getConnector().toLowerCase())) {
             throw new IllegalArgumentException(
@@ -100,5 +98,16 @@ public enum ConnectorEnums {
             );
         }
         return true;
+    }
+
+    /*
+     * 获取非Etrino支持的连接器
+     */
+    public static List<String> getNonEtrinoConnectors() {
+        return Arrays.asList(
+                MYSQL.connector,
+                MARIA.connector,
+                OPENSEARCH.connector
+        );
     }
 }

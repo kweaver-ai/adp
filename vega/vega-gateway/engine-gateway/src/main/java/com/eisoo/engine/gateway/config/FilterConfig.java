@@ -1,10 +1,7 @@
 package com.eisoo.engine.gateway.config;
 
 import com.eisoo.engine.gateway.configuration.AnyRobotConfigruation;
-import com.eisoo.engine.gateway.service.ClientIdService;
-import com.eisoo.engine.gateway.service.RewriteSqlService;
 import com.eisoo.engine.utils.webfilter.ArTraceFilter;
-import com.eisoo.engine.gateway.proxyfilter.OpenLookengProxyFilter;
 import com.eisoo.engine.gateway.proxyfilter.Auth2ProxyFilter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -18,31 +15,15 @@ import org.springframework.core.Ordered;
  */
 @Configuration
 public class FilterConfig {
-    @Value(value = "${openlookeng.url}")
-    private String openlookengUrl;
-    @Value(value = "${af-auth.pwd-auth-url}")
-    private String pwdAuthUrl;
     @Value(value = "${af-auth.token-introspect}")
     private String tokenInstropect;
-    @Value(value = "${af-auth.data-view-url}")
-    private String dataViewUrl;
     @Value(value = "${af-auth.is-open}")
     private boolean isOpen;
-    @Value(value = "${gateway-jdbc.ip}")
-    private String jdbcIp;
-    @Value(value = "${gateway-jdbc.port}")
-    private String jdbcPort;
 
 
 
     @Autowired
     AnyRobotConfigruation anyRobotConfigruation;
-
-    @Autowired
-    ClientIdService clientIdService;
-
-    @Autowired
-    RewriteSqlService rewriteSqlService;
 
     @Bean
     public FilterRegistrationBean<ArTraceFilter> arTraceFilter() {
@@ -53,16 +34,6 @@ public class FilterConfig {
         bean.setOrder(-1);
         return bean;
 
-    }
-
-    @Bean
-    public FilterRegistrationBean<OpenLookengProxyFilter> requestLogFilterRegistration() {
-        FilterRegistrationBean<OpenLookengProxyFilter> bean = new FilterRegistrationBean<>(
-                new OpenLookengProxyFilter(openlookengUrl, pwdAuthUrl,
-                        dataViewUrl, isOpen, jdbcIp, jdbcPort, clientIdService, rewriteSqlService));
-        bean.setName("OpenLookengProxyFilter");
-        bean.setOrder(Ordered.HIGHEST_PRECEDENCE);
-        return bean;
     }
 
     @Bean

@@ -145,13 +145,16 @@ public class CatalogServiceImpl implements CatalogService {
 
         String type = params.getType();
         BinDataVo binData = params.getBinData();
+        String encryptedPassword = binData.getPassword();
+        binData.setPassword(decryptPassword(binData.getPassword()));
 
-        //在创建前先判断是否支持的数据源类型
-        try {
-            ConnectorEnums.checkSupportedConnector(type);
-        } catch (IllegalArgumentException e) {
-            // 捕获checkSupportedConnector方法抛出的异常并传递异常信息
-            throw new AiShuException(ErrorCodeEnum.BadRequest, e.getMessage());
+        //判断是否支持的数据源类型
+        if (serviceEndpoints.getVegaCalculateCoordinator() == null) {
+            try {
+                ConnectorEnums.checkSupportedConnector(type);
+            } catch (IllegalArgumentException e) {
+                throw new AiShuException(ErrorCodeEnum.BadRequest, e.getMessage());
+            }
         }
 
         //基本参数校验
@@ -185,7 +188,7 @@ public class CatalogServiceImpl implements CatalogService {
                 binData.getHost(),
                 binData.getPort(),
                 binData.getAccount(),
-                binData.getPassword(),
+                encryptedPassword,
                 binData.getStorageProtocol(),
                 binData.getStorageBase(),
                 binData.getToken(),
@@ -207,9 +210,9 @@ public class CatalogServiceImpl implements CatalogService {
         try {
             dataSourceMapper.insert(dataSourceEntity);
         } catch (Exception e) {
-            if (catalogName != null) {
+            if (serviceEndpoints.getVegaCalculateCoordinator() != null && catalogName != null) {
                 catalogRuleMapper.deleteByCatalogName(catalogName);
-               // Calculate.deleteCatalog(serviceEndpoints.getVegaCalculateCoordinator(), catalogName);
+                Calculate.deleteCatalog(serviceEndpoints.getVegaCalculateCoordinator(), catalogName);
             }
             log.info("新增数据源{},数据库记录写入失败，并删除数据源成功。", params.getName());
             throw new AiShuException(ErrorCodeEnum.InternalServerError, Detail.CREATE_DATASOURCE_FAILED);
@@ -240,7 +243,7 @@ public class CatalogServiceImpl implements CatalogService {
                 log.info("添加资源权限成功");
             } catch (Exception e) {
                 dataSourceMapper.deleteById(dataSourceEntity.getFId());
-                if (catalogName != null) {
+                if (serviceEndpoints.getVegaCalculateCoordinator() != null && catalogName != null) {
                     catalogRuleMapper.deleteByCatalogName(catalogName);
                     Calculate.deleteCatalog(serviceEndpoints.getVegaCalculateCoordinator(), catalogName);
                 }
@@ -260,12 +263,12 @@ public class CatalogServiceImpl implements CatalogService {
             JSONObject payload = new JSONObject();
 
             // 设置header部分
-            header.set("method", "create"); // 或 "update" 根据操作类型
+            header.set("method", "create");
 
             // 设置payload部分
             payload.set("id", dataSourceEntity.getFId());
             payload.set("name", params.getName());
-            payload.set("type", params.getType()); // 需要实现getTypeCode方法将类型转换为数字
+            payload.set("type", params.getType());
             payload.set("database_name", binData.getDatabaseName());
             payload.set("catalog_name", catalogName);
             payload.set("schema", binData.getSchema());
@@ -297,31 +300,33 @@ public class CatalogServiceImpl implements CatalogService {
         String catalogName = typeWithUnderscore + "_" + randomString;
 
 
-//        if (Calculate.getCatalogNameList(serviceEndpoints.getVegaCalculateCoordinator()).contains(catalogName)) {
-//            log.error("数据源已存在catalogName:{}", catalogName);
-//            throw new AiShuException(ErrorCodeEnum.Conflict, Description.CATALOG_EXIST, catalogName, Message.MESSAGE_DATANOTEXIST_ERROR_SOLUTION);
-//        }
-//
-//        //opensearch 只需要生成catalogName，统一数据查询传参
-//        if (dataSourceVo.getType().equals(CatalogConstant.OPENSEARCH_CATALOG)) {
-//            return catalogName;
-//        }
-//
-//        CatalogDto catalogDto = buildCatalogDto(token, dataSourceVo.getType(), dataSourceVo.getBinData(), catalogName);
-//
-//        //创建catalog
-//        Calculate.createCatalog(serviceEndpoints.getVegaCalculateCoordinator(), catalogDto);
-//        log.info("数据源catalog添加成功:{}", catalogDto.getCatalogName());
-//
-//        //初始化下推规则
-//        try {
-//            insertCatalogRule(catalogDto.getCatalogName(), catalogDto.getConnectorName());
-//        } catch (Exception e) {
-//            Calculate.deleteCatalog(serviceEndpoints.getVegaCalculateCoordinator(), catalogDto.getCatalogName());
-//            log.info("catalogName:{},新增数据源时添加下推规则失败，并删除数据源成功!", catalogDto.getCatalogName());
-//            throw new AiShuException(ErrorCodeEnum.InternalServerError, Description.DATABASE_ERROR, Detail.DB_ERROR, Message.MESSAGE_DATABASE_ERROR_SOLUTION);
-//        }
+        if (serviceEndpoints.getVegaCalculateCoordinator() != null
+                && Calculate.getCatalogNameList(serviceEndpoints.getVegaCalculateCoordinator()).contains(catalogName)) {
+            log.error("数据源已存在catalogName:{}", catalogName);
+            throw new AiShuException(ErrorCodeEnum.Conflict, Description.CATALOG_EXIST, catalogName, Message.MESSAGE_DATANOTEXIST_ERROR_SOLUTION);
+        }
 
+        //opensearch 只需要生成catalogName，统一数据查询传参
+        if (dataSourceVo.getType().equals(CatalogConstant.OPENSEARCH_CATALOG)) {
+            return catalogName;
+        }
+
+        CatalogDto catalogDto = buildCatalogDto(token, dataSourceVo.getType(), dataSourceVo.getBinData(), catalogName);
+
+        //创建catalog
+        if (serviceEndpoints.getVegaCalculateCoordinator() != null) {
+            Calculate.createCatalog(serviceEndpoints.getVegaCalculateCoordinator(), catalogDto);
+            log.info("数据源catalog添加成功:{}", catalogDto.getCatalogName());
+
+            //初始化下推规则
+            try {
+                insertCatalogRule(catalogDto.getCatalogName(), catalogDto.getConnectorName());
+            } catch (Exception e) {
+                Calculate.deleteCatalog(serviceEndpoints.getVegaCalculateCoordinator(), catalogDto.getCatalogName());
+                log.info("catalogName:{},新增数据源时添加下推规则失败，并删除数据源成功!", catalogDto.getCatalogName());
+                throw new AiShuException(ErrorCodeEnum.InternalServerError, Description.DATABASE_ERROR, Detail.DB_ERROR, Message.MESSAGE_DATABASE_ERROR_SOLUTION);
+            }
+        }
         return catalogName;
     }
 
@@ -381,12 +386,16 @@ public class CatalogServiceImpl implements CatalogService {
 
         //基本参数校验
         checkDataSourceParam(type, binData);
-        try {
-            ConnectorEnums.checkSupportedConnector(type);
-        } catch (IllegalArgumentException e) {
-            // 捕获checkSupportedConnector方法抛出的异常并传递异常信息
-            throw new AiShuException(ErrorCodeEnum.BadRequest, e.getMessage());
+
+        //判断是否支持的数据源类型
+        if (serviceEndpoints.getVegaCalculateCoordinator() == null) {
+            try {
+                ConnectorEnums.checkSupportedConnector(type);
+            } catch (IllegalArgumentException e) {
+                throw new AiShuException(ErrorCodeEnum.BadRequest, e.getMessage());
+            }
         }
+
         //测试连接
         JSONObject result = new JSONObject();
         binData.setPassword(decryptPassword(binData.getPassword()));
@@ -496,29 +505,29 @@ public class CatalogServiceImpl implements CatalogService {
             driverManager.validateConnectionParams(type, binData);
             
             // 使用新驱动测试连接
-            if (driverManager.testConnection(type, binData)) {
-                return true;
-            }
-            
-            log.warn("使用新驱动测试连接失败，回退到原有方法");
+            return driverManager.testConnection(type, binData);
         } catch (IllegalArgumentException e) {
-            log.warn("新驱动不支持该类型数据源: {}, 使用原有方法进行测试", type);
+            if (serviceEndpoints.getVegaCalculateCoordinator() == null) {
+                throw new AiShuException(ErrorCodeEnum.BadRequest, e.getMessage());
+            }
+
+            log.warn("不支持该类型数据源: {}, 使用Etrino进行测试", type);
+            // 回退到原有的连接测试方法
+            String typeWithUnderscore = type.replace("-", "_");
+            String randomString = RandomStringUtils.randomAlphanumeric(8).toLowerCase();
+            String catalogName = CatalogConstant.TEST_CATALOG_PREFIX + typeWithUnderscore + "_" + randomString;
+            CatalogDto catalogDto = buildCatalogDto(null, type, binData, catalogName);
+            catalogDto.getProperties().set(CatalogConstant.USE_CONNECTION_POOL, false);
+            String schemaName = StringUtils.isNotBlank(binData.getSchema()) ? binData.getSchema() : binData.getDatabaseName();
+            try {
+                Calculate.testCatalog(serviceEndpoints.getVegaCalculateCoordinator(), catalogDto, schemaName);
+            } catch (Exception ex) {
+                log.error("catalogName:{},测试连接失败!", catalogDto.getCatalogName(), ex);
+                throw ex;
+            }
         } catch (Exception e) {
-            log.error("使用新驱动测试连接时发生错误: {}, 回退到原有方法", e.getMessage());
-        }
-        
-        // 回退到原有的连接测试方法
-        String typeWithUnderscore = type.replace("-", "_");
-        String randomString = RandomStringUtils.randomAlphanumeric(8).toLowerCase();
-        String catalogName = CatalogConstant.TEST_CATALOG_PREFIX + typeWithUnderscore + "_" + randomString;
-        CatalogDto catalogDto = buildCatalogDto(null, type, binData, catalogName);
-        catalogDto.getProperties().set(CatalogConstant.USE_CONNECTION_POOL, false);
-        String schemaName = StringUtils.isNotBlank(binData.getSchema()) ? binData.getSchema() : binData.getDatabaseName();
-        try {
-            Calculate.testCatalog(serviceEndpoints.getVegaCalculateCoordinator(), catalogDto, schemaName);
-        } catch (Exception e) {
-            log.error("catalogName:{},测试连接失败!", catalogDto.getCatalogName(), e);
-            throw e;
+            log.error("使用新驱动测试连接时发生错误: {}", e.getMessage());
+            throw new AiShuException(ErrorCodeEnum.BadRequest, e.getMessage());
         }
         return true;
     }
@@ -831,12 +840,16 @@ public class CatalogServiceImpl implements CatalogService {
 
         String type = params.getType();
         BinDataVo binData = params.getBinData();
+        String encryptedPassword = binData.getPassword();
+        binData.setPassword(decryptPassword(binData.getPassword()));
 
-        try {
-            ConnectorEnums.checkSupportedConnector(type);
-        } catch (IllegalArgumentException e) {
-            // 捕获checkSupportedConnector方法抛出的异常并传递异常信息
-            throw new AiShuException(ErrorCodeEnum.BadRequest, e.getMessage());
+        //判断是否支持的数据源类型
+        if (serviceEndpoints.getVegaCalculateCoordinator() == null) {
+            try {
+                ConnectorEnums.checkSupportedConnector(type);
+            } catch (IllegalArgumentException e) {
+                throw new AiShuException(ErrorCodeEnum.BadRequest, e.getMessage());
+            }
         }
 
         //基本参数校验
@@ -874,7 +887,7 @@ public class CatalogServiceImpl implements CatalogService {
         dataSourceEntity.setFHost(binData.getHost());
         dataSourceEntity.setFPort(binData.getPort());
         dataSourceEntity.setFAccount(binData.getAccount());
-        dataSourceEntity.setFPassword(binData.getPassword());
+        dataSourceEntity.setFPassword(encryptedPassword);
         dataSourceEntity.setFStorageBase(binData.getStorageBase());
         dataSourceEntity.setFToken(binData.getToken());
         dataSourceEntity.setFReplicaSet(binData.getReplicaSet());
@@ -892,12 +905,12 @@ public class CatalogServiceImpl implements CatalogService {
         dataSourceMapper.updateById(dataSourceEntity);
 
         //修改数据源catalog
-        if (!type.equals(CatalogConstant.TINGYUN_CATALOG)
+        if (serviceEndpoints.getVegaCalculateCoordinator() != null
+                && !type.equals(CatalogConstant.TINGYUN_CATALOG)
                 && !type.equals(CatalogConstant.ANYSHARE7_CATALOG)
                 && !type.equals(CatalogConstant.OPENSEARCH_CATALOG)) {
-            binData.setPassword(decryptPassword(binData.getPassword()));
             CatalogDto newCatalog = buildCatalogDto(token, type, binData, dataSourceEntity.getFCatalog());
-           // Calculate.updateCatalog(serviceEndpoints.getVegaCalculateCoordinator(), newCatalog);
+            Calculate.updateCatalog(serviceEndpoints.getVegaCalculateCoordinator(), newCatalog);
             log.info("数据源catalog更新成功:{}", newCatalog.getCatalogName());
         }
 
@@ -949,7 +962,7 @@ public class CatalogServiceImpl implements CatalogService {
         dataSourceMessage.set("header", header);
         dataSourceMessage.set("payload", payload);
 
-        // 发送消息的代码示例（根据实际需求调整）
+        // 发送消息
         try {
             mqClient.pub(Topic.AF_DATASOURCE_MESSAGE_TOPIC.getTopicName(), dataSourceMessage.toString());
         } catch (Exception e) {
@@ -1046,10 +1059,6 @@ public class CatalogServiceImpl implements CatalogService {
                 properties.set(CatalogConstant.PUSH_DOWN_MODULE, pushDownModule);
             }
 
-//            if (StringUtils.equalsIgnoreCase(CatalogConstant.ORACLE_CATALOG, type)) {
-//                properties.set(CatalogConstant.CASE_INSENSITIVE_NAME, false);
-//            }
-
             if (StringUtils.equalsIgnoreCase(CatalogConstant.MAXCOMPUTE_CATALOG, type)
                     || StringUtils.equalsIgnoreCase(CatalogConstant.HOLOGRES_CATALOG, type)
                     || StringUtils.equalsIgnoreCase(CatalogConstant.POSTGRESQL_CATALOG, type)) {
@@ -1099,20 +1108,17 @@ public class CatalogServiceImpl implements CatalogService {
     }
 
     public void delete(String name) {
-        if (StringUtils.isBlank(name)) {
-            throw new AiShuException(ErrorCodeEnum.BadRequest);
-        }
 
         if (StringUtils.equalsIgnoreCase(CatalogConstant.OLK_VIEW_VDM, name)) {
             throw new AiShuException(ErrorCodeEnum.BadRequest, Detail.BUILT_IN_CATALOG_DEL_UNSUPPORTED);
         }
 
-//        if (!Calculate.getCatalogNameList(serviceEndpoints.getVegaCalculateCoordinator()).contains(name)) {
-//            log.error("数据源不存在,catalogName:{}", name);
-//            throw new AiShuException(ErrorCodeEnum.InternalServerError, Description.CATALOG_NOT_EXIST, name, Message.MESSAGE_DATANOTEXIST_ERROR_SOLUTION);
-//        }
+        if (!Calculate.getCatalogNameList(serviceEndpoints.getVegaCalculateCoordinator()).contains(name)) {
+            log.error("数据源不存在,catalogName:{}", name);
+            throw new AiShuException(ErrorCodeEnum.InternalServerError, Description.CATALOG_NOT_EXIST, name, Message.MESSAGE_DATANOTEXIST_ERROR_SOLUTION);
+        }
 
-        //Calculate.deleteCatalog(serviceEndpoints.getVegaCalculateCoordinator(), name);
+        Calculate.deleteCatalog(serviceEndpoints.getVegaCalculateCoordinator(), name);
     }
 
     @Override
@@ -1124,11 +1130,13 @@ public class CatalogServiceImpl implements CatalogService {
             throw new AiShuException(ErrorCodeEnum.BadRequest, Description.DATASOURCE_NOT_EXIST, Detail.ID_NOT_EXISTS, Message.MESSAGE_PARAM_ERROR_SOLUTION);
         }
 
-        try {
-            ConnectorEnums.checkSupportedConnector(dataSourceEntity.getFType());
-        } catch (IllegalArgumentException e) {
-            // 捕获checkSupportedConnector方法抛出的异常并传递异常信息
-            throw new AiShuException(ErrorCodeEnum.BadRequest, e.getMessage());
+        //判断是否支持的数据源类型
+        if (serviceEndpoints.getVegaCalculateCoordinator() == null) {
+            try {
+                ConnectorEnums.checkSupportedConnector(dataSourceEntity.getFType());
+            } catch (IllegalArgumentException e) {
+                throw new AiShuException(ErrorCodeEnum.BadRequest, e.getMessage());
+            }
         }
 
         // 内置数据源不能删除
@@ -1174,8 +1182,11 @@ public class CatalogServiceImpl implements CatalogService {
             if (dataSourceEntity.getFType().equals(CatalogConstant.EXCEL_CATALOG)) {
                 deleteAllExcelTables(id);
             }
-            catalogRuleMapper.deleteByCatalogName(dataSourceEntity.getFCatalog());
-            delete(dataSourceEntity.getFCatalog());
+
+            if (serviceEndpoints.getVegaCalculateCoordinator() != null) {
+                catalogRuleMapper.deleteByCatalogName(dataSourceEntity.getFCatalog());
+                delete(dataSourceEntity.getFCatalog());
+            }
         }
 
         //清除资源权限
@@ -1308,6 +1319,13 @@ public class CatalogServiceImpl implements CatalogService {
             connectorStream = connectorStream.filter(connectorEnum -> type.equals(connectorEnum.getType()));
         }
 
+        // 根据Etrino模块是否存在，获取支持的数据源类型
+        if (serviceEndpoints.getVegaCalculateCoordinator() == null) {
+            connectorStream = connectorStream.filter(connectorEnum ->
+                    ConnectorEnums.getNonEtrinoConnectors().contains(connectorEnum.getConnector())
+            );
+        }
+
         List<ConnectorVo> connectorVoList = connectorStream
                 .map(connectorEnum -> {
                     ConnectorVo connectorVo = new ConnectorVo();
@@ -1378,11 +1396,13 @@ public class CatalogServiceImpl implements CatalogService {
         tableScanMapper.deleteBysId(dsId);
         log.info("删除t_table_scan成功:dsId:{}", dsId);
         // 删除table和field[old]
-        fieldOldMapper.deleteByDsId(dsId);
-        log.info("删除t_table_field成功:dsId:{}", dsId);
-        tableOldMapper.deleteBysId(dsId);
-        log.info("删除t_table成功:dsId:{}", dsId);
-        log.info("---成功删除dsId：{}相关资源---", dsId);
+        if (serviceEndpoints.getVegaCalculateCoordinator() != null) {
+            fieldOldMapper.deleteByDsId(dsId);
+            log.info("删除t_table_field成功:dsId:{}", dsId);
+            tableOldMapper.deleteBysId(dsId);
+            log.info("删除t_table成功:dsId:{}", dsId);
+            log.info("---成功删除dsId：{}相关资源---", dsId);
+        }
     }
 
     public static boolean isExcelFile(String fileName) {
@@ -1414,7 +1434,6 @@ public class CatalogServiceImpl implements CatalogService {
 
 
         //检查excel存储介质和存储地址
-
         if (type.equals(CatalogConstant.EXCEL_CATALOG)) {
             if (StringUtils.isBlank(binData.getStorageProtocol()) || StringUtils.isBlank(binData.getStorageBase())) {
                 throw new AiShuException(ErrorCodeEnum.BadRequest, Detail.EXCEL_BASE_AND_PROTOCOL_NOT_EMPLOY);
