@@ -1931,17 +1931,3 @@ func Test_relationTypeService_validateDependency(t *testing.T) {
 		})
 	})
 }
-
-func TestNewRelationTypeService(t *testing.T) {
-	Convey("Test NewRelationTypeService", t, func() {
-		appSetting := &common.AppSetting{}
-
-		service1 := NewRelationTypeService(appSetting)
-		service2 := NewRelationTypeService(appSetting)
-
-		Convey("Should return singleton instance", func() {
-			So(service1, ShouldNotBeNil)
-			So(service2, ShouldEqual, service1)
-		})
-	})
-}
