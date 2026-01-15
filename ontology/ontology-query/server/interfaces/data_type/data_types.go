@@ -79,6 +79,7 @@ var (
 		DATATYPE_TEXT:    {},
 		DATATYPE_KEYWORD: {},
 		DATATYPE_BINARY:  {},
+		DATATYPE_STRING:  {},
 	}
 
 	NUMBER_TYPES = map[string]struct{}{

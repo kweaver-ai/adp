@@ -131,6 +131,25 @@ func Test_agentOperatorAccess_GetAgentOperatorByID(t *testing.T) {
 			So(result.OperatorId, ShouldEqual, "")
 		})
 
+		Convey("失败 - HTTP 状态码非 200 且解析 BaseError 失败", func() {
+			accountInfo := interfaces.AccountInfo{
+				ID:   "account1",
+				Type: "user",
+			}
+			ctx = context.WithValue(ctx, interfaces.ACCOUNT_INFO_KEY, accountInfo)
+
+			invalidJSON := []byte("invalid json")
+
+			mockHTTPClient.EXPECT().
+				GetNoUnmarshal(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+				Return(http.StatusBadRequest, invalidJSON, nil)
+
+			result, err := aoa.GetAgentOperatorByID(ctx, operatorID)
+
+			So(err, ShouldNotBeNil)
+			So(result.OperatorId, ShouldEqual, "")
+		})
+
 		Convey("失败 - 响应体为空", func() {
 			accountInfo := interfaces.AccountInfo{
 				ID:   "account1",
@@ -301,6 +320,25 @@ func Test_agentOperatorAccess_ExecuteOperator(t *testing.T) {
 			So(result, ShouldResemble, operatorExecuteResult{})
 		})
 
+		Convey("失败 - HTTP 状态码非 200 且解析 OperatorError 失败", func() {
+			accountInfo := interfaces.AccountInfo{
+				ID:   "account1",
+				Type: "user",
+			}
+			ctx = context.WithValue(ctx, interfaces.ACCOUNT_INFO_KEY, accountInfo)
+
+			invalidJSON := []byte("invalid json")
+
+			mockHTTPClient.EXPECT().
+				PostNoUnmarshal(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+				Return(http.StatusBadRequest, invalidJSON, nil)
+
+			result, err := aoa.ExecuteOperator(ctx, operatorID, execRequest)
+
+			So(err, ShouldNotBeNil)
+			So(result, ShouldResemble, operatorExecuteResult{})
+		})
+
 		Convey("失败 - 响应体为空", func() {
 			accountInfo := interfaces.AccountInfo{
 				ID:   "account1",
@@ -330,6 +368,56 @@ func Test_agentOperatorAccess_ExecuteOperator(t *testing.T) {
 				Headers:    map[string]any{},
 				Body:       map[string]any{"error": "bad request"},
 				Error:      "execution failed",
+				DurationMs: 50,
+			}
+			responseBytes, _ := json.Marshal(operatorResult)
+
+			mockHTTPClient.EXPECT().
+				PostNoUnmarshal(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+				Return(http.StatusOK, responseBytes, nil)
+
+			result, err := aoa.ExecuteOperator(ctx, operatorID, execRequest)
+
+			So(err, ShouldNotBeNil)
+			So(result, ShouldBeNil)
+		})
+
+		Convey("失败 - 算子执行失败 (状态码300)", func() {
+			accountInfo := interfaces.AccountInfo{
+				ID:   "account1",
+				Type: "user",
+			}
+			ctx = context.WithValue(ctx, interfaces.ACCOUNT_INFO_KEY, accountInfo)
+
+			operatorResult := operatorExecuteResult{
+				StatusCode: http.StatusMultipleChoices,
+				Headers:    map[string]any{},
+				Body:       map[string]any{"error": "multiple choices"},
+				DurationMs: 50,
+			}
+			responseBytes, _ := json.Marshal(operatorResult)
+
+			mockHTTPClient.EXPECT().
+				PostNoUnmarshal(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+				Return(http.StatusOK, responseBytes, nil)
+
+			result, err := aoa.ExecuteOperator(ctx, operatorID, execRequest)
+
+			So(err, ShouldNotBeNil)
+			So(result, ShouldBeNil)
+		})
+
+		Convey("失败 - 算子执行失败 (状态码小于100)", func() {
+			accountInfo := interfaces.AccountInfo{
+				ID:   "account1",
+				Type: "user",
+			}
+			ctx = context.WithValue(ctx, interfaces.ACCOUNT_INFO_KEY, accountInfo)
+
+			operatorResult := operatorExecuteResult{
+				StatusCode: 99,
+				Headers:    map[string]any{},
+				Body:       map[string]any{"error": "invalid status"},
 				DurationMs: 50,
 			}
 			responseBytes, _ := json.Marshal(operatorResult)

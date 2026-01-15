@@ -197,6 +197,88 @@ func Test_objectTypeService_GetObjectsByObjectTypeID(t *testing.T) {
 			So(len(result.Datas), ShouldEqual, 1)
 		})
 
+		Convey("失败 - 从索引查询时GetTotal失败", func() {
+			objectType := interfaces.ObjectType{
+				ObjectTypeWithKeyField: interfaces.ObjectTypeWithKeyField{
+					OTID: objectTypeID,
+					DataProperties: []cond.DataProperty{
+						{Name: "prop1"},
+					},
+					PrimaryKeys: []string{"id"},
+				},
+				Status: &interfaces.ObjectTypeStatus{
+					IndexAvailable: true,
+					Index:          "index1",
+				},
+			}
+
+			query := &interfaces.ObjectQueryBaseOnObjectType{
+				KNID:         knID,
+				Branch:       branch,
+				ObjectTypeID: objectTypeID,
+				PageQuery: interfaces.PageQuery{
+					Limit:     10,
+					NeedTotal: true,
+				},
+			}
+
+			omAccess.EXPECT().GetObjectType(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(objectType, true, nil)
+			osa.EXPECT().SearchData(gomock.Any(), gomock.Any(), gomock.Any()).Return([]interfaces.Hit{
+				{
+					Source: map[string]interface{}{
+						"prop1": "value1",
+					},
+					Score: 1.0,
+				},
+			}, nil)
+			osa.EXPECT().Count(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil, rest.NewHTTPError(ctx, http.StatusInternalServerError, oerrors.OntologyQuery_InternalError))
+
+			result, err := service.GetObjectsByObjectTypeID(ctx, query)
+			So(err, ShouldNotBeNil)
+			So(result.Datas, ShouldBeNil)
+		})
+
+		Convey("成功 - 从索引查询不需要总数", func() {
+			objectType := interfaces.ObjectType{
+				ObjectTypeWithKeyField: interfaces.ObjectTypeWithKeyField{
+					OTID: objectTypeID,
+					DataProperties: []cond.DataProperty{
+						{Name: "prop1"},
+					},
+					PrimaryKeys: []string{"id"},
+				},
+				Status: &interfaces.ObjectTypeStatus{
+					IndexAvailable: true,
+					Index:          "index1",
+				},
+			}
+
+			query := &interfaces.ObjectQueryBaseOnObjectType{
+				KNID:         knID,
+				Branch:       branch,
+				ObjectTypeID: objectTypeID,
+				PageQuery: interfaces.PageQuery{
+					Limit:     10,
+					NeedTotal: false,
+				},
+			}
+
+			omAccess.EXPECT().GetObjectType(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(objectType, true, nil)
+			osa.EXPECT().SearchData(gomock.Any(), gomock.Any(), gomock.Any()).Return([]interfaces.Hit{
+				{
+					Source: map[string]interface{}{
+						"prop1": "value1",
+					},
+					Score: 1.0,
+				},
+			}, nil)
+
+			result, err := service.GetObjectsByObjectTypeID(ctx, query)
+			So(err, ShouldBeNil)
+			So(result.SearchFromIndex, ShouldBeTrue)
+			So(len(result.Datas), ShouldEqual, 1)
+		})
+
 		Convey("成功 - 从视图查询", func() {
 			objectType := interfaces.ObjectType{
 				ObjectTypeWithKeyField: interfaces.ObjectTypeWithKeyField{
@@ -237,6 +319,51 @@ func Test_objectTypeService_GetObjectsByObjectTypeID(t *testing.T) {
 			So(err, ShouldBeNil)
 			So(result.SearchFromIndex, ShouldBeFalse)
 			So(len(result.Datas), ShouldEqual, 1)
+		})
+
+		Convey("失败 - 重写条件失败", func() {
+			objectType := interfaces.ObjectType{
+				ObjectTypeWithKeyField: interfaces.ObjectTypeWithKeyField{
+					OTID: objectTypeID,
+					DataProperties: []cond.DataProperty{
+						{
+							Name: "prop1",
+							MappedField: cond.Field{
+								Name: "field1",
+							},
+						},
+					},
+					PrimaryKeys: []string{"id"},
+					DataSource: &interfaces.ResourceInfo{
+						ID: "view1",
+					},
+				},
+			}
+
+			query := &interfaces.ObjectQueryBaseOnObjectType{
+				KNID:         knID,
+				Branch:       branch,
+				ObjectTypeID: objectTypeID,
+				ActualCondition: &cond.CondCfg{
+					Name:      "invalid_field",
+					Operation: "==",
+					ValueOptCfg: cond.ValueOptCfg{
+						Value: "value1",
+					},
+				},
+				PageQuery: interfaces.PageQuery{
+					Limit: 10,
+				},
+			}
+
+			omAccess.EXPECT().GetObjectType(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(objectType, true, nil)
+
+			result, err := service.GetObjectsByObjectTypeID(ctx, query)
+			So(err, ShouldNotBeNil)
+			httpErr, ok := err.(*rest.HTTPError)
+			So(ok, ShouldBeTrue)
+			So(httpErr.HTTPCode, ShouldEqual, http.StatusBadRequest)
+			So(result.Datas, ShouldBeNil)
 		})
 
 		Convey("成功 - 包含逻辑属性", func() {
@@ -300,6 +427,543 @@ func Test_objectTypeService_GetObjectsByObjectTypeID(t *testing.T) {
 			So(len(result.Datas), ShouldEqual, 1)
 			So(result.Datas[0]["logic_prop1"], ShouldNotBeNil)
 		})
+
+		Convey("失败 - 唯一标识缺少主键字段", func() {
+			objectType := interfaces.ObjectType{
+				ObjectTypeWithKeyField: interfaces.ObjectTypeWithKeyField{
+					OTID: objectTypeID,
+					DataProperties: []cond.DataProperty{
+						{Name: "prop1"},
+					},
+					PrimaryKeys: []string{"id", "name"},
+				},
+			}
+
+			query := &interfaces.ObjectQueryBaseOnObjectType{
+				KNID:         knID,
+				Branch:       branch,
+				ObjectTypeID: objectTypeID,
+				ObjectQueryInfo: &interfaces.ObjectQueryInfo{
+					UniqueIdentities: []map[string]any{
+						{"id": "123"}, // 缺少 name
+					},
+				},
+			}
+
+			omAccess.EXPECT().GetObjectType(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(objectType, true, nil)
+
+			result, err := service.GetObjectsByObjectTypeID(ctx, query)
+			So(err, ShouldNotBeNil)
+			httpErr, ok := err.(*rest.HTTPError)
+			So(ok, ShouldBeTrue)
+			So(httpErr.HTTPCode, ShouldEqual, http.StatusBadRequest)
+			So(result.Datas, ShouldBeNil)
+		})
+
+		Convey("失败 - 属性查询的属性不存在", func() {
+			objectType := interfaces.ObjectType{
+				ObjectTypeWithKeyField: interfaces.ObjectTypeWithKeyField{
+					OTID: objectTypeID,
+					DataProperties: []cond.DataProperty{
+						{Name: "prop1"},
+					},
+					PrimaryKeys: []string{"id"},
+				},
+			}
+
+			query := &interfaces.ObjectQueryBaseOnObjectType{
+				KNID:         knID,
+				Branch:       branch,
+				ObjectTypeID: objectTypeID,
+				ObjectQueryInfo: &interfaces.ObjectQueryInfo{
+					UniqueIdentities: []map[string]any{
+						{"id": "123"},
+					},
+					Properties: []string{"invalid_prop"},
+				},
+			}
+
+			omAccess.EXPECT().GetObjectType(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(objectType, true, nil)
+
+			result, err := service.GetObjectsByObjectTypeID(ctx, query)
+			So(err, ShouldNotBeNil)
+			httpErr, ok := err.(*rest.HTTPError)
+			So(ok, ShouldBeTrue)
+			So(httpErr.HTTPCode, ShouldEqual, http.StatusBadRequest)
+			So(result.Datas, ShouldBeNil)
+		})
+
+		Convey("成功 - IgnoringStore=true时从视图查询", func() {
+			objectType := interfaces.ObjectType{
+				ObjectTypeWithKeyField: interfaces.ObjectTypeWithKeyField{
+					OTID: objectTypeID,
+					DataProperties: []cond.DataProperty{
+						{
+							Name: "prop1",
+							MappedField: cond.Field{
+								Name: "field1",
+							},
+						},
+					},
+					PrimaryKeys: []string{"id"},
+					DataSource: &interfaces.ResourceInfo{
+						ID: "view1",
+					},
+				},
+				Status: &interfaces.ObjectTypeStatus{
+					IndexAvailable: true,
+					Index:          "index1",
+				},
+			}
+
+			query := &interfaces.ObjectQueryBaseOnObjectType{
+				KNID:         knID,
+				Branch:       branch,
+				ObjectTypeID: objectTypeID,
+				CommonQueryParameters: interfaces.CommonQueryParameters{
+					IgnoringStore: true,
+				},
+				PageQuery: interfaces.PageQuery{
+					Limit: 10,
+				},
+			}
+
+			omAccess.EXPECT().GetObjectType(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(objectType, true, nil)
+			uAccess.EXPECT().GetViewDataByID(gomock.Any(), gomock.Any(), gomock.Any()).Return(interfaces.ViewData{
+				Datas: []map[string]any{
+					{"field1": "value1"},
+				},
+				TotalCount: 1,
+			}, nil)
+
+			result, err := service.GetObjectsByObjectTypeID(ctx, query)
+			So(err, ShouldBeNil)
+			So(result.SearchFromIndex, ShouldBeFalse)
+			So(len(result.Datas), ShouldEqual, 1)
+		})
+
+		Convey("失败 - 视图数据源为空", func() {
+			objectType := interfaces.ObjectType{
+				ObjectTypeWithKeyField: interfaces.ObjectTypeWithKeyField{
+					OTID: objectTypeID,
+					DataProperties: []cond.DataProperty{
+						{
+							Name: "prop1",
+							MappedField: cond.Field{
+								Name: "field1",
+							},
+						},
+					},
+					PrimaryKeys: []string{"id"},
+					DataSource:  nil, // 数据源为空
+				},
+			}
+
+			query := &interfaces.ObjectQueryBaseOnObjectType{
+				KNID:         knID,
+				Branch:       branch,
+				ObjectTypeID: objectTypeID,
+				PageQuery: interfaces.PageQuery{
+					Limit: 10,
+				},
+			}
+
+			omAccess.EXPECT().GetObjectType(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(objectType, true, nil)
+
+			result, err := service.GetObjectsByObjectTypeID(ctx, query)
+			So(err, ShouldNotBeNil)
+			httpErr, ok := err.(*rest.HTTPError)
+			So(ok, ShouldBeTrue)
+			So(httpErr.HTTPCode, ShouldEqual, http.StatusBadRequest)
+			So(result.Datas, ShouldBeNil)
+		})
+
+		Convey("失败 - 视图数据源ID为空", func() {
+			objectType := interfaces.ObjectType{
+				ObjectTypeWithKeyField: interfaces.ObjectTypeWithKeyField{
+					OTID: objectTypeID,
+					DataProperties: []cond.DataProperty{
+						{
+							Name: "prop1",
+							MappedField: cond.Field{
+								Name: "field1",
+							},
+						},
+					},
+					PrimaryKeys: []string{"id"},
+					DataSource: &interfaces.ResourceInfo{
+						ID: "", // ID为空
+					},
+				},
+			}
+
+			query := &interfaces.ObjectQueryBaseOnObjectType{
+				KNID:         knID,
+				Branch:       branch,
+				ObjectTypeID: objectTypeID,
+				PageQuery: interfaces.PageQuery{
+					Limit: 10,
+				},
+			}
+
+			omAccess.EXPECT().GetObjectType(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(objectType, true, nil)
+
+			result, err := service.GetObjectsByObjectTypeID(ctx, query)
+			So(err, ShouldNotBeNil)
+			httpErr, ok := err.(*rest.HTTPError)
+			So(ok, ShouldBeTrue)
+			So(httpErr.HTTPCode, ShouldEqual, http.StatusBadRequest)
+			So(result.Datas, ShouldBeNil)
+		})
+
+		Convey("失败 - 获取视图数据失败", func() {
+			objectType := interfaces.ObjectType{
+				ObjectTypeWithKeyField: interfaces.ObjectTypeWithKeyField{
+					OTID: objectTypeID,
+					DataProperties: []cond.DataProperty{
+						{
+							Name: "prop1",
+							MappedField: cond.Field{
+								Name: "field1",
+							},
+						},
+					},
+					PrimaryKeys: []string{"id"},
+					DataSource: &interfaces.ResourceInfo{
+						ID: "view1",
+					},
+				},
+			}
+
+			query := &interfaces.ObjectQueryBaseOnObjectType{
+				KNID:         knID,
+				Branch:       branch,
+				ObjectTypeID: objectTypeID,
+				PageQuery: interfaces.PageQuery{
+					Limit: 10,
+				},
+			}
+
+			omAccess.EXPECT().GetObjectType(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(objectType, true, nil)
+			uAccess.EXPECT().GetViewDataByID(gomock.Any(), gomock.Any(), gomock.Any()).Return(interfaces.ViewData{}, rest.NewHTTPError(ctx, http.StatusInternalServerError, oerrors.OntologyQuery_InternalError))
+
+			result, err := service.GetObjectsByObjectTypeID(ctx, query)
+			So(err, ShouldNotBeNil)
+			So(result.Datas, ShouldBeNil)
+		})
+
+		Convey("失败 - 从索引查询失败", func() {
+			objectType := interfaces.ObjectType{
+				ObjectTypeWithKeyField: interfaces.ObjectTypeWithKeyField{
+					OTID: objectTypeID,
+					DataProperties: []cond.DataProperty{
+						{Name: "prop1"},
+					},
+					PrimaryKeys: []string{"id"},
+				},
+				Status: &interfaces.ObjectTypeStatus{
+					IndexAvailable: true,
+					Index:          "index1",
+				},
+			}
+
+			query := &interfaces.ObjectQueryBaseOnObjectType{
+				KNID:         knID,
+				Branch:       branch,
+				ObjectTypeID: objectTypeID,
+				PageQuery: interfaces.PageQuery{
+					Limit: 10,
+				},
+			}
+
+			omAccess.EXPECT().GetObjectType(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(objectType, true, nil)
+			osa.EXPECT().SearchData(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil, rest.NewHTTPError(ctx, http.StatusInternalServerError, oerrors.OntologyQuery_InternalError))
+
+			result, err := service.GetObjectsByObjectTypeID(ctx, query)
+			So(err, ShouldNotBeNil)
+			So(result.Datas, ShouldBeNil)
+		})
+
+		Convey("成功 - IncludeTypeInfo=true", func() {
+			objectType := interfaces.ObjectType{
+				ObjectTypeWithKeyField: interfaces.ObjectTypeWithKeyField{
+					OTID: objectTypeID,
+					DataProperties: []cond.DataProperty{
+						{
+							Name: "prop1",
+							MappedField: cond.Field{
+								Name: "field1",
+							},
+						},
+					},
+					PrimaryKeys: []string{"id"},
+					DataSource: &interfaces.ResourceInfo{
+						ID: "view1",
+					},
+				},
+			}
+
+			query := &interfaces.ObjectQueryBaseOnObjectType{
+				KNID:         knID,
+				Branch:       branch,
+				ObjectTypeID: objectTypeID,
+				CommonQueryParameters: interfaces.CommonQueryParameters{
+					IncludeTypeInfo: true,
+				},
+				PageQuery: interfaces.PageQuery{
+					Limit: 10,
+				},
+			}
+
+			omAccess.EXPECT().GetObjectType(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(objectType, true, nil)
+			uAccess.EXPECT().GetViewDataByID(gomock.Any(), gomock.Any(), gomock.Any()).Return(interfaces.ViewData{
+				Datas: []map[string]any{
+					{"field1": "value1"},
+				},
+				TotalCount: 1,
+			}, nil)
+
+			result, err := service.GetObjectsByObjectTypeID(ctx, query)
+			So(err, ShouldBeNil)
+			So(result.ObjectType, ShouldNotBeNil)
+			So(result.ObjectType.OTID, ShouldEqual, objectTypeID)
+		})
+
+		Convey("成功 - 包含LOGIC_PARAMS_VALUE_FROM_CONST的逻辑属性", func() {
+			objectType := interfaces.ObjectType{
+				ObjectTypeWithKeyField: interfaces.ObjectTypeWithKeyField{
+					OTID: objectTypeID,
+					DataProperties: []cond.DataProperty{
+						{
+							Name: "prop1",
+							MappedField: cond.Field{
+								Name: "field1",
+							},
+						},
+					},
+					DataSource: &interfaces.ResourceInfo{
+						ID: "view1",
+					},
+					PrimaryKeys: []string{"id"},
+					LogicProperties: []*interfaces.LogicProperty{
+						{
+							Name: "logic_prop1",
+							Type: interfaces.LOGIC_PROPERTY_TYPE_METRIC,
+							DataSource: &interfaces.ResourceInfo{
+								ID: "metric1",
+							},
+							Parameters: []interfaces.Parameter{
+								{
+									Name:      "param1",
+									ValueFrom: interfaces.LOGIC_PARAMS_VALUE_FROM_CONST,
+									Value:     "const_value",
+								},
+							},
+						},
+					},
+				},
+			}
+
+			query := &interfaces.ObjectQueryBaseOnObjectType{
+				KNID:         knID,
+				Branch:       branch,
+				ObjectTypeID: objectTypeID,
+				CommonQueryParameters: interfaces.CommonQueryParameters{
+					IncludeLogicParams: true,
+				},
+				PageQuery: interfaces.PageQuery{
+					Limit: 10,
+				},
+			}
+
+			omAccess.EXPECT().GetObjectType(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(objectType, true, nil)
+			uAccess.EXPECT().GetViewDataByID(gomock.Any(), gomock.Any(), gomock.Any()).Return(interfaces.ViewData{
+				Datas: []map[string]any{
+					{"field1": "value1"},
+				},
+				TotalCount: 1,
+			}, nil)
+
+			result, err := service.GetObjectsByObjectTypeID(ctx, query)
+			So(err, ShouldBeNil)
+			So(len(result.Datas), ShouldEqual, 1)
+			So(result.Datas[0]["logic_prop1"], ShouldNotBeNil)
+		})
+
+		Convey("成功 - 包含LOGIC_PARAMS_VALUE_FROM_INPUT的逻辑属性", func() {
+			objectType := interfaces.ObjectType{
+				ObjectTypeWithKeyField: interfaces.ObjectTypeWithKeyField{
+					OTID: objectTypeID,
+					DataProperties: []cond.DataProperty{
+						{
+							Name: "prop1",
+							MappedField: cond.Field{
+								Name: "field1",
+							},
+						},
+					},
+					DataSource: &interfaces.ResourceInfo{
+						ID: "view1",
+					},
+					PrimaryKeys: []string{"id"},
+					LogicProperties: []*interfaces.LogicProperty{
+						{
+							Name: "logic_prop1",
+							Type: interfaces.LOGIC_PROPERTY_TYPE_METRIC,
+							DataSource: &interfaces.ResourceInfo{
+								ID: "metric1",
+							},
+							Parameters: []interfaces.Parameter{
+								{
+									Name:      "param1",
+									ValueFrom: interfaces.LOGIC_PARAMS_VALUE_FROM_INPUT,
+								},
+							},
+						},
+					},
+				},
+			}
+
+			query := &interfaces.ObjectQueryBaseOnObjectType{
+				KNID:         knID,
+				Branch:       branch,
+				ObjectTypeID: objectTypeID,
+				CommonQueryParameters: interfaces.CommonQueryParameters{
+					IncludeLogicParams: true,
+				},
+				PageQuery: interfaces.PageQuery{
+					Limit: 10,
+				},
+			}
+
+			omAccess.EXPECT().GetObjectType(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(objectType, true, nil)
+			uAccess.EXPECT().GetViewDataByID(gomock.Any(), gomock.Any(), gomock.Any()).Return(interfaces.ViewData{
+				Datas: []map[string]any{
+					{"field1": "value1"},
+				},
+				TotalCount: 1,
+			}, nil)
+
+			result, err := service.GetObjectsByObjectTypeID(ctx, query)
+			So(err, ShouldBeNil)
+			So(len(result.Datas), ShouldEqual, 1)
+			So(result.Datas[0]["logic_prop1"], ShouldNotBeNil)
+		})
+
+		Convey("成功 - 包含LOGIC_PROPERTY_TYPE_OPERATOR的逻辑属性", func() {
+			objectType := interfaces.ObjectType{
+				ObjectTypeWithKeyField: interfaces.ObjectTypeWithKeyField{
+					OTID: objectTypeID,
+					DataProperties: []cond.DataProperty{
+						{
+							Name: "prop1",
+							MappedField: cond.Field{
+								Name: "field1",
+							},
+						},
+					},
+					DataSource: &interfaces.ResourceInfo{
+						ID: "view1",
+					},
+					PrimaryKeys: []string{"id"},
+					LogicProperties: []*interfaces.LogicProperty{
+						{
+							Name: "logic_prop1",
+							Type: interfaces.LOGIC_PROPERTY_TYPE_OPERATOR,
+							DataSource: &interfaces.ResourceInfo{
+								ID: "operator1",
+							},
+							Parameters: []interfaces.Parameter{
+								{
+									Name:      "param1",
+									ValueFrom: interfaces.LOGIC_PARAMS_VALUE_FROM_PROP,
+									Value:     "prop1",
+								},
+							},
+						},
+					},
+				},
+			}
+
+			query := &interfaces.ObjectQueryBaseOnObjectType{
+				KNID:         knID,
+				Branch:       branch,
+				ObjectTypeID: objectTypeID,
+				CommonQueryParameters: interfaces.CommonQueryParameters{
+					IncludeLogicParams: true,
+				},
+				PageQuery: interfaces.PageQuery{
+					Limit: 10,
+				},
+			}
+
+			omAccess.EXPECT().GetObjectType(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(objectType, true, nil)
+			uAccess.EXPECT().GetViewDataByID(gomock.Any(), gomock.Any(), gomock.Any()).Return(interfaces.ViewData{
+				Datas: []map[string]any{
+					{"field1": "value1"},
+				},
+				TotalCount: 1,
+			}, nil)
+
+			result, err := service.GetObjectsByObjectTypeID(ctx, query)
+			So(err, ShouldBeNil)
+			So(len(result.Datas), ShouldEqual, 1)
+			So(result.Datas[0]["logic_prop1"], ShouldNotBeNil)
+		})
+
+		Convey("成功 - 不支持的逻辑属性类型", func() {
+			objectType := interfaces.ObjectType{
+				ObjectTypeWithKeyField: interfaces.ObjectTypeWithKeyField{
+					OTID: objectTypeID,
+					DataProperties: []cond.DataProperty{
+						{
+							Name: "prop1",
+							MappedField: cond.Field{
+								Name: "field1",
+							},
+						},
+					},
+					DataSource: &interfaces.ResourceInfo{
+						ID: "view1",
+					},
+					PrimaryKeys: []string{"id"},
+					LogicProperties: []*interfaces.LogicProperty{
+						{
+							Name: "logic_prop1",
+							Type: "unsupported_type",
+							DataSource: &interfaces.ResourceInfo{
+								ID: "resource1",
+							},
+						},
+					},
+				},
+			}
+
+			query := &interfaces.ObjectQueryBaseOnObjectType{
+				KNID:         knID,
+				Branch:       branch,
+				ObjectTypeID: objectTypeID,
+				CommonQueryParameters: interfaces.CommonQueryParameters{
+					IncludeLogicParams: true,
+				},
+				PageQuery: interfaces.PageQuery{
+					Limit: 10,
+				},
+			}
+
+			omAccess.EXPECT().GetObjectType(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(objectType, true, nil)
+			uAccess.EXPECT().GetViewDataByID(gomock.Any(), gomock.Any(), gomock.Any()).Return(interfaces.ViewData{
+				Datas: []map[string]any{
+					{"field1": "value1"},
+				},
+				TotalCount: 1,
+			}, nil)
+
+			result, err := service.GetObjectsByObjectTypeID(ctx, query)
+			So(err, ShouldBeNil)
+			So(len(result.Datas), ShouldEqual, 1)
+			// 不支持的逻辑属性类型不会添加到结果中
+		})
 	})
 }
 
@@ -344,6 +1008,24 @@ func Test_objectTypeService_GetTotal(t *testing.T) {
 		Convey("失败 - 无效JSON", func() {
 			mockOSA := service.osa.(*dmock.MockOpenSearchAccess)
 			mockOSA.EXPECT().Count(gomock.Any(), gomock.Any(), gomock.Any()).Return([]byte(`invalid json`), nil)
+
+			result, err := service.GetTotal(ctx, index, dsl)
+			So(err, ShouldNotBeNil)
+			So(result, ShouldEqual, 0)
+		})
+
+		Convey("失败 - 获取count字段失败", func() {
+			mockOSA := service.osa.(*dmock.MockOpenSearchAccess)
+			mockOSA.EXPECT().Count(gomock.Any(), gomock.Any(), gomock.Any()).Return([]byte(`{"total":100}`), nil)
+
+			result, err := service.GetTotal(ctx, index, dsl)
+			So(err, ShouldNotBeNil)
+			So(result, ShouldEqual, 0)
+		})
+
+		Convey("失败 - 转换为int64失败", func() {
+			mockOSA := service.osa.(*dmock.MockOpenSearchAccess)
+			mockOSA.EXPECT().Count(gomock.Any(), gomock.Any(), gomock.Any()).Return([]byte(`{"count":"not_a_number"}`), nil)
 
 			result, err := service.GetTotal(ctx, index, dsl)
 			So(err, ShouldNotBeNil)
@@ -523,6 +1205,312 @@ func Test_objectTypeService_GetObjectPropertyValue(t *testing.T) {
 			}
 
 			omAccess.EXPECT().GetObjectType(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(interfaces.ObjectType{}, false, nil)
+
+			result, err := service.GetObjectPropertyValue(ctx, query)
+			So(err, ShouldNotBeNil)
+			So(len(result.Datas), ShouldEqual, 0)
+		})
+
+		Convey("成功 - 包含逻辑属性且处理成功", func() {
+			query := &interfaces.ObjectPropertyValueQuery{
+				KNID:         "kn1",
+				Branch:       "main",
+				ObjectTypeID: "ot1",
+				UniqueIdentities: []map[string]any{
+					{"id": "123"},
+				},
+				Properties: []string{"logic_prop1"},
+				DynamicParams: map[string]map[string]any{
+					"logic_prop1": {
+						"start":   int64(1234567890),
+						"end":     int64(1234567890),
+						"instant": true,
+					},
+				},
+			}
+
+			objectType := interfaces.ObjectType{
+				ObjectTypeWithKeyField: interfaces.ObjectTypeWithKeyField{
+					OTID: "ot1",
+					DataProperties: []cond.DataProperty{
+						{Name: "id", MappedField: cond.Field{Name: "id"}},
+					},
+					PrimaryKeys: []string{"id"},
+					LogicProperties: []*interfaces.LogicProperty{
+						{
+							Name: "logic_prop1",
+							Type: interfaces.LOGIC_PROPERTY_TYPE_METRIC,
+							Parameters: []interfaces.Parameter{
+								{
+									Name:      "param1",
+									ValueFrom: interfaces.LOGIC_PARAMS_VALUE_FROM_PROP,
+									Value:     "id",
+								},
+							},
+							DataSource: &interfaces.ResourceInfo{
+								ID: "metric1",
+							},
+						},
+					},
+					DataSource: &interfaces.ResourceInfo{
+						ID: "view1",
+					},
+				},
+			}
+
+			omAccess.EXPECT().GetObjectType(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(objectType, true, nil)
+			uAccess.EXPECT().GetViewDataByID(gomock.Any(), "view1", gomock.Any()).Return(interfaces.ViewData{
+				Datas: []map[string]any{
+					{
+						"id": "123",
+						"logic_prop1": interfaces.MetricProperty{
+							PropertyType:    interfaces.LOGIC_PROPERTY_TYPE_METRIC,
+							MappingSourceId: "metric1",
+							Parameters: interfaces.MetricFilters{
+								Filters: []interfaces.Filter{
+									{
+										Name:      "param1",
+										Operation: "==",
+										Value:     "123",
+									},
+								},
+							},
+							DynamicParams: map[string]any{
+								"start":   int64(1234567890),
+								"end":     int64(1234567890),
+								"instant": true,
+							},
+						},
+					},
+				},
+				TotalCount: 1,
+			}, nil)
+			uAccess.EXPECT().GetMetricDataByID(gomock.Any(), "metric1", gomock.Any()).Return(interfaces.MetricData{
+				Datas: []interfaces.Data{
+					{
+						Labels: map[string]string{"param1": "123"},
+						Values: []interface{}{100},
+						Times:  []interface{}{1234567890},
+					},
+				},
+			}, nil)
+
+			result, err := service.GetObjectPropertyValue(ctx, query)
+			So(err, ShouldBeNil)
+			So(len(result.Datas), ShouldEqual, 1)
+		})
+
+		Convey("成功 - 包含算子类型逻辑属性", func() {
+			query := &interfaces.ObjectPropertyValueQuery{
+				KNID:         "kn1",
+				Branch:       "main",
+				ObjectTypeID: "ot1",
+				UniqueIdentities: []map[string]any{
+					{"id": "123"},
+				},
+				Properties: []string{"logic_prop1"},
+				DynamicParams: map[string]map[string]any{
+					"logic_prop1": {
+						"param1": "value1",
+					},
+				},
+			}
+
+			objectType := interfaces.ObjectType{
+				ObjectTypeWithKeyField: interfaces.ObjectTypeWithKeyField{
+					OTID: "ot1",
+					DataProperties: []cond.DataProperty{
+						{Name: "id", MappedField: cond.Field{Name: "id"}},
+					},
+					PrimaryKeys: []string{"id"},
+					LogicProperties: []*interfaces.LogicProperty{
+						{
+							Name: "logic_prop1",
+							Type: interfaces.LOGIC_PROPERTY_TYPE_OPERATOR,
+							Parameters: []interfaces.Parameter{
+								{
+									Name:      "param1",
+									ValueFrom: interfaces.LOGIC_PARAMS_VALUE_FROM_INPUT,
+									Source:    interfaces.PARAMETER_BODY,
+								},
+							},
+							DataSource: &interfaces.ResourceInfo{
+								ID: "operator1",
+							},
+						},
+					},
+					DataSource: &interfaces.ResourceInfo{
+						ID: "view1",
+					},
+				},
+			}
+
+			operatorInfo := interfaces.AgentOperator{
+				OperatorId: "operator1",
+				OperatorInfo: interfaces.OperatorInfo{
+					ExecutionMode: interfaces.OPERATOR_EXECUTION_MODE_SYNC,
+				},
+			}
+
+			omAccess.EXPECT().GetObjectType(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(objectType, true, nil)
+			uAccess.EXPECT().GetViewDataByID(gomock.Any(), "view1", gomock.Any()).Return(interfaces.ViewData{
+				Datas: []map[string]any{
+					{
+						"id": "123",
+						"logic_prop1": interfaces.OperatorProperty{
+							PropertyType:    interfaces.LOGIC_PROPERTY_TYPE_OPERATOR,
+							MappingSourceId: "operator1",
+							Parameters:      map[string]any{},
+							DynamicParams: map[string]any{
+								"param1": "value1",
+							},
+						},
+					},
+				},
+				TotalCount: 1,
+			}, nil)
+			aoAccess.EXPECT().GetAgentOperatorByID(gomock.Any(), "operator1").Return(operatorInfo, nil)
+			aoAccess.EXPECT().ExecuteOperator(gomock.Any(), "operator1", gomock.Any()).Return(map[string]any{"result": "success"}, nil)
+
+			result, err := service.GetObjectPropertyValue(ctx, query)
+			So(err, ShouldBeNil)
+			So(len(result.Datas), ShouldEqual, 1)
+		})
+
+		Convey("失败 - 算子执行模式不是同步", func() {
+			query := &interfaces.ObjectPropertyValueQuery{
+				KNID:         "kn1",
+				Branch:       "main",
+				ObjectTypeID: "ot1",
+				UniqueIdentities: []map[string]any{
+					{"id": "123"},
+				},
+				Properties: []string{"logic_prop1"},
+				DynamicParams: map[string]map[string]any{
+					"logic_prop1": {
+						"param1": "value1",
+					},
+				},
+			}
+
+			objectType := interfaces.ObjectType{
+				ObjectTypeWithKeyField: interfaces.ObjectTypeWithKeyField{
+					OTID: "ot1",
+					DataProperties: []cond.DataProperty{
+						{Name: "id", MappedField: cond.Field{Name: "id"}},
+					},
+					PrimaryKeys: []string{"id"},
+					LogicProperties: []*interfaces.LogicProperty{
+						{
+							Name: "logic_prop1",
+							Type: interfaces.LOGIC_PROPERTY_TYPE_OPERATOR,
+							Parameters: []interfaces.Parameter{
+								{
+									Name:      "param1",
+									ValueFrom: interfaces.LOGIC_PARAMS_VALUE_FROM_INPUT,
+									Source:    interfaces.PARAMETER_BODY,
+								},
+							},
+							DataSource: &interfaces.ResourceInfo{
+								ID: "operator1",
+							},
+						},
+					},
+					DataSource: &interfaces.ResourceInfo{
+						ID: "view1",
+					},
+				},
+			}
+
+			operatorInfo := interfaces.AgentOperator{
+				OperatorId: "operator1",
+				OperatorInfo: interfaces.OperatorInfo{
+					ExecutionMode: "async", // 异步模式
+				},
+			}
+
+			omAccess.EXPECT().GetObjectType(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(objectType, true, nil)
+			uAccess.EXPECT().GetViewDataByID(gomock.Any(), "view1", gomock.Any()).Return(interfaces.ViewData{
+				Datas: []map[string]any{
+					{
+						"id": "123",
+						"logic_prop1": interfaces.OperatorProperty{
+							PropertyType:    interfaces.LOGIC_PROPERTY_TYPE_OPERATOR,
+							MappingSourceId: "operator1",
+							Parameters:      map[string]any{},
+							DynamicParams: map[string]any{
+								"param1": "value1",
+							},
+						},
+					},
+				},
+				TotalCount: 1,
+			}, nil)
+			aoAccess.EXPECT().GetAgentOperatorByID(gomock.Any(), "operator1").Return(operatorInfo, nil)
+
+			result, err := service.GetObjectPropertyValue(ctx, query)
+			So(err, ShouldNotBeNil)
+			So(len(result.Datas), ShouldEqual, 0)
+		})
+
+		Convey("失败 - 算子缺少动态参数", func() {
+			query := &interfaces.ObjectPropertyValueQuery{
+				KNID:         "kn1",
+				Branch:       "main",
+				ObjectTypeID: "ot1",
+				UniqueIdentities: []map[string]any{
+					{"id": "123"},
+				},
+				Properties:    []string{"logic_prop1"},
+				DynamicParams: map[string]map[string]any{}, // 缺少动态参数
+			}
+
+			objectType := interfaces.ObjectType{
+				ObjectTypeWithKeyField: interfaces.ObjectTypeWithKeyField{
+					OTID: "ot1",
+					DataProperties: []cond.DataProperty{
+						{Name: "id", MappedField: cond.Field{Name: "id"}},
+					},
+					PrimaryKeys: []string{"id"},
+					LogicProperties: []*interfaces.LogicProperty{
+						{
+							Name: "logic_prop1",
+							Type: interfaces.LOGIC_PROPERTY_TYPE_OPERATOR,
+							Parameters: []interfaces.Parameter{
+								{
+									Name:      "param1",
+									ValueFrom: interfaces.LOGIC_PARAMS_VALUE_FROM_INPUT,
+									Source:    interfaces.PARAMETER_BODY,
+								},
+							},
+							DataSource: &interfaces.ResourceInfo{
+								ID: "operator1",
+							},
+						},
+					},
+					DataSource: &interfaces.ResourceInfo{
+						ID: "view1",
+					},
+				},
+			}
+
+			omAccess.EXPECT().GetObjectType(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(objectType, true, nil)
+			uAccess.EXPECT().GetViewDataByID(gomock.Any(), "view1", gomock.Any()).Return(interfaces.ViewData{
+				Datas: []map[string]any{
+					{
+						"id": "123",
+						"logic_prop1": interfaces.OperatorProperty{
+							PropertyType:    interfaces.LOGIC_PROPERTY_TYPE_OPERATOR,
+							MappingSourceId: "operator1",
+							Parameters:      map[string]any{},
+							DynamicParams: map[string]any{
+								"param1": "value1", // 需要动态参数
+							},
+						},
+					},
+				},
+				TotalCount: 1,
+			}, nil)
 
 			result, err := service.GetObjectPropertyValue(ctx, query)
 			So(err, ShouldNotBeNil)

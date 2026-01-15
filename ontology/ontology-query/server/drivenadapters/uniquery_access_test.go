@@ -134,6 +134,25 @@ func Test_uniqueryAccess_GetViewDataByID(t *testing.T) {
 			So(len(result.Datas), ShouldEqual, 0)
 		})
 
+		Convey("失败 - HTTP 状态码非 200 且解析 BaseError 失败", func() {
+			accountInfo := interfaces.AccountInfo{
+				ID:   "account1",
+				Type: "user",
+			}
+			ctx = context.WithValue(ctx, interfaces.ACCOUNT_INFO_KEY, accountInfo)
+
+			invalidJSON := []byte("invalid json")
+
+			mockHTTPClient.EXPECT().
+				PostNoUnmarshal(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+				Return(http.StatusBadRequest, invalidJSON, nil)
+
+			result, err := ua.GetViewDataByID(ctx, viewID, viewRequest)
+
+			So(err, ShouldNotBeNil)
+			So(len(result.Datas), ShouldEqual, 0)
+		})
+
 		Convey("失败 - 响应体为空", func() {
 			accountInfo := interfaces.AccountInfo{
 				ID:   "account1",
@@ -296,6 +315,25 @@ func Test_uniqueryAccess_GetMetricDataByID(t *testing.T) {
 			mockHTTPClient.EXPECT().
 				PostNoUnmarshal(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
 				Return(http.StatusBadRequest, errorBytes, nil)
+
+			result, err := ua.GetMetricDataByID(ctx, metricID, metricRequest)
+
+			So(err, ShouldNotBeNil)
+			So(len(result.Datas), ShouldEqual, 0)
+		})
+
+		Convey("失败 - HTTP 状态码非 200 且解析 BaseError 失败", func() {
+			accountInfo := interfaces.AccountInfo{
+				ID:   "account1",
+				Type: "user",
+			}
+			ctx = context.WithValue(ctx, interfaces.ACCOUNT_INFO_KEY, accountInfo)
+
+			invalidJSON := []byte("invalid json")
+
+			mockHTTPClient.EXPECT().
+				PostNoUnmarshal(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+				Return(http.StatusBadRequest, invalidJSON, nil)
 
 			result, err := ua.GetMetricDataByID(ctx, metricID, metricRequest)
 

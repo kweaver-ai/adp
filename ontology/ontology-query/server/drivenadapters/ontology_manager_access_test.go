@@ -154,6 +154,26 @@ func Test_ontologyManagerAccess_GetObjectType(t *testing.T) {
 			So(result.ObjectTypeWithKeyField.OTID, ShouldEqual, "")
 		})
 
+		Convey("失败 - HTTP 状态码非 200 且解析 BaseError 失败", func() {
+			accountInfo := interfaces.AccountInfo{
+				ID:   "account1",
+				Type: "user",
+			}
+			ctx = context.WithValue(ctx, interfaces.ACCOUNT_INFO_KEY, accountInfo)
+
+			invalidJSON := []byte("invalid json")
+
+			mockHTTPClient.EXPECT().
+				GetNoUnmarshal(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+				Return(http.StatusBadRequest, invalidJSON, nil)
+
+			result, exists, err := oma.GetObjectType(ctx, knID, branch, otID)
+
+			So(err, ShouldNotBeNil)
+			So(exists, ShouldBeFalse)
+			So(result.ObjectTypeWithKeyField.OTID, ShouldEqual, "")
+		})
+
 		Convey("失败 - 响应体为空", func() {
 			accountInfo := interfaces.AccountInfo{
 				ID:   "account1",
@@ -366,6 +386,114 @@ func Test_ontologyManagerAccess_GetRelationType(t *testing.T) {
 			So(exists, ShouldBeFalse)
 			So(result.RTID, ShouldEqual, "")
 		})
+
+		Convey("失败 - HTTP 状态码非 200", func() {
+			accountInfo := interfaces.AccountInfo{
+				ID:   "account1",
+				Type: "user",
+			}
+			ctx = context.WithValue(ctx, interfaces.ACCOUNT_INFO_KEY, accountInfo)
+
+			baseError := rest.BaseError{
+				ErrorCode:   "ERROR_CODE",
+				Description: "Error description",
+			}
+			errorBytes, _ := json.Marshal(baseError)
+
+			mockHTTPClient.EXPECT().
+				GetNoUnmarshal(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+				Return(http.StatusBadRequest, errorBytes, nil)
+
+			result, exists, err := oma.GetRelationType(ctx, knID, branch, rtID)
+
+			So(err, ShouldNotBeNil)
+			So(exists, ShouldBeFalse)
+			So(result.RTID, ShouldEqual, "")
+		})
+
+		Convey("失败 - HTTP 状态码非 200 且解析 BaseError 失败", func() {
+			accountInfo := interfaces.AccountInfo{
+				ID:   "account1",
+				Type: "user",
+			}
+			ctx = context.WithValue(ctx, interfaces.ACCOUNT_INFO_KEY, accountInfo)
+
+			invalidJSON := []byte("invalid json")
+
+			mockHTTPClient.EXPECT().
+				GetNoUnmarshal(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+				Return(http.StatusBadRequest, invalidJSON, nil)
+
+			result, exists, err := oma.GetRelationType(ctx, knID, branch, rtID)
+
+			So(err, ShouldNotBeNil)
+			So(exists, ShouldBeFalse)
+			So(result.RTID, ShouldEqual, "")
+		})
+
+		Convey("失败 - 响应体为空", func() {
+			accountInfo := interfaces.AccountInfo{
+				ID:   "account1",
+				Type: "user",
+			}
+			ctx = context.WithValue(ctx, interfaces.ACCOUNT_INFO_KEY, accountInfo)
+
+			mockHTTPClient.EXPECT().
+				GetNoUnmarshal(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+				Return(http.StatusOK, nil, nil)
+
+			result, exists, err := oma.GetRelationType(ctx, knID, branch, rtID)
+
+			So(err, ShouldBeNil)
+			So(exists, ShouldBeFalse)
+			So(result.RTID, ShouldEqual, "")
+		})
+
+		Convey("失败 - 解析响应失败", func() {
+			accountInfo := interfaces.AccountInfo{
+				ID:   "account1",
+				Type: "user",
+			}
+			ctx = context.WithValue(ctx, interfaces.ACCOUNT_INFO_KEY, accountInfo)
+
+			invalidJSON := []byte("invalid json")
+
+			mockHTTPClient.EXPECT().
+				GetNoUnmarshal(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+				Return(http.StatusOK, invalidJSON, nil)
+
+			result, exists, err := oma.GetRelationType(ctx, knID, branch, rtID)
+
+			So(err, ShouldNotBeNil)
+			So(exists, ShouldBeFalse)
+			So(result.RTID, ShouldEqual, "")
+		})
+
+		Convey("失败 - 响应体为空数组", func() {
+			accountInfo := interfaces.AccountInfo{
+				ID:   "account1",
+				Type: "user",
+			}
+			ctx = context.WithValue(ctx, interfaces.ACCOUNT_INFO_KEY, accountInfo)
+
+			response := struct {
+				RelationTypes []interfaces.RelationType `json:"entries"`
+			}{
+				RelationTypes: []interfaces.RelationType{},
+			}
+			responseBytes, _ := sonic.Marshal(response)
+
+			mockHTTPClient.EXPECT().
+				GetNoUnmarshal(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+				Return(http.StatusOK, responseBytes, nil)
+
+			result, exists, err := oma.GetRelationType(ctx, knID, branch, rtID)
+
+			So(err, ShouldBeNil)
+			So(exists, ShouldBeFalse)
+			So(result.RTID, ShouldEqual, "")
+		})
+
 	})
 }
 
@@ -441,6 +569,113 @@ func Test_ontologyManagerAccess_GetActionType(t *testing.T) {
 			mockHTTPClient.EXPECT().
 				GetNoUnmarshal(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
 				Return(http.StatusNotFound, nil, nil)
+
+			result, exists, err := oma.GetActionType(ctx, knID, branch, atID)
+
+			So(err, ShouldBeNil)
+			So(exists, ShouldBeFalse)
+			So(result.ATID, ShouldEqual, "")
+		})
+
+		Convey("失败 - HTTP 状态码非 200", func() {
+			accountInfo := interfaces.AccountInfo{
+				ID:   "account1",
+				Type: "user",
+			}
+			ctx = context.WithValue(ctx, interfaces.ACCOUNT_INFO_KEY, accountInfo)
+
+			baseError := rest.BaseError{
+				ErrorCode:   "ERROR_CODE",
+				Description: "Error description",
+			}
+			errorBytes, _ := json.Marshal(baseError)
+
+			mockHTTPClient.EXPECT().
+				GetNoUnmarshal(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+				Return(http.StatusBadRequest, errorBytes, nil)
+
+			result, exists, err := oma.GetActionType(ctx, knID, branch, atID)
+
+			So(err, ShouldNotBeNil)
+			So(exists, ShouldBeFalse)
+			So(result.ATID, ShouldEqual, "")
+		})
+
+		Convey("失败 - HTTP 状态码非 200 且解析 BaseError 失败", func() {
+			accountInfo := interfaces.AccountInfo{
+				ID:   "account1",
+				Type: "user",
+			}
+			ctx = context.WithValue(ctx, interfaces.ACCOUNT_INFO_KEY, accountInfo)
+
+			invalidJSON := []byte("invalid json")
+
+			mockHTTPClient.EXPECT().
+				GetNoUnmarshal(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+				Return(http.StatusBadRequest, invalidJSON, nil)
+
+			result, exists, err := oma.GetActionType(ctx, knID, branch, atID)
+
+			So(err, ShouldNotBeNil)
+			So(exists, ShouldBeFalse)
+			So(result.ATID, ShouldEqual, "")
+		})
+
+		Convey("失败 - 响应体为空", func() {
+			accountInfo := interfaces.AccountInfo{
+				ID:   "account1",
+				Type: "user",
+			}
+			ctx = context.WithValue(ctx, interfaces.ACCOUNT_INFO_KEY, accountInfo)
+
+			mockHTTPClient.EXPECT().
+				GetNoUnmarshal(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+				Return(http.StatusOK, nil, nil)
+
+			result, exists, err := oma.GetActionType(ctx, knID, branch, atID)
+
+			So(err, ShouldBeNil)
+			So(exists, ShouldBeFalse)
+			So(result.ATID, ShouldEqual, "")
+		})
+
+		Convey("失败 - 解析响应失败", func() {
+			accountInfo := interfaces.AccountInfo{
+				ID:   "account1",
+				Type: "user",
+			}
+			ctx = context.WithValue(ctx, interfaces.ACCOUNT_INFO_KEY, accountInfo)
+
+			invalidJSON := []byte("invalid json")
+
+			mockHTTPClient.EXPECT().
+				GetNoUnmarshal(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+				Return(http.StatusOK, invalidJSON, nil)
+
+			result, exists, err := oma.GetActionType(ctx, knID, branch, atID)
+
+			So(err, ShouldNotBeNil)
+			So(exists, ShouldBeFalse)
+			So(result.ATID, ShouldEqual, "")
+		})
+
+		Convey("失败 - 响应体为空数组", func() {
+			accountInfo := interfaces.AccountInfo{
+				ID:   "account1",
+				Type: "user",
+			}
+			ctx = context.WithValue(ctx, interfaces.ACCOUNT_INFO_KEY, accountInfo)
+
+			response := struct {
+				ActionTypes []interfaces.ActionType `json:"entries"`
+			}{
+				ActionTypes: []interfaces.ActionType{},
+			}
+			responseBytes, _ := sonic.Marshal(response)
+
+			mockHTTPClient.EXPECT().
+				GetNoUnmarshal(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+				Return(http.StatusOK, responseBytes, nil)
 
 			result, exists, err := oma.GetActionType(ctx, knID, branch, atID)
 
@@ -552,6 +787,127 @@ func Test_ontologyManagerAccess_GetRelationTypePathsBaseOnSource(t *testing.T) {
 
 			So(err, ShouldBeNil)
 			So(result, ShouldBeNil)
+		})
+
+		Convey("失败 - HTTP 状态码非 200", func() {
+			accountInfo := interfaces.AccountInfo{
+				ID:   "account1",
+				Type: "user",
+			}
+			ctx = context.WithValue(ctx, interfaces.ACCOUNT_INFO_KEY, accountInfo)
+
+			baseError := rest.BaseError{
+				ErrorCode:   "ERROR_CODE",
+				Description: "Error description",
+			}
+			errorBytes, _ := json.Marshal(baseError)
+
+			mockHTTPClient.EXPECT().
+				PostNoUnmarshal(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+				Return(http.StatusBadRequest, errorBytes, nil)
+
+			result, err := oma.GetRelationTypePathsBaseOnSource(ctx, knID, branch, query)
+
+			So(err, ShouldNotBeNil)
+			So(result, ShouldBeNil)
+		})
+
+		Convey("失败 - HTTP 状态码非 200 且解析 BaseError 失败", func() {
+			accountInfo := interfaces.AccountInfo{
+				ID:   "account1",
+				Type: "user",
+			}
+			ctx = context.WithValue(ctx, interfaces.ACCOUNT_INFO_KEY, accountInfo)
+
+			invalidJSON := []byte("invalid json")
+
+			mockHTTPClient.EXPECT().
+				PostNoUnmarshal(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+				Return(http.StatusBadRequest, invalidJSON, nil)
+
+			result, err := oma.GetRelationTypePathsBaseOnSource(ctx, knID, branch, query)
+
+			So(err, ShouldNotBeNil)
+			So(result, ShouldBeNil)
+		})
+
+		Convey("失败 - 响应体为空", func() {
+			accountInfo := interfaces.AccountInfo{
+				ID:   "account1",
+				Type: "user",
+			}
+			ctx = context.WithValue(ctx, interfaces.ACCOUNT_INFO_KEY, accountInfo)
+
+			mockHTTPClient.EXPECT().
+				PostNoUnmarshal(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+				Return(http.StatusOK, nil, nil)
+
+			result, err := oma.GetRelationTypePathsBaseOnSource(ctx, knID, branch, query)
+
+			So(err, ShouldBeNil)
+			So(result, ShouldBeNil)
+		})
+
+		Convey("失败 - 解析响应失败", func() {
+			accountInfo := interfaces.AccountInfo{
+				ID:   "account1",
+				Type: "user",
+			}
+			ctx = context.WithValue(ctx, interfaces.ACCOUNT_INFO_KEY, accountInfo)
+
+			invalidJSON := []byte("invalid json")
+
+			mockHTTPClient.EXPECT().
+				PostNoUnmarshal(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+				Return(http.StatusOK, invalidJSON, nil)
+
+			result, err := oma.GetRelationTypePathsBaseOnSource(ctx, knID, branch, query)
+
+			So(err, ShouldNotBeNil)
+			So(result, ShouldBeNil)
+		})
+
+		Convey("成功 - 获取关系类路径 (DATA_VIEW类型)", func() {
+			accountInfo := interfaces.AccountInfo{
+				ID:   "account1",
+				Type: "user",
+			}
+			ctx = context.WithValue(ctx, interfaces.ACCOUNT_INFO_KEY, accountInfo)
+
+			typePath := interfaces.RelationTypePath{
+				ID: 0,
+				TypeEdges: []interfaces.TypeEdge{
+					{
+						RelationType: interfaces.RelationType{
+							RTID: "rt1",
+							Type: interfaces.RELATION_TYPE_DATA_VIEW,
+							MappingRules: interfaces.InDirectMapping{
+								BackingDataSource: &interfaces.ResourceInfo{
+									Type: "view",
+									ID:   "view1",
+								},
+							},
+						},
+					},
+				},
+			}
+			response := struct {
+				TypePaths []interfaces.RelationTypePath `json:"entries"`
+			}{
+				TypePaths: []interfaces.RelationTypePath{typePath},
+			}
+			responseBytes, _ := sonic.Marshal(response)
+
+			mockHTTPClient.EXPECT().
+				PostNoUnmarshal(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+				Return(http.StatusOK, responseBytes, nil)
+
+			result, err := oma.GetRelationTypePathsBaseOnSource(ctx, knID, branch, query)
+
+			So(err, ShouldBeNil)
+			So(len(result), ShouldEqual, 1)
+			So(result[0].ID, ShouldEqual, 0)
+			So(result[0].TypeEdges[0].RelationType.Type, ShouldEqual, interfaces.RELATION_TYPE_DATA_VIEW)
 		})
 	})
 }
