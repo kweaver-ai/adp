@@ -1424,30 +1424,22 @@ func Test_objectTypeService_InsertOpenSearchData(t *testing.T) {
 			err := service.InsertOpenSearchData(ctx, objectTypes)
 			So(err, ShouldNotBeNil)
 		})
-	})
-}
 
-func Test_objectTypeService_InsertOpenSearchData_WithVector(t *testing.T) {
-	Convey("Test InsertOpenSearchData with vector enabled\n", t, func() {
-		ctx := context.Background()
-		mockCtrl := gomock.NewController(t)
-		defer mockCtrl.Finish()
+		Convey("Success inserting object types with vector enabled\n", func() {
+			appSettingWithVector := &common.AppSetting{
+				ServerSetting: common.ServerSetting{
+					DefaultSmallModelEnabled: true,
+				},
+			}
+			osaWithVector := dmock.NewMockOpenSearchAccess(mockCtrl)
+			mfa := dmock.NewMockModelFactoryAccess(mockCtrl)
 
-		appSetting := &common.AppSetting{
-			ServerSetting: common.ServerSetting{
-				DefaultSmallModelEnabled: true,
-			},
-		}
-		osa := dmock.NewMockOpenSearchAccess(mockCtrl)
-		mfa := dmock.NewMockModelFactoryAccess(mockCtrl)
+			serviceWithVector := &objectTypeService{
+				appSetting: appSettingWithVector,
+				osa:        osaWithVector,
+				mfa:        mfa,
+			}
 
-		service := &objectTypeService{
-			appSetting: appSetting,
-			osa:        osa,
-			mfa:        mfa,
-		}
-
-		Convey("Success inserting object types with vector\n", func() {
 			objectTypes := []*interfaces.ObjectType{
 				{
 					ObjectTypeWithKeyField: interfaces.ObjectTypeWithKeyField{
@@ -1471,13 +1463,25 @@ func Test_objectTypeService_InsertOpenSearchData_WithVector(t *testing.T) {
 
 			mfa.EXPECT().GetDefaultModel(gomock.Any()).Return(&interfaces.SmallModel{ModelID: "model1"}, nil)
 			mfa.EXPECT().GetVector(gomock.Any(), gomock.Any(), gomock.Any()).Return(vectors, nil)
-			osa.EXPECT().InsertData(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
+			osaWithVector.EXPECT().InsertData(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
 
-			err := service.InsertOpenSearchData(ctx, objectTypes)
+			err := serviceWithVector.InsertOpenSearchData(ctx, objectTypes)
 			So(err, ShouldBeNil)
 		})
 
-		Convey("Failed when GetDefaultModel returns error\n", func() {
+		Convey("Failed when GetDefaultModel returns error with vector enabled\n", func() {
+			appSettingWithVector := &common.AppSetting{
+				ServerSetting: common.ServerSetting{
+					DefaultSmallModelEnabled: true,
+				},
+			}
+			mfa := dmock.NewMockModelFactoryAccess(mockCtrl)
+
+			serviceWithVector := &objectTypeService{
+				appSetting: appSettingWithVector,
+				mfa:        mfa,
+			}
+
 			objectTypes := []*interfaces.ObjectType{
 				{
 					ObjectTypeWithKeyField: interfaces.ObjectTypeWithKeyField{
@@ -1491,11 +1495,23 @@ func Test_objectTypeService_InsertOpenSearchData_WithVector(t *testing.T) {
 
 			mfa.EXPECT().GetDefaultModel(gomock.Any()).Return(nil, rest.NewHTTPError(ctx, 500, oerrors.OntologyManager_ObjectType_InternalError))
 
-			err := service.InsertOpenSearchData(ctx, objectTypes)
+			err := serviceWithVector.InsertOpenSearchData(ctx, objectTypes)
 			So(err, ShouldNotBeNil)
 		})
 
-		Convey("Failed when GetVector returns error\n", func() {
+		Convey("Failed when GetVector returns error with vector enabled\n", func() {
+			appSettingWithVector := &common.AppSetting{
+				ServerSetting: common.ServerSetting{
+					DefaultSmallModelEnabled: true,
+				},
+			}
+			mfa := dmock.NewMockModelFactoryAccess(mockCtrl)
+
+			serviceWithVector := &objectTypeService{
+				appSetting: appSettingWithVector,
+				mfa:        mfa,
+			}
+
 			objectTypes := []*interfaces.ObjectType{
 				{
 					ObjectTypeWithKeyField: interfaces.ObjectTypeWithKeyField{
@@ -1510,11 +1526,23 @@ func Test_objectTypeService_InsertOpenSearchData_WithVector(t *testing.T) {
 			mfa.EXPECT().GetDefaultModel(gomock.Any()).Return(&interfaces.SmallModel{ModelID: "model1"}, nil)
 			mfa.EXPECT().GetVector(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil, rest.NewHTTPError(ctx, 500, oerrors.OntologyManager_ObjectType_InternalError))
 
-			err := service.InsertOpenSearchData(ctx, objectTypes)
+			err := serviceWithVector.InsertOpenSearchData(ctx, objectTypes)
 			So(err, ShouldNotBeNil)
 		})
 
-		Convey("Failed when vector count mismatch\n", func() {
+		Convey("Failed when vector count mismatch with vector enabled\n", func() {
+			appSettingWithVector := &common.AppSetting{
+				ServerSetting: common.ServerSetting{
+					DefaultSmallModelEnabled: true,
+				},
+			}
+			mfa := dmock.NewMockModelFactoryAccess(mockCtrl)
+
+			serviceWithVector := &objectTypeService{
+				appSetting: appSettingWithVector,
+				mfa:        mfa,
+			}
+
 			objectTypes := []*interfaces.ObjectType{
 				{
 					ObjectTypeWithKeyField: interfaces.ObjectTypeWithKeyField{
@@ -1530,7 +1558,7 @@ func Test_objectTypeService_InsertOpenSearchData_WithVector(t *testing.T) {
 			mfa.EXPECT().GetDefaultModel(gomock.Any()).Return(&interfaces.SmallModel{ModelID: "model1"}, nil)
 			mfa.EXPECT().GetVector(gomock.Any(), gomock.Any(), gomock.Any()).Return(vectors, nil)
 
-			err := service.InsertOpenSearchData(ctx, objectTypes)
+			err := serviceWithVector.InsertOpenSearchData(ctx, objectTypes)
 			So(err, ShouldNotBeNil)
 		})
 	})

@@ -208,49 +208,44 @@ func Test_relationTypeAccess_CreateRelationType(t *testing.T) {
 				t.Errorf("there were unfulfilled expectations: %s", err)
 			}
 		})
-	})
-}
 
-func Test_relationTypeAccess_CreateRelationType_MarshalError(t *testing.T) {
-	Convey("test CreateRelationType Marshal error\n", t, func() {
-		appSetting := &common.AppSetting{}
-		rta, _ := MockNewRelationTypeAccess(appSetting)
+		Convey("CreateRelationType Marshal error\n", func() {
+			// 创建一个会导致marshal失败的relationType
+			invalidRelationType := &interfaces.RelationType{
+				RelationTypeWithKeyField: interfaces.RelationTypeWithKeyField{
+					RTID:               "rt1",
+					RTName:             "Test Relation Type",
+					SourceObjectTypeID: "ot1",
+					TargetObjectTypeID: "ot2",
+					Type:               interfaces.RELATION_TYPE_DIRECT,
+					MappingRules:       make(chan int), // 使用channel会导致marshal失败
+				},
+				CommonInfo: interfaces.CommonInfo{
+					Tags:    testTags,
+					Comment: "test comment",
+					Icon:    "icon1",
+					Color:   "color1",
+					Detail:  "detail1",
+				},
+				KNID:   "kn1",
+				Branch: interfaces.MAIN_BRANCH,
+				Creator: interfaces.AccountInfo{
+					ID:   "admin",
+					Type: "admin",
+				},
+				CreateTime: testUpdateTime,
+				Updater: interfaces.AccountInfo{
+					ID:   "admin",
+					Type: "admin",
+				},
+				UpdateTime: testUpdateTime,
+				ModuleType: interfaces.MODULE_TYPE_RELATION_TYPE,
+			}
 
-		// 创建一个会导致marshal失败的relationType
-		invalidRelationType := &interfaces.RelationType{
-			RelationTypeWithKeyField: interfaces.RelationTypeWithKeyField{
-				RTID:               "rt1",
-				RTName:             "Test Relation Type",
-				SourceObjectTypeID: "ot1",
-				TargetObjectTypeID: "ot2",
-				Type:               interfaces.RELATION_TYPE_DIRECT,
-				MappingRules:       make(chan int), // 使用channel会导致marshal失败
-			},
-			CommonInfo: interfaces.CommonInfo{
-				Tags:    testTags,
-				Comment: "test comment",
-				Icon:    "icon1",
-				Color:   "color1",
-				Detail:  "detail1",
-			},
-			KNID:   "kn1",
-			Branch: interfaces.MAIN_BRANCH,
-			Creator: interfaces.AccountInfo{
-				ID:   "admin",
-				Type: "admin",
-			},
-			CreateTime: testUpdateTime,
-			Updater: interfaces.AccountInfo{
-				ID:   "admin",
-				Type: "admin",
-			},
-			UpdateTime: testUpdateTime,
-			ModuleType: interfaces.MODULE_TYPE_RELATION_TYPE,
-		}
-
-		tx, _ := rta.db.Begin()
-		err := rta.CreateRelationType(testCtx, tx, invalidRelationType)
-		So(err, ShouldNotBeNil)
+			tx, _ := rta.db.Begin()
+			err := rta.CreateRelationType(testCtx, tx, invalidRelationType)
+			So(err, ShouldNotBeNil)
+		})
 	})
 }
 
