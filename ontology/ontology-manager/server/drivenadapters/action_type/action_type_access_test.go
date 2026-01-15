@@ -431,6 +431,86 @@ func Test_ActionTypeAccess_ListActionTypes(t *testing.T) {
 			}
 		})
 
+		Convey("ListActionTypes with Sort ASC\n", func() {
+			sqlStr := fmt.Sprintf("SELECT f_id, f_name, f_tags, f_comment, f_icon, f_color, f_detail, "+
+				"f_kn_id, f_branch, f_action_type, f_object_type_id, f_condition, f_affect, f_action_source, "+
+				"f_parameters, f_schedule, f_creator, f_creator_type, f_create_time, f_updater, f_updater_type, f_update_time "+
+				"FROM %s WHERE f_kn_id = ? AND f_branch = ? ORDER BY f_name ASC", AT_TABLE_NAME)
+
+			rows := sqlmock.NewRows([]string{
+				"f_id", "f_name", "f_tags", "f_comment", "f_icon", "f_color", "f_detail",
+				"f_kn_id", "f_branch", "f_action_type", "f_object_type_id",
+				"f_condition", "f_affect", "f_action_source", "f_parameters", "f_schedule",
+				"f_creator", "f_creator_type", "f_create_time",
+				"f_updater", "f_updater_type", "f_update_time",
+			}).AddRow(
+				"at1", "Action Type 1", `"tag1"`, "comment", "icon", "color", "detail",
+				"kn1", "main", interfaces.ACTION_TYPE_TOOL, "ot1",
+				conditionBytes, affectBytes, actionSourceBytes, parametersBytes, scheduleBytes,
+				"admin", "admin", testUpdateTime,
+				"admin", "admin", testUpdateTime,
+			)
+
+			queryWithSort := interfaces.ActionTypesQueryParams{
+				PaginationQueryParameters: interfaces.PaginationQueryParameters{
+					Sort:      "f_name",
+					Direction: "ASC",
+				},
+				KNID:   "kn1",
+				Branch: "main",
+			}
+
+			smock.ExpectQuery(sqlStr).WithArgs().WillReturnRows(rows)
+
+			actionTypes, err := ata.ListActionTypes(testCtx, queryWithSort)
+			So(err, ShouldBeNil)
+			So(len(actionTypes), ShouldEqual, 1)
+
+			if err := smock.ExpectationsWereMet(); err != nil {
+				t.Errorf("there were unfulfilled expectations: %s", err)
+			}
+		})
+
+		Convey("ListActionTypes with Sort DESC\n", func() {
+			sqlStr := fmt.Sprintf("SELECT f_id, f_name, f_tags, f_comment, f_icon, f_color, f_detail, "+
+				"f_kn_id, f_branch, f_action_type, f_object_type_id, f_condition, f_affect, f_action_source, "+
+				"f_parameters, f_schedule, f_creator, f_creator_type, f_create_time, f_updater, f_updater_type, f_update_time "+
+				"FROM %s WHERE f_kn_id = ? AND f_branch = ? ORDER BY f_name DESC", AT_TABLE_NAME)
+
+			rows := sqlmock.NewRows([]string{
+				"f_id", "f_name", "f_tags", "f_comment", "f_icon", "f_color", "f_detail",
+				"f_kn_id", "f_branch", "f_action_type", "f_object_type_id",
+				"f_condition", "f_affect", "f_action_source", "f_parameters", "f_schedule",
+				"f_creator", "f_creator_type", "f_create_time",
+				"f_updater", "f_updater_type", "f_update_time",
+			}).AddRow(
+				"at1", "Action Type 1", `"tag1"`, "comment", "icon", "color", "detail",
+				"kn1", "main", interfaces.ACTION_TYPE_TOOL, "ot1",
+				conditionBytes, affectBytes, actionSourceBytes, parametersBytes, scheduleBytes,
+				"admin", "admin", testUpdateTime,
+				"admin", "admin", testUpdateTime,
+			)
+
+			queryWithSort := interfaces.ActionTypesQueryParams{
+				PaginationQueryParameters: interfaces.PaginationQueryParameters{
+					Sort:      "f_name",
+					Direction: "DESC",
+				},
+				KNID:   "kn1",
+				Branch: "main",
+			}
+
+			smock.ExpectQuery(sqlStr).WithArgs().WillReturnRows(rows)
+
+			actionTypes, err := ata.ListActionTypes(testCtx, queryWithSort)
+			So(err, ShouldBeNil)
+			So(len(actionTypes), ShouldEqual, 1)
+
+			if err := smock.ExpectationsWereMet(); err != nil {
+				t.Errorf("there were unfulfilled expectations: %s", err)
+			}
+		})
+
 	})
 }
 

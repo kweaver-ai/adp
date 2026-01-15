@@ -264,6 +264,53 @@ func Test_conceptGroupAccess_ListConceptGroups(t *testing.T) {
 				t.Errorf("there were unfulfilled expectations: %s", err)
 			}
 		})
+
+		Convey("ListConceptGroups with Sort ASC\n", func() {
+			sqlStr := fmt.Sprintf("SELECT f_id, f_name, f_tags, f_comment, f_icon, f_color, f_detail, "+
+				"f_kn_id, f_branch, f_creator, f_creator_type, f_create_time, f_updater, f_updater_type, f_update_time "+
+				"FROM %s WHERE f_kn_id = ? AND f_branch = ? ORDER BY f_name ASC", CONCEPT_GROUP_TABLE_NAME)
+
+			rows := sqlmock.NewRows([]string{
+				"f_id", "f_name", "f_tags", "f_comment", "f_icon", "f_color", "f_detail",
+				"f_kn_id", "f_branch", "f_creator", "f_creator_type", "f_create_time",
+				"f_updater", "f_updater_type", "f_update_time",
+			}).AddRow(
+				"cg1", "Concept Group 1", `"tag1"`, "comment", "icon", "color", "detail",
+				"kn1", "main", "admin", "admin", testUpdateTime,
+				"admin", "admin", testUpdateTime,
+			)
+
+			queryWithSort := interfaces.ConceptGroupsQueryParams{
+				PaginationQueryParameters: interfaces.PaginationQueryParameters{
+					Sort:      "f_name",
+					Direction: "ASC",
+				},
+				KNID:   "kn1",
+				Branch: "main",
+			}
+
+			smock.ExpectQuery(sqlStr).WithArgs().WillReturnRows(rows)
+
+			conceptGroups, err := cga.ListConceptGroups(testCtx, queryWithSort)
+			So(err, ShouldBeNil)
+			So(len(conceptGroups), ShouldEqual, 1)
+
+			if err := smock.ExpectationsWereMet(); err != nil {
+				t.Errorf("there were unfulfilled expectations: %s", err)
+			}
+		})
+
+		Convey("ListConceptGroups scan error\n", func() {
+			rows := sqlmock.NewRows([]string{"f_id"}).AddRow("cg1")
+			smock.ExpectQuery(sqlStr).WithArgs().WillReturnRows(rows)
+
+			_, err := cga.ListConceptGroups(testCtx, query)
+			So(err, ShouldNotBeNil)
+
+			if err := smock.ExpectationsWereMet(); err != nil {
+				t.Errorf("there were unfulfilled expectations: %s", err)
+			}
+		})
 	})
 }
 
@@ -358,6 +405,20 @@ func Test_conceptGroupAccess_GetConceptGroupsByIDs(t *testing.T) {
 			conceptGroups, err := cga.GetConceptGroupsByIDs(testCtx, tx, knID, branch, cgIDs)
 			So(conceptGroups, ShouldResemble, []*interfaces.ConceptGroup{})
 			So(err, ShouldResemble, expectedErr)
+
+			if err := smock.ExpectationsWereMet(); err != nil {
+				t.Errorf("there were unfulfilled expectations: %s", err)
+			}
+		})
+
+		Convey("GetConceptGroupsByIDs scan error\n", func() {
+			smock.ExpectBegin()
+			rows := sqlmock.NewRows([]string{"f_id"}).AddRow("cg1")
+			smock.ExpectQuery(sqlStr).WithArgs().WillReturnRows(rows)
+
+			tx, _ := cga.db.Begin()
+			_, err := cga.GetConceptGroupsByIDs(testCtx, tx, knID, branch, cgIDs)
+			So(err, ShouldNotBeNil)
 
 			if err := smock.ExpectationsWereMet(); err != nil {
 				t.Errorf("there were unfulfilled expectations: %s", err)
@@ -496,6 +557,19 @@ func Test_conceptGroupAccess_UpdateConceptGroup(t *testing.T) {
 				t.Errorf("there were unfulfilled expectations: %s", err)
 			}
 		})
+
+		Convey("UpdateConceptGroup RowsAffected 2\n", func() {
+			smock.ExpectBegin()
+			smock.ExpectExec(sqlStr).WithArgs().WillReturnResult(sqlmock.NewResult(1, 2))
+
+			tx, _ := cga.db.Begin()
+			err := cga.UpdateConceptGroup(testCtx, tx, conceptGroup)
+			So(err, ShouldBeNil)
+
+			if err := smock.ExpectationsWereMet(); err != nil {
+				t.Errorf("there were unfulfilled expectations: %s", err)
+			}
+		})
 	})
 }
 
@@ -528,6 +602,29 @@ func Test_conceptGroupAccess_UpdateConceptGroupDetail(t *testing.T) {
 
 			err := cga.UpdateConceptGroupDetail(testCtx, knID, branch, cgID, detail)
 			So(err, ShouldResemble, expectedErr)
+
+			if err := smock.ExpectationsWereMet(); err != nil {
+				t.Errorf("there were unfulfilled expectations: %s", err)
+			}
+		})
+
+		Convey("UpdateConceptGroupDetail RowsAffected error\n", func() {
+			expectedErr := errors.New("Get RowsAffected error")
+			smock.ExpectExec(sqlStr).WithArgs(detail, cgID, knID, branch).WillReturnResult(sqlmock.NewErrorResult(expectedErr))
+
+			err := cga.UpdateConceptGroupDetail(testCtx, knID, branch, cgID, detail)
+			So(err, ShouldBeNil) // 注意：代码中 RowsAffected 错误时只记录警告，不返回错误
+
+			if err := smock.ExpectationsWereMet(); err != nil {
+				t.Errorf("there were unfulfilled expectations: %s", err)
+			}
+		})
+
+		Convey("UpdateConceptGroupDetail RowsAffected not 1\n", func() {
+			smock.ExpectExec(sqlStr).WithArgs(detail, cgID, knID, branch).WillReturnResult(sqlmock.NewResult(1, 2))
+
+			err := cga.UpdateConceptGroupDetail(testCtx, knID, branch, cgID, detail)
+			So(err, ShouldBeNil) // 注意：代码中 RowsAffected != 1 时只记录警告，不返回错误
 
 			if err := smock.ExpectationsWereMet(); err != nil {
 				t.Errorf("there were unfulfilled expectations: %s", err)
@@ -582,6 +679,20 @@ func Test_conceptGroupAccess_DeleteConceptGroupByID(t *testing.T) {
 			tx, _ := cga.db.Begin()
 			_, err := cga.DeleteConceptGroupByID(testCtx, tx, knID, branch, cgID)
 			So(err, ShouldResemble, expectedErr)
+
+			if err := smock.ExpectationsWereMet(); err != nil {
+				t.Errorf("there were unfulfilled expectations: %s", err)
+			}
+		})
+
+		Convey("DeleteConceptGroupByID RowsAffected error\n", func() {
+			smock.ExpectBegin()
+			expectedErr := errors.New("Get RowsAffected error")
+			smock.ExpectExec(sqlStr).WithArgs(cgID, knID, branch).WillReturnResult(sqlmock.NewErrorResult(expectedErr))
+
+			tx, _ := cga.db.Begin()
+			_, err := cga.DeleteConceptGroupByID(testCtx, tx, knID, branch, cgID)
+			So(err, ShouldBeNil) // 注意：代码中 RowsAffected 错误时只记录警告，不返回错误
 
 			if err := smock.ExpectationsWereMet(); err != nil {
 				t.Errorf("there were unfulfilled expectations: %s", err)
@@ -697,6 +808,18 @@ func Test_conceptGroupAccess_GetAllConceptGroupsByKnID(t *testing.T) {
 				t.Errorf("there were unfulfilled expectations: %s", err)
 			}
 		})
+
+		Convey("GetAllConceptGroupsByKnID scan error\n", func() {
+			rows := sqlmock.NewRows([]string{"f_id"}).AddRow("cg1")
+			smock.ExpectQuery(sqlStr).WithArgs(knID, branch).WillReturnRows(rows)
+
+			_, err := cga.GetAllConceptGroupsByKnID(testCtx, knID, branch)
+			So(err, ShouldNotBeNil)
+
+			if err := smock.ExpectationsWereMet(); err != nil {
+				t.Errorf("there were unfulfilled expectations: %s", err)
+			}
+		})
 	})
 }
 
@@ -744,6 +867,20 @@ func Test_conceptGroupAccess_ListConceptGroupRelations(t *testing.T) {
 			relations, err := cga.ListConceptGroupRelations(testCtx, tx, query)
 			So(relations, ShouldResemble, []interfaces.ConceptGroupRelation{})
 			So(err, ShouldResemble, expectedErr)
+
+			if err := smock.ExpectationsWereMet(); err != nil {
+				t.Errorf("there were unfulfilled expectations: %s", err)
+			}
+		})
+
+		Convey("ListConceptGroupRelations scan error\n", func() {
+			smock.ExpectBegin()
+			rows := sqlmock.NewRows([]string{"f_id"}).AddRow("cgr1")
+			smock.ExpectQuery(sqlStr).WithArgs().WillReturnRows(rows)
+
+			tx, _ := cga.db.Begin()
+			_, err := cga.ListConceptGroupRelations(testCtx, tx, query)
+			So(err, ShouldNotBeNil)
 
 			if err := smock.ExpectationsWereMet(); err != nil {
 				t.Errorf("there were unfulfilled expectations: %s", err)
@@ -843,6 +980,20 @@ func Test_conceptGroupAccess_DeleteObjectTypesFromGroup(t *testing.T) {
 				t.Errorf("there were unfulfilled expectations: %s", err)
 			}
 		})
+
+		Convey("DeleteObjectTypesFromGroup RowsAffected error\n", func() {
+			smock.ExpectBegin()
+			expectedErr := errors.New("Get RowsAffected error")
+			smock.ExpectExec(sqlStr).WithArgs().WillReturnResult(sqlmock.NewErrorResult(expectedErr))
+
+			tx, _ := cga.db.Begin()
+			_, err := cga.DeleteObjectTypesFromGroup(testCtx, tx, query)
+			So(err, ShouldBeNil) // 注意：代码中 RowsAffected 错误时只记录警告，不返回错误
+
+			if err := smock.ExpectationsWereMet(); err != nil {
+				t.Errorf("there were unfulfilled expectations: %s", err)
+			}
+		})
 	})
 }
 
@@ -884,6 +1035,18 @@ func Test_conceptGroupAccess_GetConceptIDsByConceptGroupIDs(t *testing.T) {
 			conceptIDs, err := cga.GetConceptIDsByConceptGroupIDs(testCtx, knID, branch, cgIDs, conceptType)
 			So(conceptIDs, ShouldResemble, []string{})
 			So(err, ShouldResemble, expectedErr)
+
+			if err := smock.ExpectationsWereMet(); err != nil {
+				t.Errorf("there were unfulfilled expectations: %s", err)
+			}
+		})
+
+		Convey("GetConceptIDsByConceptGroupIDs scan error\n", func() {
+			rows := sqlmock.NewRows([]string{"f_concept_id", "f_concept_id"}).AddRow("ot1", "ot2")
+			smock.ExpectQuery(sqlStr).WithArgs(knID, branch, conceptType, "cg1", "cg2").WillReturnRows(rows)
+
+			_, err := cga.GetConceptIDsByConceptGroupIDs(testCtx, knID, branch, cgIDs, conceptType)
+			So(err, ShouldNotBeNil)
 
 			if err := smock.ExpectationsWereMet(); err != nil {
 				t.Errorf("there were unfulfilled expectations: %s", err)
