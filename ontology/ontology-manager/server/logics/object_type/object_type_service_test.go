@@ -255,6 +255,57 @@ func Test_objectTypeService_GetObjectTypesByIDs(t *testing.T) {
 			httpErr := err.(*rest.HTTPError)
 			So(httpErr.BaseError.ErrorCode, ShouldEqual, oerrors.OntologyManager_ObjectType_ObjectTypeNotFound)
 		})
+
+		Convey("Failed when permission check fails\n", func() {
+			knID := "kn1"
+			branch := interfaces.MAIN_BRANCH
+			otIDs := []string{"ot1"}
+
+			ps.EXPECT().CheckPermission(gomock.Any(), gomock.Any(), gomock.Any()).Return(rest.NewHTTPError(ctx, 403, oerrors.OntologyManager_InternalError_CheckPermissionFailed))
+
+			result, err := service.GetObjectTypesByIDs(ctx, nil, knID, branch, otIDs)
+			So(err, ShouldNotBeNil)
+			So(len(result), ShouldEqual, 0)
+		})
+
+		Convey("Failed when GetObjectTypesByIDs returns error\n", func() {
+			knID := "kn1"
+			branch := interfaces.MAIN_BRANCH
+			otIDs := []string{"ot1"}
+
+			smock.ExpectBegin()
+			ps.EXPECT().CheckPermission(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
+			ota.EXPECT().GetObjectTypesByIDs(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil, rest.NewHTTPError(ctx, 500, oerrors.OntologyManager_ObjectType_InternalError))
+			smock.ExpectRollback()
+
+			result, err := service.GetObjectTypesByIDs(ctx, nil, knID, branch, otIDs)
+			So(err, ShouldNotBeNil)
+			So(len(result), ShouldEqual, 0)
+		})
+
+		Convey("Failed when GetConceptGroupsByOTIDs returns error\n", func() {
+			knID := "kn1"
+			branch := interfaces.MAIN_BRANCH
+			otIDs := []string{"ot1"}
+			otArr := []*interfaces.ObjectType{
+				{
+					ObjectTypeWithKeyField: interfaces.ObjectTypeWithKeyField{
+						OTID:   "ot1",
+						OTName: "ot1",
+					},
+				},
+			}
+
+			smock.ExpectBegin()
+			ps.EXPECT().CheckPermission(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
+			ota.EXPECT().GetObjectTypesByIDs(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(otArr, nil)
+			cga.EXPECT().GetConceptGroupsByOTIDs(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil, rest.NewHTTPError(ctx, 500, oerrors.OntologyManager_ConceptGroup_InternalError))
+			smock.ExpectRollback()
+
+			result, err := service.GetObjectTypesByIDs(ctx, nil, knID, branch, otIDs)
+			So(err, ShouldNotBeNil)
+			So(len(result), ShouldEqual, 0)
+		})
 	})
 }
 
@@ -471,6 +522,136 @@ func Test_objectTypeService_CreateObjectTypes(t *testing.T) {
 			So(err, ShouldBeNil)
 			So(len(result), ShouldEqual, 0)
 		})
+
+		Convey("Success with Overwrite mode when ID exists\n", func() {
+			objectTypes := []*interfaces.ObjectType{
+				{
+					ObjectTypeWithKeyField: interfaces.ObjectTypeWithKeyField{
+						OTID:   "ot1",
+						OTName: "object_type1",
+					},
+					KNID:   "kn1",
+					Branch: interfaces.MAIN_BRANCH,
+				},
+			}
+
+			smock.ExpectBegin()
+			ps.EXPECT().CheckPermission(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
+			cga.EXPECT().GetConceptGroupsByOTIDs(gomock.Any(), gomock.Any(), gomock.Any()).Return(map[string][]*interfaces.ConceptGroup{}, nil).AnyTimes()
+			ota.EXPECT().CheckObjectTypeExistByID(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return("ot1", true, nil)
+			ota.EXPECT().CheckObjectTypeExistByName(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return("ot1", true, nil)
+			ota.EXPECT().UpdateObjectType(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
+			osa.EXPECT().InsertData(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
+			smock.ExpectCommit()
+
+			result, err := service.CreateObjectTypes(ctx, nil, objectTypes, interfaces.ImportMode_Overwrite, false)
+			So(err, ShouldBeNil)
+			So(len(result), ShouldEqual, 0)
+		})
+
+		Convey("Success with empty OTID generates new ID\n", func() {
+			objectTypes := []*interfaces.ObjectType{
+				{
+					ObjectTypeWithKeyField: interfaces.ObjectTypeWithKeyField{
+						OTID:   "",
+						OTName: "object_type1",
+					},
+					KNID:   "kn1",
+					Branch: interfaces.MAIN_BRANCH,
+				},
+			}
+
+			smock.ExpectBegin()
+			ps.EXPECT().CheckPermission(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
+			ota.EXPECT().CheckObjectTypeExistByID(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Do(func(ctx, knID, branch, otID interface{}) {
+				So(otID, ShouldNotBeEmpty)
+			}).Return("", false, nil)
+			ota.EXPECT().CheckObjectTypeExistByName(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return("", false, nil)
+			ota.EXPECT().CreateObjectType(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
+			ota.EXPECT().CreateObjectTypeStatus(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
+			osa.EXPECT().InsertData(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
+			smock.ExpectCommit()
+
+			result, err := service.CreateObjectTypes(ctx, nil, objectTypes, interfaces.ImportMode_Normal, false)
+			So(err, ShouldBeNil)
+			So(len(result), ShouldEqual, 1)
+			So(result[0], ShouldNotBeEmpty)
+		})
+
+		Convey("Failed when CreateObjectType returns error\n", func() {
+			objectTypes := []*interfaces.ObjectType{
+				{
+					ObjectTypeWithKeyField: interfaces.ObjectTypeWithKeyField{
+						OTID:   "ot1",
+						OTName: "object_type1",
+					},
+					KNID:   "kn1",
+					Branch: interfaces.MAIN_BRANCH,
+				},
+			}
+
+			smock.ExpectBegin()
+			ps.EXPECT().CheckPermission(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
+			ota.EXPECT().CheckObjectTypeExistByID(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return("", false, nil)
+			ota.EXPECT().CheckObjectTypeExistByName(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return("", false, nil)
+			ota.EXPECT().CreateObjectType(gomock.Any(), gomock.Any(), gomock.Any()).Return(rest.NewHTTPError(ctx, 500, oerrors.OntologyManager_ObjectType_InternalError))
+			smock.ExpectRollback()
+
+			result, err := service.CreateObjectTypes(ctx, nil, objectTypes, interfaces.ImportMode_Normal, false)
+			So(err, ShouldNotBeNil)
+			So(len(result), ShouldEqual, 0)
+		})
+
+		Convey("Failed when CreateObjectTypeStatus returns error\n", func() {
+			objectTypes := []*interfaces.ObjectType{
+				{
+					ObjectTypeWithKeyField: interfaces.ObjectTypeWithKeyField{
+						OTID:   "ot1",
+						OTName: "object_type1",
+					},
+					KNID:   "kn1",
+					Branch: interfaces.MAIN_BRANCH,
+				},
+			}
+
+			smock.ExpectBegin()
+			ps.EXPECT().CheckPermission(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
+			ota.EXPECT().CheckObjectTypeExistByID(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return("", false, nil)
+			ota.EXPECT().CheckObjectTypeExistByName(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return("", false, nil)
+			ota.EXPECT().CreateObjectType(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
+			ota.EXPECT().CreateObjectTypeStatus(gomock.Any(), gomock.Any(), gomock.Any()).Return(rest.NewHTTPError(ctx, 500, oerrors.OntologyManager_ObjectType_InternalError))
+			smock.ExpectRollback()
+
+			result, err := service.CreateObjectTypes(ctx, nil, objectTypes, interfaces.ImportMode_Normal, false)
+			So(err, ShouldNotBeNil)
+			So(len(result), ShouldEqual, 0)
+		})
+
+		Convey("Failed when InsertOpenSearchData returns error\n", func() {
+			objectTypes := []*interfaces.ObjectType{
+				{
+					ObjectTypeWithKeyField: interfaces.ObjectTypeWithKeyField{
+						OTID:   "ot1",
+						OTName: "object_type1",
+					},
+					KNID:   "kn1",
+					Branch: interfaces.MAIN_BRANCH,
+				},
+			}
+
+			smock.ExpectBegin()
+			ps.EXPECT().CheckPermission(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
+			ota.EXPECT().CheckObjectTypeExistByID(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return("", false, nil)
+			ota.EXPECT().CheckObjectTypeExistByName(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return("", false, nil)
+			ota.EXPECT().CreateObjectType(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
+			ota.EXPECT().CreateObjectTypeStatus(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
+			osa.EXPECT().InsertData(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(rest.NewHTTPError(ctx, 500, oerrors.OntologyManager_ObjectType_InternalError))
+			smock.ExpectRollback()
+
+			result, err := service.CreateObjectTypes(ctx, nil, objectTypes, interfaces.ImportMode_Normal, false)
+			So(err, ShouldNotBeNil)
+			So(len(result), ShouldEqual, 0)
+		})
 	})
 }
 
@@ -565,6 +746,153 @@ func Test_objectTypeService_ListObjectTypes(t *testing.T) {
 			So(total, ShouldEqual, 0)
 			So(len(result), ShouldEqual, 0)
 		})
+
+		Convey("Failed when ListObjectTypes returns error\n", func() {
+			query := interfaces.ObjectTypesQueryParams{
+				KNID:   "kn1",
+				Branch: interfaces.MAIN_BRANCH,
+			}
+
+			smock.ExpectBegin()
+			ps.EXPECT().CheckPermission(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
+			ota.EXPECT().ListObjectTypes(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil, rest.NewHTTPError(ctx, 500, oerrors.OntologyManager_ObjectType_InternalError))
+			smock.ExpectRollback()
+
+			result, total, err := service.ListObjectTypes(ctx, nil, query)
+			So(err, ShouldNotBeNil)
+			So(total, ShouldEqual, 0)
+			So(len(result), ShouldEqual, 0)
+		})
+
+		Convey("Failed when GetAccountNames returns error\n", func() {
+			query := interfaces.ObjectTypesQueryParams{
+				PaginationQueryParameters: interfaces.PaginationQueryParameters{
+					Limit:  10,
+					Offset: 0,
+				},
+				KNID:   "kn1",
+				Branch: interfaces.MAIN_BRANCH,
+			}
+			objectTypes := []*interfaces.ObjectType{
+				{
+					ObjectTypeWithKeyField: interfaces.ObjectTypeWithKeyField{
+						OTID:   "ot1",
+						OTName: "object_type1",
+					},
+					KNID:   "kn1",
+					Branch: interfaces.MAIN_BRANCH,
+				},
+			}
+
+			smock.ExpectBegin()
+			ps.EXPECT().CheckPermission(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
+			ota.EXPECT().ListObjectTypes(gomock.Any(), gomock.Any(), gomock.Any()).Return(objectTypes, nil)
+			uma.EXPECT().GetAccountNames(gomock.Any(), gomock.Any()).Return(rest.NewHTTPError(ctx, 500, oerrors.OntologyManager_ObjectType_InternalError))
+			smock.ExpectRollback()
+
+			result, total, err := service.ListObjectTypes(ctx, nil, query)
+			So(err, ShouldNotBeNil)
+			So(total, ShouldEqual, 0)
+			So(len(result), ShouldEqual, 0)
+		})
+
+		Convey("Failed when GetConceptGroupsByOTIDs returns error\n", func() {
+			query := interfaces.ObjectTypesQueryParams{
+				PaginationQueryParameters: interfaces.PaginationQueryParameters{
+					Limit:  10,
+					Offset: 0,
+				},
+				KNID:   "kn1",
+				Branch: interfaces.MAIN_BRANCH,
+			}
+			objectTypes := []*interfaces.ObjectType{
+				{
+					ObjectTypeWithKeyField: interfaces.ObjectTypeWithKeyField{
+						OTID:   "ot1",
+						OTName: "object_type1",
+					},
+					KNID:   "kn1",
+					Branch: interfaces.MAIN_BRANCH,
+				},
+			}
+
+			smock.ExpectBegin()
+			ps.EXPECT().CheckPermission(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
+			ota.EXPECT().ListObjectTypes(gomock.Any(), gomock.Any(), gomock.Any()).Return(objectTypes, nil)
+			uma.EXPECT().GetAccountNames(gomock.Any(), gomock.Any()).Return(nil)
+			cga.EXPECT().GetConceptGroupsByOTIDs(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil, rest.NewHTTPError(ctx, 500, oerrors.OntologyManager_ConceptGroup_InternalError))
+			smock.ExpectRollback()
+
+			result, total, err := service.ListObjectTypes(ctx, nil, query)
+			So(err, ShouldNotBeNil)
+			So(total, ShouldEqual, 0)
+			So(len(result), ShouldEqual, 0)
+		})
+
+		Convey("Success with Limit = -1\n", func() {
+			query := interfaces.ObjectTypesQueryParams{
+				PaginationQueryParameters: interfaces.PaginationQueryParameters{
+					Limit:  -1,
+					Offset: 0,
+				},
+				KNID:   "kn1",
+				Branch: interfaces.MAIN_BRANCH,
+			}
+			objectTypes := []*interfaces.ObjectType{
+				{
+					ObjectTypeWithKeyField: interfaces.ObjectTypeWithKeyField{
+						OTID:   "ot1",
+						OTName: "object_type1",
+					},
+					KNID:   "kn1",
+					Branch: interfaces.MAIN_BRANCH,
+				},
+			}
+
+			smock.ExpectBegin()
+			ps.EXPECT().CheckPermission(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
+			ota.EXPECT().ListObjectTypes(gomock.Any(), gomock.Any(), gomock.Any()).Return(objectTypes, nil)
+			uma.EXPECT().GetAccountNames(gomock.Any(), gomock.Any()).Return(nil)
+			cga.EXPECT().GetConceptGroupsByOTIDs(gomock.Any(), gomock.Any(), gomock.Any()).Return(map[string][]*interfaces.ConceptGroup{}, nil)
+			smock.ExpectCommit()
+
+			result, total, err := service.ListObjectTypes(ctx, nil, query)
+			So(err, ShouldBeNil)
+			So(total, ShouldEqual, 1)
+			So(len(result), ShouldEqual, 1)
+		})
+
+		Convey("Success with Offset out of bounds\n", func() {
+			query := interfaces.ObjectTypesQueryParams{
+				PaginationQueryParameters: interfaces.PaginationQueryParameters{
+					Limit:  10,
+					Offset: 100,
+				},
+				KNID:   "kn1",
+				Branch: interfaces.MAIN_BRANCH,
+			}
+			objectTypes := []*interfaces.ObjectType{
+				{
+					ObjectTypeWithKeyField: interfaces.ObjectTypeWithKeyField{
+						OTID:   "ot1",
+						OTName: "object_type1",
+					},
+					KNID:   "kn1",
+					Branch: interfaces.MAIN_BRANCH,
+				},
+			}
+
+			smock.ExpectBegin()
+			ps.EXPECT().CheckPermission(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
+			ota.EXPECT().ListObjectTypes(gomock.Any(), gomock.Any(), gomock.Any()).Return(objectTypes, nil)
+			cga.EXPECT().GetConceptGroupsByOTIDs(gomock.Any(), gomock.Any(), gomock.Any()).Return(map[string][]*interfaces.ConceptGroup{}, nil).AnyTimes()
+			smock.ExpectCommit()
+
+			result, total, err := service.ListObjectTypes(ctx, nil, query)
+			So(err, ShouldBeNil)
+			So(total, ShouldEqual, 1)
+			So(len(result), ShouldEqual, 0)
+		})
 	})
 }
 
@@ -628,6 +956,66 @@ func Test_objectTypeService_UpdateObjectType(t *testing.T) {
 			}
 
 			ps.EXPECT().CheckPermission(gomock.Any(), gomock.Any(), gomock.Any()).Return(rest.NewHTTPError(ctx, 403, oerrors.OntologyManager_InternalError_CheckPermissionFailed))
+
+			err := service.UpdateObjectType(ctx, nil, objectType)
+			So(err, ShouldNotBeNil)
+		})
+
+		Convey("Failed when UpdateObjectType returns error\n", func() {
+			objectType := &interfaces.ObjectType{
+				ObjectTypeWithKeyField: interfaces.ObjectTypeWithKeyField{
+					OTID:   "ot1",
+					OTName: "object_type1",
+				},
+				KNID:   "kn1",
+				Branch: interfaces.MAIN_BRANCH,
+			}
+
+			smock.ExpectBegin()
+			ps.EXPECT().CheckPermission(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
+			ota.EXPECT().UpdateObjectType(gomock.Any(), gomock.Any(), gomock.Any()).Return(rest.NewHTTPError(ctx, 500, oerrors.OntologyManager_ObjectType_InternalError))
+			smock.ExpectRollback()
+
+			err := service.UpdateObjectType(ctx, nil, objectType)
+			So(err, ShouldNotBeNil)
+		})
+
+		Convey("Failed when syncObjectGroups returns error\n", func() {
+			objectType := &interfaces.ObjectType{
+				ObjectTypeWithKeyField: interfaces.ObjectTypeWithKeyField{
+					OTID:   "ot1",
+					OTName: "object_type1",
+				},
+				KNID:   "kn1",
+				Branch: interfaces.MAIN_BRANCH,
+			}
+
+			smock.ExpectBegin()
+			ps.EXPECT().CheckPermission(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
+			ota.EXPECT().UpdateObjectType(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
+			cga.EXPECT().GetConceptGroupsByOTIDs(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil, rest.NewHTTPError(ctx, 500, oerrors.OntologyManager_ConceptGroup_InternalError))
+			smock.ExpectRollback()
+
+			err := service.UpdateObjectType(ctx, nil, objectType)
+			So(err, ShouldNotBeNil)
+		})
+
+		Convey("Failed when InsertOpenSearchData returns error\n", func() {
+			objectType := &interfaces.ObjectType{
+				ObjectTypeWithKeyField: interfaces.ObjectTypeWithKeyField{
+					OTID:   "ot1",
+					OTName: "object_type1",
+				},
+				KNID:   "kn1",
+				Branch: interfaces.MAIN_BRANCH,
+			}
+
+			smock.ExpectBegin()
+			ps.EXPECT().CheckPermission(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
+			ota.EXPECT().UpdateObjectType(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
+			cga.EXPECT().GetConceptGroupsByOTIDs(gomock.Any(), gomock.Any(), gomock.Any()).Return(map[string][]*interfaces.ConceptGroup{}, nil)
+			osa.EXPECT().InsertData(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(rest.NewHTTPError(ctx, 500, oerrors.OntologyManager_ObjectType_InternalError))
+			smock.ExpectRollback()
 
 			err := service.UpdateObjectType(ctx, nil, objectType)
 			So(err, ShouldNotBeNil)
@@ -703,6 +1091,90 @@ func Test_objectTypeService_UpdateDataProperties(t *testing.T) {
 			err := service.UpdateDataProperties(ctx, objectType, dataProperties)
 			So(err, ShouldNotBeNil)
 		})
+
+		Convey("Failed when UpdateDataProperties returns error\n", func() {
+			objectType := &interfaces.ObjectType{
+				ObjectTypeWithKeyField: interfaces.ObjectTypeWithKeyField{
+					OTID:   "ot1",
+					OTName: "object_type1",
+					DataProperties: []*interfaces.DataProperty{
+						{
+							Name: "prop1",
+						},
+					},
+				},
+				KNID:   "kn1",
+				Branch: interfaces.MAIN_BRANCH,
+			}
+			dataProperties := []*interfaces.DataProperty{
+				{
+					Name: "prop1",
+				},
+			}
+
+			ps.EXPECT().CheckPermission(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
+			ota.EXPECT().UpdateDataProperties(gomock.Any(), gomock.Any()).Return(rest.NewHTTPError(ctx, 500, oerrors.OntologyManager_ObjectType_InternalError))
+
+			err := service.UpdateDataProperties(ctx, objectType, dataProperties)
+			So(err, ShouldNotBeNil)
+		})
+
+		Convey("Failed when InsertOpenSearchData returns error\n", func() {
+			objectType := &interfaces.ObjectType{
+				ObjectTypeWithKeyField: interfaces.ObjectTypeWithKeyField{
+					OTID:   "ot1",
+					OTName: "object_type1",
+					DataProperties: []*interfaces.DataProperty{
+						{
+							Name: "prop1",
+						},
+					},
+				},
+				KNID:   "kn1",
+				Branch: interfaces.MAIN_BRANCH,
+			}
+			dataProperties := []*interfaces.DataProperty{
+				{
+					Name: "prop1",
+				},
+			}
+
+			ps.EXPECT().CheckPermission(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
+			ota.EXPECT().UpdateDataProperties(gomock.Any(), gomock.Any()).Return(nil)
+			osa.EXPECT().InsertData(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(rest.NewHTTPError(ctx, 500, oerrors.OntologyManager_ObjectType_InternalError))
+
+			err := service.UpdateDataProperties(ctx, objectType, dataProperties)
+			So(err, ShouldNotBeNil)
+		})
+
+		Convey("Success adding new property\n", func() {
+			objectType := &interfaces.ObjectType{
+				ObjectTypeWithKeyField: interfaces.ObjectTypeWithKeyField{
+					OTID:   "ot1",
+					OTName: "object_type1",
+					DataProperties: []*interfaces.DataProperty{
+						{
+							Name: "prop1",
+						},
+					},
+				},
+				KNID:   "kn1",
+				Branch: interfaces.MAIN_BRANCH,
+			}
+			dataProperties := []*interfaces.DataProperty{
+				{
+					Name: "prop2",
+				},
+			}
+
+			ps.EXPECT().CheckPermission(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
+			ota.EXPECT().UpdateDataProperties(gomock.Any(), gomock.Any()).Return(nil)
+			osa.EXPECT().InsertData(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
+
+			err := service.UpdateDataProperties(ctx, objectType, dataProperties)
+			So(err, ShouldBeNil)
+			So(len(objectType.DataProperties), ShouldEqual, 2)
+		})
 	})
 }
 
@@ -752,6 +1224,72 @@ func Test_objectTypeService_DeleteObjectTypesByIDs(t *testing.T) {
 			otIDs := []string{"ot1"}
 
 			ps.EXPECT().CheckPermission(gomock.Any(), gomock.Any(), gomock.Any()).Return(rest.NewHTTPError(ctx, 403, oerrors.OntologyManager_InternalError_CheckPermissionFailed))
+
+			result, err := service.DeleteObjectTypesByIDs(ctx, nil, knID, branch, otIDs)
+			So(err, ShouldNotBeNil)
+			So(result, ShouldEqual, 0)
+		})
+
+		Convey("Failed when DeleteObjectTypesByIDs returns error\n", func() {
+			knID := "kn1"
+			branch := interfaces.MAIN_BRANCH
+			otIDs := []string{"ot1"}
+
+			smock.ExpectBegin()
+			ps.EXPECT().CheckPermission(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
+			ota.EXPECT().DeleteObjectTypesByIDs(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(int64(0), rest.NewHTTPError(ctx, 500, oerrors.OntologyManager_ObjectType_InternalError))
+			smock.ExpectRollback()
+
+			result, err := service.DeleteObjectTypesByIDs(ctx, nil, knID, branch, otIDs)
+			So(err, ShouldNotBeNil)
+			So(result, ShouldEqual, 0)
+		})
+
+		Convey("Failed when DeleteObjectTypeStatusByIDs returns error\n", func() {
+			knID := "kn1"
+			branch := interfaces.MAIN_BRANCH
+			otIDs := []string{"ot1"}
+
+			smock.ExpectBegin()
+			ps.EXPECT().CheckPermission(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
+			ota.EXPECT().DeleteObjectTypesByIDs(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(int64(1), nil)
+			ota.EXPECT().DeleteObjectTypeStatusByIDs(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(int64(0), rest.NewHTTPError(ctx, 500, oerrors.OntologyManager_ObjectType_InternalError))
+			smock.ExpectRollback()
+
+			result, err := service.DeleteObjectTypesByIDs(ctx, nil, knID, branch, otIDs)
+			So(err, ShouldNotBeNil)
+			So(result, ShouldEqual, 0)
+		})
+
+		Convey("Failed when DeleteData returns error\n", func() {
+			knID := "kn1"
+			branch := interfaces.MAIN_BRANCH
+			otIDs := []string{"ot1"}
+
+			smock.ExpectBegin()
+			ps.EXPECT().CheckPermission(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
+			ota.EXPECT().DeleteObjectTypesByIDs(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(int64(1), nil)
+			ota.EXPECT().DeleteObjectTypeStatusByIDs(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(int64(1), nil)
+			osa.EXPECT().DeleteData(gomock.Any(), gomock.Any(), gomock.Any()).Return(rest.NewHTTPError(ctx, 500, oerrors.OntologyManager_ObjectType_InternalError))
+			smock.ExpectRollback()
+
+			result, err := service.DeleteObjectTypesByIDs(ctx, nil, knID, branch, otIDs)
+			So(err, ShouldNotBeNil)
+			So(result, ShouldEqual, 0)
+		})
+
+		Convey("Failed when DeleteObjectTypesFromGroup returns error\n", func() {
+			knID := "kn1"
+			branch := interfaces.MAIN_BRANCH
+			otIDs := []string{"ot1"}
+
+			smock.ExpectBegin()
+			ps.EXPECT().CheckPermission(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
+			ota.EXPECT().DeleteObjectTypesByIDs(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(int64(1), nil)
+			ota.EXPECT().DeleteObjectTypeStatusByIDs(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(int64(1), nil)
+			osa.EXPECT().DeleteData(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
+			cga.EXPECT().DeleteObjectTypesFromGroup(gomock.Any(), gomock.Any(), gomock.Any()).Return(int64(0), rest.NewHTTPError(ctx, 500, oerrors.OntologyManager_ObjectType_InternalError))
+			smock.ExpectRollback()
 
 			result, err := service.DeleteObjectTypesByIDs(ctx, nil, knID, branch, otIDs)
 			So(err, ShouldNotBeNil)
@@ -868,6 +1406,133 @@ func Test_objectTypeService_InsertOpenSearchData(t *testing.T) {
 			err := service.InsertOpenSearchData(ctx, objectTypes)
 			So(err, ShouldBeNil)
 		})
+
+		Convey("Failed when InsertData returns error\n", func() {
+			objectTypes := []*interfaces.ObjectType{
+				{
+					ObjectTypeWithKeyField: interfaces.ObjectTypeWithKeyField{
+						OTID:   "ot1",
+						OTName: "object_type1",
+					},
+					KNID:   "kn1",
+					Branch: interfaces.MAIN_BRANCH,
+				},
+			}
+
+			osa.EXPECT().InsertData(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(rest.NewHTTPError(ctx, 500, oerrors.OntologyManager_ObjectType_InternalError))
+
+			err := service.InsertOpenSearchData(ctx, objectTypes)
+			So(err, ShouldNotBeNil)
+		})
+	})
+}
+
+func Test_objectTypeService_InsertOpenSearchData_WithVector(t *testing.T) {
+	Convey("Test InsertOpenSearchData with vector enabled\n", t, func() {
+		ctx := context.Background()
+		mockCtrl := gomock.NewController(t)
+		defer mockCtrl.Finish()
+
+		appSetting := &common.AppSetting{
+			ServerSetting: common.ServerSetting{
+				DefaultSmallModelEnabled: true,
+			},
+		}
+		osa := dmock.NewMockOpenSearchAccess(mockCtrl)
+		mfa := dmock.NewMockModelFactoryAccess(mockCtrl)
+
+		service := &objectTypeService{
+			appSetting: appSetting,
+			osa:        osa,
+			mfa:        mfa,
+		}
+
+		Convey("Success inserting object types with vector\n", func() {
+			objectTypes := []*interfaces.ObjectType{
+				{
+					ObjectTypeWithKeyField: interfaces.ObjectTypeWithKeyField{
+						OTID:   "ot1",
+						OTName: "object_type1",
+					},
+					CommonInfo: interfaces.CommonInfo{
+						Tags:    []string{"tag1"},
+						Comment: "comment",
+						Detail:  "detail",
+					},
+					KNID:   "kn1",
+					Branch: interfaces.MAIN_BRANCH,
+				},
+			}
+			vectors := []*cond.VectorResp{
+				{
+					Vector: []float32{0.1, 0.2, 0.3},
+				},
+			}
+
+			mfa.EXPECT().GetDefaultModel(gomock.Any()).Return(&interfaces.SmallModel{ModelID: "model1"}, nil)
+			mfa.EXPECT().GetVector(gomock.Any(), gomock.Any(), gomock.Any()).Return(vectors, nil)
+			osa.EXPECT().InsertData(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
+
+			err := service.InsertOpenSearchData(ctx, objectTypes)
+			So(err, ShouldBeNil)
+		})
+
+		Convey("Failed when GetDefaultModel returns error\n", func() {
+			objectTypes := []*interfaces.ObjectType{
+				{
+					ObjectTypeWithKeyField: interfaces.ObjectTypeWithKeyField{
+						OTID:   "ot1",
+						OTName: "object_type1",
+					},
+					KNID:   "kn1",
+					Branch: interfaces.MAIN_BRANCH,
+				},
+			}
+
+			mfa.EXPECT().GetDefaultModel(gomock.Any()).Return(nil, rest.NewHTTPError(ctx, 500, oerrors.OntologyManager_ObjectType_InternalError))
+
+			err := service.InsertOpenSearchData(ctx, objectTypes)
+			So(err, ShouldNotBeNil)
+		})
+
+		Convey("Failed when GetVector returns error\n", func() {
+			objectTypes := []*interfaces.ObjectType{
+				{
+					ObjectTypeWithKeyField: interfaces.ObjectTypeWithKeyField{
+						OTID:   "ot1",
+						OTName: "object_type1",
+					},
+					KNID:   "kn1",
+					Branch: interfaces.MAIN_BRANCH,
+				},
+			}
+
+			mfa.EXPECT().GetDefaultModel(gomock.Any()).Return(&interfaces.SmallModel{ModelID: "model1"}, nil)
+			mfa.EXPECT().GetVector(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil, rest.NewHTTPError(ctx, 500, oerrors.OntologyManager_ObjectType_InternalError))
+
+			err := service.InsertOpenSearchData(ctx, objectTypes)
+			So(err, ShouldNotBeNil)
+		})
+
+		Convey("Failed when vector count mismatch\n", func() {
+			objectTypes := []*interfaces.ObjectType{
+				{
+					ObjectTypeWithKeyField: interfaces.ObjectTypeWithKeyField{
+						OTID:   "ot1",
+						OTName: "object_type1",
+					},
+					KNID:   "kn1",
+					Branch: interfaces.MAIN_BRANCH,
+				},
+			}
+			vectors := []*cond.VectorResp{}
+
+			mfa.EXPECT().GetDefaultModel(gomock.Any()).Return(&interfaces.SmallModel{ModelID: "model1"}, nil)
+			mfa.EXPECT().GetVector(gomock.Any(), gomock.Any(), gomock.Any()).Return(vectors, nil)
+
+			err := service.InsertOpenSearchData(ctx, objectTypes)
+			So(err, ShouldNotBeNil)
+		})
 	})
 }
 
@@ -909,6 +1574,28 @@ func Test_objectTypeService_GetTotal(t *testing.T) {
 			So(err, ShouldNotBeNil)
 			So(total, ShouldEqual, 0)
 		})
+
+		Convey("Failed when sonic.Get fails\n", func() {
+			dsl := map[string]any{}
+			countResponse := []byte(`invalid json`)
+
+			osa.EXPECT().Count(gomock.Any(), gomock.Any(), gomock.Any()).Return(countResponse, nil)
+
+			total, err := service.GetTotal(ctx, dsl)
+			So(err, ShouldNotBeNil)
+			So(total, ShouldEqual, 0)
+		})
+
+		Convey("Failed when Int64 conversion fails\n", func() {
+			dsl := map[string]any{}
+			countResponse := []byte(`{"count": "not a number"}`)
+
+			osa.EXPECT().Count(gomock.Any(), gomock.Any(), gomock.Any()).Return(countResponse, nil)
+
+			total, err := service.GetTotal(ctx, dsl)
+			So(err, ShouldNotBeNil)
+			So(total, ShouldEqual, 0)
+		})
 	})
 }
 
@@ -937,6 +1624,26 @@ func Test_objectTypeService_GetTotalWithLargeOTIDs(t *testing.T) {
 			total, err := service.GetTotalWithLargeOTIDs(ctx, conditionDslStr, otIDs)
 			So(err, ShouldBeNil)
 			So(total, ShouldEqual, 5)
+		})
+
+		Convey("Success with empty OTIDs\n", func() {
+			conditionDslStr := `{"query":{"match_all":{}}}`
+			otIDs := []string{}
+
+			total, err := service.GetTotalWithLargeOTIDs(ctx, conditionDslStr, otIDs)
+			So(err, ShouldBeNil)
+			So(total, ShouldEqual, 0)
+		})
+
+		Convey("Failed when GetTotalWithOTIDs returns error\n", func() {
+			conditionDslStr := `{"query":{"match_all":{}}}`
+			otIDs := []string{"ot1"}
+
+			osa.EXPECT().Count(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil, rest.NewHTTPError(ctx, 500, oerrors.OntologyManager_ObjectType_InternalError))
+
+			total, err := service.GetTotalWithLargeOTIDs(ctx, conditionDslStr, otIDs)
+			So(err, ShouldNotBeNil)
+			So(total, ShouldEqual, 0)
 		})
 	})
 }
@@ -970,6 +1677,17 @@ func Test_objectTypeService_GetTotalWithOTIDs(t *testing.T) {
 		Convey("Failed when invalid DSL\n", func() {
 			conditionDslStr := `invalid json`
 			otIDs := []string{"ot1"}
+
+			total, err := service.GetTotalWithOTIDs(ctx, conditionDslStr, otIDs)
+			So(err, ShouldNotBeNil)
+			So(total, ShouldEqual, 0)
+		})
+
+		Convey("Failed when GetTotal returns error\n", func() {
+			conditionDslStr := `{"query":{"match_all":{}}}`
+			otIDs := []string{"ot1"}
+
+			osa.EXPECT().Count(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil, rest.NewHTTPError(ctx, 500, oerrors.OntologyManager_ObjectType_InternalError))
 
 			total, err := service.GetTotalWithOTIDs(ctx, conditionDslStr, otIDs)
 			So(err, ShouldNotBeNil)
@@ -1060,6 +1778,52 @@ func Test_objectTypeService_SearchObjectTypes(t *testing.T) {
 
 			result, err := service.SearchObjectTypes(ctx, query)
 			So(err, ShouldNotBeNil)
+			So(len(result.Entries), ShouldEqual, 0)
+		})
+
+		Convey("Failed when GetConceptGroupsTotal returns error\n", func() {
+			query := &interfaces.ConceptsQuery{
+				KNID:          "kn1",
+				Branch:        interfaces.MAIN_BRANCH,
+				Limit:         10,
+				ConceptGroups: []string{"cg1"},
+			}
+
+			cga.EXPECT().GetConceptGroupsTotal(gomock.Any(), gomock.Any()).Return(0, rest.NewHTTPError(ctx, 500, oerrors.OntologyManager_KnowledgeNetwork_InternalError))
+
+			result, err := service.SearchObjectTypes(ctx, query)
+			So(err, ShouldNotBeNil)
+			So(len(result.Entries), ShouldEqual, 0)
+		})
+
+		Convey("Failed when GetConceptIDsByConceptGroupIDs returns error\n", func() {
+			query := &interfaces.ConceptsQuery{
+				KNID:          "kn1",
+				Branch:        interfaces.MAIN_BRANCH,
+				Limit:         10,
+				ConceptGroups: []string{"cg1"},
+			}
+
+			cga.EXPECT().GetConceptGroupsTotal(gomock.Any(), gomock.Any()).Return(1, nil)
+			cga.EXPECT().GetConceptIDsByConceptGroupIDs(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil, rest.NewHTTPError(ctx, 500, oerrors.OntologyManager_ObjectType_InternalError))
+
+			result, err := service.SearchObjectTypes(ctx, query)
+			So(err, ShouldNotBeNil)
+			So(len(result.Entries), ShouldEqual, 0)
+		})
+
+		Convey("Success with empty concept groups\n", func() {
+			query := &interfaces.ConceptsQuery{
+				KNID:   "kn1",
+				Branch: interfaces.MAIN_BRANCH,
+				Limit:  10,
+			}
+
+			osa.EXPECT().SearchData(gomock.Any(), gomock.Any(), gomock.Any()).Return([]interfaces.Hit{}, nil)
+
+			result, err := service.SearchObjectTypes(ctx, query)
+			So(err, ShouldBeNil)
+			So(result.Entries, ShouldNotBeNil)
 			So(len(result.Entries), ShouldEqual, 0)
 		})
 	})

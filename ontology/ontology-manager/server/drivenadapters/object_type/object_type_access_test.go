@@ -341,6 +341,200 @@ func Test_objectTypeAccess_ListObjectTypes(t *testing.T) {
 				t.Errorf("there were unfulfilled expectations: %s", err)
 			}
 		})
+
+		Convey("ListObjectTypes Scan error \n", func() {
+			rows := sqlmock.NewRows([]string{
+				"ot.f_id", "ot.f_name", "ot.f_tags", "ot.f_comment", "ot.f_icon", "ot.f_color", "ot.f_detail",
+				"ot.f_kn_id", "ot.f_branch", "ot.f_data_source", "ot.f_data_properties", "ot.f_logic_properties",
+				"ot.f_primary_keys", "ot.f_display_key", "ot.f_incremental_key", "ot.f_creator", "ot.f_creator_type",
+				"ot.f_create_time", "ot.f_updater", "ot.f_updater_type", "ot.f_update_time",
+				"ots.f_incremental_key", "ots.f_incremental_value", "ots.f_index", "ots.f_index_available",
+				"ots.f_doc_count", "ots.f_storage_size", "ots.f_update_time", "ots.f_update_time",
+			}).AddRow(
+				"ot1", "Object Type 1", `"tag1"`, "comment", "icon", "color", "detail",
+				"kn1", "main", dataSourceBytes, dataPropertiesBytes, logicPropertiesBytes, primaryKeysBytes,
+				"name", "update_time", "admin", "admin", testUpdateTime,
+				"admin", "admin", testUpdateTime,
+				"update_time", "0", "index1", true, int64(100), int64(1024), testUpdateTime, "ots.f_update_time",
+			)
+
+			smock.ExpectBegin()
+			smock.ExpectQuery(sqlStr).WithArgs().WillReturnRows(rows)
+
+			tx, _ := ota.db.Begin()
+			objectTypes, err := ota.ListObjectTypes(testCtx, tx, query)
+			So(objectTypes, ShouldResemble, []*interfaces.ObjectType{})
+			So(err, ShouldNotBeNil)
+
+			if err := smock.ExpectationsWereMet(); err != nil {
+				t.Errorf("there were unfulfilled expectations: %s", err)
+			}
+		})
+
+		Convey("ListObjectTypes Unmarshal dataSource error \n", func() {
+			invalidBytes := []byte("invalid json")
+			rows := sqlmock.NewRows([]string{
+				"ot.f_id", "ot.f_name", "ot.f_tags", "ot.f_comment", "ot.f_icon", "ot.f_color", "ot.f_detail",
+				"ot.f_kn_id", "ot.f_branch", "ot.f_data_source", "ot.f_data_properties", "ot.f_logic_properties",
+				"ot.f_primary_keys", "ot.f_display_key", "ot.f_incremental_key", "ot.f_creator", "ot.f_creator_type",
+				"ot.f_create_time", "ot.f_updater", "ot.f_updater_type", "ot.f_update_time",
+				"ots.f_incremental_key", "ots.f_incremental_value", "ots.f_index", "ots.f_index_available",
+				"ots.f_doc_count", "ots.f_storage_size", "ots.f_update_time",
+			}).AddRow(
+				"ot1", "Object Type 1", `"tag1"`, "comment", "icon", "color", "detail",
+				"kn1", "main", invalidBytes, dataPropertiesBytes, logicPropertiesBytes, primaryKeysBytes,
+				"name", "update_time", "admin", "admin", testUpdateTime,
+				"admin", "admin", testUpdateTime,
+				"update_time", "0", "index1", true, int64(100), int64(1024), testUpdateTime,
+			)
+
+			smock.ExpectBegin()
+			smock.ExpectQuery(sqlStr).WithArgs().WillReturnRows(rows)
+
+			tx, _ := ota.db.Begin()
+			objectTypes, err := ota.ListObjectTypes(testCtx, tx, query)
+			So(objectTypes, ShouldResemble, []*interfaces.ObjectType{})
+			So(err, ShouldNotBeNil)
+
+			if err := smock.ExpectationsWereMet(); err != nil {
+				t.Errorf("there were unfulfilled expectations: %s", err)
+			}
+		})
+
+		Convey("ListObjectTypes Unmarshal dataProperties error \n", func() {
+			invalidBytes := []byte("invalid json")
+			rows := sqlmock.NewRows([]string{
+				"ot.f_id", "ot.f_name", "ot.f_tags", "ot.f_comment", "ot.f_icon", "ot.f_color", "ot.f_detail",
+				"ot.f_kn_id", "ot.f_branch", "ot.f_data_source", "ot.f_data_properties", "ot.f_logic_properties",
+				"ot.f_primary_keys", "ot.f_display_key", "ot.f_incremental_key", "ot.f_creator", "ot.f_creator_type",
+				"ot.f_create_time", "ot.f_updater", "ot.f_updater_type", "ot.f_update_time",
+				"ots.f_incremental_key", "ots.f_incremental_value", "ots.f_index", "ots.f_index_available",
+				"ots.f_doc_count", "ots.f_storage_size", "ots.f_update_time",
+			}).AddRow(
+				"ot1", "Object Type 1", `"tag1"`, "comment", "icon", "color", "detail",
+				"kn1", "main", dataSourceBytes, invalidBytes, logicPropertiesBytes, primaryKeysBytes,
+				"name", "update_time", "admin", "admin", testUpdateTime,
+				"admin", "admin", testUpdateTime,
+				"update_time", "0", "index1", true, int64(100), int64(1024), testUpdateTime,
+			)
+
+			smock.ExpectBegin()
+			smock.ExpectQuery(sqlStr).WithArgs().WillReturnRows(rows)
+
+			tx, _ := ota.db.Begin()
+			objectTypes, err := ota.ListObjectTypes(testCtx, tx, query)
+			So(objectTypes, ShouldResemble, []*interfaces.ObjectType{})
+			So(err, ShouldNotBeNil)
+
+			if err := smock.ExpectationsWereMet(); err != nil {
+				t.Errorf("there were unfulfilled expectations: %s", err)
+			}
+		})
+
+		Convey("ListObjectTypes Unmarshal logicProperties error \n", func() {
+			invalidBytes := []byte("invalid json")
+			rows := sqlmock.NewRows([]string{
+				"ot.f_id", "ot.f_name", "ot.f_tags", "ot.f_comment", "ot.f_icon", "ot.f_color", "ot.f_detail",
+				"ot.f_kn_id", "ot.f_branch", "ot.f_data_source", "ot.f_data_properties", "ot.f_logic_properties",
+				"ot.f_primary_keys", "ot.f_display_key", "ot.f_incremental_key", "ot.f_creator", "ot.f_creator_type",
+				"ot.f_create_time", "ot.f_updater", "ot.f_updater_type", "ot.f_update_time",
+				"ots.f_incremental_key", "ots.f_incremental_value", "ots.f_index", "ots.f_index_available",
+				"ots.f_doc_count", "ots.f_storage_size", "ots.f_update_time",
+			}).AddRow(
+				"ot1", "Object Type 1", `"tag1"`, "comment", "icon", "color", "detail",
+				"kn1", "main", dataSourceBytes, dataPropertiesBytes, invalidBytes, primaryKeysBytes,
+				"name", "update_time", "admin", "admin", testUpdateTime,
+				"admin", "admin", testUpdateTime,
+				"update_time", "0", "index1", true, int64(100), int64(1024), testUpdateTime,
+			)
+
+			smock.ExpectBegin()
+			smock.ExpectQuery(sqlStr).WithArgs().WillReturnRows(rows)
+
+			tx, _ := ota.db.Begin()
+			objectTypes, err := ota.ListObjectTypes(testCtx, tx, query)
+			So(objectTypes, ShouldResemble, []*interfaces.ObjectType{})
+			So(err, ShouldNotBeNil)
+
+			if err := smock.ExpectationsWereMet(); err != nil {
+				t.Errorf("there were unfulfilled expectations: %s", err)
+			}
+		})
+
+		Convey("ListObjectTypes Unmarshal primaryKeys error \n", func() {
+			invalidBytes := []byte("invalid json")
+			rows := sqlmock.NewRows([]string{
+				"ot.f_id", "ot.f_name", "ot.f_tags", "ot.f_comment", "ot.f_icon", "ot.f_color", "ot.f_detail",
+				"ot.f_kn_id", "ot.f_branch", "ot.f_data_source", "ot.f_data_properties", "ot.f_logic_properties",
+				"ot.f_primary_keys", "ot.f_display_key", "ot.f_incremental_key", "ot.f_creator", "ot.f_creator_type",
+				"ot.f_create_time", "ot.f_updater", "ot.f_updater_type", "ot.f_update_time",
+				"ots.f_incremental_key", "ots.f_incremental_value", "ots.f_index", "ots.f_index_available",
+				"ots.f_doc_count", "ots.f_storage_size", "ots.f_update_time",
+			}).AddRow(
+				"ot1", "Object Type 1", `"tag1"`, "comment", "icon", "color", "detail",
+				"kn1", "main", dataSourceBytes, dataPropertiesBytes, logicPropertiesBytes, invalidBytes,
+				"name", "update_time", "admin", "admin", testUpdateTime,
+				"admin", "admin", testUpdateTime,
+				"update_time", "0", "index1", true, int64(100), int64(1024), testUpdateTime,
+			)
+
+			smock.ExpectBegin()
+			smock.ExpectQuery(sqlStr).WithArgs().WillReturnRows(rows)
+
+			tx, _ := ota.db.Begin()
+			objectTypes, err := ota.ListObjectTypes(testCtx, tx, query)
+			So(objectTypes, ShouldResemble, []*interfaces.ObjectType{})
+			So(err, ShouldNotBeNil)
+
+			if err := smock.ExpectationsWereMet(); err != nil {
+				t.Errorf("there were unfulfilled expectations: %s", err)
+			}
+		})
+
+		Convey("ListObjectTypes with all query params \n", func() {
+			queryWithAll := interfaces.ObjectTypesQueryParams{
+				NamePattern: "test",
+				Tag:         "tag1",
+				OTIDS:       []string{"ot1", "ot2"},
+				PaginationQueryParameters: interfaces.PaginationQueryParameters{
+					Offset:    10,
+					Limit:     20,
+					Sort:      "ot.f_name",
+					Direction: "ASC",
+				},
+			}
+			sqlStrWithAll := `SELECT ot.f_id, ot.f_name, ot.f_tags, ot.f_comment, ot.f_icon, ot.f_color, ot.f_detail,
+			 ot.f_kn_id, ot.f_branch, ot.f_data_source, ot.f_data_properties, ot.f_logic_properties, ot.f_primary_keys,
+			  ot.f_display_key, ot.f_incremental_key, ot.f_creator, ot.f_creator_type, ot.f_create_time, 
+			  ot.f_updater, ot.f_updater_type, ot.f_update_time,
+			   ots.f_incremental_key, ots.f_incremental_value, ots.f_index, ots.f_index_available, 
+			   ots.f_doc_count, ots.f_storage_size, ots.f_update_time 
+			   FROM t_object_type AS ot JOIN t_object_type_status AS ots ON ot.f_id = ots.f_id 
+			   AND ot.f_kn_id = ots.f_kn_id AND ot.f_branch = ots.f_branch 
+			   WHERE instr(ot.f_name, ?) > 0 AND instr(ot.f_tags, ?) > 0 AND ot.f_branch = ? 
+			   AND ot.f_id IN (?,?) ORDER BY ot.ot.f_name ASC`
+
+			rows := sqlmock.NewRows([]string{
+				"ot.f_id", "ot.f_name", "ot.f_tags", "ot.f_comment", "ot.f_icon", "ot.f_color", "ot.f_detail",
+				"ot.f_kn_id", "ot.f_branch", "ot.f_data_source", "ot.f_data_properties", "ot.f_logic_properties",
+				"ot.f_primary_keys", "ot.f_display_key", "ot.f_incremental_key", "ot.f_creator", "ot.f_creator_type",
+				"ot.f_create_time", "ot.f_updater", "ot.f_updater_type", "ot.f_update_time",
+				"ots.f_incremental_key", "ots.f_incremental_value", "ots.f_index", "ots.f_index_available",
+				"ots.f_doc_count", "ots.f_storage_size", "ots.f_update_time",
+			})
+
+			smock.ExpectBegin()
+			smock.ExpectQuery(sqlStrWithAll).WithArgs().WillReturnRows(rows)
+
+			tx, _ := ota.db.Begin()
+			objectTypes, err := ota.ListObjectTypes(testCtx, tx, queryWithAll)
+			So(err, ShouldBeNil)
+			So(objectTypes, ShouldNotBeNil)
+
+			if err := smock.ExpectationsWereMet(); err != nil {
+				t.Errorf("there were unfulfilled expectations: %s", err)
+			}
+		})
 	})
 }
 
@@ -377,6 +571,28 @@ func Test_objectTypeAccess_GetObjectTypesTotal(t *testing.T) {
 			total, err := ota.GetObjectTypesTotal(testCtx, query)
 			So(total, ShouldEqual, 0)
 			So(err, ShouldResemble, expectedErr)
+
+			if err := smock.ExpectationsWereMet(); err != nil {
+				t.Errorf("there were unfulfilled expectations: %s", err)
+			}
+		})
+
+		Convey("GetObjectTypesTotal with all query params \n", func() {
+			queryWithAll := interfaces.ObjectTypesQueryParams{
+				NamePattern: "test",
+				Tag:         "tag1",
+				OTIDS:       []string{"ot1", "ot2"},
+			}
+			sqlStrWithAll := `SELECT COUNT(ot.f_id) FROM t_object_type AS ot 
+			WHERE instr(ot.f_name, ?) > 0 AND instr(ot.f_tags, ?) > 0 AND ot.f_branch = ? 
+			AND ot.f_id IN (?,?)`
+
+			rows := sqlmock.NewRows([]string{"COUNT(ot.f_id)"}).AddRow(5)
+			smock.ExpectQuery(sqlStrWithAll).WithArgs().WillReturnRows(rows)
+
+			total, err := ota.GetObjectTypesTotal(testCtx, queryWithAll)
+			So(total, ShouldEqual, 5)
+			So(err, ShouldBeNil)
 
 			if err := smock.ExpectationsWereMet(); err != nil {
 				t.Errorf("there were unfulfilled expectations: %s", err)
@@ -448,6 +664,118 @@ func Test_objectTypeAccess_GetObjectTypeByID(t *testing.T) {
 				t.Errorf("there were unfulfilled expectations: %s", err)
 			}
 		})
+
+		Convey("GetObjectTypeByID Unmarshal dataSource error \n", func() {
+			invalidBytes := []byte("invalid json")
+			rows := sqlmock.NewRows([]string{
+				"ot.f_id", "ot.f_name", "ot.f_tags", "ot.f_comment", "ot.f_icon", "ot.f_color", "ot.f_detail",
+				"ot.f_kn_id", "ot.f_branch", "ot.f_data_source", "ot.f_data_properties", "ot.f_logic_properties",
+				"ot.f_primary_keys", "ot.f_display_key", "ot.f_incremental_key", "ot.f_creator", "ot.f_creator_type",
+				"ot.f_create_time", "ot.f_updater", "ot.f_updater_type", "ot.f_update_time",
+				"ots.f_incremental_key", "ots.f_incremental_value", "ots.f_index", "ots.f_index_available",
+				"ots.f_doc_count", "ots.f_storage_size", "ots.f_update_time",
+			}).AddRow(
+				"ot1", "Object Type 1", `"tag1"`, "comment", "icon", "color", "detail",
+				"kn1", "main", invalidBytes, dataPropertiesBytes, logicPropertiesBytes, primaryKeysBytes,
+				"name", "update_time", "admin", "admin", testUpdateTime,
+				"admin", "admin", testUpdateTime,
+				"update_time", "0", "index1", true, int64(100), int64(1024), testUpdateTime,
+			)
+
+			smock.ExpectQuery(sqlStr).WithArgs(knID, branch, otID).WillReturnRows(rows)
+
+			objectType, err := ota.GetObjectTypeByID(testCtx, knID, branch, otID)
+			So(objectType, ShouldBeNil)
+			So(err, ShouldNotBeNil)
+
+			if err := smock.ExpectationsWereMet(); err != nil {
+				t.Errorf("there were unfulfilled expectations: %s", err)
+			}
+		})
+
+		Convey("GetObjectTypeByID Unmarshal dataProperties error \n", func() {
+			invalidBytes := []byte("invalid json")
+			rows := sqlmock.NewRows([]string{
+				"ot.f_id", "ot.f_name", "ot.f_tags", "ot.f_comment", "ot.f_icon", "ot.f_color", "ot.f_detail",
+				"ot.f_kn_id", "ot.f_branch", "ot.f_data_source", "ot.f_data_properties", "ot.f_logic_properties",
+				"ot.f_primary_keys", "ot.f_display_key", "ot.f_incremental_key", "ot.f_creator", "ot.f_creator_type",
+				"ot.f_create_time", "ot.f_updater", "ot.f_updater_type", "ot.f_update_time",
+				"ots.f_incremental_key", "ots.f_incremental_value", "ots.f_index", "ots.f_index_available",
+				"ots.f_doc_count", "ots.f_storage_size", "ots.f_update_time",
+			}).AddRow(
+				"ot1", "Object Type 1", `"tag1"`, "comment", "icon", "color", "detail",
+				"kn1", "main", dataSourceBytes, invalidBytes, logicPropertiesBytes, primaryKeysBytes,
+				"name", "update_time", "admin", "admin", testUpdateTime,
+				"admin", "admin", testUpdateTime,
+				"update_time", "0", "index1", true, int64(100), int64(1024), testUpdateTime,
+			)
+
+			smock.ExpectQuery(sqlStr).WithArgs(knID, branch, otID).WillReturnRows(rows)
+
+			objectType, err := ota.GetObjectTypeByID(testCtx, knID, branch, otID)
+			So(objectType, ShouldBeNil)
+			So(err, ShouldNotBeNil)
+
+			if err := smock.ExpectationsWereMet(); err != nil {
+				t.Errorf("there were unfulfilled expectations: %s", err)
+			}
+		})
+
+		Convey("GetObjectTypeByID Unmarshal logicProperties error \n", func() {
+			invalidBytes := []byte("invalid json")
+			rows := sqlmock.NewRows([]string{
+				"ot.f_id", "ot.f_name", "ot.f_tags", "ot.f_comment", "ot.f_icon", "ot.f_color", "ot.f_detail",
+				"ot.f_kn_id", "ot.f_branch", "ot.f_data_source", "ot.f_data_properties", "ot.f_logic_properties",
+				"ot.f_primary_keys", "ot.f_display_key", "ot.f_incremental_key", "ot.f_creator", "ot.f_creator_type",
+				"ot.f_create_time", "ot.f_updater", "ot.f_updater_type", "ot.f_update_time",
+				"ots.f_incremental_key", "ots.f_incremental_value", "ots.f_index", "ots.f_index_available",
+				"ots.f_doc_count", "ots.f_storage_size", "ots.f_update_time",
+			}).AddRow(
+				"ot1", "Object Type 1", `"tag1"`, "comment", "icon", "color", "detail",
+				"kn1", "main", dataSourceBytes, dataPropertiesBytes, invalidBytes, primaryKeysBytes,
+				"name", "update_time", "admin", "admin", testUpdateTime,
+				"admin", "admin", testUpdateTime,
+				"update_time", "0", "index1", true, int64(100), int64(1024), testUpdateTime,
+			)
+
+			smock.ExpectQuery(sqlStr).WithArgs(knID, branch, otID).WillReturnRows(rows)
+
+			objectType, err := ota.GetObjectTypeByID(testCtx, knID, branch, otID)
+			So(objectType, ShouldBeNil)
+			So(err, ShouldNotBeNil)
+
+			if err := smock.ExpectationsWereMet(); err != nil {
+				t.Errorf("there were unfulfilled expectations: %s", err)
+			}
+		})
+
+		Convey("GetObjectTypeByID Unmarshal primaryKeys error \n", func() {
+			invalidBytes := []byte("invalid json")
+			rows := sqlmock.NewRows([]string{
+				"ot.f_id", "ot.f_name", "ot.f_tags", "ot.f_comment", "ot.f_icon", "ot.f_color", "ot.f_detail",
+				"ot.f_kn_id", "ot.f_branch", "ot.f_data_source", "ot.f_data_properties", "ot.f_logic_properties",
+				"ot.f_primary_keys", "ot.f_display_key", "ot.f_incremental_key", "ot.f_creator", "ot.f_creator_type",
+				"ot.f_create_time", "ot.f_updater", "ot.f_updater_type", "ot.f_update_time",
+				"ots.f_incremental_key", "ots.f_incremental_value", "ots.f_index", "ots.f_index_available",
+				"ots.f_doc_count", "ots.f_storage_size", "ots.f_update_time",
+			}).AddRow(
+				"ot1", "Object Type 1", `"tag1"`, "comment", "icon", "color", "detail",
+				"kn1", "main", dataSourceBytes, dataPropertiesBytes, logicPropertiesBytes, invalidBytes,
+				"name", "update_time", "admin", "admin", testUpdateTime,
+				"admin", "admin", testUpdateTime,
+				"update_time", "0", "index1", true, int64(100), int64(1024), testUpdateTime,
+			)
+
+			smock.ExpectQuery(sqlStr).WithArgs(knID, branch, otID).WillReturnRows(rows)
+
+			objectType, err := ota.GetObjectTypeByID(testCtx, knID, branch, otID)
+			So(objectType, ShouldBeNil)
+			So(err, ShouldNotBeNil)
+
+			if err := smock.ExpectationsWereMet(); err != nil {
+				t.Errorf("there were unfulfilled expectations: %s", err)
+			}
+		})
 	})
 }
 
@@ -508,6 +836,122 @@ func Test_objectTypeAccess_GetObjectTypesByIDs(t *testing.T) {
 			objectTypes, err := ota.GetObjectTypesByIDs(testCtx, knID, branch, otIDs)
 			So(objectTypes, ShouldResemble, []*interfaces.ObjectType{})
 			So(err, ShouldResemble, expectedErr)
+
+			if err := smock.ExpectationsWereMet(); err != nil {
+				t.Errorf("there were unfulfilled expectations: %s", err)
+			}
+		})
+
+		Convey("GetObjectTypesByIDs scan error \n", func() {
+			rows := sqlmock.NewRows([]string{"ot.f_id"}).AddRow("ot1")
+			smock.ExpectQuery(sqlStr).WithArgs().WillReturnRows(rows)
+
+			_, err := ota.GetObjectTypesByIDs(testCtx, knID, branch, otIDs)
+			So(err, ShouldNotBeNil)
+
+			if err := smock.ExpectationsWereMet(); err != nil {
+				t.Errorf("there were unfulfilled expectations: %s", err)
+			}
+		})
+
+		Convey("GetObjectTypesByIDs unmarshal DataSource error \n", func() {
+			invalidBytes := []byte("invalid json")
+			rows := sqlmock.NewRows([]string{
+				"ot.f_id", "ot.f_name", "ot.f_tags", "ot.f_comment", "ot.f_icon", "ot.f_color", "ot.f_detail",
+				"ot.f_kn_id", "ot.f_branch", "ot.f_data_source", "ot.f_data_properties", "ot.f_logic_properties",
+				"ot.f_primary_keys", "ot.f_display_key", "ot.f_incremental_key", "ot.f_creator", "ot.f_creator_type",
+				"ot.f_create_time", "ot.f_updater", "ot.f_updater_type", "ot.f_update_time",
+				"ots.f_incremental_key", "ots.f_incremental_value", "ots.f_index", "ots.f_index_available",
+				"ots.f_doc_count", "ots.f_storage_size", "ots.f_update_time",
+			}).AddRow(
+				"ot1", "Object Type 1", `"tag1"`, "comment", "icon", "color", "detail",
+				"kn1", "main", invalidBytes, dataPropertiesBytes, logicPropertiesBytes, primaryKeysBytes,
+				"name", "update_time", "admin", "admin", testUpdateTime,
+				"admin", "admin", testUpdateTime,
+				"update_time", "0", "index1", true, int64(100), int64(1024), testUpdateTime,
+			)
+			smock.ExpectQuery(sqlStr).WithArgs().WillReturnRows(rows)
+
+			_, err := ota.GetObjectTypesByIDs(testCtx, knID, branch, otIDs)
+			So(err, ShouldNotBeNil)
+
+			if err := smock.ExpectationsWereMet(); err != nil {
+				t.Errorf("there were unfulfilled expectations: %s", err)
+			}
+		})
+
+		Convey("GetObjectTypesByIDs unmarshal dataProperties error \n", func() {
+			invalidBytes := []byte("invalid json")
+			rows := sqlmock.NewRows([]string{
+				"ot.f_id", "ot.f_name", "ot.f_tags", "ot.f_comment", "ot.f_icon", "ot.f_color", "ot.f_detail",
+				"ot.f_kn_id", "ot.f_branch", "ot.f_data_source", "ot.f_data_properties", "ot.f_logic_properties",
+				"ot.f_primary_keys", "ot.f_display_key", "ot.f_incremental_key", "ot.f_creator", "ot.f_creator_type",
+				"ot.f_create_time", "ot.f_updater", "ot.f_updater_type", "ot.f_update_time",
+				"ots.f_incremental_key", "ots.f_incremental_value", "ots.f_index", "ots.f_index_available",
+				"ots.f_doc_count", "ots.f_storage_size", "ots.f_update_time",
+			}).AddRow(
+				"ot1", "Object Type 1", `"tag1"`, "comment", "icon", "color", "detail",
+				"kn1", "main", dataSourceBytes, invalidBytes, logicPropertiesBytes, primaryKeysBytes,
+				"name", "update_time", "admin", "admin", testUpdateTime,
+				"admin", "admin", testUpdateTime,
+				"update_time", "0", "index1", true, int64(100), int64(1024), testUpdateTime,
+			)
+			smock.ExpectQuery(sqlStr).WithArgs().WillReturnRows(rows)
+
+			_, err := ota.GetObjectTypesByIDs(testCtx, knID, branch, otIDs)
+			So(err, ShouldNotBeNil)
+
+			if err := smock.ExpectationsWereMet(); err != nil {
+				t.Errorf("there were unfulfilled expectations: %s", err)
+			}
+		})
+
+		Convey("GetObjectTypesByIDs unmarshal logicProperties error \n", func() {
+			invalidBytes := []byte("invalid json")
+			rows := sqlmock.NewRows([]string{
+				"ot.f_id", "ot.f_name", "ot.f_tags", "ot.f_comment", "ot.f_icon", "ot.f_color", "ot.f_detail",
+				"ot.f_kn_id", "ot.f_branch", "ot.f_data_source", "ot.f_data_properties", "ot.f_logic_properties",
+				"ot.f_primary_keys", "ot.f_display_key", "ot.f_incremental_key", "ot.f_creator", "ot.f_creator_type",
+				"ot.f_create_time", "ot.f_updater", "ot.f_updater_type", "ot.f_update_time",
+				"ots.f_incremental_key", "ots.f_incremental_value", "ots.f_index", "ots.f_index_available",
+				"ots.f_doc_count", "ots.f_storage_size", "ots.f_update_time",
+			}).AddRow(
+				"ot1", "Object Type 1", `"tag1"`, "comment", "icon", "color", "detail",
+				"kn1", "main", dataSourceBytes, dataPropertiesBytes, invalidBytes, primaryKeysBytes,
+				"name", "update_time", "admin", "admin", testUpdateTime,
+				"admin", "admin", testUpdateTime,
+				"update_time", "0", "index1", true, int64(100), int64(1024), testUpdateTime,
+			)
+			smock.ExpectQuery(sqlStr).WithArgs().WillReturnRows(rows)
+
+			_, err := ota.GetObjectTypesByIDs(testCtx, knID, branch, otIDs)
+			So(err, ShouldNotBeNil)
+
+			if err := smock.ExpectationsWereMet(); err != nil {
+				t.Errorf("there were unfulfilled expectations: %s", err)
+			}
+		})
+
+		Convey("GetObjectTypesByIDs unmarshal primaryKeys error \n", func() {
+			invalidBytes := []byte("invalid json")
+			rows := sqlmock.NewRows([]string{
+				"ot.f_id", "ot.f_name", "ot.f_tags", "ot.f_comment", "ot.f_icon", "ot.f_color", "ot.f_detail",
+				"ot.f_kn_id", "ot.f_branch", "ot.f_data_source", "ot.f_data_properties", "ot.f_logic_properties",
+				"ot.f_primary_keys", "ot.f_display_key", "ot.f_incremental_key", "ot.f_creator", "ot.f_creator_type",
+				"ot.f_create_time", "ot.f_updater", "ot.f_updater_type", "ot.f_update_time",
+				"ots.f_incremental_key", "ots.f_incremental_value", "ots.f_index", "ots.f_index_available",
+				"ots.f_doc_count", "ots.f_storage_size", "ots.f_update_time",
+			}).AddRow(
+				"ot1", "Object Type 1", `"tag1"`, "comment", "icon", "color", "detail",
+				"kn1", "main", dataSourceBytes, dataPropertiesBytes, logicPropertiesBytes, invalidBytes,
+				"name", "update_time", "admin", "admin", testUpdateTime,
+				"admin", "admin", testUpdateTime,
+				"update_time", "0", "index1", true, int64(100), int64(1024), testUpdateTime,
+			)
+			smock.ExpectQuery(sqlStr).WithArgs().WillReturnRows(rows)
+
+			_, err := ota.GetObjectTypesByIDs(testCtx, knID, branch, otIDs)
+			So(err, ShouldNotBeNil)
 
 			if err := smock.ExpectationsWereMet(); err != nil {
 				t.Errorf("there were unfulfilled expectations: %s", err)
@@ -577,6 +1021,33 @@ func Test_objectTypeAccess_UpdateObjectType(t *testing.T) {
 				t.Errorf("there were unfulfilled expectations: %s", err)
 			}
 		})
+
+		Convey("UpdateObjectType RowsAffected != 1 \n", func() {
+			smock.ExpectBegin()
+			smock.ExpectExec(sqlStr).WithArgs().WillReturnResult(sqlmock.NewResult(0, 0))
+
+			tx, _ := ota.db.Begin()
+			err := ota.UpdateObjectType(testCtx, tx, objectType)
+			So(err, ShouldBeNil)
+
+			if err := smock.ExpectationsWereMet(); err != nil {
+				t.Errorf("there were unfulfilled expectations: %s", err)
+			}
+		})
+
+		Convey("UpdateObjectType RowsAffected error \n", func() {
+			smock.ExpectBegin()
+			expectedErr := errors.New("Get RowsAffected error")
+			smock.ExpectExec(sqlStr).WithArgs().WillReturnResult(sqlmock.NewErrorResult(expectedErr))
+
+			tx, _ := ota.db.Begin()
+			err := ota.UpdateObjectType(testCtx, tx, objectType)
+			So(err, ShouldResemble, expectedErr)
+
+			if err := smock.ExpectationsWereMet(); err != nil {
+				t.Errorf("there were unfulfilled expectations: %s", err)
+			}
+		})
 	})
 }
 
@@ -615,6 +1086,29 @@ func Test_objectTypeAccess_UpdateDataProperties(t *testing.T) {
 		Convey("UpdateDataProperties Failed \n", func() {
 			expectedErr := errors.New("some error")
 			smock.ExpectExec(sqlStr).WithArgs().WillReturnError(expectedErr)
+
+			err := ota.UpdateDataProperties(testCtx, objectType)
+			So(err, ShouldResemble, expectedErr)
+
+			if err := smock.ExpectationsWereMet(); err != nil {
+				t.Errorf("there were unfulfilled expectations: %s", err)
+			}
+		})
+
+		Convey("UpdateDataProperties RowsAffected != 1 \n", func() {
+			smock.ExpectExec(sqlStr).WithArgs().WillReturnResult(sqlmock.NewResult(0, 0))
+
+			err := ota.UpdateDataProperties(testCtx, objectType)
+			So(err, ShouldBeNil)
+
+			if err := smock.ExpectationsWereMet(); err != nil {
+				t.Errorf("there were unfulfilled expectations: %s", err)
+			}
+		})
+
+		Convey("UpdateDataProperties RowsAffected error \n", func() {
+			expectedErr := errors.New("Get RowsAffected error")
+			smock.ExpectExec(sqlStr).WithArgs().WillReturnResult(sqlmock.NewErrorResult(expectedErr))
 
 			err := ota.UpdateDataProperties(testCtx, objectType)
 			So(err, ShouldResemble, expectedErr)
@@ -677,6 +1171,35 @@ func Test_objectTypeAccess_DeleteObjectTypesByIDs(t *testing.T) {
 				t.Errorf("there were unfulfilled expectations: %s", err)
 			}
 		})
+
+		Convey("DeleteObjectTypesByIDs RowsAffected != len(otIDs) \n", func() {
+			smock.ExpectBegin()
+			smock.ExpectExec(sqlStr).WithArgs(knID, branch, "ot1", "ot2").WillReturnResult(sqlmock.NewResult(0, 1))
+
+			tx, _ := ota.db.Begin()
+			rowsAffected, err := ota.DeleteObjectTypesByIDs(testCtx, tx, knID, branch, otIDs)
+			So(err, ShouldBeNil)
+			So(rowsAffected, ShouldEqual, 1)
+
+			if err := smock.ExpectationsWereMet(); err != nil {
+				t.Errorf("there were unfulfilled expectations: %s", err)
+			}
+		})
+
+		Convey("DeleteObjectTypesByIDs RowsAffected error \n", func() {
+			smock.ExpectBegin()
+			expectedErr := errors.New("Get RowsAffected error")
+			smock.ExpectExec(sqlStr).WithArgs(knID, branch, "ot1", "ot2").WillReturnResult(sqlmock.NewErrorResult(expectedErr))
+
+			tx, _ := ota.db.Begin()
+			rowsAffected, err := ota.DeleteObjectTypesByIDs(testCtx, tx, knID, branch, otIDs)
+			So(err, ShouldBeNil)
+			So(rowsAffected, ShouldEqual, 0)
+
+			if err := smock.ExpectationsWereMet(); err != nil {
+				t.Errorf("there were unfulfilled expectations: %s", err)
+			}
+		})
 	})
 }
 
@@ -710,6 +1233,49 @@ func Test_objectTypeAccess_DeleteObjectTypeStatusByIDs(t *testing.T) {
 
 			tx, _ := ota.db.Begin()
 			rowsAffected, err := ota.DeleteObjectTypeStatusByIDs(testCtx, tx, knID, branch, []string{})
+			So(err, ShouldBeNil)
+			So(rowsAffected, ShouldEqual, 0)
+
+			if err := smock.ExpectationsWereMet(); err != nil {
+				t.Errorf("there were unfulfilled expectations: %s", err)
+			}
+		})
+
+		Convey("DeleteObjectTypeStatusByIDs Failed dbExec \n", func() {
+			smock.ExpectBegin()
+			expectedErr := errors.New("dbExec error")
+			smock.ExpectExec(sqlStr).WithArgs(knID, branch, "ot1", "ot2").WillReturnError(expectedErr)
+
+			tx, _ := ota.db.Begin()
+			_, err := ota.DeleteObjectTypeStatusByIDs(testCtx, tx, knID, branch, otIDs)
+			So(err, ShouldResemble, expectedErr)
+
+			if err := smock.ExpectationsWereMet(); err != nil {
+				t.Errorf("there were unfulfilled expectations: %s", err)
+			}
+		})
+
+		Convey("DeleteObjectTypeStatusByIDs RowsAffected != len(otIDs) \n", func() {
+			smock.ExpectBegin()
+			smock.ExpectExec(sqlStr).WithArgs(knID, branch, "ot1", "ot2").WillReturnResult(sqlmock.NewResult(0, 1))
+
+			tx, _ := ota.db.Begin()
+			rowsAffected, err := ota.DeleteObjectTypeStatusByIDs(testCtx, tx, knID, branch, otIDs)
+			So(err, ShouldBeNil)
+			So(rowsAffected, ShouldEqual, 1)
+
+			if err := smock.ExpectationsWereMet(); err != nil {
+				t.Errorf("there were unfulfilled expectations: %s", err)
+			}
+		})
+
+		Convey("DeleteObjectTypeStatusByIDs RowsAffected error \n", func() {
+			smock.ExpectBegin()
+			expectedErr := errors.New("Get RowsAffected error")
+			smock.ExpectExec(sqlStr).WithArgs(knID, branch, "ot1", "ot2").WillReturnResult(sqlmock.NewErrorResult(expectedErr))
+
+			tx, _ := ota.db.Begin()
+			rowsAffected, err := ota.DeleteObjectTypeStatusByIDs(testCtx, tx, knID, branch, otIDs)
 			So(err, ShouldBeNil)
 			So(rowsAffected, ShouldEqual, 0)
 
@@ -767,6 +1333,21 @@ func Test_objectTypeAccess_GetObjectTypeIDsByKnID(t *testing.T) {
 			otIDs, err := ota.GetObjectTypeIDsByKnID(testCtx, knID, branch)
 			So(otIDs, ShouldBeNil)
 			So(err, ShouldResemble, expectedErr)
+
+			if err := smock.ExpectationsWereMet(); err != nil {
+				t.Errorf("there were unfulfilled expectations: %s", err)
+			}
+		})
+
+		Convey("GetObjectTypeIDsByKnID Scan error \n", func() {
+			rows := sqlmock.NewRows([]string{"f_id", "f_id"}).
+				AddRow("ot1", "ot1")
+
+			smock.ExpectQuery(sqlStr).WithArgs(knID, branch).WillReturnRows(rows)
+
+			otIDs, err := ota.GetObjectTypeIDsByKnID(testCtx, knID, branch)
+			So(otIDs, ShouldBeNil)
+			So(err, ShouldNotBeNil)
 
 			if err := smock.ExpectationsWereMet(); err != nil {
 				t.Errorf("there were unfulfilled expectations: %s", err)
@@ -888,6 +1469,130 @@ func Test_objectTypeAccess_GetAllObjectTypesByKnID(t *testing.T) {
 				t.Errorf("there were unfulfilled expectations: %s", err)
 			}
 		})
+
+		Convey("GetAllObjectTypesByKnID Scan error \n", func() {
+			rows := sqlmock.NewRows([]string{
+				"f_id", "f_name", "f_tags", "f_comment", "f_icon", "f_color", "f_detail",
+				"f_kn_id", "f_branch", "f_data_source", "f_data_properties", "f_logic_properties", "f_primary_keys",
+				"f_display_key", "f_incremental_key", "f_creator", "f_creator_type", "f_create_time",
+				"f_updater", "f_updater_type", "f_update_time", "f_update_time",
+			}).AddRow(
+				"ot1", "Object Type 1", `"tag1"`, "comment", "icon", "color", "detail",
+				"kn1", "main", dataSourceBytes, dataPropertiesBytes, logicPropertiesBytes, primaryKeysBytes,
+				"name", "update_time", "admin", "admin", testUpdateTime,
+				"admin", "admin", testUpdateTime, "f_update_time",
+			)
+
+			smock.ExpectQuery(sqlStr).WithArgs(knID, branch).WillReturnRows(rows)
+
+			objectTypes, err := ota.GetAllObjectTypesByKnID(testCtx, knID, branch)
+			So(objectTypes, ShouldResemble, map[string]*interfaces.ObjectType{})
+			So(err, ShouldNotBeNil)
+
+			if err := smock.ExpectationsWereMet(); err != nil {
+				t.Errorf("there were unfulfilled expectations: %s", err)
+			}
+		})
+
+		Convey("GetAllObjectTypesByKnID Unmarshal dataSource error \n", func() {
+			invalidBytes := []byte("invalid json")
+			rows := sqlmock.NewRows([]string{
+				"f_id", "f_name", "f_tags", "f_comment", "f_icon", "f_color", "f_detail",
+				"f_kn_id", "f_branch", "f_data_source", "f_data_properties", "f_logic_properties", "f_primary_keys",
+				"f_display_key", "f_incremental_key", "f_creator", "f_creator_type", "f_create_time",
+				"f_updater", "f_updater_type", "f_update_time",
+			}).AddRow(
+				"ot1", "Object Type 1", `"tag1"`, "comment", "icon", "color", "detail",
+				"kn1", "main", invalidBytes, dataPropertiesBytes, logicPropertiesBytes, primaryKeysBytes,
+				"name", "update_time", "admin", "admin", testUpdateTime,
+				"admin", "admin", testUpdateTime,
+			)
+
+			smock.ExpectQuery(sqlStr).WithArgs(knID, branch).WillReturnRows(rows)
+
+			objectTypes, err := ota.GetAllObjectTypesByKnID(testCtx, knID, branch)
+			So(objectTypes, ShouldResemble, map[string]*interfaces.ObjectType{})
+			So(err, ShouldNotBeNil)
+
+			if err := smock.ExpectationsWereMet(); err != nil {
+				t.Errorf("there were unfulfilled expectations: %s", err)
+			}
+		})
+
+		Convey("GetAllObjectTypesByKnID Unmarshal dataProperties error \n", func() {
+			invalidBytes := []byte("invalid json")
+			rows := sqlmock.NewRows([]string{
+				"f_id", "f_name", "f_tags", "f_comment", "f_icon", "f_color", "f_detail",
+				"f_kn_id", "f_branch", "f_data_source", "f_data_properties", "f_logic_properties", "f_primary_keys",
+				"f_display_key", "f_incremental_key", "f_creator", "f_creator_type", "f_create_time",
+				"f_updater", "f_updater_type", "f_update_time",
+			}).AddRow(
+				"ot1", "Object Type 1", `"tag1"`, "comment", "icon", "color", "detail",
+				"kn1", "main", dataSourceBytes, invalidBytes, logicPropertiesBytes, primaryKeysBytes,
+				"name", "update_time", "admin", "admin", testUpdateTime,
+				"admin", "admin", testUpdateTime,
+			)
+
+			smock.ExpectQuery(sqlStr).WithArgs(knID, branch).WillReturnRows(rows)
+
+			objectTypes, err := ota.GetAllObjectTypesByKnID(testCtx, knID, branch)
+			So(objectTypes, ShouldResemble, map[string]*interfaces.ObjectType{})
+			So(err, ShouldNotBeNil)
+
+			if err := smock.ExpectationsWereMet(); err != nil {
+				t.Errorf("there were unfulfilled expectations: %s", err)
+			}
+		})
+
+		Convey("GetAllObjectTypesByKnID Unmarshal logicProperties error \n", func() {
+			invalidBytes := []byte("invalid json")
+			rows := sqlmock.NewRows([]string{
+				"f_id", "f_name", "f_tags", "f_comment", "f_icon", "f_color", "f_detail",
+				"f_kn_id", "f_branch", "f_data_source", "f_data_properties", "f_logic_properties", "f_primary_keys",
+				"f_display_key", "f_incremental_key", "f_creator", "f_creator_type", "f_create_time",
+				"f_updater", "f_updater_type", "f_update_time",
+			}).AddRow(
+				"ot1", "Object Type 1", `"tag1"`, "comment", "icon", "color", "detail",
+				"kn1", "main", dataSourceBytes, dataPropertiesBytes, invalidBytes, primaryKeysBytes,
+				"name", "update_time", "admin", "admin", testUpdateTime,
+				"admin", "admin", testUpdateTime,
+			)
+
+			smock.ExpectQuery(sqlStr).WithArgs(knID, branch).WillReturnRows(rows)
+
+			objectTypes, err := ota.GetAllObjectTypesByKnID(testCtx, knID, branch)
+			So(objectTypes, ShouldResemble, map[string]*interfaces.ObjectType{})
+			So(err, ShouldNotBeNil)
+
+			if err := smock.ExpectationsWereMet(); err != nil {
+				t.Errorf("there were unfulfilled expectations: %s", err)
+			}
+		})
+
+		Convey("GetAllObjectTypesByKnID Unmarshal primaryKeys error \n", func() {
+			invalidBytes := []byte("invalid json")
+			rows := sqlmock.NewRows([]string{
+				"f_id", "f_name", "f_tags", "f_comment", "f_icon", "f_color", "f_detail",
+				"f_kn_id", "f_branch", "f_data_source", "f_data_properties", "f_logic_properties", "f_primary_keys",
+				"f_display_key", "f_incremental_key", "f_creator", "f_creator_type", "f_create_time",
+				"f_updater", "f_updater_type", "f_update_time",
+			}).AddRow(
+				"ot1", "Object Type 1", `"tag1"`, "comment", "icon", "color", "detail",
+				"kn1", "main", dataSourceBytes, dataPropertiesBytes, logicPropertiesBytes, invalidBytes,
+				"name", "update_time", "admin", "admin", testUpdateTime,
+				"admin", "admin", testUpdateTime,
+			)
+
+			smock.ExpectQuery(sqlStr).WithArgs(knID, branch).WillReturnRows(rows)
+
+			objectTypes, err := ota.GetAllObjectTypesByKnID(testCtx, knID, branch)
+			So(objectTypes, ShouldResemble, map[string]*interfaces.ObjectType{})
+			So(err, ShouldNotBeNil)
+
+			if err := smock.ExpectationsWereMet(); err != nil {
+				t.Errorf("there were unfulfilled expectations: %s", err)
+			}
+		})
 	})
 }
 
@@ -941,6 +1646,18 @@ func Test_objectTypeAccess_ProcessQueryCondition(t *testing.T) {
 			sqlBuilder := processQueryCondition(query, sqlBuilder)
 			sqlStr, _, _ := sqlBuilder.ToSql()
 			So(sqlStr, ShouldEqual, expectedSqlStr)
+		})
+
+		Convey("Empty Branch query ", func() {
+			query := interfaces.ObjectTypesQueryParams{
+				KNID:   "kn1",
+				Branch: "",
+			}
+
+			sqlBuilder := processQueryCondition(query, sqlBuilder)
+			sqlStr, vals, _ := sqlBuilder.ToSql()
+			So(sqlStr, ShouldContainSubstring, "ot.f_branch = ?")
+			So(len(vals), ShouldBeGreaterThan, 0)
 		})
 	})
 }

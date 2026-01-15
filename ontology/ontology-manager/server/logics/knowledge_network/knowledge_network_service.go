@@ -416,7 +416,7 @@ func (kns *knowledgeNetworkService) ListKNs(ctx context.Context,
 		// 检查起始位置是否越界
 		if parameter.Offset < 0 || parameter.Offset >= len(KNs) {
 			span.SetStatus(codes.Ok, "")
-			return []*interfaces.KN{}, 0, nil
+			return []*interfaces.KN{}, total, nil
 		}
 		// 计算结束位置
 		end := parameter.Offset + parameter.Limit
@@ -1257,7 +1257,7 @@ func (kns *knowledgeNetworkService) ListKnSrcs(ctx context.Context,
 	// 分页
 	// 检查起始位置是否越界
 	if parameter.Offset < 0 || parameter.Offset >= len(results) {
-		return nil, 0, nil
+		return nil, len(results), nil
 	}
 	// 计算结束位置
 	end := parameter.Offset + parameter.Limit

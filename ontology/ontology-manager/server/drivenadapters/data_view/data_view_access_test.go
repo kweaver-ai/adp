@@ -109,6 +109,73 @@ func Test_dataViewAccess_GetDataViewByID(t *testing.T) {
 			So(err, ShouldBeNil)
 			So(result, ShouldBeNil)
 		})
+
+		Convey("Non-200 status code with baseError", func() {
+			baseError := rest.BaseError{
+				ErrorCode:    "INTERNAL_ERROR",
+				Description:  "Internal server error",
+				ErrorDetails: "Something went wrong",
+			}
+			respData, _ := sonic.Marshal(baseError)
+
+			mockHTTPClient.EXPECT().
+				GetNoUnmarshal(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+				Return(http.StatusInternalServerError, respData, nil)
+
+			result, err := dva.GetDataViewByID(ctx, viewID)
+			So(err, ShouldNotBeNil)
+			So(result, ShouldBeNil)
+			So(err.Error(), ShouldContainSubstring, "GetDataViewByIDs failed")
+		})
+
+		Convey("Non-200 status code with invalid error format", func() {
+			mockHTTPClient.EXPECT().
+				GetNoUnmarshal(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+				Return(http.StatusInternalServerError, []byte("invalid json"), nil)
+
+			result, err := dva.GetDataViewByID(ctx, viewID)
+			So(err, ShouldNotBeNil)
+			So(result, ShouldBeNil)
+		})
+
+		Convey("Unmarshal data view failed", func() {
+			mockHTTPClient.EXPECT().
+				GetNoUnmarshal(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+				Return(http.StatusOK, []byte("invalid json"), nil)
+
+			result, err := dva.GetDataViewByID(ctx, viewID)
+			So(err, ShouldNotBeNil)
+			So(result, ShouldBeNil)
+		})
+
+		Convey("Success with AccountInfo in context", func() {
+			accountInfo := interfaces.AccountInfo{
+				ID:   "test-account-id",
+				Type: "test-account-type",
+				Name: "Test Account",
+			}
+			ctxWithAccount := context.WithValue(ctx, interfaces.ACCOUNT_INFO_KEY, accountInfo)
+
+			views := []*interfaces.DataView{
+				{
+					ViewID:   viewID,
+					ViewName: "Test View",
+					Fields: []*interfaces.ViewField{
+						{Name: "field1", Type: "string"},
+					},
+				},
+			}
+			respData, _ := sonic.Marshal(views)
+
+			mockHTTPClient.EXPECT().
+				GetNoUnmarshal(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+				Return(http.StatusOK, respData, nil)
+
+			result, err := dva.GetDataViewByID(ctxWithAccount, viewID)
+			So(err, ShouldBeNil)
+			So(result, ShouldNotBeNil)
+			So(result.ViewID, ShouldEqual, viewID)
+		})
 	})
 }
 
@@ -167,6 +234,77 @@ func Test_dataViewAccess_GetDataStart(t *testing.T) {
 			So(err, ShouldNotBeNil)
 			So(result, ShouldBeNil)
 		})
+
+		Convey("Unmarshal result failed", func() {
+			mockHTTPClient.EXPECT().
+				PostNoUnmarshal(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+				Return(http.StatusOK, []byte("invalid json"), nil)
+
+			result, err := dva.GetDataStart(ctx, viewID, incKey, incValue, limit)
+			So(err, ShouldNotBeNil)
+			So(result, ShouldBeNil)
+		})
+
+		Convey("Success with empty incKey", func() {
+			result := interfaces.ViewQueryResult{
+				TotalCount:  100,
+				SearchAfter: []any{"value1"},
+				Entries:     []map[string]any{{"id": "1", "name": "test"}},
+			}
+			respData, _ := sonic.Marshal(result)
+
+			mockHTTPClient.EXPECT().
+				PostNoUnmarshal(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+				Return(http.StatusOK, respData, nil)
+
+			res, err := dva.GetDataStart(ctx, viewID, "", nil, limit)
+			So(err, ShouldBeNil)
+			So(res, ShouldNotBeNil)
+			So(res.TotalCount, ShouldEqual, 100)
+		})
+
+		Convey("Success with incKey but nil incValue", func() {
+			result := interfaces.ViewQueryResult{
+				TotalCount:  100,
+				SearchAfter: []any{"value1"},
+				Entries:     []map[string]any{{"id": "1", "name": "test"}},
+			}
+			respData, _ := sonic.Marshal(result)
+
+			mockHTTPClient.EXPECT().
+				PostNoUnmarshal(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+				Return(http.StatusOK, respData, nil)
+
+			res, err := dva.GetDataStart(ctx, viewID, incKey, nil, limit)
+			So(err, ShouldBeNil)
+			So(res, ShouldNotBeNil)
+			So(res.TotalCount, ShouldEqual, 100)
+		})
+
+		Convey("Success with AccountInfo in context", func() {
+			accountInfo := interfaces.AccountInfo{
+				ID:   "test-account-id",
+				Type: "test-account-type",
+				Name: "Test Account",
+			}
+			ctxWithAccount := context.WithValue(ctx, interfaces.ACCOUNT_INFO_KEY, accountInfo)
+
+			result := interfaces.ViewQueryResult{
+				TotalCount:  100,
+				SearchAfter: []any{"value1"},
+				Entries:     []map[string]any{{"id": "1", "name": "test"}},
+			}
+			respData, _ := sonic.Marshal(result)
+
+			mockHTTPClient.EXPECT().
+				PostNoUnmarshal(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+				Return(http.StatusOK, respData, nil)
+
+			res, err := dva.GetDataStart(ctxWithAccount, viewID, incKey, incValue, limit)
+			So(err, ShouldBeNil)
+			So(res, ShouldNotBeNil)
+			So(res.TotalCount, ShouldEqual, 100)
+		})
 	})
 }
 
@@ -213,6 +351,51 @@ func Test_dataViewAccess_GetDataNext(t *testing.T) {
 			result, err := dva.GetDataNext(ctx, viewID, searchAfter, limit)
 			So(err, ShouldNotBeNil)
 			So(result, ShouldBeNil)
+		})
+
+		Convey("Non-200 status code", func() {
+			mockHTTPClient.EXPECT().
+				PostNoUnmarshal(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+				Return(http.StatusInternalServerError, []byte("error"), nil)
+
+			result, err := dva.GetDataNext(ctx, viewID, searchAfter, limit)
+			So(err, ShouldNotBeNil)
+			So(result, ShouldBeNil)
+		})
+
+		Convey("Unmarshal result failed", func() {
+			mockHTTPClient.EXPECT().
+				PostNoUnmarshal(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+				Return(http.StatusOK, []byte("invalid json"), nil)
+
+			result, err := dva.GetDataNext(ctx, viewID, searchAfter, limit)
+			So(err, ShouldNotBeNil)
+			So(result, ShouldBeNil)
+		})
+
+		Convey("Success with AccountInfo in context", func() {
+			accountInfo := interfaces.AccountInfo{
+				ID:   "test-account-id",
+				Type: "test-account-type",
+				Name: "Test Account",
+			}
+			ctxWithAccount := context.WithValue(ctx, interfaces.ACCOUNT_INFO_KEY, accountInfo)
+
+			result := interfaces.ViewQueryResult{
+				TotalCount:  100,
+				SearchAfter: []any{"value2"},
+				Entries:     []map[string]any{{"id": "2", "name": "test2"}},
+			}
+			respData, _ := sonic.Marshal(result)
+
+			mockHTTPClient.EXPECT().
+				PostNoUnmarshal(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+				Return(http.StatusOK, respData, nil)
+
+			res, err := dva.GetDataNext(ctxWithAccount, viewID, searchAfter, limit)
+			So(err, ShouldBeNil)
+			So(res, ShouldNotBeNil)
+			So(res.TotalCount, ShouldEqual, 100)
 		})
 	})
 }

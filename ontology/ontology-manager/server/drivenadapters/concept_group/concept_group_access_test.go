@@ -945,3 +945,203 @@ func Test_conceptGroupAccess_ProcessQueryCondition(t *testing.T) {
 		})
 	})
 }
+
+func Test_conceptGroupAccess_GetRelationTypeIDsFromConceptGroupRelation(t *testing.T) {
+	Convey("test GetRelationTypeIDsFromConceptGroupRelation\n", t, func() {
+		appSetting := &common.AppSetting{}
+		// 使用正则表达式匹配器来处理复杂的 SQL
+		db, smock, _ := sqlmock.New(sqlmock.QueryMatcherOption(sqlmock.QueryMatcherRegexp))
+		cga := &conceptGroupAccess{
+			appSetting: appSetting,
+			db:         db,
+		}
+
+		query := interfaces.ConceptGroupRelationsQueryParams{
+			KNID:        "kn1",
+			Branch:      "main",
+			ConceptType: interfaces.MODULE_TYPE_OBJECT_TYPE,
+			CGIDs:       []string{"cg1"},
+		}
+
+		Convey("GetRelationTypeIDsFromConceptGroupRelation Success \n", func() {
+			// 使用正则表达式匹配 SQL 开头
+			rows := sqlmock.NewRows([]string{"f_id"}).
+				AddRow("rt1").
+				AddRow("rt2")
+			smock.ExpectQuery("^SELECT f_id FROM t_relation_type").WillReturnRows(rows)
+
+			rtIDs, err := cga.GetRelationTypeIDsFromConceptGroupRelation(testCtx, query)
+			So(err, ShouldBeNil)
+			So(len(rtIDs), ShouldEqual, 2)
+
+			if err := smock.ExpectationsWereMet(); err != nil {
+				t.Errorf("there were unfulfilled expectations: %s", err)
+			}
+		})
+
+		Convey("GetRelationTypeIDsFromConceptGroupRelation Failed \n", func() {
+			expectedErr := errors.New("some error")
+			smock.ExpectQuery("^SELECT f_id FROM t_relation_type").WillReturnError(expectedErr)
+
+			rtIDs, err := cga.GetRelationTypeIDsFromConceptGroupRelation(testCtx, query)
+			So(rtIDs, ShouldResemble, []string{})
+			So(err, ShouldResemble, expectedErr)
+
+			if err := smock.ExpectationsWereMet(); err != nil {
+				t.Errorf("there were unfulfilled expectations: %s", err)
+			}
+		})
+
+		Convey("GetRelationTypeIDsFromConceptGroupRelation scan error \n", func() {
+			rows := sqlmock.NewRows([]string{"f_id", "f_id"}).AddRow(123, "123") // 使用 int 而不是 string
+			smock.ExpectQuery("SELECT f_id FROM t_relation_type").WillReturnRows(rows)
+
+			rtIDs, err := cga.GetRelationTypeIDsFromConceptGroupRelation(testCtx, query)
+			So(rtIDs, ShouldResemble, []string{})
+			So(err, ShouldNotBeNil)
+
+			if err := smock.ExpectationsWereMet(); err != nil {
+				t.Errorf("there were unfulfilled expectations: %s", err)
+			}
+		})
+	})
+}
+
+func Test_conceptGroupAccess_GetActionTypeIDsFromConceptGroupRelation(t *testing.T) {
+	Convey("test GetActionTypeIDsFromConceptGroupRelation\n", t, func() {
+		appSetting := &common.AppSetting{}
+		// 使用正则表达式匹配器来处理复杂的 SQL
+		db, smock, _ := sqlmock.New(sqlmock.QueryMatcherOption(sqlmock.QueryMatcherRegexp))
+		cga := &conceptGroupAccess{
+			appSetting: appSetting,
+			db:         db,
+		}
+
+		query := interfaces.ConceptGroupRelationsQueryParams{
+			KNID:        "kn1",
+			Branch:      "main",
+			ConceptType: interfaces.MODULE_TYPE_OBJECT_TYPE,
+			CGIDs:       []string{"cg1"},
+		}
+
+		Convey("GetActionTypeIDsFromConceptGroupRelation Success \n", func() {
+			rows := sqlmock.NewRows([]string{"f_id"}).
+				AddRow("at1").
+				AddRow("at2")
+			smock.ExpectQuery("^SELECT f_id FROM t_action_type").WillReturnRows(rows)
+
+			atIDs, err := cga.GetActionTypeIDsFromConceptGroupRelation(testCtx, query)
+			So(err, ShouldBeNil)
+			So(len(atIDs), ShouldEqual, 2)
+
+			if err := smock.ExpectationsWereMet(); err != nil {
+				t.Errorf("there were unfulfilled expectations: %s", err)
+			}
+		})
+
+		Convey("GetActionTypeIDsFromConceptGroupRelation Failed \n", func() {
+			expectedErr := errors.New("some error")
+			smock.ExpectQuery("^SELECT f_id FROM t_action_type").WillReturnError(expectedErr)
+
+			atIDs, err := cga.GetActionTypeIDsFromConceptGroupRelation(testCtx, query)
+			So(atIDs, ShouldResemble, []string{})
+			So(err, ShouldResemble, expectedErr)
+
+			if err := smock.ExpectationsWereMet(); err != nil {
+				t.Errorf("there were unfulfilled expectations: %s", err)
+			}
+		})
+
+		Convey("GetActionTypeIDsFromConceptGroupRelation scan error \n", func() {
+			rows := sqlmock.NewRows([]string{"f_id", "f_id"}).AddRow(123, "123") // 使用 int 而不是 string
+			smock.ExpectQuery("^SELECT f_id FROM t_action_type").WillReturnRows(rows)
+
+			atIDs, err := cga.GetActionTypeIDsFromConceptGroupRelation(testCtx, query)
+			So(atIDs, ShouldResemble, []string{})
+			So(err, ShouldNotBeNil)
+
+			if err := smock.ExpectationsWereMet(); err != nil {
+				t.Errorf("there were unfulfilled expectations: %s", err)
+			}
+		})
+	})
+}
+
+func Test_conceptGroupAccess_GetConceptGroupsByOTIDs(t *testing.T) {
+	Convey("test GetConceptGroupsByOTIDs\n", t, func() {
+		appSetting := &common.AppSetting{}
+		// 使用正则表达式匹配器来处理复杂的 SQL
+		db, smock, _ := sqlmock.New(sqlmock.QueryMatcherOption(sqlmock.QueryMatcherRegexp))
+		cga := &conceptGroupAccess{
+			appSetting: appSetting,
+			db:         db,
+		}
+
+		query := interfaces.ConceptGroupRelationsQueryParams{
+			KNID:        "kn1",
+			Branch:      "main",
+			ConceptType: interfaces.MODULE_TYPE_OBJECT_TYPE,
+			OTIDs:       []string{"ot1", "ot2"},
+		}
+
+		Convey("GetConceptGroupsByOTIDs Success \n", func() {
+			rows := sqlmock.NewRows([]string{
+				"cgr.f_concept_id", "cg.f_id", "cg.f_name", "cg.f_tags", "cg.f_comment",
+				"cg.f_icon", "cg.f_color", "cg.f_kn_id", "cg.f_branch",
+			}).AddRow(
+				"ot1", "cg1", "Concept Group 1", `"tag1"`, "comment",
+				"icon", "color", "kn1", "main",
+			).AddRow(
+				"ot1", "cg2", "Concept Group 2", `"tag2"`, "comment2",
+				"icon2", "color2", "kn1", "main",
+			).AddRow(
+				"ot2", "cg1", "Concept Group 1", `"tag1"`, "comment",
+				"icon", "color", "kn1", "main",
+			)
+
+			smock.ExpectBegin()
+			smock.ExpectQuery("^SELECT cgr.f_concept_id").WillReturnRows(rows)
+
+			tx, _ := cga.db.Begin()
+			results, err := cga.GetConceptGroupsByOTIDs(testCtx, tx, query)
+			So(err, ShouldBeNil)
+			So(len(results), ShouldEqual, 2)
+			So(len(results["ot1"]), ShouldEqual, 2)
+			So(len(results["ot2"]), ShouldEqual, 1)
+
+			if err := smock.ExpectationsWereMet(); err != nil {
+				t.Errorf("there were unfulfilled expectations: %s", err)
+			}
+		})
+
+		Convey("GetConceptGroupsByOTIDs Failed \n", func() {
+			expectedErr := errors.New("some error")
+			smock.ExpectBegin()
+			smock.ExpectQuery("^SELECT cgr.f_concept_id").WillReturnError(expectedErr)
+
+			tx, _ := cga.db.Begin()
+			results, err := cga.GetConceptGroupsByOTIDs(testCtx, tx, query)
+			So(results, ShouldResemble, map[string][]*interfaces.ConceptGroup{})
+			So(err, ShouldResemble, expectedErr)
+
+			if err := smock.ExpectationsWereMet(); err != nil {
+				t.Errorf("there were unfulfilled expectations: %s", err)
+			}
+		})
+
+		Convey("GetConceptGroupsByOTIDs scan error \n", func() {
+			rows := sqlmock.NewRows([]string{"cgr.f_concept_id"}).AddRow("ot1")
+			smock.ExpectBegin()
+			smock.ExpectQuery("^SELECT cgr.f_concept_id").WillReturnRows(rows)
+
+			tx, _ := cga.db.Begin()
+			results, err := cga.GetConceptGroupsByOTIDs(testCtx, tx, query)
+			So(results, ShouldResemble, map[string][]*interfaces.ConceptGroup{})
+			So(err, ShouldNotBeNil)
+
+			if err := smock.ExpectationsWereMet(); err != nil {
+				t.Errorf("there were unfulfilled expectations: %s", err)
+			}
+		})
+	})
+}

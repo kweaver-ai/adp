@@ -212,6 +212,273 @@ func TestObjectTypeTask_HandleObjectTypeTask(t *testing.T) {
 			err := task.HandleObjectTypeTask(ctx, jobInfo, taskInfo, objectType)
 			So(err, ShouldNotBeNil)
 		})
+
+		Convey("Failed when primary key unmapped", func() {
+			invalidObjectType := &interfaces.ObjectType{
+				ObjectTypeWithKeyField: interfaces.ObjectTypeWithKeyField{
+					OTID:        "ot1",
+					PrimaryKeys: []string{"pk1", "pk2"},
+					DataSource: &interfaces.ResourceInfo{
+						Type: "data_view",
+						ID:   "dv1",
+					},
+					DataProperties: []*interfaces.DataProperty{
+						{
+							Name: "pk1",
+							Type: "string",
+							MappedField: &interfaces.Field{
+								Name: "field1",
+								Type: "string",
+							},
+						},
+						// pk2 没有映射
+					},
+				},
+			}
+			invalidTask := NewObjectTypeTask(appSetting, taskInfo, invalidObjectType)
+			invalidTask.dva = dva
+			invalidTask.mfa = mfa
+			invalidTask.ja = ja
+			invalidTask.osa = osa
+
+			err := invalidTask.HandleObjectTypeTask(ctx, jobInfo, taskInfo, invalidObjectType)
+			So(err, ShouldNotBeNil)
+		})
+
+		Convey("Failed when GetModelByID returns error", func() {
+			objectTypeWithVector := &interfaces.ObjectType{
+				ObjectTypeWithKeyField: interfaces.ObjectTypeWithKeyField{
+					OTID:        "ot1",
+					PrimaryKeys: []string{"pk1"},
+					DataSource: &interfaces.ResourceInfo{
+						Type: "data_view",
+						ID:   "dv1",
+					},
+					DataProperties: []*interfaces.DataProperty{
+						{
+							Name: "pk1",
+							Type: "string",
+							MappedField: &interfaces.Field{
+								Name: "field1",
+								Type: "string",
+							},
+							IndexConfig: &interfaces.IndexConfig{
+								VectorConfig: interfaces.VectorConfig{
+									Enabled: true,
+									ModelID: "model1",
+								},
+							},
+						},
+					},
+				},
+			}
+			vectorTask := NewObjectTypeTask(appSetting, taskInfo, objectTypeWithVector)
+			vectorTask.dva = dva
+			vectorTask.mfa = mfa
+			vectorTask.ja = ja
+			vectorTask.osa = osa
+
+			osa.EXPECT().IndexExists(gomock.Any(), gomock.Any()).Return(false, nil).AnyTimes()
+			osa.EXPECT().CreateIndex(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
+			mfa.EXPECT().GetModelByID(gomock.Any(), gomock.Any()).Return(nil, errors.New("model error")).AnyTimes()
+
+			err := vectorTask.HandleObjectTypeTask(ctx, jobInfo, taskInfo, objectTypeWithVector)
+			So(err, ShouldNotBeNil)
+		})
+
+		Convey("Failed when GetModelByID returns nil", func() {
+			objectTypeWithVector := &interfaces.ObjectType{
+				ObjectTypeWithKeyField: interfaces.ObjectTypeWithKeyField{
+					OTID:        "ot1",
+					PrimaryKeys: []string{"pk1"},
+					DataSource: &interfaces.ResourceInfo{
+						Type: "data_view",
+						ID:   "dv1",
+					},
+					DataProperties: []*interfaces.DataProperty{
+						{
+							Name: "pk1",
+							Type: "string",
+							MappedField: &interfaces.Field{
+								Name: "field1",
+								Type: "string",
+							},
+							IndexConfig: &interfaces.IndexConfig{
+								VectorConfig: interfaces.VectorConfig{
+									Enabled: true,
+									ModelID: "model1",
+								},
+							},
+						},
+					},
+				},
+			}
+			vectorTask := NewObjectTypeTask(appSetting, taskInfo, objectTypeWithVector)
+			vectorTask.dva = dva
+			vectorTask.mfa = mfa
+			vectorTask.ja = ja
+			vectorTask.osa = osa
+
+			osa.EXPECT().IndexExists(gomock.Any(), gomock.Any()).Return(false, nil).AnyTimes()
+			osa.EXPECT().CreateIndex(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
+			mfa.EXPECT().GetModelByID(gomock.Any(), gomock.Any()).Return(nil, nil).AnyTimes()
+
+			err := vectorTask.HandleObjectTypeTask(ctx, jobInfo, taskInfo, objectTypeWithVector)
+			So(err, ShouldNotBeNil)
+		})
+
+		Convey("Failed when GetDataStart returns error", func() {
+			dataView := &interfaces.DataView{
+				ViewID:   "dv1",
+				ViewName: "test_view",
+			}
+
+			osa.EXPECT().IndexExists(ctx, gomock.Any()).Return(false, nil)
+			osa.EXPECT().CreateIndex(ctx, gomock.Any(), gomock.Any()).Return(nil)
+			dva.EXPECT().GetDataViewByID(ctx, "dv1").Return(dataView, nil)
+			dva.EXPECT().GetDataStart(ctx, "dv1", "", nil, 100).Return(nil, errors.New("data view error"))
+
+			err := task.HandleObjectTypeTask(ctx, jobInfo, taskInfo, objectType)
+			So(err, ShouldNotBeNil)
+		})
+
+		Convey("Failed when UpdateTaskState returns error", func() {
+			dataView := &interfaces.DataView{
+				ViewID:   "dv1",
+				ViewName: "test_view",
+			}
+
+			viewQueryResult := &interfaces.ViewQueryResult{
+				TotalCount:  10,
+				SearchAfter: nil,
+				Entries: []map[string]any{
+					{
+						"field1": "value1",
+					},
+				},
+			}
+
+			osa.EXPECT().IndexExists(ctx, gomock.Any()).Return(false, nil)
+			osa.EXPECT().CreateIndex(ctx, gomock.Any(), gomock.Any()).Return(nil)
+			dva.EXPECT().GetDataViewByID(ctx, "dv1").Return(dataView, nil)
+			dva.EXPECT().GetDataStart(ctx, "dv1", "", nil, 100).Return(viewQueryResult, nil)
+			ja.EXPECT().UpdateTaskState(ctx, "task1", gomock.Any()).Return(errors.New("db error"))
+
+			err := task.HandleObjectTypeTask(ctx, jobInfo, taskInfo, objectType)
+			So(err, ShouldNotBeNil)
+		})
+
+		Convey("Failed when handlerIndexData returns error", func() {
+			dataView := &interfaces.DataView{
+				ViewID:   "dv1",
+				ViewName: "test_view",
+			}
+
+			viewQueryResult := &interfaces.ViewQueryResult{
+				TotalCount:  10,
+				SearchAfter: nil,
+				Entries: []map[string]any{
+					{
+						"field1": "value1",
+					},
+				},
+			}
+
+			osa.EXPECT().IndexExists(ctx, gomock.Any()).Return(false, nil)
+			osa.EXPECT().CreateIndex(ctx, gomock.Any(), gomock.Any()).Return(nil)
+			dva.EXPECT().GetDataViewByID(ctx, "dv1").Return(dataView, nil)
+			dva.EXPECT().GetDataStart(ctx, "dv1", "", nil, 100).Return(viewQueryResult, nil)
+			ja.EXPECT().UpdateTaskState(ctx, "task1", gomock.Any()).Return(nil)
+			osa.EXPECT().BulkInsertData(ctx, gomock.Any(), gomock.Any()).Return(errors.New("opensearch error"))
+
+			err := task.HandleObjectTypeTask(ctx, jobInfo, taskInfo, objectType)
+			So(err, ShouldNotBeNil)
+		})
+
+		Convey("Failed when GetDataNext returns error", func() {
+			dataView := &interfaces.DataView{
+				ViewID:   "dv1",
+				ViewName: "test_view",
+			}
+
+			viewQueryResult := &interfaces.ViewQueryResult{
+				TotalCount:  10,
+				SearchAfter: []interface{}{"value1"},
+				Entries: []map[string]any{
+					{
+						"field1": "value1",
+					},
+				},
+			}
+
+			osa.EXPECT().IndexExists(ctx, gomock.Any()).Return(false, nil)
+			osa.EXPECT().CreateIndex(ctx, gomock.Any(), gomock.Any()).Return(nil)
+			dva.EXPECT().GetDataViewByID(ctx, "dv1").Return(dataView, nil)
+			dva.EXPECT().GetDataStart(ctx, "dv1", "", nil, 100).Return(viewQueryResult, nil)
+			ja.EXPECT().UpdateTaskState(ctx, "task1", gomock.Any()).Return(nil)
+			osa.EXPECT().BulkInsertData(ctx, gomock.Any(), gomock.Any()).Return(nil)
+			dva.EXPECT().GetDataNext(ctx, "dv1", viewQueryResult.SearchAfter, 100).Return(nil, errors.New("data view error"))
+
+			err := task.HandleObjectTypeTask(ctx, jobInfo, taskInfo, objectType)
+			So(err, ShouldNotBeNil)
+		})
+
+		Convey("Failed when Refresh returns error", func() {
+			dataView := &interfaces.DataView{
+				ViewID:   "dv1",
+				ViewName: "test_view",
+			}
+
+			viewQueryResult := &interfaces.ViewQueryResult{
+				TotalCount:  10,
+				SearchAfter: nil,
+				Entries: []map[string]any{
+					{
+						"field1": "value1",
+					},
+				},
+			}
+
+			osa.EXPECT().IndexExists(ctx, gomock.Any()).Return(false, nil)
+			osa.EXPECT().CreateIndex(ctx, gomock.Any(), gomock.Any()).Return(nil)
+			dva.EXPECT().GetDataViewByID(ctx, "dv1").Return(dataView, nil)
+			dva.EXPECT().GetDataStart(ctx, "dv1", "", nil, 100).Return(viewQueryResult, nil)
+			ja.EXPECT().UpdateTaskState(ctx, "task1", gomock.Any()).Return(nil)
+			osa.EXPECT().BulkInsertData(ctx, gomock.Any(), gomock.Any()).Return(nil)
+			osa.EXPECT().Refresh(ctx, gomock.Any()).Return(errors.New("opensearch error"))
+
+			err := task.HandleObjectTypeTask(ctx, jobInfo, taskInfo, objectType)
+			So(err, ShouldNotBeNil)
+		})
+
+		Convey("Failed when GetIndexStats returns error", func() {
+			dataView := &interfaces.DataView{
+				ViewID:   "dv1",
+				ViewName: "test_view",
+			}
+
+			viewQueryResult := &interfaces.ViewQueryResult{
+				TotalCount:  10,
+				SearchAfter: nil,
+				Entries: []map[string]any{
+					{
+						"field1": "value1",
+					},
+				},
+			}
+
+			osa.EXPECT().IndexExists(ctx, gomock.Any()).Return(false, nil)
+			osa.EXPECT().CreateIndex(ctx, gomock.Any(), gomock.Any()).Return(nil)
+			dva.EXPECT().GetDataViewByID(ctx, "dv1").Return(dataView, nil)
+			dva.EXPECT().GetDataStart(ctx, "dv1", "", nil, 100).Return(viewQueryResult, nil)
+			ja.EXPECT().UpdateTaskState(ctx, "task1", gomock.Any()).Return(nil)
+			osa.EXPECT().BulkInsertData(ctx, gomock.Any(), gomock.Any()).Return(nil)
+			osa.EXPECT().Refresh(ctx, gomock.Any()).Return(nil)
+			osa.EXPECT().GetIndexStats(ctx, gomock.Any()).Return(nil, errors.New("opensearch error"))
+
+			err := task.HandleObjectTypeTask(ctx, jobInfo, taskInfo, objectType)
+			So(err, ShouldNotBeNil)
+		})
 	})
 }
 
@@ -257,6 +524,22 @@ func TestObjectTypeTask_handlerIndex(t *testing.T) {
 
 		Convey("Failed to check index existence", func() {
 			osa.EXPECT().IndexExists(ctx, "test_index").Return(false, errors.New("opensearch error"))
+
+			err := task.handlerIndex(ctx, "test_index", task.objectType)
+			So(err, ShouldNotBeNil)
+		})
+
+		Convey("Failed to delete existing index", func() {
+			osa.EXPECT().IndexExists(ctx, "test_index").Return(true, nil)
+			osa.EXPECT().DeleteIndex(ctx, "test_index").Return(errors.New("opensearch error"))
+
+			err := task.handlerIndex(ctx, "test_index", task.objectType)
+			So(err, ShouldNotBeNil)
+		})
+
+		Convey("Failed to create index", func() {
+			osa.EXPECT().IndexExists(ctx, "test_index").Return(false, nil)
+			osa.EXPECT().CreateIndex(ctx, "test_index", gomock.Any()).Return(errors.New("opensearch error"))
 
 			err := task.handlerIndex(ctx, "test_index", task.objectType)
 			So(err, ShouldNotBeNil)
@@ -325,6 +608,65 @@ func TestObjectTypeTask_handlerIndexData(t *testing.T) {
 			}
 
 			osa.EXPECT().BulkInsertData(ctx, "test_index", gomock.Any()).Return(errors.New("opensearch error"))
+
+			err := task.handlerIndexData(ctx, viewQueryResult)
+			So(err, ShouldNotBeNil)
+		})
+
+		Convey("Success with vector properties", func() {
+			mfa := dmock.NewMockModelFactoryAccess(mockCtrl)
+			task.mfa = mfa
+			task.JobMaxRetryTimes = 3
+
+			viewQueryResult := &interfaces.ViewQueryResult{
+				Entries: []map[string]any{
+					{
+						"field1": "value1",
+					},
+				},
+			}
+
+			property := &VectorProperty{
+				Name:           "prop1",
+				VectorField:    "_vector_prop1",
+				Model:          &interfaces.SmallModel{ModelID: "model1"},
+				AllVectorResps: make([]*cond.VectorResp, 0),
+			}
+			task.vectorProperties = []*VectorProperty{property}
+
+			vectorResps := []*cond.VectorResp{
+				{Vector: []float32{0.1, 0.2}},
+			}
+
+			mfa.EXPECT().GetVector(ctx, property.Model, []string{"value1"}).Return(vectorResps, nil)
+			osa.EXPECT().BulkInsertData(ctx, "test_index", gomock.Any()).Return(nil)
+
+			err := task.handlerIndexData(ctx, viewQueryResult)
+			So(err, ShouldBeNil)
+		})
+
+		Convey("Failed when handlerVector returns error after retries", func() {
+			mfa := dmock.NewMockModelFactoryAccess(mockCtrl)
+			task.mfa = mfa
+			task.JobMaxRetryTimes = 3
+
+			viewQueryResult := &interfaces.ViewQueryResult{
+				Entries: []map[string]any{
+					{
+						"field1": "value1",
+					},
+				},
+			}
+
+			property := &VectorProperty{
+				Name:           "prop1",
+				VectorField:    "_vector_prop1",
+				Model:          &interfaces.SmallModel{ModelID: "model1"},
+				AllVectorResps: make([]*cond.VectorResp, 0),
+			}
+			task.vectorProperties = []*VectorProperty{property}
+
+			mfa.EXPECT().GetVector(ctx, property.Model, []string{"value1"}).Return(nil, errors.New("vector error")).Times(3)
 
 			err := task.handlerIndexData(ctx, viewQueryResult)
 			So(err, ShouldNotBeNil)
