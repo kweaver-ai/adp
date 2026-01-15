@@ -451,3 +451,155 @@ func TestJobExecutor_HandleTask(t *testing.T) {
 		})
 	})
 }
+
+func TestJobExecutor_reloadJobs_Errors(t *testing.T) {
+	Convey("Test reloadJobs error cases\n", t, func() {
+		ctx := context.Background()
+		mockCtrl := gomock.NewController(t)
+		defer mockCtrl.Finish()
+
+		appSetting := &common.AppSetting{
+			ServerSetting: common.ServerSetting{
+				ReloadJobEnabled: true,
+			},
+		}
+
+		ja := dmock.NewMockJobAccess(mockCtrl)
+		db, _, _ := sqlmock.New()
+
+		je := &jobExecutor{
+			appSetting: appSetting,
+			ja:         ja,
+			db:         db,
+		}
+
+		Convey("Failed to update task state\n", func() {
+			tasks := []*interfaces.TaskInfo{
+				{
+					ID: "task1",
+					TaskStateInfo: interfaces.TaskStateInfo{
+						State: interfaces.TaskStateRunning,
+					},
+				},
+			}
+
+			ja.EXPECT().ListTasks(ctx, gomock.Any()).Return(tasks, nil)
+			ja.EXPECT().UpdateTaskState(ctx, "task1", gomock.Any()).Return(errors.New("db error"))
+
+			err := je.reloadJobs()
+			So(err, ShouldNotBeNil)
+		})
+
+		Convey("Failed to update job state\n", func() {
+			tasks := []*interfaces.TaskInfo{}
+			jobs := []*interfaces.JobInfo{
+				{
+					ID: "job1",
+					JobStateInfo: interfaces.JobStateInfo{
+						State: interfaces.JobStateRunning,
+					},
+					CreateTime: time.Now().UnixMilli(),
+				},
+			}
+
+			ja.EXPECT().ListTasks(ctx, gomock.Any()).Return(tasks, nil)
+			ja.EXPECT().ListJobs(ctx, gomock.Any()).Return(jobs, nil)
+			ja.EXPECT().UpdateJobState(ctx, nil, "job1", gomock.Any()).Return(errors.New("db error"))
+
+			err := je.reloadJobs()
+			So(err, ShouldNotBeNil)
+		})
+	})
+}
+
+func TestJobExecutor_HandleTaskCallback_Errors(t *testing.T) {
+	Convey("Test HandleTaskCallback error cases\n", t, func() {
+		mockCtrl := gomock.NewController(t)
+		defer mockCtrl.Finish()
+
+		appSetting := &common.AppSetting{}
+
+		ja := dmock.NewMockJobAccess(mockCtrl)
+		ota := dmock.NewMockObjectTypeAccess(mockCtrl)
+		db, smock, _ := sqlmock.New()
+
+		je := &jobExecutor{
+			appSetting: appSetting,
+			ja:         ja,
+			ota:        ota,
+			db:         db,
+			mJobs:      make(map[string]*Job),
+		}
+
+		jobInfo := &interfaces.JobInfo{
+			ID:         "job1",
+			KNID:       "kn1",
+			Branch:     "main",
+			CreateTime: time.Now().UnixMilli(),
+			Creator:    interfaces.AccountInfo{},
+		}
+
+		taskInfo := &interfaces.TaskInfo{
+			ID:          "task1",
+			Name:        "task1",
+			JobID:       "job1",
+			ConceptID:   "ot1",
+			ConceptType: interfaces.MODULE_TYPE_OBJECT_TYPE,
+			TaskStateInfo: interfaces.TaskStateInfo{
+				State:       interfaces.TaskStateCompleted,
+				StateDetail: "",
+			},
+		}
+
+		objectTypeTask := &ObjectTypeTask{
+			taskInfo: taskInfo,
+			objectTypeStatus: &interfaces.ObjectTypeStatus{
+				IndexAvailable: true,
+				DocCount:       10,
+			},
+		}
+
+		job := &Job{
+			mJobInfo:     jobInfo,
+			mTasks:       map[string]Task{"task1": objectTypeTask},
+			mFinishCount: 0,
+		}
+
+		je.mJobs["job1"] = job
+
+		Convey("Failed when UpdateObjectTypeStatus returns error\n", func() {
+			job.mFinishCount = len(job.mTasks) - 1
+
+			smock.ExpectBegin()
+			ota.EXPECT().UpdateObjectTypeStatus(gomock.Any(), gomock.Any(), "kn1", "main", "ot1", gomock.Any()).Return(errors.New("db error"))
+			smock.ExpectRollback()
+
+			je.HandleTaskCallback(objectTypeTask)
+			So(je.mJobs["job1"], ShouldNotBeNil) // Job should still exist
+		})
+
+		Convey("Failed when UpdateJobState returns error\n", func() {
+			job.mFinishCount = len(job.mTasks) - 1
+
+			smock.ExpectBegin()
+			ota.EXPECT().UpdateObjectTypeStatus(gomock.Any(), gomock.Any(), "kn1", "main", "ot1", gomock.Any()).Return(nil)
+			ja.EXPECT().UpdateJobState(gomock.Any(), gomock.Any(), "job1", gomock.Any()).Return(errors.New("db error"))
+			smock.ExpectRollback()
+
+			je.HandleTaskCallback(objectTypeTask)
+			So(je.mJobs["job1"], ShouldNotBeNil) // Job should still exist
+		})
+
+		Convey("Failed when transaction commit returns error\n", func() {
+			job.mFinishCount = len(job.mTasks) - 1
+
+			smock.ExpectBegin()
+			ota.EXPECT().UpdateObjectTypeStatus(gomock.Any(), gomock.Any(), "kn1", "main", "ot1", gomock.Any()).Return(nil)
+			ja.EXPECT().UpdateJobState(gomock.Any(), gomock.Any(), "job1", gomock.Any()).Return(nil)
+			smock.ExpectCommit().WillReturnError(errors.New("commit error"))
+
+			je.HandleTaskCallback(objectTypeTask)
+			So(je.mJobs["job1"], ShouldNotBeNil) // Job should still exist
+		})
+	})
+}

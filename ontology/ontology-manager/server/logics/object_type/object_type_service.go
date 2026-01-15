@@ -321,7 +321,7 @@ func (ots *objectTypeService) ListObjectTypes(ctx context.Context, tx *sql.Tx,
 		// 检查起始位置是否越界
 		if query.Offset < 0 || query.Offset >= len(objectTypes) {
 			span.SetStatus(codes.Ok, "")
-			return []*interfaces.ObjectType{}, 0, nil
+			return []*interfaces.ObjectType{}, total, nil
 		}
 		// 计算结束位置
 		end := query.Offset + query.Limit

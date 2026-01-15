@@ -142,6 +142,36 @@ func Test_jobAccess_GetJob(t *testing.T) {
 				t.Errorf("there were unfulfilled expectations: %s", err)
 			}
 		})
+
+		Convey("GetJob empty jobID \n", func() {
+			job, err := ja.GetJob(testCtx, "")
+			So(job, ShouldBeNil)
+			So(err, ShouldBeNil)
+		})
+
+		Convey("GetJob Unmarshal failed \n", func() {
+			rows := sqlmock.NewRows([]string{
+				"f_id", "f_name", "f_kn_id", "f_branch", "f_job_type",
+				"f_job_concept_config", "f_state", "f_state_detail",
+				"f_creator", "f_creator_type", "f_create_time",
+				"f_finish_time", "f_time_cost",
+			}).AddRow(
+				jobID, "Test Job", "kn1", "main", interfaces.JobTypeFull,
+				"invalid json", interfaces.JobStateRunning, "",
+				"admin", "admin", testUpdateTime,
+				int64(2000), int64(1000),
+			)
+
+			smock.ExpectQuery(sqlStr).WithArgs(jobID).WillReturnRows(rows)
+
+			job, err := ja.GetJob(testCtx, jobID)
+			So(job, ShouldBeNil)
+			So(err, ShouldNotBeNil)
+
+			if err := smock.ExpectationsWereMet(); err != nil {
+				t.Errorf("there were unfulfilled expectations: %s", err)
+			}
+		})
 	})
 }
 
@@ -301,6 +331,36 @@ func Test_jobAccess_UpdateJobState(t *testing.T) {
 				t.Errorf("there were unfulfilled expectations: %s", err)
 			}
 		})
+
+		Convey("UpdateJobState Success with tx nil \n", func() {
+			sqlStrWithFinish := fmt.Sprintf("UPDATE %s SET f_state = ?, f_state_detail = ? WHERE f_id = ?", JOB_TABLE_NAME)
+			smock.ExpectExec(sqlStrWithFinish).WithArgs().WillReturnResult(sqlmock.NewResult(0, 1))
+
+			err := ja.UpdateJobState(testCtx, nil, jobID, stateInfo)
+			So(err, ShouldBeNil)
+
+			if err := smock.ExpectationsWereMet(); err != nil {
+				t.Errorf("there were unfulfilled expectations: %s", err)
+			}
+		})
+
+		Convey("UpdateJobState Success with long state detail \n", func() {
+			longStateDetail := string(make([]byte, interfaces.MAX_STATE_DETAIL_SIZE+100))
+			stateInfoWithLongDetail := interfaces.JobStateInfo{
+				State:       interfaces.JobStateRunning,
+				StateDetail: longStateDetail,
+			}
+
+			sqlStrWithFinish := fmt.Sprintf("UPDATE %s SET f_state = ?, f_state_detail = ? WHERE f_id = ?", JOB_TABLE_NAME)
+			smock.ExpectExec(sqlStrWithFinish).WithArgs().WillReturnResult(sqlmock.NewResult(0, 1))
+
+			err := ja.UpdateJobState(testCtx, nil, jobID, stateInfoWithLongDetail)
+			So(err, ShouldBeNil)
+
+			if err := smock.ExpectationsWereMet(); err != nil {
+				t.Errorf("there were unfulfilled expectations: %s", err)
+			}
+		})
 	})
 }
 
@@ -378,6 +438,30 @@ func Test_jobAccess_GetJobs(t *testing.T) {
 				t.Errorf("there were unfulfilled expectations: %s", err)
 			}
 		})
+
+		Convey("GetJobs Scan error \n", func() {
+			rows := sqlmock.NewRows([]string{
+				"f_id", "f_name", "f_kn_id", "f_branch", "f_job_type",
+				"f_job_concept_config", "f_state", "f_state_detail",
+				"f_creator", "f_creator_type", "f_create_time",
+				"f_finish_time", "f_time_cost", "f_time_cost",
+			}).AddRow(
+				"job1", "Test Job 1", "kn1", "main", interfaces.JobTypeFull,
+				jobConceptConfigStr, interfaces.JobStateRunning, "",
+				"admin", "admin", testUpdateTime,
+				int64(2000), int64(1000), "f_time_cost",
+			)
+
+			smock.ExpectQuery(sqlStr).WithArgs().WillReturnRows(rows)
+
+			jobs, err := ja.GetJobs(testCtx, jobIDs)
+			So(len(jobs), ShouldEqual, 0)
+			So(err, ShouldNotBeNil)
+
+			if err := smock.ExpectationsWereMet(); err != nil {
+				t.Errorf("there were unfulfilled expectations: %s", err)
+			}
+		})
 	})
 }
 
@@ -411,6 +495,46 @@ func Test_jobAccess_UpdateTaskState(t *testing.T) {
 
 			err := ja.UpdateTaskState(testCtx, taskID, stateInfo)
 			So(err, ShouldResemble, expectedErr)
+
+			if err := smock.ExpectationsWereMet(); err != nil {
+				t.Errorf("there were unfulfilled expectations: %s", err)
+			}
+		})
+
+		Convey("UpdateTaskState Success with all fields \n", func() {
+			stateInfoWithAllFields := interfaces.TaskStateInfo{
+				State:       interfaces.TaskStateRunning,
+				StateDetail: "Running",
+				Index:       "index1",
+				DocCount:    100,
+				StartTime:   1000,
+				FinishTime:  2000,
+				TimeCost:    1000,
+			}
+			sqlStrWithAllFields := fmt.Sprintf("UPDATE %s SET f_state = ?, f_state_detail = ?, f_index = ?, f_doc_count = ?, f_start_time = ?, f_finish_time = ?, f_time_cost = ? WHERE f_id = ?", TASK_TABLE_NAME)
+
+			smock.ExpectExec(sqlStrWithAllFields).WithArgs().WillReturnResult(sqlmock.NewResult(0, 1))
+
+			err := ja.UpdateTaskState(testCtx, taskID, stateInfoWithAllFields)
+			So(err, ShouldBeNil)
+
+			if err := smock.ExpectationsWereMet(); err != nil {
+				t.Errorf("there were unfulfilled expectations: %s", err)
+			}
+		})
+
+		Convey("UpdateTaskState Success with long state detail \n", func() {
+			longStateDetail := string(make([]byte, interfaces.MAX_STATE_DETAIL_SIZE+100))
+			stateInfoWithLongDetail := interfaces.TaskStateInfo{
+				State:       interfaces.TaskStateRunning,
+				StateDetail: longStateDetail,
+			}
+
+			sqlStrWithLongDetail := fmt.Sprintf("UPDATE %s SET f_state = ?, f_state_detail = ? WHERE f_id = ?", TASK_TABLE_NAME)
+			smock.ExpectExec(sqlStrWithLongDetail).WithArgs().WillReturnResult(sqlmock.NewResult(0, 1))
+
+			err := ja.UpdateTaskState(testCtx, taskID, stateInfoWithLongDetail)
+			So(err, ShouldBeNil)
 
 			if err := smock.ExpectationsWereMet(); err != nil {
 				t.Errorf("there were unfulfilled expectations: %s", err)
@@ -473,6 +597,90 @@ func Test_jobAccess_ListJobs(t *testing.T) {
 				t.Errorf("there were unfulfilled expectations: %s", err)
 			}
 		})
+
+		Convey("ListJobs with all query params \n", func() {
+			queryParamsWithAll := interfaces.JobsQueryParams{
+				KNID:        "kn1",
+				Branch:      "main",
+				NamePattern: "test",
+				JobType:     interfaces.JobTypeFull,
+				State:       []interfaces.JobState{interfaces.JobStateRunning},
+				PaginationQueryParameters: interfaces.PaginationQueryParameters{
+					Offset:    10,
+					Limit:     20,
+					Sort:      "f_create_time",
+					Direction: "ASC",
+				},
+			}
+			sqlStrWithAll := fmt.Sprintf("SELECT f_id, f_name, f_kn_id, f_branch, f_job_type, f_job_concept_config, "+
+				"f_state, f_state_detail, f_creator, f_creator_type, f_create_time, f_finish_time, f_time_cost "+
+				"FROM %s WHERE f_kn_id = ? AND f_name LIKE ? AND f_job_type = ? AND f_state IN (?) ORDER BY f_create_time ASC LIMIT 20 OFFSET 10", JOB_TABLE_NAME)
+
+			rows := sqlmock.NewRows([]string{
+				"f_id", "f_name", "f_kn_id", "f_branch", "f_job_type",
+				"f_job_concept_config", "f_state", "f_state_detail",
+				"f_creator", "f_creator_type", "f_create_time",
+				"f_finish_time", "f_time_cost",
+			})
+
+			smock.ExpectQuery(sqlStrWithAll).WithArgs().WillReturnRows(rows)
+
+			jobs, err := ja.ListJobs(testCtx, queryParamsWithAll)
+			So(err, ShouldBeNil)
+			So(jobs, ShouldNotBeNil)
+
+			if err := smock.ExpectationsWereMet(); err != nil {
+				t.Errorf("there were unfulfilled expectations: %s", err)
+			}
+		})
+
+		Convey("ListJobs Scan error \n", func() {
+			rows := sqlmock.NewRows([]string{
+				"f_id", "f_name", "f_kn_id", "f_branch", "f_job_type",
+				"f_job_concept_config", "f_state", "f_state_detail",
+				"f_creator", "f_creator_type", "f_create_time",
+				"f_finish_time", "f_time_cost", "f_time_cost",
+			}).AddRow(
+				"job1", "Test Job 1", "kn1", "main", interfaces.JobTypeFull,
+				jobConceptConfigStr, interfaces.JobStateRunning, "",
+				"admin", "admin", testUpdateTime,
+				int64(2000), int64(1000), "f_time_cost",
+			)
+
+			smock.ExpectQuery(sqlStr).WithArgs().WillReturnRows(rows)
+
+			jobs, err := ja.ListJobs(testCtx, queryParams)
+			So(jobs, ShouldBeNil)
+			So(err, ShouldNotBeNil)
+
+			if err := smock.ExpectationsWereMet(); err != nil {
+				t.Errorf("there were unfulfilled expectations: %s", err)
+			}
+		})
+
+		Convey("ListJobs Unmarshal failed \n", func() {
+			rows := sqlmock.NewRows([]string{
+				"f_id", "f_name", "f_kn_id", "f_branch", "f_job_type",
+				"f_job_concept_config", "f_state", "f_state_detail",
+				"f_creator", "f_creator_type", "f_create_time",
+				"f_finish_time", "f_time_cost",
+			}).AddRow(
+				"job1", "Test Job 1", "kn1", "main", interfaces.JobTypeFull,
+				"invalid json", interfaces.JobStateRunning, "",
+				"admin", "admin", testUpdateTime,
+				int64(2000), int64(1000),
+			)
+
+			smock.ExpectQuery(sqlStr).WithArgs().WillReturnRows(rows)
+
+			jobs, err := ja.ListJobs(testCtx, queryParams)
+			So(jobs, ShouldBeNil)
+			So(err, ShouldNotBeNil)
+
+			if err := smock.ExpectationsWereMet(); err != nil {
+				t.Errorf("there were unfulfilled expectations: %s", err)
+			}
+		})
 	})
 }
 
@@ -509,6 +717,26 @@ func Test_jobAccess_GetJobsTotal(t *testing.T) {
 			total, err := ja.GetJobsTotal(testCtx, queryParams)
 			So(total, ShouldEqual, 0)
 			So(err, ShouldResemble, expectedErr)
+
+			if err := smock.ExpectationsWereMet(); err != nil {
+				t.Errorf("there were unfulfilled expectations: %s", err)
+			}
+		})
+
+		Convey("GetJobsTotal with all query params \n", func() {
+			queryParamsWithAll := interfaces.JobsQueryParams{
+				KNID:        "kn1",
+				NamePattern: "test",
+				State:       []interfaces.JobState{interfaces.JobStateRunning},
+			}
+			sqlStrWithAll := fmt.Sprintf("SELECT COUNT(*) FROM %s WHERE f_kn_id = ? AND f_name LIKE ? AND f_state IN (?)", JOB_TABLE_NAME)
+
+			rows := sqlmock.NewRows([]string{"COUNT(*)"}).AddRow(5)
+			smock.ExpectQuery(sqlStrWithAll).WithArgs().WillReturnRows(rows)
+
+			total, err := ja.GetJobsTotal(testCtx, queryParamsWithAll)
+			So(total, ShouldEqual, 5)
+			So(err, ShouldBeNil)
 
 			if err := smock.ExpectationsWereMet(); err != nil {
 				t.Errorf("there were unfulfilled expectations: %s", err)
@@ -575,6 +803,43 @@ func Test_jobAccess_CreateTasks(t *testing.T) {
 				t.Errorf("there were unfulfilled expectations: %s", err)
 			}
 		})
+
+		Convey("CreateTasks with multiple tasks \n", func() {
+			multipleTaskInfos := map[string]*interfaces.TaskInfo{
+				"task1": {
+					ID:          "task1",
+					Name:        "Task 1",
+					JobID:       "job1",
+					ConceptType: "object_type",
+					ConceptID:   "ot1",
+					TaskStateInfo: interfaces.TaskStateInfo{
+						State: interfaces.TaskStatePending,
+					},
+				},
+				"task2": {
+					ID:          "task2",
+					Name:        "Task 2",
+					JobID:       "job1",
+					ConceptType: "concept_group",
+					ConceptID:   "cg1",
+					TaskStateInfo: interfaces.TaskStateInfo{
+						State: interfaces.TaskStatePending,
+					},
+				},
+			}
+			sqlStrMultiple := fmt.Sprintf("INSERT INTO %s (f_id,f_name,f_job_id,f_concept_type,f_concept_id,f_state,f_state_detail) VALUES (?,?,?,?,?,?,?),(?,?,?,?,?,?,?)", TASK_TABLE_NAME)
+
+			smock.ExpectBegin()
+			smock.ExpectExec(sqlStrMultiple).WithArgs().WillReturnResult(sqlmock.NewResult(2, 2))
+
+			tx, _ := ja.db.Begin()
+			err := ja.CreateTasks(testCtx, tx, multipleTaskInfos)
+			So(err, ShouldBeNil)
+
+			if err := smock.ExpectationsWereMet(); err != nil {
+				t.Errorf("there were unfulfilled expectations: %s", err)
+			}
+		})
 	})
 }
 
@@ -628,6 +893,62 @@ func Test_jobAccess_ListTasks(t *testing.T) {
 				t.Errorf("there were unfulfilled expectations: %s", err)
 			}
 		})
+
+		Convey("ListTasks with all query params \n", func() {
+			queryParamsWithAll := interfaces.TasksQueryParams{
+				JobID:       "job1",
+				NamePattern: "test",
+				ConceptType: "object_type",
+				State:       []interfaces.TaskState{interfaces.TaskStateRunning},
+				PaginationQueryParameters: interfaces.PaginationQueryParameters{
+					Offset:    10,
+					Limit:     20,
+					Sort:      "f_start_time",
+					Direction: "ASC",
+				},
+			}
+			sqlStrWithAll := fmt.Sprintf("SELECT f_id, f_name, f_job_id, f_concept_type, f_concept_id, f_index, "+
+				"f_doc_count, f_state, f_state_detail, f_start_time, f_finish_time, f_time_cost "+
+				"FROM %s WHERE f_job_id = ? AND f_name LIKE ? AND f_concept_type = ? AND f_state IN (?) ORDER BY f_start_time ASC LIMIT 20 OFFSET 10", TASK_TABLE_NAME)
+
+			rows := sqlmock.NewRows([]string{
+				"f_id", "f_name", "f_job_id", "f_concept_type", "f_concept_id",
+				"f_index", "f_doc_count", "f_state", "f_state_detail",
+				"f_start_time", "f_finish_time", "f_time_cost",
+			})
+
+			smock.ExpectQuery(sqlStrWithAll).WithArgs().WillReturnRows(rows)
+
+			tasks, err := ja.ListTasks(testCtx, queryParamsWithAll)
+			So(err, ShouldBeNil)
+			So(tasks, ShouldNotBeNil)
+
+			if err := smock.ExpectationsWereMet(); err != nil {
+				t.Errorf("there were unfulfilled expectations: %s", err)
+			}
+		})
+
+		Convey("ListTasks Scan error \n", func() {
+			rows := sqlmock.NewRows([]string{
+				"f_id", "f_name", "f_job_id", "f_concept_type", "f_concept_id",
+				"f_index", "f_doc_count", "f_state", "f_state_detail",
+				"f_start_time", "f_finish_time", "f_time_cost", "f_time_cost",
+			}).AddRow(
+				"task1", "Task 1", "job1", "object_type", "ot1",
+				"", int64(0), interfaces.TaskStateRunning, "",
+				int64(1000), int64(2000), int64(1000), "f_time_cost",
+			)
+
+			smock.ExpectQuery(sqlStr).WithArgs().WillReturnRows(rows)
+
+			tasks, err := ja.ListTasks(testCtx, queryParams)
+			So(tasks, ShouldBeNil)
+			So(err, ShouldNotBeNil)
+
+			if err := smock.ExpectationsWereMet(); err != nil {
+				t.Errorf("there were unfulfilled expectations: %s", err)
+			}
+		})
 	})
 }
 
@@ -663,6 +984,27 @@ func Test_jobAccess_GetTasksTotal(t *testing.T) {
 			total, err := ja.GetTasksTotal(testCtx, queryParams)
 			So(total, ShouldEqual, 0)
 			So(err, ShouldResemble, expectedErr)
+
+			if err := smock.ExpectationsWereMet(); err != nil {
+				t.Errorf("there were unfulfilled expectations: %s", err)
+			}
+		})
+
+		Convey("GetTasksTotal with all query params \n", func() {
+			queryParamsWithAll := interfaces.TasksQueryParams{
+				JobID:       "job1",
+				NamePattern: "test",
+				ConceptType: "object_type",
+				State:       []interfaces.TaskState{interfaces.TaskStateRunning},
+			}
+			sqlStrWithAll := fmt.Sprintf("SELECT count(*) FROM %s WHERE f_job_id = ? AND f_concept_type = ? AND f_name LIKE ? AND f_state IN (?)", TASK_TABLE_NAME)
+
+			rows := sqlmock.NewRows([]string{"count(*)"}).AddRow(3)
+			smock.ExpectQuery(sqlStrWithAll).WithArgs().WillReturnRows(rows)
+
+			total, err := ja.GetTasksTotal(testCtx, queryParamsWithAll)
+			So(total, ShouldEqual, 3)
+			So(err, ShouldBeNil)
 
 			if err := smock.ExpectationsWereMet(); err != nil {
 				t.Errorf("there were unfulfilled expectations: %s", err)

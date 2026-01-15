@@ -257,6 +257,62 @@ func Test_knowledgeNetworkAccess_ListKNs(t *testing.T) {
 				t.Errorf("there were unfulfilled expectations: %s", err)
 			}
 		})
+
+		Convey("ListKNs Scan error \n", func() {
+			rows := sqlmock.NewRows([]string{
+				"f_id", "f_name", "f_tags", "f_comment", "f_icon", "f_color", "f_detail",
+				"f_branch", "f_business_domain", "f_creator", "f_creator_type", "f_create_time",
+				"f_updater", "f_updater_type", "f_update_time", "f_update_time",
+			}).AddRow(
+				"kn1", "Knowledge Network 1", `"tag1"`, "comment", "icon", "color", "detail",
+				"main", "domain1", "admin", "admin", testUpdateTime,
+				"admin", "admin", testUpdateTime, "testUpdateTime",
+			)
+
+			smock.ExpectQuery(sqlStr).WithArgs().WillReturnRows(rows)
+
+			kns, err := kna.ListKNs(testCtx, query)
+			So(kns, ShouldResemble, []*interfaces.KN{})
+			So(err, ShouldNotBeNil)
+
+			if err := smock.ExpectationsWereMet(); err != nil {
+				t.Errorf("there were unfulfilled expectations: %s", err)
+			}
+		})
+
+		Convey("ListKNs with all query params \n", func() {
+			queryWithAll := interfaces.KNsQueryParams{
+				NamePattern:    "test",
+				Tag:            "tag1",
+				BusinessDomain: "domain1",
+				PaginationQueryParameters: interfaces.PaginationQueryParameters{
+					Offset:    10,
+					Limit:     20,
+					Sort:      "f_name",
+					Direction: "ASC",
+				},
+			}
+			sqlStrWithAll := fmt.Sprintf("SELECT f_id, f_name, f_tags, f_comment, f_icon, f_color, f_detail, "+
+				"f_branch, f_business_domain, f_creator, f_creator_type, f_create_time, f_updater, f_updater_type, f_update_time "+
+				"FROM %s WHERE instr(f_name, ?) > 0 AND instr(f_tags, ?) > 0 AND f_business_domain = ? ORDER BY f_name ASC",
+				KN_TABLE_NAME)
+
+			rows := sqlmock.NewRows([]string{
+				"f_id", "f_name", "f_tags", "f_comment", "f_icon", "f_color", "f_detail",
+				"f_branch", "f_business_domain", "f_creator", "f_creator_type", "f_create_time",
+				"f_updater", "f_updater_type", "f_update_time",
+			})
+
+			smock.ExpectQuery(sqlStrWithAll).WithArgs().WillReturnRows(rows)
+
+			kns, err := kna.ListKNs(testCtx, queryWithAll)
+			So(err, ShouldBeNil)
+			So(kns, ShouldNotBeNil)
+
+			if err := smock.ExpectationsWereMet(); err != nil {
+				t.Errorf("there were unfulfilled expectations: %s", err)
+			}
+		})
 	})
 }
 
@@ -290,6 +346,26 @@ func Test_knowledgeNetworkAccess_GetKNsTotal(t *testing.T) {
 			total, err := kna.GetKNsTotal(testCtx, query)
 			So(total, ShouldEqual, 0)
 			So(err, ShouldResemble, expectedErr)
+
+			if err := smock.ExpectationsWereMet(); err != nil {
+				t.Errorf("there were unfulfilled expectations: %s", err)
+			}
+		})
+
+		Convey("GetKNsTotal with all query params \n", func() {
+			queryWithAll := interfaces.KNsQueryParams{
+				NamePattern:    "test",
+				Tag:            "tag1",
+				BusinessDomain: "domain1",
+			}
+			sqlStrWithAll := fmt.Sprintf("SELECT COUNT(f_id) FROM %s WHERE instr(f_name, ?) > 0 AND instr(f_tags, ?) > 0 AND f_business_domain = ?", KN_TABLE_NAME)
+
+			rows := sqlmock.NewRows([]string{"COUNT(f_id)"}).AddRow(5)
+			smock.ExpectQuery(sqlStrWithAll).WithArgs().WillReturnRows(rows)
+
+			total, err := kna.GetKNsTotal(testCtx, queryWithAll)
+			So(total, ShouldEqual, 5)
+			So(err, ShouldBeNil)
 
 			if err := smock.ExpectationsWereMet(); err != nil {
 				t.Errorf("there were unfulfilled expectations: %s", err)
@@ -408,6 +484,33 @@ func Test_knowledgeNetworkAccess_UpdateKN(t *testing.T) {
 				t.Errorf("there were unfulfilled expectations: %s", err)
 			}
 		})
+
+		Convey("UpdateKN RowsAffected != 1 \n", func() {
+			smock.ExpectBegin()
+			smock.ExpectExec(sqlStr).WithArgs().WillReturnResult(sqlmock.NewResult(0, 0))
+
+			tx, _ := kna.db.Begin()
+			err := kna.UpdateKN(testCtx, tx, kn)
+			So(err, ShouldBeNil)
+
+			if err := smock.ExpectationsWereMet(); err != nil {
+				t.Errorf("there were unfulfilled expectations: %s", err)
+			}
+		})
+
+		Convey("UpdateKN RowsAffected error \n", func() {
+			smock.ExpectBegin()
+			expectedErr := errors.New("Get RowsAffected error")
+			smock.ExpectExec(sqlStr).WithArgs().WillReturnResult(sqlmock.NewErrorResult(expectedErr))
+
+			tx, _ := kna.db.Begin()
+			err := kna.UpdateKN(testCtx, tx, kn)
+			So(err, ShouldBeNil)
+
+			if err := smock.ExpectationsWereMet(); err != nil {
+				t.Errorf("there were unfulfilled expectations: %s", err)
+			}
+		})
 	})
 }
 
@@ -439,6 +542,29 @@ func Test_knowledgeNetworkAccess_UpdateKNDetail(t *testing.T) {
 
 			err := kna.UpdateKNDetail(testCtx, knID, branch, detail)
 			So(err, ShouldResemble, expectedErr)
+
+			if err := smock.ExpectationsWereMet(); err != nil {
+				t.Errorf("there were unfulfilled expectations: %s", err)
+			}
+		})
+
+		Convey("UpdateKNDetail RowsAffected != 1 \n", func() {
+			smock.ExpectExec(sqlStr).WithArgs(detail, knID, branch).WillReturnResult(sqlmock.NewResult(0, 0))
+
+			err := kna.UpdateKNDetail(testCtx, knID, branch, detail)
+			So(err, ShouldBeNil)
+
+			if err := smock.ExpectationsWereMet(); err != nil {
+				t.Errorf("there were unfulfilled expectations: %s", err)
+			}
+		})
+
+		Convey("UpdateKNDetail RowsAffected error \n", func() {
+			expectedErr := errors.New("Get RowsAffected error")
+			smock.ExpectExec(sqlStr).WithArgs(detail, knID, branch).WillReturnResult(sqlmock.NewErrorResult(expectedErr))
+
+			err := kna.UpdateKNDetail(testCtx, knID, branch, detail)
+			So(err, ShouldBeNil)
 
 			if err := smock.ExpectationsWereMet(); err != nil {
 				t.Errorf("there were unfulfilled expectations: %s", err)
@@ -498,6 +624,20 @@ func Test_knowledgeNetworkAccess_DeleteKN(t *testing.T) {
 				t.Errorf("there were unfulfilled expectations: %s", err)
 			}
 		})
+
+		Convey("DeleteKN RowsAffected != 1 \n", func() {
+			smock.ExpectBegin()
+			smock.ExpectExec(sqlStr).WithArgs(knID, branch).WillReturnResult(sqlmock.NewResult(0, 0))
+
+			tx, _ := kna.db.Begin()
+			rowsAffected, err := kna.DeleteKN(testCtx, tx, knID, branch)
+			So(err, ShouldBeNil)
+			So(rowsAffected, ShouldEqual, 0)
+
+			if err := smock.ExpectationsWereMet(); err != nil {
+				t.Errorf("there were unfulfilled expectations: %s", err)
+			}
+		})
 	})
 }
 
@@ -550,6 +690,28 @@ func Test_knowledgeNetworkAccess_GetAllKNs(t *testing.T) {
 				t.Errorf("there were unfulfilled expectations: %s", err)
 			}
 		})
+
+		Convey("GetAllKNs Scan error \n", func() {
+			rows := sqlmock.NewRows([]string{
+				"f_id", "f_name", "f_tags", "f_comment", "f_icon", "f_color", "f_detail",
+				"f_branch", "f_creator", "f_creator_type", "f_create_time",
+				"f_updater", "f_updater_type", "f_update_time", "f_update_time",
+			}).AddRow(
+				"kn1", "Knowledge Network 1", `"tag1"`, "comment", "icon", "color", "detail",
+				"main", "admin", "admin", testUpdateTime,
+				"admin", "admin", testUpdateTime, "testUpdateTime",
+			)
+
+			smock.ExpectQuery(sqlStr).WithArgs().WillReturnRows(rows)
+
+			kns, err := kna.GetAllKNs(testCtx)
+			So(kns, ShouldResemble, map[string]*interfaces.KN{})
+			So(err, ShouldNotBeNil)
+
+			if err := smock.ExpectationsWereMet(); err != nil {
+				t.Errorf("there were unfulfilled expectations: %s", err)
+			}
+		})
 	})
 }
 
@@ -587,6 +749,47 @@ func Test_knowledgeNetworkAccess_ListKnSrcs(t *testing.T) {
 			srcs, err := kna.ListKnSrcs(testCtx, query)
 			So(srcs, ShouldResemble, []interfaces.Resource{})
 			So(err, ShouldResemble, expectedErr)
+
+			if err := smock.ExpectationsWereMet(); err != nil {
+				t.Errorf("there were unfulfilled expectations: %s", err)
+			}
+		})
+
+		Convey("ListKnSrcs Scan error \n", func() {
+			rows := sqlmock.NewRows([]string{"f_id", "f_name", "f_update_time"}).
+				AddRow("kn1", "Knowledge Network 1", "testUpdateTime")
+
+			smock.ExpectQuery(sqlStr).WithArgs().WillReturnRows(rows)
+
+			srcs, err := kna.ListKnSrcs(testCtx, query)
+			So(srcs, ShouldResemble, []interfaces.Resource{})
+			So(err, ShouldNotBeNil)
+
+			if err := smock.ExpectationsWereMet(); err != nil {
+				t.Errorf("there were unfulfilled expectations: %s", err)
+			}
+		})
+
+		Convey("ListKnSrcs with NamePattern and Sort \n", func() {
+			queryWithParams := interfaces.KNsQueryParams{
+				NamePattern: "test",
+				PaginationQueryParameters: interfaces.PaginationQueryParameters{
+					Sort:      "graph_name",
+					Direction: "ASC",
+				},
+			}
+			sqlStr1WithParams := fmt.Sprintf("SELECT f_id, f_name FROM %s WHERE instr(f_name, ?) > 0 ORDER BY graph_name ASC", KN_TABLE_NAME)
+			sqlStr2WithParams := "SELECT id, graph_name FROM dip_kn.graph_config_table WHERE instr(graph_name, ?) > 0 ORDER BY graph_name ASC"
+			sqlStrWithParams := fmt.Sprintf("(%s) UNION ALL (%s)", sqlStr1WithParams, sqlStr2WithParams)
+
+			rows := sqlmock.NewRows([]string{"f_id", "f_name"}).
+				AddRow("kn1", "Knowledge Network 1")
+
+			smock.ExpectQuery(sqlStrWithParams).WithArgs().WillReturnRows(rows)
+
+			srcs, err := kna.ListKnSrcs(testCtx, queryWithParams)
+			So(err, ShouldBeNil)
+			So(len(srcs), ShouldEqual, 1)
 
 			if err := smock.ExpectationsWereMet(); err != nil {
 				t.Errorf("there were unfulfilled expectations: %s", err)
@@ -639,6 +842,294 @@ func Test_knowledgeNetworkAccess_ProcessQueryCondition(t *testing.T) {
 			sqlBuilder := processQueryCondition(query, sqlBuilder)
 			sqlStr, _, _ := sqlBuilder.ToSql()
 			So(sqlStr, ShouldEqual, expectedSqlStr)
+		})
+	})
+}
+
+func Test_knowledgeNetworkAccess_ProcessConceptGroupRelationsQueryCondition(t *testing.T) {
+	Convey("test processConceptGroupRelationsQueryCondition", t, func() {
+		appSetting := &common.AppSetting{}
+		_, _ = MockNewKNAccess(appSetting)
+
+		sqlBuilder := sq.Select("f_concept_id").From("t_concept_group_relation AS cgr")
+
+		Convey("KNID query", func() {
+			query := interfaces.ConceptGroupRelationsQueryParams{
+				KNID: "kn1",
+			}
+
+			sqlBuilder := processConceptGroupRelationsQueryCondition(query, sqlBuilder, "cgr.")
+			sqlStr, vals, _ := sqlBuilder.ToSql()
+			So(sqlStr, ShouldContainSubstring, "f_kn_id")
+			So(len(vals), ShouldBeGreaterThan, 0)
+		})
+
+		Convey("Branch query", func() {
+			query := interfaces.ConceptGroupRelationsQueryParams{
+				Branch: "main",
+			}
+
+			sqlBuilder := processConceptGroupRelationsQueryCondition(query, sqlBuilder, "cgr.")
+			sqlStr, vals, _ := sqlBuilder.ToSql()
+			So(sqlStr, ShouldContainSubstring, "f_branch")
+			So(len(vals), ShouldBeGreaterThan, 0)
+		})
+
+		Convey("Empty Branch query", func() {
+			query := interfaces.ConceptGroupRelationsQueryParams{
+				Branch: "",
+			}
+
+			sqlBuilder := processConceptGroupRelationsQueryCondition(query, sqlBuilder, "cgr.")
+			sqlStr, vals, _ := sqlBuilder.ToSql()
+			So(sqlStr, ShouldContainSubstring, "f_branch")
+			So(len(vals), ShouldBeGreaterThan, 0)
+		})
+
+		Convey("CGIDs query", func() {
+			query := interfaces.ConceptGroupRelationsQueryParams{
+				CGIDs: []string{"cg1", "cg2"},
+			}
+
+			sqlBuilder := processConceptGroupRelationsQueryCondition(query, sqlBuilder, "cgr.")
+			sqlStr, vals, _ := sqlBuilder.ToSql()
+			So(sqlStr, ShouldContainSubstring, "f_group_id")
+			So(len(vals), ShouldBeGreaterThan, 0)
+		})
+
+		Convey("ConceptType query", func() {
+			query := interfaces.ConceptGroupRelationsQueryParams{
+				ConceptType: "object_type",
+			}
+
+			sqlBuilder := processConceptGroupRelationsQueryCondition(query, sqlBuilder, "cgr.")
+			sqlStr, vals, _ := sqlBuilder.ToSql()
+			So(sqlStr, ShouldContainSubstring, "f_concept_type")
+			So(len(vals), ShouldBeGreaterThan, 0)
+		})
+
+		Convey("OTIDs query", func() {
+			query := interfaces.ConceptGroupRelationsQueryParams{
+				OTIDs: []string{"ot1", "ot2"},
+			}
+
+			sqlBuilder := processConceptGroupRelationsQueryCondition(query, sqlBuilder, "cgr.")
+			sqlStr, vals, _ := sqlBuilder.ToSql()
+			So(sqlStr, ShouldContainSubstring, "f_concept_id")
+			So(len(vals), ShouldBeGreaterThan, 0)
+		})
+	})
+}
+
+func Test_knowledgeNetworkAccess_GetNeighborPathsBatch(t *testing.T) {
+	Convey("test GetNeighborPathsBatch", t, func() {
+		appSetting := &common.AppSetting{}
+		// 使用 QueryMatcherRegexp 来匹配复杂的 SQL
+		db, smock, _ := sqlmock.New(sqlmock.QueryMatcherOption(sqlmock.QueryMatcherRegexp))
+		kna := &knowledgeNetworkAccess{
+			appSetting: appSetting,
+			db:         db,
+		}
+
+		otIDs := []string{"ot1"}
+		query := interfaces.RelationTypePathsBaseOnSource{
+			KNID:   "kn1",
+			Branch: "main",
+		}
+
+		Convey("GetNeighborPathsBatch forward direction query error", func() {
+			query.Direction = interfaces.DIRECTION_FORWARD
+			expectedErr := errors.New("query error")
+			// 匹配包含 forward 和 rt.f_source_object_type_id 的 SQL
+			smock.ExpectQuery(`.*forward.*rt\.f_source_object_type_id.*`).WillReturnError(expectedErr)
+
+			result, err := kna.GetNeighborPathsBatch(testCtx, otIDs, query)
+			So(result, ShouldBeNil)
+			So(err, ShouldResemble, expectedErr)
+
+			if err := smock.ExpectationsWereMet(); err != nil {
+				t.Errorf("there were unfulfilled expectations: %s", err)
+			}
+		})
+
+		Convey("GetNeighborPathsBatch backward direction query error", func() {
+			query.Direction = interfaces.DIRECTION_BACKWARD
+			expectedErr := errors.New("query error")
+			// 匹配包含 backward 和 rt.f_target_object_type_id 的 SQL
+			smock.ExpectQuery(`.*backward.*rt\.f_target_object_type_id.*`).WillReturnError(expectedErr)
+
+			result, err := kna.GetNeighborPathsBatch(testCtx, otIDs, query)
+			So(result, ShouldBeNil)
+			So(err, ShouldResemble, expectedErr)
+
+			if err := smock.ExpectationsWereMet(); err != nil {
+				t.Errorf("there were unfulfilled expectations: %s", err)
+			}
+		})
+
+		Convey("GetNeighborPathsBatch bidirectional direction query error", func() {
+			query.Direction = interfaces.DIRECTION_BIDIRECTIONAL
+			expectedErr := errors.New("query error")
+			// 匹配包含 UNION ALL 的 SQL
+			smock.ExpectQuery(`.*UNION ALL.*`).WillReturnError(expectedErr)
+
+			result, err := kna.GetNeighborPathsBatch(testCtx, otIDs, query)
+			So(result, ShouldBeNil)
+			So(err, ShouldResemble, expectedErr)
+
+			if err := smock.ExpectationsWereMet(); err != nil {
+				t.Errorf("there were unfulfilled expectations: %s", err)
+			}
+		})
+
+		Convey("GetNeighborPathsBatch scan error", func() {
+			query.Direction = interfaces.DIRECTION_FORWARD
+			rows := sqlmock.NewRows([]string{
+				"direction", "source_id", "neighbor_id", "rt_id", "rt_name",
+				"source_ot_id", "target_ot_id", "rt_type", "mapping_rules",
+				"ot_id", "ot_name", "data_source", "data_properties",
+				"logic_properties", "primary_keys", "display_key", "display_key",
+			}).AddRow(
+				"forward", "ot1", "ot2", "rt1", "Relation 1",
+				"ot1", "ot2", "direct", []byte("[]"),
+				"ot2", "Object Type 2", []byte("{}"), []byte("[]"),
+				[]byte("[]"), []byte("[]"), "id", "id",
+			)
+
+			smock.ExpectQuery(`.*forward.*rt\.f_source_object_type_id.*`).WillReturnRows(rows)
+
+			result, err := kna.GetNeighborPathsBatch(testCtx, otIDs, query)
+			So(result, ShouldBeNil)
+			So(err, ShouldNotBeNil)
+
+			if err := smock.ExpectationsWereMet(); err != nil {
+				t.Errorf("there were unfulfilled expectations: %s", err)
+			}
+		})
+
+		Convey("GetNeighborPathsBatch unmarshal mappingRules error", func() {
+			query.Direction = interfaces.DIRECTION_FORWARD
+			rows := sqlmock.NewRows([]string{
+				"direction", "source_id", "neighbor_id", "rt_id", "rt_name",
+				"source_ot_id", "target_ot_id", "rt_type", "mapping_rules",
+				"ot_id", "ot_name", "data_source", "data_properties",
+				"logic_properties", "primary_keys", "display_key",
+			}).AddRow(
+				"forward", "ot1", "ot2", "rt1", "Relation 1",
+				"ot1", "ot2", "direct", []byte("invalid json"),
+				"ot2", "Object Type 2", []byte("{}"), []byte("[]"),
+				[]byte("[]"), []byte("[]"), "id",
+			)
+
+			smock.ExpectQuery(`.*forward.*rt\.f_source_object_type_id.*`).WillReturnRows(rows)
+
+			result, err := kna.GetNeighborPathsBatch(testCtx, otIDs, query)
+			So(result, ShouldBeNil)
+			So(err, ShouldNotBeNil)
+
+			if err := smock.ExpectationsWereMet(); err != nil {
+				t.Errorf("there were unfulfilled expectations: %s", err)
+			}
+		})
+
+		Convey("GetNeighborPathsBatch unmarshal dataSource error", func() {
+			query.Direction = interfaces.DIRECTION_FORWARD
+			rows := sqlmock.NewRows([]string{
+				"direction", "source_id", "neighbor_id", "rt_id", "rt_name",
+				"source_ot_id", "target_ot_id", "rt_type", "mapping_rules",
+				"ot_id", "ot_name", "data_source", "data_properties",
+				"logic_properties", "primary_keys", "display_key",
+			}).AddRow(
+				"forward", "ot1", "ot2", "rt1", "Relation 1",
+				"ot1", "ot2", "direct", []byte("[]"),
+				"ot2", "Object Type 2", []byte("invalid json"), []byte("[]"),
+				[]byte("[]"), []byte("[]"), "id",
+			)
+
+			smock.ExpectQuery(`.*forward.*rt\.f_source_object_type_id.*`).WillReturnRows(rows)
+
+			result, err := kna.GetNeighborPathsBatch(testCtx, otIDs, query)
+			So(result, ShouldBeNil)
+			So(err, ShouldNotBeNil)
+
+			if err := smock.ExpectationsWereMet(); err != nil {
+				t.Errorf("there were unfulfilled expectations: %s", err)
+			}
+		})
+
+		Convey("GetNeighborPathsBatch unmarshal dataProperties error", func() {
+			query.Direction = interfaces.DIRECTION_FORWARD
+			rows := sqlmock.NewRows([]string{
+				"direction", "source_id", "neighbor_id", "rt_id", "rt_name",
+				"source_ot_id", "target_ot_id", "rt_type", "mapping_rules",
+				"ot_id", "ot_name", "data_source", "data_properties",
+				"logic_properties", "primary_keys", "display_key",
+			}).AddRow(
+				"forward", "ot1", "ot2", "rt1", "Relation 1",
+				"ot1", "ot2", "direct", []byte("[]"),
+				"ot2", "Object Type 2", []byte("{}"), []byte("invalid json"),
+				[]byte("[]"), []byte("[]"), "id",
+			)
+
+			smock.ExpectQuery(`.*forward.*rt\.f_source_object_type_id.*`).WillReturnRows(rows)
+
+			result, err := kna.GetNeighborPathsBatch(testCtx, otIDs, query)
+			So(result, ShouldBeNil)
+			So(err, ShouldNotBeNil)
+
+			if err := smock.ExpectationsWereMet(); err != nil {
+				t.Errorf("there were unfulfilled expectations: %s", err)
+			}
+		})
+
+		Convey("GetNeighborPathsBatch unmarshal logicProperties error", func() {
+			query.Direction = interfaces.DIRECTION_FORWARD
+			rows := sqlmock.NewRows([]string{
+				"direction", "source_id", "neighbor_id", "rt_id", "rt_name",
+				"source_ot_id", "target_ot_id", "rt_type", "mapping_rules",
+				"ot_id", "ot_name", "data_source", "data_properties",
+				"logic_properties", "primary_keys", "display_key",
+			}).AddRow(
+				"forward", "ot1", "ot2", "rt1", "Relation 1",
+				"ot1", "ot2", "direct", []byte("[]"),
+				"ot2", "Object Type 2", []byte("{}"), []byte("[]"),
+				[]byte("invalid json"), []byte("[]"), "id",
+			)
+
+			smock.ExpectQuery(`.*forward.*rt\.f_source_object_type_id.*`).WillReturnRows(rows)
+
+			result, err := kna.GetNeighborPathsBatch(testCtx, otIDs, query)
+			So(result, ShouldBeNil)
+			So(err, ShouldNotBeNil)
+
+			if err := smock.ExpectationsWereMet(); err != nil {
+				t.Errorf("there were unfulfilled expectations: %s", err)
+			}
+		})
+
+		Convey("GetNeighborPathsBatch unmarshal primaryKeys error", func() {
+			query.Direction = interfaces.DIRECTION_FORWARD
+			rows := sqlmock.NewRows([]string{
+				"direction", "source_id", "neighbor_id", "rt_id", "rt_name",
+				"source_ot_id", "target_ot_id", "rt_type", "mapping_rules",
+				"ot_id", "ot_name", "data_source", "data_properties",
+				"logic_properties", "primary_keys", "display_key",
+			}).AddRow(
+				"forward", "ot1", "ot2", "rt1", "Relation 1",
+				"ot1", "ot2", "direct", []byte("[]"),
+				"ot2", "Object Type 2", []byte("{}"), []byte("[]"),
+				[]byte("[]"), []byte("invalid json"), "id",
+			)
+
+			smock.ExpectQuery(`.*forward.*rt\.f_source_object_type_id.*`).WillReturnRows(rows)
+
+			result, err := kna.GetNeighborPathsBatch(testCtx, otIDs, query)
+			So(result, ShouldBeNil)
+			So(err, ShouldNotBeNil)
+
+			if err := smock.ExpectationsWereMet(); err != nil {
+				t.Errorf("there were unfulfilled expectations: %s", err)
+			}
 		})
 	})
 }

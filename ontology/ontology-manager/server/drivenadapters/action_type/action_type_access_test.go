@@ -306,6 +306,131 @@ func Test_ActionTypeAccess_ListActionTypes(t *testing.T) {
 			}
 		})
 
+		Convey("ListActionTypes unmarshal Condition error \n", func() {
+			invalidBytes := []byte("invalid json")
+			rows := sqlmock.NewRows([]string{
+				"f_id", "f_name", "f_tags", "f_comment", "f_icon", "f_color", "f_detail",
+				"f_kn_id", "f_branch", "f_action_type", "f_object_type_id",
+				"f_condition", "f_affect", "f_action_source", "f_parameters", "f_schedule",
+				"f_creator", "f_creator_type", "f_create_time",
+				"f_updater", "f_updater_type", "f_update_time",
+			}).AddRow(
+				"at1", "Action Type 1", `"tag1"`, "comment", "icon", "color", "detail",
+				"kn1", "main", interfaces.ACTION_TYPE_TOOL, "ot1",
+				invalidBytes, affectBytes, actionSourceBytes, parametersBytes, scheduleBytes,
+				"admin", "admin", testUpdateTime,
+				"admin", "admin", testUpdateTime,
+			)
+			smock.ExpectQuery(sqlStr).WithArgs().WillReturnRows(rows)
+
+			_, err := ata.ListActionTypes(testCtx, query)
+			So(err, ShouldNotBeNil)
+
+			if err := smock.ExpectationsWereMet(); err != nil {
+				t.Errorf("there were unfulfilled expectations: %s", err)
+			}
+		})
+
+		Convey("ListActionTypes unmarshal Affect error \n", func() {
+			invalidBytes := []byte("invalid json")
+			rows := sqlmock.NewRows([]string{
+				"f_id", "f_name", "f_tags", "f_comment", "f_icon", "f_color", "f_detail",
+				"f_kn_id", "f_branch", "f_action_type", "f_object_type_id",
+				"f_condition", "f_affect", "f_action_source", "f_parameters", "f_schedule",
+				"f_creator", "f_creator_type", "f_create_time",
+				"f_updater", "f_updater_type", "f_update_time",
+			}).AddRow(
+				"at1", "Action Type 1", `"tag1"`, "comment", "icon", "color", "detail",
+				"kn1", "main", interfaces.ACTION_TYPE_TOOL, "ot1",
+				conditionBytes, invalidBytes, actionSourceBytes, parametersBytes, scheduleBytes,
+				"admin", "admin", testUpdateTime,
+				"admin", "admin", testUpdateTime,
+			)
+			smock.ExpectQuery(sqlStr).WithArgs().WillReturnRows(rows)
+
+			_, err := ata.ListActionTypes(testCtx, query)
+			So(err, ShouldNotBeNil)
+
+			if err := smock.ExpectationsWereMet(); err != nil {
+				t.Errorf("there were unfulfilled expectations: %s", err)
+			}
+		})
+
+		Convey("ListActionTypes unmarshal ActionSource error \n", func() {
+			invalidBytes := []byte("invalid json")
+			rows := sqlmock.NewRows([]string{
+				"f_id", "f_name", "f_tags", "f_comment", "f_icon", "f_color", "f_detail",
+				"f_kn_id", "f_branch", "f_action_type", "f_object_type_id",
+				"f_condition", "f_affect", "f_action_source", "f_parameters", "f_schedule",
+				"f_creator", "f_creator_type", "f_create_time",
+				"f_updater", "f_updater_type", "f_update_time",
+			}).AddRow(
+				"at1", "Action Type 1", `"tag1"`, "comment", "icon", "color", "detail",
+				"kn1", "main", interfaces.ACTION_TYPE_TOOL, "ot1",
+				conditionBytes, affectBytes, invalidBytes, parametersBytes, scheduleBytes,
+				"admin", "admin", testUpdateTime,
+				"admin", "admin", testUpdateTime,
+			)
+			smock.ExpectQuery(sqlStr).WithArgs().WillReturnRows(rows)
+
+			_, err := ata.ListActionTypes(testCtx, query)
+			So(err, ShouldNotBeNil)
+
+			if err := smock.ExpectationsWereMet(); err != nil {
+				t.Errorf("there were unfulfilled expectations: %s", err)
+			}
+		})
+
+		Convey("ListActionTypes unmarshal Parameters error \n", func() {
+			invalidBytes := []byte("invalid json")
+			rows := sqlmock.NewRows([]string{
+				"f_id", "f_name", "f_tags", "f_comment", "f_icon", "f_color", "f_detail",
+				"f_kn_id", "f_branch", "f_action_type", "f_object_type_id",
+				"f_condition", "f_affect", "f_action_source", "f_parameters", "f_schedule",
+				"f_creator", "f_creator_type", "f_create_time",
+				"f_updater", "f_updater_type", "f_update_time",
+			}).AddRow(
+				"at1", "Action Type 1", `"tag1"`, "comment", "icon", "color", "detail",
+				"kn1", "main", interfaces.ACTION_TYPE_TOOL, "ot1",
+				conditionBytes, affectBytes, actionSourceBytes, invalidBytes, scheduleBytes,
+				"admin", "admin", testUpdateTime,
+				"admin", "admin", testUpdateTime,
+			)
+			smock.ExpectQuery(sqlStr).WithArgs().WillReturnRows(rows)
+
+			_, err := ata.ListActionTypes(testCtx, query)
+			So(err, ShouldNotBeNil)
+
+			if err := smock.ExpectationsWereMet(); err != nil {
+				t.Errorf("there were unfulfilled expectations: %s", err)
+			}
+		})
+
+		Convey("ListActionTypes unmarshal Schedule error \n", func() {
+			invalidBytes := []byte("invalid json")
+			rows := sqlmock.NewRows([]string{
+				"f_id", "f_name", "f_tags", "f_comment", "f_icon", "f_color", "f_detail",
+				"f_kn_id", "f_branch", "f_action_type", "f_object_type_id",
+				"f_condition", "f_affect", "f_action_source", "f_parameters", "f_schedule",
+				"f_creator", "f_creator_type", "f_create_time",
+				"f_updater", "f_updater_type", "f_update_time",
+			}).AddRow(
+				"at1", "Action Type 1", `"tag1"`, "comment", "icon", "color", "detail",
+				"kn1", "main", interfaces.ACTION_TYPE_TOOL, "ot1",
+				conditionBytes, affectBytes, actionSourceBytes, parametersBytes, invalidBytes,
+				"admin", "admin", testUpdateTime,
+				"admin", "admin", testUpdateTime,
+			)
+			smock.ExpectQuery(sqlStr).WithArgs().WillReturnRows(rows)
+
+			_, err := ata.ListActionTypes(testCtx, query)
+			So(err, ShouldNotBeNil)
+
+			if err := smock.ExpectationsWereMet(); err != nil {
+				t.Errorf("there were unfulfilled expectations: %s", err)
+			}
+		})
+
 	})
 }
 
@@ -438,6 +563,143 @@ func Test_ActionTypeAccess_GetActionTypesByIDs(t *testing.T) {
 				t.Errorf("there were unfulfilled expectations: %s", err)
 			}
 		})
+
+		Convey("GetActionTypesByIDs scan error \n", func() {
+			rows := sqlmock.NewRows([]string{"f_id"}).AddRow("at1")
+			smock.ExpectQuery(sqlStr).WithArgs().WillReturnRows(rows)
+
+			_, err := ata.GetActionTypesByIDs(testCtx, knID, branch, atIDs)
+			So(err, ShouldNotBeNil)
+
+			if err := smock.ExpectationsWereMet(); err != nil {
+				t.Errorf("there were unfulfilled expectations: %s", err)
+			}
+		})
+
+		Convey("GetActionTypesByIDs unmarshal Condition error \n", func() {
+			invalidBytes := []byte("invalid json")
+			rows := sqlmock.NewRows([]string{
+				"f_id", "f_name", "f_tags", "f_comment", "f_icon", "f_color", "f_detail",
+				"f_kn_id", "f_branch", "f_action_type", "f_object_type_id",
+				"f_condition", "f_affect", "f_action_source", "f_parameters", "f_schedule",
+				"f_creator", "f_creator_type", "f_create_time",
+				"f_updater", "f_updater_type", "f_update_time",
+			}).AddRow(
+				"at1", "Action Type 1", `"tag1"`, "comment", "icon", "color", "detail",
+				"kn1", "main", interfaces.ACTION_TYPE_TOOL, "ot1",
+				invalidBytes, affectBytes, actionSourceBytes, parametersBytes, scheduleBytes,
+				"admin", "admin", testUpdateTime,
+				"admin", "admin", testUpdateTime,
+			)
+			smock.ExpectQuery(sqlStr).WithArgs().WillReturnRows(rows)
+
+			_, err := ata.GetActionTypesByIDs(testCtx, knID, branch, atIDs)
+			So(err, ShouldNotBeNil)
+
+			if err := smock.ExpectationsWereMet(); err != nil {
+				t.Errorf("there were unfulfilled expectations: %s", err)
+			}
+		})
+
+		Convey("GetActionTypesByIDs unmarshal Affect error \n", func() {
+			invalidBytes := []byte("invalid json")
+			rows := sqlmock.NewRows([]string{
+				"f_id", "f_name", "f_tags", "f_comment", "f_icon", "f_color", "f_detail",
+				"f_kn_id", "f_branch", "f_action_type", "f_object_type_id",
+				"f_condition", "f_affect", "f_action_source", "f_parameters", "f_schedule",
+				"f_creator", "f_creator_type", "f_create_time",
+				"f_updater", "f_updater_type", "f_update_time",
+			}).AddRow(
+				"at1", "Action Type 1", `"tag1"`, "comment", "icon", "color", "detail",
+				"kn1", "main", interfaces.ACTION_TYPE_TOOL, "ot1",
+				conditionBytes, invalidBytes, actionSourceBytes, parametersBytes, scheduleBytes,
+				"admin", "admin", testUpdateTime,
+				"admin", "admin", testUpdateTime,
+			)
+			smock.ExpectQuery(sqlStr).WithArgs().WillReturnRows(rows)
+
+			_, err := ata.GetActionTypesByIDs(testCtx, knID, branch, atIDs)
+			So(err, ShouldNotBeNil)
+
+			if err := smock.ExpectationsWereMet(); err != nil {
+				t.Errorf("there were unfulfilled expectations: %s", err)
+			}
+		})
+
+		Convey("GetActionTypesByIDs unmarshal ActionSource error \n", func() {
+			invalidBytes := []byte("invalid json")
+			rows := sqlmock.NewRows([]string{
+				"f_id", "f_name", "f_tags", "f_comment", "f_icon", "f_color", "f_detail",
+				"f_kn_id", "f_branch", "f_action_type", "f_object_type_id",
+				"f_condition", "f_affect", "f_action_source", "f_parameters", "f_schedule",
+				"f_creator", "f_creator_type", "f_create_time",
+				"f_updater", "f_updater_type", "f_update_time",
+			}).AddRow(
+				"at1", "Action Type 1", `"tag1"`, "comment", "icon", "color", "detail",
+				"kn1", "main", interfaces.ACTION_TYPE_TOOL, "ot1",
+				conditionBytes, affectBytes, invalidBytes, parametersBytes, scheduleBytes,
+				"admin", "admin", testUpdateTime,
+				"admin", "admin", testUpdateTime,
+			)
+			smock.ExpectQuery(sqlStr).WithArgs().WillReturnRows(rows)
+
+			_, err := ata.GetActionTypesByIDs(testCtx, knID, branch, atIDs)
+			So(err, ShouldNotBeNil)
+
+			if err := smock.ExpectationsWereMet(); err != nil {
+				t.Errorf("there were unfulfilled expectations: %s", err)
+			}
+		})
+
+		Convey("GetActionTypesByIDs unmarshal Parameters error \n", func() {
+			invalidBytes := []byte("invalid json")
+			rows := sqlmock.NewRows([]string{
+				"f_id", "f_name", "f_tags", "f_comment", "f_icon", "f_color", "f_detail",
+				"f_kn_id", "f_branch", "f_action_type", "f_object_type_id",
+				"f_condition", "f_affect", "f_action_source", "f_parameters", "f_schedule",
+				"f_creator", "f_creator_type", "f_create_time",
+				"f_updater", "f_updater_type", "f_update_time",
+			}).AddRow(
+				"at1", "Action Type 1", `"tag1"`, "comment", "icon", "color", "detail",
+				"kn1", "main", interfaces.ACTION_TYPE_TOOL, "ot1",
+				conditionBytes, affectBytes, actionSourceBytes, invalidBytes, scheduleBytes,
+				"admin", "admin", testUpdateTime,
+				"admin", "admin", testUpdateTime,
+			)
+			smock.ExpectQuery(sqlStr).WithArgs().WillReturnRows(rows)
+
+			_, err := ata.GetActionTypesByIDs(testCtx, knID, branch, atIDs)
+			So(err, ShouldNotBeNil)
+
+			if err := smock.ExpectationsWereMet(); err != nil {
+				t.Errorf("there were unfulfilled expectations: %s", err)
+			}
+		})
+
+		Convey("GetActionTypesByIDs unmarshal Schedule error \n", func() {
+			invalidBytes := []byte("invalid json")
+			rows := sqlmock.NewRows([]string{
+				"f_id", "f_name", "f_tags", "f_comment", "f_icon", "f_color", "f_detail",
+				"f_kn_id", "f_branch", "f_action_type", "f_object_type_id",
+				"f_condition", "f_affect", "f_action_source", "f_parameters", "f_schedule",
+				"f_creator", "f_creator_type", "f_create_time",
+				"f_updater", "f_updater_type", "f_update_time",
+			}).AddRow(
+				"at1", "Action Type 1", `"tag1"`, "comment", "icon", "color", "detail",
+				"kn1", "main", interfaces.ACTION_TYPE_TOOL, "ot1",
+				conditionBytes, affectBytes, actionSourceBytes, parametersBytes, invalidBytes,
+				"admin", "admin", testUpdateTime,
+				"admin", "admin", testUpdateTime,
+			)
+			smock.ExpectQuery(sqlStr).WithArgs().WillReturnRows(rows)
+
+			_, err := ata.GetActionTypesByIDs(testCtx, knID, branch, atIDs)
+			So(err, ShouldNotBeNil)
+
+			if err := smock.ExpectationsWereMet(); err != nil {
+				t.Errorf("there were unfulfilled expectations: %s", err)
+			}
+		})
 	})
 }
 
@@ -529,6 +791,22 @@ func Test_ActionTypeAccess_UpdateActionType(t *testing.T) {
 			tx, _ := ata.db.Begin()
 			err := ata.UpdateActionType(testCtx, tx, actionType)
 			So(err, ShouldResemble, expectedErr)
+
+			if err := smock.ExpectationsWereMet(); err != nil {
+				t.Errorf("there were unfulfilled expectations: %s", err)
+			}
+		})
+
+		Convey("UpdateActionType Build sql error \n", func() {
+			// 使用一个会导致 SQL 构建错误的 actionType
+			// 实际上，由于使用了 SetMap，SQL 构建通常不会失败
+			// 但我们可以测试其他边界情况
+			smock.ExpectBegin()
+			smock.ExpectExec(sqlStr).WithArgs().WillReturnResult(sqlmock.NewResult(1, 1))
+
+			tx, _ := ata.db.Begin()
+			err := ata.UpdateActionType(testCtx, tx, actionType)
+			So(err, ShouldBeNil)
 
 			if err := smock.ExpectationsWereMet(); err != nil {
 				t.Errorf("there were unfulfilled expectations: %s", err)
@@ -685,6 +963,20 @@ func Test_ActionTypeAccess_GetActionTypeIDsByKnID(t *testing.T) {
 				t.Errorf("there were unfulfilled expectations: %s", err)
 			}
 		})
+
+		Convey("GetActionTypeIDsByKnID scan error \n", func() {
+			// 使用错误的列类型来触发 scan 错误
+			rows := sqlmock.NewRows([]string{"f_id", "f_id"}).AddRow(123, "123") // 使用 int 而不是 string
+			smock.ExpectQuery(sqlStr).WithArgs(knID, branch).WillReturnRows(rows)
+
+			atIDs, err := ata.GetActionTypeIDsByKnID(testCtx, knID, branch)
+			So(atIDs, ShouldBeNil)
+			So(err, ShouldNotBeNil)
+
+			if err := smock.ExpectationsWereMet(); err != nil {
+				t.Errorf("there were unfulfilled expectations: %s", err)
+			}
+		})
 	})
 }
 
@@ -748,6 +1040,143 @@ func Test_ActionTypeAccess_GetAllActionTypesByKnID(t *testing.T) {
 			actionTypes, err := ata.GetAllActionTypesByKnID(testCtx, knID, branch)
 			So(actionTypes, ShouldResemble, map[string]*interfaces.ActionType{})
 			So(err, ShouldResemble, expectedErr)
+
+			if err := smock.ExpectationsWereMet(); err != nil {
+				t.Errorf("there were unfulfilled expectations: %s", err)
+			}
+		})
+
+		Convey("GetAllActionTypesByKnID scan error \n", func() {
+			rows := sqlmock.NewRows([]string{"f_id"}).AddRow("at1")
+			smock.ExpectQuery(sqlStr).WithArgs(knID, branch).WillReturnRows(rows)
+
+			_, err := ata.GetAllActionTypesByKnID(testCtx, knID, branch)
+			So(err, ShouldNotBeNil)
+
+			if err := smock.ExpectationsWereMet(); err != nil {
+				t.Errorf("there were unfulfilled expectations: %s", err)
+			}
+		})
+
+		Convey("GetAllActionTypesByKnID unmarshal Condition error \n", func() {
+			invalidBytes := []byte("invalid json")
+			rows := sqlmock.NewRows([]string{
+				"f_id", "f_name", "f_tags", "f_comment", "f_icon", "f_color", "f_detail",
+				"f_kn_id", "f_branch", "f_action_type", "f_object_type_id",
+				"f_condition", "f_affect", "f_action_source", "f_parameters", "f_schedule",
+				"f_creator", "f_creator_type", "f_create_time",
+				"f_updater", "f_updater_type", "f_update_time",
+			}).AddRow(
+				"at1", "Action Type 1", `"tag1"`, "comment", "icon", "color", "detail",
+				"kn1", "main", interfaces.ACTION_TYPE_TOOL, "ot1",
+				invalidBytes, affectBytes, actionSourceBytes, parametersBytes, scheduleBytes,
+				"admin", "admin", testUpdateTime,
+				"admin", "admin", testUpdateTime,
+			)
+			smock.ExpectQuery(sqlStr).WithArgs(knID, branch).WillReturnRows(rows)
+
+			_, err := ata.GetAllActionTypesByKnID(testCtx, knID, branch)
+			So(err, ShouldNotBeNil)
+
+			if err := smock.ExpectationsWereMet(); err != nil {
+				t.Errorf("there were unfulfilled expectations: %s", err)
+			}
+		})
+
+		Convey("GetAllActionTypesByKnID unmarshal Affect error \n", func() {
+			invalidBytes := []byte("invalid json")
+			rows := sqlmock.NewRows([]string{
+				"f_id", "f_name", "f_tags", "f_comment", "f_icon", "f_color", "f_detail",
+				"f_kn_id", "f_branch", "f_action_type", "f_object_type_id",
+				"f_condition", "f_affect", "f_action_source", "f_parameters", "f_schedule",
+				"f_creator", "f_creator_type", "f_create_time",
+				"f_updater", "f_updater_type", "f_update_time",
+			}).AddRow(
+				"at1", "Action Type 1", `"tag1"`, "comment", "icon", "color", "detail",
+				"kn1", "main", interfaces.ACTION_TYPE_TOOL, "ot1",
+				conditionBytes, invalidBytes, actionSourceBytes, parametersBytes, scheduleBytes,
+				"admin", "admin", testUpdateTime,
+				"admin", "admin", testUpdateTime,
+			)
+			smock.ExpectQuery(sqlStr).WithArgs(knID, branch).WillReturnRows(rows)
+
+			_, err := ata.GetAllActionTypesByKnID(testCtx, knID, branch)
+			So(err, ShouldNotBeNil)
+
+			if err := smock.ExpectationsWereMet(); err != nil {
+				t.Errorf("there were unfulfilled expectations: %s", err)
+			}
+		})
+
+		Convey("GetAllActionTypesByKnID unmarshal ActionSource error \n", func() {
+			invalidBytes := []byte("invalid json")
+			rows := sqlmock.NewRows([]string{
+				"f_id", "f_name", "f_tags", "f_comment", "f_icon", "f_color", "f_detail",
+				"f_kn_id", "f_branch", "f_action_type", "f_object_type_id",
+				"f_condition", "f_affect", "f_action_source", "f_parameters", "f_schedule",
+				"f_creator", "f_creator_type", "f_create_time",
+				"f_updater", "f_updater_type", "f_update_time",
+			}).AddRow(
+				"at1", "Action Type 1", `"tag1"`, "comment", "icon", "color", "detail",
+				"kn1", "main", interfaces.ACTION_TYPE_TOOL, "ot1",
+				conditionBytes, affectBytes, invalidBytes, parametersBytes, scheduleBytes,
+				"admin", "admin", testUpdateTime,
+				"admin", "admin", testUpdateTime,
+			)
+			smock.ExpectQuery(sqlStr).WithArgs(knID, branch).WillReturnRows(rows)
+
+			_, err := ata.GetAllActionTypesByKnID(testCtx, knID, branch)
+			So(err, ShouldNotBeNil)
+
+			if err := smock.ExpectationsWereMet(); err != nil {
+				t.Errorf("there were unfulfilled expectations: %s", err)
+			}
+		})
+
+		Convey("GetAllActionTypesByKnID unmarshal Parameters error \n", func() {
+			invalidBytes := []byte("invalid json")
+			rows := sqlmock.NewRows([]string{
+				"f_id", "f_name", "f_tags", "f_comment", "f_icon", "f_color", "f_detail",
+				"f_kn_id", "f_branch", "f_action_type", "f_object_type_id",
+				"f_condition", "f_affect", "f_action_source", "f_parameters", "f_schedule",
+				"f_creator", "f_creator_type", "f_create_time",
+				"f_updater", "f_updater_type", "f_update_time",
+			}).AddRow(
+				"at1", "Action Type 1", `"tag1"`, "comment", "icon", "color", "detail",
+				"kn1", "main", interfaces.ACTION_TYPE_TOOL, "ot1",
+				conditionBytes, affectBytes, actionSourceBytes, invalidBytes, scheduleBytes,
+				"admin", "admin", testUpdateTime,
+				"admin", "admin", testUpdateTime,
+			)
+			smock.ExpectQuery(sqlStr).WithArgs(knID, branch).WillReturnRows(rows)
+
+			_, err := ata.GetAllActionTypesByKnID(testCtx, knID, branch)
+			So(err, ShouldNotBeNil)
+
+			if err := smock.ExpectationsWereMet(); err != nil {
+				t.Errorf("there were unfulfilled expectations: %s", err)
+			}
+		})
+
+		Convey("GetAllActionTypesByKnID unmarshal Schedule error \n", func() {
+			invalidBytes := []byte("invalid json")
+			rows := sqlmock.NewRows([]string{
+				"f_id", "f_name", "f_tags", "f_comment", "f_icon", "f_color", "f_detail",
+				"f_kn_id", "f_branch", "f_action_type", "f_object_type_id",
+				"f_condition", "f_affect", "f_action_source", "f_parameters", "f_schedule",
+				"f_creator", "f_creator_type", "f_create_time",
+				"f_updater", "f_updater_type", "f_update_time",
+			}).AddRow(
+				"at1", "Action Type 1", `"tag1"`, "comment", "icon", "color", "detail",
+				"kn1", "main", interfaces.ACTION_TYPE_TOOL, "ot1",
+				conditionBytes, affectBytes, actionSourceBytes, parametersBytes, invalidBytes,
+				"admin", "admin", testUpdateTime,
+				"admin", "admin", testUpdateTime,
+			)
+			smock.ExpectQuery(sqlStr).WithArgs(knID, branch).WillReturnRows(rows)
+
+			_, err := ata.GetAllActionTypesByKnID(testCtx, knID, branch)
+			So(err, ShouldNotBeNil)
 
 			if err := smock.ExpectationsWereMet(); err != nil {
 				t.Errorf("there were unfulfilled expectations: %s", err)

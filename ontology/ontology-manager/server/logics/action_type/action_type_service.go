@@ -277,7 +277,7 @@ func (ats *actionTypeService) ListActionTypes(ctx context.Context,
 		// 检查起始位置是否越界
 		if query.Offset < 0 || query.Offset >= len(actionTypes) {
 			span.SetStatus(codes.Ok, "")
-			return []*interfaces.ActionType{}, 0, nil
+			return []*interfaces.ActionType{}, total, nil
 		}
 		// 计算结束位置
 		end := query.Offset + query.Limit
