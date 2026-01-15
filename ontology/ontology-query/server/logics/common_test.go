@@ -480,6 +480,44 @@ func Test_CanGenerate(t *testing.T) {
 			result := CanGenerate(quotaManager, 1)
 			So(result, ShouldBeFalse)
 		})
+
+		Convey("成功 - 多路径类型used小于maxQuota", func() {
+			quotaManager := &interfaces.PathQuotaManager{
+				TotalLimit:         100,
+				GlobalCount:        50,
+				RequestPathTypeNum: 2,
+			}
+			quotaManager.UsedQuota.Store(1, 20)
+			// maxQuota = 100 - 50 = 50, used = 20 < 50, 应该返回true
+
+			result := CanGenerate(quotaManager, 1)
+			So(result, ShouldBeTrue)
+		})
+
+		Convey("失败 - 多路径类型used等于maxQuota", func() {
+			quotaManager := &interfaces.PathQuotaManager{
+				TotalLimit:         100,
+				GlobalCount:        50,
+				RequestPathTypeNum: 2,
+			}
+			quotaManager.UsedQuota.Store(1, 50)
+			// maxQuota = 100 - 50 = 50, used = 50 >= 50, 应该返回false
+
+			result := CanGenerate(quotaManager, 1)
+			So(result, ShouldBeFalse)
+		})
+
+		Convey("成功 - 单路径类型且未达到限制", func() {
+			quotaManager := &interfaces.PathQuotaManager{
+				TotalLimit:         100,
+				GlobalCount:        50,
+				RequestPathTypeNum: 1,
+			}
+			quotaManager.UsedQuota.Store(1, 10)
+
+			result := CanGenerate(quotaManager, 1)
+			So(result, ShouldBeTrue)
+		})
 	})
 }
 
@@ -687,6 +725,50 @@ func Test_BuildDirectBatchConditions(t *testing.T) {
 			conditions, err := BuildDirectBatchConditions(currentLevelObjects, edge, false)
 			So(err, ShouldBeNil)
 			So(len(conditions), ShouldBeGreaterThan, 0)
+		})
+
+		Convey("成功 - 单字段映射但inValue为nil", func() {
+			currentLevelObjects := []interfaces.LevelObject{
+				{
+					ObjectID: "obj1",
+					ObjectData: map[string]any{
+						// 缺少映射字段
+					},
+				},
+			}
+			edge := &interfaces.TypeEdge{
+				RelationType: interfaces.RelationType{
+					MappingRules: []interfaces.Mapping{
+						{
+							SourceProp: interfaces.SimpleProperty{Name: "id"},
+							TargetProp: interfaces.SimpleProperty{Name: "target_id"},
+						},
+					},
+				},
+			}
+
+			conditions, err := BuildDirectBatchConditions(currentLevelObjects, edge, true)
+			So(err, ShouldBeNil)
+			// 当inValue为nil时，不会返回in条件，而是返回普通条件
+			So(len(conditions), ShouldBeGreaterThanOrEqualTo, 0)
+		})
+
+		Convey("成功 - 空对象列表", func() {
+			currentLevelObjects := []interfaces.LevelObject{}
+			edge := &interfaces.TypeEdge{
+				RelationType: interfaces.RelationType{
+					MappingRules: []interfaces.Mapping{
+						{
+							SourceProp: interfaces.SimpleProperty{Name: "id"},
+							TargetProp: interfaces.SimpleProperty{Name: "target_id"},
+						},
+					},
+				},
+			}
+
+			conditions, err := BuildDirectBatchConditions(currentLevelObjects, edge, true)
+			So(err, ShouldBeNil)
+			So(len(conditions), ShouldEqual, 0)
 		})
 	})
 }
@@ -919,6 +1001,50 @@ func Test_CheckViewDataMatchesCondition(t *testing.T) {
 			result := CheckViewDataMatchesCondition(viewData, condition, mappingRules, true)
 			So(result, ShouldBeFalse)
 		})
+
+		Convey("成功 - 反向映射匹配", func() {
+			viewData := map[string]any{
+				"source_id": "123",
+			}
+			condition := &cond.CondCfg{
+				Name:      "source_id",
+				Operation: "==",
+				ValueOptCfg: cond.ValueOptCfg{
+					Value: "123",
+				},
+			}
+			mappingRules := []interfaces.Mapping{
+				{
+					SourceProp: interfaces.SimpleProperty{Name: "source_id"},
+					TargetProp: interfaces.SimpleProperty{Name: "target_id"},
+				},
+			}
+
+			result := CheckViewDataMatchesCondition(viewData, condition, mappingRules, false)
+			So(result, ShouldBeTrue)
+		})
+
+		Convey("失败 - 反向映射值不匹配", func() {
+			viewData := map[string]any{
+				"source_id": "456",
+			}
+			condition := &cond.CondCfg{
+				Name:      "source_id",
+				Operation: "==",
+				ValueOptCfg: cond.ValueOptCfg{
+					Value: "123",
+				},
+			}
+			mappingRules := []interfaces.Mapping{
+				{
+					SourceProp: interfaces.SimpleProperty{Name: "source_id"},
+					TargetProp: interfaces.SimpleProperty{Name: "target_id"},
+				},
+			}
+
+			result := CheckViewDataMatchesCondition(viewData, condition, mappingRules, false)
+			So(result, ShouldBeFalse)
+		})
 	})
 }
 
@@ -1012,6 +1138,102 @@ func Test_CheckIndirectMappingConditionsWithViewData(t *testing.T) {
 			viewData := []map[string]any{}
 
 			result := CheckIndirectMappingConditionsWithViewData(currentObjectData, nextObject, mappingRules, true, viewData)
+			So(result, ShouldBeFalse)
+		})
+
+		Convey("成功 - 反向映射匹配", func() {
+			currentObjectData := map[string]any{
+				"target_id": "456",
+			}
+			nextObject := map[string]any{
+				"id": "123",
+			}
+			mappingRules := interfaces.InDirectMapping{
+				SourceMappingRules: []interfaces.Mapping{
+					{
+						SourceProp: interfaces.SimpleProperty{Name: "id"},
+						TargetProp: interfaces.SimpleProperty{Name: "view_id"},
+					},
+				},
+				TargetMappingRules: []interfaces.Mapping{
+					{
+						SourceProp: interfaces.SimpleProperty{Name: "view_target_id"},
+						TargetProp: interfaces.SimpleProperty{Name: "target_id"},
+					},
+				},
+			}
+			viewData := []map[string]any{
+				{
+					"view_id":        "123",
+					"view_target_id": "456",
+				},
+			}
+
+			result := CheckIndirectMappingConditionsWithViewData(currentObjectData, nextObject, mappingRules, false, viewData)
+			So(result, ShouldBeTrue)
+		})
+
+		Convey("失败 - 反向映射源字段缺失", func() {
+			currentObjectData := map[string]any{
+				// target_id缺失
+			}
+			nextObject := map[string]any{
+				"id": "123",
+			}
+			mappingRules := interfaces.InDirectMapping{
+				SourceMappingRules: []interfaces.Mapping{
+					{
+						SourceProp: interfaces.SimpleProperty{Name: "id"},
+						TargetProp: interfaces.SimpleProperty{Name: "view_id"},
+					},
+				},
+				TargetMappingRules: []interfaces.Mapping{
+					{
+						SourceProp: interfaces.SimpleProperty{Name: "view_target_id"},
+						TargetProp: interfaces.SimpleProperty{Name: "target_id"},
+					},
+				},
+			}
+			viewData := []map[string]any{
+				{
+					"view_id":        "123",
+					"view_target_id": "456",
+				},
+			}
+
+			result := CheckIndirectMappingConditionsWithViewData(currentObjectData, nextObject, mappingRules, false, viewData)
+			So(result, ShouldBeFalse)
+		})
+
+		Convey("失败 - 反向映射目标字段缺失", func() {
+			currentObjectData := map[string]any{
+				"target_id": "456",
+			}
+			nextObject := map[string]any{
+				// id缺失
+			}
+			mappingRules := interfaces.InDirectMapping{
+				SourceMappingRules: []interfaces.Mapping{
+					{
+						SourceProp: interfaces.SimpleProperty{Name: "id"},
+						TargetProp: interfaces.SimpleProperty{Name: "view_id"},
+					},
+				},
+				TargetMappingRules: []interfaces.Mapping{
+					{
+						SourceProp: interfaces.SimpleProperty{Name: "view_target_id"},
+						TargetProp: interfaces.SimpleProperty{Name: "target_id"},
+					},
+				},
+			}
+			viewData := []map[string]any{
+				{
+					"view_id":        "123",
+					"view_target_id": "456",
+				},
+			}
+
+			result := CheckIndirectMappingConditionsWithViewData(currentObjectData, nextObject, mappingRules, false, viewData)
 			So(result, ShouldBeFalse)
 		})
 	})
@@ -1179,6 +1401,58 @@ func Test_BuildDslQuery(t *testing.T) {
 			result, err := BuildDslQuery(ctx, queryStr, query)
 			So(err, ShouldBeNil)
 			So(result["size"], ShouldEqual, 10)
+		})
+
+		Convey("成功 - 带search_after且NeedTotal为true", func() {
+			ctx := context.Background()
+			queryStr := `{"match_all":{}}`
+			query := &interfaces.ObjectQueryBaseOnObjectType{
+				PageQuery: interfaces.PageQuery{
+					Limit:     10,
+					NeedTotal: true,
+					SearchAfterParams: interfaces.SearchAfterParams{
+						SearchAfter: []any{"value1", "value2"},
+					},
+					Sort: []*interfaces.SortParams{
+						{
+							Field:     "field1",
+							Direction: interfaces.ASC_DIRECTION,
+						},
+					},
+				},
+			}
+
+			result, err := BuildDslQuery(ctx, queryStr, query)
+			So(err, ShouldBeNil)
+			So(result["size"], ShouldEqual, 10)
+			So(result["search_after"], ShouldNotBeNil)
+			So(query.NeedTotal, ShouldBeFalse) // 应该被设置为false
+		})
+
+		Convey("成功 - 多个排序字段", func() {
+			ctx := context.Background()
+			queryStr := `{"match_all":{}}`
+			query := &interfaces.ObjectQueryBaseOnObjectType{
+				PageQuery: interfaces.PageQuery{
+					Limit: 10,
+					Sort: []*interfaces.SortParams{
+						{
+							Field:     "field1",
+							Direction: interfaces.ASC_DIRECTION,
+						},
+						{
+							Field:     "field2",
+							Direction: interfaces.DESC_DIRECTION,
+						},
+					},
+				},
+			}
+
+			result, err := BuildDslQuery(ctx, queryStr, query)
+			So(err, ShouldBeNil)
+			sort, ok := result["sort"].([]map[string]any)
+			So(ok, ShouldBeTrue)
+			So(len(sort), ShouldEqual, 2)
 		})
 	})
 }

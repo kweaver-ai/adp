@@ -350,7 +350,7 @@ func (ots *objectTypeService) getObjectsFromDataView(ctx context.Context, query 
 		// 视图为空，返回异常，不请求
 		return rest.NewHTTPError(ctx, http.StatusBadRequest,
 			oerrors.OntologyQuery_ObjectType_InvalidParameter).
-			WithErrorDetails(fmt.Sprintf("对象类[%s]绑定的视图[%s]为空", objectType.OTID, objectType.DataSource.ID))
+			WithErrorDetails(fmt.Sprintf("对象类[%s]绑定的视图为空", objectType.OTID))
 	}
 
 	viewData, err := ots.uAccess.GetViewDataByID(ctx, objectType.DataSource.ID, viewQuery)
