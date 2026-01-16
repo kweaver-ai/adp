@@ -7,6 +7,7 @@ import (
 	"github.com/kweaver-ai/kweaver-go-lib/rest"
 	. "github.com/smartystreets/goconvey/convey"
 
+	cond "ontology-manager/common/condition"
 	oerrors "ontology-manager/errors"
 	"ontology-manager/interfaces"
 )
@@ -79,6 +80,49 @@ func Test_ValidateActionType(t *testing.T) {
 			So(err, ShouldNotBeNil)
 		})
 
+		Convey("Failed with tool type having tool_name\n", func() {
+			at := &interfaces.ActionType{
+				ActionTypeWithKeyField: interfaces.ActionTypeWithKeyField{
+					ATID:   "at1",
+					ATName: "action1",
+					ActionSource: interfaces.ActionSource{
+						Type:     interfaces.ACTION_TYPE_TOOL,
+						ToolName: "tool1",
+					},
+				},
+			}
+			err := ValidateActionType(ctx, at)
+			So(err, ShouldNotBeNil)
+		})
+
+		Convey("Success with tool type without mcp data\n", func() {
+			at := &interfaces.ActionType{
+				ActionTypeWithKeyField: interfaces.ActionTypeWithKeyField{
+					ATID:   "at1",
+					ATName: "action1",
+					ActionSource: interfaces.ActionSource{
+						Type: interfaces.ACTION_TYPE_TOOL,
+					},
+				},
+			}
+			err := ValidateActionType(ctx, at)
+			So(err, ShouldBeNil)
+		})
+
+		Convey("Success with mcp type without tool data\n", func() {
+			at := &interfaces.ActionType{
+				ActionTypeWithKeyField: interfaces.ActionTypeWithKeyField{
+					ATID:   "at1",
+					ATName: "action1",
+					ActionSource: interfaces.ActionSource{
+						Type: interfaces.ACTION_TYPE_MCP,
+					},
+				},
+			}
+			err := ValidateActionType(ctx, at)
+			So(err, ShouldBeNil)
+		})
+
 		Convey("Failed with empty parameter name\n", func() {
 			at := &interfaces.ActionType{
 				ActionTypeWithKeyField: interfaces.ActionTypeWithKeyField{
@@ -93,6 +137,263 @@ func Test_ValidateActionType(t *testing.T) {
 			}
 			err := ValidateActionType(ctx, at)
 			So(err, ShouldNotBeNil)
+		})
+
+		Convey("Failed with mcp type having box_id\n", func() {
+			at := &interfaces.ActionType{
+				ActionTypeWithKeyField: interfaces.ActionTypeWithKeyField{
+					ATID:   "at1",
+					ATName: "action1",
+					ActionSource: interfaces.ActionSource{
+						Type:  interfaces.ACTION_TYPE_MCP,
+						BoxID: "box1",
+					},
+				},
+			}
+			err := ValidateActionType(ctx, at)
+			So(err, ShouldNotBeNil)
+		})
+
+		Convey("Failed with mcp type having tool_id\n", func() {
+			at := &interfaces.ActionType{
+				ActionTypeWithKeyField: interfaces.ActionTypeWithKeyField{
+					ATID:   "at1",
+					ATName: "action1",
+					ActionSource: interfaces.ActionSource{
+						Type:  interfaces.ACTION_TYPE_MCP,
+						ToolID: "tool1",
+					},
+				},
+			}
+			err := ValidateActionType(ctx, at)
+			So(err, ShouldNotBeNil)
+		})
+
+		Convey("Success with valid condition\n", func() {
+			at := &interfaces.ActionType{
+				ActionTypeWithKeyField: interfaces.ActionTypeWithKeyField{
+					ATID:   "at1",
+					ATName: "action1",
+					Condition: &interfaces.CondCfg{
+						ObjectTypeID: "ot1",
+						Field:        "field1",
+						Operation:    cond.OperationEq,
+						ValueOptCfg: interfaces.ValueOptCfg{
+							Value: "value1",
+						},
+					},
+				},
+			}
+			err := ValidateActionType(ctx, at)
+			So(err, ShouldBeNil)
+		})
+
+		Convey("Failed with condition missing ObjectTypeID\n", func() {
+			at := &interfaces.ActionType{
+				ActionTypeWithKeyField: interfaces.ActionTypeWithKeyField{
+					ATID:   "at1",
+					ATName: "action1",
+					Condition: &interfaces.CondCfg{
+						Field:     "field1",
+						Operation: cond.OperationEq,
+						ValueOptCfg: interfaces.ValueOptCfg{
+							Value: "value1",
+						},
+					},
+				},
+			}
+			err := ValidateActionType(ctx, at)
+			So(err, ShouldNotBeNil)
+		})
+
+		Convey("Failed with condition missing Operation\n", func() {
+			at := &interfaces.ActionType{
+				ActionTypeWithKeyField: interfaces.ActionTypeWithKeyField{
+					ATID:   "at1",
+					ATName: "action1",
+					Condition: &interfaces.CondCfg{
+						ObjectTypeID: "ot1",
+						Field:        "field1",
+						ValueOptCfg: interfaces.ValueOptCfg{
+							Value: "value1",
+						},
+					},
+				},
+			}
+			err := ValidateActionType(ctx, at)
+			So(err, ShouldNotBeNil)
+		})
+
+		Convey("Failed with invalid operation\n", func() {
+			at := &interfaces.ActionType{
+				ActionTypeWithKeyField: interfaces.ActionTypeWithKeyField{
+					ATID:   "at1",
+					ATName: "action1",
+					Condition: &interfaces.CondCfg{
+						ObjectTypeID: "ot1",
+						Field:        "field1",
+						Operation:    "invalid_op",
+						ValueOptCfg: interfaces.ValueOptCfg{
+							Value: "value1",
+						},
+					},
+				},
+			}
+			err := ValidateActionType(ctx, at)
+			So(err, ShouldNotBeNil)
+		})
+
+		Convey("Failed with and operation missing field\n", func() {
+			at := &interfaces.ActionType{
+				ActionTypeWithKeyField: interfaces.ActionTypeWithKeyField{
+					ATID:   "at1",
+					ATName: "action1",
+					Condition: &interfaces.CondCfg{
+						ObjectTypeID: "ot1",
+						Operation:    cond.OperationAnd,
+						SubConds: []*interfaces.CondCfg{
+							{
+								ObjectTypeID: "ot1",
+								Field:        "field1",
+								Operation:    cond.OperationEq,
+								ValueOptCfg: interfaces.ValueOptCfg{
+									Value: "value1",
+								},
+							},
+						},
+					},
+				},
+			}
+			err := ValidateActionType(ctx, at)
+			So(err, ShouldBeNil) // and/or operation doesn't require field
+		})
+
+		Convey("Failed with eq operation having array value\n", func() {
+			at := &interfaces.ActionType{
+				ActionTypeWithKeyField: interfaces.ActionTypeWithKeyField{
+					ATID:   "at1",
+					ATName: "action1",
+					Condition: &interfaces.CondCfg{
+						ObjectTypeID: "ot1",
+						Field:        "field1",
+						Operation:    "eq",
+						ValueOptCfg: interfaces.ValueOptCfg{
+							Value: []any{"value1", "value2"},
+						},
+					},
+				},
+			}
+			err := ValidateActionType(ctx, at)
+			So(err, ShouldNotBeNil)
+		})
+
+		Convey("Failed with in operation missing array value\n", func() {
+			at := &interfaces.ActionType{
+				ActionTypeWithKeyField: interfaces.ActionTypeWithKeyField{
+					ATID:   "at1",
+					ATName: "action1",
+					Condition: &interfaces.CondCfg{
+						ObjectTypeID: "ot1",
+						Field:        "field1",
+						Operation:    cond.OperationIn,
+						ValueOptCfg: interfaces.ValueOptCfg{
+							Value: "value1",
+						},
+					},
+				},
+			}
+			err := ValidateActionType(ctx, at)
+			So(err, ShouldNotBeNil)
+		})
+
+		Convey("Failed with in operation having empty array\n", func() {
+			at := &interfaces.ActionType{
+				ActionTypeWithKeyField: interfaces.ActionTypeWithKeyField{
+					ATID:   "at1",
+					ATName: "action1",
+					Condition: &interfaces.CondCfg{
+						ObjectTypeID: "ot1",
+						Field:        "field1",
+						Operation:    cond.OperationIn,
+						ValueOptCfg: interfaces.ValueOptCfg{
+							Value: []any{},
+						},
+					},
+				},
+			}
+			err := ValidateActionType(ctx, at)
+			So(err, ShouldNotBeNil)
+		})
+
+		Convey("Failed with range operation missing array value\n", func() {
+			at := &interfaces.ActionType{
+				ActionTypeWithKeyField: interfaces.ActionTypeWithKeyField{
+					ATID:   "at1",
+					ATName: "action1",
+					Condition: &interfaces.CondCfg{
+						ObjectTypeID: "ot1",
+						Field:        "field1",
+						Operation:    cond.OperationRange,
+						ValueOptCfg: interfaces.ValueOptCfg{
+							Value: "value1",
+						},
+					},
+				},
+			}
+			err := ValidateActionType(ctx, at)
+			So(err, ShouldNotBeNil)
+		})
+
+		Convey("Failed with range operation having wrong array length\n", func() {
+			at := &interfaces.ActionType{
+				ActionTypeWithKeyField: interfaces.ActionTypeWithKeyField{
+					ATID:   "at1",
+					ATName: "action1",
+					Condition: &interfaces.CondCfg{
+						ObjectTypeID: "ot1",
+						Field:        "field1",
+						Operation:    cond.OperationRange,
+						ValueOptCfg: interfaces.ValueOptCfg{
+							Value: []any{"value1"},
+						},
+					},
+				},
+			}
+			err := ValidateActionType(ctx, at)
+			So(err, ShouldNotBeNil)
+		})
+
+		Convey("Success with valid nested condition\n", func() {
+			at := &interfaces.ActionType{
+				ActionTypeWithKeyField: interfaces.ActionTypeWithKeyField{
+					ATID:   "at1",
+					ATName: "action1",
+					Condition: &interfaces.CondCfg{
+						ObjectTypeID: "ot1",
+						Operation:    cond.OperationAnd,
+						SubConds: []*interfaces.CondCfg{
+							{
+								ObjectTypeID: "ot1",
+								Field:        "field1",
+								Operation:    cond.OperationEq,
+								ValueOptCfg: interfaces.ValueOptCfg{
+									Value: "value1",
+								},
+							},
+							{
+								ObjectTypeID: "ot1",
+								Field:        "field2",
+								Operation:    cond.OperationIn,
+								ValueOptCfg: interfaces.ValueOptCfg{
+									Value: []any{"value2", "value3"},
+								},
+							},
+						},
+					},
+				},
+			}
+			err := ValidateActionType(ctx, at)
+			So(err, ShouldBeNil)
 		})
 	})
 }

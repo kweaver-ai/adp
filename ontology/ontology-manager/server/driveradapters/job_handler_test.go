@@ -262,6 +262,54 @@ func Test_JobRestHandler_ListJobs(t *testing.T) {
 
 			So(w.Result().StatusCode, ShouldEqual, http.StatusForbidden)
 		})
+
+		Convey("Invalid pagination parameters\n", func() {
+			kns.EXPECT().CheckKNExistByID(gomock.Any(), knID, gomock.Any()).Return(knID, true, nil)
+
+			req := httptest.NewRequest(http.MethodGet, url+"?offset=invalid", nil)
+			w := httptest.NewRecorder()
+			engine.ServeHTTP(w, req)
+
+			So(w.Result().StatusCode, ShouldEqual, http.StatusBadRequest)
+		})
+
+		Convey("Invalid job_type\n", func() {
+			kns.EXPECT().CheckKNExistByID(gomock.Any(), knID, gomock.Any()).Return(knID, true, nil)
+
+			req := httptest.NewRequest(http.MethodGet, url+"?job_type=invalid", nil)
+			w := httptest.NewRecorder()
+			engine.ServeHTTP(w, req)
+
+			So(w.Result().StatusCode, ShouldEqual, http.StatusBadRequest)
+		})
+
+		Convey("Invalid state\n", func() {
+			kns.EXPECT().CheckKNExistByID(gomock.Any(), knID, gomock.Any()).Return(knID, true, nil)
+
+			req := httptest.NewRequest(http.MethodGet, url+"?state=invalid", nil)
+			w := httptest.NewRecorder()
+			engine.ServeHTTP(w, req)
+
+			So(w.Result().StatusCode, ShouldEqual, http.StatusBadRequest)
+		})
+
+		Convey("ListJobs failed\n", func() {
+			expectedErr := &rest.HTTPError{
+				HTTPCode: http.StatusInternalServerError,
+				Language: rest.DefaultLanguage,
+				BaseError: rest.BaseError{
+					ErrorCode: oerrors.OntologyManager_Job_InternalError,
+				},
+			}
+			kns.EXPECT().CheckKNExistByID(gomock.Any(), knID, gomock.Any()).Return(knID, true, nil)
+			js.EXPECT().ListJobs(gomock.Any(), gomock.Any()).Return(nil, int64(0), expectedErr)
+
+			req := httptest.NewRequest(http.MethodGet, url, nil)
+			w := httptest.NewRecorder()
+			engine.ServeHTTP(w, req)
+
+			So(w.Result().StatusCode, ShouldEqual, http.StatusInternalServerError)
+		})
 	})
 }
 
@@ -325,6 +373,92 @@ func Test_JobRestHandler_ListTasks(t *testing.T) {
 			engine.ServeHTTP(w, req)
 
 			So(w.Result().StatusCode, ShouldEqual, http.StatusForbidden)
+		})
+
+		Convey("GetJob failed\n", func() {
+			expectedErr := &rest.HTTPError{
+				HTTPCode: http.StatusInternalServerError,
+				Language: rest.DefaultLanguage,
+				BaseError: rest.BaseError{
+					ErrorCode: oerrors.OntologyManager_Job_InternalError,
+				},
+			}
+			kns.EXPECT().CheckKNExistByID(gomock.Any(), knID, gomock.Any()).Return(knID, true, nil)
+			js.EXPECT().GetJob(gomock.Any(), jobID).Return(nil, expectedErr)
+
+			req := httptest.NewRequest(http.MethodGet, url, nil)
+			w := httptest.NewRecorder()
+			engine.ServeHTTP(w, req)
+
+			So(w.Result().StatusCode, ShouldEqual, http.StatusInternalServerError)
+		})
+
+		Convey("Invalid pagination parameters\n", func() {
+			kns.EXPECT().CheckKNExistByID(gomock.Any(), knID, gomock.Any()).Return(knID, true, nil)
+			js.EXPECT().GetJob(gomock.Any(), jobID).Return(&interfaces.JobInfo{
+				ID:     jobID,
+				KNID:   knID,
+				Branch: interfaces.MAIN_BRANCH,
+			}, nil)
+
+			req := httptest.NewRequest(http.MethodGet, url+"?offset=invalid", nil)
+			w := httptest.NewRecorder()
+			engine.ServeHTTP(w, req)
+
+			So(w.Result().StatusCode, ShouldEqual, http.StatusBadRequest)
+		})
+
+		Convey("Invalid concept_type\n", func() {
+			kns.EXPECT().CheckKNExistByID(gomock.Any(), knID, gomock.Any()).Return(knID, true, nil)
+			js.EXPECT().GetJob(gomock.Any(), jobID).Return(&interfaces.JobInfo{
+				ID:     jobID,
+				KNID:   knID,
+				Branch: interfaces.MAIN_BRANCH,
+			}, nil)
+
+			req := httptest.NewRequest(http.MethodGet, url+"?concept_type=invalid", nil)
+			w := httptest.NewRecorder()
+			engine.ServeHTTP(w, req)
+
+			So(w.Result().StatusCode, ShouldEqual, http.StatusBadRequest)
+		})
+
+		Convey("Invalid state\n", func() {
+			kns.EXPECT().CheckKNExistByID(gomock.Any(), knID, gomock.Any()).Return(knID, true, nil)
+			js.EXPECT().GetJob(gomock.Any(), jobID).Return(&interfaces.JobInfo{
+				ID:     jobID,
+				KNID:   knID,
+				Branch: interfaces.MAIN_BRANCH,
+			}, nil)
+
+			req := httptest.NewRequest(http.MethodGet, url+"?state=invalid", nil)
+			w := httptest.NewRecorder()
+			engine.ServeHTTP(w, req)
+
+			So(w.Result().StatusCode, ShouldEqual, http.StatusBadRequest)
+		})
+
+		Convey("ListTasks failed\n", func() {
+			expectedErr := &rest.HTTPError{
+				HTTPCode: http.StatusInternalServerError,
+				Language: rest.DefaultLanguage,
+				BaseError: rest.BaseError{
+					ErrorCode: oerrors.OntologyManager_Job_InternalError,
+				},
+			}
+			kns.EXPECT().CheckKNExistByID(gomock.Any(), knID, gomock.Any()).Return(knID, true, nil)
+			js.EXPECT().GetJob(gomock.Any(), jobID).Return(&interfaces.JobInfo{
+				ID:     jobID,
+				KNID:   knID,
+				Branch: interfaces.MAIN_BRANCH,
+			}, nil)
+			js.EXPECT().ListTasks(gomock.Any(), gomock.Any()).Return(nil, int64(0), expectedErr)
+
+			req := httptest.NewRequest(http.MethodGet, url, nil)
+			w := httptest.NewRecorder()
+			engine.ServeHTTP(w, req)
+
+			So(w.Result().StatusCode, ShouldEqual, http.StatusInternalServerError)
 		})
 	})
 }

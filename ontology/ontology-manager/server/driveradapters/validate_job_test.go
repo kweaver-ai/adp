@@ -47,6 +47,30 @@ func Test_ValidateJob(t *testing.T) {
 			err := ValidateJob(ctx, job)
 			So(err, ShouldNotBeNil)
 		})
+
+		Convey("Failed with invalid concept type in config\n", func() {
+			job := &interfaces.JobInfo{
+				Name:    "job1",
+				JobType: interfaces.JobTypeFull,
+				JobConceptConfig: []interfaces.ConceptConfig{
+					{
+						ConceptType: "invalid_type",
+						ConceptID:   "id1",
+					},
+				},
+			}
+			err := ValidateJob(ctx, job)
+			So(err, ShouldNotBeNil)
+		})
+
+		Convey("Failed with invalid job type\n", func() {
+			job := &interfaces.JobInfo{
+				Name:    "job1",
+				JobType: interfaces.JobType("invalid"),
+			}
+			err := ValidateJob(ctx, job)
+			So(err, ShouldNotBeNil)
+		})
 	})
 }
 

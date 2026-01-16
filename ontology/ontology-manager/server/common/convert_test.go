@@ -56,3 +56,44 @@ func Test_Convert_GiBToBytes(t *testing.T) {
 		})
 	})
 }
+
+func Test_Convert_DuplicateSlice(t *testing.T) {
+	Convey("Test DuplicateSlice", t, func() {
+		Convey("Success with duplicates\n", func() {
+			input := []string{"a", "b", "a", "c", "b", "d"}
+			result := DuplicateSlice(input)
+			So(len(result), ShouldEqual, 4)
+			So(result, ShouldContain, "a")
+			So(result, ShouldContain, "b")
+			So(result, ShouldContain, "c")
+			So(result, ShouldContain, "d")
+		})
+
+		Convey("Success with no duplicates\n", func() {
+			input := []string{"a", "b", "c"}
+			result := DuplicateSlice(input)
+			So(len(result), ShouldEqual, 3)
+			So(result, ShouldResemble, []string{"a", "b", "c"})
+		})
+
+		Convey("Success with empty slice\n", func() {
+			input := []string{}
+			result := DuplicateSlice(input)
+			So(len(result), ShouldEqual, 0)
+			So(result, ShouldNotBeNil)
+		})
+
+		Convey("Success with nil slice\n", func() {
+			var input []string
+			result := DuplicateSlice(input)
+			So(len(result), ShouldEqual, 0)
+		})
+
+		Convey("Success with all same elements\n", func() {
+			input := []string{"a", "a", "a", "a"}
+			result := DuplicateSlice(input)
+			So(len(result), ShouldEqual, 1)
+			So(result[0], ShouldEqual, "a")
+		})
+	})
+}
