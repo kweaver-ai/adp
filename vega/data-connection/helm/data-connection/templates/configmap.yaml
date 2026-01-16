@@ -96,7 +96,6 @@ data:
       mqLookupdHost: {{ .Values.depServices.mq.mqLookupdHost }}
       mqLookupdPort: {{ .Values.depServices.mq.mqLookupdPort }}
       mqType: {{ .Values.depServices.mq.mqType }}
-      connectorType: {{ .Values.depServices.mq.connectorType }}
       auth:
         username: {{ .Values.depServices.mq.auth.username }}
         password: {{ .Values.depServices.mq.auth.password }}

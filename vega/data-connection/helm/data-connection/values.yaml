@@ -56,7 +56,6 @@ depServices:
     mqLookupdHost: proton-mq-nsq-nsqlookupd.resource
     mqLookupdPort: 4161
     mqType: kafka
-    connectorType: kafka
     auth:
       username: anyrobot
       password: eisoo.com123
