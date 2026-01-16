@@ -173,7 +173,13 @@ func (dvmService *dataViewMonitorService) Sync(ctx context.Context, syncType str
 			continue
 		}
 
+		// 记录每个数据源的同步时间
+		dataSourceStartTime := time.Now()
 		err := dvmService.syncDataSource(ctx, dataSource, syncType, lastSyncTime)
+		// 记录当前数据源的同步时间
+		dataSourceEndTime := time.Now()
+		dataSourceDuration := dataSourceEndTime.Sub(dataSourceStartTime).Milliseconds()
+		logger.Infof("Data source '%s' synced in %v ms", dataSource.Name, dataSourceDuration)
 		if err != nil {
 			logger.Errorf("Error syncing data source '%s': %v", dataSource.Name, err)
 			allSuccess = false
