@@ -99,6 +99,26 @@ func Test_modelFactoryAccess_GetModelByID(t *testing.T) {
 			So(err, ShouldNotBeNil)
 			So(result, ShouldBeNil)
 		})
+
+		Convey("HTTP status not OK and not NotFound", func() {
+			mockHTTPClient.EXPECT().
+				GetNoUnmarshal(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+				Return(http.StatusInternalServerError, []byte("internal error"), nil)
+
+			result, err := mfa.GetModelByID(ctx, modelID)
+			So(err, ShouldNotBeNil)
+			So(result, ShouldBeNil)
+		})
+
+		Convey("Unmarshal response failed", func() {
+			mockHTTPClient.EXPECT().
+				GetNoUnmarshal(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+				Return(http.StatusOK, []byte("invalid json"), nil)
+
+			result, err := mfa.GetModelByID(ctx, modelID)
+			So(err, ShouldNotBeNil)
+			So(result, ShouldBeNil)
+		})
 	})
 }
 
@@ -133,6 +153,107 @@ func Test_modelFactoryAccess_GetModelByName(t *testing.T) {
 			So(err, ShouldBeNil)
 			So(result, ShouldNotBeNil)
 			So(result.ModelName, ShouldEqual, modelName)
+		})
+
+		Convey("Model not found", func() {
+			mockHTTPClient.EXPECT().
+				GetNoUnmarshal(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+				Return(http.StatusNotFound, []byte(""), nil)
+
+			result, err := mfa.GetModelByName(ctx, modelName)
+			So(err, ShouldBeNil)
+			So(result, ShouldBeNil)
+		})
+
+		Convey("HTTP request error", func() {
+			mockHTTPClient.EXPECT().
+				GetNoUnmarshal(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+				Return(0, []byte(""), errors.New("network error"))
+
+			result, err := mfa.GetModelByName(ctx, modelName)
+			So(err, ShouldNotBeNil)
+			So(result, ShouldBeNil)
+		})
+
+		Convey("HTTP status not OK and not NotFound", func() {
+			mockHTTPClient.EXPECT().
+				GetNoUnmarshal(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+				Return(http.StatusInternalServerError, []byte("internal error"), nil)
+
+			result, err := mfa.GetModelByName(ctx, modelName)
+			So(err, ShouldNotBeNil)
+			So(result, ShouldBeNil)
+		})
+
+		Convey("Unmarshal response failed", func() {
+			mockHTTPClient.EXPECT().
+				GetNoUnmarshal(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+				Return(http.StatusOK, []byte("invalid json"), nil)
+
+			result, err := mfa.GetModelByName(ctx, modelName)
+			So(err, ShouldNotBeNil)
+			So(result, ShouldBeNil)
+		})
+	})
+}
+
+func Test_modelFactoryAccess_GetDefaultModel(t *testing.T) {
+	Convey("Test GetDefaultModel", t, func() {
+		ctx := context.Background()
+		mockCtrl := gomock.NewController(t)
+		defer mockCtrl.Finish()
+
+		appSetting := &common.AppSetting{
+			ModelFactoryManagerUrl: "http://test-mf-manager",
+			ModelFactoryAPIUrl:     "http://test-mf-api",
+			ServerSetting: common.ServerSetting{
+				DefaultSmallModelEnabled: true,
+				DefaultSmallModelName:    "default-model",
+			},
+		}
+		mockHTTPClient := rmock.NewMockHTTPClient(mockCtrl)
+		mfa := newTestModelFactoryAccess(appSetting, mockHTTPClient)
+
+		Convey("Success getting default model", func() {
+			model := interfaces.SmallModel{
+				ModelID:   "model1",
+				ModelName: "default-model",
+			}
+			respData, _ := sonic.Marshal(model)
+
+			mockHTTPClient.EXPECT().
+				GetNoUnmarshal(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+				Return(http.StatusOK, respData, nil)
+
+			result, err := mfa.GetDefaultModel(ctx)
+			So(err, ShouldBeNil)
+			So(result, ShouldNotBeNil)
+			So(result.ModelName, ShouldEqual, "default-model")
+		})
+
+		Convey("Default model disabled", func() {
+			appSetting2 := &common.AppSetting{
+				ModelFactoryManagerUrl: "http://test-mf-manager",
+				ModelFactoryAPIUrl:     "http://test-mf-api",
+				ServerSetting: common.ServerSetting{
+					DefaultSmallModelEnabled: false,
+				},
+			}
+			mfa2 := newTestModelFactoryAccess(appSetting2, mockHTTPClient)
+
+			result, err := mfa2.GetDefaultModel(ctx)
+			So(err, ShouldBeNil)
+			So(result, ShouldBeNil)
+		})
+
+		Convey("GetModelByName failed", func() {
+			mockHTTPClient.EXPECT().
+				GetNoUnmarshal(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+				Return(0, []byte(""), errors.New("network error"))
+
+			result, err := mfa.GetDefaultModel(ctx)
+			So(err, ShouldNotBeNil)
+			So(result, ShouldBeNil)
 		})
 	})
 }

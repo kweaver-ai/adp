@@ -114,6 +114,46 @@ func Test_permissionAccess_CheckPermission(t *testing.T) {
 			So(err, ShouldBeNil)
 			So(allowed, ShouldBeFalse)
 		})
+
+		Convey("HTTP status not OK with valid error response", func() {
+			permissionError := PermissionError{
+				Code:        "PERMISSION_DENIED",
+				Description: "Permission denied",
+				Cause:       "User does not have permission",
+			}
+			respData, _ := sonic.Marshal(permissionError)
+
+			mockHTTPClient.EXPECT().
+				PostNoUnmarshal(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+				Return(http.StatusForbidden, respData, nil)
+
+			allowed, err := pa.CheckPermission(ctx, check)
+			So(err, ShouldNotBeNil)
+			So(allowed, ShouldBeFalse)
+			httpErr, ok := err.(*rest.HTTPError)
+			So(ok, ShouldBeTrue)
+			So(httpErr.HTTPCode, ShouldEqual, http.StatusForbidden)
+		})
+
+		Convey("HTTP status not OK with invalid error response", func() {
+			mockHTTPClient.EXPECT().
+				PostNoUnmarshal(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+				Return(http.StatusForbidden, []byte("invalid json"), nil)
+
+			allowed, err := pa.CheckPermission(ctx, check)
+			So(err, ShouldNotBeNil)
+			So(allowed, ShouldBeFalse)
+		})
+
+		Convey("Unmarshal result failed", func() {
+			mockHTTPClient.EXPECT().
+				PostNoUnmarshal(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+				Return(http.StatusOK, []byte("invalid json"), nil)
+
+			allowed, err := pa.CheckPermission(ctx, check)
+			So(err, ShouldNotBeNil)
+			So(allowed, ShouldBeFalse)
+		})
 	})
 }
 
@@ -160,6 +200,34 @@ func Test_permissionAccess_CreateResources(t *testing.T) {
 			err := pa.CreateResources(ctx, policies)
 			So(err, ShouldNotBeNil)
 		})
+
+		Convey("HTTP status not NoContent with valid error response", func() {
+			permissionError := PermissionError{
+				Code:        "CREATE_FAILED",
+				Description: "Create failed",
+				Cause:       "Resource already exists",
+			}
+			respData, _ := sonic.Marshal(permissionError)
+
+			mockHTTPClient.EXPECT().
+				PostNoUnmarshal(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+				Return(http.StatusBadRequest, respData, nil)
+
+			err := pa.CreateResources(ctx, policies)
+			So(err, ShouldNotBeNil)
+			httpErr, ok := err.(*rest.HTTPError)
+			So(ok, ShouldBeTrue)
+			So(httpErr.HTTPCode, ShouldEqual, http.StatusBadRequest)
+		})
+
+		Convey("HTTP status not NoContent with invalid error response", func() {
+			mockHTTPClient.EXPECT().
+				PostNoUnmarshal(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+				Return(http.StatusBadRequest, []byte("invalid json"), nil)
+
+			err := pa.CreateResources(ctx, policies)
+			So(err, ShouldNotBeNil)
+		})
 	})
 }
 
@@ -190,6 +258,43 @@ func Test_permissionAccess_DeleteResources(t *testing.T) {
 
 			err := pa.DeleteResources(ctx, resources)
 			So(err, ShouldBeNil)
+		})
+
+		Convey("HTTP request error", func() {
+			mockHTTPClient.EXPECT().
+				PostNoUnmarshal(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+				Return(0, []byte(""), errors.New("network error"))
+
+			err := pa.DeleteResources(ctx, resources)
+			So(err, ShouldNotBeNil)
+		})
+
+		Convey("HTTP status not NoContent with valid error response", func() {
+			permissionError := PermissionError{
+				Code:        "DELETE_FAILED",
+				Description: "Delete failed",
+				Cause:       "Resource not found",
+			}
+			respData, _ := sonic.Marshal(permissionError)
+
+			mockHTTPClient.EXPECT().
+				PostNoUnmarshal(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+				Return(http.StatusNotFound, respData, nil)
+
+			err := pa.DeleteResources(ctx, resources)
+			So(err, ShouldNotBeNil)
+			httpErr, ok := err.(*rest.HTTPError)
+			So(ok, ShouldBeTrue)
+			So(httpErr.HTTPCode, ShouldEqual, http.StatusNotFound)
+		})
+
+		Convey("HTTP status not NoContent with invalid error response", func() {
+			mockHTTPClient.EXPECT().
+				PostNoUnmarshal(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+				Return(http.StatusBadRequest, []byte("invalid json"), nil)
+
+			err := pa.DeleteResources(ctx, resources)
+			So(err, ShouldNotBeNil)
 		})
 	})
 }
@@ -232,6 +337,66 @@ func Test_permissionAccess_FilterResources(t *testing.T) {
 			So(err, ShouldBeNil)
 			So(ops, ShouldNotBeNil)
 			So(len(ops), ShouldEqual, 1)
+		})
+
+		Convey("HTTP request error", func() {
+			mockHTTPClient.EXPECT().
+				PostNoUnmarshal(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+				Return(0, []byte(""), errors.New("network error"))
+
+			ops, err := pa.FilterResources(ctx, filter)
+			So(err, ShouldNotBeNil)
+			So(len(ops), ShouldEqual, 0)
+		})
+
+		Convey("HTTP status not OK with valid error response", func() {
+			permissionError := PermissionError{
+				Code:        "FILTER_FAILED",
+				Description: "Filter failed",
+				Cause:       "Invalid filter parameters",
+			}
+			respData, _ := sonic.Marshal(permissionError)
+
+			mockHTTPClient.EXPECT().
+				PostNoUnmarshal(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+				Return(http.StatusBadRequest, respData, nil)
+
+			ops, err := pa.FilterResources(ctx, filter)
+			So(err, ShouldNotBeNil)
+			So(len(ops), ShouldEqual, 0)
+			httpErr, ok := err.(*rest.HTTPError)
+			So(ok, ShouldBeTrue)
+			So(httpErr.HTTPCode, ShouldEqual, http.StatusBadRequest)
+		})
+
+		Convey("HTTP status not OK with invalid error response", func() {
+			mockHTTPClient.EXPECT().
+				PostNoUnmarshal(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+				Return(http.StatusBadRequest, []byte("invalid json"), nil)
+
+			ops, err := pa.FilterResources(ctx, filter)
+			So(err, ShouldNotBeNil)
+			So(len(ops), ShouldEqual, 0)
+		})
+
+		Convey("Null response body", func() {
+			mockHTTPClient.EXPECT().
+				PostNoUnmarshal(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+				Return(http.StatusOK, nil, nil)
+
+			ops, err := pa.FilterResources(ctx, filter)
+			So(err, ShouldBeNil)
+			So(len(ops), ShouldEqual, 0)
+		})
+
+		Convey("Unmarshal result failed", func() {
+			mockHTTPClient.EXPECT().
+				PostNoUnmarshal(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+				Return(http.StatusOK, []byte("invalid json"), nil)
+
+			ops, err := pa.FilterResources(ctx, filter)
+			So(err, ShouldNotBeNil)
+			So(len(ops), ShouldEqual, 0)
 		})
 	})
 }

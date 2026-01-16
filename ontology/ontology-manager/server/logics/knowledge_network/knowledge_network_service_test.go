@@ -1778,5 +1778,275 @@ func Test_knowledgeNetworkService_CreateKN(t *testing.T) {
 			So(err, ShouldBeNil)
 			So(knID, ShouldEqual, "kn1")
 		})
+
+		Convey("Failed when Begin transaction fails\n", func() {
+			kn := &interfaces.KN{
+				KNID:   "kn1",
+				KNName: "kn1",
+				Branch: interfaces.MAIN_BRANCH,
+			}
+			mode := interfaces.ImportMode_Normal
+
+			ps.EXPECT().CheckPermission(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
+			// 模拟Begin失败
+			db2, _, _ := sqlmock.New(sqlmock.QueryMatcherOption(sqlmock.QueryMatcherEqual))
+			db2.Close() // 关闭数据库连接以模拟Begin失败
+			service2 := &knowledgeNetworkService{
+				appSetting: appSetting,
+				kna:        kna,
+				ps:         ps,
+				osa:        osa,
+				bsa:        bsa,
+				db:         db2,
+			}
+
+			knID, err := service2.CreateKN(ctx, kn, mode)
+			So(err, ShouldNotBeNil)
+			So(knID, ShouldEqual, "")
+		})
+
+		Convey("Failed when CreateKN fails\n", func() {
+			kn := &interfaces.KN{
+				KNID:   "kn1",
+				KNName: "kn1",
+				Branch: interfaces.MAIN_BRANCH,
+			}
+			mode := interfaces.ImportMode_Normal
+
+			smock.ExpectBegin()
+			ps.EXPECT().CheckPermission(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
+			kna.EXPECT().CheckKNExistByID(gomock.Any(), gomock.Any(), gomock.Any()).Return("", false, nil)
+			kna.EXPECT().CheckKNExistByName(gomock.Any(), gomock.Any(), gomock.Any()).Return("", false, nil)
+			kna.EXPECT().CreateKN(gomock.Any(), gomock.Any(), gomock.Any()).Return(rest.NewHTTPError(ctx, 500, oerrors.OntologyManager_KnowledgeNetwork_InternalError))
+			smock.ExpectRollback()
+
+			knID, err := service.CreateKN(ctx, kn, mode)
+			So(err, ShouldNotBeNil)
+			So(knID, ShouldEqual, "")
+		})
+
+		Convey("Failed when CreateConceptGroup fails\n", func() {
+			kn := &interfaces.KN{
+				KNID:   "kn1",
+				KNName: "kn1",
+				Branch: interfaces.MAIN_BRANCH,
+				ConceptGroups: []*interfaces.ConceptGroup{
+					{
+						CGID:   "cg1",
+						CGName: "cg1",
+					},
+				},
+			}
+			mode := interfaces.ImportMode_Normal
+			cgs := dmock.NewMockConceptGroupService(mockCtrl)
+
+			service3 := &knowledgeNetworkService{
+				appSetting: appSetting,
+				kna:        kna,
+				ps:         ps,
+				osa:        osa,
+				bsa:        bsa,
+				db:         db,
+				cgs:        cgs,
+			}
+
+			smock.ExpectBegin()
+			ps.EXPECT().CheckPermission(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
+			kna.EXPECT().CheckKNExistByID(gomock.Any(), gomock.Any(), gomock.Any()).Return("", false, nil)
+			kna.EXPECT().CheckKNExistByName(gomock.Any(), gomock.Any(), gomock.Any()).Return("", false, nil)
+			kna.EXPECT().CreateKN(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
+			cgs.EXPECT().CreateConceptGroup(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return("", rest.NewHTTPError(ctx, 500, oerrors.OntologyManager_KnowledgeNetwork_InternalError))
+			smock.ExpectRollback()
+
+			knID, err := service3.CreateKN(ctx, kn, mode)
+			So(err, ShouldNotBeNil)
+			So(knID, ShouldEqual, "")
+		})
+
+		Convey("Failed when CreateObjectTypes fails\n", func() {
+			kn := &interfaces.KN{
+				KNID:   "kn1",
+				KNName: "kn1",
+				Branch: interfaces.MAIN_BRANCH,
+				ObjectTypes: []*interfaces.ObjectType{
+					{
+						ObjectTypeWithKeyField: interfaces.ObjectTypeWithKeyField{
+							OTID:   "ot1",
+							OTName: "ot1",
+						},
+					},
+				},
+			}
+			mode := interfaces.ImportMode_Normal
+			ots := dmock.NewMockObjectTypeService(mockCtrl)
+
+			service4 := &knowledgeNetworkService{
+				appSetting: appSetting,
+				kna:        kna,
+				ps:         ps,
+				osa:        osa,
+				bsa:        bsa,
+				db:         db,
+				ots:        ots,
+			}
+
+			smock.ExpectBegin()
+			ps.EXPECT().CheckPermission(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
+			kna.EXPECT().CheckKNExistByID(gomock.Any(), gomock.Any(), gomock.Any()).Return("", false, nil)
+			kna.EXPECT().CheckKNExistByName(gomock.Any(), gomock.Any(), gomock.Any()).Return("", false, nil)
+			kna.EXPECT().CreateKN(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
+			ots.EXPECT().CreateObjectTypes(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil, rest.NewHTTPError(ctx, 500, oerrors.OntologyManager_KnowledgeNetwork_InternalError))
+			smock.ExpectRollback()
+
+			knID, err := service4.CreateKN(ctx, kn, mode)
+			So(err, ShouldNotBeNil)
+			So(knID, ShouldEqual, "")
+		})
+
+		Convey("Failed when CreateRelationTypes fails\n", func() {
+			kn := &interfaces.KN{
+				KNID:   "kn1",
+				KNName: "kn1",
+				Branch: interfaces.MAIN_BRANCH,
+				RelationTypes: []*interfaces.RelationType{
+					{
+						RelationTypeWithKeyField: interfaces.RelationTypeWithKeyField{
+							RTID:   "rt1",
+							RTName: "rt1",
+						},
+					},
+				},
+			}
+			mode := interfaces.ImportMode_Normal
+			rts := dmock.NewMockRelationTypeService(mockCtrl)
+
+			service5 := &knowledgeNetworkService{
+				appSetting: appSetting,
+				kna:        kna,
+				ps:         ps,
+				osa:        osa,
+				bsa:        bsa,
+				db:         db,
+				rts:        rts,
+			}
+
+			smock.ExpectBegin()
+			ps.EXPECT().CheckPermission(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
+			kna.EXPECT().CheckKNExistByID(gomock.Any(), gomock.Any(), gomock.Any()).Return("", false, nil)
+			kna.EXPECT().CheckKNExistByName(gomock.Any(), gomock.Any(), gomock.Any()).Return("", false, nil)
+			kna.EXPECT().CreateKN(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
+			rts.EXPECT().CreateRelationTypes(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil, rest.NewHTTPError(ctx, 500, oerrors.OntologyManager_KnowledgeNetwork_InternalError))
+			smock.ExpectRollback()
+
+			knID, err := service5.CreateKN(ctx, kn, mode)
+			So(err, ShouldNotBeNil)
+			So(knID, ShouldEqual, "")
+		})
+
+		Convey("Failed when CreateActionTypes fails\n", func() {
+			kn := &interfaces.KN{
+				KNID:   "kn1",
+				KNName: "kn1",
+				Branch: interfaces.MAIN_BRANCH,
+				ActionTypes: []*interfaces.ActionType{
+					{
+						ActionTypeWithKeyField: interfaces.ActionTypeWithKeyField{
+							ATID:   "at1",
+							ATName: "at1",
+						},
+					},
+				},
+			}
+			mode := interfaces.ImportMode_Normal
+			ats := dmock.NewMockActionTypeService(mockCtrl)
+
+			service6 := &knowledgeNetworkService{
+				appSetting: appSetting,
+				kna:        kna,
+				ps:         ps,
+				osa:        osa,
+				bsa:        bsa,
+				db:         db,
+				ats:        ats,
+			}
+
+			smock.ExpectBegin()
+			ps.EXPECT().CheckPermission(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
+			kna.EXPECT().CheckKNExistByID(gomock.Any(), gomock.Any(), gomock.Any()).Return("", false, nil)
+			kna.EXPECT().CheckKNExistByName(gomock.Any(), gomock.Any(), gomock.Any()).Return("", false, nil)
+			kna.EXPECT().CreateKN(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
+			ats.EXPECT().CreateActionTypes(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil, rest.NewHTTPError(ctx, 500, oerrors.OntologyManager_KnowledgeNetwork_InternalError))
+			smock.ExpectRollback()
+
+			knID, err := service6.CreateKN(ctx, kn, mode)
+			So(err, ShouldNotBeNil)
+			So(knID, ShouldEqual, "")
+		})
+
+		Convey("Failed when InsertOpenSearchData fails\n", func() {
+			kn := &interfaces.KN{
+				KNID:   "kn1",
+				KNName: "kn1",
+				Branch: interfaces.MAIN_BRANCH,
+			}
+			mode := interfaces.ImportMode_Normal
+
+			smock.ExpectBegin()
+			ps.EXPECT().CheckPermission(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
+			kna.EXPECT().CheckKNExistByID(gomock.Any(), gomock.Any(), gomock.Any()).Return("", false, nil)
+			kna.EXPECT().CheckKNExistByName(gomock.Any(), gomock.Any(), gomock.Any()).Return("", false, nil)
+			kna.EXPECT().CreateKN(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
+			osa.EXPECT().InsertData(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(rest.NewHTTPError(ctx, 500, oerrors.OntologyManager_KnowledgeNetwork_InternalError))
+			smock.ExpectRollback()
+
+			knID, err := service.CreateKN(ctx, kn, mode)
+			So(err, ShouldNotBeNil)
+			So(knID, ShouldEqual, "")
+		})
+
+		Convey("Failed when CreateResources fails\n", func() {
+			kn := &interfaces.KN{
+				KNID:   "kn1",
+				KNName: "kn1",
+				Branch: interfaces.MAIN_BRANCH,
+			}
+			mode := interfaces.ImportMode_Normal
+
+			smock.ExpectBegin()
+			ps.EXPECT().CheckPermission(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
+			kna.EXPECT().CheckKNExistByID(gomock.Any(), gomock.Any(), gomock.Any()).Return("", false, nil)
+			kna.EXPECT().CheckKNExistByName(gomock.Any(), gomock.Any(), gomock.Any()).Return("", false, nil)
+			kna.EXPECT().CreateKN(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
+			osa.EXPECT().InsertData(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
+			ps.EXPECT().CreateResources(gomock.Any(), gomock.Any(), gomock.Any()).Return(rest.NewHTTPError(ctx, 500, oerrors.OntologyManager_KnowledgeNetwork_InternalError))
+			smock.ExpectRollback()
+
+			knID, err := service.CreateKN(ctx, kn, mode)
+			So(err, ShouldNotBeNil)
+			So(knID, ShouldEqual, "")
+		})
+
+		Convey("Failed when BindResource fails\n", func() {
+			kn := &interfaces.KN{
+				KNID:   "kn1",
+				KNName: "kn1",
+				Branch: interfaces.MAIN_BRANCH,
+			}
+			mode := interfaces.ImportMode_Normal
+
+			smock.ExpectBegin()
+			ps.EXPECT().CheckPermission(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
+			kna.EXPECT().CheckKNExistByID(gomock.Any(), gomock.Any(), gomock.Any()).Return("", false, nil)
+			kna.EXPECT().CheckKNExistByName(gomock.Any(), gomock.Any(), gomock.Any()).Return("", false, nil)
+			kna.EXPECT().CreateKN(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
+			osa.EXPECT().InsertData(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
+			ps.EXPECT().CreateResources(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
+			bsa.EXPECT().BindResource(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(rest.NewHTTPError(ctx, 500, oerrors.OntologyManager_KnowledgeNetwork_InternalError))
+			smock.ExpectRollback()
+
+			knID, err := service.CreateKN(ctx, kn, mode)
+			So(err, ShouldNotBeNil)
+			So(knID, ShouldEqual, "")
+		})
 	})
 }

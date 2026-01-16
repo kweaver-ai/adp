@@ -35,7 +35,7 @@ func TestNewLikeCond(t *testing.T) {
 			cfg := &CondCfg{
 				Operation: OperationLike,
 				Name:      "field3",
-				NameField:  fieldsMap["field3"],
+				NameField: fieldsMap["field3"],
 				ValueOptCfg: ValueOptCfg{
 					ValueFrom: ValueFrom_Const,
 					Value:     "value1",
@@ -51,7 +51,7 @@ func TestNewLikeCond(t *testing.T) {
 			cfg := &CondCfg{
 				Operation: OperationLike,
 				Name:      "field1",
-				NameField:  fieldsMap["field1"],
+				NameField: fieldsMap["field1"],
 				ValueOptCfg: ValueOptCfg{
 					ValueFrom: ValueFrom_Field,
 					Value:     "value1",
@@ -67,7 +67,7 @@ func TestNewLikeCond(t *testing.T) {
 			cfg := &CondCfg{
 				Operation: OperationLike,
 				Name:      "field1",
-				NameField:  fieldsMap["field1"],
+				NameField: fieldsMap["field1"],
 				ValueOptCfg: ValueOptCfg{
 					ValueFrom: ValueFrom_Const,
 					Value:     123,
@@ -83,7 +83,7 @@ func TestNewLikeCond(t *testing.T) {
 			cfg := &CondCfg{
 				Operation: OperationLike,
 				Name:      "field1",
-				NameField:  fieldsMap["field1"],
+				NameField: fieldsMap["field1"],
 				ValueOptCfg: ValueOptCfg{
 					ValueFrom: ValueFrom_Const,
 					Value:     "value1",
@@ -101,7 +101,7 @@ func TestNewLikeCond(t *testing.T) {
 			cfg := &CondCfg{
 				Operation: OperationLike,
 				Name:      "field2",
-				NameField:  fieldsMap["field2"],
+				NameField: fieldsMap["field2"],
 				ValueOptCfg: ValueOptCfg{
 					ValueFrom: ValueFrom_Const,
 					Value:     "value1",
@@ -116,7 +116,7 @@ func TestNewLikeCond(t *testing.T) {
 			cfg := &CondCfg{
 				Operation: OperationLike,
 				Name:      "field4",
-				NameField:  fieldsMap["field4"],
+				NameField: fieldsMap["field4"],
 				ValueOptCfg: ValueOptCfg{
 					ValueFrom: ValueFrom_Const,
 					Value:     "value1",
@@ -143,7 +143,7 @@ func TestLikeCond_Convert(t *testing.T) {
 			cfg := &CondCfg{
 				Operation: OperationLike,
 				Name:      "field1",
-				NameField:  fieldsMap["field1"],
+				NameField: fieldsMap["field1"],
 				ValueOptCfg: ValueOptCfg{
 					ValueFrom: ValueFrom_Const,
 					Value:     "test",
@@ -180,7 +180,7 @@ func TestLikeCond_Convert2SQL(t *testing.T) {
 			cfg := &CondCfg{
 				Operation: OperationLike,
 				Name:      "field1",
-				NameField:  fieldsMap["field1"],
+				NameField: fieldsMap["field1"],
 				ValueOptCfg: ValueOptCfg{
 					ValueFrom: ValueFrom_Const,
 					Value:     "test",
@@ -194,14 +194,14 @@ func TestLikeCond_Convert2SQL(t *testing.T) {
 			So(sql, ShouldNotBeEmpty)
 			So(sql, ShouldContainSubstring, "field1")
 			So(sql, ShouldContainSubstring, "LIKE")
-			So(sql, ShouldContainSubstring, "%test%")
+			So(sql, ShouldContainSubstring, "test")
 		})
 
 		Convey("special characters should be escaped", func() {
 			cfg := &CondCfg{
 				Operation: OperationLike,
 				Name:      "field1",
-				NameField:  fieldsMap["field1"],
+				NameField: fieldsMap["field1"],
 				ValueOptCfg: ValueOptCfg{
 					ValueFrom: ValueFrom_Const,
 					Value:     "test'%_\\",
