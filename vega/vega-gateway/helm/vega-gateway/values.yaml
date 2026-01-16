@@ -47,23 +47,6 @@ depServices:
     port: 8090
     timeout: 3000
     protocol: http
-  vega_jdbc:
-    host: 10.4.109.201
-    port: 80
-  vega_schedule:
-    queued: TaskGroupMax20
-    host: data-sync-connect
-    port: 80
-    engine_host: 10.4.109.243
-    protocol: http
-  authentication:
-    publicHost: authentication-public
-    publicPort: 30110
-    publicProtocol: http
-  dataView:
-    host: data-view
-    port: 8123
-    protocol: http
   hydra:
     administrativeHost: hydra-admin
     administrativePort: 4445

@@ -82,31 +82,16 @@ olk:
   connector:
     name: mysql,maria,hive-hadoop2,postgresql,clickhouse,doris,oracle,sqlserver,hive-jdbc
 
-queue:
-  name: TaskGroupMax5
-
 sql:
   enabled: true
-
-schedule:
-  url: http://10.4.108.214:8787
-  host: http://10.4.108.63:8090
 
 #AF权限相关配置
 af-auth:
   is-open: true
-  pwd-auth-url: http://10.4.109.201:30974/api/authentication/v1/pwd-auth
-  data-view-url: http://10.4.109.201/api/data-view/v1/user/form-view
   register-clientid-url: http://10.4.110.188:4445/admin/clients
   clientid-token: http://10.4.110.188:4444/oauth2/token
   token-introspect: http://10.4.110.188:4445/admin/oauth2/introspect
   row-column-rule: http://10.4.109.201:31125/admin/clients
-
-
-#提供jdbc代理服务的ip和端口
-gateway-jdbc:
-  ip: 10.4.37.7
-  port: 8099
 
   #anyrobot:
   #  log:
