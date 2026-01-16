@@ -480,5 +480,331 @@ func Test_validateCond(t *testing.T) {
 			httpErr := err.(*rest.HTTPError)
 			So(httpErr.HTTPCode, ShouldEqual, http.StatusBadRequest)
 		})
+
+		Convey("Success with OperationOr condition\n", func() {
+			cfg := &cond.CondCfg{
+				Operation: cond.OperationOr,
+				SubConds: []*cond.CondCfg{
+					{
+						Operation: cond.OperationEq,
+						Name:      "field1",
+						ValueOptCfg: cond.ValueOptCfg{
+							Value: "value1",
+						},
+					},
+				},
+			}
+			err := validateCond(ctx, cfg)
+			So(err, ShouldBeNil)
+		})
+
+		Convey("Success with OperationKNN condition\n", func() {
+			cfg := &cond.CondCfg{
+				Operation: cond.OperationKNN,
+				SubConds: []*cond.CondCfg{
+					{
+						Operation: cond.OperationEq,
+						Name:      "field1",
+						ValueOptCfg: cond.ValueOptCfg{
+							Value: "value1",
+						},
+					},
+				},
+			}
+			err := validateCond(ctx, cfg)
+			So(err, ShouldBeNil)
+		})
+
+		Convey("Failed with too many sub conditions\n", func() {
+			subConds := make([]*cond.CondCfg, cond.MaxSubCondition+1)
+			for i := 0; i < cond.MaxSubCondition+1; i++ {
+				subConds[i] = &cond.CondCfg{
+					Operation: cond.OperationEq,
+					Name:      "field1",
+					ValueOptCfg: cond.ValueOptCfg{
+						Value: "value1",
+					},
+				}
+			}
+			cfg := &cond.CondCfg{
+				Operation: cond.OperationAnd,
+				SubConds:  subConds,
+			}
+			err := validateCond(ctx, cfg)
+			So(err, ShouldNotBeNil)
+			httpErr := err.(*rest.HTTPError)
+			So(httpErr.HTTPCode, ShouldEqual, http.StatusBadRequest)
+		})
+
+		Convey("Success with OperationMultiMatch without name\n", func() {
+			cfg := &cond.CondCfg{
+				Operation: cond.OperationMultiMatch,
+				Name:      "",
+				ValueOptCfg: cond.ValueOptCfg{
+					Value: "value1",
+				},
+			}
+			err := validateCond(ctx, cfg)
+			So(err, ShouldBeNil)
+		})
+
+		Convey("Failed with Like operation having non-string value\n", func() {
+			cfg := &cond.CondCfg{
+				Operation: cond.OperationLike,
+				Name:      "field1",
+				ValueOptCfg: cond.ValueOptCfg{
+					Value: 123,
+				},
+			}
+			err := validateCond(ctx, cfg)
+			So(err, ShouldNotBeNil)
+			httpErr := err.(*rest.HTTPError)
+			So(httpErr.HTTPCode, ShouldEqual, http.StatusBadRequest)
+		})
+
+		Convey("Failed with NotLike operation having non-string value\n", func() {
+			cfg := &cond.CondCfg{
+				Operation: cond.OperationNotLike,
+				Name:      "field1",
+				ValueOptCfg: cond.ValueOptCfg{
+					Value: 123,
+				},
+			}
+			err := validateCond(ctx, cfg)
+			So(err, ShouldNotBeNil)
+			httpErr := err.(*rest.HTTPError)
+			So(httpErr.HTTPCode, ShouldEqual, http.StatusBadRequest)
+		})
+
+		Convey("Failed with Prefix operation having non-string value\n", func() {
+			cfg := &cond.CondCfg{
+				Operation: cond.OperationPrefix,
+				Name:      "field1",
+				ValueOptCfg: cond.ValueOptCfg{
+					Value: 123,
+				},
+			}
+			err := validateCond(ctx, cfg)
+			So(err, ShouldNotBeNil)
+			httpErr := err.(*rest.HTTPError)
+			So(httpErr.HTTPCode, ShouldEqual, http.StatusBadRequest)
+		})
+
+		Convey("Failed with NotPrefix operation having non-string value\n", func() {
+			cfg := &cond.CondCfg{
+				Operation: cond.OperationNotPrefix,
+				Name:      "field1",
+				ValueOptCfg: cond.ValueOptCfg{
+					Value: 123,
+				},
+			}
+			err := validateCond(ctx, cfg)
+			So(err, ShouldNotBeNil)
+			httpErr := err.(*rest.HTTPError)
+			So(httpErr.HTTPCode, ShouldEqual, http.StatusBadRequest)
+		})
+
+		Convey("Success with Like operation having string value\n", func() {
+			cfg := &cond.CondCfg{
+				Operation: cond.OperationLike,
+				Name:      "field1",
+				ValueOptCfg: cond.ValueOptCfg{
+					Value: "value1",
+				},
+			}
+			err := validateCond(ctx, cfg)
+			So(err, ShouldBeNil)
+		})
+
+		Convey("Failed with NotIn operation having non-array value\n", func() {
+			cfg := &cond.CondCfg{
+				Operation: cond.OperationNotIn,
+				Name:      "field1",
+				ValueOptCfg: cond.ValueOptCfg{
+					Value: "value1",
+				},
+			}
+			err := validateCond(ctx, cfg)
+			So(err, ShouldNotBeNil)
+			httpErr := err.(*rest.HTTPError)
+			So(httpErr.HTTPCode, ShouldEqual, http.StatusBadRequest)
+		})
+
+		Convey("Failed with NotIn operation having empty array\n", func() {
+			cfg := &cond.CondCfg{
+				Operation: cond.OperationNotIn,
+				Name:      "field1",
+				ValueOptCfg: cond.ValueOptCfg{
+					Value: []any{},
+				},
+			}
+			err := validateCond(ctx, cfg)
+			So(err, ShouldNotBeNil)
+			httpErr := err.(*rest.HTTPError)
+			So(httpErr.HTTPCode, ShouldEqual, http.StatusBadRequest)
+		})
+
+		Convey("Failed with OutRange operation having non-array value\n", func() {
+			cfg := &cond.CondCfg{
+				Operation: cond.OperationOutRange,
+				Name:      "field1",
+				ValueOptCfg: cond.ValueOptCfg{
+					Value: "value1",
+				},
+			}
+			err := validateCond(ctx, cfg)
+			So(err, ShouldNotBeNil)
+			httpErr := err.(*rest.HTTPError)
+			So(httpErr.HTTPCode, ShouldEqual, http.StatusBadRequest)
+		})
+
+		Convey("Failed with OutRange operation having wrong array length\n", func() {
+			cfg := &cond.CondCfg{
+				Operation: cond.OperationOutRange,
+				Name:      "field1",
+				ValueOptCfg: cond.ValueOptCfg{
+					Value: []any{1},
+				},
+			}
+			err := validateCond(ctx, cfg)
+			So(err, ShouldNotBeNil)
+			httpErr := err.(*rest.HTTPError)
+			So(httpErr.HTTPCode, ShouldEqual, http.StatusBadRequest)
+		})
+
+		Convey("Failed with Before operation having non-array value\n", func() {
+			cfg := &cond.CondCfg{
+				Operation: cond.OperationBefore,
+				Name:      "field1",
+				ValueOptCfg: cond.ValueOptCfg{
+					Value: "value1",
+				},
+			}
+			err := validateCond(ctx, cfg)
+			So(err, ShouldNotBeNil)
+			httpErr := err.(*rest.HTTPError)
+			So(httpErr.HTTPCode, ShouldEqual, http.StatusBadRequest)
+		})
+
+		Convey("Failed with Before operation having wrong array length\n", func() {
+			cfg := &cond.CondCfg{
+				Operation: cond.OperationBefore,
+				Name:      "field1",
+				ValueOptCfg: cond.ValueOptCfg{
+					Value: []any{1},
+				},
+			}
+			err := validateCond(ctx, cfg)
+			So(err, ShouldNotBeNil)
+			httpErr := err.(*rest.HTTPError)
+			So(httpErr.HTTPCode, ShouldEqual, http.StatusBadRequest)
+		})
+
+		Convey("Failed with Between operation having non-array value\n", func() {
+			cfg := &cond.CondCfg{
+				Operation: cond.OperationBetween,
+				Name:      "field1",
+				ValueOptCfg: cond.ValueOptCfg{
+					Value: "value1",
+				},
+			}
+			err := validateCond(ctx, cfg)
+			So(err, ShouldNotBeNil)
+			httpErr := err.(*rest.HTTPError)
+			So(httpErr.HTTPCode, ShouldEqual, http.StatusBadRequest)
+		})
+
+		Convey("Failed with Between operation having wrong array length\n", func() {
+			cfg := &cond.CondCfg{
+				Operation: cond.OperationBetween,
+				Name:      "field1",
+				ValueOptCfg: cond.ValueOptCfg{
+					Value: []any{1},
+				},
+			}
+			err := validateCond(ctx, cfg)
+			So(err, ShouldNotBeNil)
+			httpErr := err.(*rest.HTTPError)
+			So(httpErr.HTTPCode, ShouldEqual, http.StatusBadRequest)
+		})
+
+		Convey("Success with Range operation having correct array length\n", func() {
+			cfg := &cond.CondCfg{
+				Operation: cond.OperationRange,
+				Name:      "field1",
+				ValueOptCfg: cond.ValueOptCfg{
+					Value: []any{1, 2},
+				},
+			}
+			err := validateCond(ctx, cfg)
+			So(err, ShouldBeNil)
+		})
+
+		Convey("Success with OutRange operation having correct array length\n", func() {
+			cfg := &cond.CondCfg{
+				Operation: cond.OperationOutRange,
+				Name:      "field1",
+				ValueOptCfg: cond.ValueOptCfg{
+					Value: []any{1, 2},
+				},
+			}
+			err := validateCond(ctx, cfg)
+			So(err, ShouldBeNil)
+		})
+
+		Convey("Success with Before operation having correct array length\n", func() {
+			cfg := &cond.CondCfg{
+				Operation: cond.OperationBefore,
+				Name:      "field1",
+				ValueOptCfg: cond.ValueOptCfg{
+					Value: []any{1, 2},
+				},
+			}
+			err := validateCond(ctx, cfg)
+			So(err, ShouldBeNil)
+		})
+
+		Convey("Success with Between operation having correct array length\n", func() {
+			cfg := &cond.CondCfg{
+				Operation: cond.OperationBetween,
+				Name:      "field1",
+				ValueOptCfg: cond.ValueOptCfg{
+					Value: []any{1, 2},
+				},
+			}
+			err := validateCond(ctx, cfg)
+			So(err, ShouldBeNil)
+		})
+
+		Convey("Success with valid regex\n", func() {
+			cfg := &cond.CondCfg{
+				Operation: cond.OperationRegex,
+				Name:      "field1",
+				ValueOptCfg: cond.ValueOptCfg{
+					Value: "^test.*",
+				},
+			}
+			err := validateCond(ctx, cfg)
+			So(err, ShouldBeNil)
+		})
+
+		Convey("Success with other single value operations\n", func() {
+			operations := []string{
+				cond.OperationNotEq, cond.OperationGt, cond.OperationGte,
+				cond.OperationLt, cond.OperationLte, cond.OperationMatch,
+				cond.OperationMatchPhrase, cond.OperationCurrent,
+			}
+			for _, op := range operations {
+				cfg := &cond.CondCfg{
+					Operation: op,
+					Name:      "field1",
+					ValueOptCfg: cond.ValueOptCfg{
+						Value: "value1",
+					},
+				}
+				err := validateCond(ctx, cfg)
+				So(err, ShouldBeNil)
+			}
+		})
 	})
 }

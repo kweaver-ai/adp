@@ -170,6 +170,21 @@ func Test_ObjectTypeRestHandler_CreateObjectTypes(t *testing.T) {
 
 			So(w.Result().StatusCode, ShouldEqual, http.StatusInternalServerError)
 		})
+
+		Convey("CreateObjectTypesByIn - Success\n", func() {
+			kns.EXPECT().CheckKNExistByID(gomock.Any(), knID, gomock.Any()).Return(knID, true, nil)
+			ots.EXPECT().CreateObjectTypes(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return([]string{"ot1"}, nil)
+
+			urlIn := "/api/ontology-manager/in/v1/knowledge-networks/" + knID + "/object-types"
+			reqParamByte, _ := sonic.Marshal(requestData)
+			req := httptest.NewRequest(http.MethodPost, urlIn, bytes.NewReader(reqParamByte))
+			req.Header.Set(interfaces.CONTENT_TYPE_NAME, interfaces.CONTENT_TYPE_JSON)
+			req.Header.Set(interfaces.HTTP_HEADER_ACCOUNT_ID, "user1")
+			w := httptest.NewRecorder()
+			engine.ServeHTTP(w, req)
+
+			So(w.Result().StatusCode, ShouldEqual, http.StatusCreated)
+		})
 	})
 }
 
@@ -385,6 +400,96 @@ func Test_ObjectTypeRestHandler_DeleteObjectTypes(t *testing.T) {
 	})
 }
 
+func Test_ObjectTypeRestHandler_UpdateDataProperties(t *testing.T) {
+	Convey("Test ObjectTypeHandler UpdateDataProperties\n", t, func() {
+		test := setGinMode()
+		defer test()
+
+		engine := gin.New()
+		engine.Use(gin.Recovery())
+
+		mockCtrl := gomock.NewController(t)
+		defer mockCtrl.Finish()
+
+		appSetting := &common.AppSetting{}
+		hydra := rmock.NewMockHydra(mockCtrl)
+		ots := dmock.NewMockObjectTypeService(mockCtrl)
+		kns := dmock.NewMockKNService(mockCtrl)
+
+		handler := MockNewObjectTypeRestHandler(appSetting, hydra, ots, kns)
+		handler.RegisterPublic(engine)
+
+		hydra.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(rest.Visitor{}, nil)
+
+		knID := "kn1"
+		otID := "ot1"
+		propertyNames := "prop1,prop2"
+		url := "/api/ontology-manager/v1/knowledge-networks/" + knID + "/object-types/" + otID + "/data_properties/" + propertyNames
+
+		dataProperties := []*interfaces.DataProperty{
+			{
+				Name:        "prop1",
+				Type:        "string",
+				DisplayName: "prop1",
+			},
+			{
+				Name:        "prop2",
+				Type:        "integer",
+				DisplayName: "prop2",
+			},
+		}
+		requestData := struct {
+			Entries []*interfaces.DataProperty `json:"entries"`
+		}{
+			Entries: dataProperties,
+		}
+
+		Convey("Success UpdateDataProperties\n", func() {
+			kns.EXPECT().CheckKNExistByID(gomock.Any(), knID, gomock.Any()).Return(knID, true, nil)
+			ots.EXPECT().GetObjectTypeByID(gomock.Any(), knID, gomock.Any(), otID).Return(&interfaces.ObjectType{
+				ObjectTypeWithKeyField: interfaces.ObjectTypeWithKeyField{
+					OTID:   otID,
+					OTName: "object1",
+				},
+			}, nil)
+			ots.EXPECT().UpdateDataProperties(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
+
+			reqParamByte, _ := sonic.Marshal(requestData)
+			req := httptest.NewRequest(http.MethodPut, url, bytes.NewReader(reqParamByte))
+			req.Header.Set(interfaces.CONTENT_TYPE_NAME, interfaces.CONTENT_TYPE_JSON)
+			w := httptest.NewRecorder()
+			engine.ServeHTTP(w, req)
+
+			So(w.Result().StatusCode, ShouldEqual, http.StatusNoContent)
+		})
+
+		Convey("KN not found\n", func() {
+			kns.EXPECT().CheckKNExistByID(gomock.Any(), knID, gomock.Any()).Return("", false, nil)
+
+			reqParamByte, _ := sonic.Marshal(requestData)
+			req := httptest.NewRequest(http.MethodPut, url, bytes.NewReader(reqParamByte))
+			req.Header.Set(interfaces.CONTENT_TYPE_NAME, interfaces.CONTENT_TYPE_JSON)
+			w := httptest.NewRecorder()
+			engine.ServeHTTP(w, req)
+
+			So(w.Result().StatusCode, ShouldEqual, http.StatusForbidden)
+		})
+
+		Convey("ObjectType not found\n", func() {
+			kns.EXPECT().CheckKNExistByID(gomock.Any(), knID, gomock.Any()).Return(knID, true, nil)
+			ots.EXPECT().GetObjectTypeByID(gomock.Any(), knID, gomock.Any(), otID).Return(nil, nil)
+
+			reqParamByte, _ := sonic.Marshal(requestData)
+			req := httptest.NewRequest(http.MethodPut, url, bytes.NewReader(reqParamByte))
+			req.Header.Set(interfaces.CONTENT_TYPE_NAME, interfaces.CONTENT_TYPE_JSON)
+			w := httptest.NewRecorder()
+			engine.ServeHTTP(w, req)
+
+			So(w.Result().StatusCode, ShouldEqual, http.StatusForbidden)
+		})
+	})
+}
+
 func Test_ObjectTypeRestHandler_ListObjectTypes(t *testing.T) {
 	Convey("Test ObjectTypeHandler ListObjectTypes\n", t, func() {
 		test := setGinMode()
@@ -447,6 +552,19 @@ func Test_ObjectTypeRestHandler_ListObjectTypes(t *testing.T) {
 			engine.ServeHTTP(w, req)
 
 			So(w.Result().StatusCode, ShouldEqual, http.StatusInternalServerError)
+		})
+
+		Convey("ListObjectTypesByIn - Success\n", func() {
+			kns.EXPECT().CheckKNExistByID(gomock.Any(), knID, gomock.Any()).Return(knID, true, nil)
+			ots.EXPECT().ListObjectTypes(gomock.Any(), gomock.Any(), gomock.Any()).Return([]*interfaces.ObjectType{}, 0, nil)
+
+			urlIn := "/api/ontology-manager/in/v1/knowledge-networks/" + knID + "/object-types"
+			req := httptest.NewRequest(http.MethodGet, urlIn, nil)
+			req.Header.Set(interfaces.HTTP_HEADER_ACCOUNT_ID, "user1")
+			w := httptest.NewRecorder()
+			engine.ServeHTTP(w, req)
+
+			So(w.Result().StatusCode, ShouldEqual, http.StatusOK)
 		})
 	})
 }
@@ -514,6 +632,33 @@ func Test_ObjectTypeRestHandler_GetObjectTypes(t *testing.T) {
 			engine.ServeHTTP(w, req)
 
 			So(w.Result().StatusCode, ShouldEqual, http.StatusInternalServerError)
+		})
+
+		Convey("GetObjectTypesByIn - Success\n", func() {
+			otIDs := "ot1,ot2"
+			kns.EXPECT().CheckKNExistByID(gomock.Any(), knID, gomock.Any()).Return(knID, true, nil)
+			ots.EXPECT().GetObjectTypesByIDs(gomock.Any(), gomock.Any(), knID, gomock.Any(), gomock.Any()).Return([]*interfaces.ObjectType{
+				{
+					ObjectTypeWithKeyField: interfaces.ObjectTypeWithKeyField{
+						OTID:   "ot1",
+						OTName: "object1",
+					},
+				},
+				{
+					ObjectTypeWithKeyField: interfaces.ObjectTypeWithKeyField{
+						OTID:   "ot2",
+						OTName: "object2",
+					},
+				},
+			}, nil)
+
+			urlIn := "/api/ontology-manager/in/v1/knowledge-networks/" + knID + "/object-types/" + otIDs
+			req := httptest.NewRequest(http.MethodGet, urlIn, nil)
+			req.Header.Set(interfaces.HTTP_HEADER_ACCOUNT_ID, "user1")
+			w := httptest.NewRecorder()
+			engine.ServeHTTP(w, req)
+
+			So(w.Result().StatusCode, ShouldEqual, http.StatusOK)
 		})
 	})
 }

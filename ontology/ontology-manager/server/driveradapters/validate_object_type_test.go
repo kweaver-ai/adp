@@ -145,6 +145,283 @@ func Test_ValidateObjectType(t *testing.T) {
 			err := ValidateObjectType(ctx, ot)
 			So(err, ShouldNotBeNil)
 		})
+
+		Convey("Failed with primary key not in data properties\n", func() {
+			ot := &interfaces.ObjectType{
+				ObjectTypeWithKeyField: interfaces.ObjectTypeWithKeyField{
+					OTID:   "ot1",
+					OTName: "object1",
+					DataProperties: []*interfaces.DataProperty{
+						{
+							Name:        "prop1",
+							Type:        "string",
+							DisplayName: "prop1",
+						},
+					},
+					PrimaryKeys: []string{"prop2"},
+					DisplayKey:  "prop1",
+				},
+			}
+			err := ValidateObjectType(ctx, ot)
+			So(err, ShouldNotBeNil)
+		})
+
+		Convey("Failed with display key not in data properties\n", func() {
+			ot := &interfaces.ObjectType{
+				ObjectTypeWithKeyField: interfaces.ObjectTypeWithKeyField{
+					OTID:   "ot1",
+					OTName: "object1",
+					DataProperties: []*interfaces.DataProperty{
+						{
+							Name:        "prop1",
+							Type:        "string",
+							DisplayName: "prop1",
+						},
+					},
+					PrimaryKeys: []string{"prop1"},
+					DisplayKey:  "prop2",
+				},
+			}
+			err := ValidateObjectType(ctx, ot)
+			So(err, ShouldNotBeNil)
+		})
+
+		Convey("Failed with invalid display key type\n", func() {
+			ot := &interfaces.ObjectType{
+				ObjectTypeWithKeyField: interfaces.ObjectTypeWithKeyField{
+					OTID:   "ot1",
+					OTName: "object1",
+					DataProperties: []*interfaces.DataProperty{
+						{
+							Name:        "prop1",
+							Type:        "string",
+							DisplayName: "prop1",
+						},
+						{
+							Name:        "prop2",
+							Type:        "binary",
+							DisplayName: "prop2",
+						},
+					},
+					PrimaryKeys: []string{"prop1"},
+					DisplayKey:  "prop2",
+				},
+			}
+			err := ValidateObjectType(ctx, ot)
+			So(err, ShouldNotBeNil)
+		})
+
+		Convey("Failed with invalid incremental key type\n", func() {
+			ot := &interfaces.ObjectType{
+				ObjectTypeWithKeyField: interfaces.ObjectTypeWithKeyField{
+					OTID:   "ot1",
+					OTName: "object1",
+					DataProperties: []*interfaces.DataProperty{
+						{
+							Name:        "prop1",
+							Type:        "string",
+							DisplayName: "prop1",
+						},
+						{
+							Name:        "prop2",
+							Type:        "float",
+							DisplayName: "prop2",
+						},
+					},
+					PrimaryKeys:    []string{"prop1"},
+					DisplayKey:      "prop1",
+					IncrementalKey:  "prop2",
+				},
+			}
+			err := ValidateObjectType(ctx, ot)
+			So(err, ShouldNotBeNil)
+		})
+
+		Convey("Failed with incremental key not in data properties\n", func() {
+			ot := &interfaces.ObjectType{
+				ObjectTypeWithKeyField: interfaces.ObjectTypeWithKeyField{
+					OTID:   "ot1",
+					OTName: "object1",
+					DataProperties: []*interfaces.DataProperty{
+						{
+							Name:        "prop1",
+							Type:        "string",
+							DisplayName: "prop1",
+						},
+					},
+					PrimaryKeys:    []string{"prop1"},
+					DisplayKey:      "prop1",
+					IncrementalKey:  "prop2",
+				},
+			}
+			err := ValidateObjectType(ctx, ot)
+			So(err, ShouldNotBeNil)
+		})
+
+		Convey("Success with valid incremental key\n", func() {
+			ot := &interfaces.ObjectType{
+				ObjectTypeWithKeyField: interfaces.ObjectTypeWithKeyField{
+					OTID:   "ot1",
+					OTName: "object1",
+					DataProperties: []*interfaces.DataProperty{
+						{
+							Name:        "prop1",
+							Type:        "string",
+							DisplayName: "prop1",
+						},
+						{
+							Name:        "prop2",
+							Type:        "integer",
+							DisplayName: "prop2",
+						},
+					},
+					PrimaryKeys:    []string{"prop1"},
+					DisplayKey:      "prop1",
+					IncrementalKey:  "prop2",
+				},
+			}
+			err := ValidateObjectType(ctx, ot)
+			So(err, ShouldBeNil)
+		})
+
+		Convey("Failed with invalid logic property type\n", func() {
+			ot := &interfaces.ObjectType{
+				ObjectTypeWithKeyField: interfaces.ObjectTypeWithKeyField{
+					OTID:   "ot1",
+					OTName: "object1",
+					DataProperties: []*interfaces.DataProperty{
+						{
+							Name:        "prop1",
+							Type:        "string",
+							DisplayName: "prop1",
+						},
+					},
+					PrimaryKeys: []string{"prop1"},
+					DisplayKey:  "prop1",
+					LogicProperties: []*interfaces.LogicProperty{
+						{
+							Name:        "logic1",
+							Type:        "invalid_type",
+							DisplayName: "logic1",
+						},
+					},
+				},
+			}
+			err := ValidateObjectType(ctx, ot)
+			So(err, ShouldNotBeNil)
+		})
+
+		Convey("Failed with logic property type mismatch with data source\n", func() {
+			ot := &interfaces.ObjectType{
+				ObjectTypeWithKeyField: interfaces.ObjectTypeWithKeyField{
+					OTID:   "ot1",
+					OTName: "object1",
+					DataProperties: []*interfaces.DataProperty{
+						{
+							Name:        "prop1",
+							Type:        "string",
+							DisplayName: "prop1",
+						},
+					},
+					PrimaryKeys: []string{"prop1"},
+					DisplayKey:  "prop1",
+					LogicProperties: []*interfaces.LogicProperty{
+						{
+							Name:        "logic1",
+							Type:        "metric",
+							DisplayName: "logic1",
+							DataSource: &interfaces.ResourceInfo{
+								Type: "operator",
+							},
+						},
+					},
+				},
+			}
+			err := ValidateObjectType(ctx, ot)
+			So(err, ShouldNotBeNil)
+		})
+
+		Convey("Failed with logic property empty parameter name\n", func() {
+			ot := &interfaces.ObjectType{
+				ObjectTypeWithKeyField: interfaces.ObjectTypeWithKeyField{
+					OTID:   "ot1",
+					OTName: "object1",
+					DataProperties: []*interfaces.DataProperty{
+						{
+							Name:        "prop1",
+							Type:        "string",
+							DisplayName: "prop1",
+						},
+					},
+					PrimaryKeys: []string{"prop1"},
+					DisplayKey:  "prop1",
+					LogicProperties: []*interfaces.LogicProperty{
+						{
+							Name:        "logic1",
+							Type:        "metric",
+							DisplayName: "logic1",
+							Parameters: []interfaces.Parameter{
+								{
+									Name: "",
+								},
+							},
+						},
+					},
+				},
+			}
+			err := ValidateObjectType(ctx, ot)
+			So(err, ShouldNotBeNil)
+		})
+
+		Convey("Success with valid logic property metric type\n", func() {
+			ot := &interfaces.ObjectType{
+				ObjectTypeWithKeyField: interfaces.ObjectTypeWithKeyField{
+					OTID:   "ot1",
+					OTName: "object1",
+					DataProperties: []*interfaces.DataProperty{
+						{
+							Name:        "prop1",
+							Type:        "string",
+							DisplayName: "prop1",
+						},
+					},
+					PrimaryKeys: []string{"prop1"},
+					DisplayKey:  "prop1",
+					LogicProperties: []*interfaces.LogicProperty{
+						{
+							Name:        "logic1",
+							Type:        "metric",
+							DisplayName: "logic1",
+							DataSource: &interfaces.ResourceInfo{
+								Type: "metric",
+							},
+						},
+					},
+				},
+			}
+			err := ValidateObjectType(ctx, ot)
+			So(err, ShouldBeNil)
+		})
+
+		Convey("Failed with invalid data property\n", func() {
+			ot := &interfaces.ObjectType{
+				ObjectTypeWithKeyField: interfaces.ObjectTypeWithKeyField{
+					OTID:   "ot1",
+					OTName: "object1",
+					DataProperties: []*interfaces.DataProperty{
+						{
+							Name:        "",
+							Type:        "string",
+							DisplayName: "prop1",
+						},
+					},
+					PrimaryKeys: []string{"prop1"},
+					DisplayKey:  "prop1",
+				},
+			}
+			err := ValidateObjectType(ctx, ot)
+			So(err, ShouldNotBeNil)
+		})
 	})
 }
 

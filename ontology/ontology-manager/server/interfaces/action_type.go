@@ -1,5 +1,7 @@
 package interfaces
 
+import "ontology-manager/common/condition"
+
 const (
 	ACTION_TYPE_TOOL = "tool"
 	ACTION_TYPE_MCP  = "mcp"
@@ -9,6 +11,28 @@ var (
 	ACTION_TYPE_SORT = map[string]string{
 		"name":        "f_name",
 		"update_time": "f_update_time",
+	}
+
+	// 行动条件操作符
+	ActionCondOperationMap = map[string]struct{}{
+		condition.OperationAnd:      {},
+		condition.OperationOr:       {},
+		condition.OperationEq:       {},
+		condition.OperationNotEq:    {},
+		condition.OperationGt:       {},
+		condition.OperationGte:      {},
+		condition.OperationLt:       {},
+		condition.OperationLte:      {},
+		condition.OperationIn:       {},
+		condition.OperationNotIn:    {},
+		condition.OperationEmpty:    {},
+		condition.OperationNotEmpty: {},
+		condition.OperationTrue:     {},
+		condition.OperationFalse:    {},
+		condition.OperationRange:    {},
+		condition.OperationOutRange: {},
+		condition.OperationBefore:   {},
+		condition.OperationBetween:  {},
 	}
 )
 

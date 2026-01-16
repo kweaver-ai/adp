@@ -9,6 +9,7 @@ import (
 	libCommon "github.com/kweaver-ai/kweaver-go-lib/common"
 	"github.com/kweaver-ai/kweaver-go-lib/rest"
 
+	cond "ontology-manager/common/condition"
 	oerrors "ontology-manager/errors"
 	"ontology-manager/interfaces"
 )
@@ -77,6 +78,99 @@ func ValidateActionType(ctx context.Context, actionType *interfaces.ActionType) 
 				return rest.NewHTTPError(ctx, http.StatusBadRequest, oerrors.OntologyManager_ActionType_InvalidParameter).
 					WithErrorDetails(fmt.Sprintf("行动类[%s]行动资源参数名称不能为空", actionType.ATName))
 			}
+		}
+	}
+
+	// 行动条件非空时，校验行动条件
+	if actionType.Condition != nil {
+		err = validateActionCondition(ctx, actionType.Condition)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+// 校验行动条件的合法性
+func validateActionCondition(ctx context.Context, cfg *interfaces.CondCfg) error {
+	if cfg == nil {
+		return nil
+	}
+
+	if cfg.ObjectTypeID == "" {
+		return rest.NewHTTPError(ctx, http.StatusBadRequest, oerrors.OntologyManager_ActionType_InvalidParameter).
+			WithErrorDetails("行动条件的对象类不能为空")
+	}
+
+	// 过滤操作符
+	if cfg.Operation == "" {
+		return rest.NewHTTPError(ctx, http.StatusBadRequest, oerrors.OntologyManager_ActionType_InvalidParameter).
+			WithErrorDetails("行动条件的过滤条件不能为空")
+	}
+
+	_, exists := interfaces.ActionCondOperationMap[cfg.Operation]
+	if !exists {
+		return rest.NewHTTPError(ctx, http.StatusBadRequest, oerrors.OntologyManager_ActionType_InvalidParameter).
+			WithErrorDetails(fmt.Sprintf("行动条件的操作符[%s]不支持", cfg.Operation))
+	}
+
+	switch cfg.Operation {
+	case cond.OperationAnd, cond.OperationOr:
+		// 子过滤条件不能超过100个
+		if len(cfg.SubConds) > cond.MaxSubCondition {
+			return rest.NewHTTPError(ctx, http.StatusBadRequest, oerrors.OntologyManager_CountExceeded_Conditions).
+				WithErrorDetails(fmt.Sprintf("行动条件的子条件不能超过 %d 个", cond.MaxSubCondition))
+		}
+
+		for _, subCond := range cfg.SubConds {
+			err := validateActionCondition(ctx, subCond)
+			if err != nil {
+				return err
+			}
+		}
+	default:
+		// 过滤字段名称不能为空
+		if cfg.Field == "" {
+			return rest.NewHTTPError(ctx, http.StatusBadRequest, oerrors.OntologyManager_ActionType_InvalidParameter).
+				WithErrorDetails("行动条件的过滤字段不能为空")
+
+		}
+	}
+
+	switch cfg.Operation {
+	case cond.OperationEq, cond.OperationNotEq, cond.OperationGt, cond.OperationGte, cond.OperationLt, cond.OperationLte:
+		// 右侧值为单个值
+		_, ok := cfg.Value.([]any)
+		if ok {
+			return rest.NewHTTPError(ctx, http.StatusBadRequest, oerrors.OntologyManager_ActionType_InvalidParameter).
+				WithErrorDetails(fmt.Sprintf("[%s] operation's value should be a single value", cfg.Operation))
+		}
+
+	case cond.OperationIn, cond.OperationNotIn:
+		// 当 operation 是 in, not_in 时，value 为任意基本类型的数组，且长度大于等于1；
+		_, ok := cfg.Value.([]any)
+		if !ok {
+			return rest.NewHTTPError(ctx, http.StatusBadRequest, oerrors.OntologyManager_ActionType_InvalidParameter).
+				WithErrorDetails("[in not_in] operation's value must be an array")
+		}
+
+		if len(cfg.Value.([]any)) <= 0 {
+			return rest.NewHTTPError(ctx, http.StatusBadRequest, oerrors.OntologyManager_ActionType_InvalidParameter).
+				WithErrorDetails("[in not_in] operation's value should contains at least 1 value")
+		}
+	case cond.OperationRange, cond.OperationOutRange, cond.OperationBefore, cond.OperationBetween:
+		// 当 operation 是 range 时，value 是个由范围的下边界和上边界组成的长度为 2 的数值型数组
+		// 当 operation 是 out_range 时，value 是个长度为 2 的数值类型的数组，查询的数据范围为 (-inf, value[0]) || [value[1], +inf)
+		v, ok := cfg.Value.([]any)
+		if !ok {
+			return rest.NewHTTPError(ctx, http.StatusBadRequest, oerrors.OntologyManager_ActionType_InvalidParameter).
+				WithErrorDetails("[range, out_range] operation's value must be an array")
+		}
+
+		if len(v) != 2 {
+			return rest.NewHTTPError(ctx, http.StatusBadRequest, oerrors.OntologyManager_ActionType_InvalidParameter).
+				WithErrorDetails("[range, out_range] operation's value must contain 2 values")
 		}
 	}
 
