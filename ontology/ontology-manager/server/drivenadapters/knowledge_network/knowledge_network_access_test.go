@@ -199,6 +199,31 @@ func Test_knowledgeNetworkAccess_CreateKN(t *testing.T) {
 	})
 }
 
+// Test_NewKNAccess 跳过测试，因为NewKNAccess需要实际的数据库连接
+// 在单元测试中使用MockNewKNAccess代替
+// func Test_NewKNAccess(t *testing.T) {
+// 	Convey("test NewKNAccess\n", t, func() {
+// 		appSetting := &common.AppSetting{
+// 			DBSetting: libdb.DBSetting{
+// 				Host:     "localhost",
+// 				Port:     3306,
+// 				Username: "test",
+// 				Password: "test",
+// 				DBName:   "test",
+// 			},
+// 		}
+//
+// 		Convey("NewKNAccess Success\n", func() {
+// 			access := NewKNAccess(appSetting)
+// 			So(access, ShouldNotBeNil)
+//
+// 			// 第二次调用应该返回同一个实例（单例模式）
+// 			access2 := NewKNAccess(appSetting)
+// 			So(access2, ShouldEqual, access)
+// 		})
+// 	})
+// }
+
 func Test_knowledgeNetworkAccess_ListKNs(t *testing.T) {
 	Convey("test ListKNs\n", t, func() {
 		appSetting := &common.AppSetting{}
