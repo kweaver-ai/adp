@@ -1,4 +1,4 @@
-import { Button, Layout, PageHeader, Space, Steps } from "antd";
+import { Button, Layout, message, PageHeader, Space, Steps } from "antd";
 import styles from "./styles/tag-extract.module.less";
 import { LeftOutlined } from "@ant-design/icons";
 import { API, MicroAppContext, useTranslate } from "@applet/common";
@@ -69,7 +69,7 @@ export const TagExtract = () => {
         }
         // 校验 是否完成前面步骤
         if (tagRule.length === 0 && val !== 0) {
-            microWidgetProps?.components?.toast.info(
+            message.info(
                 t("model.stepMessage", "请先完成前面的步骤")
             );
             return;
@@ -109,7 +109,7 @@ export const TagExtract = () => {
                     }
                 );
             }
-            microWidgetProps?.components?.toast?.success(
+            message.success(
                 t("save.success", "保存成功")
             );
             back();

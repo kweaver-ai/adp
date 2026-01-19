@@ -1,5 +1,5 @@
 import { useContext, useEffect, useRef, useState } from "react";
-import { Button, Modal, PageHeader, Typography } from "antd";
+import { Button, message, Modal, PageHeader, Typography } from "antd";
 import { useNavigate, useParams } from "react-router";
 import { useSearchParams } from "react-router-dom";
 import clsx from "clsx";
@@ -14,6 +14,7 @@ import { useHandleErrReq } from "../../utils/hooks";
 import { TaskInfoContext, TaskStatus } from "../../pages/editor-panel";
 import { taskTemplates } from "../../extensions/templates";
 import styles from "./styles/header-bar.module.less";
+import ChangeVersionModal from "../data-studio/change-version-modal";
 const { confirm } = Modal;
 
 /**
@@ -147,13 +148,13 @@ export const HeaderBar = () => {
         }
     };
 
-    const handleSave = async () => {
+    const handleSave = async (version: any) => {
         // 编辑时判断每个操作块输入是否正确
         if (isFunction(onVerify)) {
             const isValid = await onVerify();
             if (!isValid) {
                 if (mode === "edit") {
-                    microWidgetProps?.components?.toast.error(
+                    message.error(
                         t("save.fail", "保存失败")
                     );
                 }
@@ -190,9 +191,10 @@ export const HeaderBar = () => {
                     status,
                     steps,
                     accessors: isManual ? accessors : [],
+                    ...version
                 });
                 handleChanges && handleChanges(false);
-                microWidgetProps?.components?.toast.success(
+                message.success(
                     t("save.success", "保存成功")
                 );
                 navigate(getBackUrl(taskId, from));
@@ -273,7 +275,7 @@ export const HeaderBar = () => {
                     title + ".json"
                 );
             } else {
-                microWidgetProps?.components?.toast.info(
+                message.info(
                     t("export.waiting", "正在导出…")
                 );
                 const link = document.createElement("a");
@@ -447,105 +449,104 @@ export const HeaderBar = () => {
     }, [userInfo?.userid]);
 
     return (
-        <>
-            <PageHeader
-                title={
-                    <Typography.Text
-                        ellipsis
-                        title={title}
-                        className={styles["title"]}
-                    >
-                        {title}
-                    </Typography.Text>
-                }
-                className={styles["header"]}
-                backIcon={
-                    <LeftOutlined
-                        className={styles["back-icon"]}
-                        title={
-                            from.split(",")[0] === "details"
-                                ? t("task.back.detail", "返回任务详情")
-                                : t("task.back", "返回任务列表")
-                        }
-                    />
-                }
-                onBack={back}
-                extra={[
-                    mode === "edit" ? (
-                        <>
-                            <Button
-                                key="3"
-                                type="link"
-                                title={t("header.details", "任务详情")}
-                                className={styles["link-btn"]}
-                                icon={
-                                    <CalendarOutlined
-                                        className={styles["btn-icon"]}
-                                    />
-                                }
-                                onClick={() => {
-                                    navigate(
-                                        `/details/${taskId}?back=${[
-                                            "edit",
-                                            ...from.split(","),
-                                        ]
-                                            .filter(Boolean)
-                                            .join(",")}`
-                                    );
-                                }}
-                            />
-                            <Button
-                                key="2"
-                                type="link"
-                                title={t("header.setting", "任务设置")}
-                                className={styles["link-btn"]}
-                                icon={
-                                    <SettingOutlined
-                                        className={styles["btn-icon"]}
-                                    />
-                                }
-                                onClick={handleEdit}
-                            />
-                            <Button
-                                key="4"
-                                type="link"
-                                title={t("header.export", "任务导出")}
-                                className={styles["link-btn"]}
-                                icon={
-                                    <ExportOutlined
-                                        className={styles["btn-icon"]}
-                                    />
-                                }
-                                onClick={handleExport}
-                            />
-                        </>
-                    ) : null,
-                    <Button
-                        key="1"
-                        type="primary"
-                        className={clsx(
-                            styles["primary-btn"],
-                            "automate-oem-primary-btn"
-                        )}
-                        onClick={handleSave}
-                    >
-                        {t("task.save", "保存")}
-                    </Button>,
-                ]}
+      <>
+        <PageHeader
+          title={
+            <Typography.Text ellipsis title={title} className={styles["title"]}>
+              {title}
+            </Typography.Text>
+          }
+          className={styles["header"]}
+          backIcon={
+            <LeftOutlined
+              className={styles["back-icon"]}
+              title={
+                from.split(",")[0] === "details"
+                  ? t("task.back.detail", "返回任务详情")
+                  : t("task.back", "返回任务列表")
+              }
             />
-            {isModalVisible && (
-                <TaskFormModal
-                    visible={isModalVisible}
-                    onClose={() => setIsModalVisible(false)}
+          }
+          onBack={back}
+          extra={[
+            mode === "edit" ? (
+              <>
+                <Button
+                  key="3"
+                  type="link"
+                  title={t("header.details", "任务详情")}
+                  className={styles["link-btn"]}
+                  icon={<CalendarOutlined className={styles["btn-icon"]} />}
+                  onClick={() => {
+                    navigate(
+                      `/details/${taskId}?back=${["edit", ...from.split(",")]
+                        .filter(Boolean)
+                        .join(",")}`
+                    );
+                  }}
                 />
-            )}
-            {isDrawerVisible && (
-                <TaskFormDrawer
-                    steps={steps}
-                    visible={isDrawerVisible}
-                    onClose={() => setIsDrawerVisible(false)}
+                <Button
+                  key="2"
+                  type="link"
+                  title={t("header.setting", "任务设置")}
+                  className={styles["link-btn"]}
+                  icon={<SettingOutlined className={styles["btn-icon"]} />}
+                  onClick={handleEdit}
                 />
-            )}
-        </>
+                <Button
+                  key="4"
+                  type="link"
+                  title={t("header.export", "任务导出")}
+                  className={styles["link-btn"]}
+                  icon={<ExportOutlined className={styles["btn-icon"]} />}
+                  onClick={handleExport}
+                />
+              </>
+            ) : null,
+            mode === "edit" ? (
+              <ChangeVersionModal
+                dagId={taskId}
+                onSaveVersion={(data) => handleSave(data)}
+              >
+                <Button
+                  key="1"
+                  type="primary"
+                  className={clsx(
+                    styles["primary-btn"],
+                    "automate-oem-primary-btn"
+                  )}
+                >
+                  {t("task.save", "保存")}
+                </Button>
+              </ChangeVersionModal>
+            ) : (
+              <Button
+                key="1"
+                type="primary"
+                className={clsx(
+                  styles["primary-btn"],
+                  "automate-oem-primary-btn"
+                )}
+                onClick={handleSave}
+              >
+                {t("task.save", "保存")}
+              </Button>
+            ),
+          ]}
+        />
+        {isModalVisible && (
+          <TaskFormModal
+            visible={isModalVisible}
+            onClose={() => setIsModalVisible(false)}
+          />
+        )}
+        {isDrawerVisible && (
+          <TaskFormDrawer
+            steps={steps}
+            visible={isDrawerVisible}
+            onClose={() => setIsDrawerVisible(false)}
+          />
+        )}
+      </>
     );
 };

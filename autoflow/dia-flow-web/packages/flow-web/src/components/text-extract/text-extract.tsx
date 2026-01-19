@@ -1,4 +1,4 @@
-import { Button, Layout, PageHeader, Space, Steps } from "antd";
+import { Button, Layout, message, PageHeader, Space, Steps } from "antd";
 import { LeftOutlined } from "@ant-design/icons";
 import { API, MicroAppContext, useTranslate } from "@applet/common";
 import { useLocation, useNavigate, useParams } from "react-router";
@@ -68,7 +68,7 @@ export const TextExtract = () => {
         }
         // 校验 是否完成前面步骤
         if (!isEditMode && !annotationDetails?.id && val !== 0) {
-            microWidgetProps?.components?.toast.info(
+            message.info(
                 t("model.stepMessage", "请先完成前面的步骤")
             );
             return;
@@ -134,7 +134,7 @@ export const TextExtract = () => {
                     status: status,
                 }
             );
-            microWidgetProps?.components?.toast?.success(
+            message.success(
                 t("save.success", "保存成功")
             );
             back();

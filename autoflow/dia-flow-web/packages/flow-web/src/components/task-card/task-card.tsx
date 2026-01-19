@@ -31,6 +31,9 @@ import { useFormTriggerModal } from "./use-form-trigger-modal";
 import { ExtensionContext } from "../extension-provider";
 import { IntelliinfoTransfer } from "../../extensions/datastudio/graph-database";
 import DataBaseSVG from "../../extensions/datastudio/assets/database.svg";
+import versionIcon from "../data-studio/assets/version.svg";
+import { VersionModelDrawer } from "../data-studio/version-model-drawer";
+import { PermissionType } from "../data-studio/types";
 
 export interface ITask {
     id: string;
@@ -156,6 +159,7 @@ export const Card = ({
     const handleErr = useHandleErrReq();
     const enable = useRef(true);
     const location = useLocation();
+    const [isVersionOpen, setIsVersionOpen] = useState(false);
 
     const formatTime = (timestamp?: number, format = "YYYY/MM/DD HH:mm") => {
         if (!timestamp) {
@@ -359,6 +363,9 @@ export const Card = ({
             case "edit":
                 handleEdit(task.id);
                 break;
+            case "version":
+                setIsVersionOpen(true);
+                break;
             default:
                 // 删除
                 setIsDeleteModalVisible(true);
@@ -403,6 +410,13 @@ export const Card = ({
                             icon={<FormOutlined style={{ fontSize: "16px" }} />}
                         >
                             {t("edit", "编辑")}
+                        </Menu.Item>
+                        <Menu.Item
+                            hidden={isShare}
+                            key="version"
+                            icon={<img src={versionIcon} alt="版本信息" />}
+                        >
+                            {t("version", "版本信息")}
                         </Menu.Item>
                         <Menu.Divider />
                         <Menu.Item
@@ -532,6 +546,17 @@ export const Card = ({
                 />
             )}
             {ModalElement}
+            {/* 版本信息抽屉 */}
+            {isVersionOpen && (
+                <VersionModelDrawer
+                    dagId={task.id}
+                    permissionCheckInfo={[PermissionType.Modify]}
+                    onClose={() => {
+                    setIsVersionOpen(false);
+                    }}
+                    fetchTasks={()=>refresh?.()}
+                />
+            )}
         </>
     );
 };

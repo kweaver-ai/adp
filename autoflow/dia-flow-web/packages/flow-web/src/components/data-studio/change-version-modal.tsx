@@ -40,14 +40,13 @@ const ChangeVersionModal = ({
   };
 
   useEffect(() => {
-    if (dagId) {
-      getVersions();
-    } else {
+    if (!dagId) {
       form.setFieldValue("version", "v0.0.0");
     }
   }, []);
 
   const handleVisibleChange = (newVisible: boolean) => {
+    if(newVisible && dagId) getVersions();
     setVisible(newVisible);
   };
 

@@ -1,5 +1,5 @@
 import React, { useContext, useLayoutEffect, useRef, useState } from "react";
-import { Button, Modal } from "antd";
+import { Button, message, Modal } from "antd";
 import { useNavigate, useParams } from "react-router";
 import { trim } from "lodash";
 import clsx from "clsx";
@@ -10,6 +10,7 @@ import { TaskInfoContext, TaskStatus } from "../../pages/editor-panel";
 import { useHandleErrReq } from "../../utils/hooks";
 import styles from "./styles/task-form-modal.module.less";
 import { getBackUrl } from "./header-bar";
+import ChangeVersionModal from "../data-studio/change-version-modal";
 interface TaskFormModalModalProps {
     visible: boolean;
     onClose: () => void;
@@ -32,6 +33,7 @@ export const TaskFormModal = ({
     const back = params.get("back") || "";
     const local = params.get("local");
     const { id: taskId = "" } = useParams<{ id: string }>();
+    const [version, setVersion] = useState({})
     const {
         title,
         description = "",
@@ -74,7 +76,8 @@ export const TaskFormModal = ({
                 accessors,
                 steps,
                 template: templateId,
-                create_by
+                create_by,
+                ...version
             });
             // 更新数据
             if (onUpdate) {
@@ -88,7 +91,7 @@ export const TaskFormModal = ({
             }
 
             handleChanges && handleChanges(false);
-            microWidgetProps?.components?.toast.success(
+            message.success(
                 t("save.success", "保存成功")
             );
             onClose();
@@ -168,28 +171,36 @@ export const TaskFormModal = ({
     }, []);
 
     const footer = (
-        <div className={styles["modal-footer"]}>
-            <Button
-                className={clsx(
-                    styles["footer-btn-ok"],
-                    "automate-oem-primary-btn"
-                )}
-                onClick={() => {
-                    formRef.current && formRef.current.form.submit();
-                }}
-                type="primary"
-                disabled={hasValidateError}
-            >
-                {t("ok", "确定")}
-            </Button>
-            <Button
-                className={styles["footer-btn-cancel"]}
-                onClick={onClose}
-                type="default"
-            >
-                {t("cancel", "取消")}
-            </Button>
-        </div>
+      <div className={styles["modal-footer"]}>
+        <ChangeVersionModal
+          dagId={taskId}
+          onSaveVersion={(data) => {
+            setVersion(data);
+            formRef.current && formRef.current.form.submit();
+          }}
+        >
+          <Button
+            className={clsx(
+              styles["footer-btn-ok"],
+              "automate-oem-primary-btn"
+            )}
+            // onClick={() => {
+            //   formRef.current && formRef.current.form.submit();
+            // }}
+            type="primary"
+            disabled={hasValidateError}
+          >
+            {t("ok", "确定")}
+          </Button>
+        </ChangeVersionModal>
+        <Button
+          className={styles["footer-btn-cancel"]}
+          onClick={onClose}
+          type="default"
+        >
+          {t("cancel", "取消")}
+        </Button>
+      </div>
     );
 
     return (

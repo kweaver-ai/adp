@@ -1,5 +1,5 @@
 import React, { useContext, useLayoutEffect, useRef, useState } from "react";
-import { Button, Drawer } from "antd";
+import { Button, Drawer, message } from "antd";
 import { API, MicroAppContext, useTranslate } from "@applet/common";
 import { useParams } from "react-router";
 import clsx from "clsx";
@@ -9,6 +9,7 @@ import { useHandleErrReq } from "../../utils/hooks";
 import { TaskInfoContext, TaskStatus } from "../../pages/editor-panel";
 import styles from "./styles/task-form-drawer.module.less";
 import { Step } from "@applet/api/lib/content-automation";
+import ChangeVersionModal from "../data-studio/change-version-modal";
 
 interface TaskFormDrawerModalProps {
     steps: Step[];
@@ -28,6 +29,7 @@ export const TaskFormDrawer = ({
     const { microWidgetProps } = useContext(MicroAppContext);
     const handleErr = useHandleErrReq();
     const enable = useRef(true);
+    const [version, setVersion] = useState({})
     const {
         title,
         description = "",
@@ -59,6 +61,7 @@ export const TaskFormDrawer = ({
                 status: newStatus,
                 accessors,
                 steps,
+                ...version,
             });
             if (onUpdate) {
                 onUpdate({ type: "title", title });
@@ -71,7 +74,7 @@ export const TaskFormDrawer = ({
                 onUpdate({ type: "accessors", accessors });
             }
             handleChanges && handleChanges(false);
-            microWidgetProps?.components?.toast.success(
+            message.success(
                 t("setting.success", "任务设置成功")
             );
             onClose();
@@ -118,28 +121,36 @@ export const TaskFormDrawer = ({
     }, []);
 
     const footer = (
-        <div className={styles["drawer-footer"]}>
-            <Button
-                className={clsx(
-                    styles["footer-btn-ok"],
-                    "automate-oem-primary-btn"
-                )}
-                onClick={() => {
-                    formRef.current && formRef.current.form.submit();
-                }}
-                type="primary"
-                disabled={hasValidateError}
-            >
-                {t("ok", "确定")}
-            </Button>
-            <Button
-                className={styles["footer-btn-cancel"]}
-                onClick={onClose}
-                type="default"
-            >
-                {t("cancel", "取消")}
-            </Button>
-        </div>
+      <div className={styles["drawer-footer"]}>
+        <ChangeVersionModal
+          dagId={taskId}
+          onSaveVersion={(data) => {
+            setVersion(data);
+            formRef.current && formRef.current.form.submit();
+          }}
+        >
+          <Button
+            className={clsx(
+              styles["footer-btn-ok"],
+              "automate-oem-primary-btn"
+            )}
+            // onClick={() => {
+            //   formRef.current && formRef.current.form.submit();
+            // }}
+            type="primary"
+            disabled={hasValidateError}
+          >
+            {t("ok", "确定")}
+          </Button>
+        </ChangeVersionModal>
+        <Button
+          className={styles["footer-btn-cancel"]}
+          onClick={onClose}
+          type="default"
+        >
+          {t("cancel", "取消")}
+        </Button>
+      </div>
     );
 
     return (
