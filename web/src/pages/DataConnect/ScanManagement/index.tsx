@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import intl from 'react-intl-universal';
 import { EllipsisOutlined } from '@ant-design/icons';
-import { Badge, Dropdown, MenuProps, TablePaginationConfig } from 'antd';
+import { Badge, Dropdown, MenuProps, Switch, TablePaginationConfig } from 'antd';
 import { ItemType } from 'antd/es/menu/interface';
 import dayjs from 'dayjs';
 import ContainerIsVisible, { getTypePermissionOperation, matchPermission, PERMISSION_CODES } from '@/components/ContainerIsVisible';
@@ -16,6 +16,7 @@ import { Table, Button, IconFont, Select } from '@/web-library/common';
 import { DatabaseTableSelect } from '../Components/DatabaseTableSelect';
 import ScanDetail from '../Components/SacnTask/detail';
 import ScanModal from '../Components/ScanModal';
+import ScanTaskConfig from '../Components/ScanTaskConfig';
 import styles from '../index.module.less';
 import { dataBaseIconList, getScanStatusColor, transformAndMapDataSources } from '../utils';
 
@@ -33,7 +34,7 @@ const getIconCom = (type: string): JSX.Element => {
 
 interface ScanManagementProps {
   connectors: DataConnectType.Connector[];
-  getTableType: (type: string, val: string) => JSX.Element | string;
+  getTableType: (type: string, val: string) => string;
 }
 
 const ScanManagement = (props: ScanManagementProps): JSX.Element => {
@@ -49,6 +50,9 @@ const ScanManagement = (props: ScanManagementProps): JSX.Element => {
   const [databaseTableSelectOpen, setDatabaseTableSelectOpen] = useState(false);
   const [scanDetailVisible, setScanDetailVisible] = useState(false);
   const [scanDetail, setScanDetail] = useState<ScanTaskType.ScanTaskItem>();
+  const [scanTaskConfigOpen, setScanTaskConfigOpen] = useState(false);
+  const [selectedDataSources, setSelectedDataSources] = useState<DataConnectType.DataSource[]>([]);
+  const [isEditMode, setIsEditMode] = useState(false);
 
   const MENU_SORT_ITEMS: MenuProps['items'] = [
     { key: 'name', label: intl.get('Global.sortByNameLabel') },
@@ -58,13 +62,13 @@ const ScanManagement = (props: ScanManagementProps): JSX.Element => {
   const { sort, direction } = pageState || {};
 
   const onDatabaseTableSelectOk = async (val: ScanTaskType.TableInfo[], dataConnectId: string): Promise<void> => {
-    setDatabaseTableSelectOpen(false);
     await scanManagementApi.createScanTask({
       scan_name: val[0].name + (val.length > 1 ? intl.get('Global.etc') : ''),
       ds_info: { ds_id: dataConnectId, ds_type: allDataSource.find((val) => val.id === dataConnectId)?.type || '' },
       type: 1,
       tables: val.map((val) => val.id),
     });
+    setDatabaseTableSelectOpen(false);
     message.success(intl.get('Global.scanTaskSuccess'));
     getData();
   };
@@ -144,8 +148,27 @@ const ScanManagement = (props: ScanManagementProps): JSX.Element => {
       setScanDetail(record);
       setScanDetailVisible(true);
       // getModalContent(record.id)
+    } else if (key === 'edit') {
+      setScanDetail(record);
+      setIsEditMode(true);
+      setScanTaskConfigOpen(true);
     }
     // if (key === 'delete') deleteConfirm(record.id);
+  };
+
+  /** 处理定时任务状态切换 */
+  const handleStatusChange = async (record: ScanTaskType.ScanTaskItem, checked: boolean) => {
+    try {
+      await scanManagementApi.updateScheduleStatus({
+        schedule_id: record.schedule_id,
+        status: checked ? 'open' : 'close',
+      });
+      message.success(intl.get('Global.updateSuccess'));
+      getData();
+    } catch (error) {
+      console.error('Failed to update schedule status:', error);
+      message.error(intl.get('Global.updateFailed'));
+    }
   };
 
   const getProcess = (record: ScanTaskType.ScanTaskItem) => {
@@ -193,10 +216,15 @@ const ScanManagement = (props: ScanManagementProps): JSX.Element => {
         //     { key: 'delete', label: intl.get('Global.delete'), visible: matchPermission(PERMISSION_CODES.DELETE, record.operations) }
         // ];
         const allOperations = [
-          { key: 'view', label: intl.get('Global.view') },
+          { key: 'view', label: intl.get('Global.view'), visible: true },
+          {
+            key: 'edit',
+            label: intl.get('Global.edit'),
+            visible: record.type === 2,
+          },
           // { key: 'delete', label: intl.get('Global.delete') }
         ];
-        const dropdownMenu: any = allOperations;
+        const dropdownMenu: any = allOperations.filter((item) => item.visible);
         return (
           <Dropdown
             trigger={['click']}
@@ -211,6 +239,27 @@ const ScanManagement = (props: ScanManagementProps): JSX.Element => {
             <Button.Icon icon={<EllipsisOutlined className={styles.operationIcon} />} onClick={(event: React.MouseEvent) => event.stopPropagation()} />
           </Dropdown>
         );
+      },
+    },
+    {
+      title: intl.get('Global.taskType'),
+      dataIndex: 'type',
+      minWidth: 120,
+      __fixed: true,
+      __selected: true,
+      render: (type: number): string => {
+        return type === 2 ? intl.get('Global.scheduleScan') : intl.get('Global.immediateScan');
+      },
+    },
+    {
+      title: intl.get('Global.taskStatus'),
+      dataIndex: 'task_status',
+      minWidth: 120,
+      __fixed: true,
+      __selected: true,
+      render: (task_status: 'open' | 'close', record: ScanTaskType.ScanTaskItem): JSX.Element => {
+        const isSchedule = record.type === 2;
+        return <Switch checked={task_status === 'open'} disabled={!isSchedule} onChange={(checked) => handleStatusChange(record, checked)} />;
       },
     },
     {
@@ -267,10 +316,13 @@ const ScanManagement = (props: ScanManagementProps): JSX.Element => {
     }
   };
 
-  const scanModalCancel = (isOk?: boolean) => {
+  const scanModalCancel = (isOk?: boolean, dataSources?: DataConnectType.DataSource[]) => {
     setScanModalOpen(false);
-    if (isOk) {
-      getData();
+    if (isOk && dataSources) {
+      // 保存选中的数据源并打开扫描任务配置弹窗
+      setSelectedDataSources(dataSources);
+      setIsEditMode(false);
+      setScanTaskConfigOpen(true);
     }
   };
 
@@ -289,6 +341,19 @@ const ScanManagement = (props: ScanManagementProps): JSX.Element => {
   const scanDetailCancel = () => {
     setScanDetailVisible(false);
     setScanDetail(undefined);
+  };
+
+  // 处理扫描任务配置关闭
+  const handleScanTaskConfigClose = async (isOk?: boolean) => {
+    setScanTaskConfigOpen(false);
+    if (isOk) {
+      // 重新获取扫描任务列表
+      getData();
+    }
+    // 清空表单数据，确保每次打开都是全新状态
+    setSelectedDataSources([]);
+    setScanDetail(undefined);
+    setIsEditMode(false);
   };
 
   return (
@@ -338,7 +403,14 @@ const ScanManagement = (props: ScanManagementProps): JSX.Element => {
         isEmpty={allDataSource.length === 0}
       />
       <DatabaseTableSelect open={databaseTableSelectOpen} onOk={onDatabaseTableSelectOk} onCancel={onDatabaseTableSelectCancel} />
-      {scanDetail && <ScanDetail scanDetail={scanDetail} visible={scanDetailVisible} onClose={scanDetailCancel} />}
+      {scanDetail && <ScanDetail scanDetail={scanDetail} isEdit={true} visible={scanDetailVisible} onClose={scanDetailCancel} getTableType={getTableType} />}
+      <ScanTaskConfig
+        open={scanTaskConfigOpen}
+        onClose={handleScanTaskConfigClose}
+        selectedDataSources={selectedDataSources}
+        isEdit={isEditMode}
+        scanDetail={scanDetail}
+      />
     </div>
   );
 };
