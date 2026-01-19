@@ -284,12 +284,6 @@ const Task = (props: TProps) => {
         pagination={pagination}
         onChange={onTableChange}
         locale={{
-          // emptyText:
-          //   filterValues.name_pattern || filterValues.state !== 'all' || filterValues.job_type !== 'all' ? (
-          //     <Empty image={noSearchResultImage} description={intl.get('Global.emptyNoSearchResult')} />
-          //   ) : (
-          //     <Empty image={emptyImage} description={intl.get('Task.emptyDescription')} />
-          //   ),
           emptyText:
             filterValues.name_pattern || filterValues.state !== '' || filterValues.job_type !== '' ? (
               <Empty image={noSearchResultImage} description={intl.get('Global.emptyNoSearchResult')} />
@@ -298,11 +292,11 @@ const Task = (props: TProps) => {
                 image={createImage}
                 description={
                   <span>
-                    {intl.get('Task.emptyCreate')}
+                    {intl.get('Global.click')}
                     <Button type="link" style={{ padding: 0 }} onClick={() => onOpenCreateTask()}>
-                      {intl.get('Global.emptyCreateButton')}
+                      {intl.get('Global.createBtn')}
                     </Button>
-                    {intl.get('Global.emptyCreateTip')}
+                    {intl.get('Global.add')}
                   </span>
                 }
               />

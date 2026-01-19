@@ -282,6 +282,9 @@
     "bindObjectType": "綁定對象類",
     "sourceObjectType": "起點對象類",
     "targetObjectType": "終點對象類",
-    "removeSuccess": "移除成功"
+    "removeSuccess": "移除成功",
+    "click": "點擊",
+    "createBtn": "【新建】",
+    "alreadyExists": "已存在"
   }
 }

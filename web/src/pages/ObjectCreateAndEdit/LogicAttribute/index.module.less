@@ -1,0 +1,115 @@
+.logic-attribute-container {
+  .object-info-bar {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    height: 48px;
+    padding: 0 24px;
+    margin-bottom: 16px;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+
+    .object-icon {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 28px;
+      height: 28px;
+      border-radius: 4px;
+    }
+
+    .object-name {
+      font-size: 14px;
+      font-weight: 500;
+      line-height: 22px;
+      color: rgba(6, 6, 6, 0.85);
+    }
+  }
+
+  .logic-attribute-content {
+    padding: 10px 30px;
+
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+
+      .title-box {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+
+        .title {
+          font-size: 16px;
+          font-weight: 500;
+          line-height: 22px;
+          color: rgba(0, 0, 0, 0.85);
+        }
+
+        .add-button {
+          display: flex;
+          gap: 4px;
+          align-items: center;
+          padding: 0 8px;
+          font-size: 14px;
+          line-height: 20px;
+          color: #126ee3;
+          cursor: pointer;
+        }
+      }
+
+      .actions {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+
+        .search-input {
+          width: 280px;
+          border: 1px solid #d9d9d9;
+          border-radius: 6px;
+
+          :global {
+            .ant-input {
+              font-size: 14px;
+              line-height: 24px;
+            }
+
+            .ant-input::placeholder {
+              color: rgba(0, 0, 0, 0.25);
+            }
+          }
+        }
+      }
+    }
+
+    .table-container {
+      height: calc(100vh - 220px);
+      overflow-y: auto;
+    }
+  }
+
+  .name-cell {
+    display: flex;
+    gap: 8px;
+  }
+
+  .bind-resource-cell {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    .data-resource {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      padding: 4px 8px;
+      border-radius: 3px;
+
+      .resource-name {
+        font-size: 14px;
+        line-height: 1;
+        color: rgba(0, 0, 0, 0.85);
+      }
+    }
+  }
+}

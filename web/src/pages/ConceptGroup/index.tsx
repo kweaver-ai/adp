@@ -119,7 +119,7 @@ const ConceptGroup = (props: ConceptGroupProps) => {
       icon: <ExclamationCircleFilled />,
       async onOk() {
         await api.deleteConceptGroup(knId, row ? [row.id] : selectedRowKeys);
-        message.success(intl.get('ConceptGroup.deleteSuccess'));
+        message.success(intl.get('Global.deleteSuccess'));
         getTableData({ offset: 0 });
       },
     });
@@ -305,11 +305,11 @@ const ConceptGroup = (props: ConceptGroupProps) => {
                   image={createImage}
                   description={
                     <span>
-                      {intl.get('ConceptGroup.click')}
+                      {intl.get('Global.click')}
                       <Button type="link" style={{ padding: 0 }} onClick={() => setOpen(true)}>
-                        {intl.get('ConceptGroup.createButton')}
+                        {intl.get('Global.createBtn')}
                       </Button>
-                      {intl.get('ConceptGroup.addConceptGroupTip')}
+                      {intl.get('Global.add')}
                     </span>
                   }
                 />

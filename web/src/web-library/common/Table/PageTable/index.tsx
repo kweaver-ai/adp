@@ -228,7 +228,7 @@ const PageTable: React.FC<CustomTableProps> = (props) => {
   };
 
   return (
-    <div ref={containerRef} style={{ width: bordered ? 'calc(100% + 2px)' : '100%', height: '100%', overflow: 'hidden' }}>
+    <div ref={containerRef} className={styles['common-table-page-table-container']}>
       {props.children && <div ref={operationBarRef}>{props.children}</div>}
       <AntdTable
         size="small"

@@ -10,9 +10,13 @@ import noSearchResultImage from '@/assets/images/common/no_search_result.svg';
 import HOOKS from '@/hooks';
 import SERVICE from '@/services';
 import { Text, Table, Select, Button, IconFont } from '@/web-library/common';
+import Fields from '@/web-library/utils/fields';
 import styles from './index.module.less';
 import IndexSetting from './IndexSetting';
-import { TYPE_OPTIONS } from '../ObjectCreateAndEdit/AttrDef';
+
+const types = Fields.DataType_All_Name.map((item) => ({ value: item, label: item }));
+
+const TYPE_OPTIONS = [...types, { value: 'metric', label: 'metric' }, { value: 'operator', label: 'operator' }];
 
 const canSettingTypes = ['string', 'vector', 'text'];
 

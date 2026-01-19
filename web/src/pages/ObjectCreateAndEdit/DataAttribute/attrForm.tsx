@@ -17,7 +17,7 @@ const AttrForm = (props: TAttrForm) => {
 
   useEffect(() => {
     form.setFieldsValue(data);
-  }, [JSON.stringify(data)]);
+  }, [data?.name, data?.display_name, data?.type]);
 
   return (
     <div className={styles['attr-form-box']}>

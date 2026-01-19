@@ -162,8 +162,9 @@ const AtomDataView = (): JSX.Element => {
   /** 删除确认 */
 
   const deleteConfirm = async (record?: any): Promise<void> => {
+    const content = record ? intl.get('Global.deleteConfirm', { name: record.name }) : intl.get('Global.deleteConfirmMultiple', { count: selectedRows.length });
     modal.confirm({
-      content: intl.get('Global.deleteConfirm', { name: record?.name || selectedRows.map((item) => item.name).join(',') }),
+      content,
       icon: <IconFont type="icon-about" />,
       okText: intl.get('Global.ok'),
       okButtonProps: {
@@ -199,6 +200,10 @@ const AtomDataView = (): JSX.Element => {
     const baseConfigContent = {
       title: intl.get('Global.basicConfig'),
       content: [
+        {
+          name: intl.get('Global.id'),
+          value: data.id,
+        },
         {
           name: intl.get('Global.name'),
           value: data.name,

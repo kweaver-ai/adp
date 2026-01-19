@@ -1,10 +1,10 @@
 .header-step-box {
   position: relative;
   display: flex;
+  flex: 1;
   align-items: center;
   justify-content: center;
   width: 100%;
-  min-width: 900px;
   height: 48px;
   border-bottom: var(--g-border);
 
@@ -13,8 +13,16 @@
     top: 0;
     left: 0;
     display: flex;
+    gap: 12px;
     align-items: center;
     height: 48px;
     padding-left: 16px;
+
+    .back-box {
+      display: flex;
+      gap: 6px;
+      align-items: center;
+      cursor: pointer;
+    }
   }
 }
