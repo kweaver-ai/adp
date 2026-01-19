@@ -199,6 +199,10 @@ const DataSource = (props: DataSourceProps): JSX.Element => {
         title: intl.get('Global.basicConfig'),
         content: [
           {
+            name: intl.get('Global.id'),
+            value: id,
+          },
+          {
             name: intl.get('Global.dataSourceName_common'),
             value: name,
           },

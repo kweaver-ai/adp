@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import intl from 'react-intl-universal';
 import { MinusCircleFilled } from '@ant-design/icons';
 import { Button, Col, Form, Input, InputNumber, Row, Select, Table, TableColumnProps } from 'antd';
@@ -57,13 +57,31 @@ const EditDrawer: React.FC<{
   const { message } = HOOKS.useGlobalContext();
   const { VALUE_FROM_OPTIONS, LOGIC_ATTR_TYPE_OPTIONS, OPERATOR_TYPE_OPTIONS, FIELD_TYPE_INPUT } = HOOKS.useConstants();
 
+  // 判断是新增还是编辑模式
+  const isAddMode = !attrInfo?.name;
+  // 跟踪显示名是否被手动编辑过
+  const isDisplayNameManuallyEdited = useRef(false);
+
   useEffect(() => {
     if (open) {
+      // 重置显示名手动编辑标记
+      isDisplayNameManuallyEdited.current = false;
+
       if (attrInfo?.data_source?.id) {
         form.setFieldValue('type', attrInfo.data_source.type);
         form.setFieldValue('id', attrInfo.data_source.id);
         form.setFieldValue('name', attrInfo.name);
         form.setFieldValue('display_name', attrInfo.display_name);
+        form.setFieldValue('comment', attrInfo.comment);
+      } else if (attrInfo?.name) {
+        // 编辑模式但未绑定资源
+        form.setFieldValue('name', attrInfo.name);
+        form.setFieldValue('display_name', attrInfo.display_name);
+        form.setFieldValue('comment', attrInfo.comment);
+      } else {
+        // 新增模式，重置表单
+        form.resetFields();
+        isDisplayNameManuallyEdited.current = false;
       }
       if (attrInfo?.parameters?.length) {
         if (attrInfo?.data_source?.type === OntologyObjectType.LogicAttributeType.METRIC) {
@@ -71,11 +89,10 @@ const EditDrawer: React.FC<{
         }
       }
     } else {
-      form.setFieldValue('type', undefined);
-      form.setFieldValue('id', undefined);
+      form.resetFields();
       setSettingList([]);
     }
-  }, [open, attrInfo]);
+  }, [open, attrInfo?.name, attrInfo?.data_source?.id]);
 
   useEffect(() => {
     if (type === OntologyObjectType.LogicAttributeType.METRIC) {
@@ -92,7 +109,22 @@ const EditDrawer: React.FC<{
     } else if (type === OntologyObjectType.LogicAttributeType.METRIC) {
       getMetricModelFields(id);
     }
-  }, [id, type, nameOptions]);
+  }, [id, type]);
+
+  // 处理属性名输入变化
+  const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const name = e.target.value;
+    // 如果显示名没有被手动修改过，则持续同步属性名到显示名
+    if (!isDisplayNameManuallyEdited.current) {
+      form.setFieldValue('display_name', name);
+    }
+  };
+
+  // 处理显示名输入变化
+  const handleDisplayNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    // 用户手动修改了显示名，标记为已手动编辑
+    isDisplayNameManuallyEdited.current = true;
+  };
 
   const propertyOptions = useMemo(() => {
     const propertyNames = logicFields.map((item) => item.name);
@@ -100,9 +132,9 @@ const EditDrawer: React.FC<{
       label: item.name,
       value: item.name,
       type: item.type,
-      disabled: propertyNames.includes(item.name) || item.name === attrInfo.name,
+      disabled: propertyNames.includes(item.name) || (!isAddMode && item.name === attrInfo.name),
     }));
-  }, [allData, attrInfo, logicFields]);
+  }, [allData, attrInfo, logicFields, isAddMode]);
 
   // 处理算子详情
   const handleOperatorDetail = (api_spec: any) => {
@@ -181,7 +213,7 @@ const EditDrawer: React.FC<{
   };
 
   // 数据处理函数
-  const updateSettingData = useCallback((id: string, updateValue: Record<string, any>) => {
+  const updateSettingData = (id: string, updateValue: Record<string, any>) => {
     const processNode = (item: any): any => {
       if (item?.id === id) {
         if (item) return { ...item, ...updateValue, error: {} };
@@ -195,7 +227,7 @@ const EditDrawer: React.FC<{
       return item;
     };
     setSettingList((prev) => prev.map(processNode));
-  }, []);
+  };
 
   const handleAddRow = () => {
     setSettingList((prev) => [...prev, { id: nanoid(), name: '', value_from: ActionType.ValueFrom.Property, operation: '==' }]);
@@ -248,6 +280,7 @@ const EditDrawer: React.FC<{
       return;
     }
 
+    const formValues = form.getFieldsValue();
     const name =
       type === OntologyObjectType.LogicAttributeType.METRIC
         ? metricModelList.find((item) => item.id === id)?.name
@@ -266,10 +299,10 @@ const EditDrawer: React.FC<{
     const parameters = extractLeafParams(settingList);
 
     const data = {
-      name: attrInfo.name,
-      display_name: attrInfo.display_name,
-      type: attrInfo.type,
-      comment: attrInfo.comment,
+      name: formValues.name,
+      display_name: formValues.display_name,
+      type: isAddMode ? type : attrInfo.type,
+      comment: formValues.comment,
       data_source: {
         type,
         id,
@@ -384,22 +417,37 @@ const EditDrawer: React.FC<{
   );
 
   return (
-    <Drawer className={styles.drawerBox} width={900} title={title} onClose={onClose} open={open} footer={footer}>
+    <Drawer className={styles.drawerBox} width={1000} title={title} onClose={onClose} open={open} footer={footer}>
       <Form layout="vertical" form={form}>
         <Row gutter={16}>
-          <Col span={12}>
-            <Form.Item label={intl.get('Global.attributeName')} name="name" rules={[{ required: true }]} initialValue={attrInfo.name}>
-              <Input disabled />
+          <Col span={8}>
+            <Form.Item
+              label={intl.get('Global.attributeName')}
+              name="name"
+              rules={[
+                { required: true, message: intl.get('Global.pleaseInput') },
+                {
+                  pattern: /^[a-z0-9][a-z0-9_-]*$/,
+                  message: intl.get('Global.idPatternError'),
+                },
+              ]}
+            >
+              <Input disabled={!isAddMode} placeholder={intl.get('Global.pleaseInput')} onChange={handleNameChange} />
             </Form.Item>
           </Col>
-          <Col span={12}>
-            <Form.Item label={intl.get('Global.attributeDisplayName')} name="display_name" rules={[{ required: true }]} initialValue={attrInfo.display_name}>
-              <Input disabled />
+          <Col span={8}>
+            <Form.Item label={intl.get('Global.attributeDisplayName')} name="display_name" rules={[{ required: true }]}>
+              <Input disabled={!isAddMode} placeholder={intl.get('Global.pleaseInput')} onChange={handleDisplayNameChange} />
+            </Form.Item>
+          </Col>
+          <Col span={8}>
+            <Form.Item label={intl.get('Global.description')} name="comment">
+              <Input placeholder={intl.get('Global.pleaseInput')} />
             </Form.Item>
           </Col>
         </Row>
         <Row gutter={16}>
-          <Col span={12}>
+          <Col span={8}>
             <Form.Item label={intl.get('Global.type')} name="type" rules={[{ required: true }]}>
               <Select
                 options={LOGIC_ATTR_TYPE_OPTIONS}
@@ -411,7 +459,7 @@ const EditDrawer: React.FC<{
               />
             </Form.Item>
           </Col>
-          <Col span={12}>
+          <Col span={8}>
             <Form.Item label={intl.get('Global.name')} name="id" rules={[{ required: true }]}>
               <Select
                 allowClear

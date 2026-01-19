@@ -39,7 +39,7 @@ const render = (props: any) => {
 if (!(window as any).__POWERED_BY_QIANKUN__) {
   // 本地调试，手动填入token
   baseConfig.lang = 'zh-cn';
-  baseConfig.token = 'ory_at_Qr06Od4elSeVIQj9CBVM7JnC83qk2oVMjp9bCw6WpyY.I3VkF2kyBy7Of-wOGGbhIhC9kXVhne0XUY00LvDVpNc';
+  baseConfig.token = UTILS.SessionStorage.get('token');
   baseConfig.userid = '488c973e-6f67-11f0-b0dc-36fa540cff80';
   baseConfig.roles = [];
   baseConfig.toggleSideBarShow = () => {};

@@ -30,7 +30,7 @@ const ImportCom = (props: ImportComProps) => {
     const resConfirm: any = await api.createConceptGroup(knId, { ...jsonData, kn_id: knId, branch: 'main' }, val || skipRef.current.checked);
     modalContext.destroy();
     if (!resConfirm?.error_code) {
-      message.success(intl.get('ConceptGroup.importSuccess'));
+      message.success(intl.get('Global.importSuccess'));
       skipRef.current = {
         skip: false,
         checked: '',
@@ -88,7 +88,7 @@ const ImportCom = (props: ImportComProps) => {
         checked: '',
       };
     } else {
-      message.success(intl.get('ConceptGroup.importSuccess'));
+      message.success(intl.get('Global.importSuccess'));
       skipRef.current = {
         skip: false,
         checked: '',

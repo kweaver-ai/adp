@@ -282,6 +282,9 @@
     "bindObjectType": "Bound Object Class",
     "sourceObjectType": "Source Object Class",
     "targetObjectType": "Target Object Class",
-    "removeSuccess": "Removed successfully"
+    "removeSuccess": "Removed successfully",
+    "click": "Click",
+    "createBtn": "「Create」",
+    "alreadyExists": "Already Exists"
   }
 }

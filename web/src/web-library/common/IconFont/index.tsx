@@ -9,6 +9,7 @@ const IconFontBase = createFromIconfontCN({
 });
 
 const IconFont: React.FC<IconFontProps> = ({ type, style = {}, ...restProps }) => {
+  if (!type) return null;
   const renderContent = () => {
     return <IconFontBase type={type} style={style} {...restProps} />;
   };

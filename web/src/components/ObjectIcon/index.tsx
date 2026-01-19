@@ -1,10 +1,51 @@
+import { CSSProperties } from 'react';
 import { IconFont } from '@/web-library/common';
 
-const ObjectIcon = (props: { icon: string; color: string }) => {
-  const { icon, color } = props;
+export interface ObjectIconProps {
+  /** 图标类型 */
+  icon?: string;
+  /** 背景颜色 */
+  color?: string;
+  /** 容器大小（宽高相同），默认 28px */
+  size?: number;
+  /** 图标字体大小，默认为容器大小的 0.7 倍 */
+  iconSize?: number;
+  /** 图标样式 */
+  iconStyle?: CSSProperties;
+  /** 容器样式 */
+  style?: CSSProperties;
+  /** 容器类名 */
+  className?: string;
+  /** 边框圆角，默认 0 */
+  borderRadius?: number;
+}
+
+const ObjectIcon = (props: ObjectIconProps) => {
+  const { icon = 'icon-color-rectangle', color = '#1890ff', size = 28, iconSize, iconStyle, style, className, borderRadius = 4 } = props;
+
+  // 图标大小默认为容器大小的 0.7 倍
+  const finalIconSize = iconSize || size * 0.7;
+
+  const containerStyle: CSSProperties = {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: size,
+    height: size,
+    background: color,
+    borderRadius,
+    ...style,
+  };
+
+  const defaultIconStyle: CSSProperties = {
+    color: '#fff',
+    fontSize: finalIconSize,
+    ...iconStyle,
+  };
+
   return (
-    <div className="g-mr-2 g-p-1 g-flex-center" style={{ background: color, borderRadius: 3 }}>
-      <IconFont type={icon} style={{ color: '#fff', fontSize: 16 }} />
+    <div className={className} style={containerStyle}>
+      <IconFont type={icon} style={defaultIconStyle} />
     </div>
   );
 };

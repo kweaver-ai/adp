@@ -420,11 +420,11 @@ const Action: FC<TProps> = ({ detail, isPermission }) => {
                 image={createImage}
                 description={
                   <span>
-                    {intl.get('Action.emptyCreate')}
+                    {intl.get('Global.click')}
                     <Button type="link" style={{ padding: 0 }} onClick={() => goToCreateAndEditPage('create')}>
-                      {intl.get('Global.createActionType')}
+                      {intl.get('Global.createBtn')}
                     </Button>
-                    {intl.get('Action.emptyCreateTip')}
+                    {intl.get('Global.add')}
                   </span>
                 }
               />

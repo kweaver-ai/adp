@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import intl from 'react-intl-universal';
 import { useHistory } from 'react-router-dom';
 import { EllipsisOutlined, ExclamationCircleFilled } from '@ant-design/icons';
@@ -30,44 +30,50 @@ const KnowledgeNetwork = (props: TProps) => {
   const { detail, isPermission } = props;
   const knId = detail?.id || localStorage.getItem('KnowledgeNetwork.id');
   const { modal } = HOOKS.useGlobalContext();
-  const { pageState, pagination, onUpdateState } = HOOKS.usePageStateNew(); // 分页信息
+  const { pageState, pagination, onUpdateState } = HOOKS.usePageStateNew();
   const [selectedRowKeys, setSelectedRowKeys] = useState<string[]>([]);
   const [selectedRows, setSelectedRows] = useState<ObjectType.Detail[]>([]);
   const [tableData, setTableData] = useState<ObjectType.Detail[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [filterValues, setFilterValues] = useState<Pick<ObjectType.ListQuery, 'name_pattern' | 'tag'>>({ name_pattern: '', tag: 'all' }); // 筛选条件
+  const [filterValues, setFilterValues] = useState<Pick<ObjectType.ListQuery, 'name_pattern' | 'tag'>>({ name_pattern: '', tag: 'all' });
   const [objectDetail, setObjectDetail] = useState<ObjectType.Detail>();
 
   const { page, limit, direction, sort } = pageState || {};
   const { name_pattern, tag } = filterValues || {};
-
-  // 使用全局 Hook 获取国际化常量
   const { OBJECT_MENU_SORT_ITEMS } = HOOKS.useConstants();
 
-  /** 获取列表数据 */
-  const getTableData = async (val?: any): Promise<void> => {
-    const postData = { offset: val?.page ? limit * (val?.page - 1) : limit * (page - 1), limit, direction, sort, name_pattern, tag, ...val };
-    if (!postData.tag || postData.tag === 'all') delete postData.tag;
-    const curPage = val?.page || page;
-    if (val?.page) delete postData.page;
-    setIsLoading(true);
-    // 根据指标模型名称排序，向后端传参为 model_name
-    try {
-      const res = await api.objectGet(detail?.id as string, postData);
-      if (!res) return;
-      const { total_count, entries } = res;
+  const getTableData = useCallback(
+    async (val?: any): Promise<void> => {
+      const postData = {
+        offset: val?.page ? limit * (val?.page - 1) : limit * (page - 1),
+        limit,
+        direction,
+        sort,
+        name_pattern,
+        tag,
+        ...val,
+      };
+      if (!postData.tag || postData.tag === 'all') delete postData.tag;
+      const curPage = val?.page || page;
+      if (val?.page) delete postData.page;
+      setIsLoading(true);
+      try {
+        const res = await api.objectGet(detail?.id as string, postData);
+        if (!res) return;
+        const { total_count, entries } = res;
 
-      onUpdateState({ ...postData, page: curPage, count: total_count });
-      setTableData(entries);
-
-      setIsLoading(false);
-      setSelectedRowKeys([]);
-      setSelectedRows([]);
-    } catch (error) {
-      setIsLoading(false);
-      console.log('error', error);
-    }
-  };
+        onUpdateState({ ...postData, page: curPage, count: total_count });
+        setTableData(entries);
+        setSelectedRowKeys([]);
+        setSelectedRows([]);
+      } catch (error) {
+        console.error('getTableData error:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [detail?.id, limit, page, direction, sort, name_pattern, tag, onUpdateState]
+  );
 
   useEffect(() => {
     if (detail?.id) {
@@ -75,52 +81,57 @@ const KnowledgeNetwork = (props: TProps) => {
     }
   }, [detail?.id]);
 
-  /** 筛选条件变更 */
   const onChangeTableOperation = (values: Pick<ObjectType.ListQuery, 'name_pattern' | 'tag'>) => {
     getTableData({ offset: 0, ...values });
     setFilterValues(values);
   };
 
-  /** table Change */
-  const handleTableChange: TableProps['onChange'] = async (pagination, _filters, sorter): Promise<void> => {
-    const { field, order } = sorter as SorterResult;
-    const { current, pageSize } = pagination;
-    const stateOrder = ENUMS.SORT_ENUM[order as keyof typeof ENUMS.SORT_ENUM] || 'desc';
-    const state = { page: current, limit: pageSize, sort: (field as string) || 'update_time', direction: stateOrder };
-    onUpdateState(state);
-    getTableData(state);
-  };
+  const handleTableChange: TableProps['onChange'] = useCallback(
+    async (pagination: any, _filters: any, sorter: any): Promise<void> => {
+      const { field, order } = sorter as SorterResult;
+      const { current, pageSize } = pagination;
+      const stateOrder = ENUMS.SORT_ENUM[order as keyof typeof ENUMS.SORT_ENUM] || 'desc';
+      const state = { page: current, limit: pageSize, sort: (field as string) || 'update_time', direction: stateOrder };
+      onUpdateState(state);
+      getTableData(state);
+    },
+    [onUpdateState, getTableData]
+  );
 
-  /** 删除 */
-  const onDelete = async (items: any, isBatch?: boolean) => {
-    try {
-      const objectIds = map(items, (item) => item?.id);
-      await api.deleteObjectTypes(knId as string, objectIds);
-      getTableData();
-      message.success(intl.get('Global.deleteSuccess'));
-      if (isBatch) setSelectedRowKeys([]);
-    } catch (error) {
-      console.log(error);
-    }
-  };
+  const onDelete = useCallback(
+    async (items: ObjectType.Detail[], isBatch?: boolean) => {
+      try {
+        const objectIds = map(items, (item) => item?.id);
+        await api.deleteObjectTypes(knId as string, objectIds);
+        getTableData();
+        message.success(intl.get('Global.deleteSuccess'));
+        if (isBatch) setSelectedRowKeys([]);
+      } catch (error) {
+        console.error('onDelete error:', error);
+      }
+    },
+    [knId, getTableData]
+  );
 
-  /** 删除 */
-  const onDeleteConfirm = (items: ObjectType.Detail[], isBatch?: boolean, callBack?: () => void) => {
-    const name = map(items, (item) => `「${item?.name}」`).join('、');
-    const length = items.length || 0;
-    modal.confirm({
-      title: intl.get('Global.tipTitle'),
-      closable: true,
-      icon: <ExclamationCircleFilled />,
-      content: length > 1 ? intl.get('Global.deleteConfirmMultiple', { count: length }) : intl.get('Global.deleteConfirm', { name }),
-      okText: intl.get('Global.ok'),
-      cancelText: intl.get('Global.cancel'),
-      onOk: async () => {
-        await onDelete(items, isBatch);
-        if (callBack) callBack();
-      },
-    });
-  };
+  const onDeleteConfirm = useCallback(
+    (items: ObjectType.Detail[], isBatch?: boolean, callBack?: () => void) => {
+      const name = map(items, (item) => `「${item?.name}」`).join('、');
+      const length = items.length || 0;
+      modal.confirm({
+        title: intl.get('Global.tipTitle'),
+        closable: true,
+        icon: <ExclamationCircleFilled />,
+        content: length > 1 ? intl.get('Global.deleteConfirmMultiple', { count: length }) : intl.get('Global.deleteConfirm', { name }),
+        okText: intl.get('Global.ok'),
+        cancelText: intl.get('Global.cancel'),
+        onOk: async () => {
+          await onDelete(items, isBatch);
+          if (callBack) callBack();
+        },
+      });
+    },
+    [modal, onDelete]
+  );
 
   const toCreateOrEdit = (objId?: string) => {
     if (objId) {
@@ -130,12 +141,9 @@ const KnowledgeNetwork = (props: TProps) => {
     history.push(`/ontology/object/create`);
   };
 
-  /** 打开对象类详情侧边栏 */
   const onOpenDetail = (val: ObjectType.Detail) => setObjectDetail(val);
-  /** 打开对象类详情侧边栏  */
   const onCloseDetail = () => setObjectDetail(undefined);
 
-  /** 操作按钮 */
   const onOperate = (key: string, record: ObjectType.Detail) => {
     if (key === 'view') {
       onOpenDetail(record);
@@ -246,7 +254,6 @@ const KnowledgeNetwork = (props: TProps) => {
     }),
   };
 
-  /** 排序 */
   const handleSortChange = (val: { key: string }) => {
     const state = {
       sort: val.key,
@@ -276,11 +283,11 @@ const KnowledgeNetwork = (props: TProps) => {
                 image={createImage}
                 description={
                   <span>
-                    {intl.get('Object.emptyCreate')}
+                    {intl.get('Global.click')}
                     <Button type="link" style={{ padding: 0 }} onClick={() => toCreateOrEdit()}>
-                      {intl.get('Global.emptyCreateButton')}
+                      {intl.get('Global.createBtn')}
                     </Button>
-                    {intl.get('Global.emptyCreateTip')}
+                    {intl.get('Global.add')}
                   </span>
                 }
               />
@@ -298,12 +305,6 @@ const KnowledgeNetwork = (props: TProps) => {
           isControlFilter
         >
           {isPermission && <Button.Create onClick={() => toCreateOrEdit()} />}
-          {/* <Button
-                        icon={<UploadOutlined />}
-                        onClick={() => setType('edit')}
-                    >
-                        {intl.get('Object.import')}
-                    </Button> */}
           {isPermission && <Button.Delete onClick={() => onDeleteConfirm(selectedRows, true)} disabled={!selectedRows?.length} />}
           <Select.LabelSelect
             key="tag"

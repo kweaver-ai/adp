@@ -1,20 +1,20 @@
 import intl from 'react-intl-universal';
 import * as OntologyObjectType from '@/services/object/type';
 
-/**
- * 数据属性转换画布数据
- * @param dataProperties 数据属性
- * @param logicProperties 逻辑属性
- * @param fields 字段
- * @returns
- */
 export interface TransformCanvasDataParams {
   dataProperties: OntologyObjectType.DataProperty[];
   logicProperties: OntologyObjectType.LogicProperty[];
   fields: OntologyObjectType.Field[];
   dataSource?: OntologyObjectType.DataSource;
   basicValue: OntologyObjectType.BasicInfo;
+  openDataViewSource?: () => void;
+  deleteDataViewSource?: () => void;
+  addDataAttribute?: () => void;
+  attrClick?: (val: OntologyObjectType.Field) => void;
+  pickAttribute?: () => void;
+  autoLine?: () => void;
 }
+
 export const transformCanvasData = (
   props: TransformCanvasDataParams
 ): {
@@ -22,7 +22,19 @@ export const transformCanvasData = (
   edges: OntologyObjectType.TEdge[];
   allData: OntologyObjectType.ViewField[];
 } => {
-  const { dataProperties, logicProperties, fields, dataSource, basicValue } = props;
+  const {
+    dataProperties,
+    logicProperties,
+    fields,
+    dataSource,
+    basicValue,
+    openDataViewSource,
+    deleteDataViewSource,
+    addDataAttribute,
+    attrClick,
+    pickAttribute,
+    autoLine,
+  } = props;
   const logics = logicProperties.map((item) => item.name) || [];
 
   const dataNodes = dataProperties
@@ -30,7 +42,10 @@ export const transformCanvasData = (
     .map((item) => ({
       ...item,
       id: item.name,
-      mapped_field: undefined,
+      mapped_field: item.mapped_field,
+      primary_key: item.primary_key,
+      display_key: item.display_key,
+      incremental_key: item.incremental_key,
     }));
   const logicNodes = logicProperties.map((item) => ({
     id: item.name,
@@ -39,34 +54,47 @@ export const transformCanvasData = (
     type: item.type,
     comment: item.comment,
   }));
-  const nodesData: any = {
-    id: 'data',
-    type: 'customNode',
-    position: { x: 250, y: 0 },
-    data: {
-      label: basicValue.name,
-      bg: basicValue.color,
-      icon: basicValue.icon,
-      attributes: [...dataNodes],
-    },
-  };
+
   const nodesView: OntologyObjectType.TNode = {
     id: 'view',
     type: 'customNode',
-    position: { x: 900, y: 0 },
+    position: { x: 150, y: 30 },
     data: {
       label: dataSource?.name || intl.get('Global.dataView'),
       bg: '#fff',
       icon: 'icon-dip-usedata',
+      openDataViewSource,
+      deleteDataViewSource,
+      attrClick,
+      pickAttribute,
+      autoLine,
       attributes: fields.map((item) => ({
         id: item.name,
         name: item.name,
         display_name: item.display_name,
         type: item.type || '',
         comment: item.comment,
+        primary_key: item.primary_key,
+        display_key: item.display_key,
+        incremental_key: item.incremental_key,
       })),
     },
   };
+
+  const nodesData: any = {
+    id: 'data',
+    type: 'customNode',
+    position: { x: 760, y: 30 },
+    data: {
+      label: basicValue.name,
+      bg: basicValue.color,
+      icon: basicValue.icon,
+      addDataAttribute,
+      attrClick,
+      attributes: [...dataNodes],
+    },
+  };
+
   const edgesData = dataProperties
     .filter((val) => val.mapped_field?.name && val.type == val.mapped_field?.type)
     .map((item) => ({
@@ -79,7 +107,6 @@ export const transformCanvasData = (
       data: { deletable: true },
     }));
 
-  // 不存在映射，则自动映射
   if (!(edgesData.length > 0)) {
     dataProperties.forEach((val) => {
       const beField = fields.find((item) => item.name === val.name && (item.type === val.type || !val.type));
@@ -102,7 +129,6 @@ export const transformCanvasData = (
     allData: [...dataNodes, ...logicNodes],
   };
 };
-
 interface TransformAttrDataParams {
   nodes: {
     id: string;
@@ -134,13 +160,6 @@ interface TransformAttrDataParams {
   logics: string[];
 }
 
-/**
- * 画布数据转换属性数据
- * @param nodes 节点数据
- * @param edges 边数据
- * @param logics 逻辑属性列表
- * @returns
- */
 export const transformAttrData = (props: TransformAttrDataParams): OntologyObjectType.DataProperty[] => {
   const { nodes, edges, logics } = props;
   const dataNode = nodes.find((val) => val.id === 'data')!;

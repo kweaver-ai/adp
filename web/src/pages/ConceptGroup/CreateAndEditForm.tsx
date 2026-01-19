@@ -45,11 +45,11 @@ const CreateAndEditForm = (props: CreateAndEditFormProps) => {
         if (id && knId) {
           // 编辑模式
           await api.updateConceptGroup(knId, id, submitValues);
-          message.success(intl.get('ConceptGroup.editSuccess'));
+          message.success(intl.get('Global.editSuccess'));
         } else if (knId) {
           // 创建模式
           await api.createConceptGroup(knId, { ...submitValues, kn_id: knId, branch: 'main' });
-          message.success(intl.get('ConceptGroup.createSuccess'));
+          message.success(intl.get('Global.createSuccess'));
         }
         onCancel();
         callBack?.();
@@ -70,7 +70,7 @@ const CreateAndEditForm = (props: CreateAndEditFormProps) => {
             { max: 50, message: intl.get('Global.lenErr', { len: 50 }) },
           ]}
         >
-          <Input placeholder={intl.get('ConceptGroup.pleaseInputName')} />
+          <Input placeholder={intl.get('Global.pleaseInputName')} />
         </Form.Item>
         <Form.Item
           label={intl.get('Global.id')}
@@ -80,7 +80,7 @@ const CreateAndEditForm = (props: CreateAndEditFormProps) => {
             { pattern: /^[a-z0-9_-]+$/, message: intl.get('Global.idPatternError') },
           ]}
         >
-          <Input placeholder={intl.get('ConceptGroup.pleaseInputId')} disabled={!!id} />
+          <Input placeholder={intl.get('Global.pleaseInputId')} disabled={!!id} />
         </Form.Item>
         <Form.Item label={intl.get('ConceptGroup.iconColor')} name="color">
           <ColorSelect icon="icon-dip-fenzu" />
