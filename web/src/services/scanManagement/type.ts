@@ -3,11 +3,12 @@ export type Status = 'wait' | 'running' | 'success' | 'fail' | 'all';
 export interface ScanRequest {
   scan_name: string;
   type: number;
-  ds_info: { ds_id: string; ds_type: string };
+  ds_info: { ds_id: string; ds_type: string; scan_strategy?: string[] }; // 扫描策略 insert update delete
+  cron_expression?: CronExpression; // cron表达式
+  status?: string; // 任务状态'open' | 'close'
   use_default_template?: boolean;
   field_list_when_change?: string[];
   use_multi_threads?: boolean;
-  cron_expression?: string;
   tables?: string[];
 }
 
@@ -71,11 +72,15 @@ export interface ScanTaskItem {
   create_user: string;
   scan_status: Status;
   start_time: string;
+  schedule_id: string;
   type: number;
   ds_type: string;
   allow_multi_table_scan: boolean;
   task_process_info: string;
   task_result_info: string;
+  task_status: 'open' | 'close'; // 任务状态：open开启，close关闭
+  status: 'open' | 'close'; // 任务状态：open开启，close关闭
+  operations: string[];
 }
 
 export interface ScanTaskListResponse {
@@ -194,4 +199,54 @@ export interface ExcelFileListResponse {
 export interface ExcelSheetListResponse {
   data: string[];
   total: number;
+}
+
+export interface ScheduleScanStatusResponse {
+  last_scan_task_id: string; // 上次扫描任务ID
+  duration: string; // 持续时间
+  scan_strategy: string[]; // 扫描策略 insert update delete : 'open' | 'close'; // 任务状态：open开启，close关闭
+  cron_expression: CronExpression; // cron表达式 CronExpression
+  task_status: string; // 任务状态
+  scan_status: string; // 扫描状态
+  start_time: string; // 开始时间
+  end_time: string; // 结束时间
+}
+
+export interface ScheduleHistoryItem {
+  duration: string; // 持续时间
+  task_id: string; // 任务ID
+  scan_status: string; // 扫描状态
+  start_time: string; // 开始时间
+  end_time: string; // 结束时间
+}
+
+export interface ScheduleHistoryListResponse {
+  entries: ScheduleHistoryItem[];
+  total_count: number;
+}
+
+export interface UpdateScheduleStatusRequest {
+  schedule_id: string; // 定时任务ID
+  status: 'open' | 'close'; // 状态：enable或disable
+}
+
+export interface UpdateScheduleStatusResponse {
+  status: 'open' | 'close';
+}
+
+export interface CronExpression {
+  type: string;
+  expression: string;
+}
+
+export interface UpdateScheduleRequest {
+  schedule_id: string; // 定时任务ID
+  scan_strategy: string[]; // 扫描策略 insert update delete
+  cron_expression: CronExpression; // cron表达式
+  status?: 'open' | 'close'; // 任务状态
+}
+
+export interface UpdateScheduleResponse {
+  status: 'open' | 'close'; // 执行状态
+  schedule_id: string; // 定时任务ID
 }

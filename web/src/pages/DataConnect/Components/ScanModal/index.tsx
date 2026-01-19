@@ -10,7 +10,7 @@ import styles from './styles.module.less';
 
 interface TScanModal {
   open: boolean;
-  onClose: (isOk?: boolean) => void;
+  onClose: (isOk?: boolean, selectedDataSources?: DataConnectType.DataSource[]) => void;
   allDataSource?: DataConnectType.DataSource[];
   dataSourceTree?: DataConnectType.DataSource[];
   isEmpty?: boolean;
@@ -79,7 +79,8 @@ const ScanModal = ({ open, onClose, allDataSource = [], dataSourceTree = [], isE
   };
 
   const onOk = (): void => {
-    scanModalOk();
+    // 关闭当前Modal并通知父组件打开ScanTaskConfig
+    onClose(true, data);
   };
 
   return (
@@ -91,13 +92,12 @@ const ScanModal = ({ open, onClose, allDataSource = [], dataSourceTree = [], isE
       onCancel={() => onClose()}
       className={styles.modalWrapper}
       maskClosable={false}
-      getContainer={(): any => document.getElementById('vega-root')}
       footer={
         <div className={styles.modalFooter}>
           <div className={styles.footerLeft}></div>
           <div className={styles.footerRight}>
             <Button disabled={data?.length === 0} type="primary" onClick={(): void => onOk()} className={styles.okButton}>
-              {intl.get('Global.startScan')}
+              {intl.get('Global.next')}
             </Button>
             <Button onClick={(): void => onClose()}>{intl.get('Global.cancel')}</Button>
           </div>

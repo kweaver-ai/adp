@@ -14,9 +14,10 @@ const { Text } = Typography;
 
 interface ScanTaskProps {
   dataConnectId: string;
+  getTableType: (type: string, connectorName: string) => string;
 }
 
-const ScanTask: React.FC<ScanTaskProps> = ({ dataConnectId }) => {
+const ScanTask: React.FC<ScanTaskProps> = ({ dataConnectId, getTableType }) => {
   // 状态管理
   const [data, setData] = useState<ScanTaskType.ScanTaskItem[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -166,7 +167,12 @@ const ScanTask: React.FC<ScanTaskProps> = ({ dataConnectId }) => {
           emptyText: <Empty description={intl.get('Global.noScanTask')} />,
         }}
       />
-      <ScanDetail visible={detailVisible} onClose={handleCloseDetail} scanDetail={selectedTask || ({} as ScanTaskType.ScanTaskItem)} />
+      <ScanDetail
+        getTableType={getTableType}
+        visible={detailVisible}
+        onClose={handleCloseDetail}
+        scanDetail={selectedTask || ({} as ScanTaskType.ScanTaskItem)}
+      />
     </>
   );
 };

@@ -11,6 +11,7 @@ export const createScanTask = (params: ScanManagement.ScanRequest) => {
     field_list_when_change: [],
     use_multi_threads: true,
     tables: params.tables || [],
+    status: params.status || 'open',
   };
   return request.post<ScanManagement.ScanResponse>(`${BASE_URL}/scan`, obj);
 };
@@ -88,8 +89,45 @@ export const getExcelSheets = (catalog: string, fileName: string) => {
   );
 };
 
+/**
+ * 获取Excel文件列表
+ * @param catalog - 目录名称
+ */
 export const getExcelFiles = (catalog: string) => {
   return request.get<ScanManagement.ExcelFileListResponse>(`${EXCEL_BASE_URL}/files/${catalog}`, {}, { timeout: 60000 });
+};
+
+/**
+ * 获取定时扫描状态
+ * @param scheduleId - 定时任务ID
+ */
+export const getScheduleScanStatus = (scheduleId: string, type: number) => {
+  return request.get<ScanManagement.ScheduleScanStatusResponse>(`${BASE_URL}/scan/schedule/${scheduleId}?type=${type}`);
+};
+
+/**
+ * 获取定时扫描历史记录列表
+ * @param scheduleId - 定时任务ID
+ * @param params - 分页查询参数
+ */
+export const getScheduleHistoryList = (scheduleId: string, params?: ScanManagement.PageQueryParams) => {
+  return request.get<ScanManagement.ScheduleHistoryListResponse>(`${BASE_URL}/scan/schedule/task/${scheduleId}`, params);
+};
+
+/**
+ * 更新定时任务状态
+ * @param params - 更新状态请求参数
+ */
+export const updateScheduleStatus = (params: ScanManagement.UpdateScheduleStatusRequest) => {
+  return request.put<ScanManagement.UpdateScheduleStatusResponse>(`${BASE_URL}/scan/schedule/status`, params);
+};
+
+/**
+ * 更新定时任务配置
+ * @param params - 更新请求参数
+ */
+export const updateSchedule = (params: ScanManagement.UpdateScheduleRequest) => {
+  return request.put<ScanManagement.UpdateScheduleResponse>(`${BASE_URL}/scan/schedule`, params);
 };
 
 export default {
@@ -106,4 +144,8 @@ export default {
   getExcelColumns,
   getExcelSheets,
   getExcelFiles,
+  getScheduleScanStatus,
+  getScheduleHistoryList,
+  updateScheduleStatus,
+  updateSchedule,
 };

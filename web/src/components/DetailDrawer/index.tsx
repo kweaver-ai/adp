@@ -1,6 +1,6 @@
-import { ReactNode } from 'react';
-import { DrawerProps } from 'antd/lib/drawer';
 import { Drawer } from '@/web-library/common';
+import { DrawerProps } from 'antd/lib/drawer';
+import { ReactNode } from 'react';
 import styles from './index.module.less';
 
 interface ContentItem {
@@ -17,6 +17,7 @@ export interface DataItem {
   isOpen?: boolean;
   style?: object;
   content: ContentItem[];
+  extra?: ReactNode;
 }
 
 // 包含抽屉的属性
@@ -34,9 +35,12 @@ const DetailDrawer = (props: PropsType): JSX.Element => {
     return (
       <div className={`${styles['one-line']} ${isSec ? styles['sec-container'] : ''}`}>
         {item.title && (
-          <div className={styles['title']}>
-            <span className={styles['title-span']}></span>
-            {item.title}
+          <div className={styles['title']} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div style={{ display: 'flex', alignItems: 'center' }}>
+              <span className={styles['title-span']}></span>
+              {item.title}
+            </div>
+            {(item as DataItem).extra && <div>{(item as DataItem).extra}</div>}
           </div>
         )}
         {content}

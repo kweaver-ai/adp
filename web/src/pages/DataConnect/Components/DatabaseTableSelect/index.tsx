@@ -23,7 +23,7 @@ const getIconCom = (type: string): JSX.Element => {
 
 export const DatabaseTableSelect: React.FC<{
   open: boolean;
-  onOk: (checkedList: ScanTaskType.TableInfo[], dataConnectId: string) => void;
+  onOk: (checkedList: ScanTaskType.TableInfo[], dataConnectId: string, openScanTaskConfig?: boolean) => void;
   onCancel: () => void;
 }> = ({ open, onCancel, onOk }) => {
   const [checkedList, setCheckedList] = useState<ScanTaskType.TableInfo[]>([]);
@@ -102,7 +102,8 @@ export const DatabaseTableSelect: React.FC<{
   }, [open]);
 
   const handleSubmit = () => {
-    onOk(checkedList, selectedKey);
+    // 关闭当前弹窗并通知父组件打开ScanTaskConfig
+    onOk(checkedList, selectedKey, true);
   };
 
   const footer = useMemo(

@@ -18,6 +18,7 @@ import { Table, Button, Select } from '@/web-library/common';
 import DatabaseTable from './Components/DatabaseTable';
 import ExcelTable from './Components/ExcelTable';
 import ScanTask from './Components/SacnTask';
+import ScanTaskConfig from './Components/ScanTaskConfig/index';
 import ExcelForm from './ExcelForm';
 import styles from './index.module.less';
 import { getConnector, USER_ID_REQUIRED_TYPES, getScanStatusColor } from './utils';
@@ -27,7 +28,7 @@ const ATOM_DATA_VIEW_CHECK_LIMIT = 2;
 
 interface DataSourceProps {
   connectors: DataConnectType.Connector[];
-  getTableType: (type: string, val: string) => JSX.Element | string;
+  getTableType: (type: string, val: string) => string;
 }
 
 const DataSource = (props: DataSourceProps): JSX.Element => {
@@ -40,6 +41,8 @@ const DataSource = (props: DataSourceProps): JSX.Element => {
   const [detailDrawerData, setDetailDrawerData] = useState<DataItem[] | null>(null);
   const [detail, setDetail] = useState<DataConnectType.DataSource>();
   const [excelFormOpen, setExcelFormOpen] = useState<boolean>(false);
+  const [scanTaskConfigOpen, setScanTaskConfigOpen] = useState<boolean>(false);
+  const [scanDataSource, setScanDataSource] = useState<DataConnectType.DataSource | null>(null);
   const { sort, direction } = pageState || {};
   const { message } = HOOKS.useGlobalContext();
 
@@ -185,7 +188,7 @@ const DataSource = (props: DataSourceProps): JSX.Element => {
                 {
                   // name: intl.get('Global.view'),
                   isOneLine: true,
-                  value: <ScanTask dataConnectId={id} />,
+                  value: <ScanTask dataConnectId={id} getTableType={getTableType} />,
                 },
               ],
             },
@@ -240,13 +243,20 @@ const DataSource = (props: DataSourceProps): JSX.Element => {
     setDetailDrawerData(cur);
   };
 
-  const createScanTask = async (record: DataConnectType.DataSource) => {
-    await scanApi.createScanTask({
-      scan_name: record.name,
-      ds_info: { ds_id: record.id, ds_type: record.type },
-      type: 0,
-    });
-    message.success(intl.get('Global.scanTaskSuccess'));
+  const createScanTask = (record: DataConnectType.DataSource) => {
+    // 保存当前数据源并打开扫描任务配置弹窗
+    setScanDataSource(record);
+    setScanTaskConfigOpen(true);
+  };
+
+  // 处理扫描任务配置关闭
+  const handleScanTaskConfigClose = async (isOk?: boolean) => {
+    setScanTaskConfigOpen(false);
+    if (isOk && scanDataSource) {
+      message.success(intl.get('Global.scanTaskSuccess'));
+      // 清空数据源
+      setScanDataSource(null);
+    }
   };
 
   const postTestConnect = async (record: DataConnectType.DataSource): Promise<void> => {
@@ -308,7 +318,7 @@ const DataSource = (props: DataSourceProps): JSX.Element => {
           { key: 'view', label: intl.get('Global.view'), visible: matchPermission(PERMISSION_CODES.VIEW, record.operations) },
           {
             key: 'scan',
-            label: intl.get('DataConnect.scan'),
+            label: intl.get('Global.scan'),
             visible: record.type != 'excel' && matchPermission(PERMISSION_CODES.SACN, record.operations),
           },
           {
@@ -337,6 +347,7 @@ const DataSource = (props: DataSourceProps): JSX.Element => {
         );
       },
     },
+
     {
       title: intl.get('Global.dataSourceType_common'),
       dataIndex: 'type',
@@ -440,6 +451,8 @@ const DataSource = (props: DataSourceProps): JSX.Element => {
       </Table.PageTable>
       <DetailDrawer data={detailDrawerData} title={intl.get('DataConnect.dataConnectDetail')} width={1040} onClose={() => setDetailDrawerData(null)} />
       <ExcelForm detail={detail} open={excelFormOpen && !!detail} onCancel={() => setExcelFormOpen(false)} />
+      {/* 扫描任务配置弹窗 */}
+      {scanDataSource && <ScanTaskConfig open={scanTaskConfigOpen} onClose={handleScanTaskConfigClose} selectedDataSources={[scanDataSource]} />}
     </div>
   );
 };
