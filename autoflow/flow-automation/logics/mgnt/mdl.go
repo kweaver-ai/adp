@@ -171,7 +171,7 @@ func (m *mgnt) triggerFromMDLDataView(
 	err = <-ch
 
 	if err != nil {
-		dagIns, dagErr := dag.Run(ctx, triggerType, runVar, nil)
+		dagIns, dagErr := dag.Run(ctx, triggerType, runVar)
 
 		if dagErr != nil {
 			log.Warnf("[logic.triggerFromMDLDataView] dag.Run err: %s", err.Error())
@@ -556,7 +556,7 @@ func (m *mgnt) batchCreateDagInsFromDataView(ctx context.Context,
 		}
 
 		items := entryBuffer[start:end]
-		dagIns, err := dag.Run(ctx, triggerType, runVar, nil)
+		dagIns, err := dag.Run(ctx, triggerType, runVar)
 
 		if err != nil {
 			log.Warnf("[logic.batchCreateDagInsFromDataView] dag.Run err, detail: %s", err.Error())

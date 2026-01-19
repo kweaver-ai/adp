@@ -121,7 +121,7 @@ func (m *mgnt) runFormInstanceVM(
 		"run_args":      string(bytes),
 	}
 
-	dagIns, dagErr := dag.Run(ctx, triggerType, runVar, []string{userInfo.UserName})
+	dagIns, dagErr := dag.Run(ctx, triggerType, runVar, entity.WithKeyWords(userInfo.UserName))
 	if dagErr != nil {
 		return nil, nil, liberrors.NewPublicRestError(ctx, liberrors.PErrorForbidden,
 			liberrors.PErrorForbidden,

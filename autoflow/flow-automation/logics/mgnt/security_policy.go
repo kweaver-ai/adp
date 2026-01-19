@@ -528,7 +528,7 @@ func (m *mgnt) StartSecurityPolicyFlowProc(ctx context.Context, params ProcParam
 		}
 	}
 
-	dagIns, dagErr := dag.Run(ctx, triggerType, runVar, []string{userDetail.UserName})
+	dagIns, dagErr := dag.Run(ctx, triggerType, runVar, entity.WithKeyWords(userDetail.UserName))
 	if dagErr != nil {
 		log.Warnf("[logic.RunSecurityPolicyFlow] dag.Run err, deail: %s", dagErr.Error())
 		return pid, ierrors.NewIError(ierrors.Forbidden, ierrors.DagStatusNotNormal, map[string]interface{}{"id:": dag.ID, "status": dag.Status})
