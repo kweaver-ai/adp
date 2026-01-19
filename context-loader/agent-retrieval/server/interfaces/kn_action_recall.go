@@ -52,7 +52,7 @@ type KnDynamicTool struct {
 	Parameters      map[string]interface{} `json:"parameters"`        // OpenAI Function Call Schema
 	ApiURL          string                 `json:"api_url"`           // Tool Execution Proxy URL
 	OriginalSchema  map[string]interface{} `json:"original_schema"`   // Original OpenAPI Definition
-	FixedParams     KnFixedParams          `json:"fixed_params"`      // Fixed Parameters
+	FixedParams     interface{}            `json:"fixed_params"`      // Fixed Parameters (KnFixedParams or map[string]interface{})
 	ApiCallStrategy string                 `json:"api_call_strategy"` // Result Processing Strategy, fixed value: kn_action_recall
 }
 
@@ -107,9 +107,11 @@ type ActionTypeParam struct {
 
 // ActionSource Action Source
 type ActionSource struct {
-	Type   string `json:"type"`    // tool/mcp
-	BoxID  string `json:"box_id"`  // Tool Box ID
-	ToolID string `json:"tool_id"` // Tool ID
+	Type     string `json:"type"`                // tool/mcp
+	BoxID    string `json:"box_id"`              // Tool Box ID
+	ToolID   string `json:"tool_id"`             // Tool ID
+	McpID    string `json:"mcp_id,omitempty"`    // MCP ID
+	ToolName string `json:"tool_name,omitempty"` // Tool Name
 }
 
 // ActionParams Action Parameters
