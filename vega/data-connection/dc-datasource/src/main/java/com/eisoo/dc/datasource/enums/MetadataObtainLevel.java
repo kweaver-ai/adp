@@ -46,13 +46,13 @@ public enum MetadataObtainLevel {
         }
 
         // excel 不支持扫描, 支持新建元数据
-        if (ConnectorEnums.EXCEL.getConnector().equals(dataSourceType)) {
+        if (CatalogConstant.EXCEL_CATALOG.equals(dataSourceType)) {
             return CAN_CREATE.value;
         }
 
         // anyshare7、tingyun 不支持扫描和新建元数据
-        if (ConnectorEnums.ANYSHARE7.getConnector().equals(dataSourceType) ||
-                ConnectorEnums.TINGYUN.getConnector().equals(dataSourceType) ||
+        if (CatalogConstant.ANYSHARE7_CATALOG.equals(dataSourceType) ||
+                CatalogConstant.TINGYUN_CATALOG.equals(dataSourceType) ||
                 CatalogConstant.INDEX_BASE_DS.equals(dataSourceType) ) {
             return NO_SCAN_AND_NO_CREATE.value;
         }

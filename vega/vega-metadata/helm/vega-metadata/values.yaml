@@ -65,7 +65,7 @@ depServices:
     protocol: http
     collector: mymaria_fast2
   kafka:
-    enable: true
+    enable: false
 config:
   backend:
     health: "/api/metadata-manage/swagger-ui/index.html#/"

@@ -13,7 +13,13 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+import javax.annotation.PostConstruct;
+import java.io.IOException;
 import java.util.Objects;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
 
 @Configuration
 @Data
@@ -46,8 +52,47 @@ public class ServiceConfig {
     @Value("${services.vega-gateway}")
     private String vegaGateway;
 
+
+    private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
+    private final AtomicReference<String> vegaCalculateCoordinatorFQDN = new AtomicReference<>();
+    private String hydraAdminFQDN;
+    private String userManagementPrivateFQDN;
+    private String authorizationPrivateFQDN;
+    private String efastPublicFQDN;
+    private String efastPrivateFQDN;
+
+    @PostConstruct
+    public void init() throws IOException {
+        if (!isLocal) {
+            ApiClient client = Config.fromCluster();
+            CoreV1Api api = new CoreV1Api(client);
+
+            // 初始化获取所有服务地址
+            hydraAdminFQDN = getServiceFQDN(api, hydraAdmin);
+            userManagementPrivateFQDN = getServiceFQDN(api, userManagementPrivate);
+            authorizationPrivateFQDN = getServiceFQDN(api, authorizationPrivate);
+            efastPublicFQDN = getServiceFQDN(api, efastPublic);
+            efastPrivateFQDN = getServiceFQDN(api, efastPrivate);
+
+            // 定时更新vegaCalculateCoordinator地址
+            updateVegaCalculateCoordinator(api);
+            scheduler.scheduleAtFixedRate(() -> updateVegaCalculateCoordinator(api),
+                    1, 1, TimeUnit.MINUTES); // 每1分钟更新一次
+        }
+    }
+
+    private void updateVegaCalculateCoordinator(CoreV1Api api) {
+        try {
+            String newFQDN = getServiceFQDN(api, vegaCalculateCoordinator);
+            vegaCalculateCoordinatorFQDN.set(newFQDN);
+        } catch (Exception e) {
+            vegaCalculateCoordinatorFQDN.set(null);
+        }
+    }
+
+
     @Bean
-    public ServiceEndpoints serviceEndpoints() throws Exception {
+    public ServiceEndpoints serviceEndpoints() {
         if (isLocal){
             return new ServiceEndpoints(
                     () -> vegaCalculateCoordinator,
@@ -58,15 +103,13 @@ public class ServiceConfig {
                     () -> efastPrivate
             );
         }else{
-            ApiClient client = Config.fromCluster();
-            CoreV1Api api = new CoreV1Api(client);
             return new ServiceEndpoints(
-                    () -> getServiceFQDN(api, vegaCalculateCoordinator),
-                    () -> getServiceFQDN(api, hydraAdmin),
-                    () -> getServiceFQDN(api, userManagementPrivate),
-                    () -> getServiceFQDN(api, authorizationPrivate),
-                    () -> getServiceFQDN(api, efastPublic),
-                    () -> getServiceFQDN(api, efastPrivate)
+                    () -> vegaCalculateCoordinatorFQDN.get(),
+                    () -> hydraAdminFQDN,
+                    () -> userManagementPrivateFQDN,
+                    () -> authorizationPrivateFQDN,
+                    () -> efastPublicFQDN,
+                    () -> efastPrivateFQDN
             );
         }
     }

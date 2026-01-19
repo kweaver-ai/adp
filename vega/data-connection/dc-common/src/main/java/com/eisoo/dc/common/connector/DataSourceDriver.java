@@ -1,7 +1,8 @@
 package com.eisoo.dc.common.connector;
 
 import com.eisoo.dc.common.vo.BinDataVo;
-import com.eisoo.dc.common.vo.TestDataSourceVo;
+
+import java.sql.SQLException;
 
 /**
  * 数据源连接测试驱动接口
@@ -20,7 +21,7 @@ public interface DataSourceDriver {
      * @param binData 数据源连接配置信息
      * @return 连接测试结果，true表示连接成功，false表示连接失败
      */
-    boolean testConnection(BinDataVo binData);
+    boolean testConnection(BinDataVo binData) throws SQLException;
 
     /**
      * 验证数据源连接参数是否合法

@@ -12,13 +12,13 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 
 /**
- * MySQL数据源连接测试驱动实现
+ * MariaDB数据源连接测试驱动实现
  */
 @Slf4j
 @Component
-public class MySQLDataSourceDriver implements DataSourceDriver {
+public class MariadbDataSourceDriver implements DataSourceDriver {
 
-    private static final String MYSQL_TYPE = "mysql";
+    private static final String MYSQL_TYPE = "maria";
     private static final String JDBC_URL_TEMPLATE = "jdbc:mysql://%s:%d/%s?useSSL=false&serverTimezone=UTC";
 
     @Override
@@ -41,10 +41,10 @@ public class MySQLDataSourceDriver implements DataSourceDriver {
         try {
             // 尝试建立连接
             connection = DriverManager.getConnection(url, binData.getAccount(), binData.getPassword());
-            log.info("MySQL连接测试成功: {}", url);
+            log.info("MariaDB连接测试成功: {}", url);
             return true;
         } catch (SQLException e) {
-            log.error("MySQL连接测试失败: {}, 错误信息: {}", url, e.getMessage());
+            log.error("MariaDB连接测试失败: {}, 错误信息: {}", url, e.getMessage());
             throw e;
         } finally {
             // 关闭连接
@@ -52,7 +52,7 @@ public class MySQLDataSourceDriver implements DataSourceDriver {
                 try {
                     connection.close();
                 } catch (SQLException e) {
-                    log.warn("关闭MySQL连接时发生错误: {}", e.getMessage());
+                    log.warn("关闭MariaDB连接时发生错误: {}", e.getMessage());
                 }
             }
         }
