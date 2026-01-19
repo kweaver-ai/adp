@@ -209,10 +209,10 @@ public class CatalogServiceImpl implements CatalogService {
         try {
             dataSourceMapper.insert(dataSourceEntity);
         } catch (Exception e) {
-            if (catalogName != null) {
-                catalogRuleMapper.deleteByCatalogName(catalogName);
-               // Calculate.deleteCatalog(serviceEndpoints.getVegaCalculateCoordinator(), catalogName);
-            }
+//            if (catalogName != null) {
+//                catalogRuleMapper.deleteByCatalogName(catalogName);
+//                Calculate.deleteCatalog(serviceEndpoints.getVegaCalculateCoordinator(), catalogName);
+//            }
             log.info("新增数据源{},数据库记录写入失败，并删除数据源成功。", params.getName());
             throw new AiShuException(ErrorCodeEnum.InternalServerError, Detail.CREATE_DATASOURCE_FAILED);
         }
@@ -242,10 +242,10 @@ public class CatalogServiceImpl implements CatalogService {
                 log.info("添加资源权限成功");
             } catch (Exception e) {
                 dataSourceMapper.deleteById(dataSourceEntity.getFId());
-                if (catalogName != null) {
-                    catalogRuleMapper.deleteByCatalogName(catalogName);
-                    Calculate.deleteCatalog(serviceEndpoints.getVegaCalculateCoordinator(), catalogName);
-                }
+//                if (catalogName != null) {
+//                    catalogRuleMapper.deleteByCatalogName(catalogName);
+//                    Calculate.deleteCatalog(serviceEndpoints.getVegaCalculateCoordinator(), catalogName);
+//                }
                 log.info("新增数据源{},添加资源权限失败，并删除数据源成功。", params.getName());
                 throw e;
             }
@@ -498,29 +498,26 @@ public class CatalogServiceImpl implements CatalogService {
             driverManager.validateConnectionParams(type, binData);
             
             // 使用新驱动测试连接
-            if (driverManager.testConnection(type, binData)) {
-                return true;
-            }
-            
-            log.warn("使用新驱动测试连接失败，回退到原有方法");
+            return driverManager.testConnection(type, binData);
         } catch (IllegalArgumentException e) {
             log.warn("新驱动不支持该类型数据源: {}, 使用原有方法进行测试", type);
+
+            // 回退到原有的连接测试方法
+            String typeWithUnderscore = type.replace("-", "_");
+            String randomString = RandomStringUtils.randomAlphanumeric(8).toLowerCase();
+            String catalogName = CatalogConstant.TEST_CATALOG_PREFIX + typeWithUnderscore + "_" + randomString;
+            CatalogDto catalogDto = buildCatalogDto(null, type, binData, catalogName);
+            catalogDto.getProperties().set(CatalogConstant.USE_CONNECTION_POOL, false);
+            String schemaName = StringUtils.isNotBlank(binData.getSchema()) ? binData.getSchema() : binData.getDatabaseName();
+            try {
+                Calculate.testCatalog(serviceEndpoints.getVegaCalculateCoordinator(), catalogDto, schemaName);
+            } catch (Exception ex) {
+                log.error("catalogName:{},测试连接失败!", catalogDto.getCatalogName(), ex);
+                throw ex;
+            }
         } catch (Exception e) {
-            log.error("使用新驱动测试连接时发生错误: {}, 回退到原有方法", e.getMessage());
-        }
-        
-        // 回退到原有的连接测试方法
-        String typeWithUnderscore = type.replace("-", "_");
-        String randomString = RandomStringUtils.randomAlphanumeric(8).toLowerCase();
-        String catalogName = CatalogConstant.TEST_CATALOG_PREFIX + typeWithUnderscore + "_" + randomString;
-        CatalogDto catalogDto = buildCatalogDto(null, type, binData, catalogName);
-        catalogDto.getProperties().set(CatalogConstant.USE_CONNECTION_POOL, false);
-        String schemaName = StringUtils.isNotBlank(binData.getSchema()) ? binData.getSchema() : binData.getDatabaseName();
-        try {
-            Calculate.testCatalog(serviceEndpoints.getVegaCalculateCoordinator(), catalogDto, schemaName);
-        } catch (Exception e) {
-            log.error("catalogName:{},测试连接失败!", catalogDto.getCatalogName(), e);
-            throw e;
+            log.error("使用新驱动测试连接时发生错误: {}", e.getMessage());
+            throw new AiShuException(ErrorCodeEnum.BadRequest, e.getMessage());
         }
         return true;
     }
@@ -1177,7 +1174,7 @@ public class CatalogServiceImpl implements CatalogService {
             if (dataSourceEntity.getFType().equals(CatalogConstant.EXCEL_CATALOG)) {
                 deleteAllExcelTables(id);
             }
-            catalogRuleMapper.deleteByCatalogName(dataSourceEntity.getFCatalog());
+//            catalogRuleMapper.deleteByCatalogName(dataSourceEntity.getFCatalog());
             delete(dataSourceEntity.getFCatalog());
         }
 
