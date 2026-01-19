@@ -118,7 +118,7 @@ export const VersionModelDrawer = ({
       <Drawer
         open
         width={600}
-        title={"版本信息"}
+        title={t("version", "版本信息")}
         className={styles["drawer"]}
         closable
         onClose={onClose}

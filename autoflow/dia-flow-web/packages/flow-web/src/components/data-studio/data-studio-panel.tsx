@@ -613,7 +613,7 @@ const DataStudioPanel: React.FC = () => {
           <Menu.Item key="edit-flow" onClick={handleView}>
             <img
               src={runStatisticsSVG}
-              alt="运行统计"
+              alt={t("datastudio.button.runStatistics", "运行统计")}
               className={styles["edit-icon"]}
             />
             {t("datastudio.button.runStatistics", "运行统计")}
@@ -623,10 +623,10 @@ const DataStudioPanel: React.FC = () => {
           <Menu.Item key="edit-trigger" onClick={() => setIsVersionOpen(true)}>
             <img
               src={versionIcon}
-              alt="版本信息"
+              alt={t('version')}
               className={styles["edit-icon"]}
             />
-            版本信息
+            {t('version')}
           </Menu.Item>
         )}
       </Menu>
