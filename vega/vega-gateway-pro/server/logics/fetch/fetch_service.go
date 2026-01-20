@@ -194,6 +194,9 @@ func (fs *Service) fetchSqlQuery(ctx context.Context, query *interfaces.FetchQue
 		} else if resultCache.ResultSet == nil && len(resultCache.ResultChan) == 0 { // 处理查询完成
 			logger.Debugf("Sql: %s, queryId: %s, slug: %s, query completed", query.Sql, queryId, slug)
 			fs.cleanQuery(queryCacheKey, resultCache)
+		} else if query.Type == 1 { // 处理同步查询
+			logger.Debugf("Sql: %s, queryId: %s, slug: %s, query completed", query.Sql, queryId, slug)
+			fs.cleanQuery(queryCacheKey, resultCache)
 		}
 
 		// 记录执行耗时
@@ -202,17 +205,8 @@ func (fs *Service) fetchSqlQuery(ctx context.Context, query *interfaces.FetchQue
 
 	logger.Infof("Original SQL: %s", query.Sql)
 
-	// 处理同步查询的LIMIT子句
-	if query.Type == 1 &&
-		(strings.HasPrefix(strings.ToUpper(query.Sql), "SELECT") ||
-			strings.HasPrefix(strings.ToUpper(query.Sql), "WITH")) {
-		query.Sql = fmt.Sprintf("SELECT * FROM (%s) AS subquery LIMIT %d", query.Sql, *query.BatchSize)
-		logger.Infof("Processed SQL: %s", query.Sql)
-	}
-	sql := query.Sql
-
 	//提取表名
-	tablesResult, err := sqlglot.ExtractTables(sql, "trino")
+	tablesResult, err := sqlglot.ExtractTables(query.Sql, "trino")
 	if err != nil {
 		logger.Errorf("Extract tables failed: %s", err.Error())
 		return nil, rest.NewHTTPError(ctx, http.StatusInternalServerError, rest.PublicError_InternalServerError).
@@ -264,13 +258,13 @@ func (fs *Service) fetchSqlQuery(ctx context.Context, query *interfaces.FetchQue
 
 			// 数据源类型连接器未适配，查询退化，转发给Etrino
 			logger.Infof("Degradation to Etrino, SQL: %s", query.Sql)
-			err := fs.getDataFromEtrino(ctx, query.Sql, query.Type, queryId, slug)
+			err := fs.getDataFromEtrino(ctx, query.Sql, queryId, slug)
 			if err != nil {
 				return nil, err
 			}
 		} else {
 			//去除sql中的catalog.
-			sql = strings.ReplaceAll(sql, fmt.Sprintf("%s.", catalog), "")
+			sql := strings.ReplaceAll(query.Sql, fmt.Sprintf("%s.", catalog), "")
 
 			// 直连查询获取结果集
 			logger.Infof("Direct connection query, SQL: %s", sql)
@@ -284,7 +278,7 @@ func (fs *Service) fetchSqlQuery(ctx context.Context, query *interfaces.FetchQue
 					logger.Errorf("Transpile SQL failed: %s", err.Error())
 					// 查询退化，转发给Etrino
 					logger.Infof("Degradation to Etrino query, SQL: %s", query.Sql)
-					err := fs.getDataFromEtrino(ctx, query.Sql, query.Type, queryId, slug)
+					err := fs.getDataFromEtrino(ctx, query.Sql, queryId, slug)
 					if err != nil {
 						return nil, err
 					}
@@ -297,7 +291,7 @@ func (fs *Service) fetchSqlQuery(ctx context.Context, query *interfaces.FetchQue
 
 						// 数据源类型连接器未适配，查询退化，转发给Etrino
 						logger.Infof("Degradation to Etrino, SQL: %s", query.Sql)
-						err := fs.getDataFromEtrino(ctx, query.Sql, query.Type, queryId, slug)
+						err := fs.getDataFromEtrino(ctx, query.Sql, queryId, slug)
 						if err != nil {
 							return nil, err
 						}
@@ -308,13 +302,13 @@ func (fs *Service) fetchSqlQuery(ctx context.Context, query *interfaces.FetchQue
 
 							// 查询退化，转发给Etrino
 							logger.Infof("Degradation to Etrino query, SQL: %s", query.Sql)
-							err := fs.getDataFromEtrino(ctx, query.Sql, query.Type, queryId, slug)
+							err := fs.getDataFromEtrino(ctx, query.Sql, queryId, slug)
 							if err != nil {
 								return nil, err
 							}
 						} else {
 							// 直连数据查询
-							err = fs.getDataFromQueryResult(ctx, connector, resultSet, query.Type, queryId, slug)
+							err = fs.getDataFromQueryResult(ctx, connector, resultSet, queryId, slug)
 							if err != nil {
 								return nil, err
 							}
@@ -323,7 +317,7 @@ func (fs *Service) fetchSqlQuery(ctx context.Context, query *interfaces.FetchQue
 				}
 			} else {
 				// 直连数据查询
-				err = fs.getDataFromQueryResult(ctx, connector, resultSet, query.Type, queryId, slug)
+				err = fs.getDataFromQueryResult(ctx, connector, resultSet, queryId, slug)
 				if err != nil {
 					return nil, err
 				}
@@ -332,7 +326,7 @@ func (fs *Service) fetchSqlQuery(ctx context.Context, query *interfaces.FetchQue
 	} else {
 		//多源查询，转发给Etrino
 		logger.Infof("Multi-source query, degradation to Etrino query, SQL: %s", query.Sql)
-		err := fs.getDataFromEtrino(ctx, query.Sql, query.Type, queryId, slug)
+		err := fs.getDataFromEtrino(ctx, query.Sql, queryId, slug)
 		if err != nil {
 			return nil, err
 		}
@@ -343,7 +337,7 @@ func (fs *Service) fetchSqlQuery(ctx context.Context, query *interfaces.FetchQue
 }
 
 // getDataFromQueryResult 从查询结果集中获取数据
-func (fs *Service) getDataFromQueryResult(ctx context.Context, connector sql_connectors.ConnectorHandler, resultSet any, queryType int, queryId string, slug string) error {
+func (fs *Service) getDataFromQueryResult(ctx context.Context, connector sql_connectors.ConnectorHandler, resultSet any, queryId string, slug string) error {
 
 	queryCacheKey := fmt.Sprintf("%s_%s", queryId, slug)
 
@@ -383,7 +377,7 @@ func (fs *Service) getDataFromQueryResult(ctx context.Context, connector sql_con
 			}
 
 			// 执行查询
-			resultSet, data, err := connector.GetData(resultSet, len(columns), queryType, fs.appSetting.QuerySetting.DataQuerySize)
+			resultSet, data, err := connector.GetData(resultSet, len(columns), fs.appSetting.QuerySetting.DataQuerySize)
 
 			// 缓存结果
 			fs.storeToCache(resultCache, resultSet, columns, data, err)
@@ -427,7 +421,7 @@ func (fs *Service) storeToCache(oldResultCache *interfaces.ResultCache, resultSe
 
 // checkCachePeriodically 定期检查缓存通道是否有数据
 func (fs *Service) checkCachePeriodically(cache *interfaces.ResultCache) {
-	ticker := time.NewTicker(100 * time.Millisecond)
+	ticker := time.NewTicker(1 * time.Millisecond)
 	defer ticker.Stop()
 
 	for range ticker.C {
@@ -439,7 +433,7 @@ func (fs *Service) checkCachePeriodically(cache *interfaces.ResultCache) {
 }
 
 // getDataFromEtrino 从Etrino获取数据
-func (fs *Service) getDataFromEtrino(ctx context.Context, sql string, queryType int, queryId string, slug string) error {
+func (fs *Service) getDataFromEtrino(ctx context.Context, sql string, queryId string, slug string) error {
 
 	statementData, err := fs.vegaCalculateAccess.StatementQuery(ctx, sql)
 	if err != nil {
@@ -471,11 +465,11 @@ func (fs *Service) getDataFromEtrino(ctx context.Context, sql string, queryType 
 	}
 
 	// 第二阶段：处理executing阶段
-	return fs.getDataFromEtrinoExecutingNextUri(ctx, nextUri, queryType, queryId, slug)
+	return fs.getDataFromEtrinoExecutingNextUri(ctx, nextUri, queryId, slug)
 }
 
 // getDataFromEtrinoExecutingNextUri 从Etrino获取executing阶段的数据
-func (fs *Service) getDataFromEtrinoExecutingNextUri(ctx context.Context, nextUri string, queryType int, queryId string, slug string) error {
+func (fs *Service) getDataFromEtrinoExecutingNextUri(ctx context.Context, nextUri string, queryId string, slug string) error {
 
 	// 初始化结果通道缓存
 	queryCacheKey := fmt.Sprintf("%s_%s", queryId, slug)
@@ -493,6 +487,8 @@ func (fs *Service) getDataFromEtrinoExecutingNextUri(ctx context.Context, nextUr
 	// 提交查询任务到查询池
 	err := fs.queryPool.Submit(func() {
 
+		queryCtx, cancel := context.WithCancel(context.Background())
+
 		defer func() {
 			if r := recover(); r != nil {
 				err := fmt.Errorf("QueryId: %s, slug: %s, etrino query panic in goroutine: %v", queryId, slug, r)
@@ -501,6 +497,8 @@ func (fs *Service) getDataFromEtrinoExecutingNextUri(ctx context.Context, nextUr
 			}
 
 			logger.Debugf("QueryId: %s, slug: %s, etrino query goroutine exit", queryId, slug)
+
+			cancel()
 		}()
 
 		var columns []*interfaces.Column
@@ -515,11 +513,9 @@ func (fs *Service) getDataFromEtrinoExecutingNextUri(ctx context.Context, nextUr
 					goto CacheNotFound
 				}
 
-				if queryType == 2 {
-					nextUri = fmt.Sprintf("%s?targetResultBatchSize=%d", nextUri, fs.appSetting.QuerySetting.DataQuerySize)
-				}
+				nextUri = fmt.Sprintf("%s?targetResultBatchSize=%d", nextUri, fs.appSetting.QuerySetting.DataQuerySize)
 
-				nextData, err := fs.vegaCalculateAccess.NextUriQuery(ctx, nextUri)
+				nextData, err := fs.vegaCalculateAccess.NextUriQuery(queryCtx, nextUri)
 
 				if err != nil {
 					nextUri = ""
@@ -531,10 +527,7 @@ func (fs *Service) getDataFromEtrinoExecutingNextUri(ctx context.Context, nextUr
 
 					if nextData.Data != nil {
 						data = append(data, nextData.Data...)
-
-						if nextUri != "" && queryType == 2 {
-							break
-						}
+						break
 					}
 				}
 			}
@@ -634,7 +627,7 @@ func (fs *Service) handleQueryResult(ctx context.Context, queryType int, timeout
 				chanData := <-resultCache.ResultChan
 				data = append(data, chanData)
 				totalCount++
-				if queryType == 2 && totalCount == batchSize {
+				if totalCount == batchSize {
 					break
 				}
 				if len(resultCache.ResultChan) > 0 {
@@ -644,7 +637,7 @@ func (fs *Service) handleQueryResult(ctx context.Context, queryType int, timeout
 			}
 		}
 
-		if (queryType == 2 && totalCount == batchSize) ||
+		if totalCount == batchSize ||
 			(resultCache.ResultSet == nil && len(resultCache.ResultChan) == 0) {
 			break
 		}
@@ -663,8 +656,8 @@ func (fs *Service) handleQueryResult(ctx context.Context, queryType int, timeout
 		TotalCount: int64(totalCount),
 	}
 
-	// 检查是否还有更多数据
-	if resultCache.ResultSet != nil || len(resultCache.ResultChan) > 0 {
+	// 检查流式查询是否还有更多数据
+	if queryType == 2 && resultCache.ResultSet != nil || len(resultCache.ResultChan) > 0 {
 		resultCache.Token++
 		finalResult.NextUri = fmt.Sprintf("http://%s:%d/api/vega-gateway/v2/fetch/%s/%s/%d",
 			version.ServerName, fs.appSetting.ServerSetting.HttpPort, queryId, slug, resultCache.Token)
