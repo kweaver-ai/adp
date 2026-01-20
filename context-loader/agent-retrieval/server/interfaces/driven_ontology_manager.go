@@ -67,7 +67,9 @@ type SimpleObjectType struct {
 
 // DataProperty Data property structure definition
 type DataProperty struct {
-	Name                string            `json:"name"`                 // Property name. Can only contain lowercase letters, numbers, underscores (_), hyphens (-), and cannot start with underscore or hyphen
+	// Name is the property name. Can only contain lowercase letters, numbers, underscores (_),
+	// hyphens (-), and cannot start with underscore or hyphen
+	Name                string            `json:"name"`
 	DisplayName         string            `json:"display_name"`         // Property display name
 	Type                string            `json:"type"`                 // Property data type. In addition to view field types, there are metric, objective, event, trace, log, operator
 	Comment             string            `json:"comment"`              // Comment
@@ -118,8 +120,8 @@ type RelationType struct {
 	Comment    string   `json:"comment"`     // Comment
 	Score      float64  `json:"_score"`      // Score
 
-	SourceObjectTypeId string `json:"source_object_type_id"`        // Source object type ID
-	TargetObjectTypeId string `json:"target_object_type_id"`        // Target object type ID
+	SourceObjectTypeID string `json:"source_object_type_id"`        // Source object type ID
+	TargetObjectTypeID string `json:"target_object_type_id"`        // Target object type ID
 	SourceObjectType   any    `json:"source_object_type,omitempty"` // Provide name when viewing details
 	TargetObjectType   any    `json:"target_object_type,omitempty"` // Provide name when viewing details
 	MappingRules       any    `json:"mapping_rules"`                // Mapping rules based on type, direct corresponds to []Mapping structure
@@ -135,7 +137,7 @@ type ActionType struct {
 	Comment    string   `json:"comment"`     // Comment
 	Score      float64  `json:"_score"`      // Score
 
-	ObjectTypeId string `json:"object_type_id"` // Object type ID bound to action type
+	ObjectTypeID string `json:"object_type_id"` // Object type ID bound to action type
 }
 
 type KnCondValueFrom string
@@ -203,29 +205,6 @@ type ActionTypeConcepts struct {
 	TotalCount int64         `json:"total_count,omitempty"` // Total count
 }
 
-// OntologyManagerAccess Ontology management interface
-type OntologyManagerAccess interface {
-	// SearchObjectTypes Search object types
-	SearchObjectTypes(ctx context.Context, query *QueryConceptsReq) (objectTypes *ObjectTypeConcepts, err error)
-	// GetObjectTypeDetail Get object type details
-	GetObjectTypeDetail(ctx context.Context, knId string, otIds []string, includeDetail bool) ([]*ObjectType, error)
-
-	// SearchRelationTypes Search relation types
-	SearchRelationTypes(ctx context.Context, query *QueryConceptsReq) (releationTypes *RelationTypeConcepts, err error)
-	// GetRelationTypeDetail Get relation type details
-	GetRelationTypeDetail(ctx context.Context, knId string, rtIDs []string, includeDetail bool) ([]*RelationType, error)
-
-	// SearchActionTypes Search action types
-	SearchActionTypes(ctx context.Context, query *QueryConceptsReq) (actionTypes *ActionTypeConcepts, err error)
-	// GetActionTypeDetail Get action type details
-	GetActionTypeDetail(ctx context.Context, knId string, atIDs []string, includeDetail bool) ([]*ActionType, error)
-
-	// CreateFullBuildOntologyJob Create a full ontology build job
-	CreateFullBuildOntologyJob(ctx context.Context, knID string, req *CreateFullBuildOntologyJobReq) (resp *CreateJobResp, err error)
-	// ListOntologyJobs List ontology jobs with filters
-	ListOntologyJobs(ctx context.Context, knID string, req *ListOntologyJobsReq) (resp *ListOntologyJobsResp, err error)
-}
-
 // OntologyJobState Ontology job state
 type OntologyJobState string
 
@@ -289,4 +268,27 @@ type ListOntologyJobsReq struct {
 type ListOntologyJobsResp struct {
 	Entries   []*OntologyJob `json:"entries"`   // Job list
 	TotalCount int64         `json:"total_count"` // Total count
+}
+
+// OntologyManagerAccess Ontology management interface
+type OntologyManagerAccess interface {
+	// SearchObjectTypes Search object types
+	SearchObjectTypes(ctx context.Context, query *QueryConceptsReq) (objectTypes *ObjectTypeConcepts, err error)
+	// GetObjectTypeDetail Get object type details
+	GetObjectTypeDetail(ctx context.Context, knID string, otIds []string, includeDetail bool) ([]*ObjectType, error)
+
+	// SearchRelationTypes Search relation types
+	SearchRelationTypes(ctx context.Context, query *QueryConceptsReq) (releationTypes *RelationTypeConcepts, err error)
+	// GetRelationTypeDetail Get relation type details
+	GetRelationTypeDetail(ctx context.Context, knID string, rtIDs []string, includeDetail bool) ([]*RelationType, error)
+
+	// SearchActionTypes Search action types
+	SearchActionTypes(ctx context.Context, query *QueryConceptsReq) (actionTypes *ActionTypeConcepts, err error)
+	// GetActionTypeDetail Get action type details
+	GetActionTypeDetail(ctx context.Context, knID string, atIDs []string, includeDetail bool) ([]*ActionType, error)
+
+	// CreateFullBuildOntologyJob Create a full ontology build job
+	CreateFullBuildOntologyJob(ctx context.Context, knID string, req *CreateFullBuildOntologyJobReq) (resp *CreateJobResp, err error)
+	// ListOntologyJobs List ontology jobs with filters
+	ListOntologyJobs(ctx context.Context, knID string, req *ListOntologyJobsReq) (resp *ListOntologyJobsResp, err error)
 }

@@ -1,11 +1,12 @@
 .DEFAULT_GOAL := help
-.PHONY: help generate-mock lint test helm-template ktctl preview build
+.PHONY: help generate-mock lint test test-cover helm-template ktctl preview build
 
 help:
 	@echo "可用目标:"
 	@echo "  generate-mock\t生成mock代码"
 	@echo "  lint\t\t运行代码检查"
 	@echo "  test\t\t执行单元测试"
+	@echo "  test-cover\t执行单元测试并检查覆盖率"
 	@echo "  helm-template\t生成Helm模板"
 	@echo "  ktctl\t\t连接远程集群"
 	@echo "  preview\t预览API文档"
@@ -22,6 +23,12 @@ lint:
 test:
 	@echo "==== 执行测试 ===="
 	go test $(shell go list ./... | grep -v /server/tests/ | grep -v /server/mocks) -gcflags=all=-l -v
+
+test-cover:
+	@echo "==== 执行测试并检查覆盖率 ===="
+	go test $(shell go list ./... | grep -v /server/tests/ | grep -v /server/mocks) -gcflags=all=-l -coverprofile=coverage.out
+	go tool cover -func=coverage.out
+	@go tool cover -func=coverage.out | grep total | awk '{print substr($$3, 1, length($$3)-1)}'
 
 helm-template:
 	@echo "==== 生成Helm模板 ===="

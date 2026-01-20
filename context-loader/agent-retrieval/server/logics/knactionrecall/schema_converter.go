@@ -24,8 +24,115 @@ const (
 	MaxSchemaDepth = 3
 )
 
+// ==================== 通用 Schema 引用解析器 ====================
+// NOTE: 统一 OpenAPI (#/components/schemas/) 和 MCP (#/$defs/) 的 $ref 解析逻辑
+// 两者的核心递归逻辑、循环检测、深度控制、剪枝策略完全一致，
+// 仅引用路径格式和查找位置不同，通过 RefResolver 函数参数化实现复用。
+
+// RefResolver 引用解析器函数类型
+// 作用：根据 $ref 路径查找并返回被引用的 Schema 定义
+// OpenAPI: 从 apiSpec["components"]["schemas"] 查找
+// MCP: 从 inputSchema["$defs"] 查找
+type RefResolver func(refPath string) (map[string]interface{}, error)
+
+// resolveSchemaWithResolver 通用 Schema 解析函数（支持 $ref 引用、循环检测和深度控制）
+// 参数：
+//   - ctx: 上下文
+//   - schema: 待解析的 Schema
+//   - refResolver: 引用解析器（根据 $ref 路径查找定义）
+//   - visitedRefs: 已访问的引用路径（用于循环检测）
+//   - currentDepth: 当前递归深度
+//
+// 返回：解析后的 Schema（$ref 已内联）
+func (s *knActionRecallServiceImpl) resolveSchemaWithResolver(
+	ctx context.Context,
+	schema map[string]interface{},
+	refResolver RefResolver,
+	visitedRefs map[string]bool,
+	currentDepth int,
+) (map[string]interface{}, error) {
+	if schema == nil {
+		return map[string]interface{}{"type": "string"}, nil
+	}
+
+	// 复制 schema 以避免修改原 map
+	resolved := make(map[string]interface{})
+	for k, v := range schema {
+		resolved[k] = v
+	}
+
+	// 1. 处理 $ref 引用
+	if refPath, ok := resolved["$ref"].(string); ok {
+		// 1.1 循环引用检测
+		if visitedRefs[refPath] {
+			s.logger.WithContext(ctx).Debugf("[SchemaResolver] Circular reference detected for %s, pruning", refPath)
+			refSchema, err := refResolver(refPath)
+			if err != nil {
+				return map[string]interface{}{"type": "object"}, nil
+			}
+			return s.pruneSchema(refSchema), nil
+		}
+
+		// 1.2 深度限制检测
+		if currentDepth >= MaxSchemaDepth {
+			s.logger.WithContext(ctx).Debugf("[SchemaResolver] Max depth reached for %s (depth: %d), pruning", refPath, currentDepth)
+			refSchema, err := refResolver(refPath)
+			if err != nil {
+				return map[string]interface{}{"type": "object"}, nil
+			}
+			return s.pruneSchema(refSchema), nil
+		}
+
+		// 1.3 标记为已访问
+		visitedRefs[refPath] = true
+		defer func() { delete(visitedRefs, refPath) }()
+
+		// 1.4 获取引用定义并递归解析（深度 +1）
+		refSchema, err := refResolver(refPath)
+		if err != nil {
+			return nil, fmt.Errorf("failed to resolve $ref %s: %w", refPath, err)
+		}
+		return s.resolveSchemaWithResolver(ctx, refSchema, refResolver, visitedRefs, currentDepth+1)
+	}
+
+	// 2. 处理 properties（递归解析每个属性，深度不变）
+	if props, ok := resolved["properties"].(map[string]interface{}); ok {
+		newProps := make(map[string]interface{})
+		for propName, propDef := range props {
+			if propMap, ok := propDef.(map[string]interface{}); ok {
+				resolvedProp, err := s.resolveSchemaWithResolver(ctx, propMap, refResolver, visitedRefs, currentDepth)
+				if err != nil {
+					s.logger.WithContext(ctx).Warnf("[SchemaResolver] Failed to resolve property %s: %v", propName, err)
+					newProps[propName] = propDef // 降级：保留原值
+				} else {
+					newProps[propName] = resolvedProp
+				}
+			} else {
+				newProps[propName] = propDef
+			}
+		}
+		resolved["properties"] = newProps
+	}
+
+	// 3. 处理 array items（递归解析，深度不变）
+	if resolved["type"] == "array" {
+		if items, ok := resolved["items"].(map[string]interface{}); ok {
+			resolvedItems, err := s.resolveSchemaWithResolver(ctx, items, refResolver, visitedRefs, currentDepth)
+			if err != nil {
+				s.logger.WithContext(ctx).Warnf("[SchemaResolver] Failed to resolve array items: %v", err)
+			} else {
+				resolved["items"] = resolvedItems
+			}
+		}
+	}
+
+	return resolved, nil
+}
+
 // convertSchemaToFunctionCall 将 OpenAPI Schema 转换为 OpenAI Function Call Schema
 // 改进：保持分层结构（header/path/query/body），而不是扁平化
+//
+//nolint:unparam // 保持接口一致性，error 返回用于后续扩展
 func (s *knActionRecallServiceImpl) convertSchemaToFunctionCall(ctx context.Context, apiSpec map[string]interface{}) (map[string]interface{}, error) {
 	// 使用分层结构：header/path/query/body
 	properties := map[string]interface{}{
@@ -185,7 +292,13 @@ func (s *knActionRecallServiceImpl) convertSchemaToFunctionCall(ctx context.Cont
 // - 解析 properties 中的属性时，深度不变（同一层级）
 // - 达到最大深度时，执行剪枝（保留类型和原始描述，移除 properties）
 // currentDepth: 当前递归深度，用于控制循环引用的展开深度
-func (s *knActionRecallServiceImpl) resolveSchema(ctx context.Context, schema interface{}, apiSpec map[string]interface{}, visitedRefs map[string]bool, currentDepth int) (map[string]interface{}, error) {
+func (s *knActionRecallServiceImpl) resolveSchema(
+	ctx context.Context,
+	schema interface{},
+	apiSpec map[string]interface{},
+	visitedRefs map[string]bool,
+	currentDepth int,
+) (map[string]interface{}, error) {
 	if schema == nil {
 		return map[string]interface{}{"type": "string"}, nil
 	}
@@ -362,7 +475,13 @@ func (s *knActionRecallServiceImpl) pruneSchema(schema map[string]interface{}) m
 }
 
 // resolveDollarRef 解析 $ref 引用（完整实现，支持循环引用检测和深度控制）
-func (s *knActionRecallServiceImpl) resolveDollarRef(ctx context.Context, refPath string, apiSpec map[string]interface{}, visitedRefs map[string]bool, currentDepth int) (map[string]interface{}, error) {
+func (s *knActionRecallServiceImpl) resolveDollarRef(
+	ctx context.Context,
+	refPath string,
+	apiSpec map[string]interface{},
+	visitedRefs map[string]bool,
+	currentDepth int,
+) (map[string]interface{}, error) {
 	// 获取被引用的 schema
 	schema, err := s.getReferencedSchema(refPath, apiSpec)
 	if err != nil {
@@ -413,7 +532,12 @@ func (s *knActionRecallServiceImpl) buildPropertyDefinition(schema map[string]in
 }
 
 // mergeSchemaProperties 合并 schema 的 properties 到目标 properties
-func (s *knActionRecallServiceImpl) mergeSchemaProperties(ctx context.Context, targetProps map[string]interface{}, schema map[string]interface{}, apiSpec map[string]interface{}, visitedRefs map[string]bool, currentDepth int) {
+func (s *knActionRecallServiceImpl) mergeSchemaProperties(
+	ctx context.Context,
+	targetProps, schema, apiSpec map[string]interface{},
+	visitedRefs map[string]bool,
+	currentDepth int,
+) {
 	if props, ok := schema["properties"].(map[string]interface{}); ok {
 		for propName, propDef := range props {
 			resolvedProp, err := s.resolveSchema(ctx, propDef, apiSpec, visitedRefs, currentDepth)
@@ -427,7 +551,10 @@ func (s *knActionRecallServiceImpl) mergeSchemaProperties(ctx context.Context, t
 }
 
 // mapFixedParams 映射固定参数到 header/path/query/body
-func (s *knActionRecallServiceImpl) mapFixedParams(ctx context.Context, parameters map[string]interface{}, apiSpec map[string]interface{}) interfaces.KnFixedParams {
+func (s *knActionRecallServiceImpl) mapFixedParams(
+	_ context.Context,
+	parameters, apiSpec map[string]interface{},
+) interfaces.KnFixedParams {
 	fixedParams := interfaces.KnFixedParams{
 		Header: make(map[string]interface{}),
 		Path:   make(map[string]interface{}),
@@ -491,4 +618,50 @@ func isHeaderParam(key string) bool {
 	}
 
 	return false
+}
+
+// convertMCPSchemaToFunctionCall 将 MCP JSON Schema 转换为 OpenAI Function Call Schema
+// NOTE: 使用通用的 resolveSchemaWithResolver 函数，通过 RefResolver 参数化 $defs 查找逻辑
+func (s *knActionRecallServiceImpl) convertMCPSchemaToFunctionCall(ctx context.Context, inputSchema map[string]interface{}) (map[string]interface{}, error) {
+	// OpenAI function call schema 期望根节点有 type=object 和 properties
+	// MCP schema 通常已经是 JSON Schema，但可能包含 $defs
+	// 我们需要解析 $defs，并确保根结构符合 OpenAI 要求
+
+	visitedRefs := make(map[string]bool)
+
+	// 提取 rootDefs ($defs)
+	rootDefs := make(map[string]interface{})
+	if defs, ok := inputSchema["$defs"].(map[string]interface{}); ok {
+		rootDefs = defs
+	}
+
+	// 构建 MCP 专用的引用解析器
+	// MCP 引用格式: #/$defs/SchemaName
+	mcpRefResolver := func(refPath string) (map[string]interface{}, error) {
+		prefix := "#/$defs/"
+		if !strings.HasPrefix(refPath, prefix) {
+			return nil, fmt.Errorf("unsupported MCP $ref path format: %s (only #/$defs/* is supported)", refPath)
+		}
+		name := strings.TrimPrefix(refPath, prefix)
+		if def, ok := rootDefs[name].(map[string]interface{}); ok {
+			return def, nil
+		}
+		return nil, fmt.Errorf("MCP schema definition not found: %s", name)
+	}
+
+	// 使用通用解析器解析 schema
+	resolvedSchema, err := s.resolveSchemaWithResolver(ctx, inputSchema, mcpRefResolver, visitedRefs, 0)
+	if err != nil {
+		return nil, err
+	}
+
+	// 确保有 type=object (通常 MCP schema 根就是 object，但为了保险)
+	if _, ok := resolvedSchema["type"]; !ok {
+		resolvedSchema["type"] = "object"
+	}
+
+	// 移除 $defs (因为已经解析并内联了)
+	delete(resolvedSchema, "$defs")
+
+	return resolvedSchema, nil
 }

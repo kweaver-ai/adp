@@ -3,20 +3,21 @@
 // Licensed under the Apache License, Version 2.0.
 // See the LICENSE file in the project root for details.
 
+// Package knqueryobjectinstance provides HTTP handler for object instance query operations.
 package knqueryobjectinstance
 
 import (
 	"net/http"
 	"sync"
 
+	"github.com/creasty/defaults"
+	"github.com/gin-gonic/gin"
+	"github.com/go-playground/validator/v10"
 	"github.com/kweaver-ai/adp/context-loader/agent-retrieval/server/drivenadapters"
 	"github.com/kweaver-ai/adp/context-loader/agent-retrieval/server/infra/config"
 	"github.com/kweaver-ai/adp/context-loader/agent-retrieval/server/infra/errors"
 	"github.com/kweaver-ai/adp/context-loader/agent-retrieval/server/infra/rest"
 	"github.com/kweaver-ai/adp/context-loader/agent-retrieval/server/interfaces"
-	"github.com/creasty/defaults"
-	"github.com/gin-gonic/gin"
-	"github.com/go-playground/validator/v10"
 )
 
 // KnQueryObjectInstanceHandler 查询对象实例处理器

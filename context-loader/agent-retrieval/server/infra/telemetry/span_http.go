@@ -24,6 +24,13 @@ import (
 
 var clearUserPassRe = regexp.MustCompile(`(://)[^/]*@`)
 
+const (
+	// maxHeaderLogSize 请求头日志记录最大字节数
+	maxHeaderLogSize = 4096
+	// maxBodyLogSize 请求体日志记录最大字节数
+	maxBodyLogSize = 2048
+)
+
 // HTTPRequest 发起HTTP请求
 func HTTPRequest(ctx context.Context, req *http.Request, fn func(req *http.Request) (*http.Response, error)) (rsp *http.Response, err error) {
 	tracer := otel.GetTracerProvider()
@@ -50,8 +57,8 @@ func HTTPRequest(ctx context.Context, req *http.Request, fn func(req *http.Reque
 		if req.Header != nil {
 			headerBytes, _ := json.Marshal(req.Header)
 			headerStr := string(headerBytes)
-			if len(headerStr) > 4096 {
-				headerStr = headerStr[:4096] + "...[truncated]"
+			if len(headerStr) > maxHeaderLogSize {
+				headerStr = headerStr[:maxHeaderLogSize] + "...[truncated]"
 			}
 			span.SetAttributes(attribute.Key("http.request_headers").String(headerStr))
 		}
@@ -61,8 +68,8 @@ func HTTPRequest(ctx context.Context, req *http.Request, fn func(req *http.Reque
 			bodyBytes, _ := io.ReadAll(req.Body)
 			if len(bodyBytes) > 0 {
 				bodyStr := string(bodyBytes)
-				if len(bodyStr) > 2048 {
-					bodyStr = bodyStr[:2048] + "...[truncated]"
+				if len(bodyStr) > maxBodyLogSize {
+					bodyStr = bodyStr[:maxBodyLogSize] + "...[truncated]"
 				}
 				span.SetAttributes(attribute.Key("http.request_body").String(bodyStr))
 				// 重置Body以便后续读取

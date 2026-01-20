@@ -3,6 +3,7 @@
 // Licensed under the Apache License, Version 2.0.
 // See the LICENSE file in the project root for details.
 
+// Package knlogicpropertyresolver provides logic property resolver service for knowledge network.
 package knlogicpropertyresolver
 
 import (
@@ -32,7 +33,7 @@ func NewDebugCollector() *DebugCollector {
 }
 
 // AddPropertyType 添加属性类型
-func (dc *DebugCollector) AddPropertyType(propertyName string, propertyType string) {
+func (dc *DebugCollector) AddPropertyType(propertyName, propertyType string) {
 	dc.propertyTypes[propertyName] = propertyType
 }
 
@@ -82,7 +83,7 @@ func (dc *DebugCollector) RecordAgentResponseMissingParams(
 }
 
 // RecordAgentResponseError 记录 Agent 错误响应（直接存储 Agent 响应）
-func (dc *DebugCollector) RecordAgentResponseError(propertyName string, errorMsg string) {
+func (dc *DebugCollector) RecordAgentResponseError(propertyName, errorMsg string) {
 	// 直接存储 Agent 响应：失败时返回 _error 字段
 	dc.agentResponses[propertyName] = &interfaces.AgentResponseDebugInfo{
 		Error: errorMsg,
