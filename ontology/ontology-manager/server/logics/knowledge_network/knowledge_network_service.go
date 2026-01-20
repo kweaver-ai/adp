@@ -1078,18 +1078,19 @@ func (kns *knowledgeNetworkService) GetRelationTypePaths(ctx context.Context,
 			// 获取当前节点的信息（按需查询）
 			if currentNode.OTName == "" {
 				// 若currentNode.OTID不存在，此函数会报错： objetc type not found
-				objectType, err := kns.ots.GetObjectTypesByIDs(ctx, nil, query.KNID, query.Branch, []string{currentNode.OTID})
+				objectType, err := kns.ots.GetObjectTypeByID(ctx, nil, query.KNID, query.Branch, currentNode.OTID)
 				if err != nil {
 					return nil, err
 				}
 				currentNode = interfaces.ObjectTypeWithKeyField{
-					OTID:            objectType[0].OTID,
-					OTName:          objectType[0].OTName,
-					DataSource:      objectType[0].DataSource,
-					DataProperties:  objectType[0].DataProperties,
-					LogicProperties: objectType[0].LogicProperties,
-					PrimaryKeys:     objectType[0].PrimaryKeys,
-					DisplayKey:      objectType[0].DisplayKey,
+					OTID:            objectType.OTID,
+					OTName:          objectType.OTName,
+					DataSource:      objectType.DataSource,
+					DataProperties:  objectType.DataProperties,
+					LogicProperties: objectType.LogicProperties,
+					PrimaryKeys:     objectType.PrimaryKeys,
+					DisplayKey:      objectType.DisplayKey,
+					IncrementalKey:  objectType.IncrementalKey,
 				}
 				currentPath.ObjectTypes[len(currentPath.ObjectTypes)-1] = currentNode
 			}

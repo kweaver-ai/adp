@@ -156,7 +156,7 @@ func (je *jobExecutor) AddJob(ctx context.Context, jobInfo *interfaces.JobInfo) 
 	for _, taskInfo := range jobInfo.TaskInfos {
 		switch taskInfo.ConceptType {
 		case interfaces.MODULE_TYPE_OBJECT_TYPE:
-			ot, err := je.ota.GetObjectTypeByID(ctx, jobInfo.KNID, jobInfo.Branch, taskInfo.ConceptID)
+			ot, err := je.ota.GetObjectTypeByID(ctx, nil, jobInfo.KNID, jobInfo.Branch, taskInfo.ConceptID)
 			if err != nil {
 				return err
 			}

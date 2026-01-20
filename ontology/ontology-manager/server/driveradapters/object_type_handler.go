@@ -471,7 +471,7 @@ func (r *restHandler) UpdateDataProperties(c *gin.Context) {
 	span.SetAttributes(attr.Key("ot_id").String(otID))
 
 	// 先按id获取原对象
-	objectType, err := r.ots.GetObjectTypeByID(ctx, knID, branch, otID)
+	objectType, err := r.ots.GetObjectTypeByID(ctx, nil, knID, branch, otID)
 	if err != nil {
 		httpErr := err.(*rest.HTTPError)
 		// 设置 trace 的错误信息的 attributes

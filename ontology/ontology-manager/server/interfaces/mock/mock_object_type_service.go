@@ -114,18 +114,18 @@ func (mr *MockObjectTypeServiceMockRecorder) GetAllObjectTypesByKnID(ctx, knID, 
 }
 
 // GetObjectTypeByID mocks base method.
-func (m *MockObjectTypeService) GetObjectTypeByID(ctx context.Context, knID, branch, otID string) (*interfaces.ObjectType, error) {
+func (m *MockObjectTypeService) GetObjectTypeByID(ctx context.Context, tx *sql.Tx, knID, branch, otID string) (*interfaces.ObjectType, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetObjectTypeByID", ctx, knID, branch, otID)
+	ret := m.ctrl.Call(m, "GetObjectTypeByID", ctx, tx, knID, branch, otID)
 	ret0, _ := ret[0].(*interfaces.ObjectType)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetObjectTypeByID indicates an expected call of GetObjectTypeByID.
-func (mr *MockObjectTypeServiceMockRecorder) GetObjectTypeByID(ctx, knID, branch, otID interface{}) *gomock.Call {
+func (mr *MockObjectTypeServiceMockRecorder) GetObjectTypeByID(ctx, tx, knID, branch, otID interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetObjectTypeByID", reflect.TypeOf((*MockObjectTypeService)(nil).GetObjectTypeByID), ctx, knID, branch, otID)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetObjectTypeByID", reflect.TypeOf((*MockObjectTypeService)(nil).GetObjectTypeByID), ctx, tx, knID, branch, otID)
 }
 
 // GetObjectTypeIDsByKnID mocks base method.
