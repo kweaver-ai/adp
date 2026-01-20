@@ -46,8 +46,10 @@ type DataView struct {
 
 // 简单的视图结构，列表查询接口使用
 type DataScopeAdvancedParams struct {
-	HasDataScopeSQLNode bool `json:"-"` // 是否包含sql节点
-	HasStar             bool `json:"-"` // 是否有 *
+	HasDataScopeSQLNode   bool   `json:"-"` // 是否包含sql节点
+	HasStar               bool   `json:"-"` // 是否有 *
+	IsSingleSource        bool   `json:"-"` // 自定义视图的原子视图是否来自同一个数据源
+	DataScopeDataSourceID string `json:"-"` // 自定义视图数据源ID
 }
 
 // DataScopeNode 表示数据作用域图中的节点
@@ -73,13 +75,10 @@ type DataScopeNode struct {
 
 // 节点类型为view的节点配置
 type ViewNodeCfg struct {
-	ViewID string `json:"view_id" mapstructure:"view_id"`
-	// TechnicalName string                `json:"technical_name" mapstructure:"technical_name"`
+	ViewID   string        `json:"view_id" mapstructure:"view_id"`
 	Filters  *cond.CondCfg `json:"filters,omitempty" mapstructure:"filters"`
 	Distinct Distinct      `json:"distinct" mapstructure:"distinct"`
 	View     *DataView     `json:"view,omitempty" mapstructure:"view"`
-	// ViewTableName string                `json:"meta_table_name" mapstructure:"meta_table_name"`
-	// FieldsMap map[string]*ViewField `json:"fields_map" mapstructure:"fields_map"` // 存储原子视图的字段列表（对应metadata全部字段）
 }
 
 type Distinct struct {

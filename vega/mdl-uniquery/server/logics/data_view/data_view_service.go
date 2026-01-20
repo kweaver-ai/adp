@@ -589,6 +589,31 @@ func (dvs *dataViewService) GetDataViewByID(ctx context.Context, viewID string, 
 
 	view := views[0]
 
+	// 补充自定义视图的来源原子视图是否来自同一个数据源
+	if includeDataScopeView && view.Type == interfaces.ViewType_Custom {
+		dataSourceIDMap := make(map[string]struct{})
+		for _, node := range view.DataScope {
+			if node.Type == interfaces.DataScopeNodeType_View {
+				var viewNodeConfig interfaces.ViewNodeCfg
+				err := mapstructure.Decode(node.Config, &viewNodeConfig)
+				if err != nil {
+					logger.Errorf("Decode view node config failed, err: %v", err)
+					return nil, err
+				}
+
+				if viewNodeConfig.View == nil {
+					logger.Errorf("View node config view is nil")
+					return nil, fmt.Errorf("view node config view is nil")
+				}
+
+				dataSourceIDMap[viewNodeConfig.View.DataSourceID] = struct{}{}
+				view.DataScopeAdvancedParams.DataScopeDataSourceID = viewNodeConfig.View.DataSourceID
+			}
+		}
+
+		view.IsSingleSource = len(dataSourceIDMap) == 1
+	}
+
 	return view, nil
 }
 
@@ -871,12 +896,12 @@ func (dvs *dataViewService) queryByDSL(ctx context.Context, query interfaces.Vie
 
 	// 向vega执行dsl查询
 	fetchParams := &interfaces.FetchVegaDataParams{
-		ViewType:     view.Type,
-		QueryType:    interfaces.QueryType_DSL,
-		DataSourceID: view.DataSourceID,
-		CatalogName:  catalogName,
-		TableNames:   indices,
-		Dsl:          dsl,
+		IsSameDataSource: isSameDataSource4Query(view),
+		QueryType:        interfaces.QueryType_DSL,
+		DataSourceID:     getDataSourceID4Query(view),
+		CatalogName:      catalogName,
+		TableNames:       indices,
+		Dsl:              dsl,
 	}
 	dataBatch, err := dvs.vgAccess.FetchDataNoUnmarshal(ctx, fetchParams)
 	if err != nil {
@@ -899,7 +924,6 @@ func (dvs *dataViewService) queryByDSL(ctx context.Context, query interfaces.Vie
 func (dvs *dataViewService) queryBySQL(ctx context.Context, query interfaces.ViewQueryInterface,
 	view *interfaces.DataView) (resBytes []byte, total int64, err error) {
 	commonParams := query.GetCommonParams()
-	// previewDataScopeNodeID := query.GetPreviewDataScopeNodeID()
 
 	// 优先使用查询接口指定的 sql
 	selectSql := commonParams.SqlStr
@@ -969,12 +993,12 @@ func (dvs *dataViewService) queryBySQL(ctx context.Context, query interfaces.Vie
 		countSql := buildCountSql(sqlStr)
 		logger.Infof("get total count sqlStr is %s", countSql)
 		result, err := dvs.vgAccess.FetchDataNoUnmarshal(ctx, &interfaces.FetchVegaDataParams{
-			ViewType:       view.Type,
-			QueryType:      interfaces.QueryType_SQL,
-			DataSourceID:   view.DataSourceID,
-			SqlStr:         countSql,
-			NextUri:        "",
-			UseSearchAfter: false,
+			IsSameDataSource: isSameDataSource4Query(view),
+			QueryType:        interfaces.QueryType_SQL,
+			DataSourceID:     getDataSourceID4Query(view),
+			SqlStr:           countSql,
+			NextUri:          "",
+			UseSearchAfter:   false,
 		})
 		if err != nil {
 			return nil, 0, rest.NewHTTPError(ctx, http.StatusInternalServerError, rest.PublicError_InternalServerError).
@@ -1025,14 +1049,14 @@ func (dvs *dataViewService) queryBySQL(ctx context.Context, query interfaces.Vie
 	timeoutSecond := int64(timeout.Seconds())
 	nextUri := strings.Join(keys, "/")
 	fetchParams := &interfaces.FetchVegaDataParams{
-		ViewType:       view.Type,
-		QueryType:      interfaces.QueryType_SQL,
-		DataSourceID:   view.DataSourceID,
-		NextUri:        nextUri,
-		SqlStr:         finalSql,
-		UseSearchAfter: commonParams.UseSearchAfter,
-		Limit:          commonParams.Limit,
-		Timeout:        timeoutSecond,
+		IsSameDataSource: isSameDataSource4Query(view),
+		QueryType:        interfaces.QueryType_SQL,
+		DataSourceID:     getDataSourceID4Query(view),
+		NextUri:          nextUri,
+		SqlStr:           finalSql,
+		UseSearchAfter:   commonParams.UseSearchAfter,
+		Limit:            commonParams.Limit,
+		Timeout:          timeoutSecond,
 	}
 	dataBatch, err := dvs.vgAccess.FetchDataNoUnmarshal(ctx, fetchParams)
 	if err != nil {

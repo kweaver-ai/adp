@@ -15,7 +15,8 @@ const (
 )
 
 type FetchVegaDataParams struct {
-	ViewType       string
+	IsSameDataSource bool
+	// ViewType         string
 	QueryType      string
 	DataSourceID   string
 	NextUri        string
