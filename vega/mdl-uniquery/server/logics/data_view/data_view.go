@@ -22,7 +22,7 @@ import (
 )
 
 // 判断视图的数据源是否来自同一个数据源
-func isSingleDataSource4Query(view *interfaces.DataView) bool {
+func isSingleDataSource(view *interfaces.DataView) bool {
 	if view.Type == interfaces.ViewType_Atomic {
 		return true
 	}
@@ -34,8 +34,8 @@ func isSingleDataSource4Query(view *interfaces.DataView) bool {
 	return false
 }
 
-// 获取视图的dataSourceID
-func getDataSourceID4Query(view *interfaces.DataView) string {
+// 获取查询vega数据的dataSourceID
+func getQueryDataSourceID(view *interfaces.DataView) string {
 	if view.Type == interfaces.ViewType_Atomic {
 		return view.DataSourceID
 	}

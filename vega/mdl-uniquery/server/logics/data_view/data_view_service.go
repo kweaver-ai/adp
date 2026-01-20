@@ -896,9 +896,9 @@ func (dvs *dataViewService) queryByDSL(ctx context.Context, query interfaces.Vie
 
 	// 向vega执行dsl查询
 	fetchParams := &interfaces.FetchVegaDataParams{
-		IsSingleDataSource: isSingleDataSource4Query(view),
+		IsSingleDataSource: isSingleDataSource(view),
 		QueryType:          interfaces.QueryType_DSL,
-		DataSourceID:       getDataSourceID4Query(view),
+		DataSourceID:       getQueryDataSourceID(view),
 		CatalogName:        catalogName,
 		TableNames:         indices,
 		Dsl:                dsl,
@@ -993,9 +993,9 @@ func (dvs *dataViewService) queryBySQL(ctx context.Context, query interfaces.Vie
 		countSql := buildCountSql(sqlStr)
 		logger.Infof("get total count sqlStr is %s", countSql)
 		result, err := dvs.vgAccess.FetchDataNoUnmarshal(ctx, &interfaces.FetchVegaDataParams{
-			IsSingleDataSource: isSingleDataSource4Query(view),
+			IsSingleDataSource: isSingleDataSource(view),
 			QueryType:          interfaces.QueryType_SQL,
-			DataSourceID:       getDataSourceID4Query(view),
+			DataSourceID:       getQueryDataSourceID(view),
 			SqlStr:             countSql,
 			NextUri:            "",
 			UseSearchAfter:     false,
@@ -1006,7 +1006,7 @@ func (dvs *dataViewService) queryBySQL(ctx context.Context, query interfaces.Vie
 		}
 
 		// 读取count的结果
-		total, err = readCountResult(ctx, isSingleDataSource4Query(view), result)
+		total, err = readCountResult(ctx, isSingleDataSource(view), result)
 		if err != nil {
 			return nil, 0, rest.NewHTTPError(ctx, http.StatusInternalServerError, rest.PublicError_InternalServerError).
 				WithErrorDetails(err.Error())
@@ -1049,9 +1049,9 @@ func (dvs *dataViewService) queryBySQL(ctx context.Context, query interfaces.Vie
 	timeoutSecond := int64(timeout.Seconds())
 	nextUri := strings.Join(keys, "/")
 	fetchParams := &interfaces.FetchVegaDataParams{
-		IsSingleDataSource: isSingleDataSource4Query(view),
+		IsSingleDataSource: isSingleDataSource(view),
 		QueryType:          interfaces.QueryType_SQL,
-		DataSourceID:       getDataSourceID4Query(view),
+		DataSourceID:       getQueryDataSourceID(view),
 		NextUri:            nextUri,
 		SqlStr:             finalSql,
 		UseSearchAfter:     commonParams.UseSearchAfter,
@@ -1583,7 +1583,7 @@ func convertToViewUniResponseBySQL(ctx context.Context, query interfaces.ViewQue
 			rest.PublicError_InternalServerError).WithErrorDetails(err.Error())
 	}
 
-	docs, err := parseSQLDocuments(rootNode, isSingleDataSource4Query(view))
+	docs, err := parseSQLDocuments(rootNode, isSingleDataSource(view))
 	if err != nil {
 		return nil, rest.NewHTTPError(ctx, http.StatusInternalServerError,
 			uerrors.Uniquery_DataView_InternalError_GetDocumentsFailed).WithErrorDetails(err.Error())
@@ -1651,7 +1651,7 @@ func convertToViewUniResponseBySQL(ctx context.Context, query interfaces.ViewQue
 
 	var searchAfter []any
 	if query.GetCommonParams().UseSearchAfter {
-		searchAfter = extractSearchAfterParams(rootNode, isSingleDataSource4Query(view))
+		searchAfter = extractSearchAfterParams(rootNode, isSingleDataSource(view))
 	}
 
 	includeView := query.GetQueryParams()[interfaces.QueryParam_IncludeView].(bool)
