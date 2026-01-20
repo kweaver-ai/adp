@@ -32,7 +32,7 @@ const (
 	MAX_LIMIT              = 1000
 	NO_LIMIT               = "-1"
 	DEFAULT_SIMPLE_INFO    = "false"
-	COMMENT_MAX_LENGTH     = 255
+	COMMENT_MAX_LENGTH     = 1000
 	NAME_INVALID_CHARACTER = "/:?\\\"<>|：？‘’“”！《》,#[]{}%&*$^!=.'"
 
 	TAGS_MAX_NUMBER = 5

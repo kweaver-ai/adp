@@ -87,7 +87,7 @@ func validateMappingRules(ctx context.Context, relationType string, mappingRules
 // 校验直接关联的mapping_rules
 func validateDirectMappingRules(ctx context.Context, mappingRules any) error {
 	// mappingRules 先转成 []any 再解码成 []interfaces.Mapping
-	mappingArray, ok := mappingRules.([]any)
+	mappingArray, ok := mappingRules.([]map[string]any)
 	if !ok {
 		return rest.NewHTTPError(ctx, http.StatusBadRequest, oerrors.OntologyManager_RelationType_InvalidParameter).
 			WithErrorDetails("直接关联的 mapping_rules 格式不正确，应为 Mapping 数组")

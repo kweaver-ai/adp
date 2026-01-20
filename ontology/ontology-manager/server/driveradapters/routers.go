@@ -147,11 +147,10 @@ func (r *restHandler) RegisterPublic(c *gin.Engine) {
 		apiInV1.GET("/knowledge-networks/:kn_id/action-types/:at_ids", r.GetActionTypesByIn)
 
 		// 任务管理
-		apiV1.POST("/knowledge-networks/:kn_id/jobs", r.verifyJsonContentTypeMiddleWare(), r.CreateJobByIn)
-		apiV1.DELETE("/knowledge-networks/:kn_id/jobs/:job_ids", r.DeleteJobsByIn)
-		apiV1.GET("/knowledge-networks/:kn_id/jobs", r.ListJobsByIn)
-		apiV1.GET("/knowledge-networks/:kn_id/jobs/:job_id/tasks", r.ListTasksByIn)
-
+		apiInV1.POST("/knowledge-networks/:kn_id/jobs", r.verifyJsonContentTypeMiddleWare(), r.CreateJobByIn)
+		apiInV1.DELETE("/knowledge-networks/:kn_id/jobs/:job_ids", r.DeleteJobsByIn)
+		apiInV1.GET("/knowledge-networks/:kn_id/jobs", r.ListJobsByIn)
+		apiInV1.GET("/knowledge-networks/:kn_id/jobs/:job_id/tasks", r.ListTasksByIn)
 	}
 
 	logger.Info("RestHandler RegisterPublic")

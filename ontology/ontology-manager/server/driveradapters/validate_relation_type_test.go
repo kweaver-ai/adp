@@ -68,10 +68,10 @@ func Test_ValidateRelationType(t *testing.T) {
 					RTID:   "rt1",
 					RTName: "relation1",
 					Type:   "",
-					MappingRules: []interfaces.Mapping{
+					MappingRules: []map[string]any{
 						{
-							SourceProp: interfaces.SimpleProperty{Name: "prop1"},
-							TargetProp: interfaces.SimpleProperty{Name: "prop2"},
+							"source_property": map[string]string{"name": "prop1"},
+							"target_property": map[string]string{"name": "prop2"},
 						},
 					},
 				},
@@ -86,10 +86,10 @@ func Test_ValidateRelationType(t *testing.T) {
 					RTID:   "rt1",
 					RTName: "relation1",
 					Type:   interfaces.RELATION_TYPE_DIRECT,
-					MappingRules: []interfaces.Mapping{
+					MappingRules: []map[string]any{
 						{
-							SourceProp: interfaces.SimpleProperty{Name: "prop1"},
-							TargetProp: interfaces.SimpleProperty{Name: "prop2"},
+							"source_property": map[string]string{"name": "prop1"},
+							"target_property": map[string]string{"name": "prop2"},
 						},
 					},
 				},
@@ -104,10 +104,10 @@ func Test_ValidateRelationType(t *testing.T) {
 					RTID:   "rt1",
 					RTName: "relation1",
 					Type:   interfaces.RELATION_TYPE_DIRECT,
-					MappingRules: []interfaces.Mapping{
+					MappingRules: []map[string]any{
 						{
-							SourceProp: interfaces.SimpleProperty{Name: ""},
-							TargetProp: interfaces.SimpleProperty{Name: "prop2"},
+							"source_property": map[string]string{"name": ""},
+							"target_property": map[string]string{"name": "prop2"},
 						},
 					},
 				},
@@ -122,10 +122,10 @@ func Test_ValidateRelationType(t *testing.T) {
 					RTID:   "rt1",
 					RTName: "relation1",
 					Type:   interfaces.RELATION_TYPE_DIRECT,
-					MappingRules: []interfaces.Mapping{
+					MappingRules: []map[string]any{
 						{
-							SourceProp: interfaces.SimpleProperty{Name: "prop1"},
-							TargetProp: interfaces.SimpleProperty{Name: ""},
+							"source_property": map[string]string{"name": "prop1"},
+							"target_property": map[string]string{"name": ""},
 						},
 					},
 				},
@@ -137,9 +137,9 @@ func Test_ValidateRelationType(t *testing.T) {
 		Convey("Failed with direct mapping rules invalid format\n", func() {
 			rt := &interfaces.RelationType{
 				RelationTypeWithKeyField: interfaces.RelationTypeWithKeyField{
-					RTID:   "rt1",
-					RTName: "relation1",
-					Type:   interfaces.RELATION_TYPE_DIRECT,
+					RTID:         "rt1",
+					RTName:       "relation1",
+					Type:         interfaces.RELATION_TYPE_DIRECT,
 					MappingRules: "invalid_format",
 				},
 			}
@@ -153,21 +153,21 @@ func Test_ValidateRelationType(t *testing.T) {
 					RTID:   "rt1",
 					RTName: "relation1",
 					Type:   interfaces.RELATION_TYPE_DATA_VIEW,
-					MappingRules: interfaces.InDirectMapping{
-						BackingDataSource: &interfaces.ResourceInfo{
-							Type: interfaces.RELATION_TYPE_DATA_VIEW,
-							ID:   "dv1",
+					MappingRules: map[string]any{
+						"backing_data_source": map[string]any{
+							"type": interfaces.RELATION_TYPE_DATA_VIEW,
+							"id":   "dv1",
 						},
-						SourceMappingRules: []interfaces.Mapping{
+						"source_mapping_rules": []map[string]any{
 							{
-								SourceProp: interfaces.SimpleProperty{Name: "prop1"},
-								TargetProp: interfaces.SimpleProperty{Name: "bridge1"},
+								"source_property": map[string]string{"name": "prop1"},
+								"target_property": map[string]string{"name": "bridge1"},
 							},
 						},
-						TargetMappingRules: []interfaces.Mapping{
+						"target_mapping_rules": []map[string]any{
 							{
-								SourceProp: interfaces.SimpleProperty{Name: "bridge1"},
-								TargetProp: interfaces.SimpleProperty{Name: "prop2"},
+								"source_property": map[string]string{"name": "bridge1"},
+								"target_property": map[string]string{"name": "prop2"},
 							},
 						},
 					},
@@ -183,8 +183,8 @@ func Test_ValidateRelationType(t *testing.T) {
 					RTID:   "rt1",
 					RTName: "relation1",
 					Type:   interfaces.RELATION_TYPE_DATA_VIEW,
-					MappingRules: interfaces.InDirectMapping{
-						BackingDataSource: nil,
+					MappingRules: map[string]any{
+						"backing_data_source": map[string]any{},
 					},
 				},
 			}
@@ -198,10 +198,10 @@ func Test_ValidateRelationType(t *testing.T) {
 					RTID:   "rt1",
 					RTName: "relation1",
 					Type:   interfaces.RELATION_TYPE_DATA_VIEW,
-					MappingRules: interfaces.InDirectMapping{
-						BackingDataSource: &interfaces.ResourceInfo{
-							Type: "",
-							ID:   "dv1",
+					MappingRules: map[string]any{
+						"backing_data_source": map[string]any{
+							"type": "",
+							"id":   "dv1",
 						},
 					},
 				},
@@ -216,10 +216,10 @@ func Test_ValidateRelationType(t *testing.T) {
 					RTID:   "rt1",
 					RTName: "relation1",
 					Type:   interfaces.RELATION_TYPE_DATA_VIEW,
-					MappingRules: interfaces.InDirectMapping{
-						BackingDataSource: &interfaces.ResourceInfo{
-							Type: "invalid_type",
-							ID:   "dv1",
+					MappingRules: map[string]any{
+						"backing_data_source": map[string]any{
+							"type": "invalid_type",
+							"id":   "dv1",
 						},
 					},
 				},
@@ -234,10 +234,10 @@ func Test_ValidateRelationType(t *testing.T) {
 					RTID:   "rt1",
 					RTName: "relation1",
 					Type:   interfaces.RELATION_TYPE_DATA_VIEW,
-					MappingRules: interfaces.InDirectMapping{
-						BackingDataSource: &interfaces.ResourceInfo{
-							Type: interfaces.RELATION_TYPE_DATA_VIEW,
-							ID:   "",
+					MappingRules: map[string]any{
+						"backing_data_source": map[string]any{
+							"type": interfaces.RELATION_TYPE_DATA_VIEW,
+							"id":   "",
 						},
 					},
 				},
@@ -252,12 +252,12 @@ func Test_ValidateRelationType(t *testing.T) {
 					RTID:   "rt1",
 					RTName: "relation1",
 					Type:   interfaces.RELATION_TYPE_DATA_VIEW,
-					MappingRules: interfaces.InDirectMapping{
-						BackingDataSource: &interfaces.ResourceInfo{
-							Type: interfaces.RELATION_TYPE_DATA_VIEW,
-							ID:   "dv1",
+					MappingRules: map[string]any{
+						"backing_data_source": map[string]any{
+							"type": interfaces.RELATION_TYPE_DATA_VIEW,
+							"id":   "dv1",
 						},
-						SourceMappingRules: []interfaces.Mapping{},
+						"source_mapping_rules": []map[string]any{},
 					},
 				},
 			}
@@ -271,15 +271,15 @@ func Test_ValidateRelationType(t *testing.T) {
 					RTID:   "rt1",
 					RTName: "relation1",
 					Type:   interfaces.RELATION_TYPE_DATA_VIEW,
-					MappingRules: interfaces.InDirectMapping{
-						BackingDataSource: &interfaces.ResourceInfo{
-							Type: interfaces.RELATION_TYPE_DATA_VIEW,
-							ID:   "dv1",
+					MappingRules: map[string]any{
+						"backing_data_source": map[string]any{
+							"type": interfaces.RELATION_TYPE_DATA_VIEW,
+							"id":   "dv1",
 						},
-						SourceMappingRules: []interfaces.Mapping{
+						"source_mapping_rules": []map[string]any{
 							{
-								SourceProp: interfaces.SimpleProperty{Name: ""},
-								TargetProp: interfaces.SimpleProperty{Name: "bridge1"},
+								"source_property": map[string]string{"name": ""},
+								"target_property": map[string]string{"name": "bridge1"},
 							},
 						},
 					},
@@ -295,15 +295,15 @@ func Test_ValidateRelationType(t *testing.T) {
 					RTID:   "rt1",
 					RTName: "relation1",
 					Type:   interfaces.RELATION_TYPE_DATA_VIEW,
-					MappingRules: interfaces.InDirectMapping{
-						BackingDataSource: &interfaces.ResourceInfo{
-							Type: interfaces.RELATION_TYPE_DATA_VIEW,
-							ID:   "dv1",
+					MappingRules: map[string]any{
+						"backing_data_source": map[string]any{
+							"type": interfaces.RELATION_TYPE_DATA_VIEW,
+							"id":   "dv1",
 						},
-						SourceMappingRules: []interfaces.Mapping{
+						"source_mapping_rules": []map[string]any{
 							{
-								SourceProp: interfaces.SimpleProperty{Name: "prop1"},
-								TargetProp: interfaces.SimpleProperty{Name: ""},
+								"source_property": map[string]string{"name": "prop1"},
+								"target_property": map[string]string{"name": ""},
 							},
 						},
 					},
@@ -319,18 +319,18 @@ func Test_ValidateRelationType(t *testing.T) {
 					RTID:   "rt1",
 					RTName: "relation1",
 					Type:   interfaces.RELATION_TYPE_DATA_VIEW,
-					MappingRules: interfaces.InDirectMapping{
-						BackingDataSource: &interfaces.ResourceInfo{
-							Type: interfaces.RELATION_TYPE_DATA_VIEW,
-							ID:   "dv1",
+					MappingRules: map[string]any{
+						"backing_data_source": map[string]any{
+							"type": interfaces.RELATION_TYPE_DATA_VIEW,
+							"id":   "dv1",
 						},
-						SourceMappingRules: []interfaces.Mapping{
+						"source_mapping_rules": []map[string]any{
 							{
-								SourceProp: interfaces.SimpleProperty{Name: "prop1"},
-								TargetProp: interfaces.SimpleProperty{Name: "bridge1"},
+								"source_property": map[string]string{"name": "prop1"},
+								"target_property": map[string]string{"name": "bridge1"},
 							},
 						},
-						TargetMappingRules: []interfaces.Mapping{},
+						"target_mapping_rules": []map[string]any{},
 					},
 				},
 			}
@@ -344,21 +344,21 @@ func Test_ValidateRelationType(t *testing.T) {
 					RTID:   "rt1",
 					RTName: "relation1",
 					Type:   interfaces.RELATION_TYPE_DATA_VIEW,
-					MappingRules: interfaces.InDirectMapping{
-						BackingDataSource: &interfaces.ResourceInfo{
-							Type: interfaces.RELATION_TYPE_DATA_VIEW,
-							ID:   "dv1",
+					MappingRules: map[string]any{
+						"backing_data_source": map[string]any{
+							"type": interfaces.RELATION_TYPE_DATA_VIEW,
+							"id":   "dv1",
 						},
-						SourceMappingRules: []interfaces.Mapping{
+						"source_mapping_rules": []map[string]any{
 							{
-								SourceProp: interfaces.SimpleProperty{Name: "prop1"},
-								TargetProp: interfaces.SimpleProperty{Name: "bridge1"},
+								"source_property": map[string]string{"name": "prop1"},
+								"target_property": map[string]string{"name": "bridge1"},
 							},
 						},
-						TargetMappingRules: []interfaces.Mapping{
+						"target_mapping_rules": []map[string]any{
 							{
-								SourceProp: interfaces.SimpleProperty{Name: ""},
-								TargetProp: interfaces.SimpleProperty{Name: "prop2"},
+								"source_property": map[string]string{"name": ""},
+								"target_property": map[string]string{"name": "prop2"},
 							},
 						},
 					},
@@ -374,21 +374,21 @@ func Test_ValidateRelationType(t *testing.T) {
 					RTID:   "rt1",
 					RTName: "relation1",
 					Type:   interfaces.RELATION_TYPE_DATA_VIEW,
-					MappingRules: interfaces.InDirectMapping{
-						BackingDataSource: &interfaces.ResourceInfo{
-							Type: interfaces.RELATION_TYPE_DATA_VIEW,
-							ID:   "dv1",
+					MappingRules: map[string]any{
+						"backing_data_source": map[string]any{
+							"type": interfaces.RELATION_TYPE_DATA_VIEW,
+							"id":   "dv1",
 						},
-						SourceMappingRules: []interfaces.Mapping{
+						"source_mapping_rules": []map[string]any{
 							{
-								SourceProp: interfaces.SimpleProperty{Name: "prop1"},
-								TargetProp: interfaces.SimpleProperty{Name: "bridge1"},
+								"source_property": map[string]string{"name": "prop1"},
+								"target_property": map[string]string{"name": "bridge1"},
 							},
 						},
-						TargetMappingRules: []interfaces.Mapping{
+						"target_mapping_rules": []map[string]any{
 							{
-								SourceProp: interfaces.SimpleProperty{Name: "bridge1"},
-								TargetProp: interfaces.SimpleProperty{Name: ""},
+								"source_property": map[string]string{"name": "bridge1"},
+								"target_property": map[string]string{"name": ""},
 							},
 						},
 					},
@@ -401,9 +401,9 @@ func Test_ValidateRelationType(t *testing.T) {
 		Convey("Failed with data_view mapping rules invalid format\n", func() {
 			rt := &interfaces.RelationType{
 				RelationTypeWithKeyField: interfaces.RelationTypeWithKeyField{
-					RTID:   "rt1",
-					RTName: "relation1",
-					Type:   interfaces.RELATION_TYPE_DATA_VIEW,
+					RTID:         "rt1",
+					RTName:       "relation1",
+					Type:         interfaces.RELATION_TYPE_DATA_VIEW,
 					MappingRules: "invalid_format",
 				},
 			}
@@ -417,10 +417,10 @@ func Test_ValidateRelationType(t *testing.T) {
 					RTID:   "rt1",
 					RTName: "relation1",
 					Type:   "invalid_type",
-					MappingRules: []interfaces.Mapping{
+					MappingRules: []map[string]any{
 						{
-							SourceProp: interfaces.SimpleProperty{Name: "prop1"},
-							TargetProp: interfaces.SimpleProperty{Name: "prop2"},
+							"source_property": map[string]string{"name": "prop1"},
+							"target_property": map[string]string{"name": "prop2"},
 						},
 					},
 				},
