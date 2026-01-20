@@ -1,0 +1,151 @@
+// Copyright The kweaver.ai Authors.
+//
+// Licensed under the Apache License, Version 2.0.
+// See the LICENSE file in the project root for details.
+
+package knontologyjob
+
+import (
+	"net/http"
+	"sync"
+
+	"github.com/kweaver-ai/adp/context-loader/agent-retrieval/server/drivenadapters"
+	"github.com/kweaver-ai/adp/context-loader/agent-retrieval/server/infra/config"
+	"github.com/kweaver-ai/adp/context-loader/agent-retrieval/server/infra/errors"
+	"github.com/kweaver-ai/adp/context-loader/agent-retrieval/server/infra/rest"
+	"github.com/kweaver-ai/adp/context-loader/agent-retrieval/server/interfaces"
+	"github.com/creasty/defaults"
+	"github.com/gin-gonic/gin"
+	"github.com/go-playground/validator/v10"
+)
+
+// KnOntologyJobHandler Ontology job management handler
+type KnOntologyJobHandler interface {
+	FullBuildOntology(c *gin.Context)
+	GetFullOntologyBuildingStatus(c *gin.Context)
+}
+
+type knOntologyJobHandler struct {
+	Logger                  interfaces.Logger
+	OntologyManagerAccess interfaces.OntologyManagerAccess
+}
+
+var (
+	kojOnce    sync.Once
+	kojHandler KnOntologyJobHandler
+)
+
+// NewKnOntologyJobHandler Create new KnOntologyJobHandler
+func NewKnOntologyJobHandler() KnOntologyJobHandler {
+	kojOnce.Do(func() {
+		conf := config.NewConfigLoader()
+		kojHandler = &knOntologyJobHandler{
+			Logger:                  conf.GetLogger(),
+			OntologyManagerAccess: drivenadapters.NewOntologyManagerAccess(),
+		}
+	})
+	return kojHandler
+}
+
+// FullBuildOntology Create a full ontology build job
+// POST /api/agent-retrieval/in/v1/kn/full_build_ontology
+func (h *knOntologyJobHandler) FullBuildOntology(c *gin.Context) {
+	var err error
+
+	// Bind request from JSON body including kn_id
+	reqBody := struct {
+		KnID string `json:"kn_id" binding:"required"`
+		interfaces.CreateFullBuildOntologyJobReq
+	}{}
+
+	if err = c.ShouldBindJSON(&reqBody); err != nil {
+		err = errors.DefaultHTTPError(c.Request.Context(), http.StatusBadRequest, err.Error())
+		rest.ReplyError(c, err)
+		return
+	}
+
+	// Create request object
+	req := &interfaces.CreateFullBuildOntologyJobReq{
+		Name: reqBody.Name,
+	}
+
+	// Set default values
+	if err = defaults.Set(req); err != nil {
+		err = errors.DefaultHTTPError(c.Request.Context(), http.StatusBadRequest, err.Error())
+		rest.ReplyError(c, err)
+		return
+	}
+
+	// Validate request
+	err = validator.New().Struct(req)
+	if err != nil {
+		rest.ReplyError(c, err)
+		return
+	}
+
+	// Call ontology manager to create job
+	resp, err := h.OntologyManagerAccess.CreateFullBuildOntologyJob(c.Request.Context(), reqBody.KnID, req)
+	if err != nil {
+		h.Logger.Errorf("[KnOntologyJobHandler#FullBuildOntology] CreateFullBuildOntologyJob failed, knId: %s, err: %v", reqBody.KnID, err)
+		rest.ReplyError(c, err)
+		return
+	}
+
+	// Return success response
+	rest.ReplyOK(c, http.StatusCreated, resp)
+}
+
+// GetFullOntologyBuildingStatus Get ontology build job status
+// GET /api/agent-retrieval/in/v1/kn/full_ontology_building_status
+func (h *knOntologyJobHandler) GetFullOntologyBuildingStatus(c *gin.Context) {
+	var err error
+
+	// Get kn_id from query
+	knID := c.Query("kn_id")
+	if knID == "" {
+		err = errors.DefaultHTTPError(c.Request.Context(), http.StatusBadRequest, "kn_id is required")
+		rest.ReplyError(c, err)
+		return
+	}
+
+	// Get build_id from query (required)
+	buildID := c.Query("build_id")
+	if buildID == "" {
+		err = errors.DefaultHTTPError(c.Request.Context(), http.StatusBadRequest, "build_id is required")
+		rest.ReplyError(c, err)
+		return
+	}
+
+	// Create list request
+	req := &interfaces.ListOntologyJobsReq{
+		JobType: interfaces.OntologyJobTypeFull,
+		Limit:   100, // Set a reasonable limit
+	}
+
+	// Call ontology manager to list jobs
+	resp, err := h.OntologyManagerAccess.ListOntologyJobs(c.Request.Context(), knID, req)
+	if err != nil {
+		h.Logger.Errorf("[KnOntologyJobHandler#GetFullOntologyBuildingStatus] ListOntologyJobs failed, knId: %s, err: %v", knID, err)
+		rest.ReplyError(c, err)
+		return
+	}
+
+	// Find the job with matching build_id
+	var job *interfaces.OntologyJob
+	for _, entry := range resp.Entries {
+		if entry.ID == buildID {
+			job = entry
+			break
+		}
+	}
+
+	// If job not found, return 404
+	if job == nil {
+		err = errors.DefaultHTTPError(c.Request.Context(), http.StatusNotFound, "build job not found")
+		rest.ReplyError(c, err)
+		return
+	}
+
+	// Return the single job
+	rest.ReplyOK(c, http.StatusOK, job)
+}

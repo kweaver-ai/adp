@@ -368,3 +368,124 @@ func (oma *ontologyManagerAccess) GetActionTypeDetail(ctx context.Context, knID 
 
 	return actionTypes, nil
 }
+
+// CreateFullBuildOntologyJob Create a full ontology build job
+func (oma *ontologyManagerAccess) CreateFullBuildOntologyJob(ctx context.Context, knID string, req *interfaces.CreateFullBuildOntologyJobReq) (resp *interfaces.CreateJobResp, err error) {
+	src := fmt.Sprintf("%s/in/v1/knowledge-networks/%s/jobs", oma.baseURL, knID)
+	header := common.GetHeaderFromCtx(ctx)
+	header[rest.ContentTypeKey] = rest.ContentTypeJSON
+
+	// Build request body
+	jobReq := map[string]any{
+		"name":     req.Name,
+		"job_type": interfaces.OntologyJobTypeFull,
+	}
+
+	respCode, respBody, err := oma.httpClient.PostNoUnmarshal(ctx, src, header, jobReq)
+	if err != nil {
+		oma.logger.WithContext(ctx).Errorf("[OntologyManagerAccess] CreateFullBuildOntologyJob request failed, err: %v", err)
+		return nil, fmt.Errorf("[OntologyManagerAccess] CreateFullBuildOntologyJob request failed, err: %v", err)
+	}
+
+	if respCode == http.StatusNotFound {
+		oma.logger.WithContext(ctx).Warnf("[OntologyManagerAccess] request not found, [%s]", src)
+		return nil, fmt.Errorf("[OntologyManagerAccess] request not found, [%s]", src)
+	}
+
+	if (respCode < http.StatusOK) || (respCode >= http.StatusMultipleChoices) {
+		oma.logger.Errorf("[OntologyManagerAccess] CreateFullBuildOntologyJob get resp failed, [%s], %v\n", src, respBody)
+
+		var baseError interfaces.KnBaseError
+		if err := sonic.Unmarshal(respBody, &baseError); err != nil {
+			oma.logger.Errorf("unmarshal KnBaseError failed: %v\n", err)
+			return nil, err
+		}
+
+		return nil, &infraErr.HTTPError{
+			HTTPCode:     respCode,
+			Code:         baseError.ErrorCode,
+			Description:  baseError.Description,
+			Solution:     baseError.Solution,
+			ErrorLink:    baseError.ErrorLink,
+			ErrorDetails: baseError.ErrorDetails,
+		}
+	}
+
+	resp = &interfaces.CreateJobResp{}
+	if err := sonic.Unmarshal(respBody, resp); err != nil {
+		oma.logger.Errorf("[OntologyManagerAccess] CreateFullBuildOntologyJob unmarshal response failed: %v\n", err)
+		return nil, err
+	}
+
+	return resp, nil
+}
+
+// ListOntologyJobs List ontology jobs with filters
+func (oma *ontologyManagerAccess) ListOntologyJobs(ctx context.Context, knID string, req *interfaces.ListOntologyJobsReq) (resp *interfaces.ListOntologyJobsResp, err error) {
+	src := fmt.Sprintf("%s/in/v1/knowledge-networks/%s/jobs", oma.baseURL, knID)
+	header := common.GetHeaderFromCtx(ctx)
+	header[rest.ContentTypeKey] = rest.ContentTypeJSON
+
+	// Build query parameters
+	queryValues := url.Values{}
+	if req.NamePattern != "" {
+		queryValues.Set("name_pattern", req.NamePattern)
+	}
+	if req.State != "" {
+		queryValues.Set("state", string(req.State))
+	}
+	if req.JobType != "" {
+		queryValues.Set("job_type", string(req.JobType))
+	}
+	if req.Limit > 0 {
+		queryValues.Set("limit", strconv.Itoa(req.Limit))
+	}
+	if req.Direction != "" {
+		queryValues.Set("direction", req.Direction)
+	}
+	if req.Offset > 0 {
+		queryValues.Set("offset", strconv.Itoa(req.Offset))
+	}
+
+	respCode, respBody, err := oma.httpClient.GetNoUnmarshal(ctx, src, queryValues, header)
+	if err != nil {
+		oma.logger.WithContext(ctx).Errorf("[OntologyManagerAccess] ListOntologyJobs request failed, err: %v", err)
+		return nil, fmt.Errorf("[OntologyManagerAccess] ListOntologyJobs request failed, err: %v", err)
+	}
+
+	if respCode == http.StatusNotFound {
+		oma.logger.WithContext(ctx).Warnf("[OntologyManagerAccess] request not found, [%s]", src)
+		return nil, fmt.Errorf("[OntologyManagerAccess] request not found, [%s]", src)
+	}
+
+	if (respCode < http.StatusOK) || (respCode >= http.StatusMultipleChoices) {
+		oma.logger.Errorf("[OntologyManagerAccess] ListOntologyJobs get resp failed, [%s], %v\n", src, respBody)
+
+		var baseError interfaces.KnBaseError
+		if err := sonic.Unmarshal(respBody, &baseError); err != nil {
+			oma.logger.Errorf("unmarshal KnBaseError failed: %v\n", err)
+			return nil, err
+		}
+
+		return nil, &infraErr.HTTPError{
+			HTTPCode:     respCode,
+			Code:         baseError.ErrorCode,
+			Description:  baseError.Description,
+			Solution:     baseError.Solution,
+			ErrorLink:    baseError.ErrorLink,
+			ErrorDetails: baseError.ErrorDetails,
+		}
+	}
+
+	resp = &interfaces.ListOntologyJobsResp{}
+	if len(respBody) == 0 {
+		return resp, nil
+	}
+
+	if err := sonic.Unmarshal(respBody, resp); err != nil {
+		oma.logger.Errorf("[OntologyManagerAccess] ListOntologyJobs unmarshal response failed: %v\n", err)
+		return nil, err
+	}
+
+	return resp, nil
+}

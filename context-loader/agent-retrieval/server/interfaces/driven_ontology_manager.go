@@ -219,4 +219,74 @@ type OntologyManagerAccess interface {
 	SearchActionTypes(ctx context.Context, query *QueryConceptsReq) (actionTypes *ActionTypeConcepts, err error)
 	// GetActionTypeDetail Get action type details
 	GetActionTypeDetail(ctx context.Context, knId string, atIDs []string, includeDetail bool) ([]*ActionType, error)
+
+	// CreateFullBuildOntologyJob Create a full ontology build job
+	CreateFullBuildOntologyJob(ctx context.Context, knID string, req *CreateFullBuildOntologyJobReq) (resp *CreateJobResp, err error)
+	// ListOntologyJobs List ontology jobs with filters
+	ListOntologyJobs(ctx context.Context, knID string, req *ListOntologyJobsReq) (resp *ListOntologyJobsResp, err error)
+}
+
+// OntologyJobState Ontology job state
+type OntologyJobState string
+
+const (
+	OntologyJobStatePending   OntologyJobState = "pending"   // Pending
+	OntologyJobStateRunning   OntologyJobState = "running"   // Running
+	OntologyJobStateCompleted OntologyJobState = "completed" // Completed
+	OntologyJobStateCanceled  OntologyJobState = "canceled"  // Canceled
+	OntologyJobStateFailed    OntologyJobState = "failed"    // Failed
+)
+
+// OntologyJobType Ontology job type
+type OntologyJobType string
+
+const (
+	OntologyJobTypeFull OntologyJobType = "full" // Full build job
+)
+
+// AccountInfo Account information
+type AccountInfo struct {
+	ID   string `json:"id"`   // Account ID
+	Type string `json:"type"` // Account type
+	Name string `json:"name"` // Account name
+}
+
+// CreateFullBuildOntologyJobReq Request to create full ontology build job
+type CreateFullBuildOntologyJobReq struct {
+	Name string `json:"name" validate:"required"` // Job name
+}
+
+// CreateJobResp Response when creating a job
+type CreateJobResp struct {
+	ID string `json:"id"` // Job ID
+}
+
+// OntologyJob Ontology job details
+type OntologyJob struct {
+	ID           string           `json:"id"`            // Job ID
+	Name         string           `json:"name"`          // Job name
+	KnID         string           `json:"kn_id"`         // Knowledge network ID
+	State        OntologyJobState `json:"state"`         // Job state
+	StateDetail  string           `json:"state_detail"`  // State details
+	Creator      *AccountInfo     `json:"creator"`       // Creator
+	CreateTime   int64            `json:"create_time"`   // Create time (timestamp)
+	FinishedTime int64            `json:"finished_time"` // Finished time (timestamp)
+	TimeCost     int64            `json:"time_cost"`     // Time cost (seconds)
+	JobType      OntologyJobType  `json:"job_type"`      // Job type
+}
+
+// ListOntologyJobsReq Request to list ontology jobs
+type ListOntologyJobsReq struct {
+	NamePattern string           `form:"name_pattern" json:"name_pattern"`   // Job name pattern filter
+	State       OntologyJobState  `form:"state" json:"state"`                 // Job state filter
+	JobType     OntologyJobType  `form:"job_type" json:"job_type"`           // Job type filter
+	Limit       int              `form:"limit" json:"limit"`                 // Return count
+	Direction   string           `form:"direction" json:"direction"`         // Sort direction (asc/desc)
+	Offset      int              `form:"offset" json:"offset"`               // Pagination offset
+}
+
+// ListOntologyJobsResp Response for listing ontology jobs
+type ListOntologyJobsResp struct {
+	Entries   []*OntologyJob `json:"entries"`   // Job list
+	TotalCount int64         `json:"total_count"` // Total count
 }

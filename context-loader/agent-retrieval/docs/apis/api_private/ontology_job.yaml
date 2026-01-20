@@ -1,0 +1,283 @@
+openapi: 3.0.3
+info:
+  title: 知识网络构建任务管理接口
+  version: 1.0.0
+  description: 业务知识网络构建任务管理接口
+servers:
+  - url: http://agent-retrieval:30779
+security:
+  - BearerAuth: []
+paths:
+  /api/agent-retrieval/in/v1/kn/full_build_ontology:
+    post:
+      tags:
+        - OntologyJob
+      summary: 创建业务知识网络构建任务
+      description: 创建一个全量构建业务知识网络的任务
+      parameters:
+        - name: x-account-id
+          in: header
+          required: false
+          schema:
+            type: string
+          description: 账户ID，用于内部服务调用时传递账户信息
+        - name: x-account-type
+          in: header
+          required: false
+          schema:
+            type: string
+            enum:
+              - user
+              - app
+              - anonymous
+            default: user
+          description: 账户类型：user(用户), app(应用), anonymous(匿名)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateJobRequest"
+            example:
+              kn_id: "kn_1234567890"
+              name: "全量构建任务"
+      responses:
+        "201":
+          description: 创建成功
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CreateJobResponse"
+              example:
+                id: "job_1234567890"
+        "400":
+          description: 参数错误
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: 未授权
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: 服务器内部错误
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /api/agent-retrieval/in/v1/kn/full_ontology_building_status:
+    get:
+      tags:
+        - OntologyJob
+      summary: 获取业务知识网络构建任务状态
+      description: 根据build_id获取指定构建任务的详细状态
+      parameters:
+        - name: x-account-id
+          in: header
+          required: false
+          schema:
+            type: string
+          description: 账户ID，用于内部服务调用时传递账户信息
+        - name: x-account-type
+          in: header
+          required: false
+          schema:
+            type: string
+            enum:
+              - user
+              - app
+              - anonymous
+            default: user
+          description: 账户类型：user(用户), app(应用), anonymous(匿名)
+        - name: kn_id
+          in: query
+          required: true
+          schema:
+            type: string
+          description: 业务知识网络ID
+        - name: build_id
+          in: query
+          required: true
+          schema:
+            type: string
+          description: 构建任务ID
+      responses:
+        "200":
+          description: 成功返回构建任务详情
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OntologyJob"
+              example:
+                id: "d5niemjvm0qr3o2trad0"
+                name: "销售网络"
+                kn_id: "d5levlh818p1vl2slp60"
+                state: "completed"
+                state_detail: ""
+                creator:
+                  id: "bdb78b62-6c48-11f0-af96-fa8dcc0a06b2"
+                  type: "user"
+                  name: "test"
+                create_time: 1768892250908
+                finished_time: 0
+                time_cost: 41594
+                job_type: "full"
+        "400":
+          description: 参数错误
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: 未授权
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: 构建任务不存在
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: 服务器内部错误
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+  schemas:
+    CreateJobRequest:
+      type: object
+      required:
+        - kn_id
+        - name
+      properties:
+        kn_id:
+          type: string
+          description: 业务知识网络ID
+          example: "kn_1234567890"
+        name:
+          type: string
+          description: 任务名称
+          example: "全量构建任务"
+    CreateJobResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          description: 任务ID
+          example: "job_1234567890"
+    OntologyJob:
+      type: object
+      description: 构建任务详情
+      required:
+        - id
+        - name
+        - kn_id
+        - state
+        - creator
+        - create_time
+        - job_type
+      properties:
+        id:
+          type: string
+          description: 任务ID
+          example: "d5niemjvm0qr3o2trad0"
+        name:
+          type: string
+          description: 任务名称
+          example: "销售网络"
+        kn_id:
+          type: string
+          description: 业务知识网络ID
+          example: "d5levlh818p1vl2slp60"
+        state:
+          $ref: "#/components/schemas/JobState"
+          description: 任务状态
+        state_detail:
+          type: string
+          description: 任务状态详情
+          example: ""
+        creator:
+          $ref: "#/components/schemas/AccountInfo"
+          description: 创建者信息
+        create_time:
+          type: integer
+          format: int64
+          description: 创建时间（Unix时间戳，毫秒）
+          example: 1768892250908
+        finished_time:
+          type: integer
+          format: int64
+          description: 结束时间（Unix时间戳，毫秒）
+          example: 0
+        time_cost:
+          type: integer
+          format: int64
+          description: 任务运行时间（秒）
+          example: 41594
+        job_type:
+          $ref: "#/components/schemas/JobType"
+          description: 任务类型
+    AccountInfo:
+      type: object
+      description: 账户信息
+      required:
+        - id
+        - type
+      properties:
+        id:
+          type: string
+          description: 账户ID
+          example: "bdb78b62-6c48-11f0-af96-fa8dcc0a06b2"
+        type:
+          type: string
+          description: 账户类型
+          enum: [user, app]
+          example: "user"
+        name:
+          type: string
+          description: 账户名称
+          example: "test"
+    JobState:
+      type: string
+      enum: [pending, running, completed, canceled, failed]
+      description: 任务状态
+    JobType:
+      type: string
+      enum: [full]
+      description: 任务类型
+    ErrorResponse:
+      type: object
+      properties:
+        code:
+          type: string
+          description: 错误码
+        description:
+          type: string
+          description: 错误描述
+        detail:
+          type: object
+          description: 错误详情
+        solution:
+          type: string
+          description: 解决方案
+        link:
+          type: string
+          description: 错误链接
+      example:
+        code: "NOT_FOUND"
+        description: "构建任务不存在"
+        detail:
+          build_id: "d5niemjvm0qr3o2trad0"
+        solution: "请检查build_id参数是否正确"
+        link: ""
