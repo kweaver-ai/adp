@@ -22,7 +22,7 @@ import (
 )
 
 // 判断视图的数据源是否来自同一个数据源
-func isSameDataSource4Query(view *interfaces.DataView) bool {
+func isSingleDataSource4Query(view *interfaces.DataView) bool {
 	if view.Type == interfaces.ViewType_Atomic {
 		return true
 	}

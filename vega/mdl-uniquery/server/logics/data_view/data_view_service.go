@@ -896,12 +896,12 @@ func (dvs *dataViewService) queryByDSL(ctx context.Context, query interfaces.Vie
 
 	// 向vega执行dsl查询
 	fetchParams := &interfaces.FetchVegaDataParams{
-		IsSameDataSource: isSameDataSource4Query(view),
-		QueryType:        interfaces.QueryType_DSL,
-		DataSourceID:     getDataSourceID4Query(view),
-		CatalogName:      catalogName,
-		TableNames:       indices,
-		Dsl:              dsl,
+		IsSingleDataSource: isSingleDataSource4Query(view),
+		QueryType:          interfaces.QueryType_DSL,
+		DataSourceID:       getDataSourceID4Query(view),
+		CatalogName:        catalogName,
+		TableNames:         indices,
+		Dsl:                dsl,
 	}
 	dataBatch, err := dvs.vgAccess.FetchDataNoUnmarshal(ctx, fetchParams)
 	if err != nil {
@@ -993,12 +993,12 @@ func (dvs *dataViewService) queryBySQL(ctx context.Context, query interfaces.Vie
 		countSql := buildCountSql(sqlStr)
 		logger.Infof("get total count sqlStr is %s", countSql)
 		result, err := dvs.vgAccess.FetchDataNoUnmarshal(ctx, &interfaces.FetchVegaDataParams{
-			IsSameDataSource: isSameDataSource4Query(view),
-			QueryType:        interfaces.QueryType_SQL,
-			DataSourceID:     getDataSourceID4Query(view),
-			SqlStr:           countSql,
-			NextUri:          "",
-			UseSearchAfter:   false,
+			IsSingleDataSource: isSingleDataSource4Query(view),
+			QueryType:          interfaces.QueryType_SQL,
+			DataSourceID:       getDataSourceID4Query(view),
+			SqlStr:             countSql,
+			NextUri:            "",
+			UseSearchAfter:     false,
 		})
 		if err != nil {
 			return nil, 0, rest.NewHTTPError(ctx, http.StatusInternalServerError, rest.PublicError_InternalServerError).
@@ -1006,7 +1006,7 @@ func (dvs *dataViewService) queryBySQL(ctx context.Context, query interfaces.Vie
 		}
 
 		// 读取count的结果
-		total, err = readCountResult(ctx, isSameDataSource4Query(view), result)
+		total, err = readCountResult(ctx, isSingleDataSource4Query(view), result)
 		if err != nil {
 			return nil, 0, rest.NewHTTPError(ctx, http.StatusInternalServerError, rest.PublicError_InternalServerError).
 				WithErrorDetails(err.Error())
@@ -1049,14 +1049,14 @@ func (dvs *dataViewService) queryBySQL(ctx context.Context, query interfaces.Vie
 	timeoutSecond := int64(timeout.Seconds())
 	nextUri := strings.Join(keys, "/")
 	fetchParams := &interfaces.FetchVegaDataParams{
-		IsSameDataSource: isSameDataSource4Query(view),
-		QueryType:        interfaces.QueryType_SQL,
-		DataSourceID:     getDataSourceID4Query(view),
-		NextUri:          nextUri,
-		SqlStr:           finalSql,
-		UseSearchAfter:   commonParams.UseSearchAfter,
-		Limit:            commonParams.Limit,
-		Timeout:          timeoutSecond,
+		IsSingleDataSource: isSingleDataSource4Query(view),
+		QueryType:          interfaces.QueryType_SQL,
+		DataSourceID:       getDataSourceID4Query(view),
+		NextUri:            nextUri,
+		SqlStr:             finalSql,
+		UseSearchAfter:     commonParams.UseSearchAfter,
+		Limit:              commonParams.Limit,
+		Timeout:            timeoutSecond,
 	}
 	dataBatch, err := dvs.vgAccess.FetchDataNoUnmarshal(ctx, fetchParams)
 	if err != nil {
@@ -1583,7 +1583,7 @@ func convertToViewUniResponseBySQL(ctx context.Context, query interfaces.ViewQue
 			rest.PublicError_InternalServerError).WithErrorDetails(err.Error())
 	}
 
-	docs, err := parseSQLDocuments(rootNode, isSameDataSource4Query(view))
+	docs, err := parseSQLDocuments(rootNode, isSingleDataSource4Query(view))
 	if err != nil {
 		return nil, rest.NewHTTPError(ctx, http.StatusInternalServerError,
 			uerrors.Uniquery_DataView_InternalError_GetDocumentsFailed).WithErrorDetails(err.Error())
@@ -1651,7 +1651,7 @@ func convertToViewUniResponseBySQL(ctx context.Context, query interfaces.ViewQue
 
 	var searchAfter []any
 	if query.GetCommonParams().UseSearchAfter {
-		searchAfter = extractSearchAfterParams(rootNode, isSameDataSource4Query(view))
+		searchAfter = extractSearchAfterParams(rootNode, isSingleDataSource4Query(view))
 	}
 
 	includeView := query.GetQueryParams()[interfaces.QueryParam_IncludeView].(bool)
@@ -2644,9 +2644,9 @@ func (dvs *dataViewService) FilterRowColumnRules(ctx context.Context, rules []*i
 
 // extractSearchAfterParams 从nextUri中提取searchAfter参数
 // 解析nextUri的倒数三个部分，例如：/api/internal/vega-gateway/v2/fetch/{query_id}/{slug}/{token} 解析出 query_id、slug、token
-func extractSearchAfterParams(rootNode ast.Node, isSameDataSource bool) []any {
+func extractSearchAfterParams(rootNode ast.Node, isSingleDataSource bool) []any {
 	var nextUri string
-	if isSameDataSource {
+	if isSingleDataSource {
 		nextUri, _ = rootNode.Get("next_uri").String()
 	} else {
 		nextUri, _ = rootNode.Get("nextUri").String()
@@ -2718,9 +2718,9 @@ func parseSQLColumns(rootNode ast.Node) ([]ast.Node, error) {
 }
 
 // parseSQLDocuments 解析SQL查询结果中的文档数据
-func parseSQLDocuments(rootNode ast.Node, isSameDataSource bool) ([]ast.Node, error) {
+func parseSQLDocuments(rootNode ast.Node, isSingleDataSource bool) ([]ast.Node, error) {
 	var docsNode *ast.Node
-	if isSameDataSource {
+	if isSingleDataSource {
 		docsNode = rootNode.Get("entries")
 	} else {
 		docsNode = rootNode.Get("data")
@@ -2848,9 +2848,9 @@ func processSQLNodeFields(view *interfaces.DataView, columns []ast.Node) error {
 }
 
 // 读取count结果
-func readCountResult(ctx context.Context, isSameDataSource bool, result []byte) (int64, error) {
+func readCountResult(ctx context.Context, isSingleDataSource bool, result []byte) (int64, error) {
 	var val any
-	if isSameDataSource {
+	if isSingleDataSource {
 		var vegaFetchData interfaces.VegaGatewayProFetchDataRes
 		d := decoder.NewDecoder(string(result))
 		d.UseInt64()

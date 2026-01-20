@@ -15,15 +15,14 @@ const (
 )
 
 type FetchVegaDataParams struct {
-	IsSameDataSource bool
-	// ViewType         string
-	QueryType      string
-	DataSourceID   string
-	NextUri        string
-	SqlStr         string
-	UseSearchAfter bool
-	Limit          int
-	Timeout        int64
+	IsSingleDataSource bool
+	QueryType          string
+	DataSourceID       string
+	NextUri            string
+	SqlStr             string
+	UseSearchAfter     bool
+	Limit              int
+	Timeout            int64
 
 	Dsl         DSLCfg
 	TableNames  []string
