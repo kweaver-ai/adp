@@ -1,6 +1,6 @@
-import { Drawer } from '@/web-library/common';
-import { DrawerProps } from 'antd/lib/drawer';
 import { ReactNode } from 'react';
+import { DrawerProps } from 'antd/lib/drawer';
+import { Drawer } from '@/web-library/common';
 import styles from './index.module.less';
 
 interface ContentItem {

@@ -12,7 +12,6 @@ import { StateConfigType } from '@/hooks/usePageState';
 import atomDataViewApi from '@/services/atomDataView';
 import api from '@/services/dataConnect';
 import * as DataConnectType from '@/services/dataConnect/type';
-import scanApi from '@/services/scanManagement';
 import HOOKS from '@/hooks';
 import { Table, Button, Select } from '@/web-library/common';
 import DatabaseTable from './Components/DatabaseTable';
@@ -28,7 +27,7 @@ const ATOM_DATA_VIEW_CHECK_LIMIT = 2;
 
 interface DataSourceProps {
   connectors: DataConnectType.Connector[];
-  getTableType: (type: string, val: string) => string;
+  getTableType: (type: string, val: string) => JSX.Element | string;
 }
 
 const DataSource = (props: DataSourceProps): JSX.Element => {

@@ -14,7 +14,7 @@ const { Text } = Typography;
 
 interface ScanTaskProps {
   dataConnectId: string;
-  getTableType: (type: string, connectorName: string) => string;
+  getTableType: (type: string, connectorName: string) => JSX.Element | string;
 }
 
 const ScanTask: React.FC<ScanTaskProps> = ({ dataConnectId, getTableType }) => {
