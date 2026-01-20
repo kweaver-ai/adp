@@ -4,10 +4,10 @@ import (
 	"encoding/json"
 	"time"
 
-	"devops.aishu.cn/AISHUDevOps/AnyShareFamily/_git/ContentAutomation/common"
-	ierrors "devops.aishu.cn/AISHUDevOps/AnyShareFamily/_git/ContentAutomation/errors"
-	"devops.aishu.cn/AISHUDevOps/AnyShareFamily/_git/ContentAutomation/pkg/entity"
-	"devops.aishu.cn/AISHUDevOps/AnyShareFamily/_git/ContentAutomation/utils"
+	"github.com/kweaver-ai/adp/autoflow/flow-automation/common"
+	ierrors "github.com/kweaver-ai/adp/autoflow/flow-automation/errors"
+	"github.com/kweaver-ai/adp/autoflow/flow-automation/pkg/entity"
+	"github.com/kweaver-ai/adp/autoflow/flow-automation/utils"
 )
 
 // BuildDagVersionParams 构建版本记录所需的参数
