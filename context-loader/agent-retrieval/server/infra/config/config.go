@@ -215,6 +215,7 @@ func overrideWithEnv(cfg interface{}) {
 		}
 
 		// Use reflection to set field value directly, type match required
+		//nolint:exhaustive // 只处理需要的类型，其他类型自动跳过
 		switch field.Kind() {
 		case reflect.String:
 			field.SetString(envValue)
@@ -229,7 +230,7 @@ func overrideWithEnv(cfg interface{}) {
 				field.SetBool(boolValue)
 			}
 		default:
-			panic("Unsupported field type for env override")
+			// 不支持的类型直接跳过，不再 panic
 		}
 	}
 }

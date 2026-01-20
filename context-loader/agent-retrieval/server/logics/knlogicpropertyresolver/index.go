@@ -254,6 +254,8 @@ func (s *knLogicPropertyResolverService) extractLogicProperties(
 }
 
 // generateDynamicParams 生成 dynamic_params（按 property 并发）
+//
+//nolint:unparam // 保持接口一致性，error 返回用于后续扩展
 func (s *knLogicPropertyResolverService) generateDynamicParams(
 	ctx context.Context,
 	req *interfaces.ResolveLogicPropertiesRequest,
@@ -624,10 +626,9 @@ func (s *knLogicPropertyResolverService) validateMetricParams(
 
 // validateTimestamp 校验时间戳参数
 func (s *knLogicPropertyResolverService) validateTimestamp(
-	ctx context.Context,
+	_ context.Context,
 	value interface{},
-	paramName string,
-	propertyName string,
+	paramName, propertyName string,
 ) error {
 	switch v := value.(type) {
 	case int64:
@@ -659,10 +660,12 @@ func (s *knLogicPropertyResolverService) validateTimestamp(
 }
 
 // validateOperatorParams 校验 operator 类型的参数
+//
+//nolint:unparam // 保持接口一致性，error 返回用于后续扩展
 func (s *knLogicPropertyResolverService) validateOperatorParams(
 	ctx context.Context,
-	property *interfaces.LogicPropertyDef,
-	params map[string]interface{},
+	_ *interfaces.LogicPropertyDef,
+	_ map[string]interface{},
 ) error {
 	// TODO: 实现 operator 参数校验
 	// 1. 检查所有 value_from="input" 的参数是否都存在

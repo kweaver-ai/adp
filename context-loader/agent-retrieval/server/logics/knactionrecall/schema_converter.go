@@ -131,6 +131,8 @@ func (s *knActionRecallServiceImpl) resolveSchemaWithResolver(
 
 // convertSchemaToFunctionCall 将 OpenAPI Schema 转换为 OpenAI Function Call Schema
 // 改进：保持分层结构（header/path/query/body），而不是扁平化
+//
+//nolint:unparam // 保持接口一致性，error 返回用于后续扩展
 func (s *knActionRecallServiceImpl) convertSchemaToFunctionCall(ctx context.Context, apiSpec map[string]interface{}) (map[string]interface{}, error) {
 	// 使用分层结构：header/path/query/body
 	properties := map[string]interface{}{
@@ -530,7 +532,12 @@ func (s *knActionRecallServiceImpl) buildPropertyDefinition(schema map[string]in
 }
 
 // mergeSchemaProperties 合并 schema 的 properties 到目标 properties
-func (s *knActionRecallServiceImpl) mergeSchemaProperties(ctx context.Context, targetProps map[string]interface{}, schema map[string]interface{}, apiSpec map[string]interface{}, visitedRefs map[string]bool, currentDepth int) {
+func (s *knActionRecallServiceImpl) mergeSchemaProperties(
+	ctx context.Context,
+	targetProps, schema, apiSpec map[string]interface{},
+	visitedRefs map[string]bool,
+	currentDepth int,
+) {
 	if props, ok := schema["properties"].(map[string]interface{}); ok {
 		for propName, propDef := range props {
 			resolvedProp, err := s.resolveSchema(ctx, propDef, apiSpec, visitedRefs, currentDepth)
@@ -544,7 +551,10 @@ func (s *knActionRecallServiceImpl) mergeSchemaProperties(ctx context.Context, t
 }
 
 // mapFixedParams 映射固定参数到 header/path/query/body
-func (s *knActionRecallServiceImpl) mapFixedParams(ctx context.Context, parameters map[string]interface{}, apiSpec map[string]interface{}) interfaces.KnFixedParams {
+func (s *knActionRecallServiceImpl) mapFixedParams(
+	_ context.Context,
+	parameters, apiSpec map[string]interface{},
+) interfaces.KnFixedParams {
 	fixedParams := interfaces.KnFixedParams{
 		Header: make(map[string]interface{}),
 		Path:   make(map[string]interface{}),

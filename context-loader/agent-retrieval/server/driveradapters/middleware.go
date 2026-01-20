@@ -73,10 +73,6 @@ func middlewareIntrospectVerify(hydra interfaces.Hydra) gin.HandlerFunc {
 		tokenInfo.MAC = c.GetHeader("X-Request-MAC")
 		tokenInfo.UserAgent = c.GetHeader("User-Agent")
 
-		// 设置visitorType到context
-		// ctx = common.SetVisitorTypeToCtx(ctx, string(tokenInfo.VisitorTyp))
-		// ctx = common.SetXVisitorTypeToCtx(ctx, interfaces.XVisitorTypeToVisitorTypeMap[tokenInfo.VisitorTyp])
-		// ctx = common.SetUserIDToCtx(ctx, tokenInfo.VisitorID)
 		ctx = common.SetPublicAPIToCtx(ctx, true)
 		// 设置认证上下文到context
 		authContext := &interfaces.AccountAuthContext{
@@ -87,7 +83,6 @@ func middlewareIntrospectVerify(hydra interfaces.Hydra) gin.HandlerFunc {
 		ctx = common.SetAccountAuthContextToCtx(ctx, authContext)
 		c.Request = c.Request.WithContext(ctx)
 		c.Request.Header.Set(string(interfaces.IsPublic), "true")
-		// c.Request.Header.Set(string(interfaces.KeyVisitorType), string(tokenInfo.VisitorTyp))
 		c.Next()
 	}
 }

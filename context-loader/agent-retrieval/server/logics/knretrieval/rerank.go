@@ -12,7 +12,9 @@ import (
 	"github.com/kweaver-ai/adp/context-loader/agent-retrieval/server/interfaces"
 )
 
-// 收集不同概念类集合，并进行排序，每个概念集取前limit个
+// rerankByConceptType 收集不同概念类集合，并进行排序，每个概念集取前limit个
+//
+//nolint:unused // 预留函数，后续可能使用
 func (k *knRetrievalServiceImpl) rerankByConceptType(conceptResults []*interfaces.ConceptResult, limit int) []*interfaces.ConceptResult {
 	// 去重
 	conceptResults = k.deduplicateConcepts(conceptResults)
