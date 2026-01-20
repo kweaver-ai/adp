@@ -72,8 +72,8 @@ paths:
     get:
       tags:
         - OntologyJob
-      summary: 获取业务知识网络构建任务状态
-      description: 根据build_id获取指定构建任务的详细状态
+      summary: 获取业务知识网络构建状态
+      description: 查询最新50个构建任务的整体状态（按创建时间倒排）。如果所有任务都已完成则返回completed，如果有任务正在运行则返回running
       parameters:
         - name: x-account-id
           in: header
@@ -98,33 +98,17 @@ paths:
           schema:
             type: string
           description: 业务知识网络ID
-        - name: build_id
-          in: query
-          required: true
-          schema:
-            type: string
-          description: 构建任务ID
       responses:
         "200":
-          description: 成功返回构建任务详情
+          description: 成功返回构建状态
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/OntologyJob"
+                $ref: "#/components/schemas/BuildStatusSimpleResponse"
               example:
-                id: "d5niemjvm0qr3o2trad0"
-                name: "销售网络"
                 kn_id: "d5levlh818p1vl2slp60"
                 state: "completed"
-                state_detail: ""
-                creator:
-                  id: "bdb78b62-6c48-11f0-af96-fa8dcc0a06b2"
-                  type: "user"
-                  name: "test"
-                create_time: 1768892250908
-                finished_time: 0
-                time_cost: 41594
-                job_type: "full"
+                state_detail: "All latest 50 jobs are completed"
         "400":
           description: 参数错误
           content:
@@ -133,12 +117,6 @@ paths:
                 $ref: "#/components/schemas/ErrorResponse"
         "401":
           description: 未授权
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorResponse"
-        "404":
-          description: 构建任务不存在
           content:
             application/json:
               schema:
@@ -176,78 +154,27 @@ components:
           type: string
           description: 任务ID
           example: "job_1234567890"
-    OntologyJob:
+    BuildStatusSimpleResponse:
       type: object
-      description: 构建任务详情
+      description: 构建状态响应
       required:
-        - id
-        - name
         - kn_id
         - state
-        - creator
-        - create_time
-        - job_type
+        - state_detail
       properties:
-        id:
-          type: string
-          description: 任务ID
-          example: "d5niemjvm0qr3o2trad0"
-        name:
-          type: string
-          description: 任务名称
-          example: "销售网络"
         kn_id:
           type: string
           description: 业务知识网络ID
           example: "d5levlh818p1vl2slp60"
         state:
-          $ref: "#/components/schemas/JobState"
-          description: 任务状态
+          type: string
+          enum: [running, completed]
+          description: 构建状态（running表示有任务正在运行，completed表示所有任务都已完成）
+          example: "completed"
         state_detail:
           type: string
-          description: 任务状态详情
-          example: ""
-        creator:
-          $ref: "#/components/schemas/AccountInfo"
-          description: 创建者信息
-        create_time:
-          type: integer
-          format: int64
-          description: 创建时间（Unix时间戳，毫秒）
-          example: 1768892250908
-        finished_time:
-          type: integer
-          format: int64
-          description: 结束时间（Unix时间戳，毫秒）
-          example: 0
-        time_cost:
-          type: integer
-          format: int64
-          description: 任务运行时间（秒）
-          example: 41594
-        job_type:
-          $ref: "#/components/schemas/JobType"
-          description: 任务类型
-    AccountInfo:
-      type: object
-      description: 账户信息
-      required:
-        - id
-        - type
-      properties:
-        id:
-          type: string
-          description: 账户ID
-          example: "bdb78b62-6c48-11f0-af96-fa8dcc0a06b2"
-        type:
-          type: string
-          description: 账户类型
-          enum: [user, app]
-          example: "user"
-        name:
-          type: string
-          description: 账户名称
-          example: "test"
+          description: 状态详情
+          example: "All latest 50 jobs are completed"
     JobState:
       type: string
       enum: [pending, running, completed, canceled, failed]
@@ -275,9 +202,8 @@ components:
           type: string
           description: 错误链接
       example:
-        code: "NOT_FOUND"
-        description: "构建任务不存在"
-        detail:
-          build_id: "d5niemjvm0qr3o2trad0"
-        solution: "请检查build_id参数是否正确"
+        code: "INVALID_KN_ID"
+        description: "业务知识网络ID无效"
+        detail: {}
+        solution: "请检查kn_id参数是否正确"
         link: ""

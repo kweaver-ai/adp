@@ -108,18 +108,11 @@ func (h *knOntologyJobHandler) GetFullOntologyBuildingStatus(c *gin.Context) {
 		return
 	}
 
-	// Get build_id from query (required)
-	buildID := c.Query("build_id")
-	if buildID == "" {
-		err = errors.DefaultHTTPError(c.Request.Context(), http.StatusBadRequest, "build_id is required")
-		rest.ReplyError(c, err)
-		return
-	}
-
-	// Create list request
+	// Create list request to get latest 50 jobs
 	req := &interfaces.ListOntologyJobsReq{
-		JobType: interfaces.OntologyJobTypeFull,
-		Limit:   100, // Set a reasonable limit
+		JobType:   interfaces.OntologyJobTypeFull,
+		Limit:     50,
+		Direction: "desc", // Descending by create_time
 	}
 
 	// Call ontology manager to list jobs
@@ -130,22 +123,25 @@ func (h *knOntologyJobHandler) GetFullOntologyBuildingStatus(c *gin.Context) {
 		return
 	}
 
-	// Find the job with matching build_id
-	var job *interfaces.OntologyJob
-	for _, entry := range resp.Entries {
-		if entry.ID == buildID {
-			job = entry
+	// Determine overall state based on the latest 50 jobs
+	overallState := interfaces.OntologyJobStateCompleted
+	stateDetail := "All latest 50 jobs are completed"
+
+	for _, job := range resp.Entries {
+		if job.State == interfaces.OntologyJobStateRunning {
+			overallState = interfaces.OntologyJobStateRunning
+			stateDetail = "Some jobs are still running"
 			break
 		}
 	}
 
-	// If job not found, return 404
-	if job == nil {
-		err = errors.DefaultHTTPError(c.Request.Context(), http.StatusNotFound, "build job not found")
-		rest.ReplyError(c, err)
-		return
+	// Build simplified response
+	response := map[string]interface{}{
+		"kn_id":        knID,
+		"state":        overallState,
+		"state_detail": stateDetail,
 	}
 
-	// Return the single job
-	rest.ReplyOK(c, http.StatusOK, job)
+	// Return the simplified response
+	rest.ReplyOK(c, http.StatusOK, response)
 }
