@@ -88,13 +88,8 @@ func validateMappingRules(ctx context.Context, relationType string, mappingRules
 // 校验直接关联的mapping_rules
 func validateDirectMappingRules(ctx context.Context, mappingRules any) (any, error) {
 	// mappingRules 先转成 []any 再解码成 []interfaces.Mapping
-	mappingArray, ok := mappingRules.([]map[string]any)
-	if !ok {
-		return nil, rest.NewHTTPError(ctx, http.StatusBadRequest, oerrors.OntologyManager_RelationType_InvalidParameter).
-			WithErrorDetails("直接关联的 mapping_rules 格式不正确，应为 Mapping 数组")
-	}
 	var mappings []interfaces.Mapping
-	if err := mapstructure.Decode(mappingArray, &mappings); err != nil {
+	if err := mapstructure.Decode(mappingRules, &mappings); err != nil {
 		return nil, rest.NewHTTPError(ctx, http.StatusBadRequest, oerrors.OntologyManager_RelationType_InvalidParameter).
 			WithErrorDetails("直接关联的 mapping_rules 解码失败: " + err.Error())
 	}

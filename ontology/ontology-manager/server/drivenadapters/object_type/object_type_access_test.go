@@ -840,7 +840,7 @@ func Test_objectTypeAccess_GetObjectTypeByID(t *testing.T) {
 
 			smock.ExpectQuery(sqlStr).WithArgs(knID, branch, otID).WillReturnRows(rows)
 
-			objectType, err := ota.GetObjectTypeByID(testCtx, knID, branch, otID)
+			objectType, err := ota.GetObjectTypeByID(testCtx, nil, knID, branch, otID)
 			So(err, ShouldBeNil)
 			So(objectType, ShouldNotBeNil)
 			So(objectType.OTID, ShouldEqual, "ot1")
@@ -854,7 +854,7 @@ func Test_objectTypeAccess_GetObjectTypeByID(t *testing.T) {
 			expectedErr := errors.New("some error")
 			smock.ExpectQuery(sqlStr).WithArgs(knID, branch, otID).WillReturnError(expectedErr)
 
-			objectType, err := ota.GetObjectTypeByID(testCtx, knID, branch, otID)
+			objectType, err := ota.GetObjectTypeByID(testCtx, nil, knID, branch, otID)
 			So(objectType, ShouldBeNil)
 			So(err, ShouldResemble, expectedErr)
 
@@ -882,7 +882,7 @@ func Test_objectTypeAccess_GetObjectTypeByID(t *testing.T) {
 
 			smock.ExpectQuery(sqlStr).WithArgs(knID, branch, otID).WillReturnRows(rows)
 
-			objectType, err := ota.GetObjectTypeByID(testCtx, knID, branch, otID)
+			objectType, err := ota.GetObjectTypeByID(testCtx, nil, knID, branch, otID)
 			So(objectType, ShouldBeNil)
 			So(err, ShouldNotBeNil)
 
@@ -910,7 +910,7 @@ func Test_objectTypeAccess_GetObjectTypeByID(t *testing.T) {
 
 			smock.ExpectQuery(sqlStr).WithArgs(knID, branch, otID).WillReturnRows(rows)
 
-			objectType, err := ota.GetObjectTypeByID(testCtx, knID, branch, otID)
+			objectType, err := ota.GetObjectTypeByID(testCtx, nil, knID, branch, otID)
 			So(objectType, ShouldBeNil)
 			So(err, ShouldNotBeNil)
 
@@ -938,7 +938,7 @@ func Test_objectTypeAccess_GetObjectTypeByID(t *testing.T) {
 
 			smock.ExpectQuery(sqlStr).WithArgs(knID, branch, otID).WillReturnRows(rows)
 
-			objectType, err := ota.GetObjectTypeByID(testCtx, knID, branch, otID)
+			objectType, err := ota.GetObjectTypeByID(testCtx, nil, knID, branch, otID)
 			So(objectType, ShouldBeNil)
 			So(err, ShouldNotBeNil)
 
@@ -966,7 +966,7 @@ func Test_objectTypeAccess_GetObjectTypeByID(t *testing.T) {
 
 			smock.ExpectQuery(sqlStr).WithArgs(knID, branch, otID).WillReturnRows(rows)
 
-			objectType, err := ota.GetObjectTypeByID(testCtx, knID, branch, otID)
+			objectType, err := ota.GetObjectTypeByID(testCtx, nil, knID, branch, otID)
 			So(objectType, ShouldBeNil)
 			So(err, ShouldNotBeNil)
 
@@ -1018,7 +1018,7 @@ func Test_objectTypeAccess_GetObjectTypesByIDs(t *testing.T) {
 
 			smock.ExpectQuery(sqlStr).WithArgs().WillReturnRows(rows)
 
-			objectTypes, err := ota.GetObjectTypesByIDs(testCtx, knID, branch, otIDs)
+			objectTypes, err := ota.GetObjectTypesByIDs(testCtx, nil, knID, branch, otIDs)
 			So(len(objectTypes), ShouldEqual, 1)
 			So(err, ShouldBeNil)
 
@@ -1031,7 +1031,7 @@ func Test_objectTypeAccess_GetObjectTypesByIDs(t *testing.T) {
 			expectedErr := errors.New("some error")
 			smock.ExpectQuery(sqlStr).WithArgs().WillReturnError(expectedErr)
 
-			objectTypes, err := ota.GetObjectTypesByIDs(testCtx, knID, branch, otIDs)
+			objectTypes, err := ota.GetObjectTypesByIDs(testCtx, nil, knID, branch, otIDs)
 			So(objectTypes, ShouldResemble, []*interfaces.ObjectType{})
 			So(err, ShouldResemble, expectedErr)
 
@@ -1044,7 +1044,7 @@ func Test_objectTypeAccess_GetObjectTypesByIDs(t *testing.T) {
 			rows := sqlmock.NewRows([]string{"ot.f_id"}).AddRow("ot1")
 			smock.ExpectQuery(sqlStr).WithArgs().WillReturnRows(rows)
 
-			_, err := ota.GetObjectTypesByIDs(testCtx, knID, branch, otIDs)
+			_, err := ota.GetObjectTypesByIDs(testCtx, nil, knID, branch, otIDs)
 			So(err, ShouldNotBeNil)
 
 			if err := smock.ExpectationsWereMet(); err != nil {
@@ -1070,7 +1070,7 @@ func Test_objectTypeAccess_GetObjectTypesByIDs(t *testing.T) {
 			)
 			smock.ExpectQuery(sqlStr).WithArgs().WillReturnRows(rows)
 
-			_, err := ota.GetObjectTypesByIDs(testCtx, knID, branch, otIDs)
+			_, err := ota.GetObjectTypesByIDs(testCtx, nil, knID, branch, otIDs)
 			So(err, ShouldNotBeNil)
 
 			if err := smock.ExpectationsWereMet(); err != nil {
@@ -1096,7 +1096,7 @@ func Test_objectTypeAccess_GetObjectTypesByIDs(t *testing.T) {
 			)
 			smock.ExpectQuery(sqlStr).WithArgs().WillReturnRows(rows)
 
-			_, err := ota.GetObjectTypesByIDs(testCtx, knID, branch, otIDs)
+			_, err := ota.GetObjectTypesByIDs(testCtx, nil, knID, branch, otIDs)
 			So(err, ShouldNotBeNil)
 
 			if err := smock.ExpectationsWereMet(); err != nil {
@@ -1122,7 +1122,7 @@ func Test_objectTypeAccess_GetObjectTypesByIDs(t *testing.T) {
 			)
 			smock.ExpectQuery(sqlStr).WithArgs().WillReturnRows(rows)
 
-			_, err := ota.GetObjectTypesByIDs(testCtx, knID, branch, otIDs)
+			_, err := ota.GetObjectTypesByIDs(testCtx, nil, knID, branch, otIDs)
 			So(err, ShouldNotBeNil)
 
 			if err := smock.ExpectationsWereMet(); err != nil {
@@ -1148,7 +1148,7 @@ func Test_objectTypeAccess_GetObjectTypesByIDs(t *testing.T) {
 			)
 			smock.ExpectQuery(sqlStr).WithArgs().WillReturnRows(rows)
 
-			_, err := ota.GetObjectTypesByIDs(testCtx, knID, branch, otIDs)
+			_, err := ota.GetObjectTypesByIDs(testCtx, nil, knID, branch, otIDs)
 			So(err, ShouldNotBeNil)
 
 			if err := smock.ExpectationsWereMet(); err != nil {

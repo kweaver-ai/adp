@@ -1121,28 +1121,19 @@ func (rts *relationTypeService) GetTotalWithRTIDs(ctx context.Context,
 func (rts *relationTypeService) validateDependency(ctx context.Context, tx *sql.Tx, relationType *interfaces.RelationType) error {
 	var sourceObjectType *interfaces.ObjectType
 	var targetObjectType *interfaces.ObjectType
+	var err error
 	if relationType.SourceObjectTypeID != "" {
 		// 导入时未提交，在一个事务中get
-		sourceObjectTypes, err := rts.ots.GetObjectTypesByIDs(ctx, tx, relationType.KNID, relationType.Branch, []string{relationType.SourceObjectTypeID})
+		sourceObjectType, err = rts.ots.GetObjectTypeByID(ctx, tx, relationType.KNID, relationType.Branch, relationType.SourceObjectTypeID)
 		if err != nil {
 			return err
 		}
-		if len(sourceObjectTypes) == 0 {
-			return rest.NewHTTPError(ctx, http.StatusBadRequest, oerrors.OntologyManager_RelationType_InvalidParameter).
-				WithErrorDetails(fmt.Sprintf("起点对象类[%s]不存在", relationType.SourceObjectTypeID))
-		}
-		sourceObjectType = sourceObjectTypes[0]
 	}
 	if relationType.TargetObjectTypeID != "" {
-		targetObjectTypes, err := rts.ots.GetObjectTypesByIDs(ctx, tx, relationType.KNID, relationType.Branch, []string{relationType.TargetObjectTypeID})
+		targetObjectType, err = rts.ots.GetObjectTypeByID(ctx, tx, relationType.KNID, relationType.Branch, relationType.TargetObjectTypeID)
 		if err != nil {
 			return err
 		}
-		if len(targetObjectTypes) == 0 {
-			return rest.NewHTTPError(ctx, http.StatusBadRequest, oerrors.OntologyManager_RelationType_InvalidParameter).
-				WithErrorDetails(fmt.Sprintf("终点对象类[%s]不存在", relationType.TargetObjectTypeID))
-		}
-		targetObjectType = targetObjectTypes[0]
 	}
 	// 当关联关系非空时，校验起点对象类、终点对象类的属性存在性
 	if relationType.MappingRules != nil {

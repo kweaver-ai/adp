@@ -2,6 +2,7 @@ package relation_type
 
 import (
 	"context"
+	"net/http"
 	"testing"
 
 	"github.com/DATA-DOG/go-sqlmock"
@@ -821,7 +822,8 @@ func Test_relationTypeService_CreateRelationTypes(t *testing.T) {
 
 			smock.ExpectBegin()
 			ps.EXPECT().CheckPermission(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
-			ots.EXPECT().GetObjectTypesByIDs(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return([]*interfaces.ObjectType{{ObjectTypeWithKeyField: interfaces.ObjectTypeWithKeyField{OTID: "ot1"}}}, nil).AnyTimes()
+			ots.EXPECT().GetObjectTypeByID(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+				Return(&interfaces.ObjectType{ObjectTypeWithKeyField: interfaces.ObjectTypeWithKeyField{OTID: "ot1"}}, nil).AnyTimes()
 			ots.EXPECT().CheckObjectTypeExistByID(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return("", true, nil).AnyTimes()
 			rta.EXPECT().CheckRelationTypeExistByID(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return("", false, nil).AnyTimes()
 			rta.EXPECT().CheckRelationTypeExistByName(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return("", false, nil).AnyTimes()
@@ -918,7 +920,8 @@ func Test_relationTypeService_CreateRelationTypes(t *testing.T) {
 			ps.EXPECT().CheckPermission(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
 			rta.EXPECT().CheckRelationTypeExistByID(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return("rt1", true, nil)
 			rta.EXPECT().CheckRelationTypeExistByName(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return("rt1", true, nil)
-			ots.EXPECT().GetObjectTypesByIDs(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return([]*interfaces.ObjectType{}, nil).AnyTimes()
+			ots.EXPECT().GetObjectTypeByID(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+				Return(&interfaces.ObjectType{}, nil).AnyTimes()
 			rta.EXPECT().UpdateRelationType(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
 			osa.EXPECT().InsertData(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
 			smock.ExpectCommit()
@@ -946,7 +949,8 @@ func Test_relationTypeService_CreateRelationTypes(t *testing.T) {
 				So(rtID, ShouldNotBeEmpty)
 			}).Return("", false, nil)
 			rta.EXPECT().CheckRelationTypeExistByName(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return("", false, nil)
-			ots.EXPECT().GetObjectTypesByIDs(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return([]*interfaces.ObjectType{}, nil).AnyTimes()
+			ots.EXPECT().GetObjectTypeByID(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+				Return(&interfaces.ObjectType{}, nil).AnyTimes()
 			rta.EXPECT().CreateRelationType(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
 			osa.EXPECT().InsertData(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
 			smock.ExpectCommit()
@@ -969,10 +973,12 @@ func Test_relationTypeService_CreateRelationTypes(t *testing.T) {
 					Branch: interfaces.MAIN_BRANCH,
 				},
 			}
+			httpErr := rest.NewHTTPError(ctx, http.StatusInternalServerError,
+				oerrors.OntologyManager_ObjectType_InternalError_GetObjectTypeByIDFailed)
 
 			smock.ExpectBegin()
 			ps.EXPECT().CheckPermission(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
-			ots.EXPECT().GetObjectTypesByIDs(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return([]*interfaces.ObjectType{}, nil)
+			ots.EXPECT().GetObjectTypeByID(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil, httpErr)
 			smock.ExpectRollback()
 
 			result, err := service.CreateRelationTypes(ctx, nil, relationTypes, interfaces.ImportMode_Normal)
@@ -994,7 +1000,7 @@ func Test_relationTypeService_CreateRelationTypes(t *testing.T) {
 
 			smock.ExpectBegin()
 			ps.EXPECT().CheckPermission(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
-			ots.EXPECT().GetObjectTypesByIDs(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return([]*interfaces.ObjectType{}, nil).AnyTimes()
+			ots.EXPECT().GetObjectTypeByID(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(&interfaces.ObjectType{}, nil).AnyTimes()
 			rta.EXPECT().CheckRelationTypeExistByID(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return("", false, nil)
 			rta.EXPECT().CheckRelationTypeExistByName(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return("", false, nil)
 			rta.EXPECT().CreateRelationType(gomock.Any(), gomock.Any(), gomock.Any()).Return(rest.NewHTTPError(ctx, 500, oerrors.OntologyManager_RelationType_InternalError))
@@ -1019,7 +1025,7 @@ func Test_relationTypeService_CreateRelationTypes(t *testing.T) {
 
 			smock.ExpectBegin()
 			ps.EXPECT().CheckPermission(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
-			ots.EXPECT().GetObjectTypesByIDs(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return([]*interfaces.ObjectType{}, nil).AnyTimes()
+			ots.EXPECT().GetObjectTypeByID(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(&interfaces.ObjectType{}, nil).AnyTimes()
 			rta.EXPECT().CheckRelationTypeExistByID(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return("", false, nil)
 			rta.EXPECT().CheckRelationTypeExistByName(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return("", false, nil)
 			rta.EXPECT().CreateRelationType(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
@@ -1073,7 +1079,7 @@ func Test_relationTypeService_UpdateRelationType(t *testing.T) {
 
 			smock.ExpectBegin()
 			ps.EXPECT().CheckPermission(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
-			ots.EXPECT().GetObjectTypesByIDs(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return([]*interfaces.ObjectType{{ObjectTypeWithKeyField: interfaces.ObjectTypeWithKeyField{OTID: "ot1"}}}, nil).AnyTimes()
+			ots.EXPECT().GetObjectTypeByID(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(&interfaces.ObjectType{}, nil).AnyTimes()
 			ots.EXPECT().CheckObjectTypeExistByID(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return("", true, nil).AnyTimes()
 			rta.EXPECT().UpdateRelationType(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
 			osa.EXPECT().InsertData(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
@@ -1109,10 +1115,12 @@ func Test_relationTypeService_UpdateRelationType(t *testing.T) {
 				KNID:   "kn1",
 				Branch: interfaces.MAIN_BRANCH,
 			}
+			httpErr := rest.NewHTTPError(ctx, http.StatusInternalServerError,
+				oerrors.OntologyManager_ObjectType_InternalError_GetObjectTypeByIDFailed)
 
 			smock.ExpectBegin()
 			ps.EXPECT().CheckPermission(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
-			ots.EXPECT().GetObjectTypesByIDs(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return([]*interfaces.ObjectType{}, nil)
+			ots.EXPECT().GetObjectTypeByID(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil, httpErr)
 			smock.ExpectRollback()
 
 			err := service.UpdateRelationType(ctx, nil, relationType)
@@ -1131,7 +1139,7 @@ func Test_relationTypeService_UpdateRelationType(t *testing.T) {
 
 			smock.ExpectBegin()
 			ps.EXPECT().CheckPermission(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
-			ots.EXPECT().GetObjectTypesByIDs(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return([]*interfaces.ObjectType{}, nil).AnyTimes()
+			ots.EXPECT().GetObjectTypeByID(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(&interfaces.ObjectType{}, nil).AnyTimes()
 			rta.EXPECT().UpdateRelationType(gomock.Any(), gomock.Any(), gomock.Any()).Return(rest.NewHTTPError(ctx, 500, oerrors.OntologyManager_RelationType_InternalError))
 			smock.ExpectRollback()
 
@@ -1151,7 +1159,7 @@ func Test_relationTypeService_UpdateRelationType(t *testing.T) {
 
 			smock.ExpectBegin()
 			ps.EXPECT().CheckPermission(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
-			ots.EXPECT().GetObjectTypesByIDs(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return([]*interfaces.ObjectType{}, nil).AnyTimes()
+			ots.EXPECT().GetObjectTypeByID(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(&interfaces.ObjectType{}, nil).AnyTimes()
 			rta.EXPECT().UpdateRelationType(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
 			osa.EXPECT().InsertData(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(rest.NewHTTPError(ctx, 500, oerrors.OntologyManager_RelationType_InternalError))
 			smock.ExpectRollback()
@@ -1760,15 +1768,16 @@ func Test_relationTypeService_validateDependency(t *testing.T) {
 				KNID:   "kn1",
 				Branch: interfaces.MAIN_BRANCH,
 			}
+			httpErr := rest.NewHTTPError(ctx, http.StatusInternalServerError,
+				oerrors.OntologyManager_ObjectType_InternalError_GetObjectTypeByIDFailed)
 
 			smock.ExpectBegin()
-			ots.EXPECT().GetObjectTypesByIDs(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return([]*interfaces.ObjectType{}, nil)
+			ots.EXPECT().GetObjectTypeByID(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil, httpErr)
 			smock.ExpectRollback()
 
 			err := service.validateDependency(ctx, nil, relationType)
 			So(err, ShouldNotBeNil)
-			httpErr := err.(*rest.HTTPError)
-			So(httpErr.BaseError.ErrorCode, ShouldEqual, oerrors.OntologyManager_RelationType_InvalidParameter)
+			So(err.(*rest.HTTPError).BaseError.ErrorCode, ShouldEqual, oerrors.OntologyManager_ObjectType_InternalError_GetObjectTypeByIDFailed)
 		})
 
 		Convey("Failed when target object type not found\n", func() {
@@ -1781,15 +1790,16 @@ func Test_relationTypeService_validateDependency(t *testing.T) {
 				KNID:   "kn1",
 				Branch: interfaces.MAIN_BRANCH,
 			}
+			httpErr := rest.NewHTTPError(ctx, http.StatusInternalServerError,
+				oerrors.OntologyManager_ObjectType_InternalError_GetObjectTypeByIDFailed)
 
 			smock.ExpectBegin()
-			ots.EXPECT().GetObjectTypesByIDs(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return([]*interfaces.ObjectType{}, nil)
+			ots.EXPECT().GetObjectTypeByID(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil, httpErr)
 			smock.ExpectRollback()
 
 			err := service.validateDependency(ctx, nil, relationType)
 			So(err, ShouldNotBeNil)
-			httpErr := err.(*rest.HTTPError)
-			So(httpErr.BaseError.ErrorCode, ShouldEqual, oerrors.OntologyManager_RelationType_InvalidParameter)
+			So(err.(*rest.HTTPError).BaseError.ErrorCode, ShouldEqual, oerrors.OntologyManager_ObjectType_InternalError_GetObjectTypeByIDFailed)
 		})
 
 		Convey("Failed when source property not found in DIRECT type\n", func() {
@@ -1819,7 +1829,7 @@ func Test_relationTypeService_validateDependency(t *testing.T) {
 			}
 
 			smock.ExpectBegin()
-			ots.EXPECT().GetObjectTypesByIDs(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return([]*interfaces.ObjectType{sourceObjectType}, nil)
+			ots.EXPECT().GetObjectTypeByID(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(sourceObjectType, nil)
 			smock.ExpectRollback()
 
 			err := service.validateDependency(ctx, nil, relationType)
@@ -1855,7 +1865,7 @@ func Test_relationTypeService_validateDependency(t *testing.T) {
 			}
 
 			smock.ExpectBegin()
-			ots.EXPECT().GetObjectTypesByIDs(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return([]*interfaces.ObjectType{targetObjectType}, nil)
+			ots.EXPECT().GetObjectTypeByID(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(targetObjectType, nil)
 			smock.ExpectRollback()
 
 			err := service.validateDependency(ctx, nil, relationType)
@@ -1948,7 +1958,7 @@ func Test_relationTypeService_validateDependency(t *testing.T) {
 			}
 
 			smock.ExpectBegin()
-			ots.EXPECT().GetObjectTypesByIDs(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return([]*interfaces.ObjectType{sourceObjectType}, nil)
+			ots.EXPECT().GetObjectTypeByID(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(sourceObjectType, nil)
 			dva.EXPECT().GetDataViewByID(gomock.Any(), gomock.Any()).Return(dataView, nil)
 			smock.ExpectRollback()
 

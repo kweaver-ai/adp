@@ -446,7 +446,7 @@ func Test_ObjectTypeRestHandler_UpdateDataProperties(t *testing.T) {
 
 		Convey("Success UpdateDataProperties\n", func() {
 			kns.EXPECT().CheckKNExistByID(gomock.Any(), knID, gomock.Any()).Return(knID, true, nil)
-			ots.EXPECT().GetObjectTypeByID(gomock.Any(), knID, gomock.Any(), otID).Return(&interfaces.ObjectType{
+			ots.EXPECT().GetObjectTypeByID(gomock.Any(), gomock.Any(), knID, gomock.Any(), otID).Return(&interfaces.ObjectType{
 				ObjectTypeWithKeyField: interfaces.ObjectTypeWithKeyField{
 					OTID:   otID,
 					OTName: "object1",
@@ -477,7 +477,7 @@ func Test_ObjectTypeRestHandler_UpdateDataProperties(t *testing.T) {
 
 		Convey("ObjectType not found\n", func() {
 			kns.EXPECT().CheckKNExistByID(gomock.Any(), knID, gomock.Any()).Return(knID, true, nil)
-			ots.EXPECT().GetObjectTypeByID(gomock.Any(), knID, gomock.Any(), otID).Return(nil, nil)
+			ots.EXPECT().GetObjectTypeByID(gomock.Any(), gomock.Any(), knID, gomock.Any(), otID).Return(nil, nil)
 
 			reqParamByte, _ := sonic.Marshal(requestData)
 			req := httptest.NewRequest(http.MethodPut, url, bytes.NewReader(reqParamByte))

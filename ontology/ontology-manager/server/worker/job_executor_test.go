@@ -149,7 +149,7 @@ func TestJobExecutor_AddJob(t *testing.T) {
 				},
 			}
 
-			ota.EXPECT().GetObjectTypeByID(ctx, "kn1", "main", "ot1").Return(objectType, nil)
+			ota.EXPECT().GetObjectTypeByID(ctx, gomock.Any(), "kn1", "main", "ot1").Return(objectType, nil)
 			ja.EXPECT().UpdateJobState(ctx, nil, "job1", gomock.Any()).Return(nil)
 
 			err := je.AddJob(ctx, jobInfo)
@@ -158,7 +158,7 @@ func TestJobExecutor_AddJob(t *testing.T) {
 		})
 
 		Convey("Failed to get object type", func() {
-			ota.EXPECT().GetObjectTypeByID(ctx, "kn1", "main", "ot1").Return(nil, errors.New("db error"))
+			ota.EXPECT().GetObjectTypeByID(ctx, gomock.Any(), "kn1", "main", "ot1").Return(nil, errors.New("db error"))
 
 			err := je.AddJob(ctx, jobInfo)
 			So(err, ShouldNotBeNil)
@@ -171,7 +171,7 @@ func TestJobExecutor_AddJob(t *testing.T) {
 				},
 			}
 
-			ota.EXPECT().GetObjectTypeByID(ctx, "kn1", "main", "ot1").Return(objectType, nil)
+			ota.EXPECT().GetObjectTypeByID(ctx, gomock.Any(), "kn1", "main", "ot1").Return(objectType, nil)
 			ja.EXPECT().UpdateJobState(ctx, nil, "job1", gomock.Any()).Return(errors.New("db error"))
 
 			err := je.AddJob(ctx, jobInfo)

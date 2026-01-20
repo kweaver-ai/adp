@@ -452,7 +452,7 @@ func (ots *objectTypeService) GetObjectTypesByIDs(ctx context.Context, tx *sql.T
 	otIDs = common.DuplicateSlice(otIDs)
 
 	// 获取对象类基本信息
-	objectTypes, err := ots.ota.GetObjectTypesByIDs(ctx, knID, branch, otIDs)
+	objectTypes, err := ots.ota.GetObjectTypesByIDs(ctx, tx, knID, branch, otIDs)
 	if err != nil {
 		logger.Errorf("GetObjectTypesByObjectTypeIDs error: %s", err.Error())
 		span.SetStatus(codes.Error, fmt.Sprintf("Get object types[%s] error: %v", otIDs, err))
@@ -996,7 +996,7 @@ func (ots *objectTypeService) GetObjectTypesMapByIDs(ctx context.Context, knID s
 	otIDs = common.DuplicateSlice(otIDs)
 
 	// 获取模型基本信息
-	objectTypeArr, err := ots.ota.GetObjectTypesByIDs(ctx, knID, branch, otIDs)
+	objectTypeArr, err := ots.ota.GetObjectTypesByIDs(ctx, nil, knID, branch, otIDs)
 	if err != nil {
 		logger.Errorf("GetObjectTypesByObjectTypeIDs error: %s", err.Error())
 		span.SetStatus(codes.Error, fmt.Sprintf("Get object type[%v] error: %v", otIDs, err))
@@ -1435,7 +1435,7 @@ func (ots *objectTypeService) GetAllObjectTypesByKnID(ctx context.Context,
 }
 
 // 内部接口，不检查权限
-func (ots *objectTypeService) GetObjectTypeByID(ctx context.Context,
+func (ots *objectTypeService) GetObjectTypeByID(ctx context.Context, tx *sql.Tx,
 	knID string, branch string, otID string) (*interfaces.ObjectType, error) {
 	// 获取对象类
 	ctx, span := ar_trace.Tracer.Start(ctx, fmt.Sprintf("查询对象类[%s]信息", otID))
@@ -1446,8 +1446,45 @@ func (ots *objectTypeService) GetObjectTypeByID(ctx context.Context,
 		attr.Key("branch").String(branch),
 		attr.Key("ot_id").String(otID))
 
+	var err error
+	// 0. 开始事务
+	if tx == nil {
+		tx, err = ots.db.Begin()
+		if err != nil {
+			logger.Errorf("Begin transaction error: %s", err.Error())
+			span.SetStatus(codes.Error, "事务开启失败")
+			o11y.Error(ctx, fmt.Sprintf("Begin transaction error: %s", err.Error()))
+			return &interfaces.ObjectType{}, rest.NewHTTPError(ctx, http.StatusInternalServerError,
+				oerrors.OntologyManager_ObjectType_InternalError_BeginTransactionFailed).
+				WithErrorDetails(err.Error())
+		}
+		// 0.1 异常时
+		defer func() {
+			switch err {
+			case nil:
+				// 提交事务
+				err = tx.Commit()
+				if err != nil {
+					logger.Errorf("GetObjectTypeByID Transaction Commit Failed:%v", err)
+					span.SetStatus(codes.Error, "提交事务失败")
+					o11y.Error(ctx, fmt.Sprintf("GetObjectTypeByID Transaction Commit Failed: %s", err.Error()))
+					return
+				}
+				logger.Infof("GetObjectTypeByID Transaction Commit Success")
+				o11y.Debug(ctx, "GetObjectTypeByID Transaction Commit Success")
+			default:
+				rollbackErr := tx.Rollback()
+				if rollbackErr != nil {
+					logger.Errorf("GetObjectTypeByID Transaction Rollback Error:%v", rollbackErr)
+					span.SetStatus(codes.Error, "事务回滚失败")
+					o11y.Error(ctx, fmt.Sprintf("GetObjectTypeByID Transaction Rollback Error: %s", err.Error()))
+				}
+			}
+		}()
+	}
+
 	// 获取对象类基本信息
-	objectType, err := ots.ota.GetObjectTypeByID(ctx, knID, branch, otID)
+	objectType, err := ots.ota.GetObjectTypeByID(ctx, tx, knID, branch, otID)
 	if err != nil {
 		logger.Errorf("GetObjectTypeByID error: %s", err.Error())
 		span.SetStatus(codes.Error, fmt.Sprintf("Get object type by id[%s] error: %v", otID, err))

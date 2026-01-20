@@ -1485,12 +1485,10 @@ func Test_knowledgeNetworkService_GetRelationTypePaths(t *testing.T) {
 				Direction:         "out",
 				PathLength:        1,
 			}
-			objectType := []*interfaces.ObjectType{
-				{
-					ObjectTypeWithKeyField: interfaces.ObjectTypeWithKeyField{
-						OTID:   "ot1",
-						OTName: "ot1",
-					},
+			objectType := interfaces.ObjectType{
+				ObjectTypeWithKeyField: interfaces.ObjectTypeWithKeyField{
+					OTID:   "ot1",
+					OTName: "ot1",
 				},
 			}
 			neighborPathsMap := map[string][]interfaces.RelationTypePath{
@@ -1508,7 +1506,7 @@ func Test_knowledgeNetworkService_GetRelationTypePaths(t *testing.T) {
 				},
 			}
 
-			ots.EXPECT().GetObjectTypesByIDs(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(objectType, nil).AnyTimes()
+			ots.EXPECT().GetObjectTypeByID(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(&objectType, nil).AnyTimes()
 			kna.EXPECT().GetNeighborPathsBatch(gomock.Any(), gomock.Any(), gomock.Any()).Return(neighborPathsMap, nil)
 
 			paths, err := service.GetRelationTypePaths(ctx, query)
@@ -1524,16 +1522,14 @@ func Test_knowledgeNetworkService_GetRelationTypePaths(t *testing.T) {
 				Direction:         "out",
 				PathLength:        0,
 			}
-			objectType := []*interfaces.ObjectType{
-				{
-					ObjectTypeWithKeyField: interfaces.ObjectTypeWithKeyField{
-						OTID:   "ot1",
-						OTName: "ot1",
-					},
+			objectType := interfaces.ObjectType{
+				ObjectTypeWithKeyField: interfaces.ObjectTypeWithKeyField{
+					OTID:   "ot1",
+					OTName: "ot1",
 				},
 			}
 
-			ots.EXPECT().GetObjectTypesByIDs(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(objectType, nil).AnyTimes()
+			ots.EXPECT().GetObjectTypeByID(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(&objectType, nil).AnyTimes()
 
 			paths, err := service.GetRelationTypePaths(ctx, query)
 			So(err, ShouldBeNil)
@@ -1549,7 +1545,8 @@ func Test_knowledgeNetworkService_GetRelationTypePaths(t *testing.T) {
 				PathLength:        1,
 			}
 
-			ots.EXPECT().GetObjectTypesByIDs(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil, rest.NewHTTPError(ctx, 500, oerrors.OntologyManager_KnowledgeNetwork_InternalError))
+			ots.EXPECT().GetObjectTypeByID(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+				Return(nil, rest.NewHTTPError(ctx, 500, oerrors.OntologyManager_KnowledgeNetwork_InternalError))
 
 			paths, err := service.GetRelationTypePaths(ctx, query)
 			So(err, ShouldNotBeNil)
@@ -1564,16 +1561,14 @@ func Test_knowledgeNetworkService_GetRelationTypePaths(t *testing.T) {
 				Direction:         "out",
 				PathLength:        1,
 			}
-			objectType := []*interfaces.ObjectType{
-				{
-					ObjectTypeWithKeyField: interfaces.ObjectTypeWithKeyField{
-						OTID:   "ot1",
-						OTName: "ot1",
-					},
+			objectType := interfaces.ObjectType{
+				ObjectTypeWithKeyField: interfaces.ObjectTypeWithKeyField{
+					OTID:   "ot1",
+					OTName: "ot1",
 				},
 			}
 
-			ots.EXPECT().GetObjectTypesByIDs(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(objectType, nil).AnyTimes()
+			ots.EXPECT().GetObjectTypeByID(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(&objectType, nil).AnyTimes()
 			kna.EXPECT().GetNeighborPathsBatch(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil, rest.NewHTTPError(ctx, 500, oerrors.OntologyManager_KnowledgeNetwork_InternalError))
 
 			paths, err := service.GetRelationTypePaths(ctx, query)
@@ -1589,19 +1584,17 @@ func Test_knowledgeNetworkService_GetRelationTypePaths(t *testing.T) {
 				Direction:         "out",
 				PathLength:        1,
 			}
-			objectType := []*interfaces.ObjectType{
-				{
-					ObjectTypeWithKeyField: interfaces.ObjectTypeWithKeyField{
-						OTID:   "ot1",
-						OTName: "ot1",
-					},
+			objectType := interfaces.ObjectType{
+				ObjectTypeWithKeyField: interfaces.ObjectTypeWithKeyField{
+					OTID:   "ot1",
+					OTName: "ot1",
 				},
 			}
 			neighborPathsMap := map[string][]interfaces.RelationTypePath{
 				"ot1": {},
 			}
 
-			ots.EXPECT().GetObjectTypesByIDs(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(objectType, nil).AnyTimes()
+			ots.EXPECT().GetObjectTypeByID(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(&objectType, nil).AnyTimes()
 			kna.EXPECT().GetNeighborPathsBatch(gomock.Any(), gomock.Any(), gomock.Any()).Return(neighborPathsMap, nil)
 
 			paths, err := service.GetRelationTypePaths(ctx, query)
