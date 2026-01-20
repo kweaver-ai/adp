@@ -102,10 +102,10 @@ func (r *restHandler) RegisterPublic(c *gin.Engine) {
 		apiV1.GET("/knowledge-networks/:kn_id/action-types/:at_ids", r.GetActionTypesByEx)
 
 		// 任务管理
-		apiV1.POST("/knowledge-networks/:kn_id/jobs", r.verifyJsonContentTypeMiddleWare(), r.CreateJob)
-		apiV1.DELETE("/knowledge-networks/:kn_id/jobs/:job_ids", r.DeleteJobs)
-		apiV1.GET("/knowledge-networks/:kn_id/jobs", r.ListJobs)
-		apiV1.GET("/knowledge-networks/:kn_id/jobs/:job_id/tasks", r.ListTasks)
+		apiV1.POST("/knowledge-networks/:kn_id/jobs", r.verifyJsonContentTypeMiddleWare(), r.CreateJobByEx)
+		apiV1.DELETE("/knowledge-networks/:kn_id/jobs/:job_ids", r.DeleteJobsByEx)
+		apiV1.GET("/knowledge-networks/:kn_id/jobs", r.ListJobsByEx)
+		apiV1.GET("/knowledge-networks/:kn_id/jobs/:job_id/tasks", r.ListTasksByEx)
 
 		// 业务知识网络资源示例列表
 		apiV1.GET("/resources", r.ListResources)
@@ -145,6 +145,13 @@ func (r *restHandler) RegisterPublic(c *gin.Engine) {
 		apiInV1.PUT("/knowledge-networks/:kn_id/action-types/:at_id", r.verifyJsonContentTypeMiddleWare(), r.UpdateActionTypeByIn)
 		apiInV1.GET("/knowledge-networks/:kn_id/action-types", r.ListActionTypesByIn)
 		apiInV1.GET("/knowledge-networks/:kn_id/action-types/:at_ids", r.GetActionTypesByIn)
+
+		// 任务管理
+		apiV1.POST("/knowledge-networks/:kn_id/jobs", r.verifyJsonContentTypeMiddleWare(), r.CreateJobByIn)
+		apiV1.DELETE("/knowledge-networks/:kn_id/jobs/:job_ids", r.DeleteJobsByIn)
+		apiV1.GET("/knowledge-networks/:kn_id/jobs", r.ListJobsByIn)
+		apiV1.GET("/knowledge-networks/:kn_id/jobs/:job_id/tasks", r.ListTasksByIn)
+
 	}
 
 	logger.Info("RestHandler RegisterPublic")
