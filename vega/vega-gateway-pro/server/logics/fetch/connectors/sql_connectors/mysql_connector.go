@@ -4,8 +4,9 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	"github.com/kweaver-ai/kweaver-go-lib/logger"
 	"vega-gateway-pro/interfaces"
+
+	"github.com/kweaver-ai/kweaver-go-lib/logger"
 )
 
 // MySQLConnector MySQL连接器
@@ -91,7 +92,7 @@ func (h *MySQLConnector) GetColumns(resultSet any) ([]*interfaces.Column, error)
 }
 
 // GetData 从结果集中提取数据
-func (h *MySQLConnector) GetData(resultSet any, columnSize int, queryType int, batchSize int) (any, []*[]any, error) {
+func (h *MySQLConnector) GetData(resultSet any, columnSize int, batchSize int) (any, []*[]any, error) {
 	rows, ok := resultSet.(*sql.Rows)
 	if !ok {
 		logger.Errorf("resultSet type error, expect *sql.Rows")
@@ -127,7 +128,7 @@ func (h *MySQLConnector) GetData(resultSet any, columnSize int, queryType int, b
 		}
 		result = append(result, &row)
 		// 批次处理
-		if queryType == 2 && len(result) >= batchSize {
+		if len(result) >= batchSize {
 			break
 		}
 	}
@@ -141,8 +142,8 @@ func (h *MySQLConnector) GetData(resultSet any, columnSize int, queryType int, b
 	}
 
 	// 判断是否还有更多数据
-	if queryType == 1 || len(result) < batchSize {
-		// 如果是一次性查询或结果数量小于批次大小，说明没有更多数据了
+	if len(result) < batchSize {
+		// 如果结果数量小于批次大小，说明没有更多数据了
 		rows.Close()
 		h.db.Close()
 		return nil, result, nil
