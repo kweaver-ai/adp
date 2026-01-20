@@ -61,17 +61,18 @@ func ValidateRelationType(ctx context.Context, relationType *interfaces.Relation
 			return rest.NewHTTPError(ctx, http.StatusBadRequest, oerrors.OntologyManager_RelationType_InvalidParameter).
 				WithErrorDetails("当 mapping_rules 不为空时，type 字段不能为空")
 		}
-		err = validateMappingRules(ctx, relationType.Type, relationType.MappingRules)
+		rules, err := validateMappingRules(ctx, relationType.Type, relationType.MappingRules)
 		if err != nil {
 			return err
 		}
+		relationType.MappingRules = rules
 	}
 
 	return nil
 }
 
 // 校验mapping_rules的有效性
-func validateMappingRules(ctx context.Context, relationType string, mappingRules any) error {
+func validateMappingRules(ctx context.Context, relationType string, mappingRules any) (any, error) {
 	switch relationType {
 	case interfaces.RELATION_TYPE_DIRECT:
 		return validateDirectMappingRules(ctx, mappingRules)
@@ -79,106 +80,106 @@ func validateMappingRules(ctx context.Context, relationType string, mappingRules
 		return validateInDirectMappingRules(ctx, mappingRules)
 	default:
 		// 如果type不是direct或data_view，返回错误
-		return rest.NewHTTPError(ctx, http.StatusBadRequest, oerrors.OntologyManager_RelationType_InvalidParameter).
+		return nil, rest.NewHTTPError(ctx, http.StatusBadRequest, oerrors.OntologyManager_RelationType_InvalidParameter).
 			WithErrorDetails(fmt.Sprintf("mapping_rules 的类型 %s 不支持", relationType))
 	}
 }
 
 // 校验直接关联的mapping_rules
-func validateDirectMappingRules(ctx context.Context, mappingRules any) error {
+func validateDirectMappingRules(ctx context.Context, mappingRules any) (any, error) {
 	// mappingRules 先转成 []any 再解码成 []interfaces.Mapping
 	mappingArray, ok := mappingRules.([]map[string]any)
 	if !ok {
-		return rest.NewHTTPError(ctx, http.StatusBadRequest, oerrors.OntologyManager_RelationType_InvalidParameter).
+		return nil, rest.NewHTTPError(ctx, http.StatusBadRequest, oerrors.OntologyManager_RelationType_InvalidParameter).
 			WithErrorDetails("直接关联的 mapping_rules 格式不正确，应为 Mapping 数组")
 	}
 	var mappings []interfaces.Mapping
 	if err := mapstructure.Decode(mappingArray, &mappings); err != nil {
-		return rest.NewHTTPError(ctx, http.StatusBadRequest, oerrors.OntologyManager_RelationType_InvalidParameter).
+		return nil, rest.NewHTTPError(ctx, http.StatusBadRequest, oerrors.OntologyManager_RelationType_InvalidParameter).
 			WithErrorDetails("直接关联的 mapping_rules 解码失败: " + err.Error())
 	}
 
 	for idx, item := range mappings {
 		// 校验起点属性非空
 		if item.SourceProp.Name == "" {
-			return rest.NewHTTPError(ctx, http.StatusBadRequest, oerrors.OntologyManager_RelationType_InvalidParameter).
+			return nil, rest.NewHTTPError(ctx, http.StatusBadRequest, oerrors.OntologyManager_RelationType_InvalidParameter).
 				WithErrorDetails(fmt.Sprintf("直接关联的 mapping_rules[%d] 的起点属性名不能为空", idx))
 		}
 
 		// 校验终点属性非空
 		if item.TargetProp.Name == "" {
-			return rest.NewHTTPError(ctx, http.StatusBadRequest, oerrors.OntologyManager_RelationType_InvalidParameter).
+			return nil, rest.NewHTTPError(ctx, http.StatusBadRequest, oerrors.OntologyManager_RelationType_InvalidParameter).
 				WithErrorDetails(fmt.Sprintf("直接关联的 mapping_rules[%d] 的终点属性名不能为空", idx))
 		}
 	}
 
-	return nil
+	return mappings, nil
 }
 
 // 校验间接关联的mapping_rules
-func validateInDirectMappingRules(ctx context.Context, mappingRules any) error {
+func validateInDirectMappingRules(ctx context.Context, mappingRules any) (any, error) {
 	// 尝试类型断言
 	var mapping interfaces.InDirectMapping
 	if err := mapstructure.Decode(mappingRules, &mapping); err != nil {
-		return rest.NewHTTPError(ctx, http.StatusBadRequest, oerrors.OntologyManager_RelationType_InvalidParameter).
+		return nil, rest.NewHTTPError(ctx, http.StatusBadRequest, oerrors.OntologyManager_RelationType_InvalidParameter).
 			WithErrorDetails("间接关联的 mapping_rules 格式不正确，应为 InDirectMapping 对象")
 	}
 
 	// 校验关联的数据来源类型非空，且为 data_view
 	if mapping.BackingDataSource == nil {
-		return rest.NewHTTPError(ctx, http.StatusBadRequest, oerrors.OntologyManager_RelationType_InvalidParameter).
+		return nil, rest.NewHTTPError(ctx, http.StatusBadRequest, oerrors.OntologyManager_RelationType_InvalidParameter).
 			WithErrorDetails("间接关联的 backing_data_source 不能为空")
 	}
 	if mapping.BackingDataSource.Type == "" {
-		return rest.NewHTTPError(ctx, http.StatusBadRequest, oerrors.OntologyManager_RelationType_InvalidParameter).
+		return nil, rest.NewHTTPError(ctx, http.StatusBadRequest, oerrors.OntologyManager_RelationType_InvalidParameter).
 			WithErrorDetails("间接关联的 backing_data_source.type 不能为空")
 	}
 	if mapping.BackingDataSource.Type != interfaces.RELATION_TYPE_DATA_VIEW {
-		return rest.NewHTTPError(ctx, http.StatusBadRequest, oerrors.OntologyManager_RelationType_InvalidParameter).
+		return nil, rest.NewHTTPError(ctx, http.StatusBadRequest, oerrors.OntologyManager_RelationType_InvalidParameter).
 			WithErrorDetails(fmt.Sprintf("间接关联的 backing_data_source.type 必须为 %s，当前为: %s",
 				interfaces.RELATION_TYPE_DATA_VIEW, mapping.BackingDataSource.Type))
 	}
 	// 校验关联的数据视图id非空（数据视图存在性校验在logics层）
 	if mapping.BackingDataSource.ID == "" {
-		return rest.NewHTTPError(ctx, http.StatusBadRequest, oerrors.OntologyManager_RelationType_InvalidParameter).
+		return nil, rest.NewHTTPError(ctx, http.StatusBadRequest, oerrors.OntologyManager_RelationType_InvalidParameter).
 			WithErrorDetails("间接关联的 backing_data_source.id 不能为空")
 	}
 
 	// 校验起点对象类与数据集的关联规则非空
 	if len(mapping.SourceMappingRules) == 0 {
-		return rest.NewHTTPError(ctx, http.StatusBadRequest, oerrors.OntologyManager_RelationType_InvalidParameter).
+		return nil, rest.NewHTTPError(ctx, http.StatusBadRequest, oerrors.OntologyManager_RelationType_InvalidParameter).
 			WithErrorDetails("间接关联的 source_mapping_rules 不能为空")
 	}
 	for idx, item := range mapping.SourceMappingRules {
 		// 校验起点对象类的属性非空（属性存在于起点对象类中的校验在logics层）
 		if item.SourceProp.Name == "" {
-			return rest.NewHTTPError(ctx, http.StatusBadRequest, oerrors.OntologyManager_RelationType_InvalidParameter).
+			return nil, rest.NewHTTPError(ctx, http.StatusBadRequest, oerrors.OntologyManager_RelationType_InvalidParameter).
 				WithErrorDetails(fmt.Sprintf("间接关联的 source_mapping_rules[%d] 的起点对象类属性名不能为空", idx))
 		}
 		// 校验中间的桥梁字段非空（桥梁字段存在于数据视图中的校验在logics层）
 		if item.TargetProp.Name == "" {
-			return rest.NewHTTPError(ctx, http.StatusBadRequest, oerrors.OntologyManager_RelationType_InvalidParameter).
+			return nil, rest.NewHTTPError(ctx, http.StatusBadRequest, oerrors.OntologyManager_RelationType_InvalidParameter).
 				WithErrorDetails(fmt.Sprintf("间接关联的 source_mapping_rules[%d] 的桥梁字段名不能为空", idx))
 		}
 	}
 
 	// 校验数据集与终点对象类的关联规则非空
 	if len(mapping.TargetMappingRules) == 0 {
-		return rest.NewHTTPError(ctx, http.StatusBadRequest, oerrors.OntologyManager_RelationType_InvalidParameter).
+		return nil, rest.NewHTTPError(ctx, http.StatusBadRequest, oerrors.OntologyManager_RelationType_InvalidParameter).
 			WithErrorDetails("间接关联的 target_mapping_rules 不能为空")
 	}
 	for idx, item := range mapping.TargetMappingRules {
 		// 校验中间的桥梁字段非空（桥梁字段存在于数据视图中的校验在logics层）
 		if item.SourceProp.Name == "" {
-			return rest.NewHTTPError(ctx, http.StatusBadRequest, oerrors.OntologyManager_RelationType_InvalidParameter).
+			return nil, rest.NewHTTPError(ctx, http.StatusBadRequest, oerrors.OntologyManager_RelationType_InvalidParameter).
 				WithErrorDetails(fmt.Sprintf("间接关联的 target_mapping_rules[%d] 的桥梁字段名不能为空", idx))
 		}
 		// 校验终点对象类的属性非空（属性存在于终点对象类中的校验在logics层）
 		if item.TargetProp.Name == "" {
-			return rest.NewHTTPError(ctx, http.StatusBadRequest, oerrors.OntologyManager_RelationType_InvalidParameter).
+			return nil, rest.NewHTTPError(ctx, http.StatusBadRequest, oerrors.OntologyManager_RelationType_InvalidParameter).
 				WithErrorDetails(fmt.Sprintf("间接关联的 target_mapping_rules[%d] 的终点对象类属性名不能为空", idx))
 		}
 	}
 
-	return nil
+	return mapping, nil
 }
