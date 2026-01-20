@@ -1,12 +1,10 @@
 import React, { useMemo, useState, useEffect } from 'react';
-import { Badge, Button } from 'antd';
-import { FormOutlined } from '@ant-design/icons';
 import intl from 'react-intl-universal';
-import dayjs from 'dayjs';
-import * as ScanTaskType from '@/services/scanManagement/type';
-import * as DataConnectType from '@/services/dataConnect/type';
-import { getScheduleScanStatus } from '@/services/scanManagement';
+import { FormOutlined } from '@ant-design/icons';
+import { Button } from 'antd';
 import DetailDrawer, { DataItem } from '@/components/DetailDrawer';
+import { getScheduleScanStatus } from '@/services/scanManagement';
+import * as ScanTaskType from '@/services/scanManagement/type';
 import TaskExecution from './TaskExecution';
 import ScanTaskConfig from '../ScanTaskConfig';
 
@@ -14,7 +12,7 @@ interface ScanDetailProps {
   scanDetail: ScanTaskType.ScanTaskItem;
   visible: boolean;
   onClose: () => void;
-  getTableType: (type: string, val: string) => string;
+  getTableType: (type: string, val: string) => JSX.Element | string;
   isEdit?: boolean;
 }
 
@@ -63,7 +61,7 @@ const ScanDetail: React.FC<ScanDetailProps> = ({ visible, onClose, scanDetail, g
   };
 
   // 构建DetailDrawer数据
-  // eslint-disable-next-line react-hooks/preserve-manual-memoization
+
   const detailDrawerData = useMemo((): DataItem[] | null => {
     if (!visible) return null;
 

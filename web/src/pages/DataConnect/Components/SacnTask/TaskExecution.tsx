@@ -1,14 +1,15 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Table, Button, Empty, Badge, Radio, Breadcrumb, Input, Space, RadioChangeEvent, Typography } from 'antd';
-import { DatabaseOutlined, HomeOutlined, LoadingOutlined } from '@ant-design/icons';
-const { Text } = Typography;
 import intl from 'react-intl-universal';
+import { DatabaseOutlined, LoadingOutlined } from '@ant-design/icons';
+import { Table, Button, Empty, Badge, Radio, Breadcrumb, Input, RadioChangeEvent, Typography } from 'antd';
 import dayjs from 'dayjs';
 import { PAGINATION_DEFAULT, DATE_FORMAT } from '@/hooks/useConstants';
-import { getScanTaskInfo, getScheduleScanStatus, getScheduleHistoryList } from '@/services/scanManagement';
+import { getScanTaskInfo, getScheduleHistoryList } from '@/services/scanManagement';
 import * as ScanTaskType from '@/services/scanManagement/type';
 import { getScanStatusColor } from '../../utils';
 import type { ColumnsType, TablePaginationConfig } from 'antd/es/table';
+
+const { Text } = Typography;
 
 interface TaskExecutionProps {
   scanDetail: ScanTaskType.ScanTaskItem;

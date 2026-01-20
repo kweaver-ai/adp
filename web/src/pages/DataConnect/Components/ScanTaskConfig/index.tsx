@@ -1,13 +1,13 @@
-import intl from 'react-intl-universal';
-import { Button, Radio, Checkbox, Switch, Modal, Form, Spin } from 'antd';
 import { useEffect, useState } from 'react';
-import * as DataConnectType from '@/services/dataConnect/type';
-import * as ScanTaskType from '@/services/scanManagement/type';
-import scanManagementApi from '@/services/scanManagement';
-import ScheduleExpression from '../ScheduleExpression';
-import HOOKS from '@/hooks';
-import styles from './styles.module.less';
+import intl from 'react-intl-universal';
+import { Button, Radio, Checkbox, Switch, Modal, Form } from 'antd';
 import { SCHEDULE_TYPE } from '@/hooks/useConstants';
+import * as DataConnectType from '@/services/dataConnect/type';
+import scanManagementApi from '@/services/scanManagement';
+import * as ScanTaskType from '@/services/scanManagement/type';
+import HOOKS from '@/hooks';
+import ScheduleExpression from '../ScheduleExpression';
+import styles from './styles.module.less';
 
 interface TScanTaskConfig {
   open: boolean;
