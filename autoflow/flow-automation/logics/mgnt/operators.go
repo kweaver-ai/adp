@@ -484,7 +484,7 @@ func (m *mgnt) CheckAndBuildDag(ctx context.Context, param *OptionalComboOperato
 		}
 
 		// 流程引用子流程是否存在环
-		cycle, err := m.hasCycle(ctx, param.DagID, dag.SubIDs)
+		cycle, err := m.hasCycle(ctx, param.DagID, dag.SubIDs, []string{common.DagTypeComboOperator})
 		if err != nil {
 			return err
 		}
@@ -516,7 +516,7 @@ func (m *mgnt) CheckAndBuildDag(ctx context.Context, param *OptionalComboOperato
 }
 
 // hasCycle 当前创建和更新流程是否存在环
-func (m *mgnt) hasCycle(ctx context.Context, dagID string, dagIDs []string) (*CycleError, error) {
+func (m *mgnt) hasCycle(ctx context.Context, dagID string, dagIDs []string, dagTypes []string) (*CycleError, error) {
 	var err error
 	ctx, span := trace.StartInternalSpan(ctx)
 	defer func() { trace.TelemetrySpanEnd(span, err) }()
@@ -548,7 +548,8 @@ func (m *mgnt) hasCycle(ctx context.Context, dagID string, dagIDs []string) (*Cy
 			return cycleErr, ierr.NewPublicRestError(ctx, ierr.PErrorInternalServerError, aerr.DescKeyErrorDepencyService, nil)
 		}
 		for _, dag := range dags {
-			if dag.Type != common.DagTypeComboOperator || len(dag.SubIDs) == 0 && dagID != dag.ID {
+			dagType := utils.IfNot(dag.Type == "", common.DagTypeDefault, dag.Type)
+			if !utils.Contains(dagTypes, dagType) || len(dag.SubIDs) == 0 && dagID != dag.ID {
 				continue
 			}
 

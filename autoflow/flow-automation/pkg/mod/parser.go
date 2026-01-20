@@ -2,6 +2,7 @@ package mod
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"strings"
@@ -19,6 +20,8 @@ import (
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/store/rds"
 	cutils "github.com/kweaver-ai/adp/autoflow/flow-automation/utils"
 	traceLog "github.com/kweaver-ai/adp/autoflow/ide-go-lib/telemetry/log"
+	aErrs "github.com/kweaver-ai/adp/autoflow/flow-automation/errors"
+	libErrors "github.com/kweaver-ai/adp/autoflow/ide-go-lib/errors"
 	"github.com/kweaver-ai/adp/autoflow/ide-go-lib/telemetry/trace"
 	"github.com/shiningrush/goevent"
 	"github.com/spaolacci/murmur3"
@@ -323,7 +326,7 @@ func (p *DefParser) InitialDagIns(ctx context.Context, dagIns *entity.DagInstanc
 						"taskId":     taskIns.TaskID,
 						"name":       taskIns.Name,
 						"actionName": taskIns.ActionName,
-						"detail":     "initial failed",
+						"detail":     cutils.IfNot(taskIns.Reason != nil && taskIns.Reason != "", taskIns.Reason, "initial failed"),
 					})
 				} else {
 					tree.DagIns.FailDetail(map[string]any{
@@ -341,125 +344,15 @@ func (p *DefParser) InitialDagIns(ctx context.Context, dagIns *entity.DagInstanc
 		if err := GetStore().PatchDagIns(ctx, &entity.DagInstance{
 			BaseInfo:         entity.BaseInfo{ID: dagIns.ID},
 			EventPersistence: dagIns.EventPersistence,
-			Status:           dagIns.Status}); err != nil {
+			Status:           dagIns.Status,
+			Reason:           tree.DagIns.Reason,
+			EndedAt:          tree.DagIns.EndedAt}); err != nil {
 			log.Errorf("patch dag instance[%s] failed: %s", dagIns.ID, err)
 			return
 		}
+
 		if tree.DagIns.Status == entity.DagInstanceStatusFailed || tree.DagIns.Status == entity.DagInstanceStatusSuccess {
-			go func() {
-				// 流程执行成功删除所有task信息
-				if tree.DagIns.Status == entity.DagInstanceStatusSuccess {
-					dErr := GetStore().DeleteTaskInsByDagInsID(ctx, dagIns.ID)
-					if dErr != nil {
-						log.Warnf("run success, delete task instance failed: %s", dErr.Error())
-					}
-
-					if tree.DagIns.EventPersistence == entity.DagInstanceEventPersistenceSql {
-						_ = UploadDagInstanceEvents(context.Background(), tree.DagIns)
-					}
-				}
-				dag, err := GetStore().GetDagWithOptionalVersion(ctx, dagIns.DagID, dagIns.VersionID)
-				if err != nil {
-					log.Errorf("get dag[%s] failed: %s", dagIns.DagID, err)
-					return
-				}
-
-				if dag.IsDebug {
-					return
-				}
-
-				var (
-					detail string
-					extMsg string
-				)
-
-				if dagIns.DagType == common.DagTypeSecurityPolicy {
-
-					bodyType := "RunSecurityPolicyFlowFailed"
-					if dagIns.Status == entity.DagInstanceStatusSuccess {
-						bodyType = "RunSecurityPolicyFlowSuccess"
-					}
-					detail, extMsg = common.GetLogBody(bodyType, []interface{}{dag.ID},
-						[]interface{}{})
-
-				} else {
-					bodyType := common.CompleteTaskWithFailed
-					if dagIns.Status == entity.DagInstanceStatusSuccess {
-						bodyType = common.CompleteTaskWithSuccess
-					}
-					detail, extMsg = common.GetLogBody(bodyType, []interface{}{dag.Name},
-						[]interface{}{})
-				}
-
-				object := map[string]interface{}{
-					"type":          dag.Trigger,
-					"id":            dagIns.ID,
-					"dagId":         dagIns.DagID,
-					"name":          dag.Name,
-					"priority":      dagIns.Priority,
-					"status":        dagIns.Status,
-					"biz_domain_id": cutils.IfNot(dag.BizDomainID == "", common.BizDomainDefaultID, dag.BizDomainID),
-				}
-
-				if len(dag.Type) != 0 {
-					object["dagType"] = dag.Type
-				} else {
-					object["dagType"] = common.DagTypeDefault
-				}
-
-				if dagIns.EndedAt < dagIns.CreatedAt {
-					endedAt := time.Now().Unix()
-					object["duration"] = endedAt - dagIns.CreatedAt
-				} else {
-					object["duration"] = dagIns.EndedAt - dagIns.CreatedAt
-				}
-
-				varsGetter := dagIns.VarsGetter()
-				userID, _ := varsGetter("operator_id")
-				userType, _ := varsGetter("operator_type")
-
-				var userInfo drivenadapters.UserInfo
-				userInfo, err0 := drivenadapters.NewUserManagement().GetUserInfoByType(fmt.Sprintf("%v", userID), fmt.Sprintf("%v", userType))
-				if err0 != nil {
-					log.Warnf("[InitialDagIns] GetUserInfoByType failed: %s", err0.Error())
-					userName, _ := varsGetter("operator_name")
-					userInfo = drivenadapters.UserInfo{
-						UserID:   fmt.Sprintf("%v", userID),
-						UserName: fmt.Sprintf("%v", userName),
-						Type:     fmt.Sprintf("%v", userType),
-					}
-				}
-				userInfo.VisitorType = common.InternalServiceUserType
-				logger := drivenadapters.NewLogger()
-				logger.LogO11y(&drivenadapters.BuildARLogParams{
-					Operation:   common.ArLogEndDagIns,
-					Description: detail,
-					UserInfo:    &userInfo,
-					Object:      object,
-				}, &drivenadapters.O11yLogWriter{Logger: traceLog.NewFlowO11yLogger()})
-
-				traceLog.WithContext(ctx).Infof("detail: %s, extMsg: %s", detail, extMsg)
-				write := &drivenadapters.JSONLogWriter{SendFunc: p.mq.Publish}
-				// 原AS审计日志发送逻辑
-				// logger.Log(drivenadapters.LogTypeASAuditLog, &drivenadapters.BuildAuditLogParams{
-				// 	UserInfo: &userInfo,
-				// 	Msg:      detail,
-				// 	ExtMsg:   extMsg,
-				// 	OutBizID: dagIns.ID,
-				// 	LogLevel: drivenadapters.NcTLogLevel_NCT_LL_INFO,
-				// }, write)
-
-				logger.Log(drivenadapters.LogTypeDIPFlowAduitLog, &drivenadapters.BuildDIPFlowAuditLog{
-					UserInfo:  &userInfo,
-					Msg:       detail,
-					ExtMsg:    extMsg,
-					OutBizID:  dagIns.ID,
-					Operation: drivenadapters.ExecuteOperation,
-					ObjID:     dag.ID,
-					ObjName:   dag.Name,
-					LogLevel:  drivenadapters.NcTLogLevel_NCT_LL_INFO_Str,
-				}, write)
-			}()
+			go p.handleDagInstanceCompletion(ctx, tree.DagIns.Status, tree, nil)
 		}
 
 		return
@@ -572,117 +465,7 @@ func (p *DefParser) executeNext(taskIns *entity.TaskInstance) error {
 		}
 
 		if status == entity.DagInstanceStatusFailed || status == entity.DagInstanceStatusSuccess {
-			go func() {
-				// 流程执行成功删除所有task信息
-				if tree.DagIns.Status == entity.DagInstanceStatusSuccess {
-					dErr := GetStore().DeleteTaskInsByDagInsID(ctx, tree.DagIns.ID)
-					if dErr != nil {
-						log.Warnf("run success,delete task instance failed: %s", dErr.Error())
-					}
-
-					if tree.DagIns.EventPersistence == entity.DagInstanceEventPersistenceSql {
-						_ = UploadDagInstanceEvents(context.Background(), tree.DagIns)
-					}
-				}
-				dag, err := GetStore().GetDagWithOptionalVersion(ctx, tree.DagIns.DagID, tree.DagIns.VersionID)
-				if err != nil {
-					log.Warnf("get dag[%s] failed: %s", tree.DagIns.DagID, err)
-					return
-				}
-
-				if dag.IsDebug {
-					return
-				}
-
-				var detail, extMsg string
-
-				if tree.DagIns.DagType == common.DagTypeSecurityPolicy {
-
-					bodyType := "RunSecurityPolicyFlowFailed"
-					if tree.DagIns.Status == entity.DagInstanceStatusSuccess {
-						bodyType = "RunSecurityPolicyFlowSuccess"
-					}
-					detail, extMsg = common.GetLogBody(bodyType, []interface{}{dag.ID},
-						[]interface{}{})
-
-				} else {
-					bodyType := common.CompleteTaskWithFailed
-					if tree.DagIns.Status == entity.DagInstanceStatusSuccess {
-						bodyType = common.CompleteTaskWithSuccess
-					}
-					detail, extMsg = common.GetLogBody(bodyType, []interface{}{dag.Name},
-						[]interface{}{})
-				}
-
-				object := map[string]interface{}{
-					"type":          dag.Trigger,
-					"id":            tree.DagIns.ID,
-					"dagId":         tree.DagIns.DagID,
-					"name":          dag.Name,
-					"priority":      tree.DagIns.Priority,
-					"status":        tree.DagIns.Status,
-					"biz_domain_id": cutils.IfNot(dag.BizDomainID == "", common.BizDomainDefaultID, dag.BizDomainID),
-				}
-
-				if len(dag.Type) != 0 {
-					object["dagType"] = dag.Type
-				} else {
-					object["dagType"] = common.DagTypeDefault
-				}
-
-				if tree.DagIns.EndedAt < tree.DagIns.CreatedAt {
-					endedAt := time.Now().Unix()
-					object["duration"] = endedAt - tree.DagIns.CreatedAt
-				} else {
-					object["duration"] = tree.DagIns.EndedAt - tree.DagIns.CreatedAt
-				}
-
-				varsGetter := tree.DagIns.VarsGetter()
-				userID, _ := varsGetter("operator_id")
-				userType, _ := varsGetter("operator_type")
-
-				var userInfo drivenadapters.UserInfo
-				userInfo, err0 := drivenadapters.NewUserManagement().GetUserInfoByType(fmt.Sprintf("%v", userID), fmt.Sprintf("%v", userType))
-				if err0 != nil {
-					log.Warnf("[InitialDagIns] GetUserInfoByType failed: %s", err0.Error())
-					userName, _ := varsGetter("operator_name")
-					userInfo = drivenadapters.UserInfo{
-						UserID:   fmt.Sprintf("%v", userID),
-						UserName: fmt.Sprintf("%v", userName),
-						Type:     fmt.Sprintf("%v", userType),
-					}
-				}
-				userInfo.VisitorType = common.InternalServiceUserType
-				logger := drivenadapters.NewLogger()
-				logger.LogO11y(&drivenadapters.BuildARLogParams{
-					Operation:   common.ArLogEndDagIns,
-					Description: detail,
-					UserInfo:    &userInfo,
-					Object:      object,
-				}, &drivenadapters.O11yLogWriter{Logger: traceLog.NewFlowO11yLogger()})
-
-				traceLog.WithContext(ctx).Infof("detail: %s, extMsg: %s", detail, extMsg)
-				write := &drivenadapters.JSONLogWriter{SendFunc: p.mq.Publish}
-				// 原AS审计日志发送逻辑
-				// logger.Log(drivenadapters.LogTypeASAuditLog, &drivenadapters.BuildAuditLogParams{
-				// 	UserInfo: &userInfo,
-				// 	Msg:      detail,
-				// 	ExtMsg:   extMsg,
-				// 	OutBizID: dag.ID,
-				// 	LogLevel: drivenadapters.NcTLogLevel_NCT_LL_INFO,
-				// }, write)
-
-				logger.Log(drivenadapters.LogTypeDIPFlowAduitLog, &drivenadapters.BuildDIPFlowAuditLog{
-					UserInfo:  &userInfo,
-					Msg:       detail,
-					ExtMsg:    extMsg,
-					OutBizID:  taskIns.ID,
-					Operation: drivenadapters.ExecuteOperation,
-					ObjID:     dag.ID,
-					ObjName:   dag.Name,
-					LogLevel:  drivenadapters.NcTLogLevel_NCT_LL_INFO_Str,
-				}, write)
-			}()
+			go p.handleDagInstanceCompletion(ctx, status, tree, taskIns)
 		}
 
 		return nil
@@ -860,7 +643,7 @@ func (p *DefParser) parseScheduleDagIns(ctx context.Context, dagIns *entity.DagI
 			}
 			if len(needInitTaskIns) > 0 {
 				if _, err := GetStore().BatchCreateTaskIns(ctx, needInitTaskIns); err != nil {
-					fmt.Println("BatchCreateTaskIns failed: %v", err.Error())
+					fmt.Println("BatchCreateTaskIns failed: ", err.Error())
 					return err
 				}
 			}
@@ -975,4 +758,223 @@ func (p *DefParser) handleDagInsResult(dagIns *entity.DagInstance) {
 			log.Infof("[Parser.handleDagInsResult] publish topic failed: %s\n", err.Error())
 		}
 	}
+}
+
+// handleDagInstanceCompletion 处理 DAG 实例完成后的所有操作
+// 包括：数据清理、回调执行、日志记录
+func (p *DefParser) handleDagInstanceCompletion(ctx context.Context, status entity.DagInstanceStatus, tree *TaskTree, taskIns *entity.TaskInstance) {
+	// 执行回调
+	HandleSubprocessCallback(ctx, status, tree.DagIns, taskIns)
+
+	// 清理成功的 DAG 实例数据
+	p.cleanupSuccessDagInstance(ctx, tree)
+
+	// 记录日志
+	p.logDagInstanceCompletion(ctx, tree.DagIns, taskIns)
+}
+
+// cleanupSuccessDagInstance 清理成功完成的 DAG 实例数据
+func (p *DefParser) cleanupSuccessDagInstance(ctx context.Context, tree *TaskTree) {
+	if tree.DagIns.Status != entity.DagInstanceStatusSuccess {
+		return
+	}
+
+	// 删除任务实例数据
+	if dErr := GetStore().DeleteTaskInsByDagInsID(ctx, tree.DagIns.ID); dErr != nil {
+		log.Warnf("run success, delete task instance failed: %s", dErr.Error())
+	}
+
+	// 上传事件到 OSS
+	if tree.DagIns.EventPersistence == entity.DagInstanceEventPersistenceSql {
+		_ = UploadDagInstanceEvents(context.Background(), tree.DagIns)
+	}
+}
+
+// logDagInstanceCompletion 记录 DAG 实例完成日志
+func (p *DefParser) logDagInstanceCompletion(ctx context.Context, dagIns *entity.DagInstance, taskIns *entity.TaskInstance) {
+	dag, err := GetStore().GetDagWithOptionalVersion(ctx, dagIns.DagID, dagIns.VersionID)
+	if err != nil {
+		log.Warnf("[parser.logDagInstanceCompletion] GetDagWithOptionalVersion failed: %s", err.Error())
+		return
+	}
+
+	// 调试模式下不执行后续操作
+	if dag == nil || dag.IsDebug {
+		return
+	}
+	// 构建日志详情
+	var detail, extMsg string
+	if dagIns.DagType == common.DagTypeSecurityPolicy {
+		bodyType := "RunSecurityPolicyFlowFailed"
+		if dagIns.Status == entity.DagInstanceStatusSuccess {
+			bodyType = "RunSecurityPolicyFlowSuccess"
+		}
+		detail, extMsg = common.GetLogBody(bodyType, []any{dag.ID}, []any{})
+	} else {
+		bodyType := common.CompleteTaskWithFailed
+		if dagIns.Status == entity.DagInstanceStatusSuccess {
+			bodyType = common.CompleteTaskWithSuccess
+		}
+		detail, extMsg = common.GetLogBody(bodyType, []any{dag.Name}, []any{})
+	}
+
+	// 构建日志对象
+	object := map[string]interface{}{
+		"type":          dag.Trigger,
+		"id":            dagIns.ID,
+		"dagId":         dagIns.DagID,
+		"name":          dag.Name,
+		"priority":      dagIns.Priority,
+		"status":        dagIns.Status,
+		"biz_domain_id": cutils.IfNot(dag.BizDomainID == "", common.BizDomainDefaultID, dag.BizDomainID),
+	}
+	if len(dag.Type) != 0 {
+		object["dagType"] = dag.Type
+	} else {
+		object["dagType"] = common.DagTypeDefault
+	}
+	if dagIns.EndedAt < dagIns.CreatedAt {
+		object["duration"] = time.Now().Unix() - dagIns.CreatedAt
+	} else {
+		object["duration"] = dagIns.EndedAt - dagIns.CreatedAt
+	}
+
+	// 获取用户信息
+	varsGetter := dagIns.VarsGetter()
+	userID, _ := varsGetter("operator_id")
+	userType, _ := varsGetter("operator_type")
+	userInfo, err := drivenadapters.NewUserManagement().GetUserInfoByType(fmt.Sprintf("%v", userID), fmt.Sprintf("%v", userType))
+	if err != nil {
+		log.Warnf("[parser.logDagInstanceCompletion] GetUserInfoByType failed: %s", err.Error())
+		userName, _ := varsGetter("operator_name")
+		userInfo = drivenadapters.UserInfo{
+			UserID:   fmt.Sprintf("%v", userID),
+			UserName: fmt.Sprintf("%v", userName),
+			Type:     fmt.Sprintf("%v", userType),
+		}
+	}
+	userInfo.VisitorType = common.InternalServiceUserType
+
+	// 记录可观测性日志
+	logger := drivenadapters.NewLogger()
+	logger.LogO11y(&drivenadapters.BuildARLogParams{
+		Operation:   common.ArLogEndDagIns,
+		Description: detail,
+		UserInfo:    &userInfo,
+		Object:      object,
+	}, &drivenadapters.O11yLogWriter{Logger: traceLog.NewFlowO11yLogger()})
+
+	traceLog.WithContext(ctx).Infof("detail: %s, extMsg: %s", detail, extMsg)
+
+	// 确定 OutBizID
+	outBizID := dagIns.ID
+	if taskIns != nil {
+		outBizID = taskIns.ID
+	}
+
+	// 记录 DIP 审计日志
+	write := &drivenadapters.JSONLogWriter{SendFunc: p.mq.Publish}
+	logger.Log(drivenadapters.LogTypeDIPFlowAduitLog, &drivenadapters.BuildDIPFlowAuditLog{
+		UserInfo:  &userInfo,
+		Msg:       detail,
+		ExtMsg:    extMsg,
+		OutBizID:  outBizID,
+		Operation: drivenadapters.ExecuteOperation,
+		ObjID:     dag.ID,
+		ObjName:   dag.Name,
+		LogLevel:  drivenadapters.NcTLogLevel_NCT_LL_INFO_Str,
+	}, write)
+}
+
+func HandleSubprocessCallback(ctx context.Context, status entity.DagInstanceStatus, dagIns *entity.DagInstance, taskIns *entity.TaskInstance) {
+	if dagIns.SuccessCallback == "" {
+		return
+	}
+
+	store := GetStore()
+	if dagIns.DagType == common.DagTypeDataFlow {
+		varsGetter := dagIns.VarsGetter()
+		batchRunID, ok := varsGetter("batch_run_id")
+		if !ok {
+			return
+		}
+
+		dagIns, err := store.ListDagInstance(ctx, &ListDagInstanceInput{
+			DagIDs: []string{dagIns.DagID},
+			Status: []entity.DagInstanceStatus{entity.DagInstanceStatusInit, entity.DagInstanceStatusScheduled, entity.DagInstanceStatusRunning, entity.DagInstanceStatusBlocked},
+			MatchQuery: &MatchQuery{
+				Field: "vars.batch_run_id.value",
+				Value: batchRunID,
+			},
+			SelectField: []string{"_id", "dagId"},
+		})
+		if err != nil {
+			log.Warnf("[executeCallback] ListDagInstance failed: %s", err.Error())
+			return
+		}
+
+		if len(dagIns) > 0 {
+			return
+		}
+	}
+
+	var body any
+	if status == entity.DagInstanceStatusSuccess {
+		var data = map[string]any{}
+		if dagIns.DagType != common.DagTypeDataFlow {
+			dag, err := store.GetDagWithOptionalVersion(ctx, dagIns.DagID, dagIns.VersionID)
+			if err != nil {
+				log.Warnf("[executeCallback] GetDagWithOptionalVersion failed: %s", err.Error())
+				return
+			}
+
+			lastStep := dag.Steps[len(dag.Steps)-1]
+			if lastStep.Operator != common.BranchOpt {
+				events, _ := GetDagInstanceEvents(ctx, &rds.DagInstanceEventListOptions{
+					DagInstanceID: dagIns.ID,
+					Names:         []string{fmt.Sprintf("__%s", lastStep.ID)},
+				})
+				if len(events) > 0 {
+					_ = json.Unmarshal([]byte(events[0].Data), &data)
+				}
+			}
+		}
+		body = data
+	} else {
+		// 处理失败情况
+		var reason any
+		if taskIns != nil {
+			reason = taskIns.Reason
+		} else {
+			// taskIns 为 nil 时，从 dagIns 中获取 reason
+			reason = dagIns.Reason
+			data := map[string]any{}
+			mErr := json.Unmarshal([]byte(dagIns.Reason), &data)
+			if mErr == nil {
+				detail, ok := data["detail"]
+				reason = cutils.IfNot(ok, detail, reason)
+			}
+		}
+
+		switch reason.(type) {
+		case *aErrs.IError, aErrs.IError, *libErrors.RestError, libErrors.RestError:
+			body = reason
+		case map[string]any:
+			if _, ok := reason.(map[string]any)["code"]; ok {
+				body = reason
+			} else {
+				body = libErrors.NewPublicRestError(ctx, libErrors.PErrorInternalServerError, libErrors.PErrorInternalServerError, reason)
+			}
+		default:
+			body = libErrors.NewPublicRestError(ctx, libErrors.PErrorInternalServerError, libErrors.PErrorInternalServerError, reason)
+		}
+	}
+
+	client := drivenadapters.NewOtelHTTPClient()
+	_, _, err := client.Post(context.Background(), dagIns.SuccessCallback, map[string]string{}, body)
+	if err != nil {
+		log.Warnf("[parser.executeCallback] 调用 callBack %s 失败: %v \n", dagIns.SuccessCallback, err)
+	}
+
+	return
 }

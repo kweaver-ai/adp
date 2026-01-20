@@ -103,6 +103,17 @@
             "description": "Whether the DAG is published",
             "type": "boolean",
             "default": false
+        },
+        "version" : {
+            "type": "string",
+            "pattern": "^v(0|[1-9]\\d*)(?:\\.(0|[1-9]\\d*)){2}$",
+            "not": {
+                "const": "v0.0.0"
+            }
+        },
+        "change_log" : {
+            "type": "string",
+            "maxLength": 300
         }
     },
     "additionalProperties": false

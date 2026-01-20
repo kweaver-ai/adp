@@ -270,15 +270,17 @@ func (h *restHandler) listDags(config mgnt.ListDagsConfig) func(c *gin.Context) 
 	return func(c *gin.Context) {
 		user, _ := c.Get("user")
 		userInfo := user.(*drivenadapters.UserInfo)
+		config.Scope = c.Query("scope")
 
 		var (
-			page        = c.DefaultQuery("page", "0")
-			limit       = c.DefaultQuery("limit", "20")
-			sortBy      = c.DefaultQuery("sortby", "updated_at")
-			order       = c.DefaultQuery("order", "desc")
-			keyword     = c.Query("keyword")
-			triggerType = c.Query("trigger_type")
-			flowType    = c.Query("type")
+			page         = c.DefaultQuery("page", "0")
+			limit        = c.DefaultQuery("limit", "20")
+			sortBy       = c.DefaultQuery("sortby", "updated_at")
+			order        = c.DefaultQuery("order", "desc")
+			keyword      = c.Query("keyword")
+			triggerType  = c.Query("trigger_type")
+			triggerTypes = c.Query("trigger_types")
+			flowType     = c.Query("type")
 		)
 		pageInt, err := strconv.ParseInt(page, 0, 64)
 
@@ -302,6 +304,10 @@ func (h *restHandler) listDags(config mgnt.ListDagsConfig) func(c *gin.Context) 
 			"keyword":      keyword,
 			"trigger_type": triggerType,
 			"type":         flowType,
+		}
+
+		if triggerTypes != "" {
+			query["trigger_types"] = strings.Split(triggerTypes, ",")
 		}
 
 		queryByte, _ := json.Marshal(query)
@@ -351,7 +357,14 @@ func (h *restHandler) runInstance(c *gin.Context) {
 		return
 	}
 
-	err = h.mgnt.RunInstance(c.Request.Context(), dagID, userInfo)
+	params := &mgnt.RunDagParams{
+		ID:                  dagID,
+		VersionID:           c.Query("version_id"),
+		ParentDagInstanceID: c.GetHeader("X-Parent-Execution-ID"),
+		CallBack:            c.GetHeader("X-Callback-URL"),
+	}
+
+	err = h.mgnt.RunInstance(c.Request.Context(), params, userInfo)
 	if err != nil {
 		errors.ReplyError(c, err)
 		return
@@ -387,7 +400,15 @@ func (h *restHandler) runInstanceWithForm(c *gin.Context) {
 		return
 	}
 
-	dagInsID, err := h.mgnt.RunFormInstance(c.Request.Context(), dagID, param.Data, userInfo)
+	params := &mgnt.RunDagParams{
+		ID:                  dagID,
+		VersionID:           c.Query("version_id"),
+		ParentDagInstanceID: c.GetHeader("X-Parent-Execution-ID"),
+		CallBack:            c.GetHeader("X-Callback-URL"),
+		FormData:            param.Data,
+	}
+
+	dagInsID, err := h.mgnt.RunFormInstance(c.Request.Context(), params, userInfo)
 	if err != nil {
 		errors.ReplyError(c, err)
 		return
@@ -422,7 +443,13 @@ func (h *restHandler) runPublicAPI(c *gin.Context) {
 		return
 	}
 
-	_, err = h.mgnt.RunFormInstance(c.Request.Context(), dagID, param.Data, nil)
+	params := &mgnt.RunDagParams{
+		ID:        dagID,
+		VersionID: c.Query("version_id"),
+		FormData:  param.Data,
+	}
+
+	_, err = h.mgnt.RunFormInstance(c.Request.Context(), params, nil)
 	if err != nil {
 		errors.ReplyError(c, err)
 		return
@@ -1815,13 +1842,14 @@ func (h *restHandler) listDagsWithPerm(c *gin.Context) {
 	userInfo := user.(*drivenadapters.UserInfo)
 
 	var (
-		page        = c.DefaultQuery("page", "0")
-		limit       = c.DefaultQuery("limit", "20")
-		sortBy      = c.DefaultQuery("sortby", "updated_at")
-		order       = c.DefaultQuery("order", "desc")
-		keyword     = c.Query("keyword")
-		triggerType = c.Query("trigger_type")
-		flowType    = c.Query("type")
+		page         = c.DefaultQuery("page", "0")
+		limit        = c.DefaultQuery("limit", "20")
+		sortBy       = c.DefaultQuery("sortby", "updated_at")
+		order        = c.DefaultQuery("order", "desc")
+		keyword      = c.Query("keyword")
+		triggerType  = c.Query("trigger_type")
+		triggerTypes = c.Query("trigger_types")
+		flowType     = c.Query("type")
 	)
 	pageInt, err := strconv.ParseInt(page, 0, 64)
 
@@ -1845,6 +1873,10 @@ func (h *restHandler) listDagsWithPerm(c *gin.Context) {
 		"keyword":      keyword,
 		"trigger_type": triggerType,
 		"type":         flowType,
+	}
+
+	if triggerTypes != "" {
+		query["trigger_types"] = strings.Split(triggerTypes, ",")
 	}
 
 	queryByte, _ := json.Marshal(query)

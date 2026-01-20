@@ -1397,6 +1397,12 @@ func (s *Store) ListDag(ctx context.Context, input *mod.ListDagInput) ([]*entity
 		query["trigger"] = input.TriggerType
 	}
 
+	if len(input.TriggerTypes) > 0 {
+		query["trigger"] = bson.M{
+			"$in": input.TriggerTypes,
+		}
+	}
+
 	if input.UserID != "" {
 		query["userid"] = input.UserID
 	}
@@ -1465,7 +1471,7 @@ func (s *Store) ListDag(ctx context.Context, input *mod.ListDagInput) ([]*entity
 				},
 			}
 		}
-	} else if len(input.TriggerExclude) > 0 {
+	} else if len(input.TriggerExclude) > 0 && input.Scope != "all" {
 		query["steps"] = bson.M{
 			"$not": bson.M{
 				"$elemMatch": bson.M{
@@ -1481,6 +1487,39 @@ func (s *Store) ListDag(ctx context.Context, input *mod.ListDagInput) ([]*entity
 		query["accessors.id"] = bson.M{
 			"$in": input.Accessors,
 		}
+	}
+
+	// scope 查询条件仅在子流程调用接口使用
+	if input.Scope == "all" {
+		query["$or"] = []bson.M{
+			{
+				"steps": bson.M{
+					"$not": bson.M{
+						"$elemMatch": bson.M{
+							"operator": bson.M{
+								"$in": input.TriggerExclude,
+							},
+						},
+					},
+				},
+				"accessors.id": bson.M{
+					"$in": input.Accessors,
+				},
+			},
+			{
+				"userid": input.UserID,
+			},
+		}
+		// 子流程调用，过滤批量触发的工作流
+		query["steps"] = bson.M{
+			"$not": bson.M{
+				"$elemMatch": bson.M{
+					"datasource": bson.M{"$ne": nil, "$exists": true},
+				},
+			},
+		}
+		delete(query, "userid")
+		delete(query, "accessors.id")
 	}
 
 	opt := &options.FindOptions{}

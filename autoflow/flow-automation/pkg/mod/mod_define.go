@@ -195,10 +195,12 @@ type ListDagInput struct {
 	Accessors      []string
 	TriggerExclude []string
 	TriggerType    string
+	TriggerTypes   []string
 	Type           string
 	SelectField    []string
 	Status         []entity.DagStatus
 	BizDomainID    string
+	Scope          string
 }
 
 // ListDagInstanceInput

@@ -707,7 +707,7 @@ func (m *mgnt) FullDebug(ctx context.Context, params FullDeBugReq, userInfo *dri
 		return "", "", err
 	}
 
-	dagIns, err := dag.Run(ctx, trigger, runVar, nil)
+	dagIns, err := dag.Run(ctx, trigger, runVar)
 	if err != nil {
 		log.Warnf("[logic.FullDebug] RunDag err, detail: %s", err.Error())
 		return "", "", ierr.NewPublicRestError(ctx, ierr.PErrorInternalServerError, aerr.DescKeyErrorDepencyService, nil)

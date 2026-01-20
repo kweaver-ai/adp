@@ -111,6 +111,10 @@ func (c *DefaultDagPermChecker) Check(ctx context.Context, dag *entity.Dag, user
 		}
 	}
 
+	if utils.Contains(opts, OldOwnerOperation) {
+		return dag.UserID == userInfo.UserID, nil
+	}
+
 	if dag.UserID != userInfo.UserID && utils.Contains(opts, OldShareOperation) {
 		accessors, gerr := c.Usermgnt.GetUserAccessorIDs(userInfo.UserID)
 		if gerr != nil {
