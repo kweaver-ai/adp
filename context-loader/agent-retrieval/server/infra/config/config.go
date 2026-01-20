@@ -3,6 +3,7 @@
 // Licensed under the Apache License, Version 2.0.
 // See the LICENSE file in the project root for details.
 
+// Package config provides application configuration loading and management.
 package config
 
 import (
@@ -14,11 +15,11 @@ import (
 	"strconv"
 	"sync"
 
+	"github.com/creasty/defaults"
 	"github.com/kweaver-ai/adp/context-loader/agent-retrieval/server/infra/logger"
 	"github.com/kweaver-ai/adp/context-loader/agent-retrieval/server/infra/telemetry"
 	"github.com/kweaver-ai/adp/context-loader/agent-retrieval/server/interfaces"
 	"github.com/kweaver-ai/adp/context-loader/agent-retrieval/server/utils"
-	"github.com/creasty/defaults"
 	o11y "github.com/kweaver-ai/kweaver-go-lib/observability"
 	"github.com/spf13/viper"
 	"gopkg.in/yaml.v3"

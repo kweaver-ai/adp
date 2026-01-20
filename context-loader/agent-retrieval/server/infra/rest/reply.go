@@ -15,14 +15,14 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/bytedance/sonic"
+	"github.com/gin-gonic/gin"
+	"github.com/go-playground/validator/v10"
 	"github.com/kweaver-ai/adp/context-loader/agent-retrieval/server/infra/common"
 	myErr "github.com/kweaver-ai/adp/context-loader/agent-retrieval/server/infra/errors"
 	"github.com/kweaver-ai/adp/context-loader/agent-retrieval/server/infra/localize"
 	"github.com/kweaver-ai/adp/context-loader/agent-retrieval/server/infra/logger"
 	validatorv "github.com/kweaver-ai/adp/context-loader/agent-retrieval/server/infra/validator"
-	"github.com/bytedance/sonic"
-	"github.com/gin-gonic/gin"
-	"github.com/go-playground/validator/v10"
 	errorwrap "github.com/pkg/errors"
 )
 

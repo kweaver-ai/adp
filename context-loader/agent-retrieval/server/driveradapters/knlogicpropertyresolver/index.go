@@ -3,6 +3,7 @@
 // Licensed under the Apache License, Version 2.0.
 // See the LICENSE file in the project root for details.
 
+// Package knlogicpropertyresolver provides HTTP handler for logic property resolver operations.
 package knlogicpropertyresolver
 
 import (
@@ -11,14 +12,14 @@ import (
 	"sync"
 	"time"
 
+	"github.com/creasty/defaults"
+	"github.com/gin-gonic/gin"
+	"github.com/go-playground/validator/v10"
 	"github.com/kweaver-ai/adp/context-loader/agent-retrieval/server/infra/config"
 	"github.com/kweaver-ai/adp/context-loader/agent-retrieval/server/infra/errors"
 	"github.com/kweaver-ai/adp/context-loader/agent-retrieval/server/infra/rest"
 	"github.com/kweaver-ai/adp/context-loader/agent-retrieval/server/interfaces"
 	logicskn "github.com/kweaver-ai/adp/context-loader/agent-retrieval/server/logics/knlogicpropertyresolver"
-	"github.com/creasty/defaults"
-	"github.com/gin-gonic/gin"
-	"github.com/go-playground/validator/v10"
 )
 
 // KnLogicPropertyResolverHandler 逻辑属性解析 Handler

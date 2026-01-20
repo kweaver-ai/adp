@@ -13,8 +13,9 @@ import (
 	"github.com/kweaver-ai/adp/context-loader/agent-retrieval/server/interfaces"
 )
 
-var (
-	maxMatchScore float64 = 100
+const (
+	// dataSampleLimit 数据采样数量
+	dataSampleLimit = 2
 )
 
 // parallelExecSemanticQueryStrategy 执行召回策略（并发）
@@ -87,7 +88,7 @@ func (k *knRetrievalServiceImpl) execObjectInstanceDiscoveryStrategy(ctx context
 		OtID:               strategy.Filter.ConceptID,
 		IncludeTypeInfo:    true,
 		IncludeLogicParams: true,
-		Limit:              2, // 数据采样数量
+		Limit:              dataSampleLimit,
 	}
 	// todo: condition转换待实现
 

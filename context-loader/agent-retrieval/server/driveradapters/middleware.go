@@ -25,9 +25,9 @@ import (
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/trace"
 
-	"github.com/kweaver-ai/TelemetrySDK-Go/span/v2/field"
 	"github.com/gin-gonic/gin"
 	jsoniter "github.com/json-iterator/go"
+	"github.com/kweaver-ai/TelemetrySDK-Go/span/v2/field"
 )
 
 type apiLogModel struct {

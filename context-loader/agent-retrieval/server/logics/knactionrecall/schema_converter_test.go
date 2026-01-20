@@ -35,7 +35,9 @@ func TestConvertMCPSchemaToFunctionCall(t *testing.T) {
 		}
 	}`
 	var inputMap map[string]interface{}
-	json.Unmarshal([]byte(inputJSON), &inputMap)
+	if err := json.Unmarshal([]byte(inputJSON), &inputMap); err != nil {
+		t.Fatalf("Failed to unmarshal test JSON: %v", err)
+	}
 
 	result, err := service.convertMCPSchemaToFunctionCall(ctx, inputMap)
 	if err != nil {
@@ -59,7 +61,9 @@ func TestConvertMCPSchemaToFunctionCall(t *testing.T) {
 			"owner": {"$ref": "#/$defs/Person"}
 		}
 	}`
-	json.Unmarshal([]byte(inputJSON), &inputMap)
+	if err := json.Unmarshal([]byte(inputJSON), &inputMap); err != nil {
+		t.Fatalf("Failed to unmarshal test JSON: %v", err)
+	}
 	result, err = service.convertMCPSchemaToFunctionCall(ctx, inputMap)
 	if err != nil {
 		t.Fatalf("Expected no error, got %v", err)
@@ -103,7 +107,9 @@ func TestResolveMCPSchemaCircular(t *testing.T) {
 		}
 	}`
 	var inputMap map[string]interface{}
-	json.Unmarshal([]byte(inputJSON), &inputMap)
+	if err := json.Unmarshal([]byte(inputJSON), &inputMap); err != nil {
+		t.Fatalf("Failed to unmarshal test JSON: %v", err)
+	}
 
 	result, err := service.convertMCPSchemaToFunctionCall(ctx, inputMap)
 	if err != nil {

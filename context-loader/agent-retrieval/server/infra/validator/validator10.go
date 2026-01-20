@@ -3,6 +3,7 @@
 // Licensed under the Apache License, Version 2.0.
 // See the LICENSE file in the project root for details.
 
+// Package validator provides validation utilities and error type mappings.
 package validator
 
 import (

@@ -44,7 +44,7 @@ type ToolMetadata struct {
 	UpdateTime  int64          `json:"update_time"`
 	CreateUser  string         `json:"create_user"`
 	UpdateUser  string         `json:"update_user"`
-	ApiSpec     map[string]any `json:"api_spec"` // OpenAPI specification
+	APISpec     map[string]any `json:"api_spec"` // OpenAPI specification
 }
 
 // GetMCPToolDetailRequest Get MCP tool detail request

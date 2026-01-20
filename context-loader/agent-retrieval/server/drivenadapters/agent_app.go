@@ -166,9 +166,10 @@ func (a *agentClient) ConceptRetrievalStrategistAgent(ctx context.Context,
 }
 
 // MetricDynamicParamsGeneratorAgent Metric 动态参数生成智能体
-func (a *agentClient) MetricDynamicParamsGeneratorAgent(ctx context.Context,
-	req *interfaces.MetricDynamicParamsGeneratorReq) (dynamicParams map[string]any, missingParams *interfaces.MissingPropertyParams, err error) {
-
+func (a *agentClient) MetricDynamicParamsGeneratorAgent(
+	ctx context.Context,
+	req *interfaces.MetricDynamicParamsGeneratorReq,
+) (dynamicParams map[string]any, missingParams *interfaces.MissingPropertyParams, err error) {
 	// 📤 记录调用 Agent 的入参
 	queryStr := utils.ObjectToJSON(req)
 	a.logger.WithContext(ctx).Infof("  ├─ [Agent调用] Metric Agent 入参: query=%s", queryStr)
@@ -226,16 +227,17 @@ func (a *agentClient) MetricDynamicParamsGeneratorAgent(ctx context.Context,
 }
 
 // OperatorDynamicParamsGeneratorAgent Operator 动态参数生成智能体
-func (a *agentClient) OperatorDynamicParamsGeneratorAgent(ctx context.Context,
-	req *interfaces.OperatorDynamicParamsGeneratorReq) (dynamicParams map[string]any, missingParams *interfaces.MissingPropertyParams, err error) {
-
+func (a *agentClient) OperatorDynamicParamsGeneratorAgent(
+	ctx context.Context,
+	req *interfaces.OperatorDynamicParamsGeneratorReq,
+) (dynamicParams map[string]any, missingParams *interfaces.MissingPropertyParams, err error) {
 	// 📤 记录调用 Agent 的入参
 	queryStr := utils.ObjectToJSON(req)
 	a.logger.WithContext(ctx).Infof("  ├─ [Agent调用] Operator Agent 入参: property=%s, query=%s",
 		req.LogicProperty.Name, req.Query)
 	customQuerys := make(map[string]any)
-	if len(req.OperatorId) > 0 {
-		customQuerys["operator_id"] = req.OperatorId
+	if req.OperatorID != "" {
+		customQuerys["operator_id"] = req.OperatorID
 	}
 	chatReq := &interfaces.ChatRequest{
 		AgentKey:     a.DeployAgent.OperatorDynamicParamsGeneratorKey,

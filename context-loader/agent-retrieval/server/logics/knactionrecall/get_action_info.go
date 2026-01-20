@@ -84,10 +84,10 @@ func (s *knActionRecallServiceImpl) GetActionInfo(ctx context.Context, req *inte
 			actionsResp.ActionSource.ToolID)
 
 		// 8. 映射固定参数
-		fixedParams := s.mapFixedParams(ctx, firstAction.Parameters, toolDetail.Metadata.ApiSpec)
+		fixedParams := s.mapFixedParams(ctx, firstAction.Parameters, toolDetail.Metadata.APISpec)
 
 		// 9. 转换 Schema 为 OpenAI Function Call 格式
-		parameters, err := s.convertSchemaToFunctionCall(ctx, toolDetail.Metadata.ApiSpec)
+		parameters, err := s.convertSchemaToFunctionCall(ctx, toolDetail.Metadata.APISpec)
 		if err != nil {
 			s.logger.WithContext(ctx).Errorf("[KnActionRecall#GetActionInfo] ConvertSchema failed, err: %v", err)
 			return nil, infraErr.DefaultHTTPError(ctx, http.StatusInternalServerError,
@@ -99,10 +99,10 @@ func (s *knActionRecallServiceImpl) GetActionInfo(ctx context.Context, req *inte
 			Name:            toolDetail.Name,
 			Description:     toolDetail.Description,
 			Parameters:      parameters,
-			ApiURL:          apiURL,
-			OriginalSchema:  toolDetail.Metadata.ApiSpec,
+			APIURL:          apiURL,
+			OriginalSchema:  toolDetail.Metadata.APISpec,
 			FixedParams:     fixedParams,
-			ApiCallStrategy: interfaces.ResultProcessStrategyKnActionRecall,
+			APICallStrategy: interfaces.ResultProcessStrategyKnActionRecall,
 		}
 	} else {
 		// MCP Logic
@@ -138,10 +138,10 @@ func (s *knActionRecallServiceImpl) GetActionInfo(ctx context.Context, req *inte
 			Name:            toolDetail.Name,
 			Description:     toolDetail.Description,
 			Parameters:      parameters,
-			ApiURL:          apiURL,
+			APIURL:          apiURL,
 			OriginalSchema:  toolDetail.InputSchema,
 			FixedParams:     fixedParams,
-			ApiCallStrategy: interfaces.ResultProcessStrategyKnActionRecall,
+			APICallStrategy: interfaces.ResultProcessStrategyKnActionRecall,
 		}
 	}
 

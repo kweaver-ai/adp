@@ -14,12 +14,12 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/bytedance/sonic"
 	"github.com/kweaver-ai/adp/context-loader/agent-retrieval/server/infra/common"
 	"github.com/kweaver-ai/adp/context-loader/agent-retrieval/server/infra/config"
 	infraErr "github.com/kweaver-ai/adp/context-loader/agent-retrieval/server/infra/errors"
 	"github.com/kweaver-ai/adp/context-loader/agent-retrieval/server/infra/rest"
 	"github.com/kweaver-ai/adp/context-loader/agent-retrieval/server/interfaces"
-	"github.com/bytedance/sonic"
 )
 
 type ontologyManagerAccess struct {

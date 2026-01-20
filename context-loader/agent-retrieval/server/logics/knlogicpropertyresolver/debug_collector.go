@@ -3,6 +3,7 @@
 // Licensed under the Apache License, Version 2.0.
 // See the LICENSE file in the project root for details.
 
+// Package knlogicpropertyresolver provides logic property resolver service for knowledge network.
 package knlogicpropertyresolver
 
 import (

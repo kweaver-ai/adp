@@ -290,7 +290,13 @@ func (s *knActionRecallServiceImpl) convertSchemaToFunctionCall(ctx context.Cont
 // - 解析 properties 中的属性时，深度不变（同一层级）
 // - 达到最大深度时，执行剪枝（保留类型和原始描述，移除 properties）
 // currentDepth: 当前递归深度，用于控制循环引用的展开深度
-func (s *knActionRecallServiceImpl) resolveSchema(ctx context.Context, schema interface{}, apiSpec map[string]interface{}, visitedRefs map[string]bool, currentDepth int) (map[string]interface{}, error) {
+func (s *knActionRecallServiceImpl) resolveSchema(
+	ctx context.Context,
+	schema interface{},
+	apiSpec map[string]interface{},
+	visitedRefs map[string]bool,
+	currentDepth int,
+) (map[string]interface{}, error) {
 	if schema == nil {
 		return map[string]interface{}{"type": "string"}, nil
 	}
@@ -467,7 +473,13 @@ func (s *knActionRecallServiceImpl) pruneSchema(schema map[string]interface{}) m
 }
 
 // resolveDollarRef 解析 $ref 引用（完整实现，支持循环引用检测和深度控制）
-func (s *knActionRecallServiceImpl) resolveDollarRef(ctx context.Context, refPath string, apiSpec map[string]interface{}, visitedRefs map[string]bool, currentDepth int) (map[string]interface{}, error) {
+func (s *knActionRecallServiceImpl) resolveDollarRef(
+	ctx context.Context,
+	refPath string,
+	apiSpec map[string]interface{},
+	visitedRefs map[string]bool,
+	currentDepth int,
+) (map[string]interface{}, error) {
 	// 获取被引用的 schema
 	schema, err := s.getReferencedSchema(refPath, apiSpec)
 	if err != nil {

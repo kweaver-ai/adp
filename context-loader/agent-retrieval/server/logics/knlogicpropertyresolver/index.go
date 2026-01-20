@@ -18,6 +18,11 @@ import (
 	"github.com/kweaver-ai/adp/context-loader/agent-retrieval/server/interfaces"
 )
 
+const (
+	// defaultMaxConcurrency 默认最大并发数
+	defaultMaxConcurrency = 4
+)
+
 // knLogicPropertyResolverService 逻辑属性解析服务实现
 type knLogicPropertyResolverService struct {
 	logger                interfaces.Logger
@@ -58,7 +63,7 @@ func (s *knLogicPropertyResolverService) ResolveLogicProperties(
 		req.Options = &interfaces.ResolveOptions{
 			ReturnDebug:     false,
 			MaxRepairRounds: 1,
-			MaxConcurrency:  4,
+			MaxConcurrency:  defaultMaxConcurrency,
 		}
 	}
 
@@ -486,16 +491,16 @@ func (s *knLogicPropertyResolverService) generateOperatorParams(
 	s.logger.WithContext(ctx).Debugf("[KnLogicPropertyResolver] Generating operator params via Agent for: %s", property.Name)
 
 	// 从 data_source 中提取 operator_id
-	var operatorId string
+	var operatorID string
 	if property.DataSource != nil {
 		if id, ok := property.DataSource["id"].(string); ok {
-			operatorId = id
+			operatorID = id
 		}
 	}
 
 	// 构建 Agent 请求
 	agentReq := &interfaces.OperatorDynamicParamsGeneratorReq{
-		OperatorId:        operatorId,
+		OperatorID:        operatorID,
 		LogicProperty:     property,
 		Query:             req.Query,
 		UniqueIdentities:  req.UniqueIdentities,

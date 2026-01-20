@@ -32,13 +32,13 @@ func (k *knRetrievalServiceImpl) rerankByConceptType(conceptResults []*interface
 	}
 	result := []*interfaces.ConceptResult{}
 	// 顺序要求：对象类、关系类、行动类
-	if conceptTypeMap[interfaces.KnConceptTypeObject] != nil && len(conceptTypeMap[interfaces.KnConceptTypeObject]) > 0 {
+	if len(conceptTypeMap[interfaces.KnConceptTypeObject]) > 0 {
 		result = append(result, conceptTypeMap[interfaces.KnConceptTypeObject]...)
 	}
-	if conceptTypeMap[interfaces.KnConceptTypeRelation] != nil && len(conceptTypeMap[interfaces.KnConceptTypeRelation]) > 0 {
+	if len(conceptTypeMap[interfaces.KnConceptTypeRelation]) > 0 {
 		result = append(result, conceptTypeMap[interfaces.KnConceptTypeRelation]...)
 	}
-	if conceptTypeMap[interfaces.KnConceptTypeAction] != nil && len(conceptTypeMap[interfaces.KnConceptTypeAction]) > 0 {
+	if len(conceptTypeMap[interfaces.KnConceptTypeAction]) > 0 {
 		result = append(result, conceptTypeMap[interfaces.KnConceptTypeAction]...)
 	}
 	if len(result) > limit {

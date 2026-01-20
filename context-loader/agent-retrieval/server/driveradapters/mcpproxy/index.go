@@ -3,6 +3,7 @@
 // Licensed under the Apache License, Version 2.0.
 // See the LICENSE file in the project root for details.
 
+// Package mcpproxy provides HTTP proxy handler for MCP tool invocations.
 package mcpproxy
 
 import (

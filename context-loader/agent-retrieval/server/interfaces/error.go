@@ -28,7 +28,7 @@ type EOut struct {
 }
 
 var (
-	ecodeRule            = regexp.MustCompile(`^[A-Z][A-Za-z0-9\.]{0,34}$`)
+	ecodeRule            = regexp.MustCompile(`^[A-Z][A-Za-z0-9.]{0,34}$`)
 	ErrCodeOpenAPIParser = newEOut("OpenAPIParser", http.StatusBadRequest)
 )
 
@@ -85,7 +85,7 @@ type CommonError struct {
 }
 
 // Error output error string
-func (err CommonError) Error() string {
+func (err *CommonError) Error() string {
 	return err.Description
 }
 
