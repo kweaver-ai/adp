@@ -175,12 +175,12 @@ func (vva *vegaViewAccess) FetchDatasFromVega(ctx context.Context, nextUri strin
 		// statement/executing/20250516_051107_00077_dpx8g/xe0786066b47e4aeda3972d483db644f1/1
 		httpUrl := fmt.Sprintf("%s/statement/executing/%s", vva.vegaGatewayUrl, nextUri)
 		respCode, result, err = vva.httpClient.GetNoUnmarshal(ctx, httpUrl, nil, vegaViewHeaders)
-		logger.Debugf("get [%s] finished, response code is [%d], result is [%s], error is [%v]",
-			httpUrl, respCode, result, err)
+		logger.Debugf("get [%s] finished, request sql is [%s], response code is [%d], result is [%s], error is [%v]",
+			httpUrl, sql, respCode, result, err)
 	}
 
 	if err != nil {
-		logger.Errorf("fetch data from vega gateway failed: %v", err)
+		logger.Errorf("fetch data from vega gateway by sql[%s] failed: %v", sql, err)
 
 		// 添加异常时的 trace 属性
 		o11y.AddHttpAttrs4Error(span, respCode, "InternalError", "Http Get Failed")
@@ -209,7 +209,7 @@ func (vva *vegaViewAccess) FetchDatasFromVega(ctx context.Context, nextUri strin
 				Description:  vegaError.Description,
 				ErrorDetails: vegaError.Detail,
 			}}
-		logger.Errorf("fetch data from vega gateway Error: %v", httpErr.Error())
+		logger.Errorf("fetch data from vega gateway by sql[%s] Error: %v", sql, httpErr.Error())
 
 		// 添加异常时的 trace 属性
 		o11y.AddHttpAttrs4Error(span, respCode, "InternalError", "Http status is not 200")

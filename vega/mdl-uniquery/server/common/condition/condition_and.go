@@ -8,6 +8,7 @@ import (
 type AndCond struct {
 	mCfg      *CondCfg
 	mSubConds []Condition
+	needScore bool
 }
 
 func newAndCond(ctx context.Context, cfg *CondCfg, vType string, fieldsMap map[string]*ViewField) (cond Condition, needScore bool, err error) {
@@ -36,12 +37,25 @@ func newAndCond(ctx context.Context, cfg *CondCfg, vType string, fieldsMap map[s
 	return &AndCond{
 		mCfg:      cfg,
 		mSubConds: subConds,
+		needScore: needScore,
 	}, needScore, nil
 
 }
 
 func (cond *AndCond) Convert(ctx context.Context) (string, error) {
-	res := `
+	var res string
+	if cond.needScore {
+		res = `
+	{
+		"bool": {
+			"must": [
+				%s
+			]
+		}
+	}
+	`
+	} else {
+		res = `
 	{
 		"bool": {
 			"filter": [
@@ -50,6 +64,7 @@ func (cond *AndCond) Convert(ctx context.Context) (string, error) {
 		}
 	}
 	`
+	}
 
 	dslStr := ""
 	for i, subCond := range cond.mSubConds {
