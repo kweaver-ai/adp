@@ -143,6 +143,7 @@
     "view": "Xem",
     "edit": "Chỉnh sửa",
     "delete": "Xóa",
+    "version": "版本信息",
     "addMore.folder": "Thêm nhiều thư mục hơn",
     "addMore.file": "Thêm nhiều tệp hơn",
     "addMore": "Thêm nhiều hơn",
@@ -1181,5 +1182,8 @@
     "ci": "次",
     "operational.objective": "运行目标",
     "reason.for.failure": "失败原因：",
-    "failed.node": "失败节点："
+    "failed.node": "失败节点：",
+    "customExecutor.workflow": "工作流",
+    "customExecutor.dataflow": "数据流",
+    "customExecutor.subprocess.error": "当前子流程或其引用的子流程中，存在循环调用关系，请修改"
 }

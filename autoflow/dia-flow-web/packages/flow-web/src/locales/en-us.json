@@ -142,6 +142,7 @@
     "view": "View",
     "edit": "Edit",
     "delete": "Delete",
+    "version": "Version",
     "title.detail": "Details",
     "addMore.folder": "Add more",
     "addMore.file": "Add more",
@@ -1197,5 +1198,8 @@
     "ci": "time",
     "operational.objective": "Operational objective",
     "reason.for.failure": "Reason for failure:",
-    "failed.node": "Failed node:"
+    "failed.node": "Failed node:",
+    "customExecutor.workflow": "Workflow",
+    "customExecutor.dataflow": "Dataflow",
+    "customExecutor.subprocess.error": "There is a circular call relationship in the current subprocess or its referenced subprocesses. Please modify it."
 }
