@@ -54,6 +54,15 @@ func ValidateRelationType(ctx context.Context, relationType *interfaces.Relation
 		}
 	}
 
+	if relationType.SourceObjectTypeID == "" {
+		return rest.NewHTTPError(ctx, http.StatusBadRequest, oerrors.OntologyManager_RelationType_InvalidParameter).
+			WithErrorDetails("关系类的 source_object_type_id 不能为空")
+	}
+	if relationType.TargetObjectTypeID == "" {
+		return rest.NewHTTPError(ctx, http.StatusBadRequest, oerrors.OntologyManager_RelationType_InvalidParameter).
+			WithErrorDetails("关系类的 target_object_type_id 不能为空")
+	}
+
 	// 校验mapping_rules字段
 	if relationType.MappingRules != nil {
 		// 如果mapping_rules不为空，type必须非空
