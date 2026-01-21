@@ -108,7 +108,7 @@ func (kns *knowledgeNetworkService) SearchSubgraph(ctx context.Context,
 		RequestPathTypeNum: len(typePaths),
 	}
 
-	// 起点类已经查询完成，limit已经得到，后续的路径探索用系统默认的最大值 5w 进行探索
+	// 起点类已经查询完成，limit已经得到，后续的路径探索用系统默认的最大值进行探索
 	query.PageQuery.Limit = interfaces.MAX_PATHS
 	objectGraph, err := kns.buildObjectSubgraph(ctx, query, typePaths, startObjects)
 	if err != nil {
