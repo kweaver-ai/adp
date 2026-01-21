@@ -6,11 +6,12 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/kweaver-ai/kweaver-go-lib/logger"
-	"github.com/kweaver-ai/kweaver-go-lib/rest"
 	"net/http"
 	"strings"
+	"vega-gateway-pro/common"
 	"vega-gateway-pro/interfaces"
+
+	"github.com/kweaver-ai/kweaver-go-lib/logger"
 )
 
 // OpenSearchClient OpenSearch 客户端
@@ -53,7 +54,7 @@ func (c *OpenSearchClient) QueryStatement(indexes []string, dsl map[string]any) 
 	}
 
 	// 发送请求
-	respCode, respData, err := rest.NewHTTPClient().PostNoUnmarshal(context.Background(), url, headers, dslBytes)
+	respCode, respData, err := common.NewHTTPClient().PostNoUnmarshal(context.Background(), url, headers, dslBytes)
 	if err != nil {
 		logger.Errorf("OpenSearch query do request failed: %s", err.Error())
 		return "", err
