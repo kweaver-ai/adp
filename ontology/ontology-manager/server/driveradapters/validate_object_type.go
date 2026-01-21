@@ -53,6 +53,16 @@ func ValidateObjectType(ctx context.Context, objectType *interfaces.ObjectType) 
 		}
 	}
 
+	if len(objectType.DataProperties) > interfaces.MAX_PROPERTY_NUM {
+		return rest.NewHTTPError(ctx, http.StatusBadRequest, oerrors.OntologyManager_ObjectType_InvalidParameter).
+			WithErrorDetails(fmt.Sprintf("对象类[%s]数据属性数[%d]超过最大限制[%d]", objectType.OTName, len(objectType.DataProperties), interfaces.MAX_PROPERTY_NUM))
+	}
+
+	if len(objectType.LogicProperties) > interfaces.MAX_PROPERTY_NUM {
+		return rest.NewHTTPError(ctx, http.StatusBadRequest, oerrors.OntologyManager_ObjectType_InvalidParameter).
+			WithErrorDetails(fmt.Sprintf("对象类[%s]逻辑属性数[%d]超过最大限制[%d]", objectType.OTName, len(objectType.LogicProperties), interfaces.MAX_PROPERTY_NUM))
+	}
+
 	// 属性名只包含小写英文字母和数字和下划线(_)和连字符(-)，且不能以下划线开头，不能超过40个字符
 	dataPropMap := map[string]*interfaces.DataProperty{}
 	for _, prop := range objectType.DataProperties {

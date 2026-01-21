@@ -3,7 +3,7 @@ package interfaces
 import "ontology-manager/interfaces/data_type"
 
 const (
-
+	MAX_PROPERTY_NUM = 1000
 	// 逻辑属性类型
 	LOGIC_PROPERTY_TYPE_METRIC   = "metric"
 	LOGIC_PROPERTY_TYPE_OPERATOR = "operator"
