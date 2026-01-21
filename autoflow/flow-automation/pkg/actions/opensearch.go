@@ -104,6 +104,196 @@ func getDefaultIndexTemplate() (map[string]interface{}, map[string]interface{}) 
 	return settings, mappings
 }
 
+// getAdvancedIndexTemplate 获取高级索引配置模板，支持动态字段类型预设
+func getAdvancedIndexTemplate() (map[string]interface{}, map[string]interface{}) {
+	settings := map[string]interface{}{
+		"number_of_shards":         1,
+		"number_of_replicas":       0,
+		"knn":                      true,
+		"knn.algo_param.ef_search": 100,
+		"refresh_interval":         "30s",
+	}
+
+	mappings := map[string]interface{}{
+		"properties": map[string]interface{}{
+			"lat_lon": map[string]interface{}{
+				"type":  "geo_point",
+				"store": "true",
+			},
+		},
+		"date_detection": "true",
+		"dynamic_templates": []map[string]interface{}{
+			{
+				"int": map[string]interface{}{
+					"match": "*_int",
+					"mapping": map[string]interface{}{
+						"type":  "integer",
+						"store": "true",
+					},
+				},
+			},
+			{
+				"ulong": map[string]interface{}{
+					"match": "*_ulong",
+					"mapping": map[string]interface{}{
+						"type":  "unsigned_long",
+						"store": "true",
+					},
+				},
+			},
+			{
+				"long": map[string]interface{}{
+					"match": "*_long",
+					"mapping": map[string]interface{}{
+						"type":  "long",
+						"store": "true",
+					},
+				},
+			},
+			{
+				"short": map[string]interface{}{
+					"match": "*_short",
+					"mapping": map[string]interface{}{
+						"type":  "short",
+						"store": "true",
+					},
+				},
+			},
+			{
+				"numeric": map[string]interface{}{
+					"match": "*_flt",
+					"mapping": map[string]interface{}{
+						"type":  "float",
+						"store": true,
+					},
+				},
+			},
+			{
+				"tks": map[string]interface{}{
+					"match": "*_tks",
+					"mapping": map[string]interface{}{
+						"type":       "text",
+						"similarity": "scripted_sim",
+						"analyzer":   "whitespace",
+						"store":      true,
+					},
+				},
+			},
+			{
+				"ltks": map[string]interface{}{
+					"match": "*_ltks",
+					"mapping": map[string]interface{}{
+						"type":     "text",
+						"analyzer": "whitespace",
+						"store":    true,
+					},
+				},
+			},
+			{
+				"kwd": map[string]interface{}{
+					"match_pattern": "regex",
+					"match":         "^(.*_(kwd|id|ids|uid|uids)|uid)$",
+					"mapping": map[string]interface{}{
+						"type":       "keyword",
+						"similarity": "boolean",
+						"store":      true,
+					},
+				},
+			},
+			{
+				"nested": map[string]interface{}{
+					"match": "*_nst",
+					"mapping": map[string]interface{}{
+						"type": "nested",
+					},
+				},
+			},
+			{
+				"object": map[string]interface{}{
+					"match": "*_obj",
+					"mapping": map[string]interface{}{
+						"type":    "object",
+						"dynamic": "true",
+					},
+				},
+			},
+			{
+				"string": map[string]interface{}{
+					"match_pattern": "regex",
+					"match":         "^.*_(with_weight|list)$",
+					"mapping": map[string]interface{}{
+						"type":  "text",
+						"index": "false",
+						"store": true,
+					},
+				},
+			},
+			{
+				"rank_feature": map[string]interface{}{
+					"match": "*_fea",
+					"mapping": map[string]interface{}{
+						"type": "rank_feature",
+					},
+				},
+			},
+			{
+				"rank_features": map[string]interface{}{
+					"match": "*_feas",
+					"mapping": map[string]interface{}{
+						"type": "rank_features",
+					},
+				},
+			},
+			{
+				"knn_vector_512": map[string]interface{}{
+					"match": "*_512_vec",
+					"mapping": map[string]interface{}{
+						"type":      "knn_vector",
+						"dimension": 512,
+					},
+				},
+			},
+			{
+				"knn_vector_768": map[string]interface{}{
+					"match": "*_768_vec",
+					"mapping": map[string]interface{}{
+						"type":      "knn_vector",
+						"dimension": 768,
+					},
+				},
+			},
+			{
+				"knn_vector_1024": map[string]interface{}{
+					"match": "*_1024_vec",
+					"mapping": map[string]interface{}{
+						"type":      "knn_vector",
+						"dimension": 1024,
+					},
+				},
+			},
+			{
+				"knn_vector_1536": map[string]interface{}{
+					"match": "*_1536_vec",
+					"mapping": map[string]interface{}{
+						"type":      "knn_vector",
+						"dimension": 1536,
+					},
+				},
+			},
+			{
+				"binary": map[string]interface{}{
+					"match": "*_bin",
+					"mapping": map[string]interface{}{
+						"type": "binary",
+					},
+				},
+			},
+		},
+	}
+
+	return settings, mappings
+}
+
 func normalizeDocuments(documents any, baseType, dataType, category string) (results []map[string]any) {
 	switch v := documents.(type) {
 	case string:
@@ -171,11 +361,22 @@ func (b *OpenSearchBulkUpsert) Run(ctx entity.ExecuteContext, params interface{}
 	settings := input.Settings
 	mappings := input.Mappings
 
-	// 如果用户没有提供 settings 和 mappings，但指定了 template，使用内置模板
-	if settings == nil && mappings == nil && input.Template != "" {
-		if input.Template == "default" {
-			settings, mappings = getDefaultIndexTemplate()
-			log.Infof("[OpenSearchBulkUpsert] taskInsID %s, using default index template", taskIns.TaskID)
+	// 如果用户没有提供 settings 和 mappings，使用内置模板
+	if settings == nil && mappings == nil {
+		if input.Template != "" {
+			// 如果指定了模板，使用指定的模板
+			switch input.Template {
+			case "default":
+				settings, mappings = getDefaultIndexTemplate()
+				log.Infof("[OpenSearchBulkUpsert] taskInsID %s, using default index template", taskIns.TaskID)
+			case "advanced":
+				settings, mappings = getAdvancedIndexTemplate()
+				log.Infof("[OpenSearchBulkUpsert] taskInsID %s, using advanced index template", taskIns.TaskID)
+			}
+		} else {
+			// 如果没有指定模板，默认使用高级模板
+			settings, mappings = getAdvancedIndexTemplate()
+			log.Infof("[OpenSearchBulkUpsert] taskInsID %s, using default advanced index template", taskIns.TaskID)
 		}
 	}
 

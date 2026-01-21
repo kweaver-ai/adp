@@ -727,6 +727,102 @@ func UploadImageToOSS(ctx context.Context, imgPath string, docName string) (stri
 	return resultURL, nil
 }
 
+// UploadOriginalImageToOSS 从原始文件URL下载图片并上传到OSS
+// 用于处理输入文件本身就是图片的情况
+func UploadOriginalImageToOSS(ctx context.Context, originalFileURL string, docName string) (string, error) {
+	log := traceLog.WithContext(ctx)
+
+	log.Infof("[uploadOriginalImageToOSS] downloading image from URL: %s", originalFileURL)
+
+	// 创建 HTTP 客户端下载图片
+	client := drivenadapters.NewRawHTTPClient()
+	client.Timeout = 60 * time.Second
+
+	resp, err := client.Get(originalFileURL)
+	if err != nil {
+		log.Warnf("[uploadOriginalImageToOSS] failed to download image from URL: %s, error: %v", originalFileURL, err)
+		return "", fmt.Errorf("failed to download image from URL: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		body, _ := io.ReadAll(resp.Body)
+		log.Warnf("[uploadOriginalImageToOSS] failed to download image, status: %d, body: %s", resp.StatusCode, string(body))
+		return "", fmt.Errorf("failed to download image, status: %d", resp.StatusCode)
+	}
+
+	// 读取响应体
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		log.Warnf("[uploadOriginalImageToOSS] failed to read response body: %s, error: %v", originalFileURL, err)
+		return "", fmt.Errorf("failed to read response body: %w", err)
+	}
+
+	imageData := bytes.NewReader(body)
+	fileSize := int64(len(body))
+
+	// 计算图片内容的MD5，用于生成稳定的OSS key，避免重复上传相同图片
+	imageMD5 := GenerateMD5(body)
+
+	// 从docName获取文件扩展名，如果没有则使用默认值
+	fileExt := filepath.Ext(docName)
+	if fileExt == "" {
+		fileExt = ".jpg" // 默认扩展名
+	}
+
+	// 去掉 docName 的后缀名
+	docNameWithoutExt := strings.TrimSuffix(docName, fileExt)
+
+	// 生成 OSS key：file/{doc_name}/images/{md5}.{ext}
+	// 使用MD5而不是时间戳，相同图片会使用相同的key，避免重复上传
+	ossKey := fmt.Sprintf("file/%s/images/%s%s", docNameWithoutExt, imageMD5, fileExt)
+
+	// 获取 OSS 网关实例
+	ossGateway := drivenadapters.NewOssGateWay()
+
+	// 获取可用的 OSS ID
+	ossID, err := ossGateway.GetAvaildOSS(ctx)
+	if err != nil {
+		log.Warnf("[uploadOriginalImageToOSS] failed to get available OSS: %v", err)
+		return "", fmt.Errorf("failed to get available OSS: %w", err)
+	}
+
+	// 检查OSS中是否已存在该文件（通过GetObjectMeta检查）
+	existingSize, err := ossGateway.GetObjectMeta(ctx, ossID, ossKey, true)
+	if err == nil && existingSize > 0 {
+		// 文件已存在，直接返回下载URL，避免重复上传
+		log.Infof("[uploadOriginalImageToOSS] image already exists in OSS, skipping upload: %s", ossKey)
+		expires := time.Now().AddDate(1, 0, 0).Unix() // 1年后的Unix时间戳
+		resultURL, err := ossGateway.GetDownloadURL(ctx, ossID, ossKey, expires, false)
+		if err != nil {
+			log.Warnf("[uploadOriginalImageToOSS] failed to get download URL for existing file: %s, error: %v", ossKey, err)
+			return "", fmt.Errorf("failed to get download URL: %w", err)
+		}
+		log.Infof("[uploadOriginalImageToOSS] reused existing image: %s -> %s", originalFileURL, resultURL)
+		return resultURL, nil
+	}
+
+	// 文件不存在，需要上传
+	// 重新创建Reader（因为之前已经读取过了）
+	imageData = bytes.NewReader(body)
+	err = ossGateway.UploadFile(ctx, ossID, ossKey, true, imageData, fileSize)
+	if err != nil {
+		log.Warnf("[uploadOriginalImageToOSS] failed to upload image to OSS: %s, error: %v", originalFileURL, err)
+		return "", fmt.Errorf("failed to upload image to OSS: %w", err)
+	}
+
+	// 使用 OSS 方法生成下载链接（设置过期时间为 1 年后）
+	expires := time.Now().AddDate(1, 0, 0).Unix() // 1年后的Unix时间戳
+	resultURL, err := ossGateway.GetDownloadURL(ctx, ossID, ossKey, expires, false)
+	if err != nil {
+		log.Warnf("[uploadOriginalImageToOSS] failed to get download URL: %s, error: %v", ossKey, err)
+		return "", fmt.Errorf("failed to get download URL: %w", err)
+	}
+
+	log.Infof("[uploadOriginalImageToOSS] successfully uploaded image: %s -> %s", originalFileURL, resultURL)
+	return resultURL, nil
+}
+
 // createChunks 创建自定义块
 func createChunks(ctx context.Context, processedList []*ProcessingItem, splitIndices map[int]bool, mergedIndicesToRemove map[int]bool, mergedHeadingMap map[int]*ProcessingItem, docName, docMD5 string) []*CustomChunk {
 	// 获取最终分割点
@@ -1030,7 +1126,7 @@ func isNaturalParagraphEnd(text string) bool {
 // 1. 初始化缓冲区
 // 2. 流式遍历每个 Item
 // 3. 类型分支处理：
-//   - 标题：强制闭合当前文本切片，生成标题切片（父子关系通过 BuildChunkHierarchyFromContentList 建立）
+//   - 标题：不生成独立切片，只更新标题栈用于后续内容的上下文（标题内容会拼接到后续chunk中）
 //   - 文本：累加到缓冲区，当 Token 超过阈值且遇到自然段落结尾时闭合生成切片
 //   - 原子对象（Table/Formula/Code）：强制闭合文本切片，作为独立不可分割的原子
 //   - 图片：强制闭合文本切片，提取 bbox 和路径作为独立对象
@@ -1053,14 +1149,19 @@ func ProcessCustomChunk(ctx context.Context,
 	ensureBasicFields(processedList)
 	preprocessItems(processedList)
 
-	// 建立 SegmentID 到 ElementID 的映射
+	// 建立 SegmentID 到 ElementID 的映射，并获取 documentID
 	var segmentIDToElementID map[int]string
+	var documentID string
 	if len(elements) > 0 && len(elements[0]) > 0 {
 		segmentIDToElementID = make(map[int]string)
 		for i, element := range elements[0] {
 			if i < len(processedList) {
 				segmentIDToElementID[i] = element.ElementID
 			}
+		}
+		// 从第一个 element 获取 documentID
+		if len(elements[0]) > 0 && elements[0][0] != nil {
+			documentID = elements[0][0].DocumentID
 		}
 	}
 
@@ -1073,15 +1174,49 @@ func ProcessCustomChunk(ctx context.Context,
 	var bufferLocations [][4]int
 	var bufferSegmentIDs []int // 记录缓冲区中涉及的所有 SegmentID
 
+	// 标题栈：维护最近的各级标题，key 是标题级别（1-3），value 是标题内容
+	titleStack := make(map[int]string)
+
 	// Token 阈值（字符数近似，中文字符约2-3 token）
-	const tokenThreshold = 512
+	// 调整为 768 以减少切片数量，提高每个切片的信息密度
+	const tokenThreshold = 768
+	// 最小切片长度限制，避免生成过短的切片
+	const minChunkLength = 50
+
+	// getRelatedTitles 获取关联的标题内容（按级别从高到低）
+	getRelatedTitles := func() string {
+		var titles []string
+		// 按级别从高到低（1, 2, 3）收集标题
+		for level := 1; level <= 3; level++ {
+			if title, exists := titleStack[level]; exists && title != "" {
+				titles = append(titles, title)
+			}
+		}
+		if len(titles) > 0 {
+			return strings.Join(titles, "\n")
+		}
+		return ""
+	}
 
 	// flushBuffer 闭合当前文本缓冲区，生成一个文本切片
-	flushBuffer := func() {
+	// forceFlush: 是否强制输出（即使小于最小长度），用于处理文档末尾的剩余内容
+	flushBuffer := func(forceFlush bool) {
 		if len(textBuffer) == 0 {
 			return
 		}
 		content := strings.Join(textBuffer, "\n")
+
+		// 将关联的标题拼接到内容前面
+		relatedTitles := getRelatedTitles()
+		if relatedTitles != "" {
+			content = relatedTitles + "\n" + content
+		}
+
+		// 检查最小长度限制（仅在非强制输出时检查）
+		if !forceFlush && len(content) < minChunkLength {
+			return
+		}
+
 		sliceMD5 := GenerateMD5(content)
 
 		// 收集关联的 ElementIDs（缓冲区中所有 SegmentID 对应的 ElementID）
@@ -1115,6 +1250,7 @@ func ProcessCustomChunk(ctx context.Context,
 			SliceMD5:        sliceMD5,
 			ID:              uuid.New().String(),
 			DeduplicationID: GenerateDeduplicationID(docMD5, sliceMD5, fmt.Sprintf("%d", firstSegmentID)),
+			DocumentID:      documentID,
 			SliceType:       SliceTypeText,
 			Pages:           uniqueSortedInts(bufferPages),
 			SegmentID:       firstSegmentID,
@@ -1128,7 +1264,7 @@ func ProcessCustomChunk(ctx context.Context,
 		textBuffer, bufferPages, bufferLocations, bufferSegmentIDs = nil, nil, nil, nil
 	}
 
-	// createChunk 创建切片（标题/原子对象）
+	// createChunk 创建切片（原子对象）
 	createChunk := func(item *ProcessingItem, index int, sliceType int) {
 		content := item.Text
 
@@ -1139,6 +1275,12 @@ func ProcessCustomChunk(ctx context.Context,
 		// 表格类型使用 TableBody
 		if sliceType == SliceTypeTable && item.TableBody != "" {
 			content = item.TableBody
+		}
+
+		// 将关联的标题拼接到内容前面
+		relatedTitles := getRelatedTitles()
+		if relatedTitles != "" {
+			content = relatedTitles + "\n" + content
 		}
 
 		var imgPath *string
@@ -1168,6 +1310,7 @@ func ProcessCustomChunk(ctx context.Context,
 			SliceMD5:        sliceMD5,
 			ID:              uuid.New().String(),
 			DeduplicationID: GenerateDeduplicationID(docMD5, sliceMD5, fmt.Sprintf("%d", index)),
+			DocumentID:      documentID,
 			SliceType:       sliceType,
 			Pages:           extractPages(item.PageIdx),
 			SegmentID:       index,
@@ -1183,18 +1326,33 @@ func ProcessCustomChunk(ctx context.Context,
 	for i, item := range processedList {
 		sliceType := determineSliceType(item)
 
-		// A. 标题处理：强制闭合当前文本切片，生成标题切片
-		// 父子关系通过 BuildChunkHierarchyFromContentList 建立
+		// A. 标题处理：不生成独立切片，只更新标题栈用于后续内容的上下文
+		// 标题内容会通过标题栈拼接到后续的文本/原子对象chunk中
 		if sliceType == SliceTypeTitle {
-			flushBuffer()
-			createChunk(item, i, sliceType)
+			flushBuffer(false) // 先闭合之前的文本缓冲区
+
+			// 更新标题栈
+			if item.TextLevel != nil && *item.TextLevel >= 1 && *item.TextLevel <= 3 {
+				level := *item.TextLevel
+				titleText := strings.TrimSpace(item.Text)
+
+				// 更新当前级别的标题
+				titleStack[level] = titleText
+
+				// 清除更低级别的标题（更高级别的标题会重置文档结构）
+				for l := level + 1; l <= 3; l++ {
+					delete(titleStack, l)
+				}
+			}
+
+			// 不生成独立的标题chunk，标题只作为上下文使用
 			continue
 		}
 
 		// B. 原子对象处理（表格/公式/代码/图片）：强制闭合文本切片，作为独立不可分割的原子
 		if sliceType == SliceTypeTable || sliceType == SliceTypeFormula ||
 			sliceType == SliceTypeCode || sliceType == SliceTypeImage {
-			flushBuffer()
+			flushBuffer(false)
 			createChunk(item, i, sliceType)
 			continue
 		}
@@ -1213,12 +1371,12 @@ func ProcessCustomChunk(ctx context.Context,
 
 		// 当超过阈值且遇到自然段落结尾时，闭合切片
 		if currentLen > tokenThreshold && isNaturalParagraphEnd(item.Text) {
-			flushBuffer()
+			flushBuffer(false)
 		}
 	}
 
-	// 处理剩余缓冲区内容
-	flushBuffer()
+	// 处理剩余缓冲区内容（强制输出，即使小于最小长度）
+	flushBuffer(true)
 
 	// 处理向量化
 	if embedding && model != "" {
