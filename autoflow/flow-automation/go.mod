@@ -13,7 +13,6 @@ require (
 	github.com/go-playground/assert/v2 v2.2.0
 	github.com/godoes/gorm-oracle v1.6.18
 	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da
-	github.com/golang/mock v1.6.0
 	github.com/google/go-querystring v1.1.0
 	github.com/google/uuid v1.6.0
 	github.com/joho/godotenv v1.3.0
@@ -70,7 +69,7 @@ require (
 	github.com/perimeterx/marshmallow v1.1.5 // indirect
 	github.com/sagikazarmark/locafero v0.11.0 // indirect
 	github.com/shoenig/go-m1cpu v0.1.6 // indirect
-	github.com/sirupsen/logrus v1.9.3 // indirect
+	github.com/sirupsen/logrus v1.9.3
 	github.com/smarty/assertions v1.16.0 // indirect
 	github.com/sourcegraph/conc v0.3.1-0.20240121214520-5f936abd7ae8 // indirect
 	github.com/tidwall/pretty v1.2.1 // indirect
@@ -93,10 +92,14 @@ require (
 )
 
 require (
+	github.com/DATA-DOG/go-sqlmock v1.5.2
 	github.com/bytedance/gopkg v0.1.3
 	github.com/kweaver-ai/proton-mq-sdk-go v1.9.1
 	github.com/kweaver-ai/proton-rds-sdk-go v1.4.2
 	github.com/lib/pq v1.10.9
+	github.com/orcaman/concurrent-map v1.0.0
+	github.com/satori/go.uuid v1.2.0
+	github.com/unrolled/secure v1.17.0
 	go.uber.org/mock v0.5.2
 )
 

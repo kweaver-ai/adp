@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/url"
 	"os"
+	"path/filepath"
 	"reflect"
 	"strings"
 
@@ -511,6 +512,10 @@ func (conf *MongoDBConfig) DSN() string {
 			query.Set(k, "true")
 		}
 		sslPath := "/opt/ssl/mongo.ca.pem"
+		if _, err := os.Stat(sslPath); os.IsNotExist(err) {
+			pwd, _ := os.Getwd()
+			sslPath = filepath.Join(pwd, "ssl", "mongo.ca.pem")
+		}
 		rootPEM, err := os.ReadFile(sslPath)
 		if err != nil {
 			panic(err)
