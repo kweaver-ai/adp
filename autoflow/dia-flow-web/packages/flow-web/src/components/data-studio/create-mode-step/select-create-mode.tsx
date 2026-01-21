@@ -30,7 +30,7 @@ export const SelectCreateMode = ({ onSelectMode, onNext }: ISelectCreateModeProp
                 <div className={styles['create-mode-content']}>
                     <Text className={styles['title']}>{t("datastudio.create.fromTemplate", "从模板新建")}</Text>
                     <Text className={styles['description']}>
-                        {t("datastudio.create.templateDesc", "基于特定场景，一键新建与之相关的数据处理流程")}
+                        {t("datastudio.create.atlasDesc", "使用预定义模板快速搭建数据处理流程")}
                     </Text>
                 </div>
             </div>

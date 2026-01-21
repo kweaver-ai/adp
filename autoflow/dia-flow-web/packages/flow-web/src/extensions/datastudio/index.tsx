@@ -294,22 +294,22 @@ export default {
     // },
   ],
   executors: [
-    {
-      name: "db.graphDatabase",
-      description: "db.graphDatabaseDescription",
-      icon: DataBaseSVG,
-      groups: [
-        {
-          group: "BuildIn",
-          name: "db.group.in",
-        },
-        {
-          group: "Custom",
-          name: "db.group.custom",
-        },
-      ],
-      actions: [...GraphDataBaseExecutorActions],
-    },
+    // {
+    //   name: "db.graphDatabase",
+    //   description: "db.graphDatabaseDescription",
+    //   icon: DataBaseSVG,
+    //   groups: [
+    //     {
+    //       group: "BuildIn",
+    //       name: "db.group.in",
+    //     },
+    //     {
+    //       group: "Custom",
+    //       name: "db.group.custom",
+    //     },
+    //   ],
+    //   actions: [...GraphDataBaseExecutorActions],
+    // },
     {
       name: "WriteFile",
       icon: FileSVG,

@@ -70,5 +70,9 @@
   "model": "Model",
   "modelPlaceholder": "Please select model",
   "filename": "Filename",
-  "pdfFilePlaceholder": "Please select PDF format file"
+  "pdfFilePlaceholder": "Select a PDF or image file.",
+  "sliceVectorConfigMore": "Analysis of advanced configuration",
+  "sliceVectorConfigMoreDesc": "When a file contains images, a multimodal large model can be used to describe the content of the images.",
+  "multimodal": "Multimodal large model",
+  "promptWords": "Prompt words"
 }

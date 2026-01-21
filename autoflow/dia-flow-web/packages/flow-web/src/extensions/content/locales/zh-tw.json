@@ -70,5 +70,9 @@
   "model": "模型",
   "modelPlaceholder": "請選擇",
   "filename": "檔案名稱",
-  "pdfFilePlaceholder": "請選擇PDF格式的檔案"
+  "pdfFilePlaceholder": "選擇PDF或圖片格式的文件",
+  "sliceVectorConfigMore": "解析進階配置",
+  "sliceVectorConfigMoreDesc": "當文件中包含圖片時，可運用多模態大模型對圖片進行內容描述",
+  "multimodal": "多模態大模型",
+  "promptWords": "提示詞"
 }
