@@ -256,18 +256,18 @@ type OntologyJob struct {
 
 // ListOntologyJobsReq Request to list ontology jobs
 type ListOntologyJobsReq struct {
-	NamePattern string           `form:"name_pattern" json:"name_pattern"`   // Job name pattern filter
-	State       OntologyJobState  `form:"state" json:"state"`                 // Job state filter
-	JobType     OntologyJobType  `form:"job_type" json:"job_type"`           // Job type filter
-	Limit       int              `form:"limit" json:"limit"`                 // Return count
-	Direction   string           `form:"direction" json:"direction"`         // Sort direction (asc/desc)
-	Offset      int              `form:"offset" json:"offset"`               // Pagination offset
+	NamePattern string           `form:"name_pattern" json:"name_pattern"` // Job name pattern filter
+	State       OntologyJobState `form:"state" json:"state"`               // Job state filter
+	JobType     OntologyJobType  `form:"job_type" json:"job_type"`         // Job type filter
+	Limit       int              `form:"limit" json:"limit"`               // Return count
+	Direction   string           `form:"direction" json:"direction"`       // Sort direction (asc/desc)
+	Offset      int              `form:"offset" json:"offset"`             // Pagination offset
 }
 
 // ListOntologyJobsResp Response for listing ontology jobs
 type ListOntologyJobsResp struct {
-	Entries   []*OntologyJob `json:"entries"`   // Job list
-	TotalCount int64         `json:"total_count"` // Total count
+	Entries    []*OntologyJob `json:"entries"`     // Job list
+	TotalCount int64          `json:"total_count"` // Total count
 }
 
 // OntologyManagerAccess Ontology management interface

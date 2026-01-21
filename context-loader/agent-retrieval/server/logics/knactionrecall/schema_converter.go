@@ -655,6 +655,17 @@ func (s *knActionRecallServiceImpl) convertMCPSchemaToFunctionCall(ctx context.C
 		return nil, err
 	}
 
+	// NOTE: 为第一层 body 参数添加默认描述
+	// 当 body 参数存在但缺少 description 时（例如通过 $ref 引用的 schema 没有 description），
+	// 自动添加默认描述 "Request Body参数"
+	if props, ok := resolvedSchema["properties"].(map[string]interface{}); ok {
+		if bodyProp, ok := props["body"].(map[string]interface{}); ok {
+			if _, hasDesc := bodyProp["description"]; !hasDesc {
+				bodyProp["description"] = "Request Body参数"
+			}
+		}
+	}
+
 	// 确保有 type=object (通常 MCP schema 根就是 object，但为了保险)
 	if _, ok := resolvedSchema["type"]; !ok {
 		resolvedSchema["type"] = "object"

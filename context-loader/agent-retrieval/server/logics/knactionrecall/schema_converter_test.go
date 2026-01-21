@@ -85,6 +85,169 @@ func TestConvertMCPSchemaToFunctionCall(t *testing.T) {
 	}
 }
 
+// TestConvertMCPSchemaToFunctionCall_BodyDefaultDescription 测试 MCP Schema 转换时 body 参数默认描述逻辑
+// 规则：当第一层存在 body 参数但缺少 description 时，自动添加 "Request Body参数"
+func TestConvertMCPSchemaToFunctionCall_BodyDefaultDescription(t *testing.T) {
+	service := &knActionRecallServiceImpl{
+		logger: &mockLogger{},
+	}
+
+	ctx := context.Background()
+
+	// Case 1: body 存在但通过 $ref 引用，引用的 schema 没有 description
+	// 期望：自动添加默认描述 "Request Body参数"
+	t.Run("body_without_description_via_ref", func(t *testing.T) {
+		inputJSON := `{
+			"$defs": {
+				"UpdateEventStatusRequest": {
+					"type": "object",
+					"properties": {
+						"status": {"type": "string"}
+					}
+				}
+			},
+			"type": "object",
+			"properties": {
+				"body": {"$ref": "#/$defs/UpdateEventStatusRequest"},
+				"path": {
+					"type": "object",
+					"description": "URL 路径参数",
+					"properties": {
+						"event_id": {"type": "string"}
+					}
+				}
+			}
+		}`
+		var inputMap map[string]interface{}
+		if err := json.Unmarshal([]byte(inputJSON), &inputMap); err != nil {
+			t.Fatalf("Failed to unmarshal test JSON: %v", err)
+		}
+
+		result, err := service.convertMCPSchemaToFunctionCall(ctx, inputMap)
+		if err != nil {
+			t.Fatalf("Expected no error, got %v", err)
+		}
+
+		props := result["properties"].(map[string]interface{})
+		body := props["body"].(map[string]interface{})
+
+		// 验证 body 添加了默认描述
+		if desc, ok := body["description"].(string); !ok || desc != "Request Body参数" {
+			t.Errorf("Expected body description 'Request Body参数', got %v", body["description"])
+		}
+
+		// 验证 path 保持原有描述
+		path := props["path"].(map[string]interface{})
+		if desc, ok := path["description"].(string); !ok || desc != "URL 路径参数" {
+			t.Errorf("Expected path description 'URL 路径参数', got %v", path["description"])
+		}
+	})
+
+	// Case 2: body 存在且已有 description
+	// 期望：保留原有描述，不覆盖
+	t.Run("body_with_existing_description", func(t *testing.T) {
+		inputJSON := `{
+			"type": "object",
+			"properties": {
+				"body": {
+					"type": "object",
+					"description": "自定义请求体描述",
+					"properties": {
+						"name": {"type": "string"}
+					}
+				}
+			}
+		}`
+		var inputMap map[string]interface{}
+		if err := json.Unmarshal([]byte(inputJSON), &inputMap); err != nil {
+			t.Fatalf("Failed to unmarshal test JSON: %v", err)
+		}
+
+		result, err := service.convertMCPSchemaToFunctionCall(ctx, inputMap)
+		if err != nil {
+			t.Fatalf("Expected no error, got %v", err)
+		}
+
+		props := result["properties"].(map[string]interface{})
+		body := props["body"].(map[string]interface{})
+
+		// 验证保留原有描述
+		if desc, ok := body["description"].(string); !ok || desc != "自定义请求体描述" {
+			t.Errorf("Expected body description '自定义请求体描述', got %v", body["description"])
+		}
+	})
+
+	// Case 3: 没有 body 参数
+	// 期望：不做任何处理，不报错
+	t.Run("no_body_property", func(t *testing.T) {
+		inputJSON := `{
+			"type": "object",
+			"properties": {
+				"query": {
+					"type": "object",
+					"properties": {
+						"limit": {"type": "integer"}
+					}
+				}
+			}
+		}`
+		var inputMap map[string]interface{}
+		if err := json.Unmarshal([]byte(inputJSON), &inputMap); err != nil {
+			t.Fatalf("Failed to unmarshal test JSON: %v", err)
+		}
+
+		result, err := service.convertMCPSchemaToFunctionCall(ctx, inputMap)
+		if err != nil {
+			t.Fatalf("Expected no error, got %v", err)
+		}
+
+		props := result["properties"].(map[string]interface{})
+
+		// 验证 body 不存在
+		if _, ok := props["body"]; ok {
+			t.Error("Expected no body property, but found one")
+		}
+
+		// 验证 query 存在
+		if _, ok := props["query"]; !ok {
+			t.Error("Expected query property to exist")
+		}
+	})
+
+	// Case 4: body 直接定义（非 $ref）且无 description
+	// 期望：自动添加默认描述 "Request Body参数"
+	t.Run("body_direct_without_description", func(t *testing.T) {
+		inputJSON := `{
+			"type": "object",
+			"properties": {
+				"body": {
+					"type": "object",
+					"properties": {
+						"name": {"type": "string"}
+					}
+				}
+			}
+		}`
+		var inputMap map[string]interface{}
+		if err := json.Unmarshal([]byte(inputJSON), &inputMap); err != nil {
+			t.Fatalf("Failed to unmarshal test JSON: %v", err)
+		}
+
+		result, err := service.convertMCPSchemaToFunctionCall(ctx, inputMap)
+		if err != nil {
+			t.Fatalf("Expected no error, got %v", err)
+		}
+
+		props := result["properties"].(map[string]interface{})
+		body := props["body"].(map[string]interface{})
+
+		// 验证 body 添加了默认描述
+		if desc, ok := body["description"].(string); !ok || desc != "Request Body参数" {
+			t.Errorf("Expected body description 'Request Body参数', got %v", body["description"])
+		}
+	})
+}
+
 func TestResolveMCPSchemaCircular(t *testing.T) {
 	service := &knActionRecallServiceImpl{
 		logger: &mockLogger{},
