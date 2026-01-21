@@ -63,7 +63,7 @@ config:
     maxBackups: 20
     maxSize: 100
   pool:
-    queryPoolSize: 100                   # 查询池大小
+    queryPoolSize: 1000                  # 查询池大小
   query:
     cleanIntervalTime: 5m                # 查询清理间隔
     maxIntervalTime: 1h                  # 查询取数最大间隔时间
