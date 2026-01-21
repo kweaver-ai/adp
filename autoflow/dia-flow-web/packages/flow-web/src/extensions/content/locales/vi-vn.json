@@ -69,5 +69,9 @@
   "model": "Mô hình",
   "modelPlaceholder": "Vui lòng chọn mô hình",
   "filename": "Tên tệp",
-  "pdfFilePlaceholder": "Vui lòng chọn tệp PDF"
+  "pdfFilePlaceholder": "Vui lòng chọn tệp PDF",
+  "sliceVectorConfigMore": "Phân tích cấu hình nâng cao",
+  "sliceVectorConfigMoreDesc": "Khi một tập tin chứa hình ảnh, mô hình đa phương thức quy mô lớn có thể được sử dụng để mô tả nội dung của các hình ảnh đó.",
+  "multimodal": "Mô hình lớn đa phương thức",
+  "promptWords": "Từ khóa"
 }
