@@ -7,7 +7,7 @@ import (
 	"strings"
 	"time"
 
-	libstore "devops.aishu.cn/AISHUDevOps/DIP/_git/ide-go-lib/store"
+	libstore "github.com/kweaver-ai/adp/autoflow/ide-go-lib/store"
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/common"
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/drivenadapters"
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/pkg/entity"
