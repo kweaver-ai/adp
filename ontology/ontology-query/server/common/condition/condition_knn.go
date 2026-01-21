@@ -139,16 +139,12 @@ func rewriteKnnCond(ctx context.Context, cfg *CondCfg,
 	if err != nil {
 		return nil, fmt.Errorf("condition [knn]: vectorizer [%s] failed, error: %s", v, err.Error())
 	}
-	res, err := json.Marshal(vector[0].Vector)
-	if err != nil {
-		return nil, fmt.Errorf("condition [in] json marshal right value failed, %s", err.Error())
-	}
 
 	return &CondCfg{
 		Name:      cfg.NameField.MappedField.Name,
 		Operation: OperationKNNVector, // 操作符为 knn_vector
 		ValueOptCfg: ValueOptCfg{
-			Value: res, // 值用向量化后的内容
+			Value: vector[0].Vector, // 值用向量化后的内容
 		},
 		RemainCfg: cfg.RemainCfg,
 	}, nil
