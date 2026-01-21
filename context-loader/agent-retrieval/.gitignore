@@ -6,3 +6,5 @@ __debug*
 coverage_report
 .nocalhost*
 .ktctl*
+.agent/
+coverage.out

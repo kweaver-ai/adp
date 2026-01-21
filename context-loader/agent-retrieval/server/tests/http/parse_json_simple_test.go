@@ -60,8 +60,13 @@ func parseJSONString(jsonStr string) (QueryStrategy, error) {
 	return queryStrategy, err
 }
 
-func TestParseJSONString(t *testing.T) {
-	jsonStr := "```json\n{\n  \"query_strategy\": [\n    {\n      \"strategy_type\": \"concept_discovery\",\n      \"confidence\": 0.9,\n      \"filter\": {\n        \"concept_type\": \"object_type\",\n        \"conditions\": [\n          {\n            \"field\": \"name\",\n            \"operation\": \"like\",\n            \"value\": \"技能特长\"\n          }\n        ]\n      }\n    }\n  ]\n}\n```"
+func TestParseJSONString(_ *testing.T) {
+	// 测试字符串包含 JSON 块，需要提取并解析
+	jsonStr := "```json\n" +
+		`{"query_strategy":[{"strategy_type":"concept_discovery","confidence":0.9,` +
+		`"filter":{"concept_type":"object_type","conditions":[` +
+		`{"field":"name","operation":"like","value":"技能特长"}]}}]}` +
+		"\n```"
 	queryStrategy, err := parseJSONString(jsonStr)
 	if err != nil {
 		log.Fatal("Error unmarshaling JSON:", err)

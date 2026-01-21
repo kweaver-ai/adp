@@ -16,12 +16,12 @@ import (
 	"net/url"
 	"time"
 
+	"github.com/bytedance/sonic"
 	infraErr "github.com/kweaver-ai/adp/context-loader/agent-retrieval/server/infra/errors"
 	"github.com/kweaver-ai/adp/context-loader/agent-retrieval/server/infra/logger"
 	"github.com/kweaver-ai/adp/context-loader/agent-retrieval/server/infra/telemetry"
 	"github.com/kweaver-ai/adp/context-loader/agent-retrieval/server/interfaces"
 	"github.com/kweaver-ai/adp/context-loader/agent-retrieval/server/utils"
-	"github.com/bytedance/sonic"
 )
 
 // httpClient HTTP客户端结构

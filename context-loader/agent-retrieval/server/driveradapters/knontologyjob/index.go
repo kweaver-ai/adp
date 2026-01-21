@@ -3,20 +3,21 @@
 // Licensed under the Apache License, Version 2.0.
 // See the LICENSE file in the project root for details.
 
+// Package knontologyjob 提供本体构建任务管理的 HTTP 处理器
 package knontologyjob
 
 import (
 	"net/http"
 	"sync"
 
+	"github.com/creasty/defaults"
+	"github.com/gin-gonic/gin"
+	"github.com/go-playground/validator/v10"
 	"github.com/kweaver-ai/adp/context-loader/agent-retrieval/server/drivenadapters"
 	"github.com/kweaver-ai/adp/context-loader/agent-retrieval/server/infra/config"
 	"github.com/kweaver-ai/adp/context-loader/agent-retrieval/server/infra/errors"
 	"github.com/kweaver-ai/adp/context-loader/agent-retrieval/server/infra/rest"
 	"github.com/kweaver-ai/adp/context-loader/agent-retrieval/server/interfaces"
-	"github.com/creasty/defaults"
-	"github.com/gin-gonic/gin"
-	"github.com/go-playground/validator/v10"
 )
 
 // KnOntologyJobHandler Ontology job management handler
@@ -26,9 +27,12 @@ type KnOntologyJobHandler interface {
 }
 
 type knOntologyJobHandler struct {
-	Logger                  interfaces.Logger
+	Logger                interfaces.Logger
 	OntologyManagerAccess interfaces.OntologyManagerAccess
 }
+
+// DefaultJobListLimit 默认查询任务列表的数量限制
+const DefaultJobListLimit = 50
 
 var (
 	kojOnce    sync.Once
@@ -40,7 +44,7 @@ func NewKnOntologyJobHandler() KnOntologyJobHandler {
 	kojOnce.Do(func() {
 		conf := config.NewConfigLoader()
 		kojHandler = &knOntologyJobHandler{
-			Logger:                  conf.GetLogger(),
+			Logger:                conf.GetLogger(),
 			OntologyManagerAccess: drivenadapters.NewOntologyManagerAccess(),
 		}
 	})
@@ -111,7 +115,7 @@ func (h *knOntologyJobHandler) GetFullOntologyBuildingStatus(c *gin.Context) {
 	// Create list request to get latest 50 jobs
 	req := &interfaces.ListOntologyJobsReq{
 		JobType:   interfaces.OntologyJobTypeFull,
-		Limit:     50,
+		Limit:     DefaultJobListLimit,
 		Direction: "desc", // Descending by create_time
 	}
 

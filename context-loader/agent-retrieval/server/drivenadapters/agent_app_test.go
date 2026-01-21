@@ -5,82 +5,152 @@
 
 package drivenadapters
 
-// const (
-// 	knID = "kn_hr"
-// )
+import (
+	"context"
+	"errors"
+	"testing"
 
-// func mockAgentClient() *agentClient {
-// 	return &agentClient{
-// 		logger:     logger.DefaultLogger(),
-// 		baseURL:    "http://192.168.232.11:30777/api/agent-app",
-// 		httpClient: rest.NewHTTPClient(),
-// 		DeployAgent: config.DeployAgentConfig{
-// 			ConceptIntentionAnalysisAgentKey:   "01K5FS890WD4V7M27GAWE1259H",
-// 			ConceptRetrievalStrategistAgentKey: "01K5G6JFAVJF94C40K90Y8TJ3B",
-// 		},
-// 	}
-// }
+	"github.com/kweaver-ai/adp/context-loader/agent-retrieval/server/infra/config"
+	"github.com/kweaver-ai/adp/context-loader/agent-retrieval/server/interfaces"
+	"github.com/kweaver-ai/adp/context-loader/agent-retrieval/server/mocks"
+	. "github.com/smartystreets/goconvey/convey"
+	"go.uber.org/mock/gomock"
+)
 
-// func mockVisitor() *interfaces.Visitor {
-// 	visitor := &interfaces.Visitor{
-// 		UserID:      "bdb78b62-6c48-11f0-af96-fa8dcc0a06b2",
-// 		VisitorType: "realname",
-// 	}
-// 	return visitor
-// }
+// TestParseResultFromAgentV1Answer 测试 parseResultFromAgentV1Answer 函数
+func TestParseResultFromAgentV1Answer(t *testing.T) {
+	Convey("TestParseResultFromAgentV1Answer", t, func() {
+		Convey("正常 JSON", func() {
+			input := `{"key": "value"}`
+			result, err := parseResultFromAgentV1Answer(input)
+			So(err, ShouldBeNil)
+			So(result, ShouldEqual, `{"key": "value"}`)
+		})
 
-// 冒烟测试
-// 测试ConceptIntentionAnalysisAgent
-// func TestSmokeConceptIntentionAnalysisAgent(t *testing.T) {
-// 	cli := mockAgentClient()
-// 	visitor := mockVisitor()
-// 	req := &interfaces.ConceptIntentionAnalysisAgentReq{
-// 		HistoryQuerys: []string{"你好"},
-// 		Query:         "请帮我查找薪资在20-30的Java开发工程师",
-// 		KnID:          knID,
-// 	}
-// 	resp, err := cli.ConceptIntentionAnalysisAgent(context.Background(), visitor, req)
-// 	if err != nil {
-// 		t.Fatalf("ConceptIntentionAnalysisAgent err: %v", err)
-// 		return
-// 	}
-// 	if resp == nil {
-// 		t.Fatalf("ConceptIntentionAnalysisAgent resp is nil")
-// 		return
-// 	}
-// 	fmt.Println(utils.ObjectToJSON(resp))
-// }
-// func TestSmokeConceptRetrievalStrategistAgent(t *testing.T) {
-// 	cli := mockAgentClient()
-// 	visitor := mockVisitor()
-// 	req := &interfaces.ConceptRetrievalStrategistReq{
-// 		QueryParam: &interfaces.ConceptRetrievalStrategistQueryParam{
-// 			OriginalQuery: "请帮我查找薪资在20-30的Java开发工程师",
-// 			CurrentIntentSegment: &interfaces.SemanticQueryIntent{
-// 				QuerySegment:      "薪资在20-30k",
-// 				Confidence:        0.9,
-// 				Reasoning:         "用户明确提到了薪资范围20-30，这是一个具体的筛选条件。",
-// 				RequiresReasoning: false,
-// 				RelatedConcepts: []*interfaces.KnowledgeConcept{
-// 					{
-// 						ConceptType: "object_type",
-// 						ConceptID:   "basicinfo",
-// 						ConceptName: "简历基本信息",
-// 					},
-// 				},
-// 			},
-// 		},
-// 		KnID:          knID,
-// 		HistoryQuerys: []string{"你好"},
-// 	}
-// 	resp, err := cli.ConceptRetrievalStrategistAgent(context.Background(), visitor, req)
-// 	if err != nil {
-// 		t.Fatalf("ConceptRetrievalStrategistAgent err: %v", err)
-// 		return
-// 	}
-// 	if resp == nil {
-// 		t.Fatalf("ConceptRetrievalStrategistAgent resp is nil")
-// 		return
-// 	}
-// 	fmt.Println(utils.ObjectToJSON(resp))
-// }
+		Convey("带前缀文本的 JSON", func() {
+			input := `Here is the result: {"key": "value"}`
+			result, err := parseResultFromAgentV1Answer(input)
+			So(err, ShouldBeNil)
+			So(result, ShouldEqual, `{"key": "value"}`)
+		})
+
+		Convey("带转义字符的 JSON", func() {
+			input := `{"key": "value with \\n newline"}`
+			result, err := parseResultFromAgentV1Answer(input)
+			So(err, ShouldBeNil)
+			So(result, ShouldContainSubstring, "value with")
+		})
+
+		Convey("无效格式 - 无大括号", func() {
+			input := `no json here`
+			_, err := parseResultFromAgentV1Answer(input)
+			So(err, ShouldNotBeNil)
+		})
+
+		Convey("空字符串", func() {
+			_, err := parseResultFromAgentV1Answer("")
+			So(err, ShouldNotBeNil)
+		})
+	})
+}
+
+// TestParseMetricMissingParamsFromError 测试 parseMetricMissingParamsFromError 函数
+func TestParseMetricMissingParamsFromError(t *testing.T) {
+	Convey("TestParseMetricMissingParamsFromError", t, func() {
+		Convey("正常错误消息", func() {
+			result := parseMetricMissingParamsFromError("test_prop", "缺少时间参数")
+			So(result, ShouldNotBeNil)
+			So(result.Property, ShouldEqual, "test_prop")
+			So(result.ErrorMsg, ShouldEqual, "缺少时间参数")
+		})
+
+		Convey("空错误消息", func() {
+			result := parseMetricMissingParamsFromError("test_prop", "")
+			So(result, ShouldNotBeNil)
+			So(result.Property, ShouldEqual, "test_prop")
+			So(result.ErrorMsg, ShouldEqual, "")
+		})
+	})
+}
+
+// TestParseOperatorMissingParamsFromError 测试 parseOperatorMissingParamsFromError 函数
+func TestParseOperatorMissingParamsFromError(t *testing.T) {
+	Convey("TestParseOperatorMissingParamsFromError", t, func() {
+		result := parseOperatorMissingParamsFromError("test_prop", "缺少参数")
+		So(result, ShouldNotBeNil)
+		So(result.Property, ShouldEqual, "test_prop")
+		So(result.ErrorMsg, ShouldEqual, "缺少参数")
+	})
+}
+
+// TestAPIChat_Success 测试 APIChat 成功场景
+func TestAPIChat_Success(t *testing.T) {
+	Convey("TestAPIChat_Success", t, func() {
+		ctrl := gomock.NewController(t)
+		defer ctrl.Finish()
+
+		mockLogger := mocks.NewMockLogger(ctrl)
+		mockHTTPClient := mocks.NewMockHTTPClient(ctrl)
+
+		mockLogger.EXPECT().WithContext(gomock.Any()).Return(mockLogger).AnyTimes()
+
+		client := &agentClient{
+			logger:      mockLogger,
+			baseURL:     "http://localhost:8080/api/agent-app",
+			httpClient:  mockHTTPClient,
+			DeployAgent: config.DeployAgentConfig{},
+		}
+
+		ctx := context.Background()
+		req := &interfaces.ChatRequest{
+			AgentKey: "test-agent",
+			Query:    "测试问题",
+		}
+
+		// Mock HTTP 成功响应
+		mockHTTPClient.EXPECT().Post(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+			Return(200, map[string]interface{}{
+				"message": map[string]interface{}{
+					"content": map[string]interface{}{},
+				},
+			}, nil)
+
+		resp, err := client.APIChat(ctx, req)
+		So(err, ShouldBeNil)
+		So(resp, ShouldNotBeNil)
+	})
+}
+
+// TestAPIChat_HTTPError 测试 APIChat HTTP 错误
+func TestAPIChat_HTTPError(t *testing.T) {
+	Convey("TestAPIChat_HTTPError", t, func() {
+		ctrl := gomock.NewController(t)
+		defer ctrl.Finish()
+
+		mockLogger := mocks.NewMockLogger(ctrl)
+		mockHTTPClient := mocks.NewMockHTTPClient(ctrl)
+
+		mockLogger.EXPECT().WithContext(gomock.Any()).Return(mockLogger).AnyTimes()
+		mockLogger.EXPECT().Warnf(gomock.Any(), gomock.Any()).AnyTimes()
+
+		client := &agentClient{
+			logger:      mockLogger,
+			baseURL:     "http://localhost:8080/api/agent-app",
+			httpClient:  mockHTTPClient,
+			DeployAgent: config.DeployAgentConfig{},
+		}
+
+		ctx := context.Background()
+		req := &interfaces.ChatRequest{
+			AgentKey: "test-agent",
+			Query:    "测试问题",
+		}
+
+		// Mock HTTP 错误
+		mockHTTPClient.EXPECT().Post(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+			Return(0, nil, errors.New("connection refused"))
+
+		_, err := client.APIChat(ctx, req)
+		So(err, ShouldNotBeNil)
+	})
+}
