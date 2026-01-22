@@ -247,6 +247,7 @@ const EditingArea = forwardRef(({ operatorType, value, onChange }: EditingAreaPr
           title="使用 AI 生成代码"
           width={448}
           getContainer={() => microWidgetProps?.container}
+          onCancel={() => setShowAIConfirm(false)}
           footer={() => (
             <Button
               icon={<AIGenIcon className="dip-font-16" />}
