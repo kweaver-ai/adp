@@ -9,15 +9,13 @@ import (
 	"sync"
 	"time"
 
-<<<<<<< HEAD
-=======
 	"regexp"
->>>>>>> 3375973 ([feat] dataflow支持对图片提取特征描述)
-	libstore "github.com/kweaver-ai/adp/autoflow/ide-go-lib/store"
+
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/common"
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/drivenadapters"
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/pkg/entity"
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/pkg/utils/extractor"
+	libstore "github.com/kweaver-ai/adp/autoflow/ide-go-lib/store"
 	traceLog "github.com/kweaver-ai/adp/autoflow/ide-go-lib/telemetry/log"
 	"github.com/kweaver-ai/adp/autoflow/ide-go-lib/telemetry/trace"
 )
