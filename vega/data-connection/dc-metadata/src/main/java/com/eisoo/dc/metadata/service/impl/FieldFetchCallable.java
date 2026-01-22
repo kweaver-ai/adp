@@ -86,6 +86,7 @@ public class FieldFetchCallable implements Callable<String> {
                     currentFields = dbClientInterface.getFields(tableName,
                             dataSourceEntity,
                             connectorConfig);
+                    break;
                 } catch (Exception e) {
                     log.error("【{}采集field元数据】失败：tableName:{};taskId:{}",
                             fType,
