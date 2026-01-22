@@ -319,7 +319,7 @@ func (s *actionLogsService) ensureIndexExists(ctx context.Context, indexName str
 func structToMap(v any) map[string]any {
 	data, _ := json.Marshal(v)
 	var result map[string]any
-	json.Unmarshal(data, &result)
+	_ = json.Unmarshal(data, &result)
 	return result
 }
 

@@ -27,9 +27,9 @@ var (
 )
 
 type actionSchedulerService struct {
-	appSetting *common.AppSetting
-	omAccess   interfaces.OntologyManagerAccess
-	aoAccess   interfaces.AgentOperatorAccess
+	appSetting  *common.AppSetting
+	omAccess    interfaces.OntologyManagerAccess
+	aoAccess    interfaces.AgentOperatorAccess
 	logsService interfaces.ActionLogsService
 
 	// Reserved hooks for future extension
@@ -67,7 +67,7 @@ func (s *actionSchedulerService) ExecuteAction(ctx context.Context, req *interfa
 	}
 
 	// Get action type from ontology-manager
-	actionType, exists, err := s.omAccess.GetActionType(ctx, req.KNID, req.ActionTypeID)
+	actionType, exists, err := s.omAccess.GetActionType(ctx, req.KNID, req.Branch, req.ActionTypeID)
 	if err != nil {
 		logger.Errorf("Failed to get action type: %v", err)
 		return nil, rest.NewHTTPError(ctx, http.StatusInternalServerError, oerrors.OntologyQuery_ActionExecution_GetActionTypeFailed).

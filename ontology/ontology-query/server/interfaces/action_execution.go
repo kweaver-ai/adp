@@ -30,6 +30,7 @@ const (
 // ActionExecutionRequest represents the request to execute an action
 type ActionExecutionRequest struct {
 	KNID             string           `json:"-"`
+	Branch           string           `json:"-"`
 	ActionTypeID     string           `json:"-"`
 	TriggerType      string           `json:"trigger_type,omitempty"` // "manual" or "scheduled", defaults to "manual"
 	UniqueIdentities []map[string]any `json:"unique_identities"`
