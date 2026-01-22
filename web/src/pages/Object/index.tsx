@@ -2,11 +2,12 @@ import { useEffect, useState, useCallback } from 'react';
 import intl from 'react-intl-universal';
 import { useHistory } from 'react-router-dom';
 import { EllipsisOutlined, ExclamationCircleFilled } from '@ant-design/icons';
-import { Dropdown, Empty, message } from 'antd';
+import { Dropdown, Empty, message, Tooltip } from 'antd';
 import { SorterResult } from 'antd/es/table/interface';
 import { TableProps } from 'antd/lib/table';
 import dayjs from 'dayjs';
 import { map } from 'lodash-es';
+import ObjectIcon from '@/components/ObjectIcon';
 import Tags from '@/components/Tags';
 import api from '@/services/object';
 import * as ObjectType from '@/services/object/type';
@@ -167,10 +168,8 @@ const KnowledgeNetwork = (props: TProps) => {
       __fixed: true,
       __selected: true,
       render: (value: string, record: ObjectType.Detail) => (
-        <div className="g-flex" style={{ lineHeight: '22px', cursor: 'pointer' }} title={value} onClick={() => onOpenDetail(record)}>
-          <div className={styles['name-icon']} style={{ background: record.color }}>
-            <IconFont type={record.icon} style={{ color: '#fff', fontSize: 16 }} />
-          </div>
+        <div className={styles['object-title-box']} title={value} onClick={() => onOpenDetail(record)}>
+          <ObjectIcon icon={record.icon} color={record.color} />
           <span>{record.name}</span>
         </div>
       ),
@@ -207,7 +206,14 @@ const KnowledgeNetwork = (props: TProps) => {
       },
     },
     {
-      title: intl.get('Object.hasIndex'),
+      title: () => (
+        <div className={styles['has-index']}>
+          <span>{intl.get('Object.hasIndex')}</span>
+          <Tooltip title={intl.get('Object.hasIndexTip')}>
+            <IconFont type="icon-dip-color-tip" />
+          </Tooltip>
+        </div>
+      ),
       dataIndex: 'status',
       width: 150,
       __selected: true,
@@ -297,7 +303,7 @@ const KnowledgeNetwork = (props: TProps) => {
         }}
       >
         <Table.Operation
-          nameConfig={{ key: 'name_pattern', placeholder: intl.get('Global.filterByNameOrId') }}
+          nameConfig={{ key: 'name_pattern', placeholder: intl.get('Global.searchName') }}
           sortConfig={{ items: OBJECT_MENU_SORT_ITEMS, order: direction, rule: sort, onChange: handleSortChange }}
           initialFilter={filterValues}
           onChange={onChangeTableOperation}

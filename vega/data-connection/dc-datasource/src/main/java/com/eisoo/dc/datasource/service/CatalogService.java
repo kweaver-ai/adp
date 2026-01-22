@@ -1,7 +1,7 @@
 package com.eisoo.dc.datasource.service;
 
 import com.eisoo.dc.datasource.domain.vo.DataSourceVo;
-import com.eisoo.dc.datasource.domain.vo.TestDataSourceVo;
+import com.eisoo.dc.common.vo.TestDataSourceVo;
 import org.springframework.http.ResponseEntity;
 
 import javax.servlet.http.HttpServletRequest;

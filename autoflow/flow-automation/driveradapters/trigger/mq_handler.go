@@ -14,6 +14,7 @@ import (
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/logics/cronjob"
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/logics/inbox"
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/logics/mgnt"
+	"github.com/kweaver-ai/adp/autoflow/flow-automation/pkg/actions"
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/pkg/entity"
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/pkg/mod"
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/store/rds"
@@ -145,6 +146,7 @@ func (m *mqHandler) Subscribe() {
 
 		common.TopicContentPipelineFulltextResult:         m.handleContentPipelineFulltextResult,
 		common.TopicContentPipelineDocFormatConvertResult: m.handleContentPipelineDocFormatConvertResult,
+		common.TopicAsyncTaskResult:                       m.handleAsyncTaskResult,
 	}
 
 	for _, val := range docTopics {
@@ -998,4 +1000,61 @@ func (m *mqHandler) getTaskCacheByHashWithRetry(ctx context.Context, hash string
 	}
 
 	return nil, nil
+}
+
+// 统一的异步任务结果处理器
+func (m *mqHandler) handleAsyncTaskResult(message []byte) error {
+	var err error
+	ctx, span := trace.StartConsumerSpan(context.Background())
+	defer func() { trace.TelemetrySpanEnd(span, err) }()
+
+	log := traceLog.WithContext(ctx)
+
+	// 解析统一的消息结构
+	var notification actions.AsyncTaskResultNotification
+	err = json.Unmarshal(message, &notification)
+	if err != nil {
+		log.Warnf("[handleAsyncTaskResult] Unmarshal failed, err %s", err.Error())
+		return err
+	}
+
+	log.Infof("[handleAsyncTaskResult] Received notification, hash: %s, taskType: %s, status: %s",
+		notification.Hash, notification.TaskType, notification.Status)
+
+	// 根据状态确定任务实例状态和结果
+	taskStatus := entity.TaskInstanceStatusSuccess
+	taskResult := map[string]any{}
+
+	if notification.Status == "failed" {
+		taskStatus = entity.TaskInstanceStatusFailed
+		taskResult["error"] = notification.Error
+	} else {
+		taskResult = notification.Result
+	}
+
+	// 查询关联的任务实例
+	taskIns, err := m.mongo.ListTaskInstance(ctx, &mod.ListTaskInstanceInput{
+		Hash: notification.Hash,
+	})
+
+	if err != nil || len(taskIns) == 0 {
+		if err != nil {
+			log.Warnf("[handleAsyncTaskResult] ListTaskInstance failed, hash: %s, err: %s", notification.Hash, err.Error())
+		}
+		return err
+	}
+
+	// 恢复所有阻塞的任务实例
+	for _, ins := range taskIns {
+		err := m.mgnt.ContinueBlockInstances(ctx, []string{ins.ID}, taskResult, taskStatus)
+		if err != nil {
+			log.Warnf("[handleAsyncTaskResult] ContinueBlockInstances failed, id %s, taskType: %s, err %s",
+				ins.ID, notification.TaskType, err.Error())
+		} else {
+			log.Infof("[handleAsyncTaskResult] Successfully continued instance %s, taskType: %s",
+				ins.ID, notification.TaskType)
+		}
+	}
+
+	return nil
 }

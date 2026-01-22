@@ -15,8 +15,6 @@ import (
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/pkg/entity"
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/pkg/mod"
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/store/rds"
-	"github.com/kweaver-ai/adp/autoflow/flow-automation/utils"
-	"github.com/kweaver-ai/adp/autoflow/flow-automation/utils/ptr"
 	ierr "github.com/kweaver-ai/adp/autoflow/ide-go-lib/errors"
 	traceLog "github.com/kweaver-ai/adp/autoflow/ide-go-lib/telemetry/log"
 	"github.com/kweaver-ai/adp/autoflow/ide-go-lib/telemetry/trace"
@@ -90,13 +88,13 @@ func (m *mgnt) CreateDataFlow(ctx context.Context, param *CreateDataFlowReq, use
 	copy(steps, param.Steps)
 	m.buildTasks(&steps[0], steps, &tasks, nil, &stepList, nil, nil)
 
-	triggerType := m.getTriggerType(param.TriggerConfig.Operator)
-
-	if param.Version == "" {
-		param.Version = common.DefaultDagVersion
+	subDagIDs, err := m.validSubFlowInSteps(ctx, "", stepList)
+	if err != nil {
+		return "", err
 	}
 
-	versionID, _ := utils.GetUniqueIDStr()
+	triggerType := m.getTriggerType(param.TriggerConfig.Operator)
+
 	// 创建 dag
 	dag := &entity.Dag{
 		UserID:      userInfo.UserID,
@@ -113,11 +111,10 @@ func (m *mgnt) CreateDataFlow(ctx context.Context, param *CreateDataFlowReq, use
 			"docid":  {DefaultValue: ""},
 		},
 		TriggerConfig: param.TriggerConfig,
-		Version:       param.Version,
-		VersionID:     versionID,
 		ModifyBy:      userInfo.UserID,
 		DeBugID:       param.DeBugID,
 		BizDomainID:   param.BizDomainID,
+		SubIDs:        subDagIDs,
 	}
 
 	dag.AppInfo = entity.AppInfo{
@@ -152,6 +149,17 @@ func (m *mgnt) CreateDataFlow(ctx context.Context, param *CreateDataFlowReq, use
 	}
 
 	var dagID string
+	dagVersions, err := m.buildDagVersions(&BuildDagVersionParams{
+		Dag:        dag,
+		CurVersion: &param.Version,
+		ChangeLog:  param.ChangeLog,
+		UserID:     userInfo.UserID,
+		IsCreate:   true,
+	})
+	if err != nil {
+		return "", err
+	}
+
 	err = m.mongo.WithTransaction(ctx, func(sctx mongo.SessionContext) error {
 		// 设置定时任务
 		dagID, err = m.mongo.CreateDag(sctx, dag)
@@ -161,17 +169,9 @@ func (m *mgnt) CreateDataFlow(ctx context.Context, param *CreateDataFlowReq, use
 		}
 
 		config, _ := json.Marshal(dag)
-
-		dagVersion := &entity.DagVersion{
-			DagID:     dagID,
-			UserID:    userInfo.UserID,
-			Version:   param.Version,
-			VersionID: versionID,
-			ChangeLog: param.ChangeLog,
-			Config:    entity.Config(config),
-			SortTime:  time.Now().UnixNano(),
-		}
-
+		dagVersion := dagVersions[0]
+		dagVersion.DagID = dagID
+		dagVersion.Config = entity.Config(config)
 		_, err = m.mongo.CreateDagVersion(sctx, dagVersion)
 		if err != nil {
 			log.Warnf("[logic.CreateDataFlow] CreateDagVersion err, detail: %s", err.Error())
@@ -410,6 +410,11 @@ func (m *mgnt) UpdateDataFlow(ctx context.Context, dagID string, param *UpdateDa
 		copy(steps, *param.Steps)
 		m.buildTasks(&steps[0], steps, &tasks, nil, &stepList, nil, nil)
 
+		dag.SubIDs, err = m.validSubFlowInSteps(ctx, dagID, stepList)
+		if err != nil {
+			return err
+		}
+
 		err = m.validSteps(&Validate{
 			Ctx:         ctx,
 			Steps:       stepList,
@@ -512,60 +517,21 @@ func (m *mgnt) UpdateDataFlow(ctx context.Context, dagID string, param *UpdateDa
 	}
 
 	var dagVersions []*entity.DagVersion
-	prevVersion := dag.Version
-	// 如果当前流程不存在版本, 则初始默认版本
-	if dag.Version == "" {
-		prevVersion = common.DefaultDagVersion
-		versionID, _ := utils.GetUniqueIDStr()
-		dagVersions = append(dagVersions, &entity.DagVersion{
-			DagID:     dagID,
-			UserID:    dag.UserID,
-			Version:   common.DefaultDagVersion,
-			VersionID: versionID,
-			ChangeLog: "",
-			Config:    entity.Config(dagBytes),
-			SortTime:  time.Now().UnixNano(),
-		})
-	}
-	if param.Version == nil {
-		nextVersion, err := prevVersion.GetNextVersion()
-		if err != nil {
-			return ierrors.NewIError(ierrors.InternalError, "", err.Error())
-		}
-		param.Version = ptr.ToPtr(entity.Version(nextVersion))
-	}
-	versionID, _ := utils.GetUniqueIDStr()
-	dag.Version = *param.Version
-	dag.VersionID = versionID
-
-	config, _ := json.Marshal(dag)
-	dagVersions = append(dagVersions, &entity.DagVersion{
-		DagID:     dagID,
-		UserID:    userInfo.UserID,
-		Version:   *param.Version,
-		VersionID: versionID,
-		ChangeLog: param.ChangeLog,
-		Config:    entity.Config(config),
-		SortTime:  time.Now().UnixNano(),
+	dagVersions, err = m.buildDagVersions(&BuildDagVersionParams{
+		OldDagBytes: dagBytes,
+		Dag:         dag,
+		CurVersion:  param.Version,
+		ChangeLog:   param.ChangeLog,
+		UserID:      userInfo.UserID,
+		IsCreate:    false,
 	})
-
-	semver, err := param.Version.Compare(prevVersion)
 	if err != nil {
-		log.Warnf("[logic.UpdateDataFlow] Compare err, detail: %s", err.Error())
-		return ierrors.NewIError(ierrors.InvalidParameter, "", map[string]interface{}{"version": err.Error()})
-	}
-
-	if semver < 1 {
-		return ierrors.NewIError(ierrors.InvalidParameter, ierrors.IllegalSemverVersion, map[string]interface{}{
-			"version": "new version must be greater than old version",
-			"latest":  param.Version,
-			"prev":    prevVersion,
-		})
+		return err
 	}
 
 	err = m.mongo.WithTransaction(ctx, func(sctx mongo.SessionContext) error {
 		// 更新dag
-		if err = m.mongo.UpdateDag(ctx, dag); err != nil {
+		if err = m.mongo.UpdateDag(sctx, dag); err != nil {
 			log.Warnf("[logic.UpdateDataFlow] UpdateDag err, detail: %s", err.Error())
 			return err
 		}

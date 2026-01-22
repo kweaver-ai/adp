@@ -197,6 +197,7 @@ func (d *dagVersion) RevertToVersion(ctx context.Context, params RevertDagReq, u
 	opMap := &perm.MapOperationProvider{
 		OpMap: map[string][]string{
 			common.DagTypeDataFlow: {perm.ModeifyOperation},
+			common.DagTypeDefault:  {perm.OldAdminOperation, perm.OldOwnerOperation},
 		},
 	}
 

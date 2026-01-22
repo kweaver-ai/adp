@@ -589,6 +589,31 @@ func (dvs *dataViewService) GetDataViewByID(ctx context.Context, viewID string, 
 
 	view := views[0]
 
+	// 补充自定义视图的来源原子视图是否来自同一个数据源
+	if includeDataScopeView && view.Type == interfaces.ViewType_Custom {
+		dataSourceIDMap := make(map[string]struct{})
+		for _, node := range view.DataScope {
+			if node.Type == interfaces.DataScopeNodeType_View {
+				var viewNodeConfig interfaces.ViewNodeCfg
+				err := mapstructure.Decode(node.Config, &viewNodeConfig)
+				if err != nil {
+					logger.Errorf("Decode view node config failed, err: %v", err)
+					return nil, err
+				}
+
+				if viewNodeConfig.View == nil {
+					logger.Errorf("View node config view is nil")
+					return nil, fmt.Errorf("view node config view is nil")
+				}
+
+				dataSourceIDMap[viewNodeConfig.View.DataSourceID] = struct{}{}
+				view.DataScopeAdvancedParams.DataScopeDataSourceID = viewNodeConfig.View.DataSourceID
+			}
+		}
+
+		view.IsSingleSource = len(dataSourceIDMap) == 1
+	}
+
 	return view, nil
 }
 
@@ -871,12 +896,12 @@ func (dvs *dataViewService) queryByDSL(ctx context.Context, query interfaces.Vie
 
 	// 向vega执行dsl查询
 	fetchParams := &interfaces.FetchVegaDataParams{
-		ViewType:     view.Type,
-		QueryType:    interfaces.QueryType_DSL,
-		DataSourceID: view.DataSourceID,
-		CatalogName:  catalogName,
-		TableNames:   indices,
-		Dsl:          dsl,
+		IsSingleDataSource: isSingleDataSource(view),
+		QueryType:          interfaces.QueryType_DSL,
+		DataSourceID:       getQueryDataSourceID(view),
+		CatalogName:        catalogName,
+		TableNames:         indices,
+		Dsl:                dsl,
 	}
 	dataBatch, err := dvs.vgAccess.FetchDataNoUnmarshal(ctx, fetchParams)
 	if err != nil {
@@ -899,7 +924,6 @@ func (dvs *dataViewService) queryByDSL(ctx context.Context, query interfaces.Vie
 func (dvs *dataViewService) queryBySQL(ctx context.Context, query interfaces.ViewQueryInterface,
 	view *interfaces.DataView) (resBytes []byte, total int64, err error) {
 	commonParams := query.GetCommonParams()
-	// previewDataScopeNodeID := query.GetPreviewDataScopeNodeID()
 
 	// 优先使用查询接口指定的 sql
 	selectSql := commonParams.SqlStr
@@ -969,12 +993,12 @@ func (dvs *dataViewService) queryBySQL(ctx context.Context, query interfaces.Vie
 		countSql := buildCountSql(sqlStr)
 		logger.Infof("get total count sqlStr is %s", countSql)
 		result, err := dvs.vgAccess.FetchDataNoUnmarshal(ctx, &interfaces.FetchVegaDataParams{
-			ViewType:       view.Type,
-			QueryType:      interfaces.QueryType_SQL,
-			DataSourceID:   view.DataSourceID,
-			SqlStr:         countSql,
-			NextUri:        "",
-			UseSearchAfter: false,
+			IsSingleDataSource: isSingleDataSource(view),
+			QueryType:          interfaces.QueryType_SQL,
+			DataSourceID:       getQueryDataSourceID(view),
+			SqlStr:             countSql,
+			NextUri:            "",
+			UseSearchAfter:     false,
 		})
 		if err != nil {
 			return nil, 0, rest.NewHTTPError(ctx, http.StatusInternalServerError, rest.PublicError_InternalServerError).
@@ -982,7 +1006,7 @@ func (dvs *dataViewService) queryBySQL(ctx context.Context, query interfaces.Vie
 		}
 
 		// 读取count的结果
-		total, err = readCountResult(ctx, view.Type, result)
+		total, err = readCountResult(ctx, isSingleDataSource(view), result)
 		if err != nil {
 			return nil, 0, rest.NewHTTPError(ctx, http.StatusInternalServerError, rest.PublicError_InternalServerError).
 				WithErrorDetails(err.Error())
@@ -1025,14 +1049,14 @@ func (dvs *dataViewService) queryBySQL(ctx context.Context, query interfaces.Vie
 	timeoutSecond := int64(timeout.Seconds())
 	nextUri := strings.Join(keys, "/")
 	fetchParams := &interfaces.FetchVegaDataParams{
-		ViewType:       view.Type,
-		QueryType:      interfaces.QueryType_SQL,
-		DataSourceID:   view.DataSourceID,
-		NextUri:        nextUri,
-		SqlStr:         finalSql,
-		UseSearchAfter: commonParams.UseSearchAfter,
-		Limit:          commonParams.Limit,
-		Timeout:        timeoutSecond,
+		IsSingleDataSource: isSingleDataSource(view),
+		QueryType:          interfaces.QueryType_SQL,
+		DataSourceID:       getQueryDataSourceID(view),
+		NextUri:            nextUri,
+		SqlStr:             finalSql,
+		UseSearchAfter:     commonParams.UseSearchAfter,
+		Limit:              commonParams.Limit,
+		Timeout:            timeoutSecond,
 	}
 	dataBatch, err := dvs.vgAccess.FetchDataNoUnmarshal(ctx, fetchParams)
 	if err != nil {
@@ -1559,7 +1583,7 @@ func convertToViewUniResponseBySQL(ctx context.Context, query interfaces.ViewQue
 			rest.PublicError_InternalServerError).WithErrorDetails(err.Error())
 	}
 
-	docs, err := parseSQLDocuments(rootNode, view.Type)
+	docs, err := parseSQLDocuments(rootNode, isSingleDataSource(view))
 	if err != nil {
 		return nil, rest.NewHTTPError(ctx, http.StatusInternalServerError,
 			uerrors.Uniquery_DataView_InternalError_GetDocumentsFailed).WithErrorDetails(err.Error())
@@ -1627,7 +1651,7 @@ func convertToViewUniResponseBySQL(ctx context.Context, query interfaces.ViewQue
 
 	var searchAfter []any
 	if query.GetCommonParams().UseSearchAfter {
-		searchAfter = extractSearchAfterParams(rootNode, view.Type)
+		searchAfter = extractSearchAfterParams(rootNode, isSingleDataSource(view))
 	}
 
 	includeView := query.GetQueryParams()[interfaces.QueryParam_IncludeView].(bool)
@@ -2620,9 +2644,9 @@ func (dvs *dataViewService) FilterRowColumnRules(ctx context.Context, rules []*i
 
 // extractSearchAfterParams 从nextUri中提取searchAfter参数
 // 解析nextUri的倒数三个部分，例如：/api/internal/vega-gateway/v2/fetch/{query_id}/{slug}/{token} 解析出 query_id、slug、token
-func extractSearchAfterParams(rootNode ast.Node, viewType string) []any {
+func extractSearchAfterParams(rootNode ast.Node, isSingleDataSource bool) []any {
 	var nextUri string
-	if viewType == interfaces.ViewType_Atomic {
+	if isSingleDataSource {
 		nextUri, _ = rootNode.Get("next_uri").String()
 	} else {
 		nextUri, _ = rootNode.Get("nextUri").String()
@@ -2694,9 +2718,9 @@ func parseSQLColumns(rootNode ast.Node) ([]ast.Node, error) {
 }
 
 // parseSQLDocuments 解析SQL查询结果中的文档数据
-func parseSQLDocuments(rootNode ast.Node, viewType string) ([]ast.Node, error) {
+func parseSQLDocuments(rootNode ast.Node, isSingleDataSource bool) ([]ast.Node, error) {
 	var docsNode *ast.Node
-	if viewType == interfaces.ViewType_Atomic {
+	if isSingleDataSource {
 		docsNode = rootNode.Get("entries")
 	} else {
 		docsNode = rootNode.Get("data")
@@ -2824,9 +2848,9 @@ func processSQLNodeFields(view *interfaces.DataView, columns []ast.Node) error {
 }
 
 // 读取count结果
-func readCountResult(ctx context.Context, viewType string, result []byte) (int64, error) {
+func readCountResult(ctx context.Context, isSingleDataSource bool, result []byte) (int64, error) {
 	var val any
-	if viewType == interfaces.ViewType_Atomic {
+	if isSingleDataSource {
 		var vegaFetchData interfaces.VegaGatewayProFetchDataRes
 		d := decoder.NewDecoder(string(result))
 		d.UseInt64()

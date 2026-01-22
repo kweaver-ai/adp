@@ -6,10 +6,10 @@
 package driveradapters
 
 import (
+	"github.com/gin-gonic/gin"
 	"github.com/kweaver-ai/adp/context-loader/agent-retrieval/server/drivenadapters"
 	"github.com/kweaver-ai/adp/context-loader/agent-retrieval/server/driveradapters/knretrieval"
 	"github.com/kweaver-ai/adp/context-loader/agent-retrieval/server/interfaces"
-	"github.com/gin-gonic/gin"
 )
 
 type restPublicHandler struct {

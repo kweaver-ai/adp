@@ -55,8 +55,8 @@ const BasicInformation = (props: any) => {
         >
           <TagsSelector />
         </Form.Item>
-        <Form.Item name="comment" label={intl.get('Global.comment')}>
-          <Input.TextArea showCount rows={4} maxLength={255} />
+        <Form.Item name="comment" label={intl.get('Global.description')}>
+          <Input.TextArea showCount rows={4} maxLength={1000} placeholder={intl.get('Global.pleaseInput')} />
         </Form.Item>
       </Form>
     </div>

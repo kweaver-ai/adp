@@ -9,6 +9,7 @@ import (
 	"mime/multipart"
 	"net/http"
 	"sync"
+	"time"
 
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/common"
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/errors"
@@ -41,6 +42,7 @@ func NewStructureExtractor() StructureExtractor {
 				Transport: otelhttp.NewTransport(&http.Transport{
 					TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
 				}),
+				Timeout: 30 * time.Minute, // 整体请求超时（文件解析可能耗时较长）
 			},
 		}
 	})
@@ -92,54 +94,88 @@ type FileParseResult struct {
 }
 
 func (s *structureExtractor) FileParse(ctx context.Context, fileUrl, fileName string) (*FileParseResultItem, []*ContentItem, error) {
+	log := traceLog.WithContext(ctx)
+
+	// 1. 先下载文件（建立连接，获取 response body）
+	fileResp, err := s.client.Get(fileUrl)
+	if err != nil {
+		log.Warnf("FileParse download file err: %s, url: %s", err.Error(), fileUrl)
+		return nil, nil, err
+	}
+	defer fileResp.Body.Close()
+
+	// 2. 使用 io.Pipe 进行流式传输（避免大文件占用过多内存）
 	pr, pw := io.Pipe()
-
 	writer := multipart.NewWriter(pw)
+
+	// 先获取 Content-Type（必须在写入之前获取，确保 boundary 正确）
+	contentType := writer.FormDataContentType()
+
+	// 用于捕获 goroutine 中的错误
+	errChan := make(chan error, 1)
+
 	go func() {
-		defer pw.Close()
-		defer writer.Close()
-		writer.WriteField("output_dir", s.config.OutputDir)
-		writer.WriteField("backend", s.config.Backend)
-		writer.WriteField("server_url", s.config.ServerUrl)
-		writer.WriteField("lang_list", "ch")
-		writer.WriteField("return_md", "true")
-		writer.WriteField("return_content_list", "true")
-		writer.WriteField("return_images", "false")
+		var writeErr error
+		defer func() {
+			writer.Close() // 先关闭 writer
+			if writeErr != nil {
+				pw.CloseWithError(writeErr)
+			} else {
+				pw.Close()
+			}
+			errChan <- writeErr
+		}()
 
-		resp, err := s.client.Get(fileUrl)
-
-		if err != nil {
-			pw.CloseWithError(err)
-			return
+		// 写入表单字段（用 map+循环简化逻辑）
+		fields := map[string]string{
+			"output_dir":          s.config.OutputDir,
+			"backend":             s.config.Backend,
+			"server_url":          s.config.ServerUrl,
+			"lang_list":           "ch",
+			"return_md":           "true",
+			"return_content_list": "true",
+			"return_images":       "false",
+		}
+		for k, v := range fields {
+			if writeErr = writer.WriteField(k, v); writeErr != nil {
+				return
+			}
 		}
 
-		defer resp.Body.Close()
-
+		// 创建文件表单字段
 		part, err := writer.CreateFormFile("files", fileName)
-
 		if err != nil {
-			pw.CloseWithError(err)
+			writeErr = err
 			return
 		}
 
-		_, err = io.Copy(part, resp.Body)
-
-		if err != nil {
-			pw.CloseWithError(err)
-			return
-		}
+		// 流式复制文件内容
+		_, writeErr = io.Copy(part, fileResp.Body)
 	}()
 
+	// 3. 发送请求（会从 pipe reader 读取数据）
 	target := fmt.Sprintf("%s/file_parse", s.baseURL)
 	req, err := http.NewRequestWithContext(ctx, "POST", target, pr)
-
 	if err != nil {
-		traceLog.WithContext(ctx).Warnf("FileParse err: %s", err.Error())
+		pr.Close() // 关闭 reader，让 goroutine 退出
+		<-errChan  // 等待 goroutine 结束
+		log.Warnf("FileParse create request err: %s", err.Error())
 		return nil, nil, err
 	}
 
-	req.Header.Set("Content-Type", writer.FormDataContentType())
+	req.Header.Set("Content-Type", contentType)
+
+	log.Infof("FileParse sending request to %s, Content-Type: %s, fileName: %s", target, contentType, fileName)
 	resp, err := s.client.Do(req)
+
+	// 等待写入 goroutine 完成，获取写入错误
+	writeErr := <-errChan
+	if writeErr != nil {
+		log.Warnf("FileParse write goroutine error: %s", writeErr.Error())
+		if err == nil {
+			err = writeErr
+		}
+	}
 
 	if err != nil {
 		traceLog.WithContext(ctx).Warnf("FileParse err: %s", err.Error())

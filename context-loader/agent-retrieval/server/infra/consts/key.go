@@ -3,6 +3,7 @@
 // Licensed under the Apache License, Version 2.0.
 // See the LICENSE file in the project root for details.
 
+// Package consts provides common constants for the application.
 package consts
 
 // Key is the type of value for context key.

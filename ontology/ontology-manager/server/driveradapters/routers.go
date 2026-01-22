@@ -105,10 +105,10 @@ func (r *restHandler) RegisterPublic(c *gin.Engine) {
 		apiV1.GET("/knowledge-networks/:kn_id/action-types/:at_ids", r.GetActionTypesByEx)
 
 		// 任务管理
-		apiV1.POST("/knowledge-networks/:kn_id/jobs", r.verifyJsonContentTypeMiddleWare(), r.CreateJob)
-		apiV1.DELETE("/knowledge-networks/:kn_id/jobs/:job_ids", r.DeleteJobs)
-		apiV1.GET("/knowledge-networks/:kn_id/jobs", r.ListJobs)
-		apiV1.GET("/knowledge-networks/:kn_id/jobs/:job_id/tasks", r.ListTasks)
+		apiV1.POST("/knowledge-networks/:kn_id/jobs", r.verifyJsonContentTypeMiddleWare(), r.CreateJobByEx)
+		apiV1.DELETE("/knowledge-networks/:kn_id/jobs/:job_ids", r.DeleteJobsByEx)
+		apiV1.GET("/knowledge-networks/:kn_id/jobs", r.ListJobsByEx)
+		apiV1.GET("/knowledge-networks/:kn_id/jobs/:job_id/tasks", r.ListTasksByEx)
 
 		// 行动计划管理
 		apiV1.POST("/knowledge-networks/:kn_id/action-schedules", r.verifyJsonContentTypeMiddleWare(), r.CreateActionScheduleByEx)
@@ -164,6 +164,12 @@ func (r *restHandler) RegisterPublic(c *gin.Engine) {
 		apiInV1.PUT("/knowledge-networks/:kn_id/action-schedules/:schedule_id/status", r.verifyJsonContentTypeMiddleWare(), r.UpdateActionScheduleStatusByIn)
 		apiInV1.GET("/knowledge-networks/:kn_id/action-schedules", r.ListActionSchedulesByIn)
 		apiInV1.GET("/knowledge-networks/:kn_id/action-schedules/:schedule_id", r.GetActionScheduleByIn)
+
+		// 任务管理
+		apiInV1.POST("/knowledge-networks/:kn_id/jobs", r.verifyJsonContentTypeMiddleWare(), r.CreateJobByIn)
+		apiInV1.DELETE("/knowledge-networks/:kn_id/jobs/:job_ids", r.DeleteJobsByIn)
+		apiInV1.GET("/knowledge-networks/:kn_id/jobs", r.ListJobsByIn)
+		apiInV1.GET("/knowledge-networks/:kn_id/jobs/:job_id/tasks", r.ListTasksByIn)
 	}
 
 	logger.Info("RestHandler RegisterPublic")

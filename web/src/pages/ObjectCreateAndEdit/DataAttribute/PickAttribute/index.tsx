@@ -29,6 +29,13 @@ const PickAttribute: React.FC<Props> = ({ visible, onOk, onCancel, dataSource = 
 
   const handleSelectChange: TransferProps['onSelectChange'] = (sourceSelectedKeys, targetSelectedKeys) => {
     setSelectedKeys([...sourceSelectedKeys, ...targetSelectedKeys]);
+
+    // 左侧选中直接移动到右侧
+    if (sourceSelectedKeys.length > 0) {
+      const newTargetKeys = [...targetKeys, ...sourceSelectedKeys];
+      setTargetKeys(newTargetKeys);
+      setSelectedKeys([]);
+    }
   };
 
   const handleSubmit = () => {
@@ -51,14 +58,15 @@ const PickAttribute: React.FC<Props> = ({ visible, onOk, onCancel, dataSource = 
       okText={intl.get('Global.ok')}
       cancelText={intl.get('Global.cancel')}
       okButtonProps={{ disabled: targetKeys.length === 0 }}
+      className={styles.modalContent}
     >
-      <div className={styles.modalContent}>
+      <div>
         <Transfer
           dataSource={dataSource.map((item) => ({ ...item, key: item.name }))}
           titles={[
             intl.get('Global.dataView'),
             <div key="clear" className={styles.clearBtn} onClick={handleClear}>
-              {intl.get('Global.clear')}
+              {intl.get('Global.clearAll')}
             </div>,
           ]}
           targetKeys={targetKeys}
@@ -80,6 +88,13 @@ const PickAttribute: React.FC<Props> = ({ visible, onOk, onCancel, dataSource = 
           listStyle={{
             width: 336,
             height: 416,
+          }}
+          showSearch
+          filterOption={(inputValue, item) => {
+            const searchText = inputValue.toLowerCase();
+            const displayName = String(item.display_name || '').toLowerCase();
+            const name = String(item.name || '').toLowerCase();
+            return displayName.includes(searchText) || name.includes(searchText);
           }}
         />
       </div>

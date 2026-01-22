@@ -34,7 +34,7 @@ const getIconCom = (type: string): JSX.Element => {
 
 interface ScanManagementProps {
   connectors: DataConnectType.Connector[];
-  getTableType: (type: string, val: string) => string;
+  getTableType: (type: string, val: string) => JSX.Element | string;
 }
 
 const ScanManagement = (props: ScanManagementProps): JSX.Element => {
@@ -81,7 +81,7 @@ const ScanManagement = (props: ScanManagementProps): JSX.Element => {
   const getDataSourceList = async (): Promise<void> => {
     const res = await api.getDataSourceList({ limit: -1 });
     const cur: DataConnectType.DataSource[] = res.entries
-      .filter((val) => !val.is_built_in && val.type != 'excel' && matchPermission(PERMISSION_CODES.SACN, val.operations))
+      .filter((val) => (val.metadata_obtain_level === 1 || val.metadata_obtain_level === 2) && matchPermission(PERMISSION_CODES.SACN, val.operations))
       .map((val) => ({
         ...val.bin_data,
         ...val,
@@ -179,10 +179,10 @@ const ScanManagement = (props: ScanManagementProps): JSX.Element => {
     const task_process_info: ScanTaskType.TaskProcessInfo = JSON.parse(record.task_process_info || '{}');
     const { table_count = 0, fail_count = 0, success_count = 0 } = { ...task_result_info, ...task_process_info };
     if (record.scan_status === 'success') {
-      return table_count + '/' + table_count;
+      return (table_count || 0) + '/' + (table_count || 0);
     }
 
-    return fail_count + success_count + '/' + table_count;
+    return (fail_count || 0) + (success_count || 0) + '/' + (table_count || 0);
   };
 
   const columns: any = [

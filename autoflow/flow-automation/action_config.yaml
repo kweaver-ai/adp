@@ -6,3 +6,9 @@ docformatconvert:
 
 fileparse:
   expireSec: 86400
+
+ocr:
+  expireSec: 86400
+
+audiotransfer:
+  expireSec: 86400

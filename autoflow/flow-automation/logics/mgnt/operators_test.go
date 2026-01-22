@@ -575,7 +575,7 @@ func TestHasCycle(t *testing.T) {
 	Convey("HasCycle", t, func() {
 		Convey("List Dag Err", func() {
 			dependency.mongo.EXPECT().ListDagByFields(gomock.Any(), gomock.Any(), gomock.Any()).Times(1).Return(nil, fmt.Errorf("List Dag Err"))
-			_, err := mockMgnt.hasCycle(context.Background(), dagID, referIDs)
+			_, err := mockMgnt.hasCycle(context.Background(), dagID, referIDs, []string{common.DagTypeComboOperator})
 			assert.NotEqual(t, err, nil)
 		})
 
@@ -605,7 +605,7 @@ func TestHasCycle(t *testing.T) {
 			dependency.mongo.EXPECT().ListDagByFields(gomock.Any(), gomock.Any(), gomock.Any()).Times(1).Return(dags1, nil)
 			dependency.mongo.EXPECT().ListDagByFields(gomock.Any(), gomock.Any(), gomock.Any()).Times(1).Return(dags2, nil)
 			dependency.mongo.EXPECT().ListDagByFields(gomock.Any(), gomock.Any(), gomock.Any()).Times(1).Return(dags1, nil)
-			cycle, err := mockMgnt.hasCycle(context.Background(), dagID, referIDs)
+			cycle, err := mockMgnt.hasCycle(context.Background(), dagID, referIDs, []string{common.DagTypeComboOperator})
 			assert.Equal(t, err, nil)
 			assert.Equal(t, cycle.Cycle, true)
 		})
@@ -634,7 +634,7 @@ func TestHasCycle(t *testing.T) {
 			}
 			dependency.mongo.EXPECT().ListDagByFields(gomock.Any(), gomock.Any(), gomock.Any()).Times(1).Return(dags1, nil)
 			dependency.mongo.EXPECT().ListDagByFields(gomock.Any(), gomock.Any(), gomock.Any()).Times(1).Return(dags2, nil)
-			cycle, err := mockMgnt.hasCycle(context.Background(), dagID, referIDs)
+			cycle, err := mockMgnt.hasCycle(context.Background(), dagID, referIDs, []string{common.DagTypeComboOperator})
 			assert.Equal(t, err, nil)
 			assert.Equal(t, cycle.Cycle, false)
 		})

@@ -4,6 +4,7 @@ import { Route, Switch, useHistory, useLocation, useRouteMatch } from 'react-rou
 import { LeftOutlined } from '@ant-design/icons';
 import classnames from 'classnames';
 import { matchPermission, PERMISSION_CODES } from '@/components/ContainerIsVisible';
+import ObjectIcon from '@/components/ObjectIcon';
 import api from '@/services/knowledgeNetwork';
 import * as KnowledgeNetworkType from '@/services/knowledgeNetwork/type';
 import { baseConfig } from '@/services/request';
@@ -56,8 +57,8 @@ const KnowledgeNetworkOverview = () => {
   const [active, setActive] = useState<string>('overview');
 
   const getDetail = async (val: string) => {
-    const res = await api.getNetworkDetail({ knIds: [val], include_statistics: true });
-    setdetail(res[0]);
+    const res = await api.getNetworkDetail({ knId: val, include_statistics: true });
+    setdetail(res);
   };
 
   const goback = () => {
@@ -87,10 +88,8 @@ const KnowledgeNetworkOverview = () => {
     <div className={styles['main-box']}>
       <div className={styles['main-header']}>
         <LeftOutlined onClick={goback} />
-        <div className={styles['name-icon']} style={{ background: detail?.color }}>
-          {detail?.icon && <IconFont type={detail.icon} style={{ color: '#fff', fontSize: 14 }} />}
-        </div>
-        <h4 style={{ fontSize: 14 }}>{detail?.name}</h4>
+        {detail?.icon && <ObjectIcon icon={detail.icon} color={detail.color} />}
+        <h4>{detail?.name}</h4>
       </div>
       <div className={styles['main-layout']}>
         <div className={styles['main-side']}>

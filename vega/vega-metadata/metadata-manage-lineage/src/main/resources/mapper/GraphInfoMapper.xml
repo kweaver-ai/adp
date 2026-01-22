@@ -1,7 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="com.eisoo.mapper.GraphInfoMapper">
-    <insert id="insertOrUpdate" parameterType="com.eisoo.entity.GraphInfoEntity">
-        insert into t_lineage_graph_info (app_id,graph_id) values (#{appId},#{graphId}) ON DUPLICATE KEY UPDATE graph_id=#{graphId}
-    </insert>
-</mapper>

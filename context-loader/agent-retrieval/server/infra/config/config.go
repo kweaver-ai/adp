@@ -3,6 +3,7 @@
 // Licensed under the Apache License, Version 2.0.
 // See the LICENSE file in the project root for details.
 
+// Package config provides application configuration loading and management.
 package config
 
 import (
@@ -14,11 +15,11 @@ import (
 	"strconv"
 	"sync"
 
+	"github.com/creasty/defaults"
 	"github.com/kweaver-ai/adp/context-loader/agent-retrieval/server/infra/logger"
 	"github.com/kweaver-ai/adp/context-loader/agent-retrieval/server/infra/telemetry"
 	"github.com/kweaver-ai/adp/context-loader/agent-retrieval/server/interfaces"
 	"github.com/kweaver-ai/adp/context-loader/agent-retrieval/server/utils"
-	"github.com/creasty/defaults"
 	o11y "github.com/kweaver-ai/kweaver-go-lib/observability"
 	"github.com/spf13/viper"
 	"gopkg.in/yaml.v3"
@@ -214,6 +215,7 @@ func overrideWithEnv(cfg interface{}) {
 		}
 
 		// Use reflection to set field value directly, type match required
+		//nolint:exhaustive // 只处理需要的类型，其他类型自动跳过
 		switch field.Kind() {
 		case reflect.String:
 			field.SetString(envValue)
@@ -228,7 +230,7 @@ func overrideWithEnv(cfg interface{}) {
 				field.SetBool(boolValue)
 			}
 		default:
-			panic("Unsupported field type for env override")
+			// 不支持的类型直接跳过，不再 panic
 		}
 	}
 }

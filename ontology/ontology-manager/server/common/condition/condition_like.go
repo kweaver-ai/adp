@@ -56,7 +56,7 @@ func (cond *LikeCond) Convert2SQL(ctx context.Context) (string, error) {
 	}
 
 	vStr = fmt.Sprintf("%v", v)
-	sqlStr := fmt.Sprintf(`"%s" LIKE '%s'`, cond.mFilterFieldName, "%"+vStr+"%")
+	sqlStr := fmt.Sprintf(`"%s" LIKE '%s'`, cond.mFilterFieldName, vStr)
 
 	return sqlStr, nil
 }

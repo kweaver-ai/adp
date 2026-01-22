@@ -285,6 +285,7 @@
     "removeSuccess": "Removed successfully",
     "click": "Click",
     "createBtn": "「Create」",
-    "alreadyExists": "Already Exists"
+    "alreadyExists": "Already Exists",
+    "more": "More"
   }
 }

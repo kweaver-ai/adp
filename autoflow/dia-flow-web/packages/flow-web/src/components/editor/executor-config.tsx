@@ -29,12 +29,14 @@ export interface ExecutorConfigProps {
   step?: IStep;
   onFinish?(step: IStep): void;
   onCancel?(): void;
+  dagsId?: string
 }
 
 export const ExecutorConfig: FC<ExecutorConfigProps> = ({
   step,
   onFinish,
   onCancel,
+  dagsId,
 }) => {
   const { message, platform } = useContext(MicroAppContext);
   const [current, setCurrent] = useState(0);
@@ -211,6 +213,7 @@ export const ExecutorConfig: FC<ExecutorConfigProps> = ({
                     t={te}
                     parameters={parameters}
                     onChange={setParameters}
+                    dagsId={dagsId}
                   />
                 ) : (
                   <StepsSettings

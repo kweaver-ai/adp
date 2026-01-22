@@ -41,7 +41,8 @@ type BboxInfo struct {
 }
 
 // ConvertContentItemsToElements 将 ContentItem 列表转换为 Element 数组
-func ConvertContentItemsToElements(ctx context.Context, contentList []*drivenadapters.ContentItem, documentID string, docName string, docMD5 string) []*Element {
+// originalFileURL: 当输入文件本身就是图片文件时，传入原始文件的URL，用于设置img_path
+func ConvertContentItemsToElements(ctx context.Context, contentList []*drivenadapters.ContentItem, documentID string, docName string, docMD5 string, originalFileURL ...string) []*Element {
 	var elements []*Element
 	readingOrder := 1
 
@@ -60,6 +61,28 @@ func ConvertContentItemsToElements(ctx context.Context, contentList []*drivenada
 		}
 		if item.Type == "code" && item.CodeBody != "" {
 			elementContent = item.CodeBody
+		}
+		// image 类型需要包含 ImageCaption 和 ImageFootnote 用于去重
+		if item.Type == "image" {
+			imageParts := []string{}
+			if strings.TrimSpace(item.Text) != "" {
+				imageParts = append(imageParts, strings.TrimSpace(item.Text))
+			}
+			if len(item.ImageCaption) > 0 {
+				caption := strings.Join(item.ImageCaption, "\n")
+				if strings.TrimSpace(caption) != "" {
+					imageParts = append(imageParts, strings.TrimSpace(caption))
+				}
+			}
+			if len(item.ImageFootnote) > 0 {
+				footnote := strings.Join(item.ImageFootnote, "\n")
+				if strings.TrimSpace(footnote) != "" {
+					imageParts = append(imageParts, strings.TrimSpace(footnote))
+				}
+			}
+			if len(imageParts) > 0 {
+				elementContent = strings.Join(imageParts, "\n")
+			}
 		}
 		contentHash := GenerateMD5(elementContent)
 		deduplicationID := GenerateDeduplicationID(docMD5, fmt.Sprintf("%d", i), contentHash[:8], item.Type, fmt.Sprintf("%d", item.PageIdx))
@@ -123,15 +146,27 @@ func ConvertContentItemsToElements(ctx context.Context, contentList []*drivenada
 
 		// 设置 img_path（仅当元素类型为 image 时）
 		var imgPath *string
-		if item.Type == "image" && item.ImgPath != "" {
-			// 上传图片到 OSS 并获取下载链接
-			uploadedURL, err := UploadImageToOSS(ctx, item.ImgPath, docName)
-			if err != nil {
-				// 如果上传失败，记录警告但继续使用原始路径
-				traceLog.WithContext(ctx).Warnf("[convertContentItemsToElements] failed to upload image: %s, error: %v", item.ImgPath, err)
-				imgPath = &item.ImgPath
-			} else {
-				imgPath = &uploadedURL
+		if item.Type == "image" {
+			// 如果提供了原始文件URL（说明输入文件本身就是图片），需要上传到OSS
+			if len(originalFileURL) > 0 && originalFileURL[0] != "" {
+				// 从原始文件URL下载并上传到OSS，获取OSS的下载链接
+				uploadedURL, err := UploadOriginalImageToOSS(ctx, originalFileURL[0], docName)
+				if err != nil {
+					// 如果上传失败，记录警告但不设置img_path
+					traceLog.WithContext(ctx).Warnf("[convertContentItemsToElements] failed to upload original image: %s, error: %v", originalFileURL[0], err)
+				} else {
+					imgPath = &uploadedURL
+				}
+			} else if item.ImgPath != "" {
+				// 否则使用解析出的图片路径，上传到 OSS 并获取下载链接
+				uploadedURL, err := UploadImageToOSS(ctx, item.ImgPath, docName)
+				if err != nil {
+					// 如果上传失败，记录警告但继续使用原始路径
+					traceLog.WithContext(ctx).Warnf("[convertContentItemsToElements] failed to upload image: %s, error: %v", item.ImgPath, err)
+					imgPath = &item.ImgPath
+				} else {
+					imgPath = &uploadedURL
+				}
 			}
 		}
 
@@ -145,6 +180,37 @@ func ConvertContentItemsToElements(ctx context.Context, contentList []*drivenada
 			listContent := strings.Join(item.ListItems, "\n")
 			if listContent != "" {
 				content = listContent
+			}
+		}
+		// image 类型聚合 ImageCaption 和 ImageFootnote 到 content
+		if item.Type == "image" {
+			textParts := []string{}
+			if strings.TrimSpace(item.Text) != "" {
+				textParts = append(textParts, strings.TrimSpace(item.Text))
+			}
+			if len(item.ImageCaption) > 0 {
+				caption := strings.Join(item.ImageCaption, "\n")
+				if strings.TrimSpace(caption) != "" {
+					textParts = append(textParts, strings.TrimSpace(caption))
+				}
+			}
+			if len(item.ImageFootnote) > 0 {
+				footnote := strings.Join(item.ImageFootnote, "\n")
+				if strings.TrimSpace(footnote) != "" {
+					textParts = append(textParts, strings.TrimSpace(footnote))
+				}
+			}
+			// 去重并合并
+			uniqueParts := []string{}
+			seen := make(map[string]bool)
+			for _, part := range textParts {
+				if part != "" && !seen[part] {
+					uniqueParts = append(uniqueParts, part)
+					seen[part] = true
+				}
+			}
+			if len(uniqueParts) > 0 {
+				content = strings.Join(uniqueParts, "\n")
 			}
 		}
 

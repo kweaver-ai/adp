@@ -41,36 +41,6 @@
                     }
                 }
             },
-            "depServices": {
-                "type": "object",
-                "title": "虚拟化引擎网关的配置",
-                "properties": {
-                    "vega_jdbc":{
-                        "type": "object",
-                        "description": "虚拟化引擎jdbc服务的入口",
-                        "properties": {
-                            "host": {
-                                "type": "string",
-                                "description": "jdbc服务开放的地址"
-                            },
-                            "port": {
-                                "type": "integer",
-                                "description": "jdbc服务开放的端口"
-                            }
-                        }
-                    },
-                    "vega_schedule":{
-                        "type": "object",
-                        "description": "调度引擎服务的入口",
-                        "properties": {
-                            "engine_host": {
-                                "type": "string",
-                                "description": "宿主机的地址"
-                            }
-                        }
-                    }
-                }
-            },
             "replicaCount": {
                 "type": "number",
                 "title": "服务副本数"

@@ -44,7 +44,28 @@ type ToolMetadata struct {
 	UpdateTime  int64          `json:"update_time"`
 	CreateUser  string         `json:"create_user"`
 	UpdateUser  string         `json:"update_user"`
-	ApiSpec     map[string]any `json:"api_spec"` // OpenAPI specification
+	APISpec     map[string]any `json:"api_spec"` // OpenAPI specification
+}
+
+// GetMCPToolDetailRequest Get MCP tool detail request
+type GetMCPToolDetailRequest struct {
+	McpID    string
+	ToolName string
+}
+
+// GetMCPToolDetailResponse Get MCP tool detail response
+type GetMCPToolDetailResponse struct {
+	Name        string                 `json:"name"`
+	Description string                 `json:"description"`
+	InputSchema map[string]interface{} `json:"inputSchema"`
+	Annotations map[string]interface{} `json:"annotations"`
+}
+
+// CallMCPToolRequest Call MCP tool request
+type CallMCPToolRequest struct {
+	McpID      string                 `json:"mcp_id"`
+	ToolName   string                 `json:"tool_name"`
+	Parameters map[string]interface{} `json:"parameters"`
 }
 
 // ==================== Driven Adapters Interface ====================
@@ -53,4 +74,8 @@ type ToolMetadata struct {
 type DrivenOperatorIntegration interface {
 	// GetToolDetail Get tool detail
 	GetToolDetail(ctx context.Context, req *GetToolDetailRequest) (*GetToolDetailResponse, error)
+	// GetMCPToolDetail Get MCP tool detail
+	GetMCPToolDetail(ctx context.Context, req *GetMCPToolDetailRequest) (*GetMCPToolDetailResponse, error)
+	// CallMCPTool Call MCP tool
+	CallMCPTool(ctx context.Context, req *CallMCPToolRequest) (map[string]interface{}, error)
 }

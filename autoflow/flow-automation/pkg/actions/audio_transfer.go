@@ -1,8 +1,8 @@
 package actions
 
 import (
+	"context"
 	"fmt"
-	"sync"
 	"time"
 
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/common"
@@ -22,66 +22,96 @@ func (a *AudioTransfer) Name() string {
 	return common.AudioTransfer
 }
 
-var (
-	audioMutex sync.Mutex
-)
-
 // Run 操作方法
 func (a *AudioTransfer) Run(ctx entity.ExecuteContext, params interface{}, token *entity.Token) (interface{}, error) {
 	var err error
-	taskIns := ctx.GetTaskInstance()
-	if taskIns == nil {
-		return nil, fmt.Errorf("get taskinstance failed")
-	}
 	newCtx, span := trace.StartInternalSpan(ctx.Context())
 	defer func() { trace.TelemetrySpanEnd(span, err) }()
 	ctx.SetContext(newCtx)
+	ctx.Trace(newCtx, "run start", entity.TraceOpPersistAfterAction)
 
-	ctx.Trace(ctx.Context(), "run start", entity.TraceOpPersistAfterAction)
 	input := params.(*AudioTransfer)
-	id := ctx.GetTaskID()
-	log := traceLog.WithContext(ctx.Context())
-	audioMutex.Lock()
-	defer audioMutex.Unlock()
+
+	// 创建执行器包装器
+	executor := &audioTransferExecutor{
+		action:  a,
+		input:   input,
+		token:   token,
+		context: ctx,
+	}
+
+	// 使用通用的异步任务缓存管理器
+	manager := NewAsyncTaskManager(ctx.NewExecuteMethods()).
+		WithLockPrefix("automation:audio_transfer")
+
+	return manager.Run(ctx, executor)
+}
+
+func (a *AudioTransfer) RunAfter(ctx entity.ExecuteContext, _ interface{}) (entity.TaskInstanceStatus, error) {
+	manager := NewAsyncTaskManager(ctx.NewExecuteMethods())
+	return manager.RunAfter(ctx)
+}
+
+// ParameterNew 初始化参数
+func (a *AudioTransfer) ParameterNew() interface{} {
+	return &AudioTransfer{}
+}
+
+// audioTransferExecutor 实现 AsyncTaskExecutor 接口
+type audioTransferExecutor struct {
+	action  *AudioTransfer
+	input   *AudioTransfer
+	token   *entity.Token
+	context entity.ExecuteContext
+}
+
+func (e *audioTransferExecutor) GetTaskType() string {
+	return e.action.Name()
+}
+
+func (e *audioTransferExecutor) GetHashContent() string {
+	return fmt.Sprintf("%s:%s:%s", e.action.Name(), e.input.DocID, e.input.Version)
+}
+
+func (e *audioTransferExecutor) GetExpireSeconds() int64 {
+	config := common.NewConfig()
+	return config.ActionConfig.AudioTransfer.ExpireSec
+}
+
+func (e *audioTransferExecutor) GetResultFileExt() string {
+	return ".json"
+}
+
+func (e *audioTransferExecutor) Execute(ctx context.Context) (map[string]any, error) {
+	log := traceLog.WithContext(ctx)
+
 	// 获取文件信息
-	_, docInfo, err := getDocInfo(ctx.Context(), input.DocID, token.Token, token.LoginIP, token.IsApp, ctx.NewASDoc())
+	_, docInfo, err := getDocInfo(ctx, e.input.DocID, e.token.Token, e.token.LoginIP, e.token.IsApp, e.context.NewASDoc())
 	if err != nil {
-		ctx.Trace(ctx.Context(), err.Error())
-		log.Warnf("[AudioTransfer.Run] getDocInfo failed, detail: %s", err.Error())
+		log.Warnf("[audioTransferExecutor] getDocInfo failed, detail: %s", err.Error())
 		return nil, err
 	}
 
 	// 获取文件预下载地址
-	res, err := ctx.NewASDoc().InnerOSDownload(newCtx, input.DocID, input.Version)
+	res, err := e.context.NewASDoc().InnerOSDownload(ctx, e.input.DocID, e.input.Version)
 	if err != nil {
-		ctx.Trace(ctx.Context(), err.Error())
-		log.Warnf("[AudioTransfer.Run] InnerOSDownload failed, detail: %s", err.Error())
+		log.Warnf("[audioTransferExecutor] InnerOSDownload failed, detail: %s", err.Error())
 		return nil, err
 	}
 
 	// 获取文件二进制内容
 	body, err := getFileStream(res.URL, 15*60*time.Second)
 	if err != nil {
-		ctx.Trace(ctx.Context(), err.Error())
-		log.Warnf("[AudioTransfer.Run] getFileStream failed, detail: %s", err.Error())
+		log.Warnf("[audioTransferExecutor] getFileStream failed, detail: %s", err.Error())
 		return nil, err
 	}
 
 	var sizeLimit int64 = 500 * 1024 * 1024
-	result, err := ctx.NewRepo().AudioTransfer(ctx.Context(), float64(sizeLimit), "", body, docInfo)
+	result, err := e.context.NewRepo().AudioTransfer(ctx, float64(sizeLimit), "", body, docInfo)
 	if err != nil {
-		ctx.Trace(ctx.Context(), err.Error())
-		log.Warnf("[AudioTransfer.Run] AudioTransfer failed, detail: %s", err.Error())
+		log.Warnf("[audioTransferExecutor] AudioTransfer failed, detail: %s", err.Error())
 		return nil, err
 	}
 
-	ctx.ShareData().Set(id, result)
-
-	ctx.Trace(ctx.Context(), "run end")
 	return result, nil
-}
-
-// ParameterNew 初始化参数
-func (a *AudioTransfer) ParameterNew() interface{} {
-	return &AudioTransfer{}
 }

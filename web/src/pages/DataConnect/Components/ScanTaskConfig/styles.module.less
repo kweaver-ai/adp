@@ -1,13 +1,13 @@
 .modalWrapper {
   :global(.ant-modal-content) {
-    border-radius: 8px;
-    box-shadow: 0px 4px 12px 0px rgba(0, 0, 0, 0.15);
     padding: 0;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px 0 rgba(0, 0, 0, 0.15);
   }
 
   :global(.ant-modal-header) {
-    border-bottom: none;
     padding: 16px 16px 0;
+    border-bottom: none;
   }
 
   :global(.ant-modal-title) {
@@ -22,8 +22,8 @@
   }
 
   :global(.ant-modal-footer) {
-    border-top: none;
     padding: 0 24px 24px;
+    border-top: none;
   }
 
   .modalFooter {
@@ -67,19 +67,19 @@
 }
 
 .sectionTitle {
+  display: flex;
+  align-items: center;
+  margin-bottom: 12px;
   font-size: 14px;
   font-weight: 400;
   line-height: 22px;
-  color: #000000;
-  margin-bottom: 12px;
-  display: flex;
-  align-items: center;
+  color: #000;
 }
 
 .required {
-  color: #e60012;
   margin-left: 4px;
   font-size: 13px;
+  color: #e60012;
 }
 
 .radioGroup {
@@ -98,11 +98,11 @@
   margin-bottom: 16px;
 
   :global(.ant-tabs-tab) {
+    padding: 6px 16px;
     font-size: 14px;
     font-weight: 400;
     line-height: 22px;
     color: rgba(0, 0, 0, 0.6);
-    padding: 6px 16px;
   }
 
   :global(.ant-tabs-tab-active) {
@@ -116,8 +116,8 @@
 
 .frequencyConfig {
   display: flex;
-  align-items: center;
   gap: 8px;
+  align-items: center;
 }
 
 .inputNumber {
@@ -133,7 +133,7 @@
   font-size: 14px;
   font-weight: 400;
   line-height: 22px;
-  color: #000000;
+  color: #000;
 }
 
 .unitSelect {
@@ -142,20 +142,20 @@
 }
 
 .hint {
+  width: 100%;
+  margin-top: 12px;
   font-size: 12px;
   font-weight: 400;
   line-height: 20px;
   color: rgba(0, 0, 0, 0.45);
-  margin-top: 12px;
-  width: 100%;
 }
 
 .strategyHint {
+  margin-bottom: 16px;
   font-size: 12px;
   font-weight: 400;
   line-height: 12px;
   color: rgba(0, 0, 0, 0.45);
-  margin-bottom: 16px;
 }
 
 .checkboxGroup {
@@ -178,11 +178,11 @@
 }
 
 .checkboxDesc {
+  margin-left: 24px;
   font-size: 12px;
   font-weight: 400;
   line-height: 12px;
   color: rgba(0, 0, 0, 0.45);
-  margin-left: 24px;
 }
 
 .switch {
@@ -201,23 +201,23 @@
 .prevButton {
   width: 80px;
   height: 32px;
-  border: 1px solid #d9d9d9;
-  border-radius: 4px;
   font-size: 14px;
   font-weight: 400;
   line-height: 18px;
   color: rgba(0, 0, 0, 0.85);
+  border: 1px solid #d9d9d9;
+  border-radius: 4px;
   opacity: 0.85;
 }
 
 .okButton {
   width: 80px;
   height: 32px;
-  background-color: #126ee3;
-  border: 1px solid #126ee3;
-  border-radius: 4px;
   font-size: 14px;
   font-weight: 400;
   line-height: 18px;
-  color: #ffffff;
+  color: #fff;
+  background-color: #126ee3;
+  border: 1px solid #126ee3;
+  border-radius: 4px;
 }

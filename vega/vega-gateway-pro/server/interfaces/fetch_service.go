@@ -12,11 +12,15 @@ type FetchService interface {
 }
 
 type FetchQueryReq struct {
-	DataSourceId string `json:"data_source_id" binding:"required" example:""`                 // 数据源ID
-	Type         int    `json:"type" binding:"required,oneof=1 2" example:"1"`                // 查询类型 1-同步查询 2-流式查询
-	Sql          string `json:"sql" binding:"required" example:"select * from table"`         // 查询语句
-	BatchSize    *int   `json:"batch_size" binding:"omitempty,min=1,max=10000" example:"100"` // 批次大小
-	Timeout      *int   `json:"timeout" binding:"omitempty,min=1,max=1800" example:"60"`      // 超时时间（秒）
+	DataSourceId string `json:"data_source_id" binding:"required" example:""`    // 数据源ID
+	Type         int    `json:"type" binding:"required,oneof=1 2 3" example:"1"` // 查询类型 1-SQL同步查询 2-SQL流式查询 3-DSL查询
+	// SQL
+	Sql       string `json:"sql" binding:"required_if=Type 1|required_if=Type 2" example:"SELECT * FROM table"` // SQL语句
+	BatchSize *int   `json:"batch_size" binding:"omitempty,min=1,max=10000" example:"100"`                      // 批次大小
+	Timeout   *int   `json:"timeout" binding:"omitempty,min=1,max=1800" example:"60"`                           // 超时时间（秒）
+	// DSL
+	Dsl        map[string]any `json:"dsl" binding:"required_if=Type 3" example:"{}"`          // DSL语句
+	TableNames []string       `json:"table_name" binding:"omitempty" example:"table1,table2"` // 表名
 }
 
 type NextQueryReq struct {
@@ -28,8 +32,8 @@ type NextQueryReq struct {
 
 type FetchResp struct {
 	NextUri    string    `json:"next_uri,omitempty"`
-	Columns    []*Column `json:"columns"`
-	Entries    []*[]any  `json:"entries"`
+	Columns    []*Column `json:"columns,omitempty"`
+	Entries    any       `json:"entries"`
 	TotalCount int64     `json:"total_count"`
 }
 

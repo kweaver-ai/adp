@@ -302,6 +302,8 @@ func Init(opt *InitialOption) error {
 		&actions.ContentFileParse{},
 		&actions.OCRNew{},
 		&actions.AnyshareFileUpdate{},
+		&actions.SubFlowCallWorkflow{},
+		&actions.SubFlowCallDataflow{},
 	})
 
 	if opt.ReadDagFromDir != "" {

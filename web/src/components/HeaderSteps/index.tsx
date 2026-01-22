@@ -13,10 +13,11 @@ interface TProps {
   stepsCurrent: number;
   goBack?: () => void;
   items?: { title: string }[];
+  onStepChange?: (current: number) => void;
 }
 
 const HeaderSteps = (props: TProps) => {
-  const { title = '', stepsCurrent, goBack: goBackProp, items } = props;
+  const { title = '', stepsCurrent, goBack: goBackProp, items, onStepChange } = props;
   const history = useHistory();
   const { modal } = HOOKS.useGlobalContext();
   const [i18nLoaded, setI18nLoaded] = useState(false);
@@ -52,7 +53,7 @@ const HeaderSteps = (props: TProps) => {
         <Divider type="vertical" />
         <Title>{title}</Title>
       </div>
-      {items && <Steps.GapIcon size="small" current={stepsCurrent} items={items} />}
+      {items && <Steps.GapIcon size="small" current={stepsCurrent} items={items} onChange={onStepChange} />}
     </div>
   );
 };

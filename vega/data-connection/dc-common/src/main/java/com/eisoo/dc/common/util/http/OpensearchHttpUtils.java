@@ -3,8 +3,6 @@ package com.eisoo.dc.common.util.http;
 import cn.hutool.http.HttpRequest;
 import cn.hutool.http.HttpResponse;
 import com.alibaba.fastjson2.JSONObject;
-import com.eisoo.dc.common.exception.enums.ErrorCodeEnum;
-import com.eisoo.dc.common.exception.vo.AiShuException;
 import com.eisoo.dc.common.metadata.entity.DataSourceEntity;
 import com.eisoo.dc.common.util.RSAUtil;
 import com.eisoo.dc.common.util.StringUtils;
@@ -24,6 +22,7 @@ public class OpensearchHttpUtils {
             url = config.getFConnectProtocol() + "://" + config.getFHost() + ":" + config.getFPort() + "/_search";
         }
         log.info("url:{}", url);
+        HttpResponse response = null;
         try {
             // 1. 创建Hutool HttpRequest并配置认证
             HttpRequest request = HttpRequest.post(url)
@@ -35,7 +34,7 @@ public class OpensearchHttpUtils {
                 request.basicAuth(config.getFAccount(), RSAUtil.decrypt(config.getFPassword()));
             }
             // 3. 发送请求并获取响应
-            HttpResponse response = request.execute();
+            response = request.execute();
             // 4. 处理响应状态
             if (!response.isOk()) {
                 log.error("OpenSearchUtil查询失败: httpStatus={}, response={}", response.getStatus(), response);
@@ -52,6 +51,10 @@ public class OpensearchHttpUtils {
             }
         } catch (Exception e) {
             throw new Exception(e);
+        } finally {
+            if (response != null) {
+                response.close();
+            }
         }
     }
 

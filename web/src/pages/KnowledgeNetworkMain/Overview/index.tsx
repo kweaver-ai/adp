@@ -3,6 +3,7 @@ import intl from 'react-intl-universal';
 import { useHistory } from 'react-router-dom';
 import { TableColumnProps } from 'antd';
 import dayjs from 'dayjs';
+import ObjectIcon from '@/components/ObjectIcon';
 import Tags from '@/components/Tags';
 import api from '@/services/object';
 import CreateAndEditForm from '@/pages/KnowledgeNetwork/CreateAndEditForm';
@@ -77,10 +78,8 @@ const Overview = (props: TProps) => {
       ellipsis: true,
       width: 350,
       render: (value: string, record: ObjectType.Detail) => (
-        <div className="g-flex" style={{ lineHeight: '22px' }} title={value}>
-          <div className={styles['name-icon']} style={{ background: record.color }}>
-            {record.icon && <IconFont type={record.icon} style={{ color: '#fff', fontSize: 16 }} />}
-          </div>
+        <div className={styles['object-title-box']} title={value}>
+          <ObjectIcon icon={record.icon} color={record.color} />
           <span>{record.name}</span>
         </div>
       ),
@@ -119,9 +118,7 @@ const Overview = (props: TProps) => {
       <div className={styles['overview-box-header']}>
         <div className={styles['header-title']}>
           <div className={styles['header-title-left']}>
-            <div className={styles['name-icon']} style={{ background: detail?.color }}>
-              {detail?.icon && <IconFont type={detail.icon} style={{ color: '#fff', fontSize: 16 }} />}
-            </div>
+            {detail?.icon && <ObjectIcon icon={detail.icon} color={detail.color} size={32} iconSize={20} />}
             <div className={styles['name-text']}>{detail?.name}</div>
           </div>
           <div className={styles['header-title-right']}>
@@ -130,7 +127,6 @@ const Overview = (props: TProps) => {
                 {intl.get('Global.edit')}
               </Button>
             )}
-            {/* <Button icon={<IconFont type="icon-dip-task-list" />}>{intl.get('KnowledgeNetwork.overviewBtn')}</Button> */}
           </div>
         </div>
         <div className={styles['header-comment']}>{detail?.comment || intl.get('Global.noComment')}</div>

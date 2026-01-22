@@ -6,9 +6,9 @@ export interface ObjectIconProps {
   icon?: string;
   /** 背景颜色 */
   color?: string;
-  /** 容器大小（宽高相同），默认 28px */
+  /** 容器大小（宽高相同），默认 24px */
   size?: number;
-  /** 图标字体大小，默认为容器大小的 0.7 倍 */
+  /** 图标字体大小，默认为 16px */
   iconSize?: number;
   /** 图标样式 */
   iconStyle?: CSSProperties;
@@ -21,10 +21,10 @@ export interface ObjectIconProps {
 }
 
 const ObjectIcon = (props: ObjectIconProps) => {
-  const { icon = 'icon-color-rectangle', color = '#1890ff', size = 28, iconSize, iconStyle, style, className, borderRadius = 4 } = props;
+  const { icon = 'icon-color-rectangle', color = '#1890ff', size = 24, iconSize = 16, iconStyle, style, className, borderRadius = 4 } = props;
 
   // 图标大小默认为容器大小的 0.7 倍
-  const finalIconSize = iconSize || size * 0.7;
+  const finalIconSize = iconSize;
 
   const containerStyle: CSSProperties = {
     display: 'flex',

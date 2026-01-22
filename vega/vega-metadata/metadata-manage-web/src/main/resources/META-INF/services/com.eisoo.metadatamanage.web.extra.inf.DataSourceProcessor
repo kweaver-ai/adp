@@ -1,6 +1,0 @@
-com.eisoo.metadatamanage.web.extra.service.MySQLDataSourceProcessor
-com.eisoo.metadatamanage.web.extra.service.OracleDataSourceProcessor
-com.eisoo.metadatamanage.web.extra.service.HiveDataSourceProcessor
-com.eisoo.metadatamanage.web.extra.service.PostgreSQLDataSourceProcessor
-com.eisoo.metadatamanage.web.extra.service.SQLServerDataSourceProcessor
-com.eisoo.metadatamanage.web.extra.service.ClickHouseDataSourceProcessor

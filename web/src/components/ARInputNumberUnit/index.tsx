@@ -27,6 +27,7 @@ interface PropType extends Omit<InputNumberProps, 'value' | 'onChange'> {
   afterType?: 'select' | 'input';
   inputAfterWidth?: number;
   inputAfterValue?: string;
+  isDefaultMax?: boolean;
 }
 
 // 全部存储单位
@@ -55,6 +56,7 @@ const InputNumberUnit: React.FC<PropType> = (props: PropType): JSX.Element => {
     afterType = 'select',
     inputAfterValue = 'GiB',
     inputAfterWidth,
+    isDefaultMax = false,
     ...other
   } = props;
 
@@ -131,7 +133,17 @@ const InputNumberUnit: React.FC<PropType> = (props: PropType): JSX.Element => {
       return;
     }
 
-    onChange && onChange(num.current + v);
+    let adjustedValue = num.current;
+
+    if (isDefaultMax) {
+      const newUnitMax = getDefaultMaxByUnit(v);
+      if (newUnitMax !== undefined && num.current > newUnitMax) {
+        adjustedValue = newUnitMax;
+        num.current = newUnitMax;
+      }
+    }
+
+    onChange && onChange(adjustedValue + v);
   };
 
   // 转换时间最大值
@@ -157,11 +169,25 @@ const InputNumberUnit: React.FC<PropType> = (props: PropType): JSX.Element => {
 
   const max = unitType?.slice(0, 1) === 't' && afterType !== 'input' && maxValue ? getTimeMax(maxValue) : undefined;
 
+  const getDefaultMaxByUnit = (unitValue: string): number | undefined => {
+    if (unitValue === 's') return 59;
+    if (unitValue === 'm') return 59;
+    if (unitValue === 'h') return 23;
+    return undefined;
+  };
+
+  const getDefaultMax = (): number | undefined => {
+    if (!isDefaultMax) return undefined;
+    return getDefaultMaxByUnit(unit.current || '');
+  };
+
+  const finalMax = isDefaultMax ? getDefaultMax() : max;
+
   return (
     <Space.Compact>
       {textBefore ? <span className={commonStyles['text-front-item']}>{textBefore}</span> : null}
 
-      <InputNumber className={commonStyles['input-width']} value={num.current} disabled={disabled} onChange={handleNumberChange} max={max} {...other} />
+      <InputNumber className={commonStyles['input-width']} value={num.current} disabled={disabled} onChange={handleNumberChange} max={finalMax} {...other} />
 
       {afterType === 'select' && (
         <Select

@@ -147,6 +147,12 @@
             <artifactId>opensearch-java</artifactId>
             <version>3.0.0</version>
         </dependency>
+        <dependency>
+            <groupId>cn.hutool</groupId>
+            <artifactId>hutool-all</artifactId>
+            <version>5.8.11</version>
+            <scope>compile</scope>
+        </dependency>
     </dependencies>
 
     <build>

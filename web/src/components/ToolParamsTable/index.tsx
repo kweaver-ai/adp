@@ -2,7 +2,7 @@ import { useState, useEffect, forwardRef, useImperativeHandle, useRef, useCallba
 import { Select, Table, Empty, Space, Input, Tooltip } from 'antd';
 import classNames from 'classnames';
 import { keyBy } from 'lodash-es';
-import { extractParamsByToolList } from '@/utils/extractSchemaParams';
+import { extractMCPSchemaParamsByToolList } from '@/utils/parseMCPSchemaParams';
 import * as ActionType from '@/services/action/type';
 import objectApi from '@/services/object';
 import toolApi from '@/services/tool';
@@ -51,9 +51,7 @@ const VALUE_FROM_OPTIONS = [
 
 const ToolParamsTable = forwardRef(({ onChange, value, actionSource, overflowYHeight, disabled, obId, knId }: ParamTableProps, ref) => {
   const { message } = HOOKS.useGlobalContext();
-
   const isMounted = useRef<boolean>(false);
-
   const [tableData, setTableData] = useState<any[]>([]);
   const [propertyOptions, setPropertyOptions] = useState<any[]>([]);
   const [expandedKeys, setExpandedKeys] = useState<string[]>([]);
@@ -205,7 +203,7 @@ const ToolParamsTable = forwardRef(({ onChange, value, actionSource, overflowYHe
     try {
       const { tools } = await toolApi.getMcpTools(mcpId, { page: 1, page_size: 100, status: 'enabled', all: true });
       // 获取工具的输入参数
-      const inputParams = extractParamsByToolList(tools, tool_name);
+      const inputParams = extractMCPSchemaParamsByToolList(tools, tool_name);
       // 处理参数
       processParams(inputParams);
     } catch (error: any) {

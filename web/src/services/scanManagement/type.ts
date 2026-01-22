@@ -218,6 +218,8 @@ export interface ScheduleHistoryItem {
   scan_status: string; // 扫描状态
   start_time: string; // 开始时间
   end_time: string; // 结束时间
+  task_process_info: string; // 任务处理信息
+  task_result_info: string; // 任务结果信息
 }
 
 export interface ScheduleHistoryListResponse {

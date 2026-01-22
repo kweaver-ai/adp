@@ -10,7 +10,7 @@ import (
 	dtype "ontology-manager/interfaces/data_type"
 )
 
-const MaxSubCondition = 10
+const MaxSubCondition = 100
 
 // sql的字符串转义
 var Special = strings.NewReplacer(`\`, `\\\\`, `'`, `\'`, `%`, `\%`, `_`, `\_`)

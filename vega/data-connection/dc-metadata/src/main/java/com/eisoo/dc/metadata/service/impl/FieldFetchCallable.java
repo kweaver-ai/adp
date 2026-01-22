@@ -54,7 +54,6 @@ public class FieldFetchCallable implements Callable<String> {
         String tableName = taskScanTableEntity.getTableName();
         String taskId = taskScanTableEntity.getTaskId();
         String tableId = taskScanTableEntity.getTableId();
-        String id = taskScanTableEntity.getId();
         String fType = dataSourceEntity.getFType();
         // 记录开始时刻
         // 2. 定义格式化器（线程安全，可全局复用）
@@ -158,7 +157,7 @@ public class FieldFetchCallable implements Callable<String> {
             }
             // 持久化field元数据信息
             fieldScanService.fieldScanBatch(deletes, updateList, saveList);
-            if (!updateList.isEmpty() || !deletes.isEmpty()) {
+            if (!updateList.isEmpty() || !deletes.isEmpty() || !saveList.isEmpty()) {
                 fieldChanged = true;
             }
             // 更新状态
@@ -168,18 +167,19 @@ public class FieldFetchCallable implements Callable<String> {
             // 更新 t_table_scan
             if (fieldChanged) {
                 tableScanEntity.setFTaskId(taskId);
+                if (OperationTyeEnum.UNKNOWN.getCode() == taskScanTableEntity.getOperationType()) {
+                    taskScanTableEntity.setOperationType(OperationTyeEnum.UNKNOWN.getCode());
+                }
             }
             taskScanTableService.updateScanStatusBothTable(taskScanTableEntity, tableScanEntity);
-            log.info("taskId:{};tableName:{};tableId:{}:获取field元数据成功结束",
+            log.info("taskId:{};tableName:{}:获取field元数据成功结束",
                     taskId,
-                    tableName,
-                    tableId);
+                    tableName);
             return ScanStatusEnum.fromCode(ScanStatusEnum.SUCCESS.getCode());
         } catch (Exception e) {
-            log.error("taskId:{};tableName:{};tableId:{}:获取field元数据失败!",
+            log.error("taskId:{};tableName:{}:获取field元数据失败!",
                     taskId,
                     tableName,
-                    tableId,
                     e
             );
 

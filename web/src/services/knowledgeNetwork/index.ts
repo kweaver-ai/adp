@@ -56,16 +56,14 @@ export const updateNetwork = async (knId: string, data: KnowledgeNetworkType.Upd
  * @param params 详情查询参数
  */
 export const getNetworkDetail = async (params: KnowledgeNetworkType.GetNetworkDetailParams): Promise<any> => {
-  const { knIds, mode, include_detail, include_statistics } = params;
+  const { knId, mode, include_detail, include_statistics } = params;
   const queryParams = {
     include_detail: !!include_detail,
     mode,
     include_statistics: include_statistics,
   };
-
-  const res = await Request.get<{ entries: KnowledgeNetworkType.KnowledgeNetwork[] }>(`${BASE_URL}/${knIds.join(',')}`, queryParams);
-  // 兼容后端返回结构
-  return Array.isArray(res) ? res : [res];
+  const res = await Request.get(`${BASE_URL}/${knId}`, queryParams);
+  return res;
 };
 
 /**

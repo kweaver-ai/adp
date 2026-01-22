@@ -31,12 +31,14 @@ public interface TaskScanMapper extends MPJBaseMapper<TaskScanEntity> {
     List<TaskScanEntity> selectTaskScans(
             @Param("id") String id,
             @Param("dsId") String dsId,
+            @Param("taskType") List<Integer> taskType,
             @Param("statusList") List<Integer> statusList,
             @Param("keyword") String keyword
     );
 
     long selectCount(@Param("includeIds") Set<String> includeIds,
                      @Param("dsId") String dsId,
+                     @Param("taskType") List<Integer> taskType,
                      @Param("statusList") List<Integer> statusList,
                      @Param("keyword") String keyword
     );
@@ -52,4 +54,14 @@ public interface TaskScanMapper extends MPJBaseMapper<TaskScanEntity> {
 
     @Select("SELECT count(*) FROM t_task_scan WHERE ds_id = #{dsId} and scan_status = #{scanStatus}")
     int getTaskCountByDsIdAndScanStatus(@Param("dsId") String dsId, @Param("scanStatus") int scanStatus);
+
+    TaskScanEntity selectLastScheduleScanTask(@Param("scheduleId") String scheduleId);
+
+    List<TaskScanEntity> selectScheduleScanExecList(String scheduleId, int limit, int offset);
+
+    @Select("SELECT count(*) FROM t_task_scan WHERE  schedule_id = #{scheduleId}")
+    int selectScheduleScanExecCount(String scheduleId);
+
+    @Select("SELECT * FROM t_task_scan WHERE schedule_id = #{jobId} limit 2")
+    List<TaskScanEntity> getWaitTaskByName(String jobId);
 }

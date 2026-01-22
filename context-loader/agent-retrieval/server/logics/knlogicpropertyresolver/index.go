@@ -18,6 +18,11 @@ import (
 	"github.com/kweaver-ai/adp/context-loader/agent-retrieval/server/interfaces"
 )
 
+const (
+	// defaultMaxConcurrency 默认最大并发数
+	defaultMaxConcurrency = 4
+)
+
 // knLogicPropertyResolverService 逻辑属性解析服务实现
 type knLogicPropertyResolverService struct {
 	logger                interfaces.Logger
@@ -58,7 +63,7 @@ func (s *knLogicPropertyResolverService) ResolveLogicProperties(
 		req.Options = &interfaces.ResolveOptions{
 			ReturnDebug:     false,
 			MaxRepairRounds: 1,
-			MaxConcurrency:  4,
+			MaxConcurrency:  defaultMaxConcurrency,
 		}
 	}
 
@@ -249,6 +254,8 @@ func (s *knLogicPropertyResolverService) extractLogicProperties(
 }
 
 // generateDynamicParams 生成 dynamic_params（按 property 并发）
+//
+//nolint:unparam // 保持接口一致性，error 返回用于后续扩展
 func (s *knLogicPropertyResolverService) generateDynamicParams(
 	ctx context.Context,
 	req *interfaces.ResolveLogicPropertiesRequest,
@@ -486,16 +493,16 @@ func (s *knLogicPropertyResolverService) generateOperatorParams(
 	s.logger.WithContext(ctx).Debugf("[KnLogicPropertyResolver] Generating operator params via Agent for: %s", property.Name)
 
 	// 从 data_source 中提取 operator_id
-	var operatorId string
+	var operatorID string
 	if property.DataSource != nil {
 		if id, ok := property.DataSource["id"].(string); ok {
-			operatorId = id
+			operatorID = id
 		}
 	}
 
 	// 构建 Agent 请求
 	agentReq := &interfaces.OperatorDynamicParamsGeneratorReq{
-		OperatorId:        operatorId,
+		OperatorID:        operatorID,
 		LogicProperty:     property,
 		Query:             req.Query,
 		UniqueIdentities:  req.UniqueIdentities,
@@ -619,10 +626,9 @@ func (s *knLogicPropertyResolverService) validateMetricParams(
 
 // validateTimestamp 校验时间戳参数
 func (s *knLogicPropertyResolverService) validateTimestamp(
-	ctx context.Context,
+	_ context.Context,
 	value interface{},
-	paramName string,
-	propertyName string,
+	paramName, propertyName string,
 ) error {
 	switch v := value.(type) {
 	case int64:
@@ -654,10 +660,12 @@ func (s *knLogicPropertyResolverService) validateTimestamp(
 }
 
 // validateOperatorParams 校验 operator 类型的参数
+//
+//nolint:unparam // 保持接口一致性，error 返回用于后续扩展
 func (s *knLogicPropertyResolverService) validateOperatorParams(
 	ctx context.Context,
-	property *interfaces.LogicPropertyDef,
-	params map[string]interface{},
+	_ *interfaces.LogicPropertyDef,
+	_ map[string]interface{},
 ) error {
 	// TODO: 实现 operator 参数校验
 	// 1. 检查所有 value_from="input" 的参数是否都存在

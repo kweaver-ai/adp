@@ -43,7 +43,7 @@ const ImportCom = (props: TProps) => {
         title: intl.get('Global.tipTitle'),
         content: (
           <>
-            {res.description}。{intl.get('KnowledgeNetwork.importConflictTip')}
+            {res.description}。{intl.getHTML('KnowledgeNetwork.importConflictTip')}
           </>
         ),
         icon: null,

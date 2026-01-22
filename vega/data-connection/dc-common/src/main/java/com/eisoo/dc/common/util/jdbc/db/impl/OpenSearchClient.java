@@ -20,6 +20,7 @@ import org.opensearch.client.opensearch.indices.GetIndexRequest;
 import org.opensearch.client.opensearch.indices.GetIndexResponse;
 import org.opensearch.client.opensearch.indices.IndexState;
 
+import java.io.IOException;
 import java.sql.Connection;
 import java.util.*;
 
@@ -37,21 +38,22 @@ public class OpenSearchClient implements DbClientInterface {
     }
 
     @Override
-    public Map<String, TableScanEntity> getTables(DataSourceEntity dataSourceEntity) throws Exception {
+    public Map<String, TableScanEntity> getTables(DataSourceEntity dataSourceEntity, List<String> scanStrategy) throws Exception {
         IndicesResponse response = null;
         Map<String, TableScanEntity> currentTables = new HashMap<>();
         String dsId = dataSourceEntity.getFId();
+        org.opensearch.client.opensearch.OpenSearchClient openSearchClient = null;
         try {
             OpenSearchClientCfg openSearchClientCfg = new OpenSearchClientCfg(dataSourceEntity.getFConnectProtocol(),
                     dataSourceEntity.getFHost(),
                     dataSourceEntity.getFPort(),
                     dataSourceEntity.getFAccount(),
                     RSAUtil.decrypt(dataSourceEntity.getFPassword()));
-            final org.opensearch.client.opensearch.OpenSearchClient client = CommonUtil.getOpenSearchClient(openSearchClientCfg);
+            openSearchClient = CommonUtil.getOpenSearchClient(openSearchClientCfg);
             // 1. 构建cat indices请求
             IndicesRequest request = new IndicesRequest.Builder().build();
             // 2. 执行请求
-            response = client.cat().indices(request);
+            response = openSearchClient.cat().indices(request);
             // 封装index
             for (IndicesRecord record : response.valueBody()) {
                 // "."开头的index不处理
@@ -72,6 +74,15 @@ public class OpenSearchClient implements DbClientInterface {
                     response,
                     e);
             throw new Exception(e);
+        } finally {
+            if (openSearchClient != null) {
+                try {
+                    openSearchClient._transport().close();
+                    log.info("opensearch:dsId:{}:关闭client成功", dsId);
+                } catch (IOException e) {
+                    log.error("opensearch:dsId:{}:关闭client失败", dsId, e);
+                }
+            }
         }
         return currentTables;
     }
@@ -83,31 +94,48 @@ public class OpenSearchClient implements DbClientInterface {
                 dataSourceEntity.getFPort(),
                 dataSourceEntity.getFAccount(),
                 RSAUtil.decrypt(dataSourceEntity.getFPassword()));
-        final org.opensearch.client.opensearch.OpenSearchClient openSearchClient = CommonUtil.getOpenSearchClient(openSearchClientCfg);
-        // 创建获取索引请求
-        GetIndexRequest request = new GetIndexRequest.Builder().index(indexName)
-                .flatSettings(true)
-                .build();
-        GetIndexResponse getIndexResponse = openSearchClient.indices().get(request);
-        Map<String, IndexState> result = getIndexResponse.result();
-        IndexState indexState = result.get(indexName);
-        TypeMapping mappings = indexState.mappings();
-        assert mappings != null;
-        Map<String, Property> properties = mappings.properties();
-        ArrayList<OpenSearchEntity.OpenSearchField> list = new ArrayList<>();
-        extractFields("", properties, list);
-        log.info("indexName:{}:open search获取field元数据成功：count:{}",
-                indexName,
-                list.size()
-        );
+        org.opensearch.client.opensearch.OpenSearchClient openSearchClient = null;
         Map<String, FieldScanEntity> currentFields = new HashMap<>();
-        for (OpenSearchEntity.OpenSearchField field : list) {
-            FieldScanEntity fieldScanEntity = new FieldScanEntity();
-            fieldScanEntity.setFId(UUID.randomUUID().toString());
-            fieldScanEntity.setFFieldName(field.getName());
-            fieldScanEntity.setFFieldType(field.getType());
-            fieldScanEntity.setFAdvancedParams(CommonUtil.getOpenSearchFieldParam(connectorConfig, field));
-            currentFields.put(fieldScanEntity.getFFieldName(), fieldScanEntity);
+        try {
+            openSearchClient = CommonUtil.getOpenSearchClient(openSearchClientCfg);
+            // 创建获取索引请求
+            GetIndexRequest request = new GetIndexRequest.Builder().index(indexName)
+                    .flatSettings(true)
+                    .build();
+            GetIndexResponse getIndexResponse = openSearchClient.indices().get(request);
+            Map<String, IndexState> result = getIndexResponse.result();
+            IndexState indexState = result.get(indexName);
+            TypeMapping mappings = indexState.mappings();
+            assert mappings != null;
+            Map<String, Property> properties = mappings.properties();
+            ArrayList<OpenSearchEntity.OpenSearchField> list = new ArrayList<>();
+            extractFields("", properties, list);
+            log.info("indexName:{}:open search获取field元数据成功：count:{}",
+                    indexName,
+                    list.size()
+            );
+            for (OpenSearchEntity.OpenSearchField field : list) {
+                FieldScanEntity fieldScanEntity = new FieldScanEntity();
+                fieldScanEntity.setFId(UUID.randomUUID().toString());
+                fieldScanEntity.setFFieldName(field.getName());
+                fieldScanEntity.setFFieldType(field.getType());
+                fieldScanEntity.setFAdvancedParams(CommonUtil.getOpenSearchFieldParam(connectorConfig, field));
+                currentFields.put(fieldScanEntity.getFFieldName(), fieldScanEntity);
+            }
+        } catch (Exception e) {
+            log.error("opensearch:dsId:{}:获取index元数据失败",
+                    dataSourceEntity.getFId(),
+                    e);
+            throw new Exception(e);
+        } finally {
+            if (openSearchClient != null) {
+                try {
+                    openSearchClient._transport().close();
+                    log.info("opensearch:dsId:{}:关闭client成功", dataSourceEntity.getFId());
+                } catch (IOException e) {
+                    log.error("opensearch:dsId:{}:关闭client失败", dataSourceEntity.getFId(), e);
+                }
+            }
         }
         return currentFields;
     }

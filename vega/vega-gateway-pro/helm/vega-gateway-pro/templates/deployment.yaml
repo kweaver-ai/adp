@@ -91,14 +91,6 @@ spec:
             valueFrom:
               fieldRef:
                 fieldPath: metadata.name
-          {{- if .Values.depServices.rds.type }}
-          - name: DB_TYPE
-            value: {{ .Values.depServices.rds.type | quote }}
-          {{- end }}
-          {{- if .Values.depServices.mq.mqType }}
-          - name: MQ_TYPE
-            value: {{ .Values.depServices.mq.mqType | quote }}
-          {{- end }}
         resources: {{- toYaml .Values.resources | nindent 10 }}
         volumeMounts:
           - name: {{ .Values.moduleName }}-cm

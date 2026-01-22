@@ -2,6 +2,7 @@ package actions
 
 import (
 	"context"
+	"fmt"
 	"sync"
 
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/common"
@@ -170,30 +171,75 @@ func (a *OCRNew) Run(ctx entity.ExecuteContext, params interface{}, token *entit
 	defer func() { trace.TelemetrySpanEnd(span, err) }()
 	ctx.SetContext(newCtx)
 	ctx.Trace(newCtx, "run start", entity.TraceOpPersistAfterAction)
-	log := traceLog.WithContext(ctx.Context())
 
 	input := params.(*OCRNew)
 
+	// 创建执行器包装器
+	executor := &ocrNewExecutor{
+		action:  a,
+		input:   input,
+		token:   token,
+		context: ctx,
+	}
+
+	// 使用通用的异步任务缓存管理器
+	manager := NewAsyncTaskManager(ctx.NewExecuteMethods()).
+		WithLockPrefix("automation:ocr")
+
+	return manager.Run(ctx, executor)
+}
+
+func (a *OCRNew) RunAfter(ctx entity.ExecuteContext, _ interface{}) (entity.TaskInstanceStatus, error) {
+	manager := NewAsyncTaskManager(ctx.NewExecuteMethods())
+	return manager.RunAfter(ctx)
+}
+
+// ocrNewExecutor 实现 AsyncTaskExecutor 接口
+type ocrNewExecutor struct {
+	action  *OCRNew
+	input   *OCRNew
+	token   *entity.Token
+	context entity.ExecuteContext
+}
+
+func (e *ocrNewExecutor) GetTaskType() string {
+	return e.action.Name()
+}
+
+func (e *ocrNewExecutor) GetHashContent() string {
+	return fmt.Sprintf("%s:%s:%s", e.action.Name(), e.input.DocID, e.input.Version)
+}
+
+func (e *ocrNewExecutor) GetExpireSeconds() int64 {
+	config := common.NewConfig()
+	return config.ActionConfig.OCR.ExpireSec
+}
+
+func (e *ocrNewExecutor) GetResultFileExt() string {
+	return ".json"
+}
+
+func (e *ocrNewExecutor) Execute(ctx context.Context) (map[string]any, error) {
+	log := traceLog.WithContext(ctx)
+
 	efast := drivenadapters.NewEfast()
-	downloadInfo, err := efast.InnerOSDownload(ctx.Context(), input.DocID, input.Version)
+	downloadInfo, err := efast.InnerOSDownload(ctx, e.input.DocID, e.input.Version)
 	if err != nil {
-		log.Warnf("[OCRNew.Run] InnerOSDownload err %s, docid %s, version %s", err.Error(), input.DocID, input.Version)
+		log.Warnf("[ocrNewExecutor] InnerOSDownload err %s, docid %s, version %s", err.Error(), e.input.DocID, e.input.Version)
 		return nil, err
 	}
 
 	ocr := drivenadapters.NewOcr()
-	text, err := ocr.RecognizeText(ctx.Context(), downloadInfo.URL, downloadInfo.Name)
+	text, err := ocr.RecognizeText(ctx, downloadInfo.URL, downloadInfo.Name)
 
 	if err != nil {
-		log.Warnf("[OCRNew.Run] RecognizeText err %s, docid %s, version %s", err.Error(), input.DocID, input.Version)
+		log.Warnf("[ocrNewExecutor] RecognizeText err %s, docid %s, version %s", err.Error(), e.input.DocID, e.input.Version)
 		return nil, err
 	}
 
 	result := map[string]any{
 		"text": text,
 	}
-
-	ctx.ShareData().Set(ctx.GetTaskID(), result)
 
 	return result, nil
 }

@@ -494,9 +494,10 @@ func buildStepMap(steps []entity.Step, stepMap map[string]*entity.Step) {
 
 func buildTaskInstanceFromEvents(events []*entity.DagInstanceEvent, dagIns *entity.DagInstance, dag *entity.Dag) (tasks []*entity.TaskInstance) {
 	var (
-		current *entity.TaskInstance
-		env     = make(map[string]any)
-		stepMap = make(map[string]*entity.Step)
+		current              *entity.TaskInstance
+		env                  = make(map[string]any)
+		stepMap              = make(map[string]*entity.Step)
+		lastStepTaskIndexMap = make(map[string]int)
 	)
 
 	buildStepMap(dag.Steps, stepMap)
@@ -505,6 +506,25 @@ func buildTaskInstanceFromEvents(events []*entity.DagInstanceEvent, dagIns *enti
 		switch event.Type {
 		case rds.DagInstanceEventTypeVariable:
 			env[event.Name] = event.Data
+			stepId := event.Name[2:]
+			if step, ok := stepMap[stepId]; ok && step.Operator == common.Loop {
+				if data, ok := event.Data.(map[string]any); ok {
+					if _, ok := data["outputs"]; ok {
+						if lastStepTaskIndex, ok := lastStepTaskIndexMap[stepId]; ok {
+							resultsMap, isMap := tasks[lastStepTaskIndex].Results.(map[string]any)
+							if resultsMap == nil || !isMap {
+								resultsMap = make(map[string]any)
+							}
+
+							for k, v := range data {
+								resultsMap[k] = v
+							}
+
+							tasks[lastStepTaskIndex].Results = resultsMap
+						}
+					}
+				}
+			}
 		case rds.DagInstanceEventTypeTaskStatus:
 			if current != nil {
 				if current.TaskID == event.TaskID {
@@ -524,6 +544,7 @@ func buildTaskInstanceFromEvents(events []*entity.DagInstanceEvent, dagIns *enti
 					}
 					continue
 				} else {
+					lastStepTaskIndexMap[current.TaskID] = len(tasks)
 					tasks = append(tasks, current)
 				}
 			}
@@ -531,7 +552,7 @@ func buildTaskInstanceFromEvents(events []*entity.DagInstanceEvent, dagIns *enti
 			timestampSec := event.Timestamp / 1e6
 			current = &entity.TaskInstance{
 				BaseInfo: entity.BaseInfo{
-					ID:        fmt.Sprintf("%d", event.ID),
+					ID:        fmt.Sprintf("%d", len(tasks)),
 					CreatedAt: timestampSec,
 					UpdatedAt: timestampSec,
 				},
@@ -546,6 +567,9 @@ func buildTaskInstanceFromEvents(events []*entity.DagInstanceEvent, dagIns *enti
 			}
 
 			if step, ok := stepMap[event.TaskID]; ok {
+
+				current.Name = step.Title
+
 				switch step.Operator {
 				case common.InternalAssignOpt:
 					target := step.Parameters["target"]

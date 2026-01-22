@@ -88,15 +88,17 @@ const AtomDataView = (): JSX.Element => {
   // 获取分组列表
   const getDataSourceList = async (): Promise<void> => {
     const res = await dataConnectApi.getDataSourceList({ limit: -1 });
-    const cur: DataConnectType.DataSource[] = res.entries.map((val) => ({
-      ...val.bin_data,
-      ...val,
-      title: val.name,
-      key: val.id,
-      icon: getIconCom(val.type),
-      paramType: 'data_source_id',
-      isLeaf: true,
-    }));
+    const cur: DataConnectType.DataSource[] = res.entries
+      .filter((val) => val.metadata_obtain_level != 4 || val.type === 'index_base')
+      .map((val) => ({
+        ...val.bin_data,
+        ...val,
+        title: val.name,
+        key: val.id,
+        icon: getIconCom(val.type),
+        paramType: 'data_source_id',
+        isLeaf: true,
+      }));
 
     setAllDataSource(cur);
     setDataSourceTree(transformAndMapDataSources(cur));

@@ -5,6 +5,12 @@
   width: 100%;
   height: 100%;
   background: #fff;
+
+  :global {
+    .ant-alert-banner {
+      border-bottom: 1px solid #0000001a !important;
+    }
+  }
 }
 
 .object-info-bar {
@@ -52,11 +58,15 @@
     line-height: 1.4;
 
     .info-label {
-      color: rgba(0, 0, 0, 0.65);
+      color: rgba(0, 0, 0, 0.45);
     }
 
     .info-value {
       color: rgba(0, 0, 0, 0.85);
+    }
+
+    .info-value-empty {
+      color: rgba(0, 0, 0, 0.45);
     }
 
     .info-value-bold {
@@ -84,6 +94,12 @@
     text-align: center;
     background: rgba(0, 0, 0, 0.06);
     border-radius: 2px;
+  }
+
+  .helpIcon {
+    font-size: 14px;
+    color: rgba(0, 0, 0, 0.45);
+    cursor: help;
   }
 }
 
@@ -186,7 +202,7 @@
 
       .item-name {
         display: flex;
-        gap: 4px;
+        gap: 8px;
         align-items: center;
         margin-bottom: 4px;
         font-size: 14px;
@@ -258,5 +274,57 @@
     display: flex;
     justify-content: space-between;
     margin-bottom: 24px;
+  }
+}
+
+// 主键列表 Popover 样式
+.key-list-popover-wrapper {
+  :global(.ant-popover-inner) {
+    padding: 0;
+    border-radius: 8px;
+    box-shadow:
+      0 9px 28px 8px rgba(0, 0, 0, 0.05),
+      0 6px 16px 0 rgba(0, 0, 0, 0.08),
+      0 3px 6px -4px rgba(0, 0, 0, 0.12);
+  }
+}
+
+.key-list-popover {
+  display: flex;
+  flex-direction: column;
+  width: 200px;
+  max-height: 300px;
+  overflow-y: auto;
+  background: #fff;
+  border-radius: 8px;
+}
+
+.key-list-item {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  min-height: 32px;
+  padding: 4px 16px;
+  line-height: 2.286em;
+
+  &:not(:last-child) {
+    border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+  }
+
+  .key-item-icon {
+    flex-shrink: 0;
+    font-size: 16px;
+  }
+
+  .key-item-text {
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-family: 'PingFang SC', sans-serif;
+    font-size: 14px;
+    font-weight: 400;
+    line-height: 2.286em;
+    color: rgba(0, 0, 0, 0.85);
+    white-space: nowrap;
   }
 }

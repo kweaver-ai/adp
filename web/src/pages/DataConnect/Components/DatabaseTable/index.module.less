@@ -133,3 +133,29 @@
   font-size: 14px;
   color: var(--g-text-color-secondary);
 }
+
+.table-box {
+  height: 469px;
+  padding: 16px;
+  overflow: auto;
+
+  .table-box-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: calc(50% - 10px);
+    padding: 4px 0;
+    margin-right: 10px;
+
+    .tableItem-key {
+      margin-right: 8px;
+    }
+
+    .tableItem-value {
+      flex: 1;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+  }
+}

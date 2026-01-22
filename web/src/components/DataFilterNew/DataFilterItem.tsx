@@ -69,7 +69,7 @@ const DataFilterItem = forwardRef(
       return [fieldType, formatType];
     }, [objectTarget?.data_properties, value.field, transformType]);
 
-    const [i18nLoaded, setI18nLoaded] = React.useState(false);
+    const [i18nLoaded, setI18nLoaded] = useState(false);
 
     useImperativeHandle(ref, () => ({ validate: () => false }));
 

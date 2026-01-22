@@ -35,7 +35,7 @@ export const DatabaseTableSelect: React.FC<{
   const getTreeData = async (): Promise<void> => {
     const res = await api.getDataSourceList({});
     const cur: DataConnectType.DataSource[] = res.entries
-      .filter((val) => val.allow_multi_table_scan && matchPermission(PERMISSION_CODES.SACN, val.operations))
+      .filter((val) => val.metadata_obtain_level === 1 && matchPermission(PERMISSION_CODES.SACN, val.operations))
       .map((val: DataConnectType.DataSource) => ({
         ...val.bin_data,
         ...val,

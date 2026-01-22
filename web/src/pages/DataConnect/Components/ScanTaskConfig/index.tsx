@@ -1,13 +1,13 @@
-import intl from 'react-intl-universal';
-import { Button, Radio, Checkbox, Switch, Modal, Form, Spin } from 'antd';
 import { useEffect, useState } from 'react';
-import * as DataConnectType from '@/services/dataConnect/type';
-import * as ScanTaskType from '@/services/scanManagement/type';
-import scanManagementApi from '@/services/scanManagement';
-import ScheduleExpression from '../ScheduleExpression';
-import HOOKS from '@/hooks';
-import styles from './styles.module.less';
+import intl from 'react-intl-universal';
+import { Button, Radio, Checkbox, Switch, Modal, Form } from 'antd';
 import { SCHEDULE_TYPE } from '@/hooks/useConstants';
+import * as DataConnectType from '@/services/dataConnect/type';
+import scanManagementApi from '@/services/scanManagement';
+import * as ScanTaskType from '@/services/scanManagement/type';
+import HOOKS from '@/hooks';
+import ScheduleExpression from '../ScheduleExpression';
+import styles from './styles.module.less';
 
 interface TScanTaskConfig {
   open: boolean;
@@ -32,6 +32,7 @@ const ScanTaskConfig = ({ open, onClose, selectedDataSources = [], isEdit = fals
   const [scheduleStatus, setScheduleStatus] = useState<ScanTaskType.ScheduleScanStatusResponse | null>(null);
 
   const scanType = Form.useWatch('type', form);
+  const expressionType = Form.useWatch('expressionType', form);
 
   // 初始化表单默认值
   const initialValues = {
@@ -165,7 +166,7 @@ const ScanTaskConfig = ({ open, onClose, selectedDataSources = [], isEdit = fals
           </Radio.Group>
         </Form.Item>
 
-        {scanType === 2 && <ScheduleExpression form={form} scheduleType="FIX_RATE" />}
+        {scanType === 2 && <ScheduleExpression form={form} scheduleType={expressionType} />}
 
         <Form.Item
           name="scan_strategy"

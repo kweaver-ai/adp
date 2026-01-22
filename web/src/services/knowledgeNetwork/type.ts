@@ -61,7 +61,7 @@ export interface UpdateNetworkRequest {
 
 // 详情查询参数
 export interface GetNetworkDetailParams {
-  knIds: string[];
+  knId: string;
   mode?: 'export';
   include_detail?: boolean;
   include_statistics?: boolean;

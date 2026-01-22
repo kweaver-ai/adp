@@ -74,8 +74,8 @@ const BasicInformation = (props: BasicInformationProps) => {
             style={{ width: '100%' }}
           />
         </Form.Item>
-        <Form.Item label={intl.get('Global.comment')} name="comment">
-          <Input.TextArea placeholder={intl.get('Global.pleaseInput')} />
+        <Form.Item label={intl.get('Global.description')} name="comment">
+          <Input.TextArea placeholder={intl.get('Global.pleaseInput')} rows={4} maxLength={1000} showCount />
         </Form.Item>
       </Form>
     </div>

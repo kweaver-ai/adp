@@ -2,8 +2,10 @@ import { forwardRef, useCallback, useEffect, useImperativeHandle, useMemo, useSt
 import intl from 'react-intl-universal';
 import { ReactFlow, addEdge, useNodesState, useEdgesState, Edge, Connection, applyNodeChanges, type OnNodesChange, Controls } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
+import { Alert, Popover, Tooltip } from 'antd';
 import { nanoid } from 'nanoid';
 import { DataViewSource } from '@/components/DataViewSource';
+import FieldTypeIcon from '@/components/FieldTypeIcon';
 import ObjectIcon from '@/components/ObjectIcon';
 import * as OntologyObjectType from '@/services/object/type';
 import HOOKS from '@/hooks';
@@ -72,36 +74,72 @@ const DataAttribute = forwardRef((props: TProps, ref) => {
   const [open, setOpen] = useState(false);
   const [dataViewInfo, setDataViewInfo] = useState<OntologyObjectType.DataSource | undefined>(undefined);
   const [pickAttributeVisible, setPickAttributeVisible] = useState(false);
+  const [alertMessage, setAlertMessage] = useState<string>('');
+
+  // 自定义边变化处理，同步更新 localDataProperties 的 mapped_field
+  const handleEdgesChange = useCallback(
+    (changes: any[]) => {
+      // 检查是否有边被删除
+      const removedEdges = changes.filter((change) => change.type === 'remove');
+      if (removedEdges.length > 0) {
+        // 获取被删除边的 id 列表
+        const removedEdgeIds = removedEdges.map((change) => {
+          const edge = edges.find((e) => e.id === change.id);
+          return edge?.id;
+        });
+
+        // 清除对应属性的 mapped_field
+        setLocalDataProperties((prevProps) =>
+          prevProps.map((p) => {
+            // 检查这个属性的连线是否被删除
+            const hasRemovedEdge = removedEdgeIds.some((edgeId) => edgeId && edgeId.startsWith(`${p.name}&&`));
+            if (hasRemovedEdge) {
+              const { mapped_field, ...rest } = p;
+              return rest;
+            }
+            return p;
+          })
+        );
+      }
+
+      // 调用原始的 onEdgesChange
+      onEdgesChange(changes);
+    },
+    [edges, onEdgesChange]
+  );
 
   useImperativeHandle(
     ref,
     () => ({
       validateFields: () => {
+        console.log('localDataProperties', localDataProperties);
         return new Promise((resolve, reject) => {
           if (localDataProperties.length === 0) {
-            message.error(intl.get('Object.dataPropertiesRequired'));
-            reject(new Error(intl.get('Object.dataPropertiesRequired')));
+            resolve({
+              dataProperties: localDataProperties,
+              dataSource: dataViewInfo,
+            });
             return;
           }
 
           const namePattern = /^[a-z0-9][a-z0-9_-]*$/;
           const invalidProperty = localDataProperties.find((p) => !namePattern.test(p.name));
           if (invalidProperty) {
-            message.error(`${intl.get('Global.attributeName')}  ${intl.get('Global.idPatternError')}`);
+            setAlertMessage(`${intl.get('Global.attributeName')}  ${intl.get('Global.idPatternError')}`);
             reject(new Error(intl.get('Global.idPatternError')));
             return;
           }
 
           const hasPrimaryKey = localDataProperties.some((p) => p.primary_key);
           if (!hasPrimaryKey) {
-            message.error(intl.get('Object.primaryKeyRequired'));
+            setAlertMessage(intl.get('Object.primaryKeyRequired'));
             reject(new Error(intl.get('Object.primaryKeyRequired')));
             return;
           }
 
           const hasDisplayKey = localDataProperties.some((p) => p.display_key);
           if (!hasDisplayKey) {
-            message.error(intl.get('Object.displayKeyRequired'));
+            setAlertMessage(intl.get('Object.displayKeyRequired'));
             reject(new Error(intl.get('Object.displayKeyRequired')));
             return;
           }
@@ -121,6 +159,7 @@ const DataAttribute = forwardRef((props: TProps, ref) => {
         });
       },
     }),
+
     [localDataProperties, edges, logicProperties, dataViewInfo, message]
   );
 
@@ -130,10 +169,15 @@ const DataAttribute = forwardRef((props: TProps, ref) => {
       const result = await SERVICE.dataView.getDataViewDetail(dataViewId);
       if (result?.[0]) {
         const fields = result?.[0]?.fields || [];
-        fields.forEach((item: OntologyObjectType.Field) => {
-          item.id = nanoid();
-        });
-        setFields(fields);
+        const resetFields = fields
+          .filter((item: OntologyObjectType.Field) => !item.name.startsWith('_'))
+          .map((item: OntologyObjectType.Field) => ({
+            ...item,
+            id: nanoid(),
+            name: item.name.replace(/\./g, '_'),
+          }));
+        setEdges([]);
+        setFields(resetFields);
       }
     } catch (event) {
       console.log('getDataViewDetail event: ', event);
@@ -192,11 +236,14 @@ const DataAttribute = forwardRef((props: TProps, ref) => {
         });
 
         const newEdges: Edge[] = [];
-        dataAttrs.forEach((dataAttr: { name: string; type: string }) => {
+        const newMappings: Array<{ dataAttr: string; viewAttr: any }> = [];
+
+        dataAttrs.forEach((dataAttr: { name: string; display_name: string; type: string }) => {
           if (connectedAttrs.has(dataAttr.name)) return;
 
           const matchedViewAttr = viewAttrs.find(
-            (viewAttr: { name: string; type: string }) => viewAttr.name === dataAttr.name && viewAttr.type === dataAttr.type
+            (viewAttr: { name: string; display_name: string; type: string }) =>
+              viewAttr.name === dataAttr.name && viewAttr.display_name === dataAttr.display_name && viewAttr.type === dataAttr.type
           );
 
           if (matchedViewAttr && !connectedAttrs.has(matchedViewAttr.name)) {
@@ -211,10 +258,29 @@ const DataAttribute = forwardRef((props: TProps, ref) => {
             } as Edge);
             connectedAttrs.add(dataAttr.name);
             connectedAttrs.add(matchedViewAttr.name);
+            newMappings.push({ dataAttr: dataAttr.name, viewAttr: matchedViewAttr });
           }
         });
 
         if (newEdges.length > 0) {
+          // 更新 localDataProperties 中的 mapped_field
+          setLocalDataProperties((prevProps) =>
+            prevProps.map((p) => {
+              const mapping = newMappings.find((m) => m.dataAttr === p.name);
+              if (mapping) {
+                return {
+                  ...p,
+                  mapped_field: {
+                    name: mapping.viewAttr.name,
+                    display_name: mapping.viewAttr.display_name,
+                    type: mapping.viewAttr.type,
+                  },
+                };
+              }
+              return p;
+            })
+          );
+
           message.success(`${intl.get('Global.add')}${newEdges.length}条连线`);
           return [...currentEdges, ...newEdges];
         }
@@ -277,7 +343,11 @@ const DataAttribute = forwardRef((props: TProps, ref) => {
         })
       );
 
-      if (editAttrData.name !== data.name) {
+      if (editAttrData.type !== data.type) {
+        // 类型改变，删除相关的边
+        setEdges((prev) => prev.filter((edge) => !edge.sourceHandle?.includes(editAttrData.name) && !edge.targetHandle?.includes(editAttrData.name)));
+      } else if (editAttrData.name !== data.name || editAttrData.display_name !== data.display_name) {
+        // 只改名称，不改类型，更新边的引用
         setEdges((prev) =>
           prev.map((edge) => {
             const newEdge = { ...edge };
@@ -377,7 +447,7 @@ const DataAttribute = forwardRef((props: TProps, ref) => {
       dataProperties: localDataProperties,
       logicProperties,
       fields,
-      dataSource,
+      dataSource: dataViewInfo,
       basicValue,
       openDataViewSource: handleOpenDataViewSource,
       deleteDataViewSource: handleDeleteDataViewSource,
@@ -394,7 +464,7 @@ const DataAttribute = forwardRef((props: TProps, ref) => {
       }, EDGE_RENDER_DELAY);
       return () => clearTimeout(timer);
     }
-  }, [localDataProperties, fields, logicProperties, dataSource?.id, basicValue?.name]);
+  }, [localDataProperties, fields, logicProperties, dataViewInfo?.id, basicValue]);
 
   const onConnect = useCallback(
     (params: Connection) => {
@@ -404,19 +474,6 @@ const DataAttribute = forwardRef((props: TProps, ref) => {
       if (!isConnectionValid(sourceHandle, targetHandle)) return;
 
       const { viewAttr, dataAttr } = extractConnectionNames(sourceHandle, targetHandle);
-
-      const exists = edges.some(
-        (edge) =>
-          edge.id === `${dataAttr}&&${viewAttr}` ||
-          edge.id === `${viewAttr}&&${dataAttr}` ||
-          (edge.sourceHandle?.includes(viewAttr) && edge.targetHandle?.includes(dataAttr)) ||
-          (edge.sourceHandle?.includes(dataAttr) && edge.targetHandle?.includes(viewAttr))
-      );
-
-      if (exists) {
-        message.error(intl.get('Object.onlyOneConnection'));
-        return;
-      }
 
       const viewNode = nodes.find((node) => node.id === 'view');
       const dataNode = nodes.find((node) => node.id === 'data');
@@ -429,8 +486,46 @@ const DataAttribute = forwardRef((props: TProps, ref) => {
         return;
       }
 
-      setEdges((prev) =>
-        addEdge(
+      setEdges((prev) => {
+        // 检查是否已存在相同的连接
+        const exists = prev.some((edge) => edge.id === `${dataAttr}&&${viewAttr}`);
+        if (exists) {
+          message.error(intl.get('Object.onlyOneConnection'));
+          return prev;
+        }
+
+        // 1对1限制：检查 sourceHandle 是否已被使用
+        const sourceAlreadyConnected = prev.some((edge) => edge.sourceHandle === sourceHandle || edge.targetHandle === sourceHandle);
+        if (sourceAlreadyConnected) {
+          message.error(intl.get('Object.attributeAlreadyConnected'));
+          return prev;
+        }
+
+        // 1对1限制：检查 targetHandle 是否已被使用
+        const targetAlreadyConnected = prev.some((edge) => edge.sourceHandle === targetHandle || edge.targetHandle === targetHandle);
+        if (targetAlreadyConnected) {
+          message.error(intl.get('Object.attributeAlreadyConnected'));
+          return prev;
+        }
+
+        // 更新 localDataProperties 中的 mapped_field
+        setLocalDataProperties((prevProps) =>
+          prevProps.map((p) => {
+            if (p.name === dataAttr) {
+              return {
+                ...p,
+                mapped_field: {
+                  name: viewAttr,
+                  display_name: viewAttrObj?.display_name,
+                  type: viewAttrObj?.type,
+                },
+              };
+            }
+            return p;
+          })
+        );
+
+        return addEdge(
           {
             ...params,
             id: `${dataAttr}&&${viewAttr}`,
@@ -438,10 +533,10 @@ const DataAttribute = forwardRef((props: TProps, ref) => {
             data: { deletable: true },
           },
           prev
-        )
-      );
+        );
+      });
     },
-    [edges, nodes, setEdges, message]
+    [nodes, setEdges, message]
   );
 
   const handleChooseOk = (e: OntologyObjectType.DataSource[]) => {
@@ -494,6 +589,7 @@ const DataAttribute = forwardRef((props: TProps, ref) => {
 
   return (
     <div className={styles['data-attribute-root']}>
+      {alertMessage && <Alert message={alertMessage} type="error" closable onClose={() => setAlertMessage('')} banner />}
       <div className={styles['object-info-bar']}>
         <div className={styles['object-info-content']}>
           <ObjectIcon icon={basicValue?.icon || 'icon-color-rectangle'} color={basicValue?.color} size={28} iconSize={20} />
@@ -503,22 +599,60 @@ const DataAttribute = forwardRef((props: TProps, ref) => {
           <div className={styles['info-item']}>
             <IconFont type="icon-dip-color-primary-key" />
             <span className={styles['info-label']}>{intl.get('Global.primaryKey')}</span>
+            <Tooltip title={intl.get('Object.primaryKeyTip')}>
+              <IconFont type="icon-dip-color-tip" className={styles.helpIcon} />
+            </Tooltip>
             <span className={styles['info-label']}>:</span>
-            <span className={styles['count-badge']}>{localDataProperties.filter((p) => p.primary_key).length}</span>
+            {localDataProperties.filter((p) => p.primary_key).length > 1 ? (
+              <Popover
+                content={
+                  <div className={styles['key-list-popover']}>
+                    {localDataProperties
+                      .filter((p) => p.primary_key)
+                      .map((item) => (
+                        <div key={item.name} className={styles['key-list-item']}>
+                          {item.type && <FieldTypeIcon type={item.type} />}
+                          <span className={styles['key-item-text']}>{item.display_name}</span>
+                        </div>
+                      ))}
+                  </div>
+                }
+                trigger="hover"
+                placement="bottomRight"
+                overlayClassName={styles['key-list-popover-wrapper']}
+              >
+                <span className={styles['count-badge']}>{localDataProperties.filter((p) => p.primary_key).length}</span>
+              </Popover>
+            ) : (
+              <span className={localDataProperties.find((p) => p.primary_key) ? styles['info-value'] : styles['info-value-empty']}>
+                {localDataProperties.find((p) => p.primary_key)?.display_name || intl.get('Global.notConfigured')}
+              </span>
+            )}
           </div>
+
           <div className={styles['divider']} />
           <div className={styles['info-item']}>
             <IconFont type="icon-dip-color-star" />
             <span className={styles['info-label']}>{intl.get('Global.title')}</span>
+            <Tooltip title={intl.get('Object.displayKeyTip')}>
+              <IconFont type="icon-dip-color-tip" className={styles.helpIcon} />
+            </Tooltip>
             <span className={styles['info-label']}>:</span>
-            <span className={styles['info-value']}>{localDataProperties.find((p) => p.display_key)?.display_name || intl.get('Global.notConfigured')}</span>
+            <span className={localDataProperties.find((p) => p.display_key) ? styles['info-value'] : styles['info-value-empty']}>
+              {localDataProperties.find((p) => p.display_key)?.display_name || intl.get('Global.notConfigured')}
+            </span>
           </div>
           <div className={styles['divider']} />
           <div className={styles['info-item']}>
             <IconFont type="icon-dip-color-increment" />
             <span className={styles['info-label']}>{intl.get('Object.incremental')}</span>
+            <Tooltip title={intl.get('Object.incrementalKeyTip')}>
+              <IconFont type="icon-dip-color-tip" className={styles.helpIcon} />
+            </Tooltip>
             <span className={styles['info-label']}>:</span>
-            <span className={styles['info-value']}>{localDataProperties.find((p) => p.incremental_key)?.display_name || intl.get('Global.notConfigured')}</span>
+            <span className={localDataProperties.find((p) => p.incremental_key) ? styles['info-value'] : styles['info-value-empty']}>
+              {localDataProperties.find((p) => p.incremental_key)?.display_name || intl.get('Global.notConfigured')}
+            </span>
           </div>
         </div>
       </div>
@@ -527,7 +661,7 @@ const DataAttribute = forwardRef((props: TProps, ref) => {
           nodes={nodes}
           edges={edges}
           onNodesChange={onNodesChange}
-          onEdgesChange={onEdgesChange}
+          onEdgesChange={handleEdgesChange}
           onConnect={onConnect}
           nodeTypes={nodeTypes as any}
           edgeTypes={edgeTypes}
@@ -560,7 +694,7 @@ const DataAttribute = forwardRef((props: TProps, ref) => {
             maxZoom: 2,
           }}
         >
-          <Controls showInteractive={false} position="top-left" />
+          <Controls showInteractive={false} position="bottom-right" />
         </ReactFlow>
       </div>
       <AddDataAttribute open={addAttrVisible} data={editAttrData} onClose={handleAddAttrClose} onOk={handleAddAttrOk} onDelete={handleAddAttrDelete} />

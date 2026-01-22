@@ -3,6 +3,7 @@ import {
   useImperativeHandle,
   useLayoutEffect,
   useMemo,
+  useState,
 } from "react";
 import { Form, Input, Select, Radio, Switch, Tooltip } from "antd";
 import { DefaultOptionType } from "antd/lib/select";
@@ -14,6 +15,10 @@ import {
 } from "../../components/extension";
 import { FormItem } from "../../components/editor/form-item";
 import styles from "./content-file-parse-config.module.less";
+import EditorWithMentions from "../ai/editor-with-mentions";
+import ModelSettingsPopover, { ModelSettings } from "../ai/settings-popover";
+import { SettingOutlined } from "@ant-design/icons";
+import { useExtensionTranslateFn } from "../../components/extension-provider/extension-context";
 
 enum SourceTypeEnum {
   Docid = "docid",
@@ -34,6 +39,8 @@ export interface ContentFileParseParameters {
   filename?: string; // 文件名，当source_type 为url时必填
   slice_vector: SliceVectorEnum;
   model?: string; // 模型, slice_vector 为 slice_vector 时 必填
+  multimodal_prompt_template?: string;
+  multimodal_enabled?: boolean;
 }
 
 export const ContentFileParseConfig = forwardRef<
@@ -42,6 +49,22 @@ export const ContentFileParseConfig = forwardRef<
 >(({ t, parameters = {}, onChange }, ref) => {
   const { source_type = SourceTypeEnum.Docid, slice_vector } = parameters;
   const [form] = Form.useForm<ContentFileParseParameters>();
+  const extensionTranslateFn = useExtensionTranslateFn();
+  const aiTranslateFn = (key: string, defaultValue?: any, values?: any) => {
+    return extensionTranslateFn('ai', key, defaultValue, values);
+  };
+  const initialSettings = {
+    temperature: 1,
+    top_p: 1,
+    max_tokens: 1000,
+    top_k: 1,
+    frequency_penalty: 0,
+    presence_penalty: 0,
+  };
+  const [settings, setSettings] = useState<ModelSettings>({
+    ...initialSettings,
+    ...parameters,
+  });
 
   const { data: smallModels } = useSWR<DefaultOptionType[]>(
     "/api/mf-model-manager/v1/small-model/list?page=1&size=1000",
@@ -140,6 +163,36 @@ export const ContentFileParseConfig = forwardRef<
     });
   }, [form, parameters]);
 
+  const textAreaContent = (data: any, itemName: string) => {
+    form.setFieldValue(itemName, data);
+  };
+
+  const { data: modelOptions } = useSWR<DefaultOptionType[]>(
+    "/api/mf-model-manager/v1/llm/list?page=1&size=1000&model_type=vu",
+    async (url) => {
+      try {
+        const { data } = await API.axios.get(url);
+        if (Array.isArray(data?.data)) {
+          return data.data.map((item: any) => ({
+            label: item.model_name,
+            value: item.model_name,
+            model_type: item.model_type,
+          }));
+        }
+      } catch (e) {}
+
+      return [];
+    },
+    {
+      revalidateIfStale: false,
+      revalidateOnFocus: false,
+    }
+  );
+  const handleModelSettingsUpdate = (settings: ModelSettings) => {
+    setSettings(settings);
+    onChange({ ...form.getFieldsValue(), ...settings });
+  };
+
   return (
     <Form
       form={form}
@@ -166,9 +219,9 @@ export const ContentFileParseConfig = forwardRef<
             multiple={false}
             omitUnavailableItem
             selectType={1}
-            placeholder={t("pdfFilePlaceholder", "请选择PDF格式的文件")}
+            placeholder={t("pdfFilePlaceholder", "请选择PDF或图片格式的文件")}
             selectButtonText={t("select")}
-            supportExtensions={["pdf"]}
+            supportExtensions={["pdf","jpg", "jpeg", "png"]}
           />
         </FormItem>
       )}
@@ -283,6 +336,56 @@ export const ContentFileParseConfig = forwardRef<
             placeholder={t("modelPlaceholder", "请选择")}
           />
         </FormItem>
+      )}
+      <FormItem label={t("sliceVectorConfigMore", "解析高级配置")} className={styles["slice_vector_config"]}>
+        <FormItem name="multimodal_enabled" valuePropName="checked" className={styles["multimodal_enabled"]}>
+          <Switch size="small" className={styles["switch"]} />
+        </FormItem>
+        <FormItem className={styles["multimodal_enabled_des"]}>{t("sliceVectorConfigMoreDesc")}</FormItem>
+      </FormItem>
+      {parameters?.multimodal_enabled && (
+        <div className={styles["multimodal"]}>
+          <FormItem noStyle>
+            <FormItem
+              label={t("multimodal", "多模态大模型")}
+              name="multimodal_model_name"
+              rules={[
+                {
+                  required: true,
+                  message: t("emptyMessage"),
+                },
+              ]}
+              style={{ width: "380px", display: "inline-block" }}
+            >
+              <Select
+                options={modelOptions}
+                placeholder={t("modelPlaceholder", "请选择")}
+              />
+            </FormItem>
+            <ModelSettingsPopover
+              t={aiTranslateFn}
+              initialSettings={settings}
+              onSettingsChange={(settings) =>
+                handleModelSettingsUpdate(settings)
+              }
+            >
+              <SettingOutlined
+                className="dip-c-subtext"
+                style={{ fontSize: "16px", margin: "34px 0 0 12px" }}
+              />
+            </ModelSettingsPopover>
+          </FormItem>
+          <FormItem
+            name="multimodal_prompt_template"
+            label={t("promptWords", "提示词")}
+          >
+            <EditorWithMentions
+              onChange={textAreaContent}
+              parameters={parameters?.multimodal_prompt_template || t("imageDescriptionPrompt", "请详细描述这张图片的内容,包括: \n 1. 主要对象和场景 \n 2. 颜色和布局 \n 3. 图片类型(照片、图表、示意图等) \n 4. 其他重要细节 \n \n 请用简洁、准确的语言描述,不超过200字。")}
+              itemName="multimodal_prompt_template"
+            />
+          </FormItem>
+        </div>
       )}
     </Form>
   );

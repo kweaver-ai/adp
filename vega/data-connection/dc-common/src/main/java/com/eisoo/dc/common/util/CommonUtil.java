@@ -43,8 +43,12 @@ import java.io.IOException;
 import java.lang.reflect.Array;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -54,11 +58,23 @@ import java.util.concurrent.atomic.AtomicLong;
 public class CommonUtil {
 
     private final static Logger logger = LoggerFactory.getLogger(CommonUtil.class);
+    private final static DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+    public final static String INSERT = "insert";
+    public final static String UPDATE = "update";
+    public final static String DELETE = "delete";
+    public final static Set<String> OPERATON_TYPES = new HashSet<>(Arrays.asList(INSERT, UPDATE, DELETE));
+
+
+    public static String getNowTime() {
+        return LocalDateTime.now().format(formatter);
+    }
+
     public static final String OPEN_SEARCH = "opensearch";
     public static final String EXCEL = "excel";
     public static final String MYSQL = "mysql";
 
     public static final String MARIA = "maria";
+
     public static String obj2json(Object o) {
         try {
             return new ObjectMapper().writeValueAsString(o);
@@ -277,6 +293,7 @@ public class CommonUtil {
 
 
     }
+
     public static boolean judgeTwoFiledIsChane(FieldScanEntity newFieldScanEntity, FieldScanEntity oldFieldScanEntity) {
         // opensearch 没有f_field_length  f_field_precision  f_field_comment
         String fieldTypeNew = newFieldScanEntity.getFFieldType();
@@ -336,6 +353,7 @@ public class CommonUtil {
             return false;
         }
     }
+
     public static String getOpenSearchParam(IndicesRecord record) {
         JSONObject health = new JSONObject();
         health.put("key", "health");
@@ -375,4 +393,6 @@ public class CommonUtil {
 
         return new JSONArray(health, status, uuid, pri, rep, docsCount, docsCountDel, storeSize, priStoreSize).toJSONString();
     }
+
+    public static final Map<String, ScheduledFuture<?>> SCHEDULE_JOB_MAP = new ConcurrentHashMap<>();
 }

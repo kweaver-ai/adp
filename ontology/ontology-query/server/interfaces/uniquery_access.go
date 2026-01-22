@@ -58,7 +58,7 @@ type MetricModel struct {
 	Unit     string `json:"unit"`
 }
 
-//go:generate mockgen -source ../interfaces/metric_model_access.go -destination ../interfaces/mock/mock_metric_model_access.go
+//go:generate mockgen -source ../interfaces/uniquery_access.go -destination ../interfaces/mock/mock_uniquery_access.go
 type UniqueryAccess interface {
 	GetViewDataByID(ctx context.Context, viewID string, viewRequest ViewQuery) (ViewData, error)
 	GetMetricDataByID(ctx context.Context, metricID string, metricRequest MetricQuery) (MetricData, error)

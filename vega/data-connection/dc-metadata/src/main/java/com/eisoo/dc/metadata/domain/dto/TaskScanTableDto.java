@@ -6,8 +6,9 @@ import io.swagger.annotations.ApiModel;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import java.util.Date;
+
 import java.io.Serializable;
+import java.util.Date;
 
 /**
  * @author Tian.lan
@@ -28,4 +29,6 @@ public class TaskScanTableDto implements Serializable {
     private String scanStatus;
     @JsonProperty(value = "start_time")
     private Date startTime;
+    @JsonProperty(value = "end_time")
+    private Date endTime;
 }

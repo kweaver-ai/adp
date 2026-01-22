@@ -157,3 +157,13 @@ func DeleteDagInstanceEvents(ctx context.Context, dagIns *entity.DagInstance) er
 	}
 	return err
 }
+
+func GetDagInstanceEvents(ctx context.Context, opts *rds.DagInstanceEventListOptions) ([]*rds.DagInstanceEvent, error) {
+	eventRepo := rds.NewDagInstanceEventRepository()
+	events, err := eventRepo.List(ctx, opts)
+	if err != nil {
+		return nil, err
+	}
+
+	return events, err
+}

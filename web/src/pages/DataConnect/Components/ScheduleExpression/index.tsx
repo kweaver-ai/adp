@@ -9,8 +9,6 @@ import { SCHEDULE_TYPE } from '@/hooks/useConstants';
 import styles from './index.module.less';
 
 const ScheduleExpression = ({ scheduleType, form }: any): JSX.Element => {
-  const [type, setType] = useState(scheduleType || SCHEDULE_TYPE.FIX_RATE);
-
   const renderTabs = (options: any): JSX.Element[] => {
     return options.map((item: any) => {
       return (
@@ -32,11 +30,10 @@ const ScheduleExpression = ({ scheduleType, form }: any): JSX.Element => {
   const config = [
     {
       title: intl.get('MetricModel.persistenceTaskSchedule'),
-      value: type,
-      onChange: (e: RadioChangeEvent): void => setType(e.target.value),
+      value: scheduleType,
       options: [
         { label: intl.get('Global.fixRate'), value: SCHEDULE_TYPE.FIX_RATE },
-        { label: intl.get('MetricModel.cronExpress'), value: SCHEDULE_TYPE.CRON },
+        { label: '自定义频率', value: SCHEDULE_TYPE.CRON },
       ],
     },
   ];
@@ -44,22 +41,22 @@ const ScheduleExpression = ({ scheduleType, form }: any): JSX.Element => {
   return (
     <div className={styles['schedule-wrapper']}>
       {renderTabs(config)}
-      {type === SCHEDULE_TYPE.FIX_RATE && (
+      {scheduleType === SCHEDULE_TYPE.FIX_RATE && (
         <Form.Item
           name="fixExpression"
           preserve={true}
           className={styles['expression-wrapper']}
           extra={
-            <span className="g-c-text-sub" style={{ fontSize: 12 }}>
+            <span className="g-c-text-sub" style={{ fontSize: 12, whiteSpace: 'pre-line' }}>
               {intl.get('DataConnect.fixRateTip')}
             </span>
           }
-          rules={[{ required: type === SCHEDULE_TYPE.FIX_RATE, message: intl.get('MetricModel.scheduleIsEmpty') }]}
+          rules={[{ required: scheduleType === SCHEDULE_TYPE.FIX_RATE, message: intl.get('MetricModel.scheduleIsEmpty') }]}
         >
-          <ARInputNumberUnit unitType="tmhdwM" textBefore={intl.get('Global.every')} min={1} />
+          <ARInputNumberUnit unitType="tmhdwM" isDefaultMax textBefore={intl.get('Global.every')} min={1} precision={0} />
         </Form.Item>
       )}
-      {type === SCHEDULE_TYPE.CRON && (
+      {scheduleType === SCHEDULE_TYPE.CRON && (
         <Form.Item
           name="cronExpression"
           preserve={true}
@@ -72,7 +69,7 @@ const ScheduleExpression = ({ scheduleType, form }: any): JSX.Element => {
               </Tooltip>
             </div>
           }
-          rules={[{ required: type === SCHEDULE_TYPE.CRON, message: intl.get('MetricModel.scheduleIsEmpty') }]}
+          rules={[{ required: scheduleType === SCHEDULE_TYPE.CRON, message: '自定义频率不能为空' }]}
         >
           <CronSelect inputProps={{ style: { width: 300 } }} />
         </Form.Item>

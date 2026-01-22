@@ -138,6 +138,23 @@ func (vm *VMExt) HookLoopStart(id string, value any) {
 			InstanceID: vm.dagIns.ID,
 			Operator:   common.Loop,
 			TaskID:     id,
+			Status:     string(entity.TaskInstanceStatusRunning),
+			Timestamp:  time.Now().UnixMicro(),
+			Visibility: rds.DagInstanceEventVisibilityPublic,
+		},
+		&entity.DagInstanceEvent{
+			Type:       rds.DagInstanceEventTypeVariable,
+			InstanceID: vm.dagIns.ID,
+			Name:       fmt.Sprintf("__%s", id),
+			Data:       value,
+			Visibility: rds.DagInstanceEventVisibilityPublic,
+			Timestamp:  time.Now().UnixMicro(),
+		},
+		&entity.DagInstanceEvent{
+			Type:       rds.DagInstanceEventTypeTaskStatus,
+			InstanceID: vm.dagIns.ID,
+			Operator:   common.Loop,
+			TaskID:     id,
 			Status:     string(entity.TaskInstanceStatusSuccess),
 			Timestamp:  time.Now().UnixMicro(),
 			Visibility: rds.DagInstanceEventVisibilityPublic,
@@ -149,6 +166,18 @@ func (vm *VMExt) HookLoopStart(id string, value any) {
 	if err != nil {
 		vm.logger.Warnf("[VMExt.HookLoopStart] BatchCreateTaskIns err: %s", err.Error())
 	}
+}
+
+func (vm *VMExt) HookLoopEnd(id string, value any) {
+	vm.AppendEvents(
+		&entity.DagInstanceEvent{
+			Type:       rds.DagInstanceEventTypeVariable,
+			InstanceID: vm.dagIns.ID,
+			Name:       fmt.Sprintf("__%s", id),
+			Data:       value,
+			Visibility: rds.DagInstanceEventVisibilityPublic,
+			Timestamp:  time.Now().UnixMicro(),
+		})
 }
 
 func (vm *VMExt) HookBeforeReturn(id string, value any) {

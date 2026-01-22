@@ -26,15 +26,17 @@ const DataViewGroup: React.FC<{ onSelect: (selectedKeys: any, info?: any) => voi
   }, []);
   const getTreeData = async (): Promise<void> => {
     const res = await api.getDatasourceConnection({});
-    const cur: TDatasource[] = res.entries.map((val: { bin_data: any; name: any; id: any; type: string }) => ({
-      ...val.bin_data,
-      ...val,
-      title: val.name,
-      key: val.id,
-      icon: getIconCom(val.type),
-      paramType: 'dataSourceId',
-      isLeaf: true,
-    }));
+    const cur: TDatasource[] = res.entries
+      .filter((val: TDatasource) => val.metadata_obtain_level != 4 || val.type === 'index_base')
+      .map((val: { bin_data: any; name: any; id: any; type: string }) => ({
+        ...val.bin_data,
+        ...val,
+        title: val.name,
+        key: val.id,
+        icon: getIconCom(val.type),
+        paramType: 'dataSourceId',
+        isLeaf: true,
+      }));
 
     setTreeData(transformAndMapDataSources(cur));
   };

@@ -204,7 +204,7 @@
     "selectCellRange": "请选择单元格范围",
     "scanStatus": "扫描状态",
     "taskType": "任务类型",
-    "taskStatus": "任务状态",
+    "taskStatus": "启用状态",
     "scheduleScan": "定时扫描",
     "immediateScan": "立即扫描",
     "connectionManagement": "连接管理",
@@ -285,6 +285,7 @@
     "removeSuccess": "移除成功",
     "click": "点击",
     "createBtn": "【新建】",
-    "alreadyExists": "已存在"
+    "alreadyExists": "已存在",
+    "more": "更多"
   }
 }

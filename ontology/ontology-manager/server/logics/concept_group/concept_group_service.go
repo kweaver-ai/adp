@@ -374,7 +374,7 @@ func (cgs *conceptGroupService) ListConceptGroups(ctx context.Context,
 		// 检查起始位置是否越界
 		if query.Offset < 0 || query.Offset >= len(conceptGroups) {
 			span.SetStatus(codes.Ok, "")
-			return []*interfaces.ConceptGroup{}, 0, nil
+			return []*interfaces.ConceptGroup{}, total, nil
 		}
 		// 计算结束位置
 		end := query.Offset + query.Limit
@@ -757,7 +757,7 @@ func (cgs *conceptGroupService) DeleteConceptGroupByID(ctx context.Context, tx *
 		logger.Errorf("DeleteObjectTypesFromGroup error: %s", err.Error())
 		span.SetStatus(codes.Error, "删除概念与分组的关系失败")
 
-		return rowsAffect, rest.NewHTTPError(ctx, http.StatusInternalServerError,
+		return 0, rest.NewHTTPError(ctx, http.StatusInternalServerError,
 			oerrors.OntologyManager_ActionType_InternalError).WithErrorDetails(err.Error())
 	}
 	logger.Infof("DeleteObjectTypesFromGroup: Rows affected is %v, request delete cgID is %s!", cgrsRowsAffect, cgID)

@@ -16,6 +16,7 @@ export interface TDatasource {
   paramType: 'dataSourceType' | 'dataSourceId' | 'excelFileName';
   isLeaf: boolean;
   excelFileName: string;
+  metadata_obtain_level: number;
   children: TDatasource[];
 }
 

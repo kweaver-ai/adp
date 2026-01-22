@@ -10,7 +10,6 @@ Vega是一个企业级数据管理平台，旨在提供统一的数据连接、�
 - [mdl-uniquery](./mdl-uniquery/) - 统一查询服务，提供标准化的数据访问接口
 - [vega-gateway](./vega-gateway/) - API网关服务
 - [vega-gateway-pro](./vega-gateway-pro/) - 高级API网关功能
-- [vega-metadata](./vega-metadata/) - 元数据管理服务
 
 ## 功能特性
 
@@ -43,15 +42,6 @@ mvn clean install
 docker build -t vega-service-name -f ./Dockerfile .
 ```
 
-## 配置
-
-各服务的具体配置请参考对应项目的文档：
-
-- [data-connection配置](./data-connection/README.md)
-- [mdl-data-model配置](./mdl-data-model/README.md)
-- [vega-gateway配置](./vega-gateway/README.md)
-- [vega-metadata配置](./vega-metadata/README.md)
-
 ## 部署
 
 Vega使用Helm Charts进行Kubernetes部署，各组件均有对应的Helm包。
@@ -60,7 +50,7 @@ Vega使用Helm Charts进行Kubernetes部署，各组件均有对应的Helm包。
 # 部署所有组件
 helm install vega ./helm/vega-gateway
 helm install data-connection ./helm/data-connection
-helm install vega-metadata ./helm/vega-metadata
+helm install vega-gateway-pro ./helm/vega-gateway-pro
 ```
 
 ## 贡献

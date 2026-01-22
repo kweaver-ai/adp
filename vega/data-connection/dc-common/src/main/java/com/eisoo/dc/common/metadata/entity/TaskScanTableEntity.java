@@ -1,13 +1,11 @@
 package com.eisoo.dc.common.metadata.entity;
 
-import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.Getter;
 
 import java.io.Serializable;
 import java.util.Date;
@@ -92,6 +90,10 @@ public class TaskScanTableEntity implements Serializable {
      */
     @TableField(value = "error_stack")
     private String errorStack;
-
+    /**
+     * 操作类型：0 insert;1 delete;2 update;3 unknown
+     */
+    @TableField(value = "operation_type")
+    private Integer operationType;
 
 }

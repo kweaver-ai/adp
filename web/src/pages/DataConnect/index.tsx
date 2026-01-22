@@ -12,7 +12,6 @@ import { StateConfigType } from '@/hooks/usePageState';
 import atomDataViewApi from '@/services/atomDataView';
 import api from '@/services/dataConnect';
 import * as DataConnectType from '@/services/dataConnect/type';
-import scanApi from '@/services/scanManagement';
 import HOOKS from '@/hooks';
 import { Table, Button, Select } from '@/web-library/common';
 import DatabaseTable from './Components/DatabaseTable';
@@ -28,7 +27,7 @@ const ATOM_DATA_VIEW_CHECK_LIMIT = 2;
 
 interface DataSourceProps {
   connectors: DataConnectType.Connector[];
-  getTableType: (type: string, val: string) => string;
+  getTableType: (type: string, val: string) => JSX.Element | string;
 }
 
 const DataSource = (props: DataSourceProps): JSX.Element => {
@@ -182,16 +181,20 @@ const DataSource = (props: DataSourceProps): JSX.Element => {
                 },
               ],
             },
-            {
-              title: intl.get('DataConnect.scanTaskLabel'),
-              content: [
-                {
-                  // name: intl.get('Global.view'),
-                  isOneLine: true,
-                  value: <ScanTask dataConnectId={id} getTableType={getTableType} />,
-                },
-              ],
-            },
+            ...(res.metadata_obtain_level === 1 || res.metadata_obtain_level === 2
+              ? [
+                  {
+                    title: intl.get('DataConnect.scanTaskLabel'),
+                    content: [
+                      {
+                        // name: intl.get('global.view'),
+                        isOneLine: true,
+                        value: <ScanTask dataConnectId={id} getTableType={getTableType} />,
+                      },
+                    ],
+                  },
+                ]
+              : []),
           ];
 
     const cur = [
@@ -257,7 +260,6 @@ const DataSource = (props: DataSourceProps): JSX.Element => {
   const handleScanTaskConfigClose = async (isOk?: boolean) => {
     setScanTaskConfigOpen(false);
     if (isOk && scanDataSource) {
-      message.success(intl.get('Global.scanTaskSuccess'));
       // 清空数据源
       setScanDataSource(null);
     }
@@ -318,17 +320,18 @@ const DataSource = (props: DataSourceProps): JSX.Element => {
       __fixed: true,
       __selected: true,
       render: (_value: unknown, record: DataConnectType.DataSource) => {
+        const { metadata_obtain_level } = record;
         const allOperations = [
           { key: 'view', label: intl.get('Global.view'), visible: matchPermission(PERMISSION_CODES.VIEW, record.operations) },
           {
             key: 'scan',
             label: intl.get('Global.scan'),
-            visible: record.type != 'excel' && matchPermission(PERMISSION_CODES.SACN, record.operations),
+            visible: (metadata_obtain_level === 1 || metadata_obtain_level === 2) && matchPermission(PERMISSION_CODES.SACN, record.operations),
           },
           {
             key: 'create',
             label: intl.get('DataConnect.createMetadata'),
-            visible: record.type === 'excel' && matchPermission(PERMISSION_CODES.SACN, record.operations),
+            visible: metadata_obtain_level === 3 && matchPermission(PERMISSION_CODES.SACN, record.operations),
           },
           { key: 'edit', label: intl.get('Global.edit'), visible: matchPermission(PERMISSION_CODES.MODIFY, record.operations) },
           { key: 'test', label: intl.get('Global.testConnector'), visible: matchPermission(PERMISSION_CODES.MODIFY, record.operations) },
@@ -393,7 +396,10 @@ const DataSource = (props: DataSourceProps): JSX.Element => {
       minWidth: 160,
       __fixed: true,
       __selected: true,
-      render: (text: string): string | JSX.Element => {
+      render: (text: string, row: DataConnectType.DataSource): string | JSX.Element => {
+        if (row.metadata_obtain_level === 4 || row.metadata_obtain_level === 3) {
+          return <Badge status="default" text={'无需扫描'} />;
+        }
         const { label, color } = getScanStatusColor(text);
         return <Badge status={color} text={label} />;
       },

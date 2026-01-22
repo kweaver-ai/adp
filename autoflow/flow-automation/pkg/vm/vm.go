@@ -533,12 +533,17 @@ func (vm *VM) mark(instr *opcode.Instruction) {
 			return
 		}
 
+		var value any
+		if l := len(vm.Stack); l > 0 {
+			value = vm.Stack[l-1]
+		}
+
 		id, ok := instr.Value.(string)
 		if !ok {
 			return
 		}
 
-		h.HookLoopEnd(id)
+		h.HookLoopEnd(id, value)
 
 	case opcode.MARK_BRANCH_START:
 		h, ok := vm.hook.(hook.BranchStart)

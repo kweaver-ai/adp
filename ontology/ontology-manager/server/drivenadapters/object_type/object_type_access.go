@@ -241,7 +241,11 @@ func (ota *objectTypeAccess) CreateObjectType(ctx context.Context, tx *sql.Tx, o
 	// 记录处理的 sql 字符串
 	o11y.Info(ctx, fmt.Sprintf("创建对象类的 sql 语句: %s", sqlStr))
 
-	_, err = tx.Exec(sqlStr, vals...)
+	if tx != nil {
+		_, err = tx.Exec(sqlStr, vals...)
+	} else {
+		_, err = ota.db.Exec(sqlStr, vals...)
+	}
 	if err != nil {
 		logger.Errorf("insert data error: %v\n", err)
 		o11y.Error(ctx, fmt.Sprintf("Insert data error: %v ", err))
@@ -287,7 +291,11 @@ func (ota *objectTypeAccess) CreateObjectTypeStatus(ctx context.Context, tx *sql
 	// 记录处理的 sql 字符串
 	o11y.Info(ctx, fmt.Sprintf("创建对象类状态的 sql 语句: %s", sqlStr))
 
-	_, err = tx.Exec(sqlStr, vals...)
+	if tx != nil {
+		_, err = tx.Exec(sqlStr, vals...)
+	} else {
+		_, err = ota.db.Exec(sqlStr, vals...)
+	}
 	if err != nil {
 		logger.Errorf("insert data error: %v\n", err)
 		o11y.Error(ctx, fmt.Sprintf("Insert data error: %v ", err))
@@ -359,7 +367,12 @@ func (ota *objectTypeAccess) ListObjectTypes(ctx context.Context, tx *sql.Tx, qu
 	// 记录处理的 sql 字符串
 	o11y.Info(ctx, fmt.Sprintf("查询对象类列表的 sql 语句: %s; queryParams: %v", sqlStr, query))
 
-	rows, err := tx.Query(sqlStr, vals...)
+	var rows *sql.Rows
+	if tx != nil {
+		rows, err = tx.Query(sqlStr, vals...)
+	} else {
+		rows, err = ota.db.Query(sqlStr, vals...)
+	}
 	if err != nil {
 		logger.Errorf("list data error: %v\n", err)
 		o11y.Error(ctx, fmt.Sprintf("List data error: %v", err))
@@ -501,7 +514,7 @@ func (ota *objectTypeAccess) GetObjectTypesTotal(ctx context.Context, query inte
 	return total, nil
 }
 
-func (ota *objectTypeAccess) GetObjectTypeByID(ctx context.Context,
+func (ota *objectTypeAccess) GetObjectTypeByID(ctx context.Context, tx *sql.Tx,
 	knID string, branch string, otID string) (*interfaces.ObjectType, error) {
 
 	ctx, span := ar_trace.Tracer.Start(ctx, fmt.Sprintf("Get object type[%s]", otID),
@@ -571,7 +584,12 @@ func (ota *objectTypeAccess) GetObjectTypeByID(ctx context.Context,
 		primaryKeysBytes     []byte
 	)
 
-	row := ota.db.QueryRowContext(ctx, sqlStr, vals...)
+	var row *sql.Row
+	if tx != nil {
+		row = tx.QueryRowContext(ctx, sqlStr, vals...)
+	} else {
+		row = ota.db.QueryRowContext(ctx, sqlStr, vals...)
+	}
 	err = row.Scan(
 		&objectType.OTID,
 		&objectType.OTName,
@@ -653,7 +671,7 @@ func (ota *objectTypeAccess) GetObjectTypeByID(ctx context.Context,
 	return &objectType, nil
 }
 
-func (ota *objectTypeAccess) GetObjectTypesByIDs(ctx context.Context,
+func (ota *objectTypeAccess) GetObjectTypesByIDs(ctx context.Context, tx *sql.Tx,
 	knID string, branch string, otIDs []string) ([]*interfaces.ObjectType, error) {
 
 	ctx, span := ar_trace.Tracer.Start(ctx, fmt.Sprintf("Get object types[%s]", otIDs),
@@ -732,7 +750,12 @@ func (ota *objectTypeAccess) GetObjectTypesByIDs(ctx context.Context,
 	// 记录处理的 sql 字符串
 	o11y.Info(ctx, fmt.Sprintf("查询对象类列表的 sql 语句: %s.", sqlStr))
 
-	rows, err := ota.db.Query(sqlStr, vals...)
+	var rows *sql.Rows
+	if tx != nil {
+		rows, err = tx.Query(sqlStr, vals...)
+	} else {
+		rows, err = ota.db.Query(sqlStr, vals...)
+	}
 	if err != nil {
 		logger.Errorf("list data error: %v\n", err)
 		o11y.Error(ctx, fmt.Sprintf("List data error: %v", err))
@@ -905,7 +928,12 @@ func (ota *objectTypeAccess) UpdateObjectType(ctx context.Context, tx *sql.Tx, o
 	// 记录处理的 sql 字符串
 	o11y.Info(ctx, fmt.Sprintf("修改对象类的 sql 语句: %s", sqlStr))
 
-	ret, err := tx.Exec(sqlStr, vals...)
+	var ret sql.Result
+	if tx != nil {
+		ret, err = tx.Exec(sqlStr, vals...)
+	} else {
+		ret, err = ota.db.Exec(sqlStr, vals...)
+	}
 	if err != nil {
 		logger.Errorf("update object type error: %v\n", err)
 		o11y.Error(ctx, fmt.Sprintf("Update data error: %v ", err))
@@ -1031,7 +1059,12 @@ func (ota *objectTypeAccess) DeleteObjectTypesByIDs(ctx context.Context, tx *sql
 	// 记录处理的 sql 字符串
 	o11y.Info(ctx, fmt.Sprintf("删除对象类的 sql 语句: %s; 删除的对象类ids: %v", sqlStr, otIDs))
 
-	ret, err := tx.Exec(sqlStr, vals...)
+	var ret sql.Result
+	if tx != nil {
+		ret, err = tx.Exec(sqlStr, vals...)
+	} else {
+		ret, err = ota.db.Exec(sqlStr, vals...)
+	}
 	if err != nil {
 		logger.Errorf("delete data error: %v\n", err)
 		o11y.Error(ctx, fmt.Sprintf("Delete data error: %v ", err))
@@ -1092,7 +1125,12 @@ func (ota *objectTypeAccess) DeleteObjectTypeStatusByIDs(ctx context.Context, tx
 	// 记录处理的 sql 字符串
 	o11y.Info(ctx, fmt.Sprintf("删除对象类状态的 sql 语句: %s; 删除的对象类ids: %v", sqlStr, otIDs))
 
-	ret, err := tx.Exec(sqlStr, vals...)
+	var ret sql.Result
+	if tx != nil {
+		ret, err = tx.Exec(sqlStr, vals...)
+	} else {
+		ret, err = ota.db.Exec(sqlStr, vals...)
+	}
 	if err != nil {
 		logger.Errorf("delete data error: %v\n", err)
 		o11y.Error(ctx, fmt.Sprintf("Delete data error: %v ", err))
@@ -1212,7 +1250,11 @@ func (ota *objectTypeAccess) UpdateObjectTypeStatus(ctx context.Context,
 	}
 
 	// 执行更新
-	_, err = tx.Exec(sqlStr, vals...)
+	if tx != nil {
+		_, err = tx.Exec(sqlStr, vals...)
+	} else {
+		_, err = ota.db.Exec(sqlStr, vals...)
+	}
 	if err != nil {
 		logger.Errorf("Failed to exec the sql of update object type index, error: %s", err.Error())
 		o11y.Error(ctx, fmt.Sprintf("Failed to exec the sql of update object type index, error: %s", err.Error()))

@@ -15,7 +15,7 @@ export const CreateFromTemplate = ({ onNext }: ICreateFromTemplateProps) => {
   const t = useTranslate();
   return (
     <Space direction="vertical" size={16} className={styles['create-mode-options']}>
-      <div className={styles["create-mode-option"]} onClick={() => onNext(CreateType.UpdateAtlas)}>
+      {/* <div className={styles["create-mode-option"]} onClick={() => onNext(CreateType.UpdateAtlas)}>
         <img
           src={atlasTemplates}
           alt="updateGraph"
@@ -27,7 +27,7 @@ export const CreateFromTemplate = ({ onNext }: ICreateFromTemplateProps) => {
             {t("datastudio.create.templateDesc", "提供多种触发方式自动更新知识网络")}
           </Text>
         </div>
-      </div>
+      </div> */}
       {/* <div className={styles["create-mode-option"]} onClick={() => onNext(CreateType.CreateIndex)}>
         <img
           src={createIndex}

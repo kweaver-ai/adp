@@ -53,16 +53,40 @@ public class MetaDataFetchServiceBase implements IMetaDataFetchService {
         taskScanEntity.setStartTime(startTime);
         String taskId = taskScanEntity.getId();
         String dsId = taskScanEntity.getDsId();
-        DataSourceEntity dataSourceEntity = dataSourceMapper.selectById(dsId);
-        String fType = dataSourceEntity.getFType();
-
+        Integer type = taskScanEntity.getType();
+        String fType = null;
+        DataSourceEntity dataSourceEntity = null;
+        List<String> scanStrategy = null;
+        // 是否配置了采集策略
+        boolean needScanStrategy = false;
+        try {
+            dataSourceEntity = dataSourceMapper.selectById(dsId);
+            fType = dataSourceEntity.getFType();
+            String taskParamsInfo = taskScanEntity.getTaskParamsInfo();
+            if (CommonUtil.isNotEmpty(taskParamsInfo)) {
+                TaskScanEntity.TaskParamsInfo info = JSONObject.parseObject(taskParamsInfo, TaskScanEntity.TaskParamsInfo.class);
+                scanStrategy = info.getScanStrategy();
+                if (CommonUtil.isNotEmpty(scanStrategy)) {
+                    needScanStrategy = true;
+                }
+                log.info("【{}采集table元数据】：taskId:{};dsId:{};scanStrategy:{}", fType,
+                        taskId,
+                        dsId,
+                        scanStrategy);
+            }
+        } catch (Exception e) {
+            log.error("【获取table元数据失败】taskId:{};dsId:{}", taskId, dsId, e);
+            saveFail(taskScanEntity, 1, e.getMessage());
+            throw new Exception(e);
+        }
+        // 下面进行table元数据采集
         Map<String, TableScanEntity> currentTables = new HashMap<>();
         int maxCount = 3;
         for (int i = 0; i < maxCount; i++) {
             try {
                 currentTables = DbConnectionStrategyFactory
-                        .getStrategy(dataSourceEntity.getFType())
-                        .getTables(dataSourceEntity);
+                        .getStrategy(fType)
+                        .getTables(dataSourceEntity, scanStrategy);
                 break;
             } catch (Exception e) {
                 log.error("【{}采集table元数据】失败：taskId:{};dsId:{}",
@@ -71,46 +95,49 @@ public class MetaDataFetchServiceBase implements IMetaDataFetchService {
                         dsId,
                         e);
                 if (i == maxCount - 1) {
+                    log.warn("---已经第{}次重试，采集任务失败退出---", i);
                     saveFail(taskScanEntity, 1, e.getMessage());
                     throw new Exception(e);
                 }
+                log.warn("---开始第{}次重试---", i + 1);
             }
         }
         // 对要操作的表要加锁
         List<String> lockIds = new ArrayList<>();
-        // 查出old
-        List<TableScanEntity> olds = tableScanMapper.selectByDsId(taskScanEntity.getDsId());
-        Map<String, TableScanEntity> oldTables = new HashMap<>();
-        for (TableScanEntity old : olds) {
-            oldTables.put(old.getFName(), old);
-            // 对要操作的表要加锁:阻塞直到加锁成功
-            boolean getLock = LockUtil.GLOBAL_MULTI_TASK_LOCK.tryLock(old.getFId(),
-                    0,
-                    TimeUnit.SECONDS,
-                    true);
-            if (getLock) {
-                lockIds.add(old.getFId());
-            }
-        }
         List<TableScanEntity> saveList = new ArrayList<>();
         List<TableScanEntity> updateList = new ArrayList<>();
-        List<TableScanEntity> deletes = new ArrayList<>();
+        List<TableScanEntity> deleteList = new ArrayList<>();
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
-        // 3. 格式化输出
         String now = LocalDateTime.now().format(formatter);
         try {
-            //1,获取待删除列表并删除
-            for (String tableName : oldTables.keySet()) {
-                if (!currentTables.containsKey(tableName)) {
-                    TableScanEntity tableEntity = oldTables.get(tableName);
-                    if (!tableEntity.getFOperationType().equals(OperationTyeEnum.DELETE.getCode())) {
-                        tableEntity.setFTaskId(taskId);
-                        tableEntity.setFVersion(tableEntity.getFVersion() + 1);
-                        tableEntity.setFOperationTime(now);
-                        tableEntity.setFOperationUser(userId);
-                        tableEntity.setFOperationType(OperationTyeEnum.DELETE.getCode());
-                        tableEntity.setFStatusChange(1);
-                        deletes.add(tableEntity);
+            // 查出old
+            List<TableScanEntity> olds = tableScanMapper.selectByDsId(taskScanEntity.getDsId());
+            Map<String, TableScanEntity> oldTables = new HashMap<>();
+            for (TableScanEntity old : olds) {
+                oldTables.put(old.getFName(), old);
+                // 对要操作的表要加锁:阻塞直到加锁成功
+                boolean getLock = LockUtil.GLOBAL_MULTI_TASK_LOCK.tryLock(old.getFId(),
+                        0,
+                        TimeUnit.SECONDS,
+                        true);
+                if (getLock) {
+                    lockIds.add(old.getFId());
+                }
+            }
+            if (!needScanStrategy || scanStrategy.contains("delete")) {
+                //1,获取待删除列表并删除
+                for (String tableName : oldTables.keySet()) {
+                    if (!currentTables.containsKey(tableName)) {
+                        TableScanEntity tableEntity = oldTables.get(tableName);
+                        if (!tableEntity.getFOperationType().equals(OperationTyeEnum.DELETE.getCode())) {
+                            tableEntity.setFTaskId(taskId);
+                            tableEntity.setFVersion(tableEntity.getFVersion() + 1);
+                            tableEntity.setFOperationTime(now);
+                            tableEntity.setFOperationUser(userId);
+                            tableEntity.setFOperationType(OperationTyeEnum.DELETE.getCode());
+                            tableEntity.setFStatusChange(1);
+                            deleteList.add(tableEntity);
+                        }
                     }
                 }
             }
@@ -119,49 +146,87 @@ public class MetaDataFetchServiceBase implements IMetaDataFetchService {
             for (String tableName : currentTables.keySet()) {
                 TableScanEntity currentTable = currentTables.get(tableName);
                 TableScanEntity oldTable = oldTables.get(tableName);
-                // 取出id,update
+                // 取出update
                 if (CommonUtil.isNotEmpty(oldTable)) {
-                    // table的更新由field体现
-//                    currentTable.setFId(oldTable.getFId());
-//                    currentTable.setFTaskId(taskId);
-//                    currentTable.setFVersion(1 + oldTable.getFVersion());
-////                    currentTable.setFOperationTime(now);
-//                    currentTable.setFOperationUser(userId);
-//                    currentTable.setFOperationType(OperationTyeEnum.UPDATE.getCode());
-//                    currentTable.setFStatus(ScanStatusEnum.WAIT.getCode());//初始化
-//                    currentTable.setFStatusChange(1);
-//                    updateList.add(currentTable);
-                } else {
-                    // 新增
-                    currentTable.setFDataSourceId(dsId);
-                    currentTable.setFDataSourceName(dataSourceEntity.getFName());
-                    String fSchema = dataSourceEntity.getFSchema();
-                    if (CommonUtil.isEmpty(fSchema)) {
-                        fSchema = dataSourceEntity.getFDatabase();
+                    if (!needScanStrategy || scanStrategy.contains(CommonUtil.UPDATE)) {
+                        // table的更新由field体现
+                        currentTable.setFId(oldTable.getFId());
+                        currentTable.setFDataSourceId(dsId);
+                        currentTable.setFDataSourceName(dataSourceEntity.getFName());
+                        String fSchema = dataSourceEntity.getFSchema();
+                        if (CommonUtil.isEmpty(fSchema)) {
+                            fSchema = dataSourceEntity.getFDatabase();
+                        }
+                        currentTable.setFSchemaName(fSchema);
+                        currentTable.setFTaskId(taskId);
+                        currentTable.setFVersion(1 + oldTable.getFVersion());
+                        // currentTable.setFOperationTime(now);
+                        currentTable.setFOperationUser(userId);
+                        currentTable.setFOperationType(OperationTyeEnum.UPDATE.getCode());
+                        currentTable.setFStatus(ScanStatusEnum.WAIT.getCode());//初始化
+                        currentTable.setFStatusChange(1);
+                        updateList.add(currentTable);
                     }
-                    currentTable.setFSchemaName(fSchema);
-                    currentTable.setFTaskId(taskId);
-                    currentTable.setFVersion(1);
-                    currentTable.setFCreateTime(now);
-                    currentTable.setFCreatUser(userId);
-                    currentTable.setFOperationTime(now);
-                    currentTable.setFOperationUser(userId);
-                    currentTable.setFOperationType(OperationTyeEnum.INSERT.getCode());
-                    currentTable.setFStatus(ScanStatusEnum.WAIT.getCode());//初始化
-                    currentTable.setFStatusChange(1);
-                    saveList.add(currentTable);
+                } else {
+                    // 取出insert
+                    if (!needScanStrategy || scanStrategy.contains(CommonUtil.INSERT)) {
+                        // 新增
+                        currentTable.setFDataSourceId(dsId);
+                        currentTable.setFDataSourceName(dataSourceEntity.getFName());
+                        String fSchema = dataSourceEntity.getFSchema();
+                        if (CommonUtil.isEmpty(fSchema)) {
+                            fSchema = dataSourceEntity.getFDatabase();
+                        }
+                        currentTable.setFSchemaName(fSchema);
+                        currentTable.setFTaskId(taskId);
+                        currentTable.setFVersion(1);
+                        currentTable.setFCreateTime(now);
+                        currentTable.setFCreatUser(userId);
+                        currentTable.setFOperationTime(now);
+                        currentTable.setFOperationUser(userId);
+                        currentTable.setFOperationType(OperationTyeEnum.INSERT.getCode());
+                        currentTable.setFStatus(ScanStatusEnum.WAIT.getCode());//初始化
+                        currentTable.setFStatusChange(1);
+                        saveList.add(currentTable);
+                    }
                 }
             }
-            // 更新
-            tableScanService.tableScanBatch(deletes, updateList, saveList);
-            log.info("【获取table元数据失败】:taskId:{};dsId:{}:成功将table元数据更新", taskId, dsId);
+            // 更新:update由field的采集任务负责更新维护
+            tableScanService.tableScanBatch(deleteList, new ArrayList<>(), saveList);
+            log.info("【获取table元数据成功】:taskId:{};dsId:{}:成功将table元数据更新", taskId, dsId);
             // 把t_table_scan的插入到t_task_scan_table表里面
-            List<TableScanEntity> tableScanEntities = tableScanMapper.selectByDsId(dsId);
-            List<TaskScanTableEntity> data = new ArrayList<>(tableScanEntities.size());
-            for (TableScanEntity table : tableScanEntities) {
-                // 删除的不要
-                if (1 == table.getFOperationType()) {
-                    continue;
+            List<TableScanEntity> alls = new ArrayList<>(currentTables.size());
+            // 如果不需要策略，直接查出来所有的table然后进行field采集任务
+            if (!needScanStrategy) {
+//                alls = tableScanMapper.selectByDsId(dsId);
+                alls.addAll(saveList);
+                alls.addAll(updateList);
+                alls.addAll(deleteList);
+            } else {
+                // 需要策略，根据策略把需要操作的table弄出来
+                if (scanStrategy.contains(CommonUtil.INSERT)) {
+                    alls.addAll(saveList);
+                }
+                if (scanStrategy.contains(CommonUtil.UPDATE)) {
+                    alls.addAll(updateList);
+                }
+                if (scanStrategy.contains(CommonUtil.DELETE)) {
+                    alls.addAll(deleteList);
+                }
+            }
+            List<TaskScanTableEntity> data = new ArrayList<>(alls.size());
+            for (TableScanEntity table : alls) {
+//                // 删除的不要
+//                if (1 == table.getFOperationType()) {
+//                    continue;
+//                }
+                int code = ScanStatusEnum.WAIT.getCode();
+                int operationTye = table.getFOperationType();
+                if (table.getFOperationType().equals(OperationTyeEnum.UPDATE.getCode())) {
+                    operationTye = OperationTyeEnum.UNKNOWN.getCode();
+                }
+                if (table.getFOperationType().equals(OperationTyeEnum.DELETE.getCode())) {
+                    code = ScanStatusEnum.SUCCESS.getCode();
                 }
                 TaskScanTableEntity taskScanTableEntity = new TaskScanTableEntity(
                         UUID.randomUUID().toString(),
@@ -171,23 +236,21 @@ public class MetaDataFetchServiceBase implements IMetaDataFetchService {
                         table.getFId(),
                         table.getFName(),
                         table.getFSchemaName(),
-                        ScanStatusEnum.WAIT.getCode(),
+                        code,
                         startTime,
                         new Date(),
                         userId,
                         null,
                         null,
-                        null
+                        null,
+                        operationTye
                 );
                 data.add(taskScanTableEntity);
             }
             // 首先删除掉冗余文件
-            if (!data.isEmpty()) {
-                int delCount = taskScanTableService.deleteBatchByTaskIdAndTableId(data);
+            if (data.size() > 0) {
+                taskScanTableService.deleteBatchByTaskIdAndTableId(data);
                 taskScanTableService.saveBatchTaskScanTable(data, 100);
-                log.info("更新t_task_scan_table成功");
-            } else {
-                log.warn("不需要更新t_task_scan_table");
             }
             log.info("【获取table元数据成功】taskId:{};dsId:{}", taskId, dsId);
         } catch (Exception e) {
@@ -200,17 +263,12 @@ public class MetaDataFetchServiceBase implements IMetaDataFetchService {
                     LockUtil.GLOBAL_MULTI_TASK_LOCK.unlock(id);
                 }
             }
-            String idsEnd = String.join("\n", lockIds);
-            log.info("【获取table元数据失败】：taskId:{};dsId:{}:获取元数据对如下的table释放了锁!\n{}",
-                    taskId,
-                    dsId,
-                    idsEnd);
+            log.info("【获取table元数据结束】taskId:{};dsId:{}:成功释放table锁!", taskId, dsId);
         }
     }
 
     @Override
     public void getFieldsByTable(String table) throws Exception {
-
     }
 
     /***

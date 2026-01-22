@@ -92,14 +92,18 @@ type QueryUnderstanding struct {
 
 // SemanticSearchRequest Semantic search request
 type SemanticSearchRequest struct {
-	Mode                     SemanticQueryMode         `form:"mode" validate:"required,oneof=keyword_vector_retrieval agent_intent_planning agent_intent_retrieval" default:"keyword_vector_retrieval"` // Semantic retrieval strategy mode
-	RerankAction             KnowledgeRerankActionType `json:"rerank_action" validate:"required,oneof=default llm vector" default:"vector"`                                                             // Action: llm based rerank, vector based rerank
-	ReturnQueryUnderstanding *bool                     `json:"return_query_understanding" default:"false"`                                                                                              // Whether to return query understanding information
-	Query                    string                    `json:"query" validate:"required"`                                                                                                               // User Query
-	KnID                     string                    `json:"kn_id" validate:"required"`                                                                                                               // Knowledge network ID
-	PreviousQueries          []string                  `json:"previous_queries"`                                                                                                                        // History Queries
-	SearchScope              *SearchScopeConfig        `json:"search_scope"`                                                                                                                            // Search scope configuration
-	MaxConcepts              int                       `json:"max_concepts" default:"10"`                                                                                                               // Max concepts count
+	// Mode is the semantic retrieval strategy mode
+	Mode SemanticQueryMode `form:"mode" validate:"required,oneof=keyword_vector_retrieval agent_intent_planning agent_intent_retrieval" default:"keyword_vector_retrieval"`
+	// RerankAction is the rerank action: llm based rerank, vector based rerank
+	RerankAction KnowledgeRerankActionType `json:"rerank_action" validate:"required,oneof=default llm vector" default:"vector"`
+	// ReturnQueryUnderstanding indicates whether to return query understanding information
+	ReturnQueryUnderstanding *bool    `json:"return_query_understanding" default:"false"`
+	Query                    string   `json:"query" validate:"required"` // User Query
+	KnID                     string   `json:"kn_id" validate:"required"` // Knowledge network ID
+	PreviousQueries          []string `json:"previous_queries"`          // History Queries
+	// SearchScope is the search scope configuration
+	SearchScope *SearchScopeConfig `json:"search_scope"`
+	MaxConcepts int                `json:"max_concepts" default:"10"` // Max concepts count
 }
 
 // ConceptResult Concept result

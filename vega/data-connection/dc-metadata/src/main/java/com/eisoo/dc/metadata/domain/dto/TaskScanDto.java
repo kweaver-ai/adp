@@ -20,6 +20,8 @@ import java.util.Date;
 public class TaskScanDto implements Serializable {
     @JsonProperty(value = "id")
     private String id;
+    @JsonProperty("schedule_id")
+    private String scheduleId;
     @JsonProperty(value = "type")
     private Integer type;
     @JsonProperty(value = "name")
@@ -32,6 +34,8 @@ public class TaskScanDto implements Serializable {
     private String createUser;
     @JsonProperty(value = "scan_status")
     private String scanStatus;
+    @JsonProperty(value = "task_status")
+    private String taskStatus;
     @JsonProperty(value = "start_time")
     @JsonFormat(timezone = "GMT+8", pattern = "yyyy-MM-dd HH:mm:ss")
     private Date startTime;

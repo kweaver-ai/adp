@@ -5,7 +5,7 @@ import com.eisoo.dc.common.enums.ConnectorEnums;
 
 public enum MetadataObtainLevel {
     /**
-     * 1、支持数据源扫描和多表扫描 (opensearch)
+     * 1、支持数据源扫描和多表扫描 (opensearch、mysql、maria、oracle、inceptor-jdbc)
      */
     SCAN_MULTIPLE_TABLES(1),
 
@@ -37,18 +37,22 @@ public enum MetadataObtainLevel {
     public static int getByDsType(String dataSourceType) {
 
         // opensearch 支持数据源扫描和多表扫描
-        if (ConnectorEnums.OPENSEARCH.getConnector().equals(dataSourceType)) {
+        if (ConnectorEnums.OPENSEARCH.getConnector().equals(dataSourceType) ||
+                ConnectorEnums.MYSQL.getConnector().equals(dataSourceType) ||
+                ConnectorEnums.MARIA.getConnector().equals(dataSourceType) ||
+                ConnectorEnums.ORACLE.getConnector().equals(dataSourceType) ||
+                ConnectorEnums.INCEPTOR.getConnector().equals(dataSourceType)) {
             return SCAN_MULTIPLE_TABLES.value;
         }
 
         // excel 不支持扫描, 支持新建元数据
-        if (ConnectorEnums.EXCEL.getConnector().equals(dataSourceType)) {
+        if (CatalogConstant.EXCEL_CATALOG.equals(dataSourceType)) {
             return CAN_CREATE.value;
         }
 
         // anyshare7、tingyun 不支持扫描和新建元数据
-        if (ConnectorEnums.ANYSHARE7.getConnector().equals(dataSourceType) ||
-                ConnectorEnums.TINGYUN.getConnector().equals(dataSourceType) ||
+        if (CatalogConstant.ANYSHARE7_CATALOG.equals(dataSourceType) ||
+                CatalogConstant.TINGYUN_CATALOG.equals(dataSourceType) ||
                 CatalogConstant.INDEX_BASE_DS.equals(dataSourceType) ) {
             return NO_SCAN_AND_NO_CREATE.value;
         }

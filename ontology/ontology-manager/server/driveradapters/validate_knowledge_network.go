@@ -4,12 +4,54 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"strings"
 
 	oerrors "ontology-manager/errors"
 	"ontology-manager/interfaces"
 
+	libCommon "github.com/kweaver-ai/kweaver-go-lib/common"
 	"github.com/kweaver-ai/kweaver-go-lib/rest"
 )
+
+// 业务知识网络必要创建参数的非空校验。bool 为 dsl 语句中是否使用了 top_hits 的标识。
+func ValidateKN(ctx context.Context, kn *interfaces.KN) error {
+	// 校验id的合法性
+	err := validateID(ctx, kn.KNID)
+	if err != nil {
+		return err
+	}
+
+	// 校验名称合法性
+	// 去掉模型名称的前后空格
+	kn.KNName = strings.TrimSpace(kn.KNName)
+	err = validateObjectName(ctx, kn.KNName, interfaces.MODULE_TYPE_KN)
+	if err != nil {
+		return err
+	}
+
+	// 若输入了 tags，校验 tags 的合法性
+	err = ValidateTags(ctx, kn.Tags)
+	if err != nil {
+		return err
+	}
+
+	// 去掉tag前后空格以及数组去重
+	kn.Tags = libCommon.TagSliceTransform(kn.Tags)
+
+	// 校验comment合法性
+	err = validateObjectComment(ctx, kn.Comment)
+	if err != nil {
+		return err
+	}
+
+	// 校验分支非空
+	if kn.Branch == "" {
+		return rest.NewHTTPError(ctx, http.StatusBadRequest, oerrors.OntologyManager_KnowledgeNetwork_NullParameter_Branch).
+			WithErrorDetails("branch must be set")
+	}
+
+	return nil
+}
 
 // 路径查询的参数校验
 func ValidateRelationTypePathsQuery(ctx context.Context, query *interfaces.RelationTypePathsBaseOnSource) error {
@@ -30,7 +72,7 @@ func ValidateRelationTypePathsQuery(ctx context.Context, query *interfaces.Relat
 	}
 
 	// 路径长度不超过3
-	if query.PathLength > 3 {
+	if query.PathLength > 3 || query.PathLength < 1 {
 		return rest.NewHTTPError(ctx, http.StatusBadRequest, oerrors.OntologyManager_KnowledgeNetwork_InvalidParameter_PathLength).
 			WithErrorDetails(fmt.Sprintf("路径长度不超过3, 请求的路径长度为%d", query.PathLength))
 	}

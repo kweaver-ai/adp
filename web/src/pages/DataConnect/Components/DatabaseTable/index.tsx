@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import intl from 'react-intl-universal';
 import { SearchOutlined } from '@ant-design/icons';
-import { Table, Input, Pagination } from 'antd';
+import { Table, Input, Pagination, Segmented } from 'antd';
 import { PAGINATION_DEFAULT } from '@/hooks/useConstants';
 import api from '@/services/scanManagement';
 import * as ScanTaskType from '@/services/scanManagement/type';
@@ -12,6 +12,17 @@ import styles from './index.module.less';
 interface DatabaseTableProps {
   dataConnectId: string;
 }
+
+const OBJECT_PROPERTY_TYPE_OPTIONS = [
+  {
+    label: '表属性',
+    value: 'table',
+  },
+  {
+    label: '字段属性',
+    value: 'column',
+  },
+];
 
 const DatabaseTable: React.FC<DatabaseTableProps> = ({ dataConnectId }) => {
   // 表列表相关状态
@@ -26,13 +37,14 @@ const DatabaseTable: React.FC<DatabaseTableProps> = ({ dataConnectId }) => {
   const [fieldLoading, setFieldLoading] = useState<boolean>(false);
   const [fieldSearchValue, setFieldSearchValue] = useState('');
   const [selectedTableId, setSelectedTableId] = useState<string>('');
-  const [selectedTableName, setSelectedTableName] = useState<string>('');
+  const [selectedTable, setSelectedTable] = useState({});
   // 字段分页相关状态
   const [fieldPagination, setFieldPagination] = useState<{ current: number; pageSize: number }>({
     current: PAGINATION_DEFAULT.current,
     pageSize: PAGINATION_DEFAULT.pageSize,
   });
   const [fieldTotal, setFieldTotal] = useState<number>(0);
+  const [type, setType] = useState<string>('table');
 
   // 获取表列表数据
   const getTableList = async (newPagination?: typeof tablePagination) => {
@@ -89,7 +101,8 @@ const DatabaseTable: React.FC<DatabaseTableProps> = ({ dataConnectId }) => {
   // 处理表选择
   const handleTableSelect = (table: ScanTaskType.TableInfo) => {
     setSelectedTableId(table.id);
-    setSelectedTableName(table.name);
+    setFieldSearchValue('');
+    setSelectedTable(table);
     // 重置到第一页
     const newPagination = { ...fieldPagination, current: 1 };
     setFieldPagination(newPagination);
@@ -115,11 +128,18 @@ const DatabaseTable: React.FC<DatabaseTableProps> = ({ dataConnectId }) => {
       title: intl.get('Global.fieldName'),
       dataIndex: 'name',
       key: 'name',
-      width: 200,
+      width: 100,
       ellipsis: true,
     },
     {
       title: intl.get('Global.fieldType'),
+      dataIndex: 'vega_type',
+      key: 'vega_type',
+      width: 100,
+      ellipsis: true,
+    },
+    {
+      title: '原始字段类型',
       dataIndex: 'type',
       key: 'type',
       width: 100,
@@ -129,7 +149,7 @@ const DatabaseTable: React.FC<DatabaseTableProps> = ({ dataConnectId }) => {
       title: intl.get('Global.fieldComment'),
       dataIndex: 'comment',
       key: 'comment',
-      width: 150,
+      width: 100,
       ellipsis: true,
       render: (text: string) => text || '--',
     },
@@ -139,7 +159,7 @@ const DatabaseTable: React.FC<DatabaseTableProps> = ({ dataConnectId }) => {
   useEffect(() => {
     setTablePagination({ pageSize: PAGINATION_DEFAULT.pageSize, page: PAGINATION_DEFAULT.current });
     setSelectedTableId('');
-    setSelectedTableName('');
+    setSelectedTable({});
     setFieldList([]);
     setFieldTotal(0);
 
@@ -158,6 +178,9 @@ const DatabaseTable: React.FC<DatabaseTableProps> = ({ dataConnectId }) => {
       const newPagination = { ...fieldPagination, current: 1 };
       setFieldPagination(newPagination);
       getFieldList(selectedTableId, newPagination);
+    } else {
+      setFieldList([]);
+      setFieldTotal(0);
     }
   }, [fieldSearchValue, selectedTableId]);
 
@@ -207,55 +230,93 @@ const DatabaseTable: React.FC<DatabaseTableProps> = ({ dataConnectId }) => {
       {/* 右侧字段信息 */}
       <div className={styles.rightPanel}>
         <div className={styles.rightHeader}>
-          <h3 className={styles.tableTitle}>{intl.get('Global.fieldList')}</h3>
-          <Input.Search
-            placeholder={intl.get('DataConnect.searchFieldNameOrComment')}
-            allowClear
-            style={{ width: 240 }}
-            value={fieldSearchValue}
-            onChange={(e) => setFieldSearchValue(e.target.value || '')}
+          <Segmented<string>
+            // style={{ width: 'fit-content', margin: '0 10px' }}
+            options={OBJECT_PROPERTY_TYPE_OPTIONS}
+            onChange={(value) => {
+              setType(value); // string
+            }}
           />
+          {type === 'column' && (
+            <Input.Search
+              placeholder={intl.get('DataConnect.searchFieldNameOrComment')}
+              allowClear
+              style={{ width: 240 }}
+              value={fieldSearchValue}
+              onChange={(e) => setFieldSearchValue(e.target.value || '')}
+            />
+          )}
         </div>
-        {fieldList.length > 0 ? (
-          <>
-            <div className={styles.tableContent}>
-              <Table
-                columns={columns}
-                dataSource={fieldList}
-                rowKey="id"
-                pagination={false}
-                scroll={{ y: 350, x: 'max-content' }}
-                size="small"
-                loading={fieldLoading}
-                locale={{
-                  emptyText: intl.get('Global.noFieldData'),
-                }}
-              />
+        {type === 'table' && (
+          <div className={styles['table-box']}>
+            <div style={{ display: 'flex', flexWrap: 'wrap' }}>
+              {Object.entries(selectedTable).map(([key, value]) => (
+                <div key={key} className={styles['table-box-item']}>
+                  <span className={styles['tableItem-key']}>{key}:</span>
+                  <span className={styles['tableItem-value']} title={String(value)}>
+                    {value ? String(value) : '--'}
+                  </span>
+                </div>
+              ))}
             </div>
-            <div className={styles.pagination}>
-              <Pagination
-                current={fieldPagination.current}
-                total={fieldTotal}
-                pageSize={fieldPagination.pageSize}
-                showSizeChanger
-                onChange={(page, pageSize) => handleFieldPaginationChange({ current: page, pageSize })}
-                size="small"
-                showTotal={(total) => intl.get('Global.total', { total })}
-                onShowSizeChange={(_, pageSize) => {
-                  handleFieldPaginationChange({ current: 1, pageSize });
-                }}
-                pageSizeOptions={[...PAGINATION_DEFAULT.pageSizeOptions]}
-              />
-            </div>
-          </>
-        ) : (
-          <div className={styles.emptyContainer}>
-            <img className={styles.emptyImg} src={emptyImg} alt={intl.get('Global.noDataPreview')} />
-            <span className={styles.emptyTip}>
-              {selectedTableId ? intl.get('DataConnect.fieldListEmptyTip') : intl.get('DataConnect.clickTableNameToViewFields')}
-            </span>
           </div>
         )}
+        {type === 'column' &&
+          (fieldList.length > 0 ? (
+            <>
+              <div className={styles.tableContent}>
+                <Table
+                  columns={columns}
+                  dataSource={fieldList}
+                  rowKey="id"
+                  pagination={false}
+                  scroll={{ y: 350, x: 'max-content' }}
+                  size="small"
+                  loading={fieldLoading}
+                  locale={{
+                    emptyText: intl.get('Global.noFieldData'),
+                  }}
+                />
+              </div>
+              <div className={styles.pagination}>
+                <Pagination
+                  current={fieldPagination.current}
+                  total={fieldTotal}
+                  pageSize={fieldPagination.pageSize}
+                  showSizeChanger
+                  onChange={(page, pageSize) => handleFieldPaginationChange({ current: page, pageSize })}
+                  size="small"
+                  showTotal={(total) => intl.get('Global.total', { total })}
+                  onShowSizeChange={(_, pageSize) => {
+                    handleFieldPaginationChange({ current: 1, pageSize });
+                  }}
+                  pageSizeOptions={['10', '20', '50', '100']}
+                  // {
+                  //     current: fieldPagination.current,
+                  //     pageSize: fieldPagination.pageSize,
+                  //     total: fieldTotal,
+                  //     showSizeChanger: true,
+                  //     showQuickJumper: true,
+                  //     showTotal: (total) => `共 ${total} 条`,
+                  //     pageSizeOptions: ['10', '20', '50', '100'],
+                  //     onChange: (page, pageSize) => {
+                  //         handleFieldPaginationChange({ current: page, pageSize });
+                  //     },
+                  //     onShowSizeChange: (page, pageSize) => {
+                  //         handleFieldPaginationChange({ current: 1, pageSize });
+                  //     }
+                  // }
+                />
+              </div>
+            </>
+          ) : (
+            <div className={styles.emptyContainer}>
+              <img className={styles.emptyImg} src={emptyImg} alt={intl.get('Global.noDataPreview')} />
+              <span className={styles.emptyTip}>
+                {selectedTableId ? intl.get('DataConnect.fieldListEmptyTip') : intl.get('DataConnect.clickTableNameToViewFields')}
+              </span>
+            </div>
+          ))}
       </div>
     </div>
   );

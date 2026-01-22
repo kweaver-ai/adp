@@ -21,6 +21,32 @@ import (
 	dtype "uniquery/interfaces/data_type"
 )
 
+// 判断视图的数据源是否来自同一个数据源
+func isSingleDataSource(view *interfaces.DataView) bool {
+	if view.Type == interfaces.ViewType_Atomic {
+		return true
+	}
+
+	if view.Type == interfaces.ViewType_Custom {
+		return view.DataScopeAdvancedParams.IsSingleSource
+	}
+
+	return false
+}
+
+// 获取查询vega数据的dataSourceID
+func getQueryDataSourceID(view *interfaces.DataView) string {
+	if view.Type == interfaces.ViewType_Atomic {
+		return view.DataSourceID
+	}
+
+	if view.Type == interfaces.ViewType_Custom {
+		return view.DataScopeAdvancedParams.DataScopeDataSourceID
+	}
+
+	return ""
+}
+
 func GetBaseTypes(view *interfaces.DataView) ([]string, map[string]string, error) {
 	baseTypes := []string{}
 	// 索引库和视图 id 的映射
@@ -110,6 +136,7 @@ func validateDataScope(ctx context.Context, dvs *dataViewService, view *interfac
 	baseTypes := []string{}
 	baseTypeViewMap := make(map[string]string) // 视图 id 和索引库的映射
 	dataScopeViewQueryType := make(map[string]struct{})
+	dataScopeViewDataSourceID := make(map[string]struct{})
 
 	for _, node := range view.DataScope {
 		switch node.Type {
@@ -123,6 +150,8 @@ func validateDataScope(ctx context.Context, dvs *dataViewService, view *interfac
 			baseTypes = append(baseTypes, atomicView.TechnicalName)
 			baseTypeViewMap[atomicView.TechnicalName] = atomicView.ViewID
 			dataScopeViewQueryType[atomicView.QueryType] = struct{}{}
+			dataScopeViewDataSourceID[atomicView.DataSourceID] = struct{}{}
+			view.DataScopeAdvancedParams.DataScopeDataSourceID = atomicView.DataSourceID
 
 		case interfaces.DataScopeNodeType_Join:
 			err := validateJoinNode(ctx, node, nodeMap)
@@ -166,18 +195,14 @@ func validateDataScope(ctx context.Context, dvs *dataViewService, view *interfac
 			return nil, nil, rest.NewHTTPError(ctx, http.StatusBadRequest, uerrors.Uniquery_DataView_InvalidParameter_DataScope).
 				WithErrorDetails("the data scope node type is invalid")
 		}
-
-		// // 如果指定了要预览的节点，视图的字段为当前这个正在预览的节点的输出字段
-		// if node.ID == previewDataScopeNodeID {
-		// 	view.Fields = node.OutputFields
-		// }
-
 	}
 
 	if len(dataScopeViewQueryType) != 1 {
 		return nil, nil, rest.NewHTTPError(ctx, http.StatusBadRequest, uerrors.Uniquery_DataView_InvalidParameter_DataScope).
 			WithErrorDetails("the source view of the custom view must have the same query type")
 	}
+
+	view.IsSingleSource = len(dataScopeViewDataSourceID) == 1
 
 	// 如果输出节点也没有输出字段,字段范围是全部字段
 	if view.HasStar || len(view.Fields) == 0 {

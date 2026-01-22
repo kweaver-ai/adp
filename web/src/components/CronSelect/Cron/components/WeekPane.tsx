@@ -3,7 +3,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import intl from 'react-intl-universal';
 import { Checkbox, Col, Radio, Row } from 'antd';
-import WeekSelect, { weekOptionsObj } from './WeekSelect';
+import WeekSelect from './WeekSelect';
 import locales from '../../locales';
 
 const RadioGroup = Radio.Group;
@@ -14,7 +14,7 @@ const radioStyle = {
   paddingBottom: '6px',
 };
 
-const weekOptions = ['1', '2', '3', '4', '5', '6', '7'];
+const weekOptions = ['7', '1', '2', '3', '4', '5', '6'];
 
 function WeekPane(props: any): JSX.Element {
   const { value, onChange } = props;
@@ -121,11 +121,21 @@ function WeekPane(props: any): JSX.Element {
   const checkList = useMemo(() => {
     const disabled = currentRadio !== 6;
 
+    const weekLabels = {
+      7: intl.get('CronSelect.SUN'),
+      1: intl.get('CronSelect.MON'),
+      2: intl.get('CronSelect.TUE'),
+      3: intl.get('CronSelect.WED'),
+      4: intl.get('CronSelect.THU'),
+      5: intl.get('CronSelect.FRI'),
+      6: intl.get('CronSelect.SAT'),
+    };
+
     return weekOptions.map((item) => {
       return (
         <Col key={item} span={3}>
           <Checkbox disabled={disabled} value={item}>
-            {weekOptionsObj[item]}
+            {weekLabels[item]}
           </Checkbox>
         </Col>
       );
@@ -180,7 +190,7 @@ function WeekPane(props: any): JSX.Element {
         {intl.get('CronSelect.noSpecify')}
       </Radio>
 
-      <Radio style={radioStyle} value={3}>
+      {/* <Radio style={radioStyle} value={3}>
         <>
           {intl.get('CronSelect.from')}&nbsp;
           {aTobA}
@@ -188,7 +198,7 @@ function WeekPane(props: any): JSX.Element {
           {aTobB}
           &nbsp;{intl.get('CronSelect.excuteOnceEveryWeek')}
         </>
-      </Radio>
+      </Radio> */}
 
       {/* <Radio style={radioStyle} value={4}>
         <>

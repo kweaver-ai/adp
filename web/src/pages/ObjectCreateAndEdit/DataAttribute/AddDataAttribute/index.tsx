@@ -1,14 +1,13 @@
 import { useEffect, useRef, useState, useMemo } from 'react';
 import intl from 'react-intl-universal';
-import { ExclamationCircleOutlined, QuestionCircleFilled } from '@ant-design/icons';
-import { Form, Input, Select, Switch, Tooltip, Modal } from 'antd';
+import { ExclamationCircleOutlined } from '@ant-design/icons';
+import { Form, Input, Select, Switch, Tooltip } from 'antd';
 import { useForm } from 'antd/es/form/Form';
 import * as OntologyObjectType from '@/services/object/type';
+import HOOKS from '@/hooks';
 import { Drawer, Button, IconFont } from '@/web-library/common';
 import Fields from '@/web-library/utils/fields';
 import styles from './index.module.less';
-
-const { TextArea } = Input;
 
 const canAddIncrementalKeys = ['integer', 'unsigned integer', 'datetime', 'timestamp'];
 const canPrimaryKeys = ['integer', 'unsigned integer', 'string'];
@@ -31,6 +30,7 @@ const AddDataAttribute = (props: TAddDataAttribute) => {
   const [form] = useForm();
   const isDisplayNameManuallyEdited = useRef(false);
   const [currentType, setCurrentType] = useState<string>('string');
+  const { modal } = HOOKS.useGlobalContext();
 
   useEffect(() => {
     const initializeForm = async () => {
@@ -70,7 +70,7 @@ const AddDataAttribute = (props: TAddDataAttribute) => {
   const handleDelete = () => {
     if (!data) return;
 
-    Modal.confirm({
+    modal.confirm({
       title: '',
       icon: <ExclamationCircleOutlined />,
       content: intl.get('Global.deleteConfirm', { name: data.display_name || data.name }),
@@ -167,7 +167,7 @@ const AddDataAttribute = (props: TAddDataAttribute) => {
             </Form.Item>
 
             <Form.Item name="comment" label={intl.get('Global.description')}>
-              <TextArea placeholder={intl.get('Global.pleaseInput')} rows={5} />
+              <Input.TextArea placeholder={intl.get('Global.pleaseInput')} rows={3} maxLength={1000} showCount />
             </Form.Item>
 
             <Form.Item
@@ -177,7 +177,7 @@ const AddDataAttribute = (props: TAddDataAttribute) => {
                 <div className={styles.switchItem}>
                   <span className={styles.switchLabel}>{intl.get('Global.primaryKey')}</span>
                   <Tooltip title={intl.get('Object.primaryKeyTip')}>
-                    <QuestionCircleFilled className={styles.helpIcon} />
+                    <IconFont type="icon-dip-color-tip" className={styles.helpIcon} />
                   </Tooltip>
                 </div>
               }
@@ -194,7 +194,7 @@ const AddDataAttribute = (props: TAddDataAttribute) => {
                 <div className={styles.switchItem}>
                   <span className={styles.switchLabel}>{intl.get('Global.title')}</span>
                   <Tooltip title={intl.get('Object.displayKeyTip')}>
-                    <QuestionCircleFilled className={styles.helpIcon} />
+                    <IconFont type="icon-dip-color-tip" className={styles.helpIcon} />
                   </Tooltip>
                 </div>
               }
@@ -211,7 +211,7 @@ const AddDataAttribute = (props: TAddDataAttribute) => {
                 <div className={styles.switchItem}>
                   <span className={styles.switchLabel}>{intl.get('Object.incrementalKey')}</span>
                   <Tooltip title={intl.get('Object.incrementalKeyTip')}>
-                    <QuestionCircleFilled className={styles.helpIcon} />
+                    <IconFont type="icon-dip-color-tip" className={styles.helpIcon} />
                   </Tooltip>
                 </div>
               }

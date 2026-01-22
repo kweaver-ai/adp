@@ -38,26 +38,6 @@ antiAffinity:
 depServices:
   class-443:
     ingressClass: class-443
-  rds:
-    host: mariadb-mariadb-master.resource.svc.cluster.local.
-    port: 3330
-    user: root
-    password: eisoo.com123
-    type: MariaDB
-  mq:
-    auth:
-      mechanism: PLAIN
-      password: eisoo.com123
-      username: anyrobot
-    mqHost: kafka-headless.resource.svc.cluster.local.
-    mqPort: 9097
-    mqType: kafka
-    protocol: sasl_plaintext
-    tenant: default
-  authorization-private:
-    host: authorization-private
-    port: 30920
-    protocol: http
   hydra-admin:
     host: hydra-admin
     port: 4445
@@ -83,7 +63,7 @@ config:
     maxBackups: 20
     maxSize: 100
   pool:
-    queryPoolSize: 100                   # 查询池大小
+    queryPoolSize: 1000                  # 查询池大小
   query:
     cleanIntervalTime: 5m                # 查询清理间隔
     maxIntervalTime: 1h                  # 查询取数最大间隔时间
@@ -91,21 +71,6 @@ config:
     dataCacheSize: 20000                 # 单个查询内部缓存数据量
   trace:
     maxSearchSpanSize: 1000
-  kafka:
-    batchSize: 1000                      # 一次事务发送的最大消息数量
-    retries: 5                            # Kafka管理客户端重试次数
-    retryBackoffMs: 500                   # 生产者每次重试之间的间隔
-    transactionTimeoutMs: 60000           # 事务生产者事务超时时间
-    produceFlushTimeoutMs: 1000          # 事务生产者发送消息的超时时间
-    transactionOperationTimeoutMs: 60000  # 事务相关方法超时时间 (initTransactions, sendOffsetToTransaction(), CommitTransaction(), AbortTransaction())
-    sessionTimeoutMs: 45000               # 组管理协议用来监测消费者是否失效的超时时间
-    fetchWaitMaxMs: 3000                  # 消费者拉取一字节消息的超时时间
-    socketTimeoutMs: 60000                # 消费者拉取消息的超时时间，等于socketTimeoutMs + fetchWaitMaxms
-    maxPollIntervalMs: 300000             # 两次 poll操作之间的间隔
-    maxPollRecords: 1000                  # 每次poll的最大条数
-    heartbeatIntervalMs: 10000            # 消费者向coordinator发送心跳包的间隔时间
-    adminClientRequestTimeoutMs: 30000    # 获取源集群 topics 的超时时间
-    adminClientOperationTimeoutMs: 60000  # 向目标集群创建 topic 的超时时间
   observability:
     logEnabled: false
     traceEnabled: false

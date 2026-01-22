@@ -69,6 +69,19 @@
                 "event"
             ]
         },
+        "trigger_types": {
+            "description": "手动触发manually, 定时触发cron, 事件触发event",
+            "type": "array",
+            "items": {
+                "enum": [
+                    "",
+                    "manually",
+                    "cron",
+                    "event",
+                    "form"
+                ]
+            }
+        },
         "type": {
             "description": "数据流类型，仅支持data-flow，security-policy",
             "enum": [

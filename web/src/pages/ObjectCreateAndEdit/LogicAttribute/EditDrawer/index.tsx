@@ -409,18 +409,18 @@ const EditDrawer: React.FC<{
 
   const footer = (
     <div className={styles.footer}>
+      <Button onClick={onClose}>{intl.get('Global.cancel')}</Button>
       <Button type="primary" onClick={onSubmit}>
         {intl.get('Global.ok')}
       </Button>
-      <Button onClick={onClose}>{intl.get('Global.cancel')}</Button>
     </div>
   );
 
   return (
-    <Drawer className={styles.drawerBox} width={1000} title={title} onClose={onClose} open={open} footer={footer}>
+    <Drawer className={styles.drawerBox} width={1000} maskClosable={false} title={title} onClose={onClose} open={open} footer={footer}>
       <Form layout="vertical" form={form}>
         <Row gutter={16}>
-          <Col span={8}>
+          <Col span={6}>
             <Form.Item
               label={intl.get('Global.attributeName')}
               name="name"
@@ -435,19 +435,12 @@ const EditDrawer: React.FC<{
               <Input disabled={!isAddMode} placeholder={intl.get('Global.pleaseInput')} onChange={handleNameChange} />
             </Form.Item>
           </Col>
-          <Col span={8}>
+          <Col span={6}>
             <Form.Item label={intl.get('Global.attributeDisplayName')} name="display_name" rules={[{ required: true }]}>
               <Input disabled={!isAddMode} placeholder={intl.get('Global.pleaseInput')} onChange={handleDisplayNameChange} />
             </Form.Item>
           </Col>
-          <Col span={8}>
-            <Form.Item label={intl.get('Global.description')} name="comment">
-              <Input placeholder={intl.get('Global.pleaseInput')} />
-            </Form.Item>
-          </Col>
-        </Row>
-        <Row gutter={16}>
-          <Col span={8}>
+          <Col span={6}>
             <Form.Item label={intl.get('Global.type')} name="type" rules={[{ required: true }]}>
               <Select
                 options={LOGIC_ATTR_TYPE_OPTIONS}
@@ -459,7 +452,7 @@ const EditDrawer: React.FC<{
               />
             </Form.Item>
           </Col>
-          <Col span={8}>
+          <Col span={6}>
             <Form.Item label={intl.get('Global.name')} name="id" rules={[{ required: true }]}>
               <Select
                 allowClear
@@ -471,6 +464,14 @@ const EditDrawer: React.FC<{
                   onNameOptionsChange(value);
                 }}
               />
+            </Form.Item>
+          </Col>
+        </Row>
+        <Row gutter={16}></Row>
+        <Row gutter={16}>
+          <Col span={24}>
+            <Form.Item label={intl.get('Global.description')} name="comment">
+              <Input.TextArea placeholder={intl.get('Global.pleaseInput')} rows={3} maxLength={1000} showCount />
             </Form.Item>
           </Col>
         </Row>
@@ -491,7 +492,7 @@ const EditDrawer: React.FC<{
                   {!item?.if_system_generate && <MinusCircleFilled style={{ color: 'rgba(0, 0, 0, 0.25)' }} onClick={() => handleDeleteRow(item.id)} />}
                 </div>
                 <Select
-                  style={{ width: 156 }}
+                  style={{ width: 256 }}
                   placeholder={intl.get('Global.pleaseSelect')}
                   options={dimensionFields}
                   value={item.name || undefined}
@@ -523,7 +524,7 @@ const EditDrawer: React.FC<{
                 />
                 {item.value_from === ActionType.ValueFrom.Property && (
                   <Select
-                    style={{ width: 256 }}
+                    style={{ width: 400 }}
                     placeholder={intl.get('Global.pleaseSelect')}
                     options={propertyOptions}
                     value={item.value || undefined}
@@ -537,7 +538,7 @@ const EditDrawer: React.FC<{
                 {item.value_from === ActionType.ValueFrom.Const &&
                   (item.type && FIELD_TYPE_INPUT.number.includes(item.type) ? (
                     <InputNumber
-                      style={{ width: 256 }}
+                      style={{ width: 400 }}
                       placeholder={intl.get('Global.pleaseInput')}
                       value={item.value}
                       onChange={(value) => {
@@ -547,7 +548,7 @@ const EditDrawer: React.FC<{
                     />
                   ) : item.type && FIELD_TYPE_INPUT.boolean.includes(item.type) ? (
                     <Select
-                      style={{ width: 256 }}
+                      style={{ width: 400 }}
                       placeholder={intl.get('Global.pleaseSelect')}
                       options={[
                         { label: intl.get('Global.yes'), value: true },
@@ -562,7 +563,7 @@ const EditDrawer: React.FC<{
                     />
                   ) : (
                     <Input
-                      style={{ width: 256 }}
+                      style={{ width: 400 }}
                       placeholder={intl.get('Global.pleaseInput')}
                       value={item.value}
                       onChange={(e) => {
@@ -571,7 +572,7 @@ const EditDrawer: React.FC<{
                       status={item?.error?.['value'] ? 'error' : ''}
                     />
                   ))}
-                {item.value_from === ActionType.ValueFrom.Input && <Input style={{ width: 256 }} disabled />}
+                {item.value_from === ActionType.ValueFrom.Input && <Input style={{ width: 400 }} disabled />}
               </div>
             ))}
           </div>

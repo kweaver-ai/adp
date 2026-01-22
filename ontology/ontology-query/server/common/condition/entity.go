@@ -1,6 +1,7 @@
 package condition
 
 import (
+	"encoding/json"
 	"reflect"
 )
 
@@ -143,9 +144,50 @@ type CondCfg struct {
 	SubConds     []*CondCfg `json:"sub_conditions,omitempty" mapstructure:"sub_conditions"`
 	ValueOptCfg  `mapstructure:",squash"`
 
-	RemainCfg map[string]any `mapstructure:",remain"`
+	RemainCfg map[string]any `json:"-" mapstructure:",remain"`
 
 	NameField *DataProperty `json:"-" mapstructure:"-"`
+}
+
+// MarshalJSON 自定义 JSON 序列化，将 RemainCfg 中的内容平铺到顶层
+func (c *CondCfg) MarshalJSON() ([]byte, error) {
+	// 创建一个临时结构体，用于序列化标准字段
+	type Alias CondCfg
+	aux := &struct {
+		*Alias
+	}{
+		Alias: (*Alias)(c),
+	}
+
+	// 先序列化标准字段
+	data, err := json.Marshal(aux)
+	if err != nil {
+		return nil, err
+	}
+
+	// 解析为标准map
+	var result map[string]any
+	if err := json.Unmarshal(data, &result); err != nil {
+		return nil, err
+	}
+
+	// 将 RemainCfg 中的内容平铺到顶层
+	if c.RemainCfg != nil {
+		for k, v := range c.RemainCfg {
+			// 避免覆盖已存在的字段
+			if _, exists := result[k]; !exists {
+				result[k] = v
+			}
+		}
+	}
+
+	// 移除 nil 值
+	for k, v := range result {
+		if v == nil {
+			delete(result, k)
+		}
+	}
+	return json.Marshal(result)
 }
 
 type DataProperty struct {

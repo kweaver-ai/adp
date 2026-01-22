@@ -168,10 +168,11 @@ func WithSharedDagFilter(param QueryParams) ListDagOption {
 			var allExistingIDs []string
 
 			listDagInput := &mod.ListDagInput{
-				TriggerType: param.TriggerType,
-				Type:        param.Type,
-				KeyWord:     param.KeyWord,
-				SelectField: []string{"_id"},
+				TriggerType:  param.TriggerType,
+				TriggerTypes: param.TriggerTypes,
+				Type:         param.Type,
+				KeyWord:      param.KeyWord,
+				SelectField:  []string{"_id"},
 			}
 
 			if param.UserID != "" {
@@ -184,6 +185,10 @@ func WithSharedDagFilter(param QueryParams) ListDagOption {
 
 			if len(param.Accessors) > 0 {
 				listDagInput.Accessors = param.Accessors
+			}
+
+			if param.Scope != "" {
+				listDagInput.Scope = param.Scope
 			}
 
 			for i := 0; i < len(dagIDs); i += chunkSize {
@@ -312,12 +317,13 @@ func ListDagWithFilters(ctx context.Context, param QueryParams, opts ...ListDagO
 
 	// 3. 构建查询参数
 	listDagInput := &mod.ListDagInput{
-		Offset:      param.Page,
-		Limit:       param.Limit,
-		Order:       -1,
-		TriggerType: param.TriggerType,
-		Type:        param.Type,
-		KeyWord:     param.KeyWord,
+		Offset:       param.Page,
+		Limit:        param.Limit,
+		Order:        -1,
+		TriggerType:  param.TriggerType,
+		TriggerTypes: param.TriggerTypes,
+		Type:         param.Type,
+		KeyWord:      param.KeyWord,
 	}
 
 	if param.UserID != "" {
@@ -330,6 +336,10 @@ func ListDagWithFilters(ctx context.Context, param QueryParams, opts ...ListDagO
 
 	if len(param.Accessors) > 0 {
 		listDagInput.Accessors = param.Accessors
+	}
+
+	if param.Scope != "" {
+		listDagInput.Scope = param.Scope
 	}
 
 	if param.Order == common.ASC {
