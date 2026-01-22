@@ -160,7 +160,7 @@ func Test_ValidateActionType(t *testing.T) {
 					ATID:   "at1",
 					ATName: "action1",
 					ActionSource: interfaces.ActionSource{
-						Type:  interfaces.ACTION_TYPE_MCP,
+						Type:   interfaces.ACTION_TYPE_MCP,
 						ToolID: "tool1",
 					},
 				},
@@ -188,23 +188,23 @@ func Test_ValidateActionType(t *testing.T) {
 			So(err, ShouldBeNil)
 		})
 
-		Convey("Failed with condition missing ObjectTypeID\n", func() {
-			at := &interfaces.ActionType{
-				ActionTypeWithKeyField: interfaces.ActionTypeWithKeyField{
-					ATID:   "at1",
-					ATName: "action1",
-					Condition: &interfaces.CondCfg{
-						Field:     "field1",
-						Operation: cond.OperationEq,
-						ValueOptCfg: interfaces.ValueOptCfg{
-							Value: "value1",
-						},
-					},
-				},
-			}
-			err := ValidateActionType(ctx, at)
-			So(err, ShouldNotBeNil)
-		})
+		// Convey("Failed with condition missing ObjectTypeID\n", func() {
+		// 	at := &interfaces.ActionType{
+		// 		ActionTypeWithKeyField: interfaces.ActionTypeWithKeyField{
+		// 			ATID:   "at1",
+		// 			ATName: "action1",
+		// 			Condition: &interfaces.CondCfg{
+		// 				Field:     "field1",
+		// 				Operation: cond.OperationEq,
+		// 				ValueOptCfg: interfaces.ValueOptCfg{
+		// 					Value: "value1",
+		// 				},
+		// 			},
+		// 		},
+		// 	}
+		// 	err := ValidateActionType(ctx, at)
+		// 	So(err, ShouldNotBeNil)
+		// })
 
 		Convey("Failed with condition missing Operation\n", func() {
 			at := &interfaces.ActionType{

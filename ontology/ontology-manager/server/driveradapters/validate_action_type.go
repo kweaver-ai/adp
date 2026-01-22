@@ -83,7 +83,7 @@ func ValidateActionType(ctx context.Context, actionType *interfaces.ActionType) 
 
 	// 行动条件非空时，校验行动条件
 	if actionType.Condition != nil {
-		err = validateActionCondition(ctx, actionType.Condition)
+		err = validateActionCondition(ctx, actionType.Condition, actionType.ObjectTypeID)
 		if err != nil {
 			return err
 		}
@@ -93,15 +93,19 @@ func ValidateActionType(ctx context.Context, actionType *interfaces.ActionType) 
 }
 
 // 校验行动条件的合法性
-func validateActionCondition(ctx context.Context, cfg *interfaces.CondCfg) error {
+func validateActionCondition(ctx context.Context, cfg *interfaces.CondCfg, objectTypeID string) error {
 	if cfg == nil {
 		return nil
 	}
 
+	// 如果行动条件不给对象类id，那么就默认使用行动类的对象类id
 	if cfg.ObjectTypeID == "" {
-		return rest.NewHTTPError(ctx, http.StatusBadRequest, oerrors.OntologyManager_ActionType_InvalidParameter).
-			WithErrorDetails("行动条件的对象类不能为空")
+		cfg.ObjectTypeID = objectTypeID
 	}
+	// if cfg.ObjectTypeID == "" {
+	// 	return rest.NewHTTPError(ctx, http.StatusBadRequest, oerrors.OntologyManager_ActionType_InvalidParameter).
+	// 		WithErrorDetails("行动条件的对象类不能为空")
+	// }
 
 	// 过滤操作符
 	if cfg.Operation == "" {
@@ -124,7 +128,7 @@ func validateActionCondition(ctx context.Context, cfg *interfaces.CondCfg) error
 		}
 
 		for _, subCond := range cfg.SubConds {
-			err := validateActionCondition(ctx, subCond)
+			err := validateActionCondition(ctx, subCond, objectTypeID)
 			if err != nil {
 				return err
 			}
