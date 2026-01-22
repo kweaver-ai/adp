@@ -33,7 +33,7 @@ const ScheduleExpression = ({ scheduleType, form }: any): JSX.Element => {
       value: scheduleType,
       options: [
         { label: intl.get('Global.fixRate'), value: SCHEDULE_TYPE.FIX_RATE },
-        { label: '自定义频率', value: SCHEDULE_TYPE.CRON },
+        { label: intl.get('DataConnect.customFrequency'), value: SCHEDULE_TYPE.CRON },
       ],
     },
   ];
@@ -69,7 +69,7 @@ const ScheduleExpression = ({ scheduleType, form }: any): JSX.Element => {
               </Tooltip>
             </div>
           }
-          rules={[{ required: scheduleType === SCHEDULE_TYPE.CRON, message: '自定义频率不能为空' }]}
+          rules={[{ required: scheduleType === SCHEDULE_TYPE.CRON, message: intl.get('DataConnect.customFrequencyRequired') }]}
         >
           <CronSelect inputProps={{ style: { width: 300 } }} />
         </Form.Item>

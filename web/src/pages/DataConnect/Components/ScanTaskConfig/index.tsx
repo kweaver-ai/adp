@@ -130,7 +130,7 @@ const ScanTaskConfig = ({ open, onClose, selectedDataSources = [], isEdit = fals
         onClose(true);
       }
     } catch (error) {
-      console.error('操作失败:', error);
+      console.error(intl.get('DataConnect.operationFailed'), error);
     }
   };
 

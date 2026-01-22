@@ -398,7 +398,7 @@ const DataSource = (props: DataSourceProps): JSX.Element => {
       __selected: true,
       render: (text: string, row: DataConnectType.DataSource): string | JSX.Element => {
         if (row.metadata_obtain_level === 4 || row.metadata_obtain_level === 3) {
-          return <Badge status="default" text={'无需扫描'} />;
+          return <Badge status="default" text={intl.get('DataConnect.noNeedScan')} />;
         }
         const { label, color } = getScanStatusColor(text);
         return <Badge status={color} text={label} />;

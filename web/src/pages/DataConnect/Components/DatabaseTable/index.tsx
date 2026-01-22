@@ -15,11 +15,11 @@ interface DatabaseTableProps {
 
 const OBJECT_PROPERTY_TYPE_OPTIONS = [
   {
-    label: '表属性',
+    label: intl.get('DataConnect.tableProperty'),
     value: 'table',
   },
   {
-    label: '字段属性',
+    label: intl.get('DataConnect.fieldProperty'),
     value: 'column',
   },
 ];
@@ -102,7 +102,7 @@ const DatabaseTable: React.FC<DatabaseTableProps> = ({ dataConnectId }) => {
   const handleTableSelect = (table: ScanTaskType.TableInfo) => {
     setSelectedTableId(table.id);
     setFieldSearchValue('');
-    setSelectedTable(table);
+    setSelectedTable(table?.advanced_params || {});
     // 重置到第一页
     const newPagination = { ...fieldPagination, current: 1 };
     setFieldPagination(newPagination);
@@ -139,7 +139,7 @@ const DatabaseTable: React.FC<DatabaseTableProps> = ({ dataConnectId }) => {
       ellipsis: true,
     },
     {
-      title: '原始字段类型',
+      title: intl.get('DataConnect.originalFieldType'),
       dataIndex: 'type',
       key: 'type',
       width: 100,

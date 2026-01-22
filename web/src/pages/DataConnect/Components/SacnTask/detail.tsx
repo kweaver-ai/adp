@@ -76,7 +76,7 @@ const ScanDetail: React.FC<ScanDetailProps> = ({ visible, onClose, scanDetail, g
       scanDetail.type === 2
         ? [
             {
-              name: '重复规则',
+              name: intl.get('DataConnect.repeatRule'),
               value: repeatRuleDisplay,
             },
           ]
@@ -99,7 +99,7 @@ const ScanDetail: React.FC<ScanDetailProps> = ({ visible, onClose, scanDetail, g
       scanDetail.type != 1
         ? [
             {
-              name: '扫描策略',
+              name: intl.get('DataConnect.scanStrategy'),
               value: scheduleStatus?.scan_strategy?.length
                 ? scheduleStatus?.scan_strategy?.map(getStrategyDisplayName).join(', ')
                 : intl.get('DataConnect.fullScan'),
@@ -109,7 +109,7 @@ const ScanDetail: React.FC<ScanDetailProps> = ({ visible, onClose, scanDetail, g
 
     return [
       {
-        title: '基本信息',
+        title: intl.get('DataConnect.basicInfo'),
         isOpen: true,
         extra:
           scanDetail.type === 2 && isEdit ? (
@@ -117,23 +117,23 @@ const ScanDetail: React.FC<ScanDetailProps> = ({ visible, onClose, scanDetail, g
           ) : undefined,
         content: [
           {
-            name: '扫描目标',
+            name: intl.get('DataConnect.scanTarget'),
             value: scanTargetDisplay,
           },
           {
-            name: '任务类型',
+            name: intl.get('DataConnect.taskType'),
             value: scanDetail.type === 2 ? intl.get('Global.scheduleScan') : intl.get('Global.immediateScan'),
           },
           {
-            name: '任务状态',
-            value: scheduleStatus?.task_status === 'open' ? '开启' : '关闭',
+            name: intl.get('DataConnect.taskStatus'),
+            value: scheduleStatus?.task_status === 'open' ? intl.get('DataConnect.enabled') : intl.get('DataConnect.disabled'),
           },
           ...scanStrategyCom,
           ...repeatRuleDisplayCom,
         ],
       },
       {
-        title: '任务执行',
+        title: intl.get('DataConnect.taskExecution'),
         isOpen: true,
         content: [
           {
@@ -148,7 +148,7 @@ const ScanDetail: React.FC<ScanDetailProps> = ({ visible, onClose, scanDetail, g
 
   return (
     <>
-      <DetailDrawer data={detailDrawerData} title="扫描详情" width={1040} onClose={onClose} open={visible} />
+      <DetailDrawer data={detailDrawerData} title={intl.get('DataConnect.scanDetail')} width={1040} onClose={onClose} open={visible} />
       <ScanTaskConfig open={scanTaskConfigVisible} onClose={handleScanTaskConfigClose} isEdit={true} scanDetail={scanDetail} />
     </>
   );

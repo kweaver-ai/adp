@@ -194,7 +194,7 @@ const TaskExecution: React.FC<TaskExecutionProps> = ({ scanDetail, scheduleStatu
   // 表格列定义 - 当前执行
   const currentColumns: ColumnsType<ScanTaskType.ScanTaskInfoResponseItem> = [
     {
-      title: '表名',
+      title: intl.get('DataConnect.tableName'),
       dataIndex: 'table_name',
       key: 'table_name',
       ellipsis: true,
@@ -206,7 +206,7 @@ const TaskExecution: React.FC<TaskExecutionProps> = ({ scanDetail, scheduleStatu
       ),
     },
     {
-      title: '扫描状态',
+      title: intl.get('DataConnect.executionStatus'),
       dataIndex: 'scan_status',
       key: 'scan_status',
       render: (text: string) => {
@@ -215,14 +215,14 @@ const TaskExecution: React.FC<TaskExecutionProps> = ({ scanDetail, scheduleStatu
       },
     },
     {
-      title: '开始时间',
+      title: intl.get('DataConnect.startTime'),
       dataIndex: 'start_time',
       key: 'start_time',
       sorter: (a, b) => new Date(a.start_time || 0).getTime() - new Date(b.start_time || 0).getTime(),
       render: (text: string) => (text ? dayjs(text).format(DATE_FORMAT.DEFAULT) : '--'),
     },
     {
-      title: '结束时间',
+      title: intl.get('DataConnect.endTime'),
       dataIndex: 'end_time',
       key: 'end_time',
       render: (text: string) => (text ? dayjs(text).format(DATE_FORMAT.DEFAULT) : '--'),
@@ -232,7 +232,7 @@ const TaskExecution: React.FC<TaskExecutionProps> = ({ scanDetail, scheduleStatu
   // 历史记录表格列定义
   const historyColumns: ColumnsType<ScanTaskType.ScheduleHistoryItem> = [
     {
-      title: '执行状态',
+      title: intl.get('DataConnect.executionStatus'),
       dataIndex: 'scan_status',
       key: 'scan_status',
       render: (text: string) => {
@@ -241,30 +241,30 @@ const TaskExecution: React.FC<TaskExecutionProps> = ({ scanDetail, scheduleStatu
       },
     },
     {
-      title: '耗时',
+      title: intl.get('DataConnect.duration'),
       dataIndex: 'duration',
       key: 'duration',
       render: (duration) => formatDuration(duration),
     },
     {
-      title: '开始时间',
+      title: intl.get('DataConnect.startTime'),
       dataIndex: 'start_time',
       key: 'start_time',
       sorter: (a, b) => new Date(a.start_time || 0).getTime() - new Date(b.start_time || 0).getTime(),
       render: (text: string) => (text ? dayjs(text).format(DATE_FORMAT.DEFAULT) : '--'),
     },
     {
-      title: '结束时间',
+      title: intl.get('DataConnect.endTime'),
       dataIndex: 'end_time',
       key: 'end_time',
       render: (text: string) => (text ? dayjs(text).format(DATE_FORMAT.DEFAULT) : '--'),
     },
     {
-      title: '详情',
+      title: intl.get('DataConnect.detail'),
       key: 'action',
       render: (_, record) => (
         <Button type="link" size="small" onClick={() => handleViewHistoryTask(record)}>
-          查看
+          {intl.get('DataConnect.view')}
         </Button>
       ),
     },
@@ -290,8 +290,8 @@ const TaskExecution: React.FC<TaskExecutionProps> = ({ scanDetail, scheduleStatu
       {/* 布局切换 */}
       {scanDetail.type === 2 && (
         <Radio.Group onChange={handleModeChange} value={mode} style={{ marginBottom: 8 }}>
-          <Radio.Button value="current">当前执行</Radio.Button>
-          <Radio.Button value="history">历史记录({historyDataTotal})</Radio.Button>
+          <Radio.Button value="current">{intl.get('DataConnect.currentExecution')}</Radio.Button>
+          <Radio.Button value="history">{intl.get('DataConnect.historyRecord')}({historyDataTotal})</Radio.Button>
         </Radio.Group>
       )}
 
@@ -302,7 +302,7 @@ const TaskExecution: React.FC<TaskExecutionProps> = ({ scanDetail, scheduleStatu
           {/* 顶部概览 */}
           <div style={{ marginBottom: 16, padding: '8px 0', display: 'flex', alignItems: 'center', justifyContent: 'flex-start', gap: '24px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <div style={{ fontSize: 14, color: '#666', marginRight: '8px' }}>状态:</div>
+              <div style={{ fontSize: 14, color: '#666', marginRight: '8px' }}>{intl.get('DataConnect.status')}:</div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: 14 }}>
                 {scheduleStatus?.scan_status === 'running' && <LoadingOutlined spin />}
                 <span style={{ color: getScanStatusColor(scheduleStatus?.scan_status || scanDetail.scan_status || '').color }}>
@@ -312,17 +312,17 @@ const TaskExecution: React.FC<TaskExecutionProps> = ({ scanDetail, scheduleStatu
             </div>
             <div style={{ width: '1px', height: '16px', backgroundColor: '#e8e8e8' }}></div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <div style={{ fontSize: 14, color: '#666', marginRight: '8px' }}>耗时:</div>
+              <div style={{ fontSize: 14, color: '#666', marginRight: '8px' }}>{intl.get('DataConnect.duration')}:</div>
               <div style={{ fontSize: 14 }}>{formatDuration(scheduleStatus?.duration)}</div>
             </div>
             <div style={{ width: '1px', height: '16px', backgroundColor: '#e8e8e8' }}></div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <div style={{ fontSize: 14, color: '#666', marginRight: '8px' }}>开始时间:</div>
+              <div style={{ fontSize: 14, color: '#666', marginRight: '8px' }}>{intl.get('DataConnect.startTime')}:</div>
               <div style={{ fontSize: 14 }}>{scheduleStatus?.start_time ? dayjs(scheduleStatus.start_time).format(DATE_FORMAT.DEFAULT) : '--'}</div>
             </div>
             <div style={{ width: '1px', height: '16px', backgroundColor: '#e8e8e8' }}></div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <div style={{ fontSize: 14, color: '#666', marginRight: '8px' }}>结束时间:</div>
+              <div style={{ fontSize: 14, color: '#666', marginRight: '8px' }}>{intl.get('DataConnect.endTime')}:</div>
               <div style={{ fontSize: 14 }}>{scheduleStatus?.end_time ? dayjs(scheduleStatus.end_time).format(DATE_FORMAT.DEFAULT) : '--'}</div>
             </div>
           </div>
@@ -370,12 +370,12 @@ const TaskExecution: React.FC<TaskExecutionProps> = ({ scanDetail, scheduleStatu
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
                 <Breadcrumb separator="/">
                   <Breadcrumb.Item onClick={handleBackToHistory}>
-                    <span style={{ cursor: 'pointer' }}>历史记录</span>
+                    <span style={{ cursor: 'pointer' }}>{intl.get('DataConnect.historyRecord')}</span>
                   </Breadcrumb.Item>
-                  <Breadcrumb.Item>{`开始时间: ${dayjs(selectedHistoryTask.start_time).format(DATE_FORMAT.DEFAULT)}`}</Breadcrumb.Item>
+                  <Breadcrumb.Item>{`${intl.get('DataConnect.startTime')}: ${dayjs(selectedHistoryTask.start_time).format(DATE_FORMAT.DEFAULT)}`}</Breadcrumb.Item>
                 </Breadcrumb>
                 <Input.Search
-                  placeholder={'搜索'}
+                  placeholder={intl.get('DataConnect.search')}
                   allowClear
                   style={{ width: 240 }}
                   value={searchText}
@@ -387,17 +387,17 @@ const TaskExecution: React.FC<TaskExecutionProps> = ({ scanDetail, scheduleStatu
               {/* 顶部统计概览 */}
               <div style={{ marginBottom: 16, padding: '8px 0', display: 'flex', alignItems: 'center', justifyContent: 'flex-start', gap: '24px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <div style={{ fontSize: 14, color: '#666', marginRight: '8px' }}>表总数:</div>
+                  <div style={{ fontSize: 14, color: '#666', marginRight: '8px' }}>{intl.get('DataConnect.totalTables')}:</div>
                   <div style={{ fontSize: 14 }}>{table_count || 0}</div>
                 </div>
                 <div style={{ width: '1px', height: '16px', backgroundColor: '#e8e8e8' }}></div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <div style={{ fontSize: 14, color: '#666', marginRight: '8px' }}>成功数:</div>
+                  <div style={{ fontSize: 14, color: '#666', marginRight: '8px' }}>{intl.get('DataConnect.successCount')}:</div>
                   <div style={{ fontSize: 14, color: '#52c41a' }}>{success_count || 0}</div>
                 </div>
                 <div style={{ width: '1px', height: '16px', backgroundColor: '#e8e8e8' }}></div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <div style={{ fontSize: 14, color: '#666', marginRight: '8px' }}>失败数:</div>
+                  <div style={{ fontSize: 14, color: '#666', marginRight: '8px' }}>{intl.get('DataConnect.failCount')}:</div>
                   <div style={{ fontSize: 14, color: '#ff4d4f' }}>{fail_count || 0}</div>
                 </div>
               </div>
