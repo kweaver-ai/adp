@@ -14,6 +14,45 @@ import (
 	"ontology-manager/interfaces"
 )
 
+func ValidateObjectTypes(ctx context.Context, knID string, objectTypes []*interfaces.ObjectType) error {
+	tmpNameMap := make(map[string]any)
+	idMap := make(map[string]any)
+	for i := 0; i < len(objectTypes); i++ {
+		// 校验导入模型时模块是否是对象类
+		if objectTypes[i].ModuleType != "" && objectTypes[i].ModuleType != interfaces.MODULE_TYPE_OBJECT_TYPE {
+			return rest.NewHTTPError(ctx, http.StatusForbidden, oerrors.OntologyManager_InvalidParameter_ModuleType).
+				WithErrorDetails("Object type name is not 'object_type'")
+		}
+
+		// 0.校验请求体中多个模型 ID 是否重复
+		otID := objectTypes[i].OTID
+		if _, ok := idMap[otID]; !ok || otID == "" {
+			idMap[otID] = nil
+		} else {
+			errDetails := fmt.Sprintf("ObjectType ID '%s' already exists in the request body", otID)
+			return rest.NewHTTPError(ctx, http.StatusBadRequest, oerrors.OntologyManager_ObjectType_Duplicated_IDInFile).
+				WithDescription(map[string]any{"ObjectTypeID": otID}).
+				WithErrorDetails(errDetails)
+		}
+
+		// 1. 校验 对象类必要创建参数的合法性, 非空、长度、是枚举值
+		err := ValidateObjectType(ctx, objectTypes[i])
+		if err != nil {
+			return err
+		}
+
+		// 3. 校验 请求体中对象类名称重复性
+		if _, ok := tmpNameMap[objectTypes[i].OTName]; !ok {
+			tmpNameMap[objectTypes[i].OTName] = nil
+		} else {
+			return rest.NewHTTPError(ctx, http.StatusBadRequest, oerrors.OntologyManager_ObjectType_Duplicated_Name)
+		}
+
+		objectTypes[i].KNID = knID
+	}
+	return nil
+}
+
 // 对象类必要创建参数的非空校验。
 func ValidateObjectType(ctx context.Context, objectType *interfaces.ObjectType) error {
 	// 校验id的合法性

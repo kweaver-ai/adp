@@ -137,10 +137,10 @@ func (r *restHandler) CreateRelationTypes(c *gin.Context, visitor rest.Visitor) 
 		rest.ReplyError(c, httpErr)
 		return
 	}
-	reqBody := requestData.Entries
+	relationTypes := requestData.Entries
 
 	// 如果传入的模型对象为[], 应报错
-	if len(reqBody) == 0 {
+	if len(relationTypes) == 0 {
 		httpErr := rest.NewHTTPError(ctx, http.StatusBadRequest, oerrors.OntologyManager_InvalidParameter_RequestBody).
 			WithErrorDetails("No relation type was passed in")
 
@@ -150,74 +150,15 @@ func (r *restHandler) CreateRelationTypes(c *gin.Context, visitor rest.Visitor) 
 	}
 
 	// 记录接口调用参数： c.Request.RequestURI, body
-	o11y.Info(ctx, fmt.Sprintf("创建关系类请求参数: [%s,%v]", c.Request.RequestURI, reqBody))
+	o11y.Info(ctx, fmt.Sprintf("创建关系类请求参数: [%s,%v]", c.Request.RequestURI, relationTypes))
 
-	relationTypes := make([]*interfaces.RelationType, 0)
 	// 校验 请求体中目标模型名称合法性
-	tmpNameMap := make(map[string]any)
-	idMap := make(map[string]any)
-	for i := 0; i < len(reqBody); i++ {
-		// 校验导入模型时模块是否是关系类
-		if reqBody[i].ModuleType != "" && reqBody[i].ModuleType != interfaces.MODULE_TYPE_RELATION_TYPE {
-			httpErr := rest.NewHTTPError(ctx, http.StatusForbidden, oerrors.OntologyManager_InvalidParameter_ModuleType).
-				WithErrorDetails("Relation type name is not 'relation_type'")
-
-			o11y.AddHttpAttrs4HttpError(span, httpErr)
-			rest.ReplyError(c, httpErr)
-			return
-		}
-
-		// 0.校验请求体中多个模型 ID 是否重复
-		rtID := reqBody[i].RTID
-		if _, ok := idMap[rtID]; !ok || rtID == "" {
-			idMap[rtID] = nil
-		} else {
-			errDetails := fmt.Sprintf("RelationType ID '%s' already exists in the request body", rtID)
-			httpErr := rest.NewHTTPError(ctx, http.StatusBadRequest, oerrors.OntologyManager_RelationType_Duplicated_IDInFile).
-				WithDescription(map[string]any{"relationTypeID": rtID}).
-				WithErrorDetails(errDetails)
-
-			o11y.AddHttpAttrs4HttpError(span, httpErr)
-			rest.ReplyError(c, httpErr)
-			return
-		}
-
-		// 1. 校验 关系类必要创建参数的合法性, 非空、长度、是枚举值
-		err = ValidateRelationType(ctx, reqBody[i])
-		if err != nil {
-			httpErr := err.(*rest.HTTPError)
-
-			// 记录异常日志
-			o11y.Error(ctx, fmt.Sprintf("Validate relation type[%s] failed: %s. %v", reqBody[i].RTName,
-				httpErr.BaseError.Description, httpErr.BaseError.ErrorDetails))
-
-			// 设置 trace 的错误信息的 attributes
-			span.SetAttributes(attr.Key("rt_name").String(reqBody[i].RTName))
-			o11y.AddHttpAttrs4HttpError(span, httpErr)
-			rest.ReplyError(c, httpErr)
-			return
-		}
-
-		// 3. 校验 请求体中关系类名称重复性
-		if _, ok := tmpNameMap[reqBody[i].RTName]; !ok {
-			tmpNameMap[reqBody[i].RTName] = nil
-		} else {
-			httpErr := rest.NewHTTPError(ctx, http.StatusBadRequest, oerrors.OntologyManager_RelationType_Duplicated_Name)
-
-			// 记录异常日志
-			o11y.Error(ctx, fmt.Sprintf("Duplicated relation type name: [%s]: %s. %v", fmt.Sprintf("%v", reqBody[i].RTName),
-				httpErr.BaseError.Description, httpErr.BaseError.ErrorDetails))
-
-			// 设置 trace 的错误信息的 attributes
-			span.SetAttributes(attr.Key("rt_name").String(reqBody[i].RTName))
-
-			o11y.AddHttpAttrs4HttpError(span, httpErr)
-			rest.ReplyError(c, httpErr)
-			return
-		}
-		reqBody[i].KNID = knID
-
-		relationTypes = append(relationTypes, reqBody[i])
+	err = ValidateRelationTypes(ctx, knID, relationTypes)
+	if err != nil {
+		httpErr := err.(*rest.HTTPError)
+		o11y.AddHttpAttrs4HttpError(span, httpErr)
+		rest.ReplyError(c, httpErr)
+		return
 	}
 
 	//调用创建

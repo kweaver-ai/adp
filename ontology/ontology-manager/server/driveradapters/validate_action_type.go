@@ -14,6 +14,44 @@ import (
 	"ontology-manager/interfaces"
 )
 
+func ValidateActionTypes(ctx context.Context, knID string, actionTypes []*interfaces.ActionType) error {
+	tmpNameMap := make(map[string]any)
+	idMap := make(map[string]any)
+	for i := 0; i < len(actionTypes); i++ {
+		// 校验导入模型时模块是否是行动类
+		if actionTypes[i].ModuleType != "" && actionTypes[i].ModuleType != interfaces.MODULE_TYPE_ACTION_TYPE {
+			return rest.NewHTTPError(ctx, http.StatusForbidden, oerrors.OntologyManager_InvalidParameter_ModuleType).
+				WithErrorDetails("Action type name is not 'action_type'")
+		}
+
+		// 0.校验请求体中多个模型 ID 是否重复
+		atID := actionTypes[i].ATID
+		if _, ok := idMap[atID]; !ok || atID == "" {
+			idMap[atID] = nil
+		} else {
+			errDetails := fmt.Sprintf("ActionType ID '%s' already exists in the request body", atID)
+			return rest.NewHTTPError(ctx, http.StatusBadRequest, oerrors.OntologyManager_ActionType_Duplicated_IDInFile).
+				WithDescription(map[string]any{"actionTypeID": atID}).
+				WithErrorDetails(errDetails)
+		}
+
+		// 1. 校验 行动类必要创建参数的合法性, 非空、长度、是枚举值
+		err := ValidateActionType(ctx, actionTypes[i])
+		if err != nil {
+			return err
+		}
+
+		// 3. 校验 请求体中行动类名称重复性
+		if _, ok := tmpNameMap[actionTypes[i].ATName]; !ok {
+			tmpNameMap[actionTypes[i].ATName] = nil
+		} else {
+			return rest.NewHTTPError(ctx, http.StatusBadRequest, oerrors.OntologyManager_ActionType_Duplicated_Name)
+		}
+		actionTypes[i].KNID = knID
+	}
+	return nil
+}
+
 // 对象类必要创建参数的非空校验。
 func ValidateActionType(ctx context.Context, actionType *interfaces.ActionType) error {
 	// 校验id的合法性

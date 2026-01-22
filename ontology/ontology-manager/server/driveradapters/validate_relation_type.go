@@ -14,6 +14,44 @@ import (
 	"ontology-manager/interfaces"
 )
 
+func ValidateRelationTypes(ctx context.Context, knID string, relationTypes []*interfaces.RelationType) error {
+	tmpNameMap := make(map[string]any)
+	idMap := make(map[string]any)
+	for i := 0; i < len(relationTypes); i++ {
+		// 校验导入模型时模块是否是关系类
+		if relationTypes[i].ModuleType != "" && relationTypes[i].ModuleType != interfaces.MODULE_TYPE_RELATION_TYPE {
+			return rest.NewHTTPError(ctx, http.StatusForbidden, oerrors.OntologyManager_InvalidParameter_ModuleType).
+				WithErrorDetails("Relation type name is not 'relation_type'")
+		}
+
+		// 0.校验请求体中多个模型 ID 是否重复
+		rtID := relationTypes[i].RTID
+		if _, ok := idMap[rtID]; !ok || rtID == "" {
+			idMap[rtID] = nil
+		} else {
+			errDetails := fmt.Sprintf("RelationType ID '%s' already exists in the request body", rtID)
+			return rest.NewHTTPError(ctx, http.StatusBadRequest, oerrors.OntologyManager_RelationType_Duplicated_IDInFile).
+				WithDescription(map[string]any{"relationTypeID": rtID}).
+				WithErrorDetails(errDetails)
+		}
+
+		// 1. 校验 关系类必要创建参数的合法性, 非空、长度、是枚举值
+		err := ValidateRelationType(ctx, relationTypes[i])
+		if err != nil {
+			return err
+		}
+
+		// 3. 校验 请求体中关系类名称重复性
+		if _, ok := tmpNameMap[relationTypes[i].RTName]; !ok {
+			tmpNameMap[relationTypes[i].RTName] = nil
+		} else {
+			return rest.NewHTTPError(ctx, http.StatusBadRequest, oerrors.OntologyManager_RelationType_Duplicated_Name)
+		}
+		relationTypes[i].KNID = knID
+	}
+	return nil
+}
+
 // 对象类必要创建参数的非空校验。
 func ValidateRelationType(ctx context.Context, relationType *interfaces.RelationType) error {
 	// 校验id的合法性

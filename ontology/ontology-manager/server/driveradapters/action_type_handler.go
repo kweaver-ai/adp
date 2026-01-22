@@ -137,10 +137,10 @@ func (r *restHandler) CreateActionTypes(c *gin.Context, visitor rest.Visitor) {
 		rest.ReplyError(c, httpErr)
 		return
 	}
-	reqBody := requestData.Entries
+	actionTypes := requestData.Entries
 
 	// 如果传入的模型对象为[], 应报错
-	if len(reqBody) == 0 {
+	if len(actionTypes) == 0 {
 		httpErr := rest.NewHTTPError(ctx, http.StatusBadRequest, oerrors.OntologyManager_InvalidParameter_RequestBody).
 			WithErrorDetails("No action type was passed in")
 
@@ -150,71 +150,15 @@ func (r *restHandler) CreateActionTypes(c *gin.Context, visitor rest.Visitor) {
 	}
 
 	// 记录接口调用参数： c.Request.RequestURI, body
-	o11y.Info(ctx, fmt.Sprintf("创建行动类请求参数: [%s,%v]", c.Request.RequestURI, reqBody))
+	o11y.Info(ctx, fmt.Sprintf("创建行动类请求参数: [%s,%v]", c.Request.RequestURI, actionTypes))
 
-	actionTypes := make([]*interfaces.ActionType, 0)
 	// 校验 请求体中目标模型名称合法性
-	tmpNameMap := make(map[string]any)
-	idMap := make(map[string]any)
-	for i := 0; i < len(reqBody); i++ {
-		// 校验导入模型时模块是否是行动类
-		if reqBody[i].ModuleType != "" && reqBody[i].ModuleType != interfaces.MODULE_TYPE_ACTION_TYPE {
-			httpErr := rest.NewHTTPError(ctx, http.StatusForbidden, oerrors.OntologyManager_InvalidParameter_ModuleType).
-				WithErrorDetails("Action type name is not 'action_type'")
-
-			o11y.AddHttpAttrs4HttpError(span, httpErr)
-			rest.ReplyError(c, httpErr)
-			return
-		}
-
-		// 0.校验请求体中多个模型 ID 是否重复
-		atID := reqBody[i].ATID
-		if _, ok := idMap[atID]; !ok || atID == "" {
-			idMap[atID] = nil
-		} else {
-			errDetails := fmt.Sprintf("ActionType ID '%s' already exists in the request body", atID)
-			httpErr := rest.NewHTTPError(ctx, http.StatusBadRequest, oerrors.OntologyManager_ActionType_Duplicated_IDInFile).
-				WithDescription(map[string]any{"actionTypeID": atID}).
-				WithErrorDetails(errDetails)
-
-			o11y.AddHttpAttrs4HttpError(span, httpErr)
-			rest.ReplyError(c, httpErr)
-			return
-		}
-
-		// 1. 校验 行动类必要创建参数的合法性, 非空、长度、是枚举值
-		err = ValidateActionType(ctx, reqBody[i])
-		if err != nil {
-			httpErr := err.(*rest.HTTPError)
-
-			// 记录异常日志
-			o11y.Error(ctx, fmt.Sprintf("Validate action type[%s] failed: %s. %v", reqBody[i].ATName,
-				httpErr.BaseError.Description, httpErr.BaseError.ErrorDetails))
-
-			// 设置 trace 的错误信息的 attributes
-			span.SetAttributes(attr.Key("at_name").String(reqBody[i].ATName))
-			o11y.AddHttpAttrs4HttpError(span, httpErr)
-			rest.ReplyError(c, httpErr)
-			return
-		}
-
-		// 3. 校验 请求体中行动类名称重复性
-		if _, ok := tmpNameMap[reqBody[i].ATName]; !ok {
-			tmpNameMap[reqBody[i].ATName] = nil
-		} else {
-			httpErr := rest.NewHTTPError(ctx, http.StatusBadRequest, oerrors.OntologyManager_ActionType_Duplicated_Name)
-			// 记录异常日志
-			o11y.Error(ctx, fmt.Sprintf("Duplicated action type name: [%s]: %s. %v", fmt.Sprintf("%v", reqBody[i].ATName),
-				httpErr.BaseError.Description, httpErr.BaseError.ErrorDetails))
-			// 设置 trace 的错误信息的 attributes
-			span.SetAttributes(attr.Key("at_name").String(reqBody[i].ATName))
-			o11y.AddHttpAttrs4HttpError(span, httpErr)
-			rest.ReplyError(c, httpErr)
-			return
-		}
-		reqBody[i].KNID = knID
-
-		actionTypes = append(actionTypes, reqBody[i])
+	err = ValidateActionTypes(ctx, knID, actionTypes)
+	if err != nil {
+		httpErr := err.(*rest.HTTPError)
+		o11y.AddHttpAttrs4HttpError(span, httpErr)
+		rest.ReplyError(c, httpErr)
+		return
 	}
 
 	//调用创建

@@ -138,10 +138,10 @@ func (r *restHandler) CreateObjectTypes(c *gin.Context, visitor rest.Visitor) {
 		return
 
 	}
-	reqBody := requestData.Entries
+	objectTypes := requestData.Entries
 
 	// 如果传入的模型对象为[], 应报错
-	if len(reqBody) == 0 {
+	if len(objectTypes) == 0 {
 		httpErr := rest.NewHTTPError(ctx, http.StatusBadRequest, oerrors.OntologyManager_InvalidParameter_RequestBody).
 			WithErrorDetails("No object type was passed in")
 
@@ -151,74 +151,15 @@ func (r *restHandler) CreateObjectTypes(c *gin.Context, visitor rest.Visitor) {
 	}
 
 	// 记录接口调用参数： c.Request.RequestURI, body
-	o11y.Info(ctx, fmt.Sprintf("创建对象类请求参数: [%s,%v]", c.Request.RequestURI, reqBody))
+	o11y.Info(ctx, fmt.Sprintf("创建对象类请求参数: [%s,%v]", c.Request.RequestURI, objectTypes))
 
-	objectTypes := make([]*interfaces.ObjectType, 0)
 	// 校验 请求体中目标模型名称合法性
-	tmpNameMap := make(map[string]any)
-	idMap := make(map[string]any)
-	for i := 0; i < len(reqBody); i++ {
-		// 校验导入模型时模块是否是对象类
-		if reqBody[i].ModuleType != "" && reqBody[i].ModuleType != interfaces.MODULE_TYPE_OBJECT_TYPE {
-			httpErr := rest.NewHTTPError(ctx, http.StatusForbidden, oerrors.OntologyManager_InvalidParameter_ModuleType).
-				WithErrorDetails("Object type name is not 'object_type'")
-
-			o11y.AddHttpAttrs4HttpError(span, httpErr)
-			rest.ReplyError(c, httpErr)
-			return
-		}
-
-		// 0.校验请求体中多个模型 ID 是否重复
-		otID := reqBody[i].OTID
-		if _, ok := idMap[otID]; !ok || otID == "" {
-			idMap[otID] = nil
-		} else {
-			errDetails := fmt.Sprintf("ObjectType ID '%s' already exists in the request body", otID)
-			httpErr := rest.NewHTTPError(ctx, http.StatusBadRequest, oerrors.OntologyManager_ObjectType_Duplicated_IDInFile).
-				WithDescription(map[string]any{"ObjectTypeID": otID}).
-				WithErrorDetails(errDetails)
-
-			o11y.AddHttpAttrs4HttpError(span, httpErr)
-			rest.ReplyError(c, httpErr)
-			return
-		}
-
-		// 1. 校验 对象类必要创建参数的合法性, 非空、长度、是枚举值
-		err = ValidateObjectType(ctx, reqBody[i])
-		if err != nil {
-			httpErr := err.(*rest.HTTPError)
-
-			// 记录异常日志
-			o11y.Error(ctx, fmt.Sprintf("Validate object type[%s] failed: %s. %v", reqBody[i].OTName,
-				httpErr.BaseError.Description, httpErr.BaseError.ErrorDetails))
-
-			// 设置 trace 的错误信息的 attributes
-			span.SetAttributes(attr.Key("ot_name").String(reqBody[i].OTName))
-			o11y.AddHttpAttrs4HttpError(span, httpErr)
-			rest.ReplyError(c, httpErr)
-			return
-		}
-
-		// 3. 校验 请求体中对象类名称重复性
-		if _, ok := tmpNameMap[reqBody[i].OTName]; !ok {
-			tmpNameMap[reqBody[i].OTName] = nil
-		} else {
-			httpErr := rest.NewHTTPError(ctx, http.StatusBadRequest, oerrors.OntologyManager_ObjectType_Duplicated_Name)
-
-			// 记录异常日志
-			o11y.Error(ctx, fmt.Sprintf("Duplicated object type name: [%s]: %s. %v", fmt.Sprintf("%v", reqBody[i].OTName),
-				httpErr.BaseError.Description, httpErr.BaseError.ErrorDetails))
-
-			// 设置 trace 的错误信息的 attributes
-			span.SetAttributes(attr.Key("ot_name").String(reqBody[i].OTName))
-
-			o11y.AddHttpAttrs4HttpError(span, httpErr)
-			rest.ReplyError(c, httpErr)
-			return
-		}
-
-		reqBody[i].KNID = knID
-		objectTypes = append(objectTypes, reqBody[i])
+	err = ValidateObjectTypes(ctx, knID, objectTypes)
+	if err != nil {
+		httpErr := err.(*rest.HTTPError)
+		o11y.AddHttpAttrs4HttpError(span, httpErr)
+		rest.ReplyError(c, httpErr)
+		return
 	}
 
 	//调用创建

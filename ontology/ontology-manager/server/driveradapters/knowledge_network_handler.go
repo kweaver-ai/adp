@@ -126,6 +126,46 @@ func (r *restHandler) CreateKN(c *gin.Context, visitor rest.Visitor) {
 		return
 	}
 
+	// 若kn的对象类，关系类，行动类, 概念分组不为空，则应循环调用对象类、关系类、行动类, 概念分组的校验函数
+	if len(kn.ObjectTypes) > 0 {
+		err = ValidateObjectTypes(ctx, kn.KNID, kn.ObjectTypes)
+		if err != nil {
+			httpErr := err.(*rest.HTTPError)
+			o11y.AddHttpAttrs4HttpError(span, httpErr)
+			rest.ReplyError(c, httpErr)
+			return
+		}
+	}
+	if len(kn.RelationTypes) > 0 {
+		err = ValidateRelationTypes(ctx, kn.KNID, kn.RelationTypes)
+		if err != nil {
+			httpErr := err.(*rest.HTTPError)
+			o11y.AddHttpAttrs4HttpError(span, httpErr)
+			rest.ReplyError(c, httpErr)
+			return
+		}
+	}
+	if len(kn.ActionTypes) > 0 {
+		err = ValidateActionTypes(ctx, kn.KNID, kn.ActionTypes)
+		if err != nil {
+			httpErr := err.(*rest.HTTPError)
+			o11y.AddHttpAttrs4HttpError(span, httpErr)
+			rest.ReplyError(c, httpErr)
+			return
+		}
+	}
+	if len(kn.ConceptGroups) > 0 {
+		for _, conceptGroup := range kn.ConceptGroups {
+			err = ValidateConceptGroup(ctx, conceptGroup)
+			if err != nil {
+				httpErr := err.(*rest.HTTPError)
+				o11y.AddHttpAttrs4HttpError(span, httpErr)
+				rest.ReplyError(c, httpErr)
+				return
+			}
+		}
+	}
+
 	// 调用创建单个知识网络
 	knID, err := r.kns.CreateKN(ctx, &kn, mode)
 	if err != nil {
