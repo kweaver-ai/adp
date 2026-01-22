@@ -103,6 +103,8 @@ func validateDirectMappingRules(ctx context.Context, mappingRules any) (any, err
 			WithErrorDetails("直接关联的 mapping_rules 解码失败: " + err.Error())
 	}
 
+	// mappings 里的每对映射规则的起点属性名和终点属性名都不能重复出现
+	mappingsRuleMap := map[string]bool{}
 	for idx, item := range mappings {
 		// 校验起点属性非空
 		if item.SourceProp.Name == "" {
@@ -115,6 +117,13 @@ func validateDirectMappingRules(ctx context.Context, mappingRules any) (any, err
 			return nil, rest.NewHTTPError(ctx, http.StatusBadRequest, oerrors.OntologyManager_RelationType_InvalidParameter).
 				WithErrorDetails(fmt.Sprintf("直接关联的 mapping_rules[%d] 的终点属性名不能为空", idx))
 		}
+
+		// 映射规则重复出现，则报错
+		if mappingsRuleMap[item.SourceProp.Name+":"+item.TargetProp.Name] {
+			return nil, rest.NewHTTPError(ctx, http.StatusBadRequest, oerrors.OntologyManager_RelationType_InvalidParameter).
+				WithErrorDetails(fmt.Sprintf("直接关联的 mapping_rules[%d] 的起点和终点的映射规则不能重复出现", idx))
+		}
+		mappingsRuleMap[item.SourceProp.Name+":"+item.TargetProp.Name] = true
 	}
 
 	return mappings, nil
@@ -154,6 +163,9 @@ func validateInDirectMappingRules(ctx context.Context, mappingRules any) (any, e
 		return nil, rest.NewHTTPError(ctx, http.StatusBadRequest, oerrors.OntologyManager_RelationType_InvalidParameter).
 			WithErrorDetails("间接关联的 source_mapping_rules 不能为空")
 	}
+
+	// 起点到中间表的每对映射规则不能重复
+	sourceMappingsRuleMap := map[string]bool{}
 	for idx, item := range mapping.SourceMappingRules {
 		// 校验起点对象类的属性非空（属性存在于起点对象类中的校验在logics层）
 		if item.SourceProp.Name == "" {
@@ -165,6 +177,13 @@ func validateInDirectMappingRules(ctx context.Context, mappingRules any) (any, e
 			return nil, rest.NewHTTPError(ctx, http.StatusBadRequest, oerrors.OntologyManager_RelationType_InvalidParameter).
 				WithErrorDetails(fmt.Sprintf("间接关联的 source_mapping_rules[%d] 的桥梁字段名不能为空", idx))
 		}
+
+		// 映射规则重复出现，则报错
+		if sourceMappingsRuleMap[item.SourceProp.Name+":"+item.TargetProp.Name] {
+			return nil, rest.NewHTTPError(ctx, http.StatusBadRequest, oerrors.OntologyManager_RelationType_InvalidParameter).
+				WithErrorDetails(fmt.Sprintf("间接关联的 source_mapping_rules[%d] 的起点和终点的映射规则不能重复出现", idx))
+		}
+		sourceMappingsRuleMap[item.SourceProp.Name+":"+item.TargetProp.Name] = true
 	}
 
 	// 校验数据集与终点对象类的关联规则非空
@@ -172,6 +191,8 @@ func validateInDirectMappingRules(ctx context.Context, mappingRules any) (any, e
 		return nil, rest.NewHTTPError(ctx, http.StatusBadRequest, oerrors.OntologyManager_RelationType_InvalidParameter).
 			WithErrorDetails("间接关联的 target_mapping_rules 不能为空")
 	}
+	// 中间表到终点的每对映射规则不能重复
+	targetMappingsRuleMap := map[string]bool{}
 	for idx, item := range mapping.TargetMappingRules {
 		// 校验中间的桥梁字段非空（桥梁字段存在于数据视图中的校验在logics层）
 		if item.SourceProp.Name == "" {
@@ -183,6 +204,13 @@ func validateInDirectMappingRules(ctx context.Context, mappingRules any) (any, e
 			return nil, rest.NewHTTPError(ctx, http.StatusBadRequest, oerrors.OntologyManager_RelationType_InvalidParameter).
 				WithErrorDetails(fmt.Sprintf("间接关联的 target_mapping_rules[%d] 的终点对象类属性名不能为空", idx))
 		}
+
+		// 映射规则重复出现，则报错
+		if targetMappingsRuleMap[item.SourceProp.Name+":"+item.TargetProp.Name] {
+			return nil, rest.NewHTTPError(ctx, http.StatusBadRequest, oerrors.OntologyManager_RelationType_InvalidParameter).
+				WithErrorDetails(fmt.Sprintf("间接关联的 target_mapping_rules[%d] 的起点和终点的映射规则不能重复出现", idx))
+		}
+		targetMappingsRuleMap[item.SourceProp.Name+":"+item.TargetProp.Name] = true
 	}
 
 	return mapping, nil
