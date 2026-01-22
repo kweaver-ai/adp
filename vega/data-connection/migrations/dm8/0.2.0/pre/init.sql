@@ -54,7 +54,7 @@ CREATE TABLE IF NOT EXISTS "t_task_scan" (
   "task_params_info" text DEFAULT NULL COMMENT '任务执行参数信息',
   "task_process_info" text DEFAULT NULL COMMENT '任务执行进度信息',
   "task_result_info" text DEFAULT NULL COMMENT '任务执行结果信息',
-  "schedule_id" char(36 char) DEFAULT NULL COMMENT '定时任务配置id',
+  "schedule_id" varchar(36 char) DEFAULT NULL COMMENT '定时任务配置id',
   CLUSTER PRIMARY KEY ("id")
 );
 CREATE INDEX IF NOT EXISTS "t_task_scan_ds_id_IDX" on "t_task_scan" ("ds_id");
@@ -133,7 +133,7 @@ CREATE TABLE IF NOT EXISTS "t_task_scan_schedule" (
   "cron_expression" varchar(64 char) NOT NULL COMMENT 'cron表达式',
   "scan_strategy" varchar(64 char) DEFAULT NULL COMMENT '快速扫描策略',
   "task_status" tinyint DEFAULT 0 COMMENT '定时扫描任务:0 close 1 open',
-  "ds_id" char(36 char) DEFAULT NULL COMMENT '数据源唯一标识',
+  "ds_id" varchar(36 char) DEFAULT NULL COMMENT '数据源唯一标识',
   "create_time" datetime NOT NULL DEFAULT current_timestamp() COMMENT '创建时间',
   "create_user" varchar(64 char) DEFAULT NULL COMMENT '创建用户',
   "operation_time" datetime DEFAULT NULL,

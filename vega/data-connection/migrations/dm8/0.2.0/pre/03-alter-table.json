@@ -5,7 +5,7 @@
     "object_type": "COLUMN",
     "operation_type": "ADD",
     "object_name": "schedule_id",
-    "object_property": "char(36 char) DEFAULT NULL",
+    "object_property": "varchar(36 char) DEFAULT NULL",
     "object_comment": "定时任务配置id"
   },
   {
