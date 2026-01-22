@@ -3,10 +3,7 @@ package com.eisoo.dc.metadata.controller;
 import com.eisoo.dc.common.util.CommonUtil;
 import com.eisoo.dc.common.util.StringUtils;
 import com.eisoo.dc.common.vo.IntrospectInfo;
-import com.eisoo.dc.metadata.domain.vo.QueryStatementVO;
-import com.eisoo.dc.metadata.domain.vo.TableRetryVO;
-import com.eisoo.dc.metadata.domain.vo.TableStatusVO;
-import com.eisoo.dc.metadata.domain.vo.TaskScanVO;
+import com.eisoo.dc.metadata.domain.vo.*;
 import com.eisoo.dc.metadata.service.IFieldScanService;
 import com.eisoo.dc.metadata.service.ITableScanService;
 import com.eisoo.dc.metadata.service.ITaskScanService;
@@ -54,6 +51,26 @@ public class MetaDataController {
         return taskScanService.getScanTaskInfo(request, taskId);
     }
 
+    @ApiOperation(value = "查询定时扫描任务状态", notes = "查询定时扫描任务状态接口")
+    @GetMapping("/scan/schedule/{scheduleId}")
+    public ResponseEntity<?> getScheduleScanJob(HttpServletRequest request, @PathVariable("scheduleId") String scheduleId,
+                                                @RequestParam(value = "type", required = true) Integer type) {
+        return taskScanService.getScheduleScanJob(request, scheduleId, type);
+    }
+
+    @ApiOperation(value = "更新定时扫描任务", notes = "更新定时扫描任务接口")
+    @PutMapping("/scan/schedule")
+    public ResponseEntity<?> updateScheduleScanJob(HttpServletRequest request, @Validated @RequestBody ScheduleTaskScanVO scheduleTaskScanVO) {
+        return taskScanService.updateScheduleScanJob(request, scheduleTaskScanVO);
+    }
+
+    @ApiOperation(value = "查询定时扫描任务执行列表", notes = "查询定时扫描任务状态接口")
+    @GetMapping("/scan/schedule/task/{scheduleId}")
+    public ResponseEntity<?> getScheduleScanExecList(HttpServletRequest request, @PathVariable("scheduleId") String scheduleId,
+                                                     @RequestParam(value = "limit", required = false, defaultValue = "50") @Min(value = -1) int limit,
+                                                     @RequestParam(value = "offset", required = false, defaultValue = "0") @Min(value = 0) int offset) {
+        return taskScanService.getScheduleScanExecList(request, scheduleId, limit, offset);
+    }
 //    @ApiOperation(value = "查询table扫描状态", notes = "查询table扫描状态接口")
 //    @PostMapping("/scan/status")
 //    public ResponseEntity<?> getScanTaskStatus(HttpServletRequest request, @Validated @RequestBody TableStatusVO req) {
@@ -88,6 +105,7 @@ public class MetaDataController {
     @GetMapping("/scan")
     public ResponseEntity<?> getScanTaskList(HttpServletRequest request,
                                              @RequestParam(value = "ds_id", required = false, defaultValue = "") String dsId,
+                                             @RequestParam(value = "type", required = false, defaultValue = "") List<Integer> type,
                                              @RequestParam(value = "status", required = false, defaultValue = "")
                                              @Pattern(regexp = "^$|wait|running|success|fail", flags = Pattern.Flag.CASE_INSENSITIVE, message = "可选参数值：''、wait、running、success、fail") String status,
                                              @RequestParam(value = "limit", required = false, defaultValue = "50") @Min(value = -1) int limit,
@@ -99,7 +117,7 @@ public class MetaDataController {
                                              @Pattern(regexp = "start_time|name", message = "可选参数值：start_time、name") String sort) {
         IntrospectInfo introspectInfo = CommonUtil.getOrCreateIntrospectInfo(request);
         String userId = StringUtils.defaultString(introspectInfo.getSub());
-        return taskScanService.getScanTaskList(userId, dsId, status, keyword, limit, offset, sort, direction);
+        return taskScanService.getScanTaskList(userId,type, dsId, status, keyword, limit, offset, sort, direction);
     }
 
     @ApiOperation(value = "查询指定数据源下的所有表", notes = "查询指定数据源下的所有表接口")
@@ -137,8 +155,15 @@ public class MetaDataController {
         String userId = StringUtils.defaultString(introspectInfo.getSub());
         return fieldScanService.getFieldListByTableId(userId, tableId, keyword, limit, offset, sort, direction);
     }
+
     @PostMapping("/scan/view")
     public ResponseEntity<?> view(HttpServletRequest request, @Validated @RequestBody QueryStatementVO req) {
         return taskScanService.queryDslStatement(request, req);
     }
+
+    @PutMapping("/scan/schedule/status")
+    public ResponseEntity<?> changeScheduleJobStatus(HttpServletRequest request, @Validated @RequestBody ScheduleJobStatusVo req) {
+        return taskScanService.changeScanStatus(request, req);
+    }
+
 }

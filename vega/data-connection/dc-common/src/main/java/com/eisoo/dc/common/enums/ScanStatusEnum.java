@@ -9,7 +9,8 @@ public enum ScanStatusEnum {
     WAIT(0, "wait"),
     RUNNING(1, "running"),
     SUCCESS(2, "success"),
-    FAIL(3, "fail");
+    FAIL(3, "fail"),
+    SKIP(4, "skip");
 
     private final int code;
     private final String desc;

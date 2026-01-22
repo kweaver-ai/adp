@@ -12,39 +12,42 @@ import com.eisoo.dc.common.auditLog.enums.AgentType;
 import com.eisoo.dc.common.auditLog.enums.ObjectType;
 import com.eisoo.dc.common.auditLog.enums.OperationType;
 import com.eisoo.dc.common.auditLog.enums.OperatorType;
-import com.eisoo.dc.common.constant.Constants;
-import com.eisoo.dc.common.constant.Description;
-import com.eisoo.dc.common.constant.Detail;
-import com.eisoo.dc.common.constant.Message;
+import com.eisoo.dc.common.constant.*;
 import com.eisoo.dc.common.driven.Authorization;
 import com.eisoo.dc.common.driven.Calculate;
+import com.eisoo.dc.common.driven.UserManagement;
 import com.eisoo.dc.common.driven.service.ServiceEndpoints;
+import com.eisoo.dc.common.enums.ConnectorEnums;
 import com.eisoo.dc.common.enums.ScanStatusEnum;
 import com.eisoo.dc.common.exception.enums.ErrorCodeEnum;
 import com.eisoo.dc.common.exception.vo.AiShuException;
 import com.eisoo.dc.common.metadata.entity.*;
 import com.eisoo.dc.common.metadata.mapper.*;
-import com.eisoo.dc.common.util.RSAUtil;
 import com.eisoo.dc.common.msq.ProtonMQClient;
 import com.eisoo.dc.common.msq.Topic;
-import com.eisoo.dc.common.util.http.ExcelHttpUtils;
 import com.eisoo.dc.common.util.CommonUtil;
+import com.eisoo.dc.common.util.LockUtil;
+import com.eisoo.dc.common.util.RSAUtil;
 import com.eisoo.dc.common.util.StringUtils;
+import com.eisoo.dc.common.util.http.ExcelHttpUtils;
 import com.eisoo.dc.common.util.http.TingYunHttpUtils;
-import com.eisoo.dc.common.driven.UserManagement;
 import com.eisoo.dc.common.vo.CatalogDto;
 import com.eisoo.dc.common.vo.IntrospectInfo;
 import com.eisoo.dc.common.vo.ResourceAuthVo;
-import com.eisoo.dc.common.constant.CatalogConstant;
-import com.eisoo.dc.common.constant.ResourceAuthConstant;
 import com.eisoo.dc.datasource.domain.vo.*;
-import com.eisoo.dc.common.enums.ConnectorEnums;
 import com.eisoo.dc.datasource.enums.DsBuiltInStatus;
 import com.eisoo.dc.datasource.enums.MetadataObtainLevel;
 import com.eisoo.dc.datasource.service.CatalogService;
 import org.apache.commons.lang3.RandomStringUtils;
+import org.apache.hc.client5.http.auth.AuthScope;
+import org.apache.hc.client5.http.auth.UsernamePasswordCredentials;
+import org.apache.hc.client5.http.impl.auth.BasicCredentialsProvider;
+import org.apache.hc.core5.http.HttpHost;
 import org.opensearch.client.RestClient;
 import org.opensearch.client.json.jackson.JacksonJsonpMapper;
+import org.opensearch.client.opensearch.OpenSearchClient;
+import org.opensearch.client.opensearch.cluster.HealthResponse;
+import org.opensearch.client.transport.OpenSearchTransport;
 import org.opensearch.client.transport.rest_client.RestClientTransport;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -53,13 +56,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.apache.hc.client5.http.auth.AuthScope;
-import org.apache.hc.client5.http.auth.UsernamePasswordCredentials;
-import org.apache.hc.client5.http.impl.auth.BasicCredentialsProvider;
-import org.apache.hc.core5.http.HttpHost;
-import org.opensearch.client.opensearch.OpenSearchClient;
-import org.opensearch.client.opensearch.cluster.HealthResponse;
-import org.opensearch.client.transport.OpenSearchTransport;
 
 import javax.servlet.http.HttpServletRequest;
 import java.time.Instant;
@@ -67,6 +63,8 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -93,6 +91,9 @@ public class CatalogServiceImpl implements CatalogService {
     TaskScanMapper taskScanMapper;
     @Autowired(required = false)
     TaskScanTableMapper taskScanTableMapper;
+    @Autowired(required = false)
+    private TaskScanScheduleMapper taskScanScheduleMapper;
+
     @Autowired(required = false)
     ProtonMQClient mqClient;
 
@@ -883,7 +884,7 @@ public class CatalogServiceImpl implements CatalogService {
         payload.set("name", params.getName());
         payload.set("type", params.getType()); // 需要实现getTypeCode方法将类型转换为数字
         payload.set("database_name", binData.getDatabaseName());
-        payload.set("catalog_name",dataSourceEntity.getFCatalog());
+        payload.set("catalog_name", dataSourceEntity.getFCatalog());
         payload.set("schema", binData.getSchema());
         payload.set("connect_status", "Connecting");
         payload.set("update_time", System.currentTimeMillis() * 1000000 + RandomStringUtils.randomNumeric(9)); // 示例时间戳
@@ -1277,6 +1278,38 @@ public class CatalogServiceImpl implements CatalogService {
         log.info("删除t_task_scan成功:dsId:{}", dsId);
         // 删除t_task_scan_table
         taskScanTableMapper.delByDsId(dsId);
+        // 删除t_task_scan_schedule
+        TaskScanScheduleEntity taskScanScheduleEntity = taskScanScheduleMapper.selectByDsId(dsId);
+        if (taskScanScheduleEntity != null) {
+            String jobId = taskScanScheduleEntity.getId();
+            boolean getLock = LockUtil.SCHEDULE_SCAN_TASK_LOCK.tryLock(jobId,
+                    0,
+                    TimeUnit.SECONDS,
+                    true);
+            if (getLock) {
+                try {
+                    ScheduledFuture<?> scheduledTask = CommonUtil.SCHEDULE_JOB_MAP.get(jobId);
+                    if (scheduledTask != null) {
+                        // 取消任务调度
+                        scheduledTask.cancel(true);
+                        // 从映射表移除
+                        CommonUtil.SCHEDULE_JOB_MAP.remove(jobId);
+                        log.info("定时任务ID：{}，删除成功", jobId);
+                    } else {
+                        log.warn("定时任务ID：{}，不存在，删除失败", jobId);
+                    }
+                } catch (Exception e) {
+                    log.error("定时任务ID：{}，删除失败", jobId, e);
+                    throw new RuntimeException(e);
+                } finally {
+                    if (LockUtil.SCHEDULE_SCAN_TASK_LOCK.isHoldingLock(jobId)) {
+                        LockUtil.SCHEDULE_SCAN_TASK_LOCK.unlock(jobId);
+                    }
+                }
+            }
+            taskScanScheduleMapper.deleteById(jobId);
+            log.info("删除t_task_scan_schedule成功:jobId:{}", jobId);
+        }
         log.info("删除t_task_scan_table成功:dsId:{}", dsId);
         fieldScanMapper.deleteByDsId(dsId);
         log.info("删除t_table_field_scan成功:dsId:{}", dsId);
@@ -1322,16 +1355,16 @@ public class CatalogServiceImpl implements CatalogService {
         //检查excel存储介质和存储地址
 
         if (type.equals(CatalogConstant.EXCEL_CATALOG)) {
-            if(StringUtils.isBlank(binData.getStorageProtocol()) || StringUtils.isBlank(binData.getStorageBase())) {
-                throw new AiShuException(ErrorCodeEnum.BadRequest,Detail.EXCEL_BASE_AND_PROTOCOL_NOT_EMPLOY);
-            }else if (!ArrayUtil.contains(EXCEL_PROTOCOLS, binData.getStorageProtocol())) {
+            if (StringUtils.isBlank(binData.getStorageProtocol()) || StringUtils.isBlank(binData.getStorageBase())) {
+                throw new AiShuException(ErrorCodeEnum.BadRequest, Detail.EXCEL_BASE_AND_PROTOCOL_NOT_EMPLOY);
+            } else if (!ArrayUtil.contains(EXCEL_PROTOCOLS, binData.getStorageProtocol())) {
                 throw new AiShuException(ErrorCodeEnum.BadRequest, Detail.EXCEL_PROTOCOL_ILLEGAL);
             }
         }
 
         //检查anyshare存储地址
         if (type.equals(CatalogConstant.ANYSHARE7_CATALOG) && StringUtils.isBlank(binData.getStorageBase())) {
-            throw new AiShuException(ErrorCodeEnum.BadRequest,Detail.BASE_NOT_EMPLOY);
+            throw new AiShuException(ErrorCodeEnum.BadRequest, Detail.BASE_NOT_EMPLOY);
         }
 
         //检查schema
@@ -1342,32 +1375,32 @@ public class CatalogServiceImpl implements CatalogService {
                 || StringUtils.equals(type, CatalogConstant.OPENGAUSS_CATALOG)
                 || StringUtils.equals(type, CatalogConstant.GAUSSDB_CATALOG)
                 || StringUtils.equals(type, CatalogConstant.KINGBASE_CATALOG))
-                && StringUtils.isBlank(binData.getSchema())){
-            throw new AiShuException(ErrorCodeEnum.BadRequest,Detail.SCHEMA_NOT_NULL);
+                && StringUtils.isBlank(binData.getSchema())) {
+            throw new AiShuException(ErrorCodeEnum.BadRequest, Detail.SCHEMA_NOT_NULL);
         }
 
         //检查认证信息
-        if (StringUtils.isBlank(binData.getAccount()) || StringUtils.isBlank(binData.getPassword())){
+        if (StringUtils.isBlank(binData.getAccount()) || StringUtils.isBlank(binData.getPassword())) {
             if (!type.equals(CatalogConstant.INCEPTOR_JDBC_CATALOG)
                     && !(StringUtils.equals(type, CatalogConstant.EXCEL_CATALOG) && binData.getStorageProtocol().equals(CatalogConstant.STORAGE_PROTOCOL_DOCLIB))) {
-                throw new AiShuException(ErrorCodeEnum.BadRequest,Detail.USERNAME_OR_PASSWORD_NOT_EMPLOY);
+                throw new AiShuException(ErrorCodeEnum.BadRequest, Detail.USERNAME_OR_PASSWORD_NOT_EMPLOY);
             }
             if (type.equals(CatalogConstant.INCEPTOR_JDBC_CATALOG) && StringUtils.isBlank(binData.getToken())) {
-                throw new AiShuException(ErrorCodeEnum.BadRequest,Detail.DATASOURCE_AUTH_NOT_EMPLOY);
+                throw new AiShuException(ErrorCodeEnum.BadRequest, Detail.DATASOURCE_AUTH_NOT_EMPLOY);
             }
         }
 
         //检查连接方式
         String[] connectorProtocol = ConnectorEnums.fromConnector(type).getConnectProtocol().split(",");
-        if (!StringUtils.inStringIgnoreCase(binData.getConnectProtocol(),connectorProtocol)){
-            throw new AiShuException(ErrorCodeEnum.BadRequest,Detail.CONNECTOR_PROTOCOL_UNSUPPORTED);
-        }else if (StringUtils.equals(type, CatalogConstant.EXCEL_CATALOG)){
+        if (!StringUtils.inStringIgnoreCase(binData.getConnectProtocol(), connectorProtocol)) {
+            throw new AiShuException(ErrorCodeEnum.BadRequest, Detail.CONNECTOR_PROTOCOL_UNSUPPORTED);
+        } else if (StringUtils.equals(type, CatalogConstant.EXCEL_CATALOG)) {
             if (StringUtils.equals(binData.getStorageProtocol(), CatalogConstant.STORAGE_PROTOCOL_ANYSHARE)
-                    && StringUtils.equals(binData.getConnectProtocol(), "http")){
-                throw new AiShuException(ErrorCodeEnum.BadRequest,Detail.CONNECTOR_PROTOCOL_UNSUPPORTED);
-            }else if (StringUtils.equals(binData.getStorageProtocol(), CatalogConstant.STORAGE_PROTOCOL_DOCLIB)
-                    && StringUtils.equals(binData.getConnectProtocol(), "https")){
-                throw new AiShuException(ErrorCodeEnum.BadRequest,Detail.CONNECTOR_PROTOCOL_UNSUPPORTED);
+                    && StringUtils.equals(binData.getConnectProtocol(), "http")) {
+                throw new AiShuException(ErrorCodeEnum.BadRequest, Detail.CONNECTOR_PROTOCOL_UNSUPPORTED);
+            } else if (StringUtils.equals(binData.getStorageProtocol(), CatalogConstant.STORAGE_PROTOCOL_DOCLIB)
+                    && StringUtils.equals(binData.getConnectProtocol(), "https")) {
+                throw new AiShuException(ErrorCodeEnum.BadRequest, Detail.CONNECTOR_PROTOCOL_UNSUPPORTED);
             }
         }
 
@@ -1386,27 +1419,27 @@ public class CatalogServiceImpl implements CatalogService {
 
         //检查schema
         if (StringUtils.equals(type, CatalogConstant.EXCEL_CATALOG)
-                || StringUtils.equals(type, CatalogConstant.OPENSEARCH_CATALOG)){
+                || StringUtils.equals(type, CatalogConstant.OPENSEARCH_CATALOG)) {
             binData.setSchema(CatalogConstant.VIEW_DEFAULT_SCHEMA);
-        }else if (!StringUtils.equals(type, CatalogConstant.POSTGRESQL_CATALOG)
+        } else if (!StringUtils.equals(type, CatalogConstant.POSTGRESQL_CATALOG)
                 && !StringUtils.equals(type, CatalogConstant.ORACLE_CATALOG)
                 && !StringUtils.equals(type, CatalogConstant.SQLSERVER_CATALOG)
                 && !StringUtils.equals(type, CatalogConstant.HOLOGRES_CATALOG)
                 && !StringUtils.equals(type, CatalogConstant.OPENGAUSS_CATALOG)
                 && !StringUtils.equals(type, CatalogConstant.GAUSSDB_CATALOG)
-                && !StringUtils.equals(type, CatalogConstant.KINGBASE_CATALOG)){
+                && !StringUtils.equals(type, CatalogConstant.KINGBASE_CATALOG)) {
             binData.setSchema(null);
         }
 
         //检查认证信息
-        if (StringUtils.equals(type, CatalogConstant.INCEPTOR_JDBC_CATALOG) && StringUtils.isNotBlank(binData.getToken())){
+        if (StringUtils.equals(type, CatalogConstant.INCEPTOR_JDBC_CATALOG) && StringUtils.isNotBlank(binData.getToken())) {
             binData.setAccount(null);
             binData.setPassword(null);
-        }else if (type.equals(CatalogConstant.EXCEL_CATALOG) && binData.getStorageProtocol().equals(CatalogConstant.STORAGE_PROTOCOL_DOCLIB)){
+        } else if (type.equals(CatalogConstant.EXCEL_CATALOG) && binData.getStorageProtocol().equals(CatalogConstant.STORAGE_PROTOCOL_DOCLIB)) {
             binData.setAccount(null);
             binData.setPassword(null);
             binData.setToken(null);
-        }else {
+        } else {
             binData.setToken(null);
         }
 

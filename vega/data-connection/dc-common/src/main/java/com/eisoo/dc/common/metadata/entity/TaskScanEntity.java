@@ -1,6 +1,5 @@
 package com.eisoo.dc.common.metadata.entity;
 
-import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
@@ -8,7 +7,6 @@ import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.io.Serializable;
@@ -89,6 +87,11 @@ public class TaskScanEntity implements Serializable {
     @TableField(value = "task_result_info")
     private String taskResultInfo;
 
+    /**
+     * 定时任务id
+     */
+    @TableField(value = "schedule_id")
+    private String scheduleId;
 
     @Data
     @AllArgsConstructor
@@ -96,8 +99,10 @@ public class TaskScanEntity implements Serializable {
         @JsonProperty(required = true, value = "cron_expression")
         private String cronExpression;
         @JsonProperty(required = true, value = "tables_count")
-        private Integer tablesCount;
+        private Integer tablesCount = 0;
         @JsonProperty(required = true, value = "tables")
         private List<String> tables;
+        @JsonProperty(required = true, value = "scan_strategy")
+        private List<String> scanStrategy;
     }
 }

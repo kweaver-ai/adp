@@ -2,6 +2,7 @@ package com.eisoo.dc.metadata.service.impl;
 
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.eisoo.dc.common.enums.ConnectorEnums;
+import com.eisoo.dc.common.enums.OperationTyeEnum;
 import com.eisoo.dc.common.enums.ScanStatusEnum;
 import com.eisoo.dc.common.metadata.entity.DataSourceEntity;
 import com.eisoo.dc.common.metadata.entity.TableScanEntity;
@@ -65,7 +66,8 @@ public class TaskScanTableServiceImpl extends ServiceImpl<TaskScanTableMapper, T
                     userId,
                     null,
                     null,
-                    null
+                    null,
+                    OperationTyeEnum.INSERT.getCode()
             );
             data.add(taskScanTableEntity);
         }

@@ -31,4 +31,8 @@ public class DataSourceConfig {
      * 密码
      */
     private String password;
+    /**
+     * token
+     */
+    private String token;
 }

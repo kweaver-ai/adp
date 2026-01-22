@@ -20,16 +20,26 @@ public class ScanTaskPoolConfig {
     @Value("${scan.numThread}")
     private Integer numThread;
 
-    @Bean(name = "dsScanExecutor")
-    public ListeningExecutorService dsScanExecutorPool() {
-        ListeningExecutorService executorColumnCollectService = MoreExecutors.listeningDecorator(new ThreadPoolExecutor(
+    @Bean(name = "dsScheduleScanExecutor")
+    public ListeningExecutorService dsScheduleScanExecutorPool() {
+        return MoreExecutors.listeningDecorator(new ThreadPoolExecutor(
                 20, // 核心线程数
                 20, // 最大线程数
                 0L,
                 TimeUnit.MILLISECONDS, // 空闲线程等待新任务的最长时间
                 new LinkedBlockingQueue<>() // 使用无界队列
         ));
-        return executorColumnCollectService;
+    }
+
+    @Bean(name = "dsScanExecutor")
+    public ListeningExecutorService dsScanExecutorPool() {
+        return MoreExecutors.listeningDecorator(new ThreadPoolExecutor(
+                20, // 核心线程数
+                20, // 最大线程数
+                0L,
+                TimeUnit.MILLISECONDS, // 空闲线程等待新任务的最长时间
+                new LinkedBlockingQueue<>() // 使用无界队列
+        ));
     }
 
     @Bean(name = "tableScanExecutor")
