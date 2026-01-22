@@ -18,8 +18,24 @@ func Test_ValidateRelationType(t *testing.T) {
 		Convey("Success with valid relation type\n", func() {
 			rt := &interfaces.RelationType{
 				RelationTypeWithKeyField: interfaces.RelationTypeWithKeyField{
-					RTID:   "rt1",
-					RTName: "relation1",
+					RTID:               "rt1",
+					RTName:             "relation1",
+					SourceObjectTypeID: "ot1",
+					TargetObjectTypeID: "ot2",
+					Type:               interfaces.RELATION_TYPE_DIRECT,
+					MappingRules: []interfaces.Mapping{
+						{
+							SourceProp: interfaces.SimpleProperty{Name: "prop1"},
+							TargetProp: interfaces.SimpleProperty{Name: "prop2"},
+						},
+					},
+				},
+				CommonInfo: interfaces.CommonInfo{
+					Tags:    []string{"tag1", "tag2", "tag3"},
+					Comment: "test comment",
+					Icon:    "icon1",
+					Color:   "color1",
+					Detail:  "detail1",
 				},
 			}
 			err := ValidateRelationType(ctx, rt)
@@ -83,9 +99,11 @@ func Test_ValidateRelationType(t *testing.T) {
 		Convey("Success with direct mapping rules\n", func() {
 			rt := &interfaces.RelationType{
 				RelationTypeWithKeyField: interfaces.RelationTypeWithKeyField{
-					RTID:   "rt1",
-					RTName: "relation1",
-					Type:   interfaces.RELATION_TYPE_DIRECT,
+					RTID:               "rt1",
+					RTName:             "relation1",
+					SourceObjectTypeID: "ot1",
+					TargetObjectTypeID: "ot2",
+					Type:               interfaces.RELATION_TYPE_DIRECT,
 					MappingRules: []map[string]any{
 						{
 							"source_property": map[string]string{"name": "prop1"},
@@ -150,9 +168,11 @@ func Test_ValidateRelationType(t *testing.T) {
 		Convey("Success with data_view mapping rules\n", func() {
 			rt := &interfaces.RelationType{
 				RelationTypeWithKeyField: interfaces.RelationTypeWithKeyField{
-					RTID:   "rt1",
-					RTName: "relation1",
-					Type:   interfaces.RELATION_TYPE_DATA_VIEW,
+					RTID:               "rt1",
+					RTName:             "relation1",
+					Type:               interfaces.RELATION_TYPE_DATA_VIEW,
+					SourceObjectTypeID: "ot1",
+					TargetObjectTypeID: "ot2",
 					MappingRules: map[string]any{
 						"backing_data_source": map[string]any{
 							"type": interfaces.RELATION_TYPE_DATA_VIEW,

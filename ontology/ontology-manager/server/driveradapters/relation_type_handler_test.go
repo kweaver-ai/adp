@@ -58,8 +58,24 @@ func Test_RelationTypeRestHandler_CreateRelationTypes(t *testing.T) {
 
 		relationType := &interfaces.RelationType{
 			RelationTypeWithKeyField: interfaces.RelationTypeWithKeyField{
-				RTID:   "rt1",
-				RTName: "relation1",
+				RTID:               "rt1",
+				RTName:             "relation1",
+				SourceObjectTypeID: "ot1",
+				TargetObjectTypeID: "ot2",
+				Type:               interfaces.RELATION_TYPE_DIRECT,
+				MappingRules: []interfaces.Mapping{
+					{
+						SourceProp: interfaces.SimpleProperty{Name: "prop1"},
+						TargetProp: interfaces.SimpleProperty{Name: "prop2"},
+					},
+				},
+			},
+			CommonInfo: interfaces.CommonInfo{
+				Tags:    []string{"tag1", "tag2", "tag3"},
+				Comment: "test comment",
+				Icon:    "icon1",
+				Color:   "color1",
+				Detail:  "detail1",
 			},
 		}
 		requestData := struct {
@@ -204,8 +220,24 @@ func Test_RelationTypeRestHandler_UpdateRelationType(t *testing.T) {
 
 		relationType := &interfaces.RelationType{
 			RelationTypeWithKeyField: interfaces.RelationTypeWithKeyField{
-				RTID:   rtID,
-				RTName: "relation1",
+				RTID:               rtID,
+				RTName:             "relation1",
+				SourceObjectTypeID: "ot1",
+				TargetObjectTypeID: "ot2",
+				Type:               interfaces.RELATION_TYPE_DIRECT,
+				MappingRules: []interfaces.Mapping{
+					{
+						SourceProp: interfaces.SimpleProperty{Name: "prop1"},
+						TargetProp: interfaces.SimpleProperty{Name: "prop2"},
+					},
+				},
+			},
+			CommonInfo: interfaces.CommonInfo{
+				Tags:    []string{"tag1", "tag2", "tag3"},
+				Comment: "test comment",
+				Icon:    "icon1",
+				Color:   "color1",
+				Detail:  "detail1",
 			},
 		}
 
@@ -695,8 +727,24 @@ func Test_RelationTypeRestHandler_HandleRelationTypeGetOverride(t *testing.T) {
 
 		relationType := &interfaces.RelationType{
 			RelationTypeWithKeyField: interfaces.RelationTypeWithKeyField{
-				RTID:   "rt1",
-				RTName: "relation1",
+				RTID:               "rt1",
+				RTName:             "relation1",
+				SourceObjectTypeID: "ot1",
+				TargetObjectTypeID: "ot2",
+				Type:               interfaces.RELATION_TYPE_DIRECT,
+				MappingRules: []interfaces.Mapping{
+					{
+						SourceProp: interfaces.SimpleProperty{Name: "prop1"},
+						TargetProp: interfaces.SimpleProperty{Name: "prop2"},
+					},
+				},
+			},
+			CommonInfo: interfaces.CommonInfo{
+				Tags:    []string{"tag1", "tag2", "tag3"},
+				Comment: "test comment",
+				Icon:    "icon1",
+				Color:   "color1",
+				Detail:  "detail1",
 			},
 		}
 		requestData := struct {

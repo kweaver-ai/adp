@@ -64,18 +64,21 @@ func ValidateRelationType(ctx context.Context, relationType *interfaces.Relation
 	}
 
 	// 校验mapping_rules字段
-	if relationType.MappingRules != nil {
-		// 如果mapping_rules不为空，type必须非空
-		if relationType.Type == "" {
-			return rest.NewHTTPError(ctx, http.StatusBadRequest, oerrors.OntologyManager_RelationType_InvalidParameter).
-				WithErrorDetails("当 mapping_rules 不为空时，type 字段不能为空")
-		}
-		rules, err := validateMappingRules(ctx, relationType.Type, relationType.MappingRules)
-		if err != nil {
-			return err
-		}
-		relationType.MappingRules = rules
+	if relationType.MappingRules == nil {
+		return rest.NewHTTPError(ctx, http.StatusBadRequest, oerrors.OntologyManager_RelationType_InvalidParameter).
+			WithErrorDetails("关系类的映射规则 mapping_rules 不能为空")
 	}
+
+	// 如果mapping_rules不为空，type必须非空
+	if relationType.Type == "" {
+		return rest.NewHTTPError(ctx, http.StatusBadRequest, oerrors.OntologyManager_RelationType_InvalidParameter).
+			WithErrorDetails("关系类的关系类型 type 字段不能为空")
+	}
+	rules, err := validateMappingRules(ctx, relationType.Type, relationType.MappingRules)
+	if err != nil {
+		return err
+	}
+	relationType.MappingRules = rules
 
 	return nil
 }
@@ -90,7 +93,7 @@ func validateMappingRules(ctx context.Context, relationType string, mappingRules
 	default:
 		// 如果type不是direct或data_view，返回错误
 		return nil, rest.NewHTTPError(ctx, http.StatusBadRequest, oerrors.OntologyManager_RelationType_InvalidParameter).
-			WithErrorDetails(fmt.Sprintf("mapping_rules 的类型 %s 不支持", relationType))
+			WithErrorDetails(fmt.Sprintf("关系类的关系类型 %s 不支持", relationType))
 	}
 }
 
@@ -101,6 +104,12 @@ func validateDirectMappingRules(ctx context.Context, mappingRules any) (any, err
 	if err := mapstructure.Decode(mappingRules, &mappings); err != nil {
 		return nil, rest.NewHTTPError(ctx, http.StatusBadRequest, oerrors.OntologyManager_RelationType_InvalidParameter).
 			WithErrorDetails("直接关联的 mapping_rules 解码失败: " + err.Error())
+	}
+
+	// 数组非空
+	if len(mappings) == 0 {
+		return nil, rest.NewHTTPError(ctx, http.StatusBadRequest, oerrors.OntologyManager_RelationType_InvalidParameter).
+			WithErrorDetails("直接关联的 mapping_rules 不能为空")
 	}
 
 	// mappings 里的每对映射规则的起点属性名和终点属性名都不能重复出现

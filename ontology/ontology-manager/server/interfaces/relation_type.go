@@ -17,8 +17,9 @@ type RelationTypeWithKeyField struct {
 	RTName             string `json:"name" mapstructure:"name"`
 	SourceObjectTypeID string `json:"source_object_type_id" mapstructure:"source_object_type_id"`
 	TargetObjectTypeID string `json:"target_object_type_id" mapstructure:"target_object_type_id"`
-	Type               string `json:"type" mapstructure:"type"`
-	MappingRules       any    `json:"mapping_rules" mapstructure:"mapping_rules"` // 根据type来决定是不同的映射方式，direct对应的结构体是[]Mapping
+
+	Type         string `json:"type" mapstructure:"type"`
+	MappingRules any    `json:"mapping_rules" mapstructure:"mapping_rules"` // 根据type来决定是不同的映射方式，direct对应的结构体是[]Mapping
 }
 
 // knowledge_network
