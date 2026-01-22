@@ -173,7 +173,8 @@
         "BusinessDomainResourceConflict": "该资源已关联到业务域，无需重复关联",
         "SandboxRuntimeExecuteCodeFailed": "沙箱函数运行报错，请检查代码是否正确",
         "DebugParamsInvalid": "调试传参错误，必须为JSON格式",
-        "FunctionAIGenerateFailed": "AI生成失败，请检查默认模型是否正常"
+        "FunctionAIGenerateFailed": "AI生成失败，请检查默认模型是否正常",
+        "FunctionAIGenerateModelFailed": "模型生成内容异常，请检查默认模型是否可用，或前往设置配置有效的模型"
     },
     "sol": {
         "Common": "请联系管理员",

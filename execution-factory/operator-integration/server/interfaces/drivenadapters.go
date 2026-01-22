@@ -620,8 +620,8 @@ type ChatCompletionChoice struct {
 
 // ChatCompletionMessage 消息结构体
 type ChatCompletionMessage struct {
-	Role    string `json:"role"`    // 角色
-	Content string `json:"content"` // 内容
+	Role    string `json:"role,omitempty"`    // 角色
+	Content string `json:"content,omitempty"` // 内容
 }
 
 // ChatCompletionUsage 消耗统计结构体

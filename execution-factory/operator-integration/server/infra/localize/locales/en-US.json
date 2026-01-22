@@ -173,7 +173,8 @@
         "BusinessDomainResourceConflict": "The resource is already associated with a business domain, no need to associate again",
         "SandboxRuntimeExecuteCodeFailed": "Sandbox runtime execute code failed, please check if the code is correct",
         "DebugParamsInvalid": "Debug parameters are invalid, please check if they are in JSON format",
-        "FunctionAIGenerateFailed": "AI generate failed, please check if the default model is normal"
+        "FunctionAIGenerateFailed": "AI generate failed, please check if the default model is normal",
+        "FunctionAIGenerateModelFailed": "Model generate content failed, please check if the default model is available, or go to settings to configure a valid model"
     },
     "sol": {
         "Common": "Contact administrator",

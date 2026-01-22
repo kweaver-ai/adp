@@ -99,18 +99,37 @@ func (h *aiGenerationHandler) FunctionAIGeneration(c *gin.Context) {
 			if !ok {
 				return false // 消息通道已关闭，结束流
 			}
-			// 直接转发上游SSE行，不进行任何格式转换
+			// 检查是否为结束标记
+			if isEndMarker(msg) {
+				// 发送SSE结束标记
+				fmt.Fprintf(w, "%s\n\n", msg)
+				flushIfSupported(w)
+				return false
+			}
+
+			// 转发前对data内数据检查，如果和预期格式不符合直接报错结束流
 			if strings.HasPrefix(msg, "data:") {
-				// 检查是否为结束标记
-				if isEndMarker(msg) {
-					// 发送SSE结束标记
-					fmt.Fprintf(w, "%s\n\n", msg)
-					flushIfSupported(w)
+				content := strings.TrimPrefix(msg, "data:") // 移除"data:"前缀
+				// 结果预期格式
+				result := &interfaces.ChatCompletionResp{}
+				err = utils.StringToObject(content, result)
+				if err != nil {
+					// 提示模型异常，返回错误
+					h.Logger.WithContext(c.Request.Context()).Error(fmt.Sprintf("invalid SSE data format: %s, err: %s", content, err.Error()))
+					err = errors.NewHTTPError(c.Request.Context(), http.StatusBadRequest, errors.ErrExtFunctionAIGenerateModelFailed, fmt.Sprintf("invalid SSE data format: %s, err: %s", content, err.Error()))
+					c.SSEvent("error", utils.ObjectToJSON(err))
+					flushIfSupported(w) // 确保错误消息立即发送
+					return false
+				}
+				// 检查是否有choices
+				if len(result.Choices) == 0 {
+					h.Logger.WithContext(c.Request.Context()).Error(fmt.Sprintf("invalid SSE data format: %s", content))
+					err = errors.NewHTTPError(c.Request.Context(), http.StatusBadRequest, errors.ErrExtFunctionAIGenerateModelFailed, fmt.Sprintf("invalid SSE data format: %s", content))
+					c.SSEvent("error", utils.ObjectToJSON(err))
+					flushIfSupported(w) // 确保错误消息立即发送
 					return false
 				}
 			}
-
-			// 直接转发上游SSE行
 			fmt.Fprintf(w, "%s\n\n", msg)
 			flushIfSupported(w)
 			return true
