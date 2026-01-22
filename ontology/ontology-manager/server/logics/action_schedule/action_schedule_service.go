@@ -30,7 +30,7 @@ type actionScheduleService struct {
 	appSetting *common.AppSetting
 	asa        interfaces.ActionScheduleAccess
 	ata        interfaces.ActionTypeAccess
-	db         interface{ Begin() (interface{}, error) }
+	//db         interface{ Begin() (interface{}, error) }
 
 	cronParser cron.Parser
 }

@@ -60,9 +60,11 @@ func (r *restHandler) ExecuteAction(c *gin.Context, visitor rest.Visitor) {
 	// Get path parameters
 	knID := c.Param("kn_id")
 	atID := c.Param("at_id")
+	branch := c.DefaultQuery("branch", interfaces.MAIN_BRANCH)
 	span.SetAttributes(
 		attr.Key("kn_id").String(knID),
 		attr.Key("at_id").String(atID),
+		attr.Key("branch").String(branch),
 	)
 
 	// Bind request body
@@ -78,6 +80,7 @@ func (r *restHandler) ExecuteAction(c *gin.Context, visitor rest.Visitor) {
 	}
 
 	req.KNID = knID
+	req.Branch = branch
 	req.ActionTypeID = atID
 
 	// Note: unique_identities is optional

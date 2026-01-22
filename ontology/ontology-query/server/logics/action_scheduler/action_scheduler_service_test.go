@@ -174,6 +174,30 @@ func Test_ActionExecutionRequest_Validation(t *testing.T) {
 			So(len(req.UniqueIdentities), ShouldEqual, 1)
 		})
 
+		Convey("should support branch field", func() {
+			req := &interfaces.ActionExecutionRequest{
+				KNID:         "kn_001",
+				Branch:       "feature/test",
+				ActionTypeID: "at_001",
+				UniqueIdentities: []map[string]any{
+					{"pod_ip": "192.168.1.1"},
+				},
+			}
+
+			So(req.KNID, ShouldEqual, "kn_001")
+			So(req.Branch, ShouldEqual, "feature/test")
+			So(req.ActionTypeID, ShouldEqual, "at_001")
+		})
+
+		Convey("should default branch to empty string when not set", func() {
+			req := &interfaces.ActionExecutionRequest{
+				KNID:         "kn_001",
+				ActionTypeID: "at_001",
+			}
+
+			So(req.Branch, ShouldEqual, "")
+		})
+
 		Convey("should handle multiple objects", func() {
 			req := &interfaces.ActionExecutionRequest{
 				UniqueIdentities: []map[string]any{

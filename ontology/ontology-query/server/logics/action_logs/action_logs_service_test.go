@@ -1,7 +1,6 @@
 package action_logs
 
 import (
-	"context"
 	"testing"
 
 	. "github.com/smartystreets/goconvey/convey"
@@ -156,44 +155,44 @@ func Test_ActionExecution_Status_Constants(t *testing.T) {
 	})
 }
 
-// Mock OpenSearch access for integration tests
-type mockOpenSearchAccess struct {
-	data       map[string]map[string]any
-	indexExist map[string]bool
-}
+// // Mock OpenSearch access for integration tests
+// type mockOpenSearchAccess struct {
+// 	data       map[string]map[string]any
+// 	indexExist map[string]bool
+// }
 
-func newMockOpenSearchAccess() *mockOpenSearchAccess {
-	return &mockOpenSearchAccess{
-		data:       make(map[string]map[string]any),
-		indexExist: make(map[string]bool),
-	}
-}
+// func newMockOpenSearchAccess() *mockOpenSearchAccess {
+// 	return &mockOpenSearchAccess{
+// 		data:       make(map[string]map[string]any),
+// 		indexExist: make(map[string]bool),
+// 	}
+// }
 
-func (m *mockOpenSearchAccess) IndexExists(ctx context.Context, indexName string) (bool, error) {
-	return m.indexExist[indexName], nil
-}
+// func (m *mockOpenSearchAccess) IndexExists(ctx context.Context, indexName string) (bool, error) {
+// 	return m.indexExist[indexName], nil
+// }
 
-func (m *mockOpenSearchAccess) CreateIndex(ctx context.Context, indexName string, body any) error {
-	m.indexExist[indexName] = true
-	return nil
-}
+// func (m *mockOpenSearchAccess) CreateIndex(ctx context.Context, indexName string, body any) error {
+// 	m.indexExist[indexName] = true
+// 	return nil
+// }
 
-func (m *mockOpenSearchAccess) InsertData(ctx context.Context, indexName, id string, data any) error {
-	if m.data[indexName] == nil {
-		m.data[indexName] = make(map[string]any)
-	}
-	m.data[indexName][id] = data
-	return nil
-}
+// func (m *mockOpenSearchAccess) InsertData(ctx context.Context, indexName, id string, data any) error {
+// 	if m.data[indexName] == nil {
+// 		m.data[indexName] = make(map[string]any)
+// 	}
+// 	m.data[indexName][id] = data
+// 	return nil
+// }
 
-func (m *mockOpenSearchAccess) SearchData(ctx context.Context, indexName string, query any) ([]interfaces.Hit, error) {
-	return nil, nil
-}
+// func (m *mockOpenSearchAccess) SearchData(ctx context.Context, indexName string, query any) ([]interfaces.Hit, error) {
+// 	return nil, nil
+// }
 
-func (m *mockOpenSearchAccess) Count(ctx context.Context, indexName string, query any) ([]byte, error) {
-	return []byte(`{"count": 0}`), nil
-}
+// func (m *mockOpenSearchAccess) Count(ctx context.Context, indexName string, query any) ([]byte, error) {
+// 	return []byte(`{"count": 0}`), nil
+// }
 
-func (m *mockOpenSearchAccess) DeleteByQuery(ctx context.Context, indexName string, query any) error {
-	return nil
-}
+// func (m *mockOpenSearchAccess) DeleteByQuery(ctx context.Context, indexName string, query any) error {
+// 	return nil
+// }
