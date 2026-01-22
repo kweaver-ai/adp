@@ -47,7 +47,7 @@ const ScheduleExpression = ({ scheduleType, form }: any): JSX.Element => {
           preserve={true}
           className={styles['expression-wrapper']}
           extra={
-            <span className="g-c-text-sub" style={{ fontSize: 12 }}>
+            <span className="g-c-text-sub" style={{ fontSize: 12, whiteSpace: 'pre-line' }}>
               {intl.get('DataConnect.fixRateTip')}
             </span>
           }
