@@ -54,6 +54,7 @@ CREATE TABLE IF NOT EXISTS "t_task_scan" (
   "task_params_info" text DEFAULT NULL COMMENT '任务执行参数信息',
   "task_process_info" text DEFAULT NULL COMMENT '任务执行进度信息',
   "task_result_info" text DEFAULT NULL COMMENT '任务执行结果信息',
+  "schedule_id" char(36 char) DEFAULT NULL COMMENT '定时任务配置id',
   CLUSTER PRIMARY KEY ("id")
 );
 CREATE INDEX IF NOT EXISTS "t_task_scan_ds_id_IDX" on "t_task_scan" ("ds_id");
@@ -73,6 +74,7 @@ CREATE TABLE IF NOT EXISTS "t_task_scan_table" (
   "scan_params" text DEFAULT NULL COMMENT '任务执行参数信息',
   "scan_result_info" text DEFAULT NULL COMMENT '任务执行结果：',
   "error_stack" text DEFAULT NULL COMMENT '异常堆栈信息',
+  "operation_type" tinyint DEFAULT NULL COMMENT '操作类型:0:insert 1:delete 2:update 3:unknown',
   CLUSTER PRIMARY KEY ("id")
 );
 CREATE INDEX IF NOT EXISTS "t_task_scan_table_task_id_IDX" on "t_task_scan_table" ("task_id");
