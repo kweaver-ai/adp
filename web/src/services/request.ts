@@ -30,7 +30,7 @@ export const baseConfig: BaseConfig = {
 const cancelSources: Record<string, any> = {};
 
 // 创建 axios 实例
-const service = axios.create({ baseURL: '/', timeout: 20000 });
+const service = axios.create({ baseURL: '/' });
 
 // 请求拦截器
 service.interceptors.request.use(

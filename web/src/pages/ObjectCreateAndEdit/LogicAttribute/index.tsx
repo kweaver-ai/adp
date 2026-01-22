@@ -1,7 +1,7 @@
 import { useState, forwardRef, useImperativeHandle, useMemo } from 'react';
 import intl from 'react-intl-universal';
-import { MinusCircleFilled, ExclamationCircleFilled } from '@ant-design/icons';
-import { Empty, Input } from 'antd';
+import { EllipsisOutlined, ExclamationCircleFilled } from '@ant-design/icons';
+import { Dropdown, Empty, Tooltip } from 'antd';
 import ObjectIcon from '@/components/ObjectIcon';
 import { deduplicateObjects } from '@/utils/object';
 import * as OntologyObjectType from '@/services/object/type';
@@ -25,6 +25,8 @@ const LogicAttribute = forwardRef((props: LogicAttributeProps, ref: any) => {
   const [attrInfo, setAttrInfo] = useState<OntologyObjectType.LogicProperty>({} as OntologyObjectType.LogicProperty);
   const [searchInput, setSearchInput] = useState('');
   const { modal, message } = HOOKS.useGlobalContext();
+  const [selectedRowKeys, setSelectedRowKeys] = useState<string[]>([]);
+  const [selectedRows, setSelectedRows] = useState<any[]>([]);
 
   useImperativeHandle(ref, () => ({
     validateFields: () => {
@@ -46,22 +48,23 @@ const LogicAttribute = forwardRef((props: LogicAttributeProps, ref: any) => {
     setOpen(true);
   };
 
-  const handleDelete = (record: OntologyObjectType.LogicProperty) => {
-    if (!record.type || !record.name) {
-      return;
-    }
-
+  const handleDelete = (record: any) => {
+    const content = record ? intl.get('Global.deleteConfirm', { name: record.name }) : intl.get('Global.deleteConfirmMultiple', { count: selectedRows.length });
     modal.confirm({
       title: intl.get('Global.tipTitle'),
       icon: <ExclamationCircleFilled />,
-      content: intl.get('Global.deleteConfirm', { name: `「${record.display_name || record.name}」` }),
+      content,
       okText: intl.get('Global.ok'),
       okButtonProps: {
         style: { backgroundColor: '#ff4d4f', borderColor: '#ff4d4f' },
       },
       cancelText: intl.get('Global.cancel'),
       onOk: () => {
-        setLocalLogicProperties(localLogicProperties.filter((item) => item.name !== record.name));
+        if (record) {
+          setLocalLogicProperties(localLogicProperties.filter((item) => item.name !== record.name));
+        } else {
+          setLocalLogicProperties(localLogicProperties.filter((item) => !selectedRowKeys.includes(item.name)));
+        }
         message.success(intl.get('Global.deleteSuccess'));
       },
     });
@@ -88,24 +91,57 @@ const LogicAttribute = forwardRef((props: LogicAttributeProps, ref: any) => {
     return localLogicProperties.filter((item) => item.name?.includes(searchInput) || item.display_name?.includes(searchInput));
   }, [localLogicProperties, searchInput]);
 
+  const onChangeTableOperation = (value: any) => {
+    console.log(value);
+    setSearchInput(value.name);
+  };
+
+  const onOperate = (key: string, record: any) => {
+    if (key === 'edit') {
+      handleEdit(record);
+    }
+    if (key === 'delete') {
+      handleDelete(record);
+    }
+  };
+
   const columns: any = [
     {
       title: intl.get('Global.attributeName'),
       dataIndex: 'name',
       width: 260,
       __selected: true,
-      render: (value: string, record: OntologyObjectType.LogicProperty) => (
+      render: (value: string) => (
         <div className={styles['name-cell']}>
-          <MinusCircleFilled
-            style={{ color: 'rgba(0, 0, 0, 0.25)', cursor: 'pointer' }}
-            onClick={(e) => {
-              e.stopPropagation();
-              handleDelete(record);
-            }}
-          />
           <span className={styles['data-name']}>{value}</span>
         </div>
       ),
+    },
+    {
+      title: intl.get('Global.operation'),
+      width: 100,
+      align: 'center',
+      __selected: true,
+      render: (_text: any, record: any): JSX.Element => {
+        const dropdownMenu: any = [
+          { key: 'edit', label: intl.get('Global.edit') },
+          { key: 'delete', label: intl.get('Global.delete') },
+        ];
+        return (
+          <Dropdown
+            trigger={['click']}
+            menu={{
+              items: dropdownMenu,
+              onClick: (event) => {
+                event.domEvent.stopPropagation();
+                onOperate(event?.key, record);
+              },
+            }}
+          >
+            <Button.Icon icon={<EllipsisOutlined style={{ fontSize: 20 }} />} onClick={(event) => event.stopPropagation()} />
+          </Dropdown>
+        );
+      },
     },
     {
       title: intl.get('Global.attributeDisplayName'),
@@ -146,6 +182,24 @@ const LogicAttribute = forwardRef((props: LogicAttributeProps, ref: any) => {
     },
   ];
 
+  const rowSelection = {
+    selectedRowKeys,
+    onChange: (selectedRowKeys: any, selectedRows: any): void => {
+      setSelectedRowKeys(selectedRowKeys);
+      setSelectedRows(selectedRows);
+    },
+    onSelectAll: (selected: any): void => {
+      const newSelectedRowKeys = selected ? filteredDataSource.map((item: any) => item.id) : [];
+      const newSelectedRows = selected ? filteredDataSource : [];
+
+      setSelectedRowKeys(newSelectedRowKeys);
+      setSelectedRows(newSelectedRows);
+    },
+    getCheckboxProps: (row: any): Record<string, any> => ({
+      disabled: row.builtin,
+    }),
+  };
+
   return (
     <>
       <div className={styles['logic-attribute-container']}>
@@ -157,18 +211,9 @@ const LogicAttribute = forwardRef((props: LogicAttributeProps, ref: any) => {
           <div className={styles['header']}>
             <div className={styles['title-box']}>
               <div className={styles['title']}>{intl.get('Object.logicProperty')}</div>
-              <div className={styles['add-button']} onClick={handleAdd}>
-                <IconFont type="icon-dip-jia" style={{ fontSize: '14px' }} />
-                <span>{intl.get('Global.add')}</span>
-              </div>
-            </div>
-            <div className={styles['actions']}>
-              <Input
-                className={styles['search-input']}
-                placeholder={intl.get('Object.searchAttributeNameOrDisplayName')}
-                onChange={(value) => setSearchInput(value.target.value)}
-                prefix={<IconFont type="icon-dip-search" style={{ fontSize: '16px', color: 'rgba(0, 0, 0, 0.25)' }} />}
-              />
+              <Tooltip title={intl.get('Object.logicPropertyTip')}>
+                <IconFont type="icon-dip-color-tip" className={styles.helpIcon} />
+              </Tooltip>
             </div>
           </div>
 
@@ -184,6 +229,7 @@ const LogicAttribute = forwardRef((props: LogicAttributeProps, ref: any) => {
               onRow={(record: any) => ({
                 onClick: () => handleEdit(record),
               })}
+              rowSelection={rowSelection}
               locale={{
                 emptyText: searchInput ? (
                   <Empty image={noSearchResultImage} description={intl.get('Global.emptyNoSearchResult')} />
@@ -191,18 +237,26 @@ const LogicAttribute = forwardRef((props: LogicAttributeProps, ref: any) => {
                   <Empty
                     image={createImage}
                     description={
-                      <span>
-                        {intl.get('Global.click')}
-                        <Button type="link" style={{ padding: 0 }} onClick={handleAdd}>
-                          {intl.get('Global.createBtn')}
-                        </Button>
-                        {intl.get('Global.add')}
-                      </span>
+                      <div>
+                        <span>
+                          {intl.get('Global.click')}
+                          <Button type="link" style={{ padding: 0 }} onClick={handleAdd}>
+                            {intl.get('Global.createBtn')}
+                          </Button>
+                          {intl.get('Global.add')}
+                        </span>
+                        <div>{intl.get('Object.skipLogicPropertyTip')}</div>
+                      </div>
                     }
                   />
                 ),
               }}
-            />
+            >
+              <Table.Operation nameConfig={{ key: 'name', placeholder: intl.get('Global.search') }} onChange={onChangeTableOperation}>
+                <Button.Create onClick={handleAdd} />
+                <Button.Delete disabled={!selectedRows?.length} onClick={() => handleDelete('')} />
+              </Table.Operation>
+            </Table.PageTable>
           </div>
         </div>
       </div>

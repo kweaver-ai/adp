@@ -1,6 +1,6 @@
 import { useMemo, useState, useEffect } from 'react';
 import intl from 'react-intl-universal';
-import { Tag, Table, Divider, Dropdown } from 'antd';
+import { Tag, Table, Divider, Dropdown, Tooltip } from 'antd';
 import { map, uniqueId } from 'lodash-es';
 import ObjectIcon from '@/components/ObjectIcon';
 import ENUMS from '@/enums';
@@ -11,7 +11,7 @@ import styles from './index.module.less';
 const ObjectItem = (props: any) => {
   const { value, icon, color } = props;
   return (
-    <div className="g-flex-align-center" title={value}>
+    <div className="g-flex-align-center" style={{ gap: '8px' }} title={value}>
       {icon && <ObjectIcon icon={icon} color={color} />}
       <div>
         <Text className="g-ellipsis-1">{value}</Text>
@@ -223,7 +223,9 @@ const Detail = (props: any) => {
             return (
               <div key={label} className={styles['edge-root-drawer-base-info']}>
                 <div className={styles['edge-root-drawer-base-info-label']}>{label}</div>
-                <div className="g-ellipsis-1">{value}</div>
+                <Tooltip title={value.length > 50 ? value : ''}>
+                  <div className="g-ellipsis-1">{value}</div>
+                </Tooltip>
               </div>
             );
           })}

@@ -6,6 +6,11 @@
       align-items: flex-start;
     }
 
+    // 隐藏中间的穿梭按钮
+    .ant-transfer-operation {
+      display: none;
+    }
+
     .ant-transfer-list {
       width: 336px;
       height: 416px;
@@ -26,6 +31,11 @@
         .ant-transfer-list-header-selected {
           font-size: 14px;
           color: rgba(0, 0, 0, 0.85);
+        }
+
+        // 隐藏下拉菜单触发器
+        .ant-dropdown-trigger {
+          display: none;
         }
       }
 
@@ -96,6 +106,10 @@
         padding: 0;
         border-bottom: none;
       }
+    }
+
+    .ant-modal-header {
+      margin-bottom: 20px !important;
     }
   }
 }

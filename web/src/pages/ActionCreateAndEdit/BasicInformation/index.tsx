@@ -109,8 +109,8 @@ const BasicInformation = (props: any) => {
             </Form.Item>
           </Col>
           <Col span={24}>
-            <Form.Item name="comment" label={intl.get('Global.comment')}>
-              <Input.TextArea rows={4} maxLength={255} placeholder={intl.get('Global.pleaseInput')} />
+            <Form.Item name="comment" label={intl.get('Global.description')}>
+              <Input.TextArea rows={4} maxLength={1000} showCount placeholder={intl.get('Global.pleaseInput')} />
             </Form.Item>
           </Col>
           <Col span={12}>

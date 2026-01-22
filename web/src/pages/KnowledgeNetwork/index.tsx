@@ -7,6 +7,7 @@ import { SorterResult } from 'antd/es/table/interface';
 import { TableProps } from 'antd/lib/table';
 import dayjs from 'dayjs';
 import ContainerIsVisible, { getTypePermissionOperation, matchPermission, PERMISSION_CODES } from '@/components/ContainerIsVisible';
+import ObjectIcon from '@/components/ObjectIcon';
 import Tags from '@/components/Tags';
 import downFile from '@/utils/down-file';
 import api from '@/services/knowledgeNetwork';
@@ -17,7 +18,7 @@ import emptyImage from '@/assets/images/common/empty.png';
 import noSearchResultImage from '@/assets/images/common/no_search_result.svg';
 import ENUMS from '@/enums';
 import HOOKS from '@/hooks';
-import { Table, Button, Select, Title, IconFont } from '@/web-library/common';
+import { Table, Button, Select, Title } from '@/web-library/common';
 import CreateAndEditForm from './CreateAndEditForm';
 import styles from './index.module.less';
 import ImportCom from './Operation/import';
@@ -105,7 +106,7 @@ const KnowledgeNetwork = () => {
   };
 
   const exportData = async (id: string): Promise<void> => {
-    const res = await api.getNetworkDetail({ knIds: [id], mode: 'export' });
+    const res = await api.getNetworkDetail({ knId: id, mode: 'export' });
     downFile(JSON.stringify(res, null, 2), res.name, 'json');
     message.success(intl.get('Global.exportSuccess'));
   };
@@ -135,10 +136,8 @@ const KnowledgeNetwork = () => {
       __selected: true,
       render: (value: string, record: KnowledgeNetworkType.KnowledgeNetwork) => (
         <div className="g-flex-align-center" style={{ lineHeight: '22px' }} title={value}>
-          <div className={styles['name-icon']} style={{ background: record.color }}>
-            {record.icon && <IconFont type={record.icon} style={{ color: '#fff', fontSize: 20 }} />}
-          </div>
-          <div style={{ flex: 1 }}>
+          {record.icon && <ObjectIcon icon={record.icon} color={record.color} size={32} iconSize={20} />}
+          <div style={{ flex: 1, marginLeft: 8 }}>
             <a style={{ fontSize: 14, color: '#000' }} onClick={() => onOperate('view', record)}>
               {record.name}
             </a>

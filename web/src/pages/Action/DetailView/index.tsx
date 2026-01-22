@@ -3,7 +3,7 @@
  */
 import { useEffect, useState, FC } from 'react';
 import intl from 'react-intl-universal';
-import { Tag, Divider, Modal, Spin, Dropdown } from 'antd';
+import { Tag, Divider, Modal, Spin, Dropdown, Tooltip } from 'antd';
 import classNames from 'classnames';
 import { map } from 'lodash-es';
 import DataFilterNew from '@/components/DataFilterNew';
@@ -300,9 +300,9 @@ const DetailView: FC<DetailViewProps> = ({ atId, knId, hasModifyPerm, onClose, o
               <div key={label} className={classNames('g-flex', styles['line-height-32'])} style={{ gap: 10, ...(index === 0 ? {} : { marginTop: 10 }) }}>
                 <div style={{ width: 100, flexShrink: 0, color: 'rgba(0, 0, 0, 0.65)' }}>{label}</div>
                 {typeof content === 'string' ? (
-                  <div style={{ flex: 1 }} className="g-ellipsis-1" title={content}>
-                    {content}
-                  </div>
+                  <Tooltip title={content.length > 50 ? content : ''}>
+                    <div className="g-ellipsis-1">{content}</div>
+                  </Tooltip>
                 ) : (
                   content
                 )}

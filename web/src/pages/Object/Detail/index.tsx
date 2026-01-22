@@ -1,6 +1,6 @@
 import { useState, useMemo, useEffect, useRef } from 'react';
 import intl from 'react-intl-universal';
-import { Tag, Table, Divider, Dropdown, Segmented, Input, TableColumnProps, Form, Switch } from 'antd';
+import { Tag, Table, Divider, Dropdown, Segmented, Input, TableColumnProps, Form, Switch, Tooltip } from 'antd';
 import { map } from 'lodash-es';
 import ObjectIcon from '@/components/ObjectIcon';
 import { formatKeyOfObjectToLine } from '@/utils/format-objectkey-structure';
@@ -116,7 +116,7 @@ const Detail = (props: TDetailProps) => {
       label: intl.get('Global.index'),
       value: intl.get('Object.indexInfo', { docCount: status?.doc_count || 0, storageSize: formatFileSize(status?.storage_size || 0) || '0 B' }),
     },
-    { label: intl.get('Global.comment'), value: comment || '--' },
+    { label: intl.get('Global.description'), value: comment || '--' },
   ];
 
   const columns = [
@@ -190,7 +190,9 @@ const Detail = (props: TDetailProps) => {
             return (
               <div key={label} className={styles['object-root-drawer-base-info']}>
                 <div className={styles['object-root-drawer-base-info-label']}>{label}</div>
-                <div className="g-ellipsis-1">{value}</div>
+                <Tooltip title={value.length > 50 ? value : ''}>
+                  <div className="g-ellipsis-1">{value}</div>
+                </Tooltip>
               </div>
             );
           })}

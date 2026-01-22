@@ -91,9 +91,9 @@ const Edge = (props: TProps) => {
           name,
           data_properties,
           label: (
-            <div className="g-flex-align-center" title={name}>
+            <div className="g-flex-align-center" style={{ gap: '8px' }} title={name}>
               <ObjectIcon icon={icon} color={color} />
-              <div style={{ marginLeft: 8 }}>
+              <div>
                 <Text className="g-ellipsis-1">{name}</Text>
               </div>
             </div>
@@ -229,7 +229,7 @@ const Edge = (props: TProps) => {
       render: (value: string, data: any) => {
         const { icon, color, name, display_name } = data?.source_object_type || {};
         return (
-          <div className="g-flex-align-center">
+          <div className="g-flex-align-center" style={{ gap: '8px' }}>
             {icon && <ObjectIcon icon={icon} color={color} />}
             <Text>{display_name || name || value}</Text>
           </div>
@@ -244,7 +244,7 @@ const Edge = (props: TProps) => {
       render: (value: string, data: any) => {
         const { icon, color, name, display_name } = data?.target_object_type || {};
         return (
-          <div className="g-flex-align-center">
+          <div className="g-flex-align-center" style={{ gap: '8px' }}>
             {icon && <ObjectIcon icon={icon} color={color} />}
             <Text>{display_name || name || value}</Text>
           </div>

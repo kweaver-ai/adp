@@ -89,7 +89,7 @@ const Action: FC<TProps> = ({ detail, isPermission }) => {
       __fixed: true,
       __selected: true,
       render: (_value: any, record: any) => (
-        <div className="g-flex-align-center">
+        <div className="g-flex-align-center" style={{ cursor: 'pointer' }}>
           <IconFont type="icon-dip-hangdonglei" />
           <div className="g-ellipsis-1 g-ml-2" title={_value}>
             {_value}

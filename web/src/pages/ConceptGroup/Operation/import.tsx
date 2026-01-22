@@ -58,7 +58,7 @@ const ImportCom = (props: ImportComProps) => {
         title: intl.get('Global.tipTitle'),
         content: (
           <>
-            {res.description}。{intl.get('ConceptGroup.importConflictTip')}
+            {res.description}。{intl.getHTML('ConceptGroup.importConflictTip')}
           </>
         ),
         icon: null,

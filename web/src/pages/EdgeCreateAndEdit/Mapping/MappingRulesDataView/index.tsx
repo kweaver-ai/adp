@@ -66,7 +66,7 @@ const MappingRulesDataView = (props: any) => {
           name,
           data_properties,
           label: (
-            <div className="g-flex-align-center" title={name}>
+            <div className={styles['object-title-box']} title={name}>
               <ObjectIcon icon={icon} color={color} />
               <div>
                 <Text className="g-ellipsis-1">{name}</Text>

@@ -29,10 +29,12 @@ const CreateAndEditForm = (props: any) => {
   const [createMode, setCreateMode] = useState<'standard' | 'ai'>('standard');
 
   const getDetail = async () => {
-    const res = await api.getNetworkDetail({ knIds: [id] });
-    setTimeout(() => {
-      form.setFieldsValue(res);
-    });
+    const res = await api.getNetworkDetail({ knId: id });
+    if (res) {
+      setTimeout(() => {
+        form.setFieldsValue(res);
+      });
+    }
   };
 
   useEffect(() => {
@@ -109,7 +111,7 @@ const CreateAndEditForm = (props: any) => {
     <Modal
       open={open}
       width={640}
-      title={intl.get('KnowledgeNetwork.create')}
+      title={id ? intl.get('Global.edit') : intl.get('KnowledgeNetwork.create')}
       onCancel={onCancel}
       onOk={onOk}
       okText={createMode === 'ai' ? intl.get('KnowledgeNetwork.generate') : undefined}

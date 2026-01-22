@@ -285,6 +285,7 @@
     "removeSuccess": "移除成功",
     "click": "点击",
     "createBtn": "【新建】",
-    "alreadyExists": "已存在"
+    "alreadyExists": "已存在",
+    "more": "更多"
   }
 }
