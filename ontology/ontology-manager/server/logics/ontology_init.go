@@ -3,28 +3,32 @@ package logics
 import (
 	"context"
 	"errors"
-	"ontology-manager/interfaces"
 
 	"github.com/kweaver-ai/kweaver-go-lib/logger"
+
+	"ontology-manager/common"
+	"ontology-manager/interfaces"
 )
 
-func Init(ctx context.Context) error {
+func Init(ctx context.Context, appSetting *common.AppSetting) error {
 	// 初始化 OpenSearch 索引
 	logger.Info("InitKNConceptIndex Start")
 
-	// 初始化模型工厂
-	smallModel, err := MFA.GetDefaultModel(ctx)
-	if err != nil {
-		logger.Errorf("GetDefaultModel err:%v", err)
-		return err
+	if appSetting.ServerSetting.DefaultSmallModelEnabled {
+		// 初始化模型工厂
+		smallModel, err := MFA.GetDefaultModel(ctx)
+		if err != nil {
+			logger.Errorf("GetDefaultModel err:%v", err)
+			return err
+		}
+		if smallModel == nil {
+			logger.Errorf("GetDefaultModel return nil")
+			return errors.New("GetDefaultModel return nil")
+		}
+		interfaces.KN_CONCEPT_INDEX_VECTOR_PROP["dimension"] = smallModel.EmbeddingDim
 	}
-	if smallModel == nil {
-		logger.Errorf("GetDefaultModel return nil")
-		return errors.New("GetDefaultModel return nil")
-	}
-	interfaces.KN_CONCEPT_INDEX_VECTOR_PROP["dimension"] = smallModel.EmbeddingDim
 
-	err = OSA.PutIndexTemplate(ctx, interfaces.KN_CONCEPT_INDEX_TEMP_NAME, interfaces.KN_CONCEPT_INDEX_TEMP)
+	err := OSA.PutIndexTemplate(ctx, interfaces.KN_CONCEPT_INDEX_TEMP_NAME, interfaces.KN_CONCEPT_INDEX_TEMP)
 	if err != nil {
 		logger.Errorf("PutKNConceptIndexTemplate err:%v", err)
 		return err

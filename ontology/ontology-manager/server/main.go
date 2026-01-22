@@ -50,7 +50,7 @@ type mgrService struct {
 func (server *mgrService) start() {
 	logger.Info("Server Starting")
 
-	err := logics.Init(context.Background())
+	err := logics.Init(context.Background(), server.appSetting)
 	if err != nil {
 		panic(err)
 	}

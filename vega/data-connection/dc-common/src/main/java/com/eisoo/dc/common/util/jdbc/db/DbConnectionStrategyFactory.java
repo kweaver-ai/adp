@@ -1,11 +1,9 @@
 package com.eisoo.dc.common.util.jdbc.db;
 
 
+import com.eisoo.dc.common.constant.CatalogConstant;
 import com.eisoo.dc.common.metadata.entity.DataSourceEntity;
-import com.eisoo.dc.common.util.jdbc.db.impl.MariaJdbcClient;
-import com.eisoo.dc.common.util.jdbc.db.impl.MySqlJdbcClient;
-import com.eisoo.dc.common.util.jdbc.db.impl.OpenSearchClient;
-import com.eisoo.dc.common.util.jdbc.db.impl.OracleJdbcClient;
+import com.eisoo.dc.common.util.jdbc.db.impl.*;
 
 import java.util.HashMap;
 import java.util.HashSet;
@@ -24,6 +22,14 @@ public class DbConnectionStrategyFactory {
     public static final Map<String, String> DRIVER_CLASS_MAP = new HashMap<>();
     public static final Map<String, String> TABLE_METADATA_SQL_TEMPLATE_MAP = new HashMap<>();
 
+    public static final String INCEPTOR_JDBC_DB = "SELECT * FROM (SELECT database_name,table_name, commentstring as remarks, \"table\" as table_type\n" +
+            "               FROM `system`.`tables_v` tv\n" +
+            "               union all\n" +
+            "               SELECT database_name,view_name as table_name, \"\" as remarks, \"view\" as table_type\n" +
+            "               FROM `system`.`views_v` tv\n" +
+            "               )t\n" +
+            "         WHERE t.database_name = '%s'\n" +
+            "ORDER BY table_type,table_name LIMIT %d,1000";
     public static final String ORACLE_DB = "SELECT * \n" +
             "   FROM (\n" +
             "       SELECT t.*, ROWNUM rn \n" +
@@ -96,34 +102,37 @@ public class DbConnectionStrategyFactory {
 
     // 静态初始化：注册不同数据源的连接策略
     static {
-        SUPPORT_NEW_SCAN.add("mysql");
-        SUPPORT_NEW_SCAN.add("maria");
-        SUPPORT_NEW_SCAN.add("oracle");
-        SUPPORT_NEW_SCAN.add("opensearch");
+        SUPPORT_NEW_SCAN.add(CatalogConstant.MARIA_CATALOG);
+        SUPPORT_NEW_SCAN.add(CatalogConstant.MYSQL_CATALOG);
+        SUPPORT_NEW_SCAN.add(CatalogConstant.ORACLE_CATALOG);
+        SUPPORT_NEW_SCAN.add(CatalogConstant.OPENSEARCH_CATALOG);
+        SUPPORT_NEW_SCAN.add(CatalogConstant.INCEPTOR_JDBC_CATALOG);
+
         //  注册client
-        DB_CLIENT_MAP.put("mysql", new MySqlJdbcClient());
-        DB_CLIENT_MAP.put("maria", new MariaJdbcClient());
-        DB_CLIENT_MAP.put("oracle", new OracleJdbcClient());
-        DB_CLIENT_MAP.put("opensearch", new OpenSearchClient());
+        DB_CLIENT_MAP.put(CatalogConstant.MYSQL_CATALOG, new MySqlJdbcClient());
+        DB_CLIENT_MAP.put(CatalogConstant.MARIA_CATALOG, new MariaJdbcClient());
+        DB_CLIENT_MAP.put(CatalogConstant.ORACLE_CATALOG, new OracleJdbcClient());
+        DB_CLIENT_MAP.put(CatalogConstant.OPENSEARCH_CATALOG, new OpenSearchClient());
+        DB_CLIENT_MAP.put(CatalogConstant.INCEPTOR_JDBC_CATALOG, new Inceptor2JdbcClient());
+
         // 注册getTable的sql模板
-        TABLE_METADATA_SQL_TEMPLATE_MAP.put("maria", MARIA_DB);
-        TABLE_METADATA_SQL_TEMPLATE_MAP.put("mysql", MYSQL_DB);
-        TABLE_METADATA_SQL_TEMPLATE_MAP.put("oracle", ORACLE_DB);
+        TABLE_METADATA_SQL_TEMPLATE_MAP.put(CatalogConstant.MARIA_CATALOG, MARIA_DB);
+        TABLE_METADATA_SQL_TEMPLATE_MAP.put(CatalogConstant.MYSQL_CATALOG, MYSQL_DB);
+        TABLE_METADATA_SQL_TEMPLATE_MAP.put(CatalogConstant.ORACLE_CATALOG, ORACLE_DB);
+        TABLE_METADATA_SQL_TEMPLATE_MAP.put(CatalogConstant.INCEPTOR_JDBC_CATALOG, INCEPTOR_JDBC_DB);
+
         // MySQL：5.x版本驱动类为com.mysql.jdbc.Driver，8.0+为com.mysql.cj.jdbc.Driver（推荐）
-        DRIVER_CLASS_MAP.put("mysql", "com.mysql.cj.jdbc.Driver");
-        DRIVER_CLASS_MAP.put("maria", "org.mariadb.jdbc.Driver");
+        DRIVER_CLASS_MAP.put(CatalogConstant.MYSQL_CATALOG, "com.mysql.cj.jdbc.Driver");
+        DRIVER_CLASS_MAP.put(CatalogConstant.MARIA_CATALOG, "org.mariadb.jdbc.Driver");
         // Oracle：ojdbc8及以上版本推荐用oracle.jdbc.OracleDriver（替代旧的oracle.jdbc.driver.OracleDriver）
-        DRIVER_CLASS_MAP.put("oracle", "oracle.jdbc.OracleDriver");
+        DRIVER_CLASS_MAP.put(CatalogConstant.ORACLE_CATALOG, "oracle.jdbc.OracleDriver");
+        DRIVER_CLASS_MAP.put(CatalogConstant.INCEPTOR_JDBC_CATALOG, "org.apache.hive.jdbc.HiveDriver");
+
+
         // PostgreSQL：主流版本统一为org.postgresql.Driver
-        DRIVER_CLASS_MAP.put("postgresql", "org.postgresql.Driver");
+        DRIVER_CLASS_MAP.put(CatalogConstant.POSTGRESQL_CATALOG, "org.postgresql.Driver");
         // SQL Server：2017+版本用com.microsoft.sqlserver.jdbc.SQLServerDriver
-        DRIVER_CLASS_MAP.put("sqlserver", "com.microsoft.sqlserver.jdbc.SQLServerDriver");
-        // DB2：主流版本为com.ibm.db2.jcc.DB2Driver
-        DRIVER_CLASS_MAP.put("db2", "com.ibm.db2.jcc.DB2Driver");
-        // SQLite：轻量级数据库，驱动类为org.sqlite.JDBC
-        DRIVER_CLASS_MAP.put("sqlite", "org.sqlite.JDBC");
-        // H2：嵌入式数据库，驱动类为org.h2.Driver
-        DRIVER_CLASS_MAP.put("h2", "org.h2.Driver");
+        DRIVER_CLASS_MAP.put(CatalogConstant.SQLSERVER_CATALOG, "com.microsoft.sqlserver.jdbc.SQLServerDriver");
     }
 
     /**
@@ -158,6 +167,8 @@ public class DbConnectionStrategyFactory {
                 return "jdbc:oracle:thin:@" + dataSourceEntity.getFHost() + ":" + dataSourceEntity.getFPort() + ":" + dataSourceEntity.getFDatabase();
             case "postgresql":
                 return "jdbc:postgresql://" + dataSourceEntity.getFHost() + ":" + dataSourceEntity.getFPort() + "/" + dataSourceEntity.getFDatabase();
+            case CatalogConstant.INCEPTOR_JDBC_CATALOG:
+                return "jdbc:inceptor2://" + dataSourceEntity.getFHost() + ":" + dataSourceEntity.getFPort() + "/" + dataSourceEntity.getFDatabase();
             default:
                 throw new IllegalArgumentException("不支持的数据源类型：" + fType);
         }

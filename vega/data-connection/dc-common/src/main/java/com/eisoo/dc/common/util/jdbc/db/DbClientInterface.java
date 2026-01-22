@@ -8,6 +8,7 @@ import com.eisoo.dc.common.metadata.entity.TableScanEntity;
 
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -24,7 +25,7 @@ public interface DbClientInterface {
      */
     Connection getConnection(DataSourceConfig config)  throws Exception;
 
-    Map<String, TableScanEntity> getTables(DataSourceEntity dataSourceEntity) throws Exception;
+    Map<String, TableScanEntity> getTables(DataSourceEntity dataSourceEntity,List<String> scanStrategy) throws Exception;
 
     Map<String, FieldScanEntity> getFields(String tableName,DataSourceEntity dataSourceEntity, ConnectorConfig connectorConfig) throws Exception;
 

@@ -16,7 +16,7 @@ type ObjectTypeService interface {
 	UpdateDataProperties(ctx context.Context, objectType *ObjectType, dataProperties []*DataProperty) error
 	DeleteObjectTypesByIDs(ctx context.Context, tx *sql.Tx, knID string, branch string, otIDs []string) (int64, error)
 
-	GetObjectTypeByID(ctx context.Context, knID string, branch string, otID string) (*ObjectType, error)
+	GetObjectTypeByID(ctx context.Context, tx *sql.Tx, knID string, branch string, otID string) (*ObjectType, error)
 	GetAllObjectTypesByKnID(ctx context.Context, knID string, branch string) (map[string]*ObjectType, error)
 	GetObjectTypeIDsByKnID(ctx context.Context, knID string, branch string) ([]string, error)
 

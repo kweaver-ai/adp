@@ -25,7 +25,7 @@
     </update>
     <select id="selectTaskScanTables" resultType="com.eisoo.dc.common.metadata.entity.TaskScanTableEntity">
         SELECT * FROM t_task_scan_table
-        WHERE 1=1 AND task_id= #{taskId}
+        WHERE 1=1 AND task_id= #{taskId} AND (operation_type != 3 or (operation_type=3 AND scan_status=3))
         <if test="statusList != null">
             AND scan_status IN
             <foreach item="status" collection="statusList" open="(" separator="," close=")">
@@ -38,7 +38,7 @@
     </select>
     <select id="selectCountTaskScanTables" resultType="long">
         SELECT COUNT(*) FROM t_task_scan_table
-        WHERE 1=1 AND task_id = #{taskId}
+        WHERE 1=1 AND task_id = #{taskId} AND (operation_type != 3 or (operation_type=3 AND scan_status=3))
         <if test="includeIds != null">
             AND id IN
             <foreach item="includeId" collection="includeIds" open="(" separator="," close=")">

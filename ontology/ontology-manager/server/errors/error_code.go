@@ -54,6 +54,7 @@ var (
 		OntologyManager_CountExceeded_TagTotal,
 		OntologyManager_InvalidParameter_Direction,
 		OntologyManager_InvalidParameter_Condition,
+		OntologyManager_InvalidParameter_DataTagName,
 		OntologyManager_InvalidParameter_ID,
 		OntologyManager_InvalidParameter_ImportMode,
 		OntologyManager_InvalidParameter_Mode,

@@ -59,6 +59,11 @@ Description = "业务知识网络名称长度超出限制"
 Solution = "请检查参数是否正确。"
 ErrorLink = "暂无"
 
+[OntologyManager.KnowledgeNetwork.NullParameter.Branch]
+Description = "分支为空"
+Solution = "请检查参数是否正确。"
+ErrorLink = "暂无"
+
 [OntologyManager.KnowledgeNetwork.NullParameter.Direction]
 Description = "方向为空"
 Solution = "请检查参数是否正确。"

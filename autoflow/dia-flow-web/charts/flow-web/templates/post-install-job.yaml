@@ -27,7 +27,8 @@ spec:
           command:
             - "sh"
             - "-c"
-            - >
+            - |
+              curl -f -X DELETE http://studio-web-service:8877/api/workstation/v1/webapp/workflow || true &&
               curl -H "Content-Type:application/json" -X PUT -d '
               [{
                 "name": "data-processing",
@@ -46,29 +47,13 @@ spec:
                 }
               },
               {
-                "name": "workflow",
-                "parent": "dataflow",
-                "orderIndex": 2,
-                "app": {
-                  "textZHCN": "工作流",
-                  "textZHTW": "工作流",
-                  "textENUS": "Workflow",
-                  "icon": "//ip:port/flow-web/workflow.svg"
-                },
-                "subapp": {
-                  "entry": "//ip:port/flow-web/workflow.html",
-                  "activeRule": "/",
-                  "baseRouter": ""
-                }
-              },
-              {
                 "name": "dataflow",
                 "parent": "root",
                 "orderIndex": 2000,
                 "app": {
-                  "textZHCN": "Autoflow",
-                  "textZHTW": "Autoflow",
-                  "textENUS": "Autoflow",
+                  "textZHCN": "Dataflow",
+                  "textZHTW": "Dataflow",
+                  "textENUS": "Dataflow",
                   "icon": "//ip:port/flow-web/data-stream.svg"
                 },
                 "subapp": {"children": {}}

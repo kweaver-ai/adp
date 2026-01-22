@@ -144,6 +144,7 @@ type KNsQueryParams struct {
 	NamePattern    string
 	Tag            string
 	BusinessDomain string
+	Branch         string
 }
 
 // 概念搜索

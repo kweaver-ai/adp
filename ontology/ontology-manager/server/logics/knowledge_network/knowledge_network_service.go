@@ -161,8 +161,6 @@ func (kns *knowledgeNetworkService) CreateKN(ctx context.Context, kn *interfaces
 	kn.CreateTime = currentTime
 	kn.UpdateTime = currentTime
 
-	// todo: 处理版本
-
 	// 0. 开始事务
 	tx, err := kns.db.Begin()
 	if err != nil {
@@ -418,7 +416,7 @@ func (kns *knowledgeNetworkService) ListKNs(ctx context.Context,
 		// 检查起始位置是否越界
 		if parameter.Offset < 0 || parameter.Offset >= len(KNs) {
 			span.SetStatus(codes.Ok, "")
-			return []*interfaces.KN{}, 0, nil
+			return []*interfaces.KN{}, total, nil
 		}
 		// 计算结束位置
 		end := parameter.Offset + parameter.Limit
@@ -1079,18 +1077,20 @@ func (kns *knowledgeNetworkService) GetRelationTypePaths(ctx context.Context,
 			currentNode := currentPath.ObjectTypes[len(currentPath.ObjectTypes)-1]
 			// 获取当前节点的信息（按需查询）
 			if currentNode.OTName == "" {
-				objectType, err := kns.ots.GetObjectTypesByIDs(ctx, nil, query.KNID, query.Branch, []string{currentNode.OTID})
+				// 若currentNode.OTID不存在，此函数会报错： objetc type not found
+				objectType, err := kns.ots.GetObjectTypeByID(ctx, nil, query.KNID, query.Branch, currentNode.OTID)
 				if err != nil {
 					return nil, err
 				}
 				currentNode = interfaces.ObjectTypeWithKeyField{
-					OTID:            objectType[0].OTID,
-					OTName:          objectType[0].OTName,
-					DataSource:      objectType[0].DataSource,
-					DataProperties:  objectType[0].DataProperties,
-					LogicProperties: objectType[0].LogicProperties,
-					PrimaryKeys:     objectType[0].PrimaryKeys,
-					DisplayKey:      objectType[0].DisplayKey,
+					OTID:            objectType.OTID,
+					OTName:          objectType.OTName,
+					DataSource:      objectType.DataSource,
+					DataProperties:  objectType.DataProperties,
+					LogicProperties: objectType.LogicProperties,
+					PrimaryKeys:     objectType.PrimaryKeys,
+					DisplayKey:      objectType.DisplayKey,
+					IncrementalKey:  objectType.IncrementalKey,
 				}
 				currentPath.ObjectTypes[len(currentPath.ObjectTypes)-1] = currentNode
 			}
@@ -1258,7 +1258,7 @@ func (kns *knowledgeNetworkService) ListKnSrcs(ctx context.Context,
 	// 分页
 	// 检查起始位置是否越界
 	if parameter.Offset < 0 || parameter.Offset >= len(results) {
-		return nil, 0, nil
+		return nil, len(results), nil
 	}
 	// 计算结束位置
 	end := parameter.Offset + parameter.Limit

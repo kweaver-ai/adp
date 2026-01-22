@@ -81,7 +81,7 @@ func BuildIndexSort(objectType interfaces.ObjectType, propMap map[string]cond.Da
 // 构建路径键用于循环检测
 func BuildPathKey(path interfaces.RelationPath, nextNodeID string) string {
 	key := fmt.Sprintf("%s:%s", path.Relations[0].RelationTypeId, path.Relations[0].SourceObjectId)
-	for i := 1; i < len(path.Relations); i++ {
+	for i := 0; i < len(path.Relations); i++ {
 		key += fmt.Sprintf("->%s", path.Relations[i].TargetObjectId)
 	}
 	key += fmt.Sprintf("->%s", nextNodeID)
@@ -103,21 +103,48 @@ func FilterValidPaths(paths []interfaces.RelationPath, visitedNodes map[string]b
 
 // 检查路径是否有效（无循环）
 func IsPathValid(path interfaces.RelationPath, visitedNodes map[string]bool) bool {
+	if len(path.Relations) == 0 {
+		return true
+	}
+
 	nodeSet := make(map[string]bool)
+	var prevTargetId string
 
-	// 检查路径中的每个节点是否唯一
-	for _, relation := range path.Relations {
-		if nodeSet[relation.SourceObjectId] {
-			logger.Debugf("检测到循环路径 - 重复节点: %s", relation.SourceObjectId)
-			return false
+	// 检查路径中的每个节点是否唯一，同时检查路径连续性
+	for i, relation := range path.Relations {
+		// 检查路径连续性：除了第一条边外，前一条边的目标节点应该等于当前边的源节点
+		if i > 0 {
+			if prevTargetId != relation.SourceObjectId {
+				logger.Debugf("检测到路径不连续 - 前一条边的目标节点[%s]不等于当前边的源节点[%s]", prevTargetId, relation.SourceObjectId)
+				return false
+			}
 		}
-		nodeSet[relation.SourceObjectId] = true
 
+		// 对于第一条边：检查源节点是否已访问（不应重复）
+		if i == 0 {
+			if nodeSet[relation.SourceObjectId] {
+				logger.Debugf("检测到路径起始节点重复: %s", relation.SourceObjectId)
+				return false
+			}
+			nodeSet[relation.SourceObjectId] = true
+		}
+
+		// 对于所有边：检查目标节点是否已访问（如果已访问，说明形成了循环）
 		if nodeSet[relation.TargetObjectId] {
 			logger.Debugf("检测到循环路径 - 重复节点: %s", relation.TargetObjectId)
 			return false
 		}
 		nodeSet[relation.TargetObjectId] = true
+
+		// 检查是否与已访问的节点冲突（如果提供了visitedNodes参数）
+		if visitedNodes != nil {
+			if visitedNodes[relation.SourceObjectId] || visitedNodes[relation.TargetObjectId] {
+				logger.Debugf("检测到路径与已访问节点冲突")
+				return false
+			}
+		}
+
+		prevTargetId = relation.TargetObjectId
 	}
 
 	return true
@@ -185,6 +212,8 @@ func GetObjectID(objectData map[string]any, objectType *interfaces.ObjectType) (
 		if value, exists := objectData[pk]; exists {
 			idParts = append(idParts, fmt.Sprintf("%v", value))
 			uk[pk] = value
+		} else {
+			idParts = append(idParts, "__NULL__")
 		}
 	}
 
@@ -455,6 +484,11 @@ func CheckIndirectMappingConditionsWithViewData(currentObjectData map[string]any
 
 // 根据对象唯一标识构建对象查询的过滤条件
 func BuildUniqueIdentitiesCondition(uks []map[string]any) *cond.CondCfg {
+
+	if len(uks) == 0 {
+		return nil
+	}
+
 	ukSubConds := []*cond.CondCfg{}
 	for _, uk := range uks { // 多个对象
 		conds := []*cond.CondCfg{}

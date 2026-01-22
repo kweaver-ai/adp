@@ -164,6 +164,20 @@ func (mr *MockOpenSearchAccessMockRecorder) InsertData(ctx, indexName, docID, da
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "InsertData", reflect.TypeOf((*MockOpenSearchAccess)(nil).InsertData), ctx, indexName, docID, data)
 }
 
+// PutIndexTemplate mocks base method.
+func (m *MockOpenSearchAccess) PutIndexTemplate(ctx context.Context, indexTemplateName string, body any) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "PutIndexTemplate", ctx, indexTemplateName, body)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// PutIndexTemplate indicates an expected call of PutIndexTemplate.
+func (mr *MockOpenSearchAccessMockRecorder) PutIndexTemplate(ctx, indexTemplateName, body interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "PutIndexTemplate", reflect.TypeOf((*MockOpenSearchAccess)(nil).PutIndexTemplate), ctx, indexTemplateName, body)
+}
+
 // Refresh mocks base method.
 func (m *MockOpenSearchAccess) Refresh(ctx context.Context, indexName string) error {
 	m.ctrl.T.Helper()

@@ -13,10 +13,10 @@ type PathsQueryBaseOnSource struct {
 	// IncludeTypeInfo bool   `json:"-"`
 }
 
-//go:generate mockgen -source ../interfaces/metric_model_access.go -destination ../interfaces/mock/mock_metric_model_access.go
+//go:generate mockgen -source ../interfaces/ontology_manager_access.go -destination ../interfaces/mock/mock_ontology_manager_access.go
 type OntologyManagerAccess interface {
-	GetObjectType(ctx context.Context, knID string, otId string) (ObjectType, bool, error)
-	GetRelationType(ctx context.Context, knID string, rtId string) (RelationType, bool, error)
-	GetActionType(ctx context.Context, knID string, atId string) (ActionType, bool, error)
-	GetRelationTypePathsBaseOnSource(ctx context.Context, knID string, query PathsQueryBaseOnSource) ([]RelationTypePath, error)
+	GetObjectType(ctx context.Context, knID string, branch string, otId string) (ObjectType, bool, error)
+	GetRelationType(ctx context.Context, knID string, branch string, rtId string) (RelationType, bool, error)
+	GetActionType(ctx context.Context, knID string, branch string, atId string) (ActionType, bool, error)
+	GetRelationTypePathsBaseOnSource(ctx context.Context, knID string, branch string, query PathsQueryBaseOnSource) ([]RelationTypePath, error)
 }

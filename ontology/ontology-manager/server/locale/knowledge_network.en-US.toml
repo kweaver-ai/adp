@@ -59,6 +59,11 @@ Description = "The Length of Knowledge Network Name Out of Limit"
 Solution = "Please check whether the parameter is correct."
 ErrorLink = "None"
 
+[OntologyManager.KnowledgeNetwork.NullParameter.Branch]
+Description = "Branch Is Empty"
+Solution = "Please check whether the parameter is correct."
+ErrorLink = "None"
+
 [OntologyManager.KnowledgeNetwork.NullParameter.Direction]
 Description = "Direction Is Empty"
 Solution = "Please check whether the parameter is correct."

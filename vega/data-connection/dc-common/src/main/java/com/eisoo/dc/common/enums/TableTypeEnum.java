@@ -5,7 +5,7 @@ package com.eisoo.dc.common.enums;
  */
 
 public enum TableTypeEnum {
-    TABLE(0, "Ttable"),
+    TABLE(0, "table"),
     VIEW(1, "view");
     private final int code;
     private final String desc;

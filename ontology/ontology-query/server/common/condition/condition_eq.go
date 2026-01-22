@@ -59,7 +59,7 @@ func (cond *EqCond) Convert2SQL(ctx context.Context) (string, error) {
 func rewriteEqCond(cfg *CondCfg) (*CondCfg, error) {
 
 	// 过滤条件中的属性字段换成映射的视图字段
-	if cfg.NameField.Name == "" {
+	if cfg.NameField == nil || cfg.NameField.Name == "" {
 		return nil, fmt.Errorf("等于[==]操作符使用的过滤字段[%s]在对象类的属性中不存在", cfg.Name)
 	}
 	return &CondCfg{

@@ -34,4 +34,5 @@ public interface ITableScanService extends IService<TableScanEntity> {
 
     ResponseEntity<?> getTableAndFieldDetailBatch(String accountId, String accountType, TableIdsVo req);
 
+    List<TableScanEntity> selectBatchIds(List<String> tables);
 }

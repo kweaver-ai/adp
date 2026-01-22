@@ -7,6 +7,7 @@ type ActionQuery struct {
 	UniqueIdentities []map[string]any `json:"unique_identities,omitempty"`
 
 	KNID         string `json:"-"`
+	Branch       string `json:"-"`
 	ActionTypeID string `json:"-"`
 	CommonQueryParameters
 }

@@ -5,7 +5,7 @@ import (
 	"database/sql"
 )
 
-//go:generate mockgen -source ../interfaces/knowledge_network_service.go -destination ../interfaces/mock/mock_kn_service.go
+//go:generate mockgen -source ../interfaces/knowledge_network_service.go -destination ../interfaces/mock/mock_knowledge_network_service.go
 type KNService interface {
 	CheckKNExistByID(ctx context.Context, knID string, branch string) (string, bool, error)
 	CheckKNExistByName(ctx context.Context, knName string, branch string) (string, bool, error)

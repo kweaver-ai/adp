@@ -18,11 +18,11 @@ import (
 	"go.opentelemetry.io/otel/trace"
 )
 
-// CreateJob 创建 job
-func (r *restHandler) CreateJob(c *gin.Context) {
-	logger.Debug("Handler CreateJob Start")
+// CreateJobByEx 创建 job
+func (r *restHandler) CreateJobByEx(c *gin.Context) {
+	logger.Debug("Handler CreateJobByEx Start")
 	ctx, span := ar_trace.Tracer.Start(rest.GetLanguageCtx(c),
-		"创建job", trace.WithSpanKind(trace.SpanKindServer))
+		"创建job(Ex)", trace.WithSpanKind(trace.SpanKindServer))
 	defer span.End()
 
 	// 校验token
@@ -30,6 +30,29 @@ func (r *restHandler) CreateJob(c *gin.Context) {
 	if err != nil {
 		return
 	}
+	r.CreateJob(c, visitor)
+}
+
+// CreateJobByIn 创建 job
+func (r *restHandler) CreateJobByIn(c *gin.Context) {
+	logger.Debug("Handler CreateJobByIn Start")
+	_, span := ar_trace.Tracer.Start(rest.GetLanguageCtx(c),
+		"创建job(In)", trace.WithSpanKind(trace.SpanKindServer))
+	defer span.End()
+
+	// 内部接口 account_id从header中取，跳过用户有效认证，后面在权限校验时就会校验这个用户是否有权限，无效用户无权限
+	// 自行构建一个visitor
+	visitor := GenerateVisitor(c)
+	r.CreateJob(c, visitor)
+}
+
+// CreateJobByEx 创建 job
+func (r *restHandler) CreateJob(c *gin.Context, visitor rest.Visitor) {
+	logger.Debug("Handler CreateJob Start")
+	ctx, span := ar_trace.Tracer.Start(rest.GetLanguageCtx(c),
+		"创建job", trace.WithSpanKind(trace.SpanKindServer))
+	defer span.End()
+
 	accountInfo := interfaces.AccountInfo{
 		ID:   visitor.ID,
 		Type: string(visitor.Type),
@@ -123,11 +146,11 @@ func (r *restHandler) CreateJob(c *gin.Context) {
 	rest.ReplyOK(c, http.StatusCreated, result)
 }
 
-// DeleteJobs 批量删除 job
-func (r *restHandler) DeleteJobs(c *gin.Context) {
-	logger.Debug("Handler DeleteJobs Start")
+// DeleteJobsByEx 批量删除 job
+func (r *restHandler) DeleteJobsByEx(c *gin.Context) {
+	logger.Debug("Handler DeleteJobsByEx Start")
 	ctx, span := ar_trace.Tracer.Start(rest.GetLanguageCtx(c),
-		"批量删除job", trace.WithSpanKind(trace.SpanKindServer))
+		"批量删除job(Ex)", trace.WithSpanKind(trace.SpanKindServer))
 	defer span.End()
 
 	// 校验token
@@ -135,6 +158,29 @@ func (r *restHandler) DeleteJobs(c *gin.Context) {
 	if err != nil {
 		return
 	}
+	r.DeleteJobs(c, visitor)
+}
+
+// DeleteJobsByIn 批量删除 job
+func (r *restHandler) DeleteJobsByIn(c *gin.Context) {
+	logger.Debug("Handler DeleteJobsByIn Start")
+	_, span := ar_trace.Tracer.Start(rest.GetLanguageCtx(c),
+		"批量删除job(In)", trace.WithSpanKind(trace.SpanKindServer))
+	defer span.End()
+
+	// 内部接口 account_id从header中取，跳过用户有效认证，后面在权限校验时就会校验这个用户是否有权限，无效用户无权限
+	// 自行构建一个visitor
+	visitor := GenerateVisitor(c)
+	r.DeleteJobs(c, visitor)
+}
+
+// DeleteJobs 批量删除 job
+func (r *restHandler) DeleteJobs(c *gin.Context, visitor rest.Visitor) {
+	logger.Debug("Handler DeleteJobs Start")
+	ctx, span := ar_trace.Tracer.Start(rest.GetLanguageCtx(c),
+		"批量删除job", trace.WithSpanKind(trace.SpanKindServer))
+	defer span.End()
+
 	accountInfo := interfaces.AccountInfo{
 		ID:   visitor.ID,
 		Type: string(visitor.Type),
@@ -234,11 +280,11 @@ func (r *restHandler) DeleteJobs(c *gin.Context) {
 	rest.ReplyOK(c, http.StatusNoContent, nil)
 }
 
-// ListJobs 列出所有 job
-func (r *restHandler) ListJobs(c *gin.Context) {
-	logger.Debug("Handler ListJobs Start")
+// ListJobsByEx 列出所有 job
+func (r *restHandler) ListJobsByEx(c *gin.Context) {
+	logger.Debug("Handler ListJobsByEx Start")
 	ctx, span := ar_trace.Tracer.Start(rest.GetLanguageCtx(c),
-		"列出所有job", trace.WithSpanKind(trace.SpanKindServer))
+		"列出所有job(Ex)", trace.WithSpanKind(trace.SpanKindServer))
 	defer span.End()
 
 	// 校验token
@@ -246,6 +292,29 @@ func (r *restHandler) ListJobs(c *gin.Context) {
 	if err != nil {
 		return
 	}
+	r.ListJobs(c, visitor)
+}
+
+// ListJobsByIn 列出所有 job
+func (r *restHandler) ListJobsByIn(c *gin.Context) {
+	logger.Debug("Handler ListJobsByIn Start")
+	_, span := ar_trace.Tracer.Start(rest.GetLanguageCtx(c),
+		"列出所有job(In)", trace.WithSpanKind(trace.SpanKindServer))
+	defer span.End()
+
+	// 内部接口 account_id从header中取，跳过用户有效认证，后面在权限校验时就会校验这个用户是否有权限，无效用户无权限
+	// 自行构建一个visitor
+	visitor := GenerateVisitor(c)
+	r.ListJobs(c, visitor)
+}
+
+// ListJobs 列出所有 job
+func (r *restHandler) ListJobs(c *gin.Context, visitor rest.Visitor) {
+	logger.Debug("Handler ListJobs Start")
+	ctx, span := ar_trace.Tracer.Start(rest.GetLanguageCtx(c),
+		"列出所有job", trace.WithSpanKind(trace.SpanKindServer))
+	defer span.End()
+
 	accountInfo := interfaces.AccountInfo{
 		ID:   visitor.ID,
 		Type: string(visitor.Type),
@@ -365,11 +434,11 @@ func (r *restHandler) ListJobs(c *gin.Context) {
 	rest.ReplyOK(c, http.StatusOK, result)
 }
 
-// ListTasks 列出指定 job 的子任务
-func (r *restHandler) ListTasks(c *gin.Context) {
-	logger.Debug("Handler ListTasks Start")
+// ListTasksByEx 列出指定 job 的子任务
+func (r *restHandler) ListTasksByEx(c *gin.Context) {
+	logger.Debug("Handler ListTasksByEx Start")
 	ctx, span := ar_trace.Tracer.Start(rest.GetLanguageCtx(c),
-		"列出指定job的子任务", trace.WithSpanKind(trace.SpanKindServer))
+		"列出指定job的子任务(Ex)", trace.WithSpanKind(trace.SpanKindServer))
 	defer span.End()
 
 	// 校验token
@@ -377,6 +446,29 @@ func (r *restHandler) ListTasks(c *gin.Context) {
 	if err != nil {
 		return
 	}
+	r.ListTasks(c, visitor)
+}
+
+// ListTasksByIn 列出指定 job 的子任务
+func (r *restHandler) ListTasksByIn(c *gin.Context) {
+	logger.Debug("Handler ListTasksByIn Start")
+	_, span := ar_trace.Tracer.Start(rest.GetLanguageCtx(c),
+		"列出指定job的子任务(In)", trace.WithSpanKind(trace.SpanKindServer))
+	defer span.End()
+
+	// 内部接口 account_id从header中取，跳过用户有效认证，后面在权限校验时就会校验这个用户是否有权限，无效用户无权限
+	// 自行构建一个visitor
+	visitor := GenerateVisitor(c)
+	r.ListTasks(c, visitor)
+}
+
+// ListTasks 列出指定 job 的子任务
+func (r *restHandler) ListTasks(c *gin.Context, visitor rest.Visitor) {
+	logger.Debug("Handler ListTasks Start")
+	ctx, span := ar_trace.Tracer.Start(rest.GetLanguageCtx(c),
+		"列出指定job的子任务", trace.WithSpanKind(trace.SpanKindServer))
+	defer span.End()
+
 	accountInfo := interfaces.AccountInfo{
 		ID:   visitor.ID,
 		Type: string(visitor.Type),
