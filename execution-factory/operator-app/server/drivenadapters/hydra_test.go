@@ -44,7 +44,6 @@ func TestIntrospect(t *testing.T) {
 		})
 
 		Convey("令牌无效", func() {
-			logger.EXPECT().Warnf(gomock.Any(), gomock.Any()).Return()
 			httpClient.EXPECT().Post(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
 				Return(200, &IntrospectInfo{Active: false}, nil)
 
