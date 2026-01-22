@@ -93,7 +93,7 @@ const Edge = (props: TProps) => {
           label: (
             <div className="g-flex-align-center" title={name}>
               <ObjectIcon icon={icon} color={color} />
-              <div>
+              <div style={{ marginLeft: 8 }}>
                 <Text className="g-ellipsis-1">{name}</Text>
               </div>
             </div>
@@ -290,11 +290,11 @@ const Edge = (props: TProps) => {
                 image={createImage}
                 description={
                   <span>
-                    {intl.get('Edge.emptyCreate')}
+                    {intl.get('Global.click')}
                     <Button type="link" style={{ padding: 0 }} onClick={() => goToCreateAndEditPage('create')}>
-                      {intl.get('Global.emptyCreateButton')}
+                      {intl.get('Global.createBtn')}
                     </Button>
-                    {intl.get('Global.emptyCreateTip')}
+                    {intl.get('Global.add')}
                   </span>
                 }
               />

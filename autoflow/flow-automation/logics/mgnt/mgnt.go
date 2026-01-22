@@ -104,6 +104,8 @@ type CreateDagReq struct {
 	CreateBy    string            `json:"create_by"`
 	Published   bool              `json:"published"`
 	Type        string            `json:"type,omitempty"`
+	Version     entity.Version    `json:"version"`
+	ChangeLog   string            `json:"change_log"`
 	BizDomainID string            `json:"-"`
 }
 
@@ -118,6 +120,8 @@ type OptionalUpdateDagReq struct {
 	AppInfo     *entity.AppInfo    `json:"appinfo"`
 	Emails      *[]string          `json:"emails"`
 	Published   *bool              `json:"published"`
+	Version     *entity.Version    `json:"version"`
+	ChangeLog   string             `json:"change_log"`
 }
 
 // DagInfo dag detail info
@@ -156,9 +160,10 @@ type DagSimpleInfo struct {
 	Creator     string         `json:"creator,omitempty"`
 	Trigger     entity.Trigger `json:"trigger,omitempty"`
 	Type        string         `json:"type,omitempty"`
+	VersionID   string         `json:"version_id,omitempty"`
 }
 
-// DagSimpleInfo  dag simple info
+// DagInfoOption  dag info
 type DagInfoOption struct {
 	ID           string                        `json:"id"`
 	Name         string                        `json:"name,omitempty"`
@@ -236,6 +241,8 @@ type AuditorInfo struct {
 // ListDagsConfig 列举dags参数
 type ListDagsConfig struct {
 	IsShared bool `json:"is_shared"`
+	// Scope 此参数用于子流程调用时列举用户可展示的所有流程信息(自己创建或他人分享)
+	Scope string `json:"scope"` // "all"
 }
 
 // TriggerConfig 触发器节点配置信息
@@ -252,12 +259,23 @@ type QueryParams struct {
 	SortBy         string   `json:"sortby"`
 	Order          string   `json:"order"`
 	TriggerType    string   `json:"trigger_type"`
+	TriggerTypes   []string `json:"trigger_types"`
 	Type           string   `json:"type"`
 	KeyWord        string   `json:"keyword"`
 	BizDomainID    string   `json:"-"`
 	TriggerExclude []string `json:"-"`
 	Accessors      []string `json:"-"`
 	UserID         string   `json:"-"`
+	Scope          string   `json:"-"`
+}
+
+// RunDagParams 运行数据流请求参数
+type RunDagParams struct {
+	ID                  string
+	VersionID           string
+	FormData            map[string]any
+	ParentDagInstanceID string
+	CallBack            string
 }
 
 // DocMsg doc msg
@@ -272,8 +290,8 @@ type MgntHandler interface { //nolint
 	ListDag(ctx context.Context, param QueryParams, userInfo *drivenadapters.UserInfo, config *ListDagsConfig) ([]*DagSimpleInfo, int64, error)
 	ListDagV2(ctx context.Context, param QueryParams, userInfo *drivenadapters.UserInfo) ([]*DagSimpleInfo, int64, error)
 	ListDagByFields(ctx context.Context, filter bson.M, opt options.FindOptions) ([]*DagSimpleInfo, int64, error)
-	RunInstance(ctx context.Context, id string, userInfo *drivenadapters.UserInfo) error
-	RunFormInstance(ctx context.Context, id string, formData map[string]interface{}, userInfo *drivenadapters.UserInfo) (string, error)
+	RunInstance(ctx context.Context, params *RunDagParams, userInfo *drivenadapters.UserInfo) error
+	RunFormInstance(ctx context.Context, params *RunDagParams, userInfo *drivenadapters.UserInfo) (string, error)
 	HandleDocEvent(ctx context.Context, msg *DocMsg, topic string) error
 	CancelRunningInstance(ctx context.Context, id string, dagInsReq *DagInsStatusReq, userInfo *drivenadapters.UserInfo) error
 	GetSuggestDagName(ctx context.Context, name string, userInfo *drivenadapters.UserInfo) (string, error)
@@ -462,6 +480,11 @@ func (m *mgnt) CreateDag(ctx context.Context, param *CreateDagReq, userInfo *dri
 	copy(steps, param.Steps)
 	m.buildTasks(&steps[0], steps, &tasks, nil, &stepList, nil, nil)
 
+	subDagIDs, err := m.validSubFlowInSteps(ctx, "", stepList)
+	if err != nil {
+		return dagID, err
+	}
+
 	err = m.validSteps(&Validate{
 		Ctx:         ctx,
 		Steps:       stepList,
@@ -496,6 +519,8 @@ func (m *mgnt) CreateDag(ctx context.Context, param *CreateDagReq, userInfo *dri
 		Published:   param.Published,
 		Type:        param.Type,
 		BizDomainID: param.BizDomainID,
+		ModifyBy:    userInfo.UserID,
+		SubIDs:      subDagIDs,
 	}
 
 	if param.Status == common.StoppedStatus {
@@ -521,10 +546,38 @@ func (m *mgnt) CreateDag(ctx context.Context, param *CreateDagReq, userInfo *dri
 		return dagID, ierrors.NewIError(ierrors.Forbidden, "", map[string]string{"title": param.Title})
 	}
 
-	dagID, err = m.mongo.CreateDag(ctx, dag)
+	dagVersions, err := m.buildDagVersions(&BuildDagVersionParams{
+		Dag:        dag,
+		CurVersion: &param.Version,
+		ChangeLog:  param.ChangeLog,
+		UserID:     userInfo.UserID,
+		IsCreate:   true,
+	})
 	if err != nil {
-		logger.Warnf("[logic.CreateDag] CreateDag err, deail: %s", err.Error())
-		return dagID, ierrors.NewIError(ierrors.InternalError, "", nil)
+		return "", err
+	}
+
+	err = m.mongo.WithTransaction(ctx, func(sctx mongo.SessionContext) error {
+		dagID, err = m.mongo.CreateDag(sctx, dag)
+		if err != nil {
+			logger.Warnf("[logic.CreateDag] CreateDag err, deail: %s", err.Error())
+			return ierrors.NewIError(ierrors.InternalError, "", nil)
+		}
+
+		config, _ := json.Marshal(dag)
+		dagVersion := dagVersions[0]
+		dagVersion.DagID = dagID
+		dagVersion.Config = entity.Config(config)
+		_, err = m.mongo.CreateDagVersion(sctx, dagVersion)
+		if err != nil {
+			log.Warnf("[logic.CreateDag] CreateDagVersion err, detail: %s", err.Error())
+			return err
+		}
+
+		return nil
+	})
+	if err != nil {
+		return "", ierrors.NewIError(ierrors.InternalError, "", nil)
 	}
 
 	bizDomainParams := drivenadapters.BizDomainResourceParams{
@@ -650,6 +703,12 @@ func (m *mgnt) UpdateDag(ctx context.Context, dagID string, param *OptionalUpdat
 	}
 	trigger := m.getTriggerType(dag.Steps[0].Operator)
 
+	dagBytes, err := json.Marshal(dag)
+	if err != nil {
+		log.Warnf("[logic.UpdateDataFlow] Marshal err, detail: %s", err.Error())
+		return ierrors.NewIError(ierrors.InternalError, "", err.Error())
+	}
+
 	userDetail, err := m.usermgnt.GetUserInfoByType(userInfo.UserID, userInfo.AccountType)
 	if err != nil {
 		log.Warnf("[logic.UpdateDag] GetUserInfoByType err, detail: %s", err.Error())
@@ -705,6 +764,11 @@ func (m *mgnt) UpdateDag(ctx context.Context, dagID string, param *OptionalUpdat
 		steps := make([]entity.Step, len(*param.Steps))
 		copy(steps, *param.Steps)
 		m.buildTasks(&steps[0], steps, &tasks, nil, &stepList, nil, nil)
+
+		dag.SubIDs, err = m.validSubFlowInSteps(ctx, dagID, stepList)
+		if err != nil {
+			return err
+		}
 
 		// steps paramas validate
 		err = m.validSteps(&Validate{
@@ -787,8 +851,37 @@ func (m *mgnt) UpdateDag(ctx context.Context, dagID string, param *OptionalUpdat
 		dag.Published = *param.Published
 	}
 
-	if err := m.mongo.UpdateDag(ctx, dag); err != nil {
-		log.Warnf("[logic.UpdateDag] UpdateDag err, deail: %s", err.Error())
+	var dagVersions []*entity.DagVersion
+	dagVersions, err = m.buildDagVersions(&BuildDagVersionParams{
+		OldDagBytes: dagBytes,
+		Dag:         dag,
+		CurVersion:  param.Version,
+		ChangeLog:   param.ChangeLog,
+		UserID:      userInfo.UserID,
+		IsCreate:    false,
+	})
+	if err != nil {
+		return err
+	}
+
+	err = m.mongo.WithTransaction(ctx, func(sctx mongo.SessionContext) error {
+		// 更新dag
+		if err := m.mongo.UpdateDag(sctx, dag); err != nil {
+			log.Warnf("[logic.UpdateDag] UpdateDag err, deail: %s", err.Error())
+			return ierrors.NewIError(ierrors.InternalError, "", nil)
+		}
+
+		for _, dagVersion := range dagVersions {
+			_, err = m.mongo.CreateDagVersion(sctx, dagVersion)
+			if err != nil {
+				log.Warnf("[logic.UpdateDag] CreateDagVersion err, detail: %s", err.Error())
+				return err
+			}
+		}
+
+		return nil
+	})
+	if err != nil {
 		return ierrors.NewIError(ierrors.InternalError, "", nil)
 	}
 
@@ -1136,7 +1229,17 @@ func (m *mgnt) ListDag(ctx context.Context, param QueryParams, userInfo *drivena
 
 	isAdmin := utils.IsAdminRole(userDetail.Roles)
 
-	if config != nil && config.IsShared {
+	if config != nil && config.Scope == "all" {
+		accessors, merr := m.usermgnt.GetUserAccessorIDs(userInfo.UserID)
+		if merr != nil {
+			log.Warnf("[logic.ListDag] GetUserAccessorIDs err, detail: %s", merr.Error())
+			return nil, 0, merr
+		}
+		param.TriggerExclude = []string{common.OpAnyShareSelectedFileTrigger, common.OpAnyShareSelectedFolderTrigger}
+		param.Accessors = accessors
+		param.UserID = userInfo.UserID
+		param.Scope = config.Scope
+	} else if config != nil && config.IsShared {
 		accessors, merr := m.usermgnt.GetUserAccessorIDs(userInfo.UserID)
 		if merr != nil {
 			log.Warnf("[logic.ListDag] GetUserAccessorIDs err, detail: %s", merr.Error())
@@ -1180,6 +1283,7 @@ func (m *mgnt) ListDag(ctx context.Context, param QueryParams, userInfo *drivena
 			Creator:     accessors[_dag.UserID],
 			Trigger:     _dag.Trigger,
 			Type:        _dag.Type,
+			VersionID:   _dag.VersionID,
 		})
 	}
 
@@ -1373,16 +1477,16 @@ func (m *mgnt) RunCronInstance(ctx context.Context, id, webhook string) error {
 }
 
 // RunInstance 手动运行
-func (m *mgnt) RunInstance(ctx context.Context, id string, userInfo *drivenadapters.UserInfo) error {
+func (m *mgnt) RunInstance(ctx context.Context, params *RunDagParams, userInfo *drivenadapters.UserInfo) error {
 	var err error
 	ctx, span := trace.StartInternalSpan(ctx)
 	defer func() { trace.TelemetrySpanEnd(span, err) }()
 	log := traceLog.WithContext(ctx)
 
-	dag, err := m.mongo.GetDag(ctx, id)
+	dag, err := m.mongo.GetDagWithOptionalVersion(ctx, params.ID, params.VersionID)
 	if err != nil {
 		if errors.Is(err, mongo.ErrNoDocuments) {
-			return ierrors.NewIError(ierrors.TaskNotFound, "", map[string]string{"dagId": id})
+			return ierrors.NewIError(ierrors.TaskNotFound, "", map[string]string{"dagId": params.ID})
 		}
 		log.Warnf("[logic.RunInstance] GetDag err, deail: %s", err.Error())
 		return ierrors.NewIError(ierrors.InternalError, "", nil)
@@ -1442,6 +1546,33 @@ func (m *mgnt) RunInstance(ctx context.Context, id string, userInfo *drivenadapt
 		return err
 	}
 
+	if params.ParentDagInstanceID != "" {
+		parentDagIns, err1 := m.mongo.GetDagInstance(ctx, params.ParentDagInstanceID)
+		if err1 != nil {
+			log.Warnf("[logic.RunInstance] GetDagInstance err, deail: %s", err1.Error())
+			return ierrors.NewIError(ierrors.InternalError, "", nil)
+		}
+
+		callChain := append(parentDagIns.CallChain, dag.ID)
+		if len(callChain) > MaxCallDepth {
+			return libErrors.NewPublicRestError(ctx, libErrors.PErrorBadRequest,
+				libErrors.PErrorBadRequest, map[string]interface{}{
+					"message":        fmt.Sprintf("Maximum call chain depth exceeded (limit: %d).", MaxCallDepth),
+					"max_call_depth": MaxCallDepth,
+				},
+			)
+		}
+		runVar["call_chain"] = strings.Join(callChain, ",")
+	}
+
+	if params.CallBack != "" {
+		runVar["call_back"] = params.CallBack
+		runVar["batch_run_id"], err = utils.GetUniqueIDStr()
+		if err != nil {
+			return err
+		}
+	}
+
 	if dag.Steps[0].Operator == common.MDLDataViewTrigger {
 		err = m.triggerFromMDLDataView(ctx, dag, triggerType, runVar, userInfo.UserID, userInfo.AccountType, tokenInfo.LoginIP)
 		if err != nil {
@@ -1485,7 +1616,7 @@ func (m *mgnt) RunInstance(ctx context.Context, id string, userInfo *drivenadapt
 			ExtMsg:    extMsg,
 			OutBizID:  fmt.Sprintf("%v", randomID),
 			Operation: drivenadapters.ExecuteOperation,
-			ObjID:     id,
+			ObjID:     params.ID,
 			ObjName:   dag.Name,
 			LogLevel:  drivenadapters.NcTLogLevel_NCT_LL_INFO_Str,
 		}, write)
@@ -1493,16 +1624,16 @@ func (m *mgnt) RunInstance(ctx context.Context, id string, userInfo *drivenadapt
 	return nil
 }
 
-func (m *mgnt) RunFormInstance(ctx context.Context, id string, formData map[string]interface{}, userInfo *drivenadapters.UserInfo) (string, error) {
+func (m *mgnt) RunFormInstance(ctx context.Context, params *RunDagParams, userInfo *drivenadapters.UserInfo) (string, error) {
 	var err error
 	ctx, span := trace.StartInternalSpan(ctx)
 	defer func() { trace.TelemetrySpanEnd(span, err) }()
 	log := traceLog.WithContext(ctx)
 
-	dag, err := m.mongo.GetDag(ctx, id)
+	dag, err := m.mongo.GetDagWithOptionalVersion(ctx, params.ID, params.VersionID)
 	if err != nil {
 		if errors.Is(err, mongo.ErrNoDocuments) {
-			return "", ierrors.NewIError(ierrors.TaskNotFound, "", map[string]string{"dagId": id})
+			return "", ierrors.NewIError(ierrors.TaskNotFound, "", map[string]string{"dagId": params.ID})
 		}
 		log.Warnf("[logic.RunFormInstance] GetDag err, deail: %s", err.Error())
 		return "", ierrors.NewIError(ierrors.InternalError, "", nil)
@@ -1528,7 +1659,7 @@ func (m *mgnt) RunFormInstance(ctx context.Context, id string, formData map[stri
 	}
 
 	if !dag.Published && userInfo == nil {
-		return "", ierrors.NewIError(ierrors.Forbidden, "", map[string]string{"dagId": id})
+		return "", ierrors.NewIError(ierrors.Forbidden, "", map[string]string{"dagId": params.ID})
 	}
 
 	if userInfo != nil {
@@ -1561,7 +1692,30 @@ func (m *mgnt) RunFormInstance(ctx context.Context, id string, formData map[stri
 		"operator_type": userInfo.AccountType,
 	}
 
-	for key, val := range formData {
+	if params.ParentDagInstanceID != "" {
+		parentDagIns, err1 := m.mongo.GetDagInstance(ctx, params.ParentDagInstanceID)
+		if err1 != nil {
+			log.Warnf("[logic.RunFormInstance] GetDagInstance err, deail: %s", err1.Error())
+			return "", ierrors.NewIError(ierrors.InternalError, "", nil)
+		}
+
+		callChain := append(parentDagIns.CallChain, dag.ID)
+		if len(callChain) > MaxCallDepth {
+			return "", libErrors.NewPublicRestError(ctx, libErrors.PErrorBadRequest,
+				libErrors.PErrorBadRequest, map[string]interface{}{
+					"message":        fmt.Sprintf("Maximum call chain depth exceeded (limit: %d).", MaxCallDepth),
+					"max_call_depth": MaxCallDepth,
+				},
+			)
+		}
+		runVar["call_chain"] = strings.Join(callChain, ",")
+	}
+
+	if params.CallBack != "" {
+		runVar["call_back"] = params.CallBack
+	}
+
+	for key, val := range params.FormData {
 		switch v := val.(type) {
 		case string, int, float64:
 			runVar[key] = fmt.Sprintf("%v", v)
@@ -1582,7 +1736,7 @@ func (m *mgnt) RunFormInstance(ctx context.Context, id string, formData map[stri
 		return "", err
 	}
 
-	dagIns, dagErr := dag.Run(ctx, triggerType, runVar, []string{userInfo.UserName})
+	dagIns, dagErr := dag.Run(ctx, triggerType, runVar, entity.WithKeyWords(userInfo.UserName))
 	if dagErr != nil {
 		return "", ierrors.NewIError(ierrors.Forbidden, ierrors.DagStatusNotNormal, map[string]interface{}{"id:": dag.ID, "status": dag.Status})
 	}
@@ -1612,7 +1766,7 @@ func (m *mgnt) RunFormInstance(ctx context.Context, id string, formData map[stri
 			ExtMsg:    extMsg,
 			OutBizID:  dagIns.ID,
 			Operation: drivenadapters.ExecuteOperation,
-			ObjID:     id,
+			ObjID:     params.ID,
 			ObjName:   dag.Name,
 			LogLevel:  drivenadapters.NcTLogLevel_NCT_LL_INFO_Str,
 		}, write)
@@ -1757,7 +1911,7 @@ func (m *mgnt) HandleDocEvent(ctx context.Context, msg *DocMsg, topic string) er
 		}
 
 		dag.SetPushMessage(m.executeMethods.Publish)
-		dagIns, err := dag.Run(ctx, entity.TriggerEvent, runVar, []string{msg.DocName}) //nolint
+		dagIns, err := dag.Run(ctx, entity.TriggerEvent, runVar, entity.WithKeyWords(msg.DocName)) //nolint
 		if err != nil {
 			return err
 		}
@@ -1882,7 +2036,7 @@ func (m *mgnt) HandleUserInfoEvent(ctx context.Context, msg *common.UserInfoMsg,
 			runVar["dept_paths"] = string(paths)
 		}
 
-		dagIns, err := dag.Run(ctx, entity.TriggerEvent, runVar, keywords)
+		dagIns, err := dag.Run(ctx, entity.TriggerEvent, runVar, entity.WithKeyWords(keywords...))
 		if err != nil {
 			log.Warnf("[logics.HandleUserInfoEvent] Run dag failed: %s", err.Error())
 			return err
@@ -1957,7 +2111,7 @@ func (m *mgnt) HandleTagInfoChangeEvent(ctx context.Context, tag *common.TagInfo
 		}
 
 		dag.SetPushMessage(m.executeMethods.Publish)
-		dagIns, err := dag.Run(ctx, entity.TriggerEvent, runVar, []string{tag.Name}) //nolint
+		dagIns, err := dag.Run(ctx, entity.TriggerEvent, runVar, entity.WithKeyWords(tag.Name)) //nolint
 		if err != nil {
 			return err
 		}
@@ -2037,7 +2191,7 @@ func (m *mgnt) HandleTagTreeCreateEvent(ctx context.Context, msg *common.TagInfo
 		}
 
 		dag.SetPushMessage(m.executeMethods.Publish)
-		dagIns, err := dag.Run(ctx, entity.TriggerEvent, runVar, []string{msg.Name}) //nolint
+		dagIns, err := dag.Run(ctx, entity.TriggerEvent, runVar, entity.WithKeyWords(msg.Name)) //nolint
 		if err != nil {
 			return err
 		}
@@ -2128,7 +2282,7 @@ func (m *mgnt) HandleKCUserInfoEvent(ctx context.Context, msg *common.UserInfoMs
 		}
 
 		dag.SetPushMessage(m.executeMethods.Publish)
-		dagIns, err := dag.Run(ctx, entity.TriggerEvent, runVar, []string{msg.Name, msg.Email}) //nolint
+		dagIns, err := dag.Run(ctx, entity.TriggerEvent, runVar, entity.WithKeyWords(msg.Name, msg.Email)) //nolint
 		if err != nil {
 			return err
 		}
@@ -3096,6 +3250,7 @@ func (m *mgnt) ContinueBlockInstances(ctx context.Context, blockedTaskIDs []stri
 					}
 					b, _ := json.Marshal(reason)
 					dagIns.Reason = string(b)
+					mod.HandleSubprocessCallback(ctx, entity.DagInstanceStatusFailed, dagIns, instance)
 					// 如果dagIns已经是取消状态，不需要再推一次可观测性日志
 					if preStatus != entity.DagInstanceStatusCancled {
 						go m.LogDagInsResult(ctx, dagIns)
@@ -3756,7 +3911,7 @@ func (m *mgnt) handleFoldersFromSource(ctx context.Context, depth int, docid, us
 
 // handleTriggerError 处理触发器节点执行失败
 func (m *mgnt) handleTriggerError(ctx context.Context, triggerType entity.Trigger, runVar map[string]string, dag *entity.Dag, err error) error {
-	dagIns, dagErr := dag.Run(ctx, triggerType, runVar, nil)
+	dagIns, dagErr := dag.Run(ctx, triggerType, runVar)
 
 	if dagErr != nil {
 		log.Warnf("[logic.handleTriggerError] dag.Run err: %s", err.Error())
@@ -4512,7 +4667,7 @@ func (m *mgnt) createDagInstanceFromDataSource(ctx context.Context, triggerType 
 	dagInstances := make([]*entity.DagInstance, 0)
 	for _, d := range datas {
 		runVar["docid"] = d.ID
-		dagIns, dagErr := dag.Run(ctx, triggerType, runVar, d.Keywords)
+		dagIns, dagErr := dag.Run(ctx, triggerType, runVar, entity.WithKeyWords(d.Keywords...))
 		if dagErr != nil {
 			return ierrors.NewIError(ierrors.Forbidden, ierrors.DagStatusNotNormal, map[string]interface{}{"id:": dag.ID, "status": dag.Status})
 		}
@@ -4672,7 +4827,7 @@ func (m *mgnt) RunInstanceWithDoc(ctx context.Context, id string, params RunWith
 	}
 
 	dag.SetPushMessage(m.executeMethods.Publish)
-	dagIns, dagErr := dag.Run(ctx, triggerType, runVar, []string{metadata.Name, userDetail.UserName})
+	dagIns, dagErr := dag.Run(ctx, triggerType, runVar, entity.WithKeyWords(metadata.Name, userDetail.UserName))
 	if dagErr != nil {
 		return ierrors.NewIError(ierrors.Forbidden, ierrors.DagStatusNotNormal, map[string]interface{}{"id:": dag.ID, "status": dag.Status})
 	}
@@ -5171,7 +5326,7 @@ func (m *mgnt) GetAgents(ctx context.Context) (res []*rds.AgentModel, err error)
 
 // Extract shared logic into a helper method
 func (m *mgnt) runDagInstance(ctx context.Context, dag *entity.Dag, triggerType entity.Trigger, runVar map[string]string, userDetail *drivenadapters.UserInfo) error {
-	dagIns, dagErr := dag.Run(ctx, triggerType, runVar, nil)
+	dagIns, dagErr := dag.Run(ctx, triggerType, runVar)
 	if dagErr != nil {
 		return ierrors.NewIError(ierrors.Forbidden, ierrors.DagStatusNotNormal, map[string]interface{}{"id:": dag.ID, "status": dag.Status})
 	}
@@ -5431,6 +5586,7 @@ func (m *mgnt) ListDagV2(ctx context.Context, param QueryParams, userInfo *drive
 			Creator:     accessors[dag.UserID],
 			Trigger:     dag.Trigger,
 			Type:        dag.Type,
+			VersionID:   dag.VersionID,
 		}
 		if dag.Type == "" {
 			simpleDag.Type = common.DagTypeDefault
@@ -5496,4 +5652,54 @@ func (m *mgnt) ListDagInstanceEvents(ctx context.Context, dagID, dagInsID string
 	}
 	next = offset + len(logs)
 	return
+}
+
+// validSubFlowInSteps 校验子流程调用信息
+func (m *mgnt) validSubFlowInSteps(ctx context.Context, dagID string, stepList []map[string]interface{}) ([]string, error) {
+	var err error
+	ctx, span := trace.StartInternalSpan(ctx)
+	defer func() { trace.TelemetrySpanEnd(span, err) }()
+	log := traceLog.WithContext(ctx)
+
+	var subDagIDs []string
+	for _, v := range stepList {
+		opType := v["operator"].(string)
+		if opType == common.SubFlowCallWorkflowOpt || opType == common.SubFlowCallDataflowOpt {
+			parameters := v["parameters"].(map[string]any)
+			subDagIDs = append(subDagIDs, parameters["dag_id"].(string))
+		}
+	}
+
+	if len(subDagIDs) == 0 {
+		return subDagIDs, nil
+	}
+
+	dags, err := m.mongo.ListDag(ctx, &mod.ListDagInput{
+		DagIDs: subDagIDs,
+		Type:   "all",
+	})
+	if err != nil {
+		log.Warnf("[logic.validSubFlowInSteps] ListDag err, detail: %s", err.Error())
+		return subDagIDs, libErrors.NewPublicRestError(ctx, libErrors.PErrorInternalServerError, libErrors.PErrorInternalServerError, nil)
+	}
+
+	if len(subDagIDs) != len(dags) {
+		existIDs := []string{}
+		for _, dag := range dags {
+			existIDs = append(existIDs, dag.ID)
+		}
+		_, del := utils.Arrcmp(subDagIDs, existIDs)
+		return subDagIDs, libErrors.NewPublicRestError(ctx, libErrors.PErrorNotFound, libErrors.PErrorNotFound, map[string]any{"ids": del})
+	}
+
+	cycle, err := m.hasCycle(ctx, dagID, subDagIDs, []string{common.DagTypeDefault, common.DagTypeDataFlow})
+	if err != nil {
+		return subDagIDs, err
+	}
+
+	if cycle.Cycle {
+		return subDagIDs, libErrors.NewPublicRestError(ctx, libErrors.PErrorBadRequest, libErrors.PErrorLoopDetected, cycle)
+	}
+
+	return subDagIDs, nil
 }

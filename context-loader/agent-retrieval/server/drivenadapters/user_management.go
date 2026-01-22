@@ -12,12 +12,12 @@ import (
 	"strings"
 	"sync"
 
+	jsoniter "github.com/json-iterator/go"
 	"github.com/kweaver-ai/adp/context-loader/agent-retrieval/server/infra/config"
 	"github.com/kweaver-ai/adp/context-loader/agent-retrieval/server/infra/errors"
 	"github.com/kweaver-ai/adp/context-loader/agent-retrieval/server/infra/rest"
 	"github.com/kweaver-ai/adp/context-loader/agent-retrieval/server/interfaces"
 	"github.com/kweaver-ai/adp/context-loader/agent-retrieval/server/utils"
-	jsoniter "github.com/json-iterator/go"
 )
 
 var (

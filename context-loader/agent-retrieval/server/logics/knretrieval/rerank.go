@@ -12,7 +12,9 @@ import (
 	"github.com/kweaver-ai/adp/context-loader/agent-retrieval/server/interfaces"
 )
 
-// 收集不同概念类集合，并进行排序，每个概念集取前limit个
+// rerankByConceptType 收集不同概念类集合，并进行排序，每个概念集取前limit个
+//
+//nolint:unused // 预留函数，后续可能使用
 func (k *knRetrievalServiceImpl) rerankByConceptType(conceptResults []*interfaces.ConceptResult, limit int) []*interfaces.ConceptResult {
 	// 去重
 	conceptResults = k.deduplicateConcepts(conceptResults)
@@ -32,13 +34,13 @@ func (k *knRetrievalServiceImpl) rerankByConceptType(conceptResults []*interface
 	}
 	result := []*interfaces.ConceptResult{}
 	// 顺序要求：对象类、关系类、行动类
-	if conceptTypeMap[interfaces.KnConceptTypeObject] != nil && len(conceptTypeMap[interfaces.KnConceptTypeObject]) > 0 {
+	if len(conceptTypeMap[interfaces.KnConceptTypeObject]) > 0 {
 		result = append(result, conceptTypeMap[interfaces.KnConceptTypeObject]...)
 	}
-	if conceptTypeMap[interfaces.KnConceptTypeRelation] != nil && len(conceptTypeMap[interfaces.KnConceptTypeRelation]) > 0 {
+	if len(conceptTypeMap[interfaces.KnConceptTypeRelation]) > 0 {
 		result = append(result, conceptTypeMap[interfaces.KnConceptTypeRelation]...)
 	}
-	if conceptTypeMap[interfaces.KnConceptTypeAction] != nil && len(conceptTypeMap[interfaces.KnConceptTypeAction]) > 0 {
+	if len(conceptTypeMap[interfaces.KnConceptTypeAction]) > 0 {
 		result = append(result, conceptTypeMap[interfaces.KnConceptTypeAction]...)
 	}
 	if len(result) > limit {

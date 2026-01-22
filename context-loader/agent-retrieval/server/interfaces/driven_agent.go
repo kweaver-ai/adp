@@ -92,7 +92,7 @@ type MetricDynamicParamsGeneratorReq struct {
 
 // OperatorDynamicParamsGeneratorReq Operator Dynamic Params Generator Request
 type OperatorDynamicParamsGeneratorReq struct {
-	OperatorId        string            `json:"operator_id"`
+	OperatorID        string            `json:"operator_id"`
 	LogicProperty     *LogicPropertyDef `json:"logic_property"`
 	Query             string            `json:"query"`
 	UniqueIdentities  []map[string]any  `json:"unique_identities"`

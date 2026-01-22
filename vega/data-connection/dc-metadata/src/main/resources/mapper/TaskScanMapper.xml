@@ -39,13 +39,19 @@
     </select>
 
     <select id="selectTaskScans" resultType="com.eisoo.dc.common.metadata.entity.TaskScanEntity">
-        SELECT id FROM t_task_scan
-        WHERE 1=1
+        SELECT id,type FROM t_task_scan
+        WHERE 1=1 AND schedule_id is null
         <if test="id != null and id != ''">
             AND id = #{id}
         </if>
         <if test="dsId != null and dsId != ''">
             AND ds_id = #{dsId}
+        </if>
+        <if test="taskType != null and not taskType.isEmpty()">
+            AND type IN
+            <foreach item="includeId" collection="taskType" open="(" separator="," close=")">
+                #{includeId}
+            </foreach>
         </if>
         AND scan_status IN
         <foreach item="status" collection="statusList" open="(" separator="," close=")">
@@ -54,10 +60,107 @@
         <if test="keyword != null and keyword != ''">
             AND name LIKE CONCAT('%', #{keyword}, '%')
         </if>
+        UNION ALL
+        select t1.id,t1.type
+        from
+        (   select * from t_task_scan where schedule_id is not null
+        <if test="dsId != null and dsId != ''">
+            AND ds_id = #{dsId}
+        </if>
+        <if test="taskType != null and not taskType.isEmpty()">
+            AND type IN
+            <foreach item="includeId" collection="taskType" open="(" separator="," close=")">
+                #{includeId}
+            </foreach>
+        </if>
+        AND scan_status IN
+        <foreach item="status" collection="statusList" open="(" separator="," close=")">
+            #{status}
+        </foreach>
+        <if test="keyword != null and keyword != ''">
+            AND name LIKE CONCAT('%', #{keyword}, '%')
+        </if>
+        )t1
+        join
+        (select schedule_id,max(start_time) as start_time from t_task_scan
+        where schedule_id is not null
+        <if test="dsId != null and dsId != ''">
+            AND ds_id = #{dsId}
+        </if>
+        AND scan_status IN
+        <foreach item="status" collection="statusList" open="(" separator="," close=")">
+            #{status}
+        </foreach>
+        <if test="taskType != null and not taskType.isEmpty()">
+            AND type IN
+            <foreach item="includeId" collection="taskType" open="(" separator="," close=")">
+                #{includeId}
+            </foreach>
+        </if>
+        <if test="keyword != null and keyword != ''">
+            AND name LIKE CONCAT('%', #{keyword}, '%')
+        </if>
+        group by schedule_id
+        )t2 on t1.schedule_id=t2.schedule_id and t1.start_time=t2.start_time
     </select>
     <select id="selectCount" resultType="long">
-        SELECT COUNT(*) FROM t_task_scan
-        WHERE 1=1
+        SELECT COUNT(*) FROM
+        (
+        SELECT id,type FROM t_task_scan
+        WHERE 1=1 AND schedule_id is null
+        <if test="includeIds != null">
+            AND id IN
+            <foreach item="includeId" collection="includeIds" open="(" separator="," close=")">
+                #{includeId}
+            </foreach>
+        </if>
+        <if test="dsId != null and dsId != ''">
+            AND ds_id = #{dsId}
+        </if>
+        <if test="taskType != null and not taskType.isEmpty()">
+            AND type IN
+            <foreach item="includeId" collection="taskType" open="(" separator="," close=")">
+                #{includeId}
+            </foreach>
+        </if>
+        AND scan_status IN
+        <foreach item="status" collection="statusList" open="(" separator="," close=")">
+            #{status}
+        </foreach>
+        <if test="keyword != null and keyword != ''">
+            AND name LIKE CONCAT('%', #{keyword}, '%')
+        </if>
+        UNION ALL
+        select t1.id,t1.type
+        from
+        (select * from t_task_scan
+        where schedule_id is not null
+        <if test="includeIds != null">
+            AND id IN
+            <foreach item="includeId" collection="includeIds" open="(" separator="," close=")">
+                #{includeId}
+            </foreach>
+        </if>
+        <if test="dsId != null and dsId != ''">
+            AND ds_id = #{dsId}
+        </if>
+        <if test="taskType != null and not taskType.isEmpty()">
+            AND type IN
+            <foreach item="includeId" collection="taskType" open="(" separator="," close=")">
+                #{includeId}
+            </foreach>
+        </if>
+        AND scan_status IN
+        <foreach item="status" collection="statusList" open="(" separator="," close=")">
+            #{status}
+        </foreach>
+        <if test="keyword != null and keyword != ''">
+            AND name LIKE CONCAT('%', #{keyword}, '%')
+        </if>
+        )t1
+        join
+        (select schedule_id,max(start_time) as start_time from t_task_scan
+        where schedule_id is not null
         <if test="includeIds != null">
             AND id IN
             <foreach item="includeId" collection="includeIds" open="(" separator="," close=")">
@@ -71,9 +174,34 @@
         <foreach item="status" collection="statusList" open="(" separator="," close=")">
             #{status}
         </foreach>
+        <if test="taskType != null and not taskType.isEmpty()">
+            AND type IN
+            <foreach item="includeId" collection="taskType" open="(" separator="," close=")">
+                #{includeId}
+            </foreach>
+        </if>
         <if test="keyword != null and keyword != ''">
             AND name LIKE CONCAT('%', #{keyword}, '%')
         </if>
+        group by schedule_id
+        )t2
+        on t1.schedule_id=t2.schedule_id and t1.start_time=t2.start_time
+        )tmp
     </select>
 
+    <select id="selectLastScheduleScanTask" resultType="com.eisoo.dc.common.metadata.entity.TaskScanEntity">
+        select *
+        from t_task_scan
+        where schedule_id = #{scheduleId}
+        order by start_time desc limit 1
+    </select>
+    <select id="selectScheduleScanExecList" resultType="com.eisoo.dc.common.metadata.entity.TaskScanEntity">
+        select *
+        from t_task_scan
+        where schedule_id = #{scheduleId}
+        order by start_time desc
+        <if test="limit > 0">
+            LIMIT #{limit} OFFSET #{offset}
+        </if>
+    </select>
 </mapper>

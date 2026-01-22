@@ -45,6 +45,7 @@ const (
 	OldPublishOperatiuon = "publish"
 	// OldAppTokenOperation 原AS app-token接口使用,工作流运行接口应用账户支持所有流程执行
 	OldAppTokenOperation = "app_token"
+	OldOwnerOperation    = "owner"
 )
 
 var (

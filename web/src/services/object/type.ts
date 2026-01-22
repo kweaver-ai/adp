@@ -55,6 +55,10 @@ export interface DataProperty {
   fulltext_config?: FulltextConfig;
   vector_config?: VectorConfig;
   index_config?: IndexConfig;
+  // 对象配置信息
+  primary_key?: boolean;
+  display_key?: boolean;
+  incremental_key?: boolean;
 }
 
 export enum LogicAttributeType {
@@ -197,11 +201,18 @@ export interface TNode {
     icon: string;
     attrClick?: (val: any) => void;
     openDataViewSource?: () => void;
+    deleteDataViewSource?: () => void;
+    addDataAttribute?: () => void;
+    pickAttribute?: () => void;
+    autoLine?: () => void;
     attributes: {
       name: string;
       display_name: string;
       type: string;
       comment?: string;
+      primary_key?: boolean;
+      display_key?: boolean;
+      incremental_key?: boolean;
       mapped_field?: {
         name: string;
         display_name?: string;

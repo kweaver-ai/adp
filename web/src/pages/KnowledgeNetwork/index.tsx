@@ -91,9 +91,7 @@ const KnowledgeNetwork = () => {
   };
 
   const changeDel = (row?: KnowledgeNetworkType.KnowledgeNetwork) => {
-    const content = row
-      ? intl.get('Global.deleteConfirm', { name: row.name })
-      : intl.get('Global.deleteConfirmMultiple', { names: selectedRows.map((val) => val.name).join(','), count: selectedRows.length });
+    const content = row ? intl.get('Global.deleteConfirm', { name: row.name }) : intl.get('Global.deleteConfirmMultiple', { count: selectedRows.length });
     modal.confirm({
       title: '',
       content: content,
@@ -255,11 +253,11 @@ const KnowledgeNetwork = () => {
                   image={createImage}
                   description={
                     <span>
-                      {intl.get('KnowledgeNetwork.emptyCreate')}
+                      {intl.get('Global.click')}
                       <Button type="link" style={{ padding: 0 }} onClick={() => setOpen(true)}>
-                        {intl.get('Global.emptyCreateButton')}
+                        {intl.get('Global.createBtn')}
                       </Button>
-                      {intl.get('KnowledgeNetwork.emptyCreateTip')}
+                      {intl.get('Global.add')}
                     </span>
                   }
                 />

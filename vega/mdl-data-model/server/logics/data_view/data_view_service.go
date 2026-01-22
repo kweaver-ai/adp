@@ -471,7 +471,7 @@ func (dvs *dataViewService) UpdateDataView(ctx context.Context, tx *sql.Tx, view
 	return nil
 }
 
-// 内部修改单个数据视图，不校验权限, 同步库表到原子视图时使用
+// 内部修改单个数据视图，不校验权限, 同步库表为原子视图时使用
 func (dvs *dataViewService) UpdateDataViewInternal(ctx context.Context, view *interfaces.DataView) error {
 	ctx, span := ar_trace.Tracer.Start(ctx, "logic layer: Update a data view internal")
 	defer span.End()
@@ -486,9 +486,12 @@ func (dvs *dataViewService) UpdateDataViewInternal(ctx context.Context, view *in
 	}
 
 	if len(oldViews) == 0 {
+		// 不报错，如果同步过程中更新视图时，用户手动删除了视图，直接跳过当前视图的更新
 		span.SetStatus(codes.Error, "Data view not found")
-		return rest.NewHTTPError(ctx, http.StatusNotFound, derrors.DataModel_DataView_DataViewNotFound).
-			WithErrorDetails(fmt.Sprintf("Data view '%s' does not exist", view.ViewID))
+		logger.Warnf("Update data view id '%s' name '%s' not found, skip", view.ViewID, view.ViewName)
+		return nil
+		// return rest.NewHTTPError(ctx, http.StatusNotFound, derrors.DataModel_DataView_DataViewNotFound).
+		// 	WithErrorDetails(fmt.Sprintf("Data view '%s' does not exist", view.ViewID))
 	}
 	oldView := oldViews[0]
 

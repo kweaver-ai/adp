@@ -121,6 +121,7 @@ const DataFlowDesigner = ({
 
           setSteps(steps);
         }}
+        dagsId={value?.id}
       />
     </div>,
     document.getElementById("content-automation-root") || document.body

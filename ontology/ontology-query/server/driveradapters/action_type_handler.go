@@ -72,6 +72,10 @@ func (r *restHandler) GetActionsInActionType(c *gin.Context, visitor rest.Visito
 	otID := c.Param("at_id")
 	span.SetAttributes(attr.Key("at_id").String(otID))
 
+	// 接受 branch 参数
+	branch := c.DefaultQuery("branch", interfaces.MAIN_BRANCH)
+	span.SetAttributes(attr.Key("branch").String(branch))
+
 	// 是否包含行动类信息
 	includeTypeInfo := c.DefaultQuery("include_type_info", interfaces.DEFAULT_INCLUDE_TYPE_INFO)
 	// 校验查询参数
@@ -119,6 +123,7 @@ func (r *restHandler) GetActionsInActionType(c *gin.Context, visitor rest.Visito
 	}
 
 	query.KNID = knID
+	query.Branch = branch
 	query.ActionTypeID = otID
 	query.CommonQueryParameters = objectsQueryParas
 

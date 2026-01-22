@@ -1,5 +1,6 @@
 .main-box {
   box-sizing: border-box;
+  min-width: 1000px;
   height: 100%;
 
   .main-header {
@@ -31,6 +32,7 @@
   .main-side {
     position: relative;
     display: flex;
+    flex-shrink: 0;
     flex-direction: column;
     width: 240px;
     height: 100%;
@@ -93,6 +95,7 @@
 
   .main-content {
     flex: 1;
+    min-width: 760px;
     overflow: hidden;
   }
 }

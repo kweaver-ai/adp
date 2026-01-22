@@ -7,7 +7,6 @@ import Internal from "../../extensions/internal";
 import Workflow from "../../extensions/workflow";
 import Cron from "../../extensions/cron";
 import AI, { AIExtensionForDataStudio } from "../../extensions/ai";
-import Admin from "../../extensions/admin";
 import Console from "../../extensions/console";
 import Operator from "../../extensions/operator";
 import DataStudio from "../../extensions/datastudio";
@@ -24,7 +23,7 @@ import {
   ValueType,
   DataSource,
 } from "../extension/types";
-import { API, MicroAppContext, Translations } from "@applet/common";
+import { API, MicroAppContext } from "@applet/common";
 import useSWR from "swr";
 import { ExecutorDto } from "../../models/executor-dto";
 import CustomExecutorSVG from "../../assets/custom-executor.svg";
@@ -39,8 +38,10 @@ import {
 import { OperatorDataSource } from "../editor/operator-editor/operator-data-source";
 import SqlWriteExtension from "../../extensions/sqlwriter";
 import VariableExtension from "../../extensions/variable";
+import SubprocessExtension from "../../extensions/subprocess";
+
 // 工作流
-const Extensions = [AnyShare, Internal, Cron, JSONExtension, ContentExtension, VariableExtension];
+const Extensions = [AnyShare, Internal, Cron, JSONExtension, ContentExtension, VariableExtension, SubprocessExtension];
 // 数据处理流
 const DataStudioExtensions = [
   DataStudio,
@@ -51,6 +52,7 @@ const DataStudioExtensions = [
   AIExtensionForDataStudio,
   ContentExtension,
   VariableExtension,
+  SubprocessExtension,
 ];
 // 控制台
 const ConsoleExtensions = [Console, Internal];
@@ -137,10 +139,10 @@ export const ExtensionProvider: FC<ExtensionProviderProps> = ({
 
   //算子数据源
   const { data: operatorDataSource, mutate: reloadOperatorDataSource } = useSWR(
-    `/api/agent-operator-integration/v1/operator/market?page_size=-1&status=published&is_data_source=true`,
+    platform === "console" ? `/api/agent-operator-integration/v1/operator/market?page_size=-1&status=published&is_data_source=true` : null,
     async (url: string) => {
       const { data } = await API.axios.get(url);
-      return platform === "console" && data?.data;
+      return data?.data;
     },
     {
       revalidateOnFocus: false,
@@ -538,6 +540,8 @@ export const ExtensionProvider: FC<ExtensionProviderProps> = ({
         }
       }
     }
+
+    //算子节点
     let customExtension: Extension | undefined;
     if (customExecutors?.length) {
       customExtension = {

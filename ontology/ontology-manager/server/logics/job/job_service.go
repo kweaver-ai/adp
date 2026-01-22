@@ -231,6 +231,9 @@ func (js *jobService) DeleteJobs(ctx context.Context, knID string, branch string
 		logger.Errorf("Begin transaction error: %s", err.Error())
 		span.SetStatus(codes.Error, "事务开启失败")
 		o11y.Error(ctx, fmt.Sprintf("Begin transaction error: %s", err.Error()))
+		return rest.NewHTTPError(ctx, http.StatusInternalServerError,
+			oerrors.OntologyManager_Job_InternalError_BeginTransactionFailed).
+			WithErrorDetails(err.Error())
 	}
 	defer func() {
 		switch err {

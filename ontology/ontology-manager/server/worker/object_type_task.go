@@ -99,7 +99,7 @@ func (ott *ObjectTypeTask) HandleObjectTypeTask(ctx context.Context, jobInfo *in
 			continue
 		}
 
-		ott.propertyMapping[property.Name] = &property.MappedField
+		ott.propertyMapping[property.Name] = property.MappedField
 		if property.Type == "varchar" || property.Type == "string" || property.Type == "text" {
 			if property.IndexConfig != nil && property.IndexConfig.VectorConfig.Enabled {
 

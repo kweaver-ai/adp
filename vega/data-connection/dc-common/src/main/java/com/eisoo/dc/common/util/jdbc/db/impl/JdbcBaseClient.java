@@ -3,6 +3,7 @@ package com.eisoo.dc.common.util.jdbc.db.impl;
 import com.alibaba.fastjson2.JSON;
 import com.eisoo.dc.common.connector.ConnectorConfig;
 import com.eisoo.dc.common.connector.TypeConfig;
+import com.eisoo.dc.common.constant.CatalogConstant;
 import com.eisoo.dc.common.enums.ConnectorEnums;
 import com.eisoo.dc.common.metadata.entity.AdvancedParamsDTO;
 import com.eisoo.dc.common.metadata.entity.DataSourceEntity;
@@ -28,16 +29,25 @@ public abstract class JdbcBaseClient implements DbClientInterface {
     @Override
     public Connection getConnection(DataSourceConfig config) throws Exception {
         Class.forName(config.getDriverClass());
+        Properties props = new Properties();
+        String url = config.getUrl();
+        String token = config.getToken();
+        if (CatalogConstant.INCEPTOR_JDBC_CATALOG.equals(config.getDbType()) && StringUtils.isNotEmpty(token)) {
+            url = url + ";guardianToken=" + token;
+            log.info("inceptor-jdbc:url:{}", url);
+        } else {
+            props.setProperty("user", config.getUsername());
+            props.setProperty("password", config.getPassword());
+        }
         // 2. 获取连接
         return DriverManager.getConnection(
-                config.getUrl(),
-                config.getUsername(),
-                config.getPassword()
+                url,
+                props
         );
     }
 
     @Override
-    public Map<String, TableScanEntity> getTables(DataSourceEntity dataSourceEntity) throws Exception {
+    public Map<String, TableScanEntity> getTables(DataSourceEntity dataSourceEntity, List<String> scanStrategy) throws Exception {
         String fType = dataSourceEntity.getFType();
         String fSchema = dataSourceEntity.getFSchema();
         if (StringUtils.isEmpty(fSchema)) {
@@ -47,12 +57,18 @@ public abstract class JdbcBaseClient implements DbClientInterface {
         String fId = dataSourceEntity.getFId();
 
         Map<String, TableScanEntity> currentTables = new HashMap<>();
+        String fToken = dataSourceEntity.getFToken();
+        String fPassword = dataSourceEntity.getFPassword();
+        if (StringUtils.isNotEmpty(fPassword)) {
+            fPassword = RSAUtil.decrypt(fPassword);
+        }
         DataSourceConfig dataSourceConfig = new DataSourceConfig(
                 fType,
                 DbConnectionStrategyFactory.DRIVER_CLASS_MAP.get(fType),
                 DbConnectionStrategyFactory.getDriverURL(dataSourceEntity),
                 dataSourceEntity.getFAccount(),
-                RSAUtil.decrypt(dataSourceEntity.getFPassword()));
+                fPassword,
+                fToken);
         Connection connection = null;
         Statement statement = null;
         ResultSet resultSet = null;
@@ -104,6 +120,7 @@ public abstract class JdbcBaseClient implements DbClientInterface {
                         }
                     }
                     tableScanEntity.setFScanSource(type);
+                    tableScanEntity.setFDataSourceName(dataSourceEntity.getFName());
                     ++currentBatchSize;
                     currentTables.put(tableScanEntity.getFName(), tableScanEntity);
                 }
@@ -167,12 +184,18 @@ public abstract class JdbcBaseClient implements DbClientInterface {
             typeMap.put(typeConfig.getSourceType(), typeConfig.getVegaType());
         }
         String fType = dataSourceEntity.getFType();
+        String fToken = dataSourceEntity.getFToken();
+        String fPassword = dataSourceEntity.getFPassword();
+        if (StringUtils.isNotEmpty(fPassword)) {
+            fPassword = RSAUtil.decrypt(fPassword);
+        }
         DataSourceConfig dataSourceConfig = new DataSourceConfig(
                 fType,
                 DbConnectionStrategyFactory.DRIVER_CLASS_MAP.get(fType),
                 DbConnectionStrategyFactory.getDriverURL(dataSourceEntity),
                 dataSourceEntity.getFAccount(),
-                RSAUtil.decrypt(dataSourceEntity.getFPassword()));
+                fPassword,
+                fToken);
         Connection connection = null;
         ResultSet columnSet = null;
         try {

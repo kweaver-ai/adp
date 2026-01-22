@@ -1,0 +1,20 @@
+[
+  {
+    "db_name": "adp",
+    "table_name": "t_task_scan",
+    "object_type": "COLUMN",
+    "operation_type": "ADD",
+    "object_name": "schedule_id",
+    "object_property": "char(36) DEFAULT NULL",
+    "object_comment": "定时任务配置id"
+  },
+  {
+    "db_name": "adp",
+    "table_name": "t_task_scan_table",
+    "object_type": "COLUMN",
+    "operation_type": "ADD",
+    "object_name": "operation_type",
+    "object_property": "tinyint DEFAULT NULL",
+    "object_comment": "操作类型:0:insert 1:delete 2:update 3:unknown"
+  }
+]

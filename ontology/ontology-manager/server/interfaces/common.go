@@ -32,7 +32,7 @@ const (
 	MAX_LIMIT              = 1000
 	NO_LIMIT               = "-1"
 	DEFAULT_SIMPLE_INFO    = "false"
-	COMMENT_MAX_LENGTH     = 255
+	COMMENT_MAX_LENGTH     = 1000
 	NAME_INVALID_CHARACTER = "/:?\\\"<>|：？‘’“”！《》,#[]{}%&*$^!=.'"
 
 	TAGS_MAX_NUMBER = 5
@@ -51,6 +51,9 @@ const (
 	ImportMode_Overwrite = "overwrite"
 
 	Mode_Export = "export"
+
+	// 数据来源类型
+	DATA_SOURCE_TYPE_DATA_VIEW = "data_view"
 
 	// 对象id的校验
 	RegexPattern_Builtin_ID    = "^[a-z0-9_][a-z0-9_-]{0,39}$"
@@ -84,6 +87,12 @@ const (
 
 	// 获取总数时每批对象类id传递的数量(每批处理的ID数量)
 	GET_TOTAL_CONCEPTID_BATCH_SIZE = 900
+
+	// 概念检索默认的条数
+	DEFAULT_CONCEPT_SEARCH_LIMIT = 10
+
+	// 概念id字段名
+	CONCEPT_ID_FIELD = "id"
 )
 
 const (

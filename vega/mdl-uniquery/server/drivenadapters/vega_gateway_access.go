@@ -151,7 +151,7 @@ func (vga *vegaGatewayAccess) buildSQLRequestBody(params *interfaces.FetchVegaDa
 	body := map[string]any{"sql": params.SqlStr}
 
 	if params.UseSearchAfter {
-		if params.ViewType == interfaces.ViewType_Atomic {
+		if params.IsSingleDataSource {
 			// 原子视图走下推数据源查询，type = 2 表示流式查询
 			body["type"] = interfaces.VegaDataSourceQueryType_Stream
 			body["data_source_id"] = params.DataSourceID
@@ -166,7 +166,7 @@ func (vga *vegaGatewayAccess) buildSQLRequestBody(params *interfaces.FetchVegaDa
 			body["batch_size"] = params.Limit
 		}
 	} else {
-		if params.ViewType == interfaces.ViewType_Atomic {
+		if params.IsSingleDataSource {
 			// 原子视图走下推数据源查询，type = 1 同步查询
 			body["type"] = interfaces.VegaDataSourceQueryType_Sync
 			body["data_source_id"] = params.DataSourceID
@@ -181,7 +181,7 @@ func (vga *vegaGatewayAccess) buildSQLRequestBody(params *interfaces.FetchVegaDa
 
 // buildSQLRequestURL 构建SQL请求URL
 func (vga *vegaGatewayAccess) buildSQLRequestURL(params *interfaces.FetchVegaDataParams) string {
-	if params.ViewType == interfaces.ViewType_Atomic {
+	if params.IsSingleDataSource {
 		return fmt.Sprintf("%s/fetch", vga.appSetting.VegaGatewayProUrl)
 	} else {
 		return fmt.Sprintf("%s/fetch", vga.appSetting.DataConnGatewayUrl)
@@ -192,7 +192,7 @@ func (vga *vegaGatewayAccess) buildSQLRequestURL(params *interfaces.FetchVegaDat
 func (vga *vegaGatewayAccess) buildNextBatchURL(params *interfaces.FetchVegaDataParams) string {
 	queryValues := make(url.Values)
 
-	if params.ViewType == interfaces.ViewType_Atomic {
+	if params.IsSingleDataSource {
 		if params.Limit > 0 {
 			queryValues.Add("batch_size", fmt.Sprintf("%d", params.Limit))
 		}

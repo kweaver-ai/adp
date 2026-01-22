@@ -321,7 +321,7 @@ func (ots *objectTypeService) ListObjectTypes(ctx context.Context, tx *sql.Tx,
 		// 检查起始位置是否越界
 		if query.Offset < 0 || query.Offset >= len(objectTypes) {
 			span.SetStatus(codes.Ok, "")
-			return []*interfaces.ObjectType{}, 0, nil
+			return []*interfaces.ObjectType{}, total, nil
 		}
 		// 计算结束位置
 		end := query.Offset + query.Limit
@@ -452,7 +452,7 @@ func (ots *objectTypeService) GetObjectTypesByIDs(ctx context.Context, tx *sql.T
 	otIDs = common.DuplicateSlice(otIDs)
 
 	// 获取对象类基本信息
-	objectTypes, err := ots.ota.GetObjectTypesByIDs(ctx, knID, branch, otIDs)
+	objectTypes, err := ots.ota.GetObjectTypesByIDs(ctx, tx, knID, branch, otIDs)
 	if err != nil {
 		logger.Errorf("GetObjectTypesByObjectTypeIDs error: %s", err.Error())
 		span.SetStatus(codes.Error, fmt.Sprintf("Get object types[%s] error: %v", otIDs, err))
@@ -472,10 +472,10 @@ func (ots *objectTypeService) GetObjectTypesByIDs(ctx context.Context, tx *sql.T
 
 	// 获取对象类所属的分组
 	otGroups, err := ots.cga.GetConceptGroupsByOTIDs(ctx, tx, interfaces.ConceptGroupRelationsQueryParams{
-		KNID: knID,
-		// Branch: query.Branch,
-		OTIDs: otIDs,
-	}) // todo: 分支
+		KNID:   knID,
+		Branch: branch,
+		OTIDs:  otIDs,
+	})
 	if err != nil {
 		span.SetStatus(codes.Error, "GetConceptGroupsByOTIDs error")
 
@@ -853,7 +853,7 @@ func (ots *objectTypeService) DeleteObjectTypesByIDs(ctx context.Context, tx *sq
 	// 删除对象类与分组的绑定关系
 	rowsAffect, err = ots.cga.DeleteObjectTypesFromGroup(ctx, tx, interfaces.ConceptGroupRelationsQueryParams{
 		KNID:        knID,
-		Branch:      "main", //todo: 后续需补充这个字段
+		Branch:      branch,
 		ConceptType: interfaces.MODULE_TYPE_OBJECT_TYPE,
 		OTIDs:       otIDs,
 	})
@@ -996,7 +996,7 @@ func (ots *objectTypeService) GetObjectTypesMapByIDs(ctx context.Context, knID s
 	otIDs = common.DuplicateSlice(otIDs)
 
 	// 获取模型基本信息
-	objectTypeArr, err := ots.ota.GetObjectTypesByIDs(ctx, knID, branch, otIDs)
+	objectTypeArr, err := ots.ota.GetObjectTypesByIDs(ctx, nil, knID, branch, otIDs)
 	if err != nil {
 		logger.Errorf("GetObjectTypesByObjectTypeIDs error: %s", err.Error())
 		span.SetStatus(codes.Error, fmt.Sprintf("Get object type[%v] error: %v", otIDs, err))
@@ -1097,24 +1097,27 @@ func (ots *objectTypeService) SearchObjectTypes(ctx context.Context,
 	}
 
 	// 转换到dsl
-	conditionDslStr, err := condtion.Convert(ctx, func(ctx context.Context, words []string) ([]*cond.VectorResp, error) {
-		if !ots.appSetting.ServerSetting.DefaultSmallModelEnabled {
-			err = errors.New("DefaultSmallModelEnabled is false, does not support knn condition")
-			span.SetStatus(codes.Error, err.Error())
-			return nil, err
-		}
-		dftModel, err := ots.mfa.GetDefaultModel(ctx)
+	conditionDslStr := "{}"
+	if condtion != nil {
+		conditionDslStr, err = condtion.Convert(ctx, func(ctx context.Context, words []string) ([]*cond.VectorResp, error) {
+			if !ots.appSetting.ServerSetting.DefaultSmallModelEnabled {
+				err = errors.New("DefaultSmallModelEnabled is false, does not support knn condition")
+				span.SetStatus(codes.Error, err.Error())
+				return nil, err
+			}
+			dftModel, err := ots.mfa.GetDefaultModel(ctx)
+			if err != nil {
+				logger.Errorf("GetDefaultModel error: %s", err.Error())
+				span.SetStatus(codes.Error, "获取默认模型失败")
+				return nil, err
+			}
+			return ots.mfa.GetVector(ctx, dftModel, words)
+		})
 		if err != nil {
-			logger.Errorf("GetDefaultModel error: %s", err.Error())
-			span.SetStatus(codes.Error, "获取默认模型失败")
-			return nil, err
+			return response, rest.NewHTTPError(ctx, http.StatusBadRequest,
+				oerrors.OntologyManager_ObjectType_InvalidParameter_ConceptCondition).
+				WithErrorDetails(fmt.Sprintf("failed to convert condition to dsl, %s", err.Error()))
 		}
-		return ots.mfa.GetVector(ctx, dftModel, words)
-	})
-	if err != nil {
-		return response, rest.NewHTTPError(ctx, http.StatusBadRequest,
-			oerrors.OntologyManager_ObjectType_InvalidParameter_ConceptCondition).
-			WithErrorDetails(fmt.Sprintf("failed to convert condition to dsl, %s", err.Error()))
 	}
 
 	// 1. 获取组下的对象类
@@ -1360,22 +1363,22 @@ func (ots *objectTypeService) GetTotal(ctx context.Context, dsl map[string]any) 
 	totalBytes, err := ots.osa.Count(ctx, interfaces.KN_CONCEPT_INDEX_NAME, dsl)
 	if err != nil {
 		span.SetStatus(codes.Error, "Search total documents count failed")
-		// return total, rest.NewHTTPError(ctx, http.StatusInternalServerError, oerrors.Uniquery_InternalError_CountFailed).
-		// 	WithErrorDetails(err.Error())
+		return total, rest.NewHTTPError(ctx, http.StatusInternalServerError, oerrors.OntologyManager_ObjectType_InternalError).
+			WithErrorDetails(err.Error())
 	}
 
 	totalNode, err := sonic.Get(totalBytes, "count")
 	if err != nil {
 		span.SetStatus(codes.Error, "Get total documents count failed")
-		// return total, rest.NewHTTPError(ctx, http.StatusInternalServerError, uerrors.Uniquery_InternalError_CountFailed).
-		// 	WithErrorDetails(err.Error())
+		return total, rest.NewHTTPError(ctx, http.StatusInternalServerError, oerrors.OntologyManager_ObjectType_InternalError).
+			WithErrorDetails(err.Error())
 	}
 
 	total, err = totalNode.Int64()
 	if err != nil {
 		span.SetStatus(codes.Error, "Convert total documents count to type int64 failed")
-		// return total, rest.NewHTTPError(ctx, http.StatusInternalServerError, uerrors.Uniquery_InternalError_CountFailed).
-		// 	WithErrorDetails(err.Error())
+		return total, rest.NewHTTPError(ctx, http.StatusInternalServerError, oerrors.OntologyManager_ObjectType_InternalError).
+			WithErrorDetails(err.Error())
 	}
 
 	span.SetStatus(codes.Ok, "")
@@ -1432,7 +1435,7 @@ func (ots *objectTypeService) GetAllObjectTypesByKnID(ctx context.Context,
 }
 
 // 内部接口，不检查权限
-func (ots *objectTypeService) GetObjectTypeByID(ctx context.Context,
+func (ots *objectTypeService) GetObjectTypeByID(ctx context.Context, tx *sql.Tx,
 	knID string, branch string, otID string) (*interfaces.ObjectType, error) {
 	// 获取对象类
 	ctx, span := ar_trace.Tracer.Start(ctx, fmt.Sprintf("查询对象类[%s]信息", otID))
@@ -1443,8 +1446,45 @@ func (ots *objectTypeService) GetObjectTypeByID(ctx context.Context,
 		attr.Key("branch").String(branch),
 		attr.Key("ot_id").String(otID))
 
+	var err error
+	// 0. 开始事务
+	if tx == nil {
+		tx, err = ots.db.Begin()
+		if err != nil {
+			logger.Errorf("Begin transaction error: %s", err.Error())
+			span.SetStatus(codes.Error, "事务开启失败")
+			o11y.Error(ctx, fmt.Sprintf("Begin transaction error: %s", err.Error()))
+			return &interfaces.ObjectType{}, rest.NewHTTPError(ctx, http.StatusInternalServerError,
+				oerrors.OntologyManager_ObjectType_InternalError_BeginTransactionFailed).
+				WithErrorDetails(err.Error())
+		}
+		// 0.1 异常时
+		defer func() {
+			switch err {
+			case nil:
+				// 提交事务
+				err = tx.Commit()
+				if err != nil {
+					logger.Errorf("GetObjectTypeByID Transaction Commit Failed:%v", err)
+					span.SetStatus(codes.Error, "提交事务失败")
+					o11y.Error(ctx, fmt.Sprintf("GetObjectTypeByID Transaction Commit Failed: %s", err.Error()))
+					return
+				}
+				logger.Infof("GetObjectTypeByID Transaction Commit Success")
+				o11y.Debug(ctx, "GetObjectTypeByID Transaction Commit Success")
+			default:
+				rollbackErr := tx.Rollback()
+				if rollbackErr != nil {
+					logger.Errorf("GetObjectTypeByID Transaction Rollback Error:%v", rollbackErr)
+					span.SetStatus(codes.Error, "事务回滚失败")
+					o11y.Error(ctx, fmt.Sprintf("GetObjectTypeByID Transaction Rollback Error: %s", err.Error()))
+				}
+			}
+		}()
+	}
+
 	// 获取对象类基本信息
-	objectType, err := ots.ota.GetObjectTypeByID(ctx, knID, branch, otID)
+	objectType, err := ots.ota.GetObjectTypeByID(ctx, tx, knID, branch, otID)
 	if err != nil {
 		logger.Errorf("GetObjectTypeByID error: %s", err.Error())
 		span.SetStatus(codes.Error, fmt.Sprintf("Get object type by id[%s] error: %v", otID, err))
@@ -1452,6 +1492,12 @@ func (ots *objectTypeService) GetObjectTypeByID(ctx context.Context,
 		return nil, rest.NewHTTPError(ctx, http.StatusInternalServerError,
 			oerrors.OntologyManager_ObjectType_InternalError_GetObjectTypeByIDFailed).WithErrorDetails(err.Error())
 	}
+
+	propMap := map[string]string{}
+	for _, prop := range objectType.DataProperties {
+		propMap[prop.Name] = prop.DisplayName
+	}
+	objectType.PropertyMap = propMap
 
 	span.SetStatus(codes.Ok, "")
 	return objectType, nil

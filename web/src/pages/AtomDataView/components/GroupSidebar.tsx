@@ -106,7 +106,7 @@ const GroupSidebar = (props: GroupSidebarPropsType): JSX.Element => {
           <Icon type="scan" style={{ cursor: 'pointer' }} onClick={selDatasource} />
         </Tooltip> */}
       </div>
-      <Input.Search allowClear placeholder={intl.get('DataView.pleaseInputDatasource')} onChange={handleSearchGroup} />
+      <Input.Search allowClear placeholder={intl.get('Global.search')} onChange={handleSearchGroup} />
       <div className={styles.divider}></div>
       {/* “所有数据视图”分组 */}
       <div

@@ -14,6 +14,7 @@ const (
 	OntologyManager_KnowledgeNetwork_KNIDExisted                        = "OntologyManager.KnowledgeNetwork.KNIDExisted"
 	OntologyManager_KnowledgeNetwork_KNNameExisted                      = "OntologyManager.KnowledgeNetwork.KNNameExisted"
 	OntologyManager_KnowledgeNetwork_LengthExceeded_Name                = "OntologyManager.KnowledgeNetwork.LengthExceeded.Name"
+	OntologyManager_KnowledgeNetwork_NullParameter_Branch               = "OntologyManager.KnowledgeNetwork.NullParameter.Branch"
 	OntologyManager_KnowledgeNetwork_NullParameter_Direction            = "OntologyManager.KnowledgeNetwork.NullParameter.Direction"
 	OntologyManager_KnowledgeNetwork_NullParameter_Name                 = "OntologyManager.KnowledgeNetwork.NullParameter.Name"
 	OntologyManager_KnowledgeNetwork_NullParameter_SourceObjectTypeId   = "OntologyManager.KnowledgeNetwork.NullParameter.SourceObjectTypeId"
@@ -58,6 +59,7 @@ var (
 		OntologyManager_KnowledgeNetwork_KNIDExisted,
 		OntologyManager_KnowledgeNetwork_KNNameExisted,
 		OntologyManager_KnowledgeNetwork_LengthExceeded_Name,
+		OntologyManager_KnowledgeNetwork_NullParameter_Branch,
 		OntologyManager_KnowledgeNetwork_NullParameter_Direction,
 		OntologyManager_KnowledgeNetwork_NullParameter_Name,
 		OntologyManager_KnowledgeNetwork_NullParameter_SourceObjectTypeId,

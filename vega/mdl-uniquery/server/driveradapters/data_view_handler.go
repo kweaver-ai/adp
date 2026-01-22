@@ -14,6 +14,7 @@ import (
 	"github.com/kweaver-ai/kweaver-go-lib/rest"
 	"go.opentelemetry.io/otel/trace"
 
+	"uniquery/common"
 	"uniquery/common/convert"
 	uerrors "uniquery/errors"
 	"uniquery/interfaces"
@@ -101,188 +102,19 @@ func (r *restHandler) ViewSimulate(c *gin.Context, visitor rest.Visitor) {
 		rest.ReplyError(c, httpErr)
 		return
 	}
-
 	result.OverallMs = int64(time.Since(startTime).Milliseconds())
+	resultBytes, err := common.Marshal(c.Request.UserAgent(), result)
+	if err != nil {
+		httpErr := rest.NewHTTPError(ctx, http.StatusInternalServerError, uerrors.Uniquery_InvalidParameter_RequestBody).
+			WithErrorDetails("Marshal query result Failed:" + err.Error())
+		o11y.AddHttpAttrs4HttpError(span, httpErr)
+		rest.ReplyError(c, httpErr)
+		return
+	}
+
 	o11y.AddHttpAttrs4Ok(span, http.StatusOK)
-	rest.ReplyOK(c, http.StatusOK, result)
+	common.ReplyOK(c, http.StatusOK, resultBytes)
 }
-
-// 视图数据查询 (deprecated)
-// func (r *restHandler) GetViewDataV1(c *gin.Context) {
-// 	logger.Debug("Handler GetViewData Start")
-
-// 	ctx, span := ar_trace.Tracer.Start(rest.GetLanguageCtx(c), "driver layer: Get view data", trace.WithSpanKind(trace.SpanKindServer))
-// 	defer span.End()
-
-// 	o11y.AddHttpAttrs4API(span, o11y.GetAttrsByGinCtx(c))
-
-// 	err := ValidateHeaderMethodOverride(ctx, c.GetHeader(interfaces.Headers_MethodOverride))
-// 	if err != nil {
-// 		httpErr := err.(*rest.HTTPError)
-// 		o11y.AddHttpAttrs4HttpError(span, httpErr)
-// 		rest.ReplyError(c, httpErr)
-// 		return
-// 	}
-
-// 	allowNonExistFieldParam := c.DefaultQuery(interfaces.QueryParam_AllowNonExistField, "false")
-// 	allowNonExistField, err := strconv.ParseBool(allowNonExistFieldParam)
-// 	if err != nil {
-// 		errDetails := fmt.Sprintf(`The value of param '%s' should be bool type, but got '%s'`, interfaces.QueryParam_AllowNonExistField, allowNonExistFieldParam)
-// 		httpErr := rest.NewHTTPError(ctx, http.StatusBadRequest, uerrors.Uniquery_DataView_InvalidParameter_AllowNonExistField).
-// 			WithErrorDetails(errDetails)
-
-// 		o11y.AddHttpAttrs4HttpError(span, httpErr)
-// 		rest.ReplyError(c, httpErr)
-// 		return
-// 	}
-
-// 	ids := c.Param("view_ids")
-// 	if ids == "" {
-// 		httpErr := rest.NewHTTPError(ctx, http.StatusBadRequest, uerrors.Uniquery_DataView_InvalidParameter_ViewIDs).
-// 			WithErrorDetails("View id is empty")
-
-// 		o11y.Error(ctx, fmt.Sprintf("%s. %v", httpErr.BaseError.Description, httpErr.BaseError.ErrorDetails))
-// 		o11y.AddHttpAttrs4HttpError(span, httpErr)
-// 		rest.ReplyError(c, httpErr)
-// 		return
-// 	}
-
-// 	idsArr := convert.StringToStringSlice(ids)
-
-// 	// 单个查询
-// 	if len(idsArr) == 1 {
-// 		query := &interfaces.DataViewQueryV1{}
-// 		err := c.ShouldBindJSON(&query)
-// 		if err != nil {
-// 			httpErr := rest.NewHTTPError(ctx, http.StatusBadRequest, uerrors.Uniquery_InvalidParameter_RequestBody).
-// 				WithErrorDetails("Binding Parameter Failed:" + err.Error())
-
-// 			o11y.Error(ctx, fmt.Sprintf("%s. %v", httpErr.BaseError.Description, httpErr.BaseError.ErrorDetails))
-// 			o11y.AddHttpAttrs4HttpError(span, httpErr)
-// 			rest.ReplyError(c, httpErr)
-// 			return
-// 		}
-
-// 		viewID := idsArr[0]
-// 		query.AllowNonExistField = allowNonExistField
-
-// 		if query.Sort == "" {
-// 			query.Sort = interfaces.MetaField_Timestamp
-// 		}
-// 		if query.Direction == "" {
-// 			query.Direction = interfaces.DESC_DIRECTION
-// 		}
-
-// 		// 参数默认值
-// 		setDefaultValues(&query.ViewQueryCommonParams)
-
-// 		// 视图查询的参数校验
-// 		err = ValidateDataViewQueryV1(ctx, query)
-// 		if err != nil {
-// 			httpErr := err.(*rest.HTTPError)
-// 			o11y.AddHttpAttrs4HttpError(span, httpErr)
-// 			rest.ReplyError(c, httpErr)
-// 			return
-// 		}
-
-// 		res, err := r.dvService.GetSingleViewData(ctx, viewID, query)
-// 		if err != nil {
-// 			httpErr := err.(*rest.HTTPError)
-// 			o11y.AddHttpAttrs4HttpError(span, httpErr)
-// 			rest.ReplyError(c, httpErr)
-// 			return
-// 		}
-
-// 		datas := []interfaces.ViewData{{
-// 			Total:  res.TotalCount,
-// 			Values: res.Entries,
-// 		}}
-// 		responseV1 := &interfaces.ViewUniResponseV1{
-// 			ScrollId: res.ScrollId,
-// 			View:     res.View,
-// 			Datas:    datas,
-// 		}
-
-// 		o11y.AddHttpAttrs4Ok(span, http.StatusOK)
-// 		rest.ReplyOK(c, http.StatusOK, responseV1)
-// 		return
-// 	} else {
-// 		querys := []*interfaces.DataViewQueryV1{}
-// 		err := c.ShouldBindJSON(&querys)
-// 		if err != nil {
-// 			httpErr := rest.NewHTTPError(ctx, http.StatusBadRequest, uerrors.Uniquery_InvalidParameter_RequestBody).
-// 				WithErrorDetails("Binding Parameter Failed:" + err.Error())
-
-// 			o11y.Error(ctx, fmt.Sprintf("%s. %v", httpErr.BaseError.Description, httpErr.BaseError.ErrorDetails))
-// 			o11y.AddHttpAttrs4HttpError(span, httpErr)
-// 			rest.ReplyError(c, httpErr)
-// 			return
-// 		}
-
-// 		failed := false
-// 		results := make([]any, len(querys))
-
-// 		for i := range querys {
-// 			viewID := idsArr[i]
-// 			querys[i].AllowNonExistField = allowNonExistField
-// 			if querys[i].Sort == "" {
-// 				querys[i].Sort = interfaces.MetaField_Timestamp
-// 			}
-
-// 			if querys[i].Direction == "" {
-// 				querys[i].Direction = interfaces.DESC_DIRECTION
-// 			}
-
-// 			// 参数默认值
-// 			setDefaultValues(&querys[i].ViewQueryCommonParams)
-
-// 			err = ValidateDataViewQueryV1(ctx, querys[i])
-// 			if err != nil {
-// 				httpErr := err.(*rest.HTTPError)
-// 				o11y.AddHttpAttrs4HttpError(span, httpErr)
-// 				results[i] = interfaces.UniResponseError{
-// 					StatusCode: httpErr.HTTPCode,
-// 					BaseError:  httpErr.BaseError,
-// 				}
-
-// 				failed = true
-// 				continue
-// 			}
-
-// 			res, err := r.dvService.GetSingleViewData(ctx, viewID, querys[i])
-// 			if err != nil {
-// 				httpErr := err.(*rest.HTTPError)
-// 				o11y.AddHttpAttrs4HttpError(span, httpErr)
-// 				results[i] = interfaces.UniResponseError{
-// 					StatusCode: httpErr.HTTPCode,
-// 					BaseError:  httpErr.BaseError,
-// 				}
-
-// 				failed = true
-// 				continue
-// 			}
-
-// 			datas := []interfaces.ViewData{{
-// 				Total:  res.TotalCount,
-// 				Values: res.Entries,
-// 			}}
-// 			responseV1 := &interfaces.ViewUniResponseV1{
-// 				ScrollId: res.ScrollId,
-// 				View:     res.View,
-// 				Datas:    datas,
-// 			}
-
-// 			results[i] = responseV1
-// 			o11y.AddHttpAttrs4Ok(span, http.StatusOK)
-// 		}
-
-// 		if failed {
-// 			rest.ReplyOK(c, http.StatusMultiStatus, results)
-// 		} else {
-// 			rest.ReplyOK(c, http.StatusOK, results)
-// 		}
-// 	}
-// }
 
 // 视图数据查询（外部）
 func (r *restHandler) GetViewDataByEx(c *gin.Context) {
@@ -427,8 +259,17 @@ func (r *restHandler) GetViewData(c *gin.Context, visitor rest.Visitor) {
 		}
 
 		res.OverallMs = int64(time.Since(startTime).Milliseconds())
+		resBytes, err := common.Marshal(c.Request.UserAgent(), res)
+		if err != nil {
+			httpErr := rest.NewHTTPError(ctx, http.StatusInternalServerError, uerrors.Uniquery_InvalidParameter_RequestBody).
+				WithErrorDetails("Marshal query result Failed:" + err.Error())
+			o11y.AddHttpAttrs4HttpError(span, httpErr)
+			rest.ReplyError(c, httpErr)
+			return
+		}
+
 		o11y.AddHttpAttrs4Ok(span, http.StatusOK)
-		rest.ReplyOK(c, http.StatusOK, res)
+		common.ReplyOK(c, http.StatusOK, resBytes)
 		return
 	} else {
 		querys := []interfaces.DataViewQueryV2{}
@@ -487,10 +328,19 @@ func (r *restHandler) GetViewData(c *gin.Context, visitor rest.Visitor) {
 			o11y.AddHttpAttrs4Ok(span, http.StatusOK)
 		}
 
+		resultsBytes, err := common.Marshal(c.Request.UserAgent(), results)
+		if err != nil {
+			httpErr := rest.NewHTTPError(ctx, http.StatusInternalServerError, uerrors.Uniquery_InvalidParameter_RequestBody).
+				WithErrorDetails("Marshal query result Failed:" + err.Error())
+			o11y.AddHttpAttrs4HttpError(span, httpErr)
+			rest.ReplyError(c, httpErr)
+			return
+		}
+
 		if failed {
-			rest.ReplyOK(c, http.StatusMultiStatus, results)
+			common.ReplyOK(c, http.StatusMultiStatus, resultsBytes)
 		} else {
-			rest.ReplyOK(c, http.StatusOK, results)
+			common.ReplyOK(c, http.StatusOK, resultsBytes)
 		}
 	}
 }
@@ -570,55 +420,8 @@ func (r *restHandler) DeleteDataViewPits(c *gin.Context, visitor rest.Visitor) {
 	}
 
 	o11y.AddHttpAttrs4Ok(span, http.StatusOK)
-	rest.ReplyOK(c, http.StatusOK, res)
+	common.ReplyOK(c, http.StatusOK, res)
 }
-
-// func (r *restHandler) BuildDataViewSqlByIn(c *gin.Context) {
-// 	logger.Debug("Handler BuildDataViewSqlByIn Start")
-// 	visitor := GenerateVisitor(c)
-// 	r.BuildDataViewSql(c, visitor)
-// }
-
-// // 生成视图的sql，内部接口，data-model调用
-// func (r *restHandler) BuildDataViewSql(c *gin.Context, visitor rest.Visitor) {
-// 	logger.Debug("Handler BuildDataViewSql Start")
-
-// 	ctx, span := ar_trace.Tracer.Start(rest.GetLanguageCtx(c), "driver layer: Build data view sql", trace.WithSpanKind(trace.SpanKindServer))
-// 	defer span.End()
-
-// 	// tokenid 存入 context中
-// 	ctx = context.WithValue(ctx, interfaces.USER_TOKEN_KEY, visitor.TokenID)
-// 	// userId 存入 context 中
-// 	ctx = context.WithValue(ctx, interfaces.USER_KEY, visitor.ID)
-
-// 	o11y.AddHttpAttrs4API(span, o11y.GetAttrsByGinCtx(c))
-
-// 	// 校验请求体
-// 	body := interfaces.DataView{}
-// 	err := c.ShouldBindJSON(&body)
-// 	if err != nil {
-// 		httpErr := rest.NewHTTPError(ctx, http.StatusBadRequest, uerrors.Uniquery_InvalidParameter_RequestBody).
-// 			WithErrorDetails("Binding Parameter Failed:" + err.Error())
-// 		o11y.AddHttpAttrs4HttpError(span, httpErr)
-// 		rest.ReplyError(c, httpErr)
-// 		return
-// 	}
-
-// 	viewSql, err := r.dvService.BuildDataViewSql(ctx, &body)
-// 	if err != nil {
-// 		httpErr := err.(*rest.HTTPError)
-// 		o11y.AddHttpAttrs4HttpError(span, httpErr)
-// 		rest.ReplyError(c, err)
-// 		return
-// 	}
-
-// 	result := map[string]any{
-// 		"sql_str": viewSql,
-// 	}
-
-// 	o11y.AddHttpAttrs4Ok(span, http.StatusOK)
-// 	rest.ReplyOK(c, http.StatusOK, result)
-// }
 
 // 设置视图查询参数的默认值
 func setDefaultValues(query *interfaces.ViewQueryCommonParams) {

@@ -1,0 +1,154 @@
+.modalContent {
+  :global {
+    .ant-transfer {
+      display: flex;
+      gap: 20px;
+      align-items: flex-start;
+    }
+
+    .ant-transfer-list {
+      width: 336px;
+      height: 416px;
+      border: 1px solid rgba(0, 0, 0, 0.15);
+      border-radius: 8px;
+
+      .ant-transfer-list-header {
+        padding: 8px 12px;
+        background: #fff;
+        border-radius: 8px 8px 0 0;
+
+        .ant-transfer-list-header-title {
+          font-size: 14px;
+          font-weight: 500;
+          color: rgba(0, 0, 0, 0.85);
+        }
+
+        .ant-transfer-list-header-selected {
+          font-size: 14px;
+          color: rgba(0, 0, 0, 0.85);
+        }
+      }
+
+      .ant-transfer-list-body {
+        .ant-transfer-list-body-search-wrapper {
+          padding: 8px 12px;
+          border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+
+          .ant-input-affix-wrapper {
+            height: 32px;
+            border-color: #d9d9d9;
+            border-radius: 6px;
+
+            .ant-input {
+              font-size: 14px;
+
+              &::placeholder {
+                color: rgba(0, 0, 0, 0.25);
+              }
+            }
+          }
+        }
+
+        .ant-transfer-list-content {
+          height: calc(416px - 40px - 40px - 1px);
+          overflow-y: auto;
+
+          .ant-transfer-list-content-item {
+            height: auto;
+            min-height: 48px;
+            padding: 8px 12px;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+            transition: all 0.3s;
+
+            &:last-child {
+              border-bottom: none;
+            }
+
+            &:hover {
+              background-color: rgba(0, 0, 0, 0.04);
+            }
+
+            &-checked {
+              background-color: rgba(18, 110, 227, 0.05);
+            }
+
+            .ant-checkbox {
+              top: 50%;
+              transform: translateY(-50%);
+            }
+          }
+        }
+      }
+    }
+
+    // 右侧已选列表特殊样式
+    .ant-transfer-list:last-child {
+      .ant-transfer-list-header {
+        .ant-transfer-list-header-dropdown {
+          .ant-btn-link {
+            font-size: 14px;
+            color: #126ee3;
+          }
+        }
+      }
+
+      .ant-transfer-list-content-item {
+        padding: 0;
+        border-bottom: none;
+      }
+    }
+  }
+}
+
+// 数据项样式
+.transferItem {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  width: 100%;
+  padding-left: 8px;
+
+  .itemIcon {
+    display: flex;
+    flex-shrink: 0;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    height: 20px;
+    color: rgba(0, 0, 0, 0.85);
+  }
+
+  .itemContent {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    gap: 2px;
+    overflow: hidden;
+
+    .itemTitle {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      font-size: 14px;
+      font-weight: 400;
+      line-height: 20px;
+      color: #000;
+      white-space: nowrap;
+    }
+
+    .itemDesc {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      font-size: 12px;
+      line-height: 18px;
+      color: rgba(0, 0, 0, 0.65);
+      white-space: nowrap;
+    }
+  }
+}
+
+.clearBtn {
+  font-size: 14px;
+  line-height: 22px;
+  color: #126ee3;
+  cursor: pointer;
+}

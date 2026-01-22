@@ -15,7 +15,7 @@ type LoopStart interface {
 }
 
 type LoopEnd interface {
-	HookLoopEnd(id string)
+	HookLoopEnd(id string, value any)
 }
 
 type BranchStart interface {

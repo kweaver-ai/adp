@@ -23,7 +23,7 @@
         "CommonExternalServerError": "External service call exception",
         "MCPInstanceAlreadyExists": "MCP instance already exists",
         "MCPInstanceNotFound": "MCP instance not found",
-        "KnActionRecallUnsupportedType": "Currently only type=tool action sources are supported, MCP type will be supported in the next version",
+        "KnActionRecallUnsupportedType": "Unsupported action source type, currently only type=tool and type=mcp are supported",
         "KnActionRecallNoActionsFound": "No available actions found",
         "KnActionRecallSchemaConvertFailed": "Tool schema conversion failed",
         "KnActionRecallToolNotFound": "Tool not found or has been deleted",
@@ -48,7 +48,7 @@
         "CommonExternalServerError": "Please check the service",
         "MCPInstanceAlreadyExists": "None",
         "MCPInstanceNotFound": "None",
-        "KnActionRecallUnsupportedType": "Please use type=tool action source, or wait for MCP support in the next version",
+        "KnActionRecallUnsupportedType": "Please check if the action source type configuration is correct, currently supports tool and mcp types",
         "KnActionRecallNoActionsFound": "Please check if the action type configuration is correct",
         "KnActionRecallSchemaConvertFailed": "Please check if the tool's OpenAPI Schema definition complies with the specification",
         "KnActionRecallToolNotFound": "Please check if the tool exists, or contact the administrator"

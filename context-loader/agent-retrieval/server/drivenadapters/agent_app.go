@@ -166,9 +166,10 @@ func (a *agentClient) ConceptRetrievalStrategistAgent(ctx context.Context,
 }
 
 // MetricDynamicParamsGeneratorAgent Metric 动态参数生成智能体
-func (a *agentClient) MetricDynamicParamsGeneratorAgent(ctx context.Context,
-	req *interfaces.MetricDynamicParamsGeneratorReq) (dynamicParams map[string]any, missingParams *interfaces.MissingPropertyParams, err error) {
-
+func (a *agentClient) MetricDynamicParamsGeneratorAgent(
+	ctx context.Context,
+	req *interfaces.MetricDynamicParamsGeneratorReq,
+) (dynamicParams map[string]any, missingParams *interfaces.MissingPropertyParams, err error) {
 	// 📤 记录调用 Agent 的入参
 	queryStr := utils.ObjectToJSON(req)
 	a.logger.WithContext(ctx).Infof("  ├─ [Agent调用] Metric Agent 入参: query=%s", queryStr)
@@ -215,7 +216,7 @@ func (a *agentClient) MetricDynamicParamsGeneratorAgent(ctx context.Context,
 
 	// 检查是否是缺参错误
 	if errorMsg, ok := rawResult["_error"].(string); ok {
-		missingParams = parseMetricMissingParamsFromError(ctx, req.LogicProperty.Name, errorMsg)
+		missingParams = parseMetricMissingParamsFromError(req.LogicProperty.Name, errorMsg)
 		a.logger.WithContext(ctx).Warnf("  └─ [Agent结果] ⚠️ 缺参: %s", errorMsg)
 		return nil, missingParams, nil
 	}
@@ -226,16 +227,17 @@ func (a *agentClient) MetricDynamicParamsGeneratorAgent(ctx context.Context,
 }
 
 // OperatorDynamicParamsGeneratorAgent Operator 动态参数生成智能体
-func (a *agentClient) OperatorDynamicParamsGeneratorAgent(ctx context.Context,
-	req *interfaces.OperatorDynamicParamsGeneratorReq) (dynamicParams map[string]any, missingParams *interfaces.MissingPropertyParams, err error) {
-
+func (a *agentClient) OperatorDynamicParamsGeneratorAgent(
+	ctx context.Context,
+	req *interfaces.OperatorDynamicParamsGeneratorReq,
+) (dynamicParams map[string]any, missingParams *interfaces.MissingPropertyParams, err error) {
 	// 📤 记录调用 Agent 的入参
 	queryStr := utils.ObjectToJSON(req)
 	a.logger.WithContext(ctx).Infof("  ├─ [Agent调用] Operator Agent 入参: property=%s, query=%s",
 		req.LogicProperty.Name, req.Query)
 	customQuerys := make(map[string]any)
-	if len(req.OperatorId) > 0 {
-		customQuerys["operator_id"] = req.OperatorId
+	if req.OperatorID != "" {
+		customQuerys["operator_id"] = req.OperatorID
 	}
 	chatReq := &interfaces.ChatRequest{
 		AgentKey:     a.DeployAgent.OperatorDynamicParamsGeneratorKey,
@@ -280,7 +282,7 @@ func (a *agentClient) OperatorDynamicParamsGeneratorAgent(ctx context.Context,
 
 	// 检查是否是缺参错误
 	if errorMsg, ok := rawResult["_error"].(string); ok {
-		missingParams = parseOperatorMissingParamsFromError(ctx, req.LogicProperty.Name, errorMsg)
+		missingParams = parseOperatorMissingParamsFromError(req.LogicProperty.Name, errorMsg)
 		a.logger.WithContext(ctx).Warnf("  └─ [Agent结果] ⚠️ 缺参: %s", errorMsg)
 		return nil, missingParams, nil
 	}
@@ -311,7 +313,7 @@ func parseResultFromAgentV1Answer(jsonStr string) (resultStr string, err error) 
 
 // parseMetricMissingParamsFromError 解析 metric agent 返回的缺参错误信息（简化版）
 // 直接返回 Agent 生成的原始错误消息，不再解析具体参数信息
-func parseMetricMissingParamsFromError(ctx context.Context, propertyName string, errorMsg string) *interfaces.MissingPropertyParams {
+func parseMetricMissingParamsFromError(propertyName, errorMsg string) *interfaces.MissingPropertyParams {
 	if errorMsg == "" {
 		return &interfaces.MissingPropertyParams{
 			Property: propertyName,
@@ -328,7 +330,7 @@ func parseMetricMissingParamsFromError(ctx context.Context, propertyName string,
 
 // parseOperatorMissingParamsFromError 解析 operator agent 返回的缺参错误信息（简化版）
 // 直接返回 Agent 生成的原始错误消息，不再解析具体参数信息
-func parseOperatorMissingParamsFromError(ctx context.Context, propertyName string, errorMsg string) *interfaces.MissingPropertyParams {
+func parseOperatorMissingParamsFromError(propertyName, errorMsg string) *interfaces.MissingPropertyParams {
 	// operator 和 metric 的缺参格式相同，直接复用
-	return parseMetricMissingParamsFromError(ctx, propertyName, errorMsg)
+	return parseMetricMissingParamsFromError(propertyName, errorMsg)
 }

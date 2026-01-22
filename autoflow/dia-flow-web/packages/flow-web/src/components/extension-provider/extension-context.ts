@@ -35,7 +35,7 @@ export const ExtensionContext = createContext<ExtensionContextType>({
     globalConfig: {},
     reloadAccessableExecutors: () => { },
     isDataStudio: false,
-     reloadOperatorDataSource: () => { },
+    reloadOperatorDataSource: () => { },
 });
 
 export function useTrigger(operator?: string) {
@@ -95,6 +95,10 @@ export function useExtensionTranslateFn(): TranslateExtension {
             defaultMessage?: string | Record<string, any>,
             values?: Record<string, any>
         ) => {
+            // 如果id为空字符串，直接返回空字符串，避免生成无效的翻译键
+            if (id === "") {
+                return "";
+            }
             return t(
                 extension
                     ? `${ExtensionTranslatePrefix}/${extension}/${id}`

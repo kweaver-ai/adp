@@ -15,9 +15,9 @@ type IndexStats struct {
 	StorageSize int64 `json:"storage_size"`
 }
 
-//go:generate mockgen -source ../interfaces/opensearch_access.go -destination ../interfaces/mock/mock_opensearch_access.go
-
 // OpenSearchAccess 定义OpenSearch访问接口
+//
+//go:generate mockgen -source ../interfaces/opensearch_access.go -destination ../interfaces/mock/mock_opensearch_access.go
 type OpenSearchAccess interface {
 	PutIndexTemplate(ctx context.Context, indexTemplateName string, body any) error
 

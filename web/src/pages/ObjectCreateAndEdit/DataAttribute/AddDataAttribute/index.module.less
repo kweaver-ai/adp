@@ -1,0 +1,68 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.formContent {
+  flex: 1;
+  overflow-y: auto;
+}
+
+.requiredLabel {
+  color: #f5222d;
+}
+
+.switchGroup {
+  margin-top: 20px;
+
+  :global {
+    .ant-form-item {
+      margin-bottom: 20px;
+    }
+  }
+}
+
+.switchItem {
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+
+.switchLabel {
+  margin-right: 4px;
+  font-size: 14px;
+  color: rgba(0, 0, 0, 0.85);
+}
+
+.helpIcon {
+  margin-right: auto;
+  font-size: 14px;
+  color: rgba(0, 0, 0, 0.45);
+  cursor: pointer;
+}
+
+.footer {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+.title {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+
+  .line {
+    width: 1px;
+    height: 14px;
+    background-color: rgba(217, 217, 217, 1);
+  }
+
+  .delete {
+    font-size: 14px;
+    color: rgba(0, 0, 0, 0.65);
+    cursor: pointer;
+  }
+}

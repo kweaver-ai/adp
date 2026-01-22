@@ -27,7 +27,7 @@ const ATOM_DATA_VIEW_CHECK_LIMIT = 2;
 
 interface DataSourceProps {
   connectors: DataConnectType.Connector[];
-  getTableType: (type: string, val: string) => string;
+  getTableType: (type: string, val: string) => JSX.Element | string;
 }
 
 const DataSource = (props: DataSourceProps): JSX.Element => {
@@ -201,6 +201,10 @@ const DataSource = (props: DataSourceProps): JSX.Element => {
       {
         title: intl.get('Global.basicConfig'),
         content: [
+          {
+            name: intl.get('Global.id'),
+            value: id,
+          },
           {
             name: intl.get('Global.dataSourceName_common'),
             value: name,

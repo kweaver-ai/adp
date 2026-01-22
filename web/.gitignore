@@ -18,3 +18,5 @@ pnpm-lock.yaml
 *.lock
 
 /dist
+
+.qoder

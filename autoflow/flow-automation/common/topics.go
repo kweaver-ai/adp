@@ -88,6 +88,7 @@ var (
 
 	TopicContentPipelineFulltextResult         = "pipe.task.full_text"
 	TopicContentPipelineDocFormatConvertResult = "pipe.task.doc_format_convert"
+	TopicAsyncTaskResult                       = "automation.async_task.result"
 
 	TopicWorkflowSecurityPolicyPermResult              = "workflow.audit.result.security_policy_perm"
 	TopicWorkflowSecurityPolicyPermAuditor             = "workflow.audit.auditor.security_policy_perm"

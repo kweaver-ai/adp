@@ -4,6 +4,8 @@ import cn.hutool.core.date.StopWatch;
 import com.alibaba.fastjson2.JSONArray;
 import com.alibaba.fastjson2.JSONObject;
 import com.eisoo.dc.common.constant.Constants;
+import com.eisoo.dc.common.enums.OperationTyeEnum;
+import com.eisoo.dc.common.enums.ScanStatusEnum;
 import com.eisoo.dc.common.exception.enums.ErrorCodeEnum;
 import com.eisoo.dc.common.exception.vo.AiShuException;
 import com.eisoo.dc.common.metadata.entity.DataSourceEntity;
@@ -11,19 +13,16 @@ import com.eisoo.dc.common.metadata.entity.TableScanEntity;
 import com.eisoo.dc.common.metadata.entity.TaskScanEntity;
 import com.eisoo.dc.common.metadata.entity.TaskScanTableEntity;
 import com.eisoo.dc.common.metadata.mapper.DataSourceMapper;
+import com.eisoo.dc.common.metadata.mapper.TableScanMapper;
 import com.eisoo.dc.common.util.CommonUtil;
+import com.eisoo.dc.common.util.LockUtil;
 import com.eisoo.dc.common.util.http.IndexbaseHttpUtils;
 import com.eisoo.dc.common.vo.HttpResInfo;
 import com.eisoo.dc.metadata.domain.dto.TaskStatusInfoDto;
-import com.eisoo.dc.common.metadata.mapper.TableScanMapper;
 import com.eisoo.dc.metadata.service.IMetaDataFetchService;
 import com.eisoo.dc.metadata.service.ITableScanService;
 import com.eisoo.dc.metadata.service.ITaskScanService;
 import com.eisoo.dc.metadata.service.ITaskScanTableService;
-import com.eisoo.dc.common.util.LockUtil;
-import com.eisoo.dc.common.enums.OperationTyeEnum;
-import com.eisoo.dc.common.enums.ScanStatusEnum;
-
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -220,7 +219,8 @@ public class IndexBaseMetaDataFetchServiceImpl implements IMetaDataFetchService 
                         userId,
                         null,
                         null,
-                        null
+                        null,
+                        OperationTyeEnum.INSERT.getCode()
                 );
                 data.add(taskScanTableEntity);
             }

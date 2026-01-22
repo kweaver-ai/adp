@@ -88,6 +88,7 @@ export interface ExecutorActionConfigProps<P = any> extends BaseProps {
     action: ExecutorAction;
     parameters: P;
     onChange(parameters: P): void;
+    dagsId?: string;
 }
 
 export interface ExecutorActionOutputProps extends BaseProps {

@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.Data;
+
 import java.io.Serializable;
 
 /**
@@ -93,7 +94,7 @@ public class TableScanEntity implements Serializable {
     @TableField(value = "f_operation_type")
     private Integer fOperationType = 0;
     /**
-     * 任务状态：0 成功1 失败2 进行中3 初始化
+     * 任务状态：0 wait 1 running 2 success 3 fail
      */
     @TableField(value = "f_status")
     private Integer fStatus = 0;

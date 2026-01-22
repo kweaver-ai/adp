@@ -34,7 +34,7 @@ const getIconCom = (type: string): JSX.Element => {
 
 interface ScanManagementProps {
   connectors: DataConnectType.Connector[];
-  getTableType: (type: string, val: string) => string;
+  getTableType: (type: string, val: string) => JSX.Element | string;
 }
 
 const ScanManagement = (props: ScanManagementProps): JSX.Element => {

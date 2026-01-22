@@ -1,14 +1,81 @@
 package common
 
 import (
+	"encoding/json"
 	"math/rand"
 	"reflect"
 	"sort"
 	"strconv"
 	"strings"
+	"unsafe"
 
+	"github.com/bytedance/sonic"
+	jsoniter "github.com/json-iterator/go"
 	"github.com/kweaver-ai/kweaver-go-lib/logger"
+	"github.com/modern-go/reflect2"
 )
+
+// 创建一个局部的 API 实例，不影响全局 jsoniter.ConfigDefault
+var jsonExt = jsoniter.ConfigCompatibleWithStandardLibrary
+
+type intToStringExtension struct {
+	jsoniter.DummyExtension
+}
+
+func init() {
+	// 仅在局部实例中注册扩展
+	jsonExt.RegisterExtension(&intToStringExtension{})
+}
+
+// 为 int64 和 json.Number 类型指定自定义编码器
+func (extension *intToStringExtension) CreateEncoder(typ reflect2.Type) jsoniter.ValEncoder {
+	if typ.Kind() == reflect.Int64 {
+		return &int64AsStringEncoder{}
+	}
+
+	if typ.Kind() == reflect.String {
+		return &jsonNumberAsStringEncoder{}
+	}
+
+	return nil
+}
+
+type int64AsStringEncoder struct{}
+
+func (enc *int64AsStringEncoder) Encode(ptr unsafe.Pointer, stream *jsoniter.Stream) {
+	val := *((*int64)(ptr))
+	stream.WriteString(strconv.FormatInt(val, 10))
+}
+
+func (enc *int64AsStringEncoder) IsEmpty(ptr unsafe.Pointer) bool {
+	return *((*int64)(ptr)) == 0
+}
+
+type jsonNumberAsStringEncoder struct{}
+
+func (enc *jsonNumberAsStringEncoder) Encode(ptr unsafe.Pointer, stream *jsoniter.Stream) {
+	val := *((*json.Number)(ptr))
+	stream.WriteString(val.String())
+}
+
+func (enc *jsonNumberAsStringEncoder) IsEmpty(ptr unsafe.Pointer) bool {
+	return *((*json.Number)(ptr)) == ""
+}
+
+// 判断是否为浏览器请求
+func isBrowser(userAgent string) bool {
+	return strings.Contains(userAgent, "Mozilla") ||
+		strings.Contains(userAgent, "Chrome") ||
+		strings.Contains(userAgent, "Safari")
+}
+
+// 如果浏览器请求，使用jsoniter进行编码, 否则使用sonic进行编码
+func Marshal(userAgent string, v interface{}) ([]byte, error) {
+	if isBrowser(userAgent) {
+		return jsonExt.Marshal(v)
+	}
+	return sonic.Marshal(v)
+}
 
 // CE 条件表达式函数（泛型版本）
 // condition: 条件表达式

@@ -222,6 +222,7 @@ func (g *Generator) GenerateAssign(step *entity.Step) (err error) {
 func (g *Generator) GenerateBranch(branch *entity.Branch) (err error) {
 
 	if len(branch.Conditions) == 0 {
+		g.append(&opcode.Instruction{OpCode: opcode.Mark, Name: opcode.MARK_BRANCH_START, Value: branch.ID})
 		for _, step := range branch.Steps {
 			err = g.GenerateStep(&step)
 
@@ -406,9 +407,11 @@ func (g *Generator) GenerateLoop(step *entity.Step) (err error) {
 
 	g.GenerateLoopOutputs(loop.Name, loop)
 
-	// g.append(
-	// 	&opcode.Instruction{OpCode: opcode.Mark, Name: opcode.MARK_LOOP_END, Value: step.ID},
-	// )
+	g.append(
+		&opcode.Instruction{OpCode: opcode.Load, Name: loop.Name},
+		&opcode.Instruction{OpCode: opcode.Mark, Name: opcode.MARK_LOOP_END, Value: step.ID},
+		&opcode.Instruction{OpCode: opcode.Pop},
+	)
 
 	g.append(
 		&opcode.Instruction{OpCode: opcode.Load, Name: loop.Index},

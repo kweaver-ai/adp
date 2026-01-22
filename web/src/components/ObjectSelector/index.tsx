@@ -7,7 +7,7 @@ import ObjectIcon from '../ObjectIcon';
 export const renderObjectTypeLabel = ({ icon, name, color }: { icon?: string; name: string; color?: string }) => (
   <div className="g-flex-align-center" title="name">
     <ObjectIcon icon={icon || ''} color={color || ''} />
-    <div>
+    <div style={{ marginLeft: 8 }}>
       <Text className="g-ellipsis-1" title={name}>
         {name}
       </Text>

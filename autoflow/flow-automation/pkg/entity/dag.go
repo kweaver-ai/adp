@@ -8,6 +8,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"maps"
 	"net/http"
 	"regexp"
 	"strconv"
@@ -23,9 +24,11 @@ import (
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/pkg/vm/opcode"
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/store"
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/store/rds"
+	cutils "github.com/kweaver-ai/adp/autoflow/flow-automation/utils"
 	libstore "github.com/kweaver-ai/adp/autoflow/ide-go-lib/store"
 	"github.com/kweaver-ai/adp/autoflow/ide-go-lib/telemetry/trace"
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 )
 
@@ -77,7 +80,7 @@ type Dag struct {
 	// 组合算子ID,用于权限校验时传递resourceID使用
 	OperatorID string `yaml:"operator_id,omitempty" json:"operator_id,omitempty" bson:"operator_id,omitempty"`
 
-	IncValues map[string]any `yaml:"-" json:"-" bson:"inc_values,omitempty"`
+	IncValues map[string]any `yaml:"-" json:"inc_values,omitempty" bson:"inc_values,omitempty"`
 	// 流程语义化版本信息
 	Version Version `yaml:"version" json:"version" bson:"version"`
 	// 流程版本ID
@@ -123,12 +126,37 @@ type SpecifiedVar struct {
 	Value string
 }
 
+// DagRunOption dag run option
+type DagRunOption func(*DagInstance)
+
+// WithKeyWords
+func WithKeyWords(keywords ...string) DagRunOption {
+	return func(dagIns *DagInstance) {
+		dagIns.Keywords = keywords
+	}
+}
+
+// WithCallChain
+func WithCallChain(chains []string) DagRunOption {
+	return func(dagIns *DagInstance) {
+		dagIns.CallChain = chains
+	}
+}
+
+// WithCallBack
+func WithCallBack(successCallBack, failCallBack string) DagRunOption {
+	return func(dagIns *DagInstance) {
+		dagIns.SuccessCallback = successCallBack
+		dagIns.ErrorCallback = failCallBack
+	}
+}
+
 func (d *Dag) SetPushMessage(publish func(topic string, message []byte) error) {
 	d.pushMessage = publish
 }
 
 // Run used to build a new DagInstance, then you also need save it to Store
-func (d *Dag) Run(ctx context.Context, trigger Trigger, specVars map[string]string, keywords []string) (*DagInstance, error) {
+func (d *Dag) Run(ctx context.Context, trigger Trigger, specVars map[string]string, opts ...DagRunOption) (*DagInstance, error) {
 	var err error
 	ctx, span := trace.StartInternalSpan(ctx)
 	defer func() { trace.TelemetrySpanEnd(span, err) }()
@@ -137,9 +165,21 @@ func (d *Dag) Run(ctx context.Context, trigger Trigger, specVars map[string]stri
 		return nil, fmt.Errorf("you cannot run a stopeed dag")
 	}
 
+	specVarsCopy := maps.Clone(specVars)
+
+	if v, ok := specVarsCopy["call_chain"]; ok {
+		delete(specVarsCopy, "call_chain")
+		opts = append(opts, WithCallChain(strings.Split(v, ",")))
+	}
+
+	if v, ok := specVarsCopy["call_back"]; ok {
+		delete(specVarsCopy, "call_back")
+		opts = append(opts, WithCallBack(v, ""))
+	}
+
 	dagInsVars := DagInstanceVars{}
 
-	for key, value := range specVars {
+	for key, value := range specVarsCopy {
 		dagInsVars[key] = DagInstanceVar{
 			Value: value,
 		}
@@ -196,7 +236,6 @@ func (d *Dag) Run(ctx context.Context, trigger Trigger, specVars map[string]stri
 		DagID:            d.ID,
 		Trigger:          trigger,
 		Vars:             dagInsVars,
-		Keywords:         keywords,
 		EventPersistence: DagInstanceEventPersistenceSql,
 		Status:           DagInstanceStatusInit,
 		UserID:           userID,
@@ -212,6 +251,10 @@ func (d *Dag) Run(ctx context.Context, trigger Trigger, specVars map[string]stri
 	dagIns.ShareData = &ShareData{
 		Dict:        map[string]any{},
 		DagInstance: dagIns,
+	}
+
+	for _, opt := range opts {
+		opt(dagIns)
 	}
 
 	return dagIns, nil
@@ -1096,6 +1139,9 @@ func (dagIns *DagInstance) Fail(reason string) {
 }
 
 func (dagIns *DagInstance) FailDetail(reason map[string]any) {
+	if _, ok := reason["detail"].(primitive.D); ok {
+		reason["detail"] = cutils.PrimitiveToMap(reason["detail"])
+	}
 	b, _ := json.Marshal(reason)
 	dagIns.Fail(string(b))
 }

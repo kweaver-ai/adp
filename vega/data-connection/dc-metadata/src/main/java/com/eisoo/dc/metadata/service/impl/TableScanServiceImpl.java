@@ -52,6 +52,11 @@ public class TableScanServiceImpl extends ServiceImpl<TableScanMapper, TableScan
         return tableScanMapper.selectByDsId(dsId);
     }
 
+    @Override
+    public List<TableScanEntity> selectBatchIds(List<String> tables) {
+        return tableScanMapper.selectBatchIds(tables);
+    }
+
     @Transactional(rollbackFor = Exception.class)
     @Override
     public void tableScanBatch(List<TableScanEntity> deletes, List<TableScanEntity> updateList, List<TableScanEntity> saveList) {
@@ -289,6 +294,7 @@ public class TableScanServiceImpl extends ServiceImpl<TableScanMapper, TableScan
         response.put("total_count", tableIds.size());
         return ResponseEntity.ok(response);
     }
+
 
     public ResponseEntity<?> getTableOldListByDsId(String userId, String dsId, String keyword, int limit,
                                                    int offset, String sort, String direction) {

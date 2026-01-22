@@ -80,6 +80,7 @@ export interface EditorProps {
     type?: string;
     onChange?(value?: IStep[]): void;
     getPopupContainer?(): HTMLElement;
+    dagsId?: string;
 }
 
 const DefaultSteps: IStep[] = [
@@ -964,6 +965,7 @@ export const Editor = forwardRef<Instance, EditorProps>((props, ref) => {
                     () => (
                         <ExecutorConfig
                             step={currentStep?.value}
+                            dagsId={props?.dagsId}
                             onFinish={(value) => {
                                 setCurrentStep(undefined);
                                 currentStep?.onFinish({

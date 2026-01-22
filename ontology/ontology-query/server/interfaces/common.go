@@ -14,6 +14,9 @@ const (
 
 	SERVICE_NAME = "ontology-query"
 
+	// 默认的分支
+	MAIN_BRANCH = "main"
+
 	// 指标数据查询是否包含模型信息
 	DEFAULT_INCLUDE_TYPE_INFO    = "false"
 	DEFAULT_INCLUDE_LOGIC_PARAMS = "false"
@@ -44,6 +47,9 @@ const (
 
 	// limit的最大值
 	MAX_LIMIT = 10000
+
+	// 对象类的对象实例检索时，默认的查询数量
+	DEFAULT_OBJECT_LIMIT = 10
 
 	// 子图查询时，节点对象类的对象实例的默认查询数量
 	DEFAULT_LIMIT = 1000

@@ -37,21 +37,22 @@ const HeaderSteps = (props: TProps) => {
     });
   };
 
+  // 国际化未加载完成时不渲染
+  if (!i18nLoaded) {
+    return null;
+  }
+
   return (
     <div className={styles['header-step-box']}>
       <div className={styles['box-exit']}>
-        <div className="g-pointer g-flex-align-center" onClick={goBack}>
-          <LeftOutlined style={{ marginTop: 2, marginRight: 6 }} />
+        <div className={styles['back-box']} onClick={goBack}>
+          <LeftOutlined />
           <Text>{intl.get('HeaderSteps.exit')}</Text>
         </div>
-        <Divider type="vertical" style={{ margin: '0 12px' }} />
+        <Divider type="vertical" />
         <Title>{title}</Title>
       </div>
-      {items && (
-        <div style={{ width: 800 }}>
-          <Steps.GapIcon size="small" current={stepsCurrent} items={items} />
-        </div>
-      )}
+      {items && <Steps.GapIcon size="small" current={stepsCurrent} items={items} />}
     </div>
   );
 };

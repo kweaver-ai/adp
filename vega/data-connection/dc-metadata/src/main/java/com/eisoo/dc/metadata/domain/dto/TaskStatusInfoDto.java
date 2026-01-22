@@ -33,11 +33,11 @@ public class TaskStatusInfoDto {
     @NoArgsConstructor
     public static class TaskProcessInfo {
         @JsonProperty(value = "table_count", required = true)
-        private Integer tableCount;
+        private Integer tableCount = 0;
         @JsonProperty(value = "success_count", required = true)
-        private Integer successCount;
+        private Integer successCount = 0;
         @JsonProperty(value = "fail_count", required = true)
-        private Integer failCount;
+        private Integer failCount = 0;
     }
 
     @Data
@@ -45,11 +45,11 @@ public class TaskStatusInfoDto {
     @NoArgsConstructor
     public static class TaskResultInfo {
         @JsonProperty(value = "table_count", required = true)
-        private Integer tableCount;
+        private Integer tableCount = 0;
         @JsonProperty(value = "success_count", required = true)
-        private Integer successCount;
+        private Integer successCount = 0;
         @JsonProperty(value = "fail_count", required = true)
-        private Integer failCount;
+        private Integer failCount = 0;
         @JsonProperty(value = "fail_stage", required = true)
         private Integer failStage;
         @JsonProperty(value = "error_stack", required = true)

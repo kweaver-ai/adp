@@ -32,7 +32,7 @@
         "CommonExternalServerError": "调用依赖服务异常",
         "MCPInstanceAlreadyExists": "MCP实例已存在",
         "MCPInstanceNotFound": "MCP实例不存在",
-        "KnActionRecallUnsupportedType": "当前仅支持 type=tool 的行动源，MCP 类型将在下个版本支持",
+        "KnActionRecallUnsupportedType": "不支持的行动源类型，当前仅支持 type=tool 和 type=mcp",
         "KnActionRecallNoActionsFound": "未找到可用的行动",
         "KnActionRecallSchemaConvertFailed": "工具Schema转换失败",
         "KnActionRecallToolNotFound": "工具不存在或已被删除",
@@ -56,7 +56,7 @@
         "CommonExternalServerError": "Please check the service",
         "MCPInstanceAlreadyExists": "无",
         "MCPInstanceNotFound": "无",
-        "KnActionRecallUnsupportedType": "请使用 type=tool 的行动源，或等待下个版本的 MCP 支持",
+        "KnActionRecallUnsupportedType": "请检查行动源类型配置是否正确，当前支持 tool 和 mcp 类型",
         "KnActionRecallNoActionsFound": "请检查行动类型配置是否正确",
         "KnActionRecallSchemaConvertFailed": "请检查工具的 OpenAPI Schema 定义是否符合规范",
         "KnActionRecallToolNotFound": "请检查工具是否存在，或联系管理员"

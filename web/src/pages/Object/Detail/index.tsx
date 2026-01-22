@@ -20,17 +20,14 @@ interface TObjectItem {
   icon: string;
   color: string;
 }
-const ObjectItem = (props: TObjectItem) => {
-  const { value, icon, color } = props;
-  return (
-    <div className="g-flex-align-center" title={value}>
-      {icon && <ObjectIcon icon={icon} color={color} />}
-      <div>
-        <Text className="g-ellipsis-1">{value}</Text>
-      </div>
+const ObjectItem = ({ value, icon, color }: TObjectItem) => (
+  <div className="g-flex-align-center" title={value}>
+    {icon && <ObjectIcon icon={icon} color={color} />}
+    <div style={{ marginLeft: 8 }}>
+      <Text className="g-ellipsis-1">{value}</Text>
     </div>
-  );
-};
+  </div>
+);
 
 interface TDetailProps {
   open: boolean;
@@ -55,7 +52,6 @@ const Detail = (props: TDetailProps) => {
   const dataFilterRef = useRef<any>(null);
 
   const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
-    console.log(e.target.value, 'valu');
     setSearchText(e.target.value);
   };
 
@@ -88,18 +84,16 @@ const Detail = (props: TDetailProps) => {
     fetchData();
   }, [id]);
 
-  // 当抽屉打开时重置过滤状态
   useEffect(() => {
     if (!open) {
       setSwitchFilter(false);
       form.setFieldValue('dataFilter', INIT_FILTER);
     }
-  }, [open]);
+  }, [open, form]);
 
-  // 处理过滤搜索
   const handleFilterSearch = () => {
     if (switchFilter && dataFilterRef.current) {
-      const filters = switchFilter ? form.getFieldValue('dataFilter') : {};
+      const filters = form.getFieldValue('dataFilter');
       const validate = dataFilterRef.current?.validate();
       if (!validate) {
         fetchData({ condition: formatKeyOfObjectToLine(filters) });
@@ -109,26 +103,12 @@ const Detail = (props: TDetailProps) => {
     }
   };
 
-  // const [source, setSource] = useState(sourceData);
-
-  // useEffect(() => {
-  //     if (!id) return;
-  //     getDetail();
-  // }, [id]);
-
-  // const getDetail = async () => {
-  //     const result = await SERVICE.object.getDetail(knId, [id]);
-  //     if (result[0]) setSource(result[0]);
-  // };
-
-  /** 下来菜单变更 */
   const onChange = (data: any) => {
     if (data.key === 'delete') {
       onDeleteConfirm([source], false, () => onClose());
     }
   };
 
-  /** 基础数据 */
   const baseInfo = [
     { label: 'ID', value: id },
     { label: intl.get('Global.tag'), value: Array.isArray(tags) && tags.length ? map(tags, (i) => <Tag key={i}>{i}</Tag>) : '--' },

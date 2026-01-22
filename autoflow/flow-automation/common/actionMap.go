@@ -145,6 +145,10 @@ const (
 
 	// DatabaseWriteOpt MySQL数据库写入操作
 	DatabaseWriteOpt = "@internal/database/write"
+	// SubFlowCallWorkflowOpt 工作流子流程调用操作
+	SubFlowCallWorkflowOpt = "@subflow/call/workflow"
+	// SubFlowCallWorkflowOpt 数据流子流程调用操作
+	SubFlowCallDataflowOpt = "@subflow/call/dataflow"
 )
 
 const (
@@ -505,4 +509,6 @@ var ActionMap = map[string]string{
 	OpContentPipelineDocFormatConvert: "tools/docformatconvert.json",
 	OpOCRNew:                          "tools/ocrnew.json",
 	OpContentFileParse:                "tools/fileparse.json",
+	SubFlowCallWorkflowOpt:            "tools/workflowcall.json",
+	SubFlowCallDataflowOpt:            "tools/dataflowcall.json",
 }

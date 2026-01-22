@@ -2,12 +2,12 @@ package drivenadapters
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"net/http"
 	"sync"
 	"time"
 
+	"github.com/bytedance/sonic"
 	"github.com/kweaver-ai/kweaver-go-lib/logger"
 	"github.com/kweaver-ai/kweaver-go-lib/rest"
 
@@ -57,7 +57,7 @@ func (ua *uniqueryAccess) GetViewDataByID(ctx context.Context, viewID string, vi
 	start := time.Now().UnixMilli()
 	respCode, result, err := ua.httpClient.PostNoUnmarshal(ctx, url, headers, viewRequest)
 
-	reqByte, _ := json.Marshal(viewRequest)
+	reqByte, _ := sonic.Marshal(viewRequest)
 	logger.Debugf("post [%s] with headers[%v] finished, request is [%v] response code is [%d],  error is [%v], 耗时: %dms",
 		url, headers, string(reqByte), respCode, err, time.Now().UnixMilli()-start)
 
@@ -71,7 +71,7 @@ func (ua *uniqueryAccess) GetViewDataByID(ctx context.Context, viewID string, vi
 	if respCode != http.StatusOK {
 		// 转成 baseerror
 		var baseError rest.BaseError
-		if err := json.Unmarshal(result, &baseError); err != nil {
+		if err := sonic.Unmarshal(result, &baseError); err != nil {
 			logger.Errorf("unmalshal BaesError failed: %v\n", err)
 			return viewData, err
 		}
@@ -85,7 +85,9 @@ func (ua *uniqueryAccess) GetViewDataByID(ctx context.Context, viewID string, vi
 		return viewData, fmt.Errorf("get view data %v return null", viewID)
 	}
 
-	if err := json.Unmarshal(result, &viewData); err != nil {
+	// 使用 UseInt64 选项
+	cfg := sonic.Config{UseInt64: true}.Froze()
+	if err := cfg.Unmarshal(result, &viewData); err != nil {
 		logger.Errorf("Unmarshal View Data failed, %s", err)
 
 		return viewData, err
@@ -95,7 +97,7 @@ func (ua *uniqueryAccess) GetViewDataByID(ctx context.Context, viewID string, vi
 	if viewRequest.NeedTotal && viewData.TotalCount > 0 &&
 		len(viewData.Datas) == 0 && viewData.SearchAfter != nil {
 
-		viewReqStr, _ := json.Marshal(viewRequest)
+		viewReqStr, _ := sonic.Marshal(viewRequest)
 		logger.Errorf("get view[%s] data timeout, current timeout is %s, view query is [%s]",
 			viewID, ua.appSetting.ServerSetting.ViewDataTimeout, viewReqStr)
 
@@ -133,7 +135,7 @@ func (ua *uniqueryAccess) GetMetricDataByID(ctx context.Context, metricID string
 	start := time.Now().UnixMilli()
 	respCode, result, err = ua.httpClient.PostNoUnmarshal(ctx, url, headers, metricRequest)
 
-	reqByte, _ := json.Marshal(metricRequest)
+	reqByte, _ := sonic.Marshal(metricRequest)
 	logger.Debugf("post [%s] with headers[%v] finished, request is [%v] response code is [%d],  error is [%v], 耗时: %dms",
 		url, headers, string(reqByte), respCode, err, time.Now().UnixMilli()-start)
 
@@ -147,7 +149,7 @@ func (ua *uniqueryAccess) GetMetricDataByID(ctx context.Context, metricID string
 	if respCode != http.StatusOK {
 		// 转成 baseerror
 		var baseError rest.BaseError
-		if err = json.Unmarshal(result, &baseError); err != nil {
+		if err = sonic.Unmarshal(result, &baseError); err != nil {
 			logger.Errorf("unmalshal BaesError failed: %v\n", err)
 			return metricData, err
 		}
@@ -161,7 +163,7 @@ func (ua *uniqueryAccess) GetMetricDataByID(ctx context.Context, metricID string
 		return metricData, fmt.Errorf("get metric model %v return null", metricID)
 	}
 
-	if err = json.Unmarshal(result, &metricData); err != nil {
+	if err = sonic.Unmarshal(result, &metricData); err != nil {
 		logger.Errorf("Unmarshal metric data failed, %s", err)
 
 		return metricData, err

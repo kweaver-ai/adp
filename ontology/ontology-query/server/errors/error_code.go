@@ -64,4 +64,5 @@ func init() {
 	rest.Register(errCodeList)
 	rest.Register(objectTypeErrCodeList)
 	rest.Register(knowledgeNetworkErrCodeList)
+	rest.Register(actionTypeErrCodeList)
 }

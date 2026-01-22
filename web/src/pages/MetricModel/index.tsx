@@ -176,8 +176,9 @@ const MetricModel = () => {
 
   /** 删除弹窗 */
   const deleteConfirm = (record?: any): void => {
+    const content = record ? intl.get('Global.deleteConfirm', { name: record.name }) : intl.get('Global.deleteConfirmMultiple', { count: selectedRows.length });
     modal.confirm({
-      content: intl.get('Global.deleteConfirm', { name: record?.name || selectedRows?.map((item) => item.name).join(',') || '' }),
+      content,
       icon: <IconFont type="icon-about" />,
       okText: intl.get('Global.ok'),
       okButtonProps: {
