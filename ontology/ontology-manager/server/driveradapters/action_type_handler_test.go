@@ -58,8 +58,10 @@ func Test_ActionTypeRestHandler_CreateActionTypes(t *testing.T) {
 
 		actionType := &interfaces.ActionType{
 			ActionTypeWithKeyField: interfaces.ActionTypeWithKeyField{
-				ATID:   "at1",
-				ATName: "action1",
+				ATID:         "at1",
+				ATName:       "action1",
+				ObjectTypeID: "ot1",
+				ActionType:   interfaces.ACTION_TYPE_ADD,
 			},
 		}
 		requestData := struct {
@@ -206,8 +208,10 @@ func Test_ActionTypeRestHandler_UpdateActionType(t *testing.T) {
 
 		actionType := interfaces.ActionType{
 			ActionTypeWithKeyField: interfaces.ActionTypeWithKeyField{
-				ATID:   atID,
-				ATName: "action1",
+				ATID:         atID,
+				ATName:       "action1",
+				ObjectTypeID: "ot1",
+				ActionType:   interfaces.ACTION_TYPE_MODIFY,
 			},
 		}
 
@@ -433,14 +437,16 @@ func Test_ActionTypeRestHandler_GetActionTypes(t *testing.T) {
 			ats.EXPECT().GetActionTypesByIDs(gomock.Any(), knID, gomock.Any(), gomock.Any()).Return([]*interfaces.ActionType{
 				{
 					ActionTypeWithKeyField: interfaces.ActionTypeWithKeyField{
-						ATID:   "at1",
-						ATName: "action1",
+						ATID:       "at1",
+						ATName:     "action1",
+						ActionType: interfaces.ACTION_TYPE_ADD,
 					},
 				},
 				{
 					ActionTypeWithKeyField: interfaces.ActionTypeWithKeyField{
-						ATID:   "at2",
-						ATName: "action2",
+						ATID:       "at2",
+						ATName:     "action2",
+						ActionType: interfaces.ACTION_TYPE_ADD,
 					},
 				},
 			}, nil)
@@ -486,14 +492,16 @@ func Test_ActionTypeRestHandler_GetActionTypes(t *testing.T) {
 			ats.EXPECT().GetActionTypesByIDs(gomock.Any(), knID, gomock.Any(), gomock.Any()).Return([]*interfaces.ActionType{
 				{
 					ActionTypeWithKeyField: interfaces.ActionTypeWithKeyField{
-						ATID:   "at1",
-						ATName: "action1",
+						ATID:       "at1",
+						ATName:     "action1",
+						ActionType: interfaces.ACTION_TYPE_ADD,
 					},
 				},
 				{
 					ActionTypeWithKeyField: interfaces.ActionTypeWithKeyField{
-						ATID:   "at2",
-						ATName: "action2",
+						ATID:       "at2",
+						ATName:     "action2",
+						ActionType: interfaces.ACTION_TYPE_ADD,
 					},
 				},
 			}, nil)
@@ -643,8 +651,10 @@ func Test_ActionTypeRestHandler_HandleActionTypeGetOverride(t *testing.T) {
 
 		actionType := &interfaces.ActionType{
 			ActionTypeWithKeyField: interfaces.ActionTypeWithKeyField{
-				ATID:   "at1",
-				ATName: "action1",
+				ATID:         "at1",
+				ATName:       "action1",
+				ObjectTypeID: "ot1",
+				ActionType:   interfaces.ACTION_TYPE_ADD,
 			},
 		}
 		requestData := struct {

@@ -140,6 +140,15 @@ func (ats *actionTypeService) CreateActionTypes(ctx context.Context, tx *sql.Tx,
 
 		actionType.CreateTime = currentTime
 		actionType.UpdateTime = currentTime
+
+		// 绑定的对象类非空时，需校验对象类存在性
+		if actionType.ObjectTypeID != "" {
+			// 导入时未提交，在一个事务中get
+			_, err = ats.ots.GetObjectTypeByID(ctx, tx, actionType.KNID, actionType.Branch, actionType.ObjectTypeID)
+			if err != nil {
+				return []string{}, err
+			}
+		}
 	}
 
 	// 0. 开始事务

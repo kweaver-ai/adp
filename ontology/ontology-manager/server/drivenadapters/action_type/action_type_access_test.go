@@ -27,12 +27,12 @@ var (
 		ActionTypeWithKeyField: interfaces.ActionTypeWithKeyField{
 			ATID:         "at1",
 			ATName:       "Action Type 1",
-			ActionType:   interfaces.ACTION_TYPE_TOOL,
+			ActionType:   interfaces.ACTION_SOURCE_TYPE_TOOL,
 			ObjectTypeID: "ot1",
 			Condition:    &interfaces.CondCfg{},
 			Affect:       &interfaces.ActionAffect{},
 			ActionSource: interfaces.ActionSource{
-				Type:   interfaces.ACTION_TYPE_TOOL,
+				Type:   interfaces.ACTION_SOURCE_TYPE_TOOL,
 				BoxID:  "box1",
 				ToolID: "tool1",
 			},
@@ -245,7 +245,7 @@ func Test_ActionTypeAccess_ListActionTypes(t *testing.T) {
 			"f_updater", "f_updater_type", "f_update_time",
 		}).AddRow(
 			"at1", "Action Type 1", `"tag1"`, "comment", "icon", "color", "detail",
-			"kn1", "main", interfaces.ACTION_TYPE_TOOL, "ot1",
+			"kn1", "main", interfaces.ACTION_SOURCE_TYPE_TOOL, "ot1",
 			conditionBytes, affectBytes, actionSourceBytes, parametersBytes, scheduleBytes,
 			"admin", "admin", testUpdateTime,
 			"admin", "admin", testUpdateTime,
@@ -316,7 +316,7 @@ func Test_ActionTypeAccess_ListActionTypes(t *testing.T) {
 				"f_updater", "f_updater_type", "f_update_time",
 			}).AddRow(
 				"at1", "Action Type 1", `"tag1"`, "comment", "icon", "color", "detail",
-				"kn1", "main", interfaces.ACTION_TYPE_TOOL, "ot1",
+				"kn1", "main", interfaces.ACTION_SOURCE_TYPE_TOOL, "ot1",
 				invalidBytes, affectBytes, actionSourceBytes, parametersBytes, scheduleBytes,
 				"admin", "admin", testUpdateTime,
 				"admin", "admin", testUpdateTime,
@@ -341,7 +341,7 @@ func Test_ActionTypeAccess_ListActionTypes(t *testing.T) {
 				"f_updater", "f_updater_type", "f_update_time",
 			}).AddRow(
 				"at1", "Action Type 1", `"tag1"`, "comment", "icon", "color", "detail",
-				"kn1", "main", interfaces.ACTION_TYPE_TOOL, "ot1",
+				"kn1", "main", interfaces.ACTION_SOURCE_TYPE_TOOL, "ot1",
 				conditionBytes, invalidBytes, actionSourceBytes, parametersBytes, scheduleBytes,
 				"admin", "admin", testUpdateTime,
 				"admin", "admin", testUpdateTime,
@@ -366,7 +366,7 @@ func Test_ActionTypeAccess_ListActionTypes(t *testing.T) {
 				"f_updater", "f_updater_type", "f_update_time",
 			}).AddRow(
 				"at1", "Action Type 1", `"tag1"`, "comment", "icon", "color", "detail",
-				"kn1", "main", interfaces.ACTION_TYPE_TOOL, "ot1",
+				"kn1", "main", interfaces.ACTION_SOURCE_TYPE_TOOL, "ot1",
 				conditionBytes, affectBytes, invalidBytes, parametersBytes, scheduleBytes,
 				"admin", "admin", testUpdateTime,
 				"admin", "admin", testUpdateTime,
@@ -391,7 +391,7 @@ func Test_ActionTypeAccess_ListActionTypes(t *testing.T) {
 				"f_updater", "f_updater_type", "f_update_time",
 			}).AddRow(
 				"at1", "Action Type 1", `"tag1"`, "comment", "icon", "color", "detail",
-				"kn1", "main", interfaces.ACTION_TYPE_TOOL, "ot1",
+				"kn1", "main", interfaces.ACTION_SOURCE_TYPE_TOOL, "ot1",
 				conditionBytes, affectBytes, actionSourceBytes, invalidBytes, scheduleBytes,
 				"admin", "admin", testUpdateTime,
 				"admin", "admin", testUpdateTime,
@@ -416,7 +416,7 @@ func Test_ActionTypeAccess_ListActionTypes(t *testing.T) {
 				"f_updater", "f_updater_type", "f_update_time",
 			}).AddRow(
 				"at1", "Action Type 1", `"tag1"`, "comment", "icon", "color", "detail",
-				"kn1", "main", interfaces.ACTION_TYPE_TOOL, "ot1",
+				"kn1", "main", interfaces.ACTION_SOURCE_TYPE_TOOL, "ot1",
 				conditionBytes, affectBytes, actionSourceBytes, parametersBytes, invalidBytes,
 				"admin", "admin", testUpdateTime,
 				"admin", "admin", testUpdateTime,
@@ -445,7 +445,7 @@ func Test_ActionTypeAccess_ListActionTypes(t *testing.T) {
 				"f_updater", "f_updater_type", "f_update_time",
 			}).AddRow(
 				"at1", "Action Type 1", `"tag1"`, "comment", "icon", "color", "detail",
-				"kn1", "main", interfaces.ACTION_TYPE_TOOL, "ot1",
+				"kn1", "main", interfaces.ACTION_SOURCE_TYPE_TOOL, "ot1",
 				conditionBytes, affectBytes, actionSourceBytes, parametersBytes, scheduleBytes,
 				"admin", "admin", testUpdateTime,
 				"admin", "admin", testUpdateTime,
@@ -485,7 +485,7 @@ func Test_ActionTypeAccess_ListActionTypes(t *testing.T) {
 				"f_updater", "f_updater_type", "f_update_time",
 			}).AddRow(
 				"at1", "Action Type 1", `"tag1"`, "comment", "icon", "color", "detail",
-				"kn1", "main", interfaces.ACTION_TYPE_TOOL, "ot1",
+				"kn1", "main", interfaces.ACTION_SOURCE_TYPE_TOOL, "ot1",
 				conditionBytes, affectBytes, actionSourceBytes, parametersBytes, scheduleBytes,
 				"admin", "admin", testUpdateTime,
 				"admin", "admin", testUpdateTime,
@@ -591,13 +591,13 @@ func Test_ActionTypeAccess_GetActionTypesByIDs(t *testing.T) {
 			"f_updater", "f_updater_type", "f_update_time",
 		}).AddRow(
 			"at1", "Action Type 1", `"tag1"`, "comment", "icon", "color", "detail",
-			"kn1", "main", interfaces.ACTION_TYPE_TOOL, "ot1",
+			"kn1", "main", interfaces.ACTION_SOURCE_TYPE_TOOL, "ot1",
 			conditionBytes, affectBytes, actionSourceBytes, parametersBytes, scheduleBytes,
 			"admin", "admin", testUpdateTime,
 			"admin", "admin", testUpdateTime,
 		).AddRow(
 			"at2", "Action Type 2", `"tag2"`, "comment2", "icon2", "color2", "detail2",
-			"kn1", "main", interfaces.ACTION_TYPE_TOOL, "ot1",
+			"kn1", "main", interfaces.ACTION_SOURCE_TYPE_TOOL, "ot1",
 			conditionBytes, affectBytes, actionSourceBytes, parametersBytes, scheduleBytes,
 			"admin", "admin", testUpdateTime,
 			"admin", "admin", testUpdateTime,
@@ -666,7 +666,7 @@ func Test_ActionTypeAccess_GetActionTypesByIDs(t *testing.T) {
 				"f_updater", "f_updater_type", "f_update_time",
 			}).AddRow(
 				"at1", "Action Type 1", `"tag1"`, "comment", "icon", "color", "detail",
-				"kn1", "main", interfaces.ACTION_TYPE_TOOL, "ot1",
+				"kn1", "main", interfaces.ACTION_SOURCE_TYPE_TOOL, "ot1",
 				invalidBytes, affectBytes, actionSourceBytes, parametersBytes, scheduleBytes,
 				"admin", "admin", testUpdateTime,
 				"admin", "admin", testUpdateTime,
@@ -691,7 +691,7 @@ func Test_ActionTypeAccess_GetActionTypesByIDs(t *testing.T) {
 				"f_updater", "f_updater_type", "f_update_time",
 			}).AddRow(
 				"at1", "Action Type 1", `"tag1"`, "comment", "icon", "color", "detail",
-				"kn1", "main", interfaces.ACTION_TYPE_TOOL, "ot1",
+				"kn1", "main", interfaces.ACTION_SOURCE_TYPE_TOOL, "ot1",
 				conditionBytes, invalidBytes, actionSourceBytes, parametersBytes, scheduleBytes,
 				"admin", "admin", testUpdateTime,
 				"admin", "admin", testUpdateTime,
@@ -716,7 +716,7 @@ func Test_ActionTypeAccess_GetActionTypesByIDs(t *testing.T) {
 				"f_updater", "f_updater_type", "f_update_time",
 			}).AddRow(
 				"at1", "Action Type 1", `"tag1"`, "comment", "icon", "color", "detail",
-				"kn1", "main", interfaces.ACTION_TYPE_TOOL, "ot1",
+				"kn1", "main", interfaces.ACTION_SOURCE_TYPE_TOOL, "ot1",
 				conditionBytes, affectBytes, invalidBytes, parametersBytes, scheduleBytes,
 				"admin", "admin", testUpdateTime,
 				"admin", "admin", testUpdateTime,
@@ -741,7 +741,7 @@ func Test_ActionTypeAccess_GetActionTypesByIDs(t *testing.T) {
 				"f_updater", "f_updater_type", "f_update_time",
 			}).AddRow(
 				"at1", "Action Type 1", `"tag1"`, "comment", "icon", "color", "detail",
-				"kn1", "main", interfaces.ACTION_TYPE_TOOL, "ot1",
+				"kn1", "main", interfaces.ACTION_SOURCE_TYPE_TOOL, "ot1",
 				conditionBytes, affectBytes, actionSourceBytes, invalidBytes, scheduleBytes,
 				"admin", "admin", testUpdateTime,
 				"admin", "admin", testUpdateTime,
@@ -766,7 +766,7 @@ func Test_ActionTypeAccess_GetActionTypesByIDs(t *testing.T) {
 				"f_updater", "f_updater_type", "f_update_time",
 			}).AddRow(
 				"at1", "Action Type 1", `"tag1"`, "comment", "icon", "color", "detail",
-				"kn1", "main", interfaces.ACTION_TYPE_TOOL, "ot1",
+				"kn1", "main", interfaces.ACTION_SOURCE_TYPE_TOOL, "ot1",
 				conditionBytes, affectBytes, actionSourceBytes, parametersBytes, invalidBytes,
 				"admin", "admin", testUpdateTime,
 				"admin", "admin", testUpdateTime,
@@ -797,7 +797,7 @@ func Test_ActionTypeAccess_UpdateActionType(t *testing.T) {
 			ActionTypeWithKeyField: interfaces.ActionTypeWithKeyField{
 				ATID:         "at1",
 				ATName:       "Updated Action Type",
-				ActionType:   interfaces.ACTION_TYPE_TOOL,
+				ActionType:   interfaces.ACTION_SOURCE_TYPE_TOOL,
 				ObjectTypeID: "ot1",
 			},
 			KNID:   "kn1",
@@ -1084,13 +1084,13 @@ func Test_ActionTypeAccess_GetAllActionTypesByKnID(t *testing.T) {
 			"f_updater", "f_updater_type", "f_update_time",
 		}).AddRow(
 			"at1", "Action Type 1", `"tag1"`, "comment", "icon", "color", "detail",
-			"kn1", "main", interfaces.ACTION_TYPE_TOOL, "ot1",
+			"kn1", "main", interfaces.ACTION_SOURCE_TYPE_TOOL, "ot1",
 			conditionBytes, affectBytes, actionSourceBytes, parametersBytes, scheduleBytes,
 			"admin", "admin", testUpdateTime,
 			"admin", "admin", testUpdateTime,
 		).AddRow(
 			"at2", "Action Type 2", `"tag2"`, "comment2", "icon2", "color2", "detail2",
-			"kn1", "main", interfaces.ACTION_TYPE_TOOL, "ot1",
+			"kn1", "main", interfaces.ACTION_SOURCE_TYPE_TOOL, "ot1",
 			conditionBytes, affectBytes, actionSourceBytes, parametersBytes, scheduleBytes,
 			"admin", "admin", testUpdateTime,
 			"admin", "admin", testUpdateTime,
@@ -1148,7 +1148,7 @@ func Test_ActionTypeAccess_GetAllActionTypesByKnID(t *testing.T) {
 				"f_updater", "f_updater_type", "f_update_time",
 			}).AddRow(
 				"at1", "Action Type 1", `"tag1"`, "comment", "icon", "color", "detail",
-				"kn1", "main", interfaces.ACTION_TYPE_TOOL, "ot1",
+				"kn1", "main", interfaces.ACTION_SOURCE_TYPE_TOOL, "ot1",
 				invalidBytes, affectBytes, actionSourceBytes, parametersBytes, scheduleBytes,
 				"admin", "admin", testUpdateTime,
 				"admin", "admin", testUpdateTime,
@@ -1173,7 +1173,7 @@ func Test_ActionTypeAccess_GetAllActionTypesByKnID(t *testing.T) {
 				"f_updater", "f_updater_type", "f_update_time",
 			}).AddRow(
 				"at1", "Action Type 1", `"tag1"`, "comment", "icon", "color", "detail",
-				"kn1", "main", interfaces.ACTION_TYPE_TOOL, "ot1",
+				"kn1", "main", interfaces.ACTION_SOURCE_TYPE_TOOL, "ot1",
 				conditionBytes, invalidBytes, actionSourceBytes, parametersBytes, scheduleBytes,
 				"admin", "admin", testUpdateTime,
 				"admin", "admin", testUpdateTime,
@@ -1198,7 +1198,7 @@ func Test_ActionTypeAccess_GetAllActionTypesByKnID(t *testing.T) {
 				"f_updater", "f_updater_type", "f_update_time",
 			}).AddRow(
 				"at1", "Action Type 1", `"tag1"`, "comment", "icon", "color", "detail",
-				"kn1", "main", interfaces.ACTION_TYPE_TOOL, "ot1",
+				"kn1", "main", interfaces.ACTION_SOURCE_TYPE_TOOL, "ot1",
 				conditionBytes, affectBytes, invalidBytes, parametersBytes, scheduleBytes,
 				"admin", "admin", testUpdateTime,
 				"admin", "admin", testUpdateTime,
@@ -1223,7 +1223,7 @@ func Test_ActionTypeAccess_GetAllActionTypesByKnID(t *testing.T) {
 				"f_updater", "f_updater_type", "f_update_time",
 			}).AddRow(
 				"at1", "Action Type 1", `"tag1"`, "comment", "icon", "color", "detail",
-				"kn1", "main", interfaces.ACTION_TYPE_TOOL, "ot1",
+				"kn1", "main", interfaces.ACTION_SOURCE_TYPE_TOOL, "ot1",
 				conditionBytes, affectBytes, actionSourceBytes, invalidBytes, scheduleBytes,
 				"admin", "admin", testUpdateTime,
 				"admin", "admin", testUpdateTime,
@@ -1248,7 +1248,7 @@ func Test_ActionTypeAccess_GetAllActionTypesByKnID(t *testing.T) {
 				"f_updater", "f_updater_type", "f_update_time",
 			}).AddRow(
 				"at1", "Action Type 1", `"tag1"`, "comment", "icon", "color", "detail",
-				"kn1", "main", interfaces.ACTION_TYPE_TOOL, "ot1",
+				"kn1", "main", interfaces.ACTION_SOURCE_TYPE_TOOL, "ot1",
 				conditionBytes, affectBytes, actionSourceBytes, parametersBytes, invalidBytes,
 				"admin", "admin", testUpdateTime,
 				"admin", "admin", testUpdateTime,
@@ -1331,7 +1331,7 @@ func Test_ActionTypeAccess_ProcessQueryCondition(t *testing.T) {
 
 		Convey("ActionType query ", func() {
 			query := interfaces.ActionTypesQueryParams{
-				ActionType: interfaces.ACTION_TYPE_TOOL,
+				ActionType: interfaces.ACTION_SOURCE_TYPE_TOOL,
 				KNID:       "kn1",
 				Branch:     "main",
 			}

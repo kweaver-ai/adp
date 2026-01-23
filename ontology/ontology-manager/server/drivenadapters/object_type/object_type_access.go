@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"net/http"
 	"sync"
 
 	sq "github.com/Masterminds/squirrel"
@@ -13,11 +14,13 @@ import (
 	libdb "github.com/kweaver-ai/kweaver-go-lib/db"
 	"github.com/kweaver-ai/kweaver-go-lib/logger"
 	o11y "github.com/kweaver-ai/kweaver-go-lib/observability"
+	"github.com/kweaver-ai/kweaver-go-lib/rest"
 	attr "go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
 	"go.opentelemetry.io/otel/trace"
 
 	"ontology-manager/common"
+	oerrors "ontology-manager/errors"
 	"ontology-manager/interfaces"
 )
 
@@ -621,7 +624,10 @@ func (ota *objectTypeAccess) GetObjectTypeByID(ctx context.Context, tx *sql.Tx,
 		&objectType.Status.StorageSize,
 		&objectType.Status.UpdateTime,
 	)
-	if err != nil {
+	if err == sql.ErrNoRows {
+		return nil, rest.NewHTTPError(ctx, http.StatusNotFound, oerrors.OntologyManager_ObjectType_ObjectTypeNotFound).
+			WithErrorDetails(fmt.Sprintf("对象类[%s]不存在: %v", otID, err))
+	} else if err != nil {
 		logger.Errorf("row scan failed, err: %v \n", err)
 		o11y.Error(ctx, fmt.Sprintf("Row scan error: %v", err))
 		span.SetStatus(codes.Error, "Row scan error")

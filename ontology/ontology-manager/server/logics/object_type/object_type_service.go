@@ -374,9 +374,12 @@ func (ots *objectTypeService) ListObjectTypes(ctx context.Context, tx *sql.Tx,
 				objectType.DataSource.Name = dataView.ViewName
 				// 翻译数据属性映射的字段显示名
 				for j, prop := range objectType.DataProperties {
-					if field, exists := dataView.FieldsMap[prop.MappedField.Name]; exists {
-						objectType.DataProperties[j].MappedField.DisplayName = field.DisplayName
-						objectType.DataProperties[j].MappedField.Type = field.Type
+					// 不为空时，才翻译字段显示名。为空则不翻译
+					if prop.MappedField != nil {
+						if field, exists := dataView.FieldsMap[prop.MappedField.Name]; exists {
+							objectType.DataProperties[j].MappedField.DisplayName = field.DisplayName
+							objectType.DataProperties[j].MappedField.Type = field.Type
+						}
 					}
 					// 字符串类型的属性支持的操作符返回
 					objectType.DataProperties[j].ConditionOperations = ots.processConditionOperations(objectType, prop, dataView)
