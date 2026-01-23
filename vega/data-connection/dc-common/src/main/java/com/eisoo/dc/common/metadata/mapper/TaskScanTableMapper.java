@@ -18,7 +18,7 @@ public interface TaskScanTableMapper extends MPJBaseMapper<TaskScanTableEntity> 
     @Select("SELECT * FROM t_task_scan_table WHERE task_id = #{id}")
     List<TaskScanTableEntity> selectByTaskId(@Param("id") String taskId);
 
-    int deleteBatchByTaskIdAndTableId(@Param("list") List<TaskScanTableEntity> list);
+    int deleteBatchByTaskIdAndTableId(@Param("taskId") String taskId, @Param("list") List<String> ids);
 
     List<TaskScanTableEntity> selectByTaskIdAndIds(@Param("taskId") String taskId, @Param("list") List<String> ids);
 

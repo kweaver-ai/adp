@@ -4,8 +4,6 @@ import cn.hutool.core.date.StopWatch;
 import com.alibaba.fastjson2.JSONArray;
 import com.alibaba.fastjson2.JSONObject;
 import com.eisoo.dc.common.constant.Constants;
-import com.eisoo.dc.common.enums.OperationTyeEnum;
-import com.eisoo.dc.common.enums.ScanStatusEnum;
 import com.eisoo.dc.common.exception.enums.ErrorCodeEnum;
 import com.eisoo.dc.common.exception.vo.AiShuException;
 import com.eisoo.dc.common.metadata.entity.DataSourceEntity;
@@ -13,16 +11,19 @@ import com.eisoo.dc.common.metadata.entity.TableScanEntity;
 import com.eisoo.dc.common.metadata.entity.TaskScanEntity;
 import com.eisoo.dc.common.metadata.entity.TaskScanTableEntity;
 import com.eisoo.dc.common.metadata.mapper.DataSourceMapper;
-import com.eisoo.dc.common.metadata.mapper.TableScanMapper;
 import com.eisoo.dc.common.util.CommonUtil;
-import com.eisoo.dc.common.util.LockUtil;
 import com.eisoo.dc.common.util.http.IndexbaseHttpUtils;
 import com.eisoo.dc.common.vo.HttpResInfo;
 import com.eisoo.dc.metadata.domain.dto.TaskStatusInfoDto;
+import com.eisoo.dc.common.metadata.mapper.TableScanMapper;
 import com.eisoo.dc.metadata.service.IMetaDataFetchService;
 import com.eisoo.dc.metadata.service.ITableScanService;
 import com.eisoo.dc.metadata.service.ITaskScanService;
 import com.eisoo.dc.metadata.service.ITaskScanTableService;
+import com.eisoo.dc.common.util.LockUtil;
+import com.eisoo.dc.common.enums.OperationTyeEnum;
+import com.eisoo.dc.common.enums.ScanStatusEnum;
+
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -200,6 +201,7 @@ public class IndexBaseMetaDataFetchServiceImpl implements IMetaDataFetchService 
             // 把t_table_scan的插入到t_task_scan_table表里面
             List<TableScanEntity> tableScanEntities = tableScanMapper.selectByDsId(dsId);
             List<TaskScanTableEntity> data = new ArrayList<>(tableScanEntities.size());
+            List<String> tableIds = new ArrayList<>(tableScanEntities.size());
             for (TableScanEntity table : tableScanEntities) {
                 // 删除的不要
                 if (1 == table.getFOperationType()) {
@@ -223,13 +225,14 @@ public class IndexBaseMetaDataFetchServiceImpl implements IMetaDataFetchService 
                         OperationTyeEnum.INSERT.getCode()
                 );
                 data.add(taskScanTableEntity);
+                tableIds.add(table.getFId());
             }
-
-            // 首先删除掉冗余文件
-            int delCount = taskScanTableService.deleteBatchByTaskIdAndTableId(data);
-            taskScanTableService.saveBatchTaskScanTable(data, 100);
-            log.info("【获取index元数据成功】taskId:{};dsId:{}", taskId, dsId);
-
+            if (tableIds.size() > 0) {
+                // 首先删除掉冗余文件
+                int delCount = taskScanTableService.deleteBatchByTaskIdAndTableId(taskId, tableIds);
+                taskScanTableService.saveBatchTaskScanTable(data, 100);
+                log.info("【获取index元数据成功】taskId:{};dsId:{}", taskId, dsId);
+            }
         } catch (Exception e) {
             failStage = 1;
             errorStack = e.getMessage();

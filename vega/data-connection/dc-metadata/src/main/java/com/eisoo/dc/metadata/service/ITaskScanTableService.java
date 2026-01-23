@@ -15,7 +15,7 @@ public interface ITaskScanTableService extends IService<TaskScanTableEntity> {
 
     boolean saveBatchTaskScanTable(Collection<TaskScanTableEntity> entityList, int batch);
 
-    int deleteBatchByTaskIdAndTableId(List<TaskScanTableEntity> entityList);
+    int deleteBatchByTaskIdAndTableId(String taskId, List<String> tableIds);
 
     void updateScanStatusById(String id, int status);
 

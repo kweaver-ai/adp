@@ -3,6 +3,7 @@ package com.eisoo.dc.metadata.service.impl;
 import com.alibaba.fastjson2.JSONObject;
 import com.eisoo.dc.common.enums.OperationTyeEnum;
 import com.eisoo.dc.common.enums.ScanStatusEnum;
+import com.eisoo.dc.common.enums.ScanTaskEnm;
 import com.eisoo.dc.common.metadata.entity.DataSourceEntity;
 import com.eisoo.dc.common.metadata.entity.TableScanEntity;
 import com.eisoo.dc.common.metadata.entity.TaskScanEntity;
@@ -215,6 +216,7 @@ public class MetaDataFetchServiceBase implements IMetaDataFetchService {
                 }
             }
             List<TaskScanTableEntity> data = new ArrayList<>(alls.size());
+            List<String> tableIds = new ArrayList<>(alls.size());
             for (TableScanEntity table : alls) {
 //                // 删除的不要
 //                if (1 == table.getFOperationType()) {
@@ -246,10 +248,11 @@ public class MetaDataFetchServiceBase implements IMetaDataFetchService {
                         operationTye
                 );
                 data.add(taskScanTableEntity);
+                tableIds.add(table.getFId());
             }
             // 首先删除掉冗余文件
             if (data.size() > 0) {
-                taskScanTableService.deleteBatchByTaskIdAndTableId(data);
+                taskScanTableService.deleteBatchByTaskIdAndTableId(taskId, tableIds);
                 taskScanTableService.saveBatchTaskScanTable(data, 100);
             }
             log.info("【获取table元数据成功】taskId:{};dsId:{}", taskId, dsId);
@@ -282,7 +285,14 @@ public class MetaDataFetchServiceBase implements IMetaDataFetchService {
         taskResultInfo.setSuccessCount(null);
         taskResultInfo.setFailCount(null);
         taskResultInfo.setFailStage(failStage);
-        taskResultInfo.setErrorStack(errorStack);
+        if (CommonUtil.isEmpty(errorStack)) {
+            taskResultInfo.setErrorStack(errorStack);
+        } else {
+            if (errorStack.length() > 100) {
+                errorStack = errorStack.substring(0, 100);
+            }
+            taskResultInfo.setErrorStack(errorStack);
+        }
         taskScanEntity.setTaskResultInfo(JSONObject.toJSONString(taskResultInfo, WriteMapNullValue));
         taskScanService.updateByIdNewRequires(taskScanEntity);
     }

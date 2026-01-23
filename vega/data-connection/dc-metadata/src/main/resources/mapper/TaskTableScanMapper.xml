@@ -4,9 +4,9 @@
     <!-- 批量删除：使用 foreach 遍历 ids 集合 -->
     <delete id="deleteBatchByTaskIdAndTableId">
         DELETE FROM t_task_scan_table
-        WHERE
-        <foreach collection="list" item="item" open="(" separator="OR" close=")">
-            (task_id = #{item.taskId} AND table_id = #{item.tableId})
+        WHERE task_id= #{taskId} AND table_id IN
+        <foreach collection="list" item="id" open="(" separator="," close=")">
+            #{id}
         </foreach>
     </delete>
 

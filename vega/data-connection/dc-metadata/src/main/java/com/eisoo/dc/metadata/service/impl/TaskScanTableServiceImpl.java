@@ -3,11 +3,11 @@ package com.eisoo.dc.metadata.service.impl;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.eisoo.dc.common.enums.ConnectorEnums;
 import com.eisoo.dc.common.enums.OperationTyeEnum;
-import com.eisoo.dc.common.enums.ScanStatusEnum;
 import com.eisoo.dc.common.metadata.entity.DataSourceEntity;
+import com.eisoo.dc.common.metadata.mapper.DataSourceMapper;
 import com.eisoo.dc.common.metadata.entity.TableScanEntity;
 import com.eisoo.dc.common.metadata.entity.TaskScanTableEntity;
-import com.eisoo.dc.common.metadata.mapper.DataSourceMapper;
+import com.eisoo.dc.common.enums.ScanStatusEnum;
 import com.eisoo.dc.common.metadata.mapper.TableScanMapper;
 import com.eisoo.dc.common.metadata.mapper.TaskScanTableMapper;
 import com.eisoo.dc.common.util.CommonUtil;
@@ -71,9 +71,11 @@ public class TaskScanTableServiceImpl extends ServiceImpl<TaskScanTableMapper, T
             );
             data.add(taskScanTableEntity);
         }
-        int delCount = deleteBatchByTaskIdAndTableId(data);
-        log.info("成功删除了{}条", delCount);
-        saveBatchTaskScanTable(data, 100);
+        if (!data.isEmpty()) {
+            int delCount = deleteBatchByTaskIdAndTableId(taskId, tables);
+            log.info("成功删除了{}条", delCount);
+            saveBatchTaskScanTable(data, 100);
+        }
     }
 
     @Transactional(rollbackFor = Exception.class)
@@ -84,8 +86,19 @@ public class TaskScanTableServiceImpl extends ServiceImpl<TaskScanTableMapper, T
 
     @Transactional(rollbackFor = Exception.class)
     @Override
-    public int deleteBatchByTaskIdAndTableId(List<TaskScanTableEntity> entityList) {
-        return taskScanTableMapper.deleteBatchByTaskIdAndTableId(entityList);
+    public int deleteBatchByTaskIdAndTableId(String taskId, List<String> tableIds) {
+        // 超大集合拆分：若ID数量>100，拆分为多个批次（避免SQL过长）
+        if (tableIds.size() > 100) {
+            int total = 0;
+            // 按每1000个ID为一批次
+            for (int i = 0; i < tableIds.size(); i += 100) {
+                int end = Math.min(i + 100, tableIds.size());
+                List<String> batchIds = tableIds.subList(i, end);
+                total += taskScanTableMapper.deleteBatchByTaskIdAndTableId(taskId, batchIds);
+            }
+            return total;
+        }
+        return taskScanTableMapper.deleteBatchByTaskIdAndTableId(taskId, tableIds);
     }
 
     @Transactional(rollbackFor = Exception.class)

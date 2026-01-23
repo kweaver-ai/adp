@@ -1,14 +1,13 @@
 package com.eisoo.dc.common.util.jdbc.db.impl;
 
 import com.alibaba.fastjson2.JSON;
+import com.alibaba.fastjson2.JSONArray;
+import com.alibaba.fastjson2.JSONObject;
 import com.eisoo.dc.common.connector.ConnectorConfig;
 import com.eisoo.dc.common.connector.TypeConfig;
 import com.eisoo.dc.common.constant.CatalogConstant;
 import com.eisoo.dc.common.enums.ConnectorEnums;
-import com.eisoo.dc.common.metadata.entity.AdvancedParamsDTO;
-import com.eisoo.dc.common.metadata.entity.DataSourceEntity;
-import com.eisoo.dc.common.metadata.entity.FieldScanEntity;
-import com.eisoo.dc.common.metadata.entity.TableScanEntity;
+import com.eisoo.dc.common.metadata.entity.*;
 import com.eisoo.dc.common.util.RSAUtil;
 import com.eisoo.dc.common.util.jdbc.db.DataSourceConfig;
 import com.eisoo.dc.common.util.jdbc.db.DbClientInterface;
@@ -76,27 +75,27 @@ public abstract class JdbcBaseClient implements DbClientInterface {
             connection = this.getConnection(dataSourceConfig);
             statement = connection.createStatement();
             long offset = 0;
-            String sql = DbConnectionStrategyFactory.TABLE_METADATA_SQL_TEMPLATE_MAP.get(fType);
+            String templateSql = DbConnectionStrategyFactory.TABLE_METADATA_SQL_TEMPLATE_MAP.get(fType);
+            String sqlExec = "";
             while (true) {
                 int currentBatchSize = 0;
                 if ("oracle".equals(fType)) {
-                    sql = String.format(sql, offset + 1000, fSchema);
+                    sqlExec = String.format(templateSql, offset + 1000, fSchema);
                 } else {
-                    sql = String.format(sql, fSchema, offset);
+                    sqlExec = String.format(templateSql, fSchema, offset);
                 }
-                log.info("【{}采集table元数据】:dsId:{};sql:\n {}", fType, fId, sql);
-                // 高级参数
-                List<AdvancedParamsDTO> advancedParamsDTOList = new ArrayList<>();
-                AdvancedParamsDTO vCatalogNameParam = new AdvancedParamsDTO("vCatalogName", "fCatalog");
-                advancedParamsDTOList.add(vCatalogNameParam);
-//                String advancedParams = new JSONArray(priStoreSize).toJSONString();
-                resultSet = statement.executeQuery(sql);
+                log.info("【{}采集table元数据】:dsId:{};sql:\n {}", fType, fId, sqlExec);
+                resultSet = statement.executeQuery(sqlExec);
                 long startTimeScan = System.currentTimeMillis();
                 while (resultSet.next()) {
                     TableScanEntity tableScanEntity = new TableScanEntity();
                     tableScanEntity.setFId(UUID.randomUUID().toString());
                     tableScanEntity.setFName(resultSet.getString("table_name"));
                     tableScanEntity.setFDescription(resultSet.getString("remarks"));
+                    // 高级参数
+                    List<AdvancedParamsDTO> advancedParamsDTOList = new ArrayList<>();
+                    AdvancedParamsDTO vCatalogNameParam = new AdvancedParamsDTO("vCatalogName", "fCatalog");
+                    advancedParamsDTOList.add(vCatalogNameParam);
                     // 高级参数
                     if (ConnectorEnums.MYSQL.getConnector().equals(fType) || ConnectorEnums.MARIA.getConnector().equals(fType)) {
                         advancedParamsDTOList.add(new AdvancedParamsDTO("engine", resultSet.getString("ENGINE")));
@@ -132,10 +131,7 @@ public abstract class JdbcBaseClient implements DbClientInterface {
                         endTime,
                         currentBatchSize,
                         currentTables.size());
-                if (currentTables.size() == 0) {
-                    break;
-                }
-                if (currentTables.size() < 1000) {
+                if (currentBatchSize < 1000) {
                     break;
                 }
                 offset += 1000;
