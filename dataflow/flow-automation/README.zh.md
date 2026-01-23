@@ -1,8 +1,8 @@
-# Flow Automation (工作流自动化)
+# Flow Automation (数据流编排)
 
 [中文](README.zh.md) | [English](README.md)
 
-Flow Automation 是一个负责编排和执行自动化工作流的核心服务。它管理工作流的完整生命周期，集成各种基础设施组件，并提供工作流管理的 API 接口。
+Flow Automation 是一个负责编排和执行自动化数据管道的核心服务。它管理数据流的完整生命周期，集成各种基础设施组件，并提供数据管道管理的 API 接口。
 
 ## 核心架构
 
@@ -23,7 +23,7 @@ Flow Automation 是一个负责编排和执行自动化工作流的核心服务�
 
 ### 目录结构说明
 
-- **`logics/`**: 核心业务逻辑层，包含工作流管理、执行器、触发器等业务逻辑
+- **`logics/`**: 核心业务逻辑层，包含数据管道管理、执行器、触发器等业务逻辑
 - **`driveradapters/`**: 驱动适配器层（入站），处理 HTTP 请求、消息队列消费等
 - **`drivenadapters/`**: 被驱动适配器层（出站），与数据库、外部服务、缓存等交互
 - **`module/`**: 领域模块，包含初始化和配置
@@ -31,12 +31,12 @@ Flow Automation 是一个负责编排和执行自动化工作流的核心服务�
 
 ## 主要功能
 
-### 1. 工作流管理 (DAG Management)
-- **创建与编辑**: 支持创建、更新、删除工作流（DAG）
-- **版本控制**: 工作流版本管理
-- **执行管理**: 启动、取消、暂停工作流实例
+### 1. 数据管道管理 (DAG Management)
+- **创建与编辑**: 支持创建、更新、删除数据管道（DAG）
+- **版本控制**: 数据管道版本管理
+- **执行管理**: 启动、取消、暂停管道实例
 - **调试模式**: 支持单步调试和完整调试
-- **批量操作**: 批量查询和操作工作流
+- **批量操作**: 批量查询和操作数据管道
 
 ### 2. 自定义执行器 (Custom Executors)
 - **执行器管理**: 创建、更新、删除自定义执行器
@@ -46,8 +46,8 @@ Flow Automation 是一个负责编排和执行自动化工作流的核心服务�
 
 ### 3. 触发器系统 (Trigger System)
 - **定时触发**: 基于 Cron 表达式的定时任务触发
-- **事件触发**: 支持外部事件触发工作流
-- **手动触发**: 支持用户手动触发工作流执行
+- **事件触发**: 支持外部事件触发数据管道
+- **手动触发**: 支持用户手动触发数据管道执行
 - **回调处理**: 处理异步任务回调
 
 ### 4. 认证与授权 (Authentication & Authorization)
@@ -71,7 +71,7 @@ Flow Automation 是一个负责编排和执行自动化工作流的核心服务�
 - **数据转换**: 支持数据流转换和处理
 
 ### 8. 算子管理 (Operators)
-- **算子注册**: 注册和管理工作流算子
+- **算子注册**: 注册和管理数据处理算子
 - **算子执行**: 执行各类数据处理算子
 
 ## 技术栈
@@ -79,7 +79,7 @@ Flow Automation 是一个负责编排和执行自动化工作流的核心服务�
 - **语言**: Go 1.24.0
 - **Web 框架**: Gin
 - **数据库**: 
-  - MongoDB (工作流定义和实例存储)
+  - MongoDB (数据管道定义和实例存储)
   - MariaDB/MySQL (关系型数据)
   - Redis (缓存和分布式锁)
 - **消息队列**: Kafka
@@ -139,12 +139,12 @@ Flow Automation 是一个负责编排和执行自动化工作流的核心服务�
 │   ├── alarm/          # 告警接口
 │   ├── auth/           # 认证接口
 │   ├── executor/       # 执行器接口
-│   ├── mgnt/           # 工作流管理接口
+│   ├── mgnt/           # 数据管道管理接口
 │   ├── trigger/        # 触发器接口
 │   └── ...
 ├── helm/               # Helm 部署图表
 ├── logics/             # 业务逻辑
-│   ├── mgnt/           # 工作流管理逻辑
+│   ├── mgnt/           # 数据管道管理逻辑
 │   ├── executor/       # 执行器逻辑
 │   ├── cronjob/        # 定时任务逻辑
 │   └── ...
@@ -165,15 +165,15 @@ Flow Automation 是一个负责编排和执行自动化工作流的核心服务�
 
 主要 API 端点：
 
-### 工作流管理
-- `POST /api/automation/v1/dags` - 创建工作流
-- `PUT /api/automation/v1/dags/:id` - 更新工作流
-- `GET /api/automation/v1/dags/:id` - 获取工作流详情
-- `DELETE /api/automation/v1/dags/:id` - 删除工作流
-- `GET /api/automation/v1/dags` - 列出工作流
+### 数据管道管理
+- `POST /api/automation/v1/dags` - 创建数据管道
+- `PUT /api/automation/v1/dags/:id` - 更新数据管道
+- `GET /api/automation/v1/dags/:id` - 获取数据管道详情
+- `DELETE /api/automation/v1/dags/:id` - 删除数据管道
+- `GET /api/automation/v1/dags` - 列出数据管道
 
-### 工作流执行
-- `POST /api/automation/v1/dags/:id/run` - 执行工作流
+### 数据管道执行
+- `POST /api/automation/v1/dags/:id/run` - 执行数据管道
 - `POST /api/automation/v1/dags/:id/cancel` - 取消执行
 - `GET /api/automation/v1/dags/:id/instances` - 查询执行实例
 

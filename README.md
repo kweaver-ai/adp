@@ -19,7 +19,7 @@ The DIP platform includes key subsystems such as ADP, Decision Agent, DIP Studio
 
 ## Platform Definition
 
-ADP is an intelligent data platform that bridges the gap between heterogeneous data sources and AI agents. It abstracts data complexity through business knowledge networks (Ontology), provides unified data access (VEGA), and orchestrates logic through visual workflows (AutoFlow).
+ADP is an intelligent data platform that bridges the gap between heterogeneous data sources and AI agents. It abstracts data complexity through business knowledge networks (Ontology), provides unified data access (VEGA), and orchestrates data processing through DataFlow pipelines.
 
 ## Key Components
 
@@ -41,11 +41,11 @@ VEGA provides a unified SQL interface for heterogeneous data sources, decoupling
 - **Cross-Source Query**: Join data across different databases seamlessly.
 - **Standardized Semantics**: Ensures consistent data definitions across all applications.
 
-### 4. AutoFlow
-AutoFlow is a visual workflow orchestration engine designed for humans and agents.
-- **Agent Node Embedding**: Embed AI agents as nodes in a workflow to handle complex decision tasks.
-- **Low-Code Design**: Drag-and-drop interface for process definition and management.
-- **Robust Execution**: Features transaction management, automatic retries, and comprehensive error handling.
+### 4. DataFlow
+DataFlow is a visual pipeline orchestration engine designed for data processing.
+- **Data Pipeline Design**: Build and orchestrate data processing flows through a visual interface.
+- **Code Execution**: Supports sandboxed Python code execution for complex data transformation tasks.
+- **Real-time Processing**: Supports scheduled and event-driven data processing pipelines.
 
 ## Technical Goals
 
@@ -61,8 +61,8 @@ AutoFlow is a visual workflow orchestration engine designed for humans and agent
 │                           ADP Platform                            │
 │                                                                   │
 │  ┌──────────────┐   ┌──────────────┐   ┌──────────────┐           │
-│  │   AutoFlow   │◄──┤ ContextLoader│◄──┤ Ontology Eng.│           │
-│  │ (Orchestrate)│   │  (Assembly)  │   │  (Modeling)  │           │
+│  │   DataFlow   │◄──┤ ContextLoader│◄──┤ Ontology Eng.│           │
+│  │(Data Pipeline)│   │  (Assembly)  │   │  (Modeling)  │           │
 │  └──────┬───────┘   └──────┬───────┘   └──────┬───────┘           │
 │         │                  │                  │                   │
 │         ▼                  ▼                  ▼                   │
@@ -82,7 +82,7 @@ AutoFlow is a visual workflow orchestration engine designed for humans and agent
 ### Prerequisites
 
 - **Go**: 1.23+ (for Ontology)
-- **Java**: JDK 1.8+ (for AutoFlow, VEGA)
+- **Java**: JDK 1.8+ (for VEGA)
 - **Node.js**: 18+ (for Web Console)
 - **Database**: MariaDB 11.4+ or DM8
 - **Search Engine**: OpenSearch 2.x
@@ -113,11 +113,8 @@ AutoFlow is a visual workflow orchestration engine designed for humans and agent
         mvn clean install
         ```
 
-    *   **AutoFlow (Java)**:
-        ```bash
-        cd autoflow/workflow
-        mvn clean package
-        ```
+    *   **DataFlow**:
+        Refer to [dataflow/README.md](dataflow/README.md) for detailed instructions.
 
     *   **Web Console (Node.js)**:
         ```bash

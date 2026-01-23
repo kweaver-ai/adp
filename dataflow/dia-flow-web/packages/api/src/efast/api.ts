@@ -8865,21 +8865,21 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
             if (configuration) {
                 baseOptions = configuration.baseOptions;
             }
-            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options };
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
 
 
-    
+
             localVarHeaderParameter['Content-Type'] = 'application/json';
 
-            localVarUrlObj.query = {...localVarUrlObj.query, ...localVarQueryParameter, ...options.query};
+            localVarUrlObj.query = { ...localVarUrlObj.query, ...localVarQueryParameter, ...options.query };
             // fix override query string Detail: https://stackoverflow.com/a/7517673/1077943
             delete (localVarUrlObj as Partial<typeof localVarUrlObj>).search;
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
-            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.headers = { ...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers };
             const needsSerialization = (typeof anonymousLogin !== "string") || localVarRequestOptions.headers['Content-Type'] === 'application/json';
-            localVarRequestOptions.data =  needsSerialization ? JSON.stringify(anonymousLogin !== undefined ? anonymousLogin : {}) : (anonymousLogin || "");
+            localVarRequestOptions.data = needsSerialization ? JSON.stringify(anonymousLogin !== undefined ? anonymousLogin : {}) : (anonymousLogin || "");
 
             return {
                 url: globalImportUrl.format(localVarUrlObj),
@@ -8900,21 +8900,21 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
             if (configuration) {
                 baseOptions = configuration.baseOptions;
             }
-            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options };
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
 
 
-    
+
             localVarHeaderParameter['Content-Type'] = 'application/json';
 
-            localVarUrlObj.query = {...localVarUrlObj.query, ...localVarQueryParameter, ...options.query};
+            localVarUrlObj.query = { ...localVarUrlObj.query, ...localVarQueryParameter, ...options.query };
             // fix override query string Detail: https://stackoverflow.com/a/7517673/1077943
             delete (localVarUrlObj as Partial<typeof localVarUrlObj>).search;
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
-            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.headers = { ...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers };
             const needsSerialization = (typeof singleSignOn !== "string") || localVarRequestOptions.headers['Content-Type'] === 'application/json';
-            localVarRequestOptions.data =  needsSerialization ? JSON.stringify(singleSignOn !== undefined ? singleSignOn : {}) : (singleSignOn || "");
+            localVarRequestOptions.data = needsSerialization ? JSON.stringify(singleSignOn !== undefined ? singleSignOn : {}) : (singleSignOn || "");
 
             return {
                 url: globalImportUrl.format(localVarUrlObj),
@@ -8935,21 +8935,21 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
             if (configuration) {
                 baseOptions = configuration.baseOptions;
             }
-            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options };
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
 
 
-    
+
             localVarHeaderParameter['Content-Type'] = 'application/json';
 
-            localVarUrlObj.query = {...localVarUrlObj.query, ...localVarQueryParameter, ...options.query};
+            localVarUrlObj.query = { ...localVarUrlObj.query, ...localVarQueryParameter, ...options.query };
             // fix override query string Detail: https://stackoverflow.com/a/7517673/1077943
             delete (localVarUrlObj as Partial<typeof localVarUrlObj>).search;
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
-            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.headers = { ...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers };
             const needsSerialization = (typeof auth1CheckuninstallpwdReq !== "string") || localVarRequestOptions.headers['Content-Type'] === 'application/json';
-            localVarRequestOptions.data =  needsSerialization ? JSON.stringify(auth1CheckuninstallpwdReq !== undefined ? auth1CheckuninstallpwdReq : {}) : (auth1CheckuninstallpwdReq || "");
+            localVarRequestOptions.data = needsSerialization ? JSON.stringify(auth1CheckuninstallpwdReq !== undefined ? auth1CheckuninstallpwdReq : {}) : (auth1CheckuninstallpwdReq || "");
 
             return {
                 url: globalImportUrl.format(localVarUrlObj),
@@ -8969,17 +8969,17 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
             if (configuration) {
                 baseOptions = configuration.baseOptions;
             }
-            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options };
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
 
 
-    
-            localVarUrlObj.query = {...localVarUrlObj.query, ...localVarQueryParameter, ...options.query};
+
+            localVarUrlObj.query = { ...localVarUrlObj.query, ...localVarQueryParameter, ...options.query };
             // fix override query string Detail: https://stackoverflow.com/a/7517673/1077943
             delete (localVarUrlObj as Partial<typeof localVarUrlObj>).search;
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
-            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.headers = { ...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers };
 
             return {
                 url: globalImportUrl.format(localVarUrlObj),
@@ -9000,21 +9000,21 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
             if (configuration) {
                 baseOptions = configuration.baseOptions;
             }
-            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options };
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
 
 
-    
+
             localVarHeaderParameter['Content-Type'] = 'application/json';
 
-            localVarUrlObj.query = {...localVarUrlObj.query, ...localVarQueryParameter, ...options.query};
+            localVarUrlObj.query = { ...localVarUrlObj.query, ...localVarQueryParameter, ...options.query };
             // fix override query string Detail: https://stackoverflow.com/a/7517673/1077943
             delete (localVarUrlObj as Partial<typeof localVarUrlObj>).search;
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
-            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.headers = { ...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers };
             const needsSerialization = (typeof auth1GetvcodeReq !== "string") || localVarRequestOptions.headers['Content-Type'] === 'application/json';
-            localVarRequestOptions.data =  needsSerialization ? JSON.stringify(auth1GetvcodeReq !== undefined ? auth1GetvcodeReq : {}) : (auth1GetvcodeReq || "");
+            localVarRequestOptions.data = needsSerialization ? JSON.stringify(auth1GetvcodeReq !== undefined ? auth1GetvcodeReq : {}) : (auth1GetvcodeReq || "");
 
             return {
                 url: globalImportUrl.format(localVarUrlObj),
@@ -9036,7 +9036,7 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
             if (configuration) {
                 baseOptions = configuration.baseOptions;
             }
-            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options };
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
 
@@ -9045,16 +9045,16 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
             }
 
 
-    
+
             localVarHeaderParameter['Content-Type'] = 'application/json';
 
-            localVarUrlObj.query = {...localVarUrlObj.query, ...localVarQueryParameter, ...options.query};
+            localVarUrlObj.query = { ...localVarUrlObj.query, ...localVarQueryParameter, ...options.query };
             // fix override query string Detail: https://stackoverflow.com/a/7517673/1077943
             delete (localVarUrlObj as Partial<typeof localVarUrlObj>).search;
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
-            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.headers = { ...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers };
             const needsSerialization = (typeof auth1ModifypasswordReq !== "string") || localVarRequestOptions.headers['Content-Type'] === 'application/json';
-            localVarRequestOptions.data =  needsSerialization ? JSON.stringify(auth1ModifypasswordReq !== undefined ? auth1ModifypasswordReq : {}) : (auth1ModifypasswordReq || "");
+            localVarRequestOptions.data = needsSerialization ? JSON.stringify(auth1ModifypasswordReq !== undefined ? auth1ModifypasswordReq : {}) : (auth1ModifypasswordReq || "");
 
             return {
                 url: globalImportUrl.format(localVarUrlObj),
@@ -9075,21 +9075,21 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
             if (configuration) {
                 baseOptions = configuration.baseOptions;
             }
-            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options };
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
 
 
-    
+
             localVarHeaderParameter['Content-Type'] = 'application/json';
 
-            localVarUrlObj.query = {...localVarUrlObj.query, ...localVarQueryParameter, ...options.query};
+            localVarUrlObj.query = { ...localVarUrlObj.query, ...localVarQueryParameter, ...options.query };
             // fix override query string Detail: https://stackoverflow.com/a/7517673/1077943
             delete (localVarUrlObj as Partial<typeof localVarUrlObj>).search;
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
-            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.headers = { ...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers };
             const needsSerialization = (typeof auth1SelfregistrationReq !== "string") || localVarRequestOptions.headers['Content-Type'] === 'application/json';
-            localVarRequestOptions.data =  needsSerialization ? JSON.stringify(auth1SelfregistrationReq !== undefined ? auth1SelfregistrationReq : {}) : (auth1SelfregistrationReq || "");
+            localVarRequestOptions.data = needsSerialization ? JSON.stringify(auth1SelfregistrationReq !== undefined ? auth1SelfregistrationReq : {}) : (auth1SelfregistrationReq || "");
 
             return {
                 url: globalImportUrl.format(localVarUrlObj),
@@ -9110,21 +9110,21 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
             if (configuration) {
                 baseOptions = configuration.baseOptions;
             }
-            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options };
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
 
 
-    
+
             localVarHeaderParameter['Content-Type'] = 'application/json';
 
-            localVarUrlObj.query = {...localVarUrlObj.query, ...localVarQueryParameter, ...options.query};
+            localVarUrlObj.query = { ...localVarUrlObj.query, ...localVarQueryParameter, ...options.query };
             // fix override query string Detail: https://stackoverflow.com/a/7517673/1077943
             delete (localVarUrlObj as Partial<typeof localVarUrlObj>).search;
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
-            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.headers = { ...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers };
             const needsSerialization = (typeof auth1SendauthvcodeReq !== "string") || localVarRequestOptions.headers['Content-Type'] === 'application/json';
-            localVarRequestOptions.data =  needsSerialization ? JSON.stringify(auth1SendauthvcodeReq !== undefined ? auth1SendauthvcodeReq : {}) : (auth1SendauthvcodeReq || "");
+            localVarRequestOptions.data = needsSerialization ? JSON.stringify(auth1SendauthvcodeReq !== undefined ? auth1SendauthvcodeReq : {}) : (auth1SendauthvcodeReq || "");
 
             return {
                 url: globalImportUrl.format(localVarUrlObj),
@@ -9145,21 +9145,21 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
             if (configuration) {
                 baseOptions = configuration.baseOptions;
             }
-            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options };
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
 
 
-    
+
             localVarHeaderParameter['Content-Type'] = 'application/json';
 
-            localVarUrlObj.query = {...localVarUrlObj.query, ...localVarQueryParameter, ...options.query};
+            localVarUrlObj.query = { ...localVarUrlObj.query, ...localVarQueryParameter, ...options.query };
             // fix override query string Detail: https://stackoverflow.com/a/7517673/1077943
             delete (localVarUrlObj as Partial<typeof localVarUrlObj>).search;
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
-            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.headers = { ...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers };
             const needsSerialization = (typeof auth1ValidatesecuritydeviceReq !== "string") || localVarRequestOptions.headers['Content-Type'] === 'application/json';
-            localVarRequestOptions.data =  needsSerialization ? JSON.stringify(auth1ValidatesecuritydeviceReq !== undefined ? auth1ValidatesecuritydeviceReq : {}) : (auth1ValidatesecuritydeviceReq || "");
+            localVarRequestOptions.data = needsSerialization ? JSON.stringify(auth1ValidatesecuritydeviceReq !== undefined ? auth1ValidatesecuritydeviceReq : {}) : (auth1ValidatesecuritydeviceReq || "");
 
             return {
                 url: globalImportUrl.format(localVarUrlObj),
@@ -9180,21 +9180,21 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
             if (configuration) {
                 baseOptions = configuration.baseOptions;
             }
-            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options };
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
 
 
-    
+
             localVarHeaderParameter['Content-Type'] = 'application/json';
 
-            localVarUrlObj.query = {...localVarUrlObj.query, ...localVarQueryParameter, ...options.query};
+            localVarUrlObj.query = { ...localVarUrlObj.query, ...localVarQueryParameter, ...options.query };
             // fix override query string Detail: https://stackoverflow.com/a/7517673/1077943
             delete (localVarUrlObj as Partial<typeof localVarUrlObj>).search;
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
-            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.headers = { ...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers };
             const needsSerialization = (typeof autolockGetdirlockinfoReq !== "string") || localVarRequestOptions.headers['Content-Type'] === 'application/json';
-            localVarRequestOptions.data =  needsSerialization ? JSON.stringify(autolockGetdirlockinfoReq !== undefined ? autolockGetdirlockinfoReq : {}) : (autolockGetdirlockinfoReq || "");
+            localVarRequestOptions.data = needsSerialization ? JSON.stringify(autolockGetdirlockinfoReq !== undefined ? autolockGetdirlockinfoReq : {}) : (autolockGetdirlockinfoReq || "");
 
             return {
                 url: globalImportUrl.format(localVarUrlObj),
@@ -9215,21 +9215,21 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
             if (configuration) {
                 baseOptions = configuration.baseOptions;
             }
-            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options };
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
 
 
-    
+
             localVarHeaderParameter['Content-Type'] = 'application/json';
 
-            localVarUrlObj.query = {...localVarUrlObj.query, ...localVarQueryParameter, ...options.query};
+            localVarUrlObj.query = { ...localVarUrlObj.query, ...localVarQueryParameter, ...options.query };
             // fix override query string Detail: https://stackoverflow.com/a/7517673/1077943
             delete (localVarUrlObj as Partial<typeof localVarUrlObj>).search;
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
-            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.headers = { ...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers };
             const needsSerialization = (typeof autolockGetlockedfileinfosReq !== "string") || localVarRequestOptions.headers['Content-Type'] === 'application/json';
-            localVarRequestOptions.data =  needsSerialization ? JSON.stringify(autolockGetlockedfileinfosReq !== undefined ? autolockGetlockedfileinfosReq : {}) : (autolockGetlockedfileinfosReq || "");
+            localVarRequestOptions.data = needsSerialization ? JSON.stringify(autolockGetlockedfileinfosReq !== undefined ? autolockGetlockedfileinfosReq : {}) : (autolockGetlockedfileinfosReq || "");
 
             return {
                 url: globalImportUrl.format(localVarUrlObj),
@@ -9250,21 +9250,21 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
             if (configuration) {
                 baseOptions = configuration.baseOptions;
             }
-            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options };
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
 
 
-    
+
             localVarHeaderParameter['Content-Type'] = 'application/json';
 
-            localVarUrlObj.query = {...localVarUrlObj.query, ...localVarQueryParameter, ...options.query};
+            localVarUrlObj.query = { ...localVarUrlObj.query, ...localVarQueryParameter, ...options.query };
             // fix override query string Detail: https://stackoverflow.com/a/7517673/1077943
             delete (localVarUrlObj as Partial<typeof localVarUrlObj>).search;
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
-            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.headers = { ...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers };
             const needsSerialization = (typeof autolockGetlockinfoReq !== "string") || localVarRequestOptions.headers['Content-Type'] === 'application/json';
-            localVarRequestOptions.data =  needsSerialization ? JSON.stringify(autolockGetlockinfoReq !== undefined ? autolockGetlockinfoReq : {}) : (autolockGetlockinfoReq || "");
+            localVarRequestOptions.data = needsSerialization ? JSON.stringify(autolockGetlockinfoReq !== undefined ? autolockGetlockinfoReq : {}) : (autolockGetlockinfoReq || "");
 
             return {
                 url: globalImportUrl.format(localVarUrlObj),
@@ -9285,21 +9285,21 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
             if (configuration) {
                 baseOptions = configuration.baseOptions;
             }
-            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options };
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
 
 
-    
+
             localVarHeaderParameter['Content-Type'] = 'application/json';
 
-            localVarUrlObj.query = {...localVarUrlObj.query, ...localVarQueryParameter, ...options.query};
+            localVarUrlObj.query = { ...localVarUrlObj.query, ...localVarQueryParameter, ...options.query };
             // fix override query string Detail: https://stackoverflow.com/a/7517673/1077943
             delete (localVarUrlObj as Partial<typeof localVarUrlObj>).search;
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
-            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.headers = { ...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers };
             const needsSerialization = (typeof autolockLockReq !== "string") || localVarRequestOptions.headers['Content-Type'] === 'application/json';
-            localVarRequestOptions.data =  needsSerialization ? JSON.stringify(autolockLockReq !== undefined ? autolockLockReq : {}) : (autolockLockReq || "");
+            localVarRequestOptions.data = needsSerialization ? JSON.stringify(autolockLockReq !== undefined ? autolockLockReq : {}) : (autolockLockReq || "");
 
             return {
                 url: globalImportUrl.format(localVarUrlObj),
@@ -9320,21 +9320,21 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
             if (configuration) {
                 baseOptions = configuration.baseOptions;
             }
-            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options };
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
 
 
-    
+
             localVarHeaderParameter['Content-Type'] = 'application/json';
 
-            localVarUrlObj.query = {...localVarUrlObj.query, ...localVarQueryParameter, ...options.query};
+            localVarUrlObj.query = { ...localVarUrlObj.query, ...localVarQueryParameter, ...options.query };
             // fix override query string Detail: https://stackoverflow.com/a/7517673/1077943
             delete (localVarUrlObj as Partial<typeof localVarUrlObj>).search;
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
-            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.headers = { ...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers };
             const needsSerialization = (typeof autolockRefreshReq !== "string") || localVarRequestOptions.headers['Content-Type'] === 'application/json';
-            localVarRequestOptions.data =  needsSerialization ? JSON.stringify(autolockRefreshReq !== undefined ? autolockRefreshReq : {}) : (autolockRefreshReq || "");
+            localVarRequestOptions.data = needsSerialization ? JSON.stringify(autolockRefreshReq !== undefined ? autolockRefreshReq : {}) : (autolockRefreshReq || "");
 
             return {
                 url: globalImportUrl.format(localVarUrlObj),
@@ -9355,21 +9355,21 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
             if (configuration) {
                 baseOptions = configuration.baseOptions;
             }
-            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options };
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
 
 
-    
+
             localVarHeaderParameter['Content-Type'] = 'application/json';
 
-            localVarUrlObj.query = {...localVarUrlObj.query, ...localVarQueryParameter, ...options.query};
+            localVarUrlObj.query = { ...localVarUrlObj.query, ...localVarQueryParameter, ...options.query };
             // fix override query string Detail: https://stackoverflow.com/a/7517673/1077943
             delete (localVarUrlObj as Partial<typeof localVarUrlObj>).search;
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
-            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.headers = { ...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers };
             const needsSerialization = (typeof autolockTrylockReq !== "string") || localVarRequestOptions.headers['Content-Type'] === 'application/json';
-            localVarRequestOptions.data =  needsSerialization ? JSON.stringify(autolockTrylockReq !== undefined ? autolockTrylockReq : {}) : (autolockTrylockReq || "");
+            localVarRequestOptions.data = needsSerialization ? JSON.stringify(autolockTrylockReq !== undefined ? autolockTrylockReq : {}) : (autolockTrylockReq || "");
 
             return {
                 url: globalImportUrl.format(localVarUrlObj),
@@ -9390,21 +9390,21 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
             if (configuration) {
                 baseOptions = configuration.baseOptions;
             }
-            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options };
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
 
 
-    
+
             localVarHeaderParameter['Content-Type'] = 'application/json';
 
-            localVarUrlObj.query = {...localVarUrlObj.query, ...localVarQueryParameter, ...options.query};
+            localVarUrlObj.query = { ...localVarUrlObj.query, ...localVarQueryParameter, ...options.query };
             // fix override query string Detail: https://stackoverflow.com/a/7517673/1077943
             delete (localVarUrlObj as Partial<typeof localVarUrlObj>).search;
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
-            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.headers = { ...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers };
             const needsSerialization = (typeof autolockUnlockReq !== "string") || localVarRequestOptions.headers['Content-Type'] === 'application/json';
-            localVarRequestOptions.data =  needsSerialization ? JSON.stringify(autolockUnlockReq !== undefined ? autolockUnlockReq : {}) : (autolockUnlockReq || "");
+            localVarRequestOptions.data = needsSerialization ? JSON.stringify(autolockUnlockReq !== undefined ? autolockUnlockReq : {}) : (autolockUnlockReq || "");
 
             return {
                 url: globalImportUrl.format(localVarUrlObj),
@@ -9425,21 +9425,21 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
             if (configuration) {
                 baseOptions = configuration.baseOptions;
             }
-            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options };
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
 
 
-    
+
             localVarHeaderParameter['Content-Type'] = 'application/json';
 
-            localVarUrlObj.query = {...localVarUrlObj.query, ...localVarQueryParameter, ...options.query};
+            localVarUrlObj.query = { ...localVarUrlObj.query, ...localVarQueryParameter, ...options.query };
             // fix override query string Detail: https://stackoverflow.com/a/7517673/1077943
             delete (localVarUrlObj as Partial<typeof localVarUrlObj>).search;
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
-            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.headers = { ...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers };
             const needsSerialization = (typeof configGetReq !== "string") || localVarRequestOptions.headers['Content-Type'] === 'application/json';
-            localVarRequestOptions.data =  needsSerialization ? JSON.stringify(configGetReq !== undefined ? configGetReq : {}) : (configGetReq || "");
+            localVarRequestOptions.data = needsSerialization ? JSON.stringify(configGetReq !== undefined ? configGetReq : {}) : (configGetReq || "");
 
             return {
                 url: globalImportUrl.format(localVarUrlObj),
@@ -9460,21 +9460,21 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
             if (configuration) {
                 baseOptions = configuration.baseOptions;
             }
-            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options };
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
 
 
-    
+
             localVarHeaderParameter['Content-Type'] = 'application/json';
 
-            localVarUrlObj.query = {...localVarUrlObj.query, ...localVarQueryParameter, ...options.query};
+            localVarUrlObj.query = { ...localVarUrlObj.query, ...localVarQueryParameter, ...options.query };
             // fix override query string Detail: https://stackoverflow.com/a/7517673/1077943
             delete (localVarUrlObj as Partial<typeof localVarUrlObj>).search;
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
-            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.headers = { ...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers };
             const needsSerialization = (typeof configGetoemconfigbysectionReq !== "string") || localVarRequestOptions.headers['Content-Type'] === 'application/json';
-            localVarRequestOptions.data =  needsSerialization ? JSON.stringify(configGetoemconfigbysectionReq !== undefined ? configGetoemconfigbysectionReq : {}) : (configGetoemconfigbysectionReq || "");
+            localVarRequestOptions.data = needsSerialization ? JSON.stringify(configGetoemconfigbysectionReq !== undefined ? configGetoemconfigbysectionReq : {}) : (configGetoemconfigbysectionReq || "");
 
             return {
                 url: globalImportUrl.format(localVarUrlObj),
@@ -9495,21 +9495,21 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
             if (configuration) {
                 baseOptions = configuration.baseOptions;
             }
-            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options };
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
 
 
-    
+
             localVarHeaderParameter['Content-Type'] = 'application/json';
 
-            localVarUrlObj.query = {...localVarUrlObj.query, ...localVarQueryParameter, ...options.query};
+            localVarUrlObj.query = { ...localVarUrlObj.query, ...localVarQueryParameter, ...options.query };
             // fix override query string Detail: https://stackoverflow.com/a/7517673/1077943
             delete (localVarUrlObj as Partial<typeof localVarUrlObj>).search;
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
-            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.headers = { ...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers };
             const needsSerialization = (typeof contactorAddgroupReq !== "string") || localVarRequestOptions.headers['Content-Type'] === 'application/json';
-            localVarRequestOptions.data =  needsSerialization ? JSON.stringify(contactorAddgroupReq !== undefined ? contactorAddgroupReq : {}) : (contactorAddgroupReq || "");
+            localVarRequestOptions.data = needsSerialization ? JSON.stringify(contactorAddgroupReq !== undefined ? contactorAddgroupReq : {}) : (contactorAddgroupReq || "");
 
             return {
                 url: globalImportUrl.format(localVarUrlObj),
@@ -9530,21 +9530,21 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
             if (configuration) {
                 baseOptions = configuration.baseOptions;
             }
-            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options };
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
 
 
-    
+
             localVarHeaderParameter['Content-Type'] = 'application/json';
 
-            localVarUrlObj.query = {...localVarUrlObj.query, ...localVarQueryParameter, ...options.query};
+            localVarUrlObj.query = { ...localVarUrlObj.query, ...localVarQueryParameter, ...options.query };
             // fix override query string Detail: https://stackoverflow.com/a/7517673/1077943
             delete (localVarUrlObj as Partial<typeof localVarUrlObj>).search;
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
-            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.headers = { ...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers };
             const needsSerialization = (typeof contactorAddpersonsReq !== "string") || localVarRequestOptions.headers['Content-Type'] === 'application/json';
-            localVarRequestOptions.data =  needsSerialization ? JSON.stringify(contactorAddpersonsReq !== undefined ? contactorAddpersonsReq : {}) : (contactorAddpersonsReq || "");
+            localVarRequestOptions.data = needsSerialization ? JSON.stringify(contactorAddpersonsReq !== undefined ? contactorAddpersonsReq : {}) : (contactorAddpersonsReq || "");
 
             return {
                 url: globalImportUrl.format(localVarUrlObj),
@@ -9565,21 +9565,21 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
             if (configuration) {
                 baseOptions = configuration.baseOptions;
             }
-            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options };
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
 
 
-    
+
             localVarHeaderParameter['Content-Type'] = 'application/json';
 
-            localVarUrlObj.query = {...localVarUrlObj.query, ...localVarQueryParameter, ...options.query};
+            localVarUrlObj.query = { ...localVarUrlObj.query, ...localVarQueryParameter, ...options.query };
             // fix override query string Detail: https://stackoverflow.com/a/7517673/1077943
             delete (localVarUrlObj as Partial<typeof localVarUrlObj>).search;
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
-            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.headers = { ...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers };
             const needsSerialization = (typeof contactorDeletegroupReq !== "string") || localVarRequestOptions.headers['Content-Type'] === 'application/json';
-            localVarRequestOptions.data =  needsSerialization ? JSON.stringify(contactorDeletegroupReq !== undefined ? contactorDeletegroupReq : {}) : (contactorDeletegroupReq || "");
+            localVarRequestOptions.data = needsSerialization ? JSON.stringify(contactorDeletegroupReq !== undefined ? contactorDeletegroupReq : {}) : (contactorDeletegroupReq || "");
 
             return {
                 url: globalImportUrl.format(localVarUrlObj),
@@ -9600,21 +9600,21 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
             if (configuration) {
                 baseOptions = configuration.baseOptions;
             }
-            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options };
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
 
 
-    
+
             localVarHeaderParameter['Content-Type'] = 'application/json';
 
-            localVarUrlObj.query = {...localVarUrlObj.query, ...localVarQueryParameter, ...options.query};
+            localVarUrlObj.query = { ...localVarUrlObj.query, ...localVarQueryParameter, ...options.query };
             // fix override query string Detail: https://stackoverflow.com/a/7517673/1077943
             delete (localVarUrlObj as Partial<typeof localVarUrlObj>).search;
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
-            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.headers = { ...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers };
             const needsSerialization = (typeof contactorDeletepersonsReq !== "string") || localVarRequestOptions.headers['Content-Type'] === 'application/json';
-            localVarRequestOptions.data =  needsSerialization ? JSON.stringify(contactorDeletepersonsReq !== undefined ? contactorDeletepersonsReq : {}) : (contactorDeletepersonsReq || "");
+            localVarRequestOptions.data = needsSerialization ? JSON.stringify(contactorDeletepersonsReq !== undefined ? contactorDeletepersonsReq : {}) : (contactorDeletepersonsReq || "");
 
             return {
                 url: globalImportUrl.format(localVarUrlObj),
@@ -9635,21 +9635,21 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
             if (configuration) {
                 baseOptions = configuration.baseOptions;
             }
-            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options };
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
 
 
-    
+
             localVarHeaderParameter['Content-Type'] = 'application/json';
 
-            localVarUrlObj.query = {...localVarUrlObj.query, ...localVarQueryParameter, ...options.query};
+            localVarUrlObj.query = { ...localVarUrlObj.query, ...localVarQueryParameter, ...options.query };
             // fix override query string Detail: https://stackoverflow.com/a/7517673/1077943
             delete (localVarUrlObj as Partial<typeof localVarUrlObj>).search;
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
-            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.headers = { ...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers };
             const needsSerialization = (typeof contactorEditgroupReq !== "string") || localVarRequestOptions.headers['Content-Type'] === 'application/json';
-            localVarRequestOptions.data =  needsSerialization ? JSON.stringify(contactorEditgroupReq !== undefined ? contactorEditgroupReq : {}) : (contactorEditgroupReq || "");
+            localVarRequestOptions.data = needsSerialization ? JSON.stringify(contactorEditgroupReq !== undefined ? contactorEditgroupReq : {}) : (contactorEditgroupReq || "");
 
             return {
                 url: globalImportUrl.format(localVarUrlObj),
@@ -9670,21 +9670,21 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
             if (configuration) {
                 baseOptions = configuration.baseOptions;
             }
-            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options };
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
 
 
-    
+
             localVarHeaderParameter['Content-Type'] = 'application/json';
 
-            localVarUrlObj.query = {...localVarUrlObj.query, ...localVarQueryParameter, ...options.query};
+            localVarUrlObj.query = { ...localVarUrlObj.query, ...localVarQueryParameter, ...options.query };
             // fix override query string Detail: https://stackoverflow.com/a/7517673/1077943
             delete (localVarUrlObj as Partial<typeof localVarUrlObj>).search;
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
-            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.headers = { ...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers };
             const needsSerialization = (typeof contactorGetReq !== "string") || localVarRequestOptions.headers['Content-Type'] === 'application/json';
-            localVarRequestOptions.data =  needsSerialization ? JSON.stringify(contactorGetReq !== undefined ? contactorGetReq : {}) : (contactorGetReq || "");
+            localVarRequestOptions.data = needsSerialization ? JSON.stringify(contactorGetReq !== undefined ? contactorGetReq : {}) : (contactorGetReq || "");
 
             return {
                 url: globalImportUrl.format(localVarUrlObj),
@@ -9704,17 +9704,17 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
             if (configuration) {
                 baseOptions = configuration.baseOptions;
             }
-            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options };
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
 
 
-    
-            localVarUrlObj.query = {...localVarUrlObj.query, ...localVarQueryParameter, ...options.query};
+
+            localVarUrlObj.query = { ...localVarUrlObj.query, ...localVarQueryParameter, ...options.query };
             // fix override query string Detail: https://stackoverflow.com/a/7517673/1077943
             delete (localVarUrlObj as Partial<typeof localVarUrlObj>).search;
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
-            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.headers = { ...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers };
 
             return {
                 url: globalImportUrl.format(localVarUrlObj),
@@ -9735,21 +9735,21 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
             if (configuration) {
                 baseOptions = configuration.baseOptions;
             }
-            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options };
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
 
 
-    
+
             localVarHeaderParameter['Content-Type'] = 'application/json';
 
-            localVarUrlObj.query = {...localVarUrlObj.query, ...localVarQueryParameter, ...options.query};
+            localVarUrlObj.query = { ...localVarUrlObj.query, ...localVarQueryParameter, ...options.query };
             // fix override query string Detail: https://stackoverflow.com/a/7517673/1077943
             delete (localVarUrlObj as Partial<typeof localVarUrlObj>).search;
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
-            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.headers = { ...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers };
             const needsSerialization = (typeof contactorGetpersonsReq !== "string") || localVarRequestOptions.headers['Content-Type'] === 'application/json';
-            localVarRequestOptions.data =  needsSerialization ? JSON.stringify(contactorGetpersonsReq !== undefined ? contactorGetpersonsReq : {}) : (contactorGetpersonsReq || "");
+            localVarRequestOptions.data = needsSerialization ? JSON.stringify(contactorGetpersonsReq !== undefined ? contactorGetpersonsReq : {}) : (contactorGetpersonsReq || "");
 
             return {
                 url: globalImportUrl.format(localVarUrlObj),
@@ -9770,21 +9770,21 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
             if (configuration) {
                 baseOptions = configuration.baseOptions;
             }
-            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options };
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
 
 
-    
+
             localVarHeaderParameter['Content-Type'] = 'application/json';
 
-            localVarUrlObj.query = {...localVarUrlObj.query, ...localVarQueryParameter, ...options.query};
+            localVarUrlObj.query = { ...localVarUrlObj.query, ...localVarQueryParameter, ...options.query };
             // fix override query string Detail: https://stackoverflow.com/a/7517673/1077943
             delete (localVarUrlObj as Partial<typeof localVarUrlObj>).search;
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
-            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.headers = { ...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers };
             const needsSerialization = (typeof contactorSearchReq !== "string") || localVarRequestOptions.headers['Content-Type'] === 'application/json';
-            localVarRequestOptions.data =  needsSerialization ? JSON.stringify(contactorSearchReq !== undefined ? contactorSearchReq : {}) : (contactorSearchReq || "");
+            localVarRequestOptions.data = needsSerialization ? JSON.stringify(contactorSearchReq !== undefined ? contactorSearchReq : {}) : (contactorSearchReq || "");
 
             return {
                 url: globalImportUrl.format(localVarUrlObj),
@@ -9805,21 +9805,21 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
             if (configuration) {
                 baseOptions = configuration.baseOptions;
             }
-            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options };
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
 
 
-    
+
             localVarHeaderParameter['Content-Type'] = 'application/json';
 
-            localVarUrlObj.query = {...localVarUrlObj.query, ...localVarQueryParameter, ...options.query};
+            localVarUrlObj.query = { ...localVarUrlObj.query, ...localVarQueryParameter, ...options.query };
             // fix override query string Detail: https://stackoverflow.com/a/7517673/1077943
             delete (localVarUrlObj as Partial<typeof localVarUrlObj>).search;
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
-            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.headers = { ...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers };
             const needsSerialization = (typeof contactorSearchcountReq !== "string") || localVarRequestOptions.headers['Content-Type'] === 'application/json';
-            localVarRequestOptions.data =  needsSerialization ? JSON.stringify(contactorSearchcountReq !== undefined ? contactorSearchcountReq : {}) : (contactorSearchcountReq || "");
+            localVarRequestOptions.data = needsSerialization ? JSON.stringify(contactorSearchcountReq !== undefined ? contactorSearchcountReq : {}) : (contactorSearchcountReq || "");
 
             return {
                 url: globalImportUrl.format(localVarUrlObj),
@@ -9840,21 +9840,21 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
             if (configuration) {
                 baseOptions = configuration.baseOptions;
             }
-            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options };
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
 
 
-    
+
             localVarHeaderParameter['Content-Type'] = 'application/json';
 
-            localVarUrlObj.query = {...localVarUrlObj.query, ...localVarQueryParameter, ...options.query};
+            localVarUrlObj.query = { ...localVarUrlObj.query, ...localVarQueryParameter, ...options.query };
             // fix override query string Detail: https://stackoverflow.com/a/7517673/1077943
             delete (localVarUrlObj as Partial<typeof localVarUrlObj>).search;
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
-            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.headers = { ...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers };
             const needsSerialization = (typeof contactorSearchpersonsReq !== "string") || localVarRequestOptions.headers['Content-Type'] === 'application/json';
-            localVarRequestOptions.data =  needsSerialization ? JSON.stringify(contactorSearchpersonsReq !== undefined ? contactorSearchpersonsReq : {}) : (contactorSearchpersonsReq || "");
+            localVarRequestOptions.data = needsSerialization ? JSON.stringify(contactorSearchpersonsReq !== undefined ? contactorSearchpersonsReq : {}) : (contactorSearchpersonsReq || "");
 
             return {
                 url: globalImportUrl.format(localVarUrlObj),
@@ -9875,21 +9875,21 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
             if (configuration) {
                 baseOptions = configuration.baseOptions;
             }
-            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options };
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
 
 
-    
+
             localVarHeaderParameter['Content-Type'] = 'application/json';
 
-            localVarUrlObj.query = {...localVarUrlObj.query, ...localVarQueryParameter, ...options.query};
+            localVarUrlObj.query = { ...localVarUrlObj.query, ...localVarQueryParameter, ...options.query };
             // fix override query string Detail: https://stackoverflow.com/a/7517673/1077943
             delete (localVarUrlObj as Partial<typeof localVarUrlObj>).search;
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
-            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.headers = { ...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers };
             const needsSerialization = (typeof rootTypeForDepartmentGetbasicinfoReq !== "string") || localVarRequestOptions.headers['Content-Type'] === 'application/json';
-            localVarRequestOptions.data =  needsSerialization ? JSON.stringify(rootTypeForDepartmentGetbasicinfoReq !== undefined ? rootTypeForDepartmentGetbasicinfoReq : {}) : (rootTypeForDepartmentGetbasicinfoReq || "");
+            localVarRequestOptions.data = needsSerialization ? JSON.stringify(rootTypeForDepartmentGetbasicinfoReq !== undefined ? rootTypeForDepartmentGetbasicinfoReq : {}) : (rootTypeForDepartmentGetbasicinfoReq || "");
 
             return {
                 url: globalImportUrl.format(localVarUrlObj),
@@ -9909,17 +9909,17 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
             if (configuration) {
                 baseOptions = configuration.baseOptions;
             }
-            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options };
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
 
 
-    
-            localVarUrlObj.query = {...localVarUrlObj.query, ...localVarQueryParameter, ...options.query};
+
+            localVarUrlObj.query = { ...localVarUrlObj.query, ...localVarQueryParameter, ...options.query };
             // fix override query string Detail: https://stackoverflow.com/a/7517673/1077943
             delete (localVarUrlObj as Partial<typeof localVarUrlObj>).search;
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
-            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.headers = { ...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers };
 
             return {
                 url: globalImportUrl.format(localVarUrlObj),
@@ -9940,21 +9940,21 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
             if (configuration) {
                 baseOptions = configuration.baseOptions;
             }
-            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options };
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
 
 
-    
+
             localVarHeaderParameter['Content-Type'] = 'application/json';
 
-            localVarUrlObj.query = {...localVarUrlObj.query, ...localVarQueryParameter, ...options.query};
+            localVarUrlObj.query = { ...localVarUrlObj.query, ...localVarQueryParameter, ...options.query };
             // fix override query string Detail: https://stackoverflow.com/a/7517673/1077943
             delete (localVarUrlObj as Partial<typeof localVarUrlObj>).search;
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
-            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.headers = { ...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers };
             const needsSerialization = (typeof departmentGetsubusersReq !== "string") || localVarRequestOptions.headers['Content-Type'] === 'application/json';
-            localVarRequestOptions.data =  needsSerialization ? JSON.stringify(departmentGetsubusersReq !== undefined ? departmentGetsubusersReq : {}) : (departmentGetsubusersReq || "");
+            localVarRequestOptions.data = needsSerialization ? JSON.stringify(departmentGetsubusersReq !== undefined ? departmentGetsubusersReq : {}) : (departmentGetsubusersReq || "");
 
             return {
                 url: globalImportUrl.format(localVarUrlObj),
@@ -9975,21 +9975,21 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
             if (configuration) {
                 baseOptions = configuration.baseOptions;
             }
-            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options };
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
 
 
-    
+
             localVarHeaderParameter['Content-Type'] = 'application/json';
 
-            localVarUrlObj.query = {...localVarUrlObj.query, ...localVarQueryParameter, ...options.query};
+            localVarUrlObj.query = { ...localVarUrlObj.query, ...localVarQueryParameter, ...options.query };
             // fix override query string Detail: https://stackoverflow.com/a/7517673/1077943
             delete (localVarUrlObj as Partial<typeof localVarUrlObj>).search;
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
-            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.headers = { ...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers };
             const needsSerialization = (typeof departmentGetsubusersReq !== "string") || localVarRequestOptions.headers['Content-Type'] === 'application/json';
-            localVarRequestOptions.data =  needsSerialization ? JSON.stringify(departmentGetsubusersReq !== undefined ? departmentGetsubusersReq : {}) : (departmentGetsubusersReq || "");
+            localVarRequestOptions.data = needsSerialization ? JSON.stringify(departmentGetsubusersReq !== undefined ? departmentGetsubusersReq : {}) : (departmentGetsubusersReq || "");
 
             return {
                 url: globalImportUrl.format(localVarUrlObj),
@@ -10010,21 +10010,21 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
             if (configuration) {
                 baseOptions = configuration.baseOptions;
             }
-            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options };
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
 
 
-    
+
             localVarHeaderParameter['Content-Type'] = 'application/json';
 
-            localVarUrlObj.query = {...localVarUrlObj.query, ...localVarQueryParameter, ...options.query};
+            localVarUrlObj.query = { ...localVarUrlObj.query, ...localVarQueryParameter, ...options.query };
             // fix override query string Detail: https://stackoverflow.com/a/7517673/1077943
             delete (localVarUrlObj as Partial<typeof localVarUrlObj>).search;
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
-            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.headers = { ...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers };
             const needsSerialization = (typeof departmentSearchReq !== "string") || localVarRequestOptions.headers['Content-Type'] === 'application/json';
-            localVarRequestOptions.data =  needsSerialization ? JSON.stringify(departmentSearchReq !== undefined ? departmentSearchReq : {}) : (departmentSearchReq || "");
+            localVarRequestOptions.data = needsSerialization ? JSON.stringify(departmentSearchReq !== undefined ? departmentSearchReq : {}) : (departmentSearchReq || "");
 
             return {
                 url: globalImportUrl.format(localVarUrlObj),
@@ -10045,21 +10045,21 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
             if (configuration) {
                 baseOptions = configuration.baseOptions;
             }
-            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options };
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
 
 
-    
+
             localVarHeaderParameter['Content-Type'] = 'application/json';
 
-            localVarUrlObj.query = {...localVarUrlObj.query, ...localVarQueryParameter, ...options.query};
+            localVarUrlObj.query = { ...localVarUrlObj.query, ...localVarQueryParameter, ...options.query };
             // fix override query string Detail: https://stackoverflow.com/a/7517673/1077943
             delete (localVarUrlObj as Partial<typeof localVarUrlObj>).search;
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
-            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.headers = { ...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers };
             const needsSerialization = (typeof departmentSearchcountReq !== "string") || localVarRequestOptions.headers['Content-Type'] === 'application/json';
-            localVarRequestOptions.data =  needsSerialization ? JSON.stringify(departmentSearchcountReq !== undefined ? departmentSearchcountReq : {}) : (departmentSearchcountReq || "");
+            localVarRequestOptions.data = needsSerialization ? JSON.stringify(departmentSearchcountReq !== undefined ? departmentSearchcountReq : {}) : (departmentSearchcountReq || "");
 
             return {
                 url: globalImportUrl.format(localVarUrlObj),
@@ -10080,21 +10080,21 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
             if (configuration) {
                 baseOptions = configuration.baseOptions;
             }
-            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options };
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
 
 
-    
+
             localVarHeaderParameter['Content-Type'] = 'application/json';
 
-            localVarUrlObj.query = {...localVarUrlObj.query, ...localVarQueryParameter, ...options.query};
+            localVarUrlObj.query = { ...localVarUrlObj.query, ...localVarQueryParameter, ...options.query };
             // fix override query string Detail: https://stackoverflow.com/a/7517673/1077943
             delete (localVarUrlObj as Partial<typeof localVarUrlObj>).search;
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
-            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.headers = { ...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers };
             const needsSerialization = (typeof deviceDisableReq !== "string") || localVarRequestOptions.headers['Content-Type'] === 'application/json';
-            localVarRequestOptions.data =  needsSerialization ? JSON.stringify(deviceDisableReq !== undefined ? deviceDisableReq : {}) : (deviceDisableReq || "");
+            localVarRequestOptions.data = needsSerialization ? JSON.stringify(deviceDisableReq !== undefined ? deviceDisableReq : {}) : (deviceDisableReq || "");
 
             return {
                 url: globalImportUrl.format(localVarUrlObj),
@@ -10115,21 +10115,21 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
             if (configuration) {
                 baseOptions = configuration.baseOptions;
             }
-            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options };
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
 
 
-    
+
             localVarHeaderParameter['Content-Type'] = 'application/json';
 
-            localVarUrlObj.query = {...localVarUrlObj.query, ...localVarQueryParameter, ...options.query};
+            localVarUrlObj.query = { ...localVarUrlObj.query, ...localVarQueryParameter, ...options.query };
             // fix override query string Detail: https://stackoverflow.com/a/7517673/1077943
             delete (localVarUrlObj as Partial<typeof localVarUrlObj>).search;
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
-            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.headers = { ...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers };
             const needsSerialization = (typeof deviceEnableReq !== "string") || localVarRequestOptions.headers['Content-Type'] === 'application/json';
-            localVarRequestOptions.data =  needsSerialization ? JSON.stringify(deviceEnableReq !== undefined ? deviceEnableReq : {}) : (deviceEnableReq || "");
+            localVarRequestOptions.data = needsSerialization ? JSON.stringify(deviceEnableReq !== undefined ? deviceEnableReq : {}) : (deviceEnableReq || "");
 
             return {
                 url: globalImportUrl.format(localVarUrlObj),
@@ -10150,21 +10150,21 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
             if (configuration) {
                 baseOptions = configuration.baseOptions;
             }
-            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options };
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
 
 
-    
+
             localVarHeaderParameter['Content-Type'] = 'application/json';
 
-            localVarUrlObj.query = {...localVarUrlObj.query, ...localVarQueryParameter, ...options.query};
+            localVarUrlObj.query = { ...localVarUrlObj.query, ...localVarQueryParameter, ...options.query };
             // fix override query string Detail: https://stackoverflow.com/a/7517673/1077943
             delete (localVarUrlObj as Partial<typeof localVarUrlObj>).search;
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
-            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.headers = { ...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers };
             const needsSerialization = (typeof deviceEraseReq !== "string") || localVarRequestOptions.headers['Content-Type'] === 'application/json';
-            localVarRequestOptions.data =  needsSerialization ? JSON.stringify(deviceEraseReq !== undefined ? deviceEraseReq : {}) : (deviceEraseReq || "");
+            localVarRequestOptions.data = needsSerialization ? JSON.stringify(deviceEraseReq !== undefined ? deviceEraseReq : {}) : (deviceEraseReq || "");
 
             return {
                 url: globalImportUrl.format(localVarUrlObj),
@@ -10185,21 +10185,21 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
             if (configuration) {
                 baseOptions = configuration.baseOptions;
             }
-            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options };
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
 
 
-    
+
             localVarHeaderParameter['Content-Type'] = 'application/json';
 
-            localVarUrlObj.query = {...localVarUrlObj.query, ...localVarQueryParameter, ...options.query};
+            localVarUrlObj.query = { ...localVarUrlObj.query, ...localVarQueryParameter, ...options.query };
             // fix override query string Detail: https://stackoverflow.com/a/7517673/1077943
             delete (localVarUrlObj as Partial<typeof localVarUrlObj>).search;
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
-            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.headers = { ...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers };
             const needsSerialization = (typeof deviceGetstatusReq !== "string") || localVarRequestOptions.headers['Content-Type'] === 'application/json';
-            localVarRequestOptions.data =  needsSerialization ? JSON.stringify(deviceGetstatusReq !== undefined ? deviceGetstatusReq : {}) : (deviceGetstatusReq || "");
+            localVarRequestOptions.data = needsSerialization ? JSON.stringify(deviceGetstatusReq !== undefined ? deviceGetstatusReq : {}) : (deviceGetstatusReq || "");
 
             return {
                 url: globalImportUrl.format(localVarUrlObj),
@@ -10219,17 +10219,17 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
             if (configuration) {
                 baseOptions = configuration.baseOptions;
             }
-            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options };
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
 
 
-    
-            localVarUrlObj.query = {...localVarUrlObj.query, ...localVarQueryParameter, ...options.query};
+
+            localVarUrlObj.query = { ...localVarUrlObj.query, ...localVarQueryParameter, ...options.query };
             // fix override query string Detail: https://stackoverflow.com/a/7517673/1077943
             delete (localVarUrlObj as Partial<typeof localVarUrlObj>).search;
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
-            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.headers = { ...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers };
 
             return {
                 url: globalImportUrl.format(localVarUrlObj),
@@ -10247,7 +10247,7 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
         eacpV1DeviceOnerasesucPost(userid: string, deviceOnerasesucReq?: DeviceOnerasesucReq, options: any = {}): RequestArgs {
             // verify required parameter 'userid' is not null or undefined
             if (userid === null || userid === undefined) {
-                throw new RequiredError('userid','Required parameter userid was null or undefined when calling eacpV1DeviceOnerasesucPost.');
+                throw new RequiredError('userid', 'Required parameter userid was null or undefined when calling eacpV1DeviceOnerasesucPost.');
             }
             const localVarPath = `/eacp/v1/device/onerasesuc`;
             const localVarUrlObj = globalImportUrl.parse(localVarPath, true);
@@ -10255,7 +10255,7 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
             if (configuration) {
                 baseOptions = configuration.baseOptions;
             }
-            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options };
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
 
@@ -10264,16 +10264,16 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
             }
 
 
-    
+
             localVarHeaderParameter['Content-Type'] = 'application/json';
 
-            localVarUrlObj.query = {...localVarUrlObj.query, ...localVarQueryParameter, ...options.query};
+            localVarUrlObj.query = { ...localVarUrlObj.query, ...localVarQueryParameter, ...options.query };
             // fix override query string Detail: https://stackoverflow.com/a/7517673/1077943
             delete (localVarUrlObj as Partial<typeof localVarUrlObj>).search;
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
-            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.headers = { ...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers };
             const needsSerialization = (typeof deviceOnerasesucReq !== "string") || localVarRequestOptions.headers['Content-Type'] === 'application/json';
-            localVarRequestOptions.data =  needsSerialization ? JSON.stringify(deviceOnerasesucReq !== undefined ? deviceOnerasesucReq : {}) : (deviceOnerasesucReq || "");
+            localVarRequestOptions.data = needsSerialization ? JSON.stringify(deviceOnerasesucReq !== undefined ? deviceOnerasesucReq : {}) : (deviceOnerasesucReq || "");
 
             return {
                 url: globalImportUrl.format(localVarUrlObj),
@@ -10294,21 +10294,21 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
             if (configuration) {
                 baseOptions = configuration.baseOptions;
             }
-            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options };
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
 
 
-    
+
             localVarHeaderParameter['Content-Type'] = 'application/json';
 
-            localVarUrlObj.query = {...localVarUrlObj.query, ...localVarQueryParameter, ...options.query};
+            localVarUrlObj.query = { ...localVarUrlObj.query, ...localVarQueryParameter, ...options.query };
             // fix override query string Detail: https://stackoverflow.com/a/7517673/1077943
             delete (localVarUrlObj as Partial<typeof localVarUrlObj>).search;
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
-            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.headers = { ...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers };
             const needsSerialization = (typeof messageGetReq !== "string") || localVarRequestOptions.headers['Content-Type'] === 'application/json';
-            localVarRequestOptions.data =  needsSerialization ? JSON.stringify(messageGetReq !== undefined ? messageGetReq : {}) : (messageGetReq || "");
+            localVarRequestOptions.data = needsSerialization ? JSON.stringify(messageGetReq !== undefined ? messageGetReq : {}) : (messageGetReq || "");
 
             return {
                 url: globalImportUrl.format(localVarUrlObj),
@@ -10329,21 +10329,21 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
             if (configuration) {
                 baseOptions = configuration.baseOptions;
             }
-            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options };
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
 
 
-    
+
             localVarHeaderParameter['Content-Type'] = 'application/json';
 
-            localVarUrlObj.query = {...localVarUrlObj.query, ...localVarQueryParameter, ...options.query};
+            localVarUrlObj.query = { ...localVarUrlObj.query, ...localVarQueryParameter, ...options.query };
             // fix override query string Detail: https://stackoverflow.com/a/7517673/1077943
             delete (localVarUrlObj as Partial<typeof localVarUrlObj>).search;
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
-            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.headers = { ...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers };
             const needsSerialization = (typeof messageRead2Req !== "string") || localVarRequestOptions.headers['Content-Type'] === 'application/json';
-            localVarRequestOptions.data =  needsSerialization ? JSON.stringify(messageRead2Req !== undefined ? messageRead2Req : {}) : (messageRead2Req || "");
+            localVarRequestOptions.data = needsSerialization ? JSON.stringify(messageRead2Req !== undefined ? messageRead2Req : {}) : (messageRead2Req || "");
 
             return {
                 url: globalImportUrl.format(localVarUrlObj),
@@ -10364,21 +10364,21 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
             if (configuration) {
                 baseOptions = configuration.baseOptions;
             }
-            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options };
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
 
 
-    
+
             localVarHeaderParameter['Content-Type'] = 'application/json';
 
-            localVarUrlObj.query = {...localVarUrlObj.query, ...localVarQueryParameter, ...options.query};
+            localVarUrlObj.query = { ...localVarUrlObj.query, ...localVarQueryParameter, ...options.query };
             // fix override query string Detail: https://stackoverflow.com/a/7517673/1077943
             delete (localVarUrlObj as Partial<typeof localVarUrlObj>).search;
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
-            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.headers = { ...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers };
             const needsSerialization = (typeof messageSendmailReq !== "string") || localVarRequestOptions.headers['Content-Type'] === 'application/json';
-            localVarRequestOptions.data =  needsSerialization ? JSON.stringify(messageSendmailReq !== undefined ? messageSendmailReq : {}) : (messageSendmailReq || "");
+            localVarRequestOptions.data = needsSerialization ? JSON.stringify(messageSendmailReq !== undefined ? messageSendmailReq : {}) : (messageSendmailReq || "");
 
             return {
                 url: globalImportUrl.format(localVarUrlObj),
@@ -10399,21 +10399,21 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
             if (configuration) {
                 baseOptions = configuration.baseOptions;
             }
-            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options };
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
 
 
-    
+
             localVarHeaderParameter['Content-Type'] = 'application/json';
 
-            localVarUrlObj.query = {...localVarUrlObj.query, ...localVarQueryParameter, ...options.query};
+            localVarUrlObj.query = { ...localVarUrlObj.query, ...localVarQueryParameter, ...options.query };
             // fix override query string Detail: https://stackoverflow.com/a/7517673/1077943
             delete (localVarUrlObj as Partial<typeof localVarUrlObj>).search;
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
-            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.headers = { ...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers };
             const needsSerialization = (typeof ownerAddReq !== "string") || localVarRequestOptions.headers['Content-Type'] === 'application/json';
-            localVarRequestOptions.data =  needsSerialization ? JSON.stringify(ownerAddReq !== undefined ? ownerAddReq : {}) : (ownerAddReq || "");
+            localVarRequestOptions.data = needsSerialization ? JSON.stringify(ownerAddReq !== undefined ? ownerAddReq : {}) : (ownerAddReq || "");
 
             return {
                 url: globalImportUrl.format(localVarUrlObj),
@@ -10434,21 +10434,21 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
             if (configuration) {
                 baseOptions = configuration.baseOptions;
             }
-            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options };
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
 
 
-    
+
             localVarHeaderParameter['Content-Type'] = 'application/json';
 
-            localVarUrlObj.query = {...localVarUrlObj.query, ...localVarQueryParameter, ...options.query};
+            localVarUrlObj.query = { ...localVarUrlObj.query, ...localVarQueryParameter, ...options.query };
             // fix override query string Detail: https://stackoverflow.com/a/7517673/1077943
             delete (localVarUrlObj as Partial<typeof localVarUrlObj>).search;
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
-            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.headers = { ...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers };
             const needsSerialization = (typeof ownerCheckReq !== "string") || localVarRequestOptions.headers['Content-Type'] === 'application/json';
-            localVarRequestOptions.data =  needsSerialization ? JSON.stringify(ownerCheckReq !== undefined ? ownerCheckReq : {}) : (ownerCheckReq || "");
+            localVarRequestOptions.data = needsSerialization ? JSON.stringify(ownerCheckReq !== undefined ? ownerCheckReq : {}) : (ownerCheckReq || "");
 
             return {
                 url: globalImportUrl.format(localVarUrlObj),
@@ -10469,21 +10469,21 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
             if (configuration) {
                 baseOptions = configuration.baseOptions;
             }
-            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options };
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
 
 
-    
+
             localVarHeaderParameter['Content-Type'] = 'application/json';
 
-            localVarUrlObj.query = {...localVarUrlObj.query, ...localVarQueryParameter, ...options.query};
+            localVarUrlObj.query = { ...localVarUrlObj.query, ...localVarQueryParameter, ...options.query };
             // fix override query string Detail: https://stackoverflow.com/a/7517673/1077943
             delete (localVarUrlObj as Partial<typeof localVarUrlObj>).search;
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
-            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.headers = { ...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers };
             const needsSerialization = (typeof ownerDeleteReq !== "string") || localVarRequestOptions.headers['Content-Type'] === 'application/json';
-            localVarRequestOptions.data =  needsSerialization ? JSON.stringify(ownerDeleteReq !== undefined ? ownerDeleteReq : {}) : (ownerDeleteReq || "");
+            localVarRequestOptions.data = needsSerialization ? JSON.stringify(ownerDeleteReq !== undefined ? ownerDeleteReq : {}) : (ownerDeleteReq || "");
 
             return {
                 url: globalImportUrl.format(localVarUrlObj),
@@ -10504,21 +10504,21 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
             if (configuration) {
                 baseOptions = configuration.baseOptions;
             }
-            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options };
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
 
 
-    
+
             localVarHeaderParameter['Content-Type'] = 'application/json';
 
-            localVarUrlObj.query = {...localVarUrlObj.query, ...localVarQueryParameter, ...options.query};
+            localVarUrlObj.query = { ...localVarUrlObj.query, ...localVarQueryParameter, ...options.query };
             // fix override query string Detail: https://stackoverflow.com/a/7517673/1077943
             delete (localVarUrlObj as Partial<typeof localVarUrlObj>).search;
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
-            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.headers = { ...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers };
             const needsSerialization = (typeof ownerGetReq !== "string") || localVarRequestOptions.headers['Content-Type'] === 'application/json';
-            localVarRequestOptions.data =  needsSerialization ? JSON.stringify(ownerGetReq !== undefined ? ownerGetReq : {}) : (ownerGetReq || "");
+            localVarRequestOptions.data = needsSerialization ? JSON.stringify(ownerGetReq !== undefined ? ownerGetReq : {}) : (ownerGetReq || "");
 
             return {
                 url: globalImportUrl.format(localVarUrlObj),
@@ -10539,21 +10539,21 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
             if (configuration) {
                 baseOptions = configuration.baseOptions;
             }
-            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options };
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
 
 
-    
+
             localVarHeaderParameter['Content-Type'] = 'application/json';
 
-            localVarUrlObj.query = {...localVarUrlObj.query, ...localVarQueryParameter, ...options.query};
+            localVarUrlObj.query = { ...localVarUrlObj.query, ...localVarQueryParameter, ...options.query };
             // fix override query string Detail: https://stackoverflow.com/a/7517673/1077943
             delete (localVarUrlObj as Partial<typeof localVarUrlObj>).search;
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
-            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.headers = { ...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers };
             const needsSerialization = (typeof ownerSetReq !== "string") || localVarRequestOptions.headers['Content-Type'] === 'application/json';
-            localVarRequestOptions.data =  needsSerialization ? JSON.stringify(ownerSetReq !== undefined ? ownerSetReq : {}) : (ownerSetReq || "");
+            localVarRequestOptions.data = needsSerialization ? JSON.stringify(ownerSetReq !== undefined ? ownerSetReq : {}) : (ownerSetReq || "");
 
             return {
                 url: globalImportUrl.format(localVarUrlObj),
@@ -10574,21 +10574,21 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
             if (configuration) {
                 baseOptions = configuration.baseOptions;
             }
-            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options };
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
 
 
-    
+
             localVarHeaderParameter['Content-Type'] = 'application/json';
 
-            localVarUrlObj.query = {...localVarUrlObj.query, ...localVarQueryParameter, ...options.query};
+            localVarUrlObj.query = { ...localVarUrlObj.query, ...localVarQueryParameter, ...options.query };
             // fix override query string Detail: https://stackoverflow.com/a/7517673/1077943
             delete (localVarUrlObj as Partial<typeof localVarUrlObj>).search;
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
-            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.headers = { ...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers };
             const needsSerialization = (typeof perm1CheckReq !== "string") || localVarRequestOptions.headers['Content-Type'] === 'application/json';
-            localVarRequestOptions.data =  needsSerialization ? JSON.stringify(perm1CheckReq !== undefined ? perm1CheckReq : {}) : (perm1CheckReq || "");
+            localVarRequestOptions.data = needsSerialization ? JSON.stringify(perm1CheckReq !== undefined ? perm1CheckReq : {}) : (perm1CheckReq || "");
 
             return {
                 url: globalImportUrl.format(localVarUrlObj),
@@ -10609,21 +10609,21 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
             if (configuration) {
                 baseOptions = configuration.baseOptions;
             }
-            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options };
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
 
 
-    
+
             localVarHeaderParameter['Content-Type'] = 'application/json';
 
-            localVarUrlObj.query = {...localVarUrlObj.query, ...localVarQueryParameter, ...options.query};
+            localVarUrlObj.query = { ...localVarUrlObj.query, ...localVarQueryParameter, ...options.query };
             // fix override query string Detail: https://stackoverflow.com/a/7517673/1077943
             delete (localVarUrlObj as Partial<typeof localVarUrlObj>).search;
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
-            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.headers = { ...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers };
             const needsSerialization = (typeof perm1CheckallReq !== "string") || localVarRequestOptions.headers['Content-Type'] === 'application/json';
-            localVarRequestOptions.data =  needsSerialization ? JSON.stringify(perm1CheckallReq !== undefined ? perm1CheckallReq : {}) : (perm1CheckallReq || "");
+            localVarRequestOptions.data = needsSerialization ? JSON.stringify(perm1CheckallReq !== undefined ? perm1CheckallReq : {}) : (perm1CheckallReq || "");
 
             return {
                 url: globalImportUrl.format(localVarUrlObj),
@@ -10643,17 +10643,17 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
             if (configuration) {
                 baseOptions = configuration.baseOptions;
             }
-            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options };
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
 
 
-    
-            localVarUrlObj.query = {...localVarUrlObj.query, ...localVarQueryParameter, ...options.query};
+
+            localVarUrlObj.query = { ...localVarUrlObj.query, ...localVarQueryParameter, ...options.query };
             // fix override query string Detail: https://stackoverflow.com/a/7517673/1077943
             delete (localVarUrlObj as Partial<typeof localVarUrlObj>).search;
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
-            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.headers = { ...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers };
 
             return {
                 url: globalImportUrl.format(localVarUrlObj),
@@ -10673,17 +10673,17 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
             if (configuration) {
                 baseOptions = configuration.baseOptions;
             }
-            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options };
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
 
 
-    
-            localVarUrlObj.query = {...localVarUrlObj.query, ...localVarQueryParameter, ...options.query};
+
+            localVarUrlObj.query = { ...localVarUrlObj.query, ...localVarQueryParameter, ...options.query };
             // fix override query string Detail: https://stackoverflow.com/a/7517673/1077943
             delete (localVarUrlObj as Partial<typeof localVarUrlObj>).search;
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
-            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.headers = { ...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers };
 
             return {
                 url: globalImportUrl.format(localVarUrlObj),
@@ -10704,21 +10704,21 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
             if (configuration) {
                 baseOptions = configuration.baseOptions;
             }
-            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options };
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
 
 
-    
+
             localVarHeaderParameter['Content-Type'] = 'application/json';
 
-            localVarUrlObj.query = {...localVarUrlObj.query, ...localVarQueryParameter, ...options.query};
+            localVarUrlObj.query = { ...localVarUrlObj.query, ...localVarQueryParameter, ...options.query };
             // fix override query string Detail: https://stackoverflow.com/a/7517673/1077943
             delete (localVarUrlObj as Partial<typeof localVarUrlObj>).search;
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
-            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.headers = { ...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers };
             const needsSerialization = (typeof perm1ListReq !== "string") || localVarRequestOptions.headers['Content-Type'] === 'application/json';
-            localVarRequestOptions.data =  needsSerialization ? JSON.stringify(perm1ListReq !== undefined ? perm1ListReq : {}) : (perm1ListReq || "");
+            localVarRequestOptions.data = needsSerialization ? JSON.stringify(perm1ListReq !== undefined ? perm1ListReq : {}) : (perm1ListReq || "");
 
             return {
                 url: globalImportUrl.format(localVarUrlObj),
@@ -10739,21 +10739,21 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
             if (configuration) {
                 baseOptions = configuration.baseOptions;
             }
-            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options };
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
 
 
-    
+
             localVarHeaderParameter['Content-Type'] = 'application/json';
 
-            localVarUrlObj.query = {...localVarUrlObj.query, ...localVarQueryParameter, ...options.query};
+            localVarUrlObj.query = { ...localVarUrlObj.query, ...localVarQueryParameter, ...options.query };
             // fix override query string Detail: https://stackoverflow.com/a/7517673/1077943
             delete (localVarUrlObj as Partial<typeof localVarUrlObj>).search;
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
-            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.headers = { ...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers };
             const needsSerialization = (typeof perm2GetReq !== "string") || localVarRequestOptions.headers['Content-Type'] === 'application/json';
-            localVarRequestOptions.data =  needsSerialization ? JSON.stringify(perm2GetReq !== undefined ? perm2GetReq : {}) : (perm2GetReq || "");
+            localVarRequestOptions.data = needsSerialization ? JSON.stringify(perm2GetReq !== undefined ? perm2GetReq : {}) : (perm2GetReq || "");
 
             return {
                 url: globalImportUrl.format(localVarUrlObj),
@@ -10774,21 +10774,21 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
             if (configuration) {
                 baseOptions = configuration.baseOptions;
             }
-            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options };
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
 
 
-    
+
             localVarHeaderParameter['Content-Type'] = 'application/json';
 
-            localVarUrlObj.query = {...localVarUrlObj.query, ...localVarQueryParameter, ...options.query};
+            localVarUrlObj.query = { ...localVarUrlObj.query, ...localVarQueryParameter, ...options.query };
             // fix override query string Detail: https://stackoverflow.com/a/7517673/1077943
             delete (localVarUrlObj as Partial<typeof localVarUrlObj>).search;
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
-            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.headers = { ...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers };
             const needsSerialization = (typeof perm2SetReq !== "string") || localVarRequestOptions.headers['Content-Type'] === 'application/json';
-            localVarRequestOptions.data =  needsSerialization ? JSON.stringify(perm2SetReq !== undefined ? perm2SetReq : {}) : (perm2SetReq || "");
+            localVarRequestOptions.data = needsSerialization ? JSON.stringify(perm2SetReq !== undefined ? perm2SetReq : {}) : (perm2SetReq || "");
 
             return {
                 url: globalImportUrl.format(localVarUrlObj),
@@ -10808,17 +10808,17 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
             if (configuration) {
                 baseOptions = configuration.baseOptions;
             }
-            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options };
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
 
 
-    
-            localVarUrlObj.query = {...localVarUrlObj.query, ...localVarQueryParameter, ...options.query};
+
+            localVarUrlObj.query = { ...localVarUrlObj.query, ...localVarQueryParameter, ...options.query };
             // fix override query string Detail: https://stackoverflow.com/a/7517673/1077943
             delete (localVarUrlObj as Partial<typeof localVarUrlObj>).search;
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
-            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.headers = { ...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers };
 
             return {
                 url: globalImportUrl.format(localVarUrlObj),
@@ -10839,21 +10839,21 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
             if (configuration) {
                 baseOptions = configuration.baseOptions;
             }
-            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options };
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
 
 
-    
+
             localVarHeaderParameter['Content-Type'] = 'application/json';
 
-            localVarUrlObj.query = {...localVarUrlObj.query, ...localVarQueryParameter, ...options.query};
+            localVarUrlObj.query = { ...localVarUrlObj.query, ...localVarQueryParameter, ...options.query };
             // fix override query string Detail: https://stackoverflow.com/a/7517673/1077943
             delete (localVarUrlObj as Partial<typeof localVarUrlObj>).search;
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
-            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.headers = { ...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers };
             const needsSerialization = (typeof userEditReq !== "string") || localVarRequestOptions.headers['Content-Type'] === 'application/json';
-            localVarRequestOptions.data =  needsSerialization ? JSON.stringify(userEditReq !== undefined ? userEditReq : {}) : (userEditReq || "");
+            localVarRequestOptions.data = needsSerialization ? JSON.stringify(userEditReq !== undefined ? userEditReq : {}) : (userEditReq || "");
 
             return {
                 url: globalImportUrl.format(localVarUrlObj),
@@ -10873,17 +10873,17 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
             if (configuration) {
                 baseOptions = configuration.baseOptions;
             }
-            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options };
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
 
 
-    
-            localVarUrlObj.query = {...localVarUrlObj.query, ...localVarQueryParameter, ...options.query};
+
+            localVarUrlObj.query = { ...localVarUrlObj.query, ...localVarQueryParameter, ...options.query };
             // fix override query string Detail: https://stackoverflow.com/a/7517673/1077943
             delete (localVarUrlObj as Partial<typeof localVarUrlObj>).search;
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
-            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.headers = { ...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers };
 
             return {
                 url: globalImportUrl.format(localVarUrlObj),
@@ -10904,21 +10904,21 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
             if (configuration) {
                 baseOptions = configuration.baseOptions;
             }
-            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options };
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
 
 
-    
+
             localVarHeaderParameter['Content-Type'] = 'application/json';
 
-            localVarUrlObj.query = {...localVarUrlObj.query, ...localVarQueryParameter, ...options.query};
+            localVarUrlObj.query = { ...localVarUrlObj.query, ...localVarQueryParameter, ...options.query };
             // fix override query string Detail: https://stackoverflow.com/a/7517673/1077943
             delete (localVarUrlObj as Partial<typeof localVarUrlObj>).search;
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
-            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.headers = { ...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers };
             const needsSerialization = (typeof userGetbasicinfoReq !== "string") || localVarRequestOptions.headers['Content-Type'] === 'application/json';
-            localVarRequestOptions.data =  needsSerialization ? JSON.stringify(userGetbasicinfoReq !== undefined ? userGetbasicinfoReq : {}) : (userGetbasicinfoReq || "");
+            localVarRequestOptions.data = needsSerialization ? JSON.stringify(userGetbasicinfoReq !== undefined ? userGetbasicinfoReq : {}) : (userGetbasicinfoReq || "");
 
             return {
                 url: globalImportUrl.format(localVarUrlObj),
@@ -10938,17 +10938,17 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
             if (configuration) {
                 baseOptions = configuration.baseOptions;
             }
-            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
+            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options };
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
 
 
-    
-            localVarUrlObj.query = {...localVarUrlObj.query, ...localVarQueryParameter, ...options.query};
+
+            localVarUrlObj.query = { ...localVarUrlObj.query, ...localVarQueryParameter, ...options.query };
             // fix override query string Detail: https://stackoverflow.com/a/7517673/1077943
             delete (localVarUrlObj as Partial<typeof localVarUrlObj>).search;
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
-            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.headers = { ...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers };
 
             return {
                 url: globalImportUrl.format(localVarUrlObj),
@@ -10969,21 +10969,21 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
             if (configuration) {
                 baseOptions = configuration.baseOptions;
             }
-            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options };
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
 
 
-    
+
             localVarHeaderParameter['Content-Type'] = 'application/json';
 
-            localVarUrlObj.query = {...localVarUrlObj.query, ...localVarQueryParameter, ...options.query};
+            localVarUrlObj.query = { ...localVarUrlObj.query, ...localVarQueryParameter, ...options.query };
             // fix override query string Detail: https://stackoverflow.com/a/7517673/1077943
             delete (localVarUrlObj as Partial<typeof localVarUrlObj>).search;
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
-            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.headers = { ...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers };
             const needsSerialization = (typeof dirAttributeReq !== "string") || localVarRequestOptions.headers['Content-Type'] === 'application/json';
-            localVarRequestOptions.data =  needsSerialization ? JSON.stringify(dirAttributeReq !== undefined ? dirAttributeReq : {}) : (dirAttributeReq || "");
+            localVarRequestOptions.data = needsSerialization ? JSON.stringify(dirAttributeReq !== undefined ? dirAttributeReq : {}) : (dirAttributeReq || "");
 
             return {
                 url: globalImportUrl.format(localVarUrlObj),
@@ -11005,7 +11005,7 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
             if (configuration) {
                 baseOptions = configuration.baseOptions;
             }
-            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options };
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
 
@@ -11014,16 +11014,16 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
             }
 
 
-    
+
             localVarHeaderParameter['Content-Type'] = 'application/json';
 
-            localVarUrlObj.query = {...localVarUrlObj.query, ...localVarQueryParameter, ...options.query};
+            localVarUrlObj.query = { ...localVarUrlObj.query, ...localVarQueryParameter, ...options.query };
             // fix override query string Detail: https://stackoverflow.com/a/7517673/1077943
             delete (localVarUrlObj as Partial<typeof localVarUrlObj>).search;
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
-            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.headers = { ...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers };
             const needsSerialization = (typeof dirCopyReq !== "string") || localVarRequestOptions.headers['Content-Type'] === 'application/json';
-            localVarRequestOptions.data =  needsSerialization ? JSON.stringify(dirCopyReq !== undefined ? dirCopyReq : {}) : (dirCopyReq || "");
+            localVarRequestOptions.data = needsSerialization ? JSON.stringify(dirCopyReq !== undefined ? dirCopyReq : {}) : (dirCopyReq || "");
 
             return {
                 url: globalImportUrl.format(localVarUrlObj),
@@ -11044,21 +11044,21 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
             if (configuration) {
                 baseOptions = configuration.baseOptions;
             }
-            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options };
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
 
 
-    
+
             localVarHeaderParameter['Content-Type'] = 'application/json';
 
-            localVarUrlObj.query = {...localVarUrlObj.query, ...localVarQueryParameter, ...options.query};
+            localVarUrlObj.query = { ...localVarUrlObj.query, ...localVarQueryParameter, ...options.query };
             // fix override query string Detail: https://stackoverflow.com/a/7517673/1077943
             delete (localVarUrlObj as Partial<typeof localVarUrlObj>).search;
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
-            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.headers = { ...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers };
             const needsSerialization = (typeof dirCopyprogressReq !== "string") || localVarRequestOptions.headers['Content-Type'] === 'application/json';
-            localVarRequestOptions.data =  needsSerialization ? JSON.stringify(dirCopyprogressReq !== undefined ? dirCopyprogressReq : {}) : (dirCopyprogressReq || "");
+            localVarRequestOptions.data = needsSerialization ? JSON.stringify(dirCopyprogressReq !== undefined ? dirCopyprogressReq : {}) : (dirCopyprogressReq || "");
 
             return {
                 url: globalImportUrl.format(localVarUrlObj),
@@ -11079,21 +11079,21 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
             if (configuration) {
                 baseOptions = configuration.baseOptions;
             }
-            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options };
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
 
 
-    
+
             localVarHeaderParameter['Content-Type'] = 'application/json';
 
-            localVarUrlObj.query = {...localVarUrlObj.query, ...localVarQueryParameter, ...options.query};
+            localVarUrlObj.query = { ...localVarUrlObj.query, ...localVarQueryParameter, ...options.query };
             // fix override query string Detail: https://stackoverflow.com/a/7517673/1077943
             delete (localVarUrlObj as Partial<typeof localVarUrlObj>).search;
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
-            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.headers = { ...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers };
             const needsSerialization = (typeof dirCreateReq !== "string") || localVarRequestOptions.headers['Content-Type'] === 'application/json';
-            localVarRequestOptions.data =  needsSerialization ? JSON.stringify(dirCreateReq !== undefined ? dirCreateReq : {}) : (dirCreateReq || "");
+            localVarRequestOptions.data = needsSerialization ? JSON.stringify(dirCreateReq !== undefined ? dirCreateReq : {}) : (dirCreateReq || "");
 
             return {
                 url: globalImportUrl.format(localVarUrlObj),
@@ -11114,21 +11114,21 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
             if (configuration) {
                 baseOptions = configuration.baseOptions;
             }
-            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options };
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
 
 
-    
+
             localVarHeaderParameter['Content-Type'] = 'application/json';
 
-            localVarUrlObj.query = {...localVarUrlObj.query, ...localVarQueryParameter, ...options.query};
+            localVarUrlObj.query = { ...localVarUrlObj.query, ...localVarQueryParameter, ...options.query };
             // fix override query string Detail: https://stackoverflow.com/a/7517673/1077943
             delete (localVarUrlObj as Partial<typeof localVarUrlObj>).search;
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
-            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.headers = { ...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers };
             const needsSerialization = (typeof dirCreatemultileveldirReq !== "string") || localVarRequestOptions.headers['Content-Type'] === 'application/json';
-            localVarRequestOptions.data =  needsSerialization ? JSON.stringify(dirCreatemultileveldirReq !== undefined ? dirCreatemultileveldirReq : {}) : (dirCreatemultileveldirReq || "");
+            localVarRequestOptions.data = needsSerialization ? JSON.stringify(dirCreatemultileveldirReq !== undefined ? dirCreatemultileveldirReq : {}) : (dirCreatemultileveldirReq || "");
 
             return {
                 url: globalImportUrl.format(localVarUrlObj),
@@ -11149,21 +11149,21 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
             if (configuration) {
                 baseOptions = configuration.baseOptions;
             }
-            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options };
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
 
 
-    
+
             localVarHeaderParameter['Content-Type'] = 'application/json';
 
-            localVarUrlObj.query = {...localVarUrlObj.query, ...localVarQueryParameter, ...options.query};
+            localVarUrlObj.query = { ...localVarUrlObj.query, ...localVarQueryParameter, ...options.query };
             // fix override query string Detail: https://stackoverflow.com/a/7517673/1077943
             delete (localVarUrlObj as Partial<typeof localVarUrlObj>).search;
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
-            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.headers = { ...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers };
             const needsSerialization = (typeof dirDeleteReq !== "string") || localVarRequestOptions.headers['Content-Type'] === 'application/json';
-            localVarRequestOptions.data =  needsSerialization ? JSON.stringify(dirDeleteReq !== undefined ? dirDeleteReq : {}) : (dirDeleteReq || "");
+            localVarRequestOptions.data = needsSerialization ? JSON.stringify(dirDeleteReq !== undefined ? dirDeleteReq : {}) : (dirDeleteReq || "");
 
             return {
                 url: globalImportUrl.format(localVarUrlObj),
@@ -11184,21 +11184,21 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
             if (configuration) {
                 baseOptions = configuration.baseOptions;
             }
-            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options };
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
 
 
-    
+
             localVarHeaderParameter['Content-Type'] = 'application/json';
 
-            localVarUrlObj.query = {...localVarUrlObj.query, ...localVarQueryParameter, ...options.query};
+            localVarUrlObj.query = { ...localVarUrlObj.query, ...localVarQueryParameter, ...options.query };
             // fix override query string Detail: https://stackoverflow.com/a/7517673/1077943
             delete (localVarUrlObj as Partial<typeof localVarUrlObj>).search;
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
-            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.headers = { ...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers };
             const needsSerialization = (typeof dirGetsuggestnameReq !== "string") || localVarRequestOptions.headers['Content-Type'] === 'application/json';
-            localVarRequestOptions.data =  needsSerialization ? JSON.stringify(dirGetsuggestnameReq !== undefined ? dirGetsuggestnameReq : {}) : (dirGetsuggestnameReq || "");
+            localVarRequestOptions.data = needsSerialization ? JSON.stringify(dirGetsuggestnameReq !== undefined ? dirGetsuggestnameReq : {}) : (dirGetsuggestnameReq || "");
 
             return {
                 url: globalImportUrl.format(localVarUrlObj),
@@ -11219,21 +11219,21 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
             if (configuration) {
                 baseOptions = configuration.baseOptions;
             }
-            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options };
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
 
 
-    
+
             localVarHeaderParameter['Content-Type'] = 'application/json';
 
-            localVarUrlObj.query = {...localVarUrlObj.query, ...localVarQueryParameter, ...options.query};
+            localVarUrlObj.query = { ...localVarUrlObj.query, ...localVarQueryParameter, ...options.query };
             // fix override query string Detail: https://stackoverflow.com/a/7517673/1077943
             delete (localVarUrlObj as Partial<typeof localVarUrlObj>).search;
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
-            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.headers = { ...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers };
             const needsSerialization = (typeof dirListReq !== "string") || localVarRequestOptions.headers['Content-Type'] === 'application/json';
-            localVarRequestOptions.data =  needsSerialization ? JSON.stringify(dirListReq !== undefined ? dirListReq : {}) : (dirListReq || "");
+            localVarRequestOptions.data = needsSerialization ? JSON.stringify(dirListReq !== undefined ? dirListReq : {}) : (dirListReq || "");
 
             return {
                 url: globalImportUrl.format(localVarUrlObj),
@@ -11254,21 +11254,21 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
             if (configuration) {
                 baseOptions = configuration.baseOptions;
             }
-            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options };
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
 
 
-    
+
             localVarHeaderParameter['Content-Type'] = 'application/json';
 
-            localVarUrlObj.query = {...localVarUrlObj.query, ...localVarQueryParameter, ...options.query};
+            localVarUrlObj.query = { ...localVarUrlObj.query, ...localVarQueryParameter, ...options.query };
             // fix override query string Detail: https://stackoverflow.com/a/7517673/1077943
             delete (localVarUrlObj as Partial<typeof localVarUrlObj>).search;
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
-            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.headers = { ...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers };
             const needsSerialization = (typeof dirMoveReq !== "string") || localVarRequestOptions.headers['Content-Type'] === 'application/json';
-            localVarRequestOptions.data =  needsSerialization ? JSON.stringify(dirMoveReq !== undefined ? dirMoveReq : {}) : (dirMoveReq || "");
+            localVarRequestOptions.data = needsSerialization ? JSON.stringify(dirMoveReq !== undefined ? dirMoveReq : {}) : (dirMoveReq || "");
 
             return {
                 url: globalImportUrl.format(localVarUrlObj),
@@ -11289,21 +11289,21 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
             if (configuration) {
                 baseOptions = configuration.baseOptions;
             }
-            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options };
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
 
 
-    
+
             localVarHeaderParameter['Content-Type'] = 'application/json';
 
-            localVarUrlObj.query = {...localVarUrlObj.query, ...localVarQueryParameter, ...options.query};
+            localVarUrlObj.query = { ...localVarUrlObj.query, ...localVarQueryParameter, ...options.query };
             // fix override query string Detail: https://stackoverflow.com/a/7517673/1077943
             delete (localVarUrlObj as Partial<typeof localVarUrlObj>).search;
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
-            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.headers = { ...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers };
             const needsSerialization = (typeof dirRenameReq !== "string") || localVarRequestOptions.headers['Content-Type'] === 'application/json';
-            localVarRequestOptions.data =  needsSerialization ? JSON.stringify(dirRenameReq !== undefined ? dirRenameReq : {}) : (dirRenameReq || "");
+            localVarRequestOptions.data = needsSerialization ? JSON.stringify(dirRenameReq !== undefined ? dirRenameReq : {}) : (dirRenameReq || "");
 
             return {
                 url: globalImportUrl.format(localVarUrlObj),
@@ -11324,21 +11324,21 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
             if (configuration) {
                 baseOptions = configuration.baseOptions;
             }
-            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options };
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
 
 
-    
+
             localVarHeaderParameter['Content-Type'] = 'application/json';
 
-            localVarUrlObj.query = {...localVarUrlObj.query, ...localVarQueryParameter, ...options.query};
+            localVarUrlObj.query = { ...localVarUrlObj.query, ...localVarQueryParameter, ...options.query };
             // fix override query string Detail: https://stackoverflow.com/a/7517673/1077943
             delete (localVarUrlObj as Partial<typeof localVarUrlObj>).search;
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
-            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.headers = { ...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers };
             const needsSerialization = (typeof dirSetcsflevelReq !== "string") || localVarRequestOptions.headers['Content-Type'] === 'application/json';
-            localVarRequestOptions.data =  needsSerialization ? JSON.stringify(dirSetcsflevelReq !== undefined ? dirSetcsflevelReq : {}) : (dirSetcsflevelReq || "");
+            localVarRequestOptions.data = needsSerialization ? JSON.stringify(dirSetcsflevelReq !== undefined ? dirSetcsflevelReq : {}) : (dirSetcsflevelReq || "");
 
             return {
                 url: globalImportUrl.format(localVarUrlObj),
@@ -11359,21 +11359,21 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
             if (configuration) {
                 baseOptions = configuration.baseOptions;
             }
-            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options };
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
 
 
-    
+
             localVarHeaderParameter['Content-Type'] = 'application/json';
 
-            localVarUrlObj.query = {...localVarUrlObj.query, ...localVarQueryParameter, ...options.query};
+            localVarUrlObj.query = { ...localVarUrlObj.query, ...localVarQueryParameter, ...options.query };
             // fix override query string Detail: https://stackoverflow.com/a/7517673/1077943
             delete (localVarUrlObj as Partial<typeof localVarUrlObj>).search;
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
-            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.headers = { ...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers };
             const needsSerialization = (typeof dirSizeReq !== "string") || localVarRequestOptions.headers['Content-Type'] === 'application/json';
-            localVarRequestOptions.data =  needsSerialization ? JSON.stringify(dirSizeReq !== undefined ? dirSizeReq : {}) : (dirSizeReq || "");
+            localVarRequestOptions.data = needsSerialization ? JSON.stringify(dirSizeReq !== undefined ? dirSizeReq : {}) : (dirSizeReq || "");
 
             return {
                 url: globalImportUrl.format(localVarUrlObj),
@@ -11397,7 +11397,7 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
             if (configuration) {
                 baseOptions = configuration.baseOptions;
             }
-            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
+            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options };
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
 
@@ -11418,12 +11418,12 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
             }
 
 
-    
-            localVarUrlObj.query = {...localVarUrlObj.query, ...localVarQueryParameter, ...options.query};
+
+            localVarUrlObj.query = { ...localVarUrlObj.query, ...localVarQueryParameter, ...options.query };
             // fix override query string Detail: https://stackoverflow.com/a/7517673/1077943
             delete (localVarUrlObj as Partial<typeof localVarUrlObj>).search;
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
-            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.headers = { ...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers };
 
             return {
                 url: globalImportUrl.format(localVarUrlObj),
@@ -11443,17 +11443,17 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
             if (configuration) {
                 baseOptions = configuration.baseOptions;
             }
-            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
+            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options };
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
 
 
-    
-            localVarUrlObj.query = {...localVarUrlObj.query, ...localVarQueryParameter, ...options.query};
+
+            localVarUrlObj.query = { ...localVarUrlObj.query, ...localVarQueryParameter, ...options.query };
             // fix override query string Detail: https://stackoverflow.com/a/7517673/1077943
             delete (localVarUrlObj as Partial<typeof localVarUrlObj>).search;
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
-            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.headers = { ...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers };
 
             return {
                 url: globalImportUrl.format(localVarUrlObj),
@@ -11474,21 +11474,21 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
             if (configuration) {
                 baseOptions = configuration.baseOptions;
             }
-            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options };
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
 
 
-    
+
             localVarHeaderParameter['Content-Type'] = 'application/json';
 
-            localVarUrlObj.query = {...localVarUrlObj.query, ...localVarQueryParameter, ...options.query};
+            localVarUrlObj.query = { ...localVarUrlObj.query, ...localVarQueryParameter, ...options.query };
             // fix override query string Detail: https://stackoverflow.com/a/7517673/1077943
             delete (localVarUrlObj as Partial<typeof localVarUrlObj>).search;
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
-            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.headers = { ...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers };
             const needsSerialization = (typeof favoritesAddReq !== "string") || localVarRequestOptions.headers['Content-Type'] === 'application/json';
-            localVarRequestOptions.data =  needsSerialization ? JSON.stringify(favoritesAddReq !== undefined ? favoritesAddReq : {}) : (favoritesAddReq || "");
+            localVarRequestOptions.data = needsSerialization ? JSON.stringify(favoritesAddReq !== undefined ? favoritesAddReq : {}) : (favoritesAddReq || "");
 
             return {
                 url: globalImportUrl.format(localVarUrlObj),
@@ -11509,21 +11509,21 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
             if (configuration) {
                 baseOptions = configuration.baseOptions;
             }
-            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options };
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
 
 
-    
+
             localVarHeaderParameter['Content-Type'] = 'application/json';
 
-            localVarUrlObj.query = {...localVarUrlObj.query, ...localVarQueryParameter, ...options.query};
+            localVarUrlObj.query = { ...localVarUrlObj.query, ...localVarQueryParameter, ...options.query };
             // fix override query string Detail: https://stackoverflow.com/a/7517673/1077943
             delete (localVarUrlObj as Partial<typeof localVarUrlObj>).search;
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
-            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.headers = { ...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers };
             const needsSerialization = (typeof favoritesCheckReq !== "string") || localVarRequestOptions.headers['Content-Type'] === 'application/json';
-            localVarRequestOptions.data =  needsSerialization ? JSON.stringify(favoritesCheckReq !== undefined ? favoritesCheckReq : {}) : (favoritesCheckReq || "");
+            localVarRequestOptions.data = needsSerialization ? JSON.stringify(favoritesCheckReq !== undefined ? favoritesCheckReq : {}) : (favoritesCheckReq || "");
 
             return {
                 url: globalImportUrl.format(localVarUrlObj),
@@ -11544,21 +11544,21 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
             if (configuration) {
                 baseOptions = configuration.baseOptions;
             }
-            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options };
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
 
 
-    
+
             localVarHeaderParameter['Content-Type'] = 'application/json';
 
-            localVarUrlObj.query = {...localVarUrlObj.query, ...localVarQueryParameter, ...options.query};
+            localVarUrlObj.query = { ...localVarUrlObj.query, ...localVarQueryParameter, ...options.query };
             // fix override query string Detail: https://stackoverflow.com/a/7517673/1077943
             delete (localVarUrlObj as Partial<typeof localVarUrlObj>).search;
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
-            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.headers = { ...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers };
             const needsSerialization = (typeof favoritesDeleteReq !== "string") || localVarRequestOptions.headers['Content-Type'] === 'application/json';
-            localVarRequestOptions.data =  needsSerialization ? JSON.stringify(favoritesDeleteReq !== undefined ? favoritesDeleteReq : {}) : (favoritesDeleteReq || "");
+            localVarRequestOptions.data = needsSerialization ? JSON.stringify(favoritesDeleteReq !== undefined ? favoritesDeleteReq : {}) : (favoritesDeleteReq || "");
 
             return {
                 url: globalImportUrl.format(localVarUrlObj),
@@ -11578,17 +11578,17 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
             if (configuration) {
                 baseOptions = configuration.baseOptions;
             }
-            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options };
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
 
 
-    
-            localVarUrlObj.query = {...localVarUrlObj.query, ...localVarQueryParameter, ...options.query};
+
+            localVarUrlObj.query = { ...localVarUrlObj.query, ...localVarQueryParameter, ...options.query };
             // fix override query string Detail: https://stackoverflow.com/a/7517673/1077943
             delete (localVarUrlObj as Partial<typeof localVarUrlObj>).search;
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
-            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.headers = { ...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers };
 
             return {
                 url: globalImportUrl.format(localVarUrlObj),
@@ -11609,21 +11609,21 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
             if (configuration) {
                 baseOptions = configuration.baseOptions;
             }
-            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options };
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
 
 
-    
+
             localVarHeaderParameter['Content-Type'] = 'application/json';
 
-            localVarUrlObj.query = {...localVarUrlObj.query, ...localVarQueryParameter, ...options.query};
+            localVarUrlObj.query = { ...localVarUrlObj.query, ...localVarQueryParameter, ...options.query };
             // fix override query string Detail: https://stackoverflow.com/a/7517673/1077943
             delete (localVarUrlObj as Partial<typeof localVarUrlObj>).search;
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
-            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.headers = { ...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers };
             const needsSerialization = (typeof fileAttributeReq !== "string") || localVarRequestOptions.headers['Content-Type'] === 'application/json';
-            localVarRequestOptions.data =  needsSerialization ? JSON.stringify(fileAttributeReq !== undefined ? fileAttributeReq : {}) : (fileAttributeReq || "");
+            localVarRequestOptions.data = needsSerialization ? JSON.stringify(fileAttributeReq !== undefined ? fileAttributeReq : {}) : (fileAttributeReq || "");
 
             return {
                 url: globalImportUrl.format(localVarUrlObj),
@@ -11644,21 +11644,21 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
             if (configuration) {
                 baseOptions = configuration.baseOptions;
             }
-            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options };
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
 
 
-    
+
             localVarHeaderParameter['Content-Type'] = 'application/json';
 
-            localVarUrlObj.query = {...localVarUrlObj.query, ...localVarQueryParameter, ...options.query};
+            localVarUrlObj.query = { ...localVarUrlObj.query, ...localVarQueryParameter, ...options.query };
             // fix override query string Detail: https://stackoverflow.com/a/7517673/1077943
             delete (localVarUrlObj as Partial<typeof localVarUrlObj>).search;
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
-            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.headers = { ...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers };
             const needsSerialization = (typeof fileBatchdownloadReq !== "string") || localVarRequestOptions.headers['Content-Type'] === 'application/json';
-            localVarRequestOptions.data =  needsSerialization ? JSON.stringify(fileBatchdownloadReq !== undefined ? fileBatchdownloadReq : {}) : (fileBatchdownloadReq || "");
+            localVarRequestOptions.data = needsSerialization ? JSON.stringify(fileBatchdownloadReq !== undefined ? fileBatchdownloadReq : {}) : (fileBatchdownloadReq || "");
 
             return {
                 url: globalImportUrl.format(localVarUrlObj),
@@ -11679,21 +11679,21 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
             if (configuration) {
                 baseOptions = configuration.baseOptions;
             }
-            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options };
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
 
 
-    
+
             localVarHeaderParameter['Content-Type'] = 'application/json';
 
-            localVarUrlObj.query = {...localVarUrlObj.query, ...localVarQueryParameter, ...options.query};
+            localVarUrlObj.query = { ...localVarUrlObj.query, ...localVarQueryParameter, ...options.query };
             // fix override query string Detail: https://stackoverflow.com/a/7517673/1077943
             delete (localVarUrlObj as Partial<typeof localVarUrlObj>).search;
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
-            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.headers = { ...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers };
             const needsSerialization = (typeof fileConvertpathReq !== "string") || localVarRequestOptions.headers['Content-Type'] === 'application/json';
-            localVarRequestOptions.data =  needsSerialization ? JSON.stringify(fileConvertpathReq !== undefined ? fileConvertpathReq : {}) : (fileConvertpathReq || "");
+            localVarRequestOptions.data = needsSerialization ? JSON.stringify(fileConvertpathReq !== undefined ? fileConvertpathReq : {}) : (fileConvertpathReq || "");
 
             return {
                 url: globalImportUrl.format(localVarUrlObj),
@@ -11715,7 +11715,7 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
             if (configuration) {
                 baseOptions = configuration.baseOptions;
             }
-            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options };
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
 
@@ -11724,16 +11724,16 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
             }
 
 
-    
+
             localVarHeaderParameter['Content-Type'] = 'application/json';
 
-            localVarUrlObj.query = {...localVarUrlObj.query, ...localVarQueryParameter, ...options.query};
+            localVarUrlObj.query = { ...localVarUrlObj.query, ...localVarQueryParameter, ...options.query };
             // fix override query string Detail: https://stackoverflow.com/a/7517673/1077943
             delete (localVarUrlObj as Partial<typeof localVarUrlObj>).search;
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
-            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.headers = { ...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers };
             const needsSerialization = (typeof fileCopyReq !== "string") || localVarRequestOptions.headers['Content-Type'] === 'application/json';
-            localVarRequestOptions.data =  needsSerialization ? JSON.stringify(fileCopyReq !== undefined ? fileCopyReq : {}) : (fileCopyReq || "");
+            localVarRequestOptions.data = needsSerialization ? JSON.stringify(fileCopyReq !== undefined ? fileCopyReq : {}) : (fileCopyReq || "");
 
             return {
                 url: globalImportUrl.format(localVarUrlObj),
@@ -11754,21 +11754,21 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
             if (configuration) {
                 baseOptions = configuration.baseOptions;
             }
-            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options };
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
 
 
-    
+
             localVarHeaderParameter['Content-Type'] = 'application/json';
 
-            localVarUrlObj.query = {...localVarUrlObj.query, ...localVarQueryParameter, ...options.query};
+            localVarUrlObj.query = { ...localVarUrlObj.query, ...localVarQueryParameter, ...options.query };
             // fix override query string Detail: https://stackoverflow.com/a/7517673/1077943
             delete (localVarUrlObj as Partial<typeof localVarUrlObj>).search;
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
-            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.headers = { ...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers };
             const needsSerialization = (typeof fileDeleteReq !== "string") || localVarRequestOptions.headers['Content-Type'] === 'application/json';
-            localVarRequestOptions.data =  needsSerialization ? JSON.stringify(fileDeleteReq !== undefined ? fileDeleteReq : {}) : (fileDeleteReq || "");
+            localVarRequestOptions.data = needsSerialization ? JSON.stringify(fileDeleteReq !== undefined ? fileDeleteReq : {}) : (fileDeleteReq || "");
 
             return {
                 url: globalImportUrl.format(localVarUrlObj),
@@ -11789,21 +11789,21 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
             if (configuration) {
                 baseOptions = configuration.baseOptions;
             }
-            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options };
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
 
 
-    
+
             localVarHeaderParameter['Content-Type'] = 'application/json';
 
-            localVarUrlObj.query = {...localVarUrlObj.query, ...localVarQueryParameter, ...options.query};
+            localVarUrlObj.query = { ...localVarUrlObj.query, ...localVarQueryParameter, ...options.query };
             // fix override query string Detail: https://stackoverflow.com/a/7517673/1077943
             delete (localVarUrlObj as Partial<typeof localVarUrlObj>).search;
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
-            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.headers = { ...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers };
             const needsSerialization = (typeof fileDuploadReq !== "string") || localVarRequestOptions.headers['Content-Type'] === 'application/json';
-            localVarRequestOptions.data =  needsSerialization ? JSON.stringify(fileDuploadReq !== undefined ? fileDuploadReq : {}) : (fileDuploadReq || "");
+            localVarRequestOptions.data = needsSerialization ? JSON.stringify(fileDuploadReq !== undefined ? fileDuploadReq : {}) : (fileDuploadReq || "");
 
             return {
                 url: globalImportUrl.format(localVarUrlObj),
@@ -11824,21 +11824,21 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
             if (configuration) {
                 baseOptions = configuration.baseOptions;
             }
-            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options };
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
 
 
-    
+
             localVarHeaderParameter['Content-Type'] = 'application/json';
 
-            localVarUrlObj.query = {...localVarUrlObj.query, ...localVarQueryParameter, ...options.query};
+            localVarUrlObj.query = { ...localVarUrlObj.query, ...localVarQueryParameter, ...options.query };
             // fix override query string Detail: https://stackoverflow.com/a/7517673/1077943
             delete (localVarUrlObj as Partial<typeof localVarUrlObj>).search;
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
-            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.headers = { ...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers };
             const needsSerialization = (typeof fileGetcsfinfoReq !== "string") || localVarRequestOptions.headers['Content-Type'] === 'application/json';
-            localVarRequestOptions.data =  needsSerialization ? JSON.stringify(fileGetcsfinfoReq !== undefined ? fileGetcsfinfoReq : {}) : (fileGetcsfinfoReq || "");
+            localVarRequestOptions.data = needsSerialization ? JSON.stringify(fileGetcsfinfoReq !== undefined ? fileGetcsfinfoReq : {}) : (fileGetcsfinfoReq || "");
 
             return {
                 url: globalImportUrl.format(localVarUrlObj),
@@ -11859,21 +11859,21 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
             if (configuration) {
                 baseOptions = configuration.baseOptions;
             }
-            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options };
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
 
 
-    
+
             localVarHeaderParameter['Content-Type'] = 'application/json';
 
-            localVarUrlObj.query = {...localVarUrlObj.query, ...localVarQueryParameter, ...options.query};
+            localVarUrlObj.query = { ...localVarUrlObj.query, ...localVarQueryParameter, ...options.query };
             // fix override query string Detail: https://stackoverflow.com/a/7517673/1077943
             delete (localVarUrlObj as Partial<typeof localVarUrlObj>).search;
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
-            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.headers = { ...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers };
             const needsSerialization = (typeof fileGetinfobypathReq !== "string") || localVarRequestOptions.headers['Content-Type'] === 'application/json';
-            localVarRequestOptions.data =  needsSerialization ? JSON.stringify(fileGetinfobypathReq !== undefined ? fileGetinfobypathReq : {}) : (fileGetinfobypathReq || "");
+            localVarRequestOptions.data = needsSerialization ? JSON.stringify(fileGetinfobypathReq !== undefined ? fileGetinfobypathReq : {}) : (fileGetinfobypathReq || "");
 
             return {
                 url: globalImportUrl.format(localVarUrlObj),
@@ -11894,21 +11894,21 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
             if (configuration) {
                 baseOptions = configuration.baseOptions;
             }
-            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options };
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
 
 
-    
+
             localVarHeaderParameter['Content-Type'] = 'application/json';
 
-            localVarUrlObj.query = {...localVarUrlObj.query, ...localVarQueryParameter, ...options.query};
+            localVarUrlObj.query = { ...localVarUrlObj.query, ...localVarQueryParameter, ...options.query };
             // fix override query string Detail: https://stackoverflow.com/a/7517673/1077943
             delete (localVarUrlObj as Partial<typeof localVarUrlObj>).search;
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
-            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.headers = { ...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers };
             const needsSerialization = (typeof fileGetsuggestnameReq !== "string") || localVarRequestOptions.headers['Content-Type'] === 'application/json';
-            localVarRequestOptions.data =  needsSerialization ? JSON.stringify(fileGetsuggestnameReq !== undefined ? fileGetsuggestnameReq : {}) : (fileGetsuggestnameReq || "");
+            localVarRequestOptions.data = needsSerialization ? JSON.stringify(fileGetsuggestnameReq !== undefined ? fileGetsuggestnameReq : {}) : (fileGetsuggestnameReq || "");
 
             return {
                 url: globalImportUrl.format(localVarUrlObj),
@@ -11929,21 +11929,21 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
             if (configuration) {
                 baseOptions = configuration.baseOptions;
             }
-            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options };
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
 
 
-    
+
             localVarHeaderParameter['Content-Type'] = 'application/json';
 
-            localVarUrlObj.query = {...localVarUrlObj.query, ...localVarQueryParameter, ...options.query};
+            localVarUrlObj.query = { ...localVarUrlObj.query, ...localVarQueryParameter, ...options.query };
             // fix override query string Detail: https://stackoverflow.com/a/7517673/1077943
             delete (localVarUrlObj as Partial<typeof localVarUrlObj>).search;
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
-            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.headers = { ...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers };
             const needsSerialization = (typeof fileMetadataReq !== "string") || localVarRequestOptions.headers['Content-Type'] === 'application/json';
-            localVarRequestOptions.data =  needsSerialization ? JSON.stringify(fileMetadataReq !== undefined ? fileMetadataReq : {}) : (fileMetadataReq || "");
+            localVarRequestOptions.data = needsSerialization ? JSON.stringify(fileMetadataReq !== undefined ? fileMetadataReq : {}) : (fileMetadataReq || "");
 
             return {
                 url: globalImportUrl.format(localVarUrlObj),
@@ -11964,21 +11964,21 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
             if (configuration) {
                 baseOptions = configuration.baseOptions;
             }
-            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options };
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
 
 
-    
+
             localVarHeaderParameter['Content-Type'] = 'application/json';
 
-            localVarUrlObj.query = {...localVarUrlObj.query, ...localVarQueryParameter, ...options.query};
+            localVarUrlObj.query = { ...localVarUrlObj.query, ...localVarQueryParameter, ...options.query };
             // fix override query string Detail: https://stackoverflow.com/a/7517673/1077943
             delete (localVarUrlObj as Partial<typeof localVarUrlObj>).search;
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
-            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.headers = { ...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers };
             const needsSerialization = (typeof fileMoveReq !== "string") || localVarRequestOptions.headers['Content-Type'] === 'application/json';
-            localVarRequestOptions.data =  needsSerialization ? JSON.stringify(fileMoveReq !== undefined ? fileMoveReq : {}) : (fileMoveReq || "");
+            localVarRequestOptions.data = needsSerialization ? JSON.stringify(fileMoveReq !== undefined ? fileMoveReq : {}) : (fileMoveReq || "");
 
             return {
                 url: globalImportUrl.format(localVarUrlObj),
@@ -11999,21 +11999,21 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
             if (configuration) {
                 baseOptions = configuration.baseOptions;
             }
-            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options };
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
 
 
-    
+
             localVarHeaderParameter['Content-Type'] = 'application/json';
 
-            localVarUrlObj.query = {...localVarUrlObj.query, ...localVarQueryParameter, ...options.query};
+            localVarUrlObj.query = { ...localVarUrlObj.query, ...localVarQueryParameter, ...options.query };
             // fix override query string Detail: https://stackoverflow.com/a/7517673/1077943
             delete (localVarUrlObj as Partial<typeof localVarUrlObj>).search;
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
-            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.headers = { ...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers };
             const needsSerialization = (typeof fileOpstatisticsReq !== "string") || localVarRequestOptions.headers['Content-Type'] === 'application/json';
-            localVarRequestOptions.data =  needsSerialization ? JSON.stringify(fileOpstatisticsReq !== undefined ? fileOpstatisticsReq : {}) : (fileOpstatisticsReq || "");
+            localVarRequestOptions.data = needsSerialization ? JSON.stringify(fileOpstatisticsReq !== undefined ? fileOpstatisticsReq : {}) : (fileOpstatisticsReq || "");
 
             return {
                 url: globalImportUrl.format(localVarUrlObj),
@@ -12021,7 +12021,7 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
             };
         },
         /**
-         * 1. 如果reqmethod为PUT，收到响应后，客户端自行发送上传文件http请求到对象存储，填入响应中authrequest字段包含的header，然后15分钟内发送PUT请求            示例：            URL：https://s3-ap-northeast-1.amazonaws.com/anyshares3accesstestbucket/21A9B9FD1B524CB49D54BF7399F82EB4/AAA6CBAFE45B4E4D884DC59805E60A5C            Header：      ```      “Authorization: AWS AKIAJEROARV2UTTADY6A:PkLXjvYrDGDVZgTD8WVbMmS33q4=”      “Date: Tue, 07 Apr 2015 02:35:36 GMT”      “Content-Length: 42”      “Content-Type: application/octet-stream”      ```            Body：文件内容  2. 如果reqmethod为POST，收到响应后，客户端自行设置发送上传文件内容的表单请求到对象存储，填入各表单项，然后15分钟内发送POST请求。阿里云OSS和亚马逊S3要求file必须为表单中最后一个域。  
+         * 1. 如果reqmethod为PUT，收到响应后，客户端自行发送上传文件http请求到对象存储，填入响应中authrequest字段包含的header，然后15分钟内发送PUT请求
          * @summary 开始上传文件协议
          * @param {FileOsbeginuploadReq} [fileOsbeginuploadReq] 
          * @param {*} [options] Override http request option.
@@ -12034,21 +12034,21 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
             if (configuration) {
                 baseOptions = configuration.baseOptions;
             }
-            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options };
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
 
 
-    
+
             localVarHeaderParameter['Content-Type'] = 'application/json';
 
-            localVarUrlObj.query = {...localVarUrlObj.query, ...localVarQueryParameter, ...options.query};
+            localVarUrlObj.query = { ...localVarUrlObj.query, ...localVarQueryParameter, ...options.query };
             // fix override query string Detail: https://stackoverflow.com/a/7517673/1077943
             delete (localVarUrlObj as Partial<typeof localVarUrlObj>).search;
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
-            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.headers = { ...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers };
             const needsSerialization = (typeof fileOsbeginuploadReq !== "string") || localVarRequestOptions.headers['Content-Type'] === 'application/json';
-            localVarRequestOptions.data =  needsSerialization ? JSON.stringify(fileOsbeginuploadReq !== undefined ? fileOsbeginuploadReq : {}) : (fileOsbeginuploadReq || "");
+            localVarRequestOptions.data = needsSerialization ? JSON.stringify(fileOsbeginuploadReq !== undefined ? fileOsbeginuploadReq : {}) : (fileOsbeginuploadReq || "");
 
             return {
                 url: globalImportUrl.format(localVarUrlObj),
@@ -12056,7 +12056,7 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
             };
         },
         /**
-         * 接口调用成功，收到200响应时，表单中json部分含义：  - authrequest[0]：请求方法  - authrequest[1]: 待上传的资源URL  - authrequest[2]及以后项（如果存在）：请求头，格式为“key: value”    客户端15分钟内自行发送相关分片信息的请求到云存储平台    mothod为：PUT    URL为：https://s3-ap-northeast-1.amazonaws.com/anyshares3accesstestbucket/21A9B9FD1B524CB49D54BF7399F82EB4/AAA6CBAFE45B4E4D884DC59805E60A5C?uploadId=0004B9895DBBB6EC98E36    Header包含：  “Authorization: AWS AKIAJEROARV2UTTADY6A:PkLXjvYrDGDVZgTD8WVbMmS33q4=”  “Date: Tue, 07 Apr 2015 02:35:36 GMT”  “Content-Length: 4200”    Body为返回的body内容中除了参数之外的部分：   ```xml  <CompleteMultipartUpload>  <Part>  <PartNumber>1</PartNumber>  <ETag>3349DC700140D7F86A078484278075A9</ETag>  </Part>  <Part>  <PartNumber>2</PartNumber>  <ETag>22222C700140D7F86A078484278075A9</ETag>  </Part>  </CompleteMultipartUpload>  ```  
+         * 接口调用成功，收到200响应时，表单中json部分含义：  - authrequest[0]：请求方法  - authrequest[1]: 待上传的资源URL  - authrequest[2]及以后项（如果存在）：请求头，格式为“key: value”    客户端15分钟内自行发送相关分片信息的请求到云存储平台    mothod为：PUT  
          * @summary 上传大文件的分块完成协议
          * @param {FileOscompleteuploadReq} [fileOscompleteuploadReq] 
          * @param {*} [options] Override http request option.
@@ -12069,21 +12069,21 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
             if (configuration) {
                 baseOptions = configuration.baseOptions;
             }
-            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options };
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
 
 
-    
+
             localVarHeaderParameter['Content-Type'] = 'application/json';
 
-            localVarUrlObj.query = {...localVarUrlObj.query, ...localVarQueryParameter, ...options.query};
+            localVarUrlObj.query = { ...localVarUrlObj.query, ...localVarQueryParameter, ...options.query };
             // fix override query string Detail: https://stackoverflow.com/a/7517673/1077943
             delete (localVarUrlObj as Partial<typeof localVarUrlObj>).search;
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
-            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.headers = { ...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers };
             const needsSerialization = (typeof fileOscompleteuploadReq !== "string") || localVarRequestOptions.headers['Content-Type'] === 'application/json';
-            localVarRequestOptions.data =  needsSerialization ? JSON.stringify(fileOscompleteuploadReq !== undefined ? fileOscompleteuploadReq : {}) : (fileOscompleteuploadReq || "");
+            localVarRequestOptions.data = needsSerialization ? JSON.stringify(fileOscompleteuploadReq !== undefined ? fileOscompleteuploadReq : {}) : (fileOscompleteuploadReq || "");
 
             return {
                 url: globalImportUrl.format(localVarUrlObj),
@@ -12091,7 +12091,7 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
             };
         },
         /**
-         * 1. 收到请求响应时，客户端自行向对象存储发送下载文件内容的请求  2. 如果authtype为空，则按照下面的方式下载，15分钟内发送GET请求  URL为：https://s3-ap-northeast-1.amazonaws.com/anyshares3accesstestbucket/21A9B9FD1B524CB49D54BF7399F82EB4/AAA6CBAFE45B4E4D884DC59805E60A5C  Header包含：  “Authorization: AWS AKIAJEROARV2UTTADY6A:PkLXjvYrDGDVZgTD8WVbMmS33q4=”  “Date: Tue, 07 Apr 2015 02:35:36 GMT”  Body为：空  3. 如果authtype为QUERY_STRING，则按照下面的方式下载，15分钟内发送GET请求  URL为：https://s3-ap-northeast-1.amazonaws.com/anyshares3accesstestbucket/21A9B9FD1B524CB49D54BF7399F82EB4/AAA6CBAFE45B4E4D884DC59805E60A5C?AWSAccessKeyId=AKIAJEROARV2UTTADY6A&Expires=1428384700&Signature=lnOy3CUh9KNknNDX8aB8Mhur7%2Bw%3D  4. 如果想分块下载，请自行在Header中加入Range  5. 发送GET请求后，可能并不能直接获取数据，将获得 HTTP/1.1 307 Temporary Redirect，此时重定向的数据实际下载地址包含在返回的header中，形如：  Location: http://iovip.qbox.me/file/8QhbPDcKueO0ZOEDqnroKw0y478TNADQAwAAACfQem72ulBu9rl6bvYDEHDiumoeFLDnJKS5em72uXpu9rl6bvbWRi-vul_Q0Ckfu5f7PMvE9OoXIdfQ0NDT-tDQ0NDQ0N2pQCrK0NDQcHNHYPbupfOQx9EUBTS5bh6sR1Jtqr4maaq-JmmqviY=  对于重定向的情况，客户端需要判断并从新地址下载数据，以C++开发使用curl为例，需要设置：curl_easy_setopt (_curl, CURLOPT_FOLLOWLOCATION, 1); 
+         * 1. 收到请求响应时，客户端自行向对象存储发送下载文件内容的请求  2. 如果authtype为空，则按照下面的方式下载，15分钟内发送GET请求
          * @summary 下载文件协议
          * @param {FileOsdownloadReq} [fileOsdownloadReq] 
          * @param {*} [options] Override http request option.
@@ -12104,21 +12104,21 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
             if (configuration) {
                 baseOptions = configuration.baseOptions;
             }
-            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options };
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
 
 
-    
+
             localVarHeaderParameter['Content-Type'] = 'application/json';
 
-            localVarUrlObj.query = {...localVarUrlObj.query, ...localVarQueryParameter, ...options.query};
+            localVarUrlObj.query = { ...localVarUrlObj.query, ...localVarQueryParameter, ...options.query };
             // fix override query string Detail: https://stackoverflow.com/a/7517673/1077943
             delete (localVarUrlObj as Partial<typeof localVarUrlObj>).search;
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
-            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.headers = { ...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers };
             const needsSerialization = (typeof fileOsdownloadReq !== "string") || localVarRequestOptions.headers['Content-Type'] === 'application/json';
-            localVarRequestOptions.data =  needsSerialization ? JSON.stringify(fileOsdownloadReq !== undefined ? fileOsdownloadReq : {}) : (fileOsdownloadReq || "");
+            localVarRequestOptions.data = needsSerialization ? JSON.stringify(fileOsdownloadReq !== undefined ? fileOsdownloadReq : {}) : (fileOsdownloadReq || "");
 
             return {
                 url: globalImportUrl.format(localVarUrlObj),
@@ -12139,21 +12139,21 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
             if (configuration) {
                 baseOptions = configuration.baseOptions;
             }
-            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options };
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
 
 
-    
+
             localVarHeaderParameter['Content-Type'] = 'application/json';
 
-            localVarUrlObj.query = {...localVarUrlObj.query, ...localVarQueryParameter, ...options.query};
+            localVarUrlObj.query = { ...localVarUrlObj.query, ...localVarQueryParameter, ...options.query };
             // fix override query string Detail: https://stackoverflow.com/a/7517673/1077943
             delete (localVarUrlObj as Partial<typeof localVarUrlObj>).search;
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
-            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.headers = { ...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers };
             const needsSerialization = (typeof fileOsenduploadReq !== "string") || localVarRequestOptions.headers['Content-Type'] === 'application/json';
-            localVarRequestOptions.data =  needsSerialization ? JSON.stringify(fileOsenduploadReq !== undefined ? fileOsenduploadReq : {}) : (fileOsenduploadReq || "");
+            localVarRequestOptions.data = needsSerialization ? JSON.stringify(fileOsenduploadReq !== undefined ? fileOsenduploadReq : {}) : (fileOsenduploadReq || "");
 
             return {
                 url: globalImportUrl.format(localVarUrlObj),
@@ -12174,21 +12174,21 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
             if (configuration) {
                 baseOptions = configuration.baseOptions;
             }
-            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options };
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
 
 
-    
+
             localVarHeaderParameter['Content-Type'] = 'application/json';
 
-            localVarUrlObj.query = {...localVarUrlObj.query, ...localVarQueryParameter, ...options.query};
+            localVarUrlObj.query = { ...localVarUrlObj.query, ...localVarQueryParameter, ...options.query };
             // fix override query string Detail: https://stackoverflow.com/a/7517673/1077943
             delete (localVarUrlObj as Partial<typeof localVarUrlObj>).search;
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
-            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.headers = { ...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers };
             const needsSerialization = (typeof fileOsinitmultiuploadReq !== "string") || localVarRequestOptions.headers['Content-Type'] === 'application/json';
-            localVarRequestOptions.data =  needsSerialization ? JSON.stringify(fileOsinitmultiuploadReq !== undefined ? fileOsinitmultiuploadReq : {}) : (fileOsinitmultiuploadReq || "");
+            localVarRequestOptions.data = needsSerialization ? JSON.stringify(fileOsinitmultiuploadReq !== undefined ? fileOsinitmultiuploadReq : {}) : (fileOsinitmultiuploadReq || "");
 
             return {
                 url: globalImportUrl.format(localVarUrlObj),
@@ -12208,17 +12208,17 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
             if (configuration) {
                 baseOptions = configuration.baseOptions;
             }
-            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options };
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
 
 
-    
-            localVarUrlObj.query = {...localVarUrlObj.query, ...localVarQueryParameter, ...options.query};
+
+            localVarUrlObj.query = { ...localVarUrlObj.query, ...localVarQueryParameter, ...options.query };
             // fix override query string Detail: https://stackoverflow.com/a/7517673/1077943
             delete (localVarUrlObj as Partial<typeof localVarUrlObj>).search;
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
-            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.headers = { ...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers };
 
             return {
                 url: globalImportUrl.format(localVarUrlObj),
@@ -12226,7 +12226,7 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
             };
         },
         /**
-         * 1. 收到该响应后，客户端自行发送文件分片内容的请求到对象存储。  2. 客户端在请求Header中填入authrequests中的header，15分钟内发送PUT请求        示例：        URL：https://s3-ap-northeast-1.amazonaws.com/anyshares3accesstestbucket/21A9B9FD1B524CB49D54BF7399F82EB4/AAA6CBAFE45B4E4D884DC59805E60A5C?partNumber=1&uploadId=0004B9895DBBB6EC98E36            Header：      ```      “Authorization: AWS AKIAJEROARV2UTTADY6A:PkLXjvYrDGDVZgTD8WVbMmS33q4=”      “Date: Tue, 07 Apr 2015 02:35:36 GMT”      “Content-Length: 42”      ```            Body：分片内容  3. 对象存储返回响应信息时，响应header中可能包含Etag值，用于标识所上传对象分片。如果存在key为ETag/ETAG/etag/Etag等值的header，需要取得其对应的值(如果这些header都没有，直接使用空字符串)，作为完成大文件分块上传协议oscompleteupload的传参，见参数partetag及请求示例。            需注意，不同对象存储返回的Etag的header，key大小写可能不同，可能为ETag/ETAG/etag/Etag等(如果这些header都没有，直接使用空字符串)。可以对响应header进行遍历，对每个key转为小写，和字符串“etag”对比，获取对应的值。一个可能的响应header示例为：Etag: ce1c8d1c3900c64feaa651052d75acd9    4. 亚马逊S3限定分块大小不能小于5MB，七牛存储限定分块大小为4M的倍数。见“对象存储选项值协议”说明
+         * 1. 收到该响应后，客户端自行发送文件分片内容的请求到对象存储。  2. 客户端在请求Header中填入authrequests中的header，15分钟内发送PUT请求
          * @summary 上传大文件的分块协议
          * @param {FileOsuploadpartReq} [fileOsuploadpartReq] 
          * @param {*} [options] Override http request option.
@@ -12239,21 +12239,21 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
             if (configuration) {
                 baseOptions = configuration.baseOptions;
             }
-            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options };
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
 
 
-    
+
             localVarHeaderParameter['Content-Type'] = 'application/json';
 
-            localVarUrlObj.query = {...localVarUrlObj.query, ...localVarQueryParameter, ...options.query};
+            localVarUrlObj.query = { ...localVarUrlObj.query, ...localVarQueryParameter, ...options.query };
             // fix override query string Detail: https://stackoverflow.com/a/7517673/1077943
             delete (localVarUrlObj as Partial<typeof localVarUrlObj>).search;
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
-            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.headers = { ...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers };
             const needsSerialization = (typeof fileOsuploadpartReq !== "string") || localVarRequestOptions.headers['Content-Type'] === 'application/json';
-            localVarRequestOptions.data =  needsSerialization ? JSON.stringify(fileOsuploadpartReq !== undefined ? fileOsuploadpartReq : {}) : (fileOsuploadpartReq || "");
+            localVarRequestOptions.data = needsSerialization ? JSON.stringify(fileOsuploadpartReq !== undefined ? fileOsuploadpartReq : {}) : (fileOsuploadpartReq || "");
 
             return {
                 url: globalImportUrl.format(localVarUrlObj),
@@ -12274,21 +12274,21 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
             if (configuration) {
                 baseOptions = configuration.baseOptions;
             }
-            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options };
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
 
 
-    
+
             localVarHeaderParameter['Content-Type'] = 'application/json';
 
-            localVarUrlObj.query = {...localVarUrlObj.query, ...localVarQueryParameter, ...options.query};
+            localVarUrlObj.query = { ...localVarUrlObj.query, ...localVarQueryParameter, ...options.query };
             // fix override query string Detail: https://stackoverflow.com/a/7517673/1077943
             delete (localVarUrlObj as Partial<typeof localVarUrlObj>).search;
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
-            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.headers = { ...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers };
             const needsSerialization = (typeof fileOsuploadrefreshReq !== "string") || localVarRequestOptions.headers['Content-Type'] === 'application/json';
-            localVarRequestOptions.data =  needsSerialization ? JSON.stringify(fileOsuploadrefreshReq !== undefined ? fileOsuploadrefreshReq : {}) : (fileOsuploadrefreshReq || "");
+            localVarRequestOptions.data = needsSerialization ? JSON.stringify(fileOsuploadrefreshReq !== undefined ? fileOsuploadrefreshReq : {}) : (fileOsuploadrefreshReq || "");
 
             return {
                 url: globalImportUrl.format(localVarUrlObj),
@@ -12309,21 +12309,21 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
             if (configuration) {
                 baseOptions = configuration.baseOptions;
             }
-            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options };
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
 
 
-    
+
             localVarHeaderParameter['Content-Type'] = 'application/json';
 
-            localVarUrlObj.query = {...localVarUrlObj.query, ...localVarQueryParameter, ...options.query};
+            localVarUrlObj.query = { ...localVarUrlObj.query, ...localVarQueryParameter, ...options.query };
             // fix override query string Detail: https://stackoverflow.com/a/7517673/1077943
             delete (localVarUrlObj as Partial<typeof localVarUrlObj>).search;
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
-            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.headers = { ...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers };
             const needsSerialization = (typeof filePreduploadReq !== "string") || localVarRequestOptions.headers['Content-Type'] === 'application/json';
-            localVarRequestOptions.data =  needsSerialization ? JSON.stringify(filePreduploadReq !== undefined ? filePreduploadReq : {}) : (filePreduploadReq || "");
+            localVarRequestOptions.data = needsSerialization ? JSON.stringify(filePreduploadReq !== undefined ? filePreduploadReq : {}) : (filePreduploadReq || "");
 
             return {
                 url: globalImportUrl.format(localVarUrlObj),
@@ -12344,21 +12344,21 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
             if (configuration) {
                 baseOptions = configuration.baseOptions;
             }
-            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options };
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
 
 
-    
+
             localVarHeaderParameter['Content-Type'] = 'application/json';
 
-            localVarUrlObj.query = {...localVarUrlObj.query, ...localVarQueryParameter, ...options.query};
+            localVarUrlObj.query = { ...localVarUrlObj.query, ...localVarQueryParameter, ...options.query };
             // fix override query string Detail: https://stackoverflow.com/a/7517673/1077943
             delete (localVarUrlObj as Partial<typeof localVarUrlObj>).search;
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
-            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.headers = { ...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers };
             const needsSerialization = (typeof fileRenameReq !== "string") || localVarRequestOptions.headers['Content-Type'] === 'application/json';
-            localVarRequestOptions.data =  needsSerialization ? JSON.stringify(fileRenameReq !== undefined ? fileRenameReq : {}) : (fileRenameReq || "");
+            localVarRequestOptions.data = needsSerialization ? JSON.stringify(fileRenameReq !== undefined ? fileRenameReq : {}) : (fileRenameReq || "");
 
             return {
                 url: globalImportUrl.format(localVarUrlObj),
@@ -12379,21 +12379,21 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
             if (configuration) {
                 baseOptions = configuration.baseOptions;
             }
-            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options };
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
 
 
-    
+
             localVarHeaderParameter['Content-Type'] = 'application/json';
 
-            localVarUrlObj.query = {...localVarUrlObj.query, ...localVarQueryParameter, ...options.query};
+            localVarUrlObj.query = { ...localVarUrlObj.query, ...localVarQueryParameter, ...options.query };
             // fix override query string Detail: https://stackoverflow.com/a/7517673/1077943
             delete (localVarUrlObj as Partial<typeof localVarUrlObj>).search;
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
-            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.headers = { ...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers };
             const needsSerialization = (typeof fileRestorerevisionReq !== "string") || localVarRequestOptions.headers['Content-Type'] === 'application/json';
-            localVarRequestOptions.data =  needsSerialization ? JSON.stringify(fileRestorerevisionReq !== undefined ? fileRestorerevisionReq : {}) : (fileRestorerevisionReq || "");
+            localVarRequestOptions.data = needsSerialization ? JSON.stringify(fileRestorerevisionReq !== undefined ? fileRestorerevisionReq : {}) : (fileRestorerevisionReq || "");
 
             return {
                 url: globalImportUrl.format(localVarUrlObj),
@@ -12414,21 +12414,21 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
             if (configuration) {
                 baseOptions = configuration.baseOptions;
             }
-            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options };
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
 
 
-    
+
             localVarHeaderParameter['Content-Type'] = 'application/json';
 
-            localVarUrlObj.query = {...localVarUrlObj.query, ...localVarQueryParameter, ...options.query};
+            localVarUrlObj.query = { ...localVarUrlObj.query, ...localVarQueryParameter, ...options.query };
             // fix override query string Detail: https://stackoverflow.com/a/7517673/1077943
             delete (localVarUrlObj as Partial<typeof localVarUrlObj>).search;
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
-            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.headers = { ...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers };
             const needsSerialization = (typeof fileRevisionsReq !== "string") || localVarRequestOptions.headers['Content-Type'] === 'application/json';
-            localVarRequestOptions.data =  needsSerialization ? JSON.stringify(fileRevisionsReq !== undefined ? fileRevisionsReq : {}) : (fileRevisionsReq || "");
+            localVarRequestOptions.data = needsSerialization ? JSON.stringify(fileRevisionsReq !== undefined ? fileRevisionsReq : {}) : (fileRevisionsReq || "");
 
             return {
                 url: globalImportUrl.format(localVarUrlObj),
@@ -12449,21 +12449,21 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
             if (configuration) {
                 baseOptions = configuration.baseOptions;
             }
-            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options };
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
 
 
-    
+
             localVarHeaderParameter['Content-Type'] = 'application/json';
 
-            localVarUrlObj.query = {...localVarUrlObj.query, ...localVarQueryParameter, ...options.query};
+            localVarUrlObj.query = { ...localVarUrlObj.query, ...localVarQueryParameter, ...options.query };
             // fix override query string Detail: https://stackoverflow.com/a/7517673/1077943
             delete (localVarUrlObj as Partial<typeof localVarUrlObj>).search;
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
-            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.headers = { ...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers };
             const needsSerialization = (typeof fileSetcsflevelReq !== "string") || localVarRequestOptions.headers['Content-Type'] === 'application/json';
-            localVarRequestOptions.data =  needsSerialization ? JSON.stringify(fileSetcsflevelReq !== undefined ? fileSetcsflevelReq : {}) : (fileSetcsflevelReq || "");
+            localVarRequestOptions.data = needsSerialization ? JSON.stringify(fileSetcsflevelReq !== undefined ? fileSetcsflevelReq : {}) : (fileSetcsflevelReq || "");
 
             return {
                 url: globalImportUrl.format(localVarUrlObj),
@@ -12485,19 +12485,19 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
         efastV1FileThumbnailGet(docid: string, height: string, width: string, tokenid: string, rev?: string, quality?: string, options: any = {}): RequestArgs {
             // verify required parameter 'docid' is not null or undefined
             if (docid === null || docid === undefined) {
-                throw new RequiredError('docid','Required parameter docid was null or undefined when calling efastV1FileThumbnailGet.');
+                throw new RequiredError('docid', 'Required parameter docid was null or undefined when calling efastV1FileThumbnailGet.');
             }
             // verify required parameter 'height' is not null or undefined
             if (height === null || height === undefined) {
-                throw new RequiredError('height','Required parameter height was null or undefined when calling efastV1FileThumbnailGet.');
+                throw new RequiredError('height', 'Required parameter height was null or undefined when calling efastV1FileThumbnailGet.');
             }
             // verify required parameter 'width' is not null or undefined
             if (width === null || width === undefined) {
-                throw new RequiredError('width','Required parameter width was null or undefined when calling efastV1FileThumbnailGet.');
+                throw new RequiredError('width', 'Required parameter width was null or undefined when calling efastV1FileThumbnailGet.');
             }
             // verify required parameter 'tokenid' is not null or undefined
             if (tokenid === null || tokenid === undefined) {
-                throw new RequiredError('tokenid','Required parameter tokenid was null or undefined when calling efastV1FileThumbnailGet.');
+                throw new RequiredError('tokenid', 'Required parameter tokenid was null or undefined when calling efastV1FileThumbnailGet.');
             }
             const localVarPath = `/efast/v1/file/thumbnail`;
             const localVarUrlObj = globalImportUrl.parse(localVarPath, true);
@@ -12505,7 +12505,7 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
             if (configuration) {
                 baseOptions = configuration.baseOptions;
             }
-            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
+            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options };
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
 
@@ -12534,12 +12534,12 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
             }
 
 
-    
-            localVarUrlObj.query = {...localVarUrlObj.query, ...localVarQueryParameter, ...options.query};
+
+            localVarUrlObj.query = { ...localVarUrlObj.query, ...localVarQueryParameter, ...options.query };
             // fix override query string Detail: https://stackoverflow.com/a/7517673/1077943
             delete (localVarUrlObj as Partial<typeof localVarUrlObj>).search;
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
-            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.headers = { ...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers };
 
             return {
                 url: globalImportUrl.format(localVarUrlObj),
@@ -12559,17 +12559,17 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
             if (configuration) {
                 baseOptions = configuration.baseOptions;
             }
-            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
+            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options };
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
 
 
-    
-            localVarUrlObj.query = {...localVarUrlObj.query, ...localVarQueryParameter, ...options.query};
+
+            localVarUrlObj.query = { ...localVarUrlObj.query, ...localVarQueryParameter, ...options.query };
             // fix override query string Detail: https://stackoverflow.com/a/7517673/1077943
             delete (localVarUrlObj as Partial<typeof localVarUrlObj>).search;
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
-            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.headers = { ...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers };
 
             return {
                 url: globalImportUrl.format(localVarUrlObj),
@@ -12590,21 +12590,21 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
             if (configuration) {
                 baseOptions = configuration.baseOptions;
             }
-            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options };
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
 
 
-    
+
             localVarHeaderParameter['Content-Type'] = 'application/json';
 
-            localVarUrlObj.query = {...localVarUrlObj.query, ...localVarQueryParameter, ...options.query};
+            localVarUrlObj.query = { ...localVarUrlObj.query, ...localVarQueryParameter, ...options.query };
             // fix override query string Detail: https://stackoverflow.com/a/7517673/1077943
             delete (localVarUrlObj as Partial<typeof localVarUrlObj>).search;
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
-            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.headers = { ...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers };
             const needsSerialization = (typeof quarantineAppealReq !== "string") || localVarRequestOptions.headers['Content-Type'] === 'application/json';
-            localVarRequestOptions.data =  needsSerialization ? JSON.stringify(quarantineAppealReq !== undefined ? quarantineAppealReq : {}) : (quarantineAppealReq || "");
+            localVarRequestOptions.data = needsSerialization ? JSON.stringify(quarantineAppealReq !== undefined ? quarantineAppealReq : {}) : (quarantineAppealReq || "");
 
             return {
                 url: globalImportUrl.format(localVarUrlObj),
@@ -12624,17 +12624,17 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
             if (configuration) {
                 baseOptions = configuration.baseOptions;
             }
-            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options };
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
 
 
-    
-            localVarUrlObj.query = {...localVarUrlObj.query, ...localVarQueryParameter, ...options.query};
+
+            localVarUrlObj.query = { ...localVarUrlObj.query, ...localVarQueryParameter, ...options.query };
             // fix override query string Detail: https://stackoverflow.com/a/7517673/1077943
             delete (localVarUrlObj as Partial<typeof localVarUrlObj>).search;
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
-            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.headers = { ...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers };
 
             return {
                 url: globalImportUrl.format(localVarUrlObj),
@@ -12655,21 +12655,21 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
             if (configuration) {
                 baseOptions = configuration.baseOptions;
             }
-            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options };
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
 
 
-    
+
             localVarHeaderParameter['Content-Type'] = 'application/json';
 
-            localVarUrlObj.query = {...localVarUrlObj.query, ...localVarQueryParameter, ...options.query};
+            localVarUrlObj.query = { ...localVarUrlObj.query, ...localVarQueryParameter, ...options.query };
             // fix override query string Detail: https://stackoverflow.com/a/7517673/1077943
             delete (localVarUrlObj as Partial<typeof localVarUrlObj>).search;
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
-            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.headers = { ...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers };
             const needsSerialization = (typeof quarantineListreversionReq !== "string") || localVarRequestOptions.headers['Content-Type'] === 'application/json';
-            localVarRequestOptions.data =  needsSerialization ? JSON.stringify(quarantineListreversionReq !== undefined ? quarantineListreversionReq : {}) : (quarantineListreversionReq || "");
+            localVarRequestOptions.data = needsSerialization ? JSON.stringify(quarantineListreversionReq !== undefined ? quarantineListreversionReq : {}) : (quarantineListreversionReq || "");
 
             return {
                 url: globalImportUrl.format(localVarUrlObj),
@@ -12686,7 +12686,7 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
         efastV1QuotaDocLibIdGet(id: string, options: any = {}): RequestArgs {
             // verify required parameter 'id' is not null or undefined
             if (id === null || id === undefined) {
-                throw new RequiredError('id','Required parameter id was null or undefined when calling efastV1QuotaDocLibIdGet.');
+                throw new RequiredError('id', 'Required parameter id was null or undefined when calling efastV1QuotaDocLibIdGet.');
             }
             const localVarPath = `/efast/v1/quota/doc-lib/{id}`
                 .replace(`{${"id"}}`, encodeURIComponent(String(id)));
@@ -12695,17 +12695,17 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
             if (configuration) {
                 baseOptions = configuration.baseOptions;
             }
-            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
+            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options };
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
 
 
-    
-            localVarUrlObj.query = {...localVarUrlObj.query, ...localVarQueryParameter, ...options.query};
+
+            localVarUrlObj.query = { ...localVarUrlObj.query, ...localVarQueryParameter, ...options.query };
             // fix override query string Detail: https://stackoverflow.com/a/7517673/1077943
             delete (localVarUrlObj as Partial<typeof localVarUrlObj>).search;
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
-            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.headers = { ...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers };
 
             return {
                 url: globalImportUrl.format(localVarUrlObj),
@@ -12725,17 +12725,17 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
             if (configuration) {
                 baseOptions = configuration.baseOptions;
             }
-            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
+            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options };
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
 
 
-    
-            localVarUrlObj.query = {...localVarUrlObj.query, ...localVarQueryParameter, ...options.query};
+
+            localVarUrlObj.query = { ...localVarUrlObj.query, ...localVarQueryParameter, ...options.query };
             // fix override query string Detail: https://stackoverflow.com/a/7517673/1077943
             delete (localVarUrlObj as Partial<typeof localVarUrlObj>).search;
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
-            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.headers = { ...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers };
 
             return {
                 url: globalImportUrl.format(localVarUrlObj),
@@ -12756,21 +12756,21 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
             if (configuration) {
                 baseOptions = configuration.baseOptions;
             }
-            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options };
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
 
 
-    
+
             localVarHeaderParameter['Content-Type'] = 'application/json';
 
-            localVarUrlObj.query = {...localVarUrlObj.query, ...localVarQueryParameter, ...options.query};
+            localVarUrlObj.query = { ...localVarUrlObj.query, ...localVarQueryParameter, ...options.query };
             // fix override query string Detail: https://stackoverflow.com/a/7517673/1077943
             delete (localVarUrlObj as Partial<typeof localVarUrlObj>).search;
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
-            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.headers = { ...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers };
             const needsSerialization = (typeof recycleDeleteReq !== "string") || localVarRequestOptions.headers['Content-Type'] === 'application/json';
-            localVarRequestOptions.data =  needsSerialization ? JSON.stringify(recycleDeleteReq !== undefined ? recycleDeleteReq : {}) : (recycleDeleteReq || "");
+            localVarRequestOptions.data = needsSerialization ? JSON.stringify(recycleDeleteReq !== undefined ? recycleDeleteReq : {}) : (recycleDeleteReq || "");
 
             return {
                 url: globalImportUrl.format(localVarUrlObj),
@@ -12791,21 +12791,21 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
             if (configuration) {
                 baseOptions = configuration.baseOptions;
             }
-            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options };
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
 
 
-    
+
             localVarHeaderParameter['Content-Type'] = 'application/json';
 
-            localVarUrlObj.query = {...localVarUrlObj.query, ...localVarQueryParameter, ...options.query};
+            localVarUrlObj.query = { ...localVarUrlObj.query, ...localVarQueryParameter, ...options.query };
             // fix override query string Detail: https://stackoverflow.com/a/7517673/1077943
             delete (localVarUrlObj as Partial<typeof localVarUrlObj>).search;
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
-            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.headers = { ...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers };
             const needsSerialization = (typeof recycleGetretentiondaysReq !== "string") || localVarRequestOptions.headers['Content-Type'] === 'application/json';
-            localVarRequestOptions.data =  needsSerialization ? JSON.stringify(recycleGetretentiondaysReq !== undefined ? recycleGetretentiondaysReq : {}) : (recycleGetretentiondaysReq || "");
+            localVarRequestOptions.data = needsSerialization ? JSON.stringify(recycleGetretentiondaysReq !== undefined ? recycleGetretentiondaysReq : {}) : (recycleGetretentiondaysReq || "");
 
             return {
                 url: globalImportUrl.format(localVarUrlObj),
@@ -12826,21 +12826,21 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
             if (configuration) {
                 baseOptions = configuration.baseOptions;
             }
-            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options };
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
 
 
-    
+
             localVarHeaderParameter['Content-Type'] = 'application/json';
 
-            localVarUrlObj.query = {...localVarUrlObj.query, ...localVarQueryParameter, ...options.query};
+            localVarUrlObj.query = { ...localVarUrlObj.query, ...localVarQueryParameter, ...options.query };
             // fix override query string Detail: https://stackoverflow.com/a/7517673/1077943
             delete (localVarUrlObj as Partial<typeof localVarUrlObj>).search;
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
-            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.headers = { ...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers };
             const needsSerialization = (typeof recycleGetsuggestnameReq !== "string") || localVarRequestOptions.headers['Content-Type'] === 'application/json';
-            localVarRequestOptions.data =  needsSerialization ? JSON.stringify(recycleGetsuggestnameReq !== undefined ? recycleGetsuggestnameReq : {}) : (recycleGetsuggestnameReq || "");
+            localVarRequestOptions.data = needsSerialization ? JSON.stringify(recycleGetsuggestnameReq !== undefined ? recycleGetsuggestnameReq : {}) : (recycleGetsuggestnameReq || "");
 
             return {
                 url: globalImportUrl.format(localVarUrlObj),
@@ -12861,21 +12861,21 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
             if (configuration) {
                 baseOptions = configuration.baseOptions;
             }
-            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options };
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
 
 
-    
+
             localVarHeaderParameter['Content-Type'] = 'application/json';
 
-            localVarUrlObj.query = {...localVarUrlObj.query, ...localVarQueryParameter, ...options.query};
+            localVarUrlObj.query = { ...localVarUrlObj.query, ...localVarQueryParameter, ...options.query };
             // fix override query string Detail: https://stackoverflow.com/a/7517673/1077943
             delete (localVarUrlObj as Partial<typeof localVarUrlObj>).search;
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
-            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.headers = { ...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers };
             const needsSerialization = (typeof recycleListReq !== "string") || localVarRequestOptions.headers['Content-Type'] === 'application/json';
-            localVarRequestOptions.data =  needsSerialization ? JSON.stringify(recycleListReq !== undefined ? recycleListReq : {}) : (recycleListReq || "");
+            localVarRequestOptions.data = needsSerialization ? JSON.stringify(recycleListReq !== undefined ? recycleListReq : {}) : (recycleListReq || "");
 
             return {
                 url: globalImportUrl.format(localVarUrlObj),
@@ -12896,21 +12896,21 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
             if (configuration) {
                 baseOptions = configuration.baseOptions;
             }
-            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options };
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
 
 
-    
+
             localVarHeaderParameter['Content-Type'] = 'application/json';
 
-            localVarUrlObj.query = {...localVarUrlObj.query, ...localVarQueryParameter, ...options.query};
+            localVarUrlObj.query = { ...localVarUrlObj.query, ...localVarQueryParameter, ...options.query };
             // fix override query string Detail: https://stackoverflow.com/a/7517673/1077943
             delete (localVarUrlObj as Partial<typeof localVarUrlObj>).search;
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
-            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.headers = { ...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers };
             const needsSerialization = (typeof recycleRestoreReq !== "string") || localVarRequestOptions.headers['Content-Type'] === 'application/json';
-            localVarRequestOptions.data =  needsSerialization ? JSON.stringify(recycleRestoreReq !== undefined ? recycleRestoreReq : {}) : (recycleRestoreReq || "");
+            localVarRequestOptions.data = needsSerialization ? JSON.stringify(recycleRestoreReq !== undefined ? recycleRestoreReq : {}) : (recycleRestoreReq || "");
 
             return {
                 url: globalImportUrl.format(localVarUrlObj),
@@ -12931,21 +12931,21 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
             if (configuration) {
                 baseOptions = configuration.baseOptions;
             }
-            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options };
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
 
 
-    
+
             localVarHeaderParameter['Content-Type'] = 'application/json';
 
-            localVarUrlObj.query = {...localVarUrlObj.query, ...localVarQueryParameter, ...options.query};
+            localVarUrlObj.query = { ...localVarUrlObj.query, ...localVarQueryParameter, ...options.query };
             // fix override query string Detail: https://stackoverflow.com/a/7517673/1077943
             delete (localVarUrlObj as Partial<typeof localVarUrlObj>).search;
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
-            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.headers = { ...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers };
             const needsSerialization = (typeof recycleSetretentiondaysReq !== "string") || localVarRequestOptions.headers['Content-Type'] === 'application/json';
-            localVarRequestOptions.data =  needsSerialization ? JSON.stringify(recycleSetretentiondaysReq !== undefined ? recycleSetretentiondaysReq : {}) : (recycleSetretentiondaysReq || "");
+            localVarRequestOptions.data = needsSerialization ? JSON.stringify(recycleSetretentiondaysReq !== undefined ? recycleSetretentiondaysReq : {}) : (recycleSetretentiondaysReq || "");
 
             return {
                 url: globalImportUrl.format(localVarUrlObj),
@@ -12964,7 +12964,7 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
         userManagementV1GroupMembersIdGet(id: string, offset?: string, limit?: string, options: any = {}): RequestArgs {
             // verify required parameter 'id' is not null or undefined
             if (id === null || id === undefined) {
-                throw new RequiredError('id','Required parameter id was null or undefined when calling userManagementV1GroupMembersIdGet.');
+                throw new RequiredError('id', 'Required parameter id was null or undefined when calling userManagementV1GroupMembersIdGet.');
             }
             const localVarPath = `/user-management/v1/group-members/{id}`
                 .replace(`{${"id"}}`, encodeURIComponent(String(id)));
@@ -12973,7 +12973,7 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
             if (configuration) {
                 baseOptions = configuration.baseOptions;
             }
-            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
+            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options };
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
 
@@ -12986,12 +12986,12 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
             }
 
 
-    
-            localVarUrlObj.query = {...localVarUrlObj.query, ...localVarQueryParameter, ...options.query};
+
+            localVarUrlObj.query = { ...localVarUrlObj.query, ...localVarQueryParameter, ...options.query };
             // fix override query string Detail: https://stackoverflow.com/a/7517673/1077943
             delete (localVarUrlObj as Partial<typeof localVarUrlObj>).search;
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
-            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.headers = { ...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers };
 
             return {
                 url: globalImportUrl.format(localVarUrlObj),
@@ -13013,7 +13013,7 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
             if (configuration) {
                 baseOptions = configuration.baseOptions;
             }
-            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
+            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options };
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
 
@@ -13026,12 +13026,12 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
             }
 
 
-    
-            localVarUrlObj.query = {...localVarUrlObj.query, ...localVarQueryParameter, ...options.query};
+
+            localVarUrlObj.query = { ...localVarUrlObj.query, ...localVarQueryParameter, ...options.query };
             // fix override query string Detail: https://stackoverflow.com/a/7517673/1077943
             delete (localVarUrlObj as Partial<typeof localVarUrlObj>).search;
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
-            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.headers = { ...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers };
 
             return {
                 url: globalImportUrl.format(localVarUrlObj),
@@ -13051,11 +13051,11 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
         userManagementV1SearchInGroupGet(keyword: string, type: string, offset?: string, limit?: string, options: any = {}): RequestArgs {
             // verify required parameter 'keyword' is not null or undefined
             if (keyword === null || keyword === undefined) {
-                throw new RequiredError('keyword','Required parameter keyword was null or undefined when calling userManagementV1SearchInGroupGet.');
+                throw new RequiredError('keyword', 'Required parameter keyword was null or undefined when calling userManagementV1SearchInGroupGet.');
             }
             // verify required parameter 'type' is not null or undefined
             if (type === null || type === undefined) {
-                throw new RequiredError('type','Required parameter type was null or undefined when calling userManagementV1SearchInGroupGet.');
+                throw new RequiredError('type', 'Required parameter type was null or undefined when calling userManagementV1SearchInGroupGet.');
             }
             const localVarPath = `/user-management/v1/search-in-group`;
             const localVarUrlObj = globalImportUrl.parse(localVarPath, true);
@@ -13063,7 +13063,7 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
             if (configuration) {
                 baseOptions = configuration.baseOptions;
             }
-            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
+            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options };
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
 
@@ -13084,12 +13084,12 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
             }
 
 
-    
-            localVarUrlObj.query = {...localVarUrlObj.query, ...localVarQueryParameter, ...options.query};
+
+            localVarUrlObj.query = { ...localVarUrlObj.query, ...localVarQueryParameter, ...options.query };
             // fix override query string Detail: https://stackoverflow.com/a/7517673/1077943
             delete (localVarUrlObj as Partial<typeof localVarUrlObj>).search;
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
-            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.headers = { ...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers };
 
             return {
                 url: globalImportUrl.format(localVarUrlObj),
@@ -13103,7 +13103,7 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
  * DefaultApi - functional programming interface
  * @export
  */
-export const DefaultApiFp = function(configuration?: Configuration) {
+export const DefaultApiFp = function (configuration?: Configuration) {
     return {
         /**
          * 
@@ -13115,7 +13115,7 @@ export const DefaultApiFp = function(configuration?: Configuration) {
         authenticationV1AnonymousPost(anonymousLogin?: AnonymousLogin, options?: any): (axios?: AxiosInstance, basePath?: string) => AxiosPromise<AnonymousLoginSuccess> {
             const localVarAxiosArgs = DefaultApiAxiosParamCreator(configuration).authenticationV1AnonymousPost(anonymousLogin, options);
             return (axios: AxiosInstance = globalAxios, basePath: string = BASE_PATH) => {
-                const axiosRequestArgs = {...localVarAxiosArgs.options, url: basePath + localVarAxiosArgs.url};
+                const axiosRequestArgs = { ...localVarAxiosArgs.options, url: basePath + localVarAxiosArgs.url };
                 return axios.request(axiosRequestArgs);
             };
         },
@@ -13129,7 +13129,7 @@ export const DefaultApiFp = function(configuration?: Configuration) {
         authenticationV1SsoPost(singleSignOn?: SingleSignOn, options?: any): (axios?: AxiosInstance, basePath?: string) => AxiosPromise<SingleSignOnSuccess> {
             const localVarAxiosArgs = DefaultApiAxiosParamCreator(configuration).authenticationV1SsoPost(singleSignOn, options);
             return (axios: AxiosInstance = globalAxios, basePath: string = BASE_PATH) => {
-                const axiosRequestArgs = {...localVarAxiosArgs.options, url: basePath + localVarAxiosArgs.url};
+                const axiosRequestArgs = { ...localVarAxiosArgs.options, url: basePath + localVarAxiosArgs.url };
                 return axios.request(axiosRequestArgs);
             };
         },
@@ -13143,7 +13143,7 @@ export const DefaultApiFp = function(configuration?: Configuration) {
         eacpV1Auth1CheckuninstallpwdPost(auth1CheckuninstallpwdReq?: Auth1CheckuninstallpwdReq, options?: any): (axios?: AxiosInstance, basePath?: string) => AxiosPromise<Auth1CheckuninstallpwdRes> {
             const localVarAxiosArgs = DefaultApiAxiosParamCreator(configuration).eacpV1Auth1CheckuninstallpwdPost(auth1CheckuninstallpwdReq, options);
             return (axios: AxiosInstance = globalAxios, basePath: string = BASE_PATH) => {
-                const axiosRequestArgs = {...localVarAxiosArgs.options, url: basePath + localVarAxiosArgs.url};
+                const axiosRequestArgs = { ...localVarAxiosArgs.options, url: basePath + localVarAxiosArgs.url };
                 return axios.request(axiosRequestArgs);
             };
         },
@@ -13156,7 +13156,7 @@ export const DefaultApiFp = function(configuration?: Configuration) {
         eacpV1Auth1GetconfigPost(options?: any): (axios?: AxiosInstance, basePath?: string) => AxiosPromise<Auth1GetconfigRes> {
             const localVarAxiosArgs = DefaultApiAxiosParamCreator(configuration).eacpV1Auth1GetconfigPost(options);
             return (axios: AxiosInstance = globalAxios, basePath: string = BASE_PATH) => {
-                const axiosRequestArgs = {...localVarAxiosArgs.options, url: basePath + localVarAxiosArgs.url};
+                const axiosRequestArgs = { ...localVarAxiosArgs.options, url: basePath + localVarAxiosArgs.url };
                 return axios.request(axiosRequestArgs);
             };
         },
@@ -13170,7 +13170,7 @@ export const DefaultApiFp = function(configuration?: Configuration) {
         eacpV1Auth1GetvcodePost(auth1GetvcodeReq?: Auth1GetvcodeReq, options?: any): (axios?: AxiosInstance, basePath?: string) => AxiosPromise<Auth1GetvcodeRes> {
             const localVarAxiosArgs = DefaultApiAxiosParamCreator(configuration).eacpV1Auth1GetvcodePost(auth1GetvcodeReq, options);
             return (axios: AxiosInstance = globalAxios, basePath: string = BASE_PATH) => {
-                const axiosRequestArgs = {...localVarAxiosArgs.options, url: basePath + localVarAxiosArgs.url};
+                const axiosRequestArgs = { ...localVarAxiosArgs.options, url: basePath + localVarAxiosArgs.url };
                 return axios.request(axiosRequestArgs);
             };
         },
@@ -13185,7 +13185,7 @@ export const DefaultApiFp = function(configuration?: Configuration) {
         eacpV1Auth1ModifypasswordPost(sign?: string, auth1ModifypasswordReq?: Auth1ModifypasswordReq, options?: any): (axios?: AxiosInstance, basePath?: string) => AxiosPromise<object> {
             const localVarAxiosArgs = DefaultApiAxiosParamCreator(configuration).eacpV1Auth1ModifypasswordPost(sign, auth1ModifypasswordReq, options);
             return (axios: AxiosInstance = globalAxios, basePath: string = BASE_PATH) => {
-                const axiosRequestArgs = {...localVarAxiosArgs.options, url: basePath + localVarAxiosArgs.url};
+                const axiosRequestArgs = { ...localVarAxiosArgs.options, url: basePath + localVarAxiosArgs.url };
                 return axios.request(axiosRequestArgs);
             };
         },
@@ -13199,7 +13199,7 @@ export const DefaultApiFp = function(configuration?: Configuration) {
         eacpV1Auth1SelfregistrationPost(auth1SelfregistrationReq?: Auth1SelfregistrationReq, options?: any): (axios?: AxiosInstance, basePath?: string) => AxiosPromise<Auth1SelfregistrationRes> {
             const localVarAxiosArgs = DefaultApiAxiosParamCreator(configuration).eacpV1Auth1SelfregistrationPost(auth1SelfregistrationReq, options);
             return (axios: AxiosInstance = globalAxios, basePath: string = BASE_PATH) => {
-                const axiosRequestArgs = {...localVarAxiosArgs.options, url: basePath + localVarAxiosArgs.url};
+                const axiosRequestArgs = { ...localVarAxiosArgs.options, url: basePath + localVarAxiosArgs.url };
                 return axios.request(axiosRequestArgs);
             };
         },
@@ -13213,7 +13213,7 @@ export const DefaultApiFp = function(configuration?: Configuration) {
         eacpV1Auth1SendauthvcodePost(auth1SendauthvcodeReq?: Auth1SendauthvcodeReq, options?: any): (axios?: AxiosInstance, basePath?: string) => AxiosPromise<Auth1SendauthvcodeRes> {
             const localVarAxiosArgs = DefaultApiAxiosParamCreator(configuration).eacpV1Auth1SendauthvcodePost(auth1SendauthvcodeReq, options);
             return (axios: AxiosInstance = globalAxios, basePath: string = BASE_PATH) => {
-                const axiosRequestArgs = {...localVarAxiosArgs.options, url: basePath + localVarAxiosArgs.url};
+                const axiosRequestArgs = { ...localVarAxiosArgs.options, url: basePath + localVarAxiosArgs.url };
                 return axios.request(axiosRequestArgs);
             };
         },
@@ -13227,7 +13227,7 @@ export const DefaultApiFp = function(configuration?: Configuration) {
         eacpV1Auth1ValidatesecuritydevicePost(auth1ValidatesecuritydeviceReq?: Auth1ValidatesecuritydeviceReq, options?: any): (axios?: AxiosInstance, basePath?: string) => AxiosPromise<Auth1ValidatesecuritydeviceRes> {
             const localVarAxiosArgs = DefaultApiAxiosParamCreator(configuration).eacpV1Auth1ValidatesecuritydevicePost(auth1ValidatesecuritydeviceReq, options);
             return (axios: AxiosInstance = globalAxios, basePath: string = BASE_PATH) => {
-                const axiosRequestArgs = {...localVarAxiosArgs.options, url: basePath + localVarAxiosArgs.url};
+                const axiosRequestArgs = { ...localVarAxiosArgs.options, url: basePath + localVarAxiosArgs.url };
                 return axios.request(axiosRequestArgs);
             };
         },
@@ -13241,7 +13241,7 @@ export const DefaultApiFp = function(configuration?: Configuration) {
         eacpV1AutolockGetdirlockinfoPost(autolockGetdirlockinfoReq?: AutolockGetdirlockinfoReq, options?: any): (axios?: AxiosInstance, basePath?: string) => AxiosPromise<AutolockGetdirlockinfoRes> {
             const localVarAxiosArgs = DefaultApiAxiosParamCreator(configuration).eacpV1AutolockGetdirlockinfoPost(autolockGetdirlockinfoReq, options);
             return (axios: AxiosInstance = globalAxios, basePath: string = BASE_PATH) => {
-                const axiosRequestArgs = {...localVarAxiosArgs.options, url: basePath + localVarAxiosArgs.url};
+                const axiosRequestArgs = { ...localVarAxiosArgs.options, url: basePath + localVarAxiosArgs.url };
                 return axios.request(axiosRequestArgs);
             };
         },
@@ -13255,7 +13255,7 @@ export const DefaultApiFp = function(configuration?: Configuration) {
         eacpV1AutolockGetlockedfileinfosPost(autolockGetlockedfileinfosReq?: AutolockGetlockedfileinfosReq, options?: any): (axios?: AxiosInstance, basePath?: string) => AxiosPromise<AutolockGetlockedfileinfosRes> {
             const localVarAxiosArgs = DefaultApiAxiosParamCreator(configuration).eacpV1AutolockGetlockedfileinfosPost(autolockGetlockedfileinfosReq, options);
             return (axios: AxiosInstance = globalAxios, basePath: string = BASE_PATH) => {
-                const axiosRequestArgs = {...localVarAxiosArgs.options, url: basePath + localVarAxiosArgs.url};
+                const axiosRequestArgs = { ...localVarAxiosArgs.options, url: basePath + localVarAxiosArgs.url };
                 return axios.request(axiosRequestArgs);
             };
         },
@@ -13269,7 +13269,7 @@ export const DefaultApiFp = function(configuration?: Configuration) {
         eacpV1AutolockGetlockinfoPost(autolockGetlockinfoReq?: AutolockGetlockinfoReq, options?: any): (axios?: AxiosInstance, basePath?: string) => AxiosPromise<AutolockGetlockinfoRes> {
             const localVarAxiosArgs = DefaultApiAxiosParamCreator(configuration).eacpV1AutolockGetlockinfoPost(autolockGetlockinfoReq, options);
             return (axios: AxiosInstance = globalAxios, basePath: string = BASE_PATH) => {
-                const axiosRequestArgs = {...localVarAxiosArgs.options, url: basePath + localVarAxiosArgs.url};
+                const axiosRequestArgs = { ...localVarAxiosArgs.options, url: basePath + localVarAxiosArgs.url };
                 return axios.request(axiosRequestArgs);
             };
         },
@@ -13283,7 +13283,7 @@ export const DefaultApiFp = function(configuration?: Configuration) {
         eacpV1AutolockLockPost(autolockLockReq?: AutolockLockReq, options?: any): (axios?: AxiosInstance, basePath?: string) => AxiosPromise<object> {
             const localVarAxiosArgs = DefaultApiAxiosParamCreator(configuration).eacpV1AutolockLockPost(autolockLockReq, options);
             return (axios: AxiosInstance = globalAxios, basePath: string = BASE_PATH) => {
-                const axiosRequestArgs = {...localVarAxiosArgs.options, url: basePath + localVarAxiosArgs.url};
+                const axiosRequestArgs = { ...localVarAxiosArgs.options, url: basePath + localVarAxiosArgs.url };
                 return axios.request(axiosRequestArgs);
             };
         },
@@ -13297,7 +13297,7 @@ export const DefaultApiFp = function(configuration?: Configuration) {
         eacpV1AutolockRefreshPost(autolockRefreshReq?: AutolockRefreshReq, options?: any): (axios?: AxiosInstance, basePath?: string) => AxiosPromise<AutolockRefreshRes> {
             const localVarAxiosArgs = DefaultApiAxiosParamCreator(configuration).eacpV1AutolockRefreshPost(autolockRefreshReq, options);
             return (axios: AxiosInstance = globalAxios, basePath: string = BASE_PATH) => {
-                const axiosRequestArgs = {...localVarAxiosArgs.options, url: basePath + localVarAxiosArgs.url};
+                const axiosRequestArgs = { ...localVarAxiosArgs.options, url: basePath + localVarAxiosArgs.url };
                 return axios.request(axiosRequestArgs);
             };
         },
@@ -13311,7 +13311,7 @@ export const DefaultApiFp = function(configuration?: Configuration) {
         eacpV1AutolockTrylockPost(autolockTrylockReq?: AutolockTrylockReq, options?: any): (axios?: AxiosInstance, basePath?: string) => AxiosPromise<AutolockTrylockRes> {
             const localVarAxiosArgs = DefaultApiAxiosParamCreator(configuration).eacpV1AutolockTrylockPost(autolockTrylockReq, options);
             return (axios: AxiosInstance = globalAxios, basePath: string = BASE_PATH) => {
-                const axiosRequestArgs = {...localVarAxiosArgs.options, url: basePath + localVarAxiosArgs.url};
+                const axiosRequestArgs = { ...localVarAxiosArgs.options, url: basePath + localVarAxiosArgs.url };
                 return axios.request(axiosRequestArgs);
             };
         },
@@ -13325,7 +13325,7 @@ export const DefaultApiFp = function(configuration?: Configuration) {
         eacpV1AutolockUnlockPost(autolockUnlockReq?: AutolockUnlockReq, options?: any): (axios?: AxiosInstance, basePath?: string) => AxiosPromise<object> {
             const localVarAxiosArgs = DefaultApiAxiosParamCreator(configuration).eacpV1AutolockUnlockPost(autolockUnlockReq, options);
             return (axios: AxiosInstance = globalAxios, basePath: string = BASE_PATH) => {
-                const axiosRequestArgs = {...localVarAxiosArgs.options, url: basePath + localVarAxiosArgs.url};
+                const axiosRequestArgs = { ...localVarAxiosArgs.options, url: basePath + localVarAxiosArgs.url };
                 return axios.request(axiosRequestArgs);
             };
         },
@@ -13339,7 +13339,7 @@ export const DefaultApiFp = function(configuration?: Configuration) {
         eacpV1ConfigGetPost(configGetReq?: ConfigGetReq, options?: any): (axios?: AxiosInstance, basePath?: string) => AxiosPromise<ConfigGetRes> {
             const localVarAxiosArgs = DefaultApiAxiosParamCreator(configuration).eacpV1ConfigGetPost(configGetReq, options);
             return (axios: AxiosInstance = globalAxios, basePath: string = BASE_PATH) => {
-                const axiosRequestArgs = {...localVarAxiosArgs.options, url: basePath + localVarAxiosArgs.url};
+                const axiosRequestArgs = { ...localVarAxiosArgs.options, url: basePath + localVarAxiosArgs.url };
                 return axios.request(axiosRequestArgs);
             };
         },
@@ -13353,7 +13353,7 @@ export const DefaultApiFp = function(configuration?: Configuration) {
         eacpV1ConfigGetoemconfigbysectionPost(configGetoemconfigbysectionReq?: ConfigGetoemconfigbysectionReq, options?: any): (axios?: AxiosInstance, basePath?: string) => AxiosPromise<ConfigGetoemconfigbysectionRes> {
             const localVarAxiosArgs = DefaultApiAxiosParamCreator(configuration).eacpV1ConfigGetoemconfigbysectionPost(configGetoemconfigbysectionReq, options);
             return (axios: AxiosInstance = globalAxios, basePath: string = BASE_PATH) => {
-                const axiosRequestArgs = {...localVarAxiosArgs.options, url: basePath + localVarAxiosArgs.url};
+                const axiosRequestArgs = { ...localVarAxiosArgs.options, url: basePath + localVarAxiosArgs.url };
                 return axios.request(axiosRequestArgs);
             };
         },
@@ -13367,7 +13367,7 @@ export const DefaultApiFp = function(configuration?: Configuration) {
         eacpV1ContactorAddgroupPost(contactorAddgroupReq?: ContactorAddgroupReq, options?: any): (axios?: AxiosInstance, basePath?: string) => AxiosPromise<ContactorAddgroupRes> {
             const localVarAxiosArgs = DefaultApiAxiosParamCreator(configuration).eacpV1ContactorAddgroupPost(contactorAddgroupReq, options);
             return (axios: AxiosInstance = globalAxios, basePath: string = BASE_PATH) => {
-                const axiosRequestArgs = {...localVarAxiosArgs.options, url: basePath + localVarAxiosArgs.url};
+                const axiosRequestArgs = { ...localVarAxiosArgs.options, url: basePath + localVarAxiosArgs.url };
                 return axios.request(axiosRequestArgs);
             };
         },
@@ -13381,7 +13381,7 @@ export const DefaultApiFp = function(configuration?: Configuration) {
         eacpV1ContactorAddpersonsPost(contactorAddpersonsReq?: ContactorAddpersonsReq, options?: any): (axios?: AxiosInstance, basePath?: string) => AxiosPromise<object> {
             const localVarAxiosArgs = DefaultApiAxiosParamCreator(configuration).eacpV1ContactorAddpersonsPost(contactorAddpersonsReq, options);
             return (axios: AxiosInstance = globalAxios, basePath: string = BASE_PATH) => {
-                const axiosRequestArgs = {...localVarAxiosArgs.options, url: basePath + localVarAxiosArgs.url};
+                const axiosRequestArgs = { ...localVarAxiosArgs.options, url: basePath + localVarAxiosArgs.url };
                 return axios.request(axiosRequestArgs);
             };
         },
@@ -13395,7 +13395,7 @@ export const DefaultApiFp = function(configuration?: Configuration) {
         eacpV1ContactorDeletegroupPost(contactorDeletegroupReq?: ContactorDeletegroupReq, options?: any): (axios?: AxiosInstance, basePath?: string) => AxiosPromise<object> {
             const localVarAxiosArgs = DefaultApiAxiosParamCreator(configuration).eacpV1ContactorDeletegroupPost(contactorDeletegroupReq, options);
             return (axios: AxiosInstance = globalAxios, basePath: string = BASE_PATH) => {
-                const axiosRequestArgs = {...localVarAxiosArgs.options, url: basePath + localVarAxiosArgs.url};
+                const axiosRequestArgs = { ...localVarAxiosArgs.options, url: basePath + localVarAxiosArgs.url };
                 return axios.request(axiosRequestArgs);
             };
         },
@@ -13409,7 +13409,7 @@ export const DefaultApiFp = function(configuration?: Configuration) {
         eacpV1ContactorDeletepersonsPost(contactorDeletepersonsReq?: ContactorDeletepersonsReq, options?: any): (axios?: AxiosInstance, basePath?: string) => AxiosPromise<object> {
             const localVarAxiosArgs = DefaultApiAxiosParamCreator(configuration).eacpV1ContactorDeletepersonsPost(contactorDeletepersonsReq, options);
             return (axios: AxiosInstance = globalAxios, basePath: string = BASE_PATH) => {
-                const axiosRequestArgs = {...localVarAxiosArgs.options, url: basePath + localVarAxiosArgs.url};
+                const axiosRequestArgs = { ...localVarAxiosArgs.options, url: basePath + localVarAxiosArgs.url };
                 return axios.request(axiosRequestArgs);
             };
         },
@@ -13423,7 +13423,7 @@ export const DefaultApiFp = function(configuration?: Configuration) {
         eacpV1ContactorEditgroupPost(contactorEditgroupReq?: ContactorEditgroupReq, options?: any): (axios?: AxiosInstance, basePath?: string) => AxiosPromise<object> {
             const localVarAxiosArgs = DefaultApiAxiosParamCreator(configuration).eacpV1ContactorEditgroupPost(contactorEditgroupReq, options);
             return (axios: AxiosInstance = globalAxios, basePath: string = BASE_PATH) => {
-                const axiosRequestArgs = {...localVarAxiosArgs.options, url: basePath + localVarAxiosArgs.url};
+                const axiosRequestArgs = { ...localVarAxiosArgs.options, url: basePath + localVarAxiosArgs.url };
                 return axios.request(axiosRequestArgs);
             };
         },
@@ -13437,7 +13437,7 @@ export const DefaultApiFp = function(configuration?: Configuration) {
         eacpV1ContactorGetPost(contactorGetReq?: ContactorGetReq, options?: any): (axios?: AxiosInstance, basePath?: string) => AxiosPromise<ContactorGetRes> {
             const localVarAxiosArgs = DefaultApiAxiosParamCreator(configuration).eacpV1ContactorGetPost(contactorGetReq, options);
             return (axios: AxiosInstance = globalAxios, basePath: string = BASE_PATH) => {
-                const axiosRequestArgs = {...localVarAxiosArgs.options, url: basePath + localVarAxiosArgs.url};
+                const axiosRequestArgs = { ...localVarAxiosArgs.options, url: basePath + localVarAxiosArgs.url };
                 return axios.request(axiosRequestArgs);
             };
         },
@@ -13450,7 +13450,7 @@ export const DefaultApiFp = function(configuration?: Configuration) {
         eacpV1ContactorGetgroupsPost(options?: any): (axios?: AxiosInstance, basePath?: string) => AxiosPromise<ContactorGetgroupsRes> {
             const localVarAxiosArgs = DefaultApiAxiosParamCreator(configuration).eacpV1ContactorGetgroupsPost(options);
             return (axios: AxiosInstance = globalAxios, basePath: string = BASE_PATH) => {
-                const axiosRequestArgs = {...localVarAxiosArgs.options, url: basePath + localVarAxiosArgs.url};
+                const axiosRequestArgs = { ...localVarAxiosArgs.options, url: basePath + localVarAxiosArgs.url };
                 return axios.request(axiosRequestArgs);
             };
         },
@@ -13464,7 +13464,7 @@ export const DefaultApiFp = function(configuration?: Configuration) {
         eacpV1ContactorGetpersonsPost(contactorGetpersonsReq?: ContactorGetpersonsReq, options?: any): (axios?: AxiosInstance, basePath?: string) => AxiosPromise<ContactorGetpersonsRes> {
             const localVarAxiosArgs = DefaultApiAxiosParamCreator(configuration).eacpV1ContactorGetpersonsPost(contactorGetpersonsReq, options);
             return (axios: AxiosInstance = globalAxios, basePath: string = BASE_PATH) => {
-                const axiosRequestArgs = {...localVarAxiosArgs.options, url: basePath + localVarAxiosArgs.url};
+                const axiosRequestArgs = { ...localVarAxiosArgs.options, url: basePath + localVarAxiosArgs.url };
                 return axios.request(axiosRequestArgs);
             };
         },
@@ -13478,7 +13478,7 @@ export const DefaultApiFp = function(configuration?: Configuration) {
         eacpV1ContactorSearchPost(contactorSearchReq?: ContactorSearchReq, options?: any): (axios?: AxiosInstance, basePath?: string) => AxiosPromise<ContactorSearchRes> {
             const localVarAxiosArgs = DefaultApiAxiosParamCreator(configuration).eacpV1ContactorSearchPost(contactorSearchReq, options);
             return (axios: AxiosInstance = globalAxios, basePath: string = BASE_PATH) => {
-                const axiosRequestArgs = {...localVarAxiosArgs.options, url: basePath + localVarAxiosArgs.url};
+                const axiosRequestArgs = { ...localVarAxiosArgs.options, url: basePath + localVarAxiosArgs.url };
                 return axios.request(axiosRequestArgs);
             };
         },
@@ -13492,7 +13492,7 @@ export const DefaultApiFp = function(configuration?: Configuration) {
         eacpV1ContactorSearchcountPost(contactorSearchcountReq?: ContactorSearchcountReq, options?: any): (axios?: AxiosInstance, basePath?: string) => AxiosPromise<ContactorSearchcountRes> {
             const localVarAxiosArgs = DefaultApiAxiosParamCreator(configuration).eacpV1ContactorSearchcountPost(contactorSearchcountReq, options);
             return (axios: AxiosInstance = globalAxios, basePath: string = BASE_PATH) => {
-                const axiosRequestArgs = {...localVarAxiosArgs.options, url: basePath + localVarAxiosArgs.url};
+                const axiosRequestArgs = { ...localVarAxiosArgs.options, url: basePath + localVarAxiosArgs.url };
                 return axios.request(axiosRequestArgs);
             };
         },
@@ -13506,7 +13506,7 @@ export const DefaultApiFp = function(configuration?: Configuration) {
         eacpV1ContactorSearchpersonsPost(contactorSearchpersonsReq?: ContactorSearchpersonsReq, options?: any): (axios?: AxiosInstance, basePath?: string) => AxiosPromise<ContactorSearchpersonsRes> {
             const localVarAxiosArgs = DefaultApiAxiosParamCreator(configuration).eacpV1ContactorSearchpersonsPost(contactorSearchpersonsReq, options);
             return (axios: AxiosInstance = globalAxios, basePath: string = BASE_PATH) => {
-                const axiosRequestArgs = {...localVarAxiosArgs.options, url: basePath + localVarAxiosArgs.url};
+                const axiosRequestArgs = { ...localVarAxiosArgs.options, url: basePath + localVarAxiosArgs.url };
                 return axios.request(axiosRequestArgs);
             };
         },
@@ -13520,7 +13520,7 @@ export const DefaultApiFp = function(configuration?: Configuration) {
         eacpV1DepartmentGetbasicinfoPost(rootTypeForDepartmentGetbasicinfoReq?: RootTypeForDepartmentGetbasicinfoReq, options?: any): (axios?: AxiosInstance, basePath?: string) => AxiosPromise<RootTypeForDepartmentGetbasicinfoRes> {
             const localVarAxiosArgs = DefaultApiAxiosParamCreator(configuration).eacpV1DepartmentGetbasicinfoPost(rootTypeForDepartmentGetbasicinfoReq, options);
             return (axios: AxiosInstance = globalAxios, basePath: string = BASE_PATH) => {
-                const axiosRequestArgs = {...localVarAxiosArgs.options, url: basePath + localVarAxiosArgs.url};
+                const axiosRequestArgs = { ...localVarAxiosArgs.options, url: basePath + localVarAxiosArgs.url };
                 return axios.request(axiosRequestArgs);
             };
         },
@@ -13533,7 +13533,7 @@ export const DefaultApiFp = function(configuration?: Configuration) {
         eacpV1DepartmentGetrootsPost(options?: any): (axios?: AxiosInstance, basePath?: string) => AxiosPromise<DepartmentGetrootsRes> {
             const localVarAxiosArgs = DefaultApiAxiosParamCreator(configuration).eacpV1DepartmentGetrootsPost(options);
             return (axios: AxiosInstance = globalAxios, basePath: string = BASE_PATH) => {
-                const axiosRequestArgs = {...localVarAxiosArgs.options, url: basePath + localVarAxiosArgs.url};
+                const axiosRequestArgs = { ...localVarAxiosArgs.options, url: basePath + localVarAxiosArgs.url };
                 return axios.request(axiosRequestArgs);
             };
         },
@@ -13547,7 +13547,7 @@ export const DefaultApiFp = function(configuration?: Configuration) {
         eacpV1DepartmentGetsubdepsPost(departmentGetsubusersReq?: DepartmentGetsubusersReq, options?: any): (axios?: AxiosInstance, basePath?: string) => AxiosPromise<DepartmentGetsubdepsRes> {
             const localVarAxiosArgs = DefaultApiAxiosParamCreator(configuration).eacpV1DepartmentGetsubdepsPost(departmentGetsubusersReq, options);
             return (axios: AxiosInstance = globalAxios, basePath: string = BASE_PATH) => {
-                const axiosRequestArgs = {...localVarAxiosArgs.options, url: basePath + localVarAxiosArgs.url};
+                const axiosRequestArgs = { ...localVarAxiosArgs.options, url: basePath + localVarAxiosArgs.url };
                 return axios.request(axiosRequestArgs);
             };
         },
@@ -13561,7 +13561,7 @@ export const DefaultApiFp = function(configuration?: Configuration) {
         eacpV1DepartmentGetsubusersPost(departmentGetsubusersReq?: DepartmentGetsubusersReq, options?: any): (axios?: AxiosInstance, basePath?: string) => AxiosPromise<DepartmentGetsubusersRes> {
             const localVarAxiosArgs = DefaultApiAxiosParamCreator(configuration).eacpV1DepartmentGetsubusersPost(departmentGetsubusersReq, options);
             return (axios: AxiosInstance = globalAxios, basePath: string = BASE_PATH) => {
-                const axiosRequestArgs = {...localVarAxiosArgs.options, url: basePath + localVarAxiosArgs.url};
+                const axiosRequestArgs = { ...localVarAxiosArgs.options, url: basePath + localVarAxiosArgs.url };
                 return axios.request(axiosRequestArgs);
             };
         },
@@ -13575,7 +13575,7 @@ export const DefaultApiFp = function(configuration?: Configuration) {
         eacpV1DepartmentSearchPost(departmentSearchReq?: DepartmentSearchReq, options?: any): (axios?: AxiosInstance, basePath?: string) => AxiosPromise<DepartmentSearchRes> {
             const localVarAxiosArgs = DefaultApiAxiosParamCreator(configuration).eacpV1DepartmentSearchPost(departmentSearchReq, options);
             return (axios: AxiosInstance = globalAxios, basePath: string = BASE_PATH) => {
-                const axiosRequestArgs = {...localVarAxiosArgs.options, url: basePath + localVarAxiosArgs.url};
+                const axiosRequestArgs = { ...localVarAxiosArgs.options, url: basePath + localVarAxiosArgs.url };
                 return axios.request(axiosRequestArgs);
             };
         },
@@ -13589,7 +13589,7 @@ export const DefaultApiFp = function(configuration?: Configuration) {
         eacpV1DepartmentSearchcountPost(departmentSearchcountReq?: DepartmentSearchcountReq, options?: any): (axios?: AxiosInstance, basePath?: string) => AxiosPromise<DepartmentSearchcountRes> {
             const localVarAxiosArgs = DefaultApiAxiosParamCreator(configuration).eacpV1DepartmentSearchcountPost(departmentSearchcountReq, options);
             return (axios: AxiosInstance = globalAxios, basePath: string = BASE_PATH) => {
-                const axiosRequestArgs = {...localVarAxiosArgs.options, url: basePath + localVarAxiosArgs.url};
+                const axiosRequestArgs = { ...localVarAxiosArgs.options, url: basePath + localVarAxiosArgs.url };
                 return axios.request(axiosRequestArgs);
             };
         },
@@ -13603,7 +13603,7 @@ export const DefaultApiFp = function(configuration?: Configuration) {
         eacpV1DeviceDisablePost(deviceDisableReq?: DeviceDisableReq, options?: any): (axios?: AxiosInstance, basePath?: string) => AxiosPromise<object> {
             const localVarAxiosArgs = DefaultApiAxiosParamCreator(configuration).eacpV1DeviceDisablePost(deviceDisableReq, options);
             return (axios: AxiosInstance = globalAxios, basePath: string = BASE_PATH) => {
-                const axiosRequestArgs = {...localVarAxiosArgs.options, url: basePath + localVarAxiosArgs.url};
+                const axiosRequestArgs = { ...localVarAxiosArgs.options, url: basePath + localVarAxiosArgs.url };
                 return axios.request(axiosRequestArgs);
             };
         },
@@ -13617,7 +13617,7 @@ export const DefaultApiFp = function(configuration?: Configuration) {
         eacpV1DeviceEnablePost(deviceEnableReq?: DeviceEnableReq, options?: any): (axios?: AxiosInstance, basePath?: string) => AxiosPromise<object> {
             const localVarAxiosArgs = DefaultApiAxiosParamCreator(configuration).eacpV1DeviceEnablePost(deviceEnableReq, options);
             return (axios: AxiosInstance = globalAxios, basePath: string = BASE_PATH) => {
-                const axiosRequestArgs = {...localVarAxiosArgs.options, url: basePath + localVarAxiosArgs.url};
+                const axiosRequestArgs = { ...localVarAxiosArgs.options, url: basePath + localVarAxiosArgs.url };
                 return axios.request(axiosRequestArgs);
             };
         },
@@ -13631,7 +13631,7 @@ export const DefaultApiFp = function(configuration?: Configuration) {
         eacpV1DeviceErasePost(deviceEraseReq?: DeviceEraseReq, options?: any): (axios?: AxiosInstance, basePath?: string) => AxiosPromise<object> {
             const localVarAxiosArgs = DefaultApiAxiosParamCreator(configuration).eacpV1DeviceErasePost(deviceEraseReq, options);
             return (axios: AxiosInstance = globalAxios, basePath: string = BASE_PATH) => {
-                const axiosRequestArgs = {...localVarAxiosArgs.options, url: basePath + localVarAxiosArgs.url};
+                const axiosRequestArgs = { ...localVarAxiosArgs.options, url: basePath + localVarAxiosArgs.url };
                 return axios.request(axiosRequestArgs);
             };
         },
@@ -13645,7 +13645,7 @@ export const DefaultApiFp = function(configuration?: Configuration) {
         eacpV1DeviceGetstatusPost(deviceGetstatusReq?: DeviceGetstatusReq, options?: any): (axios?: AxiosInstance, basePath?: string) => AxiosPromise<DeviceGetstatusRes> {
             const localVarAxiosArgs = DefaultApiAxiosParamCreator(configuration).eacpV1DeviceGetstatusPost(deviceGetstatusReq, options);
             return (axios: AxiosInstance = globalAxios, basePath: string = BASE_PATH) => {
-                const axiosRequestArgs = {...localVarAxiosArgs.options, url: basePath + localVarAxiosArgs.url};
+                const axiosRequestArgs = { ...localVarAxiosArgs.options, url: basePath + localVarAxiosArgs.url };
                 return axios.request(axiosRequestArgs);
             };
         },
@@ -13658,7 +13658,7 @@ export const DefaultApiFp = function(configuration?: Configuration) {
         eacpV1DeviceListPost(options?: any): (axios?: AxiosInstance, basePath?: string) => AxiosPromise<DeviceListRes> {
             const localVarAxiosArgs = DefaultApiAxiosParamCreator(configuration).eacpV1DeviceListPost(options);
             return (axios: AxiosInstance = globalAxios, basePath: string = BASE_PATH) => {
-                const axiosRequestArgs = {...localVarAxiosArgs.options, url: basePath + localVarAxiosArgs.url};
+                const axiosRequestArgs = { ...localVarAxiosArgs.options, url: basePath + localVarAxiosArgs.url };
                 return axios.request(axiosRequestArgs);
             };
         },
@@ -13673,7 +13673,7 @@ export const DefaultApiFp = function(configuration?: Configuration) {
         eacpV1DeviceOnerasesucPost(userid: string, deviceOnerasesucReq?: DeviceOnerasesucReq, options?: any): (axios?: AxiosInstance, basePath?: string) => AxiosPromise<object> {
             const localVarAxiosArgs = DefaultApiAxiosParamCreator(configuration).eacpV1DeviceOnerasesucPost(userid, deviceOnerasesucReq, options);
             return (axios: AxiosInstance = globalAxios, basePath: string = BASE_PATH) => {
-                const axiosRequestArgs = {...localVarAxiosArgs.options, url: basePath + localVarAxiosArgs.url};
+                const axiosRequestArgs = { ...localVarAxiosArgs.options, url: basePath + localVarAxiosArgs.url };
                 return axios.request(axiosRequestArgs);
             };
         },
@@ -13687,7 +13687,7 @@ export const DefaultApiFp = function(configuration?: Configuration) {
         eacpV1MessageGetPost(messageGetReq?: MessageGetReq, options?: any): (axios?: AxiosInstance, basePath?: string) => AxiosPromise<MessageGetRes> {
             const localVarAxiosArgs = DefaultApiAxiosParamCreator(configuration).eacpV1MessageGetPost(messageGetReq, options);
             return (axios: AxiosInstance = globalAxios, basePath: string = BASE_PATH) => {
-                const axiosRequestArgs = {...localVarAxiosArgs.options, url: basePath + localVarAxiosArgs.url};
+                const axiosRequestArgs = { ...localVarAxiosArgs.options, url: basePath + localVarAxiosArgs.url };
                 return axios.request(axiosRequestArgs);
             };
         },
@@ -13701,7 +13701,7 @@ export const DefaultApiFp = function(configuration?: Configuration) {
         eacpV1MessageRead2Post(messageRead2Req?: MessageRead2Req, options?: any): (axios?: AxiosInstance, basePath?: string) => AxiosPromise<object> {
             const localVarAxiosArgs = DefaultApiAxiosParamCreator(configuration).eacpV1MessageRead2Post(messageRead2Req, options);
             return (axios: AxiosInstance = globalAxios, basePath: string = BASE_PATH) => {
-                const axiosRequestArgs = {...localVarAxiosArgs.options, url: basePath + localVarAxiosArgs.url};
+                const axiosRequestArgs = { ...localVarAxiosArgs.options, url: basePath + localVarAxiosArgs.url };
                 return axios.request(axiosRequestArgs);
             };
         },
@@ -13715,7 +13715,7 @@ export const DefaultApiFp = function(configuration?: Configuration) {
         eacpV1MessageSendmailPost(messageSendmailReq?: MessageSendmailReq, options?: any): (axios?: AxiosInstance, basePath?: string) => AxiosPromise<object> {
             const localVarAxiosArgs = DefaultApiAxiosParamCreator(configuration).eacpV1MessageSendmailPost(messageSendmailReq, options);
             return (axios: AxiosInstance = globalAxios, basePath: string = BASE_PATH) => {
-                const axiosRequestArgs = {...localVarAxiosArgs.options, url: basePath + localVarAxiosArgs.url};
+                const axiosRequestArgs = { ...localVarAxiosArgs.options, url: basePath + localVarAxiosArgs.url };
                 return axios.request(axiosRequestArgs);
             };
         },
@@ -13729,7 +13729,7 @@ export const DefaultApiFp = function(configuration?: Configuration) {
         eacpV1OwnerAddPost(ownerAddReq?: OwnerAddReq, options?: any): (axios?: AxiosInstance, basePath?: string) => AxiosPromise<object> {
             const localVarAxiosArgs = DefaultApiAxiosParamCreator(configuration).eacpV1OwnerAddPost(ownerAddReq, options);
             return (axios: AxiosInstance = globalAxios, basePath: string = BASE_PATH) => {
-                const axiosRequestArgs = {...localVarAxiosArgs.options, url: basePath + localVarAxiosArgs.url};
+                const axiosRequestArgs = { ...localVarAxiosArgs.options, url: basePath + localVarAxiosArgs.url };
                 return axios.request(axiosRequestArgs);
             };
         },
@@ -13743,7 +13743,7 @@ export const DefaultApiFp = function(configuration?: Configuration) {
         eacpV1OwnerCheckPost(ownerCheckReq?: OwnerCheckReq, options?: any): (axios?: AxiosInstance, basePath?: string) => AxiosPromise<OwnerCheckRes> {
             const localVarAxiosArgs = DefaultApiAxiosParamCreator(configuration).eacpV1OwnerCheckPost(ownerCheckReq, options);
             return (axios: AxiosInstance = globalAxios, basePath: string = BASE_PATH) => {
-                const axiosRequestArgs = {...localVarAxiosArgs.options, url: basePath + localVarAxiosArgs.url};
+                const axiosRequestArgs = { ...localVarAxiosArgs.options, url: basePath + localVarAxiosArgs.url };
                 return axios.request(axiosRequestArgs);
             };
         },
@@ -13757,7 +13757,7 @@ export const DefaultApiFp = function(configuration?: Configuration) {
         eacpV1OwnerDeletePost(ownerDeleteReq?: OwnerDeleteReq, options?: any): (axios?: AxiosInstance, basePath?: string) => AxiosPromise<object> {
             const localVarAxiosArgs = DefaultApiAxiosParamCreator(configuration).eacpV1OwnerDeletePost(ownerDeleteReq, options);
             return (axios: AxiosInstance = globalAxios, basePath: string = BASE_PATH) => {
-                const axiosRequestArgs = {...localVarAxiosArgs.options, url: basePath + localVarAxiosArgs.url};
+                const axiosRequestArgs = { ...localVarAxiosArgs.options, url: basePath + localVarAxiosArgs.url };
                 return axios.request(axiosRequestArgs);
             };
         },
@@ -13771,7 +13771,7 @@ export const DefaultApiFp = function(configuration?: Configuration) {
         eacpV1OwnerGetPost(ownerGetReq?: OwnerGetReq, options?: any): (axios?: AxiosInstance, basePath?: string) => AxiosPromise<OwnerGetRes> {
             const localVarAxiosArgs = DefaultApiAxiosParamCreator(configuration).eacpV1OwnerGetPost(ownerGetReq, options);
             return (axios: AxiosInstance = globalAxios, basePath: string = BASE_PATH) => {
-                const axiosRequestArgs = {...localVarAxiosArgs.options, url: basePath + localVarAxiosArgs.url};
+                const axiosRequestArgs = { ...localVarAxiosArgs.options, url: basePath + localVarAxiosArgs.url };
                 return axios.request(axiosRequestArgs);
             };
         },
@@ -13785,7 +13785,7 @@ export const DefaultApiFp = function(configuration?: Configuration) {
         eacpV1OwnerSetPost(ownerSetReq?: OwnerSetReq, options?: any): (axios?: AxiosInstance, basePath?: string) => AxiosPromise<OwnerSetRes> {
             const localVarAxiosArgs = DefaultApiAxiosParamCreator(configuration).eacpV1OwnerSetPost(ownerSetReq, options);
             return (axios: AxiosInstance = globalAxios, basePath: string = BASE_PATH) => {
-                const axiosRequestArgs = {...localVarAxiosArgs.options, url: basePath + localVarAxiosArgs.url};
+                const axiosRequestArgs = { ...localVarAxiosArgs.options, url: basePath + localVarAxiosArgs.url };
                 return axios.request(axiosRequestArgs);
             };
         },
@@ -13799,7 +13799,7 @@ export const DefaultApiFp = function(configuration?: Configuration) {
         eacpV1Perm1CheckPost(perm1CheckReq?: Perm1CheckReq, options?: any): (axios?: AxiosInstance, basePath?: string) => AxiosPromise<Perm1CheckRes> {
             const localVarAxiosArgs = DefaultApiAxiosParamCreator(configuration).eacpV1Perm1CheckPost(perm1CheckReq, options);
             return (axios: AxiosInstance = globalAxios, basePath: string = BASE_PATH) => {
-                const axiosRequestArgs = {...localVarAxiosArgs.options, url: basePath + localVarAxiosArgs.url};
+                const axiosRequestArgs = { ...localVarAxiosArgs.options, url: basePath + localVarAxiosArgs.url };
                 return axios.request(axiosRequestArgs);
             };
         },
@@ -13813,7 +13813,7 @@ export const DefaultApiFp = function(configuration?: Configuration) {
         eacpV1Perm1CheckallPost(perm1CheckallReq?: Perm1CheckallReq, options?: any): (axios?: AxiosInstance, basePath?: string) => AxiosPromise<Perm1CheckallRes> {
             const localVarAxiosArgs = DefaultApiAxiosParamCreator(configuration).eacpV1Perm1CheckallPost(perm1CheckallReq, options);
             return (axios: AxiosInstance = globalAxios, basePath: string = BASE_PATH) => {
-                const axiosRequestArgs = {...localVarAxiosArgs.options, url: basePath + localVarAxiosArgs.url};
+                const axiosRequestArgs = { ...localVarAxiosArgs.options, url: basePath + localVarAxiosArgs.url };
                 return axios.request(axiosRequestArgs);
             };
         },
@@ -13826,7 +13826,7 @@ export const DefaultApiFp = function(configuration?: Configuration) {
         eacpV1Perm1GetsharedPost(options?: any): (axios?: AxiosInstance, basePath?: string) => AxiosPromise<Perm1GetsharedRes> {
             const localVarAxiosArgs = DefaultApiAxiosParamCreator(configuration).eacpV1Perm1GetsharedPost(options);
             return (axios: AxiosInstance = globalAxios, basePath: string = BASE_PATH) => {
-                const axiosRequestArgs = {...localVarAxiosArgs.options, url: basePath + localVarAxiosArgs.url};
+                const axiosRequestArgs = { ...localVarAxiosArgs.options, url: basePath + localVarAxiosArgs.url };
                 return axios.request(axiosRequestArgs);
             };
         },
@@ -13839,7 +13839,7 @@ export const DefaultApiFp = function(configuration?: Configuration) {
         eacpV1Perm1GetsharedocconfigPost(options?: any): (axios?: AxiosInstance, basePath?: string) => AxiosPromise<Perm1GetsharedocconfigRes> {
             const localVarAxiosArgs = DefaultApiAxiosParamCreator(configuration).eacpV1Perm1GetsharedocconfigPost(options);
             return (axios: AxiosInstance = globalAxios, basePath: string = BASE_PATH) => {
-                const axiosRequestArgs = {...localVarAxiosArgs.options, url: basePath + localVarAxiosArgs.url};
+                const axiosRequestArgs = { ...localVarAxiosArgs.options, url: basePath + localVarAxiosArgs.url };
                 return axios.request(axiosRequestArgs);
             };
         },
@@ -13853,7 +13853,7 @@ export const DefaultApiFp = function(configuration?: Configuration) {
         eacpV1Perm1ListPost(perm1ListReq?: Perm1ListReq, options?: any): (axios?: AxiosInstance, basePath?: string) => AxiosPromise<Perm1ListRes> {
             const localVarAxiosArgs = DefaultApiAxiosParamCreator(configuration).eacpV1Perm1ListPost(perm1ListReq, options);
             return (axios: AxiosInstance = globalAxios, basePath: string = BASE_PATH) => {
-                const axiosRequestArgs = {...localVarAxiosArgs.options, url: basePath + localVarAxiosArgs.url};
+                const axiosRequestArgs = { ...localVarAxiosArgs.options, url: basePath + localVarAxiosArgs.url };
                 return axios.request(axiosRequestArgs);
             };
         },
@@ -13867,7 +13867,7 @@ export const DefaultApiFp = function(configuration?: Configuration) {
         eacpV1Perm2GetPost(perm2GetReq?: Perm2GetReq, options?: any): (axios?: AxiosInstance, basePath?: string) => AxiosPromise<Perm2GetRes> {
             const localVarAxiosArgs = DefaultApiAxiosParamCreator(configuration).eacpV1Perm2GetPost(perm2GetReq, options);
             return (axios: AxiosInstance = globalAxios, basePath: string = BASE_PATH) => {
-                const axiosRequestArgs = {...localVarAxiosArgs.options, url: basePath + localVarAxiosArgs.url};
+                const axiosRequestArgs = { ...localVarAxiosArgs.options, url: basePath + localVarAxiosArgs.url };
                 return axios.request(axiosRequestArgs);
             };
         },
@@ -13881,7 +13881,7 @@ export const DefaultApiFp = function(configuration?: Configuration) {
         eacpV1Perm2SetPost(perm2SetReq?: Perm2SetReq, options?: any): (axios?: AxiosInstance, basePath?: string) => AxiosPromise<Perm2SetRes> {
             const localVarAxiosArgs = DefaultApiAxiosParamCreator(configuration).eacpV1Perm2SetPost(perm2SetReq, options);
             return (axios: AxiosInstance = globalAxios, basePath: string = BASE_PATH) => {
-                const axiosRequestArgs = {...localVarAxiosArgs.options, url: basePath + localVarAxiosArgs.url};
+                const axiosRequestArgs = { ...localVarAxiosArgs.options, url: basePath + localVarAxiosArgs.url };
                 return axios.request(axiosRequestArgs);
             };
         },
@@ -13894,7 +13894,7 @@ export const DefaultApiFp = function(configuration?: Configuration) {
         eacpV1UserAgreedtotermsofusePost(options?: any): (axios?: AxiosInstance, basePath?: string) => AxiosPromise<UserAgreedtotermsofuseRes> {
             const localVarAxiosArgs = DefaultApiAxiosParamCreator(configuration).eacpV1UserAgreedtotermsofusePost(options);
             return (axios: AxiosInstance = globalAxios, basePath: string = BASE_PATH) => {
-                const axiosRequestArgs = {...localVarAxiosArgs.options, url: basePath + localVarAxiosArgs.url};
+                const axiosRequestArgs = { ...localVarAxiosArgs.options, url: basePath + localVarAxiosArgs.url };
                 return axios.request(axiosRequestArgs);
             };
         },
@@ -13908,7 +13908,7 @@ export const DefaultApiFp = function(configuration?: Configuration) {
         eacpV1UserEditPost(userEditReq?: UserEditReq, options?: any): (axios?: AxiosInstance, basePath?: string) => AxiosPromise<object> {
             const localVarAxiosArgs = DefaultApiAxiosParamCreator(configuration).eacpV1UserEditPost(userEditReq, options);
             return (axios: AxiosInstance = globalAxios, basePath: string = BASE_PATH) => {
-                const axiosRequestArgs = {...localVarAxiosArgs.options, url: basePath + localVarAxiosArgs.url};
+                const axiosRequestArgs = { ...localVarAxiosArgs.options, url: basePath + localVarAxiosArgs.url };
                 return axios.request(axiosRequestArgs);
             };
         },
@@ -13921,7 +13921,7 @@ export const DefaultApiFp = function(configuration?: Configuration) {
         eacpV1UserGetPost(options?: any): (axios?: AxiosInstance, basePath?: string) => AxiosPromise<UserGetRes> {
             const localVarAxiosArgs = DefaultApiAxiosParamCreator(configuration).eacpV1UserGetPost(options);
             return (axios: AxiosInstance = globalAxios, basePath: string = BASE_PATH) => {
-                const axiosRequestArgs = {...localVarAxiosArgs.options, url: basePath + localVarAxiosArgs.url};
+                const axiosRequestArgs = { ...localVarAxiosArgs.options, url: basePath + localVarAxiosArgs.url };
                 return axios.request(axiosRequestArgs);
             };
         },
@@ -13935,7 +13935,7 @@ export const DefaultApiFp = function(configuration?: Configuration) {
         eacpV1UserGetbasicinfoPost(userGetbasicinfoReq?: UserGetbasicinfoReq, options?: any): (axios?: AxiosInstance, basePath?: string) => AxiosPromise<UserGetbasicinfoRes> {
             const localVarAxiosArgs = DefaultApiAxiosParamCreator(configuration).eacpV1UserGetbasicinfoPost(userGetbasicinfoReq, options);
             return (axios: AxiosInstance = globalAxios, basePath: string = BASE_PATH) => {
-                const axiosRequestArgs = {...localVarAxiosArgs.options, url: basePath + localVarAxiosArgs.url};
+                const axiosRequestArgs = { ...localVarAxiosArgs.options, url: basePath + localVarAxiosArgs.url };
                 return axios.request(axiosRequestArgs);
             };
         },
@@ -13948,7 +13948,7 @@ export const DefaultApiFp = function(configuration?: Configuration) {
         efastV1ClassifiedEntryDocLibsGet(options?: any): (axios?: AxiosInstance, basePath?: string) => AxiosPromise<Array<ClassifiedEntryDoc>> {
             const localVarAxiosArgs = DefaultApiAxiosParamCreator(configuration).efastV1ClassifiedEntryDocLibsGet(options);
             return (axios: AxiosInstance = globalAxios, basePath: string = BASE_PATH) => {
-                const axiosRequestArgs = {...localVarAxiosArgs.options, url: basePath + localVarAxiosArgs.url};
+                const axiosRequestArgs = { ...localVarAxiosArgs.options, url: basePath + localVarAxiosArgs.url };
                 return axios.request(axiosRequestArgs);
             };
         },
@@ -13962,7 +13962,7 @@ export const DefaultApiFp = function(configuration?: Configuration) {
         efastV1DirAttributePost(dirAttributeReq?: DirAttributeReq, options?: any): (axios?: AxiosInstance, basePath?: string) => AxiosPromise<DirAttributeRes> {
             const localVarAxiosArgs = DefaultApiAxiosParamCreator(configuration).efastV1DirAttributePost(dirAttributeReq, options);
             return (axios: AxiosInstance = globalAxios, basePath: string = BASE_PATH) => {
-                const axiosRequestArgs = {...localVarAxiosArgs.options, url: basePath + localVarAxiosArgs.url};
+                const axiosRequestArgs = { ...localVarAxiosArgs.options, url: basePath + localVarAxiosArgs.url };
                 return axios.request(axiosRequestArgs);
             };
         },
@@ -13977,7 +13977,7 @@ export const DefaultApiFp = function(configuration?: Configuration) {
         efastV1DirCopyPost(xASAuthorization?: string, dirCopyReq?: DirCopyReq, options?: any): (axios?: AxiosInstance, basePath?: string) => AxiosPromise<DirCopyRes> {
             const localVarAxiosArgs = DefaultApiAxiosParamCreator(configuration).efastV1DirCopyPost(xASAuthorization, dirCopyReq, options);
             return (axios: AxiosInstance = globalAxios, basePath: string = BASE_PATH) => {
-                const axiosRequestArgs = {...localVarAxiosArgs.options, url: basePath + localVarAxiosArgs.url};
+                const axiosRequestArgs = { ...localVarAxiosArgs.options, url: basePath + localVarAxiosArgs.url };
                 return axios.request(axiosRequestArgs);
             };
         },
@@ -13991,7 +13991,7 @@ export const DefaultApiFp = function(configuration?: Configuration) {
         efastV1DirCopyprogressPost(dirCopyprogressReq?: DirCopyprogressReq, options?: any): (axios?: AxiosInstance, basePath?: string) => AxiosPromise<DirCopyprogressRes> {
             const localVarAxiosArgs = DefaultApiAxiosParamCreator(configuration).efastV1DirCopyprogressPost(dirCopyprogressReq, options);
             return (axios: AxiosInstance = globalAxios, basePath: string = BASE_PATH) => {
-                const axiosRequestArgs = {...localVarAxiosArgs.options, url: basePath + localVarAxiosArgs.url};
+                const axiosRequestArgs = { ...localVarAxiosArgs.options, url: basePath + localVarAxiosArgs.url };
                 return axios.request(axiosRequestArgs);
             };
         },
@@ -14005,7 +14005,7 @@ export const DefaultApiFp = function(configuration?: Configuration) {
         efastV1DirCreatePost(dirCreateReq?: DirCreateReq, options?: any): (axios?: AxiosInstance, basePath?: string) => AxiosPromise<DirCreateRes> {
             const localVarAxiosArgs = DefaultApiAxiosParamCreator(configuration).efastV1DirCreatePost(dirCreateReq, options);
             return (axios: AxiosInstance = globalAxios, basePath: string = BASE_PATH) => {
-                const axiosRequestArgs = {...localVarAxiosArgs.options, url: basePath + localVarAxiosArgs.url};
+                const axiosRequestArgs = { ...localVarAxiosArgs.options, url: basePath + localVarAxiosArgs.url };
                 return axios.request(axiosRequestArgs);
             };
         },
@@ -14019,7 +14019,7 @@ export const DefaultApiFp = function(configuration?: Configuration) {
         efastV1DirCreatemultileveldirPost(dirCreatemultileveldirReq?: DirCreatemultileveldirReq, options?: any): (axios?: AxiosInstance, basePath?: string) => AxiosPromise<DirCreatemultileveldirRes> {
             const localVarAxiosArgs = DefaultApiAxiosParamCreator(configuration).efastV1DirCreatemultileveldirPost(dirCreatemultileveldirReq, options);
             return (axios: AxiosInstance = globalAxios, basePath: string = BASE_PATH) => {
-                const axiosRequestArgs = {...localVarAxiosArgs.options, url: basePath + localVarAxiosArgs.url};
+                const axiosRequestArgs = { ...localVarAxiosArgs.options, url: basePath + localVarAxiosArgs.url };
                 return axios.request(axiosRequestArgs);
             };
         },
@@ -14033,7 +14033,7 @@ export const DefaultApiFp = function(configuration?: Configuration) {
         efastV1DirDeletePost(dirDeleteReq?: DirDeleteReq, options?: any): (axios?: AxiosInstance, basePath?: string) => AxiosPromise<DirDeleteRes> {
             const localVarAxiosArgs = DefaultApiAxiosParamCreator(configuration).efastV1DirDeletePost(dirDeleteReq, options);
             return (axios: AxiosInstance = globalAxios, basePath: string = BASE_PATH) => {
-                const axiosRequestArgs = {...localVarAxiosArgs.options, url: basePath + localVarAxiosArgs.url};
+                const axiosRequestArgs = { ...localVarAxiosArgs.options, url: basePath + localVarAxiosArgs.url };
                 return axios.request(axiosRequestArgs);
             };
         },
@@ -14047,7 +14047,7 @@ export const DefaultApiFp = function(configuration?: Configuration) {
         efastV1DirGetsuggestnamePost(dirGetsuggestnameReq?: DirGetsuggestnameReq, options?: any): (axios?: AxiosInstance, basePath?: string) => AxiosPromise<DirGetsuggestnameRes> {
             const localVarAxiosArgs = DefaultApiAxiosParamCreator(configuration).efastV1DirGetsuggestnamePost(dirGetsuggestnameReq, options);
             return (axios: AxiosInstance = globalAxios, basePath: string = BASE_PATH) => {
-                const axiosRequestArgs = {...localVarAxiosArgs.options, url: basePath + localVarAxiosArgs.url};
+                const axiosRequestArgs = { ...localVarAxiosArgs.options, url: basePath + localVarAxiosArgs.url };
                 return axios.request(axiosRequestArgs);
             };
         },
@@ -14061,7 +14061,7 @@ export const DefaultApiFp = function(configuration?: Configuration) {
         efastV1DirListPost(dirListReq?: DirListReq, options?: any): (axios?: AxiosInstance, basePath?: string) => AxiosPromise<DirListRes> {
             const localVarAxiosArgs = DefaultApiAxiosParamCreator(configuration).efastV1DirListPost(dirListReq, options);
             return (axios: AxiosInstance = globalAxios, basePath: string = BASE_PATH) => {
-                const axiosRequestArgs = {...localVarAxiosArgs.options, url: basePath + localVarAxiosArgs.url};
+                const axiosRequestArgs = { ...localVarAxiosArgs.options, url: basePath + localVarAxiosArgs.url };
                 return axios.request(axiosRequestArgs);
             };
         },
@@ -14075,7 +14075,7 @@ export const DefaultApiFp = function(configuration?: Configuration) {
         efastV1DirMovePost(dirMoveReq?: DirMoveReq, options?: any): (axios?: AxiosInstance, basePath?: string) => AxiosPromise<DirMoveRes> {
             const localVarAxiosArgs = DefaultApiAxiosParamCreator(configuration).efastV1DirMovePost(dirMoveReq, options);
             return (axios: AxiosInstance = globalAxios, basePath: string = BASE_PATH) => {
-                const axiosRequestArgs = {...localVarAxiosArgs.options, url: basePath + localVarAxiosArgs.url};
+                const axiosRequestArgs = { ...localVarAxiosArgs.options, url: basePath + localVarAxiosArgs.url };
                 return axios.request(axiosRequestArgs);
             };
         },
@@ -14089,7 +14089,7 @@ export const DefaultApiFp = function(configuration?: Configuration) {
         efastV1DirRenamePost(dirRenameReq?: DirRenameReq, options?: any): (axios?: AxiosInstance, basePath?: string) => AxiosPromise<DirRenameRes> {
             const localVarAxiosArgs = DefaultApiAxiosParamCreator(configuration).efastV1DirRenamePost(dirRenameReq, options);
             return (axios: AxiosInstance = globalAxios, basePath: string = BASE_PATH) => {
-                const axiosRequestArgs = {...localVarAxiosArgs.options, url: basePath + localVarAxiosArgs.url};
+                const axiosRequestArgs = { ...localVarAxiosArgs.options, url: basePath + localVarAxiosArgs.url };
                 return axios.request(axiosRequestArgs);
             };
         },
@@ -14103,7 +14103,7 @@ export const DefaultApiFp = function(configuration?: Configuration) {
         efastV1DirSetcsflevelPost(dirSetcsflevelReq?: DirSetcsflevelReq, options?: any): (axios?: AxiosInstance, basePath?: string) => AxiosPromise<DirSetcsflevelRes> {
             const localVarAxiosArgs = DefaultApiAxiosParamCreator(configuration).efastV1DirSetcsflevelPost(dirSetcsflevelReq, options);
             return (axios: AxiosInstance = globalAxios, basePath: string = BASE_PATH) => {
-                const axiosRequestArgs = {...localVarAxiosArgs.options, url: basePath + localVarAxiosArgs.url};
+                const axiosRequestArgs = { ...localVarAxiosArgs.options, url: basePath + localVarAxiosArgs.url };
                 return axios.request(axiosRequestArgs);
             };
         },
@@ -14117,7 +14117,7 @@ export const DefaultApiFp = function(configuration?: Configuration) {
         efastV1DirSizePost(dirSizeReq?: DirSizeReq, options?: any): (axios?: AxiosInstance, basePath?: string) => AxiosPromise<DirSizeRes> {
             const localVarAxiosArgs = DefaultApiAxiosParamCreator(configuration).efastV1DirSizePost(dirSizeReq, options);
             return (axios: AxiosInstance = globalAxios, basePath: string = BASE_PATH) => {
-                const axiosRequestArgs = {...localVarAxiosArgs.options, url: basePath + localVarAxiosArgs.url};
+                const axiosRequestArgs = { ...localVarAxiosArgs.options, url: basePath + localVarAxiosArgs.url };
                 return axios.request(axiosRequestArgs);
             };
         },
@@ -14134,7 +14134,7 @@ export const DefaultApiFp = function(configuration?: Configuration) {
         efastV1EntryDocLibGet(type?: string, sort?: string, direction?: string, subtypeId?: string, options?: any): (axios?: AxiosInstance, basePath?: string) => AxiosPromise<Array<EntryDoc>> {
             const localVarAxiosArgs = DefaultApiAxiosParamCreator(configuration).efastV1EntryDocLibGet(type, sort, direction, subtypeId, options);
             return (axios: AxiosInstance = globalAxios, basePath: string = BASE_PATH) => {
-                const axiosRequestArgs = {...localVarAxiosArgs.options, url: basePath + localVarAxiosArgs.url};
+                const axiosRequestArgs = { ...localVarAxiosArgs.options, url: basePath + localVarAxiosArgs.url };
                 return axios.request(axiosRequestArgs);
             };
         },
@@ -14147,7 +14147,7 @@ export const DefaultApiFp = function(configuration?: Configuration) {
         efastV1EntryItemGet(options?: any): (axios?: AxiosInstance, basePath?: string) => AxiosPromise<Array<EntryItem>> {
             const localVarAxiosArgs = DefaultApiAxiosParamCreator(configuration).efastV1EntryItemGet(options);
             return (axios: AxiosInstance = globalAxios, basePath: string = BASE_PATH) => {
-                const axiosRequestArgs = {...localVarAxiosArgs.options, url: basePath + localVarAxiosArgs.url};
+                const axiosRequestArgs = { ...localVarAxiosArgs.options, url: basePath + localVarAxiosArgs.url };
                 return axios.request(axiosRequestArgs);
             };
         },
@@ -14161,7 +14161,7 @@ export const DefaultApiFp = function(configuration?: Configuration) {
         efastV1FavoritesAddPost(favoritesAddReq?: FavoritesAddReq, options?: any): (axios?: AxiosInstance, basePath?: string) => AxiosPromise<object> {
             const localVarAxiosArgs = DefaultApiAxiosParamCreator(configuration).efastV1FavoritesAddPost(favoritesAddReq, options);
             return (axios: AxiosInstance = globalAxios, basePath: string = BASE_PATH) => {
-                const axiosRequestArgs = {...localVarAxiosArgs.options, url: basePath + localVarAxiosArgs.url};
+                const axiosRequestArgs = { ...localVarAxiosArgs.options, url: basePath + localVarAxiosArgs.url };
                 return axios.request(axiosRequestArgs);
             };
         },
@@ -14175,7 +14175,7 @@ export const DefaultApiFp = function(configuration?: Configuration) {
         efastV1FavoritesCheckPost(favoritesCheckReq?: FavoritesCheckReq, options?: any): (axios?: AxiosInstance, basePath?: string) => AxiosPromise<Array<FavoritesCheckResItem>> {
             const localVarAxiosArgs = DefaultApiAxiosParamCreator(configuration).efastV1FavoritesCheckPost(favoritesCheckReq, options);
             return (axios: AxiosInstance = globalAxios, basePath: string = BASE_PATH) => {
-                const axiosRequestArgs = {...localVarAxiosArgs.options, url: basePath + localVarAxiosArgs.url};
+                const axiosRequestArgs = { ...localVarAxiosArgs.options, url: basePath + localVarAxiosArgs.url };
                 return axios.request(axiosRequestArgs);
             };
         },
@@ -14189,7 +14189,7 @@ export const DefaultApiFp = function(configuration?: Configuration) {
         efastV1FavoritesDeletePost(favoritesDeleteReq?: FavoritesDeleteReq, options?: any): (axios?: AxiosInstance, basePath?: string) => AxiosPromise<object> {
             const localVarAxiosArgs = DefaultApiAxiosParamCreator(configuration).efastV1FavoritesDeletePost(favoritesDeleteReq, options);
             return (axios: AxiosInstance = globalAxios, basePath: string = BASE_PATH) => {
-                const axiosRequestArgs = {...localVarAxiosArgs.options, url: basePath + localVarAxiosArgs.url};
+                const axiosRequestArgs = { ...localVarAxiosArgs.options, url: basePath + localVarAxiosArgs.url };
                 return axios.request(axiosRequestArgs);
             };
         },
@@ -14202,7 +14202,7 @@ export const DefaultApiFp = function(configuration?: Configuration) {
         efastV1FavoritesListPost(options?: any): (axios?: AxiosInstance, basePath?: string) => AxiosPromise<Array<FavoritesListResItem>> {
             const localVarAxiosArgs = DefaultApiAxiosParamCreator(configuration).efastV1FavoritesListPost(options);
             return (axios: AxiosInstance = globalAxios, basePath: string = BASE_PATH) => {
-                const axiosRequestArgs = {...localVarAxiosArgs.options, url: basePath + localVarAxiosArgs.url};
+                const axiosRequestArgs = { ...localVarAxiosArgs.options, url: basePath + localVarAxiosArgs.url };
                 return axios.request(axiosRequestArgs);
             };
         },
@@ -14216,7 +14216,7 @@ export const DefaultApiFp = function(configuration?: Configuration) {
         efastV1FileAttributePost(fileAttributeReq?: FileAttributeReq, options?: any): (axios?: AxiosInstance, basePath?: string) => AxiosPromise<FileAttributeRes> {
             const localVarAxiosArgs = DefaultApiAxiosParamCreator(configuration).efastV1FileAttributePost(fileAttributeReq, options);
             return (axios: AxiosInstance = globalAxios, basePath: string = BASE_PATH) => {
-                const axiosRequestArgs = {...localVarAxiosArgs.options, url: basePath + localVarAxiosArgs.url};
+                const axiosRequestArgs = { ...localVarAxiosArgs.options, url: basePath + localVarAxiosArgs.url };
                 return axios.request(axiosRequestArgs);
             };
         },
@@ -14230,7 +14230,7 @@ export const DefaultApiFp = function(configuration?: Configuration) {
         efastV1FileBatchdownloadPost(fileBatchdownloadReq?: FileBatchdownloadReq, options?: any): (axios?: AxiosInstance, basePath?: string) => AxiosPromise<FileBatchdownloadRes> {
             const localVarAxiosArgs = DefaultApiAxiosParamCreator(configuration).efastV1FileBatchdownloadPost(fileBatchdownloadReq, options);
             return (axios: AxiosInstance = globalAxios, basePath: string = BASE_PATH) => {
-                const axiosRequestArgs = {...localVarAxiosArgs.options, url: basePath + localVarAxiosArgs.url};
+                const axiosRequestArgs = { ...localVarAxiosArgs.options, url: basePath + localVarAxiosArgs.url };
                 return axios.request(axiosRequestArgs);
             };
         },
@@ -14244,7 +14244,7 @@ export const DefaultApiFp = function(configuration?: Configuration) {
         efastV1FileConvertpathPost(fileConvertpathReq?: FileConvertpathReq, options?: any): (axios?: AxiosInstance, basePath?: string) => AxiosPromise<FileConvertpathRes> {
             const localVarAxiosArgs = DefaultApiAxiosParamCreator(configuration).efastV1FileConvertpathPost(fileConvertpathReq, options);
             return (axios: AxiosInstance = globalAxios, basePath: string = BASE_PATH) => {
-                const axiosRequestArgs = {...localVarAxiosArgs.options, url: basePath + localVarAxiosArgs.url};
+                const axiosRequestArgs = { ...localVarAxiosArgs.options, url: basePath + localVarAxiosArgs.url };
                 return axios.request(axiosRequestArgs);
             };
         },
@@ -14259,7 +14259,7 @@ export const DefaultApiFp = function(configuration?: Configuration) {
         efastV1FileCopyPost(xASAuthorization?: string, fileCopyReq?: FileCopyReq, options?: any): (axios?: AxiosInstance, basePath?: string) => AxiosPromise<FileCopyRes> {
             const localVarAxiosArgs = DefaultApiAxiosParamCreator(configuration).efastV1FileCopyPost(xASAuthorization, fileCopyReq, options);
             return (axios: AxiosInstance = globalAxios, basePath: string = BASE_PATH) => {
-                const axiosRequestArgs = {...localVarAxiosArgs.options, url: basePath + localVarAxiosArgs.url};
+                const axiosRequestArgs = { ...localVarAxiosArgs.options, url: basePath + localVarAxiosArgs.url };
                 return axios.request(axiosRequestArgs);
             };
         },
@@ -14273,7 +14273,7 @@ export const DefaultApiFp = function(configuration?: Configuration) {
         efastV1FileDeletePost(fileDeleteReq?: FileDeleteReq, options?: any): (axios?: AxiosInstance, basePath?: string) => AxiosPromise<object> {
             const localVarAxiosArgs = DefaultApiAxiosParamCreator(configuration).efastV1FileDeletePost(fileDeleteReq, options);
             return (axios: AxiosInstance = globalAxios, basePath: string = BASE_PATH) => {
-                const axiosRequestArgs = {...localVarAxiosArgs.options, url: basePath + localVarAxiosArgs.url};
+                const axiosRequestArgs = { ...localVarAxiosArgs.options, url: basePath + localVarAxiosArgs.url };
                 return axios.request(axiosRequestArgs);
             };
         },
@@ -14287,7 +14287,7 @@ export const DefaultApiFp = function(configuration?: Configuration) {
         efastV1FileDuploadPost(fileDuploadReq?: FileDuploadReq, options?: any): (axios?: AxiosInstance, basePath?: string) => AxiosPromise<FileDuploadRes> {
             const localVarAxiosArgs = DefaultApiAxiosParamCreator(configuration).efastV1FileDuploadPost(fileDuploadReq, options);
             return (axios: AxiosInstance = globalAxios, basePath: string = BASE_PATH) => {
-                const axiosRequestArgs = {...localVarAxiosArgs.options, url: basePath + localVarAxiosArgs.url};
+                const axiosRequestArgs = { ...localVarAxiosArgs.options, url: basePath + localVarAxiosArgs.url };
                 return axios.request(axiosRequestArgs);
             };
         },
@@ -14301,7 +14301,7 @@ export const DefaultApiFp = function(configuration?: Configuration) {
         efastV1FileGetcsfinfoPost(fileGetcsfinfoReq?: FileGetcsfinfoReq, options?: any): (axios?: AxiosInstance, basePath?: string) => AxiosPromise<FileGetcsfinfoRes> {
             const localVarAxiosArgs = DefaultApiAxiosParamCreator(configuration).efastV1FileGetcsfinfoPost(fileGetcsfinfoReq, options);
             return (axios: AxiosInstance = globalAxios, basePath: string = BASE_PATH) => {
-                const axiosRequestArgs = {...localVarAxiosArgs.options, url: basePath + localVarAxiosArgs.url};
+                const axiosRequestArgs = { ...localVarAxiosArgs.options, url: basePath + localVarAxiosArgs.url };
                 return axios.request(axiosRequestArgs);
             };
         },
@@ -14315,7 +14315,7 @@ export const DefaultApiFp = function(configuration?: Configuration) {
         efastV1FileGetinfobypathPost(fileGetinfobypathReq?: FileGetinfobypathReq, options?: any): (axios?: AxiosInstance, basePath?: string) => AxiosPromise<FileGetinfobypathRes> {
             const localVarAxiosArgs = DefaultApiAxiosParamCreator(configuration).efastV1FileGetinfobypathPost(fileGetinfobypathReq, options);
             return (axios: AxiosInstance = globalAxios, basePath: string = BASE_PATH) => {
-                const axiosRequestArgs = {...localVarAxiosArgs.options, url: basePath + localVarAxiosArgs.url};
+                const axiosRequestArgs = { ...localVarAxiosArgs.options, url: basePath + localVarAxiosArgs.url };
                 return axios.request(axiosRequestArgs);
             };
         },
@@ -14329,7 +14329,7 @@ export const DefaultApiFp = function(configuration?: Configuration) {
         efastV1FileGetsuggestnamePost(fileGetsuggestnameReq?: FileGetsuggestnameReq, options?: any): (axios?: AxiosInstance, basePath?: string) => AxiosPromise<FileGetsuggestnameRes> {
             const localVarAxiosArgs = DefaultApiAxiosParamCreator(configuration).efastV1FileGetsuggestnamePost(fileGetsuggestnameReq, options);
             return (axios: AxiosInstance = globalAxios, basePath: string = BASE_PATH) => {
-                const axiosRequestArgs = {...localVarAxiosArgs.options, url: basePath + localVarAxiosArgs.url};
+                const axiosRequestArgs = { ...localVarAxiosArgs.options, url: basePath + localVarAxiosArgs.url };
                 return axios.request(axiosRequestArgs);
             };
         },
@@ -14343,7 +14343,7 @@ export const DefaultApiFp = function(configuration?: Configuration) {
         efastV1FileMetadataPost(fileMetadataReq?: FileMetadataReq, options?: any): (axios?: AxiosInstance, basePath?: string) => AxiosPromise<FileMetadataRes> {
             const localVarAxiosArgs = DefaultApiAxiosParamCreator(configuration).efastV1FileMetadataPost(fileMetadataReq, options);
             return (axios: AxiosInstance = globalAxios, basePath: string = BASE_PATH) => {
-                const axiosRequestArgs = {...localVarAxiosArgs.options, url: basePath + localVarAxiosArgs.url};
+                const axiosRequestArgs = { ...localVarAxiosArgs.options, url: basePath + localVarAxiosArgs.url };
                 return axios.request(axiosRequestArgs);
             };
         },
@@ -14357,7 +14357,7 @@ export const DefaultApiFp = function(configuration?: Configuration) {
         efastV1FileMovePost(fileMoveReq?: FileMoveReq, options?: any): (axios?: AxiosInstance, basePath?: string) => AxiosPromise<FileMoveRes> {
             const localVarAxiosArgs = DefaultApiAxiosParamCreator(configuration).efastV1FileMovePost(fileMoveReq, options);
             return (axios: AxiosInstance = globalAxios, basePath: string = BASE_PATH) => {
-                const axiosRequestArgs = {...localVarAxiosArgs.options, url: basePath + localVarAxiosArgs.url};
+                const axiosRequestArgs = { ...localVarAxiosArgs.options, url: basePath + localVarAxiosArgs.url };
                 return axios.request(axiosRequestArgs);
             };
         },
@@ -14371,12 +14371,12 @@ export const DefaultApiFp = function(configuration?: Configuration) {
         efastV1FileOpstatisticsPost(fileOpstatisticsReq?: FileOpstatisticsReq, options?: any): (axios?: AxiosInstance, basePath?: string) => AxiosPromise<{ [key: string]: object; }> {
             const localVarAxiosArgs = DefaultApiAxiosParamCreator(configuration).efastV1FileOpstatisticsPost(fileOpstatisticsReq, options);
             return (axios: AxiosInstance = globalAxios, basePath: string = BASE_PATH) => {
-                const axiosRequestArgs = {...localVarAxiosArgs.options, url: basePath + localVarAxiosArgs.url};
+                const axiosRequestArgs = { ...localVarAxiosArgs.options, url: basePath + localVarAxiosArgs.url };
                 return axios.request(axiosRequestArgs);
             };
         },
         /**
-         * 1. 如果reqmethod为PUT，收到响应后，客户端自行发送上传文件http请求到对象存储，填入响应中authrequest字段包含的header，然后15分钟内发送PUT请求            示例：            URL：https://s3-ap-northeast-1.amazonaws.com/anyshares3accesstestbucket/21A9B9FD1B524CB49D54BF7399F82EB4/AAA6CBAFE45B4E4D884DC59805E60A5C            Header：      ```      “Authorization: AWS AKIAJEROARV2UTTADY6A:PkLXjvYrDGDVZgTD8WVbMmS33q4=”      “Date: Tue, 07 Apr 2015 02:35:36 GMT”      “Content-Length: 42”      “Content-Type: application/octet-stream”      ```            Body：文件内容  2. 如果reqmethod为POST，收到响应后，客户端自行设置发送上传文件内容的表单请求到对象存储，填入各表单项，然后15分钟内发送POST请求。阿里云OSS和亚马逊S3要求file必须为表单中最后一个域。  
+         * 1. 如果reqmethod为PUT，收到响应后，客户端自行发送上传文件http请求到对象存储，填入响应中authrequest字段包含的header，然后15分钟内发送PUT请求
          * @summary 开始上传文件协议
          * @param {FileOsbeginuploadReq} [fileOsbeginuploadReq] 
          * @param {*} [options] Override http request option.
@@ -14385,12 +14385,12 @@ export const DefaultApiFp = function(configuration?: Configuration) {
         efastV1FileOsbeginuploadPost(fileOsbeginuploadReq?: FileOsbeginuploadReq, options?: any): (axios?: AxiosInstance, basePath?: string) => AxiosPromise<FileOsbeginuploadRes> {
             const localVarAxiosArgs = DefaultApiAxiosParamCreator(configuration).efastV1FileOsbeginuploadPost(fileOsbeginuploadReq, options);
             return (axios: AxiosInstance = globalAxios, basePath: string = BASE_PATH) => {
-                const axiosRequestArgs = {...localVarAxiosArgs.options, url: basePath + localVarAxiosArgs.url};
+                const axiosRequestArgs = { ...localVarAxiosArgs.options, url: basePath + localVarAxiosArgs.url };
                 return axios.request(axiosRequestArgs);
             };
         },
         /**
-         * 接口调用成功，收到200响应时，表单中json部分含义：  - authrequest[0]：请求方法  - authrequest[1]: 待上传的资源URL  - authrequest[2]及以后项（如果存在）：请求头，格式为“key: value”    客户端15分钟内自行发送相关分片信息的请求到云存储平台    mothod为：PUT    URL为：https://s3-ap-northeast-1.amazonaws.com/anyshares3accesstestbucket/21A9B9FD1B524CB49D54BF7399F82EB4/AAA6CBAFE45B4E4D884DC59805E60A5C?uploadId=0004B9895DBBB6EC98E36    Header包含：  “Authorization: AWS AKIAJEROARV2UTTADY6A:PkLXjvYrDGDVZgTD8WVbMmS33q4=”  “Date: Tue, 07 Apr 2015 02:35:36 GMT”  “Content-Length: 4200”    Body为返回的body内容中除了参数之外的部分：   ```xml  <CompleteMultipartUpload>  <Part>  <PartNumber>1</PartNumber>  <ETag>3349DC700140D7F86A078484278075A9</ETag>  </Part>  <Part>  <PartNumber>2</PartNumber>  <ETag>22222C700140D7F86A078484278075A9</ETag>  </Part>  </CompleteMultipartUpload>  ```  
+         * 接口调用成功，收到200响应时，表单中json部分含义：  - authrequest[0]：请求方法  - authrequest[1]: 待上传的资源URL  - authrequest[2]及以后项（如果存在）：请求头，格式为“key: value”    客户端15分钟内自行发送相关分片信息的请求到云存储平台    mothod为：PUT  
          * @summary 上传大文件的分块完成协议
          * @param {FileOscompleteuploadReq} [fileOscompleteuploadReq] 
          * @param {*} [options] Override http request option.
@@ -14399,12 +14399,12 @@ export const DefaultApiFp = function(configuration?: Configuration) {
         efastV1FileOscompleteuploadPost(fileOscompleteuploadReq?: FileOscompleteuploadReq, options?: any): (axios?: AxiosInstance, basePath?: string) => AxiosPromise<object> {
             const localVarAxiosArgs = DefaultApiAxiosParamCreator(configuration).efastV1FileOscompleteuploadPost(fileOscompleteuploadReq, options);
             return (axios: AxiosInstance = globalAxios, basePath: string = BASE_PATH) => {
-                const axiosRequestArgs = {...localVarAxiosArgs.options, url: basePath + localVarAxiosArgs.url};
+                const axiosRequestArgs = { ...localVarAxiosArgs.options, url: basePath + localVarAxiosArgs.url };
                 return axios.request(axiosRequestArgs);
             };
         },
         /**
-         * 1. 收到请求响应时，客户端自行向对象存储发送下载文件内容的请求  2. 如果authtype为空，则按照下面的方式下载，15分钟内发送GET请求  URL为：https://s3-ap-northeast-1.amazonaws.com/anyshares3accesstestbucket/21A9B9FD1B524CB49D54BF7399F82EB4/AAA6CBAFE45B4E4D884DC59805E60A5C  Header包含：  “Authorization: AWS AKIAJEROARV2UTTADY6A:PkLXjvYrDGDVZgTD8WVbMmS33q4=”  “Date: Tue, 07 Apr 2015 02:35:36 GMT”  Body为：空  3. 如果authtype为QUERY_STRING，则按照下面的方式下载，15分钟内发送GET请求  URL为：https://s3-ap-northeast-1.amazonaws.com/anyshares3accesstestbucket/21A9B9FD1B524CB49D54BF7399F82EB4/AAA6CBAFE45B4E4D884DC59805E60A5C?AWSAccessKeyId=AKIAJEROARV2UTTADY6A&Expires=1428384700&Signature=lnOy3CUh9KNknNDX8aB8Mhur7%2Bw%3D  4. 如果想分块下载，请自行在Header中加入Range  5. 发送GET请求后，可能并不能直接获取数据，将获得 HTTP/1.1 307 Temporary Redirect，此时重定向的数据实际下载地址包含在返回的header中，形如：  Location: http://iovip.qbox.me/file/8QhbPDcKueO0ZOEDqnroKw0y478TNADQAwAAACfQem72ulBu9rl6bvYDEHDiumoeFLDnJKS5em72uXpu9rl6bvbWRi-vul_Q0Ckfu5f7PMvE9OoXIdfQ0NDT-tDQ0NDQ0N2pQCrK0NDQcHNHYPbupfOQx9EUBTS5bh6sR1Jtqr4maaq-JmmqviY=  对于重定向的情况，客户端需要判断并从新地址下载数据，以C++开发使用curl为例，需要设置：curl_easy_setopt (_curl, CURLOPT_FOLLOWLOCATION, 1); 
+         * 1. 收到请求响应时，客户端自行向对象存储发送下载文件内容的请求  2. 如果authtype为空，则按照下面的方式下载，15分钟内发送GET请求
          * @summary 下载文件协议
          * @param {FileOsdownloadReq} [fileOsdownloadReq] 
          * @param {*} [options] Override http request option.
@@ -14413,7 +14413,7 @@ export const DefaultApiFp = function(configuration?: Configuration) {
         efastV1FileOsdownloadPost(fileOsdownloadReq?: FileOsdownloadReq, options?: any): (axios?: AxiosInstance, basePath?: string) => AxiosPromise<FileOsdownloadRes> {
             const localVarAxiosArgs = DefaultApiAxiosParamCreator(configuration).efastV1FileOsdownloadPost(fileOsdownloadReq, options);
             return (axios: AxiosInstance = globalAxios, basePath: string = BASE_PATH) => {
-                const axiosRequestArgs = {...localVarAxiosArgs.options, url: basePath + localVarAxiosArgs.url};
+                const axiosRequestArgs = { ...localVarAxiosArgs.options, url: basePath + localVarAxiosArgs.url };
                 return axios.request(axiosRequestArgs);
             };
         },
@@ -14427,7 +14427,7 @@ export const DefaultApiFp = function(configuration?: Configuration) {
         efastV1FileOsenduploadPost(fileOsenduploadReq?: FileOsenduploadReq, options?: any): (axios?: AxiosInstance, basePath?: string) => AxiosPromise<FileOsenduploadRes> {
             const localVarAxiosArgs = DefaultApiAxiosParamCreator(configuration).efastV1FileOsenduploadPost(fileOsenduploadReq, options);
             return (axios: AxiosInstance = globalAxios, basePath: string = BASE_PATH) => {
-                const axiosRequestArgs = {...localVarAxiosArgs.options, url: basePath + localVarAxiosArgs.url};
+                const axiosRequestArgs = { ...localVarAxiosArgs.options, url: basePath + localVarAxiosArgs.url };
                 return axios.request(axiosRequestArgs);
             };
         },
@@ -14441,7 +14441,7 @@ export const DefaultApiFp = function(configuration?: Configuration) {
         efastV1FileOsinitmultiuploadPost(fileOsinitmultiuploadReq?: FileOsinitmultiuploadReq, options?: any): (axios?: AxiosInstance, basePath?: string) => AxiosPromise<FileOsinitmultiuploadRes> {
             const localVarAxiosArgs = DefaultApiAxiosParamCreator(configuration).efastV1FileOsinitmultiuploadPost(fileOsinitmultiuploadReq, options);
             return (axios: AxiosInstance = globalAxios, basePath: string = BASE_PATH) => {
-                const axiosRequestArgs = {...localVarAxiosArgs.options, url: basePath + localVarAxiosArgs.url};
+                const axiosRequestArgs = { ...localVarAxiosArgs.options, url: basePath + localVarAxiosArgs.url };
                 return axios.request(axiosRequestArgs);
             };
         },
@@ -14454,12 +14454,12 @@ export const DefaultApiFp = function(configuration?: Configuration) {
         efastV1FileOsoptionPost(options?: any): (axios?: AxiosInstance, basePath?: string) => AxiosPromise<FileOsoptionRes> {
             const localVarAxiosArgs = DefaultApiAxiosParamCreator(configuration).efastV1FileOsoptionPost(options);
             return (axios: AxiosInstance = globalAxios, basePath: string = BASE_PATH) => {
-                const axiosRequestArgs = {...localVarAxiosArgs.options, url: basePath + localVarAxiosArgs.url};
+                const axiosRequestArgs = { ...localVarAxiosArgs.options, url: basePath + localVarAxiosArgs.url };
                 return axios.request(axiosRequestArgs);
             };
         },
         /**
-         * 1. 收到该响应后，客户端自行发送文件分片内容的请求到对象存储。  2. 客户端在请求Header中填入authrequests中的header，15分钟内发送PUT请求        示例：        URL：https://s3-ap-northeast-1.amazonaws.com/anyshares3accesstestbucket/21A9B9FD1B524CB49D54BF7399F82EB4/AAA6CBAFE45B4E4D884DC59805E60A5C?partNumber=1&uploadId=0004B9895DBBB6EC98E36            Header：      ```      “Authorization: AWS AKIAJEROARV2UTTADY6A:PkLXjvYrDGDVZgTD8WVbMmS33q4=”      “Date: Tue, 07 Apr 2015 02:35:36 GMT”      “Content-Length: 42”      ```            Body：分片内容  3. 对象存储返回响应信息时，响应header中可能包含Etag值，用于标识所上传对象分片。如果存在key为ETag/ETAG/etag/Etag等值的header，需要取得其对应的值(如果这些header都没有，直接使用空字符串)，作为完成大文件分块上传协议oscompleteupload的传参，见参数partetag及请求示例。            需注意，不同对象存储返回的Etag的header，key大小写可能不同，可能为ETag/ETAG/etag/Etag等(如果这些header都没有，直接使用空字符串)。可以对响应header进行遍历，对每个key转为小写，和字符串“etag”对比，获取对应的值。一个可能的响应header示例为：Etag: ce1c8d1c3900c64feaa651052d75acd9    4. 亚马逊S3限定分块大小不能小于5MB，七牛存储限定分块大小为4M的倍数。见“对象存储选项值协议”说明
+         * 1. 收到该响应后，客户端自行发送文件分片内容的请求到对象存储。  2. 客户端在请求Header中填入authrequests中的header，15分钟内发送PUT请求 
          * @summary 上传大文件的分块协议
          * @param {FileOsuploadpartReq} [fileOsuploadpartReq] 
          * @param {*} [options] Override http request option.
@@ -14468,7 +14468,7 @@ export const DefaultApiFp = function(configuration?: Configuration) {
         efastV1FileOsuploadpartPost(fileOsuploadpartReq?: FileOsuploadpartReq, options?: any): (axios?: AxiosInstance, basePath?: string) => AxiosPromise<FileOsuploadpartRes> {
             const localVarAxiosArgs = DefaultApiAxiosParamCreator(configuration).efastV1FileOsuploadpartPost(fileOsuploadpartReq, options);
             return (axios: AxiosInstance = globalAxios, basePath: string = BASE_PATH) => {
-                const axiosRequestArgs = {...localVarAxiosArgs.options, url: basePath + localVarAxiosArgs.url};
+                const axiosRequestArgs = { ...localVarAxiosArgs.options, url: basePath + localVarAxiosArgs.url };
                 return axios.request(axiosRequestArgs);
             };
         },
@@ -14482,7 +14482,7 @@ export const DefaultApiFp = function(configuration?: Configuration) {
         efastV1FileOsuploadrefreshPost(fileOsuploadrefreshReq?: FileOsuploadrefreshReq, options?: any): (axios?: AxiosInstance, basePath?: string) => AxiosPromise<FileOsuploadrefreshRes> {
             const localVarAxiosArgs = DefaultApiAxiosParamCreator(configuration).efastV1FileOsuploadrefreshPost(fileOsuploadrefreshReq, options);
             return (axios: AxiosInstance = globalAxios, basePath: string = BASE_PATH) => {
-                const axiosRequestArgs = {...localVarAxiosArgs.options, url: basePath + localVarAxiosArgs.url};
+                const axiosRequestArgs = { ...localVarAxiosArgs.options, url: basePath + localVarAxiosArgs.url };
                 return axios.request(axiosRequestArgs);
             };
         },
@@ -14496,7 +14496,7 @@ export const DefaultApiFp = function(configuration?: Configuration) {
         efastV1FilePreduploadPost(filePreduploadReq?: FilePreduploadReq, options?: any): (axios?: AxiosInstance, basePath?: string) => AxiosPromise<FilePreduploadRes> {
             const localVarAxiosArgs = DefaultApiAxiosParamCreator(configuration).efastV1FilePreduploadPost(filePreduploadReq, options);
             return (axios: AxiosInstance = globalAxios, basePath: string = BASE_PATH) => {
-                const axiosRequestArgs = {...localVarAxiosArgs.options, url: basePath + localVarAxiosArgs.url};
+                const axiosRequestArgs = { ...localVarAxiosArgs.options, url: basePath + localVarAxiosArgs.url };
                 return axios.request(axiosRequestArgs);
             };
         },
@@ -14510,7 +14510,7 @@ export const DefaultApiFp = function(configuration?: Configuration) {
         efastV1FileRenamePost(fileRenameReq?: FileRenameReq, options?: any): (axios?: AxiosInstance, basePath?: string) => AxiosPromise<FileRenameRes> {
             const localVarAxiosArgs = DefaultApiAxiosParamCreator(configuration).efastV1FileRenamePost(fileRenameReq, options);
             return (axios: AxiosInstance = globalAxios, basePath: string = BASE_PATH) => {
-                const axiosRequestArgs = {...localVarAxiosArgs.options, url: basePath + localVarAxiosArgs.url};
+                const axiosRequestArgs = { ...localVarAxiosArgs.options, url: basePath + localVarAxiosArgs.url };
                 return axios.request(axiosRequestArgs);
             };
         },
@@ -14524,7 +14524,7 @@ export const DefaultApiFp = function(configuration?: Configuration) {
         efastV1FileRestorerevisionPost(fileRestorerevisionReq?: FileRestorerevisionReq, options?: any): (axios?: AxiosInstance, basePath?: string) => AxiosPromise<FileRestorerevisionRes> {
             const localVarAxiosArgs = DefaultApiAxiosParamCreator(configuration).efastV1FileRestorerevisionPost(fileRestorerevisionReq, options);
             return (axios: AxiosInstance = globalAxios, basePath: string = BASE_PATH) => {
-                const axiosRequestArgs = {...localVarAxiosArgs.options, url: basePath + localVarAxiosArgs.url};
+                const axiosRequestArgs = { ...localVarAxiosArgs.options, url: basePath + localVarAxiosArgs.url };
                 return axios.request(axiosRequestArgs);
             };
         },
@@ -14538,7 +14538,7 @@ export const DefaultApiFp = function(configuration?: Configuration) {
         efastV1FileRevisionsPost(fileRevisionsReq?: FileRevisionsReq, options?: any): (axios?: AxiosInstance, basePath?: string) => AxiosPromise<Array<FileRevisionsResItem>> {
             const localVarAxiosArgs = DefaultApiAxiosParamCreator(configuration).efastV1FileRevisionsPost(fileRevisionsReq, options);
             return (axios: AxiosInstance = globalAxios, basePath: string = BASE_PATH) => {
-                const axiosRequestArgs = {...localVarAxiosArgs.options, url: basePath + localVarAxiosArgs.url};
+                const axiosRequestArgs = { ...localVarAxiosArgs.options, url: basePath + localVarAxiosArgs.url };
                 return axios.request(axiosRequestArgs);
             };
         },
@@ -14552,7 +14552,7 @@ export const DefaultApiFp = function(configuration?: Configuration) {
         efastV1FileSetcsflevelPost(fileSetcsflevelReq?: FileSetcsflevelReq, options?: any): (axios?: AxiosInstance, basePath?: string) => AxiosPromise<FileSetcsflevelRes> {
             const localVarAxiosArgs = DefaultApiAxiosParamCreator(configuration).efastV1FileSetcsflevelPost(fileSetcsflevelReq, options);
             return (axios: AxiosInstance = globalAxios, basePath: string = BASE_PATH) => {
-                const axiosRequestArgs = {...localVarAxiosArgs.options, url: basePath + localVarAxiosArgs.url};
+                const axiosRequestArgs = { ...localVarAxiosArgs.options, url: basePath + localVarAxiosArgs.url };
                 return axios.request(axiosRequestArgs);
             };
         },
@@ -14571,7 +14571,7 @@ export const DefaultApiFp = function(configuration?: Configuration) {
         efastV1FileThumbnailGet(docid: string, height: string, width: string, tokenid: string, rev?: string, quality?: string, options?: any): (axios?: AxiosInstance, basePath?: string) => AxiosPromise<object> {
             const localVarAxiosArgs = DefaultApiAxiosParamCreator(configuration).efastV1FileThumbnailGet(docid, height, width, tokenid, rev, quality, options);
             return (axios: AxiosInstance = globalAxios, basePath: string = BASE_PATH) => {
-                const axiosRequestArgs = {...localVarAxiosArgs.options, url: basePath + localVarAxiosArgs.url};
+                const axiosRequestArgs = { ...localVarAxiosArgs.options, url: basePath + localVarAxiosArgs.url };
                 return axios.request(axiosRequestArgs);
             };
         },
@@ -14584,7 +14584,7 @@ export const DefaultApiFp = function(configuration?: Configuration) {
         efastV1OwnedDocLibGet(options?: any): (axios?: AxiosInstance, basePath?: string) => AxiosPromise<Array<ManagedDoc>> {
             const localVarAxiosArgs = DefaultApiAxiosParamCreator(configuration).efastV1OwnedDocLibGet(options);
             return (axios: AxiosInstance = globalAxios, basePath: string = BASE_PATH) => {
-                const axiosRequestArgs = {...localVarAxiosArgs.options, url: basePath + localVarAxiosArgs.url};
+                const axiosRequestArgs = { ...localVarAxiosArgs.options, url: basePath + localVarAxiosArgs.url };
                 return axios.request(axiosRequestArgs);
             };
         },
@@ -14598,7 +14598,7 @@ export const DefaultApiFp = function(configuration?: Configuration) {
         efastV1QuarantineAppealPost(quarantineAppealReq?: QuarantineAppealReq, options?: any): (axios?: AxiosInstance, basePath?: string) => AxiosPromise<object> {
             const localVarAxiosArgs = DefaultApiAxiosParamCreator(configuration).efastV1QuarantineAppealPost(quarantineAppealReq, options);
             return (axios: AxiosInstance = globalAxios, basePath: string = BASE_PATH) => {
-                const axiosRequestArgs = {...localVarAxiosArgs.options, url: basePath + localVarAxiosArgs.url};
+                const axiosRequestArgs = { ...localVarAxiosArgs.options, url: basePath + localVarAxiosArgs.url };
                 return axios.request(axiosRequestArgs);
             };
         },
@@ -14611,7 +14611,7 @@ export const DefaultApiFp = function(configuration?: Configuration) {
         efastV1QuarantineListPost(options?: any): (axios?: AxiosInstance, basePath?: string) => AxiosPromise<Array<QuarantineListResItem>> {
             const localVarAxiosArgs = DefaultApiAxiosParamCreator(configuration).efastV1QuarantineListPost(options);
             return (axios: AxiosInstance = globalAxios, basePath: string = BASE_PATH) => {
-                const axiosRequestArgs = {...localVarAxiosArgs.options, url: basePath + localVarAxiosArgs.url};
+                const axiosRequestArgs = { ...localVarAxiosArgs.options, url: basePath + localVarAxiosArgs.url };
                 return axios.request(axiosRequestArgs);
             };
         },
@@ -14625,7 +14625,7 @@ export const DefaultApiFp = function(configuration?: Configuration) {
         efastV1QuarantineListreversionPost(quarantineListreversionReq?: QuarantineListreversionReq, options?: any): (axios?: AxiosInstance, basePath?: string) => AxiosPromise<Array<QuarantineListreversionRes>> {
             const localVarAxiosArgs = DefaultApiAxiosParamCreator(configuration).efastV1QuarantineListreversionPost(quarantineListreversionReq, options);
             return (axios: AxiosInstance = globalAxios, basePath: string = BASE_PATH) => {
-                const axiosRequestArgs = {...localVarAxiosArgs.options, url: basePath + localVarAxiosArgs.url};
+                const axiosRequestArgs = { ...localVarAxiosArgs.options, url: basePath + localVarAxiosArgs.url };
                 return axios.request(axiosRequestArgs);
             };
         },
@@ -14639,7 +14639,7 @@ export const DefaultApiFp = function(configuration?: Configuration) {
         efastV1QuotaDocLibIdGet(id: string, options?: any): (axios?: AxiosInstance, basePath?: string) => AxiosPromise<Quota> {
             const localVarAxiosArgs = DefaultApiAxiosParamCreator(configuration).efastV1QuotaDocLibIdGet(id, options);
             return (axios: AxiosInstance = globalAxios, basePath: string = BASE_PATH) => {
-                const axiosRequestArgs = {...localVarAxiosArgs.options, url: basePath + localVarAxiosArgs.url};
+                const axiosRequestArgs = { ...localVarAxiosArgs.options, url: basePath + localVarAxiosArgs.url };
                 return axios.request(axiosRequestArgs);
             };
         },
@@ -14652,7 +14652,7 @@ export const DefaultApiFp = function(configuration?: Configuration) {
         efastV1QuotaUserGet(options?: any): (axios?: AxiosInstance, basePath?: string) => AxiosPromise<Quota> {
             const localVarAxiosArgs = DefaultApiAxiosParamCreator(configuration).efastV1QuotaUserGet(options);
             return (axios: AxiosInstance = globalAxios, basePath: string = BASE_PATH) => {
-                const axiosRequestArgs = {...localVarAxiosArgs.options, url: basePath + localVarAxiosArgs.url};
+                const axiosRequestArgs = { ...localVarAxiosArgs.options, url: basePath + localVarAxiosArgs.url };
                 return axios.request(axiosRequestArgs);
             };
         },
@@ -14666,7 +14666,7 @@ export const DefaultApiFp = function(configuration?: Configuration) {
         efastV1RecycleDeletePost(recycleDeleteReq?: RecycleDeleteReq, options?: any): (axios?: AxiosInstance, basePath?: string) => AxiosPromise<object> {
             const localVarAxiosArgs = DefaultApiAxiosParamCreator(configuration).efastV1RecycleDeletePost(recycleDeleteReq, options);
             return (axios: AxiosInstance = globalAxios, basePath: string = BASE_PATH) => {
-                const axiosRequestArgs = {...localVarAxiosArgs.options, url: basePath + localVarAxiosArgs.url};
+                const axiosRequestArgs = { ...localVarAxiosArgs.options, url: basePath + localVarAxiosArgs.url };
                 return axios.request(axiosRequestArgs);
             };
         },
@@ -14680,7 +14680,7 @@ export const DefaultApiFp = function(configuration?: Configuration) {
         efastV1RecycleGetretentiondaysPost(recycleGetretentiondaysReq?: RecycleGetretentiondaysReq, options?: any): (axios?: AxiosInstance, basePath?: string) => AxiosPromise<RecycleGetretentiondaysRes> {
             const localVarAxiosArgs = DefaultApiAxiosParamCreator(configuration).efastV1RecycleGetretentiondaysPost(recycleGetretentiondaysReq, options);
             return (axios: AxiosInstance = globalAxios, basePath: string = BASE_PATH) => {
-                const axiosRequestArgs = {...localVarAxiosArgs.options, url: basePath + localVarAxiosArgs.url};
+                const axiosRequestArgs = { ...localVarAxiosArgs.options, url: basePath + localVarAxiosArgs.url };
                 return axios.request(axiosRequestArgs);
             };
         },
@@ -14694,7 +14694,7 @@ export const DefaultApiFp = function(configuration?: Configuration) {
         efastV1RecycleGetsuggestnamePost(recycleGetsuggestnameReq?: RecycleGetsuggestnameReq, options?: any): (axios?: AxiosInstance, basePath?: string) => AxiosPromise<RecycleGetsuggestnameRes> {
             const localVarAxiosArgs = DefaultApiAxiosParamCreator(configuration).efastV1RecycleGetsuggestnamePost(recycleGetsuggestnameReq, options);
             return (axios: AxiosInstance = globalAxios, basePath: string = BASE_PATH) => {
-                const axiosRequestArgs = {...localVarAxiosArgs.options, url: basePath + localVarAxiosArgs.url};
+                const axiosRequestArgs = { ...localVarAxiosArgs.options, url: basePath + localVarAxiosArgs.url };
                 return axios.request(axiosRequestArgs);
             };
         },
@@ -14708,7 +14708,7 @@ export const DefaultApiFp = function(configuration?: Configuration) {
         efastV1RecycleListPost(recycleListReq?: RecycleListReq, options?: any): (axios?: AxiosInstance, basePath?: string) => AxiosPromise<RecycleListRes> {
             const localVarAxiosArgs = DefaultApiAxiosParamCreator(configuration).efastV1RecycleListPost(recycleListReq, options);
             return (axios: AxiosInstance = globalAxios, basePath: string = BASE_PATH) => {
-                const axiosRequestArgs = {...localVarAxiosArgs.options, url: basePath + localVarAxiosArgs.url};
+                const axiosRequestArgs = { ...localVarAxiosArgs.options, url: basePath + localVarAxiosArgs.url };
                 return axios.request(axiosRequestArgs);
             };
         },
@@ -14722,7 +14722,7 @@ export const DefaultApiFp = function(configuration?: Configuration) {
         efastV1RecycleRestorePost(recycleRestoreReq?: RecycleRestoreReq, options?: any): (axios?: AxiosInstance, basePath?: string) => AxiosPromise<RecycleRestoreRes> {
             const localVarAxiosArgs = DefaultApiAxiosParamCreator(configuration).efastV1RecycleRestorePost(recycleRestoreReq, options);
             return (axios: AxiosInstance = globalAxios, basePath: string = BASE_PATH) => {
-                const axiosRequestArgs = {...localVarAxiosArgs.options, url: basePath + localVarAxiosArgs.url};
+                const axiosRequestArgs = { ...localVarAxiosArgs.options, url: basePath + localVarAxiosArgs.url };
                 return axios.request(axiosRequestArgs);
             };
         },
@@ -14736,7 +14736,7 @@ export const DefaultApiFp = function(configuration?: Configuration) {
         efastV1RecycleSetretentiondaysPost(recycleSetretentiondaysReq?: RecycleSetretentiondaysReq, options?: any): (axios?: AxiosInstance, basePath?: string) => AxiosPromise<object> {
             const localVarAxiosArgs = DefaultApiAxiosParamCreator(configuration).efastV1RecycleSetretentiondaysPost(recycleSetretentiondaysReq, options);
             return (axios: AxiosInstance = globalAxios, basePath: string = BASE_PATH) => {
-                const axiosRequestArgs = {...localVarAxiosArgs.options, url: basePath + localVarAxiosArgs.url};
+                const axiosRequestArgs = { ...localVarAxiosArgs.options, url: basePath + localVarAxiosArgs.url };
                 return axios.request(axiosRequestArgs);
             };
         },
@@ -14752,7 +14752,7 @@ export const DefaultApiFp = function(configuration?: Configuration) {
         userManagementV1GroupMembersIdGet(id: string, offset?: string, limit?: string, options?: any): (axios?: AxiosInstance, basePath?: string) => AxiosPromise<SimpleMemberList> {
             const localVarAxiosArgs = DefaultApiAxiosParamCreator(configuration).userManagementV1GroupMembersIdGet(id, offset, limit, options);
             return (axios: AxiosInstance = globalAxios, basePath: string = BASE_PATH) => {
-                const axiosRequestArgs = {...localVarAxiosArgs.options, url: basePath + localVarAxiosArgs.url};
+                const axiosRequestArgs = { ...localVarAxiosArgs.options, url: basePath + localVarAxiosArgs.url };
                 return axios.request(axiosRequestArgs);
             };
         },
@@ -14767,7 +14767,7 @@ export const DefaultApiFp = function(configuration?: Configuration) {
         userManagementV1GroupsGet(offset?: string, limit?: string, options?: any): (axios?: AxiosInstance, basePath?: string) => AxiosPromise<GroupList> {
             const localVarAxiosArgs = DefaultApiAxiosParamCreator(configuration).userManagementV1GroupsGet(offset, limit, options);
             return (axios: AxiosInstance = globalAxios, basePath: string = BASE_PATH) => {
-                const axiosRequestArgs = {...localVarAxiosArgs.options, url: basePath + localVarAxiosArgs.url};
+                const axiosRequestArgs = { ...localVarAxiosArgs.options, url: basePath + localVarAxiosArgs.url };
                 return axios.request(axiosRequestArgs);
             };
         },
@@ -14784,7 +14784,7 @@ export const DefaultApiFp = function(configuration?: Configuration) {
         userManagementV1SearchInGroupGet(keyword: string, type: string, offset?: string, limit?: string, options?: any): (axios?: AxiosInstance, basePath?: string) => AxiosPromise<GroupAndMemberInfos> {
             const localVarAxiosArgs = DefaultApiAxiosParamCreator(configuration).userManagementV1SearchInGroupGet(keyword, type, offset, limit, options);
             return (axios: AxiosInstance = globalAxios, basePath: string = BASE_PATH) => {
-                const axiosRequestArgs = {...localVarAxiosArgs.options, url: basePath + localVarAxiosArgs.url};
+                const axiosRequestArgs = { ...localVarAxiosArgs.options, url: basePath + localVarAxiosArgs.url };
                 return axios.request(axiosRequestArgs);
             };
         },
@@ -15704,7 +15704,7 @@ export const DefaultApiFactory = function (configuration?: Configuration, basePa
             return DefaultApiFp(configuration).efastV1FileOpstatisticsPost(fileOpstatisticsReq, options)(axios, basePath);
         },
         /**
-         * 1. 如果reqmethod为PUT，收到响应后，客户端自行发送上传文件http请求到对象存储，填入响应中authrequest字段包含的header，然后15分钟内发送PUT请求            示例：            URL：https://s3-ap-northeast-1.amazonaws.com/anyshares3accesstestbucket/21A9B9FD1B524CB49D54BF7399F82EB4/AAA6CBAFE45B4E4D884DC59805E60A5C            Header：      ```      “Authorization: AWS AKIAJEROARV2UTTADY6A:PkLXjvYrDGDVZgTD8WVbMmS33q4=”      “Date: Tue, 07 Apr 2015 02:35:36 GMT”      “Content-Length: 42”      “Content-Type: application/octet-stream”      ```            Body：文件内容  2. 如果reqmethod为POST，收到响应后，客户端自行设置发送上传文件内容的表单请求到对象存储，填入各表单项，然后15分钟内发送POST请求。阿里云OSS和亚马逊S3要求file必须为表单中最后一个域。  
+         * 1. 如果reqmethod为PUT，收到响应后，客户端自行发送上传文件http请求到对象存储，填入响应中authrequest字段包含的header，然后15分钟内发送PUT请求 
          * @summary 开始上传文件协议
          * @param {FileOsbeginuploadReq} [fileOsbeginuploadReq] 
          * @param {*} [options] Override http request option.
@@ -15714,7 +15714,7 @@ export const DefaultApiFactory = function (configuration?: Configuration, basePa
             return DefaultApiFp(configuration).efastV1FileOsbeginuploadPost(fileOsbeginuploadReq, options)(axios, basePath);
         },
         /**
-         * 接口调用成功，收到200响应时，表单中json部分含义：  - authrequest[0]：请求方法  - authrequest[1]: 待上传的资源URL  - authrequest[2]及以后项（如果存在）：请求头，格式为“key: value”    客户端15分钟内自行发送相关分片信息的请求到云存储平台    mothod为：PUT    URL为：https://s3-ap-northeast-1.amazonaws.com/anyshares3accesstestbucket/21A9B9FD1B524CB49D54BF7399F82EB4/AAA6CBAFE45B4E4D884DC59805E60A5C?uploadId=0004B9895DBBB6EC98E36    Header包含：  “Authorization: AWS AKIAJEROARV2UTTADY6A:PkLXjvYrDGDVZgTD8WVbMmS33q4=”  “Date: Tue, 07 Apr 2015 02:35:36 GMT”  “Content-Length: 4200”    Body为返回的body内容中除了参数之外的部分：   ```xml  <CompleteMultipartUpload>  <Part>  <PartNumber>1</PartNumber>  <ETag>3349DC700140D7F86A078484278075A9</ETag>  </Part>  <Part>  <PartNumber>2</PartNumber>  <ETag>22222C700140D7F86A078484278075A9</ETag>  </Part>  </CompleteMultipartUpload>  ```  
+         * 接口调用成功，收到200响应时，表单中json部分含义：  - authrequest[0]：请求方法  - authrequest[1]: 待上传的资源URL  - authrequest[2]及以后项（如果存在）：请求头，格式为“key: value”    客户端15分钟内自行发送相关分片信息的请求到云存储平台    mothod为：PUT
          * @summary 上传大文件的分块完成协议
          * @param {FileOscompleteuploadReq} [fileOscompleteuploadReq] 
          * @param {*} [options] Override http request option.
@@ -15724,7 +15724,7 @@ export const DefaultApiFactory = function (configuration?: Configuration, basePa
             return DefaultApiFp(configuration).efastV1FileOscompleteuploadPost(fileOscompleteuploadReq, options)(axios, basePath);
         },
         /**
-         * 1. 收到请求响应时，客户端自行向对象存储发送下载文件内容的请求  2. 如果authtype为空，则按照下面的方式下载，15分钟内发送GET请求  URL为：https://s3-ap-northeast-1.amazonaws.com/anyshares3accesstestbucket/21A9B9FD1B524CB49D54BF7399F82EB4/AAA6CBAFE45B4E4D884DC59805E60A5C  Header包含：  “Authorization: AWS AKIAJEROARV2UTTADY6A:PkLXjvYrDGDVZgTD8WVbMmS33q4=”  “Date: Tue, 07 Apr 2015 02:35:36 GMT”  Body为：空  3. 如果authtype为QUERY_STRING，则按照下面的方式下载，15分钟内发送GET请求  URL为：https://s3-ap-northeast-1.amazonaws.com/anyshares3accesstestbucket/21A9B9FD1B524CB49D54BF7399F82EB4/AAA6CBAFE45B4E4D884DC59805E60A5C?AWSAccessKeyId=AKIAJEROARV2UTTADY6A&Expires=1428384700&Signature=lnOy3CUh9KNknNDX8aB8Mhur7%2Bw%3D  4. 如果想分块下载，请自行在Header中加入Range  5. 发送GET请求后，可能并不能直接获取数据，将获得 HTTP/1.1 307 Temporary Redirect，此时重定向的数据实际下载地址包含在返回的header中，形如：  Location: http://iovip.qbox.me/file/8QhbPDcKueO0ZOEDqnroKw0y478TNADQAwAAACfQem72ulBu9rl6bvYDEHDiumoeFLDnJKS5em72uXpu9rl6bvbWRi-vul_Q0Ckfu5f7PMvE9OoXIdfQ0NDT-tDQ0NDQ0N2pQCrK0NDQcHNHYPbupfOQx9EUBTS5bh6sR1Jtqr4maaq-JmmqviY=  对于重定向的情况，客户端需要判断并从新地址下载数据，以C++开发使用curl为例，需要设置：curl_easy_setopt (_curl, CURLOPT_FOLLOWLOCATION, 1); 
+         * 1. 收到请求响应时，客户端自行向对象存储发送下载文件内容的请求  2. 如果authtype为空，则按照下面的方式下载，15分钟内发送GET请求
          * @summary 下载文件协议
          * @param {FileOsdownloadReq} [fileOsdownloadReq] 
          * @param {*} [options] Override http request option.
@@ -15763,7 +15763,7 @@ export const DefaultApiFactory = function (configuration?: Configuration, basePa
             return DefaultApiFp(configuration).efastV1FileOsoptionPost(options)(axios, basePath);
         },
         /**
-         * 1. 收到该响应后，客户端自行发送文件分片内容的请求到对象存储。  2. 客户端在请求Header中填入authrequests中的header，15分钟内发送PUT请求        示例：        URL：https://s3-ap-northeast-1.amazonaws.com/anyshares3accesstestbucket/21A9B9FD1B524CB49D54BF7399F82EB4/AAA6CBAFE45B4E4D884DC59805E60A5C?partNumber=1&uploadId=0004B9895DBBB6EC98E36            Header：      ```      “Authorization: AWS AKIAJEROARV2UTTADY6A:PkLXjvYrDGDVZgTD8WVbMmS33q4=”      “Date: Tue, 07 Apr 2015 02:35:36 GMT”      “Content-Length: 42”      ```            Body：分片内容  3. 对象存储返回响应信息时，响应header中可能包含Etag值，用于标识所上传对象分片。如果存在key为ETag/ETAG/etag/Etag等值的header，需要取得其对应的值(如果这些header都没有，直接使用空字符串)，作为完成大文件分块上传协议oscompleteupload的传参，见参数partetag及请求示例。            需注意，不同对象存储返回的Etag的header，key大小写可能不同，可能为ETag/ETAG/etag/Etag等(如果这些header都没有，直接使用空字符串)。可以对响应header进行遍历，对每个key转为小写，和字符串“etag”对比，获取对应的值。一个可能的响应header示例为：Etag: ce1c8d1c3900c64feaa651052d75acd9    4. 亚马逊S3限定分块大小不能小于5MB，七牛存储限定分块大小为4M的倍数。见“对象存储选项值协议”说明
+         * 1. 收到该响应后，客户端自行发送文件分片内容的请求到对象存储。  2. 客户端在请求Header中填入authrequests中的header，15分钟内发送PUT请求
          * @summary 上传大文件的分块协议
          * @param {FileOsuploadpartReq} [fileOsuploadpartReq] 
          * @param {*} [options] Override http request option.
@@ -17099,8 +17099,7 @@ export class DefaultApi extends BaseAPI {
     }
 
     /**
-     * 1. 如果reqmethod为PUT，收到响应后，客户端自行发送上传文件http请求到对象存储，填入响应中authrequest字段包含的header，然后15分钟内发送PUT请求            示例：            URL：https://s3-ap-northeast-1.amazonaws.com/anyshares3accesstestbucket/21A9B9FD1B524CB49D54BF7399F82EB4/AAA6CBAFE45B4E4D884DC59805E60A5C            Header：      ```      “Authorization: AWS AKIAJEROARV2UTTADY6A:PkLXjvYrDGDVZgTD8WVbMmS33q4=”      “Date: Tue, 07 Apr 2015 02:35:36 GMT”      “Content-Length: 42”      “Content-Type: application/octet-stream”      ```            Body：文件内容  2. 如果reqmethod为POST，收到响应后，客户端自行设置发送上传文件内容的表单请求到对象存储，填入各表单项，然后15分钟内发送POST请求。阿里云OSS和亚马逊S3要求file必须为表单中最后一个域。  
-     * @summary 开始上传文件协议
+     * 1. 如果reqmethod为PUT，收到响应后，客户端自行发送上传文件http请求到对象存储，填入响应中authrequest字段包含的header，然后15分钟内发送PUT请求
      * @param {FileOsbeginuploadReq} [fileOsbeginuploadReq] 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
@@ -17111,7 +17110,7 @@ export class DefaultApi extends BaseAPI {
     }
 
     /**
-     * 接口调用成功，收到200响应时，表单中json部分含义：  - authrequest[0]：请求方法  - authrequest[1]: 待上传的资源URL  - authrequest[2]及以后项（如果存在）：请求头，格式为“key: value”    客户端15分钟内自行发送相关分片信息的请求到云存储平台    mothod为：PUT    URL为：https://s3-ap-northeast-1.amazonaws.com/anyshares3accesstestbucket/21A9B9FD1B524CB49D54BF7399F82EB4/AAA6CBAFE45B4E4D884DC59805E60A5C?uploadId=0004B9895DBBB6EC98E36    Header包含：  “Authorization: AWS AKIAJEROARV2UTTADY6A:PkLXjvYrDGDVZgTD8WVbMmS33q4=”  “Date: Tue, 07 Apr 2015 02:35:36 GMT”  “Content-Length: 4200”    Body为返回的body内容中除了参数之外的部分：   ```xml  <CompleteMultipartUpload>  <Part>  <PartNumber>1</PartNumber>  <ETag>3349DC700140D7F86A078484278075A9</ETag>  </Part>  <Part>  <PartNumber>2</PartNumber>  <ETag>22222C700140D7F86A078484278075A9</ETag>  </Part>  </CompleteMultipartUpload>  ```  
+     * 接口调用成功，收到200响应时，表单中json部分含义：  - authrequest[0]：请求方法  - authrequest[1]: 待上传的资源URL  - authrequest[2]及以后项（如果存在）：请求头，格式为“key: value”    客户端15分钟内自行发送相关分片信息的请求到云存储平台
      * @summary 上传大文件的分块完成协议
      * @param {FileOscompleteuploadReq} [fileOscompleteuploadReq] 
      * @param {*} [options] Override http request option.
@@ -17123,7 +17122,7 @@ export class DefaultApi extends BaseAPI {
     }
 
     /**
-     * 1. 收到请求响应时，客户端自行向对象存储发送下载文件内容的请求  2. 如果authtype为空，则按照下面的方式下载，15分钟内发送GET请求  URL为：https://s3-ap-northeast-1.amazonaws.com/anyshares3accesstestbucket/21A9B9FD1B524CB49D54BF7399F82EB4/AAA6CBAFE45B4E4D884DC59805E60A5C  Header包含：  “Authorization: AWS AKIAJEROARV2UTTADY6A:PkLXjvYrDGDVZgTD8WVbMmS33q4=”  “Date: Tue, 07 Apr 2015 02:35:36 GMT”  Body为：空  3. 如果authtype为QUERY_STRING，则按照下面的方式下载，15分钟内发送GET请求  URL为：https://s3-ap-northeast-1.amazonaws.com/anyshares3accesstestbucket/21A9B9FD1B524CB49D54BF7399F82EB4/AAA6CBAFE45B4E4D884DC59805E60A5C?AWSAccessKeyId=AKIAJEROARV2UTTADY6A&Expires=1428384700&Signature=lnOy3CUh9KNknNDX8aB8Mhur7%2Bw%3D  4. 如果想分块下载，请自行在Header中加入Range  5. 发送GET请求后，可能并不能直接获取数据，将获得 HTTP/1.1 307 Temporary Redirect，此时重定向的数据实际下载地址包含在返回的header中，形如：  Location: http://iovip.qbox.me/file/8QhbPDcKueO0ZOEDqnroKw0y478TNADQAwAAACfQem72ulBu9rl6bvYDEHDiumoeFLDnJKS5em72uXpu9rl6bvbWRi-vul_Q0Ckfu5f7PMvE9OoXIdfQ0NDT-tDQ0NDQ0N2pQCrK0NDQcHNHYPbupfOQx9EUBTS5bh6sR1Jtqr4maaq-JmmqviY=  对于重定向的情况，客户端需要判断并从新地址下载数据，以C++开发使用curl为例，需要设置：curl_easy_setopt (_curl, CURLOPT_FOLLOWLOCATION, 1); 
+     * 1. 收到请求响应时，客户端自行向对象存储发送下载文件内容的请求  2. 如果authtype为空，则按照下面的方式下载，15分钟内发送GET请求
      * @summary 下载文件协议
      * @param {FileOsdownloadReq} [fileOsdownloadReq] 
      * @param {*} [options] Override http request option.
@@ -17170,7 +17169,7 @@ export class DefaultApi extends BaseAPI {
     }
 
     /**
-     * 1. 收到该响应后，客户端自行发送文件分片内容的请求到对象存储。  2. 客户端在请求Header中填入authrequests中的header，15分钟内发送PUT请求        示例：        URL：https://s3-ap-northeast-1.amazonaws.com/anyshares3accesstestbucket/21A9B9FD1B524CB49D54BF7399F82EB4/AAA6CBAFE45B4E4D884DC59805E60A5C?partNumber=1&uploadId=0004B9895DBBB6EC98E36            Header：      ```      “Authorization: AWS AKIAJEROARV2UTTADY6A:PkLXjvYrDGDVZgTD8WVbMmS33q4=”      “Date: Tue, 07 Apr 2015 02:35:36 GMT”      “Content-Length: 42”      ```            Body：分片内容  3. 对象存储返回响应信息时，响应header中可能包含Etag值，用于标识所上传对象分片。如果存在key为ETag/ETAG/etag/Etag等值的header，需要取得其对应的值(如果这些header都没有，直接使用空字符串)，作为完成大文件分块上传协议oscompleteupload的传参，见参数partetag及请求示例。            需注意，不同对象存储返回的Etag的header，key大小写可能不同，可能为ETag/ETAG/etag/Etag等(如果这些header都没有，直接使用空字符串)。可以对响应header进行遍历，对每个key转为小写，和字符串“etag”对比，获取对应的值。一个可能的响应header示例为：Etag: ce1c8d1c3900c64feaa651052d75acd9    4. 亚马逊S3限定分块大小不能小于5MB，七牛存储限定分块大小为4M的倍数。见“对象存储选项值协议”说明
+     * 1. 收到该响应后，客户端自行发送文件分片内容的请求到对象存储。  2. 客户端在请求Header中填入authrequests中的header，15分钟内发送PUT请求
      * @summary 上传大文件的分块协议
      * @param {FileOsuploadpartReq} [fileOsuploadpartReq] 
      * @param {*} [options] Override http request option.
