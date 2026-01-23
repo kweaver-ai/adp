@@ -142,7 +142,7 @@ depServices:
     privatePort: 9101
     privateProtocol: http
   mf-model-api:
-    privateHost: "mf-model-api.anyshare"
+    privateHost: "mf-model-api"
     privatePort: 9898
     privateProtocol: "http"
   mf-model-manager:
