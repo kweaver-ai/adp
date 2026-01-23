@@ -16,17 +16,15 @@ import java.sql.SQLException;
  */
 @Slf4j
 @Component
-public class PostgreSQLDataSourceDriver implements DataSourceDriver {
+public class PostgreSQLDataSourceDriver {
 
     private static final String POSTGRESQL_TYPE = "postgresql";
     private static final String JDBC_URL_TEMPLATE = "jdbc:postgresql://%s:%d/%s";
 
-    @Override
     public String getSupportedType() {
         return POSTGRESQL_TYPE;
     }
 
-    @Override
     public boolean testConnection(BinDataVo binData) throws SQLException {
         // 验证参数
         validateConnectionParams(binData);
@@ -58,7 +56,6 @@ public class PostgreSQLDataSourceDriver implements DataSourceDriver {
         }
     }
 
-    @Override
     public void validateConnectionParams(BinDataVo binData) {
         if (binData == null) {
             throw new IllegalArgumentException("数据源配置不能为空");
@@ -85,7 +82,6 @@ public class PostgreSQLDataSourceDriver implements DataSourceDriver {
         }
     }
 
-    @Override
     public String getConnectionUrlTemplate() {
         return JDBC_URL_TEMPLATE;
     }
