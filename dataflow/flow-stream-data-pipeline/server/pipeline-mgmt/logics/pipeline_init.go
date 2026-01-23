@@ -112,11 +112,11 @@ func (pi *PipelineInit) Init() {
 		return
 	}
 
-	pi.CreatePipeline(ctx, DIP_AUDIT_LOG)
+	// pi.CreatePipeline(ctx, DIP_AUDIT_LOG)
 	// pi.CreatePipeline(ctx, DIP_O11Y_LOG)
 	// pi.CreatePipeline(ctx, DIP_O11Y_METRIC)
 	// pi.CreatePipeline(ctx, DIP_O11Y_TRACE)
-	pi.CreatePipeline(ctx, DIP_MODEL_PERSISTENCE)
+	// pi.CreatePipeline(ctx, DIP_MODEL_PERSISTENCE)
 }
 
 func (pi *PipelineInit) CreatePipeline(ctx context.Context, pipeline *interfaces.Pipeline) {

@@ -18,6 +18,7 @@ type KubernetesCfg struct {
 	ContainerArgs []string
 	WorkingDir    string
 	VolumeMounts  []corev1.VolumeMount
+	Volumes       []corev1.Volume
 }
 
 type ApplyAction string

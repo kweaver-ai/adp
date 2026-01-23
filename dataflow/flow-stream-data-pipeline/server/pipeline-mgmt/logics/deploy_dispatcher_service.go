@@ -129,6 +129,8 @@ func (d *deployDispatcherService) UpdateDeploy(ctx context.Context, pipelineId s
 	ds.Labels = k8scfg.Label
 	ds.Spec.Template.Spec.Containers = []corev1.Container{d.newWorkerContainer(k8scfg)}
 	ds.OwnerReferences = []metav1.OwnerReference{ref}
+	// 使用配置中的 volumes
+	ds.Spec.Template.Spec.Volumes = k8scfg.Volumes
 
 	_, err = d.k8sCli.UpdateDeploy(ctx, ds)
 	if err != nil {
