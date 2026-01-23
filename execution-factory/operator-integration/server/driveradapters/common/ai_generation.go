@@ -93,6 +93,7 @@ func (h *aiGenerationHandler) FunctionAIGeneration(c *gin.Context) {
 	c.Header("Access-Control-Allow-Headers", "Cache-Control")
 	c.Header("Access-Control-Allow-Credentials", "false")
 	// SSE 响应
+	var finish bool
 	c.Stream(func(w io.Writer) bool {
 		select {
 		case msg, ok := <-messageChan:
@@ -121,8 +122,11 @@ func (h *aiGenerationHandler) FunctionAIGeneration(c *gin.Context) {
 					flushIfSupported(w) // 确保错误消息立即发送
 					return false
 				}
+				if len(result.Choices) > 0 && result.Choices[0].FinishReason == "stop" {
+					finish = true
+				}
 				// 检查是否有choices
-				if len(result.Choices) == 0 {
+				if !finish && len(result.Choices) == 0 && result.Model == "" && result.ID == "" && result.Object == "" {
 					h.Logger.WithContext(c.Request.Context()).Error(fmt.Sprintf("invalid SSE data format: %s", content))
 					err = errors.NewHTTPError(c.Request.Context(), http.StatusBadRequest, errors.ErrExtFunctionAIGenerateModelFailed, fmt.Sprintf("invalid SSE data format: %s", content))
 					c.SSEvent("error", utils.ObjectToJSON(err))
