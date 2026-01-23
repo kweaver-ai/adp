@@ -8,7 +8,6 @@ import (
 	"fmt"
 	"net/http"
 
-	o11y "github.com/kweaver-ai/kweaver-go-lib/observability"
 	infracommon "github.com/kweaver-ai/adp/execution-factory/operator-integration/server/infra/common"
 	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/infra/errors"
 	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/infra/telemetry"
@@ -17,6 +16,7 @@ import (
 	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/logics/common"
 	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/logics/metadata"
 	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/logics/metric"
+	o11y "github.com/kweaver-ai/kweaver-go-lib/observability"
 
 	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/utils"
 )
@@ -615,7 +615,6 @@ func (s *ToolServiceImpl) UpdateToolStatus(ctx context.Context, req *interfaces.
 				}
 			}
 		}
-		return
 	}
 
 	// 更新工具状态
