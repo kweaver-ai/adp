@@ -65,7 +65,7 @@ export const useConstants = () => {
 
   // Task Detail 概念类型标签
   const CONCEPT_TYPE_LABELS: Record<TaskType.ConceptTypeEnum, string> = {
-    [TaskType.ConceptTypeEnum.Object]: intl.get('Task.objectClass'),
+    [TaskType.ConceptTypeEnum.Object]: intl.get('Global.objectClass'),
   };
 
   // Task Detail 概念类型选项
