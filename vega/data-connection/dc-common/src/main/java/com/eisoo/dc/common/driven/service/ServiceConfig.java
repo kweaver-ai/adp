@@ -55,29 +55,21 @@ public class ServiceConfig {
 
     private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
     private final AtomicReference<String> vegaCalculateCoordinatorFQDN = new AtomicReference<>();
-    private String hydraAdminFQDN;
-    private String userManagementPrivateFQDN;
-    private String authorizationPrivateFQDN;
-    private String efastPublicFQDN;
-    private String efastPrivateFQDN;
+    private CoreV1Api coreV1Api;
 
     @PostConstruct
-    public void init() throws IOException {
+    public void init() {
         if (!isLocal) {
-            ApiClient client = Config.fromCluster();
-            CoreV1Api api = new CoreV1Api(client);
+            try {
+                ApiClient client = Config.fromCluster();
+                coreV1Api = new CoreV1Api(client);
 
-            // 初始化获取所有服务地址
-            hydraAdminFQDN = getServiceFQDN(api, hydraAdmin);
-            userManagementPrivateFQDN = getServiceFQDN(api, userManagementPrivate);
-            authorizationPrivateFQDN = getServiceFQDN(api, authorizationPrivate);
-            efastPublicFQDN = getServiceFQDN(api, efastPublic);
-            efastPrivateFQDN = getServiceFQDN(api, efastPrivate);
-
-            // 定时更新vegaCalculateCoordinator地址
-            updateVegaCalculateCoordinator(api);
-            scheduler.scheduleAtFixedRate(() -> updateVegaCalculateCoordinator(api),
-                    1, 1, TimeUnit.MINUTES); // 每1分钟更新一次
+                // 定时更新vegaCalculateCoordinator地址
+                scheduler.scheduleWithFixedDelay(() -> updateVegaCalculateCoordinator(coreV1Api),
+                        0, 1, TimeUnit.MINUTES); // 每1分钟更新一次
+            } catch (IOException e) {
+                throw new RuntimeException("Failed to create Kubernetes API client", e);
+            }
         }
     }
 
@@ -105,16 +97,16 @@ public class ServiceConfig {
         }else{
             return new ServiceEndpoints(
                     () -> vegaCalculateCoordinatorFQDN.get(),
-                    () -> hydraAdminFQDN,
-                    () -> userManagementPrivateFQDN,
-                    () -> authorizationPrivateFQDN,
-                    () -> efastPublicFQDN,
-                    () -> efastPrivateFQDN
+                    () -> getServiceFQDN(coreV1Api, hydraAdmin),
+                    () -> getServiceFQDN(coreV1Api, userManagementPrivate),
+                    () -> getServiceFQDN(coreV1Api, authorizationPrivate),
+                    () -> getServiceFQDN(coreV1Api, efastPublic),
+                    () -> getServiceFQDN(coreV1Api, efastPrivate)
             );
         }
     }
 
-    private String getServiceFQDN(CoreV1Api api, String url) {
+    public String getServiceFQDN(CoreV1Api api, String url) {
         String serviceName = url.replace("http://", "").split(":")[0];
         int port = Integer.parseInt(url.split(":")[2]);
 
