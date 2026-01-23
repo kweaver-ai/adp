@@ -20,7 +20,7 @@ public class ServiceEndpoints {
             Supplier<String> authorizationPrivate,
             Supplier<String> efastPublic,
             Supplier<String> efastPrivate) {
-        this.vegaCalculateCoordinator = memoize(vegaCalculateCoordinator, "vegaCalculateCoordinator");
+        this.vegaCalculateCoordinator = vegaCalculateCoordinator;
         this.hydraAdmin = memoize(hydraAdmin, "hydraAdmin");
         this.userManagementPrivate = memoize(userManagementPrivate, "userManagementPrivate");
         this.authorizationPrivate = memoize(authorizationPrivate, "authorizationPrivate");
