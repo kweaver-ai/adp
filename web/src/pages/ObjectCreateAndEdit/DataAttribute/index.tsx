@@ -331,6 +331,7 @@ const DataAttribute = forwardRef((props: TProps, ref) => {
               display_key: data.display_key || false,
               incremental_key: data.incremental_key || false,
               mapped_field: p.mapped_field,
+              index_config: p.index_config,
             };
           }
           if (data.display_key && p.display_key) {
@@ -564,6 +565,11 @@ const DataAttribute = forwardRef((props: TProps, ref) => {
         display_name: f.display_name,
         type: f.type,
         comment: f.comment,
+        mapped_field: {
+          name: f.name,
+          display_name: f.display_name,
+          type: f.type,
+        },
       }));
     setLocalDataProperties((prev) => [...newAttributes, ...prev]);
   };

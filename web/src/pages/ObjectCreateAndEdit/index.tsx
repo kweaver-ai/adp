@@ -134,6 +134,7 @@ const ObjectCreateAndEdit = () => {
         type: item.type || '',
         comment: item.comment || '',
         mapped_field: item.mapped_field,
+        index_config: item.index_config,
       }));
 
       const postData: OntologyObjectType.ReqObjectType = {
