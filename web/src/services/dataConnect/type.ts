@@ -42,6 +42,7 @@ export interface DataSource {
   authMethod?: number; // 前端转换字段：认证方式
   children?: DataSource[];
   metadata_obtain_level: number; // 元数据获取级别
+  selectable?: boolean; // 是否可选择
 }
 
 // 列表查询参数
