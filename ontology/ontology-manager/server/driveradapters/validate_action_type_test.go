@@ -19,8 +19,10 @@ func Test_ValidateActionType(t *testing.T) {
 		Convey("Success with valid action type\n", func() {
 			at := &interfaces.ActionType{
 				ActionTypeWithKeyField: interfaces.ActionTypeWithKeyField{
-					ATID:   "at1",
-					ATName: "action1",
+					ATID:         "at1",
+					ATName:       "action1",
+					ActionType:   interfaces.ACTION_TYPE_ADD,
+					ObjectTypeID: "ot1",
 				},
 			}
 			err := ValidateActionType(ctx, at)
@@ -30,8 +32,10 @@ func Test_ValidateActionType(t *testing.T) {
 		Convey("Failed with invalid ID\n", func() {
 			at := &interfaces.ActionType{
 				ActionTypeWithKeyField: interfaces.ActionTypeWithKeyField{
-					ATID:   "_invalid_id",
-					ATName: "action1",
+					ATID:         "_invalid_id",
+					ATName:       "action1",
+					ActionType:   interfaces.ACTION_TYPE_ADD,
+					ObjectTypeID: "ot1",
 				},
 			}
 			err := ValidateActionType(ctx, at)
@@ -41,8 +45,10 @@ func Test_ValidateActionType(t *testing.T) {
 		Convey("Failed with empty name\n", func() {
 			at := &interfaces.ActionType{
 				ActionTypeWithKeyField: interfaces.ActionTypeWithKeyField{
-					ATID:   "at1",
-					ATName: "",
+					ATID:         "at1",
+					ATName:       "",
+					ActionType:   interfaces.ACTION_TYPE_ADD,
+					ObjectTypeID: "ot1",
 				},
 			}
 			err := ValidateActionType(ctx, at)
@@ -54,8 +60,10 @@ func Test_ValidateActionType(t *testing.T) {
 		Convey("Failed with invalid action source type\n", func() {
 			at := &interfaces.ActionType{
 				ActionTypeWithKeyField: interfaces.ActionTypeWithKeyField{
-					ATID:   "at1",
-					ATName: "action1",
+					ATID:         "at1",
+					ATName:       "action1",
+					ActionType:   interfaces.ACTION_TYPE_ADD,
+					ObjectTypeID: "ot1",
 					ActionSource: interfaces.ActionSource{
 						Type: "invalid_type",
 					},
@@ -68,10 +76,12 @@ func Test_ValidateActionType(t *testing.T) {
 		Convey("Failed with tool type having mcp data\n", func() {
 			at := &interfaces.ActionType{
 				ActionTypeWithKeyField: interfaces.ActionTypeWithKeyField{
-					ATID:   "at1",
-					ATName: "action1",
+					ATID:         "at1",
+					ATName:       "action1",
+					ObjectTypeID: "ot1",
+					ActionType:   interfaces.ACTION_TYPE_ADD,
 					ActionSource: interfaces.ActionSource{
-						Type:  interfaces.ACTION_TYPE_TOOL,
+						Type:  interfaces.ACTION_SOURCE_TYPE_TOOL,
 						McpID: "mcp1",
 					},
 				},
@@ -83,10 +93,12 @@ func Test_ValidateActionType(t *testing.T) {
 		Convey("Failed with tool type having tool_name\n", func() {
 			at := &interfaces.ActionType{
 				ActionTypeWithKeyField: interfaces.ActionTypeWithKeyField{
-					ATID:   "at1",
-					ATName: "action1",
+					ATID:         "at1",
+					ATName:       "action1",
+					ObjectTypeID: "ot1",
+					ActionType:   interfaces.ACTION_TYPE_ADD,
 					ActionSource: interfaces.ActionSource{
-						Type:     interfaces.ACTION_TYPE_TOOL,
+						Type:     interfaces.ACTION_SOURCE_TYPE_TOOL,
 						ToolName: "tool1",
 					},
 				},
@@ -98,10 +110,12 @@ func Test_ValidateActionType(t *testing.T) {
 		Convey("Success with tool type without mcp data\n", func() {
 			at := &interfaces.ActionType{
 				ActionTypeWithKeyField: interfaces.ActionTypeWithKeyField{
-					ATID:   "at1",
-					ATName: "action1",
+					ATID:         "at1",
+					ATName:       "action1",
+					ObjectTypeID: "ot1",
+					ActionType:   interfaces.ACTION_TYPE_ADD,
 					ActionSource: interfaces.ActionSource{
-						Type: interfaces.ACTION_TYPE_TOOL,
+						Type: interfaces.ACTION_SOURCE_TYPE_TOOL,
 					},
 				},
 			}
@@ -112,10 +126,12 @@ func Test_ValidateActionType(t *testing.T) {
 		Convey("Success with mcp type without tool data\n", func() {
 			at := &interfaces.ActionType{
 				ActionTypeWithKeyField: interfaces.ActionTypeWithKeyField{
-					ATID:   "at1",
-					ATName: "action1",
+					ATID:         "at1",
+					ATName:       "action1",
+					ObjectTypeID: "ot1",
+					ActionType:   interfaces.ACTION_TYPE_ADD,
 					ActionSource: interfaces.ActionSource{
-						Type: interfaces.ACTION_TYPE_MCP,
+						Type: interfaces.ACTION_SOURCE_TYPE_MCP,
 					},
 				},
 			}
@@ -126,8 +142,10 @@ func Test_ValidateActionType(t *testing.T) {
 		Convey("Failed with empty parameter name\n", func() {
 			at := &interfaces.ActionType{
 				ActionTypeWithKeyField: interfaces.ActionTypeWithKeyField{
-					ATID:   "at1",
-					ATName: "action1",
+					ATID:         "at1",
+					ATName:       "action1",
+					ObjectTypeID: "ot1",
+					ActionType:   interfaces.ACTION_TYPE_ADD,
 					Parameters: []interfaces.Parameter{
 						{
 							Name: "",
@@ -142,10 +160,11 @@ func Test_ValidateActionType(t *testing.T) {
 		Convey("Failed with mcp type having box_id\n", func() {
 			at := &interfaces.ActionType{
 				ActionTypeWithKeyField: interfaces.ActionTypeWithKeyField{
-					ATID:   "at1",
-					ATName: "action1",
+					ATID:         "at1",
+					ATName:       "action1",
+					ObjectTypeID: "ot1",
 					ActionSource: interfaces.ActionSource{
-						Type:  interfaces.ACTION_TYPE_MCP,
+						Type:  interfaces.ACTION_SOURCE_TYPE_MCP,
 						BoxID: "box1",
 					},
 				},
@@ -157,10 +176,12 @@ func Test_ValidateActionType(t *testing.T) {
 		Convey("Failed with mcp type having tool_id\n", func() {
 			at := &interfaces.ActionType{
 				ActionTypeWithKeyField: interfaces.ActionTypeWithKeyField{
-					ATID:   "at1",
-					ATName: "action1",
+					ATID:         "at1",
+					ATName:       "action1",
+					ObjectTypeID: "ot1",
+					ActionType:   interfaces.ACTION_TYPE_ADD,
 					ActionSource: interfaces.ActionSource{
-						Type:   interfaces.ACTION_TYPE_MCP,
+						Type:   interfaces.ACTION_SOURCE_TYPE_MCP,
 						ToolID: "tool1",
 					},
 				},
@@ -172,8 +193,10 @@ func Test_ValidateActionType(t *testing.T) {
 		Convey("Success with valid condition\n", func() {
 			at := &interfaces.ActionType{
 				ActionTypeWithKeyField: interfaces.ActionTypeWithKeyField{
-					ATID:   "at1",
-					ATName: "action1",
+					ATID:         "at1",
+					ATName:       "action1",
+					ObjectTypeID: "ot1",
+					ActionType:   interfaces.ACTION_TYPE_ADD,
 					Condition: &interfaces.CondCfg{
 						ObjectTypeID: "ot1",
 						Field:        "field1",
@@ -209,8 +232,10 @@ func Test_ValidateActionType(t *testing.T) {
 		Convey("Failed with condition missing Operation\n", func() {
 			at := &interfaces.ActionType{
 				ActionTypeWithKeyField: interfaces.ActionTypeWithKeyField{
-					ATID:   "at1",
-					ATName: "action1",
+					ATID:         "at1",
+					ATName:       "action1",
+					ObjectTypeID: "ot1",
+					ActionType:   interfaces.ACTION_TYPE_ADD,
 					Condition: &interfaces.CondCfg{
 						ObjectTypeID: "ot1",
 						Field:        "field1",
@@ -227,8 +252,10 @@ func Test_ValidateActionType(t *testing.T) {
 		Convey("Failed with invalid operation\n", func() {
 			at := &interfaces.ActionType{
 				ActionTypeWithKeyField: interfaces.ActionTypeWithKeyField{
-					ATID:   "at1",
-					ATName: "action1",
+					ATID:         "at1",
+					ATName:       "action1",
+					ObjectTypeID: "ot1",
+					ActionType:   interfaces.ACTION_TYPE_ADD,
 					Condition: &interfaces.CondCfg{
 						ObjectTypeID: "ot1",
 						Field:        "field1",
@@ -246,8 +273,10 @@ func Test_ValidateActionType(t *testing.T) {
 		Convey("Failed with and operation missing field\n", func() {
 			at := &interfaces.ActionType{
 				ActionTypeWithKeyField: interfaces.ActionTypeWithKeyField{
-					ATID:   "at1",
-					ATName: "action1",
+					ATID:         "at1",
+					ATName:       "action1",
+					ObjectTypeID: "ot1",
+					ActionType:   interfaces.ACTION_TYPE_ADD,
 					Condition: &interfaces.CondCfg{
 						ObjectTypeID: "ot1",
 						Operation:    cond.OperationAnd,
@@ -271,8 +300,10 @@ func Test_ValidateActionType(t *testing.T) {
 		Convey("Failed with eq operation having array value\n", func() {
 			at := &interfaces.ActionType{
 				ActionTypeWithKeyField: interfaces.ActionTypeWithKeyField{
-					ATID:   "at1",
-					ATName: "action1",
+					ATID:         "at1",
+					ATName:       "action1",
+					ObjectTypeID: "ot1",
+					ActionType:   interfaces.ACTION_TYPE_ADD,
 					Condition: &interfaces.CondCfg{
 						ObjectTypeID: "ot1",
 						Field:        "field1",
@@ -290,8 +321,10 @@ func Test_ValidateActionType(t *testing.T) {
 		Convey("Failed with in operation missing array value\n", func() {
 			at := &interfaces.ActionType{
 				ActionTypeWithKeyField: interfaces.ActionTypeWithKeyField{
-					ATID:   "at1",
-					ATName: "action1",
+					ATID:         "at1",
+					ATName:       "action1",
+					ObjectTypeID: "ot1",
+					ActionType:   interfaces.ACTION_TYPE_ADD,
 					Condition: &interfaces.CondCfg{
 						ObjectTypeID: "ot1",
 						Field:        "field1",
@@ -309,8 +342,10 @@ func Test_ValidateActionType(t *testing.T) {
 		Convey("Failed with in operation having empty array\n", func() {
 			at := &interfaces.ActionType{
 				ActionTypeWithKeyField: interfaces.ActionTypeWithKeyField{
-					ATID:   "at1",
-					ATName: "action1",
+					ATID:         "at1",
+					ATName:       "action1",
+					ObjectTypeID: "ot1",
+					ActionType:   interfaces.ACTION_TYPE_ADD,
 					Condition: &interfaces.CondCfg{
 						ObjectTypeID: "ot1",
 						Field:        "field1",
@@ -328,8 +363,10 @@ func Test_ValidateActionType(t *testing.T) {
 		Convey("Failed with range operation missing array value\n", func() {
 			at := &interfaces.ActionType{
 				ActionTypeWithKeyField: interfaces.ActionTypeWithKeyField{
-					ATID:   "at1",
-					ATName: "action1",
+					ATID:         "at1",
+					ATName:       "action1",
+					ObjectTypeID: "ot1",
+					ActionType:   interfaces.ACTION_TYPE_ADD,
 					Condition: &interfaces.CondCfg{
 						ObjectTypeID: "ot1",
 						Field:        "field1",
@@ -347,8 +384,10 @@ func Test_ValidateActionType(t *testing.T) {
 		Convey("Failed with range operation having wrong array length\n", func() {
 			at := &interfaces.ActionType{
 				ActionTypeWithKeyField: interfaces.ActionTypeWithKeyField{
-					ATID:   "at1",
-					ATName: "action1",
+					ATID:         "at1",
+					ATName:       "action1",
+					ObjectTypeID: "ot1",
+					ActionType:   interfaces.ACTION_TYPE_ADD,
 					Condition: &interfaces.CondCfg{
 						ObjectTypeID: "ot1",
 						Field:        "field1",
@@ -366,8 +405,10 @@ func Test_ValidateActionType(t *testing.T) {
 		Convey("Success with valid nested condition\n", func() {
 			at := &interfaces.ActionType{
 				ActionTypeWithKeyField: interfaces.ActionTypeWithKeyField{
-					ATID:   "at1",
-					ATName: "action1",
+					ATID:         "at1",
+					ATName:       "action1",
+					ObjectTypeID: "ot1",
+					ActionType:   interfaces.ACTION_TYPE_ADD,
 					Condition: &interfaces.CondCfg{
 						ObjectTypeID: "ot1",
 						Operation:    cond.OperationAnd,

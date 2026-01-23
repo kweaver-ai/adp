@@ -3,14 +3,27 @@ package interfaces
 import "ontology-manager/common/condition"
 
 const (
-	ACTION_TYPE_TOOL = "tool"
-	ACTION_TYPE_MCP  = "mcp"
+	// 行动资源类型
+	ACTION_SOURCE_TYPE_TOOL = "tool"
+	ACTION_SOURCE_TYPE_MCP  = "mcp"
+
+	// 行动类型
+	ACTION_TYPE_ADD    = "add"
+	ACTION_TYPE_MODIFY = "modify"
+	ACTION_TYPE_DELETE = "delete"
 )
 
 var (
 	ACTION_TYPE_SORT = map[string]string{
 		"name":        "f_name",
 		"update_time": "f_update_time",
+	}
+
+	// 行动类型
+	ActionTypeMap = map[string]bool{
+		ACTION_TYPE_ADD:    true,
+		ACTION_TYPE_MODIFY: true,
+		ACTION_TYPE_DELETE: true,
 	}
 
 	// 行动条件操作符
@@ -127,5 +140,5 @@ type ActionTypes struct {
 }
 
 func IsValidActionSourceType(m string) bool {
-	return m == ACTION_TYPE_TOOL || m == ACTION_TYPE_MCP
+	return m == ACTION_SOURCE_TYPE_TOOL || m == ACTION_SOURCE_TYPE_MCP
 }

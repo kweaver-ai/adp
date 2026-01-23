@@ -83,6 +83,19 @@ func ValidateActionType(ctx context.Context, actionType *interfaces.ActionType) 
 		return err
 	}
 
+	// 校验行动类型为有效类型
+	if !interfaces.ActionTypeMap[actionType.ActionType] {
+		return rest.NewHTTPError(ctx, http.StatusBadRequest, oerrors.OntologyManager_ActionType_InvalidParameter).
+			WithErrorDetails(fmt.Sprintf("The action type is expected one of [create, update, delete], actual is [%s]",
+				actionType.ActionType))
+	}
+
+	// 行动类绑定的对象类非空
+	if actionType.ObjectTypeID == "" {
+		return rest.NewHTTPError(ctx, http.StatusBadRequest, oerrors.OntologyManager_ActionType_InvalidParameter).
+			WithErrorDetails("行动类绑定的对象类不能为空")
+	}
+
 	// 校验类型
 	if actionType.ActionSource.Type != "" {
 		// type 不为空，则代表在配置映射了，则需要校验映射
@@ -92,14 +105,14 @@ func ValidateActionType(ctx context.Context, actionType *interfaces.ActionType) 
 					actionType.ActionSource.Type))
 		}
 		switch actionType.ActionSource.Type {
-		case interfaces.ACTION_TYPE_TOOL:
+		case interfaces.ACTION_SOURCE_TYPE_TOOL:
 			// tool 时，mcp_id或者tool_name不为空，则报错
 			if actionType.ActionSource.McpID != "" || actionType.ActionSource.ToolName != "" {
 				return rest.NewHTTPError(ctx, http.StatusBadRequest, oerrors.OntologyManager_ActionType_InvalidParameter).
 					WithErrorDetails(fmt.Sprintf("tool type should not have mcp data, current mcp_id is[%s], tool_name is [%s]",
 						actionType.ActionSource.McpID, actionType.ActionSource.ToolName))
 			}
-		case interfaces.ACTION_TYPE_MCP:
+		case interfaces.ACTION_SOURCE_TYPE_MCP:
 			// map 时，box_id或者tool_id不为空，则报错
 			if actionType.ActionSource.BoxID != "" || actionType.ActionSource.ToolID != "" {
 				return rest.NewHTTPError(ctx, http.StatusBadRequest, oerrors.OntologyManager_ActionType_InvalidParameter).
