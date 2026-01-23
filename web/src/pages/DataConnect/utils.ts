@@ -86,6 +86,7 @@ export const transformAndMapDataSources = (dataSources: DataConnectType.DataSour
     const cur: DataConnectType.DataSource = {
       ...item,
       icon: children[0]?.icon,
+      selectable: false,
       children,
     };
 
