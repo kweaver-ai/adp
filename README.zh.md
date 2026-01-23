@@ -19,7 +19,7 @@ DIP 平台包含 ADP、Decision Agent、DIP Studio 和 AI Store 等关键子系�
 
 ## 平台定义
 
-ADP 是一个智能数据平台，旨在弥合异构数据源与 AI Agent 之间的鸿沟。它通过业务知识网络（本体）抽象数据复杂性，提供统一的数据访问（VEGA），并通过可视化工作流（AutoFlow）编排业务逻辑。
+ADP 是一个智能数据平台，旨在弥合异构数据源与 AI Agent 之间的鸿沟。它通过业务知识网络（本体）抽象数据复杂性，提供统一的数据访问（VEGA），并通过数据流编排（DataFlow）处理和转换数据。
 
 ## 核心组件
 
@@ -41,11 +41,11 @@ VEGA 为异构数据源提供统一的 SQL 接口，将应用程序与底层数�
 - **跨源查询**：无缝连接不同数据库中的数据进行查询。
 - **标准化语义**：确保所有应用程序的数据定义一致。
 
-### 4. 流程编排 (AutoFlow)
-AutoFlow 是一个专为人类和 Agent 设计的可视化工作流编排引擎。
-- **Agent 节点嵌入**：将 AI Agent 作为节点嵌入工作流，处理复杂的决策任务。
-- **低代码设计**：用于流程定义和管理的拖通过拽界面。
-- **稳健执行**：具有事务管理、自动重试和全面的错误处理功能。
+### 4. 数据流编排 (DataFlow)
+DataFlow 是一个专为数据处理设计的可视化流程编排引擎。
+- **数据管道设计**：通过可视化界面构建和编排数据处理流程。
+- **代码执行**：支持沙箱化 Python 代码执行，处理复杂的数据转换任务。
+- **实时处理**：支持定时调度和事件驱动的数据处理流程。
 
 ## 技术目标
 
@@ -61,8 +61,8 @@ AutoFlow 是一个专为人类和 Agent 设计的可视化工作流编排引擎�
 │                           ADP Platform                            │
 │                                                                   │
 │  ┌──────────────┐   ┌──────────────┐   ┌──────────────┐           │
-│  │   AutoFlow   │◄──┤ ContextLoader│◄──┤ Ontology Eng.│           │
-│  │     (编排)    │   │    (组装)    │   │    (建模)    │           │
+│  │   DataFlow   │◄──┤ ContextLoader│◄──┤ Ontology Eng.│           │
+│  │   (数据编排)  │   │    (组装)    │   │    (建模)    │           │
 │  └──────┬───────┘   └──────┬───────┘   └──────┬───────┘           │
 │         │                  │                  │                   │
 │         ▼                  ▼                  ▼                   │
@@ -82,7 +82,7 @@ AutoFlow 是一个专为人类和 Agent 设计的可视化工作流编排引擎�
 ### 前置要求
 
 - **Go**: 1.23+ (用于 Ontology)
-- **Java**: JDK 1.8+ (用于 AutoFlow, VEGA)
+- **Java**: JDK 1.8+ (用于 VEGA)
 - **Node.js**: 18+ (用于 Web Console)
 - **数据库**: MariaDB 11.4+ 或 DM8
 - **搜索引擎**: OpenSearch 2.x
@@ -113,11 +113,8 @@ AutoFlow 是一个专为人类和 Agent 设计的可视化工作流编排引擎�
         mvn clean install
         ```
 
-    *   **AutoFlow (Java)**:
-        ```bash
-        cd autoflow/workflow
-        mvn clean package
-        ```
+    *   **DataFlow**:
+        详细说明请参考 [dataflow/README.zh.md](dataflow/README.zh.md)。
 
     *   **Web 控制台 (Node.js)**:
         ```bash

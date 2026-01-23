@@ -2,7 +2,7 @@
 
 [中文](README.zh.md) | English
 
-Flow Automation is a core service responsible for orchestrating and executing automated workflows. It manages the complete lifecycle of workflow executions, integrates with various infrastructure components, and provides comprehensive APIs for workflow management.
+Flow Automation is a core service responsible for orchestrating and executing automated data pipelines. It manages the complete lifecycle of data flow executions, integrates with various infrastructure components, and provides comprehensive APIs for data pipeline management.
 
 ## Core Architecture
 
@@ -23,7 +23,7 @@ This project follows a Hexagonal Architecture (Ports and Adapters), separating c
 
 ### Directory Structure
 
-- **`logics/`**: Core business logic layer, containing workflow management, executors, triggers, etc.
+- **`logics/`**: Core business logic layer, containing data pipeline management, executors, triggers, etc.
 - **`driveradapters/`**: Driver adapters (inbound), handling HTTP requests, message queue consumption, etc.
 - **`drivenadapters/`**: Driven adapters (outbound), interacting with databases, external services, cache, etc.
 - **`module/`**: Domain modules, including initialization and configuration
@@ -31,12 +31,12 @@ This project follows a Hexagonal Architecture (Ports and Adapters), separating c
 
 ## Key Features
 
-### 1. Workflow Management (DAG Management)
-- **Create & Edit**: Support for creating, updating, and deleting workflows (DAGs)
-- **Version Control**: Workflow version management
-- **Execution Management**: Start, cancel, and pause workflow instances
+### 1. Data Pipeline Management (DAG Management)
+- **Create & Edit**: Support for creating, updating, and deleting data pipelines (DAGs)
+- **Version Control**: Data pipeline version management
+- **Execution Management**: Start, cancel, and pause pipeline instances
 - **Debug Mode**: Support for single-step and full debugging
-- **Batch Operations**: Batch query and operations on workflows
+- **Batch Operations**: Batch query and operations on data pipelines
 
 ### 2. Custom Executors
 - **Executor Management**: Create, update, and delete custom executors
@@ -46,8 +46,8 @@ This project follows a Hexagonal Architecture (Ports and Adapters), separating c
 
 ### 3. Trigger System
 - **Scheduled Triggers**: Cron-based scheduled task triggers
-- **Event Triggers**: Support for external event-driven workflow execution
-- **Manual Triggers**: Support for user-initiated workflow execution
+- **Event Triggers**: Support for external event-driven data pipeline execution
+- **Manual Triggers**: Support for user-initiated data pipeline execution
 - **Callback Handling**: Process asynchronous task callbacks
 
 ### 4. Authentication & Authorization
@@ -71,7 +71,7 @@ This project follows a Hexagonal Architecture (Ports and Adapters), separating c
 - **Data Transformation**: Support for data flow transformation and processing
 
 ### 8. Operator Management
-- **Operator Registration**: Register and manage workflow operators
+- **Operator Registration**: Register and manage data processing operators
 - **Operator Execution**: Execute various data processing operators
 
 ## Tech Stack
@@ -79,7 +79,7 @@ This project follows a Hexagonal Architecture (Ports and Adapters), separating c
 - **Language**: Go 1.24.0
 - **Web Framework**: Gin
 - **Databases**: 
-  - MongoDB (workflow definitions and instance storage)
+  - MongoDB (data pipeline definitions and instance storage)
   - MariaDB/MySQL (relational data)
   - Redis (caching and distributed locks)
 - **Message Queue**: Kafka
@@ -139,12 +139,12 @@ Key configuration items:
 │   ├── alarm/          # Alarm interfaces
 │   ├── auth/           # Authentication interfaces
 │   ├── executor/       # Executor interfaces
-│   ├── mgnt/           # Workflow management interfaces
+│   ├── mgnt/           # Data pipeline management interfaces
 │   ├── trigger/        # Trigger interfaces
 │   └── ...
 ├── helm/               # Helm deployment charts
 ├── logics/             # Business logic
-│   ├── mgnt/           # Workflow management logic
+│   ├── mgnt/           # Data pipeline management logic
 │   ├── executor/       # Executor logic
 │   ├── cronjob/        # Scheduled task logic
 │   └── ...
@@ -165,15 +165,15 @@ Key configuration items:
 
 Main API endpoints:
 
-### Workflow Management
-- `POST /api/automation/v1/dags` - Create workflow
-- `PUT /api/automation/v1/dags/:id` - Update workflow
-- `GET /api/automation/v1/dags/:id` - Get workflow details
-- `DELETE /api/automation/v1/dags/:id` - Delete workflow
-- `GET /api/automation/v1/dags` - List workflows
+### Data Pipeline Management
+- `POST /api/automation/v1/dags` - Create data pipeline
+- `PUT /api/automation/v1/dags/:id` - Update data pipeline
+- `GET /api/automation/v1/dags/:id` - Get data pipeline details
+- `DELETE /api/automation/v1/dags/:id` - Delete data pipeline
+- `GET /api/automation/v1/dags` - List data pipelines
 
-### Workflow Execution
-- `POST /api/automation/v1/dags/:id/run` - Execute workflow
+### Data Pipeline Execution
+- `POST /api/automation/v1/dags/:id/run` - Execute data pipeline
 - `POST /api/automation/v1/dags/:id/cancel` - Cancel execution
 - `GET /api/automation/v1/dags/:id/instances` - Query execution instances
 
