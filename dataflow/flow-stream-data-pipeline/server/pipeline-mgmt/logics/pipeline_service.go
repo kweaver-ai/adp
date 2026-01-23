@@ -732,14 +732,20 @@ func (pmService *pipelineMgmtService) buildDeployConfig(ctx context.Context, pip
 	)
 
 	mounts := []corev1.VolumeMount{{
-		Name:      "flow-stream-data-pipeline-dep-configmap",
-		MountPath: "/mdl-shared-configmap",
-	},
-		{
-			Name:      "flow-stream-data-pipeline-configmap",
-			MountPath: "/opt/pipeline/config",
+		Name:      "flow-stream-data-pipeline-cm",
+		MountPath: "/opt/pipeline/config",
+	}}
+
+	volumes := []corev1.Volume{{
+		Name: "flow-stream-data-pipeline-cm",
+		VolumeSource: corev1.VolumeSource{
+			ConfigMap: &corev1.ConfigMapVolumeSource{
+				LocalObjectReference: corev1.LocalObjectReference{
+					Name: "flow-stream-data-pipeline-cm",
+				},
+			},
 		},
-	}
+	}}
 
 	return &interfaces.KubernetesCfg{
 		Image:     image,
@@ -751,6 +757,7 @@ func (pmService *pipelineMgmtService) buildDeployConfig(ctx context.Context, pip
 		ContainerArgs: args,
 		WorkingDir:    "/opt/pipeline/",
 		VolumeMounts:  mounts,
+		Volumes:       volumes,
 	}
 }
 
