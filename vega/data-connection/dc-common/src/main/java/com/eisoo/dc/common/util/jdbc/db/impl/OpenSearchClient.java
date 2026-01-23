@@ -1,26 +1,34 @@
 package com.eisoo.dc.common.util.jdbc.db.impl;
 
 
+import com.alibaba.fastjson2.JSONObject;
 import com.eisoo.dc.common.config.OpenSearchClientCfg;
 import com.eisoo.dc.common.connector.ConnectorConfig;
 import com.eisoo.dc.common.metadata.entity.DataSourceEntity;
 import com.eisoo.dc.common.metadata.entity.FieldScanEntity;
-import com.eisoo.dc.common.metadata.entity.OpenSearchEntity;
 import com.eisoo.dc.common.metadata.entity.TableScanEntity;
 import com.eisoo.dc.common.util.CommonUtil;
 import com.eisoo.dc.common.util.RSAUtil;
+import com.eisoo.dc.common.util.StringUtils;
 import com.eisoo.dc.common.util.jdbc.db.DataSourceConfig;
 import com.eisoo.dc.common.util.jdbc.db.DbClientInterface;
 import lombok.extern.slf4j.Slf4j;
-import org.opensearch.client.opensearch._types.mapping.*;
+import org.apache.http.HttpEntity;
+import org.apache.http.HttpResponse;
+import org.apache.http.auth.AuthScope;
+import org.apache.http.auth.UsernamePasswordCredentials;
+import org.apache.http.client.CredentialsProvider;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.impl.client.BasicCredentialsProvider;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClients;
+import org.apache.http.util.EntityUtils;
 import org.opensearch.client.opensearch.cat.IndicesRequest;
 import org.opensearch.client.opensearch.cat.IndicesResponse;
 import org.opensearch.client.opensearch.cat.indices.IndicesRecord;
-import org.opensearch.client.opensearch.indices.GetIndexRequest;
-import org.opensearch.client.opensearch.indices.GetIndexResponse;
-import org.opensearch.client.opensearch.indices.IndexState;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.sql.Connection;
 import java.util.*;
 
@@ -89,55 +97,71 @@ public class OpenSearchClient implements DbClientInterface {
 
     @Override
     public Map<String, FieldScanEntity> getFields(String indexName, DataSourceEntity dataSourceEntity, ConnectorConfig connectorConfig) throws Exception {
-        OpenSearchClientCfg openSearchClientCfg = new OpenSearchClientCfg(dataSourceEntity.getFConnectProtocol(),
-                dataSourceEntity.getFHost(),
-                dataSourceEntity.getFPort(),
-                dataSourceEntity.getFAccount(),
-                RSAUtil.decrypt(dataSourceEntity.getFPassword()));
-        org.opensearch.client.opensearch.OpenSearchClient openSearchClient = null;
+        String url = dataSourceEntity.getFConnectProtocol() + "://" + dataSourceEntity.getFHost() + ":" + dataSourceEntity.getFPort() + "/" + indexName;
+        JSONObject result = JSONObject.parseObject(getIndexMetadata(url, dataSourceEntity.getFAccount(), RSAUtil.decrypt(dataSourceEntity.getFPassword())));
         Map<String, FieldScanEntity> currentFields = new HashMap<>();
-        try {
-            openSearchClient = CommonUtil.getOpenSearchClient(openSearchClientCfg);
-            // 创建获取索引请求
-            GetIndexRequest request = new GetIndexRequest.Builder().index(indexName)
-                    .flatSettings(true)
-                    .build();
-            GetIndexResponse getIndexResponse = openSearchClient.indices().get(request);
-            Map<String, IndexState> result = getIndexResponse.result();
-            IndexState indexState = result.get(indexName);
-            TypeMapping mappings = indexState.mappings();
-            assert mappings != null;
-            Map<String, Property> properties = mappings.properties();
-            ArrayList<OpenSearchEntity.OpenSearchField> list = new ArrayList<>();
-            extractFields("", properties, list);
-            log.info("indexName:{}:open search获取field元数据成功：count:{}",
-                    indexName,
-                    list.size()
-            );
-            for (OpenSearchEntity.OpenSearchField field : list) {
+        JSONObject properties = result.getJSONObject(indexName).getJSONObject("mappings").getJSONObject("properties");
+        extractFields(null, currentFields, properties, connectorConfig);
+        return currentFields;
+    }
+
+    private void extractFields(String parentName, Map<String, FieldScanEntity> currentFields, JSONObject properties, ConnectorConfig connectorConfig) {
+        for (String fieldName : properties.keySet()) {
+            String concatFieldName;
+            if (StringUtils.isEmpty(parentName)) {
+                concatFieldName = fieldName;
+            } else {
+                concatFieldName = parentName + "." + fieldName;
+            }
+            // 包含properties说明属性为object类型
+            if (properties.getJSONObject(fieldName).containsKey("properties")) {
+                extractFields(concatFieldName, currentFields, properties.getJSONObject(fieldName).getJSONObject("properties"), connectorConfig);
+            } else {
                 FieldScanEntity fieldScanEntity = new FieldScanEntity();
                 fieldScanEntity.setFId(UUID.randomUUID().toString());
-                fieldScanEntity.setFFieldName(field.getName());
-                fieldScanEntity.setFFieldType(field.getType());
-                fieldScanEntity.setFAdvancedParams(CommonUtil.getOpenSearchFieldParam(connectorConfig, field));
+                fieldScanEntity.setFFieldName(concatFieldName);
+                fieldScanEntity.setFFieldType(properties.getJSONObject(fieldName).getString("type"));
+                fieldScanEntity.setFAdvancedParams(CommonUtil.getOpenSearchFieldParamByJson(connectorConfig, properties.getJSONObject(fieldName)));
                 currentFields.put(fieldScanEntity.getFFieldName(), fieldScanEntity);
             }
-        } catch (Exception e) {
-            log.error("opensearch:dsId:{}:获取index元数据失败",
-                    dataSourceEntity.getFId(),
-                    e);
-            throw new Exception(e);
-        } finally {
-            if (openSearchClient != null) {
-                try {
-                    openSearchClient._transport().close();
-                    log.info("opensearch:dsId:{}:关闭client成功", dataSourceEntity.getFId());
-                } catch (IOException e) {
-                    log.error("opensearch:dsId:{}:关闭client失败", dataSourceEntity.getFId(), e);
-                }
-            }
         }
-        return currentFields;
+    }
+
+    public String getIndexMetadata(String url, String username, String password) throws Exception {
+        // 创建凭证提供者
+        CredentialsProvider credentialsProvider = new BasicCredentialsProvider();
+        credentialsProvider.setCredentials(
+                AuthScope.ANY,
+                new UsernamePasswordCredentials(username, password)
+        );
+
+        // 创建 HttpClient
+        try (CloseableHttpClient httpClient = HttpClients.custom()
+                .setDefaultCredentialsProvider(credentialsProvider)
+                .build()) {
+
+            // 创建 GET 请求
+            HttpGet httpGet = new HttpGet(url);
+            httpGet.setHeader("Accept", "application/json");
+            httpGet.setHeader("Content-Type", "application/json");
+
+            // 执行请求
+            HttpResponse response = httpClient.execute(httpGet);
+
+            // 检查响应状态
+            int statusCode = response.getStatusLine().getStatusCode();
+            if (statusCode != 200) {
+                throw new RuntimeException("HTTP Error: " + statusCode);
+            }
+
+            // 读取响应内容
+            HttpEntity entity = response.getEntity();
+            if (entity != null) {
+                return EntityUtils.toString(entity, StandardCharsets.UTF_8);
+            }
+
+            return "{}";
+        }
     }
 
     @Override
@@ -161,55 +185,4 @@ public class OpenSearchClient implements DbClientInterface {
         }
         return false;
     }
-
-    private static void extractFields(String parentName, Map<String, Property> properties, ArrayList<OpenSearchEntity.OpenSearchField> list) {
-        // fields.keyword.type
-        // fields.keyword.ignore_above
-        // norms
-        // analyzer
-        Set<Map.Entry<String, Property>> entries = properties.entrySet();
-        for (Map.Entry<String, Property> entry : entries) {
-            OpenSearchEntity.OpenSearchField openSearchField = new OpenSearchEntity.OpenSearchField();
-
-            String fieldName = entry.getKey();
-            Property property = entry.getValue();
-            String typeName = property._kind().name();
-            if (parentName.length() != 0) {
-                fieldName = parentName + "." + fieldName;
-            }
-            openSearchField.setName(fieldName);
-            openSearchField.setType(typeName);
-            PropertyVariant propertyVariant = property._get();
-            if (property.isObject()) {
-                ObjectProperty o = (ObjectProperty) propertyVariant;
-                Map<String, Property> fields = o.properties();
-                extractFields(fieldName, fields, list);
-            } else {
-                PropertyBase base = (PropertyBase) propertyVariant;
-                if (property.isText()) {
-                    TextProperty t = (TextProperty) propertyVariant;
-                    String analyzer = t.analyzer();//ik_max_word
-                    Boolean norms = t.norms();
-                    openSearchField.setNorms(norms);
-                    openSearchField.setAnalyzer(analyzer);
-                }
-                // 判断是否有fields子字段
-                Map<String, Property> fields = base.fields();
-                // 判断是否有keyword这个field
-                if (fields.containsKey("keyword")) {
-                    Property keywordProperty = fields.get("keyword");
-                    String type = keywordProperty._kind().name();
-                    PropertyVariant variant = keywordProperty._get();
-                    if (variant instanceof KeywordProperty) {
-                        KeywordProperty p = (KeywordProperty) variant;
-                        Integer ignoreAbove = p.ignoreAbove();
-                        openSearchField.setKeywordType(type);
-                        openSearchField.setIgnoreAbove(ignoreAbove);
-                    }
-                }
-                list.add(openSearchField);
-            }
-        }
-    }
-
 }
