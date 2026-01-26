@@ -233,6 +233,12 @@ var (
 		},
 		"logic_properties": map[string]any{
 			"type": "object",
+			"properties": map[string]any{
+				// 逻辑属性的参数用 flattened 类型存储
+				"parameters": map[string]any{
+					"type": "flattened",
+				},
+			},
 		},
 		"primary_keys": map[string]any{
 			"type": "keyword",
@@ -262,8 +268,9 @@ var (
 		"object_type_id": map[string]any{
 			"type": "keyword",
 		},
+		// 行动条件用 flattened 类型存储
 		"condition": map[string]any{
-			"type": "object",
+			"type": "flattened",
 		},
 		"affect": map[string]any{
 			"type": "object",
@@ -271,8 +278,9 @@ var (
 		"action_source": map[string]any{
 			"type": "object",
 		},
+		// 行动资源的参数用 flattened 类型存储
 		"parameters": map[string]any{
-			"type": "object",
+			"type": "flattened",
 		},
 		"schedule": map[string]any{
 			"type": "object",
