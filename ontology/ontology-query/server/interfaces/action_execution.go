@@ -6,13 +6,15 @@ const (
 	ExecutionStatusRunning   = "running"
 	ExecutionStatusCompleted = "completed"
 	ExecutionStatusFailed    = "failed"
+	ExecutionStatusCancelled = "cancelled"
 )
 
 // Object execution status constants
 const (
-	ObjectStatusPending = "pending"
-	ObjectStatusSuccess = "success"
-	ObjectStatusFailed  = "failed"
+	ObjectStatusPending   = "pending"
+	ObjectStatusSuccess   = "success"
+	ObjectStatusFailed    = "failed"
+	ObjectStatusCancelled = "cancelled"
 )
 
 // Trigger type constants
@@ -60,6 +62,9 @@ type ActionExecution struct {
 	SuccessCount     int                     `json:"success_count"`
 	FailedCount      int                     `json:"failed_count"`
 	Results          []ObjectExecutionResult `json:"results"`
+	ResultsTotal     int                     `json:"results_total,omitempty"`  // total count of results (for pagination)
+	ResultsOffset    int                     `json:"results_offset,omitempty"` // current offset of results
+	ResultsLimit     int                     `json:"results_limit,omitempty"`  // current limit of results
 	DynamicParams    map[string]any          `json:"dynamic_params,omitempty"`
 	ExecutorID       string                  `json:"executor_id"` // user who triggered
 	StartTime        int64                   `json:"start_time"`
@@ -77,16 +82,28 @@ type ObjectExecutionResult struct {
 	DurationMs     int64          `json:"duration_ms,omitempty"`
 }
 
-// ActionLogQuery represents query parameters for execution logs
+// ActionLogQuery represents query parameters for execution logs (supports both GET query params and JSON body)
 type ActionLogQuery struct {
-	KNID           string  `json:"-"`
-	ActionTypeID   string  `json:"action_type_id,omitempty"`
-	Status         string  `json:"status,omitempty"`
-	TriggerType    string  `json:"trigger_type,omitempty"`
-	StartTimeRange []int64 `json:"start_time_range,omitempty"` // [start, end]
-	Limit          int     `json:"limit,omitempty"`
-	NeedTotal      bool    `json:"need_total,omitempty"`
+	KNID           string  `json:"-" form:"-"`
+	ActionTypeID   string  `json:"action_type_id,omitempty" form:"action_type_id"`
+	Status         string  `json:"status,omitempty" form:"status"`
+	TriggerType    string  `json:"trigger_type,omitempty" form:"trigger_type"`
+	StartTimeRange []int64 `json:"start_time_range,omitempty"` // [start, end] for JSON body
+	StartTimeFrom  int64   `json:"-" form:"start_time_from"`   // for GET query params
+	StartTimeTo    int64   `json:"-" form:"start_time_to"`     // for GET query params
+	Limit          int     `json:"limit,omitempty" form:"limit"`
+	NeedTotal      bool    `json:"need_total,omitempty" form:"need_total"`
 	SearchAfter    []any   `json:"search_after,omitempty"`
+	SearchAfterStr string  `json:"-" form:"search_after"` // comma-separated string for GET query params
+}
+
+// ActionLogDetailQuery represents query parameters for single execution log detail
+type ActionLogDetailQuery struct {
+	KNID          string `form:"-"`
+	LogID         string `form:"-"`
+	ResultsLimit  int    `form:"results_limit"`  // pagination limit for results, default 100, max 1000
+	ResultsOffset int    `form:"results_offset"` // pagination offset for results, default 0
+	ResultsStatus string `form:"results_status"` // filter results by status: "success" | "failed"
 }
 
 // ActionExecutionList represents a list of action executions with pagination
@@ -102,4 +119,18 @@ type MCPExecutionRequest struct {
 	ToolName   string         `json:"tool_name"`
 	Parameters map[string]any `json:"parameters"`
 	Timeout    int64          `json:"timeout"` // timeout in seconds
+}
+
+// CancelExecutionRequest represents the request to cancel an execution
+type CancelExecutionRequest struct {
+	Reason string `json:"reason,omitempty"`
+}
+
+// CancelExecutionResponse represents the response after cancelling an execution
+type CancelExecutionResponse struct {
+	ExecutionID    string `json:"execution_id"`
+	Status         string `json:"status"`
+	Message        string `json:"message"`
+	CancelledCount int    `json:"cancelled_count"` // number of objects that were pending and now cancelled
+	CompletedCount int    `json:"completed_count"` // number of objects that were already completed before cancel
 }

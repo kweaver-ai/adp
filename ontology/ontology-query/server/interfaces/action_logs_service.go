@@ -13,11 +13,14 @@ type ActionLogsService interface {
 	// The updates map should contain field names as keys and new values as values
 	UpdateExecution(ctx context.Context, knID, execID string, updates map[string]any) error
 
-	// GetExecution retrieves a single execution by ID
-	GetExecution(ctx context.Context, knID, execID string) (*ActionExecution, error)
+	// GetExecution retrieves a single execution by ID with optional results pagination
+	GetExecution(ctx context.Context, query *ActionLogDetailQuery) (*ActionExecution, error)
 
 	// QueryExecutions queries executions based on filter criteria
 	QueryExecutions(ctx context.Context, query *ActionLogQuery) (*ActionExecutionList, error)
+
+	// CancelExecution cancels a running or pending execution
+	CancelExecution(ctx context.Context, knID, execID, reason string) (*CancelExecutionResponse, error)
 }
 
 // OpenSearch index name pattern for action executions

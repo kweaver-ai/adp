@@ -171,7 +171,12 @@ func (s *actionSchedulerService) GetExecution(ctx context.Context, knID, executi
 		attr.Key("execution_id").String(executionID),
 	)
 
-	exec, err := s.logsService.GetExecution(ctx, knID, executionID)
+	query := &interfaces.ActionLogDetailQuery{
+		KNID:         knID,
+		LogID:        executionID,
+		ResultsLimit: 10000, // Get all results for internal use
+	}
+	exec, err := s.logsService.GetExecution(ctx, query)
 	if err != nil {
 		return nil, rest.NewHTTPError(ctx, http.StatusNotFound, oerrors.OntologyQuery_ActionExecution_ExecutionNotFound).
 			WithErrorDetails(err.Error())

@@ -77,8 +77,13 @@ func (s *actionLogsService) UpdateExecution(ctx context.Context, knID, execID st
 		attr.Key("kn_id").String(knID),
 	)
 
-	// Get the current execution
-	exec, err := s.GetExecution(ctx, knID, execID)
+	// Get the current execution (without pagination for full data)
+	query := &interfaces.ActionLogDetailQuery{
+		KNID:         knID,
+		LogID:        execID,
+		ResultsLimit: 10000, // Get all results for update
+	}
+	exec, err := s.GetExecution(ctx, query)
 	if err != nil {
 		return err
 	}
@@ -101,42 +106,90 @@ func (s *actionLogsService) UpdateExecution(ctx context.Context, knID, execID st
 	return nil
 }
 
-// GetExecution retrieves a single execution by ID
-func (s *actionLogsService) GetExecution(ctx context.Context, knID, execID string) (*interfaces.ActionExecution, error) {
+// GetExecution retrieves a single execution by ID with optional results pagination
+func (s *actionLogsService) GetExecution(ctx context.Context, query *interfaces.ActionLogDetailQuery) (*interfaces.ActionExecution, error) {
 	ctx, span := ar_trace.Tracer.Start(ctx, "GetExecution", trace.WithSpanKind(trace.SpanKindInternal))
 	defer span.End()
 
 	span.SetAttributes(
-		attr.Key("execution_id").String(execID),
-		attr.Key("kn_id").String(knID),
+		attr.Key("execution_id").String(query.LogID),
+		attr.Key("kn_id").String(query.KNID),
 	)
 
-	indexName := interfaces.GetActionExecutionIndex(knID)
+	indexName := interfaces.GetActionExecutionIndex(query.KNID)
 
 	// Build query to get by ID
-	query := map[string]any{
+	osQuery := map[string]any{
 		"query": map[string]any{
 			"term": map[string]any{
-				"id": execID,
+				"id": query.LogID,
 			},
 		},
 		"size": 1,
 	}
 
-	hits, err := s.osAccess.SearchData(ctx, indexName, query)
+	hits, err := s.osAccess.SearchData(ctx, indexName, osQuery)
 	if err != nil {
 		logger.Errorf("Failed to search execution: %v", err)
 		return nil, fmt.Errorf("failed to search execution: %w", err)
 	}
 
 	if len(hits) == 0 {
-		return nil, fmt.Errorf("execution not found: %s", execID)
+		return nil, fmt.Errorf("execution not found: %s", query.LogID)
 	}
 
 	exec, err := mapToActionExecution(hits[0].Source)
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse execution: %w", err)
 	}
+
+	// Apply results pagination and filtering
+	allResults := exec.Results
+	resultsTotal := len(allResults)
+
+	// Filter by status if specified
+	if query.ResultsStatus != "" {
+		filteredResults := make([]interfaces.ObjectExecutionResult, 0)
+		for _, r := range allResults {
+			if r.Status == query.ResultsStatus {
+				filteredResults = append(filteredResults, r)
+			}
+		}
+		allResults = filteredResults
+		resultsTotal = len(allResults)
+	}
+
+	// Apply pagination
+	resultsLimit := query.ResultsLimit
+	if resultsLimit <= 0 {
+		resultsLimit = 100
+	}
+	if resultsLimit > 1000 {
+		resultsLimit = 1000
+	}
+
+	resultsOffset := query.ResultsOffset
+	if resultsOffset < 0 {
+		resultsOffset = 0
+	}
+
+	// Slice the results based on pagination
+	startIdx := resultsOffset
+	endIdx := resultsOffset + resultsLimit
+
+	if startIdx >= len(allResults) {
+		exec.Results = []interfaces.ObjectExecutionResult{}
+	} else {
+		if endIdx > len(allResults) {
+			endIdx = len(allResults)
+		}
+		exec.Results = allResults[startIdx:endIdx]
+	}
+
+	// Set pagination metadata
+	exec.ResultsTotal = resultsTotal
+	exec.ResultsOffset = resultsOffset
+	exec.ResultsLimit = resultsLimit
 
 	return exec, nil
 }
@@ -313,6 +366,77 @@ func (s *actionLogsService) ensureIndexExists(ctx context.Context, indexName str
 	time.Sleep(100 * time.Millisecond)
 
 	return nil
+}
+
+// CancelExecution cancels a running or pending execution
+func (s *actionLogsService) CancelExecution(ctx context.Context, knID, execID, reason string) (*interfaces.CancelExecutionResponse, error) {
+	ctx, span := ar_trace.Tracer.Start(ctx, "CancelExecution", trace.WithSpanKind(trace.SpanKindInternal))
+	defer span.End()
+
+	span.SetAttributes(
+		attr.Key("execution_id").String(execID),
+		attr.Key("kn_id").String(knID),
+		attr.Key("reason").String(reason),
+	)
+
+	// Get the current execution (without pagination for full data)
+	query := &interfaces.ActionLogDetailQuery{
+		KNID:         knID,
+		LogID:        execID,
+		ResultsLimit: 10000, // Get all results
+	}
+	exec, err := s.GetExecution(ctx, query)
+	if err != nil {
+		return nil, err
+	}
+
+	// Check if execution can be cancelled
+	if exec.Status == interfaces.ExecutionStatusCompleted ||
+		exec.Status == interfaces.ExecutionStatusFailed ||
+		exec.Status == interfaces.ExecutionStatusCancelled {
+		return nil, fmt.Errorf("execution %s cannot be cancelled, current status: %s", execID, exec.Status)
+	}
+
+	// Count and update pending objects
+	cancelledCount := 0
+	completedCount := 0
+	for i := range exec.Results {
+		if exec.Results[i].Status == interfaces.ObjectStatusPending {
+			exec.Results[i].Status = interfaces.ObjectStatusCancelled
+			exec.Results[i].ErrorMessage = "cancelled by user"
+			if reason != "" {
+				exec.Results[i].ErrorMessage = fmt.Sprintf("cancelled: %s", reason)
+			}
+			cancelledCount++
+		} else if exec.Results[i].Status == interfaces.ObjectStatusSuccess {
+			completedCount++
+		}
+	}
+
+	// Update execution status
+	exec.Status = interfaces.ExecutionStatusCancelled
+	exec.EndTime = time.Now().UnixMilli()
+	if exec.StartTime > 0 {
+		exec.DurationMs = exec.EndTime - exec.StartTime
+	}
+
+	// Save the updated execution
+	indexName := interfaces.GetActionExecutionIndex(knID)
+	execMap := structToMap(exec)
+	if err := s.osAccess.InsertData(ctx, indexName, execID, execMap); err != nil {
+		logger.Errorf("Failed to update cancelled execution: %v", err)
+		return nil, fmt.Errorf("failed to update cancelled execution: %w", err)
+	}
+
+	logger.Infof("Cancelled execution %s, cancelled_count=%d, completed_count=%d", execID, cancelledCount, completedCount)
+
+	return &interfaces.CancelExecutionResponse{
+		ExecutionID:    execID,
+		Status:         interfaces.ExecutionStatusCancelled,
+		Message:        "任务已取消",
+		CancelledCount: cancelledCount,
+		CompletedCount: completedCount,
+	}, nil
 }
 
 // structToMap converts a struct to a map

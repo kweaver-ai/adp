@@ -43,3 +43,8 @@ ErrorLink = "N/A"
 Description = "Failed to query execution logs"
 Solution = "Please try again. If the error occurs again, please submit a ticket or contact technical support."
 ErrorLink = "N/A"
+
+[OntologyQuery.ActionExecution.CancelExecutionFailed]
+Description = "Failed to cancel execution"
+Solution = "Please try again. If the error occurs again, please submit a ticket or contact technical support."
+ErrorLink = "N/A"

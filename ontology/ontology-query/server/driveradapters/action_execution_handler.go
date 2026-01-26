@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -172,16 +173,16 @@ func (r *restHandler) GetActionExecution(c *gin.Context, visitor rest.Visitor) {
 	rest.ReplyOK(c, http.StatusOK, result)
 }
 
-// QueryActionLogsOverrideByIn handles query action logs request (internal)
-func (r *restHandler) QueryActionLogsOverrideByIn(c *gin.Context) {
-	logger.Debug("Handler QueryActionLogsOverrideByIn Start")
+// QueryActionLogsByIn handles query action logs request (internal)
+func (r *restHandler) QueryActionLogsByIn(c *gin.Context) {
+	logger.Debug("Handler QueryActionLogsByIn Start")
 	visitor := GenerateVisitor(c)
-	r.QueryActionLogsOverride(c, visitor)
+	r.QueryActionLogs(c, visitor)
 }
 
-// QueryActionLogsOverrideByEx handles query action logs request (external)
-func (r *restHandler) QueryActionLogsOverrideByEx(c *gin.Context) {
-	logger.Debug("Handler QueryActionLogsOverrideByEx Start")
+// QueryActionLogsByEx handles query action logs request (external)
+func (r *restHandler) QueryActionLogsByEx(c *gin.Context) {
+	logger.Debug("Handler QueryActionLogsByEx Start")
 	ctx, span := ar_trace.Tracer.Start(rest.GetLanguageCtx(c), "查询行动执行日志API",
 		trace.WithSpanKind(trace.SpanKindServer))
 	defer span.End()
@@ -190,12 +191,12 @@ func (r *restHandler) QueryActionLogsOverrideByEx(c *gin.Context) {
 	if err != nil {
 		return
 	}
-	r.QueryActionLogsOverride(c, visitor)
+	r.QueryActionLogs(c, visitor)
 }
 
-// QueryActionLogsOverride handles the query action logs request (POST with method override)
-func (r *restHandler) QueryActionLogsOverride(c *gin.Context, visitor rest.Visitor) {
-	logger.Debug("Handler QueryActionLogsOverride Start")
+// QueryActionLogs handles the query action logs request (GET with query parameters)
+func (r *restHandler) QueryActionLogs(c *gin.Context, visitor rest.Visitor) {
+	logger.Debug("Handler QueryActionLogs Start")
 	startTime := time.Now()
 
 	ctx, span := ar_trace.Tracer.Start(rest.GetLanguageCtx(c), "查询行动执行日志API",
@@ -209,24 +210,15 @@ func (r *restHandler) QueryActionLogsOverride(c *gin.Context, visitor rest.Visit
 	ctx = context.WithValue(ctx, interfaces.ACCOUNT_INFO_KEY, accountInfo)
 
 	o11y.AddHttpAttrs4API(span, o11y.GetAttrsByGinCtx(c))
-	o11y.Info(ctx, fmt.Sprintf("行动日志查询请求参数: [%s,%v]", c.Request.RequestURI, c.Request.Body))
-
-	// Validate method override header
-	if err := ValidateHeaderMethodOverride(ctx, c.GetHeader(interfaces.HTTP_HEADER_METHOD_OVERRIDE)); err != nil {
-		httpErr := err.(*rest.HTTPError)
-		o11y.AddHttpAttrs4HttpError(span, httpErr)
-		o11y.Error(ctx, fmt.Sprintf("%s. %v", httpErr.BaseError.Description, httpErr.BaseError.ErrorDetails))
-		rest.ReplyError(c, httpErr)
-		return
-	}
+	o11y.Info(ctx, fmt.Sprintf("行动日志查询请求参数: [%s]", c.Request.RequestURI))
 
 	// Get path parameters
 	knID := c.Param("kn_id")
 	span.SetAttributes(attr.Key("kn_id").String(knID))
 
-	// Bind request body
+	// Bind query parameters
 	query := interfaces.ActionLogQuery{}
-	if err := c.ShouldBindJSON(&query); err != nil {
+	if err := c.ShouldBindQuery(&query); err != nil {
 		httpErr := rest.NewHTTPError(ctx, http.StatusBadRequest, oerrors.OntologyQuery_ActionExecution_InvalidParameter).
 			WithErrorDetails(fmt.Sprintf("Binding Parameter Failed: %s", err.Error()))
 
@@ -237,6 +229,28 @@ func (r *restHandler) QueryActionLogsOverride(c *gin.Context, visitor rest.Visit
 	}
 
 	query.KNID = knID
+
+	// Convert GET query params to internal format
+	if query.StartTimeFrom > 0 || query.StartTimeTo > 0 {
+		query.StartTimeRange = []int64{query.StartTimeFrom, query.StartTimeTo}
+	}
+
+	// Parse search_after from comma-separated string
+	if query.SearchAfterStr != "" {
+		parts := strings.Split(query.SearchAfterStr, ",")
+		query.SearchAfter = make([]any, len(parts))
+		for i, p := range parts {
+			query.SearchAfter[i] = strings.TrimSpace(p)
+		}
+	}
+
+	// Set default limit
+	if query.Limit <= 0 {
+		query.Limit = 20
+	}
+	if query.Limit > 1000 {
+		query.Limit = 1000
+	}
 
 	// Query executions
 	result, err := r.als.QueryExecutions(ctx, &query)
@@ -304,8 +318,34 @@ func (r *restHandler) GetActionLog(c *gin.Context, visitor rest.Visitor) {
 		attr.Key("log_id").String(logID),
 	)
 
-	// Get execution log
-	result, err := r.als.GetExecution(ctx, knID, logID)
+	// Bind query parameters for results pagination
+	query := interfaces.ActionLogDetailQuery{}
+	if err := c.ShouldBindQuery(&query); err != nil {
+		httpErr := rest.NewHTTPError(ctx, http.StatusBadRequest, oerrors.OntologyQuery_ActionExecution_InvalidParameter).
+			WithErrorDetails(fmt.Sprintf("Binding Parameter Failed: %s", err.Error()))
+
+		o11y.AddHttpAttrs4HttpError(span, httpErr)
+		o11y.Error(ctx, fmt.Sprintf("%s. %v", httpErr.BaseError.Description, httpErr.BaseError.ErrorDetails))
+		rest.ReplyError(c, httpErr)
+		return
+	}
+
+	query.KNID = knID
+	query.LogID = logID
+
+	// Set default values for results pagination
+	if query.ResultsLimit <= 0 {
+		query.ResultsLimit = 100
+	}
+	if query.ResultsLimit > 1000 {
+		query.ResultsLimit = 1000
+	}
+	if query.ResultsOffset < 0 {
+		query.ResultsOffset = 0
+	}
+
+	// Get execution log with pagination
+	result, err := r.als.GetExecution(ctx, &query)
 	if err != nil {
 		httpErr, ok := err.(*rest.HTTPError)
 		if !ok {
@@ -321,5 +361,85 @@ func (r *restHandler) GetActionLog(c *gin.Context, visitor rest.Visitor) {
 
 	o11y.AddHttpAttrs4Ok(span, http.StatusOK)
 	logger.Debugf("GetActionLog completed in %dms", time.Since(startTime).Milliseconds())
+	rest.ReplyOK(c, http.StatusOK, result)
+}
+
+// CancelActionLogByIn handles cancel action execution request (internal)
+func (r *restHandler) CancelActionLogByIn(c *gin.Context) {
+	logger.Debug("Handler CancelActionLogByIn Start")
+	visitor := GenerateVisitor(c)
+	r.CancelActionLog(c, visitor)
+}
+
+// CancelActionLogByEx handles cancel action execution request (external)
+func (r *restHandler) CancelActionLogByEx(c *gin.Context) {
+	logger.Debug("Handler CancelActionLogByEx Start")
+	ctx, span := ar_trace.Tracer.Start(rest.GetLanguageCtx(c), "取消行动执行API",
+		trace.WithSpanKind(trace.SpanKindServer))
+	defer span.End()
+
+	visitor, err := r.verifyOAuth(ctx, c)
+	if err != nil {
+		return
+	}
+	r.CancelActionLog(c, visitor)
+}
+
+// CancelActionLog handles the cancel action execution request
+func (r *restHandler) CancelActionLog(c *gin.Context, visitor rest.Visitor) {
+	logger.Debug("Handler CancelActionLog Start")
+	startTime := time.Now()
+
+	ctx, span := ar_trace.Tracer.Start(rest.GetLanguageCtx(c), "取消行动执行API",
+		trace.WithSpanKind(trace.SpanKindServer))
+	defer span.End()
+
+	accountInfo := interfaces.AccountInfo{
+		ID:   visitor.ID,
+		Type: string(visitor.Type),
+	}
+	ctx = context.WithValue(ctx, interfaces.ACCOUNT_INFO_KEY, accountInfo)
+
+	o11y.AddHttpAttrs4API(span, o11y.GetAttrsByGinCtx(c))
+
+	// Get path parameters
+	knID := c.Param("kn_id")
+	logID := c.Param("log_id")
+	span.SetAttributes(
+		attr.Key("kn_id").String(knID),
+		attr.Key("log_id").String(logID),
+	)
+
+	// Bind request body (optional)
+	req := interfaces.CancelExecutionRequest{}
+	// Ignore binding errors since request body is optional
+	_ = c.ShouldBindJSON(&req)
+
+	// Cancel execution
+	result, err := r.als.CancelExecution(ctx, knID, logID, req.Reason)
+	if err != nil {
+		httpErr, ok := err.(*rest.HTTPError)
+		if !ok {
+			// Check if it's a "not found" error
+			if strings.Contains(err.Error(), "not found") {
+				httpErr = rest.NewHTTPError(ctx, http.StatusNotFound, oerrors.OntologyQuery_ActionExecution_ExecutionNotFound).
+					WithErrorDetails(err.Error())
+			} else if strings.Contains(err.Error(), "cannot be cancelled") {
+				httpErr = rest.NewHTTPError(ctx, http.StatusBadRequest, oerrors.OntologyQuery_ActionExecution_InvalidParameter).
+					WithErrorDetails(err.Error())
+			} else {
+			httpErr = rest.NewHTTPError(ctx, http.StatusInternalServerError, oerrors.OntologyQuery_ActionExecution_CancelExecutionFailed).
+				WithErrorDetails(err.Error())
+			}
+		}
+
+		o11y.AddHttpAttrs4HttpError(span, httpErr)
+		o11y.Error(ctx, fmt.Sprintf("%s. %v", httpErr.BaseError.Description, httpErr.BaseError.ErrorDetails))
+		rest.ReplyError(c, httpErr)
+		return
+	}
+
+	o11y.AddHttpAttrs4Ok(span, http.StatusOK)
+	logger.Debugf("CancelActionLog completed in %dms", time.Since(startTime).Milliseconds())
 	rest.ReplyOK(c, http.StatusOK, result)
 }

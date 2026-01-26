@@ -2265,6 +2265,326 @@ paths:
                     overall_ms: 2588
           description: ok
       summary: 对象属性值查询
+
+  /api/ontology-query/v1/knowledge-networks/{kn_id}/action-types/{at_id}/execute:
+    summary: 执行指定行动类的行动
+    post:
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ActionExecutionRequest"
+            examples:
+              执行行动-多个对象:
+                value:
+                  unique_identities:
+                    - pod_ip: "192.168.1.1"
+                      id: 1
+                    - pod_ip: "192.168.1.2"
+                      id: 2
+                  dynamic_params:
+                    Authorization: "Bearer xxx"
+        required: true
+      parameters:
+        - name: kn_id
+          description: 业务知识网络ID
+          schema:
+            type: string
+          in: path
+          required: true
+        - name: at_id
+          description: 行动类ID
+          schema:
+            type: string
+          in: path
+          required: true
+      responses:
+        "202":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ActionExecutionResponse"
+              examples:
+                执行行动-成功提交:
+                  value:
+                    execution_id: "cqq2g8h4d2fg00fvm8dg"
+                    status: "pending"
+                    message: "Action execution started"
+                    created_at: 1704067200000
+          description: accepted
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorBody"
+          description: 请求参数错误
+        "404":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorBody"
+          description: 行动类不存在
+      summary: 执行行动类
+
+  /api/ontology-query/v1/knowledge-networks/{kn_id}/action-executions/{execution_id}:
+    summary: 获取行动执行状态
+    get:
+      parameters:
+        - name: kn_id
+          description: 业务知识网络ID
+          schema:
+            type: string
+          in: path
+          required: true
+        - name: execution_id
+          description: 执行ID
+          schema:
+            type: string
+          in: path
+          required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ActionExecution"
+              examples:
+                获取执行状态-已完成:
+                  value:
+                    id: "cqq2g8h4d2fg00fvm8dg"
+                    kn_id: "kn_xxx"
+                    action_type_id: "at_xxx"
+                    action_type_name: "restart_pod"
+                    action_source_type: "tool"
+                    object_type_id: "ot_xxx"
+                    trigger_type: "manual"
+                    status: "completed"
+                    total_count: 2
+                    success_count: 1
+                    failed_count: 1
+                    results:
+                      - unique_identity:
+                          pod_ip: "192.168.1.1"
+                          id: 1
+                        status: "success"
+                        parameters:
+                          pod_ip: "192.168.1.1"
+                        result:
+                          message: "Pod restarted successfully"
+                        duration_ms: 1200
+                      - unique_identity:
+                          pod_ip: "192.168.1.2"
+                          id: 2
+                        status: "failed"
+                        parameters:
+                          pod_ip: "192.168.1.2"
+                        error_message: "Connection timeout"
+                        duration_ms: 5000
+                    executor_id: "user_xxx"
+                    start_time: 1704067200000
+                    end_time: 1704067206200
+                    duration_ms: 6200
+          description: ok
+        "404":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorBody"
+          description: 执行记录不存在
+      summary: 获取行动执行状态
+
+  /api/ontology-query/v1/knowledge-networks/{kn_id}/action-logs:
+    summary: 查询行动执行日志
+    get:
+      parameters:
+        - name: kn_id
+          description: 业务知识网络ID
+          schema:
+            type: string
+          in: path
+          required: true
+        - name: action_type_id
+          description: 行动类ID（可选）
+          schema:
+            type: string
+          in: query
+        - name: status
+          description: 执行状态（可选）
+          schema:
+            enum:
+              - pending
+              - running
+              - completed
+              - failed
+              - cancelled
+            type: string
+          in: query
+        - name: trigger_type
+          description: 触发类型（可选）
+          schema:
+            enum:
+              - manual
+              - scheduled
+            type: string
+          in: query
+        - name: start_time_from
+          description: 开始时间范围-起始（毫秒时间戳，可选）
+          schema:
+            type: integer
+            format: int64
+          in: query
+        - name: start_time_to
+          description: 开始时间范围-结束（毫秒时间戳，可选）
+          schema:
+            type: integer
+            format: int64
+          in: query
+        - name: limit
+          description: 返回数量限制，默认20，最大1000
+          schema:
+            type: integer
+            default: 20
+          in: query
+        - name: need_total
+          description: 是否需要返回总数
+          schema:
+            type: boolean
+            default: false
+          in: query
+        - name: search_after
+          description: 分页游标（逗号分隔字符串，如 "1704067200000,cqq2g8h4d2fg00fvm8dg"）
+          schema:
+            type: string
+          in: query
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ActionExecutionList"
+              examples:
+                查询执行日志-成功:
+                  value:
+                    entries:
+                      - id: "cqq2g8h4d2fg00fvm8dg"
+                        action_type_id: "at_xxx"
+                        action_type_name: "restart_pod"
+                        status: "completed"
+                        trigger_type: "manual"
+                        total_count: 2
+                        success_count: 2
+                        failed_count: 0
+                        start_time: 1704067200000
+                        duration_ms: 6200
+                    total_count: 100
+                    search_after:
+                      - 1704067200000
+                      - "cqq2g8h4d2fg00fvm8dg"
+          description: ok
+      summary: 查询行动执行日志
+
+  /api/ontology-query/v1/knowledge-networks/{kn_id}/action-logs/{log_id}:
+    summary: 获取单条行动执行日志
+    get:
+      parameters:
+        - name: kn_id
+          description: 业务知识网络ID
+          schema:
+            type: string
+          in: path
+          required: true
+        - name: log_id
+          description: 日志ID (即执行ID)
+          schema:
+            type: string
+          in: path
+          required: true
+        - name: results_limit
+          description: results 分页大小，默认100，最大1000
+          schema:
+            type: integer
+            default: 100
+          in: query
+        - name: results_offset
+          description: results 偏移量，默认0
+          schema:
+            type: integer
+            default: 0
+          in: query
+        - name: results_status
+          description: 按 results 中的状态过滤（可选）
+          schema:
+            enum:
+              - success
+              - failed
+            type: string
+          in: query
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ActionExecution"
+          description: ok
+        "404":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorBody"
+          description: 日志不存在
+      summary: 获取单条行动执行日志
+
+  /api/ontology-query/v1/knowledge-networks/{kn_id}/action-logs/{log_id}/cancel:
+    summary: 取消正在执行的任务
+    post:
+      parameters:
+        - name: kn_id
+          description: 业务知识网络ID
+          schema:
+            type: string
+          in: path
+          required: true
+        - name: log_id
+          description: 日志ID (即执行ID)
+          schema:
+            type: string
+          in: path
+          required: true
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CancelExecutionRequest"
+        required: false
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CancelExecutionResponse"
+              examples:
+                取消成功:
+                  value:
+                    execution_id: "cqq2g8h4d2fg00fvm8dg"
+                    status: "cancelled"
+                    message: "任务已取消"
+                    cancelled_count: 5
+                    completed_count: 10
+          description: ok
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorBody"
+          description: 任务已完成或已取消，无法取消
+        "404":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorBody"
+          description: 执行记录不存在
+      summary: 取消正在执行的任务
+
 components:
   schemas:
     Object:
@@ -4400,3 +4720,234 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/InstanceIdentity'
+        dynamic_params:
+          description: 动态参数，用于填充行动参数
+          type: object
+          additionalProperties: true
+
+    ActionExecutionResponse:
+      description: 行动执行响应（异步）
+      type: object
+      properties:
+        execution_id:
+          description: 执行ID
+          type: string
+        status:
+          description: 执行状态
+          enum:
+            - pending
+            - running
+            - completed
+            - failed
+          type: string
+        message:
+          description: 提示消息
+          type: string
+        created_at:
+          description: 创建时间（毫秒时间戳）
+          type: integer
+          format: int64
+
+    ActionExecution:
+      description: 行动执行详情
+      type: object
+      properties:
+        id:
+          description: 执行ID
+          type: string
+        kn_id:
+          description: 业务知识网络ID
+          type: string
+        action_type_id:
+          description: 行动类ID
+          type: string
+        action_type_name:
+          description: 行动类名称
+          type: string
+        action_source_type:
+          description: 行动源类型
+          enum:
+            - tool
+            - mcp
+          type: string
+        object_type_id:
+          description: 对象类ID
+          type: string
+        trigger_type:
+          description: 触发类型
+          enum:
+            - manual
+            - scheduled
+          type: string
+        status:
+          description: 执行状态
+          enum:
+            - pending
+            - running
+            - completed
+            - failed
+            - cancelled
+          type: string
+        total_count:
+          description: 对象总数
+          type: integer
+        success_count:
+          description: 成功数量
+          type: integer
+        failed_count:
+          description: 失败数量
+          type: integer
+        results:
+          description: 每个对象的执行结果（分页返回）
+          type: array
+          items:
+            $ref: "#/components/schemas/ObjectExecutionResult"
+        results_total:
+          description: results 总数（用于分页）
+          type: integer
+        results_offset:
+          description: 当前 results 偏移量
+          type: integer
+        results_limit:
+          description: 当前 results 分页大小
+          type: integer
+        dynamic_params:
+          description: 动态参数
+          type: object
+          additionalProperties: true
+        executor_id:
+          description: 执行者ID
+          type: string
+        start_time:
+          description: 开始时间（毫秒时间戳）
+          type: integer
+          format: int64
+        end_time:
+          description: 结束时间（毫秒时间戳）
+          type: integer
+          format: int64
+        duration_ms:
+          description: 执行耗时（毫秒）
+          type: integer
+          format: int64
+
+    ObjectExecutionResult:
+      description: 单个对象的执行结果
+      type: object
+      properties:
+        unique_identity:
+          description: 对象唯一标识
+          type: object
+          additionalProperties: true
+        status:
+          description: 执行状态
+          enum:
+            - pending
+            - success
+            - failed
+          type: string
+        parameters:
+          description: 解析后的执行参数
+          type: object
+          additionalProperties: true
+        result:
+          description: 执行结果
+          type: object
+          additionalProperties: true
+        error_message:
+          description: 错误消息
+          type: string
+        duration_ms:
+          description: 执行耗时（毫秒）
+          type: integer
+          format: int64
+
+    ActionLogQuery:
+      description: 行动执行日志查询
+      type: object
+      properties:
+        action_type_id:
+          description: 行动类ID（可选）
+          type: string
+        status:
+          description: 执行状态（可选）
+          enum:
+            - pending
+            - running
+            - completed
+            - failed
+            - cancelled
+          type: string
+        trigger_type:
+          description: 触发类型（可选）
+          enum:
+            - manual
+            - scheduled
+          type: string
+        start_time_range:
+          description: 开始时间范围 [起始, 结束]（毫秒时间戳）
+          type: array
+          items:
+            type: integer
+            format: int64
+          minItems: 2
+          maxItems: 2
+        limit:
+          description: 返回数量限制，默认20，最大1000
+          type: integer
+          default: 20
+        need_total:
+          description: 是否需要返回总数
+          type: boolean
+          default: false
+        search_after:
+          description: 分页游标
+          type: array
+          items: {}
+
+    ActionExecutionList:
+      description: 行动执行日志列表
+      type: object
+      properties:
+        entries:
+          description: 执行记录列表
+          type: array
+          items:
+            $ref: "#/components/schemas/ActionExecution"
+        total_count:
+          description: 总数（当 need_total 为 true 时返回）
+          type: integer
+        search_after:
+          description: 下一页游标
+          type: array
+          items: {}
+
+    CancelExecutionRequest:
+      description: 取消执行请求
+      type: object
+      properties:
+        reason:
+          description: 取消原因（可选）
+          type: string
+
+    CancelExecutionResponse:
+      description: 取消执行响应
+      type: object
+      properties:
+        execution_id:
+          description: 执行ID
+          type: string
+        status:
+          description: 执行状态
+          enum:
+            - cancelled
+          type: string
+        message:
+          description: 提示消息
+          type: string
+        cancelled_count:
+          description: 被取消的对象数量（原本 pending 状态的对象）
+          type: integer
+        completed_count:
+          description: 已完成的对象数量（取消前已执行完成的对象）
+          type: integer
