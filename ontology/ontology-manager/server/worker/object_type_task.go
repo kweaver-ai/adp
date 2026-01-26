@@ -90,7 +90,8 @@ func (ott *ObjectTypeTask) HandleObjectTypeTask(ctx context.Context, jobInfo *in
 	}
 
 	for _, property := range objectType.DataProperties {
-		if property.MappedField.Name == "" {
+		// 未配置映射或者映射的字段名为空
+		if property.MappedField == nil || property.MappedField.Name == "" {
 			continue
 		}
 		_, ok := interfaces.KN_INDEX_PROP_TYPE_MAPPING[property.Type]
