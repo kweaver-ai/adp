@@ -18,6 +18,7 @@ const (
 	OntologyQuery_ActionExecution_ExecuteToolFailed       = "OntologyQuery.ActionExecution.ExecuteToolFailed"
 	OntologyQuery_ActionExecution_ExecuteMCPFailed        = "OntologyQuery.ActionExecution.ExecuteMCPFailed"
 	OntologyQuery_ActionExecution_QueryExecutionsFailed   = "OntologyQuery.ActionExecution.QueryExecutionsFailed"
+	OntologyQuery_ActionExecution_CancelExecutionFailed   = "OntologyQuery.ActionExecution.CancelExecutionFailed"
 )
 
 var (
@@ -38,5 +39,6 @@ var (
 		OntologyQuery_ActionExecution_ExecuteToolFailed,
 		OntologyQuery_ActionExecution_ExecuteMCPFailed,
 		OntologyQuery_ActionExecution_QueryExecutionsFailed,
+		OntologyQuery_ActionExecution_CancelExecutionFailed,
 	}
 )

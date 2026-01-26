@@ -68,8 +68,9 @@ func (r *restHandler) RegisterPublic(c *gin.Engine) {
 		// 行动执行相关 API
 		apiV1.POST("/knowledge-networks/:kn_id/action-types/:at_id/execute", r.verifyJsonContentTypeMiddleWare(), r.ExecuteActionByEx)
 		apiV1.GET("/knowledge-networks/:kn_id/action-executions/:execution_id", r.GetActionExecutionByEx)
-		apiV1.POST("/knowledge-networks/:kn_id/action-logs", r.verifyJsonContentTypeMiddleWare(), r.QueryActionLogsOverrideByEx)
+		apiV1.GET("/knowledge-networks/:kn_id/action-logs", r.QueryActionLogsByEx)
 		apiV1.GET("/knowledge-networks/:kn_id/action-logs/:log_id", r.GetActionLogByEx)
+		apiV1.POST("/knowledge-networks/:kn_id/action-logs/:log_id/cancel", r.CancelActionLogByEx)
 	}
 
 	apiInV1 := c.Group("/api/ontology-query/in/v1")
@@ -85,8 +86,9 @@ func (r *restHandler) RegisterPublic(c *gin.Engine) {
 		// 行动执行相关 API (内部)
 		apiInV1.POST("/knowledge-networks/:kn_id/action-types/:at_id/execute", r.verifyJsonContentTypeMiddleWare(), r.ExecuteActionByIn)
 		apiInV1.GET("/knowledge-networks/:kn_id/action-executions/:execution_id", r.GetActionExecutionByIn)
-		apiInV1.POST("/knowledge-networks/:kn_id/action-logs", r.verifyJsonContentTypeMiddleWare(), r.QueryActionLogsOverrideByIn)
+		apiInV1.GET("/knowledge-networks/:kn_id/action-logs", r.QueryActionLogsByIn)
 		apiInV1.GET("/knowledge-networks/:kn_id/action-logs/:log_id", r.GetActionLogByIn)
+		apiInV1.POST("/knowledge-networks/:kn_id/action-logs/:log_id/cancel", r.CancelActionLogByIn)
 	}
 
 	logger.Info("RestHandler RegisterPublic")
