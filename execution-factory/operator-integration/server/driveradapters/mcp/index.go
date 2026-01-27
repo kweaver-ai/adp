@@ -3,14 +3,13 @@
 package mcp
 
 import (
-	"fmt"
 	"sync"
 
+	"github.com/gin-gonic/gin"
 	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/infra/config"
 	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/interfaces"
 	logicsmcp "github.com/kweaver-ai/adp/execution-factory/operator-integration/server/logics/mcp"
-	"github.com/gin-gonic/gin"
-	"github.com/redis/go-redis/v9"
+	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/logics/mcpinstance"
 )
 
 type MCPPublicHandler interface {
@@ -56,8 +55,6 @@ type MCPPrivateHandler interface {
 	GetMCPTools(c *gin.Context)
 	// CallMCPTool 调用MCP服务工具
 	CallMCPTool(c *gin.Context)
-	// ExecuteTool 执行MCP服务工具
-	ExecuteTool(c *gin.Context)
 
 	// RegisterBuiltinMCPServerPrivate 注册内置MCP服务
 	RegisterBuiltinMCPServerPrivate(c *gin.Context)
@@ -71,23 +68,21 @@ var (
 )
 
 type mcpHandle struct {
-	Logger     interfaces.Logger
-	mcpService interfaces.IMCPService
-	redisCli   *redis.Client
+	Logger      interfaces.Logger
+	mcpService  interfaces.IMCPService
+	mcpInstance interfaces.InstanceService
 }
 
 // NewMCPHandler 创建MCP处理程序
 func NewMCPHandler() *mcpHandle {
 	once.Do(func() {
 		conf := config.NewConfigLoader()
-		cli, _, err := conf.RedisConfig.GetClient()
-		if err != nil {
-			panic(fmt.Sprintf("get redis client failed: %v", err))
-		}
+		mcpService := logicsmcp.NewMCPServiceImpl()
+		instanceService := mcpinstance.NewMCPInstanceService(mcpService)
 		h = &mcpHandle{
-			Logger:     config.NewConfigLoader().GetLogger(),
-			mcpService: logicsmcp.NewMCPServiceImpl(),
-			redisCli:   cli,
+			Logger:      conf.GetLogger(),
+			mcpService:  mcpService,
+			mcpInstance: instanceService,
 		}
 	})
 	return h

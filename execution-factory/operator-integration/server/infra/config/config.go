@@ -15,11 +15,11 @@ import (
 
 	"github.com/creasty/defaults"
 	"github.com/go-playground/validator/v10"
-	o11y "github.com/kweaver-ai/kweaver-go-lib/observability"
 	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/infra/logger"
 	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/infra/telemetry"
 	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/interfaces"
 	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/utils"
+	o11y "github.com/kweaver-ai/kweaver-go-lib/observability"
 	"github.com/spf13/viper"
 	"gopkg.in/yaml.v3"
 )
@@ -36,7 +36,6 @@ type Config struct {
 	DB                       DBConfig            `yaml:"db"`
 	UserMgnt                 PrivateBaseConfig   `yaml:"user_management"`
 	Authorization            PrivateBaseConfig   `yaml:"authorization"`
-	AgentOperatorApp         PrivateBaseConfig   `yaml:"agent-operator-app"`
 	OperatorConfig           OperatorConfig      `yaml:"operator"`
 	Logger                   interfaces.Logger   `yaml:"-"`
 	RedisConfig              RedisConfig         `yaml:"redis"`
@@ -131,6 +130,21 @@ type OperatorConfig struct {
 // MCPConfig MCP配置
 type MCPConfig struct {
 	ConnTimeout int64 `yaml:"conn_timeout" default:"10"` // 单位: 秒
+
+	// MaxInstances 控制进程内最多保留多少个运行态 MCP 实例：
+	// - <=0: 不限制（不推荐，实例数量大时会占用较多内存）
+	// - >0 : 超过后按 LRU 淘汰最久未访问实例（有活跃 SSE/Stream 连接的实例不淘汰）
+	MaxInstances int `yaml:"max_instances" default:"200"`
+
+	// InstanceTTL 控制实例的过期清理阈值（按最近访问时间）：
+	// - <=0: 不启用 TTL
+	// - >0 : lastAccess 超过该阈值则可被清理（有活跃 SSE/Stream 连接的实例不清理）
+	InstanceTTL int64 `yaml:"instance_ttl" default:"1800"` // 单位: 秒
+
+	// CleanupInterval 定时清理周期：
+	// - <=0: 不启用定时清理
+	// - >0 : 周期性扫描并清理过期实例（仅在 InstanceTTL>0 时有效）
+	CleanupInterval int64 `yaml:"cleanup_interval" default:"60"` // 单位: 秒
 }
 
 // CategoryConfig 算子分类配置

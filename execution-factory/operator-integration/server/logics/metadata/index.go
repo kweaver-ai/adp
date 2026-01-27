@@ -10,7 +10,6 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	o11y "github.com/kweaver-ai/kweaver-go-lib/observability"
 	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/dbaccess"
 	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/infra/config"
 	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/infra/errors"
@@ -19,6 +18,7 @@ import (
 	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/interfaces/model"
 	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/logics/parsers"
 	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/utils"
+	o11y "github.com/kweaver-ai/kweaver-go-lib/observability"
 )
 
 // metadataService 统一元数据管理服务
@@ -245,7 +245,7 @@ func (m *metadataService) RegisterMetadata(ctx context.Context, tx *sql.Tx, meta
 		if funcMetadata.Version == "" {
 			funcMetadata.Version = uuid.New().String()
 		}
-		funcMetadata.Path = interfaces.GetAOIFuncExecPath(funcMetadata.Version)
+		funcMetadata.Path = interfaces.SetAOIFuncExecPath(funcMetadata.Version)
 		version, err = m.FuncMetadataDB.InsertFuncMetadata(ctx, tx, funcMetadata)
 		if err != nil {
 			m.Logger.WithContext(ctx).Errorf("insert Function metadata failed, err: %v", err)
@@ -294,7 +294,7 @@ func (m *metadataService) BatchRegisterMetadata(ctx context.Context, tx *sql.Tx,
 			if funcMetadata.Version == "" {
 				funcMetadata.Version = uuid.New().String()
 			}
-			funcMetadata.Path = interfaces.GetAOIFuncExecPath(funcMetadata.Version)
+			funcMetadata.Path = interfaces.SetAOIFuncExecPath(funcMetadata.Version)
 			funcMetadatas = append(funcMetadatas, funcMetadata)
 		default:
 			err = fmt.Errorf("unsupported metadata type: %s", metadata.GetType())
@@ -460,7 +460,7 @@ func (m *metadataService) UpdateMetadata(ctx context.Context, tx *sql.Tx, metada
 		}
 		now := time.Now().UnixNano()
 		funcMetadata.UpdateTime = now
-		funcMetadata.Path = interfaces.GetAOIFuncExecPath(funcMetadata.Version)
+		funcMetadata.Path = interfaces.SetAOIFuncExecPath(funcMetadata.Version)
 		err = m.FuncMetadataDB.UpdateByVersion(ctx, tx, funcMetadata)
 		if err != nil {
 			m.Logger.WithContext(ctx).Errorf("update Function metadata failed, err: %v", err)

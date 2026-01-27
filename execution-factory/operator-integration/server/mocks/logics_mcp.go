@@ -269,21 +269,6 @@ func (mr *MockIMCPExecuteServiceMockRecorder) CallMCPTool(ctx, req any) *gomock.
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CallMCPTool", reflect.TypeOf((*MockIMCPExecuteService)(nil).CallMCPTool), ctx, req)
 }
 
-// ExecuteTool mocks base method.
-func (m *MockIMCPExecuteService) ExecuteTool(ctx context.Context, req *interfaces.MCPExecuteToolRequest) (*interfaces.HTTPResponse, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "ExecuteTool", ctx, req)
-	ret0, _ := ret[0].(*interfaces.HTTPResponse)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// ExecuteTool indicates an expected call of ExecuteTool.
-func (mr *MockIMCPExecuteServiceMockRecorder) ExecuteTool(ctx, req any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ExecuteTool", reflect.TypeOf((*MockIMCPExecuteService)(nil).ExecuteTool), ctx, req)
-}
-
 // GetMCPTools mocks base method.
 func (m *MockIMCPExecuteService) GetMCPTools(ctx context.Context, req *interfaces.MCPProxyToolListRequest) (*interfaces.MCPProxyToolListResponse, error) {
 	m.ctrl.T.Helper()
@@ -350,45 +335,6 @@ func (m *MockIMCPBuiltinService) UnregisterBuiltinMCPServer(ctx context.Context,
 func (mr *MockIMCPBuiltinServiceMockRecorder) UnregisterBuiltinMCPServer(ctx, req any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UnregisterBuiltinMCPServer", reflect.TypeOf((*MockIMCPBuiltinService)(nil).UnregisterBuiltinMCPServer), ctx, req)
-}
-
-// MockIMCPAppService is a mock of IMCPAppService interface.
-type MockIMCPAppService struct {
-	ctrl     *gomock.Controller
-	recorder *MockIMCPAppServiceMockRecorder
-	isgomock struct{}
-}
-
-// MockIMCPAppServiceMockRecorder is the mock recorder for MockIMCPAppService.
-type MockIMCPAppServiceMockRecorder struct {
-	mock *MockIMCPAppService
-}
-
-// NewMockIMCPAppService creates a new mock instance.
-func NewMockIMCPAppService(ctrl *gomock.Controller) *MockIMCPAppService {
-	mock := &MockIMCPAppService{ctrl: ctrl}
-	mock.recorder = &MockIMCPAppServiceMockRecorder{mock}
-	return mock
-}
-
-// EXPECT returns an object that allows the caller to indicate expected use.
-func (m *MockIMCPAppService) EXPECT() *MockIMCPAppServiceMockRecorder {
-	return m.recorder
-}
-
-// GetAppConfig mocks base method.
-func (m *MockIMCPAppService) GetAppConfig(ctx context.Context, mcpID string, mode interfaces.MCPMode) (*interfaces.MCPAppConfigInfo, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetAppConfig", ctx, mcpID, mode)
-	ret0, _ := ret[0].(*interfaces.MCPAppConfigInfo)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// GetAppConfig indicates an expected call of GetAppConfig.
-func (mr *MockIMCPAppServiceMockRecorder) GetAppConfig(ctx, mcpID, mode any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAppConfig", reflect.TypeOf((*MockIMCPAppService)(nil).GetAppConfig), ctx, mcpID, mode)
 }
 
 // MockIMCPService is a mock of IMCPService interface.
@@ -475,18 +421,18 @@ func (mr *MockIMCPServiceMockRecorder) DeleteMCPServer(ctx, req any) *gomock.Cal
 }
 
 // ExecuteTool mocks base method.
-func (m *MockIMCPService) ExecuteTool(ctx context.Context, req *interfaces.MCPExecuteToolRequest) (*interfaces.HTTPResponse, error) {
+func (m *MockIMCPService) ExecuteTool(ctx context.Context, mcpToolID string, params interfaces.HTTPRequestParams) (*interfaces.HTTPResponse, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "ExecuteTool", ctx, req)
+	ret := m.ctrl.Call(m, "ExecuteTool", ctx, mcpToolID, params)
 	ret0, _ := ret[0].(*interfaces.HTTPResponse)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // ExecuteTool indicates an expected call of ExecuteTool.
-func (mr *MockIMCPServiceMockRecorder) ExecuteTool(ctx, req any) *gomock.Call {
+func (mr *MockIMCPServiceMockRecorder) ExecuteTool(ctx, mcpToolID, params any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ExecuteTool", reflect.TypeOf((*MockIMCPService)(nil).ExecuteTool), ctx, req)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ExecuteTool", reflect.TypeOf((*MockIMCPService)(nil).ExecuteTool), ctx, mcpToolID, params)
 }
 
 // Export mocks base method.
@@ -504,21 +450,6 @@ func (mr *MockIMCPServiceMockRecorder) Export(ctx, req any) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Export", reflect.TypeOf((*MockIMCPService)(nil).Export), ctx, req)
 }
 
-// GetAppConfig mocks base method.
-func (m *MockIMCPService) GetAppConfig(ctx context.Context, mcpID string, mode interfaces.MCPMode) (*interfaces.MCPAppConfigInfo, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetAppConfig", ctx, mcpID, mode)
-	ret0, _ := ret[0].(*interfaces.MCPAppConfigInfo)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// GetAppConfig indicates an expected call of GetAppConfig.
-func (mr *MockIMCPServiceMockRecorder) GetAppConfig(ctx, mcpID, mode any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAppConfig", reflect.TypeOf((*MockIMCPService)(nil).GetAppConfig), ctx, mcpID, mode)
-}
-
 // GetDetail mocks base method.
 func (m *MockIMCPService) GetDetail(ctx context.Context, req *interfaces.MCPServerDetailRequest) (*interfaces.MCPServerDetailResponse, error) {
 	m.ctrl.T.Helper()
@@ -532,6 +463,21 @@ func (m *MockIMCPService) GetDetail(ctx context.Context, req *interfaces.MCPServ
 func (mr *MockIMCPServiceMockRecorder) GetDetail(ctx, req any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetDetail", reflect.TypeOf((*MockIMCPService)(nil).GetDetail), ctx, req)
+}
+
+// GetMCPInstanceConfig mocks base method.
+func (m *MockIMCPService) GetMCPInstanceConfig(ctx context.Context, mcpID string, mode interfaces.MCPMode) (*interfaces.MCPInstancConfigInfo, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetMCPInstanceConfig", ctx, mcpID, mode)
+	ret0, _ := ret[0].(*interfaces.MCPInstancConfigInfo)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetMCPInstanceConfig indicates an expected call of GetMCPInstanceConfig.
+func (mr *MockIMCPServiceMockRecorder) GetMCPInstanceConfig(ctx, mcpID, mode any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetMCPInstanceConfig", reflect.TypeOf((*MockIMCPService)(nil).GetMCPInstanceConfig), ctx, mcpID, mode)
 }
 
 // GetMCPTools mocks base method.
@@ -709,4 +655,135 @@ func (m *MockIMCPService) UpgradeMCPInstance(ctx context.Context, mcpID string) 
 func (mr *MockIMCPServiceMockRecorder) UpgradeMCPInstance(ctx, mcpID any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpgradeMCPInstance", reflect.TypeOf((*MockIMCPService)(nil).UpgradeMCPInstance), ctx, mcpID)
+}
+
+// MockIMCPImpexService is a mock of IMCPImpexService interface.
+type MockIMCPImpexService struct {
+	ctrl     *gomock.Controller
+	recorder *MockIMCPImpexServiceMockRecorder
+	isgomock struct{}
+}
+
+// MockIMCPImpexServiceMockRecorder is the mock recorder for MockIMCPImpexService.
+type MockIMCPImpexServiceMockRecorder struct {
+	mock *MockIMCPImpexService
+}
+
+// NewMockIMCPImpexService creates a new mock instance.
+func NewMockIMCPImpexService(ctrl *gomock.Controller) *MockIMCPImpexService {
+	mock := &MockIMCPImpexService{ctrl: ctrl}
+	mock.recorder = &MockIMCPImpexServiceMockRecorder{mock}
+	return mock
+}
+
+// EXPECT returns an object that allows the caller to indicate expected use.
+func (m *MockIMCPImpexService) EXPECT() *MockIMCPImpexServiceMockRecorder {
+	return m.recorder
+}
+
+// Export mocks base method.
+func (m *MockIMCPImpexService) Export(ctx context.Context, req *interfaces.ExportReq) (*interfaces.ComponentImpexConfigModel, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Export", ctx, req)
+	ret0, _ := ret[0].(*interfaces.ComponentImpexConfigModel)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Export indicates an expected call of Export.
+func (mr *MockIMCPImpexServiceMockRecorder) Export(ctx, req any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Export", reflect.TypeOf((*MockIMCPImpexService)(nil).Export), ctx, req)
+}
+
+// Import mocks base method.
+func (m *MockIMCPImpexService) Import(ctx context.Context, tx *sql.Tx, mode interfaces.ImportType, data *interfaces.ComponentImpexConfigModel, userID string) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Import", ctx, tx, mode, data, userID)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// Import indicates an expected call of Import.
+func (mr *MockIMCPImpexServiceMockRecorder) Import(ctx, tx, mode, data, userID any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Import", reflect.TypeOf((*MockIMCPImpexService)(nil).Import), ctx, tx, mode, data, userID)
+}
+
+// MockIMCPToolExecutor is a mock of IMCPToolExecutor interface.
+type MockIMCPToolExecutor struct {
+	ctrl     *gomock.Controller
+	recorder *MockIMCPToolExecutorMockRecorder
+	isgomock struct{}
+}
+
+// MockIMCPToolExecutorMockRecorder is the mock recorder for MockIMCPToolExecutor.
+type MockIMCPToolExecutorMockRecorder struct {
+	mock *MockIMCPToolExecutor
+}
+
+// NewMockIMCPToolExecutor creates a new mock instance.
+func NewMockIMCPToolExecutor(ctrl *gomock.Controller) *MockIMCPToolExecutor {
+	mock := &MockIMCPToolExecutor{ctrl: ctrl}
+	mock.recorder = &MockIMCPToolExecutorMockRecorder{mock}
+	return mock
+}
+
+// EXPECT returns an object that allows the caller to indicate expected use.
+func (m *MockIMCPToolExecutor) EXPECT() *MockIMCPToolExecutorMockRecorder {
+	return m.recorder
+}
+
+// ExecuteTool mocks base method.
+func (m *MockIMCPToolExecutor) ExecuteTool(ctx context.Context, mcpToolID string, params interfaces.HTTPRequestParams) (*interfaces.HTTPResponse, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ExecuteTool", ctx, mcpToolID, params)
+	ret0, _ := ret[0].(*interfaces.HTTPResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ExecuteTool indicates an expected call of ExecuteTool.
+func (mr *MockIMCPToolExecutorMockRecorder) ExecuteTool(ctx, mcpToolID, params any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ExecuteTool", reflect.TypeOf((*MockIMCPToolExecutor)(nil).ExecuteTool), ctx, mcpToolID, params)
+}
+
+// MockIMCPInstancConfig is a mock of IMCPInstancConfig interface.
+type MockIMCPInstancConfig struct {
+	ctrl     *gomock.Controller
+	recorder *MockIMCPInstancConfigMockRecorder
+	isgomock struct{}
+}
+
+// MockIMCPInstancConfigMockRecorder is the mock recorder for MockIMCPInstancConfig.
+type MockIMCPInstancConfigMockRecorder struct {
+	mock *MockIMCPInstancConfig
+}
+
+// NewMockIMCPInstancConfig creates a new mock instance.
+func NewMockIMCPInstancConfig(ctrl *gomock.Controller) *MockIMCPInstancConfig {
+	mock := &MockIMCPInstancConfig{ctrl: ctrl}
+	mock.recorder = &MockIMCPInstancConfigMockRecorder{mock}
+	return mock
+}
+
+// EXPECT returns an object that allows the caller to indicate expected use.
+func (m *MockIMCPInstancConfig) EXPECT() *MockIMCPInstancConfigMockRecorder {
+	return m.recorder
+}
+
+// GetMCPInstanceConfig mocks base method.
+func (m *MockIMCPInstancConfig) GetMCPInstanceConfig(ctx context.Context, mcpID string, mode interfaces.MCPMode) (*interfaces.MCPInstancConfigInfo, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetMCPInstanceConfig", ctx, mcpID, mode)
+	ret0, _ := ret[0].(*interfaces.MCPInstancConfigInfo)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetMCPInstanceConfig indicates an expected call of GetMCPInstanceConfig.
+func (mr *MockIMCPInstancConfigMockRecorder) GetMCPInstanceConfig(ctx, mcpID, mode any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetMCPInstanceConfig", reflect.TypeOf((*MockIMCPInstancConfig)(nil).GetMCPInstanceConfig), ctx, mcpID, mode)
 }

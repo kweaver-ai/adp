@@ -7,11 +7,10 @@ import (
 
 	infraerrors "github.com/kweaver-ai/adp/execution-factory/operator-integration/server/infra/errors"
 	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/interfaces"
-	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/interfaces/model"
 	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/utils"
 )
 
-func (s *mcpServiceImpl) GetAppConfig(ctx context.Context, mcpID string, mode interfaces.MCPMode) (*interfaces.MCPAppConfigInfo, error) {
+func (s *mcpServiceImpl) GetMCPInstanceConfig(ctx context.Context, mcpID string, mode interfaces.MCPMode) (*interfaces.MCPInstancConfigInfo, error) {
 	// 获取MCP Server发布信息
 	release, err := s.DBMCPServerRelease.SelectByMCPID(ctx, nil, mcpID)
 	if err != nil {
@@ -41,37 +40,25 @@ func (s *mcpServiceImpl) GetAppConfig(ctx context.Context, mcpID string, mode in
 	}
 
 	// 组装配置信息
-	var config *interfaces.MCPAppConfigInfo
+	var config *interfaces.MCPInstancConfigInfo
 	switch release.CreationType {
 	case interfaces.MCPCreationTypeCustom.String():
-		config = s.getCustomAppConfig(release, mode)
+		config = &interfaces.MCPInstancConfigInfo{
+			MCPID:   release.MCPID,
+			Mode:    mode,
+			URL:     release.URL,
+			Headers: utils.JSONToObject[map[string]string](release.Headers),
+		}
 	case interfaces.MCPCreationTypeToolImported.String():
-		config = s.getToolImportedAppConfig(release, mode)
+		config = &interfaces.MCPInstancConfigInfo{
+			MCPID:   release.MCPID,
+			Mode:    mode,
+			URL:     "",
+			Headers: utils.JSONToObject[map[string]string](release.Headers),
+		}
 	default:
 		return nil, infraerrors.NewHTTPError(ctx, http.StatusBadRequest, infraerrors.ErrExtMCPNotFound, "mcp server not support this mode")
 	}
 	// 返回配置信息
 	return config, nil
-}
-
-func (s *mcpServiceImpl) getCustomAppConfig(release *model.MCPServerReleaseDB, mode interfaces.MCPMode) *interfaces.MCPAppConfigInfo {
-	config := &interfaces.MCPAppConfigInfo{
-		MCPID:   release.MCPID,
-		Mode:    mode,
-		URL:     release.URL,
-		Headers: utils.JSONToObject[map[string]string](release.Headers),
-	}
-
-	return config
-}
-
-func (s *mcpServiceImpl) getToolImportedAppConfig(release *model.MCPServerReleaseDB, mode interfaces.MCPMode) *interfaces.MCPAppConfigInfo {
-	config := &interfaces.MCPAppConfigInfo{
-		MCPID:   release.MCPID,
-		Mode:    mode,
-		URL:     s.generateInternalMCPURL(release.MCPID, release.Version, mode),
-		Headers: utils.JSONToObject[map[string]string](release.Headers),
-	}
-
-	return config
 }

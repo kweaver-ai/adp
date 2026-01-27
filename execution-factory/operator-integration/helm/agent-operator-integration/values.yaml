@@ -60,7 +60,10 @@ service:
     importOperatorMaxCount: 10 # 批量导入算子的最大数量
     descriptionLengthLimit: 500 # 算子描述的长度限制，单位字符
   mcp:
-    connTimeout: 10 # 单位: 秒
+    connTimeout: 30 # 单位: 秒
+    maxInstances: 100 # 最大实例数
+    instanceTTL: 1800 # 单位秒
+    cleanupInterval: 600 # 单位秒
   category:
     initSwitch: true # 是否初始化算子分类
   proxyModule:
@@ -102,10 +105,6 @@ depServices:
   authorization:
     privateHost: authorization-private
     privatePort: 30920
-    privateProtocol: http
-  agent-operator-app:
-    privateHost: agent-operator-app
-    privatePort: 9000
     privateProtocol: http
   business-system-service:
     privateHost: business-system-service

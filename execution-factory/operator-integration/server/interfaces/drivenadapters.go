@@ -218,6 +218,8 @@ type MCPClient interface {
 	ListTools(ctx context.Context, req mcp.ListToolsRequest) (*mcp.ListToolsResult, error)
 	// CallTool 调用工具
 	CallTool(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error)
+	// Close 关闭客户端连接
+	Close() error
 }
 
 type MCPToolConfig struct {
@@ -253,20 +255,6 @@ type MCPInstanceUpdateResponse struct {
 	MCPVersion int    `json:"version"`
 	StreamURL  string `json:"stream_url"`
 	SSEURL     string `json:"sse_url"`
-}
-
-// AgentOperatorApp MCP实例管理接口
-type AgentOperatorApp interface {
-	// 创建MCP实例
-	CreateMCPInstance(ctx context.Context, req *MCPInstanceCreateRequest) (*MCPInstanceCreateResponse, error)
-	// 删除MCP实例
-	DeleteMCPInstance(ctx context.Context, mcpID string, mcpVersion int) error
-	// 更新MCP实例
-	UpdateMCPInstance(ctx context.Context, mcpID string, mcpVersion int, req *MCPInstanceUpdateRequest) (*MCPInstanceUpdateResponse, error)
-	// 删除该MCP所有实例
-	DeleteAllMCPInstances(ctx context.Context, mcpID string) error
-	// 升级MCP实例
-	UpgradeMCPInstance(ctx context.Context, req *MCPInstanceCreateRequest) (*MCPInstanceCreateResponse, error)
 }
 
 // AccessorType 访问类型

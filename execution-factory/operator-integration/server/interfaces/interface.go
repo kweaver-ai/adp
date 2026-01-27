@@ -29,3 +29,14 @@ const (
 	ResourceObjectTool     ResourceObjectType = "tool"     // 工具
 	ResourceObjectOperator ResourceObjectType = "operator" // 算子
 )
+
+// ResourceDeployType 资源部署类型
+type ResourceDeployType string
+
+func (r ResourceDeployType) String() string {
+	return string(r)
+}
+
+const (
+	ResourceDeployTypeMCP ResourceDeployType = "mcp"
+)

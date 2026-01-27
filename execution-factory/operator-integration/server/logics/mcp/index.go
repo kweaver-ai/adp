@@ -16,6 +16,7 @@ import (
 	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/logics/business_domain"
 	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/logics/category"
 	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/logics/intcomp"
+	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/logics/mcpinstance"
 	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/logics/metric"
 	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/logics/toolbox"
 )
@@ -39,14 +40,14 @@ type mcpServiceImpl struct {
 	AuthService               interfaces.IAuthorizationService
 	ToolService               interfaces.IToolService
 	AuditLog                  interfaces.LogModelOperator[*metric.AuditLogBuilderParams]
-	AgentOperatorApp          interfaces.AgentOperatorApp
+	MCPInstanceService        interfaces.InstanceService
 	BusinessDomainService     interfaces.IBusinessDomainService
 }
 
 // NewMCPServiceImpl 初始化MCP服务
 func NewMCPServiceImpl() interfaces.IMCPService {
 	mOnce.Do(func() {
-		mcpService = &mcpServiceImpl{
+		s := &mcpServiceImpl{
 			logger:                    config.NewConfigLoader().GetLogger(),
 			DBTx:                      dbaccess.NewBaseTx(),
 			DBMCPServerConfig:         dbaccess.NewMCPServerConfigDBSingleton(),
@@ -60,9 +61,10 @@ func NewMCPServiceImpl() interfaces.IMCPService {
 			AuthService:               auth.NewAuthServiceImpl(),
 			ToolService:               toolbox.NewToolServiceImpl(),
 			AuditLog:                  metric.NewAuditLogBuilder(),
-			AgentOperatorApp:          drivenadapters.NewAgentOperatorApp(),
 			BusinessDomainService:     business_domain.NewBusinessDomainService(),
 		}
+		s.MCPInstanceService = mcpinstance.NewMCPInstanceService(s)
+		mcpService = s
 	})
 	return mcpService
 }
