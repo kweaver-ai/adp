@@ -245,7 +245,7 @@ const LogicAttribute = forwardRef((props: LogicAttributeProps, ref: any) => {
                           </Button>
                           {intl.get('Global.add')}
                         </span>
-                        <div>{intl.get('Object.skipLogicPropertyTip')}</div>
+                        <div className={styles['logic-property-tip']}>{intl.get('Object.skipLogicPropertyTip')}</div>
                       </div>
                     }
                   />

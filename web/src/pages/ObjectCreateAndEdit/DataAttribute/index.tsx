@@ -115,10 +115,8 @@ const DataAttribute = forwardRef((props: TProps, ref) => {
         console.log('localDataProperties', localDataProperties);
         return new Promise((resolve, reject) => {
           if (localDataProperties.length === 0) {
-            resolve({
-              dataProperties: localDataProperties,
-              dataSource: dataViewInfo,
-            });
+            setAlertMessage(intl.get('Object.dataPropertiesRequired'));
+            reject(new Error(intl.get('Object.dataPropertiesRequired')));
             return;
           }
 
@@ -672,7 +670,7 @@ const DataAttribute = forwardRef((props: TProps, ref) => {
           nodeTypes={nodeTypes as any}
           edgeTypes={edgeTypes}
           proOptions={{ hideAttribution: true }}
-          nodesDraggable={false}
+          nodesDraggable={true}
           nodesConnectable={true}
           nodesFocusable={false}
           edgesFocusable={true}

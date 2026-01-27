@@ -127,8 +127,21 @@ const Detail = (props: TDetailProps) => {
       render: (value: string, record: any) => (
         <div className={styles.propertyTitle}>
           <div>{value}</div>
-          {record.primary_key && <div className={styles.keyTag}>{intl.get('Global.primaryKey')}</div>}
-          {record.display_key && <div className={styles.titleTag}>{intl.get('Global.title')}</div>}
+          {record.primary_key && (
+            <Tooltip title={intl.get('Global.primaryKey')}>
+              <IconFont type="icon-dip-color-primary-key" />
+            </Tooltip>
+          )}
+          {record.display_key && (
+            <Tooltip title={intl.get('Global.title')}>
+              <IconFont type="icon-dip-color-star" />
+            </Tooltip>
+          )}
+          {record.incremental_key && (
+            <Tooltip title={intl.get('Global.incrementalKey')}>
+              <IconFont type="icon-dip-color-increment" />
+            </Tooltip>
+          )}
         </div>
       ),
     },

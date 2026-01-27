@@ -103,7 +103,7 @@ const CustomNode = ({ data, id }: OntologyObjectType.TNode) => {
           )}
         </div>
       </div>
-      {filteredAttributes.length > 0 && (
+      {(filteredAttributes.length > 0 || !!searchVal) && (
         <div className={styles['panel-search']}>
           <Input placeholder={intl.get('Global.searchProperty')} value={searchVal} suffix={<SearchOutlined />} onChange={handleSearch} allowClear />
         </div>
