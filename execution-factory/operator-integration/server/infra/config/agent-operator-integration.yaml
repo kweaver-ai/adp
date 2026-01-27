@@ -13,6 +13,9 @@ operator:
   operator_description_length_limit: 255
 mcp:
   conn_timeout: 10 # 单位:秒
+  max_instances: 200
+  instance_ttl: 1800 # 单位:秒
+  cleanup_interval: 60 # 单位:秒
 category:
   init_switch: true # 是否初始化算子分类
 

@@ -14,6 +14,7 @@ import (
 	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/infra/telemetry"
 	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/interfaces"
 	logicscommon "github.com/kweaver-ai/adp/execution-factory/operator-integration/server/logics/common"
+	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/logics/mcpinstance"
 )
 
 // Server 服务
@@ -68,6 +69,7 @@ func (s *Server) Start() {
 func (s *Server) Stop(ctx context.Context) {
 	s.config.Logger.Info("stop agent-operator-integration server")
 	s.outboxMessageEvent.Stop(ctx)
+	mcpinstance.Close() // 关闭实例池
 }
 
 func main() {

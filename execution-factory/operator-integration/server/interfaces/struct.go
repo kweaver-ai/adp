@@ -1,6 +1,7 @@
 package interfaces
 
 import (
+	"fmt"
 	"strings"
 	"time"
 )
@@ -16,13 +17,17 @@ const (
 
 var (
 	// 当前服务配置
-	AOIServerURL    = "http://agent-operator-integration:9000"
-	AOIFuncExecPath = "/api/agent-operator-integration/internal-v1/function/exec/:version"
+	AOIServerURL = "http://agent-operator-integration:9000"
+	// AOPInternalV1Prefix AOP 内部 V1 前缀
+	AOPInternalV1Prefix = "/api/agent-operator-integration/internal-v1"
 )
 
-// GetAOIFuncExecPath 获取函数执行路径
-func GetAOIFuncExecPath(version string) string {
-	return strings.ReplaceAll(AOIFuncExecPath, ":version", version)
+// SetAOIFuncExecPath 获取函数执行路径
+func SetAOIFuncExecPath(version string) string {
+	return strings.ReplaceAll(GetAOIFuncExecPath(), ":version", version)
+} // GetAOIFuncExecPath 获取函数执行路径
+func GetAOIFuncExecPath() string {
+	return fmt.Sprintf("%s/function/exec/:version", AOPInternalV1Prefix)
 }
 
 // CommonPageResult 通用分页返回结果

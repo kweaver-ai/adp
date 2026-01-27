@@ -72,13 +72,6 @@ type MCPAppEndpointRequest struct {
 	MCPID string `uri:"mcp_id" validate:"required"` // MCP Server ID
 }
 
-type MCPAppConfigInfo struct {
-	MCPID   string            // MCP Server ID
-	URL     string            // MCP Server URL
-	Headers map[string]string // MCP Server请求头
-	Mode    MCPMode           // MCP Server运行模式
-}
-
 // MCPServerAddRequest MCP Server注册请求
 type MCPServerAddRequest struct {
 	MCPCoreConfigInfo
@@ -350,11 +343,6 @@ type MCPBuiltinUnregisterRequest struct {
 	MCPID    string `uri:"mcp_id" validate:"required"`     // MCP Server ID
 }
 
-type MCPExecuteToolRequest struct {
-	MCPToolID         string `uri:"mcp_tool_id" validate:"required"` // MCP工具ID
-	HTTPRequestParams `json:",inline"`
-}
-
 // IMCPManageService MCP管理接口
 type IMCPManageService interface {
 	// ParseSSE 解析SSE MCPServer
@@ -391,8 +379,6 @@ type IMCPExecuteService interface {
 	GetMCPTools(ctx context.Context, req *MCPProxyToolListRequest) (*MCPProxyToolListResponse, error)
 	// CallMCPTool 调用MCP工具
 	CallMCPTool(ctx context.Context, req *MCPProxyCallToolRequest) (*MCPProxyCallToolResponse, error)
-	// ExecuteTool 执行MCP工具
-	ExecuteTool(ctx context.Context, req *MCPExecuteToolRequest) (resp *HTTPResponse, err error)
 }
 
 // IMCPBuiltinService MCP内置接口
@@ -401,12 +387,6 @@ type IMCPBuiltinService interface {
 	RegisterBuiltinMCPServer(ctx context.Context, req *MCPBuiltinRegisterRequest) (*MCPBuiltinRegisterResponse, error)
 	// UnregisterBuiltinMCPServer 注销内置MCP Server
 	UnregisterBuiltinMCPServer(ctx context.Context, req *MCPBuiltinUnregisterRequest) error
-}
-
-// IMCPAppService MCP App接口
-type IMCPAppService interface {
-	// GetAppConfig 获取App配置
-	GetAppConfig(ctx context.Context, mcpID string, mode MCPMode) (*MCPAppConfigInfo, error)
 }
 
 // IMCPService MCP服务接口
@@ -419,12 +399,41 @@ type IMCPService interface {
 	IMCPExecuteService
 	// MCPBuiltinService MCP内置接口
 	IMCPBuiltinService
-	// MCPAppService MCP App接口
-	IMCPAppService
+	// IMCPImpexService MCP导入导出接口
+	IMCPImpexService
+	// UpgradeMCPInstance 升级MCP Server实例
+	UpgradeMCPInstance(ctx context.Context, mcpID string) error
+	// MCPInstancConfig MCP Server实例配置接口
+	IMCPInstancConfig
+	// IMCPToolExecutor MCP工具执行器
+	IMCPToolExecutor
+}
+
+// IMCPImpexService MCP导入导出接口
+type IMCPImpexService interface {
 	// 导入导出
 	// Impex[*MCPImpexData]
 	Import(ctx context.Context, tx *sql.Tx, mode ImportType, data *ComponentImpexConfigModel, userID string) (err error)
-	// UpgradeMCPInstance 升级MCP Server实例
-	UpgradeMCPInstance(ctx context.Context, mcpID string) error
+	// Export 导出配置
 	Export(ctx context.Context, req *ExportReq) (data *ComponentImpexConfigModel, err error)
+}
+
+// IMCPToolExecutor MCP工具执行器
+type IMCPToolExecutor interface {
+	ExecuteTool(ctx context.Context, mcpToolID string, params HTTPRequestParams) (*HTTPResponse, error)
+}
+
+// MCP 实例相关配置接口
+type IMCPInstancConfig interface {
+	// GetMCPInstanceConfig 获取MCP Server实例配置
+	GetMCPInstanceConfig(ctx context.Context, mcpID string, mode MCPMode) (*MCPInstancConfigInfo, error)
+}
+
+// MCPInstancConfigInfo MCP Server实例配置信息
+type MCPInstancConfigInfo struct {
+	MCPID   string            // MCP Server ID
+	URL     string            // MCP Server URL
+	Headers map[string]string // MCP Server请求头
+	Mode    MCPMode           // MCP Server运行模式
+	Version int               // MCP Server版本（tool_imported场景使用）
 }

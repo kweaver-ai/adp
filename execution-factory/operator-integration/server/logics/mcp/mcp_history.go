@@ -71,7 +71,7 @@ func (s *mcpServiceImpl) addMCPHistory(ctx context.Context, tx *sql.Tx, mcpRelea
 		lastMCPRelease := utils.JSONToObject[model.MCPServerReleaseDB](lastMCPReleaseHistory.MCPRelease)
 		if lastMCPRelease.CreationType == interfaces.MCPCreationTypeToolImported.String() {
 			// 删除mcp Server实例
-			err = s.AgentOperatorApp.DeleteMCPInstance(ctx, lastMCPRelease.MCPID, lastMCPRelease.Version)
+			err = s.MCPInstanceService.DeleteMCPInstance(ctx, lastMCPRelease.MCPID, lastMCPRelease.Version)
 			if err != nil {
 				s.logger.WithContext(ctx).Warnf("failed to remove MCP server instance: %v", err)
 				return fmt.Errorf("failed to remove MCP server instance: %w", err)
