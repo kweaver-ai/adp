@@ -171,6 +171,7 @@ func (ats *actionTypeService) GetActionsByActionTypeID(ctx context.Context,
 			DynamicParams: dynamicParams,
 		}
 
+		// 已经在对象数据查询是指定了排除字段，返回的已经是按排除字段处理后的数据，所以字段存在就添加。
 		if _, exist := object[interfaces.SYSTEM_PROPERTY_INSTANCE_ID]; exist {
 			action.InstanceID = object[interfaces.SYSTEM_PROPERTY_INSTANCE_ID]
 		}

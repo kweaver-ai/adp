@@ -588,8 +588,9 @@ func (ots *objectTypeService) GetObjectPropertyValue(ctx context.Context,
 		Branch:       query.Branch,
 		ObjectTypeID: query.ObjectTypeID,
 		CommonQueryParameters: interfaces.CommonQueryParameters{
-			IncludeTypeInfo:    true, // 需要把对象类信息返回
-			IncludeLogicParams: true, // 需要把逻辑属性的计算参数返回
+			IncludeTypeInfo:         true, // 需要把对象类信息返回
+			IncludeLogicParams:      true, // 需要把逻辑属性的计算参数返回
+			ExcludeSystemProperties: query.ExcludeSystemProperties,
 		},
 		ObjectQueryInfo: &interfaces.ObjectQueryInfo{
 			InstanceIdentity: query.InstanceIdentity,
@@ -634,6 +635,18 @@ func (ots *objectTypeService) GetObjectPropertyValue(ctx context.Context,
 				newObject[prop] = value
 			}
 		}
+
+		// 已经在对象数据查询是指定了排除字段，返回的已经是按排除字段处理后的数据，所以字段存在就添加。
+		if _, exist := object[interfaces.SYSTEM_PROPERTY_INSTANCE_ID]; exist {
+			newObject[interfaces.SYSTEM_PROPERTY_INSTANCE_ID] = object[interfaces.SYSTEM_PROPERTY_INSTANCE_ID]
+		}
+		if _, exist := object[interfaces.SYSTEM_PROPERTY_INSTANCE_IDENTITY]; exist {
+			newObject[interfaces.SYSTEM_PROPERTY_INSTANCE_IDENTITY] = object[interfaces.SYSTEM_PROPERTY_INSTANCE_IDENTITY]
+		}
+		if _, exist := object[interfaces.SYSTEM_PROPERTY_DISPLAY]; exist {
+			newObject[interfaces.SYSTEM_PROPERTY_DISPLAY] = object[interfaces.SYSTEM_PROPERTY_DISPLAY]
+		}
+
 		datas[i] = newObject
 	}
 	// 第二步：并发处理所有对象的所有逻辑属性
