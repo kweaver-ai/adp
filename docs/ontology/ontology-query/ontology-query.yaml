@@ -814,6 +814,17 @@ paths:
         schema:
           type: boolean
         in: query
+      - name: exclude_system_properties
+        description: 需要排除的系统字段列表。可选值：_instance_id（实例ID）、_instance_identity（实例唯一标识）、_display（显示值）。如果指定了某个字段，则在返回的对象数据中不包含该字段。可以传递多个值，例如：?exclude_system_properties=_instance_id&exclude_system_properties=_display
+        schema:
+          type: array
+          items:
+            type: string
+            enum: ["_instance_id", "_instance_identity", "_display"]
+        style: form
+        explode: true
+        in: query
+        required: false
       - name: x-http-method-override
         description: 重载POST
         schema:
@@ -897,6 +908,17 @@ paths:
       schema:
         type: boolean
       in: query
+    - name: exclude_system_properties
+      description: 需要排除的系统字段列表。可选值：_instance_id（实例ID）、_instance_identity（实例唯一标识）、_display（显示值）。如果指定了某个字段，则在返回的对象数据中不包含该字段。可以传递多个值，例如：?exclude_system_properties=_instance_id&exclude_system_properties=_display
+      schema:
+        type: array
+        items:
+          type: string
+          enum: ["_instance_id", "_instance_identity", "_display"]
+      style: form
+      explode: true
+      in: query
+      required: false
     - name: x-http-method-override
       description: 重载POST
       schema:
@@ -2071,6 +2093,17 @@ paths:
           type: string
         in: path
         required: true
+      - name: exclude_system_properties
+        description: 需要排除的系统字段列表。可选值：_instance_id（实例ID）、_instance_identity（实例唯一标识）、_display（显示值）。如果指定了某个字段，则在返回的对象数据中不包含该字段。可以传递多个值，例如：?exclude_system_properties=_instance_id&exclude_system_properties=_display
+        schema:
+          type: array
+          items:
+            type: string
+            enum: ["_instance_id", "_instance_identity", "_display"]
+        style: form
+        explode: true
+        in: query
+        required: false
       - name: x-http-method-override
         description: 重载 post，实际上是 get 方法
         schema:
@@ -3109,22 +3142,27 @@ components:
           description: 动态参数。是个map
           type: object
           additionalProperties: {}
-    ObjectInfo:
-      description: 对象信息
-      required:
-      - _instance_id
-      - _instance_identity
-      - _display
-      type: object
-      properties:
         _instance_id:
-          description: 实例id
+          description: 对象实例id：对象类id-根据联合主键生成的对象id。默认返回，当 exclude_system_properties 排除时，不返回。
           type: string
         _instance_identity:
           $ref: '#/components/schemas/InstanceIdentity'
-          description: 实例标识
+          description: 对象实例标识。key为属性名称，value为属性值。id是主键的字符串表现形式。默认返回，当 exclude_system_properties 排除时，不返回。
         _display:
-          description: 对象的显示属性值
+          description: 对象实例的显示属性值。显示属性只选一个，所以这里直接展示值即可。默认返回，当 exclude_system_properties 排除时，不返回。
+    ObjectInfo:
+      description: 对象信息
+      required: []
+      type: object
+      properties:
+        _instance_id:
+          description: 实例id。默认返回，当 exclude_system_properties 排除时，不返回。
+          type: string
+        _instance_identity:
+          $ref: '#/components/schemas/InstanceIdentity'
+          description: 实例标识。默认返回，当 exclude_system_properties 排除时，不返回。
+        _display:
+          description: 对象的显示属性值。默认返回，当 exclude_system_properties 排除时，不返回。
       additionalProperties:
         oneOf:
         - type: string
@@ -3136,11 +3174,8 @@ components:
     ObjectInfoInSubgraph:
       description: 子图中的对象信息
       required:
-      - _instance_id
-      - _instance_identity
       - object_type_id
       - object_type_name
-      - _display
       - properties
       type: object
       properties:
@@ -3162,13 +3197,13 @@ components:
             - $ref: '#/components/schemas/MetricProperty'
             - $ref: '#/components/schemas/OperatorProperty'
         _instance_id:
-          description: 对象实例id：对象类id-根据联合主键生成的对象id
+          description: 对象实例id：对象类id-根据联合主键生成的对象id。默认返回，当 exclude_system_properties 排除时，不返回。
           type: string
         _display:
-          description: 对象实例的显示属性值。显示属性只选一个，所以这里直接展示值即可
+          description: 对象实例的显示属性值。显示属性只选一个，所以这里直接展示值即可。默认返回，当 exclude_system_properties 排除时，不返回。
         _instance_identity:
           $ref: '#/components/schemas/InstanceIdentity'
-          description: 对象实例标识。key为属性名称，value为属性值。id是主键的字符串表现形式
+          description: 对象实例标识。key为属性名称，value为属性值。id是主键的字符串表现形式。默认返回，当 exclude_system_properties 排除时，不返回。
           additionalProperties:
             oneOf:
             - type: string
@@ -3178,6 +3213,15 @@ components:
     ObjectPropertyValue:
       description: 对象的属性值
       type: object
+      properties:
+        _instance_id:
+          description: 对象实例id：对象类id-根据联合主键生成的对象id。默认返回，当 exclude_system_properties 排除时，不返回。
+          type: string
+        _instance_identity:
+          $ref: '#/components/schemas/InstanceIdentity'
+          description: 对象实例标识。key为属性名称，value为属性值。id是主键的字符串表现形式。默认返回，当 exclude_system_properties 排除时，不返回。
+        _display:
+          description: 对象实例的显示属性值。显示属性只选一个，所以这里直接展示值即可。默认返回，当 exclude_system_properties 排除时，不返回。
       additionalProperties:
         oneOf:
         - type: string
