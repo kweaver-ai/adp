@@ -88,6 +88,7 @@ func (kns *knowledgeNetworkService) SearchSubgraph(ctx context.Context,
 			IncludeTypeInfo:    true,
 			IncludeLogicParams: query.IncludeLogicParams,
 			IgnoringStore:      query.IgnoringStore,
+			// ExcludeSystemProperties: query.ExcludeSystemProperties,
 		},
 	}
 	if startObjectQuery.Limit == 0 {
@@ -238,6 +239,7 @@ func (kns *knowledgeNetworkService) buildObjectSubgraphByTypePaths(
 			IncludeTypeInfo:    true,
 			IncludeLogicParams: query.IncludeLogicParams,
 			IgnoringStore:      query.IgnoringStore,
+			// ExcludeSystemProperties: query.CommonQueryParameters.ExcludeSystemProperties,
 		},
 	}
 	if startObjectQuery.Limit == 0 {
@@ -431,7 +433,7 @@ func (kns *knowledgeNetworkService) buildSingleTypePathObjects(
 		// 检查合并后是否会超过限制. 按需合并
 		currentGlobal := atomic.LoadInt64(&query.PathQuotaManager.GlobalCount)
 		if currentGlobal > query.PathQuotaManager.TotalLimit {
-			// 合并一批超，那么就合并差的那部分进去，知道超
+			// 合并一批超，那么就合并差的那部分进去，直到超
 			fixedNum := query.PathQuotaManager.TotalLimit - int64(len(typePathObjectCtx.relationPaths))
 			for i := int64(0); i < fixedNum; i++ {
 				typePathObjectCtx.relationPaths = append(typePathObjectCtx.relationPaths, currentObjectPaths[i])
@@ -494,12 +496,7 @@ func (kns *knowledgeNetworkService) expandObjectPathsBatch(ctx context.Context,
 		// 准备批量查询
 		currentLevelObjects := make([]interfaces.LevelObject, len(currentLevel))
 		for i, obj := range currentLevel {
-			currentLevelObjects[i] = interfaces.LevelObject{
-				ObjectID:   obj.ObjectID,
-				ObjectUK:   obj.ObjectUK,
-				ObjectData: obj.ObjectData,
-				PathFrom:   obj.PathFrom,
-			}
+			currentLevelObjects[i] = obj.LevelObject
 		}
 
 		// 按对象分批处理，避免单次查询过大
@@ -572,27 +569,43 @@ func (kns *knowledgeNetworkService) expandObjectPathsBatch(ctx context.Context,
 					// if !exists {
 					// 	continue
 					// }
+
+					// 当前对象未被添加过，则添加到对象映射
 					_, exists = objectsMap[currentObj.ObjectID]
 					if !exists {
-						objectsMap[currentObj.ObjectID] = interfaces.ObjectInfoInSubgraph{
-							ID:               currentObj.ObjectID,
-							UniqueIdentities: currentObj.ObjectUK,
-							ObjectTypeId:     startObjects.ObjectType.OTID,
-							ObjectTypeName:   startObjects.ObjectType.OTName,
-							Display:          currentObj.ObjectData[startObjects.ObjectType.DisplayKey],
-							Properties:       currentObj.ObjectData,
+						objInfo := interfaces.ObjectInfoInSubgraph{
+							ObjectTypeId:   currentObj.ObjectType.OTID,
+							ObjectTypeName: currentObj.ObjectType.OTName,
+							Properties:     currentObj.ObjectData,
 						}
+						if !logics.ShouldExcludeSystemProperty(interfaces.SYSTEM_PROPERTY_INSTANCE_ID, query.ExcludeSystemProperties) {
+							objInfo.InstanceID = currentObj.ObjectID
+						}
+						if !logics.ShouldExcludeSystemProperty(interfaces.SYSTEM_PROPERTY_INSTANCE_IDENTITY, query.ExcludeSystemProperties) {
+							objInfo.InstanceIdentity = currentObj.ObjectUK
+						}
+						if !logics.ShouldExcludeSystemProperty(interfaces.SYSTEM_PROPERTY_DISPLAY, query.ExcludeSystemProperties) {
+							objInfo.Display = currentObj.ObjectData[currentObj.ObjectType.DisplayKey]
+						}
+						objectsMap[currentObj.ObjectID] = objInfo
 					}
 
 					// 添加下一层对象到对象映射
-					objectsMap[nextObjectID] = interfaces.ObjectInfoInSubgraph{
-						ID:               nextObjectID,
-						UniqueIdentities: uk,
-						ObjectTypeId:     nextObjects.ObjectType.OTID,
-						ObjectTypeName:   nextObjects.ObjectType.OTName,
-						Display:          nextObject[nextObjects.ObjectType.DisplayKey],
-						Properties:       nextObject,
+					objInfo := interfaces.ObjectInfoInSubgraph{
+						ObjectTypeId:   nextObjects.ObjectType.OTID,
+						ObjectTypeName: nextObjects.ObjectType.OTName,
+						Properties:     nextObject,
 					}
+					if !logics.ShouldExcludeSystemProperty(interfaces.SYSTEM_PROPERTY_INSTANCE_ID, query.ExcludeSystemProperties) {
+						objInfo.InstanceID = nextObjectID
+					}
+					if !logics.ShouldExcludeSystemProperty(interfaces.SYSTEM_PROPERTY_INSTANCE_IDENTITY, query.ExcludeSystemProperties) {
+						objInfo.InstanceIdentity = uk
+					}
+					if !logics.ShouldExcludeSystemProperty(interfaces.SYSTEM_PROPERTY_DISPLAY, query.ExcludeSystemProperties) {
+						objInfo.Display = nextObject[nextObjects.ObjectType.DisplayKey]
+					}
+					objectsMap[nextObjectID] = objInfo
 
 					// 为当前对象的所有路径添加新边
 					newPaths, pathExisted := kns.extendPathsWithNewEdge(query, currentObj.Paths, currentObj.ObjectID, nextObjectID, edge)
@@ -645,6 +658,7 @@ func (kns *knowledgeNetworkService) expandObjectPathsBatch(ctx context.Context,
 		initialLevel = append(initialLevel, interfaces.LevelObjectWithPath{
 			LevelObject: interfaces.LevelObject{
 				ObjectID:   startObjectID,
+				ObjectType: startObjects.ObjectType,
 				ObjectUK:   startObjectUK,
 				ObjectData: startObjectData,
 				PathFrom:   "", // 起点对象没有来源
@@ -715,6 +729,7 @@ func (kns *knowledgeNetworkService) getNextObjectsBatchByRelation(ctx context.Co
 			IncludeTypeInfo:    true,
 			IncludeLogicParams: query.IncludeLogicParams,
 			IgnoringStore:      query.IgnoringStore,
+			// ExcludeSystemProperties: query.ExcludeSystemProperties, 子图查询的系统字段在子图查询中生成，不需要对象实例自己生成
 		},
 	}
 

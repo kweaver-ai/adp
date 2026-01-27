@@ -86,11 +86,11 @@ type PathsEntries struct {
 
 // 在对象子图中的对象信息
 type ObjectInfoInSubgraph struct {
-	ID               string         `json:"id"`
-	UniqueIdentities map[string]any `json:"unique_identities"`
+	InstanceID       string         `json:"_instance_id"`
+	InstanceIdentity map[string]any `json:"_instance_identity"`
+	Display          any            `json:"_display"`
 	ObjectTypeId     string         `json:"object_type_id"`
 	ObjectTypeName   string         `json:"object_type_name"`
-	Display          any            `json:"display"`
 	Properties       map[string]any `json:"properties"`
 }
 
@@ -129,6 +129,7 @@ type LevelObject struct {
 	ObjectID   string
 	ObjectUK   map[string]any // 对象主键
 	ObjectData map[string]any
+	ObjectType *ObjectType
 	PathFrom   string // 记录从哪个对象来的，用于构建路径
 }
 

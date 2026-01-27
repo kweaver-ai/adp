@@ -592,3 +592,16 @@ func BuildDslQuery(ctx context.Context, queryStr string, query *interfaces.Objec
 
 	return dsl, nil
 }
+
+// shouldExcludeSystemProperty 检查是否应该排除指定的系统字段
+func ShouldExcludeSystemProperty(fieldName string, excludeList []string) bool {
+	if len(excludeList) == 0 {
+		return false
+	}
+	for _, excludeField := range excludeList {
+		if excludeField == fieldName {
+			return true
+		}
+	}
+	return false
+}

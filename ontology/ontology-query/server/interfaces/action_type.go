@@ -4,7 +4,7 @@ import cond "ontology-query/common/condition"
 
 // 行动查询请求体
 type ActionQuery struct {
-	UniqueIdentities []map[string]any `json:"unique_identities,omitempty"`
+	InstanceIdentity []map[string]any `json:"_instance_identity,omitempty"`
 
 	KNID         string `json:"-"`
 	Branch       string `json:"-"`
@@ -23,8 +23,11 @@ type Actions struct {
 
 // 实例化后的行动参数
 type ActionParam struct {
-	Parameters    map[string]any `json:"parameters"`     // 填入了实参的参数
-	DynamicParams map[string]any `json:"dynamic_params"` // 动态参数map
+	InstanceID       any            `json:"instance_id,omitempty"`       // 实例ID
+	InstanceIdentity any            `json:"instance_identity,omitempty"` // 实例唯一标识
+	Display          any            `json:"display,omitempty"`           // 显示值
+	Parameters       map[string]any `json:"parameters"`                  // 填入了实参的参数
+	DynamicParams    map[string]any `json:"dynamic_params"`              // 动态参数map
 }
 
 type ActionType struct {

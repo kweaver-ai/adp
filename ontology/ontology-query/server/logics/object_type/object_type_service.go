@@ -140,7 +140,7 @@ func (ots *objectTypeService) GetObjectsByObjectTypeID(ctx context.Context,
 	// 对于数据属性的查询的参数校验
 	if query.ObjectQueryInfo != nil {
 		// 唯一标识包含主键字段
-		for i, uniqueIdentity := range query.ObjectQueryInfo.UniqueIdentities {
+		for i, uniqueIdentity := range query.ObjectQueryInfo.InstanceIdentity {
 			for _, key := range objectType.PrimaryKeys {
 				if _, exist := uniqueIdentity[key]; !exist {
 					return resps, rest.NewHTTPError(ctx, http.StatusBadRequest, oerrors.OntologyQuery_ObjectType_InvalidParameter).
@@ -372,6 +372,21 @@ func (ots *objectTypeService) getObjectsFromDataView(ctx context.Context, query 
 				object[propName] = v
 			}
 		}
+
+		// 为对象添加 _instance_id, _instance_identity, _display 字段
+		instanceID, instanceIdentity := logics.GetObjectID(object, &objectType)
+		displayValue := object[objectType.DisplayKey]
+
+		if !logics.ShouldExcludeSystemProperty(interfaces.SYSTEM_PROPERTY_INSTANCE_ID, query.ExcludeSystemProperties) {
+			object[interfaces.SYSTEM_PROPERTY_INSTANCE_ID] = instanceID
+		}
+		if !logics.ShouldExcludeSystemProperty(interfaces.SYSTEM_PROPERTY_INSTANCE_IDENTITY, query.ExcludeSystemProperties) {
+			object[interfaces.SYSTEM_PROPERTY_INSTANCE_IDENTITY] = instanceIdentity
+		}
+		if !logics.ShouldExcludeSystemProperty(interfaces.SYSTEM_PROPERTY_DISPLAY, query.ExcludeSystemProperties) {
+			object[interfaces.SYSTEM_PROPERTY_DISPLAY] = displayValue
+		}
+
 		if len(object) > 0 {
 			objects = append(objects, object)
 		} else {
@@ -450,6 +465,21 @@ func (ots *objectTypeService) getObjectsFromObjectIndex(ctx context.Context, que
 		}
 		// 添加_score字段
 		object[interfaces.SORT_FIELD_SCORE] = hit.Score
+
+		// 为对象添加 _instance_id, _instance_identity, _display 字段
+		instanceID, instanceIdentity := logics.GetObjectID(object, &objectType)
+		displayValue := object[objectType.DisplayKey]
+
+		if !logics.ShouldExcludeSystemProperty(interfaces.SYSTEM_PROPERTY_INSTANCE_ID, query.ExcludeSystemProperties) {
+			object[interfaces.SYSTEM_PROPERTY_INSTANCE_ID] = instanceID
+		}
+		if !logics.ShouldExcludeSystemProperty(interfaces.SYSTEM_PROPERTY_INSTANCE_IDENTITY, query.ExcludeSystemProperties) {
+			object[interfaces.SYSTEM_PROPERTY_INSTANCE_IDENTITY] = instanceIdentity
+		}
+		if !logics.ShouldExcludeSystemProperty(interfaces.SYSTEM_PROPERTY_DISPLAY, query.ExcludeSystemProperties) {
+			object[interfaces.SYSTEM_PROPERTY_DISPLAY] = displayValue
+		}
+
 		if len(object) > 0 {
 			objects = append(objects, object)
 		} else {
@@ -546,7 +576,7 @@ func (ots *objectTypeService) GetObjectPropertyValue(ctx context.Context,
 	var resps interfaces.Objects
 
 	// 1. 根据唯一标识构建过滤条件
-	ukCond := logics.BuildUniqueIdentitiesCondition(query.UniqueIdentities)
+	ukCond := logics.BuildUniqueIdentitiesCondition(query.InstanceIdentity)
 	// 2. 根据唯一标识组成的条件检索对象类的对象实例
 	objectQuery := &interfaces.ObjectQueryBaseOnObjectType{
 		ActualCondition: ukCond,
@@ -562,7 +592,7 @@ func (ots *objectTypeService) GetObjectPropertyValue(ctx context.Context,
 			IncludeLogicParams: true, // 需要把逻辑属性的计算参数返回
 		},
 		ObjectQueryInfo: &interfaces.ObjectQueryInfo{
-			UniqueIdentities: query.UniqueIdentities,
+			InstanceIdentity: query.InstanceIdentity,
 			Properties:       query.Properties,
 		},
 	}
