@@ -125,7 +125,7 @@ func TestRerankByDataRetrieval_VectorAction(t *testing.T) {
 	})
 }
 
-// TestRerankByDataRetrieval_Error 测试 rerankByDataRetrieval 错误场景
+// TestRerankByDataRetrieval_Error 测试 rerankByDataRetrieval 错误降级场景
 func TestRerankByDataRetrieval_Error(t *testing.T) {
 	Convey("TestRerankByDataRetrieval_Error", t, func() {
 		ctrl := gomock.NewController(t)
@@ -145,15 +145,23 @@ func TestRerankByDataRetrieval_Error(t *testing.T) {
 		}
 
 		concepts := []*interfaces.ConceptResult{
-			{ConceptID: "1", ConceptName: "Concept1"},
+			{ConceptID: "1", ConceptName: "Concept1", RerankScore: 0.5}, // 添加非零分数，避免被过滤
 		}
 
 		// Mock KnowledgeRerank 错误
 		mockDataRetrieval.EXPECT().KnowledgeRerank(gomock.Any(), gomock.Any()).
 			Return(nil, errors.New("rerank failed"))
 
-		_, err := service.rerankByDataRetrieval(ctx, queryUnderstanding, concepts, interfaces.KnowledgeRerankActionVector, 10)
-		So(err, ShouldNotBeNil)
+		// 期待调用 Warnf 记录降级日志（2个参数：格式字符串 + err）
+		mockLogger.EXPECT().WithContext(gomock.Any()).Return(mockLogger)
+		mockLogger.EXPECT().Warnf(gomock.Any(), gomock.Any())
+
+		// 修改期待：rerank 失败时应降级返回原始数据，不返回错误
+		result, err := service.rerankByDataRetrieval(ctx, queryUnderstanding, concepts, interfaces.KnowledgeRerankActionVector, 10)
+		So(err, ShouldBeNil) // 降级后不应返回错误
+		So(result, ShouldNotBeNil)
+		So(len(result), ShouldEqual, 1) // 返回原始概念列表
+		So(result[0].ConceptID, ShouldEqual, "1")
 	})
 }
 

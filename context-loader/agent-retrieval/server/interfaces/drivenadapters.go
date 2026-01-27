@@ -253,6 +253,34 @@ type KnDataSourceConfig struct {
 	KnowledgeNetworkID string `json:"knowledge_network_id"` // Knowledge Network ID
 }
 
+// ConceptRetrievalConfig 概念召回配置
+type ConceptRetrievalConfig struct {
+	TopK                  int  `json:"top_k,omitempty"`                     // 默认10
+	SkipLLM               bool `json:"skip_llm,omitempty"`                  // 默认false
+	ReturnUnion           bool `json:"return_union,omitempty"`              // 默认false
+	IncludeSampleData     bool `json:"include_sample_data,omitempty"`       // 默认false
+	SchemaBrief           bool `json:"schema_brief,omitempty"`              // 默认false
+	PerObjectPropertyTopK int  `json:"per_object_property_top_k,omitempty"` // 默认8
+	GlobalPropertyTopK    int  `json:"global_property_top_k,omitempty"`     // 默认30
+	EnablePropertyBrief   bool `json:"enable_property_brief,omitempty"`     // 默认true
+}
+
+// SemanticInstanceRetrievalConfig 语义实例检索配置
+type SemanticInstanceRetrievalConfig struct {
+	PerTypeInstanceLimit              int     `json:"per_type_instance_limit,omitempty"`                // 默认10
+	InitialCandidateCount             int     `json:"initial_candidate_count,omitempty"`                // 默认50
+	EnableGlobalFinalScoreRatioFilter bool    `json:"enable_global_final_score_ratio_filter,omitempty"` // 默认true
+	GlobalFinalScoreRatio             float64 `json:"global_final_score_ratio,omitempty"`               // 默认0.25
+	PreFilterPerTypeLimit             int     `json:"pre_filter_per_type_limit,omitempty"`              // 可选
+	MaxKeywords                       int     `json:"max_keywords,omitempty"`                           // 多关键词最大数量，默认5
+}
+
+// RetrievalConfig 检索配置
+type RetrievalConfig struct {
+	ConceptRetrieval          *ConceptRetrievalConfig          `json:"concept_retrieval,omitempty"`
+	SemanticInstanceRetrieval *SemanticInstanceRetrievalConfig `json:"semantic_instance_retrieval,omitempty"`
+}
+
 // KnSearchReq kn_search request
 type KnSearchReq struct {
 	// Header Parameters
@@ -297,4 +325,46 @@ type DataRetrieval interface {
 	KnowledgeRerank(ctx context.Context, req *KnowledgeRerankReq) (results []*ConceptResult, err error)
 	// KnSearch Knowledge network retrieval
 	KnSearch(ctx context.Context, req *KnSearchReq) (resp *KnSearchResp, err error)
+}
+
+// LLMMessage LLM对话消息
+type LLMMessage struct {
+	Role    string `json:"role"`    // "system" | "user" | "assistant"
+	Content string `json:"content"` // 消息内容
+}
+
+// LLMChatReq LLM对话请求
+type LLMChatReq struct {
+	Model            string       `json:"model"`                       // 模型名称
+	Messages         []LLMMessage `json:"messages"`                    // 对话消息列表
+	Temperature      float64      `json:"temperature,omitempty"`       // 温度参数
+	TopK             int          `json:"top_k,omitempty"`             // TopK采样
+	TopP             float64      `json:"top_p,omitempty"`             // TopP采样
+	FrequencyPenalty float64      `json:"frequency_penalty,omitempty"` // 频率惩罚
+	PresencePenalty  float64      `json:"presence_penalty,omitempty"`  // 存在惩罚
+	MaxTokens        int          `json:"max_tokens,omitempty"`        // 最大token数
+	Stream           bool         `json:"stream,omitempty"`            // 是否流式
+	AccountID        string       `json:"-"`                           // 账号ID（用于Header）
+	AccountType      string       `json:"-"`                           // 账号类型（用于Header）
+}
+
+// DrivenMFModelAPIClient MF-Model API客户端接口
+// 统一提供LLM对话和向量重排序能力
+type DrivenMFModelAPIClient interface {
+	// Chat 对话，返回完整响应内容
+	Chat(ctx context.Context, req *LLMChatReq) (content string, err error)
+	// Rerank 对文档进行重排序
+	Rerank(ctx context.Context, query string, documents []string) (*RerankResp, error)
+}
+
+// RerankResult 单个重排结果
+type RerankResult struct {
+	Index          int     `json:"index"`           // 文档索引
+	RelevanceScore float64 `json:"relevance_score"` // 相关性分数
+	Document       *string `json:"document"`        // 原始文档（通常为null）
+}
+
+// RerankResp 重排响应
+type RerankResp struct {
+	Results []RerankResult `json:"results"` // 重排结果列表
 }
