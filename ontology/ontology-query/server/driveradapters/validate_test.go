@@ -48,7 +48,7 @@ func Test_validateObjectsQueryParameters(t *testing.T) {
 		ctx := context.Background()
 
 		Convey("成功 - 所有参数有效", func() {
-			result, err := validateObjectsQueryParameters(ctx, "true", "false", "true")
+			result, err := validateObjectsQueryParameters(ctx, "true", "false", "true", []string{})
 			So(err, ShouldBeNil)
 			So(result.IncludeTypeInfo, ShouldBeTrue)
 			So(result.IgnoringStore, ShouldBeFalse)
@@ -56,7 +56,7 @@ func Test_validateObjectsQueryParameters(t *testing.T) {
 		})
 
 		Convey("成功 - 所有参数为false", func() {
-			result, err := validateObjectsQueryParameters(ctx, "false", "false", "false")
+			result, err := validateObjectsQueryParameters(ctx, "false", "false", "false", []string{})
 			So(err, ShouldBeNil)
 			So(result.IncludeTypeInfo, ShouldBeFalse)
 			So(result.IgnoringStore, ShouldBeFalse)
@@ -64,21 +64,21 @@ func Test_validateObjectsQueryParameters(t *testing.T) {
 		})
 
 		Convey("失败 - includeTypeInfo无效", func() {
-			_, err := validateObjectsQueryParameters(ctx, "invalid", "false", "false")
+			_, err := validateObjectsQueryParameters(ctx, "invalid", "false", "false", []string{})
 			So(err, ShouldNotBeNil)
 			httpErr := err.(*rest.HTTPError)
 			So(httpErr.BaseError.ErrorCode, ShouldEqual, oerrors.OntologyQuery_ObjectType_InvalidParameter_IncludeTypeInfo)
 		})
 
 		Convey("失败 - includeLogicParams无效", func() {
-			_, err := validateObjectsQueryParameters(ctx, "true", "false", "invalid")
+			_, err := validateObjectsQueryParameters(ctx, "true", "false", "invalid", []string{})
 			So(err, ShouldNotBeNil)
 			httpErr := err.(*rest.HTTPError)
 			So(httpErr.BaseError.ErrorCode, ShouldEqual, oerrors.OntologyQuery_ObjectType_InvalidParameter_IncludeTypeInfo)
 		})
 
 		Convey("失败 - ignoringStoreCache无效", func() {
-			_, err := validateObjectsQueryParameters(ctx, "true", "invalid", "true")
+			_, err := validateObjectsQueryParameters(ctx, "true", "invalid", "true", []string{})
 			So(err, ShouldNotBeNil)
 			httpErr := err.(*rest.HTTPError)
 			So(httpErr.BaseError.ErrorCode, ShouldEqual, oerrors.OntologyQuery_ObjectType_InvalidParameter_IgnoringStoreCache)
@@ -91,28 +91,28 @@ func Test_validateSugraphQueryParameters(t *testing.T) {
 		ctx := context.Background()
 
 		Convey("成功 - 所有参数有效", func() {
-			result, err := validateSugraphQueryParameters(ctx, "true", "false")
+			result, err := validateSugraphQueryParameters(ctx, "true", "false", []string{})
 			So(err, ShouldBeNil)
 			So(result.IncludeLogicParams, ShouldBeTrue)
 			So(result.IgnoringStore, ShouldBeFalse)
 		})
 
 		Convey("成功 - 所有参数为false", func() {
-			result, err := validateSugraphQueryParameters(ctx, "false", "false")
+			result, err := validateSugraphQueryParameters(ctx, "false", "false", []string{})
 			So(err, ShouldBeNil)
 			So(result.IncludeLogicParams, ShouldBeFalse)
 			So(result.IgnoringStore, ShouldBeFalse)
 		})
 
 		Convey("失败 - includeLogicParams无效", func() {
-			_, err := validateSugraphQueryParameters(ctx, "invalid", "false")
+			_, err := validateSugraphQueryParameters(ctx, "invalid", "false", []string{})
 			So(err, ShouldNotBeNil)
 			httpErr := err.(*rest.HTTPError)
 			So(httpErr.BaseError.ErrorCode, ShouldEqual, oerrors.OntologyQuery_ObjectType_InvalidParameter_IncludeTypeInfo)
 		})
 
 		Convey("失败 - ignoringStoreCache无效", func() {
-			_, err := validateSugraphQueryParameters(ctx, "true", "invalid")
+			_, err := validateSugraphQueryParameters(ctx, "true", "invalid", []string{})
 			So(err, ShouldNotBeNil)
 			httpErr := err.(*rest.HTTPError)
 			So(httpErr.BaseError.ErrorCode, ShouldEqual, oerrors.OntologyQuery_ObjectType_InvalidParameter_IgnoringStoreCache)
@@ -828,7 +828,7 @@ func Test_validateActionQuery(t *testing.T) {
 
 		Convey("成功 - 有效请求", func() {
 			query := &interfaces.ActionQuery{
-				UniqueIdentities: []map[string]any{
+				InstanceIdentity: []map[string]any{
 					{"id": "1"},
 				},
 			}
@@ -836,9 +836,9 @@ func Test_validateActionQuery(t *testing.T) {
 			So(err, ShouldBeNil)
 		})
 
-		Convey("失败 - UniqueIdentities为空", func() {
+		Convey("失败 - InstanceIdentity为空", func() {
 			query := &interfaces.ActionQuery{
-				UniqueIdentities: []map[string]any{},
+				InstanceIdentity: []map[string]any{},
 			}
 			err := validateActionQuery(ctx, query)
 			So(err, ShouldNotBeNil)
@@ -854,7 +854,7 @@ func Test_validateObjectPropertyValueQuery(t *testing.T) {
 
 		Convey("成功 - 有效请求", func() {
 			query := &interfaces.ObjectPropertyValueQuery{
-				UniqueIdentities: []map[string]any{
+				InstanceIdentity: []map[string]any{
 					{"id": "1"},
 				},
 				Properties: []string{"prop1"},
@@ -863,9 +863,9 @@ func Test_validateObjectPropertyValueQuery(t *testing.T) {
 			So(err, ShouldBeNil)
 		})
 
-		Convey("失败 - UniqueIdentities为空", func() {
+		Convey("失败 - InstanceIdentity为空", func() {
 			query := &interfaces.ObjectPropertyValueQuery{
-				UniqueIdentities: []map[string]any{},
+				InstanceIdentity: []map[string]any{},
 				Properties:       []string{"prop1"},
 			}
 			err := validateObjectPropertyValueQuery(ctx, query)
@@ -876,7 +876,7 @@ func Test_validateObjectPropertyValueQuery(t *testing.T) {
 
 		Convey("失败 - Properties为空", func() {
 			query := &interfaces.ObjectPropertyValueQuery{
-				UniqueIdentities: []map[string]any{
+				InstanceIdentity: []map[string]any{
 					{"id": "1"},
 				},
 				Properties: []string{},
