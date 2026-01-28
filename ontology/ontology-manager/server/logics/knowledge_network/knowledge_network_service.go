@@ -846,15 +846,17 @@ func (kns *knowledgeNetworkService) DeleteKN(ctx context.Context, kn *interfaces
 	}
 
 	err = kns.osa.DeleteByQuery(ctx, interfaces.KN_CONCEPT_INDEX_NAME, map[string]any{
-		"bool": map[string]any{
-			"filter": []any{
-				map[string]any{
-					"term": map[string]any{
-						"kn_id": kn.KNID,
-					},
-				}, map[string]any{
-					"term": map[string]any{
-						"branch": kn.Branch,
+		"query": map[string]any{
+			"bool": map[string]any{
+				"filter": []any{
+					map[string]any{
+						"term": map[string]any{
+							"kn_id": kn.KNID,
+						},
+					}, map[string]any{
+						"term": map[string]any{
+							"branch": kn.Branch,
+						},
 					},
 				},
 			},
