@@ -18,7 +18,7 @@
             <url>https://raw.githubusercontent.com/exxiang/data-connection-packages/main/repository/</url>
             <releases>
                 <enabled>true</enabled>
-                <updatePolicy>always</updatePolicy>
+                <updatePolicy>never</updatePolicy>
                 <checksumPolicy>warn</checksumPolicy>
             </releases>
             <snapshots>
