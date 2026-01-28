@@ -11,6 +11,22 @@
 
     <artifactId>dc-main</artifactId>
 
+    <repositories>
+        <repository>
+            <id>data-connection-packages</id>
+            <name>data-connection-packages</name>
+            <url>https://raw.githubusercontent.com/exxiang/data-connection-packages/main/repository/</url>
+            <releases>
+                <enabled>true</enabled>
+                <updatePolicy>always</updatePolicy>
+                <checksumPolicy>warn</checksumPolicy>
+            </releases>
+            <snapshots>
+                <enabled>true</enabled>
+            </snapshots>
+        </repository>
+    </repositories>
+
     <properties>
         <maven.compiler.source>8</maven.compiler.source>
         <maven.compiler.target>8</maven.compiler.target>
