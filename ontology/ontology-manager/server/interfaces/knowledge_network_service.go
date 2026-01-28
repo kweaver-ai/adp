@@ -14,7 +14,7 @@ type KNService interface {
 	GetKNByID(ctx context.Context, knID string, branch string, mode string) (*KN, error)
 	UpdateKN(ctx context.Context, tx *sql.Tx, kn *KN) error
 	UpdateKNDetail(ctx context.Context, knID string, branch string, detail string) error
-	DeleteKN(ctx context.Context, kn *KN) (int64, error)
+	DeleteKN(ctx context.Context, kn *KN) error
 
 	GetStatByKN(ctx context.Context, kn *KN) (*Statistics, error)
 	GetRelationTypePaths(ctx context.Context, query RelationTypePathsBaseOnSource) ([]RelationTypePath, error)

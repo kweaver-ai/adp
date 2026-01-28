@@ -111,6 +111,21 @@ func (mr *MockObjectTypeAccessMockRecorder) DeleteObjectTypeStatusByIDs(ctx, tx,
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteObjectTypeStatusByIDs", reflect.TypeOf((*MockObjectTypeAccess)(nil).DeleteObjectTypeStatusByIDs), ctx, tx, knID, branch, otIDs)
 }
 
+// DeleteObjectTypeStatusByKnID mocks base method.
+func (m *MockObjectTypeAccess) DeleteObjectTypeStatusByKnID(ctx context.Context, tx *sql.Tx, knID, branch string) (int64, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DeleteObjectTypeStatusByKnID", ctx, tx, knID, branch)
+	ret0, _ := ret[0].(int64)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// DeleteObjectTypeStatusByKnID indicates an expected call of DeleteObjectTypeStatusByKnID.
+func (mr *MockObjectTypeAccessMockRecorder) DeleteObjectTypeStatusByKnID(ctx, tx, knID, branch interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteObjectTypeStatusByKnID", reflect.TypeOf((*MockObjectTypeAccess)(nil).DeleteObjectTypeStatusByKnID), ctx, tx, knID, branch)
+}
+
 // DeleteObjectTypesByIDs mocks base method.
 func (m *MockObjectTypeAccess) DeleteObjectTypesByIDs(ctx context.Context, tx *sql.Tx, knID, branch string, otIDs []string) (int64, error) {
 	m.ctrl.T.Helper()
@@ -124,6 +139,21 @@ func (m *MockObjectTypeAccess) DeleteObjectTypesByIDs(ctx context.Context, tx *s
 func (mr *MockObjectTypeAccessMockRecorder) DeleteObjectTypesByIDs(ctx, tx, knID, branch, otIDs interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteObjectTypesByIDs", reflect.TypeOf((*MockObjectTypeAccess)(nil).DeleteObjectTypesByIDs), ctx, tx, knID, branch, otIDs)
+}
+
+// DeleteObjectTypesByKnID mocks base method.
+func (m *MockObjectTypeAccess) DeleteObjectTypesByKnID(ctx context.Context, tx *sql.Tx, knID, branch string) (int64, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DeleteObjectTypesByKnID", ctx, tx, knID, branch)
+	ret0, _ := ret[0].(int64)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// DeleteObjectTypesByKnID indicates an expected call of DeleteObjectTypesByKnID.
+func (mr *MockObjectTypeAccessMockRecorder) DeleteObjectTypesByKnID(ctx, tx, knID, branch interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteObjectTypesByKnID", reflect.TypeOf((*MockObjectTypeAccess)(nil).DeleteObjectTypesByKnID), ctx, tx, knID, branch)
 }
 
 // GetAllObjectTypesByKnID mocks base method.

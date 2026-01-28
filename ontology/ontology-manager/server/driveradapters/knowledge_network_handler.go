@@ -228,9 +228,11 @@ func (r *restHandler) UpdateKN(c *gin.Context, visitor rest.Visitor) {
 
 	// 1. 接受 kn_id 参数
 	knID := c.Param("kn_id")
-	span.SetAttributes(attr.Key("kn_id").String(knID))
 	branch := c.DefaultQuery("branch", interfaces.MAIN_BRANCH)
-	span.SetAttributes(attr.Key("branch").String(branch))
+	span.SetAttributes(
+		attr.Key("kn_id").String(knID),
+		attr.Key("branch").String(branch),
+	)
 
 	//接收绑定参数
 	kn := interfaces.KN{}
@@ -359,11 +361,13 @@ func (r *restHandler) DeleteKN(c *gin.Context) {
 	// 记录接口调用参数： c.Request.RequestURI, body
 	o11y.Info(ctx, fmt.Sprintf("删除业务知识网络请求参数: [%s]", c.Request.RequestURI))
 
-	//获取参数字符串 <id1,id2,id3>
+	// 1. 接受 kn_id 参数
 	knID := c.Param("kn_id")
-	span.SetAttributes(attr.Key("kn_id").String(knID))
 	branch := c.DefaultQuery("branch", interfaces.MAIN_BRANCH)
-	span.SetAttributes(attr.Key("branch").String(branch))
+	span.SetAttributes(
+		attr.Key("kn_id").String(knID),
+		attr.Key("branch").String(branch),
+	)
 
 	kn, err := r.kns.GetKNByID(ctx, knID, branch, "")
 	if err != nil {
@@ -385,7 +389,7 @@ func (r *restHandler) DeleteKN(c *gin.Context) {
 	}
 
 	// 批量删除业务知识网络
-	rowsAffect, err := r.kns.DeleteKN(ctx, kn)
+	err = r.kns.DeleteKN(ctx, kn)
 	if err != nil {
 		httpErr := err.(*rest.HTTPError)
 		// 设置 trace 的错误信息的 attributes
@@ -395,10 +399,8 @@ func (r *restHandler) DeleteKN(c *gin.Context) {
 	}
 
 	// 记录审计日志
-	if rowsAffect != 0 {
-		audit.NewWarnLog(audit.OPERATION, audit.DELETE, audit.TransforOperator(visitor),
-			interfaces.GenerateKNAuditObject(knID, kn.KNName), audit.SUCCESS, "")
-	}
+	audit.NewWarnLog(audit.OPERATION, audit.DELETE, audit.TransforOperator(visitor),
+		interfaces.GenerateKNAuditObject(knID, kn.KNName), audit.SUCCESS, "")
 
 	logger.Debug("Handler DeleteKN Success")
 	o11y.AddHttpAttrs4Ok(span, http.StatusOK)
@@ -561,11 +563,13 @@ func (r *restHandler) GetKN(c *gin.Context, visitor rest.Visitor) {
 	// 设置 trace 的相关 api 的属性
 	o11y.AddHttpAttrs4API(span, o11y.GetAttrsByGinCtx(c))
 
-	//获取参数字符串
+	// 1. 接受 kn_id 参数
 	knID := c.Param("kn_id")
-	span.SetAttributes(attr.Key("kn_id").String(knID))
 	branch := c.DefaultQuery("branch", interfaces.MAIN_BRANCH)
-	span.SetAttributes(attr.Key("branch").String(branch))
+	span.SetAttributes(
+		attr.Key("kn_id").String(knID),
+		attr.Key("branch").String(branch),
+	)
 
 	mode := c.DefaultQuery(interfaces.QueryParam_Mode, "")
 	if mode != "" && mode != interfaces.Mode_Export {
@@ -682,11 +686,14 @@ func (r *restHandler) GetRelationTypePaths(c *gin.Context, visitor rest.Visitor)
 		return
 	}
 
-	//获取参数字符串
+	// 1. 接受 kn_id 参数
 	knID := c.Param("kn_id")
-	span.SetAttributes(attr.Key("kn_id").String(knID))
 	branch := c.DefaultQuery("branch", interfaces.MAIN_BRANCH)
-	span.SetAttributes(attr.Key("branch").String(branch))
+	span.SetAttributes(
+		attr.Key("kn_id").String(knID),
+		attr.Key("branch").String(branch),
+	)
+
 	query.KNID = knID
 	query.Branch = branch
 

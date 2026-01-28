@@ -47,6 +47,9 @@ type OpenSearchAccess interface {
 	// DeleteData 按照索引名和数据id删除数据
 	DeleteData(ctx context.Context, indexName string, docID string) error
 
+	// DeleteByQuery 按照查询条件删除数据
+	DeleteByQuery(ctx context.Context, indexName string, query any) error
+
 	// BulkDeleteData 批量删除数据，参数为docID数组
 	BulkDeleteData(ctx context.Context, indexName string, docIDs []string) error
 

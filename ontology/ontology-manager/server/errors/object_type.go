@@ -23,6 +23,7 @@ const (
 
 	// 500
 	OntologyManager_ObjectType_InternalError                                  = "OntologyManager.ObjectType.InternalError"
+	OntologyManager_ObjectType_InternalError_MissingTransaction               = "OntologyManager.ObjectType.InternalError.MissingTransaction"
 	OntologyManager_ObjectType_InternalError_BeginTransactionFailed           = "OntologyManager.ObjectType.InternalError.BeginTransactionFailed"
 	OntologyManager_ObjectType_InternalError_CheckObjectTypeIfExistFailed     = "OntologyManager.ObjectType.InternalError.CheckObjectTypeIfExistFailed"
 	OntologyManager_ObjectType_InternalError_CreateConceptGroupRelationFailed = "OntologyManager.ObjectType.InternalError.CreateConceptGroupRelationFailed"
@@ -57,6 +58,7 @@ var (
 
 		// 500
 		OntologyManager_ObjectType_InternalError,
+		OntologyManager_ObjectType_InternalError_MissingTransaction,
 		OntologyManager_ObjectType_InternalError_BeginTransactionFailed,
 		OntologyManager_ObjectType_InternalError_CheckObjectTypeIfExistFailed,
 		OntologyManager_ObjectType_InternalError_CreateConceptGroupRelationFailed,

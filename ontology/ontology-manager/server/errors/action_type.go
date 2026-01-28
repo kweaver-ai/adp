@@ -14,6 +14,7 @@ const (
 
 	// 500
 	OntologyManager_ActionType_InternalError                              = "OntologyManager.ActionType.InternalError"
+	OntologyManager_ActionType_InternalError_MissingTransaction           = "OntologyManager.ActionType.InternalError.MissingTransaction"
 	OntologyManager_ActionType_InternalError_BeginTransactionFailed       = "OntologyManager.ActionType.InternalError.BeginTransactionFailed"
 	OntologyManager_ActionType_InternalError_CheckActionTypeIfExistFailed = "OntologyManager.ActionType.InternalError.CheckActionTypeIfExistFailed"
 	OntologyManager_ActionType_InternalError_GetActionTypesByIDsFailed    = "OntologyManager.ActionType.InternalError.GetActionTypesByIDsFailed"
@@ -35,6 +36,7 @@ var (
 
 		// 500
 		OntologyManager_ActionType_InternalError,
+		OntologyManager_ActionType_InternalError_MissingTransaction,
 		OntologyManager_ActionType_InternalError_CheckActionTypeIfExistFailed,
 		OntologyManager_ActionType_InternalError_BeginTransactionFailed,
 		OntologyManager_ActionType_InternalError_GetActionTypesByIDsFailed,

@@ -84,18 +84,31 @@ func (mr *MockActionTypeServiceMockRecorder) CreateActionTypes(ctx, tx, actionTy
 }
 
 // DeleteActionTypesByIDs mocks base method.
-func (m *MockActionTypeService) DeleteActionTypesByIDs(ctx context.Context, tx *sql.Tx, knID, branch string, atIDs []string) (int64, error) {
+func (m *MockActionTypeService) DeleteActionTypesByIDs(ctx context.Context, tx *sql.Tx, knID, branch string, atIDs []string) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "DeleteActionTypesByIDs", ctx, tx, knID, branch, atIDs)
-	ret0, _ := ret[0].(int64)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
+	ret0, _ := ret[0].(error)
+	return ret0
 }
 
 // DeleteActionTypesByIDs indicates an expected call of DeleteActionTypesByIDs.
 func (mr *MockActionTypeServiceMockRecorder) DeleteActionTypesByIDs(ctx, tx, knID, branch, atIDs interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteActionTypesByIDs", reflect.TypeOf((*MockActionTypeService)(nil).DeleteActionTypesByIDs), ctx, tx, knID, branch, atIDs)
+}
+
+// DeleteActionTypesByKnID mocks base method.
+func (m *MockActionTypeService) DeleteActionTypesByKnID(ctx context.Context, tx *sql.Tx, knID, branch string) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DeleteActionTypesByKnID", ctx, tx, knID, branch)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// DeleteActionTypesByKnID indicates an expected call of DeleteActionTypesByKnID.
+func (mr *MockActionTypeServiceMockRecorder) DeleteActionTypesByKnID(ctx, tx, knID, branch interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteActionTypesByKnID", reflect.TypeOf((*MockActionTypeService)(nil).DeleteActionTypesByKnID), ctx, tx, knID, branch)
 }
 
 // GetActionTypeIDsByKnID mocks base method.

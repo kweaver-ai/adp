@@ -54,6 +54,11 @@ Description = "Job create conflict"
 Solution = "Please check whether the parameter is correct."
 ErrorLink = "None"
 
+[OntologyManager.Job.JobRunning]
+Description = "Job is running, "
+Solution = "Please try again later."
+ErrorLink = "None"
+
 [OntologyManager.Job.JobNotFound]
 Description = "The Job Does Not Exist"
 Solution = "Please check whether the parameter is correct."
@@ -71,5 +76,10 @@ ErrorLink = "None"
 
 [OntologyManager.Job.InternalError.CommitTransactionFailed]
 Description = "Commit Transaction Failed"
+Solution = "Please try again. If the error occurs again, please submit the work order or contact technical support."
+ErrorLink = "None"
+
+[OntologyManager.Job.InternalError.MissingTransaction]
+Description = "Missing Transaction"
 Solution = "Please try again. If the error occurs again, please submit the work order or contact technical support."
 ErrorLink = "None"

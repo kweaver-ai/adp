@@ -937,9 +937,8 @@ func Test_conceptGroupService_DeleteConceptGroupByID(t *testing.T) {
 			osa.EXPECT().DeleteData(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
 			smock.ExpectCommit()
 
-			rowsAffected, err := service.DeleteConceptGroupByID(ctx, nil, knID, branch, cgID)
+			err := service.DeleteConceptGroupByID(ctx, nil, knID, branch, cgID)
 			So(err, ShouldBeNil)
-			So(rowsAffected, ShouldEqual, 1)
 		})
 
 		Convey("Failed when permission check fails\n", func() {
@@ -949,9 +948,8 @@ func Test_conceptGroupService_DeleteConceptGroupByID(t *testing.T) {
 
 			ps.EXPECT().CheckPermission(gomock.Any(), gomock.Any(), gomock.Any()).Return(rest.NewHTTPError(ctx, 403, oerrors.OntologyManager_ConceptGroup_InternalError))
 
-			rowsAffected, err := service.DeleteConceptGroupByID(ctx, nil, knID, branch, cgID)
+			err := service.DeleteConceptGroupByID(ctx, nil, knID, branch, cgID)
 			So(err, ShouldNotBeNil)
-			So(rowsAffected, ShouldEqual, 0)
 		})
 
 		Convey("Failed when DeleteConceptGroupByID returns error\n", func() {
@@ -964,9 +962,8 @@ func Test_conceptGroupService_DeleteConceptGroupByID(t *testing.T) {
 			cga.EXPECT().DeleteConceptGroupByID(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(int64(0), rest.NewHTTPError(ctx, 500, oerrors.OntologyManager_ConceptGroup_InternalError))
 			smock.ExpectRollback()
 
-			rowsAffected, err := service.DeleteConceptGroupByID(ctx, nil, knID, branch, cgID)
+			err := service.DeleteConceptGroupByID(ctx, nil, knID, branch, cgID)
 			So(err, ShouldNotBeNil)
-			So(rowsAffected, ShouldEqual, 0)
 		})
 
 		Convey("Failed when DeleteObjectTypesFromGroup returns error\n", func() {
@@ -980,9 +977,8 @@ func Test_conceptGroupService_DeleteConceptGroupByID(t *testing.T) {
 			cga.EXPECT().DeleteObjectTypesFromGroup(gomock.Any(), gomock.Any(), gomock.Any()).Return(int64(0), rest.NewHTTPError(ctx, 500, oerrors.OntologyManager_ConceptGroup_InternalError))
 			smock.ExpectRollback()
 
-			rowsAffected, err := service.DeleteConceptGroupByID(ctx, nil, knID, branch, cgID)
+			err := service.DeleteConceptGroupByID(ctx, nil, knID, branch, cgID)
 			So(err, ShouldNotBeNil)
-			So(rowsAffected, ShouldEqual, 0)
 		})
 
 		Convey("Failed when DeleteData returns error\n", func() {
@@ -997,9 +993,8 @@ func Test_conceptGroupService_DeleteConceptGroupByID(t *testing.T) {
 			osa.EXPECT().DeleteData(gomock.Any(), gomock.Any(), gomock.Any()).Return(rest.NewHTTPError(ctx, 500, oerrors.OntologyManager_ConceptGroup_InternalError))
 			smock.ExpectRollback()
 
-			rowsAffected, err := service.DeleteConceptGroupByID(ctx, nil, knID, branch, cgID)
+			err := service.DeleteConceptGroupByID(ctx, nil, knID, branch, cgID)
 			So(err, ShouldNotBeNil)
-			So(rowsAffected, ShouldEqual, 0)
 		})
 
 		Convey("Success with rowsAffect != 1\n", func() {
@@ -1014,9 +1009,8 @@ func Test_conceptGroupService_DeleteConceptGroupByID(t *testing.T) {
 			osa.EXPECT().DeleteData(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
 			smock.ExpectCommit()
 
-			rowsAffected, err := service.DeleteConceptGroupByID(ctx, nil, knID, branch, cgID)
+			err := service.DeleteConceptGroupByID(ctx, nil, knID, branch, cgID)
 			So(err, ShouldBeNil)
-			So(rowsAffected, ShouldEqual, 0)
 		})
 	})
 }
@@ -1336,9 +1330,8 @@ func Test_conceptGroupService_DeleteObjectTypesFromGroup(t *testing.T) {
 			cga.EXPECT().DeleteObjectTypesFromGroup(gomock.Any(), gomock.Any(), gomock.Any()).Return(int64(2), nil)
 			smock.ExpectCommit()
 
-			rowsAffected, err := service.DeleteObjectTypesFromGroup(ctx, nil, knID, branch, cgID, otIDs)
+			err := service.DeleteObjectTypesFromGroup(ctx, nil, knID, branch, cgID, otIDs)
 			So(err, ShouldBeNil)
-			So(rowsAffected, ShouldEqual, 2)
 		})
 
 		Convey("Failed when permission check fails\n", func() {
@@ -1349,9 +1342,8 @@ func Test_conceptGroupService_DeleteObjectTypesFromGroup(t *testing.T) {
 
 			ps.EXPECT().CheckPermission(gomock.Any(), gomock.Any(), gomock.Any()).Return(rest.NewHTTPError(ctx, 403, oerrors.OntologyManager_ConceptGroup_InternalError))
 
-			rowsAffected, err := service.DeleteObjectTypesFromGroup(ctx, nil, knID, branch, cgID, otIDs)
+			err := service.DeleteObjectTypesFromGroup(ctx, nil, knID, branch, cgID, otIDs)
 			So(err, ShouldNotBeNil)
-			So(rowsAffected, ShouldEqual, 0)
 		})
 
 		Convey("Failed when DeleteObjectTypesFromGroup returns error\n", func() {
@@ -1365,9 +1357,8 @@ func Test_conceptGroupService_DeleteObjectTypesFromGroup(t *testing.T) {
 			cga.EXPECT().DeleteObjectTypesFromGroup(gomock.Any(), gomock.Any(), gomock.Any()).Return(int64(0), rest.NewHTTPError(ctx, 500, oerrors.OntologyManager_ConceptGroup_InternalError))
 			smock.ExpectRollback()
 
-			rowsAffected, err := service.DeleteObjectTypesFromGroup(ctx, nil, knID, branch, cgID, otIDs)
+			err := service.DeleteObjectTypesFromGroup(ctx, nil, knID, branch, cgID, otIDs)
 			So(err, ShouldNotBeNil)
-			So(rowsAffected, ShouldEqual, 0)
 		})
 
 		Convey("Success with rowsAffect != len(otIDs)\n", func() {
@@ -1381,9 +1372,8 @@ func Test_conceptGroupService_DeleteObjectTypesFromGroup(t *testing.T) {
 			cga.EXPECT().DeleteObjectTypesFromGroup(gomock.Any(), gomock.Any(), gomock.Any()).Return(int64(1), nil)
 			smock.ExpectCommit()
 
-			rowsAffected, err := service.DeleteObjectTypesFromGroup(ctx, nil, knID, branch, cgID, otIDs)
+			err := service.DeleteObjectTypesFromGroup(ctx, nil, knID, branch, cgID, otIDs)
 			So(err, ShouldBeNil)
-			So(rowsAffected, ShouldEqual, 1)
 		})
 	})
 }
@@ -1942,7 +1932,7 @@ func Test_conceptGroupService_AddObjectTypesToConceptGroup(t *testing.T) {
 			So(err, ShouldNotBeNil)
 			So(len(cgrIDs), ShouldEqual, 0)
 			httpErr := err.(*rest.HTTPError)
-			So(httpErr.BaseError.ErrorCode, ShouldEqual, oerrors.OntologyManager_ObjectType_ObjectTypeNotFound)
+			So(httpErr.BaseError.ErrorCode, ShouldEqual, oerrors.OntologyManager_ConceptGroup_ObjectTypeNotFound)
 		})
 
 		Convey("Failed when relation already exists in normal mode\n", func() {

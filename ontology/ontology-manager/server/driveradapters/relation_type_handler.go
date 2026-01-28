@@ -98,9 +98,11 @@ func (r *restHandler) CreateRelationTypes(c *gin.Context, visitor rest.Visitor) 
 
 	// 1. 接受 kn_id 参数
 	knID := c.Param("kn_id")
-	span.SetAttributes(attr.Key("kn_id").String(knID))
 	branch := c.DefaultQuery("branch", interfaces.MAIN_BRANCH)
-	span.SetAttributes(attr.Key("branch").String(branch))
+	span.SetAttributes(
+		attr.Key("kn_id").String(knID),
+		attr.Key("branch").String(branch),
+	)
 
 	// 校验业务知识网络存在性
 	_, exist, err := r.kns.CheckKNExistByID(ctx, knID, branch)
@@ -232,9 +234,11 @@ func (r *restHandler) UpdateRelationType(c *gin.Context, visitor rest.Visitor) {
 
 	// 1. 接受 kn_id 参数
 	knID := c.Param("kn_id")
-	span.SetAttributes(attr.Key("kn_id").String(knID))
 	branch := c.DefaultQuery("branch", interfaces.MAIN_BRANCH)
-	span.SetAttributes(attr.Key("branch").String(branch))
+	span.SetAttributes(
+		attr.Key("kn_id").String(knID),
+		attr.Key("branch").String(branch),
+	)
 
 	// 校验业务知识网络存在性
 	_, exist, err := r.kns.CheckKNExistByID(ctx, knID, branch)
@@ -387,9 +391,11 @@ func (r *restHandler) DeleteRelationTypes(c *gin.Context) {
 
 	// 1. 接受 kn_id 参数
 	knID := c.Param("kn_id")
-	span.SetAttributes(attr.Key("kn_id").String(knID))
 	branch := c.DefaultQuery("branch", interfaces.MAIN_BRANCH)
-	span.SetAttributes(attr.Key("branch").String(branch))
+	span.SetAttributes(
+		attr.Key("kn_id").String(knID),
+		attr.Key("branch").String(branch),
+	)
 
 	// 校验业务知识网络存在性
 	_, exist, err := r.kns.CheckKNExistByID(ctx, knID, branch)
@@ -443,10 +449,9 @@ func (r *restHandler) DeleteRelationTypes(c *gin.Context) {
 	}
 
 	// 批量删除关系类
-	rowsAffect, err := r.rts.DeleteRelationTypesByIDs(ctx, nil, knID, branch, rtIDs)
+	err = r.rts.DeleteRelationTypesByIDs(ctx, nil, knID, branch, rtIDs)
 	if err != nil {
 		httpErr := err.(*rest.HTTPError)
-
 		// 设置 trace 的错误信息的 attributes
 		o11y.AddHttpAttrs4HttpError(span, httpErr)
 		rest.ReplyError(c, httpErr)
@@ -454,11 +459,9 @@ func (r *restHandler) DeleteRelationTypes(c *gin.Context) {
 	}
 
 	//循环记录审计日志
-	if rowsAffect != 0 {
-		for _, relationType := range relationTypes {
-			audit.NewWarnLog(audit.OPERATION, audit.DELETE, audit.TransforOperator(visitor),
-				interfaces.GenerateRelationTypeAuditObject(relationType.RTID, relationType.RTName), audit.SUCCESS, "")
-		}
+	for _, relationType := range relationTypes {
+		audit.NewWarnLog(audit.OPERATION, audit.DELETE, audit.TransforOperator(visitor),
+			interfaces.GenerateRelationTypeAuditObject(relationType.RTID, relationType.RTName), audit.SUCCESS, "")
 	}
 
 	logger.Debug("Handler DeleteRelationTypes Success")
@@ -512,9 +515,11 @@ func (r *restHandler) ListRelationTypes(c *gin.Context, visitor rest.Visitor) {
 
 	// 1. 接受 kn_id 参数
 	knID := c.Param("kn_id")
-	span.SetAttributes(attr.Key("kn_id").String(knID))
 	branch := c.DefaultQuery("branch", interfaces.MAIN_BRANCH)
-	span.SetAttributes(attr.Key("branch").String(branch))
+	span.SetAttributes(
+		attr.Key("kn_id").String(knID),
+		attr.Key("branch").String(branch),
+	)
 
 	// 校验业务知识网络存在性
 	_, exist, err := r.kns.CheckKNExistByID(ctx, knID, branch)
@@ -650,9 +655,11 @@ func (r *restHandler) GetRelationTypes(c *gin.Context, visitor rest.Visitor) {
 
 	// 1. 接受 kn_id 参数
 	knID := c.Param("kn_id")
-	span.SetAttributes(attr.Key("kn_id").String(knID))
 	branch := c.DefaultQuery("branch", interfaces.MAIN_BRANCH)
-	span.SetAttributes(attr.Key("branch").String(branch))
+	span.SetAttributes(
+		attr.Key("kn_id").String(knID),
+		attr.Key("branch").String(branch),
+	)
 
 	// 校验业务知识网络存在性
 	_, exist, err := r.kns.CheckKNExistByID(ctx, knID, branch)
@@ -743,9 +750,11 @@ func (r *restHandler) SearchRelationTypes(c *gin.Context, visitor rest.Visitor) 
 
 	// 1. 接受 kn_id 参数
 	knID := c.Param("kn_id")
-	span.SetAttributes(attr.Key("kn_id").String(knID))
 	branch := c.DefaultQuery("branch", interfaces.MAIN_BRANCH)
-	span.SetAttributes(attr.Key("branch").String(branch))
+	span.SetAttributes(
+		attr.Key("kn_id").String(knID),
+		attr.Key("branch").String(branch),
+	)
 
 	// 校验业务知识网络存在性
 	_, exist, err := r.kns.CheckKNExistByID(ctx, knID, branch)
@@ -769,7 +778,7 @@ func (r *restHandler) SearchRelationTypes(c *gin.Context, visitor rest.Visitor) 
 	query := interfaces.ConceptsQuery{}
 	err = c.ShouldBindJSON(&query)
 	if err != nil {
-		httpErr := rest.NewHTTPError(ctx, http.StatusBadRequest, oerrors.OntologyManager_KnowledgeNetwork_InvalidParameter).
+		httpErr := rest.NewHTTPError(ctx, http.StatusBadRequest, oerrors.OntologyManager_RelationType_InvalidParameter).
 			WithErrorDetails(fmt.Sprintf("Binding Concept Query Paramter Failed:%s", err.Error()))
 
 		o11y.AddHttpAttrs4HttpError(span, httpErr)

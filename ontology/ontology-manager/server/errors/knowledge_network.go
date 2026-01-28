@@ -19,6 +19,9 @@ const (
 	OntologyManager_KnowledgeNetwork_NullParameter_Name                 = "OntologyManager.KnowledgeNetwork.NullParameter.Name"
 	OntologyManager_KnowledgeNetwork_NullParameter_SourceObjectTypeId   = "OntologyManager.KnowledgeNetwork.NullParameter.SourceObjectTypeId"
 
+	// 403
+	OntologyManager_KnowledgeNetwork_Forbidden_HasRunningJob = "OntologyManager.KnowledgeNetwork.Forbidden.HasRunningJob"
+
 	// 404
 	OntologyManager_KnowledgeNetwork_NotFound = "OntologyManager.KnowledgeNetwork.NotFound"
 
@@ -63,6 +66,9 @@ var (
 		OntologyManager_KnowledgeNetwork_NullParameter_Direction,
 		OntologyManager_KnowledgeNetwork_NullParameter_Name,
 		OntologyManager_KnowledgeNetwork_NullParameter_SourceObjectTypeId,
+
+		// 403
+		OntologyManager_KnowledgeNetwork_Forbidden_HasRunningJob,
 
 		// 404
 		OntologyManager_KnowledgeNetwork_NotFound,

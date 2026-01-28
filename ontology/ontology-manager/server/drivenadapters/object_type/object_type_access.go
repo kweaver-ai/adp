@@ -50,15 +50,14 @@ func NewObjectTypeAccess(appSetting *common.AppSetting) interfaces.ObjectTypeAcc
 }
 
 // 根据ID获取对象类存在性
-func (ota *objectTypeAccess) CheckObjectTypeExistByID(ctx context.Context,
-	knID string, branch string, otID string) (string, bool, error) {
-	ctx, span := ar_trace.Tracer.Start(ctx, "Query object type",
-		trace.WithSpanKind(trace.SpanKindClient))
+func (ota *objectTypeAccess) CheckObjectTypeExistByID(ctx context.Context, knID string, branch string, otID string) (string, bool, error) {
+	ctx, span := ar_trace.Tracer.Start(ctx, "CheckObjectTypeExistByID", trace.WithSpanKind(trace.SpanKindClient))
 	defer span.End()
 
 	span.SetAttributes(
 		attr.Key("db_url").String(libdb.GetDBUrl()),
-		attr.Key("db_type").String(libdb.GetDBType()))
+		attr.Key("db_type").String(libdb.GetDBType()),
+	)
 
 	//查询
 	sqlStr, vals, err := sq.Select(
@@ -96,15 +95,14 @@ func (ota *objectTypeAccess) CheckObjectTypeExistByID(ctx context.Context,
 }
 
 // 根据名称获取对象类存在性
-func (ota *objectTypeAccess) CheckObjectTypeExistByName(ctx context.Context,
-	knID string, branch string, name string) (string, bool, error) {
-	ctx, span := ar_trace.Tracer.Start(ctx, "Query object type",
-		trace.WithSpanKind(trace.SpanKindClient))
+func (ota *objectTypeAccess) CheckObjectTypeExistByName(ctx context.Context, knID string, branch string, name string) (string, bool, error) {
+	ctx, span := ar_trace.Tracer.Start(ctx, "CheckObjectTypeExistByName", trace.WithSpanKind(trace.SpanKindClient))
 	defer span.End()
 
 	span.SetAttributes(
 		attr.Key("db_url").String(libdb.GetDBUrl()),
-		attr.Key("db_type").String(libdb.GetDBType()))
+		attr.Key("db_type").String(libdb.GetDBType()),
+	)
 
 	//查询
 	sqlStr, vals, err := sq.Select("f_id").
@@ -144,12 +142,13 @@ func (ota *objectTypeAccess) CheckObjectTypeExistByName(ctx context.Context,
 
 // 创建对象类
 func (ota *objectTypeAccess) CreateObjectType(ctx context.Context, tx *sql.Tx, objectType *interfaces.ObjectType) error {
-	ctx, span := ar_trace.Tracer.Start(ctx, "Insert into object type", trace.WithSpanKind(trace.SpanKindClient))
+	ctx, span := ar_trace.Tracer.Start(ctx, "CreateObjectType", trace.WithSpanKind(trace.SpanKindClient))
 	defer span.End()
 
 	span.SetAttributes(
 		attr.Key("db_url").String(libdb.GetDBUrl()),
-		attr.Key("db_type").String(libdb.GetDBType()))
+		attr.Key("db_type").String(libdb.GetDBType()),
+	)
 
 	// tags 转成 string 的格式
 	tagsStr := libCommon.TagSlice2TagString(objectType.Tags)
@@ -262,12 +261,13 @@ func (ota *objectTypeAccess) CreateObjectType(ctx context.Context, tx *sql.Tx, o
 
 // 创建对象类状态
 func (ota *objectTypeAccess) CreateObjectTypeStatus(ctx context.Context, tx *sql.Tx, objectType *interfaces.ObjectType) error {
-	ctx, span := ar_trace.Tracer.Start(ctx, "Insert into object type status", trace.WithSpanKind(trace.SpanKindClient))
+	ctx, span := ar_trace.Tracer.Start(ctx, "CreateObjectTypeStatus", trace.WithSpanKind(trace.SpanKindClient))
 	defer span.End()
 
 	span.SetAttributes(
 		attr.Key("db_url").String(libdb.GetDBUrl()),
-		attr.Key("db_type").String(libdb.GetDBType()))
+		attr.Key("db_type").String(libdb.GetDBType()),
+	)
 
 	sqlStr, vals, err := sq.Insert(OT_STATUS_TABLE_NAME).
 		Columns(
@@ -312,12 +312,13 @@ func (ota *objectTypeAccess) CreateObjectTypeStatus(ctx context.Context, tx *sql
 
 // 查询对象类列表。查主线的当前版本为true的对象类
 func (ota *objectTypeAccess) ListObjectTypes(ctx context.Context, tx *sql.Tx, query interfaces.ObjectTypesQueryParams) ([]*interfaces.ObjectType, error) {
-	ctx, span := ar_trace.Tracer.Start(ctx, "Select object types", trace.WithSpanKind(trace.SpanKindClient))
+	ctx, span := ar_trace.Tracer.Start(ctx, "ListObjectTypes", trace.WithSpanKind(trace.SpanKindClient))
 	defer span.End()
 
 	span.SetAttributes(
 		attr.Key("db_url").String(libdb.GetDBUrl()),
-		attr.Key("db_type").String(libdb.GetDBType()))
+		attr.Key("db_type").String(libdb.GetDBType()),
+	)
 
 	subBuilder := sq.Select(
 		"ot.f_id",
@@ -482,12 +483,13 @@ func (ota *objectTypeAccess) ListObjectTypes(ctx context.Context, tx *sql.Tx, qu
 }
 
 func (ota *objectTypeAccess) GetObjectTypesTotal(ctx context.Context, query interfaces.ObjectTypesQueryParams) (int, error) {
-	ctx, span := ar_trace.Tracer.Start(ctx, "Select object types total number", trace.WithSpanKind(trace.SpanKindClient))
+	ctx, span := ar_trace.Tracer.Start(ctx, "GetObjectTypesTotal", trace.WithSpanKind(trace.SpanKindClient))
 	defer span.End()
 
 	span.SetAttributes(
 		attr.Key("db_url").String(libdb.GetDBUrl()),
-		attr.Key("db_type").String(libdb.GetDBType()))
+		attr.Key("db_type").String(libdb.GetDBType()),
+	)
 
 	subBuilder := sq.Select("COUNT(ot.f_id)").
 		From(OT_TABLE_NAME + " AS ot")
@@ -517,16 +519,14 @@ func (ota *objectTypeAccess) GetObjectTypesTotal(ctx context.Context, query inte
 	return total, nil
 }
 
-func (ota *objectTypeAccess) GetObjectTypeByID(ctx context.Context, tx *sql.Tx,
-	knID string, branch string, otID string) (*interfaces.ObjectType, error) {
-
-	ctx, span := ar_trace.Tracer.Start(ctx, fmt.Sprintf("Get object type[%s]", otID),
-		trace.WithSpanKind(trace.SpanKindClient))
+func (ota *objectTypeAccess) GetObjectTypeByID(ctx context.Context, tx *sql.Tx, knID string, branch string, otID string) (*interfaces.ObjectType, error) {
+	ctx, span := ar_trace.Tracer.Start(ctx, "GetObjectTypeByID", trace.WithSpanKind(trace.SpanKindClient))
 	defer span.End()
 
 	span.SetAttributes(
 		attr.Key("db_url").String(libdb.GetDBUrl()),
-		attr.Key("db_type").String(libdb.GetDBType()))
+		attr.Key("db_type").String(libdb.GetDBType()),
+	)
 
 	//查询
 	sqlStr, vals, err := sq.Select(
@@ -677,16 +677,14 @@ func (ota *objectTypeAccess) GetObjectTypeByID(ctx context.Context, tx *sql.Tx,
 	return &objectType, nil
 }
 
-func (ota *objectTypeAccess) GetObjectTypesByIDs(ctx context.Context, tx *sql.Tx,
-	knID string, branch string, otIDs []string) ([]*interfaces.ObjectType, error) {
-
-	ctx, span := ar_trace.Tracer.Start(ctx, fmt.Sprintf("Get object types[%s]", otIDs),
-		trace.WithSpanKind(trace.SpanKindClient))
+func (ota *objectTypeAccess) GetObjectTypesByIDs(ctx context.Context, tx *sql.Tx, knID string, branch string, otIDs []string) ([]*interfaces.ObjectType, error) {
+	ctx, span := ar_trace.Tracer.Start(ctx, "GetObjectTypesByIDs", trace.WithSpanKind(trace.SpanKindClient))
 	defer span.End()
 
 	span.SetAttributes(
 		attr.Key("db_url").String(libdb.GetDBUrl()),
-		attr.Key("db_type").String(libdb.GetDBType()))
+		attr.Key("db_type").String(libdb.GetDBType()),
+	)
 
 	//查询
 	sqlStr, vals, err := sq.Select(
@@ -869,12 +867,13 @@ func (ota *objectTypeAccess) GetObjectTypesByIDs(ctx context.Context, tx *sql.Tx
 }
 
 func (ota *objectTypeAccess) UpdateObjectType(ctx context.Context, tx *sql.Tx, objectType *interfaces.ObjectType) error {
-	ctx, span := ar_trace.Tracer.Start(ctx, fmt.Sprintf("Update object type[%s]", objectType.OTID), trace.WithSpanKind(trace.SpanKindClient))
+	ctx, span := ar_trace.Tracer.Start(ctx, "UpdateObjectType", trace.WithSpanKind(trace.SpanKindClient))
 	defer span.End()
 
 	span.SetAttributes(
 		attr.Key("db_url").String(libdb.GetDBUrl()),
-		attr.Key("db_type").String(libdb.GetDBType()))
+		attr.Key("db_type").String(libdb.GetDBType()),
+	)
 
 	// tags 转成 string 的格式
 	tagsStr := libCommon.TagSlice2TagString(objectType.Tags)
@@ -969,12 +968,13 @@ func (ota *objectTypeAccess) UpdateObjectType(ctx context.Context, tx *sql.Tx, o
 }
 
 func (ota *objectTypeAccess) UpdateDataProperties(ctx context.Context, objectType *interfaces.ObjectType) error {
-	ctx, span := ar_trace.Tracer.Start(ctx, fmt.Sprintf("Update object type[%s]", objectType.OTID), trace.WithSpanKind(trace.SpanKindClient))
+	ctx, span := ar_trace.Tracer.Start(ctx, "UpdateDataProperties", trace.WithSpanKind(trace.SpanKindClient))
 	defer span.End()
 
 	span.SetAttributes(
 		attr.Key("db_url").String(libdb.GetDBUrl()),
-		attr.Key("db_type").String(libdb.GetDBType()))
+		attr.Key("db_type").String(libdb.GetDBType()),
+	)
 
 	// 2.1 序列化数据属性
 	dataPropertiesBytes, err := sonic.Marshal(objectType.DataProperties)
@@ -1033,18 +1033,14 @@ func (ota *objectTypeAccess) UpdateDataProperties(ctx context.Context, objectTyp
 	return nil
 }
 
-func (ota *objectTypeAccess) DeleteObjectTypesByIDs(ctx context.Context, tx *sql.Tx,
-	knID string, branch string, otIDs []string) (int64, error) {
-	ctx, span := ar_trace.Tracer.Start(ctx, "Delete object types from db",
-		trace.WithSpanKind(trace.SpanKindClient))
+func (ota *objectTypeAccess) DeleteObjectTypesByIDs(ctx context.Context, tx *sql.Tx, knID string, branch string, otIDs []string) (int64, error) {
+	ctx, span := ar_trace.Tracer.Start(ctx, "DeleteObjectTypesByIDs", trace.WithSpanKind(trace.SpanKindClient))
 	defer span.End()
 
 	span.SetAttributes(
 		attr.Key("db_url").String(libdb.GetDBUrl()),
 		attr.Key("db_type").String(libdb.GetDBType()),
-		attr.Key("kn_id").String(knID),
-		attr.Key("branch").String(branch),
-		attr.Key("ot_ids").String(fmt.Sprintf("%v", otIDs)))
+	)
 
 	if len(otIDs) == 0 {
 		return 0, nil
@@ -1099,18 +1095,14 @@ func (ota *objectTypeAccess) DeleteObjectTypesByIDs(ctx context.Context, tx *sql
 	return RowsAffected, nil
 }
 
-func (ota *objectTypeAccess) DeleteObjectTypeStatusByIDs(ctx context.Context, tx *sql.Tx,
-	knID string, branch string, otIDs []string) (int64, error) {
-	ctx, span := ar_trace.Tracer.Start(ctx, "Delete object types from db",
-		trace.WithSpanKind(trace.SpanKindClient))
+func (ota *objectTypeAccess) DeleteObjectTypeStatusByIDs(ctx context.Context, tx *sql.Tx, knID string, branch string, otIDs []string) (int64, error) {
+	ctx, span := ar_trace.Tracer.Start(ctx, "DeleteObjectTypeStatusByIDs", trace.WithSpanKind(trace.SpanKindClient))
 	defer span.End()
 
 	span.SetAttributes(
 		attr.Key("db_url").String(libdb.GetDBUrl()),
 		attr.Key("db_type").String(libdb.GetDBType()),
-		attr.Key("kn_id").String(knID),
-		attr.Key("branch").String(branch),
-		attr.Key("ot_ids").String(fmt.Sprintf("%v", otIDs)))
+	)
 
 	if len(otIDs) == 0 {
 		return 0, nil
@@ -1165,16 +1157,112 @@ func (ota *objectTypeAccess) DeleteObjectTypeStatusByIDs(ctx context.Context, tx
 	return RowsAffected, nil
 }
 
-func (ota *objectTypeAccess) GetObjectTypeIDsByKnID(ctx context.Context, knID string, branch string) ([]string, error) {
-	ctx, span := ar_trace.Tracer.Start(ctx, fmt.Sprintf("Get object type ids by kn_id[%s]", knID),
-		trace.WithSpanKind(trace.SpanKindClient))
+func (ota *objectTypeAccess) DeleteObjectTypesByKnID(ctx context.Context, tx *sql.Tx, knID string, branch string) (int64, error) {
+	ctx, span := ar_trace.Tracer.Start(ctx, "DeleteObjectTypesByKnID", trace.WithSpanKind(trace.SpanKindClient))
 	defer span.End()
 
 	span.SetAttributes(
 		attr.Key("db_url").String(libdb.GetDBUrl()),
 		attr.Key("db_type").String(libdb.GetDBType()),
-		attr.Key("kn_id").String(knID),
-		attr.Key("branch").String(branch))
+	)
+
+	sqlStr, vals, err := sq.Delete(OT_TABLE_NAME).
+		Where(sq.Eq{"f_kn_id": knID}).
+		Where(sq.Eq{"f_branch": branch}).
+		ToSql()
+	if err != nil {
+		logger.Errorf("Failed to build the sql of delete object type by object type id, error: %s", err.Error())
+		o11y.Error(ctx, fmt.Sprintf("Failed to build the sql of delete object type by object type id, error: %s", err.Error()))
+		span.SetStatus(codes.Error, "Build sql failed ")
+		return 0, err
+	}
+
+	// 记录处理的 sql 字符串
+	o11y.Info(ctx, fmt.Sprintf("删除对象类的 sql 语句: %s; 删除的对象类kn_id: %s, branch: %s", sqlStr, knID, branch))
+
+	var ret sql.Result
+	if tx != nil {
+		ret, err = tx.Exec(sqlStr, vals...)
+	} else {
+		ret, err = ota.db.Exec(sqlStr, vals...)
+	}
+	if err != nil {
+		logger.Errorf("delete data error: %v\n", err)
+		o11y.Error(ctx, fmt.Sprintf("Delete data error: %v ", err))
+		span.SetStatus(codes.Error, "Delete data error")
+		return 0, err
+	}
+
+	//sql语句影响的行数
+	RowsAffected, err := ret.RowsAffected()
+	if err != nil {
+		logger.Errorf("Get RowsAffected error: %v\n", err)
+		span.SetStatus(codes.Error, "Get RowsAffected error")
+		o11y.Warn(ctx, fmt.Sprintf("Get RowsAffected error: %v ", err))
+	}
+
+	logger.Infof("RowsAffected: %d", RowsAffected)
+	span.SetStatus(codes.Ok, "")
+	return RowsAffected, nil
+}
+
+func (ota *objectTypeAccess) DeleteObjectTypeStatusByKnID(ctx context.Context, tx *sql.Tx, knID string, branch string) (int64, error) {
+	ctx, span := ar_trace.Tracer.Start(ctx, "DeleteObjectTypeStatusByKnID", trace.WithSpanKind(trace.SpanKindClient))
+	defer span.End()
+
+	span.SetAttributes(
+		attr.Key("db_url").String(libdb.GetDBUrl()),
+		attr.Key("db_type").String(libdb.GetDBType()),
+	)
+
+	sqlStr, vals, err := sq.Delete(OT_STATUS_TABLE_NAME).
+		Where(sq.Eq{"f_kn_id": knID}).
+		Where(sq.Eq{"f_branch": branch}).
+		ToSql()
+	if err != nil {
+		logger.Errorf("Failed to build the sql of delete object type status by object type id, error: %s", err.Error())
+		o11y.Error(ctx, fmt.Sprintf("Failed to build the sql of delete object type status by object type id, error: %s", err.Error()))
+		span.SetStatus(codes.Error, "Build sql failed ")
+		return 0, err
+	}
+
+	// 记录处理的 sql 字符串
+	o11y.Info(ctx, fmt.Sprintf("删除对象类状态的 sql 语句: %s; 删除的对象类kn_id: %s, branch: %s", sqlStr, knID, branch))
+
+	var ret sql.Result
+	if tx != nil {
+		ret, err = tx.Exec(sqlStr, vals...)
+	} else {
+		ret, err = ota.db.Exec(sqlStr, vals...)
+	}
+	if err != nil {
+		logger.Errorf("delete data error: %v\n", err)
+		o11y.Error(ctx, fmt.Sprintf("Delete data error: %v ", err))
+		span.SetStatus(codes.Error, "Delete data error")
+		return 0, err
+	}
+
+	//sql语句影响的行数
+	RowsAffected, err := ret.RowsAffected()
+	if err != nil {
+		logger.Errorf("Get RowsAffected error: %v\n", err)
+		span.SetStatus(codes.Error, "Get RowsAffected error")
+		o11y.Warn(ctx, fmt.Sprintf("Get RowsAffected error: %v ", err))
+	}
+
+	logger.Infof("RowsAffected: %d", RowsAffected)
+	span.SetStatus(codes.Ok, "")
+	return RowsAffected, nil
+}
+
+func (ota *objectTypeAccess) GetObjectTypeIDsByKnID(ctx context.Context, knID string, branch string) ([]string, error) {
+	ctx, span := ar_trace.Tracer.Start(ctx, "GetObjectTypeIDsByKnID", trace.WithSpanKind(trace.SpanKindClient))
+	defer span.End()
+
+	span.SetAttributes(
+		attr.Key("db_url").String(libdb.GetDBUrl()),
+		attr.Key("db_type").String(libdb.GetDBType()),
+	)
 
 	//查询
 	sqlStr, vals, err := sq.Select(
@@ -1222,18 +1310,14 @@ func (ota *objectTypeAccess) GetObjectTypeIDsByKnID(ctx context.Context, knID st
 	return otIDs, nil
 }
 
-func (ota *objectTypeAccess) UpdateObjectTypeStatus(ctx context.Context,
-	tx *sql.Tx, knID string, branch string, otID string, otStatus interfaces.ObjectTypeStatus) error {
-	ctx, span := ar_trace.Tracer.Start(ctx,
-		fmt.Sprintf("Update object type status[%v] by ot_id[%s]", otStatus, otID),
-		trace.WithSpanKind(trace.SpanKindClient))
+func (ota *objectTypeAccess) UpdateObjectTypeStatus(ctx context.Context, tx *sql.Tx, knID string, branch string, otID string, otStatus interfaces.ObjectTypeStatus) error {
+	ctx, span := ar_trace.Tracer.Start(ctx, "UpdateObjectTypeStatus", trace.WithSpanKind(trace.SpanKindClient))
 	defer span.End()
 
 	span.SetAttributes(
 		attr.Key("db_url").String(libdb.GetDBUrl()),
 		attr.Key("db_type").String(libdb.GetDBType()),
-		attr.Key("kn_id").String(knID),
-		attr.Key("branch").String(branch))
+	)
 
 	//更新
 	sqlStr, vals, err := sq.Update(OT_STATUS_TABLE_NAME).
@@ -1301,17 +1385,14 @@ func processQueryCondition(query interfaces.ObjectTypesQueryParams, subBuilder s
 	return subBuilder
 }
 
-func (ota *objectTypeAccess) GetAllObjectTypesByKnID(ctx context.Context,
-	knID string, branch string) (map[string]*interfaces.ObjectType, error) {
-	ctx, span := ar_trace.Tracer.Start(ctx, fmt.Sprintf("Get all object types by kn_id[%s]", knID),
-		trace.WithSpanKind(trace.SpanKindClient))
+func (ota *objectTypeAccess) GetAllObjectTypesByKnID(ctx context.Context, knID string, branch string) (map[string]*interfaces.ObjectType, error) {
+	ctx, span := ar_trace.Tracer.Start(ctx, "GetAllObjectTypesByKnID", trace.WithSpanKind(trace.SpanKindClient))
 	defer span.End()
 
 	span.SetAttributes(
 		attr.Key("db_url").String(libdb.GetDBUrl()),
 		attr.Key("db_type").String(libdb.GetDBType()),
-		attr.Key("kn_id").String(knID),
-		attr.Key("branch").String(branch))
+	)
 
 	//查询
 	sqlStr, vals, err := sq.Select(

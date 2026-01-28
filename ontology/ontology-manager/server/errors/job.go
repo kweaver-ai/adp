@@ -15,6 +15,7 @@ const (
 
 	// 403
 	OntologyManager_Job_CreateConflict = "OntologyManager.Job.CreateConflict"
+	OntologyManager_Job_JobRunning     = "OntologyManager.Job.JobRunning"
 
 	// 404
 	OntologyManager_Job_JobNotFound = "OntologyManager.Job.JobNotFound"
@@ -23,6 +24,7 @@ const (
 	OntologyManager_Job_InternalError                         = "OntologyManager.Job.InternalError"
 	OntologyManager_Job_InternalError_BeginTransactionFailed  = "OntologyManager.Job.InternalError.BeginTransactionFailed"
 	OntologyManager_Job_InternalError_CommitTransactionFailed = "OntologyManager.Job.InternalError.CommitTransactionFailed"
+	OntologyManager_Job_InternalError_MissingTransaction      = "OntologyManager.Job.InternalError.MissingTransaction"
 )
 
 var (
@@ -39,11 +41,13 @@ var (
 		OntologyManager_Job_InvalidObjectType,
 
 		OntologyManager_Job_CreateConflict,
+		OntologyManager_Job_JobRunning,
 
 		OntologyManager_Job_JobNotFound,
 
 		OntologyManager_Job_InternalError,
 		OntologyManager_Job_InternalError_BeginTransactionFailed,
 		OntologyManager_Job_InternalError_CommitTransactionFailed,
+		OntologyManager_Job_InternalError_MissingTransaction,
 	}
 )

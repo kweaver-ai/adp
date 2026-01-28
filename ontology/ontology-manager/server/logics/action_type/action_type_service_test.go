@@ -1017,9 +1017,8 @@ func Test_actionTypeService_DeleteActionTypesByIDs(t *testing.T) {
 			ata.EXPECT().DeleteActionTypesByIDs(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(int64(2), nil)
 			osa.EXPECT().DeleteData(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).Times(2)
 			smock.ExpectCommit()
-			rowsAffected, err := service.DeleteActionTypesByIDs(ctx, nil, knID, branch, atIDs)
+			err := service.DeleteActionTypesByIDs(ctx, nil, knID, branch, atIDs)
 			So(err, ShouldBeNil)
-			So(rowsAffected, ShouldEqual, 2)
 		})
 
 		Convey("Failed when permission check fails\n", func() {
@@ -1029,9 +1028,8 @@ func Test_actionTypeService_DeleteActionTypesByIDs(t *testing.T) {
 
 			ps.EXPECT().CheckPermission(gomock.Any(), gomock.Any(), gomock.Any()).Return(rest.NewHTTPError(ctx, 403, oerrors.OntologyManager_ActionType_InternalError))
 
-			rowsAffected, err := service.DeleteActionTypesByIDs(ctx, nil, knID, branch, atIDs)
+			err := service.DeleteActionTypesByIDs(ctx, nil, knID, branch, atIDs)
 			So(err, ShouldNotBeNil)
-			So(rowsAffected, ShouldEqual, 0)
 		})
 
 		Convey("Failed when DeleteActionTypesByIDs returns error\n", func() {
@@ -1042,9 +1040,8 @@ func Test_actionTypeService_DeleteActionTypesByIDs(t *testing.T) {
 			ps.EXPECT().CheckPermission(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
 			ata.EXPECT().DeleteActionTypesByIDs(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(int64(0), rest.NewHTTPError(ctx, 500, oerrors.OntologyManager_ActionType_InternalError))
 			smock.ExpectCommit()
-			rowsAffected, err := service.DeleteActionTypesByIDs(ctx, nil, knID, branch, atIDs)
+			err := service.DeleteActionTypesByIDs(ctx, nil, knID, branch, atIDs)
 			So(err, ShouldNotBeNil)
-			So(rowsAffected, ShouldEqual, 0)
 		})
 
 		Convey("Failed when DeleteData returns error\n", func() {
@@ -1056,9 +1053,8 @@ func Test_actionTypeService_DeleteActionTypesByIDs(t *testing.T) {
 			ata.EXPECT().DeleteActionTypesByIDs(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(int64(1), nil)
 			osa.EXPECT().DeleteData(gomock.Any(), gomock.Any(), gomock.Any()).Return(rest.NewHTTPError(ctx, 500, oerrors.OntologyManager_ActionType_InternalError))
 			smock.ExpectCommit()
-			rowsAffected, err := service.DeleteActionTypesByIDs(ctx, nil, knID, branch, atIDs)
+			err := service.DeleteActionTypesByIDs(ctx, nil, knID, branch, atIDs)
 			So(err, ShouldNotBeNil)
-			So(rowsAffected, ShouldEqual, 0)
 		})
 
 		Convey("Success with rowsAffect != len(atIDs)\n", func() {
@@ -1070,9 +1066,8 @@ func Test_actionTypeService_DeleteActionTypesByIDs(t *testing.T) {
 			ata.EXPECT().DeleteActionTypesByIDs(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(int64(1), nil)
 			osa.EXPECT().DeleteData(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).Times(2)
 			smock.ExpectCommit()
-			rowsAffected, err := service.DeleteActionTypesByIDs(ctx, nil, knID, branch, atIDs)
+			err := service.DeleteActionTypesByIDs(ctx, nil, knID, branch, atIDs)
 			So(err, ShouldBeNil)
-			So(rowsAffected, ShouldEqual, 1)
 		})
 	})
 }

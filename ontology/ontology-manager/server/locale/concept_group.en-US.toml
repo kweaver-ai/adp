@@ -1,9 +1,4 @@
 # ConceptGroup
-[OntologyManager.ConceptGroup.Duplicated.IDInFile]
-Description = "Same Konwledge Network ID Existed"
-Solution = "Please check whether the parameter is correct."
-ErrorLink = "None"
-
 [OntologyManager.ConceptGroup.Duplicated.Name]
 Description = "Same Konwledge Network Name Existed"
 Solution = "Please check whether the parameter is correct."
@@ -84,6 +79,11 @@ Description = "The Concept Group Does Not Exist"
 Solution = "Please try again. If the error occurs again, please submit the work order or contact technical support."
 ErrorLink = "None"
 
+[OntologyManager.ConceptGroup.ObjectTypeNotFound]
+Description = "The Object Type Does Not Exist"
+Solution = "Please try again. If the error occurs again, please submit the work order or contact technical support."
+ErrorLink = "None"
+
 [OntologyManager.ConceptGroup.InternalError]
 Description = "Internal Error"
 Solution = "Please try again. If the error occurs again, please submit the work order or contact technical support."
@@ -91,6 +91,11 @@ ErrorLink = "None"
 
 [OntologyManager.ConceptGroup.InternalError.AddObjectTypesToConceptGroupFailed]
 Description = "Add Object Types To Group Failed"
+Solution = "Please try again. If the error occurs again, please submit the work order or contact technical support."
+ErrorLink = "None"
+
+[OntologyManager.ConceptGroup.InternalError.MissingTransaction]
+Description = "Missing Transaction"
 Solution = "Please try again. If the error occurs again, please submit the work order or contact technical support."
 ErrorLink = "None"
 
@@ -176,20 +181,5 @@ ErrorLink = "None"
 
 [OntologyManager.ConceptGroup.InternalError.CreateActionTypesFailed]
 Description = "Failed to create action types"
-Solution = "Please try again. If the error occurs again, please submit the work order or contact technical support."
-ErrorLink = "None"
-
-[OntologyManager.ConceptGroup.InternalError.DeleteObjectTypesFailed]
-Description = "Failed to delete object types"
-Solution = "Please try again. If the error occurs again, please submit the work order or contact technical support."
-ErrorLink = "None"
-
-[OntologyManager.ConceptGroup.InternalError.DeleteRelationTypesFailed]
-Description = "Failed to delete relation types"
-Solution = "Please try again. If the error occurs again, please submit the work order or contact technical support."
-ErrorLink = "None"
-
-[OntologyManager.ConceptGroup.InternalError.DeleteActionTypesFailed]
-Description = "Failed to delete action types"
 Solution = "Please try again. If the error occurs again, please submit the work order or contact technical support."
 ErrorLink = "None"

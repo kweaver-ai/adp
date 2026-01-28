@@ -111,6 +111,36 @@ func (mr *MockConceptGroupAccessMockRecorder) DeleteConceptGroupByID(ctx, tx, kn
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteConceptGroupByID", reflect.TypeOf((*MockConceptGroupAccess)(nil).DeleteConceptGroupByID), ctx, tx, knID, branch, cgID)
 }
 
+// DeleteConceptGroupRelationsByKnID mocks base method.
+func (m *MockConceptGroupAccess) DeleteConceptGroupRelationsByKnID(ctx context.Context, tx *sql.Tx, knID, branch string) (int64, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DeleteConceptGroupRelationsByKnID", ctx, tx, knID, branch)
+	ret0, _ := ret[0].(int64)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// DeleteConceptGroupRelationsByKnID indicates an expected call of DeleteConceptGroupRelationsByKnID.
+func (mr *MockConceptGroupAccessMockRecorder) DeleteConceptGroupRelationsByKnID(ctx, tx, knID, branch interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteConceptGroupRelationsByKnID", reflect.TypeOf((*MockConceptGroupAccess)(nil).DeleteConceptGroupRelationsByKnID), ctx, tx, knID, branch)
+}
+
+// DeleteConceptGroupsByKnID mocks base method.
+func (m *MockConceptGroupAccess) DeleteConceptGroupsByKnID(ctx context.Context, tx *sql.Tx, knID, branch string) (int64, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DeleteConceptGroupsByKnID", ctx, tx, knID, branch)
+	ret0, _ := ret[0].(int64)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// DeleteConceptGroupsByKnID indicates an expected call of DeleteConceptGroupsByKnID.
+func (mr *MockConceptGroupAccessMockRecorder) DeleteConceptGroupsByKnID(ctx, tx, knID, branch interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteConceptGroupsByKnID", reflect.TypeOf((*MockConceptGroupAccess)(nil).DeleteConceptGroupsByKnID), ctx, tx, knID, branch)
+}
+
 // DeleteObjectTypesFromGroup mocks base method.
 func (m *MockConceptGroupAccess) DeleteObjectTypesFromGroup(ctx context.Context, tx *sql.Tx, query interfaces.ConceptGroupRelationsQueryParams) (int64, error) {
 	m.ctrl.T.Helper()
@@ -169,6 +199,21 @@ func (m *MockConceptGroupAccess) GetConceptGroupByID(ctx context.Context, knID, 
 func (mr *MockConceptGroupAccessMockRecorder) GetConceptGroupByID(ctx, knID, branch, cgID interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetConceptGroupByID", reflect.TypeOf((*MockConceptGroupAccess)(nil).GetConceptGroupByID), ctx, knID, branch, cgID)
+}
+
+// GetConceptGroupIDsByKnID mocks base method.
+func (m *MockConceptGroupAccess) GetConceptGroupIDsByKnID(ctx context.Context, knID, branch string) ([]string, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetConceptGroupIDsByKnID", ctx, knID, branch)
+	ret0, _ := ret[0].([]string)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetConceptGroupIDsByKnID indicates an expected call of GetConceptGroupIDsByKnID.
+func (mr *MockConceptGroupAccessMockRecorder) GetConceptGroupIDsByKnID(ctx, knID, branch interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetConceptGroupIDsByKnID", reflect.TypeOf((*MockConceptGroupAccess)(nil).GetConceptGroupIDsByKnID), ctx, knID, branch)
 }
 
 // GetConceptGroupsByIDs mocks base method.

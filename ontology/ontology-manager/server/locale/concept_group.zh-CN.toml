@@ -1,9 +1,4 @@
 # 概念分组
-[OntologyManager.ConceptGroup.Duplicated.IDInFile]
-Description = "存在重复的概念分组ID"
-Solution = "请检查参数是否正确。"
-ErrorLink = "暂无"
-
 [OntologyManager.ConceptGroup.Duplicated.Name]
 Description = "存在重复的概念分组名称"
 Solution = "请检查参数是否正确。"
@@ -84,6 +79,11 @@ Description = "概念分组不存在"
 Solution = "请检查参数是否正确。"
 ErrorLink = "暂无"
 
+[OntologyManager.ConceptGroup.ObjectTypeNotFound]
+Description = "对象类不存在"
+Solution = "请检查参数是否正确。"
+ErrorLink = "暂无"
+
 [OntologyManager.ConceptGroup.InternalError]
 Description = "内部错误"
 Solution = "请重试该操作，若再次出现该错误请提交工单或联系技术支持工程师。"
@@ -91,6 +91,11 @@ ErrorLink = "暂无"
 
 [OntologyManager.ConceptGroup.InternalError.AddObjectTypesToConceptGroupFailed]
 Description = "添加对象类到分组失败"
+Solution = "请重试该操作，若再次出现该错误请提交工单或联系技术支持工程师。"
+ErrorLink = "暂无"
+
+[OntologyManager.ConceptGroup.InternalError.MissingTransaction]
+Description = "缺少事务"
 Solution = "请重试该操作，若再次出现该错误请提交工单或联系技术支持工程师。"
 ErrorLink = "暂无"
 
@@ -176,20 +181,5 @@ ErrorLink = "暂无"
 
 [OntologyManager.ConceptGroup.InternalError.CreateActionTypesFailed]
 Description = "创建行动类失败"
-Solution = "请重试该操作，若再次出现该错误请提交工单或联系技术支持工程师。"
-ErrorLink = "暂无"
-
-[OntologyManager.ConceptGroup.InternalError.DeleteObjectTypesFailed]
-Description = "删除对象类失败"
-Solution = "请重试该操作，若再次出现该错误请提交工单或联系技术支持工程师。"
-ErrorLink = "暂无"
-
-[OntologyManager.ConceptGroup.InternalError.DeleteRelationTypesFailed]
-Description = "删除关系类失败"
-Solution = "请重试该操作，若再次出现该错误请提交工单或联系技术支持工程师。"
-ErrorLink = "暂无"
-
-[OntologyManager.ConceptGroup.InternalError.DeleteActionTypesFailed]
-Description = "删除行动类失败"
 Solution = "请重试该操作，若再次出现该错误请提交工单或联系技术支持工程师。"
 ErrorLink = "暂无"

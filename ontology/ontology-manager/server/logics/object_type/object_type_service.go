@@ -17,7 +17,6 @@ import (
 	o11y "github.com/kweaver-ai/kweaver-go-lib/observability"
 	"github.com/kweaver-ai/kweaver-go-lib/rest"
 	"github.com/rs/xid"
-	attr "go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
 
 	"ontology-manager/common"
@@ -70,8 +69,6 @@ func (ots *objectTypeService) CheckObjectTypeExistByID(ctx context.Context,
 	ctx, span := ar_trace.Tracer.Start(ctx, fmt.Sprintf("校验对象类[%s]的存在性", otID))
 	defer span.End()
 
-	span.SetAttributes(attr.Key("ot_id").String(otID))
-
 	otName, exist, err := ots.ota.CheckObjectTypeExistByID(ctx, knID, branch, otID)
 	if err != nil {
 		logger.Errorf("CheckObjectTypeExistByID error: %s", err.Error())
@@ -92,8 +89,6 @@ func (ots *objectTypeService) CheckObjectTypeExistByName(ctx context.Context,
 
 	ctx, span := ar_trace.Tracer.Start(ctx, fmt.Sprintf("校验对象类[%s]的存在性", otName))
 	defer span.End()
-
-	span.SetAttributes(attr.Key("ot_name").String(otName))
 
 	otID, exist, err := ots.ota.CheckObjectTypeExistByName(ctx, knID, branch, otName)
 	if err != nil {
@@ -356,7 +351,7 @@ func (ots *objectTypeService) ListObjectTypes(ctx context.Context, tx *sql.Tx,
 		span.SetStatus(codes.Error, "GetConceptGroupsByOTIDs error")
 
 		return []*interfaces.ObjectType{}, 0, rest.NewHTTPError(ctx, http.StatusInternalServerError,
-			oerrors.OntologyManager_ConceptGroup_InternalError).WithErrorDetails(err.Error())
+			oerrors.OntologyManager_ObjectType_InternalError).WithErrorDetails(err.Error())
 	}
 
 	for _, objectType := range objectTypes {
@@ -400,11 +395,6 @@ func (ots *objectTypeService) GetObjectTypesByIDs(ctx context.Context, tx *sql.T
 	// 获取对象类
 	ctx, span := ar_trace.Tracer.Start(ctx, fmt.Sprintf("查询对象类[%s]信息", otIDs))
 	defer span.End()
-
-	span.SetAttributes(
-		attr.Key("kn_id").String(knID),
-		attr.Key("branch").String(branch),
-		attr.Key("ot_ids").String(fmt.Sprintf("%v", otIDs)))
 
 	// 判断userid是否有查看业务知识网络的权限
 	err := ots.ps.CheckPermission(ctx, interfaces.Resource{
@@ -483,7 +473,7 @@ func (ots *objectTypeService) GetObjectTypesByIDs(ctx context.Context, tx *sql.T
 		span.SetStatus(codes.Error, "GetConceptGroupsByOTIDs error")
 
 		return []*interfaces.ObjectType{}, rest.NewHTTPError(ctx, http.StatusInternalServerError,
-			oerrors.OntologyManager_ConceptGroup_InternalError).WithErrorDetails(err.Error())
+			oerrors.OntologyManager_ObjectType_InternalError).WithErrorDetails(err.Error())
 	}
 
 	// 数据视图不为空时，需要把id转成名称
@@ -553,15 +543,10 @@ func (ots *objectTypeService) GetObjectTypesByIDs(ctx context.Context, tx *sql.T
 }
 
 // 更新对象类
-func (ots *objectTypeService) UpdateObjectType(ctx context.Context,
-	tx *sql.Tx, objectType *interfaces.ObjectType) error {
+func (ots *objectTypeService) UpdateObjectType(ctx context.Context, tx *sql.Tx, objectType *interfaces.ObjectType) error {
 
 	ctx, span := ar_trace.Tracer.Start(ctx, "Update object type")
 	defer span.End()
-
-	span.SetAttributes(
-		attr.Key("ot_id").String(objectType.OTID),
-		attr.Key("ot_name").String(objectType.OTName))
 
 	// 判断userid是否有修改业务知识网络的权限
 	err := ots.ps.CheckPermission(ctx, interfaces.Resource{
@@ -681,10 +666,6 @@ func (ots *objectTypeService) UpdateDataProperties(ctx context.Context,
 	ctx, span := ar_trace.Tracer.Start(ctx, "Update object type")
 	defer span.End()
 
-	span.SetAttributes(
-		attr.Key("ot_id").String(objectType.OTID),
-		attr.Key("ot_name").String(objectType.OTName))
-
 	// 判断userid是否有修改业务知识网络的权限
 	err := ots.ps.CheckPermission(ctx, interfaces.Resource{
 		Type: interfaces.RESOURCE_TYPE_KN,
@@ -766,15 +747,9 @@ func (ots *objectTypeService) UpdateDataProperties(ctx context.Context,
 	return nil
 }
 
-func (ots *objectTypeService) DeleteObjectTypesByIDs(ctx context.Context, tx *sql.Tx,
-	knID string, branch string, otIDs []string) (int64, error) {
+func (ots *objectTypeService) DeleteObjectTypesByIDs(ctx context.Context, tx *sql.Tx, knID string, branch string, otIDs []string) error {
 	ctx, span := ar_trace.Tracer.Start(ctx, "Delete object types")
 	defer span.End()
-
-	span.SetAttributes(
-		attr.Key("kn_id").String(knID),
-		attr.Key("branch").String(branch),
-		attr.Key("ot_ids").String(fmt.Sprintf("%v", otIDs)))
 
 	// 判断userid是否有修改业务知识网络的权限
 	err := ots.ps.CheckPermission(ctx, interfaces.Resource{
@@ -782,7 +757,7 @@ func (ots *objectTypeService) DeleteObjectTypesByIDs(ctx context.Context, tx *sq
 		ID:   knID,
 	}, []string{interfaces.OPERATION_TYPE_MODIFY})
 	if err != nil {
-		return 0, err
+		return err
 	}
 
 	if tx == nil {
@@ -793,7 +768,7 @@ func (ots *objectTypeService) DeleteObjectTypesByIDs(ctx context.Context, tx *sq
 			span.SetStatus(codes.Error, "事务开启失败")
 			o11y.Error(ctx, fmt.Sprintf("Begin transaction error: %s", err.Error()))
 
-			return 0, rest.NewHTTPError(ctx, http.StatusInternalServerError,
+			return rest.NewHTTPError(ctx, http.StatusInternalServerError,
 				oerrors.OntologyManager_ObjectType_InternalError_BeginTransactionFailed).
 				WithErrorDetails(err.Error())
 		}
@@ -823,12 +798,11 @@ func (ots *objectTypeService) DeleteObjectTypesByIDs(ctx context.Context, tx *sq
 
 	// 删除对象类
 	rowsAffect, err := ots.ota.DeleteObjectTypesByIDs(ctx, tx, knID, branch, otIDs)
-	span.SetAttributes(attr.Key("rows_affect").Int64(rowsAffect))
 	if err != nil {
 		logger.Errorf("DeleteObjectTypes error: %s", err.Error())
 		span.SetStatus(codes.Error, "删除对象类失败")
 
-		return rowsAffect, rest.NewHTTPError(ctx, http.StatusInternalServerError,
+		return rest.NewHTTPError(ctx, http.StatusInternalServerError,
 			oerrors.OntologyManager_ObjectType_InternalError).WithErrorDetails(err.Error())
 	}
 
@@ -843,15 +817,19 @@ func (ots *objectTypeService) DeleteObjectTypesByIDs(ctx context.Context, tx *sq
 		logger.Errorf("DeleteObjectTypeStatusByIDs error: %s", err.Error())
 		span.SetStatus(codes.Error, "删除对象类状态失败")
 
-		return rowsAffect, rest.NewHTTPError(ctx, http.StatusInternalServerError,
+		return rest.NewHTTPError(ctx, http.StatusInternalServerError,
 			oerrors.OntologyManager_ObjectType_InternalError).WithErrorDetails(err.Error())
 	}
+
+	// 记录info日志，删除的条数
+	logger.Infof("DeleteObjectTypeStatusByIDs success, the kn_id is [%s], branch is [%s], ot_ids is [%v], rowsAffect is [%d]",
+		knID, branch, otIDs, rowsAffect)
 
 	for _, otID := range otIDs {
 		docid := interfaces.GenerateConceptDocuemtnID(knID, interfaces.MODULE_TYPE_OBJECT_TYPE, otID, branch)
 		err = ots.osa.DeleteData(ctx, interfaces.KN_CONCEPT_INDEX_NAME, docid)
 		if err != nil {
-			return 0, err
+			return err
 		}
 	}
 
@@ -868,16 +846,55 @@ func (ots *objectTypeService) DeleteObjectTypesByIDs(ctx context.Context, tx *sq
 			knID, "branch", otIDs, err.Error())
 		logger.Errorf(errStr)
 
-		return 0, rest.NewHTTPError(ctx, http.StatusInternalServerError,
+		return rest.NewHTTPError(ctx, http.StatusInternalServerError,
 			oerrors.OntologyManager_ObjectType_InternalError).
 			WithErrorDetails(errStr)
 	}
 	// 记录info日志，删除的条数
-	logger.Infof("DeleteObjectTypesFromGroup success, the kn_id is [%s], branch is [%s], ot_ids is [%v],, rowsAffect is [%d]",
-		knID, "branch", otIDs, rowsAffect)
+	logger.Infof("DeleteObjectTypesFromGroup success, the kn_id is [%s], branch is [%s], ot_ids is [%v], rowsAffect is [%d]",
+		knID, branch, otIDs, rowsAffect)
 
 	span.SetStatus(codes.Ok, "")
-	return rowsAffect, nil
+	return nil
+}
+
+// 内部方法，删除对象类与状态，不检查权限，tx必须传入
+func (ots *objectTypeService) DeleteObjectTypesByKnID(ctx context.Context, tx *sql.Tx, knID string, branch string) error {
+	ctx, span := ar_trace.Tracer.Start(ctx, "Delete object types")
+	defer span.End()
+
+	if tx == nil {
+		logger.Errorf("missing transaction")
+		o11y.Error(ctx, "missing transaction")
+		span.SetStatus(codes.Error, "缺少事务")
+		return rest.NewHTTPError(ctx, http.StatusInternalServerError,
+			oerrors.OntologyManager_ObjectType_InternalError_BeginTransactionFailed).
+			WithErrorDetails("missing transaction")
+	}
+
+	// 删除对象类
+	rowsAffect, err := ots.ota.DeleteObjectTypesByKnID(ctx, tx, knID, branch)
+	if err != nil {
+		logger.Errorf("DeleteObjectTypes error: %s", err.Error())
+		span.SetStatus(codes.Error, "删除对象类失败")
+		return rest.NewHTTPError(ctx, http.StatusInternalServerError,
+			oerrors.OntologyManager_ObjectType_InternalError).WithErrorDetails(err.Error())
+	}
+
+	logger.Infof("DeleteObjectTypes: Rows affected is %v!", rowsAffect)
+	rowsAffect, err = ots.ota.DeleteObjectTypeStatusByKnID(ctx, tx, knID, branch)
+	if err != nil {
+		logger.Errorf("DeleteObjectTypeStatusByIDs error: %s", err.Error())
+		span.SetStatus(codes.Error, "删除对象类状态失败")
+		return rest.NewHTTPError(ctx, http.StatusInternalServerError,
+			oerrors.OntologyManager_ObjectType_InternalError).WithErrorDetails(err.Error())
+	}
+
+	// 记录info日志，删除的条数
+	logger.Infof("DeleteObjectTypesByKnID success, the kn_id is [%s], branch is [%s], rowsAffect is [%d]",
+		knID, branch, rowsAffect)
+	span.SetStatus(codes.Ok, "")
+	return nil
 }
 
 func (ots *objectTypeService) handleObjectTypeImportMode(ctx context.Context, mode string,
@@ -983,11 +1000,6 @@ func (ots *objectTypeService) GetObjectTypesMapByIDs(ctx context.Context, knID s
 	// 获取对象类
 	ctx, span := ar_trace.Tracer.Start(ctx, fmt.Sprintf("查询对象类[%v]信息", otIDs))
 	defer span.End()
-
-	span.SetAttributes(
-		attr.Key("kn_id").String(knID),
-		attr.Key("branch").String(branch),
-		attr.Key("ot_ids").String(fmt.Sprintf("%v", otIDs)))
 
 	// 判断userid是否有修改业务知识网络的权限
 	err := ots.ps.CheckPermission(ctx, interfaces.Resource{
@@ -1142,7 +1154,7 @@ func (ots *objectTypeService) SearchObjectTypes(ctx context.Context,
 			span.SetStatus(codes.Error, fmt.Sprintf("GetConceptGroupsTotal in knowledge network[%s], error: %v", query.KNID, err))
 
 			return response, rest.NewHTTPError(ctx, http.StatusInternalServerError,
-				oerrors.OntologyManager_KnowledgeNetwork_InternalError).WithErrorDetails(err.Error())
+				oerrors.OntologyManager_ObjectType_InternalError).WithErrorDetails(err.Error())
 		}
 		if cgCnt == 0 {
 			errStr := fmt.Sprintf("all concept group not found, expect concept group nums is [%d], actual concept group num is [%d]",
@@ -1401,10 +1413,6 @@ func (ots *objectTypeService) GetObjectTypeIDsByKnID(ctx context.Context,
 	ctx, span := ar_trace.Tracer.Start(ctx, fmt.Sprintf("按kn_id[%s]获取对象类IDs", knID))
 	defer span.End()
 
-	span.SetAttributes(
-		attr.Key("kn_id").String(knID),
-		attr.Key("branch").String(branch))
-
 	// 获取对象类基本信息
 	otIDs, err := ots.ota.GetObjectTypeIDsByKnID(ctx, knID, branch)
 	if err != nil {
@@ -1424,10 +1432,6 @@ func (ots *objectTypeService) GetAllObjectTypesByKnID(ctx context.Context,
 	// 获取对象类
 	ctx, span := ar_trace.Tracer.Start(ctx, fmt.Sprintf("按kn_id[%s]获取对象类基本信息", knID))
 	defer span.End()
-
-	span.SetAttributes(
-		attr.Key("kn_id").String(knID),
-		attr.Key("branch").String(branch))
 
 	// 获取对象类基本信息
 	objectTypes, err := ots.ota.GetAllObjectTypesByKnID(ctx, knID, branch)
@@ -1449,11 +1453,6 @@ func (ots *objectTypeService) GetObjectTypeByID(ctx context.Context, tx *sql.Tx,
 	// 获取对象类
 	ctx, span := ar_trace.Tracer.Start(ctx, fmt.Sprintf("查询对象类[%s]信息", otID))
 	defer span.End()
-
-	span.SetAttributes(
-		attr.Key("kn_id").String(knID),
-		attr.Key("branch").String(branch),
-		attr.Key("ot_id").String(otID))
 
 	var err error
 	// 0. 开始事务
@@ -1683,7 +1682,7 @@ func (ots *objectTypeService) syncObjectGroups(ctx context.Context, tx *sql.Tx,
 	if err != nil {
 		logger.Errorf(err.Error())
 		return rest.NewHTTPError(ctx, http.StatusInternalServerError,
-			oerrors.OntologyManager_ConceptGroup_InternalError).WithErrorDetails(err.Error())
+			oerrors.OntologyManager_ObjectType_InternalError).WithErrorDetails(err.Error())
 	}
 
 	// 2. 计算需要添加和删除的分组
