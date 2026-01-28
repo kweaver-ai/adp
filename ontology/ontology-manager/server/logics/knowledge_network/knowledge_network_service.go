@@ -22,6 +22,7 @@ import (
 	"ontology-manager/logics"
 	"ontology-manager/logics/action_type"
 	"ontology-manager/logics/concept_group"
+	"ontology-manager/logics/job"
 	"ontology-manager/logics/object_type"
 	"ontology-manager/logics/permission"
 	"ontology-manager/logics/relation_type"
@@ -62,6 +63,7 @@ func NewKNService(appSetting *common.AppSetting) interfaces.KNService {
 			cga:        logics.CGA,
 			cgs:        concept_group.NewConceptGroupService(appSetting),
 			db:         logics.DB,
+			js:         job.NewJobService(appSetting),
 			kna:        logics.KNA,
 			mfa:        logics.MFA,
 			osa:        logics.OSA,
