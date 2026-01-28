@@ -4845,6 +4845,7 @@ components:
             - pending
             - success
             - failed
+            - cancelled
           type: string
         parameters:
           description: 解析后的执行参数
