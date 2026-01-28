@@ -550,7 +550,7 @@ func (ja *jobAccess) UpdateTaskState(ctx context.Context, taskID string, stateIn
 }
 
 // 查询job列表
-func (ja *jobAccess) ListJobs(ctx context.Context, queryParams interfaces.JobsQueryParams) ([]*interfaces.JobInfo, error) {
+func (ja *jobAccess) ListJobs(ctx context.Context, query interfaces.JobsQueryParams) ([]*interfaces.JobInfo, error) {
 	ctx, span := ar_trace.Tracer.Start(ctx, "ListJobs", trace.WithSpanKind(trace.SpanKindClient))
 	defer span.End()
 
@@ -559,7 +559,7 @@ func (ja *jobAccess) ListJobs(ctx context.Context, queryParams interfaces.JobsQu
 		attr.Key("db_type").String(libdb.GetDBType()),
 	)
 
-	query := sq.Select(
+	builder := sq.Select(
 		"f_id",
 		"f_name",
 		"f_kn_id",
@@ -575,31 +575,33 @@ func (ja *jobAccess) ListJobs(ctx context.Context, queryParams interfaces.JobsQu
 		"f_time_cost",
 	).From(JOB_TABLE_NAME)
 
-	if queryParams.KNID != "" {
-		query = query.Where(sq.Eq{"f_kn_id": queryParams.KNID})
+	if query.KNID != "" {
+		builder = builder.Where(sq.Eq{"f_kn_id": query.KNID})
 	}
 
 	// 过滤job名称
-	if queryParams.NamePattern != "" {
-		query = query.Where(sq.Like{"f_name": fmt.Sprintf("%%%s%%", queryParams.NamePattern)})
+	if query.NamePattern != "" {
+		builder = builder.Where(sq.Like{"f_name": fmt.Sprintf("%%%s%%", query.NamePattern)})
 	}
-	if queryParams.JobType != "" {
-		query = query.Where(sq.Eq{"f_job_type": queryParams.JobType})
+	if query.JobType != "" {
+		builder = builder.Where(sq.Eq{"f_job_type": query.JobType})
 	}
-	if len(queryParams.State) > 0 {
-		query = query.Where(sq.Eq{"f_state": queryParams.State})
-	}
-
-	query = query.OrderBy(fmt.Sprintf("%s %s", queryParams.Sort, queryParams.Direction))
-
-	if queryParams.Offset > 0 {
-		query = query.Offset(uint64(queryParams.Offset))
-	}
-	if queryParams.Limit > 0 {
-		query = query.Limit(uint64(queryParams.Limit))
+	if len(query.State) > 0 {
+		builder = builder.Where(sq.Eq{"f_state": query.State})
 	}
 
-	sqlStr, vals, err := query.ToSql()
+	if query.Sort != "" {
+		builder = builder.OrderBy(fmt.Sprintf("%s %s", query.Sort, query.Direction))
+	}
+
+	if query.Offset > 0 {
+		builder = builder.Offset(uint64(query.Offset))
+	}
+	if query.Limit > 0 {
+		builder = builder.Limit(uint64(query.Limit))
+	}
+
+	sqlStr, vals, err := builder.ToSql()
 	if err != nil {
 		logger.Errorf("Failed to build the sql of list jobs, error: %s", err.Error())
 		o11y.Error(ctx, fmt.Sprintf("Failed to build the sql of list jobs, error: %s", err.Error()))
@@ -766,7 +768,7 @@ func (ja *jobAccess) CreateTasks(ctx context.Context, tx *sql.Tx, taskInfos map[
 }
 
 // 查询task列表
-func (ja *jobAccess) ListTasks(ctx context.Context, queryParams interfaces.TasksQueryParams) ([]*interfaces.TaskInfo, error) {
+func (ja *jobAccess) ListTasks(ctx context.Context, query interfaces.TasksQueryParams) ([]*interfaces.TaskInfo, error) {
 	ctx, span := ar_trace.Tracer.Start(ctx, "ListTasks", trace.WithSpanKind(trace.SpanKindClient))
 	defer span.End()
 
@@ -775,7 +777,7 @@ func (ja *jobAccess) ListTasks(ctx context.Context, queryParams interfaces.Tasks
 		attr.Key("db_type").String(libdb.GetDBType()),
 	)
 
-	query := sq.Select(
+	builder := sq.Select(
 		"f_id",
 		"f_name",
 		"f_job_id",
@@ -790,30 +792,32 @@ func (ja *jobAccess) ListTasks(ctx context.Context, queryParams interfaces.Tasks
 		"f_time_cost",
 	).From(TASK_TABLE_NAME)
 
-	if queryParams.JobID != "" {
-		query = query.Where(sq.Eq{"f_job_id": queryParams.JobID})
+	if query.JobID != "" {
+		builder = builder.Where(sq.Eq{"f_job_id": query.JobID})
 	}
 
-	if queryParams.NamePattern != "" {
-		query = query.Where(sq.Like{"f_name": fmt.Sprintf("%%%s%%", queryParams.NamePattern)})
+	if query.NamePattern != "" {
+		builder = builder.Where(sq.Like{"f_name": fmt.Sprintf("%%%s%%", query.NamePattern)})
 	}
-	if queryParams.ConceptType != "" {
-		query = query.Where(sq.Eq{"f_concept_type": queryParams.ConceptType})
+	if query.ConceptType != "" {
+		builder = builder.Where(sq.Eq{"f_concept_type": query.ConceptType})
 	}
-	if len(queryParams.State) != 0 {
-		query = query.Where(sq.Eq{"f_state": queryParams.State})
-	}
-
-	query = query.OrderBy(fmt.Sprintf("%s %s", queryParams.Sort, queryParams.Direction))
-
-	if queryParams.Offset != 0 {
-		query = query.Offset(uint64(queryParams.Offset))
-	}
-	if queryParams.Limit != 0 {
-		query = query.Limit(uint64(queryParams.Limit))
+	if len(query.State) != 0 {
+		builder = builder.Where(sq.Eq{"f_state": query.State})
 	}
 
-	sqlStr, vals, err := query.ToSql()
+	if query.Sort != "" {
+		builder = builder.OrderBy(fmt.Sprintf("%s %s", query.Sort, query.Direction))
+	}
+
+	if query.Offset > 0 {
+		builder = builder.Offset(uint64(query.Offset))
+	}
+	if query.Limit > 0 {
+		builder = builder.Limit(uint64(query.Limit))
+	}
+
+	sqlStr, vals, err := builder.ToSql()
 	if err != nil {
 		logger.Errorf("Failed to build the sql of list tasks, error: %s", err.Error())
 		o11y.Error(ctx, fmt.Sprintf("Failed to build the sql of list tasks, error: %s", err.Error()))

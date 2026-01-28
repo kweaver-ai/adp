@@ -322,38 +322,40 @@ func (a *actionScheduleAccess) GetSchedules(ctx context.Context, scheduleIDs []s
 }
 
 // ListSchedules lists schedules with pagination
-func (a *actionScheduleAccess) ListSchedules(ctx context.Context, queryParams interfaces.ActionScheduleQueryParams) ([]*interfaces.ActionSchedule, error) {
+func (a *actionScheduleAccess) ListSchedules(ctx context.Context, query interfaces.ActionScheduleQueryParams) ([]*interfaces.ActionSchedule, error) {
 	ctx, span := ar_trace.Tracer.Start(ctx, "List schedules", trace.WithSpanKind(trace.SpanKindClient))
 	defer span.End()
 
-	query := a.buildSelectQuery()
+	builder := a.buildSelectQuery()
 
-	if queryParams.KNID != "" {
-		query = query.Where(sq.Eq{"f_kn_id": queryParams.KNID})
+	if query.KNID != "" {
+		builder = builder.Where(sq.Eq{"f_kn_id": query.KNID})
 	}
-	if queryParams.Branch != "" {
-		query = query.Where(sq.Eq{"f_branch": queryParams.Branch})
+	if query.Branch != "" {
+		builder = builder.Where(sq.Eq{"f_branch": query.Branch})
 	}
-	if queryParams.NamePattern != "" {
-		query = query.Where(sq.Like{"f_name": fmt.Sprintf("%%%s%%", queryParams.NamePattern)})
+	if query.NamePattern != "" {
+		builder = builder.Where(sq.Like{"f_name": fmt.Sprintf("%%%s%%", query.NamePattern)})
 	}
-	if queryParams.ActionTypeID != "" {
-		query = query.Where(sq.Eq{"f_action_type_id": queryParams.ActionTypeID})
+	if query.ActionTypeID != "" {
+		builder = builder.Where(sq.Eq{"f_action_type_id": query.ActionTypeID})
 	}
-	if queryParams.Status != "" {
-		query = query.Where(sq.Eq{"f_status": queryParams.Status})
-	}
-
-	query = query.OrderBy(fmt.Sprintf("%s %s", queryParams.Sort, queryParams.Direction))
-
-	if queryParams.Offset > 0 {
-		query = query.Offset(uint64(queryParams.Offset))
-	}
-	if queryParams.Limit > 0 {
-		query = query.Limit(uint64(queryParams.Limit))
+	if query.Status != "" {
+		builder = builder.Where(sq.Eq{"f_status": query.Status})
 	}
 
-	sqlStr, vals, err := query.ToSql()
+	if query.Sort != "" {
+		builder = builder.OrderBy(fmt.Sprintf("%s %s", query.Sort, query.Direction))
+	}
+
+	if query.Offset > 0 {
+		builder = builder.Offset(uint64(query.Offset))
+	}
+	if query.Limit > 0 {
+		builder = builder.Limit(uint64(query.Limit))
+	}
+
+	sqlStr, vals, err := builder.ToSql()
 	if err != nil {
 		span.SetStatus(codes.Error, "Build sql failed")
 		return nil, err

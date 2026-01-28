@@ -258,7 +258,7 @@ func (rta *relationTypeAccess) ListRelationTypes(ctx context.Context, query inte
 
 	//排序
 	if query.Sort != "" {
-		builder = builder.OrderBy(fmt.Sprint(query.Sort, " ", query.Direction))
+		builder = builder.OrderBy(fmt.Sprintf("%s %s", query.Sort, query.Direction))
 	}
 
 	sqlStr, vals, err := builder.ToSql()
