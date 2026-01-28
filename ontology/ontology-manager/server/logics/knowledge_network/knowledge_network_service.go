@@ -728,6 +728,10 @@ func (kns *knowledgeNetworkService) DeleteKN(ctx context.Context, kn *interfaces
 
 	// 获取业务知识网络下的所有任务
 	jobs, _, err := kns.js.ListJobs(ctx, interfaces.JobsQueryParams{
+		PaginationQueryParameters: interfaces.PaginationQueryParameters{
+			Sort:      interfaces.JOB_SORT["create_time"],
+			Direction: interfaces.DESC_DIRECTION,
+		},
 		KNID:   kn.KNID,
 		Branch: kn.Branch,
 		State:  []interfaces.JobState{interfaces.JobStateRunning},
