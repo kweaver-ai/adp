@@ -19,4 +19,5 @@ type ActionTypeAccess interface {
 
 	GetAllActionTypesByKnID(ctx context.Context, knID string, branch string) (map[string]*ActionType, error)
 	GetActionTypeIDsByKnID(ctx context.Context, knID string, branch string) ([]string, error)
+	DeleteActionTypesByKnID(ctx context.Context, tx *sql.Tx, knID string, branch string) (int64, error)
 }

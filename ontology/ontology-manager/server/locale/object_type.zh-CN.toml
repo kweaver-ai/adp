@@ -84,6 +84,11 @@ Description = "开启事务异常"
 Solution = "请重试该操作，若再次出现该错误请提交工单或联系技术支持工程师。"
 ErrorLink = "暂无"
 
+[OntologyManager.ObjectType.InternalError.MissingTransaction]
+Description = "缺少事务"
+Solution = "请重试该操作，若再次出现该错误请提交工单或联系技术支持工程师。"
+ErrorLink = "暂无"
+
 [OntologyManager.ObjectType.InternalError.CheckObjectTypeIfExistFailed]
 Description = "检查对象类名称是否存在失败"
 Solution = "请重试该操作，若再次出现该错误请提交工单或联系技术支持工程师。"

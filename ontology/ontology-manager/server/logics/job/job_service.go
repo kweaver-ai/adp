@@ -55,7 +55,6 @@ func NewJobService(appSetting *common.AppSetting) interfaces.JobService {
 }
 
 func (js *jobService) CreateJob(ctx context.Context, jobInfo *interfaces.JobInfo) (jobID string, err error) {
-
 	ctx, span := ar_trace.Tracer.Start(ctx, "Create job")
 	defer span.End()
 
@@ -213,8 +212,8 @@ func (js *jobService) CreateJob(ctx context.Context, jobInfo *interfaces.JobInfo
 	return jobInfo.ID, nil
 }
 
-func (js *jobService) DeleteJobs(ctx context.Context, knID string, branch string, jobIDs []string) (err error) {
-	ctx, span := ar_trace.Tracer.Start(ctx, "Delete jobs")
+func (js *jobService) DeleteJobsByIDs(ctx context.Context, knID string, branch string, jobIDs []string) (err error) {
+	ctx, span := ar_trace.Tracer.Start(ctx, "Delete jobs by ids")
 	defer span.End()
 
 	// 判断userid是否有修改业务知识网络的权限
@@ -259,17 +258,58 @@ func (js *jobService) DeleteJobs(ctx context.Context, knID string, branch string
 	}()
 
 	// 删除
-	err = js.ja.DeleteJobs(ctx, tx, jobIDs)
+	_, err = js.ja.DeleteJobsByIDs(ctx, tx, jobIDs)
 	if err != nil {
-		logger.Errorf("DeleteJobs error: %s", err.Error())
+		logger.Errorf("DeleteJobsByIDs error: %s", err.Error())
 		span.SetStatus(codes.Error, "删除任务失败")
 		return rest.NewHTTPError(ctx, http.StatusInternalServerError, oerrors.OntologyManager_Job_InternalError).
 			WithErrorDetails(err.Error())
 	}
 
-	err = js.ja.DeleteTasks(ctx, tx, jobIDs)
+	_, err = js.ja.DeleteTasksByJobIDs(ctx, tx, jobIDs)
 	if err != nil {
-		logger.Errorf("DeleteTasks error: %s", err.Error())
+		logger.Errorf("DeleteTasksByJobIDs error: %s", err.Error())
+		span.SetStatus(codes.Error, "删除子任务失败")
+		return rest.NewHTTPError(ctx, http.StatusInternalServerError, oerrors.OntologyManager_Job_InternalError).
+			WithErrorDetails(err.Error())
+	}
+
+	span.SetStatus(codes.Ok, "")
+	return err
+}
+
+func (js *jobService) DeleteJobsByKnID(ctx context.Context, tx *sql.Tx, knID string, branch string) (err error) {
+	ctx, span := ar_trace.Tracer.Start(ctx, "Delete jobs by kn id")
+	defer span.End()
+
+	if tx == nil {
+		logger.Errorf("missing transaction")
+		o11y.Error(ctx, "missing transaction")
+		span.SetStatus(codes.Error, "缺少事务")
+		return rest.NewHTTPError(ctx, http.StatusInternalServerError,
+			oerrors.OntologyManager_Job_InternalError_MissingTransaction).
+			WithErrorDetails("missing transaction")
+	}
+
+	jobIDs, err := js.ja.GetJobIDsByKnID(ctx, tx, knID, branch)
+	if err != nil {
+		logger.Errorf("GetJobIDsByKnID error: %s", err.Error())
+		span.SetStatus(codes.Error, "查询任务失败")
+		return rest.NewHTTPError(ctx, http.StatusInternalServerError, oerrors.OntologyManager_Job_InternalError).
+			WithErrorDetails(err.Error())
+	}
+	// 删除
+	_, err = js.ja.DeleteJobsByIDs(ctx, tx, jobIDs)
+	if err != nil {
+		logger.Errorf("DeleteJobsByIDs error: %s", err.Error())
+		span.SetStatus(codes.Error, "删除任务失败")
+		return rest.NewHTTPError(ctx, http.StatusInternalServerError, oerrors.OntologyManager_Job_InternalError).
+			WithErrorDetails(err.Error())
+	}
+
+	_, err = js.ja.DeleteTasksByJobIDs(ctx, tx, jobIDs)
+	if err != nil {
+		logger.Errorf("DeleteTasksByJobIDs error: %s", err.Error())
 		span.SetStatus(codes.Error, "删除子任务失败")
 		return rest.NewHTTPError(ctx, http.StatusInternalServerError, oerrors.OntologyManager_Job_InternalError).
 			WithErrorDetails(err.Error())
@@ -361,14 +401,14 @@ func (js *jobService) ListTasks(ctx context.Context, queryParams interfaces.Task
 	return tasks, total, nil
 }
 
-func (js *jobService) GetJobs(ctx context.Context, jobIDs []string) (map[string]*interfaces.JobInfo, error) {
-	ctx, span := ar_trace.Tracer.Start(ctx, "Get jobs")
+func (js *jobService) GetJobsByIDs(ctx context.Context, jobIDs []string) (map[string]*interfaces.JobInfo, error) {
+	ctx, span := ar_trace.Tracer.Start(ctx, "Get jobs by ids")
 	defer span.End()
 
 	// 查询
-	jobs, err := js.ja.GetJobs(ctx, jobIDs)
+	jobs, err := js.ja.GetJobsByIDs(ctx, jobIDs)
 	if err != nil {
-		logger.Errorf("GetJobs error: %s", err.Error())
+		logger.Errorf("GetJobsByIDs error: %s", err.Error())
 		span.SetStatus(codes.Error, "查询任务失败")
 		return nil, rest.NewHTTPError(ctx, http.StatusInternalServerError, oerrors.OntologyManager_Job_InternalError).
 			WithErrorDetails(err.Error())
@@ -378,14 +418,14 @@ func (js *jobService) GetJobs(ctx context.Context, jobIDs []string) (map[string]
 	return jobs, nil
 }
 
-func (js *jobService) GetJob(ctx context.Context, jobID string) (*interfaces.JobInfo, error) {
-	ctx, span := ar_trace.Tracer.Start(ctx, "Get job")
+func (js *jobService) GetJobByID(ctx context.Context, jobID string) (*interfaces.JobInfo, error) {
+	ctx, span := ar_trace.Tracer.Start(ctx, "Get job by id")
 	defer span.End()
 
 	// 查询
-	job, err := js.ja.GetJob(ctx, jobID)
+	job, err := js.ja.GetJobByID(ctx, jobID)
 	if err != nil {
-		logger.Errorf("GetJob error: %s", err.Error())
+		logger.Errorf("GetJobByID error: %s", err.Error())
 		span.SetStatus(codes.Error, "查询任务失败")
 		return nil, rest.NewHTTPError(ctx, http.StatusInternalServerError, oerrors.OntologyManager_Job_InternalError).
 			WithErrorDetails(err.Error())

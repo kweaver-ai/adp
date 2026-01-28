@@ -54,6 +54,11 @@ Description = "任务创建冲突"
 Solution = "请检查任务配置是否正确。"
 ErrorLink = "暂无"
 
+[OntologyManager.Job.JobRunning]
+Description = "任务正在运行"
+Solution = "请稍后重试。"
+ErrorLink = "暂无"
+
 [OntologyManager.Job.JobNotFound]
 Description = "任务不存在"
 Solution = "请检查参数是否正确。"
@@ -74,3 +79,7 @@ Description = "数据库事务提交失败"
 Solution = "请重试该操作，若再次出现该错误请提交工单或联系技术支持工程师。"
 ErrorLink = "暂无"
 
+[OntologyManager.Job.InternalError.MissingTransaction]
+Description = "缺少事务"
+Solution = "请重试该操作，若再次出现该错误请提交工单或联系技术支持工程师。"
+ErrorLink = "暂无"

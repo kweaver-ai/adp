@@ -14,6 +14,7 @@ const (
 
 	// 500
 	OntologyManager_RelationType_InternalError                                = "OntologyManager.RelationType.InternalError"
+	OntologyManager_RelationType_InternalError_MissingTransaction             = "OntologyManager.RelationType.InternalError.MissingTransaction"
 	OntologyManager_RelationType_InternalError_BeginTransactionFailed         = "OntologyManager.RelationType.InternalError.BeginTransactionFailed"
 	OntologyManager_RelationType_InternalError_CheckRelationTypeIfExistFailed = "OntologyManager.RelationType.InternalError.CheckRelationTypeIfExistFailed"
 	OntologyManager_RelationType_InternalError_GetDataViewByIDFailed          = "OntologyManager.RelationType.InternalError.GetDataViewByIDFailed"
@@ -36,6 +37,7 @@ var (
 
 		// 500
 		OntologyManager_RelationType_InternalError,
+		OntologyManager_RelationType_InternalError_MissingTransaction,
 		OntologyManager_RelationType_InternalError_CheckRelationTypeIfExistFailed,
 		OntologyManager_RelationType_InternalError_BeginTransactionFailed,
 		OntologyManager_RelationType_InternalError_GetDataViewByIDFailed,

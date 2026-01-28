@@ -84,12 +84,11 @@ func (mr *MockKNServiceMockRecorder) CreateKN(ctx, kn, mode interface{}) *gomock
 }
 
 // DeleteKN mocks base method.
-func (m *MockKNService) DeleteKN(ctx context.Context, kn *interfaces.KN) (int64, error) {
+func (m *MockKNService) DeleteKN(ctx context.Context, kn *interfaces.KN) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "DeleteKN", ctx, kn)
-	ret0, _ := ret[0].(int64)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
+	ret0, _ := ret[0].(error)
+	return ret0
 }
 
 // DeleteKN indicates an expected call of DeleteKN.

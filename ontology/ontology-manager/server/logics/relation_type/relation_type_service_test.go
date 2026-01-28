@@ -974,7 +974,7 @@ func Test_relationTypeService_CreateRelationTypes(t *testing.T) {
 				},
 			}
 			httpErr := rest.NewHTTPError(ctx, http.StatusInternalServerError,
-				oerrors.OntologyManager_ObjectType_InternalError_GetObjectTypeByIDFailed)
+				oerrors.OntologyManager_RelationType_InternalError)
 
 			smock.ExpectBegin()
 			ps.EXPECT().CheckPermission(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
@@ -1116,7 +1116,7 @@ func Test_relationTypeService_UpdateRelationType(t *testing.T) {
 				Branch: interfaces.MAIN_BRANCH,
 			}
 			httpErr := rest.NewHTTPError(ctx, http.StatusInternalServerError,
-				oerrors.OntologyManager_ObjectType_InternalError_GetObjectTypeByIDFailed)
+				oerrors.OntologyManager_RelationType_InternalError)
 
 			smock.ExpectBegin()
 			ps.EXPECT().CheckPermission(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
@@ -1201,9 +1201,8 @@ func Test_relationTypeService_DeleteRelationTypesByIDs(t *testing.T) {
 			osa.EXPECT().DeleteData(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).Times(2)
 			smock.ExpectCommit()
 
-			result, err := service.DeleteRelationTypesByIDs(ctx, nil, knID, branch, rtIDs)
+			err := service.DeleteRelationTypesByIDs(ctx, nil, knID, branch, rtIDs)
 			So(err, ShouldBeNil)
-			So(result, ShouldEqual, 2)
 		})
 
 		Convey("Failed when permission check fails\n", func() {
@@ -1213,9 +1212,8 @@ func Test_relationTypeService_DeleteRelationTypesByIDs(t *testing.T) {
 
 			ps.EXPECT().CheckPermission(gomock.Any(), gomock.Any(), gomock.Any()).Return(rest.NewHTTPError(ctx, 403, oerrors.OntologyManager_InternalError_CheckPermissionFailed))
 
-			result, err := service.DeleteRelationTypesByIDs(ctx, nil, knID, branch, rtIDs)
+			err := service.DeleteRelationTypesByIDs(ctx, nil, knID, branch, rtIDs)
 			So(err, ShouldNotBeNil)
-			So(result, ShouldEqual, 0)
 		})
 
 		Convey("Failed when DeleteRelationTypesByIDs returns error\n", func() {
@@ -1228,9 +1226,8 @@ func Test_relationTypeService_DeleteRelationTypesByIDs(t *testing.T) {
 			rta.EXPECT().DeleteRelationTypesByIDs(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(int64(0), rest.NewHTTPError(ctx, 500, oerrors.OntologyManager_RelationType_InternalError))
 			smock.ExpectRollback()
 
-			result, err := service.DeleteRelationTypesByIDs(ctx, nil, knID, branch, rtIDs)
+			err := service.DeleteRelationTypesByIDs(ctx, nil, knID, branch, rtIDs)
 			So(err, ShouldNotBeNil)
-			So(result, ShouldEqual, 0)
 		})
 
 		Convey("Failed when DeleteData returns error\n", func() {
@@ -1244,9 +1241,8 @@ func Test_relationTypeService_DeleteRelationTypesByIDs(t *testing.T) {
 			osa.EXPECT().DeleteData(gomock.Any(), gomock.Any(), gomock.Any()).Return(rest.NewHTTPError(ctx, 500, oerrors.OntologyManager_RelationType_InternalError))
 			smock.ExpectRollback()
 
-			result, err := service.DeleteRelationTypesByIDs(ctx, nil, knID, branch, rtIDs)
+			err := service.DeleteRelationTypesByIDs(ctx, nil, knID, branch, rtIDs)
 			So(err, ShouldNotBeNil)
-			So(result, ShouldEqual, 0)
 		})
 	})
 }
@@ -1700,7 +1696,7 @@ func Test_relationTypeService_SearchRelationTypes(t *testing.T) {
 				ConceptGroups: []string{"cg1"},
 			}
 
-			cga.EXPECT().GetConceptGroupsTotal(gomock.Any(), gomock.Any()).Return(0, rest.NewHTTPError(ctx, 500, oerrors.OntologyManager_KnowledgeNetwork_InternalError))
+			cga.EXPECT().GetConceptGroupsTotal(gomock.Any(), gomock.Any()).Return(0, rest.NewHTTPError(ctx, 500, oerrors.OntologyManager_RelationType_InternalError))
 
 			result, err := service.SearchRelationTypes(ctx, query)
 			So(err, ShouldNotBeNil)
@@ -1716,7 +1712,7 @@ func Test_relationTypeService_SearchRelationTypes(t *testing.T) {
 			}
 
 			cga.EXPECT().GetConceptGroupsTotal(gomock.Any(), gomock.Any()).Return(1, nil)
-			cga.EXPECT().GetRelationTypeIDsFromConceptGroupRelation(gomock.Any(), gomock.Any()).Return(nil, rest.NewHTTPError(ctx, 500, oerrors.OntologyManager_ObjectType_InternalError))
+			cga.EXPECT().GetRelationTypeIDsFromConceptGroupRelation(gomock.Any(), gomock.Any()).Return(nil, rest.NewHTTPError(ctx, 500, oerrors.OntologyManager_RelationType_InternalError))
 
 			result, err := service.SearchRelationTypes(ctx, query)
 			So(err, ShouldNotBeNil)
@@ -1769,7 +1765,7 @@ func Test_relationTypeService_validateDependency(t *testing.T) {
 				Branch: interfaces.MAIN_BRANCH,
 			}
 			httpErr := rest.NewHTTPError(ctx, http.StatusInternalServerError,
-				oerrors.OntologyManager_ObjectType_InternalError_GetObjectTypeByIDFailed)
+				oerrors.OntologyManager_RelationType_InternalError)
 
 			smock.ExpectBegin()
 			ots.EXPECT().GetObjectTypeByID(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil, httpErr)
@@ -1777,7 +1773,7 @@ func Test_relationTypeService_validateDependency(t *testing.T) {
 
 			err := service.validateDependency(ctx, nil, relationType)
 			So(err, ShouldNotBeNil)
-			So(err.(*rest.HTTPError).BaseError.ErrorCode, ShouldEqual, oerrors.OntologyManager_ObjectType_InternalError_GetObjectTypeByIDFailed)
+			So(err.(*rest.HTTPError).BaseError.ErrorCode, ShouldEqual, oerrors.OntologyManager_RelationType_InternalError)
 		})
 
 		Convey("Failed when target object type not found\n", func() {
@@ -1791,7 +1787,7 @@ func Test_relationTypeService_validateDependency(t *testing.T) {
 				Branch: interfaces.MAIN_BRANCH,
 			}
 			httpErr := rest.NewHTTPError(ctx, http.StatusInternalServerError,
-				oerrors.OntologyManager_ObjectType_InternalError_GetObjectTypeByIDFailed)
+				oerrors.OntologyManager_RelationType_InternalError)
 
 			smock.ExpectBegin()
 			ots.EXPECT().GetObjectTypeByID(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil, httpErr)
@@ -1799,7 +1795,7 @@ func Test_relationTypeService_validateDependency(t *testing.T) {
 
 			err := service.validateDependency(ctx, nil, relationType)
 			So(err, ShouldNotBeNil)
-			So(err.(*rest.HTTPError).BaseError.ErrorCode, ShouldEqual, oerrors.OntologyManager_ObjectType_InternalError_GetObjectTypeByIDFailed)
+			So(err.(*rest.HTTPError).BaseError.ErrorCode, ShouldEqual, oerrors.OntologyManager_RelationType_InternalError)
 		})
 
 		Convey("Failed when source property not found in DIRECT type\n", func() {

@@ -99,12 +99,11 @@ func (mr *MockConceptGroupServiceMockRecorder) CreateConceptGroup(ctx, tx, conce
 }
 
 // DeleteConceptGroupByID mocks base method.
-func (m *MockConceptGroupService) DeleteConceptGroupByID(ctx context.Context, tx *sql.Tx, knID, branch, cgID string) (int64, error) {
+func (m *MockConceptGroupService) DeleteConceptGroupByID(ctx context.Context, tx *sql.Tx, knID, branch, cgID string) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "DeleteConceptGroupByID", ctx, tx, knID, branch, cgID)
-	ret0, _ := ret[0].(int64)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
+	ret0, _ := ret[0].(error)
+	return ret0
 }
 
 // DeleteConceptGroupByID indicates an expected call of DeleteConceptGroupByID.
@@ -113,13 +112,26 @@ func (mr *MockConceptGroupServiceMockRecorder) DeleteConceptGroupByID(ctx, tx, k
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteConceptGroupByID", reflect.TypeOf((*MockConceptGroupService)(nil).DeleteConceptGroupByID), ctx, tx, knID, branch, cgID)
 }
 
+// DeleteConceptGroupsByKnID mocks base method.
+func (m *MockConceptGroupService) DeleteConceptGroupsByKnID(ctx context.Context, tx *sql.Tx, knID, branch string) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DeleteConceptGroupsByKnID", ctx, tx, knID, branch)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// DeleteConceptGroupsByKnID indicates an expected call of DeleteConceptGroupsByKnID.
+func (mr *MockConceptGroupServiceMockRecorder) DeleteConceptGroupsByKnID(ctx, tx, knID, branch interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteConceptGroupsByKnID", reflect.TypeOf((*MockConceptGroupService)(nil).DeleteConceptGroupsByKnID), ctx, tx, knID, branch)
+}
+
 // DeleteObjectTypesFromGroup mocks base method.
-func (m *MockConceptGroupService) DeleteObjectTypesFromGroup(ctx context.Context, tx *sql.Tx, knID, branch, cgID string, otIDs []string) (int64, error) {
+func (m *MockConceptGroupService) DeleteObjectTypesFromGroup(ctx context.Context, tx *sql.Tx, knID, branch, cgID string, otIDs []string) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "DeleteObjectTypesFromGroup", ctx, tx, knID, branch, cgID, otIDs)
-	ret0, _ := ret[0].(int64)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
+	ret0, _ := ret[0].(error)
+	return ret0
 }
 
 // DeleteObjectTypesFromGroup indicates an expected call of DeleteObjectTypesFromGroup.
@@ -141,6 +153,21 @@ func (m *MockConceptGroupService) GetConceptGroupByID(ctx context.Context, knID,
 func (mr *MockConceptGroupServiceMockRecorder) GetConceptGroupByID(ctx, knID, branch, cgID, mode interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetConceptGroupByID", reflect.TypeOf((*MockConceptGroupService)(nil).GetConceptGroupByID), ctx, knID, branch, cgID, mode)
+}
+
+// GetConceptGroupIDsByKnID mocks base method.
+func (m *MockConceptGroupService) GetConceptGroupIDsByKnID(ctx context.Context, knID, branch string) ([]string, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetConceptGroupIDsByKnID", ctx, knID, branch)
+	ret0, _ := ret[0].([]string)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetConceptGroupIDsByKnID indicates an expected call of GetConceptGroupIDsByKnID.
+func (mr *MockConceptGroupServiceMockRecorder) GetConceptGroupIDsByKnID(ctx, knID, branch interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetConceptGroupIDsByKnID", reflect.TypeOf((*MockConceptGroupService)(nil).GetConceptGroupIDsByKnID), ctx, knID, branch)
 }
 
 // GetStatByConceptGroup mocks base method.

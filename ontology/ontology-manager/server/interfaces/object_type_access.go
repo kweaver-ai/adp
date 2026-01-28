@@ -19,6 +19,8 @@ type ObjectTypeAccess interface {
 	UpdateObjectType(ctx context.Context, tx *sql.Tx, objectType *ObjectType) error
 	DeleteObjectTypesByIDs(ctx context.Context, tx *sql.Tx, knID string, branch string, otIDs []string) (int64, error)
 	DeleteObjectTypeStatusByIDs(ctx context.Context, tx *sql.Tx, knID string, branch string, otIDs []string) (int64, error)
+	DeleteObjectTypesByKnID(ctx context.Context, tx *sql.Tx, knID string, branch string) (int64, error)
+	DeleteObjectTypeStatusByKnID(ctx context.Context, tx *sql.Tx, knID string, branch string) (int64, error)
 	UpdateDataProperties(ctx context.Context, objectType *ObjectType) error
 
 	GetAllObjectTypesByKnID(ctx context.Context, knID string, branch string) (map[string]*ObjectType, error)

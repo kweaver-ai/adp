@@ -17,7 +17,6 @@ import (
 	o11y "github.com/kweaver-ai/kweaver-go-lib/observability"
 	"github.com/kweaver-ai/kweaver-go-lib/rest"
 	"github.com/rs/xid"
-	attr "go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
 
 	"ontology-manager/common"
@@ -63,22 +62,16 @@ func NewActionTypeService(appSetting *common.AppSetting) interfaces.ActionTypeSe
 	return atService
 }
 
-func (ats *actionTypeService) CheckActionTypeExistByID(ctx context.Context,
-	knID string, branch string, atID string) (string, bool, error) {
-
-	ctx, span := ar_trace.Tracer.Start(ctx, fmt.Sprintf("校验行动类[%s]的存在性", atID))
+func (ats *actionTypeService) CheckActionTypeExistByID(ctx context.Context, knID string, branch string, atID string) (string, bool, error) {
+	ctx, span := ar_trace.Tracer.Start(ctx, "CheckActionTypeExistByID")
 	defer span.End()
-
-	span.SetAttributes(attr.Key("at_id").String(atID))
 
 	atName, exist, err := ats.ata.CheckActionTypeExistByID(ctx, knID, branch, atID)
 	if err != nil {
 		logger.Errorf("CheckActionTypeExistByID error: %s", err.Error())
-
-		span.SetStatus(codes.Error, fmt.Sprintf("按ID[%v]获取行动类失败", atID))
 		// 记录处理的 sql 字符串
 		o11y.Error(ctx, fmt.Sprintf("按ID[%v]获取行动类失败: %v", atID, err))
-
+		span.SetStatus(codes.Error, fmt.Sprintf("按ID[%v]获取行动类失败", atID))
 		return "", exist, rest.NewHTTPError(ctx, http.StatusInternalServerError,
 			oerrors.OntologyManager_ActionType_InternalError_CheckActionTypeIfExistFailed).WithErrorDetails(err.Error())
 	}
@@ -87,13 +80,9 @@ func (ats *actionTypeService) CheckActionTypeExistByID(ctx context.Context,
 	return atName, exist, nil
 }
 
-func (ats *actionTypeService) CheckActionTypeExistByName(ctx context.Context,
-	knID string, branch string, atName string) (string, bool, error) {
-
-	ctx, span := ar_trace.Tracer.Start(ctx, fmt.Sprintf("校验行动类[%s]的存在性", atName))
+func (ats *actionTypeService) CheckActionTypeExistByName(ctx context.Context, knID string, branch string, atName string) (string, bool, error) {
+	ctx, span := ar_trace.Tracer.Start(ctx, "CheckActionTypeExistByName")
 	defer span.End()
-
-	span.SetAttributes(attr.Key("at_name").String(atName))
 
 	actionTypeID, exist, err := ats.ata.CheckActionTypeExistByName(ctx, knID, branch, atName)
 	if err != nil {
@@ -109,9 +98,8 @@ func (ats *actionTypeService) CheckActionTypeExistByName(ctx context.Context,
 	return actionTypeID, exist, nil
 }
 
-func (ats *actionTypeService) CreateActionTypes(ctx context.Context, tx *sql.Tx,
-	actionTypes []*interfaces.ActionType, mode string) ([]string, error) {
-	ctx, span := ar_trace.Tracer.Start(ctx, "Create action type")
+func (ats *actionTypeService) CreateActionTypes(ctx context.Context, tx *sql.Tx, actionTypes []*interfaces.ActionType, mode string) ([]string, error) {
+	ctx, span := ar_trace.Tracer.Start(ctx, "CreateActionTypes")
 	defer span.End()
 
 	// 判断userid是否有修改业务知识网络的权限
@@ -201,7 +189,6 @@ func (ats *actionTypeService) CreateActionTypes(ctx context.Context, tx *sql.Tx,
 		if err != nil {
 			logger.Errorf("CreateActionType error: %s", err.Error())
 			span.SetStatus(codes.Error, "创建行动类失败")
-
 			return []string{}, rest.NewHTTPError(ctx, http.StatusInternalServerError, oerrors.OntologyManager_ActionType_InternalError).
 				WithErrorDetails(err.Error())
 		}
@@ -222,7 +209,6 @@ func (ats *actionTypeService) CreateActionTypes(ctx context.Context, tx *sql.Tx,
 	if err != nil {
 		logger.Errorf("InsertOpenSearchData error: %s", err.Error())
 		span.SetStatus(codes.Error, "行动类索引写入失败")
-
 		return []string{}, rest.NewHTTPError(ctx, http.StatusInternalServerError,
 			oerrors.OntologyManager_ActionType_InternalError_InsertOpenSearchDataFailed).
 			WithErrorDetails(err.Error())
@@ -232,10 +218,8 @@ func (ats *actionTypeService) CreateActionTypes(ctx context.Context, tx *sql.Tx,
 	return atIDs, nil
 }
 
-func (ats *actionTypeService) ListActionTypes(ctx context.Context,
-	query interfaces.ActionTypesQueryParams) ([]*interfaces.ActionType, int, error) {
-
-	ctx, span := ar_trace.Tracer.Start(ctx, "查询行动类列表")
+func (ats *actionTypeService) ListActionTypes(ctx context.Context, query interfaces.ActionTypesQueryParams) ([]*interfaces.ActionType, int, error) {
+	ctx, span := ar_trace.Tracer.Start(ctx, "ListActionTypes")
 	defer span.End()
 
 	// 判断userid是否有查看业务知识网络的权限
@@ -252,7 +236,6 @@ func (ats *actionTypeService) ListActionTypes(ctx context.Context,
 	if err != nil {
 		logger.Errorf("ListActionTypes error: %s", err.Error())
 		span.SetStatus(codes.Error, "List action types error")
-
 		return []*interfaces.ActionType{}, 0, rest.NewHTTPError(ctx, http.StatusInternalServerError,
 			oerrors.OntologyManager_ActionType_InternalError).WithErrorDetails(err.Error())
 	}
@@ -305,7 +288,6 @@ func (ats *actionTypeService) ListActionTypes(ctx context.Context,
 	err = ats.uma.GetAccountNames(ctx, accountInfos)
 	if err != nil {
 		span.SetStatus(codes.Error, "GetAccountNames error")
-
 		return []*interfaces.ActionType{}, 0, rest.NewHTTPError(ctx, http.StatusInternalServerError,
 			oerrors.OntologyManager_ActionType_InternalError).WithErrorDetails(err.Error())
 	}
@@ -314,13 +296,10 @@ func (ats *actionTypeService) ListActionTypes(ctx context.Context,
 	return actionTypes, total, nil
 }
 
-func (ats *actionTypeService) GetActionTypesByIDs(ctx context.Context,
-	knID string, branch string, atIDs []string) ([]*interfaces.ActionType, error) {
+func (ats *actionTypeService) GetActionTypesByIDs(ctx context.Context, knID string, branch string, atIDs []string) ([]*interfaces.ActionType, error) {
 	// 获取行动类
-	ctx, span := ar_trace.Tracer.Start(ctx, fmt.Sprintf("查询行动类[%v]信息", atIDs))
+	ctx, span := ar_trace.Tracer.Start(ctx, "GetActionTypesByIDs")
 	defer span.End()
-
-	span.SetAttributes(attr.Key("at_ids").String(fmt.Sprintf("%v", atIDs)))
 
 	// 判断userid是否有查看业务知识网络的权限
 	err := ats.ps.CheckPermission(ctx, interfaces.Resource{
@@ -390,15 +369,9 @@ func (ats *actionTypeService) GetActionTypesByIDs(ctx context.Context,
 }
 
 // 更新行动类
-func (ats *actionTypeService) UpdateActionType(ctx context.Context,
-	tx *sql.Tx, actionType *interfaces.ActionType) error {
-
-	ctx, span := ar_trace.Tracer.Start(ctx, "Update action type")
+func (ats *actionTypeService) UpdateActionType(ctx context.Context, tx *sql.Tx, actionType *interfaces.ActionType) error {
+	ctx, span := ar_trace.Tracer.Start(ctx, "UpdateActionType")
 	defer span.End()
-
-	span.SetAttributes(
-		attr.Key("at_id").String(actionType.ATID),
-		attr.Key("ot_name").String(actionType.ATName))
 
 	// 判断userid是否有修改业务知识网络的权限
 	err := ats.ps.CheckPermission(ctx, interfaces.Resource{
@@ -425,7 +398,6 @@ func (ats *actionTypeService) UpdateActionType(ctx context.Context,
 			logger.Errorf("Begin transaction error: %s", err.Error())
 			span.SetStatus(codes.Error, "事务开启失败")
 			o11y.Error(ctx, fmt.Sprintf("Begin transaction error: %s", err.Error()))
-
 			return rest.NewHTTPError(ctx, http.StatusInternalServerError, oerrors.OntologyManager_ActionType_InternalError_BeginTransactionFailed).
 				WithErrorDetails(err.Error())
 		}
@@ -458,7 +430,6 @@ func (ats *actionTypeService) UpdateActionType(ctx context.Context,
 	if err != nil {
 		logger.Errorf("UpdateActionType error: %s", err.Error())
 		span.SetStatus(codes.Error, "修改行动类失败")
-
 		return rest.NewHTTPError(ctx, http.StatusInternalServerError,
 			oerrors.OntologyManager_ActionType_InternalError).
 			WithErrorDetails(err.Error())
@@ -468,7 +439,6 @@ func (ats *actionTypeService) UpdateActionType(ctx context.Context,
 	if err != nil {
 		logger.Errorf("InsertOpenSearchData error: %s", err.Error())
 		span.SetStatus(codes.Error, "行动类索引写入失败")
-
 		return rest.NewHTTPError(ctx, http.StatusInternalServerError,
 			oerrors.OntologyManager_ActionType_InternalError_InsertOpenSearchDataFailed).
 			WithErrorDetails(err.Error())
@@ -478,10 +448,8 @@ func (ats *actionTypeService) UpdateActionType(ctx context.Context,
 	return nil
 }
 
-func (ats *actionTypeService) DeleteActionTypesByIDs(ctx context.Context, tx *sql.Tx,
-	knID string, branch string, atIDs []string) (int64, error) {
-
-	ctx, span := ar_trace.Tracer.Start(ctx, "Delete action types")
+func (ats *actionTypeService) DeleteActionTypesByIDs(ctx context.Context, tx *sql.Tx, knID string, branch string, atIDs []string) error {
+	ctx, span := ar_trace.Tracer.Start(ctx, "DeleteActionTypesByIDs")
 	defer span.End()
 
 	// 判断userid是否有修改业务知识网络的权限
@@ -490,7 +458,7 @@ func (ats *actionTypeService) DeleteActionTypesByIDs(ctx context.Context, tx *sq
 		ID:   knID,
 	}, []string{interfaces.OPERATION_TYPE_MODIFY})
 	if err != nil {
-		return 0, err
+		return err
 	}
 
 	if tx == nil {
@@ -501,7 +469,7 @@ func (ats *actionTypeService) DeleteActionTypesByIDs(ctx context.Context, tx *sq
 			span.SetStatus(codes.Error, "事务开启失败")
 			o11y.Error(ctx, fmt.Sprintf("Begin transaction error: %s", err.Error()))
 
-			return 0, rest.NewHTTPError(ctx, http.StatusInternalServerError,
+			return rest.NewHTTPError(ctx, http.StatusInternalServerError,
 				oerrors.OntologyManager_ActionType_InternalError_BeginTransactionFailed).
 				WithErrorDetails(err.Error())
 		}
@@ -531,19 +499,16 @@ func (ats *actionTypeService) DeleteActionTypesByIDs(ctx context.Context, tx *sq
 
 	// 删除行动类
 	rowsAffect, err := ats.ata.DeleteActionTypesByIDs(ctx, tx, knID, branch, atIDs)
-	span.SetAttributes(attr.Key("rows_affect").Int64(rowsAffect))
 	if err != nil {
 		logger.Errorf("DeleteActionTypes error: %s", err.Error())
 		span.SetStatus(codes.Error, "删除行动类失败")
-
-		return rowsAffect, rest.NewHTTPError(ctx, http.StatusInternalServerError,
+		return rest.NewHTTPError(ctx, http.StatusInternalServerError,
 			oerrors.OntologyManager_ActionType_InternalError).WithErrorDetails(err.Error())
 	}
 
 	logger.Infof("DeleteActionTypes: Rows affected is %v, request delete ATIDs is %v!", rowsAffect, len(atIDs))
 	if rowsAffect != int64(len(atIDs)) {
 		logger.Warnf("Delete action types number %v not equal requerst action types number %v!", rowsAffect, len(atIDs))
-
 		o11y.Warn(ctx, fmt.Sprintf("Delete action types number %v not equal requerst action types number %v!", rowsAffect, len(atIDs)))
 	}
 
@@ -551,18 +516,47 @@ func (ats *actionTypeService) DeleteActionTypesByIDs(ctx context.Context, tx *sq
 		docid := interfaces.GenerateConceptDocuemtnID(knID, interfaces.MODULE_TYPE_ACTION_TYPE, atID, branch)
 		err = ats.osa.DeleteData(ctx, interfaces.KN_CONCEPT_INDEX_NAME, docid)
 		if err != nil {
-			return 0, err
+			return err
 		}
 	}
 
 	span.SetStatus(codes.Ok, "")
-	return rowsAffect, nil
+	return nil
+}
+
+// 内部接口，不校验权限， tx必须传
+func (ats *actionTypeService) DeleteActionTypesByKnID(ctx context.Context, tx *sql.Tx, knID string, branch string) error {
+	ctx, span := ar_trace.Tracer.Start(ctx, "DeleteActionTypesByKnID")
+	defer span.End()
+
+	if tx == nil {
+		logger.Errorf("missing transaction")
+		o11y.Error(ctx, "missing transaction")
+		span.SetStatus(codes.Error, "缺少事务")
+		return rest.NewHTTPError(ctx, http.StatusInternalServerError,
+			oerrors.OntologyManager_ActionType_InternalError_MissingTransaction).
+			WithErrorDetails("missing transaction")
+	}
+
+	// 删除行动类
+	rowsAffect, err := ats.ata.DeleteActionTypesByKnID(ctx, tx, knID, branch)
+	if err != nil {
+		logger.Errorf("DeleteActionTypes error: %s", err.Error())
+		span.SetStatus(codes.Error, "删除行动类失败")
+		return rest.NewHTTPError(ctx, http.StatusInternalServerError,
+			oerrors.OntologyManager_ActionType_InternalError).WithErrorDetails(err.Error())
+	}
+
+	logger.Infof("DeleteActionTypesByKnID success, the kn_id is [%s], branch is [%s], rowsAffect is [%d]",
+		knID, branch, rowsAffect)
+	span.SetStatus(codes.Ok, "")
+	return nil
 }
 
 func (ats *actionTypeService) handleActionTypeImportMode(ctx context.Context, mode string,
 	actionTypes []*interfaces.ActionType) ([]*interfaces.ActionType, []*interfaces.ActionType, error) {
 
-	ctx, span := ar_trace.Tracer.Start(ctx, "action type import mode logic")
+	ctx, span := ar_trace.Tracer.Start(ctx, "handleActionTypeImportMode")
 	defer span.End()
 
 	creates := []*interfaces.ActionType{}
@@ -658,7 +652,7 @@ func (ats *actionTypeService) handleActionTypeImportMode(ctx context.Context, mo
 }
 
 func (ats *actionTypeService) InsertOpenSearchData(ctx context.Context, actionTypes []*interfaces.ActionType) error {
-	ctx, span := ar_trace.Tracer.Start(ctx, "行动类索引写入")
+	ctx, span := ar_trace.Tracer.Start(ctx, "InsertOpenSearchData")
 	defer span.End()
 
 	if len(actionTypes) == 0 {
@@ -714,10 +708,8 @@ func (ats *actionTypeService) InsertOpenSearchData(ctx context.Context, actionTy
 	return nil
 }
 
-func (ats *actionTypeService) SearchActionTypes(ctx context.Context,
-	query *interfaces.ConceptsQuery) (interfaces.ActionTypes, error) {
-
-	ctx, span := ar_trace.Tracer.Start(ctx, "业务知识网络行动类检索")
+func (ats *actionTypeService) SearchActionTypes(ctx context.Context, query *interfaces.ConceptsQuery) (interfaces.ActionTypes, error) {
+	ctx, span := ar_trace.Tracer.Start(ctx, "SearchActionTypes")
 	defer span.End()
 
 	response := interfaces.ActionTypes{}
@@ -769,7 +761,7 @@ func (ats *actionTypeService) SearchActionTypes(ctx context.Context,
 			span.SetStatus(codes.Error, fmt.Sprintf("GetConceptGroupsTotal in knowledge network[%s], error: %v", query.KNID, err))
 
 			return response, rest.NewHTTPError(ctx, http.StatusInternalServerError,
-				oerrors.OntologyManager_KnowledgeNetwork_InternalError).WithErrorDetails(err.Error())
+				oerrors.OntologyManager_ActionType_InternalError).WithErrorDetails(err.Error())
 		}
 		if cgCnt == 0 {
 			errStr := fmt.Sprintf("all concept group not found, expect concept group nums is [%d], actual concept group num is [%d]",
@@ -777,7 +769,7 @@ func (ats *actionTypeService) SearchActionTypes(ctx context.Context,
 			logger.Errorf(errStr)
 
 			return response, rest.NewHTTPError(ctx, http.StatusInternalServerError,
-				oerrors.OntologyManager_ObjectType_InternalError).
+				oerrors.OntologyManager_ActionType_InternalError).
 				WithErrorDetails(errStr)
 		}
 
@@ -908,7 +900,7 @@ func (ats *actionTypeService) SearchActionTypes(ctx context.Context,
 }
 
 func (ats *actionTypeService) GetTotal(ctx context.Context, dsl map[string]any) (total int64, err error) {
-	ctx, span := ar_trace.Tracer.Start(ctx, "logic layer: search action type total ")
+	ctx, span := ar_trace.Tracer.Start(ctx, "GetTotal")
 	defer span.End()
 
 	// delete(dsl, "pit")
@@ -941,13 +933,10 @@ func (ats *actionTypeService) GetTotal(ctx context.Context, dsl map[string]any) 
 }
 
 // 内部调用，不加权限校验
-func (ats *actionTypeService) GetActionTypeIDsByKnID(ctx context.Context,
-	knID string, branch string) ([]string, error) {
+func (ats *actionTypeService) GetActionTypeIDsByKnID(ctx context.Context, knID string, branch string) ([]string, error) {
 	// 获取行动类
-	ctx, span := ar_trace.Tracer.Start(ctx, fmt.Sprintf("按kn_id[%s]获取行动类IDs", knID))
+	ctx, span := ar_trace.Tracer.Start(ctx, "GetActionTypeIDsByKnID")
 	defer span.End()
-
-	span.SetAttributes(attr.Key("kn_id").String(fmt.Sprintf("%v", knID)))
 
 	// 获取模型基本信息
 	atIDs, err := ats.ata.GetActionTypeIDsByKnID(ctx, knID, branch)
@@ -964,9 +953,7 @@ func (ats *actionTypeService) GetActionTypeIDsByKnID(ctx context.Context,
 }
 
 // 分批查询
-func (ats *actionTypeService) GetTotalWithLargeATIDs(ctx context.Context,
-	conditionDslStr string,
-	atIDs []string) (int64, error) {
+func (ats *actionTypeService) GetTotalWithLargeATIDs(ctx context.Context, conditionDslStr string, atIDs []string) (int64, error) {
 
 	total := int64(0)
 	for i := 0; i < len(atIDs); i += interfaces.GET_TOTAL_CONCEPTID_BATCH_SIZE {
@@ -988,9 +975,7 @@ func (ats *actionTypeService) GetTotalWithLargeATIDs(ctx context.Context,
 }
 
 // 查询指定对象类ID列表的对象类总数
-func (ats *actionTypeService) GetTotalWithATIDs(ctx context.Context,
-	conditionDslStr string,
-	atIDs []string) (int64, error) {
+func (ats *actionTypeService) GetTotalWithATIDs(ctx context.Context, conditionDslStr string, atIDs []string) (int64, error) {
 
 	var dslMap map[string]any
 	err := json.Unmarshal([]byte(conditionDslStr), &dslMap)

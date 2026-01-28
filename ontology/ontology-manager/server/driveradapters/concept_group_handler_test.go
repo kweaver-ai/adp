@@ -117,7 +117,7 @@ func Test_ConceptGroupRestHandler_CreateConceptGroup(t *testing.T) {
 				HTTPCode: http.StatusInternalServerError,
 				Language: rest.DefaultLanguage,
 				BaseError: rest.BaseError{
-					ErrorCode: oerrors.OntologyManager_KnowledgeNetwork_InternalError,
+					ErrorCode: oerrors.OntologyManager_ConceptGroup_InternalError,
 				},
 			}
 			kns.EXPECT().CheckKNExistByID(gomock.Any(), knID, gomock.Any()).Return("", false, expectedErr)
@@ -276,7 +276,7 @@ func Test_ConceptGroupRestHandler_DeleteConceptGroup(t *testing.T) {
 		Convey("Success DeleteConceptGroup\n", func() {
 			kns.EXPECT().CheckKNExistByID(gomock.Any(), knID, gomock.Any()).Return(knID, true, nil)
 			cgs.EXPECT().CheckConceptGroupExistByID(gomock.Any(), knID, gomock.Any(), cgID).Return("group1", true, nil)
-			cgs.EXPECT().DeleteConceptGroupByID(gomock.Any(), gomock.Any(), knID, gomock.Any(), cgID).Return(int64(1), nil)
+			cgs.EXPECT().DeleteConceptGroupByID(gomock.Any(), gomock.Any(), knID, gomock.Any(), cgID).Return(nil)
 
 			req := httptest.NewRequest(http.MethodDelete, url, nil)
 			w := httptest.NewRecorder()
@@ -688,7 +688,7 @@ func Test_ConceptGroupRestHandler_DeleteObjectTypesFromGroup(t *testing.T) {
 					},
 				}, nil
 			})
-			cgs.EXPECT().DeleteObjectTypesFromGroup(gomock.Any(), gomock.Any(), knID, gomock.Any(), cgID, gomock.Any()).Return(int64(2), nil)
+			cgs.EXPECT().DeleteObjectTypesFromGroup(gomock.Any(), gomock.Any(), knID, gomock.Any(), cgID, gomock.Any()).Return(nil)
 
 			req := httptest.NewRequest(http.MethodDelete, url, nil)
 			w := httptest.NewRecorder()
@@ -766,7 +766,7 @@ func Test_ConceptGroupRestHandler_DeleteObjectTypesFromGroup(t *testing.T) {
 					},
 				}, nil
 			})
-			cgs.EXPECT().DeleteObjectTypesFromGroup(gomock.Any(), gomock.Any(), knID, gomock.Any(), cgID, gomock.Any()).Return(int64(0), expectedErr)
+			cgs.EXPECT().DeleteObjectTypesFromGroup(gomock.Any(), gomock.Any(), knID, gomock.Any(), cgID, gomock.Any()).Return(expectedErr)
 
 			req := httptest.NewRequest(http.MethodDelete, url, nil)
 			w := httptest.NewRecorder()
@@ -831,7 +831,7 @@ func Test_ConceptGroupRestHandler_DeleteObjectTypesFromGroup(t *testing.T) {
 					},
 				}, nil
 			})
-			cgs.EXPECT().DeleteObjectTypesFromGroup(gomock.Any(), gomock.Any(), knID, gomock.Any(), cgID, gomock.Any()).Return(int64(2), nil)
+			cgs.EXPECT().DeleteObjectTypesFromGroup(gomock.Any(), gomock.Any(), knID, gomock.Any(), cgID, gomock.Any()).Return(nil)
 
 			urlIn := "/api/ontology-manager/in/v1/knowledge-networks/" + knID + "/concept-groups/" + cgID + "/object-types/" + otIDs
 			req := httptest.NewRequest(http.MethodDelete, urlIn, nil)

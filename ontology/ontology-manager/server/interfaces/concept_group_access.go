@@ -19,6 +19,9 @@ type ConceptGroupAccess interface {
 	GetConceptGroupsByIDs(ctx context.Context, tx *sql.Tx, knID string, branch string, cgIDs []string) ([]*ConceptGroup, error)
 	GetConceptGroupsTotal(ctx context.Context, query ConceptGroupsQueryParams) (int, error)
 	GetAllConceptGroupsByKnID(ctx context.Context, knID string, branch string) (map[string]*ConceptGroup, error)
+	GetConceptGroupIDsByKnID(ctx context.Context, knID string, branch string) ([]string, error)
+	DeleteConceptGroupsByKnID(ctx context.Context, tx *sql.Tx, knID string, branch string) (int64, error)
+	DeleteConceptGroupRelationsByKnID(ctx context.Context, tx *sql.Tx, knID string, branch string) (int64, error)
 
 	ListConceptGroupRelations(ctx context.Context, tx *sql.Tx, query ConceptGroupRelationsQueryParams) ([]ConceptGroupRelation, error)
 	CreateConceptGroupRelation(ctx context.Context, tx *sql.Tx, kn *ConceptGroupRelation) error

@@ -14,11 +14,12 @@ type ObjectTypeService interface {
 	GetObjectTypesByIDs(ctx context.Context, tx *sql.Tx, knID string, branch string, otIDs []string) ([]*ObjectType, error)
 	UpdateObjectType(ctx context.Context, tx *sql.Tx, objectType *ObjectType) error
 	UpdateDataProperties(ctx context.Context, objectType *ObjectType, dataProperties []*DataProperty) error
-	DeleteObjectTypesByIDs(ctx context.Context, tx *sql.Tx, knID string, branch string, otIDs []string) (int64, error)
+	DeleteObjectTypesByIDs(ctx context.Context, tx *sql.Tx, knID string, branch string, otIDs []string) error
 
 	GetObjectTypeByID(ctx context.Context, tx *sql.Tx, knID string, branch string, otID string) (*ObjectType, error)
 	GetAllObjectTypesByKnID(ctx context.Context, knID string, branch string) (map[string]*ObjectType, error)
 	GetObjectTypeIDsByKnID(ctx context.Context, knID string, branch string) ([]string, error)
+	DeleteObjectTypesByKnID(ctx context.Context, tx *sql.Tx, knID string, branch string) error
 
 	SearchObjectTypes(ctx context.Context, query *ConceptsQuery) (ObjectTypes, error)
 

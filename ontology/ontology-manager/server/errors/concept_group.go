@@ -21,10 +21,12 @@ const (
 
 	// 404
 	OntologyManager_ConceptGroup_ConceptGroupNotFound = "OntologyManager.ConceptGroup.ConceptGroupNotFound"
+	OntologyManager_ConceptGroup_ObjectTypeNotFound   = "OntologyManager.ConceptGroup.ObjectTypeNotFound"
 
 	// 500
 	OntologyManager_ConceptGroup_InternalError                                      = "OntologyManager.ConceptGroup.InternalError"
 	OntologyManager_ConceptGroup_InternalError_AddObjectTypesToConceptGroupFailed   = "OntologyManager.ConceptGroup.InternalError.AddObjectTypesToConceptGroupFailed"
+	OntologyManager_ConceptGroup_InternalError_MissingTransaction                   = "OntologyManager.ConceptGroup.InternalError.MissingTransaction"
 	OntologyManager_ConceptGroup_InternalError_BeginTransactionFailed               = "OntologyManager.ConceptGroup.InternalError.BeginTransactionFailed"
 	OntologyManager_ConceptGroup_InternalError_BindBusinessDomainFailed             = "OntologyManager.ConceptGroup.InternalError.BindBusinessDomainFailed"
 	OntologyManager_ConceptGroup_InternalError_UnbindBusinessDomainFailed           = "OntologyManager.ConceptGroup.InternalError.UnbindBusinessDomainFailed"
@@ -41,9 +43,6 @@ const (
 	OntologyManager_ConceptGroup_InternalError_CreateObjectTypesFailed              = "OntologyManager.ConceptGroup.InternalError.CreateObjectTypesFailed"
 	OntologyManager_ConceptGroup_InternalError_CreateRelationTypesFailed            = "OntologyManager.ConceptGroup.InternalError.CreateRelationTypesFailed"
 	OntologyManager_ConceptGroup_InternalError_CreateActionTypesFailed              = "OntologyManager.ConceptGroup.InternalError.CreateActionTypesFailed"
-	OntologyManager_ConceptGroup_InternalError_DeleteObjectTypesFailed              = "OntologyManager.ConceptGroup.InternalError.DeleteObjectTypesFailed"
-	OntologyManager_ConceptGroup_InternalError_DeleteRelationTypesFailed            = "OntologyManager.ConceptGroup.InternalError.DeleteRelationTypesFailed"
-	OntologyManager_ConceptGroup_InternalError_DeleteActionTypesFailed              = "OntologyManager.ConceptGroup.InternalError.DeleteActionTypesFailed"
 )
 
 var (
@@ -67,10 +66,12 @@ var (
 
 		// 404
 		OntologyManager_ConceptGroup_ConceptGroupNotFound,
+		OntologyManager_ConceptGroup_ObjectTypeNotFound,
 
 		// 500
 		OntologyManager_ConceptGroup_InternalError,
 		OntologyManager_ConceptGroup_InternalError_AddObjectTypesToConceptGroupFailed,
+		OntologyManager_ConceptGroup_InternalError_MissingTransaction,
 		OntologyManager_ConceptGroup_InternalError_CheckConceptGroupIfExistFailed,
 		OntologyManager_ConceptGroup_InternalError_BeginTransactionFailed,
 		OntologyManager_ConceptGroup_InternalError_BindBusinessDomainFailed,
@@ -87,8 +88,5 @@ var (
 		OntologyManager_ConceptGroup_InternalError_CreateObjectTypesFailed,
 		OntologyManager_ConceptGroup_InternalError_CreateRelationTypesFailed,
 		OntologyManager_ConceptGroup_InternalError_CreateActionTypesFailed,
-		OntologyManager_ConceptGroup_InternalError_DeleteObjectTypesFailed,
-		OntologyManager_ConceptGroup_InternalError_DeleteRelationTypesFailed,
-		OntologyManager_ConceptGroup_InternalError_DeleteActionTypesFailed,
 	}
 )
