@@ -294,6 +294,9 @@
         },
         {
             "name": "business-system-service"
+        },
+        {
+            "name": "opensearch"
         }
     ]
 }
