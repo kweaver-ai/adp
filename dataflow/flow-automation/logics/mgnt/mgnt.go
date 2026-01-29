@@ -3371,6 +3371,87 @@ func (m *mgnt) buildTasks(triggerStep *entity.Step, steps []entity.Step, tasks *
 			for _, bch := range step.Branches {
 				m.buildTasks(triggerStep, bch.Steps, tasks, &bch, stepList, &prechecks, &step.ID)
 			}
+		} else if step.Operator == common.ControlFlowParallel {
+			// 并行分支节点处理
+			parallelBranchLastTasks := []string{}
+
+			for branchIndex, branch := range step.Branches {
+				branchLastTaskID := ""
+
+				for stepIndex, branchStep := range branch.Steps {
+					// 生成Task ID: {parallel_step_id}_b{branch_index}_s{step_index}
+					stepTaskID := fmt.Sprintf("%s_b%d_s%d", step.ID, branchIndex, stepIndex)
+
+					// 确定依赖关系
+					stepDependOn := dependOn // 第一个step依赖并行节点的前置step
+					if stepIndex > 0 {
+						// 分支内的后续step依赖前一个step
+						prevStepTaskID := fmt.Sprintf("%s_b%d_s%d", step.ID, branchIndex, stepIndex-1)
+						stepDependOn = []string{prevStepTaskID}
+					}
+
+					// 处理prechecks
+					pre := prechecks
+					isCycle := m.chargeCycle(triggerStep, &branchStep)
+					if isCycle {
+						con := []entity.TaskCondition{
+							{
+								ID: "0000000000",
+								Op: entity.OperateStringEq,
+								Parameter: entity.TaskConditionParameter{
+									A: "0",
+									B: "1",
+								},
+							},
+						}
+						pre = entity.PreChecks{"end": &entity.Check{
+							Conditions: con,
+							Act:        entity.ActiveActionSkip,
+						}}
+					}
+
+					// 审核节点或图谱写入节点，显式的配置了超时和失败重试策略
+					if branchStep.Operator == common.WorkflowApproval || branchStep.Operator == common.IntelliinfoTranfer {
+						branchStep.Settings = nil
+					}
+
+					// 创建Task
+					task := entity.Task{
+						ID:         stepTaskID,
+						ActionName: branchStep.Operator,
+						Name:       branchStep.Title,
+						DependOn:   stepDependOn,
+						Params:     branchStep.Parameters,
+						PreChecks:  pre,
+						Settings:   branchStep.Settings,
+					}
+
+					// 设置超时时间
+					if branchStep.Settings == nil {
+						task.TimeoutSecs = m.taskTimeoutConfig.GetTimeout(branchStep.Operator)
+					} else {
+						task.TimeoutSecs = branchStep.Settings.TimeOut.Delay
+					}
+					task.TimeoutSecs += 60 // 看门狗时间窗口
+
+					*tasks = append(*tasks, task)
+
+					// 添加到stepList用于参数验证
+					var stepMap = map[string]interface{}{}
+					stepByte, _ := json.Marshal(branchStep)
+					json.Unmarshal(stepByte, &stepMap) //nolint
+					delete(stepMap, "branches")
+					delete(stepMap, "steps")
+					*stepList = append(*stepList, stepMap)
+
+					branchLastTaskID = stepTaskID
+				}
+
+				parallelBranchLastTasks = append(parallelBranchLastTasks, branchLastTaskID)
+			}
+
+			// 更新dependOn，后续step依赖所有分支的最后一个task
+			dependOn = parallelBranchLastTasks
 		} else if step.Operator == common.Loop {
 			task := entity.Task{
 				ID:         step.ID,

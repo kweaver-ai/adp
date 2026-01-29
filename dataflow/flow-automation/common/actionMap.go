@@ -98,6 +98,9 @@ const (
 	// Loop 循环
 	Loop = "@control/flow/loop"
 
+	// ControlFlowParallel 并行分支
+	ControlFlowParallel = "@control/flow/parallel"
+
 	// BranchOpt 分支
 	BranchOpt = "@control/flow/branches"
 	// BranchCmpStringEqOpt 字符串比较相等
@@ -445,6 +448,7 @@ var ActionMap = map[string]string{
 
 	// flow
 	Loop:                          LoopSchema,
+	ControlFlowParallel:           "", // 并行分支节点不需要schema验证
 	BranchOpt:                     "",
 	BranchCmpStringEqOpt:          "",
 	BranchCmpStringNeqOpt:         "",

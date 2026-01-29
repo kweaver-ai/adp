@@ -10,6 +10,8 @@ const (
 	controlFlow string = "@control/flow"
 	// ControlFlowBranches 逻辑分支
 	ControlFlowBranches string = controlFlow + "/branches"
+	// ControlFlowParallel 并行分支
+	ControlFlowParallel string = controlFlow + "/parallel"
 	// ControlFlowCondition 逻辑分支条件
 	ControlFlowCondition string = controlFlow + "/condition"
 )
@@ -33,6 +35,27 @@ func (a *LogicBranch) Run(ctx entity.ExecuteContext, params interface{}, token *
 // ParameterNew 初始化参数
 func (a *LogicBranch) ParameterNew() interface{} {
 	return &LogicBranch{}
+}
+
+// ParallelBranch 并行分支
+type ParallelBranch struct {
+}
+
+// Name 操作名称
+func (a *ParallelBranch) Name() string {
+	return ControlFlowParallel
+}
+
+// Run 操作方法
+func (a *ParallelBranch) Run(ctx entity.ExecuteContext, params interface{}, token *entity.Token) (interface{}, error) {
+	ctx.Trace(ctx.Context(), "parallel branch start", entity.TraceOpPersistAfterAction)
+	ctx.Trace(ctx.Context(), "parallel branch end")
+	return nil, nil
+}
+
+// ParameterNew 初始化参数
+func (a *ParallelBranch) ParameterNew() interface{} {
+	return &ParallelBranch{}
 }
 
 // LoopParameters defines the parameters for loop execution

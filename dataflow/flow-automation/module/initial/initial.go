@@ -192,6 +192,7 @@ func Init(opt *InitialOption) error {
 		&actions.AnyShareDirRemove{},
 		&actions.AnyShareDirMove{},
 		&actions.LogicBranch{},
+		&actions.ParallelBranch{},
 		&actions.AnyShareDirCreate{},
 		&actions.AnyShareDirPath{},
 		&actions.AnyShareDirRename{},
