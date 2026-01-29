@@ -999,7 +999,7 @@ func generateNativeFieldFeatures(fieldType string, metaField *interfaces.MetaFie
 
 	// 2. 精确匹配特征
 	if fieldType == dtype.DataType_String {
-		fieldsKeywordIgnoreAbove, _ := common.GetWithDefault(mappingConfig, interfaces.FieldProperty_IgnoreAbove, 1024)
+		fieldsKeywordIgnoreAbove, _ := common.GetWithDefault(mappingConfig, interfaces.FieldProperty_IgnoreAbove, 256)
 		features = append(features, interfaces.FieldFeature{
 			FeatureName: fmt.Sprintf("autoKeyword_%s", metaField.FieldName),
 			FeatureType: interfaces.FieldFeatureType_Keyword,
@@ -1034,7 +1034,7 @@ func generateNativeFieldFeatures(fieldType string, metaField *interfaces.MetaFie
 				switch subFieldType {
 				case dtype.IndexBase_DataType_Keyword:
 					fieldsKeywordIgnoreAbove, _ := common.GetWithDefault(subFieldMap,
-						interfaces.FieldProperty_IgnoreAbove, 1024)
+						interfaces.FieldProperty_IgnoreAbove, 256)
 					fture = interfaces.FieldFeature{
 						FeatureName: fmt.Sprintf("autoKeyword_%s.%s", metaField.FieldName, subFieldName),
 						FeatureType: interfaces.FieldFeatureType_Keyword,
