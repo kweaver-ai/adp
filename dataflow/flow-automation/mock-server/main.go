@@ -43,6 +43,9 @@ func main() {
 	// Business System Service Mock (port 8085)
 	go startBusinessSystemMock()
 
+	// Authorization Service Mock (port 30920)
+	go startAuthorizationMock()
+
 	fmt.Println("Mock services started:")
 	fmt.Println("  - User Management Service: http://localhost:30980")
 	fmt.Println("  - Deploy Service: http://localhost:9703")
@@ -50,6 +53,7 @@ func main() {
 	fmt.Println("  - Hydra Admin Service: http://localhost:4445")
 	fmt.Println("  - Hydra Public Service: http://localhost:4444")
 	fmt.Println("  - Business System Service: http://localhost:8085")
+	fmt.Println("  - Authorization Service: http://localhost:30920")
 	fmt.Println("Press Ctrl+C to stop...")
 
 	select {}
@@ -341,5 +345,135 @@ func startBusinessSystemMock() {
 	log.Printf("[BusinessSystem] Starting mock server on port %s", port)
 	if err := router.Run(":" + port); err != nil {
 		log.Fatalf("[BusinessSystem] Failed to start: %v", err)
+	}
+}
+
+func startAuthorizationMock() {
+	router := gin.New()
+	router.Use(gin.Recovery())
+
+	// Mock operation permission check endpoint
+	router.POST("/api/authorization/v1/operation-check", func(c *gin.Context) {
+		var requestBody map[string]interface{}
+		if err := c.BindJSON(&requestBody); err != nil {
+			log.Printf("[Authorization] Invalid request body: %v", err)
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body"})
+			return
+		}
+		log.Printf("[Authorization] Received operation-check request: %+v", requestBody)
+
+		// Return success with result: true (permission granted)
+		c.JSON(http.StatusOK, gin.H{
+			"result": true,
+		})
+	})
+
+	// Mock create policy endpoint
+	router.POST("/api/authorization/v1/policy", func(c *gin.Context) {
+		var requestBody []map[string]interface{}
+		if err := c.BindJSON(&requestBody); err != nil {
+			log.Printf("[Authorization] Invalid request body: %v", err)
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body"})
+			return
+		}
+		log.Printf("[Authorization] Received create policy request: %+v", requestBody)
+		c.JSON(http.StatusOK, gin.H{"status": "success"})
+	})
+
+	// Mock update policy endpoint
+	router.PUT("/api/authorization/v1/policy/:policy_ids", func(c *gin.Context) {
+		policyIDs := c.Param("policy_ids")
+		var requestBody []map[string]interface{}
+		if err := c.BindJSON(&requestBody); err != nil {
+			log.Printf("[Authorization] Invalid request body: %v", err)
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body"})
+			return
+		}
+		log.Printf("[Authorization] Received update policy request for IDs %s: %+v", policyIDs, requestBody)
+		c.JSON(http.StatusOK, gin.H{"status": "success"})
+	})
+
+	// Mock delete policy endpoint
+	router.POST("/api/authorization/v1/policy-delete", func(c *gin.Context) {
+		var requestBody map[string]interface{}
+		if err := c.BindJSON(&requestBody); err != nil {
+			log.Printf("[Authorization] Invalid request body: %v", err)
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body"})
+			return
+		}
+		log.Printf("[Authorization] Received delete policy request: %+v", requestBody)
+		c.JSON(http.StatusOK, gin.H{"status": "success"})
+	})
+
+	// Mock resource filter endpoint
+	router.POST("/api/authorization/v1/resource-filter", func(c *gin.Context) {
+		var requestBody map[string]interface{}
+		if err := c.BindJSON(&requestBody); err != nil {
+			log.Printf("[Authorization] Invalid request body: %v", err)
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body"})
+			return
+		}
+		log.Printf("[Authorization] Received resource-filter request: %+v", requestBody)
+
+		// Return the same resources that were sent (all pass the filter)
+		resources := requestBody["resources"]
+		if resources == nil {
+			resources = []interface{}{}
+		}
+		c.JSON(http.StatusOK, resources)
+	})
+
+	// Mock resource operation list endpoint
+	router.POST("/api/authorization/v1/resource-operation", func(c *gin.Context) {
+		var requestBody map[string]interface{}
+		if err := c.BindJSON(&requestBody); err != nil {
+			log.Printf("[Authorization] Invalid request body: %v", err)
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body"})
+			return
+		}
+		log.Printf("[Authorization] Received resource-operation request: %+v", requestBody)
+
+		// Return mock operation list for each resource
+		resources := []gin.H{}
+		if reqResources, ok := requestBody["resources"].([]interface{}); ok {
+			for _, res := range reqResources {
+				if resMap, ok := res.(map[string]interface{}); ok {
+					resources = append(resources, gin.H{
+						"id":        resMap["id"],
+						"operation": []string{"read", "write", "delete", "execute"},
+					})
+				}
+			}
+		}
+		c.JSON(http.StatusOK, resources)
+	})
+
+	// Mock resource list endpoint
+	router.POST("/api/authorization/v1/resource-list", func(c *gin.Context) {
+		var requestBody map[string]interface{}
+		if err := c.BindJSON(&requestBody); err != nil {
+			log.Printf("[Authorization] Invalid request body: %v", err)
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body"})
+			return
+		}
+		log.Printf("[Authorization] Received resource-list request: %+v", requestBody)
+
+		// Return empty resource list
+		c.JSON(http.StatusOK, []interface{}{})
+	})
+
+	// Health check
+	router.GET("/health", func(c *gin.Context) {
+		c.JSON(http.StatusOK, gin.H{"status": "ok", "service": "authorization-mock"})
+	})
+
+	port := os.Getenv("AUTHORIZATION_MOCK_PORT")
+	if port == "" {
+		port = "30920"
+	}
+
+	log.Printf("[Authorization] Starting mock server on port %s", port)
+	if err := router.Run(":" + port); err != nil {
+		log.Fatalf("[Authorization] Failed to start: %v", err)
 	}
 }
