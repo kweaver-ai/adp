@@ -35,7 +35,7 @@ func NewNullCond(ctx context.Context, cfg *CondCfg, fieldsMap map[string]*ViewFi
 // 2. 该字段在 JSON 中被显示设为 null
 // 3. 该字段是一个空数组
 func (cond *NullCond) Convert(ctx context.Context) (string, error) {
-dslStr := fmt.Sprintf(`
+	dslStr := fmt.Sprintf(`
 	{
 		"bool": {
 			"must_not": {

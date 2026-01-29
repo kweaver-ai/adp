@@ -48,7 +48,6 @@ func (dvr *dataViewRowColumnRuleAccess) GetRulesByViewID(ctx context.Context, vi
 	span.SetAttributes(attr.Key("view_id").String(viewID))
 	var queryValues url.Values = make(url.Values)
 	queryValues.Add("view_id", viewID)
-	queryValues.Add("is_inner_request", "true")
 
 	o11y.AddAttrs4InternalHttp(span, o11y.TraceAttrs{
 		HttpUrl:         httpUrl,
