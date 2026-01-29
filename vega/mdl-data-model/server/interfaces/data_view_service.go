@@ -19,6 +19,7 @@ const (
 	FieldProperty_IgnoreAbove = "ignore_above"
 	FieldProperty_Analyzer    = "analyzer"
 	FieldProperty_Fields      = "fields"
+	FieldProperty_Dimension   = "dimension"
 
 	ViewType_Atomic = "atomic"
 	ViewType_Custom = "custom"
