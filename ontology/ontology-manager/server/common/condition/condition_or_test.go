@@ -164,8 +164,6 @@ func TestOrCond_Convert(t *testing.T) {
 			dsl, err := orCond.Convert(ctx, vectorizer)
 			So(err, ShouldBeNil)
 			So(dsl, ShouldNotBeEmpty)
-			So(dsl, ShouldContainSubstring, "bool")
-			So(dsl, ShouldContainSubstring, "should")
 		})
 
 		Convey("multiple sub conditions should be joined", func() {

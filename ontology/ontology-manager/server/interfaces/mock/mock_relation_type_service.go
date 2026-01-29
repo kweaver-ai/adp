@@ -69,18 +69,18 @@ func (mr *MockRelationTypeServiceMockRecorder) CheckRelationTypeExistByName(ctx,
 }
 
 // CreateRelationTypes mocks base method.
-func (m *MockRelationTypeService) CreateRelationTypes(ctx context.Context, tx *sql.Tx, relationTypes []*interfaces.RelationType, mode string) ([]string, error) {
+func (m *MockRelationTypeService) CreateRelationTypes(ctx context.Context, tx *sql.Tx, relationTypes []*interfaces.RelationType, mode string, validateDependency bool) ([]string, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "CreateRelationTypes", ctx, tx, relationTypes, mode)
+	ret := m.ctrl.Call(m, "CreateRelationTypes", ctx, tx, relationTypes, mode, validateDependency)
 	ret0, _ := ret[0].([]string)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // CreateRelationTypes indicates an expected call of CreateRelationTypes.
-func (mr *MockRelationTypeServiceMockRecorder) CreateRelationTypes(ctx, tx, relationTypes, mode interface{}) *gomock.Call {
+func (mr *MockRelationTypeServiceMockRecorder) CreateRelationTypes(ctx, tx, relationTypes, mode, validateDependency interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateRelationTypes", reflect.TypeOf((*MockRelationTypeService)(nil).CreateRelationTypes), ctx, tx, relationTypes, mode)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateRelationTypes", reflect.TypeOf((*MockRelationTypeService)(nil).CreateRelationTypes), ctx, tx, relationTypes, mode, validateDependency)
 }
 
 // DeleteRelationTypesByIDs mocks base method.

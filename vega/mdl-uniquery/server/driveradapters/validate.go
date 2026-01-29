@@ -578,7 +578,8 @@ func validateFilters(ctx context.Context, filters []interfaces.Filter) error {
 		}
 
 		// 当 operation 是 in 时，value 为任意基本类型的数组，且长度大于等于1；
-		if filter.Operation == interfaces.OPERATION_IN {
+		switch filter.Operation {
+		case interfaces.OPERATION_IN:
 			_, ok := filter.Value.([]interface{})
 			if !ok {
 				return rest.NewHTTPError(ctx, http.StatusBadRequest, uerrors.Uniquery_InvalidParameter_FilterValue).
@@ -589,7 +590,7 @@ func validateFilters(ctx context.Context, filters []interfaces.Filter) error {
 				return rest.NewHTTPError(ctx, http.StatusBadRequest, uerrors.Uniquery_InvalidParameter_FilterValue).
 					WithErrorDetails("When Filter Operation is in, The Value should contains at least 1 value")
 			}
-		} else if filter.Operation == cond.OperationRange {
+		case cond.OperationRange:
 			// 当 operation 是 range 时，value 是个由范围的下边界和上边界组成的长度为 2 的数值型数组
 			v, ok := filter.Value.([]interface{})
 			if !ok {
@@ -601,7 +602,7 @@ func validateFilters(ctx context.Context, filters []interfaces.Filter) error {
 				return rest.NewHTTPError(ctx, http.StatusBadRequest, uerrors.Uniquery_InvalidParameter_FilterValue).
 					WithErrorDetails("When Filter Operation is range, The Value must contains 2 value")
 			}
-		} else if filter.Operation == cond.OperationOutRange {
+		case cond.OperationOutRange:
 			// 当 operation 是 out_range 时，value 是个长度为 2 的数值类型的数组，查询的数据范围为 (-inf, value[0]) || [value[1], +inf)。
 			v, ok := filter.Value.([]interface{})
 			if !ok {
@@ -613,7 +614,7 @@ func validateFilters(ctx context.Context, filters []interfaces.Filter) error {
 				return rest.NewHTTPError(ctx, http.StatusBadRequest, uerrors.Uniquery_InvalidParameter_FilterValue).
 					WithErrorDetails("When Filter Operation is out_range, The Value must contains 2 value")
 			}
-		} else {
+		default:
 			// 当 operation 是 = 或 != 时，value 为任意基本类型的值
 			_, ok := filter.Value.([]interface{})
 			if ok {

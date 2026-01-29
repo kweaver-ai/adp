@@ -428,6 +428,129 @@ func (oma *ontologyManagerAccess) GetRelationType(ctx context.Context, knID stri
 	return response.RelationTypes[0], true, nil
 }
 
+func (oma *ontologyManagerAccess) ListRelationTypes(ctx context.Context, knID string,
+	branch string, query interfaces.RelationTypesQuery) ([]interfaces.RelationType, error) {
+
+	httpUrl := fmt.Sprintf("%s/%s/relation-types?branch=%s&limit=-1", oma.ontologyManagerUrl, knID, branch)
+
+	// 支持多个对象类型ID查询
+	if len(query.SourceObjectTypeIDs) > 0 {
+		for _, otID := range query.SourceObjectTypeIDs {
+			httpUrl += fmt.Sprintf("&source_object_type_id=%s", otID)
+		}
+	}
+
+	if len(query.TargetObjectTypeIDs) > 0 {
+		for _, otID := range query.TargetObjectTypeIDs {
+			httpUrl += fmt.Sprintf("&target_object_type_id=%s", otID)
+		}
+	}
+
+	ctx, span := ar_trace.Tracer.Start(ctx, "请求 ontology-manager 获取关系类列表", trace.WithSpanKind(trace.SpanKindClient))
+	o11y.AddAttrs4InternalHttp(span, o11y.TraceAttrs{
+		HttpUrl:         httpUrl,
+		HttpMethod:      http.MethodGet,
+		HttpContentType: rest.ContentTypeJson,
+	})
+	defer span.End()
+
+	var (
+		respCode int
+		result   []byte
+		err      error
+	)
+
+	accountInfo := interfaces.AccountInfo{}
+	if ctx.Value(interfaces.ACCOUNT_INFO_KEY) != nil {
+		accountInfo = ctx.Value(interfaces.ACCOUNT_INFO_KEY).(interfaces.AccountInfo)
+	}
+
+	headers := map[string]string{
+		interfaces.CONTENT_TYPE_NAME:        interfaces.CONTENT_TYPE_JSON,
+		interfaces.HTTP_HEADER_ACCOUNT_ID:   accountInfo.ID,
+		interfaces.HTTP_HEADER_ACCOUNT_TYPE: accountInfo.Type,
+	}
+
+	respCode, result, err = oma.httpClient.GetNoUnmarshal(ctx, httpUrl, nil, headers)
+	logger.Debugf("get [%s] with headers[%v] finished,response code is [%d],  error is [%v]",
+		httpUrl, headers, respCode, err)
+
+	if err != nil {
+		logger.Errorf("get request method failed: %v", err)
+		o11y.AddHttpAttrs4Error(span, respCode, "InternalError", "Http Get Failed")
+		o11y.Error(ctx, fmt.Sprintf("List relation types request failed: %v", err))
+		return nil, fmt.Errorf("get request method failed: %v", err)
+	}
+
+	if respCode != http.StatusOK {
+		logger.Errorf("list relation types failed: %v", result)
+
+		var baseError rest.BaseError
+		if err = sonic.Unmarshal(result, &baseError); err != nil {
+			logger.Errorf("unmalshal BaseError failed: %v\n", err)
+			o11y.AddHttpAttrs4Error(span, respCode, "InternalError", "Unmalshal BaseError failed")
+			o11y.Error(ctx, fmt.Sprintf("Unmalshal BaseError failed: %v", err))
+			return nil, err
+		}
+
+		httpErr := &rest.HTTPError{HTTPCode: respCode, BaseError: baseError}
+		o11y.AddHttpAttrs4Error(span, respCode, "InternalError", "Http status is not 200")
+		o11y.Error(ctx, fmt.Sprintf("List relation types failed: %v", httpErr))
+		return nil, fmt.Errorf("list relation types failed: %v", httpErr.Error())
+	}
+
+	if result == nil {
+		o11y.AddHttpAttrs4Ok(span, respCode)
+		o11y.Warn(ctx, "Http response body is null")
+		return []interfaces.RelationType{}, nil
+	}
+
+	var response struct {
+		RelationTypes []interfaces.RelationType `json:"entries"`
+	}
+	if err = sonic.Unmarshal(result, &response); err != nil {
+		logger.Errorf("unmalshal relation types info failed: %v\n", err)
+		o11y.AddHttpAttrs4Error(span, respCode, "InternalError", "Unmalshal relation types info failed")
+		o11y.Error(ctx, fmt.Sprintf("Unmalshal relation types info failed: %v", err))
+		return nil, err
+	}
+
+	if len(response.RelationTypes) == 0 {
+		return []interfaces.RelationType{}, nil
+	}
+
+	// 转换每个关系类的MappingRules
+	for i := range response.RelationTypes {
+		switch response.RelationTypes[i].Type {
+		case interfaces.RELATION_TYPE_DIRECT:
+			var directMapping []interfaces.Mapping
+			jsonData, err := json.Marshal(response.RelationTypes[i].MappingRules)
+			if err != nil {
+				return nil, fmt.Errorf("derived Config Marshal error: %s", err.Error())
+			}
+			err = json.Unmarshal(jsonData, &directMapping)
+			if err != nil {
+				return nil, fmt.Errorf("derived Config Unmarshal error: %s", err.Error())
+			}
+			response.RelationTypes[i].MappingRules = directMapping
+		case interfaces.RELATION_TYPE_DATA_VIEW:
+			var inDirectMapping interfaces.InDirectMapping
+			jsonData, err := json.Marshal(response.RelationTypes[i].MappingRules)
+			if err != nil {
+				return nil, fmt.Errorf("derived Config Marshal error: %s", err.Error())
+			}
+			err = json.Unmarshal(jsonData, &inDirectMapping)
+			if err != nil {
+				return nil, fmt.Errorf("derived Config Unmarshal error: %s", err.Error())
+			}
+			response.RelationTypes[i].MappingRules = inDirectMapping
+		}
+	}
+
+	o11y.AddHttpAttrs4Ok(span, respCode)
+	return response.RelationTypes, nil
+}
+
 func (oma *ontologyManagerAccess) GetActionType(ctx context.Context, knID string,
 	branch string, atID string) (interfaces.ActionType, bool, error) {
 

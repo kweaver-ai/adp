@@ -1414,8 +1414,6 @@ components:
         - field
         - operation
         - value
-        - limit_key
-        - limit_value
       type: object
       properties:
         field:
@@ -1434,14 +1432,17 @@ components:
         limit_key:
           description:
             "执行径向搜索时使用的过滤和评分行为, k:返回最相似的limit_value个结果；max_distance:返回距\
-            离小于等于limit_value的结果；min_score：返回相似度分数大于等于limit_value的结果"
+            离小于等于limit_value的结果；min_score：返回相似度分数大于等于limit_value的结果。默认值为k"
           enum:
             - k
             - max_distance
             - min_score
           type: string
+          default: k
         limit_value:
-          description: 执行径向搜索使用的值
+          description: "执行径向搜索使用的值。默认值为100"
+          type: number
+          default: 100
         sub_conditions:
           description: knn下的子查询
           type: array

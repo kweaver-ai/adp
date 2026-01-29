@@ -21,16 +21,11 @@ func NewMatchCond(ctx context.Context, cfg *CondCfg, fieldScope uint8, fieldsMap
 	if name == AllField {
 		// * 只针对text字段和配了全文索引的属性做全文检索
 		for _, fieldInfo := range fieldsMap {
-			if fieldInfo.Type == dtype.DATATYPE_TEXT {
-				// text字段直接拼
-				fields = append(fields, name)
-			} else {
-				if fieldInfo.Type == dtype.DATATYPE_STRING &&
-					fieldInfo.IndexConfig != nil && fieldInfo.IndexConfig.FulltextConfig.Enabled {
-					// 配置了全文索引的属性,可以做match查询,否则报错,不能进行match查询
-					// string 类型做了fulltext, 则match用 xxx.text 进行过滤
-					fields = append(fields, name+"."+dtype.TEXT_SUFFIX)
-				}
+			fields = append(fields, fieldInfo.Name)
+			// 如果是string类型且配置了全文索引，则字段名为 fieldInfo.Name+"."+dtype.TEXT_SUFFIX
+			if fieldInfo.Type == dtype.DATATYPE_STRING &&
+				fieldInfo.IndexConfig != nil && fieldInfo.IndexConfig.FulltextConfig.Enabled {
+				fields = append(fields, fieldInfo.Name+"."+dtype.TEXT_SUFFIX)
 			}
 		}
 	} else {

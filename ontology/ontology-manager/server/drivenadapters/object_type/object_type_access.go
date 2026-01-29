@@ -967,7 +967,7 @@ func (ota *objectTypeAccess) UpdateObjectType(ctx context.Context, tx *sql.Tx, o
 	return nil
 }
 
-func (ota *objectTypeAccess) UpdateDataProperties(ctx context.Context, objectType *interfaces.ObjectType) error {
+func (ota *objectTypeAccess) UpdateDataProperties(ctx context.Context, tx *sql.Tx, objectType *interfaces.ObjectType) error {
 	ctx, span := ar_trace.Tracer.Start(ctx, "UpdateDataProperties", trace.WithSpanKind(trace.SpanKindClient))
 	defer span.End()
 
@@ -1004,7 +1004,7 @@ func (ota *objectTypeAccess) UpdateDataProperties(ctx context.Context, objectTyp
 	// 记录处理的 sql 字符串
 	o11y.Info(ctx, fmt.Sprintf("修改对象类的 sql 语句: %s", sqlStr))
 
-	ret, err := ota.db.Exec(sqlStr, vals...)
+	ret, err := tx.Exec(sqlStr, vals...)
 	if err != nil {
 		logger.Errorf("update object type error: %v\n", err)
 		o11y.Error(ctx, fmt.Sprintf("Update data error: %v ", err))

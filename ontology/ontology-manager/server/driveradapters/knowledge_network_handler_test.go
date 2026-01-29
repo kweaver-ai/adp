@@ -59,7 +59,7 @@ func Test_KnowledgeNetworkRestHandler_CreateKN(t *testing.T) {
 		}
 
 		Convey("Success CreateKN \n", func() {
-			kns.EXPECT().CreateKN(gomock.Any(), gomock.Any(), gomock.Any()).Return("kn1", nil)
+			kns.EXPECT().CreateKN(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return("kn1", nil)
 
 			reqParamByte, _ := sonic.Marshal(kn)
 			req := httptest.NewRequest(http.MethodPost, url, bytes.NewReader(reqParamByte))
@@ -112,7 +112,7 @@ func Test_KnowledgeNetworkRestHandler_CreateKN(t *testing.T) {
 				},
 			}
 
-			kns.EXPECT().CreateKN(gomock.Any(), gomock.Any(), gomock.Any()).Return("", err)
+			kns.EXPECT().CreateKN(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return("", err)
 
 			reqParamByte, _ := sonic.Marshal(kn)
 			req := httptest.NewRequest(http.MethodPost, url, bytes.NewReader(reqParamByte))
