@@ -10,6 +10,7 @@ import (
 	"os"
 	"reflect"
 	"regexp"
+	"sort"
 	"strconv"
 	"strings"
 	"sync"
@@ -2980,6 +2981,34 @@ func (m *mgnt) ListTaskInstance(ctx context.Context, dagID, dagInstanceID string
 		}
 
 	}
+
+	// 去重：对于相同taskId的记录，只保留最新的（LastModifiedAt最大的）
+	// 这解决了并行分支执行时可能创建重复TaskInstance的问题
+	taskMap := make(map[string]*entity.TaskInstance)
+	for i := range taskInsList {
+		task := taskInsList[i]
+		if existing, ok := taskMap[task.TaskID]; ok {
+			// 如果已存在相同taskId的记录，比较LastModifiedAt，保留最新的
+			if task.LastModifiedAt > existing.LastModifiedAt {
+				taskMap[task.TaskID] = task
+			}
+		} else {
+			taskMap[task.TaskID] = task
+		}
+	}
+
+	// 将去重后的结果转回数组
+	deduplicatedTasks := make([]*entity.TaskInstance, 0, len(taskMap))
+	for _, task := range taskMap {
+		deduplicatedTasks = append(deduplicatedTasks, task)
+	}
+
+	// 重新排序，保持原有的时间顺序
+	sort.SliceStable(deduplicatedTasks, func(i, j int) bool {
+		return deduplicatedTasks[i].LastModifiedAt < deduplicatedTasks[j].LastModifiedAt
+	})
+
+	taskInsList = deduplicatedTasks
 
 	for _, taskIns := range taskInsList {
 		_taskIns := taskIns
