@@ -4,16 +4,17 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"net/http"
+	"sync"
+	"vega-gateway-pro/common"
+	"vega-gateway-pro/interfaces"
+
 	"github.com/bytedance/sonic"
 	"github.com/kweaver-ai/TelemetrySDK-Go/exporter/v2/ar_trace"
 	"github.com/kweaver-ai/kweaver-go-lib/logger"
 	o11y "github.com/kweaver-ai/kweaver-go-lib/observability"
 	"github.com/kweaver-ai/kweaver-go-lib/rest"
 	"go.opentelemetry.io/otel/trace"
-	"net/http"
-	"sync"
-	"vega-gateway-pro/common"
-	"vega-gateway-pro/interfaces"
 )
 
 var (
@@ -32,7 +33,7 @@ func NewVegaCalculateAccess(appSetting *common.AppSetting) interfaces.VegaCalcul
 		vcAccess = &vegaCalculateAccess{
 			appSetting:                  appSetting,
 			vegaCalculateCoordinatorUrl: appSetting.VegaCalculateCoordinatorUrl,
-			httpClient:                  common.NewHTTPClient(),
+			httpClient:                  common.NewHTTPClientWithOptions(rest.HttpClientOptions{TimeOut: 0}),
 		}
 	})
 
