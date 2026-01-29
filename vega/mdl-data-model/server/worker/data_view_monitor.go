@@ -1013,6 +1013,7 @@ func generateNativeFieldFeatures(fieldType string, metaField *interfaces.MetaFie
 
 	// 3. 向量特征
 	if fieldType == dtype.DataType_Vector {
+		dimension, _ := common.GetWithDefault(mappingConfig, interfaces.FieldProperty_Dimension, 768)
 		features = append(features, interfaces.FieldFeature{
 			FeatureName: fmt.Sprintf("autoVector_%s", metaField.FieldName),
 			FeatureType: interfaces.FieldFeatureType_Vector,
@@ -1020,7 +1021,7 @@ func generateNativeFieldFeatures(fieldType string, metaField *interfaces.MetaFie
 			RefField:    metaField.FieldName,
 			IsDefault:   false,
 			IsNative:    true,
-			Config:      map[string]any{},
+			Config:      map[string]any{interfaces.FieldProperty_Dimension: dimension},
 		})
 	}
 
@@ -1055,6 +1056,7 @@ func generateNativeFieldFeatures(fieldType string, metaField *interfaces.MetaFie
 						Config:      map[string]any{interfaces.FieldProperty_Analyzer: analyzer},
 					}
 				case dtype.IndexBase_DataType_KNNVector:
+					dimension, _ := common.GetWithDefault(subFieldMap, interfaces.FieldProperty_Dimension, 768)
 					fture = interfaces.FieldFeature{
 						FeatureName: fmt.Sprintf("autoVector_%s.%s", metaField.FieldName, subFieldName),
 						FeatureType: interfaces.FieldFeatureType_Vector,
@@ -1062,7 +1064,7 @@ func generateNativeFieldFeatures(fieldType string, metaField *interfaces.MetaFie
 						RefField:    fmt.Sprintf("%s.%s", metaField.FieldName, subFieldName),
 						IsDefault:   false,
 						IsNative:    true,
-						Config:      map[string]any{},
+						Config:      map[string]any{interfaces.FieldProperty_Dimension: dimension},
 					}
 				}
 			}
