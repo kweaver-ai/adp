@@ -6,4 +6,5 @@ import "context"
 type KnowledgeNetworkService interface {
 	SearchSubgraph(ctx context.Context, query *SubGraphQueryBaseOnSource) (ObjectSubGraph, error)
 	SearchSubgraphByTypePath(ctx context.Context, query *SubGraphQueryBaseOnTypePath) (PathsEntries, error)
+	SearchSubgraphByObjects(ctx context.Context, query *SubGraphQueryBaseOnObjects) (ObjectSubGraph, error)
 }

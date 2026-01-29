@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	"ontology-query/common"
 	dtype "ontology-query/interfaces/data_type"
 )
 
@@ -37,8 +38,9 @@ func NewNotLikeCond(ctx context.Context, cfg *CondCfg, fieldsMap map[string]*Dat
 }
 
 func (cond *NotLikeCond) Convert(ctx context.Context, vectorizer func(ctx context.Context, property *DataProperty, word string) ([]VectorResp, error)) (string, error) {
-	valPattern := fmt.Sprintf(".*%s.*", cond.mCfg.Value)
-	v := fmt.Sprintf("%q", valPattern)
+	// 替换 like 里的通配符
+	v := common.ReplaceLikeWildcards(cond.mValue)
+	v = fmt.Sprintf("%q", v)
 
 	dslStr := fmt.Sprintf(`
 					{

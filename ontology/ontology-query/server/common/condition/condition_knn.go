@@ -18,9 +18,9 @@ func NewKnnCond(ctx context.Context, cfg *CondCfg, fieldScope uint8, fieldsMap m
 	// 校验名称是否存在
 	name := getFilterFieldName(cfg.Name, fieldsMap, true)
 	var field string
-	// 如果指定*查询，则把 * 换成 _vector_*
+	// 如果指定*查询,报错，不支持，因为字段太多，向量耗时太长
 	if name == AllField {
-		field = "_vector_*"
+		return nil, fmt.Errorf(`the knn operation does not support the [*] query, please specify the field name explicitly`)
 	} else {
 		// 向量字段做knn查询时需要把向量字段换成 "_vector_"+property.Name
 		// 字段是否做了knn

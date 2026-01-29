@@ -2,7 +2,11 @@ package interfaces
 
 import (
 	"context"
+	"encoding/json"
 	cond "ontology-query/common/condition"
+
+	"github.com/bytedance/sonic"
+	"github.com/kweaver-ai/kweaver-go-lib/logger"
 )
 
 type ViewQuery struct {
@@ -19,8 +23,31 @@ type SortParams struct {
 	Direction string `json:"direction"`
 }
 
+// SearchAfterArray 自定义类型，用于保持大整数精度
+type SearchAfterArray []any
+
+// UnmarshalJSON 自定义反序列化方法，确保大整数不会丢失精度
+func (s *SearchAfterArray) UnmarshalJSON(data []byte) error {
+	var result []any
+
+	// 使用 UseInt64 选项
+	cfg := sonic.Config{UseInt64: true}.Froze()
+	if err := cfg.Unmarshal(data, &result); err != nil {
+		logger.Errorf("Unmarshal Search After failed, %s", err)
+		return err
+	}
+
+	*s = result
+	return nil
+}
+
+// MarshalJSON 自定义序列化方法，确保正确输出
+func (s SearchAfterArray) MarshalJSON() ([]byte, error) {
+	return json.Marshal([]any(s))
+}
+
 type SearchAfterParams struct {
-	SearchAfter []any `json:"search_after"`
+	SearchAfter SearchAfterArray `json:"search_after"`
 	// PitID        string `json:"pit_id"`
 	// PitKeepAlive string `json:"pit_keep_alive"`
 }

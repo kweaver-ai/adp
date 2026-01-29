@@ -357,3 +357,36 @@ func validateObjectPropertyValueQuery(ctx context.Context, query *interfaces.Obj
 
 	return nil
 }
+
+// 基于一组对象实例组织关系子图的参数校验
+func validateSubgraphQueryByObjectsRequest(ctx context.Context, query *interfaces.SubGraphQueryBaseOnObjects) error {
+
+	// entries 数组非空
+	if len(query.Entries) == 0 {
+		return rest.NewHTTPError(ctx, http.StatusBadRequest, oerrors.OntologyQuery_ObjectType_InvalidParameter).
+			WithErrorDetails("对象实例数组不能为空")
+	}
+
+	// entries 数量限制（最大1000）
+	if len(query.Entries) > 1000 {
+		return rest.NewHTTPError(ctx, http.StatusBadRequest, oerrors.OntologyQuery_ObjectType_InvalidParameter).
+			WithErrorDetails("对象实例数组长度不能超过1000")
+	}
+
+	// 验证每个 entry
+	for i, entry := range query.Entries {
+		// object_type_id 非空
+		if entry.ObjectTypeID == "" {
+			return rest.NewHTTPError(ctx, http.StatusBadRequest, oerrors.OntologyQuery_ObjectType_InvalidParameter).
+				WithErrorDetails(fmt.Sprintf("第%d个对象的对象类型ID不能为空", i+1))
+		}
+
+		// _instance_identity 非空
+		if len(entry.InstanceIdentity) == 0 {
+			return rest.NewHTTPError(ctx, http.StatusBadRequest, oerrors.OntologyQuery_ObjectType_InvalidParameter).
+				WithErrorDetails(fmt.Sprintf("第%d个对象的唯一标识不能为空", i+1))
+		}
+	}
+
+	return nil
+}

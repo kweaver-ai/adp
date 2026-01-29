@@ -38,6 +38,20 @@ type SubGraphQueryBaseOnTypePath struct {
 	CommonQueryParameters
 }
 
+// 基于一组对象实例组织关系子图的请求体
+type SubGraphQueryBaseOnObjects struct {
+	Entries []InputObjectInstance `json:"entries"`
+	KNID    string                `json:"-"`
+	Branch  string                `json:"-"`
+	CommonQueryParameters
+}
+
+// 输入的对象实例
+type InputObjectInstance struct {
+	ObjectTypeID     string         `json:"object_type_id"`
+	InstanceIdentity map[string]any `json:"_instance_identity"`
+}
+
 type QueryRelationTypePaths struct {
 	TypePaths []QueryRelationTypePath `json:"relation_type_paths"`
 }
@@ -72,6 +86,7 @@ type BatchQueryState struct {
 // 对象子图的返回体
 type ObjectSubGraph struct {
 	Objects           map[string]ObjectInfoInSubgraph `json:"objects"`
+	IsolatedObjects   map[string]ObjectInfoInSubgraph `json:"isolated_objects,omitempty"`
 	RelationPaths     []RelationPath                  `json:"relation_paths"`
 	TotalCount        int64                           `json:"total_count,omitempty"`
 	SearchAfter       []any                           `json:"search_after,omitempty"`

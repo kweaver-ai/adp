@@ -235,6 +235,7 @@ func (cs *ConceptSyncer) handleObjectTypes(ctx context.Context, knID string, bra
 		} else if otInDB.UpdateTime != otInOS.UpdateTime {
 			add_list = append(add_list, otInDB)
 		}
+		// todo: DB里没有，OS里有的，需要删除OS里的数据？
 	}
 	if len(add_list) > 0 {
 		logger.Debugf("Need add (%d) object types to OpenSearch", len(add_list))

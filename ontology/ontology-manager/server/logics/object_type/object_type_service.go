@@ -1329,10 +1329,9 @@ func (ots *objectTypeService) processObjectTypeDetails(ctx context.Context, obje
 								objectType.OTID, logicProp.Name, objectType.DataSource.ID))
 						} else {
 							objectType.LogicProperties[j].DataSource.Name = model.ModelName
+							// 模型不为空时才对参数填充comment
+							processMetricPropertyParamComment(ctx, logicProp, model, objectType, j)
 						}
-
-						// 对参数填充comment
-						processMetricPropertyParamComment(ctx, logicProp, model, objectType, j)
 					}
 				case interfaces.LOGIC_PROPERTY_TYPE_OPERATOR:
 					//todo: 算子的名称,前端翻译
@@ -1351,24 +1350,31 @@ func processMetricPropertyParamComment(ctx context.Context, logicProp *interface
 	// 对参数填充comment
 	for k, param := range logicProp.Parameters {
 		// 存在则给，否则不给，不报错，记录warn日志
-		if field, exist := model.FieldsMap[param.Name]; exist {
-			objectType.LogicProperties[j].Parameters[k].Comment = field.Comment
-		} else if param.Name == "instant" {
+		if model != nil && model.FieldsMap != nil {
+			if field, exist := model.FieldsMap[param.Name]; exist {
+				objectType.LogicProperties[j].Parameters[k].Comment = field.Comment
+				continue
+			} else {
+				// 字段不存在，记录warn日志
+				o11y.Warn(ctx, fmt.Sprintf("Object type [%s]'s logic property [%s]'s parameter[%s] not found in metric model[%s]",
+					objectType.OTID, logicProp.Name, param.Name, objectType.DataSource.ID))
+			}
+		}
+
+		// 处理特殊参数或记录warn日志
+		switch param.Name {
+		case "instant":
 			comment := "是否是即时查询。可选，默认为 false。当 instant = true 时，表示即时查询；当 instant = false 时，表示范围查询。"
 			objectType.LogicProperties[j].Parameters[k].Comment = &comment
-		} else if param.Name == "start" {
+		case "start":
 			comment := "指标查询的开始时间。 start=<unix_timestamp>，单位到毫秒。 例如: 1646360670123"
 			objectType.LogicProperties[j].Parameters[k].Comment = &comment
-		} else if param.Name == "end" {
+		case "end":
 			comment := "指标查询的结束时间。end=<unix_timestamp>，单位到毫秒。例如: 1646471470123"
 			objectType.LogicProperties[j].Parameters[k].Comment = &comment
-		} else if param.Name == "step" {
+		case "step":
 			comment := "范围查询的步长。当 instant 为 false 时, 必须。step=<time_durations>，用一个数字，后面跟时间单位来定义。"
 			objectType.LogicProperties[j].Parameters[k].Comment = &comment
-		} else {
-			// 字段不存在，记录warn日志
-			o11y.Warn(ctx, fmt.Sprintf("Object type [%s]'s logic property [%s]'s parameter[%s] not found in metric model[%s]",
-				objectType.OTID, logicProp.Name, param.Name, objectType.DataSource.ID))
 		}
 	}
 }
@@ -1381,6 +1387,7 @@ func (ots *objectTypeService) GetTotal(ctx context.Context, dsl map[string]any) 
 	delete(dsl, "from")
 	delete(dsl, "size")
 	delete(dsl, "sort")
+	delete(dsl, "track_scores")
 	totalBytes, err := ots.osa.Count(ctx, interfaces.KN_CONCEPT_INDEX_NAME, dsl)
 	if err != nil {
 		span.SetStatus(codes.Error, "Search total documents count failed")
@@ -1531,6 +1538,7 @@ func (ots *objectTypeService) processConditionOperations(objectType *interfaces.
 		case "text":
 			if dataView.QueryType == interfaces.VIEW_QueryType_DSL {
 				ops = interfaces.DSL_TEXT_OPS // dsl的text有match
+				ops = append(ops, interfaces.DSL_KEYWORD_OPS...)
 			} else {
 				ops = interfaces.SQL_STRING_OPS
 			}
@@ -1543,22 +1551,24 @@ func (ots *objectTypeService) processConditionOperations(objectType *interfaces.
 	} else {
 		opMap := map[string]string{}
 		// 先看本类型，text 类型支持 match,其余的字符串类型可支持 == != in not_in
-		if prop.Type == "text" {
-			opMap[cond.OperationMatch] = cond.OperationMatch
-			opMap[cond.OperationMultiMatch] = cond.OperationMultiMatch
-		} else {
-			opMap[cond.OperationEq] = cond.OperationEq
-			opMap[cond.OperationNotEq] = cond.OperationNotEq
-			opMap[cond.OperationIn] = cond.OperationIn
-			opMap[cond.OperationNotIn] = cond.OperationNotIn
+		switch prop.Type {
+		case "keyword", "varchar", "string":
+			opMap = interfaces.DSL_KEYWORD_OPS_MAP
+		case "text":
+			opMap = interfaces.DSL_KEYWORD_OPS_MAP
+			for k, v := range interfaces.DSL_TEXT_OPS_MAP {
+				opMap[k] = v
+			}
+		case "vector":
+			opMap[cond.OperationKNN] = cond.OperationKNN
 		}
 
-		// 配置了keyword索引,则可以做 == != in not_in的操作
+		// 配置了keyword索引
 		if prop.IndexConfig != nil && prop.IndexConfig.KeywordConfig.Enabled {
-			opMap[cond.OperationEq] = cond.OperationEq
-			opMap[cond.OperationNotEq] = cond.OperationNotEq
-			opMap[cond.OperationIn] = cond.OperationIn
-			opMap[cond.OperationNotIn] = cond.OperationNotIn
+			// 把 keyword 支持的操作符添加
+			for k, v := range interfaces.DSL_KEYWORD_OPS_MAP {
+				opMap[k] = v
+			}
 		}
 		// 配置了full text索引,则可以做  match 的操作
 		if prop.IndexConfig != nil && prop.IndexConfig.FulltextConfig.Enabled {

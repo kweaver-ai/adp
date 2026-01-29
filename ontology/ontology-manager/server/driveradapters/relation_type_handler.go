@@ -543,8 +543,9 @@ func (r *restHandler) ListRelationTypes(c *gin.Context, visitor rest.Visitor) {
 	namePattern := c.Query("name_pattern")
 	tag := c.Query("tag")
 	groupID := c.Query("group_id")
-	sourceObjectTypeID := c.Query("source_object_type_id")
-	targetObjectTypeID := c.Query("target_object_type_id")
+	sourceObjectTypeIDs := c.QueryArray("source_object_type_id")
+	targetObjectTypeIDs := c.QueryArray("target_object_type_id")
+
 	offset := c.DefaultQuery("offset", interfaces.DEFAULT_OFFEST)
 	limit := c.DefaultQuery("limit", interfaces.DEFAULT_LIMIT)
 	sort := c.DefaultQuery("sort", "update_time")
@@ -578,12 +579,14 @@ func (r *restHandler) ListRelationTypes(c *gin.Context, visitor rest.Visitor) {
 		GroupID:     groupID,
 	}
 
-	if sourceObjectTypeID != "" {
-		parameter.SourceObjectTypeIDs = []string{sourceObjectTypeID}
+	// 不为空时，赋值
+	if len(sourceObjectTypeIDs) > 0 {
+		parameter.SourceObjectTypeIDs = sourceObjectTypeIDs
 	}
-	if targetObjectTypeID != "" {
-		parameter.TargetObjectTypeIDs = []string{targetObjectTypeID}
+	if len(targetObjectTypeIDs) > 0 {
+		parameter.TargetObjectTypeIDs = targetObjectTypeIDs
 	}
+
 	parameter.Sort = pageParam.Sort
 	parameter.Direction = pageParam.Direction
 	parameter.Limit = pageParam.Limit
