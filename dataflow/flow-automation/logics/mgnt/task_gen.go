@@ -517,6 +517,10 @@ func buildStepMap(steps []entity.Step, stepMap map[string]*entity.Step) {
 			for _, branch := range step.Branches {
 				buildStepMap(branch.Steps, stepMap)
 			}
+		case common.ControlFlowParallel: // 并行分支节点
+			for _, branch := range step.Branches {
+				buildStepMap(branch.Steps, stepMap)
+			}
 		default:
 			stepMap[step.ID] = &step
 		}
