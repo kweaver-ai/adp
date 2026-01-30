@@ -22,7 +22,12 @@ public interface TableScanMapper extends MPJBaseMapper<TableScanEntity> {
     @Update("UPDATE  t_table_scan SET f_status=#{status},f_task_id=#{taskId},f_operation_time=NOW() WHERE f_id = #{id}")
     int updateScanStatusAndOperationTimeById(@Param("id") String id, @Param("taskId") String taskId, @Param("status") int status);
 
-    List<TableScanEntity> getTableListByDsId(String dsId, String keyword);
+    List<TableScanEntity> getTableListByDsId(@Param("dsId") String dsId,
+                                             @Param("keyword") String keyword,
+                                             @Param("offset") int offset,
+                                             @Param("limit") int limit,
+                                             @Param("sortOrder") String sortOrder,
+                                             @Param("direction") String direction);
 
     List<TableScanEntity> selectPage(
             @Param("includeIds") Set<String> includeIds,
@@ -41,7 +46,7 @@ public interface TableScanMapper extends MPJBaseMapper<TableScanEntity> {
     @Update("UPDATE t_table_scan SET f_operation_type=1, f_operation_time=#{operationTime} WHERE f_data_source_id = #{dataSourceId}")
     int deleteByDataSourceId(@Param("dataSourceId") String dataSourceId, @Param("operationTime") Date operationTime);
 
-    List<String> getTableListByDsIdsBatch(List<String> dsIds, String updateTime, String keyword);
+    List<TableScanEntity> getTableListByDsIdsBatch(List<String> dsIds, String updateTime, String keyword, int offset, int limit, String sortOrder, String direction);
 
     long selectCountByDsIdsBatch(List<String> dsIds, String updateTime, String keyword);
 
