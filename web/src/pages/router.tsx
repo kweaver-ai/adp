@@ -21,6 +21,7 @@ const loadAishuComponents = () => {
 };
 
 const ActionCreateAndEdit = lazy(() => import('./ActionCreateAndEdit'));
+const ActionDetail = lazy(() => import('./Action/Detail'));
 const AtomDataView = lazy(() => import('./AtomDataView'));
 const CustomDataView = lazy(() => import('./CustomDataView'));
 const CustomDataViewDetailContent = lazy(() => import('./CustomDataView/MainContent/DetailContent'));
@@ -111,6 +112,7 @@ const App = (props: AppProps) => {
               <Route exact path="/ontology/object/edit/:id" render={() => <ObjectCreateAndEdit />} />
               <Route exact path="/ontology/action/create" render={() => <ActionCreateAndEdit />} />
               <Route exact path="/ontology/action/edit/:id" render={() => <ActionCreateAndEdit />} />
+              <Route path="/ontology/action/detail/:knId/:atId" render={() => <ActionDetail />} />
               <Route exact path="/ontology/object/settting/:id" render={() => <ObjectIndexSetting />} />
               <Route exact path="/metric-model" render={() => <MetricModel />} />
               <Route exact path="/metric-model/create/:createType" render={() => <FormContainer />} />

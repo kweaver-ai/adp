@@ -311,8 +311,9 @@ const Action: FC<TProps> = ({ detail, isPermission }) => {
 
   /** 点击查看 */
   const clickView = (record: any) => {
-    actionTypeDataToView.current = record;
-    setDetailVisible(true);
+    // actionTypeDataToView.current = record;
+    // setDetailVisible(true);
+    history.push(`/ontology/action/detail/${knId}/${record.id}`);
   };
 
   /** 操作事件 */
