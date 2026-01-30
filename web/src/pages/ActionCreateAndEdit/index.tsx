@@ -11,6 +11,7 @@ import BasicInformation from './BasicInformation';
 import Header from './Header';
 import styles from './index.module.less';
 import Mapping from './Mapping';
+import RunStrategy from './RunStrategy';
 
 interface BasicValueType {
   id?: string;
@@ -45,8 +46,10 @@ const ActionCreateAndEdit: FC = () => {
     color: '#0e5fc5',
   } as any); // 基本信息的值
   const [mappingValue, setMappingValue] = useState({}); // 关系映射的值
+  const [scheduleValue, setScheduleValue] = useState({}); // 运行策略的值
   const [basicForm] = Form.useForm();
   const [mappingForm] = Form.useForm();
+  const [scheduleForm] = Form.useForm();
 
   useEffect(() => {
     // 编辑页面，发请求获取行动类的信息，用于填充到界面上
@@ -60,15 +63,18 @@ const ActionCreateAndEdit: FC = () => {
           'schedule.type': detail.schedule?.type || 'FIX_RATE',
           'schedule.FIX_RATE.expression': detail.schedule?.type === 'FIX_RATE' ? detail.schedule?.expression : undefined,
           'schedule.CRON.expression': detail.schedule?.type === 'CRON' ? detail.schedule?.expression : undefined,
+          scheduleEnabled: !!detail.schedule,
         });
 
         setBasicValue(detail);
         setMappingValue(detail);
+        setScheduleValue(detail);
 
         const formFields = Object.entries(detail).map(([key, val]) => ({ name: key, value: val }));
 
         basicForm.setFields(formFields);
-        mappingForm.setFields(formFields);
+        // mappingForm.setFields(formFields);
+        // scheduleForm.setFields(formFields);
         setConditionVisible(true);
       } catch (error: any) {
         if (error?.description) {
@@ -90,43 +96,62 @@ const ActionCreateAndEdit: FC = () => {
   const onPrev = () => setStepsCurrent(stepsCurrent - 1);
   /** 下一步 */
   const onNext = () => {
-    basicForm.validateFields().then((values) => {
-      setBasicValue(values);
-      setStepsCurrent(stepsCurrent + 1);
-    });
+    if (stepsCurrent === 0) {
+      basicForm.validateFields().then((values) => {
+        setBasicValue(values);
+        setStepsCurrent(stepsCurrent + 1);
+      });
+    } else if (stepsCurrent === 1) {
+      const { isValid } = (mappingRef.current as any)?.validate?.() || {};
+
+      if (isValid) {
+        setMappingValue(mappingForm.getFieldsValue());
+        setStepsCurrent(stepsCurrent + 1);
+      }
+    }
   };
 
   const onSubmit = async () => {
-    const { 'affect.object_type_id': affectObjectType, 'affect.comment': affectComment, condition } = basicValue;
-    const affect = affectObjectType || affectComment ? { object_type_id: affectObjectType, comment: affectComment } : undefined;
-    const step1Params = {
-      ...pick(basicValue, 'id', 'name', 'tags', 'comment', 'color', 'action_type', 'object_type_id'),
-      affect,
-      condition: condition?.field || condition?.operation ? condition : undefined,
-    };
-
-    const {
-      action_source,
-      parameters,
-      'schedule.type': scheduleType,
-      'schedule.FIX_RATE.expression': scheduleFixExpression,
-      'schedule.CRON.expression': scheduleCronExpression,
-    } = mappingForm.getFieldsValue();
-    const { box_id, tool_id, tool_name, mcp_id, type } = action_source || {};
-    let actionSource: any = undefined;
-    if (box_id) {
-      actionSource = { type, box_id, tool_id };
-    } else if (mcp_id) {
-      actionSource = { type, mcp_id, tool_name };
-    }
-    const expression = scheduleType === 'FIX_RATE' ? scheduleFixExpression : scheduleCronExpression;
-    const step2Params = {
-      action_source: actionSource,
-      parameters: parameters?.length ? parameters : undefined,
-      schedule: expression ? { type: scheduleType, expression } : undefined,
-    };
-
     try {
+      const { 'affect.object_type_id': affectObjectType, 'affect.comment': affectComment, condition } = basicValue;
+      const affect = affectObjectType || affectComment ? { object_type_id: affectObjectType, comment: affectComment } : undefined;
+      const step1Params = {
+        ...pick(basicValue, 'id', 'name', 'tags', 'comment', 'color', 'action_type', 'object_type_id'),
+        affect,
+        condition: condition?.field || condition?.operation ? condition : undefined,
+      };
+
+      const { action_source, parameters } = mappingValue as any;
+      const { box_id, tool_id, tool_name, mcp_id, type } = action_source || {};
+      let actionSource: any = undefined;
+      if (box_id) {
+        actionSource = { type, box_id, tool_id };
+      } else if (mcp_id) {
+        actionSource = { type, mcp_id, tool_name };
+      }
+
+      const scheduleValues = await scheduleForm.validateFields();
+      const {
+        scheduleEnabled,
+        'schedule.type': scheduleType,
+        'schedule.FIX_RATE.expression': scheduleFixExpression,
+        'schedule.CRON.expression': scheduleCronExpression,
+      } = scheduleValues;
+
+      let schedule = undefined;
+      if (scheduleEnabled) {
+        const expression = scheduleType === 'FIX_RATE' ? scheduleFixExpression : scheduleCronExpression;
+        if (expression) {
+          schedule = { type: scheduleType, expression };
+        }
+      }
+
+      const step2Params = {
+        action_source: actionSource,
+        parameters: parameters?.length ? parameters : undefined,
+        schedule,
+      };
+
       if (atId) {
         // 编辑
         await api.editActionType(knId, atId, omit({ ...step1Params, ...step2Params, branch: 'main' }, 'id'));
@@ -162,42 +187,45 @@ const ActionCreateAndEdit: FC = () => {
           objectTypeId={basicValue.object_type_id}
         />
       ),
+      nextText: intl.get('Global.next'),
+      nextClick: onNext,
+    },
+    2: {
+      content: <RunStrategy form={scheduleForm} value={scheduleValue} />,
       nextText: intl.get('Global.saveAndExit'),
-      nextClick: () => {
-        const { isValid } = (mappingRef.current as any)?.validate?.() || {};
-
-        if (isValid) {
-          onSubmit();
-        }
-      },
+      nextClick: onSubmit,
     },
   };
 
-  return (
-    <div className={styles['root']}>
-      {/* {isIntercept && <RouterPrompt modal={modal} isIntercept title="确认要退出此页面吗?" content="当前内容尚未保存的更改， 是否保存？" />} */}
-      <Header title={title} stepsCurrent={stepsCurrent} goBack={goBack} onPrev={onPrev} onNext={onNext} />
-      <div className={styles['content']}>{StepsContent?.[stepsCurrent]?.content}</div>
-      <div className={styles['footer']}>
-        {stepsCurrent === 0 ? (
-          <div />
-        ) : (
+  const renderActions = () => {
+    const currentStep = StepsContent?.[stepsCurrent];
+    return (
+      <div className="g-flex-align-center">
+        {stepsCurrent > 0 && (
           <Button
+            className="g-mr-2"
             onClick={() => {
-              setMappingValue(mappingForm.getFieldsValue());
+              if (stepsCurrent === 1) setMappingValue(mappingForm.getFieldsValue());
+              if (stepsCurrent === 2) setScheduleValue(scheduleForm.getFieldsValue());
               onPrev();
             }}
           >
             {intl.get('Global.prev')}
           </Button>
         )}
-        <div className="g-flex-align-center">
-          <Button className="g-mr-2" type="primary" onClick={StepsContent?.[stepsCurrent]?.nextClick}>
-            {StepsContent?.[stepsCurrent]?.nextText}
-          </Button>
-          <Button onClick={goBack}>{intl.get('Global.cancel')}</Button>
-        </div>
+        <Button className="g-mr-2" type="primary" onClick={StepsContent?.[stepsCurrent]?.nextClick}>
+          {StepsContent?.[stepsCurrent]?.nextText}
+        </Button>
+        <Button onClick={goBack}>{intl.get('Global.cancel')}</Button>
       </div>
+    );
+  };
+
+  return (
+    <div className={styles['root']}>
+      {/* {isIntercept && <RouterPrompt modal={modal} isIntercept title="确认要退出此页面吗?" content="当前内容尚未保存的更改， 是否保存？" />} */}
+      <Header title={title} stepsCurrent={stepsCurrent} goBack={goBack} onPrev={onPrev} onNext={onNext} actions={renderActions()} />
+      <div className={styles['content']}>{StepsContent?.[stepsCurrent]?.content}</div>
     </div>
   );
 };
