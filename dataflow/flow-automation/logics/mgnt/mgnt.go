@@ -25,6 +25,7 @@ import (
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/libs/go/telemetry/trace"
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/logics/perm"
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/pkg/actions"
+	pkgconfig "github.com/kweaver-ai/adp/autoflow/flow-automation/pkg/config"
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/pkg/dependency"
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/pkg/entity"
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/pkg/log"
@@ -281,6 +282,14 @@ type RunDagParams struct {
 // DocMsg doc msg
 type DocMsg = common.DocMsg
 
+// S3ValidationResult S3配置验证结果
+type S3ValidationResult struct {
+	BucketExists   bool   `json:"bucket_exists"`
+	PathAccessible bool   `json:"path_accessible"`
+	FileCount      int    `json:"file_count"`
+	Message        string `json:"message,omitempty"`
+}
+
 // MgntHandler mgnt interface method
 type MgntHandler interface { //nolint
 	CreateDag(ctx context.Context, param *CreateDagReq, userInfo *drivenadapters.UserInfo) (string, error)
@@ -342,6 +351,9 @@ type MgntHandler interface { //nolint
 	ListHistoryData(ctx context.Context, page, limit int64) (HistoryDataResp, error)
 	ListDagInstanceEvents(ctx context.Context, dagID, dagInsID string, offset, limit int, userInfo *drivenadapters.UserInfo) (
 		logs []*entity.DagInstanceEvent, dagIns *entity.DagInstance, total int, next int, err error)
+
+	// S3配置验证接口
+	ValidateS3Config(ctx context.Context, bucket, path string) (*S3ValidationResult, error)
 }
 
 var (
@@ -382,6 +394,7 @@ type mgnt struct {
 	memoryCache       cstore.LocalCache
 	pool              *threadPool.PoolManager
 	bizDomain         drivenadapters.BusinessDomain
+	s3Adapter         drivenadapters.S3Adapter // S3适配器
 }
 
 // NewMgnt mgnt instance
@@ -426,6 +439,18 @@ func NewMgnt() MgntHandler {
 				CleanUpInterval: 10 * time.Minute,
 			}),
 			bizDomain: drivenadapters.NewBusinessDomain(),
+		}
+
+		// Initialize S3 adapter if configured
+		if s3cfg, err := pkgconfig.LoadS3Config(); err == nil {
+			if s3Adapter, err := drivenadapters.NewS3Adapter(s3cfg); err == nil {
+				mIns.s3Adapter = s3Adapter
+				log.Info("[mgnt.NewMgnt] S3 adapter initialized successfully")
+			} else {
+				log.Warnf("[mgnt.NewMgnt] Failed to create S3 adapter: %v", err)
+			}
+		} else if pkgconfig.IsS3Configured() {
+			log.Warnf("[mgnt.NewMgnt] S3 is configured but failed to load config: %v", err)
 		}
 
 		perm.RegisterChecker(common.DagTypeDataFlow, &perm.DataFlowDagPermChecker{PermPolicy: perm.NewPermPolicy()})

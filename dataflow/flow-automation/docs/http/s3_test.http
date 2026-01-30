@@ -1,0 +1,61 @@
+### S3配置验证接口
+
+POST http://localhost:8080/api/automation/v1/s3/validate
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "bucket": "my-test-bucket",
+  "path": "data/"
+}
+
+###
+
+### 创建带S3数据源的DataFlow
+
+POST http://localhost:8080/api/automation/v1/dataflows
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "title": "S3数据处理流程",
+  "description": "从S3读取文件并处理",
+  "steps": [
+    {
+      "id": "0",
+      "title": "S3数据源",
+      "operator": "@s3/list-objects",
+      "dataSource": {
+        "operator": "@s3/list-objects",
+        "parameters": {
+          "sources": [
+            {
+              "bucket": "my-data-bucket",
+              "path": "input/"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "1",
+      "title": "处理数据",
+      "operator": "@internal/python",
+      "parameters": {
+        "code": "# 处理S3数据\nfor item in __0['items']:\n    print(f\"Processing {item['key']}\")"
+      }
+    }
+  ]
+}
+
+###
+
+### 运行S3数据流
+
+POST http://localhost:8080/api/automation/v1/dataflows/{{dataflow_id}}/run
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{}
+
+###
