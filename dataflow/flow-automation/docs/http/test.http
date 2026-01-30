@@ -371,7 +371,7 @@ X-Business-Domain: bd_public
 
 
 ### 执行dag
-POST {{host}}/api/automation/v1/run-instance/600759627105203644
+POST {{host}}/api/automation/v1/run-instance/604225964230079932
 Authorization: {{token}}
 Content-Type: application/json
 
@@ -385,7 +385,7 @@ Content-Type: application/json
 }
 
 ### 获取dag运行列表
-GET   {{host}}/api/automation/v1/dag/438647354506114492/results
+GET   {{host}}/api/automation/v1/dag/604225964230079932/results
 Authorization: {{token}}
 Content-Type: application/json
 
@@ -1067,4 +1067,118 @@ Content-Type: application/json
     "trigger_data": {
       "KcBAXtznXhVUdiUw": "aaa"
     }
+}
+
+### 创建包含并行分支的dataflow流程
+POST {{host}}/api/automation/v1/data-flow/flow
+Authorization: {{token}}
+Content-Type: application/json
+X-Business-Domain: bd-public
+
+{
+  "title": "并行数据处理流程",
+  "description": "演示包含多个并行分支的数据流处理",
+  "status": "normal",
+  "steps": [
+    {
+      "id": "0",
+      "title": "表单触发器",
+      "operator": "@trigger/form",
+      "parameters": {
+        "fields": [
+          {
+            "key": "input_data",
+            "type": "string",
+            "name": "输入数据"
+          },
+          {
+            "key": "process_type",
+            "type": "string",
+            "name": "处理类型"
+          }
+        ]
+      }
+    },
+    {
+      "id": "1",
+      "title": "获取当前时间",
+      "operator": "@internal/time/now",
+      "parameters": {}
+    },
+    {
+      "id": "2",
+      "title": "并行分支处理",
+      "operator": "@control/flow/parallel",
+      "branches": [
+        {
+          "id": "branch_1",
+          "title": "文本处理分支1",
+          "steps": [
+            {
+              "id": "3",
+              "title": "文本合并",
+              "operator": "@internal/text/join",
+              "parameters": {
+                "texts": ["分支1:", "{{__0.fields.input_data}}", "时间:", "{{__1.time}}"],
+                "separator": "，"
+              }
+            }
+          ]
+        },
+        {
+          "id": "branch_2",
+          "title": "文本处理分支2",
+          "steps": [
+            {
+              "id": "4",
+              "title": "文本分割",
+              "operator": "@internal/text/split",
+              "parameters": {
+                "text": "{{__0.fields.input_data}}",
+                "separator": ","
+              }
+            }
+          ]
+        },
+        {
+          "id": "branch_3",
+          "title": "文本处理分支3",
+          "steps": [
+            {
+              "id": "5",
+              "title": "文本合并",
+              "operator": "@internal/text/join",
+              "parameters": {
+                "texts": ["分支3:", "{{__0.fields.process_type}}", "数据:", "{{__0.fields.input_data}}"],
+                "separator": "；"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "6",
+      "title": "汇总所有分支结果",
+      "operator": "@internal/text/join",
+      "parameters": {
+        "texts": [
+          "分支1结果: {{__3.result}}",
+          "分支2结果: {{__4.result}}",
+          "分支3结果: {{__5.result}}",
+          "执行时间: {{__1.time}}"
+        ],
+        "separator": "；"
+      }
+    }
+  ],
+  "trigger_config": {
+    "operator": "@trigger/manual",
+    "dataSource": {
+      "operator": "",
+      "parameters": {
+        "accessorid": "00000000-0000-0000-0000-000000000000"
+      }
+    }
+  }
 }

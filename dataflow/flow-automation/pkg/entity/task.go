@@ -74,6 +74,13 @@ type DataSourceParam struct {
 	AccessorID string                   `json:"accessorid,omitempty"`
 	Depth      int                      `json:"depth,omitempty"`
 	Docs       []map[string]interface{} `json:"docs,omitempty"`
+	Sources    []S3Source               `json:"sources,omitempty"` // S3数据源列表
+}
+
+// S3Source S3数据源配置
+type S3Source struct {
+	Bucket string `json:"bucket"` // S3 Bucket名称
+	Path   string `json:"path"`   // S3对象路径前缀
 }
 
 // Branch 分支结构
