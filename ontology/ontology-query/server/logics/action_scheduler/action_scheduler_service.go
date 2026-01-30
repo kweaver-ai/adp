@@ -67,7 +67,7 @@ func (s *actionSchedulerService) ExecuteAction(ctx context.Context, req *interfa
 	}
 
 	// Get action type from ontology-manager
-	actionType, exists, err := s.omAccess.GetActionType(ctx, req.KNID, req.Branch, req.ActionTypeID)
+	actionType, actionTypeSnapshot, exists, err := s.omAccess.GetActionType(ctx, req.KNID, req.Branch, req.ActionTypeID)
 	if err != nil {
 		logger.Errorf("Failed to get action type: %v", err)
 		return nil, rest.NewHTTPError(ctx, http.StatusInternalServerError, oerrors.OntologyQuery_ActionExecution_GetActionTypeFailed).
@@ -124,22 +124,23 @@ func (s *actionSchedulerService) ExecuteAction(ctx context.Context, req *interfa
 
 	// Create execution record
 	execution := &interfaces.ActionExecution{
-		ID:               executionID,
-		KNID:             req.KNID,
-		ActionTypeID:     actionType.ATID,
-		ActionTypeName:   actionType.ATName,
-		ActionSourceType: actionType.ActionSource.Type,
-		ActionSource:     actionType.ActionSource,
-		ObjectTypeID:     actionType.ObjectTypeID,
-		TriggerType:      triggerType,
-		Status:           interfaces.ExecutionStatusPending,
-		TotalCount:       len(req.UniqueIdentities),
-		SuccessCount:     0,
-		FailedCount:      0,
-		Results:          objectResults,
-		DynamicParams:    req.DynamicParams,
-		ExecutorID:       executorID,
-		StartTime:        now,
+		ID:                 executionID,
+		KNID:               req.KNID,
+		ActionTypeID:       actionType.ATID,
+		ActionTypeName:     actionType.ATName,
+		ActionSourceType:   actionType.ActionSource.Type,
+		ActionSource:       actionType.ActionSource,
+		ObjectTypeID:       actionType.ObjectTypeID,
+		TriggerType:        triggerType,
+		Status:             interfaces.ExecutionStatusPending,
+		TotalCount:         len(req.UniqueIdentities),
+		SuccessCount:       0,
+		FailedCount:        0,
+		Results:            objectResults,
+		DynamicParams:      req.DynamicParams,
+		ExecutorID:         executorID,
+		StartTime:          now,
+		ActionTypeSnapshot: actionTypeSnapshot, // 保存执行时的行动类配置快照
 	}
 
 	// Save initial execution record

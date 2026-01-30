@@ -65,11 +65,12 @@ type ActionExecution struct {
 	ResultsTotal     int                     `json:"results_total,omitempty"`  // total count of results (for pagination)
 	ResultsOffset    int                     `json:"results_offset,omitempty"` // current offset of results
 	ResultsLimit     int                     `json:"results_limit,omitempty"`  // current limit of results
-	DynamicParams    map[string]any          `json:"dynamic_params,omitempty"`
-	ExecutorID       string                  `json:"executor_id"` // user who triggered
-	StartTime        int64                   `json:"start_time"`
-	EndTime          int64                   `json:"end_time,omitempty"`
-	DurationMs       int64                   `json:"duration_ms,omitempty"`
+	DynamicParams      map[string]any          `json:"dynamic_params,omitempty"`
+	ExecutorID         string                  `json:"executor_id"` // user who triggered
+	StartTime          int64                   `json:"start_time"`
+	EndTime            int64                   `json:"end_time,omitempty"`
+	DurationMs         int64                   `json:"duration_ms,omitempty"`
+	ActionTypeSnapshot map[string]any          `json:"action_type_snapshot,omitempty"` // 执行时的行动类配置快照（与 manager 返回一致）
 }
 
 // ObjectExecutionResult represents execution result for a single object

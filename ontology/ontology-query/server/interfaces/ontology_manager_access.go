@@ -17,6 +17,6 @@ type PathsQueryBaseOnSource struct {
 type OntologyManagerAccess interface {
 	GetObjectType(ctx context.Context, knID string, branch string, otId string) (ObjectType, bool, error)
 	GetRelationType(ctx context.Context, knID string, branch string, rtId string) (RelationType, bool, error)
-	GetActionType(ctx context.Context, knID string, branch string, atId string) (ActionType, bool, error)
+	GetActionType(ctx context.Context, knID string, branch string, atId string) (ActionType, map[string]any, bool, error)
 	GetRelationTypePathsBaseOnSource(ctx context.Context, knID string, branch string, query PathsQueryBaseOnSource) ([]RelationTypePath, error)
 }

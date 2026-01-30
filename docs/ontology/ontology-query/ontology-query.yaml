@@ -3415,7 +3415,7 @@ components:
           description: |-
             执行表达式。
 
-            1.固定频率指以固定周期执行持久化，frequency=< time_durations >，用一个数字，后面跟时间单位来定义。时间单位可以是如下之一：m - 分钟； h - 小时； d - 天
+            1.固定频率指以固定周期执行持久化, frequency=< time_durations >, 用一个数字, 后面跟时间单位来定义。时间单位可以是如下之一: m - 分钟; h - 小时; d - 天
           type: string
     ActionTypeParams:
       description: 行动类绑定的行动资源参数
@@ -4830,6 +4830,10 @@ components:
           description: 执行耗时（毫秒）
           type: integer
           format: int64
+        action_type_snapshot:
+          description: 执行时的行动类配置快照（与 ontology-manager 返回一致）
+          type: object
+          additionalProperties: true
 
     ObjectExecutionResult:
       description: 单个对象的执行结果

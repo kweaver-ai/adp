@@ -534,11 +534,13 @@ func Test_ontologyManagerAccess_GetActionType(t *testing.T) {
 				GetNoUnmarshal(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
 				Return(http.StatusOK, responseBytes, nil)
 
-			result, exists, err := oma.GetActionType(ctx, knID, branch, atID)
+			result, rawSnapshot, exists, err := oma.GetActionType(ctx, knID, branch, atID)
 
 			So(err, ShouldBeNil)
 			So(exists, ShouldBeTrue)
 			So(result.ATID, ShouldEqual, atID)
+			So(rawSnapshot, ShouldNotBeNil)
+			So(rawSnapshot["id"], ShouldEqual, atID)
 		})
 
 		Convey("失败 - HTTP 请求错误", func() {
@@ -552,11 +554,12 @@ func Test_ontologyManagerAccess_GetActionType(t *testing.T) {
 				GetNoUnmarshal(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
 				Return(0, nil, fmt.Errorf("http request failed"))
 
-			result, exists, err := oma.GetActionType(ctx, knID, branch, atID)
+			result, rawSnapshot, exists, err := oma.GetActionType(ctx, knID, branch, atID)
 
 			So(err, ShouldNotBeNil)
 			So(exists, ShouldBeFalse)
 			So(result.ATID, ShouldEqual, "")
+			So(rawSnapshot, ShouldBeNil)
 		})
 
 		Convey("失败 - 行动类不存在 (404)", func() {
@@ -570,11 +573,12 @@ func Test_ontologyManagerAccess_GetActionType(t *testing.T) {
 				GetNoUnmarshal(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
 				Return(http.StatusNotFound, nil, nil)
 
-			result, exists, err := oma.GetActionType(ctx, knID, branch, atID)
+			result, rawSnapshot, exists, err := oma.GetActionType(ctx, knID, branch, atID)
 
 			So(err, ShouldBeNil)
 			So(exists, ShouldBeFalse)
 			So(result.ATID, ShouldEqual, "")
+			So(rawSnapshot, ShouldBeNil)
 		})
 
 		Convey("失败 - HTTP 状态码非 200", func() {
@@ -594,11 +598,12 @@ func Test_ontologyManagerAccess_GetActionType(t *testing.T) {
 				GetNoUnmarshal(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
 				Return(http.StatusBadRequest, errorBytes, nil)
 
-			result, exists, err := oma.GetActionType(ctx, knID, branch, atID)
+			result, rawSnapshot, exists, err := oma.GetActionType(ctx, knID, branch, atID)
 
 			So(err, ShouldNotBeNil)
 			So(exists, ShouldBeFalse)
 			So(result.ATID, ShouldEqual, "")
+			So(rawSnapshot, ShouldBeNil)
 		})
 
 		Convey("失败 - HTTP 状态码非 200 且解析 BaseError 失败", func() {
@@ -614,11 +619,12 @@ func Test_ontologyManagerAccess_GetActionType(t *testing.T) {
 				GetNoUnmarshal(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
 				Return(http.StatusBadRequest, invalidJSON, nil)
 
-			result, exists, err := oma.GetActionType(ctx, knID, branch, atID)
+			result, rawSnapshot, exists, err := oma.GetActionType(ctx, knID, branch, atID)
 
 			So(err, ShouldNotBeNil)
 			So(exists, ShouldBeFalse)
 			So(result.ATID, ShouldEqual, "")
+			So(rawSnapshot, ShouldBeNil)
 		})
 
 		Convey("失败 - 响应体为空", func() {
@@ -632,11 +638,12 @@ func Test_ontologyManagerAccess_GetActionType(t *testing.T) {
 				GetNoUnmarshal(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
 				Return(http.StatusOK, nil, nil)
 
-			result, exists, err := oma.GetActionType(ctx, knID, branch, atID)
+			result, rawSnapshot, exists, err := oma.GetActionType(ctx, knID, branch, atID)
 
 			So(err, ShouldBeNil)
 			So(exists, ShouldBeFalse)
 			So(result.ATID, ShouldEqual, "")
+			So(rawSnapshot, ShouldBeNil)
 		})
 
 		Convey("失败 - 解析响应失败", func() {
@@ -652,11 +659,12 @@ func Test_ontologyManagerAccess_GetActionType(t *testing.T) {
 				GetNoUnmarshal(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
 				Return(http.StatusOK, invalidJSON, nil)
 
-			result, exists, err := oma.GetActionType(ctx, knID, branch, atID)
+			result, rawSnapshot, exists, err := oma.GetActionType(ctx, knID, branch, atID)
 
 			So(err, ShouldNotBeNil)
 			So(exists, ShouldBeFalse)
 			So(result.ATID, ShouldEqual, "")
+			So(rawSnapshot, ShouldBeNil)
 		})
 
 		Convey("失败 - 响应体为空数组", func() {
@@ -677,11 +685,12 @@ func Test_ontologyManagerAccess_GetActionType(t *testing.T) {
 				GetNoUnmarshal(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
 				Return(http.StatusOK, responseBytes, nil)
 
-			result, exists, err := oma.GetActionType(ctx, knID, branch, atID)
+			result, rawSnapshot, exists, err := oma.GetActionType(ctx, knID, branch, atID)
 
 			So(err, ShouldBeNil)
 			So(exists, ShouldBeFalse)
 			So(result.ATID, ShouldEqual, "")
+			So(rawSnapshot, ShouldBeNil)
 		})
 	})
 }

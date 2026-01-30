@@ -301,3 +301,71 @@ func Test_ActionSource_Types(t *testing.T) {
 		})
 	})
 }
+
+func Test_ActionExecution_Snapshot(t *testing.T) {
+	Convey("Test ActionExecution with ActionTypeSnapshot", t, func() {
+		Convey("should store action type snapshot", func() {
+			// 模拟从 manager 获取的原始行动类配置
+			actionTypeSnapshot := map[string]any{
+				"id":             "at_001",
+				"name":           "restart_pod",
+				"action_type":    "modify",
+				"object_type_id": "ot_pod",
+				"tags":           []string{"k8s", "pod"},
+				"comment":        "重启 Pod",
+				"icon":           "restart",
+				"color":          "#FF5722",
+				"condition": map[string]any{
+					"field":    "status",
+					"operator": "eq",
+					"value":    "Running",
+				},
+				"parameters": []map[string]any{
+					{"name": "timeout", "value_from": "const", "value": 30},
+				},
+				"schedule": map[string]any{
+					"type":       "manual",
+					"expression": "",
+				},
+				"creator":     "user_123",
+				"create_time": int64(1704000000000),
+				"updater":     "user_456",
+				"update_time": int64(1704100000000),
+			}
+
+			execution := &interfaces.ActionExecution{
+				ID:                 "exec_001",
+				KNID:               "kn_001",
+				ActionTypeID:       "at_001",
+				ActionTypeName:     "restart_pod",
+				ActionSourceType:   interfaces.ActionSourceTypeTool,
+				Status:             interfaces.ExecutionStatusPending,
+				TotalCount:         1,
+				ActionTypeSnapshot: actionTypeSnapshot,
+			}
+
+			So(execution.ActionTypeSnapshot, ShouldNotBeNil)
+			So(execution.ActionTypeSnapshot["id"], ShouldEqual, "at_001")
+			So(execution.ActionTypeSnapshot["name"], ShouldEqual, "restart_pod")
+			So(execution.ActionTypeSnapshot["tags"], ShouldNotBeNil)
+			So(execution.ActionTypeSnapshot["condition"], ShouldNotBeNil)
+			So(execution.ActionTypeSnapshot["parameters"], ShouldNotBeNil)
+			So(execution.ActionTypeSnapshot["creator"], ShouldEqual, "user_123")
+			So(execution.ActionTypeSnapshot["create_time"], ShouldEqual, int64(1704000000000))
+		})
+
+		Convey("should allow nil snapshot for backward compatibility", func() {
+			execution := &interfaces.ActionExecution{
+				ID:                 "exec_002",
+				KNID:               "kn_001",
+				ActionTypeID:       "at_001",
+				ActionTypeName:     "restart_pod",
+				Status:             interfaces.ExecutionStatusCompleted,
+				ActionTypeSnapshot: nil, // 旧数据可能没有快照
+			}
+
+			So(execution.ActionTypeSnapshot, ShouldBeNil)
+			So(execution.ActionTypeID, ShouldEqual, "at_001")
+		})
+	})
+}
