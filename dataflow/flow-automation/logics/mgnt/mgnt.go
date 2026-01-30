@@ -3354,6 +3354,30 @@ func (m *mgnt) HandleAuditorsMacth(ctx context.Context, msg *AuditorInfo) error 
 	return nil
 }
 
+// getLastTaskIDs 递归获取步骤列表中的最后一个(或多个)任务ID
+// 对于普通步骤,返回该步骤的ID
+// 对于并行分支,递归收集所有子分支的最后任务ID
+func getLastTaskIDs(steps []entity.Step) []string {
+	if len(steps) == 0 {
+		return []string{}
+	}
+
+	lastStep := steps[len(steps)-1]
+
+	// 如果最后一个步骤是并行节点,递归获取其所有分支的最后任务
+	if lastStep.Operator == common.ControlFlowParallel {
+		result := []string{}
+		for _, branch := range lastStep.Branches {
+			branchLastTasks := getLastTaskIDs(branch.Steps)
+			result = append(result, branchLastTasks...)
+		}
+		return result
+	}
+
+	// 否则,返回该步骤的ID
+	return []string{lastStep.ID}
+}
+
 func (m *mgnt) buildTasks(triggerStep *entity.Step, steps []entity.Step, tasks *[]entity.Task, bch *entity.Branch, stepList *[]map[string]interface{}, inheritChecks *entity.PreChecks, branchsID *string) { //nolint
 	prechecks := entity.PreChecks{}
 	if inheritChecks != nil {
@@ -3425,12 +3449,10 @@ func (m *mgnt) buildTasks(triggerStep *entity.Step, steps []entity.Step, tasks *
 					(*tasks)[branchStartIdx].DependOn = branchEntryDependOn
 				}
 
-				// 找到该分支的最后一个 task ID
-				// 分支的最后一个 step 就是该分支的最后一个 task
-				if len(branch.Steps) > 0 {
-					lastStep := branch.Steps[len(branch.Steps)-1]
-					parallelBranchLastTasks = append(parallelBranchLastTasks, lastStep.ID)
-				}
+				// 找到该分支的最后一个(或多个)task ID
+				// 使用递归函数处理嵌套并行分支的情况
+				branchLastTasks := getLastTaskIDs(branch.Steps)
+				parallelBranchLastTasks = append(parallelBranchLastTasks, branchLastTasks...)
 			}
 
 			// 更新dependOn，后续step依赖所有分支的最后一个task
