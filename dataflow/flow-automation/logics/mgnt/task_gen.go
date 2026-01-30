@@ -520,10 +520,11 @@ func buildStepMap(steps []entity.Step, stepMap map[string]*entity.Step) {
 
 func buildTaskInstanceFromEvents(events []*entity.DagInstanceEvent, dagIns *entity.DagInstance, dag *entity.Dag) (tasks []*entity.TaskInstance) {
 	var (
-		current              *entity.TaskInstance
-		env                  = make(map[string]any)
-		stepMap              = make(map[string]*entity.Step)
-		lastStepTaskIndexMap = make(map[string]int)
+		// 使用 map 存储多个并发任务的状态,支持并行执行
+		taskInstanceMap = make(map[string]*entity.TaskInstance)
+		env             = make(map[string]any)
+		stepMap         = make(map[string]*entity.Step)
+		taskOrder       = make([]string, 0) // 记录任务首次出现的顺序
 	)
 
 	buildStepMap(dag.Steps, stepMap)
@@ -536,8 +537,9 @@ func buildTaskInstanceFromEvents(events []*entity.DagInstanceEvent, dagIns *enti
 			if step, ok := stepMap[stepId]; ok && step.Operator == common.Loop {
 				if data, ok := event.Data.(map[string]any); ok {
 					if _, ok := data["outputs"]; ok {
-						if lastStepTaskIndex, ok := lastStepTaskIndexMap[stepId]; ok {
-							resultsMap, isMap := tasks[lastStepTaskIndex].Results.(map[string]any)
+						// 查找循环节点对应的任务实例
+						if taskIns, exists := taskInstanceMap[stepId]; exists {
+							resultsMap, isMap := taskIns.Results.(map[string]any)
 							if resultsMap == nil || !isMap {
 								resultsMap = make(map[string]any)
 							}
@@ -546,80 +548,72 @@ func buildTaskInstanceFromEvents(events []*entity.DagInstanceEvent, dagIns *enti
 								resultsMap[k] = v
 							}
 
-							tasks[lastStepTaskIndex].Results = resultsMap
+							taskIns.Results = resultsMap
 						}
 					}
 				}
 			}
 		case rds.DagInstanceEventTypeTaskStatus:
-			if current != nil {
-				if current.TaskID == event.TaskID {
-					current.Status = entity.TaskInstanceStatus(event.Status)
-					current.UpdatedAt = event.Timestamp / 1e6
+			current, exists := taskInstanceMap[event.TaskID]
+
+			if !exists {
+				// 首次遇到该任务,创建新实例
+				timestampSec := event.Timestamp / 1e6
+				current = &entity.TaskInstance{
+					BaseInfo: entity.BaseInfo{
+						ID:        event.TaskID, // 使用taskID作为唯一标识
+						CreatedAt: timestampSec,
+						UpdatedAt: timestampSec,
+					},
+					TaskID:     event.TaskID,
+					DagInsID:   dagIns.ID,
+					ActionName: event.Operator,
+					Status:     entity.TaskInstanceStatus(event.Status),
 					// 统一使用纳秒级时间戳
-					current.LastModifiedAt = event.Timestamp * 1e3
-					current.MetaData.ElapsedTime = event.Timestamp/1e3 - current.MetaData.StartedAt
+					LastModifiedAt: event.Timestamp * 1e3,
+					MetaData: &entity.TaskMetaData{
+						StartedAt: event.Timestamp / 1e3,
+					},
+				}
 
-					switch current.Status {
-					case entity.TaskInstanceStatusSuccess:
-						if result, ok := env[fmt.Sprintf("__%s", current.TaskID)]; ok {
-							current.Results = result
+				// 从stepMap填充任务信息
+				if step, ok := stepMap[event.TaskID]; ok {
+					current.Name = step.Title
+
+					switch step.Operator {
+					case common.InternalAssignOpt:
+						target := step.Parameters["target"]
+						value, valueOk := step.Parameters["value"]
+						if valueOk {
+							value = renderParams(value, env)
 						}
-
-					case entity.TaskInstanceStatusFailed:
-						current.Reason = event.Data
-					}
-					continue
-				} else {
-					lastStepTaskIndexMap[current.TaskID] = len(tasks)
-					tasks = append(tasks, current)
-				}
-			}
-
-			timestampSec := event.Timestamp / 1e6
-			current = &entity.TaskInstance{
-				BaseInfo: entity.BaseInfo{
-					ID:        fmt.Sprintf("%d", len(tasks)),
-					CreatedAt: timestampSec,
-					UpdatedAt: timestampSec,
-				},
-				TaskID:     event.TaskID,
-				DagInsID:   dagIns.ID,
-				ActionName: event.Operator,
-				Status:     entity.TaskInstanceStatus(event.Status),
-				// 统一使用纳秒级时间戳
-				LastModifiedAt: event.Timestamp * 1e3,
-				MetaData: &entity.TaskMetaData{
-					StartedAt: event.Timestamp / 1e3,
-				},
-			}
-
-			if step, ok := stepMap[event.TaskID]; ok {
-
-				current.Name = step.Title
-
-				switch step.Operator {
-				case common.InternalAssignOpt:
-					target := step.Parameters["target"]
-					value, valueOk := step.Parameters["value"]
-					if valueOk {
-						value = renderParams(value, env)
-					}
-					current.Params = map[string]any{
-						"target": target,
-						"value":  value,
-					}
-				case common.BranchOpt:
-				default:
-					realParam := renderParams(step.Parameters, env)
-					if p, ok := realParam.(map[string]any); ok {
-						current.Params = p
-					} else {
-						current.Params = step.Parameters
+						current.Params = map[string]any{
+							"target": target,
+							"value":  value,
+						}
+					case common.BranchOpt:
+						// 分支节点无参数
+					default:
+						realParam := renderParams(step.Parameters, env)
+						if p, ok := realParam.(map[string]any); ok {
+							current.Params = p
+						} else {
+							current.Params = step.Parameters
+						}
 					}
 				}
+
+				taskInstanceMap[event.TaskID] = current
+				taskOrder = append(taskOrder, event.TaskID) // 记录顺序
+			} else {
+				// 更新已存在的任务状态
+				current.Status = entity.TaskInstanceStatus(event.Status)
+				current.UpdatedAt = event.Timestamp / 1e6
+				current.LastModifiedAt = event.Timestamp * 1e3
+				current.MetaData.ElapsedTime = event.Timestamp/1e3 - current.MetaData.StartedAt
 			}
 
+			// 处理任务完成状态
 			switch current.Status {
 			case entity.TaskInstanceStatusSuccess:
 				if result, ok := env[fmt.Sprintf("__%s", current.TaskID)]; ok {
@@ -628,15 +622,26 @@ func buildTaskInstanceFromEvents(events []*entity.DagInstanceEvent, dagIns *enti
 			case entity.TaskInstanceStatusFailed:
 				current.Reason = event.Data
 			}
+
 		case rds.DagInstanceEventTypeTrace:
-			dataBytes, _ := json.Marshal(event.Data)
-			_ = json.Unmarshal(dataBytes, current.MetaData)
+			// Trace事件需要关联到对应的任务实例
+			if event.TaskID != "" {
+				if current, exists := taskInstanceMap[event.TaskID]; exists {
+					dataBytes, _ := json.Marshal(event.Data)
+					_ = json.Unmarshal(dataBytes, current.MetaData)
+				}
+			}
 		}
 	}
 
-	if current != nil {
-		tasks = append(tasks, current)
+	// 按首次出现顺序构建结果数组
+	tasks = make([]*entity.TaskInstance, 0, len(taskOrder))
+	for _, taskID := range taskOrder {
+		if task, ok := taskInstanceMap[taskID]; ok {
+			tasks = append(tasks, task)
+		}
 	}
+
 	return
 }
 
