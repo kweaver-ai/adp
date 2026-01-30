@@ -350,8 +350,9 @@ func (s *actionLogsService) ensureIndexExists(ctx context.Context, indexName str
 				"end_time":           map[string]any{"type": "long"},
 				"duration_ms":        map[string]any{"type": "long"},
 				"results":            map[string]any{"type": "nested"},
-				"dynamic_params":     map[string]any{"type": "object", "enabled": false},
-				"action_source":      map[string]any{"type": "object", "enabled": false},
+				"dynamic_params":        map[string]any{"type": "object", "enabled": false},
+				"action_source":         map[string]any{"type": "object", "enabled": false},
+				"action_type_snapshot":  map[string]any{"type": "object", "enabled": false},
 			},
 		},
 	}

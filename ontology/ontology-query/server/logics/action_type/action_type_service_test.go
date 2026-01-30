@@ -100,7 +100,7 @@ func Test_actionTypeService_GetActionsByActionTypeID(t *testing.T) {
 				},
 			}
 
-			omAccess.EXPECT().GetActionType(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(actionType, true, nil)
+			omAccess.EXPECT().GetActionType(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(actionType, map[string]any{"id": actionType.ATID}, true, nil)
 			ots.EXPECT().GetObjectsByObjectTypeID(gomock.Any(), gomock.Any()).Return(objects, nil)
 
 			result, err := service.GetActionsByActionTypeID(ctx, query)
@@ -116,7 +116,7 @@ func Test_actionTypeService_GetActionsByActionTypeID(t *testing.T) {
 				ActionTypeID: actionTypeID,
 			}
 
-			omAccess.EXPECT().GetActionType(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(interfaces.ActionType{}, false, nil)
+			omAccess.EXPECT().GetActionType(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(interfaces.ActionType{}, nil, false, nil)
 
 			result, err := service.GetActionsByActionTypeID(ctx, query)
 			So(err, ShouldNotBeNil)
@@ -133,7 +133,7 @@ func Test_actionTypeService_GetActionsByActionTypeID(t *testing.T) {
 				ActionTypeID: actionTypeID,
 			}
 
-			omAccess.EXPECT().GetActionType(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(interfaces.ActionType{}, false, rest.NewHTTPError(ctx, http.StatusInternalServerError, oerrors.OntologyQuery_InternalError))
+			omAccess.EXPECT().GetActionType(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(interfaces.ActionType{}, nil, false, rest.NewHTTPError(ctx, http.StatusInternalServerError, oerrors.OntologyQuery_InternalError))
 
 			result, err := service.GetActionsByActionTypeID(ctx, query)
 			So(err, ShouldNotBeNil)
@@ -180,7 +180,7 @@ func Test_actionTypeService_GetActionsByActionTypeID(t *testing.T) {
 				},
 			}
 
-			omAccess.EXPECT().GetActionType(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(actionType, true, nil)
+			omAccess.EXPECT().GetActionType(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(actionType, map[string]any{"id": actionType.ATID}, true, nil)
 			ots.EXPECT().GetObjectsByObjectTypeID(gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, query *interfaces.ObjectQueryBaseOnObjectType) (interfaces.Objects, error) {
 				// 验证条件是否正确合并
 				So(query.ActualCondition, ShouldNotBeNil)
@@ -229,7 +229,7 @@ func Test_actionTypeService_GetActionsByActionTypeID(t *testing.T) {
 				},
 			}
 
-			omAccess.EXPECT().GetActionType(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(actionType, true, nil)
+			omAccess.EXPECT().GetActionType(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(actionType, map[string]any{"id": actionType.ATID}, true, nil)
 			ots.EXPECT().GetObjectsByObjectTypeID(gomock.Any(), gomock.Any()).Return(objects, nil)
 
 			result, err := service.GetActionsByActionTypeID(ctx, query)
@@ -272,7 +272,7 @@ func Test_actionTypeService_GetActionsByActionTypeID(t *testing.T) {
 				},
 			}
 
-			omAccess.EXPECT().GetActionType(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(actionType, true, nil)
+			omAccess.EXPECT().GetActionType(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(actionType, map[string]any{"id": actionType.ATID}, true, nil)
 			ots.EXPECT().GetObjectsByObjectTypeID(gomock.Any(), gomock.Any()).Return(objects, nil)
 
 			result, err := service.GetActionsByActionTypeID(ctx, query)
@@ -313,7 +313,7 @@ func Test_actionTypeService_GetActionsByActionTypeID(t *testing.T) {
 				},
 			}
 
-			omAccess.EXPECT().GetActionType(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(actionType, true, nil)
+			omAccess.EXPECT().GetActionType(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(actionType, map[string]any{"id": actionType.ATID}, true, nil)
 			ots.EXPECT().GetObjectsByObjectTypeID(gomock.Any(), gomock.Any()).Return(objects, nil)
 
 			result, err := service.GetActionsByActionTypeID(ctx, query)
@@ -354,7 +354,7 @@ func Test_actionTypeService_GetActionsByActionTypeID(t *testing.T) {
 				},
 			}
 
-			omAccess.EXPECT().GetActionType(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(actionType, true, nil)
+			omAccess.EXPECT().GetActionType(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(actionType, map[string]any{"id": actionType.ATID}, true, nil)
 			ots.EXPECT().GetObjectsByObjectTypeID(gomock.Any(), gomock.Any()).Return(objects, nil)
 
 			result, err := service.GetActionsByActionTypeID(ctx, query)
@@ -382,7 +382,7 @@ func Test_actionTypeService_GetActionsByActionTypeID(t *testing.T) {
 				Parameters: []interfaces.Parameter{},
 			}
 
-			omAccess.EXPECT().GetActionType(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(actionType, true, nil)
+			omAccess.EXPECT().GetActionType(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(actionType, map[string]any{"id": actionType.ATID}, true, nil)
 			ots.EXPECT().GetObjectsByObjectTypeID(gomock.Any(), gomock.Any()).Return(interfaces.Objects{}, rest.NewHTTPError(ctx, http.StatusInternalServerError, oerrors.OntologyQuery_InternalError))
 
 			result, err := service.GetActionsByActionTypeID(ctx, query)
@@ -418,7 +418,7 @@ func Test_actionTypeService_GetActionsByActionTypeID(t *testing.T) {
 				},
 			}
 
-			omAccess.EXPECT().GetActionType(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(actionType, true, nil)
+			omAccess.EXPECT().GetActionType(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(actionType, map[string]any{"id": actionType.ATID}, true, nil)
 			ots.EXPECT().GetObjectsByObjectTypeID(gomock.Any(), gomock.Any()).Return(objects, nil)
 
 			result, err := service.GetActionsByActionTypeID(ctx, query)

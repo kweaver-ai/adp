@@ -552,7 +552,7 @@ func (oma *ontologyManagerAccess) ListRelationTypes(ctx context.Context, knID st
 }
 
 func (oma *ontologyManagerAccess) GetActionType(ctx context.Context, knID string,
-	branch string, atID string) (interfaces.ActionType, bool, error) {
+	branch string, atID string) (interfaces.ActionType, map[string]any, bool, error) {
 
 	httpUrl := fmt.Sprintf("%s/%s/action-types/%s?branch=%s", oma.ontologyManagerUrl, knID, atID, branch)
 	// http client 发送请求时，在 RoundTrip 时是用 transport 在 RoundTrip，此时的 transport 是 otelhttp.NewTransport 的，
@@ -592,7 +592,7 @@ func (oma *ontologyManagerAccess) GetActionType(ctx context.Context, knID string
 		// 记录异常日志
 		o11y.Error(ctx, fmt.Sprintf("Get action type request failed: %v", err))
 
-		return emptyActionType, false, fmt.Errorf("get request method failed: %v", err)
+		return emptyActionType, nil, false, fmt.Errorf("get request method failed: %v", err)
 	}
 
 	if respCode == http.StatusNotFound {
@@ -603,7 +603,7 @@ func (oma *ontologyManagerAccess) GetActionType(ctx context.Context, knID string
 		// 记录模型不存在的日志
 		o11y.Warn(ctx, fmt.Sprintf("action type [%s] not found", atID))
 
-		return emptyActionType, false, nil
+		return emptyActionType, nil, false, nil
 	}
 
 	if respCode != http.StatusOK {
@@ -618,7 +618,7 @@ func (oma *ontologyManagerAccess) GetActionType(ctx context.Context, knID string
 			// 记录异常日志
 			o11y.Error(ctx, fmt.Sprintf("Unmalshal BaesError failed: %v", err))
 
-			return emptyActionType, false, err
+			return emptyActionType, nil, false, err
 		}
 
 		httpErr := &rest.HTTPError{HTTPCode: respCode, BaseError: baseError}
@@ -628,7 +628,7 @@ func (oma *ontologyManagerAccess) GetActionType(ctx context.Context, knID string
 		// 记录异常日志
 		o11y.Error(ctx, fmt.Sprintf("Get action type failed: %v", httpErr))
 
-		return emptyActionType, false, fmt.Errorf("get action type failed: %v", httpErr.Error())
+		return emptyActionType, nil, false, fmt.Errorf("get action type failed: %v", httpErr.Error())
 	}
 
 	if result == nil {
@@ -637,11 +637,10 @@ func (oma *ontologyManagerAccess) GetActionType(ctx context.Context, knID string
 		// 记录模型不存在的日志
 		o11y.Warn(ctx, "Http response body is null")
 
-		return emptyActionType, false, nil
+		return emptyActionType, nil, false, nil
 	}
 
-	// 处理返回结果 result
-	// var actionTypes []interfaces.ActionType
+	// 处理返回结果 result - 解析为结构体
 	var response struct {
 		ActionTypes []interfaces.ActionType `json:"entries"`
 	}
@@ -653,15 +652,31 @@ func (oma *ontologyManagerAccess) GetActionType(ctx context.Context, knID string
 		// 记录异常日志
 		o11y.Error(ctx, fmt.Sprintf("Unmalshal action type info failed: %v", err))
 
-		return emptyActionType, false, err
+		return emptyActionType, nil, false, err
 	}
 
 	if len(response.ActionTypes) == 0 {
-		return emptyActionType, false, nil
+		return emptyActionType, nil, false, nil
+	}
+
+	// 同时解析原始 JSON 为 map[string]any，保留完整数据
+	var rawResponse struct {
+		Entries []map[string]any `json:"entries"`
+	}
+	if err = sonic.Unmarshal(result, &rawResponse); err != nil {
+		logger.Errorf("unmalshal raw action type info failed: %v\n", err)
+		// 仍然返回解析后的结构体，但原始数据为 nil
+		o11y.AddHttpAttrs4Ok(span, respCode)
+		return response.ActionTypes[0], nil, true, nil
+	}
+
+	var rawActionType map[string]any
+	if len(rawResponse.Entries) > 0 {
+		rawActionType = rawResponse.Entries[0]
 	}
 
 	// 添加成功时的 trace 属性
 	o11y.AddHttpAttrs4Ok(span, respCode)
 
-	return response.ActionTypes[0], true, nil
+	return response.ActionTypes[0], rawActionType, true, nil
 }

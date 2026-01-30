@@ -57,7 +57,7 @@ func (ats *actionTypeService) GetActionsByActionTypeID(ctx context.Context,
 	var resps interfaces.Actions
 
 	// 1. 先获取行动类信息
-	actionType, exists, err := ats.omAccess.GetActionType(ctx, query.KNID, query.Branch, query.ActionTypeID)
+	actionType, _, exists, err := ats.omAccess.GetActionType(ctx, query.KNID, query.Branch, query.ActionTypeID)
 	if err != nil {
 		logger.Errorf("Get Action Type error: %s", err.Error())
 

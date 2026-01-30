@@ -36,13 +36,14 @@ func (m *MockOntologyManagerAccess) EXPECT() *MockOntologyManagerAccessMockRecor
 }
 
 // GetActionType mocks base method.
-func (m *MockOntologyManagerAccess) GetActionType(ctx context.Context, knID, branch, atId string) (interfaces.ActionType, bool, error) {
+func (m *MockOntologyManagerAccess) GetActionType(ctx context.Context, knID, branch, atId string) (interfaces.ActionType, map[string]any, bool, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetActionType", ctx, knID, branch, atId)
 	ret0, _ := ret[0].(interfaces.ActionType)
-	ret1, _ := ret[1].(bool)
-	ret2, _ := ret[2].(error)
-	return ret0, ret1, ret2
+	ret1, _ := ret[1].(map[string]any)
+	ret2, _ := ret[2].(bool)
+	ret3, _ := ret[3].(error)
+	return ret0, ret1, ret2, ret3
 }
 
 // GetActionType indicates an expected call of GetActionType.
