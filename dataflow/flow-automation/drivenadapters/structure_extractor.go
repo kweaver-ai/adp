@@ -13,7 +13,7 @@ import (
 
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/common"
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/errors"
-	traceLog "github.com/kweaver-ai/adp/autoflow/ide-go-lib/telemetry/log"
+	traceLog "github.com/kweaver-ai/adp/autoflow/flow-automation/libs/go/telemetry/log"
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 )
 

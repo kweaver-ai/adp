@@ -14,15 +14,15 @@ import (
 
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/common"
 	aerr "github.com/kweaver-ai/adp/autoflow/flow-automation/errors"
+	ierr "github.com/kweaver-ai/adp/autoflow/flow-automation/libs/go/errors"
+	commonLog "github.com/kweaver-ai/adp/autoflow/flow-automation/libs/go/log"
+	traceLog "github.com/kweaver-ai/adp/autoflow/flow-automation/libs/go/telemetry/log"
+	"github.com/kweaver-ai/adp/autoflow/flow-automation/libs/go/telemetry/trace"
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/pkg/entity"
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/pkg/mod"
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/pkg/vm"
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/store/rds"
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/utils"
-	ierr "github.com/kweaver-ai/adp/autoflow/ide-go-lib/errors"
-	commonLog "github.com/kweaver-ai/adp/autoflow/ide-go-lib/log"
-	traceLog "github.com/kweaver-ai/adp/autoflow/ide-go-lib/telemetry/log"
-	"github.com/kweaver-ai/adp/autoflow/ide-go-lib/telemetry/trace"
 )
 
 // LoopParam 循环节点步骤参数

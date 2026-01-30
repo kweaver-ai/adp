@@ -10,7 +10,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/errors"
-	ierr "github.com/kweaver-ai/adp/autoflow/ide-go-lib/errors"
+	ierr "github.com/kweaver-ai/adp/autoflow/flow-automation/libs/go/errors"
 	"github.com/xeipuuv/gojsonschema"
 )
 

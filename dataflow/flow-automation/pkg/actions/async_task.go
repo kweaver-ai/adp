@@ -9,13 +9,13 @@ import (
 
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/common"
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/drivenadapters"
+	lock "github.com/kweaver-ai/adp/autoflow/flow-automation/libs/go/lock"
+	libstore "github.com/kweaver-ai/adp/autoflow/flow-automation/libs/go/store"
+	traceLog "github.com/kweaver-ai/adp/autoflow/flow-automation/libs/go/telemetry/log"
+	"github.com/kweaver-ai/adp/autoflow/flow-automation/libs/go/telemetry/trace"
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/pkg/entity"
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/store"
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/store/rds"
-	lock "github.com/kweaver-ai/adp/autoflow/ide-go-lib/lock"
-	libstore "github.com/kweaver-ai/adp/autoflow/ide-go-lib/store"
-	traceLog "github.com/kweaver-ai/adp/autoflow/ide-go-lib/telemetry/log"
-	"github.com/kweaver-ai/adp/autoflow/ide-go-lib/telemetry/trace"
 )
 
 const (

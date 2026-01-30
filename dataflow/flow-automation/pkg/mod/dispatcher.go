@@ -7,11 +7,11 @@ import (
 	"time"
 
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/common"
+	commonLog "github.com/kweaver-ai/adp/autoflow/flow-automation/libs/go/log"
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/pkg/entity"
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/pkg/event"
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/pkg/log"
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/pkg/utils/data"
-	commonLog "github.com/kweaver-ai/adp/autoflow/ide-go-lib/log"
 	"github.com/panjf2000/ants/v2"
 	"github.com/shiningrush/goevent"
 )

@@ -6,8 +6,8 @@ import (
 	"strings"
 
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/drivenadapters"
+	"github.com/kweaver-ai/adp/autoflow/flow-automation/libs/go/telemetry/trace"
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/pkg/entity"
-	"github.com/kweaver-ai/adp/autoflow/ide-go-lib/telemetry/trace"
 )
 
 // StringMatchType 匹配类型

@@ -12,16 +12,16 @@ import (
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/common"
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/drivenadapters"
 	aerr "github.com/kweaver-ai/adp/autoflow/flow-automation/errors"
+	ierr "github.com/kweaver-ai/adp/autoflow/flow-automation/libs/go/errors"
+	cstore "github.com/kweaver-ai/adp/autoflow/flow-automation/libs/go/store"
+	traceLog "github.com/kweaver-ai/adp/autoflow/flow-automation/libs/go/telemetry/log"
+	"github.com/kweaver-ai/adp/autoflow/flow-automation/libs/go/telemetry/trace"
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/logics/mgnt"
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/logics/perm"
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/pkg/entity"
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/pkg/mod"
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/utils"
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/utils/ptr"
-	ierr "github.com/kweaver-ai/adp/autoflow/ide-go-lib/errors"
-	cstore "github.com/kweaver-ai/adp/autoflow/ide-go-lib/store"
-	traceLog "github.com/kweaver-ai/adp/autoflow/ide-go-lib/telemetry/log"
-	"github.com/kweaver-ai/adp/autoflow/ide-go-lib/telemetry/trace"
 )
 
 //go:generate mockgen -package mock_observability -source ../../logics/observability/observability.go -destination ../../tests/mock_logics/mock_observability/observability_mock.go

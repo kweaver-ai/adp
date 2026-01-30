@@ -6,11 +6,11 @@ import (
 	"sync"
 
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/errors"
+	commonLog "github.com/kweaver-ai/adp/autoflow/flow-automation/libs/go/log"
+	traceLog "github.com/kweaver-ai/adp/autoflow/flow-automation/libs/go/telemetry/log"
+	"github.com/kweaver-ai/adp/autoflow/flow-automation/libs/go/telemetry/trace"
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/store/rds"
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/utils"
-	commonLog "github.com/kweaver-ai/adp/autoflow/ide-go-lib/log"
-	traceLog "github.com/kweaver-ai/adp/autoflow/ide-go-lib/telemetry/log"
-	"github.com/kweaver-ai/adp/autoflow/ide-go-lib/telemetry/trace"
 )
 
 type AdminHandler interface {

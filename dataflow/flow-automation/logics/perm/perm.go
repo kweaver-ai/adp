@@ -8,11 +8,11 @@ import (
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/common"
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/drivenadapters"
 	aerr "github.com/kweaver-ai/adp/autoflow/flow-automation/errors"
+	ierr "github.com/kweaver-ai/adp/autoflow/flow-automation/libs/go/errors"
+	traceLog "github.com/kweaver-ai/adp/autoflow/flow-automation/libs/go/telemetry/log"
+	"github.com/kweaver-ai/adp/autoflow/flow-automation/libs/go/telemetry/trace"
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/pkg/entity"
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/pkg/mod"
-	ierr "github.com/kweaver-ai/adp/autoflow/ide-go-lib/errors"
-	traceLog "github.com/kweaver-ai/adp/autoflow/ide-go-lib/telemetry/log"
-	"github.com/kweaver-ai/adp/autoflow/ide-go-lib/telemetry/trace"
 	"go.mongodb.org/mongo-driver/mongo"
 )
 

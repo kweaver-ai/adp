@@ -6,8 +6,8 @@ import (
 	"testing"
 
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/common"
-	liberrors "github.com/kweaver-ai/adp/autoflow/ide-go-lib/errors"
-	i18n "github.com/kweaver-ai/adp/autoflow/ide-go-lib/i18n"
+	liberrors "github.com/kweaver-ai/adp/autoflow/flow-automation/libs/go/errors"
+	i18n "github.com/kweaver-ai/adp/autoflow/flow-automation/libs/go/i18n"
 )
 
 func TestMain(t *testing.T) {
