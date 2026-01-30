@@ -96,7 +96,7 @@ CREATE TABLE IF NOT EXISTS `t_table_scan` (
   `f_operation_time` datetime NOT NULL DEFAULT current_timestamp() COMMENT '修改时间，默认当前时间',
   `f_operation_user` varchar(100) NOT NULL DEFAULT '' COMMENT '修改用户（ID），默认空字符串',
   `f_operation_type` tinyint NOT NULL DEFAULT 0 COMMENT '状态：0新增1删除2更新',
-  `f_status` tinyint NOT NULL DEFAULT 3 COMMENT '任务状态：0 成功1 失败2 进行中 3 初始化',
+  `f_status` tinyint NOT NULL DEFAULT 3 COMMENT '任务状态：0 等待;1 进行中;2 成功;3 失败',
   `f_status_change` tinyint NOT NULL DEFAULT 0 COMMENT '状态是否发生变化：0 否1 是',
   `f_scan_source` tinyint(4) DEFAULT NULL COMMENT '扫描来源',
   PRIMARY KEY (`f_id`),
