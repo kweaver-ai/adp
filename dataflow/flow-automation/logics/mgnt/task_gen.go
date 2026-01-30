@@ -142,11 +142,6 @@ func (m *mgnt) GenerateTaskResults(ctx context.Context, dagID, dagInsID string, 
 		deduplicatedTasks = append(deduplicatedTasks, task)
 	}
 
-	// 重新排序，保持原有的时间顺序
-	sort.SliceStable(deduplicatedTasks, func(i, j int) bool {
-		return deduplicatedTasks[i].LastModifiedAt < deduplicatedTasks[j].LastModifiedAt
-	})
-
 	allTasks = deduplicatedTasks
 	total := int64(len(allTasks))
 
@@ -510,14 +505,6 @@ func buildStepMap(steps []entity.Step, stepMap map[string]*entity.Step) {
 			stepMap[step.ID] = &step
 			buildStepMap(step.Steps, stepMap)
 		case common.BranchOpt, common.ControlFlowParallel:
-			for _, branch := range step.Branches {
-				buildStepMap(branch.Steps, stepMap)
-			}
-		case common.ControlFlowParallel: // 并行分支节点
-			for _, branch := range step.Branches {
-				buildStepMap(branch.Steps, stepMap)
-			}
-		case common.ControlFlowParallel: // 并行分支节点
 			for _, branch := range step.Branches {
 				buildStepMap(branch.Steps, stepMap)
 			}
