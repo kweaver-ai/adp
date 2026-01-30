@@ -142,11 +142,6 @@ func (m *mgnt) GenerateTaskResults(ctx context.Context, dagID, dagInsID string, 
 		deduplicatedTasks = append(deduplicatedTasks, task)
 	}
 
-	// 重新排序，保持原有的时间顺序
-	sort.SliceStable(deduplicatedTasks, func(i, j int) bool {
-		return deduplicatedTasks[i].LastModifiedAt < deduplicatedTasks[j].LastModifiedAt
-	})
-
 	allTasks = deduplicatedTasks
 	total := int64(len(allTasks))
 
@@ -561,7 +556,8 @@ func buildTaskInstanceFromEvents(events []*entity.DagInstanceEvent, dagIns *enti
 				if current.TaskID == event.TaskID {
 					current.Status = entity.TaskInstanceStatus(event.Status)
 					current.UpdatedAt = event.Timestamp / 1e6
-					current.LastModifiedAt = current.UpdatedAt
+					// 统一使用纳秒级时间戳
+					current.LastModifiedAt = event.Timestamp * 1e3
 					current.MetaData.ElapsedTime = event.Timestamp/1e3 - current.MetaData.StartedAt
 
 					switch current.Status {
@@ -587,11 +583,12 @@ func buildTaskInstanceFromEvents(events []*entity.DagInstanceEvent, dagIns *enti
 					CreatedAt: timestampSec,
 					UpdatedAt: timestampSec,
 				},
-				TaskID:         event.TaskID,
-				DagInsID:       dagIns.ID,
-				ActionName:     event.Operator,
-				Status:         entity.TaskInstanceStatus(event.Status),
-				LastModifiedAt: event.Timestamp,
+				TaskID:     event.TaskID,
+				DagInsID:   dagIns.ID,
+				ActionName: event.Operator,
+				Status:     entity.TaskInstanceStatus(event.Status),
+				// 统一使用纳秒级时间戳
+				LastModifiedAt: event.Timestamp * 1e3,
 				MetaData: &entity.TaskMetaData{
 					StartedAt: event.Timestamp / 1e3,
 				},

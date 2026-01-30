@@ -128,6 +128,14 @@ func (og *ossGatetway) SimpleUpload(ctx context.Context, ossID, key string, inte
 	}
 
 	utils.ParseInterface(respParam, &requestBody)
+
+	// Validate that we got a valid request body with URL
+	if requestBody.URL == "" {
+		err := fmt.Errorf("invalid response from OSS gateway: missing URL")
+		traceLog.WithContext(ctx).Warnf("[SimpleUpload] %s", err.Error())
+		return err
+	}
+
 	data, err := io.ReadAll(file)
 	if err != nil {
 		traceLog.WithContext(ctx).Warnf("[SimpleUpload] read file err, detail: %s", err.Error())
@@ -434,9 +442,18 @@ func (og *ossGatetway) getDefaultOSS(ctx context.Context) (string, error) {
 		traceLog.WithContext(ctx).Warnf("[GetDefaultOSS] get default oss failed, detail: %s %s", target, err.Error())
 		return ossID, err
 	}
+
 	utils.ParseInterface(respParam, &res)
-	ossID = res["storage_id"].(string)
-	return ossID, nil
+
+	// Safely extract storage_id with type assertion
+	if storageID, ok := res["storage_id"]; ok {
+		if ossID, ok = storageID.(string); ok {
+			return ossID, nil
+		}
+		return "", fmt.Errorf("storage_id is not a string type")
+	}
+
+	return "", fmt.Errorf("storage_id not found in response")
 }
 
 // getObjectStorageInfos 获取本站点的对象存储信息

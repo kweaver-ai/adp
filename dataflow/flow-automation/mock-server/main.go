@@ -46,6 +46,9 @@ func main() {
 	// Authorization Service Mock (port 30920)
 	go startAuthorizationMock()
 
+	// OSS Gateway Service Mock (port 9002)
+	go startOSSGatewayMock()
+
 	fmt.Println("Mock services started:")
 	fmt.Println("  - User Management Service: http://localhost:30980")
 	fmt.Println("  - Deploy Service: http://localhost:9703")
@@ -54,6 +57,7 @@ func main() {
 	fmt.Println("  - Hydra Public Service: http://localhost:4444")
 	fmt.Println("  - Business System Service: http://localhost:8085")
 	fmt.Println("  - Authorization Service: http://localhost:30920")
+	fmt.Println("  - OSS Gateway Service: http://localhost:9002")
 	fmt.Println("Press Ctrl+C to stop...")
 
 	select {}
@@ -475,5 +479,162 @@ func startAuthorizationMock() {
 	log.Printf("[Authorization] Starting mock server on port %s", port)
 	if err := router.Run(":" + port); err != nil {
 		log.Fatalf("[Authorization] Failed to start: %v", err)
+	}
+}
+
+func startOSSGatewayMock() {
+	router := gin.New()
+	router.Use(gin.Recovery())
+
+	// Mock get default storage endpoint
+	router.GET("/api/ossgateway/v1/default-storage", func(c *gin.Context) {
+		log.Printf("[OSSGateway] Received get default storage request")
+
+		response := gin.H{
+			"storage_id": "mock-oss-storage-id",
+			"name":       "Mock OSS Storage",
+			"enabled":    true,
+			"default":    true,
+		}
+
+		log.Printf("[OSSGateway] Returning mock response: %+v", response)
+		c.JSON(http.StatusOK, response)
+	})
+
+	// Mock get object storage info endpoint
+	router.GET("/api/ossgateway/v1/objectstorageinfo", func(c *gin.Context) {
+		app := c.Query("app")
+		log.Printf("[OSSGateway] Received get object storage info request for app: %s", app)
+
+		response := []gin.H{
+			{
+				"id":      "mock-oss-storage-id",
+				"name":    "Mock OSS Storage",
+				"enabled": true,
+				"default": true,
+			},
+		}
+
+		log.Printf("[OSSGateway] Returning mock response: %+v", response)
+		c.JSON(http.StatusOK, response)
+	})
+
+	// Mock upload endpoint - returns request body for actual upload
+	router.GET("/api/ossgateway/v1/upload/:oss_id/*key", func(c *gin.Context) {
+		ossID := c.Param("oss_id")
+		key := c.Param("key")
+		requestMethod := c.Query("request_method")
+		internalRequest := c.Query("internal_request")
+		log.Printf("[OSSGateway] Received upload request for oss_id: %s, key: %s, method: %s, internal: %s",
+			ossID, key, requestMethod, internalRequest)
+
+		// Return a mock request body that simulates what the real OSS gateway would return
+		response := gin.H{
+			"method": "PUT",
+			"url":    "http://localhost:9002/mock-oss-storage/upload",
+			"headers": gin.H{
+				"Content-Type": "application/octet-stream",
+			},
+		}
+
+		log.Printf("[OSSGateway] Returning mock upload request body: %+v", response)
+		c.JSON(http.StatusOK, response)
+	})
+
+	// Mock actual upload endpoint (receives the file data)
+	router.PUT("/mock-oss-storage/upload", func(c *gin.Context) {
+		log.Printf("[OSSGateway] Received actual file upload")
+		c.Status(http.StatusOK)
+	})
+
+	// Mock download endpoint
+	router.GET("/api/ossgateway/v1/download/:oss_id/*key", func(c *gin.Context) {
+		ossID := c.Param("oss_id")
+		key := c.Param("key")
+		internalRequest := c.Query("internal_request")
+		downloadType := c.Query("type")
+		log.Printf("[OSSGateway] Received download request for oss_id: %s, key: %s, internal: %s, type: %s",
+			ossID, key, internalRequest, downloadType)
+
+		response := gin.H{
+			"method": "GET",
+			"url":    "http://localhost:9002/mock-oss-storage/download",
+			"headers": gin.H{
+				"Content-Type": "application/octet-stream",
+			},
+		}
+
+		log.Printf("[OSSGateway] Returning mock download request body: %+v", response)
+		c.JSON(http.StatusOK, response)
+	})
+
+	// Mock actual download endpoint
+	router.GET("/mock-oss-storage/download", func(c *gin.Context) {
+		log.Printf("[OSSGateway] Received actual file download")
+		c.JSON(http.StatusOK, gin.H{"data": "mock file content"})
+	})
+
+	// Mock delete endpoint
+	router.GET("/api/ossgateway/v1/delete/:oss_id/*key", func(c *gin.Context) {
+		ossID := c.Param("oss_id")
+		key := c.Param("key")
+		internalRequest := c.Query("internal_request")
+		log.Printf("[OSSGateway] Received delete request for oss_id: %s, key: %s, internal: %s",
+			ossID, key, internalRequest)
+
+		response := gin.H{
+			"method":  "DELETE",
+			"url":     "http://localhost:9002/mock-oss-storage/delete",
+			"headers": gin.H{},
+		}
+
+		log.Printf("[OSSGateway] Returning mock delete request body: %+v", response)
+		c.JSON(http.StatusOK, response)
+	})
+
+	// Mock actual delete endpoint
+	router.DELETE("/mock-oss-storage/delete", func(c *gin.Context) {
+		log.Printf("[OSSGateway] Received actual file delete")
+		c.Status(http.StatusOK)
+	})
+
+	// Mock head (metadata) endpoint
+	router.GET("/api/ossgateway/v1/head/:oss_id/*key", func(c *gin.Context) {
+		ossID := c.Param("oss_id")
+		key := c.Param("key")
+		internalRequest := c.Query("internal_request")
+		log.Printf("[OSSGateway] Received head request for oss_id: %s, key: %s, internal: %s",
+			ossID, key, internalRequest)
+
+		response := gin.H{
+			"method":  "HEAD",
+			"url":     "http://localhost:9002/mock-oss-storage/head",
+			"headers": gin.H{},
+		}
+
+		log.Printf("[OSSGateway] Returning mock head request body: %+v", response)
+		c.JSON(http.StatusOK, response)
+	})
+
+	// Mock actual head endpoint
+	router.HEAD("/mock-oss-storage/head", func(c *gin.Context) {
+		log.Printf("[OSSGateway] Received actual file head request")
+		c.Header("Content-Length", "1024")
+		c.Status(http.StatusOK)
+	})
+
+	// Health check
+	router.GET("/health", func(c *gin.Context) {
+		c.JSON(http.StatusOK, gin.H{"status": "ok", "service": "ossgateway-mock"})
+	})
+
+	port := os.Getenv("OSSGATEWAY_MOCK_PORT")
+	if port == "" {
+		port = "9002"
+	}
+
+	log.Printf("[OSSGateway] Starting mock server on port %s", port)
+	if err := router.Run(":" + port); err != nil {
+		log.Fatalf("[OSSGateway] Failed to start: %v", err)
 	}
 }

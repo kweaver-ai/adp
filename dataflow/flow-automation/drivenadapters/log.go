@@ -7,9 +7,9 @@ import (
 	"sync"
 	"time"
 
-	"github.com/kweaver-ai/adp/autoflow/flow-automation/common"
 	"github.com/kweaver-ai/TelemetrySDK-Go/span/v2/field"
 	spanLog "github.com/kweaver-ai/TelemetrySDK-Go/span/v2/log"
+	"github.com/kweaver-ai/adp/autoflow/flow-automation/common"
 )
 
 // 常量定义
@@ -276,6 +276,9 @@ type O11yLogWriter struct {
 }
 
 func (w *O11yLogWriter) Write(_ string, logObj interface{}) error {
+	if w.Logger == nil {
+		return nil
+	}
 	w.Logger.InfoField(field.MallocJsonField(logObj), common.FlowServiceName)
 	return nil
 }
