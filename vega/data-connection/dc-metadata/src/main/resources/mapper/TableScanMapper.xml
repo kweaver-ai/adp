@@ -8,63 +8,57 @@
           AND f_operation_type != 1
     </select>
 
-    <select id="getTableListByDsIdsBatch" resultType="java.lang.String">
-        SELECT f_id FROM
+    <select id="getTableListByDsIdsBatch" resultType="com.eisoo.dc.common.metadata.entity.TableScanEntity">
+        SELECT f_id,f_name, f_advanced_params,f_description,f_table_rows,f_data_source_id,f_operation_time FROM
         (
-         SELECT t1.f_id,GREATEST(IFNULL(t1.f_operation_time,0),max(IFNULL(t2.f_operation_time,0))) as f_operation_time
-                FROM
-            (SELECT f_id,f_operation_time FROM t_table_scan
-                WHERE 1=1
-            <if test="dsIds != null">
-                AND f_data_source_id IN
-                <foreach item="dsId" collection="dsIds" open="(" separator="," close=")">
-                    #{dsId}
-                </foreach>
-            </if>
-            AND f_operation_type != 1
-            <if test="keyword != null and keyword != ''">
-                AND f_name LIKE CONCAT('%', #{keyword}, '%')
-            </if>
-            )t1
-                JOIN
-            (SELECT f_table_id,f_operation_time FROM t_table_field_scan WHERE f_operation_type != 1)t2
-                ON t1.f_id=t2.f_table_id GROUP BY t1.f_id
-         )m  WHERE 1=1
-        <if test="updateTime != null and updateTime != ''">
-            AND m.f_operation_time >= #{updateTime}
+        SELECT f_id,f_name, f_advanced_params,f_description,f_table_rows,f_data_source_id,${sortOrder} as
+        sort_order,f_operation_time FROM t_table_scan
+        WHERE 1=1
+        <if test="dsIds != null and not dsIds.isEmpty()">
+            AND f_data_source_id IN
+            <foreach item="dsId" collection="dsIds" open="(" separator="," close=")">
+                #{dsId}
+            </foreach>
         </if>
-        UNION ALL
-            SELECT f_id FROM
-        (
-            SELECT t3.f_id,GREATEST(IFNULL(t3.f_update_time,0),max(IFNULL(t4.f_update_time,0))) as f_operation_time
-                    FROM
-                (SELECT f_id,f_update_time FROM t_table
-                WHERE 1=1
-                <if test="dsIds != null">
-                    AND f_data_source_id IN
-                    <foreach item="dsId" collection="dsIds" open="(" separator="," close=")">
-                        #{dsId}
-                    </foreach>
-                </if>
-                AND f_delete_flag != 1
-                <if test="keyword != null and keyword != ''">
-                    AND f_name LIKE CONCAT('%', #{keyword}, '%')
-                </if>
-                )t3
-                    JOIN (SELECT f_table_id ,f_update_time FROM t_table_field WHERE f_delete_flag != 1)t4
-                        ON t3.f_id=t4.f_table_id  GROUP BY t3.f_id
-        )n
-            WHERE 1=1
+        AND f_operation_type != 1
         <if test="updateTime != null and updateTime != ''">
-            AND n.f_operation_time >= #{updateTime}
+            AND f_operation_time >= #{updateTime}
         </if>
-
-    </select>
-    <select id="getTableListByDsId" resultType="com.eisoo.dc.common.metadata.entity.TableScanEntity">
-        SELECT f_id FROM t_table_scan
-        WHERE f_data_source_id = #{dsId} AND f_operation_type != 1
         <if test="keyword != null and keyword != ''">
             AND f_name LIKE CONCAT('%', #{keyword}, '%')
+        </if>
+        UNION ALL
+        SELECT f_id,f_name,f_advanced_params,f_description,f_table_rows,f_data_source_id, ${sortOrder} as
+        sort_order,f_update_time as f_operation_time FROM t_table
+        WHERE 1=1
+        <if test="dsIds != null and not dsIds.isEmpty()">
+            AND f_data_source_id IN
+            <foreach item="dsId" collection="dsIds" open="(" separator="," close=")">
+                #{dsId}
+            </foreach>
+        </if>
+        AND f_delete_flag != 1
+        <if test="updateTime != null and updateTime != ''">
+            AND f_update_time >= #{updateTime}
+        </if>
+        <if test="keyword != null and keyword != ''">
+            AND f_name LIKE CONCAT('%', #{keyword}, '%')
+        </if>
+        )t
+        ORDER BY t.sort_order ${direction}
+        <if test="limit > 0">
+            LIMIT #{limit} OFFSET #{offset}
+        </if>
+    </select>
+    <select id="getTableListByDsId" resultType="com.eisoo.dc.common.metadata.entity.TableScanEntity">
+        SELECT * FROM t_table_scan
+            WHERE f_data_source_id = #{dsId} AND f_operation_type != 1
+        <if test="keyword != null and keyword != ''">
+            AND f_name LIKE CONCAT('%', #{keyword}, '%')
+        </if>
+        ORDER BY ${sortOrder} ${direction}
+        <if test="limit > 0">
+            LIMIT #{limit} OFFSET #{offset}
         </if>
     </select>
     <select id="selectPage" resultType="com.eisoo.dc.common.metadata.entity.TableScanEntity">
@@ -88,7 +82,8 @@
 
     <select id="selectPageBatchIds" resultType="com.eisoo.dc.common.metadata.entity.TableScanEntity">
         SELECT f_id,f_name, f_advanced_params,f_description,f_table_rows,f_data_source_id,f_scan_source FROM (
-        SELECT f_id,f_name, f_advanced_params,f_description,f_table_rows,f_data_source_id,f_scan_source FROM t_table_scan
+        SELECT f_id,f_name, f_advanced_params,f_description,f_table_rows,f_data_source_id,f_scan_source FROM
+        t_table_scan
         WHERE 1=1
         <if test="includeIds != null">
             AND f_id IN
@@ -114,7 +109,7 @@
         SELECT f_id,f_name, f_advanced_params,f_description,f_table_rows,f_data_source_id,${sortOrder} as
         sort_order,f_operation_time FROM t_table_scan
         WHERE 1=1
-        <if test="includeIds != null">
+        <if test="includeIds != null and not includeIds.isEmpty()">
             AND f_id IN
             <foreach item="includeId" collection="includeIds" open="(" separator="," close=")">
                 #{includeId}
@@ -129,7 +124,7 @@
         sort_order,f_update_time as f_operation_time
         FROM t_table
         WHERE 1=1
-        <if test="includeIds != null">
+        <if test="includeIds != null and not includeIds.isEmpty()">
             AND f_id IN
             <foreach item="includeId" collection="includeIds" open="(" separator="," close=")">
                 #{includeId}
@@ -153,56 +148,39 @@
             AND f_name LIKE CONCAT('%', #{keyword}, '%')
         </if>
     </select>
-
     <select id="selectCountByDsIdsBatch" resultType="long">
         SELECT count(*) FROM (
-            SELECT f_id FROM
-         (
-            SELECT t1.f_id,GREATEST(IFNULL(t1.f_operation_time,0),max(IFNULL(t2.f_operation_time,0))) as f_operation_time
-                FROM
-            (SELECT f_id,f_operation_time FROM t_table_scan WHERE 1=1
-                <if test="dsIds != null">
-                    AND f_data_source_id IN
-                    <foreach item="dsId" collection="dsIds" open="(" separator="," close=")">
-                        #{dsId}
-                    </foreach>
-                </if>
-            AND f_operation_type != 1
-                <if test="keyword != null and keyword != ''">
-                    AND f_name LIKE CONCAT('%', #{keyword}, '%')
-                </if>
-            )t1
-                JOIN
-            (SELECT f_table_id,f_operation_time FROM t_table_field_scan WHERE f_operation_type != 1)t2
-                ON t1.f_id=t2.f_table_id  GROUP BY t1.f_id
-         )m   WHERE 1=1
-            <if test="updateTime != null and updateTime != ''">
-                AND m.f_operation_time >= #{updateTime}
-            </if>
+        SELECT f_id FROM t_table_scan
+        WHERE 1=1
+        <if test="dsIds != null and not dsIds.isEmpty()">
+            AND f_data_source_id IN
+            <foreach item="dsId" collection="dsIds" open="(" separator="," close=")">
+                #{dsId}
+            </foreach>
+        </if>
+        AND f_operation_type != 1
+        <if test="updateTime != null and updateTime != ''">
+            AND f_operation_time >= #{updateTime}
+        </if>
+        <if test="keyword != null and keyword != ''">
+            AND f_name LIKE CONCAT('%', #{keyword}, '%')
+        </if>
         UNION ALL
-                SELECT f_id FROM
-            (
-                SELECT t3.f_id,GREATEST(IFNULL(t3.f_update_time,0),max(IFNULL(t4.f_update_time,0))) as f_operation_time
-                        FROM
-                    (SELECT f_id,f_update_time FROM t_table WHERE 1=1
-                            <if test="dsIds != null">
-                                AND f_data_source_id IN
-                                <foreach item="dsId" collection="dsIds" open="(" separator="," close=")">
-                                    #{dsId}
-                                </foreach>
-                            </if>
-                        AND f_delete_flag != 1
-                        <if test="keyword != null and keyword != ''">
-                            AND f_name LIKE CONCAT('%', #{keyword}, '%')
-                        </if>
-                    )t3
-                        JOIN
-                    (SELECT f_table_id ,f_update_time FROM t_table_field WHERE f_delete_flag != 1
-                    )t4 ON t3.f_id=t4.f_table_id GROUP BY t3.f_id
-            )n WHERE 1=1
-                <if test="updateTime != null and updateTime != ''">
-                    AND n.f_operation_time >= #{updateTime}
-                </if>
+        SELECT f_id FROM t_table
+        WHERE 1=1
+        <if test="dsIds != null and not dsIds.isEmpty()">
+            AND f_data_source_id IN
+            <foreach item="dsId" collection="dsIds" open="(" separator="," close=")">
+                #{dsId}
+            </foreach>
+        </if>
+        AND f_delete_flag != 1
+        <if test="updateTime != null and updateTime != ''">
+            AND f_update_time >= #{updateTime}
+        </if>
+        <if test="keyword != null and keyword != ''">
+            AND f_name LIKE CONCAT('%', #{keyword}, '%')
+        </if>
         ) AS tmp
     </select>
 </mapper>
