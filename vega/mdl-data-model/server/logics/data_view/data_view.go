@@ -594,7 +594,7 @@ func validateViewNode(ctx context.Context, dvs *dataViewService, node *interface
 	// 判断自定义视图的来源视图是否存在，从这个函数能够拿到字段列表
 	atomicView, err := dvs.GetDataView(ctx, cfg.ViewID)
 	if err != nil {
-		return rest.NewHTTPError(ctx, http.StatusInternalServerError, rest.PublicError_InternalServerError).
+		return rest.NewHTTPError(ctx, http.StatusInternalServerError, derrors.DataModel_DataView_InternalError_InvalidReferenceView).
 			WithErrorDetails(fmt.Sprintf("get data view %s failed, %v", cfg.ViewID, err))
 	}
 

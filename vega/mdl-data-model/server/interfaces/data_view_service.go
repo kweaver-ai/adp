@@ -57,7 +57,8 @@ const (
 	OBJECTTYPE_DATA_VIEW           = "ID_AUDIT_DATA_VIEW"
 	OBJECTTYPE_REAL_TIME_STREAMING = "ID_AUDIT_REAL_TIME_STREAMING"
 
-	// 视图备注、视图分组名最大长度
+	// 视图名称、视图备注、视图分组名最大长度
+	MaxLength_ViewName      = 255
 	MaxLength_ViewComment   = 255
 	MaxLength_ViewGroupName = 40
 	// 视图字段名称、字段显示名、字段备注、字段特征备注的最大长度

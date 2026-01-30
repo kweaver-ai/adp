@@ -193,6 +193,11 @@ Description = "Get Total Failed"
 Solution = "Please try again. If the error occurs again, please submit the work order or contact technical support."
 ErrorLink = "None"
 
+[Uniquery.DataView.InternalError.InvalidReferenceView]
+Description = "Invalid Reference Atomic View"
+Solution = "Please check whether the reference atomic view is valid."
+ErrorLink = "None"
+
 [Uniquery.DataView.InternalError.LoadIndexShardsFailed]
 Description = "Load Index Shards Failed"
 Solution = "Please try again. If the error occurs again, please submit the work order or contact technical support."
