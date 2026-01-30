@@ -259,6 +259,11 @@ Description = "Delete Data Views Failed"
 Solution = "Please try again. If the error occurs again, please submit the work order or contact technical support."
 ErrorLink = "None"
 
+[DataModel.DataView.InternalError.InvalidReferenceView]
+Description = "Invalid Reference Atomic View"
+Solution = "Please Check Whether The Reference Atomic View Is Valid."
+ErrorLink = "None"
+
 [DataModel.DataView.InternalError.ListDataViewsFailed]
 Description = "List Data Views Failed"
 Solution = "Please try again. If the error occurs again, please submit the work order or contact technical support."

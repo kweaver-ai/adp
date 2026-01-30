@@ -144,7 +144,7 @@ func validateViewID(ctx context.Context, viewID string, builtin bool) error {
 // 	return nil
 // }
 
-// 数据视图参数校验
+// 自定义数据视图参数校验
 func ValidateDataView(ctx context.Context, view *interfaces.DataView) error {
 	// 校验数据视图 id
 	err := validateViewID(ctx, view.ViewID, view.Builtin)
@@ -152,10 +152,15 @@ func ValidateDataView(ctx context.Context, view *interfaces.DataView) error {
 		return err
 	}
 
-	// 校验对象名称
-	err = validateObjectName(ctx, view.ViewName, interfaces.MODULE_TYPE_DATA_VIEW)
-	if err != nil {
-		return err
+	// 校验视图业务名称
+	if view.ViewName == "" {
+		return rest.NewHTTPError(ctx, http.StatusBadRequest, derrors.DataModel_DataView_NullParameter_ViewName)
+	}
+
+	// 视图业务名称长度限制255
+	if utf8.RuneCountInString(view.ViewName) > interfaces.MaxLength_ViewName {
+		return rest.NewHTTPError(ctx, http.StatusBadRequest, derrors.DataModel_DataView_LengthExceeded_ViewName).
+			WithErrorDetails(fmt.Sprintf("The length of the %v named %v exceeds %v", "view name", view.ViewName, interfaces.MaxLength_ViewName))
 	}
 
 	// 校验技术名称
@@ -242,13 +247,18 @@ func validateDataScope(ctx context.Context, nodes []*interfaces.DataScopeNode) (
 // 校验原子视图更新参数
 func validateAtomicViewUpdateReq(ctx context.Context, req *interfaces.AtomicViewUpdateReq) error {
 	// 校验对象名称
-	err := validateObjectName(ctx, req.ViewName, interfaces.MODULE_TYPE_DATA_VIEW)
-	if err != nil {
-		return err
+	if req.ViewName == "" {
+		return rest.NewHTTPError(ctx, http.StatusBadRequest, derrors.DataModel_DataView_NullParameter_ViewName)
+	}
+
+	// 视图业务名称长度限制255
+	if utf8.RuneCountInString(req.ViewName) > interfaces.MaxLength_ViewName {
+		return rest.NewHTTPError(ctx, http.StatusBadRequest, derrors.DataModel_DataView_LengthExceeded_ViewName).
+			WithErrorDetails(fmt.Sprintf("The length of the %v named %v exceeds %v", "view name", req.ViewName, interfaces.MaxLength_ViewName))
 	}
 
 	// 校验备注
-	err = validateObjectComment(ctx, req.Comment)
+	err := validateObjectComment(ctx, req.Comment)
 	if err != nil {
 		return err
 	}

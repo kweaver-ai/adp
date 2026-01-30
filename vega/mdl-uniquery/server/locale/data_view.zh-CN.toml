@@ -193,6 +193,11 @@ Description = "获取数据总量失败"
 Solution = "请重试该操作，若再次出现该错误请提交工单或联系技术支持工程师。"
 ErrorLink = "暂无"
 
+[Uniquery.DataView.InternalError.InvalidReferenceView]
+Description = "引用的原子视图无效"
+Solution = "请检查引用的原子视图是否有效。"
+ErrorLink = "暂无"
+
 [Uniquery.DataView.InternalError.LoadIndexShardsFailed]
 Description = "获取索引的分片信息失败"
 Solution = "请重试该操作，若再次出现该错误请提交工单或联系技术支持工程师。"

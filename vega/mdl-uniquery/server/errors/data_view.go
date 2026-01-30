@@ -48,6 +48,7 @@ const (
 	Uniquery_DataView_InternalError_GetSearchAfterValueFailed      = "Uniquery.DataView.InternalError.GetSearchAfterValueFailed"
 	Uniquery_DataView_InternalError_GetScrollIdFailed              = "Uniquery.DataView.InternalError.GetScrollIdFailed"
 	Uniquery_DataView_InternalError_GetTotalFailed                 = "Uniquery.DataView.InternalError.GetTotalFailed"
+	Uniquery_DataView_InternalError_InvalidReferenceView           = "Uniquery.DataView.InternalError.InvalidReferenceView"
 	Uniquery_DataView_InternalError_LoadIndexShardsFailed          = "Uniquery.DataView.InternalError.LoadIndexShardsFailed"
 	Uniquery_DataView_InternalError_MarshalFailed                  = "Uniquery.DataView.InternalError.MarshalFailed"
 	Uniquery_DataView_InternalError_ProcessDocFailed               = "Uniquery.DataView.InternalError.ProcessDocFailed"
@@ -104,6 +105,7 @@ var (
 		Uniquery_DataView_InternalError_GetSearchAfterValueFailed,
 		Uniquery_DataView_InternalError_GetScrollIdFailed,
 		Uniquery_DataView_InternalError_GetTotalFailed,
+		Uniquery_DataView_InternalError_InvalidReferenceView,
 		Uniquery_DataView_InternalError_LoadIndexShardsFailed,
 		Uniquery_DataView_InternalError_MarshalFailed,
 		Uniquery_DataView_InternalError_ProcessDocFailed,

@@ -76,6 +76,7 @@ const (
 	DataModel_DataView_InternalError_GetJobsByDataViewIDsFailed            = "DataModel.DataView.InternalError.GetJobsByDataViewIDsFailed"
 	DataModel_DataView_InternalError_GetSimpleDataViewMapByIDsFailed       = "DataModel.DataView.InternalError.GetSimpleDataViewMapByIDsFailed"
 	DataModel_DataView_InternalError_GetSimpleDataViewMapByNamesFailed     = "DataModel.DataView.InternalError.GetSimpleDataViewMapByNamesFailed"
+	DataModel_DataView_InternalError_InvalidReferenceView                  = "DataModel.DataView.InternalError.InvalidReferenceView"
 	DataModel_DataView_InternalError_ListDataViewsFailed                   = "DataModel.DataView.InternalError.ListDataViewsFailed"
 	DataModel_DataView_InternalError_MarshalViewAttrFailed                 = "DataModel.DataView.InternalError.MarshalViewAttrFailed"
 	DataModel_DataView_InternalError_UnMarshalViewAttrFailed               = "DataModel.DataView.InternalError.UnMarshalViewAttrFailed"
@@ -204,6 +205,7 @@ var (
 		DataModel_DataView_InternalError_GetJobsByDataViewIDsFailed,
 		DataModel_DataView_InternalError_GetSimpleDataViewMapByIDsFailed,
 		DataModel_DataView_InternalError_GetSimpleDataViewMapByNamesFailed,
+		DataModel_DataView_InternalError_InvalidReferenceView,
 		DataModel_DataView_InternalError_ListDataViewsFailed,
 		DataModel_DataView_InternalError_MarshalViewAttrFailed,
 		DataModel_DataView_InternalError_UnMarshalViewAttrFailed,
