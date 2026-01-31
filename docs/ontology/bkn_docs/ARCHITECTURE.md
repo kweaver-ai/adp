@@ -1,6 +1,6 @@
 # BKN 架构设计
 
-BKN (Business Knowledge Network) 是一种 Markdown-based 的本体建模语言，用于描述业务知识网络中的实体、关系和行动。
+BKN (Business Knowledge Network) 是一种 Markdown-based 的业务知识网络建模语言，用于描述业务知识网络中的实体、关系和行动。
 
 ## 设计理念
 
@@ -14,10 +14,10 @@ BKN (Business Knowledge Network) 是一种 Markdown-based 的本体建模语言�
 
 ```mermaid
 flowchart TB
-    subgraph BKN_Language["BKN 本体建模语言"]
+    subgraph BKN_Language["BKN 业务知识网络建模语言"]
         direction TB
         
-        subgraph Types["三种本体类型"]
+        subgraph Types["三种类型"]
             Entity["Entity Type<br/>实体类"]
             Relation["Relation Type<br/>关系类"]
             Action["Action Type<br/>行动类"]
@@ -70,7 +70,7 @@ flowchart LR
     
     subgraph Backend["后端服务"]
         Parser["BKN Parser<br/>解析器"]
-        API["Ontology API<br/>本体管理"]
+        API["Knowledge Network API<br/>知识网络管理"]
         KN["Knowledge Network<br/>知识网络"]
     end
     
@@ -82,7 +82,7 @@ flowchart LR
     API -->|持久化| KN
 ```
 
-## 三种本体类型
+## 三种类型
 
 ### 实体类 (Entity Type)
 
@@ -301,13 +301,15 @@ flowchart LR
 4. **修改**: 导入同 ID 的文件，自动覆盖
 5. **删除**: 导入 `type: delete` 标记的文件
 
-## 与 Ontology API 的映射
+## 与 知识网络管理 API 的映射
+
+> 说明：接口路径仅用于表达 BKN 概念与系统 API 的对应关系，具体实现路径以实际部署为准。
 
 | BKN 概念 | API 端点 |
 |----------|----------|
-| Entity | `/api/ontology-manager/v1/knowledge-networks/{kn_id}/object-types` |
-| Relation | `/api/ontology-manager/v1/knowledge-networks/{kn_id}/relation-types` |
-| Action | `/api/ontology-manager/v1/knowledge-networks/{kn_id}/action-types` |
+| Entity | `/api/knowledge-networks/{kn_id}/object-types` |
+| Relation | `/api/knowledge-networks/{kn_id}/relation-types` |
+| Action | `/api/knowledge-networks/{kn_id}/action-types` |
 
 ## 参考
 
