@@ -1,0 +1,816 @@
+# BKN 语言规范
+
+版本: 1.0.0
+
+## 概述
+
+BKN (Business Knowledge Network) 是一种基于 Markdown 的本体建模语言，用于描述业务知识网络。本文档定义了 BKN 的语法规范。
+
+## 文件格式
+
+### 文件扩展名
+
+- `.bkn` - BKN 文件
+
+### 文件编码
+
+- UTF-8
+
+### 基本结构
+
+每个 BKN 文件由两部分组成：
+
+1. **YAML Frontmatter**: 文件元数据
+2. **Markdown Body**: 本体定义内容
+
+```markdown
+---
+type: network
+id: example-network
+name: 示例网络
+version: 1.0.0
+---
+
+# 网络标题
+
+网络描述...
+
+## Entity: entity_id
+
+实体定义...
+
+## Relation: relation_id
+
+关系定义...
+
+## Action: action_id
+
+行动定义...
+```
+
+---
+
+## Frontmatter 规范
+
+### 文件类型 (type)
+
+| type | 说明 | 用途 |
+|------|------|------|
+| `network` | 完整知识网络 | 包含多个定义的网络文件 |
+| `entity` | 单个实体定义 | 独立的实体文件，可直接导入 |
+| `relation` | 单个关系定义 | 独立的关系文件，可直接导入 |
+| `action` | 单个行动定义 | 独立的行动文件，可直接导入 |
+| `fragment` | 混合片段 | 包含多个类型的部分定义 |
+| `delete` | 删除标记 | 标记要删除的定义 |
+
+### 网络文件 (type: network)
+
+```yaml
+---
+type: network                    # 完整知识网络
+id: string                       # 网络ID，唯一标识
+name: string                     # 网络显示名称
+version: string                  # 版本号 (semver)
+tags: [string]                   # 可选，标签列表
+description: string              # 可选，网络描述
+includes: [string]               # 可选，引用的其他文件
+---
+```
+
+### 单实体文件 (type: entity)
+
+```yaml
+---
+type: entity                     # 单个实体定义
+id: string                       # 实体ID，唯一标识
+name: string                     # 实体显示名称
+version: string                  # 可选，版本号
+network: string                  # 可选，所属网络ID
+tags: [string]                   # 可选，标签列表
+---
+```
+
+### 单关系文件 (type: relation)
+
+```yaml
+---
+type: relation                   # 单个关系定义
+id: string                       # 关系ID，唯一标识
+name: string                     # 关系显示名称
+version: string                  # 可选，版本号
+network: string                  # 可选，所属网络ID
+---
+```
+
+### 单行动文件 (type: action)
+
+```yaml
+---
+type: action                     # 单个行动定义
+id: string                       # 行动ID，唯一标识
+name: string                     # 行动显示名称
+action_type: add | modify | delete  # 行动类型
+version: string                  # 可选，版本号
+network: string                  # 可选，所属网络ID
+---
+```
+
+### 混合片段 (type: fragment)
+
+```yaml
+---
+type: fragment                   # 混合片段
+id: string                       # 片段ID
+name: string                     # 片段名称
+version: string                  # 可选，版本号
+network: string                  # 可选，目标网络ID
+---
+```
+
+### 删除标记 (type: delete)
+
+```yaml
+---
+type: delete                     # 删除标记
+targets:                         # 要删除的定义列表
+  - entity: pod
+  - relation: pod_belongs_node
+  - action: restart_pod
+---
+```
+
+---
+
+## 实体定义规范
+
+### 语法
+
+```markdown
+## Entity: {entity_id}
+
+**{显示名称}** - {简短描述}
+
+### 数据来源
+
+| 类型 | ID | 名称 |
+|------|-----|------|
+| data_view | {view_id} | {view_name} |
+
+> **主键**: `{primary_key}` | **显示属性**: `{display_key}`
+
+### 属性覆盖
+
+(可选) 仅声明需要特殊配置的属性
+
+| 属性名 | 显示名 | 索引配置 | 说明 |
+|--------|--------|----------|------|
+| ... | ... | ... | ... |
+
+### 逻辑属性
+
+#### {property_name}
+
+- **类型**: metric | operator
+- **来源**: {source_id} ({source_type})
+- **说明**: {description}
+
+| 参数名 | 来源 | 绑定值 |
+|--------|------|--------|
+| ... | property | {property_name} |
+| ... | input | - |
+```
+
+### 字段说明
+
+| 字段 | 必须 | 说明 |
+|------|:----:|------|
+| entity_id | YES | 实体唯一标识，小写字母、数字、下划线 |
+| 显示名称 | YES | 人类可读名称 |
+| 数据来源 | YES | 映射的数据视图 |
+| 主键 | YES | 主键属性名 |
+| 显示属性 | YES | 用于展示的属性名 |
+| 属性覆盖 | NO | 需要特殊配置的属性 |
+| 逻辑属性 | NO | 指标、算子等扩展属性 |
+
+### 配置模式
+
+#### 模式一：完全映射（最简洁）
+
+直接映射视图，自动继承所有字段：
+
+```markdown
+## Entity: node
+
+**Node节点**
+
+### 数据来源
+
+| 类型 | ID |
+|------|-----|
+| data_view | view_123 |
+
+> **主键**: `id` | **显示属性**: `node_name`
+```
+
+#### 模式二：映射 + 属性覆盖
+
+映射视图，仅声明需要特殊配置的属性：
+
+```markdown
+## Entity: pod
+
+**Pod实例**
+
+### 数据来源
+
+| 类型 | ID |
+|------|-----|
+| data_view | view_456 |
+
+> **主键**: `id` | **显示属性**: `pod_name`
+
+### 属性覆盖
+
+| 属性名 | 索引配置 |
+|--------|----------|
+| pod_status | fulltext + vector |
+```
+
+#### 模式三：完整定义
+
+完整声明所有属性：
+
+```markdown
+## Entity: service
+
+**Service服务**
+
+### 数据来源
+
+| 类型 | ID |
+|------|-----|
+| data_view | view_789 |
+
+### 数据属性
+
+| 属性名 | 显示名 | 类型 | 说明 | 主键 | 索引 |
+|--------|--------|------|------|:----:|:----:|
+| id | ID | int64 | 主键 | YES | YES |
+| service_name | 名称 | VARCHAR | 服务名 | | YES |
+
+> **显示属性**: `service_name`
+```
+
+---
+
+## 关系定义规范
+
+### 语法
+
+```markdown
+## Relation: {relation_id}
+
+**{显示名称}** - {简短描述}
+
+| 起点 | 终点 | 类型 |
+|------|------|------|
+| {source_entity} | {target_entity} | direct | data_view |
+
+### 映射规则
+
+| 起点属性 | 终点属性 |
+|----------|----------|
+| {source_prop} | {target_prop} |
+
+### 业务语义
+
+(可选) 关系的业务含义说明...
+```
+
+### 字段说明
+
+| 字段 | 必须 | 说明 |
+|------|:----:|------|
+| relation_id | YES | 关系唯一标识 |
+| 起点 | YES | 起点实体 ID |
+| 终点 | YES | 终点实体 ID |
+| 类型 | YES | `direct` (直接映射) 或 `data_view` (视图映射) |
+| 映射规则 | YES | 属性映射关系 |
+
+### 关系类型
+
+#### 直接映射 (direct)
+
+通过属性值匹配建立关联：
+
+```markdown
+## Relation: pod_belongs_node
+
+| 起点 | 终点 | 类型 |
+|------|------|------|
+| pod | node | direct |
+
+### 映射规则
+
+| 起点属性 | 终点属性 |
+|----------|----------|
+| pod_node_name | node_name |
+```
+
+#### 视图映射 (data_view)
+
+通过中间视图建立关联：
+
+```markdown
+## Relation: user_likes_post
+
+| 起点 | 终点 | 类型 |
+|------|------|------|
+| user | post | data_view |
+
+### 映射视图
+
+| 类型 | ID |
+|------|-----|
+| data_view | user_post_likes_view |
+
+### 起点映射
+
+| 起点属性 | 视图属性 |
+|----------|----------|
+| user_id | uid |
+
+### 终点映射
+
+| 视图属性 | 终点属性 |
+|----------|----------|
+| pid | post_id |
+```
+
+---
+
+## 行动定义规范
+
+### 语法
+
+```markdown
+## Action: {action_id}
+
+**{显示名称}** - {简短描述}
+
+| 绑定实体 | 行动类型 |
+|----------|----------|
+| {entity_id} | add | modify | delete |
+
+### 触发条件
+
+```yaml
+field: {property_name}
+operation: == | != | > | < | >= | <= | in | not_in | exist | not_exist
+value: {value}
+```
+
+### 工具配置
+
+| 类型 | 工具ID |
+|------|--------|
+| tool | {tool_id} |
+
+或
+
+| 类型 | MCP |
+|------|-----|
+| mcp | {mcp_id}/{tool_name} |
+
+### 参数绑定
+
+| 参数 | 来源 | 绑定 |
+|------|------|------|
+| {param_name} | property | {property_name} |
+| {param_name} | input | - |
+| {param_name} | const | {value} |
+
+### 调度配置
+
+(可选)
+
+| 类型 | 表达式 |
+|------|--------|
+| FIX_RATE | {interval} |
+| CRON | {cron_expr} |
+
+### 执行说明
+
+(可选) 详细的执行流程说明...
+```
+
+### 字段说明
+
+| 字段 | 必须 | 说明 |
+|------|:----:|------|
+| action_id | YES | 行动唯一标识 |
+| 绑定实体 | YES | 目标实体 ID |
+| 行动类型 | YES | `add` / `modify` / `delete` |
+| 触发条件 | NO | 自动触发的条件 |
+| 工具配置 | YES | 执行的工具或 MCP |
+| 参数绑定 | YES | 参数来源配置 |
+| 调度配置 | NO | 定时执行配置 |
+
+### 触发条件操作符
+
+| 操作符 | 说明 | 示例 |
+|--------|------|------|
+| == | 等于 | `value: Running` |
+| != | 不等于 | `value: Running` |
+| > | 大于 | `value: 100` |
+| < | 小于 | `value: 100` |
+| >= | 大于等于 | `value: 100` |
+| <= | 小于等于 | `value: 100` |
+| in | 包含于 | `value: [A, B, C]` |
+| not_in | 不包含于 | `value: [A, B, C]` |
+| exist | 存在 | (无需 value) |
+| not_exist | 不存在 | (无需 value) |
+| range | 范围内 | `value: [0, 100]` |
+
+### 参数来源
+
+| 来源 | 说明 |
+|------|------|
+| property | 从实体属性获取 |
+| input | 运行时用户输入 |
+| const | 常量值 |
+
+---
+
+## 通用语法元素
+
+### 表格格式
+
+使用标准 Markdown 表格：
+
+```markdown
+| 列1 | 列2 | 列3 |
+|-----|-----|-----|
+| 值1 | 值2 | 值3 |
+```
+
+居中对齐（用于布尔值）：
+
+```markdown
+| 列1 | 列2 |
+|-----|:---:|
+| 值1 | YES |
+```
+
+### YAML 代码块
+
+用于复杂结构（如条件表达式）：
+
+```markdown
+```yaml
+condition:
+  operation: and
+  sub_conditions:
+    - field: status
+      operation: ==
+      value: Failed
+    - field: retry_count
+      operation: <
+      value: 3
+`` `
+```
+
+### Mermaid 图表
+
+用于可视化关系：
+
+```markdown
+```mermaid
+graph LR
+    A --> B
+    B --> C
+`` `
+```
+
+### 引用块
+
+用于关键信息高亮：
+
+```markdown
+> **主键**: `id` | **显示属性**: `name`
+```
+
+### 标题层级
+
+- `#` - 网络标题
+- `##` - 类型定义 (Entity/Relation/Action)
+- `###` - 定义内的主要 section
+- `####` - 逻辑属性名等子项
+
+---
+
+## 文件组织
+
+### 模式一：单文件（小型网络）
+
+所有定义在一个 `.bkn` 文件中：
+
+```markdown
+---
+type: network
+id: my-network
+---
+
+# My Network
+
+## Entity: entity1
+...
+
+## Entity: entity2
+...
+
+## Relation: rel1
+...
+
+## Action: action1
+...
+```
+
+### 模式二：按类型拆分（中型网络）
+
+使用 `index.bkn` 引用其他文件：
+
+```markdown
+---
+type: network
+id: my-network
+includes:
+  - entities.bkn
+  - relations.bkn
+  - actions.bkn
+---
+
+# My Network
+
+网络描述...
+```
+
+### 模式三：每定义一文件（大型网络，推荐）
+
+每个实体/关系/行动独立一个文件：
+
+```
+k8s-network/
+├── index.bkn                    # type: network
+├── entities/
+│   ├── pod.bkn                  # type: entity
+│   ├── node.bkn                 # type: entity
+│   └── service.bkn              # type: entity
+├── relations/
+│   ├── pod_belongs_node.bkn     # type: relation
+│   └── service_routes_pod.bkn   # type: relation
+└── actions/
+    ├── restart_pod.bkn          # type: action
+    └── cordon_node.bkn          # type: action
+```
+
+**单实体文件示例** (`pod.bkn`):
+
+```markdown
+---
+type: entity
+id: pod
+name: Pod实例
+network: k8s-network
+---
+
+# Pod实例
+
+Kubernetes 中的最小部署单元。
+
+## 数据来源
+
+| 类型 | ID |
+|------|-----|
+| data_view | view_123 |
+
+> **主键**: `id` | **显示属性**: `pod_name`
+```
+
+---
+
+## 增量导入规范
+
+BKN 支持将任何 `.bkn` 文件动态导入到已有的知识网络。
+
+### 导入行为
+
+| 场景 | 行为 |
+|------|------|
+| ID 不存在 | 创建新定义 |
+| ID 已存在 | 更新定义（覆盖） |
+| 使用 `type: delete` | 删除指定定义 |
+
+### 导入示例
+
+**场景：向已有网络添加新实体**
+
+创建 `deployment.bkn`:
+
+```markdown
+---
+type: entity
+id: deployment
+name: Deployment
+network: k8s-network
+---
+
+# Deployment
+
+Kubernetes 部署控制器。
+
+## 数据来源
+
+| 类型 | ID |
+|------|-----|
+| data_view | deployment_view |
+
+> **主键**: `id` | **显示属性**: `deployment_name`
+```
+
+导入后，`k8s-network` 将包含新的 `deployment` 实体。
+
+**场景：更新已有实体**
+
+创建同 ID 的文件，导入后自动覆盖：
+
+```markdown
+---
+type: entity
+id: pod
+name: Pod实例（更新版）
+network: k8s-network
+---
+
+# Pod实例
+
+更新后的定义...
+```
+
+**场景：删除定义**
+
+```markdown
+---
+type: delete
+network: k8s-network
+targets:
+  - entity: deprecated_entity
+  - relation: old_relation
+---
+
+# 删除废弃定义
+
+清理不再使用的定义。
+```
+
+**场景：批量导入（fragment）**
+
+```markdown
+---
+type: fragment
+id: monitoring-extension
+name: 监控扩展
+network: k8s-network
+---
+
+# 监控扩展
+
+添加监控相关的实体和行动。
+
+## Entity: alert
+
+**告警**
+
+### 数据来源
+
+| 类型 | ID |
+|------|-----|
+| data_view | alert_view |
+
+> **主键**: `id` | **显示属性**: `alert_name`
+
+---
+
+## Action: send_alert
+
+**发送告警**
+
+| 绑定实体 | 行动类型 |
+|----------|----------|
+| alert | add |
+
+### 工具配置
+
+| 类型 | 工具ID |
+|------|--------|
+| tool | alert_sender |
+```
+
+---
+
+## Patch 规范（文件级别）
+
+### 添加操作
+
+```markdown
+---
+type: patch
+id: 2026-01-31-add-metric
+target: k8s-topology.bkn
+operation: add
+---
+
+# 添加CPU指标
+
+在 `## Entity: pod` 的 `### 逻辑属性` 后添加：
+
+#### cpu_usage
+
+- **类型**: metric
+- **来源**: cpu_metric
+```
+
+### 修改操作
+
+```markdown
+---
+type: patch
+id: 2026-01-31-update-condition
+target: k8s-topology.bkn
+operation: modify
+---
+
+# 更新触发条件
+
+将 `## Action: restart_pod` 的触发条件修改为：
+
+```yaml
+field: pod_status
+operation: in
+value: [Unknown, Failed, CrashLoopBackOff]
+`` `
+```
+
+### 删除操作
+
+```markdown
+---
+type: patch
+id: 2026-01-31-remove-action
+target: k8s-topology.bkn
+operation: delete
+---
+
+# 删除废弃行动
+
+删除 `## Action: deprecated_action`
+```
+
+---
+
+## 最佳实践
+
+### 命名规范
+
+- **ID**: 小写字母、数字、下划线，如 `pod_belongs_node`
+- **显示名称**: 简洁明确，如 "Pod属于节点"
+- **标签**: 使用统一的标签体系
+
+### 文档结构
+
+1. 网络描述放在文件开头
+2. 使用 mermaid 图展示整体拓扑
+3. 实体定义在前，关系和行动在后
+4. 相关定义放在一起
+
+### 简洁原则
+
+- 优先使用完全映射模式
+- 只在需要时声明属性覆盖
+- 避免重复信息
+
+### 可读性
+
+- 使用表格呈现结构化数据
+- 添加业务语义说明
+- 必要时使用 mermaid 图
+
+---
+
+## 参考
+
+- [架构设计](./ARCHITECTURE.md)
+- 样例：
+  - [单文件模式](./examples/k8s-topology.bkn) - 所有定义在一个文件
+  - [按类型拆分](./examples/k8s-network/) - 实体/关系/行动分文件
+  - [每定义一文件](./examples/k8s-modular/) - 每个定义独立文件（推荐大规模场景）
