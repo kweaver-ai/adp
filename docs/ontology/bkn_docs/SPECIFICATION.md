@@ -4,7 +4,7 @@
 
 ## 概述
 
-BKN (Business Knowledge Network) 是一种基于 Markdown 的本体建模语言，用于描述业务知识网络。本文档定义了 BKN 的语法规范。
+BKN (Business Knowledge Network) 是一种基于 Markdown 的业务知识网络建模语言，用于描述业务知识网络。本文档定义了 BKN 的语法规范。
 
 ## 文件格式
 
@@ -21,7 +21,7 @@ BKN (Business Knowledge Network) 是一种基于 Markdown 的本体建模语言�
 每个 BKN 文件由两部分组成：
 
 1. **YAML Frontmatter**: 文件元数据
-2. **Markdown Body**: 本体定义内容
+2. **Markdown Body**: 知识网络定义内容
 
 ```markdown
 ---
