@@ -71,7 +71,7 @@ flowchart LR
     subgraph Backend["后端服务"]
         Parser["BKN Parser<br/>解析器"]
         API["Ontology API<br/>本体管理"]
-        KG["Knowledge Graph<br/>知识图谱"]
+        KN["Knowledge Network<br/>知识网络"]
     end
     
     Human -->|编写/修改| BKNFile
