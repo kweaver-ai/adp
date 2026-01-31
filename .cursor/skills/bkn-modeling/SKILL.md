@@ -138,6 +138,51 @@ value: [Unknown, Failed]
 3. 声明工具配置和参数绑定（必须）
 4. 可选：触发条件、调度配置
 
+## 增量导入
+
+BKN 支持动态增量导入，任何 `.bkn` 文件可直接导入到已有的知识网络。
+
+### 文件类型
+
+| type | 用途 |
+|------|------|
+| `entity` | 单个实体，独立文件 |
+| `relation` | 单个关系，独立文件 |
+| `action` | 单个行动，独立文件 |
+| `fragment` | 混合片段，包含多个定义 |
+| `delete` | 删除标记 |
+
+### 导入行为
+
+- **ID 不存在**: 新增定义
+- **ID 已存在**: 更新定义（覆盖）
+- **type: delete**: 删除指定定义
+
+### 新增实体示例
+
+创建独立文件 `deployment.bkn`:
+
+```markdown
+---
+type: entity
+id: deployment
+name: Deployment
+network: k8s-network
+---
+
+# Deployment
+
+## 数据来源
+
+| 类型 | ID |
+|------|-----|
+| data_view | deployment_view |
+
+> **主键**: `id` | **显示属性**: `deployment_name`
+```
+
+导入后自动添加到 `k8s-network`。
+
 ## 命名规范
 
 | 类型 | 格式 | 示例 |
@@ -166,4 +211,8 @@ value: [Unknown, Failed]
   - [单文件模式](../../docs/ontology/bkn_docs/examples/k8s-topology.bkn)
   - [按类型拆分](../../docs/ontology/bkn_docs/examples/k8s-network/)
   - [每定义一文件](../../docs/ontology/bkn_docs/examples/k8s-modular/) - 推荐大规模场景
-- [模板文件](../../docs/ontology/bkn_docs/templates/network.bkn.template)
+- 模板文件：
+  - [网络模板](../../docs/ontology/bkn_docs/templates/network.bkn.template)
+  - [实体模板](../../docs/ontology/bkn_docs/templates/entity.bkn.template)
+  - [关系模板](../../docs/ontology/bkn_docs/templates/relation.bkn.template)
+  - [行动模板](../../docs/ontology/bkn_docs/templates/action.bkn.template)

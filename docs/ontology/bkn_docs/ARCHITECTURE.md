@@ -79,7 +79,7 @@ flowchart LR
     Patch -->|增量更新| BKNFile
     BKNFile -->|解析| Parser
     Parser -->|调用| API
-    API -->|持久化| KG
+    API -->|持久化| KN
 ```
 
 ## 三种本体类型

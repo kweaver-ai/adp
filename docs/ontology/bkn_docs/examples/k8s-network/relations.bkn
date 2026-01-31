@@ -1,5 +1,7 @@
 ---
-type: relations
+type: fragment
+id: k8s-relations
+name: Kubernetes关系定义
 parent: index.bkn
 version: 1.0.0
 ---
