@@ -1,5 +1,7 @@
 ---
-type: entities
+type: fragment
+id: k8s-entities
+name: Kubernetes实体定义
 parent: index.bkn
 version: 1.0.0
 ---
