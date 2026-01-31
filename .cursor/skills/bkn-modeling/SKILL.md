@@ -1,11 +1,11 @@
 ---
 name: bkn-modeling
-description: 编写和验证 BKN 本体建模文件。用于创建实体类、关系类、行动类定义，或修改现有的 .bkn 文件。当用户提到本体、知识网络、BKN 文件时使用。
+description: 编写和验证 BKN（业务知识网络）建模文件。用于创建实体类、关系类、行动类定义，或修改现有的 .bkn 文件。当用户提到业务知识网络、知识网络、BKN 文件时使用。
 ---
 
-# BKN 本体建模
+# BKN 业务知识网络建模
 
-辅助编写 BKN (Business Knowledge Network) 本体建模文件。
+辅助编写 BKN (Business Knowledge Network) 业务知识网络建模文件。
 
 ## 快速开始
 
@@ -37,7 +37,7 @@ version: 1.0.0
 ...
 ```
 
-## 三种本体类型
+## 三种类型
 
 ### 实体类 (Entity)
 
