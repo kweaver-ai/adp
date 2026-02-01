@@ -74,6 +74,19 @@ version: 1.0.0
 
 ## Frontmatter 规范
 
+### 工程可控性字段（推荐）
+
+为支持规模化协作、审批与审计，建议在定义文件中使用以下字段：
+
+| 字段 | 适用 type | 说明 |
+|------|----------|------|
+| `spec_version` | all | 该文件使用的规范版本（默认继承文档 spec_version） |
+| `namespace` | entity/relation/action/fragment/delete | 命名空间/包名，用于大规模组织与避免冲突（例如 `platform.k8s`） |
+| `owner` | entity/relation/action/fragment/delete | 负责人/团队（用于审计与审批路由） |
+| `enabled` | action | 是否启用（建议默认 `false`，导入不等于启用） |
+| `risk_level` | action | 风险等级（`low|medium|high`，用于审批与发布策略） |
+| `requires_approval` | action | 是否需要审批才能启用/执行 |
+
 ### 文件类型 (type)
 
 | type | 说明 | 用途 |
@@ -107,7 +120,9 @@ type: entity                     # 单个实体定义
 id: string                       # 实体ID，唯一标识
 name: string                     # 实体显示名称
 version: string                  # 可选，版本号
-network: string                  # 可选，所属网络ID
+network: string                  # 所属网络ID（建议必填，保证导入确定性）
+namespace: string                # 可选，命名空间/包名
+owner: string                    # 可选，负责人/团队
 tags: [string]                   # 可选，标签列表
 ---
 ```
@@ -120,7 +135,9 @@ type: relation                   # 单个关系定义
 id: string                       # 关系ID，唯一标识
 name: string                     # 关系显示名称
 version: string                  # 可选，版本号
-network: string                  # 可选，所属网络ID
+network: string                  # 所属网络ID（建议必填，保证导入确定性）
+namespace: string                # 可选，命名空间/包名
+owner: string                    # 可选，负责人/团队
 ---
 ```
 
@@ -133,7 +150,12 @@ id: string                       # 行动ID，唯一标识
 name: string                     # 行动显示名称
 action_type: add | modify | delete  # 行动类型
 version: string                  # 可选，版本号
-network: string                  # 可选，所属网络ID
+network: string                  # 所属网络ID（建议必填，保证导入确定性）
+namespace: string                # 可选，命名空间/包名
+owner: string                    # 可选，负责人/团队
+enabled: boolean                 # 可选，是否启用（建议默认 false）
+risk_level: low | medium | high  # 可选，风险等级
+requires_approval: boolean       # 可选，是否需要审批
 ---
 ```
 
@@ -145,7 +167,9 @@ type: fragment                   # 混合片段
 id: string                       # 片段ID
 name: string                     # 片段名称
 version: string                  # 可选，版本号
-network: string                  # 可选，目标网络ID
+network: string                  # 目标网络ID（建议必填，保证导入确定性）
+namespace: string                # 可选，命名空间/包名
+owner: string                    # 可选，负责人/团队
 ---
 ```
 
@@ -154,6 +178,9 @@ network: string                  # 可选，目标网络ID
 ```yaml
 ---
 type: delete                     # 删除标记
+network: string                  # 目标网络ID（建议必填，保证导入确定性）
+namespace: string                # 可选，命名空间/包名
+owner: string                    # 可选，负责人/团队
 targets:                         # 要删除的定义列表
   - entity: pod
   - relation: pod_belongs_node
@@ -635,6 +662,20 @@ Kubernetes 中的最小部署单元。
 ## 增量导入规范
 
 BKN 支持将任何 `.bkn` 文件动态导入到已有的知识网络。
+
+### 导入器能力要求（工程可控性 9+ 的前提）
+
+建议实现一个 **BKN Importer**，将 BKN 文件转换为系统变更，并提供以下能力（缺一不可）：
+
+| 能力 | 说明 | 目的 |
+|------|------|------|
+| `validate` | 结构/表格/YAML block 校验，引用完整性校验，参数绑定校验 | 阻止错误进入系统 |
+| `diff` | 计算变更集（新增/更新/删除）与影响范围 | 让变更可解释、可审计 |
+| `dry_run` | 在不落地的情况下执行 validate + diff | 上线前预演 |
+| `apply` | 执行落地（按确定性语义与冲突策略） | 可控执行 |
+| `export` | 将线上知识网络状态导出为 BKN（可 round-trip） | 防漂移、可回滚、可复现 |
+
+> 要求：所有导入操作必须记录审计信息（操作者、时间、输入文件指纹、变更集、结果）。
 
 ### 导入的确定性（必须保证）
 
