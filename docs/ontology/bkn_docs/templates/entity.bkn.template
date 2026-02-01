@@ -3,7 +3,10 @@ type: entity
 id: {entity_id}
 name: {实体名称}
 version: 1.0.0
+spec_version: 1.0.0
 network: {network_id}
+namespace: {namespace}
+owner: {owner}
 tags: [{标签1}, {标签2}]
 ---
 

@@ -3,8 +3,14 @@ type: action
 id: {action_id}
 name: {行动名称}
 version: 1.0.0
+spec_version: 1.0.0
 network: {network_id}
+namespace: {namespace}
+owner: {owner}
 action_type: add | modify | delete
+enabled: false
+risk_level: low | medium | high
+requires_approval: true
 tags: [{标签1}, {标签2}]
 ---
 
@@ -62,6 +68,14 @@ condition:
 | 类型 | 表达式 |
 |------|--------|
 | FIX_RATE | {interval} |
+
+## 权限与前置条件
+
+{谁可以启用/执行、是否需要审批、需要哪些凭据/权限}
+
+## 回滚/失败策略
+
+{失败如何处理、是否重试、是否可撤销、如何回滚}
 
 ## 执行流程
 

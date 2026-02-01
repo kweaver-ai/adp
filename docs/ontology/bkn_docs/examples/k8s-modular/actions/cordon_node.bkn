@@ -3,8 +3,14 @@ type: action
 id: cordon_node
 name: 隔离节点
 version: 1.0.0
+spec_version: 1.0.0
 network: k8s-modular
+namespace: k8s
+owner: platform
 action_type: modify
+enabled: false
+risk_level: high
+requires_approval: true
 tags: [运维操作, 节点管理]
 ---
 

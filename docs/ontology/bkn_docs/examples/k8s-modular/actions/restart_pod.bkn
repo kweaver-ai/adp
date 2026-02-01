@@ -3,8 +3,14 @@ type: action
 id: restart_pod
 name: 重启Pod
 version: 1.0.0
+spec_version: 1.0.0
 network: k8s-modular
+namespace: k8s
+owner: platform
 action_type: modify
+enabled: false
+risk_level: medium
+requires_approval: true
 tags: [运维操作, 故障恢复]
 ---
 
