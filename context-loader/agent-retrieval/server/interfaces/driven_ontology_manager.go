@@ -270,8 +270,21 @@ type ListOntologyJobsResp struct {
 	TotalCount int64          `json:"total_count"` // Total count
 }
 
+// KnowledgeNetworkDetail Knowledge network detail with full schema
+type KnowledgeNetworkDetail struct {
+	ID            string          `json:"id"`             // Knowledge network ID
+	Name          string          `json:"name"`           // Knowledge network name
+	Comment       string          `json:"comment"`        // Comment/description
+	ObjectTypes   []*ObjectType   `json:"object_types"`   // Object types
+	RelationTypes []*RelationType `json:"relation_types"` // Relation types
+	ActionTypes   []*ActionType   `json:"action_types"`   // Action types
+}
+
 // OntologyManagerAccess Ontology management interface
 type OntologyManagerAccess interface {
+	// GetKnowledgeNetworkDetail Get knowledge network detail with full schema (include_detail=true, mode=export)
+	GetKnowledgeNetworkDetail(ctx context.Context, knID string) (*KnowledgeNetworkDetail, error)
+
 	// SearchObjectTypes Search object types
 	SearchObjectTypes(ctx context.Context, query *QueryConceptsReq) (objectTypes *ObjectTypeConcepts, err error)
 	// GetObjectTypeDetail Get object type details

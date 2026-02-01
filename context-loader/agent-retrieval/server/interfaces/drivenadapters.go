@@ -255,30 +255,49 @@ type KnDataSourceConfig struct {
 
 // ConceptRetrievalConfig 概念召回配置
 type ConceptRetrievalConfig struct {
-	TopK                  int  `json:"top_k,omitempty"`                     // 默认10
-	SkipLLM               bool `json:"skip_llm,omitempty"`                  // 默认false
-	ReturnUnion           bool `json:"return_union,omitempty"`              // 默认false
-	IncludeSampleData     bool `json:"include_sample_data,omitempty"`       // 默认false
-	SchemaBrief           bool `json:"schema_brief,omitempty"`              // 默认false
-	PerObjectPropertyTopK int  `json:"per_object_property_top_k,omitempty"` // 默认8
-	GlobalPropertyTopK    int  `json:"global_property_top_k,omitempty"`     // 默认30
-	EnablePropertyBrief   bool `json:"enable_property_brief,omitempty"`     // 默认true
+	TopK                   int  `json:"top_k,omitempty"`                      // 默认10
+	SkipLLM                bool `json:"skip_llm,omitempty"`                   // 默认false
+	ReturnUnion            bool `json:"return_union,omitempty"`               // 默认false
+	IncludeSampleData      bool `json:"include_sample_data,omitempty"`        // 默认false
+	SchemaBrief            bool `json:"schema_brief,omitempty"`               // 默认false
+	PerObjectPropertyTopK  int  `json:"per_object_property_top_k,omitempty"`  // 默认8
+	GlobalPropertyTopK     int  `json:"global_property_top_k,omitempty"`      // 默认30
+	EnablePropertyBrief    bool `json:"enable_property_brief,omitempty"`      // 默认true
+	EnableCoarseRecall     bool `json:"enable_coarse_recall,omitempty"`       // 默认true，启用粗召回
+	CoarseObjectLimit      int  `json:"coarse_object_limit,omitempty"`        // 默认2000
+	CoarseRelationLimit    int  `json:"coarse_relation_limit,omitempty"`      // 默认300
+	CoarseMinRelationCount int  `json:"coarse_min_relation_count,omitempty"`  // 默认5000，触发粗召回的最小关系数量
+}
+
+// PropertyFilterConfig 属性过滤配置
+type PropertyFilterConfig struct {
+	MaxPropertiesPerInstance int  `json:"max_properties_per_instance,omitempty"` // 默认20
+	MaxPropertyValueLength   int  `json:"max_property_value_length,omitempty"`   // 默认500
+	EnablePropertyFilter     bool `json:"enable_property_filter,omitempty"`      // 默认true
 }
 
 // SemanticInstanceRetrievalConfig 语义实例检索配置
 type SemanticInstanceRetrievalConfig struct {
-	PerTypeInstanceLimit              int     `json:"per_type_instance_limit,omitempty"`                // 默认10
+	PerTypeInstanceLimit              int     `json:"per_type_instance_limit,omitempty"`                // 默认5
 	InitialCandidateCount             int     `json:"initial_candidate_count,omitempty"`                // 默认50
 	EnableGlobalFinalScoreRatioFilter bool    `json:"enable_global_final_score_ratio_filter,omitempty"` // 默认true
 	GlobalFinalScoreRatio             float64 `json:"global_final_score_ratio,omitempty"`               // 默认0.25
 	PreFilterPerTypeLimit             int     `json:"pre_filter_per_type_limit,omitempty"`              // 可选
 	MaxKeywords                       int     `json:"max_keywords,omitempty"`                           // 多关键词最大数量，默认5
+	MaxSemanticSubConditions          int     `json:"max_semantic_sub_conditions,omitempty"`            // 默认10
+	SemanticFieldKeepRatio            float64 `json:"semantic_field_keep_ratio,omitempty"`              // 默认0.2
+	SemanticFieldKeepMin              int     `json:"semantic_field_keep_min,omitempty"`                // 默认5
+	SemanticFieldKeepMax              int     `json:"semantic_field_keep_max,omitempty"`                // 默认15
+	SemanticFieldRerankBatchSize      int     `json:"semantic_field_rerank_batch_size,omitempty"`       // 默认128
+	MinDirectRelevance                float64 `json:"min_direct_relevance,omitempty"`                   // 默认0.3
+	ExactNameMatchScore               float64 `json:"exact_name_match_score,omitempty"`                 // 默认0.85
 }
 
 // RetrievalConfig 检索配置
 type RetrievalConfig struct {
 	ConceptRetrieval          *ConceptRetrievalConfig          `json:"concept_retrieval,omitempty"`
 	SemanticInstanceRetrieval *SemanticInstanceRetrievalConfig `json:"semantic_instance_retrieval,omitempty"`
+	PropertyFilter            *PropertyFilterConfig            `json:"property_filter,omitempty"`
 }
 
 // KnSearchReq kn_search request

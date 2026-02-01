@@ -18,7 +18,7 @@ import (
 
 // useLocalRerank Feature Flag: 是否使用本地Rerank
 // 迁移验证通过后改为true，最终删除此开关和远程调用代码
-const useLocalRerank = false
+const useLocalRerank = true
 
 type knRetrievalServiceImpl struct {
 	logger                interfaces.Logger
