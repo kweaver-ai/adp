@@ -314,6 +314,7 @@ flowchart LR
 ## 参考
 
 - [BKN 语言规范](./SPECIFICATION.md)
+- [BKN vs RESTful API 对比](./BKN_vs_REST_API.md)
 - 样例：
   - [单文件模式](./examples/k8s-topology.bkn) - 所有定义在一个文件
   - [按类型拆分](./examples/k8s-network/) - 实体/关系/行动分文件
