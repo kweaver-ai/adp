@@ -119,6 +119,7 @@ func (m *AsyncTaskManager) Run(ctx entity.ExecuteContext, executor AsyncTaskExec
 	err := taskIns.Patch(ctx.Context(), &entity.TaskInstance{
 		BaseInfo: taskIns.BaseInfo,
 		Hash:     taskIns.Hash,
+		Results:  map[string]any{},
 	})
 	if err != nil {
 		log.Warnf("[AsyncTaskManager] Patch hash err: %s, taskInsID: %s, hash: %s", err.Error(), taskIns.ID, taskIns.Hash)
@@ -202,7 +203,7 @@ func (m *AsyncTaskManager) Run(ctx entity.ExecuteContext, executor AsyncTaskExec
 	switch task.Status {
 	case rds.TaskStatusFailed:
 		ctx.ShareData().Set("__status_"+taskIns.ID, entity.TaskInstanceStatusFailed)
-		return nil, fmt.Errorf(task.ErrMsg)
+		return nil, fmt.Errorf("%v", task.ErrMsg)
 	case rds.TaskStatusPending:
 		ctx.ShareData().Set("__status_"+taskIns.ID, entity.TaskInstanceStatusBlocked)
 		return result, nil
@@ -308,6 +309,11 @@ func (m *AsyncTaskManager) updateTaskStatus(ctx context.Context, hash string, st
 
 // notifyResult 发送MQ消息通知任务完成（使用统一的消息结构和 topic）
 func (m *AsyncTaskManager) notifyResult(ctx context.Context, hash, taskType string, result map[string]any, err error) {
+	PublishAsyncTaskResult(ctx, m.executeMethods, hash, taskType, result, err)
+}
+
+// PublishAsyncTaskResult 统一发布异步任务结果通知
+func PublishAsyncTaskResult(ctx context.Context, executeMethods entity.ExecuteMethods, hash, taskType string, result map[string]any, err error) {
 	log := traceLog.WithContext(ctx)
 
 	// 构建统一的通知消息
@@ -327,15 +333,15 @@ func (m *AsyncTaskManager) notifyResult(ctx context.Context, hash, taskType stri
 
 	msgBytes, marshalErr := json.Marshal(notification)
 	if marshalErr != nil {
-		log.Warnf("[AsyncTaskManager.notifyResult] Marshal msg err: %v", marshalErr)
+		log.Warnf("[PublishAsyncTaskResult] Marshal msg err: %v", marshalErr)
 		return
 	}
 
-	publishErr := m.executeMethods.Publish(common.TopicAsyncTaskResult, msgBytes)
+	publishErr := executeMethods.Publish(common.TopicAsyncTaskResult, msgBytes)
 	if publishErr != nil {
-		log.Warnf("[AsyncTaskManager.notifyResult] Publish err: %v, topic: %s", publishErr, common.TopicAsyncTaskResult)
+		log.Warnf("[PublishAsyncTaskResult] Publish err: %v, topic: %s", publishErr, common.TopicAsyncTaskResult)
 	} else {
-		log.Infof("[AsyncTaskManager.notifyResult] Published result notification, hash: %s, taskType: %s, status: %s", hash, taskType, notification.Status)
+		log.Infof("[PublishAsyncTaskResult] Published result notification, hash: %s, taskType: %s, status: %s", hash, taskType, notification.Status)
 	}
 }
 

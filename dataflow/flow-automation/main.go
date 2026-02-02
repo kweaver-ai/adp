@@ -28,6 +28,7 @@ import (
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/driveradapters/observability"
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/driveradapters/operators"
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/driveradapters/policy"
+	"github.com/kweaver-ai/adp/autoflow/flow-automation/driveradapters/sandbox"
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/driveradapters/security_policy"
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/driveradapters/trigger"
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/driveradapters/versions"
@@ -67,6 +68,7 @@ type app struct {
 	obsRESTHandler      observability.RESTHandler
 	dvRESTHandler       versions.RESTHandler
 	dbRESTHandler       database_con.RESTHandler
+	sandboxRESTHandler  sandbox.RESTHandler
 }
 
 func CacheControl() gin.HandlerFunc {
@@ -111,6 +113,7 @@ func (a *app) Start() {
 		a.obsRESTHandler.RegisterAPI(group)
 		a.dvRESTHandler.RegisterAPI(group)
 		a.dbRESTHandler.RegisterAPI(group)
+		a.sandboxRESTHandler.RegisterAPI(group)
 		spGroup := group.Group("security-policy")
 		a.spRESTHandler.RegisterAPI(spGroup)
 
@@ -216,6 +219,7 @@ func StartDataFlow() {
 		obsRESTHandler:      observability.NewRESTHandler(),
 		dvRESTHandler:       versions.NewRESTHandler(),
 		dbRESTHandler:       database_con.NewRestHandler(),
+		sandboxRESTHandler:  sandbox.NewRESTHandler(),
 	}
 	server.Start()
 }

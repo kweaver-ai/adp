@@ -306,6 +306,14 @@ depServices:
     host: mdl-index-base-svc
     port: 13013
     protocol: http
+  sandbox:
+    host: sandbox
+    port: 8000
+    template_id: "python-basic"
+    cpu: "1"
+    memory: "512Mi"
+    disk: "1Gi"
+    timeout: 30
 
 # Common Resource Limits
 resources:

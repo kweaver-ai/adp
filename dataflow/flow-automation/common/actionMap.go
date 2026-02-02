@@ -95,6 +95,8 @@ const (
 	// DocInfoEntityExtract 文本实体信息提取
 	DocInfoEntityExtract = "@docinfo/entity/extract"
 
+	OpSandboxExecute = "@sandbox/execute"
+
 	// Loop 循环
 	Loop = "@control/flow/loop"
 
@@ -442,6 +444,7 @@ var ActionMap = map[string]string{
 	IntelliinfoTranfer:   "", // TODO 补全json schema
 	AudioTransfer:        AudioTransferSchema,
 	DocInfoEntityExtract: DocInfoEntityExtractSchema,
+	OpSandboxExecute:     "tools/sandboxexecute.json",
 
 	// flow
 	Loop:                          LoopSchema,
