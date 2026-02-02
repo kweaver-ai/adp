@@ -1,0 +1,89 @@
+[VegaManager.Resource.InvalidParameter]
+Description = "Invalid resource parameter"
+Solution = "Please check the parameter"
+ErrorLink = "None"
+
+[VegaManager.Resource.InvalidParameter.Type]
+Description = "Invalid resource type"
+Solution = "Please check the parameter"
+ErrorLink = "None"
+
+[VegaManager.Resource.InvalidParameter.Name]
+Description = "Invalid resource name"
+Solution = "Please check the parameter"
+ErrorLink = "None"
+
+[VegaManager.Resource.InvalidParameter.CatalogID]
+Description = "Catalog ID is required"
+Solution = "Please provide a valid catalog ID"
+ErrorLink = "None"
+
+[VegaManager.Resource.LengthExceeded.Name]
+Description = "Resource name length exceeded"
+Solution = "Please shorten the name"
+ErrorLink = "None"
+
+[VegaManager.Resource.LengthExceeded.Description]
+Description = "Resource description length exceeded"
+Solution = "Please shorten the description"
+ErrorLink = "None"
+
+[VegaManager.Resource.NotFound]
+Description = "Resource not found"
+Solution = "Please check the resource ID"
+ErrorLink = "None"
+
+[VegaManager.Resource.NameExists]
+Description = "Resource name already exists in catalog"
+Solution = "Please use a different name"
+ErrorLink = "None"
+
+[VegaManager.Resource.CatalogNotFound]
+Description = "Catalog not found for resource"
+Solution = "Please check the catalog ID"
+ErrorLink = "None"
+
+[VegaManager.Resource.IsDisabled]
+Description = "Resource is disabled"
+Solution = "Please enable the resource first"
+ErrorLink = "None"
+
+[VegaManager.Resource.AlreadyEnabled]
+Description = "Resource is already enabled"
+Solution = "No action needed"
+ErrorLink = "None"
+
+[VegaManager.Resource.AlreadyDisabled]
+Description = "Resource is already disabled"
+Solution = "No action needed"
+ErrorLink = "None"
+
+[VegaManager.Resource.InternalError]
+Description = "Resource internal error"
+Solution = "Please contact the administrator"
+ErrorLink = "None"
+
+[VegaManager.Resource.InternalError.CreateFailed]
+Description = "Failed to create resource"
+Solution = "Please contact the administrator"
+ErrorLink = "None"
+
+[VegaManager.Resource.InternalError.GetFailed]
+Description = "Failed to get resource"
+Solution = "Please contact the administrator"
+ErrorLink = "None"
+
+[VegaManager.Resource.InternalError.UpdateFailed]
+Description = "Failed to update resource"
+Solution = "Please contact the administrator"
+ErrorLink = "None"
+
+[VegaManager.Resource.InternalError.DeleteFailed]
+Description = "Failed to delete resource"
+Solution = "Please contact the administrator"
+ErrorLink = "None"
+
+[VegaManager.Resource.InternalError.SyncFailed]
+Description = "Failed to sync resource"
+Solution = "Please contact the administrator"
+ErrorLink = "None"

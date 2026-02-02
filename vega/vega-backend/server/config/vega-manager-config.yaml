@@ -1,0 +1,25 @@
+server:
+  runMode: release
+  httpPort: 13014
+  language: zh-CN
+  readTimeOut: 120
+  writeTimeOut: 600
+log:
+  logLevel: info
+  developMode: false
+  maxAge: 100
+  maxBackups: 20
+  maxSize: 100
+crypto:
+  enabled: true
+  privateKeyPath: /mnt/c/aishu_code/vega-backend/server/config/rsa_private_key_pkcs8.pem
+  publicKeyPath: /mnt/c/aishu_code/vega-backend/server/config/rsa_public_key.pem
+depServices:
+  class-443:
+    ingressClass: class-443
+  rds:
+    host: 0.0.0.0
+    port: 3330
+    user: root
+    password: eisoo.com
+    type: MariaDB

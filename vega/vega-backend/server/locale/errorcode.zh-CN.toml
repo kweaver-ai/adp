@@ -1,0 +1,69 @@
+[VegaManager.InvalidParameter.Name]
+Description = "无效的名称"
+Solution = "请检查参数"
+ErrorLink = "暂无"
+
+[VegaManager.InvalidParameter.Tag]
+Description = "无效的标签"
+Solution = "请检查参数"
+ErrorLink = "暂无"
+
+[VegaManager.InvalidParameter.Comment]
+Description = "无效的描述"
+Solution = "请检查参数"
+ErrorLink = "暂无"
+
+[VegaManager.InvalidParameter.RequestBody]
+Description = "无效的请求体"
+Solution = "请检查参数"
+ErrorLink = "暂无"
+
+[VegaManager.InvalidParameter.Limit]
+Description = "无效的分页限制参数"
+Solution = "请检查参数"
+ErrorLink = "暂无"
+
+[VegaManager.InvalidParameter.Offset]
+Description = "无效的分页偏移参数"
+Solution = "请检查参数"
+ErrorLink = "暂无"
+
+[VegaManager.InvalidParameter.Sort]
+Description = "无效的排序参数"
+Solution = "请检查参数"
+ErrorLink = "暂无"
+
+[VegaManager.InvalidParameter.Direction]
+Description = "无效的排序方向参数"
+Solution = "请检查参数"
+ErrorLink = "暂无"
+
+[VegaManager.InvalidParameter.ID]
+Description = "无效的ID参数"
+Solution = "请检查参数"
+ErrorLink = "暂无"
+
+[VegaManager.InvalidRequestHeader.ContentType]
+Description = "不支持的Content-Type请求头"
+Solution = "请检查请求头"
+ErrorLink = "暂无"
+
+[VegaManager.InternalError.BeginTransactionFailed]
+Description = "开启事务失败"
+Solution = "请联系管理员"
+ErrorLink = "暂无"
+
+[VegaManager.InternalError.CommitTransactionFailed]
+Description = "提交事务失败"
+Solution = "请联系管理员"
+ErrorLink = "暂无"
+
+[VegaManager.InternalError.MarshalDataFailed]
+Description = "序列化数据失败"
+Solution = "请联系管理员"
+ErrorLink = "暂无"
+
+[VegaManager.InternalError.UnMarshalDataFailed]
+Description = "反序列化数据失败"
+Solution = "请联系管理员"
+ErrorLink = "暂无"

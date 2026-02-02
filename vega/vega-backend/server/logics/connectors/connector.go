@@ -1,0 +1,84 @@
+// Package connectors defines the port interfaces for hexagonal architecture.
+package connectors
+
+import (
+	"context"
+
+	"vega-manager/interfaces"
+)
+
+// Connector 定义基础连接器接口
+type Connector interface {
+	GetType() string
+	GetName() string
+	GetMode() string
+	GetCategory() string
+
+	GetEnabled() bool
+	SetEnabled(bool)
+
+	// GetSensitiveFields 返回该 connector 的敏感字段列表（如 password）
+	GetSensitiveFields() []string
+
+	New(cfg *interfaces.ConnectorConfig) (Connector, error)
+
+	Connect(ctx context.Context) error
+	Close(ctx context.Context) error
+}
+
+// LocalConnectorBuilder 本地 connector 构建函数
+type LocalConnectorBuilder func(cfg *interfaces.ConnectorConfig) (Connector, error)
+
+// TableConnector defines the interface for relational database connectors.
+// Implementations: mysql, postgresql, dameng, oracle, clickhouse, etc.
+type TableConnector interface {
+	Connector
+	Ping(ctx context.Context) error
+
+	// ListDatabases 列出实例下所有可访问的数据库
+	ListDatabases(ctx context.Context) ([]string, error)
+	ListTables(ctx context.Context) ([]*interfaces.TableMeta, error)
+	GetTableMeta(ctx context.Context, table *interfaces.TableMeta) error
+
+	ExecuteQuery(ctx context.Context, query string, args ...any) (*interfaces.QueryResult, error)
+}
+
+// FileConnector defines the interface for file/document storage connectors.
+// Implementations: s3, hdfs, minio, feishu, notion, etc.
+type FileConnector interface {
+	Connector
+}
+
+// FilesetConnector defines the interface for file/document storage connectors.
+// Implementations: s3, hdfs, minio, feishu, notion, etc.
+type FilesetConnector interface {
+	Connector
+}
+
+// TopicConnector defines the interface for message queue connectors.
+// Implementations: kafka, pulsar, etc.
+type TopicConnector interface {
+	Connector
+}
+
+// MetricConnector defines the interface for time-series database connectors.
+// Implementations: prometheus, influxdb, etc.
+type MetricConnector interface {
+	Connector
+}
+
+// IndexConnector defines the interface for search engine connectors.
+// Implementations: opensearch, elasticsearch, etc.
+type IndexConnector interface {
+	Connector
+	Ping(ctx context.Context) error
+
+	ListIndexes(ctx context.Context) ([]*interfaces.IndexMeta, error)
+	GetIndexMeta(ctx context.Context, index *interfaces.IndexMeta) error
+}
+
+// APIConnector defines the interface for REST/GraphQL API connectors.
+// Implementations: rest, graphql, etc.
+type APIConnector interface {
+	Connector
+}

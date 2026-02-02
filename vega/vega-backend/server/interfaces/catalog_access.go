@@ -1,0 +1,24 @@
+// Package interfaces defines entities, DTOs, and service interfaces.
+package interfaces
+
+import "context"
+
+// CatalogAccess defines catalog data access interface.
+type CatalogAccess interface {
+	// Create creates a new Catalog.
+	Create(ctx context.Context, catalog *Catalog) error
+	// GetByID retrieves a Catalog by ID.
+	GetByID(ctx context.Context, id string) (*Catalog, error)
+	// GetByIDs retrieves a Catalog by IDs.
+	GetByIDs(ctx context.Context, ids []string) ([]*Catalog, error)
+	// GetByName retrieves a Catalog by name.
+	GetByName(ctx context.Context, name string) (*Catalog, error)
+	// List lists Catalogs with filters.
+	List(ctx context.Context, params CatalogsQueryParams) ([]*Catalog, int64, error)
+	// Update updates a Catalog.
+	Update(ctx context.Context, catalog *Catalog) error
+	// DeleteByIDs deletes Catalogs by IDs.
+	DeleteByIDs(ctx context.Context, ids []string) error
+	// UpdateHealthCheckStatus updates Catalog health check status.
+	UpdateHealthCheckStatus(ctx context.Context, id string, status CatalogHealthCheckStatus) error
+}
