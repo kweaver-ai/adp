@@ -185,6 +185,7 @@ func Init(opt *InitialOption) error {
 		&actions.ManualTrigger{},
 		&actions.FormTrigger{},
 		&actions.CronTrigger{},
+		&actions.SandboxExecute{},
 		&actions.CronWeekTrigger{},
 		&actions.CronCustomTrigger{},
 		&actions.CronMonthTrigger{},

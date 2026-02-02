@@ -247,6 +247,14 @@ data:
   ACCESS_ADDRESS_SCHEMA: {{ .Values.accessAddress.schema | quote }}
   ACCESS_ADDRESS_PATH: {{ .Values.accessAddress.path | quote }}
 
+  SANDBOX_HOST: {{ .Values.depServices.sandbox.host | quote }}
+  SANDBOX_PORT: {{ .Values.depServices.sandbox.port | quote }}
+  SANDBOX_TEMPLATE_ID: {{ .Values.depServices.sandbox.template_id | quote }}
+  SANDBOX_CPU: {{ .Values.depServices.sandbox.cpu | quote }}
+  SANDBOX_MEMORY: {{ .Values.depServices.sandbox.memory | quote }}
+  SANDBOX_DISK: {{ .Values.depServices.sandbox.disk | quote }}
+  SANDBOX_TIMEOUT: {{ .Values.depServices.sandbox.timeout | quote }}
+
   flow_o11y_data.yaml: |
     log_level: {{ index .Values "flowAutomation" "flow-o11y-data-log" "log_level"}}
     {{- with index .Values "flowAutomation" "flow-o11y-data-log" "exporters" }}

@@ -149,6 +149,47 @@
                                 "description": "文件服务端口"
                             }
                         }
+                    },
+                    "sandbox": {
+                        "type": "object",
+                        "title": "沙箱服务配置",
+                        "properties": {
+                            "host": {
+                                "type": "string",
+                                "title": "沙箱服务地址",
+                                "default": "sandbox"
+                            },
+                            "port": {
+                                "type": "number",
+                                "title": "沙箱服务端口",
+                                "default": 8000
+                            },
+                            "template_id": {
+                                "type": "string",
+                                "title": "沙箱模板ID",
+                                "default": "python-basic"
+                            },
+                            "cpu": {
+                                "type": "string",
+                                "title": "CPU限制",
+                                "default": "1"
+                            },
+                            "memory": {
+                                "type": "string",
+                                "title": "内存限制",
+                                "default": "512Mi"
+                            },
+                            "disk": {
+                                "type": "string",
+                                "title": "磁盘限制",
+                                "default": "1Gi"
+                            },
+                            "timeout": {
+                                "type": "number",
+                                "title": "超时时间（秒）",
+                                "default": 30
+                            }
+                        }
                     }
                 }
             },
