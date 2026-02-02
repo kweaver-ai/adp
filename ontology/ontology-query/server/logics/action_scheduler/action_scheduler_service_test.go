@@ -1,11 +1,22 @@
 package action_scheduler
 
 import (
+	"context"
+	"fmt"
+	"net/http"
 	"testing"
 
+	"github.com/golang/mock/gomock"
+	"github.com/kweaver-ai/kweaver-go-lib/logger"
+	"github.com/kweaver-ai/kweaver-go-lib/rest"
 	. "github.com/smartystreets/goconvey/convey"
 
+	"ontology-query/common"
+	oerrors "ontology-query/errors"
 	"ontology-query/interfaces"
+	dmock "ontology-query/interfaces/mock"
+	"ontology-query/logics"
+	"ontology-query/logics/action_logs"
 )
 
 func Test_buildExecutionParams(t *testing.T) {
@@ -366,6 +377,215 @@ func Test_ActionExecution_Snapshot(t *testing.T) {
 
 			So(execution.ActionTypeSnapshot, ShouldBeNil)
 			So(execution.ActionTypeID, ShouldEqual, "at_001")
+		})
+	})
+}
+
+func Test_ExecuteAction_ScanMode(t *testing.T) {
+	Convey("Test ExecuteAction with scan mode (empty unique_identities)", t, func() {
+		mockCtrl := gomock.NewController(t)
+		defer mockCtrl.Finish()
+
+		appSetting := &common.AppSetting{}
+		omAccess := dmock.NewMockOntologyManagerAccess(mockCtrl)
+		aoAccess := dmock.NewMockAgentOperatorAccess(mockCtrl)
+		ots := dmock.NewMockObjectTypeService(mockCtrl)
+		logsService := action_logs.NewActionLogsService(appSetting)
+
+		// Set global variables
+		logics.OMA = omAccess
+		logics.AOA = aoAccess
+
+		service := &actionSchedulerService{
+			appSetting:  appSetting,
+			omAccess:    omAccess,
+			aoAccess:    aoAccess,
+			logsService: logsService,
+			ots:         ots,
+		}
+
+		ctx := context.Background()
+		knID := "kn_001"
+		actionTypeID := "at_001"
+		objectTypeID := "ot_001"
+
+		Convey("成功 - 扫描模式：找到符合条件的实例", func() {
+			req := &interfaces.ActionExecutionRequest{
+				KNID:             knID,
+				Branch:           interfaces.MAIN_BRANCH,
+				ActionTypeID:     actionTypeID,
+				UniqueIdentities: []map[string]any{}, // Empty, triggers scan mode
+			}
+
+			actionType := interfaces.ActionType{
+				ATID:         actionTypeID,
+				ATName:       "restart_pod",
+				ObjectTypeID: objectTypeID,
+				ActionSource: interfaces.ActionSource{
+					Type:   interfaces.ActionSourceTypeTool,
+					BoxID:  "box_001",
+					ToolID: "tool_001",
+				},
+				Parameters: []interfaces.Parameter{},
+			}
+
+			// Variable to capture scan result
+			var scanVerified bool
+
+			// Mock GetActionType
+			omAccess.EXPECT().GetActionType(gomock.Any(), knID, interfaces.MAIN_BRANCH, actionTypeID).
+				Return(actionType, map[string]any{"id": actionTypeID}, true, nil)
+
+			// Mock GetObjectsByObjectTypeID to return scanned instances
+			scannedObjects := interfaces.Objects{
+				Datas: []map[string]any{
+					{
+						interfaces.SYSTEM_PROPERTY_INSTANCE_IDENTITY: map[string]any{"pod_ip": "192.168.1.1", "id": "1"},
+						"pod_ip": "192.168.1.1",
+						"id":     "1",
+					},
+					{
+						interfaces.SYSTEM_PROPERTY_INSTANCE_IDENTITY: map[string]any{"pod_ip": "192.168.1.2", "id": "2"},
+						"pod_ip": "192.168.1.2",
+						"id":     "2",
+					},
+				},
+				TotalCount: 2,
+			}
+
+			ots.EXPECT().GetObjectsByObjectTypeID(gomock.Any(), gomock.Any()).DoAndReturn(
+				func(ctx context.Context, query *interfaces.ObjectQueryBaseOnObjectType) (interfaces.Objects, error) {
+					// Verify query parameters
+					So(query.KNID, ShouldEqual, knID)
+					So(query.ObjectTypeID, ShouldEqual, objectTypeID)
+					scanVerified = true
+					return scannedObjects, nil
+				})
+
+			// Execute - will panic due to unmocked logsService, but scan logic should complete
+			func() {
+				defer func() {
+					if r := recover(); r != nil {
+						// Expected panic due to unmocked logsService
+						logger.Infof("Expected panic due to unmocked logsService: %v", r)
+					}
+				}()
+				_, _ = service.ExecuteAction(ctx, req)
+			}()
+
+			// Verify scan mode was triggered and identities were populated
+			So(scanVerified, ShouldBeTrue)
+			So(len(req.UniqueIdentities), ShouldEqual, 2)
+			So(req.UniqueIdentities[0]["pod_ip"], ShouldEqual, "192.168.1.1")
+			So(req.UniqueIdentities[1]["pod_ip"], ShouldEqual, "192.168.1.2")
+		})
+
+		Convey("失败 - 扫描模式：扫描后没有找到符合条件的实例", func() {
+			req := &interfaces.ActionExecutionRequest{
+				KNID:             knID,
+				Branch:           interfaces.MAIN_BRANCH,
+				ActionTypeID:     actionTypeID,
+				UniqueIdentities: []map[string]any{}, // Empty, triggers scan mode
+			}
+
+			actionType := interfaces.ActionType{
+				ATID:         actionTypeID,
+				ATName:       "restart_pod",
+				ObjectTypeID: objectTypeID,
+			}
+
+			// Mock GetActionType
+			omAccess.EXPECT().GetActionType(gomock.Any(), knID, interfaces.MAIN_BRANCH, actionTypeID).
+				Return(actionType, map[string]any{"id": actionTypeID}, true, nil)
+
+			// Mock GetObjectsByObjectTypeID to return empty result
+			ots.EXPECT().GetObjectsByObjectTypeID(gomock.Any(), gomock.Any()).
+				Return(interfaces.Objects{Datas: []map[string]any{}}, nil)
+
+			_, err := service.ExecuteAction(ctx, req)
+
+			So(err, ShouldNotBeNil)
+			httpErr, ok := err.(*rest.HTTPError)
+			So(ok, ShouldBeTrue)
+			So(httpErr.HTTPCode, ShouldEqual, http.StatusBadRequest)
+			So(httpErr.BaseError.ErrorCode, ShouldEqual, oerrors.OntologyQuery_ActionExecution_InvalidParameter)
+		})
+
+		Convey("失败 - 扫描模式：扫描过程出错", func() {
+			req := &interfaces.ActionExecutionRequest{
+				KNID:             knID,
+				Branch:           interfaces.MAIN_BRANCH,
+				ActionTypeID:     actionTypeID,
+				UniqueIdentities: []map[string]any{}, // Empty, triggers scan mode
+			}
+
+			actionType := interfaces.ActionType{
+				ATID:         actionTypeID,
+				ATName:       "restart_pod",
+				ObjectTypeID: objectTypeID,
+			}
+
+			// Mock GetActionType
+			omAccess.EXPECT().GetActionType(gomock.Any(), knID, interfaces.MAIN_BRANCH, actionTypeID).
+				Return(actionType, map[string]any{"id": actionTypeID}, true, nil)
+
+			// Mock GetObjectsByObjectTypeID to return error
+			ots.EXPECT().GetObjectsByObjectTypeID(gomock.Any(), gomock.Any()).
+				Return(interfaces.Objects{}, rest.NewHTTPError(ctx, http.StatusInternalServerError, oerrors.OntologyQuery_InternalError).
+					WithErrorDetails("scan failed"))
+
+			_, err := service.ExecuteAction(ctx, req)
+
+			So(err, ShouldNotBeNil)
+			httpErr, ok := err.(*rest.HTTPError)
+			So(ok, ShouldBeTrue)
+			So(httpErr.HTTPCode, ShouldEqual, http.StatusInternalServerError)
+		})
+
+		Convey("失败 - 扫描模式：超过最大执行数量限制", func() {
+			// Save original limit and restore after test
+			originalLimit := maxExecutionObjects
+			maxExecutionObjects = 5 // Set a low limit for testing
+			defer func() { maxExecutionObjects = originalLimit }()
+
+			req := &interfaces.ActionExecutionRequest{
+				KNID:             knID,
+				Branch:           interfaces.MAIN_BRANCH,
+				ActionTypeID:     actionTypeID,
+				UniqueIdentities: []map[string]any{}, // Empty, triggers scan mode
+			}
+
+			actionType := interfaces.ActionType{
+				ATID:         actionTypeID,
+				ATName:       "restart_pod",
+				ObjectTypeID: objectTypeID,
+			}
+
+			// Mock GetActionType
+			omAccess.EXPECT().GetActionType(gomock.Any(), knID, interfaces.MAIN_BRANCH, actionTypeID).
+				Return(actionType, map[string]any{"id": actionTypeID}, true, nil)
+
+			// Mock GetObjectsByObjectTypeID to return more objects than the limit
+			manyObjects := interfaces.Objects{
+				Datas: []map[string]any{},
+			}
+			for i := 0; i < 10; i++ { // 10 objects, limit is 5
+				manyObjects.Datas = append(manyObjects.Datas, map[string]any{
+					interfaces.SYSTEM_PROPERTY_INSTANCE_IDENTITY: map[string]any{"id": fmt.Sprintf("%d", i)},
+				})
+			}
+			manyObjects.TotalCount = 10
+
+			ots.EXPECT().GetObjectsByObjectTypeID(gomock.Any(), gomock.Any()).
+				Return(manyObjects, nil)
+
+			_, err := service.ExecuteAction(ctx, req)
+
+			So(err, ShouldNotBeNil)
+			httpErr, ok := err.(*rest.HTTPError)
+			So(ok, ShouldBeTrue)
+			So(httpErr.HTTPCode, ShouldEqual, http.StatusBadRequest)
+			So(httpErr.BaseError.ErrorCode, ShouldEqual, oerrors.OntologyQuery_ActionExecution_InvalidParameter)
 		})
 	})
 }
