@@ -230,6 +230,12 @@ func (e *DefExecutor) workerDo(taskIns *entity.TaskInstance) {
 
 	switch taskIns.Status {
 	case entity.TaskInstanceStatusInit, entity.TaskInstanceStatusEnding, entity.TaskInstanceStatusRetrying:
+	case entity.TaskInstanceStatusFailed, entity.TaskInstanceStatusCanceled:
+		// 允许Loop任务在失败或取消状态下进入runAction，以便在那里的特殊逻辑重置状态
+		if taskIns.ActionName == common.Loop {
+			break
+		}
+		fallthrough
 	default:
 		log.Warnf("this task instance[%s] is not executable, status[%s]", taskIns.ID, taskIns.Status)
 		e.cancelMap.Delete(taskIns.ID)

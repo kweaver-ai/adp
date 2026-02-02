@@ -833,7 +833,7 @@ func getLoopLastTaskIDs(steps []entity.Step, parentTaskID string, branchIndex in
 	if lastStep.Operator == common.ControlFlowParallel {
 		result := []string{}
 		for i, branch := range lastStep.Branches {
-			nestedParentID := fmt.Sprintf("%s_b%d_s%s", parentTaskID, branchIndex, lastStep.ID)
+			nestedParentID := fmt.Sprintf("%s_%d_%s", parentTaskID, branchIndex, lastStep.ID)
 			branchLastTasks := getLoopLastTaskIDs(branch.Steps, nestedParentID, i)
 			result = append(result, branchLastTasks...)
 		}
@@ -841,7 +841,7 @@ func getLoopLastTaskIDs(steps []entity.Step, parentTaskID string, branchIndex in
 	}
 
 	// 否则,返回该步骤的ID
-	return []string{fmt.Sprintf("%s_b%d_s%s", parentTaskID, branchIndex, lastStep.ID)}
+	return []string{fmt.Sprintf("%s_%d_%s", parentTaskID, branchIndex, lastStep.ID)}
 }
 
 // processStepRecursively 递归处理步骤，支持嵌套分支
@@ -865,7 +865,7 @@ func (e *LoopExecutor) processStepRecursively(
 			// 处理分支内的每个步骤
 			for j, branchStep := range branch.Steps {
 				// 创建步骤任务ID
-				stepTaskID := fmt.Sprintf("%s_b%d_s%s", taskID, i, branchStep.ID)
+				stepTaskID := fmt.Sprintf("%s_%d_%s", taskID, i, branchStep.ID)
 
 				// 检查任务是否已存在
 				if existingTaskIDs[stepTaskID] {
@@ -880,7 +880,7 @@ func (e *LoopExecutor) processStepRecursively(
 					branchStepDependOn = branchEntryDependOn
 				} else {
 					// 后续步骤依赖分支内的前一个步骤
-					prevStepTaskID := fmt.Sprintf("%s_b%d_s%s", taskID, i, branch.Steps[j-1].ID)
+					prevStepTaskID := fmt.Sprintf("%s_%d_%s", taskID, i, branch.Steps[j-1].ID)
 					branchStepDependOn = []string{prevStepTaskID}
 				}
 

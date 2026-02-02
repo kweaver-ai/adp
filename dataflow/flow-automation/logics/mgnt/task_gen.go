@@ -121,28 +121,6 @@ func (m *mgnt) GenerateTaskResults(ctx context.Context, dagID, dagInsID string, 
 		}
 	}
 
-	// 去重：对于相同taskId的记录，只保留最新的（LastModifiedAt最大的）
-	// 这解决了并行分支执行时可能创建重复TaskInstance的问题
-	taskMap := make(map[string]*entity.TaskInstance)
-	for i := range allTasks {
-		task := allTasks[i]
-		if existing, ok := taskMap[task.TaskID]; ok {
-			// 如果已存在相同taskId的记录，比较LastModifiedAt，保留最新的
-			if task.LastModifiedAt > existing.LastModifiedAt {
-				taskMap[task.TaskID] = task
-			}
-		} else {
-			taskMap[task.TaskID] = task
-		}
-	}
-
-	// 将去重后的结果转回数组
-	deduplicatedTasks := make([]*entity.TaskInstance, 0, len(taskMap))
-	for _, task := range taskMap {
-		deduplicatedTasks = append(deduplicatedTasks, task)
-	}
-
-	allTasks = deduplicatedTasks
 	total := int64(len(allTasks))
 
 	if limit == -1 {
@@ -235,7 +213,7 @@ func (m *mgnt) generateLoopTaskResults(task entity.Task, dagIns *entity.DagInsta
 
 		// loop内部step创建
 		for _, step := range task.Steps {
-			if step.Operator == common.BranchOpt {
+			if step.Operator == common.BranchOpt || step.Operator == common.ControlFlowParallel {
 				breanchTaskID := fmt.Sprintf("%s_i%v_s%v", task.ID, i, step.ID)
 				isReturn, tasks := m.generateBranchTaskResults(breanchTaskID, step, dagIns, loopParam, false)
 				allTasks = append(allTasks, tasks...)
@@ -504,11 +482,7 @@ func buildStepMap(steps []entity.Step, stepMap map[string]*entity.Step) {
 		case common.Loop:
 			stepMap[step.ID] = &step
 			buildStepMap(step.Steps, stepMap)
-		case common.BranchOpt:
-			for _, branch := range step.Branches {
-				buildStepMap(branch.Steps, stepMap)
-			}
-		case common.ControlFlowParallel: // 并行分支节点
+		case common.BranchOpt, common.ControlFlowParallel:
 			for _, branch := range step.Branches {
 				buildStepMap(branch.Steps, stepMap)
 			}
@@ -518,66 +492,11 @@ func buildStepMap(steps []entity.Step, stepMap map[string]*entity.Step) {
 	}
 }
 
-// loopContext 循环上下文，用于跟踪循环迭代状态
-type loopContext struct {
-	loopTaskID       string // 循环任务ID
-	currentIteration int    // 当前迭代索引
-}
-
-// updateLoopContext 更新或创建循环上下文
-func updateLoopContext(loopStack []*loopContext, loopTaskID string, iteration int) []*loopContext {
-	// 查找是否已存在该循环的上下文
-	for _, ctx := range loopStack {
-		if ctx.loopTaskID == loopTaskID {
-			ctx.currentIteration = iteration
-			return loopStack
-		}
-	}
-
-	// 不存在则创建新的上下文
-	return append(loopStack, &loopContext{
-		loopTaskID:       loopTaskID,
-		currentIteration: iteration,
-	})
-}
-
-// generateTaskID 根据循环上下文生成正确的任务ID
-func generateTaskID(eventTaskID string, loopStack []*loopContext, stepMap map[string]*entity.Step) string {
-	// 如果不在循环中，直接返回
-	if len(loopStack) == 0 {
-		return eventTaskID
-	}
-
-	currentLoop := loopStack[len(loopStack)-1]
-
-	// 如果这是循环任务本身
-	if eventTaskID == currentLoop.loopTaskID {
-		if currentLoop.currentIteration > 0 {
-			return fmt.Sprintf("%s_i%d", eventTaskID, currentLoop.currentIteration)
-		}
-		return eventTaskID
-	}
-
-	// 检查是否是循环内的步骤
-	if _, ok := stepMap[eventTaskID]; ok {
-		// 格式: loopID_iN_sStepID
-		return fmt.Sprintf("%s_i%d_s%s",
-			currentLoop.loopTaskID,
-			currentLoop.currentIteration,
-			eventTaskID)
-	}
-
-	return eventTaskID
-}
-
 func buildTaskInstanceFromEvents(events []*entity.DagInstanceEvent, dagIns *entity.DagInstance, dag *entity.Dag) (tasks []*entity.TaskInstance) {
 	var (
-		// 使用 map 存储多个并发任务的状态,支持并行执行
-		taskInstanceMap = make(map[string]*entity.TaskInstance)
-		env             = make(map[string]any)
-		stepMap         = make(map[string]*entity.Step)
-		taskOrder       = make([]string, 0)       // 记录任务首次出现的顺序
-		loopStack       = make([]*loopContext, 0) // 跟踪循环上下文
+		allTasksMap = make(map[string]*entity.TaskInstance)
+		env         = make(map[string]any)
+		stepMap     = make(map[string]*entity.Step)
 	)
 
 	buildStepMap(dag.Steps, stepMap)
@@ -587,25 +506,12 @@ func buildTaskInstanceFromEvents(events []*entity.DagInstanceEvent, dagIns *enti
 		case rds.DagInstanceEventTypeVariable:
 			env[event.Name] = event.Data
 			stepId := event.Name[2:]
+			// 尝试更新Loop节点的输出结果
+			// 注意：对于循环节点，这里总是更新该TaskID对应的"最新"一个实例
 			if step, ok := stepMap[stepId]; ok && step.Operator == common.Loop {
 				if data, ok := event.Data.(map[string]any); ok {
-					// 检查是否有index字段，更新循环上下文
-					if indexVal, ok := data["index"]; ok {
-						var iteration int
-						switch v := indexVal.(type) {
-						case float64:
-							iteration = int(v)
-						case int:
-							iteration = v
-						case int64:
-							iteration = int(v)
-						}
-						loopStack = updateLoopContext(loopStack, stepId, iteration)
-					}
-
 					if _, ok := data["outputs"]; ok {
-						// 查找循环节点对应的任务实例
-						if taskIns, exists := taskInstanceMap[stepId]; exists {
+						if taskIns, ok := allTasksMap[stepId]; ok {
 							resultsMap, isMap := taskIns.Results.(map[string]any)
 							if resultsMap == nil || !isMap {
 								resultsMap = make(map[string]any)
@@ -621,31 +527,45 @@ func buildTaskInstanceFromEvents(events []*entity.DagInstanceEvent, dagIns *enti
 				}
 			}
 		case rds.DagInstanceEventTypeTaskStatus:
-			// 根据循环上下文生成正确的任务ID
-			actualTaskID := generateTaskID(event.TaskID, loopStack, stepMap)
-			current, exists := taskInstanceMap[actualTaskID]
+			current, exists := allTasksMap[event.TaskID]
+			isNewInstance := false
 
+			// 检测是否需要创建新实例：
+			// 1. Map中不存在该TaskID
+			// 2. Map中存在，但已处于最终状态，且当前事件为非最终状态（循环节点的下一次迭代复用ID）
 			if !exists {
-				// 首次遇到该任务,创建新实例
+				isNewInstance = true
+			} else {
+				isFinished := current.Status == entity.TaskInstanceStatusSuccess ||
+					current.Status == entity.TaskInstanceStatusFailed ||
+					current.Status == entity.TaskInstanceStatusSkipped
+
+				// 如果是开始类状态（Running/Blocked/Pending），且旧实例已完成，视为新迭代
+				isStarting := event.Status == "running" || event.Status == "blocked" || event.Status == "pending"
+
+				if isFinished && isStarting {
+					isNewInstance = true
+				}
+			}
+
+			if isNewInstance {
 				timestampSec := event.Timestamp / 1e6
 				current = &entity.TaskInstance{
 					BaseInfo: entity.BaseInfo{
-						ID:        actualTaskID, // 使用生成的实际任务ID
+						ID:        fmt.Sprintf("%d", len(tasks)),
 						CreatedAt: timestampSec,
 						UpdatedAt: timestampSec,
 					},
-					TaskID:     actualTaskID, // 使用生成的实际任务ID
-					DagInsID:   dagIns.ID,
-					ActionName: event.Operator,
-					Status:     entity.TaskInstanceStatus(event.Status),
-					// 统一使用纳秒级时间戳
-					LastModifiedAt: event.Timestamp * 1e3,
+					TaskID:         event.TaskID,
+					DagInsID:       dagIns.ID,
+					ActionName:     event.Operator,
+					Status:         entity.TaskInstanceStatus(event.Status),
+					LastModifiedAt: event.Timestamp,
 					MetaData: &entity.TaskMetaData{
 						StartedAt: event.Timestamp / 1e3,
 					},
 				}
 
-				// 从stepMap填充任务信息
 				if step, ok := stepMap[event.TaskID]; ok {
 					current.Name = step.Title
 
@@ -661,7 +581,6 @@ func buildTaskInstanceFromEvents(events []*entity.DagInstanceEvent, dagIns *enti
 							"value":  value,
 						}
 					case common.BranchOpt:
-						// 分支节点无参数
 					default:
 						realParam := renderParams(step.Parameters, env)
 						if p, ok := realParam.(map[string]any); ok {
@@ -672,17 +591,19 @@ func buildTaskInstanceFromEvents(events []*entity.DagInstanceEvent, dagIns *enti
 					}
 				}
 
-				taskInstanceMap[actualTaskID] = current
-				taskOrder = append(taskOrder, actualTaskID) // 记录顺序
+				// 加入列表和Map
+				tasks = append(tasks, current)
+				allTasksMap[event.TaskID] = current
 			} else {
-				// 更新已存在的任务状态
+				// 更新现有实例
 				current.Status = entity.TaskInstanceStatus(event.Status)
 				current.UpdatedAt = event.Timestamp / 1e6
-				current.LastModifiedAt = event.Timestamp * 1e3
+				current.LastModifiedAt = current.UpdatedAt
+				// 注意：这里更新MetaData.ElapsedTime依赖于正确的StartedAt，而StartedAt是在创建时设置的
 				current.MetaData.ElapsedTime = event.Timestamp/1e3 - current.MetaData.StartedAt
 			}
 
-			// 处理任务完成状态
+			// 处理完成状态的Result/Reason更新
 			switch current.Status {
 			case entity.TaskInstanceStatusSuccess:
 				if result, ok := env[fmt.Sprintf("__%s", current.TaskID)]; ok {
@@ -693,22 +614,10 @@ func buildTaskInstanceFromEvents(events []*entity.DagInstanceEvent, dagIns *enti
 			}
 
 		case rds.DagInstanceEventTypeTrace:
-			// Trace事件需要关联到对应的任务实例
-			if event.TaskID != "" {
-				actualTaskID := generateTaskID(event.TaskID, loopStack, stepMap)
-				if current, exists := taskInstanceMap[actualTaskID]; exists {
-					dataBytes, _ := json.Marshal(event.Data)
-					_ = json.Unmarshal(dataBytes, current.MetaData)
-				}
+			if current, ok := allTasksMap[event.TaskID]; ok {
+				dataBytes, _ := json.Marshal(event.Data)
+				_ = json.Unmarshal(dataBytes, current.MetaData)
 			}
-		}
-	}
-
-	// 按首次出现顺序构建结果数组
-	tasks = make([]*entity.TaskInstance, 0, len(taskOrder))
-	for _, taskID := range taskOrder {
-		if task, ok := taskInstanceMap[taskID]; ok {
-			tasks = append(tasks, task)
 		}
 	}
 
