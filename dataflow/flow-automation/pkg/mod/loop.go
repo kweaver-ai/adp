@@ -629,12 +629,30 @@ func (e *LoopExecutor) GenerateIterationTasks() ([]*entity.TaskInstance, error) 
 		var dependOn []string
 
 		if j > 0 {
-			// 如果不是第一个步骤，依赖前一个步骤
-			prevStepTaskID := fmt.Sprintf("%s_i%d_s%s",
-				baseTaskID,
-				e.loopParams.CurrentIteration,
-				e.loopParams.Steps[j-1].ID)
-			dependOn = append(dependOn, prevStepTaskID)
+			prevStep := e.loopParams.Steps[j-1]
+			baseTaskID := strings.Split(e.loopParams.LoopTaskID, "_i")[0]
+
+			// Check if previous step is a parallel branch
+			if prevStep.Operator == common.ControlFlowParallel {
+				// Get all last task IDs from parallel branches
+				prevTaskID := fmt.Sprintf("%s_i%d_s%s",
+					baseTaskID,
+					e.loopParams.CurrentIteration,
+					prevStep.ID)
+
+				// Use helper to get all branch last tasks
+				for i, branch := range prevStep.Branches {
+					branchLastTasks := getLoopLastTaskIDs(branch.Steps, prevTaskID, i)
+					dependOn = append(dependOn, branchLastTasks...)
+				}
+			} else {
+				// Regular step - single dependency
+				prevStepTaskID := fmt.Sprintf("%s_i%d_s%s",
+					baseTaskID,
+					e.loopParams.CurrentIteration,
+					prevStep.ID)
+				dependOn = append(dependOn, prevStepTaskID)
+			}
 		} else {
 			// 如果是第一个步骤，依赖循环节点
 			dependOn = append(dependOn, e.loopParams.LoopTaskID)
@@ -801,6 +819,31 @@ func (e *LoopExecutor) GenerateIterationTasks() ([]*entity.TaskInstance, error) 
 	return createdTasks, nil
 }
 
+// getLoopLastTaskIDs 递归获取循环迭代步骤中的最后一个(或多个)任务ID
+// 对于普通步骤,返回该步骤的ID
+// 对于并行分支,递归收集所有子分支的最后任务ID
+func getLoopLastTaskIDs(steps []entity.Step, parentTaskID string, branchIndex int) []string {
+	if len(steps) == 0 {
+		return []string{}
+	}
+
+	lastStep := steps[len(steps)-1]
+
+	// 如果最后一个步骤是并行节点,递归获取其所有分支的最后任务
+	if lastStep.Operator == common.ControlFlowParallel {
+		result := []string{}
+		for i, branch := range lastStep.Branches {
+			nestedParentID := fmt.Sprintf("%s_b%d_s%s", parentTaskID, branchIndex, lastStep.ID)
+			branchLastTasks := getLoopLastTaskIDs(branch.Steps, nestedParentID, i)
+			result = append(result, branchLastTasks...)
+		}
+		return result
+	}
+
+	// 否则,返回该步骤的ID
+	return []string{fmt.Sprintf("%s_b%d_s%s", parentTaskID, branchIndex, lastStep.ID)}
+}
+
 // processStepRecursively 递归处理步骤，支持嵌套分支
 func (e *LoopExecutor) processStepRecursively(
 	taskInstances []*entity.TaskInstance,
@@ -812,7 +855,54 @@ func (e *LoopExecutor) processStepRecursively(
 	getTimeout func(string) int,
 ) ([]*entity.TaskInstance, string) {
 
-	// 处理分支节点
+	// 处理并行分支节点
+	if step.Operator == common.ControlFlowParallel {
+		// 并行分支节点不创建任务，只处理所有分支
+		var parallelBranchLastTasks []string
+		branchEntryDependOn := dependOn
+
+		for i, branch := range step.Branches {
+			// 处理分支内的每个步骤
+			for j, branchStep := range branch.Steps {
+				// 创建步骤任务ID
+				stepTaskID := fmt.Sprintf("%s_b%d_s%s", taskID, i, branchStep.ID)
+
+				// 检查任务是否已存在
+				if existingTaskIDs[stepTaskID] {
+					log.Warnf("Parallel branch step task with ID [%s] already exists, skipping creation", stepTaskID)
+					continue
+				}
+
+				// 确定依赖关系
+				var branchStepDependOn []string
+				if j == 0 {
+					// 分支的第一个步骤依赖进入并行分支前的节点
+					branchStepDependOn = branchEntryDependOn
+				} else {
+					// 后续步骤依赖分支内的前一个步骤
+					prevStepTaskID := fmt.Sprintf("%s_b%d_s%s", taskID, i, branch.Steps[j-1].ID)
+					branchStepDependOn = []string{prevStepTaskID}
+				}
+
+				// 递归处理分支内的步骤
+				taskInstances, lastTaskID = e.processStepRecursively(
+					taskInstances, branchStep, stepTaskID, branchStepDependOn,
+					existingTaskIDs, lastTaskID, getTimeout)
+			}
+
+			// 收集该分支的最后任务ID
+			branchLastTasks := getLoopLastTaskIDs(branch.Steps, taskID, i)
+			parallelBranchLastTasks = append(parallelBranchLastTasks, branchLastTasks...)
+		}
+
+		// 返回所有并行分支的最后任务ID
+		if len(parallelBranchLastTasks) > 0 {
+			lastTaskID = parallelBranchLastTasks[len(parallelBranchLastTasks)-1]
+		}
+		return taskInstances, lastTaskID
+	}
+
+	// 处理条件分支节点
 	if step.Operator == common.BranchOpt {
 		// 创建分支任务
 		branchTask := &entity.Task{
