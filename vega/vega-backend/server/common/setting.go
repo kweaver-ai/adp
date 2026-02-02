@@ -10,6 +10,7 @@ import (
 	"github.com/fsnotify/fsnotify"
 	libdb "github.com/kweaver-ai/kweaver-go-lib/db"
 	"github.com/kweaver-ai/kweaver-go-lib/logger"
+	libmq "github.com/kweaver-ai/kweaver-go-lib/mq"
 	o11y "github.com/kweaver-ai/kweaver-go-lib/observability"
 	"github.com/kweaver-ai/kweaver-go-lib/rest"
 	"github.com/spf13/viper"
@@ -44,6 +45,7 @@ type AppSetting struct {
 	DepServices          map[string]map[string]any `mapstructure:"depServices"`
 
 	DBSetting         libdb.DBSetting
+	MQSetting         libmq.MQSetting
 	OpenSearchSetting rest.OpenSearchClientConfig
 }
 
@@ -53,6 +55,7 @@ const (
 	configType string = "yaml"
 
 	rdsServiceName        string = "rds"
+	mqServiceName         string = "mq"
 	opensearchServiceName string = "opensearch"
 
 	DATA_BASE_NAME string = "adp"
@@ -108,7 +111,11 @@ func loadSetting(vp *viper.Viper) {
 	}
 
 	SetLogSetting(appSetting.LogSetting)
+
 	SetDBSetting()
+
+	SetMQSetting()
+
 	SetOpenSearchSetting()
 
 	serverInfo := o11y.ServerInfo{
@@ -140,6 +147,29 @@ func SetDBSetting() {
 		Username: setting["user"].(string),
 		Password: setting["password"].(string),
 		DBName:   DATA_BASE_NAME,
+	}
+}
+
+func SetMQSetting() {
+	setting, ok := appSetting.DepServices[mqServiceName]
+	if !ok {
+		logger.Fatalf("service %s not found in depServices", mqServiceName)
+	}
+	authSetting, ok := setting["auth"].(map[string]any)
+	if !ok {
+		logger.Fatalf("service %s auth not found in depServices", mqServiceName)
+	}
+
+	appSetting.MQSetting = libmq.MQSetting{
+		MQType: setting["mqtype"].(string),
+		MQHost: setting["mqhost"].(string),
+		MQPort: setting["mqport"].(int),
+		Tenant: setting["tenant"].(string),
+		Auth: libmq.MQAuthSetting{
+			Username:  authSetting["username"].(string),
+			Password:  authSetting["password"].(string),
+			Mechanism: authSetting["mechanism"].(string),
+		},
 	}
 }
 

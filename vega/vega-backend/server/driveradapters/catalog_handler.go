@@ -324,6 +324,7 @@ func (r *restHandler) TestConnection(c *gin.Context) {
 }
 
 // DiscoverCatalogResources handles POST /api/vega-manager/v1/catalogs/:id/discover
+// 触发异步扫描任务，返回任务信息
 func (r *restHandler) DiscoverCatalogResources(c *gin.Context) {
 	ctx, span := ar_trace.Tracer.Start(rest.GetLanguageCtx(c),
 		"DiscoverCatalogResources", trace.WithSpanKind(trace.SpanKindServer))
@@ -336,7 +337,7 @@ func (r *restHandler) DiscoverCatalogResources(c *gin.Context) {
 
 	id := c.Param("id")
 
-	// Get catalog
+	// Get catalog to verify it exists
 	catalog, err := r.cs.GetByID(ctx, id)
 	if err != nil {
 		httpErr := err.(*rest.HTTPError)
@@ -351,8 +352,8 @@ func (r *restHandler) DiscoverCatalogResources(c *gin.Context) {
 		return
 	}
 
-	// Trigger discovery
-	result, err := r.ds.DiscoverCatalog(ctx, catalog)
+	// Create discovery task (async)
+	task, err := r.dts.Create(ctx, catalog.ID)
 	if err != nil {
 		httpErr := rest.NewHTTPError(ctx, http.StatusInternalServerError, oerrors.VegaManager_Catalog_InternalError).
 			WithErrorDetails(err.Error())
@@ -361,9 +362,9 @@ func (r *restHandler) DiscoverCatalogResources(c *gin.Context) {
 		return
 	}
 
-	logger.Debug("Handler DiscoverCatalogResources Success")
-	o11y.AddHttpAttrs4Ok(span, http.StatusOK)
-	rest.ReplyOK(c, http.StatusOK, result)
+	logger.Debug("Handler DiscoverCatalogResources Success - Task Created")
+	o11y.AddHttpAttrs4Ok(span, http.StatusAccepted)
+	rest.ReplyOK(c, http.StatusAccepted, task)
 }
 
 // ListCatalogResources handles GET /api/vega-manager/v1/catalogs/:id/resources

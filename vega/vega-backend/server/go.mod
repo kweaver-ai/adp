@@ -4,12 +4,12 @@ go 1.24.0
 
 require (
 	github.com/Masterminds/squirrel v1.5.4
-	github.com/bytedance/sonic v1.14.2
+	github.com/bytedance/sonic v1.15.0
 	github.com/fsnotify/fsnotify v1.9.0
 	github.com/gin-gonic/gin v1.11.0
-	github.com/go-viper/mapstructure/v2 v2.4.0
 	github.com/kweaver-ai/TelemetrySDK-Go/exporter/v2 v2.10.3
-	github.com/kweaver-ai/kweaver-go-lib v1.0.2
+	github.com/kweaver-ai/kweaver-go-lib v1.0.3-0.20260202054858-6bd59c1aca87
+	github.com/kweaver-ai/proton-mq-sdk-go v1.9.1
 	github.com/mitchellh/mapstructure v1.5.0
 	github.com/opensearch-project/opensearch-go/v2 v2.3.0
 	github.com/rs/xid v1.6.0
@@ -22,12 +22,12 @@ require (
 
 require (
 	filippo.io/edwards25519 v1.1.0 // indirect
-	gitee.com/chunanyong/dm v1.8.19 // indirect
+	gitee.com/chunanyong/dm v1.8.22 // indirect
 	github.com/BurntSushi/toml v1.6.0 // indirect
 	github.com/IBM/sarama v1.46.3 // indirect
 	github.com/avast/retry-go v3.0.0+incompatible // indirect
 	github.com/bytedance/gopkg v0.1.3 // indirect
-	github.com/bytedance/sonic/loader v0.4.0 // indirect
+	github.com/bytedance/sonic/loader v0.5.0 // indirect
 	github.com/cenkalti/backoff/v4 v4.3.0 // indirect
 	github.com/cloudwego/base64x v0.1.6 // indirect
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
@@ -35,6 +35,7 @@ require (
 	github.com/eapache/go-xerial-snappy v0.0.0-20230731223053-c322873962e3 // indirect
 	github.com/eapache/queue v1.1.0 // indirect
 	github.com/emicklei/go-restful/v3 v3.11.0 // indirect
+	github.com/emirpasic/gods v1.18.1 // indirect
 	github.com/gabriel-vasile/mimetype v1.4.12 // indirect
 	github.com/gin-contrib/sse v1.1.0 // indirect
 	github.com/go-logr/logr v1.4.2 // indirect
@@ -47,6 +48,7 @@ require (
 	github.com/go-playground/universal-translator v0.18.1 // indirect
 	github.com/go-playground/validator/v10 v10.30.1 // indirect
 	github.com/go-sql-driver/mysql v1.9.3 // indirect
+	github.com/go-viper/mapstructure/v2 v2.5.0 // indirect
 	github.com/goccy/go-json v0.10.5 // indirect
 	github.com/goccy/go-yaml v1.18.0 // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
@@ -72,8 +74,7 @@ require (
 	github.com/klauspost/cpuid/v2 v2.3.0 // indirect
 	github.com/kweaver-ai/TelemetrySDK-Go/event/v2 v2.10.3 // indirect
 	github.com/kweaver-ai/TelemetrySDK-Go/span/v2 v2.10.3 // indirect
-	github.com/kweaver-ai/proton-mq-sdk-go v1.9.1 // indirect
-	github.com/kweaver-ai/proton-rds-sdk-go v1.4.1 // indirect
+	github.com/kweaver-ai/proton-rds-sdk-go v1.5.0 // indirect
 	github.com/lann/builder v0.0.0-20180802200727-47ae307949d0 // indirect
 	github.com/lann/ps v0.0.0-20150810152359-62de8c46ede0 // indirect
 	github.com/leodido/go-urn v1.4.0 // indirect

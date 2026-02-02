@@ -21,6 +21,7 @@ import (
 	"vega-manager/driveradapters"
 	"vega-manager/logics"
 	"vega-manager/logics/connectors/factory"
+	"vega-manager/worker"
 )
 
 type vegaService struct {
@@ -101,6 +102,9 @@ func main() {
 	// 初始化 Connector Factory 并注册内置的 Local Connector Builder
 	factory.Init(appSetting)
 	logger.Info("VEGA Manager Init Connector Factory Success")
+
+	worker.Start(appSetting)
+	logger.Info("VEGA Manager Init Discovery Worker Success")
 
 	// 创建并启动服务
 	server := &vegaService{
