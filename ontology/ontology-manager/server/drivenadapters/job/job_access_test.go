@@ -137,8 +137,8 @@ func Test_jobAccess_CreateJob(t *testing.T) {
 	})
 }
 
-func Test_jobAccess_GetJob(t *testing.T) {
-	Convey("test GetJob\n", t, func() {
+func Test_jobAccess_GetJobByID(t *testing.T) {
+	Convey("test GetJobByID\n", t, func() {
 		appSetting := &common.AppSetting{}
 		ja, smock := MockNewJobAccess(appSetting)
 
@@ -149,7 +149,7 @@ func Test_jobAccess_GetJob(t *testing.T) {
 		jobID := "job1"
 		jobConceptConfigStr, _ := sonic.MarshalString([]interfaces.ConceptConfig{})
 
-		Convey("GetJob Success \n", func() {
+		Convey("GetJobByID Success \n", func() {
 			rows := sqlmock.NewRows([]string{
 				"f_id", "f_name", "f_kn_id", "f_branch", "f_job_type",
 				"f_job_concept_config", "f_state", "f_state_detail",
@@ -164,7 +164,7 @@ func Test_jobAccess_GetJob(t *testing.T) {
 
 			smock.ExpectQuery(sqlStr).WithArgs(jobID).WillReturnRows(rows)
 
-			job, err := ja.GetJob(testCtx, jobID)
+			job, err := ja.GetJobByID(testCtx, jobID)
 			So(err, ShouldBeNil)
 			So(job, ShouldNotBeNil)
 			So(job.ID, ShouldEqual, jobID)
@@ -174,10 +174,10 @@ func Test_jobAccess_GetJob(t *testing.T) {
 			}
 		})
 
-		Convey("GetJob Success no row \n", func() {
+		Convey("GetJobByID Success no row \n", func() {
 			smock.ExpectQuery(sqlStr).WithArgs(jobID).WillReturnError(sql.ErrNoRows)
 
-			job, err := ja.GetJob(testCtx, jobID)
+			job, err := ja.GetJobByID(testCtx, jobID)
 			So(job, ShouldBeNil)
 			So(err, ShouldBeNil)
 
@@ -186,11 +186,11 @@ func Test_jobAccess_GetJob(t *testing.T) {
 			}
 		})
 
-		Convey("GetJob Failed \n", func() {
+		Convey("GetJobByID Failed \n", func() {
 			expectedErr := errors.New("some error")
 			smock.ExpectQuery(sqlStr).WithArgs(jobID).WillReturnError(expectedErr)
 
-			job, err := ja.GetJob(testCtx, jobID)
+			job, err := ja.GetJobByID(testCtx, jobID)
 			So(job, ShouldBeNil)
 			So(err, ShouldResemble, expectedErr)
 
@@ -199,13 +199,13 @@ func Test_jobAccess_GetJob(t *testing.T) {
 			}
 		})
 
-		Convey("GetJob empty jobID \n", func() {
-			job, err := ja.GetJob(testCtx, "")
+		Convey("GetJobByID empty jobID \n", func() {
+			job, err := ja.GetJobByID(testCtx, "")
 			So(job, ShouldBeNil)
 			So(err, ShouldBeNil)
 		})
 
-		Convey("GetJob Unmarshal failed \n", func() {
+		Convey("GetJobByID Unmarshal failed \n", func() {
 			rows := sqlmock.NewRows([]string{
 				"f_id", "f_name", "f_kn_id", "f_branch", "f_job_type",
 				"f_job_concept_config", "f_state", "f_state_detail",
@@ -220,7 +220,7 @@ func Test_jobAccess_GetJob(t *testing.T) {
 
 			smock.ExpectQuery(sqlStr).WithArgs(jobID).WillReturnRows(rows)
 
-			job, err := ja.GetJob(testCtx, jobID)
+			job, err := ja.GetJobByID(testCtx, jobID)
 			So(job, ShouldBeNil)
 			So(err, ShouldNotBeNil)
 
@@ -231,8 +231,8 @@ func Test_jobAccess_GetJob(t *testing.T) {
 	})
 }
 
-func Test_jobAccess_DeleteJobs(t *testing.T) {
-	Convey("test DeleteJobs\n", t, func() {
+func Test_jobAccess_DeleteJobsByIDs(t *testing.T) {
+	Convey("test DeleteJobsByIDs\n", t, func() {
 		appSetting := &common.AppSetting{}
 		ja, smock := MockNewJobAccess(appSetting)
 
@@ -240,12 +240,12 @@ func Test_jobAccess_DeleteJobs(t *testing.T) {
 
 		jobIDs := []string{"job1", "job2"}
 
-		Convey("DeleteJobs Success \n", func() {
+		Convey("DeleteJobsByIDs Success \n", func() {
 			smock.ExpectBegin()
 			smock.ExpectExec(sqlStr).WithArgs().WillReturnResult(sqlmock.NewResult(0, 2))
 
 			tx, _ := ja.db.Begin()
-			err := ja.DeleteJobs(testCtx, tx, jobIDs)
+			_, err := ja.DeleteJobsByIDs(testCtx, tx, jobIDs)
 			So(err, ShouldBeNil)
 
 			if err := smock.ExpectationsWereMet(); err != nil {
@@ -253,11 +253,11 @@ func Test_jobAccess_DeleteJobs(t *testing.T) {
 			}
 		})
 
-		Convey("DeleteJobs null \n", func() {
+		Convey("DeleteJobsByIDs null \n", func() {
 			smock.ExpectBegin()
 
 			tx, _ := ja.db.Begin()
-			err := ja.DeleteJobs(testCtx, tx, []string{})
+			_, err := ja.DeleteJobsByIDs(testCtx, tx, []string{})
 			So(err, ShouldBeNil)
 
 			if err := smock.ExpectationsWereMet(); err != nil {
@@ -265,13 +265,13 @@ func Test_jobAccess_DeleteJobs(t *testing.T) {
 			}
 		})
 
-		Convey("DeleteJobs Failed dbExec \n", func() {
+		Convey("DeleteJobsByIDs Failed dbExec \n", func() {
 			smock.ExpectBegin()
 			expectedErr := errors.New("dbExec error")
 			smock.ExpectExec(sqlStr).WithArgs().WillReturnError(expectedErr)
 
 			tx, _ := ja.db.Begin()
-			err := ja.DeleteJobs(testCtx, tx, jobIDs)
+			_, err := ja.DeleteJobsByIDs(testCtx, tx, jobIDs)
 			So(err, ShouldResemble, expectedErr)
 
 			if err := smock.ExpectationsWereMet(); err != nil {
@@ -281,8 +281,8 @@ func Test_jobAccess_DeleteJobs(t *testing.T) {
 	})
 }
 
-func Test_jobAccess_DeleteTasks(t *testing.T) {
-	Convey("test DeleteTasks\n", t, func() {
+func Test_jobAccess_DeleteTasksByJobIDs(t *testing.T) {
+	Convey("test DeleteTasksByJobIDs\n", t, func() {
 		appSetting := &common.AppSetting{}
 		ja, smock := MockNewJobAccess(appSetting)
 
@@ -290,12 +290,12 @@ func Test_jobAccess_DeleteTasks(t *testing.T) {
 
 		jobIDs := []string{"job1", "job2"}
 
-		Convey("DeleteTasks Success \n", func() {
+		Convey("DeleteTasksByJobIDs Success \n", func() {
 			smock.ExpectBegin()
 			smock.ExpectExec(sqlStr).WithArgs().WillReturnResult(sqlmock.NewResult(0, 5))
 
 			tx, _ := ja.db.Begin()
-			err := ja.DeleteTasks(testCtx, tx, jobIDs)
+			_, err := ja.DeleteTasksByJobIDs(testCtx, tx, jobIDs)
 			So(err, ShouldBeNil)
 
 			if err := smock.ExpectationsWereMet(); err != nil {
@@ -303,11 +303,11 @@ func Test_jobAccess_DeleteTasks(t *testing.T) {
 			}
 		})
 
-		Convey("DeleteTasks null \n", func() {
+		Convey("DeleteTasksByJobIDs null \n", func() {
 			smock.ExpectBegin()
 
 			tx, _ := ja.db.Begin()
-			err := ja.DeleteTasks(testCtx, tx, []string{})
+			_, err := ja.DeleteTasksByJobIDs(testCtx, tx, []string{})
 			So(err, ShouldBeNil)
 
 			if err := smock.ExpectationsWereMet(); err != nil {
@@ -315,13 +315,13 @@ func Test_jobAccess_DeleteTasks(t *testing.T) {
 			}
 		})
 
-		Convey("DeleteTasks Failed dbExec \n", func() {
+		Convey("DeleteTasksByJobIDs Failed dbExec \n", func() {
 			smock.ExpectBegin()
 			expectedErr := errors.New("dbExec error")
 			smock.ExpectExec(sqlStr).WithArgs().WillReturnError(expectedErr)
 
 			tx, _ := ja.db.Begin()
-			err := ja.DeleteTasks(testCtx, tx, jobIDs)
+			_, err := ja.DeleteTasksByJobIDs(testCtx, tx, jobIDs)
 			So(err, ShouldResemble, expectedErr)
 
 			if err := smock.ExpectationsWereMet(); err != nil {
@@ -420,8 +420,8 @@ func Test_jobAccess_UpdateJobState(t *testing.T) {
 	})
 }
 
-func Test_jobAccess_GetJobs(t *testing.T) {
-	Convey("test GetJobs\n", t, func() {
+func Test_jobAccess_GetJobsByIDs(t *testing.T) {
+	Convey("test GetJobsByIDs\n", t, func() {
 		appSetting := &common.AppSetting{}
 		ja, smock := MockNewJobAccess(appSetting)
 
@@ -432,7 +432,7 @@ func Test_jobAccess_GetJobs(t *testing.T) {
 		jobIDs := []string{"job1", "job2"}
 		jobConceptConfigStr, _ := sonic.MarshalString([]interfaces.ConceptConfig{})
 
-		Convey("GetJobs Success \n", func() {
+		Convey("GetJobsByIDs Success \n", func() {
 			rows := sqlmock.NewRows([]string{
 				"f_id", "f_name", "f_kn_id", "f_branch", "f_job_type",
 				"f_job_concept_config", "f_state", "f_state_detail",
@@ -452,7 +452,7 @@ func Test_jobAccess_GetJobs(t *testing.T) {
 
 			smock.ExpectQuery(sqlStr).WithArgs().WillReturnRows(rows)
 
-			jobs, err := ja.GetJobs(testCtx, jobIDs)
+			jobs, err := ja.GetJobsByIDs(testCtx, jobIDs)
 			So(err, ShouldBeNil)
 			So(jobs, ShouldNotBeNil)
 			So(len(jobs), ShouldEqual, 2)
@@ -464,10 +464,10 @@ func Test_jobAccess_GetJobs(t *testing.T) {
 			}
 		})
 
-		Convey("GetJobs Success no row \n", func() {
+		Convey("GetJobsByIDs Success no row \n", func() {
 			smock.ExpectQuery(sqlStr).WithArgs().WillReturnRows(sqlmock.NewRows(nil))
 
-			jobs, err := ja.GetJobs(testCtx, jobIDs)
+			jobs, err := ja.GetJobsByIDs(testCtx, jobIDs)
 			So(jobs, ShouldResemble, map[string]*interfaces.JobInfo{})
 			So(err, ShouldBeNil)
 
@@ -476,17 +476,17 @@ func Test_jobAccess_GetJobs(t *testing.T) {
 			}
 		})
 
-		Convey("GetJobs null \n", func() {
-			jobs, err := ja.GetJobs(testCtx, []string{})
+		Convey("GetJobsByIDs null \n", func() {
+			jobs, err := ja.GetJobsByIDs(testCtx, []string{})
 			So(jobs, ShouldResemble, map[string]*interfaces.JobInfo{})
 			So(err, ShouldBeNil)
 		})
 
-		Convey("GetJobs Failed \n", func() {
+		Convey("GetJobsByIDs Failed \n", func() {
 			expectedErr := errors.New("some error")
 			smock.ExpectQuery(sqlStr).WithArgs().WillReturnError(expectedErr)
 
-			jobs, err := ja.GetJobs(testCtx, jobIDs)
+			jobs, err := ja.GetJobsByIDs(testCtx, jobIDs)
 			So(jobs, ShouldBeNil)
 			So(err, ShouldResemble, expectedErr)
 
@@ -495,7 +495,7 @@ func Test_jobAccess_GetJobs(t *testing.T) {
 			}
 		})
 
-		Convey("GetJobs Scan error \n", func() {
+		Convey("GetJobsByIDs Scan error \n", func() {
 			rows := sqlmock.NewRows([]string{
 				"f_id", "f_name", "f_kn_id", "f_branch", "f_job_type",
 				"f_job_concept_config", "f_state", "f_state_detail",
@@ -510,7 +510,7 @@ func Test_jobAccess_GetJobs(t *testing.T) {
 
 			smock.ExpectQuery(sqlStr).WithArgs().WillReturnRows(rows)
 
-			jobs, err := ja.GetJobs(testCtx, jobIDs)
+			jobs, err := ja.GetJobsByIDs(testCtx, jobIDs)
 			So(len(jobs), ShouldEqual, 0)
 			So(err, ShouldNotBeNil)
 
@@ -519,7 +519,7 @@ func Test_jobAccess_GetJobs(t *testing.T) {
 			}
 		})
 
-		Convey("GetJobs Unmarshal error \n", func() {
+		Convey("GetJobsByIDs Unmarshal error \n", func() {
 			rows := sqlmock.NewRows([]string{
 				"f_id", "f_name", "f_kn_id", "f_branch", "f_job_type",
 				"f_job_concept_config", "f_state", "f_state_detail",
@@ -534,7 +534,7 @@ func Test_jobAccess_GetJobs(t *testing.T) {
 
 			smock.ExpectQuery(sqlStr).WithArgs().WillReturnRows(rows)
 
-			jobs, err := ja.GetJobs(testCtx, jobIDs)
+			jobs, err := ja.GetJobsByIDs(testCtx, jobIDs)
 			So(jobs, ShouldBeNil)
 			So(err, ShouldNotBeNil)
 

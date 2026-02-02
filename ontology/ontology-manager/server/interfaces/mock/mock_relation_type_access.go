@@ -97,6 +97,21 @@ func (mr *MockRelationTypeAccessMockRecorder) DeleteRelationTypesByIDs(ctx, tx, 
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteRelationTypesByIDs", reflect.TypeOf((*MockRelationTypeAccess)(nil).DeleteRelationTypesByIDs), ctx, tx, knID, branch, rtIDs)
 }
 
+// DeleteRelationTypesByKnID mocks base method.
+func (m *MockRelationTypeAccess) DeleteRelationTypesByKnID(ctx context.Context, tx *sql.Tx, knID, branch string) (int64, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DeleteRelationTypesByKnID", ctx, tx, knID, branch)
+	ret0, _ := ret[0].(int64)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// DeleteRelationTypesByKnID indicates an expected call of DeleteRelationTypesByKnID.
+func (mr *MockRelationTypeAccessMockRecorder) DeleteRelationTypesByKnID(ctx, tx, knID, branch interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteRelationTypesByKnID", reflect.TypeOf((*MockRelationTypeAccess)(nil).DeleteRelationTypesByKnID), ctx, tx, knID, branch)
+}
+
 // GetAllRelationTypesByKnID mocks base method.
 func (m *MockRelationTypeAccess) GetAllRelationTypesByKnID(ctx context.Context, knID, branch string) (map[string]*interfaces.RelationType, error) {
 	m.ctrl.T.Helper()

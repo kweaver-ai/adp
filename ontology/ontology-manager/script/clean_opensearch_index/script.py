@@ -87,26 +87,28 @@ class OpenSearchIndexCleaner:
             logger.error(f"OpenSearch连接失败: {e}")
             return False
 
-    def get_invalid_indexes_from_db(self) -> Set[str]:
+    def get_valid_indexes_from_db(self) -> Set[str]:
         """
-        从数据库获取无效索引列表
-        逻辑：从失败或取消的job查找对应的task，取出这些task中的索引
+        从数据库获取有效索引列表
+        逻辑：从运行中的job的task中获取索引，以及object_type_status中的索引
 
         Returns:
-            无效索引名称集合
+            有效索引名称集合
         """
-        invalid_indexes = set()
+        valid_indexes = set()
 
         try:
             with self.db_conn.cursor() as cursor:
-                # 使用JOIN语句一次性查询：从失败或取消的job关联的task中获取索引
+                # 从运行中的job的task中获取索引，以及object_type_status中的索引
                 sql = """
-                SELECT DISTINCT t.f_index
+                SELECT t.f_index
                 FROM t_kn_task t
                 INNER JOIN t_kn_job j ON t.f_job_id = j.f_id
-                WHERE j.f_state IN ('failed', 'canceled')
-                AND t.f_index IS NOT NULL 
+                WHERE j.f_state IN ('running')
                 AND t.f_index != ''
+                UNION ALL
+                SELECT f_index FROM t_object_type_status
+                WHERE f_index != ''
                 """
                 cursor.execute(sql)
                 results = cursor.fetchall()
@@ -114,10 +116,10 @@ class OpenSearchIndexCleaner:
                 for row in results:
                     index_name = row["f_index"]
                     if index_name:
-                        invalid_indexes.add(index_name)
+                        valid_indexes.add(index_name)
 
-                logger.info(f"从失败或取消的job的task中获取到 {len(invalid_indexes)} 个无效索引")
-                return invalid_indexes
+                logger.info(f"从数据库中获取到 {len(valid_indexes)} 个有效索引")
+                return valid_indexes
 
         except Exception as e:
             logger.error(f"从数据库获取索引列表失败: {e}")
@@ -135,49 +137,51 @@ class OpenSearchIndexCleaner:
         try:
             # 使用cat API一次性获取索引信息，bytes='b'直接返回字节数
             response = self.os_client.cat.indices(
-                index="adp-kn_ot_index-*,dip-kn_ot_index-*",    
-                format='json',
-                h='index,docsCount,storeSize',
-                bytes='b'
+                index="adp-kn_ot_index-*,dip-kn_ot_index-*",
+                format="json",
+                h="index,docsCount,storeSize",
+                bytes="b",
             )
 
             for item in response:
-                index_name = item['index']
-                
+                index_name = item["index"]
+
                 index_info[index_name] = {
-                    'docs': int(item.get('docsCount', 0)),
-                    'size': int(item.get('storeSize', 0))
+                    "docs": int(item.get("docsCount", 0)),
+                    "size": int(item.get("storeSize", 0)),
                 }
 
-            logger.info(
-                f"从OpenSearch获取到 {len(index_info)} 个业务知识网络相关索引"
-            )
+            logger.info(f"从OpenSearch获取到 {len(index_info)} 个业务知识网络相关索引")
             return index_info
 
         except Exception as e:
             logger.error(f"从OpenSearch获取索引列表失败: {e}")
             return {}
 
-
     def find_orphan_indexes(
-        self, db_indexes: Set[str], os_indexes: Set[str]
+        self,
+        db_valid_indexes: Set[str],
+        os_indexes: Set[str],
     ) -> Set[str]:
         """
-        找出需要删除的索引（在OpenSearch中存在且在失败或取消的job的task中的索引）
+        找出需要删除的索引（在OpenSearch中存在且不在使用的索引）
 
         Args:
-            db_indexes: 从失败或取消的job的task中获取的无效索引
+            db_valid_indexes: 从数据库中获取的有效索引
             os_indexes: OpenSearch中的所有索引
 
         Returns:
-            需要删除的索引集合（在OpenSearch中存在且在数据库中标记为无效的索引）
+            需要删除的索引集合（在OpenSearch中存在且不在使用的索引）
         """
-        # 找出在OpenSearch中存在且在数据库中标记为无效的索引
-        orphan_indexes = os_indexes & db_indexes
+        # 从 os_indexes 中排除 db_valid_indexes 中的索引
+        orphan_indexes = os_indexes - db_valid_indexes
         logger.info(f"发现 {len(orphan_indexes)} 个需要删除的索引")
+
         return orphan_indexes
 
-    def delete_indexes(self, indexes: List[str], index_info: Dict[str, dict]) -> Tuple[int, int, int]:
+    def delete_indexes(
+        self, indexes: List[str], index_info: Dict[str, dict]
+    ) -> Tuple[int, int, int]:
         """
         删除指定的索引
 
@@ -196,17 +200,21 @@ class OpenSearchIndexCleaner:
             try:
                 # 从预获取的索引信息中获取大小
                 info = index_info.get(index_name, {})
-                index_size = info.get('size', 0)
+                index_size = info.get("size", 0)
 
                 if self.dry_run:
-                    logger.info(f"[DRY RUN] 将删除索引: {index_name} (大小: {self._format_bytes(index_size)})")
+                    logger.info(
+                        f"[DRY RUN] 将删除索引: {index_name} (大小: {self._format_bytes(index_size)})"
+                    )
                     success_count += 1
                     total_recovered_size += index_size
                 else:
                     if self.os_client.indices.exists(index=index_name):
                         response = self.os_client.indices.delete(index=index_name)
                         if response.get("acknowledged", False):
-                            logger.info(f"成功删除索引: {index_name} (回收: {self._format_bytes(index_size)})")
+                            logger.info(
+                                f"成功删除索引: {index_name} (回收: {self._format_bytes(index_size)})"
+                            )
                             success_count += 1
                             total_recovered_size += index_size
                         else:
@@ -236,11 +244,8 @@ class OpenSearchIndexCleaner:
         if not self.connect_opensearch():
             return False
 
-        # 获取从失败或取消的job的task中的无效索引
-        db_indexes = self.get_invalid_indexes_from_db()
-        if not db_indexes:
-            logger.warning("从失败或取消的job的task中没有找到任何无效索引")
-            return False
+        # 获取从数据库中获取的有效索引
+        db_valid_indexes = self.get_valid_indexes_from_db()
 
         # 获取OpenSearch中的所有索引及其大小信息
         index_info = self.get_all_opensearch_indexes_with_size()
@@ -252,7 +257,7 @@ class OpenSearchIndexCleaner:
         os_indexes = set(index_info.keys())
 
         # 找出孤立的索引
-        orphan_indexes = self.find_orphan_indexes(db_indexes, os_indexes)
+        orphan_indexes = self.find_orphan_indexes(db_valid_indexes, os_indexes)
 
         if not orphan_indexes:
             logger.info("没有发现需要删除的索引，清理完成")
@@ -263,16 +268,16 @@ class OpenSearchIndexCleaner:
         logger.info("-" * 60)
         for index_name in sorted(orphan_indexes):
             info = index_info.get(index_name, {})
-            logger.info(f"  - {index_name}")
-            logger.info(f"    文档数: {info.get('docs', 0):,}")
             logger.info(
-                f"    存储大小: {self._format_bytes(info.get('size', 0))}"
+                f"  - {index_name} (文档数: {info.get('docs', 0):,}, 存储大小: {self._format_bytes(info.get('size', 0))})"
             )
         logger.info("-" * 60)
 
         # 删除索引
         logger.info(f"\n开始删除 {len(orphan_indexes)} 个索引...")
-        success_count, failed_count, recovered_size = self.delete_indexes(list(orphan_indexes), index_info)
+        success_count, failed_count, recovered_size = self.delete_indexes(
+            list(orphan_indexes), index_info
+        )
 
         # 输出结果
         logger.info("\n" + "=" * 60)

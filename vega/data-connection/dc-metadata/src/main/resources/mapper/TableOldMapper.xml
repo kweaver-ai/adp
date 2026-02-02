@@ -8,11 +8,15 @@
     </select>
 
     <select id="getTableListByDsId" resultType="com.eisoo.dc.common.metadata.entity.TableOldEntity">
-        SELECT f_id FROM t_table
-        WHERE f_data_source_id = #{dsId} and f_delete_flag != 1
-        <if test="keyword != null and keyword != ''">
-            AND f_name LIKE CONCAT('%', #{keyword}, '%')
-        </if>
+        SELECT * FROM t_table
+            WHERE f_data_source_id = #{dsId} and f_delete_flag != 1
+            <if test="keyword != null and keyword != ''">
+                AND f_name LIKE CONCAT('%', #{keyword}, '%')
+            </if>
+        ORDER BY ${sortOrder} ${direction}
+            <if test="limit > 0">
+                LIMIT #{limit} OFFSET #{offset}
+            </if>
     </select>
 
     <select id="selectPage" resultType="com.eisoo.dc.common.metadata.entity.TableOldEntity">

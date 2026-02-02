@@ -78,9 +78,11 @@ func (r *restHandler) GetActionsInActionType(c *gin.Context, visitor rest.Visito
 
 	// 是否包含行动类信息
 	includeTypeInfo := c.DefaultQuery("include_type_info", interfaces.DEFAULT_INCLUDE_TYPE_INFO)
+	// 排除系统字段列表
+	excludeSystemProperties := c.QueryArray("exclude_system_properties")
 	// 校验查询参数
 	objectsQueryParas, err := validateObjectsQueryParameters(ctx, includeTypeInfo, interfaces.DEFAULT_IGNORING_STORE_CACHE,
-		interfaces.DEFAULT_INCLUDE_LOGIC_PARAMS)
+		interfaces.DEFAULT_INCLUDE_LOGIC_PARAMS, excludeSystemProperties)
 	if err != nil {
 		httpErr := err.(*rest.HTTPError)
 		// 设置 trace 的错误信息的 attributes

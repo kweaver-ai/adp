@@ -17,6 +17,11 @@ const (
 
 	// USE_SEARCH_AFTER
 	USE_SEARCH_AFTER_TRUE = true
+
+	// 系统字段常量
+	SYSTEM_PROPERTY_INSTANCE_ID       = "_instance_id"
+	SYSTEM_PROPERTY_INSTANCE_IDENTITY = "_instance_identity"
+	SYSTEM_PROPERTY_DISPLAY           = "_display"
 )
 
 // 对象检索请求体
@@ -36,7 +41,7 @@ type ObjectQueryBaseOnObjectType struct {
 }
 
 type ObjectQueryInfo struct {
-	UniqueIdentities []map[string]any `json:"unique_identities,omitempty"`
+	InstanceIdentity []map[string]any `json:"_instance_identity,omitempty"`
 	Properties       []string         `json:"properties,omitempty"`
 }
 
@@ -84,9 +89,10 @@ type Filter struct {
 }
 
 type CommonQueryParameters struct {
-	IncludeTypeInfo    bool
-	IncludeLogicParams bool
-	IgnoringStore      bool
+	IncludeTypeInfo         bool
+	IncludeLogicParams      bool
+	IgnoringStore           bool
+	ExcludeSystemProperties []string
 }
 
 type ObjectTypeWithKeyField struct {
@@ -153,7 +159,7 @@ type Parameter struct {
 
 // 对象属性值请求体
 type ObjectPropertyValueQuery struct {
-	UniqueIdentities []map[string]any          `json:"unique_identities,omitempty"`
+	InstanceIdentity []map[string]any          `json:"_instance_identity,omitempty"`
 	Properties       []string                  `json:"properties,omitempty"`
 	DynamicParams    map[string]map[string]any `json:"dynamic_params"`
 

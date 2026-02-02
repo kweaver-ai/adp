@@ -79,6 +79,11 @@ Description = "Source Object Type Id Is Empty"
 Solution = "Please check whether the parameter is correct."
 ErrorLink = "None"
 
+[OntologyManager.KnowledgeNetwork.Forbidden.HasRunningJob]
+Description = "Knowledge Network Has Running Job"
+Solution = "Please try again later. If the error occurs again, please submit the work order or contact technical support."
+ErrorLink = "None"
+
 [OntologyManager.KnowledgeNetwork.NotFound]
 Description = "The Knowledge Network Does Not Exist"
 Solution = "Please try again. If the error occurs again, please submit the work order or contact technical support."

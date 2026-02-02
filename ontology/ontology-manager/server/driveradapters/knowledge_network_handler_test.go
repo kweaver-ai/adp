@@ -220,7 +220,7 @@ func Test_KnowledgeNetworkRestHandler_DeleteKN(t *testing.T) {
 				KNID:   knID,
 				KNName: "kn1",
 			}, nil)
-			kns.EXPECT().DeleteKN(gomock.Any(), gomock.Any()).Return(int64(1), nil)
+			kns.EXPECT().DeleteKN(gomock.Any(), gomock.Any()).Return(nil)
 
 			req := httptest.NewRequest(http.MethodDelete, url, nil)
 			w := httptest.NewRecorder()

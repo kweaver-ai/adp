@@ -69,7 +69,7 @@ nodeSelector: {}
 
 depServices:
   class-443:
-    ingressClass: nginx
+    ingressClass: class-443
 
 enableSystemLog: true
 

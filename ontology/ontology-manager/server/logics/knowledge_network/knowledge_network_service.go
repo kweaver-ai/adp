@@ -14,7 +14,6 @@ import (
 	o11y "github.com/kweaver-ai/kweaver-go-lib/observability"
 	"github.com/kweaver-ai/kweaver-go-lib/rest"
 	"github.com/rs/xid"
-	attr "go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
 
 	"ontology-manager/common"
@@ -23,6 +22,7 @@ import (
 	"ontology-manager/logics"
 	"ontology-manager/logics/action_type"
 	"ontology-manager/logics/concept_group"
+	"ontology-manager/logics/job"
 	"ontology-manager/logics/object_type"
 	"ontology-manager/logics/permission"
 	"ontology-manager/logics/relation_type"
@@ -41,6 +41,7 @@ type knowledgeNetworkService struct {
 	bsa        interfaces.BusinessSystemAccess
 	cga        interfaces.ConceptGroupAccess
 	cgs        interfaces.ConceptGroupService
+	js         interfaces.JobService
 	kna        interfaces.KNAccess
 	mfa        interfaces.ModelFactoryAccess
 	osa        interfaces.OpenSearchAccess
@@ -62,6 +63,7 @@ func NewKNService(appSetting *common.AppSetting) interfaces.KNService {
 			cga:        logics.CGA,
 			cgs:        concept_group.NewConceptGroupService(appSetting),
 			db:         logics.DB,
+			js:         job.NewJobService(appSetting),
 			kna:        logics.KNA,
 			mfa:        logics.MFA,
 			osa:        logics.OSA,
@@ -79,8 +81,6 @@ func NewKNService(appSetting *common.AppSetting) interfaces.KNService {
 func (kns *knowledgeNetworkService) CheckKNExistByID(ctx context.Context, KNID string, branch string) (string, bool, error) {
 	ctx, span := ar_trace.Tracer.Start(ctx, fmt.Sprintf("校验业务知识网络[%v]的存在性", KNID))
 	defer span.End()
-
-	span.SetAttributes(attr.Key("kn_id").String(KNID))
 
 	otName, exist, err := kns.kna.CheckKNExistByID(ctx, KNID, branch)
 	if err != nil {
@@ -101,8 +101,6 @@ func (kns *knowledgeNetworkService) CheckKNExistByID(ctx context.Context, KNID s
 func (kns *knowledgeNetworkService) CheckKNExistByName(ctx context.Context, knName string, branch string) (string, bool, error) {
 	ctx, span := ar_trace.Tracer.Start(ctx, fmt.Sprintf("校验业务知识网络[%v]的存在性", knName))
 	defer span.End()
-
-	span.SetAttributes(attr.Key("kn_name").String(knName))
 
 	KNID, exist, err := kns.kna.CheckKNExistByName(ctx, knName, branch)
 	if err != nil {
@@ -450,8 +448,6 @@ func (kns *knowledgeNetworkService) GetKNByID(ctx context.Context, knID string, 
 	ctx, span := ar_trace.Tracer.Start(ctx, fmt.Sprintf("查询业务知识网络[%s]信息", knID))
 	defer span.End()
 
-	span.SetAttributes(attr.Key("kn_id").String(knID))
-
 	// 获取模型基本信息
 	kn, err := kns.kna.GetKNByID(ctx, knID, branch)
 	if err != nil {
@@ -554,8 +550,6 @@ func (kns *knowledgeNetworkService) GetStatByKN(ctx context.Context, kn *interfa
 	ctx, span := ar_trace.Tracer.Start(ctx, fmt.Sprintf("查询业务知识网络[%s]信息", kn.KNID))
 	defer span.End()
 
-	span.SetAttributes(attr.Key("kn_id").String(kn.KNID))
-
 	// 获取业务知识网络下的对象类、关系类、行动类的数量
 	otCnt, err := kns.ota.GetObjectTypesTotal(ctx, interfaces.ObjectTypesQueryParams{
 		KNID:   kn.KNID,
@@ -646,10 +640,6 @@ func (kns *knowledgeNetworkService) UpdateKN(ctx context.Context, tx *sql.Tx, kn
 	currentTime := time.Now().UnixMilli() // 业务知识网络的update_time是int类型
 	kn.UpdateTime = currentTime
 
-	span.SetAttributes(
-		attr.Key("kn_id").String(kn.KNID),
-		attr.Key("kn_name").String(kn.KNName))
-
 	if tx == nil {
 		// 0. 开始事务
 		tx, err = kns.db.Begin()
@@ -723,7 +713,7 @@ func (kns *knowledgeNetworkService) UpdateKN(ctx context.Context, tx *sql.Tx, kn
 	return nil
 }
 
-func (kns *knowledgeNetworkService) DeleteKN(ctx context.Context, kn *interfaces.KN) (int64, error) {
+func (kns *knowledgeNetworkService) DeleteKN(ctx context.Context, kn *interfaces.KN) error {
 	ctx, span := ar_trace.Tracer.Start(ctx, "Delete knowledge network")
 	defer span.End()
 
@@ -733,7 +723,27 @@ func (kns *knowledgeNetworkService) DeleteKN(ctx context.Context, kn *interfaces
 		ID:   kn.KNID,
 	}, []string{interfaces.OPERATION_TYPE_DELETE})
 	if err != nil {
-		return 0, err
+		return err
+	}
+
+	// 获取业务知识网络下的所有任务
+	jobs, _, err := kns.js.ListJobs(ctx, interfaces.JobsQueryParams{
+		PaginationQueryParameters: interfaces.PaginationQueryParameters{
+			Sort:      interfaces.JOB_SORT["create_time"],
+			Direction: interfaces.DESC_DIRECTION,
+		},
+		KNID:   kn.KNID,
+		Branch: kn.Branch,
+		State:  []interfaces.JobState{interfaces.JobStateRunning},
+	})
+	if err != nil {
+		return err
+	}
+	if len(jobs) > 0 {
+		// 有运行中的任务，不允许删除
+		return rest.NewHTTPError(ctx, http.StatusForbidden,
+			oerrors.OntologyManager_KnowledgeNetwork_Forbidden_HasRunningJob).
+			WithErrorDetails("业务知识网络下有运行中的任务，不允许删除")
 	}
 
 	// 0. 开始事务
@@ -743,7 +753,7 @@ func (kns *knowledgeNetworkService) DeleteKN(ctx context.Context, kn *interfaces
 		span.SetStatus(codes.Error, "事务开启失败")
 		o11y.Error(ctx, fmt.Sprintf("Begin transaction error: %s", err.Error()))
 
-		return 0, rest.NewHTTPError(ctx, http.StatusInternalServerError,
+		return rest.NewHTTPError(ctx, http.StatusInternalServerError,
 			oerrors.OntologyManager_KnowledgeNetwork_InternalError_BeginTransactionFailed).
 			WithErrorDetails(err.Error())
 	}
@@ -774,104 +784,117 @@ func (kns *knowledgeNetworkService) DeleteKN(ctx context.Context, kn *interfaces
 
 	// 删除业务知识网络
 	rowsAffect, err := kns.kna.DeleteKN(ctx, tx, kn.KNID, kn.Branch)
-	span.SetAttributes(attr.Key("rows_affect").Int64(rowsAffect))
 	if err != nil {
 		logger.Errorf("DeleteKN error: %s", err.Error())
 		span.SetStatus(codes.Error, "删除业务知识网络失败")
 
-		return rowsAffect, rest.NewHTTPError(ctx, http.StatusInternalServerError,
+		return rest.NewHTTPError(ctx, http.StatusInternalServerError,
 			oerrors.OntologyManager_KnowledgeNetwork_InternalError).WithErrorDetails(err.Error())
 	}
 	logger.Infof("DeleteKN: Rows affected is %v, request delete KNID is %s!", rowsAffect, kn.KNID)
 	if rowsAffect != 1 {
 		logger.Warnf("Delete kns number %v not equal 1!", rowsAffect)
-
 		o11y.Warn(ctx, fmt.Sprintf("Delete kns number %v not equal 1!", rowsAffect))
 	}
 
-	// 删除对象类、关系类、行动类
+	// 删除业务知识网络下的所有对象类、关系类、行动类, 概念分组, 任务
 	// 获取业务知识网络下的对象类id
-	otIDs, err := kns.ots.GetObjectTypeIDsByKnID(ctx, kn.KNID, kn.Branch)
+	err = kns.ots.DeleteObjectTypesByKnID(ctx, tx, kn.KNID, kn.Branch)
 	if err != nil {
-		logger.Errorf("GetObjectTypeIDsByKnID error: %s", err.Error())
-		span.SetStatus(codes.Error, "获取业务知识网络下的对象类失败")
-		return 0, err
-	}
-	_, err = kns.ots.DeleteObjectTypesByIDs(ctx, tx, kn.KNID, kn.Branch, otIDs)
-	if err != nil {
-		logger.Errorf("DeleteObjectTypes error: %s", err.Error())
+		logger.Errorf("DeleteObjectTypesByKnID error: %s", err.Error())
 		span.SetStatus(codes.Error, "删除业务知识网络对象类失败")
-		return 0, rest.NewHTTPError(ctx, http.StatusInternalServerError,
-			oerrors.OntologyManager_KnowledgeNetwork_InternalError_DeleteObjectTypesFailed).
-			WithErrorDetails(err.Error())
+		return err
 	}
 
-	// 获取业务知识网络下的关系类id
-	rtIDs, err := kns.rts.GetRelationTypeIDsByKnID(ctx, kn.KNID, kn.Branch)
+	// 删除业务知识网络下的所有关系类
+	err = kns.rts.DeleteRelationTypesByKnID(ctx, tx, kn.KNID, kn.Branch)
 	if err != nil {
-		logger.Errorf("GetRelationTypeIDsByKnID error: %s", err.Error())
-		span.SetStatus(codes.Error, "获取业务知识网络下的关系类失败")
-		return 0, err
-	}
-	_, err = kns.rts.DeleteRelationTypesByIDs(ctx, tx, kn.KNID, kn.Branch, rtIDs)
-	if err != nil {
-		logger.Errorf("DeleteRelationTypes error: %s", err.Error())
+		logger.Errorf("DeleteRelationTypesByKnID error: %s", err.Error())
 		span.SetStatus(codes.Error, "删除业务知识网络关系类失败")
-		return 0, rest.NewHTTPError(ctx, http.StatusInternalServerError,
-			oerrors.OntologyManager_KnowledgeNetwork_InternalError_CreateRelationTypesFailed).
-			WithErrorDetails(err.Error())
+		return err
 	}
 
-	// 获取业务知识网络下的行动类id
-	atIDs, err := kns.ats.GetActionTypeIDsByKnID(ctx, kn.KNID, kn.Branch)
+	// 删除业务知识网络下的所有行动类
+	err = kns.ats.DeleteActionTypesByKnID(ctx, tx, kn.KNID, kn.Branch)
 	if err != nil {
-		logger.Errorf("GetRelationTypeIDsByKnID error: %s", err.Error())
-		span.SetStatus(codes.Error, "获取业务知识网络下的关系类失败")
-		return 0, err
-	}
-	_, err = kns.ats.DeleteActionTypesByIDs(ctx, tx, kn.KNID, kn.Branch, atIDs)
-	if err != nil {
-		logger.Errorf("DeleteActionTypes error: %s", err.Error())
+		logger.Errorf("DeleteActionTypesByKnID error: %s", err.Error())
 		span.SetStatus(codes.Error, "删除业务知识网络动作类失败")
-		return 0, rest.NewHTTPError(ctx, http.StatusInternalServerError,
-			oerrors.OntologyManager_KnowledgeNetwork_InternalError_DeleteActionTypesFailed).
-			WithErrorDetails(err.Error())
+		return err
+	}
+
+	// 删除业务知识网络下的所有概念分组
+	err = kns.cgs.DeleteConceptGroupsByKnID(ctx, tx, kn.KNID, kn.Branch)
+	if err != nil {
+		logger.Errorf("DeleteConceptGroupsByKnID error: %s", err.Error())
+		span.SetStatus(codes.Error, "删除业务知识网络概念分组失败")
+		return err
+	}
+
+	// 删除业务知识网络下的所有任务
+	err = kns.js.DeleteJobsByKnID(ctx, tx, kn.KNID, kn.Branch)
+	if err != nil {
+		logger.Errorf("DeleteJobsByKnID error: %s", err.Error())
+		span.SetStatus(codes.Error, "删除业务知识网络任务失败")
+		return err
 	}
 
 	docid := interfaces.GenerateConceptDocuemtnID(kn.KNID,
 		interfaces.MODULE_TYPE_KN, kn.KNID, kn.Branch)
 	err = kns.osa.DeleteData(ctx, interfaces.KN_CONCEPT_INDEX_NAME, docid)
 	if err != nil {
-		return 0, err
+		return err
+	}
+
+	err = kns.osa.DeleteByQuery(ctx, interfaces.KN_CONCEPT_INDEX_NAME, map[string]any{
+		"query": map[string]any{
+			"bool": map[string]any{
+				"filter": []any{
+					map[string]any{
+						"term": map[string]any{
+							"kn_id": kn.KNID,
+						},
+					}, map[string]any{
+						"term": map[string]any{
+							"branch": kn.Branch,
+						},
+					},
+				},
+			},
+		},
+	})
+	if err != nil {
+		logger.Errorf("DeleteByQuery error: %s", err.Error())
+		span.SetStatus(codes.Error, "删除业务知识网络概念失败")
+		return rest.NewHTTPError(ctx, http.StatusInternalServerError,
+			oerrors.OntologyManager_KnowledgeNetwork_InternalError).
+			WithErrorDetails(err.Error())
 	}
 
 	//  清除资源策略
 	err = kns.ps.DeleteResources(ctx, interfaces.RESOURCE_TYPE_KN, []string{kn.KNID})
 	if err != nil {
-		return 0, err
+		logger.Errorf("DeleteResources error: %s", err.Error())
+		span.SetStatus(codes.Error, "删除业务知识网络资源策略失败")
+		return err
 	}
 	// 最后再解绑业务域
 	err = kns.bsa.UnbindResource(ctx, kn.BusinessDomain, kn.KNID, interfaces.RESOURCE_TYPE_KN)
 	if err != nil {
 		logger.Errorf("UnbindResource error: %s", err.Error())
 		span.SetStatus(codes.Error, "解绑业务知识网络业务域失败")
-		return 0, rest.NewHTTPError(ctx, http.StatusInternalServerError,
+		return rest.NewHTTPError(ctx, http.StatusInternalServerError,
 			oerrors.OntologyManager_KnowledgeNetwork_InternalError_UnbindBusinessDomainFailed).
 			WithErrorDetails(err.Error())
 	}
 
 	span.SetStatus(codes.Ok, "")
-	return rowsAffect, nil
+	return nil
 }
 
 // 更新知识网络详情
-func (kns *knowledgeNetworkService) UpdateKNDetail(ctx context.Context,
-	knID string, branch string, detail string) error {
-	ctx, span := ar_trace.Tracer.Start(ctx, fmt.Sprintf("Update knowledge network detail[%s]", knID))
+func (kns *knowledgeNetworkService) UpdateKNDetail(ctx context.Context, knID string, branch string, detail string) error {
+	ctx, span := ar_trace.Tracer.Start(ctx, "UpdateKNDetail")
 	defer span.End()
-
-	span.SetAttributes(
-		attr.Key("kn_id").String(knID))
 
 	// 更新知识网络详情
 	err := kns.kna.UpdateKNDetail(ctx, knID, branch, detail)

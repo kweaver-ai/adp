@@ -6,6 +6,7 @@ package mock_interfaces
 
 import (
 	context "context"
+	sql "database/sql"
 	interfaces "ontology-manager/interfaces"
 	reflect "reflect"
 
@@ -50,48 +51,62 @@ func (mr *MockJobServiceMockRecorder) CreateJob(ctx, jobInfo interface{}) *gomoc
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateJob", reflect.TypeOf((*MockJobService)(nil).CreateJob), ctx, jobInfo)
 }
 
-// DeleteJobs mocks base method.
-func (m *MockJobService) DeleteJobs(ctx context.Context, knID, branch string, jobIDs []string) error {
+// DeleteJobsByIDs mocks base method.
+func (m *MockJobService) DeleteJobsByIDs(ctx context.Context, knID, branch string, jobIDs []string) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "DeleteJobs", ctx, knID, branch, jobIDs)
+	ret := m.ctrl.Call(m, "DeleteJobsByIDs", ctx, knID, branch, jobIDs)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
-// DeleteJobs indicates an expected call of DeleteJobs.
-func (mr *MockJobServiceMockRecorder) DeleteJobs(ctx, knID, branch, jobIDs interface{}) *gomock.Call {
+// DeleteJobsByIDs indicates an expected call of DeleteJobsByIDs.
+func (mr *MockJobServiceMockRecorder) DeleteJobsByIDs(ctx, knID, branch, jobIDs interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteJobs", reflect.TypeOf((*MockJobService)(nil).DeleteJobs), ctx, knID, branch, jobIDs)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteJobsByIDs", reflect.TypeOf((*MockJobService)(nil).DeleteJobsByIDs), ctx, knID, branch, jobIDs)
 }
 
-// GetJob mocks base method.
-func (m *MockJobService) GetJob(ctx context.Context, jobID string) (*interfaces.JobInfo, error) {
+// DeleteJobsByKnID mocks base method.
+func (m *MockJobService) DeleteJobsByKnID(ctx context.Context, tx *sql.Tx, knID, branch string) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetJob", ctx, jobID)
+	ret := m.ctrl.Call(m, "DeleteJobsByKnID", ctx, tx, knID, branch)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// DeleteJobsByKnID indicates an expected call of DeleteJobsByKnID.
+func (mr *MockJobServiceMockRecorder) DeleteJobsByKnID(ctx, tx, knID, branch interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteJobsByKnID", reflect.TypeOf((*MockJobService)(nil).DeleteJobsByKnID), ctx, tx, knID, branch)
+}
+
+// GetJobByID mocks base method.
+func (m *MockJobService) GetJobByID(ctx context.Context, jobID string) (*interfaces.JobInfo, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetJobByID", ctx, jobID)
 	ret0, _ := ret[0].(*interfaces.JobInfo)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// GetJob indicates an expected call of GetJob.
-func (mr *MockJobServiceMockRecorder) GetJob(ctx, jobID interface{}) *gomock.Call {
+// GetJobByID indicates an expected call of GetJobByID.
+func (mr *MockJobServiceMockRecorder) GetJobByID(ctx, jobID interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetJob", reflect.TypeOf((*MockJobService)(nil).GetJob), ctx, jobID)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetJobByID", reflect.TypeOf((*MockJobService)(nil).GetJobByID), ctx, jobID)
 }
 
-// GetJobs mocks base method.
-func (m *MockJobService) GetJobs(ctx context.Context, jobIDs []string) (map[string]*interfaces.JobInfo, error) {
+// GetJobsByIDs mocks base method.
+func (m *MockJobService) GetJobsByIDs(ctx context.Context, jobIDs []string) (map[string]*interfaces.JobInfo, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetJobs", ctx, jobIDs)
+	ret := m.ctrl.Call(m, "GetJobsByIDs", ctx, jobIDs)
 	ret0, _ := ret[0].(map[string]*interfaces.JobInfo)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// GetJobs indicates an expected call of GetJobs.
-func (mr *MockJobServiceMockRecorder) GetJobs(ctx, jobIDs interface{}) *gomock.Call {
+// GetJobsByIDs indicates an expected call of GetJobsByIDs.
+func (mr *MockJobServiceMockRecorder) GetJobsByIDs(ctx, jobIDs interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetJobs", reflect.TypeOf((*MockJobService)(nil).GetJobs), ctx, jobIDs)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetJobsByIDs", reflect.TypeOf((*MockJobService)(nil).GetJobsByIDs), ctx, jobIDs)
 }
 
 // ListJobs mocks base method.

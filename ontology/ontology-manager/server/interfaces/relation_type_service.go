@@ -13,9 +13,10 @@ type RelationTypeService interface {
 	ListRelationTypes(ctx context.Context, query RelationTypesQueryParams) ([]*RelationType, int, error)
 	GetRelationTypesByIDs(ctx context.Context, knID string, branch string, rtIDs []string) ([]*RelationType, error)
 	UpdateRelationType(ctx context.Context, tx *sql.Tx, relationType *RelationType) error
-	DeleteRelationTypesByIDs(ctx context.Context, tx *sql.Tx, knID string, branch string, rtIDs []string) (int64, error)
+	DeleteRelationTypesByIDs(ctx context.Context, tx *sql.Tx, knID string, branch string, rtIDs []string) error
 
 	GetRelationTypeIDsByKnID(ctx context.Context, knID string, branch string) ([]string, error)
+	DeleteRelationTypesByKnID(ctx context.Context, tx *sql.Tx, knID string, branch string) error
 
 	SearchRelationTypes(ctx context.Context, query *ConceptsQuery) (RelationTypes, error)
 

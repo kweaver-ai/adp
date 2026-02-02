@@ -54,7 +54,10 @@ func (r *restHandler) CreateActionSchedule(c *gin.Context, visitor rest.Visitor)
 
 	knID := c.Param("kn_id")
 	branch := c.DefaultQuery("branch", interfaces.MAIN_BRANCH)
-	span.SetAttributes(attr.Key("kn_id").String(knID), attr.Key("branch").String(branch))
+	span.SetAttributes(
+		attr.Key("kn_id").String(knID),
+		attr.Key("branch").String(branch),
+	)
 
 	// Verify KN exists
 	_, exist, err := r.kns.CheckKNExistByID(ctx, knID, branch)
@@ -252,6 +255,7 @@ func (r *restHandler) UpdateActionScheduleStatus(c *gin.Context, visitor rest.Vi
 	scheduleID := c.Param("schedule_id")
 	span.SetAttributes(
 		attr.Key("kn_id").String(knID),
+		attr.Key("branch").String(branch),
 		attr.Key("schedule_id").String(scheduleID),
 	)
 
@@ -333,6 +337,7 @@ func (r *restHandler) DeleteActionSchedules(c *gin.Context, visitor rest.Visitor
 	scheduleIDsStr := c.Param("schedule_ids")
 	span.SetAttributes(
 		attr.Key("kn_id").String(knID),
+		attr.Key("branch").String(branch),
 		attr.Key("schedule_ids").String(scheduleIDsStr),
 	)
 
@@ -399,7 +404,10 @@ func (r *restHandler) ListActionSchedules(c *gin.Context, visitor rest.Visitor) 
 
 	knID := c.Param("kn_id")
 	branch := c.DefaultQuery("branch", interfaces.MAIN_BRANCH)
-	span.SetAttributes(attr.Key("kn_id").String(knID))
+	span.SetAttributes(
+		attr.Key("kn_id").String(knID),
+		attr.Key("branch").String(branch),
+	)
 
 	// Verify KN exists
 	_, exist, err := r.kns.CheckKNExistByID(ctx, knID, branch)
@@ -510,6 +518,7 @@ func (r *restHandler) GetActionSchedule(c *gin.Context, visitor rest.Visitor) {
 	scheduleID := c.Param("schedule_id")
 	span.SetAttributes(
 		attr.Key("kn_id").String(knID),
+		attr.Key("branch").String(branch),
 		attr.Key("schedule_id").String(scheduleID),
 	)
 

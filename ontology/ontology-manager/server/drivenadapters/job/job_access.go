@@ -49,12 +49,13 @@ func NewJobAccess(appSetting *common.AppSetting) interfaces.JobAccess {
 
 // 创建job
 func (ja *jobAccess) CreateJob(ctx context.Context, tx *sql.Tx, jobInfo *interfaces.JobInfo) error {
-	ctx, span := ar_trace.Tracer.Start(ctx, fmt.Sprintf("Create job[%s]", jobInfo.Name), trace.WithSpanKind(trace.SpanKindClient))
+	ctx, span := ar_trace.Tracer.Start(ctx, "CreateJob", trace.WithSpanKind(trace.SpanKindClient))
 	defer span.End()
 
 	span.SetAttributes(
 		attr.Key("db_url").String(libdb.GetDBUrl()),
-		attr.Key("db_type").String(libdb.GetDBType()))
+		attr.Key("db_type").String(libdb.GetDBType()),
+	)
 
 	jobConceptConfigStr, err := sonic.MarshalString(jobInfo.JobConceptConfig)
 	if err != nil {
@@ -114,16 +115,17 @@ func (ja *jobAccess) CreateJob(ctx context.Context, tx *sql.Tx, jobInfo *interfa
 }
 
 // 删除jobs
-func (ja *jobAccess) DeleteJobs(ctx context.Context, tx *sql.Tx, jobIDs []string) error {
-	ctx, span := ar_trace.Tracer.Start(ctx, fmt.Sprintf("Delete jobs[%v]", jobIDs), trace.WithSpanKind(trace.SpanKindClient))
+func (ja *jobAccess) DeleteJobsByIDs(ctx context.Context, tx *sql.Tx, jobIDs []string) (int64, error) {
+	ctx, span := ar_trace.Tracer.Start(ctx, "DeleteJobsByIDs", trace.WithSpanKind(trace.SpanKindClient))
 	defer span.End()
 
 	span.SetAttributes(
 		attr.Key("db_url").String(libdb.GetDBUrl()),
-		attr.Key("db_type").String(libdb.GetDBType()))
+		attr.Key("db_type").String(libdb.GetDBType()),
+	)
 
 	if len(jobIDs) == 0 {
-		return nil
+		return 0, nil
 	}
 
 	sqlStr, vals, err := sq.Delete(JOB_TABLE_NAME).
@@ -133,34 +135,44 @@ func (ja *jobAccess) DeleteJobs(ctx context.Context, tx *sql.Tx, jobIDs []string
 		logger.Errorf("Failed to build the sql of delete jobs, error: %s", err.Error())
 		o11y.Error(ctx, fmt.Sprintf("Failed to build the sql of delete jobs, error: %s", err.Error()))
 		span.SetStatus(codes.Error, "Build sql failed ")
-		return err
+		return 0, err
 	}
 
 	// 记录处理的 sql 字符串
 	o11y.Info(ctx, fmt.Sprintf("删除job的 sql 语句: %s", sqlStr))
 
-	_, err = tx.Exec(sqlStr, vals...)
+	ret, err := tx.Exec(sqlStr, vals...)
 	if err != nil {
 		logger.Errorf("delete data error: %v\n", err)
 		span.SetStatus(codes.Error, "Delete data error")
 		o11y.Error(ctx, fmt.Sprintf("Delete data error: %v ", err))
-		return err
+		return 0, err
+	}
+
+	//sql语句影响的行数
+	RowsAffected, err := ret.RowsAffected()
+	if err != nil {
+		logger.Errorf("Get RowsAffected error: %v\n", err)
+		o11y.Warn(ctx, fmt.Sprintf("Get RowsAffected error: %v ", err))
+		span.SetStatus(codes.Error, "Get RowsAffected error")
+		return 0, err
 	}
 
 	span.SetStatus(codes.Ok, "")
-	return nil
+	return RowsAffected, nil
 }
 
-func (ja *jobAccess) DeleteTasks(ctx context.Context, tx *sql.Tx, jobIDs []string) error {
-	ctx, span := ar_trace.Tracer.Start(ctx, fmt.Sprintf("Delete tasks[%v]", jobIDs), trace.WithSpanKind(trace.SpanKindClient))
+func (ja *jobAccess) DeleteTasksByJobIDs(ctx context.Context, tx *sql.Tx, jobIDs []string) (int64, error) {
+	ctx, span := ar_trace.Tracer.Start(ctx, "DeleteTasksByJobIDs", trace.WithSpanKind(trace.SpanKindClient))
 	defer span.End()
 
 	span.SetAttributes(
 		attr.Key("db_url").String(libdb.GetDBUrl()),
-		attr.Key("db_type").String(libdb.GetDBType()))
+		attr.Key("db_type").String(libdb.GetDBType()),
+	)
 
 	if len(jobIDs) == 0 {
-		return nil
+		return 0, nil
 	}
 
 	sqlStr, vals, err := sq.Delete(TASK_TABLE_NAME).
@@ -170,33 +182,42 @@ func (ja *jobAccess) DeleteTasks(ctx context.Context, tx *sql.Tx, jobIDs []strin
 		logger.Errorf("Failed to build the sql of delete tasks, error: %s", err.Error())
 		o11y.Error(ctx, fmt.Sprintf("Failed to build the sql of delete tasks, error: %s", err.Error()))
 		span.SetStatus(codes.Error, "Build sql failed ")
-		return err
+		return 0, err
 	}
 
 	// 记录处理的 sql 字符串
 	o11y.Info(ctx, fmt.Sprintf("删除task的 sql 语句: %s", sqlStr))
 
-	_, err = tx.Exec(sqlStr, vals...)
+	ret, err := tx.Exec(sqlStr, vals...)
 	if err != nil {
 		logger.Errorf("delete data error: %v\n", err)
 		span.SetStatus(codes.Error, "Delete data error")
 		o11y.Error(ctx, fmt.Sprintf("Delete data error: %v ", err))
-		return err
+		return 0, err
+	}
+
+	//sql语句影响的行数
+	RowsAffected, err := ret.RowsAffected()
+	if err != nil {
+		logger.Errorf("Get RowsAffected error: %v\n", err)
+		o11y.Warn(ctx, fmt.Sprintf("Get RowsAffected error: %v ", err))
+		span.SetStatus(codes.Error, "Get RowsAffected error")
+		return 0, err
 	}
 
 	span.SetStatus(codes.Ok, "")
-	return nil
+	return RowsAffected, nil
 }
 
 // 更新job状态
 func (ja *jobAccess) UpdateJobState(ctx context.Context, tx *sql.Tx, jobID string, stateInfo interfaces.JobStateInfo) error {
-	ctx, span := ar_trace.Tracer.Start(ctx, fmt.Sprintf("Update job[%s] state to %s", jobID, stateInfo.State),
-		trace.WithSpanKind(trace.SpanKindClient))
+	ctx, span := ar_trace.Tracer.Start(ctx, "UpdateJobState", trace.WithSpanKind(trace.SpanKindClient))
 	defer span.End()
 
 	span.SetAttributes(
 		attr.Key("db_url").String(libdb.GetDBUrl()),
-		attr.Key("db_type").String(libdb.GetDBType()))
+		attr.Key("db_type").String(libdb.GetDBType()),
+	)
 
 	if len(stateInfo.StateDetail) > interfaces.MAX_STATE_DETAIL_SIZE {
 		stateInfo.StateDetail = stateInfo.StateDetail[:interfaces.MAX_STATE_DETAIL_SIZE]
@@ -241,13 +262,14 @@ func (ja *jobAccess) UpdateJobState(ctx context.Context, tx *sql.Tx, jobID strin
 }
 
 // 根据ID查询job
-func (ja *jobAccess) GetJob(ctx context.Context, jobID string) (*interfaces.JobInfo, error) {
-	ctx, span := ar_trace.Tracer.Start(ctx, fmt.Sprintf("Get job[%s]", jobID), trace.WithSpanKind(trace.SpanKindClient))
+func (ja *jobAccess) GetJobByID(ctx context.Context, jobID string) (*interfaces.JobInfo, error) {
+	ctx, span := ar_trace.Tracer.Start(ctx, "GetJobByID", trace.WithSpanKind(trace.SpanKindClient))
 	defer span.End()
 
 	span.SetAttributes(
 		attr.Key("db_url").String(libdb.GetDBUrl()),
-		attr.Key("db_type").String(libdb.GetDBType()))
+		attr.Key("db_type").String(libdb.GetDBType()),
+	)
 
 	if jobID == "" {
 		return nil, nil
@@ -322,13 +344,14 @@ func (ja *jobAccess) GetJob(ctx context.Context, jobID string) (*interfaces.JobI
 }
 
 // 根据ID查询job
-func (ja *jobAccess) GetJobs(ctx context.Context, jobIDs []string) (map[string]*interfaces.JobInfo, error) {
-	ctx, span := ar_trace.Tracer.Start(ctx, fmt.Sprintf("Get jobs[%v]", jobIDs), trace.WithSpanKind(trace.SpanKindClient))
+func (ja *jobAccess) GetJobsByIDs(ctx context.Context, jobIDs []string) (map[string]*interfaces.JobInfo, error) {
+	ctx, span := ar_trace.Tracer.Start(ctx, "GetJobsByIDs", trace.WithSpanKind(trace.SpanKindClient))
 	defer span.End()
 
 	span.SetAttributes(
 		attr.Key("db_url").String(libdb.GetDBUrl()),
-		attr.Key("db_type").String(libdb.GetDBType()))
+		attr.Key("db_type").String(libdb.GetDBType()),
+	)
 
 	if len(jobIDs) == 0 {
 		return map[string]*interfaces.JobInfo{}, nil
@@ -411,14 +434,70 @@ func (ja *jobAccess) GetJobs(ctx context.Context, jobIDs []string) (map[string]*
 	return jobInfos, nil
 }
 
-// 更新task状态
-func (ja *jobAccess) UpdateTaskState(ctx context.Context, taskID string, stateInfo interfaces.TaskStateInfo) error {
-	ctx, span := ar_trace.Tracer.Start(ctx, fmt.Sprintf("Update task[%s] state to %s", taskID, stateInfo.State), trace.WithSpanKind(trace.SpanKindClient))
+// 根据ID查询job
+func (ja *jobAccess) GetJobIDsByKnID(ctx context.Context, tx *sql.Tx, knID string, branch string) ([]string, error) {
+	ctx, span := ar_trace.Tracer.Start(ctx, "GetJobIDsByKnID", trace.WithSpanKind(trace.SpanKindClient))
 	defer span.End()
 
 	span.SetAttributes(
 		attr.Key("db_url").String(libdb.GetDBUrl()),
-		attr.Key("db_type").String(libdb.GetDBType()))
+		attr.Key("db_type").String(libdb.GetDBType()),
+	)
+
+	query := sq.Select(
+		"f_id",
+	).From(JOB_TABLE_NAME).
+		Where(sq.Eq{"f_kn_id": knID}).
+		Where(sq.Eq{"f_branch": branch})
+
+	sqlStr, vals, err := query.ToSql()
+	if err != nil {
+		logger.Errorf("Failed to build the sql of get jobs, error: %s", err.Error())
+		o11y.Error(ctx, fmt.Sprintf("Failed to build the sql of get jobs, error: %s", err.Error()))
+		span.SetStatus(codes.Error, "Build sql failed ")
+		return nil, err
+	}
+
+	// 记录处理的 sql 字符串
+	o11y.Info(ctx, fmt.Sprintf("根据ID查询job的 sql 语句: %s", sqlStr))
+
+	rows, err := ja.db.QueryContext(ctx, sqlStr, vals...)
+	if err != nil {
+		logger.Errorf("query data error: %v\n", err)
+		span.SetStatus(codes.Error, "Query data error")
+		o11y.Error(ctx, fmt.Sprintf("Query data error: %v ", err))
+		return nil, err
+	}
+	defer rows.Close()
+
+	jobIDs := []string{}
+	for rows.Next() {
+		var jobID string
+		err := rows.Scan(
+			&jobID,
+		)
+		if err != nil {
+			logger.Errorf("scan data error: %v\n", err)
+			span.SetStatus(codes.Error, "Scan data error")
+			o11y.Error(ctx, fmt.Sprintf("Scan data error: %v ", err))
+			return nil, err
+		}
+		jobIDs = append(jobIDs, jobID)
+	}
+
+	span.SetStatus(codes.Ok, "")
+	return jobIDs, nil
+}
+
+// 更新task状态
+func (ja *jobAccess) UpdateTaskState(ctx context.Context, taskID string, stateInfo interfaces.TaskStateInfo) error {
+	ctx, span := ar_trace.Tracer.Start(ctx, "UpdateTaskState", trace.WithSpanKind(trace.SpanKindClient))
+	defer span.End()
+
+	span.SetAttributes(
+		attr.Key("db_url").String(libdb.GetDBUrl()),
+		attr.Key("db_type").String(libdb.GetDBType()),
+	)
 
 	if len(stateInfo.StateDetail) > interfaces.MAX_STATE_DETAIL_SIZE {
 		stateInfo.StateDetail = stateInfo.StateDetail[:interfaces.MAX_STATE_DETAIL_SIZE]
@@ -471,15 +550,16 @@ func (ja *jobAccess) UpdateTaskState(ctx context.Context, taskID string, stateIn
 }
 
 // 查询job列表
-func (ja *jobAccess) ListJobs(ctx context.Context, queryParams interfaces.JobsQueryParams) ([]*interfaces.JobInfo, error) {
-	ctx, span := ar_trace.Tracer.Start(ctx, "List jobs", trace.WithSpanKind(trace.SpanKindClient))
+func (ja *jobAccess) ListJobs(ctx context.Context, query interfaces.JobsQueryParams) ([]*interfaces.JobInfo, error) {
+	ctx, span := ar_trace.Tracer.Start(ctx, "ListJobs", trace.WithSpanKind(trace.SpanKindClient))
 	defer span.End()
 
 	span.SetAttributes(
 		attr.Key("db_url").String(libdb.GetDBUrl()),
-		attr.Key("db_type").String(libdb.GetDBType()))
+		attr.Key("db_type").String(libdb.GetDBType()),
+	)
 
-	query := sq.Select(
+	builder := sq.Select(
 		"f_id",
 		"f_name",
 		"f_kn_id",
@@ -495,31 +575,33 @@ func (ja *jobAccess) ListJobs(ctx context.Context, queryParams interfaces.JobsQu
 		"f_time_cost",
 	).From(JOB_TABLE_NAME)
 
-	if queryParams.KNID != "" {
-		query = query.Where(sq.Eq{"f_kn_id": queryParams.KNID})
+	if query.KNID != "" {
+		builder = builder.Where(sq.Eq{"f_kn_id": query.KNID})
 	}
 
 	// 过滤job名称
-	if queryParams.NamePattern != "" {
-		query = query.Where(sq.Like{"f_name": fmt.Sprintf("%%%s%%", queryParams.NamePattern)})
+	if query.NamePattern != "" {
+		builder = builder.Where(sq.Like{"f_name": fmt.Sprintf("%%%s%%", query.NamePattern)})
 	}
-	if queryParams.JobType != "" {
-		query = query.Where(sq.Eq{"f_job_type": queryParams.JobType})
+	if query.JobType != "" {
+		builder = builder.Where(sq.Eq{"f_job_type": query.JobType})
 	}
-	if len(queryParams.State) > 0 {
-		query = query.Where(sq.Eq{"f_state": queryParams.State})
-	}
-
-	query = query.OrderBy(fmt.Sprintf("%s %s", queryParams.Sort, queryParams.Direction))
-
-	if queryParams.Offset > 0 {
-		query = query.Offset(uint64(queryParams.Offset))
-	}
-	if queryParams.Limit > 0 {
-		query = query.Limit(uint64(queryParams.Limit))
+	if len(query.State) > 0 {
+		builder = builder.Where(sq.Eq{"f_state": query.State})
 	}
 
-	sqlStr, vals, err := query.ToSql()
+	if query.Sort != "" {
+		builder = builder.OrderBy(fmt.Sprintf("%s %s", query.Sort, query.Direction))
+	}
+
+	if query.Offset > 0 {
+		builder = builder.Offset(uint64(query.Offset))
+	}
+	if query.Limit > 0 {
+		builder = builder.Limit(uint64(query.Limit))
+	}
+
+	sqlStr, vals, err := builder.ToSql()
 	if err != nil {
 		logger.Errorf("Failed to build the sql of list jobs, error: %s", err.Error())
 		o11y.Error(ctx, fmt.Sprintf("Failed to build the sql of list jobs, error: %s", err.Error()))
@@ -582,12 +664,13 @@ func (ja *jobAccess) ListJobs(ctx context.Context, queryParams interfaces.JobsQu
 
 // 查询job总数
 func (ja *jobAccess) GetJobsTotal(ctx context.Context, queryParams interfaces.JobsQueryParams) (int64, error) {
-	ctx, span := ar_trace.Tracer.Start(ctx, "Get jobs total", trace.WithSpanKind(trace.SpanKindClient))
+	ctx, span := ar_trace.Tracer.Start(ctx, "GetJobsTotal", trace.WithSpanKind(trace.SpanKindClient))
 	defer span.End()
 
 	span.SetAttributes(
 		attr.Key("db_url").String(libdb.GetDBUrl()),
-		attr.Key("db_type").String(libdb.GetDBType()))
+		attr.Key("db_type").String(libdb.GetDBType()),
+	)
 
 	query := sq.Select("COUNT(*)").From(JOB_TABLE_NAME).
 		Where(sq.Eq{"f_kn_id": queryParams.KNID})
@@ -626,12 +709,13 @@ func (ja *jobAccess) GetJobsTotal(ctx context.Context, queryParams interfaces.Jo
 
 // 批量创建tasks
 func (ja *jobAccess) CreateTasks(ctx context.Context, tx *sql.Tx, taskInfos map[string]*interfaces.TaskInfo) error {
-	ctx, span := ar_trace.Tracer.Start(ctx, fmt.Sprintf("Create tasks[%d]", len(taskInfos)), trace.WithSpanKind(trace.SpanKindClient))
+	ctx, span := ar_trace.Tracer.Start(ctx, "CreateTasks", trace.WithSpanKind(trace.SpanKindClient))
 	defer span.End()
 
 	span.SetAttributes(
 		attr.Key("db_url").String(libdb.GetDBUrl()),
-		attr.Key("db_type").String(libdb.GetDBType()))
+		attr.Key("db_type").String(libdb.GetDBType()),
+	)
 
 	if len(taskInfos) == 0 {
 		return nil
@@ -684,15 +768,16 @@ func (ja *jobAccess) CreateTasks(ctx context.Context, tx *sql.Tx, taskInfos map[
 }
 
 // 查询task列表
-func (ja *jobAccess) ListTasks(ctx context.Context, queryParams interfaces.TasksQueryParams) ([]*interfaces.TaskInfo, error) {
-	ctx, span := ar_trace.Tracer.Start(ctx, "List tasks", trace.WithSpanKind(trace.SpanKindClient))
+func (ja *jobAccess) ListTasks(ctx context.Context, query interfaces.TasksQueryParams) ([]*interfaces.TaskInfo, error) {
+	ctx, span := ar_trace.Tracer.Start(ctx, "ListTasks", trace.WithSpanKind(trace.SpanKindClient))
 	defer span.End()
 
 	span.SetAttributes(
 		attr.Key("db_url").String(libdb.GetDBUrl()),
-		attr.Key("db_type").String(libdb.GetDBType()))
+		attr.Key("db_type").String(libdb.GetDBType()),
+	)
 
-	query := sq.Select(
+	builder := sq.Select(
 		"f_id",
 		"f_name",
 		"f_job_id",
@@ -707,30 +792,32 @@ func (ja *jobAccess) ListTasks(ctx context.Context, queryParams interfaces.Tasks
 		"f_time_cost",
 	).From(TASK_TABLE_NAME)
 
-	if queryParams.JobID != "" {
-		query = query.Where(sq.Eq{"f_job_id": queryParams.JobID})
+	if query.JobID != "" {
+		builder = builder.Where(sq.Eq{"f_job_id": query.JobID})
 	}
 
-	if queryParams.NamePattern != "" {
-		query = query.Where(sq.Like{"f_name": fmt.Sprintf("%%%s%%", queryParams.NamePattern)})
+	if query.NamePattern != "" {
+		builder = builder.Where(sq.Like{"f_name": fmt.Sprintf("%%%s%%", query.NamePattern)})
 	}
-	if queryParams.ConceptType != "" {
-		query = query.Where(sq.Eq{"f_concept_type": queryParams.ConceptType})
+	if query.ConceptType != "" {
+		builder = builder.Where(sq.Eq{"f_concept_type": query.ConceptType})
 	}
-	if len(queryParams.State) != 0 {
-		query = query.Where(sq.Eq{"f_state": queryParams.State})
-	}
-
-	query = query.OrderBy(fmt.Sprintf("%s %s", queryParams.Sort, queryParams.Direction))
-
-	if queryParams.Offset != 0 {
-		query = query.Offset(uint64(queryParams.Offset))
-	}
-	if queryParams.Limit != 0 {
-		query = query.Limit(uint64(queryParams.Limit))
+	if len(query.State) != 0 {
+		builder = builder.Where(sq.Eq{"f_state": query.State})
 	}
 
-	sqlStr, vals, err := query.ToSql()
+	if query.Sort != "" {
+		builder = builder.OrderBy(fmt.Sprintf("%s %s", query.Sort, query.Direction))
+	}
+
+	if query.Offset > 0 {
+		builder = builder.Offset(uint64(query.Offset))
+	}
+	if query.Limit > 0 {
+		builder = builder.Limit(uint64(query.Limit))
+	}
+
+	sqlStr, vals, err := builder.ToSql()
 	if err != nil {
 		logger.Errorf("Failed to build the sql of list tasks, error: %s", err.Error())
 		o11y.Error(ctx, fmt.Sprintf("Failed to build the sql of list tasks, error: %s", err.Error()))
@@ -783,12 +870,13 @@ func (ja *jobAccess) ListTasks(ctx context.Context, queryParams interfaces.Tasks
 
 // 查询task总数
 func (ja *jobAccess) GetTasksTotal(ctx context.Context, queryParams interfaces.TasksQueryParams) (int64, error) {
-	ctx, span := ar_trace.Tracer.Start(ctx, "Get tasks total", trace.WithSpanKind(trace.SpanKindClient))
+	ctx, span := ar_trace.Tracer.Start(ctx, "GetTasksTotal", trace.WithSpanKind(trace.SpanKindClient))
 	defer span.End()
 
 	span.SetAttributes(
 		attr.Key("db_url").String(libdb.GetDBUrl()),
-		attr.Key("db_type").String(libdb.GetDBType()))
+		attr.Key("db_type").String(libdb.GetDBType()),
+	)
 
 	query := sq.Select(
 		"count(*)",

@@ -79,6 +79,11 @@ Description = "起点对象类为空"
 Solution = "请检查参数是否正确。"
 ErrorLink = "暂无"
 
+[OntologyManager.KnowledgeNetwork.Forbidden.HasRunningJob]
+Description = "存在运行中的任务，请求被拒绝"
+Solution = "请稍后再试"
+ErrorLink = "暂无"
+
 [OntologyManager.KnowledgeNetwork.NotFound]
 Description = "业务知识网络不存在"
 Solution = "请检查参数是否正确。"

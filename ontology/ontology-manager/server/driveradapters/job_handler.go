@@ -65,9 +65,11 @@ func (r *restHandler) CreateJob(c *gin.Context, visitor rest.Visitor) {
 
 	// 1. 接受 kn_id 参数
 	knID := c.Param("kn_id")
-	span.SetAttributes(attr.Key("kn_id").String(knID))
 	branch := c.DefaultQuery("branch", interfaces.MAIN_BRANCH)
-	span.SetAttributes(attr.Key("branch").String(branch))
+	span.SetAttributes(
+		attr.Key("kn_id").String(knID),
+		attr.Key("branch").String(branch),
+	)
 
 	// 校验业务知识网络存在性
 	_, exist, err := r.kns.CheckKNExistByID(ctx, knID, branch)
@@ -196,9 +198,11 @@ func (r *restHandler) DeleteJobs(c *gin.Context, visitor rest.Visitor) {
 
 	// 1. 接受 kn_id 参数
 	knID := c.Param("kn_id")
-	span.SetAttributes(attr.Key("kn_id").String(knID))
 	branch := c.DefaultQuery("branch", interfaces.MAIN_BRANCH)
-	span.SetAttributes(attr.Key("branch").String(branch))
+	span.SetAttributes(
+		attr.Key("kn_id").String(knID),
+		attr.Key("branch").String(branch),
+	)
 
 	// 校验业务知识网络存在性
 	_, exist, err := r.kns.CheckKNExistByID(ctx, knID, branch)
@@ -226,7 +230,7 @@ func (r *restHandler) DeleteJobs(c *gin.Context, visitor rest.Visitor) {
 	jobIDs := common.StringToStringSlice(jobIDsStr)
 
 	//检查 jobIDs 是否都存在
-	jobs, err := r.js.GetJobs(ctx, jobIDs)
+	jobs, err := r.js.GetJobsByIDs(ctx, jobIDs)
 	if err != nil {
 		httpErr := err.(*rest.HTTPError)
 		// 设置 trace 的错误信息的 attributes
@@ -257,10 +261,18 @@ func (r *restHandler) DeleteJobs(c *gin.Context, visitor rest.Visitor) {
 			rest.ReplyError(c, httpErr)
 			return
 		}
+		if job.State == interfaces.JobStateRunning {
+			httpErr := rest.NewHTTPError(ctx, http.StatusBadRequest,
+				oerrors.OntologyManager_Job_JobRunning)
+			// 设置 trace 的错误信息的 attributes
+			o11y.AddHttpAttrs4HttpError(span, httpErr)
+			rest.ReplyError(c, httpErr)
+			return
+		}
 	}
 
 	// 批量删除 job
-	err = r.js.DeleteJobs(ctx, knID, branch, jobIDs)
+	err = r.js.DeleteJobsByIDs(ctx, knID, branch, jobIDs)
 	if err != nil {
 		httpErr := err.(*rest.HTTPError)
 		// 设置 trace 的错误信息的 attributes
@@ -330,9 +342,11 @@ func (r *restHandler) ListJobs(c *gin.Context, visitor rest.Visitor) {
 
 	// 1. 接受 kn_id 参数
 	knID := c.Param("kn_id")
-	span.SetAttributes(attr.Key("kn_id").String(knID))
 	branch := c.DefaultQuery("branch", interfaces.MAIN_BRANCH)
-	span.SetAttributes(attr.Key("branch").String(branch))
+	span.SetAttributes(
+		attr.Key("kn_id").String(knID),
+		attr.Key("branch").String(branch),
+	)
 
 	// 校验业务知识网络存在性
 	_, exist, err := r.kns.CheckKNExistByID(ctx, knID, branch)
@@ -478,9 +492,11 @@ func (r *restHandler) ListTasks(c *gin.Context, visitor rest.Visitor) {
 
 	// 1. 接受 kn_id 参数
 	knID := c.Param("kn_id")
-	span.SetAttributes(attr.Key("kn_id").String(knID))
 	branch := c.DefaultQuery("branch", interfaces.MAIN_BRANCH)
-	span.SetAttributes(attr.Key("branch").String(branch))
+	span.SetAttributes(
+		attr.Key("kn_id").String(knID),
+		attr.Key("branch").String(branch),
+	)
 
 	// 校验业务知识网络存在性
 	_, exist, err := r.kns.CheckKNExistByID(ctx, knID, branch)
@@ -503,7 +519,7 @@ func (r *restHandler) ListTasks(c *gin.Context, visitor rest.Visitor) {
 	jobID := c.Param("job_id")
 	span.SetAttributes(attr.Key("job_id").String(jobID))
 
-	job, err := r.js.GetJob(ctx, jobID)
+	job, err := r.js.GetJobByID(ctx, jobID)
 	if err != nil {
 		httpErr := err.(*rest.HTTPError)
 		// 设置 trace 的错误信息的 attributes

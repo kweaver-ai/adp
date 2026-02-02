@@ -4,9 +4,6 @@ import (
 	"context"
 	cryptoRand "crypto/rand"
 	"fmt"
-	"github.com/kweaver-ai/kweaver-go-lib/logger"
-	"github.com/kweaver-ai/kweaver-go-lib/rest"
-	"github.com/panjf2000/ants/v2"
 	mathRand "math/rand"
 	"net/http"
 	"strings"
@@ -19,6 +16,10 @@ import (
 	"vega-gateway-pro/logics/fetch/connectors/sql_connectors"
 	"vega-gateway-pro/logics/fetch/sqlglot"
 	"vega-gateway-pro/version"
+
+	"github.com/kweaver-ai/kweaver-go-lib/logger"
+	"github.com/kweaver-ai/kweaver-go-lib/rest"
+	"github.com/panjf2000/ants/v2"
 )
 
 var (
@@ -171,7 +172,7 @@ func (fs *Service) fetchSqlQuery(ctx context.Context, query *interfaces.FetchQue
 	resultCache := &interfaces.ResultCache{
 		ResultSet:     nil,
 		Token:         0,
-		Columns:       nil,
+		Columns:       make([]*interfaces.Column, 0),
 		ResultChan:    resultChan,
 		Error:         nil,
 		MaxExceedTime: time.Now().Add(fs.appSetting.QuerySetting.MaxIntervalTime),
@@ -578,6 +579,9 @@ func (fs *Service) handleQueryResult(ctx context.Context, queryType int, timeout
 	}
 	resultCache, _ := existingCache.(*interfaces.ResultCache)
 
+	data := make([]*[]any, 0)
+	var totalCount int
+
 	if queryType == 2 && timeout > 0 {
 		// 如果是流式查询且存在超时时间时，判断超时时间内是否有数据
 
@@ -591,7 +595,7 @@ func (fs *Service) handleQueryResult(ctx context.Context, queryType int, timeout
 				// 定期检查缓存， 查询异常、数据足够、查询完成退出检查
 				if resultCache.Error != nil ||
 					len(resultCache.ResultChan) >= batchSize ||
-					(resultCache.Columns != nil && resultCache.ResultSet == nil) {
+					(len(resultCache.Columns) > 0 && resultCache.ResultSet == nil) {
 					break
 				}
 				continue
@@ -599,14 +603,17 @@ func (fs *Service) handleQueryResult(ctx context.Context, queryType int, timeout
 				// 超时后检查缓存， 查询异常、数据足够、查询完成退出检查
 				if resultCache.Error != nil ||
 					len(resultCache.ResultChan) >= batchSize ||
-					(resultCache.Columns != nil && resultCache.ResultSet == nil) {
+					(len(resultCache.Columns) > 0 && resultCache.ResultSet == nil) {
 					break
 				} else {
 					resultCache.Token++
 					nextUri := fmt.Sprintf("http://%s:%d/api/vega-gateway/v2/fetch/%s/%s/%d",
 						version.ServerName, fs.appSetting.ServerSetting.HttpPort, queryId, slug, token+1)
 					finalResult := &interfaces.FetchResp{
-						NextUri: nextUri,
+						NextUri:    nextUri,
+						Columns:    resultCache.Columns,
+						Entries:    data,
+						TotalCount: int64(totalCount),
 					}
 					return finalResult, nil
 				}
@@ -616,9 +623,6 @@ func (fs *Service) handleQueryResult(ctx context.Context, queryType int, timeout
 			break
 		}
 	}
-
-	data := make([]*[]any, 0)
-	var totalCount int
 
 	// 从缓存中获取查询结果，直到数据足够或查询完成
 	for {

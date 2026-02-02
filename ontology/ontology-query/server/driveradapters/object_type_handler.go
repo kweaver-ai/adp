@@ -84,9 +84,11 @@ func (r *restHandler) GetObjectsInObjectType(c *gin.Context, visitor rest.Visito
 	IncludeLogicParams := c.DefaultQuery("include_logic_params", interfaces.DEFAULT_INCLUDE_LOGIC_PARAMS)
 	// 是否忽略持久化数据,走虚拟化查询,默认是false,不忽略
 	ignoringStoreCache := c.DefaultQuery("ignoring_store_cache", interfaces.DEFAULT_IGNORING_STORE_CACHE)
+	// 排除系统字段列表
+	excludeSystemProperties := c.QueryArray("exclude_system_properties")
 
 	// 校验查询参数
-	objectsQueryParas, err := validateObjectsQueryParameters(ctx, includeTypeInfo, ignoringStoreCache, IncludeLogicParams)
+	objectsQueryParas, err := validateObjectsQueryParameters(ctx, includeTypeInfo, ignoringStoreCache, IncludeLogicParams, excludeSystemProperties)
 	if err != nil {
 		httpErr := err.(*rest.HTTPError)
 		// 设置 trace 的错误信息的 attributes
@@ -229,11 +231,14 @@ func (r *restHandler) GetObjectsProperties(c *gin.Context, visitor rest.Visitor)
 
 	// 是否包含对象类信息
 	includeTypeInfo := c.DefaultQuery("include_type_info", interfaces.DEFAULT_INCLUDE_TYPE_INFO)
+	// 排除系统字段列表
+	excludeSystemProperties := c.QueryArray("exclude_system_properties")
 
 	// 校验查询参数
 	objectsQueryParas, err := validateObjectsQueryParameters(ctx, includeTypeInfo,
 		interfaces.DEFAULT_IGNORING_STORE_CACHE,
-		interfaces.DEFAULT_INCLUDE_LOGIC_PARAMS)
+		interfaces.DEFAULT_INCLUDE_LOGIC_PARAMS,
+		excludeSystemProperties)
 	if err != nil {
 		httpErr := err.(*rest.HTTPError)
 		// 设置 trace 的错误信息的 attributes

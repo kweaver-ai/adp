@@ -50,12 +50,13 @@ func NewConceptGroupAccess(appSetting *common.AppSetting) interfaces.ConceptGrou
 
 // 根据ID获取概念分组存在性
 func (cga *conceptGroupAccess) CheckConceptGroupExistByID(ctx context.Context, knID string, branch string, cgID string) (string, bool, error) {
-	ctx, span := ar_trace.Tracer.Start(ctx, "Query concept group", trace.WithSpanKind(trace.SpanKindClient))
+	ctx, span := ar_trace.Tracer.Start(ctx, "CheckConceptGroupExistByID", trace.WithSpanKind(trace.SpanKindClient))
 	defer span.End()
 
 	span.SetAttributes(
 		attr.Key("db_url").String(libdb.GetDBUrl()),
-		attr.Key("db_type").String(libdb.GetDBType()))
+		attr.Key("db_type").String(libdb.GetDBType()),
+	)
 
 	//查询
 	sqlStr, vals, err := sq.Select(
@@ -94,7 +95,7 @@ func (cga *conceptGroupAccess) CheckConceptGroupExistByID(ctx context.Context, k
 
 // 根据名称获取概念分组存在性
 func (cga *conceptGroupAccess) CheckConceptGroupExistByName(ctx context.Context, knID string, branch string, name string) (string, bool, error) {
-	ctx, span := ar_trace.Tracer.Start(ctx, "Query concept group", trace.WithSpanKind(trace.SpanKindClient))
+	ctx, span := ar_trace.Tracer.Start(ctx, "CheckConceptGroupExistByName", trace.WithSpanKind(trace.SpanKindClient))
 	defer span.End()
 
 	span.SetAttributes(
@@ -140,12 +141,13 @@ func (cga *conceptGroupAccess) CheckConceptGroupExistByName(ctx context.Context,
 
 // 创建概念分组
 func (cga *conceptGroupAccess) CreateConceptGroup(ctx context.Context, tx *sql.Tx, conceptGroup *interfaces.ConceptGroup) error {
-	ctx, span := ar_trace.Tracer.Start(ctx, "Insert into concept group", trace.WithSpanKind(trace.SpanKindClient))
+	ctx, span := ar_trace.Tracer.Start(ctx, "CreateConceptGroup", trace.WithSpanKind(trace.SpanKindClient))
 	defer span.End()
 
 	span.SetAttributes(
 		attr.Key("db_url").String(libdb.GetDBUrl()),
-		attr.Key("db_type").String(libdb.GetDBType()))
+		attr.Key("db_type").String(libdb.GetDBType()),
+	)
 
 	// tags 转成 string 的格式
 	tagsStr := libCommon.TagSlice2TagString(conceptGroup.Tags)
@@ -208,12 +210,13 @@ func (cga *conceptGroupAccess) CreateConceptGroup(ctx context.Context, tx *sql.T
 
 // 查询概念分组列表。查主线的当前版本为true的概念分组
 func (cga *conceptGroupAccess) ListConceptGroups(ctx context.Context, query interfaces.ConceptGroupsQueryParams) ([]*interfaces.ConceptGroup, error) {
-	ctx, span := ar_trace.Tracer.Start(ctx, "Select concept groups", trace.WithSpanKind(trace.SpanKindClient))
+	ctx, span := ar_trace.Tracer.Start(ctx, "ListConceptGroups", trace.WithSpanKind(trace.SpanKindClient))
 	defer span.End()
 
 	span.SetAttributes(
 		attr.Key("db_url").String(libdb.GetDBUrl()),
-		attr.Key("db_type").String(libdb.GetDBType()))
+		attr.Key("db_type").String(libdb.GetDBType()),
+	)
 
 	subBuilder := sq.Select(
 		"f_id",
@@ -302,15 +305,14 @@ func (cga *conceptGroupAccess) ListConceptGroups(ctx context.Context, query inte
 }
 
 // 批量获取概念分组
-func (cga *conceptGroupAccess) GetConceptGroupsByIDs(ctx context.Context, tx *sql.Tx,
-	knID string, branch string, cgIDs []string) ([]*interfaces.ConceptGroup, error) {
-
-	ctx, span := ar_trace.Tracer.Start(ctx, fmt.Sprintf("Get concept groups[%v]", cgIDs), trace.WithSpanKind(trace.SpanKindClient))
+func (cga *conceptGroupAccess) GetConceptGroupsByIDs(ctx context.Context, tx *sql.Tx, knID string, branch string, cgIDs []string) ([]*interfaces.ConceptGroup, error) {
+	ctx, span := ar_trace.Tracer.Start(ctx, "GetConceptGroupsByIDs", trace.WithSpanKind(trace.SpanKindClient))
 	defer span.End()
 
 	span.SetAttributes(
 		attr.Key("db_url").String(libdb.GetDBUrl()),
-		attr.Key("db_type").String(libdb.GetDBType()))
+		attr.Key("db_type").String(libdb.GetDBType()),
+	)
 
 	//查询
 	sqlStr, vals, err := sq.Select(
@@ -394,12 +396,13 @@ func (cga *conceptGroupAccess) GetConceptGroupsByIDs(ctx context.Context, tx *sq
 
 // 获取概念分组总数
 func (cga *conceptGroupAccess) GetConceptGroupsTotal(ctx context.Context, query interfaces.ConceptGroupsQueryParams) (int, error) {
-	ctx, span := ar_trace.Tracer.Start(ctx, "Select concept groups total number", trace.WithSpanKind(trace.SpanKindClient))
+	ctx, span := ar_trace.Tracer.Start(ctx, "GetConceptGroupsTotal", trace.WithSpanKind(trace.SpanKindClient))
 	defer span.End()
 
 	span.SetAttributes(
 		attr.Key("db_url").String(libdb.GetDBUrl()),
-		attr.Key("db_type").String(libdb.GetDBType()))
+		attr.Key("db_type").String(libdb.GetDBType()),
+	)
 
 	subBuilder := sq.Select("COUNT(f_id)").From(CONCEPT_GROUP_TABLE_NAME)
 	builder := processQueryCondition(query, subBuilder)
@@ -428,12 +431,13 @@ func (cga *conceptGroupAccess) GetConceptGroupsTotal(ctx context.Context, query 
 }
 
 func (cga *conceptGroupAccess) GetConceptGroupByID(ctx context.Context, knID string, branch string, cgID string) (*interfaces.ConceptGroup, error) {
-	ctx, span := ar_trace.Tracer.Start(ctx, fmt.Sprintf("Get concept group[%s]", cgID), trace.WithSpanKind(trace.SpanKindClient))
+	ctx, span := ar_trace.Tracer.Start(ctx, "GetConceptGroupByID", trace.WithSpanKind(trace.SpanKindClient))
 	defer span.End()
 
 	span.SetAttributes(
 		attr.Key("db_url").String(libdb.GetDBUrl()),
-		attr.Key("db_type").String(libdb.GetDBType()))
+		attr.Key("db_type").String(libdb.GetDBType()),
+	)
 
 	//查询
 	sqlStr, vals, err := sq.Select(
@@ -506,12 +510,13 @@ func (cga *conceptGroupAccess) GetConceptGroupByID(ctx context.Context, knID str
 }
 
 func (cga *conceptGroupAccess) UpdateConceptGroup(ctx context.Context, tx *sql.Tx, conceptGroup *interfaces.ConceptGroup) error {
-	ctx, span := ar_trace.Tracer.Start(ctx, fmt.Sprintf("Update concept group[%s]", conceptGroup.CGID), trace.WithSpanKind(trace.SpanKindClient))
+	ctx, span := ar_trace.Tracer.Start(ctx, "UpdateConceptGroup", trace.WithSpanKind(trace.SpanKindClient))
 	defer span.End()
 
 	span.SetAttributes(
 		attr.Key("db_url").String(libdb.GetDBUrl()),
-		attr.Key("db_type").String(libdb.GetDBType()))
+		attr.Key("db_type").String(libdb.GetDBType()),
+	)
 
 	// tags 转成 string 的格式
 	tagsStr := libCommon.TagSlice2TagString(conceptGroup.Tags)
@@ -572,15 +577,13 @@ func (cga *conceptGroupAccess) UpdateConceptGroup(ctx context.Context, tx *sql.T
 }
 
 func (cga *conceptGroupAccess) UpdateConceptGroupDetail(ctx context.Context, knID string, branch string, cgID string, detail string) error {
-	ctx, span := ar_trace.Tracer.Start(ctx, fmt.Sprintf("Updateconcept group detail[%s]", cgID), trace.WithSpanKind(trace.SpanKindClient))
+	ctx, span := ar_trace.Tracer.Start(ctx, "UpdateConceptGroupDetail", trace.WithSpanKind(trace.SpanKindClient))
 	defer span.End()
 
 	span.SetAttributes(
 		attr.Key("db_url").String(libdb.GetDBUrl()),
 		attr.Key("db_type").String(libdb.GetDBType()),
-		attr.Key("kn_id").String(knID),
-		attr.Key("cg_id").String(cgID),
-		attr.Key("branch").String(branch))
+	)
 
 	data := map[string]any{
 		"f_detail": detail,
@@ -627,14 +630,13 @@ func (cga *conceptGroupAccess) UpdateConceptGroupDetail(ctx context.Context, knI
 }
 
 func (cga *conceptGroupAccess) DeleteConceptGroupByID(ctx context.Context, tx *sql.Tx, knID string, branch string, cgID string) (int64, error) {
-	ctx, span := ar_trace.Tracer.Start(ctx, "Delete concept group from db", trace.WithSpanKind(trace.SpanKindClient))
+	ctx, span := ar_trace.Tracer.Start(ctx, "DeleteConceptGroupByID", trace.WithSpanKind(trace.SpanKindClient))
 	defer span.End()
 
 	span.SetAttributes(
 		attr.Key("db_url").String(libdb.GetDBUrl()),
 		attr.Key("db_type").String(libdb.GetDBType()),
-		attr.Key("kn_id").String(knID),
-		attr.Key("cg_id").String(fmt.Sprintf("%v", cgID)))
+	)
 
 	if cgID == "" {
 		return 0, nil
@@ -676,13 +678,102 @@ func (cga *conceptGroupAccess) DeleteConceptGroupByID(ctx context.Context, tx *s
 	return RowsAffected, nil
 }
 
-func (cga *conceptGroupAccess) GetConceptGroupIDsByKnID(ctx context.Context, knID string, branch string) ([]string, error) {
-	ctx, span := ar_trace.Tracer.Start(ctx, fmt.Sprintf("Get concept group ids by kn_id[%s]", knID), trace.WithSpanKind(trace.SpanKindClient))
+func (cga *conceptGroupAccess) DeleteConceptGroupsByKnID(ctx context.Context, tx *sql.Tx, knID string, branch string) (int64, error) {
+	ctx, span := ar_trace.Tracer.Start(ctx, "DeleteConceptGroupByKnID", trace.WithSpanKind(trace.SpanKindClient))
 	defer span.End()
 
 	span.SetAttributes(
 		attr.Key("db_url").String(libdb.GetDBUrl()),
-		attr.Key("db_type").String(libdb.GetDBType()))
+		attr.Key("db_type").String(libdb.GetDBType()),
+	)
+
+	sqlStr, vals, err := sq.Delete(CONCEPT_GROUP_TABLE_NAME).
+		Where(sq.Eq{"f_kn_id": knID}).
+		Where(sq.Eq{"f_branch": branch}).
+		ToSql()
+	if err != nil {
+		logger.Errorf("Failed to build the sql of delete concept group by concept group id, error: %s", err.Error())
+		o11y.Error(ctx, fmt.Sprintf("Failed to build the sql of delete concept group by concept group id, error: %s", err.Error()))
+		span.SetStatus(codes.Error, "Build sql failed ")
+		return 0, err
+	}
+
+	// 记录处理的 sql 字符串
+	o11y.Info(ctx, fmt.Sprintf("删除概念分组的 sql 语句: %s; 删除的概念分组: kn_id [%s] branch [%s]", sqlStr, knID, branch))
+
+	ret, err := tx.Exec(sqlStr, vals...)
+	if err != nil {
+		logger.Errorf("delete data error: %v\n", err)
+		o11y.Error(ctx, fmt.Sprintf("Delete data error: %v ", err))
+		span.SetStatus(codes.Error, "Delete data error")
+		return 0, err
+	}
+
+	//sql语句影响的行数
+	RowsAffected, err := ret.RowsAffected()
+	if err != nil {
+		logger.Errorf("Get RowsAffected error: %v\n", err)
+		o11y.Warn(ctx, fmt.Sprintf("Get RowsAffected error: %v ", err))
+		span.SetStatus(codes.Error, "Get RowsAffected error")
+	}
+
+	logger.Infof("RowsAffected: %d", RowsAffected)
+	span.SetStatus(codes.Ok, "")
+	return RowsAffected, nil
+}
+
+func (cga *conceptGroupAccess) DeleteConceptGroupRelationsByKnID(ctx context.Context, tx *sql.Tx, knID string, branch string) (int64, error) {
+	ctx, span := ar_trace.Tracer.Start(ctx, "DeleteConceptGroupRelationsByKnID", trace.WithSpanKind(trace.SpanKindClient))
+	defer span.End()
+
+	span.SetAttributes(
+		attr.Key("db_url").String(libdb.GetDBUrl()),
+		attr.Key("db_type").String(libdb.GetDBType()),
+	)
+
+	sqlStr, vals, err := sq.Delete(CONCEPT_GROUP_RELATION_TABLE_NAME).
+		Where(sq.Eq{"f_kn_id": knID}).
+		Where(sq.Eq{"f_branch": branch}).
+		ToSql()
+	if err != nil {
+		logger.Errorf("Failed to build the sql of delete concept group relation by kn_id, error: %s", err.Error())
+		o11y.Error(ctx, fmt.Sprintf("Failed to build the sql of delete concept group relation by kn_id, error: %s", err.Error()))
+		span.SetStatus(codes.Error, "Build sql failed ")
+		return 0, err
+	}
+
+	// 记录处理的 sql 字符串
+	o11y.Info(ctx, fmt.Sprintf("删除概念分组关联的 sql 语句: %s; 删除的概念分组关联: kn_id [%s] branch [%s]", sqlStr, knID, branch))
+
+	ret, err := tx.Exec(sqlStr, vals...)
+	if err != nil {
+		logger.Errorf("delete data error: %v\n", err)
+		o11y.Error(ctx, fmt.Sprintf("Delete data error: %v ", err))
+		span.SetStatus(codes.Error, "Delete data error")
+		return 0, err
+	}
+
+	//sql语句影响的行数
+	RowsAffected, err := ret.RowsAffected()
+	if err != nil {
+		logger.Errorf("Get RowsAffected error: %v\n", err)
+		o11y.Warn(ctx, fmt.Sprintf("Get RowsAffected error: %v ", err))
+		span.SetStatus(codes.Error, "Get RowsAffected error")
+	}
+
+	logger.Infof("RowsAffected: %d", RowsAffected)
+	span.SetStatus(codes.Ok, "")
+	return RowsAffected, nil
+}
+
+func (cga *conceptGroupAccess) GetConceptGroupIDsByKnID(ctx context.Context, knID string, branch string) ([]string, error) {
+	ctx, span := ar_trace.Tracer.Start(ctx, "GetConceptGroupIDsByKnID", trace.WithSpanKind(trace.SpanKindClient))
+	defer span.End()
+
+	span.SetAttributes(
+		attr.Key("db_url").String(libdb.GetDBUrl()),
+		attr.Key("db_type").String(libdb.GetDBType()),
+	)
 
 	//查询
 	sqlStr, vals, err := sq.Select(
@@ -761,12 +852,13 @@ func processQueryCondition(query interfaces.ConceptGroupsQueryParams, subBuilder
 
 // 查询概念分组列表。查主线的当前版本为true的概念分组
 func (cga *conceptGroupAccess) GetAllConceptGroupsByKnID(ctx context.Context, knID string, branch string) (map[string]*interfaces.ConceptGroup, error) {
-	ctx, span := ar_trace.Tracer.Start(ctx, fmt.Sprintf("Select concept groups by kn_id[%s]", knID), trace.WithSpanKind(trace.SpanKindClient))
+	ctx, span := ar_trace.Tracer.Start(ctx, "GetAllConceptGroupsByKnID", trace.WithSpanKind(trace.SpanKindClient))
 	defer span.End()
 
 	span.SetAttributes(
 		attr.Key("db_url").String(libdb.GetDBUrl()),
-		attr.Key("db_type").String(libdb.GetDBType()))
+		attr.Key("db_type").String(libdb.GetDBType()),
+	)
 
 	sqlStr, vals, err := sq.Select(
 		"f_id",
@@ -850,14 +942,16 @@ func (cga *conceptGroupAccess) GetAllConceptGroupsByKnID(ctx context.Context, kn
 }
 
 // 获取指定分组下的对象类的绑定关系
-func (cga *conceptGroupAccess) ListConceptGroupRelations(ctx context.Context, tx *sql.Tx, query interfaces.ConceptGroupRelationsQueryParams) ([]interfaces.ConceptGroupRelation, error) {
+func (cga *conceptGroupAccess) ListConceptGroupRelations(ctx context.Context, tx *sql.Tx,
+	query interfaces.ConceptGroupRelationsQueryParams) ([]interfaces.ConceptGroupRelation, error) {
 
-	ctx, span := ar_trace.Tracer.Start(ctx, "Get concept group relations", trace.WithSpanKind(trace.SpanKindClient))
+	ctx, span := ar_trace.Tracer.Start(ctx, "ListConceptGroupRelations", trace.WithSpanKind(trace.SpanKindClient))
 	defer span.End()
 
 	span.SetAttributes(
 		attr.Key("db_url").String(libdb.GetDBUrl()),
-		attr.Key("db_type").String(libdb.GetDBType()))
+		attr.Key("db_type").String(libdb.GetDBType()),
+	)
 
 	//查询
 	subBuilder := sq.Select(
@@ -921,12 +1015,13 @@ func (cga *conceptGroupAccess) ListConceptGroupRelations(ctx context.Context, tx
 }
 
 func (cga *conceptGroupAccess) CreateConceptGroupRelation(ctx context.Context, tx *sql.Tx, conceptGroupRelation *interfaces.ConceptGroupRelation) error {
-	ctx, span := ar_trace.Tracer.Start(ctx, "Insert into concept group", trace.WithSpanKind(trace.SpanKindClient))
+	ctx, span := ar_trace.Tracer.Start(ctx, "CreateConceptGroupRelation", trace.WithSpanKind(trace.SpanKindClient))
 	defer span.End()
 
 	span.SetAttributes(
 		attr.Key("db_url").String(libdb.GetDBUrl()),
-		attr.Key("db_type").String(libdb.GetDBType()))
+		attr.Key("db_type").String(libdb.GetDBType()),
+	)
 
 	sqlStr, vals, err := sq.Insert(CONCEPT_GROUP_RELATION_TABLE_NAME).
 		Columns(
@@ -999,13 +1094,13 @@ func processConceptGroupRelationsQueryCondition(query interfaces.ConceptGroupRel
 
 // 从分组中删除对象类，即删除概念与分组的绑定关系
 func (cga *conceptGroupAccess) DeleteObjectTypesFromGroup(ctx context.Context, tx *sql.Tx, query interfaces.ConceptGroupRelationsQueryParams) (int64, error) {
-
-	ctx, span := ar_trace.Tracer.Start(ctx, "Delete concept group from db", trace.WithSpanKind(trace.SpanKindClient))
+	ctx, span := ar_trace.Tracer.Start(ctx, "DeleteObjectTypesFromGroup", trace.WithSpanKind(trace.SpanKindClient))
 	defer span.End()
 
 	span.SetAttributes(
 		attr.Key("db_url").String(libdb.GetDBUrl()),
-		attr.Key("db_type").String(libdb.GetDBType()))
+		attr.Key("db_type").String(libdb.GetDBType()),
+	)
 
 	builder := sq.Delete(CONCEPT_GROUP_RELATION_TABLE_NAME).
 		Where(sq.Eq{"f_kn_id": query.KNID}).
@@ -1053,14 +1148,14 @@ func (cga *conceptGroupAccess) DeleteObjectTypesFromGroup(ctx context.Context, t
 	return RowsAffected, nil
 }
 
-func (cga *conceptGroupAccess) GetConceptIDsByConceptGroupIDs(ctx context.Context,
-	knID string, branch string, cgIDs []string, conceptType string) ([]string, error) {
+func (cga *conceptGroupAccess) GetConceptIDsByConceptGroupIDs(ctx context.Context, knID string, branch string, cgIDs []string, conceptType string) ([]string, error) {
 	ctx, span := ar_trace.Tracer.Start(ctx, "GetConceptIDsByConceptGroupIDs", trace.WithSpanKind(trace.SpanKindClient))
 	defer span.End()
 
 	span.SetAttributes(
 		attr.Key("db_url").String(libdb.GetDBUrl()),
-		attr.Key("db_type").String(libdb.GetDBType()))
+		attr.Key("db_type").String(libdb.GetDBType()),
+	)
 
 	//查询
 	sqlStr, vals, err := sq.Select(
@@ -1112,12 +1207,13 @@ func (cga *conceptGroupAccess) GetConceptIDsByConceptGroupIDs(ctx context.Contex
 
 // 获取概念分组下的关系类ID
 func (cga *conceptGroupAccess) GetRelationTypeIDsFromConceptGroupRelation(ctx context.Context, query interfaces.ConceptGroupRelationsQueryParams) ([]string, error) {
-	ctx, span := ar_trace.Tracer.Start(ctx, "Get concept group relations", trace.WithSpanKind(trace.SpanKindClient))
+	ctx, span := ar_trace.Tracer.Start(ctx, "GetRelationTypeIDsFromConceptGroupRelation", trace.WithSpanKind(trace.SpanKindClient))
 	defer span.End()
 
 	span.SetAttributes(
 		attr.Key("db_url").String(libdb.GetDBUrl()),
-		attr.Key("db_type").String(libdb.GetDBType()))
+		attr.Key("db_type").String(libdb.GetDBType()),
+	)
 
 	// 子查询：获取指定概念组中的概念ID（object_type类型）
 	subQueryBuilder := sq.Select("cgr.f_concept_id").
@@ -1188,12 +1284,13 @@ func (cga *conceptGroupAccess) GetRelationTypeIDsFromConceptGroupRelation(ctx co
 
 // 获取概念分组下的行动类ID
 func (cga *conceptGroupAccess) GetActionTypeIDsFromConceptGroupRelation(ctx context.Context, query interfaces.ConceptGroupRelationsQueryParams) ([]string, error) {
-	ctx, span := ar_trace.Tracer.Start(ctx, "Get concept group relations", trace.WithSpanKind(trace.SpanKindClient))
+	ctx, span := ar_trace.Tracer.Start(ctx, "GetActionTypeIDsFromConceptGroupRelation", trace.WithSpanKind(trace.SpanKindClient))
 	defer span.End()
 
 	span.SetAttributes(
 		attr.Key("db_url").String(libdb.GetDBUrl()),
-		attr.Key("db_type").String(libdb.GetDBType()))
+		attr.Key("db_type").String(libdb.GetDBType()),
+	)
 
 	// 子查询：获取指定概念组中的概念ID（object_type类型）
 	subQueryBuilder := sq.Select("cgr.f_concept_id").
@@ -1265,12 +1362,13 @@ func (cga *conceptGroupAccess) GetActionTypeIDsFromConceptGroupRelation(ctx cont
 func (cga *conceptGroupAccess) GetConceptGroupsByOTIDs(ctx context.Context, tx *sql.Tx,
 	query interfaces.ConceptGroupRelationsQueryParams) (map[string][]*interfaces.ConceptGroup, error) {
 
-	ctx, span := ar_trace.Tracer.Start(ctx, "Get concept group of object types", trace.WithSpanKind(trace.SpanKindClient))
+	ctx, span := ar_trace.Tracer.Start(ctx, "GetConceptGroupsByOTIDs", trace.WithSpanKind(trace.SpanKindClient))
 	defer span.End()
 
 	span.SetAttributes(
 		attr.Key("db_url").String(libdb.GetDBUrl()),
-		attr.Key("db_type").String(libdb.GetDBType()))
+		attr.Key("db_type").String(libdb.GetDBType()),
+	)
 
 	//查询
 	subBuilder := sq.Select(

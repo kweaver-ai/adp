@@ -975,6 +975,9 @@ func Test_knowledgeNetworkService_DeleteKN(t *testing.T) {
 		ots := dmock.NewMockObjectTypeService(mockCtrl)
 		rts := dmock.NewMockRelationTypeService(mockCtrl)
 		ats := dmock.NewMockActionTypeService(mockCtrl)
+		js := dmock.NewMockJobService(mockCtrl)
+		cgs := dmock.NewMockConceptGroupService(mockCtrl)
+
 		db, smock, _ := sqlmock.New(sqlmock.QueryMatcherOption(sqlmock.QueryMatcherEqual))
 
 		service := &knowledgeNetworkService{
@@ -986,6 +989,8 @@ func Test_knowledgeNetworkService_DeleteKN(t *testing.T) {
 			ots:        ots,
 			rts:        rts,
 			ats:        ats,
+			js:         js,
+			cgs:        cgs,
 			db:         db,
 		}
 
@@ -999,21 +1004,21 @@ func Test_knowledgeNetworkService_DeleteKN(t *testing.T) {
 
 			smock.ExpectBegin()
 			ps.EXPECT().CheckPermission(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
+			js.EXPECT().ListJobs(gomock.Any(), gomock.Any()).Return([]*interfaces.JobInfo{}, int64(0), nil)
 			kna.EXPECT().DeleteKN(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(int64(1), nil)
-			ots.EXPECT().GetObjectTypeIDsByKnID(gomock.Any(), gomock.Any(), gomock.Any()).Return([]string{}, nil)
-			rts.EXPECT().GetRelationTypeIDsByKnID(gomock.Any(), gomock.Any(), gomock.Any()).Return([]string{}, nil)
-			ats.EXPECT().GetActionTypeIDsByKnID(gomock.Any(), gomock.Any(), gomock.Any()).Return([]string{}, nil)
+			ots.EXPECT().DeleteObjectTypesByKnID(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
+			rts.EXPECT().DeleteRelationTypesByKnID(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
+			ats.EXPECT().DeleteActionTypesByKnID(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
+			cgs.EXPECT().DeleteConceptGroupsByKnID(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
+			js.EXPECT().DeleteJobsByKnID(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
 			osa.EXPECT().DeleteData(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
+			osa.EXPECT().DeleteByQuery(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
 			ps.EXPECT().DeleteResources(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
 			bsa.EXPECT().UnbindResource(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
-			ots.EXPECT().DeleteObjectTypesByIDs(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(int64(0), nil)
-			rts.EXPECT().DeleteRelationTypesByIDs(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(int64(0), nil)
-			ats.EXPECT().DeleteActionTypesByIDs(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(int64(0), nil)
 			smock.ExpectCommit()
 
-			rowsAffected, err := service.DeleteKN(ctx, kn)
+			err := service.DeleteKN(ctx, kn)
 			So(err, ShouldBeNil)
-			So(rowsAffected, ShouldEqual, 1)
 		})
 
 		Convey("Failed when permission check fails\n", func() {
@@ -1025,9 +1030,8 @@ func Test_knowledgeNetworkService_DeleteKN(t *testing.T) {
 
 			ps.EXPECT().CheckPermission(gomock.Any(), gomock.Any(), gomock.Any()).Return(rest.NewHTTPError(ctx, 403, oerrors.OntologyManager_KnowledgeNetwork_InternalError))
 
-			rowsAffected, err := service.DeleteKN(ctx, kn)
+			err := service.DeleteKN(ctx, kn)
 			So(err, ShouldNotBeNil)
-			So(rowsAffected, ShouldEqual, 0)
 		})
 
 		Convey("Failed when DeleteKN returns error\n", func() {
@@ -1039,15 +1043,15 @@ func Test_knowledgeNetworkService_DeleteKN(t *testing.T) {
 
 			smock.ExpectBegin()
 			ps.EXPECT().CheckPermission(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
+			js.EXPECT().ListJobs(gomock.Any(), gomock.Any()).Return([]*interfaces.JobInfo{}, int64(0), nil)
 			kna.EXPECT().DeleteKN(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(int64(0), rest.NewHTTPError(ctx, 500, oerrors.OntologyManager_KnowledgeNetwork_InternalError))
 			smock.ExpectRollback()
 
-			rowsAffected, err := service.DeleteKN(ctx, kn)
+			err := service.DeleteKN(ctx, kn)
 			So(err, ShouldNotBeNil)
-			So(rowsAffected, ShouldEqual, 0)
 		})
 
-		Convey("Failed when GetObjectTypeIDsByKnID returns error\n", func() {
+		Convey("Failed when DeleteObjectTypesByKnID returns error\n", func() {
 			kn := &interfaces.KN{
 				KNID:   "kn1",
 				KNName: "kn1",
@@ -1056,16 +1060,16 @@ func Test_knowledgeNetworkService_DeleteKN(t *testing.T) {
 
 			smock.ExpectBegin()
 			ps.EXPECT().CheckPermission(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
+			js.EXPECT().ListJobs(gomock.Any(), gomock.Any()).Return([]*interfaces.JobInfo{}, int64(0), nil)
 			kna.EXPECT().DeleteKN(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(int64(1), nil)
-			ots.EXPECT().GetObjectTypeIDsByKnID(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil, rest.NewHTTPError(ctx, 500, oerrors.OntologyManager_KnowledgeNetwork_InternalError))
+			ots.EXPECT().DeleteObjectTypesByKnID(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(rest.NewHTTPError(ctx, 500, oerrors.OntologyManager_KnowledgeNetwork_InternalError))
 			smock.ExpectRollback()
 
-			rowsAffected, err := service.DeleteKN(ctx, kn)
+			err := service.DeleteKN(ctx, kn)
 			So(err, ShouldNotBeNil)
-			So(rowsAffected, ShouldEqual, 0)
 		})
 
-		Convey("Failed when DeleteObjectTypesByIDs returns error\n", func() {
+		Convey("Failed when DeleteRelationTypesByKnID returns error\n", func() {
 			kn := &interfaces.KN{
 				KNID:   "kn1",
 				KNName: "kn1",
@@ -1074,17 +1078,17 @@ func Test_knowledgeNetworkService_DeleteKN(t *testing.T) {
 
 			smock.ExpectBegin()
 			ps.EXPECT().CheckPermission(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
+			js.EXPECT().ListJobs(gomock.Any(), gomock.Any()).Return([]*interfaces.JobInfo{}, int64(0), nil)
 			kna.EXPECT().DeleteKN(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(int64(1), nil)
-			ots.EXPECT().GetObjectTypeIDsByKnID(gomock.Any(), gomock.Any(), gomock.Any()).Return([]string{"ot1"}, nil)
-			ots.EXPECT().DeleteObjectTypesByIDs(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(int64(0), rest.NewHTTPError(ctx, 500, oerrors.OntologyManager_KnowledgeNetwork_InternalError))
+			ots.EXPECT().DeleteObjectTypesByKnID(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
+			rts.EXPECT().DeleteRelationTypesByKnID(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(rest.NewHTTPError(ctx, 500, oerrors.OntologyManager_KnowledgeNetwork_InternalError))
 			smock.ExpectRollback()
 
-			rowsAffected, err := service.DeleteKN(ctx, kn)
+			err := service.DeleteKN(ctx, kn)
 			So(err, ShouldNotBeNil)
-			So(rowsAffected, ShouldEqual, 0)
 		})
 
-		Convey("Failed when GetRelationTypeIDsByKnID returns error\n", func() {
+		Convey("Failed when DeleteActionTypesByKnID returns error\n", func() {
 			kn := &interfaces.KN{
 				KNID:   "kn1",
 				KNName: "kn1",
@@ -1093,18 +1097,18 @@ func Test_knowledgeNetworkService_DeleteKN(t *testing.T) {
 
 			smock.ExpectBegin()
 			ps.EXPECT().CheckPermission(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
+			js.EXPECT().ListJobs(gomock.Any(), gomock.Any()).Return([]*interfaces.JobInfo{}, int64(0), nil)
 			kna.EXPECT().DeleteKN(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(int64(1), nil)
-			ots.EXPECT().GetObjectTypeIDsByKnID(gomock.Any(), gomock.Any(), gomock.Any()).Return([]string{}, nil)
-			ots.EXPECT().DeleteObjectTypesByIDs(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(int64(0), nil)
-			rts.EXPECT().GetRelationTypeIDsByKnID(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil, rest.NewHTTPError(ctx, 500, oerrors.OntologyManager_KnowledgeNetwork_InternalError))
+			ots.EXPECT().DeleteObjectTypesByKnID(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
+			rts.EXPECT().DeleteRelationTypesByKnID(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
+			ats.EXPECT().DeleteActionTypesByKnID(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(rest.NewHTTPError(ctx, 500, oerrors.OntologyManager_KnowledgeNetwork_InternalError))
 			smock.ExpectRollback()
 
-			rowsAffected, err := service.DeleteKN(ctx, kn)
+			err := service.DeleteKN(ctx, kn)
 			So(err, ShouldNotBeNil)
-			So(rowsAffected, ShouldEqual, 0)
 		})
 
-		Convey("Failed when DeleteRelationTypesByIDs returns error\n", func() {
+		Convey("Failed when DeleteConceptGroupsByKnID returns error\n", func() {
 			kn := &interfaces.KN{
 				KNID:   "kn1",
 				KNName: "kn1",
@@ -1113,19 +1117,19 @@ func Test_knowledgeNetworkService_DeleteKN(t *testing.T) {
 
 			smock.ExpectBegin()
 			ps.EXPECT().CheckPermission(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
+			js.EXPECT().ListJobs(gomock.Any(), gomock.Any()).Return([]*interfaces.JobInfo{}, int64(0), nil)
 			kna.EXPECT().DeleteKN(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(int64(1), nil)
-			ots.EXPECT().GetObjectTypeIDsByKnID(gomock.Any(), gomock.Any(), gomock.Any()).Return([]string{}, nil)
-			ots.EXPECT().DeleteObjectTypesByIDs(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(int64(0), nil)
-			rts.EXPECT().GetRelationTypeIDsByKnID(gomock.Any(), gomock.Any(), gomock.Any()).Return([]string{"rt1"}, nil)
-			rts.EXPECT().DeleteRelationTypesByIDs(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(int64(0), rest.NewHTTPError(ctx, 500, oerrors.OntologyManager_KnowledgeNetwork_InternalError))
+			ots.EXPECT().DeleteObjectTypesByKnID(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
+			rts.EXPECT().DeleteRelationTypesByKnID(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
+			ats.EXPECT().DeleteActionTypesByKnID(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
+			cgs.EXPECT().DeleteConceptGroupsByKnID(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(rest.NewHTTPError(ctx, 500, oerrors.OntologyManager_KnowledgeNetwork_InternalError))
 			smock.ExpectRollback()
 
-			rowsAffected, err := service.DeleteKN(ctx, kn)
+			err := service.DeleteKN(ctx, kn)
 			So(err, ShouldNotBeNil)
-			So(rowsAffected, ShouldEqual, 0)
 		})
 
-		Convey("Failed when GetActionTypeIDsByKnID returns error\n", func() {
+		Convey("Failed when DeleteJobsByKnID returns error\n", func() {
 			kn := &interfaces.KN{
 				KNID:   "kn1",
 				KNName: "kn1",
@@ -1134,40 +1138,17 @@ func Test_knowledgeNetworkService_DeleteKN(t *testing.T) {
 
 			smock.ExpectBegin()
 			ps.EXPECT().CheckPermission(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
+			js.EXPECT().ListJobs(gomock.Any(), gomock.Any()).Return([]*interfaces.JobInfo{}, int64(0), nil)
 			kna.EXPECT().DeleteKN(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(int64(1), nil)
-			ots.EXPECT().GetObjectTypeIDsByKnID(gomock.Any(), gomock.Any(), gomock.Any()).Return([]string{}, nil)
-			ots.EXPECT().DeleteObjectTypesByIDs(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(int64(0), nil)
-			rts.EXPECT().GetRelationTypeIDsByKnID(gomock.Any(), gomock.Any(), gomock.Any()).Return([]string{}, nil)
-			rts.EXPECT().DeleteRelationTypesByIDs(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(int64(0), nil)
-			ats.EXPECT().GetActionTypeIDsByKnID(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil, rest.NewHTTPError(ctx, 500, oerrors.OntologyManager_KnowledgeNetwork_InternalError))
+			ots.EXPECT().DeleteObjectTypesByKnID(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
+			rts.EXPECT().DeleteRelationTypesByKnID(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
+			ats.EXPECT().DeleteActionTypesByKnID(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
+			cgs.EXPECT().DeleteConceptGroupsByKnID(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
+			js.EXPECT().DeleteJobsByKnID(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(rest.NewHTTPError(ctx, 500, oerrors.OntologyManager_KnowledgeNetwork_InternalError))
 			smock.ExpectRollback()
 
-			rowsAffected, err := service.DeleteKN(ctx, kn)
+			err := service.DeleteKN(ctx, kn)
 			So(err, ShouldNotBeNil)
-			So(rowsAffected, ShouldEqual, 0)
-		})
-
-		Convey("Failed when DeleteActionTypesByIDs returns error\n", func() {
-			kn := &interfaces.KN{
-				KNID:   "kn1",
-				KNName: "kn1",
-				Branch: interfaces.MAIN_BRANCH,
-			}
-
-			smock.ExpectBegin()
-			ps.EXPECT().CheckPermission(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
-			kna.EXPECT().DeleteKN(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(int64(1), nil)
-			ots.EXPECT().GetObjectTypeIDsByKnID(gomock.Any(), gomock.Any(), gomock.Any()).Return([]string{}, nil)
-			ots.EXPECT().DeleteObjectTypesByIDs(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(int64(0), nil)
-			rts.EXPECT().GetRelationTypeIDsByKnID(gomock.Any(), gomock.Any(), gomock.Any()).Return([]string{}, nil)
-			rts.EXPECT().DeleteRelationTypesByIDs(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(int64(0), nil)
-			ats.EXPECT().GetActionTypeIDsByKnID(gomock.Any(), gomock.Any(), gomock.Any()).Return([]string{"at1"}, nil)
-			ats.EXPECT().DeleteActionTypesByIDs(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(int64(0), rest.NewHTTPError(ctx, 500, oerrors.OntologyManager_KnowledgeNetwork_InternalError))
-			smock.ExpectRollback()
-
-			rowsAffected, err := service.DeleteKN(ctx, kn)
-			So(err, ShouldNotBeNil)
-			So(rowsAffected, ShouldEqual, 0)
 		})
 
 		Convey("Failed when DeleteData returns error\n", func() {
@@ -1179,19 +1160,42 @@ func Test_knowledgeNetworkService_DeleteKN(t *testing.T) {
 
 			smock.ExpectBegin()
 			ps.EXPECT().CheckPermission(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
+			js.EXPECT().ListJobs(gomock.Any(), gomock.Any()).Return([]*interfaces.JobInfo{}, int64(0), nil)
 			kna.EXPECT().DeleteKN(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(int64(1), nil)
-			ots.EXPECT().GetObjectTypeIDsByKnID(gomock.Any(), gomock.Any(), gomock.Any()).Return([]string{}, nil)
-			ots.EXPECT().DeleteObjectTypesByIDs(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(int64(0), nil)
-			rts.EXPECT().GetRelationTypeIDsByKnID(gomock.Any(), gomock.Any(), gomock.Any()).Return([]string{}, nil)
-			rts.EXPECT().DeleteRelationTypesByIDs(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(int64(0), nil)
-			ats.EXPECT().GetActionTypeIDsByKnID(gomock.Any(), gomock.Any(), gomock.Any()).Return([]string{}, nil)
-			ats.EXPECT().DeleteActionTypesByIDs(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(int64(0), nil)
+			ots.EXPECT().DeleteObjectTypesByKnID(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
+			rts.EXPECT().DeleteRelationTypesByKnID(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
+			ats.EXPECT().DeleteActionTypesByKnID(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
+			cgs.EXPECT().DeleteConceptGroupsByKnID(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
+			js.EXPECT().DeleteJobsByKnID(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
 			osa.EXPECT().DeleteData(gomock.Any(), gomock.Any(), gomock.Any()).Return(rest.NewHTTPError(ctx, 500, oerrors.OntologyManager_KnowledgeNetwork_InternalError))
 			smock.ExpectRollback()
 
-			rowsAffected, err := service.DeleteKN(ctx, kn)
+			err := service.DeleteKN(ctx, kn)
 			So(err, ShouldNotBeNil)
-			So(rowsAffected, ShouldEqual, 0)
+		})
+
+		Convey("Failed when DeleteByQuery returns error\n", func() {
+			kn := &interfaces.KN{
+				KNID:   "kn1",
+				KNName: "kn1",
+				Branch: interfaces.MAIN_BRANCH,
+			}
+
+			smock.ExpectBegin()
+			ps.EXPECT().CheckPermission(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
+			js.EXPECT().ListJobs(gomock.Any(), gomock.Any()).Return([]*interfaces.JobInfo{}, int64(0), nil)
+			kna.EXPECT().DeleteKN(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(int64(1), nil)
+			ots.EXPECT().DeleteObjectTypesByKnID(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
+			rts.EXPECT().DeleteRelationTypesByKnID(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
+			ats.EXPECT().DeleteActionTypesByKnID(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
+			cgs.EXPECT().DeleteConceptGroupsByKnID(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
+			js.EXPECT().DeleteJobsByKnID(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
+			osa.EXPECT().DeleteData(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
+			osa.EXPECT().DeleteByQuery(gomock.Any(), gomock.Any(), gomock.Any()).Return(rest.NewHTTPError(ctx, 500, oerrors.OntologyManager_KnowledgeNetwork_InternalError))
+			smock.ExpectRollback()
+
+			err := service.DeleteKN(ctx, kn)
+			So(err, ShouldNotBeNil)
 		})
 
 		Convey("Failed when DeleteResources returns error\n", func() {
@@ -1203,20 +1207,20 @@ func Test_knowledgeNetworkService_DeleteKN(t *testing.T) {
 
 			smock.ExpectBegin()
 			ps.EXPECT().CheckPermission(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
+			js.EXPECT().ListJobs(gomock.Any(), gomock.Any()).Return([]*interfaces.JobInfo{}, int64(0), nil)
 			kna.EXPECT().DeleteKN(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(int64(1), nil)
-			ots.EXPECT().GetObjectTypeIDsByKnID(gomock.Any(), gomock.Any(), gomock.Any()).Return([]string{}, nil)
-			ots.EXPECT().DeleteObjectTypesByIDs(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(int64(0), nil)
-			rts.EXPECT().GetRelationTypeIDsByKnID(gomock.Any(), gomock.Any(), gomock.Any()).Return([]string{}, nil)
-			rts.EXPECT().DeleteRelationTypesByIDs(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(int64(0), nil)
-			ats.EXPECT().GetActionTypeIDsByKnID(gomock.Any(), gomock.Any(), gomock.Any()).Return([]string{}, nil)
-			ats.EXPECT().DeleteActionTypesByIDs(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(int64(0), nil)
+			ots.EXPECT().DeleteObjectTypesByKnID(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
+			rts.EXPECT().DeleteRelationTypesByKnID(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
+			ats.EXPECT().DeleteActionTypesByKnID(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
+			cgs.EXPECT().DeleteConceptGroupsByKnID(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
+			js.EXPECT().DeleteJobsByKnID(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
 			osa.EXPECT().DeleteData(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
+			osa.EXPECT().DeleteByQuery(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
 			ps.EXPECT().DeleteResources(gomock.Any(), gomock.Any(), gomock.Any()).Return(rest.NewHTTPError(ctx, 500, oerrors.OntologyManager_KnowledgeNetwork_InternalError))
 			smock.ExpectRollback()
 
-			rowsAffected, err := service.DeleteKN(ctx, kn)
+			err := service.DeleteKN(ctx, kn)
 			So(err, ShouldNotBeNil)
-			So(rowsAffected, ShouldEqual, 0)
 		})
 
 		Convey("Failed when UnbindResource returns error\n", func() {
@@ -1229,48 +1233,21 @@ func Test_knowledgeNetworkService_DeleteKN(t *testing.T) {
 
 			smock.ExpectBegin()
 			ps.EXPECT().CheckPermission(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
+			js.EXPECT().ListJobs(gomock.Any(), gomock.Any()).Return([]*interfaces.JobInfo{}, int64(0), nil)
 			kna.EXPECT().DeleteKN(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(int64(1), nil)
-			ots.EXPECT().GetObjectTypeIDsByKnID(gomock.Any(), gomock.Any(), gomock.Any()).Return([]string{}, nil)
-			ots.EXPECT().DeleteObjectTypesByIDs(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(int64(0), nil)
-			rts.EXPECT().GetRelationTypeIDsByKnID(gomock.Any(), gomock.Any(), gomock.Any()).Return([]string{}, nil)
-			rts.EXPECT().DeleteRelationTypesByIDs(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(int64(0), nil)
-			ats.EXPECT().GetActionTypeIDsByKnID(gomock.Any(), gomock.Any(), gomock.Any()).Return([]string{}, nil)
-			ats.EXPECT().DeleteActionTypesByIDs(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(int64(0), nil)
+			ots.EXPECT().DeleteObjectTypesByKnID(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
+			rts.EXPECT().DeleteRelationTypesByKnID(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
+			ats.EXPECT().DeleteActionTypesByKnID(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
+			cgs.EXPECT().DeleteConceptGroupsByKnID(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
+			js.EXPECT().DeleteJobsByKnID(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
 			osa.EXPECT().DeleteData(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
+			osa.EXPECT().DeleteByQuery(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
 			ps.EXPECT().DeleteResources(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
 			bsa.EXPECT().UnbindResource(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(rest.NewHTTPError(ctx, 500, oerrors.OntologyManager_KnowledgeNetwork_InternalError))
 			smock.ExpectRollback()
 
-			rowsAffected, err := service.DeleteKN(ctx, kn)
+			err := service.DeleteKN(ctx, kn)
 			So(err, ShouldNotBeNil)
-			So(rowsAffected, ShouldEqual, 0)
-		})
-
-		Convey("Success with rowsAffect != 1\n", func() {
-			kn := &interfaces.KN{
-				KNID:           "kn1",
-				KNName:         "kn1",
-				Branch:         interfaces.MAIN_BRANCH,
-				BusinessDomain: "bd1",
-			}
-
-			smock.ExpectBegin()
-			ps.EXPECT().CheckPermission(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
-			kna.EXPECT().DeleteKN(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(int64(0), nil)
-			ots.EXPECT().GetObjectTypeIDsByKnID(gomock.Any(), gomock.Any(), gomock.Any()).Return([]string{}, nil)
-			ots.EXPECT().DeleteObjectTypesByIDs(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(int64(0), nil)
-			rts.EXPECT().GetRelationTypeIDsByKnID(gomock.Any(), gomock.Any(), gomock.Any()).Return([]string{}, nil)
-			rts.EXPECT().DeleteRelationTypesByIDs(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(int64(0), nil)
-			ats.EXPECT().GetActionTypeIDsByKnID(gomock.Any(), gomock.Any(), gomock.Any()).Return([]string{}, nil)
-			ats.EXPECT().DeleteActionTypesByIDs(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(int64(0), nil)
-			osa.EXPECT().DeleteData(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
-			ps.EXPECT().DeleteResources(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
-			bsa.EXPECT().UnbindResource(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
-			smock.ExpectCommit()
-
-			rowsAffected, err := service.DeleteKN(ctx, kn)
-			So(err, ShouldBeNil)
-			So(rowsAffected, ShouldEqual, 0)
 		})
 	})
 }

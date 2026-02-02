@@ -14,7 +14,6 @@ import (
 	o11y "github.com/kweaver-ai/kweaver-go-lib/observability"
 	"github.com/kweaver-ai/kweaver-go-lib/rest"
 	"github.com/rs/xid"
-	attr "go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
 
 	"ontology-manager/common"
@@ -77,10 +76,6 @@ func (cgs *conceptGroupService) CheckConceptGroupExistByID(ctx context.Context, 
 	ctx, span := ar_trace.Tracer.Start(ctx, fmt.Sprintf("校验概念分组[%v]的存在性", cgID))
 	defer span.End()
 
-	span.SetAttributes(attr.Key("kn_id").String(knID),
-		attr.Key("cg_id").String(cgID),
-		attr.Key("branch").String(branch))
-
 	cgName, exist, err := cgs.cga.CheckConceptGroupExistByID(ctx, knID, branch, cgID)
 	if err != nil {
 		logger.Errorf("CheckConceptGroupExistByID error: %s", err.Error())
@@ -98,11 +93,8 @@ func (cgs *conceptGroupService) CheckConceptGroupExistByID(ctx context.Context, 
 }
 
 func (cgs *conceptGroupService) CheckConceptGroupExistByName(ctx context.Context, knID string, branch string, cgName string) (string, bool, error) {
-
 	ctx, span := ar_trace.Tracer.Start(ctx, fmt.Sprintf("校验概念分组[%v]的存在性", cgName))
 	defer span.End()
-
-	span.SetAttributes(attr.Key("cg_name").String(cgName))
 
 	cgID, exist, err := cgs.cga.CheckConceptGroupExistByName(ctx, knID, branch, cgName)
 	if err != nil {
@@ -417,10 +409,6 @@ func (cgs *conceptGroupService) GetConceptGroupByID(ctx context.Context, knID st
 	ctx, span := ar_trace.Tracer.Start(ctx, fmt.Sprintf("查询概念分组[%s]信息", knID))
 	defer span.End()
 
-	span.SetAttributes(attr.Key("kn_id").String(knID),
-		attr.Key("cg_id").String(cgID),
-		attr.Key("branch").String(branch))
-
 	// 判断userid是否有查看业务知识网络的权限
 	err := cgs.ps.CheckPermission(ctx, interfaces.Resource{
 		Type: interfaces.RESOURCE_TYPE_KN,
@@ -512,15 +500,31 @@ func (cgs *conceptGroupService) GetConceptGroupByID(ctx context.Context, knID st
 	return conceptGroup, nil
 }
 
+func (cgs *conceptGroupService) GetConceptGroupIDsByKnID(ctx context.Context, knID string, branch string) ([]string, error) {
+	// 获取概念分组
+	ctx, span := ar_trace.Tracer.Start(ctx, fmt.Sprintf("查询概念分组[%s]信息", knID))
+	defer span.End()
+
+	// 获取模型基本信息
+	cgIDs, err := cgs.cga.GetConceptGroupIDsByKnID(ctx, knID, branch)
+	if err != nil {
+		logger.Errorf("GetConceptGroupIDsByKnID error: %s", err.Error())
+		span.SetStatus(codes.Error, fmt.Sprintf("Get concept group ids by kn_id[%s] error: %v", knID, err))
+		span.End()
+
+		return []string{}, rest.NewHTTPError(ctx, http.StatusInternalServerError,
+			oerrors.OntologyManager_ConceptGroup_InternalError).WithErrorDetails(err.Error())
+	}
+
+	span.SetStatus(codes.Ok, "")
+	return cgIDs, nil
+}
+
 // 获取概念分组的统计信息
 func (cgs *conceptGroupService) GetStatByConceptGroup(ctx context.Context, conceptGroup *interfaces.ConceptGroup) (*interfaces.Statistics, error) {
 	// 获取概念分组
 	ctx, span := ar_trace.Tracer.Start(ctx, fmt.Sprintf("查询概念分组[%s]信息", conceptGroup.KNID))
 	defer span.End()
-
-	span.SetAttributes(attr.Key("kn_id").String(conceptGroup.KNID),
-		attr.Key("branch").String(conceptGroup.Branch),
-		attr.Key("cg_id").String(conceptGroup.CGID))
 
 	//  数量从对象类、概念对象关系、概念分组表中联合查询得到
 	// 获取概念分组下的对象类、关系类、行动类的数量
@@ -610,11 +614,6 @@ func (cgs *conceptGroupService) UpdateConceptGroup(ctx context.Context, tx *sql.
 	currentTime := time.Now().UnixMilli() // 概念分组的update_time是int类型
 	conceptGroup.UpdateTime = currentTime
 
-	span.SetAttributes(
-		attr.Key("kn_id").String(conceptGroup.KNID),
-		attr.Key("branch").String(conceptGroup.Branch),
-		attr.Key("cg_id").String(conceptGroup.CGID))
-
 	if tx == nil {
 		// 0. 开始事务
 		tx, err = cgs.db.Begin()
@@ -676,8 +675,8 @@ func (cgs *conceptGroupService) UpdateConceptGroup(ctx context.Context, tx *sql.
 	return nil
 }
 
-func (cgs *conceptGroupService) DeleteConceptGroupByID(ctx context.Context, tx *sql.Tx, knID string, branch string, cgID string) (int64, error) {
-	ctx, span := ar_trace.Tracer.Start(ctx, "Delete concept group")
+func (cgs *conceptGroupService) DeleteConceptGroupByID(ctx context.Context, tx *sql.Tx, knID string, branch string, cgID string) error {
+	ctx, span := ar_trace.Tracer.Start(ctx, "Delete concept group by id")
 	defer span.End()
 
 	// 判断userid是否有删除概念分组的权限
@@ -686,7 +685,7 @@ func (cgs *conceptGroupService) DeleteConceptGroupByID(ctx context.Context, tx *
 		ID:   knID,
 	}, []string{interfaces.OPERATION_TYPE_MODIFY})
 	if err != nil {
-		return 0, err
+		return err
 	}
 
 	if tx == nil {
@@ -697,7 +696,7 @@ func (cgs *conceptGroupService) DeleteConceptGroupByID(ctx context.Context, tx *
 			span.SetStatus(codes.Error, "事务开启失败")
 			o11y.Error(ctx, fmt.Sprintf("Begin transaction error: %s", err.Error()))
 
-			return 0, rest.NewHTTPError(ctx, http.StatusInternalServerError,
+			return rest.NewHTTPError(ctx, http.StatusInternalServerError,
 				oerrors.OntologyManager_ConceptGroup_InternalError_BeginTransactionFailed).
 				WithErrorDetails(err.Error())
 		}
@@ -729,20 +728,18 @@ func (cgs *conceptGroupService) DeleteConceptGroupByID(ctx context.Context, tx *
 
 	// 删除概念分组
 	rowsAffect, err := cgs.cga.DeleteConceptGroupByID(ctx, tx, knID, branch, cgID)
-	span.SetAttributes(attr.Key("rows_affect").Int64(rowsAffect))
 	if err != nil {
-		logger.Errorf("DeleteConceptGroup error: %s", err.Error())
+		logger.Errorf("DeleteConceptGroupsByIDs error: %s", err.Error())
 		span.SetStatus(codes.Error, "删除概念分组失败")
 
-		return rowsAffect, rest.NewHTTPError(ctx, http.StatusInternalServerError,
+		return rest.NewHTTPError(ctx, http.StatusInternalServerError,
 			oerrors.OntologyManager_ConceptGroup_InternalError).WithErrorDetails(err.Error())
 	}
-	logger.Infof("DeleteConceptGroup: Rows affected is %v, request delete CGID is %s in knowledge network [%s] branch [%s]!",
+	logger.Infof("DeleteConceptGroupByID: Rows affected is %v, request delete CGID is %s in knowledge network [%s] branch [%s]!",
 		rowsAffect, cgID, knID, branch)
-	if rowsAffect != 1 {
-		logger.Warnf("Delete kns number %v not equal 1!", rowsAffect)
-
-		o11y.Warn(ctx, fmt.Sprintf("Delete kns number %v not equal 1!", rowsAffect))
+	if rowsAffect != int64(1) {
+		logger.Warnf("DeleteConceptGroupByID number %v not equal %v!", rowsAffect, 1)
+		o11y.Warn(ctx, fmt.Sprintf("DeleteConceptGroupByID number %v not equal %v!", rowsAffect, 1))
 	}
 
 	// 删除组下所有的绑定关系
@@ -752,13 +749,11 @@ func (cgs *conceptGroupService) DeleteConceptGroupByID(ctx context.Context, tx *
 		ConceptType: interfaces.MODULE_TYPE_OBJECT_TYPE,
 		CGIDs:       []string{cgID},
 	})
-	span.SetAttributes(attr.Key("cgrs_rows_affect").Int64(rowsAffect))
 	if err != nil {
 		logger.Errorf("DeleteObjectTypesFromGroup error: %s", err.Error())
 		span.SetStatus(codes.Error, "删除概念与分组的关系失败")
-
-		return 0, rest.NewHTTPError(ctx, http.StatusInternalServerError,
-			oerrors.OntologyManager_ActionType_InternalError).WithErrorDetails(err.Error())
+		return rest.NewHTTPError(ctx, http.StatusInternalServerError,
+			oerrors.OntologyManager_ConceptGroup_InternalError).WithErrorDetails(err.Error())
 	}
 	logger.Infof("DeleteObjectTypesFromGroup: Rows affected is %v, request delete cgID is %s!", cgrsRowsAffect, cgID)
 
@@ -766,21 +761,57 @@ func (cgs *conceptGroupService) DeleteConceptGroupByID(ctx context.Context, tx *
 		interfaces.MODULE_TYPE_CONCEPT_GROUP, cgID, branch)
 	err = cgs.osa.DeleteData(ctx, interfaces.KN_CONCEPT_INDEX_NAME, docid)
 	if err != nil {
-		return 0, err
+		return err
 	}
 
 	span.SetStatus(codes.Ok, "")
-	return rowsAffect, nil
+	return nil
+}
+
+// 内部方法，删除概念分组，不检查权限，tx必须传入
+func (cgs *conceptGroupService) DeleteConceptGroupsByKnID(ctx context.Context, tx *sql.Tx, knID string, branch string) error {
+	ctx, span := ar_trace.Tracer.Start(ctx, "Delete concept group by knID")
+	defer span.End()
+
+	if tx == nil {
+		logger.Errorf("missing transaction")
+		o11y.Error(ctx, "missing transaction")
+		span.SetStatus(codes.Error, "缺少事务")
+		return rest.NewHTTPError(ctx, http.StatusInternalServerError,
+			oerrors.OntologyManager_ConceptGroup_InternalError_MissingTransaction).
+			WithErrorDetails("missing transaction")
+	}
+
+	// 删除概念分组
+	rowsAffect, err := cgs.cga.DeleteConceptGroupsByKnID(ctx, tx, knID, branch)
+	if err != nil {
+		logger.Errorf("DeleteConceptGroupsByKnID error: %s", err.Error())
+		span.SetStatus(codes.Error, "删除概念分组失败")
+		return rest.NewHTTPError(ctx, http.StatusInternalServerError,
+			oerrors.OntologyManager_ConceptGroup_InternalError).WithErrorDetails(err.Error())
+	}
+	logger.Infof("DeleteConceptGroupsByKnID: Rows affected is %v, request delete knID is %s in knowledge network [%s] branch [%s]!",
+		rowsAffect, knID, knID, branch)
+
+	// 删除组下所有的绑定关系
+	rowsAffect, err = cgs.cga.DeleteConceptGroupRelationsByKnID(ctx, tx, knID, branch)
+	if err != nil {
+		logger.Errorf("DeleteConceptGroupRelationsByKnID error: %s", err.Error())
+		span.SetStatus(codes.Error, "删除概念与分组的关系失败")
+		return rest.NewHTTPError(ctx, http.StatusInternalServerError,
+			oerrors.OntologyManager_ConceptGroup_InternalError).WithErrorDetails(err.Error())
+	}
+	logger.Infof("DeleteConceptGroupRelationsByKnID: Rows affected is %v, request delete knID is %s in knowledge network [%s] branch [%s]!",
+		rowsAffect, knID, knID, branch)
+
+	span.SetStatus(codes.Ok, "")
+	return nil
 }
 
 // 更新知识网络详情
 func (cgs *conceptGroupService) UpdateConceptGroupDetail(ctx context.Context, knID string, branch string, cgID string, detail string) error {
 	ctx, span := ar_trace.Tracer.Start(ctx, fmt.Sprintf("Update concept group detail[%s]", knID))
 	defer span.End()
-
-	span.SetAttributes(attr.Key("kn_id").String(knID),
-		attr.Key("branch").String(branch),
-		attr.Key("cg_id").String(cgID))
 
 	// 更新知识网络详情
 	err := cgs.cga.UpdateConceptGroupDetail(ctx, knID, branch, cgID, detail)
@@ -1007,7 +1038,7 @@ func (cgs *conceptGroupService) AddObjectTypesToConceptGroup(ctx context.Context
 		span.SetStatus(codes.Error, errStr)
 
 		return []string{}, rest.NewHTTPError(ctx, http.StatusNotFound,
-			oerrors.OntologyManager_ObjectType_ObjectTypeNotFound).WithErrorDetails(errStr)
+			oerrors.OntologyManager_ConceptGroup_ObjectTypeNotFound).WithErrorDetails(errStr)
 	}
 
 	currentTime := time.Now().UnixMilli()
@@ -1193,9 +1224,7 @@ func (cgs *conceptGroupService) ListConceptGroupRelations(ctx context.Context,
 }
 
 // 从概念分组中移除对象类
-func (cgs *conceptGroupService) DeleteObjectTypesFromGroup(ctx context.Context, tx *sql.Tx, knID string, branch string,
-	cgID string, otIDs []string) (int64, error) {
-
+func (cgs *conceptGroupService) DeleteObjectTypesFromGroup(ctx context.Context, tx *sql.Tx, knID string, branch string, cgID string, otIDs []string) error {
 	ctx, span := ar_trace.Tracer.Start(ctx, "Delete concept group relations")
 	defer span.End()
 
@@ -1205,7 +1234,7 @@ func (cgs *conceptGroupService) DeleteObjectTypesFromGroup(ctx context.Context, 
 		ID:   knID,
 	}, []string{interfaces.OPERATION_TYPE_MODIFY})
 	if err != nil {
-		return 0, err
+		return err
 	}
 
 	if tx == nil {
@@ -1216,8 +1245,8 @@ func (cgs *conceptGroupService) DeleteObjectTypesFromGroup(ctx context.Context, 
 			span.SetStatus(codes.Error, "事务开启失败")
 			o11y.Error(ctx, fmt.Sprintf("Begin transaction error: %s", err.Error()))
 
-			return 0, rest.NewHTTPError(ctx, http.StatusInternalServerError,
-				oerrors.OntologyManager_ActionType_InternalError_BeginTransactionFailed).
+			return rest.NewHTTPError(ctx, http.StatusInternalServerError,
+				oerrors.OntologyManager_ConceptGroup_InternalError_BeginTransactionFailed).
 				WithErrorDetails(err.Error())
 		}
 		// 0.1 异常时
@@ -1252,22 +1281,19 @@ func (cgs *conceptGroupService) DeleteObjectTypesFromGroup(ctx context.Context, 
 		ConceptType: interfaces.MODULE_TYPE_OBJECT_TYPE,
 		OTIDs:       otIDs,
 	})
-	span.SetAttributes(attr.Key("rows_affect").Int64(rowsAffect))
 	if err != nil {
 		logger.Errorf("DeleteObjectTypesFromGroup error: %s", err.Error())
 		span.SetStatus(codes.Error, "删除概念与分组的关系失败")
-
-		return rowsAffect, rest.NewHTTPError(ctx, http.StatusInternalServerError,
-			oerrors.OntologyManager_ActionType_InternalError).WithErrorDetails(err.Error())
+		return rest.NewHTTPError(ctx, http.StatusInternalServerError,
+			oerrors.OntologyManager_ConceptGroup_InternalError).WithErrorDetails(err.Error())
 	}
 
 	logger.Infof("DeleteObjectTypesFromGroup: Rows affected is %v, request delete ATIDs is %v!", rowsAffect, len(otIDs))
 	if rowsAffect != int64(len(otIDs)) {
 		logger.Warnf("Delete action types number %v not equal requerst action types number %v!", rowsAffect, len(otIDs))
-
 		o11y.Warn(ctx, fmt.Sprintf("Delete action types number %v not equal requerst action types number %v!", rowsAffect, len(otIDs)))
 	}
 
 	span.SetStatus(codes.Ok, "")
-	return rowsAffect, nil
+	return nil
 }

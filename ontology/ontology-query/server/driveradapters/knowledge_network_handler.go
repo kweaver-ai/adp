@@ -92,8 +92,10 @@ func (r *restHandler) GetObjectsSubgraph(c *gin.Context, visitor rest.Visitor) {
 	includeLogicParams := c.DefaultQuery("include_logic_params", interfaces.DEFAULT_INCLUDE_LOGIC_PARAMS)
 	// 是否忽略持久化数据,走虚拟化查询,默认是false,不忽略
 	ignoringStoreCache := c.DefaultQuery("ignoring_store_cache", interfaces.DEFAULT_IGNORING_STORE_CACHE)
+	// 排除系统字段列表
+	excludeSystemProperties := c.QueryArray("exclude_system_properties")
 	// 校验查询参数
-	queryParams, err := validateSugraphQueryParameters(ctx, includeLogicParams, ignoringStoreCache)
+	queryParams, err := validateSugraphQueryParameters(ctx, includeLogicParams, ignoringStoreCache, excludeSystemProperties)
 	if err != nil {
 		httpErr := err.(*rest.HTTPError)
 		// 设置 trace 的错误信息的 attributes
@@ -210,8 +212,10 @@ func (r *restHandler) GetObjectsSubgraphByTypePath(c *gin.Context, visitor rest.
 	includeLogicParams := c.DefaultQuery("include_logic_params", interfaces.DEFAULT_INCLUDE_LOGIC_PARAMS)
 	// 是否忽略持久化数据,走虚拟化查询,默认是false,不忽略
 	ignoringStoreCache := c.DefaultQuery("ignoring_store_cache", interfaces.DEFAULT_IGNORING_STORE_CACHE)
+	// 排除系统字段列表
+	excludeSystemProperties := c.QueryArray("exclude_system_properties")
 	// 校验查询参数
-	queryParams, err := validateSugraphQueryParameters(ctx, includeLogicParams, ignoringStoreCache)
+	queryParams, err := validateSugraphQueryParameters(ctx, includeLogicParams, ignoringStoreCache, excludeSystemProperties)
 	if err != nil {
 		httpErr := err.(*rest.HTTPError)
 		// 设置 trace 的错误信息的 attributes

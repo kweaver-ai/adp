@@ -303,7 +303,7 @@ func Test_objectTypeService_GetObjectTypesByIDs(t *testing.T) {
 			smock.ExpectBegin()
 			ps.EXPECT().CheckPermission(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
 			ota.EXPECT().GetObjectTypesByIDs(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(otArr, nil)
-			cga.EXPECT().GetConceptGroupsByOTIDs(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil, rest.NewHTTPError(ctx, 500, oerrors.OntologyManager_ConceptGroup_InternalError))
+			cga.EXPECT().GetConceptGroupsByOTIDs(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil, rest.NewHTTPError(ctx, 500, oerrors.OntologyManager_ObjectType_InternalError))
 			smock.ExpectRollback()
 
 			result, err := service.GetObjectTypesByIDs(ctx, nil, knID, branch, otIDs)
@@ -982,7 +982,7 @@ func Test_objectTypeService_ListObjectTypes(t *testing.T) {
 			ps.EXPECT().CheckPermission(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
 			ota.EXPECT().ListObjectTypes(gomock.Any(), gomock.Any(), gomock.Any()).Return(objectTypes, nil)
 			uma.EXPECT().GetAccountNames(gomock.Any(), gomock.Any()).Return(nil)
-			cga.EXPECT().GetConceptGroupsByOTIDs(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil, rest.NewHTTPError(ctx, 500, oerrors.OntologyManager_ConceptGroup_InternalError))
+			cga.EXPECT().GetConceptGroupsByOTIDs(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil, rest.NewHTTPError(ctx, 500, oerrors.OntologyManager_ObjectType_InternalError))
 			smock.ExpectRollback()
 
 			result, total, err := service.ListObjectTypes(ctx, nil, query)
@@ -1155,7 +1155,7 @@ func Test_objectTypeService_UpdateObjectType(t *testing.T) {
 			smock.ExpectBegin()
 			ps.EXPECT().CheckPermission(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
 			ota.EXPECT().UpdateObjectType(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
-			cga.EXPECT().GetConceptGroupsByOTIDs(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil, rest.NewHTTPError(ctx, 500, oerrors.OntologyManager_ConceptGroup_InternalError))
+			cga.EXPECT().GetConceptGroupsByOTIDs(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil, rest.NewHTTPError(ctx, 500, oerrors.OntologyManager_ObjectType_InternalError))
 			smock.ExpectRollback()
 
 			err := service.UpdateObjectType(ctx, nil, objectType)
@@ -1375,9 +1375,8 @@ func Test_objectTypeService_DeleteObjectTypesByIDs(t *testing.T) {
 			cga.EXPECT().DeleteObjectTypesFromGroup(gomock.Any(), gomock.Any(), gomock.Any()).Return(int64(2), nil)
 			smock.ExpectCommit()
 
-			result, err := service.DeleteObjectTypesByIDs(ctx, nil, knID, branch, otIDs)
+			err := service.DeleteObjectTypesByIDs(ctx, nil, knID, branch, otIDs)
 			So(err, ShouldBeNil)
-			So(result, ShouldEqual, 2)
 		})
 
 		Convey("Failed when permission check fails\n", func() {
@@ -1387,9 +1386,8 @@ func Test_objectTypeService_DeleteObjectTypesByIDs(t *testing.T) {
 
 			ps.EXPECT().CheckPermission(gomock.Any(), gomock.Any(), gomock.Any()).Return(rest.NewHTTPError(ctx, 403, oerrors.OntologyManager_InternalError_CheckPermissionFailed))
 
-			result, err := service.DeleteObjectTypesByIDs(ctx, nil, knID, branch, otIDs)
+			err := service.DeleteObjectTypesByIDs(ctx, nil, knID, branch, otIDs)
 			So(err, ShouldNotBeNil)
-			So(result, ShouldEqual, 0)
 		})
 
 		Convey("Failed when DeleteObjectTypesByIDs returns error\n", func() {
@@ -1402,9 +1400,8 @@ func Test_objectTypeService_DeleteObjectTypesByIDs(t *testing.T) {
 			ota.EXPECT().DeleteObjectTypesByIDs(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(int64(0), rest.NewHTTPError(ctx, 500, oerrors.OntologyManager_ObjectType_InternalError))
 			smock.ExpectRollback()
 
-			result, err := service.DeleteObjectTypesByIDs(ctx, nil, knID, branch, otIDs)
+			err := service.DeleteObjectTypesByIDs(ctx, nil, knID, branch, otIDs)
 			So(err, ShouldNotBeNil)
-			So(result, ShouldEqual, 0)
 		})
 
 		Convey("Failed when DeleteObjectTypeStatusByIDs returns error\n", func() {
@@ -1418,9 +1415,8 @@ func Test_objectTypeService_DeleteObjectTypesByIDs(t *testing.T) {
 			ota.EXPECT().DeleteObjectTypeStatusByIDs(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(int64(0), rest.NewHTTPError(ctx, 500, oerrors.OntologyManager_ObjectType_InternalError))
 			smock.ExpectRollback()
 
-			result, err := service.DeleteObjectTypesByIDs(ctx, nil, knID, branch, otIDs)
+			err := service.DeleteObjectTypesByIDs(ctx, nil, knID, branch, otIDs)
 			So(err, ShouldNotBeNil)
-			So(result, ShouldEqual, 0)
 		})
 
 		Convey("Failed when DeleteData returns error\n", func() {
@@ -1435,9 +1431,8 @@ func Test_objectTypeService_DeleteObjectTypesByIDs(t *testing.T) {
 			osa.EXPECT().DeleteData(gomock.Any(), gomock.Any(), gomock.Any()).Return(rest.NewHTTPError(ctx, 500, oerrors.OntologyManager_ObjectType_InternalError))
 			smock.ExpectRollback()
 
-			result, err := service.DeleteObjectTypesByIDs(ctx, nil, knID, branch, otIDs)
+			err := service.DeleteObjectTypesByIDs(ctx, nil, knID, branch, otIDs)
 			So(err, ShouldNotBeNil)
-			So(result, ShouldEqual, 0)
 		})
 
 		Convey("Failed when DeleteObjectTypesFromGroup returns error\n", func() {
@@ -1453,9 +1448,8 @@ func Test_objectTypeService_DeleteObjectTypesByIDs(t *testing.T) {
 			cga.EXPECT().DeleteObjectTypesFromGroup(gomock.Any(), gomock.Any(), gomock.Any()).Return(int64(0), rest.NewHTTPError(ctx, 500, oerrors.OntologyManager_ObjectType_InternalError))
 			smock.ExpectRollback()
 
-			result, err := service.DeleteObjectTypesByIDs(ctx, nil, knID, branch, otIDs)
+			err := service.DeleteObjectTypesByIDs(ctx, nil, knID, branch, otIDs)
 			So(err, ShouldNotBeNil)
-			So(result, ShouldEqual, 0)
 		})
 	})
 }
@@ -1979,7 +1973,7 @@ func Test_objectTypeService_SearchObjectTypes(t *testing.T) {
 				ConceptGroups: []string{"cg1"},
 			}
 
-			cga.EXPECT().GetConceptGroupsTotal(gomock.Any(), gomock.Any()).Return(0, rest.NewHTTPError(ctx, 500, oerrors.OntologyManager_KnowledgeNetwork_InternalError))
+			cga.EXPECT().GetConceptGroupsTotal(gomock.Any(), gomock.Any()).Return(0, rest.NewHTTPError(ctx, 500, oerrors.OntologyManager_ObjectType_InternalError))
 
 			result, err := service.SearchObjectTypes(ctx, query)
 			So(err, ShouldNotBeNil)
@@ -2864,7 +2858,7 @@ func Test_objectTypeService_handleGroupRelations(t *testing.T) {
 			smock.ExpectBegin()
 			tx, _ := db.Begin()
 
-			cga.EXPECT().GetConceptGroupsByIDs(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil, rest.NewHTTPError(ctx, 500, oerrors.OntologyManager_ConceptGroup_InternalError))
+			cga.EXPECT().GetConceptGroupsByIDs(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil, rest.NewHTTPError(ctx, 500, oerrors.OntologyManager_ObjectType_InternalError))
 
 			err := service.handleGroupRelations(ctx, tx, objectType, currentTime)
 			So(err, ShouldNotBeNil)
@@ -3028,7 +3022,7 @@ func Test_objectTypeService_syncObjectGroups(t *testing.T) {
 			smock.ExpectBegin()
 			tx, _ := db.Begin()
 
-			cga.EXPECT().GetConceptGroupsByIDs(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil, rest.NewHTTPError(ctx, 500, oerrors.OntologyManager_ConceptGroup_InternalError))
+			cga.EXPECT().GetConceptGroupsByIDs(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil, rest.NewHTTPError(ctx, 500, oerrors.OntologyManager_ObjectType_InternalError))
 
 			err := service.syncObjectGroups(ctx, tx, objectType, currentTime)
 			So(err, ShouldNotBeNil)
@@ -3056,7 +3050,7 @@ func Test_objectTypeService_syncObjectGroups(t *testing.T) {
 			}
 
 			cga.EXPECT().GetConceptGroupsByIDs(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(conceptGroups, nil)
-			cga.EXPECT().GetConceptGroupsByOTIDs(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil, rest.NewHTTPError(ctx, 500, oerrors.OntologyManager_ConceptGroup_InternalError))
+			cga.EXPECT().GetConceptGroupsByOTIDs(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil, rest.NewHTTPError(ctx, 500, oerrors.OntologyManager_ObjectType_InternalError))
 
 			err := service.syncObjectGroups(ctx, tx, objectType, currentTime)
 			So(err, ShouldNotBeNil)

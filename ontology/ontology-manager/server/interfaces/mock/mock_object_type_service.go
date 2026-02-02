@@ -84,18 +84,31 @@ func (mr *MockObjectTypeServiceMockRecorder) CreateObjectTypes(ctx, tx, objectTy
 }
 
 // DeleteObjectTypesByIDs mocks base method.
-func (m *MockObjectTypeService) DeleteObjectTypesByIDs(ctx context.Context, tx *sql.Tx, knID, branch string, otIDs []string) (int64, error) {
+func (m *MockObjectTypeService) DeleteObjectTypesByIDs(ctx context.Context, tx *sql.Tx, knID, branch string, otIDs []string) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "DeleteObjectTypesByIDs", ctx, tx, knID, branch, otIDs)
-	ret0, _ := ret[0].(int64)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
+	ret0, _ := ret[0].(error)
+	return ret0
 }
 
 // DeleteObjectTypesByIDs indicates an expected call of DeleteObjectTypesByIDs.
 func (mr *MockObjectTypeServiceMockRecorder) DeleteObjectTypesByIDs(ctx, tx, knID, branch, otIDs interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteObjectTypesByIDs", reflect.TypeOf((*MockObjectTypeService)(nil).DeleteObjectTypesByIDs), ctx, tx, knID, branch, otIDs)
+}
+
+// DeleteObjectTypesByKnID mocks base method.
+func (m *MockObjectTypeService) DeleteObjectTypesByKnID(ctx context.Context, tx *sql.Tx, knID, branch string) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DeleteObjectTypesByKnID", ctx, tx, knID, branch)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// DeleteObjectTypesByKnID indicates an expected call of DeleteObjectTypesByKnID.
+func (mr *MockObjectTypeServiceMockRecorder) DeleteObjectTypesByKnID(ctx, tx, knID, branch interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteObjectTypesByKnID", reflect.TypeOf((*MockObjectTypeService)(nil).DeleteObjectTypesByKnID), ctx, tx, knID, branch)
 }
 
 // GetAllObjectTypesByKnID mocks base method.

@@ -46,15 +46,14 @@ func NewActionTypeAccess(appSetting *common.AppSetting) interfaces.ActionTypeAcc
 }
 
 // 根据ID获取行动类存在性
-func (ata *actionTypeAccess) CheckActionTypeExistByID(ctx context.Context,
-	knID string, branch string, atID string) (string, bool, error) {
-	ctx, span := ar_trace.Tracer.Start(ctx, "Query action type",
-		trace.WithSpanKind(trace.SpanKindClient))
+func (ata *actionTypeAccess) CheckActionTypeExistByID(ctx context.Context, knID string, branch string, atID string) (string, bool, error) {
+	ctx, span := ar_trace.Tracer.Start(ctx, "CheckActionTypeExistByID", trace.WithSpanKind(trace.SpanKindClient))
 	defer span.End()
 
 	span.SetAttributes(
 		attr.Key("db_url").String(libdb.GetDBUrl()),
-		attr.Key("db_type").String(libdb.GetDBType()))
+		attr.Key("db_type").String(libdb.GetDBType()),
+	)
 
 	//查询
 	sqlStr, vals, err := sq.Select(
@@ -92,14 +91,14 @@ func (ata *actionTypeAccess) CheckActionTypeExistByID(ctx context.Context,
 }
 
 // 根据名称获取行动类存在性
-func (ata *actionTypeAccess) CheckActionTypeExistByName(ctx context.Context,
-	knID string, branch string, atName string) (string, bool, error) {
-	ctx, span := ar_trace.Tracer.Start(ctx, "Query action type", trace.WithSpanKind(trace.SpanKindClient))
+func (ata *actionTypeAccess) CheckActionTypeExistByName(ctx context.Context, knID string, branch string, atName string) (string, bool, error) {
+	ctx, span := ar_trace.Tracer.Start(ctx, "CheckActionTypeExistByName", trace.WithSpanKind(trace.SpanKindClient))
 	defer span.End()
 
 	span.SetAttributes(
 		attr.Key("db_url").String(libdb.GetDBUrl()),
-		attr.Key("db_type").String(libdb.GetDBType()))
+		attr.Key("db_type").String(libdb.GetDBType()),
+	)
 
 	//查询
 	sqlStr, vals, err := sq.Select(
@@ -140,12 +139,13 @@ func (ata *actionTypeAccess) CheckActionTypeExistByName(ctx context.Context,
 
 // 创建行动类
 func (ata *actionTypeAccess) CreateActionType(ctx context.Context, tx *sql.Tx, actionType *interfaces.ActionType) error {
-	ctx, span := ar_trace.Tracer.Start(ctx, "Insert into action type", trace.WithSpanKind(trace.SpanKindClient))
+	ctx, span := ar_trace.Tracer.Start(ctx, "CreateActionType", trace.WithSpanKind(trace.SpanKindClient))
 	defer span.End()
 
 	span.SetAttributes(
 		attr.Key("db_url").String(libdb.GetDBUrl()),
-		attr.Key("db_type").String(libdb.GetDBType()))
+		attr.Key("db_type").String(libdb.GetDBType()),
+	)
 
 	// tags 转成 string 的格式
 	tagsStr := libCommon.TagSlice2TagString(actionType.Tags)
@@ -257,12 +257,13 @@ func (ata *actionTypeAccess) CreateActionType(ctx context.Context, tx *sql.Tx, a
 
 // 查询行动类列表。查主线的当前版本为true的行动类
 func (ata *actionTypeAccess) ListActionTypes(ctx context.Context, query interfaces.ActionTypesQueryParams) ([]*interfaces.ActionType, error) {
-	ctx, span := ar_trace.Tracer.Start(ctx, "Select action types", trace.WithSpanKind(trace.SpanKindClient))
+	ctx, span := ar_trace.Tracer.Start(ctx, "ListActionTypes", trace.WithSpanKind(trace.SpanKindClient))
 	defer span.End()
 
 	span.SetAttributes(
 		attr.Key("db_url").String(libdb.GetDBUrl()),
-		attr.Key("db_type").String(libdb.GetDBType()))
+		attr.Key("db_type").String(libdb.GetDBType()),
+	)
 
 	subBuilder := sq.Select(
 		"f_id",
@@ -412,12 +413,13 @@ func (ata *actionTypeAccess) ListActionTypes(ctx context.Context, query interfac
 }
 
 func (ata *actionTypeAccess) GetActionTypesTotal(ctx context.Context, query interfaces.ActionTypesQueryParams) (int, error) {
-	ctx, span := ar_trace.Tracer.Start(ctx, "Select action types total number", trace.WithSpanKind(trace.SpanKindClient))
+	ctx, span := ar_trace.Tracer.Start(ctx, "GetActionTypesTotal", trace.WithSpanKind(trace.SpanKindClient))
 	defer span.End()
 
 	span.SetAttributes(
 		attr.Key("db_url").String(libdb.GetDBUrl()),
-		attr.Key("db_type").String(libdb.GetDBType()))
+		attr.Key("db_type").String(libdb.GetDBType()),
+	)
 
 	subBuilder := sq.Select("COUNT(f_id)").From(AT_TABLE_NAME)
 	builder := processQueryCondition(query, subBuilder)
@@ -445,15 +447,14 @@ func (ata *actionTypeAccess) GetActionTypesTotal(ctx context.Context, query inte
 	return total, nil
 }
 
-func (ata *actionTypeAccess) GetActionTypesByIDs(ctx context.Context,
-	knID string, branch string, atIDs []string) ([]*interfaces.ActionType, error) {
-	ctx, span := ar_trace.Tracer.Start(ctx, fmt.Sprintf("Get action type[%s]", atIDs),
-		trace.WithSpanKind(trace.SpanKindClient))
+func (ata *actionTypeAccess) GetActionTypesByIDs(ctx context.Context, knID string, branch string, atIDs []string) ([]*interfaces.ActionType, error) {
+	ctx, span := ar_trace.Tracer.Start(ctx, "GetActionTypesByIDs", trace.WithSpanKind(trace.SpanKindClient))
 	defer span.End()
 
 	span.SetAttributes(
 		attr.Key("db_url").String(libdb.GetDBUrl()),
-		attr.Key("db_type").String(libdb.GetDBType()))
+		attr.Key("db_type").String(libdb.GetDBType()),
+	)
 
 	//查询
 	sqlStr, vals, err := sq.Select(
@@ -600,12 +601,13 @@ func (ata *actionTypeAccess) GetActionTypesByIDs(ctx context.Context,
 }
 
 func (ata *actionTypeAccess) UpdateActionType(ctx context.Context, tx *sql.Tx, actionType *interfaces.ActionType) error {
-	ctx, span := ar_trace.Tracer.Start(ctx, fmt.Sprintf("Update action type[%s]", actionType.ATID), trace.WithSpanKind(trace.SpanKindClient))
+	ctx, span := ar_trace.Tracer.Start(ctx, "UpdateActionType", trace.WithSpanKind(trace.SpanKindClient))
 	defer span.End()
 
 	span.SetAttributes(
 		attr.Key("db_url").String(libdb.GetDBUrl()),
-		attr.Key("db_type").String(libdb.GetDBType()))
+		attr.Key("db_type").String(libdb.GetDBType()),
+	)
 
 	// tags 转成 string 的格式
 	tagsStr := libCommon.TagSlice2TagString(actionType.Tags)
@@ -715,17 +717,14 @@ func (ata *actionTypeAccess) UpdateActionType(ctx context.Context, tx *sql.Tx, a
 	return nil
 }
 
-func (ata *actionTypeAccess) DeleteActionTypesByIDs(ctx context.Context,
-	tx *sql.Tx, knID string, branch string, atIDs []string) (int64, error) {
-	ctx, span := ar_trace.Tracer.Start(ctx, "Delete action types from db", trace.WithSpanKind(trace.SpanKindClient))
+func (ata *actionTypeAccess) DeleteActionTypesByIDs(ctx context.Context, tx *sql.Tx, knID string, branch string, atIDs []string) (int64, error) {
+	ctx, span := ar_trace.Tracer.Start(ctx, "DeleteActionTypesByIDs", trace.WithSpanKind(trace.SpanKindClient))
 	defer span.End()
 
 	span.SetAttributes(
 		attr.Key("db_url").String(libdb.GetDBUrl()),
 		attr.Key("db_type").String(libdb.GetDBType()),
-		attr.Key("kn_id").String(knID),
-		attr.Key("branch").String(branch),
-		attr.Key("at_ids").String(fmt.Sprintf("%v", atIDs)))
+	)
 
 	if len(atIDs) == 0 {
 		return 0, nil
@@ -767,16 +766,58 @@ func (ata *actionTypeAccess) DeleteActionTypesByIDs(ctx context.Context,
 	return RowsAffected, nil
 }
 
-func (ata *actionTypeAccess) GetActionTypeIDsByKnID(ctx context.Context,
-	knID string, branch string) ([]string, error) {
-	ctx, span := ar_trace.Tracer.Start(ctx, fmt.Sprintf("Get action type ids by kn_id[%s]", knID), trace.WithSpanKind(trace.SpanKindClient))
+func (ata *actionTypeAccess) DeleteActionTypesByKnID(ctx context.Context, tx *sql.Tx, knID string, branch string) (int64, error) {
+	ctx, span := ar_trace.Tracer.Start(ctx, "DeleteActionTypesByKnID", trace.WithSpanKind(trace.SpanKindClient))
 	defer span.End()
 
 	span.SetAttributes(
 		attr.Key("db_url").String(libdb.GetDBUrl()),
 		attr.Key("db_type").String(libdb.GetDBType()),
-		attr.Key("kn_id").String(knID),
-		attr.Key("branch").String(branch))
+	)
+
+	sqlStr, vals, err := sq.Delete(AT_TABLE_NAME).
+		Where(sq.Eq{"f_kn_id": knID}).
+		Where(sq.Eq{"f_branch": branch}).
+		ToSql()
+	if err != nil {
+		logger.Errorf("Failed to build the sql of delete action type by kn_id, error: %s", err.Error())
+		o11y.Error(ctx, fmt.Sprintf("Failed to build the sql of delete action type by kn_id, error: %s", err.Error()))
+		span.SetStatus(codes.Error, "Build sql failed ")
+		return 0, err
+	}
+
+	// 记录处理的 sql 字符串
+	o11y.Info(ctx, fmt.Sprintf("删除行动类的 sql 语句: %s; 删除的行动类kn_id: %s, branch: %s", sqlStr, knID, branch))
+
+	ret, err := tx.Exec(sqlStr, vals...)
+	if err != nil {
+		logger.Errorf("delete data error: %v\n", err)
+		o11y.Error(ctx, fmt.Sprintf("Delete data error: %v ", err))
+		span.SetStatus(codes.Error, "Delete data error")
+		return 0, err
+	}
+
+	//sql语句影响的行数
+	RowsAffected, err := ret.RowsAffected()
+	if err != nil {
+		logger.Errorf("Get RowsAffected error: %v\n", err)
+		o11y.Warn(ctx, fmt.Sprintf("Get RowsAffected error: %v ", err))
+		span.SetStatus(codes.Error, "Get RowsAffected error")
+	}
+
+	logger.Infof("RowsAffected: %d", RowsAffected)
+	span.SetStatus(codes.Ok, "")
+	return RowsAffected, nil
+}
+
+func (ata *actionTypeAccess) GetActionTypeIDsByKnID(ctx context.Context, knID string, branch string) ([]string, error) {
+	ctx, span := ar_trace.Tracer.Start(ctx, "GetActionTypeIDsByKnID", trace.WithSpanKind(trace.SpanKindClient))
+	defer span.End()
+
+	span.SetAttributes(
+		attr.Key("db_url").String(libdb.GetDBUrl()),
+		attr.Key("db_type").String(libdb.GetDBType()),
+	)
 
 	//查询
 	sqlStr, vals, err := sq.Select(
@@ -858,16 +899,14 @@ func processQueryCondition(query interfaces.ActionTypesQueryParams, subBuilder s
 }
 
 // 查询行动类列表。查主线的当前版本为true的行动类
-func (ata *actionTypeAccess) GetAllActionTypesByKnID(ctx context.Context,
-	knID string, branch string) (map[string]*interfaces.ActionType, error) {
-	ctx, span := ar_trace.Tracer.Start(ctx, fmt.Sprintf("Select action types by kn_id[%s]", knID), trace.WithSpanKind(trace.SpanKindClient))
+func (ata *actionTypeAccess) GetAllActionTypesByKnID(ctx context.Context, knID string, branch string) (map[string]*interfaces.ActionType, error) {
+	ctx, span := ar_trace.Tracer.Start(ctx, "GetAllActionTypesByKnID", trace.WithSpanKind(trace.SpanKindClient))
 	defer span.End()
 
 	span.SetAttributes(
 		attr.Key("db_url").String(libdb.GetDBUrl()),
 		attr.Key("db_type").String(libdb.GetDBType()),
-		attr.Key("kn_id").String(knID),
-		attr.Key("branch").String(branch))
+	)
 
 	sqlStr, vals, err := sq.Select(
 		"f_id",

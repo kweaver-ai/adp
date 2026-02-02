@@ -54,6 +54,11 @@ Description = "Begin Transaction Failed"
 Solution = "Please try again. If the error occurs again, please submit the work order or contact technical support."
 ErrorLink = "None"
 
+[OntologyManager.RelationType.InternalError.MissingTransaction]
+Description = "Missing Transaction"
+Solution = "Please try again. If the error occurs again, please submit the work order or contact technical support."
+ErrorLink = "None"
+
 [OntologyManager.RelationType.InternalError.CheckRelationTypeIfExistFailed]
 Description = "Check Relation Type Exist Failed"
 Solution = "Please try again. If the error occurs again, please submit the work order or contact technical support."

@@ -400,8 +400,8 @@ func Test_jobService_CreateJob(t *testing.T) {
 	})
 }
 
-func Test_jobService_DeleteJobs(t *testing.T) {
-	Convey("Test DeleteJobs\n", t, func() {
+func Test_jobService_DeleteJobsByIDs(t *testing.T) {
+	Convey("Test DeleteJobsByIDs\n", t, func() {
 		ctx := context.Background()
 		mockCtrl := gomock.NewController(t)
 		defer mockCtrl.Finish()
@@ -425,11 +425,11 @@ func Test_jobService_DeleteJobs(t *testing.T) {
 
 			ps.EXPECT().CheckPermission(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
 			smock.ExpectBegin()
-			ja.EXPECT().DeleteJobs(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
-			ja.EXPECT().DeleteTasks(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
+			ja.EXPECT().DeleteJobsByIDs(gomock.Any(), gomock.Any(), gomock.Any()).Return(int64(0), nil)
+			ja.EXPECT().DeleteTasksByJobIDs(gomock.Any(), gomock.Any(), gomock.Any()).Return(int64(0), nil)
 			smock.ExpectCommit()
 
-			err := service.DeleteJobs(ctx, knID, branch, jobIDs)
+			err := service.DeleteJobsByIDs(ctx, knID, branch, jobIDs)
 			So(err, ShouldBeNil)
 		})
 
@@ -440,7 +440,7 @@ func Test_jobService_DeleteJobs(t *testing.T) {
 
 			ps.EXPECT().CheckPermission(gomock.Any(), gomock.Any(), gomock.Any()).Return(rest.NewHTTPError(ctx, 403, oerrors.OntologyManager_Job_InternalError))
 
-			err := service.DeleteJobs(ctx, knID, branch, jobIDs)
+			err := service.DeleteJobsByIDs(ctx, knID, branch, jobIDs)
 			So(err, ShouldNotBeNil)
 		})
 
@@ -452,38 +452,40 @@ func Test_jobService_DeleteJobs(t *testing.T) {
 			ps.EXPECT().CheckPermission(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
 			smock.ExpectBegin().WillReturnError(errors.New("begin transaction error"))
 
-			err := service.DeleteJobs(ctx, knID, branch, jobIDs)
+			err := service.DeleteJobsByIDs(ctx, knID, branch, jobIDs)
 			So(err, ShouldNotBeNil)
 		})
 
-		Convey("Failed when DeleteJobs fails\n", func() {
+		Convey("Failed when DeleteJobsByIDs fails\n", func() {
 			knID := "kn1"
 			branch := interfaces.MAIN_BRANCH
 			jobIDs := []string{"job1"}
 
 			ps.EXPECT().CheckPermission(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
 			smock.ExpectBegin()
-			ja.EXPECT().DeleteJobs(gomock.Any(), gomock.Any(), gomock.Any()).Return(errors.New("delete jobs error"))
+			ja.EXPECT().DeleteJobsByIDs(gomock.Any(), gomock.Any(), gomock.Any()).
+				Return(int64(0), errors.New("delete jobs error"))
 			smock.ExpectRollback()
 
-			err := service.DeleteJobs(ctx, knID, branch, jobIDs)
+			err := service.DeleteJobsByIDs(ctx, knID, branch, jobIDs)
 			So(err, ShouldNotBeNil)
 			httpErr := err.(*rest.HTTPError)
 			So(httpErr.BaseError.ErrorCode, ShouldEqual, oerrors.OntologyManager_Job_InternalError)
 		})
 
-		Convey("Failed when DeleteTasks fails\n", func() {
+		Convey("Failed when DeleteTasksByJobIDs fails\n", func() {
 			knID := "kn1"
 			branch := interfaces.MAIN_BRANCH
 			jobIDs := []string{"job1"}
 
 			ps.EXPECT().CheckPermission(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
 			smock.ExpectBegin()
-			ja.EXPECT().DeleteJobs(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
-			ja.EXPECT().DeleteTasks(gomock.Any(), gomock.Any(), gomock.Any()).Return(errors.New("delete tasks error"))
+			ja.EXPECT().DeleteJobsByIDs(gomock.Any(), gomock.Any(), gomock.Any()).Return(int64(0), nil)
+			ja.EXPECT().DeleteTasksByJobIDs(gomock.Any(), gomock.Any(), gomock.Any()).
+				Return(int64(0), errors.New("delete tasks error"))
 			smock.ExpectRollback()
 
-			err := service.DeleteJobs(ctx, knID, branch, jobIDs)
+			err := service.DeleteJobsByIDs(ctx, knID, branch, jobIDs)
 			So(err, ShouldNotBeNil)
 			httpErr := err.(*rest.HTTPError)
 			So(httpErr.BaseError.ErrorCode, ShouldEqual, oerrors.OntologyManager_Job_InternalError)
@@ -496,11 +498,11 @@ func Test_jobService_DeleteJobs(t *testing.T) {
 
 			ps.EXPECT().CheckPermission(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
 			smock.ExpectBegin()
-			ja.EXPECT().DeleteJobs(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
-			ja.EXPECT().DeleteTasks(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
+			ja.EXPECT().DeleteJobsByIDs(gomock.Any(), gomock.Any(), gomock.Any()).Return(int64(0), nil)
+			ja.EXPECT().DeleteTasksByJobIDs(gomock.Any(), gomock.Any(), gomock.Any()).Return(int64(0), nil)
 			smock.ExpectCommit().WillReturnError(errors.New("commit error"))
 
-			err := service.DeleteJobs(ctx, knID, branch, jobIDs)
+			err := service.DeleteJobsByIDs(ctx, knID, branch, jobIDs)
 			So(err, ShouldNotBeNil)
 		})
 	})
@@ -742,8 +744,8 @@ func Test_jobService_ListTasks(t *testing.T) {
 	})
 }
 
-func Test_jobService_GetJobs(t *testing.T) {
-	Convey("Test GetJobs\n", t, func() {
+func Test_jobService_GetJobsByIDs(t *testing.T) {
+	Convey("Test GetJobsByIDs\n", t, func() {
 		ctx := context.Background()
 		mockCtrl := gomock.NewController(t)
 		defer mockCtrl.Finish()
@@ -773,9 +775,9 @@ func Test_jobService_GetJobs(t *testing.T) {
 				},
 			}
 
-			ja.EXPECT().GetJobs(gomock.Any(), gomock.Any()).Return(jobs, nil)
+			ja.EXPECT().GetJobsByIDs(gomock.Any(), gomock.Any()).Return(jobs, nil)
 
-			result, err := service.GetJobs(ctx, jobIDs)
+			result, err := service.GetJobsByIDs(ctx, jobIDs)
 			So(err, ShouldBeNil)
 			So(len(result), ShouldEqual, 2)
 			So(result["job1"], ShouldNotBeNil)
@@ -786,19 +788,19 @@ func Test_jobService_GetJobs(t *testing.T) {
 			jobIDs := []string{}
 			jobs := map[string]*interfaces.JobInfo{}
 
-			ja.EXPECT().GetJobs(gomock.Any(), gomock.Any()).Return(jobs, nil)
+			ja.EXPECT().GetJobsByIDs(gomock.Any(), gomock.Any()).Return(jobs, nil)
 
-			result, err := service.GetJobs(ctx, jobIDs)
+			result, err := service.GetJobsByIDs(ctx, jobIDs)
 			So(err, ShouldBeNil)
 			So(len(result), ShouldEqual, 0)
 		})
 
-		Convey("Failed when GetJobs fails\n", func() {
+		Convey("Failed when GetJobsByIDs fails\n", func() {
 			jobIDs := []string{"job1"}
 
-			ja.EXPECT().GetJobs(gomock.Any(), gomock.Any()).Return(nil, errors.New("get jobs error"))
+			ja.EXPECT().GetJobsByIDs(gomock.Any(), gomock.Any()).Return(nil, errors.New("get jobs error"))
 
-			result, err := service.GetJobs(ctx, jobIDs)
+			result, err := service.GetJobsByIDs(ctx, jobIDs)
 			So(err, ShouldNotBeNil)
 			So(result, ShouldBeNil)
 			httpErr := err.(*rest.HTTPError)
@@ -807,8 +809,8 @@ func Test_jobService_GetJobs(t *testing.T) {
 	})
 }
 
-func Test_jobService_GetJob(t *testing.T) {
-	Convey("Test GetJob\n", t, func() {
+func Test_jobService_GetJobByID(t *testing.T) {
+	Convey("Test GetJobByID\n", t, func() {
 		ctx := context.Background()
 		mockCtrl := gomock.NewController(t)
 		defer mockCtrl.Finish()
@@ -831,20 +833,20 @@ func Test_jobService_GetJob(t *testing.T) {
 				Branch: interfaces.MAIN_BRANCH,
 			}
 
-			ja.EXPECT().GetJob(gomock.Any(), gomock.Any()).Return(job, nil)
+			ja.EXPECT().GetJobByID(gomock.Any(), gomock.Any()).Return(job, nil)
 
-			result, err := service.GetJob(ctx, jobID)
+			result, err := service.GetJobByID(ctx, jobID)
 			So(err, ShouldBeNil)
 			So(result, ShouldNotBeNil)
 			So(result.ID, ShouldEqual, jobID)
 		})
 
-		Convey("Failed when GetJob fails\n", func() {
+		Convey("Failed when GetJobByID fails\n", func() {
 			jobID := "job1"
 
-			ja.EXPECT().GetJob(gomock.Any(), gomock.Any()).Return(nil, errors.New("get job error"))
+			ja.EXPECT().GetJobByID(gomock.Any(), gomock.Any()).Return(nil, errors.New("get job error"))
 
-			result, err := service.GetJob(ctx, jobID)
+			result, err := service.GetJobByID(ctx, jobID)
 			So(err, ShouldNotBeNil)
 			So(result, ShouldBeNil)
 			httpErr := err.(*rest.HTTPError)

@@ -12,7 +12,6 @@ import (
 	"github.com/kweaver-ai/kweaver-go-lib/rest"
 	"github.com/robfig/cron/v3"
 	"github.com/rs/xid"
-	attr "go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/trace"
 
 	"ontology-manager/common"
@@ -53,11 +52,6 @@ func NewActionScheduleService(appSetting *common.AppSetting) interfaces.ActionSc
 func (s *actionScheduleService) CreateSchedule(ctx context.Context, schedule *interfaces.ActionSchedule) (string, error) {
 	ctx, span := ar_trace.Tracer.Start(ctx, "CreateSchedule", trace.WithSpanKind(trace.SpanKindInternal))
 	defer span.End()
-
-	span.SetAttributes(
-		attr.Key("kn_id").String(schedule.KNID),
-		attr.Key("action_type_id").String(schedule.ActionTypeID),
-	)
 
 	// Validate cron expression
 	if err := s.ValidateCronExpression(schedule.CronExpression); err != nil {
@@ -112,8 +106,6 @@ func (s *actionScheduleService) CreateSchedule(ctx context.Context, schedule *in
 func (s *actionScheduleService) UpdateSchedule(ctx context.Context, scheduleID string, req *interfaces.ActionScheduleUpdateRequest) error {
 	ctx, span := ar_trace.Tracer.Start(ctx, "UpdateSchedule", trace.WithSpanKind(trace.SpanKindInternal))
 	defer span.End()
-
-	span.SetAttributes(attr.Key("schedule_id").String(scheduleID))
 
 	// Check if schedule exists
 	existing, err := s.asa.GetSchedule(ctx, scheduleID)
@@ -181,11 +173,6 @@ func (s *actionScheduleService) UpdateSchedule(ctx context.Context, scheduleID s
 func (s *actionScheduleService) UpdateScheduleStatus(ctx context.Context, scheduleID string, status string) error {
 	ctx, span := ar_trace.Tracer.Start(ctx, "UpdateScheduleStatus", trace.WithSpanKind(trace.SpanKindInternal))
 	defer span.End()
-
-	span.SetAttributes(
-		attr.Key("schedule_id").String(scheduleID),
-		attr.Key("status").String(status),
-	)
 
 	// Validate status
 	if status != interfaces.ScheduleStatusActive && status != interfaces.ScheduleStatusInactive {
