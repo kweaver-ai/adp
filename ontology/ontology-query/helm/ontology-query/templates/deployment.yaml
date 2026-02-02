@@ -93,6 +93,8 @@ spec:
                 fieldPath: metadata.name
           - name: DM_SVC_PATH
             value: /opt/ontology-query/config
+          - name: ACTION_EXECUTION_MAX_OBJECTS
+            value: "{{ .Values.env.actionExecutionMaxObjects }}"
         resources: {{- toYaml .Values.resources | nindent 10 }}
         volumeMounts:
           - name: {{ .Values.moduleName }}-cm
