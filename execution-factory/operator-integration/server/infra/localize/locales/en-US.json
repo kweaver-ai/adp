@@ -174,7 +174,8 @@
         "SandboxRuntimeExecuteCodeFailed": "Sandbox runtime execute code failed, please check if the code is correct",
         "DebugParamsInvalid": "Debug parameters are invalid, please check if they are in JSON format",
         "FunctionAIGenerateFailed": "AI generate failed, please check if the default model is normal",
-        "FunctionAIGenerateModelFailed": "Model generate content failed, please check if the default model is available, or go to settings to configure a valid model"
+        "FunctionAIGenerateModelFailed": "Model generate content failed, please check if the default model is available, or go to settings to configure a valid model",
+        "SandboxControlPlaneFailed": "Sandbox control plane service failed, please check the error details"
     },
     "sol": {
         "Common": "Contact administrator",

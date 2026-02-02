@@ -136,10 +136,6 @@ depServices:
     privateHost: flow-automation-private
     privatePort: 8680
     privateProtocol: http
-  sandbox-runtime:
-    privateHost: sandbox-runtime
-    privatePort: 9101
-    privateProtocol: http
   mf-model-api:
     privateHost: "mf-model-api"
     privatePort: 9898
@@ -159,6 +155,19 @@ depServices:
       topP: 0.95
       frequencyPenalty: 0.0
       presencePenalty: 0.0
+  sandbox-control-plane:
+    privateHost: "sandbox-control-plane"
+    privatePort: 8000
+    privateProtocol: "http"
+    templateID: "" # 模板ID,模式使用python-basic
+    sessionResources:
+      cpu: 1
+      memory: 512Mi
+      disk: 1Gi
+      timeout: 3600 # 单位:秒
+    maxSessions: 3
+    activeSessions: 1
+    maxConcurrentTasks: 100
 
 env:
   language: en_US.UTF-8

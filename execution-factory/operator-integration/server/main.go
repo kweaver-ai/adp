@@ -68,6 +68,7 @@ func (s *Server) Start() {
 // Stop 停止服务
 func (s *Server) Stop(ctx context.Context) {
 	s.config.Logger.Info("stop agent-operator-integration server")
+	// sandbox.Close()      // 关闭并销毁沙箱会话池
 	s.outboxMessageEvent.Stop(ctx)
 	mcpinstance.Close() // 关闭实例池
 }

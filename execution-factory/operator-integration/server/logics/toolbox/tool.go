@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"net/http"
 
-	o11y "github.com/kweaver-ai/kweaver-go-lib/observability"
 	infracommon "github.com/kweaver-ai/adp/execution-factory/operator-integration/server/infra/common"
 	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/infra/errors"
 	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/infra/telemetry"
@@ -13,6 +12,7 @@ import (
 	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/interfaces/model"
 	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/logics/metric"
 	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/utils"
+	o11y "github.com/kweaver-ai/kweaver-go-lib/observability"
 )
 
 // CreateTool 工具管理
@@ -65,7 +65,7 @@ func (s *ToolServiceImpl) CreateTool(ctx context.Context, req *interfaces.Create
 		return
 	}
 	// 检查导入工具中是否存在重复的工具
-	tools, validatorNameMap, validatorMethodPathMap, err := s.parseOpenAPIToMetadata(ctx, req.BoxID, req.UserID, metadataList)
+	tools, validatorNameMap, validatorMethodPathMap, err := s.parseOpenAPIToMetadata(ctx, req.BoxID, req.UserID, metadataList, false)
 	if err != nil {
 		return
 	}
