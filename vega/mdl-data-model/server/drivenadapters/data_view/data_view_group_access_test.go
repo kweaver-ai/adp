@@ -234,7 +234,7 @@ func Test_DataViewGroupAccess_ListDataViewsGroup(t *testing.T) {
 		)
 
 		sqlStr := fmt.Sprintf("SELECT f_group_id, f_group_name, f_create_time, "+
-			"f_update_time, f_builtin FROM %s WHERE f_builtin IN (?) "+
+			"f_update_time, f_builtin FROM %s WHERE f_builtin IN (?) AND f_delete_time = ? "+
 			"ORDER BY f_update_time desc LIMIT 1000 OFFSET 0", DATA_VIEW_GROUP_TABLE_NAME)
 
 		listQuery := &interfaces.ListViewGroupQueryParams{
@@ -287,7 +287,7 @@ func Test_DataViewGroupAccess_ListDataViewsGroup(t *testing.T) {
 
 		Convey("List succeed with limit is equal to 1", func() {
 			sqlStr := fmt.Sprintf("SELECT f_group_id, f_group_name, f_create_time, "+
-				"f_update_time, f_builtin FROM %s WHERE f_builtin IN (?) "+
+				"f_update_time, f_builtin FROM %s WHERE f_builtin IN (?) AND f_delete_time = ? "+
 				"ORDER BY f_update_time desc LIMIT 1 OFFSET 0", DATA_VIEW_GROUP_TABLE_NAME)
 
 			listQuery.Limit = 1
@@ -304,7 +304,7 @@ func Test_DataViewGroupAccess_ListDataViewsGroup(t *testing.T) {
 
 		Convey("List succeed with no limit", func() {
 			sqlStr := fmt.Sprintf("SELECT f_group_id, f_group_name, f_create_time, "+
-				"f_update_time, f_builtin FROM %s WHERE f_builtin IN (?) "+
+				"f_update_time, f_builtin FROM %s WHERE f_builtin IN (?) AND f_delete_time = ? "+
 				"ORDER BY f_update_time desc", DATA_VIEW_GROUP_TABLE_NAME)
 
 			smock.ExpectQuery(sqlStr).WithArgs().WillReturnRows(rows2)
@@ -332,7 +332,8 @@ func Test_DataViewGroupAccess_GetDataViewGroupsTotal(t *testing.T) {
 		rows := sqlmock.NewRows([]string{"COUNT(f_group_id)"}).AddRow(1)
 
 		listQuery := &interfaces.ListViewGroupQueryParams{
-			Builtin: []bool{true},
+			IncludeDeleted: true,
+			Builtin:        []bool{true},
 			PaginationQueryParameters: interfaces.PaginationQueryParameters{
 				Limit:     interfaces.MAX_LIMIT,
 				Offset:    interfaces.MIN_OFFSET,
