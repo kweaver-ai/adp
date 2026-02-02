@@ -12,8 +12,10 @@ type DiscoveryResult struct {
 	Message        string `json:"message"`
 }
 
-// DiscoveryService interface defines discovery functionality.
-type DiscoveryService interface {
-	// DiscoverCatalog discovers resources for a specific catalog.
-	DiscoverCatalog(ctx context.Context, catalog *Catalog) (*DiscoveryResult, error)
+// DiscoveryWorker interface defines discovery execution functionality.
+// This worker is called by the task management service to execute the actual discovery.
+type DiscoveryWorker interface {
+	Run()
+	// ExecuteDiscovery executes discovery for a specific catalog.
+	ExecuteDiscovery(ctx context.Context, taskID string) error
 }

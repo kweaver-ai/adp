@@ -23,3 +23,19 @@ depServices:
     user: root
     password: eisoo.com
     type: MariaDB
+  mq:
+    mqType: Kafka
+    mqHost: 0.0.0.0
+    mqPort: 9092
+    protocol: sasl_plaintext
+    tenant: default
+    auth:
+      username: admin
+      password: admin
+      mechanism: PLAIN
+  opensearch:
+    host: 0.0.0.0
+    port: 9200
+    protocol: http
+    username: admin
+    password: admin

@@ -17,7 +17,7 @@ type tableDiscoveryItem struct {
 
 // discoverTableResources discovers table resources from a table connector.
 // 分步执行：1. 获取表名列表 2. 创建/更新 Resource 3. 逐个补齐详细元数据
-func (ds *discoveryService) discoverTableResources(ctx context.Context,
+func (dw *discoveryWorker) discoverTableResources(ctx context.Context,
 	catalog *interfaces.Catalog, connector connectors.Connector) (*interfaces.DiscoveryResult, error) {
 
 	tableConnector, ok := connector.(connectors.TableConnector)
@@ -33,19 +33,19 @@ func (ds *discoveryService) discoverTableResources(ctx context.Context,
 	logger.Infof("Discovered %d tables from source", len(sourceTables))
 
 	// Step 2: 获取现有 Resources
-	existingResources, err := ds.rs.GetByCatalogID(ctx, catalog.ID)
+	existingResources, err := dw.rs.GetByCatalogID(ctx, catalog.ID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get existing resources: %w", err)
 	}
 
 	// Step 3: 对比并创建/更新 Resource（基础信息）
-	result, items, err := ds.reconcileTableResources(ctx, catalog, sourceTables, existingResources)
+	result, items, err := dw.reconcileTableResources(ctx, catalog, sourceTables, existingResources)
 	if err != nil {
 		return nil, fmt.Errorf("failed to reconcile resources: %w", err)
 	}
 
 	// Step 4: 逐个补齐详细元数据
-	if err := ds.enrichTableMetadata(ctx, tableConnector, items); err != nil {
+	if err := dw.enrichTableMetadata(ctx, tableConnector, items); err != nil {
 		return nil, fmt.Errorf("failed to enrich table metadata: %w", err)
 	}
 
@@ -56,7 +56,7 @@ func (ds *discoveryService) discoverTableResources(ctx context.Context,
 }
 
 // enrichTableMetadata enriches table resources with detailed metadata.
-func (ds *discoveryService) enrichTableMetadata(ctx context.Context,
+func (dw *discoveryWorker) enrichTableMetadata(ctx context.Context,
 	tableConnector connectors.TableConnector, items []tableDiscoveryItem) error {
 
 	for _, item := range items {
@@ -96,7 +96,7 @@ func (ds *discoveryService) enrichTableMetadata(ctx context.Context,
 		resource.SourceMetadata = sourceMetadata
 
 		// 更新 Resource
-		if err := ds.rs.UpdateResource(ctx, resource); err != nil {
+		if err := dw.rs.UpdateResource(ctx, resource); err != nil {
 			logger.Errorf("Failed to update metadata for table %s: %v", table.Name, err)
 			return err
 		}
@@ -108,7 +108,7 @@ func (ds *discoveryService) enrichTableMetadata(ctx context.Context,
 }
 
 // reconcileTableResources reconciles source tables with existing resources.
-func (ds *discoveryService) reconcileTableResources(ctx context.Context,
+func (dw *discoveryWorker) reconcileTableResources(ctx context.Context,
 	catalog *interfaces.Catalog, sourceTables []*interfaces.TableMeta,
 	existingResources []*interfaces.Resource) (*interfaces.DiscoveryResult, []tableDiscoveryItem, error) {
 
@@ -128,19 +128,19 @@ func (ds *discoveryService) reconcileTableResources(ctx context.Context,
 	// 构建源端表的 map
 	sourceMap := make(map[string]*interfaces.TableMeta)
 	for _, t := range sourceTables {
-		sourceIdentifier := ds.buildSourceIdentifier(t)
+		sourceIdentifier := dw.buildSourceIdentifier(t)
 		sourceMap[sourceIdentifier] = t
 	}
 
 	// 处理新增和保持的资源
 	for _, table := range sourceTables {
-		sourceIdentifier := ds.buildSourceIdentifier(table)
+		sourceIdentifier := dw.buildSourceIdentifier(table)
 
 		if resource, ok := existingMap[sourceIdentifier]; ok {
 			// 已存在，检查状态
 			if resource.Status == interfaces.ResourceStatusStale {
 				// 之前标记为 stale，现在重新激活
-				if err := ds.rs.UpdateStatus(ctx, resource.ID, interfaces.ResourceStatusActive); err != nil {
+				if err := dw.rs.UpdateStatus(ctx, resource.ID, interfaces.ResourceStatusActive); err != nil {
 					logger.Errorf("Failed to reactivate resource %s: %v", resource.ID, err)
 				}
 			}
@@ -151,7 +151,7 @@ func (ds *discoveryService) reconcileTableResources(ctx context.Context,
 			})
 		} else {
 			// 新增资源
-			resource, err := ds.createResource(ctx, catalog, table, sourceIdentifier)
+			resource, err := dw.createResource(ctx, catalog, table, sourceIdentifier)
 			if err != nil {
 				logger.Errorf("Failed to create resource %s: %v", sourceIdentifier, err)
 			} else {
@@ -169,7 +169,7 @@ func (ds *discoveryService) reconcileTableResources(ctx context.Context,
 		if _, ok := sourceMap[sourceIdentifier]; !ok {
 			// 源端不存在，标记为 stale
 			if existing.Status != interfaces.ResourceStatusStale {
-				if err := ds.rs.UpdateStatus(ctx, existing.ID, interfaces.ResourceStatusStale); err != nil {
+				if err := dw.rs.UpdateStatus(ctx, existing.ID, interfaces.ResourceStatusStale); err != nil {
 					logger.Errorf("Failed to mark resource %s as stale: %v", existing.ID, err)
 				} else {
 					result.StaleCount++
@@ -185,7 +185,7 @@ func (ds *discoveryService) reconcileTableResources(ctx context.Context,
 }
 
 // buildSourceIdentifier builds the source identifier for a table.
-func (ds *discoveryService) buildSourceIdentifier(table *interfaces.TableMeta) string {
+func (dw *discoveryWorker) buildSourceIdentifier(table *interfaces.TableMeta) string {
 	if table.Database != "" {
 		return fmt.Sprintf("%s.%s", table.Database, table.Name)
 	}
@@ -193,7 +193,7 @@ func (ds *discoveryService) buildSourceIdentifier(table *interfaces.TableMeta) s
 }
 
 // createResource creates a new resource.
-func (ds *discoveryService) createResource(ctx context.Context, catalog *interfaces.Catalog,
+func (dw *discoveryWorker) createResource(ctx context.Context, catalog *interfaces.Catalog,
 	table *interfaces.TableMeta, sourceIdentifier string) (*interfaces.Resource, error) {
 
 	req := &interfaces.ResourceRequest{
@@ -203,13 +203,13 @@ func (ds *discoveryService) createResource(ctx context.Context, catalog *interfa
 		Category:  interfaces.ResourceCategoryTable,
 		Status:    interfaces.ResourceStatusActive,
 	}
-	id, err := ds.rs.Create(ctx, req)
+	id, err := dw.rs.Create(ctx, req)
 	if err != nil {
 		return nil, err
 	}
 
 	// 获取刚创建的resource
-	resource, err := ds.rs.GetByID(ctx, id)
+	resource, err := dw.rs.GetByID(ctx, id)
 	if err != nil {
 		return nil, err
 	}

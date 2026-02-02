@@ -15,9 +15,9 @@ import (
 	"vega-manager/interfaces"
 	"vega-manager/logics/catalog"
 	connectortype "vega-manager/logics/connector_type"
+	discoverytask "vega-manager/logics/discovery_task"
 	"vega-manager/logics/resource"
 	"vega-manager/version"
-	"vega-manager/worker"
 )
 
 // RestHandler interface
@@ -30,7 +30,7 @@ type restHandler struct {
 	cs         interfaces.CatalogService
 	rs         interfaces.ResourceService
 	cts        interfaces.ConnectorTypeService
-	ds         interfaces.DiscoveryService
+	dts        interfaces.DiscoveryTaskService // 任务服务
 }
 
 // NewRestHandler creates a new RestHandler.
@@ -42,7 +42,7 @@ func NewRestHandler(appSetting *common.AppSetting) RestHandler {
 		cs:         cs,
 		rs:         rs,
 		cts:        connectortype.NewConnectorTypeService(appSetting),
-		ds:         worker.NewDiscoveryService(appSetting, rs),
+		dts:        discoverytask.NewDiscoveryTaskService(appSetting),
 	}
 }
 
@@ -88,6 +88,13 @@ func (r *restHandler) RegisterPublic(engine *gin.Engine) {
 			connectorTypes.PUT("/:type", r.verifyJsonContentType(), r.UpdateConnectorType)
 			connectorTypes.DELETE("/:type", r.DeleteConnectorType)
 			connectorTypes.POST("/:type/enabled", r.SetConnectorTypeEnabled)
+		}
+
+		// ConnectorType APIs
+		discoveryTasks := apiV1.Group("/discovery-tasks")
+		{
+			discoveryTasks.GET("", r.ListDiscoveryTasks)
+			discoveryTasks.GET("/:taskId", r.GetDiscoveryTask)
 		}
 	}
 

@@ -16,7 +16,7 @@ type indexDiscoveryItem struct {
 }
 
 // discoverIndexResources discovers index resources from an index connector.
-func (ds *discoveryService) discoverIndexResources(ctx context.Context,
+func (dw *discoveryWorker) discoverIndexResources(ctx context.Context,
 	catalog *interfaces.Catalog, connector connectors.Connector) (*interfaces.DiscoveryResult, error) {
 
 	indexConnector, ok := connector.(connectors.IndexConnector)
@@ -32,19 +32,19 @@ func (ds *discoveryService) discoverIndexResources(ctx context.Context,
 	logger.Infof("Discovered %d indices from source", len(sourceIndices))
 
 	// Step 2: Get Existing Resources
-	existingResources, err := ds.rs.GetByCatalogID(ctx, catalog.ID)
+	existingResources, err := dw.rs.GetByCatalogID(ctx, catalog.ID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get existing resources: %w", err)
 	}
 
 	// Step 3: Reconcile
-	result, items, err := ds.reconcileIndexResources(ctx, catalog, sourceIndices, existingResources)
+	result, items, err := dw.reconcileIndexResources(ctx, catalog, sourceIndices, existingResources)
 	if err != nil {
 		return nil, fmt.Errorf("failed to reconcile resources: %w", err)
 	}
 
 	// Step 4: Enrich
-	if err := ds.enrichIndexMetadata(ctx, indexConnector, items); err != nil {
+	if err := dw.enrichIndexMetadata(ctx, indexConnector, items); err != nil {
 		return nil, fmt.Errorf("failed to enrich index metadata: %w", err)
 	}
 
@@ -55,7 +55,7 @@ func (ds *discoveryService) discoverIndexResources(ctx context.Context,
 }
 
 // reconcileIndexResources reconciles source indices with existing resources.
-func (ds *discoveryService) reconcileIndexResources(ctx context.Context,
+func (dw *discoveryWorker) reconcileIndexResources(ctx context.Context,
 	catalog *interfaces.Catalog, sourceIndices []*interfaces.IndexMeta,
 	existingResources []*interfaces.Resource) (*interfaces.DiscoveryResult, []indexDiscoveryItem, error) {
 
@@ -81,7 +81,7 @@ func (ds *discoveryService) reconcileIndexResources(ctx context.Context,
 
 		if resource, ok := existingMap[sourceIdentifier]; ok {
 			if resource.Status == interfaces.ResourceStatusStale {
-				if err := ds.rs.UpdateStatus(ctx, resource.ID, interfaces.ResourceStatusActive); err != nil {
+				if err := dw.rs.UpdateStatus(ctx, resource.ID, interfaces.ResourceStatusActive); err != nil {
 					logger.Errorf("Failed to reactivate resource %s: %v", resource.ID, err)
 				}
 			}
@@ -91,7 +91,7 @@ func (ds *discoveryService) reconcileIndexResources(ctx context.Context,
 				indexMeta: idx,
 			})
 		} else {
-			resource, err := ds.createIndexResource(ctx, catalog, idx)
+			resource, err := dw.createIndexResource(ctx, catalog, idx)
 			if err != nil {
 				logger.Errorf("Failed to create resource %s: %v", sourceIdentifier, err)
 			} else {
@@ -108,7 +108,7 @@ func (ds *discoveryService) reconcileIndexResources(ctx context.Context,
 	for sourceIdentifier, existing := range existingMap {
 		if _, ok := sourceMap[sourceIdentifier]; !ok {
 			if existing.Status != interfaces.ResourceStatusStale {
-				if err := ds.rs.UpdateStatus(ctx, existing.ID, interfaces.ResourceStatusStale); err != nil {
+				if err := dw.rs.UpdateStatus(ctx, existing.ID, interfaces.ResourceStatusStale); err != nil {
 					logger.Errorf("Failed to mark resource %s as stale: %v", existing.ID, err)
 				} else {
 					result.StaleCount++
@@ -124,7 +124,7 @@ func (ds *discoveryService) reconcileIndexResources(ctx context.Context,
 }
 
 // createIndexResource creates a new resource for an index.
-func (ds *discoveryService) createIndexResource(ctx context.Context, catalog *interfaces.Catalog,
+func (dw *discoveryWorker) createIndexResource(ctx context.Context, catalog *interfaces.Catalog,
 	index *interfaces.IndexMeta) (*interfaces.Resource, error) {
 
 	req := &interfaces.ResourceRequest{
@@ -133,16 +133,16 @@ func (ds *discoveryService) createIndexResource(ctx context.Context, catalog *in
 		Category:  interfaces.ResourceCategoryIndex,
 		Status:    interfaces.ResourceStatusActive,
 	}
-	id, err := ds.rs.Create(ctx, req)
+	id, err := dw.rs.Create(ctx, req)
 	if err != nil {
 		return nil, err
 	}
 
-	return ds.rs.GetByID(ctx, id)
+	return dw.rs.GetByID(ctx, id)
 }
 
 // enrichIndexMetadata enriches index resources with detailed metadata.
-func (ds *discoveryService) enrichIndexMetadata(ctx context.Context,
+func (dw *discoveryWorker) enrichIndexMetadata(ctx context.Context,
 	indexConnector connectors.IndexConnector, items []indexDiscoveryItem) error {
 
 	for _, item := range items {
@@ -176,7 +176,7 @@ func (ds *discoveryService) enrichIndexMetadata(ctx context.Context,
 		resource.SourceMetadata = sourceMetadata
 
 		// Update Resource
-		if err := ds.rs.UpdateResource(ctx, resource); err != nil {
+		if err := dw.rs.UpdateResource(ctx, resource); err != nil {
 			logger.Errorf("Failed to update metadata for index %s: %v", idx.Name, err)
 			return err
 		}

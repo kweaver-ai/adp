@@ -57,4 +57,5 @@ func init() {
 	rest.Register(CatalogErrCodeList)
 	rest.Register(ResourceErrCodeList)
 	rest.Register(ConnectorTypeErrCodeList)
+	rest.Register(TaskErrCodeList)
 }
