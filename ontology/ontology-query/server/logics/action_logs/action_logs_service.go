@@ -316,6 +316,9 @@ func (s *actionLogsService) QueryExecutions(ctx context.Context, query *interfac
 }
 
 // ensureIndexExists creates the index if it doesn't exist
+// This function is safe for concurrent calls - if multiple requests try to create
+// the same index simultaneously, only one will succeed and others will detect the
+// index already exists.
 func (s *actionLogsService) ensureIndexExists(ctx context.Context, indexName string) error {
 	exists, err := s.osAccess.IndexExists(ctx, indexName)
 	if err != nil {
@@ -334,22 +337,22 @@ func (s *actionLogsService) ensureIndexExists(ctx context.Context, indexName str
 		},
 		"mappings": map[string]any{
 			"properties": map[string]any{
-				"id":                 map[string]any{"type": "keyword"},
-				"kn_id":              map[string]any{"type": "keyword"},
-				"action_type_id":     map[string]any{"type": "keyword"},
-				"action_type_name":   map[string]any{"type": "keyword"},
-				"action_source_type": map[string]any{"type": "keyword"},
-				"object_type_id":     map[string]any{"type": "keyword"},
-				"trigger_type":       map[string]any{"type": "keyword"},
-				"status":             map[string]any{"type": "keyword"},
-				"total_count":        map[string]any{"type": "integer"},
-				"success_count":      map[string]any{"type": "integer"},
-				"failed_count":       map[string]any{"type": "integer"},
-				"executor_id":        map[string]any{"type": "keyword"},
-				"start_time":         map[string]any{"type": "long"},
-				"end_time":           map[string]any{"type": "long"},
-				"duration_ms":        map[string]any{"type": "long"},
-				"results":            map[string]any{"type": "nested"},
+				"id":                    map[string]any{"type": "keyword"},
+				"kn_id":                 map[string]any{"type": "keyword"},
+				"action_type_id":        map[string]any{"type": "keyword"},
+				"action_type_name":      map[string]any{"type": "keyword"},
+				"action_source_type":    map[string]any{"type": "keyword"},
+				"object_type_id":        map[string]any{"type": "keyword"},
+				"trigger_type":          map[string]any{"type": "keyword"},
+				"status":                map[string]any{"type": "keyword"},
+				"total_count":           map[string]any{"type": "integer"},
+				"success_count":         map[string]any{"type": "integer"},
+				"failed_count":          map[string]any{"type": "integer"},
+				"executor_id":           map[string]any{"type": "keyword"},
+				"start_time":            map[string]any{"type": "long"},
+				"end_time":              map[string]any{"type": "long"},
+				"duration_ms":           map[string]any{"type": "long"},
+				"results":               map[string]any{"type": "nested"},
 				"dynamic_params":        map[string]any{"type": "object", "enabled": false},
 				"action_source":         map[string]any{"type": "object", "enabled": false},
 				"action_type_snapshot":  map[string]any{"type": "object", "enabled": false},
@@ -358,6 +361,12 @@ func (s *actionLogsService) ensureIndexExists(ctx context.Context, indexName str
 	}
 
 	if err := s.osAccess.CreateIndex(ctx, indexName, indexBody); err != nil {
+		// Handle concurrent creation: if creation fails, check if another request created it
+		existsAfter, checkErr := s.osAccess.IndexExists(ctx, indexName)
+		if checkErr == nil && existsAfter {
+			logger.Debugf("Index %s was created by another request", indexName)
+			return nil
+		}
 		return fmt.Errorf("failed to create index: %w", err)
 	}
 
