@@ -1,0 +1,69 @@
+[VegaManager.InvalidParameter.Name]
+Description = "Invalid name"
+Solution = "Please check the parameter"
+ErrorLink = "None"
+
+[VegaManager.InvalidParameter.Tag]
+Description = "Invalid tag"
+Solution = "Please check the parameter"
+ErrorLink = "None"
+
+[VegaManager.InvalidParameter.Comment]
+Description = "Invalid comment"
+Solution = "Please check the parameter"
+ErrorLink = "None"
+
+[VegaManager.InvalidParameter.RequestBody]
+Description = "Invalid request body"
+Solution = "Please check the parameter"
+ErrorLink = "None"
+
+[VegaManager.InvalidParameter.Limit]
+Description = "Invalid limit parameter"
+Solution = "Please check the parameter"
+ErrorLink = "None"
+
+[VegaManager.InvalidParameter.Offset]
+Description = "Invalid offset parameter"
+Solution = "Please check the parameter"
+ErrorLink = "None"
+
+[VegaManager.InvalidParameter.Sort]
+Description = "Invalid sort parameter"
+Solution = "Please check the parameter"
+ErrorLink = "None"
+
+[VegaManager.InvalidParameter.Direction]
+Description = "Invalid direction parameter"
+Solution = "Please check the parameter"
+ErrorLink = "None"
+
+[VegaManager.InvalidParameter.ID]
+Description = "Invalid ID parameter"
+Solution = "Please check the parameter"
+ErrorLink = "None"
+
+[VegaManager.InvalidRequestHeader.ContentType]
+Description = "Content-Type header is not supported"
+Solution = "Please check the request header"
+ErrorLink = "None"
+
+[VegaManager.InternalError.BeginTransactionFailed]
+Description = "Failed to begin transaction"
+Solution = "Please contact the administrator"
+ErrorLink = "None"
+
+[VegaManager.InternalError.CommitTransactionFailed]
+Description = "Failed to commit transaction"
+Solution = "Please contact the administrator"
+ErrorLink = "None"
+
+[VegaManager.InternalError.MarshalDataFailed]
+Description = "Failed to marshal data"
+Solution = "Please contact the administrator"
+ErrorLink = "None"
+
+[VegaManager.InternalError.UnMarshalDataFailed]
+Description = "Failed to unmarshal data"
+Solution = "Please contact the administrator"
+ErrorLink = "None"

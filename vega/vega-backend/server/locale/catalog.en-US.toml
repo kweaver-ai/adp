@@ -1,0 +1,94 @@
+[VegaManager.Catalog.InvalidParameter]
+Description = "Invalid catalog parameter"
+Solution = "Please check the parameter"
+ErrorLink = "None"
+
+[VegaManager.Catalog.InvalidParameter.Type]
+Description = "Invalid catalog type"
+Solution = "Please check the parameter"
+ErrorLink = "None"
+
+[VegaManager.Catalog.InvalidParameter.Name]
+Description = "Invalid catalog name"
+Solution = "Please check the parameter"
+ErrorLink = "None"
+
+[VegaManager.Catalog.InvalidParameter.ConnectorType]
+Description = "Invalid connector type"
+Solution = "Please check the parameter"
+ErrorLink = "None"
+
+[VegaManager.Catalog.InvalidParameter.ConnectorConfig]
+Description = "Invalid connector config"
+Solution = "Please check the parameter"
+ErrorLink = "None"
+
+[VegaManager.Catalog.LengthExceeded.Name]
+Description = "Catalog name length exceeded"
+Solution = "Please shorten the name"
+ErrorLink = "None"
+
+[VegaManager.Catalog.LengthExceeded.Description]
+Description = "Catalog description length exceeded"
+Solution = "Please shorten the description"
+ErrorLink = "None"
+
+[VegaManager.Catalog.NotFound]
+Description = "Catalog not found"
+Solution = "Please check the catalog ID"
+ErrorLink = "None"
+
+[VegaManager.Catalog.NameExists]
+Description = "Catalog name already exists"
+Solution = "Please use a different name"
+ErrorLink = "None"
+
+[VegaManager.Catalog.HasAssets]
+Description = "Catalog has assets and cannot be deleted"
+Solution = "Please delete all assets in the catalog first"
+ErrorLink = "None"
+
+[VegaManager.Catalog.IsDisabled]
+Description = "Catalog is disabled"
+Solution = "Please enable the catalog first"
+ErrorLink = "None"
+
+[VegaManager.Catalog.InternalError]
+Description = "Catalog internal error"
+Solution = "Please contact the administrator"
+ErrorLink = "None"
+
+[VegaManager.Catalog.InternalError.CreateFailed]
+Description = "Failed to create catalog"
+Solution = "Please contact the administrator"
+ErrorLink = "None"
+
+[VegaManager.Catalog.InternalError.GetFailed]
+Description = "Failed to get catalog"
+Solution = "Please contact the administrator"
+ErrorLink = "None"
+
+[VegaManager.Catalog.InternalError.UpdateFailed]
+Description = "Failed to update catalog"
+Solution = "Please contact the administrator"
+ErrorLink = "None"
+
+[VegaManager.Catalog.InternalError.DeleteFailed]
+Description = "Failed to delete catalog"
+Solution = "Please contact the administrator"
+ErrorLink = "None"
+
+[VegaManager.Catalog.InternalError.TestConnectionFailed]
+Description = "Failed to test catalog connection"
+Solution = "Please contact the administrator"
+ErrorLink = "None"
+
+[VegaManager.Catalog.InternalError.EncryptFailed]
+Description = "Failed to entrypt config"
+Solution = "Please contact the administrator"
+ErrorLink = "None"
+
+[VegaManager.Catalog.InvalidParameter.SensitiveFieldNotEncrypted]
+Description = "Sensitive field is not properly encrypted"
+Solution = "Please encrypt the sensitive field with the public key before submitting"
+ErrorLink = "None"
