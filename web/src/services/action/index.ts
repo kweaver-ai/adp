@@ -50,24 +50,60 @@ export const getActionTypeDetail = (knId: string, atIds: string[]): Promise<Acti
   return Request.get<{ entries: ActionType.ActionType[] }>(`${BASE_URL}/${knId}/action-types/${atIds.join(',')}`).then((response) => response.entries);
 };
 
+// /**
+//  * 创建行动计划
+//  * @param knId 知识网络ID
+//  * @param data 创建数据
+//  */
+// export const createActionSchedule = (knId: string, data: ActionType.CreateActionScheduleRequest): Promise<{ id: string }> => {
+//   return Request.post(`${BASE_URL}/${knId}/action-schedules`, data);
+// };
+
+// /**
+//  * 删除行动计划
+//  * @param knId 知识网络ID
+//  * @param scheduleIds 行动计划ID列表
+//  */
+// export const deleteActionSchedules = (knId: string, scheduleIds: string[]): Promise<void> => {
+//   return Request.delete(`${BASE_URL}/${knId}/action-schedules/${scheduleIds.join(',')}`);
+// };
+
+// /**
+//  * 更新行动计划
+//  * @param knId 知识网络ID
+//  * @param scheduleId 行动计划ID
+//  * @param data 更新数据
+//  */
+// export const updateActionSchedule = (knId: string, scheduleId: string, data: ActionType.UpdateActionScheduleRequest): Promise<void> => {
+//   return Request.put(`${BASE_URL}/${knId}/action-schedules/${scheduleId}`, data);
+// };
+
+// /**
+//  * 更新行动计划状态
+//  * @param knId 知识网络ID
+//  * @param scheduleId 行动计划ID
+//  * @param status 状态
+//  */
+// export const updateActionScheduleStatus = (knId: string, scheduleId: string, status: ActionType.ActionScheduleStatusEnum): Promise<void> => {
+//   return Request.put(`${BASE_URL}/${knId}/action-schedules/${scheduleId}/status`, { status });
+// };
+
 /**
- * 获取行动类任务列表
+ * 获取行动计划列表
  * @param knId 知识网络ID
- * @param atId 行动类ID
  * @param params 查询参数
  */
-export const getActionTasks = (knId: string, atId: string, params: ActionType.GetTasksRequest): Promise<ActionType.GetTasksResponse> => {
-  return Request.get(`${BASE_URL}/${knId}/action-types/${atId}/tasks`, params);
+export const getActionSchedules = (knId: string, params: ActionType.GetActionSchedulesRequest): Promise<ActionType.GetActionSchedulesResponse> => {
+  return Request.get(`${BASE_URL}/${knId}/action-schedules`, params);
 };
 
 /**
- * 获取行动类任务详情
+ * 获取行动计划详情
  * @param knId 知识网络ID
- * @param atId 行动类ID
- * @param taskId 任务ID
+ * @param scheduleId 行动计划ID
  */
-export const getActionTaskDetail = (knId: string, atId: string, taskId: string): Promise<ActionType.Task> => {
-  return Request.get(`${BASE_URL}/${knId}/action-types/${atId}/tasks/${taskId}`);
+export const getActionSchedule = (knId: string, scheduleId: string): Promise<ActionType.ActionSchedule> => {
+  return Request.get(`${BASE_URL}/${knId}/action-schedules/${scheduleId}`);
 };
 
 /**
@@ -113,8 +149,12 @@ export default {
   createActionType,
   editActionType,
   getActionTypeDetail,
-  getActionTasks,
-  getActionTaskDetail,
+  // createActionSchedule,
+  // deleteActionSchedules,
+  // updateActionSchedule,
+  // updateActionScheduleStatus,
+  getActionSchedules,
+  getActionSchedule,
   executeActionType,
   getActionExecutionStatus,
   queryActionLogs,

@@ -270,3 +270,76 @@ export interface CancelExecutionResponse {
   success: boolean;
   message?: string;
 }
+
+// 行动计划状态枚举
+export enum ActionScheduleStatusEnum {
+  Active = 'active',
+  Inactive = 'inactive',
+}
+
+// 行动计划
+export interface ActionSchedule {
+  id: string; // 行动计划ID
+  name: string; // 行动计划名称
+  kn_id: string; // 知识网络ID
+  branch: string; // 分支
+  action_type_id: string; // 行动类ID
+  cron_expression: string; // Cron表达式
+  unique_identities?: Array<Record<string, any>>; // 实体唯一标识列表
+  dynamic_params?: Record<string, any>; // 动态参数
+  status: ActionScheduleStatusEnum; // 状态
+  last_run_time?: number; // 上次执行时间
+  next_run_time?: number; // 下次执行时间
+  creator?: {
+    id: string;
+    name: string;
+    type: string;
+  }; // 创建人
+  create_time?: number; // 创建时间
+  updater?: {
+    id: string;
+    name: string;
+    type: string;
+  }; // 更新人
+  update_time?: number; // 更新时间
+}
+
+// 创建行动计划请求
+export interface CreateActionScheduleRequest {
+  name: string; // 行动计划名称
+  action_type_id: string; // 行动类ID
+  cron_expression: string; // Cron表达式
+  unique_identities: Array<Record<string, any>>; // 实体唯一标识列表
+  dynamic_params?: Record<string, any>; // 动态参数
+  status?: ActionScheduleStatusEnum; // 状态，默认为inactive
+}
+
+// 更新行动计划请求
+export interface UpdateActionScheduleRequest {
+  name?: string; // 行动计划名称
+  cron_expression?: string; // Cron表达式
+  unique_identities?: Array<Record<string, any>>; // 实体唯一标识列表
+  dynamic_params?: Record<string, any>; // 动态参数
+}
+
+// 更新行动计划状态请求
+export interface UpdateActionScheduleStatusRequest {
+  status: ActionScheduleStatusEnum; // 状态
+}
+
+// 获取行动计划列表请求
+export interface GetActionSchedulesRequest {
+  name_pattern?: string; // 名称模糊查询
+  action_type_id?: string; // 行动类ID
+  status?: ActionScheduleStatusEnum; // 状态
+  offset?: number; // 偏移量
+  limit?: number; // 数量
+  sort?: string; // 排序字段
+  direction?: DirectionEnum; // 排序方向
+}
+
+// 获取行动计划列表响应
+export interface GetActionSchedulesResponse {
+  entries: ActionSchedule[];
+  total_count: number;
+}

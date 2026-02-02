@@ -33,6 +33,8 @@
     "triggerCondition": "触发条件",
     "triggerType": "触发方式",
     "overview": "概览",
-    "viewTool": "{name}查看"
+    "viewTool": "{name}查看",
+    "executeSuccess": "执行成功",
+    "executeFailed": "执行失败"
   }
 }

@@ -5,19 +5,18 @@ import { Dropdown, Empty, Modal, Drawer, Spin } from 'antd';
 import classnames from 'classnames';
 import dayjs from 'dayjs';
 import { formatMsToHMS } from '@/utils/time';
+import actionApi from '@/services/action';
 import * as ActionType from '@/services/action/type';
-import createImage from '@/assets/images/common/create.svg';
 import emptyImage from '@/assets/images/common/empty.png';
 import noSearchResultImage from '@/assets/images/common/no_search_result.svg';
-import HOOKS from '@/hooks';
 import { Title, Table, Select, Button, IconFont } from '@/web-library/common';
-import actionApi from '@/services/action';
-import ActionInfo from '../components/ActionInfo';
 import styles from './index.module.less';
 
 interface TaskManagementProps {
   knId: string;
   atId: string;
+  refreshTask?: boolean;
+  onRefreshComplete?: () => void;
 }
 
 const StateItem = ({ state, error }: { state: ActionType.TaskStatusEnum; error?: string }) => {
@@ -46,25 +45,18 @@ const StateItem = ({ state, error }: { state: ActionType.TaskStatusEnum; error?:
   );
 };
 
-const TaskManagement = ({ knId, atId }: TaskManagementProps) => {
-  const ACTION_TASK_STATE_LABELS: Record<ActionType.TaskStatusEnum, string> = {
-    [ActionType.TaskStatusEnum.Pending]: intl.get('Action.statusPending'),
-    [ActionType.TaskStatusEnum.Running]: intl.get('Action.statusRunning'),
-    [ActionType.TaskStatusEnum.Success]: intl.get('Action.statusSuccess'),
-    [ActionType.TaskStatusEnum.Failed]: intl.get('Action.statusFailed'),
-    [ActionType.TaskStatusEnum.Canceled]: intl.get('Action.statusCanceled'),
+const TaskManagement = ({ knId, atId, refreshTask, onRefreshComplete }: TaskManagementProps) => {
+  const ACTION_SCHEDULE_STATE_LABELS: Record<ActionType.ActionScheduleStatusEnum, string> = {
+    [ActionType.ActionScheduleStatusEnum.Active]: intl.get('Action.statusActive'),
+    [ActionType.ActionScheduleStatusEnum.Inactive]: intl.get('Action.statusInactive'),
   };
-
-  const ACTION_TASK_STATE_OPTIONS = [
+  const ACTION_SCHEDULE_STATE_OPTIONS = [
     { value: '', label: intl.get('Global.all') },
-    { value: ActionType.TaskStatusEnum.Pending, label: ACTION_TASK_STATE_LABELS[ActionType.TaskStatusEnum.Pending] },
-    { value: ActionType.TaskStatusEnum.Running, label: ACTION_TASK_STATE_LABELS[ActionType.TaskStatusEnum.Running] },
-    { value: ActionType.TaskStatusEnum.Success, label: ACTION_TASK_STATE_LABELS[ActionType.TaskStatusEnum.Success] },
-    { value: ActionType.TaskStatusEnum.Failed, label: ACTION_TASK_STATE_LABELS[ActionType.TaskStatusEnum.Failed] },
-    { value: ActionType.TaskStatusEnum.Canceled, label: ACTION_TASK_STATE_LABELS[ActionType.TaskStatusEnum.Canceled] },
+    { value: ActionType.ActionScheduleStatusEnum.Active, label: ACTION_SCHEDULE_STATE_LABELS[ActionType.ActionScheduleStatusEnum.Active] },
+    { value: ActionType.ActionScheduleStatusEnum.Inactive, label: ACTION_SCHEDULE_STATE_LABELS[ActionType.ActionScheduleStatusEnum.Inactive] },
   ];
   const [loading, setLoading] = useState(false);
-  const [data, setData] = useState<ActionType.Task[]>([]);
+  const [data, setData] = useState<ActionType.ActionSchedule[]>([]);
   const [pagination, setPagination] = useState({
     current: 1,
     pageSize: 10,
@@ -72,22 +64,21 @@ const TaskManagement = ({ knId, atId }: TaskManagementProps) => {
   });
   const [filterValues, setFilterValues] = useState<any>({ keyword: '', trigger_type: '', status: '' });
   const [detailVisible, setDetailVisible] = useState(false);
-  const [currentTask, setCurrentTask] = useState<ActionType.Task | null>(null);
+  const [currentTask, setCurrentTask] = useState<ActionType.ActionSchedule | null>(null);
   const [detailLoading, setDetailLoading] = useState(false);
 
   const fetchTasks = async (page = 1, pageSize = 10, filters = filterValues) => {
     setLoading(true);
     try {
-      const params: ActionType.GetTasksRequest = {
+      const params: ActionType.GetActionSchedulesRequest = {
         offset: (page - 1) * pageSize,
         limit: pageSize,
-        keyword: filters.keyword,
+        name_pattern: filters.keyword,
+        action_type_id: atId,
       };
       if (filters.status && filters.status !== 'all') params.status = filters.status;
-      // Note: trigger_type is not in GetTasksRequest yet, but if it was supported:
-      // if (filters.trigger_type && filters.trigger_type !== 'all') params.trigger_type = filters.trigger_type;
 
-      const res = await actionApi.getActionTasks(knId, atId, params);
+      const res = await actionApi.getActionSchedules(knId, params);
       setData(res.entries);
       setPagination({
         current: page,
@@ -104,6 +95,15 @@ const TaskManagement = ({ knId, atId }: TaskManagementProps) => {
   useEffect(() => {
     fetchTasks(1, pagination.pageSize, filterValues);
   }, [knId, atId]);
+
+  useEffect(() => {
+    if (refreshTask) {
+      fetchTasks(1, pagination.pageSize, filterValues);
+      if (onRefreshComplete) {
+        onRefreshComplete();
+      }
+    }
+  }, [refreshTask, onRefreshComplete, pagination.pageSize, filterValues]);
 
   const handleTableChange = (pag: any, filters: any, sorter: any) => {
     setPagination({ ...pagination, current: pag.current, pageSize: pag.pageSize });
@@ -122,11 +122,11 @@ const TaskManagement = ({ knId, atId }: TaskManagementProps) => {
     fetchTasks(1, pagination.pageSize, newFilters);
   };
 
-  const handleViewDetail = async (record: ActionType.Task) => {
+  const handleViewDetail = async (record: ActionType.ActionSchedule) => {
     setDetailVisible(true);
     setDetailLoading(true);
     try {
-      const res = await actionApi.getActionTaskDetail(knId, atId, record.id);
+      const res = await actionApi.getActionSchedule(knId, record.id);
       setCurrentTask(res);
     } catch (error) {
       console.error(error);
@@ -138,7 +138,7 @@ const TaskManagement = ({ knId, atId }: TaskManagementProps) => {
   const columns: any = [
     {
       title: intl.get('Global.startTime'),
-      dataIndex: 'start_time',
+      dataIndex: 'last_run_time',
       width: 200,
       sorter: true,
       __selected: true,
@@ -149,7 +149,7 @@ const TaskManagement = ({ knId, atId }: TaskManagementProps) => {
       dataIndex: 'operation',
       width: 80,
       __selected: true,
-      render: (_value: any, record: ActionType.Task) => {
+      render: (_value: any, record: ActionType.ActionSchedule) => {
         const dropdownMenu: any = [{ key: 'view', label: intl.get('Global.view'), visible: true }];
         return (
           <Dropdown
@@ -172,14 +172,15 @@ const TaskManagement = ({ knId, atId }: TaskManagementProps) => {
       dataIndex: 'trigger_type',
       width: 120,
       __selected: true,
+      render: () => intl.get('Action.scheduleTrigger'),
     },
     {
       title: intl.get('Global.runStatus'),
       dataIndex: 'status',
       width: 150,
       __selected: true,
-      render: (status: ActionType.TaskStatusEnum, record: ActionType.Task) => {
-        return <StateItem error={record?.result_desc} state={status} />;
+      render: (status: ActionType.ActionScheduleStatusEnum) => {
+        return <div>{ACTION_SCHEDULE_STATE_LABELS[status] || status}</div>;
       },
     },
     {
@@ -187,7 +188,7 @@ const TaskManagement = ({ knId, atId }: TaskManagementProps) => {
       dataIndex: 'result_desc',
       width: 200,
       __selected: true,
-      render: (text: string) => text || '--',
+      render: () => '--',
     },
     {
       title: intl.get('Action.totalDuration'),
@@ -199,7 +200,7 @@ const TaskManagement = ({ knId, atId }: TaskManagementProps) => {
     },
     {
       title: intl.get('Global.endTime'),
-      dataIndex: 'end_time',
+      dataIndex: 'last_run_time',
       width: 200,
       sorter: true,
       __selected: true,
@@ -207,7 +208,7 @@ const TaskManagement = ({ knId, atId }: TaskManagementProps) => {
     },
     {
       title: intl.get('Global.creator'),
-      dataIndex: ['operator', 'name'],
+      dataIndex: ['creator', 'name'],
       width: 120,
       __selected: true,
       render: (text: string) => text || '--',
@@ -241,8 +242,21 @@ const TaskManagement = ({ knId, atId }: TaskManagementProps) => {
           onRefresh={() => fetchTasks(1, pagination.pageSize, filterValues)}
         >
           {/* Placeholder for trigger type filter if needed in future */}
-          <Select.LabelSelect key="trigger_type" label={intl.get('Action.triggerType')} defaultValue="all" style={{ width: 190 }} options={[]} />
+          {/* <Select.LabelSelect key="trigger_type" label={intl.get('Action.triggerType')} defaultValue="all" style={{ width: 190 }} options={[]} />
           <Select.LabelSelect key="status" label={intl.get('Global.status')} defaultValue="all" style={{ width: 190 }} options={ACTION_TASK_STATE_OPTIONS} />
+            key="status"
+            label={intl.get('Global.status')}
+            defaultValue="all"
+            style={{ width: 190 }}
+            options={ACTION_SCHEDULE_STATE_OPTIONS}
+          /> */}
+          <Select.LabelSelect
+            key="status"
+            label={intl.get('Global.status')}
+            defaultValue="all"
+            style={{ width: 190 }}
+            options={ACTION_SCHEDULE_STATE_OPTIONS}
+          />
         </Table.Operation>
       </Table.PageTable>
 
@@ -251,8 +265,33 @@ const TaskManagement = ({ knId, atId }: TaskManagementProps) => {
           <div style={{ display: 'flex', justifyContent: 'center', paddingTop: 50 }}>
             <Spin />
           </div>
-        ) : currentTask?.action_config ? (
-          <ActionInfo knId={knId} atId={atId} detail={currentTask.action_config} />
+        ) : currentTask ? (
+          <div>
+            <p>
+              <strong>{intl.get('Global.name')}:</strong> {currentTask.name}
+            </p>
+            <p>
+              <strong>{intl.get('Action.cronExpression')}:</strong> {currentTask.cron_expression}
+            </p>
+            <p>
+              <strong>{intl.get('Global.status')}:</strong> {ACTION_SCHEDULE_STATE_LABELS[currentTask.status] || currentTask.status}
+            </p>
+            {currentTask.last_run_time && (
+              <p>
+                <strong>{intl.get('Action.lastRunTime')}:</strong> {dayjs(currentTask.last_run_time * 1000).format('YYYY-MM-DD HH:mm:ss')}
+              </p>
+            )}
+            {currentTask.next_run_time && (
+              <p>
+                <strong>{intl.get('Action.nextRunTime')}:</strong> {dayjs(currentTask.next_run_time * 1000).format('YYYY-MM-DD HH:mm:ss')}
+              </p>
+            )}
+            {currentTask.creator && (
+              <p>
+                <strong>{intl.get('Global.creator')}:</strong> {currentTask.creator.name}
+              </p>
+            )}
+          </div>
         ) : (
           <div>{intl.get('Global.noData')}</div>
         )}

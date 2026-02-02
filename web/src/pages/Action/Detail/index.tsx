@@ -2,13 +2,14 @@ import { useEffect, useState } from 'react';
 import intl from 'react-intl-universal';
 import { Route, Switch, useHistory, useLocation, useParams, useRouteMatch, Redirect } from 'react-router-dom';
 import { LeftOutlined } from '@ant-design/icons';
-import { Button } from 'antd';
+import { Button, message } from 'antd';
 import classnames from 'classnames';
+import actionApi from '@/services/action';
+import * as ActionType from '@/services/action/type';
 import { IconFont } from '@/web-library/common';
 import styles from './index.module.less';
 import Overview from './Overview';
 import TaskManagement from './TaskManagement';
-import actionApi from '@/services/action';
 
 interface TLinkItem {
   icon: string;
@@ -49,6 +50,8 @@ const ActionDetail = () => {
   const { knId, atId } = useParams<{ knId: string; atId: string }>();
   const [active, setActive] = useState<string>('overview');
   const [detail, setDetail] = useState<any>();
+  const [executing, setExecuting] = useState(false);
+  const [refreshTask, setRefreshTask] = useState(false);
 
   const getDetail = async () => {
     try {
@@ -74,6 +77,25 @@ const ActionDetail = () => {
     }
   }, [knId, atId]);
 
+  const handleExecute = async () => {
+    setExecuting(true);
+    try {
+      console.log('detail?.object_type_id', detail);
+      const request: ActionType.ActionExecutionRequest = {
+        unique_identities: [detail?.object_type],
+      };
+      const response = await actionApi.executeActionType(knId, atId, request);
+      message.success(intl.get('Action.executeSuccess'));
+      console.log('Execute response:', response);
+      setRefreshTask(true);
+    } catch (error) {
+      console.error('Execute error:', error);
+      message.error(intl.get('Action.executeFailed'));
+    } finally {
+      setExecuting(false);
+    }
+  };
+
   return (
     <div className={styles['main-box']}>
       <div className={styles['main-header']}>
@@ -82,7 +104,7 @@ const ActionDetail = () => {
           <IconFont type="icon-dip-hangdonglei" style={{ fontSize: 24 }} />
         </div>
         <h4>{detail?.name}</h4>
-        <Button type="primary" style={{ marginLeft: 'auto' }}>
+        <Button type="primary" style={{ marginLeft: 'auto' }} onClick={handleExecute} loading={executing}>
           {intl.get('Action.executeImmediately')}
         </Button>
       </div>
@@ -97,7 +119,11 @@ const ActionDetail = () => {
               <Redirect to={`${url}/overview`} />
             </Route>
             <Route exact path={`${path}/overview`} render={() => <Overview knId={knId} atId={atId} detail={detail} />} />
-            <Route exact path={`${path}/task`} render={() => <TaskManagement knId={knId} atId={atId} />} />
+            <Route
+              exact
+              path={`${path}/task`}
+              render={() => <TaskManagement knId={knId} atId={atId} refreshTask={refreshTask} onRefreshComplete={() => setRefreshTask(false)} />}
+            />
             <Route render={() => <div>{intl.get('Global.pageNotFound')}</div>} />
           </Switch>
         </div>
