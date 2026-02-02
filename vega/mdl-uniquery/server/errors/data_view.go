@@ -40,6 +40,7 @@ const (
 	Uniquery_DataView_InternalError_ConvertToViewUniResponseFailed = "Uniquery.DataView.InternalError.ConvertToViewUniResponseFailed"
 	Uniquery_DataView_InternalError_CreatePointInTimeFailed        = "Uniquery.DataView.InternalError.CreatePointInTimeFailed"
 	Uniquery_DataView_InternalError_DeletePointInTimeFailed        = "Uniquery.DataView.InternalError.DeletePointInTimeFailed"
+	Uniquery_DataView_InternalError_FetchDataFromVegaFailed        = "Uniquery.DataView.InternalError.FetchDataFromVegaFailed"
 	Uniquery_DataView_InternalError_GetDataViewByIDFailed          = "Uniquery.DataView.InternalError.GetDataViewByIDFailed"
 	Uniquery_DataView_InternalError_GetDocumentsFailed             = "Uniquery.DataView.InternalError.GetDocumentsFailed"
 	Uniquery_DataView_InternalError_GetIndexBaseByTypeFailed       = "Uniquery.DataView.InternalError.GetIndexBaseByTypeFailed"
@@ -97,6 +98,7 @@ var (
 		Uniquery_DataView_InternalError_ConvertToViewUniResponseFailed,
 		Uniquery_DataView_InternalError_CreatePointInTimeFailed,
 		Uniquery_DataView_InternalError_DeletePointInTimeFailed,
+		Uniquery_DataView_InternalError_FetchDataFromVegaFailed,
 		Uniquery_DataView_InternalError_GetDataViewByIDFailed,
 		Uniquery_DataView_InternalError_GetDocumentsFailed,
 		Uniquery_DataView_InternalError_GetIndexBaseByTypeFailed,

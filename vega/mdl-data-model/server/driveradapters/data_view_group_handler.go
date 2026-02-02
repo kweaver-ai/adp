@@ -343,6 +343,7 @@ func (r *restHandler) ListDataViewGroups(c *gin.Context) {
 	sort := c.DefaultQuery("sort", interfaces.DEFAULT_DATA_VIEW_GROUP_SORT)
 	direction := c.DefaultQuery("direction", interfaces.ASC_DIRECTION)
 	builtinQueryArr := c.QueryArray("builtin")
+	includeDeletedStr := c.DefaultQuery("include_deleted", "false")
 
 	pageParam, err := validatePaginationQueryParameters(ctx,
 		offset, limit, sort, direction, interfaces.DATA_VIEW_GROUP_SORT)
@@ -374,8 +375,19 @@ func (r *restHandler) ListDataViewGroups(c *gin.Context) {
 		builtinArr = append(builtinArr, builtin)
 	}
 
+	includeDeleted, err := strconv.ParseBool(includeDeletedStr)
+	if err != nil {
+		httpErr := rest.NewHTTPError(ctx, http.StatusBadRequest, rest.PublicError_BadRequest).
+			WithErrorDetails(fmt.Sprintf("Invalid param include_deleted '%s'", includeDeletedStr))
+
+		o11y.AddHttpAttrs4HttpError(span, httpErr)
+		rest.ReplyError(c, httpErr)
+		return
+	}
+
 	queryParam := &interfaces.ListViewGroupQueryParams{
 		Builtin:                   builtinArr,
+		IncludeDeleted:            includeDeleted,
 		PaginationQueryParameters: pageParam,
 	}
 
