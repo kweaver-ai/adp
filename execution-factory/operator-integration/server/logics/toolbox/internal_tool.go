@@ -10,13 +10,13 @@ import (
 	"net/http"
 	"time"
 
-	o11y "github.com/kweaver-ai/kweaver-go-lib/observability"
 	infracommon "github.com/kweaver-ai/adp/execution-factory/operator-integration/server/infra/common"
 	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/infra/errors"
 	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/infra/telemetry"
 	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/interfaces"
 	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/interfaces/model"
 	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/logics/metric"
+	o11y "github.com/kweaver-ai/kweaver-go-lib/observability"
 )
 
 // 内置工具管理原则：工具箱只能属于一个服务，而一个服务可以有多个工具箱
@@ -64,7 +64,7 @@ func (s *ToolServiceImpl) CreateInternalToolBox(ctx context.Context, req *interf
 	}
 	serverURL := metadataList[0].GetServerURL()
 	// 检查导入工具是否存在重复,保证传入的数据没有重复的工具名称等
-	toolList, _, _, err := s.parseOpenAPIToMetadata(ctx, req.BoxID, req.UserID, metadataList)
+	toolList, _, _, err := s.parseOpenAPIToMetadata(ctx, req.BoxID, req.UserID, metadataList, true)
 	if err != nil {
 		return
 	}

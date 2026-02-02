@@ -196,6 +196,8 @@ const (
 	ErrExtDebugParamsInvalid              ErrorCode = "DebugParamsInvalid"              // 调试传参错误，必须为JSON格式
 	ErrExtFunctionAIGenerateFailed        ErrorCode = "FunctionAIGenerateFailed"        // AI生成失败，请检查默认模型是否正常
 	ErrExtFunctionAIGenerateModelFailed   ErrorCode = "FunctionAIGenerateModelFailed"   // 模型生成内容异常，请检查默认模型是否可用，或前往设置配置有效的模型
+	// 依赖沙箱服务异常
+	ErrExtSandboxControlPlaneFailed ErrorCode = "SandboxControlPlaneFailed" // 依赖沙箱服务异常，请查看错误详情
 )
 
 const (
