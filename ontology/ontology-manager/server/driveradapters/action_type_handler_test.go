@@ -129,7 +129,7 @@ func Test_ActionTypeRestHandler_CreateActionTypes(t *testing.T) {
 				HTTPCode: http.StatusInternalServerError,
 				Language: rest.DefaultLanguage,
 				BaseError: rest.BaseError{
-					ErrorCode: oerrors.OntologyManager_KnowledgeNetwork_InternalError,
+					ErrorCode: oerrors.OntologyManager_ActionType_InternalError,
 				},
 			}
 			kns.EXPECT().CheckKNExistByID(gomock.Any(), knID, gomock.Any()).Return("", false, expectedErr)
@@ -314,7 +314,7 @@ func Test_ActionTypeRestHandler_DeleteActionTypes(t *testing.T) {
 			kns.EXPECT().CheckKNExistByID(gomock.Any(), knID, gomock.Any()).Return(knID, true, nil)
 			ats.EXPECT().CheckActionTypeExistByID(gomock.Any(), knID, gomock.Any(), "at1").Return("action1", true, nil)
 			ats.EXPECT().CheckActionTypeExistByID(gomock.Any(), knID, gomock.Any(), "at2").Return("action2", true, nil)
-			ats.EXPECT().DeleteActionTypesByIDs(gomock.Any(), gomock.Any(), knID, gomock.Any(), gomock.Any()).Return(int64(2), nil)
+			ats.EXPECT().DeleteActionTypesByIDs(gomock.Any(), gomock.Any(), knID, gomock.Any(), gomock.Any()).Return(nil)
 
 			req := httptest.NewRequest(http.MethodDelete, url, nil)
 			w := httptest.NewRecorder()

@@ -86,7 +86,7 @@ func (ats *actionTypeService) GetActionsByActionTypeID(ctx context.Context,
 
 	// 2.根据行动条件+请求的唯一标识，去请求对象类的对象实例数据（当前行动条件只能选绑定的对象类的，不能选其他类，所以当前就直接拼，认为这些条件都在作用在这个对象类上）
 	// 条件转换，唯一标识换成主键过滤，各个对象之间用or连接，主键间用and连接，然后再跟行动条件and去请求对象类的对象数据
-	condition := logics.BuildUniqueIdentitiesCondition(query.UniqueIdentities)
+	condition := logics.BuildUniqueIdentitiesCondition(query.InstanceIdentity)
 
 	if actionType.Condition != nil {
 		condition = &cond.CondCfg{
@@ -106,11 +106,12 @@ func (ats *actionTypeService) GetActionsByActionTypeID(ctx context.Context,
 		Branch:       query.Branch,
 		ObjectTypeID: actionType.ObjectTypeID,
 		CommonQueryParameters: interfaces.CommonQueryParameters{
-			IncludeTypeInfo:    true,
-			IncludeLogicParams: query.IncludeLogicParams,
+			IncludeTypeInfo:         true,
+			IncludeLogicParams:      query.IncludeLogicParams,
+			ExcludeSystemProperties: query.ExcludeSystemProperties,
 		},
 		ObjectQueryInfo: &interfaces.ObjectQueryInfo{
-			UniqueIdentities: query.UniqueIdentities,
+			InstanceIdentity: query.InstanceIdentity,
 		},
 	}
 	objects, err := ats.ots.GetObjectsByObjectTypeID(ctx, objectQuery)
@@ -165,10 +166,24 @@ func (ats *actionTypeService) GetActionsByActionTypeID(ctx context.Context,
 					actionType.ATName, err.Error()))
 		}
 
-		actions = append(actions, interfaces.ActionParam{
+		action := interfaces.ActionParam{
 			Parameters:    params,
 			DynamicParams: dynamicParams,
-		})
+		}
+
+		// 已经在对象数据查询是指定了排除字段，返回的已经是按排除字段处理后的数据，所以字段存在就添加。
+		if _, exist := object[interfaces.SYSTEM_PROPERTY_INSTANCE_ID]; exist {
+			action.InstanceID = object[interfaces.SYSTEM_PROPERTY_INSTANCE_ID]
+		}
+		if _, exist := object[interfaces.SYSTEM_PROPERTY_INSTANCE_IDENTITY]; exist {
+			action.InstanceIdentity = object[interfaces.SYSTEM_PROPERTY_INSTANCE_IDENTITY]
+		}
+		if _, exist := object[interfaces.SYSTEM_PROPERTY_DISPLAY]; exist {
+			action.Display = object[interfaces.SYSTEM_PROPERTY_DISPLAY]
+		}
+
+		// 返回的对象数据已经按查询参数生成和排除系统字段了，此时就是按需添加
+		actions = append(actions, action)
 	}
 
 	respActions := interfaces.Actions{

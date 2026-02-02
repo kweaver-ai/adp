@@ -14,11 +14,13 @@ type ConceptGroupService interface {
 	GetConceptGroupByID(ctx context.Context, knID string, branch string, cgID string, mode string) (*ConceptGroup, error)
 	UpdateConceptGroup(ctx context.Context, tx *sql.Tx, conceptGroup *ConceptGroup) error
 	UpdateConceptGroupDetail(ctx context.Context, knID string, branch string, cgID string, detail string) error
-	DeleteConceptGroupByID(ctx context.Context, tx *sql.Tx, knID string, branch string, cgID string) (int64, error)
+	DeleteConceptGroupByID(ctx context.Context, tx *sql.Tx, knID string, branch string, cgID string) error
 
 	GetStatByConceptGroup(ctx context.Context, conceptGroup *ConceptGroup) (*Statistics, error)
+	GetConceptGroupIDsByKnID(ctx context.Context, knID string, branch string) ([]string, error)
+	DeleteConceptGroupsByKnID(ctx context.Context, tx *sql.Tx, knID string, branch string) error
 
 	AddObjectTypesToConceptGroup(ctx context.Context, tx *sql.Tx, knID string, branch string, cgID string, otIDs []ID, importMode string) ([]string, error)
 	ListConceptGroupRelations(ctx context.Context, query ConceptGroupRelationsQueryParams) ([]ConceptGroupRelation, error)
-	DeleteObjectTypesFromGroup(ctx context.Context, tx *sql.Tx, knID string, branch string, cgID string, otIDs []string) (int64, error)
+	DeleteObjectTypesFromGroup(ctx context.Context, tx *sql.Tx, knID string, branch string, cgID string, otIDs []string) error
 }

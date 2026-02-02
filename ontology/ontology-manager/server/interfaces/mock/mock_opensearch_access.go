@@ -92,6 +92,20 @@ func (mr *MockOpenSearchAccessMockRecorder) CreateIndex(ctx, indexName, body int
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateIndex", reflect.TypeOf((*MockOpenSearchAccess)(nil).CreateIndex), ctx, indexName, body)
 }
 
+// DeleteByQuery mocks base method.
+func (m *MockOpenSearchAccess) DeleteByQuery(ctx context.Context, indexName string, query any) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DeleteByQuery", ctx, indexName, query)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// DeleteByQuery indicates an expected call of DeleteByQuery.
+func (mr *MockOpenSearchAccessMockRecorder) DeleteByQuery(ctx, indexName, query interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteByQuery", reflect.TypeOf((*MockOpenSearchAccess)(nil).DeleteByQuery), ctx, indexName, query)
+}
+
 // DeleteData mocks base method.
 func (m *MockOpenSearchAccess) DeleteData(ctx context.Context, indexName, docID string) error {
 	m.ctrl.T.Helper()

@@ -141,7 +141,7 @@ func Test_RelationTypeRestHandler_CreateRelationTypes(t *testing.T) {
 				HTTPCode: http.StatusInternalServerError,
 				Language: rest.DefaultLanguage,
 				BaseError: rest.BaseError{
-					ErrorCode: oerrors.OntologyManager_KnowledgeNetwork_InternalError,
+					ErrorCode: oerrors.OntologyManager_RelationType_InternalError,
 				},
 			}
 			kns.EXPECT().CheckKNExistByID(gomock.Any(), knID, gomock.Any()).Return("", false, expectedErr)
@@ -377,7 +377,7 @@ func Test_RelationTypeRestHandler_DeleteRelationTypes(t *testing.T) {
 			kns.EXPECT().CheckKNExistByID(gomock.Any(), knID, gomock.Any()).Return(knID, true, nil)
 			rts.EXPECT().CheckRelationTypeExistByID(gomock.Any(), knID, gomock.Any(), "rt1").Return("relation1", true, nil)
 			rts.EXPECT().CheckRelationTypeExistByID(gomock.Any(), knID, gomock.Any(), "rt2").Return("relation2", true, nil)
-			rts.EXPECT().DeleteRelationTypesByIDs(gomock.Any(), gomock.Any(), knID, gomock.Any(), gomock.Any()).Return(int64(2), nil)
+			rts.EXPECT().DeleteRelationTypesByIDs(gomock.Any(), gomock.Any(), knID, gomock.Any(), gomock.Any()).Return(nil)
 
 			req := httptest.NewRequest(http.MethodDelete, url, nil)
 			w := httptest.NewRecorder()
@@ -419,7 +419,7 @@ func Test_RelationTypeRestHandler_DeleteRelationTypes(t *testing.T) {
 			kns.EXPECT().CheckKNExistByID(gomock.Any(), knID, gomock.Any()).Return(knID, true, nil)
 			rts.EXPECT().CheckRelationTypeExistByID(gomock.Any(), knID, gomock.Any(), "rt1").Return("relation1", true, nil)
 			rts.EXPECT().CheckRelationTypeExistByID(gomock.Any(), knID, gomock.Any(), "rt2").Return("relation2", true, nil)
-			rts.EXPECT().DeleteRelationTypesByIDs(gomock.Any(), gomock.Any(), knID, gomock.Any(), gomock.Any()).Return(int64(0), err)
+			rts.EXPECT().DeleteRelationTypesByIDs(gomock.Any(), gomock.Any(), knID, gomock.Any(), gomock.Any()).Return(err)
 
 			req := httptest.NewRequest(http.MethodDelete, url, nil)
 			w := httptest.NewRecorder()

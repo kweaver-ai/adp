@@ -20,4 +20,5 @@ type RelationTypeAccess interface {
 
 	GetAllRelationTypesByKnID(ctx context.Context, knID string, branch string) (map[string]*RelationType, error)
 	GetRelationTypeIDsByKnID(ctx context.Context, knID string, branch string) ([]string, error)
+	DeleteRelationTypesByKnID(ctx context.Context, tx *sql.Tx, knID string, branch string) (int64, error)
 }

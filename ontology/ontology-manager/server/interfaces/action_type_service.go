@@ -13,9 +13,10 @@ type ActionTypeService interface {
 	ListActionTypes(ctx context.Context, query ActionTypesQueryParams) ([]*ActionType, int, error)
 	GetActionTypesByIDs(ctx context.Context, knID string, branch string, atIDs []string) ([]*ActionType, error)
 	UpdateActionType(ctx context.Context, tx *sql.Tx, actionType *ActionType) error
-	DeleteActionTypesByIDs(ctx context.Context, tx *sql.Tx, knID string, branch string, atIDs []string) (int64, error)
+	DeleteActionTypesByIDs(ctx context.Context, tx *sql.Tx, knID string, branch string, atIDs []string) error
 
 	GetActionTypeIDsByKnID(ctx context.Context, knID string, branch string) ([]string, error)
+	DeleteActionTypesByKnID(ctx context.Context, tx *sql.Tx, knID string, branch string) error
 
 	SearchActionTypes(ctx context.Context, query *ConceptsQuery) (ActionTypes, error)
 

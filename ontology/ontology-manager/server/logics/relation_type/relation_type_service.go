@@ -17,7 +17,6 @@ import (
 	o11y "github.com/kweaver-ai/kweaver-go-lib/observability"
 	"github.com/kweaver-ai/kweaver-go-lib/rest"
 	"github.com/rs/xid"
-	attr "go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
 
 	"ontology-manager/common"
@@ -65,13 +64,10 @@ func NewRelationTypeService(appSetting *common.AppSetting) interfaces.RelationTy
 	return rtService
 }
 
-func (rts *relationTypeService) CheckRelationTypeExistByID(ctx context.Context,
-	knID string, branch string, rtID string) (string, bool, error) {
+func (rts *relationTypeService) CheckRelationTypeExistByID(ctx context.Context, knID string, branch string, rtID string) (string, bool, error) {
 
 	ctx, span := ar_trace.Tracer.Start(ctx, fmt.Sprintf("校验关系类[%s]的存在性", rtID))
 	defer span.End()
-
-	span.SetAttributes(attr.Key("rt_id").String(rtID))
 
 	rtName, exist, err := rts.rta.CheckRelationTypeExistByID(ctx, knID, branch, rtID)
 	if err != nil {
@@ -87,13 +83,10 @@ func (rts *relationTypeService) CheckRelationTypeExistByID(ctx context.Context,
 	return rtName, exist, nil
 }
 
-func (rts *relationTypeService) CheckRelationTypeExistByName(ctx context.Context,
-	knID string, branch string, rtName string) (string, bool, error) {
+func (rts *relationTypeService) CheckRelationTypeExistByName(ctx context.Context, knID string, branch string, rtName string) (string, bool, error) {
 
 	ctx, span := ar_trace.Tracer.Start(ctx, fmt.Sprintf("校验关系类[%s]的存在性", rtName))
 	defer span.End()
-
-	span.SetAttributes(attr.Key("rt_name").String(rtName))
 
 	rtID, exist, err := rts.rta.CheckRelationTypeExistByName(ctx, knID, branch, rtName)
 	if err != nil {
@@ -320,13 +313,10 @@ func (rts *relationTypeService) ListRelationTypes(ctx context.Context,
 	return relationTypes, total, nil
 }
 
-func (rts *relationTypeService) GetRelationTypesByIDs(ctx context.Context,
-	knID string, branch string, rtIDs []string) ([]*interfaces.RelationType, error) {
+func (rts *relationTypeService) GetRelationTypesByIDs(ctx context.Context, knID string, branch string, rtIDs []string) ([]*interfaces.RelationType, error) {
 	// 获取关系类
 	ctx, span := ar_trace.Tracer.Start(ctx, fmt.Sprintf("查询关系类[%v]信息", rtIDs))
 	defer span.End()
-
-	span.SetAttributes(attr.Key("rt_ids").String(fmt.Sprintf("%v", rtIDs)))
 
 	// 判断userid是否有查看业务知识网络的权限
 	err := rts.ps.CheckPermission(ctx, interfaces.Resource{
@@ -471,15 +461,9 @@ func (rts *relationTypeService) GetRelationTypesByIDs(ctx context.Context,
 }
 
 // 更新关系类
-func (rts *relationTypeService) UpdateRelationType(ctx context.Context,
-	tx *sql.Tx, relationType *interfaces.RelationType) error {
-
+func (rts *relationTypeService) UpdateRelationType(ctx context.Context, tx *sql.Tx, relationType *interfaces.RelationType) error {
 	ctx, span := ar_trace.Tracer.Start(ctx, "Update relation type")
 	defer span.End()
-
-	span.SetAttributes(
-		attr.Key("rt_id").String(relationType.RTID),
-		attr.Key("rt_name").String(relationType.RTName))
 
 	// 判断userid是否有修改业务知识网络的权限
 	err := rts.ps.CheckPermission(ctx, interfaces.Resource{
@@ -566,9 +550,7 @@ func (rts *relationTypeService) UpdateRelationType(ctx context.Context,
 	return nil
 }
 
-func (rts *relationTypeService) DeleteRelationTypesByIDs(ctx context.Context, tx *sql.Tx,
-	knID string, branch string, rtIDs []string) (int64, error) {
-
+func (rts *relationTypeService) DeleteRelationTypesByIDs(ctx context.Context, tx *sql.Tx, knID string, branch string, rtIDs []string) error {
 	ctx, span := ar_trace.Tracer.Start(ctx, "Delete relation types")
 	defer span.End()
 
@@ -578,7 +560,7 @@ func (rts *relationTypeService) DeleteRelationTypesByIDs(ctx context.Context, tx
 		ID:   knID,
 	}, []string{interfaces.OPERATION_TYPE_MODIFY})
 	if err != nil {
-		return 0, err
+		return err
 	}
 
 	if tx == nil {
@@ -589,7 +571,7 @@ func (rts *relationTypeService) DeleteRelationTypesByIDs(ctx context.Context, tx
 			span.SetStatus(codes.Error, "事务开启失败")
 			o11y.Error(ctx, fmt.Sprintf("Begin transaction error: %s", err.Error()))
 
-			return 0, rest.NewHTTPError(ctx, http.StatusInternalServerError,
+			return rest.NewHTTPError(ctx, http.StatusInternalServerError,
 				oerrors.OntologyManager_RelationType_InternalError_BeginTransactionFailed).
 				WithErrorDetails(err.Error())
 		}
@@ -619,12 +601,11 @@ func (rts *relationTypeService) DeleteRelationTypesByIDs(ctx context.Context, tx
 
 	// 删除指标模型
 	rowsAffect, err := rts.rta.DeleteRelationTypesByIDs(ctx, tx, knID, branch, rtIDs)
-	span.SetAttributes(attr.Key("rows_affect").Int64(rowsAffect))
 	if err != nil {
 		logger.Errorf("DeleteRelationTypes error: %s", err.Error())
 		span.SetStatus(codes.Error, "删除关系类失败")
 
-		return rowsAffect, rest.NewHTTPError(ctx, http.StatusInternalServerError,
+		return rest.NewHTTPError(ctx, http.StatusInternalServerError,
 			oerrors.OntologyManager_RelationType_InternalError).WithErrorDetails(err.Error())
 	}
 
@@ -638,12 +619,41 @@ func (rts *relationTypeService) DeleteRelationTypesByIDs(ctx context.Context, tx
 		docid := interfaces.GenerateConceptDocuemtnID(knID, interfaces.MODULE_TYPE_RELATION_TYPE, rtID, branch)
 		err = rts.osa.DeleteData(ctx, interfaces.KN_CONCEPT_INDEX_NAME, docid)
 		if err != nil {
-			return 0, err
+			return err
 		}
 	}
 
 	span.SetStatus(codes.Ok, "")
-	return rowsAffect, nil
+	return nil
+}
+
+// 内部接口，根据业务知识网络ID删除所有关系类，不校验权限，tx必须传入
+func (rts *relationTypeService) DeleteRelationTypesByKnID(ctx context.Context, tx *sql.Tx, knID string, branch string) error {
+	ctx, span := ar_trace.Tracer.Start(ctx, "Delete relation types by kn_id")
+	defer span.End()
+
+	if tx == nil {
+		logger.Errorf("missing transaction")
+		o11y.Error(ctx, "missing transaction")
+		span.SetStatus(codes.Error, "缺少事务")
+		return rest.NewHTTPError(ctx, http.StatusInternalServerError,
+			oerrors.OntologyManager_RelationType_InternalError_MissingTransaction).
+			WithErrorDetails("missing transaction")
+	}
+
+	// 删除指标模型
+	rowsAffect, err := rts.rta.DeleteRelationTypesByKnID(ctx, tx, knID, branch)
+	if err != nil {
+		logger.Errorf("DeleteRelationTypesByKnID error: %s", err.Error())
+		span.SetStatus(codes.Error, "删除关系类失败")
+		return rest.NewHTTPError(ctx, http.StatusInternalServerError,
+			oerrors.OntologyManager_RelationType_InternalError).WithErrorDetails(err.Error())
+	}
+
+	logger.Infof("DeleteRelationTypesByKnID success, the kn_id is [%s], branch is [%s], rowsAffect is [%d]",
+		knID, branch, rowsAffect)
+	span.SetStatus(codes.Ok, "")
+	return nil
 }
 
 func (rts *relationTypeService) handleRelationTypeImportMode(ctx context.Context, mode string,
@@ -856,7 +866,7 @@ func (rts *relationTypeService) SearchRelationTypes(ctx context.Context,
 			span.SetStatus(codes.Error, fmt.Sprintf("GetConceptGroupsTotal in knowledge network[%s], error: %v", query.KNID, err))
 
 			return response, rest.NewHTTPError(ctx, http.StatusInternalServerError,
-				oerrors.OntologyManager_KnowledgeNetwork_InternalError).WithErrorDetails(err.Error())
+				oerrors.OntologyManager_RelationType_InternalError).WithErrorDetails(err.Error())
 		}
 		if cgCnt == 0 {
 			errStr := fmt.Sprintf("all concept group not found, expect concept group nums is [%d], actual concept group num is [%d]",
@@ -864,7 +874,7 @@ func (rts *relationTypeService) SearchRelationTypes(ctx context.Context,
 			logger.Errorf(errStr)
 
 			return response, rest.NewHTTPError(ctx, http.StatusInternalServerError,
-				oerrors.OntologyManager_ObjectType_InternalError).
+				oerrors.OntologyManager_RelationType_InternalError).
 				WithErrorDetails(errStr)
 		}
 		// 在当前业务知识网络下查找属于请求的分组范围内的关系类ID
@@ -882,7 +892,7 @@ func (rts *relationTypeService) SearchRelationTypes(ctx context.Context,
 			span.End()
 
 			return response, rest.NewHTTPError(ctx, http.StatusInternalServerError,
-				oerrors.OntologyManager_ObjectType_InternalError).WithErrorDetails(errStr)
+				oerrors.OntologyManager_RelationType_InternalError).WithErrorDetails(errStr)
 		}
 		// 概念分组下没有关系类,返回空
 		if len(rtIDArr) == 0 {
@@ -1025,13 +1035,10 @@ func (rts *relationTypeService) GetTotal(ctx context.Context, dsl map[string]any
 }
 
 // 内部调用，不加权限校验
-func (rts *relationTypeService) GetRelationTypeIDsByKnID(ctx context.Context,
-	knID string, branch string) ([]string, error) {
+func (rts *relationTypeService) GetRelationTypeIDsByKnID(ctx context.Context, knID string, branch string) ([]string, error) {
 	// 获取关系类
 	ctx, span := ar_trace.Tracer.Start(ctx, fmt.Sprintf("按kn_id[%s]获取关系类IDs", knID))
 	defer span.End()
-
-	span.SetAttributes(attr.Key("kn_id").String(knID))
 
 	// 获取对象类基本信息
 	rtIDs, err := rts.rta.GetRelationTypeIDsByKnID(ctx, knID, branch)

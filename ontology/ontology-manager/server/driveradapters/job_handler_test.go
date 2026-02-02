@@ -116,7 +116,7 @@ func Test_JobRestHandler_CreateJob(t *testing.T) {
 				HTTPCode: http.StatusInternalServerError,
 				Language: rest.DefaultLanguage,
 				BaseError: rest.BaseError{
-					ErrorCode: oerrors.OntologyManager_KnowledgeNetwork_InternalError,
+					ErrorCode: oerrors.OntologyManager_Job_InternalError,
 				},
 			}
 			kns.EXPECT().CheckKNExistByID(gomock.Any(), knID, gomock.Any()).Return("", false, expectedErr)
@@ -180,11 +180,11 @@ func Test_JobRestHandler_DeleteJobs(t *testing.T) {
 
 		Convey("Success DeleteJobs\n", func() {
 			kns.EXPECT().CheckKNExistByID(gomock.Any(), knID, gomock.Any()).Return(knID, true, nil)
-			js.EXPECT().GetJobs(gomock.Any(), gomock.Any()).Return(map[string]*interfaces.JobInfo{
+			js.EXPECT().GetJobsByIDs(gomock.Any(), gomock.Any()).Return(map[string]*interfaces.JobInfo{
 				"job1": {ID: "job1", Name: "job1", KNID: knID, Branch: interfaces.MAIN_BRANCH},
 				"job2": {ID: "job2", Name: "job2", KNID: knID, Branch: interfaces.MAIN_BRANCH},
 			}, nil)
-			js.EXPECT().DeleteJobs(gomock.Any(), knID, gomock.Any(), gomock.Any()).Return(nil)
+			js.EXPECT().DeleteJobsByIDs(gomock.Any(), knID, gomock.Any(), gomock.Any()).Return(nil)
 
 			req := httptest.NewRequest(http.MethodDelete, url, nil)
 			w := httptest.NewRecorder()
@@ -205,7 +205,7 @@ func Test_JobRestHandler_DeleteJobs(t *testing.T) {
 
 		Convey("Job not found\n", func() {
 			kns.EXPECT().CheckKNExistByID(gomock.Any(), knID, gomock.Any()).Return(knID, true, nil)
-			js.EXPECT().GetJobs(gomock.Any(), gomock.Any()).Return(map[string]*interfaces.JobInfo{
+			js.EXPECT().GetJobsByIDs(gomock.Any(), gomock.Any()).Return(map[string]*interfaces.JobInfo{
 				"job1": {ID: "job1", Name: "job1", KNID: knID, Branch: interfaces.MAIN_BRANCH},
 			}, nil)
 
@@ -340,7 +340,7 @@ func Test_JobRestHandler_ListTasks(t *testing.T) {
 
 		Convey("Success ListTasks\n", func() {
 			kns.EXPECT().CheckKNExistByID(gomock.Any(), knID, gomock.Any()).Return(knID, true, nil)
-			js.EXPECT().GetJob(gomock.Any(), jobID).Return(&interfaces.JobInfo{
+			js.EXPECT().GetJobByID(gomock.Any(), jobID).Return(&interfaces.JobInfo{
 				ID:     jobID,
 				KNID:   knID,
 				Branch: interfaces.MAIN_BRANCH,
@@ -366,7 +366,7 @@ func Test_JobRestHandler_ListTasks(t *testing.T) {
 
 		Convey("Job not found\n", func() {
 			kns.EXPECT().CheckKNExistByID(gomock.Any(), knID, gomock.Any()).Return(knID, true, nil)
-			js.EXPECT().GetJob(gomock.Any(), jobID).Return(nil, nil)
+			js.EXPECT().GetJobByID(gomock.Any(), jobID).Return(nil, nil)
 
 			req := httptest.NewRequest(http.MethodGet, url, nil)
 			w := httptest.NewRecorder()
@@ -375,7 +375,7 @@ func Test_JobRestHandler_ListTasks(t *testing.T) {
 			So(w.Result().StatusCode, ShouldEqual, http.StatusForbidden)
 		})
 
-		Convey("GetJob failed\n", func() {
+		Convey("GetJobByID failed\n", func() {
 			expectedErr := &rest.HTTPError{
 				HTTPCode: http.StatusInternalServerError,
 				Language: rest.DefaultLanguage,
@@ -384,7 +384,7 @@ func Test_JobRestHandler_ListTasks(t *testing.T) {
 				},
 			}
 			kns.EXPECT().CheckKNExistByID(gomock.Any(), knID, gomock.Any()).Return(knID, true, nil)
-			js.EXPECT().GetJob(gomock.Any(), jobID).Return(nil, expectedErr)
+			js.EXPECT().GetJobByID(gomock.Any(), jobID).Return(nil, expectedErr)
 
 			req := httptest.NewRequest(http.MethodGet, url, nil)
 			w := httptest.NewRecorder()
@@ -395,7 +395,7 @@ func Test_JobRestHandler_ListTasks(t *testing.T) {
 
 		Convey("Invalid pagination parameters\n", func() {
 			kns.EXPECT().CheckKNExistByID(gomock.Any(), knID, gomock.Any()).Return(knID, true, nil)
-			js.EXPECT().GetJob(gomock.Any(), jobID).Return(&interfaces.JobInfo{
+			js.EXPECT().GetJobByID(gomock.Any(), jobID).Return(&interfaces.JobInfo{
 				ID:     jobID,
 				KNID:   knID,
 				Branch: interfaces.MAIN_BRANCH,
@@ -410,7 +410,7 @@ func Test_JobRestHandler_ListTasks(t *testing.T) {
 
 		Convey("Invalid concept_type\n", func() {
 			kns.EXPECT().CheckKNExistByID(gomock.Any(), knID, gomock.Any()).Return(knID, true, nil)
-			js.EXPECT().GetJob(gomock.Any(), jobID).Return(&interfaces.JobInfo{
+			js.EXPECT().GetJobByID(gomock.Any(), jobID).Return(&interfaces.JobInfo{
 				ID:     jobID,
 				KNID:   knID,
 				Branch: interfaces.MAIN_BRANCH,
@@ -425,7 +425,7 @@ func Test_JobRestHandler_ListTasks(t *testing.T) {
 
 		Convey("Invalid state\n", func() {
 			kns.EXPECT().CheckKNExistByID(gomock.Any(), knID, gomock.Any()).Return(knID, true, nil)
-			js.EXPECT().GetJob(gomock.Any(), jobID).Return(&interfaces.JobInfo{
+			js.EXPECT().GetJobByID(gomock.Any(), jobID).Return(&interfaces.JobInfo{
 				ID:     jobID,
 				KNID:   knID,
 				Branch: interfaces.MAIN_BRANCH,
@@ -447,7 +447,7 @@ func Test_JobRestHandler_ListTasks(t *testing.T) {
 				},
 			}
 			kns.EXPECT().CheckKNExistByID(gomock.Any(), knID, gomock.Any()).Return(knID, true, nil)
-			js.EXPECT().GetJob(gomock.Any(), jobID).Return(&interfaces.JobInfo{
+			js.EXPECT().GetJobByID(gomock.Any(), jobID).Return(&interfaces.JobInfo{
 				ID:     jobID,
 				KNID:   knID,
 				Branch: interfaces.MAIN_BRANCH,

@@ -1,5 +1,6 @@
 package com.eisoo.dc.metadata.service.impl;
 
+import cn.hutool.core.date.StopWatch;
 import cn.hutool.json.JSONArray;
 import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.JSONObject;
@@ -120,15 +121,15 @@ public class TableScanServiceImpl extends ServiceImpl<TableScanMapper, TableScan
         }
         String dataSourceType = dataSourceEntity.getFType();
         // 首先从新的表查询，查不出来再去旧的表查询
-        List<TableScanEntity> dsList = tableScanMapper.getTableListByDsId(dsId, keyword);
+        List<TableScanEntity> tableScanEntities = tableScanMapper.getTableListByDsId(dsId, keyword, offset, limit, sort, direction);
         long count = tableScanMapper.selectCount(dsId, keyword);
-        if (dsList.size() == 0) {
+        if (count == 0) {
             // 从old查询
             return getTableOldListByDsId(userId, dsId, keyword, limit, offset, sort, direction);
         }
         //TODO:这里可以根据userId过滤资源
-        Set<String> ids = dsList.stream().map(TableScanEntity::getFId).collect(Collectors.toSet());
-        List<TableScanEntity> tableScanEntities = tableScanMapper.selectPage(ids, keyword, offset, limit, sort, direction);
+//        Set<String> ids = dsList.stream().map(TableScanEntity::getFId).collect(Collectors.toSet());
+//        List<TableScanEntity> tableScanEntities = tableScanMapper.selectPage(ids, keyword, offset, limit, sort, direction);
         if (tableScanEntities == null || tableScanEntities.size() == 0) {
             response.put("entries", new JSONArray());
             response.put("total_count", 0);
@@ -174,19 +175,27 @@ public class TableScanServiceImpl extends ServiceImpl<TableScanMapper, TableScan
             updateTime = offsetDateTime.format(targetFormatter);
         }
         // 查询所有
-        List<String> dsList = tableScanMapper.getTableListByDsIdsBatch(dsIds, updateTime, keyword);
+        StopWatch stopWatch = new StopWatch();
+        stopWatch.start();
+        List<TableScanEntity> tableScanEntities = tableScanMapper.getTableListByDsIdsBatch(dsIdsExist,
+                updateTime,
+                keyword,
+                offset,
+                limit,
+                sort,
+                direction);
+        stopWatch.stop();
+        log.info("[getTableListByDsIdsBatch]耗时：{}s", stopWatch.getTotalTimeSeconds());
+        stopWatch.start();
         long count = tableScanMapper.selectCountByDsIdsBatch(dsIds, updateTime, keyword);
-        if (dsList.size() == 0) {
+        stopWatch.stop();
+        log.info("[selectCountByDsIdsBatch]耗时：{}s", stopWatch.getTotalTimeSeconds());
+        if (count == 0) {
             response.put("entries", entries);
             response.put("total_count", 0);
             return ResponseEntity.ok(response);
         }
         //TODO:这里可以根据userId过滤资源
-        Set<String> ids = new HashSet<>(dsList);
-        List<TableScanEntity> tableScanEntities = tableScanMapper.selectPageBatch(ids, keyword, offset, limit, sort, direction)
-                .stream()
-                .filter(t -> dsIdsExist.contains(t.getFDataSourceId()))
-                .collect(Collectors.toList());
         List<TableScanDto> results = tableScanEntities.stream().map(t -> {
             TableScanDto tableScanDto = new TableScanDto();
             tableScanDto.setId(t.getFId());
@@ -295,29 +304,22 @@ public class TableScanServiceImpl extends ServiceImpl<TableScanMapper, TableScan
         return ResponseEntity.ok(response);
     }
 
-
     public ResponseEntity<?> getTableOldListByDsId(String userId, String dsId, String keyword, int limit,
                                                    int offset, String sort, String direction) {
         JSONArray entries = new JSONArray();
         JSONObject response = new JSONObject();
-        List<TableOldEntity> dsList = tableOldMapper.getTableListByDsId(dsId, keyword);
-        long count = tableOldMapper.selectCount(dsId, keyword);
-        if (dsList == null || dsList.size() == 0) {
-            response.put("entries", entries);
-            response.put("total_count", 0);
-            return ResponseEntity.ok(response);
-        }
-        //TODO:这里可以根据userId过滤资源
-        Set<Long> ids = dsList.stream().map(TableOldEntity::getFId).collect(Collectors.toSet());
         if ("f_create_time".equals(sort) || "f_operation_time".equals(sort)) {
             sort = "f_update_time";
         }
-        List<TableOldEntity> tableScanEntities = tableOldMapper.selectPage(ids, keyword, offset, limit, sort, direction);
-        if (tableScanEntities == null || tableScanEntities.size() == 0) {
+        List<TableOldEntity> tableScanEntities = tableOldMapper.getTableListByDsId(dsId, keyword, offset, limit, sort, direction);
+        long count = tableOldMapper.selectCount(dsId, keyword);
+
+        if (count == 0) {
             response.put("entries", entries);
             response.put("total_count", 0);
             return ResponseEntity.ok(response);
         }
+
         List<TableScanDto> results = tableScanEntities.stream().map(t -> {
             TableScanDto tableScanDto = new TableScanDto(
                     String.valueOf(t.getFId()),

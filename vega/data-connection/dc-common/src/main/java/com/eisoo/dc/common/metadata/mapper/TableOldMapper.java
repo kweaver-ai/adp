@@ -13,7 +13,12 @@ import java.util.Set;
 
 public interface TableOldMapper extends BaseMapper<TableOldEntity> {
 
-    List<TableOldEntity> getTableListByDsId(String dsId, String keyword);
+    List<TableOldEntity> getTableListByDsId(@Param("dsId") String dsId,
+                                            @Param("keyword") String keyword,
+                                            @Param("offset") int offset,
+                                            @Param("limit") int limit,
+                                            @Param("sortOrder") String sortOrder,
+                                            @Param("direction") String direction);
 
     long selectCount(String dsId, String keyword);
 

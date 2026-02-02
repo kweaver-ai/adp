@@ -49,6 +49,11 @@ Description = "Internal Error"
 Solution = "Please try again. If the error occurs again, please submit the work order or contact technical support."
 ErrorLink = "None"
 
+[OntologyManager.ActionType.InternalError.MissingTransaction]
+Description = "Missing Transaction"
+Solution = "Please try again. If the error occurs again, please submit the work order or contact technical support."
+ErrorLink = "None"
+
 [OntologyManager.ActionType.InternalError.BeginTransactionFailed]
 Description = "Begin Transaction Failed"
 Solution = "Please try again. If the error occurs again, please submit the work order or contact technical support."

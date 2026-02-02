@@ -624,3 +624,35 @@ func (o *openSearchAccess) Refresh(ctx context.Context, indexName string) error 
 
 	return nil
 }
+
+func (o *openSearchAccess) DeleteByQuery(ctx context.Context, indexName string, query any) error {
+	ctx, span := ar_trace.Tracer.Start(ctx, "DeleteByQuery", trace.WithSpanKind(trace.SpanKindClient))
+	defer span.End()
+
+	span.SetAttributes(attr.Key("index_name").String(indexName))
+
+	// 将查询条件编码为JSON
+	queryJSON, err := sonic.Marshal(query)
+	if err != nil {
+		return fmt.Errorf("failed to marshal query: %w", err)
+	}
+
+	// 创建删除请求
+	req := opensearchapi.DeleteByQueryRequest{
+		Index: []string{indexName},
+		Body:  bytes.NewReader(queryJSON),
+	}
+
+	// 执行请求
+	res, err := req.Do(ctx, o.client)
+	if err != nil {
+		return fmt.Errorf("failed to DeleteByQuery: %w", err)
+	}
+	defer res.Body.Close()
+
+	if res.IsError() {
+		return fmt.Errorf("DeleteByQuery failed: %s, %s", res.Status(), res.String())
+	}
+
+	return nil
+}

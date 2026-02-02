@@ -444,7 +444,7 @@ func Test_objectTypeService_GetObjectsByObjectTypeID(t *testing.T) {
 				Branch:       branch,
 				ObjectTypeID: objectTypeID,
 				ObjectQueryInfo: &interfaces.ObjectQueryInfo{
-					UniqueIdentities: []map[string]any{
+					InstanceIdentity: []map[string]any{
 						{"id": "123"}, // 缺少 name
 					},
 				},
@@ -476,7 +476,7 @@ func Test_objectTypeService_GetObjectsByObjectTypeID(t *testing.T) {
 				Branch:       branch,
 				ObjectTypeID: objectTypeID,
 				ObjectQueryInfo: &interfaces.ObjectQueryInfo{
-					UniqueIdentities: []map[string]any{
+					InstanceIdentity: []map[string]any{
 						{"id": "123"},
 					},
 					Properties: []string{"invalid_prop"},
@@ -1068,7 +1068,7 @@ func Test_objectTypeService_GetObjectPropertyValue(t *testing.T) {
 				KNID:         "kn1",
 				Branch:       "main",
 				ObjectTypeID: "ot1",
-				UniqueIdentities: []map[string]any{
+				InstanceIdentity: []map[string]any{
 					{"id": "123"},
 				},
 				Properties: []string{"prop1"},
@@ -1110,7 +1110,7 @@ func Test_objectTypeService_GetObjectPropertyValue(t *testing.T) {
 				KNID:         "kn1",
 				Branch:       "main",
 				ObjectTypeID: "ot1",
-				UniqueIdentities: []map[string]any{
+				InstanceIdentity: []map[string]any{
 					{"id": "123"},
 				},
 				Properties: []string{"prop1", "logic_prop1"},
@@ -1198,7 +1198,7 @@ func Test_objectTypeService_GetObjectPropertyValue(t *testing.T) {
 				KNID:         "kn1",
 				Branch:       "main",
 				ObjectTypeID: "ot1",
-				UniqueIdentities: []map[string]any{
+				InstanceIdentity: []map[string]any{
 					{"id": "123"},
 				},
 				Properties: []string{"prop1"},
@@ -1216,7 +1216,7 @@ func Test_objectTypeService_GetObjectPropertyValue(t *testing.T) {
 				KNID:         "kn1",
 				Branch:       "main",
 				ObjectTypeID: "ot1",
-				UniqueIdentities: []map[string]any{
+				InstanceIdentity: []map[string]any{
 					{"id": "123"},
 				},
 				Properties: []string{"logic_prop1"},
@@ -1305,7 +1305,7 @@ func Test_objectTypeService_GetObjectPropertyValue(t *testing.T) {
 				KNID:         "kn1",
 				Branch:       "main",
 				ObjectTypeID: "ot1",
-				UniqueIdentities: []map[string]any{
+				InstanceIdentity: []map[string]any{
 					{"id": "123"},
 				},
 				Properties: []string{"logic_prop1"},
@@ -1382,7 +1382,7 @@ func Test_objectTypeService_GetObjectPropertyValue(t *testing.T) {
 				KNID:         "kn1",
 				Branch:       "main",
 				ObjectTypeID: "ot1",
-				UniqueIdentities: []map[string]any{
+				InstanceIdentity: []map[string]any{
 					{"id": "123"},
 				},
 				Properties: []string{"logic_prop1"},
@@ -1458,7 +1458,7 @@ func Test_objectTypeService_GetObjectPropertyValue(t *testing.T) {
 				KNID:         "kn1",
 				Branch:       "main",
 				ObjectTypeID: "ot1",
-				UniqueIdentities: []map[string]any{
+				InstanceIdentity: []map[string]any{
 					{"id": "123"},
 				},
 				Properties:    []string{"logic_prop1"},

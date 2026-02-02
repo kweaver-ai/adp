@@ -30,7 +30,7 @@ func ValidateHeaderMethodOverride(ctx context.Context, headerMethod string) erro
 
 // 校验对象类的查询参数
 func validateObjectsQueryParameters(ctx context.Context, includeTypeInfo string, ignoringStoreCache string,
-	includeLogicParams string) (interfaces.CommonQueryParameters, error) {
+	includeLogicParams string, excludeSystemProperties []string) (interfaces.CommonQueryParameters, error) {
 
 	includeType, err := strconv.ParseBool(includeTypeInfo)
 	if err != nil {
@@ -50,16 +50,30 @@ func validateObjectsQueryParameters(ctx context.Context, includeTypeInfo string,
 			WithErrorDetails(fmt.Sprintf("The ignoring_store_cache:%s is invalid", ignoringStoreCache))
 	}
 
+	// 校验排除的系统字段
+	validFields := map[string]bool{
+		interfaces.SYSTEM_PROPERTY_INSTANCE_ID:       true,
+		interfaces.SYSTEM_PROPERTY_INSTANCE_IDENTITY: true,
+		interfaces.SYSTEM_PROPERTY_DISPLAY:           true,
+	}
+	for _, field := range excludeSystemProperties {
+		if !validFields[field] {
+			return interfaces.CommonQueryParameters{}, rest.NewHTTPError(ctx, http.StatusBadRequest, oerrors.OntologyQuery_ObjectType_InvalidParameter).
+				WithErrorDetails(fmt.Sprintf("无效的系统字段: %s，支持的字段有: _instance_id, _instance_identity, _display", field))
+		}
+	}
+
 	return interfaces.CommonQueryParameters{
-		IncludeTypeInfo:    includeType,
-		IncludeLogicParams: includeLogicP,
-		IgnoringStore:      ignoringStore,
+		IncludeTypeInfo:         includeType,
+		IncludeLogicParams:      includeLogicP,
+		IgnoringStore:           ignoringStore,
+		ExcludeSystemProperties: excludeSystemProperties,
 	}, nil
 }
 
 // 校验子图查询的查询参数
 func validateSugraphQueryParameters(ctx context.Context,
-	includeLogicParams string, ignoringStoreCache string) (interfaces.CommonQueryParameters, error) {
+	includeLogicParams string, ignoringStoreCache string, excludeSystemProperties []string) (interfaces.CommonQueryParameters, error) {
 
 	includeLogicP, err := strconv.ParseBool(includeLogicParams)
 	if err != nil {
@@ -73,9 +87,23 @@ func validateSugraphQueryParameters(ctx context.Context,
 			WithErrorDetails(fmt.Sprintf("The ignoring_store_cache:%s is invalid", ignoringStoreCache))
 	}
 
+	// 校验排除的系统字段
+	validFields := map[string]bool{
+		interfaces.SYSTEM_PROPERTY_INSTANCE_ID:       true,
+		interfaces.SYSTEM_PROPERTY_INSTANCE_IDENTITY: true,
+		interfaces.SYSTEM_PROPERTY_DISPLAY:           true,
+	}
+	for _, field := range excludeSystemProperties {
+		if !validFields[field] {
+			return interfaces.CommonQueryParameters{}, rest.NewHTTPError(ctx, http.StatusBadRequest, oerrors.OntologyQuery_ObjectType_InvalidParameter).
+				WithErrorDetails(fmt.Sprintf("无效的系统字段: %s，支持的字段有: _instance_id, _instance_identity, _display", field))
+		}
+	}
+
 	return interfaces.CommonQueryParameters{
-		IncludeLogicParams: includeLogicP,
-		IgnoringStore:      ignoringStore,
+		IncludeLogicParams:      includeLogicP,
+		IgnoringStore:           ignoringStore,
+		ExcludeSystemProperties: excludeSystemProperties,
 	}, nil
 }
 
@@ -302,7 +330,7 @@ func validateObjectSearchRequest(ctx context.Context, query *interfaces.ObjectQu
 func validateActionQuery(ctx context.Context, query *interfaces.ActionQuery) error {
 
 	// 唯一标识非空
-	if len(query.UniqueIdentities) == 0 {
+	if len(query.InstanceIdentity) == 0 {
 		return rest.NewHTTPError(ctx, http.StatusBadRequest, oerrors.OntologyQuery_ActionType_InvalidParameter).
 			WithErrorDetails("行动查询的唯一标识不能为空")
 	}
@@ -313,7 +341,7 @@ func validateActionQuery(ctx context.Context, query *interfaces.ActionQuery) err
 func validateObjectPropertyValueQuery(ctx context.Context, query *interfaces.ObjectPropertyValueQuery) error {
 
 	// 唯一标识非空
-	if len(query.UniqueIdentities) == 0 {
+	if len(query.InstanceIdentity) == 0 {
 		return rest.NewHTTPError(ctx, http.StatusBadRequest, oerrors.OntologyQuery_ObjectType_InvalidParameter).
 			WithErrorDetails("属性查询的唯一标识不能为空")
 	}
