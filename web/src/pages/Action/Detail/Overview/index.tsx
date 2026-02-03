@@ -206,6 +206,7 @@ const Overview: FC<OverviewProps> = ({ knId, atId, detail }) => {
         )}
         {renderItem(intl.get('Action.affectedObjectType'), data.affect?.object_type?.name ? renderObjectTypeLabel(data.affect.object_type) : '--')}
         {renderItem(intl.get('Action.affectDescription'), data.affect?.comment || <span className="g-c-watermark">{intl.get('Global.noDescription')}</span>)}
+        <div style={{height: 6}}></div>
       </div>
 
       {/* Resource Info */}
@@ -238,7 +239,7 @@ const Overview: FC<OverviewProps> = ({ knId, atId, detail }) => {
         )}
 
         {data.action_source && (
-          <div style={{ marginTop: 16 }}>
+          <div style={{ margin: '16px 0 20px' }}>
             <ToolParamsTable disabled actionSource={data.action_source} knId={knId} obId={data?.object_type?.id} value={data?.parameters} />
           </div>
         )}
