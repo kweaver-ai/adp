@@ -539,7 +539,7 @@ func (kns *knowledgeNetworkService) expandObjectPathsBatch(ctx context.Context,
 					}
 					totalPathsInThisBatch := 0
 					for _, currentObj := range currentLevel {
-						if batchObjectIDs[currentObj.ObjectID] {
+						if batchObjectIDs[currentObj.ObjectID] && len(currentObj.Paths) > 0 {
 							paths = append(paths, currentObj.Paths...)
 							totalPathsInThisBatch += len(currentObj.Paths)
 						}

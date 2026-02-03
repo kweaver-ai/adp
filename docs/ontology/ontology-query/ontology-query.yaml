@@ -3474,7 +3474,7 @@ components:
           description: 探索子图的路径的最大长度
           type: integer
         include_incomplete_path:
-          description: 当路径探索无下一个节点时，是否拼接当前路径。默认是false，不会包含不完整的路径
+          description: 是否包含不完整的路径。默认是false，不包含，只返回完整的路径
           type: boolean
           default: false
         sort:
