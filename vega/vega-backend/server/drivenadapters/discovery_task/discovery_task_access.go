@@ -61,6 +61,7 @@ func (da *discoveryTaskAccess) Create(ctx context.Context, task *interfaces.Disc
 		Columns(
 			"f_id",
 			"f_catalog_id",
+			"f_trigger_type",
 			"f_status",
 			"f_progress",
 			"f_message",
@@ -74,6 +75,7 @@ func (da *discoveryTaskAccess) Create(ctx context.Context, task *interfaces.Disc
 		Values(
 			task.ID,
 			task.CatalogID,
+			task.TriggerType,
 			task.Status,
 			task.Progress,
 			task.Message,
@@ -116,6 +118,7 @@ func (da *discoveryTaskAccess) GetByID(ctx context.Context, id string) (*interfa
 	sqlStr, vals, err := sq.Select(
 		"f_id",
 		"f_catalog_id",
+		"f_trigger_type",
 		"f_status",
 		"f_progress",
 		"f_message",
@@ -141,6 +144,7 @@ func (da *discoveryTaskAccess) GetByID(ctx context.Context, id string) (*interfa
 	err = row.Scan(
 		&task.ID,
 		&task.CatalogID,
+		&task.TriggerType,
 		&task.Status,
 		&task.Progress,
 		&task.Message,
@@ -180,16 +184,16 @@ func (da *discoveryTaskAccess) List(ctx context.Context, params interfaces.Disco
 	builder := sq.Select(
 		"f_id",
 		"f_catalog_id",
+		"f_trigger_type",
 		"f_status",
 		"f_progress",
 		"f_message",
+		"f_start_time",
+		"f_finish_time",
 		"f_result",
 		"f_creator",
 		"f_creator_type",
 		"f_create_time",
-		"f_start_time",
-		"f_update_time",
-		"f_finish_time",
 	).From(DISCOVERY_TASK_TABLE_NAME)
 
 	countBuilder := sq.Select("COUNT(*)").From(DISCOVERY_TASK_TABLE_NAME)
@@ -201,6 +205,10 @@ func (da *discoveryTaskAccess) List(ctx context.Context, params interfaces.Disco
 	if params.Status != "" {
 		builder = builder.Where(sq.Eq{"f_status": params.Status})
 		countBuilder = countBuilder.Where(sq.Eq{"f_status": params.Status})
+	}
+	if params.TriggerType != "" {
+		builder = builder.Where(sq.Eq{"f_trigger_type": params.TriggerType})
+		countBuilder = countBuilder.Where(sq.Eq{"f_trigger_type": params.TriggerType})
 	}
 
 	countSql, countVals, _ := countBuilder.ToSql()
@@ -239,6 +247,7 @@ func (da *discoveryTaskAccess) List(ctx context.Context, params interfaces.Disco
 		err := rows.Scan(
 			&task.ID,
 			&task.CatalogID,
+			&task.TriggerType,
 			&task.Status,
 			&task.Progress,
 			&task.Message,

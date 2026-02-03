@@ -87,13 +87,13 @@ func (dw *discoveryWorker) ExecuteDiscovery(ctx context.Context, taskID string) 
 
 	logger.Infof("Starting discovery for task: %s", taskID)
 
-	taskInfo, err := dw.dts.GetByID(ctx, taskID)
+	task, err := dw.dts.GetByID(ctx, taskID)
 	if err != nil {
 		logger.Errorf("Failed to get task info for task %s: %v", taskID, err)
 		return err
 	}
 
-	catalog, err := dw.cs.GetByID(ctx, taskInfo.CatalogID)
+	catalog, err := dw.cs.GetByID(ctx, task.CatalogID)
 	if err != nil {
 		logger.Errorf("Failed to get catalog for task %s: %v", taskID, err)
 		return err

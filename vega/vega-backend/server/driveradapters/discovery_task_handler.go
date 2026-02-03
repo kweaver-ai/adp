@@ -94,16 +94,20 @@ func (r *restHandler) ListDiscoveryTasks(c *gin.Context) {
 		return
 	}
 
-	// Parse pagination params
-	params := interfaces.PaginationParams{}
-	if err := c.ShouldBindQuery(&params); err == nil {
+	// Parse query params
+	params := interfaces.DiscoveryTaskQueryParams{
+		CatalogID:   catalogID,
+		Status:      c.Query("status"),
+		TriggerType: c.Query("trigger_type"),
+	}
+	if err := c.ShouldBindQuery(&params.PaginationParams); err == nil {
 		if params.Limit == 0 {
 			params.Limit = 10
 		}
 	}
 
 	// List tasks
-	tasks, total, err := r.dts.List(ctx, catalogID, params)
+	tasks, total, err := r.dts.List(ctx, params)
 	if err != nil {
 		httpErr := rest.NewHTTPError(ctx, http.StatusInternalServerError, oerrors.VegaManager_Catalog_InternalError).
 			WithErrorDetails(err.Error())
