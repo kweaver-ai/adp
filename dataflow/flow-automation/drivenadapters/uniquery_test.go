@@ -16,6 +16,7 @@ type HttpClientMock struct {
 	httpClient      *mhttp.MockHTTPClient
 	oauthHttpClient *mhttp.MockOAuth2Client
 	httpClient1     *mock_httpclient.MockHTTPClient
+	httpClient2     *mock_httpclient.MockHTTPClient2
 }
 
 func NewHttpClientMock(t *testing.T) *HttpClientMock {
@@ -25,6 +26,7 @@ func NewHttpClientMock(t *testing.T) *HttpClientMock {
 		httpClient:      mhttp.NewMockHTTPClient(ctrl),
 		oauthHttpClient: mhttp.NewMockOAuth2Client(ctrl),
 		httpClient1:     mock_httpclient.NewMockHTTPClient(ctrl),
+		httpClient2:     mock_httpclient.NewMockHTTPClient2(ctrl),
 	}
 }
 
