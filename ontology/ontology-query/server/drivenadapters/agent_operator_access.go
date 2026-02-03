@@ -195,9 +195,10 @@ func (aoa *agentOperatorAccess) ExecuteOperator(ctx context.Context, agentOperat
 	}
 }
 
-// ExecuteMCP executes an MCP-based action through agent-operator-integration
-func (aoa *agentOperatorAccess) ExecuteMCP(ctx context.Context, mcpID string,
-	toolName string, execRequest interfaces.MCPExecutionRequest) (any, error) {
+// ExecuteTool executes a tool via tool-box API
+// API: POST /tool-box/{box_id}/proxy/{tool_id}
+func (aoa *agentOperatorAccess) ExecuteTool(ctx context.Context, boxID string,
+	toolID string, execRequest interfaces.ToolExecutionRequest) (any, error) {
 
 	var (
 		respCode int
@@ -211,13 +212,88 @@ func (aoa *agentOperatorAccess) ExecuteMCP(ctx context.Context, mcpID string,
 	}
 
 	headers := map[string]string{
-		interfaces.CONTENT_TYPE_NAME:        interfaces.CONTENT_TYPE_JSON,
-		interfaces.HTTP_HEADER_ACCOUNT_ID:   accountInfo.ID,
-		interfaces.HTTP_HEADER_ACCOUNT_TYPE: accountInfo.Type,
+		interfaces.CONTENT_TYPE_NAME: interfaces.CONTENT_TYPE_JSON,
+		"user_id":                    accountInfo.ID, // API requires user_id header
 	}
 
-	// http://{host}:{port}/api/agent-operator-integration/internal-v1/mcp/{mcp_id}/tools/{tool_name}/execute
-	url := fmt.Sprintf("%s/mcp/%s/tools/%s/execute", aoa.agentOperatorUrl, mcpID, toolName)
+	// http://{host}:{port}/api/private/agent-operator-integration/v1/tool-box/{box_id}/proxy/{tool_id}
+	url := fmt.Sprintf("%s/%s/proxy/%s", aoa.appSetting.ToolBoxUrl, boxID, toolID)
+
+	start := time.Now().UnixMilli()
+	respCode, result, err = aoa.httpClient.PostNoUnmarshal(ctx, url, headers, execRequest)
+	logger.Debugf("post [%s] with headers[%v] finished, request is [%v] response code is [%d], error is [%v], 耗时: %dms",
+		url, headers, execRequest, respCode, err, time.Now().UnixMilli()-start)
+
+	toolResult := operatorExecuteResult{}
+
+	if err != nil {
+		logger.Errorf("Tool execution request failed: %v", err)
+		return toolResult, fmt.Errorf("tool execution request failed: %v", err)
+	}
+
+	if respCode != http.StatusOK {
+		var opError OperatorError
+		if err = json.Unmarshal(result, &opError); err != nil {
+			logger.Errorf("unmarshal ToolError failed: %v", err)
+			return toolResult, err
+		}
+		httpErr := &rest.HTTPError{HTTPCode: respCode,
+			BaseError: rest.BaseError{
+				ErrorCode:    opError.Code,
+				Description:  opError.Description,
+				ErrorDetails: opError.Detail,
+			}}
+		logger.Errorf("Tool execution failed: %v", httpErr.Error())
+		return toolResult, fmt.Errorf("execute tool %s/%s return error %v", boxID, toolID, httpErr.Error())
+	}
+
+	if result == nil {
+		return toolResult, fmt.Errorf("execute tool %s/%s return null", boxID, toolID)
+	}
+
+	if err := json.Unmarshal(result, &toolResult); err != nil {
+		logger.Errorf("Unmarshal tool execution result failed, %s", err)
+		return toolResult, err
+	}
+
+	// status_code 在100-300间才算成功
+	if http.StatusContinue <= toolResult.StatusCode &&
+		toolResult.StatusCode < http.StatusMultipleChoices {
+		return toolResult.Body, nil
+	} else {
+		resByte, err := json.Marshal(toolResult)
+		if err != nil {
+			logger.Errorf("marshal tool result failed: %v", err)
+			return toolResult, err
+		}
+		return nil, fmt.Errorf("execute tool failed: %v", string(resByte))
+	}
+}
+
+// ExecuteMCP executes an MCP-based action through agent-operator-integration
+// API: POST /mcp/execute/tool/{mcp_tool_id}
+func (aoa *agentOperatorAccess) ExecuteMCP(ctx context.Context, mcpToolID string,
+	toolName string, execRequest interfaces.MCPExecutionRequest) (any, error) {
+
+	var (
+		respCode int
+		result   []byte
+		err      error
+	)
+
+	// Get business domain from context (passed from request header)
+	businessDomain := ""
+	if ctx.Value(interfaces.BUSINESS_DOMAIN_KEY) != nil {
+		businessDomain = ctx.Value(interfaces.BUSINESS_DOMAIN_KEY).(string)
+	}
+
+	headers := map[string]string{
+		interfaces.CONTENT_TYPE_NAME:           interfaces.CONTENT_TYPE_JSON,
+		interfaces.HTTP_HEADER_BUSINESS_DOMAIN: businessDomain,
+	}
+
+	// http://{host}:{port}/api/private/agent-operator-integration/v1/mcp/execute/tool/{mcp_tool_id}
+	url := fmt.Sprintf("%s/execute/tool/%s", aoa.appSetting.MCPUrl, mcpToolID)
 
 	start := time.Now().UnixMilli()
 	respCode, result, err = aoa.httpClient.PostNoUnmarshal(ctx, url, headers, execRequest)
@@ -244,11 +320,11 @@ func (aoa *agentOperatorAccess) ExecuteMCP(ctx context.Context, mcpID string,
 				ErrorDetails: opError.Detail,
 			}}
 		logger.Errorf("MCP execution failed: %v", httpErr.Error())
-		return mcpResult, fmt.Errorf("execute MCP %s/%s return error %v", mcpID, toolName, httpErr.Error())
+		return mcpResult, fmt.Errorf("execute MCP %s return error %v", mcpToolID, httpErr.Error())
 	}
 
 	if result == nil {
-		return mcpResult, fmt.Errorf("execute MCP %s/%s return null", mcpID, toolName)
+		return mcpResult, fmt.Errorf("execute MCP %s return null", mcpToolID)
 	}
 
 	if err := json.Unmarshal(result, &mcpResult); err != nil {

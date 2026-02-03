@@ -137,18 +137,34 @@ func Test_OperatorExecutionRequest(t *testing.T) {
 					"key1": "value1",
 					"key2": 123,
 				},
-				Query: map[string]any{},
-				Path: map[string]any{
-					"box_id":  "box_001",
-					"tool_id": "tool_001",
-				},
+				Query:   map[string]any{},
+				Path:    map[string]any{},
 				Timeout: 300,
 			}
 
-			So(req.Path["box_id"], ShouldEqual, "box_001")
-			So(req.Path["tool_id"], ShouldEqual, "tool_001")
 			So(req.Body["key1"], ShouldEqual, "value1")
 			So(req.Body["key2"], ShouldEqual, 123)
+			So(req.Timeout, ShouldEqual, int64(300))
+		})
+	})
+}
+
+func Test_ToolExecutionRequest(t *testing.T) {
+	Convey("Test ToolExecutionRequest", t, func() {
+		Convey("should build correct request for tool-box API", func() {
+			req := interfaces.ToolExecutionRequest{
+				Header: map[string]any{},
+				Body: map[string]any{
+					"target_ip": "192.168.1.1",
+					"timeout":   60,
+				},
+				Query:   map[string]any{},
+				Path:    map[string]any{},
+				Timeout: 300,
+			}
+
+			So(req.Body["target_ip"], ShouldEqual, "192.168.1.1")
+			So(req.Body["timeout"], ShouldEqual, 60)
 			So(req.Timeout, ShouldEqual, int64(300))
 		})
 	})

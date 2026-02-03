@@ -9,7 +9,8 @@ import (
 	"ontology-query/interfaces"
 )
 
-// ExecuteTool executes a tool-based action through agent-operator-integration
+// ExecuteTool executes a tool-based action through tool-box API
+// API: POST /tool-box/{box_id}/proxy/{tool_id}
 func ExecuteTool(ctx context.Context, aoAccess interfaces.AgentOperatorAccess, actionType *interfaces.ActionType, params map[string]any) (any, error) {
 	source := actionType.ActionSource
 
@@ -18,25 +19,20 @@ func ExecuteTool(ctx context.Context, aoAccess interfaces.AgentOperatorAccess, a
 		return nil, fmt.Errorf("tool execution requires box_id and tool_id")
 	}
 
-	// Build operator execution request
+	// Build tool execution request
 	// Parameters are passed in the body for POST requests
-	execRequest := interfaces.OperatorExecutionRequest{
-		Header: map[string]any{},
-		Body:   params,
-		Query:  map[string]any{},
-		Path: map[string]any{
-			"box_id":  source.BoxID,
-			"tool_id": source.ToolID,
-		},
+	execRequest := interfaces.ToolExecutionRequest{
+		Header:  map[string]any{},
+		Body:    params,
+		Query:   map[string]any{},
+		Path:    map[string]any{},
 		Timeout: 300, // 5 minutes timeout
 	}
 
 	logger.Debugf("Executing tool: box_id=%s, tool_id=%s", source.BoxID, source.ToolID)
 
-	// Execute through agent-operator-integration
-	// The operator ID format may vary depending on the agent-operator-integration service
-	operatorID := source.ToolID
-	result, err := aoAccess.ExecuteOperator(ctx, operatorID, execRequest)
+	// Execute through tool-box API
+	result, err := aoAccess.ExecuteTool(ctx, source.BoxID, source.ToolID, execRequest)
 	if err != nil {
 		logger.Errorf("Tool execution failed: %v", err)
 		return nil, fmt.Errorf("tool execution failed: %w", err)

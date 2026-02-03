@@ -152,15 +152,15 @@ func (s *actionSchedulerService) ExecuteAction(ctx context.Context, req *interfa
 				len(req.UniqueIdentities), maxExecutionObjects))
 	}
 
-	// Get executor ID from context
-	executorID := ""
+	// Get executor info from context
+	executor := interfaces.AccountInfo{}
 	if accountInfo := ctx.Value(interfaces.ACCOUNT_INFO_KEY); accountInfo != nil {
-		executorID = accountInfo.(interfaces.AccountInfo).ID
+		executor = accountInfo.(interfaces.AccountInfo)
 	}
 
 	// Reserved: Permission check hook
 	if s.permissionCheckHook != nil {
-		if err := s.permissionCheckHook(ctx, executorID, &actionType); err != nil {
+		if err := s.permissionCheckHook(ctx, executor.ID, &actionType); err != nil {
 			return nil, err
 		}
 	}
@@ -204,7 +204,8 @@ func (s *actionSchedulerService) ExecuteAction(ctx context.Context, req *interfa
 		FailedCount:        0,
 		Results:            []interfaces.ObjectExecutionResult{}, // Empty initially to save space
 		DynamicParams:      req.DynamicParams,
-		ExecutorID:         executorID,
+		ExecutorID:         executor.ID, // deprecated, kept for backward compatibility
+		Executor:           executor,    // full executor info
 		StartTime:          now,
 		ActionTypeSnapshot: actionTypeSnapshot, // 保存执行时的行动类配置快照
 	}

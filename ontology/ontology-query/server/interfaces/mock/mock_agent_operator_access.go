@@ -65,17 +65,32 @@ func (mr *MockAgentOperatorAccessMockRecorder) GetAgentOperatorByID(ctx, operato
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAgentOperatorByID", reflect.TypeOf((*MockAgentOperatorAccess)(nil).GetAgentOperatorByID), ctx, operatorID)
 }
 
-// ExecuteMCP mocks base method.
-func (m *MockAgentOperatorAccess) ExecuteMCP(ctx context.Context, mcpID string, toolName string, execRequest interfaces.MCPExecutionRequest) (any, error) {
+// ExecuteTool mocks base method.
+func (m *MockAgentOperatorAccess) ExecuteTool(ctx context.Context, boxID string, toolID string, execRequest interfaces.ToolExecutionRequest) (any, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "ExecuteMCP", ctx, mcpID, toolName, execRequest)
+	ret := m.ctrl.Call(m, "ExecuteTool", ctx, boxID, toolID, execRequest)
+	ret0, _ := ret[0].(any)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ExecuteTool indicates an expected call of ExecuteTool.
+func (mr *MockAgentOperatorAccessMockRecorder) ExecuteTool(ctx, boxID, toolID, execRequest interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ExecuteTool", reflect.TypeOf((*MockAgentOperatorAccess)(nil).ExecuteTool), ctx, boxID, toolID, execRequest)
+}
+
+// ExecuteMCP mocks base method.
+func (m *MockAgentOperatorAccess) ExecuteMCP(ctx context.Context, mcpToolID string, toolName string, execRequest interfaces.MCPExecutionRequest) (any, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ExecuteMCP", ctx, mcpToolID, toolName, execRequest)
 	ret0, _ := ret[0].(any)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // ExecuteMCP indicates an expected call of ExecuteMCP.
-func (mr *MockAgentOperatorAccessMockRecorder) ExecuteMCP(ctx, mcpID, toolName, execRequest interface{}) *gomock.Call {
+func (mr *MockAgentOperatorAccessMockRecorder) ExecuteMCP(ctx, mcpToolID, toolName, execRequest interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ExecuteMCP", reflect.TypeOf((*MockAgentOperatorAccess)(nil).ExecuteMCP), ctx, mcpID, toolName, execRequest)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ExecuteMCP", reflect.TypeOf((*MockAgentOperatorAccess)(nil).ExecuteMCP), ctx, mcpToolID, toolName, execRequest)
 }
