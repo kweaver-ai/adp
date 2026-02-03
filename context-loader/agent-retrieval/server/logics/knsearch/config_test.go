@@ -16,9 +16,6 @@ func TestDefaultConceptRetrievalConfig(t *testing.T) {
 	if config.TopK != 10 {
 		t.Errorf("Expected TopK 10, got %d", config.TopK)
 	}
-	if !boolValue(config.SkipLLM) {
-		t.Error("Expected SkipLLM true")
-	}
 	if !boolValue(config.EnableCoarseRecall) {
 		t.Error("Expected EnableCoarseRecall true")
 	}
@@ -153,8 +150,6 @@ func TestMergeHelpers(t *testing.T) {
 	baseC := DefaultConceptRetrievalConfig()
 	userC := &interfaces.KnSearchConceptRetrievalConfig{
 		TopK:                   5,
-		SkipLLM:                boolPtr(false),
-		ReturnUnion:            boolPtr(true),
 		IncludeSampleData:      boolPtr(true),
 		SchemaBrief:            boolPtr(false),
 		EnableCoarseRecall:     boolPtr(false),
@@ -167,7 +162,7 @@ func TestMergeHelpers(t *testing.T) {
 	}
 	mergeConceptRetrievalConfig(baseC, userC)
 
-	if baseC.TopK != 5 || boolValue(baseC.SkipLLM) != false || boolValue(baseC.ReturnUnion) != true {
+	if baseC.TopK != 5 {
 		t.Error("mergeConceptRetrievalConfig failed on basic fields")
 	}
 	if baseC.CoarseObjectLimit != 100 || baseC.PerObjectPropertyTopK != 20 {

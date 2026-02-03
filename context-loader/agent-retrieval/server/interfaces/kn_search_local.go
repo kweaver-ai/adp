@@ -17,13 +17,11 @@ type KnSearchLocalRequest struct {
 	AccountType string `json:"-" header:"x-account-type"`
 
 	// Request Body
-	Query             string                  `json:"query" validate:"required"`
-	KnID              string                  `json:"kn_id" validate:"required"`
-	SessionID         string                  `json:"session_id,omitempty"`
-	AdditionalContext string                  `json:"additional_context,omitempty"`
-	RetrievalConfig   *KnSearchRetrievalConfig `json:"retrieval_config,omitempty"`
-	OnlySchema        bool                    `json:"only_schema" default:"false"`
-	EnableRerank      bool                    `json:"enable_rerank" default:"true"`
+	Query           string                   `json:"query" validate:"required"`
+	KnID            string                   `json:"kn_id" validate:"required"`
+	RetrievalConfig *KnSearchRetrievalConfig `json:"retrieval_config,omitempty"`
+	OnlySchema      bool                     `json:"only_schema" default:"false"`
+	EnableRerank    bool                     `json:"enable_rerank" default:"true"`
 }
 
 // KnSearchRetrievalConfig 召回配置参数
@@ -36,8 +34,6 @@ type KnSearchRetrievalConfig struct {
 // KnSearchConceptRetrievalConfig 概念召回配置参数
 type KnSearchConceptRetrievalConfig struct {
 	TopK                   int   `json:"top_k" default:"10"`
-	SkipLLM                *bool `json:"skip_llm" default:"true"`
-	ReturnUnion            *bool `json:"return_union" default:"false"`
 	IncludeSampleData      *bool `json:"include_sample_data" default:"false"`
 	SchemaBrief            *bool `json:"schema_brief" default:"true"`
 	EnableCoarseRecall     *bool `json:"enable_coarse_recall" default:"true"`
@@ -51,17 +47,17 @@ type KnSearchConceptRetrievalConfig struct {
 
 // KnSearchSemanticInstanceRetrievalConfig 语义实例召回配置参数
 type KnSearchSemanticInstanceRetrievalConfig struct {
-	InitialCandidateCount              int     `json:"initial_candidate_count" default:"50"`
-	PerTypeInstanceLimit               int     `json:"per_type_instance_limit" default:"5"`
-	MaxSemanticSubConditions           int     `json:"max_semantic_sub_conditions" default:"10"`
-	SemanticFieldKeepRatio             float64 `json:"semantic_field_keep_ratio" default:"0.2"`
-	SemanticFieldKeepMin               int     `json:"semantic_field_keep_min" default:"5"`
-	SemanticFieldKeepMax               int     `json:"semantic_field_keep_max" default:"15"`
-	SemanticFieldRerankBatchSize       int     `json:"semantic_field_rerank_batch_size" default:"128"`
-	MinDirectRelevance                 float64 `json:"min_direct_relevance" default:"0.3"`
-	EnableGlobalFinalScoreRatioFilter  *bool   `json:"enable_global_final_score_ratio_filter" default:"true"`
-	GlobalFinalScoreRatio              float64 `json:"global_final_score_ratio" default:"0.25"`
-	ExactNameMatchScore                float64 `json:"exact_name_match_score" default:"0.85"`
+	InitialCandidateCount             int     `json:"initial_candidate_count" default:"50"`
+	PerTypeInstanceLimit              int     `json:"per_type_instance_limit" default:"5"`
+	MaxSemanticSubConditions          int     `json:"max_semantic_sub_conditions" default:"10"`
+	SemanticFieldKeepRatio            float64 `json:"semantic_field_keep_ratio" default:"0.2"`
+	SemanticFieldKeepMin              int     `json:"semantic_field_keep_min" default:"5"`
+	SemanticFieldKeepMax              int     `json:"semantic_field_keep_max" default:"15"`
+	SemanticFieldRerankBatchSize      int     `json:"semantic_field_rerank_batch_size" default:"128"`
+	MinDirectRelevance                float64 `json:"min_direct_relevance" default:"0.3"`
+	EnableGlobalFinalScoreRatioFilter *bool   `json:"enable_global_final_score_ratio_filter" default:"true"`
+	GlobalFinalScoreRatio             float64 `json:"global_final_score_ratio" default:"0.25"`
+	ExactNameMatchScore               float64 `json:"exact_name_match_score" default:"0.85"`
 }
 
 // KnSearchPropertyFilterConfig 实例属性过滤配置
@@ -84,16 +80,16 @@ type KnSearchLocalResponse struct {
 
 // KnSearchObjectType object type (local response shape)
 type KnSearchObjectType struct {
-	ConceptType     string                  `json:"concept_type,omitempty"`
-	ConceptID       string                  `json:"concept_id"`
-	ConceptName     string                  `json:"concept_name"`
-	Comment         string                  `json:"comment,omitempty"`
-	Tags            []string                `json:"tags,omitempty"`
-	DataSource      *ResourceInfo           `json:"data_source,omitempty"`
-	DataProperties  []*KnSearchDataProperty `json:"data_properties,omitempty"`
+	ConceptType     string                   `json:"concept_type,omitempty"`
+	ConceptID       string                   `json:"concept_id"`
+	ConceptName     string                   `json:"concept_name"`
+	Comment         string                   `json:"comment,omitempty"`
+	Tags            []string                 `json:"tags,omitempty"`
+	DataSource      *ResourceInfo            `json:"data_source,omitempty"`
+	DataProperties  []*KnSearchDataProperty  `json:"data_properties,omitempty"`
 	LogicProperties []*KnSearchLogicProperty `json:"logic_properties,omitempty"`
-	PrimaryKeys     []string                `json:"primary_keys,omitempty"`
-	SampleData      map[string]any          `json:"sample_data,omitempty"`
+	PrimaryKeys     []string                 `json:"primary_keys,omitempty"`
+	SampleData      map[string]any           `json:"sample_data,omitempty"`
 }
 
 // KnSearchDataProperty data property (local response shape)

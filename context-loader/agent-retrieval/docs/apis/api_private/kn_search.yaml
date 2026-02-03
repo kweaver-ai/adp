@@ -35,13 +35,6 @@ paths:
               - anonymous
             default: user
           description: 账户类型：user(用户), app(应用), anonymous(匿名)
-        - name: Content-Type
-          in: header
-          required: false
-          schema:
-            type: string
-            default: application/json
-          description: 内容类型
       requestBody:
         required: true
         description: kn_search 请求体
@@ -83,14 +76,6 @@ components:
         kn_id:
           type: string
           description: 指定的知识网络ID，必须传递
-        session_id:
-          type: string
-          nullable: true
-          description: 会话ID，用于维护多轮对话存储的历史召回记录
-        additional_context:
-          type: string
-          nullable: true
-          description: 额外的上下文信息，用于二次检索时提供更精确的检索信息
         retrieval_config:
           type: object
           nullable: true
@@ -120,14 +105,6 @@ components:
           minimum: 1
           default: 10
           description: 概念召回返回最相关关系类型数量（对象类型会随关系类型自动过滤）。
-        skip_llm:
-          type: boolean
-          default: true
-          description: 是否跳过LLM筛选相关关系类型，直接使用前top_k个关系类型（高召回/低成本）。
-        return_union:
-          type: boolean
-          default: false
-          description: 概念召回多轮检索时是否返回并集。True返回所有轮次并集；False仅返回当前轮次增量（默认False）。
         include_sample_data:
           type: boolean
           default: false
@@ -258,7 +235,6 @@ components:
       type: object
       description: |
         检索结果，返回object_types/relation_types/action_types，并返回语义实例nodes/message。
-        多轮时由concept_retrieval.return_union控制 nodes 的并集/增量。
       properties:
         object_types:
           type: array

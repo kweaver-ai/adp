@@ -110,11 +110,9 @@ func TestKnSearch_Success(t *testing.T) {
 		}
 
 		ctx := context.Background()
-		sessionID := "session-001"
 		req := &interfaces.KnSearchReq{
 			Query:        "测试查询",
 			KnID:         "kn-001",
-			SessionID:    &sessionID,
 			XAccountID:   "account-001",
 			XAccountType: "user",
 		}
@@ -184,17 +182,13 @@ func TestKnSearch_WithAllOptionalParams(t *testing.T) {
 		}
 
 		ctx := context.Background()
-		sessionID := "session-001"
-		additionalContext := "额外上下文"
 		onlySchema := true
 		enableRerank := true
 		req := &interfaces.KnSearchReq{
-			Query:             "测试查询",
-			KnID:              "kn-001",
-			SessionID:         &sessionID,
-			AdditionalContext: &additionalContext,
-			OnlySchema:        &onlySchema,
-			EnableRerank:      &enableRerank,
+			Query:        "测试查询",
+			KnID:         "kn-001",
+			OnlySchema:   &onlySchema,
+			EnableRerank: &enableRerank,
 			RetrievalConfig: map[string]interface{}{
 				"top_k": 10,
 			},

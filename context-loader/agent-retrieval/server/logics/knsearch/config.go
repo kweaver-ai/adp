@@ -13,8 +13,6 @@ import "github.com/kweaver-ai/adp/context-loader/agent-retrieval/server/interfac
 func DefaultConceptRetrievalConfig() *interfaces.KnSearchConceptRetrievalConfig {
 	return &interfaces.KnSearchConceptRetrievalConfig{
 		TopK:                   10,
-		SkipLLM:                boolPtr(true),
-		ReturnUnion:            boolPtr(false),
 		IncludeSampleData:      boolPtr(false),
 		SchemaBrief:            boolPtr(true),
 		EnableCoarseRecall:     boolPtr(true),
@@ -86,12 +84,6 @@ func MergeRetrievalConfig(userConfig *interfaces.KnSearchRetrievalConfig) *inter
 func mergeConceptRetrievalConfig(base, user *interfaces.KnSearchConceptRetrievalConfig) {
 	if user.TopK > 0 {
 		base.TopK = user.TopK
-	}
-	if user.SkipLLM != nil {
-		base.SkipLLM = user.SkipLLM
-	}
-	if user.ReturnUnion != nil {
-		base.ReturnUnion = user.ReturnUnion
 	}
 	if user.IncludeSampleData != nil {
 		base.IncludeSampleData = user.IncludeSampleData

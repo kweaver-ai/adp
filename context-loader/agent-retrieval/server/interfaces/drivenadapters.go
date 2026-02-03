@@ -255,18 +255,16 @@ type KnDataSourceConfig struct {
 
 // ConceptRetrievalConfig 概念召回配置
 type ConceptRetrievalConfig struct {
-	TopK                   int  `json:"top_k,omitempty"`                      // 默认10
-	SkipLLM                bool `json:"skip_llm,omitempty"`                   // 默认false
-	ReturnUnion            bool `json:"return_union,omitempty"`               // 默认false
-	IncludeSampleData      bool `json:"include_sample_data,omitempty"`        // 默认false
-	SchemaBrief            bool `json:"schema_brief,omitempty"`               // 默认false
-	PerObjectPropertyTopK  int  `json:"per_object_property_top_k,omitempty"`  // 默认8
-	GlobalPropertyTopK     int  `json:"global_property_top_k,omitempty"`      // 默认30
-	EnablePropertyBrief    bool `json:"enable_property_brief,omitempty"`      // 默认true
-	EnableCoarseRecall     bool `json:"enable_coarse_recall,omitempty"`       // 默认true，启用粗召回
-	CoarseObjectLimit      int  `json:"coarse_object_limit,omitempty"`        // 默认2000
-	CoarseRelationLimit    int  `json:"coarse_relation_limit,omitempty"`      // 默认300
-	CoarseMinRelationCount int  `json:"coarse_min_relation_count,omitempty"`  // 默认5000，触发粗召回的最小关系数量
+	TopK                   int  `json:"top_k,omitempty"`                     // 默认10
+	IncludeSampleData      bool `json:"include_sample_data,omitempty"`       // 默认false
+	SchemaBrief            bool `json:"schema_brief,omitempty"`              // 默认false
+	PerObjectPropertyTopK  int  `json:"per_object_property_top_k,omitempty"` // 默认8
+	GlobalPropertyTopK     int  `json:"global_property_top_k,omitempty"`     // 默认30
+	EnablePropertyBrief    bool `json:"enable_property_brief,omitempty"`     // 默认true
+	EnableCoarseRecall     bool `json:"enable_coarse_recall,omitempty"`      // 默认true，启用粗召回
+	CoarseObjectLimit      int  `json:"coarse_object_limit,omitempty"`       // 默认2000
+	CoarseRelationLimit    int  `json:"coarse_relation_limit,omitempty"`     // 默认300
+	CoarseMinRelationCount int  `json:"coarse_min_relation_count,omitempty"` // 默认5000，触发粗召回的最小关系数量
 }
 
 // PropertyFilterConfig 属性过滤配置
@@ -308,14 +306,12 @@ type KnSearchReq struct {
 
 	// Body Parameters - use any to avoid defining complex structures explicitly
 	// Corresponds to the complete request structure of data-retrieval interface
-	Query             string                `json:"query" validate:"required"`
-	KnID              string                `json:"kn_id" validate:"required"`
-	knIDs             []*KnDataSourceConfig // Internal use, converted from KnID, not exposed
-	SessionID         *string               `json:"session_id,omitempty"`
-	AdditionalContext *string               `json:"additional_context,omitempty"`
-	RetrievalConfig   any                   `json:"retrieval_config,omitempty"`
-	OnlySchema        *bool                 `json:"only_schema,omitempty"`
-	EnableRerank      *bool                 `json:"enable_rerank,omitempty"`
+	Query           string                `json:"query" validate:"required"`
+	KnID            string                `json:"kn_id" validate:"required"`
+	knIDs           []*KnDataSourceConfig // Internal use, converted from KnID, not exposed
+	RetrievalConfig any                   `json:"retrieval_config,omitempty"`
+	OnlySchema      *bool                 `json:"only_schema,omitempty"`
+	EnableRerank    *bool                 `json:"enable_rerank,omitempty"`
 }
 
 // SetKnIDs Sets knIDs (internal use, converted from KnID)

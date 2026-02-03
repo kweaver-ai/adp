@@ -25,12 +25,6 @@ func KnSearchReqToLocal(req *interfaces.KnSearchReq) *interfaces.KnSearchLocalRe
 		Query:       req.Query,
 		KnID:        req.KnID,
 	}
-	if req.SessionID != nil {
-		local.SessionID = *req.SessionID
-	}
-	if req.AdditionalContext != nil {
-		local.AdditionalContext = *req.AdditionalContext
-	}
 	local.OnlySchema = false
 	if req.OnlySchema != nil {
 		local.OnlySchema = *req.OnlySchema

@@ -1,0 +1,35 @@
+{
+  "input_schema": {
+    "type": "object",
+    "properties": {
+      "at_id": {
+        "type": "string",
+        "description": "行动类型ID"
+      },
+      "unique_identity": {
+        "type": "object",
+        "description": "对象唯一标识（至少一个字段）",
+        "additionalProperties": true
+      }
+    },
+    "required": ["at_id", "unique_identity"]
+  },
+  "output_schema": {
+    "type": "object",
+    "properties": {
+      "headers": {
+        "type": "object",
+        "description": "返回的 Header 信息",
+        "additionalProperties": true
+      },
+      "_dynamic_tools": {
+        "type": "array",
+        "description": "动态工具定义列表",
+        "items": {
+          "type": "object",
+          "additionalProperties": true
+        }
+      }
+    }
+  }
+}
