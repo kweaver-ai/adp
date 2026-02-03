@@ -55,6 +55,10 @@ func (r *restHandler) ExecuteAction(c *gin.Context, visitor rest.Visitor) {
 	}
 	ctx = context.WithValue(ctx, interfaces.ACCOUNT_INFO_KEY, accountInfo)
 
+	// Pass x-business-domain header to context for MCP execution
+	businessDomain := c.GetHeader(interfaces.HTTP_HEADER_BUSINESS_DOMAIN)
+	ctx = context.WithValue(ctx, interfaces.BUSINESS_DOMAIN_KEY, businessDomain)
+
 	o11y.AddHttpAttrs4API(span, o11y.GetAttrsByGinCtx(c))
 	o11y.Info(ctx, fmt.Sprintf("行动执行请求参数: [%s,%v]", c.Request.RequestURI, c.Request.Body))
 
@@ -428,8 +432,8 @@ func (r *restHandler) CancelActionLog(c *gin.Context, visitor rest.Visitor) {
 				httpErr = rest.NewHTTPError(ctx, http.StatusBadRequest, oerrors.OntologyQuery_ActionExecution_InvalidParameter).
 					WithErrorDetails(err.Error())
 			} else {
-			httpErr = rest.NewHTTPError(ctx, http.StatusInternalServerError, oerrors.OntologyQuery_ActionExecution_CancelExecutionFailed).
-				WithErrorDetails(err.Error())
+				httpErr = rest.NewHTTPError(ctx, http.StatusInternalServerError, oerrors.OntologyQuery_ActionExecution_CancelExecutionFailed).
+					WithErrorDetails(err.Error())
 			}
 		}
 

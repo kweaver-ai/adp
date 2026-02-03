@@ -40,6 +40,10 @@ type AppSetting struct {
 	UniQueryUrl        string
 	// 算子执行 url
 	AgentOperatorUrl string
+	// 工具箱执行 url
+	ToolBoxUrl string
+	// MCP 执行 url
+	MCPUrl string
 	// model factory url
 	ModelFactoryManagerUrl string
 	// model factory api url
@@ -228,4 +232,8 @@ func SetAgentOperatorSetting() {
 	port := setting["port"].(int)
 
 	appSetting.AgentOperatorUrl = fmt.Sprintf("%s://%s:%d/api/agent-operator-integration/internal-v1/operator", protocol, host, port)
+	// ToolBox URL uses the same service but different path
+	appSetting.ToolBoxUrl = fmt.Sprintf("%s://%s:%d/api/private/agent-operator-integration/v1/tool-box", protocol, host, port)
+	// MCP URL for MCP tool execution
+	appSetting.MCPUrl = fmt.Sprintf("%s://%s:%d/api/private/agent-operator-integration/v1/mcp", protocol, host, port)
 }

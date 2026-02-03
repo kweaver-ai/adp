@@ -730,7 +730,7 @@ func Test_BuildDirectBatchConditions(t *testing.T) {
 		Convey("成功 - 单字段映射但inValue为nil", func() {
 			currentLevelObjects := []interfaces.LevelObject{
 				{
-					ObjectID: "obj1",
+					ObjectID:   "obj1",
 					ObjectData: map[string]any{
 						// 缺少映射字段
 					},

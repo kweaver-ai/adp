@@ -2381,6 +2381,10 @@ paths:
                         error_message: "Connection timeout"
                         duration_ms: 5000
                     executor_id: "user_xxx"
+                    executor:
+                      id: "user_xxx"
+                      type: "user"
+                      name: "张三"
                     start_time: 1704067200000
                     end_time: 1704067206200
                     duration_ms: 6200
@@ -4816,8 +4820,22 @@ components:
           type: object
           additionalProperties: true
         executor_id:
-          description: 执行者ID
+          description: 执行者ID（已废弃，请使用 executor）
           type: string
+          deprecated: true
+        executor:
+          description: 执行者信息
+          type: object
+          properties:
+            id:
+              description: 执行者ID
+              type: string
+            type:
+              description: 执行者类型
+              type: string
+            name:
+              description: 执行者名称
+              type: string
         start_time:
           description: 开始时间（毫秒时间戳）
           type: integer
