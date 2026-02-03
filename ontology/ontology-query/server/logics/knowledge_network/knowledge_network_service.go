@@ -403,6 +403,7 @@ func (kns *knowledgeNetworkService) buildSingleTypePathObjects(
 		SourceObjecTypeId:     query.SourceObjecTypeId,
 		Direction:             query.Direction,
 		PathLength:            query.PathLength,
+		IncludeIncompletePath: query.IncludeIncompletePath,
 		Condition:             query.Condition,
 		ActualCondition:       query.ActualCondition,
 		PageQuery:             query.PageQuery,
@@ -529,7 +530,27 @@ func (kns *knowledgeNetworkService) expandObjectPathsBatch(ctx context.Context,
 				return err
 			}
 			if len(nextLevelObjects) == 0 {
-				// 无下一层的对象，则无需构造路径，继续下一批的遍历
+				// 无下一层的对象
+				if query.IncludeIncompletePath {
+					// 如果需要包含不完整路径，将当前批次中所有对象的路径添加到结果中
+					batchObjectIDs := make(map[string]bool)
+					for _, obj := range batch {
+						batchObjectIDs[obj.ObjectID] = true
+					}
+					totalPathsInThisBatch := 0
+					for _, currentObj := range currentLevel {
+						if batchObjectIDs[currentObj.ObjectID] {
+							paths = append(paths, currentObj.Paths...)
+							totalPathsInThisBatch += len(currentObj.Paths)
+						}
+					}
+					if totalPathsInThisBatch > 0 {
+						logics.RecordGenerated(query.PathQuotaManager, typePath.ID, totalPathsInThisBatch)
+						logger.Debugf("添加不完整路径 - 路径ID: %d, 新增路径: %d, 深度: %d",
+							typePath.ID, totalPathsInThisBatch, depth)
+					}
+				}
+				// 继续下一批的遍历
 				continue
 			}
 
@@ -546,6 +567,16 @@ func (kns *knowledgeNetworkService) expandObjectPathsBatch(ctx context.Context,
 
 				nextObjects, exists := nextLevelObjects[currentObj.ObjectID]
 				if !exists {
+					// 当前对象没有找到下一层对象
+					if query.IncludeIncompletePath {
+						// 如果需要包含不完整路径，将当前对象的路径添加到结果中
+						paths = append(paths, currentObj.Paths...)
+						if len(currentObj.Paths) > 0 {
+							logics.RecordGenerated(query.PathQuotaManager, typePath.ID, len(currentObj.Paths))
+							logger.Debugf("添加不完整路径 - 路径ID: %d, 对象ID: %s, 新增路径: %d, 深度: %d",
+								typePath.ID, currentObj.ObjectID, len(currentObj.Paths), depth)
+						}
+					}
 					continue
 				}
 
