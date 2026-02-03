@@ -6,6 +6,7 @@ import (
 	"database/sql"
 	"fmt"
 	"net/url"
+	"strings"
 
 	sq "github.com/Masterminds/squirrel"
 	"github.com/mitchellh/mapstructure"
@@ -432,6 +433,9 @@ func (c *MySQLConnector) fetchColumns(ctx context.Context, table *interfaces.Tab
 		"CHARACTER_MAXIMUM_LENGTH",
 		"NUMERIC_PRECISION",
 		"NUMERIC_SCALE",
+		"DATETIME_PRECISION",
+		"CHARACTER_SET_NAME",
+		"COLLATION_NAME",
 		"ORDINAL_POSITION",
 		"COLUMN_KEY",
 	).From("information_schema.COLUMNS").
@@ -454,8 +458,8 @@ func (c *MySQLConnector) fetchColumns(ctx context.Context, table *interfaces.Tab
 
 	for rows.Next() {
 		var name, columnType, dataType, isNullable, columnKey sql.NullString
-		var columnDefault, comment sql.NullString
-		var position, charMaxLen, numPrecision, numScale sql.NullInt64
+		var columnDefault, comment, charset, collation sql.NullString
+		var position, charMaxLen, numPrecision, numScale, datetimePrecision sql.NullInt64
 
 		if err := rows.Scan(
 			&name,
@@ -467,6 +471,9 @@ func (c *MySQLConnector) fetchColumns(ctx context.Context, table *interfaces.Tab
 			&charMaxLen,
 			&numPrecision,
 			&numScale,
+			&datetimePrecision,
+			&charset,
+			&collation,
 			&position,
 			&columnKey,
 		); err != nil {
@@ -474,16 +481,20 @@ func (c *MySQLConnector) fetchColumns(ctx context.Context, table *interfaces.Tab
 		}
 
 		col := interfaces.ColumnMeta{
-			Name:         name.String,
-			Type:         dataType.String,
-			NativeType:   columnType.String,
-			Nullable:     isNullable.String == "YES",
-			DefaultValue: columnDefault.String,
-			Comment:      comment.String,
-			CharMaxLen:   int(charMaxLen.Int64),
-			NumPrecision: int(numPrecision.Int64),
-			NumScale:     int(numScale.Int64),
-			Position:     int(position.Int64),
+			Name:              name.String,
+			Type:              MapType(dataType.String),
+			OrigType:          columnType.String,
+			Nullable:          isNullable.String == "YES",
+			DefaultValue:      columnDefault.String,
+			Comment:           comment.String,
+			CharMaxLen:        int(charMaxLen.Int64),
+			NumPrecision:      int(numPrecision.Int64),
+			NumScale:          int(numScale.Int64),
+			DatetimePrecision: int(datetimePrecision.Int64),
+			Charset:           charset.String,
+			Collation:         collation.String,
+			OrdinalPosition:   int(position.Int64),
+			ColumnKey:         columnKey.String,
 		}
 		columns = append(columns, col)
 
@@ -619,4 +630,65 @@ func (c *MySQLConnector) fetchForeignKeys(ctx context.Context, table *interfaces
 
 func (c *MySQLConnector) ExecuteQuery(ctx context.Context, query string, args ...any) (*interfaces.QueryResult, error) {
 	return nil, nil
+}
+
+// GetMetadata returns the metadata for the catalog.
+func (c *MySQLConnector) GetMetadata(ctx context.Context) (map[string]any, error) {
+	if err := c.Connect(ctx); err != nil {
+		return nil, err
+	}
+
+	// 2. Fetch critical global variables
+	// 包含基础信息、字符集、时区、大小写敏感、SQL模式以及集群相关信息
+	targetVars := []string{
+		"version",
+		"version_comment",
+		"version_compile_os",
+		"character_set_server",
+		"collation_server",
+		"time_zone",
+		"system_time_zone",
+		"lower_case_table_names",
+		"sql_mode",
+		// Cluster related
+		"wsrep_on",                     // Galera Cluster
+		"group_replication_group_name", // Group Replication / InnoDB Cluster
+		"read_only",
+		"super_read_only",
+	}
+
+	// Construct placeholders
+	placeholders := make([]string, len(targetVars))
+	args := make([]any, len(targetVars))
+	for i, v := range targetVars {
+		placeholders[i] = "?"
+		args[i] = v
+	}
+
+	query := fmt.Sprintf("SHOW GLOBAL VARIABLES WHERE Variable_name IN (%s)", strings.Join(placeholders, ","))
+	rows, err := c.db.QueryContext(ctx, query, args...)
+	if err != nil {
+		// Just log error and return partial metadata if SHOW VARIABLES fails (unlikely)
+		// But for now, we return error to be safe
+		return nil, err
+	}
+	defer rows.Close()
+
+	metadata := make(map[string]any)
+	for rows.Next() {
+		var varName, varValue string
+		if err := rows.Scan(&varName, &varValue); err == nil {
+			metadata[varName] = varValue
+		}
+	}
+
+	// 3. Infer Cluster Mode
+	metadata["cluster_mode"] = "standalone" // Default
+	if val, ok := metadata["wsrep_on"]; ok && strings.EqualFold(fmt.Sprint(val), "ON") {
+		metadata["cluster_mode"] = "galera"
+	} else if val, ok := metadata["group_replication_group_name"]; ok && fmt.Sprint(val) != "" {
+		metadata["cluster_mode"] = "group_replication"
+	}
+
+	return metadata, nil
 }

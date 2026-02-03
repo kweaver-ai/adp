@@ -4,13 +4,13 @@ package mysql
 // TypeMapping maps MySQL native types to VEGA types.
 var TypeMapping = map[string]string{
 	// Integer types
-	"tinyint":    "integer",
-	"smallint":   "integer",
-	"mediumint":  "integer",
-	"int":        "integer",
-	"integer":    "integer",
-	"bigint":     "integer",
-	"year":       "integer",
+	"tinyint":   "integer",
+	"smallint":  "integer",
+	"mediumint": "integer",
+	"int":       "integer",
+	"integer":   "integer",
+	"bigint":    "integer",
+	"year":      "integer",
 
 	// Unsigned integer types
 	"tinyint unsigned":   "unsigned_integer",
@@ -70,5 +70,5 @@ func MapType(nativeType string) string {
 	if vegaType, ok := TypeMapping[nativeType]; ok {
 		return vegaType
 	}
-	return "string" // default
+	return "unsupported" // default
 }

@@ -13,7 +13,7 @@ import (
 
 	"vega-backend/common"
 	"vega-backend/interfaces"
-	"vega-backend/logics/catalog"
+	logicsCatalog "vega-backend/logics/catalog"
 	"vega-backend/logics/connectors"
 	"vega-backend/logics/connectors/factory"
 	"vega-backend/logics/discovery_task"
@@ -49,7 +49,7 @@ func NewDiscoveryWorker(appSetting *common.AppSetting) interfaces.DiscoveryWorke
 			appSetting: appSetting,
 			mqClient:   client,
 			rs:         resource.NewResourceService(appSetting),
-			cs:         catalog.NewCatalogService(appSetting),
+			cs:         logicsCatalog.NewCatalogService(appSetting),
 			dts:        discovery_task.NewDiscoveryTaskService(appSetting),
 		}
 	})
@@ -140,6 +140,15 @@ func (dw *discoveryWorker) discoverCatalog(ctx context.Context,
 		return nil, fmt.Errorf("failed to connect to data source: %w", err)
 	}
 	defer connector.Close(ctx)
+
+	// Update catalog metadata
+	if meta, err := connector.GetMetadata(ctx); err == nil {
+		if err := dw.cs.UpdateMetadata(ctx, catalog.ID, meta); err != nil {
+			logger.Errorf("Failed to update catalog metadata: %v", err)
+		}
+	} else {
+		logger.Warnf("Failed to get metadata: %v", err)
+	}
 
 	// 2. 根据 connector category 分发到不同的发现函数
 	category := connector.GetCategory()

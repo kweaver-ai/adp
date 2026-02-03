@@ -38,16 +38,20 @@ type IndexInfo struct {
 
 // ColumnMeta represents column metadata.
 type ColumnMeta struct {
-	Name         string `json:"name"`
-	Type         string `json:"type"`
-	NativeType   string `json:"native_type"`
-	Nullable     bool   `json:"nullable"`
-	Comment      string `json:"comment"`
-	DefaultValue string `json:"default_value,omitempty"` // 默认值
-	CharMaxLen   int    `json:"char_max_len,omitempty"`  // 字符最大长度
-	NumPrecision int    `json:"num_precision,omitempty"` // 数值精度
-	NumScale     int    `json:"num_scale,omitempty"`     // 数值小数位
-	Position     int    `json:"position"`                // 列位置（从1开始）
+	Name              string `json:"name"`
+	Type              string `json:"type"`
+	OrigType          string `json:"orig_type"`
+	Nullable          bool   `json:"nullable"`
+	DefaultValue      string `json:"default_value,omitempty"` // 默认值
+	Comment           string `json:"comment"`
+	CharMaxLen        int    `json:"char_max_len,omitempty"`       // 字符最大长度
+	NumPrecision      int    `json:"num_precision,omitempty"`      // 数值精度
+	NumScale          int    `json:"num_scale,omitempty"`          // 数值小数位
+	DatetimePrecision int    `json:"datetime_precision,omitempty"` // 日期时间精度
+	Charset           string `json:"charset,omitempty"`            // 字符集
+	Collation         string `json:"collation,omitempty"`          // 排序规则
+	OrdinalPosition   int    `json:"ordinal_position"`             // 列位置（从1开始）
+	ColumnKey         string `json:"column_key"`                   // 列键
 }
 
 // QueryResult represents query execution result.
