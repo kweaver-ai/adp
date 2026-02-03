@@ -25,16 +25,19 @@ func NewNotLikeCond(ctx context.Context, cfg *CondCfg, fieldsMap map[string]*Vie
 		return nil, fmt.Errorf("condition [not_like] does not support value_from type '%s'", cfg.ValueFrom)
 	}
 
-	val, ok := cfg.ValueOptCfg.Value.(string)
-	if !ok {
-		return nil, fmt.Errorf("condition [not_like] right value is not a string value: %v", cfg.Value)
-	}
-
-	realVal := ""
+	// 如果有 real_value 则跳过 value 的校验
+	var val, realVal string
 	if cfg.ValueOptCfg.RealValue != nil {
+		var ok bool
 		realVal, ok = cfg.ValueOptCfg.RealValue.(string)
 		if !ok {
-			return nil, fmt.Errorf("condition [not_like] right real value is not a string value: %v", cfg.Value)
+			return nil, fmt.Errorf("condition [not_like] right real value is not a string value: %v", cfg.RealValue)
+		}
+	} else {
+		var ok bool
+		val, ok = cfg.ValueOptCfg.Value.(string)
+		if !ok {
+			return nil, fmt.Errorf("condition [not_like] right value is not a string value: %v", cfg.Value)
 		}
 	}
 
