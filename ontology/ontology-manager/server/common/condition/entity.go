@@ -23,6 +23,9 @@ const (
 	ValueFrom_Const = "const"
 	ValueFrom_Field = "field"
 	ValueFrom_User  = "user"
+
+	KNN_LIMIT_KEY_DEFAULT   = "k"
+	KNN_LIMIT_VALUE_DEFAULT = 100
 )
 
 const (

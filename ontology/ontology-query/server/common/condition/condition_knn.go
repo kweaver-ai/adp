@@ -95,6 +95,16 @@ func (cond *KnnCond) Convert(ctx context.Context, vectorizer func(ctx context.Co
 		subDSL = fmt.Sprintf(subDSL, subCondStr)
 	}
 
+	// limit_key 和 limit_value 未给时，填入默认值
+	key := cond.mCfg.RemainCfg["limit_key"]
+	value := cond.mCfg.RemainCfg["limit_value"]
+	if key == nil || key == "" {
+		key = KNN_LIMIT_KEY_DEFAULT
+	}
+	if value == nil {
+		value = KNN_LIMIT_VALUE_DEFAULT
+	}
+
 	dslStr := fmt.Sprintf(`
 					{
 						"knn": {
@@ -104,7 +114,7 @@ func (cond *KnnCond) Convert(ctx context.Context, vectorizer func(ctx context.Co
 								%s
 							}
 						}
-					}`, cond.mFilterFieldName, cond.mCfg.RemainCfg["limit_key"], cond.mCfg.RemainCfg["limit_value"],
+					}`, cond.mFilterFieldName, key, value,
 		string(res), subDSL)
 
 	return dslStr, nil
