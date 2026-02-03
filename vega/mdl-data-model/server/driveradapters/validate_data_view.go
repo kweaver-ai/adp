@@ -144,7 +144,7 @@ func validateViewID(ctx context.Context, viewID string, builtin bool) error {
 // 	return nil
 // }
 
-// 自定义数据视图参数校验
+// 数据视图参数校验(索引库调用视图接口创建的原子视图、自定义视图)
 func ValidateDataView(ctx context.Context, view *interfaces.DataView) error {
 	// 校验数据视图 id
 	err := validateViewID(ctx, view.ViewID, view.Builtin)
@@ -198,15 +198,13 @@ func ValidateDataView(ctx context.Context, view *interfaces.DataView) error {
 		return err
 	}
 
+	// 不校验索引库视图，因为索引库视图没有字段列表和viewType
 	switch view.Type {
 	case interfaces.ViewType_Atomic:
 	case interfaces.ViewType_Custom:
 		if len(view.Fields) == 0 {
 			view.Fields = outputFields
 		}
-	default:
-		return rest.NewHTTPError(ctx, http.StatusBadRequest, rest.PublicError_BadRequest).
-			WithErrorDetails("The view type should be 'atomic' or 'custom'")
 	}
 
 	// 校验字段
