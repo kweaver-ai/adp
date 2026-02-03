@@ -12,6 +12,7 @@ type S3Config struct {
 	Region          string // S3区域
 	AccessKeyID     string // 访问密钥ID
 	SecretAccessKey string // 访问密钥
+	BucketName      string // Bucket名称
 	UseSSL          bool   // 是否使用SSL
 }
 
@@ -22,6 +23,7 @@ func LoadS3Config() (*S3Config, error) {
 		Region:          os.Getenv("S3_REGION"),
 		AccessKeyID:     os.Getenv("S3_ACCESS_KEY_ID"),
 		SecretAccessKey: os.Getenv("S3_SECRET_ACCESS_KEY"),
+		BucketName:      os.Getenv("S3_BUCKET_NAME"),
 		UseSSL:          true, // 默认使用SSL
 	}
 
@@ -46,6 +48,9 @@ func LoadS3Config() (*S3Config, error) {
 	}
 	if config.SecretAccessKey == "" {
 		return nil, fmt.Errorf("S3_SECRET_ACCESS_KEY is required")
+	}
+	if config.BucketName == "" {
+		return nil, fmt.Errorf("S3_BUCKET_NAME is required")
 	}
 
 	return config, nil

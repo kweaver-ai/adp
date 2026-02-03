@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"mime/multipart"
 	"net/http"
 	"os"
 	"reflect"
@@ -354,7 +355,14 @@ type MgntHandler interface { //nolint
 		logs []*entity.DagInstanceEvent, dagIns *entity.DagInstance, total int, next int, err error)
 
 	// S3配置验证接口
-	ValidateS3Config(ctx context.Context, bucket, path string) (*S3ValidationResult, error)
+	ValidateS3Config(ctx context.Context, bucket, path, mode string) (*S3ValidationResult, error)
+
+	// S3文件管理接口
+	UploadS3File(ctx context.Context, dagID string, fileHeader *multipart.FileHeader, userInfo *drivenadapters.UserInfo) (*S3DataItem, error)
+	ListS3Files(ctx context.Context, dagID string, userInfo *drivenadapters.UserInfo) ([]*S3DataItem, error)
+	DeleteS3File(ctx context.Context, dagID, key string, userInfo *drivenadapters.UserInfo) error
+	MoveS3Files(ctx context.Context, sources []string, targetDagID string) ([]string, error)
+	GetS3FileDownloadURL(ctx context.Context, dagID, key string, userInfo *drivenadapters.UserInfo) (string, error)
 }
 
 var (

@@ -498,6 +498,16 @@ type AccessAddress struct {
 	Path   string `mapstructure:"path"`
 }
 
+// S3 S3存储配置
+type S3 struct {
+	Endpoint        string `mapstructure:"endpoint"`
+	Region          string `mapstructure:"region"`
+	AccessKeyID     string `mapstructure:"access_key_id"`
+	SecretAccessKey string `mapstructure:"secret_access_key"`
+	BucketName      string `mapstructure:"bucket_name"`
+	UseSSL          bool   `mapstructure:"use_ssl"`
+}
+
 // DSN 获取连接地址
 func (conf *MongoDBConfig) DSN() string {
 	query := url.Values{}

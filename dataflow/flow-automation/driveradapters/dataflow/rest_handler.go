@@ -6,12 +6,12 @@ import (
 	"net/http"
 	"sync"
 
+	"github.com/gin-gonic/gin"
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/common"
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/drivenadapters"
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/driveradapters/middleware"
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/errors"
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/logics/mgnt"
-	"github.com/gin-gonic/gin"
 )
 
 type RESTHandler interface {
@@ -55,6 +55,11 @@ func (h *DataFlowHandler) RegisterAPI(engine *gin.RouterGroup) {
 	engine.POST("/flow", middleware.TokenAuth(), middleware.CheckIsApp(), middleware.CheckBizDomainID(), h.create)
 	engine.PUT("/flow/:id", middleware.TokenAuth(), h.update)
 	engine.DELETE("/flow/:id", middleware.TokenAuth(), middleware.CheckBizDomainID(), h.delete)
+
+	engine.POST("/:id/files/upload", middleware.TokenAuth(), h.uploadFile)
+	engine.GET("/:id/files", middleware.TokenAuth(), h.listFiles)
+	engine.DELETE("/:id/files", middleware.TokenAuth(), h.deleteFile)
+	engine.GET("/:id/files/download", middleware.TokenAuth(), h.downloadFile)
 }
 
 func (h *DataFlowHandler) create(c *gin.Context) {
@@ -133,4 +138,79 @@ func (h *DataFlowHandler) delete(c *gin.Context) {
 		return
 	}
 	c.Status(http.StatusNoContent)
+}
+
+func (h *DataFlowHandler) uploadFile(c *gin.Context) {
+	dagID := c.Param("id")
+	user, _ := c.Get("user")
+	userInfo := user.(*drivenadapters.UserInfo)
+
+	fileHeader, err := c.FormFile("file")
+	if err != nil {
+		c.JSON(http.StatusBadRequest, errors.NewIError(errors.InvalidParameter, "", []interface{}{"file is required"}))
+		return
+	}
+
+	item, err := h.mgnt.UploadS3File(c.Request.Context(), dagID, fileHeader, userInfo)
+	if err != nil {
+		errors.ReplyError(c, err)
+		return
+	}
+
+	c.JSON(http.StatusOK, item)
+}
+
+func (h *DataFlowHandler) listFiles(c *gin.Context) {
+	dagID := c.Param("id")
+	user, _ := c.Get("user")
+	userInfo := user.(*drivenadapters.UserInfo)
+
+	items, err := h.mgnt.ListS3Files(c.Request.Context(), dagID, userInfo)
+	if err != nil {
+		errors.ReplyError(c, err)
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"files": items,
+	})
+}
+
+func (h *DataFlowHandler) deleteFile(c *gin.Context) {
+	dagID := c.Param("id")
+	key := c.Query("key")
+	if key == "" {
+		c.JSON(http.StatusBadRequest, errors.NewIError(errors.InvalidParameter, "", []interface{}{"key is required"}))
+		return
+	}
+	user, _ := c.Get("user")
+	userInfo := user.(*drivenadapters.UserInfo)
+
+	err := h.mgnt.DeleteS3File(c.Request.Context(), dagID, key, userInfo)
+	if err != nil {
+		errors.ReplyError(c, err)
+		return
+	}
+
+	c.Status(http.StatusNoContent)
+}
+
+func (h *DataFlowHandler) downloadFile(c *gin.Context) {
+	dagID := c.Param("id")
+	key := c.Query("key")
+	if key == "" {
+		c.JSON(http.StatusBadRequest, errors.NewIError(errors.InvalidParameter, "", []interface{}{"key is required"}))
+		return
+	}
+	user, _ := c.Get("user")
+	userInfo := user.(*drivenadapters.UserInfo)
+
+	url, err := h.mgnt.GetS3FileDownloadURL(c.Request.Context(), dagID, key, userInfo)
+	if err != nil {
+		errors.ReplyError(c, err)
+		return
+	}
+
+	// 302 重定向到S3预签名地址
+	c.Redirect(http.StatusFound, url)
 }

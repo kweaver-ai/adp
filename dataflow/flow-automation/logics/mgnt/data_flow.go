@@ -17,6 +17,7 @@ import (
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/logics/perm"
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/pkg/entity"
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/pkg/mod"
+	"github.com/kweaver-ai/adp/autoflow/flow-automation/store"
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/store/rds"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -115,6 +116,64 @@ func (m *mgnt) CreateDataFlow(ctx context.Context, param *CreateDataFlowReq, use
 		DeBugID:       param.DeBugID,
 		BizDomainID:   param.BizDomainID,
 		SubIDs:        subDagIDs,
+	}
+
+	// 检查S3数据源，如果有临时文件，则移动到正式目录
+	if dag.TriggerConfig != nil && dag.TriggerConfig.DataSource != nil &&
+		dag.TriggerConfig.DataSource.Operator == common.S3DataListObjects {
+		// 转换参数
+		dataSource := dag.TriggerConfig.DataSource
+		// 直接使用类型化的参数
+		params := dataSource.Parameters
+
+		if params != nil && params.Mode == "upload" && len(params.Sources) > 0 {
+			var keysToMove []string
+			var sourceMap = make(map[string]int) // key -> index
+
+			for i, source := range params.Sources {
+				// 优先使用Path，如果Path为空则使用Key
+				path := source.Path
+				if path == "" {
+					path = source.Key
+				}
+
+				if strings.Contains(path, "/temp/") {
+					keysToMove = append(keysToMove, path)
+					sourceMap[path] = i
+				}
+			}
+
+			if len(keysToMove) > 0 {
+				// 我们需要在使用dag.ID之前确保它存在。
+				if dag.ID == "" {
+					dag.ID = store.NextStringID()
+				}
+
+				newKeys, err := m.MoveS3Files(ctx, keysToMove, dag.ID)
+				if err != nil {
+					log.Warnf("[logic.CreateDataFlow] MoveS3Files err: %v", err)
+					return "", ierrors.NewIError(ierrors.InternalError, "failed to move s3 files", err.Error())
+				}
+
+				// 更新Sources中的Path/Key
+				for i, oldKey := range keysToMove {
+					if i < len(newKeys) {
+						idx := sourceMap[oldKey]
+						// 能够根据oldKey找到对应的source索引
+						// 更新为新的路径
+						// 此时我们统一更新Path字段，清空Key字段（或者两者都更?）
+						// 为了规范，建议使用Path
+						params.Sources[idx].Path = newKeys[i]
+						params.Sources[idx].Key = "" // 可选：清空Key，避免混淆
+					}
+				}
+			}
+		}
+	}
+
+	// Double check dag ID generation in case we didn't enter the block above
+	if dag.ID == "" {
+		dag.ID = store.NextStringID()
 	}
 
 	dag.AppInfo = entity.AppInfo{
