@@ -17,11 +17,11 @@ import (
 	"go.opentelemetry.io/otel/propagation"
 	_ "go.uber.org/automaxprocs"
 
-	"vega-manager/common"
-	"vega-manager/driveradapters"
-	"vega-manager/logics"
-	"vega-manager/logics/connectors/factory"
-	"vega-manager/worker"
+	"vega-backend/common"
+	"vega-backend/driveradapters"
+	"vega-backend/logics"
+	"vega-backend/logics/connectors/factory"
+	"vega-backend/worker"
 )
 
 type vegaService struct {

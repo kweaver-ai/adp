@@ -4,7 +4,7 @@ package table
 import (
 	"database/sql"
 
-	"vega-manager/interfaces"
+	"vega-backend/interfaces"
 )
 
 // ScanRows scans SQL rows into QueryResult.

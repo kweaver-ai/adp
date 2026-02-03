@@ -3,8 +3,8 @@ package common
 import (
 	"testing"
 
-	"vega-manager/tests/at/setup"
-	"vega-manager/tests/testutil"
+	"vega-backend/tests/at/setup"
+	"vega-backend/tests/testutil"
 )
 
 // BaseTestSuite 基础测试套件
@@ -46,5 +46,5 @@ func (s *BaseTestSuite) Setup() error {
 
 // APIBasePath 返回API基础路径
 func APIBasePath() string {
-	return "/api/vega-manager/v1"
+	return "/api/vega-backend/v1"
 }

@@ -1,7 +1,7 @@
 package catalog
 
 import (
-	"vega-manager/tests/at/setup"
+	"vega-backend/tests/at/setup"
 )
 
 // PayloadBuilder Catalog payload构建器接口

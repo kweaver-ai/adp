@@ -2,7 +2,7 @@
 package interfaces
 
 const (
-	ConnectorModeLocal  string = "local"  // 内置在 vega-manager 进程内运行
+	ConnectorModeLocal  string = "local"  // 内置在 vega-backend 进程内运行
 	ConnectorModeRemote string = "remote" // 作为独立服务运行，通过 HTTP 调用
 )
 

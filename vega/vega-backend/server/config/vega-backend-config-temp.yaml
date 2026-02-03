@@ -18,24 +18,24 @@ depServices:
   class-443:
     ingressClass: class-443
   rds:
-    host: 0.0.0.0
+    host: localhost
     port: 3330
-    user: root
-    password: eisoo.com
+    user: username
+    password: password
     type: MariaDB
   mq:
-    mqType: Kafka
-    mqHost: 0.0.0.0
+    mqType: kafka
+    mqHost: localhost
     mqPort: 9092
     protocol: sasl_plaintext
     tenant: default
     auth:
-      username: admin
-      password: admin
+      username: username
+      password: password
       mechanism: PLAIN
   opensearch:
-    host: 0.0.0.0
+    host: localhost
     port: 9200
     protocol: http
-    username: admin
-    password: admin
+    username: username
+    password: password

@@ -6,9 +6,9 @@ import (
 
 	. "github.com/smartystreets/goconvey/convey"
 
-	commonresource "vega-manager/tests/at/common/resource"
-	"vega-manager/tests/at/setup"
-	"vega-manager/tests/testutil"
+	commonresource "vega-backend/tests/at/common/resource"
+	"vega-backend/tests/at/setup"
+	"vega-backend/tests/testutil"
 )
 
 // TestOpenSearchResourceCreate OpenSearch Resource创建AT测试

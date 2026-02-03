@@ -5,7 +5,7 @@ import (
 	"strings"
 	"time"
 
-	"vega-manager/tests/at/fixtures"
+	"vega-backend/tests/at/fixtures"
 )
 
 // resourceReadOnlyFields Resource更新时需要移除的只读字段

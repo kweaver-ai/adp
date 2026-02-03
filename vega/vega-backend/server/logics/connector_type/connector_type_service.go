@@ -13,11 +13,11 @@ import (
 	"github.com/kweaver-ai/kweaver-go-lib/rest"
 	"go.opentelemetry.io/otel/codes"
 
-	"vega-manager/common"
-	connectorTypeAccess "vega-manager/drivenadapters/connector_type"
-	oerrors "vega-manager/errors"
-	"vega-manager/interfaces"
-	"vega-manager/logics/connectors/factory"
+	"vega-backend/common"
+	connectorTypeAccess "vega-backend/drivenadapters/connector_type"
+	oerrors "vega-backend/errors"
+	"vega-backend/interfaces"
+	"vega-backend/logics/connectors/factory"
 )
 
 var (

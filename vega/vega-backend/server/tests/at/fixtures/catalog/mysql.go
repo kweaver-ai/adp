@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"time"
 
-	"vega-manager/tests/at/setup"
+	"vega-backend/tests/at/setup"
 )
 
 // MySQLPayloadBuilder MySQL catalog payload构建器

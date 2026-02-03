@@ -3,8 +3,10 @@ package catalog
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net/http"
+	"strings"
 	"sync"
 	"time"
 
@@ -16,11 +18,11 @@ import (
 	"github.com/rs/xid"
 	"go.opentelemetry.io/otel/codes"
 
-	"vega-manager/common"
-	catalogAccess "vega-manager/drivenadapters/catalog"
-	oerrors "vega-manager/errors"
-	"vega-manager/interfaces"
-	"vega-manager/logics/connectors/factory"
+	"vega-backend/common"
+	catalogAccess "vega-backend/drivenadapters/catalog"
+	oerrors "vega-backend/errors"
+	"vega-backend/interfaces"
+	"vega-backend/logics/connectors/factory"
 )
 
 const (
@@ -140,7 +142,7 @@ func (cs *catalogService) Create(ctx context.Context, req *interfaces.CatalogReq
 }
 
 // Get retrieves a Catalog by ID.
-func (cs *catalogService) GetByID(ctx context.Context, id string) (*interfaces.Catalog, error) {
+func (cs *catalogService) GetByID(ctx context.Context, id string, withSensitiveFields bool) (*interfaces.Catalog, error) {
 	ctx, span := ar_trace.Tracer.Start(ctx, "Get catalog")
 	defer span.End()
 
@@ -155,8 +157,22 @@ func (cs *catalogService) GetByID(ctx context.Context, id string) (*interfaces.C
 		return nil, rest.NewHTTPError(ctx, http.StatusNotFound, oerrors.VegaManager_Catalog_NotFound)
 	}
 
-	// 移除敏感字段，不返回给前端
-	cs.removeSensitiveFields(catalog)
+	if !withSensitiveFields {
+		// 移除敏感字段，不返回给前端
+		cs.removeSensitiveFields(catalog)
+	} else {
+		// 验证敏感字段是否为合法 RSA 密文，获取明文用于连接测试
+		sensitiveFields := factory.GetFactory().GetSensitiveFields(catalog.ConnectorType)
+		decryptedConfig, err := cs.decryptSensitiveFields(sensitiveFields, catalog.ConnectorConfig)
+		if err != nil {
+			logger.Errorf("Failed to validate sensitive fields: %v", err)
+			o11y.Error(ctx, fmt.Sprintf("Failed to validate sensitive fields: %v", err))
+			span.SetStatus(codes.Error, "Validate sensitive fields failed")
+			return nil, rest.NewHTTPError(ctx, http.StatusBadRequest, oerrors.VegaManager_Catalog_InvalidParameter_SensitiveFieldNotEncrypted).
+				WithErrorDetails(err.Error())
+		}
+		catalog.ConnectorConfig = decryptedConfig
+	}
 
 	span.SetStatus(codes.Ok, "")
 	return catalog, nil
@@ -403,4 +419,42 @@ func (cs *catalogService) removeSensitiveFields(catalog *interfaces.Catalog) {
 	for _, field := range sensitiveFields {
 		delete(catalog.ConnectorConfig, field)
 	}
+}
+
+// decryptSensitiveFields 验证敏感字段是否为合法 RSA 密文，
+// 返回解密后的明文 config（用于连接），数据从数据库获取而来，需要先去除ENC前缀，再解密
+// 如果 cipher 为 nil（加密未启用），直接返回原始 config 的拷贝作为 decryptedConfig，不做验证。
+func (cs *catalogService) decryptSensitiveFields(sensitiveFields []string,
+	config map[string]any) (decryptedConfig map[string]any, err error) {
+
+	// 拷贝 config 作为 decryptedConfig
+	decryptedConfig = make(map[string]any, len(config))
+	for k, v := range config {
+		decryptedConfig[k] = v
+	}
+
+	if cs.cipher == nil {
+		return decryptedConfig, nil
+	}
+
+	for _, field := range sensitiveFields {
+		val, ok := config[field].(string)
+		if !ok || val == "" {
+			continue
+		}
+		// 尝试用私钥解密，验证是否为合法密文
+		if !strings.HasPrefix(val, EncryptedPrefix) {
+			return nil, fmt.Errorf("field %s: %w", field, errors.New("not encrypted"))
+		} else {
+			val = val[len(EncryptedPrefix):]
+		}
+		decrypted, decryptErr := cs.cipher.Decrypt(val)
+		if decryptErr != nil {
+			return nil, fmt.Errorf("field %s: %w", field, decryptErr)
+		}
+		// 解密成功：明文放入 decryptedConfig，原始 config 加上 ENC: 前缀
+		decryptedConfig[field] = decrypted
+		config[field] = EncryptedPrefix + val
+	}
+	return decryptedConfig, nil
 }

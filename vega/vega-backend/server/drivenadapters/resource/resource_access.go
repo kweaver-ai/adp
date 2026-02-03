@@ -18,8 +18,8 @@ import (
 	"go.opentelemetry.io/otel/codes"
 	"go.opentelemetry.io/otel/trace"
 
-	"vega-manager/common"
-	"vega-manager/interfaces"
+	"vega-backend/common"
+	"vega-backend/interfaces"
 )
 
 const (
@@ -79,10 +79,27 @@ func (ra *resourceAccess) Create(ctx context.Context, resource *interfaces.Resou
 			"f_comment",
 			"f_category",
 			"f_status",
+			"f_status_message",
 			"f_database",
 			"f_source_identifier",
 			"f_source_metadata",
 			"f_schema_definition",
+
+			"f_logic_type",
+			"f_logic_definition",
+			"f_logic_definition_type",
+
+			"f_local_enabled",
+			"f_local_storage_engine",
+			"f_local_storage_config",
+			"f_local_index_name",
+
+			"f_sync_strategy",
+			"f_sync_config",
+			"f_sync_status",
+			"f_last_sync_time",
+			"f_sync_error_message",
+
 			"f_creator",
 			"f_creator_type",
 			"f_create_time",
@@ -98,10 +115,27 @@ func (ra *resourceAccess) Create(ctx context.Context, resource *interfaces.Resou
 			resource.Comment,
 			resource.Category,
 			resource.Status,
+			resource.StatusMessage,
 			resource.Database,
 			resource.SourceIdentifier,
 			string(sourceMetadataBytes),
 			string(schemaDefinitionBytes),
+
+			"",
+			"",
+			"",
+
+			false,
+			"",
+			"",
+			"",
+
+			"",
+			"",
+			"",
+			0,
+			"",
+
 			resource.Creator.ID,
 			resource.Creator.Type,
 			resource.CreateTime,
@@ -146,6 +180,7 @@ func (ra *resourceAccess) GetByID(ctx context.Context, id string) (*interfaces.R
 		"f_comment",
 		"f_category",
 		"f_status",
+		"f_status_message",
 		"f_database",
 		"f_source_identifier",
 		"f_source_metadata",
@@ -178,6 +213,7 @@ func (ra *resourceAccess) GetByID(ctx context.Context, id string) (*interfaces.R
 		&resource.Comment,
 		&resource.Category,
 		&resource.Status,
+		&resource.StatusMessage,
 		&database,
 		&sourceIdentifier,
 		&sourceMetadata,
@@ -230,6 +266,7 @@ func (ra *resourceAccess) GetByIDs(ctx context.Context, ids []string) ([]*interf
 		"f_comment",
 		"f_category",
 		"f_status",
+		"f_status_message",
 		"f_database",
 		"f_source_identifier",
 		"f_source_metadata",
@@ -271,6 +308,7 @@ func (ra *resourceAccess) GetByIDs(ctx context.Context, ids []string) ([]*interf
 			&resource.Comment,
 			&resource.Category,
 			&resource.Status,
+			&resource.StatusMessage,
 			&database,
 			&sourceIdentifier,
 			&sourceMetadata,
@@ -323,6 +361,7 @@ func (ra *resourceAccess) GetByName(ctx context.Context, catalogID string, name 
 		"f_comment",
 		"f_category",
 		"f_status",
+		"f_status_message",
 		"f_database",
 		"f_source_identifier",
 		"f_source_metadata",
@@ -356,6 +395,7 @@ func (ra *resourceAccess) GetByName(ctx context.Context, catalogID string, name 
 		&resource.Comment,
 		&resource.Category,
 		&resource.Status,
+		&resource.StatusMessage,
 		&database,
 		&sourceIdentifier,
 		&sourceMetadata,
@@ -406,6 +446,7 @@ func (ra *resourceAccess) List(ctx context.Context, params interfaces.ResourcesQ
 		"f_comment",
 		"f_category",
 		"f_status",
+		"f_status_message",
 		"f_database",
 		"f_source_identifier",
 		"f_source_metadata",
@@ -479,6 +520,7 @@ func (ra *resourceAccess) List(ctx context.Context, params interfaces.ResourcesQ
 			&resource.Comment,
 			&resource.Category,
 			&resource.Status,
+			&resource.StatusMessage,
 			&database,
 			&sourceIdentifier,
 			&sourceMetadata,
@@ -576,6 +618,7 @@ func (ra *resourceAccess) GetByCatalogID(ctx context.Context, catalogID string) 
 		"f_comment",
 		"f_category",
 		"f_status",
+		"f_status_message",
 		"f_database",
 		"f_source_identifier",
 		"f_source_metadata",
@@ -617,6 +660,7 @@ func (ra *resourceAccess) GetByCatalogID(ctx context.Context, catalogID string) 
 			&resource.Comment,
 			&resource.Category,
 			&resource.Status,
+			&resource.StatusMessage,
 			&database,
 			&sourceIdentifier,
 			&sourceMetadata,
@@ -652,7 +696,7 @@ func (ra *resourceAccess) GetByCatalogID(ctx context.Context, catalogID string) 
 }
 
 // UpdateStatus updates a Resource's status.
-func (ra *resourceAccess) UpdateStatus(ctx context.Context, id string, status string) error {
+func (ra *resourceAccess) UpdateStatus(ctx context.Context, id string, status string, statusMessage string) error {
 	ctx, span := ar_trace.Tracer.Start(ctx, "Update resource status",
 		trace.WithSpanKind(trace.SpanKindClient))
 	defer span.End()
@@ -664,6 +708,7 @@ func (ra *resourceAccess) UpdateStatus(ctx context.Context, id string, status st
 
 	sqlStr, vals, err := sq.Update(RESOURCE_TABLE_NAME).
 		Set("f_status", status).
+		Set("f_status_message", statusMessage).
 		Where(sq.Eq{"f_id": id}).
 		ToSql()
 	if err != nil {

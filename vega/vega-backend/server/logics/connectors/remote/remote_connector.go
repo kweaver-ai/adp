@@ -3,8 +3,9 @@ package remote
 
 import (
 	"context"
-	"vega-manager/interfaces"
-	"vega-manager/logics/connectors"
+
+	"vega-backend/interfaces"
+	"vega-backend/logics/connectors"
 )
 
 // ============================================

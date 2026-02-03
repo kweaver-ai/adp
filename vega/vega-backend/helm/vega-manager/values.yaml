@@ -1,5 +1,5 @@
 namespace: dip
-moduleName: vega-manager
+moduleName: vega-backend
 
 # 环境变量：语言/时区
 env:
@@ -13,7 +13,7 @@ nodeSelector: {}
 
 image:
   registry: acr.aishu.cn
-  repository: dip/vega-manager
+  repository: dip/vega-backend
   tag: tag
   pullPolicy: IfNotPresent
 
@@ -26,7 +26,7 @@ service:
       enabled: true
       interface:
         path:
-          - /api/vega-manager/v1
+          - /api/vega-backend/v1
 
 # 反亲和性设置
 antiAffinity:

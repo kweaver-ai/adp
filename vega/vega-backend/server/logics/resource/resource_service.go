@@ -15,10 +15,10 @@ import (
 	"github.com/rs/xid"
 	"go.opentelemetry.io/otel/codes"
 
-	"vega-manager/common"
-	resourceAccess "vega-manager/drivenadapters/resource"
-	oerrors "vega-manager/errors"
-	"vega-manager/interfaces"
+	"vega-backend/common"
+	resourceAccess "vega-backend/drivenadapters/resource"
+	oerrors "vega-backend/errors"
+	"vega-backend/interfaces"
 )
 
 var (
@@ -219,11 +219,11 @@ func (rs *resourceService) Update(ctx context.Context, id string, req *interface
 }
 
 // UpdateStatus updates a Resource's status.
-func (rs *resourceService) UpdateStatus(ctx context.Context, id string, status string) error {
+func (rs *resourceService) UpdateStatus(ctx context.Context, id string, status string, statusMessage string) error {
 	ctx, span := ar_trace.Tracer.Start(ctx, "Update resource status")
 	defer span.End()
 
-	if err := rs.ra.UpdateStatus(ctx, id, status); err != nil {
+	if err := rs.ra.UpdateStatus(ctx, id, status, statusMessage); err != nil {
 		span.SetStatus(codes.Error, "Update resource status failed")
 		return rest.NewHTTPError(ctx, http.StatusInternalServerError, oerrors.VegaManager_Resource_InternalError_UpdateFailed).
 			WithErrorDetails(err.Error())

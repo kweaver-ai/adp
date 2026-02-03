@@ -2,7 +2,8 @@ package driveradapters
 
 import (
 	"context"
-	"vega-manager/interfaces"
+
+	"vega-backend/interfaces"
 )
 
 func ValidateResourceRequest(ctx context.Context, req *interfaces.ResourceRequest) error {

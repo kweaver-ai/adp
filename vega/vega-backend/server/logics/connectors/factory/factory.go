@@ -7,13 +7,13 @@ import (
 	"reflect"
 	"sync"
 
-	"vega-manager/common"
-	connectorTypeAccess "vega-manager/drivenadapters/connector_type"
-	"vega-manager/interfaces"
-	"vega-manager/logics/connectors"
-	"vega-manager/logics/connectors/remote"
-
 	"github.com/kweaver-ai/kweaver-go-lib/logger"
+
+	"vega-backend/common"
+	connectorTypeAccess "vega-backend/drivenadapters/connector_type"
+	"vega-backend/interfaces"
+	"vega-backend/logics/connectors"
+	"vega-backend/logics/connectors/remote"
 )
 
 var (
@@ -23,7 +23,7 @@ var (
 
 // ConnectorFactory 创建和管理数据源连接器
 // 支持 local 和 remote 两种模式:
-// - local: 内置在 vega-manager 进程内运行的连接器
+// - local: 内置在 vega-backend 进程内运行的连接器
 // - remote: 作为独立服务运行，通过 HTTP 调用的连接器
 type ConnectorFactory struct {
 	mu sync.RWMutex

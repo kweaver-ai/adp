@@ -8,7 +8,7 @@ type CatalogService interface {
 	// Create creates a new Catalog.
 	Create(ctx context.Context, req *CatalogRequest) (string, error)
 	// Get retrieves a Catalog by ID.
-	GetByID(ctx context.Context, id string) (*Catalog, error)
+	GetByID(ctx context.Context, id string, withSensitiveFields bool) (*Catalog, error)
 	// Get retrieves a Catalog by IDs.
 	GetByIDs(ctx context.Context, ids []string) ([]*Catalog, error)
 	// List lists Catalogs with filters.

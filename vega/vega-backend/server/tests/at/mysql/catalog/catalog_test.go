@@ -6,10 +6,10 @@ import (
 
 	. "github.com/smartystreets/goconvey/convey"
 
-	commoncatalog "vega-manager/tests/at/common/catalog"
-	"vega-manager/tests/at/fixtures"
-	"vega-manager/tests/at/setup"
-	"vega-manager/tests/testutil"
+	commoncatalog "vega-backend/tests/at/common/catalog"
+	"vega-backend/tests/at/fixtures"
+	"vega-backend/tests/at/setup"
+	"vega-backend/tests/testutil"
 )
 
 // TestMySQLCatalogCreate MySQL Catalog创建AT测试

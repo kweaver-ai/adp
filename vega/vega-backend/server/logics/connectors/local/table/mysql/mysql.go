@@ -10,8 +10,8 @@ import (
 	sq "github.com/Masterminds/squirrel"
 	"github.com/mitchellh/mapstructure"
 
-	"vega-manager/interfaces"
-	"vega-manager/logics/connectors"
+	"vega-backend/interfaces"
+	"vega-backend/logics/connectors"
 )
 
 type mysqlConfig struct {
@@ -49,7 +49,7 @@ type MySQLConnector struct {
 }
 
 // NewMySQLConnector 创建 MySQL connector 构建器
-func NewMySQLConnector() connectors.Connector {
+func NewMySQLConnector() connectors.TableConnector {
 	return &MySQLConnector{}
 }
 
@@ -615,4 +615,8 @@ func (c *MySQLConnector) fetchForeignKeys(ctx context.Context, table *interfaces
 	}
 	table.ForeignKeys = fks
 	return nil
+}
+
+func (c *MySQLConnector) ExecuteQuery(ctx context.Context, query string, args ...any) (*interfaces.QueryResult, error) {
+	return nil, nil
 }

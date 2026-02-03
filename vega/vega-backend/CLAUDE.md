@@ -9,7 +9,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 cd server
 go mod tidy          # 安装依赖
 go run main.go       # 运行服务
-go build -o vega-manager  # 构建
+go build -o vega-backend  # 构建
 go test ./...        # 运行所有测试
 go test -v ./logics/catalog/...  # 运行单个包的测试
 go vet ./...         # 静态检查
@@ -26,7 +26,7 @@ npm run preview      # 预览构建结果
 ```
 
 ### Configuration
-服务配置文件: `./config/vega-manager-config.yaml`
+服务配置文件: `./config/vega-backend-config.yaml`
 
 ## Architecture
 
@@ -61,7 +61,7 @@ server/
 
 ### REST API
 
-基础路径: `/api/vega-manager/v1`
+基础路径: `/api/vega-backend/v1`
 
 | 资源 | 端点 |
 |------|------|

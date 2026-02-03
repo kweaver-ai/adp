@@ -9,11 +9,11 @@ import (
 
 	. "github.com/smartystreets/goconvey/convey"
 
-	"vega-manager/interfaces"
-	"vega-manager/tests/at/fixtures"
-	catalogfixtures "vega-manager/tests/at/fixtures/catalog"
-	"vega-manager/tests/at/setup"
-	"vega-manager/tests/testutil"
+	"vega-backend/interfaces"
+	"vega-backend/tests/at/fixtures"
+	catalogfixtures "vega-backend/tests/at/fixtures/catalog"
+	"vega-backend/tests/at/setup"
+	"vega-backend/tests/testutil"
 )
 
 // TestMySQLSpecificCreate MySQL特定功能AT测试 - 创建
@@ -60,13 +60,13 @@ func TestMySQLSpecificCreate(t *testing.T) {
 
 		Convey("MY101: 创建MySQL catalog后验证connector_type", func() {
 			payload := builder.BuildCreatePayload()
-			createResp := client.POST("/api/vega-manager/v1/catalogs", payload)
+			createResp := client.POST("/api/vega-backend/v1/catalogs", payload)
 			So(createResp.StatusCode, ShouldEqual, http.StatusCreated)
 
 			catalogID := createResp.Body["id"].(string)
 
 			// 查询验证
-			getResp := client.GET("/api/vega-manager/v1/catalogs/" + catalogID)
+			getResp := client.GET("/api/vega-backend/v1/catalogs/" + catalogID)
 			So(getResp.StatusCode, ShouldEqual, http.StatusOK)
 
 			catalog := fixtures.ExtractFromEntriesResponse(getResp)
@@ -83,20 +83,20 @@ func TestMySQLSpecificCreate(t *testing.T) {
 				"timeout":   "10s",
 			}
 			payload := builder.BuildCreatePayloadWithOptions(options)
-			resp := client.POST("/api/vega-manager/v1/catalogs", payload)
+			resp := client.POST("/api/vega-backend/v1/catalogs", payload)
 			So(resp.StatusCode, ShouldEqual, http.StatusCreated)
 			So(resp.Body["id"], ShouldNotBeEmpty)
 		})
 
 		Convey("MY103: 创建完整字段的MySQL catalog", func() {
 			payload := builder.BuildFullCreatePayload()
-			resp := client.POST("/api/vega-manager/v1/catalogs", payload)
+			resp := client.POST("/api/vega-backend/v1/catalogs", payload)
 			So(resp.StatusCode, ShouldEqual, http.StatusCreated)
 			So(resp.Body["id"], ShouldNotBeEmpty)
 
 			// 验证返回的字段
 			catalogID := resp.Body["id"].(string)
-			getResp := client.GET("/api/vega-manager/v1/catalogs/" + catalogID)
+			getResp := client.GET("/api/vega-backend/v1/catalogs/" + catalogID)
 			catalog := fixtures.ExtractFromEntriesResponse(getResp)
 
 			So(catalog["comment"], ShouldEqual, "完整的测试catalog，包含所有可选字段")
@@ -107,13 +107,13 @@ func TestMySQLSpecificCreate(t *testing.T) {
 
 		Convey("MY104: MySQL连接测试成功", func() {
 			payload := builder.BuildCreatePayload()
-			createResp := client.POST("/api/vega-manager/v1/catalogs", payload)
+			createResp := client.POST("/api/vega-backend/v1/catalogs", payload)
 			So(createResp.StatusCode, ShouldEqual, http.StatusCreated)
 
 			catalogID := createResp.Body["id"].(string)
 
 			// 测试连接
-			testResp := client.POST("/api/vega-manager/v1/catalogs/"+catalogID+"/test-connection", nil)
+			testResp := client.POST("/api/vega-backend/v1/catalogs/"+catalogID+"/test-connection", nil)
 			So(testResp.StatusCode, ShouldEqual, http.StatusOK)
 
 			if testResp.Body != nil {
@@ -124,13 +124,13 @@ func TestMySQLSpecificCreate(t *testing.T) {
 
 		Convey("MY105: 获取MySQL catalog健康状态", func() {
 			payload := builder.BuildCreatePayload()
-			createResp := client.POST("/api/vega-manager/v1/catalogs", payload)
+			createResp := client.POST("/api/vega-backend/v1/catalogs", payload)
 			So(createResp.StatusCode, ShouldEqual, http.StatusCreated)
 
 			catalogID := createResp.Body["id"].(string)
 
 			// 获取健康状态
-			statusResp := client.GET("/api/vega-manager/v1/catalogs/" + catalogID + "/health-status")
+			statusResp := client.GET("/api/vega-backend/v1/catalogs/" + catalogID + "/health-status")
 			So(statusResp.StatusCode, ShouldEqual, http.StatusOK)
 
 			if statusResp.Body != nil {
@@ -141,14 +141,14 @@ func TestMySQLSpecificCreate(t *testing.T) {
 
 		Convey("MY106: 创建实例级MySQL catalog（不指定database）", func() {
 			payload := builder.BuildCreatePayloadWithoutDatabase()
-			createResp := client.POST("/api/vega-manager/v1/catalogs", payload)
+			createResp := client.POST("/api/vega-backend/v1/catalogs", payload)
 			So(createResp.StatusCode, ShouldEqual, http.StatusCreated)
 			So(createResp.Body["id"], ShouldNotBeEmpty)
 
 			catalogID := createResp.Body["id"].(string)
 
 			// 验证connector_type
-			getResp := client.GET("/api/vega-manager/v1/catalogs/" + catalogID)
+			getResp := client.GET("/api/vega-backend/v1/catalogs/" + catalogID)
 			So(getResp.StatusCode, ShouldEqual, http.StatusOK)
 			catalog := fixtures.ExtractFromEntriesResponse(getResp)
 			So(catalog["connector_type"], ShouldEqual, "mysql")
@@ -156,13 +156,13 @@ func TestMySQLSpecificCreate(t *testing.T) {
 
 		Convey("MY107: 实例级MySQL catalog连接测试成功", func() {
 			payload := builder.BuildCreatePayloadWithoutDatabase()
-			createResp := client.POST("/api/vega-manager/v1/catalogs", payload)
+			createResp := client.POST("/api/vega-backend/v1/catalogs", payload)
 			So(createResp.StatusCode, ShouldEqual, http.StatusCreated)
 
 			catalogID := createResp.Body["id"].(string)
 
 			// 测试连接
-			testResp := client.POST("/api/vega-manager/v1/catalogs/"+catalogID+"/test-connection", nil)
+			testResp := client.POST("/api/vega-backend/v1/catalogs/"+catalogID+"/test-connection", nil)
 			So(testResp.StatusCode, ShouldEqual, http.StatusOK)
 
 			if testResp.Body != nil {
@@ -175,19 +175,19 @@ func TestMySQLSpecificCreate(t *testing.T) {
 
 		Convey("MY121: 无效端口测试（非数字）", func() {
 			payload := builder.BuildCreatePayloadWithInvalidPort()
-			resp := client.POST("/api/vega-manager/v1/catalogs", payload)
+			resp := client.POST("/api/vega-backend/v1/catalogs", payload)
 			So(resp.StatusCode, ShouldEqual, http.StatusBadRequest)
 		})
 
 		Convey("MY122: 错误密码测试", func() {
 			payload := builder.BuildCreatePayloadWithWrongCredentials()
-			resp := client.POST("/api/vega-manager/v1/catalogs", payload)
+			resp := client.POST("/api/vega-backend/v1/catalogs", payload)
 			So(resp.StatusCode, ShouldEqual, http.StatusBadRequest)
 		})
 
 		Convey("MY123: 不存在的数据库测试", func() {
 			payload := builder.BuildCreatePayloadWithNonExistentDB()
-			resp := client.POST("/api/vega-manager/v1/catalogs", payload)
+			resp := client.POST("/api/vega-backend/v1/catalogs", payload)
 			So(resp.StatusCode, ShouldEqual, http.StatusBadRequest)
 		})
 
@@ -204,7 +204,7 @@ func TestMySQLSpecificCreate(t *testing.T) {
 					"password": builder.GetEncryptedPassword(),
 				},
 			}
-			resp := client.POST("/api/vega-manager/v1/catalogs", payload)
+			resp := client.POST("/api/vega-backend/v1/catalogs", payload)
 			So(resp.StatusCode, ShouldEqual, http.StatusBadRequest)
 		})
 
@@ -221,14 +221,14 @@ func TestMySQLSpecificCreate(t *testing.T) {
 					"password": builder.GetEncryptedPassword(),
 				},
 			}
-			resp := client.POST("/api/vega-manager/v1/catalogs", payload)
+			resp := client.POST("/api/vega-backend/v1/catalogs", payload)
 			So(resp.StatusCode, ShouldEqual, http.StatusBadRequest)
 		})
 
 		Convey("MY126: 不指定database字段测试（实例级连接）", func() {
 			// database 为可选字段，不指定时创建实例级连接，应成功
 			payload := builder.BuildCreatePayloadWithoutDatabase()
-			resp := client.POST("/api/vega-manager/v1/catalogs", payload)
+			resp := client.POST("/api/vega-backend/v1/catalogs", payload)
 			So(resp.StatusCode, ShouldEqual, http.StatusCreated)
 			So(resp.Body["id"], ShouldNotBeEmpty)
 		})
@@ -246,7 +246,7 @@ func TestMySQLSpecificCreate(t *testing.T) {
 					"password": mysqlConfig.Password,
 				},
 			}
-			resp := client.POST("/api/vega-manager/v1/catalogs", payload)
+			resp := client.POST("/api/vega-backend/v1/catalogs", payload)
 			So(resp.StatusCode, ShouldEqual, http.StatusBadRequest)
 		})
 
@@ -263,7 +263,7 @@ func TestMySQLSpecificCreate(t *testing.T) {
 					"password": mysqlConfig.Password,
 				},
 			}
-			resp := client.POST("/api/vega-manager/v1/catalogs", payload)
+			resp := client.POST("/api/vega-backend/v1/catalogs", payload)
 			So(resp.StatusCode, ShouldEqual, http.StatusBadRequest)
 		})
 
@@ -280,7 +280,7 @@ func TestMySQLSpecificCreate(t *testing.T) {
 					"password": mysqlConfig.Password,
 				},
 			}
-			resp := client.POST("/api/vega-manager/v1/catalogs", payload)
+			resp := client.POST("/api/vega-backend/v1/catalogs", payload)
 			So(resp.StatusCode, ShouldEqual, http.StatusBadRequest)
 		})
 	})
@@ -325,13 +325,13 @@ func TestMySQLSpecificRead(t *testing.T) {
 		Convey("MY201: 查询catalog - 验证所有字段返回", func() {
 			// 创建完整字段的catalog
 			payload := builder.BuildFullCreatePayload()
-			createResp := client.POST("/api/vega-manager/v1/catalogs", payload)
+			createResp := client.POST("/api/vega-backend/v1/catalogs", payload)
 			So(createResp.StatusCode, ShouldEqual, http.StatusCreated)
 
 			catalogID := createResp.Body["id"].(string)
 
 			// 查询catalog
-			getResp := client.GET("/api/vega-manager/v1/catalogs/" + catalogID)
+			getResp := client.GET("/api/vega-backend/v1/catalogs/" + catalogID)
 			So(getResp.StatusCode, ShouldEqual, http.StatusOK)
 
 			// 从响应中提取catalog对象
@@ -359,11 +359,11 @@ func TestMySQLSpecificRead(t *testing.T) {
 		Convey("MY202: 列表查询 - 按type过滤physical", func() {
 			// 创建1个physical catalog
 			physicalPayload := builder.BuildCreatePayload()
-			createResp := client.POST("/api/vega-manager/v1/catalogs", physicalPayload)
+			createResp := client.POST("/api/vega-backend/v1/catalogs", physicalPayload)
 			So(createResp.StatusCode, ShouldEqual, http.StatusCreated)
 
 			// 查询physical类型
-			physicalResp := client.GET("/api/vega-manager/v1/catalogs?type=physical&offset=0&limit=100")
+			physicalResp := client.GET("/api/vega-backend/v1/catalogs?type=physical&offset=0&limit=100")
 			So(physicalResp.StatusCode, ShouldEqual, http.StatusOK)
 
 			if physicalResp.Body != nil && physicalResp.Body["entries"] != nil {
@@ -381,11 +381,11 @@ func TestMySQLSpecificRead(t *testing.T) {
 		Convey("MY203: 列表查询 - 按type过滤logical", func() {
 			// 创建1个logical catalog
 			logicalPayload := catalogfixtures.BuildLogicalCatalogPayload()
-			createResp := client.POST("/api/vega-manager/v1/catalogs", logicalPayload)
+			createResp := client.POST("/api/vega-backend/v1/catalogs", logicalPayload)
 			So(createResp.StatusCode, ShouldEqual, http.StatusCreated)
 
 			// 查询logical类型
-			logicalResp := client.GET("/api/vega-manager/v1/catalogs?type=logical&offset=0&limit=100")
+			logicalResp := client.GET("/api/vega-backend/v1/catalogs?type=logical&offset=0&limit=100")
 			So(logicalResp.StatusCode, ShouldEqual, http.StatusOK)
 
 			if logicalResp.Body != nil && logicalResp.Body["entries"] != nil {
@@ -404,25 +404,25 @@ func TestMySQLSpecificRead(t *testing.T) {
 			// 创建5个catalog
 			for i := 0; i < 5; i++ {
 				payload := builder.BuildCreatePayload()
-				resp := client.POST("/api/vega-manager/v1/catalogs", payload)
+				resp := client.POST("/api/vega-backend/v1/catalogs", payload)
 				So(resp.StatusCode, ShouldEqual, http.StatusCreated)
 			}
 
 			// 第一页
-			page1Resp := client.GET("/api/vega-manager/v1/catalogs?offset=0&limit=2")
+			page1Resp := client.GET("/api/vega-backend/v1/catalogs?offset=0&limit=2")
 			So(page1Resp.StatusCode, ShouldEqual, http.StatusOK)
 			entries1 := page1Resp.Body["entries"].([]any)
 			So(len(entries1), ShouldBeLessThanOrEqualTo, 2)
 
 			// 第二页
-			page2Resp := client.GET("/api/vega-manager/v1/catalogs?offset=2&limit=2")
+			page2Resp := client.GET("/api/vega-backend/v1/catalogs?offset=2&limit=2")
 			So(page2Resp.StatusCode, ShouldEqual, http.StatusOK)
 			entries2 := page2Resp.Body["entries"].([]any)
 			So(len(entries2), ShouldBeLessThanOrEqualTo, 2)
 		})
 
 		Convey("MY205: 列表查询 - 默认分页参数", func() {
-			defaultResp := client.GET("/api/vega-manager/v1/catalogs")
+			defaultResp := client.GET("/api/vega-backend/v1/catalogs")
 			So(defaultResp.StatusCode, ShouldEqual, http.StatusOK)
 			So(defaultResp.Body, ShouldNotBeNil)
 			So(defaultResp.Body["entries"], ShouldNotBeNil)
@@ -471,13 +471,13 @@ func TestMySQLSpecificUpdate(t *testing.T) {
 		Convey("MY301: 整体更新catalog connector_config", func() {
 			// 创建catalog
 			payload := builder.BuildCreatePayload()
-			createResp := client.POST("/api/vega-manager/v1/catalogs", payload)
+			createResp := client.POST("/api/vega-backend/v1/catalogs", payload)
 			So(createResp.StatusCode, ShouldEqual, http.StatusCreated)
 
 			catalogID := createResp.Body["id"].(string)
 
 			// 获取原始数据
-			getResp := client.GET("/api/vega-manager/v1/catalogs/" + catalogID)
+			getResp := client.GET("/api/vega-backend/v1/catalogs/" + catalogID)
 			originalData := fixtures.ExtractFromEntriesResponse(getResp)
 
 			// 基于原数据构建更新payload
@@ -496,20 +496,20 @@ func TestMySQLSpecificUpdate(t *testing.T) {
 					},
 				},
 			})
-			updateResp := client.PUT("/api/vega-manager/v1/catalogs/"+catalogID, updatePayload)
+			updateResp := client.PUT("/api/vega-backend/v1/catalogs/"+catalogID, updatePayload)
 			So(updateResp.StatusCode, ShouldEqual, http.StatusNoContent)
 		})
 
 		Convey("MY302: 同时更新多个字段", func() {
 			// 创建catalog
 			payload := builder.BuildCreatePayload()
-			createResp := client.POST("/api/vega-manager/v1/catalogs", payload)
+			createResp := client.POST("/api/vega-backend/v1/catalogs", payload)
 			So(createResp.StatusCode, ShouldEqual, http.StatusCreated)
 
 			catalogID := createResp.Body["id"].(string)
 
 			// 获取原始数据
-			getResp := client.GET("/api/vega-manager/v1/catalogs/" + catalogID)
+			getResp := client.GET("/api/vega-backend/v1/catalogs/" + catalogID)
 			originalData := fixtures.ExtractFromEntriesResponse(getResp)
 
 			// 基于原数据构建更新payload
@@ -521,20 +521,20 @@ func TestMySQLSpecificUpdate(t *testing.T) {
 			// GET响应不返回敏感字段，需要注入加密密码
 			catalogfixtures.InjectEncryptedPassword(updatePayload, builder.GetEncryptedPassword())
 
-			updateResp := client.PUT("/api/vega-manager/v1/catalogs/"+catalogID, updatePayload)
+			updateResp := client.PUT("/api/vega-backend/v1/catalogs/"+catalogID, updatePayload)
 			So(updateResp.StatusCode, ShouldEqual, http.StatusNoContent)
 		})
 
 		Convey("MY303: 更新name超长", func() {
 			// 创建catalog
 			payload := builder.BuildCreatePayload()
-			createResp := client.POST("/api/vega-manager/v1/catalogs", payload)
+			createResp := client.POST("/api/vega-backend/v1/catalogs", payload)
 			So(createResp.StatusCode, ShouldEqual, http.StatusCreated)
 
 			catalogID := createResp.Body["id"].(string)
 
 			// 获取原始数据
-			getResp := client.GET("/api/vega-manager/v1/catalogs/" + catalogID)
+			getResp := client.GET("/api/vega-backend/v1/catalogs/" + catalogID)
 			originalData := fixtures.ExtractFromEntriesResponse(getResp)
 
 			// 基于原数据构建更新payload（超长name）
@@ -543,14 +543,14 @@ func TestMySQLSpecificUpdate(t *testing.T) {
 			})
 			// GET响应不返回敏感字段，需要注入加密密码
 			catalogfixtures.InjectEncryptedPassword(updatePayload, builder.GetEncryptedPassword())
-			updateResp := client.PUT("/api/vega-manager/v1/catalogs/"+catalogID, updatePayload)
+			updateResp := client.PUT("/api/vega-backend/v1/catalogs/"+catalogID, updatePayload)
 			So(updateResp.StatusCode, ShouldEqual, http.StatusBadRequest)
 		})
 
 		Convey("MY304: 验证update_time更新", func() {
 			// 创建catalog
 			payload := builder.BuildCreatePayload()
-			createResp := client.POST("/api/vega-manager/v1/catalogs", payload)
+			createResp := client.POST("/api/vega-backend/v1/catalogs", payload)
 			So(createResp.StatusCode, ShouldEqual, http.StatusCreated)
 
 			catalogID := createResp.Body["id"].(string)
@@ -559,7 +559,7 @@ func TestMySQLSpecificUpdate(t *testing.T) {
 			time.Sleep(1 * time.Second)
 
 			// 获取原始数据
-			getResp := client.GET("/api/vega-manager/v1/catalogs/" + catalogID)
+			getResp := client.GET("/api/vega-backend/v1/catalogs/" + catalogID)
 			originalData := fixtures.ExtractFromEntriesResponse(getResp)
 			originalUpdateTime := originalData["update_time"].(float64)
 
@@ -569,11 +569,11 @@ func TestMySQLSpecificUpdate(t *testing.T) {
 			})
 			// GET响应不返回敏感字段，需要注入加密密码
 			catalogfixtures.InjectEncryptedPassword(updatePayload, builder.GetEncryptedPassword())
-			updateResp := client.PUT("/api/vega-manager/v1/catalogs/"+catalogID, updatePayload)
+			updateResp := client.PUT("/api/vega-backend/v1/catalogs/"+catalogID, updatePayload)
 			So(updateResp.StatusCode, ShouldEqual, http.StatusNoContent)
 
 			// 验证update_time已更新
-			newGetResp := client.GET("/api/vega-manager/v1/catalogs/" + catalogID)
+			newGetResp := client.GET("/api/vega-backend/v1/catalogs/" + catalogID)
 			newData := fixtures.ExtractFromEntriesResponse(newGetResp)
 			newUpdateTime := newData["update_time"].(float64)
 			So(newUpdateTime, ShouldBeGreaterThan, originalUpdateTime)
@@ -582,13 +582,13 @@ func TestMySQLSpecificUpdate(t *testing.T) {
 		Convey("MY305: 验证create_time不变", func() {
 			// 创建catalog
 			payload := builder.BuildCreatePayload()
-			createResp := client.POST("/api/vega-manager/v1/catalogs", payload)
+			createResp := client.POST("/api/vega-backend/v1/catalogs", payload)
 			So(createResp.StatusCode, ShouldEqual, http.StatusCreated)
 
 			catalogID := createResp.Body["id"].(string)
 
 			// 获取原始数据
-			getResp := client.GET("/api/vega-manager/v1/catalogs/" + catalogID)
+			getResp := client.GET("/api/vega-backend/v1/catalogs/" + catalogID)
 			originalData := fixtures.ExtractFromEntriesResponse(getResp)
 			originalCreateTime := originalData["create_time"].(float64)
 
@@ -598,11 +598,11 @@ func TestMySQLSpecificUpdate(t *testing.T) {
 			})
 			// GET响应不返回敏感字段，需要注入加密密码
 			catalogfixtures.InjectEncryptedPassword(updatePayload, builder.GetEncryptedPassword())
-			updateResp := client.PUT("/api/vega-manager/v1/catalogs/"+catalogID, updatePayload)
+			updateResp := client.PUT("/api/vega-backend/v1/catalogs/"+catalogID, updatePayload)
 			So(updateResp.StatusCode, ShouldEqual, http.StatusNoContent)
 
 			// 验证create_time不变
-			newGetResp := client.GET("/api/vega-manager/v1/catalogs/" + catalogID)
+			newGetResp := client.GET("/api/vega-backend/v1/catalogs/" + catalogID)
 			newData := fixtures.ExtractFromEntriesResponse(newGetResp)
 			newCreateTime := newData["create_time"].(float64)
 			So(newCreateTime, ShouldEqual, originalCreateTime)
@@ -649,17 +649,17 @@ func TestMySQLSpecificDelete(t *testing.T) {
 		Convey("MY401: 删除后不能更新", func() {
 			// 创建catalog
 			payload := builder.BuildCreatePayload()
-			createResp := client.POST("/api/vega-manager/v1/catalogs", payload)
+			createResp := client.POST("/api/vega-backend/v1/catalogs", payload)
 			So(createResp.StatusCode, ShouldEqual, http.StatusCreated)
 
 			catalogID := createResp.Body["id"].(string)
 
 			// 删除catalog
-			deleteResp := client.DELETE("/api/vega-manager/v1/catalogs/" + catalogID)
+			deleteResp := client.DELETE("/api/vega-backend/v1/catalogs/" + catalogID)
 			So(deleteResp.StatusCode, ShouldEqual, http.StatusNoContent)
 
 			// 尝试更新已删除的catalog
-			updateResp := client.PUT("/api/vega-manager/v1/catalogs/"+catalogID, payload)
+			updateResp := client.PUT("/api/vega-backend/v1/catalogs/"+catalogID, payload)
 			So(updateResp.StatusCode, ShouldEqual, http.StatusNotFound)
 		})
 
@@ -667,19 +667,19 @@ func TestMySQLSpecificDelete(t *testing.T) {
 			// 创建catalog
 			payload := builder.BuildCreatePayload()
 			catalogName := payload["name"]
-			createResp1 := client.POST("/api/vega-manager/v1/catalogs", payload)
+			createResp1 := client.POST("/api/vega-backend/v1/catalogs", payload)
 			So(createResp1.StatusCode, ShouldEqual, http.StatusCreated)
 
 			catalogID1 := createResp1.Body["id"].(string)
 
 			// 删除catalog
-			deleteResp := client.DELETE("/api/vega-manager/v1/catalogs/" + catalogID1)
+			deleteResp := client.DELETE("/api/vega-backend/v1/catalogs/" + catalogID1)
 			So(deleteResp.StatusCode, ShouldEqual, http.StatusNoContent)
 
 			// 创建同名catalog
 			payload2 := builder.BuildCreatePayload()
 			payload2["name"] = catalogName
-			createResp2 := client.POST("/api/vega-manager/v1/catalogs", payload2)
+			createResp2 := client.POST("/api/vega-backend/v1/catalogs", payload2)
 
 			So(createResp2.StatusCode, ShouldEqual, http.StatusCreated)
 
@@ -691,17 +691,17 @@ func TestMySQLSpecificDelete(t *testing.T) {
 		Convey("MY403: 删除包含完整字段的catalog", func() {
 			// 创建包含所有字段的catalog
 			payload := builder.BuildFullCreatePayload()
-			createResp := client.POST("/api/vega-manager/v1/catalogs", payload)
+			createResp := client.POST("/api/vega-backend/v1/catalogs", payload)
 			So(createResp.StatusCode, ShouldEqual, http.StatusCreated)
 
 			catalogID := createResp.Body["id"].(string)
 
 			// 删除
-			deleteResp := client.DELETE("/api/vega-manager/v1/catalogs/" + catalogID)
+			deleteResp := client.DELETE("/api/vega-backend/v1/catalogs/" + catalogID)
 			So(deleteResp.StatusCode, ShouldEqual, http.StatusNoContent)
 
 			// 验证删除成功
-			getResp := client.GET("/api/vega-manager/v1/catalogs/" + catalogID)
+			getResp := client.GET("/api/vega-backend/v1/catalogs/" + catalogID)
 			So(getResp.StatusCode, ShouldEqual, http.StatusNotFound)
 		})
 
@@ -710,20 +710,20 @@ func TestMySQLSpecificDelete(t *testing.T) {
 			catalogIDs := make([]string, 3)
 			for i := 0; i < 3; i++ {
 				payload := builder.BuildCreatePayload()
-				createResp := client.POST("/api/vega-manager/v1/catalogs", payload)
+				createResp := client.POST("/api/vega-backend/v1/catalogs", payload)
 				So(createResp.StatusCode, ShouldEqual, http.StatusCreated)
 				catalogIDs[i] = createResp.Body["id"].(string)
 			}
 
 			// 依次删除
 			for _, catalogID := range catalogIDs {
-				deleteResp := client.DELETE("/api/vega-manager/v1/catalogs/" + catalogID)
+				deleteResp := client.DELETE("/api/vega-backend/v1/catalogs/" + catalogID)
 				So(deleteResp.StatusCode, ShouldEqual, http.StatusNoContent)
 			}
 
 			// 验证所有catalog都已删除
 			for _, catalogID := range catalogIDs {
-				getResp := client.GET("/api/vega-manager/v1/catalogs/" + catalogID)
+				getResp := client.GET("/api/vega-backend/v1/catalogs/" + catalogID)
 				So(getResp.StatusCode, ShouldEqual, http.StatusNotFound)
 			}
 		})
@@ -732,17 +732,17 @@ func TestMySQLSpecificDelete(t *testing.T) {
 			// 创建catalog
 			payload := builder.BuildCreatePayload()
 			catalogName := payload["name"]
-			createResp := client.POST("/api/vega-manager/v1/catalogs", payload)
+			createResp := client.POST("/api/vega-backend/v1/catalogs", payload)
 			So(createResp.StatusCode, ShouldEqual, http.StatusCreated)
 
 			catalogID := createResp.Body["id"].(string)
 
 			// 删除catalog
-			deleteResp := client.DELETE("/api/vega-manager/v1/catalogs/" + catalogID)
+			deleteResp := client.DELETE("/api/vega-backend/v1/catalogs/" + catalogID)
 			So(deleteResp.StatusCode, ShouldEqual, http.StatusNoContent)
 
 			// 查询列表
-			listResp := client.GET("/api/vega-manager/v1/catalogs?offset=0&limit=1000")
+			listResp := client.GET("/api/vega-backend/v1/catalogs?offset=0&limit=1000")
 			So(listResp.StatusCode, ShouldEqual, http.StatusOK)
 
 			if listResp.Body != nil && listResp.Body["entries"] != nil {
@@ -765,34 +765,34 @@ func TestMySQLSpecificDelete(t *testing.T) {
 		Convey("MY406: 删除catalog后健康状态不可查", func() {
 			// 创建catalog
 			payload := builder.BuildCreatePayload()
-			createResp := client.POST("/api/vega-manager/v1/catalogs", payload)
+			createResp := client.POST("/api/vega-backend/v1/catalogs", payload)
 			So(createResp.StatusCode, ShouldEqual, http.StatusCreated)
 
 			catalogID := createResp.Body["id"].(string)
 
 			// 删除catalog
-			deleteResp := client.DELETE("/api/vega-manager/v1/catalogs/" + catalogID)
+			deleteResp := client.DELETE("/api/vega-backend/v1/catalogs/" + catalogID)
 			So(deleteResp.StatusCode, ShouldEqual, http.StatusNoContent)
 
 			// 尝试查询健康状态
-			statusResp := client.GET("/api/vega-manager/v1/catalogs/" + catalogID + "/health-status")
+			statusResp := client.GET("/api/vega-backend/v1/catalogs/" + catalogID + "/health-status")
 			So(statusResp.StatusCode, ShouldEqual, http.StatusNotFound)
 		})
 
 		Convey("MY407: 删除catalog后不能测试连接", func() {
 			// 创建catalog
 			payload := builder.BuildCreatePayload()
-			createResp := client.POST("/api/vega-manager/v1/catalogs", payload)
+			createResp := client.POST("/api/vega-backend/v1/catalogs", payload)
 			So(createResp.StatusCode, ShouldEqual, http.StatusCreated)
 
 			catalogID := createResp.Body["id"].(string)
 
 			// 删除catalog
-			deleteResp := client.DELETE("/api/vega-manager/v1/catalogs/" + catalogID)
+			deleteResp := client.DELETE("/api/vega-backend/v1/catalogs/" + catalogID)
 			So(deleteResp.StatusCode, ShouldEqual, http.StatusNoContent)
 
 			// 尝试测试连接
-			testResp := client.POST("/api/vega-manager/v1/catalogs/"+catalogID+"/test-connection", nil)
+			testResp := client.POST("/api/vega-backend/v1/catalogs/"+catalogID+"/test-connection", nil)
 			So(testResp.StatusCode, ShouldEqual, http.StatusNotFound)
 		})
 
@@ -805,7 +805,7 @@ func TestMySQLSpecificDelete(t *testing.T) {
 
 			for _, invalidID := range invalidIDs {
 				Convey("无效ID: "+invalidID, func() {
-					deleteResp := client.DELETE("/api/vega-manager/v1/catalogs/" + invalidID)
+					deleteResp := client.DELETE("/api/vega-backend/v1/catalogs/" + invalidID)
 					So(deleteResp.StatusCode, ShouldEqual, http.StatusNotFound)
 				})
 			}

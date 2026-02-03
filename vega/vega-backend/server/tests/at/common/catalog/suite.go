@@ -4,10 +4,10 @@ import (
 	"fmt"
 	"testing"
 
-	"vega-manager/tests/at/fixtures"
-	catalogfixtures "vega-manager/tests/at/fixtures/catalog"
-	"vega-manager/tests/at/setup"
-	"vega-manager/tests/testutil"
+	"vega-backend/tests/at/fixtures"
+	catalogfixtures "vega-backend/tests/at/fixtures/catalog"
+	"vega-backend/tests/at/setup"
+	"vega-backend/tests/testutil"
 )
 
 // TestSuite Catalog测试套件
@@ -74,7 +74,7 @@ func (s *TestSuite) GetConnectorType() string {
 
 // CreateCatalog 创建catalog并返回ID和完整响应
 func (s *TestSuite) CreateCatalog(payload map[string]any) (string, *testutil.HTTPResponse) {
-	resp := s.Client.POST("/api/vega-manager/v1/catalogs", payload)
+	resp := s.Client.POST("/api/vega-backend/v1/catalogs", payload)
 	if resp.StatusCode == 201 {
 		if id, ok := resp.Body["id"].(string); ok {
 			return id, &resp
@@ -85,7 +85,7 @@ func (s *TestSuite) CreateCatalog(payload map[string]any) (string, *testutil.HTT
 
 // GetCatalog 获取catalog详情
 func (s *TestSuite) GetCatalog(catalogID string) *testutil.HTTPResponse {
-	resp := s.Client.GET("/api/vega-manager/v1/catalogs/" + catalogID)
+	resp := s.Client.GET("/api/vega-backend/v1/catalogs/" + catalogID)
 	return &resp
 }
 
@@ -97,38 +97,38 @@ func (s *TestSuite) GetCatalogData(catalogID string) map[string]any {
 
 // UpdateCatalog 更新catalog
 func (s *TestSuite) UpdateCatalog(catalogID string, payload map[string]any) *testutil.HTTPResponse {
-	resp := s.Client.PUT("/api/vega-manager/v1/catalogs/"+catalogID, payload)
+	resp := s.Client.PUT("/api/vega-backend/v1/catalogs/"+catalogID, payload)
 	return &resp
 }
 
 // DeleteCatalog 删除catalog
 func (s *TestSuite) DeleteCatalog(catalogID string) *testutil.HTTPResponse {
-	resp := s.Client.DELETE("/api/vega-manager/v1/catalogs/" + catalogID)
+	resp := s.Client.DELETE("/api/vega-backend/v1/catalogs/" + catalogID)
 	return &resp
 }
 
 // ListCatalogs 列表查询catalogs
 func (s *TestSuite) ListCatalogs(offset, limit int) *testutil.HTTPResponse {
-	url := fmt.Sprintf("/api/vega-manager/v1/catalogs?offset=%d&limit=%d", offset, limit)
+	url := fmt.Sprintf("/api/vega-backend/v1/catalogs?offset=%d&limit=%d", offset, limit)
 	resp := s.Client.GET(url)
 	return &resp
 }
 
 // ListCatalogsWithParams 带参数列表查询catalogs
 func (s *TestSuite) ListCatalogsWithParams(params string) *testutil.HTTPResponse {
-	resp := s.Client.GET("/api/vega-manager/v1/catalogs?" + params)
+	resp := s.Client.GET("/api/vega-backend/v1/catalogs?" + params)
 	return &resp
 }
 
 // TestConnection 测试连接
 func (s *TestSuite) TestConnection(catalogID string) *testutil.HTTPResponse {
-	resp := s.Client.POST("/api/vega-manager/v1/catalogs/"+catalogID+"/test-connection", nil)
+	resp := s.Client.POST("/api/vega-backend/v1/catalogs/"+catalogID+"/test-connection", nil)
 	return &resp
 }
 
 // GetHealthStatus 获取健康状态
 func (s *TestSuite) GetHealthStatus(catalogID string) *testutil.HTTPResponse {
-	resp := s.Client.GET("/api/vega-manager/v1/catalogs/" + catalogID + "/health-status")
+	resp := s.Client.GET("/api/vega-backend/v1/catalogs/" + catalogID + "/health-status")
 	return &resp
 }
 

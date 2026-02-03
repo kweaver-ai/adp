@@ -14,11 +14,11 @@ import (
 	"github.com/kweaver-ai/kweaver-go-lib/rest"
 	"go.opentelemetry.io/otel/trace"
 
-	oerrors "vega-manager/errors"
-	"vega-manager/interfaces"
+	oerrors "vega-backend/errors"
+	"vega-backend/interfaces"
 )
 
-// ListResources handles GET /api/vega-manager/v1/resources
+// ListResources handles GET /api/vega-backend/v1/resources
 func (r *restHandler) ListResources(c *gin.Context) {
 	ctx, span := ar_trace.Tracer.Start(rest.GetLanguageCtx(c),
 		"ListResources", trace.WithSpanKind(trace.SpanKindServer))
@@ -58,7 +58,7 @@ func (r *restHandler) ListResources(c *gin.Context) {
 	rest.ReplyOK(c, http.StatusOK, result)
 }
 
-// CreateResource handles POST /api/vega-manager/v1/resources
+// CreateResource handles POST /api/vega-backend/v1/resources
 func (r *restHandler) CreateResource(c *gin.Context) {
 	ctx, span := ar_trace.Tracer.Start(rest.GetLanguageCtx(c),
 		"CreateResource", trace.WithSpanKind(trace.SpanKindServer))
@@ -116,7 +116,7 @@ func (r *restHandler) CreateResource(c *gin.Context) {
 	rest.ReplyOK(c, http.StatusCreated, result)
 }
 
-// GetResource handles GET /api/vega-manager/v1/resources/:ids
+// GetResource handles GET /api/vega-backend/v1/resources/:ids
 func (r *restHandler) GetResources(c *gin.Context) {
 	ctx, span := ar_trace.Tracer.Start(rest.GetLanguageCtx(c),
 		"GetResources", trace.WithSpanKind(trace.SpanKindServer))
@@ -162,7 +162,7 @@ func (r *restHandler) GetResources(c *gin.Context) {
 	rest.ReplyOK(c, http.StatusOK, result)
 }
 
-// UpdateResource handles PUT /api/vega-manager/v1/resources/:id
+// UpdateResource handles PUT /api/vega-backend/v1/resources/:id
 func (r *restHandler) UpdateResource(c *gin.Context) {
 	ctx, span := ar_trace.Tracer.Start(rest.GetLanguageCtx(c),
 		"UpdateResource", trace.WithSpanKind(trace.SpanKindServer))
@@ -212,7 +212,7 @@ func (r *restHandler) UpdateResource(c *gin.Context) {
 	rest.ReplyOK(c, http.StatusNoContent, nil)
 }
 
-// DeleteResource handles DELETE /api/vega-manager/v1/resources/:ids
+// DeleteResource handles DELETE /api/vega-backend/v1/resources/:ids
 func (r *restHandler) DeleteResources(c *gin.Context) {
 	ctx, span := ar_trace.Tracer.Start(rest.GetLanguageCtx(c),
 		"DeleteResources", trace.WithSpanKind(trace.SpanKindServer))

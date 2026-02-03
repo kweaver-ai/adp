@@ -6,8 +6,8 @@ import (
 
 	"github.com/kweaver-ai/kweaver-go-lib/logger"
 
-	"vega-manager/interfaces"
-	"vega-manager/logics/connectors"
+	"vega-backend/interfaces"
+	"vega-backend/logics/connectors"
 )
 
 type tableDiscoveryItem struct {
@@ -140,7 +140,7 @@ func (dw *discoveryWorker) reconcileTableResources(ctx context.Context,
 			// 已存在，检查状态
 			if resource.Status == interfaces.ResourceStatusStale {
 				// 之前标记为 stale，现在重新激活
-				if err := dw.rs.UpdateStatus(ctx, resource.ID, interfaces.ResourceStatusActive); err != nil {
+				if err := dw.rs.UpdateStatus(ctx, resource.ID, interfaces.ResourceStatusActive, ""); err != nil {
 					logger.Errorf("Failed to reactivate resource %s: %v", resource.ID, err)
 				}
 			}
@@ -169,7 +169,7 @@ func (dw *discoveryWorker) reconcileTableResources(ctx context.Context,
 		if _, ok := sourceMap[sourceIdentifier]; !ok {
 			// 源端不存在，标记为 stale
 			if existing.Status != interfaces.ResourceStatusStale {
-				if err := dw.rs.UpdateStatus(ctx, existing.ID, interfaces.ResourceStatusStale); err != nil {
+				if err := dw.rs.UpdateStatus(ctx, existing.ID, interfaces.ResourceStatusStale, ""); err != nil {
 					logger.Errorf("Failed to mark resource %s as stale: %v", existing.ID, err)
 				} else {
 					result.StaleCount++

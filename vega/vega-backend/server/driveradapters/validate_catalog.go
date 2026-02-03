@@ -2,7 +2,8 @@ package driveradapters
 
 import (
 	"context"
-	"vega-manager/interfaces"
+
+	"vega-backend/interfaces"
 )
 
 func ValidateCatalogRequest(ctx context.Context, req *interfaces.CatalogRequest) error {

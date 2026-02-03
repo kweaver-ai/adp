@@ -13,7 +13,7 @@
 ## 目录结构
 
 ```
-vega-manager/
+vega-backend/
 ├── docker/                 # Docker 配置
 ├── helm/                   # Kubernetes Helm charts
 ├── migrations/             # 数据库迁移脚本

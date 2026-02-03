@@ -4,7 +4,7 @@ package connectors
 import (
 	"context"
 
-	"vega-manager/interfaces"
+	"vega-backend/interfaces"
 )
 
 // Connector 定义基础连接器接口

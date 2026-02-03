@@ -13,11 +13,11 @@ import (
 	"github.com/kweaver-ai/kweaver-go-lib/rest"
 	"go.opentelemetry.io/otel/trace"
 
-	oerrors "vega-manager/errors"
-	"vega-manager/interfaces"
+	oerrors "vega-backend/errors"
+	"vega-backend/interfaces"
 )
 
-// ListConnectorTypes handles GET /api/vega-manager/v1/connector-types
+// ListConnectorTypes handles GET /api/vega-backend/v1/connector-types
 func (r *restHandler) ListConnectorTypes(c *gin.Context) {
 	ctx, span := ar_trace.Tracer.Start(rest.GetLanguageCtx(c),
 		"ListConnectorTypes", trace.WithSpanKind(trace.SpanKindServer))
@@ -64,7 +64,7 @@ func (r *restHandler) ListConnectorTypes(c *gin.Context) {
 	rest.ReplyOK(c, http.StatusOK, result)
 }
 
-// CreateConnectorType handles POST /api/vega-manager/v1/connector-types
+// CreateConnectorType handles POST /api/vega-backend/v1/connector-types
 func (r *restHandler) RegisterConnectorType(c *gin.Context) {
 	ctx, span := ar_trace.Tracer.Start(rest.GetLanguageCtx(c),
 		"RegisterConnectorType", trace.WithSpanKind(trace.SpanKindServer))
@@ -119,7 +119,7 @@ func (r *restHandler) RegisterConnectorType(c *gin.Context) {
 	rest.ReplyOK(c, http.StatusCreated, result)
 }
 
-// GetConnectorType handles GET /api/vega-manager/v1/connector-types/:id
+// GetConnectorType handles GET /api/vega-backend/v1/connector-types/:id
 func (r *restHandler) GetConnectorType(c *gin.Context) {
 	ctx, span := ar_trace.Tracer.Start(rest.GetLanguageCtx(c),
 		"GetConnectorType", trace.WithSpanKind(trace.SpanKindServer))
@@ -145,7 +145,7 @@ func (r *restHandler) GetConnectorType(c *gin.Context) {
 	rest.ReplyOK(c, http.StatusOK, connectorType)
 }
 
-// UpdateConnectorType handles PUT /api/vega-manager/v1/connector-types/:type
+// UpdateConnectorType handles PUT /api/vega-backend/v1/connector-types/:type
 func (r *restHandler) UpdateConnectorType(c *gin.Context) {
 	ctx, span := ar_trace.Tracer.Start(rest.GetLanguageCtx(c),
 		"UpdateConnectorType", trace.WithSpanKind(trace.SpanKindServer))
@@ -193,7 +193,7 @@ func (r *restHandler) UpdateConnectorType(c *gin.Context) {
 	rest.ReplyOK(c, http.StatusNoContent, nil)
 }
 
-// DeleteConnectorType handles DELETE /api/vega-manager/v1/connector-types/:type
+// DeleteConnectorType handles DELETE /api/vega-backend/v1/connector-types/:type
 func (r *restHandler) DeleteConnectorType(c *gin.Context) {
 	ctx, span := ar_trace.Tracer.Start(rest.GetLanguageCtx(c),
 		"DeleteConnectorType", trace.WithSpanKind(trace.SpanKindServer))
@@ -234,7 +234,7 @@ func (r *restHandler) DeleteConnectorType(c *gin.Context) {
 	rest.ReplyOK(c, http.StatusNoContent, nil)
 }
 
-// SetConnectorTypeEnabled handles POST /api/vega-manager/v1/connector-types/:type/enable
+// SetConnectorTypeEnabled handles POST /api/vega-backend/v1/connector-types/:type/enable
 func (r *restHandler) SetConnectorTypeEnabled(c *gin.Context) {
 	ctx, span := ar_trace.Tracer.Start(rest.GetLanguageCtx(c),
 		"SetConnectorTypeEnabled", trace.WithSpanKind(trace.SpanKindServer))

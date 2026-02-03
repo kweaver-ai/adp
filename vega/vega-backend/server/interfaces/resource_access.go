@@ -20,7 +20,7 @@ type ResourceAccess interface {
 	// Update updates a Resource.
 	Update(ctx context.Context, resource *Resource) error
 	// UpdateStatus updates a Resource's status.
-	UpdateStatus(ctx context.Context, id string, status string) error
+	UpdateStatus(ctx context.Context, id string, status string, statusMessage string) error
 	// DeleteByIDs deletes Resources by IDs.
 	DeleteByIDs(ctx context.Context, ids []string) error
 }

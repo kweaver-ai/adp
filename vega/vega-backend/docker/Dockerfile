@@ -14,7 +14,7 @@ ENV GOPROXY=${GOPROXY_URL}
 RUN set -ex; \
     cd /go/src; \
     go mod download -x; \
-    CGO_ENABLED=1 go build -ldflags "-s -w" -o ./bin/vega-manager-server;
+    CGO_ENABLED=1 go build -ldflags "-s -w" -o ./bin/vega-backend-server;
 
 ########################### Stage 1 ########################
 # Copy working directory to the actual release docker images
@@ -26,13 +26,13 @@ ARG GID=1001
 RUN groupadd -r -g $GID adp \
     && useradd -r -u $UID -g $GID adp
 
-COPY --from=builder --chown=$UID:$GID /go/src/bin /opt/vega-manager
+COPY --from=builder --chown=$UID:$GID /go/src/bin /opt/vega-backend
 
-ADD server/config/vega-manager-config.yaml /opt/vega-manager/config/
-ADD server/locale /opt/vega-manager/locale
+ADD server/config/vega-backend-config.yaml /opt/vega-backend/config/
+ADD server/locale /opt/vega-backend/locale
 
 # 指定工作目录
-WORKDIR /opt/vega-manager/
+WORKDIR /opt/vega-backend/
 
 # Change user
 USER $UID
@@ -41,4 +41,4 @@ USER $UID
 EXPOSE 13014
 
 # 指定启动命令
-ENTRYPOINT [ "./vega-manager-server" ]
+ENTRYPOINT [ "./vega-backend-server" ]

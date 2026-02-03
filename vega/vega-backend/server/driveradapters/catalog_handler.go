@@ -15,11 +15,11 @@ import (
 	"github.com/kweaver-ai/kweaver-go-lib/rest"
 	"go.opentelemetry.io/otel/trace"
 
-	oerrors "vega-manager/errors"
-	"vega-manager/interfaces"
+	oerrors "vega-backend/errors"
+	"vega-backend/interfaces"
 )
 
-// ListCatalogs handles GET /api/vega-manager/v1/catalogs
+// ListCatalogs handles GET /api/vega-backend/v1/catalogs
 func (r *restHandler) ListCatalogs(c *gin.Context) {
 	ctx, span := ar_trace.Tracer.Start(rest.GetLanguageCtx(c),
 		"ListCatalogs", trace.WithSpanKind(trace.SpanKindServer))
@@ -57,7 +57,7 @@ func (r *restHandler) ListCatalogs(c *gin.Context) {
 	rest.ReplyOK(c, http.StatusOK, result)
 }
 
-// CreateCatalog handles POST /api/vega-manager/v1/catalogs
+// CreateCatalog handles POST /api/vega-backend/v1/catalogs
 func (r *restHandler) CreateCatalog(c *gin.Context) {
 	ctx, span := ar_trace.Tracer.Start(rest.GetLanguageCtx(c),
 		"CreateCatalog", trace.WithSpanKind(trace.SpanKindServer))
@@ -115,7 +115,7 @@ func (r *restHandler) CreateCatalog(c *gin.Context) {
 	rest.ReplyOK(c, http.StatusCreated, result)
 }
 
-// GetCatalogs handles GET /api/vega-manager/v1/catalogs/:ids
+// GetCatalogs handles GET /api/vega-backend/v1/catalogs/:ids
 func (r *restHandler) GetCatalogs(c *gin.Context) {
 	ctx, span := ar_trace.Tracer.Start(rest.GetLanguageCtx(c),
 		"GetCatalogs", trace.WithSpanKind(trace.SpanKindServer))
@@ -162,7 +162,7 @@ func (r *restHandler) GetCatalogs(c *gin.Context) {
 	rest.ReplyOK(c, http.StatusOK, result)
 }
 
-// UpdateCatalog handles PUT /api/vega-manager/v1/catalogs/:id
+// UpdateCatalog handles PUT /api/vega-backend/v1/catalogs/:id
 func (r *restHandler) UpdateCatalog(c *gin.Context) {
 	ctx, span := ar_trace.Tracer.Start(rest.GetLanguageCtx(c),
 		"UpdateCatalog", trace.WithSpanKind(trace.SpanKindServer))
@@ -191,7 +191,7 @@ func (r *restHandler) UpdateCatalog(c *gin.Context) {
 	}
 
 	// Check if id exists
-	catalog, err := r.cs.GetByID(ctx, id)
+	catalog, err := r.cs.GetByID(ctx, id, false)
 	if err != nil {
 		httpErr := err.(*rest.HTTPError)
 		o11y.AddHttpAttrs4HttpError(span, httpErr)
@@ -212,7 +212,7 @@ func (r *restHandler) UpdateCatalog(c *gin.Context) {
 	rest.ReplyOK(c, http.StatusNoContent, nil)
 }
 
-// DeleteCatalog handles DELETE /api/vega-manager/v1/catalogs/:ids
+// DeleteCatalog handles DELETE /api/vega-backend/v1/catalogs/:ids
 func (r *restHandler) DeleteCatalogs(c *gin.Context) {
 	ctx, span := ar_trace.Tracer.Start(rest.GetLanguageCtx(c),
 		"DeleteCatalogs", trace.WithSpanKind(trace.SpanKindServer))
@@ -255,7 +255,7 @@ func (r *restHandler) DeleteCatalogs(c *gin.Context) {
 	rest.ReplyOK(c, http.StatusNoContent, nil)
 }
 
-// GetCatalogHealthStatus handles GET /api/vega-manager/v1/catalogs/:ids/health_status
+// GetCatalogHealthStatus handles GET /api/vega-backend/v1/catalogs/:ids/health_status
 func (r *restHandler) GetCatalogHealthStatus(c *gin.Context) {
 	ctx, span := ar_trace.Tracer.Start(rest.GetLanguageCtx(c),
 		"GetCatalogHealthStatus", trace.WithSpanKind(trace.SpanKindServer))
@@ -268,7 +268,7 @@ func (r *restHandler) GetCatalogHealthStatus(c *gin.Context) {
 
 	id := c.Param("ids")
 
-	catalog, err := r.cs.GetByID(ctx, id)
+	catalog, err := r.cs.GetByID(ctx, id, false)
 	if err != nil {
 		httpErr := err.(*rest.HTTPError)
 		o11y.AddHttpAttrs4HttpError(span, httpErr)
@@ -288,7 +288,7 @@ func (r *restHandler) GetCatalogHealthStatus(c *gin.Context) {
 	rest.ReplyOK(c, http.StatusOK, result)
 }
 
-// TestConnection handles POST /api/vega-manager/v1/catalogs/:id/test-connection
+// TestConnection handles POST /api/vega-backend/v1/catalogs/:id/test-connection
 func (r *restHandler) TestConnection(c *gin.Context) {
 	ctx, span := ar_trace.Tracer.Start(rest.GetLanguageCtx(c),
 		"TestConnection", trace.WithSpanKind(trace.SpanKindServer))
@@ -302,7 +302,7 @@ func (r *restHandler) TestConnection(c *gin.Context) {
 	id := c.Param("id")
 
 	// Check if id exists
-	catalog, err := r.cs.GetByID(ctx, id)
+	catalog, err := r.cs.GetByID(ctx, id, false)
 	if err != nil {
 		httpErr := err.(*rest.HTTPError)
 		o11y.AddHttpAttrs4HttpError(span, httpErr)
@@ -323,7 +323,7 @@ func (r *restHandler) TestConnection(c *gin.Context) {
 	rest.ReplyOK(c, http.StatusOK, result)
 }
 
-// DiscoverCatalogResources handles POST /api/vega-manager/v1/catalogs/:id/discover
+// DiscoverCatalogResources handles POST /api/vega-backend/v1/catalogs/:id/discover
 // 触发异步扫描任务，返回任务信息
 func (r *restHandler) DiscoverCatalogResources(c *gin.Context) {
 	ctx, span := ar_trace.Tracer.Start(rest.GetLanguageCtx(c),
@@ -338,7 +338,7 @@ func (r *restHandler) DiscoverCatalogResources(c *gin.Context) {
 	id := c.Param("id")
 
 	// Get catalog to verify it exists
-	catalog, err := r.cs.GetByID(ctx, id)
+	catalog, err := r.cs.GetByID(ctx, id, false)
 	if err != nil {
 		httpErr := err.(*rest.HTTPError)
 		o11y.AddHttpAttrs4HttpError(span, httpErr)
@@ -353,7 +353,7 @@ func (r *restHandler) DiscoverCatalogResources(c *gin.Context) {
 	}
 
 	// Create discovery task (async)
-	task, err := r.dts.Create(ctx, catalog.ID)
+	taskID, err := r.dts.Create(ctx, catalog.ID)
 	if err != nil {
 		httpErr := rest.NewHTTPError(ctx, http.StatusInternalServerError, oerrors.VegaManager_Catalog_InternalError).
 			WithErrorDetails(err.Error())
@@ -362,12 +362,16 @@ func (r *restHandler) DiscoverCatalogResources(c *gin.Context) {
 		return
 	}
 
+	result := map[string]any{
+		"id": taskID,
+	}
+
 	logger.Debug("Handler DiscoverCatalogResources Success - Task Created")
-	o11y.AddHttpAttrs4Ok(span, http.StatusAccepted)
-	rest.ReplyOK(c, http.StatusAccepted, task)
+	o11y.AddHttpAttrs4Ok(span, http.StatusOK)
+	rest.ReplyOK(c, http.StatusOK, result)
 }
 
-// ListCatalogResources handles GET /api/vega-manager/v1/catalogs/:id/resources
+// ListCatalogResources handles GET /api/vega-backend/v1/catalogs/:id/resources
 func (r *restHandler) ListCatalogResources(c *gin.Context) {
 	ctx, span := ar_trace.Tracer.Start(rest.GetLanguageCtx(c),
 		"ListCatalogResources", trace.WithSpanKind(trace.SpanKindServer))

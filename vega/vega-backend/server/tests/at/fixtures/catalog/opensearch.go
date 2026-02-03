@@ -1,7 +1,7 @@
 package catalog
 
 import (
-	"vega-manager/tests/at/setup"
+	"vega-backend/tests/at/setup"
 )
 
 // OpenSearchPayloadBuilder OpenSearch catalog payload构建器

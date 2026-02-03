@@ -5,13 +5,13 @@ import (
 	"testing"
 	"time"
 
-	"vega-manager/tests/testutil"
+	"vega-backend/tests/testutil"
 )
 
 // CleanupCatalogs 清理所有现有的catalog，确保测试环境干净
 func CleanupCatalogs(client *testutil.HTTPClient, t *testing.T) {
 	// 获取所有catalog（使用offset+limit分页）
-	listResp := client.GET("/api/vega-manager/v1/catalogs?offset=0&limit=1000")
+	listResp := client.GET("/api/vega-backend/v1/catalogs?offset=0&limit=1000")
 	if listResp.StatusCode != http.StatusOK {
 		t.Logf("⚠ 获取catalog列表失败，状态码: %d", listResp.StatusCode)
 		return
@@ -42,7 +42,7 @@ func CleanupCatalogs(client *testutil.HTTPClient, t *testing.T) {
 			continue
 		}
 
-		deleteResp := client.DELETE("/api/vega-manager/v1/catalogs/" + catalogID)
+		deleteResp := client.DELETE("/api/vega-backend/v1/catalogs/" + catalogID)
 		if deleteResp.StatusCode == http.StatusOK || deleteResp.StatusCode == http.StatusNoContent {
 			deletedCount++
 		} else {
@@ -57,7 +57,7 @@ func CleanupCatalogs(client *testutil.HTTPClient, t *testing.T) {
 // 将来resource测试使用
 func CleanupResources(client *testutil.HTTPClient, t *testing.T) {
 	// 获取所有resource
-	listResp := client.GET("/api/vega-manager/v1/resources?offset=0&limit=1000")
+	listResp := client.GET("/api/vega-backend/v1/resources?offset=0&limit=1000")
 	if listResp.StatusCode != http.StatusOK {
 		t.Logf("⚠ 获取resource列表失败，状态码: %d", listResp.StatusCode)
 		return
@@ -88,7 +88,7 @@ func CleanupResources(client *testutil.HTTPClient, t *testing.T) {
 			continue
 		}
 
-		deleteResp := client.DELETE("/api/vega-manager/v1/resources/" + resourceID)
+		deleteResp := client.DELETE("/api/vega-backend/v1/resources/" + resourceID)
 		if deleteResp.StatusCode == http.StatusOK || deleteResp.StatusCode == http.StatusNoContent {
 			deletedCount++
 		} else {
