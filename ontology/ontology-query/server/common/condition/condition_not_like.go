@@ -78,8 +78,11 @@ func rewriteNotLikeCond(cfg *CondCfg) (*CondCfg, error) {
 		return nil, fmt.Errorf("不相似过滤[not_like]操作符使用的过滤字段[%s]在对象类的属性中不存在", cfg.Name)
 	}
 	return &CondCfg{
-		Name:        cfg.NameField.MappedField.Name,
-		Operation:   cfg.Operation,
-		ValueOptCfg: cfg.ValueOptCfg,
+		Name:      cfg.NameField.MappedField.Name,
+		Operation: cfg.Operation,
+		ValueOptCfg: ValueOptCfg{
+			Value:     cfg.ValueOptCfg.Value,
+			RealValue: cfg.ValueOptCfg.Value, // 把本体的 not_like 的 value 传到视图的 not_like 过滤的 real_value
+		},
 	}, nil
 }
