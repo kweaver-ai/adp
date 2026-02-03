@@ -458,3 +458,19 @@ func (cs *catalogService) decryptSensitiveFields(sensitiveFields []string,
 	}
 	return decryptedConfig, nil
 }
+
+func (cs *catalogService) UpdateMetadata(ctx context.Context, id string, metadata map[string]any) error {
+	ctx, span := ar_trace.Tracer.Start(ctx, "UpdateMetadata")
+	defer span.End()
+
+	err := cs.ca.UpdateMetadata(ctx, id, metadata)
+	if err != nil {
+		logger.Errorf("Update metadata failed: %v", err)
+		o11y.Error(ctx, fmt.Sprintf("Update metadata failed: %v", err))
+		span.SetStatus(codes.Error, "Update metadata failed")
+		return rest.NewHTTPError(ctx, http.StatusInternalServerError, oerrors.VegaManager_Catalog_InternalError_UpdateFailed).
+			WithErrorDetails(err.Error())
+	}
+
+	return nil
+}

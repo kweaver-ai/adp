@@ -23,4 +23,7 @@ type CatalogService interface {
 	CheckExistByName(ctx context.Context, name string) (bool, error)
 	// TestConnection tests catalog connection.
 	TestConnection(ctx context.Context, catalog *Catalog) (*CatalogHealthCheckStatus, error)
+
+	// UpdateMetadata updates a Catalog metadata.
+	UpdateMetadata(ctx context.Context, id string, metadata map[string]any) error
 }

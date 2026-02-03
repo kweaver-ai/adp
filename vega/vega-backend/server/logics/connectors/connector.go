@@ -19,14 +19,16 @@ type Connector interface {
 
 	// GetSensitiveFields 返回该 connector 的敏感字段列表（如 password）
 	GetSensitiveFields() []string
-
 	// GetFieldConfig 返回该 connector 的字段配置定义（兼容 JSON Schema properties）
 	GetFieldConfig() map[string]interfaces.ConnectorFieldConfig
 
 	New(cfg interfaces.ConnectorConfig) (Connector, error)
 
 	Connect(ctx context.Context) error
+	Ping(ctx context.Context) error
 	Close(ctx context.Context) error
+
+	GetMetadata(ctx context.Context) (map[string]any, error)
 }
 
 // LocalConnectorBuilder 本地 connector 构建函数
@@ -36,7 +38,6 @@ type LocalConnectorBuilder func(cfg *interfaces.ConnectorConfig) (Connector, err
 // Implementations: mysql, postgresql, dameng, oracle, clickhouse, etc.
 type TableConnector interface {
 	Connector
-	Ping(ctx context.Context) error
 
 	// ListDatabases 列出实例下所有可访问的数据库
 	ListDatabases(ctx context.Context) ([]string, error)
@@ -74,7 +75,6 @@ type MetricConnector interface {
 // Implementations: opensearch, elasticsearch, etc.
 type IndexConnector interface {
 	Connector
-	Ping(ctx context.Context) error
 
 	ListIndexes(ctx context.Context) ([]*interfaces.IndexMeta, error)
 	GetIndexMeta(ctx context.Context, index *interfaces.IndexMeta) error

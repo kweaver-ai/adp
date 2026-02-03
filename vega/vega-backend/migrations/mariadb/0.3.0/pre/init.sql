@@ -105,7 +105,8 @@ CREATE TABLE IF NOT EXISTS t_catalog (
 
     -- Physical Catalog 专属字段
     f_connector_type          VARCHAR(50) NOT NULL DEFAULT '' COMMENT '数据源类型: mysql, postgresql, s3, kafka, elasticsearch, api, prometheus, etc.',
-    f_connector_config       MEDIUMTEXT NOT NULL COMMENT '加密存储的连接配置（JSON格式）',
+    f_connector_config        MEDIUMTEXT NOT NULL COMMENT '加密存储的连接配置（JSON格式）',
+    f_metadata                MEDIUMTEXT NOT NULL COMMENT '自动发现的元数据（JSON格式），如数据库版本等',
 
     -- 状态管理
     f_health_check_enabled    BOOLEAN NOT NULL DEFAULT TRUE COMMENT '是否启用健康检查',

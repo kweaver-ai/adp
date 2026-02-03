@@ -115,6 +115,30 @@ func (c *OpenSearchConnector) Connect(ctx context.Context) error {
 	return nil
 }
 
+// GetMetadata returns the metadata for the catalog.
+func (c *OpenSearchConnector) GetMetadata(ctx context.Context) (map[string]any, error) {
+	if c.client == nil {
+		return nil, fmt.Errorf("connector not connected")
+	}
+
+	req := opensearchapi.InfoRequest{}
+	resp, err := req.Do(ctx, c.client)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+	if resp.IsError() {
+		return nil, fmt.Errorf("get metadata failed: %s", resp.String())
+	}
+
+	var info map[string]any
+	if err := json.NewDecoder(resp.Body).Decode(&info); err != nil {
+		return nil, err
+	}
+
+	return info, nil
+}
+
 // Close closes the connection.
 func (c *OpenSearchConnector) Close(ctx context.Context) error {
 	c.client = nil

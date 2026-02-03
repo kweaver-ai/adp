@@ -84,3 +84,12 @@ func (rc *RemoteConnector) Close(ctx context.Context) error {
 func (rc *RemoteConnector) Connect(ctx context.Context) error {
 	return nil
 }
+
+func (rc *RemoteConnector) Ping(ctx context.Context) error {
+	return nil
+}
+
+// GetMetadata returns the metadata for the catalog (stub).
+func (rc *RemoteConnector) GetMetadata(ctx context.Context) (map[string]any, error) {
+	return nil, nil
+}

@@ -159,9 +159,9 @@ func (dw *discoveryWorker) enrichIndexMetadata(ctx context.Context,
 		var columns []interfaces.ColumnMeta
 		for _, field := range idx.Mapping {
 			columns = append(columns, interfaces.ColumnMeta{
-				Name:       field.Name,
-				Type:       field.Type,
-				NativeType: field.Type, // OpenSearch types are native
+				Name:     field.Name,
+				Type:     field.Type,
+				OrigType: field.Type, // OpenSearch types are native
 			})
 		}
 		resource.SchemaDefinition = columns

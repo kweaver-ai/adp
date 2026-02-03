@@ -61,11 +61,19 @@ func (ca *catalogAccess) Create(ctx context.Context, catalog *interfaces.Catalog
 	tagsStr := libCommon.TagSlice2TagString(catalog.Tags)
 
 	// Serialize connector config
-	connectorBytes, err := sonic.Marshal(catalog.ConnectorConfig)
+	connectorConfigStr, err := sonic.MarshalString(catalog.ConnectorConfig)
 	if err != nil {
 		logger.Errorf("Failed to marshal connector config: %v", err)
 		o11y.Error(ctx, fmt.Sprintf("Failed to marshal connector config: %v", err))
 		span.SetStatus(codes.Error, "Marshal connector failed")
+		return err
+	}
+
+	metadataStr, err := sonic.MarshalString(catalog.Metadata)
+	if err != nil {
+		logger.Errorf("Failed to marshal metadata: %v", err)
+		o11y.Error(ctx, fmt.Sprintf("Failed to marshal metadata: %v", err))
+		span.SetStatus(codes.Error, "Marshal metadata failed")
 		return err
 	}
 
@@ -78,6 +86,7 @@ func (ca *catalogAccess) Create(ctx context.Context, catalog *interfaces.Catalog
 			"f_type",
 			"f_connector_type",
 			"f_connector_config",
+			"f_metadata",
 			"f_health_check_enabled",
 			"f_health_check_status",
 			"f_last_check_time",
@@ -96,7 +105,8 @@ func (ca *catalogAccess) Create(ctx context.Context, catalog *interfaces.Catalog
 			catalog.Comment,
 			catalog.Type,
 			catalog.ConnectorType,
-			string(connectorBytes),
+			connectorConfigStr,
+			metadataStr,
 			catalog.HealthCheckEnabled,
 			catalog.HealthCheckStatus,
 			catalog.LastCheckTime,
@@ -145,6 +155,7 @@ func (ca *catalogAccess) GetByID(ctx context.Context, id string) (*interfaces.Ca
 		"f_type",
 		"f_connector_type",
 		"f_connector_config",
+		"f_metadata",
 		"f_health_check_enabled",
 		"f_health_check_status",
 		"f_last_check_time",
@@ -167,6 +178,7 @@ func (ca *catalogAccess) GetByID(ctx context.Context, id string) (*interfaces.Ca
 	catalog := &interfaces.Catalog{}
 	var tagsStr string
 	var connectorConfigStr string
+	var metadataStr string
 
 	row := ca.db.QueryRowContext(ctx, sqlStr, vals...)
 	err = row.Scan(
@@ -177,6 +189,7 @@ func (ca *catalogAccess) GetByID(ctx context.Context, id string) (*interfaces.Ca
 		&catalog.Type,
 		&catalog.ConnectorType,
 		&connectorConfigStr,
+		&metadataStr,
 		&catalog.HealthCheckEnabled,
 		&catalog.HealthCheckStatus,
 		&catalog.LastCheckTime,
@@ -211,6 +224,15 @@ func (ca *catalogAccess) GetByID(ctx context.Context, id string) (*interfaces.Ca
 		}
 	}
 
+	if metadataStr != "" {
+		err = sonic.UnmarshalString(metadataStr, &catalog.Metadata)
+		if err != nil {
+			logger.Errorf("Failed to unmarshal metadata: %v", err)
+			span.SetStatus(codes.Error, "Unmarshal metadata failed")
+			return nil, err
+		}
+	}
+
 	span.SetStatus(codes.Ok, "")
 	return catalog, nil
 }
@@ -231,6 +253,7 @@ func (ca *catalogAccess) GetByIDs(ctx context.Context, ids []string) ([]*interfa
 		"f_type",
 		"f_connector_type",
 		"f_connector_config",
+		"f_metadata",
 		"f_health_check_enabled",
 		"f_health_check_status",
 		"f_last_check_time",
@@ -263,6 +286,7 @@ func (ca *catalogAccess) GetByIDs(ctx context.Context, ids []string) ([]*interfa
 		catalog := &interfaces.Catalog{}
 		var tagsStr string
 		var connectorConfigStr string
+		var metadataStr string
 
 		err := rows.Scan(
 			&catalog.ID,
@@ -272,6 +296,7 @@ func (ca *catalogAccess) GetByIDs(ctx context.Context, ids []string) ([]*interfa
 			&catalog.Type,
 			&catalog.ConnectorType,
 			&connectorConfigStr,
+			&metadataStr,
 			&catalog.HealthCheckEnabled,
 			&catalog.HealthCheckStatus,
 			&catalog.LastCheckTime,
@@ -294,6 +319,10 @@ func (ca *catalogAccess) GetByIDs(ctx context.Context, ids []string) ([]*interfa
 
 		if connectorConfigStr != "" {
 			_ = sonic.UnmarshalString(connectorConfigStr, &catalog.ConnectorConfig)
+		}
+
+		if metadataStr != "" {
+			_ = sonic.UnmarshalString(metadataStr, &catalog.Metadata)
 		}
 
 		catalogs = append(catalogs, catalog)
@@ -319,6 +348,7 @@ func (ca *catalogAccess) GetByName(ctx context.Context, name string) (*interface
 		"f_type",
 		"f_connector_type",
 		"f_connector_config",
+		"f_metadata",
 		"f_health_check_enabled",
 		"f_health_check_status",
 		"f_last_check_time",
@@ -341,6 +371,7 @@ func (ca *catalogAccess) GetByName(ctx context.Context, name string) (*interface
 	catalog := &interfaces.Catalog{}
 	var tagsStr string
 	var connectorConfigStr string
+	var metadataStr string
 
 	row := ca.db.QueryRowContext(ctx, sqlStr, vals...)
 	err = row.Scan(
@@ -351,6 +382,7 @@ func (ca *catalogAccess) GetByName(ctx context.Context, name string) (*interface
 		&catalog.Type,
 		&catalog.ConnectorType,
 		&connectorConfigStr,
+		&metadataStr,
 		&catalog.HealthCheckEnabled,
 		&catalog.HealthCheckStatus,
 		&catalog.LastCheckTime,
@@ -385,6 +417,10 @@ func (ca *catalogAccess) GetByName(ctx context.Context, name string) (*interface
 		}
 	}
 
+	if metadataStr != "" {
+		_ = sonic.UnmarshalString(metadataStr, &catalog.Metadata)
+	}
+
 	span.SetStatus(codes.Ok, "")
 	return catalog, nil
 }
@@ -403,6 +439,7 @@ func (ca *catalogAccess) List(ctx context.Context, params interfaces.CatalogsQue
 		"f_type",
 		"f_connector_type",
 		"f_connector_config",
+		"f_metadata",
 		"f_health_check_enabled",
 		"f_health_check_status",
 		"f_last_check_time",
@@ -463,6 +500,7 @@ func (ca *catalogAccess) List(ctx context.Context, params interfaces.CatalogsQue
 		catalog := &interfaces.Catalog{}
 		var tagsStr string
 		var connectorConfigStr string
+		var metadataStr string
 
 		err := rows.Scan(
 			&catalog.ID,
@@ -472,6 +510,7 @@ func (ca *catalogAccess) List(ctx context.Context, params interfaces.CatalogsQue
 			&catalog.Type,
 			&catalog.ConnectorType,
 			&connectorConfigStr,
+			&metadataStr,
 			&catalog.HealthCheckEnabled,
 			&catalog.HealthCheckStatus,
 			&catalog.LastCheckTime,
@@ -495,6 +534,10 @@ func (ca *catalogAccess) List(ctx context.Context, params interfaces.CatalogsQue
 			sonic.UnmarshalString(connectorConfigStr, &catalog.ConnectorConfig)
 		}
 
+		if metadataStr != "" {
+			_ = sonic.UnmarshalString(metadataStr, &catalog.Metadata)
+		}
+
 		catalogs = append(catalogs, catalog)
 	}
 
@@ -513,14 +556,16 @@ func (ca *catalogAccess) Update(ctx context.Context, catalog *interfaces.Catalog
 	// tags 转成 string 的格式
 	tagsStr := libCommon.TagSlice2TagString(catalog.Tags)
 
-	connectorBytes, _ := sonic.Marshal(catalog.ConnectorConfig)
+	connectorConfigBytes, _ := sonic.Marshal(catalog.ConnectorConfig)
+	metadataBytes, _ := sonic.Marshal(catalog.Metadata)
 
 	sqlStr, vals, err := sq.Update(CATALOG_TABLE_NAME).
 		Set("f_name", catalog.Name).
 		Set("f_tags", tagsStr).
 		Set("f_comment", catalog.Comment).
 		Set("f_connector_type", catalog.ConnectorType).
-		Set("f_connector_config", string(connectorBytes)).
+		Set("f_connector_config", string(connectorConfigBytes)).
+		Set("f_metadata", string(metadataBytes)).
 		Set("f_health_check_enabled", catalog.HealthCheckEnabled).
 		Set("f_health_check_status", catalog.HealthCheckStatus).
 		Set("f_last_check_time", catalog.LastCheckTime).
@@ -587,6 +632,32 @@ func (ca *catalogAccess) UpdateHealthCheckStatus(ctx context.Context, id string,
 	_, err := ca.db.ExecContext(ctx, sqlStr, vals...)
 	if err != nil {
 		span.SetStatus(codes.Error, "Update status failed")
+		return err
+	}
+
+	span.SetStatus(codes.Ok, "")
+	return nil
+}
+
+func (ca *catalogAccess) UpdateMetadata(ctx context.Context, id string, metadata map[string]any) error {
+	ctx, span := ar_trace.Tracer.Start(ctx, "Update catalog metadata",
+		trace.WithSpanKind(trace.SpanKindClient))
+	defer span.End()
+
+	metadataBytes, _ := sonic.Marshal(metadata)
+
+	sqlStr, vals, err := sq.Update(CATALOG_TABLE_NAME).
+		Set("f_metadata", string(metadataBytes)).
+		Where(sq.Eq{"f_id": id}).
+		ToSql()
+	if err != nil {
+		span.SetStatus(codes.Error, "Build sql failed")
+		return err
+	}
+
+	_, err = ca.db.ExecContext(ctx, sqlStr, vals...)
+	if err != nil {
+		span.SetStatus(codes.Error, "Update failed")
 		return err
 	}
 

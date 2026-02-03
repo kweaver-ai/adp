@@ -32,6 +32,7 @@ type Catalog struct {
 
 	ConnectorType   string         `json:"connector_type"`
 	ConnectorConfig map[string]any `json:"connector_config"`
+	Metadata        map[string]any `json:"metadata"`
 
 	HealthCheckEnabled bool `json:"health_check_enabled"`
 	CatalogHealthCheckStatus
