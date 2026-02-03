@@ -248,7 +248,6 @@ func Release() {
 
 func main() {
 	go StartEcronManagement()
-	time.Sleep(3 * time.Second)
 	go StartEcronAnalysis()
 	go StartDataFlow()
 
