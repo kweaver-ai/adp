@@ -48,6 +48,18 @@ type S3Adapter interface {
 
 	// GetObjectMetadata 获取对象元数据
 	GetObjectMetadata(ctx context.Context, bucket, key string) (*S3ObjectMetadata, error)
+
+	// GeneratePresignedURL 生成预签名下载URL
+	GeneratePresignedURL(ctx context.Context, bucket, key string, expiration time.Duration) (string, error)
+
+	// Upload Upload file to S3
+	Upload(ctx context.Context, bucket, key string, body io.ReadSeeker) error
+
+	// DeleteObject 删除文件
+	DeleteObject(ctx context.Context, bucket, key string) error
+
+	// CopyObject 复制文件
+	CopyObject(ctx context.Context, bucket, srcKey, dstKey string) error
 }
 
 // s3AdapterImpl S3适配器实现
@@ -174,4 +186,57 @@ func (a *s3AdapterImpl) GetObjectMetadata(ctx context.Context, bucket, key strin
 	}
 
 	return metadata, nil
+}
+
+// GeneratePresignedURL 生成预签名下载URL
+func (a *s3AdapterImpl) GeneratePresignedURL(ctx context.Context, bucket, key string, expiration time.Duration) (string, error) {
+	req, _ := a.client.GetObjectRequest(&s3.GetObjectInput{
+		Bucket: aws.String(bucket),
+		Key:    aws.String(key),
+	})
+
+	urlStr, err := req.Presign(expiration)
+	if err != nil {
+		return "", fmt.Errorf("failed to generate presigned URL: %w", err)
+	}
+
+	return urlStr, nil
+}
+
+// Upload 上传文件
+func (a *s3AdapterImpl) Upload(ctx context.Context, bucket, key string, body io.ReadSeeker) error {
+	_, err := a.client.PutObjectWithContext(ctx, &s3.PutObjectInput{
+		Bucket: aws.String(bucket),
+		Key:    aws.String(key),
+		Body:   body,
+	})
+	if err != nil {
+		return fmt.Errorf("failed to upload object: %w", err)
+	}
+	return nil
+}
+
+// DeleteObject 删除文件
+func (a *s3AdapterImpl) DeleteObject(ctx context.Context, bucket, key string) error {
+	_, err := a.client.DeleteObjectWithContext(ctx, &s3.DeleteObjectInput{
+		Bucket: aws.String(bucket),
+		Key:    aws.String(key),
+	})
+	if err != nil {
+		return fmt.Errorf("failed to delete object: %w", err)
+	}
+	return nil
+}
+
+// CopyObject 复制文件
+func (a *s3AdapterImpl) CopyObject(ctx context.Context, bucket, srcKey, dstKey string) error {
+	_, err := a.client.CopyObjectWithContext(ctx, &s3.CopyObjectInput{
+		Bucket:     aws.String(bucket),
+		Key:        aws.String(dstKey),
+		CopySource: aws.String(bucket + "/" + srcKey),
+	})
+	if err != nil {
+		return fmt.Errorf("failed to copy object: %w", err)
+	}
+	return nil
 }

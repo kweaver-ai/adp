@@ -14,7 +14,7 @@
 | 类型 | Feature |
 | 标题 | 【Dataflow】支持从S3获取非结构化数据源 |
 | 状态 | In Planning |
-| 负责人 | 陈思宇（Siyu） |
+| 负责人 | 燕楠 |
 | 需求来源 | 产品规划 / 产品反馈 |
 
 #### 需求场景
@@ -22,9 +22,6 @@
 当前系统的数据流触发方式主要依赖于**添加文档库**作为数据源入口，用户需要将文件上传到文档库后才能触发数据流处理。这种方式存在以下局限性:
 
 - **数据源单一**：仅支持文档库作为数据源，无法直接对接外部存储系统
-- **操作繁琐**：用户需要先将S3中的文件下载后上传到文档库，增加了额外的操作步骤
-- **实时性差**：无法直接监听S3存储桶的文件变化并触发处理
-- **存储冗余**：同一份数据需要在S3和文档库中各存储一份，造成存储资源浪费
 - **扩展性受限**：难以支持其他云存储服务（如OSS、COS等）的接入
 
 在企业数据处理场景中，大量非结构化数据（如文档、图片、视频等）通常存储在S3或其他对象存储服务中。用户期望能够直接从这些存储服务中读取数据并触发数据流处理，而无需经过文档库的中转。
@@ -38,8 +35,9 @@
    - 保持与现有文档库触发方式的一致性
 
 2. **简化操作流程**
-   - 用户可直接配置S3存储桶和路径
-   - 无需手动下载上传文件
+   - 用户仅可通过**上传文件**方式准备数据
+   - 系统自动管理文件存储路径（`dataflow-doc/{dag_id}`）
+   - 不支持配置S3存储桶或已有路径
 
 3. **提升数据处理实时性**
    - 支持直接读取S3中的文件
@@ -67,16 +65,16 @@
 
 ### 1.3 交互设计示意图
 
-![S3数据读取配置界面](file:///Users/yannan/work/aishu/adp/dataflow/flow-automation/docs/features/808058支持从s3获取非结构化数据源/4a8a6ad004f59c46fb89478f4d9f69c6.jpg)
+![S3数据读取配置界面](4a8a6ad004f59c46fb89478f4d9f69c6.jpg)
 
 界面说明：
 - **触发方式**：提供两种触发方式的单选项
   - 添加文档库（现有方式）
   - S3 数据读取配置（新增方式）
-- **S3配置项**：
-  - **Bucket 名称**：输入S3存储桶名称
-  - **路径**：输入S3对象路径（支持前缀匹配）
-- **支持添加多个文档库/S3配置**：用户可以添加多个数据源
+   - **S3功能项**：
+     - **上传文件**：点击上传按钮上传文件（自动存储至 `dataflow-doc/{dag_id}`）
+     - **文件列表**：展示已上传的文件列表，支持删除
+- **仅支持上传模式**：不支持手动输入S3路径
 
 ---
 
@@ -107,8 +105,8 @@
 | 参与者 | 数据流设计者 |
 | 前置条件 | 1. 用户具有数据流编辑权限<br>2. 已配置S3访问凭证（AccessKey、SecretKey）<br>3. S3存储桶已存在且可访问 |
 | 后置条件 | S3数据源配置完成，数据流可以从S3读取文件并执行 |
-| 主要流程 | 1. 用户选择"S3 数据读取配置"触发方式<br>2. 输入S3 Bucket名称<br>3. 输入对象路径（可选，支持前缀匹配）<br>4. 系统验证S3配置的有效性<br>5. 保存配置<br>6. 用户可添加多个S3数据源 |
-| 异常流程 | 1. S3凭证无效：提示用户检查AccessKey和SecretKey<br>2. Bucket不存在：提示用户检查Bucket名称<br>3. 路径无权限访问：提示用户检查访问权限配置 |
+| 主要流程 | 1. 用户选择"S3 数据读取配置"触发方式<br>2. 界面显示上传组件<br>3. 用户上传文件（自动保存到S3）<br>4. 列表显示已上传文件<br>5. 保存配置 |
+| 异常流程 | 1. 上传失败：提示网络或权限错误<br>2. S3不可用：提示联系管理员 |
 
 ---
 
@@ -124,9 +122,8 @@
    - 文档库类型包括：个人文档库、部门文档库、自定义文档库
 
 2. **S3 数据读取配置**（新增功能）
-   - 配置S3存储桶和对象路径
-   - 支持添加多个S3数据源
-   - 支持路径前缀匹配
+   - 支持**上传文件**：直接上传文件触发流程（路径固定为 `dataflow-doc/{dag_id}`）
+   - Bucket通过环境变量统一配置，用户不可选
 
 > [!IMPORTANT]
 > 两种触发方式为互斥关系，用户在一个数据流中只能选择其中一种触发方式。
@@ -139,30 +136,12 @@
 
 | 配置项 | 是否必填 | 说明 | 验证规则 |
 |---|---|---|---|
-| Bucket 名称 | 是 | S3存储桶名称 | 1. 长度3-63字符<br>2. 只能包含小写字母、数字、点(.)和连字符(-)<br>3. 必须以字母或数字开头和结尾<br>4. 不能包含连续的点 |
-| 路径 | 否 | S3对象路径或前缀 | 1. 支持完整路径（如：`data/input/file.pdf`）<br>2. 支持前缀匹配（如：`data/input/`）<br>3. 空值表示读取整个Bucket |
+| 上传文件 | 是 | 上传需要处理的文件 | 1. 文件名合法性检查<br>2. 大小限制（可选，默认100MB） |
 
-##### 配置验证
-
-系统在保存配置时需要进行以下验证：
-
-1. **凭证验证**
-   - 检查S3访问凭证（AccessKey、SecretKey）是否有效
-   - 验证凭证是否具有目标Bucket的访问权限
-
-2. **Bucket验证**
-   - 检查Bucket是否存在
-   - 验证Bucket是否可访问
-
-3. **路径验证**
-   - 如果指定了路径，验证路径格式是否正确
-   - 检查是否具有路径的读取权限
-
-##### 多数据源支持
-
-- 用户可以添加多个S3数据源配置
-- 每个数据源配置独立验证
-- 数据流执行时按配置顺序依次处理各数据源
+> [!NOTE]
+> 1. Bucket名称由环境变量 `S3_BUCKET_NAME` 统一指定。
+> 2. 文件**强制**存储在 `dataflow-doc/{dag_id}/` 目录下。
+> 3. **新建流程场景**：若流程尚未创建（无dag_id），前端可生成临时Session ID（如UUID）作为路径的一部分（`dataflow-doc/temp/{session_id}/`）上传文件。流程创建时，后端会自动将文件移动至正式目录。
 
 ---
 
@@ -205,50 +184,6 @@
 > [!NOTE]
 > 本期实现**全量读取**模式，增量读取作为后续扩展功能。
 
-##### 文件过滤
-
-支持以下文件过滤条件：
-
-1. **路径前缀过滤**
-   - 通过配置路径实现前缀匹配
-   - 例如：`data/input/` 只读取该前缀下的文件
-
-2. **文件类型过滤**（后续扩展）
-   - 支持按文件扩展名过滤
-   - 例如：只处理 `.pdf`、`.docx` 等文件
-
-3. **文件大小过滤**（后续扩展）
-   - 支持设置文件大小范围
-   - 避免处理过大或过小的文件
-
----
-
-#### 2.3.5 错误处理
-
-##### 配置阶段错误
-
-| 错误类型 | 错误码 | 错误信息 | 处理方式 |
-|---|---|---|---|
-| 凭证无效 | S3_INVALID_CREDENTIALS | S3访问凭证无效，请检查AccessKey和SecretKey | 提示用户重新配置凭证 |
-| Bucket不存在 | S3_BUCKET_NOT_FOUND | S3存储桶不存在：{bucket_name} | 提示用户检查Bucket名称 |
-| 权限不足 | S3_ACCESS_DENIED | 无权访问S3存储桶：{bucket_name} | 提示用户检查访问权限 |
-| 路径格式错误 | S3_INVALID_PATH | S3路径格式错误：{path} | 提示用户检查路径格式 |
-| 网络错误 | S3_NETWORK_ERROR | 无法连接到S3服务 | 提示用户检查网络连接 |
-
-##### 执行阶段错误
-
-| 错误类型 | 错误码 | 错误信息 | 处理方式 |
-|---|---|---|---|
-| 文件不存在 | S3_FILE_NOT_FOUND | S3文件不存在：{file_path} | 记录日志，跳过该文件 |
-| 文件读取失败 | S3_READ_ERROR | 读取S3文件失败：{file_path} | 记录日志，根据重试策略处理 |
-| 文件过大 | S3_FILE_TOO_LARGE | S3文件超过大小限制：{file_path} | 记录日志，跳过该文件 |
-
-##### 重试策略
-
-- 网络错误：最多重试3次，每次间隔2秒
-- 读取错误：最多重试2次，每次间隔1秒
-- 其他错误：不重试，记录日志并跳过
-
 ---
 
 ## 三、技术设计
@@ -280,43 +215,72 @@ graph TB
         S3[S3存储]
     end
     
-    UI -->|配置数据流| API
-    API -->|验证配置| Validator
-    Validator -->|验证S3连接| S3Adapter
+    UI -->|上传文件/配置| API
+    API -->|验证系统配置| Validator
+    Validator -->|检查Bucket| S3Adapter
+    API -->|上传文件| S3Adapter
     API -->|保存配置| MongoDB
     Executor -->|读取配置| MongoDB
-    Executor -->|读取文档| DocAdapter
     Executor -->|读取S3文件| S3Adapter
-    DocAdapter -->|调用API| DocLib
     S3Adapter -->|调用SDK| S3
 ```
 
 #### 3.1.2 数据流程
+
+##### 场景一：已有流程上传文件
 
 ```mermaid
 sequenceDiagram
     participant User as 用户
     participant UI as 前端界面
     participant API as DataFlow API
-    participant Validator as 配置验证器
     participant S3Adapter as S3适配器
     participant MongoDB as MongoDB
     participant S3 as S3存储
     
     User->>UI: 选择S3数据源
-    UI->>User: 显示配置表单
-    User->>UI: 输入Bucket和路径
-    UI->>API: 提交配置
-    API->>Validator: 验证配置
-    Validator->>S3Adapter: 验证S3连接
-    S3Adapter->>S3: 测试连接
-    S3-->>S3Adapter: 返回结果
-    S3Adapter-->>Validator: 验证成功
-    Validator-->>API: 配置有效
-    API->>MongoDB: 保存配置
+    UI->>User: 显示上传组件 (已关联DAG ID)
+    User->>UI: 点击上传文件
+    UI->>API: 上传文件流 (POST /files/upload)
+    API->>S3Adapter: 上传文件
+    S3Adapter->>S3: PutObject (dataflow-doc/{dag_id})
+    S3-->>S3Adapter: 上传成功
+    S3Adapter-->>API: 返回文件信息
+    API-->>UI: 显示已上传文件
+    User->>UI: 保存配置
+    UI->>API: 提交配置 (包含文件列表)
+    API->>MongoDB: 保存数据流配置
     MongoDB-->>API: 保存成功
     API-->>UI: 返回成功
-    UI-->>User: 显示配置成功
+```
+
+##### 场景二：新建流程上传文件 (Temp Upload + Move)
+
+```mermaid
+sequenceDiagram
+    participant User as 用户
+    participant UI as 前端界面
+    participant API as DataFlow API
+    participant S3Adapter as S3适配器
+    participant MongoDB as MongoDB
+    participant S3 as S3存储
+    
+    User->>UI: 创建新流程
+    UI->>UI: 生成临时Session ID (UUID)
+    User->>UI: 点击上传文件
+    UI->>API: 上传文件 (POST /{session_id}/files/upload)
+    API->>S3Adapter: 识别为临时ID
+    S3Adapter->>S3: PutObject (dataflow-doc/temp/{session_id})
+    API-->>UI: 返回临时文件息
+    
+    User->>UI: 保存/创建流程
+    UI->>API: 提交创建请求 (Sources包含临时路径Key)
+    API->>MongoDB: 生成正式DAG ID
+    API->>S3Adapter: MoveS3Files (Temp -> Formal)
+    S3Adapter->>S3: CopyObject (Temp -> Formal)
+    S3Adapter->>S3: DeleteObject (Temp)
+    API->>MongoDB: 保存配置 (使用正式路径Key)
+    API-->>UI: 返回创建成功 (包含正式DAG ID)
 ```
 
 ---
@@ -345,9 +309,12 @@ type DataSource struct {
 
 | 参数名 | 类型 | 说明 |
 |---|---|---|
+| mode | string | 数据源模式，取值：`upload` (上传文件)、`path` (指定路径)。<br>**注**：本期仅支持 `upload` 模式。 |
 | sources | array | S3数据源列表 |
-| sources[].bucket | string | Bucket名称 |
-| sources[].path | string | 路径前缀 |
+| sources[].key | string | S3对象Key（`upload` 模式下必填） |
+| sources[].name | string | 文件名 |
+| sources[].size | int64 | 文件大小 |
+| sources[].path | string | 路径前缀（仅用于 `path` 模式，本期禁用） |
 
 
 #### 3.2.2 S3全局配置（ConfigMap）
@@ -360,6 +327,7 @@ type DataSource struct {
 | Region | S3_REGION | S3区域 |
 | AccessKeyID | S3_ACCESS_KEY_ID | 访问密钥ID |
 | SecretAccessKey | S3_SECRET_ACCESS_KEY | 访问密钥 |
+| BucketName | S3_BUCKET_NAME | 默认Bucket名称 |
 | UseSSL | S3_USE_SSL | 是否使用SSL |
 
 
@@ -385,10 +353,12 @@ Authorization: Bearer {token}
     "dataSource": {
       "operator": "@s3/list-objects",
       "parameters": {
+        "mode": "upload",
         "sources": [
           {
-            "bucket": "my-data-bucket",
-            "path": "input/documents/"
+            "key": "dataflow-doc/df_123/test.pdf",
+            "name": "test.pdf",
+            "size": 1024
           }
         ]
       }
@@ -401,20 +371,16 @@ Authorization: Bearer {token}
 
 ```json
 {
-  "code": 0,
-  "message": "success",
-  "data": {
-    "id": "df_123456",
-    "name": "S3数据处理流程",
-    "trigger_config": {
-       "operator": "@trigger/manual",
-       "dataSource": {
-         "operator": "@s3/list-objects",
-         "parameters": {
-           "sources": [...]
-         }
+  "id": "df_123456",
+  "name": "S3数据处理流程",
+  "trigger_config": {
+     "operator": "@trigger/manual",
+     "dataSource": {
+       "operator": "@s3/list-objects",
+       "parameters": {
+         "sources": [...]
        }
-    }
+     }
   }
 }
 ```
@@ -422,32 +388,135 @@ Authorization: Bearer {token}
 
 ##### 验证S3配置
 
-**请求**
+**请求** (验证环境是否可用)
 
 ```http
 POST /api/v1/dataflows/validate-s3
 Content-Type: application/json
 Authorization: Bearer {token}
 
-{
-  "bucket": "my-data-bucket",
-  "path": "input/documents/"
-}
+{}
 ```
 
 **响应**
 
 ```json
 {
-  "code": 0,
-  "message": "S3配置验证成功",
-  "data": {
-    "valid": true,
-    "bucket_exists": true,
-    "path_accessible": true,
-    "file_count": 150
-  }
+  "valid": true,
+  "bucket_exists": true
 }
+```
+
+---
+
+#### 3.3.2 文件管理接口
+
+##### 上传文件
+
+**请求**
+
+- **URL参数**: `id` 为DAG ID 或 临时Session ID (UUID)
+
+```http
+POST /api/v1/dataflows/{id}/files/upload
+Content-Type: multipart/form-data
+Authorization: Bearer {token}
+
+file: (binary)
+```
+
+**响应 (已有DAG ID)**
+
+```json
+{
+  "id": "bucket-name/dataflow-doc/df_123456/example.pdf",
+  "bucket": "bucket-name",
+  "key": "dataflow-doc/df_123456/example.pdf",
+  "name": "example.pdf",
+  "size": 1024,
+  "last_modified": "2026-02-02T10:00:00Z",
+  "download_url": "https://s3.example.com/..."
+}
+```
+
+**响应 (临时Session ID)**
+
+```json
+{
+  "id": "bucket-name/dataflow-doc/temp/uuid-1234/example.pdf",
+  "bucket": "bucket-name",
+  "key": "dataflow-doc/temp/uuid-1234/example.pdf",
+  "name": "example.pdf",
+  "size": 1024,
+  "last_modified": "2026-02-02T10:00:00Z",
+  "download_url": "https://s3.example.com/..."
+}
+```
+
+##### 列举文件
+
+**请求**
+
+```http
+GET /api/v1/dataflows/{id}/files
+Authorization: Bearer {token}
+```
+
+**响应**
+
+```json
+{
+  "files": [
+    {
+      "id": "bucket-name/dataflow-doc/df_123456/example.pdf",
+      "bucket": "bucket-name",
+      "key": "dataflow-doc/df_123456/example.pdf",
+      "name": "example.pdf",
+      "size": 1024,
+      "last_modified": "2026-02-02T10:00:00Z",
+      "download_url": "https://s3.example.com/..."
+    }
+  ]
+}
+```
+
+##### 删除文件
+
+**请求**
+
+```http
+DELETE /api/v1/dataflows/{id}/files?key=dataflow-doc/df_123456/example.pdf
+Authorization: Bearer {token}
+```
+
+**响应**
+
+```http
+HTTP/1.1 204 No Content
+```
+
+HTTP/1.1 204 No Content
+```
+
+##### 下载文件
+
+**请求**
+
+- **URL参数**: `key` 文件的完整路径
+
+```http
+GET /api/v1/dataflows/{id}/files/download?key=dataflow-doc/df_123456/example.pdf
+Authorization: Bearer {token}
+```
+
+**响应**
+
+- **状态码**: `302 Found`
+- **Location**: S3预签名下载URL (有效期1小时)
+
+```http
+HTTP/1.1 302 Found
+Location: https://s3.example.com/bucket-name/dataflow-doc/df_123456/example.pdf?X-Amz-Algorithm=...
 ```
 
 ---
@@ -473,6 +542,8 @@ Authorization: Bearer {token}
 | ListObjects | 列出指定路径下的所有对象 |
 | GetObject | 获取指定对象的内容 |
 | GetObjectMetadata | 获取对象元数据（大小、类型、修改时间等） |
+| **CopyObject** | **复制S3对象（用于文件移动）** |
+| **DeleteObject** | **删除S3对象** |
 
 **设计要点：**
 - 使用AWS SDK for Go或MinIO SDK
@@ -508,7 +579,7 @@ graph TD
 
 | 验证项 | 规则 |
 |---|---|
-| Bucket名称格式 | 长度3-63字符，只能包含小写字母、数字、点和连字符 |
+| Bucket名称格式 | 验证环境变量配置的Bucket名称格式 |
 | Bucket存在性 | 调用S3 API验证Bucket是否存在 |
 | 访问权限 | 验证凭证是否具有Bucket的读取权限 |
 | 路径有效性 | 如果指定路径，验证路径是否可访问 |
@@ -545,6 +616,75 @@ graph TD
 - 单个文件失败不影响整体流程
 - 记录详细的执行日志
 - 支持大文件的流式处理
+
+---
+
+#### 3.4.4 文件移动逻辑 (CreateDataFlow)
+
+**主要职责：**
+- 在流程创建时，识别配置中的临时文件路径
+- 将文件从临时目录移动到正式DAG目录
+- 更新流程配置中的文件路径
+
+**执行流程：**
+1. 解析 `TriggerConfig.DataSource.Parameters`
+2. 检查 `sources` 列表中是否包含 `dataflow-doc/temp/` 前缀的Key
+3. 如果存在：
+   - 生成正式DAG ID (如果尚未生成)
+   - 遍历临时Key列表
+   - 调用 `S3Adapter.CopyObject` 将文件复制到 `dataflow-doc/{dag_id}/`
+   - 调用 `S3Adapter.DeleteObject` 删除临时文件
+   - 更新 `sources` 列表中的Key为新路径
+   - 保存更新后的配置到数据库
+
+---
+
+#### 3.4.4 S3数据源输出结构
+
+**主要职责:**
+- 定义S3触发器的标准输出格式
+- 提供下游操作符所需的完整S3对象信息
+- 生成安全的预签名下载链接
+
+**输出数据结构:**
+
+```json
+{
+  "_type": "s3",
+  "id": "bucket-name/path/to/object.txt",
+  "bucket": "bucket-name",
+  "key": "path/to/object.txt",
+  "name": "object.txt",
+  "size": "1024",
+  "last_modified": "2026-02-02T09:30:31Z",
+  "etag": "\"5d41402abc4b2a76b9719d911017c592\"",
+  "md5": "\"5d41402abc4b2a76b9719d911017c592\"",
+  "download_url": "https://s3.example.com/bucket-name/path/to/object.txt?X-Amz-Algorithm=..."
+}
+```
+
+**字段说明:**
+
+| 字段名 | 类型 | 说明 |
+|---|---|---|
+| _type | string | 固定为 "s3",标识数据源类型 |
+| id | string | S3对象唯一标识符,格式为 `bucket/key` |
+| bucket | string | S3存储桶名称 |
+| key | string | S3对象键(完整路径) |
+| name | string | 文件名(从key中提取的最后一段) |
+| size | string | 对象大小(字节),字符串格式 |
+| last_modified | string | 最后修改时间,ISO 8601格式 |
+| etag | string | S3 ETag值(通常是MD5哈希) |
+| md5 | string | 与etag相同,便于使用 |
+| download_url | string | 预签名下载URL,有效期7天 |
+
+**预签名URL特性:**
+
+- **有效期**: 7天(168小时)
+- **授权方式**: URL中包含临时访问凭证
+- **安全性**: 无需暴露S3访问密钥给最终用户
+- **容错机制**: 如果生成失败,降级为简单的endpoint URL
+
 
 ---
 
@@ -690,6 +830,7 @@ S3_REGION=us-east-1
 # 访问凭证
 S3_ACCESS_KEY_ID=AKIAIOSFODNN7EXAMPLE
 S3_SECRET_ACCESS_KEY=wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY
+S3_BUCKET_NAME=my-app-data
 
 # SSL开关
 S3_USE_SSL=true
@@ -723,16 +864,10 @@ S3_USE_SSL=true
         "dataSource": {
             "operator": "@s3/list-objects",
             "parameters": {
-                "sources": [
-                    {
-                        "bucket": "company-data",
-                        "path": "raw/2023/"
-                    },
-                    {
-                        "bucket": "company-data",
-                        "path": "raw/2024/"
-                    }
-                ]
+                "mode": "upload",
+                "source": [{
+                  "path": "dataflow-doc/temp/temp-d290f1ee-6c54-4b01-90e6-d701748f0851/doc1.txt"
+                }]
             }
         }
     }

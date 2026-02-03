@@ -1172,13 +1172,28 @@ X-Business-Domain: bd-public
       }
     }
   ],
-  "trigger_config": {
-    "operator": "@trigger/manual",
-    "dataSource": {
-      "operator": "",
-      "parameters": {
-        "accessorid": "00000000-0000-0000-0000-000000000000"
-      }
     }
   }
 }
+
+### ---------------- S3 File Management ----------------
+
+### Upload File to S3 via DataFlow
+POST {{host}}/api/automation/v1/data-flow/{{dagID}}/files/upload
+Authorization: {{token}}
+Content-Type: multipart/form-data; boundary=----WebKitFormBoundary7MA4YWxkTrZu0gW
+
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="file"; filename="test.txt"
+Content-Type: text/plain
+
+This is a test file content.
+------WebKitFormBoundary7MA4YWxkTrZu0gW--
+
+### List Files in S3 for DataFlow
+GET {{host}}/api/automation/v1/data-flow/{{dagID}}/files
+Authorization: {{token}}
+
+### Delete File in S3 for DataFlow
+DELETE {{host}}/api/automation/v1/data-flow/{{dagID}}/files?key=dataflow-doc/{{dagID}}/test.txt
+Authorization: {{token}}

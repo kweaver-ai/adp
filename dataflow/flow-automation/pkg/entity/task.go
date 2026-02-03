@@ -75,12 +75,16 @@ type DataSourceParam struct {
 	Depth      int                      `json:"depth,omitempty"`
 	Docs       []map[string]interface{} `json:"docs,omitempty"`
 	Sources    []S3Source               `json:"sources,omitempty"` // S3数据源列表
+	Mode       string                   `json:"mode,omitempty"`    // 数据源模式
 }
 
 // S3Source S3数据源配置
 type S3Source struct {
 	Bucket string `json:"bucket"` // S3 Bucket名称
 	Path   string `json:"path"`   // S3对象路径前缀
+	Key    string `json:"key"`    // S3对象Key
+	Name   string `json:"name"`   // 文件名
+	Size   int64  `json:"size"`   // 文件大小
 }
 
 // Branch 分支结构
