@@ -12,11 +12,11 @@ import (
 	"github.com/kweaver-ai/kweaver-go-lib/rest"
 	"go.opentelemetry.io/otel/trace"
 
-	oerrors "vega-manager/errors"
-	"vega-manager/interfaces"
+	oerrors "vega-backend/errors"
+	"vega-backend/interfaces"
 )
 
-// GetDiscoveryTask handles GET /api/vega-manager/v1/catalogs/:id/discover/:taskId
+// GetDiscoveryTask handles GET /api/vega-backend/v1/discovery-tasks/:id
 func (r *restHandler) GetDiscoveryTask(c *gin.Context) {
 	ctx, span := ar_trace.Tracer.Start(rest.GetLanguageCtx(c),
 		"GetDiscoveryTask", trace.WithSpanKind(trace.SpanKindServer))
@@ -27,24 +27,7 @@ func (r *restHandler) GetDiscoveryTask(c *gin.Context) {
 
 	o11y.AddHttpAttrs4API(span, o11y.GetAttrsByGinCtx(c))
 
-	catalogID := c.Param("id")
-	taskID := c.Param("taskId")
-
-	// Verify catalog exists
-	catalog, err := r.cs.GetByID(ctx, catalogID)
-	if err != nil {
-		httpErr := err.(*rest.HTTPError)
-		o11y.AddHttpAttrs4HttpError(span, httpErr)
-		rest.ReplyError(c, httpErr)
-		return
-	}
-	if catalog == nil {
-		httpErr := rest.NewHTTPError(ctx, http.StatusNotFound, oerrors.VegaManager_Catalog_NotFound)
-		o11y.AddHttpAttrs4HttpError(span, httpErr)
-		rest.ReplyError(c, httpErr)
-		return
-	}
-
+	taskID := c.Param("id")
 	// Get task
 	task, err := r.dts.GetByID(ctx, taskID)
 	if err != nil {
@@ -54,7 +37,7 @@ func (r *restHandler) GetDiscoveryTask(c *gin.Context) {
 		rest.ReplyError(c, httpErr)
 		return
 	}
-	if task == nil || task.CatalogID != catalogID {
+	if task == nil {
 		httpErr := rest.NewHTTPError(ctx, http.StatusNotFound, oerrors.VegaManager_Task_NotFound)
 		o11y.AddHttpAttrs4HttpError(span, httpErr)
 		rest.ReplyError(c, httpErr)
@@ -66,7 +49,7 @@ func (r *restHandler) GetDiscoveryTask(c *gin.Context) {
 	rest.ReplyOK(c, http.StatusOK, task)
 }
 
-// ListDiscoveryTasks handles GET /api/vega-manager/v1/catalogs/:id/discover/tasks
+// ListDiscoveryTasks handles GET /api/vega-backend/v1/catalogs/:id/discover/tasks
 func (r *restHandler) ListDiscoveryTasks(c *gin.Context) {
 	ctx, span := ar_trace.Tracer.Start(rest.GetLanguageCtx(c),
 		"ListDiscoveryTasks", trace.WithSpanKind(trace.SpanKindServer))
@@ -80,7 +63,7 @@ func (r *restHandler) ListDiscoveryTasks(c *gin.Context) {
 	catalogID := c.Param("id")
 
 	// Verify catalog exists
-	catalog, err := r.cs.GetByID(ctx, catalogID)
+	catalog, err := r.cs.GetByID(ctx, catalogID, false)
 	if err != nil {
 		httpErr := err.(*rest.HTTPError)
 		o11y.AddHttpAttrs4HttpError(span, httpErr)

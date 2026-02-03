@@ -93,7 +93,7 @@
 -- ==========================================
 -- 1. t_catalog 主表
 -- ==========================================
-CREATE TABLE t_catalog (
+CREATE TABLE IF NOT EXISTS t_catalog (
     -- 主键与基础信息
     f_id                      VARCHAR(40) NOT NULL DEFAULT '' COMMENT 'catalog唯一标识',
     f_name                    VARCHAR(128) NOT NULL DEFAULT '' COMMENT '目录名称，系统一级命名空间',
@@ -133,7 +133,7 @@ CREATE TABLE t_catalog (
 -- ==========================================
 -- 2. t_catalog_discovery_policy 发现与变更策略表
 -- ==========================================
-CREATE TABLE t_catalog_discovery_policy (
+CREATE TABLE IF NOT EXISTS t_catalog_discovery_policy (
     f_id                      VARCHAR(40) NOT NULL DEFAULT '' COMMENT '所属catalog ID',
 
     -- 状态
@@ -163,26 +163,27 @@ CREATE TABLE t_catalog_discovery_policy (
 -- ==========================================
 -- 3. t_resource 数据资源主表
 -- ==========================================
-CREATE TABLE t_resource (
+CREATE TABLE IF NOT EXISTS t_resource (
     -- 主键与基础信息
     f_id                      VARCHAR(40) NOT NULL DEFAULT '' COMMENT 'resource唯一标识',
     f_catalog_id              VARCHAR(40) NOT NULL DEFAULT '' COMMENT '所属catalog ID',
     f_name                    VARCHAR(128) NOT NULL DEFAULT '' COMMENT '数据资源名称，catalog下唯一',
-    f_comment                 VARCHAR(1000) NOT NULL DEFAULT '' COMMENT '数据资源描述',
     f_tags                    VARCHAR(255) NOT NULL DEFAULT '[]' COMMENT '标签，JSON数组格式',
+    f_comment                 VARCHAR(1000) NOT NULL DEFAULT '' COMMENT '数据资源描述',
 
-    f_type                    VARCHAR(20) NOT NULL DEFAULT '' COMMENT '数据资源类型: table, file, fileset, api, metric, topic, index, logicview, dataset',
+    f_category                VARCHAR(20) NOT NULL DEFAULT '' COMMENT '数据资源类型: table, file, fileset, api, metric, topic, index, logicview, dataset',
+
+    -- 状态管理
+    f_status                  VARCHAR(20) NOT NULL DEFAULT 'active' COMMENT '数据资源状态: active, disabled, deprecated, stale',
+    f_status_message          VARCHAR(500) NOT NULL DEFAULT '' COMMENT '状态说明',
 
     -- 物理数据资源专属字段
+    f_database                VARCHAR(128) NOT NULL DEFAULT '' COMMENT '所属数据库名称（实例级连接时使用）',
     f_source_identifier       VARCHAR(500) NOT NULL DEFAULT '' COMMENT '源端标识(表名/文件路径/索引名等)',
-    f_source_config           MEDIUMTEXT NOT NULL COMMENT '源端特定配置（JSON格式）',
+    f_source_metadata         MEDIUMTEXT NOT NULL COMMENT '源端元数据（JSON格式）',
 
     -- Schema相关
-    f_database                VARCHAR(128) NOT NULL DEFAULT '' COMMENT '所属数据库名称（实例级连接时使用）',
     f_schema_definition       MEDIUMTEXT NOT NULL COMMENT 'Schema定义（JSON数组格式，包含所有字段信息）',
-    f_schema_version          VARCHAR(40) NOT NULL DEFAULT '' COMMENT 'Schema版本号',
-    f_schema_inferred         BOOLEAN NOT NULL DEFAULT FALSE COMMENT 'Schema是否为自动推导',
-    f_schema_last_updated     BIGINT(20) NOT NULL DEFAULT 0 COMMENT 'Schema最后更新时间',
 
     -- LogicView 专属字段
     f_logic_type              VARCHAR(20) NOT NULL DEFAULT '' COMMENT '逻辑类型: derived(衍生), composite(复合), 仅LogicView使用',
@@ -202,10 +203,6 @@ CREATE TABLE t_resource (
     f_last_sync_time          BIGINT(20) NOT NULL DEFAULT 0 COMMENT '最后同步时间',
     f_sync_error_message      TEXT NOT NULL COMMENT '同步错误信息',
 
-    -- 状态管理
-    f_status                  VARCHAR(20) NOT NULL DEFAULT 'active' COMMENT '数据资源状态: active, disabled, deprecated, stale',
-    f_status_message          VARCHAR(500) NOT NULL DEFAULT '' COMMENT '状态说明',
-
     -- 审计字段
     f_creator                 VARCHAR(128) COMMENT '创建者id',
     f_creator_type            VARCHAR(20) NOT NULL DEFAULT '' COMMENT '创建者类型',
@@ -217,7 +214,7 @@ CREATE TABLE t_resource (
     -- 索引
     PRIMARY KEY (f_id),
     UNIQUE INDEX uk_catalog_name (f_catalog_id, f_name),
-    INDEX idx_type (f_type),
+    INDEX idx_category (f_category),
     INDEX idx_status (f_status)
 )  ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_bin COMMENT='数据资源主表，管理所有类型的数据资源';
 
@@ -225,7 +222,7 @@ CREATE TABLE t_resource (
 -- ==========================================
 -- 4. t_resource_schema_history Schema历史表
 -- ==========================================
-CREATE TABLE t_resource_schema_history (
+CREATE TABLE IF NOT EXISTS t_resource_schema_history (
     f_id                      VARCHAR(40) NOT NULL DEFAULT '' COMMENT '历史记录唯一标识',
     f_resource_id             VARCHAR(40) NOT NULL DEFAULT '' COMMENT '所属resource ID',
     f_schema_version          VARCHAR(40) NOT NULL DEFAULT '' COMMENT 'Schema版本号',
@@ -246,7 +243,7 @@ CREATE TABLE t_resource_schema_history (
 -- ==========================================
 -- 5. t_connector_type Connector 类型注册表
 -- ==========================================
-CREATE TABLE t_connector_type (
+CREATE TABLE IF NOT EXISTS t_connector_type (
     -- 主键与基础信息
     f_type                    VARCHAR(40) NOT NULL DEFAULT '' COMMENT 'connector类型,唯一标识',
     f_name                    VARCHAR(128) NOT NULL DEFAULT '' COMMENT '类型名称: mysql, postgresql, kafka...',
@@ -313,7 +310,7 @@ FROM DUAL WHERE NOT EXISTS ( SELECT f_type FROM t_connector_type WHERE f_type = 
 -- ==========================================
 -- 7. t_discovery_task 发现任务表
 -- ==========================================
-CREATE TABLE t_discovery_task (
+CREATE TABLE IF NOT EXISTS t_discovery_task (
     -- 主键与关联信息
     f_id                      VARCHAR(40) NOT NULL DEFAULT '' COMMENT '任务唯一标识',
     f_catalog_id              VARCHAR(40) NOT NULL DEFAULT '' COMMENT '所属catalog ID',

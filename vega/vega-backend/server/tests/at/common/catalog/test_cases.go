@@ -7,8 +7,8 @@ import (
 
 	. "github.com/smartystreets/goconvey/convey"
 
-	"vega-manager/tests/at/fixtures"
-	catalogfixtures "vega-manager/tests/at/fixtures/catalog"
+	"vega-backend/tests/at/fixtures"
+	catalogfixtures "vega-backend/tests/at/fixtures/catalog"
 )
 
 // RunCommonCreateTests 运行通用创建测试
@@ -20,34 +20,34 @@ func RunCommonCreateTests(suite *TestSuite) {
 
 	Convey(fmt.Sprintf("CM101: 创建%s physical catalog - 基本场景", connectorType), func() {
 		payload := suite.Builder.BuildCreatePayload()
-		resp := suite.Client.POST("/api/vega-manager/v1/catalogs", payload)
+		resp := suite.Client.POST("/api/vega-backend/v1/catalogs", payload)
 		So(resp.StatusCode, ShouldEqual, http.StatusCreated)
 		So(resp.Body["id"], ShouldNotBeEmpty)
 	})
 
 	Convey("CM102: 创建catalog - 最小字段（仅name）", func() {
 		payload := catalogfixtures.BuildMinimalPayload()
-		resp := suite.Client.POST("/api/vega-manager/v1/catalogs", payload)
+		resp := suite.Client.POST("/api/vega-backend/v1/catalogs", payload)
 		So(resp.StatusCode, ShouldEqual, http.StatusCreated)
 		So(resp.Body["id"], ShouldNotBeEmpty)
 	})
 
 	Convey(fmt.Sprintf("CM103: 创建%s catalog - 完整字段", connectorType), func() {
 		payload := suite.Builder.BuildFullCreatePayload()
-		resp := suite.Client.POST("/api/vega-manager/v1/catalogs", payload)
+		resp := suite.Client.POST("/api/vega-backend/v1/catalogs", payload)
 		So(resp.StatusCode, ShouldEqual, http.StatusCreated)
 		So(resp.Body["id"], ShouldNotBeEmpty)
 	})
 
 	Convey("CM104: 创建后立即查询", func() {
 		payload := suite.Builder.BuildCreatePayload()
-		createResp := suite.Client.POST("/api/vega-manager/v1/catalogs", payload)
+		createResp := suite.Client.POST("/api/vega-backend/v1/catalogs", payload)
 		So(createResp.StatusCode, ShouldEqual, http.StatusCreated)
 
 		catalogID := createResp.Body["id"].(string)
 
 		// 立即查询
-		getResp := suite.Client.GET("/api/vega-manager/v1/catalogs/" + catalogID)
+		getResp := suite.Client.GET("/api/vega-backend/v1/catalogs/" + catalogID)
 		So(getResp.StatusCode, ShouldEqual, http.StatusOK)
 		catalog := fixtures.ExtractFromEntriesResponse(getResp)
 		So(catalog["id"], ShouldEqual, catalogID)
@@ -60,14 +60,14 @@ func RunCommonCreateTests(suite *TestSuite) {
 			"max_retries": 3,
 		}
 		payload := suite.Builder.BuildCreatePayloadWithOptions(options)
-		resp := suite.Client.POST("/api/vega-manager/v1/catalogs", payload)
+		resp := suite.Client.POST("/api/vega-backend/v1/catalogs", payload)
 		So(resp.StatusCode, ShouldEqual, http.StatusCreated)
 		So(resp.Body["id"], ShouldNotBeEmpty)
 	})
 
 	Convey("CM106: 创建logical类型catalog", func() {
 		payload := catalogfixtures.BuildLogicalCatalogPayload()
-		resp := suite.Client.POST("/api/vega-manager/v1/catalogs", payload)
+		resp := suite.Client.POST("/api/vega-backend/v1/catalogs", payload)
 		So(resp.StatusCode, ShouldEqual, http.StatusCreated)
 		So(resp.Body["id"], ShouldNotBeEmpty)
 	})
@@ -76,14 +76,14 @@ func RunCommonCreateTests(suite *TestSuite) {
 	if suite.Builder.SupportsTestConnection() {
 		Convey("CM107: 创建后测试连接成功", func() {
 			payload := suite.Builder.BuildCreatePayload()
-			createResp := suite.Client.POST("/api/vega-manager/v1/catalogs", payload)
+			createResp := suite.Client.POST("/api/vega-backend/v1/catalogs", payload)
 			So(createResp.StatusCode, ShouldEqual, http.StatusCreated)
 			So(createResp.Body["id"], ShouldNotBeEmpty)
 
 			catalogID := createResp.Body["id"].(string)
 
 			// 测试连接
-			testResp := suite.Client.POST("/api/vega-manager/v1/catalogs/"+catalogID+"/test-connection", nil)
+			testResp := suite.Client.POST("/api/vega-backend/v1/catalogs/"+catalogID+"/test-connection", nil)
 			So(testResp.StatusCode, ShouldEqual, http.StatusOK)
 
 			if testResp.Body != nil {
@@ -94,13 +94,13 @@ func RunCommonCreateTests(suite *TestSuite) {
 
 		Convey("CM108: 获取catalog健康状态", func() {
 			payload := suite.Builder.BuildCreatePayload()
-			createResp := suite.Client.POST("/api/vega-manager/v1/catalogs", payload)
+			createResp := suite.Client.POST("/api/vega-backend/v1/catalogs", payload)
 			So(createResp.StatusCode, ShouldEqual, http.StatusCreated)
 
 			catalogID := createResp.Body["id"].(string)
 
 			// 获取状态
-			statusResp := suite.Client.GET("/api/vega-manager/v1/catalogs/" + catalogID + "/health-status")
+			statusResp := suite.Client.GET("/api/vega-backend/v1/catalogs/" + catalogID + "/health-status")
 			So(statusResp.StatusCode, ShouldEqual, http.StatusOK)
 
 			if statusResp.Body != nil {
@@ -114,12 +114,12 @@ func RunCommonCreateTests(suite *TestSuite) {
 		// 创建3个catalog
 		for i := 0; i < 3; i++ {
 			payload := suite.Builder.BuildCreatePayload()
-			resp := suite.Client.POST("/api/vega-manager/v1/catalogs", payload)
+			resp := suite.Client.POST("/api/vega-backend/v1/catalogs", payload)
 			So(resp.StatusCode, ShouldEqual, http.StatusCreated)
 		}
 
 		// 列表查询
-		listResp := suite.Client.GET("/api/vega-manager/v1/catalogs?offset=0&limit=10")
+		listResp := suite.Client.GET("/api/vega-backend/v1/catalogs?offset=0&limit=10")
 		So(listResp.StatusCode, ShouldEqual, http.StatusOK)
 
 		if listResp.Body != nil {
@@ -136,7 +136,7 @@ func RunCommonCreateTests(suite *TestSuite) {
 	Convey("CM110: Tags数组测试", func() {
 		Convey("空tags数组", func() {
 			payload := catalogfixtures.BuildPayloadWithEmptyTags()
-			resp := suite.Client.POST("/api/vega-manager/v1/catalogs", payload)
+			resp := suite.Client.POST("/api/vega-backend/v1/catalogs", payload)
 			So(resp.StatusCode, ShouldEqual, http.StatusCreated)
 			So(resp.Body["id"], ShouldNotBeEmpty)
 		})
@@ -144,7 +144,7 @@ func RunCommonCreateTests(suite *TestSuite) {
 		Convey("单个tag", func() {
 			payload := suite.Builder.BuildCreatePayload()
 			payload["tags"] = []string{"single-tag"}
-			resp := suite.Client.POST("/api/vega-manager/v1/catalogs", payload)
+			resp := suite.Client.POST("/api/vega-backend/v1/catalogs", payload)
 			So(resp.StatusCode, ShouldEqual, http.StatusCreated)
 			So(resp.Body["id"], ShouldNotBeEmpty)
 		})
@@ -152,7 +152,7 @@ func RunCommonCreateTests(suite *TestSuite) {
 		Convey("多个tags", func() {
 			payload := suite.Builder.BuildCreatePayload()
 			payload["tags"] = []string{"tag1", "tag2", "tag3", "tag4", "tag5"}
-			resp := suite.Client.POST("/api/vega-manager/v1/catalogs", payload)
+			resp := suite.Client.POST("/api/vega-backend/v1/catalogs", payload)
 			So(resp.StatusCode, ShouldEqual, http.StatusCreated)
 			So(resp.Body["id"], ShouldNotBeEmpty)
 		})
@@ -174,7 +174,7 @@ func RunCommonCreateTests(suite *TestSuite) {
 		for _, tc := range testCases {
 			Convey(tc.name, func() {
 				payload := catalogfixtures.BuildPayloadWithSpecialCharsName(tc.catalogName)
-				resp := suite.Client.POST("/api/vega-manager/v1/catalogs", payload)
+				resp := suite.Client.POST("/api/vega-backend/v1/catalogs", payload)
 				So(resp.StatusCode, ShouldEqual, tc.expectCode)
 			})
 		}
@@ -186,7 +186,7 @@ func RunCommonCreateTests(suite *TestSuite) {
 func RunCommonNegativeTests(suite *TestSuite) {
 	Convey("CM121: 缺少必填字段 - name", func() {
 		payload := catalogfixtures.BuildPayloadWithMissingName()
-		resp := suite.Client.POST("/api/vega-manager/v1/catalogs", payload)
+		resp := suite.Client.POST("/api/vega-backend/v1/catalogs", payload)
 		So(resp.StatusCode, ShouldEqual, http.StatusBadRequest)
 	})
 
@@ -196,41 +196,41 @@ func RunCommonNegativeTests(suite *TestSuite) {
 		payload1["name"] = fixedName
 
 		// 第一次创建
-		resp1 := suite.Client.POST("/api/vega-manager/v1/catalogs", payload1)
+		resp1 := suite.Client.POST("/api/vega-backend/v1/catalogs", payload1)
 		So(resp1.StatusCode, ShouldEqual, http.StatusCreated)
 
 		// 第二次创建相同名称
 		payload2 := suite.Builder.BuildCreatePayload()
 		payload2["name"] = fixedName
 
-		resp2 := suite.Client.POST("/api/vega-manager/v1/catalogs", payload2)
+		resp2 := suite.Client.POST("/api/vega-backend/v1/catalogs", payload2)
 		So(resp2.StatusCode, ShouldEqual, http.StatusConflict)
 		So(resp2.Error, ShouldNotBeNil)
 	})
 
 	Convey("CM123: 无效JSON格式", func() {
 		invalidJSON := `{"name": "test", "type": }`
-		resp := suite.Client.POST("/api/vega-manager/v1/catalogs", invalidJSON)
+		resp := suite.Client.POST("/api/vega-backend/v1/catalogs", invalidJSON)
 		So(resp.StatusCode, ShouldEqual, http.StatusBadRequest)
 	})
 
 	Convey("CM124: 错误的Content-Type", func() {
 		payload := suite.Builder.BuildCreatePayload()
 		suite.Client.SetHeader("Content-Type", "text/plain")
-		resp := suite.Client.POST("/api/vega-manager/v1/catalogs", payload)
+		resp := suite.Client.POST("/api/vega-backend/v1/catalogs", payload)
 		suite.Client.SetHeader("Content-Type", "application/json")
 		So(resp.StatusCode, ShouldEqual, http.StatusNotAcceptable)
 	})
 
 	Convey("CM125: 超长name字段（>128字符）", func() {
 		payload := catalogfixtures.BuildPayloadWithLongName(129)
-		resp := suite.Client.POST("/api/vega-manager/v1/catalogs", payload)
+		resp := suite.Client.POST("/api/vega-backend/v1/catalogs", payload)
 		So(resp.StatusCode, ShouldEqual, http.StatusBadRequest)
 	})
 
 	Convey("CM126: 超长comment字段（>1000字符）", func() {
 		payload := catalogfixtures.BuildPayloadWithLongComment(1001)
-		resp := suite.Client.POST("/api/vega-manager/v1/catalogs", payload)
+		resp := suite.Client.POST("/api/vega-backend/v1/catalogs", payload)
 		So(resp.StatusCode, ShouldEqual, http.StatusBadRequest)
 	})
 
@@ -238,62 +238,62 @@ func RunCommonNegativeTests(suite *TestSuite) {
 	if suite.Builder.SupportsTestConnection() {
 		Convey("CM127: 错误的连接凭证", func() {
 			payload := suite.Builder.BuildCreatePayloadWithWrongCredentials()
-			resp := suite.Client.POST("/api/vega-manager/v1/catalogs", payload)
+			resp := suite.Client.POST("/api/vega-backend/v1/catalogs", payload)
 			So(resp.StatusCode, ShouldEqual, http.StatusBadRequest)
 		})
 
 		Convey("CM128: 无效的连接配置", func() {
 			payload := suite.Builder.BuildCreatePayloadWithInvalidConfig()
-			resp := suite.Client.POST("/api/vega-manager/v1/catalogs", payload)
+			resp := suite.Client.POST("/api/vega-backend/v1/catalogs", payload)
 			So(resp.StatusCode, ShouldEqual, http.StatusBadRequest)
 		})
 	}
 
 	Convey("CM129: name为空字符串", func() {
 		payload := catalogfixtures.BuildPayloadWithEmptyName()
-		resp := suite.Client.POST("/api/vega-manager/v1/catalogs", payload)
+		resp := suite.Client.POST("/api/vega-backend/v1/catalogs", payload)
 		So(resp.StatusCode, ShouldEqual, http.StatusBadRequest)
 	})
 
 	Convey("CM130: name只有空格", func() {
 		payload := catalogfixtures.BuildPayloadWithWhitespaceName()
-		resp := suite.Client.POST("/api/vega-manager/v1/catalogs", payload)
+		resp := suite.Client.POST("/api/vega-backend/v1/catalogs", payload)
 		// name只有长度限制，空格也是有效字符
 		So(resp.StatusCode, ShouldEqual, http.StatusCreated)
 	})
 
 	Convey("CM131: tags包含空字符串", func() {
 		payload := catalogfixtures.BuildPayloadWithEmptyTagInArray()
-		resp := suite.Client.POST("/api/vega-manager/v1/catalogs", payload)
+		resp := suite.Client.POST("/api/vega-backend/v1/catalogs", payload)
 		So(resp.StatusCode, ShouldEqual, http.StatusBadRequest)
 	})
 
 	Convey("CM132: tags包含非法字符", func() {
 		payload := catalogfixtures.BuildPayloadWithInvalidCharTag()
-		resp := suite.Client.POST("/api/vega-manager/v1/catalogs", payload)
+		resp := suite.Client.POST("/api/vega-backend/v1/catalogs", payload)
 		So(resp.StatusCode, ShouldEqual, http.StatusBadRequest)
 	})
 
 	Convey("CM133: 单个tag超长（41字符）", func() {
 		payload := catalogfixtures.BuildPayloadWithLongTag(41)
-		resp := suite.Client.POST("/api/vega-manager/v1/catalogs", payload)
+		resp := suite.Client.POST("/api/vega-backend/v1/catalogs", payload)
 		So(resp.StatusCode, ShouldEqual, http.StatusBadRequest)
 	})
 
 	Convey("CM134: 无效的connector_type", func() {
 		payload := catalogfixtures.BuildPayloadWithInvalidConnectorType()
-		resp := suite.Client.POST("/api/vega-manager/v1/catalogs", payload)
+		resp := suite.Client.POST("/api/vega-backend/v1/catalogs", payload)
 		So(resp.StatusCode, ShouldEqual, http.StatusBadRequest)
 	})
 
 	Convey("CM135: connector_config缺少必要字段", func() {
 		payload := catalogfixtures.BuildPayloadWithMissingConnectorFields()
-		resp := suite.Client.POST("/api/vega-manager/v1/catalogs", payload)
+		resp := suite.Client.POST("/api/vega-backend/v1/catalogs", payload)
 		So(resp.StatusCode, ShouldEqual, http.StatusBadRequest)
 	})
 
 	Convey("CM136: 请求体为空", func() {
-		resp := suite.Client.POST("/api/vega-manager/v1/catalogs", nil)
+		resp := suite.Client.POST("/api/vega-backend/v1/catalogs", nil)
 		So(resp.StatusCode, ShouldEqual, http.StatusBadRequest)
 	})
 }
@@ -303,60 +303,60 @@ func RunCommonNegativeTests(suite *TestSuite) {
 func RunCommonBoundaryTests(suite *TestSuite) {
 	Convey("CM141: name长度边界 - 1字符（最小）", func() {
 		payload := catalogfixtures.BuildPayloadWithMinName()
-		resp := suite.Client.POST("/api/vega-manager/v1/catalogs", payload)
+		resp := suite.Client.POST("/api/vega-backend/v1/catalogs", payload)
 		So(resp.StatusCode, ShouldEqual, http.StatusCreated)
 		So(resp.Body["id"], ShouldNotBeEmpty)
 	})
 
 	Convey("CM142: name长度边界 - 128字符（最大允许）", func() {
 		payload := catalogfixtures.BuildPayloadWithLongName(128)
-		resp := suite.Client.POST("/api/vega-manager/v1/catalogs", payload)
+		resp := suite.Client.POST("/api/vega-backend/v1/catalogs", payload)
 		So(resp.StatusCode, ShouldEqual, http.StatusCreated)
 		So(resp.Body["id"], ShouldNotBeEmpty)
 	})
 
 	Convey("CM143: name长度边界 - 129字符（超出）", func() {
 		payload := catalogfixtures.BuildPayloadWithLongName(129)
-		resp := suite.Client.POST("/api/vega-manager/v1/catalogs", payload)
+		resp := suite.Client.POST("/api/vega-backend/v1/catalogs", payload)
 		So(resp.StatusCode, ShouldEqual, http.StatusBadRequest)
 	})
 
 	Convey("CM144: comment长度边界 - 1000字符（最大允许）", func() {
 		payload := catalogfixtures.BuildPayloadWithExactComment(1000)
-		resp := suite.Client.POST("/api/vega-manager/v1/catalogs", payload)
+		resp := suite.Client.POST("/api/vega-backend/v1/catalogs", payload)
 		So(resp.StatusCode, ShouldEqual, http.StatusCreated)
 		So(resp.Body["id"], ShouldNotBeEmpty)
 	})
 
 	Convey("CM145: comment长度边界 - 1001字符（超出）", func() {
 		payload := catalogfixtures.BuildPayloadWithExactComment(1001)
-		resp := suite.Client.POST("/api/vega-manager/v1/catalogs", payload)
+		resp := suite.Client.POST("/api/vega-backend/v1/catalogs", payload)
 		So(resp.StatusCode, ShouldEqual, http.StatusBadRequest)
 	})
 
 	Convey("CM146: tags数量边界 - 5个（最大允许）", func() {
 		payload := catalogfixtures.BuildPayloadWithManyTags(5)
-		resp := suite.Client.POST("/api/vega-manager/v1/catalogs", payload)
+		resp := suite.Client.POST("/api/vega-backend/v1/catalogs", payload)
 		So(resp.StatusCode, ShouldEqual, http.StatusCreated)
 		So(resp.Body["id"], ShouldNotBeEmpty)
 	})
 
 	Convey("CM147: tags数量边界 - 6个（超出）", func() {
 		payload := catalogfixtures.BuildPayloadWithManyTags(6)
-		resp := suite.Client.POST("/api/vega-manager/v1/catalogs", payload)
+		resp := suite.Client.POST("/api/vega-backend/v1/catalogs", payload)
 		So(resp.StatusCode, ShouldEqual, http.StatusBadRequest)
 	})
 
 	Convey("CM148: 单个tag长度边界 - 40字符（最大允许）", func() {
 		payload := catalogfixtures.BuildPayloadWithLongTag(40)
-		resp := suite.Client.POST("/api/vega-manager/v1/catalogs", payload)
+		resp := suite.Client.POST("/api/vega-backend/v1/catalogs", payload)
 		So(resp.StatusCode, ShouldEqual, http.StatusCreated)
 		So(resp.Body["id"], ShouldNotBeEmpty)
 	})
 
 	Convey("CM149: 单个tag长度边界 - 41字符（超出）", func() {
 		payload := catalogfixtures.BuildPayloadWithLongTag(41)
-		resp := suite.Client.POST("/api/vega-manager/v1/catalogs", payload)
+		resp := suite.Client.POST("/api/vega-backend/v1/catalogs", payload)
 		So(resp.StatusCode, ShouldEqual, http.StatusBadRequest)
 	})
 }
@@ -369,7 +369,7 @@ func RunCommonSecurityTests(suite *TestSuite) {
 
 	Convey("CM161: SQL注入尝试", func() {
 		payload := catalogfixtures.BuildPayloadWithSQLInjection()
-		resp := suite.Client.POST("/api/vega-manager/v1/catalogs", payload)
+		resp := suite.Client.POST("/api/vega-backend/v1/catalogs", payload)
 		// name没有内容限制，创建成功；验证系统能安全处理SQL注入payload
 		So(resp.StatusCode, ShouldEqual, http.StatusCreated)
 		So(resp.Body["id"], ShouldNotBeEmpty)
@@ -377,7 +377,7 @@ func RunCommonSecurityTests(suite *TestSuite) {
 
 	Convey("CM162: XSS尝试", func() {
 		payload := catalogfixtures.BuildPayloadWithXSS()
-		resp := suite.Client.POST("/api/vega-manager/v1/catalogs", payload)
+		resp := suite.Client.POST("/api/vega-backend/v1/catalogs", payload)
 		// name没有内容限制，创建成功；验证系统能安全处理XSS payload
 		So(resp.StatusCode, ShouldEqual, http.StatusCreated)
 		So(resp.Body["id"], ShouldNotBeEmpty)
@@ -385,7 +385,7 @@ func RunCommonSecurityTests(suite *TestSuite) {
 
 	Convey("CM163: 路径遍历尝试", func() {
 		payload := catalogfixtures.BuildPayloadWithPathTraversal()
-		resp := suite.Client.POST("/api/vega-manager/v1/catalogs", payload)
+		resp := suite.Client.POST("/api/vega-backend/v1/catalogs", payload)
 		// name没有内容限制，创建成功；验证系统能安全处理路径遍历payload
 		So(resp.StatusCode, ShouldEqual, http.StatusCreated)
 		So(resp.Body["id"], ShouldNotBeEmpty)
@@ -398,12 +398,12 @@ func RunCommonReadTests(suite *TestSuite) {
 	Convey("CM201: 获取存在的catalog", func() {
 		// 先创建
 		payload := suite.Builder.BuildCreatePayload()
-		createResp := suite.Client.POST("/api/vega-manager/v1/catalogs", payload)
+		createResp := suite.Client.POST("/api/vega-backend/v1/catalogs", payload)
 		So(createResp.StatusCode, ShouldEqual, http.StatusCreated)
 		catalogID := createResp.Body["id"].(string)
 
 		// 查询
-		getResp := suite.Client.GET("/api/vega-manager/v1/catalogs/" + catalogID)
+		getResp := suite.Client.GET("/api/vega-backend/v1/catalogs/" + catalogID)
 		So(getResp.StatusCode, ShouldEqual, http.StatusOK)
 
 		catalog := fixtures.ExtractFromEntriesResponse(getResp)
@@ -412,7 +412,7 @@ func RunCommonReadTests(suite *TestSuite) {
 	})
 
 	Convey("CM202: 获取不存在的catalog", func() {
-		resp := suite.Client.GET("/api/vega-manager/v1/catalogs/non-existent-id-12345")
+		resp := suite.Client.GET("/api/vega-backend/v1/catalogs/non-existent-id-12345")
 		So(resp.StatusCode, ShouldEqual, http.StatusNotFound)
 	})
 
@@ -420,12 +420,12 @@ func RunCommonReadTests(suite *TestSuite) {
 		// 创建5个catalog
 		for i := 0; i < 5; i++ {
 			payload := suite.Builder.BuildCreatePayload()
-			resp := suite.Client.POST("/api/vega-manager/v1/catalogs", payload)
+			resp := suite.Client.POST("/api/vega-backend/v1/catalogs", payload)
 			So(resp.StatusCode, ShouldEqual, http.StatusCreated)
 		}
 
 		// 分页查询
-		listResp := suite.Client.GET("/api/vega-manager/v1/catalogs?offset=0&limit=2")
+		listResp := suite.Client.GET("/api/vega-backend/v1/catalogs?offset=0&limit=2")
 		So(listResp.StatusCode, ShouldEqual, http.StatusOK)
 
 		if entries, ok := listResp.Body["entries"].([]any); ok {
@@ -450,11 +450,11 @@ func RunCommonUpdateTests(suite *TestSuite) {
 		})
 		// 回填加密密码（GET不再返回敏感字段）
 		catalogfixtures.InjectEncryptedPassword(updatePayload, suite.Builder.GetEncryptedPassword())
-		updateResp := suite.Client.PUT("/api/vega-manager/v1/catalogs/"+catalogID, updatePayload)
+		updateResp := suite.Client.PUT("/api/vega-backend/v1/catalogs/"+catalogID, updatePayload)
 		So(updateResp.StatusCode, ShouldEqual, http.StatusNoContent)
 
 		// 验证
-		getResp := suite.Client.GET("/api/vega-manager/v1/catalogs/" + catalogID)
+		getResp := suite.Client.GET("/api/vega-backend/v1/catalogs/" + catalogID)
 		catalog := fixtures.ExtractFromEntriesResponse(getResp)
 		So(catalog["name"], ShouldEqual, newName)
 	})
@@ -472,11 +472,11 @@ func RunCommonUpdateTests(suite *TestSuite) {
 		})
 		// 回填加密密码（GET不再返回敏感字段）
 		catalogfixtures.InjectEncryptedPassword(updatePayload, suite.Builder.GetEncryptedPassword())
-		updateResp := suite.Client.PUT("/api/vega-manager/v1/catalogs/"+catalogID, updatePayload)
+		updateResp := suite.Client.PUT("/api/vega-backend/v1/catalogs/"+catalogID, updatePayload)
 		So(updateResp.StatusCode, ShouldEqual, http.StatusNoContent)
 
 		// 验证
-		getResp := suite.Client.GET("/api/vega-manager/v1/catalogs/" + catalogID)
+		getResp := suite.Client.GET("/api/vega-backend/v1/catalogs/" + catalogID)
 		catalog := fixtures.ExtractFromEntriesResponse(getResp)
 		So(catalog["comment"], ShouldEqual, newComment)
 	})
@@ -486,7 +486,7 @@ func RunCommonUpdateTests(suite *TestSuite) {
 		updatePayload := map[string]any{
 			"name": "new-name",
 		}
-		resp := suite.Client.PUT("/api/vega-manager/v1/catalogs/non-existent-id-12345", updatePayload)
+		resp := suite.Client.PUT("/api/vega-backend/v1/catalogs/non-existent-id-12345", updatePayload)
 		So(resp.StatusCode, ShouldEqual, http.StatusNotFound)
 	})
 
@@ -502,7 +502,7 @@ func RunCommonUpdateTests(suite *TestSuite) {
 		})
 		// 回填加密密码（GET不再返回敏感字段）
 		catalogfixtures.InjectEncryptedPassword(updatePayload, suite.Builder.GetEncryptedPassword())
-		updateResp := suite.Client.PUT("/api/vega-manager/v1/catalogs/"+catalogID, updatePayload)
+		updateResp := suite.Client.PUT("/api/vega-backend/v1/catalogs/"+catalogID, updatePayload)
 		So(updateResp.StatusCode, ShouldEqual, http.StatusNoContent)
 	})
 }
@@ -513,37 +513,37 @@ func RunCommonDeleteTests(suite *TestSuite) {
 	Convey("CM401: 删除存在的catalog", func() {
 		// 创建
 		payload := suite.Builder.BuildCreatePayload()
-		createResp := suite.Client.POST("/api/vega-manager/v1/catalogs", payload)
+		createResp := suite.Client.POST("/api/vega-backend/v1/catalogs", payload)
 		So(createResp.StatusCode, ShouldEqual, http.StatusCreated)
 		catalogID := createResp.Body["id"].(string)
 
 		// 删除
-		deleteResp := suite.Client.DELETE("/api/vega-manager/v1/catalogs/" + catalogID)
+		deleteResp := suite.Client.DELETE("/api/vega-backend/v1/catalogs/" + catalogID)
 		So(deleteResp.StatusCode, ShouldEqual, http.StatusNoContent)
 
 		// 验证已删除
-		getResp := suite.Client.GET("/api/vega-manager/v1/catalogs/" + catalogID)
+		getResp := suite.Client.GET("/api/vega-backend/v1/catalogs/" + catalogID)
 		So(getResp.StatusCode, ShouldEqual, http.StatusNotFound)
 	})
 
 	Convey("CM402: 删除不存在的catalog", func() {
-		resp := suite.Client.DELETE("/api/vega-manager/v1/catalogs/non-existent-id-12345")
+		resp := suite.Client.DELETE("/api/vega-backend/v1/catalogs/non-existent-id-12345")
 		So(resp.StatusCode, ShouldEqual, http.StatusNotFound)
 	})
 
 	Convey("CM403: 重复删除同一catalog", func() {
 		// 创建
 		payload := suite.Builder.BuildCreatePayload()
-		createResp := suite.Client.POST("/api/vega-manager/v1/catalogs", payload)
+		createResp := suite.Client.POST("/api/vega-backend/v1/catalogs", payload)
 		So(createResp.StatusCode, ShouldEqual, http.StatusCreated)
 		catalogID := createResp.Body["id"].(string)
 
 		// 第一次删除
-		deleteResp1 := suite.Client.DELETE("/api/vega-manager/v1/catalogs/" + catalogID)
+		deleteResp1 := suite.Client.DELETE("/api/vega-backend/v1/catalogs/" + catalogID)
 		So(deleteResp1.StatusCode, ShouldEqual, http.StatusNoContent)
 
 		// 第二次删除
-		deleteResp2 := suite.Client.DELETE("/api/vega-manager/v1/catalogs/" + catalogID)
+		deleteResp2 := suite.Client.DELETE("/api/vega-backend/v1/catalogs/" + catalogID)
 		So(deleteResp2.StatusCode, ShouldEqual, http.StatusNotFound)
 	})
 }

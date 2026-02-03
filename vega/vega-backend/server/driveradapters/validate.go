@@ -9,8 +9,8 @@ import (
 
 	"github.com/kweaver-ai/kweaver-go-lib/rest"
 
-	verrors "vega-manager/errors"
-	"vega-manager/interfaces"
+	verrors "vega-backend/errors"
+	"vega-backend/interfaces"
 )
 
 // 名称合法性校验

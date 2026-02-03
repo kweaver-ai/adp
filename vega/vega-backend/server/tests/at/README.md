@@ -34,11 +34,11 @@ tests/
 ### 1. 启动VEGA Manager服务
 
 ```bash
-cd /mnt/c/aishu_code/vega-manager/server
+cd /mnt/c/aishu_code/vega-backend/server
 go run main.go
 
 # 或使用配置文件
-go run main.go -config ./config/vega-manager-config.yaml
+go run main.go -config ./config/vega-backend-config.yaml
 
 # 确保服务成功启动，默认监听 http://localhost:8080
 ```
@@ -69,7 +69,7 @@ docker run -d --name test-mysql \
 ### 3. 配置测试文件
 
 ```bash
-cd /mnt/c/aishu_code/vega-manager/server/tests/at/testdata
+cd /mnt/c/aishu_code/vega-backend/server/tests/at/testdata
 
 # 复制配置模板
 cp test-config.yaml.example test-config.yaml
@@ -99,7 +99,7 @@ target_mysql:
 ### 使用Makefile（推荐）
 
 ```bash
-cd /mnt/c/aishu_code/vega-manager
+cd /mnt/c/aishu_code/vega-backend
 
 # 运行所有catalog AT测试
 make test-at-catalog
@@ -117,7 +117,7 @@ make test-at-setup
 ### 直接使用go test
 
 ```bash
-cd /mnt/c/aishu_code/vega-manager/server
+cd /mnt/c/aishu_code/vega-backend/server
 
 # 运行所有catalog测试
 go test -v ./tests/at/catalog/...
@@ -286,7 +286,7 @@ go test -v ./tests/at/catalog/... -timeout 5m
     --- PASS: TestCatalogCreateATSuite/TestTC002_CreateCatalog_MinimalFields (0.85s)
     --- PASS: TestCatalogCreateATSuite/TestTC003_CreateCatalog_FullFields (1.10s)
 PASS
-ok      vega-manager/tests/at/catalog   45.234s
+ok      vega-backend/tests/at/catalog   45.234s
 ```
 
 ## 故障排查
@@ -298,7 +298,7 @@ ok      vega-manager/tests/at/catalog   45.234s
 ```
 
 **解决方法**:
-1. 确认VEGA Manager服务已启动: `ps aux | grep vega-manager`
+1. 确认VEGA Manager服务已启动: `ps aux | grep vega-backend`
 2. 检查服务监听端口: `netstat -tuln | grep 8080`
 3. 验证配置文件中的base_url是否正确
 
@@ -357,7 +357,7 @@ AT测试创建的catalog使用唯一名称（带时间戳），避免冲突。�
 
 ```bash
 # 通过API删除（推荐）
-curl -X DELETE http://localhost:8080/api/vega-manager/v1/catalogs/{catalog_id} \
+curl -X DELETE http://localhost:8080/api/vega-backend/v1/catalogs/{catalog_id} \
   -H "X-Account-ID: test-user-001"
 
 # 或直接操作数据库
@@ -467,7 +467,7 @@ So(failed, ShouldBeFalse)
 Convey("TC011: 你的测试描述", func() {
     payload := testutil.BuildBasicMySQLPayload(config.TargetMySQL)
 
-    resp := client.POST("/api/vega-manager/v1/catalogs", payload)
+    resp := client.POST("/api/vega-backend/v1/catalogs", payload)
 
     So(resp.StatusCode, ShouldEqual, 201)
     So(resp.Body["id"], ShouldNotBeEmpty)

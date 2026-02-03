@@ -4,7 +4,7 @@ package errors
 import (
 	"github.com/kweaver-ai/kweaver-go-lib/rest"
 
-	"vega-manager/locale"
+	"vega-backend/locale"
 )
 
 // 公共错误码

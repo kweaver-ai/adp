@@ -9,11 +9,11 @@ import (
 
 	. "github.com/smartystreets/goconvey/convey"
 
-	"vega-manager/tests/at/fixtures"
-	catalogfixtures "vega-manager/tests/at/fixtures/catalog"
-	resourcefixtures "vega-manager/tests/at/fixtures/resource"
-	"vega-manager/tests/at/setup"
-	"vega-manager/tests/testutil"
+	"vega-backend/tests/at/fixtures"
+	catalogfixtures "vega-backend/tests/at/fixtures/catalog"
+	resourcefixtures "vega-backend/tests/at/fixtures/resource"
+	"vega-backend/tests/at/setup"
+	"vega-backend/tests/testutil"
 )
 
 // TestOpenSearchResourceSpecificCreate OpenSearch Resource特定功能AT测试 - 创建
@@ -57,7 +57,7 @@ func TestOpenSearchResourceSpecificCreate(t *testing.T) {
 
 		// 创建前置Catalog
 		catalogPayload := builder.BuildCreatePayload()
-		catalogResp := client.POST("/api/vega-manager/v1/catalogs", catalogPayload)
+		catalogResp := client.POST("/api/vega-backend/v1/catalogs", catalogPayload)
 		So(catalogResp.StatusCode, ShouldEqual, http.StatusCreated)
 		catalogID = catalogResp.Body["id"].(string)
 		t.Logf("✓ 前置Catalog创建成功，ID: %s", catalogID)
@@ -66,13 +66,13 @@ func TestOpenSearchResourceSpecificCreate(t *testing.T) {
 
 		Convey("OR101: 创建resource后验证catalog_id关联", func() {
 			payload := resourcefixtures.BuildCreatePayload(catalogID)
-			createResp := client.POST("/api/vega-manager/v1/resources", payload)
+			createResp := client.POST("/api/vega-backend/v1/resources", payload)
 			So(createResp.StatusCode, ShouldEqual, http.StatusCreated)
 
 			resourceID := createResp.Body["id"].(string)
 
 			// 查询验证
-			getResp := client.GET("/api/vega-manager/v1/resources/" + resourceID)
+			getResp := client.GET("/api/vega-backend/v1/resources/" + resourceID)
 			So(getResp.StatusCode, ShouldEqual, http.StatusOK)
 
 			resource := fixtures.ExtractFromEntriesResponse(getResp)
@@ -83,13 +83,13 @@ func TestOpenSearchResourceSpecificCreate(t *testing.T) {
 		Convey("OR102: 查询resource - 验证所有字段返回", func() {
 			// 创建完整字段的resource
 			payload := resourcefixtures.BuildFullCreatePayload(catalogID)
-			createResp := client.POST("/api/vega-manager/v1/resources", payload)
+			createResp := client.POST("/api/vega-backend/v1/resources", payload)
 			So(createResp.StatusCode, ShouldEqual, http.StatusCreated)
 
 			resourceID := createResp.Body["id"].(string)
 
 			// 查询resource
-			getResp := client.GET("/api/vega-manager/v1/resources/" + resourceID)
+			getResp := client.GET("/api/vega-backend/v1/resources/" + resourceID)
 			So(getResp.StatusCode, ShouldEqual, http.StatusOK)
 
 			// 从响应中提取resource对象
@@ -117,11 +117,11 @@ func TestOpenSearchResourceSpecificCreate(t *testing.T) {
 		Convey("OR103: 按catalog_id过滤resource列表", func() {
 			// 创建1个resource
 			payload := resourcefixtures.BuildCreatePayload(catalogID)
-			createResp := client.POST("/api/vega-manager/v1/resources", payload)
+			createResp := client.POST("/api/vega-backend/v1/resources", payload)
 			So(createResp.StatusCode, ShouldEqual, http.StatusCreated)
 
 			// 按catalog_id过滤
-			filterResp := client.GET("/api/vega-manager/v1/resources?catalog_id=" + catalogID + "&offset=0&limit=100")
+			filterResp := client.GET("/api/vega-backend/v1/resources?catalog_id=" + catalogID + "&offset=0&limit=100")
 			So(filterResp.StatusCode, ShouldEqual, http.StatusOK)
 
 			if filterResp.Body != nil && filterResp.Body["entries"] != nil {
@@ -140,25 +140,25 @@ func TestOpenSearchResourceSpecificCreate(t *testing.T) {
 			// 创建5个resource
 			for i := 0; i < 5; i++ {
 				payload := resourcefixtures.BuildCreatePayload(catalogID)
-				resp := client.POST("/api/vega-manager/v1/resources", payload)
+				resp := client.POST("/api/vega-backend/v1/resources", payload)
 				So(resp.StatusCode, ShouldEqual, http.StatusCreated)
 			}
 
 			// 第一页
-			page1Resp := client.GET("/api/vega-manager/v1/resources?offset=0&limit=2")
+			page1Resp := client.GET("/api/vega-backend/v1/resources?offset=0&limit=2")
 			So(page1Resp.StatusCode, ShouldEqual, http.StatusOK)
 			entries1 := page1Resp.Body["entries"].([]any)
 			So(len(entries1), ShouldBeLessThanOrEqualTo, 2)
 
 			// 第二页
-			page2Resp := client.GET("/api/vega-manager/v1/resources?offset=2&limit=2")
+			page2Resp := client.GET("/api/vega-backend/v1/resources?offset=2&limit=2")
 			So(page2Resp.StatusCode, ShouldEqual, http.StatusOK)
 			entries2 := page2Resp.Body["entries"].([]any)
 			So(len(entries2), ShouldBeLessThanOrEqualTo, 2)
 		})
 
 		Convey("OR105: 列表查询 - 默认分页参数", func() {
-			defaultResp := client.GET("/api/vega-manager/v1/resources")
+			defaultResp := client.GET("/api/vega-backend/v1/resources")
 			So(defaultResp.StatusCode, ShouldEqual, http.StatusOK)
 			So(defaultResp.Body, ShouldNotBeNil)
 			So(defaultResp.Body["entries"], ShouldNotBeNil)
@@ -206,7 +206,7 @@ func TestOpenSearchResourceSpecificUpdate(t *testing.T) {
 
 		// 创建前置Catalog
 		catalogPayload := builder.BuildCreatePayload()
-		catalogResp := client.POST("/api/vega-manager/v1/catalogs", catalogPayload)
+		catalogResp := client.POST("/api/vega-backend/v1/catalogs", catalogPayload)
 		So(catalogResp.StatusCode, ShouldEqual, http.StatusCreated)
 		catalogID = catalogResp.Body["id"].(string)
 
@@ -215,13 +215,13 @@ func TestOpenSearchResourceSpecificUpdate(t *testing.T) {
 		Convey("OR301: 同时更新多个字段", func() {
 			// 创建resource
 			payload := resourcefixtures.BuildCreatePayload(catalogID)
-			createResp := client.POST("/api/vega-manager/v1/resources", payload)
+			createResp := client.POST("/api/vega-backend/v1/resources", payload)
 			So(createResp.StatusCode, ShouldEqual, http.StatusCreated)
 
 			resourceID := createResp.Body["id"].(string)
 
 			// 获取原始数据
-			getResp := client.GET("/api/vega-manager/v1/resources/" + resourceID)
+			getResp := client.GET("/api/vega-backend/v1/resources/" + resourceID)
 			originalData := fixtures.ExtractFromEntriesResponse(getResp)
 
 			// 基于原数据构建更新payload
@@ -231,14 +231,14 @@ func TestOpenSearchResourceSpecificUpdate(t *testing.T) {
 				"tags":    []string{"multi-update", "opensearch", "test"},
 			})
 
-			updateResp := client.PUT("/api/vega-manager/v1/resources/"+resourceID, updatePayload)
+			updateResp := client.PUT("/api/vega-backend/v1/resources/"+resourceID, updatePayload)
 			So(updateResp.StatusCode, ShouldEqual, http.StatusNoContent)
 		})
 
 		Convey("OR302: 验证update_time更新", func() {
 			// 创建resource
 			payload := resourcefixtures.BuildCreatePayload(catalogID)
-			createResp := client.POST("/api/vega-manager/v1/resources", payload)
+			createResp := client.POST("/api/vega-backend/v1/resources", payload)
 			So(createResp.StatusCode, ShouldEqual, http.StatusCreated)
 
 			resourceID := createResp.Body["id"].(string)
@@ -247,7 +247,7 @@ func TestOpenSearchResourceSpecificUpdate(t *testing.T) {
 			time.Sleep(1 * time.Second)
 
 			// 获取原始数据
-			getResp := client.GET("/api/vega-manager/v1/resources/" + resourceID)
+			getResp := client.GET("/api/vega-backend/v1/resources/" + resourceID)
 			originalData := fixtures.ExtractFromEntriesResponse(getResp)
 			originalUpdateTime := originalData["update_time"].(float64)
 
@@ -255,11 +255,11 @@ func TestOpenSearchResourceSpecificUpdate(t *testing.T) {
 			updatePayload := resourcefixtures.BuildUpdatePayload(originalData, map[string]any{
 				"comment": "验证update_time更新",
 			})
-			updateResp := client.PUT("/api/vega-manager/v1/resources/"+resourceID, updatePayload)
+			updateResp := client.PUT("/api/vega-backend/v1/resources/"+resourceID, updatePayload)
 			So(updateResp.StatusCode, ShouldEqual, http.StatusNoContent)
 
 			// 验证update_time已更新
-			newGetResp := client.GET("/api/vega-manager/v1/resources/" + resourceID)
+			newGetResp := client.GET("/api/vega-backend/v1/resources/" + resourceID)
 			newData := fixtures.ExtractFromEntriesResponse(newGetResp)
 			newUpdateTime := newData["update_time"].(float64)
 			So(newUpdateTime, ShouldBeGreaterThan, originalUpdateTime)
@@ -268,13 +268,13 @@ func TestOpenSearchResourceSpecificUpdate(t *testing.T) {
 		Convey("OR303: 验证create_time不变", func() {
 			// 创建resource
 			payload := resourcefixtures.BuildCreatePayload(catalogID)
-			createResp := client.POST("/api/vega-manager/v1/resources", payload)
+			createResp := client.POST("/api/vega-backend/v1/resources", payload)
 			So(createResp.StatusCode, ShouldEqual, http.StatusCreated)
 
 			resourceID := createResp.Body["id"].(string)
 
 			// 获取原始数据
-			getResp := client.GET("/api/vega-manager/v1/resources/" + resourceID)
+			getResp := client.GET("/api/vega-backend/v1/resources/" + resourceID)
 			originalData := fixtures.ExtractFromEntriesResponse(getResp)
 			originalCreateTime := originalData["create_time"].(float64)
 
@@ -282,11 +282,11 @@ func TestOpenSearchResourceSpecificUpdate(t *testing.T) {
 			updatePayload := resourcefixtures.BuildUpdatePayload(originalData, map[string]any{
 				"comment": "验证create_time不变",
 			})
-			updateResp := client.PUT("/api/vega-manager/v1/resources/"+resourceID, updatePayload)
+			updateResp := client.PUT("/api/vega-backend/v1/resources/"+resourceID, updatePayload)
 			So(updateResp.StatusCode, ShouldEqual, http.StatusNoContent)
 
 			// 验证create_time不变
-			newGetResp := client.GET("/api/vega-manager/v1/resources/" + resourceID)
+			newGetResp := client.GET("/api/vega-backend/v1/resources/" + resourceID)
 			newData := fixtures.ExtractFromEntriesResponse(newGetResp)
 			newCreateTime := newData["create_time"].(float64)
 			So(newCreateTime, ShouldEqual, originalCreateTime)
@@ -332,7 +332,7 @@ func TestOpenSearchResourceSpecificDelete(t *testing.T) {
 
 		// 创建前置Catalog
 		catalogPayload := builder.BuildCreatePayload()
-		catalogResp := client.POST("/api/vega-manager/v1/catalogs", catalogPayload)
+		catalogResp := client.POST("/api/vega-backend/v1/catalogs", catalogPayload)
 		So(catalogResp.StatusCode, ShouldEqual, http.StatusCreated)
 		catalogID = catalogResp.Body["id"].(string)
 
@@ -341,17 +341,17 @@ func TestOpenSearchResourceSpecificDelete(t *testing.T) {
 		Convey("OR401: 删除后不能更新", func() {
 			// 创建resource
 			payload := resourcefixtures.BuildCreatePayload(catalogID)
-			createResp := client.POST("/api/vega-manager/v1/resources", payload)
+			createResp := client.POST("/api/vega-backend/v1/resources", payload)
 			So(createResp.StatusCode, ShouldEqual, http.StatusCreated)
 
 			resourceID := createResp.Body["id"].(string)
 
 			// 删除resource
-			deleteResp := client.DELETE("/api/vega-manager/v1/resources/" + resourceID)
+			deleteResp := client.DELETE("/api/vega-backend/v1/resources/" + resourceID)
 			So(deleteResp.StatusCode, ShouldEqual, http.StatusNoContent)
 
 			// 尝试更新已删除的resource
-			updateResp := client.PUT("/api/vega-manager/v1/resources/"+resourceID, payload)
+			updateResp := client.PUT("/api/vega-backend/v1/resources/"+resourceID, payload)
 			So(updateResp.StatusCode, ShouldEqual, http.StatusNotFound)
 		})
 
@@ -359,19 +359,19 @@ func TestOpenSearchResourceSpecificDelete(t *testing.T) {
 			// 创建resource
 			payload := resourcefixtures.BuildCreatePayload(catalogID)
 			resourceName := payload["name"]
-			createResp1 := client.POST("/api/vega-manager/v1/resources", payload)
+			createResp1 := client.POST("/api/vega-backend/v1/resources", payload)
 			So(createResp1.StatusCode, ShouldEqual, http.StatusCreated)
 
 			resourceID1 := createResp1.Body["id"].(string)
 
 			// 删除resource
-			deleteResp := client.DELETE("/api/vega-manager/v1/resources/" + resourceID1)
+			deleteResp := client.DELETE("/api/vega-backend/v1/resources/" + resourceID1)
 			So(deleteResp.StatusCode, ShouldEqual, http.StatusNoContent)
 
 			// 创建同名resource
 			payload2 := resourcefixtures.BuildCreatePayload(catalogID)
 			payload2["name"] = resourceName
-			createResp2 := client.POST("/api/vega-manager/v1/resources", payload2)
+			createResp2 := client.POST("/api/vega-backend/v1/resources", payload2)
 
 			So(createResp2.StatusCode, ShouldEqual, http.StatusCreated)
 
@@ -384,17 +384,17 @@ func TestOpenSearchResourceSpecificDelete(t *testing.T) {
 			// 创建resource
 			payload := resourcefixtures.BuildCreatePayload(catalogID)
 			resourceName := payload["name"]
-			createResp := client.POST("/api/vega-manager/v1/resources", payload)
+			createResp := client.POST("/api/vega-backend/v1/resources", payload)
 			So(createResp.StatusCode, ShouldEqual, http.StatusCreated)
 
 			resourceID := createResp.Body["id"].(string)
 
 			// 删除resource
-			deleteResp := client.DELETE("/api/vega-manager/v1/resources/" + resourceID)
+			deleteResp := client.DELETE("/api/vega-backend/v1/resources/" + resourceID)
 			So(deleteResp.StatusCode, ShouldEqual, http.StatusNoContent)
 
 			// 查询列表
-			listResp := client.GET("/api/vega-manager/v1/resources?offset=0&limit=1000")
+			listResp := client.GET("/api/vega-backend/v1/resources?offset=0&limit=1000")
 			So(listResp.StatusCode, ShouldEqual, http.StatusOK)
 
 			if listResp.Body != nil && listResp.Body["entries"] != nil {
@@ -423,7 +423,7 @@ func TestOpenSearchResourceSpecificDelete(t *testing.T) {
 
 			for _, invalidID := range invalidIDs {
 				Convey("无效ID: "+invalidID, func() {
-					deleteResp := client.DELETE("/api/vega-manager/v1/resources/" + invalidID)
+					deleteResp := client.DELETE("/api/vega-backend/v1/resources/" + invalidID)
 					So(deleteResp.StatusCode, ShouldEqual, http.StatusNotFound)
 				})
 			}
@@ -434,19 +434,19 @@ func TestOpenSearchResourceSpecificDelete(t *testing.T) {
 			resourceIDs := make([]string, 3)
 			for i := 0; i < 3; i++ {
 				payload := resourcefixtures.BuildCreatePayload(catalogID)
-				createResp := client.POST("/api/vega-manager/v1/resources", payload)
+				createResp := client.POST("/api/vega-backend/v1/resources", payload)
 				So(createResp.StatusCode, ShouldEqual, http.StatusCreated)
 				resourceIDs[i] = createResp.Body["id"].(string)
 			}
 
 			// 批量删除
 			idsStr := strings.Join(resourceIDs, ",")
-			deleteResp := client.DELETE("/api/vega-manager/v1/resources/" + idsStr)
+			deleteResp := client.DELETE("/api/vega-backend/v1/resources/" + idsStr)
 			So(deleteResp.StatusCode, ShouldEqual, http.StatusNoContent)
 
 			// 验证所有resource都已删除
 			for _, resourceID := range resourceIDs {
-				getResp := client.GET("/api/vega-manager/v1/resources/" + resourceID)
+				getResp := client.GET("/api/vega-backend/v1/resources/" + resourceID)
 				So(getResp.StatusCode, ShouldEqual, http.StatusNotFound)
 			}
 		})

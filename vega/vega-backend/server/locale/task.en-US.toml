@@ -1,0 +1,4 @@
+[VegaManager.Task.NotFound]
+Description = "Task not found"
+Solution = "Please check the parameters"
+ErrorLink = "No solution"

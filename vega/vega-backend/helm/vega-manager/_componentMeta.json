@@ -1,9 +1,9 @@
 {
     "conponentDefineType": "helm/service",
-    "name": "vega-manager",
+    "name": "vega-backend",
     "version": "0.3.0",
     "configSchema": {
-        "title": "vega-manager",
+        "title": "vega-backend",
         "description": "组件配置定义",
         "type": "object",
         "properties": {

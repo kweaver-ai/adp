@@ -14,9 +14,9 @@ import (
 	"github.com/rs/xid"
 	"go.opentelemetry.io/otel/trace"
 
-	"vega-manager/common"
-	discoverytaskaccess "vega-manager/drivenadapters/discovery_task"
-	"vega-manager/interfaces"
+	"vega-backend/common"
+	discoverytaskaccess "vega-backend/drivenadapters/discovery_task"
+	"vega-backend/interfaces"
 )
 
 var (
@@ -51,7 +51,7 @@ func NewDiscoveryTaskService(appSetting *common.AppSetting) interfaces.Discovery
 }
 
 // Create creates a new DiscoveryTask and sends message to Kafka.
-func (s *discoveryTaskService) Create(ctx context.Context, catalogID string) (*interfaces.DiscoveryTask, error) {
+func (s *discoveryTaskService) Create(ctx context.Context, catalogID string) (string, error) {
 	ctx, span := ar_trace.Tracer.Start(ctx, "DiscoveryTaskService.Create",
 		trace.WithSpanKind(trace.SpanKindServer))
 	defer span.End()
@@ -78,7 +78,7 @@ func (s *discoveryTaskService) Create(ctx context.Context, catalogID string) (*i
 	if err := s.dta.Create(ctx, task); err != nil {
 		logger.Errorf("Failed to create discovery task: %v", err)
 		o11y.Error(ctx, "Failed to create discovery task")
-		return nil, err
+		return "", err
 	}
 
 	// 2. TODO Send message to Kafka
@@ -88,17 +88,17 @@ func (s *discoveryTaskService) Create(ctx context.Context, catalogID string) (*i
 	if err != nil {
 		logger.Errorf("Failed to marshal discovery task: %v", err)
 		o11y.Error(ctx, "Failed to marshal discovery task")
-		return nil, err
+		return "", err
 	}
 
 	err = s.mqClient.Pub(interfaces.DiscoveryTaskTopic, bytes)
 	if err != nil {
 		logger.Errorf("Failed to send message to Kafka: %v", err)
 		o11y.Error(ctx, "Failed to send message to Kafka")
-		return nil, err
+		return "", err
 	}
 
-	return task, nil
+	return task.ID, nil
 }
 
 // GetByID retrieves a DiscoveryTask by ID.

@@ -9,10 +9,10 @@ import (
 
 	. "github.com/smartystreets/goconvey/convey"
 
-	"vega-manager/tests/at/fixtures"
-	catalogfixtures "vega-manager/tests/at/fixtures/catalog"
-	"vega-manager/tests/at/setup"
-	"vega-manager/tests/testutil"
+	"vega-backend/tests/at/fixtures"
+	catalogfixtures "vega-backend/tests/at/fixtures/catalog"
+	"vega-backend/tests/at/setup"
+	"vega-backend/tests/testutil"
 )
 
 // TestOpenSearchSpecificCreate OpenSearch特定功能AT测试 - 创建
@@ -58,7 +58,7 @@ func TestOpenSearchSpecificCreate(t *testing.T) {
 
 		Convey("OS101: 创建带SSL配置的OpenSearch catalog（SSL禁用）", func() {
 			payload := builder.BuildCreatePayloadWithSSL(false)
-			resp := client.POST("/api/vega-manager/v1/catalogs", payload)
+			resp := client.POST("/api/vega-backend/v1/catalogs", payload)
 			So(resp.StatusCode, ShouldEqual, http.StatusCreated)
 			So(resp.Body["id"], ShouldNotBeEmpty)
 		})
@@ -71,20 +71,20 @@ func TestOpenSearchSpecificCreate(t *testing.T) {
 				"discovery_interval": "10m",
 			}
 			payload := builder.BuildCreatePayloadWithOptions(options)
-			resp := client.POST("/api/vega-manager/v1/catalogs", payload)
+			resp := client.POST("/api/vega-backend/v1/catalogs", payload)
 			So(resp.StatusCode, ShouldEqual, http.StatusCreated)
 			So(resp.Body["id"], ShouldNotBeEmpty)
 		})
 
 		Convey("OS103: 创建OpenSearch catalog后验证connector_type", func() {
 			payload := builder.BuildCreatePayload()
-			createResp := client.POST("/api/vega-manager/v1/catalogs", payload)
+			createResp := client.POST("/api/vega-backend/v1/catalogs", payload)
 			So(createResp.StatusCode, ShouldEqual, http.StatusCreated)
 
 			catalogID := createResp.Body["id"].(string)
 
 			// 查询验证
-			getResp := client.GET("/api/vega-manager/v1/catalogs/" + catalogID)
+			getResp := client.GET("/api/vega-backend/v1/catalogs/" + catalogID)
 			So(getResp.StatusCode, ShouldEqual, http.StatusOK)
 
 			catalog := fixtures.ExtractFromEntriesResponse(getResp)
@@ -94,13 +94,13 @@ func TestOpenSearchSpecificCreate(t *testing.T) {
 
 		Convey("OS104: 创建完整字段的OpenSearch catalog", func() {
 			payload := builder.BuildFullCreatePayload()
-			resp := client.POST("/api/vega-manager/v1/catalogs", payload)
+			resp := client.POST("/api/vega-backend/v1/catalogs", payload)
 			So(resp.StatusCode, ShouldEqual, http.StatusCreated)
 			So(resp.Body["id"], ShouldNotBeEmpty)
 
 			// 验证返回的字段
 			catalogID := resp.Body["id"].(string)
-			getResp := client.GET("/api/vega-manager/v1/catalogs/" + catalogID)
+			getResp := client.GET("/api/vega-backend/v1/catalogs/" + catalogID)
 			catalog := fixtures.ExtractFromEntriesResponse(getResp)
 
 			So(catalog["comment"], ShouldEqual, "完整的OpenSearch测试catalog")
@@ -111,13 +111,13 @@ func TestOpenSearchSpecificCreate(t *testing.T) {
 
 		Convey("OS105: OpenSearch连接测试成功", func() {
 			payload := builder.BuildCreatePayload()
-			createResp := client.POST("/api/vega-manager/v1/catalogs", payload)
+			createResp := client.POST("/api/vega-backend/v1/catalogs", payload)
 			So(createResp.StatusCode, ShouldEqual, http.StatusCreated)
 
 			catalogID := createResp.Body["id"].(string)
 
 			// 测试连接
-			testResp := client.POST("/api/vega-manager/v1/catalogs/"+catalogID+"/test-connection", nil)
+			testResp := client.POST("/api/vega-backend/v1/catalogs/"+catalogID+"/test-connection", nil)
 			So(testResp.StatusCode, ShouldEqual, http.StatusOK)
 
 			if testResp.Body != nil {
@@ -128,13 +128,13 @@ func TestOpenSearchSpecificCreate(t *testing.T) {
 
 		Convey("OS106: 获取OpenSearch catalog健康状态", func() {
 			payload := builder.BuildCreatePayload()
-			createResp := client.POST("/api/vega-manager/v1/catalogs", payload)
+			createResp := client.POST("/api/vega-backend/v1/catalogs", payload)
 			So(createResp.StatusCode, ShouldEqual, http.StatusCreated)
 
 			catalogID := createResp.Body["id"].(string)
 
 			// 获取健康状态
-			statusResp := client.GET("/api/vega-manager/v1/catalogs/" + catalogID + "/health-status")
+			statusResp := client.GET("/api/vega-backend/v1/catalogs/" + catalogID + "/health-status")
 			So(statusResp.StatusCode, ShouldEqual, http.StatusOK)
 
 			if statusResp.Body != nil {
@@ -147,31 +147,31 @@ func TestOpenSearchSpecificCreate(t *testing.T) {
 
 		Convey("OS121: 无效端口测试（非数字）", func() {
 			payload := builder.BuildCreatePayloadWithInvalidPort()
-			resp := client.POST("/api/vega-manager/v1/catalogs", payload)
+			resp := client.POST("/api/vega-backend/v1/catalogs", payload)
 			So(resp.StatusCode, ShouldEqual, http.StatusBadRequest)
 		})
 
 		Convey("OS122: 缺少认证信息测试", func() {
 			payload := builder.BuildCreatePayloadWithMissingAuth()
-			resp := client.POST("/api/vega-manager/v1/catalogs", payload)
+			resp := client.POST("/api/vega-backend/v1/catalogs", payload)
 			So(resp.StatusCode, ShouldEqual, http.StatusBadRequest)
 		})
 
 		Convey("OS123: 错误凭证测试", func() {
 			payload := builder.BuildCreatePayloadWithWrongCredentials()
-			resp := client.POST("/api/vega-manager/v1/catalogs", payload)
+			resp := client.POST("/api/vega-backend/v1/catalogs", payload)
 			So(resp.StatusCode, ShouldEqual, http.StatusBadRequest)
 		})
 
 		Convey("OS124: 无效host测试", func() {
 			payload := builder.BuildCreatePayloadWithInvalidHost()
-			resp := client.POST("/api/vega-manager/v1/catalogs", payload)
+			resp := client.POST("/api/vega-backend/v1/catalogs", payload)
 			So(resp.StatusCode, ShouldEqual, http.StatusBadRequest)
 		})
 
 		Convey("OS125: 超出范围端口测试", func() {
 			payload := builder.BuildCreatePayloadWithOutOfRangePort()
-			resp := client.POST("/api/vega-manager/v1/catalogs", payload)
+			resp := client.POST("/api/vega-backend/v1/catalogs", payload)
 			So(resp.StatusCode, ShouldEqual, http.StatusBadRequest)
 		})
 
@@ -187,7 +187,7 @@ func TestOpenSearchSpecificCreate(t *testing.T) {
 					"use_ssl":  config.TargetOpenSearch.UseSSL,
 				},
 			}
-			resp := client.POST("/api/vega-manager/v1/catalogs", payload)
+			resp := client.POST("/api/vega-backend/v1/catalogs", payload)
 			So(resp.StatusCode, ShouldEqual, http.StatusBadRequest)
 		})
 
@@ -203,7 +203,7 @@ func TestOpenSearchSpecificCreate(t *testing.T) {
 					"use_ssl":  config.TargetOpenSearch.UseSSL,
 				},
 			}
-			resp := client.POST("/api/vega-manager/v1/catalogs", payload)
+			resp := client.POST("/api/vega-backend/v1/catalogs", payload)
 			So(resp.StatusCode, ShouldEqual, http.StatusBadRequest)
 		})
 
@@ -221,7 +221,7 @@ func TestOpenSearchSpecificCreate(t *testing.T) {
 					"use_ssl":  config.TargetOpenSearch.UseSSL,
 				},
 			}
-			resp := client.POST("/api/vega-manager/v1/catalogs", payload)
+			resp := client.POST("/api/vega-backend/v1/catalogs", payload)
 			// 端口1有效但可能无法连接，期望BadRequest（连接失败）
 			So(resp.StatusCode, ShouldEqual, http.StatusBadRequest)
 		})
@@ -238,7 +238,7 @@ func TestOpenSearchSpecificCreate(t *testing.T) {
 					"use_ssl":  config.TargetOpenSearch.UseSSL,
 				},
 			}
-			resp := client.POST("/api/vega-manager/v1/catalogs", payload)
+			resp := client.POST("/api/vega-backend/v1/catalogs", payload)
 			// 端口65535有效但可能无法连接，期望BadRequest（连接失败）
 			So(resp.StatusCode, ShouldEqual, http.StatusBadRequest)
 		})
@@ -255,7 +255,7 @@ func TestOpenSearchSpecificCreate(t *testing.T) {
 					"use_ssl":  config.TargetOpenSearch.UseSSL,
 				},
 			}
-			resp := client.POST("/api/vega-manager/v1/catalogs", payload)
+			resp := client.POST("/api/vega-backend/v1/catalogs", payload)
 			So(resp.StatusCode, ShouldEqual, http.StatusBadRequest)
 		})
 
@@ -271,7 +271,7 @@ func TestOpenSearchSpecificCreate(t *testing.T) {
 					"use_ssl":  config.TargetOpenSearch.UseSSL,
 				},
 			}
-			resp := client.POST("/api/vega-manager/v1/catalogs", payload)
+			resp := client.POST("/api/vega-backend/v1/catalogs", payload)
 			So(resp.StatusCode, ShouldEqual, http.StatusBadRequest)
 		})
 
@@ -287,7 +287,7 @@ func TestOpenSearchSpecificCreate(t *testing.T) {
 					"use_ssl":  config.TargetOpenSearch.UseSSL,
 				},
 			}
-			resp := client.POST("/api/vega-manager/v1/catalogs", payload)
+			resp := client.POST("/api/vega-backend/v1/catalogs", payload)
 			So(resp.StatusCode, ShouldEqual, http.StatusBadRequest)
 		})
 
@@ -303,7 +303,7 @@ func TestOpenSearchSpecificCreate(t *testing.T) {
 					"use_ssl":  config.TargetOpenSearch.UseSSL,
 				},
 			}
-			resp := client.POST("/api/vega-manager/v1/catalogs", payload)
+			resp := client.POST("/api/vega-backend/v1/catalogs", payload)
 			// 空用户名可能被接受（取决于业务规则），但连接会失败
 			So(resp.StatusCode, ShouldEqual, http.StatusBadRequest)
 		})
@@ -320,7 +320,7 @@ func TestOpenSearchSpecificCreate(t *testing.T) {
 					"use_ssl":  config.TargetOpenSearch.UseSSL,
 				},
 			}
-			resp := client.POST("/api/vega-manager/v1/catalogs", payload)
+			resp := client.POST("/api/vega-backend/v1/catalogs", payload)
 			// 空密码可能被接受（取决于业务规则），但连接会失败
 			So(resp.StatusCode, ShouldEqual, http.StatusBadRequest)
 		})
@@ -365,13 +365,13 @@ func TestOpenSearchSpecificRead(t *testing.T) {
 		Convey("OS201: 查询catalog - 验证所有字段返回", func() {
 			// 创建完整字段的catalog
 			payload := builder.BuildFullCreatePayload()
-			createResp := client.POST("/api/vega-manager/v1/catalogs", payload)
+			createResp := client.POST("/api/vega-backend/v1/catalogs", payload)
 			So(createResp.StatusCode, ShouldEqual, http.StatusCreated)
 
 			catalogID := createResp.Body["id"].(string)
 
 			// 查询catalog
-			getResp := client.GET("/api/vega-manager/v1/catalogs/" + catalogID)
+			getResp := client.GET("/api/vega-backend/v1/catalogs/" + catalogID)
 			So(getResp.StatusCode, ShouldEqual, http.StatusOK)
 
 			// 从响应中提取catalog对象
@@ -398,11 +398,11 @@ func TestOpenSearchSpecificRead(t *testing.T) {
 		Convey("OS202: 列表查询 - 按connector_type过滤opensearch", func() {
 			// 创建1个opensearch catalog
 			payload := builder.BuildCreatePayload()
-			createResp := client.POST("/api/vega-manager/v1/catalogs", payload)
+			createResp := client.POST("/api/vega-backend/v1/catalogs", payload)
 			So(createResp.StatusCode, ShouldEqual, http.StatusCreated)
 
 			// 查询physical类型（opensearch是physical类型）
-			physicalResp := client.GET("/api/vega-manager/v1/catalogs?type=physical&offset=0&limit=100")
+			physicalResp := client.GET("/api/vega-backend/v1/catalogs?type=physical&offset=0&limit=100")
 			So(physicalResp.StatusCode, ShouldEqual, http.StatusOK)
 
 			if physicalResp.Body != nil && physicalResp.Body["entries"] != nil {
@@ -421,25 +421,25 @@ func TestOpenSearchSpecificRead(t *testing.T) {
 			// 创建5个catalog
 			for i := 0; i < 5; i++ {
 				payload := builder.BuildCreatePayload()
-				resp := client.POST("/api/vega-manager/v1/catalogs", payload)
+				resp := client.POST("/api/vega-backend/v1/catalogs", payload)
 				So(resp.StatusCode, ShouldEqual, http.StatusCreated)
 			}
 
 			// 第一页
-			page1Resp := client.GET("/api/vega-manager/v1/catalogs?offset=0&limit=2")
+			page1Resp := client.GET("/api/vega-backend/v1/catalogs?offset=0&limit=2")
 			So(page1Resp.StatusCode, ShouldEqual, http.StatusOK)
 			entries1 := page1Resp.Body["entries"].([]any)
 			So(len(entries1), ShouldBeLessThanOrEqualTo, 2)
 
 			// 第二页
-			page2Resp := client.GET("/api/vega-manager/v1/catalogs?offset=2&limit=2")
+			page2Resp := client.GET("/api/vega-backend/v1/catalogs?offset=2&limit=2")
 			So(page2Resp.StatusCode, ShouldEqual, http.StatusOK)
 			entries2 := page2Resp.Body["entries"].([]any)
 			So(len(entries2), ShouldBeLessThanOrEqualTo, 2)
 		})
 
 		Convey("OS204: 列表查询 - 默认分页参数", func() {
-			defaultResp := client.GET("/api/vega-manager/v1/catalogs")
+			defaultResp := client.GET("/api/vega-backend/v1/catalogs")
 			So(defaultResp.StatusCode, ShouldEqual, http.StatusOK)
 			So(defaultResp.Body, ShouldNotBeNil)
 			So(defaultResp.Body["entries"], ShouldNotBeNil)
@@ -449,12 +449,12 @@ func TestOpenSearchSpecificRead(t *testing.T) {
 
 		Convey("OS205: 查询验证connector_config字段", func() {
 			payload := builder.BuildCreatePayload()
-			createResp := client.POST("/api/vega-manager/v1/catalogs", payload)
+			createResp := client.POST("/api/vega-backend/v1/catalogs", payload)
 			So(createResp.StatusCode, ShouldEqual, http.StatusCreated)
 
 			catalogID := createResp.Body["id"].(string)
 
-			getResp := client.GET("/api/vega-manager/v1/catalogs/" + catalogID)
+			getResp := client.GET("/api/vega-backend/v1/catalogs/" + catalogID)
 			So(getResp.StatusCode, ShouldEqual, http.StatusOK)
 
 			catalog := fixtures.ExtractFromEntriesResponse(getResp)
@@ -507,13 +507,13 @@ func TestOpenSearchSpecificUpdate(t *testing.T) {
 		Convey("OS301: 整体更新catalog connector_config", func() {
 			// 创建catalog
 			payload := builder.BuildCreatePayload()
-			createResp := client.POST("/api/vega-manager/v1/catalogs", payload)
+			createResp := client.POST("/api/vega-backend/v1/catalogs", payload)
 			So(createResp.StatusCode, ShouldEqual, http.StatusCreated)
 
 			catalogID := createResp.Body["id"].(string)
 
 			// 获取原始数据
-			getResp := client.GET("/api/vega-manager/v1/catalogs/" + catalogID)
+			getResp := client.GET("/api/vega-backend/v1/catalogs/" + catalogID)
 			originalData := fixtures.ExtractFromEntriesResponse(getResp)
 
 			// 基于原数据构建更新payload
@@ -532,20 +532,20 @@ func TestOpenSearchSpecificUpdate(t *testing.T) {
 					},
 				},
 			})
-			updateResp := client.PUT("/api/vega-manager/v1/catalogs/"+catalogID, updatePayload)
+			updateResp := client.PUT("/api/vega-backend/v1/catalogs/"+catalogID, updatePayload)
 			So(updateResp.StatusCode, ShouldEqual, http.StatusNoContent)
 		})
 
 		Convey("OS302: 同时更新多个字段", func() {
 			// 创建catalog
 			payload := builder.BuildCreatePayload()
-			createResp := client.POST("/api/vega-manager/v1/catalogs", payload)
+			createResp := client.POST("/api/vega-backend/v1/catalogs", payload)
 			So(createResp.StatusCode, ShouldEqual, http.StatusCreated)
 
 			catalogID := createResp.Body["id"].(string)
 
 			// 获取原始数据
-			getResp := client.GET("/api/vega-manager/v1/catalogs/" + catalogID)
+			getResp := client.GET("/api/vega-backend/v1/catalogs/" + catalogID)
 			originalData := fixtures.ExtractFromEntriesResponse(getResp)
 
 			// 基于原数据构建更新payload
@@ -555,34 +555,34 @@ func TestOpenSearchSpecificUpdate(t *testing.T) {
 				"tags":    []string{"multi-update", "opensearch", "test"},
 			})
 
-			updateResp := client.PUT("/api/vega-manager/v1/catalogs/"+catalogID, updatePayload)
+			updateResp := client.PUT("/api/vega-backend/v1/catalogs/"+catalogID, updatePayload)
 			So(updateResp.StatusCode, ShouldEqual, http.StatusNoContent)
 		})
 
 		Convey("OS303: 更新name超长", func() {
 			// 创建catalog
 			payload := builder.BuildCreatePayload()
-			createResp := client.POST("/api/vega-manager/v1/catalogs", payload)
+			createResp := client.POST("/api/vega-backend/v1/catalogs", payload)
 			So(createResp.StatusCode, ShouldEqual, http.StatusCreated)
 
 			catalogID := createResp.Body["id"].(string)
 
 			// 获取原始数据
-			getResp := client.GET("/api/vega-manager/v1/catalogs/" + catalogID)
+			getResp := client.GET("/api/vega-backend/v1/catalogs/" + catalogID)
 			originalData := fixtures.ExtractFromEntriesResponse(getResp)
 
 			// 基于原数据构建更新payload（超长name）
 			updatePayload := catalogfixtures.BuildUpdatePayload(originalData, map[string]any{
 				"name": strings.Repeat("a", 129),
 			})
-			updateResp := client.PUT("/api/vega-manager/v1/catalogs/"+catalogID, updatePayload)
+			updateResp := client.PUT("/api/vega-backend/v1/catalogs/"+catalogID, updatePayload)
 			So(updateResp.StatusCode, ShouldEqual, http.StatusBadRequest)
 		})
 
 		Convey("OS304: 验证update_time更新", func() {
 			// 创建catalog
 			payload := builder.BuildCreatePayload()
-			createResp := client.POST("/api/vega-manager/v1/catalogs", payload)
+			createResp := client.POST("/api/vega-backend/v1/catalogs", payload)
 			So(createResp.StatusCode, ShouldEqual, http.StatusCreated)
 
 			catalogID := createResp.Body["id"].(string)
@@ -591,7 +591,7 @@ func TestOpenSearchSpecificUpdate(t *testing.T) {
 			time.Sleep(1 * time.Second)
 
 			// 获取原始数据
-			getResp := client.GET("/api/vega-manager/v1/catalogs/" + catalogID)
+			getResp := client.GET("/api/vega-backend/v1/catalogs/" + catalogID)
 			originalData := fixtures.ExtractFromEntriesResponse(getResp)
 			originalUpdateTime := originalData["update_time"].(float64)
 
@@ -599,11 +599,11 @@ func TestOpenSearchSpecificUpdate(t *testing.T) {
 			updatePayload := catalogfixtures.BuildUpdatePayload(originalData, map[string]any{
 				"comment": "验证update_time更新",
 			})
-			updateResp := client.PUT("/api/vega-manager/v1/catalogs/"+catalogID, updatePayload)
+			updateResp := client.PUT("/api/vega-backend/v1/catalogs/"+catalogID, updatePayload)
 			So(updateResp.StatusCode, ShouldEqual, http.StatusNoContent)
 
 			// 验证update_time已更新
-			newGetResp := client.GET("/api/vega-manager/v1/catalogs/" + catalogID)
+			newGetResp := client.GET("/api/vega-backend/v1/catalogs/" + catalogID)
 			newData := fixtures.ExtractFromEntriesResponse(newGetResp)
 			newUpdateTime := newData["update_time"].(float64)
 			So(newUpdateTime, ShouldBeGreaterThan, originalUpdateTime)
@@ -612,13 +612,13 @@ func TestOpenSearchSpecificUpdate(t *testing.T) {
 		Convey("OS305: 验证create_time不变", func() {
 			// 创建catalog
 			payload := builder.BuildCreatePayload()
-			createResp := client.POST("/api/vega-manager/v1/catalogs", payload)
+			createResp := client.POST("/api/vega-backend/v1/catalogs", payload)
 			So(createResp.StatusCode, ShouldEqual, http.StatusCreated)
 
 			catalogID := createResp.Body["id"].(string)
 
 			// 获取原始数据
-			getResp := client.GET("/api/vega-manager/v1/catalogs/" + catalogID)
+			getResp := client.GET("/api/vega-backend/v1/catalogs/" + catalogID)
 			originalData := fixtures.ExtractFromEntriesResponse(getResp)
 			originalCreateTime := originalData["create_time"].(float64)
 
@@ -626,11 +626,11 @@ func TestOpenSearchSpecificUpdate(t *testing.T) {
 			updatePayload := catalogfixtures.BuildUpdatePayload(originalData, map[string]any{
 				"comment": "验证create_time不变",
 			})
-			updateResp := client.PUT("/api/vega-manager/v1/catalogs/"+catalogID, updatePayload)
+			updateResp := client.PUT("/api/vega-backend/v1/catalogs/"+catalogID, updatePayload)
 			So(updateResp.StatusCode, ShouldEqual, http.StatusNoContent)
 
 			// 验证create_time不变
-			newGetResp := client.GET("/api/vega-manager/v1/catalogs/" + catalogID)
+			newGetResp := client.GET("/api/vega-backend/v1/catalogs/" + catalogID)
 			newData := fixtures.ExtractFromEntriesResponse(newGetResp)
 			newCreateTime := newData["create_time"].(float64)
 			So(newCreateTime, ShouldEqual, originalCreateTime)
@@ -644,9 +644,9 @@ func TestOpenSearchSpecificUpdate(t *testing.T) {
 // 编号规则：OS4xx为OpenSearch特定删除测试
 func TestOpenSearchSpecificDelete(t *testing.T) {
 	var (
-		ctx    context.Context
-		config *setup.TestConfig
-		client *testutil.HTTPClient
+		ctx     context.Context
+		config  *setup.TestConfig
+		client  *testutil.HTTPClient
 		builder *catalogfixtures.OpenSearchPayloadBuilder
 	)
 
@@ -676,17 +676,17 @@ func TestOpenSearchSpecificDelete(t *testing.T) {
 		Convey("OS401: 删除后不能更新", func() {
 			// 创建catalog
 			payload := builder.BuildCreatePayload()
-			createResp := client.POST("/api/vega-manager/v1/catalogs", payload)
+			createResp := client.POST("/api/vega-backend/v1/catalogs", payload)
 			So(createResp.StatusCode, ShouldEqual, http.StatusCreated)
 
 			catalogID := createResp.Body["id"].(string)
 
 			// 删除catalog
-			deleteResp := client.DELETE("/api/vega-manager/v1/catalogs/" + catalogID)
+			deleteResp := client.DELETE("/api/vega-backend/v1/catalogs/" + catalogID)
 			So(deleteResp.StatusCode, ShouldEqual, http.StatusNoContent)
 
 			// 尝试更新已删除的catalog
-			updateResp := client.PUT("/api/vega-manager/v1/catalogs/"+catalogID, payload)
+			updateResp := client.PUT("/api/vega-backend/v1/catalogs/"+catalogID, payload)
 			So(updateResp.StatusCode, ShouldEqual, http.StatusNotFound)
 		})
 
@@ -694,19 +694,19 @@ func TestOpenSearchSpecificDelete(t *testing.T) {
 			// 创建catalog
 			payload := builder.BuildCreatePayload()
 			catalogName := payload["name"]
-			createResp1 := client.POST("/api/vega-manager/v1/catalogs", payload)
+			createResp1 := client.POST("/api/vega-backend/v1/catalogs", payload)
 			So(createResp1.StatusCode, ShouldEqual, http.StatusCreated)
 
 			catalogID1 := createResp1.Body["id"].(string)
 
 			// 删除catalog
-			deleteResp := client.DELETE("/api/vega-manager/v1/catalogs/" + catalogID1)
+			deleteResp := client.DELETE("/api/vega-backend/v1/catalogs/" + catalogID1)
 			So(deleteResp.StatusCode, ShouldEqual, http.StatusNoContent)
 
 			// 创建同名catalog
 			payload2 := builder.BuildCreatePayload()
 			payload2["name"] = catalogName
-			createResp2 := client.POST("/api/vega-manager/v1/catalogs", payload2)
+			createResp2 := client.POST("/api/vega-backend/v1/catalogs", payload2)
 
 			So(createResp2.StatusCode, ShouldEqual, http.StatusCreated)
 
@@ -718,17 +718,17 @@ func TestOpenSearchSpecificDelete(t *testing.T) {
 		Convey("OS403: 删除包含完整字段的catalog", func() {
 			// 创建包含所有字段的catalog
 			payload := builder.BuildFullCreatePayload()
-			createResp := client.POST("/api/vega-manager/v1/catalogs", payload)
+			createResp := client.POST("/api/vega-backend/v1/catalogs", payload)
 			So(createResp.StatusCode, ShouldEqual, http.StatusCreated)
 
 			catalogID := createResp.Body["id"].(string)
 
 			// 删除
-			deleteResp := client.DELETE("/api/vega-manager/v1/catalogs/" + catalogID)
+			deleteResp := client.DELETE("/api/vega-backend/v1/catalogs/" + catalogID)
 			So(deleteResp.StatusCode, ShouldEqual, http.StatusNoContent)
 
 			// 验证删除成功
-			getResp := client.GET("/api/vega-manager/v1/catalogs/" + catalogID)
+			getResp := client.GET("/api/vega-backend/v1/catalogs/" + catalogID)
 			So(getResp.StatusCode, ShouldEqual, http.StatusNotFound)
 		})
 
@@ -737,20 +737,20 @@ func TestOpenSearchSpecificDelete(t *testing.T) {
 			catalogIDs := make([]string, 3)
 			for i := 0; i < 3; i++ {
 				payload := builder.BuildCreatePayload()
-				createResp := client.POST("/api/vega-manager/v1/catalogs", payload)
+				createResp := client.POST("/api/vega-backend/v1/catalogs", payload)
 				So(createResp.StatusCode, ShouldEqual, http.StatusCreated)
 				catalogIDs[i] = createResp.Body["id"].(string)
 			}
 
 			// 依次删除
 			for _, catalogID := range catalogIDs {
-				deleteResp := client.DELETE("/api/vega-manager/v1/catalogs/" + catalogID)
+				deleteResp := client.DELETE("/api/vega-backend/v1/catalogs/" + catalogID)
 				So(deleteResp.StatusCode, ShouldEqual, http.StatusNoContent)
 			}
 
 			// 验证所有catalog都已删除
 			for _, catalogID := range catalogIDs {
-				getResp := client.GET("/api/vega-manager/v1/catalogs/" + catalogID)
+				getResp := client.GET("/api/vega-backend/v1/catalogs/" + catalogID)
 				So(getResp.StatusCode, ShouldEqual, http.StatusNotFound)
 			}
 		})
@@ -759,17 +759,17 @@ func TestOpenSearchSpecificDelete(t *testing.T) {
 			// 创建catalog
 			payload := builder.BuildCreatePayload()
 			catalogName := payload["name"]
-			createResp := client.POST("/api/vega-manager/v1/catalogs", payload)
+			createResp := client.POST("/api/vega-backend/v1/catalogs", payload)
 			So(createResp.StatusCode, ShouldEqual, http.StatusCreated)
 
 			catalogID := createResp.Body["id"].(string)
 
 			// 删除catalog
-			deleteResp := client.DELETE("/api/vega-manager/v1/catalogs/" + catalogID)
+			deleteResp := client.DELETE("/api/vega-backend/v1/catalogs/" + catalogID)
 			So(deleteResp.StatusCode, ShouldEqual, http.StatusNoContent)
 
 			// 查询列表
-			listResp := client.GET("/api/vega-manager/v1/catalogs?offset=0&limit=1000")
+			listResp := client.GET("/api/vega-backend/v1/catalogs?offset=0&limit=1000")
 			So(listResp.StatusCode, ShouldEqual, http.StatusOK)
 
 			if listResp.Body != nil && listResp.Body["entries"] != nil {
@@ -792,34 +792,34 @@ func TestOpenSearchSpecificDelete(t *testing.T) {
 		Convey("OS406: 删除catalog后健康状态不可查", func() {
 			// 创建catalog
 			payload := builder.BuildCreatePayload()
-			createResp := client.POST("/api/vega-manager/v1/catalogs", payload)
+			createResp := client.POST("/api/vega-backend/v1/catalogs", payload)
 			So(createResp.StatusCode, ShouldEqual, http.StatusCreated)
 
 			catalogID := createResp.Body["id"].(string)
 
 			// 删除catalog
-			deleteResp := client.DELETE("/api/vega-manager/v1/catalogs/" + catalogID)
+			deleteResp := client.DELETE("/api/vega-backend/v1/catalogs/" + catalogID)
 			So(deleteResp.StatusCode, ShouldEqual, http.StatusNoContent)
 
 			// 尝试查询健康状态
-			statusResp := client.GET("/api/vega-manager/v1/catalogs/" + catalogID + "/health-status")
+			statusResp := client.GET("/api/vega-backend/v1/catalogs/" + catalogID + "/health-status")
 			So(statusResp.StatusCode, ShouldEqual, http.StatusNotFound)
 		})
 
 		Convey("OS407: 删除catalog后不能测试连接", func() {
 			// 创建catalog
 			payload := builder.BuildCreatePayload()
-			createResp := client.POST("/api/vega-manager/v1/catalogs", payload)
+			createResp := client.POST("/api/vega-backend/v1/catalogs", payload)
 			So(createResp.StatusCode, ShouldEqual, http.StatusCreated)
 
 			catalogID := createResp.Body["id"].(string)
 
 			// 删除catalog
-			deleteResp := client.DELETE("/api/vega-manager/v1/catalogs/" + catalogID)
+			deleteResp := client.DELETE("/api/vega-backend/v1/catalogs/" + catalogID)
 			So(deleteResp.StatusCode, ShouldEqual, http.StatusNoContent)
 
 			// 尝试测试连接
-			testResp := client.POST("/api/vega-manager/v1/catalogs/"+catalogID+"/test-connection", nil)
+			testResp := client.POST("/api/vega-backend/v1/catalogs/"+catalogID+"/test-connection", nil)
 			So(testResp.StatusCode, ShouldEqual, http.StatusNotFound)
 		})
 
@@ -832,7 +832,7 @@ func TestOpenSearchSpecificDelete(t *testing.T) {
 
 			for _, invalidID := range invalidIDs {
 				Convey("无效ID: "+invalidID, func() {
-					deleteResp := client.DELETE("/api/vega-manager/v1/catalogs/" + invalidID)
+					deleteResp := client.DELETE("/api/vega-backend/v1/catalogs/" + invalidID)
 					So(deleteResp.StatusCode, ShouldEqual, http.StatusNotFound)
 				})
 			}
@@ -879,7 +879,7 @@ func TestOpenSearchConnectionVariations(t *testing.T) {
 				"timeout": "60s",
 			}
 			payload := builder.BuildCreatePayloadWithOptions(options)
-			resp := client.POST("/api/vega-manager/v1/catalogs", payload)
+			resp := client.POST("/api/vega-backend/v1/catalogs", payload)
 			So(resp.StatusCode, ShouldEqual, http.StatusCreated)
 		})
 
@@ -888,7 +888,7 @@ func TestOpenSearchConnectionVariations(t *testing.T) {
 				"max_retries": 10,
 			}
 			payload := builder.BuildCreatePayloadWithOptions(options)
-			resp := client.POST("/api/vega-manager/v1/catalogs", payload)
+			resp := client.POST("/api/vega-backend/v1/catalogs", payload)
 			So(resp.StatusCode, ShouldEqual, http.StatusCreated)
 		})
 
@@ -897,7 +897,7 @@ func TestOpenSearchConnectionVariations(t *testing.T) {
 				"compress": true,
 			}
 			payload := builder.BuildCreatePayloadWithOptions(options)
-			resp := client.POST("/api/vega-manager/v1/catalogs", payload)
+			resp := client.POST("/api/vega-backend/v1/catalogs", payload)
 			So(resp.StatusCode, ShouldEqual, http.StatusCreated)
 		})
 
@@ -909,13 +909,13 @@ func TestOpenSearchConnectionVariations(t *testing.T) {
 				"discovery_interval": "5m",
 			}
 			payload := builder.BuildCreatePayloadWithOptions(options)
-			resp := client.POST("/api/vega-manager/v1/catalogs", payload)
+			resp := client.POST("/api/vega-backend/v1/catalogs", payload)
 			So(resp.StatusCode, ShouldEqual, http.StatusCreated)
 		})
 
 		Convey("OS505: 创建带空options的catalog", func() {
 			payload := builder.BuildCreatePayloadWithOptions(map[string]any{})
-			resp := client.POST("/api/vega-manager/v1/catalogs", payload)
+			resp := client.POST("/api/vega-backend/v1/catalogs", payload)
 			So(resp.StatusCode, ShouldEqual, http.StatusCreated)
 		})
 	})

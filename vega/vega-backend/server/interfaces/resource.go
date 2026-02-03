@@ -30,7 +30,8 @@ type Resource struct {
 
 	Category string `json:"category"` // 资源类别：table/file/fileset/...
 
-	Status string `json:"status"` // 状态：active/stale/disabled
+	Status        string `json:"status"`         // 状态：active/stale/disabled
+	StatusMessage string `json:"status_message"` // 状态消息
 
 	// 新增字段：支持自动发现
 	Database         string         `json:"database,omitempty"`          // 所属数据库（实例级 Catalog 时填充）

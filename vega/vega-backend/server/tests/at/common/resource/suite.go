@@ -5,11 +5,11 @@ import (
 	"strings"
 	"testing"
 
-	"vega-manager/tests/at/fixtures"
-	catalogfixtures "vega-manager/tests/at/fixtures/catalog"
-	resourcefixtures "vega-manager/tests/at/fixtures/resource"
-	"vega-manager/tests/at/setup"
-	"vega-manager/tests/testutil"
+	"vega-backend/tests/at/fixtures"
+	catalogfixtures "vega-backend/tests/at/fixtures/catalog"
+	resourcefixtures "vega-backend/tests/at/fixtures/resource"
+	"vega-backend/tests/at/setup"
+	"vega-backend/tests/testutil"
 )
 
 // TestSuite Resource测试套件
@@ -85,7 +85,7 @@ func (s *TestSuite) Cleanup() {
 // 公开方法，支持跨Catalog唯一性测试等场景
 func (s *TestSuite) CreatePrerequisiteCatalog() (string, error) {
 	payload := s.CatalogBuilder.BuildCreatePayload()
-	resp := s.Client.POST("/api/vega-manager/v1/catalogs", payload)
+	resp := s.Client.POST("/api/vega-backend/v1/catalogs", payload)
 	if resp.StatusCode != 201 {
 		return "", fmt.Errorf("创建前置Catalog失败，状态码: %d", resp.StatusCode)
 	}
@@ -102,7 +102,7 @@ func (s *TestSuite) CreatePrerequisiteCatalog() (string, error) {
 
 // CreateResource 创建resource并返回ID和完整响应
 func (s *TestSuite) CreateResource(payload map[string]any) (string, *testutil.HTTPResponse) {
-	resp := s.Client.POST("/api/vega-manager/v1/resources", payload)
+	resp := s.Client.POST("/api/vega-backend/v1/resources", payload)
 	if resp.StatusCode == 201 {
 		if id, ok := resp.Body["id"].(string); ok {
 			return id, &resp
@@ -113,14 +113,14 @@ func (s *TestSuite) CreateResource(payload map[string]any) (string, *testutil.HT
 
 // GetResource 获取resource详情
 func (s *TestSuite) GetResource(resourceID string) *testutil.HTTPResponse {
-	resp := s.Client.GET("/api/vega-manager/v1/resources/" + resourceID)
+	resp := s.Client.GET("/api/vega-backend/v1/resources/" + resourceID)
 	return &resp
 }
 
 // GetResources 批量获取resources（逗号分隔IDs）
 func (s *TestSuite) GetResources(ids []string) *testutil.HTTPResponse {
 	idsStr := strings.Join(ids, ",")
-	resp := s.Client.GET("/api/vega-manager/v1/resources/" + idsStr)
+	resp := s.Client.GET("/api/vega-backend/v1/resources/" + idsStr)
 	return &resp
 }
 
@@ -132,33 +132,33 @@ func (s *TestSuite) GetResourceData(resourceID string) map[string]any {
 
 // UpdateResource 更新resource
 func (s *TestSuite) UpdateResource(resourceID string, payload map[string]any) *testutil.HTTPResponse {
-	resp := s.Client.PUT("/api/vega-manager/v1/resources/"+resourceID, payload)
+	resp := s.Client.PUT("/api/vega-backend/v1/resources/"+resourceID, payload)
 	return &resp
 }
 
 // DeleteResource 删除resource
 func (s *TestSuite) DeleteResource(resourceID string) *testutil.HTTPResponse {
-	resp := s.Client.DELETE("/api/vega-manager/v1/resources/" + resourceID)
+	resp := s.Client.DELETE("/api/vega-backend/v1/resources/" + resourceID)
 	return &resp
 }
 
 // DeleteResources 批量删除resources（逗号分隔IDs）
 func (s *TestSuite) DeleteResources(ids []string) *testutil.HTTPResponse {
 	idsStr := strings.Join(ids, ",")
-	resp := s.Client.DELETE("/api/vega-manager/v1/resources/" + idsStr)
+	resp := s.Client.DELETE("/api/vega-backend/v1/resources/" + idsStr)
 	return &resp
 }
 
 // ListResources 列表查询resources
 func (s *TestSuite) ListResources(offset, limit int) *testutil.HTTPResponse {
-	url := fmt.Sprintf("/api/vega-manager/v1/resources?offset=%d&limit=%d", offset, limit)
+	url := fmt.Sprintf("/api/vega-backend/v1/resources?offset=%d&limit=%d", offset, limit)
 	resp := s.Client.GET(url)
 	return &resp
 }
 
 // ListResourcesWithParams 带参数列表查询resources
 func (s *TestSuite) ListResourcesWithParams(params string) *testutil.HTTPResponse {
-	resp := s.Client.GET("/api/vega-manager/v1/resources?" + params)
+	resp := s.Client.GET("/api/vega-backend/v1/resources?" + params)
 	return &resp
 }
 

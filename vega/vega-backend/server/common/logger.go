@@ -3,12 +3,12 @@ package common
 import (
 	"github.com/kweaver-ai/kweaver-go-lib/logger"
 
-	"vega-manager/version"
+	"vega-backend/version"
 )
 
 const (
 	// 日志保存位置
-	logFileName = "/opt/vega-manager/logs/vega-manager.log"
+	logFileName = "/opt/vega-backend/logs/vega-backend.log"
 )
 
 // 获取日志句柄

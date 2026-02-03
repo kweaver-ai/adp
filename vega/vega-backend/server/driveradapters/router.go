@@ -11,13 +11,13 @@ import (
 	"github.com/kweaver-ai/kweaver-go-lib/middleware"
 	"github.com/kweaver-ai/kweaver-go-lib/rest"
 
-	"vega-manager/common"
-	"vega-manager/interfaces"
-	"vega-manager/logics/catalog"
-	connectortype "vega-manager/logics/connector_type"
-	discoverytask "vega-manager/logics/discovery_task"
-	"vega-manager/logics/resource"
-	"vega-manager/version"
+	"vega-backend/common"
+	"vega-backend/interfaces"
+	"vega-backend/logics/catalog"
+	connectortype "vega-backend/logics/connector_type"
+	discoverytask "vega-backend/logics/discovery_task"
+	"vega-backend/logics/resource"
+	"vega-backend/version"
 )
 
 // RestHandler interface
@@ -53,7 +53,7 @@ func (r *restHandler) RegisterPublic(engine *gin.Engine) {
 
 	engine.GET("/health", r.HealthCheck)
 
-	apiV1 := engine.Group("/api/vega-manager/v1")
+	apiV1 := engine.Group("/api/vega-backend/v1")
 	{
 		// Catalog APIs
 		catalogs := apiV1.Group("/catalogs")
@@ -90,11 +90,11 @@ func (r *restHandler) RegisterPublic(engine *gin.Engine) {
 			connectorTypes.POST("/:type/enabled", r.SetConnectorTypeEnabled)
 		}
 
-		// ConnectorType APIs
+		// DiscoveryTask APIs
 		discoveryTasks := apiV1.Group("/discovery-tasks")
 		{
 			discoveryTasks.GET("", r.ListDiscoveryTasks)
-			discoveryTasks.GET("/:taskId", r.GetDiscoveryTask)
+			discoveryTasks.GET("/:id", r.GetDiscoveryTask)
 		}
 	}
 
@@ -164,6 +164,6 @@ func (r *restHandler) generateAccountInfo(c *gin.Context) interfaces.AccountInfo
 func (h *restHandler) Health(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{
 		"status":  "healthy",
-		"service": "vega-manager",
+		"service": "vega-backend",
 	})
 }

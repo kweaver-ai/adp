@@ -1,13 +1,13 @@
 {{/* vim: set filetype=mustache: */}}
 {{/* Expand the name of the chart. */}}
 
-{{- define "vega-manager.name" -}}
+{{- define "vega-backend.name" -}}
 {{- printf "%s-%s" .Release.Name .Chart.Name | trunc 63 | trimSuffix "-" }}
 {{- end -}}
 
 
-{{/* Generate vega-manager image */}}
-{{- define "vega-manager.image" -}}
+{{/* Generate vega-backend image */}}
+{{- define "vega-backend.image" -}}
 {{- if .Values.image.registry }}
 {{- printf "%s/%s:%s" .Values.image.registry .Values.image.repository .Values.image.tag -}}
 {{- else -}}

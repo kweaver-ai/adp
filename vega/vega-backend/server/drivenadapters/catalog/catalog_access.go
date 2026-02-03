@@ -18,8 +18,8 @@ import (
 	"go.opentelemetry.io/otel/codes"
 	"go.opentelemetry.io/otel/trace"
 
-	"vega-manager/common"
-	"vega-manager/interfaces"
+	"vega-backend/common"
+	"vega-backend/interfaces"
 )
 
 const (

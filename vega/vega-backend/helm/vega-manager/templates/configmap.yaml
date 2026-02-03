@@ -4,7 +4,7 @@ metadata:
   name: {{ .Values.moduleName }}-cm
   namespace: {{ .Values.namespace }}
 data:
-  vega-manager-config.yaml: |
+  vega-backend-config.yaml: |
     server:
       {{- toYaml .Values.config.server | nindent 6 }}
     log:

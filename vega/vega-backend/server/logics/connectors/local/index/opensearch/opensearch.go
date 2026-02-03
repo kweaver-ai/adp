@@ -11,8 +11,8 @@ import (
 	"github.com/opensearch-project/opensearch-go/v2"
 	"github.com/opensearch-project/opensearch-go/v2/opensearchapi"
 
-	"vega-manager/interfaces"
-	"vega-manager/logics/connectors"
+	"vega-backend/interfaces"
+	"vega-backend/logics/connectors"
 )
 
 type opensearchConfig struct {
@@ -31,7 +31,7 @@ type OpenSearchConnector struct {
 }
 
 // NewOpenSearchConnector 创建 OpenSearch connector 构建器
-func NewOpenSearchConnector() connectors.Connector {
+func NewOpenSearchConnector() connectors.IndexConnector {
 	return &OpenSearchConnector{}
 }
 

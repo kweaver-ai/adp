@@ -15,7 +15,7 @@ import (
 	"github.com/kweaver-ai/kweaver-go-lib/rest"
 	"github.com/spf13/viper"
 
-	"vega-manager/version"
+	"vega-backend/version"
 )
 
 // ServerSetting server配置项
@@ -51,7 +51,7 @@ type AppSetting struct {
 
 const (
 	configPath string = "./config/"
-	configName string = "vega-manager-config"
+	configName string = "vega-backend-config"
 	configType string = "yaml"
 
 	rdsServiceName        string = "rds"
@@ -184,7 +184,7 @@ func SetOpenSearchSetting() {
 		Host:     setting["host"].(string),
 		Port:     setting["port"].(int),
 		Protocol: setting["protocol"].(string),
-		Username: setting["user"].(string),
+		Username: setting["username"].(string),
 		Password: setting["password"].(string),
 	}
 }

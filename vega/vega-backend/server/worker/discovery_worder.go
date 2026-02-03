@@ -11,13 +11,13 @@ import (
 	"github.com/kweaver-ai/kweaver-go-lib/logger"
 	mqclient "github.com/kweaver-ai/proton-mq-sdk-go"
 
-	"vega-manager/common"
-	"vega-manager/interfaces"
-	"vega-manager/logics/catalog"
-	"vega-manager/logics/connectors"
-	"vega-manager/logics/connectors/factory"
-	"vega-manager/logics/discovery_task"
-	"vega-manager/logics/resource"
+	"vega-backend/common"
+	"vega-backend/interfaces"
+	"vega-backend/logics/catalog"
+	"vega-backend/logics/connectors"
+	"vega-backend/logics/connectors/factory"
+	"vega-backend/logics/discovery_task"
+	"vega-backend/logics/resource"
 )
 
 var (
@@ -58,7 +58,7 @@ func NewDiscoveryWorker(appSetting *common.AppSetting) interfaces.DiscoveryWorke
 
 func Start(appSetting *common.AppSetting) {
 	dWorker = NewDiscoveryWorker(appSetting)
-	dWorker.Run()
+	go dWorker.Run()
 }
 
 func (dw *discoveryWorker) Run() {
@@ -92,7 +92,7 @@ func (dw *discoveryWorker) ExecuteDiscovery(ctx context.Context, taskID string) 
 		return err
 	}
 
-	catalog, err := dw.cs.GetByID(ctx, task.CatalogID)
+	catalog, err := dw.cs.GetByID(ctx, task.CatalogID, true)
 	if err != nil {
 		logger.Errorf("Failed to get catalog for task %s: %v", taskID, err)
 		return err

@@ -7,7 +7,7 @@ import (
 )
 
 var (
-	ServerName    string = "vega-manager"
+	ServerName    string = "vega-backend"
 	ServerVersion string = "1.0.0"
 	LanguageGo    string = "go"
 	GoVersion     string = runtime.Version()
@@ -18,7 +18,7 @@ func init() {
 	audit.DEFAULT_AUDIT_LOG_FROM = audit.AuditLogFrom{
 		Package: "Vega",
 		Service: audit.AuditLogFromService{
-			Name: "vega-manager",
+			Name: "vega-backend",
 		},
 	}
 }

@@ -58,8 +58,8 @@ spec:
         {{- end }}
       {{- end }}
       containers:
-      - name: vega-manager
-        image: {{ template "vega-manager.image" . }}
+      - name: vega-backend
+        image: {{ template "vega-backend.image" . }}
         imagePullPolicy: {{ .Values.image.pullPolicy }}
         ports:
           - name: manager
@@ -100,11 +100,11 @@ spec:
             value: {{ .Values.depServices.mq.mqType | quote }}
           {{- end }}
           - name: DM_SVC_PATH
-            value: /opt/vega-manager/config
+            value: /opt/vega-backend/config
         resources: {{- toYaml .Values.resources | nindent 10 }}
         volumeMounts:
           - name: {{ .Values.moduleName }}-cm
-            mountPath: /opt/vega-manager/config
+            mountPath: /opt/vega-backend/config
       restartPolicy: Always
       volumes:
       - name: {{ .Values.moduleName }}-cm
