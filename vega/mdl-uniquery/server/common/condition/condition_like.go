@@ -71,13 +71,15 @@ func (cond *LikeCond) Convert(ctx context.Context) (string, error) {
 }
 
 func (cond *LikeCond) Convert2SQL(ctx context.Context) (string, error) {
-	v := cond.mRealValue
-	if v == "" {
-		v = cond.mValue
+	// real_value: 内部接口调用，值已拼接好 %，支持自定义前缀/后缀匹配
+	// value: 前端传入，不带 %，后端自动转义特殊字符并添加 %value% 通配符
+	var vStr string
+	if cond.mRealValue != "" {
+		vStr = cond.mRealValue
+	} else {
+		vStr = "%" + Special.Replace(cond.mValue) + "%"
 	}
 
-	vStr := fmt.Sprintf("%v", v)
 	sqlStr := fmt.Sprintf(`"%s" LIKE '%s'`, cond.mFilterFieldName, vStr)
-
 	return sqlStr, nil
 }
