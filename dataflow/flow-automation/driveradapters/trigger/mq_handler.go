@@ -810,7 +810,7 @@ func (m *mqHandler) handleContentPipelineFulltextResult(message []byte) error {
 		return err
 	}
 
-	if !strings.HasPrefix(result.Job.Passback, "automation:") {
+	if result.Job == nil || !strings.HasPrefix(result.Job.Passback, "automation:") {
 		return nil
 	}
 
@@ -844,6 +844,12 @@ func (m *mqHandler) handleContentPipelineFulltextResult(message []byte) error {
 		taskStatus = entity.TaskInstanceStatusFailed
 		taskResult["code"] = result.Code
 		taskResult["description"] = result.Description
+	} else if result.Result == nil || result.Result.Value == nil {
+		log.Warnf("[handleContentPipelineFulltextResult] failed, result.Result.Value is nil")
+		update.Status = rds.TaskStatusFailed
+		update.ErrMsg = "result is empty"
+		taskStatus = entity.TaskInstanceStatusFailed
+		taskResult["description"] = "result is empty"
 	} else {
 		og := drivenadapters.NewOssGateWay()
 		servicePrefix := false
@@ -892,7 +898,6 @@ func (m *mqHandler) handleContentPipelineDocFormatConvertResult(message []byte) 
 
 	log := traceLog.WithContext(ctx)
 	log.Warnf("[handleContentPipelineDocFormatConvertResult] message: %s", string(message))
-
 	var result ContentPipelineResult[string, any]
 
 	err = json.Unmarshal(message, &result)
@@ -902,9 +907,7 @@ func (m *mqHandler) handleContentPipelineDocFormatConvertResult(message []byte) 
 		return err
 	}
 
-	ossPath, ok := result.Result.Value.(string)
-
-	if !strings.HasPrefix(result.Job.Passback, "automation:") || !ok {
+	if result.Job == nil || !strings.HasPrefix(result.Job.Passback, "automation:") {
 		return nil
 	}
 
@@ -939,13 +942,29 @@ func (m *mqHandler) handleContentPipelineDocFormatConvertResult(message []byte) 
 		taskStatus = entity.TaskInstanceStatusFailed
 		taskResult["code"] = result.Code
 		taskResult["description"] = result.Description
+	} else if result.Result == nil || result.Result.Value == nil {
+		log.Warnf("[handleContentPipelineDocFormatConvertResult] failed, result.Result.Value is nil")
+		update.Status = rds.TaskStatusFailed
+		update.ErrMsg = "result is empty"
+		taskStatus = entity.TaskInstanceStatusFailed
+		taskResult["description"] = "result is empty"
 	} else {
-		og := drivenadapters.NewOssGateWay()
-		servicePrefix := false
-		parts := strings.SplitN(ossPath, "/", 2)
-		ossID, objectKey := parts[0], parts[1]
-		reader := og.NewReader(ossID, objectKey, drivenadapters.OssOpt{StoragePrifix: &servicePrefix})
-		taskResult["url"], _ = reader.Url(ctx)
+		ossPath, ok := result.Result.Value.(string)
+		if !ok || ossPath == "" {
+			log.Warnf("[handleContentPipelineDocFormatConvertResult] failed, ossPath %s", ossPath)
+			update.Status = rds.TaskStatusFailed
+			update.ErrMsg = fmt.Sprintf("ossPath %s is invalid", ossPath)
+			taskStatus = entity.TaskInstanceStatusFailed
+			taskResult["description"] = fmt.Sprintf("ossPath %s is invalid", ossPath)
+			return nil
+		} else {
+			og := drivenadapters.NewOssGateWay()
+			servicePrefix := false
+			parts := strings.SplitN(ossPath, "/", 2)
+			ossID, objectKey := parts[0], parts[1]
+			reader := og.NewReader(ossID, objectKey, drivenadapters.OssOpt{StoragePrifix: &servicePrefix})
+			taskResult["url"], _ = reader.Url(ctx)
+		}
 	}
 
 	err = m.taskCache.Update(ctx, update)
