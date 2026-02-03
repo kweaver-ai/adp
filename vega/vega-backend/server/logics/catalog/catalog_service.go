@@ -13,7 +13,6 @@ import (
 	"github.com/kweaver-ai/kweaver-go-lib/logger"
 	o11y "github.com/kweaver-ai/kweaver-go-lib/observability"
 	"github.com/kweaver-ai/kweaver-go-lib/rest"
-	"github.com/mitchellh/mapstructure"
 	"github.com/rs/xid"
 	"go.opentelemetry.io/otel/codes"
 
@@ -87,16 +86,8 @@ func (cs *catalogService) Create(ctx context.Context, req *interfaces.CatalogReq
 		}
 
 		// 用解密后的明文 config 创建 connector 并测试连接
-		var connectorCfg interfaces.ConnectorConfig
-		if err := mapstructure.Decode(decryptedConfig, &connectorCfg); err != nil {
-			logger.Errorf("Failed to decode connector config: %v", err)
-			o11y.Error(ctx, fmt.Sprintf("Failed to decode connector config: %v", err))
-			span.SetStatus(codes.Error, "Decode connector config failed")
-			return "", rest.NewHTTPError(ctx, http.StatusBadRequest, oerrors.VegaManager_Catalog_InvalidParameter_ConnectorConfig).
-				WithErrorDetails(err.Error())
-		}
-
-		connector, err := factory.GetFactory().CreateConnectorInstance(ctx, req.ConnectorType, &connectorCfg)
+		connectorCfg := interfaces.ConnectorConfig(decryptedConfig)
+		connector, err := factory.GetFactory().CreateConnectorInstance(ctx, req.ConnectorType, connectorCfg)
 		if err != nil {
 			logger.Errorf("Failed to create connector: %v", err)
 			o11y.Error(ctx, fmt.Sprintf("Failed to create connector: %v", err))
@@ -255,16 +246,8 @@ func (cs *catalogService) Update(ctx context.Context, id string, req *interfaces
 		}
 
 		// 用解密后的明文 config 创建 connector 并测试连接
-		var connectorCfg interfaces.ConnectorConfig
-		if err := mapstructure.Decode(decryptedConfig, &connectorCfg); err != nil {
-			logger.Errorf("Failed to decode connector config: %v", err)
-			o11y.Error(ctx, fmt.Sprintf("Failed to decode connector config: %v", err))
-			span.SetStatus(codes.Error, "Decode connector config failed")
-			return rest.NewHTTPError(ctx, http.StatusBadRequest, oerrors.VegaManager_Catalog_InvalidParameter_ConnectorConfig).
-				WithErrorDetails(err.Error())
-		}
-
-		connector, err := factory.GetFactory().CreateConnectorInstance(ctx, req.ConnectorType, &connectorCfg)
+		connectorCfg := interfaces.ConnectorConfig(decryptedConfig)
+		connector, err := factory.GetFactory().CreateConnectorInstance(ctx, req.ConnectorType, connectorCfg)
 		if err != nil {
 			logger.Errorf("Failed to create connector: %v", err)
 			o11y.Error(ctx, fmt.Sprintf("Failed to create connector: %v", err))

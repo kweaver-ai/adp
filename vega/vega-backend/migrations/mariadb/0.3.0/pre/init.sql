@@ -259,6 +259,16 @@ CREATE TABLE t_connector_type (
     -- Remote 模式专用字段
     f_endpoint                VARCHAR(512) NOT NULL DEFAULT '' COMMENT '远程服务地址 (仅remote模式)',
 
+    -- 字段配置列表（JSON数组格式）
+    -- 示例：
+    -- [
+    --   {"name": "host", "type": "string", "comment": "主机地址", "required": true, "encrypted": false},
+    --   {"name": "port", "type": "integer", "comment": "端口号", "required": true, "encrypted": false},
+    --   {"name": "username", "type": "string", "comment": "用户名", "required": true, "encrypted": false},
+    --   {"name": "password", "type": "string", "comment": "密码", "required": true, "encrypted": true}
+    -- ]
+    f_field_config            MEDIUMTEXT NOT NULL COMMENT '字段配置列表（JSON数组格式，定义连接配置的结构）',
+
     -- 状态
     f_enabled                 BOOLEAN NOT NULL DEFAULT TRUE COMMENT '是否启用',
 
@@ -274,12 +284,29 @@ CREATE TABLE t_connector_type (
 -- ==========================================
 -- 6. 初始化内置 Local Connector
 -- ==========================================
-INSERT INTO t_connector_type (f_type, f_name, f_comment, f_mode, f_category, f_enabled)
-SELECT 'mysql', 'mysql', 'MySQL 关系型数据库连接器', 'local', 'table', TRUE
+INSERT INTO t_connector_type (f_type, f_name, f_comment, f_mode, f_category, f_field_config, f_enabled)
+SELECT 'mysql', 'mysql', 'MySQL 关系型数据库连接器', 'local', 'table',
+    '{
+        "host":      {"name":"主机地址","type":"string","description":"MySQL 服务器主机地址","required":true,"encrypted":false},
+        "port":      {"name":"端口号","type":"integer","description":"MySQL 服务器端口","required":true,"encrypted":false},
+        "username":  {"name":"用户名","type":"string","description":"数据库用户名","required":true,"encrypted":false},
+        "password":  {"name":"密码","type":"string","description":"数据库密码","required":true,"encrypted":true},
+        "databases": {"name":"数据库列表","type":"array","description":"数据库名称列表（可选，为空则连接实例级别）","required":false,"encrypted":false},
+        "options":   {"name":"连接参数","type":"object","description":"连接参数（如 charset, timeout 等）","required":false,"encrypted":false}
+    }',
+    TRUE
 FROM DUAL WHERE NOT EXISTS ( SELECT f_type FROM t_connector_type WHERE f_type = 'mysql' );
 
-INSERT INTO t_connector_type (f_type, f_name, f_comment, f_mode, f_category, f_enabled)
-SELECT 'opensearch', 'opensearch', 'OpenSearch 搜索引擎连接器', 'local', 'index', TRUE
+INSERT INTO t_connector_type (f_type, f_name, f_comment, f_mode, f_category, f_field_config, f_enabled)
+SELECT 'opensearch', 'opensearch', 'OpenSearch 搜索引擎连接器', 'local', 'index',
+    '{
+        "host":          {"name":"主机地址","type":"string","description":"OpenSearch 服务器主机地址","required":true,"encrypted":false},
+        "port":          {"name":"端口号","type":"integer","description":"OpenSearch 服务器端口","required":true,"encrypted":false},
+        "username":      {"name":"用户名","type":"string","description":"认证用户名","required":false,"encrypted":false},
+        "password":      {"name":"密码","type":"string","description":"认证密码","required":false,"encrypted":true},
+        "index_pattern": {"name":"索引模式","type":"string","description":"索引匹配模式（可选，如 log-*）","required":false,"encrypted":false}
+    }',
+    TRUE
 FROM DUAL WHERE NOT EXISTS ( SELECT f_type FROM t_connector_type WHERE f_type = 'opensearch' );
 
 

@@ -15,7 +15,7 @@ import (
 type RemoteConnector struct {
 	enabled  bool
 	connType *interfaces.ConnectorType
-	config   *interfaces.ConnectorConfig
+	config   interfaces.ConnectorConfig
 }
 
 // NewRemoteConnector 创建基础远程连接器
@@ -61,8 +61,14 @@ func (rc *RemoteConnector) GetSensitiveFields() []string {
 	return []string{"password"}
 }
 
+// GetFieldConfig returns the field configuration for this remote connector.
+// 从 ConnectorType 中获取字段配置
+func (rc *RemoteConnector) GetFieldConfig() map[string]interfaces.ConnectorFieldConfig {
+	return rc.connType.FieldConfig
+}
+
 // New 创建新的连接器实例
-func (rc *RemoteConnector) New(cfg *interfaces.ConnectorConfig) (connectors.Connector, error) {
+func (rc *RemoteConnector) New(cfg interfaces.ConnectorConfig) (connectors.Connector, error) {
 	return &RemoteConnector{
 		enabled:  rc.enabled,
 		connType: rc.connType,

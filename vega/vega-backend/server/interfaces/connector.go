@@ -2,15 +2,7 @@
 package interfaces
 
 // ConnectorConfig holds data source connection configuration.
-type ConnectorConfig struct {
-	Type     string         `json:"type" mapstructure:"type"`
-	Host     string         `json:"host" mapstructure:"host"`
-	Port     int            `json:"port" mapstructure:"port"`
-	Username string         `json:"username" mapstructure:"username"`
-	Password string         `json:"password" mapstructure:"password"`
-	Database string         `json:"database" mapstructure:"database"`
-	Options  map[string]any `json:"options" mapstructure:"options"`
-}
+type ConnectorConfig map[string]any
 
 // TableMeta represents table/asset metadata.
 type TableMeta struct {

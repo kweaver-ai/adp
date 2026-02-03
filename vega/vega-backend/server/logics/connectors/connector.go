@@ -20,7 +20,10 @@ type Connector interface {
 	// GetSensitiveFields 返回该 connector 的敏感字段列表（如 password）
 	GetSensitiveFields() []string
 
-	New(cfg *interfaces.ConnectorConfig) (Connector, error)
+	// GetFieldConfig 返回该 connector 的字段配置定义（兼容 JSON Schema properties）
+	GetFieldConfig() map[string]interfaces.ConnectorFieldConfig
+
+	New(cfg interfaces.ConnectorConfig) (Connector, error)
 
 	Connect(ctx context.Context) error
 	Close(ctx context.Context) error

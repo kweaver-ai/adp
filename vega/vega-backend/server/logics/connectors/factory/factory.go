@@ -4,6 +4,7 @@ package factory
 import (
 	"context"
 	"fmt"
+	"reflect"
 	"sync"
 
 	"vega-manager/common"
@@ -81,6 +82,12 @@ func (cf *ConnectorFactory) RegisterConnector(ctx context.Context, tp string, ct
 	connector, exist := cf.connectors[tp]
 	if exist {
 		if ct.Mode == interfaces.ConnectorModeLocal {
+			// 验证 FieldConfig 一致性（代码是单一真相来源）
+			codeFieldConfig := connector.GetFieldConfig()
+			if !reflect.DeepEqual(codeFieldConfig, ct.FieldConfig) {
+				logger.Fatalf("FieldConfig mismatch for connector type %s:\n  Code: %+v\n  DB:   %+v\nPlease update database migration to match code definition.",
+					tp, codeFieldConfig, ct.FieldConfig)
+			}
 			connector.SetEnabled(ct.Enabled)
 		} else {
 			connector := remote.NewRemoteConnector(ct)
@@ -133,7 +140,7 @@ func (cf *ConnectorFactory) SetConnectorEnabled(ctx context.Context, tp string, 
 }
 
 // CreateConnector 根据类型名称创建 connector 实例
-func (cf *ConnectorFactory) CreateConnectorInstance(ctx context.Context, tp string, cfg *interfaces.ConnectorConfig) (connectors.Connector, error) {
+func (cf *ConnectorFactory) CreateConnectorInstance(ctx context.Context, tp string, cfg interfaces.ConnectorConfig) (connectors.Connector, error) {
 	cf.mu.Lock()
 	defer cf.mu.Unlock()
 

@@ -16,15 +16,25 @@ const (
 	ConnectorCategoryAPI     string = "api"     // API 服务
 )
 
+// ConnectorFieldConfig 定义连接器配置字段的元数据（兼容 JSON Schema properties）
+type ConnectorFieldConfig struct {
+	Name        string `json:"name"`        // 字段显示名
+	Type        string `json:"type"`        // 字段类型: string, integer, number, boolean, object, array
+	Description string `json:"description"` // 字段描述
+	Required    bool   `json:"required"`    // 是否必填
+	Encrypted   bool   `json:"encrypted"`   // 是否需要加密存储（自定义扩展）
+}
+
 // ConnectorType 表示一个已注册的 connector 类型
 type ConnectorType struct {
-	Type     string `json:"type"`
-	Name     string `json:"name"`     // mysql, postgresql, kafka...
-	Comment  string `json:"comment"`  // 类型描述
-	Mode     string `json:"mode"`     // local | remote
-	Category string `json:"category"` // table | index | topic | file | fileset | metric | api
-	Endpoint string `json:"endpoint"` // 仅 remote 模式，远程服务地址
-	Enabled  bool   `json:"enabled"`  // 是否启用
+	Type        string                          `json:"type"`
+	Name        string                          `json:"name"`         // mysql, postgresql, kafka...
+	Comment     string                          `json:"comment"`      // 类型描述
+	Mode        string                          `json:"mode"`         // local | remote
+	Category    string                          `json:"category"`     // table | index | topic | file | fileset | metric | api
+	Endpoint    string                          `json:"endpoint"`     // 仅 remote 模式，远程服务地址
+	FieldConfig map[string]ConnectorFieldConfig `json:"field_config"` // 字段配置（兼容 JSON Schema properties）
+	Enabled     bool                            `json:"enabled"`      // 是否启用
 }
 
 // ConnectorTypesQueryParams 查询参数
@@ -35,15 +45,16 @@ type ConnectorTypesQueryParams struct {
 	Enabled  *bool  // 按启用状态筛选
 }
 
-// ConnectorType 表示一个已注册的 connector 类型
+// ConnectorTypeReq 表示创建/更新 connector 类型的请求
 type ConnectorTypeReq struct {
-	Type     string `json:"type"`
-	Name     string `json:"name"`     // mysql, postgresql, kafka...
-	Comment  string `json:"comment"`  // 类型描述
-	Mode     string `json:"mode"`     // local | remote
-	Category string `json:"category"` // table | index | topic | file | fileset | metric | api
-	Endpoint string `json:"endpoint"` // 仅 remote 模式，远程服务地址
-	Enabled  bool   `json:"enabled"`  // 是否启用
+	Type        string                          `json:"type"`
+	Name        string                          `json:"name"`         // mysql, postgresql, kafka...
+	Comment     string                          `json:"comment"`      // 类型描述
+	Mode        string                          `json:"mode"`         // local | remote
+	Category    string                          `json:"category"`     // table | index | topic | file | fileset | metric | api
+	Endpoint    string                          `json:"endpoint"`     // 仅 remote 模式，远程服务地址
+	FieldConfig map[string]ConnectorFieldConfig `json:"field_config"` // 字段配置（兼容 JSON Schema properties）
+	Enabled     bool                            `json:"enabled"`      // 是否启用
 
 	OriginConnectorType *ConnectorType `json:"-"`
 }

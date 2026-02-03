@@ -8,10 +8,20 @@ import (
 	"net/url"
 
 	sq "github.com/Masterminds/squirrel"
+	"github.com/mitchellh/mapstructure"
 
 	"vega-manager/interfaces"
 	"vega-manager/logics/connectors"
 )
+
+type mysqlConfig struct {
+	Host      string         `mapstructure:"host"`
+	Port      int            `mapstructure:"port"`
+	Username  string         `mapstructure:"username"`
+	Password  string         `mapstructure:"password"`
+	Databases []string       `mapstructure:"databases"`
+	Options   map[string]any `mapstructure:"options"`
+}
 
 var (
 	SYSTEM_DBS = []string{
@@ -32,7 +42,7 @@ var (
 type MySQLConnector struct {
 	enabled bool
 
-	config *interfaces.ConnectorConfig
+	config *mysqlConfig
 
 	connected bool
 	db        *sql.DB
@@ -78,14 +88,32 @@ func (c *MySQLConnector) GetSensitiveFields() []string {
 	return []string{"password"}
 }
 
+// GetFieldConfig returns the field configuration for MySQL connector.
+func (c *MySQLConnector) GetFieldConfig() map[string]interfaces.ConnectorFieldConfig {
+	return map[string]interfaces.ConnectorFieldConfig{
+		"host":      {Name: "主机地址", Type: "string", Description: "MySQL 服务器主机地址", Required: true, Encrypted: false},
+		"port":      {Name: "端口号", Type: "integer", Description: "MySQL 服务器端口", Required: true, Encrypted: false},
+		"username":  {Name: "用户名", Type: "string", Description: "数据库用户名", Required: true, Encrypted: false},
+		"password":  {Name: "密码", Type: "string", Description: "数据库密码", Required: true, Encrypted: true},
+		"databases": {Name: "数据库列表", Type: "array", Description: "数据库名称列表（可选，为空则连接实例级别）", Required: false, Encrypted: false},
+		"options":   {Name: "连接参数", Type: "object", Description: "连接参数（如 charset, timeout 等）", Required: false, Encrypted: false},
+	}
+}
+
 // New creates a new MySQL connector.
 // Database 为可选字段，不指定时连接到实例级别。
-func (c *MySQLConnector) New(cfg *interfaces.ConnectorConfig) (connectors.Connector, error) {
-	if cfg.Host == "" || cfg.Port == 0 || cfg.Username == "" || cfg.Password == "" {
+// New creates a new MySQL connector.
+func (c *MySQLConnector) New(cfg interfaces.ConnectorConfig) (connectors.Connector, error) {
+	var mCfg mysqlConfig
+	if err := mapstructure.Decode(cfg, &mCfg); err != nil {
+		return nil, fmt.Errorf("failed to decode mysql config: %w", err)
+	}
+
+	if mCfg.Host == "" || mCfg.Port == 0 || mCfg.Username == "" || mCfg.Password == "" {
 		return nil, fmt.Errorf("mysql connector config is incomplete")
 	}
 	return &MySQLConnector{
-		config: cfg,
+		config: &mCfg,
 	}, nil
 }
 
@@ -106,9 +134,9 @@ func (c *MySQLConnector) Connect(ctx context.Context) error {
 		values.Set(k, fmt.Sprintf("%v", v))
 	}
 
-	dsn := fmt.Sprintf("%s:%s@tcp(%s:%d)/%s?%s",
+	dsn := fmt.Sprintf("%s:%s@tcp(%s:%d)/?%s",
 		c.config.Username, c.config.Password, c.config.Host, c.config.Port,
-		c.config.Database, values.Encode())
+		values.Encode())
 
 	db, err := sql.Open("mysql", dsn)
 	if err != nil {
@@ -193,8 +221,8 @@ func (c *MySQLConnector) ListTables(ctx context.Context) ([]*interfaces.TableMet
 	).From("information_schema.TABLES")
 
 	// Filter databases
-	if c.config.Database != "" {
-		builder = builder.Where(sq.Eq{"TABLE_SCHEMA": c.config.Database})
+	if len(c.config.Databases) > 0 {
+		builder = builder.Where(sq.Eq{"TABLE_SCHEMA": c.config.Databases})
 	} else {
 		builder = builder.Where(sq.NotEq{"TABLE_SCHEMA": SYSTEM_DBS})
 	}
