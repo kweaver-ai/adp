@@ -135,6 +135,15 @@ export const queryActionLogs = (knId: string, params: ActionType.QueryActionLogs
 };
 
 /**
+ * 获取行动执行日志详情
+ * @param knId 知识网络ID
+ * @param logId 日志ID
+ */
+export const getActionExecutionLogDetail = (knId: string, logId: string): Promise<ActionType.ActionExecutionLogDetail> => {
+  return Request.get(`${BASE_URL_QUERY}/${knId}/action-logs/${logId}`);
+};
+
+/**
  * 取消行动执行
  * @param knId 知识网络ID
  * @param logId 日志ID (执行ID)
@@ -158,5 +167,6 @@ export default {
   executeActionType,
   getActionExecutionStatus,
   queryActionLogs,
+  getActionExecutionLogDetail,
   cancelActionExecution,
 };

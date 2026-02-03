@@ -250,19 +250,74 @@ export interface ActionExecution {
 }
 
 // 查询行动日志参数
-export interface QueryActionLogsRequest {
-  page?: number;
-  size?: number;
-  keyword?: string;
-  status?: ActionExecutionStatusEnum;
-  start_time?: number;
-  end_time?: number;
+export interface QueryActionLogsRequest { 
+  action_type_id?: string; // 按行动类过滤（可选）
+  status?: ActionExecutionStatusEnum; // 按状态过滤：pending/running/completed/failed/cancelled
+  trigger_type?: string; // 按触发类型：manual(手动)/schedule(定时)/event(事件)
+  start_time_range?: [number, number]; // 时间范围过滤
+  keyword?: string; // 按执行ID或实体唯一标识过滤
+  limit?: number; // 分页大小
+  need_total?: boolean; // 是否需要总数
+  search_after?: [number, string]; // 分页游标
+}
+
+// 行动执行日志条目
+export interface ActionExecutionLog {
+  id: string;
+  action_type_id: string;
+  action_type_name: string;
+  status: ActionExecutionStatusEnum;
+  trigger_type: string;
+  total_count: number;
+  success_count: number;
+  failed_count: number;
+  start_time: number;
+  duration_ms: number;
 }
 
 // 行动日志列表响应
 export interface ActionExecutionList {
-  entries: ActionExecution[];
+  entries: ActionExecutionLog[];
   total_count: number;
+  search_after?: [number, string];
+}
+
+// 行动执行日志详情结果项
+export interface ActionExecutionResult {
+  unique_identity: {
+    branch: string;
+    color: string;
+    icon: string;
+    id: string;
+    name: string;
+  };
+  status: 'success' | 'failed';
+  parameters: Record<string, any>;
+  result?: Record<string, any>;
+  error_message?: string;
+  duration_ms: number;
+  start_time: number;
+  end_time?: number;
+}
+
+// 行动执行日志详情
+export interface ActionExecutionLogDetail {
+  id: string;
+  kn_id: string;
+  action_type_id: string;
+  action_type_name: string;
+  action_source_type: string;
+  object_type_id: string;
+  trigger_type: string;
+  status: ActionExecutionStatusEnum;
+  total_count: number;
+  success_count: number;
+  failed_count: number;
+  results: ActionExecutionResult[];
+  executor_id: string;
+  start_time: number;
+  end_time: number;
+  duration_ms: number;
 }
 
 // 取消执行响应

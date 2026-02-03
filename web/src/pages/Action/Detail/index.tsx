@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import intl from 'react-intl-universal';
 import { Route, Switch, useHistory, useLocation, useParams, useRouteMatch, Redirect } from 'react-router-dom';
 import { LeftOutlined } from '@ant-design/icons';
+import { baseConfig } from '@/services/request';
 import { Button, message } from 'antd';
 import classnames from 'classnames';
 import actionApi from '@/services/action';
@@ -72,6 +73,7 @@ const ActionDetail = () => {
   }, [pathname]);
 
   useEffect(() => {
+    baseConfig?.toggleSideBarShow(false);
     if (knId && atId) {
       getDetail();
     }

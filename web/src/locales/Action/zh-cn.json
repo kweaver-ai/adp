@@ -35,6 +35,21 @@
     "overview": "概览",
     "viewTool": "{name}查看",
     "executeSuccess": "执行成功",
-    "executeFailed": "执行失败"
+    "executeFailed": "执行失败",
+    "manual": "手动",
+    "schedule": "定时",
+    "event": "事件",
+    "pending": "待执行",
+    "running": "执行中",
+    "completed": "已完成",
+    "failed": "已失败",
+    "cancelled": "已取消",
+    "basicInfo": "基本信息",
+    "taskExecution": "任务执行",
+    "executionInfo": "执行信息",
+    "executionDuration": "执行耗时",
+    "stop": "停止",
+    "confirmCancelExecution": "确认停止执行",
+    "confirmCancelExecutionDesc": "确定要停止当前任务的执行吗？"
   }
 }
