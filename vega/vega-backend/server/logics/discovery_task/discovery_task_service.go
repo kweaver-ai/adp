@@ -64,13 +64,14 @@ func (s *discoveryTaskService) Create(ctx context.Context, catalogID string) (*i
 
 	now := time.Now().UnixMilli()
 	task := &interfaces.DiscoveryTask{
-		ID:         xid.New().String(),
-		CatalogID:  catalogID,
-		Status:     interfaces.DiscoveryTaskStatusPending,
-		Progress:   0,
-		Message:    "",
-		Creator:    accountInfo,
-		CreateTime: now,
+		ID:          xid.New().String(),
+		CatalogID:   catalogID,
+		TriggerType: interfaces.DiscoveryTaskTriggerManual,
+		Status:      interfaces.DiscoveryTaskStatusPending,
+		Progress:    0,
+		Message:     "",
+		Creator:     accountInfo,
+		CreateTime:  now,
 	}
 
 	// 1. Write to database
@@ -110,17 +111,12 @@ func (s *discoveryTaskService) GetByID(ctx context.Context, id string) (*interfa
 }
 
 // List lists DiscoveryTasks for a catalog.
-func (s *discoveryTaskService) List(ctx context.Context, catalogID string, params interfaces.PaginationParams) ([]*interfaces.DiscoveryTask, int64, error) {
+func (s *discoveryTaskService) List(ctx context.Context, params interfaces.DiscoveryTaskQueryParams) ([]*interfaces.DiscoveryTask, int64, error) {
 	ctx, span := ar_trace.Tracer.Start(ctx, "DiscoveryTaskService.List",
 		trace.WithSpanKind(trace.SpanKindServer))
 	defer span.End()
 
-	queryParams := interfaces.DiscoveryTaskQueryParams{
-		PaginationParams: params,
-		CatalogID:        catalogID,
-	}
-
-	return s.dta.List(ctx, queryParams)
+	return s.dta.List(ctx, params)
 }
 
 // UpdateStatus updates a DiscoveryTask's status.

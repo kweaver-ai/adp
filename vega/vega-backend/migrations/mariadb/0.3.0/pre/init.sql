@@ -281,3 +281,37 @@ FROM DUAL WHERE NOT EXISTS ( SELECT f_type FROM t_connector_type WHERE f_type = 
 INSERT INTO t_connector_type (f_type, f_name, f_comment, f_mode, f_category, f_enabled)
 SELECT 'opensearch', 'opensearch', 'OpenSearch 搜索引擎连接器', 'local', 'index', TRUE
 FROM DUAL WHERE NOT EXISTS ( SELECT f_type FROM t_connector_type WHERE f_type = 'opensearch' );
+
+
+-- ==========================================
+-- 7. t_discovery_task 发现任务表
+-- ==========================================
+CREATE TABLE t_discovery_task (
+    -- 主键与关联信息
+    f_id                      VARCHAR(40) NOT NULL DEFAULT '' COMMENT '任务唯一标识',
+    f_catalog_id              VARCHAR(40) NOT NULL DEFAULT '' COMMENT '所属catalog ID',
+    f_trigger_type            VARCHAR(20) NOT NULL DEFAULT 'manual' COMMENT '触发类型: manual(立即执行), scheduled(定时驱动)',
+
+    -- 任务状态
+    f_status                  VARCHAR(20) NOT NULL DEFAULT 'pending' COMMENT '任务状态: pending, running, completed, failed',
+    f_progress                INT NOT NULL DEFAULT 0 COMMENT '任务进度: 0-100',
+    f_message                 VARCHAR(1000) NOT NULL DEFAULT '' COMMENT '任务消息/错误信息',
+
+    -- 时间信息
+    f_start_time              BIGINT(20) NOT NULL DEFAULT 0 COMMENT '开始执行时间',
+    f_finish_time             BIGINT(20) NOT NULL DEFAULT 0 COMMENT '完成时间',
+
+    -- 执行结果
+    f_result                  MEDIUMTEXT NOT NULL COMMENT '发现结果（JSON格式，包含发现的资源统计等）',
+
+    -- 审计字段
+    f_creator                 VARCHAR(128) COMMENT '创建者id',
+    f_creator_type            VARCHAR(20) NOT NULL DEFAULT '' COMMENT '创建者类型',
+    f_create_time             BIGINT(20) NOT NULL DEFAULT 0 COMMENT '创建时间',
+
+    -- 索引
+    PRIMARY KEY (f_id),
+    INDEX idx_catalog_id (f_catalog_id),
+    INDEX idx_status (f_status),
+    INDEX idx_create_time (f_create_time)
+) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_bin COMMENT='发现任务表，记录异步资源发现任务的状态和结果';

@@ -10,7 +10,7 @@ type DiscoveryTaskService interface {
 	// GetByID retrieves a DiscoveryTask by ID.
 	GetByID(ctx context.Context, id string) (*DiscoveryTask, error)
 	// List lists DiscoveryTasks for a catalog.
-	List(ctx context.Context, catalogID string, params PaginationParams) ([]*DiscoveryTask, int64, error)
+	List(ctx context.Context, params DiscoveryTaskQueryParams) ([]*DiscoveryTask, int64, error)
 	// UpdateStatus updates a DiscoveryTask's status.
 	UpdateStatus(ctx context.Context, id string, status string, message string, stime int64) error
 	// UpdateResult updates a DiscoveryTask's result.
