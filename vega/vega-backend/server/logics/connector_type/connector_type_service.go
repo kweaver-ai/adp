@@ -49,13 +49,14 @@ func (cts *connectorTypeService) Register(ctx context.Context, req *interfaces.C
 	defer span.End()
 
 	ct := &interfaces.ConnectorType{
-		Type:     req.Type,
-		Name:     req.Name,
-		Comment:  req.Comment,
-		Mode:     req.Mode,
-		Category: req.Category,
-		Endpoint: req.Endpoint,
-		Enabled:  req.Enabled,
+		Type:        req.Type,
+		Name:        req.Name,
+		Comment:     req.Comment,
+		Mode:        req.Mode,
+		Category:    req.Category,
+		Endpoint:    req.Endpoint,
+		FieldConfig: req.FieldConfig,
+		Enabled:     req.Enabled,
 	}
 
 	if err := cts.cta.Create(ctx, ct); err != nil {
@@ -156,6 +157,7 @@ func (cts *connectorTypeService) Update(ctx context.Context, req *interfaces.Con
 	ct.Mode = req.Mode
 	ct.Category = req.Category
 	ct.Endpoint = req.Endpoint
+	ct.FieldConfig = req.FieldConfig
 	ct.Enabled = req.Enabled
 
 	if err := cts.cta.Update(ctx, ct); err != nil {

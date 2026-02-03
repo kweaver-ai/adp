@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/mitchellh/mapstructure"
 	"github.com/opensearch-project/opensearch-go/v2"
 	"github.com/opensearch-project/opensearch-go/v2/opensearchapi"
 
@@ -14,10 +15,18 @@ import (
 	"vega-manager/logics/connectors"
 )
 
+type opensearchConfig struct {
+	Host         string `mapstructure:"host"`
+	Port         int    `mapstructure:"port"`
+	Username     string `mapstructure:"username"`
+	Password     string `mapstructure:"password"`
+	IndexPattern string `mapstructure:"index_pattern"`
+}
+
 // OpenSearchConnector implements IndexConnector for OpenSearch/ElasticSearch.
 type OpenSearchConnector struct {
 	enabled bool
-	Config  *interfaces.ConnectorConfig
+	Config  *opensearchConfig
 	client  *opensearch.Client
 }
 
@@ -61,10 +70,26 @@ func (c *OpenSearchConnector) GetSensitiveFields() []string {
 	return []string{"password"}
 }
 
+// GetFieldConfig returns the field configuration for OpenSearch connector.
+func (c *OpenSearchConnector) GetFieldConfig() map[string]interfaces.ConnectorFieldConfig {
+	return map[string]interfaces.ConnectorFieldConfig{
+		"host":          {Name: "主机地址", Type: "string", Description: "OpenSearch 服务器主机地址", Required: true, Encrypted: false},
+		"port":          {Name: "端口号", Type: "integer", Description: "OpenSearch 服务器端口", Required: true, Encrypted: false},
+		"username":      {Name: "用户名", Type: "string", Description: "认证用户名", Required: false, Encrypted: false},
+		"password":      {Name: "密码", Type: "string", Description: "认证密码", Required: false, Encrypted: true},
+		"index_pattern": {Name: "索引模式", Type: "string", Description: "索引匹配模式（可选，如 log-*）", Required: false, Encrypted: false},
+	}
+}
+
 // New creates a new OpenSearch connector.
-func (c *OpenSearchConnector) New(cfg *interfaces.ConnectorConfig) (connectors.Connector, error) {
+func (c *OpenSearchConnector) New(cfg interfaces.ConnectorConfig) (connectors.Connector, error) {
+	var osCfg opensearchConfig
+	if err := mapstructure.Decode(cfg, &osCfg); err != nil {
+		return nil, fmt.Errorf("failed to decode opensearch config: %w", err)
+	}
+
 	return &OpenSearchConnector{
-		Config: cfg,
+		Config: &osCfg,
 	}, nil
 }
 
@@ -101,7 +126,9 @@ func (c *OpenSearchConnector) Ping(ctx context.Context) error {
 	if err := c.Connect(ctx); err != nil {
 		return err
 	}
-	resp, err := c.client.Info(c.client.Info.WithContext(ctx))
+
+	req := opensearchapi.InfoRequest{}
+	resp, err := req.Do(ctx, c.client)
 	if err != nil {
 		return err
 	}
@@ -118,10 +145,14 @@ func (c *OpenSearchConnector) ListIndexes(ctx context.Context) ([]*interfaces.In
 		return nil, err
 	}
 
-	resp, err := c.client.Cat.Indices(
-		c.client.Cat.Indices.WithContext(ctx),
-		c.client.Cat.Indices.WithFormat("json"),
-	)
+	req := opensearchapi.CatIndicesRequest{
+		Format: "json",
+	}
+	if c.Config.IndexPattern != "" {
+		req.Index = []string{c.Config.IndexPattern}
+	}
+
+	resp, err := req.Do(ctx, c.client)
 	if err != nil {
 		return nil, err
 	}

@@ -8,6 +8,7 @@ import (
 	"sync"
 
 	sq "github.com/Masterminds/squirrel"
+	"github.com/bytedance/sonic"
 	"github.com/kweaver-ai/TelemetrySDK-Go/exporter/v2/ar_trace"
 	libdb "github.com/kweaver-ai/kweaver-go-lib/db"
 	"github.com/kweaver-ai/kweaver-go-lib/logger"
@@ -55,6 +56,12 @@ func (cta *connectorTypeAccess) Create(ctx context.Context, ct *interfaces.Conne
 		attr.Key("db_url").String(libdb.GetDBUrl()),
 		attr.Key("db_type").String(libdb.GetDBType()))
 
+	// Serialize FieldConfig to JSON
+	fieldConfigJSON := ""
+	if len(ct.FieldConfig) > 0 {
+		fieldConfigJSON, _ = sonic.MarshalString(ct.FieldConfig)
+	}
+
 	sqlStr, vals, err := sq.Insert(CONNECTOR_TYPE_TABLE_NAME).
 		Columns(
 			"f_type",
@@ -63,6 +70,7 @@ func (cta *connectorTypeAccess) Create(ctx context.Context, ct *interfaces.Conne
 			"f_mode",
 			"f_category",
 			"f_endpoint",
+			"f_field_config",
 			"f_enabled",
 		).
 		Values(
@@ -72,6 +80,7 @@ func (cta *connectorTypeAccess) Create(ctx context.Context, ct *interfaces.Conne
 			string(ct.Mode),
 			string(ct.Category),
 			ct.Endpoint,
+			fieldConfigJSON,
 			ct.Enabled,
 		).ToSql()
 	if err != nil {
@@ -103,12 +112,19 @@ func (cta *connectorTypeAccess) Update(ctx context.Context, ct *interfaces.Conne
 
 	span.SetAttributes(attr.Key("connector_type").String(ct.Type))
 
+	// Serialize FieldConfig to JSON
+	fieldConfigJSON := ""
+	if len(ct.FieldConfig) > 0 {
+		fieldConfigJSON, _ = sonic.MarshalString(ct.FieldConfig)
+	}
+
 	sqlStr, vals, err := sq.Update(CONNECTOR_TYPE_TABLE_NAME).
 		Set("f_name", ct.Name).
 		Set("f_comment", ct.Comment).
 		Set("f_mode", string(ct.Mode)).
 		Set("f_category", string(ct.Category)).
 		Set("f_endpoint", ct.Endpoint).
+		Set("f_field_config", fieldConfigJSON).
 		Set("f_enabled", ct.Enabled).
 		Where(sq.Eq{"f_type": ct.Type}).
 		ToSql()
@@ -164,6 +180,7 @@ func (cta *connectorTypeAccess) GetByType(ctx context.Context, tp string) (*inte
 		"f_mode",
 		"f_category",
 		"f_endpoint",
+		"f_field_config",
 		"f_enabled",
 	).From(CONNECTOR_TYPE_TABLE_NAME).
 		Where(sq.Eq{"f_type": tp}).
@@ -175,6 +192,7 @@ func (cta *connectorTypeAccess) GetByType(ctx context.Context, tp string) (*inte
 	}
 
 	ct := &interfaces.ConnectorType{}
+	var fieldConfigStr sql.NullString
 	row := cta.db.QueryRowContext(ctx, sqlStr, vals...)
 	err = row.Scan(
 		&ct.Type,
@@ -183,6 +201,7 @@ func (cta *connectorTypeAccess) GetByType(ctx context.Context, tp string) (*inte
 		&ct.Mode,
 		&ct.Category,
 		&ct.Endpoint,
+		&fieldConfigStr,
 		&ct.Enabled,
 	)
 	if err == sql.ErrNoRows {
@@ -193,6 +212,11 @@ func (cta *connectorTypeAccess) GetByType(ctx context.Context, tp string) (*inte
 		logger.Errorf("Scan connector_type failed: %v", err)
 		span.SetStatus(codes.Error, "Scan failed")
 		return nil, err
+	}
+
+	// Deserialize FieldConfig
+	if fieldConfigStr.Valid && fieldConfigStr.String != "" {
+		_ = sonic.UnmarshalString(fieldConfigStr.String, &ct.FieldConfig)
 	}
 
 	span.SetStatus(codes.Ok, "")
@@ -214,6 +238,7 @@ func (cta *connectorTypeAccess) GetByName(ctx context.Context, name string) (*in
 		"f_mode",
 		"f_category",
 		"f_endpoint",
+		"f_field_config",
 		"f_enabled",
 	).From(CONNECTOR_TYPE_TABLE_NAME).
 		Where(sq.Eq{"f_name": name}).
@@ -225,6 +250,7 @@ func (cta *connectorTypeAccess) GetByName(ctx context.Context, name string) (*in
 	}
 
 	ct := &interfaces.ConnectorType{}
+	var fieldConfigStr sql.NullString
 	row := cta.db.QueryRowContext(ctx, sqlStr, vals...)
 	err = row.Scan(
 		&ct.Type,
@@ -233,6 +259,7 @@ func (cta *connectorTypeAccess) GetByName(ctx context.Context, name string) (*in
 		&ct.Mode,
 		&ct.Category,
 		&ct.Endpoint,
+		&fieldConfigStr,
 		&ct.Enabled,
 	)
 	if err == sql.ErrNoRows {
@@ -243,6 +270,11 @@ func (cta *connectorTypeAccess) GetByName(ctx context.Context, name string) (*in
 		logger.Errorf("Scan connector_type failed: %v", err)
 		span.SetStatus(codes.Error, "Scan failed")
 		return nil, err
+	}
+
+	// Deserialize FieldConfig
+	if fieldConfigStr.Valid && fieldConfigStr.String != "" {
+		_ = sonic.UnmarshalString(fieldConfigStr.String, &ct.FieldConfig)
 	}
 
 	span.SetStatus(codes.Ok, "")
@@ -262,6 +294,7 @@ func (cta *connectorTypeAccess) List(ctx context.Context, params interfaces.Conn
 		"f_mode",
 		"f_category",
 		"f_endpoint",
+		"f_field_config",
 		"f_enabled",
 	).From(CONNECTOR_TYPE_TABLE_NAME)
 
@@ -312,6 +345,7 @@ func (cta *connectorTypeAccess) List(ctx context.Context, params interfaces.Conn
 	connectorTypes := make([]*interfaces.ConnectorType, 0)
 	for rows.Next() {
 		ct := &interfaces.ConnectorType{}
+		var fieldConfigStr sql.NullString
 		err := rows.Scan(
 			&ct.Type,
 			&ct.Name,
@@ -319,11 +353,17 @@ func (cta *connectorTypeAccess) List(ctx context.Context, params interfaces.Conn
 			&ct.Mode,
 			&ct.Category,
 			&ct.Endpoint,
+			&fieldConfigStr,
 			&ct.Enabled,
 		)
 		if err != nil {
 			span.SetStatus(codes.Error, "Scan row failed")
 			return nil, 0, err
+		}
+
+		// Deserialize FieldConfig
+		if fieldConfigStr.Valid && fieldConfigStr.String != "" {
+			_ = sonic.UnmarshalString(fieldConfigStr.String, &ct.FieldConfig)
 		}
 
 		connectorTypes = append(connectorTypes, ct)

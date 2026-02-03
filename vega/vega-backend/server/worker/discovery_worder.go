@@ -10,7 +10,6 @@ import (
 	"github.com/bytedance/sonic"
 	"github.com/kweaver-ai/kweaver-go-lib/logger"
 	mqclient "github.com/kweaver-ai/proton-mq-sdk-go"
-	"github.com/mitchellh/mapstructure"
 
 	"vega-manager/common"
 	"vega-manager/interfaces"
@@ -168,10 +167,7 @@ func (dw *discoveryWorker) createAndConnectConnector(ctx context.Context,
 	catalog *interfaces.Catalog) (connectors.Connector, error) {
 
 	// 使用 mapstructure 反序列化 ConnectorConfig
-	cfg := &interfaces.ConnectorConfig{}
-	if err := mapstructure.Decode(catalog.ConnectorConfig, cfg); err != nil {
-		return nil, fmt.Errorf("failed to decode connector config: %w", err)
-	}
+	cfg := interfaces.ConnectorConfig(catalog.ConnectorConfig)
 
 	// 创建 connector
 	connector, err := factory.GetFactory().CreateConnectorInstance(ctx, catalog.ConnectorType, cfg)
