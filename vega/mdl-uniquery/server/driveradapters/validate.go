@@ -1461,10 +1461,19 @@ func validateCond(ctx context.Context, cfg *cond.CondCfg) error {
 
 		if cfg.Operation == cond.OperationLike || cfg.Operation == cond.OperationNotLike ||
 			cfg.Operation == cond.OperationPrefix || cfg.Operation == cond.OperationNotPrefix {
-			_, ok := cfg.Value.(string)
-			if !ok {
-				return rest.NewHTTPError(ctx, http.StatusBadRequest, uerrors.Uniquery_InvalidParameter_FilterValue).
-					WithErrorDetails("[like not_like prefix not_prefix] operation's value should be a string")
+			// 如果有 real_value 则跳过 value 的校验
+			if cfg.RealValue == nil {
+				_, ok := cfg.Value.(string)
+				if !ok {
+					return rest.NewHTTPError(ctx, http.StatusBadRequest, uerrors.Uniquery_InvalidParameter_FilterValue).
+						WithErrorDetails("[like not_like prefix not_prefix] operation's value should be a string")
+				}
+			} else {
+				_, ok := cfg.RealValue.(string)
+				if !ok {
+					return rest.NewHTTPError(ctx, http.StatusBadRequest, uerrors.Uniquery_InvalidParameter_FilterValue).
+						WithErrorDetails("[like not_like prefix not_prefix] operation's real_value should be a string")
+				}
 			}
 		}
 
