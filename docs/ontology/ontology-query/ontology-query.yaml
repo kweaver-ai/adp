@@ -3466,10 +3466,10 @@ components:
       description: 属性查询请求体
       required:
       - properties
-      - instance_identities
+      - _instance_identities
       type: object
       properties:
-        instance_identities:
+        _instance_identities:
           description: 对象主键的数组，代表多个对象。map，key为主键属性名，value为对应的属性值
           type: array
           items:
@@ -4392,10 +4392,10 @@ components:
     InstanceIdentities:
       description: 对象唯一标识
       required:
-      - instance_identities
+      - _instance_identities
       type: object
       properties:
-        instance_identities:
+        _instance_identities:
           description: 对象主键的数组，代表多个对象。map，key为主键属性名，value为对应的属性值
           type: array
           items:

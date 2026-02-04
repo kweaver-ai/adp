@@ -172,7 +172,7 @@ type MetricPropertyDynamicParams struct {
 
 // 对象属性值请求体
 type ObjectPropertyValueQuery struct {
-	InstanceIdentities []map[string]any          `json:"instance_identities,omitempty"`
+	InstanceIdentities []map[string]any          `json:"_instance_identities,omitempty"`
 	Properties         []string                  `json:"properties,omitempty"`
 	DynamicParams      map[string]map[string]any `json:"dynamic_params"`
 
