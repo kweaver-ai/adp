@@ -86,6 +86,13 @@ const (
 	DagInstanceEventArchivePolicySuccessOnly DagInstanceEventArchivePolicy = "successOnly"
 )
 
+type Edition string
+
+const (
+	EditionCommunity  Edition = "community"
+	EditionCommercial Edition = "commercial"
+)
+
 // Server 服务基础配置
 type Server struct {
 	LowestExecutorCount           int                           `mapstructure:"lowest_executor_count"`
@@ -104,6 +111,7 @@ type Server struct {
 	DeleteExpiredTaskCache        string                        `mapstructure:"delete_expired_task_cache_cron"`
 	DagInstanceEventMaxInlineSize int                           `mapstructure:"dag_instance_event_max_inline_size"`
 	DagInstanceEventArchivePolicy DagInstanceEventArchivePolicy `mapstructure:"dag_instance_event_archive_policy"`
+	Edition                       Edition                       `mapstructure:"edition"`
 }
 
 // DB database config

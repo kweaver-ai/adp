@@ -424,6 +424,7 @@ flowAutomation:
     deleteExpiredTaskCacheCron: "0 3 * * *"
     dagInstanceEventMaxInlineSize: 262144
     dagInstanceEventArchivePolicy: successOnly
+    edition: "community"
 
   kafka:
     sessionTimeoutMs: 45000
@@ -459,6 +460,18 @@ flowAutomation:
           broker_list: ["kafka-headless.resource:9097"]
           username: "dX25DulTIJd+H6e8JKKBPaQBYfwtoE+KSg+QBkgJom5X2ZkRYZiMMVPtxl/nfTfD3i8A4gfhMzK9u6johN7LV0uFToAk9DcCzLO9emV3rS6H8YQerQSP2J56uSCKiMA9UfeIbdwJ+pXqVqXPiqV/10ayw5WYi7zW+Yv+M0r6vx4dw5xYATOHKCK6GQJqS3uaZi3TwHgY/HicDw2o/5PAFkQAnbNiQoitGS4owC2UuSljtkoYyr3r9HrhiHry/usddx9WUPa/GW5NGQ2QGRia1eeuQax3obVZ6AzI4JhpfYmy3qrZ938YOKNpfb+/atmin/qfrWcPcsNvpnJ1zeMOFQ=="
           password: "YMqgppqxZGwjBhfWr9397RZvU5OTK7jd3Yp/aZk0hQomHUjEtocBo39Lb8xKmaNSXN0z+wk8AeBxdpqw/ZLFUULkKcCTl5IZ/SwMmv29Hizw/4hhjZpnjvZPt4go3gR9tPYNveNpz0Yc9COCovH3f95wdtJHAGttDEr1Mb/B/y+UvpLjDE3d+YgksNOZT1Z55P0HrZ4Zlr6lFyRnQn26SJ9ga+o76wzcrDT+jarB2g/D/ByMNzsc9O0bY9sZI+Je+b0J+ax1/uek/nQI1DMi3JXIEF6nR+rkAPuMGLsPWdQsRpj4XYzdtqpJf0tG584SJnuuOLWwNGKm+erNrlCaaw=="
+
+  s3:
+    default: "default"
+    connections:
+      - name: default
+        endpoint: ""
+        region: us-east-1
+        accessKeyID: ""
+        secretAccessKey: ""
+        bucketName: ""
+        skipVerify: true
+        disableHTTPS: false
 
 # =============================================================================
 # flow-stream-data-pipeline Configuration

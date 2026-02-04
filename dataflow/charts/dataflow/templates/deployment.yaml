@@ -123,6 +123,9 @@ spec:
             - mountPath: {{ .Values.flowAutomation.actionConfigYaml }}
               name: action-config-yaml
               subPath: action_config.yaml
+            - name: s3-yaml
+              mountPath: /conf/s3.yaml
+              subPath: s3.yaml
 
             # ecron 配置
             - name: ecron-management-yaml
@@ -244,6 +247,12 @@ spec:
             items:
               - key: ACTION_CONFIG
                 path: action_config.yaml
+        - name: s3-yaml
+          configMap:
+            name: {{ include "dataflow.flowAutomation.fullname" . }}
+            items:
+              - key: S3
+                path: s3.yaml
         # flow-stream-data-pipeline
         - name: stream-data-pipeline-cm
           configMap:

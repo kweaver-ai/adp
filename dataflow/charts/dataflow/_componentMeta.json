@@ -278,6 +278,73 @@
                                 "default": "successOnly"
                             }
                         }
+                    },
+                    "s3": {
+                        "type": "object",
+                        "title": "S3 配置",
+                        "properties": {
+                            "default": {
+                                "type": "string",
+                                "title": "默认 S3 连接名称"
+                            },
+                            "connections": {
+                                "type": "array",
+                                "title": "S3 连接配置",
+                                "items": {
+                                    "type": "object",
+                                    "title": "S3 连接",
+                                    "properties": {
+                                        "name": {
+                                            "type": "string",
+                                            "title": "连接名称"
+                                        },
+                                        "endpoint": {
+                                            "type": "string",
+                                            "title": "S3 服务端地址"
+                                        },
+                                        "region": {
+                                            "type": "string",
+                                            "title": "S3 区域"
+                                        },
+                                        "accessKeyID": {
+                                            "type": "string",
+                                            "title": "S3 访问密钥 ID"
+                                        },
+                                        "secretAccessKey": {
+                                            "type": "string",
+                                            "title": "S3 访问密钥"
+                                        },
+                                        "bucketName": {
+                                            "type": "string",
+                                            "title": "S3 存储桶名称"
+                                        },
+                                        "skipVerify": {
+                                            "type": "boolean",
+                                            "title": "是否跳过证书验证",
+                                            "default": true
+                                        },
+                                        "disableHTTPS": {
+                                            "type": "boolean",
+                                            "title": "是否禁用 HTTPS",
+                                            "default": false
+                                        }
+                                    }
+                                },
+                                "required": [
+                                    "name",
+                                    "endpoint",
+                                    "accessKeyID",
+                                    "secretAccessKey",
+                                    "bucketName",
+                                    "skipVerify",
+                                    "disableHTTPS"
+                                ]
+                            }
+                        },
+                        "required": [
+                            "default",
+                            "connections"
+                        ]
                     }
                 }
             },

@@ -85,9 +85,14 @@ var (
 func NewOssGateWay() OssGateWay {
 	OgOnce.Do(func() {
 		config := common.NewConfig()
-		og = &ossGatetway{
-			address: fmt.Sprintf("http://%s:%v", config.OssGateWay.PrivateHost, config.OssGateWay.PrivatePort),
-			client:  NewOtelHTTPClient(),
+
+		if config.Server.Edition == common.EditionCommunity {
+			og = NewOssGatewayS3()
+		} else {
+			og = &ossGatetway{
+				address: fmt.Sprintf("http://%s:%v", config.OssGateWay.PrivateHost, config.OssGateWay.PrivatePort),
+				client:  NewOtelHTTPClient(),
+			}
 		}
 	})
 	return og

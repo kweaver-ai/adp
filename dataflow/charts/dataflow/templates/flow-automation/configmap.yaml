@@ -33,6 +33,7 @@ data:
   SERVER_DAG_INSTANCE_EVENT_MAX_INLINE_SIZE: {{ .Values.flowAutomation.service.dagInstanceEventMaxInlineSize | quote }}
   SERVER_DAG_INSTANCE_EVENT_ARCHIVE_POLICY: {{ .Values.flowAutomation.service.dagInstanceEventArchivePolicy | quote }}
   SERVER_STORAGE_PREFIX: {{ .Values.flowAutomation.service.storagePrefix | quote }}
+  SERVER_EDITION: {{ .Values.flowAutomation.service.edition | quote }}
   MONGODB_USER: {{ .Values.depServices.mongodb.user | quote }}
   MONGODB_HOST: {{ .Values.depServices.mongodb.host | quote }}
   MONGODB_PORT: {{ .Values.depServices.mongodb.port | quote }}
@@ -275,4 +276,7 @@ data:
   ACTION_CONFIG_YAML: {{ .Values.flowAutomation.actionConfigYaml }}
   ACTION_CONFIG: |
     {{ .Values.flowAutomation.actionConfig | toYaml | nindent 4 }}
+
+  S3: |
+    {{ .Values.flowAutomation.s3 | toYaml | nindent 4 }}
 {{- end }}
