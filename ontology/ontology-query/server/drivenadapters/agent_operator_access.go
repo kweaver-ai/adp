@@ -216,7 +216,7 @@ func (aoa *agentOperatorAccess) ExecuteTool(ctx context.Context, boxID string,
 		"user_id":                    accountInfo.ID, // API requires user_id header
 	}
 
-	// http://{host}:{port}/api/private/agent-operator-integration/v1/tool-box/{box_id}/proxy/{tool_id}
+	// http://{host}:{port}/api/agent-operator-integration/internal-v1/tool-box/{box_id}/proxy/{tool_id}
 	url := fmt.Sprintf("%s/%s/proxy/%s", aoa.appSetting.ToolBoxUrl, boxID, toolID)
 
 	start := time.Now().UnixMilli()
@@ -271,8 +271,8 @@ func (aoa *agentOperatorAccess) ExecuteTool(ctx context.Context, boxID string,
 }
 
 // ExecuteMCP executes an MCP-based action through agent-operator-integration
-// API: POST /mcp/execute/tool/{mcp_tool_id}
-func (aoa *agentOperatorAccess) ExecuteMCP(ctx context.Context, mcpToolID string,
+// API: POST /mcp/proxy/{mcp_id}/tool/call
+func (aoa *agentOperatorAccess) ExecuteMCP(ctx context.Context, mcpID string,
 	toolName string, execRequest interfaces.MCPExecutionRequest) (any, error) {
 
 	var (
@@ -280,6 +280,12 @@ func (aoa *agentOperatorAccess) ExecuteMCP(ctx context.Context, mcpToolID string
 		result   []byte
 		err      error
 	)
+
+	// Get account info from context for user_id header
+	accountInfo := interfaces.AccountInfo{}
+	if ctx.Value(interfaces.ACCOUNT_INFO_KEY) != nil {
+		accountInfo = ctx.Value(interfaces.ACCOUNT_INFO_KEY).(interfaces.AccountInfo)
+	}
 
 	// Get business domain from context (passed from request header)
 	businessDomain := ""
@@ -290,10 +296,11 @@ func (aoa *agentOperatorAccess) ExecuteMCP(ctx context.Context, mcpToolID string
 	headers := map[string]string{
 		interfaces.CONTENT_TYPE_NAME:           interfaces.CONTENT_TYPE_JSON,
 		interfaces.HTTP_HEADER_BUSINESS_DOMAIN: businessDomain,
+		"user_id":                              accountInfo.ID,
 	}
 
-	// http://{host}:{port}/api/private/agent-operator-integration/v1/mcp/execute/tool/{mcp_tool_id}
-	url := fmt.Sprintf("%s/execute/tool/%s", aoa.appSetting.MCPUrl, mcpToolID)
+	// http://{host}:{port}/api/agent-operator-integration/internal-v1/mcp/proxy/{mcp_id}/tool/call
+	url := fmt.Sprintf("%s/proxy/%s/tool/call", aoa.appSetting.MCPUrl, mcpID)
 
 	start := time.Now().UnixMilli()
 	respCode, result, err = aoa.httpClient.PostNoUnmarshal(ctx, url, headers, execRequest)
@@ -320,11 +327,11 @@ func (aoa *agentOperatorAccess) ExecuteMCP(ctx context.Context, mcpToolID string
 				ErrorDetails: opError.Detail,
 			}}
 		logger.Errorf("MCP execution failed: %v", httpErr.Error())
-		return mcpResult, fmt.Errorf("execute MCP %s return error %v", mcpToolID, httpErr.Error())
+		return mcpResult, fmt.Errorf("execute MCP %s return error %v", mcpID, httpErr.Error())
 	}
 
 	if result == nil {
-		return mcpResult, fmt.Errorf("execute MCP %s return null", mcpToolID)
+		return mcpResult, fmt.Errorf("execute MCP %s return null", mcpID)
 	}
 
 	if err := json.Unmarshal(result, &mcpResult); err != nil {

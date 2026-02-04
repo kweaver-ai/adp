@@ -232,8 +232,8 @@ func SetAgentOperatorSetting() {
 	port := setting["port"].(int)
 
 	appSetting.AgentOperatorUrl = fmt.Sprintf("%s://%s:%d/api/agent-operator-integration/internal-v1/operator", protocol, host, port)
-	// ToolBox URL uses the same service but different path
-	appSetting.ToolBoxUrl = fmt.Sprintf("%s://%s:%d/api/private/agent-operator-integration/v1/tool-box", protocol, host, port)
-	// MCP URL for MCP tool execution
-	appSetting.MCPUrl = fmt.Sprintf("%s://%s:%d/api/private/agent-operator-integration/v1/mcp", protocol, host, port)
+	// ToolBox URL: /api/agent-operator-integration/internal-v1/tool-box/{box_id}/proxy/{tool_id}
+	appSetting.ToolBoxUrl = fmt.Sprintf("%s://%s:%d/api/agent-operator-integration/internal-v1/tool-box", protocol, host, port)
+	// MCP URL: /api/agent-operator-integration/internal-v1/mcp/proxy/{mcp_id}/tool/call
+	appSetting.MCPUrl = fmt.Sprintf("%s://%s:%d/api/agent-operator-integration/internal-v1/mcp", protocol, host, port)
 }
