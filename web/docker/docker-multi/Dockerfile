@@ -1,9 +1,11 @@
 ARG BASE_IMAGE=acr.aishu.cn/public/nginx:1.22.1-alpine
 ARG VEGA_BUILD_IMAGE=acr.aishu.cn/public/node:22.18.0
 ARG FLOW_BUILD_IMAGE=acr.aishu.cn/public/node:18-pnpm-7
+ARG TARGETPLATFORM
+ARG BUILDPLATFORM
 
 # ========== 第一阶段：构建 vega-web ==========
-FROM ${VEGA_BUILD_IMAGE} AS vega-builder
+FROM --platform=$TARGETPLATFORM ${VEGA_BUILD_IMAGE} AS vega-builder
 
 COPY ./web /vega-web/
 COPY ./web/.[^.]* /vega-web/
@@ -15,7 +17,7 @@ RUN set -ex; \
     pnpm run build;
 
 # ========== 第二阶段：构建 flow-web ==========
-FROM ${FLOW_BUILD_IMAGE} AS flow-builder
+FROM --platform=$TARGETPLATFORM ${FLOW_BUILD_IMAGE} AS flow-builder
 
 COPY ./dataflow/dia-flow-web /flow-web/
 
@@ -42,7 +44,7 @@ RUN set -ex; \
     ls -la packages/flow-web/
 
 # ========== 第三阶段：运行时镜像 ==========
-FROM ${BASE_IMAGE} AS prod
+FROM --platform=$TARGETPLATFORM ${BASE_IMAGE} AS prod
 
 # 给 nginx 添加权限（flow-web 的配置）
 RUN chown root /usr/sbin/nginx && \
