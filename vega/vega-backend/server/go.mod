@@ -1,6 +1,8 @@
 module vega-backend
 
-go 1.24.0
+go 1.24.3
+
+toolchain go1.24.11
 
 require (
 	github.com/Masterminds/squirrel v1.5.4
@@ -9,10 +11,10 @@ require (
 	github.com/gin-gonic/gin v1.11.0
 	github.com/kweaver-ai/TelemetrySDK-Go/exporter/v2 v2.10.3
 	github.com/kweaver-ai/kweaver-go-lib v1.0.3-0.20260202054858-6bd59c1aca87
-	github.com/kweaver-ai/proton-mq-sdk-go v1.9.1
 	github.com/mitchellh/mapstructure v1.5.0
 	github.com/opensearch-project/opensearch-go/v2 v2.3.0
 	github.com/rs/xid v1.6.0
+	github.com/segmentio/kafka-go v0.4.49
 	github.com/smartystreets/goconvey v1.8.1
 	github.com/spf13/viper v1.21.0
 	go.opentelemetry.io/otel v1.29.0
@@ -74,6 +76,7 @@ require (
 	github.com/klauspost/cpuid/v2 v2.3.0 // indirect
 	github.com/kweaver-ai/TelemetrySDK-Go/event/v2 v2.10.3 // indirect
 	github.com/kweaver-ai/TelemetrySDK-Go/span/v2 v2.10.3 // indirect
+	github.com/kweaver-ai/proton-mq-sdk-go v1.9.1 // indirect
 	github.com/kweaver-ai/proton-rds-sdk-go v1.5.0 // indirect
 	github.com/lann/builder v0.0.0-20180802200727-47ae307949d0 // indirect
 	github.com/lann/ps v0.0.0-20150810152359-62de8c46ede0 // indirect
@@ -94,7 +97,6 @@ require (
 	github.com/quic-go/quic-go v0.58.0 // indirect
 	github.com/rcrowley/go-metrics v0.0.0-20250401214520-65e299d6c5c9 // indirect
 	github.com/sagikazarmark/locafero v0.11.0 // indirect
-	github.com/segmentio/kafka-go v0.4.49 // indirect
 	github.com/shirou/gopsutil/v3 v3.24.5 // indirect
 	github.com/shoenig/go-m1cpu v0.1.6 // indirect
 	github.com/shopspring/decimal v1.4.0 // indirect
@@ -137,9 +139,9 @@ require (
 	gopkg.in/natefinch/lumberjack.v2 v2.2.1 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
-	k8s.io/api v0.29.1 // indirect
-	k8s.io/apimachinery v0.29.1 // indirect
-	k8s.io/client-go v0.29.1 // indirect
+	k8s.io/api v0.29.2 // indirect
+	k8s.io/apimachinery v0.29.2 // indirect
+	k8s.io/client-go v0.29.2 // indirect
 	k8s.io/klog/v2 v2.110.1 // indirect
 	k8s.io/kube-openapi v0.0.0-20231010175941-2dd684a91f00 // indirect
 	k8s.io/utils v0.0.0-20230726121419-3b25d923346b // indirect

@@ -103,7 +103,8 @@ func main() {
 	factory.Init(appSetting)
 	logger.Info("VEGA Manager Init Connector Factory Success")
 
-	worker.Start(appSetting)
+	dw := worker.NewDiscoveryWorker(appSetting)
+	dw.Start()
 	logger.Info("VEGA Manager Init Discovery Worker Success")
 
 	// 创建并启动服务

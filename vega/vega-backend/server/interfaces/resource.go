@@ -37,12 +37,20 @@ type Resource struct {
 	Database         string         `json:"database,omitempty"`          // 所属数据库（实例级 Catalog 时填充）
 	SourceIdentifier string         `json:"source_identifier"`           // 源端标识（原始表名/路径）
 	SourceMetadata   map[string]any `json:"source_metadata,omitempty"`   // 源端配置（JSON）
-	SchemaDefinition []ColumnMeta   `json:"schema_definition,omitempty"` // Schema定义
+	SchemaDefinition []Property     `json:"schema_definition,omitempty"` // Schema定义
 
 	Creator    AccountInfo `json:"creator"`
 	CreateTime int64       `json:"create_time"`
 	Updater    AccountInfo `json:"updater"`
 	UpdateTime int64       `json:"update_time"`
+}
+
+type Property struct {
+	Name         string `json:"name"`
+	Type         string `json:"type"`
+	DisplayName  string `json:"display_name"`
+	OriginalName string `json:"original_name"`
+	Comment      string `json:"comment"`
 }
 
 // ResourcesQueryParams holds resource list query parameters.
@@ -64,6 +72,9 @@ type ResourceRequest struct {
 	Category string `json:"category"`
 
 	Status string `json:"status"`
+
+	Database         string `json:"database,omitempty"` // 所属数据库（实例级 Catalog 时填充）
+	SourceIdentifier string `json:"source_identifier"`  // 源端标识（原始表名/路径）
 
 	OriginResource *Resource `json:"-"`
 }

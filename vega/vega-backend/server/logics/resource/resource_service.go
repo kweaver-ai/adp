@@ -55,16 +55,19 @@ func (rs *resourceService) Create(ctx context.Context, req *interfaces.ResourceR
 
 	now := time.Now().UnixMilli()
 	resource := &interfaces.Resource{
-		ID:         xid.New().String(),
-		CatalogID:  req.CatalogID,
-		Name:       req.Name,
-		Tags:       req.Tags,
-		Comment:    req.Comment,
-		Category:   req.Category,
-		Creator:    accountInfo,
-		CreateTime: now,
-		Updater:    accountInfo,
-		UpdateTime: now,
+		ID:               xid.New().String(),
+		CatalogID:        req.CatalogID,
+		Name:             req.Name,
+		Tags:             req.Tags,
+		Comment:          req.Comment,
+		Category:         req.Category,
+		Status:           req.Status,
+		Database:         req.Database,
+		SourceIdentifier: req.SourceIdentifier,
+		Creator:          accountInfo,
+		CreateTime:       now,
+		Updater:          accountInfo,
+		UpdateTime:       now,
 	}
 
 	if err := rs.ra.Create(ctx, resource); err != nil {
