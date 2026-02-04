@@ -31,7 +31,6 @@ func NewTrueCond(ctx context.Context, cfg *CondCfg, fieldsMap map[string]*ViewFi
 	return &TrueCond{
 		mCfg:             cfg,
 		mFilterFieldName: fName,
-		// mFilterFieldName: getFilterFieldName(ctx, cfg.Name, fieldsMap, false),
 	}, nil
 }
 

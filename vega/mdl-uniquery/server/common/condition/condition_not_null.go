@@ -24,7 +24,6 @@ func NewNotNullCond(ctx context.Context, cfg *CondCfg, fieldsMap map[string]*Vie
 	return &NotNullCond{
 		mCfg:             cfg,
 		mFilterFieldName: fName,
-		// mFilterFieldName: getFilterFieldName(ctx, cfg.Name, fieldsMap, false),
 	}, nil
 
 }

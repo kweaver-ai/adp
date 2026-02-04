@@ -31,7 +31,6 @@ func NewEmptyCond(ctx context.Context, cfg *CondCfg, fieldsMap map[string]*ViewF
 	return &EmptyCond{
 		mCfg:             cfg,
 		mFilterFieldName: fName,
-		// mFilterFieldName: getFilterFieldName(ctx, cfg.Name, fieldsMap, false),
 	}, nil
 
 }

@@ -50,7 +50,6 @@ func NewBeforeCond(ctx context.Context, cfg *CondCfg, fieldsMap map[string]*View
 		mCfg:             cfg,
 		mValue:           val,
 		mFilterFieldName: fName,
-		// mFilterFieldName: getFilterFieldName(ctx, cfg.Name, fieldsMap, false),
 	}, nil
 }
 

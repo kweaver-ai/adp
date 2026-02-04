@@ -41,7 +41,6 @@ func NewBetweenCond(ctx context.Context, cfg *CondCfg, fieldsMap map[string]*Vie
 		mCfg:             cfg,
 		mValue:           val,
 		mFilterFieldName: fName,
-		// mFilterFieldName: getFilterFieldName(ctx, cfg.Name, fieldsMap, false),
 	}, nil
 }
 

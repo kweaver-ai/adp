@@ -41,7 +41,6 @@ func NewOutRangeCond(ctx context.Context, cfg *CondCfg, fieldsMap map[string]*Vi
 		mCfg:             cfg,
 		mValue:           val,
 		mFilterFieldName: fName,
-		// mFilterFieldName: getFilterFieldName(ctx, cfg.Name, fieldsMap, false),
 	}, nil
 }
 

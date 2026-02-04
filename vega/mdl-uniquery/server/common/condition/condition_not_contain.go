@@ -36,7 +36,6 @@ func NewNotContainCond(ctx context.Context, cfg *CondCfg, fieldsMap map[string]*
 	notContainCond := &NotContainCond{
 		mCfg:             cfg,
 		mFilterFieldName: fName,
-		// mFilterFieldName: getFilterFieldName(ctx, cfg.Name, fieldsMap, false),
 	}
 
 	if common.IsSlice(cfg.Value) {
