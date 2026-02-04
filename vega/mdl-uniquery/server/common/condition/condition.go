@@ -198,7 +198,6 @@ func (v *ViewField) getTargetField(ctx context.Context, intent FieldFeatureType)
 		return v.Name, nil
 	}
 
-	// 3. 再次兜底，避免查询报错
 	// 全文检索情况下，text 类型的字段不需要添加 keyword 后缀
 	// 精确查询情况下，text 类型的字段并且有 keyword 特征，给字段名加上后缀 .keyword
 	// 只有查询类型为 DSL 或 IndexBase 才能加 keyword 后缀
@@ -206,20 +205,28 @@ func (v *ViewField) getTargetField(ctx context.Context, intent FieldFeatureType)
 	// 	IsTextType(v) && HasFeature(v, FieldFeatureType_Keyword) {
 	// 	return wrapKeyWordFieldName(v.Name)
 	// }
-	if IsTermLevelQuery(ctx, intent) && IsTextType(v) {
-		return wrapKeyWordFieldName(v.Name), nil
-	}
-
-	return "", fmt.Errorf("field '%s' does not have feature type '%s'", v.Name, intent)
-}
-
-// 判断是否是term-level查询
-func IsTermLevelQuery(ctx context.Context, intent FieldFeatureType) bool {
+	// 3. 再次兜底，避免查询报错
 	var queryType string
 	if ctx.Value(CtxKey_QueryType) != nil {
 		queryType = ctx.Value(CtxKey_QueryType).(string)
 	}
 
+	switch queryType {
+	case QueryType_DSL, QueryType_IndexBase:
+		if IsTermLevelQuery(queryType, intent) && IsTextType(v) {
+			return wrapKeyWordFieldName(v.Name), nil
+		}
+	case QueryType_SQL:
+		return v.Name, nil
+	default:
+		return "", fmt.Errorf("field '%s' with type '%s' does not have feature type '%s'", v.Name, v.Type, intent)
+	}
+
+	return "", fmt.Errorf("field '%s' with type '%s' does not have feature type '%s'", v.Name, v.Type, intent)
+}
+
+// 判断是否是term-level查询
+func IsTermLevelQuery(queryType string, intent FieldFeatureType) bool {
 	return (queryType == QueryType_DSL || queryType == QueryType_IndexBase) && intent == FieldFeatureType_Keyword
 }
 
