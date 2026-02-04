@@ -89,3 +89,7 @@ depServices:
     host: localhost
     port: 18080
     protocol: http
+  ontology-query:
+    host: localhost
+    port: 13018
+    protocol: http
