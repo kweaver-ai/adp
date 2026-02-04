@@ -21,10 +21,25 @@ COPY ./dataflow/dia-flow-web /flow-web/
 
 RUN set -ex; \
     cd /flow-web/; \
-    pnpm install --no-frozen-lockfile --registry https://registry.npmmirror.com/ --fetch-timeout 100000 --fetch-retries 5; \
-    pnpm --filter @applet/icons run g; \
-    pnpm --filter @applet/icons --filter @applet/api --filter @applet/common build; \
-    BUILD_PATH=dist && pnpm --filter flow-web build;
+    echo "=== Installing dependencies ==="; \
+    pnpm install --no-frozen-lockfile --registry https://registry.npmmirror.com/ --fetch-timeout 100000 --fetch-retries 5
+
+RUN set -ex; \
+    cd /flow-web/; \
+    echo "=== Generating icons ==="; \
+    pnpm --filter @applet/icons run g
+
+RUN set -ex; \
+    cd /flow-web/; \
+    echo "=== Building dependencies ==="; \
+    pnpm --filter icons --filter api --filter common build
+
+RUN set -ex; \
+    cd /flow-web/; \
+    echo "=== Building flow-web ==="; \
+    BUILD_PATH=dist pnpm --filter flow-web build; \
+    echo "=== Build complete, checking output ==="; \
+    ls -la packages/flow-web/
 
 # ========== 第三阶段：运行时镜像 ==========
 FROM ${BASE_IMAGE} AS prod
