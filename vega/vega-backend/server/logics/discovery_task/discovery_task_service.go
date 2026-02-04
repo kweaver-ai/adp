@@ -10,12 +10,13 @@ import (
 	"github.com/kweaver-ai/TelemetrySDK-Go/exporter/v2/ar_trace"
 	"github.com/kweaver-ai/kweaver-go-lib/logger"
 	o11y "github.com/kweaver-ai/kweaver-go-lib/observability"
-	mqclient "github.com/kweaver-ai/proton-mq-sdk-go"
 	"github.com/rs/xid"
+	"github.com/segmentio/kafka-go"
 	"go.opentelemetry.io/otel/trace"
 
 	"vega-backend/common"
 	discoverytaskaccess "vega-backend/drivenadapters/discovery_task"
+	kafka_access "vega-backend/drivenadapters/kafka"
 	"vega-backend/interfaces"
 )
 
@@ -26,24 +27,16 @@ var (
 
 type discoveryTaskService struct {
 	appSetting *common.AppSetting
-	mqClient   mqclient.ProtonMQClient
+	ka         interfaces.KafkaAccess
 	dta        interfaces.DiscoveryTaskAccess
 }
 
 // NewDiscoveryTaskService creates or returns the singleton DiscoveryTaskService.
 func NewDiscoveryTaskService(appSetting *common.AppSetting) interfaces.DiscoveryTaskService {
 	dtsOnce.Do(func() {
-		client, err := mqclient.NewProtonMQClient(appSetting.MQSetting.MQHost, appSetting.MQSetting.MQPort,
-			appSetting.MQSetting.MQHost, appSetting.MQSetting.MQPort, appSetting.MQSetting.MQType,
-			mqclient.UserInfo(appSetting.MQSetting.Auth.Username, appSetting.MQSetting.Auth.Password),
-			mqclient.AuthMechanism(appSetting.MQSetting.Auth.Mechanism),
-		)
-		if err != nil {
-			logger.Fatal("failed to create a proton mq client:", err)
-		}
 		dtsService = &discoveryTaskService{
 			appSetting: appSetting,
-			mqClient:   client,
+			ka:         kafka_access.NewKafkaAccess(appSetting),
 			dta:        discoverytaskaccess.NewDiscoveryTaskAccess(appSetting),
 		}
 	})
@@ -51,7 +44,7 @@ func NewDiscoveryTaskService(appSetting *common.AppSetting) interfaces.Discovery
 }
 
 // Create creates a new DiscoveryTask and sends message to Kafka.
-func (s *discoveryTaskService) Create(ctx context.Context, catalogID string) (string, error) {
+func (dts *discoveryTaskService) Create(ctx context.Context, catalogID string) (string, error) {
 	ctx, span := ar_trace.Tracer.Start(ctx, "DiscoveryTaskService.Create",
 		trace.WithSpanKind(trace.SpanKindServer))
 	defer span.End()
@@ -75,13 +68,21 @@ func (s *discoveryTaskService) Create(ctx context.Context, catalogID string) (st
 	}
 
 	// 1. Write to database
-	if err := s.dta.Create(ctx, task); err != nil {
+	if err := dts.dta.Create(ctx, task); err != nil {
 		logger.Errorf("Failed to create discovery task: %v", err)
 		o11y.Error(ctx, "Failed to create discovery task")
 		return "", err
 	}
 
-	// 2. TODO Send message to Kafka
+	// 2. Send message to Kafka
+	writer, err := dts.ka.NewWriter(ctx, interfaces.DiscoveryTaskTopic)
+	if err != nil {
+		logger.Errorf("Failed to create writer: %v", err)
+		o11y.Error(ctx, "Failed to create writer")
+		return "", err
+	}
+	defer dts.ka.CloseWriter(writer)
+
 	bytes, err := sonic.Marshal(&interfaces.DiscoveryTaskMessage{
 		TaskID: task.ID,
 	})
@@ -91,7 +92,9 @@ func (s *discoveryTaskService) Create(ctx context.Context, catalogID string) (st
 		return "", err
 	}
 
-	err = s.mqClient.Pub(interfaces.DiscoveryTaskTopic, bytes)
+	err = dts.ka.WriteMessages(ctx, writer, kafka.Message{
+		Value: bytes,
+	})
 	if err != nil {
 		logger.Errorf("Failed to send message to Kafka: %v", err)
 		o11y.Error(ctx, "Failed to send message to Kafka")
@@ -102,37 +105,37 @@ func (s *discoveryTaskService) Create(ctx context.Context, catalogID string) (st
 }
 
 // GetByID retrieves a DiscoveryTask by ID.
-func (s *discoveryTaskService) GetByID(ctx context.Context, id string) (*interfaces.DiscoveryTask, error) {
+func (dts *discoveryTaskService) GetByID(ctx context.Context, id string) (*interfaces.DiscoveryTask, error) {
 	ctx, span := ar_trace.Tracer.Start(ctx, "DiscoveryTaskService.GetByID",
 		trace.WithSpanKind(trace.SpanKindServer))
 	defer span.End()
 
-	return s.dta.GetByID(ctx, id)
+	return dts.dta.GetByID(ctx, id)
 }
 
 // List lists DiscoveryTasks for a catalog.
-func (s *discoveryTaskService) List(ctx context.Context, params interfaces.DiscoveryTaskQueryParams) ([]*interfaces.DiscoveryTask, int64, error) {
+func (dts *discoveryTaskService) List(ctx context.Context, params interfaces.DiscoveryTaskQueryParams) ([]*interfaces.DiscoveryTask, int64, error) {
 	ctx, span := ar_trace.Tracer.Start(ctx, "DiscoveryTaskService.List",
 		trace.WithSpanKind(trace.SpanKindServer))
 	defer span.End()
 
-	return s.dta.List(ctx, params)
+	return dts.dta.List(ctx, params)
 }
 
 // UpdateStatus updates a DiscoveryTask's status.
-func (s *discoveryTaskService) UpdateStatus(ctx context.Context, id, status, message string, stime int64) error {
+func (dts *discoveryTaskService) UpdateStatus(ctx context.Context, id, status, message string, stime int64) error {
 	ctx, span := ar_trace.Tracer.Start(ctx, "DiscoveryTaskService.UpdateStatus",
 		trace.WithSpanKind(trace.SpanKindServer))
 	defer span.End()
 
-	return s.dta.UpdateStatus(ctx, id, status, message, stime)
+	return dts.dta.UpdateStatus(ctx, id, status, message, stime)
 }
 
 // UpdateResult updates a DiscoveryTask's result.
-func (s *discoveryTaskService) UpdateResult(ctx context.Context, id string, result *interfaces.DiscoveryResult, stime int64) error {
+func (dts *discoveryTaskService) UpdateResult(ctx context.Context, id string, result *interfaces.DiscoveryResult, stime int64) error {
 	ctx, span := ar_trace.Tracer.Start(ctx, "DiscoveryTaskService.UpdateResult",
 		trace.WithSpanKind(trace.SpanKindServer))
 	defer span.End()
 
-	return s.dta.UpdateResult(ctx, id, result, stime)
+	return dts.dta.UpdateResult(ctx, id, result, stime)
 }

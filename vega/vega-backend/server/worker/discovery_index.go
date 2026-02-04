@@ -156,12 +156,14 @@ func (dw *discoveryWorker) enrichIndexMetadata(ctx context.Context,
 		}
 
 		// Map fields to SchemaDefinition
-		var columns []interfaces.ColumnMeta
+		var columns []interfaces.Property
 		for _, field := range idx.Mapping {
-			columns = append(columns, interfaces.ColumnMeta{
-				Name:     field.Name,
-				Type:     field.Type,
-				OrigType: field.Type, // OpenSearch types are native
+			columns = append(columns, interfaces.Property{
+				Name:         field.Name,
+				Type:         field.Type,
+				DisplayName:  field.Name,
+				OriginalName: field.Name,
+				Comment:      "",
 			})
 		}
 		resource.SchemaDefinition = columns
@@ -171,6 +173,7 @@ func (dw *discoveryWorker) enrichIndexMetadata(ctx context.Context,
 		if resource.SourceMetadata != nil {
 			sourceMetadata = resource.SourceMetadata
 		}
+
 		sourceMetadata["properties"] = idx.Properties
 		sourceMetadata["mapping"] = idx.Mapping
 		resource.SourceMetadata = sourceMetadata

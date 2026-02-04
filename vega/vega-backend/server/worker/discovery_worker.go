@@ -9,9 +9,10 @@ import (
 
 	"github.com/bytedance/sonic"
 	"github.com/kweaver-ai/kweaver-go-lib/logger"
-	mqclient "github.com/kweaver-ai/proton-mq-sdk-go"
+	"github.com/segmentio/kafka-go"
 
 	"vega-backend/common"
+	kafka_access "vega-backend/drivenadapters/kafka"
 	"vega-backend/interfaces"
 	logicsCatalog "vega-backend/logics/catalog"
 	"vega-backend/logics/connectors"
@@ -28,26 +29,19 @@ var (
 // discoveryWorker provides resource discovery functionality.
 type discoveryWorker struct {
 	appSetting *common.AppSetting
-	mqClient   mqclient.ProtonMQClient
+	ka         interfaces.KafkaAccess
 	rs         interfaces.ResourceService
 	cs         interfaces.CatalogService
 	dts        interfaces.DiscoveryTaskService
+	reader     *kafka.Reader
 }
 
 // NewDiscoveryWorker creates or returns the singleton DiscoveryWorker.
 func NewDiscoveryWorker(appSetting *common.AppSetting) interfaces.DiscoveryWorker {
 	dWorkerOnce.Do(func() {
-		client, err := mqclient.NewProtonMQClient(appSetting.MQSetting.MQHost, appSetting.MQSetting.MQPort,
-			appSetting.MQSetting.MQHost, appSetting.MQSetting.MQPort, appSetting.MQSetting.MQType,
-			mqclient.UserInfo(appSetting.MQSetting.Auth.Username, appSetting.MQSetting.Auth.Password),
-			mqclient.AuthMechanism(appSetting.MQSetting.Auth.Mechanism),
-		)
-		if err != nil {
-			logger.Fatal("failed to create a proton mq client:", err)
-		}
 		dWorker = &discoveryWorker{
 			appSetting: appSetting,
-			mqClient:   client,
+			ka:         kafka_access.NewKafkaAccess(appSetting),
 			rs:         resource.NewResourceService(appSetting),
 			cs:         logicsCatalog.NewCatalogService(appSetting),
 			dts:        discovery_task.NewDiscoveryTaskService(appSetting),
@@ -56,34 +50,69 @@ func NewDiscoveryWorker(appSetting *common.AppSetting) interfaces.DiscoveryWorke
 	return dWorker
 }
 
-func Start(appSetting *common.AppSetting) {
-	dWorker = NewDiscoveryWorker(appSetting)
-	go dWorker.Run()
-}
-
-func (dw *discoveryWorker) Run() {
-	for {
-		time.Sleep(1 * time.Second)
-		dw.mqClient.Sub(interfaces.DiscoveryTaskTopic, "", dw.MessageHandler(), 100, 0)
+func (dw *discoveryWorker) Start() {
+	ctx := context.Background()
+	err := dw.ka.CreateTopic(ctx, interfaces.DiscoveryTaskTopic)
+	if err != nil {
+		logger.Errorf("Failed to create topic: %v", err)
+		return
 	}
+
+	go func() {
+		dw.Run(ctx)
+	}()
 }
 
-func (dw *discoveryWorker) MessageHandler() mqclient.MessageHandler {
-	return func(msg []byte) error {
-		ctx := context.Background()
-		taskMsg := &interfaces.DiscoveryTaskMessage{}
-		if err := sonic.Unmarshal(msg, taskMsg); err != nil {
-			return err
+func (dw *discoveryWorker) Run(ctx context.Context) {
+	defer func() {
+		if panicErr := recover(); panicErr != nil {
+			logger.Errorf("Discovery worker panic: %v", panicErr)
 		}
-		err := dw.ExecuteDiscovery(ctx, taskMsg.TaskID)
-		return err
+	}()
+
+	reader, err := dw.ka.NewReader(ctx, interfaces.DiscoveryTaskTopic, "discovery_worker")
+	if err != nil {
+		logger.Errorf("Failed to create reader: %v", err)
+		return
+	}
+	dw.reader = reader
+	defer dw.ka.CloseReader(reader)
+
+	logger.Infof("Discovery worker started, listening on topic: %s", interfaces.DiscoveryTaskTopic)
+
+	for {
+		msg, err := dw.ka.ReadMessage(ctx, reader)
+		if err != nil {
+			logger.Errorf("Failed to read message: %v", err)
+			time.Sleep(1 * time.Second)
+			continue
+		}
+
+		taskMsg := &interfaces.DiscoveryTaskMessage{}
+		if err := sonic.Unmarshal(msg.Value, taskMsg); err != nil {
+			logger.Errorf("Failed to unmarshal message: %v", err)
+			// 消息解析失败也需要提交位移，避免重复消费无效消息
+			_ = dw.ka.CommitMessages(ctx, reader, msg)
+			continue
+		}
+
+		err = dw.ExecuteDiscovery(ctx, taskMsg.TaskID)
+		if err != nil {
+			logger.Errorf("Failed to execute discovery: %v", err)
+			// 业务失败不提交位移，下次重试
+			continue
+		}
+
+		// 业务成功后手动提交位移
+		if err := dw.ka.CommitMessages(ctx, reader, msg); err != nil {
+			logger.Errorf("Failed to commit message: %v", err)
+		}
 	}
 }
 
 // ExecuteDiscovery executes discovery for a specific catalog.
 // This method is called by the task management service.
 func (dw *discoveryWorker) ExecuteDiscovery(ctx context.Context, taskID string) error {
-
 	logger.Infof("Starting discovery for task: %s", taskID)
 
 	task, err := dw.dts.GetByID(ctx, taskID)

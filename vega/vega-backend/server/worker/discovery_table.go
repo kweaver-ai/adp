@@ -72,12 +72,22 @@ func (dw *discoveryWorker) enrichTableMetadata(ctx context.Context,
 
 		// 填充 Resource 元数据
 		resource.Database = table.Database
-		resource.SchemaDefinition = table.Columns
+		resource.SchemaDefinition = []interfaces.Property{}
+		for _, column := range table.Columns {
+			resource.SchemaDefinition = append(resource.SchemaDefinition, interfaces.Property{
+				Name:         column.Name,
+				Type:         column.Type,
+				DisplayName:  column.Name,
+				OriginalName: column.Name,
+				Comment:      column.Comment,
+			})
+		}
 
 		sourceMetadata := make(map[string]any)
 		if resource.SourceMetadata != nil {
 			sourceMetadata = resource.SourceMetadata
 		}
+		sourceMetadata["columns"] = table.Columns
 		if table.SubType != "" {
 			sourceMetadata["sub_type"] = table.SubType
 		}
@@ -197,11 +207,13 @@ func (dw *discoveryWorker) createResource(ctx context.Context, catalog *interfac
 	table *interfaces.TableMeta, sourceIdentifier string) (*interfaces.Resource, error) {
 
 	req := &interfaces.ResourceRequest{
-		CatalogID: catalog.ID,
-		Name:      sourceIdentifier,
-		Comment:   table.Comment,
-		Category:  interfaces.ResourceCategoryTable,
-		Status:    interfaces.ResourceStatusActive,
+		CatalogID:        catalog.ID,
+		Name:             sourceIdentifier,
+		Comment:          table.Comment,
+		Category:         interfaces.ResourceCategoryTable,
+		Status:           interfaces.ResourceStatusActive,
+		Database:         table.Database,
+		SourceIdentifier: sourceIdentifier,
 	}
 	id, err := dw.rs.Create(ctx, req)
 	if err != nil {

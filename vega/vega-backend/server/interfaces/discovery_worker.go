@@ -15,7 +15,7 @@ type DiscoveryResult struct {
 // DiscoveryWorker interface defines discovery execution functionality.
 // This worker is called by the task management service to execute the actual discovery.
 type DiscoveryWorker interface {
-	Run()
+	Start()
 	// ExecuteDiscovery executes discovery for a specific catalog.
 	ExecuteDiscovery(ctx context.Context, taskID string) error
 }
