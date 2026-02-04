@@ -200,5 +200,3 @@ require (
 	google.golang.org/protobuf v1.36.9 // indirect
 	gopkg.in/yaml.v2 v2.4.0
 )
-
-replace github.com/kweaver-ai/adp/autoflow/ide-go-lib => ../ide-go-lib
