@@ -77,6 +77,8 @@ public class Message {
 
     public final static String MESSAGE_QUERY_SOLUTION = "请重新发起SQL请求，详细信息参见产品 API 文档。";
 
+    public final static String MESSAGE_ETRINO_SOLUTION = "请检查ETrino模块是否安装且服务运行正常，具体操作可参考：《数据虚拟化引擎故障排除指南》。";
+
     public static String getMessageDetail(ErrorCodeEnum errorCodeEnum) {
         switch (errorCodeEnum) {
             case AuthTokenForbiddenError:

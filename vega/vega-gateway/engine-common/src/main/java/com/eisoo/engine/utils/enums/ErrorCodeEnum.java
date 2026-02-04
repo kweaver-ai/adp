@@ -49,7 +49,8 @@ public enum ErrorCodeEnum {
     DataSourceNotExist(HttpStatus.BAD_REQUEST, "VirtualizationEngine.DataSourceNotExist.", "数据源不存在。"),
     DataSourceNameExist(HttpStatus.BAD_REQUEST,"VirtualizationEngine.DataSourceNameExist","数据源名称存在。"),
     AbandonedQuery(HttpStatus.BAD_REQUEST,"Public.BadRequest","查询已失效。"),
-    MissingAttributeError(HttpStatus.BAD_REQUEST, "Public.BadRequest", "查询中表或字段不存在。");
+    MissingAttributeError(HttpStatus.BAD_REQUEST, "Public.BadRequest", "查询中表或字段不存在。"),
+    ETrinoError(HttpStatus.INTERNAL_SERVER_ERROR, "Public.InternalServerError", "ETrino服务访问异常。");
 
 
 

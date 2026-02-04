@@ -10,6 +10,7 @@ import com.eisoo.engine.gateway.service.RewriteSqlService;
 import com.eisoo.engine.gateway.util.HttpOpenUtils;
 import com.eisoo.engine.metadata.entity.ClientIdEntity;
 import com.eisoo.engine.utils.common.Constants;
+import com.eisoo.engine.utils.common.Detail;
 import com.eisoo.engine.utils.common.HttpStatus;
 import com.eisoo.engine.utils.common.Message;
 import com.eisoo.engine.utils.enums.ErrorCodeEnum;
@@ -394,7 +395,7 @@ public class RewriteSqlServiceImpl implements RewriteSqlService {
         }catch (AiShuException e){
             throw e;
         }catch (Exception e){
-            throw new AiShuException(ErrorCodeEnum.OpenLooKengError,e.getMessage(), Message.MESSAGE_OPENLOOKENG_ERROR);
+            throw new AiShuException(ErrorCodeEnum.ETrinoError, e.getMessage(),Message.MESSAGE_ETRINO_SOLUTION);
         }
         stopWatch.stop();
 
