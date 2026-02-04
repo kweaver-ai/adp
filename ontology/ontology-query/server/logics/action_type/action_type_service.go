@@ -86,7 +86,7 @@ func (ats *actionTypeService) GetActionsByActionTypeID(ctx context.Context,
 
 	// 2.根据行动条件+请求的唯一标识，去请求对象类的对象实例数据（当前行动条件只能选绑定的对象类的，不能选其他类，所以当前就直接拼，认为这些条件都在作用在这个对象类上）
 	// 条件转换，唯一标识换成主键过滤，各个对象之间用or连接，主键间用and连接，然后再跟行动条件and去请求对象类的对象数据
-	condition := logics.BuildUniqueIdentitiesCondition(query.InstanceIdentity)
+	condition := logics.BuildUniqueIdentitiesCondition(query.InstanceIdentities)
 
 	if actionType.Condition != nil {
 		condition = &cond.CondCfg{
@@ -111,7 +111,7 @@ func (ats *actionTypeService) GetActionsByActionTypeID(ctx context.Context,
 			ExcludeSystemProperties: query.ExcludeSystemProperties,
 		},
 		ObjectQueryInfo: &interfaces.ObjectQueryInfo{
-			InstanceIdentity: query.InstanceIdentity,
+			InstanceIdentity: query.InstanceIdentities,
 		},
 	}
 	objects, err := ats.ots.GetObjectsByObjectTypeID(ctx, objectQuery)

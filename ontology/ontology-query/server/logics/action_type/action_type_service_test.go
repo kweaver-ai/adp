@@ -64,7 +64,7 @@ func Test_actionTypeService_GetActionsByActionTypeID(t *testing.T) {
 			query := &interfaces.ActionQuery{
 				KNID:         knID,
 				ActionTypeID: actionTypeID,
-				InstanceIdentity: []map[string]any{
+				InstanceIdentities: []map[string]any{
 					{"id": "123"},
 				},
 			}
@@ -147,7 +147,7 @@ func Test_actionTypeService_GetActionsByActionTypeID(t *testing.T) {
 			query := &interfaces.ActionQuery{
 				KNID:         knID,
 				ActionTypeID: actionTypeID,
-				InstanceIdentity: []map[string]any{
+				InstanceIdentities: []map[string]any{
 					{"id": "123"},
 				},
 			}
@@ -197,7 +197,7 @@ func Test_actionTypeService_GetActionsByActionTypeID(t *testing.T) {
 			query := &interfaces.ActionQuery{
 				KNID:         knID,
 				ActionTypeID: actionTypeID,
-				InstanceIdentity: []map[string]any{
+				InstanceIdentities: []map[string]any{
 					{"id": "123"},
 				},
 			}
@@ -241,7 +241,7 @@ func Test_actionTypeService_GetActionsByActionTypeID(t *testing.T) {
 			query := &interfaces.ActionQuery{
 				KNID:         knID,
 				ActionTypeID: actionTypeID,
-				InstanceIdentity: []map[string]any{
+				InstanceIdentities: []map[string]any{
 					{"id": "123"},
 				},
 			}
@@ -287,7 +287,7 @@ func Test_actionTypeService_GetActionsByActionTypeID(t *testing.T) {
 				CommonQueryParameters: interfaces.CommonQueryParameters{
 					IncludeTypeInfo: true,
 				},
-				InstanceIdentity: []map[string]any{
+				InstanceIdentities: []map[string]any{
 					{"id": "123"},
 				},
 			}
@@ -326,7 +326,7 @@ func Test_actionTypeService_GetActionsByActionTypeID(t *testing.T) {
 			query := &interfaces.ActionQuery{
 				KNID:         knID,
 				ActionTypeID: actionTypeID,
-				InstanceIdentity: []map[string]any{
+				InstanceIdentities: []map[string]any{
 					{"id": "123"},
 					{"id": "456"},
 				},
@@ -367,7 +367,7 @@ func Test_actionTypeService_GetActionsByActionTypeID(t *testing.T) {
 			query := &interfaces.ActionQuery{
 				KNID:         knID,
 				ActionTypeID: actionTypeID,
-				InstanceIdentity: []map[string]any{
+				InstanceIdentities: []map[string]any{
 					{"id": "123"},
 				},
 			}
@@ -394,7 +394,7 @@ func Test_actionTypeService_GetActionsByActionTypeID(t *testing.T) {
 			query := &interfaces.ActionQuery{
 				KNID:         knID,
 				ActionTypeID: actionTypeID,
-				InstanceIdentity: []map[string]any{
+				InstanceIdentities: []map[string]any{
 					{"id": "123"},
 				},
 			}
