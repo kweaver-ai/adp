@@ -82,6 +82,6 @@ type AgentOperatorAccess interface {
 	// API: POST /tool-box/{box_id}/proxy/{tool_id}
 	ExecuteTool(ctx context.Context, boxID string, toolID string, execRequest ToolExecutionRequest) (any, error)
 	// ExecuteMCP executes an MCP-based action through agent-operator-integration
-	// API: POST /mcp/execute/tool/{mcp_tool_id}
-	ExecuteMCP(ctx context.Context, mcpToolID string, toolName string, execRequest MCPExecutionRequest) (any, error)
+	// API: POST /mcp/proxy/{mcp_id}/tool/call
+	ExecuteMCP(ctx context.Context, mcpID string, toolName string, execRequest MCPExecutionRequest) (any, error)
 }
