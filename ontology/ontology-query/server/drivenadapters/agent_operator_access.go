@@ -110,7 +110,7 @@ func (aoa *agentOperatorAccess) GetAgentOperatorByID(ctx context.Context,
 type operatorExecuteResult struct {
 	StatusCode int            `json:"status_code"`
 	Headers    map[string]any `json:"headers"`
-	Body       map[string]any `json:"body"`
+	Body       any            `json:"body"` // Can receive any type (string, map, array, etc.)
 	Error      string         `json:"error"`
 	DurationMs int            `json:"duration_ms"`
 }

@@ -260,6 +260,8 @@ const batchSize = 100
 func (s *actionSchedulerService) executeAsync(execution *interfaces.ActionExecution, actionType *interfaces.ActionType, req *interfaces.ActionExecutionRequest) {
 	// Create a new context for async execution
 	ctx := context.Background()
+	// Restore account info from execution record for downstream API calls (user_id header)
+	ctx = context.WithValue(ctx, interfaces.ACCOUNT_INFO_KEY, execution.Executor)
 
 	logger.Infof("Starting async execution: %s, total objects: %d", execution.ID, len(req.UniqueIdentities))
 
@@ -268,6 +270,15 @@ func (s *actionSchedulerService) executeAsync(execution *interfaces.ActionExecut
 		"status": interfaces.ExecutionStatusRunning,
 	}); err != nil {
 		logger.Warnf("Failed to update execution status to running: %v", err)
+	}
+
+	// Check if we need to fetch full object data for property-based parameters
+	needFullObjectData := s.needsFullObjectData(actionType.Parameters)
+	var fullObjectsMap map[string]map[string]any
+	if needFullObjectData {
+		logger.Debugf("Parameters require full object data, fetching objects for execution %s", execution.ID)
+		fullObjectsMap = s.fetchFullObjectData(ctx, req.KNID, req.Branch, actionType.ObjectTypeID, req.UniqueIdentities)
+		logger.Debugf("Fetched %d full objects for execution %s", len(fullObjectsMap), execution.ID)
 	}
 
 	// Execute objects in batches
@@ -303,8 +314,18 @@ func (s *actionSchedulerService) executeAsync(execution *interfaces.ActionExecut
 
 		objectStart := time.Now()
 
+		// Get object data for building parameters
+		// If we have full object data, use it; otherwise use the identity (unique_identity)
+		objectData := identity
+		if needFullObjectData && fullObjectsMap != nil {
+			identityKey := s.getIdentityKey(identity)
+			if fullObj, exists := fullObjectsMap[identityKey]; exists {
+				objectData = fullObj
+			}
+		}
+
 		// Build parameters for this object
-		params, err := s.buildExecutionParams(actionType, identity, req.DynamicParams)
+		params, err := s.buildExecutionParams(actionType, objectData, req.DynamicParams)
 		if err != nil {
 			allResults = append(allResults, interfaces.ObjectExecutionResult{
 				UniqueIdentity: identity,
@@ -434,4 +455,67 @@ func (s *actionSchedulerService) buildExecutionParams(actionType *interfaces.Act
 	}
 
 	return params, nil
+}
+
+// needsFullObjectData checks if any parameter requires property-based values
+func (s *actionSchedulerService) needsFullObjectData(params []interfaces.Parameter) bool {
+	for _, param := range params {
+		if param.ValueFrom == interfaces.LOGIC_PARAMS_VALUE_FROM_PROP {
+			return true
+		}
+	}
+	return false
+}
+
+// fetchFullObjectData fetches complete object data for all unique identities
+func (s *actionSchedulerService) fetchFullObjectData(ctx context.Context, knID, branch, objectTypeID string, identities []map[string]any) map[string]map[string]any {
+	result := make(map[string]map[string]any)
+
+	if len(identities) == 0 {
+		return result
+	}
+
+	// Build query to fetch objects by their unique identities
+	// We use the _instance_identity field to match objects
+	objectQuery := &interfaces.ObjectQueryBaseOnObjectType{
+		PageQuery: interfaces.PageQuery{
+			Limit:     len(identities),
+			NeedTotal: false,
+		},
+		KNID:         knID,
+		Branch:       branch,
+		ObjectTypeID: objectTypeID,
+		CommonQueryParameters: interfaces.CommonQueryParameters{
+			IncludeTypeInfo: false,
+		},
+	}
+
+	objects, err := s.ots.GetObjectsByObjectTypeID(ctx, objectQuery)
+	if err != nil {
+		logger.Warnf("Failed to fetch full object data: %v", err)
+		return result
+	}
+
+	// Build a map keyed by identity for quick lookup
+	for _, objData := range objects.Datas {
+		if identity, ok := objData[interfaces.SYSTEM_PROPERTY_INSTANCE_IDENTITY]; ok {
+			if identityMap, ok := identity.(map[string]any); ok {
+				key := s.getIdentityKey(identityMap)
+				result[key] = objData
+			}
+		}
+	}
+
+	return result
+}
+
+// getIdentityKey generates a unique key from an identity map for lookup purposes
+func (s *actionSchedulerService) getIdentityKey(identity map[string]any) string {
+	// Simple approach: serialize identity to a string
+	// For more complex cases, you might want to sort keys first
+	key := ""
+	for k, v := range identity {
+		key += fmt.Sprintf("%s=%v;", k, v)
+	}
+	return key
 }
