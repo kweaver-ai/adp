@@ -109,10 +109,10 @@ func TestQueryLogicProperties_Success(t *testing.T) {
 
 		ctx := context.Background()
 		req := &interfaces.QueryLogicPropertiesReq{
-			KnID:             "kn-001",
-			OtID:             "ot-001",
-			UniqueIdentities: []map[string]interface{}{{"id": "obj-001"}},
-			Properties:       []string{"prop1"},
+			KnID:               "kn-001",
+			OtID:               "ot-001",
+			InstanceIdentities: []map[string]interface{}{{"id": "obj-001"}},
+			Properties:         []string{"prop1"},
 		}
 
 		// Mock HTTP 成功响应
@@ -184,9 +184,9 @@ func TestQueryActions_Success(t *testing.T) {
 
 		ctx := context.Background()
 		req := &interfaces.QueryActionsRequest{
-			KnID:             "kn-001",
-			AtID:             "at-001",
-			UniqueIdentities: []map[string]interface{}{{"id": "obj-001"}},
+			KnID:               "kn-001",
+			AtID:               "at-001",
+			InstanceIdentities: []map[string]interface{}{{"id": "obj-001"}},
 		}
 
 		// Mock HTTP 成功响应

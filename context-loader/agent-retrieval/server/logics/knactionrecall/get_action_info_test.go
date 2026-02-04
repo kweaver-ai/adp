@@ -39,9 +39,9 @@ func TestGetActionInfo_QueryActionsError(t *testing.T) {
 
 		ctx := context.Background()
 		req := &interfaces.KnActionRecallRequest{
-			KnID:           "kn-001",
-			AtID:           "at-001",
-			UniqueIdentity: map[string]interface{}{"id": "obj-001"},
+			KnID:             "kn-001",
+			AtID:             "at-001",
+			InstanceIdentity: map[string]interface{}{"id": "obj-001"},
 		}
 
 		// Mock QueryActions 返回错误
@@ -75,9 +75,9 @@ func TestGetActionInfo_ActionSourceNil(t *testing.T) {
 
 		ctx := context.Background()
 		req := &interfaces.KnActionRecallRequest{
-			KnID:           "kn-001",
-			AtID:           "at-001",
-			UniqueIdentity: map[string]interface{}{"id": "obj-001"},
+			KnID:             "kn-001",
+			AtID:             "at-001",
+			InstanceIdentity: map[string]interface{}{"id": "obj-001"},
 		}
 
 		// Mock QueryActions 返回 ActionSource 为 nil
@@ -116,9 +116,9 @@ func TestGetActionInfo_ActionsEmpty(t *testing.T) {
 
 		ctx := context.Background()
 		req := &interfaces.KnActionRecallRequest{
-			KnID:           "kn-001",
-			AtID:           "at-001",
-			UniqueIdentity: map[string]interface{}{"id": "obj-001"},
+			KnID:             "kn-001",
+			AtID:             "at-001",
+			InstanceIdentity: map[string]interface{}{"id": "obj-001"},
 		}
 
 		// Mock QueryActions 返回空 Actions
@@ -157,9 +157,9 @@ func TestGetActionInfo_UnsupportedType(t *testing.T) {
 
 		ctx := context.Background()
 		req := &interfaces.KnActionRecallRequest{
-			KnID:           "kn-001",
-			AtID:           "at-001",
-			UniqueIdentity: map[string]interface{}{"id": "obj-001"},
+			KnID:             "kn-001",
+			AtID:             "at-001",
+			InstanceIdentity: map[string]interface{}{"id": "obj-001"},
 		}
 
 		// Mock QueryActions 返回不支持的类型
@@ -205,9 +205,9 @@ func TestGetActionInfo_ToolType_Success(t *testing.T) {
 
 		ctx := context.Background()
 		req := &interfaces.KnActionRecallRequest{
-			KnID:           "kn-001",
-			AtID:           "at-001",
-			UniqueIdentity: map[string]interface{}{"id": "obj-001"},
+			KnID:             "kn-001",
+			AtID:             "at-001",
+			InstanceIdentity: map[string]interface{}{"id": "obj-001"},
 		}
 
 		// Mock QueryActions 返回 Tool 类型
@@ -290,9 +290,9 @@ func TestGetActionInfo_MCPType_Success(t *testing.T) {
 
 		ctx := context.Background()
 		req := &interfaces.KnActionRecallRequest{
-			KnID:           "kn-001",
-			AtID:           "at-001",
-			UniqueIdentity: map[string]interface{}{"id": "obj-001"},
+			KnID:             "kn-001",
+			AtID:             "at-001",
+			InstanceIdentity: map[string]interface{}{"id": "obj-001"},
 		}
 
 		// Mock QueryActions 返回 MCP 类型
@@ -354,9 +354,9 @@ func TestGetActionInfo_GetToolDetailError(t *testing.T) {
 
 		ctx := context.Background()
 		req := &interfaces.KnActionRecallRequest{
-			KnID:           "kn-001",
-			AtID:           "at-001",
-			UniqueIdentity: map[string]interface{}{"id": "obj-001"},
+			KnID:             "kn-001",
+			AtID:             "at-001",
+			InstanceIdentity: map[string]interface{}{"id": "obj-001"},
 		}
 
 		// Mock QueryActions 返回 Tool 类型
@@ -405,9 +405,9 @@ func TestGetActionInfo_GetMCPToolDetailError(t *testing.T) {
 
 		ctx := context.Background()
 		req := &interfaces.KnActionRecallRequest{
-			KnID:           "kn-001",
-			AtID:           "at-001",
-			UniqueIdentity: map[string]interface{}{"id": "obj-001"},
+			KnID:             "kn-001",
+			AtID:             "at-001",
+			InstanceIdentity: map[string]interface{}{"id": "obj-001"},
 		}
 
 		// Mock QueryActions 返回 MCP 类型

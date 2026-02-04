@@ -24,7 +24,7 @@ func TestValidateRequest_Success(t *testing.T) {
 			KnID:  "kn-001",
 			OtID:  "ot-001",
 			Query: "测试查询",
-			UniqueIdentities: []map[string]interface{}{
+			InstanceIdentities: []map[string]interface{}{
 				{"id": "obj-001"},
 			},
 			Properties: []string{"prop1", "prop2"},
@@ -44,7 +44,7 @@ func TestValidateRequest_MissingKnID(t *testing.T) {
 			KnID:  "",
 			OtID:  "ot-001",
 			Query: "测试查询",
-			UniqueIdentities: []map[string]interface{}{
+			InstanceIdentities: []map[string]interface{}{
 				{"id": "obj-001"},
 			},
 			Properties: []string{"prop1"},
@@ -65,7 +65,7 @@ func TestValidateRequest_MissingOtID(t *testing.T) {
 			KnID:  "kn-001",
 			OtID:  "",
 			Query: "测试查询",
-			UniqueIdentities: []map[string]interface{}{
+			InstanceIdentities: []map[string]interface{}{
 				{"id": "obj-001"},
 			},
 			Properties: []string{"prop1"},
@@ -86,7 +86,7 @@ func TestValidateRequest_MissingQuery(t *testing.T) {
 			KnID:  "kn-001",
 			OtID:  "ot-001",
 			Query: "",
-			UniqueIdentities: []map[string]interface{}{
+			InstanceIdentities: []map[string]interface{}{
 				{"id": "obj-001"},
 			},
 			Properties: []string{"prop1"},
@@ -98,22 +98,22 @@ func TestValidateRequest_MissingQuery(t *testing.T) {
 	})
 }
 
-// TestValidateRequest_EmptyUniqueIdentities 测试 validateRequest 空 UniqueIdentities
-func TestValidateRequest_EmptyUniqueIdentities(t *testing.T) {
-	Convey("TestValidateRequest_EmptyUniqueIdentities", t, func() {
+// TestValidateRequest_EmptyInstanceIdentities 测试 validateRequest 空 InstanceIdentities
+func TestValidateRequest_EmptyInstanceIdentities(t *testing.T) {
+	Convey("TestValidateRequest_EmptyInstanceIdentities", t, func() {
 		service := &knLogicPropertyResolverService{}
 
 		req := &interfaces.ResolveLogicPropertiesRequest{
-			KnID:             "kn-001",
-			OtID:             "ot-001",
-			Query:            "测试查询",
-			UniqueIdentities: []map[string]interface{}{},
-			Properties:       []string{"prop1"},
+			KnID:               "kn-001",
+			OtID:               "ot-001",
+			Query:              "测试查询",
+			InstanceIdentities: []map[string]interface{}{},
+			Properties:         []string{"prop1"},
 		}
 
 		err := service.validateRequest(req)
 		So(err, ShouldNotBeNil)
-		So(err.Error(), ShouldContainSubstring, "unique_identities")
+		So(err.Error(), ShouldContainSubstring, "_instance_identities")
 	})
 }
 
@@ -126,7 +126,7 @@ func TestValidateRequest_EmptyProperties(t *testing.T) {
 			KnID:  "kn-001",
 			OtID:  "ot-001",
 			Query: "测试查询",
-			UniqueIdentities: []map[string]interface{}{
+			InstanceIdentities: []map[string]interface{}{
 				{"id": "obj-001"},
 			},
 			Properties: []string{},

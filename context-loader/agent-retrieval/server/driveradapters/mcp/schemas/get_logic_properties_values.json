@@ -8,11 +8,11 @@
       },
       "query": {
         "type": "string",
-        "description": "用户问题或关键词（用于生成 dynamic_params）。缺失会导致动态参数生成失败"
+        "description": "用户查询，需含时间、统计维度、业务上下文"
       },
-      "unique_identities": {
+      "_instance_identities": {
         "type": "array",
-        "description": "实例唯一标识列表（对象主键/唯一标识键值对），支持批量",
+        "description": "对象实例标识数组。必须从 query_object_instance 或 query_instance_subgraph 的 _instance_identity 字段提取，不可臆造。按原顺序组成数组。",
         "items": {
           "type": "object",
           "additionalProperties": true
@@ -25,29 +25,18 @@
       },
       "additional_context": {
         "type": "string",
-        "description": "补充上下文信息（可选）。建议传 JSON 字符串，包含时间范围/对象上下文等，例如 {\"instant\":false,\"start\":<ms>,\"end\":<ms>,\"step\":\"1d\"}"
+        "description": "可选。补充 timezone、instant、step 等上下文"
       },
       "options": {
         "type": "object",
-        "description": "高级选项（可选）。仅支持 return_debug / max_repair_rounds / max_concurrency",
         "properties": {
-          "return_debug": {
-            "type": "boolean",
-            "description": "是否返回 debug 信息（dynamic_params、agent_info 等）。默认 false"
-          },
-          "max_repair_rounds": {
-            "type": "integer",
-            "description": "动态参数修复轮数上限。默认 1"
-          },
-          "max_concurrency": {
-            "type": "integer",
-            "description": "并发生成动态参数的最大并发数。默认 4"
-          }
-        },
-        "additionalProperties": false
+          "return_debug": { "type": "boolean" },
+          "max_repair_rounds": { "type": "integer" },
+          "max_concurrency": { "type": "integer" }
+        }
       }
     },
-    "required": ["ot_id", "query", "unique_identities", "properties"]
+    "required": ["ot_id", "query", "_instance_identities", "properties"]
   },
   "output_schema": {
     "type": "object",

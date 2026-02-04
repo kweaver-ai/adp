@@ -24,6 +24,11 @@
                 "type": "boolean",
                 "default": true,
                 "description": "概念召回时是否返回精简 schema。true 仅返回必要字段（概念ID/名称/关系 source&target）"
+              },
+              "include_sample_data": {
+                "type": "boolean",
+                "default": false,
+                "description": "是否获取对象类型的样例数据。true 会为每个召回对象类型获取一条样例数据"
               }
             }
           }

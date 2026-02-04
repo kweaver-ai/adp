@@ -6,13 +6,13 @@
         "type": "string",
         "description": "行动类型ID"
       },
-      "unique_identity": {
+      "_instance_identity": {
         "type": "object",
-        "description": "对象唯一标识（至少一个字段）",
+        "description": "对象实例标识。必须从 query_object_instance 或 query_instance_subgraph 的 _instance_identity 字段提取，不可臆造。",
         "additionalProperties": true
       }
     },
-    "required": ["at_id", "unique_identity"]
+    "required": ["at_id", "_instance_identity"]
   },
   "output_schema": {
     "type": "object",

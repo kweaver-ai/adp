@@ -34,11 +34,11 @@ type QueryObjectInstancesResp struct {
 
 // QueryLogicPropertiesReq Request for querying logic properties values
 type QueryLogicPropertiesReq struct {
-	KnID             string                   `json:"kn_id"`
-	OtID             string                   `json:"ot_id"`
-	UniqueIdentities []map[string]interface{} `json:"unique_identities"`
-	Properties       []string                 `json:"properties"`
-	DynamicParams    map[string]interface{}   `json:"dynamic_params"`
+	KnID               string                   `json:"kn_id"`
+	OtID               string                   `json:"ot_id"`
+	InstanceIdentities []map[string]interface{} `json:"_instance_identity"`
+	Properties         []string                 `json:"properties"`
+	DynamicParams      map[string]interface{}   `json:"dynamic_params"`
 }
 
 // QueryLogicPropertiesResp Response for querying logic properties values
