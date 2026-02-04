@@ -8,10 +8,10 @@ import (
 
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/common"
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/drivenadapters"
+	commonLog "github.com/kweaver-ai/adp/autoflow/flow-automation/libs/go/log"
+	traceLog "github.com/kweaver-ai/adp/autoflow/flow-automation/libs/go/telemetry/log"
+	"github.com/kweaver-ai/adp/autoflow/flow-automation/libs/go/telemetry/trace"
 	sandboxutil "github.com/kweaver-ai/adp/autoflow/flow-automation/pkg/utils/sandbox"
-	commonLog "github.com/kweaver-ai/adp/autoflow/ide-go-lib/log"
-	traceLog "github.com/kweaver-ai/adp/autoflow/ide-go-lib/telemetry/log"
-	"github.com/kweaver-ai/adp/autoflow/ide-go-lib/telemetry/trace"
 )
 
 type SandboxHandler interface {
