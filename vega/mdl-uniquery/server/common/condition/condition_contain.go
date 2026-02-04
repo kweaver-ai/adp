@@ -36,7 +36,6 @@ func NewContainCond(ctx context.Context, cfg *CondCfg, fieldsMap map[string]*Vie
 	containCond := &ContainCond{
 		mCfg:             cfg,
 		mFilterFieldName: fName,
-		// mFilterFieldName: getFilterFieldName(ctx, cfg.Name, fieldsMap, false),
 	}
 
 	if common.IsSlice(cfg.Value) {

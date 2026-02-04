@@ -44,7 +44,6 @@ func NewInCond(ctx context.Context, cfg *CondCfg, fieldsMap map[string]*ViewFiel
 		mCfg:             cfg,
 		mValue:           cfg.ValueOptCfg.Value.([]any),
 		mFilterFieldName: fName,
-		// mFilterFieldName: getFilterFieldName(ctx, cfg.Name, fieldsMap, false),
 	}, nil
 }
 

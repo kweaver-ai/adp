@@ -56,7 +56,6 @@ func NewLikeCond(ctx context.Context, cfg *CondCfg, fieldsMap map[string]*ViewFi
 		mValue:           val,
 		mRealValue:       realVal,
 		mFilterFieldName: fName,
-		// mFilterFieldName: getFilterFieldName(ctx, cfg.Name, fieldsMap, false),
 	}, nil
 }
 

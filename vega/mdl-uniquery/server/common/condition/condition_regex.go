@@ -52,7 +52,6 @@ func NewRegexCond(ctx context.Context, cfg *CondCfg, fieldsMap map[string]*ViewF
 		mValue:           val,
 		mRegexp:          regexp,
 		mFilterFieldName: fName,
-		// mFilterFieldName: getFilterFieldName(ctx, cfg.Name, fieldsMap, false),
 	}, nil
 }
 

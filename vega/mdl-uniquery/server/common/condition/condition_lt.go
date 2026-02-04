@@ -30,7 +30,6 @@ func NewLtCond(ctx context.Context, cfg *CondCfg, fieldsMap map[string]*ViewFiel
 	return &LtCond{
 		mCfg:             cfg,
 		mFilterFieldName: fName,
-		// mFilterFieldName: getFilterFieldName(ctx, cfg.Name, fieldsMap, false),
 	}, nil
 
 }

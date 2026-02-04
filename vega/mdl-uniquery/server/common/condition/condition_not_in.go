@@ -43,7 +43,6 @@ func NewNotInCond(ctx context.Context, cfg *CondCfg, fieldsMap map[string]*ViewF
 		mCfg:             cfg,
 		mValue:           cfg.ValueOptCfg.Value.([]any),
 		mFilterFieldName: fName,
-		// mFilterFieldName: getFilterFieldName(ctx, cfg.Name, fieldsMap, false),
 	}, nil
 }
 

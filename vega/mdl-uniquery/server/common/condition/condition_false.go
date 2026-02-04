@@ -30,7 +30,6 @@ func NewFalseCond(ctx context.Context, cfg *CondCfg, fieldsMap map[string]*ViewF
 	return &FalseCond{
 		mCfg:             cfg,
 		mFilterFieldName: fName,
-		// mFilterFieldName: getFilterFieldName(ctx, cfg.Name, fieldsMap, false),
 	}, nil
 }
 

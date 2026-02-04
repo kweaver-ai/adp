@@ -31,7 +31,6 @@ func NewNotEmptyCond(ctx context.Context, cfg *CondCfg, fieldsMap map[string]*Vi
 	return &NotEmptyCond{
 		mCfg:             cfg,
 		mFilterFieldName: fName,
-		// mFilterFieldName: getFilterFieldName(ctx, cfg.Name, fieldsMap, false),
 	}, nil
 
 }

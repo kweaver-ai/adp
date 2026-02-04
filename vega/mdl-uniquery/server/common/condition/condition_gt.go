@@ -30,7 +30,6 @@ func NewGtCond(ctx context.Context, cfg *CondCfg, fieldsMap map[string]*ViewFiel
 	return &GtCond{
 		mCfg:             cfg,
 		mFilterFieldName: fName,
-		// mFilterFieldName: getFilterFieldName(ctx, cfg.Name, fieldsMap, false),
 	}, nil
 
 }

@@ -41,7 +41,6 @@ func NewRangeCond(ctx context.Context, cfg *CondCfg, fieldsMap map[string]*ViewF
 		mCfg:             cfg,
 		mValue:           val,
 		mFilterFieldName: fName,
-		// mFilterFieldName: getFilterFieldName(ctx, cfg.Name, fieldsMap, false),
 	}, nil
 }
 

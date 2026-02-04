@@ -24,7 +24,6 @@ func NewNullCond(ctx context.Context, cfg *CondCfg, fieldsMap map[string]*ViewFi
 	return &NullCond{
 		mCfg:             cfg,
 		mFilterFieldName: fName,
-		// mFilterFieldName: getFilterFieldName(ctx, cfg.Name, fieldsMap, false),
 	}, nil
 
 }
