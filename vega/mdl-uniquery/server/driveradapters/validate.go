@@ -782,7 +782,12 @@ func validateRequestMetrics(ctx context.Context, query *interfaces.MetricModelQu
 		}
 
 		if len(query.RequestMetrics.SamePeriodCfg.Method) == 0 {
-			return rest.NewHTTPError(ctx, http.StatusBadRequest, uerrors.Uniquery_MetricModel_NullParameter_SamePeriodMethod)
+			// 不报错，给默认值，都计算
+			query.RequestMetrics.SamePeriodCfg.Method = []string{
+				interfaces.METRICS_SAMEPERIOD_METHOD_GROWTH_VALUE,
+				interfaces.METRICS_SAMEPERIOD_METHOD_GROWTH_RATE,
+			}
+			// return rest.NewHTTPError(ctx, http.StatusBadRequest, uerrors.Uniquery_MetricModel_NullParameter_SamePeriodMethod)
 		}
 
 		for _, method := range query.RequestMetrics.SamePeriodCfg.Method {

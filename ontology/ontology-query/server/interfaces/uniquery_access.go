@@ -75,13 +75,13 @@ type MetricData struct {
 }
 
 type Data struct {
-	Labels       map[string]string `json:"labels"`
-	Times        []interface{}     `json:"times"`
-	TimeStrs     []interface{}     `json:"time_strs"`
-	Values       []interface{}     `json:"values"`
-	GrowthValues []interface{}     `json:"growth_values,omitempty"`
-	GrowthRates  []interface{}     `json:"growth_rates,omitempty"`
-	Proportions  []interface{}     `json:"proportions,omitempty"`
+	Labels map[string]string `json:"labels"`
+	Times  []interface{}     `json:"times"`
+	// TimeStrs     []interface{}     `json:"time_strs"`
+	Values       []interface{} `json:"values"`
+	GrowthValues []interface{} `json:"growth_values,omitempty"`
+	GrowthRates  []interface{} `json:"growth_rates,omitempty"`
+	Proportions  []interface{} `json:"proportions,omitempty"`
 }
 
 type MetricModel struct {

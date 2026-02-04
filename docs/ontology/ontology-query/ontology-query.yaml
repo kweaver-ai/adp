@@ -2091,7 +2091,8 @@ paths:
                       metrics:
                         type: sameperiod
                         sameperiod_config:
-                          method: growth_rate
+                          method:
+                            - growth_rate
                           offset: 1
                           time_granularity: day
                     a_action:
@@ -2506,19 +2507,21 @@ components:
         metrics:
           $ref: '#/components/schemas/Metrics'
           description: 同环比、占比分析
+      additionalProperties:
+            oneOf:
+            - type: string
+            - type: number
+            - type: boolean
+            - type: integer
     OrderField:
       description: 排序字段
       required:
       - name
-      - type
       - direction
       type: object
       properties:
         name:
           description: 字段名
-          type: string
-        type:
-          description: 字段类型
           type: string
         direction:
           description: 排序方向
@@ -2573,17 +2576,21 @@ components:
     SameperiodConfig:
       description: 同环比配置
       required:
-      - method
       - offset
       - time_granularity
       type: object
       properties:
         method:
           description: 计算方法，增长值或增长率
-          enum:
-          - growth_value
-          - growth_rate
-          type: string
+          type: array
+          default:
+            - growth_value
+            - growth_rate
+          items:
+            type: string
+            enum:
+              - growth_value
+              - growth_rate
         offset:
           description: 偏移量
           type: integer
