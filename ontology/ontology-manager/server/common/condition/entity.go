@@ -26,6 +26,9 @@ const (
 
 	KNN_LIMIT_KEY_DEFAULT   = "k"
 	KNN_LIMIT_VALUE_DEFAULT = 100
+
+	// DefaultSmallModelEnabled 关闭的错误信息
+	DEFAULT_SMALL_MODEL_ENABLED_FALSE_ERROR string = "DefaultSmallModelEnabled is false"
 )
 
 const (

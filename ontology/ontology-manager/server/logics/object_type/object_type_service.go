@@ -1119,7 +1119,7 @@ func (ots *objectTypeService) SearchObjectTypes(ctx context.Context,
 	if condtion != nil {
 		conditionDslStr, err = condtion.Convert(ctx, func(ctx context.Context, words []string) ([]*cond.VectorResp, error) {
 			if !ots.appSetting.ServerSetting.DefaultSmallModelEnabled {
-				err = errors.New("DefaultSmallModelEnabled is false, does not support knn condition")
+				err = errors.New(cond.DEFAULT_SMALL_MODEL_ENABLED_FALSE_ERROR)
 				span.SetStatus(codes.Error, err.Error())
 				return nil, err
 			}
@@ -1135,6 +1135,10 @@ func (ots *objectTypeService) SearchObjectTypes(ctx context.Context,
 			return response, rest.NewHTTPError(ctx, http.StatusBadRequest,
 				oerrors.OntologyManager_ObjectType_InvalidParameter_ConceptCondition).
 				WithErrorDetails(fmt.Sprintf("failed to convert condition to dsl, %s", err.Error()))
+		}
+		// 如果 Convert 返回空字符串（所有条件都被忽略），保持为 "{}"
+		if conditionDslStr == "" {
+			conditionDslStr = "{}"
 		}
 	}
 
