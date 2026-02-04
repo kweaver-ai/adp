@@ -55,8 +55,7 @@
                 "code",
                 "language",
                 "event"
-            ],
-            "additionalProperties": false
+            ]
         },
         "settings": {
             "$ref": "../common.json#/definitions/Settings"
@@ -66,6 +65,5 @@
         "id",
         "operator",
         "parameters"
-    ],
-    "additionalProperties": false
+    ]
 }
