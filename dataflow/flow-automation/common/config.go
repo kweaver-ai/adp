@@ -506,6 +506,7 @@ type S3 struct {
 	SecretAccessKey string `mapstructure:"secret_access_key"`
 	BucketName      string `mapstructure:"bucket_name"`
 	UseSSL          bool   `mapstructure:"use_ssl"`
+	SkipVerify      bool   `mapstructure:"skip_verify"`
 }
 
 // DSN 获取连接地址

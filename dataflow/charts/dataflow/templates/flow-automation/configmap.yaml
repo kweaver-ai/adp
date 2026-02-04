@@ -255,6 +255,16 @@ data:
   SANDBOX_DISK: {{ .Values.depServices.sandbox.disk | quote }}
   SANDBOX_TIMEOUT: {{ .Values.depServices.sandbox.timeout | quote }}
 
+  {{- if .Values.depServices.s3.endpoint }}
+  S3_ENDPOINT: {{ .Values.depServices.s3.endpoint | quote }}
+  S3_REGION: {{ .Values.depServices.s3.region | quote }}
+  S3_USE_SSL: {{ .Values.depServices.s3.useSSL | quote }}
+  S3_SKIP_VERIFY: {{ .Values.depServices.s3.skipVerify | quote }}
+  S3_BUCKET: {{ .Values.depServices.s3.bucket | quote }}
+  S3_ACCESS_KEY_ID: {{ .Values.depServices.s3.accessKeyId | quote }}
+  S3_SECRET_ACCESS_KEY: {{ .Values.depServices.s3.secretAccessKey | quote }}
+  {{- end }}
+
   flow_o11y_data.yaml: |
     log_level: {{ index .Values "flowAutomation" "flow-o11y-data-log" "log_level"}}
     {{- with index .Values "flowAutomation" "flow-o11y-data-log" "exporters" }}

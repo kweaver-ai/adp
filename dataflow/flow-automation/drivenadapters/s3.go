@@ -2,8 +2,10 @@ package drivenadapters
 
 import (
 	"context"
+	"crypto/tls"
 	"fmt"
 	"io"
+	"net/http"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -79,6 +81,13 @@ func NewS3Adapter(cfg *config.S3Config) (S3Adapter, error) {
 		Credentials:      credentials.NewStaticCredentials(cfg.AccessKeyID, cfg.SecretAccessKey, ""),
 		DisableSSL:       aws.Bool(!cfg.UseSSL),
 		S3ForcePathStyle: aws.Bool(true), // 支持MinIO等S3兼容服务
+	}
+
+	if cfg.SkipVerify {
+		tr := &http.Transport{
+			TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+		}
+		awsConfig.HTTPClient = &http.Client{Transport: tr}
 	}
 
 	sess, err := session.NewSession(awsConfig)

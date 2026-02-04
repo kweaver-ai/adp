@@ -314,6 +314,14 @@ depServices:
     memory: "512Mi"
     disk: "1Gi"
     timeout: 30
+  s3:
+    endpoint: ""
+    region: ""
+    accessKeyId: ""
+    secretAccessKey: ""
+    useSSL: true
+    skipVerify: false
+    bucket: ""
 
 # Common Resource Limits
 resources:
