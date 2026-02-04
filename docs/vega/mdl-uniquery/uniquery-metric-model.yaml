@@ -2414,17 +2414,21 @@ components:
     SameperiodConfig:
       description: 同环比配置
       required:
-        - method
         - offset
         - time_granularity
       type: object
       properties:
         method:
           description: 计算方法，增长值或增长率
-          enum:
+          type: array
+          default:
             - growth_value
             - growth_rate
-          type: string
+          items:
+            type: string
+            enum:
+              - growth_value
+              - growth_rate
         offset:
           description: 偏移量
           type: integer
