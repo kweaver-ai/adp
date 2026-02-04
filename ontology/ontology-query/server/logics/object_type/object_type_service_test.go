@@ -1068,7 +1068,7 @@ func Test_objectTypeService_GetObjectPropertyValue(t *testing.T) {
 				KNID:         "kn1",
 				Branch:       "main",
 				ObjectTypeID: "ot1",
-				InstanceIdentity: []map[string]any{
+				InstanceIdentities: []map[string]any{
 					{"id": "123"},
 				},
 				Properties: []string{"prop1"},
@@ -1110,7 +1110,7 @@ func Test_objectTypeService_GetObjectPropertyValue(t *testing.T) {
 				KNID:         "kn1",
 				Branch:       "main",
 				ObjectTypeID: "ot1",
-				InstanceIdentity: []map[string]any{
+				InstanceIdentities: []map[string]any{
 					{"id": "123"},
 				},
 				Properties: []string{"prop1", "logic_prop1"},
@@ -1198,7 +1198,7 @@ func Test_objectTypeService_GetObjectPropertyValue(t *testing.T) {
 				KNID:         "kn1",
 				Branch:       "main",
 				ObjectTypeID: "ot1",
-				InstanceIdentity: []map[string]any{
+				InstanceIdentities: []map[string]any{
 					{"id": "123"},
 				},
 				Properties: []string{"prop1"},
@@ -1216,7 +1216,7 @@ func Test_objectTypeService_GetObjectPropertyValue(t *testing.T) {
 				KNID:         "kn1",
 				Branch:       "main",
 				ObjectTypeID: "ot1",
-				InstanceIdentity: []map[string]any{
+				InstanceIdentities: []map[string]any{
 					{"id": "123"},
 				},
 				Properties: []string{"logic_prop1"},
@@ -1305,7 +1305,7 @@ func Test_objectTypeService_GetObjectPropertyValue(t *testing.T) {
 				KNID:         "kn1",
 				Branch:       "main",
 				ObjectTypeID: "ot1",
-				InstanceIdentity: []map[string]any{
+				InstanceIdentities: []map[string]any{
 					{"id": "123"},
 				},
 				Properties: []string{"logic_prop1"},
@@ -1382,7 +1382,7 @@ func Test_objectTypeService_GetObjectPropertyValue(t *testing.T) {
 				KNID:         "kn1",
 				Branch:       "main",
 				ObjectTypeID: "ot1",
-				InstanceIdentity: []map[string]any{
+				InstanceIdentities: []map[string]any{
 					{"id": "123"},
 				},
 				Properties: []string{"logic_prop1"},
@@ -1458,7 +1458,7 @@ func Test_objectTypeService_GetObjectPropertyValue(t *testing.T) {
 				KNID:         "kn1",
 				Branch:       "main",
 				ObjectTypeID: "ot1",
-				InstanceIdentity: []map[string]any{
+				InstanceIdentities: []map[string]any{
 					{"id": "123"},
 				},
 				Properties:    []string{"logic_prop1"},

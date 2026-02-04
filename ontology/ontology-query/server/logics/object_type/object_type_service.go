@@ -576,7 +576,7 @@ func (ots *objectTypeService) GetObjectPropertyValue(ctx context.Context,
 	var resps interfaces.Objects
 
 	// 1. 根据唯一标识构建过滤条件
-	ukCond := logics.BuildUniqueIdentitiesCondition(query.InstanceIdentity)
+	ukCond := logics.BuildUniqueIdentitiesCondition(query.InstanceIdentities)
 	// 2. 根据唯一标识组成的条件检索对象类的对象实例
 	objectQuery := &interfaces.ObjectQueryBaseOnObjectType{
 		ActualCondition: ukCond,
@@ -593,7 +593,7 @@ func (ots *objectTypeService) GetObjectPropertyValue(ctx context.Context,
 			ExcludeSystemProperties: query.ExcludeSystemProperties,
 		},
 		ObjectQueryInfo: &interfaces.ObjectQueryInfo{
-			InstanceIdentity: query.InstanceIdentity,
+			InstanceIdentity: query.InstanceIdentities,
 			Properties:       query.Properties,
 		},
 	}
