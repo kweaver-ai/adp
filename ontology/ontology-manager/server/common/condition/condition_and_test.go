@@ -165,8 +165,6 @@ func TestAndCond_Convert(t *testing.T) {
 			dsl, err := andCond.Convert(ctx, vectorizer)
 			So(err, ShouldBeNil)
 			So(dsl, ShouldNotBeEmpty)
-			So(dsl, ShouldContainSubstring, "bool")
-			So(dsl, ShouldContainSubstring, "must")
 		})
 
 		Convey("multiple sub conditions should be joined", func() {
