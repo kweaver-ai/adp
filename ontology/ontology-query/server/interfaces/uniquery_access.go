@@ -44,9 +44,9 @@ type HavingCondition struct {
 }
 
 type SameperiodConfig struct {
-	Method          string `json:"method"`           // growth_value or growth_rate
-	Offset          int    `json:"offset"`           // 偏移量
-	TimeGranularity string `json:"time_granularity"` // day, month, quarter, year
+	Method          []string `json:"method"`           // growth_value or growth_rate
+	Offset          int      `json:"offset"`           // 偏移量
+	TimeGranularity string   `json:"time_granularity"` // day, month, quarter, year
 }
 
 type Metrics struct {
