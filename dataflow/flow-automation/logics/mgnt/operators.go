@@ -693,8 +693,10 @@ func (m *mgnt) getOperatorExecutionMode(opInfoMap map[string]*OperatorInfo, step
 			}
 		}
 
-		// 当前内置节点异步节点： python节点、审核节点、自定义节点
-		if opType == common.InternalToolPy3Opt || opType == common.WorkflowApproval ||
+		// 当前内置节点异步节点： python节点、审核节点、自定义节点、沙箱节点
+		if opType == common.InternalToolPy3Opt ||
+			opType == common.WorkflowApproval ||
+			opType == common.OpSandboxExecute ||
 			strings.HasPrefix(opType, common.CustomOperatorPrefix) {
 			return common.ExecutionModeAsync, nil
 		}
