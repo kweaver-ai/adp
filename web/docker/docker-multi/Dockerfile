@@ -23,7 +23,7 @@ RUN set -ex; \
     cd /flow-web/; \
     pnpm install --no-frozen-lockfile --registry https://registry.npmmirror.com/ --fetch-timeout 100000 --fetch-retries 5; \
     pnpm --filter @applet/icons run g; \
-    pnpm --filter icons --filter api --filter common build; \
+    pnpm --filter @applet/icons --filter @applet/api --filter @applet/common build; \
     BUILD_PATH=dist && pnpm --filter flow-web build;
 
 # ========== 第三阶段：运行时镜像 ==========
