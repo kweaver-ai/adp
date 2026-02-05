@@ -705,6 +705,7 @@ func validateQueryTimeParam(ctx context.Context, query *interfaces.QueryTimePara
 			httpErr := rest.NewHTTPError(ctx, http.StatusBadRequest, uerrors.Uniquery_MetricModel_NullParameter_Step)
 			return httpErr
 		}
+		// sql-原子指标，衍生指标，复合指标的步长只支持日历步长,不支持固定步长，在此处没法校验，需到service获取到指标模型信息之后校验
 		// step 应属于系统步长集 15s, 30s, 1m, 2m, 5m, 10m, 15m, 20m, 30m, 1h, 2h, 3h, 6h, 12h, 1d, 1y,
 		// minute, hour, day, month, quarter, year
 		_, fixedExists := common.FixedStepsMap[*query.StepStr]
