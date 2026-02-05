@@ -357,7 +357,7 @@ func Test_objectTypeService_GetObjectTypesByIDs(t *testing.T) {
 			So(len(result), ShouldEqual, 1)
 		})
 
-		Convey("Failed when GetDataViewByID returns error\n", func() {
+		Convey("Ignore dependency error when GetDataViewByID returns error\n", func() {
 			knID := "kn1"
 			branch := interfaces.MAIN_BRANCH
 			otIDs := []string{"ot1"}
@@ -383,7 +383,7 @@ func Test_objectTypeService_GetObjectTypesByIDs(t *testing.T) {
 			So(len(result), ShouldEqual, 1)
 		})
 
-		Convey("Failed when GetMetricModelByID returns error\n", func() {
+		Convey("Ignore dependency error when GetMetricModelByID returns error\n", func() {
 			knID := "kn1"
 			branch := interfaces.MAIN_BRANCH
 			otIDs := []string{"ot1"}
