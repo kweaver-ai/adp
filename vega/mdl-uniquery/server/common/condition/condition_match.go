@@ -67,5 +67,5 @@ func (cond *MatchCond) Convert(ctx context.Context) (string, error) {
 
 // SQL 类不支持全文检索
 func (cond *MatchCond) Convert2SQL(ctx context.Context) (string, error) {
-	return "", fmt.Errorf("condition [match] does not support convert to sql")
+	return "", fmt.Errorf("condition [match] does not support convert to SQL")
 }
