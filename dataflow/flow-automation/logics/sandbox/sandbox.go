@@ -147,7 +147,7 @@ func (s *sandbox) Execute(ctx context.Context, req *SandboxExecuteRequest) (*San
 					ReturnValue:   result.ReturnValue,
 					Metrics:       result.Metrics,
 				}, nil
-			case "failed":
+			case "failed", "timeout":
 				return nil, ierrors.NewIError(ierrors.ErrorDepencyService, "", execStatus)
 			default:
 			}

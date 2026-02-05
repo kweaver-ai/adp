@@ -199,7 +199,7 @@ func (e *sandboxExecutor) Execute(ctx context.Context) (map[string]any, error) {
 					return nil, fmt.Errorf("get execution result failed: %w", err)
 				}
 				return map[string]any{"return_value": result.ReturnValue}, nil
-			case "failed":
+			case "failed", "timeout":
 				errMsg := "execution failed"
 				if execStatus.ErrorMessage != nil {
 					errMsg = *execStatus.ErrorMessage
