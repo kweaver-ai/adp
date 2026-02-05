@@ -9,9 +9,10 @@ import (
 	"context"
 	"sync"
 
-	"github.com/kweaver-ai/adp/context-loader/agent-retrieval/server/interfaces"
 	o11y "github.com/kweaver-ai/kweaver-go-lib/observability"
 	"github.com/panjf2000/ants"
+
+	"github.com/kweaver-ai/adp/context-loader/agent-retrieval/server/interfaces"
 )
 
 const (

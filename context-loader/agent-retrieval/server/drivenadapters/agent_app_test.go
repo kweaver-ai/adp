@@ -10,11 +10,12 @@ import (
 	"errors"
 	"testing"
 
+	"github.com/smartystreets/goconvey/convey"
+	"go.uber.org/mock/gomock"
+
 	"github.com/kweaver-ai/adp/context-loader/agent-retrieval/server/infra/config"
 	"github.com/kweaver-ai/adp/context-loader/agent-retrieval/server/interfaces"
 	"github.com/kweaver-ai/adp/context-loader/agent-retrieval/server/mocks"
-	"github.com/smartystreets/goconvey/convey"
-	"go.uber.org/mock/gomock"
 )
 
 // TestParseResultFromAgentV1Answer 测试 parseResultFromAgentV1Answer 函数

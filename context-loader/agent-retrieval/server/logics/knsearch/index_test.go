@@ -10,10 +10,11 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/kweaver-ai/adp/context-loader/agent-retrieval/server/interfaces"
-	"github.com/kweaver-ai/adp/context-loader/agent-retrieval/server/mocks"
 	"github.com/smartystreets/goconvey/convey"
 	"go.uber.org/mock/gomock"
+
+	"github.com/kweaver-ai/adp/context-loader/agent-retrieval/server/interfaces"
+	"github.com/kweaver-ai/adp/context-loader/agent-retrieval/server/mocks"
 )
 
 // TestKnSearch_Success 测试 KnSearch 成功场景（UseLocalSearch false，走远程）

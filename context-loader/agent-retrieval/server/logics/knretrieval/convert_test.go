@@ -8,8 +8,9 @@ package knretrieval
 import (
 	"testing"
 
-	"github.com/kweaver-ai/adp/context-loader/agent-retrieval/server/interfaces"
 	"github.com/smartystreets/goconvey/convey"
+
+	"github.com/kweaver-ai/adp/context-loader/agent-retrieval/server/interfaces"
 )
 
 // TestParseKnOperationType_Success 测试 ParseKnOperationType 成功场景

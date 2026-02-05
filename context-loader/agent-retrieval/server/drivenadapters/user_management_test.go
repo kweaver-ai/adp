@@ -10,9 +10,10 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/kweaver-ai/adp/context-loader/agent-retrieval/server/mocks"
 	"github.com/smartystreets/goconvey/convey"
 	"go.uber.org/mock/gomock"
+
+	"github.com/kweaver-ai/adp/context-loader/agent-retrieval/server/mocks"
 )
 
 // TestGetAppInfo_Success 测试 GetAppInfo 成功场景

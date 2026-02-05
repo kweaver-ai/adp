@@ -15,6 +15,7 @@ import (
 	"sync"
 
 	"github.com/bytedance/sonic"
+
 	"github.com/kweaver-ai/adp/context-loader/agent-retrieval/server/infra/common"
 	"github.com/kweaver-ai/adp/context-loader/agent-retrieval/server/infra/config"
 	infraErr "github.com/kweaver-ai/adp/context-loader/agent-retrieval/server/infra/errors"

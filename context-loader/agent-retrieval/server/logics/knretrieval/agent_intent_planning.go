@@ -9,8 +9,9 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/kweaver-ai/adp/context-loader/agent-retrieval/server/interfaces"
 	o11y "github.com/kweaver-ai/kweaver-go-lib/observability"
+
+	"github.com/kweaver-ai/adp/context-loader/agent-retrieval/server/interfaces"
 )
 
 // AgentIntentPlanning 语义搜索: 基于意图分析智能体+规划策略

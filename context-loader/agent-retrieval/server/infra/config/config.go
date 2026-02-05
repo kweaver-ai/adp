@@ -236,6 +236,7 @@ func overrideWithEnv(cfg interface{}) {
 		}
 
 		// Use reflection to set field value directly, type match required
+		//nolint:exhaustive // 只处理 String/Int/Bool，其他类型走 default 跳过
 		switch field.Kind() {
 		case reflect.String:
 			field.SetString(envValue)

@@ -8,8 +8,9 @@ package knretrieval
 import (
 	"testing"
 
-	"github.com/kweaver-ai/adp/context-loader/agent-retrieval/server/interfaces"
 	"github.com/smartystreets/goconvey/convey"
+
+	"github.com/kweaver-ai/adp/context-loader/agent-retrieval/server/interfaces"
 )
 
 // TestDeduplicateConcepts 测试 deduplicateConcepts 函数

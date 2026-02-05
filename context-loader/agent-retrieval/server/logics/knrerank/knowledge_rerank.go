@@ -92,7 +92,7 @@ func (r *KnowledgeReranker) Rerank(ctx context.Context, req *interfaces.Knowledg
 	switch req.Action {
 	case interfaces.KnowledgeRerankActionVector:
 		return r.rerankByVector(ctx, req)
-	case interfaces.KnowledgeRerankActionLLM, "":
+	case interfaces.KnowledgeRerankActionLLM, interfaces.KnowledgeRerankActionDefault, "":
 		return r.rerankByLLM(ctx, req)
 	default:
 		// 默认使用LLM模式
