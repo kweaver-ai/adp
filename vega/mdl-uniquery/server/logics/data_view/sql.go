@@ -547,7 +547,7 @@ func buildSQLCondition(ctx context.Context, filter *cond.CondCfg, vType string, 
 		if condCfg != nil {
 			condStr, err = condCfg.Convert2SQL(ctx)
 			if err != nil {
-				return "", fmt.Errorf("convert condition to dsl failed, %v", err)
+				return "", fmt.Errorf("convert condition to SQL failed, %v", err)
 			}
 		}
 	}

@@ -66,5 +66,5 @@ func (cond *MatchPhraseCond) Convert(ctx context.Context) (string, error) {
 }
 
 func (cond *MatchPhraseCond) Convert2SQL(ctx context.Context) (string, error) {
-	return "", fmt.Errorf("condition [match_phrase] does not support convert to sql")
+	return "", fmt.Errorf("condition [match_phrase] does not support convert to SQL")
 }
