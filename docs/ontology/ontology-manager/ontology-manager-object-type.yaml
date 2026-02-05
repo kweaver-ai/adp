@@ -1816,7 +1816,7 @@ components:
           description: 属性显示名
           type: string
         type:
-          description: 属性数据类型。除了视图的字段类型之外，还有 metric、objective、event、trace、log、operator
+          description: 属性数据类型。除了视图的字段类型之外，还有 metric、operator
           type: string
         comment:
           description: 属性描述
@@ -1881,7 +1881,7 @@ components:
           description: 属性显示名
           type: string
         type:
-          description: 属性数据类型。除了视图的字段类型之外，还有 metric、objective、event、trace、log、operator
+          description: 属性数据类型。除了视图的字段类型之外，还有 metric、operator
           type: string
         comment:
           description: 属性描述
@@ -1897,6 +1897,11 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/Parameter"
+        analysis_dimensions:
+          description: 指标模型的分析维度。当逻辑属性类型为指标（metric）时返回此字段
+          type: array
+          items:
+            $ref: "#/components/schemas/AnalysisDim"
     Object:
       description: json，字段不定
       type: object
@@ -2116,6 +2121,24 @@ components:
           type: string
         type:
           description: 视图字段类型，查看时有此字段
+          type: string
+    AnalysisDim:
+      description: 分析维度
+      required:
+        - name
+      type: object
+      properties:
+        name:
+          description: 分析维度名称,与视图名称一致
+          type: string
+        display_name:
+          description: 字段显示名，与视图的显示名一致
+          type: string
+        type:
+          description: 视图字段类型，与视图的字段类型一致
+          type: string
+        comment:
+          description: 分析维度描述，与视图的字段描述一致
           type: string
     LogicSource:
       description: 数据来源

@@ -97,11 +97,12 @@ var (
 
 // 指标模型结构体
 type MetricModel struct {
-	ModelID   string           `json:"id"`
-	ModelName string           `json:"name"`
-	GroupID   string           `json:"group_id"`
-	GroupName string           `json:"group_name"`
-	FieldsMap map[string]Field `json:"fields_map"` // 字段集
+	ModelID      string           `json:"id"`
+	ModelName    string           `json:"name"`
+	GroupID      string           `json:"group_id"`
+	GroupName    string           `json:"group_name"`
+	AnalysisDims []Field          `json:"analysis_dimensions,omitempty"`
+	FieldsMap    map[string]Field `json:"fields_map"` // 字段集
 }
 
 //go:generate mockgen -source ../interfaces/data_model_access.go -destination ../interfaces/mock/mock_data_model_access.go

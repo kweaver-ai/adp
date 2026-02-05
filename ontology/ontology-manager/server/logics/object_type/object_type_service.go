@@ -479,60 +479,10 @@ func (ots *objectTypeService) GetObjectTypesByIDs(ctx context.Context, tx *sql.T
 	// 数据视图不为空时，需要把id转成名称
 	// 请求视图
 	for _, objectType := range objectTypes {
-		if objectType.DataSource != nil && objectType.DataSource.ID != "" {
-			dataView, err := ots.dva.GetDataViewByID(ctx, objectType.DataSource.ID)
-			if err != nil {
-				return []*interfaces.ObjectType{}, rest.NewHTTPError(ctx, http.StatusInternalServerError,
-					oerrors.OntologyManager_ObjectType_InternalError_GetDataViewByIDFailed).
-					WithErrorDetails(err.Error())
-			}
-			if dataView == nil {
-				o11y.Warn(ctx, fmt.Sprintf("Object type [%s]'s Data view %s not found", objectType.OTID, objectType.DataSource.ID))
-			} else {
-				objectType.DataSource.Name = dataView.ViewName
-				// 翻译数据属性映射的字段显示名
-				for j, prop := range objectType.DataProperties {
-					// 不为空时，才翻译字段显示名。为空则不翻译
-					if prop.MappedField != nil {
-						if field, exists := dataView.FieldsMap[prop.MappedField.Name]; exists {
-							objectType.DataProperties[j].MappedField.DisplayName = field.DisplayName
-							objectType.DataProperties[j].MappedField.Type = field.Type
-						}
-					}
-					// 字符串类型的属性支持的操作符返回
-					objectType.DataProperties[j].ConditionOperations = ots.processConditionOperations(objectType, prop, dataView)
-				}
-			}
-
-			// 逻辑属性，资源id转名称
-			for j, logicProp := range objectType.LogicProperties {
-				if logicProp.DataSource != nil {
-					switch logicProp.DataSource.Type {
-					case interfaces.LOGIC_PROPERTY_TYPE_METRIC:
-						if logicProp.DataSource.ID != "" {
-							// 获取指标模型名称
-							model, err := ots.dda.GetMetricModelByID(ctx, logicProp.DataSource.ID)
-							if err != nil {
-								return []*interfaces.ObjectType{}, rest.NewHTTPError(ctx, http.StatusInternalServerError,
-									oerrors.OntologyManager_ObjectType_InternalError_GetMetricModelByIDFailed).
-									WithErrorDetails(err.Error())
-							}
-							if model == nil {
-								o11y.Warn(ctx, fmt.Sprintf("Object type [%s]'s logic property [%s] metric model [%s] not found",
-									objectType.OTID, logicProp.Name, objectType.DataSource.ID))
-							} else {
-								objectType.LogicProperties[j].DataSource.Name = model.ModelName
-							}
-
-							// 对参数填充comment
-							processMetricPropertyParamComment(ctx, logicProp, model, objectType, j)
-						}
-					case interfaces.LOGIC_PROPERTY_TYPE_OPERATOR:
-						//todo: 算子的名称,前端翻译
-					}
-					// todo: 处理动态参数,动态参数统一放在一个新字段上,供统一召回的大模型使用(检索那边也需要处理一下)
-				}
-			}
+		// 处理数据源和操作符
+		err = ots.processObjectTypeDetails(ctx, objectType)
+		if err != nil {
+			return []*interfaces.ObjectType{}, err
 		}
 		// 给对象类加上分组信息
 		objectType.ConceptGroups = otGroups[objectType.OTID]
@@ -1295,8 +1245,10 @@ func (ots *objectTypeService) processObjectTypeDetails(ctx context.Context, obje
 	if objectType.DataSource != nil && objectType.DataSource.ID != "" {
 		dataView, err := ots.dva.GetDataViewByID(ctx, objectType.DataSource.ID)
 		if err != nil || dataView == nil {
-			o11y.Warn(ctx, fmt.Sprintf("Object type [%s]'s Data view %s not found", objectType.OTID, objectType.DataSource.ID))
+			o11y.Warn(ctx, fmt.Sprintf("Object type [%s]'s Data view %s not found, error: %v",
+				objectType.OTID, objectType.DataSource.ID, err))
 		} else {
+			objectType.DataSource.Name = dataView.ViewName
 			// 视图不为空，则把支持的操作符返回
 			for j, prop := range objectType.DataProperties {
 				// 不为空时，才翻译字段显示名。为空则不翻译
@@ -1319,20 +1271,21 @@ func (ots *objectTypeService) processObjectTypeDetails(ctx context.Context, obje
 					if logicProp.DataSource.ID != "" {
 						// 获取指标模型名称
 						model, err := ots.dda.GetMetricModelByID(ctx, logicProp.DataSource.ID)
-						if err != nil {
-							return rest.NewHTTPError(ctx, http.StatusInternalServerError,
-								oerrors.OntologyManager_ObjectType_InternalError_GetMetricModelByIDFailed).
-								WithErrorDetails(err.Error())
-						}
-						if model == nil {
-							o11y.Warn(ctx, fmt.Sprintf("Object type [%s]'s logic property [%s] metric model [%s] not found",
-								objectType.OTID, logicProp.Name, objectType.DataSource.ID))
-						} else {
-							objectType.LogicProperties[j].DataSource.Name = model.ModelName
-						}
+						if err != nil || model == nil {
 
-						// 对参数填充comment
-						processMetricPropertyParamComment(ctx, logicProp, model, objectType, j)
+							// 依赖不存在或者请求报错，不报错，跳过
+							o11y.Warn(ctx, fmt.Sprintf("Object type [%s]'s logic property [%s] metric model [%s] not found, error: %v",
+								objectType.OTID, logicProp.Name, objectType.DataSource.ID, err))
+						} else {
+							// 依赖存在时才做相关操作
+							objectType.LogicProperties[j].DataSource.Name = model.ModelName
+
+							// 逻辑属性-指标，返回指标模型的分析维度
+							objectType.LogicProperties[j].AnalysisDims = model.AnalysisDims
+
+							// 对参数填充comment
+							processMetricPropertyParamComment(ctx, logicProp, model, objectType, j)
+						}
 					}
 				case interfaces.LOGIC_PROPERTY_TYPE_OPERATOR:
 					//todo: 算子的名称,前端翻译
