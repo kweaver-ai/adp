@@ -42,6 +42,7 @@
     "disabled": "Disabled",
     "asc": "Ascending",
     "desc": "Descending",
+    "success": "Success",
     "saveSuccess": "Saved successfully",
     "createSuccess": "Created successfully",
     "updateSuccess": "Updated successfully",

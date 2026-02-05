@@ -72,6 +72,7 @@ const TaskManagement = ({ knId, atId, refreshTask, onRefreshComplete }: TaskMana
         limit: pageSize,
         need_total: true,
         action_type_id: atId,
+        offset: (page - 1) * pageSize,
       };
       if (filters.status && filters.status !== 'all') params.status = filters.status;
       if (filters.trigger_type && filters.trigger_type !== 'all') params.trigger_type = filters.trigger_type;
@@ -286,6 +287,7 @@ const TaskManagement = ({ knId, atId, refreshTask, onRefreshComplete }: TaskMana
           nameConfig={{ key: 'keyword', placeholder: intl.get('Global.searchName') }}
           initialFilter={filterValues}
           onChange={handleChangeFilter}
+          isSearch={false}
           onRefresh={() => fetchTasks(1, pagination.pageSize, filterValues)}
         >
           <Select.LabelSelect

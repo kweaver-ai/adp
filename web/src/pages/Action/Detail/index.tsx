@@ -82,13 +82,11 @@ const ActionDetail = () => {
   const handleExecute = async () => {
     setExecuting(true);
     try {
-      console.log('detail?.object_type_id', detail);
       const request: ActionType.ActionExecutionRequest = {
-        unique_identities: [detail?.object_type],
+        unique_identities: [],
       };
-      const response = await actionApi.executeActionType(knId, atId, request);
+      await actionApi.executeActionType(knId, atId, request);
       message.success(intl.get('Action.executeSuccess'));
-      console.log('Execute response:', response);
       setRefreshTask(true);
     } catch (error) {
       console.error('Execute error:', error);

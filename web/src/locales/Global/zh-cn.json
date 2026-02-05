@@ -42,6 +42,7 @@
     "disabled": "禁用",
     "asc": "升序",
     "desc": "降序",
+    "success": "成功",
     "saveSuccess": "保存成功",
     "createSuccess": "创建成功",
     "updateSuccess": "更新成功",
