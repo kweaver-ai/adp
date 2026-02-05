@@ -14,6 +14,7 @@ type S3Config struct {
 	SecretAccessKey string // 访问密钥
 	BucketName      string // Bucket名称
 	UseSSL          bool   // 是否使用SSL
+	SkipVerify      bool   // 是否跳过SSL验证
 }
 
 // LoadS3Config 从环境变量加载S3配置
@@ -24,7 +25,8 @@ func LoadS3Config() (*S3Config, error) {
 		AccessKeyID:     os.Getenv("S3_ACCESS_KEY_ID"),
 		SecretAccessKey: os.Getenv("S3_SECRET_ACCESS_KEY"),
 		BucketName:      os.Getenv("S3_BUCKET_NAME"),
-		UseSSL:          true, // 默认使用SSL
+		UseSSL:          true,  // 默认使用SSL
+		SkipVerify:      false, // 默认不跳过验证
 	}
 
 	// 解析SSL配置
@@ -34,6 +36,15 @@ func LoadS3Config() (*S3Config, error) {
 			return nil, fmt.Errorf("invalid S3_USE_SSL value: %w", err)
 		}
 		config.UseSSL = useSSL
+	}
+
+	// 解析SkipVerify配置
+	if skipVerifyStr := os.Getenv("S3_SKIP_VERIFY"); skipVerifyStr != "" {
+		skipVerify, err := strconv.ParseBool(skipVerifyStr)
+		if err != nil {
+			return nil, fmt.Errorf("invalid S3_SKIP_VERIFY value: %w", err)
+		}
+		config.SkipVerify = skipVerify
 	}
 
 	// 验证必需配置
