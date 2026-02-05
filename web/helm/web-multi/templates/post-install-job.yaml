@@ -27,7 +27,9 @@ spec:
           command:
             - "sh"
             - "-c"
-            - >
+            - |
+              curl -f -X DELETE http://studio-web-service:8877/api/workstation/v1/webapp/workflow || true
+              curl -f -X DELETE http://studio-web-service:8877/api/workstation/v1/webapp/dataflow || true
               curl --fail --show-error -H "Content-Type:application/json" -X PUT -d '
               [
                 {
@@ -189,18 +191,77 @@ spec:
                   }
                 },
                 {
-                  "name": "flow",
-                  "parent": "root",
-                  "orderIndex": 5000,
+                  "name": "data-processing",
+                  "parent": "dataflow",
+                  "orderIndex": 1,
                   "app": {
                     "textZHCN": "数据流",
                     "textZHTW": "数据流",
-                    "textENUS": "Data Flow",
-                    "icon": "//ip:port/flow/side.svg"
+                    "textENUS": "Dataflow",
+                    "icon": "//ip:port/flow/data-stream.svg"
                   },
                   "subapp": {
-                    "entry": "//ip:port/flow/",
-                    "registryRouter": "/flow",
+                    "entry": "//ip:port/flow/dataStudio.html",
+                    "activeRule": "/",
+                    "baseRouter": ""
+                  }
+                },
+                {
+                  "name": "dataflow",
+                  "parent": "root",
+                  "orderIndex": 2000,
+                  "app": {
+                    "textZHCN": "Dataflow",
+                    "textZHTW": "Dataflow",
+                    "textENUS": "Dataflow",
+                    "icon": "//ip:port/flow/data-stream.svg"
+                  },
+                  "subapp": {"children": {}}
+                },
+                {
+                  "name": "operator-flow-detail",
+                  "parent": "plugins",
+                  "orderIndex": 0,
+                  "app": {
+                    "textZHCN": "算子编排日志",
+                    "textZHTW": "算子编排日志",
+                    "textENUS": "算子编排日志",
+                    "icon": ""
+                  },
+                  "subapp": {
+                    "entry": "//ip:port/flow/operatorFlowDetail.html",
+                    "activeRule": "/",
+                    "baseRouter": ""
+                  }
+                },
+                {
+                  "name": "automation",
+                  "parent": "plugins",
+                  "orderIndex": 0,
+                  "app": {
+                    "textZHCN": "自定义",
+                    "textZHTW": "自定义",
+                    "textENUS": "自定义",
+                    "icon": ""
+                  },
+                  "subapp": {
+                    "entry": "//ip:port/flow/plugin.html",
+                    "activeRule": "/",
+                    "baseRouter": ""
+                  }
+                },
+                {
+                  "name": "flow-web-operator",
+                  "parent": "plugins",
+                  "orderIndex": 0,
+                  "app": {
+                    "textZHCN": "算子编排",
+                    "textZHTW": "算子编排",
+                    "textENUS": "算子编排",
+                    "icon": ""
+                  },
+                  "subapp": {
+                    "entry": "//ip:port/flow/operatorFlow.html",
                     "activeRule": "/",
                     "baseRouter": ""
                   }
