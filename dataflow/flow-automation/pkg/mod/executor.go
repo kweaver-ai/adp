@@ -629,7 +629,16 @@ func (e *DefExecutor) renderParamsV2(taskIns *entity.TaskInstance) error {
 	// 使用ShareData的GetAll方法安全地获取数据副本作为VM的Env
 	env := make(map[string]interface{})
 	if taskIns.RelatedDagInstance.ShareData != nil {
+		// Optimize: Use GetAll() directly if we trust it returns a safe copy or if we are fine with it.
+		// However, we want to inject local variables "index" which might conflict if we modify the map directly returned by GetAll if it was a pointer (it returns value).
 		env = taskIns.RelatedDagInstance.ShareData.GetAll()
+
+		// Inject loop index if available in task params
+		// "current_iteration" is set by LoopHandler/LoopExecutor
+		if val, ok := params["current_iteration"]; ok {
+			env["index"] = val
+			env["__loop_index"] = val
+		}
 	}
 
 	vmIns.Env = env

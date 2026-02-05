@@ -188,15 +188,8 @@ func (h *LoopHandler) HandleLoopAction(ctx context.Context, taskIns *entity.Task
 	loopKeyPrefix := fmt.Sprintf("__loop_%s_", loopParams.LoopTaskID)
 	currentIterationKey := loopKeyPrefix + "current_iteration"
 
-	if currentIter, ok := taskIns.RelatedDagInstance.ShareData.Get(currentIterationKey); ok {
-		if iterVal, isNum := currentIter.(float64); isNum {
-			loopParams.CurrentIteration = int(iterVal)
-			log.Infof("从ShareData获取迭代计数: %d (float64)", loopParams.CurrentIteration)
-		} else if iterVal, isInt := currentIter.(int); isInt {
-			loopParams.CurrentIteration = iterVal
-			log.Infof("从ShareData获取迭代计数: %d (int)", loopParams.CurrentIteration)
-		}
-	}
+	// Use the iteration from params, do not overwrite from ShareData as it causes race conditions in parallel execution
+	log.Infof("当前循环 [%s] 迭代计数: %d", taskIns.ID, loopParams.CurrentIteration)
 
 	// 在增加迭代计数之前检查是否达到限制
 	if actualLimit > 0 && loopParams.CurrentIteration >= actualLimit {
@@ -249,13 +242,16 @@ func (h *LoopHandler) HandleLoopAction(ctx context.Context, taskIns *entity.Task
 	keys := strings.Split(taskIns.TaskID, "_")
 	originKey := keys[0]
 	loopKey := fmt.Sprintf("__%s", taskIns.TaskID)
-	if _, exists := taskIns.RelatedDagInstance.ShareData.Get(loopKey); exists {
-		return nil // 已经写过，避免重复
+	alreadyExists := false
+	if taskIns.RelatedDagInstance != nil && taskIns.RelatedDagInstance.ShareData != nil {
+		_, alreadyExists = taskIns.RelatedDagInstance.ShareData.Get(loopKey)
 	}
 
-	// 只在第一次写入时打印
-	log.Infof("设置循环 [%s] 迭代 %d 的值到ShareData: %v",
-		loopParams.LoopControlID, loopParams.CurrentIteration, loopInternalValues)
+	// Only log on first write
+	if !alreadyExists {
+		log.Infof("设置循环 [%s] 迭代 %d 的值到ShareData: %v",
+			loopParams.LoopControlID, loopParams.CurrentIteration, loopInternalValues)
+	}
 
 	// Store all loop internal values under loop control ID namespace
 	taskIns.RelatedDagInstance.ShareData.Set(fmt.Sprintf("__%s", originKey), loopInternalValues)
@@ -505,7 +501,6 @@ func (e *LoopExecutor) GenerateIterationTasks() ([]*entity.TaskInstance, error) 
 	shareData.Set(loopKeyPrefix+"current_iteration", e.loopParams.CurrentIteration)
 
 	// Also set the general loop index for template rendering compatibility
-	shareData.Set("__loop_index", e.loopParams.CurrentIteration)
 
 	// 检查数据库中是否已存在当前迭代的任务，避免重复创建
 	existingTasks, err := GetStore().ListTaskInstance(e.ctx, &ListTaskInstanceInput{
