@@ -1,0 +1,23 @@
+// Package interfaces defines entities, DTOs, and service interfaces.
+package interfaces
+
+import (
+	"context"
+
+	"github.com/hibiken/asynq"
+)
+
+const (
+	// DiscoveryTaskType is the task type for discovery tasks.
+	DiscoveryTaskType = "discovery:execute"
+)
+
+// AsynqAccess defines the interface for creating Asynq client and server.
+//
+//go:generate mockgen -source ../interfaces/asynq_access.go -destination ../interfaces/mock/mock_asynq_access.go
+type AsynqAccess interface {
+	// CreateClient creates and returns the Asynq client for enqueueing tasks.
+	CreateClient(ctx context.Context) *asynq.Client
+	// CreateServer creates and returns the Asynq server for processing tasks.
+	CreateServer(ctx context.Context) *asynq.Server
+}

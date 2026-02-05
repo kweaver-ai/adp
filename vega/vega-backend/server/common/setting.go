@@ -36,6 +36,14 @@ type CryptoSetting struct {
 	PublicKeyPath  string `mapstructure:"publicKeyPath"`  // RSA 公钥文件路径
 }
 
+// RedisSetting Redis 配置项
+type RedisSetting struct {
+	Host     string
+	Port     int
+	Username string
+	Password string
+}
+
 // AppSetting app配置项
 type AppSetting struct {
 	ServerSetting        ServerSetting             `mapstructure:"server"`
@@ -47,6 +55,7 @@ type AppSetting struct {
 	DBSetting         libdb.DBSetting
 	MQSetting         libmq.MQSetting
 	OpenSearchSetting rest.OpenSearchClientConfig
+	RedisSetting      RedisSetting
 }
 
 const (
@@ -57,6 +66,7 @@ const (
 	rdsServiceName        string = "rds"
 	mqServiceName         string = "mq"
 	opensearchServiceName string = "opensearch"
+	redisServiceName      string = "redis"
 
 	DATA_BASE_NAME string = "adp"
 )
@@ -118,6 +128,8 @@ func loadSetting(vp *viper.Viper) {
 
 	SetOpenSearchSetting()
 
+	SetRedisSetting()
+
 	serverInfo := o11y.ServerInfo{
 		ServerName:    version.ServerName,
 		ServerVersion: version.ServerVersion,
@@ -176,14 +188,28 @@ func SetMQSetting() {
 func SetOpenSearchSetting() {
 	setting, ok := appSetting.DepServices[opensearchServiceName]
 	if !ok {
-		logger.Warnf("service %s not found in depServices, skipping", opensearchServiceName)
-		return
+		logger.Fatalf("service %s not found in depServices", opensearchServiceName)
 	}
 
 	appSetting.OpenSearchSetting = rest.OpenSearchClientConfig{
 		Host:     setting["host"].(string),
 		Port:     setting["port"].(int),
 		Protocol: setting["protocol"].(string),
+		Username: setting["username"].(string),
+		Password: setting["password"].(string),
+	}
+}
+
+// SetRedisSetting 设置 Redis 配置
+func SetRedisSetting() {
+	setting, ok := appSetting.DepServices[redisServiceName]
+	if !ok {
+		logger.Fatalf("service %s not found in depServices", redisServiceName)
+	}
+
+	appSetting.RedisSetting = RedisSetting{
+		Host:     setting["host"].(string),
+		Port:     setting["port"].(int),
 		Username: setting["username"].(string),
 		Password: setting["password"].(string),
 	}

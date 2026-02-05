@@ -1,7 +1,11 @@
 // Package interfaces defines entities, DTOs, and service interfaces.
 package interfaces
 
-import "context"
+import (
+	"context"
+
+	"github.com/hibiken/asynq"
+)
 
 // DiscoveryResult represents the result of a discovery operation.
 type DiscoveryResult struct {
@@ -16,6 +20,7 @@ type DiscoveryResult struct {
 // This worker is called by the task management service to execute the actual discovery.
 type DiscoveryWorker interface {
 	Start()
-	// ExecuteDiscovery executes discovery for a specific catalog.
-	ExecuteDiscovery(ctx context.Context, taskID string) error
+
+	Run(ctx context.Context) error
+	ProcessTask(ctx context.Context, event *asynq.Task) error
 }
