@@ -11,13 +11,13 @@ import (
 
 	"github.com/kweaver-ai/adp/context-loader/agent-retrieval/server/interfaces"
 	"github.com/kweaver-ai/adp/context-loader/agent-retrieval/server/mocks"
-	. "github.com/smartystreets/goconvey/convey"
+	"github.com/smartystreets/goconvey/convey"
 	"go.uber.org/mock/gomock"
 )
 
 // TestValidateRequest_Success 测试 validateRequest 成功场景
 func TestValidateRequest_Success(t *testing.T) {
-	Convey("TestValidateRequest_Success", t, func() {
+	convey.Convey("TestValidateRequest_Success", t, func() {
 		service := &knLogicPropertyResolverService{}
 
 		req := &interfaces.ResolveLogicPropertiesRequest{
@@ -31,13 +31,13 @@ func TestValidateRequest_Success(t *testing.T) {
 		}
 
 		err := service.validateRequest(req)
-		So(err, ShouldBeNil)
+		convey.So(err, convey.ShouldBeNil)
 	})
 }
 
 // TestValidateRequest_MissingKnID 测试 validateRequest 缺少 KnID
 func TestValidateRequest_MissingKnID(t *testing.T) {
-	Convey("TestValidateRequest_MissingKnID", t, func() {
+	convey.Convey("TestValidateRequest_MissingKnID", t, func() {
 		service := &knLogicPropertyResolverService{}
 
 		req := &interfaces.ResolveLogicPropertiesRequest{
@@ -51,14 +51,14 @@ func TestValidateRequest_MissingKnID(t *testing.T) {
 		}
 
 		err := service.validateRequest(req)
-		So(err, ShouldNotBeNil)
-		So(err.Error(), ShouldContainSubstring, "kn_id")
+		convey.So(err, convey.ShouldNotBeNil)
+		convey.So(err.Error(), convey.ShouldContainSubstring, "kn_id")
 	})
 }
 
 // TestValidateRequest_MissingOtID 测试 validateRequest 缺少 OtID
 func TestValidateRequest_MissingOtID(t *testing.T) {
-	Convey("TestValidateRequest_MissingOtID", t, func() {
+	convey.Convey("TestValidateRequest_MissingOtID", t, func() {
 		service := &knLogicPropertyResolverService{}
 
 		req := &interfaces.ResolveLogicPropertiesRequest{
@@ -72,14 +72,14 @@ func TestValidateRequest_MissingOtID(t *testing.T) {
 		}
 
 		err := service.validateRequest(req)
-		So(err, ShouldNotBeNil)
-		So(err.Error(), ShouldContainSubstring, "ot_id")
+		convey.So(err, convey.ShouldNotBeNil)
+		convey.So(err.Error(), convey.ShouldContainSubstring, "ot_id")
 	})
 }
 
 // TestValidateRequest_MissingQuery 测试 validateRequest 缺少 Query
 func TestValidateRequest_MissingQuery(t *testing.T) {
-	Convey("TestValidateRequest_MissingQuery", t, func() {
+	convey.Convey("TestValidateRequest_MissingQuery", t, func() {
 		service := &knLogicPropertyResolverService{}
 
 		req := &interfaces.ResolveLogicPropertiesRequest{
@@ -93,14 +93,14 @@ func TestValidateRequest_MissingQuery(t *testing.T) {
 		}
 
 		err := service.validateRequest(req)
-		So(err, ShouldNotBeNil)
-		So(err.Error(), ShouldContainSubstring, "query")
+		convey.So(err, convey.ShouldNotBeNil)
+		convey.So(err.Error(), convey.ShouldContainSubstring, "query")
 	})
 }
 
 // TestValidateRequest_EmptyInstanceIdentities 测试 validateRequest 空 InstanceIdentities
 func TestValidateRequest_EmptyInstanceIdentities(t *testing.T) {
-	Convey("TestValidateRequest_EmptyInstanceIdentities", t, func() {
+	convey.Convey("TestValidateRequest_EmptyInstanceIdentities", t, func() {
 		service := &knLogicPropertyResolverService{}
 
 		req := &interfaces.ResolveLogicPropertiesRequest{
@@ -112,14 +112,14 @@ func TestValidateRequest_EmptyInstanceIdentities(t *testing.T) {
 		}
 
 		err := service.validateRequest(req)
-		So(err, ShouldNotBeNil)
-		So(err.Error(), ShouldContainSubstring, "_instance_identities")
+		convey.So(err, convey.ShouldNotBeNil)
+		convey.So(err.Error(), convey.ShouldContainSubstring, "_instance_identities")
 	})
 }
 
 // TestValidateRequest_EmptyProperties 测试 validateRequest 空 Properties
 func TestValidateRequest_EmptyProperties(t *testing.T) {
-	Convey("TestValidateRequest_EmptyProperties", t, func() {
+	convey.Convey("TestValidateRequest_EmptyProperties", t, func() {
 		service := &knLogicPropertyResolverService{}
 
 		req := &interfaces.ResolveLogicPropertiesRequest{
@@ -133,14 +133,14 @@ func TestValidateRequest_EmptyProperties(t *testing.T) {
 		}
 
 		err := service.validateRequest(req)
-		So(err, ShouldNotBeNil)
-		So(err.Error(), ShouldContainSubstring, "properties")
+		convey.So(err, convey.ShouldNotBeNil)
+		convey.So(err.Error(), convey.ShouldContainSubstring, "properties")
 	})
 }
 
 // TestValidateMetricParams_Success_Instant 测试 validateMetricParams 即时查询成功
 func TestValidateMetricParams_Success_Instant(t *testing.T) {
-	Convey("TestValidateMetricParams_Success_Instant", t, func() {
+	convey.Convey("TestValidateMetricParams_Success_Instant", t, func() {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 
@@ -166,13 +166,13 @@ func TestValidateMetricParams_Success_Instant(t *testing.T) {
 
 		ctx := context.Background()
 		err := service.validateMetricParams(ctx, property, params)
-		So(err, ShouldBeNil)
+		convey.So(err, convey.ShouldBeNil)
 	})
 }
 
 // TestValidateMetricParams_Success_Trend 测试 validateMetricParams 趋势查询成功
 func TestValidateMetricParams_Success_Trend(t *testing.T) {
-	Convey("TestValidateMetricParams_Success_Trend", t, func() {
+	convey.Convey("TestValidateMetricParams_Success_Trend", t, func() {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 
@@ -199,13 +199,13 @@ func TestValidateMetricParams_Success_Trend(t *testing.T) {
 
 		ctx := context.Background()
 		err := service.validateMetricParams(ctx, property, params)
-		So(err, ShouldBeNil)
+		convey.So(err, convey.ShouldBeNil)
 	})
 }
 
 // TestValidateMetricParams_MissingStart 测试 validateMetricParams 缺少 start
 func TestValidateMetricParams_MissingStart(t *testing.T) {
-	Convey("TestValidateMetricParams_MissingStart", t, func() {
+	convey.Convey("TestValidateMetricParams_MissingStart", t, func() {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 
@@ -230,14 +230,14 @@ func TestValidateMetricParams_MissingStart(t *testing.T) {
 
 		ctx := context.Background()
 		err := service.validateMetricParams(ctx, property, params)
-		So(err, ShouldNotBeNil)
-		So(err.Error(), ShouldContainSubstring, "start")
+		convey.So(err, convey.ShouldNotBeNil)
+		convey.So(err.Error(), convey.ShouldContainSubstring, "start")
 	})
 }
 
 // TestValidateMetricParams_MissingEnd 测试 validateMetricParams 缺少 end
 func TestValidateMetricParams_MissingEnd(t *testing.T) {
-	Convey("TestValidateMetricParams_MissingEnd", t, func() {
+	convey.Convey("TestValidateMetricParams_MissingEnd", t, func() {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 
@@ -262,14 +262,14 @@ func TestValidateMetricParams_MissingEnd(t *testing.T) {
 
 		ctx := context.Background()
 		err := service.validateMetricParams(ctx, property, params)
-		So(err, ShouldNotBeNil)
-		So(err.Error(), ShouldContainSubstring, "end")
+		convey.So(err, convey.ShouldNotBeNil)
+		convey.So(err.Error(), convey.ShouldContainSubstring, "end")
 	})
 }
 
 // TestValidateMetricParams_InstantWithStep 测试 instant=true 但有 step 的错误
 func TestValidateMetricParams_InstantWithStep(t *testing.T) {
-	Convey("TestValidateMetricParams_InstantWithStep", t, func() {
+	convey.Convey("TestValidateMetricParams_InstantWithStep", t, func() {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 
@@ -296,14 +296,14 @@ func TestValidateMetricParams_InstantWithStep(t *testing.T) {
 
 		ctx := context.Background()
 		err := service.validateMetricParams(ctx, property, params)
-		So(err, ShouldNotBeNil)
-		So(err.Error(), ShouldContainSubstring, "step")
+		convey.So(err, convey.ShouldNotBeNil)
+		convey.So(err.Error(), convey.ShouldContainSubstring, "step")
 	})
 }
 
 // TestValidateMetricParams_TrendWithoutStep 测试 instant=false 但没有 step 的错误
 func TestValidateMetricParams_TrendWithoutStep(t *testing.T) {
-	Convey("TestValidateMetricParams_TrendWithoutStep", t, func() {
+	convey.Convey("TestValidateMetricParams_TrendWithoutStep", t, func() {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 
@@ -330,14 +330,14 @@ func TestValidateMetricParams_TrendWithoutStep(t *testing.T) {
 
 		ctx := context.Background()
 		err := service.validateMetricParams(ctx, property, params)
-		So(err, ShouldNotBeNil)
-		So(err.Error(), ShouldContainSubstring, "step")
+		convey.So(err, convey.ShouldNotBeNil)
+		convey.So(err.Error(), convey.ShouldContainSubstring, "step")
 	})
 }
 
 // TestValidateMetricParams_InvalidStep 测试无效的 step 值
 func TestValidateMetricParams_InvalidStep(t *testing.T) {
-	Convey("TestValidateMetricParams_InvalidStep", t, func() {
+	convey.Convey("TestValidateMetricParams_InvalidStep", t, func() {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 
@@ -364,55 +364,55 @@ func TestValidateMetricParams_InvalidStep(t *testing.T) {
 
 		ctx := context.Background()
 		err := service.validateMetricParams(ctx, property, params)
-		So(err, ShouldNotBeNil)
-		So(err.Error(), ShouldContainSubstring, "invalid step")
+		convey.So(err, convey.ShouldNotBeNil)
+		convey.So(err.Error(), convey.ShouldContainSubstring, "invalid step")
 	})
 }
 
 // TestValidateTimestamp_Int64 测试 int64 类型的时间戳
 func TestValidateTimestamp_Int64(t *testing.T) {
-	Convey("TestValidateTimestamp_Int64", t, func() {
+	convey.Convey("TestValidateTimestamp_Int64", t, func() {
 		service := &knLogicPropertyResolverService{}
 		ctx := context.Background()
 
 		// 有效时间戳
 		err := service.validateTimestamp(ctx, int64(1704067200000), "start", "test_prop")
-		So(err, ShouldBeNil)
+		convey.So(err, convey.ShouldBeNil)
 
 		// 无效时间戳（太小）
 		err = service.validateTimestamp(ctx, int64(100000000000), "start", "test_prop")
-		So(err, ShouldNotBeNil)
+		convey.So(err, convey.ShouldNotBeNil)
 	})
 }
 
 // TestValidateTimestamp_Float64 测试 float64 类型的时间戳
 func TestValidateTimestamp_Float64(t *testing.T) {
-	Convey("TestValidateTimestamp_Float64", t, func() {
+	convey.Convey("TestValidateTimestamp_Float64", t, func() {
 		service := &knLogicPropertyResolverService{}
 		ctx := context.Background()
 
 		// 有效时间戳
 		err := service.validateTimestamp(ctx, float64(1704067200000), "start", "test_prop")
-		So(err, ShouldBeNil)
+		convey.So(err, convey.ShouldBeNil)
 	})
 }
 
 // TestValidateTimestamp_InvalidType 测试无效类型的时间戳
 func TestValidateTimestamp_InvalidType(t *testing.T) {
-	Convey("TestValidateTimestamp_InvalidType", t, func() {
+	convey.Convey("TestValidateTimestamp_InvalidType", t, func() {
 		service := &knLogicPropertyResolverService{}
 		ctx := context.Background()
 
 		// 无效类型
 		err := service.validateTimestamp(ctx, "not_a_number", "start", "test_prop")
-		So(err, ShouldNotBeNil)
-		So(err.Error(), ShouldContainSubstring, "must be a number")
+		convey.So(err, convey.ShouldNotBeNil)
+		convey.So(err.Error(), convey.ShouldContainSubstring, "must be a number")
 	})
 }
 
 // TestExtractLogicProperties_Success 测试 extractLogicProperties 成功
 func TestExtractLogicProperties_Success(t *testing.T) {
-	Convey("TestExtractLogicProperties_Success", t, func() {
+	convey.Convey("TestExtractLogicProperties_Success", t, func() {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 
@@ -435,16 +435,16 @@ func TestExtractLogicProperties_Success(t *testing.T) {
 
 		ctx := context.Background()
 		result, err := service.extractLogicProperties(ctx, objectType, []string{"prop1", "prop2"})
-		So(err, ShouldBeNil)
-		So(len(result), ShouldEqual, 2)
-		So(result["prop1"], ShouldNotBeNil)
-		So(result["prop2"], ShouldNotBeNil)
+		convey.So(err, convey.ShouldBeNil)
+		convey.So(len(result), convey.ShouldEqual, 2)
+		convey.So(result["prop1"], convey.ShouldNotBeNil)
+		convey.So(result["prop2"], convey.ShouldNotBeNil)
 	})
 }
 
 // TestExtractLogicProperties_NoLogicProperties 测试对象类没有逻辑属性
 func TestExtractLogicProperties_NoLogicProperties(t *testing.T) {
-	Convey("TestExtractLogicProperties_NoLogicProperties", t, func() {
+	convey.Convey("TestExtractLogicProperties_NoLogicProperties", t, func() {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 
@@ -464,13 +464,13 @@ func TestExtractLogicProperties_NoLogicProperties(t *testing.T) {
 
 		ctx := context.Background()
 		_, err := service.extractLogicProperties(ctx, objectType, []string{"prop1"})
-		So(err, ShouldNotBeNil)
+		convey.So(err, convey.ShouldNotBeNil)
 	})
 }
 
 // TestExtractLogicProperties_PropertyNotFound 测试请求的属性不存在
 func TestExtractLogicProperties_PropertyNotFound(t *testing.T) {
-	Convey("TestExtractLogicProperties_PropertyNotFound", t, func() {
+	convey.Convey("TestExtractLogicProperties_PropertyNotFound", t, func() {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 
@@ -492,7 +492,7 @@ func TestExtractLogicProperties_PropertyNotFound(t *testing.T) {
 
 		ctx := context.Background()
 		_, err := service.extractLogicProperties(ctx, objectType, []string{"prop1", "nonexistent_prop"})
-		So(err, ShouldNotBeNil)
-		So(err.Error(), ShouldContainSubstring, "nonexistent_prop")
+		convey.So(err, convey.ShouldNotBeNil)
+		convey.So(err.Error(), convey.ShouldContainSubstring, "nonexistent_prop")
 	})
 }

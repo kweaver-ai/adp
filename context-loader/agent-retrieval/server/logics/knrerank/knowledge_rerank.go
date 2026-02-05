@@ -89,7 +89,6 @@ func (r *KnowledgeReranker) Rerank(ctx context.Context, req *interfaces.Knowledg
 	}
 
 	// 根据action类型分发
-	//nolint:exhaustive // default 分支处理其他情况
 	switch req.Action {
 	case interfaces.KnowledgeRerankActionVector:
 		return r.rerankByVector(ctx, req)

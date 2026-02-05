@@ -70,7 +70,7 @@ type KnFixedParams struct {
 type QueryActionsRequest struct {
 	KnID                string                   `json:"kn_id"`
 	AtID                string                   `json:"at_id"`
-	InstanceIdentities  []map[string]interface{} `json:"_instance_identity"`
+	InstanceIdentities  []map[string]interface{} `json:"_instance_identities"`
 	IncludeTypeInfo     bool                     `json:"include_type_info"`
 	XHTTPMethodOverride string                   `json:"-"` // Fixed to GET
 }

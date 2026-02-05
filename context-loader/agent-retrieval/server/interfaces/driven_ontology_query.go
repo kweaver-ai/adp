@@ -36,7 +36,7 @@ type QueryObjectInstancesResp struct {
 type QueryLogicPropertiesReq struct {
 	KnID               string                   `json:"kn_id"`
 	OtID               string                   `json:"ot_id"`
-	InstanceIdentities []map[string]interface{} `json:"_instance_identity"`
+	InstanceIdentities []map[string]interface{} `json:"_instance_identities"`
 	Properties         []string                 `json:"properties"`
 	DynamicParams      map[string]interface{}   `json:"dynamic_params"`
 }

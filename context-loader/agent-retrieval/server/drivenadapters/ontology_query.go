@@ -88,9 +88,9 @@ func (o *ontologyQueryClient) QueryLogicProperties(ctx context.Context, req *int
 
 	// 构建请求体
 	body := map[string]interface{}{
-		"_instance_identity": req.InstanceIdentities,
-		"properties":         req.Properties,
-		"dynamic_params":     req.DynamicParams,
+		"_instance_identities": req.InstanceIdentities,
+		"properties":           req.Properties,
+		"dynamic_params":       req.DynamicParams,
 	}
 
 	// 📤 记录调用 ontology-query 的完整入参
@@ -130,7 +130,7 @@ func (o *ontologyQueryClient) QueryActions(ctx context.Context, req *interfaces.
 
 	// 构建请求体
 	body := map[string]interface{}{
-		"_instance_identity": req.InstanceIdentities,
+		"_instance_identities": req.InstanceIdentities,
 	}
 
 	// 记录请求日志

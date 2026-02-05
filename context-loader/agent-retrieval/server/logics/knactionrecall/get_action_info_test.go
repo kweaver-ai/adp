@@ -13,13 +13,13 @@ import (
 	"github.com/kweaver-ai/adp/context-loader/agent-retrieval/server/infra/config"
 	"github.com/kweaver-ai/adp/context-loader/agent-retrieval/server/interfaces"
 	"github.com/kweaver-ai/adp/context-loader/agent-retrieval/server/mocks"
-	. "github.com/smartystreets/goconvey/convey"
+	"github.com/smartystreets/goconvey/convey"
 	"go.uber.org/mock/gomock"
 )
 
 // TestGetActionInfo_QueryActionsError 测试 QueryActions 调用失败的场景
 func TestGetActionInfo_QueryActionsError(t *testing.T) {
-	Convey("TestGetActionInfo_QueryActionsError", t, func() {
+	convey.Convey("TestGetActionInfo_QueryActionsError", t, func() {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 
@@ -49,13 +49,13 @@ func TestGetActionInfo_QueryActionsError(t *testing.T) {
 			Return(nil, errors.New("query actions failed"))
 
 		_, err := service.GetActionInfo(ctx, req)
-		So(err, ShouldNotBeNil)
+		convey.So(err, convey.ShouldNotBeNil)
 	})
 }
 
 // TestGetActionInfo_ActionSourceNil 测试 ActionSource 为 nil 的场景
 func TestGetActionInfo_ActionSourceNil(t *testing.T) {
-	Convey("TestGetActionInfo_ActionSourceNil", t, func() {
+	convey.Convey("TestGetActionInfo_ActionSourceNil", t, func() {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 
@@ -88,15 +88,15 @@ func TestGetActionInfo_ActionSourceNil(t *testing.T) {
 			}, nil)
 
 		resp, err := service.GetActionInfo(ctx, req)
-		So(err, ShouldBeNil)
-		So(resp, ShouldNotBeNil)
-		So(len(resp.DynamicTools), ShouldEqual, 0)
+		convey.So(err, convey.ShouldBeNil)
+		convey.So(resp, convey.ShouldNotBeNil)
+		convey.So(len(resp.DynamicTools), convey.ShouldEqual, 0)
 	})
 }
 
 // TestGetActionInfo_ActionsEmpty 测试 Actions 为空的场景
 func TestGetActionInfo_ActionsEmpty(t *testing.T) {
-	Convey("TestGetActionInfo_ActionsEmpty", t, func() {
+	convey.Convey("TestGetActionInfo_ActionsEmpty", t, func() {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 
@@ -129,15 +129,15 @@ func TestGetActionInfo_ActionsEmpty(t *testing.T) {
 			}, nil)
 
 		resp, err := service.GetActionInfo(ctx, req)
-		So(err, ShouldBeNil)
-		So(resp, ShouldNotBeNil)
-		So(len(resp.DynamicTools), ShouldEqual, 0)
+		convey.So(err, convey.ShouldBeNil)
+		convey.So(resp, convey.ShouldNotBeNil)
+		convey.So(len(resp.DynamicTools), convey.ShouldEqual, 0)
 	})
 }
 
 // TestGetActionInfo_UnsupportedType 测试不支持的 action_source 类型
 func TestGetActionInfo_UnsupportedType(t *testing.T) {
-	Convey("TestGetActionInfo_UnsupportedType", t, func() {
+	convey.Convey("TestGetActionInfo_UnsupportedType", t, func() {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 
@@ -172,13 +172,13 @@ func TestGetActionInfo_UnsupportedType(t *testing.T) {
 			}, nil)
 
 		_, err := service.GetActionInfo(ctx, req)
-		So(err, ShouldNotBeNil)
+		convey.So(err, convey.ShouldNotBeNil)
 	})
 }
 
 // TestGetActionInfo_ToolType_Success 测试 Tool 类型成功路径
 func TestGetActionInfo_ToolType_Success(t *testing.T) {
-	Convey("TestGetActionInfo_ToolType_Success", t, func() {
+	convey.Convey("TestGetActionInfo_ToolType_Success", t, func() {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 
@@ -254,17 +254,17 @@ func TestGetActionInfo_ToolType_Success(t *testing.T) {
 			}, nil)
 
 		resp, err := service.GetActionInfo(ctx, req)
-		So(err, ShouldBeNil)
-		So(resp, ShouldNotBeNil)
-		So(len(resp.DynamicTools), ShouldEqual, 1)
-		So(resp.DynamicTools[0].Name, ShouldEqual, "TestTool")
-		So(resp.DynamicTools[0].APICallStrategy, ShouldEqual, interfaces.ResultProcessStrategyKnActionRecall)
+		convey.So(err, convey.ShouldBeNil)
+		convey.So(resp, convey.ShouldNotBeNil)
+		convey.So(len(resp.DynamicTools), convey.ShouldEqual, 1)
+		convey.So(resp.DynamicTools[0].Name, convey.ShouldEqual, "TestTool")
+		convey.So(resp.DynamicTools[0].APICallStrategy, convey.ShouldEqual, interfaces.ResultProcessStrategyKnActionRecall)
 	})
 }
 
 // TestGetActionInfo_MCPType_Success 测试 MCP 类型成功路径
 func TestGetActionInfo_MCPType_Success(t *testing.T) {
-	Convey("TestGetActionInfo_MCPType_Success", t, func() {
+	convey.Convey("TestGetActionInfo_MCPType_Success", t, func() {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 
@@ -322,17 +322,17 @@ func TestGetActionInfo_MCPType_Success(t *testing.T) {
 			}, nil)
 
 		resp, err := service.GetActionInfo(ctx, req)
-		So(err, ShouldBeNil)
-		So(resp, ShouldNotBeNil)
-		So(len(resp.DynamicTools), ShouldEqual, 1)
-		So(resp.DynamicTools[0].Name, ShouldEqual, "TestMCPTool")
-		So(resp.DynamicTools[0].APICallStrategy, ShouldEqual, interfaces.ResultProcessStrategyKnActionRecall)
+		convey.So(err, convey.ShouldBeNil)
+		convey.So(resp, convey.ShouldNotBeNil)
+		convey.So(len(resp.DynamicTools), convey.ShouldEqual, 1)
+		convey.So(resp.DynamicTools[0].Name, convey.ShouldEqual, "TestMCPTool")
+		convey.So(resp.DynamicTools[0].APICallStrategy, convey.ShouldEqual, interfaces.ResultProcessStrategyKnActionRecall)
 	})
 }
 
 // TestGetActionInfo_GetToolDetailError 测试 GetToolDetail 调用失败
 func TestGetActionInfo_GetToolDetailError(t *testing.T) {
-	Convey("TestGetActionInfo_GetToolDetailError", t, func() {
+	convey.Convey("TestGetActionInfo_GetToolDetailError", t, func() {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 
@@ -377,13 +377,13 @@ func TestGetActionInfo_GetToolDetailError(t *testing.T) {
 			Return(nil, errors.New("get tool detail failed"))
 
 		_, err := service.GetActionInfo(ctx, req)
-		So(err, ShouldNotBeNil)
+		convey.So(err, convey.ShouldNotBeNil)
 	})
 }
 
 // TestGetActionInfo_GetMCPToolDetailError 测试 GetMCPToolDetail 调用失败
 func TestGetActionInfo_GetMCPToolDetailError(t *testing.T) {
-	Convey("TestGetActionInfo_GetMCPToolDetailError", t, func() {
+	convey.Convey("TestGetActionInfo_GetMCPToolDetailError", t, func() {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 
@@ -428,7 +428,7 @@ func TestGetActionInfo_GetMCPToolDetailError(t *testing.T) {
 			Return(nil, errors.New("get mcp tool detail failed"))
 
 		_, err := service.GetActionInfo(ctx, req)
-		So(err, ShouldNotBeNil)
+		convey.So(err, convey.ShouldNotBeNil)
 	})
 }
 

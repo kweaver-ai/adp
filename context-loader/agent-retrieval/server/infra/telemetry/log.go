@@ -10,8 +10,9 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/kweaver-ai/adp/context-loader/agent-retrieval/server/interfaces"
 	o11y "github.com/kweaver-ai/kweaver-go-lib/observability"
+
+	"github.com/kweaver-ai/adp/context-loader/agent-retrieval/server/interfaces"
 )
 
 // LogExporterType 日志导出类型

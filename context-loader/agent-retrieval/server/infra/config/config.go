@@ -16,13 +16,14 @@ import (
 	"sync"
 
 	"github.com/creasty/defaults"
+	o11y "github.com/kweaver-ai/kweaver-go-lib/observability"
+	"github.com/spf13/viper"
+	yaml "gopkg.in/yaml.v3"
+
 	"github.com/kweaver-ai/adp/context-loader/agent-retrieval/server/infra/logger"
 	"github.com/kweaver-ai/adp/context-loader/agent-retrieval/server/infra/telemetry"
 	"github.com/kweaver-ai/adp/context-loader/agent-retrieval/server/interfaces"
 	"github.com/kweaver-ai/adp/context-loader/agent-retrieval/server/utils"
-	o11y "github.com/kweaver-ai/kweaver-go-lib/observability"
-	"github.com/spf13/viper"
-	"gopkg.in/yaml.v3"
 )
 
 // Config configuration
@@ -48,6 +49,10 @@ type Config struct {
 // ObservabilityConfig trace configuration
 type ObservabilityConfig struct {
 	TraceType                 telemetry.ExporterType `mapstructure:"traceType"`
+	TraceEnabled              bool                   `mapstructure:"traceEnabled"`
+	TraceProvider             string                 `mapstructure:"traceProvider"`
+	LogEnabled                bool                   `mapstructure:"logEnabled"`
+	GrpcTraceFeedIngesterURL  string                 `mapstructure:"grpcTraceFeedIngesterUrl"`
 	o11y.ObservabilitySetting `mapstructure:",squash"`
 }
 
@@ -231,7 +236,6 @@ func overrideWithEnv(cfg interface{}) {
 		}
 
 		// Use reflection to set field value directly, type match required
-		//nolint:exhaustive // 只处理需要的类型，其他类型自动跳过
 		switch field.Kind() {
 		case reflect.String:
 			field.SetString(envValue)
@@ -279,7 +283,7 @@ func (conf *Config) initO11yAndLog() {
 
 	// Initialize observability
 	if conf.Observability.TraceEnabled && conf.Observability.TraceType == telemetry.ExporterTypeJaeger {
-		_, err := telemetry.InitJaegerExporter(conf.Project.Name, conf.Observability.TraceProvider, conf.Observability.GrpcTraceFeedIngesterUrl)
+		_, err := telemetry.InitJaegerExporter(conf.Project.Name, conf.Observability.TraceProvider, conf.Observability.GrpcTraceFeedIngesterURL)
 		if err != nil {
 			panic(err)
 		}

@@ -26,8 +26,8 @@ func TestSemanticInstanceRetrieval_MainFlow(t *testing.T) {
 			},
 			objectTypes: []*interfaces.KnSearchObjectType{
 				{
-					ConceptID:     "ot1",
-					ConceptName:   "Type1",
+					ConceptID:   "ot1",
+					ConceptName: "Type1",
 					DataProperties: []*interfaces.KnSearchDataProperty{
 						{Name: "instance_name", Type: "text", ConditionOperations: []interfaces.KnOperationType{interfaces.KnOperationTypeKnn, interfaces.KnOperationTypeMatch}},
 					},

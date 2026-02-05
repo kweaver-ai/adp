@@ -8,9 +8,10 @@ package mcp
 import (
 	"context"
 	"encoding/json"
+	"net/http"
 
 	"github.com/creasty/defaults"
-	"github.com/go-playground/validator/v10"
+	validator "github.com/go-playground/validator/v10"
 	"github.com/mark3labs/mcp-go/mcp"
 
 	"github.com/kweaver-ai/adp/context-loader/agent-retrieval/server/infra/common"
@@ -113,7 +114,7 @@ func handleKnSchemaSearch(service interfaces.IKnRetrievalService) func(ctx conte
 		case interfaces.KeywordVectorRetrieval:
 			resp, err = service.KeywordVectorRetrieval(ctx, searchReq)
 		default:
-			err = errors.DefaultHTTPError(ctx, 400, "mode not support")
+			err = errors.DefaultHTTPError(ctx, http.StatusBadRequest, "mode not support")
 		}
 		if err != nil {
 			return mcp.NewToolResultError(err.Error()), nil

@@ -16,6 +16,9 @@ import (
 	o11y "github.com/kweaver-ai/kweaver-go-lib/observability"
 )
 
+// objectTypeRelationMultiplier 无关系/按关系过滤时对象类型数量相对 topK 的倍数
+const objectTypeRelationMultiplier = 2
+
 // conceptRetrieval 概念召回主逻辑
 // 流程：获取知识网络详情 -> 可选粗召回 -> 关系类型排序 -> 对象类型过滤 -> 属性裁剪
 func (s *localSearchImpl) conceptRetrieval(
@@ -83,13 +86,13 @@ func (s *localSearchImpl) selectObjectTypesForConceptRetrieval(
 		return objectTypes
 	}
 
-	maxObjectCountNoRelation := topK * 2
+	maxObjectCountNoRelation := topK * objectTypeRelationMultiplier
 	if len(relations) == 0 {
 		return sortAndTruncateObjectTypesByScore(objectTypes, maxObjectCountNoRelation)
 	}
 
 	filtered := s.filterObjectTypesByRelations(objectTypes, relations)
-	maxObjectCount := maxInt(len(relations)*2, topK)
+	maxObjectCount := maxInt(len(relations)*objectTypeRelationMultiplier, topK)
 	if len(filtered) >= maxObjectCount {
 		return filtered
 	}
@@ -301,7 +304,7 @@ func (s *localSearchImpl) coarseRecall(
 
 // buildCoarseRecallQuery 构建粗召回查询条件
 // 业务逻辑：使用 knn + match 组合查询，按分数降序排序
-func (s *localSearchImpl) buildCoarseRecallQuery(knID string, query string, limit int) *interfaces.QueryConceptsReq {
+func (s *localSearchImpl) buildCoarseRecallQuery(knID, query string, limit int) *interfaces.QueryConceptsReq {
 	return &interfaces.QueryConceptsReq{
 		KnID: knID,
 		Cond: &interfaces.KnCondition{
@@ -519,7 +522,7 @@ func (s *localSearchImpl) calculateRelevanceScore(query, name, comment string) f
 	}
 
 	// 名称包含 Query
-	if len(name) > 0 {
+	if name != "" {
 		if containsFold(name, query) {
 			score += 0.5
 		}
@@ -529,7 +532,7 @@ func (s *localSearchImpl) calculateRelevanceScore(query, name, comment string) f
 	}
 
 	// 描述包含 Query
-	if len(comment) > 0 && containsFold(comment, query) {
+	if comment != "" && containsFold(comment, query) {
 		score += 0.2
 	}
 
@@ -542,7 +545,7 @@ func containsFold(s, substr string) bool {
 
 // pruneProperties 属性裁剪：只保留与 Query 最相关的属性
 func (s *localSearchImpl) pruneProperties(
-	ctx context.Context,
+	_ context.Context,
 	query string,
 	objectTypes []*interfaces.KnSearchObjectType,
 	config *interfaces.KnSearchConceptRetrievalConfig,

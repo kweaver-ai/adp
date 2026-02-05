@@ -8,30 +8,30 @@ package utils
 import (
 	"testing"
 
-	. "github.com/smartystreets/goconvey/convey"
+	"github.com/smartystreets/goconvey/convey"
 )
 
 func TestUniqueStrings(t *testing.T) {
-	Convey("TestUniqueStrings", t, func() {
+	convey.Convey("TestUniqueStrings", t, func() {
 		str := []string{"a", "a", "b", "c", "d", "d"}
 		uniqueStr := UniqueStrings(str)
-		So(len(uniqueStr), ShouldEqual, 4)
-		So(uniqueStr[0], ShouldEqual, "a")
-		So(uniqueStr[1], ShouldEqual, "b")
-		So(uniqueStr[2], ShouldEqual, "c")
-		So(uniqueStr[3], ShouldEqual, "d")
+		convey.So(len(uniqueStr), convey.ShouldEqual, 4)
+		convey.So(uniqueStr[0], convey.ShouldEqual, "a")
+		convey.So(uniqueStr[1], convey.ShouldEqual, "b")
+		convey.So(uniqueStr[2], convey.ShouldEqual, "c")
+		convey.So(uniqueStr[3], convey.ShouldEqual, "d")
 	})
 }
 
 func TestObjectToByte(t *testing.T) {
-	Convey("TestObjectToByte", t, func() {
+	convey.Convey("TestObjectToByte", t, func() {
 		byt := ObjectToByte(nil)
-		So(byt, ShouldNotEqual, nil)
+		convey.So(byt, convey.ShouldNotEqual, nil)
 	})
 }
 func TestObjectToJSON(t *testing.T) {
-	Convey("ObjectToJSON", t, func() {
+	convey.Convey("ObjectToJSON", t, func() {
 		byt := ObjectToJSON(nil)
-		So(byt, ShouldEqual, "null")
+		convey.So(byt, convey.ShouldEqual, "null")
 	})
 }

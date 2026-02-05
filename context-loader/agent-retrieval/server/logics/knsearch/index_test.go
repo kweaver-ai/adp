@@ -12,13 +12,13 @@ import (
 
 	"github.com/kweaver-ai/adp/context-loader/agent-retrieval/server/interfaces"
 	"github.com/kweaver-ai/adp/context-loader/agent-retrieval/server/mocks"
-	. "github.com/smartystreets/goconvey/convey"
+	"github.com/smartystreets/goconvey/convey"
 	"go.uber.org/mock/gomock"
 )
 
 // TestKnSearch_Success 测试 KnSearch 成功场景（UseLocalSearch false，走远程）
 func TestKnSearch_Success(t *testing.T) {
-	Convey("TestKnSearch_Success", t, func() {
+	convey.Convey("TestKnSearch_Success", t, func() {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 
@@ -48,14 +48,14 @@ func TestKnSearch_Success(t *testing.T) {
 			}, nil)
 
 		resp, err := service.KnSearch(ctx, req)
-		So(err, ShouldBeNil)
-		So(resp, ShouldNotBeNil)
+		convey.So(err, convey.ShouldBeNil)
+		convey.So(resp, convey.ShouldNotBeNil)
 	})
 }
 
 // TestKnSearch_Error 测试 KnSearch 错误场景（UseLocalSearch false，走远程）
 func TestKnSearch_Error(t *testing.T) {
-	Convey("TestKnSearch_Error", t, func() {
+	convey.Convey("TestKnSearch_Error", t, func() {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 
@@ -82,13 +82,13 @@ func TestKnSearch_Error(t *testing.T) {
 			Return(nil, errors.New("data retrieval error"))
 
 		_, err := service.KnSearch(ctx, req)
-		So(err, ShouldNotBeNil)
+		convey.So(err, convey.ShouldNotBeNil)
 	})
 }
 
 // TestKnSearch_KnIDConversion 测试 KnID 转换逻辑（UseLocalSearch false，走远程）
 func TestKnSearch_KnIDConversion(t *testing.T) {
-	Convey("TestKnSearch_KnIDConversion", t, func() {
+	convey.Convey("TestKnSearch_KnIDConversion", t, func() {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 
@@ -115,13 +115,13 @@ func TestKnSearch_KnIDConversion(t *testing.T) {
 			DoAndReturn(func(_ context.Context, r *interfaces.KnSearchReq) (*interfaces.KnSearchResp, error) {
 				// 检查 knIDs 被正确设置
 				knIDs := r.GetKnIDs()
-				So(len(knIDs), ShouldEqual, 1)
-				So(knIDs[0].KnowledgeNetworkID, ShouldEqual, "kn-001")
+				convey.So(len(knIDs), convey.ShouldEqual, 1)
+				convey.So(knIDs[0].KnowledgeNetworkID, convey.ShouldEqual, "kn-001")
 				return &interfaces.KnSearchResp{}, nil
 			})
 
 		_, err := service.KnSearch(ctx, req)
-		So(err, ShouldBeNil)
+		convey.So(err, convey.ShouldBeNil)
 	})
 }
 
@@ -137,7 +137,7 @@ func (f *fakeLocalSearch) Search(_ context.Context, _ *interfaces.KnSearchLocalR
 
 // TestKnSearch_UseLocalSearchTrue_Success 测试 UseLocalSearch true 时走本地检索成功
 func TestKnSearch_UseLocalSearchTrue_Success(t *testing.T) {
-	Convey("TestKnSearch_UseLocalSearchTrue_Success", t, func() {
+	convey.Convey("TestKnSearch_UseLocalSearchTrue_Success", t, func() {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 
@@ -168,16 +168,16 @@ func TestKnSearch_UseLocalSearchTrue_Success(t *testing.T) {
 		}
 
 		resp, err := service.KnSearch(ctx, req)
-		So(err, ShouldBeNil)
-		So(resp, ShouldNotBeNil)
-		So(resp.ObjectTypes, ShouldResemble, localResp.ObjectTypes)
-		So(resp.Nodes, ShouldResemble, localResp.Nodes)
+		convey.So(err, convey.ShouldBeNil)
+		convey.So(resp, convey.ShouldNotBeNil)
+		convey.So(resp.ObjectTypes, convey.ShouldResemble, localResp.ObjectTypes)
+		convey.So(resp.Nodes, convey.ShouldResemble, localResp.Nodes)
 	})
 }
 
 // TestKnSearch_UseLocalSearchTrue_Error 测试 UseLocalSearch true 时本地检索返回错误
 func TestKnSearch_UseLocalSearchTrue_Error(t *testing.T) {
-	Convey("TestKnSearch_UseLocalSearchTrue_Error", t, func() {
+	convey.Convey("TestKnSearch_UseLocalSearchTrue_Error", t, func() {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 
@@ -202,7 +202,7 @@ func TestKnSearch_UseLocalSearchTrue_Error(t *testing.T) {
 		}
 
 		resp, err := service.KnSearch(ctx, req)
-		So(err, ShouldNotBeNil)
-		So(resp, ShouldBeNil)
+		convey.So(err, convey.ShouldNotBeNil)
+		convey.So(resp, convey.ShouldBeNil)
 	})
 }

@@ -179,7 +179,9 @@ func createMockNetworkDetail(objectCount, relationCount, actionCount int) *inter
 	return detail
 }
 
-// createMockInstanceData 创建测试用的实例数据
+// createMockInstanceData 创建测试用的实例数据（预留供扩展测试使用）
+//
+//nolint:unused
 func createMockInstanceData(count int) []interface{} {
 	data := make([]interface{}, count)
 	for i := 0; i < count; i++ {

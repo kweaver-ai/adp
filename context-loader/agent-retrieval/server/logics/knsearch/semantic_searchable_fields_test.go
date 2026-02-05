@@ -45,7 +45,7 @@ func TestFindSemanticSearchableFields_TextWithOps(t *testing.T) {
 func TestBuildSemanticSearchConditionStruct_WithSearchableFields(t *testing.T) {
 	svc := &localSearchImpl{}
 	config := &interfaces.KnSearchSemanticInstanceRetrievalConfig{
-		PerTypeInstanceLimit:  5,
+		PerTypeInstanceLimit:     5,
 		MaxSemanticSubConditions: 10,
 	}
 	objType := &interfaces.KnSearchObjectType{

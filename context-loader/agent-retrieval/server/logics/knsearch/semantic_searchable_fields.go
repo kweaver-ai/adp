@@ -78,6 +78,15 @@ func findSemanticSearchableFields(objType *interfaces.KnSearchObjectType) []sear
 				hasMatch = true
 			case interfaces.KnOperationTypeKnn:
 				hasKnn = true
+			case interfaces.KnOperationTypeAnd, interfaces.KnOperationTypeOr,
+				interfaces.KnOperationTypeNotEqual, interfaces.KnOperationTypeGreater, interfaces.KnOperationTypeLess,
+				interfaces.KnOperationTypeGreaterOrEqual, interfaces.KnOperationTypeLessOrEqual,
+				interfaces.KnOperationTypeIn, interfaces.KnOperationTypeNotIn,
+				interfaces.KnOperationTypeLike, interfaces.KnOperationTypeNotLike,
+				interfaces.KnOperationTypeRange, interfaces.KnOperationTypeOutRange,
+				interfaces.KnOperationTypeExist, interfaces.KnOperationTypeNotExist,
+				interfaces.KnOperationTypeRegex:
+				// 非 semantic 检索相关操作类型，不设置 hasExact/hasMatch/hasKnn
 			}
 		}
 		if !hasExact && !hasMatch && !hasKnn {

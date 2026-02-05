@@ -46,7 +46,7 @@ linters-settings:
     min-complexity: 30
   # goimports配置需求
   goimports:
-    local-prefixes: github.com/golangci/golangci-lint
+    local-prefixes: github.com/kweaver-ai/adp/context-loader/agent-retrieval
   # golint最小置信度
   golint:
     min-confidence: 1
@@ -132,3 +132,8 @@ issues:
   #   golangci-lint/golangci-lint#1249
   #   golangci-lint/golangci-lint#413
   exclude-use-default: false
+  # 默认配置文件中大量为业务常量数值，排除 mnd 检查
+  exclude-rules:
+    - path: server/logics/knsearch/config\.go
+      linters:
+        - mnd
