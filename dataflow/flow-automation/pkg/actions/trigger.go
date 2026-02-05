@@ -1744,6 +1744,75 @@ func (a *DataFlowDocTrigger) Name() string {
 
 // Run 操作方法 手动触发
 func (a *DataFlowDocTrigger) Run(ctx entity.ExecuteContext, params interface{}, token *entity.Token) (interface{}, error) {
+	// 如果包含bucket参数，说明是S3数据源触发
+	if _, ok := ctx.GetVar("bucket"); ok {
+		var err error
+		newCtx, span := trace.StartInternalSpan(ctx.Context())
+		defer func() { trace.TelemetrySpanEnd(span, err) }()
+		ctx.SetContext(newCtx)
+
+		ctx.Trace(ctx.Context(), "run start", entity.TraceOpPersistAfterAction)
+
+		var data = make(map[string]interface{})
+		data["_type"] = "s3"
+
+		defer func() {
+			patchDagInstanceSource(ctx, data, a.Name())
+		}()
+
+		// 从上下文变量中获取S3对象信息
+		id, _ := ctx.GetVar("id")
+		bucket, _ := ctx.GetVar("bucket")
+		key, _ := ctx.GetVar("key")
+		size, _ := ctx.GetVar("size")
+		lastModified, _ := ctx.GetVar("last_modified")
+		etag, _ := ctx.GetVar("etag")
+		downloadURL, _ := ctx.GetVar("download_url")
+
+		if idStr, ok := id.(string); ok && idStr != "" {
+			data["id"] = idStr
+		}
+		if bucketStr, ok := bucket.(string); ok && bucketStr != "" {
+			data["bucket"] = bucketStr
+		}
+		if keyStr, ok := key.(string); ok && keyStr != "" {
+			data["key"] = keyStr
+			// 从key中提取文件名
+			parts := strings.Split(keyStr, "/")
+			if len(parts) > 0 {
+				data["name"] = parts[len(parts)-1]
+			}
+		}
+		if sizeStr, ok := size.(string); ok && sizeStr != "" {
+			data["size"] = sizeStr
+		}
+		if lastModifiedStr, ok := lastModified.(string); ok && lastModifiedStr != "" {
+			data["last_modified"] = lastModifiedStr
+		}
+		if etagStr, ok := etag.(string); ok && etagStr != "" {
+			data["etag"] = etagStr
+			data["md5"] = etagStr // ETag通常是MD5值
+		}
+		if downloadURLStr, ok := downloadURL.(string); ok && downloadURLStr != "" {
+			data["download_url"] = downloadURLStr
+		}
+
+		// 将数据存储到共享数据中
+		datasourceid, ok := ctx.GetVar("datasourceid")
+		if ok {
+			id, idOk := datasourceid.(string)
+			if idOk {
+				ctx.ShareData().Set(id, data)
+			}
+		} else {
+			id := ctx.GetTaskID()
+			ctx.ShareData().Set(id, data)
+		}
+
+		ctx.Trace(ctx.Context(), "run end")
+		return data, nil
+	}
+
 	return triggerManual(ctx, params, token, a.Name())
 }
 

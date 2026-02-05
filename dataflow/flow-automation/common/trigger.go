@@ -118,6 +118,12 @@ const (
 	// AnyshareDataTagTree AnyShare标签树
 	AnyshareDataTagTree = "@anyshare-data/tag-tree"
 
+	// S3DataListObjects S3列表对象
+	S3DataListObjects = "@s3/list-objects"
+
+	// LocalDataListFiles 本地文件列表操作符
+	LocalDataListFiles = "@local/list-files"
+
 	// 数据视图触发流程配置数据源
 	MDLDataViewTrigger = "@trigger/dataview"
 )

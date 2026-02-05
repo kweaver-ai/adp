@@ -3831,6 +3831,86 @@ func (m *mgnt) triggerfromDataSource(ctx context.Context, dataSource *entity.Dat
 		} else {
 			return false, nil
 		}
+	case common.S3DataListObjects:
+		// S3数据源处理
+		fmt.Println("Processing S3 data source for dag: ", dag.ID)
+		log.Infof("[triggerfromDataSource] Processing S3 data source for dag: %s", dag.ID)
+
+		// 创建一个临时的 DagInstance 用于存储 S3 数据
+		dagIns := &entity.DagInstance{
+			DagID:     dag.ID,
+			ShareData: &entity.ShareData{},
+		}
+
+		// 调用 handleS3DataSource 获取 S3 对象列表
+		err := m.handleS3DataSource(ctx, dag, dagIns)
+		if err != nil {
+			log.Warnf("[triggerfromDataSource] handleS3DataSource failed: %s, dagId: %s", err.Error(), dag.ID)
+			return false, err
+		}
+
+		if dagIns.ShareData != nil && dagIns.ShareData.Dict != nil {
+			for key, value := range dagIns.ShareData.Dict {
+				fmt.Printf("  Key: %v (type: %T), Value type: %T\n", key, key, value)
+			}
+		} else {
+			fmt.Printf("  ShareData or Dict is nil\n")
+		}
+
+		// 从 ShareData 中获取 S3 对象列表
+		s3Data, ok := dagIns.ShareData.Get("__0")
+		if !ok {
+			log.Warnf("[triggerfromDataSource] No S3 data found in ShareData for dag: %s", dag.ID)
+			return false, nil
+		}
+
+		s3DataMap, ok := s3Data.(map[string]interface{})
+		if !ok {
+			log.Warnf("[triggerfromDataSource] Invalid S3 data format for dag: %s", dag.ID)
+			return false, nil
+		}
+
+		items, ok := s3DataMap["items"]
+		if !ok {
+			log.Warnf("[triggerfromDataSource] No items in S3 data for dag: %s", dag.ID)
+			return false, nil
+		}
+
+		// 将 S3 对象转换为 DataSourceItem
+		s3Items, ok := items.([]S3DataItem)
+		if !ok {
+			log.Warnf("[triggerfromDataSource] Invalid S3 items format for dag: %s", dag.ID)
+			return false, nil
+		}
+
+		for _, s3Item := range s3Items {
+			data := map[string]interface{}{
+				"id":            s3Item.ID,
+				"bucket":        s3Item.Bucket,
+				"key":           s3Item.Key,
+				"name":          s3Item.Name,
+				"size":          s3Item.Size,
+				"last_modified": s3Item.LastModified,
+				"etag":          s3Item.ETag,
+				"download_url":  s3Item.DownloadURL,
+			}
+			datas = append(datas, &DataSourceItem{
+				ID:       s3Item.Key,
+				Keywords: []string{s3Item.Bucket, s3Item.Key},
+				Data:     data,
+			})
+		}
+
+		if len(datas) > 0 {
+			err = m.createDagInstanceFromDataSource(ctx, triggerType, runVar, datas, dag)
+			if err != nil {
+				log.Warnf("[triggerfromDataSource] createDagInstanceFromDataSource failed: %s, dagId: %s", err.Error(), dag.ID)
+			}
+			return true, err
+		} else {
+			log.Warnf("[triggerfromDataSource] No S3 objects found for dag: %s", dag.ID)
+			return false, nil
+		}
 	}
 
 	return false, nil
@@ -4784,6 +4864,7 @@ func (m *mgnt) getDataSourceType(dataSource *entity.DataSource) string {
 type DataSourceItem struct {
 	ID       string
 	Keywords []string
+	Data     map[string]interface{}
 }
 
 // createDagInstanceFromDataSource
@@ -4791,8 +4872,19 @@ func (m *mgnt) createDagInstanceFromDataSource(ctx context.Context, triggerType 
 	dag.SetPushMessage(m.executeMethods.Publish)
 	dagInstances := make([]*entity.DagInstance, 0)
 	for _, d := range datas {
-		runVar["docid"] = d.ID
-		dagIns, dagErr := dag.Run(ctx, triggerType, runVar, entity.WithKeyWords(d.Keywords...))
+		// Clone runVar to avoid polluting shared map across iterations or affecting caller
+		currentRunVar := make(map[string]string)
+		for k, v := range runVar {
+			currentRunVar[k] = v
+		}
+		currentRunVar["docid"] = d.ID
+		if d.Data != nil {
+			for k, v := range d.Data {
+				currentRunVar[k] = fmt.Sprintf("%v", v)
+			}
+		}
+
+		dagIns, dagErr := dag.Run(ctx, triggerType, currentRunVar, entity.WithKeyWords(d.Keywords...))
 		if dagErr != nil {
 			return ierrors.NewIError(ierrors.Forbidden, ierrors.DagStatusNotNormal, map[string]interface{}{"id:": dag.ID, "status": dag.Status})
 		}

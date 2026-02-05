@@ -350,15 +350,25 @@ func (m *mgnt) handleS3DataSource(ctx context.Context, dag *entity.Dag, dagIns *
 	sources := dataSource.Parameters.Sources
 	var allItems []S3DataItem
 
-	if len(sources) > 0 && mode != "upload" {
+	if len(sources) > 0 {
+
 		// 使用前端传递的文件列表
 		for _, source := range sources {
-			if source.Path == "" {
+			var effectiveKey string
+			if source.Key != "" {
+				effectiveKey = source.Key
+			} else if source.Path != "" {
+				effectiveKey = source.Path
+			}
+
+			if effectiveKey == "" {
 				continue
 			}
+
 			// 验证前缀
-			if !strings.HasPrefix(source.Path, prefix) {
-				log.Warnf("[mgnt.handleS3DataSource] Key %s does not match prefix %s, skipping", source.Path, prefix)
+			if !strings.HasPrefix(effectiveKey, prefix) && !strings.HasPrefix(effectiveKey, "dataflow-doc/temp/"+dag.ID) { // Also allow temp path if needed, but strict prefix check requested?
+				// The original code passed `prefix` which was `dataflow-doc/{dag.ID}/`.
+				log.Warnf("[mgnt.handleS3DataSource] Key %s does not match prefix %s, skipping", effectiveKey, prefix)
 				continue
 			}
 
@@ -366,17 +376,17 @@ func (m *mgnt) handleS3DataSource(ctx context.Context, dag *entity.Dag, dagIns *
 			// source.Bucket 可能是前端传的，也可能没有。我们强制使用系统Bucket
 
 			// 生成下载链接
-			id := fmt.Sprintf("%s/%s", sysBucket, source.Path)
-			downloadURL, err := s3Adapter.GeneratePresignedURL(ctx, sysBucket, source.Path, 7*24*time.Hour)
+			id := fmt.Sprintf("%s/%s", sysBucket, effectiveKey)
+			downloadURL, err := s3Adapter.GeneratePresignedURL(ctx, sysBucket, effectiveKey, 7*24*time.Hour)
 			if err != nil {
-				log.Warnf("[mgnt.handleS3DataSource] Failed to generate presigned URL for %s: %v", source.Path, err)
-				downloadURL = fmt.Sprintf("%s/%s/%s", m.config.S3.Endpoint, sysBucket, source.Path)
+				log.Warnf("[mgnt.handleS3DataSource] Failed to generate presigned URL for %s: %v", effectiveKey, err)
+				downloadURL = fmt.Sprintf("%s/%s/%s", m.config.S3.Endpoint, sysBucket, effectiveKey)
 			}
 
 			allItems = append(allItems, S3DataItem{
 				ID:           id,
 				Bucket:       sysBucket,
-				Key:          source.Path,
+				Key:          effectiveKey,
 				Name:         source.Name, // Use typed Name field
 				Size:         source.Size,
 				LastModified: "", // 如果前端没传，暂时为空，或者去S3 Head一下
