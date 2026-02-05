@@ -542,6 +542,119 @@ func (ots *objectTypeService) GetObjectTypesByIDs(ctx context.Context, tx *sql.T
 	return objectTypes, nil
 }
 
+// hasDataPropertyIndexAffectingChanges 检测单个数据属性的关键字段是否发生变化
+// 影响索引的字段包括：Name, Type, IndexConfig, MappedField.Name, MappedField.Type
+func hasDataPropertyIndexAffectingChanges(oldProp, newProp *interfaces.DataProperty) bool {
+	if oldProp == nil || newProp == nil {
+		return oldProp != newProp
+	}
+
+	// 比较属性名称
+	if oldProp.Name != newProp.Name {
+		return true
+	}
+
+	// 比较属性类型
+	if oldProp.Type != newProp.Type {
+		return true
+	}
+
+	// 比较索引配置
+	if !compareIndexConfig(oldProp.IndexConfig, newProp.IndexConfig) {
+		return true // 如果配置不同，返回 true（有变化）
+	}
+
+	// 比较映射字段名称和类型
+	if !compareMappedField(oldProp.MappedField, newProp.MappedField) {
+		return true
+	}
+
+	return false
+}
+
+// compareIndexConfig 比较两个索引配置是否相同
+func compareIndexConfig(oldConfig, newConfig *interfaces.IndexConfig) bool {
+	if oldConfig == nil && newConfig == nil {
+		return true // 都为空 = 状态相同（都没有配置）
+	}
+	if oldConfig == nil || newConfig == nil {
+		return false // 一个为空一个不为空 = 状态不同
+	}
+
+	// 使用 JSON 序列化比较，确保准确性
+	oldBytes, err := sonic.Marshal(oldConfig)
+	if err != nil {
+		return false
+	}
+	newBytes, err := sonic.Marshal(newConfig)
+	if err != nil {
+		return false
+	}
+
+	return string(oldBytes) == string(newBytes)
+}
+
+// compareMappedField 比较两个映射字段是否相同（只比较 Name 和 Type）
+func compareMappedField(oldField, newField *interfaces.Field) bool {
+	if oldField == nil && newField == nil {
+		return true
+	}
+	if oldField == nil || newField == nil {
+		return false
+	}
+
+	// 比较字段名称
+	if oldField.Name != newField.Name {
+		return false
+	}
+
+	// 比较字段类型
+	if oldField.Type != newField.Type {
+		return false
+	}
+
+	return true
+}
+
+// hasAnyDataPropertyIndexAffectingChanges 检测数据属性列表中是否有影响索引的变化
+func hasAnyDataPropertyIndexAffectingChanges(oldProps, newProps []*interfaces.DataProperty) bool {
+	// 将旧属性列表转换为以 Name 为 key 的 map
+	oldPropMap := make(map[string]*interfaces.DataProperty)
+	for _, prop := range oldProps {
+		if prop != nil {
+			oldPropMap[prop.Name] = prop
+		}
+	}
+
+	// 遍历新属性列表，查找对应的旧属性进行比较
+	for _, newProp := range newProps {
+		if newProp == nil {
+			continue
+		}
+
+		oldProp, exists := oldPropMap[newProp.Name]
+		if !exists {
+			// 新增属性可能影响索引
+			return true
+		}
+
+		// 比较属性是否有影响索引的变化
+		if hasDataPropertyIndexAffectingChanges(oldProp, newProp) {
+			return true
+		}
+
+		// 从 map 中删除已比较的属性
+		delete(oldPropMap, newProp.Name)
+	}
+
+	// 如果旧属性列表中有新列表不存在的属性，也可能影响索引（删除属性）
+	if len(oldPropMap) > 0 {
+		return true
+	}
+
+	return false
+}
+
 // 更新对象类
 func (ots *objectTypeService) UpdateObjectType(ctx context.Context, tx *sql.Tx, objectType *interfaces.ObjectType) error {
 
@@ -629,6 +742,38 @@ func (ots *objectTypeService) UpdateObjectType(ctx context.Context, tx *sql.Tx, 
 		}()
 	}
 
+	// 获取旧的对象类数据，用于比较数据属性变化
+	oldObjectType, err := ots.ota.GetObjectTypeByID(ctx, tx, objectType.KNID, objectType.Branch, objectType.OTID)
+	if err != nil {
+		logger.Errorf("GetObjectTypeByID error: %s", err.Error())
+		span.SetStatus(codes.Error, "获取旧对象类数据失败")
+		o11y.Error(ctx, fmt.Sprintf("GetObjectTypeByID error: %s", err.Error()))
+
+		return rest.NewHTTPError(ctx, http.StatusInternalServerError,
+			oerrors.OntologyManager_ObjectType_InternalError_GetObjectTypeByIDFailed).
+			WithErrorDetails(err.Error())
+	}
+
+	// 检测数据属性是否有影响索引的变化
+	if oldObjectType != nil && hasAnyDataPropertyIndexAffectingChanges(oldObjectType.DataProperties, objectType.DataProperties) {
+		// 更新索引状态为不可用
+		otStatus := *oldObjectType.Status
+		otStatus.IndexAvailable = false
+		otStatus.UpdateTime = currentTime
+		err = ots.ota.UpdateObjectTypeStatus(ctx, tx, objectType.KNID, objectType.Branch, objectType.OTID, otStatus)
+		if err != nil {
+			logger.Errorf("UpdateObjectTypeStatus error: %s", err.Error())
+			span.SetStatus(codes.Error, "更新对象类索引状态失败")
+			o11y.Error(ctx, fmt.Sprintf("UpdateObjectTypeStatus error: %s", err.Error()))
+
+			return rest.NewHTTPError(ctx, http.StatusInternalServerError,
+				oerrors.OntologyManager_ObjectType_InternalError).
+				WithErrorDetails(fmt.Sprintf("更新对象类索引状态失败: %s", err.Error()))
+		}
+		logger.Infof("数据属性变化影响索引，已将对象类[%s]的索引状态设置为不可用", objectType.OTID)
+		o11y.Info(ctx, fmt.Sprintf("数据属性变化影响索引，已将对象类[%s]的索引状态设置为不可用", objectType.OTID))
+	}
+
 	// 更新模型信息
 	err = ots.ota.UpdateObjectType(ctx, tx, objectType)
 	if err != nil {
@@ -710,20 +855,103 @@ func (ots *objectTypeService) UpdateDataProperties(ctx context.Context,
 	currentTime := time.Now().UnixMilli() // 对象类的update_time是int类型
 	objectType.UpdateTime = currentTime
 
+	// 深拷贝旧的数据属性，用于后续比较
+	oldDataPropertiesBytes, err := sonic.Marshal(objectType.DataProperties)
+	if err != nil {
+		logger.Errorf("Failed to marshal old DataProperties, err: %v", err.Error())
+		span.SetStatus(codes.Error, "序列化旧数据属性失败")
+		o11y.Error(ctx, fmt.Sprintf("Failed to marshal old DataProperties, err: %v", err.Error()))
+
+		return rest.NewHTTPError(ctx, http.StatusInternalServerError,
+			oerrors.OntologyManager_ObjectType_InternalError).
+			WithErrorDetails(fmt.Sprintf("序列化旧数据属性失败: %s", err.Error()))
+	}
+
+	var oldDataProperties []*interfaces.DataProperty
+	err = sonic.Unmarshal(oldDataPropertiesBytes, &oldDataProperties)
+	if err != nil {
+		logger.Errorf("Failed to unmarshal old DataProperties, err: %v", err.Error())
+		span.SetStatus(codes.Error, "反序列化旧数据属性失败")
+		o11y.Error(ctx, fmt.Sprintf("Failed to unmarshal old DataProperties, err: %v", err.Error()))
+
+		return rest.NewHTTPError(ctx, http.StatusInternalServerError,
+			oerrors.OntologyManager_ObjectType_InternalError).
+			WithErrorDetails(fmt.Sprintf("反序列化旧数据属性失败: %s", err.Error()))
+	}
+
 	propMap := map[string]int{}
 	for idx, prop := range objectType.DataProperties {
 		propMap[prop.Name] = idx
 	}
 	for _, prop := range dataProperties {
 		if idx, ok := propMap[prop.Name]; ok {
-			objectType.DataProperties[idx] = prop
+			objectType.DataProperties[idx] = prop // 更新已存在的数据属性
 		} else {
-			objectType.DataProperties = append(objectType.DataProperties, prop)
+			objectType.DataProperties = append(objectType.DataProperties, prop) // 添加新的数据属性
+		}
+	}
+
+	// 0. 开始事务
+	var tx *sql.Tx
+	tx, err = ots.db.Begin()
+	if err != nil {
+		logger.Errorf("Begin transaction error: %s", err.Error())
+		span.SetStatus(codes.Error, "事务开启失败")
+		o11y.Error(ctx, fmt.Sprintf("Begin transaction error: %s", err.Error()))
+
+		return rest.NewHTTPError(ctx, http.StatusInternalServerError,
+			oerrors.OntologyManager_ObjectType_InternalError_BeginTransactionFailed).
+			WithErrorDetails(err.Error())
+	}
+	// 0.1 异常时
+	defer func() {
+		switch err {
+		case nil:
+			// 提交事务
+			err = tx.Commit()
+			if err != nil {
+				logger.Errorf("UpdateObjectType Transaction Commit Failed:%v", err)
+				span.SetStatus(codes.Error, "提交事务失败")
+				o11y.Error(ctx, fmt.Sprintf("UpdateObjectType Transaction Commit Failed: %s", err.Error()))
+			}
+			logger.Infof("UpdateObjectType Transaction Commit Success:%v", objectType.OTName)
+			o11y.Debug(ctx, fmt.Sprintf("UpdateObjectType Transaction Commit Success: %s", objectType.OTName))
+		default:
+			rollbackErr := tx.Rollback()
+			if rollbackErr != nil {
+				logger.Errorf("UpdateObjectType Transaction Rollback Error:%v", rollbackErr)
+				span.SetStatus(codes.Error, "事务回滚失败")
+				o11y.Error(ctx, fmt.Sprintf("UpdateObjectType Transaction Rollback Error: %s", rollbackErr.Error()))
+			}
+		}
+	}()
+
+	// 检测数据属性是否有影响索引的变化
+	if hasAnyDataPropertyIndexAffectingChanges(oldDataProperties, objectType.DataProperties) {
+		// 更新索引状态为不可用
+		if objectType.Status != nil {
+			otStatus := *objectType.Status
+			otStatus.IndexAvailable = false
+			otStatus.UpdateTime = currentTime
+			// UpdateDataProperties 方法没有 tx 参数，需要在内部管理事务
+			// 但为了保持一致性，我们使用 db.Exec 直接执行
+			err = ots.ota.UpdateObjectTypeStatus(ctx, tx, objectType.KNID, objectType.Branch, objectType.OTID, otStatus)
+			if err != nil {
+				logger.Errorf("UpdateObjectTypeStatus error: %s", err.Error())
+				span.SetStatus(codes.Error, "更新对象类索引状态失败")
+				o11y.Error(ctx, fmt.Sprintf("UpdateObjectTypeStatus error: %s", err.Error()))
+
+				return rest.NewHTTPError(ctx, http.StatusInternalServerError,
+					oerrors.OntologyManager_ObjectType_InternalError).
+					WithErrorDetails(fmt.Sprintf("更新对象类索引状态失败: %s", err.Error()))
+			}
+			logger.Infof("数据属性变化影响索引，已将对象类[%s]的索引状态设置为不可用", objectType.OTID)
+			o11y.Info(ctx, fmt.Sprintf("数据属性变化影响索引，已将对象类[%s]的索引状态设置为不可用", objectType.OTID))
 		}
 	}
 
 	// 更新模型信息
-	err = ots.ota.UpdateDataProperties(ctx, objectType)
+	err = ots.ota.UpdateDataProperties(ctx, tx, objectType)
 	if err != nil {
 		logger.Errorf("UpdateObjectType error: %s", err.Error())
 		span.SetStatus(codes.Error, "修改对象类失败")

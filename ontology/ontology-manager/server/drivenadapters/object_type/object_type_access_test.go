@@ -1332,9 +1332,11 @@ func Test_objectTypeAccess_UpdateDataProperties(t *testing.T) {
 		}
 
 		Convey("UpdateDataProperties Success \n", func() {
+			smock.ExpectBegin()
 			smock.ExpectExec(sqlStr).WithArgs().WillReturnResult(sqlmock.NewResult(1, 1))
 
-			err := ota.UpdateDataProperties(testCtx, objectType)
+			tx, _ := ota.db.Begin()
+			err := ota.UpdateDataProperties(testCtx, tx, objectType)
 			So(err, ShouldBeNil)
 
 			if err := smock.ExpectationsWereMet(); err != nil {
@@ -1344,9 +1346,11 @@ func Test_objectTypeAccess_UpdateDataProperties(t *testing.T) {
 
 		Convey("UpdateDataProperties Failed \n", func() {
 			expectedErr := errors.New("some error")
+			smock.ExpectBegin()
 			smock.ExpectExec(sqlStr).WithArgs().WillReturnError(expectedErr)
 
-			err := ota.UpdateDataProperties(testCtx, objectType)
+			tx, _ := ota.db.Begin()
+			err := ota.UpdateDataProperties(testCtx, tx, objectType)
 			So(err, ShouldResemble, expectedErr)
 
 			if err := smock.ExpectationsWereMet(); err != nil {
@@ -1355,9 +1359,11 @@ func Test_objectTypeAccess_UpdateDataProperties(t *testing.T) {
 		})
 
 		Convey("UpdateDataProperties RowsAffected != 1 \n", func() {
+			smock.ExpectBegin()
 			smock.ExpectExec(sqlStr).WithArgs().WillReturnResult(sqlmock.NewResult(0, 0))
 
-			err := ota.UpdateDataProperties(testCtx, objectType)
+			tx, _ := ota.db.Begin()
+			err := ota.UpdateDataProperties(testCtx, tx, objectType)
 			So(err, ShouldBeNil)
 
 			if err := smock.ExpectationsWereMet(); err != nil {
@@ -1367,9 +1373,11 @@ func Test_objectTypeAccess_UpdateDataProperties(t *testing.T) {
 
 		Convey("UpdateDataProperties RowsAffected error \n", func() {
 			expectedErr := errors.New("Get RowsAffected error")
+			smock.ExpectBegin()
 			smock.ExpectExec(sqlStr).WithArgs().WillReturnResult(sqlmock.NewErrorResult(expectedErr))
 
-			err := ota.UpdateDataProperties(testCtx, objectType)
+			tx, _ := ota.db.Begin()
+			err := ota.UpdateDataProperties(testCtx, tx, objectType)
 			So(err, ShouldResemble, expectedErr)
 
 			if err := smock.ExpectationsWereMet(); err != nil {
