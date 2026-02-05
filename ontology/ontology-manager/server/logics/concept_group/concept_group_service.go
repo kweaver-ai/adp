@@ -113,7 +113,7 @@ func (cgs *conceptGroupService) CheckConceptGroupExistByName(ctx context.Context
 }
 
 // 创建概念分组
-func (cgs *conceptGroupService) CreateConceptGroup(ctx context.Context, tx *sql.Tx, conceptGroup *interfaces.ConceptGroup, mode string) (string, error) {
+func (cgs *conceptGroupService) CreateConceptGroup(ctx context.Context, tx *sql.Tx, conceptGroup *interfaces.ConceptGroup, mode string, validateDependency bool) (string, error) {
 	ctx, span := ar_trace.Tracer.Start(ctx, "Create concept group")
 	defer span.End()
 
@@ -214,7 +214,7 @@ func (cgs *conceptGroupService) CreateConceptGroup(ctx context.Context, tx *sql.
 		}
 
 		if len(conceptGroup.ObjectTypes) > 0 {
-			_, err = cgs.ots.CreateObjectTypes(ctx, tx, conceptGroup.ObjectTypes, mode, false)
+			_, err = cgs.ots.CreateObjectTypes(ctx, tx, conceptGroup.ObjectTypes, mode, false, validateDependency)
 			if err != nil {
 				logger.Errorf("CreateObjectTypes error: %s", err.Error())
 				span.SetStatus(codes.Error, "创建对象类失败")
@@ -235,7 +235,7 @@ func (cgs *conceptGroupService) CreateConceptGroup(ctx context.Context, tx *sql.
 		}
 
 		if len(conceptGroup.RelationTypes) > 0 {
-			_, err = cgs.rts.CreateRelationTypes(ctx, tx, conceptGroup.RelationTypes, mode)
+			_, err = cgs.rts.CreateRelationTypes(ctx, tx, conceptGroup.RelationTypes, mode, validateDependency)
 			if err != nil {
 				logger.Errorf("CreateRelationTypes error: %s", err.Error())
 				span.SetStatus(codes.Error, "创建关系类失败")
@@ -270,7 +270,7 @@ func (cgs *conceptGroupService) CreateConceptGroup(ctx context.Context, tx *sql.
 
 		if len(conceptGroup.ObjectTypes) > 0 {
 			// 写入对象类
-			_, err = cgs.ots.CreateObjectTypes(ctx, tx, conceptGroup.ObjectTypes, mode, false)
+			_, err = cgs.ots.CreateObjectTypes(ctx, tx, conceptGroup.ObjectTypes, mode, false, validateDependency)
 			if err != nil {
 				logger.Errorf("CreateObjectTypes error: %s", err.Error())
 				span.SetStatus(codes.Error, "创建对象类失败")
@@ -291,7 +291,7 @@ func (cgs *conceptGroupService) CreateConceptGroup(ctx context.Context, tx *sql.
 		}
 
 		if len(conceptGroup.RelationTypes) > 0 {
-			_, err = cgs.rts.CreateRelationTypes(ctx, tx, conceptGroup.RelationTypes, mode)
+			_, err = cgs.rts.CreateRelationTypes(ctx, tx, conceptGroup.RelationTypes, mode, validateDependency)
 			if err != nil {
 				logger.Errorf("CreateRelationTypes error: %s", err.Error())
 				span.SetStatus(codes.Error, "创建关系类失败")

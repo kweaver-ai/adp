@@ -86,7 +86,7 @@ func Test_RelationTypeRestHandler_CreateRelationTypes(t *testing.T) {
 
 		Convey("Success CreateRelationTypes \n", func() {
 			kns.EXPECT().CheckKNExistByID(gomock.Any(), knID, gomock.Any()).Return(knID, true, nil)
-			rts.EXPECT().CreateRelationTypes(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return([]string{"rt1"}, nil)
+			rts.EXPECT().CreateRelationTypes(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return([]string{"rt1"}, nil)
 
 			reqParamByte, _ := sonic.Marshal(requestData)
 			req := httptest.NewRequest(http.MethodPost, url, bytes.NewReader(reqParamByte))
@@ -165,7 +165,7 @@ func Test_RelationTypeRestHandler_CreateRelationTypes(t *testing.T) {
 			}
 
 			kns.EXPECT().CheckKNExistByID(gomock.Any(), knID, gomock.Any()).Return(knID, true, nil)
-			rts.EXPECT().CreateRelationTypes(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil, err)
+			rts.EXPECT().CreateRelationTypes(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil, err)
 
 			reqParamByte, _ := sonic.Marshal(requestData)
 			req := httptest.NewRequest(http.MethodPost, url, bytes.NewReader(reqParamByte))
@@ -178,7 +178,7 @@ func Test_RelationTypeRestHandler_CreateRelationTypes(t *testing.T) {
 
 		Convey("CreateRelationTypesByIn - Success\n", func() {
 			kns.EXPECT().CheckKNExistByID(gomock.Any(), knID, gomock.Any()).Return(knID, true, nil)
-			rts.EXPECT().CreateRelationTypes(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return([]string{"rt1"}, nil)
+			rts.EXPECT().CreateRelationTypes(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return([]string{"rt1"}, nil)
 
 			urlIn := "/api/ontology-manager/in/v1/knowledge-networks/" + knID + "/relation-types"
 			reqParamByte, _ := sonic.Marshal(requestData)
@@ -755,7 +755,7 @@ func Test_RelationTypeRestHandler_HandleRelationTypeGetOverride(t *testing.T) {
 
 		Convey("HandleRelationTypeGetOverrideByEx - Success with POST method (default)\n", func() {
 			kns.EXPECT().CheckKNExistByID(gomock.Any(), knID, gomock.Any()).Return(knID, true, nil)
-			rts.EXPECT().CreateRelationTypes(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return([]string{"rt1"}, nil)
+			rts.EXPECT().CreateRelationTypes(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return([]string{"rt1"}, nil)
 
 			reqParamByte, _ := sonic.Marshal(requestData)
 			req := httptest.NewRequest(http.MethodPost, urlEx, bytes.NewReader(reqParamByte))
@@ -796,7 +796,7 @@ func Test_RelationTypeRestHandler_HandleRelationTypeGetOverride(t *testing.T) {
 
 		Convey("HandleRelationTypeGetOverrideByIn - Success with POST method (default)\n", func() {
 			kns.EXPECT().CheckKNExistByID(gomock.Any(), knID, gomock.Any()).Return(knID, true, nil)
-			rts.EXPECT().CreateRelationTypes(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return([]string{"rt1"}, nil)
+			rts.EXPECT().CreateRelationTypes(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return([]string{"rt1"}, nil)
 
 			reqParamByte, _ := sonic.Marshal(requestData)
 			req := httptest.NewRequest(http.MethodPost, urlIn, bytes.NewReader(reqParamByte))

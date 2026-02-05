@@ -612,7 +612,7 @@ func Test_objectTypeService_CreateObjectTypes(t *testing.T) {
 			osa.EXPECT().InsertData(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
 			smock.ExpectCommit()
 
-			result, err := service.CreateObjectTypes(ctx, nil, objectTypes, interfaces.ImportMode_Normal, false)
+			result, err := service.CreateObjectTypes(ctx, nil, objectTypes, interfaces.ImportMode_Normal, false, true)
 			So(err, ShouldBeNil)
 			So(len(result), ShouldEqual, 1)
 			So(result[0], ShouldEqual, "ot1")
@@ -632,7 +632,7 @@ func Test_objectTypeService_CreateObjectTypes(t *testing.T) {
 
 			ps.EXPECT().CheckPermission(gomock.Any(), gomock.Any(), gomock.Any()).Return(rest.NewHTTPError(ctx, 403, oerrors.OntologyManager_InternalError_CheckPermissionFailed))
 
-			result, err := service.CreateObjectTypes(ctx, nil, objectTypes, interfaces.ImportMode_Normal, false)
+			result, err := service.CreateObjectTypes(ctx, nil, objectTypes, interfaces.ImportMode_Normal, false, true)
 			So(err, ShouldNotBeNil)
 			So(len(result), ShouldEqual, 0)
 		})
@@ -655,7 +655,7 @@ func Test_objectTypeService_CreateObjectTypes(t *testing.T) {
 			ota.EXPECT().CheckObjectTypeExistByName(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return("", false, nil)
 			smock.ExpectRollback()
 
-			result, err := service.CreateObjectTypes(ctx, nil, objectTypes, interfaces.ImportMode_Normal, false)
+			result, err := service.CreateObjectTypes(ctx, nil, objectTypes, interfaces.ImportMode_Normal, false, true)
 			So(err, ShouldNotBeNil)
 			So(len(result), ShouldEqual, 0)
 			httpErr := err.(*rest.HTTPError)
@@ -680,7 +680,7 @@ func Test_objectTypeService_CreateObjectTypes(t *testing.T) {
 			ota.EXPECT().CheckObjectTypeExistByName(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return("ot1", true, nil)
 			smock.ExpectCommit()
 
-			result, err := service.CreateObjectTypes(ctx, nil, objectTypes, interfaces.ImportMode_Ignore, false)
+			result, err := service.CreateObjectTypes(ctx, nil, objectTypes, interfaces.ImportMode_Ignore, false, true)
 			So(err, ShouldBeNil)
 			So(len(result), ShouldEqual, 0)
 		})
@@ -706,7 +706,7 @@ func Test_objectTypeService_CreateObjectTypes(t *testing.T) {
 			osa.EXPECT().InsertData(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
 			smock.ExpectCommit()
 
-			result, err := service.CreateObjectTypes(ctx, nil, objectTypes, interfaces.ImportMode_Overwrite, false)
+			result, err := service.CreateObjectTypes(ctx, nil, objectTypes, interfaces.ImportMode_Overwrite, false, true)
 			So(err, ShouldBeNil)
 			So(len(result), ShouldEqual, 0)
 		})
@@ -734,7 +734,7 @@ func Test_objectTypeService_CreateObjectTypes(t *testing.T) {
 			osa.EXPECT().InsertData(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
 			smock.ExpectCommit()
 
-			result, err := service.CreateObjectTypes(ctx, nil, objectTypes, interfaces.ImportMode_Normal, false)
+			result, err := service.CreateObjectTypes(ctx, nil, objectTypes, interfaces.ImportMode_Normal, false, true)
 			So(err, ShouldBeNil)
 			So(len(result), ShouldEqual, 1)
 			So(result[0], ShouldNotBeEmpty)
@@ -759,7 +759,7 @@ func Test_objectTypeService_CreateObjectTypes(t *testing.T) {
 			ota.EXPECT().CreateObjectType(gomock.Any(), gomock.Any(), gomock.Any()).Return(rest.NewHTTPError(ctx, 500, oerrors.OntologyManager_ObjectType_InternalError))
 			smock.ExpectRollback()
 
-			result, err := service.CreateObjectTypes(ctx, nil, objectTypes, interfaces.ImportMode_Normal, false)
+			result, err := service.CreateObjectTypes(ctx, nil, objectTypes, interfaces.ImportMode_Normal, false, true)
 			So(err, ShouldNotBeNil)
 			So(len(result), ShouldEqual, 0)
 		})
@@ -784,7 +784,7 @@ func Test_objectTypeService_CreateObjectTypes(t *testing.T) {
 			ota.EXPECT().CreateObjectTypeStatus(gomock.Any(), gomock.Any(), gomock.Any()).Return(rest.NewHTTPError(ctx, 500, oerrors.OntologyManager_ObjectType_InternalError))
 			smock.ExpectRollback()
 
-			result, err := service.CreateObjectTypes(ctx, nil, objectTypes, interfaces.ImportMode_Normal, false)
+			result, err := service.CreateObjectTypes(ctx, nil, objectTypes, interfaces.ImportMode_Normal, false, true)
 			So(err, ShouldNotBeNil)
 			So(len(result), ShouldEqual, 0)
 		})
@@ -810,7 +810,7 @@ func Test_objectTypeService_CreateObjectTypes(t *testing.T) {
 			osa.EXPECT().InsertData(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(rest.NewHTTPError(ctx, 500, oerrors.OntologyManager_ObjectType_InternalError))
 			smock.ExpectRollback()
 
-			result, err := service.CreateObjectTypes(ctx, nil, objectTypes, interfaces.ImportMode_Normal, false)
+			result, err := service.CreateObjectTypes(ctx, nil, objectTypes, interfaces.ImportMode_Normal, false, true)
 			So(err, ShouldNotBeNil)
 			So(len(result), ShouldEqual, 0)
 		})

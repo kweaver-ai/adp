@@ -69,9 +69,20 @@ func (r *restHandler) CreateKN(c *gin.Context, visitor rest.Visitor) {
 		return
 	}
 
+	// 是否校验依赖，默认true
+	validateDependencyStr := c.DefaultQuery(interfaces.QueryParam_ValidateDependency, "true")
+	validateDependency, err := strconv.ParseBool(validateDependencyStr)
+	if err != nil {
+		httpErr := rest.NewHTTPError(ctx, http.StatusBadRequest, oerrors.OntologyManager_KnowledgeNetwork_InvalidParameter).
+			WithErrorDetails(fmt.Sprintf("Invalid validate_dependency parameter: %s", validateDependencyStr))
+		o11y.AddHttpAttrs4HttpError(span, httpErr)
+		rest.ReplyError(c, httpErr)
+		return
+	}
+
 	// 接受绑定参数 - 单个知识网络对象
 	kn := interfaces.KN{}
-	err := c.ShouldBindJSON(&kn)
+	err = c.ShouldBindJSON(&kn)
 	if err != nil {
 		httpErr := rest.NewHTTPError(ctx, http.StatusBadRequest, oerrors.OntologyManager_KnowledgeNetwork_InvalidParameter).
 			WithErrorDetails("Binding Paramter Failed:" + err.Error())
@@ -167,7 +178,7 @@ func (r *restHandler) CreateKN(c *gin.Context, visitor rest.Visitor) {
 	}
 
 	// 调用创建单个知识网络
-	knID, err := r.kns.CreateKN(ctx, &kn, mode)
+	knID, err := r.kns.CreateKN(ctx, &kn, mode, validateDependency)
 	if err != nil {
 		httpErr := err.(*rest.HTTPError)
 

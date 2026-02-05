@@ -106,7 +106,7 @@ func (ots *objectTypeService) CheckObjectTypeExistByName(ctx context.Context,
 }
 
 func (ots *objectTypeService) CreateObjectTypes(ctx context.Context, tx *sql.Tx,
-	objectTypes []*interfaces.ObjectType, mode string, needCreateConceptGroupRelation bool) ([]string, error) {
+	objectTypes []*interfaces.ObjectType, mode string, needCreateConceptGroupRelation bool, validateDependency bool) ([]string, error) {
 
 	ctx, span := ar_trace.Tracer.Start(ctx, "Create object type")
 	defer span.End()
@@ -136,6 +136,21 @@ func (ots *objectTypeService) CreateObjectTypes(ctx context.Context, tx *sql.Tx,
 
 		objectType.CreateTime = currentTime
 		objectType.UpdateTime = currentTime
+
+		// 校验数据视图存在性
+		if validateDependency && objectType.DataSource != nil && objectType.DataSource.ID != "" {
+			dataView, err := ots.dva.GetDataViewByID(ctx, objectType.DataSource.ID)
+			if err != nil {
+				return []string{}, rest.NewHTTPError(ctx, http.StatusBadRequest,
+					oerrors.OntologyManager_ObjectType_InvalidParameter).
+					WithErrorDetails(fmt.Sprintf("对象类[%s]的数据视图[%s]获取失败: %s", objectType.OTName, objectType.DataSource.ID, err.Error()))
+			}
+			if dataView == nil {
+				return []string{}, rest.NewHTTPError(ctx, http.StatusBadRequest,
+					oerrors.OntologyManager_ObjectType_InvalidParameter).
+					WithErrorDetails(fmt.Sprintf("对象类[%s]的数据视图[%s]不存在", objectType.OTName, objectType.DataSource.ID))
+			}
+		}
 
 		// todo: 处理版本
 	}

@@ -165,7 +165,7 @@ func (r *restHandler) CreateObjectTypes(c *gin.Context, visitor rest.Visitor) {
 	}
 
 	//调用创建
-	otIDs, err := r.ots.CreateObjectTypes(ctx, nil, objectTypes, mode, true)
+	otIDs, err := r.ots.CreateObjectTypes(ctx, nil, objectTypes, mode, true, true)
 	if err != nil {
 		httpErr := err.(*rest.HTTPError)
 

@@ -164,7 +164,8 @@ func (r *restHandler) CreateRelationTypes(c *gin.Context, visitor rest.Visitor) 
 	}
 
 	//调用创建
-	rtIDs, err := r.rts.CreateRelationTypes(ctx, nil, relationTypes, mode)
+	// 直接创建关系类接口默认进行依赖校验
+	rtIDs, err := r.rts.CreateRelationTypes(ctx, nil, relationTypes, mode, true)
 	if err != nil {
 		httpErr := err.(*rest.HTTPError)
 
