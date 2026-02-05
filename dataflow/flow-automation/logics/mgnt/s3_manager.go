@@ -383,14 +383,30 @@ func (m *mgnt) handleS3DataSource(ctx context.Context, dag *entity.Dag, dagIns *
 				downloadURL = fmt.Sprintf("%s/%s/%s", m.config.S3.Endpoint, sysBucket, effectiveKey)
 			}
 
+			// 获取对象元数据
+			meta, err := s3Adapter.GetObjectMetadata(ctx, sysBucket, effectiveKey)
+			var size int64
+			var lastModified string
+			var etag string
+
+			if err != nil {
+				log.Warnf("[mgnt.handleS3DataSource] Failed to get object metadata for %s: %v", effectiveKey, err)
+				// Fallback to provided size if available
+				size = source.Size
+			} else {
+				size = meta.ContentLength
+				lastModified = meta.LastModified.Format(time.RFC3339)
+				etag = strings.Trim(meta.ETag, "\"")
+			}
+
 			allItems = append(allItems, S3DataItem{
 				ID:           id,
 				Bucket:       sysBucket,
 				Key:          effectiveKey,
 				Name:         source.Name, // Use typed Name field
-				Size:         source.Size,
-				LastModified: "", // 如果前端没传，暂时为空，或者去S3 Head一下
-				ETag:         "",
+				Size:         size,
+				LastModified: lastModified,
+				ETag:         etag,
 				DownloadURL:  downloadURL,
 			})
 		}
