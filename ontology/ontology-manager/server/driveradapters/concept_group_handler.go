@@ -153,6 +153,35 @@ func (r *restHandler) CreateConceptGroup(c *gin.Context, visitor rest.Visitor) {
 	cg.KNID = knID
 	cg.Branch = branch // 分组的 branch 从query参数中取
 
+	// 若kn的对象类，关系类，行动类, 概念分组不为空，则应循环调用对象类、关系类、行动类, 概念分组的校验函数
+	if len(cg.ObjectTypes) > 0 {
+		err = ValidateObjectTypes(ctx, cg.KNID, cg.ObjectTypes)
+		if err != nil {
+			httpErr := err.(*rest.HTTPError)
+			o11y.AddHttpAttrs4HttpError(span, httpErr)
+			rest.ReplyError(c, httpErr)
+			return
+		}
+	}
+	if len(cg.RelationTypes) > 0 {
+		err = ValidateRelationTypes(ctx, cg.KNID, cg.RelationTypes)
+		if err != nil {
+			httpErr := err.(*rest.HTTPError)
+			o11y.AddHttpAttrs4HttpError(span, httpErr)
+			rest.ReplyError(c, httpErr)
+			return
+		}
+	}
+	if len(cg.ActionTypes) > 0 {
+		err = ValidateActionTypes(ctx, cg.KNID, cg.ActionTypes)
+		if err != nil {
+			httpErr := err.(*rest.HTTPError)
+			o11y.AddHttpAttrs4HttpError(span, httpErr)
+			rest.ReplyError(c, httpErr)
+			return
+		}
+	}
+
 	// 调用创建概念分组
 	cgID, err := r.cgs.CreateConceptGroup(ctx, nil, &cg, mode, validateDependency)
 	if err != nil {

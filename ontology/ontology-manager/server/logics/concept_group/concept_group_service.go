@@ -711,7 +711,7 @@ func (cgs *conceptGroupService) DeleteConceptGroupByID(ctx context.Context, tx *
 			if err != nil {
 				logger.Errorf("DeleteConceptGroup Transaction Commit Failed:%v", err)
 				span.SetStatus(codes.Error, "提交事务失败")
-				o11y.Error(ctx, fmt.Sprintf("CreateConceptGroup Transaction Commit Failed: %s", err.Error()))
+				o11y.Error(ctx, fmt.Sprintf("DeleteConceptGroup Transaction Commit Failed: %s", err.Error()))
 				return
 			}
 			logger.Infof("DeleteConceptGroup Transaction Commit Success")
@@ -721,7 +721,7 @@ func (cgs *conceptGroupService) DeleteConceptGroupByID(ctx context.Context, tx *
 			if rollbackErr != nil {
 				logger.Errorf("DeleteConceptGroup Transaction Rollback Error:%v", rollbackErr)
 				span.SetStatus(codes.Error, "事务回滚失败")
-				o11y.Error(ctx, fmt.Sprintf("CreateConceptGroup Transaction Rollback Error: %s", err.Error()))
+				o11y.Error(ctx, fmt.Sprintf("DeleteConceptGroup Transaction Rollback Error: %s", err.Error()))
 			}
 		}
 	}()
