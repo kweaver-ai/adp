@@ -22,6 +22,7 @@ const useForceUpdate = () => {
 
 type OperationProps = {
   children: React.ReactNode;
+  isSearch?: boolean;
   isControlFilter?: boolean;
   showFilter?: boolean;
   nameConfig?: any;
@@ -31,7 +32,7 @@ type OperationProps = {
   onRefresh?: () => void;
 };
 const Operation: React.FC<OperationProps> = (props) => {
-  const { children, nameConfig, sortConfig, initialFilter, onChange, onRefresh, showFilter: _showFilter = true, isControlFilter = false } = props;
+  const { children, isSearch = true, nameConfig, sortConfig, initialFilter, onChange, onRefresh, showFilter: _showFilter = true, isControlFilter = false } = props;
   const { key: ncKey, placeholder: ncPlaceholder = '请输入名称' } = nameConfig || {}; // 这样是为了注入时避免key的二次传递
 
   const forceUpdate = useForceUpdate();
@@ -104,15 +105,16 @@ const Operation: React.FC<OperationProps> = (props) => {
     <div>
       <div className={styles['table-operation-bar']}>
         <Items>{buttonItems}</Items>
-        <div className="g-flex-center">
-          {(oneFilter || noFilter) &&
+        <div className={"g-flex-center"}>
+          {(oneFilter || noFilter || !isSearch) &&
             !isControlFilter && ( // 只有一个筛选条件或者没有筛选条件的时候
               <React.Fragment>
-                <Input.Search allowClear style={{ width: 250, marginRight: noFilter ? 12 : 0 }} placeholder={ncPlaceholder} onChange={onSearch} />
-                {!noFilter && <div className="g-ml-3 g-mr-3">{filterElement}</div>}
+                {isSearch && <Input.Search allowClear style={{ width: 250, marginRight: noFilter ? 12 : 0 }} placeholder={ncPlaceholder} onChange={onSearch} />}
+                {!noFilter && filterElement?.length === 1 && <div className="g-ml-3 g-mr-3">{filterElement}</div>}
+                {!noFilter && filterElement!.length > 1 && <Items>{filterElement}</Items>}
               </React.Fragment>
             )}
-          {(moreFilter || isControlFilter) && ( // 有多个筛选条件的时候
+          {(moreFilter || isControlFilter) && isSearch && ( // 有多个筛选条件的时候
             <Button.Icon
               title="展开"
               icon={<IconFont type="icon-dip-filter" />}
@@ -130,7 +132,7 @@ const Operation: React.FC<OperationProps> = (props) => {
           )}
         </div>
       </div>
-      {showFilter &&
+      {isSearch && showFilter &&
         (moreFilter || isControlFilter) && ( // 有多个筛选条件的时候
           <div className={styles['table-operation-filter-bar']}>
             <div style={{ flex: 1 }}>

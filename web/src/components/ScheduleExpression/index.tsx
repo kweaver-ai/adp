@@ -4,8 +4,32 @@ import { Form, Radio, Tooltip, Switch, Row, Col } from 'antd';
 import { RadioChangeEvent } from 'antd/lib/radio';
 import ARInputNumberUnit from '@/components/ARInputNumberUnit';
 import { CronSelect } from '@/components/CronSelect';
+import { CronFieldName, validateCronField } from '@/components/CronSelect/Cron/utils';
 import { SCHEDULE_TYPE } from '@/hooks/useConstants';
 import styles from './index.module.less';
+
+/**
+ * 验证完整的Cron表达式
+ * @param value Cron表达式字符串
+ * @returns 验证结果
+ */
+const validateCronExpression = (value: string): boolean => {
+  if (!value) return false;
+  
+  const fields = value.trim().split(' ');
+  // 标准Cron表达式有6个字段：秒、分、时、日、月、周
+  if (fields.length < 6) return false;
+  
+  const fieldNames: CronFieldName[] = [CronFieldName.SECOND, CronFieldName.MINUTE, CronFieldName.HOUR, CronFieldName.DAY, CronFieldName.MONTH, CronFieldName.WEEK];
+  
+  for (let i = 0; i < 6; i++) {
+    if (!validateCronField(fields[i], fieldNames[i])) {
+      return false;
+    }
+  }
+  
+  return true;
+};
 
 interface ScheduleExpressionProps {
   showSwitch?: boolean;
@@ -108,7 +132,18 @@ const ScheduleExpression = ({
               </Tooltip>
             </div>
           }
-          rules={[{ required: showSwitch ? isEnabled : true, message: intl.get('DataConnect.customFrequencyRequired') }]}
+          rules={[
+            { required: showSwitch ? isEnabled : true, message: intl.get('DataConnect.customFrequencyRequired') },
+            { 
+              validator: (_, value) => {
+                if (!value) return Promise.resolve();
+                if (validateCronExpression(value)) {
+                  return Promise.resolve();
+                }
+                return Promise.reject(new Error(intl.get('DataConnect.cronExpressionInvalid')));
+              }
+            }
+          ]}
         >
           <CronSelect inputProps={{ style: { width: 300 } }} />
         </Form.Item>
@@ -159,7 +194,18 @@ const ScheduleExpression = ({
                     </Tooltip>
                   </div>
                 }
-                rules={[{ required: true, message: intl.get('DataConnect.customFrequencyRequired') }]}
+                rules={[
+                  { required: true, message: intl.get('DataConnect.customFrequencyRequired') },
+                  { 
+                    validator: (_, value) => {
+                      if (!value) return Promise.resolve();
+                      if (validateCronExpression(value)) {
+                        return Promise.resolve();
+                      }
+                      return Promise.reject(new Error(intl.get('DataConnect.cronExpressionInvalid')));
+                    }
+                  }
+                ]}
               >
                 <CronSelect inputProps={{ style: { width: 300 } }} />
               </Form.Item>

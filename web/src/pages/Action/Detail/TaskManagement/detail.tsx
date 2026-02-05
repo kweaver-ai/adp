@@ -15,8 +15,8 @@ interface TaskDetailProps {
   runStatusDescCom: (props: { success_count?: number; failed_count?: number }) => React.ReactElement;
 }
 
-const TaskDetail: React.FC<TaskDetailProps> = ({ visible, onClose, taskData, loading, runStatusDescCom }) => {  
-  const getBadgeStatus = (s: string) => {
+const TaskDetail: React.FC<TaskDetailProps> = ({ visible, onClose, taskData, loading, runStatusDescCom }) => {
+  const getBadgeStatus = (s: ActionType.ActionExecutionStatusEnum) => {
     switch (s) {
       case ActionType.ActionExecutionStatusEnum.Completed:
         return 'success';
@@ -32,20 +32,31 @@ const TaskDetail: React.FC<TaskDetailProps> = ({ visible, onClose, taskData, loa
         return 'default';
     }
   };
+
+  const getBadge = (s: string) => {
+    switch (s) {
+      case 'success':
+        return 'success';
+      case 'failed':
+        return 'error';
+      default:
+        return 'default';
+    }
+  };
   const columns: any = [
     {
       title: intl.get('Global.name'),
-      dataIndex: 'name',
-      key: 'name',
+      dataIndex: '_display',
+      key: '_display',
       width: 200,
-      render: (_: any, record: ActionExecutionResult) => record.unique_identity.name,
+      render: (name: string) => name || '-',
     },
     {
       title: intl.get('Global.status'),
       dataIndex: 'status',
       key: 'status',
       width: 200,
-      render: (status: string) => <Badge status={getBadgeStatus(status)} text={intl.get(`Action.${status}`)} />,
+      render: (status: string) => <Badge status={getBadge(status)} text={intl.get(`Action.${status}`)} />,
     },
     {
       title: intl.get('Action.executionInfo'),

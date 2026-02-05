@@ -256,6 +256,7 @@ export interface QueryActionLogsRequest {
   trigger_type?: string; // 按触发类型：manual(手动)/schedule(定时)/event(事件)
   start_time_range?: [number, number]; // 时间范围过滤
   keyword?: string; // 按执行ID或实体唯一标识过滤
+  offset?: number; // 分页偏移量
   limit?: number; // 分页大小
   need_total?: boolean; // 是否需要总数
   search_after?: [number, string]; // 分页游标
