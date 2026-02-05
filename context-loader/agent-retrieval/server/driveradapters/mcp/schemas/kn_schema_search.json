@@ -6,22 +6,9 @@
         "type": "string",
         "description": "用户查询问题或关键词"
       },
-      "mode": {
-        "type": "string",
-        "description": "检索模式：keyword_vector_retrieval / agent_intent_planning / agent_intent_retrieval"
-      },
       "rerank_action": {
         "type": "string",
         "description": "重排序策略：default / llm / vector"
-      },
-      "return_query_understanding": {
-        "type": "boolean",
-        "description": "是否返回 query_understanding"
-      },
-      "previous_queries": {
-        "type": "array",
-        "items": { "type": "string" },
-        "description": "历史查询"
       },
       "search_scope": {
         "type": "object",

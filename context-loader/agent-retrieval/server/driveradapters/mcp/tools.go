@@ -88,9 +88,10 @@ func handleKnSchemaSearch(service interfaces.IKnRetrievalService) func(ctx conte
 			return mcp.NewToolResultError(err.Error()), nil
 		}
 
-		if mode := req.GetString("mode", ""); mode != "" {
-			searchReq.Mode = interfaces.SemanticQueryMode(mode)
-		}
+		searchReq.Mode = interfaces.KeywordVectorRetrieval
+		searchReq.PreviousQueries = nil
+		returnQueryUnderstanding := false
+		searchReq.ReturnQueryUnderstanding = &returnQueryUnderstanding
 		if searchReq.KnID == "" {
 			searchReq.KnID = getKnIDFromHeader(req)
 		}
