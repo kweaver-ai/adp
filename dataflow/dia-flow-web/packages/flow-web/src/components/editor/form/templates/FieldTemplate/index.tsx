@@ -147,6 +147,7 @@ export default function FieldTemplate<
         variablePickerAnchorRef.current?.getBoundingClientRect();
       pickVariable((step && stepNodes[step.id]?.path) || [], schema.type, {
         targetRect,
+        currentStepNodes: step && stepNodes[step.id],
       })
         .then((value) => {
           onChange(`{{${value}}}` as any);

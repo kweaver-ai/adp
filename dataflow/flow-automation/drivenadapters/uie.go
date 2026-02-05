@@ -9,9 +9,9 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/common"
+	otelHttp "github.com/kweaver-ai/adp/autoflow/flow-automation/libs/go/http"
+	traceLog "github.com/kweaver-ai/adp/autoflow/flow-automation/libs/go/telemetry/log"
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/utils"
-	otelHttp "github.com/kweaver-ai/adp/autoflow/ide-go-lib/http"
-	traceLog "github.com/kweaver-ai/adp/autoflow/ide-go-lib/telemetry/log"
 )
 
 type Uie interface {

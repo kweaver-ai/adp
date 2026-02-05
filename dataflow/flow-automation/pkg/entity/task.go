@@ -11,10 +11,10 @@ import (
 	"time"
 
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/common"
+	"github.com/kweaver-ai/adp/autoflow/flow-automation/libs/go/telemetry/trace"
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/pkg/log"
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/pkg/utils"
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/store/rds"
-	"github.com/kweaver-ai/adp/autoflow/ide-go-lib/telemetry/trace"
 )
 
 // Task 解析后的task数据

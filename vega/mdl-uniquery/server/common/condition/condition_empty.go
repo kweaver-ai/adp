@@ -18,9 +18,19 @@ func NewEmptyCond(ctx context.Context, cfg *CondCfg, fieldsMap map[string]*ViewF
 		return nil, fmt.Errorf("condition [empty] left field %s is not of string type, but %s", cfg.Name, cfg.NameField.Type)
 	}
 
+	featureType := FieldFeatureType_Raw
+	if IsTextType(fieldsMap[cfg.Name]) {
+		featureType = FieldFeatureType_Keyword
+	}
+
+	fName, err := GetQueryField(ctx, cfg.Name, fieldsMap, featureType)
+	if err != nil {
+		return nil, fmt.Errorf("condition [empty], %v", err)
+	}
+
 	return &EmptyCond{
 		mCfg:             cfg,
-		mFilterFieldName: getFilterFieldName(ctx, cfg.Name, fieldsMap, false),
+		mFilterFieldName: fName,
 	}, nil
 
 }

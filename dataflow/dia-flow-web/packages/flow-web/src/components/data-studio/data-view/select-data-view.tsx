@@ -47,7 +47,7 @@ const SelectDataView = ({
     const { group_id, name_pattern } = data;
     try {
       const { data } = await API.axios.get(
-        `${prefixUrl}/api/mdl-data-model/v1/data-views?group_id=${
+        `${prefixUrl}/api/mdl-data-model/v1/data-views?data_source_id=${
           group_id || ""
         }&limit=-1&name_pattern=${name_pattern || ""}`
       );
@@ -71,12 +71,12 @@ const SelectDataView = ({
   const dataViewGroups = async () => {
     try {
       const { data } = await API.axios.get(
-        `${prefixUrl}/api/mdl-data-model/v1/data-view-groups?limit=-1`
+        `${prefixUrl}/api/data-connection/v1/datasource?limit=-1`
       );
       const result = data?.entries?.filter((item: any) => item.name && item.name.trim() !== '')?.map((item: any) => ({
         key: item.id,
         title: item.name,
-        isLeaf: item?.data_view_count > 0 ? false : true,
+        // isLeaf: item?.data_view_count > 0 ? false : true,
         selectable: false,
       }));
       setTreeData(result);

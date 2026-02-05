@@ -7,8 +7,8 @@ import (
 
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/common"
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/errors"
-	otelHttp "github.com/kweaver-ai/adp/autoflow/ide-go-lib/http"
-	traceLog "github.com/kweaver-ai/adp/autoflow/ide-go-lib/telemetry/log"
+	otelHttp "github.com/kweaver-ai/adp/autoflow/flow-automation/libs/go/http"
+	traceLog "github.com/kweaver-ai/adp/autoflow/flow-automation/libs/go/telemetry/log"
 )
 
 //go:generate mockgen -package mock_drivenadapters -source ../drivenadapters/intelliinfo.go -destination ../tests/mock_drivenadapters/intelliinfo_mock.go

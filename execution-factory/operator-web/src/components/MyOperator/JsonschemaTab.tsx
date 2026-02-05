@@ -4,15 +4,19 @@ import { dereference, getTableData } from '@/utils/operator';
 const { Panel } = Collapse;
 
 // 生成参数表格数据的函数
-const generateParamsTableData = (parameters: any[]) => {
-  return parameters.map(item => ({
-    ...item,
-    key: item.in + '_' + item.name,
-    type: item.schema?.type,
-  }));
+const generateParamsTableData = (parameters: any[], jsonSchema: any) => {
+  return parameters.map(item => {
+    const schema = dereference(item.schema, jsonSchema) || item.schema;
+    return {
+      ...item,
+      key: item.in + '_' + item.name,
+      type: schema?.type,
+      schema,
+    };
+  });
 };
 
-const JsonschemaTab = ({ operatorInfo, type, data }: any) => {
+const JsonschemaTab = ({ operatorInfo, type, data, onTableDataChange }: any) => {
   const [tableData, setTableData] = useState<any>([]);
   const jsonSchema = operatorInfo?.metadata?.api_spec;
 
@@ -25,7 +29,7 @@ const JsonschemaTab = ({ operatorInfo, type, data }: any) => {
 
     if (type === 'Inputs') {
       // 生成 header、query、path、cookie 参数的表格数据
-      const headerQueryPathCookieParams = generateParamsTableData(jsonSchema?.parameters || []);
+      const headerQueryPathCookieParams = generateParamsTableData(jsonSchema?.parameters || [], jsonSchema);
       // 处理 body 参数
       const data =
         jsonSchema?.request_body?.content['application/json']?.schema ||
@@ -49,6 +53,10 @@ const JsonschemaTab = ({ operatorInfo, type, data }: any) => {
       setTableData(getTableData(resolvedParameters));
     }
   }, [operatorInfo, data]);
+
+  useEffect(() => {
+    onTableDataChange?.(tableData);
+  }, [tableData]);
 
   const columns = [
     {

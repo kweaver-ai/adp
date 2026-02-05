@@ -3,37 +3,42 @@ package errors
 // 数据视图错误码
 const (
 	// 400
-	DataModel_DataView_CountExceeded_Filters            = "DataModel.DataView.CountExceeded.Filters"
-	DataModel_DataView_Duplicated_FieldDisplayName      = "DataModel.DataView.Duplicated.FieldDisplayName"
-	DataModel_DataView_Duplicated_FieldName             = "DataModel.DataView.Duplicated.FieldName"
-	DataModel_DataView_Duplicated_ViewID                = "DataModel.DataView.Duplicated.ViewID"
-	DataModel_DataView_Duplicated_ViewName              = "DataModel.DataView.Duplicated.ViewName"
-	DataModel_DataView_FieldTypeConflict                = "DataModel.DataView.FieldTypeConflict"
-	DataModel_DataView_FilterFieldTypeMisMatchOperation = "DataModel.DataView.FilterFieldTypeMisMatchOperation"
-	DataModel_DataView_IndexbaseNotFound                = "DataModel.DataView.IndexbaseNotFound"
-	DataModel_DataView_InvalidParameter_AttributeFields = "DataModel.DataView.InvalidParameter.AttributeFields"
-	DataModel_DataView_InvalidParameter_Builtin         = "DataModel.DataView.InvalidParameter.Builtin"
-	DataModel_DataView_InvalidParameter_DataScope       = "DataModel.DataView.InvalidParameter.DataScope"
-	DataModel_DataView_InvalidParameter_DataSource      = "DataModel.DataView.InvalidParameter.DataSource"
-	DataModel_DataView_InvalidParameter_FieldName       = "DataModel.DataView.InvalidParameter.FieldName"
-	DataModel_DataView_InvalidParameter_FieldScope      = "DataModel.DataView.InvalidParameter.FieldScope"
-	DataModel_DataView_InvalidParameter_ImportMode      = "DataModel.DataView.InvalidParameter.ImportMode"
-	DataModel_DataView_InvalidParameter_IncludeBuiltin  = "DataModel.DataView.InvalidParameter.IncludeBuiltin"
-	DataModel_DataView_InvalidParameter_LogGroupFilters = "DataModel.DataView.InvalidParameter.LogGroupFilters"
-	DataModel_DataView_InvalidParameter_OpenStreaming   = "DataModel.DataView.InvalidParameter.OpenStreaming"
-	DataModel_DataView_InvalidParameter_TechnicalName   = "DataModel.DataView.InvalidParameter.TechnicalName"
-	DataModel_DataView_InvalidParameter_ViewID          = "DataModel.DataView.InvalidParameter.ViewID"
-	DataModel_DataView_LengthExceeded_Comment           = "DataModel.DataView.LengthExceeded.Comment"
-	DataModel_DataView_LengthExceeded_FieldName         = "DataModel.DataView.LengthExceeded.FieldName"
-	DataModel_DataView_LengthExceeded_FieldDisplayName  = "DataModel.DataView.LengthExceeded.FieldDisplayName"
-	DataModel_DataView_LengthExceeded_ViewGroupName     = "DataModel.DataView.LengthExceeded.ViewGroupName"
-	DataModel_DataView_LengthExceeded_ViewName          = "DataModel.DataView.LengthExceeded.ViewName"
-	DataModel_DataView_MissingRequiredField             = "DataModel.DataView.MissingRequiredField"
-	DataModel_DataView_NullParameter_AttributeFields    = "DataModel.DataView.NullParameter.AttributeFields"
-	DataModel_DataView_NullParameter_Fields             = "DataModel.DataView.NullParameter.Fields"
-	DataModel_DataView_NullParameter_IndexBaseType      = "DataModel.DataView.NullParameter.IndexBaseType"
-	DataModel_DataView_NullParameter_ViewName           = "DataModel.DataView.NullParameter.ViewName"
-	DataModel_DataView_UnsupportDataSourceType          = "DataModel.DataView.UnsupportDataSourceType"
+	DataModel_DataView_CountExceeded_Filters              = "DataModel.DataView.CountExceeded.Filters"
+	DataModel_DataView_Duplicated_FieldDisplayName        = "DataModel.DataView.Duplicated.FieldDisplayName"
+	DataModel_DataView_Duplicated_FieldFeatureName        = "DataModel.DataView.Duplicated.FieldFeatureName"
+	DataModel_DataView_Duplicated_FieldName               = "DataModel.DataView.Duplicated.FieldName"
+	DataModel_DataView_Duplicated_ViewID                  = "DataModel.DataView.Duplicated.ViewID"
+	DataModel_DataView_Duplicated_ViewName                = "DataModel.DataView.Duplicated.ViewName"
+	DataModel_DataView_FieldTypeConflict                  = "DataModel.DataView.FieldTypeConflict"
+	DataModel_DataView_FilterFieldTypeMisMatchOperation   = "DataModel.DataView.FilterFieldTypeMisMatchOperation"
+	DataModel_DataView_IndexbaseNotFound                  = "DataModel.DataView.IndexbaseNotFound"
+	DataModel_DataView_InvalidParameter_AttributeFields   = "DataModel.DataView.InvalidParameter.AttributeFields"
+	DataModel_DataView_InvalidParameter_Builtin           = "DataModel.DataView.InvalidParameter.Builtin"
+	DataModel_DataView_InvalidParameter_DataScope         = "DataModel.DataView.InvalidParameter.DataScope"
+	DataModel_DataView_InvalidParameter_DataSource        = "DataModel.DataView.InvalidParameter.DataSource"
+	DataModel_DataView_InvalidParameter_FieldFeatureName  = "DataModel.DataView.InvalidParameter.FieldFeatureName"
+	DataModel_DataView_InvalidParameter_FieldName         = "DataModel.DataView.InvalidParameter.FieldName"
+	DataModel_DataView_InvalidParameter_FieldScope        = "DataModel.DataView.InvalidParameter.FieldScope"
+	DataModel_DataView_InvalidParameter_ImportMode        = "DataModel.DataView.InvalidParameter.ImportMode"
+	DataModel_DataView_InvalidParameter_IncludeBuiltin    = "DataModel.DataView.InvalidParameter.IncludeBuiltin"
+	DataModel_DataView_InvalidParameter_LogGroupFilters   = "DataModel.DataView.InvalidParameter.LogGroupFilters"
+	DataModel_DataView_InvalidParameter_OpenStreaming     = "DataModel.DataView.InvalidParameter.OpenStreaming"
+	DataModel_DataView_InvalidParameter_TechnicalName     = "DataModel.DataView.InvalidParameter.TechnicalName"
+	DataModel_DataView_InvalidParameter_ViewID            = "DataModel.DataView.InvalidParameter.ViewID"
+	DataModel_DataView_LengthExceeded_Comment             = "DataModel.DataView.LengthExceeded.Comment"
+	DataModel_DataView_LengthExceeded_FieldComment        = "DataModel.DataView.LengthExceeded.FieldComment"
+	DataModel_DataView_LengthExceeded_FieldDisplayName    = "DataModel.DataView.LengthExceeded.FieldDisplayName"
+	DataModel_DataView_LengthExceeded_FieldFeatureComment = "DataModel.DataView.LengthExceeded.FieldFeatureComment"
+	DataModel_DataView_LengthExceeded_FieldFeatureName    = "DataModel.DataView.LengthExceeded.FieldFeatureName"
+	DataModel_DataView_LengthExceeded_FieldName           = "DataModel.DataView.LengthExceeded.FieldName"
+	DataModel_DataView_LengthExceeded_ViewGroupName       = "DataModel.DataView.LengthExceeded.ViewGroupName"
+	DataModel_DataView_LengthExceeded_ViewName            = "DataModel.DataView.LengthExceeded.ViewName"
+	DataModel_DataView_MissingRequiredField               = "DataModel.DataView.MissingRequiredField"
+	DataModel_DataView_NullParameter_AttributeFields      = "DataModel.DataView.NullParameter.AttributeFields"
+	DataModel_DataView_NullParameter_Fields               = "DataModel.DataView.NullParameter.Fields"
+	DataModel_DataView_NullParameter_IndexBaseType        = "DataModel.DataView.NullParameter.IndexBaseType"
+	DataModel_DataView_NullParameter_ViewName             = "DataModel.DataView.NullParameter.ViewName"
+	DataModel_DataView_UnsupportDataSourceType            = "DataModel.DataView.UnsupportDataSourceType"
 
 	// 403
 	DataModel_DataView_Duplicated_ViewIDInFile            = "DataModel.DataView.Duplicated.ViewIDInFile"
@@ -71,6 +76,7 @@ const (
 	DataModel_DataView_InternalError_GetJobsByDataViewIDsFailed            = "DataModel.DataView.InternalError.GetJobsByDataViewIDsFailed"
 	DataModel_DataView_InternalError_GetSimpleDataViewMapByIDsFailed       = "DataModel.DataView.InternalError.GetSimpleDataViewMapByIDsFailed"
 	DataModel_DataView_InternalError_GetSimpleDataViewMapByNamesFailed     = "DataModel.DataView.InternalError.GetSimpleDataViewMapByNamesFailed"
+	DataModel_DataView_InternalError_InvalidReferenceView                  = "DataModel.DataView.InternalError.InvalidReferenceView"
 	DataModel_DataView_InternalError_ListDataViewsFailed                   = "DataModel.DataView.InternalError.ListDataViewsFailed"
 	DataModel_DataView_InternalError_MarshalViewAttrFailed                 = "DataModel.DataView.InternalError.MarshalViewAttrFailed"
 	DataModel_DataView_InternalError_UnMarshalViewAttrFailed               = "DataModel.DataView.InternalError.UnMarshalViewAttrFailed"
@@ -128,6 +134,7 @@ var (
 		// 400
 		DataModel_DataView_CountExceeded_Filters,
 		DataModel_DataView_Duplicated_FieldDisplayName,
+		DataModel_DataView_Duplicated_FieldFeatureName,
 		DataModel_DataView_Duplicated_FieldName,
 		DataModel_DataView_Duplicated_ViewID,
 		DataModel_DataView_Duplicated_ViewName,
@@ -138,6 +145,7 @@ var (
 		DataModel_DataView_InvalidParameter_Builtin,
 		DataModel_DataView_InvalidParameter_DataScope,
 		DataModel_DataView_InvalidParameter_DataSource,
+		DataModel_DataView_InvalidParameter_FieldFeatureName,
 		DataModel_DataView_InvalidParameter_FieldName,
 		DataModel_DataView_InvalidParameter_FieldScope,
 		DataModel_DataView_InvalidParameter_ImportMode,
@@ -147,8 +155,11 @@ var (
 		DataModel_DataView_InvalidParameter_TechnicalName,
 		DataModel_DataView_InvalidParameter_ViewID,
 		DataModel_DataView_LengthExceeded_Comment,
-		DataModel_DataView_LengthExceeded_FieldName,
+		DataModel_DataView_LengthExceeded_FieldComment,
 		DataModel_DataView_LengthExceeded_FieldDisplayName,
+		DataModel_DataView_LengthExceeded_FieldFeatureComment,
+		DataModel_DataView_LengthExceeded_FieldFeatureName,
+		DataModel_DataView_LengthExceeded_FieldName,
 		DataModel_DataView_LengthExceeded_ViewGroupName,
 		DataModel_DataView_LengthExceeded_ViewName,
 		DataModel_DataView_MissingRequiredField,
@@ -194,6 +205,7 @@ var (
 		DataModel_DataView_InternalError_GetJobsByDataViewIDsFailed,
 		DataModel_DataView_InternalError_GetSimpleDataViewMapByIDsFailed,
 		DataModel_DataView_InternalError_GetSimpleDataViewMapByNamesFailed,
+		DataModel_DataView_InternalError_InvalidReferenceView,
 		DataModel_DataView_InternalError_ListDataViewsFailed,
 		DataModel_DataView_InternalError_MarshalViewAttrFailed,
 		DataModel_DataView_InternalError_UnMarshalViewAttrFailed,

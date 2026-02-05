@@ -19,6 +19,8 @@ import {
     StepErrCode,
     TriggerStepNode,
     LoopStepNode,
+    ParallelOperator,
+    BranchType,
 } from "../../editor/expr";
 import { Steps } from "../../editor/steps";
 import { Button, Dropdown, Menu } from "antd";
@@ -289,9 +291,9 @@ export const Editor = forwardRef<Instance, EditorProps>((props, ref) => {
 
         let stepNodeIndex = 0;
 
-        function traverse(step: IStep, path: number[] = []) {
+        function traverse(step: IStep, path: number[] = [], branch?:string, isLoop: boolean = false) {
             switch (step.operator) {
-                case BranchesOperator: {
+                case BranchesOperator: case ParallelOperator: {
                     list[step.id] = {
                         step,
                         index: -1,
@@ -299,6 +301,7 @@ export const Editor = forwardRef<Instance, EditorProps>((props, ref) => {
                         path,
                         outputs: [],
                     };
+                    const operator = step.operator
                     if (step.branches?.length) {
                         step.branches.forEach((branch, branchIndex) => {
                             list[branch.id] = {
@@ -328,7 +331,7 @@ export const Editor = forwardRef<Instance, EditorProps>((props, ref) => {
 
                             if (branch.steps?.length) {
                                 branch.steps.forEach((step, i) =>
-                                    traverse(step, [...path, branchIndex, i])
+                                    traverse(step, [...path, branchIndex, i], operator ===  ParallelOperator ? BranchType.Parallel : '', isLoop)
                                 );
                             }
                         });
@@ -384,7 +387,7 @@ export const Editor = forwardRef<Instance, EditorProps>((props, ref) => {
                     }
                     if (step.steps?.length) {
                         step.steps.forEach((step, index) =>
-                            traverse(step, [...path, index])
+                            traverse(step, [...path, index], '', true)
                         );
                     }
                     break;
@@ -410,6 +413,8 @@ export const Editor = forwardRef<Instance, EditorProps>((props, ref) => {
                         executor,
                         extension,
                         outputs: nodeOutputs,
+                        branch,
+                        isLoop
                     };
 
                     if (nodeOutputs.length) {
@@ -571,7 +576,9 @@ export const Editor = forwardRef<Instance, EditorProps>((props, ref) => {
                         outputsNew?.length<=0 ||
                         !isAccessable(
                             stepNodes[step.id]!.path,
-                            stepNodes[newID]!.path
+                            stepNodes[newID]!.path,
+                            false,
+                            stepNodes[newID]
                         ) && !isLoopVarAccessible(stepNodes[step.id]!.path, stepNodes[newID]!.path, (stepNodes[newID]! as LoopStepNode).step?.operator === LoopOperator)
                     ) {
                         return false;

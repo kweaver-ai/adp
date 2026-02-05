@@ -34,6 +34,7 @@
     "dataTypeDateTime": "日期时间型",
     "dataTypeBoolean": "布尔型",
     "dataTypeString": "字符型",
-    "displayNameMaxLength": "显示名不能超过255个字符"
+    "displayNameMaxLength": "显示名不能超过255个字符",
+    "editAtomView": "编辑原子视图"
   }
 }

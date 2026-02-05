@@ -1,5 +1,5 @@
 import { FC } from "react";
-import { IStep, LoopOperator, BranchesOperator } from "./expr";
+import { IStep, LoopOperator, BranchesOperator, ParallelOperator } from "./expr";
 import { AtomStep } from "./atom-step";
 import { BranchStep } from "./branch-step";
 import { LoopStep } from "./loop-step";
@@ -11,6 +11,7 @@ export const Step: FC<{
 }> = ({ step, onChange, onRemove }) => {
     switch (step.operator) {
         case BranchesOperator:
+        case ParallelOperator:
             return (
                 <BranchStep
                     step={step}

@@ -2749,6 +2749,7 @@ func transferDimAndOrder(ctx context.Context,
 			model.AnalysisDims[i].Name = viewFields[dim.Name].Name
 			model.AnalysisDims[i].DisplayName = viewFields[dim.Name].DisplayName
 			model.AnalysisDims[i].Type = viewFields[dim.Name].Type
+			model.AnalysisDims[i].Comment = &viewFields[dim.Name].Comment
 
 			fieldsMap[dim.Name] = interfaces.Field{
 				Name:        viewFields[dim.Name].Name,

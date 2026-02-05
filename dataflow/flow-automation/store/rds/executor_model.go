@@ -6,10 +6,10 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/kweaver-ai/adp/autoflow/flow-automation/libs/go/db"
+	traceLog "github.com/kweaver-ai/adp/autoflow/flow-automation/libs/go/telemetry/log"
+	"github.com/kweaver-ai/adp/autoflow/flow-automation/libs/go/telemetry/trace"
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/utils"
-	"github.com/kweaver-ai/adp/autoflow/ide-go-lib/db"
-	traceLog "github.com/kweaver-ai/adp/autoflow/ide-go-lib/telemetry/log"
-	"github.com/kweaver-ai/adp/autoflow/ide-go-lib/telemetry/trace"
 	"go.opentelemetry.io/otel/attribute"
 	"gorm.io/gorm"
 )

@@ -357,7 +357,7 @@ func Test_objectTypeService_GetObjectTypesByIDs(t *testing.T) {
 			So(len(result), ShouldEqual, 1)
 		})
 
-		Convey("Failed when GetDataViewByID returns error\n", func() {
+		Convey("Ignore dependency error when GetDataViewByID returns error\n", func() {
 			knID := "kn1"
 			branch := interfaces.MAIN_BRANCH
 			otIDs := []string{"ot1"}
@@ -379,11 +379,11 @@ func Test_objectTypeService_GetObjectTypesByIDs(t *testing.T) {
 			smock.ExpectRollback()
 
 			result, err := service.GetObjectTypesByIDs(ctx, nil, knID, branch, otIDs)
-			So(err, ShouldNotBeNil)
-			So(len(result), ShouldEqual, 0)
+			So(err, ShouldBeNil)
+			So(len(result), ShouldEqual, 1)
 		})
 
-		Convey("Failed when GetMetricModelByID returns error\n", func() {
+		Convey("Ignore dependency error when GetMetricModelByID returns error\n", func() {
 			knID := "kn1"
 			branch := interfaces.MAIN_BRANCH
 			otIDs := []string{"ot1"}
@@ -415,8 +415,8 @@ func Test_objectTypeService_GetObjectTypesByIDs(t *testing.T) {
 			smock.ExpectRollback()
 
 			result, err := service.GetObjectTypesByIDs(ctx, nil, knID, branch, otIDs)
-			So(err, ShouldNotBeNil)
-			So(len(result), ShouldEqual, 0)
+			So(err, ShouldBeNil)
+			So(len(result), ShouldEqual, 1)
 		})
 
 		Convey("Success with DataSource and dataView\n", func() {
@@ -2254,8 +2254,8 @@ func Test_objectTypeService_SearchObjectTypes(t *testing.T) {
 			dda.EXPECT().GetMetricModelByID(gomock.Any(), gomock.Any()).Return(nil, rest.NewHTTPError(ctx, 500, oerrors.OntologyManager_ObjectType_InternalError))
 
 			result, err := service.SearchObjectTypes(ctx, query)
-			So(err, ShouldNotBeNil)
-			So(len(result.Entries), ShouldEqual, 0)
+			So(err, ShouldBeNil)
+			So(len(result.Entries), ShouldEqual, 1)
 		})
 
 		Convey("Success with multiple hits and filtering\n", func() {

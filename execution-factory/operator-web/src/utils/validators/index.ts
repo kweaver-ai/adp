@@ -21,3 +21,23 @@ export function validateParamName(name: string) {
   const regex = /^[a-zA-Z][a-zA-Z0-9_]*$/;
   return regex.test(name);
 }
+
+// 校验 JSON 字符串是否符合要求
+export const validateJson = (str: any, allowArray: boolean = false) => {
+  if (typeof str !== 'string') {
+    return false;
+  }
+
+  if (str.trim() === '') {
+    return false;
+  }
+
+  try {
+    const parsed = JSON.parse(str);
+
+    // 数组、字符串、null 不是合法的 JSON 对象
+    return typeof parsed === 'object' && (!Array.isArray(parsed) || allowArray) && parsed !== null;
+  } catch {
+    return false;
+  }
+};

@@ -1,5 +1,5 @@
 import { FC, useContext } from "react";
-import { IStep } from "./expr";
+import { IStep, ParallelOperator } from "./expr";
 import { Button } from "antd";
 import { Steps } from "./steps";
 import styles from "./editor.module.less";
@@ -39,7 +39,7 @@ export const BranchStep: FC<{
                         })
                     }
                 >
-                    {t("editor.step.addBranch", "添加分支")}
+                    {step?.operator === ParallelOperator ? t("editor.step.addParallel") : t("editor.step.addBranch", "添加条件分支")}
                 </Button>
                 <div className={styles.branchWrapper}>
                     {step.branches?.map((branch, index, branches) => (

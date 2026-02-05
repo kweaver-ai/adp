@@ -229,7 +229,7 @@ func validateViewNode(ctx context.Context, dvs *dataViewService, node *interface
 	// 判断自定义视图的来源视图是否存在，从这个函数能够拿到字段列表
 	atomicView, err := dvs.GetDataViewByID(ctx, cfg.ViewID, false)
 	if err != nil {
-		return nil, rest.NewHTTPError(ctx, http.StatusInternalServerError, rest.PublicError_InternalServerError).
+		return nil, rest.NewHTTPError(ctx, http.StatusInternalServerError, uerrors.Uniquery_DataView_InternalError_InvalidReferenceView).
 			WithErrorDetails(fmt.Sprintf("get data view %s failed, %v", cfg.ViewID, err))
 	}
 
@@ -590,10 +590,19 @@ func validateCond(ctx context.Context, cfg *cond.CondCfg, fieldsMap map[string]*
 
 		if cfg.Operation == cond.OperationLike || cfg.Operation == cond.OperationNotLike ||
 			cfg.Operation == cond.OperationPrefix || cfg.Operation == cond.OperationNotPrefix {
-			_, ok := cfg.Value.(string)
-			if !ok {
-				return rest.NewHTTPError(ctx, http.StatusBadRequest, uerrors.Uniquery_InvalidParameter_FilterValue).
-					WithErrorDetails("[like not_like prefix not_prefix] operation's value should be a string")
+			// 如果有 real_value 则跳过 value 的校验
+			if cfg.RealValue == nil {
+				_, ok := cfg.Value.(string)
+				if !ok {
+					return rest.NewHTTPError(ctx, http.StatusBadRequest, uerrors.Uniquery_InvalidParameter_FilterValue).
+						WithErrorDetails("[like not_like prefix not_prefix] operation's value should be a string")
+				}
+			} else {
+				_, ok := cfg.RealValue.(string)
+				if !ok {
+					return rest.NewHTTPError(ctx, http.StatusBadRequest, uerrors.Uniquery_InvalidParameter_FilterValue).
+						WithErrorDetails("[like not_like prefix not_prefix] operation's real_value should be a string")
+				}
 			}
 		}
 

@@ -15,6 +15,7 @@ import (
 	"data-model/common"
 	derrors "data-model/errors"
 	"data-model/interfaces"
+	dtype "data-model/interfaces/data_type"
 )
 
 // 校验 builtin 参数, 兼容 0, 1 和 bool 类型
@@ -143,7 +144,7 @@ func validateViewID(ctx context.Context, viewID string, builtin bool) error {
 // 	return nil
 // }
 
-// 数据视图参数校验
+// 数据视图参数校验(索引库调用视图接口创建的原子视图、自定义视图)
 func ValidateDataView(ctx context.Context, view *interfaces.DataView) error {
 	// 校验数据视图 id
 	err := validateViewID(ctx, view.ViewID, view.Builtin)
@@ -151,10 +152,15 @@ func ValidateDataView(ctx context.Context, view *interfaces.DataView) error {
 		return err
 	}
 
-	// 校验对象名称
-	err = validateObjectName(ctx, view.ViewName, interfaces.MODULE_TYPE_DATA_VIEW)
-	if err != nil {
-		return err
+	// 校验视图业务名称
+	if view.ViewName == "" {
+		return rest.NewHTTPError(ctx, http.StatusBadRequest, derrors.DataModel_DataView_NullParameter_ViewName)
+	}
+
+	// 视图业务名称长度限制255
+	if utf8.RuneCountInString(view.ViewName) > interfaces.MaxLength_ViewName {
+		return rest.NewHTTPError(ctx, http.StatusBadRequest, derrors.DataModel_DataView_LengthExceeded_ViewName).
+			WithErrorDetails(fmt.Sprintf("The length of the %v named %v exceeds %v", "view name", view.ViewName, interfaces.MaxLength_ViewName))
 	}
 
 	// 校验技术名称
@@ -187,136 +193,78 @@ func ValidateDataView(ctx context.Context, view *interfaces.DataView) error {
 	}
 
 	// 校验 dataScope
-	err = validateDataScope(ctx, view.DataScope)
+	outputFields, err := validateDataScope(ctx, view.DataScope)
 	if err != nil {
 		return err
 	}
 
-	// var dataSourceType string
-	// 视图数据源类型非空和类型校验
-	// if value, ok := view.DataSource["type"]; !ok {
-	// 	return rest.NewHTTPError(ctx, http.StatusBadRequest, derrors.DataModel_DataView_InvalidParameter_DataSource).
-	// 		WithErrorDetails("The dataSource type is null")
-	// } else {
-	// 	if dataSourceType, ok = value.(string); !ok {
-	// 		return rest.NewHTTPError(ctx, http.StatusBadRequest, derrors.DataModel_DataView_InvalidParameter_DataSource).
-	// 			WithErrorDetails("The dataSource type is not string")
-	// 	}
-	// }
-
-	// 数据源类型校验、索引库校验
-	// switch dataSourceType {
-	// case interfaces.INDEX_BASE:
-	// 	if value, ok := view.DataSource[interfaces.INDEX_BASE]; !ok {
-	// 		return rest.NewHTTPError(ctx, http.StatusBadRequest, derrors.DataModel_DataView_InvalidParameter_DataSource).
-	// 			WithErrorDetails("There is no 'index_base' parameter in the dataSource")
-	// 	} else {
-
-	// 		if bases, ok := value.([]any); ok {
-	// 			if len(bases) <= 0 {
-	// 				return rest.NewHTTPError(ctx, http.StatusBadRequest, derrors.DataModel_DataView_InvalidParameter_DataSource).
-	// 					WithErrorDetails("The number of index base must be at least one")
-	// 			}
-
-	// 			// 如果选择全部字段，来源索引库只能选一个，以减少字段类型冲突
-	// 			if view.FieldScope == interfaces.FieldScope_All && len(bases) > 1 {
-	// 				return rest.NewHTTPError(ctx, http.StatusBadRequest, derrors.DataModel_DataView_InvalidParameter_DataSource).
-	// 					WithErrorDetails("When the field scope is 'all fields', there can be only one index base")
-	// 			}
-	// 		} else {
-	// 			return rest.NewHTTPError(ctx, http.StatusBadRequest, derrors.DataModel_DataView_InvalidParameter_DataSource).
-	// 				WithErrorDetails("The index base names are not a list")
-	// 		}
-	// 	}
-	// default:
-	// 	return rest.NewHTTPError(ctx, http.StatusBadRequest, derrors.DataModel_DataView_UnsupportDataSourceType).
-	// 		WithErrorDetails("Only 'index_base' is supported currently")
-	// }
-
-	// 字段范围校验，只能是0 或 1
-	// if view.FieldScope != interfaces.FieldScope_All && view.FieldScope != interfaces.FieldScope_Custom {
-	// 	return rest.NewHTTPError(ctx, http.StatusBadRequest, derrors.DataModel_DataView_InvalidParameter_FieldScope).
-	// 		WithErrorDetails("The field scope can only be 0 or 1")
-	// }
-
-	// 字段范围为部分字段时校验
-	// if view.FieldScope == interfaces.FieldScope_Custom {
-	// 字段列表非空校验
-	// if len(view.Fields) == 0 {
-	// 	return rest.NewHTTPError(ctx, http.StatusBadRequest, derrors.DataModel_DataView_NullParameter_Fields).
-	// 		WithErrorDetails("If the field scope is partial, the fields list is not empty")
-	// }
-
-	// 校验字段名称、显示名是否重复
-	nameMap := make(map[string]any)
-	displayNameMap := make(map[string]any)
-	for _, field := range view.Fields {
-		if field.Name == "" {
-			return rest.NewHTTPError(ctx, http.StatusBadRequest, derrors.DataModel_DataView_InvalidParameter_FieldName).
-				WithErrorDetails("The field name is null")
-		}
-
-		// 校验名称长度
-		if utf8.RuneCountInString(field.Name) > interfaces.FIELD_NAME_MAX_LENGTH {
-			errDetails := fmt.Sprintf("The length of the field name %s exceeds %d", field.Name, interfaces.FIELD_NAME_MAX_LENGTH)
-			return rest.NewHTTPError(ctx, http.StatusBadRequest, derrors.DataModel_DataView_LengthExceeded_FieldName).
-				WithErrorDetails(errDetails)
-		}
-
-		// 如果display_name为 "", 将display_name的值等于field的值
-		if field.DisplayName == "" {
-			field.DisplayName = field.Name
-		}
-
-		// 校验显示名长度
-		if utf8.RuneCountInString(field.DisplayName) > interfaces.FIELD_DISPLAY_NAME_MAX_LENGTH {
-			errDetails := fmt.Sprintf("The length of the field display name %s exceeds %d", field.DisplayName, interfaces.FIELD_DISPLAY_NAME_MAX_LENGTH)
-			return rest.NewHTTPError(ctx, http.StatusBadRequest, derrors.DataModel_DataView_LengthExceeded_FieldDisplayName).
-				WithErrorDetails(errDetails)
-		}
-
-		// 校验字段名称是否重复
-		if _, ok := nameMap[field.Name]; !ok {
-			nameMap[field.Name] = nil
-		} else {
-			errDetails := fmt.Sprintf("Data view field '%s' name '%s' already exists", field.Name, field.Name)
-			return rest.NewHTTPError(ctx, http.StatusBadRequest, derrors.DataModel_DataView_Duplicated_FieldName).
-				WithDescription(map[string]any{"FieldName": field.Name}).
-				WithErrorDetails(errDetails)
-		}
-
-		if _, ok := displayNameMap[field.DisplayName]; !ok {
-			displayNameMap[field.DisplayName] = nil
-		} else {
-			errDetails := fmt.Sprintf("Data view field '%s' display name '%s' already exists", field.Name, field.DisplayName)
-			return rest.NewHTTPError(ctx, http.StatusBadRequest, derrors.DataModel_DataView_Duplicated_FieldDisplayName).
-				WithDescription(map[string]any{"FieldName": field.Name, "DisplayName": field.DisplayName}).
-				WithErrorDetails(errDetails)
+	// 不校验索引库视图，因为索引库视图没有字段列表和viewType
+	switch view.Type {
+	case interfaces.ViewType_Atomic:
+	case interfaces.ViewType_Custom:
+		if len(view.Fields) == 0 {
+			view.Fields = outputFields
 		}
 	}
-	// }
+
+	// 校验字段
+	err = validateViewFields(ctx, view.Fields)
+	if err != nil {
+		return err
+	}
 
 	return nil
 }
 
 // 校验自定义视图配置
-func validateDataScope(ctx context.Context, nodes []*interfaces.DataScopeNode) error {
+func validateDataScope(ctx context.Context, nodes []*interfaces.DataScopeNode) (outputFields []*interfaces.ViewField, err error) {
 	if nodes == nil {
-		return nil
+		return nil, nil
 	}
 
 	if len(nodes) > 20 {
-		return rest.NewHTTPError(ctx, http.StatusBadRequest, derrors.DataModel_DataView_InvalidParameter_DataScope).
+		return nil, rest.NewHTTPError(ctx, http.StatusBadRequest, derrors.DataModel_DataView_InvalidParameter_DataScope).
 			WithErrorDetails("The data scope nodes cannot be more than 20")
 	}
 
 	for _, node := range nodes {
 		// 检测 nodeType
 		if _, ok := interfaces.DataScopeNodeTypeMap[node.Type]; !ok {
-			return rest.NewHTTPError(ctx, http.StatusBadRequest, derrors.DataModel_DataView_InvalidParameter_DataScope).
+			return nil, rest.NewHTTPError(ctx, http.StatusBadRequest, derrors.DataModel_DataView_InvalidParameter_DataScope).
 				WithErrorDetails("The data scope node type is invalid")
 		}
 
+		if node.Type == interfaces.DataScopeNodeType_Output {
+			outputFields = node.OutputFields
+		}
+	}
+
+	return outputFields, nil
+}
+
+// 校验原子视图更新参数
+func validateAtomicViewUpdateReq(ctx context.Context, req *interfaces.AtomicViewUpdateReq) error {
+	// 校验对象名称
+	if req.ViewName == "" {
+		return rest.NewHTTPError(ctx, http.StatusBadRequest, derrors.DataModel_DataView_NullParameter_ViewName)
+	}
+
+	// 视图业务名称长度限制255
+	if utf8.RuneCountInString(req.ViewName) > interfaces.MaxLength_ViewName {
+		return rest.NewHTTPError(ctx, http.StatusBadRequest, derrors.DataModel_DataView_LengthExceeded_ViewName).
+			WithErrorDetails(fmt.Sprintf("The length of the %v named %v exceeds %v", "view name", req.ViewName, interfaces.MaxLength_ViewName))
+	}
+
+	// 校验备注
+	err := validateObjectComment(ctx, req.Comment)
+	if err != nil {
+		return err
+	}
+
+	// 校验字段
+	err = validateViewFields(ctx, req.Fields)
+	if err != nil {
+		return err
 	}
 
 	return nil
@@ -368,4 +316,161 @@ func validateDataViewRowColumnRule(ctx context.Context, rule *interfaces.DataVie
 	}
 
 	return nil
+}
+
+// 校验字段和字段特征
+func validateViewFields(ctx context.Context, viewFields []*interfaces.ViewField) error {
+	fieldsMap := make(map[string]*interfaces.ViewField)
+	for _, field := range viewFields {
+		fieldsMap[field.Name] = field
+	}
+
+	// 校验字段名称、显示名是否重复
+	nameMap := make(map[string]struct{})
+	displayNameMap := make(map[string]struct{})
+	for _, field := range viewFields {
+		if field.Name == "" {
+			return rest.NewHTTPError(ctx, http.StatusBadRequest, derrors.DataModel_DataView_InvalidParameter_FieldName).
+				WithErrorDetails("The field name is null")
+		}
+
+		// 校验字段名称长度, 长度限制255
+		if utf8.RuneCountInString(field.Name) > interfaces.MaxLength_ViewFieldName {
+			errDetails := fmt.Sprintf("The length of the field name %s exceeds %d", field.Name, interfaces.MaxLength_ViewFieldName)
+			return rest.NewHTTPError(ctx, http.StatusBadRequest, derrors.DataModel_DataView_LengthExceeded_FieldName).
+				WithErrorDetails(errDetails)
+		}
+
+		// 如果display_name为 "", 将display_name的值等于field的值
+		if field.DisplayName == "" {
+			field.DisplayName = field.Name
+		}
+
+		// 校验字段显示名长度, 长度限制255
+		if utf8.RuneCountInString(field.DisplayName) > interfaces.MaxLength_ViewFieldDisplayName {
+			errDetails := fmt.Sprintf("The length of the field display name %s exceeds %d", field.DisplayName, interfaces.MaxLength_ViewFieldDisplayName)
+			return rest.NewHTTPError(ctx, http.StatusBadRequest, derrors.DataModel_DataView_LengthExceeded_FieldDisplayName).
+				WithErrorDetails(errDetails)
+		}
+
+		// 校验字段备注长度，长度限制1000
+		if utf8.RuneCountInString(field.Comment) > interfaces.MaxLength_ViewFieldComment {
+			errDetails := fmt.Sprintf("The length of the field comment %s exceeds %d", field.Comment, interfaces.MaxLength_ViewFieldComment)
+			return rest.NewHTTPError(ctx, http.StatusBadRequest, derrors.DataModel_DataView_LengthExceeded_FieldComment).
+				WithErrorDetails(errDetails)
+		}
+
+		// 校验字段名称是否重复
+		if _, ok := nameMap[field.Name]; !ok {
+			nameMap[field.Name] = struct{}{}
+		} else {
+			errDetails := fmt.Sprintf("Data view field '%s' name '%s' already exists", field.Name, field.Name)
+			return rest.NewHTTPError(ctx, http.StatusBadRequest, derrors.DataModel_DataView_Duplicated_FieldName).
+				WithDescription(map[string]any{"FieldName": field.Name}).
+				WithErrorDetails(errDetails)
+		}
+
+		if _, ok := displayNameMap[field.DisplayName]; !ok {
+			displayNameMap[field.DisplayName] = struct{}{}
+		} else {
+			errDetails := fmt.Sprintf("Data view field '%s' display name '%s' already exists", field.Name, field.DisplayName)
+			return rest.NewHTTPError(ctx, http.StatusBadRequest, derrors.DataModel_DataView_Duplicated_FieldDisplayName).
+				WithDescription(map[string]any{"FieldName": field.Name, "DisplayName": field.DisplayName}).
+				WithErrorDetails(errDetails)
+		}
+
+		// 校验特征
+		err := validateFeatures(ctx, fieldsMap, field.Features)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+// 校验特征
+func validateFeatures(ctx context.Context, fieldsMap map[string]*interfaces.ViewField, features []interfaces.FieldFeature) error {
+	enabledMap := make(map[interfaces.FieldFeatureType]bool)
+	featureNameMap := make(map[string]struct{})
+	for _, f := range features {
+		if f.FeatureName == "" {
+			return rest.NewHTTPError(ctx, http.StatusBadRequest, derrors.DataModel_DataView_InvalidParameter_FieldFeatureName).
+				WithErrorDetails("The field feature name is null")
+		}
+
+		// 校验特征名称长度, 长度限制255
+		if utf8.RuneCountInString(f.FeatureName) > interfaces.MaxLength_ViewFieldFeatureName {
+			errDetails := fmt.Sprintf("The length of the field feature name %s exceeds %d", f.FeatureName, interfaces.MaxLength_ViewFieldFeatureName)
+			return rest.NewHTTPError(ctx, http.StatusBadRequest, derrors.DataModel_DataView_LengthExceeded_FieldFeatureName).
+				WithErrorDetails(errDetails)
+		}
+
+		// 校验特征名称是否重复
+		if _, ok := featureNameMap[f.FeatureName]; !ok {
+			featureNameMap[f.FeatureName] = struct{}{}
+		} else {
+			errDetails := fmt.Sprintf("Data view field feature '%s' name '%s' already exists", f.FeatureName, f.FeatureName)
+			return rest.NewHTTPError(ctx, http.StatusBadRequest, derrors.DataModel_DataView_Duplicated_FieldFeatureName).
+				WithDescription(map[string]any{"FieldFeatureName": f.FeatureName}).
+				WithErrorDetails(errDetails)
+		}
+
+		// feature type
+		if _, ok := interfaces.FieldFeatureTypeMap[f.FeatureType]; !ok {
+			return rest.NewHTTPError(ctx, http.StatusBadRequest, rest.PublicError_BadRequest).
+				WithErrorDetails("The field feature type is invalid")
+		}
+
+		// 校验特征备注，长度限制1000
+		if utf8.RuneCountInString(f.Comment) > interfaces.MaxLength_ViewFieldFeatureComment {
+			return rest.NewHTTPError(ctx, http.StatusBadRequest, derrors.DataModel_DataView_LengthExceeded_FieldFeatureComment).
+				WithErrorDetails(fmt.Sprintf("The length of the field feature comment %s exceeds %d", f.Comment, interfaces.MaxLength_ViewFieldFeatureComment))
+		}
+
+		if f.RefField == "" {
+			return rest.NewHTTPError(ctx, http.StatusBadRequest, rest.PublicError_BadRequest).
+				WithErrorDetails("The field feature ref field is null")
+		}
+
+		// 校验非原生特征的引用字段
+		if !f.IsNative {
+			// 引用字段是否在字段列表里
+			if _, ok := fieldsMap[f.RefField]; !ok {
+				return rest.NewHTTPError(ctx, http.StatusBadRequest, rest.PublicError_BadRequest).
+					WithErrorDetails(fmt.Sprintf("The field feature ref field '%s' is not in the field list", f.RefField))
+			}
+
+			// 引用字段的类型是否符合特征类型
+			if !IsFeatureSupported(fieldsMap[f.RefField].Type, f.FeatureType) {
+				return rest.NewHTTPError(ctx, http.StatusBadRequest, rest.PublicError_BadRequest).
+					WithErrorDetails(fmt.Sprintf("The field feature ref field '%s' type '%s' is not supported", f.RefField, fieldsMap[f.RefField].Type))
+			}
+		}
+
+		// 校验是否已启用
+		if f.IsDefault {
+			if enabledMap[f.FeatureType] {
+				return rest.NewHTTPError(ctx, http.StatusBadRequest, rest.PublicError_BadRequest).
+					WithErrorDetails(fmt.Sprintf("Same type features can only have one default feature, current field feature name '%s' type is '%s'",
+						f.FeatureName, f.FeatureType))
+			}
+			enabledMap[f.FeatureType] = true
+		}
+	}
+
+	return nil
+}
+
+func IsFeatureSupported(fieldType string, featureType interfaces.FieldFeatureType) bool {
+	switch featureType {
+	case interfaces.FieldFeatureType_Fulltext:
+		return fieldType == dtype.DataType_Text
+	case interfaces.FieldFeatureType_Keyword:
+		return fieldType == dtype.DataType_String
+	case interfaces.FieldFeatureType_Vector:
+		return fieldType == dtype.DataType_Vector
+	default:
+		return false
+	}
 }

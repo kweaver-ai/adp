@@ -25,24 +25,37 @@ func NewLikeCond(ctx context.Context, cfg *CondCfg, fieldsMap map[string]*ViewFi
 		return nil, fmt.Errorf("condition [like] does not support value_from type '%s'", cfg.ValueFrom)
 	}
 
-	val, ok := cfg.ValueOptCfg.Value.(string)
-	if !ok {
-		return nil, fmt.Errorf("condition [like] right value is not a string value: %v", cfg.Value)
-	}
-
-	realVal := ""
+	// 如果有 real_value 则跳过 value 的校验
+	var val, realVal string
 	if cfg.ValueOptCfg.RealValue != nil {
+		var ok bool
 		realVal, ok = cfg.ValueOptCfg.RealValue.(string)
 		if !ok {
-			return nil, fmt.Errorf("condition [like] right real value is not a string value: %v", cfg.Value)
+			return nil, fmt.Errorf("condition [like] right real value is not a string value: %v", cfg.RealValue)
 		}
+	} else {
+		var ok bool
+		val, ok = cfg.ValueOptCfg.Value.(string)
+		if !ok {
+			return nil, fmt.Errorf("condition [like] right value is not a string value: %v", cfg.Value)
+		}
+	}
+
+	featureType := FieldFeatureType_Raw
+	if IsTextType(fieldsMap[cfg.Name]) {
+		featureType = FieldFeatureType_Keyword
+	}
+
+	fName, err := GetQueryField(ctx, cfg.Name, fieldsMap, featureType)
+	if err != nil {
+		return nil, fmt.Errorf("condition [like], %v", err)
 	}
 
 	return &LikeCond{
 		mCfg:             cfg,
 		mValue:           val,
 		mRealValue:       realVal,
-		mFilterFieldName: getFilterFieldName(ctx, cfg.Name, fieldsMap, false),
+		mFilterFieldName: fName,
 	}, nil
 }
 
@@ -60,13 +73,15 @@ func (cond *LikeCond) Convert(ctx context.Context) (string, error) {
 }
 
 func (cond *LikeCond) Convert2SQL(ctx context.Context) (string, error) {
-	v := cond.mRealValue
-	if v == "" {
-		v = cond.mValue
+	// real_value: 内部接口调用，值已拼接好 %，支持自定义前缀/后缀匹配
+	// value: 前端传入，不带 %，后端自动转义特殊字符并添加 %value% 通配符
+	var vStr string
+	if cond.mRealValue != "" {
+		vStr = cond.mRealValue
+	} else {
+		vStr = "%" + Special.Replace(cond.mValue) + "%"
 	}
 
-	vStr := fmt.Sprintf("%v", v)
 	sqlStr := fmt.Sprintf(`"%s" LIKE '%s'`, cond.mFilterFieldName, vStr)
-
 	return sqlStr, nil
 }

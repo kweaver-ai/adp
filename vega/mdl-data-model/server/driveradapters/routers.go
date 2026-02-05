@@ -24,6 +24,7 @@ import (
 	"data-model/logics/objective_model"
 	"data-model/logics/trace_model"
 	"data-model/version"
+	"data-model/worker"
 )
 
 type RestHandler interface {
@@ -57,7 +58,7 @@ func NewRestHandler(appSetting *common.AppSetting) RestHandler {
 		ddis:       data_dict.NewDataDictItemService(appSetting),
 		dvs:        data_view.NewDataViewService(appSetting),
 		dvgs:       data_view.NewDataViewGroupService(appSetting),
-		dvms:       data_view.NewDataViewMonitorService(appSetting),
+		dvms:       worker.NewDataViewMonitorService(appSetting),
 		dvrcs:      data_view.NewDataViewRowColumnRuleService(appSetting),
 		ems:        event_model.NewEventModelService(appSetting),
 		mms:        metric_model.NewMetricModelService(appSetting),

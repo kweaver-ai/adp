@@ -10,10 +10,10 @@ import (
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/common"
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/drivenadapters"
 	aerr "github.com/kweaver-ai/adp/autoflow/flow-automation/errors"
+	ierr "github.com/kweaver-ai/adp/autoflow/flow-automation/libs/go/errors"
+	traceLog "github.com/kweaver-ai/adp/autoflow/flow-automation/libs/go/telemetry/log"
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/pkg/entity"
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/store/rds"
-	ierr "github.com/kweaver-ai/adp/autoflow/ide-go-lib/errors"
-	traceLog "github.com/kweaver-ai/adp/autoflow/ide-go-lib/telemetry/log"
 )
 
 // ErrTypeV1 新错误码规范前的错误结构

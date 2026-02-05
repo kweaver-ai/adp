@@ -20,6 +20,7 @@ import { useHandleErrReq } from "../../utils/hooks";
 import { Output } from "../extension";
 import "./python-hint";
 import styles from "./styles/python-editor.module.less";
+import { convertValueByType } from "../../extensions/internal/sandbox-operation";
 
 interface PythonEditorProps {
     t: TranslateFn;
@@ -27,9 +28,10 @@ interface PythonEditorProps {
     inputParams?: Param[];
     outputParams?: Param[];
     onChange?: (val: string) => void;
+    codeTemplate?: string
+    pythonType?:string
 }
 
-const codeTemplate = "def main():\n    return ";
 
 export const handleOutput = (val: any) => {
     if (typeof val === "string") {
@@ -39,12 +41,14 @@ export const handleOutput = (val: any) => {
 };
 
 export const PythonEditor = (props: PythonEditorProps) => {
+    const codeTemplate = props?.codeTemplate || "def main():\n    return ";
     const {
         value = codeTemplate,
         onChange,
         t,
         inputParams,
         outputParams,
+        pythonType
     } = props;
     const [isModalVisible, setModalVisible] = useState(false);
     const [values, setValues] = useState<Record<string, any>>({});
@@ -57,20 +61,26 @@ export const PythonEditor = (props: PythonEditorProps) => {
 
     const variables = useMemo(() => {
         if (inputParams) {
-            let params: Record<string, boolean> = {};
-            const transfer = inputParams.filter((item: Param) => {
+            const variables: Param[] = [];
+            const seenVariables = new Set<string>();
+            
+            inputParams.forEach((item: Param) => {
                 const value = item?.value;
                 if (typeof value === "string") {
-                    const result = /^\{\{(__(\d+).*)\}\}$/.exec(value);
-                    if (result && !params?.[value]) {
-                        params = { ...params, [value]: true };
-                        return true;
+                    const regex = /\{\{(__[\w_]+.*?)\}\}/g;
+                    let match;
+                    
+                    while ((match = regex.exec(value)) !== null) {
+                        const variable = match[0];
+                        if (!seenVariables.has(variable)) {
+                            seenVariables.add(variable);
+                            variables.push({ ...item, value: variable });
+                        }
                     }
-                    return false;
                 }
-                return false;
             });
-            return transfer;
+            
+            return variables;
         }
         return [];
     }, [inputParams]);
@@ -110,31 +120,43 @@ export const PythonEditor = (props: PythonEditorProps) => {
         const transferInputParams = inputParams?.map((item: Param) => {
             const value = item?.value;
             if (typeof value === "string") {
-                const result = /^\{\{(__(\d+).*)\}\}$/.exec(value);
-                if (result) {
-                    return { ...item, value: values[value] };
+                let replacedValue = value;
+                const regex = /\{\{(__[\w_]+.*?)\}\}/g;
+                let match;
+                
+                while ((match = regex.exec(value)) !== null) {
+                    const variable = match[0];
+                    if (values[variable] !== undefined) {
+                        replacedValue = replacedValue.replace(variable, values[variable]);
+                    }
                 }
+                
+                return { ...item, value: replacedValue };
             }
             return item;
         });
         setLoading(true);
         // 获取输出
         try {
-            const res = await API.axios.post(
+            if (pythonType === 'sandbox') {
+                await sandboxRun(transferInputParams)
+            } else {
+                const res = await API.axios.post(
                 `${prefixUrl}/api/automation/v1/pycode/run-by-params`,
                 {
                     code: value,
                     input_params: transferInputParams,
                     output_params: outputParams,
                 }
-            );
-            setModalVisible(false);
-            if (res?.data) {
-                setResult(res.data);
-                setTimeout(() => {
-                    containerRef.current?.scrollIntoView();
-                }, 500);
-            }
+                );
+                setModalVisible(false);
+                if (res?.data) {
+                    setResult(res.data);
+                    setTimeout(() => {
+                        containerRef.current?.scrollIntoView();
+                    }, 500);
+                }
+            }              
         } catch (error: any) {
             const closeModal = () => {
                 setModalVisible(false);
@@ -150,7 +172,6 @@ export const PythonEditor = (props: PythonEditorProps) => {
                         "请检查参数。"
                     ),
                 });
-                closeModal();
             } else if (
                 error?.response.data?.code ===
                 "ContentAutomation.InternalError.ErrorDepencyService"
@@ -162,14 +183,39 @@ export const PythonEditor = (props: PythonEditorProps) => {
                         error?.response.data?.detail?.detail ||
                         error?.response.data?.description,
                 });
-                closeModal();
             } else {
                 handleErr({ error: error?.response });
+                setResult(error?.response.data);
             }
+            closeModal();
         } finally {
             setLoading(false);
         }
     };
+
+    const sandboxRun = async (transferInputParams?: any) => {
+        const eventObj:any = {};
+        transferInputParams.forEach((param:any) => {
+            if (param.key) {
+                eventObj[param.key] = convertValueByType(param.value, param.type);
+            }
+        });
+        const res = await API.axios.post(
+            `${prefixUrl}/api/automation/v1/sandbox-execution`,
+            {
+                code: value,
+                language: "python",
+                event: eventObj
+            }
+        );
+        setModalVisible(false);
+        if (res?.data) {
+            setResult(res.data);
+            setTimeout(() => {
+                containerRef.current?.scrollIntoView();
+            }, 500);
+        }
+    }
 
     const handleChange = (val: string, variable: string) => {
         setValues((pre) => ({ ...pre, [variable]: val }));
@@ -278,12 +324,13 @@ const ItemView = ({ value }: { value: string }) => {
         ]
     >(() => {
         if (typeof value === "string") {
-            const result = /^\{\{(__(\d+).*)\}\}$/.exec(value);
+            const result = /^\{\{(__(\w+).*)\}\}$/.exec(value);
             if (result) {
                 const [, key, id] = result;
+                const newID = !isNaN(Number(id)) ? id : "1000"; //处理全局变量的情况
                 return [
                     true,
-                    stepNodes[id] as
+                    stepNodes[newID] as
                         | TriggerStepNode
                         | ExecutorStepNode
                         | DataSourceStepNode,
@@ -301,7 +348,9 @@ const ItemView = ({ value }: { value: string }) => {
                     !stepOutput ||
                     !isAccessable(
                         (step && stepNodes[step.id]?.path) || [],
-                        stepNode!.path
+                        stepNode!.path,
+                        false,
+                        stepNode
                     ) && !isLoopVarAccessible((step && stepNodes[step.id]?.path) || [], stepNode!.path, stepNode?.step?.operator === LoopOperator)
             })}
         >

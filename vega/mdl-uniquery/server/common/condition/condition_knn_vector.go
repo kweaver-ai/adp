@@ -44,7 +44,11 @@ func NewKnnVectorCond(ctx context.Context, cfg *CondCfg, vType string, fieldsMap
 	// 	return nil, fmt.Errorf("condition [knn]'s interval value should be a integer")
 	// }
 
-	name := getFilterFieldName(ctx, cfg.Name, fieldsMap, true)
+	// name := getFilterFieldName(ctx, cfg.Name, fieldsMap, true)
+	name, err := GetQueryField(ctx, cfg.Name, fieldsMap, FieldFeatureType_Vector)
+	if err != nil {
+		return nil, fmt.Errorf("condition [knn_vector], %v", err)
+	}
 	// 不支持*查询
 	// var field string
 	// // 如果指定*查询，则把 * 换成 _vector

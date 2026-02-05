@@ -1059,14 +1059,14 @@ public class CatalogServiceImpl implements CatalogService {
                 properties.set(CatalogConstant.PUSH_DOWN_MODULE, pushDownModule);
             }
 
-            if (StringUtils.equalsIgnoreCase(CatalogConstant.MAXCOMPUTE_CATALOG, type)
-                    || StringUtils.equalsIgnoreCase(CatalogConstant.HOLOGRES_CATALOG, type)
-                    || StringUtils.equalsIgnoreCase(CatalogConstant.POSTGRESQL_CATALOG, type)) {
-                properties.set(CatalogConstant.METADATA_CACHE_GLOBAL, true);
-                properties.set(CatalogConstant.METADATA_CACHE_TTL, "60s");
-                properties.set(CatalogConstant.METADATA_CACHE_MAXIMUM_SIZE, 50000);
-                properties.set(CatalogConstant.METADATA_CACHE_ENABLED, true);
-            }
+//            if (StringUtils.equalsIgnoreCase(CatalogConstant.MAXCOMPUTE_CATALOG, type)
+//                    || StringUtils.equalsIgnoreCase(CatalogConstant.HOLOGRES_CATALOG, type)
+//                    || StringUtils.equalsIgnoreCase(CatalogConstant.POSTGRESQL_CATALOG, type)) {
+//                properties.set(CatalogConstant.METADATA_CACHE_GLOBAL, true);
+//                properties.set(CatalogConstant.METADATA_CACHE_TTL, "60s");
+//                properties.set(CatalogConstant.METADATA_CACHE_MAXIMUM_SIZE, 50000);
+//                properties.set(CatalogConstant.METADATA_CACHE_ENABLED, true);
+//            }
 
             // 连接池配置
 //            properties.set(CatalogConstant.USE_CONNECTION_POOL, true);

@@ -8,8 +8,8 @@ import (
 	"sync"
 
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/errors"
+	commonLog "github.com/kweaver-ai/adp/autoflow/flow-automation/libs/go/log"
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/utils"
-	commonLog "github.com/kweaver-ai/adp/autoflow/ide-go-lib/log"
 )
 
 //go:generate mockgen -package mock_drivenadapters -source ../drivenadapters/eacp.go -destination ../tests/mock_drivenadapters/eacp_mock.go

@@ -18,6 +18,8 @@ import (
 
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/common"
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/drivenadapters"
+	libstore "github.com/kweaver-ai/adp/autoflow/flow-automation/libs/go/store"
+	"github.com/kweaver-ai/adp/autoflow/flow-automation/libs/go/telemetry/trace"
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/pkg/log"
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/pkg/utils"
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/pkg/utils/value"
@@ -25,8 +27,6 @@ import (
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/store"
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/store/rds"
 	cutils "github.com/kweaver-ai/adp/autoflow/flow-automation/utils"
-	libstore "github.com/kweaver-ai/adp/autoflow/ide-go-lib/store"
-	"github.com/kweaver-ai/adp/autoflow/ide-go-lib/telemetry/trace"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"

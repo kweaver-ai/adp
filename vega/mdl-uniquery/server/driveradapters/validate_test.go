@@ -3194,13 +3194,15 @@ func TestValidateRequestMetrics(t *testing.T) {
 				RequestMetrics: &interfaces.RequestMetrics{
 					Type: interfaces.METRICS_SAMEPERIOD,
 					SamePeriodCfg: &interfaces.SamePeriodCfg{
-						Method: []string{},
+						Method:          []string{},
+						Offset:          1,
+						TimeGranularity: interfaces.METRICS_SAMEPERIOD_TIME_GRANULARITY_DAY,
 					},
 				},
 			}
 			err := validateRequestMetrics(ctx, query)
-			So(err, ShouldNotBeNil)
-			So(err.(*rest.HTTPError).BaseError.ErrorCode, ShouldEqual, uerrors.Uniquery_MetricModel_NullParameter_SamePeriodMethod)
+			So(err, ShouldBeNil)
+			So(query.RequestMetrics.SamePeriodCfg.Method, ShouldEqual, []string{interfaces.METRICS_SAMEPERIOD_METHOD_GROWTH_VALUE, interfaces.METRICS_SAMEPERIOD_METHOD_GROWTH_RATE})
 		})
 
 		Convey("RequestMetrics.Type is METRICS_SAMEPERIOD but SamePeriodCfg.Method has invalid value", func() {

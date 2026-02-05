@@ -20,10 +20,10 @@ import (
 	"encoding/json"
 
 	ierrors "github.com/kweaver-ai/adp/autoflow/flow-automation/errors"
+	"github.com/kweaver-ai/adp/autoflow/flow-automation/libs/go/telemetry/trace"
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/pkg/actions"
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/pkg/entity"
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/pkg/log"
-	"github.com/kweaver-ai/adp/autoflow/ide-go-lib/telemetry/trace"
 	"github.com/mitchellh/mapstructure"
 )
 

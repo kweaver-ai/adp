@@ -4,7 +4,7 @@ import cond "ontology-query/common/condition"
 
 // 行动查询请求体
 type ActionQuery struct {
-	InstanceIdentity []map[string]any `json:"_instance_identity,omitempty"`
+	InstanceIdentities []map[string]any `json:"_instance_identities,omitempty"`
 
 	KNID         string `json:"-"`
 	Branch       string `json:"-"`

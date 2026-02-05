@@ -9,9 +9,9 @@ import (
 
 	"github.com/google/go-querystring/query"
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/common"
+	otelHttp "github.com/kweaver-ai/adp/autoflow/flow-automation/libs/go/http"
+	traceLog "github.com/kweaver-ai/adp/autoflow/flow-automation/libs/go/telemetry/log"
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/utils"
-	otelHttp "github.com/kweaver-ai/adp/autoflow/ide-go-lib/http"
-	traceLog "github.com/kweaver-ai/adp/autoflow/ide-go-lib/telemetry/log"
 )
 
 // BusinessDomain 业务域接口
@@ -61,10 +61,15 @@ type BizDomainResources []*BizDomainResourceParams
 
 func (b BizDomainResources) GetIDs(dtype string) (res []string) {
 	for _, v := range b {
-		vs := strings.Split(v.ResourceID, ":")
-		if dtype != "" && len(vs) > 1 && vs[1] != dtype {
-			continue
+		vs := strings.SplitN(v.ResourceID, ":", 2)
+
+		// dtype 有值时才校验类型
+		if dtype != "" {
+			if len(vs) < 2 || vs[1] != dtype {
+				continue
+			}
 		}
+
 		res = append(res, vs[0])
 	}
 	return

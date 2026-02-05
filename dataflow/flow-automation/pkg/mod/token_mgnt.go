@@ -10,11 +10,11 @@ import (
 
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/common"
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/drivenadapters"
+	lock "github.com/kweaver-ai/adp/autoflow/flow-automation/libs/go/lock"
+	commonLog "github.com/kweaver-ai/adp/autoflow/flow-automation/libs/go/log"
+	rds "github.com/kweaver-ai/adp/autoflow/flow-automation/libs/go/store"
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/pkg/entity"
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/utils"
-	lock "github.com/kweaver-ai/adp/autoflow/ide-go-lib/lock"
-	commonLog "github.com/kweaver-ai/adp/autoflow/ide-go-lib/log"
-	rds "github.com/kweaver-ai/adp/autoflow/ide-go-lib/store"
 )
 
 // tokenMgntMap key[ip:port:clientID:secret]

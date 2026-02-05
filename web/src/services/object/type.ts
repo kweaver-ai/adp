@@ -205,6 +205,7 @@ export interface TNode {
     addDataAttribute?: () => void;
     pickAttribute?: () => void;
     autoLine?: () => void;
+    highlightedAttributes?: string[];
     attributes: {
       name: string;
       display_name: string;

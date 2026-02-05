@@ -10,10 +10,10 @@ import (
 
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/common"
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/common/kccode"
+	otelHttp "github.com/kweaver-ai/adp/autoflow/flow-automation/libs/go/http"
+	traceLog "github.com/kweaver-ai/adp/autoflow/flow-automation/libs/go/telemetry/log"
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/store/rds"
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/utils"
-	otelHttp "github.com/kweaver-ai/adp/autoflow/ide-go-lib/http"
-	traceLog "github.com/kweaver-ai/adp/autoflow/ide-go-lib/telemetry/log"
 )
 
 const (

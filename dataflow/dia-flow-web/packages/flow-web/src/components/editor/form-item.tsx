@@ -176,7 +176,7 @@ export const FormItemWithVariable: FC<FormItemProps & { name: NamePath }> = ({
                   } else if (
                     step &&
                     stepNode &&
-                    !isAccessable(stepNodes[step.id]?.path, stepNode.path) &&
+                    !isAccessable(stepNodes[step.id]?.path, stepNode.path, false, stepNode) &&
                     !isLoopVarAccessible(
                       stepNodes[step.id]!.path,
                       stepNode.path,
@@ -211,6 +211,7 @@ export const FormItemWithVariable: FC<FormItemProps & { name: NamePath }> = ({
               const targetRect = ref.current?.getBoundingClientRect();
               pickVariable((step && stepNodes[step.id]?.path) || [], type, {
                 targetRect,
+                currentStepNodes: step && stepNodes[step.id],
               }, allowOperator)
                 .then((value) => {
                   form.setFieldValue(namepath, `{{${value}}}`);
@@ -373,7 +374,7 @@ export const VariableInput: FC<VariableInputProps> = ({
         className={clsx(
           styles.variableInput,
           (!stepOutput ||
-            (!isAccessable(scope, stepNode!.path) &&
+            (!isAccessable(scope, stepNode!.path, false, stepNode) &&
               !isLoopVarAccessible(
                 scope,
                 stepNode!.path,

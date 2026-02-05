@@ -157,11 +157,24 @@ type Parameter struct {
 	Comment   *string `json:"comment,omitempty" mapstructure:"comment"` // 参数备注，指标实时读取赋值给对象类的指标属性参数赋值
 }
 
+// 指标属性的 dynamic_params 结构
+type MetricPropertyDynamicParams struct {
+	Start              *int64           `json:"start,omitempty"`
+	End                *int64           `json:"end,omitempty"`
+	Instant            *bool            `json:"instant,omitempty"`
+	Step               *string          `json:"step,omitempty"`
+	AnalysisDimensions []string         `json:"analysis_dimensions,omitempty"`
+	OrderByFields      []OrderField     `json:"order_by_fields,omitempty"`
+	HavingCondition    *HavingCondition `json:"having_condition,omitempty"`
+	Metrics            *Metrics         `json:"metrics,omitempty"`
+	// 其他动态参数（指标属性配置中定义的动态参数）通过 mapstructure 或自定义 UnmarshalJSON 处理
+}
+
 // 对象属性值请求体
 type ObjectPropertyValueQuery struct {
-	InstanceIdentity []map[string]any          `json:"_instance_identity,omitempty"`
-	Properties       []string                  `json:"properties,omitempty"`
-	DynamicParams    map[string]map[string]any `json:"dynamic_params"`
+	InstanceIdentities []map[string]any          `json:"_instance_identities,omitempty"`
+	Properties         []string                  `json:"properties,omitempty"`
+	DynamicParams      map[string]map[string]any `json:"dynamic_params"`
 
 	KNID         string `json:"-"`
 	Branch       string `json:"-"`

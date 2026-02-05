@@ -12,7 +12,9 @@ import viVN from "./locales/vi-vn.json";
 import TextSVG from "./assets/text.svg";
 import ManualSVG from "./assets/manual.svg";
 import TriggerManualSVG from "./assets/trigger-manual.svg";
-import PythonSVG from "./assets/py.svg";
+import CodeSVG from "./assets/py.svg";
+import PythonSVG from "./assets/python.svg";
+import SandboxSVG from "./assets/sandbox.svg";
 import TimeSVG from "./assets/time.svg";
 import EndReturnsSVG from "./assets/endReturns.svg";
 import {
@@ -56,6 +58,7 @@ import { MicroAppContext, TranslateFn } from "@applet/common";
 import { VariableDatePicker } from "./components/variable-date-picker";
 import { FileTriggerAction, FolderTriggerAction } from "./components/file-system-trigger";
 import { OutputsFormTriggerAction } from "../../extensions/internal/outputs-form-trigger";
+import { SandboxOperation } from "./sandbox-operation";
 
 const AntDatePicker: any = DatePicker;
 
@@ -890,8 +893,22 @@ export default {
         {
             name: "ETool",
             description: "EToolDescription",
-            icon: PythonSVG,
+            icon: CodeSVG,
             actions: [
+                {
+                    name: "Sandbox",
+                    description: "SandboxDescription",
+                    operator: "@sandbox/execute",
+                    icon: SandboxSVG, 
+                    outputs:[{
+                        key: ".return_value",
+                        name: "return_value",
+                        type: "any",
+                    }],
+                    components: {
+                        Config:SandboxOperation
+                    }
+                },
                 {
                     name: "EAToolPy3",
                     description: "EAToolPy3Description",
@@ -1030,12 +1047,12 @@ export default {
                                         </FormItem>
 
                                         {platform === 'operator' && (
-                                            <FormItem label="运行方式" name="mode">
+                                            <FormItem label={t('operating.mode')} name="mode">
                                                 <Select
-                                                    placeholder="请选择"
+                                                    placeholder={t('select.placeholder')}
                                                     options={[
-                                                    { label: "同步", value: "sync" },
-                                                    { label: "异步", value: "async" },
+                                                    { label: t('synchronous'), value: "sync" },
+                                                    { label: t('asynchronous'), value: "async" },
                                                     ]}
                                                 />
                                             </FormItem>

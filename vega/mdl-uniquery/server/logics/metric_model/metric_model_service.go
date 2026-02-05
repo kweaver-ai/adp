@@ -520,8 +520,9 @@ func (mms *metricModelService) eval(ctx context.Context, query interfaces.Metric
 				_, calendarExists := interfaces.CALENDAR_INTERVALS[*query.StepStr]
 				// 请求步长不在日历步长集中，不合法
 				if !calendarExists {
+					// sql指标模型只支持日历步长，不支持固定步长
 					return resp, rest.NewHTTPError(ctx, http.StatusBadRequest, uerrors.Uniquery_MetricModel_InvalidParameter_Step).
-						WithErrorDetails(fmt.Sprintf("expect steps is one of {%v}, actaul is %s",
+						WithErrorDetails(fmt.Sprintf("sql atomic metric only support calendar steps, expect steps is one of {%v}, actaul is %s",
 							[]string{"minute", "hour", "day", "week", "month", "quarter", "year"}, *query.StepStr))
 				}
 			}

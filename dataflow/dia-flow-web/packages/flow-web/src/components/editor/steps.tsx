@@ -1,5 +1,5 @@
 import { FC, Fragment, ReactElement, useContext } from "react";
-import { IStep, LoopOperator, BranchesOperator } from "./expr";
+import { IStep, LoopOperator, BranchesOperator, ParallelOperator, BranchType } from "./expr";
 import { Step } from "./step";
 import { StepsContext } from "./steps-context";
 import { AddButton } from "./add-button";
@@ -34,6 +34,7 @@ export const Steps: FC<{
                 <AddButton
                     onAddStep={onAddStep.bind(null, 0)}
                     onAddBranch={onAddBranch.bind(null, 0)}
+                    onAddParallel={onAddBranch.bind(null, 0, BranchType.Parallel)}
                     onAddLoop={onAddLoop.bind(null, 0)}
                     onPasteStep={onPasteStep.bind(null, 0)}
                 />
@@ -65,6 +66,7 @@ export const Steps: FC<{
                                         null,
                                         index + 1
                                     )}
+                                    onAddParallel={onAddBranch.bind(null, index + 1, BranchType.Parallel)}
                                     onAddLoop={onAddLoop.bind(null, index + 1)}
                                     onPasteStep={onPasteStep.bind(null, index + 1)}
                                 />
@@ -82,6 +84,7 @@ export const Steps: FC<{
                                 null,
                                 steps.length + 1
                             )}
+                            onAddParallel={onAddBranch.bind(null, steps.length + 1, BranchType.Parallel)}
                             onAddLoop={onAddLoop.bind(null, steps.length + 1)}
                             onPasteStep={onPasteStep.bind(null, steps.length + 1)}
                         />
@@ -195,12 +198,12 @@ export const Steps: FC<{
         }, 100);
     }
 
-    function onAddBranch(index: number) {
+    function onAddBranch(index: number, type?: string) {
         onChange([
             ...steps.slice(0, index),
             {
                 id: getId(),
-                operator: BranchesOperator,
+                operator: type === BranchType.Parallel ? ParallelOperator : BranchesOperator,
                 branches: [
                     {
                         id: getId(),

@@ -905,7 +905,7 @@ func (dvs *dataViewService) queryByDSL(ctx context.Context, query interfaces.Vie
 	}
 	dataBatch, err := dvs.vgAccess.FetchDataNoUnmarshal(ctx, fetchParams)
 	if err != nil {
-		return nil, 0, rest.NewHTTPError(ctx, http.StatusInternalServerError, rest.PublicError_InternalServerError).
+		return nil, 0, rest.NewHTTPError(ctx, http.StatusInternalServerError, uerrors.Uniquery_DataView_InternalError_FetchDataFromVegaFailed).
 			WithErrorDetails(err.Error())
 	}
 
@@ -1001,7 +1001,7 @@ func (dvs *dataViewService) queryBySQL(ctx context.Context, query interfaces.Vie
 			UseSearchAfter:     false,
 		})
 		if err != nil {
-			return nil, 0, rest.NewHTTPError(ctx, http.StatusInternalServerError, rest.PublicError_InternalServerError).
+			return nil, 0, rest.NewHTTPError(ctx, http.StatusInternalServerError, uerrors.Uniquery_DataView_InternalError_FetchDataFromVegaFailed).
 				WithErrorDetails(err.Error())
 		}
 
@@ -1060,7 +1060,7 @@ func (dvs *dataViewService) queryBySQL(ctx context.Context, query interfaces.Vie
 	}
 	dataBatch, err := dvs.vgAccess.FetchDataNoUnmarshal(ctx, fetchParams)
 	if err != nil {
-		return nil, 0, rest.NewHTTPError(ctx, http.StatusInternalServerError, rest.PublicError_InternalServerError).
+		return nil, 0, rest.NewHTTPError(ctx, http.StatusInternalServerError, uerrors.Uniquery_DataView_InternalError_FetchDataFromVegaFailed).
 			WithErrorDetails(err.Error())
 	}
 

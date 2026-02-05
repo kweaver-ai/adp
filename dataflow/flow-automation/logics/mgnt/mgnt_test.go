@@ -8,20 +8,20 @@ import (
 
 	. "github.com/agiledragon/gomonkey/v2"
 	"github.com/go-playground/assert/v2"
-	"go.uber.org/mock/gomock"
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/common"
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/drivenadapters"
 	aerr "github.com/kweaver-ai/adp/autoflow/flow-automation/errors"
+	ierr "github.com/kweaver-ai/adp/autoflow/flow-automation/libs/go/errors"
+	i18n "github.com/kweaver-ai/adp/autoflow/flow-automation/libs/go/i18n"
+	commonLog "github.com/kweaver-ai/adp/autoflow/flow-automation/libs/go/log"
+	traceCommon "github.com/kweaver-ai/adp/autoflow/flow-automation/libs/go/telemetry/common"
+	traceLog "github.com/kweaver-ai/adp/autoflow/flow-automation/libs/go/telemetry/log"
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/pkg/entity"
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/pkg/mod"
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/tests/mock_drivenadapters"
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/tests/mock_logics/mock_perm"
-	ierr "github.com/kweaver-ai/adp/autoflow/ide-go-lib/errors"
-	i18n "github.com/kweaver-ai/adp/autoflow/ide-go-lib/i18n"
-	commonLog "github.com/kweaver-ai/adp/autoflow/ide-go-lib/log"
-	traceCommon "github.com/kweaver-ai/adp/autoflow/ide-go-lib/telemetry/common"
-	traceLog "github.com/kweaver-ai/adp/autoflow/ide-go-lib/telemetry/log"
 	. "github.com/smartystreets/goconvey/convey"
+	"go.uber.org/mock/gomock"
 )
 
 const (

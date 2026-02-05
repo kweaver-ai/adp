@@ -10,15 +10,15 @@ import (
 
 	. "github.com/agiledragon/gomonkey/v2"
 	"github.com/go-playground/assert/v2"
-	"go.uber.org/mock/gomock"
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/common"
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/drivenadapters"
+	ierr "github.com/kweaver-ai/adp/autoflow/flow-automation/libs/go/errors"
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/logics/perm"
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/pkg/entity"
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/utils/ptr"
-	ierr "github.com/kweaver-ai/adp/autoflow/ide-go-lib/errors"
 	. "github.com/smartystreets/goconvey/convey"
 	"go.mongodb.org/mongo-driver/mongo"
+	"go.uber.org/mock/gomock"
 )
 
 func TestCreateComboOperator(t *testing.T) {

@@ -220,7 +220,7 @@ func (vga *vegaGatewayAccess) setSpanAttributes(span trace.Span, url string, met
 func (vga *vegaGatewayAccess) handleResponse(ctx context.Context, span trace.Span, respCode int, result []byte, err error) ([]byte, error) {
 	if err != nil {
 		vga.logError(ctx, span, respCode, "Http Post Failed", err)
-		return nil, fmt.Errorf("fetch data from vega gateway failed: %v", err)
+		return nil, fmt.Errorf("query data from vega gateway failed: %v", err)
 	}
 
 	if respCode != http.StatusOK {
@@ -239,28 +239,19 @@ func (vga *vegaGatewayAccess) handleResponse(ctx context.Context, span trace.Spa
 
 // handleErrorResponse 处理错误响应
 func (vga *vegaGatewayAccess) handleErrorResponse(ctx context.Context, span trace.Span, respCode int, result []byte) ([]byte, error) {
-	var vegaError VegaError
+	var vegaError *VegaError
 	if err := sonic.Unmarshal(result, &vegaError); err != nil {
 		vga.logError(ctx, span, respCode, "Unmalshal VegaError failed", err)
 		return nil, err
 	}
 
-	httpErr := &rest.HTTPError{
-		HTTPCode: respCode,
-		BaseError: rest.BaseError{
-			ErrorCode:    vegaError.Code,
-			Description:  vegaError.Description,
-			ErrorDetails: vegaError.Detail,
-		},
-	}
-
-	vga.logError(ctx, span, respCode, "Http status is not 200", httpErr)
-	return nil, fmt.Errorf("fetch data from vega gateway Error: %v", httpErr.Error())
+	vga.logError(ctx, span, respCode, "Http status is not 200", vegaError)
+	return nil, fmt.Errorf("query data from vega gateway error: %v", vegaError.Error())
 }
 
 // logError 统一错误日志记录
 func (vga *vegaGatewayAccess) logError(ctx context.Context, span trace.Span, respCode int, errorType string, err error) {
-	logger.Errorf("fetch data from vega gateway failed: %v", err)
+	logger.Errorf("query data from vega gateway failed: %v", err)
 	o11y.AddHttpAttrs4Error(span, respCode, "InternalError", errorType)
-	o11y.Error(ctx, fmt.Sprintf("fetch data from vega gateway failed: %v", err))
+	o11y.Error(ctx, fmt.Sprintf("query data from vega gateway failed: %v", err))
 }

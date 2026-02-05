@@ -5,8 +5,10 @@ import (
 	"encoding/json"
 	"strings"
 
-	otelHttp "github.com/kweaver-ai/adp/autoflow/ide-go-lib/http"
+	otelHttp "github.com/kweaver-ai/adp/autoflow/flow-automation/libs/go/http"
 )
+
+//go:generate mockgen -package mock_httpclient -source ../drivenadapters/http_client2.go -destination ../tests/mock_httpclient/http_client2_mock.go
 
 type HTTPClient2 interface {
 	Get(ctx context.Context, url string, headers map[string]string, respParam any) (respCode int, err error)

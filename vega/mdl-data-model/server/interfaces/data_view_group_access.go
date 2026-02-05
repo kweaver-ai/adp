@@ -11,12 +11,14 @@ type DataViewGroup struct {
 	GroupName     string `json:"name"`
 	CreateTime    int64  `json:"create_time"`
 	UpdateTime    int64  `json:"update_time"`
+	DeleteTime    int64  `json:"delete_time"`
 	Builtin       bool   `json:"builtin"`
 	DataViewCount int    `json:"data_view_count"`
 }
 
 type ListViewGroupQueryParams struct {
-	Builtin []bool
+	Builtin        []bool
+	IncludeDeleted bool
 	PaginationQueryParameters
 }
 

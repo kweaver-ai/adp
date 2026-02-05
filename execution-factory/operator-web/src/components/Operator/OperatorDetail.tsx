@@ -17,6 +17,7 @@ export default function OperatorDetail() {
   const action = searchParams.get('action') || '';
   const [operatorInfo, setOperatorInfo] = useState<any>({});
   const [permissionCheckInfo, setIsPermissionCheckInfo] = useState<Array<PermConfigTypeEnum>>();
+  const [parsedInputs, setParsedInputs] = useState<any>([]); // 解析后的输入参数
 
   useEffect(() => {
     fetchInfo({});
@@ -65,13 +66,9 @@ export default function OperatorDetail() {
       <Layout style={{ padding: '16px', background: '#f5f5f5' }}>
         {/* 右侧内容区域 */}
         <Content style={{ background: 'white', borderRadius: '8px' }}>
-          <OperatorInfo selectedTool={operatorInfo} />
+          <OperatorInfo selectedTool={operatorInfo} onUpdateInputs={setParsedInputs} />
           {permissionCheckInfo?.includes(PermConfigTypeEnum.Execute) && (
-            <DebugResult
-              selectedTool={operatorInfo}
-              type={OperatorTypeEnum.Operator}
-              permissionCheckInfo={permissionCheckInfo}
-            />
+            <DebugResult selectedTool={operatorInfo} type={OperatorTypeEnum.Operator} parsedInputs={parsedInputs} />
           )}
         </Content>
       </Layout>

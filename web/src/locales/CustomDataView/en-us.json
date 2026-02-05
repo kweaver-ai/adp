@@ -9,7 +9,7 @@
     "createCustomDataView": "Create Custom Data View",
     "editCustomDataView": "Edit Custom Data View",
     "dataViewInfo": "View Information",
-    "idTip": "ID is the unique identifier of the metric model, supports custom input. If not customized, the system will automatically generate it. Please note that once the metric model is created, the ID cannot be changed",
+    "idTip": "ID is a unique identifier that supports custom input. If no custom input is provided, the system will automatically generate one. Please note that once created, the ID cannot be changed.",
     "noGroupsFound": "No Groups",
     "confirmChangeQueryType": "Are you sure you want to change the query type?",
     "confirmChangeQueryTypeContent": "If the current view already has configuration content, it will be reconfigured after switching. Please confirm the operation.",
@@ -81,7 +81,8 @@
       "sameTypeFieldsOnly": "You can only select fields with the same data type for merging",
       "mergeOutputType": "Merge Output Type",
       "noMergeRules": "No Merge Rules",
-      "fieldTypeConflictTip": "Fields with the same name but different types cause view data query errors, so they are excluded"
+      "fieldTypeConflictTip": "Fields with the same name but different types cause view data query errors, so they are excluded",
+      "fieldTypeInconsistent": "Field type inconsistent"
     },
     "FieldSQL": {
       "enterSQLStatement": "Please enter SQL statement",

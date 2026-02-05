@@ -103,8 +103,14 @@ func buildDSL(ctx context.Context, query interfaces.ViewQueryInterface, view *in
 						WithErrorDetails(fmt.Sprintf("The sort field '%s' is binary type, do not support sorting", sp.Field))
 				}
 
-				if sortField.Type == dtype.DataType_Text {
-					sortFieldName = sortFieldName + "." + dtype.KEYWORD_SUFFIX
+				// text类型的字段需要看其下有没有配置keyword索引，配了就用 xxx.keyword 进行排序。否则不纳入排序
+				// string类型的字段直接支持排序，若其有全文索引，则在字段的 keyword 下有 text
+				if cond.IsTextType(sortField) {
+					if cond.HasFeature(sortField, cond.FieldFeatureType_Keyword) {
+						sortFieldName = sortFieldName + "." + dtype.KEYWORD_SUFFIX
+					} else {
+						continue
+					}
 				}
 			}
 

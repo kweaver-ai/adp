@@ -327,7 +327,7 @@ public class TaskServiceImpl implements TaskService {
         }catch (AiShuException e){
             throw e;
         }catch (Exception e){
-            throw new AiShuException(ErrorCodeEnum.OpenLooKengError,e.getMessage(),Message.MESSAGE_OPENLOOKENG_ERROR);
+            throw new AiShuException(ErrorCodeEnum.ETrinoError,e.getMessage(),Message.MESSAGE_ETRINO_SOLUTION);
         }
         stopWatch.stop();
 
@@ -343,7 +343,15 @@ public class TaskServiceImpl implements TaskService {
     public JsonNode getTableJsonNode(String urlOpen, String user){
         StopWatch stopWatch = new StopWatch();
         stopWatch.start();
-        HttpResInfo result = HttpOpenUtils.sendGet(urlOpen, user);
+        HttpResInfo result;
+        try{
+            result = HttpOpenUtils.sendGet(urlOpen, user);
+        }catch (AiShuException e){
+            throw e;
+        }catch (Exception e){
+            throw new AiShuException(ErrorCodeEnum.ETrinoError,e.getMessage(),Message.MESSAGE_ETRINO_SOLUTION);
+        }
+
         if(result==null){
             throw new AiShuException(ErrorCodeEnum.OpenLooKengError,"计算引擎异常",Message.MESSAGE_OPENLOOKENG_ERROR);
         }
@@ -828,7 +836,7 @@ public class TaskServiceImpl implements TaskService {
         try{
             result = HttpOpenUtils.sendGet(urlOpen, Constants.UTF8);
         }catch (Exception e){
-            throw new AiShuException(ErrorCodeEnum.OpenLooKengError,e.getMessage(),"请检查OpenLooKeng配置及服务状态");
+            throw new AiShuException(ErrorCodeEnum.ETrinoError,e.getMessage(),Message.MESSAGE_ETRINO_SOLUTION);
         }
         stopWatch.stop();
         log.info("Http get 请求时长为：{}ms", stopWatch.getTotal(TimeUnit.MILLISECONDS));
@@ -872,7 +880,7 @@ public class TaskServiceImpl implements TaskService {
         try{
             result = HttpOpenUtils.sendPostWithParams(urlOpen, type, statement, user);
         }catch (Exception e){
-            throw new AiShuException(ErrorCodeEnum.OpenLooKengError,e.getMessage(),Message.MESSAGE_OPENLOOKENG_ERROR);
+            throw new AiShuException(ErrorCodeEnum.ETrinoError,e.getMessage(),Message.MESSAGE_ETRINO_SOLUTION);
         }
         stopWatch.stop();
 
@@ -901,7 +909,7 @@ public class TaskServiceImpl implements TaskService {
         }catch (AiShuException e){
             throw e;
         }catch (Exception e){
-            throw new AiShuException(ErrorCodeEnum.OpenLooKengError,e.getMessage(),Message.MESSAGE_OPENLOOKENG_ERROR);
+            throw new AiShuException(ErrorCodeEnum.ETrinoError,e.getMessage(),Message.MESSAGE_ETRINO_SOLUTION);
         }
         stopWatch.stop();
 
@@ -925,7 +933,7 @@ public class TaskServiceImpl implements TaskService {
         }catch (AiShuException e){
             throw e;
         }catch (Exception e){
-            throw new AiShuException(ErrorCodeEnum.OpenLooKengError,e.getMessage(),Message.MESSAGE_OPENLOOKENG_ERROR);
+            throw new AiShuException(ErrorCodeEnum.ETrinoError,e.getMessage(),Message.MESSAGE_ETRINO_SOLUTION);
         }
         stopWatch.stop();
 

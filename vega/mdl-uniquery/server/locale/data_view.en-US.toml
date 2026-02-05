@@ -153,6 +153,11 @@ Description = "Delete Point In Time Failed"
 Solution = "Please try again. If the error occurs again, please submit the work order or contact technical support."
 ErrorLink = "None"
 
+[Uniquery.DataView.InternalError.FetchDataFromVegaFailed]
+Description = "Fetch Data From Vega Gateway Pro Or Data Connection Service Failed"
+Solution = "Please try again. If the error occurs again, please submit the work order or contact technical support."
+ErrorLink = "None"
+
 [Uniquery.DataView.InternalError.GetDataViewByIDFailed]
 Description = "Get Data View By ID Failed"
 Solution = "Please try this operation again, if the error occurs again, submit the work order or contact technical support engineers."
@@ -191,6 +196,11 @@ ErrorLink = "None"
 [Uniquery.DataView.InternalError.GetTotalFailed]
 Description = "Get Total Failed"
 Solution = "Please try again. If the error occurs again, please submit the work order or contact technical support."
+ErrorLink = "None"
+
+[Uniquery.DataView.InternalError.InvalidReferenceView]
+Description = "Invalid Reference Atomic View"
+Solution = "Please check whether the reference atomic view is valid."
 ErrorLink = "None"
 
 [Uniquery.DataView.InternalError.LoadIndexShardsFailed]

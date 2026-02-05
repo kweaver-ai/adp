@@ -8,7 +8,7 @@ import (
 	"github.com/go-playground/assert/v2"
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/common"
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/errors"
-	commonLog "github.com/kweaver-ai/adp/autoflow/ide-go-lib/log"
+	commonLog "github.com/kweaver-ai/adp/autoflow/flow-automation/libs/go/log"
 	. "github.com/smartystreets/goconvey/convey"
 	"go.uber.org/mock/gomock"
 )

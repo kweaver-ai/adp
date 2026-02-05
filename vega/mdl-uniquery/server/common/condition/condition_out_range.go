@@ -32,10 +32,15 @@ func NewOutRangeCond(ctx context.Context, cfg *CondCfg, fieldsMap map[string]*Vi
 		return nil, fmt.Errorf("condition [out_range] right value should be of the same type")
 	}
 
+	fName, err := GetQueryField(ctx, cfg.Name, fieldsMap, FieldFeatureType_Raw)
+	if err != nil {
+		return nil, fmt.Errorf("condition [out_range], %v", err)
+	}
+
 	return &OutRangeCond{
 		mCfg:             cfg,
 		mValue:           val,
-		mFilterFieldName: getFilterFieldName(ctx, cfg.Name, fieldsMap, false),
+		mFilterFieldName: fName,
 	}, nil
 }
 

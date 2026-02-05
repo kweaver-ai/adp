@@ -23,9 +23,19 @@ func NewNotContainCond(ctx context.Context, cfg *CondCfg, fieldsMap map[string]*
 		return nil, fmt.Errorf("condition [not_contain] does not support value_from type '%s'", cfg.ValueFrom)
 	}
 
+	featureType := FieldFeatureType_Raw
+	if IsTextType(fieldsMap[cfg.Name]) {
+		featureType = FieldFeatureType_Keyword
+	}
+
+	fName, err := GetQueryField(ctx, cfg.Name, fieldsMap, featureType)
+	if err != nil {
+		return nil, fmt.Errorf("condition [not_contain], %v", err)
+	}
+
 	notContainCond := &NotContainCond{
 		mCfg:             cfg,
-		mFilterFieldName: getFilterFieldName(ctx, cfg.Name, fieldsMap, false),
+		mFilterFieldName: fName,
 	}
 
 	if common.IsSlice(cfg.Value) {

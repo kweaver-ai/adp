@@ -330,7 +330,7 @@ func validateObjectSearchRequest(ctx context.Context, query *interfaces.ObjectQu
 func validateActionQuery(ctx context.Context, query *interfaces.ActionQuery) error {
 
 	// 唯一标识非空
-	if len(query.InstanceIdentity) == 0 {
+	if len(query.InstanceIdentities) == 0 {
 		return rest.NewHTTPError(ctx, http.StatusBadRequest, oerrors.OntologyQuery_ActionType_InvalidParameter).
 			WithErrorDetails("行动查询的唯一标识不能为空")
 	}
@@ -341,7 +341,7 @@ func validateActionQuery(ctx context.Context, query *interfaces.ActionQuery) err
 func validateObjectPropertyValueQuery(ctx context.Context, query *interfaces.ObjectPropertyValueQuery) error {
 
 	// 唯一标识非空
-	if len(query.InstanceIdentity) == 0 {
+	if len(query.InstanceIdentities) == 0 {
 		return rest.NewHTTPError(ctx, http.StatusBadRequest, oerrors.OntologyQuery_ObjectType_InvalidParameter).
 			WithErrorDetails("属性查询的唯一标识不能为空")
 	}

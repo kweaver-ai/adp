@@ -15,9 +15,9 @@ import (
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/common"
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/errors"
 	ierrors "github.com/kweaver-ai/adp/autoflow/flow-automation/errors"
+	otelHttp "github.com/kweaver-ai/adp/autoflow/flow-automation/libs/go/http"
+	traceLog "github.com/kweaver-ai/adp/autoflow/flow-automation/libs/go/telemetry/log"
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/utils"
-	otelHttp "github.com/kweaver-ai/adp/autoflow/ide-go-lib/http"
-	traceLog "github.com/kweaver-ai/adp/autoflow/ide-go-lib/telemetry/log"
 )
 
 //go:generate mockgen -package mock_drivenadapters -source ../drivenadapters/doc.go -destination ../tests/mock_drivenadapters/doc_mock.go

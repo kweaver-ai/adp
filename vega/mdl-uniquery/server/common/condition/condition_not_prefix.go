@@ -29,15 +29,47 @@ func NewNotPrefixCond(ctx context.Context, cfg *CondCfg, fieldsMap map[string]*V
 		return nil, fmt.Errorf("condition [not_prefix] right value is not a string value: %v", cfg.Value)
 	}
 
+	featureType := FieldFeatureType_Raw
+	if IsTextType(fieldsMap[cfg.Name]) {
+		featureType = FieldFeatureType_Keyword
+	}
+
+	fName, err := GetQueryField(ctx, cfg.Name, fieldsMap, featureType)
+	if err != nil {
+		return nil, fmt.Errorf("condition [not_prefix], %v", err)
+	}
+
 	return &NotPrefixCond{
 		mCfg:             cfg,
 		mValue:           val,
-		mFilterFieldName: getFilterFieldName(ctx, cfg.Name, fieldsMap, false),
+		mFilterFieldName: fName,
 	}, nil
 }
 
 func (cond *NotPrefixCond) Convert(ctx context.Context) (string, error) {
-	return "", nil
+	v := cond.mCfg.Value
+	vStr, ok := v.(string)
+	if ok {
+		v = fmt.Sprintf("%q", vStr)
+	}
+
+	dslStr := fmt.Sprintf(`
+	{
+		"bool": {
+			"must": {
+				"exists": {
+					"field": "%s"
+				}
+			},
+			"must_not": {
+				"prefix": {
+					"%s": %v
+				}
+			}
+		}
+	}`, cond.mFilterFieldName, cond.mFilterFieldName, v)
+
+	return dslStr, nil
 }
 
 func (cond *NotPrefixCond) Convert2SQL(ctx context.Context) (string, error) {

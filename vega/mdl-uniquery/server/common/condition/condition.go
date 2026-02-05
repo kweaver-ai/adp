@@ -154,48 +154,155 @@ func NewCondWithOpr(ctx context.Context, cfg *CondCfg, vType string, fieldsMap m
 	return cond, needScore, nil
 }
 
-// 获取过滤条件的字段，name是过滤条件配置的字段，对应name，需要将 name 转为 original_name
-// fieldsMap 的key是name
-func getFilterFieldName(ctx context.Context, name string, fieldsMap map[string]*ViewField, isFullTextQuery bool) string {
+// 获取过滤条件的字段，name是过滤条件配置的字段，需要将 name 转为 original_name
+func GetQueryField(ctx context.Context, name string, fieldsMap map[string]*ViewField, featureType FieldFeatureType) (string, error) {
 	// 全文检索允许字段为 "*"
 	if name == AllField {
-		return name
+		return name, nil
 	}
-
-	// 如果字段为 __id, 转化为 open search内置字段 _id
-	// 2025.9.1更新，经过管道的数据里都是包含__id 字段的
-	// if name == MetaField_ID {
-	// 	return OS_MetaField_ID
-	// }
-
-	// 如果是脱敏字段，字段添加后缀 _desensitize
-	desensitizeFieldName := name + DESENSITIZE_FIELD_SUFFIX
 
 	fieldInfo, ok1 := fieldsMap[name]
-	desensitizeFieldInfo, ok2 := fieldsMap[desensitizeFieldName]
-	if ok1 && ok2 {
-		// 脱敏字段
-		// name = desensitizeFieldName
-		name = desensitizeFieldInfo.OriginalName
-	} else if ok1 {
-		// 非脱敏字段
-		name = fieldInfo.OriginalName
+	if ok1 {
+		// 无特征，直接用原字段
+		if featureType == FieldFeatureType_Raw {
+			return fieldInfo.OriginalName, nil
+		}
+
+		refName, err := fieldInfo.getTargetField(ctx, featureType)
+		if err != nil {
+			return "", err
+		}
+		refFieldInfo, ok2 := fieldsMap[refName]
+		if ok2 {
+			return refFieldInfo.OriginalName, nil
+		} else {
+			// 原生特征，使用的是original_name.sub_field_name 比如 original_name.keyword,所以这里返回refName
+			return refName, nil
+		}
+	} else {
+		return name, nil
+	}
+}
+
+// GetTargetField 获取特定查询意图下的实际字段名
+func (v *ViewField) getTargetField(ctx context.Context, intent FieldFeatureType) (string, error) {
+	// 1. 优先级：优先寻找该意图下已启用的(Enabled)特征
+	for _, f := range v.Features {
+		if f.FeatureType == intent && f.IsDefault {
+			return f.RefField, nil
+		}
 	}
 
-	// 从 ctx 获取查询类型
+	// 2. 兜底：若未配置特征但逻辑类型匹配，则直接使用字段名（处理存量或简单数据）
+	if TypeToFeatureType(v.Type) == intent {
+		return v.Name, nil
+	}
+
+	// 全文检索情况下，text 类型的字段不需要添加 keyword 后缀
+	// 精确查询情况下，text 类型的字段并且有 keyword 特征，给字段名加上后缀 .keyword
+	// 只有查询类型为 DSL 或 IndexBase 才能加 keyword 后缀
+	// if IsTermLevelQuery(ctx, intent) &&
+	// 	IsTextType(v) && HasFeature(v, FieldFeatureType_Keyword) {
+	// 	return wrapKeyWordFieldName(v.Name)
+	// }
+	// 3. 再次兜底，避免查询报错
 	var queryType string
 	if ctx.Value(CtxKey_QueryType) != nil {
 		queryType = ctx.Value(CtxKey_QueryType).(string)
 	}
 
-	// 全文检索情况下，text 类型的字段不需要添加 keyword 后缀
-	// 精确查询情况下，text 类型的字段给字段名加上后缀 .keyword
-	// 只有查询类型为 DSL 才能加 keyword 后缀
-	if (queryType == QueryType_DSL || queryType == QueryType_IndexBase) && !isFullTextQuery && fieldInfo != nil && fieldInfo.Type == dtype.DataType_Text {
-		name = wrapKeyWordFieldName(name)
+	switch queryType {
+	case QueryType_DSL, QueryType_IndexBase:
+		if IsTermLevelQuery(queryType, intent) && IsTextType(v) {
+			return wrapKeyWordFieldName(v.Name), nil
+		}
+	case QueryType_SQL:
+		return v.Name, nil
+	default:
+		return "", fmt.Errorf("field '%s' with type '%s' does not have feature type '%s'", v.Name, v.Type, intent)
 	}
 
-	return name
+	return "", fmt.Errorf("field '%s' with type '%s' does not have feature type '%s'", v.Name, v.Type, intent)
+}
+
+// 判断是否是term-level查询
+func IsTermLevelQuery(queryType string, intent FieldFeatureType) bool {
+	return (queryType == QueryType_DSL || queryType == QueryType_IndexBase) && intent == FieldFeatureType_Keyword
+}
+
+// 将类型转换为对应的特征
+func TypeToFeatureType(dataType string) FieldFeatureType {
+	switch dataType {
+	case dtype.DataType_String:
+		return FieldFeatureType_Keyword
+	case dtype.DataType_Text:
+		return FieldFeatureType_Fulltext
+	case dtype.DataType_Vector:
+		return FieldFeatureType_Vector
+	default:
+		return ""
+	}
+}
+
+// 获取过滤条件的字段，name是过滤条件配置的字段，对应name，需要将 name 转为 original_name
+// fieldsMap 的key是name
+// func getFilterFieldName(ctx context.Context, name string, fieldsMap map[string]*ViewField, isFullTextQuery bool) string {
+// 	// 全文检索允许字段为 "*"
+// 	if name == AllField {
+// 		return name
+// 	}
+
+// 	// 如果字段为 __id, 转化为 open search内置字段 _id
+// 	// 2025.9.1更新，经过管道的数据里都是包含__id 字段的
+// 	// if name == MetaField_ID {
+// 	// 	return OS_MetaField_ID
+// 	// }
+
+// 	// 如果是脱敏字段，字段添加后缀 _desensitize
+// 	desensitizeFieldName := name + DESENSITIZE_FIELD_SUFFIX
+
+// 	fieldInfo, ok1 := fieldsMap[name]
+// 	desensitizeFieldInfo, ok2 := fieldsMap[desensitizeFieldName]
+// 	if ok1 && ok2 {
+// 		// 脱敏字段
+// 		// name = desensitizeFieldName
+// 		name = desensitizeFieldInfo.OriginalName
+// 	} else if ok1 {
+// 		// 非脱敏字段
+// 		name = fieldInfo.OriginalName
+// 	}
+
+// 	// 从 ctx 获取查询类型
+// 	var queryType string
+// 	if ctx.Value(CtxKey_QueryType) != nil {
+// 		queryType = ctx.Value(CtxKey_QueryType).(string)
+// 	}
+
+// 	// 全文检索情况下，text 类型的字段不需要添加 keyword 后缀
+// 	// 精确查询情况下，text 类型的字段并且有 keyword 特征，给字段名加上后缀 .keyword
+// 	// 只有查询类型为 DSL 或 IndexBase 才能加 keyword 后缀
+// 	if queryType == QueryType_DSL || queryType == QueryType_IndexBase {
+// 		if !isFullTextQuery && IsTextType(fieldInfo) && HasFeature(fieldInfo, FieldFeatureType_Keyword) {
+// 			name = wrapKeyWordFieldName(name)
+// 		}
+// 	}
+
+// 	return name
+// }
+
+// 检查字段是否为 text 类型
+func IsTextType(fieldInfo *ViewField) bool {
+	return fieldInfo != nil && fieldInfo.Type == dtype.DataType_Text
+}
+
+// 检查字段特征是否包含指定特征
+func HasFeature(fieldInfo *ViewField, feature FieldFeatureType) bool {
+	for _, f := range fieldInfo.Features {
+		if f.FeatureType == feature {
+			return true
+		}
+	}
+	return false
 }
 
 // 转换成 keyword

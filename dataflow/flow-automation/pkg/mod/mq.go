@@ -4,9 +4,9 @@ import (
 	"context"
 	"sync"
 
+	commonLog "github.com/kweaver-ai/adp/autoflow/flow-automation/libs/go/log"
+	cmq "github.com/kweaver-ai/adp/autoflow/flow-automation/libs/go/mq"
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/pkg/entity"
-	commonLog "github.com/kweaver-ai/adp/autoflow/ide-go-lib/log"
-	cmq "github.com/kweaver-ai/adp/autoflow/ide-go-lib/mq"
 )
 
 // MQHandler interface

@@ -14,11 +14,11 @@ import (
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/common"
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/drivenadapters"
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/driveradapters/middleware"
+	ierr "github.com/kweaver-ai/adp/autoflow/flow-automation/libs/go/errors"
+	i18n "github.com/kweaver-ai/adp/autoflow/flow-automation/libs/go/i18n"
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/logics/observability"
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/tests/mock_drivenadapters"
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/tests/mock_logics/mock_observability"
-	ierr "github.com/kweaver-ai/adp/autoflow/ide-go-lib/errors"
-	i18n "github.com/kweaver-ai/adp/autoflow/ide-go-lib/i18n"
 	. "github.com/smartystreets/goconvey/convey"
 	"go.uber.org/mock/gomock"
 )

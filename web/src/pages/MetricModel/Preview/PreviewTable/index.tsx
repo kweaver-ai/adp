@@ -34,13 +34,14 @@ const PreviewTable = (props: any) => {
       const defaultGrowth = [
         { key: 'growth_values', label: intl.get('MetricModel.growth') },
         { key: 'growth_rates', label: intl.get('MetricModel.growthRate') },
+        { key: 'proportions', label: intl.get('MetricModel.proportion') },
       ];
       forEach(defaultGrowth, (item: { key: string; label: string }) => {
         const { key, label } = item;
         expandColumns.push({
           title: label,
           dataIndex: key,
-          render: (value: any) => value || '--',
+          render: (value: any) => (value !== null && value !== undefined ? value : '--'),
         });
       });
     }
@@ -60,7 +61,12 @@ const PreviewTable = (props: any) => {
         return { rowSpan: data.rowSpan, colSpan: 1 };
       },
     },
-    ...expandColumns,
+    {
+      title: intl.get('MetricModel.dimension'),
+      dataIndex: 'labelsKV',
+      width: 200,
+      render: (text: string[]) => text?.join(' | ') || '--',
+    },
     {
       title: intl.get('MetricModel.time'),
       dataIndex: 'time',
@@ -73,6 +79,7 @@ const PreviewTable = (props: any) => {
       width: 100,
       render: (value: any) => value || null,
     },
+    ...expandColumns,
   ];
 
   return (

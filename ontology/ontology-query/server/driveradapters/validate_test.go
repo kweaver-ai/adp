@@ -828,7 +828,7 @@ func Test_validateActionQuery(t *testing.T) {
 
 		Convey("成功 - 有效请求", func() {
 			query := &interfaces.ActionQuery{
-				InstanceIdentity: []map[string]any{
+				InstanceIdentities: []map[string]any{
 					{"id": "1"},
 				},
 			}
@@ -838,7 +838,7 @@ func Test_validateActionQuery(t *testing.T) {
 
 		Convey("失败 - InstanceIdentity为空", func() {
 			query := &interfaces.ActionQuery{
-				InstanceIdentity: []map[string]any{},
+				InstanceIdentities: []map[string]any{},
 			}
 			err := validateActionQuery(ctx, query)
 			So(err, ShouldNotBeNil)
@@ -854,7 +854,7 @@ func Test_validateObjectPropertyValueQuery(t *testing.T) {
 
 		Convey("成功 - 有效请求", func() {
 			query := &interfaces.ObjectPropertyValueQuery{
-				InstanceIdentity: []map[string]any{
+				InstanceIdentities: []map[string]any{
 					{"id": "1"},
 				},
 				Properties: []string{"prop1"},
@@ -865,8 +865,8 @@ func Test_validateObjectPropertyValueQuery(t *testing.T) {
 
 		Convey("失败 - InstanceIdentity为空", func() {
 			query := &interfaces.ObjectPropertyValueQuery{
-				InstanceIdentity: []map[string]any{},
-				Properties:       []string{"prop1"},
+				InstanceIdentities: []map[string]any{},
+				Properties:         []string{"prop1"},
 			}
 			err := validateObjectPropertyValueQuery(ctx, query)
 			So(err, ShouldNotBeNil)
@@ -876,7 +876,7 @@ func Test_validateObjectPropertyValueQuery(t *testing.T) {
 
 		Convey("失败 - Properties为空", func() {
 			query := &interfaces.ObjectPropertyValueQuery{
-				InstanceIdentity: []map[string]any{
+				InstanceIdentities: []map[string]any{
 					{"id": "1"},
 				},
 				Properties: []string{},

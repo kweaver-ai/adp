@@ -10,12 +10,12 @@ import (
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/common"
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/drivenadapters"
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/errors"
+	otelHttp "github.com/kweaver-ai/adp/autoflow/flow-automation/libs/go/http"
+	commonLog "github.com/kweaver-ai/adp/autoflow/flow-automation/libs/go/log"
+	cmq "github.com/kweaver-ai/adp/autoflow/flow-automation/libs/go/mq"
+	traceLog "github.com/kweaver-ai/adp/autoflow/flow-automation/libs/go/telemetry/log"
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/pkg/entity"
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/pkg/mod"
-	otelHttp "github.com/kweaver-ai/adp/autoflow/ide-go-lib/http"
-	commonLog "github.com/kweaver-ai/adp/autoflow/ide-go-lib/log"
-	cmq "github.com/kweaver-ai/adp/autoflow/ide-go-lib/mq"
-	traceLog "github.com/kweaver-ai/adp/autoflow/ide-go-lib/telemetry/log"
 )
 
 const (
