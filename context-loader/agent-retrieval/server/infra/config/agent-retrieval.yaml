@@ -29,8 +29,8 @@ user_management:
   private_protocol: "http"
 agent_app:
   private_protocol: "http"
-  private_host: "agent-app.anyshare"
-  private_port: 30777
+  private_host: "agent-factory.anyshare"
+  private_port: 13020
 ontology_manager:
   private_protocol: "http"
   private_host: "ontology-manager-svc.anyshare"

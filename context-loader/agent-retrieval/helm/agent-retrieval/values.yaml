@@ -99,8 +99,8 @@ depServices:
     privatePort: 30980
     privateProtocol: http
   agent-app:
-    privateHost: agent-app
-    privatePort: 30777
+    privateHost: agent-factory
+    privatePort: 13020
     privateProtocol: http
   ontology-manager:
     privateHost: ontology-manager-svc

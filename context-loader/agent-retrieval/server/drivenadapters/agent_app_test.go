@@ -96,7 +96,7 @@ func TestAPIChat_Success(t *testing.T) {
 
 		client := &agentClient{
 			logger:      mockLogger,
-			baseURL:     "http://localhost:8080/api/agent-app",
+			baseURL:     "http://localhost:8080/api/agent-factory",
 			httpClient:  mockHTTPClient,
 			DeployAgent: config.DeployAgentConfig{},
 		}
@@ -135,7 +135,7 @@ func TestAPIChat_HTTPError(t *testing.T) {
 
 		client := &agentClient{
 			logger:      mockLogger,
-			baseURL:     "http://localhost:8080/api/agent-app",
+			baseURL:     "http://localhost:8080/api/agent-factory",
 			httpClient:  mockHTTPClient,
 			DeployAgent: config.DeployAgentConfig{},
 		}

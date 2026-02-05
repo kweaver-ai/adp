@@ -37,7 +37,7 @@ var (
 )
 
 const (
-	// https://{host}:{port}/api/agent-app/internal/v1/app/{app_key}/api/chat/completion
+	// http://agent-factory:13020/api/agent-factory/internal/v1/app/{app_key}/api/chat/completion
 	chatURI = "/internal/v1/app/%s/api/chat/completion"
 )
 
@@ -47,7 +47,7 @@ func NewAgentAppClient() interfaces.AgentApp {
 		configLoader := config.NewConfigLoader()
 		ag = &agentClient{
 			logger: configLoader.GetLogger(),
-			baseURL: fmt.Sprintf("%s://%s:%d/api/agent-app",
+			baseURL: fmt.Sprintf("%s://%s:%d/api/agent-factory",
 				configLoader.AgentApp.PrivateProtocol,
 				configLoader.AgentApp.PrivateHost,
 				configLoader.AgentApp.PrivatePort),
