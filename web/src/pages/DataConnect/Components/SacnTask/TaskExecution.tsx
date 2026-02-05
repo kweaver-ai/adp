@@ -291,7 +291,9 @@ const TaskExecution: React.FC<TaskExecutionProps> = ({ scanDetail, scheduleStatu
       {scanDetail.type === 2 && (
         <Radio.Group onChange={handleModeChange} value={mode} style={{ marginBottom: 8 }}>
           <Radio.Button value="current">{intl.get('DataConnect.currentExecution')}</Radio.Button>
-          <Radio.Button value="history">{intl.get('DataConnect.historyRecord')}({historyDataTotal})</Radio.Button>
+          <Radio.Button value="history">
+            {intl.get('DataConnect.historyRecord')}({historyDataTotal})
+          </Radio.Button>
         </Radio.Group>
       )}
 

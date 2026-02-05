@@ -286,6 +286,11 @@
     "click": "Click",
     "createBtn": "「Create」",
     "alreadyExists": "Already Exists",
-    "more": "More"
+    "more": "More",
+    "fieldFeatureType": "Field Feature Type",
+    "fieldFeature": "Field Feature",
+    "fieldFeatureTip": "Field features are configurable extensions that support advanced search capabilities, such as vector search, full-text search, and exact matching",
+    "setFieldFeature": "Set Field Feature",
+    "unset": "Unset"
   }
 }

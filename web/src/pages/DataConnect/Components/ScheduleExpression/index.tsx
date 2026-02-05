@@ -1,8 +1,6 @@
 /** 执行频率 */
-import { useState } from 'react';
 import intl from 'react-intl-universal';
 import { Form, Radio, Tooltip } from 'antd';
-import { RadioChangeEvent } from 'antd/lib/radio';
 import ARInputNumberUnit from '@/components/ARInputNumberUnit';
 import { CronSelect } from '@/components/CronSelect';
 import { SCHEDULE_TYPE } from '@/hooks/useConstants';

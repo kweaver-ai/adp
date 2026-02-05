@@ -6,7 +6,7 @@ import { getObjectTags } from '../tag';
 
 const BASE_URL = '/api/mdl-data-model/v1/metric-models';
 const GROUP_BASE_URL = '/api/mdl-data-model/v1/metric-model-groups';
-const PREVIEW_BASE_URL = '/api/mdl-uniquery/v1/metric-models';
+const PREVIEW_BASE_URL = '/api/mdl-uniquery/v1';
 const INDEX_BASE_URL = '/api/mdl-index-base/v1/index_bases';
 
 export const getMetricModelList = async (params: MetricModelType.MetricModelListParams): Promise<any> => {
@@ -83,7 +83,7 @@ export const deleteMetricModel = async (id: string): Promise<any> => {
 };
 
 export const fetchMetricPreviewData = async (values: Record<string, any>, id?: string): Promise<any> => {
-  const url = id ? `${PREVIEW_BASE_URL}/${id}?include_model=true` : PREVIEW_BASE_URL;
+  const url = id ? `${PREVIEW_BASE_URL}/metric-models/${id}?include_model=true` : `${PREVIEW_BASE_URL}/metric-model`;
   return Request.postOverrideGet(url, formatKeyOfObjectToLine(values));
 };
 
