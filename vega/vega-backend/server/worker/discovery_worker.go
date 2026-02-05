@@ -8,11 +8,11 @@ import (
 	"time"
 
 	"github.com/bytedance/sonic"
+	"github.com/hibiken/asynq"
 	"github.com/kweaver-ai/kweaver-go-lib/logger"
-	"github.com/segmentio/kafka-go"
 
 	"vega-backend/common"
-	kafka_access "vega-backend/drivenadapters/kafka"
+	asynq_access "vega-backend/drivenadapters/asynq"
 	"vega-backend/interfaces"
 	logicsCatalog "vega-backend/logics/catalog"
 	"vega-backend/logics/connectors"
@@ -29,11 +29,10 @@ var (
 // discoveryWorker provides resource discovery functionality.
 type discoveryWorker struct {
 	appSetting *common.AppSetting
-	ka         interfaces.KafkaAccess
+	aqa        interfaces.AsynqAccess
 	rs         interfaces.ResourceService
 	cs         interfaces.CatalogService
 	dts        interfaces.DiscoveryTaskService
-	reader     *kafka.Reader
 }
 
 // NewDiscoveryWorker creates or returns the singleton DiscoveryWorker.
@@ -41,7 +40,7 @@ func NewDiscoveryWorker(appSetting *common.AppSetting) interfaces.DiscoveryWorke
 	dWorkerOnce.Do(func() {
 		dWorker = &discoveryWorker{
 			appSetting: appSetting,
-			ka:         kafka_access.NewKafkaAccess(appSetting),
+			aqa:        asynq_access.NewAsynqAccess(appSetting),
 			rs:         resource.NewResourceService(appSetting),
 			cs:         logicsCatalog.NewCatalogService(appSetting),
 			dts:        discovery_task.NewDiscoveryTaskService(appSetting),
@@ -51,68 +50,47 @@ func NewDiscoveryWorker(appSetting *common.AppSetting) interfaces.DiscoveryWorke
 }
 
 func (dw *discoveryWorker) Start() {
-	ctx := context.Background()
-	err := dw.ka.CreateTopic(ctx, interfaces.DiscoveryTaskTopic)
-	if err != nil {
-		logger.Errorf("Failed to create topic: %v", err)
-		return
-	}
-
+	// Start server in a goroutine
 	go func() {
-		dw.Run(ctx)
-	}()
-}
-
-func (dw *discoveryWorker) Run(ctx context.Context) {
-	defer func() {
-		if panicErr := recover(); panicErr != nil {
-			logger.Errorf("Discovery worker panic: %v", panicErr)
-		}
-	}()
-
-	reader, err := dw.ka.NewReader(ctx, interfaces.DiscoveryTaskTopic, "discovery_worker")
-	if err != nil {
-		logger.Errorf("Failed to create reader: %v", err)
-		return
-	}
-	dw.reader = reader
-	defer dw.ka.CloseReader(reader)
-
-	logger.Infof("Discovery worker started, listening on topic: %s", interfaces.DiscoveryTaskTopic)
-
-	for {
-		msg, err := dw.ka.ReadMessage(ctx, reader)
-		if err != nil {
-			logger.Errorf("Failed to read message: %v", err)
+		for {
+			if err := dw.Run(context.Background()); err != nil {
+				logger.Errorf("Discovery worker failed: %v", err)
+			}
 			time.Sleep(1 * time.Second)
-			continue
 		}
-
-		taskMsg := &interfaces.DiscoveryTaskMessage{}
-		if err := sonic.Unmarshal(msg.Value, taskMsg); err != nil {
-			logger.Errorf("Failed to unmarshal message: %v", err)
-			// 消息解析失败也需要提交位移，避免重复消费无效消息
-			_ = dw.ka.CommitMessages(ctx, reader, msg)
-			continue
-		}
-
-		err = dw.ExecuteDiscovery(ctx, taskMsg.TaskID)
-		if err != nil {
-			logger.Errorf("Failed to execute discovery: %v", err)
-			// 业务失败不提交位移，下次重试
-			continue
-		}
-
-		// 业务成功后手动提交位移
-		if err := dw.ka.CommitMessages(ctx, reader, msg); err != nil {
-			logger.Errorf("Failed to commit message: %v", err)
-		}
-	}
+	}()
 }
 
-// ExecuteDiscovery executes discovery for a specific catalog.
-// This method is called by the task management service.
-func (dw *discoveryWorker) ExecuteDiscovery(ctx context.Context, taskID string) error {
+func (dw *discoveryWorker) Run(ctx context.Context) error {
+	defer func() {
+		if err := recover(); err != nil {
+			logger.Errorf("Discovery worker failed: %v", err)
+		}
+	}()
+
+	srv := dw.aqa.CreateServer(ctx)
+
+	// Register task handler
+	mux := asynq.NewServeMux()
+	mux.Handle(interfaces.DiscoveryTaskType, dw)
+
+	logger.Infof("Discovery worker starting, listening for task type: %s", interfaces.DiscoveryTaskType)
+	if err := srv.Run(mux); err != nil {
+		logger.Errorf("Discovery worker failed: %v", err)
+		return err
+	}
+	return nil
+}
+
+// handleDiscoveryTask handles a discovery task from the queue.
+func (dw *discoveryWorker) ProcessTask(ctx context.Context, event *asynq.Task) error {
+	var msg interfaces.DiscoveryTaskMessage
+	if err := sonic.Unmarshal(event.Payload(), &msg); err != nil {
+		logger.Errorf("Failed to unmarshal task message: %v", err)
+		return err
+	}
+
+	taskID := msg.TaskID
 	logger.Infof("Starting discovery for task: %s", taskID)
 
 	task, err := dw.dts.GetByID(ctx, taskID)

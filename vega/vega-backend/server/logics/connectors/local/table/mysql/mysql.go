@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	sq "github.com/Masterminds/squirrel"
+	_ "github.com/go-sql-driver/mysql"
 	"github.com/mitchellh/mapstructure"
 
 	"vega-backend/interfaces"
