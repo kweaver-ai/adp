@@ -135,13 +135,14 @@ type DataProperty struct {
 }
 
 type LogicProperty struct {
-	Name        string        `json:"name" mapstructure:"name"`
-	DisplayName string        `json:"display_name" mapstructure:"display_name"`
-	Type        string        `json:"type" mapstructure:"type"`
-	Comment     string        `json:"comment" mapstructure:"comment"`
-	Index       bool          `json:"index" mapstructure:"index"`
-	DataSource  *ResourceInfo `json:"data_source" mapstructure:"data_source"`
-	Parameters  []Parameter   `json:"parameters" mapstructure:"parameters"`
+	Name         string        `json:"name" mapstructure:"name"`
+	DisplayName  string        `json:"display_name" mapstructure:"display_name"`
+	Type         string        `json:"type" mapstructure:"type"`
+	Comment      string        `json:"comment" mapstructure:"comment"`
+	Index        bool          `json:"index" mapstructure:"index"`
+	DataSource   *ResourceInfo `json:"data_source" mapstructure:"data_source"`
+	Parameters   []Parameter   `json:"parameters" mapstructure:"parameters"`
+	AnalysisDims []Field       `json:"analysis_dimensions,omitempty"`
 }
 
 type Field struct {
