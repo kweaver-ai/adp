@@ -79,7 +79,7 @@ func (dw *discoveryWorker) enrichTableMetadata(ctx context.Context,
 				Type:         column.Type,
 				DisplayName:  column.Name,
 				OriginalName: column.Name,
-				Comment:      column.Comment,
+				Description:  column.Description,
 			})
 		}
 
@@ -209,7 +209,7 @@ func (dw *discoveryWorker) createResource(ctx context.Context, catalog *interfac
 	req := &interfaces.ResourceRequest{
 		CatalogID:        catalog.ID,
 		Name:             sourceIdentifier,
-		Comment:          table.Comment,
+		Description:      table.Description,
 		Category:         interfaces.ResourceCategoryTable,
 		Status:           interfaces.ResourceStatusActive,
 		Database:         table.Database,

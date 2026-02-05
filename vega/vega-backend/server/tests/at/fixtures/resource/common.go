@@ -27,11 +27,11 @@ func BuildCreatePayload(catalogID string) map[string]any {
 // BuildFullCreatePayload 构建完整的resource创建payload（包含所有可选字段）
 func BuildFullCreatePayload(catalogID string) map[string]any {
 	return map[string]any{
-		"catalog_id": catalogID,
-		"name":       fixtures.GenerateUniqueName("full-resource"),
-		"comment":    "完整的测试resource，包含所有可选字段",
-		"tags":       []string{"test", "resource", "at", "full-fields"},
-		"category":   "table",
+		"catalog_id":  catalogID,
+		"name":        fixtures.GenerateUniqueName("full-resource"),
+		"description": "完整的测试resource，包含所有可选字段",
+		"tags":        []string{"test", "resource", "at", "full-fields"},
+		"category":    "table",
 	}
 }
 
@@ -94,25 +94,25 @@ func BuildPayloadWithSpecialCharsName(catalogID string, specialName string) map[
 	}
 }
 
-// ========== Comment相关Payload ==========
+// ========== Description相关Payload ==========
 
-// BuildPayloadWithLongComment 构建超长comment的resource payload
-func BuildPayloadWithLongComment(catalogID string, commentLength int) map[string]any {
-	longComment := strings.Repeat("这是一个很长的注释。", commentLength/10+1)
+// BuildPayloadWithLongDescription 构建超长description的resource payload
+func BuildPayloadWithLongDescription(catalogID string, descriptionLength int) map[string]any {
+	longDescription := strings.Repeat("这是一个很长的注释。", descriptionLength/10+1)
 	return map[string]any{
-		"catalog_id": catalogID,
-		"name":       fixtures.GenerateUniqueName("long-comment-resource"),
-		"comment":    longComment,
+		"catalog_id":  catalogID,
+		"name":        fixtures.GenerateUniqueName("long-description-resource"),
+		"description": longDescription,
 	}
 }
 
-// BuildPayloadWithExactComment 构建指定长度comment的resource payload
-func BuildPayloadWithExactComment(catalogID string, commentLength int) map[string]any {
-	comment := strings.Repeat("c", commentLength)
+// BuildPayloadWithExactDescription 构建指定长度description的resource payload
+func BuildPayloadWithExactDescription(catalogID string, descriptionLength int) map[string]any {
+	description := strings.Repeat("c", descriptionLength)
 	return map[string]any{
-		"catalog_id": catalogID,
-		"name":       fixtures.GenerateUniqueName("exact-comment-resource"),
-		"comment":    comment,
+		"catalog_id":  catalogID,
+		"name":        fixtures.GenerateUniqueName("exact-description-resource"),
+		"description": description,
 	}
 }
 

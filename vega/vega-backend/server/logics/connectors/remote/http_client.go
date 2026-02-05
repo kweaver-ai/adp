@@ -120,21 +120,21 @@ type CreateConnectionResponse struct {
 
 // TableMetaResponse 表元数据响应
 type TableMetaResponse struct {
-	Name       string       `json:"name"`
-	Schema     string       `json:"schema"`
-	SubType    string       `json:"sub_type"`
-	Columns    []ColumnMeta `json:"columns"`
-	PrimaryKey []string     `json:"primary_key"`
-	Comment    string       `json:"comment"`
+	Name        string       `json:"name"`
+	Schema      string       `json:"schema"`
+	SubType     string       `json:"sub_type"`
+	Columns     []ColumnMeta `json:"columns"`
+	PrimaryKey  []string     `json:"primary_key"`
+	Description string       `json:"description"`
 }
 
 // ColumnMeta 列元数据
 type ColumnMeta struct {
-	Name       string `json:"name"`
-	NativeType string `json:"native_type"`
-	VegaType   string `json:"vega_type"`
-	Nullable   bool   `json:"nullable"`
-	Comment    string `json:"comment"`
+	Name        string `json:"name"`
+	NativeType  string `json:"native_type"`
+	VegaType    string `json:"vega_type"`
+	Nullable    bool   `json:"nullable"`
+	Description string `json:"description"`
 }
 
 // QueryRequest 查询请求
@@ -152,11 +152,11 @@ type QueryResponse struct {
 
 // IndexMetaResponse 索引元数据响应
 type IndexMetaResponse struct {
-	Name      string              `json:"name"`
-	DocCount  int64               `json:"doc_count"`
-	StoreSize string              `json:"store_size"`
+	Name      string               `json:"name"`
+	DocCount  int64                `json:"doc_count"`
+	StoreSize string               `json:"store_size"`
 	Mapping   map[string]FieldMeta `json:"mapping"`
-	Settings  map[string]any      `json:"settings"`
+	Settings  map[string]any       `json:"settings"`
 }
 
 // FieldMeta 字段元数据

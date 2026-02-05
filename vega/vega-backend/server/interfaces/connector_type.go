@@ -29,7 +29,7 @@ type ConnectorFieldConfig struct {
 type ConnectorType struct {
 	Type        string                          `json:"type"`
 	Name        string                          `json:"name"`         // mysql, postgresql, kafka...
-	Comment     string                          `json:"comment"`      // 类型描述
+	Description string                          `json:"description"`  // 类型描述
 	Mode        string                          `json:"mode"`         // local | remote
 	Category    string                          `json:"category"`     // table | index | topic | file | fileset | metric | api
 	Endpoint    string                          `json:"endpoint"`     // 仅 remote 模式，远程服务地址
@@ -49,7 +49,7 @@ type ConnectorTypesQueryParams struct {
 type ConnectorTypeReq struct {
 	Type        string                          `json:"type"`
 	Name        string                          `json:"name"`         // mysql, postgresql, kafka...
-	Comment     string                          `json:"comment"`      // 类型描述
+	Description string                          `json:"description"`  // 类型描述
 	Mode        string                          `json:"mode"`         // local | remote
 	Category    string                          `json:"category"`     // table | index | topic | file | fileset | metric | api
 	Endpoint    string                          `json:"endpoint"`     // 仅 remote 模式，远程服务地址

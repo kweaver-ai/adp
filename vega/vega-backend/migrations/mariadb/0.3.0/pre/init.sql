@@ -10,7 +10,7 @@
 -- 基础属性：
 --   - name: 字段名称
 --   - type: VEGA统一类型 (integer, unsigned_integer, float, decimal, string, text, date, datetime, time, boolean, binary, json, vector)
---   - comment: 字段描述
+--   - description: 字段描述
 --   - type_config: 类型配置对象 (如 {"max_length": 128}, {"dimension": 768})
 --
 -- 源端映射：
@@ -35,7 +35,7 @@
 --   {
 --     "name": "id",
 --     "type": "integer",
---     "comment": "主键ID",
+--     "description": "主键ID",
 --     "type_config": {"length": 11},
 --     "source_name": "id",
 --     "source_type": "int(11)",
@@ -48,7 +48,7 @@
 --   {
 --     "name": "content",
 --     "type": "text",
---     "comment": "文章内容",
+--     "description": "文章内容",
 --     "type_config": {},
 --     "source_name": "content",
 --     "source_type": "text",
@@ -69,7 +69,7 @@
 --   {
 --     "name": "embedding",
 --     "type": "vector",
---     "comment": "向量嵌入",
+--     "description": "向量嵌入",
 --     "type_config": {"dimension": 768},
 --     "source_name": "",
 --     "source_type": "",
@@ -96,9 +96,9 @@
 CREATE TABLE IF NOT EXISTS t_catalog (
     -- 主键与基础信息
     f_id                      VARCHAR(40) NOT NULL DEFAULT '' COMMENT 'catalog唯一标识',
-    f_name                    VARCHAR(128) NOT NULL DEFAULT '' COMMENT '目录名称，系统一级命名空间',
+    f_name                    VARCHAR(255) NOT NULL DEFAULT '' COMMENT '目录名称，系统一级命名空间',
     f_tags                    VARCHAR(255) NOT NULL DEFAULT '[]' COMMENT '标签，逗号分隔，用于分类和检索',
-    f_comment                 VARCHAR(1000) NOT NULL DEFAULT '' COMMENT '目录描述',
+    f_description             VARCHAR(1000) NOT NULL DEFAULT '' COMMENT '目录描述',
 
     f_type                    VARCHAR(20) NOT NULL DEFAULT '' COMMENT '目录类型: physical, logical',
     f_enabled                 BOOLEAN NOT NULL DEFAULT TRUE COMMENT '是否启用',
@@ -168,9 +168,9 @@ CREATE TABLE IF NOT EXISTS t_resource (
     -- 主键与基础信息
     f_id                      VARCHAR(40) NOT NULL DEFAULT '' COMMENT 'resource唯一标识',
     f_catalog_id              VARCHAR(40) NOT NULL DEFAULT '' COMMENT '所属catalog ID',
-    f_name                    VARCHAR(128) NOT NULL DEFAULT '' COMMENT '数据资源名称，catalog下唯一',
+    f_name                    VARCHAR(255) NOT NULL DEFAULT '' COMMENT '数据资源名称，catalog下唯一',
     f_tags                    VARCHAR(255) NOT NULL DEFAULT '[]' COMMENT '标签，JSON数组格式',
-    f_comment                 VARCHAR(1000) NOT NULL DEFAULT '' COMMENT '数据资源描述',
+    f_description             VARCHAR(1000) NOT NULL DEFAULT '' COMMENT '数据资源描述',
 
     f_category                VARCHAR(20) NOT NULL DEFAULT '' COMMENT '数据资源类型: table, file, fileset, api, metric, topic, index, logicview, dataset',
 
@@ -247,8 +247,9 @@ CREATE TABLE IF NOT EXISTS t_resource_schema_history (
 CREATE TABLE IF NOT EXISTS t_connector_type (
     -- 主键与基础信息
     f_type                    VARCHAR(40) NOT NULL DEFAULT '' COMMENT 'connector类型,唯一标识',
-    f_name                    VARCHAR(128) NOT NULL DEFAULT '' COMMENT '类型名称: mysql, postgresql, kafka...',
-    f_comment                 VARCHAR(1000) NOT NULL DEFAULT '' COMMENT '类型描述',
+    f_name                    VARCHAR(255) NOT NULL DEFAULT '' COMMENT '类型名称: mysql, postgresql, kafka...',
+    f_tags                    VARCHAR(255) NOT NULL DEFAULT '[]' COMMENT '标签，JSON数组格式',
+    f_description             VARCHAR(1000) NOT NULL DEFAULT '' COMMENT '类型描述',
 
     -- 类型分类
     f_mode                    VARCHAR(20) NOT NULL DEFAULT '' COMMENT '模式: local, remote',
@@ -258,13 +259,6 @@ CREATE TABLE IF NOT EXISTS t_connector_type (
     f_endpoint                VARCHAR(512) NOT NULL DEFAULT '' COMMENT '远程服务地址 (仅remote模式)',
 
     -- 字段配置列表（JSON数组格式）
-    -- 示例：
-    -- [
-    --   {"name": "host", "type": "string", "comment": "主机地址", "required": true, "encrypted": false},
-    --   {"name": "port", "type": "integer", "comment": "端口号", "required": true, "encrypted": false},
-    --   {"name": "username", "type": "string", "comment": "用户名", "required": true, "encrypted": false},
-    --   {"name": "password", "type": "string", "comment": "密码", "required": true, "encrypted": true}
-    -- ]
     f_field_config            MEDIUMTEXT NOT NULL COMMENT '字段配置列表（JSON数组格式，定义连接配置的结构）',
 
     -- 状态
@@ -282,7 +276,7 @@ CREATE TABLE IF NOT EXISTS t_connector_type (
 -- ==========================================
 -- 6. 初始化内置 Local Connector
 -- ==========================================
-INSERT INTO t_connector_type (f_type, f_name, f_comment, f_mode, f_category, f_field_config, f_enabled)
+INSERT INTO t_connector_type (f_type, f_name, f_description, f_mode, f_category, f_field_config, f_enabled)
 SELECT 'mysql', 'mysql', 'MySQL 关系型数据库连接器', 'local', 'table',
     '{
         "host":      {"name":"主机地址","type":"string","description":"MySQL 服务器主机地址","required":true,"encrypted":false},
@@ -295,7 +289,7 @@ SELECT 'mysql', 'mysql', 'MySQL 关系型数据库连接器', 'local', 'table',
     TRUE
 FROM DUAL WHERE NOT EXISTS ( SELECT f_type FROM t_connector_type WHERE f_type = 'mysql' );
 
-INSERT INTO t_connector_type (f_type, f_name, f_comment, f_mode, f_category, f_field_config, f_enabled)
+INSERT INTO t_connector_type (f_type, f_name, f_description, f_mode, f_category, f_field_config, f_enabled)
 SELECT 'opensearch', 'opensearch', 'OpenSearch 搜索引擎连接器', 'local', 'index',
     '{
         "host":          {"name":"主机地址","type":"string","description":"OpenSearch 服务器主机地址","required":true,"encrypted":false},

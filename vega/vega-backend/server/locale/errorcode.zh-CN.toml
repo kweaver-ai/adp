@@ -8,7 +8,7 @@ Description = "无效的标签"
 Solution = "请检查参数"
 ErrorLink = "暂无"
 
-[VegaManager.InvalidParameter.Comment]
+[VegaManager.InvalidParameter.Description]
 Description = "无效的描述"
 Solution = "请检查参数"
 ErrorLink = "暂无"

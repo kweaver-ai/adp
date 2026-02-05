@@ -22,10 +22,10 @@ type CatalogHealthCheckStatus struct {
 
 // Catalog represents a Catalog entity.
 type Catalog struct {
-	ID      string   `json:"id"`
-	Name    string   `json:"name"`
-	Tags    []string `json:"tags"`
-	Comment string   `json:"comment"`
+	ID          string   `json:"id"`
+	Name        string   `json:"name"`
+	Tags        []string `json:"tags"`
+	Description string   `json:"description"`
 
 	Type    string `json:"type"`
 	Enabled bool   `json:"enabled"`
@@ -54,7 +54,7 @@ type CatalogsQueryParams struct {
 type CatalogRequest struct {
 	Name            string         `json:"name"`
 	Tags            []string       `json:"tags"`
-	Comment         string         `json:"comment"`
+	Description     string         `json:"description"`
 	ConnectorType   string         `json:"connector_type"`
 	ConnectorConfig map[string]any `json:"connector_config"`
 

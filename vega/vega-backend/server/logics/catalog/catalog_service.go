@@ -114,7 +114,7 @@ func (cs *catalogService) Create(ctx context.Context, req *interfaces.CatalogReq
 		ID:                 xid.New().String(),
 		Name:               req.Name,
 		Tags:               req.Tags,
-		Comment:            req.Comment,
+		Description:        req.Description,
 		Type:               catalogType,
 		ConnectorType:      req.ConnectorType,
 		ConnectorConfig:    req.ConnectorConfig,
@@ -244,7 +244,7 @@ func (cs *catalogService) Update(ctx context.Context, id string, req *interfaces
 		catalog.Name = req.Name
 	}
 	catalog.Tags = req.Tags
-	catalog.Comment = req.Comment
+	catalog.Description = req.Description
 
 	if catalog.ConnectorType != req.ConnectorType {
 		span.SetStatus(codes.Error, "can not change connector type")

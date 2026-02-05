@@ -22,11 +22,11 @@ const (
 
 // Resource represents a Data Resource entity.
 type Resource struct {
-	ID        string   `json:"id"`
-	CatalogID string   `json:"catalog_id"`
-	Name      string   `json:"name"`
-	Tags      []string `json:"tags"`
-	Comment   string   `json:"comment"`
+	ID          string   `json:"id"`
+	CatalogID   string   `json:"catalog_id"`
+	Name        string   `json:"name"`
+	Tags        []string `json:"tags"`
+	Description string   `json:"description"`
 
 	Category string `json:"category"` // 资源类别：table/file/fileset/...
 
@@ -50,7 +50,7 @@ type Property struct {
 	Type         string `json:"type"`
 	DisplayName  string `json:"display_name"`
 	OriginalName string `json:"original_name"`
-	Comment      string `json:"comment"`
+	Description  string `json:"description"`
 }
 
 // ResourcesQueryParams holds resource list query parameters.
@@ -64,10 +64,10 @@ type ResourcesQueryParams struct {
 
 // ResourceCreateRequest represents create resource request.
 type ResourceRequest struct {
-	CatalogID string   `json:"catalog_id"`
-	Name      string   `json:"name"`
-	Tags      []string `json:"tags"`
-	Comment   string   `json:"comment"`
+	CatalogID   string   `json:"catalog_id"`
+	Name        string   `json:"name"`
+	Tags        []string `json:"tags"`
+	Description string   `json:"description"`
 
 	Category string `json:"category"`
 

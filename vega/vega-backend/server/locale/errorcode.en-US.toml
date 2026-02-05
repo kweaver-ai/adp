@@ -8,8 +8,8 @@ Description = "Invalid tag"
 Solution = "Please check the parameter"
 ErrorLink = "None"
 
-[VegaManager.InvalidParameter.Comment]
-Description = "Invalid comment"
+[VegaManager.InvalidParameter.Description]
+Description = "Invalid description"
 Solution = "Please check the parameter"
 ErrorLink = "None"
 

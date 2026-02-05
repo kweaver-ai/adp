@@ -13,7 +13,7 @@ func ValidateCatalogRequest(ctx context.Context, req *interfaces.CatalogRequest)
 	if err := ValidateTags(ctx, req.Tags); err != nil {
 		return err
 	}
-	if err := validateComment(ctx, req.Comment); err != nil {
+	if err := validateDescription(ctx, req.Description); err != nil {
 		return err
 	}
 	return nil

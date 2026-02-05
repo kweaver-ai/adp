@@ -1021,7 +1021,7 @@ catalogs:
 type FieldFeature struct {
     Name     string            `json:"name"`      // 特征名称
     Type     FieldFeatureType  `json:"type"`      // keyword, fulltext, vector
-    Comment  string            `json:"comment"`   // 备注
+    Description  string            `json:"description"`   // 备注
     RefField string            `json:"ref_field"` // 引用的物理字段
     Enabled  bool              `json:"enabled"`   // 是否启用（同类型仅一个为true）
     IsNative bool              `json:"is_native"` // true:系统同步, false:用户扩展

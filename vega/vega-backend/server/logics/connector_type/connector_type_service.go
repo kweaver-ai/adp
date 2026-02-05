@@ -51,7 +51,7 @@ func (cts *connectorTypeService) Register(ctx context.Context, req *interfaces.C
 	ct := &interfaces.ConnectorType{
 		Type:        req.Type,
 		Name:        req.Name,
-		Comment:     req.Comment,
+		Description: req.Description,
 		Mode:        req.Mode,
 		Category:    req.Category,
 		Endpoint:    req.Endpoint,
@@ -153,7 +153,7 @@ func (cts *connectorTypeService) Update(ctx context.Context, req *interfaces.Con
 	}
 
 	ct.Type = req.Type
-	ct.Comment = req.Comment
+	ct.Description = req.Description
 	ct.Mode = req.Mode
 	ct.Category = req.Category
 	ct.Endpoint = req.Endpoint

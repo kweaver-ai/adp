@@ -14,11 +14,11 @@ const (
 
 	ACCOUNT_INFO_KEY contextKey = "x-account-info" // 避免直接使用string
 
-	NAME_MAX_LENGTH       = 128
-	COMMENT_MAX_LENGTH    = 1000
-	TAGS_MAX_NUMBER       = 5
-	TAG_MAX_LENGTH        = 40
-	TAG_INVALID_CHARACTER = "/:?\\\"<>|：？‘’“”！《》,#[]{}%&*$^!=.'"
+	NAME_MAX_LENGTH        = 128
+	DESCRIPTION_MAX_LENGTH = 1000
+	TAGS_MAX_NUMBER        = 5
+	TAG_MAX_LENGTH         = 40
+	TAG_INVALID_CHARACTER  = "/:?\\\"<>|：？‘’“”！《》,#[]{}%&*$^!=.'"
 )
 
 // AccountInfo represents user/account information.

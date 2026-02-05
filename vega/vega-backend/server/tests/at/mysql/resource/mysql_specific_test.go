@@ -100,7 +100,7 @@ func TestMySQLResourceSpecificCreate(t *testing.T) {
 			So(resource["id"], ShouldNotBeEmpty)
 			So(resource["name"], ShouldNotBeEmpty)
 			So(resource["catalog_id"], ShouldEqual, catalogID)
-			So(resource["comment"], ShouldEqual, payload["comment"])
+			So(resource["description"], ShouldEqual, payload["description"])
 			So(resource["create_time"], ShouldNotBeZeroValue)
 			So(resource["update_time"], ShouldNotBeZeroValue)
 
@@ -226,9 +226,9 @@ func TestMySQLResourceSpecificUpdate(t *testing.T) {
 
 			// 基于原数据构建更新payload
 			updatePayload := resourcefixtures.BuildUpdatePayload(originalData, map[string]any{
-				"name":    fixtures.GenerateUniqueName("multi-update-resource"),
-				"comment": "同时更新多个字段的测试",
-				"tags":    []string{"multi-update", "test"},
+				"name":        fixtures.GenerateUniqueName("multi-update-resource"),
+				"description": "同时更新多个字段的测试",
+				"tags":        []string{"multi-update", "test"},
 			})
 
 			updateResp := client.PUT("/api/vega-backend/v1/resources/"+resourceID, updatePayload)
@@ -253,7 +253,7 @@ func TestMySQLResourceSpecificUpdate(t *testing.T) {
 
 			// 基于原数据构建更新payload
 			updatePayload := resourcefixtures.BuildUpdatePayload(originalData, map[string]any{
-				"comment": "验证update_time更新",
+				"description": "验证update_time更新",
 			})
 			updateResp := client.PUT("/api/vega-backend/v1/resources/"+resourceID, updatePayload)
 			So(updateResp.StatusCode, ShouldEqual, http.StatusNoContent)
@@ -280,7 +280,7 @@ func TestMySQLResourceSpecificUpdate(t *testing.T) {
 
 			// 基于原数据构建更新payload
 			updatePayload := resourcefixtures.BuildUpdatePayload(originalData, map[string]any{
-				"comment": "验证create_time不变",
+				"description": "验证create_time不变",
 			})
 			updateResp := client.PUT("/api/vega-backend/v1/resources/"+resourceID, updatePayload)
 			So(updateResp.StatusCode, ShouldEqual, http.StatusNoContent)

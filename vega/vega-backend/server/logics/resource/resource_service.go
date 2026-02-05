@@ -59,7 +59,7 @@ func (rs *resourceService) Create(ctx context.Context, req *interfaces.ResourceR
 		CatalogID:        req.CatalogID,
 		Name:             req.Name,
 		Tags:             req.Tags,
-		Comment:          req.Comment,
+		Description:      req.Description,
 		Category:         req.Category,
 		Status:           req.Status,
 		Database:         req.Database,
@@ -199,7 +199,7 @@ func (rs *resourceService) Update(ctx context.Context, id string, req *interface
 		resource.Name = req.Name
 	}
 	resource.Tags = req.Tags
-	resource.Comment = req.Comment
+	resource.Description = req.Description
 
 	// Get account info
 	accountInfo := interfaces.AccountInfo{}
