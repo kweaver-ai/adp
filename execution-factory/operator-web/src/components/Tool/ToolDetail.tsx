@@ -60,6 +60,7 @@ export default function ToolDetail() {
   const [permissionCheckInfo, setIsPermissionCheckInfo] = useState<Array<PermConfigTypeEnum>>();
   const [toolListTotal, setToolListTotal] = useState(0);
   const [loadStatus, setLoadStatus] = useState<LoadStatusEnum>(LoadStatusEnum.Loading);
+  const [parsedInputs, setParsedInputs] = useState<any>([]); // 解析后的输入参数
 
   const hasDeletedSelection = useMemo(() => {
     return selectedToolArry.some((item: any) => !item?.metadata?.version);
@@ -483,10 +484,14 @@ export default function ToolDetail() {
                 </div>
               )}
 
-              <ToolInfo selectedTool={selectedTool} />
+              <ToolInfo selectedTool={selectedTool} onUpdateInputs={setParsedInputs} />
               {selectedTool?.metadata?.version && permissionCheckInfo?.includes(PermConfigTypeEnum.Execute) && (
                 <div id="targetDiv">
-                  <DebugResult selectedTool={selectedTool} type={OperatorTypeEnum.ToolBox} />
+                  <DebugResult
+                    selectedTool={selectedTool}
+                    type={OperatorTypeEnum.ToolBox}
+                    parsedInputs={parsedInputs}
+                  />
                 </div>
               )}
             </Content>

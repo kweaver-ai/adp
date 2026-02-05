@@ -393,6 +393,8 @@ func parseVegaResult2Uniresponse(ctx context.Context, vegaData, samePeriodDatas 
 
 	// 如果要计算占比, 计算总和
 	var total float64
+	hasGrowthValue := false
+	hasGrowthRate := false
 	samePeriodMap := make(map[string]float64)
 	if query.RequestMetrics != nil {
 		switch query.RequestMetrics.Type {
@@ -403,6 +405,17 @@ func parseVegaResult2Uniresponse(ctx context.Context, vegaData, samePeriodDatas 
 				return resp, err
 			}
 		case interfaces.METRICS_SAMEPERIOD:
+			// 检查method数组，确定需要计算哪些指标
+			methods := query.RequestMetrics.SamePeriodCfg.Method
+			for _, method := range methods {
+				if method == interfaces.METRICS_SAMEPERIOD_METHOD_GROWTH_VALUE {
+					hasGrowthValue = true
+				}
+				if method == interfaces.METRICS_SAMEPERIOD_METHOD_GROWTH_RATE {
+					hasGrowthRate = true
+				}
+			}
+
 			// 创建同期数据的查找映射
 			for _, row := range samePeriodDatas.Data {
 				key := ""
@@ -455,21 +468,30 @@ func parseVegaResult2Uniresponse(ctx context.Context, vegaData, samePeriodDatas 
 		if query.RequestMetrics != nil {
 			switch query.RequestMetrics.Type {
 			case interfaces.METRICS_SAMEPERIOD:
+
 				if samePeriod, exists := samePeriodMap[key]; exists {
 					// 同期数据存在
-					growthValues = append(growthValues, currentValue-samePeriod)
+					if hasGrowthValue {
+						growthValues = append(growthValues, currentValue-samePeriod)
+					}
 					// 计算增长率（避免除以0）
-					if samePeriod != 0 {
-						growthRates = append(growthRates, (currentValue-samePeriod)/samePeriod*100)
-						// 保留两位小数
-						// growthRate = math.Round(growthRate.(float64)*100) / 100
-					} else {
-						growthRates = append(growthRates, nil)
+					if hasGrowthRate {
+						if samePeriod != 0 {
+							growthRates = append(growthRates, (currentValue-samePeriod)/samePeriod*100)
+							// 保留两位小数
+							// growthRate = math.Round(growthRate.(float64)*100) / 100
+						} else {
+							growthRates = append(growthRates, nil)
+						}
 					}
 				} else {
-					// 请求了同环比,但是同期值不存在,赋值null
-					growthValues = append(growthValues, nil)
-					growthRates = append(growthRates, nil)
+					// 请求了同环比,但是同期值不存在,只有method中包含对应方法才添加null
+					if hasGrowthValue {
+						growthValues = append(growthValues, nil)
+					}
+					if hasGrowthRate {
+						growthRates = append(growthRates, nil)
+					}
 				}
 			case interfaces.METRICS_PROPORTION:
 				// 请求了占比,占比是每行除以全部行的和.全部行的和
@@ -808,6 +830,19 @@ func findTimeStrIndex(timePoints []string, timeStr string) int {
 func calcSamePeriodValue(ctx context.Context, currentSeriesMap, previousMap map[string]interfaces.MetricModelData,
 	requestMetrics *interfaces.RequestMetrics) ([]interfaces.MetricModelData, error) {
 
+	// 检查method数组，确定需要计算哪些指标
+	methods := requestMetrics.SamePeriodCfg.Method
+	hasGrowthValue := false
+	hasGrowthRate := false
+	for _, method := range methods {
+		if method == interfaces.METRICS_SAMEPERIOD_METHOD_GROWTH_VALUE {
+			hasGrowthValue = true
+		}
+		if method == interfaces.METRICS_SAMEPERIOD_METHOD_GROWTH_RATE {
+			hasGrowthRate = true
+		}
+	}
+
 	datas := make([]interfaces.MetricModelData, 0)
 	// 生成结果
 	for key, currentPoints := range currentSeriesMap {
@@ -855,15 +890,27 @@ func calcSamePeriodValue(ctx context.Context, currentSeriesMap, previousMap map[
 					growthValue := currentVal - previousVal
 					growthRate := (growthValue / previousVal) * 100
 
-					ts.GrowthValues = append(ts.GrowthValues, convert.WrapMetricValue(growthValue))
-					ts.GrowthRates = append(ts.GrowthRates, convert.WrapMetricValue(growthRate))
+					if hasGrowthValue {
+						ts.GrowthValues = append(ts.GrowthValues, convert.WrapMetricValue(growthValue))
+					}
+					if hasGrowthRate {
+						ts.GrowthRates = append(ts.GrowthRates, convert.WrapMetricValue(growthRate))
+					}
 				} else {
-					ts.GrowthValues = append(ts.GrowthValues, nil)
-					ts.GrowthRates = append(ts.GrowthRates, nil)
+					if hasGrowthValue {
+						ts.GrowthValues = append(ts.GrowthValues, nil)
+					}
+					if hasGrowthRate {
+						ts.GrowthRates = append(ts.GrowthRates, nil)
+					}
 				}
 			} else {
-				ts.GrowthValues = append(ts.GrowthValues, nil)
-				ts.GrowthRates = append(ts.GrowthRates, nil)
+				if hasGrowthValue {
+					ts.GrowthValues = append(ts.GrowthValues, nil)
+				}
+				if hasGrowthRate {
+					ts.GrowthRates = append(ts.GrowthRates, nil)
+				}
 			}
 		}
 		datas = append(datas, ts)

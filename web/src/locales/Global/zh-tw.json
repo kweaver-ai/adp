@@ -286,6 +286,11 @@
     "click": "點擊",
     "createBtn": "【新建】",
     "alreadyExists": "已存在",
-    "more": "更多"
+    "more": "更多",
+    "fieldFeatureType": "字段特徵類型",
+    "fieldFeature": "字段特徵",
+    "fieldFeatureTip": "字段特徵是字段的可配置擴展能力,用於支持高級搜索功能,如向量搜索、全文檢索和精確匹配",
+    "setFieldFeature": "設置字段特徵",
+    "unset": "未設置"
   }
 }

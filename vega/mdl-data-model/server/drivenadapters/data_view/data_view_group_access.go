@@ -523,5 +523,10 @@ func buildViewGroupListQuerySQL(query *interfaces.ListViewGroupQueryParams, buil
 		builder = builder.Where(sq.Eq{"f_builtin": query.Builtin})
 	}
 
+	// 过滤掉被逻辑删除的
+	if !query.IncludeDeleted {
+		builder = builder.Where(sq.Eq{"f_delete_time": 0})
+	}
+
 	return builder
 }

@@ -123,3 +123,8 @@ export type StepOutputs = Record<string, Output>;
 
 export const LoopOperator = "@control/flow/loop";
 export const BranchesOperator = "@control/flow/branches";
+export const ParallelOperator = "@control/flow/parallel";
+
+export enum BranchType {
+    Parallel = 'parallel',
+}

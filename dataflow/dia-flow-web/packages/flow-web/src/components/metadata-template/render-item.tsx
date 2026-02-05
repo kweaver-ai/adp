@@ -1188,7 +1188,9 @@ export const ItemView = ({
                         !stepOutput ||
                         !isAccessable(
                             (step && stepNodes[step.id]?.path) || [],
-                            stepNode!.path
+                            stepNode!.path,
+                            false,
+                            stepNode
                         ) && !isLoopVarAccessible((step && stepNodes[step.id]?.path) || [], stepNode!.path, stepNode?.step?.operator === LoopOperator)
                 })}
             >

@@ -26,6 +26,7 @@ type ServerSetting struct {
 	WriteTimeout          time.Duration `mapstructure:"writeTimeOut"`
 	PersistSteps          []string      `mapstructure:"persistSteps"`
 	WatchMetadataInterval time.Duration `mapstructure:"watchMetadataInterval"`
+	WatchMetadataEnabled  bool          `mapstructure:"watchMetadataEnabled"`
 }
 
 type ThirdParty struct {

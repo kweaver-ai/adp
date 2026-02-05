@@ -30,10 +30,20 @@ func NewInCond(ctx context.Context, cfg *CondCfg, fieldsMap map[string]*ViewFiel
 		return nil, fmt.Errorf("condition [in] right value should be an array composed of elements of same type")
 	}
 
+	featureType := FieldFeatureType_Raw
+	if IsTextType(fieldsMap[cfg.Name]) {
+		featureType = FieldFeatureType_Keyword
+	}
+
+	fName, err := GetQueryField(ctx, cfg.Name, fieldsMap, featureType)
+	if err != nil {
+		return nil, fmt.Errorf("condition [in], %v", err)
+	}
+
 	return &InCond{
 		mCfg:             cfg,
 		mValue:           cfg.ValueOptCfg.Value.([]any),
-		mFilterFieldName: getFilterFieldName(ctx, cfg.Name, fieldsMap, false),
+		mFilterFieldName: fName,
 	}, nil
 }
 

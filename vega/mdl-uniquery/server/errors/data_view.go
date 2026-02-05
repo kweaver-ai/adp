@@ -40,6 +40,7 @@ const (
 	Uniquery_DataView_InternalError_ConvertToViewUniResponseFailed = "Uniquery.DataView.InternalError.ConvertToViewUniResponseFailed"
 	Uniquery_DataView_InternalError_CreatePointInTimeFailed        = "Uniquery.DataView.InternalError.CreatePointInTimeFailed"
 	Uniquery_DataView_InternalError_DeletePointInTimeFailed        = "Uniquery.DataView.InternalError.DeletePointInTimeFailed"
+	Uniquery_DataView_InternalError_FetchDataFromVegaFailed        = "Uniquery.DataView.InternalError.FetchDataFromVegaFailed"
 	Uniquery_DataView_InternalError_GetDataViewByIDFailed          = "Uniquery.DataView.InternalError.GetDataViewByIDFailed"
 	Uniquery_DataView_InternalError_GetDocumentsFailed             = "Uniquery.DataView.InternalError.GetDocumentsFailed"
 	Uniquery_DataView_InternalError_GetIndexBaseByTypeFailed       = "Uniquery.DataView.InternalError.GetIndexBaseByTypeFailed"
@@ -48,6 +49,7 @@ const (
 	Uniquery_DataView_InternalError_GetSearchAfterValueFailed      = "Uniquery.DataView.InternalError.GetSearchAfterValueFailed"
 	Uniquery_DataView_InternalError_GetScrollIdFailed              = "Uniquery.DataView.InternalError.GetScrollIdFailed"
 	Uniquery_DataView_InternalError_GetTotalFailed                 = "Uniquery.DataView.InternalError.GetTotalFailed"
+	Uniquery_DataView_InternalError_InvalidReferenceView           = "Uniquery.DataView.InternalError.InvalidReferenceView"
 	Uniquery_DataView_InternalError_LoadIndexShardsFailed          = "Uniquery.DataView.InternalError.LoadIndexShardsFailed"
 	Uniquery_DataView_InternalError_MarshalFailed                  = "Uniquery.DataView.InternalError.MarshalFailed"
 	Uniquery_DataView_InternalError_ProcessDocFailed               = "Uniquery.DataView.InternalError.ProcessDocFailed"
@@ -96,6 +98,7 @@ var (
 		Uniquery_DataView_InternalError_ConvertToViewUniResponseFailed,
 		Uniquery_DataView_InternalError_CreatePointInTimeFailed,
 		Uniquery_DataView_InternalError_DeletePointInTimeFailed,
+		Uniquery_DataView_InternalError_FetchDataFromVegaFailed,
 		Uniquery_DataView_InternalError_GetDataViewByIDFailed,
 		Uniquery_DataView_InternalError_GetDocumentsFailed,
 		Uniquery_DataView_InternalError_GetIndexBaseByTypeFailed,
@@ -104,6 +107,7 @@ var (
 		Uniquery_DataView_InternalError_GetSearchAfterValueFailed,
 		Uniquery_DataView_InternalError_GetScrollIdFailed,
 		Uniquery_DataView_InternalError_GetTotalFailed,
+		Uniquery_DataView_InternalError_InvalidReferenceView,
 		Uniquery_DataView_InternalError_LoadIndexShardsFailed,
 		Uniquery_DataView_InternalError_MarshalFailed,
 		Uniquery_DataView_InternalError_ProcessDocFailed,

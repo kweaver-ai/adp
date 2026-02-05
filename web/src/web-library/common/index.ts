@@ -8,6 +8,7 @@ import Select, { SelectProps } from './Select';
 import Steps from './Steps';
 import Table from './Table';
 import { Text, Title, TextProps } from './Text';
+import Tooltip from './Tooltip';
 
-export { Button, Drawer, IconFont, Input, Modal, Select, Table, Text, Title, Steps, RouterPrompt };
+export { Button, Drawer, IconFont, Input, Modal, Select, Table, Text, Title, Steps, RouterPrompt, Tooltip };
 export type { ButtonProps, InputProps, SelectProps, TextProps };

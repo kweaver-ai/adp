@@ -2077,6 +2077,24 @@ paths:
                       end: 1762996342241
                       instant: false
                       step: month
+                      analysis_dimensions:
+                      - pod_name
+                      - pod_node_name
+                      order_by_fields:
+                      - name: __value
+                        type: number
+                        direction: desc
+                      having_condition:
+                        field: __value
+                        operation: '>'
+                        value: 100
+                      metrics:
+                        type: sameperiod
+                        sameperiod_config:
+                          method:
+                            - growth_rate
+                          offset: 1
+                          time_granularity: day
                     a_action:
                       Authorization: aasssdffgg
         required: true
@@ -2450,6 +2468,140 @@ components:
         end:
           description: 结束时间戳
           type: integer
+    MetricPropertyDynamicParams:
+      description: |
+        指标属性的 dynamic_params 结构。当属性是指标属性时，dynamic_params 应遵循此 schema。
+        包含时间参数、分析参数以及指标属性配置中定义的其他动态参数。
+      type: object
+      properties:
+        start:
+          description: "指标查询的开始时间。start=< unix_timestamp >，单位到毫秒。例如: 1646360670123"
+          format: int64
+          type: integer
+        end:
+          description: "指标查询的结束时间。end=< unix_timestamp >，单位到毫秒。例如: 1646471470123"
+          format: int64
+          type: integer
+        instant:
+          description: |
+            是否是即时查询。可选，默认为 false。当 instant = true 时，表示即时查询；当 instant = false 时，表示范围查询。
+          type: boolean
+        step:
+          description: |
+            范围查询的步长。当 instant 为 false 时，建议提供。step=< time_durations >，用一个数字，后面跟时间单位来定义。
+            若不填单位，则默认按秒计算。时间单位可以是如下之一：ms - 毫秒；s - 秒；m - 分钟；h - 小时；d - 天；w - 周；y - 年；
+          type: string
+        analysis_dimensions:
+          description: 分析维度。即在指标查询时可指定的下钻维度集合
+          type: array
+          items:
+            type: string
+        order_by_fields:
+          description: 排序字段。即在指标查询时可指定的排序字段集合
+          type: array
+          items:
+            $ref: '#/components/schemas/OrderField'
+        having_condition:
+          $ref: '#/components/schemas/HavingCondition'
+          description: having值过滤。即在指标查询时可指定的值过滤的过滤条件
+        metrics:
+          $ref: '#/components/schemas/Metrics'
+          description: 同环比、占比分析
+      additionalProperties:
+            oneOf:
+            - type: string
+            - type: number
+            - type: boolean
+            - type: integer
+    OrderField:
+      description: 排序字段
+      required:
+      - name
+      - direction
+      type: object
+      properties:
+        name:
+          description: 字段名
+          type: string
+        direction:
+          description: 排序方向
+          enum:
+          - asc
+          - desc
+          type: string
+    HavingCondition:
+      description: having值数据过滤
+      required:
+      - operation
+      - value
+      - field
+      type: object
+      properties:
+        field:
+          description: 字段名称。只有 __value
+          enum:
+          - __value
+          type: string
+        operation:
+          description: 操作符
+          enum:
+          - ==
+          - '!='
+          - '>'
+          - '>='
+          - <
+          - <=
+          - in
+          - not_in
+          - range
+          - out_range
+          type: string
+        value:
+          description: 字段值
+    Metrics:
+      description: 同环比、占比分析
+      required:
+      - type
+      type: object
+      properties:
+        type:
+          description: 同环比占比类型。同环比：sameperiod；占比：proportion
+          enum:
+          - sameperiod
+          - proportion
+          type: string
+        sameperiod_config:
+          $ref: '#/components/schemas/SameperiodConfig'
+          description: 同环比配置
+    SameperiodConfig:
+      description: 同环比配置
+      required:
+      - offset
+      - time_granularity
+      type: object
+      properties:
+        method:
+          description: 计算方法，增长值或增长率
+          type: array
+          default:
+            - growth_value
+            - growth_rate
+          items:
+            type: string
+            enum:
+              - growth_value
+              - growth_rate
+        offset:
+          description: 偏移量
+          type: integer
+        time_granularity:
+          description: 时间粒度
+          enum:
+          - day
+          - month
+          - quarter
+          - year
+          type: string
     ObjectTypeDetail:
       description: 节点（对象类）信息
       required:
@@ -3270,6 +3422,7 @@ components:
       required:
       - labels
       - times
+      - time_strs
       - values
       type: object
       properties:
@@ -3284,8 +3437,28 @@ components:
           type: array
           items:
             type: object
+        time_strs:
+          description: 时间字符串数组。
+          type: array
+          items:
+            type: object
         values:
           description: 度量值数组。数值类型
+          type: array
+          items:
+            type: number
+        growth_values:
+          description: 增长值。当请求了同环比分析时才有此字段。
+          type: array
+          items:
+            type: number
+        growth_rates:
+          description: 增长率。当请求了同环比分析时才有此字段。
+          type: array
+          items:
+            type: number
+        proportions:
+          description: 占比。当请求了占比分析时才有此字段。
           type: array
           items:
             type: number
@@ -3293,22 +3466,33 @@ components:
       description: 属性查询请求体
       required:
       - properties
-      - instance_identities
+      - _instance_identities
       type: object
       properties:
+        _instance_identities:
+          description: 对象主键的数组，代表多个对象。map，key为主键属性名，value为对应的属性值
+          type: array
+          items:
+            $ref: '#/components/schemas/InstanceIdentity'
         properties:
           description: 属性列表
           type: array
           items:
             type: string
         dynamic_params:
-          description: 各个逻辑属性所需的动态参数。是个map，key为属性名成，value为map，其key为参数名，值为赋予的参数值
-          additionalProperties: {}
-        instance_identities:
-          description: 对象主键的数组，代表多个对象。map，key为主键属性名，value为对应的属性值
-          type: array
-          items:
-            $ref: '#/components/schemas/InstanceIdentity'
+          description: |
+            各个逻辑属性所需的动态参数。是个map，key为属性名称，value为map，其key为参数名，值为赋予的参数值。
+            当属性是指标属性时，dynamic_params 的结构应遵循 MetricPropertyDynamicParams schema，包含：
+            - 时间参数：start（开始时间戳，毫秒）、end（结束时间戳，毫秒）、instant（是否即时查询）、step（步长，如"1m"、"1h"等）
+            - 分析参数：analysis_dimensions（分析维度数组）、order_by_fields（排序字段数组）、having_condition（having值过滤条件）、metrics（同环比、占比分析配置）
+            - 配置的动态参数：指标属性配置中定义的其他动态参数（如 pod_ip、pod_name 等）
+          additionalProperties:
+            oneOf:
+            - type: string
+            - type: number
+            - type: boolean
+            - type: integer
+            - $ref: '#/components/schemas/MetricPropertyDynamicParams'
     SubGraphQueryBaseOnSource:
       description: 基于起点、方向和路径长度获取对象子图
       required:
@@ -4208,10 +4392,10 @@ components:
     InstanceIdentities:
       description: 对象唯一标识
       required:
-      - instance_identities
+      - _instance_identities
       type: object
       properties:
-        instance_identities:
+        _instance_identities:
           description: 对象主键的数组，代表多个对象。map，key为主键属性名，value为对应的属性值
           type: array
           items:

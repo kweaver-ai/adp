@@ -10,7 +10,6 @@ import com.eisoo.dc.common.constant.Constants;
 import com.eisoo.dc.common.exception.enums.ErrorCodeEnum;
 import com.eisoo.dc.common.exception.vo.AiShuException;
 import com.eisoo.dc.common.metadata.entity.FieldScanEntity;
-import com.eisoo.dc.common.metadata.entity.OpenSearchEntity;
 import com.eisoo.dc.common.msq.GlobalConfig;
 import com.eisoo.dc.common.vo.Ext;
 import com.eisoo.dc.common.vo.IntrospectInfo;
@@ -237,61 +236,30 @@ public class CommonUtil {
         return virtualFieldType.toLowerCase();
     }
 
-    public static String getOpenSearchFieldParam(ConnectorConfig connectorConfig, OpenSearchEntity.OpenSearchField field) {
-//        {
-//            "key": "originFieldType",
-//                "value": "bpchar"
-//        },
-//        {
-//            "key": "virtualFieldType",
-//                "value": "char"
-//        }
-        JSONArray result = new JSONArray();
+    public static String getOpenSearchFieldParamByJson(ConnectorConfig connectorConfig, JSONObject fieldJson) {
+        JSONArray advancedParamsJson = new JSONArray();
         HashMap<String, String> typeMap = new HashMap<>();
         List<TypeConfig> type = connectorConfig.getType();
         for (TypeConfig typeConfig : type) {
             typeMap.put(typeConfig.getSourceType(), typeConfig.getVegaType());
         }
+
         JSONObject o1 = new JSONObject();
         o1.put("key", "originFieldType");
-        o1.put("value", field.getType().toLowerCase());
+        o1.put("value", fieldJson.getString("type").toLowerCase());
+        advancedParamsJson.add(o1);
+
         JSONObject o2 = new JSONObject();
         o2.put("key", "virtualFieldType");
-        o2.put("value", typeMap.get(field.getType().toLowerCase()));
-        result.add(o1);
-        result.add(o2);
+        o2.put("value", typeMap.get(fieldJson.getString("type").toLowerCase()));
+        advancedParamsJson.add(o2);
 
-        String keywordType = field.getKeywordType();
-        if (isNotEmpty(keywordType)) {
-            JSONObject o = new JSONObject();
-            o.put("key", "fields.keyword.type");
-            o.put("value", keywordType);
-            result.add(o);
-        }
-        Integer ignoreAbove = field.getIgnoreAbove();
-        if (isNotEmpty(ignoreAbove)) {
-            JSONObject o = new JSONObject();
-            o.put("key", "fields.keyword.ignore_above");
-            o.put("value", ignoreAbove);
-            result.add(o);
-        }
-        Boolean norms = field.getNorms();
-        if (isNotEmpty(norms)) {
-            JSONObject o = new JSONObject();
-            o.put("key", "norms");
-            o.put("value", norms);
-            result.add(o);
-        }
-        String analyzer = field.getAnalyzer();
-        if (isNotEmpty(analyzer)) {
-            JSONObject o = new JSONObject();
-            o.put("key", "analyzer");
-            o.put("value", analyzer);
-            result.add(o);
-        }
-        return result.toJSONString();
+        JSONObject o3 = new JSONObject();
+        o3.put("key", "mappingConfig");
+        o3.put("value", fieldJson);
+        advancedParamsJson.add(o3);
 
-
+        return advancedParamsJson.toJSONString();
     }
 
     public static boolean judgeTwoFiledIsChane(FieldScanEntity newFieldScanEntity, FieldScanEntity oldFieldScanEntity) {

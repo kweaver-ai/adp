@@ -6,8 +6,8 @@ import (
 	"fmt"
 	"strings"
 
+	liberrors "github.com/kweaver-ai/adp/autoflow/flow-automation/libs/go/errors"
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/utils"
-	liberrors "github.com/kweaver-ai/adp/autoflow/ide-go-lib/errors"
 )
 
 var (

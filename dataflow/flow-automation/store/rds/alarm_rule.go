@@ -9,8 +9,8 @@ import (
 
 	jsoniter "github.com/json-iterator/go"
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/common"
-	cdb "github.com/kweaver-ai/adp/autoflow/ide-go-lib/db"
-	"github.com/kweaver-ai/adp/autoflow/ide-go-lib/telemetry/trace"
+	cdb "github.com/kweaver-ai/adp/autoflow/flow-automation/libs/go/db"
+	"github.com/kweaver-ai/adp/autoflow/flow-automation/libs/go/telemetry/trace"
 	"go.opentelemetry.io/otel/attribute"
 	"gorm.io/gorm"
 )

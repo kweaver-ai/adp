@@ -92,6 +92,7 @@ export default function ArrayFieldTemplate<
                 schema.type,
                 {
                     targetRect,
+                    currentStepNodes: step && stepNodes[step.id],
                 }
             )
                 .then((value) => {

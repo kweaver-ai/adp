@@ -12,13 +12,13 @@ import (
 
 	// "github.com/kweaver-ai/adp/autoflow/flow-automation/drivenadapters/thirft" // disabled: go-lib dependency
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/errors"
+	commonLog "github.com/kweaver-ai/adp/autoflow/flow-automation/libs/go/log"
+	traceLog "github.com/kweaver-ai/adp/autoflow/flow-automation/libs/go/telemetry/log"
+	"github.com/kweaver-ai/adp/autoflow/flow-automation/libs/go/telemetry/trace"
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/pkg/entity"
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/pkg/mod"
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/store/rds"
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/utils"
-	commonLog "github.com/kweaver-ai/adp/autoflow/ide-go-lib/log"
-	traceLog "github.com/kweaver-ai/adp/autoflow/ide-go-lib/telemetry/log"
-	"github.com/kweaver-ai/adp/autoflow/ide-go-lib/telemetry/trace"
 	"go.mongodb.org/mongo-driver/bson"
 	"gorm.io/gorm"
 )

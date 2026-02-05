@@ -96,7 +96,7 @@ export const AtomStep: FC<{
                     >
                         <div className={styles.head}>
                             <div className={styles.title}>
-                                {stepNodes[Number(step.id)]!.index + 1}.&nbsp;
+                                {(stepNodes[Number(step.id)]?.index ?? 0) + 1}.&nbsp;
                                 {step.operator && executor
                                     ? getHeaderName(executor.name)
                                     : t(

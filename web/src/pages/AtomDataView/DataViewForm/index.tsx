@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import intl from 'react-intl-universal';
-import { Button, Col, Form, Input, Row } from 'antd';
+import { LeftOutlined } from '@ant-design/icons';
+import { Button, Col, Divider, Form, Input, Row } from 'antd';
+import FieldFeatureModal from '@/components/FieldFeatureModal';
 import { FORM_LAYOUT } from '@/hooks/useConstants';
 import api from '@/services/atomDataView';
 import * as AtomDataViewType from '@/services/atomDataView/type';
@@ -26,9 +28,10 @@ const DataViewForm = ({ visible, onClose, id, checkDatasource }: PropType): JSX.
 
   const [fieldData, setFieldData] = useState<AtomDataViewType.Field[]>([]);
   const [detail, setDetail] = useState<AtomDataViewType.Data>();
-  const [editingKey, setEditingKey] = useState<string>();
   const [loading, setLoading] = useState<boolean>(false);
   const [page, setPage] = useState<number>(1);
+  const [featureModalVisible, setFeatureModalVisible] = useState<boolean>(false);
+  const [currentField, setCurrentField] = useState<AtomDataViewType.Field | null>(null);
 
   const getDetail = async (): Promise<void> => {
     const resDetail = await api.getDataViewsByIds([id]);
@@ -60,8 +63,53 @@ const DataViewForm = ({ visible, onClose, id, checkDatasource }: PropType): JSX.
     onClose(!!bool);
   };
 
+  const validateFields = (): boolean => {
+    // 校验字段数据
+    for (const field of fieldData) {
+      // 校验字段显示名称
+      if (!field.display_name || !field.display_name.trim()) {
+        message.error(`${intl.get('Global.fieldDisplayName')}: ${intl.get('Global.cannotBeNull')}`);
+        return false;
+      }
+      if (field.display_name.length > 255) {
+        message.error(`${intl.get('Global.fieldDisplayName')}: ${intl.get('DataView.displayNameMaxLength')}`);
+        return false;
+      }
+
+      // 校验字段名称
+      if (!field.name || !field.name.trim()) {
+        message.error(`${intl.get('Global.fieldName')}: ${intl.get('Global.cannotBeNull')}`);
+        return false;
+      }
+    }
+
+    // 校验字段显示名称重复
+    const displayNames = fieldData.map((f) => f.display_name);
+    const displayNameSet = new Set(displayNames);
+    if (displayNames.length !== displayNameSet.size) {
+      message.error(`${intl.get('Global.fieldDisplayName')}: ${intl.get('Global.nameCannotRepeat')}`);
+      return false;
+    }
+
+    // 校验字段名称重复
+    const names = fieldData.map((f) => f.name);
+    const nameSet = new Set(names);
+    if (names.length !== nameSet.size) {
+      message.error(`${intl.get('Global.fieldName')}: ${intl.get('Global.fieldNameCannotRepeat')}`);
+      return false;
+    }
+
+    return true;
+  };
+
   const onOk = async (): Promise<void> => {
+    // 先校验表单
     form.validateFields().then(async (values) => {
+      // 再校验字段数据
+      if (!validateFields()) {
+        return;
+      }
+
       setLoading(true);
       try {
         const { name, comment } = values;
@@ -83,10 +131,23 @@ const DataViewForm = ({ visible, onClose, id, checkDatasource }: PropType): JSX.
     });
   };
 
+  const title = (
+    <div className={styles['box-exit']}>
+      <div className={styles['exit']} onClick={() => onCancel()}>
+        <LeftOutlined />
+        <span>{intl.get('Global.exit')}</span>
+      </div>
+      <Divider type="vertical" />
+      <span>
+        {intl.get('DataView.editAtomView')}：{detail?.name}
+      </span>
+    </div>
+  );
+
   return (
-    <Drawer title={intl.get('Global.edit')} open={visible} onClose={(): Promise<void> => onCancel()} width={800} closable={false} maskClosable={false}>
+    <Drawer title={title} open={visible} onClose={() => onCancel()} width={'100vw'} closable={false} maskClosable={false}>
       <div className={styles['dataview-form-wrapper']}>
-        <Form form={form} {...FORM_LAYOUT}>
+        <Form form={form} {...FORM_LAYOUT} labelAlign="left">
           <div className={styles['title']}>
             <span> </span>
             {intl.get('Global.basicConfig')}
@@ -165,23 +226,88 @@ const DataViewForm = ({ visible, onClose, id, checkDatasource }: PropType): JSX.
           {intl.get('Global.fieldInfo')}
         </div>
         <FieldTable
-          editingKey={editingKey}
-          setEditingKey={setEditingKey}
           dataSource={fieldData}
           onChange={(val): void => setFieldData(val)}
           page={page}
           setPage={setPage}
           isEdit={!!id}
+          onFieldFeatureClick={(field): void => {
+            setCurrentField(field);
+            setFeatureModalVisible(true);
+          }}
         />
       </div>
       <div className={styles.footer}>
-        <Button onClick={onOk} type="primary" style={{ marginRight: 8 }} disabled={!!editingKey} loading={loading}>
+        <Button onClick={onOk} type="primary" style={{ marginRight: 8 }} loading={loading}>
           {intl.get('Global.save')}
         </Button>
-        <Button onClick={(): Promise<void> => onCancel()} disabled={!!editingKey || loading}>
+        <Button onClick={(): Promise<void> => onCancel()} disabled={loading}>
           {intl.get('Global.cancel')}
         </Button>
       </div>
+      <FieldFeatureModal
+        visible={featureModalVisible}
+        mode="edit"
+        fieldName={currentField?.display_name || currentField?.name}
+        data={currentField?.features || []}
+        fields={fieldData}
+        onCancel={(): void => {
+          setFeatureModalVisible(false);
+          setCurrentField(null);
+        }}
+        onOk={(data): void => {
+          setFieldData((prevFieldData) =>
+            prevFieldData.map((field) => {
+              if (currentField && field.original_name === currentField.original_name) {
+                return { ...field, features: data };
+              }
+              return field;
+            })
+          );
+          setFeatureModalVisible(false);
+          setCurrentField(null);
+        }}
+        onPrev={(features) => {
+          if (!currentField || !fieldData.length) return false;
+          // 先保存当前字段的 features
+          setFieldData((prevFieldData) =>
+            prevFieldData.map((field) => {
+              if (field.original_name === currentField.original_name) {
+                return { ...field, features };
+              }
+              return field;
+            })
+          );
+          // 切换到上一个字段
+          const currentIndex = fieldData.findIndex((f) => f.original_name === currentField.original_name);
+          if (currentIndex > 0) {
+            const prevField = fieldData[currentIndex - 1];
+            setCurrentField(prevField);
+            return true;
+          }
+          return false;
+        }}
+        onNext={(features) => {
+          if (!currentField || !fieldData.length) return false;
+          // 先保存当前字段的 features
+          setFieldData((prevFieldData) =>
+            prevFieldData.map((field) => {
+              if (field.original_name === currentField.original_name) {
+                return { ...field, features };
+              }
+              return field;
+            })
+          );
+          // 切换到下一个字段
+          const currentIndex = fieldData.findIndex((f) => f.original_name === currentField.original_name);
+          if (currentIndex < fieldData.length - 1) {
+            const nextField = fieldData[currentIndex + 1];
+            setCurrentField(nextField);
+            return true;
+          }
+          return false;
+        }}
+      />
     </Drawer>
   );
 };

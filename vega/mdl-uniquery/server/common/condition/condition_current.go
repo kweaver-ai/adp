@@ -41,10 +41,15 @@ func NewCurrentCond(ctx context.Context, cfg *CondCfg, fieldsMap map[string]*Vie
 		one of ["%Y", "%Y-%m", "%Y-%m-%d", "%Y-%m-%d %H", "%Y-%m-%d %H:%i", "%x-%v"], actual is ` + val)
 	}
 
+	fName, err := GetQueryField(ctx, cfg.Name, fieldsMap, FieldFeatureType_Raw)
+	if err != nil {
+		return nil, fmt.Errorf("condition [current], %v", err)
+	}
+
 	return &CurrentCond{
 		mCfg:             cfg,
 		mValue:           val,
-		mFilterFieldName: getFilterFieldName(ctx, cfg.Name, fieldsMap, false),
+		mFilterFieldName: fName,
 	}, nil
 }
 

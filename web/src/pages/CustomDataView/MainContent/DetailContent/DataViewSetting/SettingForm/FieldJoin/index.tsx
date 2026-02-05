@@ -1,11 +1,13 @@
 import { useEffect, useState, useRef, useMemo } from 'react';
 import intl from 'react-intl-universal';
 import { CheckOutlined } from '@ant-design/icons';
-import { Input, Select, Table } from 'antd';
+import { Button, Input, Table } from 'antd';
 import classnames from 'classnames';
 import { arNotification } from '@/components/ARNotification';
+import FieldFeatureModal from '@/components/FieldFeatureModal';
+import FieldSelect from '@/components/FieldSelect';
 import HOOKS from '@/hooks';
-import { IconFont } from '@/web-library/common';
+import { IconFont, Tooltip } from '@/web-library/common';
 import FormHeader from '../FormHeader';
 import styles from './index.module.less';
 import { useDataViewContext } from '../../../context';
@@ -26,13 +28,14 @@ const FieldJoin = () => {
   const [leftNode, setLeftNode] = useState<any>({});
   const [rightNode, setRightNode] = useState<any>({});
   const [editingKey, setEditingKey] = useState('');
-  const [editValue, setEditValue] = useState('');
   const [outputFields, setOutputFields] = useState<any[]>([]);
   const [searchKeyword, setSearchKeyword] = useState('');
   const rightBoxRef = useRef<HTMLDivElement>(null);
   const rightBoxSize = HOOKS.useSize(rightBoxRef);
   const tableScrollY = rightBoxSize?.height ? rightBoxSize.height - 100 : 500;
   const [loading, setLoading] = useState<boolean>(false);
+  const [featureModalVisible, setFeatureModalVisible] = useState<boolean>(false);
+  const [currentField, setCurrentField] = useState<any>(null);
 
   const joinTypeOptions = [
     {
@@ -117,22 +120,41 @@ const FieldJoin = () => {
     return dataSource.filter((item) => item.display_name?.toLowerCase().includes(keyword) || item.name?.toLowerCase().includes(keyword));
   }, [outputFields, searchKeyword]);
 
-  const handleInputSave = (record: any, field: string) => {
-    if (!editValue) {
-      setEditingKey('');
-      return;
-    }
-    // 字段名重复校验
-    if (dataSource?.some((item: any) => item.original_name !== record.original_name && item[field] === editValue)) {
-      arNotification.error(intl.get('Global.fieldNameCannotRepeat'));
-      setEditingKey('');
-      return;
-    }
-    record[field] = editValue;
+  const handleFieldChange = (record: any, field: string, value: string) => {
     setDataSource(
-      dataSource.map((item: any) => (item.original_name === record.original_name && item.src_node_name === record.src_node_name ? record : item)) || []
+      dataSource.map((item: any) =>
+        item.original_name === record.original_name && item.src_node_name === record.src_node_name ? { ...item, [field]: value } : item
+      ) || []
     );
-    setEditingKey('');
+  };
+
+  const renderEditableCell = (record: any, field: 'display_name' | 'comment') => {
+    const isEditing = editingKey === record.original_name + record.src_node_name;
+    const value = record[field];
+
+    if (isEditing) {
+      return (
+        <Tooltip title={value}>
+          <Input
+            value={value}
+            onChange={(e) => {
+              handleFieldChange(record, field, e.target.value);
+            }}
+            onBlur={() => setEditingKey('')}
+            autoFocus
+            maxLength={255}
+          />
+        </Tooltip>
+      );
+    }
+
+    return (
+      <Tooltip title={value}>
+        <div className={styles.fieldName} onClick={() => setEditingKey(record.original_name + record.src_node_name)}>
+          {value || '--'}
+        </div>
+      </Tooltip>
+    );
   };
 
   const handleSubmit = () => {
@@ -180,25 +202,15 @@ const FieldJoin = () => {
       title: intl.get('Global.fieldBusinessName'),
       dataIndex: 'display_name',
       key: 'display_name',
-      render: (_: any, record: any) => {
-        if (editingKey === record.original_name) {
-          return (
-            <Input
-              defaultValue={record.display_name}
-              onBlur={() => handleInputSave(record, 'display_name')}
-              onChange={(e) => {
-                setEditValue(e.target.value);
-              }}
-            />
-          );
-        }
-        return <span onClick={() => setEditingKey(record.original_name)}>{record.display_name}</span>;
-      },
+      width: 200,
+      ellipsis: true,
+      render: (_: any, record: any) => renderEditableCell(record, 'display_name'),
     },
     {
       title: intl.get('CustomDataView.FieldJoin.sourceNode'),
       dataIndex: 'src_node_name',
       key: 'src_node_name',
+      width: 150,
       render: (_: any, record: any) => (
         <div className={styles.srcNodeBox}>
           <IconFont type={record.position === 'left' ? 'icon-dip-color-zuobiao' : 'icon-dip-color-youbiao'} style={{ fontSize: 16 }} />
@@ -210,11 +222,75 @@ const FieldJoin = () => {
       title: intl.get('Global.fieldTechnicalName'),
       dataIndex: 'original_name',
       key: 'original_name',
+      width: 150,
+      ellipsis: true,
     },
     {
       title: intl.get('Global.fieldType'),
       dataIndex: 'type',
       key: 'type',
+      width: 120,
+    },
+    {
+      title: intl.get('Global.fieldComment'),
+      dataIndex: 'comment',
+      key: 'comment',
+      width: 200,
+      ellipsis: true,
+      render: (comment: string) => {
+        return (
+          <Tooltip title={comment}>
+            <div className={styles.fieldName}>{comment || '--'}</div>
+          </Tooltip>
+        );
+      },
+    },
+    {
+      title: intl.get('Global.fieldFeatureType'),
+      dataIndex: 'features',
+      key: 'features_type',
+      width: 150,
+      render: (features: any[]) => {
+        if (!features || features.length === 0) {
+          return <span style={{ color: 'rgba(0, 0, 0, 0.25)' }}>{intl.get('Global.unset')}</span>;
+        }
+        const uniqueTypes = Array.from(new Set(features.map((item) => item.type)));
+        return (
+          <div className={styles.featureTypeContainer}>
+            {uniqueTypes.map((type) => (
+              <span key={type} className={classnames(styles.featureType, styles[type])}>
+                {type}
+              </span>
+            ))}
+          </div>
+        );
+      },
+    },
+    {
+      title: () => (
+        <div>
+          <span style={{ marginRight: 8 }}>{intl.get('Global.fieldFeature')}</span>
+          <Tooltip title={intl.get('Global.fieldFeatureTip')}>
+            <IconFont type="icon-dip-color-tip" className={styles.helpIcon} />
+          </Tooltip>
+        </div>
+      ),
+      dataIndex: 'features',
+      key: 'features',
+      width: 120,
+      align: 'center' as const,
+      render: (_: unknown, record: any) => (
+        <Button
+          type="link"
+          onClick={(): void => {
+            setCurrentField(record);
+            setFeatureModalVisible(true);
+          }}
+          disabled={!record.features || record.features.length === 0}
+        >
+          {intl.get('Global.view')}
+        </Button>
+      ),
     },
   ];
 
@@ -272,44 +348,20 @@ const FieldJoin = () => {
               </div>
             </div>
             <div className={styles.joinSelelctBox}>
-              <Select
-                placeholder={intl.get('CustomDataView.FieldJoin.selectJoinField1')}
+              <FieldSelect
+                placeholder={intl.get('Global.pleaseSelect')}
                 value={leftField}
                 onChange={setLeftField}
-                showSearch
                 style={{ width: 215 }}
-                getPopupContainer={(triggerNode): HTMLElement => triggerNode.parentNode as HTMLElement}
-                options={
-                  leftNode?.output_fields?.map((item: any) => ({
-                    label: (
-                      <>
-                        <span>{item.display_name}</span>
-                        <span style={{ color: '#999', marginLeft: 4, fontSize: 12 }}>({item.type})</span>
-                      </>
-                    ),
-                    value: item.name,
-                  })) || []
-                }
+                fields={leftNode?.output_fields || []}
               />
               <div className={styles.line}></div>
-              <Select
-                placeholder={intl.get('CustomDataView.FieldJoin.selectJoinFields')}
+              <FieldSelect
+                placeholder={intl.get('Global.pleaseSelect')}
                 value={rightField}
                 onChange={setRightField}
-                showSearch
                 style={{ width: 215 }}
-                getPopupContainer={(triggerNode): HTMLElement => triggerNode.parentNode as HTMLElement}
-                options={
-                  rightNode?.output_fields?.map((item: any) => ({
-                    label: (
-                      <>
-                        <span>{item.display_name}</span>
-                        <span style={{ color: '#999', marginLeft: 4, fontSize: 12 }}>({item.type})</span>
-                      </>
-                    ),
-                    value: item.name,
-                  })) || []
-                }
+                fields={rightNode?.output_fields || []}
               />
             </div>
           </div>
@@ -342,6 +394,21 @@ const FieldJoin = () => {
           <Table rowKey="name" scroll={{ y: tableScrollY }} rowSelection={rowSelection} columns={columns} dataSource={filteredDataSource} pagination={false} />
         </div>
       </div>
+      <FieldFeatureModal
+        visible={featureModalVisible}
+        mode="view"
+        fieldName={currentField?.display_name || currentField?.name}
+        data={currentField?.features || []}
+        fields={dataSource}
+        onCancel={(): void => {
+          setFeatureModalVisible(false);
+          setCurrentField(null);
+        }}
+        onOk={(): void => {
+          setFeatureModalVisible(false);
+          setCurrentField(null);
+        }}
+      />
     </div>
   );
 };

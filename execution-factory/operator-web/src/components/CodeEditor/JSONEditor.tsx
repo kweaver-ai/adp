@@ -7,9 +7,10 @@ interface JSONEditorProps {
   value?: string;
   onChange?: (newValue: string) => void;
   options?: editor.IStandaloneEditorConstructionOptions;
+  onMount?: (editor: editor.IStandaloneCodeEditor) => void;
 }
 
-function JSONEditor({ className, height, value, options, onChange }: JSONEditorProps) {
+function JSONEditor({ className, height, value, options, onMount, onChange }: JSONEditorProps) {
   return (
     <MonacoEditor
       className={className}
@@ -33,6 +34,7 @@ function JSONEditor({ className, height, value, options, onChange }: JSONEditorP
       onChange={newValue => {
         onChange?.(newValue || '');
       }}
+      onMount={onMount}
     />
   );
 }

@@ -5,7 +5,7 @@ import (
 	"sync"
 
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/common"
-	commonLog "github.com/kweaver-ai/adp/autoflow/ide-go-lib/log"
+	commonLog "github.com/kweaver-ai/adp/autoflow/flow-automation/libs/go/log"
 )
 
 //go:generate mockgen -package mock_drivenadapters -source ../drivenadapters/authentication.go -destination ../tests/mock_drivenadapters/authentication_mock.go

@@ -45,7 +45,7 @@ func Test_RestHandler_GetActionsInActionTypeByIn(t *testing.T) {
 		url := "/api/ontology-query/in/v1/knowledge-networks/" + knID + "/action-types/" + atID
 
 		actionQuery := interfaces.ActionQuery{
-			InstanceIdentity: []map[string]any{
+			InstanceIdentities: []map[string]any{
 				{"id": "1"},
 			},
 		}
@@ -86,7 +86,7 @@ func Test_RestHandler_GetActionsInActionTypeByIn(t *testing.T) {
 
 		Convey("失败 - 唯一标识为空", func() {
 			invalidQuery := interfaces.ActionQuery{
-				InstanceIdentity: []map[string]any{},
+				InstanceIdentities: []map[string]any{},
 			}
 			reqParamByte, _ := sonic.Marshal(invalidQuery)
 			req := httptest.NewRequest(http.MethodPost, url, bytes.NewReader(reqParamByte))
@@ -141,7 +141,7 @@ func Test_RestHandler_GetActionsInActionTypeByEx(t *testing.T) {
 		url := "/api/ontology-query/v1/knowledge-networks/" + knID + "/action-types/" + atID
 
 		actionQuery := interfaces.ActionQuery{
-			InstanceIdentity: []map[string]any{
+			InstanceIdentities: []map[string]any{
 				{"id": "1"},
 			},
 		}
@@ -209,7 +209,7 @@ func Test_RestHandler_GetActionsInActionType(t *testing.T) {
 		url := "/api/ontology-query/v1/knowledge-networks/" + knID + "/action-types/" + atID
 
 		actionQuery := interfaces.ActionQuery{
-			InstanceIdentity: []map[string]any{
+			InstanceIdentities: []map[string]any{
 				{"id": "1"},
 			},
 		}

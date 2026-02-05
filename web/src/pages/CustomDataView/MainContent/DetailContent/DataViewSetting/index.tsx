@@ -312,7 +312,7 @@ const DataViewSetting = () => {
           setOpen(false);
         }}
       />
-      <Splitter layout="vertical" style={{ height: '100%', boxShadow: '0 0 10px rgba(0, 0, 0, 0.1)' }}>
+      <Splitter layout="vertical" style={{ height: '100%', boxShadow: '0 0 10px rgba(0, 0, 0, 0.1)' }} onResize={() => {}}>
         <Splitter.Panel>
           <GraphBox
             ref={graphBoxRef}

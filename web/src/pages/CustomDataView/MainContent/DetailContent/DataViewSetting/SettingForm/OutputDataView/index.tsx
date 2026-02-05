@@ -1,9 +1,12 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import intl from 'react-intl-universal';
-import { Input, Table } from 'antd';
+import { Button, Input, Table } from 'antd';
+import classNames from 'classnames';
 import { arNotification } from '@/components/ARNotification';
+import FieldFeatureModal from '@/components/FieldFeatureModal';
 import { REQUIRED_META_FIELDS } from '@/hooks/useConstants';
 import HOOKS from '@/hooks';
+import { IconFont, Tooltip } from '@/web-library/common';
 import FormHeader from '../FormHeader';
 import styles from './index.module.less';
 import { useDataViewContext } from '../../../context';
@@ -11,11 +14,12 @@ import EmptyForm from '../EmptyForm';
 
 const OutputDataView = () => {
   const { dataViewTotalInfo, setDataViewTotalInfo, selectedDataView, setSelectedDataView } = useDataViewContext();
-  const [editingKey, setEditingKey] = useState('');
-  const [editValue, setEditValue] = useState('');
+  const [editingCell, setEditingCell] = useState<{ key: string; field: string } | null>(null);
   const [outputFields, setOutputFields] = useState<any[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
   const [searchKeyword, setSearchKeyword] = useState('');
+  const [featureModalVisible, setFeatureModalVisible] = useState<boolean>(false);
+  const [currentField, setCurrentField] = useState<any>(null);
   const mainBoxRef = useRef<HTMLDivElement>(null);
   const mainBoxSize = HOOKS.useSize(mainBoxRef);
   const tableScrollY = mainBoxSize?.height ? mainBoxSize.height - 160 : 500;
@@ -56,20 +60,10 @@ const OutputDataView = () => {
     }
   }, [selectedDataView, dataViewTotalInfo]);
 
-  const handleInputSave = (record: any, field: string) => {
-    if (!editValue) {
-      setEditingKey('');
-      return;
-    }
-    // 字段名重复校验
-    if (selectedDataView?.output_fields?.some((item: any) => item.original_name !== record.original_name && item[field] === editValue)) {
-      arNotification.error(intl.get('Global.fieldNameCannotRepeat'));
-      setEditingKey('');
-      return;
-    }
-    record[field] = editValue;
-    setOutputFields(outputFields.map((item: any) => (item.original_name === record.original_name ? record : item)) || []);
-    setEditingKey('');
+  const handleFieldChange = (record: any, field: string, value: string) => {
+    setOutputFields((prevOutputFields) =>
+      prevOutputFields.map((item: any) => (item.original_name === record.original_name ? { ...item, [field]: value } : item))
+    );
   };
 
   const handleSubmit = () => {
@@ -90,60 +84,110 @@ const OutputDataView = () => {
     });
   };
 
+  const renderEditableCell = (record: any, field: 'display_name' | 'name' | 'comment') => {
+    const isEditing = editingCell?.key === record.original_name && editingCell?.field === field;
+    const value = record[field];
+
+    if (isEditing) {
+      return (
+        <Tooltip title={value}>
+          <Input
+            value={value}
+            onChange={(e) => {
+              handleFieldChange(record, field, e.target.value);
+            }}
+            onBlur={() => setEditingCell(null)}
+            autoFocus
+            maxLength={field === 'comment' ? 1000 : 255}
+          />
+        </Tooltip>
+      );
+    }
+
+    return (
+      <Tooltip title={value}>
+        <div className={styles.fieldName} onClick={() => setEditingCell({ key: record.original_name, field })}>
+          {value || '--'}
+        </div>
+      </Tooltip>
+    );
+  };
+
   const columns = [
     {
       title: intl.get('Global.fieldBusinessName'),
       dataIndex: 'display_name',
       key: 'display_name',
       width: 200,
-      ellipsis: true,
-      render: (_: any, record: any) => {
-        if (editingKey === record.original_name + 'display_name') {
-          return (
-            <Input
-              defaultValue={record.display_name}
-              onBlur={() => {
-                handleInputSave(record, 'display_name');
-              }}
-              autoFocus
-              onChange={(value) => {
-                setEditValue(value.target.value);
-              }}
-            />
-          );
-        }
-        return <span onClick={() => setEditingKey(record.original_name + 'display_name')}>{record.display_name}</span>;
-      },
+      render: (_: any, record: any) => renderEditableCell(record, 'display_name'),
     },
     {
       title: intl.get('Global.fieldTechnicalName'),
       dataIndex: 'name',
       key: 'name',
       width: 200,
-      ellipsis: true,
-      render: (_: any, record: any) => {
-        if (editingKey === record.original_name + 'name') {
-          return (
-            <Input
-              defaultValue={record.name}
-              onBlur={() => {
-                handleInputSave(record, 'name');
-              }}
-              autoFocus
-              onChange={(value) => {
-                setEditValue(value.target.value);
-              }}
-            />
-          );
-        }
-        return <span onClick={() => setEditingKey(record.original_name + 'name')}>{record.name}</span>;
-      },
+      render: (_: any, record: any) => renderEditableCell(record, 'name'),
     },
     {
       title: intl.get('Global.fieldType'),
       dataIndex: 'type',
       key: 'type',
+      width: 120,
+    },
+    {
+      title: intl.get('Global.fieldComment'),
+      dataIndex: 'comment',
+      key: 'comment',
       width: 200,
+      ellipsis: true,
+      render: (_: any, record: any) => renderEditableCell(record, 'comment'),
+    },
+    {
+      title: intl.get('Global.fieldFeatureType'),
+      dataIndex: 'features',
+      key: 'features_type',
+      width: 150,
+      render: (features: any[]) => {
+        if (!features || features.length === 0) {
+          return <span style={{ color: 'rgba(0, 0, 0, 0.25)' }}>{intl.get('Global.unset')}</span>;
+        }
+        const uniqueTypes = Array.from(new Set(features.map((item) => item.type)));
+        return (
+          <div className={styles.featureTypeContainer}>
+            {uniqueTypes.map((type) => (
+              <span key={type} className={classNames(styles.featureType, styles[type])}>
+                {type}
+              </span>
+            ))}
+          </div>
+        );
+      },
+    },
+    {
+      title: () => (
+        <div>
+          <span style={{ marginRight: 8 }}>{intl.get('Global.fieldFeature')}</span>
+          <Tooltip title={intl.get('Global.fieldFeatureTip')}>
+            <IconFont type="icon-dip-color-tip" className={styles.helpIcon} />
+          </Tooltip>
+        </div>
+      ),
+      dataIndex: 'features',
+      key: 'features',
+      width: 120,
+      align: 'center' as const,
+      render: (_: unknown, record: any) => (
+        <Button
+          type="link"
+          onClick={(): void => {
+            setCurrentField(record);
+            setFeatureModalVisible(true);
+          }}
+          disabled={!record.features || record.features.length === 0}
+        >
+          {intl.get('Global.view')}
+        </Button>
+      ),
     },
   ];
 
@@ -198,6 +242,21 @@ const OutputDataView = () => {
           <EmptyForm />
         )}
       </div>
+      <FieldFeatureModal
+        visible={featureModalVisible}
+        mode="view"
+        fieldName={currentField?.display_name || currentField?.name}
+        data={currentField?.features || []}
+        fields={outputFields}
+        onCancel={(): void => {
+          setFeatureModalVisible(false);
+          setCurrentField(null);
+        }}
+        onOk={(): void => {
+          setFeatureModalVisible(false);
+          setCurrentField(null);
+        }}
+      />
     </div>
   );
 };

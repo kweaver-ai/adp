@@ -7,8 +7,8 @@ import (
 
 const (
 	ServiceName       = "sdp"
-	ManagerDeployName = "flow-stream-data-pipeline"
-	ServiceAccount    = "flow-stream-data-pipeline-service-account"
+	ManagerDeployName = "dataflow"
+	ServiceAccount    = "dataflow-service-account"
 )
 
 const (

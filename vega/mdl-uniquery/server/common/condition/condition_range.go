@@ -32,10 +32,15 @@ func NewRangeCond(ctx context.Context, cfg *CondCfg, fieldsMap map[string]*ViewF
 		return nil, fmt.Errorf("condition [range] right value should be of the same type")
 	}
 
+	fName, err := GetQueryField(ctx, cfg.Name, fieldsMap, FieldFeatureType_Raw)
+	if err != nil {
+		return nil, fmt.Errorf("condition [range], %v", err)
+	}
+
 	return &RangeCond{
 		mCfg:             cfg,
 		mValue:           val,
-		mFilterFieldName: getFilterFieldName(ctx, cfg.Name, fieldsMap, false),
+		mFilterFieldName: fName,
 	}, nil
 }
 

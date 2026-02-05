@@ -32,10 +32,15 @@ func NewBetweenCond(ctx context.Context, cfg *CondCfg, fieldsMap map[string]*Vie
 		return nil, fmt.Errorf("condition [between] right value should be an array of length 2")
 	}
 
+	fName, err := GetQueryField(ctx, cfg.Name, fieldsMap, FieldFeatureType_Raw)
+	if err != nil {
+		return nil, fmt.Errorf("condition [between], %v", err)
+	}
+
 	return &BetweenCond{
 		mCfg:             cfg,
 		mValue:           val,
-		mFilterFieldName: getFilterFieldName(ctx, cfg.Name, fieldsMap, false),
+		mFilterFieldName: fName,
 	}, nil
 }
 

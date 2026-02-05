@@ -59,6 +59,9 @@ public class HttpOpenUtils {
                 break;
             } catch (Exception e) {
                 log.error("调用HttpOpenUtils.sendPost Exception, url=" + url + ",param=" + param.toString(), e);
+                if (retryCount == MAX_RETRIES - 1) {
+                    throw e;
+                }
             }
         }
         execute.close();
@@ -92,6 +95,9 @@ public class HttpOpenUtils {
                 break;
             } catch (Exception e) {
                 log.error("调用HttpOpenUtils.sendPut Exception, url=" + url + ",param=" + param.toString(), e);
+                if (retryCount == MAX_RETRIES - 1) {
+                    throw e;
+                }
             }
         }
         execute.close();
@@ -126,6 +132,9 @@ public class HttpOpenUtils {
                 break;
             } catch (Exception e) {
                 log.error("调用HttpOpenUtils.sendGet Exception, url=" + url, e);
+                if (retryCount == MAX_RETRIES - 1) {
+                    throw e;
+                }
             }
         }
         execute.close();
@@ -160,6 +169,9 @@ public class HttpOpenUtils {
                 break;
             } catch (Exception e) {
                 log.error("调用HttpOpenUtils.sendDelete Exception, url=" + url, e);
+                if (retryCount == MAX_RETRIES - 1) {
+                    throw e;
+                }
             }
         }
         execute.close();
@@ -201,6 +213,9 @@ public class HttpOpenUtils {
                 break;
             } catch (Exception e) {
                 log.error("调用HttpOpenUtils.sendPost Exception, url=" + url + ",param=" + sql, e);
+                if (retryCount == MAX_RETRIES - 1) {
+                    throw e;
+                }
             }
         }
         execute.close();
@@ -237,6 +252,9 @@ public class HttpOpenUtils {
                 break;
             } catch (Exception e) {
                 log.error("调用HttpOpenUtils.sendPost Exception, url=" + url + ",param=" + body, e);
+                if (retryCount == MAX_RETRIES - 1) {
+                    throw e;
+                }
             }
         }
         execute.close();
@@ -279,6 +297,9 @@ public class HttpOpenUtils {
                 break;
             } catch (Exception e) {
                 log.error("调用HttpOpenUtils.sendPost Exception, url=" + url + ",param=" + sql, e);
+                if (retryCount == MAX_RETRIES - 1) {
+                    throw e;
+                }
             }
         }
         execute.close();
@@ -308,6 +329,9 @@ public class HttpOpenUtils {
                 break;
             } catch (Exception e) {
                 log.error("调用HttpOpenUtils.sendPost Exception, url=" + url + ",param=" + sql, e);
+                if (retryCount == MAX_RETRIES - 1) {
+                    throw e;
+                }
             }
         }
         execute.close();
@@ -337,6 +361,9 @@ public class HttpOpenUtils {
                 break;
             } catch (Exception e) {
                 log.error("调用HttpOpenUtils.sendPostWithParams Exception, url=" + uri + ",param=" + sql, e);
+                if (retryCount == MAX_RETRIES - 1) {
+                    throw e;
+                }
             }
         }
         if (execute != null) {
@@ -375,6 +402,9 @@ public class HttpOpenUtils {
                 break;
             } catch (Exception e) {
                 log.error("调用HttpOpenUtils.sendPostOlk Exception, url:{},param:{}", url, sql, e);
+                if (retryCount == MAX_RETRIES - 1) {
+                    throw e;
+                }
             }
         }
         execute.close();
@@ -408,6 +438,9 @@ public class HttpOpenUtils {
                 break;
             } catch (Exception e) {
                 log.error("调用HttpOpenUtils.sendGetOlk Exception, url:{}", url, e);
+                if (retryCount == MAX_RETRIES - 1) {
+                    throw e;
+                }
             }
         }
         execute.close();
@@ -445,58 +478,9 @@ public class HttpOpenUtils {
                 break;
             } catch (Exception e) {
                 log.error("调用HttpOpenUtils.sendGetOlk Exception, url:{}", url, e);
-            }
-        }
-        execute.close();
-        return new HttpResInfo(execute.getStatus(), execute.body());
-    }
-
-    public static String sendGetOlkWithTimeOut(String url, String user, int timeOut, int readTimeOut) throws Exception {
-        HttpResponse execute = null;
-        try {
-            execute = HttpUtil.createRequest(Method.GET, url)
-                    .header("X-Presto-User", user)
-                    .header("Content-Type", "application/json")
-                    .removeHeader("Content-Encoding")
-                    .removeHeader("Accept-Encoding")
-                    .setConnectionTimeout(connectTimeout)
-                    .setReadTimeout(readTimeout)
-                    .execute();
-        } catch (Exception e) {
-            log.error("调用HttpOpenUtils.sendGetOlkWithTimeOut Exception, url:{}", url, e);
-            throw new Exception(e);
-        } finally {
-            if (null != execute) {
-                execute.close();
-            }
-        }
-        if (execute != null) {
-            return execute.body();
-        }
-        return null;
-    }
-
-    public static HttpResInfo sendGetSchemas(String url, String user) {
-        if (!Validator.isUrl(url)) {
-            log.error("调用HttpOpenUtils.sendGetSchemas url error=" + url);
-            throw new AiShuException(ErrorCodeEnum.InternalError, String.format(Detail.URL_ERROR, url), Message.MESSAGE_INTERNAL_ERROR);
-        }
-        HttpResponse execute = null;
-        for (int retryCount = 0; retryCount < MAX_RETRIES; retryCount++) {
-            try {
-                execute = HttpUtil.createRequest(Method.GET, url)
-                        .charset(Constants.UTF8)
-                        .setConnectionTimeout(connectTimeout)
-                        .setReadTimeout(readTimeout)
-                        .header("X-Presto-User", user)
-                        .header("Content-Type", "application/json")
-                        .header("Accept", "application/json")
-                        .removeHeader("Content-Encoding")
-                        .removeHeader("Accept-Encoding")
-                        .execute();
-                break;
-            } catch (Exception e) {
-                log.error("调用HttpOpenUtils.sendGetSchemas Exception, url=" + url, e);
+                if (retryCount == MAX_RETRIES - 1) {
+                    throw e;
+                }
             }
         }
         execute.close();

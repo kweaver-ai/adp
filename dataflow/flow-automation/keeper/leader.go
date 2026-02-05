@@ -9,11 +9,11 @@ import (
 	"time"
 
 	redis_v8 "github.com/go-redis/redis/v8"
+	lock "github.com/kweaver-ai/adp/autoflow/flow-automation/libs/go/lock"
+	commonLog "github.com/kweaver-ai/adp/autoflow/flow-automation/libs/go/log"
+	rds "github.com/kweaver-ai/adp/autoflow/flow-automation/libs/go/store"
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/pkg/event"
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/store"
-	lock "github.com/kweaver-ai/adp/autoflow/ide-go-lib/lock"
-	commonLog "github.com/kweaver-ai/adp/autoflow/ide-go-lib/log"
-	rds "github.com/kweaver-ai/adp/autoflow/ide-go-lib/store"
 	"github.com/shiningrush/goevent"
 )
 

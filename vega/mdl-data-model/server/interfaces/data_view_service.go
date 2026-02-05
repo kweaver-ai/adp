@@ -7,7 +7,20 @@ import (
 	dtype "data-model/interfaces/data_type"
 )
 
+// 特征类型
+type FieldFeatureType string
+
 const (
+	FieldFeatureType_Keyword  FieldFeatureType = "keyword"
+	FieldFeatureType_Fulltext FieldFeatureType = "fulltext"
+	FieldFeatureType_Vector   FieldFeatureType = "vector"
+
+	FieldProperty_Type        = "type"
+	FieldProperty_IgnoreAbove = "ignore_above"
+	FieldProperty_Analyzer    = "analyzer"
+	FieldProperty_Fields      = "fields"
+	FieldProperty_Dimension   = "dimension"
+
 	ViewType_Atomic = "atomic"
 	ViewType_Custom = "custom"
 
@@ -44,12 +57,20 @@ const (
 	OBJECTTYPE_DATA_VIEW           = "ID_AUDIT_DATA_VIEW"
 	OBJECTTYPE_REAL_TIME_STREAMING = "ID_AUDIT_REAL_TIME_STREAMING"
 
-	FIELD_NAME_MAX_LENGTH         = 128
-	FIELD_DISPLAY_NAME_MAX_LENGTH = 128
+	// 视图名称、视图备注、视图分组名最大长度
+	MaxLength_ViewName      = 255
+	MaxLength_ViewComment   = 255
+	MaxLength_ViewGroupName = 40
+	// 视图字段名称、字段显示名、字段备注、字段特征备注的最大长度
+	MaxLength_ViewFieldName           = 255
+	MaxLength_ViewFieldDisplayName    = 255
+	MaxLength_ViewFieldFeatureName    = 255
+	MaxLength_ViewFieldComment        = 1000
+	MaxLength_ViewFieldFeatureComment = 1000
 
 	Non_Builtin             = 0
 	Builtin                 = 1
-	Default_Include_Bulitin = "false"
+	Default_Include_Builtin = "false"
 
 	QueryParam_ImportMode = "import_mode"
 
@@ -108,6 +129,12 @@ var (
 	UnionTypeMap = map[string]struct{}{
 		UnionType_All:      {},
 		UnionType_Distinct: {},
+	}
+
+	FieldFeatureTypeMap = map[FieldFeatureType]struct{}{
+		FieldFeatureType_Keyword:  {},
+		FieldFeatureType_Fulltext: {},
+		FieldFeatureType_Vector:   {},
 	}
 
 	DATA_VIEW_SORT = map[string]string{

@@ -2,7 +2,6 @@ package interfaces
 
 import (
 	"context"
-	"time"
 
 	"github.com/google/uuid"
 	"github.com/kweaver-ai/kweaver-go-lib/rest"
@@ -34,10 +33,9 @@ const (
 	DataSourceAvailable = "avaliable"
 	DataSourceScanning  = "scanning"
 
-	DataSourceType_Excel   = "excel"
-	DataSourceType_TingYun = "tingyun"
-	DataSourceType_AS7     = "anyshare7"
-	// DataSourceType_ContentDataLake = "contentdatalake"
+	DataSourceType_Excel      = "excel"
+	DataSourceType_TingYun    = "tingyun"
+	DataSourceType_AS7        = "anyshare7"
 	DataSourceType_IndexBase  = "index_base"
 	DataSourceType_OpenSearch = "opensearch"
 
@@ -50,33 +48,21 @@ const (
 )
 
 const (
-	ServiceName    = "DataView"
-	ServiceChannel = "data-view"
+	// 字段的advanced params
+	FieldAdvancedParams_VirtualDataType = "virtualFieldType"
+	FieldAdvancedParams_OriginFieldType = "originFieldType"
+	FieldAdvancedParams_IsNullable      = "IS_NULLABLE"
+	FieldAdvancedParams_ColumnDef       = "COLUMN_DEF"
+	FieldAdvancedParams_CheckPrimaryKey = "checkPrimaryKey"
+	FieldAdvancedParams_MappingConfig   = "mappingConfig"
 
-	DefaultHttpRequestTimeout = 60 * time.Second
-
-	CommonTimeFormat = "2006-01-02 15:04:05"
-)
-
-const (
-	VirtualDataType = "virtualFieldType"
-	OriginFieldType = "originFieldType"
-	IsNullable      = "IS_NULLABLE"
-	ColumnDef       = "COLUMN_DEF"
-	CheckPrimaryKey = "checkPrimaryKey"
-
-	ExcelSheet            = "sheet"
-	ExcelStartCell        = "startCell"
-	ExcelEndCell          = "endCell"
-	ExcelHasHeaders       = "hasHeaders"
-	ExcelSheetAsNewColumn = "sheetAsNewColumn"
-	ExcelFileName         = "fileName"
-)
-
-const (
-	NameCharCountLimit         = 40
-	CommentCharCountLimit      = 255
-	BusinessNameCharCountLimit = 255
+	// 表的advanced params
+	TableAdvancedParams_ExcelSheet            = "sheet"
+	TableAdvancedParams_ExcelStartCell        = "startCell"
+	TableAdvancedParams_ExcelEndCell          = "endCell"
+	TableAdvancedParams_ExcelHasHeaders       = "hasHeaders"
+	TableAdvancedParams_ExcelSheetAsNewColumn = "sheetAsNewColumn"
+	TableAdvancedParams_ExcelFileName         = "fileName"
 )
 
 const UUIDRegexString = "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"

@@ -159,3 +159,106 @@
   gap: 6px;
   align-items: center;
 }
+
+.featureTypeContainer {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+
+  .featureType {
+    display: inline-block;
+    padding: 4px 8px;
+    margin-right: 8px;
+    font-size: 12px;
+    border-radius: 4px;
+
+    &.keyword {
+      color: #531dab;
+      background: #f9f0ff;
+    }
+
+    &.fulltext {
+      color: #08979c;
+      background: #e6fffb;
+    }
+
+    &.vector {
+      color: #7cb305;
+      background: #fcffe6;
+    }
+  }
+}
+
+.helpIcon {
+  font-size: 14px;
+  color: rgb(0 0 0 / 45%);
+  cursor: pointer;
+}
+
+.selectItem {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+
+  .itemIcon {
+    flex-shrink: 0;
+  }
+
+  .itemContent {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    gap: 2px;
+    overflow: hidden;
+
+    .itemTitle {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      font-size: 14px;
+      font-weight: 400;
+      color: rgb(0 0 0 / 85%);
+      white-space: nowrap;
+    }
+
+    .itemDesc {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      font-size: 12px;
+      color: rgb(0 0 0 / 45%);
+      white-space: nowrap;
+    }
+  }
+}
+
+.selectItemSingle {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+
+  .itemIcon {
+    display: flex;
+    flex-shrink: 0;
+    align-items: center;
+  }
+
+  .itemTitle {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-size: 14px;
+    color: rgb(0 0 0 / 85%);
+    white-space: nowrap;
+  }
+}
+
+.fieldName {
+  display: inline-block;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  cursor: pointer;
+
+  &:hover {
+    color: #126ee3;
+  }
+}

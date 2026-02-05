@@ -4,10 +4,11 @@ import (
 	"fmt"
 	"net/url"
 	"os"
+	"path/filepath"
 	"reflect"
 	"strings"
 
-	wlCommon "github.com/kweaver-ai/adp/autoflow/ide-go-lib/telemetry/common"
+	wlCommon "github.com/kweaver-ai/adp/autoflow/flow-automation/libs/go/telemetry/common"
 	"github.com/spf13/viper"
 	"gopkg.in/yaml.v2"
 )
@@ -74,6 +75,7 @@ type Config struct {
 	MfModelApi               MfModelApi               `mapstructure:"mfmodelapi"`
 	BusinessDomain           BusinessDomain           `mapstructure:"business_domain"`
 	AccessAddress            AccessAddress            `mapstructure:"access_address"`
+	Sandbox                  Sandbox                  `mapstructure:"sandbox"`
 }
 
 type DagInstanceEventArchivePolicy string
@@ -511,6 +513,10 @@ func (conf *MongoDBConfig) DSN() string {
 			query.Set(k, "true")
 		}
 		sslPath := "/opt/ssl/mongo.ca.pem"
+		if _, err := os.Stat(sslPath); os.IsNotExist(err) {
+			pwd, _ := os.Getwd()
+			sslPath = filepath.Join(pwd, "ssl", "mongo.ca.pem")
+		}
 		rootPEM, err := os.ReadFile(sslPath)
 		if err != nil {
 			panic(err)
@@ -553,6 +559,17 @@ func (conf *MongoDBConfig) MaxPool() *uint64 {
 // MinPool 连接池最小值
 func (conf *MongoDBConfig) MinPool() *uint64 {
 	return &conf.PoolMin
+}
+
+// Sandbox 沙箱服务配置
+type Sandbox struct {
+	Host       string `mapstructure:"host"`
+	Port       int    `mapstructure:"port"`
+	TemplateID string `mapstructure:"template_id"` // 默认模板ID
+	Cpu        string `mapstructure:"cpu"`
+	Memory     string `mapstructure:"memory"`
+	Disk       string `mapstructure:"disk"`
+	Timeout    int    `mapstructure:"timeout"` // 默认超时时间（秒）
 }
 
 // BindEnvs bind envs

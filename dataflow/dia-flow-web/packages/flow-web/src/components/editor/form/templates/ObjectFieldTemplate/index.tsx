@@ -101,6 +101,7 @@ export default function ObjectFieldTemplate<
                 schema.type,
                 {
                     targetRect,
+                    currentStepNodes: step && stepNodes[step.id],
                 }
             )
                 .then((value) => {

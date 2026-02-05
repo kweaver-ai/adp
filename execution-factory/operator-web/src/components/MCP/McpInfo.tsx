@@ -7,7 +7,7 @@ import { EditOutlined, InteractionOutlined, ProfileOutlined } from '@ant-design/
 
 const { Panel } = Collapse;
 
-export default function McpInfo({ selectedTool }: any) {
+export default function McpInfo({ selectedTool, onUpdateInputs }: any) {
   // 处理json schema成table数据，供JsonschemaTab使用
   const tableData = useMemo(() => {
     if (selectedTool?.inputSchema) {
@@ -24,7 +24,7 @@ export default function McpInfo({ selectedTool }: any) {
 
   return (
     <div className="operator-info">
-      <Collapse ghost defaultActiveKey={''} expandIconPosition="end" className="operator-details-collapse">
+      <Collapse ghost defaultActiveKey={'1'} expandIconPosition="end" className="operator-details-collapse">
         <Panel
           key="1"
           header={
@@ -53,8 +53,9 @@ export default function McpInfo({ selectedTool }: any) {
               <InteractionOutlined /> 输入
             </span>
           }
+          forceRender
         >
-          <JsonschemaTab data={tableData} type="Inputs" />
+          <JsonschemaTab data={tableData} type="Inputs" onTableDataChange={onUpdateInputs} />
         </Panel>
       </Collapse>
     </div>

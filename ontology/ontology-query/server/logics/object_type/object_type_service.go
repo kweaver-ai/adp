@@ -576,7 +576,7 @@ func (ots *objectTypeService) GetObjectPropertyValue(ctx context.Context,
 	var resps interfaces.Objects
 
 	// 1. 根据唯一标识构建过滤条件
-	ukCond := logics.BuildUniqueIdentitiesCondition(query.InstanceIdentity)
+	ukCond := logics.BuildUniqueIdentitiesCondition(query.InstanceIdentities)
 	// 2. 根据唯一标识组成的条件检索对象类的对象实例
 	objectQuery := &interfaces.ObjectQueryBaseOnObjectType{
 		ActualCondition: ukCond,
@@ -593,7 +593,7 @@ func (ots *objectTypeService) GetObjectPropertyValue(ctx context.Context,
 			ExcludeSystemProperties: query.ExcludeSystemProperties,
 		},
 		ObjectQueryInfo: &interfaces.ObjectQueryInfo{
-			InstanceIdentity: query.InstanceIdentity,
+			InstanceIdentity: query.InstanceIdentities,
 			Properties:       query.Properties,
 		},
 	}
@@ -739,71 +739,64 @@ func (ots *objectTypeService) handleMetricProperty(ctx context.Context,
 
 	// 如果只给 start、没有给 end，则end 为当前。
 	// 如果只给了end，没有给start，则start为 end - 30min
+	// metricValue 是从对象类中获取的对象的指标计算参数
 	metricValue := propValue.(interfaces.MetricProperty)
 	start = time.Now().Add(-30 * time.Minute).UnixMilli()
 	end = time.Now().UnixMilli()
 	isInstant = true
 
 	// 1. 指标需要动态参数，校验必要的动态参数是否已给
-	if _, dynamicParamExist := dynamicParams[propName]; !dynamicParamExist {
-		// 动态参数没有，即 start end都没有，给默认值
-		dynamicParams[propName] = map[string]any{
-			"start":   start,
-			"end":     end,
-			"instant": isInstant,
-		}
+	// if _, dynamicParamExist := dynamicParams[propName]; !dynamicParamExist {
+	// 	// 动态参数没有，即 start end都没有，给默认值
+	// 	dynamicParams[propName] = map[string]any{
+	// 		"start":   start,
+	// 		"end":     end,
+	// 		"instant": isInstant,
+	// 	}
+	// }
+
+	// 2. 解析 dynamic_params 为 MetricPropertyDynamicParams 结构
+	var metricParams interfaces.MetricPropertyDynamicParams
+	paramBytes, err := sonic.Marshal(dynamicParams[propName])
+	if err != nil {
+		return interfaces.MetricData{}, rest.NewHTTPError(ctx, http.StatusBadRequest,
+			oerrors.OntologyQuery_ObjectType_InvalidParameter_DynamicParams).
+			WithErrorDetails(fmt.Sprintf("属性[%s]的动态参数解析失败: %v", propName, err))
+	}
+	if err = sonic.Unmarshal(paramBytes, &metricParams); err != nil {
+		return interfaces.MetricData{}, rest.NewHTTPError(ctx, http.StatusBadRequest,
+			oerrors.OntologyQuery_ObjectType_InvalidParameter_DynamicParams).
+			WithErrorDetails(fmt.Sprintf("属性[%s]的动态参数解析失败: %v", propName, err))
 	}
 
-	// 读取动态参数
+	// 3. 提取时间参数（start, end, instant, step）
+	if metricParams.Start != nil {
+		start = *metricParams.Start
+	}
+	if metricParams.End != nil {
+		end = *metricParams.End
+		// 如果只给了end，没有给start，则start为 end - 30min
+		if metricParams.Start == nil {
+			start = end - 30*time.Minute.Milliseconds()
+		}
+	}
+	if metricParams.Instant != nil {
+		isInstant = *metricParams.Instant
+	}
+	if metricParams.Step != nil {
+		step = *metricParams.Step
+	}
+
+	// 4. 读取配置的动态参数（从 metricValue.DynamicParams 中获取参数名）
 	for paramK := range metricValue.DynamicParams {
 		switch paramK {
-		case "start":
-			// 存在就用请求值
-			if _, paramExist := dynamicParams[propName]["start"]; paramExist {
-				start, err = common.AnyToInt64(dynamicParams[propName]["start"])
-				if err != nil {
-					return interfaces.MetricData{}, rest.NewHTTPError(ctx, http.StatusBadRequest,
-						oerrors.OntologyQuery_ObjectType_InvalidParameter_DynamicParams).
-						WithErrorDetails(fmt.Sprintf("属性[%s]所需的动态参数start的类型要求是integer", propName))
-				}
-			}
-		case "end":
-			// 存在就用请求值
-			if _, paramExist := dynamicParams[propName]["end"]; paramExist {
-				end, err = common.AnyToInt64(dynamicParams[propName]["end"])
-				if err != nil {
-					return interfaces.MetricData{}, rest.NewHTTPError(ctx, http.StatusBadRequest,
-						oerrors.OntologyQuery_ObjectType_InvalidParameter_DynamicParams).
-						WithErrorDetails(fmt.Sprintf("属性[%s]所需的动态参数end的类型要求是integer", propName))
-				}
-				// 如果只给了end，没有给start，则start为 end - 30min
-				if _, startExist := dynamicParams[propName]["start"]; !startExist {
-					start = end - 30*time.Minute.Milliseconds()
-				}
-			}
-		case "instant":
-			// 存在就用请求值，不存在就用true
-			if _, paramExist := dynamicParams[propName]["instant"]; paramExist {
-				isInstant, err = common.AnyToBool(dynamicParams[propName]["instant"])
-				if err != nil {
-					return interfaces.MetricData{}, rest.NewHTTPError(ctx, http.StatusBadRequest,
-						oerrors.OntologyQuery_ObjectType_InvalidParameter_DynamicParams).
-						WithErrorDetails(fmt.Sprintf("属性[%s]所需的动态参数instant的类型要求是boolean", propName))
-				}
-			}
-		case "step":
-			// step存在就用请求值，不存在就给空串
-			if _, paramExist := dynamicParams[propName]["step"]; paramExist {
-				step = common.AnyToString(dynamicParams[propName]["step"])
-				if err != nil {
-					return interfaces.MetricData{}, rest.NewHTTPError(ctx, http.StatusBadRequest,
-						oerrors.OntologyQuery_ObjectType_InvalidParameter_DynamicParams).
-						WithErrorDetails(fmt.Sprintf("属性[%s]所需的动态参数step的类型要求是string", propName))
-				}
-			}
+		case "start", "end", "instant", "step":
+			// 这些参数已经在上面处理了，跳过
+			continue
 		default:
 			// 校验必须的动态参数是否已给
-			if _, paramExist := dynamicParams[propName][paramK]; !paramExist {
+			paramValue, paramExist := dynamicParams[propName][paramK]
+			if !paramExist {
 				return interfaces.MetricData{}, rest.NewHTTPError(ctx, http.StatusBadRequest,
 					oerrors.OntologyQuery_ObjectType_InvalidParameter_DynamicParams).
 					WithErrorDetails(fmt.Sprintf("指标属性[%s]所需的动态参数[%s]为空", propName, paramK))
@@ -822,27 +815,32 @@ func (ots *objectTypeService) handleMetricProperty(ctx context.Context,
 				interfaces.Filter{
 					Name:      paramK,
 					Operation: operation,
-					Value:     dynamicParams[propName][paramK],
+					Value:     paramValue,
 				})
 		}
 	}
 
-	// 2. 组装指标数据查询的query，发起查询
-	metricData, err := ots.uAccess.GetMetricDataByID(ctx, logicProp.DataSource.ID,
-		interfaces.MetricQuery{
-			Start:          &start,
-			End:            &end,
-			StepStr:        &step,
-			IsInstantQuery: isInstant,
-			Filters:        metricValue.Parameters.Filters,
-		})
+	// 5. 组装指标数据查询的query，发起查询
+	metricQuery := interfaces.MetricQuery{
+		Start:              &start,
+		End:                &end,
+		StepStr:            &step,
+		IsInstantQuery:     isInstant,
+		Filters:            metricValue.Parameters.Filters,
+		AnalysisDimensions: metricParams.AnalysisDimensions,
+		OrderByFields:      metricParams.OrderByFields,
+		HavingCondition:    metricParams.HavingCondition,
+		Metrics:            metricParams.Metrics,
+	}
+
+	metricData, err := ots.uAccess.GetMetricDataByID(ctx, logicProp.DataSource.ID, metricQuery)
 	if err != nil {
 		return interfaces.MetricData{}, rest.NewHTTPError(ctx, http.StatusInternalServerError,
 			oerrors.OntologyQuery_ObjectType_InternalError_GetMetricDataByIDFailed).
 			WithErrorDetails(fmt.Sprintf("属性[%s]的指标数据失败,error: %v", propName, err))
 	}
 
-	// 3. 结果赋值给属性。如果过滤出多个序列，不报错，多个序列都返回。
+	// 6. 结果赋值给属性。如果过滤出多个序列，不报错，多个序列都返回。
 	return metricData, nil
 }
 

@@ -29,9 +29,8 @@ type TableInfo struct {
 	ID             string              `json:"table_id"`
 	Name           string              `json:"table_name"`
 	AdvancedParams AdvancedParamStruct `json:"table_advanced_params"`
-	// AdvancedParamsStruct AdvancedParamStruct `json:"-"`
-	Description string `json:"table_description"`
-	Rows        int64  `json:"table_rows"`
+	Description    string              `json:"table_description"`
+	Rows           int64               `json:"table_rows"`
 }
 
 type DataSourceInfo struct {
@@ -41,19 +40,6 @@ type DataSourceInfo struct {
 	Catalog        string `json:"ds_catalog"`
 	Database       string `json:"ds_database"`
 	Schema         string `json:"ds_schema"`
-	// DataSourceConnectProtocol       string `json:"ds_connect_protocol"`
-	// DataSourceHost                  string `json:"ds_host"`
-	// DataSourcePort                  string `json:"ds_port"`
-	// DataSourceAccount               string `json:"ds_account"`
-	// DataSourcePassword              string `json:"ds_password"`
-	// DataSourceStorageProtocol       string `json:"ds_storage_protocol"`
-	// DataSourceStorageBase           string `json:"ds_storage_base"`
-	// DataSourceToken                 string `json:"ds_token"`
-	// DataSourceReplicaSet            string `json:"ds_replicaSet"`
-	// DataSourceConnectionSource      string `json:"ds_connection_source"`
-	// DataSourceOrganizationStructure string `json:"ds_organization_structure"`
-	// DataSourceIsBuiltIn             int    `json:"ds_is_built_in"`
-	// DataSourceComment               string `json:"ds_comment"`
 }
 
 type MetaField struct {
@@ -65,8 +51,6 @@ type MetaField struct {
 	FieldPrecision int32               `json:"f_field_precision"`
 	FieldComment   string              `json:"f_field_comment"`
 	AdvancedParams AdvancedParamStruct `json:"f_advanced_params"`
-	// FieldOrderNo   string              `json:"f_field_order_no"`
-	// AdvancedParamsStruct AdvancedParamStruct `json:"-"`
 }
 
 func (fb *MetaField) String() string {
@@ -81,99 +65,70 @@ type VegaMetadataAccess interface {
 	GetMetadataTablesByIDs(ctx context.Context, tableIDs []string) ([]MetadataTable, error)
 }
 
-//region GetDataTableDetailBatch
+// 判断key是否存在
+func (s AdvancedParamStruct) HasKey(key string) bool {
+	for _, params := range s {
+		if params.Key == key {
+			return true
+		}
+	}
+	return false
+}
 
-// type GetDataTableDetailBatchReq struct {
-// 	Limit        int    `json:"limit"`
-// 	Offset       int    `json:"offset"`
-// 	DataSourceId string `json:"data_source_id"`
-// 	SchemaId     string `json:"schema_id"`
-// 	//TableIds     []string `json:"table_ids"`
-// }
-
-// type GetDataTableDetailBatchRes struct {
-// 	Code        string                            `json:"code"`
-// 	Description string                            `json:"description"`
-// 	TotalCount  int                               `json:"total_count"`
-// 	Solution    string                            `json:"solution"`
-// 	Data        []*GetDataTableDetailDataBatchRes `json:"data"`
-// }
-
-// type GetDataTableDetailDataBatchRes struct {
-// 	SchemaId                  string              `json:"schema_id"`
-// 	SchemaName                string              `json:"schema_name"`
-// 	Id                        string              `json:"id"`
-// 	Name                      string              `json:"name"`
-// 	OrgName                   string              `json:"org_name"`
-// 	Description               string              `json:"description"`
-// 	AdvancedParams            AdvancedParamStruct `json:"_"`
-// 	AdvancedParamMap          map[string]string   `json:"-"`
-// 	AdvancedParamMapAvailable bool                `json:"-"`
-// 	AdvancedParamsO           string              `json:"advanced_params"`
-// 	HaveField                 bool                `json:"have_field"`
-// 	Fields                    []*FieldsBatch      `json:"fields"`
-// }
-
-// type FieldsBatch struct {
-// 	ID                        string              `json:"id"`
-// 	FieldName                 string              `json:"field_name"`
-// 	OrgFieldName              string              `json:"org_field_name"`
-// 	FieldLength               int32               `json:"field_length"`
-// 	FieldPrecision            int32               `json:"field_precision"`
-// 	FieldComment              string              `json:"field_comment"`
-// 	AdvancedParams            AdvancedParamStruct `json:"_"`
-// 	AdvancedParamMap          map[string]string   `json:"-"`
-// 	AdvancedParamMapAvailable bool                `json:"-"`
-// 	AdvancedParamsO           string              `json:"advanced_params"`
-// 	FieldTypeName             string              `json:"field_type_name"`
-// }
-
+// GetValue 获取key对应的value，若value为空，则根据key返回默认值
 func (s AdvancedParamStruct) GetValue(key string) any {
 	for _, params := range s {
 		if params.Key == key {
 			val := params.Value
 			if val == nil {
-				switch key {
-				case VirtualDataType:
-					return ""
-				case OriginFieldType:
-					return ""
-				case IsNullable:
-					return ""
-				case ColumnDef:
-					return ""
-				case CheckPrimaryKey:
-					return ""
-				case ExcelSheet:
-					return ""
-				case ExcelStartCell:
-					return ""
-				case ExcelEndCell:
-					return ""
-				case ExcelHasHeaders:
-					return false
-				case ExcelSheetAsNewColumn:
-					return false
-				case ExcelFileName:
-					return ""
-				default:
-					return ""
-				}
+				return s.getDefaultValue(key)
 			}
 
 			return val
 		}
 	}
-	// TODO
-	return ""
+
+	// 如果没有找到key，也根据key返回各自的默认值
+	return s.getDefaultValue(key)
+}
+
+func (s AdvancedParamStruct) getDefaultValue(key string) any {
+	switch key {
+	case FieldAdvancedParams_VirtualDataType:
+		return ""
+	case FieldAdvancedParams_OriginFieldType:
+		return ""
+	case FieldAdvancedParams_IsNullable:
+		return ""
+	case FieldAdvancedParams_ColumnDef:
+		return ""
+	case FieldAdvancedParams_CheckPrimaryKey:
+		return ""
+	case FieldAdvancedParams_MappingConfig:
+		return map[string]any{}
+	case TableAdvancedParams_ExcelSheet:
+		return ""
+	case TableAdvancedParams_ExcelStartCell:
+		return ""
+	case TableAdvancedParams_ExcelEndCell:
+		return ""
+	case TableAdvancedParams_ExcelHasHeaders:
+		return false
+	case TableAdvancedParams_ExcelSheetAsNewColumn:
+		return false
+	case TableAdvancedParams_ExcelFileName:
+		return ""
+	default:
+		return ""
+	}
 }
 
 func (s AdvancedParamStruct) IsPrimaryKey() bool {
 	for _, params := range s {
-		if params.Key == CheckPrimaryKey && params.Value == "YES" {
+		if params.Key == FieldAdvancedParams_CheckPrimaryKey && params.Value == "YES" {
 			return true
 		}
-		if params.Key == CheckPrimaryKey && params.Value == "NO" {
+		if params.Key == FieldAdvancedParams_CheckPrimaryKey && params.Value == "NO" {
 			return false
 		}
 	}

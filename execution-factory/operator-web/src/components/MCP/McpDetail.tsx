@@ -19,6 +19,7 @@ const { Sider, Content } = Layout;
 const { Paragraph, Text } = Typography;
 
 export default function McpDetail() {
+  const [parsedInputs, setParsedInputs] = useState<any>([]); // 解析后的输入参数
   const [selectedTool, setSelectedTool] = useState<any>({});
   const [mcpInfo, setMcpInfo] = useState<any>({});
   const [searchParams] = useSearchParams();
@@ -213,9 +214,17 @@ export default function McpDetail() {
         </Sider>
         {/* 右侧内容区域 */}
         <Content style={{ background: 'white', borderRadius: '8px' }}>
-          <McpInfo selectedTool={{ ...selectedTool, mcp_id }} type={OperatorTypeEnum.MCP} />
+          <McpInfo
+            selectedTool={{ ...selectedTool, mcp_id }}
+            type={OperatorTypeEnum.MCP}
+            onUpdateInputs={setParsedInputs}
+          />
           {permissionCheckInfo?.includes(PermConfigTypeEnum.Execute) && (
-            <DebugResult selectedTool={{ ...selectedTool, mcp_id }} type={OperatorTypeEnum.MCP} />
+            <DebugResult
+              selectedTool={{ ...selectedTool, mcp_id }}
+              type={OperatorTypeEnum.MCP}
+              parsedInputs={parsedInputs}
+            />
           )}
         </Content>
       </Layout>

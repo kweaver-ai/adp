@@ -219,12 +219,8 @@ const DetailContent = () => {
           )}
         </div>
         <div className={styles['form-content']}>
-          <div style={{ visibility: currentStep === 0 ? 'visible' : 'hidden' }}>
-            <BasicInfo form={form} filedsValue={basicInfoData} />
-          </div>
-          <div style={{ visibility: currentStep === 1 ? 'visible' : 'hidden' }}>
-            <DataViewSetting />
-          </div>
+          {currentStep === 0 && <BasicInfo form={form} filedsValue={basicInfoData} />}
+          {currentStep === 1 && <DataViewSetting />}
         </div>
       </div>
     </DataViewContext.Provider>

@@ -258,6 +258,19 @@ export const ExtensionProvider: FC<ExtensionProviderProps> = ({
         });
         Internal.executors = newExecutors;
 
+        const newExecutorsNew = Internal.executors?.map((item) => {
+            if (item.name === "ETool") {
+              return {
+                ...item,
+                actions: item.actions.filter(
+                  (i) => i.operator.indexOf("@sandbox/execute") === -1
+                ),
+              };
+            }
+            return item;
+          });
+        Internal.executors = newExecutorsNew;
+
         try {
           //检测workFLow是否存在
           await API.axios.get(`${prefixUrl}/api/doc-audit-rest/v1/ping`);

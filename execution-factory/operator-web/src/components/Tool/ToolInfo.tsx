@@ -11,8 +11,8 @@ const { Panel } = Collapse;
 const isNotExistTip = '无法获取，底层算子已被删除';
 const errorStyle = { color: 'red' };
 
-export default function ToolInfo({ selectedTool }: any) {
-  const [activeKey, setActiveKey] = useState<string[]>([]);
+export default function ToolInfo({ selectedTool, onUpdateInputs }: any) {
+  const [activeKey, setActiveKey] = useState<string[]>(['1']);
   const isExist = useMemo(() => Boolean(selectedTool?.metadata?.version), [selectedTool?.metadata?.version]);
 
   useEffect(() => {
@@ -91,11 +91,12 @@ export default function ToolInfo({ selectedTool }: any) {
             key="2"
             header={
               <span>
-                <InteractionOutlined /> 输入输出{' '}
+                <InteractionOutlined /> 输入输出
               </span>
             }
+            forceRender
           >
-            <JsonschemaTab operatorInfo={selectedTool} type="Inputs" />
+            <JsonschemaTab operatorInfo={selectedTool} type="Inputs" onTableDataChange={onUpdateInputs} />
             <JsonschemaTab operatorInfo={selectedTool} type="Outputs" />
           </Panel>
         )}

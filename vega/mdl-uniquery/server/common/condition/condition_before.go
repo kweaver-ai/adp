@@ -41,10 +41,15 @@ func NewBeforeCond(ctx context.Context, cfg *CondCfg, fieldsMap map[string]*View
 		return nil, fmt.Errorf("condition [before]'s interval value should be a string")
 	}
 
+	fName, err := GetQueryField(ctx, cfg.Name, fieldsMap, FieldFeatureType_Raw)
+	if err != nil {
+		return nil, fmt.Errorf("condition [before], %v", err)
+	}
+
 	return &BeforeCond{
 		mCfg:             cfg,
 		mValue:           val,
-		mFilterFieldName: getFilterFieldName(ctx, cfg.Name, fieldsMap, false),
+		mFilterFieldName: fName,
 	}, nil
 }
 

@@ -8,7 +8,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/drivenadapters"
-	traceLog "github.com/kweaver-ai/adp/autoflow/ide-go-lib/telemetry/log"
+	traceLog "github.com/kweaver-ai/adp/autoflow/flow-automation/libs/go/telemetry/log"
 )
 
 // Element 目标元素结构

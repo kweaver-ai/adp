@@ -6,11 +6,11 @@ import (
 	"testing"
 
 	"github.com/go-playground/assert/v2"
-	"go.uber.org/mock/gomock"
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/drivenadapters"
+	ierr "github.com/kweaver-ai/adp/autoflow/flow-automation/libs/go/errors"
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/tests/mock_drivenadapters"
-	ierr "github.com/kweaver-ai/adp/autoflow/ide-go-lib/errors"
 	. "github.com/smartystreets/goconvey/convey"
+	"go.uber.org/mock/gomock"
 )
 
 type MockPolicyDependency struct {

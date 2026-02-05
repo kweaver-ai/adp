@@ -219,4 +219,9 @@ var ErrorsMsg = map[string]map[string][]string{
 		Languages[1]: {"數據源為空", "請稍後再試"},
 		Languages[2]: {"Data source is empty", "Please try again later"},
 	},
+	ErrorDepencyService: {
+		Languages[0]: {"服务依赖异常", "请检查相关服务状态后重试"},
+		Languages[1]: {"服務依賴異常", "請檢查相關服務狀態後重試"},
+		Languages[2]: {"Service dependency error", "Please check related services and try again"},
+	},
 }

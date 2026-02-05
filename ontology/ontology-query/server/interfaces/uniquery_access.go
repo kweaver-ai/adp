@@ -31,12 +31,39 @@ type ViewData struct {
 	SearchAfter []any            `json:"search_after,omitempty"`
 }
 
+type OrderField struct {
+	Name      string `json:"name"`
+	Type      string `json:"type"`
+	Direction string `json:"direction"` // asc or desc
+}
+
+type HavingCondition struct {
+	Field     string `json:"field"`     // 只有 __value
+	Operation string `json:"operation"` // ==, !=, >, >=, <, <=, in, not_in, range, out_range
+	Value     any    `json:"value"`
+}
+
+type SameperiodConfig struct {
+	Method          []string `json:"method"`           // growth_value or growth_rate
+	Offset          int      `json:"offset"`           // 偏移量
+	TimeGranularity string   `json:"time_granularity"` // day, month, quarter, year
+}
+
+type Metrics struct {
+	Type             string            `json:"type"` // sameperiod or proportion
+	SameperiodConfig *SameperiodConfig `json:"sameperiod_config,omitempty"`
+}
+
 type MetricQuery struct {
-	Start          *int64   `json:"start"`
-	End            *int64   `json:"end"`
-	StepStr        *string  `json:"step"`
-	IsInstantQuery bool     `json:"instant"`
-	Filters        []Filter `json:"filters"`
+	Start              *int64           `json:"start"`
+	End                *int64           `json:"end"`
+	StepStr            *string          `json:"step"`
+	IsInstantQuery     bool             `json:"instant"`
+	Filters            []Filter         `json:"filters"`
+	AnalysisDimensions []string         `json:"analysis_dimensions,omitempty"`
+	OrderByFields      []OrderField     `json:"order_by_fields,omitempty"`
+	HavingCondition    *HavingCondition `json:"having_condition,omitempty"`
+	Metrics            *Metrics         `json:"metrics,omitempty"`
 }
 
 type MetricData struct {
@@ -50,7 +77,11 @@ type MetricData struct {
 type Data struct {
 	Labels map[string]string `json:"labels"`
 	Times  []interface{}     `json:"times"`
-	Values []interface{}     `json:"values"`
+	// TimeStrs     []interface{}     `json:"time_strs"`
+	Values       []interface{} `json:"values"`
+	GrowthValues []interface{} `json:"growth_values,omitempty"`
+	GrowthRates  []interface{} `json:"growth_rates,omitempty"`
+	Proportions  []interface{} `json:"proportions,omitempty"`
 }
 
 type MetricModel struct {

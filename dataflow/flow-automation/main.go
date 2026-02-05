@@ -28,16 +28,24 @@ import (
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/driveradapters/observability"
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/driveradapters/operators"
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/driveradapters/policy"
+	"github.com/kweaver-ai/adp/autoflow/flow-automation/driveradapters/sandbox"
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/driveradapters/security_policy"
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/driveradapters/trigger"
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/driveradapters/versions"
+	wlHttp "github.com/kweaver-ai/adp/autoflow/flow-automation/libs/go/http"
+	commonLog "github.com/kweaver-ai/adp/autoflow/flow-automation/libs/go/log"
+	threadPool "github.com/kweaver-ai/adp/autoflow/flow-automation/libs/go/pools"
+	traceLog "github.com/kweaver-ai/adp/autoflow/flow-automation/libs/go/telemetry/log"
+	"github.com/kweaver-ai/adp/autoflow/flow-automation/libs/go/telemetry/trace"
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/module/initial"
-	wlHttp "github.com/kweaver-ai/adp/autoflow/ide-go-lib/http"
-	commonLog "github.com/kweaver-ai/adp/autoflow/ide-go-lib/log"
-	threadPool "github.com/kweaver-ai/adp/autoflow/ide-go-lib/pools"
-	traceLog "github.com/kweaver-ai/adp/autoflow/ide-go-lib/telemetry/log"
-	"github.com/kweaver-ai/adp/autoflow/ide-go-lib/telemetry/trace"
+	"github.com/kweaver-ai/adp/autoflow/flow-automation/pkg/ecron/analysis"
+	"github.com/kweaver-ai/adp/autoflow/flow-automation/pkg/ecron/management"
+	sdktrace "go.opentelemetry.io/otel/sdk/trace"
 )
+
+var analysisServer analysis.AnalysisService
+var managementServer management.ManagementService
+var tracerProvider *sdktrace.TracerProvider
 
 type app struct {
 	hRESTHandler        health.RESTHandler
@@ -60,6 +68,7 @@ type app struct {
 	obsRESTHandler      observability.RESTHandler
 	dvRESTHandler       versions.RESTHandler
 	dbRESTHandler       database_con.RESTHandler
+	sandboxRESTHandler  sandbox.RESTHandler
 }
 
 func CacheControl() gin.HandlerFunc {
@@ -104,6 +113,7 @@ func (a *app) Start() {
 		a.obsRESTHandler.RegisterAPI(group)
 		a.dvRESTHandler.RegisterAPI(group)
 		a.dbRESTHandler.RegisterAPI(group)
+		a.sandboxRESTHandler.RegisterAPI(group)
 		spGroup := group.Group("security-policy")
 		a.spRESTHandler.RegisterAPI(spGroup)
 
@@ -156,7 +166,7 @@ func (a *app) Start() {
 	}()
 }
 
-func main() {
+func StartDataFlow() {
 	// 加载环境变量文件
 	// 先加载 .env，再加载 .env.local（如果存在）来覆盖
 	if err := godotenv.Load(".env"); err != nil {
@@ -172,8 +182,6 @@ func main() {
 	if err != nil {
 		panic(err.Error())
 	}
-	defer traceLog.Close()
-	defer traceLog.CloseFlowO11yLogger()
 
 	if err := initial.Init(&initial.InitialOption{
 		ParserWorkersCnt:         config.Server.ParserrCount,
@@ -188,15 +196,8 @@ func main() {
 	}); err != nil {
 		panic(err.Error())
 	}
-	defer initial.Close()
 
-	tracerProvider := trace.SetTraceExporter(&config.Telemetry)
-	defer func() {
-		trace.ExitTraceExporter(context.Background(), tracerProvider)
-	}()
-	// 主动释放所有线程池资源
-	defer threadPool.Pools.ShutdownAll()
-
+	tracerProvider = trace.SetTraceExporter(&config.Telemetry)
 	server := &app{
 		hRESTHandler:        health.NewRESTHandler(),
 		mRESTHandler:        mgnt.NewRESTHandler(),
@@ -218,10 +219,46 @@ func main() {
 		obsRESTHandler:      observability.NewRESTHandler(),
 		dvRESTHandler:       versions.NewRESTHandler(),
 		dbRESTHandler:       database_con.NewRestHandler(),
+		sandboxRESTHandler:  sandbox.NewRESTHandler(),
 	}
 	server.Start()
+}
+
+func StartEcronAnalysis() {
+	analysisServer = analysis.NewAnalysisService()
+	analysisServer.Start()
+}
+
+func StartEcronManagement() {
+	managementServer = management.NewManagementService()
+	managementServer.Start()
+}
+
+func Release() {
+	traceLog.Close()
+	traceLog.CloseFlowO11yLogger()
+	initial.Close()
+	trace.ExitTraceExporter(context.Background(), tracerProvider)
+	threadPool.Pools.ShutdownAll()
+
+	if analysisServer != nil {
+		analysisServer.Stop()
+	}
+
+	if managementServer != nil {
+		managementServer.Stop()
+	}
+}
+
+func main() {
+	go StartEcronManagement()
+	go StartEcronAnalysis()
+	go StartDataFlow()
 
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, syscall.SIGHUP, syscall.SIGINT, syscall.SIGTERM, syscall.SIGQUIT) //nolint
 	<-c
+
+	// 服务后置操作
+	Release()
 }

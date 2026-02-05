@@ -10,8 +10,8 @@ import (
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/drivenadapters"
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/driveradapters/middleware"
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/errors"
+	ierr "github.com/kweaver-ai/adp/autoflow/flow-automation/libs/go/errors"
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/logics/observability"
-	ierr "github.com/kweaver-ai/adp/autoflow/ide-go-lib/errors"
 )
 
 type RESTHandler interface {

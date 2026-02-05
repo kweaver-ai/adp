@@ -705,6 +705,7 @@ func validateQueryTimeParam(ctx context.Context, query *interfaces.QueryTimePara
 			httpErr := rest.NewHTTPError(ctx, http.StatusBadRequest, uerrors.Uniquery_MetricModel_NullParameter_Step)
 			return httpErr
 		}
+		// sql-原子指标，衍生指标，复合指标的步长只支持日历步长,不支持固定步长，在此处没法校验，需到service获取到指标模型信息之后校验
 		// step 应属于系统步长集 15s, 30s, 1m, 2m, 5m, 10m, 15m, 20m, 30m, 1h, 2h, 3h, 6h, 12h, 1d, 1y,
 		// minute, hour, day, month, quarter, year
 		_, fixedExists := common.FixedStepsMap[*query.StepStr]
@@ -782,7 +783,12 @@ func validateRequestMetrics(ctx context.Context, query *interfaces.MetricModelQu
 		}
 
 		if len(query.RequestMetrics.SamePeriodCfg.Method) == 0 {
-			return rest.NewHTTPError(ctx, http.StatusBadRequest, uerrors.Uniquery_MetricModel_NullParameter_SamePeriodMethod)
+			// 不报错，给默认值，都计算
+			query.RequestMetrics.SamePeriodCfg.Method = []string{
+				interfaces.METRICS_SAMEPERIOD_METHOD_GROWTH_VALUE,
+				interfaces.METRICS_SAMEPERIOD_METHOD_GROWTH_RATE,
+			}
+			// return rest.NewHTTPError(ctx, http.StatusBadRequest, uerrors.Uniquery_MetricModel_NullParameter_SamePeriodMethod)
 		}
 
 		for _, method := range query.RequestMetrics.SamePeriodCfg.Method {
@@ -1461,10 +1467,19 @@ func validateCond(ctx context.Context, cfg *cond.CondCfg) error {
 
 		if cfg.Operation == cond.OperationLike || cfg.Operation == cond.OperationNotLike ||
 			cfg.Operation == cond.OperationPrefix || cfg.Operation == cond.OperationNotPrefix {
-			_, ok := cfg.Value.(string)
-			if !ok {
-				return rest.NewHTTPError(ctx, http.StatusBadRequest, uerrors.Uniquery_InvalidParameter_FilterValue).
-					WithErrorDetails("[like not_like prefix not_prefix] operation's value should be a string")
+			// 如果有 real_value 则跳过 value 的校验
+			if cfg.RealValue == nil {
+				_, ok := cfg.Value.(string)
+				if !ok {
+					return rest.NewHTTPError(ctx, http.StatusBadRequest, uerrors.Uniquery_InvalidParameter_FilterValue).
+						WithErrorDetails("[like not_like prefix not_prefix] operation's value should be a string")
+				}
+			} else {
+				_, ok := cfg.RealValue.(string)
+				if !ok {
+					return rest.NewHTTPError(ctx, http.StatusBadRequest, uerrors.Uniquery_InvalidParameter_FilterValue).
+						WithErrorDetails("[like not_like prefix not_prefix] operation's real_value should be a string")
+				}
 			}
 		}
 

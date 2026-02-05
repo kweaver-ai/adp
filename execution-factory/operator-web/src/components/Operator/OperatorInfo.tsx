@@ -7,15 +7,10 @@ import JsonschemaTab from '../MyOperator/JsonschemaTab';
 
 const { Panel } = Collapse;
 
-export default function OperatorInfo({ selectedTool, type }: any) {
+export default function OperatorInfo({ selectedTool, type, onUpdateInputs }: any) {
   return (
     <div className="operator-info">
-      <Collapse
-        ghost
-        defaultActiveKey=''
-        expandIconPosition="end"
-        className="operator-details-collapse"
-      >
+      <Collapse ghost defaultActiveKey="1" expandIconPosition="end" className="operator-details-collapse">
         <Panel
           key="1"
           header={
@@ -29,7 +24,7 @@ export default function OperatorInfo({ selectedTool, type }: any) {
             <div className="operator-info-desc">{selectedTool?.name}</div>
             <div className="operator-info-title">算子描述</div>
             <div className="operator-info-desc">{selectedTool?.metadata?.description || '暂无描述'}</div>
-             <div className="operator-info-title">Server URL</div>
+            <div className="operator-info-title">Server URL</div>
             <div className="operator-info-desc">{selectedTool?.metadata?.server_url}</div>
             <div className="operator-info-title">算子路径</div>
             <div className="operator-info-desc">{selectedTool?.metadata?.path}</div>
@@ -45,11 +40,12 @@ export default function OperatorInfo({ selectedTool, type }: any) {
           key="2"
           header={
             <span>
-              <InteractionOutlined /> 输入输出{' '}
+              <InteractionOutlined /> 输入输出
             </span>
           }
+          forceRender
         >
-          <JsonschemaTab operatorInfo={selectedTool} type="Inputs" />
+          <JsonschemaTab operatorInfo={selectedTool} type="Inputs" onTableDataChange={onUpdateInputs} />
           <JsonschemaTab operatorInfo={selectedTool} type="Outputs" />
         </Panel>
       </Collapse>

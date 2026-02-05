@@ -47,7 +47,7 @@ const DataType_Icon_Map: Record<string, string> = DataType_Configs.reduce(
  * @param type 数据类型名称
  * @returns 图标类名
  */
-export const getIconByType = (type: string) => DataType_Icon_Map[type] || type;
+export const getIconByType = (type: string) => DataType_Icon_Map[type] || 'icon-dip-unknown';
 
 export default {
   DataType_All,

@@ -19,7 +19,11 @@ func NewMatchPhraseCond(ctx context.Context, cfg *CondCfg, vType string, fieldsM
 		return nil, fmt.Errorf("condition [match_phrase] does not support value_from type '%s'", cfg.ValueFrom)
 	}
 
-	name := getFilterFieldName(ctx, cfg.Name, fieldsMap, true)
+	// name := getFilterFieldName(ctx, cfg.Name, fieldsMap, true)
+	name, err := GetQueryField(ctx, cfg.Name, fieldsMap, FieldFeatureType_Fulltext)
+	if err != nil {
+		return nil, fmt.Errorf("condition [match_phrase], %v", err)
+	}
 	var fields []string
 	// 如果指定*查询，并且字段列表为自己选的字段，那么将查询的字段替换成视图的字段列表
 	if name == AllField && vType == vType_Custom {
@@ -62,5 +66,5 @@ func (cond *MatchPhraseCond) Convert(ctx context.Context) (string, error) {
 }
 
 func (cond *MatchPhraseCond) Convert2SQL(ctx context.Context) (string, error) {
-	return "", fmt.Errorf("condition [match_phrase] does not support convert to sql")
+	return "", fmt.Errorf("condition [match_phrase] does not support convert to SQL")
 }

@@ -41,6 +41,7 @@ interface EditorWithMentionsProps {
   onChange?: (content: string,itemName: any) => void;
   parameters?: string;
   itemName: any;
+  style?: React.CSSProperties;
 }
 
 interface SuggestionPosition {
@@ -223,22 +224,22 @@ function MentionPlugin() {
         const anchorKey = selection.anchor.key;
         const text = anchorNode.getTextContent();
 
-        // 检测是否输入了{
-        const triggerIndex = text.lastIndexOf('{', anchorOffset);
+        // 检测是否输入了@
+        const triggerIndex = text.lastIndexOf('@', anchorOffset);
         
         // 如果之前已经触发了建议，检查是否应该关闭
         if (showSuggestions && triggerInfo) {
           const hasMovedAway = triggerInfo.key !== anchorKey || 
                             triggerInfo.index !== triggerIndex;
           
-          // 如果用户移动了光标、删除了{，关闭弹窗
+          // 如果用户移动了光标、删除了@，关闭弹窗
           if (hasMovedAway || triggerIndex === -1) {
             setShowSuggestions(false);
             setTriggerInfo(null);
           }
         }
 
-        // 只有在{后面没有跟随其他字符时才触发
+        // 只有在@后面没有跟随其他字符时才触发
         if (triggerIndex !== -1 && anchorOffset - triggerIndex === 1) {
           // 获取光标位置
           const domSelection = window.getSelection();
@@ -263,6 +264,7 @@ function MentionPlugin() {
           //调用弹窗组件
           pickVariable((step && stepNodes[step.id]?.path) || [], '', {
             targetRect: undefined,
+            currentStepNodes: step && stepNodes[step.id],
           }).then((value:string) => {
               const variableKey = value;
               // 从 stepOutputs 中查找对应的变量信息
@@ -298,10 +300,10 @@ const insertMention = useCallback((variable: Variable) => {
       
       if ($isTextNode(anchorNode)) {
         const text = anchorNode.getTextContent();
-        const triggerIndex = text.lastIndexOf('{', anchorOffset);
+        const triggerIndex = text.lastIndexOf('@', anchorOffset);
         
         if (triggerIndex !== -1) {
-          // 分割文本节点：{前 | { | {后
+          // 分割文本节点：@前 | @ | @后
           const textBefore = text.substring(0, triggerIndex);
           const textAfter = text.substring(anchorOffset);
           
@@ -371,7 +373,7 @@ const insertMention = useCallback((variable: Variable) => {
           const child = children[i];
           if ($isTextNode(child)) {
             const text = child.getTextContent();
-            const triggerIndex = text.indexOf('{');
+            const triggerIndex = text.indexOf('@');
             
             if (triggerIndex !== -1) {
               // 分割文本
@@ -687,6 +689,7 @@ export default function EditorWithMentions({
   onChange,
   parameters,
   itemName,
+  style,
 }: EditorWithMentionsProps) {
 
   const editorContainerRef = useRef<HTMLDivElement>(null);
@@ -761,7 +764,8 @@ export default function EditorWithMentions({
         background: '#fff',
         position: 'relative',
         maxHeight: '300px',
-        overflowY:'auto'
+        overflowY:'auto',
+        ...style
       }}>
         <LexicalComposer initialConfig={initialConfig}>
           <ContentInitializerPlugin parameters={parameters} parseContent={parseContent} />
@@ -769,10 +773,11 @@ export default function EditorWithMentions({
             contentEditable={<ContentEditable
               className="editor-content"
               style={{
-                minHeight: '150px',
+                minHeight: '200px',
                 outline: 'none',
                 padding: '4px',
-                lineHeight: '1.5'
+                lineHeight: '1.5',
+                ...style
               }}
               onFocus={() => setIsEditorFocused(true)}
               onBlur={() => setIsEditorFocused(false)}
@@ -784,7 +789,7 @@ export default function EditorWithMentions({
               color: '#bfbfbf',
               pointerEvents: 'none',
               userSelect: 'none'
-            }}>{'输入{可选择变量置入文本框'}</div>}
+            }}>{'输入＠可选择变量置入文本框'}</div>}
             ErrorBoundary={LexicalErrorBoundary}
           />
           <HistoryPlugin />

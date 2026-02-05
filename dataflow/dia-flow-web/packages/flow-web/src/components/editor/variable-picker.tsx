@@ -19,6 +19,7 @@ import {
   useTranslateExtension,
 } from "../extension-provider";
 import {
+  BranchType,
   DataSourceStepNode,
   ExecutorStepNode,
   LoopOperator,
@@ -44,6 +45,7 @@ export interface VariablePickerOptions {
   width?: number;
   height?: number;
   loop?: boolean;
+  currentStepNodes?: any;
 }
 
 export interface VariablePickerProps extends VariablePickerOptions {
@@ -122,7 +124,9 @@ export function isLoopVarAccessible(
 export function isAccessable(
   scope: number[] | undefined,
   path: number[],
-  loopScope: boolean = false
+  loopScope: boolean = false,
+  item?: any,
+  currentStepNodes?: any,
 ) {
   if (scope === undefined || scope.length === 0) {
     return true;
@@ -136,6 +140,14 @@ export function isAccessable(
       return true;
     }
     return false;
+  }
+
+  //并行分支输入可以被选择，循环里的输出不能被循环外选择
+  if (item?.branch === BranchType.Parallel && path.length > scope.length && (!currentStepNodes || currentStepNodes.isLoop === item?.isLoop)) {
+    for (let i = 0; i < scope.length; i++) {
+        if (scope[i] > path[i]) return true;
+        if (scope[i] === path[i] && scope[i+1] > path[i+1])  return true;
+      }
   }
 
   for (let i = 0; i < path.length - 1; i += 1) {
@@ -161,6 +173,7 @@ export const VariablePicker: FC<VariablePickerProps> = ({
   onFinish,
   onCancel,
   allowOperator,
+  currentStepNodes,
 }) => {
   const { stepNodes } = useContext(EditorContext);
   const t = useTranslate();
@@ -210,7 +223,7 @@ export const VariablePicker: FC<VariablePickerProps> = ({
             return isLoopVarAccessible(scope, item.path, true);
           }
 
-          if (!isAccessable(scope, item.path, loop)) {
+          if (!isAccessable(scope, item.path, loop, item, currentStepNodes)) {
             return false;
           }
 

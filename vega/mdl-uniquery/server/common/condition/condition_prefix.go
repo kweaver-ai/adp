@@ -29,15 +29,40 @@ func NewPrefixCond(ctx context.Context, cfg *CondCfg, fieldsMap map[string]*View
 		return nil, fmt.Errorf("condition [prefix] right value is not a string value: %v", cfg.Value)
 	}
 
+	featureType := FieldFeatureType_Raw
+	if IsTextType(fieldsMap[cfg.Name]) {
+		featureType = FieldFeatureType_Keyword
+	}
+
+	fName, err := GetQueryField(ctx, cfg.Name, fieldsMap, featureType)
+	if err != nil {
+		return nil, fmt.Errorf("condition [prefix], %v", err)
+	}
+
 	return &PrefixCond{
 		mCfg:             cfg,
 		mValue:           val,
-		mFilterFieldName: getFilterFieldName(ctx, cfg.Name, fieldsMap, false),
+		mFilterFieldName: fName,
 	}, nil
 }
 
 func (cond *PrefixCond) Convert(ctx context.Context) (string, error) {
-	return "", nil
+	v := cond.mCfg.Value
+	vStr, ok := v.(string)
+	if ok {
+		v = fmt.Sprintf("%q", vStr)
+	}
+
+	dslStr := fmt.Sprintf(`
+					{
+						"prefix": {
+							"%s": {
+								"value": %v
+							}
+						}
+					}`, cond.mFilterFieldName, v)
+
+	return dslStr, nil
 }
 
 func (cond *PrefixCond) Convert2SQL(ctx context.Context) (string, error) {

@@ -10,8 +10,8 @@ import (
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/drivenadapters"
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/driveradapters/middleware"
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/errors"
+	commonLog "github.com/kweaver-ai/adp/autoflow/flow-automation/libs/go/log"
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/logics/auth"
-	commonLog "github.com/kweaver-ai/adp/autoflow/ide-go-lib/log"
 )
 
 // RESTHandler 公共RESTful api Handler接口

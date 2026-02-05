@@ -1,4 +1,9 @@
 # 逻辑视图
+[DataModel.DataView.InvalidParameter.FieldFeatureName]
+Description = "逻辑视图字段特征名称无效"
+Solution = "请检查参数是否正确"
+ErrorLink = "暂无"
+
 [DataModel.DataView.InvalidParameter.FieldName]
 Description = "逻辑视图字段名称无效"
 Solution = "请检查参数是否正确"
@@ -56,6 +61,21 @@ ErrorLink = "暂无"
 
 [DataModel.DataView.LengthExceeded.Comment]
 Description = "逻辑视图备注超出限制"
+Solution = "请检查参数是否正确"
+ErrorLink = "暂无"
+
+[DataModel.DataView.LengthExceeded.FieldComment]
+Description = "逻辑视图字段备注超出限制"
+Solution = "请检查参数是否正确"
+ErrorLink = "暂无"
+
+[DataModel.DataView.LengthExceeded.FieldFeatureComment]
+Description = "逻辑视图字段特征备注超出限制"
+Solution = "请检查参数是否正确"
+ErrorLink = "暂无"
+
+[DataModel.DataView.LengthExceeded.FieldFeatureName]
+Description = "逻辑视图字段特征名称超出限制"
 Solution = "请检查参数是否正确"
 ErrorLink = "暂无"
 
@@ -179,6 +199,11 @@ Description = "字段 '{{.FieldName}}' 的显示名 {{.DisplayName}} 已经存�
 Solution = "请检查参数是否正确"
 ErrorLink = "暂无"
 
+[DataModel.DataView.Duplicated.FieldFeatureName]
+Description = "字段特征名称 '{{.FieldFeatureName}}' 已经存在"
+Solution = "请检查参数是否正确"
+ErrorLink = "暂无"
+
 [DataModel.DataView.Duplicated.FieldName]
 Description = "字段 '{{.FieldName}}' 已经存在"
 Solution = "请检查参数是否正确"
@@ -232,6 +257,11 @@ ErrorLink = "暂无"
 [DataModel.DataView.InternalError.DeleteDataViewsFailed]
 Description = "删除逻辑视图失败"
 Solution = "请重试该操作，若再次出现该错误请提交工单或联系技术支持工程师。"
+ErrorLink = "暂无"
+
+[DataModel.DataView.InternalError.InvalidReferenceView]
+Description = "引用的原子视图不可用"
+Solution = "请检查引用的原子视图是否有效"
 ErrorLink = "暂无"
 
 [DataModel.DataView.InternalError.ListDataViewsFailed]

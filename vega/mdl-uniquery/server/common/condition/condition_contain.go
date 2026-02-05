@@ -23,9 +23,19 @@ func NewContainCond(ctx context.Context, cfg *CondCfg, fieldsMap map[string]*Vie
 		return nil, fmt.Errorf("condition [contain] does not support value_from type '%s'", cfg.ValueFrom)
 	}
 
+	featureType := FieldFeatureType_Raw
+	if IsTextType(fieldsMap[cfg.Name]) {
+		featureType = FieldFeatureType_Keyword
+	}
+
+	fName, err := GetQueryField(ctx, cfg.Name, fieldsMap, featureType)
+	if err != nil {
+		return nil, fmt.Errorf("condition [contain], %v", err)
+	}
+
 	containCond := &ContainCond{
 		mCfg:             cfg,
-		mFilterFieldName: getFilterFieldName(ctx, cfg.Name, fieldsMap, false),
+		mFilterFieldName: fName,
 	}
 
 	if common.IsSlice(cfg.Value) {

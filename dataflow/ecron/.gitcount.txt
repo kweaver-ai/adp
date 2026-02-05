@@ -1,4 +1,0 @@
-analysis
-common
-management
-utils

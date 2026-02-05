@@ -401,17 +401,21 @@ export const MainContent: React.FC = () => {
       </Table.PageTable>
 
       {/* 移动到分组弹框 */}
-      <MoveToGroupModal
-        visible={isMoveToGroupModalShow}
-        title={intl.get('CustomDataView.moveToGroup')}
-        onOk={handleMoveToGroupSubmit}
-        onCancel={() => setIsMoveToGroupModalShow(false)}
-      />
+      {isMoveToGroupModalShow && (
+        <MoveToGroupModal
+          visible={isMoveToGroupModalShow}
+          title={intl.get('CustomDataView.moveToGroup')}
+          onOk={handleMoveToGroupSubmit}
+          onCancel={() => setIsMoveToGroupModalShow(false)}
+        />
+      )}
 
       {/* 预览 */}
-      <PreviewData open={isPreviewDataModalShow} id={currentId} name={currentName} onClose={() => setIsPreviewDataModalShow(false)} />
+      {isPreviewDataModalShow && (
+        <PreviewData open={isPreviewDataModalShow} id={currentId} name={currentName} onClose={() => setIsPreviewDataModalShow(false)} />
+      )}
 
-      <DataViewDetail open={isDataViewDetailModalShow} id={currentId} onClose={() => setIsDataViewDetailModalShow(false)} />
+      {isDataViewDetailModalShow && <DataViewDetail open={isDataViewDetailModalShow} id={currentId} onClose={() => setIsDataViewDetailModalShow(false)} />}
     </div>
   );
 };

@@ -78,7 +78,7 @@ func (vdsa *vegaDataSourceAccess) GetDataSourceByID(ctx context.Context, id stri
 	// 错误码结构是 code, description, detail，需要对错误码做转换
 	if respCode != http.StatusOK {
 		// 转成 baseerror. vega返回的错误码跟我们当前的不同，暂时先用
-		var vegaError VegaError
+		var vegaError *VegaError
 		if err = sonic.Unmarshal(respData, &vegaError); err != nil {
 			logger.Errorf("unmalshal VegaError failed: %v", err)
 
@@ -87,18 +87,13 @@ func (vdsa *vegaDataSourceAccess) GetDataSourceByID(ctx context.Context, id stri
 
 			return nil, err
 		}
-		httpErr := &rest.HTTPError{HTTPCode: respCode,
-			BaseError: rest.BaseError{
-				ErrorCode:    vegaError.Code,
-				Description:  vegaError.Description,
-				ErrorDetails: vegaError.Detail,
-			}}
-		logger.Errorf("Get Vega DataSource Error: %v", httpErr.Error())
+
+		logger.Errorf("Get Vega DataSource Error: %v", vegaError.Error())
 
 		o11y.AddHttpAttrs4Error(span, respCode, "InternalError", "Http status is not 200")
 		o11y.Error(ctx, fmt.Sprintf("Get Vega DataSource failed: %v", vegaError))
 
-		return nil, fmt.Errorf("get Vega DataSource Error: %v", httpErr.Error())
+		return nil, fmt.Errorf("get Vega DataSource Error: %v", vegaError.Error())
 	}
 
 	if respData == nil {

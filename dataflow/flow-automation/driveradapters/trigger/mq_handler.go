@@ -10,6 +10,10 @@ import (
 
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/common"
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/drivenadapters"
+	cmq "github.com/kweaver-ai/adp/autoflow/flow-automation/libs/go/mq"
+	"github.com/kweaver-ai/adp/autoflow/flow-automation/libs/go/store"
+	traceLog "github.com/kweaver-ai/adp/autoflow/flow-automation/libs/go/telemetry/log"
+	"github.com/kweaver-ai/adp/autoflow/flow-automation/libs/go/telemetry/trace"
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/logics/admin"
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/logics/cronjob"
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/logics/inbox"
@@ -19,10 +23,6 @@ import (
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/pkg/mod"
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/store/rds"
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/utils"
-	cmq "github.com/kweaver-ai/adp/autoflow/ide-go-lib/mq"
-	"github.com/kweaver-ai/adp/autoflow/ide-go-lib/store"
-	traceLog "github.com/kweaver-ai/adp/autoflow/ide-go-lib/telemetry/log"
-	"github.com/kweaver-ai/adp/autoflow/ide-go-lib/telemetry/trace"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 

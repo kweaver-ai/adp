@@ -10,7 +10,7 @@ import {
 } from "react";
 import { isString } from "lodash";
 import clsx from "clsx";
-import { Button, Input, Select } from "antd";
+import { Button, Input, InputNumber, Select } from "antd";
 import { TranslateFn, useTranslate } from "@applet/common";
 import { CloseOutlined } from "@applet/icons";
 import { Param, ParamType } from "./custom-params-input";
@@ -25,6 +25,7 @@ import { EditorContext } from "../editor/editor-context";
 import { StepConfigContext } from "../editor/step-config-context";
 import { VariableInput } from "../editor/form-item";
 import styles from "./styles/params-config.module.less";
+import EditorWithMentions from "../../extensions/ai/editor-with-mentions";
 
 interface ParamsConfigProps {
     t: TranslateFn;
@@ -73,7 +74,7 @@ export const ParamsConfig = forwardRef<Validatable, ParamsConfigProps>(
         ref
     ) => {
         const [name, setName] = useState("");
-        const [value, setValue] = useState<string | undefined>();
+        const [value, setValue] = useState<any>();
         const [type, setType] = useState<ParamType | undefined>();
         const [isPicking, setIsPicking] = useState(false);
         const [inValidStatus, setInValidStatus] = useState({
@@ -219,7 +220,7 @@ export const ParamsConfig = forwardRef<Validatable, ParamsConfigProps>(
         };
 
         const validateValue = () => {
-            if (value && value.length > 0) {
+            if (value !== undefined && value !== null && value !== "") {
                 // 变量失效
                 if (isVariable && !stepOutput) {
                     setInValidStatus((pre) => ({
@@ -228,6 +229,46 @@ export const ParamsConfig = forwardRef<Validatable, ParamsConfigProps>(
                     }));
                     return false;
                 }
+                
+                // 校验数组和对象格式
+                if (!isVariable) {
+                    if (type === ParamType.Array) {
+                        try {
+                            const parsedValue = JSON.parse(value as string);
+                            if (!Array.isArray(parsedValue)) {
+                                setInValidStatus((pre) => ({
+                                    ...pre,
+                                    value: "invalidArray",
+                                }));
+                                return false;
+                            }
+                        } catch (error) {
+                            setInValidStatus((pre) => ({
+                                ...pre,
+                                value: "invalidArray",
+                            }));
+                            return false;
+                        }
+                    } else if (type === ParamType.Object) {
+                        try {
+                            const parsedValue = JSON.parse(value as string);
+                            if (typeof parsedValue !== "object" || parsedValue === null || Array.isArray(parsedValue)) {
+                                setInValidStatus((pre) => ({
+                                    ...pre,
+                                    value: "invalidObject",
+                                }));
+                                return false;
+                            }
+                        } catch (error) {
+                            setInValidStatus((pre) => ({
+                                ...pre,
+                                value: "invalidObject",
+                            }));
+                            return false;
+                        }
+                    }
+                }
+                
                 setInValidStatus((pre) => ({ ...pre, value: "" }));
                 return true;
             }
@@ -274,6 +315,16 @@ export const ParamsConfig = forwardRef<Validatable, ParamsConfigProps>(
                         "tool.error.numStart",
                         "变量名称不能以数字为第一个字符"
                     );
+                case "invalidArray":
+                    return t(
+                        "tool.error.invalidArray",
+                        "请输入有效的数组格式或选择数组变量"
+                    );
+                case "invalidObject":
+                    return t(
+                        "tool.error.invalidObject",
+                        "请输入有效的对象格式或选择对象变量"
+                    );
                 default:
                     return t("tool.error.empty", "请完善变量设置");
             }
@@ -286,8 +337,9 @@ export const ParamsConfig = forwardRef<Validatable, ParamsConfigProps>(
                 })}
             >
                 <div className={styles["section-header"]}>
-                    <span>{t("tool.params.num", { num })}</span>
-                    {paramsType === "input" ? (
+                    <span className={styles["section-params"]}>{t("tool.params.num", { num })}</span>
+                    {paramsType === "input" && (type === ParamType.String ||
+                            type === ParamType.Int) ? (
                         <Button
                             type="link"
                             onClick={() => {
@@ -300,7 +352,8 @@ export const ParamsConfig = forwardRef<Validatable, ParamsConfigProps>(
                                     {
                                         targetRect,
                                         height: 264,
-                                        loop: step?.operator === LoopOperator
+                                        loop: step?.operator === LoopOperator,
+                                        currentStepNodes: step && stepNodes[step.id],
                                     },
                                 )
                                     .then((value) => {
@@ -342,41 +395,82 @@ export const ParamsConfig = forwardRef<Validatable, ParamsConfigProps>(
                             popupClassName={styles["select-popup"]}
                         ></Select>
                     </div>
-                    {paramsType === "input" && (
-                        <div
-                            ref={inputRef}
-                            className={clsx(styles["value-input"], {
-                                [styles["isVariable"]]: isVariable,
-                            })}
-                        >
-                            {isVariable || isPicking ? (
-                                <VariableInput
-                                    value={value}
-                                    onChange={(val: string) => {
-                                        setValue(val || "");
+                    {paramsType === "input" &&
+                        (type === ParamType.Array ||
+                            type === ParamType.Object) && (
+                            <div
+                                className={clsx(styles["value-input"], {
+                                    [styles["isVariable"]]: isVariable,
+                                    [styles["has-error"]]: inValidStatus.value,
+                                })}
+                            >
+                                <EditorWithMentions
+                                    onChange={(data: any) => {
+                                        setValue(data);
+                                        validateValue();
                                     }}
+                                    parameters={value}
+                                    itemName="documents"
+                                    style={{
+                                        minHeight: '100px',
+                                    }}
+                                />
+                            </div>
+                        )}
+                    {paramsType === "input" &&
+                        (type === ParamType.String ||
+                            type === ParamType.Int) && (
+                            <div
+                                ref={inputRef}
+                                className={clsx(styles["value-input"], {
+                                    [styles["isVariable"]]: isVariable,
+                                })}
+                            >
+                                {isVariable || isPicking ? (
+                                    <VariableInput
+                                        value={value}
+                                        onChange={(val: string) => {
+                                            setValue(val || "");
+                                        }}
                                     scope={scope || ((step && stepNodes[step.id]?.path) || [])}
-                                    stepNode={stepNode}
-                                    stepOutput={stepOutput}
-                                    variableVal={variableVal}
-                                />
-                            ) : (
-                                <Input
-                                    value={value}
-                                    onChange={(e) => {
-                                        setValue(e.target.value);
-                                    }}
-                                    status={
-                                        inValidStatus.value
-                                            ? "error"
-                                            : undefined
-                                    }
-                                    onBlur={validateValue}
+                                        stepNode={stepNode}
+                                        stepOutput={stepOutput}
+                                        variableVal={variableVal}
+                                    />
+                                ) : type === ParamType.Int ? (
+                                    <InputNumber
+                                        value={value ? Number(value) : undefined}
+                                        onChange={(val) => {
+                                            setValue(val);
+                                        }}
+                                        status={
+                                            inValidStatus.value
+                                                ? "error"
+                                                : undefined
+                                        }
+                                        onBlur={validateValue}
+                                        placeholder={t(
+                                            "tool.placeholder.value",
+                                        )}
+                                        style={{ width:'100%' }}
+                                    />
+                                ) : (
+                                    <Input
+                                        value={value}
+                                        onChange={(e) => {
+                                            setValue(e.target.value);
+                                        }}
+                                        status={
+                                            inValidStatus.value
+                                                ? "error"
+                                                : undefined
+                                        }
+                                        onBlur={validateValue}
                                     placeholder={t("tool.placeholder.value")}
-                                />
-                            )}
-                        </div>
-                    )}
+                                    />
+                                )}
+                            </div>
+                        )}
 
                     <Button
                         type="link"

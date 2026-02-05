@@ -1,4 +1,6 @@
 import moment from 'moment';
+import { getConfig } from '@/utils/http';
+import { ParamTypeEnum } from './types';
 
 export function resolveRefPath(ref: any, doc: any) {
   const parts = ref.split('/').filter((part: any) => part !== '#' && part !== '');
@@ -61,6 +63,7 @@ export const getTableData = (schema, parentKey = '', location: string = '') => {
     const property = schema?.properties[key];
     const name = parentKey ? `${parentKey}.${key}` : key;
     const row = {
+      ...property,
       key: name,
       name: key,
       type: property.type,
@@ -117,3 +120,56 @@ export function generateJsonSchema(params: any) {
 
   return jsonSchema;
 }
+
+export const getParamType = (param: any) => {
+  return Array.isArray(param.schema?.type) ? param.schema.type[0] : param.schema?.type || param.type;
+};
+
+// 从JSONSchema中提取默认值
+export const parseParamDefaultValue = (param: any): any => {
+  if (param.in === 'header' && param.name === 'Authorization') {
+    return 'Bearer ' + getConfig('getToken')();
+  }
+
+  const defaultValue = param.default || param.schema?.default || param.example || param.schema?.example;
+  if (defaultValue !== undefined) {
+    return defaultValue;
+  }
+
+  if (param.examples) {
+    const defaultValue = (Object.values(param.examples)?.[0] as any)?.value;
+
+    if (defaultValue !== undefined) {
+      return defaultValue;
+    }
+  }
+
+  switch (getParamType(param)) {
+    case ParamTypeEnum.String:
+      return '';
+    case ParamTypeEnum.Number:
+    case ParamTypeEnum.Integer:
+      return 0;
+    case ParamTypeEnum.Boolean:
+      return false;
+    case ParamTypeEnum.Array:
+      const items = param.schema?.items || param.items;
+      if (items) {
+        return [parseParamDefaultValue(items)];
+      }
+
+      return [];
+    case ParamTypeEnum.Object:
+      const properties = param.schema?.properties || param.properties;
+      if (properties) {
+        const obj: any = {};
+        Object.keys(properties).forEach(key => {
+          obj[key] = parseParamDefaultValue(properties[key]);
+        });
+        return obj;
+      }
+      return {};
+    default:
+      return undefined;
+  }
+};

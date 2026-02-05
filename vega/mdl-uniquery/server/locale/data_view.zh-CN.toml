@@ -153,6 +153,11 @@ Description = "删除 Point In Time 失败"
 Solution = "请重试该操作，若再次出现该错误请提交工单或联系技术支持工程师。"
 ErrorLink = "暂无"
 
+[Uniquery.DataView.InternalError.FetchDataFromVegaFailed]
+Description = "从 vega-gateway-pro 服务或数据连接服务获取数据失败"
+Solution = "请重试该操作，若再次出现该错误请提交工单或联系技术支持工程师。"
+ErrorLink = "暂无"
+
 [Uniquery.DataView.InternalError.GetDataViewByIDFailed]
 Description = "通过 ID 获取视图详情失败"
 Solution = "请重试该操作，若再次出现该错误请提交工单或联系技术支持工程师。"
@@ -191,6 +196,11 @@ ErrorLink = "暂无"
 [Uniquery.DataView.InternalError.GetTotalFailed]
 Description = "获取数据总量失败"
 Solution = "请重试该操作，若再次出现该错误请提交工单或联系技术支持工程师。"
+ErrorLink = "暂无"
+
+[Uniquery.DataView.InternalError.InvalidReferenceView]
+Description = "引用的原子视图无效"
+Solution = "请检查引用的原子视图是否有效。"
 ErrorLink = "暂无"
 
 [Uniquery.DataView.InternalError.LoadIndexShardsFailed]

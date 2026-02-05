@@ -9,7 +9,7 @@
     "createCustomDataView": "新建自定义视图",
     "editCustomDataView": "编辑自定义视图",
     "dataViewInfo": "视图信息",
-    "idTip": "ID 是指标模型的唯一标识符,支持自定义输入,若未自定义,系统将自动生成。请注意,指标模型一旦新建完成,ID便不可更改",
+    "idTip": "ID 是唯一标识符,支持自定义输入,若未自定义,系统将自动生成。请注意,一旦新建完成,ID便不可更改",
     "noGroupsFound": "暂无分组",
     "confirmChangeQueryType": "是否确认切换查询类型?",
     "confirmChangeQueryTypeContent": "若当前视图已经有配置内容,切换后将重新配置,请确认操作。",
@@ -81,7 +81,8 @@
       "sameTypeFieldsOnly": "您仅可选择数据类型相同的字段进行合并",
       "mergeOutputType": "合并输出方式",
       "noMergeRules": "暂无合并规则",
-      "fieldTypeConflictTip": "名称相同，类型不同的字段导致视图数据查询报错，故此剔除"
+      "fieldTypeConflictTip": "名称相同，类型不同的字段导致视图数据查询报错，故此剔除",
+      "fieldTypeInconsistent": "字段类型不一致"
     },
     "FieldSQL": {
       "enterSQLStatement": "请输入SQL语句",

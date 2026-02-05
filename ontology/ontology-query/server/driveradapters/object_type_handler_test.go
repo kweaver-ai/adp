@@ -323,7 +323,7 @@ func Test_RestHandler_GetObjectsPropertiesByIn(t *testing.T) {
 		url := "/api/ontology-query/in/v1/knowledge-networks/" + knID + "/object-types/" + otID + "/properties"
 
 		propertyQuery := interfaces.ObjectPropertyValueQuery{
-			InstanceIdentity: []map[string]any{
+			InstanceIdentities: []map[string]any{
 				{"id": "1"},
 			},
 			Properties: []string{"prop1", "prop2"},
@@ -351,8 +351,8 @@ func Test_RestHandler_GetObjectsPropertiesByIn(t *testing.T) {
 
 		Convey("失败 - 唯一标识为空", func() {
 			invalidQuery := interfaces.ObjectPropertyValueQuery{
-				InstanceIdentity: []map[string]any{},
-				Properties:       []string{"prop1"},
+				InstanceIdentities: []map[string]any{},
+				Properties:         []string{"prop1"},
 			}
 			reqParamByte, _ := sonic.Marshal(invalidQuery)
 			req := httptest.NewRequest(http.MethodPost, url, bytes.NewReader(reqParamByte))
@@ -367,7 +367,7 @@ func Test_RestHandler_GetObjectsPropertiesByIn(t *testing.T) {
 
 		Convey("失败 - 属性列表为空", func() {
 			invalidQuery := interfaces.ObjectPropertyValueQuery{
-				InstanceIdentity: []map[string]any{
+				InstanceIdentities: []map[string]any{
 					{"id": "1"},
 				},
 				Properties: []string{},
@@ -410,7 +410,7 @@ func Test_RestHandler_GetObjectsPropertiesByEx(t *testing.T) {
 		url := "/api/ontology-query/v1/knowledge-networks/" + knID + "/object-types/" + otID + "/properties"
 
 		propertyQuery := interfaces.ObjectPropertyValueQuery{
-			InstanceIdentity: []map[string]any{
+			InstanceIdentities: []map[string]any{
 				{"id": "1"},
 			},
 			Properties: []string{"prop1", "prop2"},
@@ -477,7 +477,7 @@ func Test_RestHandler_GetObjectsProperties(t *testing.T) {
 		url := "/api/ontology-query/v1/knowledge-networks/" + knID + "/object-types/" + otID + "/properties"
 
 		propertyQuery := interfaces.ObjectPropertyValueQuery{
-			InstanceIdentity: []map[string]any{
+			InstanceIdentities: []map[string]any{
 				{"id": "1"},
 			},
 			Properties: []string{"prop1", "prop2"},

@@ -22,9 +22,14 @@ func NewGtCond(ctx context.Context, cfg *CondCfg, fieldsMap map[string]*ViewFiel
 		return nil, fmt.Errorf("condition [gt] only supports single value")
 	}
 
+	fName, err := GetQueryField(ctx, cfg.Name, fieldsMap, FieldFeatureType_Raw)
+	if err != nil {
+		return nil, fmt.Errorf("condition [gt], %v", err)
+	}
+
 	return &GtCond{
 		mCfg:             cfg,
-		mFilterFieldName: getFilterFieldName(ctx, cfg.Name, fieldsMap, false),
+		mFilterFieldName: fName,
 	}, nil
 
 }

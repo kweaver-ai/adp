@@ -209,7 +209,7 @@ const ScanManagement = (props: ScanManagementProps): JSX.Element => {
       __selected: true,
       render: (_value: unknown, record: ScanTaskType.ScanTaskItem) => {
         if (!record.allow_multi_table_scan) {
-          return '--';
+          return '';
         }
         // const allOperations = [
         //     { key: 'view', label: intl.get('Global.view'), visible: matchPermission(PERMISSION_CODES.VIEW, record.operations) },

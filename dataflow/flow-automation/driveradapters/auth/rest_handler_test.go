@@ -14,10 +14,10 @@ import (
 	"github.com/go-playground/assert/v2"
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/drivenadapters"
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/driveradapters/middleware"
+	commonLog "github.com/kweaver-ai/adp/autoflow/flow-automation/libs/go/log"
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/logics/auth"
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/tests/mock_drivenadapters"
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/tests/mock_logics"
-	commonLog "github.com/kweaver-ai/adp/autoflow/ide-go-lib/log"
 	"go.uber.org/mock/gomock"
 )
 

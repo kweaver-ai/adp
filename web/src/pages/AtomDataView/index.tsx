@@ -7,6 +7,7 @@ import { TablePaginationConfig } from 'antd/es/table';
 import dayjs from 'dayjs';
 import ContainerIsVisible, { getTypePermissionOperation, matchPermission, PERMISSION_CODES } from '@/components/ContainerIsVisible';
 import DetailDrawer, { DataItem } from '@/components/DetailDrawer';
+import FieldFeatureModal from '@/components/FieldFeatureModal';
 import { useAuthorization } from '@/hooks/useAuthorization';
 import { DATABASE_ICON_MAP, DATE_FORMAT } from '@/hooks/useConstants';
 import { StateConfigType } from '@/hooks/usePageState';
@@ -71,6 +72,9 @@ const AtomDataView = (): JSX.Element => {
   const [checkDatasource, setCheckDatasource] = useState<any>();
   const [selectedRows, setSelectedRows] = useState<AtomDataViewType.Data[]>([]);
   const [selectedRowKeys, setSelectedRowKeys] = useState<string[]>([]);
+  const [fieldFeatureVisible, setFieldFeatureVisible] = useState<boolean>(false);
+  const [currentField, setCurrentField] = useState<AtomDataViewType.Field | null>(null);
+  const [currentFieldList, setCurrentFieldList] = useState<AtomDataViewType.Field[]>([]);
   const { sort, direction } = pageState || {};
   const { message } = HOOKS.useGlobalContext();
   const { openModal: openAuthorizationModal } = useAuthorization({
@@ -188,13 +192,21 @@ const AtomDataView = (): JSX.Element => {
 
   const getModalContent = async (val: AtomDataViewType.Data): Promise<DataItem[]> => {
     const [data] = await api.getDataViewsByIds([val.id]);
+
+    // 处理字段特征查看
+    const handleFieldFeatureClick = (field: AtomDataViewType.Field) => {
+      setCurrentField(field);
+      setCurrentFieldList(data.fields || []);
+      setFieldFeatureVisible(true);
+    };
+
     const fieldInfoContent = {
       title: intl.get('Global.fieldInfo'),
       content: [
         {
           // name: intl.get('Global.view'),
           isOneLine: true,
-          value: <FieldTable data={data.fields || []} />,
+          value: <FieldTable data={data.fields || []} onFieldFeatureClick={handleFieldFeatureClick} />,
         },
       ],
     };
@@ -488,11 +500,21 @@ const AtomDataView = (): JSX.Element => {
           </div>
         </Splitter.Panel>
       </Splitter>
-      <DetailDrawer data={detailDrawerData} title={intl.get('DataView.dataViewDetail')} width={1040} onClose={() => setDetailDrawerData(null)} />
+      <DetailDrawer data={detailDrawerData} title={intl.get('DataView.dataViewDetail')} width={'100vw'} onClose={() => setDetailDrawerData(null)} />
 
       <DataViewForm visible={showDrawer} onClose={onClose} id={editId} checkDatasource={checkDatasource} />
 
       <PreviewData open={previewOpen} id={previewId} name={previewName} onClose={() => setPreviewOpen(false)} />
+
+      <FieldFeatureModal
+        visible={fieldFeatureVisible}
+        mode="view"
+        fieldName={currentField?.display_name || currentField?.name}
+        data={currentField?.features || []}
+        fields={currentField ? [currentField] : []}
+        onCancel={() => setFieldFeatureVisible(false)}
+        onOk={() => setFieldFeatureVisible(false)}
+      />
     </div>
   );
 };
