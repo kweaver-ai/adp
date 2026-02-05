@@ -901,7 +901,7 @@ func TestEval(t *testing.T) {
 					Description:  "Invalid Step",
 					Solution:     "Please check whether the parameter is correct.",
 					ErrorLink:    "None",
-					ErrorDetails: "expect steps is one of {[minute hour day week month quarter year]}, actaul is 1d",
+					ErrorDetails: "sql atomic metric only support calendar steps, expect steps is one of {[minute hour day week month quarter year]}, actaul is 1d",
 				},
 			}
 
