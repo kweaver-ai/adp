@@ -8,6 +8,7 @@ import (
 
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/common"
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/drivenadapters"
+	ierrors "github.com/kweaver-ai/adp/autoflow/flow-automation/errors"
 	commonLog "github.com/kweaver-ai/adp/autoflow/flow-automation/libs/go/log"
 	traceLog "github.com/kweaver-ai/adp/autoflow/flow-automation/libs/go/telemetry/log"
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/libs/go/telemetry/trace"
@@ -121,10 +122,10 @@ func (s *sandbox) Execute(ctx context.Context, req *SandboxExecuteRequest) (*San
 		} else {
 			switch execStatus.Status {
 			case "completed":
-				result, err := sandboxClient.GetExecutionResult(newCtx, execution.ExecutionID)
-				if err != nil {
-					log.Warnf("[Sandbox.Execute] GetExecutionResult err: %s", err.Error())
-					return nil, fmt.Errorf("get execution result failed: %w", err)
+				result, serr := sandboxClient.GetExecutionResult(newCtx, execution.ExecutionID)
+				if serr != nil {
+					log.Warnf("[Sandbox.Execute] GetExecutionResult err: %s", serr.Error())
+					return nil, ierrors.NewIError(ierrors.ErrorDepencyService, "", serr)
 				}
 				return &SandboxExecuteResult{
 					ID:            result.ID,
@@ -147,11 +148,7 @@ func (s *sandbox) Execute(ctx context.Context, req *SandboxExecuteRequest) (*San
 					Metrics:       result.Metrics,
 				}, nil
 			case "failed":
-				errMsg := "execution failed"
-				if execStatus.ErrorMessage != nil {
-					errMsg = *execStatus.ErrorMessage
-				}
-				return nil, fmt.Errorf("%v", errMsg)
+				return nil, ierrors.NewIError(ierrors.ErrorDepencyService, "", execStatus)
 			default:
 			}
 		}
