@@ -76,6 +76,7 @@ type Config struct {
 	BusinessDomain           BusinessDomain           `mapstructure:"business_domain"`
 	AccessAddress            AccessAddress            `mapstructure:"access_address"`
 	Sandbox                  Sandbox                  `mapstructure:"sandbox"`
+	S3                       S3                       `mapstructure:"s3"`
 }
 
 type DagInstanceEventArchivePolicy string

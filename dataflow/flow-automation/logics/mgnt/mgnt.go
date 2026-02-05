@@ -3911,9 +3911,10 @@ func (m *mgnt) triggerfromDataSource(ctx context.Context, dataSource *entity.Dat
 			log.Warnf("[triggerfromDataSource] No S3 objects found for dag: %s", dag.ID)
 			return false, nil
 		}
+	default:
+		return false, nil
 	}
 
-	return false, nil
 }
 
 func (m *mgnt) getDepartmentMembers(ctx context.Context, departmentID string) []string {

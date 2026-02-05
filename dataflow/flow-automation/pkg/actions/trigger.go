@@ -1777,6 +1777,7 @@ func (a *DataFlowDocTrigger) Run(ctx entity.ExecuteContext, params interface{}, 
 		}
 		if keyStr, ok := key.(string); ok && keyStr != "" {
 			data["key"] = keyStr
+			data["path"] = keyStr
 			// 从key中提取文件名
 			parts := strings.Split(keyStr, "/")
 			if len(parts) > 0 {
@@ -1792,6 +1793,7 @@ func (a *DataFlowDocTrigger) Run(ctx entity.ExecuteContext, params interface{}, 
 		if etagStr, ok := etag.(string); ok && etagStr != "" {
 			data["etag"] = etagStr
 			data["md5"] = etagStr // ETag通常是MD5值
+			data["rev"] = etagStr
 		}
 		if downloadURLStr, ok := downloadURL.(string); ok && downloadURLStr != "" {
 			data["download_url"] = downloadURLStr
