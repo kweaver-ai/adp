@@ -23,6 +23,7 @@ export interface PreviewDataItem {
   labelsKV: string[];
   growth_rates: number[];
   growth_values: number[];
+  proportions: number[];
   time: string;
   value: number | string;
   rowSpan?: number; // 合并行数
@@ -77,7 +78,7 @@ const Preview = (props: any) => {
     const { datas = [] } = data;
     const result: PreviewDataItem[] = [];
     _.forEach(datas, (item: any, index: number) => {
-      const { values = [], times = [], labels, growth_rates, growth_values } = item;
+      const { values = [], times = [], labels, growth_rates, growth_values, proportions } = item;
       const labelsKV = Object.keys(labels).map((i) => `${i}=${labels[i] || '--'}`);
 
       _.forEach(values, (d, i: number) => {
@@ -90,6 +91,7 @@ const Preview = (props: any) => {
           value: ERROR_VALUE.includes(d) ? null : d,
           growth_rates: growth_rates?.[i],
           growth_values: growth_values?.[i],
+          proportions: proportions?.[i],
           formatValue: d,
         });
       });

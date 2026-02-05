@@ -1,0 +1,147 @@
+.field-feature-modal {
+  .table-header {
+    display: flex;
+    gap: 16px;
+    align-items: center;
+    height: 40px;
+    margin-bottom: 12px;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+
+    .header-item {
+      display: flex;
+      align-items: center;
+      font-size: 13px;
+      color: rgba(0, 0, 0, 0.65);
+
+      .required {
+        margin-right: 4px;
+        color: #ff4d4f;
+      }
+    }
+  }
+
+  .table-body {
+    max-height: 400px;
+    overflow-y: auto;
+
+    .table-row {
+      display: flex;
+      gap: 16px;
+      align-items: center;
+      margin-bottom: 16px;
+
+      .row-item {
+        display: flex;
+        align-items: center;
+
+        .text-value {
+          overflow: hidden;
+          text-overflow: ellipsis;
+          font-size: 14px;
+          line-height: 22px;
+          color: rgba(0, 0, 0, 0.85);
+          white-space: nowrap;
+        }
+
+        .status-text {
+          font-size: 14px;
+          color: rgba(0, 0, 0, 0.85);
+        }
+
+        .delete-icon {
+          font-size: 16px;
+          color: rgba(0, 0, 0, 0.1);
+          cursor: pointer;
+          transition: color 0.3s;
+
+          &:hover {
+            color: #ff4d4f;
+          }
+        }
+      }
+    }
+  }
+
+  .footer {
+    margin-top: 24px;
+
+    .add-button {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      font-size: 14px;
+      color: #126ee3;
+      cursor: pointer;
+
+      .add-icon {
+        font-size: 16px;
+      }
+
+      &:hover {
+        opacity: 0.8;
+      }
+    }
+  }
+}
+
+.field-feature-modal-container {
+  :global {
+    .ant-modal-content {
+      min-width: 1000px;
+      overflow: auto;
+    }
+
+    .ant-modal-header {
+      padding: 16px 24px 0;
+    }
+
+    .ant-modal-body {
+      padding: 24px;
+    }
+
+    .ant-modal-footer {
+      display: flex;
+      gap: 8px;
+      justify-content: flex-end;
+      padding: 12px 24px 20px;
+
+      .ant-btn {
+        height: 32px;
+        border-radius: 6px;
+
+        &.ant-btn-default {
+          color: rgba(0, 0, 0, 0.85);
+          border: 1px solid rgba(0, 0, 0, 0.15);
+        }
+
+        &.ant-btn-primary {
+          background-color: #126ee3;
+        }
+      }
+    }
+  }
+}
+
+.modal-title-ellipsis {
+  max-width: 90%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  vertical-align: middle;
+  white-space: nowrap;
+}
+
+.navigation-container {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  width: 100%;
+}
+
+.navigation-content {
+  position: absolute;
+  left: 50%;
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  transform: translateX(-50%);
+}

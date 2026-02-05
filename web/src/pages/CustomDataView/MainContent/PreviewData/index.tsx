@@ -4,63 +4,90 @@ import { Button, Form, Switch, Table } from 'antd';
 import { INIT_FILTER } from '@/hooks/useConstants';
 import api from '@/services/customDataView/index';
 import noData from '@/assets/images/no-right.svg';
-import { Drawer } from '@/web-library/common';
+import { Drawer, Tooltip } from '@/web-library/common';
 import DataFilter from '@/web-library/components/DataFilter';
 import UTILS from '@/web-library/utils';
 import styles from './index.module.less';
 
-const PreviewData: React.FC<{ open: boolean; id: string; name?: string; params?: any; onClose: () => void }> = ({ open, id, name, params = {}, onClose }) => {
+interface PreviewDataProps {
+  open: boolean;
+  id: string;
+  name?: string;
+  params?: any;
+  onClose: () => void;
+}
+
+interface FieldItem {
+  displayName: string;
+  name: string;
+  type: string;
+}
+
+const PreviewData: React.FC<PreviewDataProps> = ({ open, id, name, params = {}, onClose }) => {
   const [form] = Form.useForm();
-  const [columns, setColumns] = useState([]);
+  const [columns, setColumns] = useState<any[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
-  const [tableData, setTableData] = useState([]);
-  const [title, setTitle] = useState('');
+  const [tableData, setTableData] = useState<any[]>([]);
+  const [title, setTitle] = useState<string>('');
   const [switchFilter, setSwitchFilter] = useState<boolean>(false);
-  const [filedList, setFiledList] = useState<any>([]);
+  const [fieldList, setFieldList] = useState<FieldItem[]>([]);
   const dataFilterRef = useRef<any>(null);
-  const [isForbidden, setIsForbidden] = useState(false);
+  const [isForbidden, setIsForbidden] = useState<boolean>(false);
+
+  // 重置数据状态
+  const resetData = () => {
+    setTableData([]);
+    setColumns([]);
+    setTitle('');
+    setFieldList([]);
+    setIsForbidden(false);
+  };
+
+  // 渲染单元格内容
+  const renderCellContent = (text: any) => {
+    const content = typeof text !== 'string' ? JSON.stringify(text) : text;
+    return (
+      <Tooltip title={content}>
+        <span style={{ display: 'inline-block', maxWidth: '100%', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{content}</span>
+      </Tooltip>
+    );
+  };
 
   const getDetail = async (values?: any): Promise<void> => {
     setLoading(true);
-    setTableData([]);
-    setColumns([]);
+    resetData();
     try {
       const resData = await api.getViewDataPreview(id, { limit: 1000, offset: 0, ...values, ...params });
-      const cols: any = [];
-      const fields: any = [];
+
       if (resData?.view) {
+        // 过滤字段
+        let viewFields = resData.view.fields;
         if (params?.output_fields) {
-          resData.view.fields = resData.view.fields.filter((item: any) => params.output_fields.includes(item.name));
+          viewFields = viewFields.filter((item: any) => params.output_fields.includes(item.name));
         }
-        resData.view.fields.forEach((item: any) => {
-          cols.push({
-            title: item.display_name,
-            dataIndex: item.name,
-            width: 180,
-            ellipsis: true,
-            render: (text: any) => {
-              if (typeof text !== 'string') {
-                return JSON.stringify(text);
-              }
-              return text;
-            },
-          });
-          fields.push({
-            displayName: item.display_name,
-            name: item.name,
-            type: item.type,
-          });
-        });
-        setFiledList(fields);
+
+        // 构建列配置和字段列表
+        const cols = viewFields.map((item: any) => ({
+          title: item.display_name,
+          dataIndex: item.name,
+          width: 180,
+          ellipsis: true,
+          render: renderCellContent,
+        }));
+
+        const fields: FieldItem[] = viewFields.map((item: any) => ({
+          displayName: item.display_name,
+          name: item.name,
+          type: item.type,
+        }));
+
+        setFieldList(fields);
         setColumns(cols);
         setTableData(resData.entries);
         setTitle(resData.view.name);
-        setIsForbidden(false);
       }
     } catch (error: any) {
-      setTableData([]);
-      setColumns([]);
-      setTitle('');
+      resetData();
       if (error?.status === 403) {
         setIsForbidden(true);
       }
@@ -73,18 +100,17 @@ const PreviewData: React.FC<{ open: boolean; id: string; name?: string; params?:
     if (open) {
       getDetail();
     } else {
-      setTableData([]);
-      setColumns([]);
+      resetData();
       setSwitchFilter(false);
       form.setFieldValue('dataFilter', INIT_FILTER);
     }
-  }, [open, form]);
+  }, [open]);
 
   const handleSearch = () => {
-    if (switchFilter && dataFilterRef.current) {
-      const filters = switchFilter ? form.getFieldValue('dataFilter') : {};
+    if (switchFilter) {
       const validate = dataFilterRef.current?.validate();
       if (!validate) {
+        const filters = form.getFieldValue('dataFilter');
         getDetail({ filters });
       }
     } else {
@@ -93,7 +119,7 @@ const PreviewData: React.FC<{ open: boolean; id: string; name?: string; params?:
   };
 
   return (
-    <Drawer size="large" title={title || name || intl.get('Global.dataPreview')} width={'90%'} onClose={onClose} open={open}>
+    <Drawer size="large" title={title || name || intl.get('Global.dataPreview')} width={'100%'} onClose={onClose} open={open}>
       {isForbidden ? (
         <>
           <div className="g-flex-center g-c-text-sub" style={{ flexDirection: 'column', height: 100, marginTop: 220 }}>
@@ -118,24 +144,14 @@ const PreviewData: React.FC<{ open: boolean; id: string; name?: string; params?:
               {intl.get('Global.search')}
             </Button>
           </div>
-          {switchFilter && (
-            <div style={{ marginBottom: 12 }}>
-              <Form form={form}>
-                <Form.Item name="dataFilter">
-                  <DataFilter
-                    ref={dataFilterRef}
-                    fieldList={filedList}
-                    required={true}
-                    transformType={UTILS.formatType}
-                    maxCount={[10, 10, 10]}
-                    level={3}
-                    isFirst
-                  />
-                </Form.Item>
-              </Form>
-            </div>
-          )}
-          <Table loading={loading} scroll={{ x: 1000 }} size="small" columns={columns} dataSource={tableData} />
+          <div style={{ marginBottom: 12, display: switchFilter ? 'block' : 'none' }}>
+            <Form form={form}>
+              <Form.Item name="dataFilter">
+                <DataFilter ref={dataFilterRef} fieldList={fieldList} required transformType={UTILS.formatType} maxCount={[10, 10, 10]} level={3} isFirst />
+              </Form.Item>
+            </Form>
+          </div>
+          <Table loading={loading} scroll={{ x: 1000, y: 'calc(100vh - 220px)' }} size="small" columns={columns} dataSource={tableData} />
         </>
       )}
     </Drawer>

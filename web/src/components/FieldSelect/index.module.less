@@ -1,0 +1,59 @@
+.selectItem {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+
+  .itemIcon {
+    flex-shrink: 0;
+  }
+
+  .itemContent {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    gap: 2px;
+    overflow: hidden;
+
+    .itemTitle {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      font-size: 14px;
+      font-weight: 400;
+      color: rgb(0 0 0 / 85%);
+      white-space: nowrap;
+    }
+
+    .itemDesc {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      font-size: 12px;
+      color: rgb(0 0 0 / 45%);
+      white-space: nowrap;
+    }
+  }
+
+  &.disabled {
+    cursor: not-allowed;
+    opacity: 0.5;
+  }
+}
+
+.selectItemSingle {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+
+  .itemIcon {
+    display: flex;
+    flex-shrink: 0;
+    align-items: center;
+  }
+
+  .itemTitle {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-size: 14px;
+    color: rgb(0 0 0 / 85%);
+    white-space: nowrap;
+  }
+}

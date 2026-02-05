@@ -313,7 +313,14 @@ const MetricModel = () => {
       ],
       __fixed: true,
       __selected: true,
-      render: (text: any): string => text || '--',
+      render: (text: any): string => {
+        const queryTypeMap: Record<string, string> = {
+          [QUERY_TYPE.Promql]: 'PromQL',
+          [QUERY_TYPE.Dsl]: 'DSL',
+          [QUERY_TYPE.Sql]: 'SQL',
+        };
+        return queryTypeMap[text] || '--';
+      },
     },
     {
       title: intl.get('Global.updateTime'),

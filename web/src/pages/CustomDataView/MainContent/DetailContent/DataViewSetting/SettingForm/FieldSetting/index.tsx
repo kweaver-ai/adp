@@ -1,12 +1,14 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import intl from 'react-intl-universal';
 import { Button, Input, Form, Switch, Table } from 'antd';
+import classNames from 'classnames';
 import { arNotification } from '@/components/ARNotification';
 import { DataViewQueryType } from '@/components/CustomDataViewSource';
+import FieldFeatureModal from '@/components/FieldFeatureModal';
 import { INIT_FILTER } from '@/hooks/useConstants';
 import api from '@/services/customDataView/index';
 import HOOKS from '@/hooks';
-import { IconFont } from '@/web-library/common';
+import { IconFont, Tooltip } from '@/web-library/common';
 import DataFilter from '@/web-library/components/DataFilter';
 import UTILS from '@/web-library/utils';
 import styles from './index.module.less';
@@ -24,14 +26,15 @@ const FiledSetting = () => {
   const { dataViewTotalInfo, setDataViewTotalInfo, selectedDataView, setSelectedDataView, setPreviewNode } = useDataViewContext();
   const [form] = Form.useForm();
   const dataFilterRef = useRef<any>(null);
-  const [editingKey, setEditingKey] = useState('');
-  const [editValue, setEditValue] = useState('');
+  const [editingCell, setEditingCell] = useState<{ key: string; field: string } | null>(null);
   const [filedList, setFiledList] = useState<any>([]);
   const [switchFilter, setSwitchFilter] = useState<boolean>(false);
   const [switchSelect, setSwitchSelect] = useState<boolean>(false);
   const [tableData, setTableData] = useState<any>([]);
   const [loading, setLoading] = useState<boolean>(false);
   const [searchKeyword, setSearchKeyword] = useState('');
+  const [featureModalVisible, setFeatureModalVisible] = useState<boolean>(false);
+  const [currentField, setCurrentField] = useState<any>(null);
 
   const { updateDataViewNode, getNodePreview } = HOOKS.useDataView({
     dataViewTotalInfo,
@@ -74,31 +77,28 @@ const FiledSetting = () => {
     } else {
       setSwitchSelect(false);
     }
-  }, [selectedDataView, form]);
+  }, [selectedDataView?.config?.view_id, selectedDataView?.config?.filters, selectedDataView?.config?.distinct?.enable]);
 
   useEffect(() => {
     if (!switchSelect) {
-      setTableData(tableData.map((item: any) => ({ ...item, selected: true })) || []);
+      setTableData((prevTableData: any[]) => prevTableData.map((item: any) => ({ ...item, selected: true })));
     }
   }, [switchSelect]);
 
-  const handleInputSave = (record: any, field: string) => {
-    if (!editValue) {
-      setEditingKey('');
-      return;
-    }
-    // 字段名重复校验
-    if (selectedDataView?.output_fields?.some((item: any) => item.original_name !== record.original_name && item[field] === editValue)) {
-      arNotification.error(intl.get('Global.fieldNameCannotRepeat'));
-      setEditingKey('');
-      return;
-    }
-    record[field] = editValue;
+  const handleFieldChange = (record: any, field: string, value: string) => {
+    // 直接更新 tableData
+    setTableData((prevTableData: any[]) =>
+      prevTableData.map((item: any) => (item.original_name === record.original_name ? { ...item, [field]: value } : item))
+    );
+
+    // 同时更新 selectedDataView 的 output_fields
+    const updatedOutputFields =
+      selectedDataView?.output_fields?.map((item: any) => (item.original_name === record.original_name ? { ...item, [field]: value } : item)) || [];
+
     setSelectedDataView({
       ...selectedDataView,
-      output_fields: selectedDataView?.output_fields?.map((item: any) => (item.original_name === record.original_name ? record : item)) || [],
+      output_fields: updatedOutputFields,
     });
-    setEditingKey('');
   };
 
   const handleSubmit = () => {
@@ -148,35 +148,116 @@ const FiledSetting = () => {
     return tableData.filter((item: any) => item.display_name?.toLowerCase().includes(keyword) || item.name?.toLowerCase().includes(keyword));
   }, [tableData, searchKeyword]);
 
+  const renderEditableCell = (record: any, field: 'display_name' | 'comment') => {
+    const isEditing = editingCell?.key === record.original_name && editingCell?.field === field;
+    const value = record[field];
+
+    if (isEditing) {
+      return (
+        <Tooltip title={value}>
+          <Input
+            value={value}
+            onChange={(e) => {
+              handleFieldChange(record, field, e.target.value);
+            }}
+            onBlur={() => setEditingCell(null)}
+            autoFocus
+            maxLength={255}
+          />
+        </Tooltip>
+      );
+    }
+
+    return (
+      <Tooltip title={value}>
+        <div className={styles.fieldName} onClick={() => setEditingCell({ key: record.original_name, field })}>
+          {value || '--'}
+        </div>
+      </Tooltip>
+    );
+  };
+
   const columns = [
     {
       title: intl.get('Global.fieldDisplayName'),
       dataIndex: 'display_name',
       key: 'display_name',
-      render: (_: any, record: any) => {
-        if (editingKey === record.original_name) {
-          return (
-            <Input
-              defaultValue={record.display_name}
-              onBlur={() => handleInputSave(record, 'display_name')}
-              onChange={(e) => {
-                setEditValue(e.target.value);
-              }}
-            />
-          );
-        }
-        return <span onClick={() => setEditingKey(record.original_name)}>{record.display_name}</span>;
-      },
+      width: 300,
+      render: (_: any, record: any) => renderEditableCell(record, 'display_name'),
     },
     {
       title: intl.get('Global.fieldName'),
       dataIndex: 'name',
       key: 'name',
+      ellipsis: true,
+      width: 200,
     },
     {
       title: intl.get('Global.fieldType'),
       dataIndex: 'type',
       key: 'type',
+      width: 120,
+    },
+    {
+      title: intl.get('Global.fieldComment'),
+      dataIndex: 'comment',
+      key: 'comment',
+      width: 200,
+      ellipsis: true,
+      render: (comment: string) => {
+        return (
+          <Tooltip title={comment}>
+            <div className={styles.fieldName}>{comment || '--'}</div>
+          </Tooltip>
+        );
+      },
+    },
+    {
+      title: intl.get('Global.fieldFeatureType'),
+      dataIndex: 'features',
+      key: 'features_type',
+      width: 150,
+      render: (features: any[]) => {
+        if (!features || features.length === 0) {
+          return <span style={{ color: 'rgba(0, 0, 0, 0.25)' }}>{intl.get('Global.unset')}</span>;
+        }
+        const uniqueTypes = Array.from(new Set(features.map((item) => item.type)));
+        return (
+          <div className={styles.featureTypeContainer}>
+            {uniqueTypes.map((type) => (
+              <span key={type} className={classNames(styles.featureType, styles[type])}>
+                {type}
+              </span>
+            ))}
+          </div>
+        );
+      },
+    },
+    {
+      title: () => (
+        <div>
+          <span style={{ marginRight: 8 }}>{intl.get('Global.fieldFeature')}</span>
+          <Tooltip title={intl.get('Global.fieldFeatureTip')}>
+            <IconFont type="icon-dip-color-tip" className={styles.helpIcon} />
+          </Tooltip>
+        </div>
+      ),
+      dataIndex: 'features',
+      key: 'features',
+      width: 120,
+      align: 'center' as const,
+      render: (_: unknown, record: any) => (
+        <Button
+          type="link"
+          onClick={(): void => {
+            setCurrentField(record);
+            setFeatureModalVisible(true);
+          }}
+          disabled={!record.features || record.features.length === 0}
+        >
+          {intl.get('Global.view')}
+        </Button>
+      ),
     },
   ];
 
@@ -271,6 +352,21 @@ const FiledSetting = () => {
           />
         )}
       </div>
+      <FieldFeatureModal
+        visible={featureModalVisible}
+        mode="view"
+        fieldName={currentField?.display_name || currentField?.name}
+        data={currentField?.features || []}
+        fields={tableData}
+        onCancel={(): void => {
+          setFeatureModalVisible(false);
+          setCurrentField(null);
+        }}
+        onOk={(): void => {
+          setFeatureModalVisible(false);
+          setCurrentField(null);
+        }}
+      />
     </div>
   );
 };

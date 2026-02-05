@@ -182,7 +182,7 @@ const DataFilterItem = forwardRef(
         return (
           <Select
             mode="tags"
-            value={value.value ?? undefined}
+            value={value?.value ?? undefined}
             disabled={disabled}
             onChange={(value) => {
               if (formatType === 'number') {
@@ -195,6 +195,8 @@ const DataFilterItem = forwardRef(
               value = filter(value, (item) => !!item);
               handleValueChange(value);
             }}
+            placeholder={intl.get('DataFilter.pleaseInputValue')}
+            style={{ width: '180px' }}
           />
         );
       }

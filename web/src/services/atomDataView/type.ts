@@ -1,3 +1,5 @@
+import type { FieldFeature } from '@/components/FieldFeatureModal';
+
 export interface Data {
   id: string; // 视图唯一标识符
   name: string; // 视图显示名称
@@ -44,6 +46,7 @@ export interface Field {
   status: string; // 字段状态，如：new, existing等
   is_nullable: string; // 是否可为空，YES或NO
   business_timestamp: boolean; // 是否为业务时间戳
+  features?: FieldFeature[]; // 字段特征列表
 }
 
 export interface List {

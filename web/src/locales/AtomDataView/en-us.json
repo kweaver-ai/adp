@@ -34,6 +34,7 @@
     "dataTypeDateTime": "DateTime",
     "dataTypeBoolean": "Boolean",
     "dataTypeString": "String",
-    "displayNameMaxLength": "Display name cannot exceed 255 characters"
+    "displayNameMaxLength": "Display name cannot exceed 255 characters",
+    "editAtomView": "Edit Atom View"
   }
 }

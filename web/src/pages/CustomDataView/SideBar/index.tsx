@@ -196,13 +196,15 @@ export const SideBar: React.FC = () => {
       </div>
 
       {/* 分组Modal */}
-      <GroupModal
-        visible={isGroupModalShow}
-        title={groupModalType === 'create' ? intl.get('Global.createGroup') : intl.get('Global.renameGroup')}
-        onOk={groupModalType === 'create' ? handleCreateGroupSubmit : handleRenameGroupSubmit}
-        onCancel={() => setIsGroupModalShow(false)}
-        initialValue={groupModalType === 'rename' ? currentOperationGroup.name : ''}
-      />
+      {isGroupModalShow && (
+        <GroupModal
+          visible={isGroupModalShow}
+          title={groupModalType === 'create' ? intl.get('Global.createGroup') : intl.get('Global.renameGroup')}
+          onOk={groupModalType === 'create' ? handleCreateGroupSubmit : handleRenameGroupSubmit}
+          onCancel={() => setIsGroupModalShow(false)}
+          initialValue={groupModalType === 'rename' ? currentOperationGroup.name : ''}
+        />
+      )}
     </div>
   );
 };
