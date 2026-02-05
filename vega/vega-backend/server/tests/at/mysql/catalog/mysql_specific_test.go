@@ -99,7 +99,7 @@ func TestMySQLSpecificCreate(t *testing.T) {
 			getResp := client.GET("/api/vega-backend/v1/catalogs/" + catalogID)
 			catalog := fixtures.ExtractFromEntriesResponse(getResp)
 
-			So(catalog["comment"], ShouldEqual, "完整的测试catalog，包含所有可选字段")
+			So(catalog["description"], ShouldEqual, "完整的测试catalog，包含所有可选字段")
 			tags, ok := catalog["tags"].([]any)
 			So(ok, ShouldBeTrue)
 			So(len(tags), ShouldBeGreaterThan, 0)
@@ -343,7 +343,7 @@ func TestMySQLSpecificRead(t *testing.T) {
 			So(catalog["name"], ShouldNotBeEmpty)
 			So(catalog["type"], ShouldEqual, interfaces.CatalogTypePhysical)
 			So(catalog["connector_type"], ShouldEqual, "mysql")
-			So(catalog["comment"], ShouldEqual, payload["comment"])
+			So(catalog["description"], ShouldEqual, payload["description"])
 			So(catalog["create_time"], ShouldNotBeZeroValue)
 			So(catalog["update_time"], ShouldNotBeZeroValue)
 
@@ -514,9 +514,9 @@ func TestMySQLSpecificUpdate(t *testing.T) {
 
 			// 基于原数据构建更新payload
 			updatePayload := catalogfixtures.BuildUpdatePayload(originalData, map[string]any{
-				"name":    catalogfixtures.GenerateUniqueName("multi-update-catalog"),
-				"comment": "同时更新多个字段的测试",
-				"tags":    []string{"multi-update", "test"},
+				"name":        catalogfixtures.GenerateUniqueName("multi-update-catalog"),
+				"description": "同时更新多个字段的测试",
+				"tags":        []string{"multi-update", "test"},
 			})
 			// GET响应不返回敏感字段，需要注入加密密码
 			catalogfixtures.InjectEncryptedPassword(updatePayload, builder.GetEncryptedPassword())
@@ -565,7 +565,7 @@ func TestMySQLSpecificUpdate(t *testing.T) {
 
 			// 基于原数据构建更新payload
 			updatePayload := catalogfixtures.BuildUpdatePayload(originalData, map[string]any{
-				"comment": "验证update_time更新",
+				"description": "验证update_time更新",
 			})
 			// GET响应不返回敏感字段，需要注入加密密码
 			catalogfixtures.InjectEncryptedPassword(updatePayload, builder.GetEncryptedPassword())
@@ -594,7 +594,7 @@ func TestMySQLSpecificUpdate(t *testing.T) {
 
 			// 基于原数据构建更新payload
 			updatePayload := catalogfixtures.BuildUpdatePayload(originalData, map[string]any{
-				"comment": "验证create_time不变",
+				"description": "验证create_time不变",
 			})
 			// GET响应不返回敏感字段，需要注入加密密码
 			catalogfixtures.InjectEncryptedPassword(updatePayload, builder.GetEncryptedPassword())

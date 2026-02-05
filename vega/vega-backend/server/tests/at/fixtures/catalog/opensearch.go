@@ -56,7 +56,7 @@ func (b *OpenSearchPayloadBuilder) BuildCreatePayload() map[string]any {
 // BuildFullCreatePayload 构建完整的OpenSearch catalog创建payload（包含所有可选字段）
 func (b *OpenSearchPayloadBuilder) BuildFullCreatePayload() map[string]any {
 	payload := b.BuildCreatePayload()
-	payload["comment"] = "完整的OpenSearch测试catalog"
+	payload["description"] = "完整的OpenSearch测试catalog"
 	payload["tags"] = []string{"test", "opensearch", "at", "full-fields"}
 
 	// 添加OpenSearch options

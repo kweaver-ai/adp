@@ -59,7 +59,7 @@ func (b *MySQLPayloadBuilder) BuildCreatePayload() map[string]any {
 // BuildFullCreatePayload 构建完整的MySQL catalog创建payload（包含所有可选字段）
 func (b *MySQLPayloadBuilder) BuildFullCreatePayload() map[string]any {
 	payload := b.BuildCreatePayload()
-	payload["comment"] = "完整的测试catalog，包含所有可选字段"
+	payload["description"] = "完整的测试catalog，包含所有可选字段"
 	payload["tags"] = []string{"test", "mysql", "at", "full-fields"}
 
 	// 添加MySQL options

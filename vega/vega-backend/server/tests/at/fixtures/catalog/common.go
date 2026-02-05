@@ -27,9 +27,9 @@ func BuildMinimalPayload() map[string]any {
 // BuildLogicalCatalogPayload 构建逻辑catalog的payload
 func BuildLogicalCatalogPayload() map[string]any {
 	return map[string]any{
-		"name":    GenerateUniqueName("logical-catalog"),
-		"comment": "逻辑目录测试",
-		"tags":    []string{"logical", "test"},
+		"name":        GenerateUniqueName("logical-catalog"),
+		"description": "逻辑目录测试",
+		"tags":        []string{"logical", "test"},
 	}
 }
 
@@ -79,23 +79,23 @@ func BuildPayloadWithSpecialCharsName(specialName string) map[string]any {
 	}
 }
 
-// ========== Comment相关Payload ==========
+// ========== Description相关Payload ==========
 
-// BuildPayloadWithLongComment 构建超长comment的payload
-func BuildPayloadWithLongComment(commentLength int) map[string]any {
-	longComment := strings.Repeat("这是一个很长的注释。", commentLength/10+1)
+// BuildPayloadWithLongDescription 构建超长description的payload
+func BuildPayloadWithLongDescription(descriptionLength int) map[string]any {
+	longDescription := strings.Repeat("这是一个很长的注释。", descriptionLength/10+1)
 	return map[string]any{
-		"name":    GenerateUniqueName("long-comment-catalog"),
-		"comment": longComment,
+		"name":        GenerateUniqueName("long-description-catalog"),
+		"description": longDescription,
 	}
 }
 
-// BuildPayloadWithExactComment 构建指定长度comment的payload
-func BuildPayloadWithExactComment(commentLength int) map[string]any {
-	comment := strings.Repeat("c", commentLength)
+// BuildPayloadWithExactDescription 构建指定长度description的payload
+func BuildPayloadWithExactDescription(descriptionLength int) map[string]any {
+	description := strings.Repeat("c", descriptionLength)
 	return map[string]any{
-		"name":    GenerateUniqueName("exact-comment-catalog"),
-		"comment": comment,
+		"name":        GenerateUniqueName("exact-description-catalog"),
+		"description": description,
 	}
 }
 

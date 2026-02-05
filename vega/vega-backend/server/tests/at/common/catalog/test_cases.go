@@ -228,8 +228,8 @@ func RunCommonNegativeTests(suite *TestSuite) {
 		So(resp.StatusCode, ShouldEqual, http.StatusBadRequest)
 	})
 
-	Convey("CM126: 超长comment字段（>1000字符）", func() {
-		payload := catalogfixtures.BuildPayloadWithLongComment(1001)
+	Convey("CM126: 超长description字段（>1000字符）", func() {
+		payload := catalogfixtures.BuildPayloadWithLongDescription(1001)
 		resp := suite.Client.POST("/api/vega-backend/v1/catalogs", payload)
 		So(resp.StatusCode, ShouldEqual, http.StatusBadRequest)
 	})
@@ -321,15 +321,15 @@ func RunCommonBoundaryTests(suite *TestSuite) {
 		So(resp.StatusCode, ShouldEqual, http.StatusBadRequest)
 	})
 
-	Convey("CM144: comment长度边界 - 1000字符（最大允许）", func() {
-		payload := catalogfixtures.BuildPayloadWithExactComment(1000)
+	Convey("CM144: description长度边界 - 1000字符（最大允许）", func() {
+		payload := catalogfixtures.BuildPayloadWithExactDescription(1000)
 		resp := suite.Client.POST("/api/vega-backend/v1/catalogs", payload)
 		So(resp.StatusCode, ShouldEqual, http.StatusCreated)
 		So(resp.Body["id"], ShouldNotBeEmpty)
 	})
 
-	Convey("CM145: comment长度边界 - 1001字符（超出）", func() {
-		payload := catalogfixtures.BuildPayloadWithExactComment(1001)
+	Convey("CM145: description长度边界 - 1001字符（超出）", func() {
+		payload := catalogfixtures.BuildPayloadWithExactDescription(1001)
 		resp := suite.Client.POST("/api/vega-backend/v1/catalogs", payload)
 		So(resp.StatusCode, ShouldEqual, http.StatusBadRequest)
 	})
@@ -466,9 +466,9 @@ func RunCommonUpdateTests(suite *TestSuite) {
 		So(err, ShouldBeNil)
 
 		// 基于原数据构建更新payload
-		newComment := "更新后的注释内容"
+		newDescription := "更新后的注释内容"
 		updatePayload := catalogfixtures.BuildUpdatePayload(catalogData, map[string]any{
-			"comment": newComment,
+			"description": newDescription,
 		})
 		// 回填加密密码（GET不再返回敏感字段）
 		catalogfixtures.InjectEncryptedPassword(updatePayload, suite.Builder.GetEncryptedPassword())
@@ -478,7 +478,7 @@ func RunCommonUpdateTests(suite *TestSuite) {
 		// 验证
 		getResp := suite.Client.GET("/api/vega-backend/v1/catalogs/" + catalogID)
 		catalog := fixtures.ExtractFromEntriesResponse(getResp)
-		So(catalog["comment"], ShouldEqual, newComment)
+		So(catalog["description"], ShouldEqual, newDescription)
 	})
 
 	Convey("CM303: 更新不存在的catalog", func() {

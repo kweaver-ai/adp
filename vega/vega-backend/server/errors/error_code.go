@@ -11,7 +11,7 @@ import (
 const (
 	// 400 Bad Request
 	VegaManager_InvalidParameter_Name        = "VegaManager.InvalidParameter.Name"
-	VegaManager_InvalidParameter_Comment     = "VegaManager.InvalidParameter.Comment"
+	VegaManager_InvalidParameter_Description = "VegaManager.InvalidParameter.Description"
 	VegaManager_InvalidParameter_Tag         = "VegaManager.InvalidParameter.Tag"
 	VegaManager_InvalidParameter_RequestBody = "VegaManager.InvalidParameter.RequestBody"
 	VegaManager_InvalidParameter_Limit       = "VegaManager.InvalidParameter.Limit"
@@ -33,7 +33,7 @@ const (
 var (
 	commonErrCodeList = []string{
 		VegaManager_InvalidParameter_Name,
-		VegaManager_InvalidParameter_Comment,
+		VegaManager_InvalidParameter_Description,
 		VegaManager_InvalidParameter_Tag,
 
 		VegaManager_InvalidParameter_RequestBody,

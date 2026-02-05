@@ -163,7 +163,7 @@ func (dw *discoveryWorker) enrichIndexMetadata(ctx context.Context,
 				Type:         field.Type,
 				DisplayName:  field.Name,
 				OriginalName: field.Name,
-				Comment:      "",
+				Description:  "",
 			})
 		}
 		resource.SchemaDefinition = columns

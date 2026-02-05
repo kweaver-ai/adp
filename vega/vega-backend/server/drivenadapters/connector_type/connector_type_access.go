@@ -66,7 +66,7 @@ func (cta *connectorTypeAccess) Create(ctx context.Context, ct *interfaces.Conne
 		Columns(
 			"f_type",
 			"f_name",
-			"f_comment",
+			"f_description",
 			"f_mode",
 			"f_category",
 			"f_endpoint",
@@ -76,7 +76,7 @@ func (cta *connectorTypeAccess) Create(ctx context.Context, ct *interfaces.Conne
 		Values(
 			ct.Type,
 			ct.Name,
-			ct.Comment,
+			ct.Description,
 			string(ct.Mode),
 			string(ct.Category),
 			ct.Endpoint,
@@ -120,7 +120,7 @@ func (cta *connectorTypeAccess) Update(ctx context.Context, ct *interfaces.Conne
 
 	sqlStr, vals, err := sq.Update(CONNECTOR_TYPE_TABLE_NAME).
 		Set("f_name", ct.Name).
-		Set("f_comment", ct.Comment).
+		Set("f_description", ct.Description).
 		Set("f_mode", string(ct.Mode)).
 		Set("f_category", string(ct.Category)).
 		Set("f_endpoint", ct.Endpoint).
@@ -176,7 +176,7 @@ func (cta *connectorTypeAccess) GetByType(ctx context.Context, tp string) (*inte
 	sqlStr, vals, err := sq.Select(
 		"f_type",
 		"f_name",
-		"f_comment",
+		"f_description",
 		"f_mode",
 		"f_category",
 		"f_endpoint",
@@ -197,7 +197,7 @@ func (cta *connectorTypeAccess) GetByType(ctx context.Context, tp string) (*inte
 	err = row.Scan(
 		&ct.Type,
 		&ct.Name,
-		&ct.Comment,
+		&ct.Description,
 		&ct.Mode,
 		&ct.Category,
 		&ct.Endpoint,
@@ -234,7 +234,7 @@ func (cta *connectorTypeAccess) GetByName(ctx context.Context, name string) (*in
 	sqlStr, vals, err := sq.Select(
 		"f_type",
 		"f_name",
-		"f_comment",
+		"f_description",
 		"f_mode",
 		"f_category",
 		"f_endpoint",
@@ -255,7 +255,7 @@ func (cta *connectorTypeAccess) GetByName(ctx context.Context, name string) (*in
 	err = row.Scan(
 		&ct.Type,
 		&ct.Name,
-		&ct.Comment,
+		&ct.Description,
 		&ct.Mode,
 		&ct.Category,
 		&ct.Endpoint,
@@ -290,7 +290,7 @@ func (cta *connectorTypeAccess) List(ctx context.Context, params interfaces.Conn
 	builder := sq.Select(
 		"f_type",
 		"f_name",
-		"f_comment",
+		"f_description",
 		"f_mode",
 		"f_category",
 		"f_endpoint",
@@ -349,7 +349,7 @@ func (cta *connectorTypeAccess) List(ctx context.Context, params interfaces.Conn
 		err := rows.Scan(
 			&ct.Type,
 			&ct.Name,
-			&ct.Comment,
+			&ct.Description,
 			&ct.Mode,
 			&ct.Category,
 			&ct.Endpoint,

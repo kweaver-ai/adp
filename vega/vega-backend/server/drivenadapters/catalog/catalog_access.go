@@ -82,7 +82,7 @@ func (ca *catalogAccess) Create(ctx context.Context, catalog *interfaces.Catalog
 			"f_id",
 			"f_name",
 			"f_tags",
-			"f_comment",
+			"f_description",
 			"f_type",
 			"f_connector_type",
 			"f_connector_config",
@@ -102,7 +102,7 @@ func (ca *catalogAccess) Create(ctx context.Context, catalog *interfaces.Catalog
 			catalog.ID,
 			catalog.Name,
 			tagsStr,
-			catalog.Comment,
+			catalog.Description,
 			catalog.Type,
 			catalog.ConnectorType,
 			connectorConfigStr,
@@ -151,7 +151,7 @@ func (ca *catalogAccess) GetByID(ctx context.Context, id string) (*interfaces.Ca
 		"f_id",
 		"f_name",
 		"f_tags",
-		"f_comment",
+		"f_description",
 		"f_type",
 		"f_connector_type",
 		"f_connector_config",
@@ -185,7 +185,7 @@ func (ca *catalogAccess) GetByID(ctx context.Context, id string) (*interfaces.Ca
 		&catalog.ID,
 		&catalog.Name,
 		&tagsStr,
-		&catalog.Comment,
+		&catalog.Description,
 		&catalog.Type,
 		&catalog.ConnectorType,
 		&connectorConfigStr,
@@ -249,7 +249,7 @@ func (ca *catalogAccess) GetByIDs(ctx context.Context, ids []string) ([]*interfa
 		"f_id",
 		"f_name",
 		"f_tags",
-		"f_comment",
+		"f_description",
 		"f_type",
 		"f_connector_type",
 		"f_connector_config",
@@ -292,7 +292,7 @@ func (ca *catalogAccess) GetByIDs(ctx context.Context, ids []string) ([]*interfa
 			&catalog.ID,
 			&catalog.Name,
 			&tagsStr,
-			&catalog.Comment,
+			&catalog.Description,
 			&catalog.Type,
 			&catalog.ConnectorType,
 			&connectorConfigStr,
@@ -344,7 +344,7 @@ func (ca *catalogAccess) GetByName(ctx context.Context, name string) (*interface
 		"f_id",
 		"f_name",
 		"f_tags",
-		"f_comment",
+		"f_description",
 		"f_type",
 		"f_connector_type",
 		"f_connector_config",
@@ -378,7 +378,7 @@ func (ca *catalogAccess) GetByName(ctx context.Context, name string) (*interface
 		&catalog.ID,
 		&catalog.Name,
 		&tagsStr,
-		&catalog.Comment,
+		&catalog.Description,
 		&catalog.Type,
 		&catalog.ConnectorType,
 		&connectorConfigStr,
@@ -435,7 +435,7 @@ func (ca *catalogAccess) List(ctx context.Context, params interfaces.CatalogsQue
 		"f_id",
 		"f_name",
 		"f_tags",
-		"f_comment",
+		"f_description",
 		"f_type",
 		"f_connector_type",
 		"f_connector_config",
@@ -506,7 +506,7 @@ func (ca *catalogAccess) List(ctx context.Context, params interfaces.CatalogsQue
 			&catalog.ID,
 			&catalog.Name,
 			&tagsStr,
-			&catalog.Comment,
+			&catalog.Description,
 			&catalog.Type,
 			&catalog.ConnectorType,
 			&connectorConfigStr,
@@ -562,7 +562,7 @@ func (ca *catalogAccess) Update(ctx context.Context, catalog *interfaces.Catalog
 	sqlStr, vals, err := sq.Update(CATALOG_TABLE_NAME).
 		Set("f_name", catalog.Name).
 		Set("f_tags", tagsStr).
-		Set("f_comment", catalog.Comment).
+		Set("f_description", catalog.Description).
 		Set("f_connector_type", catalog.ConnectorType).
 		Set("f_connector_config", string(connectorConfigBytes)).
 		Set("f_metadata", string(metadataBytes)).

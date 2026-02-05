@@ -103,7 +103,7 @@ func TestOpenSearchSpecificCreate(t *testing.T) {
 			getResp := client.GET("/api/vega-backend/v1/catalogs/" + catalogID)
 			catalog := fixtures.ExtractFromEntriesResponse(getResp)
 
-			So(catalog["comment"], ShouldEqual, "完整的OpenSearch测试catalog")
+			So(catalog["description"], ShouldEqual, "完整的OpenSearch测试catalog")
 			tags, ok := catalog["tags"].([]any)
 			So(ok, ShouldBeTrue)
 			So(len(tags), ShouldBeGreaterThan, 0)
@@ -382,7 +382,7 @@ func TestOpenSearchSpecificRead(t *testing.T) {
 			So(catalog["id"], ShouldNotBeEmpty)
 			So(catalog["name"], ShouldNotBeEmpty)
 			So(catalog["connector_type"], ShouldEqual, "opensearch")
-			So(catalog["comment"], ShouldEqual, payload["comment"])
+			So(catalog["description"], ShouldEqual, payload["description"])
 			So(catalog["create_time"], ShouldNotBeZeroValue)
 			So(catalog["update_time"], ShouldNotBeZeroValue)
 
@@ -550,9 +550,9 @@ func TestOpenSearchSpecificUpdate(t *testing.T) {
 
 			// 基于原数据构建更新payload
 			updatePayload := catalogfixtures.BuildUpdatePayload(originalData, map[string]any{
-				"name":    catalogfixtures.GenerateUniqueName("multi-update-os-catalog"),
-				"comment": "同时更新多个字段的OpenSearch测试",
-				"tags":    []string{"multi-update", "opensearch", "test"},
+				"name":        catalogfixtures.GenerateUniqueName("multi-update-os-catalog"),
+				"description": "同时更新多个字段的OpenSearch测试",
+				"tags":        []string{"multi-update", "opensearch", "test"},
 			})
 
 			updateResp := client.PUT("/api/vega-backend/v1/catalogs/"+catalogID, updatePayload)
@@ -597,7 +597,7 @@ func TestOpenSearchSpecificUpdate(t *testing.T) {
 
 			// 基于原数据构建更新payload
 			updatePayload := catalogfixtures.BuildUpdatePayload(originalData, map[string]any{
-				"comment": "验证update_time更新",
+				"description": "验证update_time更新",
 			})
 			updateResp := client.PUT("/api/vega-backend/v1/catalogs/"+catalogID, updatePayload)
 			So(updateResp.StatusCode, ShouldEqual, http.StatusNoContent)
@@ -624,7 +624,7 @@ func TestOpenSearchSpecificUpdate(t *testing.T) {
 
 			// 基于原数据构建更新payload
 			updatePayload := catalogfixtures.BuildUpdatePayload(originalData, map[string]any{
-				"comment": "验证create_time不变",
+				"description": "验证create_time不变",
 			})
 			updateResp := client.PUT("/api/vega-backend/v1/catalogs/"+catalogID, updatePayload)
 			So(updateResp.StatusCode, ShouldEqual, http.StatusNoContent)

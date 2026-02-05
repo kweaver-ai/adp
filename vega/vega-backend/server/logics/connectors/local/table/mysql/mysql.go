@@ -243,7 +243,7 @@ func (c *MySQLConnector) ListTables(ctx context.Context) ([]*interfaces.TableMet
 	var tables []*interfaces.TableMeta
 	for rows.Next() {
 		var schema, name, tableType string
-		var engine, collation, comment sql.NullString
+		var engine, collation, description sql.NullString
 		var tableRows, dataLength, indexLength sql.NullInt64
 		var createTime, updateTime sql.NullTime
 
@@ -254,7 +254,7 @@ func (c *MySQLConnector) ListTables(ctx context.Context) ([]*interfaces.TableMet
 			&engine,
 			&collation,
 			&tableRows,
-			&comment,
+			&description,
 			&createTime,
 			&updateTime,
 			&dataLength,
@@ -269,10 +269,10 @@ func (c *MySQLConnector) ListTables(ctx context.Context) ([]*interfaces.TableMet
 		}
 
 		meta := &interfaces.TableMeta{
-			Name:     name,
-			SubType:  subType,
-			Comment:  comment.String,
-			Database: schema,
+			Name:        name,
+			SubType:     subType,
+			Description: description.String,
+			Database:    schema,
 		}
 
 		// Populate Properties
@@ -357,7 +357,7 @@ func (c *MySQLConnector) fetchTableStatus(ctx context.Context, table *interfaces
 		return err
 	}
 
-	var tableType, engine, collation, comment sql.NullString
+	var tableType, engine, collation, description sql.NullString
 	var autoIncrement, tableRows, dataLength, indexLength sql.NullInt64
 	var createTime, updateTime sql.NullTime
 
@@ -368,7 +368,7 @@ func (c *MySQLConnector) fetchTableStatus(ctx context.Context, table *interfaces
 		&engine,
 		&collation,
 		&tableRows,
-		&comment,
+		&description,
 		&createTime,
 		&updateTime,
 		&dataLength,
@@ -401,7 +401,7 @@ func (c *MySQLConnector) fetchTableStatus(ctx context.Context, table *interfaces
 	if autoIncrement.Valid {
 		table.Properties["auto_increment"] = autoIncrement.Int64
 	}
-	table.Comment = comment.String
+	table.Description = description.String
 
 	if createTime.Valid {
 		table.Properties["create_time"] = createTime.Time.UnixMilli()
@@ -459,7 +459,7 @@ func (c *MySQLConnector) fetchColumns(ctx context.Context, table *interfaces.Tab
 
 	for rows.Next() {
 		var name, columnType, dataType, isNullable, columnKey sql.NullString
-		var columnDefault, comment, charset, collation sql.NullString
+		var columnDefault, description, charset, collation sql.NullString
 		var position, charMaxLen, numPrecision, numScale, datetimePrecision sql.NullInt64
 
 		if err := rows.Scan(
@@ -468,7 +468,7 @@ func (c *MySQLConnector) fetchColumns(ctx context.Context, table *interfaces.Tab
 			&columnType,
 			&isNullable,
 			&columnDefault,
-			&comment,
+			&description,
 			&charMaxLen,
 			&numPrecision,
 			&numScale,
@@ -487,7 +487,7 @@ func (c *MySQLConnector) fetchColumns(ctx context.Context, table *interfaces.Tab
 			OrigType:          columnType.String,
 			Nullable:          isNullable.String == "YES",
 			DefaultValue:      columnDefault.String,
-			Comment:           comment.String,
+			Description:       description.String,
 			CharMaxLen:        int(charMaxLen.Int64),
 			NumPrecision:      int(numPrecision.Int64),
 			NumScale:          int(numScale.Int64),

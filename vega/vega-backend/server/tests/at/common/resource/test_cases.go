@@ -132,9 +132,9 @@ func RunCommonCreateTests(suite *TestSuite) {
 		}
 	})
 
-	Convey("RM109: 创建resource - 带comment", func() {
+	Convey("RM109: 创建resource - 带description", func() {
 		payload := resourcefixtures.BuildCreatePayload(catalogID)
-		payload["comment"] = "这是一个测试resource的注释"
+		payload["description"] = "这是一个测试resource的注释"
 		resp := suite.Client.POST("/api/vega-backend/v1/resources", payload)
 		So(resp.StatusCode, ShouldEqual, http.StatusCreated)
 		So(resp.Body["id"], ShouldNotBeEmpty)
@@ -196,8 +196,8 @@ func RunCommonNegativeTests(suite *TestSuite) {
 		So(resp.StatusCode, ShouldEqual, http.StatusBadRequest)
 	})
 
-	Convey("RM127: 超长comment字段（>1000字符）", func() {
-		payload := resourcefixtures.BuildPayloadWithLongComment(catalogID, 1001)
+	Convey("RM127: 超长description字段（>1000字符）", func() {
+		payload := resourcefixtures.BuildPayloadWithLongDescription(catalogID, 1001)
 		resp := suite.Client.POST("/api/vega-backend/v1/resources", payload)
 		So(resp.StatusCode, ShouldEqual, http.StatusBadRequest)
 	})
@@ -270,15 +270,15 @@ func RunCommonBoundaryTests(suite *TestSuite) {
 		So(resp.StatusCode, ShouldEqual, http.StatusBadRequest)
 	})
 
-	Convey("RM144: comment长度边界 - 1000字符（最大允许）", func() {
-		payload := resourcefixtures.BuildPayloadWithExactComment(catalogID, 1000)
+	Convey("RM144: description长度边界 - 1000字符（最大允许）", func() {
+		payload := resourcefixtures.BuildPayloadWithExactDescription(catalogID, 1000)
 		resp := suite.Client.POST("/api/vega-backend/v1/resources", payload)
 		So(resp.StatusCode, ShouldEqual, http.StatusCreated)
 		So(resp.Body["id"], ShouldNotBeEmpty)
 	})
 
-	Convey("RM145: comment长度边界 - 1001字符（超出）", func() {
-		payload := resourcefixtures.BuildPayloadWithExactComment(catalogID, 1001)
+	Convey("RM145: description长度边界 - 1001字符（超出）", func() {
+		payload := resourcefixtures.BuildPayloadWithExactDescription(catalogID, 1001)
 		resp := suite.Client.POST("/api/vega-backend/v1/resources", payload)
 		So(resp.StatusCode, ShouldEqual, http.StatusBadRequest)
 	})
@@ -476,9 +476,9 @@ func RunCommonUpdateTests(suite *TestSuite) {
 		So(err, ShouldBeNil)
 
 		// 基于原数据构建更新payload
-		newComment := "更新后的资源注释内容"
+		newDescription := "更新后的资源注释内容"
 		updatePayload := resourcefixtures.BuildUpdatePayload(resourceData, map[string]any{
-			"comment": newComment,
+			"description": newDescription,
 		})
 		updateResp := suite.Client.PUT("/api/vega-backend/v1/resources/"+resourceID, updatePayload)
 		So(updateResp.StatusCode, ShouldEqual, http.StatusNoContent)
@@ -486,7 +486,7 @@ func RunCommonUpdateTests(suite *TestSuite) {
 		// 验证
 		getResp := suite.Client.GET("/api/vega-backend/v1/resources/" + resourceID)
 		resource := fixtures.ExtractFromEntriesResponse(getResp)
-		So(resource["comment"], ShouldEqual, newComment)
+		So(resource["description"], ShouldEqual, newDescription)
 	})
 
 	Convey("RM303: 更新不存在的resource", func() {

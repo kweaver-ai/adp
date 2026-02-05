@@ -176,7 +176,7 @@ go test -v ./tests/at/catalog/... -timeout 5m
 | TC105  | 无效JSON格式 | 400 Bad Request |
 | TC106  | 错误的Content-Type | 400/406/415 |
 | TC107  | 超长name字段（>128字符） | 400 Bad Request |
-| TC108  | 超长comment字段（>1000字符） | 400 Bad Request或允许 |
+| TC108  | 超长description字段（>1000字符） | 400 Bad Request或允许 |
 | TC109  | 错误的MySQL连接密码 | test-connector失败 |
 | TC110  | 不存在的MySQL数据库 | test-connector失败 |
 
@@ -218,7 +218,7 @@ go test -v ./tests/at/catalog/... -timeout 5m
 | 用例ID | 测试场景 | 预期结果 |
 |--------|----------|----------|
 | TC501  | 更新catalog name | 200 OK，name更新成功 |
-| TC502  | 更新catalog comment | 200 OK，comment更新成功 |
+| TC502  | 更新catalog description | 200 OK，description更新成功 |
 | TC503  | 更新catalog tags | 200 OK，tags更新成功 |
 | TC504  | 更新catalog connector_config | 200 OK，配置更新成功 |
 | TC505  | 同时更新多个字段 | 200 OK，所有字段更新成功 |

@@ -67,10 +67,10 @@ func validateTag(ctx context.Context, tag string) error {
 }
 
 // 备注合法性校验
-func validateComment(ctx context.Context, comment string) error {
-	if utf8.RuneCountInString(comment) > interfaces.COMMENT_MAX_LENGTH {
-		return rest.NewHTTPError(ctx, http.StatusBadRequest, verrors.VegaManager_InvalidParameter_Comment).
-			WithErrorDetails(fmt.Sprintf("The length of the comment exceeds %v", interfaces.COMMENT_MAX_LENGTH))
+func validateDescription(ctx context.Context, description string) error {
+	if utf8.RuneCountInString(description) > interfaces.DESCRIPTION_MAX_LENGTH {
+		return rest.NewHTTPError(ctx, http.StatusBadRequest, verrors.VegaManager_InvalidParameter_Description).
+			WithErrorDetails(fmt.Sprintf("The length of the description exceeds %v", interfaces.DESCRIPTION_MAX_LENGTH))
 	}
 	return nil
 }

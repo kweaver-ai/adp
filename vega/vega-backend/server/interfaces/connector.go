@@ -7,7 +7,7 @@ type ConnectorConfig map[string]any
 // TableMeta represents table/asset metadata.
 type TableMeta struct {
 	Name        string           `json:"name"`
-	Comment     string           `json:"comment"`
+	Description string           `json:"description"`
 	Database    string           `json:"database"`   // 所属数据库名称（实例级连接时使用）
 	SubType     string           `json:"sub_type"`   // table | view | materialized_view
 	Properties  map[string]any   `json:"properties"` // 扩展属性：charset, collation, engine, row_count 等
@@ -43,7 +43,7 @@ type ColumnMeta struct {
 	OrigType          string `json:"orig_type"`
 	Nullable          bool   `json:"nullable"`
 	DefaultValue      string `json:"default_value,omitempty"` // 默认值
-	Comment           string `json:"comment"`
+	Description       string `json:"description"`
 	CharMaxLen        int    `json:"char_max_len,omitempty"`       // 字符最大长度
 	NumPrecision      int    `json:"num_precision,omitempty"`      // 数值精度
 	NumScale          int    `json:"num_scale,omitempty"`          // 数值小数位
