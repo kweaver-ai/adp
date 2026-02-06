@@ -363,6 +363,9 @@
             "name": "rds"
         },
         {
+            "name": "opensearch"
+        },
+        {
             "name": "hydra"
         },
         {
