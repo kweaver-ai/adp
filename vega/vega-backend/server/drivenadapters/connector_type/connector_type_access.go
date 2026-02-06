@@ -317,7 +317,12 @@ func (cta *connectorTypeAccess) List(ctx context.Context, params interfaces.Conn
 	// Count total
 	countSql, countVals, _ := countBuilder.ToSql()
 	var total int64
-	cta.db.QueryRowContext(ctx, countSql, countVals...).Scan(&total)
+	err := cta.db.QueryRowContext(ctx, countSql, countVals...).Scan(&total)
+	if err != nil {
+		logger.Errorf("Count connector_type failed: %v", err)
+		span.SetStatus(codes.Error, "Count failed")
+		return nil, 0, err
+	}
 
 	// Pagination
 	if params.Limit > 0 {

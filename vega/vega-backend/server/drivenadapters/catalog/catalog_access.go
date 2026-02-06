@@ -318,11 +318,21 @@ func (ca *catalogAccess) GetByIDs(ctx context.Context, ids []string) ([]*interfa
 		catalog.Tags = libCommon.TagString2TagSlice(tagsStr)
 
 		if connectorConfigStr != "" {
-			_ = sonic.UnmarshalString(connectorConfigStr, &catalog.ConnectorConfig)
+			err = sonic.UnmarshalString(connectorConfigStr, &catalog.ConnectorConfig)
+			if err != nil {
+				logger.Errorf("Failed to unmarshal connector config: %v", err)
+				span.SetStatus(codes.Error, "Unmarshal connector config failed")
+				return []*interfaces.Catalog{}, err
+			}
 		}
 
 		if metadataStr != "" {
-			_ = sonic.UnmarshalString(metadataStr, &catalog.Metadata)
+			err = sonic.UnmarshalString(metadataStr, &catalog.Metadata)
+			if err != nil {
+				logger.Errorf("Failed to unmarshal metadata: %v", err)
+				span.SetStatus(codes.Error, "Unmarshal metadata failed")
+				return []*interfaces.Catalog{}, err
+			}
 		}
 
 		catalogs = append(catalogs, catalog)
@@ -418,7 +428,12 @@ func (ca *catalogAccess) GetByName(ctx context.Context, name string) (*interface
 	}
 
 	if metadataStr != "" {
-		_ = sonic.UnmarshalString(metadataStr, &catalog.Metadata)
+		err = sonic.UnmarshalString(metadataStr, &catalog.Metadata)
+		if err != nil {
+			logger.Errorf("Failed to unmarshal metadata: %v", err)
+			span.SetStatus(codes.Error, "Unmarshal metadata failed")
+			return nil, err
+		}
 	}
 
 	span.SetStatus(codes.Ok, "")
@@ -531,11 +546,19 @@ func (ca *catalogAccess) List(ctx context.Context, params interfaces.CatalogsQue
 		catalog.Tags = libCommon.TagString2TagSlice(tagsStr)
 
 		if connectorConfigStr != "" {
-			sonic.UnmarshalString(connectorConfigStr, &catalog.ConnectorConfig)
+			err = sonic.UnmarshalString(connectorConfigStr, &catalog.ConnectorConfig)
+			if err != nil {
+				span.SetStatus(codes.Error, "Unmarshal connector config failed")
+				return nil, 0, err
+			}
 		}
 
 		if metadataStr != "" {
-			_ = sonic.UnmarshalString(metadataStr, &catalog.Metadata)
+			err = sonic.UnmarshalString(metadataStr, &catalog.Metadata)
+			if err != nil {
+				span.SetStatus(codes.Error, "Unmarshal metadata failed")
+				return nil, 0, err
+			}
 		}
 
 		catalogs = append(catalogs, catalog)

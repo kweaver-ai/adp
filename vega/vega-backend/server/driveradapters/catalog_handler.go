@@ -426,13 +426,6 @@ func (r *restHandler) ListCatalogResources(c *gin.Context) {
 	rest.ReplyOK(c, http.StatusOK, result)
 }
 
-// buildContext builds context with account info
-func (r *restHandler) buildContext(c *gin.Context) context.Context {
-	ctx := rest.GetLanguageCtx(c)
-	accountInfo := r.generateAccountInfo(c)
-	return context.WithValue(ctx, interfaces.ACCOUNT_INFO_KEY, accountInfo)
-}
-
 // getIntQuery gets int query parameter with default value
 func getIntQuery(c *gin.Context, key string, defaultVal int) int {
 	val := c.Query(key)
