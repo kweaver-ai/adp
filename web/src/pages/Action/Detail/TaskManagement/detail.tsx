@@ -55,14 +55,14 @@ const TaskDetail: React.FC<TaskDetailProps> = ({ visible, onClose, taskData, loa
       title: intl.get('Global.status'),
       dataIndex: 'status',
       key: 'status',
-      width: 200,
+      width: 150,
       render: (status: string) => <Badge status={getBadge(status)} text={intl.get(`Action.${status}`)} />,
     },
     {
       title: intl.get('Action.executionInfo'),
       dataIndex: 'error_message',
       key: 'error_message',
-      width: 400,
+      width: 300,
       render: (errorMessage: string, record: any) => {
         const text = errorMessage || (record.status === 'success' ? intl.get('Global.success') : '');
         return (
@@ -76,23 +76,23 @@ const TaskDetail: React.FC<TaskDetailProps> = ({ visible, onClose, taskData, loa
       title: intl.get('Action.executionDuration'),
       dataIndex: 'duration_ms',
       key: 'duration_ms',
-      width: 200,
-      render: (duration: number) => formatMsToHMS(duration * 1000),
+      width: 150,
+      render: (duration: number) => (duration ? formatMsToHMS(duration > 1000 ? duration : 1000) : '-'),
     },
-    // {
-    //   title: intl.get('Global.startTime'),
-    //   dataIndex: 'start_time',
-    //   key: 'start_time',
-    //   width: 200,
-    //   render: (time: string) => (time ? dayjs(time).format('YYYY-MM-DD HH:mm:ss') : '-'),
-    // },
-    // {
-    //   title: intl.get('Global.endTime'),
-    //   dataIndex: 'end_time',
-    //   key: 'end_time',
-    //   width: 200,
-    //   render: (time: string) => (time ? dayjs(time).format('YYYY-MM-DD HH:mm:ss') : '-'),
-    // },
+    {
+      title: intl.get('Global.startTime'),
+      dataIndex: 'start_time',
+      key: 'start_time',
+      width: 300,
+      render: (time: string) => (time ? dayjs(time).format('YYYY-MM-DD HH:mm:ss') : '-'),
+    },
+    {
+      title: intl.get('Global.endTime'),
+      dataIndex: 'end_time',
+      key: 'end_time',
+      width: 300,
+      render: (time: string) => (time ? dayjs(time).format('YYYY-MM-DD HH:mm:ss') : '-'),
+    },
   ];
 
   const detailDrawerData = useMemo((): DataItem[] | null => {
@@ -121,7 +121,7 @@ const TaskDetail: React.FC<TaskDetailProps> = ({ visible, onClose, taskData, loa
           },
           {
             name: intl.get('Action.totalDuration'),
-            value: formatMsToHMS(taskData.duration_ms * 1000),
+            value: taskData.duration_ms ? formatMsToHMS(taskData.duration_ms > 1000 ? taskData.duration_ms : 1000) : '-',
           },
           {
             name: intl.get('Action.runStatusDesc'),
@@ -146,6 +146,7 @@ const TaskDetail: React.FC<TaskDetailProps> = ({ visible, onClose, taskData, loa
                       status: result.status,
                       error_message: result.error_message,
                       duration_ms: result.duration_ms,
+                      _display: result._display,
                       start_time: result.start_time ? dayjs(result.start_time).format('YYYY-MM-DD HH:mm:ss') : '-',
                       end_time: result.end_time ? dayjs(result.end_time).format('YYYY-MM-DD HH:mm:ss') : '-',
                     })) || []

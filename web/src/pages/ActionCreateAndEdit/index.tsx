@@ -11,7 +11,7 @@ import BasicInformation from './BasicInformation';
 import Header from './Header';
 import styles from './index.module.less';
 import Mapping from './Mapping';
-import RunStrategy from './RunStrategy';
+// import RunStrategy from './RunStrategy';
 
 interface BasicValueType {
   id?: string;
@@ -113,6 +113,13 @@ const ActionCreateAndEdit: FC = () => {
 
   const onSubmit = async () => {
     try {
+      // 执行映射组件的验证逻辑
+      const { isValid } = (mappingRef.current as any)?.validate?.() || {};
+      if (!isValid) return;
+      
+      // 更新映射值
+      setMappingValue(mappingForm.getFieldsValue());
+      
       const { 'affect.object_type_id': affectObjectType, 'affect.comment': affectComment, condition } = basicValue;
       const affect = affectObjectType || affectComment ? { object_type_id: affectObjectType, comment: affectComment } : undefined;
       const step1Params = {
@@ -121,7 +128,7 @@ const ActionCreateAndEdit: FC = () => {
         condition: condition?.field || condition?.operation ? condition : undefined,
       };
 
-      const { action_source, parameters } = mappingValue as any;
+      const { action_source, parameters } = mappingForm.getFieldsValue() as any;
       const { box_id, tool_id, tool_name, mcp_id, type } = action_source || {};
       let actionSource: any = undefined;
       if (box_id) {
@@ -130,6 +137,8 @@ const ActionCreateAndEdit: FC = () => {
         actionSource = { type, mcp_id, tool_name };
       }
 
+      // 暂时注释掉运行策略相关逻辑
+      /*
       const scheduleValues = await scheduleForm.validateFields();
       const {
         scheduleEnabled,
@@ -145,11 +154,13 @@ const ActionCreateAndEdit: FC = () => {
           schedule = { type: scheduleType, expression };
         }
       }
+      */
 
       const step2Params = {
         action_source: actionSource,
         parameters: parameters?.length ? parameters : undefined,
-        schedule,
+        // 暂时注释掉schedule参数
+        // schedule,
       };
 
       if (atId) {
@@ -187,14 +198,17 @@ const ActionCreateAndEdit: FC = () => {
           objectTypeId={basicValue.object_type_id}
         />
       ),
-      nextText: intl.get('Global.next'),
-      nextClick: onNext,
+      nextText: intl.get('Global.saveAndExit'),
+      nextClick: onSubmit,
     },
+    // 暂时隐藏运行策略步骤
+    /*
     2: {
       content: <RunStrategy form={scheduleForm} value={scheduleValue} />,
       nextText: intl.get('Global.saveAndExit'),
       nextClick: onSubmit,
     },
+    */
   };
 
   const renderActions = () => {
@@ -206,7 +220,10 @@ const ActionCreateAndEdit: FC = () => {
             className="g-mr-2"
             onClick={() => {
               if (stepsCurrent === 1) setMappingValue(mappingForm.getFieldsValue());
+              // 暂时注释掉运行策略步骤的处理
+              /*
               if (stepsCurrent === 2) setScheduleValue(scheduleForm.getFieldsValue());
+              */
               onPrev();
             }}
           >

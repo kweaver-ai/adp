@@ -1,8 +1,7 @@
 import { useState, useEffect } from 'react';
 import intl from 'react-intl-universal';
 import { EllipsisOutlined } from '@ant-design/icons';
-import { Dropdown, Empty, Modal, Drawer, Spin, Badge } from 'antd';
-import classnames from 'classnames';
+import { Dropdown, Empty, Badge } from 'antd';
 import dayjs from 'dayjs';
 import actionApi from '@/services/action';
 import * as ActionType from '@/services/action/type';
@@ -13,6 +12,7 @@ import { CheckCircleOutlined, CloseCircleOutlined } from '@ant-design/icons';
 import TaskDetail from './detail';
 import { formatMsToHMS } from '@/utils/time';
 import styles from './index.module.less';
+import HOOKS from '@/hooks';
 
 interface TaskManagementProps {
   knId: string;
@@ -64,6 +64,7 @@ const TaskManagement = ({ knId, atId, refreshTask, onRefreshComplete }: TaskMana
   const [detailVisible, setDetailVisible] = useState(false);
   const [currentTask, setCurrentTask] = useState<ActionType.ActionExecutionLogDetail | null>(null);
   const [detailLoading, setDetailLoading] = useState(false);
+  const { modal } = HOOKS.useGlobalContext();
 
   const fetchTasks = async (page = 1, pageSize = 10, filters = filterValues) => {
     setLoading(true);
@@ -136,7 +137,7 @@ const TaskManagement = ({ knId, atId, refreshTask, onRefreshComplete }: TaskMana
   };
 
   const handleCancelExecution = async (record: ActionType.ActionExecutionLog) => {
-    Modal.confirm({
+    modal.confirm({
       title: intl.get('Action.confirmCancelExecution'),
       content: intl.get('Action.confirmCancelExecutionDesc'),
       okText: intl.get('Global.confirm'),
@@ -244,7 +245,7 @@ const TaskManagement = ({ knId, atId, refreshTask, onRefreshComplete }: TaskMana
       width: 100,
       sorter: true,
       __selected: true,
-      render: (duration: number) => (duration ? formatMsToHMS(duration * 1000) : '--'),
+      render: (duration: number) => (duration ? formatMsToHMS(duration > 1000 ? duration : 1000) : '-'),
     },
     {
       title: intl.get('Global.endTime'),
