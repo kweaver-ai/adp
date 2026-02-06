@@ -363,25 +363,7 @@
             "name": "rds"
         },
         {
-            "name": "authentication"
-        },
-        {
-            "name": "deploy-service"
-        },
-        {
-            "name": "efast"
-        },
-        {
             "name": "hydra"
-        },
-        {
-            "name": "user-management"
-        },
-        {
-            "name": "ossgatewaymanager"
-        },
-        {
-            "name": "sharemgnt"
         },
         {
             "name": "business-system-service"

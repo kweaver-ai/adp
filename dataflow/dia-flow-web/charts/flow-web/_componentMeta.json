@@ -49,7 +49,7 @@
   },
   "dependence": [
     {
-      "name": "flow-automation"
+      "name": "dataflow"
     }
   ]
 }
