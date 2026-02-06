@@ -37,10 +37,16 @@
    - 命令行参数覆盖环境变量
    - 默认值：localhost:9200, http 协议
 
-### 依赖
+## 环境要求
 
-- `opensearch-py` - OpenSearch Python 客户端
-- Python 标准库：`logging`, `argparse`, `os`, `sys`
+- Python 3.10+
+- OpenSearch 集群
+
+## 安装依赖
+
+```bash
+pip3 install -i https://pypi.tuna.tsinghua.edu.cn/simple opensearch-py
+```
 
 ### 使用示例
 
@@ -50,13 +56,13 @@ export OPENSEARCH_HOST=localhost
 export OPENSEARCH_PORT=9200
 export OPENSEARCH_USER=test
 export OPENSEARCH_PASSWORD=testpwd
-python script/delete_concept_index.py
+python3 script/delete_concept_index.py
 
 # 使用命令行参数
-python script/delete_concept_index.py --os-host localhost --os-port 9200 --os-user test --os-password testpwd
+python3 script/delete_concept_index.py --os-host localhost --os-port 9200 --os-user test --os-password testpwd
 
 # 试运行模式
-python script/delete_concept_index.py --dry-run
+python3 script/delete_concept_index.py --dry-run
 ```
 
 ## 参考文件
