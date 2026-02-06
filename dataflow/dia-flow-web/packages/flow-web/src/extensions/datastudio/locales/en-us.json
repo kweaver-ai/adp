@@ -118,7 +118,7 @@
     "ecconfig.type.base": "Basic Information",
     "ecconfig.type.slice_vector": " Vector Index",
     "ecconfig.status": "Write Result",
-    "MdlDataDataview": "数据视图",
-    "MdlDataDataviewDes": "数据视图数据源",
-    "WriteFile":"文档库写入"
+    "MdlDataDataview": "Data View",
+    "MdlDataDataviewDes": "Data View Data Source",
+    "WriteFile":"Document Library Write"
 }

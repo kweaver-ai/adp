@@ -91,7 +91,7 @@ func (s *knLogicPropertyResolverService) ResolveLogicProperties(
 	var debugCollector *DebugCollector
 	if req.Options.ReturnDebug {
 		debugCollector = NewDebugCollector()
-		debugCollector.SetTraceID(s.getTraceID(ctx))
+		debugCollector.SetTraceID("")
 		debugCollector.SetNowMs(time.Now().UnixMilli())
 	}
 
@@ -164,8 +164,8 @@ func (s *knLogicPropertyResolverService) validateRequest(req *interfaces.Resolve
 	if req.Query == "" {
 		return fmt.Errorf("query is required")
 	}
-	if len(req.UniqueIdentities) == 0 {
-		return fmt.Errorf("unique_identities is required and cannot be empty")
+	if len(req.InstanceIdentities) == 0 {
+		return fmt.Errorf("_instance_identities is required and cannot be empty")
 	}
 	if len(req.Properties) == 0 {
 		return fmt.Errorf("properties is required and cannot be empty")
@@ -443,7 +443,7 @@ func (s *knLogicPropertyResolverService) generateMetricParams(
 	agentReq := &interfaces.MetricDynamicParamsGeneratorReq{
 		LogicProperty:     property,
 		Query:             req.Query,
-		UniqueIdentities:  req.UniqueIdentities,
+		UniqueIdentities:  req.InstanceIdentities,
 		AdditionalContext: req.AdditionalContext,
 		NowMs:             nowMs,
 		Timezone:          "", // 暂时不考虑 timezone
@@ -505,7 +505,7 @@ func (s *knLogicPropertyResolverService) generateOperatorParams(
 		OperatorID:        operatorID,
 		LogicProperty:     property,
 		Query:             req.Query,
-		UniqueIdentities:  req.UniqueIdentities,
+		UniqueIdentities:  req.InstanceIdentities,
 		AdditionalContext: req.AdditionalContext,
 	}
 
@@ -684,11 +684,11 @@ func (s *knLogicPropertyResolverService) queryLogicProperties(
 ) ([]map[string]interface{}, error) {
 	// 构建查询请求
 	queryReq := &interfaces.QueryLogicPropertiesReq{
-		KnID:             req.KnID,
-		OtID:             req.OtID,
-		UniqueIdentities: req.UniqueIdentities,
-		Properties:       req.Properties,
-		DynamicParams:    dynamicParams,
+		KnID:               req.KnID,
+		OtID:               req.OtID,
+		InstanceIdentities: req.InstanceIdentities,
+		Properties:         req.Properties,
+		DynamicParams:      dynamicParams,
 	}
 
 	// 调用 ontology-query 服务
@@ -725,18 +725,10 @@ func (s *knLogicPropertyResolverService) buildMissingParamsError(
 		Message:   "dynamic_params 缺少必需的 input 参数",
 		ErrorMsg:  errorMsg,
 		Debug:     debugInfo,
-		TraceID:   s.getTraceID(ctx),
+		TraceID:   "",
 		Missing:   missingParams,
 	}
 
 	// 返回为 HTTPError
 	return errors.DefaultHTTPError(ctx, http.StatusBadRequest, fmt.Sprintf("%+v", missingError))
-}
-
-// getTraceID 从 context 中获取 trace ID
-// TODO: 实现从 context 中提取 trace_id 的逻辑
-func (s *knLogicPropertyResolverService) getTraceID(ctx context.Context) string {
-	// TODO: 从 context 中提取 trace_id
-	// 可以参考 server/infra/consts/key.go 中的 HeaderOpTraceID
-	return ""
 }

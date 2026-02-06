@@ -1178,6 +1178,7 @@ const DataStudioPanel: React.FC = () => {
               setIsTriggerConfigVisible(false);
             }}
             isEditTrigger={task.isEditTrigger}
+            dagsId={currentFlowDetail.current?.id}
           />
         </Drawer>
       )}

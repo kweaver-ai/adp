@@ -69,21 +69,23 @@ const (
 
 // MCP拓展错误码定义
 const (
-	ErrExtMCPModeNotSupported    ErrorCode = "MCPModeNotSupported"    // MCP模式不支持
-	ErrExtMCPExists              ErrorCode = "MCPExists"              // MCP已存在
-	ErrExtMCPNotFound            ErrorCode = "MCPNotFound"            // MCP不存在
-	ErrExtMCPStatusInvalid       ErrorCode = "MCPStatusInvalid"       // MCP状态无效
-	ErrExtMCPNameEmpty           ErrorCode = "MCPNameEmpty"           // MCP名称不能为空
-	ErrExtMCPNameLimit           ErrorCode = "MCPNameLimit"           // MCP名称长度不能超过%d个字符
-	ErrExtMCPUnSupportEdit       ErrorCode = "MCPUnSupportEdit"       // MCP不支持编辑
-	ErrExtMCPUnSupportDelete     ErrorCode = "MCPUnSupportDelete"     // 当前MCP不允许删除
-	ErrExtMCPParseFailed         ErrorCode = "MCPParseFailed"         // MCP解析失败
-	ErrExtMCPServerNotAccessible ErrorCode = "MCPServerNotAccessible" // MCP Server 无法访问
-	ErrExtMCPListToolsFailed     ErrorCode = "MCPListToolsFailed"     // 无法获取当前MCP服务下的工具列表
-	ErrExtMCPCallToolFailed      ErrorCode = "MCPCallToolFailed"      // 调用MCP工具失败
-	ErrExtMCPDescLimit           ErrorCode = "MCPDescLimit"           // MCP描述长度不能超过%d个字符
-	ErrExtMCPToolMaxCount        ErrorCode = "MCPToolMaxCount"        // MCP工具数量不能超过%d个
-	ErrExtMCPToolNameDuplicate   ErrorCode = "MCPToolNameDuplicate"   // MCP工具名称重复
+	ErrExtMCPModeNotSupported      ErrorCode = "MCPModeNotSupported"      // MCP模式不支持
+	ErrExtMCPExists                ErrorCode = "MCPExists"                // MCP已存在
+	ErrExtMCPNotFound              ErrorCode = "MCPNotFound"              // MCP不存在
+	ErrExtMCPStatusInvalid         ErrorCode = "MCPStatusInvalid"         // MCP状态无效
+	ErrExtMCPNameEmpty             ErrorCode = "MCPNameEmpty"             // MCP名称不能为空
+	ErrExtMCPNameLimit             ErrorCode = "MCPNameLimit"             // MCP名称长度不能超过%d个字符
+	ErrExtMCPUnSupportEdit         ErrorCode = "MCPUnSupportEdit"         // MCP不支持编辑
+	ErrExtMCPUnSupportDelete       ErrorCode = "MCPUnSupportDelete"       // 当前MCP不允许删除
+	ErrExtMCPParseFailed           ErrorCode = "MCPParseFailed"           // MCP解析失败
+	ErrExtMCPServerNotAccessible   ErrorCode = "MCPServerNotAccessible"   // MCP Server 无法访问
+	ErrExtMCPListToolsFailed       ErrorCode = "MCPListToolsFailed"       // 无法获取当前MCP服务下的工具列表
+	ErrExtMCPCallToolFailed        ErrorCode = "MCPCallToolFailed"        // 调用MCP工具失败
+	ErrExtMCPDescLimit             ErrorCode = "MCPDescLimit"             // MCP描述长度不能超过%d个字符
+	ErrExtMCPToolMaxCount          ErrorCode = "MCPToolMaxCount"          // MCP工具数量不能超过%d个
+	ErrExtMCPToolNameDuplicate     ErrorCode = "MCPToolNameDuplicate"     // MCP工具名称重复
+	ErrExtMCPInstanceAlreadyExists ErrorCode = "MCPInstanceAlreadyExists" // MCP实例已存在
+	ErrExtMCPInstanceNotFound      ErrorCode = "MCPInstanceNotFound"      // MCP实例不存在
 )
 
 // 算子分类拓展错误码定义
@@ -194,6 +196,8 @@ const (
 	ErrExtDebugParamsInvalid              ErrorCode = "DebugParamsInvalid"              // 调试传参错误，必须为JSON格式
 	ErrExtFunctionAIGenerateFailed        ErrorCode = "FunctionAIGenerateFailed"        // AI生成失败，请检查默认模型是否正常
 	ErrExtFunctionAIGenerateModelFailed   ErrorCode = "FunctionAIGenerateModelFailed"   // 模型生成内容异常，请检查默认模型是否可用，或前往设置配置有效的模型
+	// 依赖沙箱服务异常
+	ErrExtSandboxControlPlaneFailed ErrorCode = "SandboxControlPlaneFailed" // 依赖沙箱服务异常，请查看错误详情
 )
 
 const (

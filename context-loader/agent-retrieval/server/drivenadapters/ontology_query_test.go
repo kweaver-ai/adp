@@ -10,15 +10,16 @@ import (
 	"errors"
 	"testing"
 
+	"github.com/smartystreets/goconvey/convey"
+	"go.uber.org/mock/gomock"
+
 	"github.com/kweaver-ai/adp/context-loader/agent-retrieval/server/interfaces"
 	"github.com/kweaver-ai/adp/context-loader/agent-retrieval/server/mocks"
-	. "github.com/smartystreets/goconvey/convey"
-	"go.uber.org/mock/gomock"
 )
 
 // TestQueryObjectInstances_Success 测试 QueryObjectInstances 成功场景
 func TestQueryObjectInstances_Success(t *testing.T) {
-	Convey("TestQueryObjectInstances_Success", t, func() {
+	convey.Convey("TestQueryObjectInstances_Success", t, func() {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 
@@ -48,14 +49,14 @@ func TestQueryObjectInstances_Success(t *testing.T) {
 			}, nil)
 
 		resp, err := client.QueryObjectInstances(ctx, req)
-		So(err, ShouldBeNil)
-		So(resp, ShouldNotBeNil)
+		convey.So(err, convey.ShouldBeNil)
+		convey.So(resp, convey.ShouldNotBeNil)
 	})
 }
 
 // TestQueryObjectInstances_HTTPError 测试 QueryObjectInstances HTTP 错误
 func TestQueryObjectInstances_HTTPError(t *testing.T) {
-	Convey("TestQueryObjectInstances_HTTPError", t, func() {
+	convey.Convey("TestQueryObjectInstances_HTTPError", t, func() {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 
@@ -85,13 +86,13 @@ func TestQueryObjectInstances_HTTPError(t *testing.T) {
 			Return(0, nil, errors.New("connection refused"))
 
 		_, err := client.QueryObjectInstances(ctx, req)
-		So(err, ShouldNotBeNil)
+		convey.So(err, convey.ShouldNotBeNil)
 	})
 }
 
 // TestQueryLogicProperties_Success 测试 QueryLogicProperties 成功场景
 func TestQueryLogicProperties_Success(t *testing.T) {
-	Convey("TestQueryLogicProperties_Success", t, func() {
+	convey.Convey("TestQueryLogicProperties_Success", t, func() {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 
@@ -109,10 +110,10 @@ func TestQueryLogicProperties_Success(t *testing.T) {
 
 		ctx := context.Background()
 		req := &interfaces.QueryLogicPropertiesReq{
-			KnID:             "kn-001",
-			OtID:             "ot-001",
-			UniqueIdentities: []map[string]interface{}{{"id": "obj-001"}},
-			Properties:       []string{"prop1"},
+			KnID:               "kn-001",
+			OtID:               "ot-001",
+			InstanceIdentities: []map[string]interface{}{{"id": "obj-001"}},
+			Properties:         []string{"prop1"},
 		}
 
 		// Mock HTTP 成功响应
@@ -124,15 +125,15 @@ func TestQueryLogicProperties_Success(t *testing.T) {
 			}, nil)
 
 		resp, err := client.QueryLogicProperties(ctx, req)
-		So(err, ShouldBeNil)
-		So(resp, ShouldNotBeNil)
-		So(len(resp.Datas), ShouldEqual, 1)
+		convey.So(err, convey.ShouldBeNil)
+		convey.So(resp, convey.ShouldNotBeNil)
+		convey.So(len(resp.Datas), convey.ShouldEqual, 1)
 	})
 }
 
 // TestQueryLogicProperties_HTTPError 测试 QueryLogicProperties HTTP 错误
 func TestQueryLogicProperties_HTTPError(t *testing.T) {
-	Convey("TestQueryLogicProperties_HTTPError", t, func() {
+	convey.Convey("TestQueryLogicProperties_HTTPError", t, func() {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 
@@ -160,13 +161,13 @@ func TestQueryLogicProperties_HTTPError(t *testing.T) {
 			Return(0, nil, errors.New("connection refused"))
 
 		_, err := client.QueryLogicProperties(ctx, req)
-		So(err, ShouldNotBeNil)
+		convey.So(err, convey.ShouldNotBeNil)
 	})
 }
 
 // TestQueryActions_Success 测试 QueryActions 成功场景
 func TestQueryActions_Success(t *testing.T) {
-	Convey("TestQueryActions_Success", t, func() {
+	convey.Convey("TestQueryActions_Success", t, func() {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 
@@ -184,9 +185,9 @@ func TestQueryActions_Success(t *testing.T) {
 
 		ctx := context.Background()
 		req := &interfaces.QueryActionsRequest{
-			KnID:             "kn-001",
-			AtID:             "at-001",
-			UniqueIdentities: []map[string]interface{}{{"id": "obj-001"}},
+			KnID:               "kn-001",
+			AtID:               "at-001",
+			InstanceIdentities: []map[string]interface{}{{"id": "obj-001"}},
 		}
 
 		// Mock HTTP 成功响应
@@ -207,16 +208,16 @@ func TestQueryActions_Success(t *testing.T) {
 			}, nil)
 
 		resp, err := client.QueryActions(ctx, req)
-		So(err, ShouldBeNil)
-		So(resp, ShouldNotBeNil)
-		So(resp.ActionSource, ShouldNotBeNil)
-		So(resp.ActionSource.Type, ShouldEqual, "tool")
+		convey.So(err, convey.ShouldBeNil)
+		convey.So(resp, convey.ShouldNotBeNil)
+		convey.So(resp.ActionSource, convey.ShouldNotBeNil)
+		convey.So(resp.ActionSource.Type, convey.ShouldEqual, "tool")
 	})
 }
 
 // TestQueryActions_HTTPError 测试 QueryActions HTTP 错误
 func TestQueryActions_HTTPError(t *testing.T) {
-	Convey("TestQueryActions_HTTPError", t, func() {
+	convey.Convey("TestQueryActions_HTTPError", t, func() {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 
@@ -244,13 +245,13 @@ func TestQueryActions_HTTPError(t *testing.T) {
 			Return(0, nil, errors.New("connection refused"))
 
 		_, err := client.QueryActions(ctx, req)
-		So(err, ShouldNotBeNil)
+		convey.So(err, convey.ShouldNotBeNil)
 	})
 }
 
 // TestQueryInstanceSubgraph_Success 测试 QueryInstanceSubgraph 成功场景
 func TestQueryInstanceSubgraph_Success(t *testing.T) {
-	Convey("TestQueryInstanceSubgraph_Success", t, func() {
+	convey.Convey("TestQueryInstanceSubgraph_Success", t, func() {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 
@@ -281,14 +282,14 @@ func TestQueryInstanceSubgraph_Success(t *testing.T) {
 			}, nil)
 
 		resp, err := client.QueryInstanceSubgraph(ctx, req)
-		So(err, ShouldBeNil)
-		So(resp, ShouldNotBeNil)
+		convey.So(err, convey.ShouldBeNil)
+		convey.So(resp, convey.ShouldNotBeNil)
 	})
 }
 
 // TestQueryInstanceSubgraph_HTTPError 测试 QueryInstanceSubgraph HTTP 错误
 func TestQueryInstanceSubgraph_HTTPError(t *testing.T) {
-	Convey("TestQueryInstanceSubgraph_HTTPError", t, func() {
+	convey.Convey("TestQueryInstanceSubgraph_HTTPError", t, func() {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 
@@ -315,6 +316,6 @@ func TestQueryInstanceSubgraph_HTTPError(t *testing.T) {
 			Return(0, nil, errors.New("connection refused"))
 
 		_, err := client.QueryInstanceSubgraph(ctx, req)
-		So(err, ShouldNotBeNil)
+		convey.So(err, convey.ShouldNotBeNil)
 	})
 }

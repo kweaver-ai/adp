@@ -50,6 +50,21 @@ func (mr *MockKnowledgeNetworkServiceMockRecorder) SearchSubgraph(ctx, query int
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SearchSubgraph", reflect.TypeOf((*MockKnowledgeNetworkService)(nil).SearchSubgraph), ctx, query)
 }
 
+// SearchSubgraphByObjects mocks base method.
+func (m *MockKnowledgeNetworkService) SearchSubgraphByObjects(ctx context.Context, query *interfaces.SubGraphQueryBaseOnObjects) (interfaces.ObjectSubGraph, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "SearchSubgraphByObjects", ctx, query)
+	ret0, _ := ret[0].(interfaces.ObjectSubGraph)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// SearchSubgraphByObjects indicates an expected call of SearchSubgraphByObjects.
+func (mr *MockKnowledgeNetworkServiceMockRecorder) SearchSubgraphByObjects(ctx, query interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SearchSubgraphByObjects", reflect.TypeOf((*MockKnowledgeNetworkService)(nil).SearchSubgraphByObjects), ctx, query)
+}
+
 // SearchSubgraphByTypePath mocks base method.
 func (m *MockKnowledgeNetworkService) SearchSubgraphByTypePath(ctx context.Context, query *interfaces.SubGraphQueryBaseOnTypePath) (interfaces.PathsEntries, error) {
 	m.ctrl.T.Helper()

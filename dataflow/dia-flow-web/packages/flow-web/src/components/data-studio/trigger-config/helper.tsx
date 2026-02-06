@@ -7,6 +7,7 @@ import EventTriggerSVG from "../../../assets/trigger-event.svg";
 import CronExtensions, { CronCustomAction } from '../../../extensions/cron'
 import { Extension } from "../../extension";
 import { SelectDocLib } from "./select-doclib";
+import { SelectFileLib } from "./select-doclib/select-file-lib";
 import { TranslateFn, useTranslate } from "@applet/common";
 import { DefaultOptionType } from "antd/lib/select";
 
@@ -242,7 +243,7 @@ const Cron = {
             )
         }),
 
-        DataSource: SelectDocLib
+        DataSource: SelectFileLib
     }
 }
 
@@ -297,7 +298,7 @@ const Manual = {
 
             return <div></div>
         },
-        DataSource: SelectDocLib
+        DataSource: SelectFileLib
     }
 }
 

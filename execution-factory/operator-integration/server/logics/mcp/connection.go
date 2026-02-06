@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/infra/config"
 	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/interfaces"
 )
 
@@ -14,9 +13,9 @@ const (
 	// 对外MCP Server SSE URL
 	externalMCPSSEURI = "/api/agent-operator-integration/v1/mcp/app/:mcp_id/sse"
 	// internalMCPStreamURL 内部MCP流式URL, 参数为mcpID
-	internalMCPStreamURI = "/api/agent-operator-app/internal-v1/mcp/app/%s/%d/stream"
+	internalMCPStreamURI = "/api/agent-operator-integration/internal-v1/mcp/app/%s/%d/stream"
 	// internalMCPSSEURL 内部MCP SSE URL, 参数为mcpID
-	internalMCPSSEURI = "/api/agent-operator-app/internal-v1/mcp/app/%s/%d/sse"
+	internalMCPSSEURI = "/api/agent-operator-integration/internal-v1/mcp/app/%s/%d/sse"
 )
 
 // generateExternalConnectionInfo 生成对外MCP Server连接信息
@@ -71,9 +70,7 @@ func (s *mcpServiceImpl) generateInternalMCPURL(mcpID string,
 	mcpVersion int,
 	mode interfaces.MCPMode,
 ) (url string) {
-	config := config.NewConfigLoader()
-	baseURL := fmt.Sprintf("%s://%s:%d", config.AgentOperatorApp.PrivateProtocol,
-		config.AgentOperatorApp.PrivateHost, config.AgentOperatorApp.PrivatePort)
+	baseURL := strings.TrimRight(interfaces.AOIServerURL, "/")
 	switch mode {
 	case interfaces.MCPModeStream:
 		url = fmt.Sprintf("%s%s", baseURL, fmt.Sprintf(internalMCPStreamURI, mcpID, mcpVersion))

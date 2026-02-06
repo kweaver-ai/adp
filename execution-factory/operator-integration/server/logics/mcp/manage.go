@@ -10,7 +10,6 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	o11y "github.com/kweaver-ai/kweaver-go-lib/observability"
 	icommon "github.com/kweaver-ai/adp/execution-factory/operator-integration/server/infra/common"
 	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/infra/common/ormhelper"
 	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/infra/errors"
@@ -22,6 +21,7 @@ import (
 	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/logics/common"
 	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/logics/metric"
 	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/utils"
+	o11y "github.com/kweaver-ai/kweaver-go-lib/observability"
 )
 
 // 排序字段与数据库字段映射
@@ -52,7 +52,7 @@ func (s *mcpServiceImpl) ParseSSE(ctx context.Context, req *interfaces.MCPParseS
 
 	toolsResponse, err := s.listTools(ctx, &listToolsReq)
 	if err != nil {
-		err = infraerrors.NewHTTPError(ctx, http.StatusInternalServerError, infraerrors.ErrExtMCPParseFailed, err.Error())
+		s.logger.WithContext(ctx).Errorf("list tools error: %v", err)
 		return
 	}
 	resp = &interfaces.MCPParseSSEResponse{
@@ -295,7 +295,7 @@ func (s *mcpServiceImpl) DeleteMCPServer(ctx context.Context, req *interfaces.MC
 		}
 
 		// 删除mcp Server实例
-		err = s.AgentOperatorApp.DeleteAllMCPInstances(ctx, req.MCPID)
+		err = s.MCPInstanceService.DeleteAllMCPInstances(ctx, req.MCPID)
 		if err != nil {
 			return err
 		}
@@ -927,10 +927,15 @@ func (s *mcpServiceImpl) DebugTool(ctx context.Context, req *interfaces.MCPToolD
 
 	// 2. 调用工具
 	callToolReq := &CallToolRequest{
-		MCPCoreInfo: &interfaces.MCPCoreConfigInfo{
-			Mode:    mcpConfig.Mode,
-			URL:     mcpConfig.URL,
-			Headers: mcpConfig.Headers,
+		ListToolsRequest: &ListToolsRequest{
+			CreationType: mcpConfig.CreationType,
+			MCPID:        mcpConfig.MCPID,
+			Version:      mcpConfig.Version,
+			MCPCoreInfo: &interfaces.MCPCoreConfigInfo{
+				Mode:    mcpConfig.Mode,
+				URL:     mcpConfig.URL,
+				Headers: mcpConfig.Headers,
+			},
 		},
 		ToolName: req.ToolName,
 		Params:   req.Parameters,
@@ -1087,7 +1092,7 @@ func (s *mcpServiceImpl) createMCPServerInstance(ctx context.Context, mcpConfigD
 		return err
 	}
 	req.ToolConfigs = toolConfigs
-	_, err = s.AgentOperatorApp.CreateMCPInstance(ctx, req)
+	_, err = s.MCPInstanceService.CreateMCPInstance(ctx, req)
 	if err != nil {
 		return err
 	}
@@ -1121,7 +1126,7 @@ func (s *mcpServiceImpl) UpgradeMCPInstance(ctx context.Context, mcpID string) (
 		Instructions: mcpConfigDB.Description,
 		ToolConfigs:  toolConfigs,
 	}
-	_, err = s.AgentOperatorApp.UpgradeMCPInstance(ctx, req)
+	_, err = s.MCPInstanceService.UpgradeMCPInstance(ctx, req)
 	if err != nil {
 		return err
 	}
@@ -1149,7 +1154,7 @@ func (s *mcpServiceImpl) updateMCPServerInstance(ctx context.Context, mcpConfigD
 		return err
 	}
 	req.ToolConfigs = toolConfigs
-	_, err = s.AgentOperatorApp.UpdateMCPInstance(ctx, mcpConfigDB.MCPID, mcpConfigDB.Version, req)
+	_, err = s.MCPInstanceService.UpdateMCPInstance(ctx, mcpConfigDB.MCPID, mcpConfigDB.Version, req)
 	if err != nil {
 		return err
 	}

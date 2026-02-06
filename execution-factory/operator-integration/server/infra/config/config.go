@@ -15,11 +15,11 @@ import (
 
 	"github.com/creasty/defaults"
 	"github.com/go-playground/validator/v10"
-	o11y "github.com/kweaver-ai/kweaver-go-lib/observability"
 	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/infra/logger"
 	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/infra/telemetry"
 	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/interfaces"
 	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/utils"
+	o11y "github.com/kweaver-ai/kweaver-go-lib/observability"
 	"github.com/spf13/viper"
 	"gopkg.in/yaml.v3"
 )
@@ -31,26 +31,48 @@ const (
 
 // Config 配置
 type Config struct {
-	Project                  Project             `yaml:"project"`
-	OAuth                    OAuthConfig         `yaml:"oauth"`
-	DB                       DBConfig            `yaml:"db"`
-	UserMgnt                 PrivateBaseConfig   `yaml:"user_management"`
-	Authorization            PrivateBaseConfig   `yaml:"authorization"`
-	AgentOperatorApp         PrivateBaseConfig   `yaml:"agent-operator-app"`
-	OperatorConfig           OperatorConfig      `yaml:"operator"`
-	Logger                   interfaces.Logger   `yaml:"-"`
-	RedisConfig              RedisConfig         `yaml:"redis"`
-	ProxyModuleConfig        ProxyModuleConfig   `yaml:"proxy_module"`
-	MCPConfig                MCPConfig           `yaml:"mcp"`
-	CategoryConfig           CategoryConfig      `yaml:"category"`
-	MQConfigFile             string              `yaml:"-"`
-	Observability            ObservabilityConfig `yaml:"-"`
-	FlowAutomation           PrivateBaseConfig   `yaml:"flow-automation"`
-	BusinessDomainManagement PrivateBaseConfig   `yaml:"business-system-service"`
-	SandboxRuntime           PrivateBaseConfig   `yaml:"sandbox-runtime"`
-	MFModelAPI               PrivateBaseConfig   `yaml:"mf-model-api"`
-	MFModelManager           PrivateBaseConfig   `yaml:"mf-model-manager"`
-	AIGenerationConfig       AIGenerationConfig  `yaml:"ai_generation_config"`
+	Project                  Project                   `yaml:"project"`
+	OAuth                    OAuthConfig               `yaml:"oauth"`
+	DB                       DBConfig                  `yaml:"db"`
+	UserMgnt                 PrivateBaseConfig         `yaml:"user_management"`
+	Authorization            PrivateBaseConfig         `yaml:"authorization"`
+	OperatorConfig           OperatorConfig            `yaml:"operator"`
+	Logger                   interfaces.Logger         `yaml:"-"`
+	RedisConfig              RedisConfig               `yaml:"redis"`
+	ProxyModuleConfig        ProxyModuleConfig         `yaml:"proxy_module"`
+	MCPConfig                MCPConfig                 `yaml:"mcp"`
+	CategoryConfig           CategoryConfig            `yaml:"category"`
+	MQConfigFile             string                    `yaml:"-"`
+	Observability            ObservabilityConfig       `yaml:"-"`
+	FlowAutomation           PrivateBaseConfig         `yaml:"flow-automation"`
+	BusinessDomainManagement PrivateBaseConfig         `yaml:"business-system-service"`
+	SandboxControlPlane      SandboxControlPlaneConfig `yaml:"sandbox-control-plane"`
+	MFModelAPI               PrivateBaseConfig         `yaml:"mf-model-api"`
+	MFModelManager           PrivateBaseConfig         `yaml:"mf-model-manager"`
+	AIGenerationConfig       AIGenerationConfig        `yaml:"ai_generation_config"`
+}
+
+// SandboxControlPlaneConfig 沙箱控制服务配置
+type SandboxControlPlaneConfig struct {
+	PrivateBaseConfig `yaml:",inline"`
+	// 模版ID
+	TemplateID string `yaml:"template_id" default:"python-basic"`
+	// 会话资源配置
+	SessionResources SessionResourcesConfig `yaml:"session_resources"`
+	// 最大会话数，默认3
+	MaxSessions int `yaml:"max_sessions" default:"3"`
+	// 活跃会话数，默认1
+	ActiveSessions int `yaml:"active_sessions" default:"1"`
+	// 单个会话并发执行最大任务数，默认1
+	MaxConcurrentTasks int `yaml:"max_concurrent_tasks" default:"100"`
+}
+
+// SessionResourcesConfig 会话资源配置
+type SessionResourcesConfig struct {
+	CPU     string `yaml:"cpu" default:"1"`        // CPU核心数
+	Memory  string `yaml:"memory" default:"512Mi"` // 内存大小，单位为Mi, 默认512Mi
+	Disk    string `yaml:"disk" default:"1Gi"`     // 磁盘大小，单位为Gi, 默认1Gi
+	Timeout int    `yaml:"timeout" default:"3600"` // 会话超时时间，单位为秒, 默认1小时
 }
 
 // AIGenerationConfig 智能生成配置
@@ -131,6 +153,21 @@ type OperatorConfig struct {
 // MCPConfig MCP配置
 type MCPConfig struct {
 	ConnTimeout int64 `yaml:"conn_timeout" default:"10"` // 单位: 秒
+
+	// MaxInstances 控制进程内最多保留多少个运行态 MCP 实例：
+	// - <=0: 不限制（不推荐，实例数量大时会占用较多内存）
+	// - >0 : 超过后按 LRU 淘汰最久未访问实例（有活跃 SSE/Stream 连接的实例不淘汰）
+	MaxInstances int `yaml:"max_instances" default:"200"`
+
+	// InstanceTTL 控制实例的过期清理阈值（按最近访问时间）：
+	// - <=0: 不启用 TTL
+	// - >0 : lastAccess 超过该阈值则可被清理（有活跃 SSE/Stream 连接的实例不清理）
+	InstanceTTL int64 `yaml:"instance_ttl" default:"1800"` // 单位: 秒
+
+	// CleanupInterval 定时清理周期：
+	// - <=0: 不启用定时清理
+	// - >0 : 周期性扫描并清理过期实例（仅在 InstanceTTL>0 时有效）
+	CleanupInterval int64 `yaml:"cleanup_interval" default:"60"` // 单位: 秒
 }
 
 // CategoryConfig 算子分类配置

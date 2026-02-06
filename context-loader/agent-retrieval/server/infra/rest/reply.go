@@ -17,13 +17,14 @@ import (
 
 	"github.com/bytedance/sonic"
 	"github.com/gin-gonic/gin"
-	"github.com/go-playground/validator/v10"
+	validator "github.com/go-playground/validator/v10"
+	errorwrap "github.com/pkg/errors"
+
 	"github.com/kweaver-ai/adp/context-loader/agent-retrieval/server/infra/common"
 	myErr "github.com/kweaver-ai/adp/context-loader/agent-retrieval/server/infra/errors"
 	"github.com/kweaver-ai/adp/context-loader/agent-retrieval/server/infra/localize"
 	"github.com/kweaver-ai/adp/context-loader/agent-retrieval/server/infra/logger"
 	validatorv "github.com/kweaver-ai/adp/context-loader/agent-retrieval/server/infra/validator"
-	errorwrap "github.com/pkg/errors"
 )
 
 const (

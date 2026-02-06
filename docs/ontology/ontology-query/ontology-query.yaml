@@ -2050,6 +2050,136 @@ paths:
         type: string
       in: header
       required: true
+  /api/ontology-query/v1/knowledge-networks/{kn_id}/subgraph/objects:
+    summary: 基于一组对象实例组织关系子图
+    post:
+      requestBody:
+        description: 基于一组对象实例探索关系子图的请求体
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SubGraphQueryBaseOnObjects'
+            examples:
+              基于一组对象探索关系子图-request:
+                value:
+                  entries:
+                  - object_type_id: comment
+                    _instance_identity:
+                      c_commentid: 206158448803
+                  - object_type_id: comment
+                    _instance_identity:
+                      c_commentid: 755914262659
+                  - object_type_id: post
+                    _instance_identity:
+                      ps_postid: 481036361318
+        required: true
+      parameters:
+      - name: kn_id
+        description: 业务知识网络ID
+        schema:
+          type: string
+        in: path
+        required: true
+      - name: branch
+        description: 分支名称
+        schema:
+          type: string
+        in: query
+        required: false
+      - name: include_type_info
+        description: 是否包含对象类信息，默认false，不包含
+        schema:
+          type: boolean
+        in: query
+        required: false
+      - name: include_logic_params
+        description: 包含逻辑属性的计算参数，默认false，返回结果不包含逻辑属性的字段和值
+        schema:
+          type: boolean
+        in: query
+        required: false
+      - name: ignoring_store_cache
+        description: 是否忽略持久化查询，默认是false，不忽略，即走持久化查询
+        schema:
+          type: boolean
+        in: query
+        required: false
+      - name: exclude_system_properties
+        description: 需要排除的系统字段列表。可选值：_instance_id（实例ID）、_instance_identity（实例唯一标识）、_display（显示值）。如果指定了某个字段，则在返回的对象数据中不包含该字段。可以传递多个值，例如：?exclude_system_properties=_instance_id&exclude_system_properties=_display
+        schema:
+          type: array
+          items:
+            type: string
+            enum: ["_instance_id", "_instance_identity", "_display"]
+        style: form
+        explode: true
+        in: query
+        required: false
+      responses:
+        "200":
+          description: 成功返回关系子图
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ObjectSubGraphResponse'
+              examples:
+                基于一组对象探索关系子图-response:
+                  value:
+                    objects:
+                      comment-2.06158448803e+11:
+                        _instance_id: comment-2.06158448803e+11
+                        _instance_identity:
+                          c_commentid: 206158448803
+                        object_type_id: comment
+                        object_type_name: comment
+                        _display: "About Titian, stic manner cAbout Leona Lewis..."
+                        properties:
+                          c_commentid: 206158448803
+                          c_creationdate: 2010-07-24 00:04:01.000
+                          c_locationip: 186.169.83.109
+                          c_browserused: Firefox
+                          c_content: "About Titian, stic manner cAbout Leona Lewis..."
+                          c_length: 111
+                      comment-7.55914262659e+11:
+                        _instance_id: comment-7.55914262659e+11
+                        _instance_identity:
+                          c_commentid: 755914262659
+                        object_type_id: comment
+                        object_type_name: comment
+                        _display: "Original of the Species is a song by rock band U2..."
+                        properties:
+                          c_commentid: 755914262659
+                          c_creationdate: 2011-12-12 12:04:24.000
+                          c_locationip: 186.169.83.109
+                          c_browserused: Firefox
+                          c_content: "Original of the Species is a song by rock band U2..."
+                          c_length: 151
+                    isolated_objects:
+                      post-4.81036361318e+11:
+                        _instance_id: post-4.81036361318e+11
+                        _instance_identity:
+                          ps_postid: 481036361318
+                        object_type_id: post
+                        object_type_name: post
+                        _display: ""
+                        properties:
+                          ps_postid: 481036361318
+                          ps_creationdate: 2011-04-27 04:12:24.000
+                          ps_locationip: 31.216.154.26
+                          ps_browserused: Chrome
+                          ps_language: ""
+                          ps_content: ""
+                          ps_length: 0
+                    relation_paths:
+                    - relations:
+                      - relation_type_id: comment_replyof_comment
+                        relation_type_name: comment_replyof_comment
+                        source_object_id: comment-2.06158448803e+11
+                        target_object_id: comment-7.55914262659e+11
+                      length: 1
+                    overall_ms: 150
+      summary: 基于一组对象实例组织关系子图
+      description: 给定一组对象实例，按概念定义的关系，组织这些对象实例的关系子图
   /api/ontology-query/v1/knowledge-networks/{kn_id}/object-types/{ot_id}/properties:
     post:
       requestBody:
@@ -2440,7 +2570,7 @@ components:
           description: 操作符。
           enum:
           - in
-          - =
+          - '='
           - '!='
           - range
           - out_range
@@ -2448,8 +2578,8 @@ components:
           - not_like
           - '>'
           - '>='
-          - <
-          - <=
+          - '<'
+          - '<='
           type: string
     MetricRequiredParams:
       description: 指标模型查询的动态参数
@@ -2882,12 +3012,12 @@ components:
           description: 操作符。映射指标模型的属性时，此字段必须
           enum:
           - in
-          - =
+          - '='
           - '!='
           - '>'
           - '>='
-          - <
-          - <=
+          - '<'
+          - '<='
           type: string
     PageTurnQueryWithSearchAfter:
       description: 分页查询的第一次查询请求
@@ -3025,7 +3155,7 @@ components:
       type: object
       properties:
         objects:
-          description: 子图中的对象map，key是对象id，value是对象信息。动态数据字段，其值可以是基本类型、MetricProperty或OperatorProperty
+          description: 子图中参与关系的对象map，key是对象id，value是对象信息。动态数据字段，其值可以是基本类型、MetricProperty或OperatorProperty
           type: object
           additionalProperties:
             $ref: '#/components/schemas/ObjectInfoInSubgraph'
@@ -3034,6 +3164,11 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/RelationPath'
+        isolated_objects:
+          description: 子图中未建立关系的孤立对象map，key是对象id，value是对象信息。动态数据字段，其值可以是基本类型、MetricProperty或OperatorProperty
+          type: object
+          additionalProperties:
+            $ref: '#/components/schemas/ObjectInfoInSubgraph'
         total_count:
           description: 起点对象类的总条数
           type: integer
@@ -3522,6 +3657,10 @@ components:
         path_length:
           description: 探索子图的路径的最大长度
           type: integer
+        include_incomplete_path:
+          description: 是否包含不完整的路径。默认是false，不包含，只返回完整的路径
+          type: boolean
+          default: false
         sort:
           description: 对起点类的排序字段
           type: array
@@ -3537,6 +3676,30 @@ components:
           description: 上次查询返回的最后一个起点类对象的排序值。只对起点类生效。第一次查询不传此字段
           type: array
           items: {}
+    SubGraphQueryBaseOnObjects:
+      description: 基于一组对象实例探索关系子图的请求体
+      required:
+      - entries
+      type: object
+      properties:
+        entries:
+          description: 对象实例数组
+          type: array
+          items:
+            $ref: '#/components/schemas/InputObjectInstance'
+    InputObjectInstance:
+      description: 输入的对象实例
+      required:
+      - object_type_id
+      - _instance_identity
+      type: object
+      properties:
+        object_type_id:
+          description: 对象类型ID
+          type: string
+        _instance_identity:
+          description: 对象唯一标识，对应主键字段。key为主键属性名，value为对应的属性值
+          $ref: '#/components/schemas/InstanceIdentity'
     ActionType:
       description: 行动类信息
       required:
@@ -3703,8 +3866,6 @@ components:
       - field
       - operation
       - value
-      - limit_key
-      - limit_value
       type: object
       properties:
         field:
@@ -3720,14 +3881,17 @@ components:
           type: number
         limit_key:
           description: "执行径向搜索时使用的过滤和评分行为, k:返回最相似的limit_value个结果；max_distance:返回距\
-            离小于等于limit_value的结果；min_score：返回相似度分数大于等于limit_value的结果"
+            离小于等于limit_value的结果；min_score：返回相似度分数大于等于limit_value的结果。默认值为k"
           enum:
           - k
           - max_distance
           - min_score
           type: string
+          default: k
         limit_value:
-          description: 执行径向搜索使用的值
+          description: "执行径向搜索使用的值。默认值为100"
+          type: number
+          default: 100
         sub_conditions:
           description: knn下的子查询
           type: array
@@ -3911,7 +4075,7 @@ components:
         operation:
           description: 操作符
           enum:
-          - <
+          - '<'
           type: string
         value:
           description: 过滤值
@@ -4198,7 +4362,7 @@ components:
         operation:
           description: 操作符
           enum:
-          - <
+          - '<'
           type: string
         value:
           description: 过滤值

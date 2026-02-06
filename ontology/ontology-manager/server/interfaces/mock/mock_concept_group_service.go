@@ -84,18 +84,18 @@ func (mr *MockConceptGroupServiceMockRecorder) CheckConceptGroupExistByName(ctx,
 }
 
 // CreateConceptGroup mocks base method.
-func (m *MockConceptGroupService) CreateConceptGroup(ctx context.Context, tx *sql.Tx, conceptGroup *interfaces.ConceptGroup, mode string) (string, error) {
+func (m *MockConceptGroupService) CreateConceptGroup(ctx context.Context, tx *sql.Tx, conceptGroup *interfaces.ConceptGroup, mode string, validateDependency bool) (string, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "CreateConceptGroup", ctx, tx, conceptGroup, mode)
+	ret := m.ctrl.Call(m, "CreateConceptGroup", ctx, tx, conceptGroup, mode, validateDependency)
 	ret0, _ := ret[0].(string)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // CreateConceptGroup indicates an expected call of CreateConceptGroup.
-func (mr *MockConceptGroupServiceMockRecorder) CreateConceptGroup(ctx, tx, conceptGroup, mode interface{}) *gomock.Call {
+func (mr *MockConceptGroupServiceMockRecorder) CreateConceptGroup(ctx, tx, conceptGroup, mode, validateDependency interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateConceptGroup", reflect.TypeOf((*MockConceptGroupService)(nil).CreateConceptGroup), ctx, tx, conceptGroup, mode)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateConceptGroup", reflect.TypeOf((*MockConceptGroupService)(nil).CreateConceptGroup), ctx, tx, conceptGroup, mode, validateDependency)
 }
 
 // DeleteConceptGroupByID mocks base method.

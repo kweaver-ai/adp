@@ -18,8 +18,9 @@ import (
 	context "context"
 	reflect "reflect"
 
-	interfaces "github.com/kweaver-ai/adp/context-loader/agent-retrieval/server/interfaces"
 	gomock "go.uber.org/mock/gomock"
+
+	interfaces "github.com/kweaver-ai/adp/context-loader/agent-retrieval/server/interfaces"
 )
 
 // MockHydra is a mock of Hydra interface.

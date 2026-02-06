@@ -82,6 +82,7 @@ export interface EditorProps {
     type?: string;
     onChange?(value?: IStep[]): void;
     getPopupContainer?(): HTMLElement;
+    dagsId?: string;
 }
 
 const DefaultSteps: IStep[] = [

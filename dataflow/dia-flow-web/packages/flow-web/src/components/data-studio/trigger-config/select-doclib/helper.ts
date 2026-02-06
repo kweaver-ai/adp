@@ -108,3 +108,12 @@ const getIcon = {
 }
 
 export const getDocLibIcon = (type: DocLibType) => getIcon[type] || UserdoclibPng
+
+export enum DataSourceOperatorEnum {
+    AnyshareDataFile = '@anyshare-data/list-files',
+    S3DataFile = '@s3/list-objects',
+}
+
+export enum ParametersModeEnum {
+    Upload = 'upload',
+}

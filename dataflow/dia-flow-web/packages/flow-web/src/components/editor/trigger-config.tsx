@@ -31,12 +31,14 @@ export interface TriggerConfigProps {
   step?: IStep;
   onFinish?(step: IStep): void;
   onCancel?(): void;
+  dagsId?: string;
 }
 
 export const TriggerConfig: FC<TriggerConfigProps> = ({
   step,
   onFinish,
   onCancel,
+  dagsId,
 }) => {
   const { message, platform } = useContext(MicroAppContext);
   const [current, setCurrent] = useState(0);
@@ -302,6 +304,7 @@ export const TriggerConfig: FC<TriggerConfigProps> = ({
                 t={te}
                 parameters={parameters}
                 onChange={setParameters}
+                dagsId={dagsId}
               />
             ) : null}
             {currentAction?.allowDataSource ? (
@@ -309,6 +312,7 @@ export const TriggerConfig: FC<TriggerConfigProps> = ({
                 ref={dataSourceConfigRef}
                 step={dataSource}
                 onChange={setDataSource}
+                dagsId={dagsId}
               />
             ) : null}
           </div>

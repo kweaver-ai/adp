@@ -709,7 +709,7 @@ func Test_objectTypeAccess_ListObjectTypes(t *testing.T) {
 			   ots.f_doc_count, ots.f_storage_size, ots.f_update_time 
 			   FROM t_object_type AS ot JOIN t_object_type_status AS ots ON ot.f_id = ots.f_id 
 			   AND ot.f_kn_id = ots.f_kn_id AND ot.f_branch = ots.f_branch 
-			   WHERE instr(ot.f_name, ?) > 0 AND instr(ot.f_tags, ?) > 0 AND ot.f_branch = ? 
+			   WHERE (instr(ot.f_name, ?) > 0 OR instr(ot.f_id, ?) > 0) AND instr(ot.f_tags, ?) > 0 AND ot.f_branch = ? 
 			   AND ot.f_id IN (?,?) ORDER BY ot.ot.f_name ASC`
 
 			rows := sqlmock.NewRows([]string{
@@ -782,7 +782,7 @@ func Test_objectTypeAccess_GetObjectTypesTotal(t *testing.T) {
 				OTIDS:       []string{"ot1", "ot2"},
 			}
 			sqlStrWithAll := `SELECT COUNT(ot.f_id) FROM t_object_type AS ot 
-			WHERE instr(ot.f_name, ?) > 0 AND instr(ot.f_tags, ?) > 0 AND ot.f_branch = ? 
+			WHERE (instr(ot.f_name, ?) > 0 OR instr(ot.f_id, ?) > 0) AND instr(ot.f_tags, ?) > 0 AND ot.f_branch = ? 
 			AND ot.f_id IN (?,?)`
 
 			rows := sqlmock.NewRows([]string{"COUNT(ot.f_id)"}).AddRow(5)
@@ -1332,9 +1332,11 @@ func Test_objectTypeAccess_UpdateDataProperties(t *testing.T) {
 		}
 
 		Convey("UpdateDataProperties Success \n", func() {
+			smock.ExpectBegin()
 			smock.ExpectExec(sqlStr).WithArgs().WillReturnResult(sqlmock.NewResult(1, 1))
 
-			err := ota.UpdateDataProperties(testCtx, objectType)
+			tx, _ := ota.db.Begin()
+			err := ota.UpdateDataProperties(testCtx, tx, objectType)
 			So(err, ShouldBeNil)
 
 			if err := smock.ExpectationsWereMet(); err != nil {
@@ -1344,9 +1346,11 @@ func Test_objectTypeAccess_UpdateDataProperties(t *testing.T) {
 
 		Convey("UpdateDataProperties Failed \n", func() {
 			expectedErr := errors.New("some error")
+			smock.ExpectBegin()
 			smock.ExpectExec(sqlStr).WithArgs().WillReturnError(expectedErr)
 
-			err := ota.UpdateDataProperties(testCtx, objectType)
+			tx, _ := ota.db.Begin()
+			err := ota.UpdateDataProperties(testCtx, tx, objectType)
 			So(err, ShouldResemble, expectedErr)
 
 			if err := smock.ExpectationsWereMet(); err != nil {
@@ -1355,9 +1359,11 @@ func Test_objectTypeAccess_UpdateDataProperties(t *testing.T) {
 		})
 
 		Convey("UpdateDataProperties RowsAffected != 1 \n", func() {
+			smock.ExpectBegin()
 			smock.ExpectExec(sqlStr).WithArgs().WillReturnResult(sqlmock.NewResult(0, 0))
 
-			err := ota.UpdateDataProperties(testCtx, objectType)
+			tx, _ := ota.db.Begin()
+			err := ota.UpdateDataProperties(testCtx, tx, objectType)
 			So(err, ShouldBeNil)
 
 			if err := smock.ExpectationsWereMet(); err != nil {
@@ -1367,9 +1373,11 @@ func Test_objectTypeAccess_UpdateDataProperties(t *testing.T) {
 
 		Convey("UpdateDataProperties RowsAffected error \n", func() {
 			expectedErr := errors.New("Get RowsAffected error")
+			smock.ExpectBegin()
 			smock.ExpectExec(sqlStr).WithArgs().WillReturnResult(sqlmock.NewErrorResult(expectedErr))
 
-			err := ota.UpdateDataProperties(testCtx, objectType)
+			tx, _ := ota.db.Begin()
+			err := ota.UpdateDataProperties(testCtx, tx, objectType)
 			So(err, ShouldResemble, expectedErr)
 
 			if err := smock.ExpectationsWereMet(); err != nil {
@@ -1870,7 +1878,7 @@ func Test_objectTypeAccess_ProcessQueryCondition(t *testing.T) {
 			}
 
 			expectedSqlStr := fmt.Sprintf("SELECT COUNT(ot.f_id) FROM %s AS ot "+
-				"WHERE instr(ot.f_name, ?) > 0 AND ot.f_kn_id = ? AND ot.f_branch = ?", OT_TABLE_NAME)
+				"WHERE (instr(ot.f_name, ?) > 0 OR instr(ot.f_id, ?) > 0) AND ot.f_kn_id = ? AND ot.f_branch = ?", OT_TABLE_NAME)
 
 			sqlBuilder := processQueryCondition(query, sqlBuilder)
 			sqlStr, _, _ := sqlBuilder.ToSql()

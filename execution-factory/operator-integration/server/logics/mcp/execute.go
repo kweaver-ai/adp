@@ -5,20 +5,20 @@ import (
 	"fmt"
 	"net/http"
 
-	o11y "github.com/kweaver-ai/kweaver-go-lib/observability"
 	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/drivenadapters"
 	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/infra/common"
 	infraerrors "github.com/kweaver-ai/adp/execution-factory/operator-integration/server/infra/errors"
 	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/infra/telemetry"
 	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/interfaces"
 	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/logics/metric"
+	o11y "github.com/kweaver-ai/kweaver-go-lib/observability"
 	"github.com/mark3labs/mcp-go/mcp"
 )
 
 type CallToolRequest struct {
-	MCPCoreInfo *interfaces.MCPCoreConfigInfo
-	ToolName    string         `json:"tool_name"` // 工具名称
-	Params      map[string]any `json:"params"`    // 工具参数
+	*ListToolsRequest
+	ToolName string         `json:"tool_name"` // 工具名称
+	Params   map[string]any `json:"params"`    // 工具参数
 }
 
 type CallToolResponse struct {
@@ -26,7 +26,10 @@ type CallToolResponse struct {
 }
 
 type ListToolsRequest struct {
-	MCPCoreInfo *interfaces.MCPCoreConfigInfo
+	CreationType interfaces.MCPCreationType
+	MCPID        string
+	Version      int
+	MCPCoreInfo  *interfaces.MCPCoreConfigInfo
 }
 
 type ListToolsResponse struct {
@@ -75,6 +78,9 @@ func (s *mcpServiceImpl) GetMCPTools(ctx context.Context, req *interfaces.MCPPro
 	}
 
 	listToolsReq := &ListToolsRequest{
+		CreationType: interfaces.MCPCreationType(serverConfig.CreationType),
+		MCPID:        req.MCPID,
+		Version:      serverConfig.Version,
 		MCPCoreInfo: &interfaces.MCPCoreConfigInfo{
 			Mode:    interfaces.MCPMode(serverConfig.Mode),
 			URL:     serverConfig.URL,
@@ -124,10 +130,15 @@ func (s *mcpServiceImpl) CallMCPTool(ctx context.Context, req *interfaces.MCPPro
 	}
 
 	callToolReq := &CallToolRequest{
-		MCPCoreInfo: &interfaces.MCPCoreConfigInfo{
-			Mode:    interfaces.MCPMode(serverConfig.Mode),
-			URL:     serverConfig.URL,
-			Headers: nil,
+		ListToolsRequest: &ListToolsRequest{
+			CreationType: interfaces.MCPCreationType(serverConfig.CreationType),
+			MCPID:        req.MCPID,
+			Version:      serverConfig.Version,
+			MCPCoreInfo: &interfaces.MCPCoreConfigInfo{
+				Mode:    interfaces.MCPMode(serverConfig.Mode),
+				URL:     serverConfig.URL,
+				Headers: nil,
+			},
 		},
 		ToolName: req.ToolName,
 		Params:   req.Parameters,
@@ -160,10 +171,16 @@ func (s *mcpServiceImpl) CallMCPTool(ctx context.Context, req *interfaces.MCPPro
 }
 
 func (s *mcpServiceImpl) callTool(ctx context.Context, req *CallToolRequest) (*CallToolResponse, error) {
-	mcpClient, err := drivenadapters.NewMCPClient(ctx, s.logger, req.MCPCoreInfo)
+	mcpClient, err := s.getMCPClient(ctx, req.ListToolsRequest)
 	if err != nil {
+		s.logger.WithContext(ctx).Errorf("get mcp client error: %v", err)
 		return nil, err
 	}
+	defer func() {
+		if e := mcpClient.Close(); e != nil {
+			s.logger.WithContext(ctx).Errorf("close mcp client error: %v", e)
+		}
+	}()
 
 	callToolRequest := mcp.CallToolRequest{}
 	callToolRequest.Params.Name = req.ToolName
@@ -171,6 +188,7 @@ func (s *mcpServiceImpl) callTool(ctx context.Context, req *CallToolRequest) (*C
 
 	result, err := mcpClient.CallTool(ctx, callToolRequest)
 	if err != nil {
+		s.logger.WithContext(ctx).Errorf("call mcp tool error: %v", err)
 		return nil, infraerrors.NewHTTPError(ctx, http.StatusGatewayTimeout, infraerrors.ErrExtMCPCallToolFailed, err.Error())
 	}
 
@@ -182,11 +200,32 @@ func (s *mcpServiceImpl) callTool(ctx context.Context, req *CallToolRequest) (*C
 	}, nil
 }
 
-func (s *mcpServiceImpl) listTools(ctx context.Context, req *ListToolsRequest) (*ListToolsResponse, error) {
-	mcpClient, err := drivenadapters.NewMCPClient(ctx, s.logger, req.MCPCoreInfo)
+func (s *mcpServiceImpl) getMCPClient(ctx context.Context, req *ListToolsRequest) (mcpClient interfaces.MCPClient, err error) {
+	if req.CreationType != interfaces.MCPCreationTypeToolImported {
+		mcpClient, err = drivenadapters.NewMCPClient(ctx, req.MCPCoreInfo)
+		return mcpClient, err
+	}
+	var instance *interfaces.MCPServerInstance
+	instance, err = s.MCPInstanceService.GetMCPInstance(ctx, req.MCPID, req.Version)
 	if err != nil {
+		s.logger.WithContext(ctx).Errorf("get mcp instance error: %v", err)
 		return nil, err
 	}
+	mcpClient, err = drivenadapters.NewInProcessMCPClient(ctx, instance.MCPServer)
+	return mcpClient, err
+}
+
+func (s *mcpServiceImpl) listTools(ctx context.Context, req *ListToolsRequest) (*ListToolsResponse, error) {
+	mcpClient, err := s.getMCPClient(ctx, req)
+	if err != nil {
+		s.logger.WithContext(ctx).Errorf("get mcp client error: %v", err)
+		return nil, err
+	}
+	defer func() {
+		if e := mcpClient.Close(); e != nil {
+			s.logger.WithContext(ctx).Errorf("close mcp client error: %v", e)
+		}
+	}()
 
 	initInfo := mcpClient.GetInitInfo(ctx)
 
@@ -204,9 +243,9 @@ func (s *mcpServiceImpl) listTools(ctx context.Context, req *ListToolsRequest) (
 }
 
 // ExecuteTool 执行MCP工具
-func (s *mcpServiceImpl) ExecuteTool(ctx context.Context, req *interfaces.MCPExecuteToolRequest) (*interfaces.HTTPResponse, error) {
+func (s *mcpServiceImpl) ExecuteTool(ctx context.Context, mcpToolID string, params interfaces.HTTPRequestParams) (*interfaces.HTTPResponse, error) {
 	// 获取MCP工具配置信息
-	tool, err := s.DBMCPTool.SelectByMCPToolID(ctx, nil, req.MCPToolID)
+	tool, err := s.DBMCPTool.SelectByMCPToolID(ctx, nil, mcpToolID)
 	if err != nil {
 		s.logger.Warnf("select mcp tool failed, err: %v", err)
 		return nil, infraerrors.DefaultHTTPError(ctx, http.StatusInternalServerError, "select mcp tool failed")
@@ -220,7 +259,7 @@ func (s *mcpServiceImpl) ExecuteTool(ctx context.Context, req *interfaces.MCPExe
 	executeToolReq := &interfaces.ExecuteToolReq{
 		BoxID:             tool.BoxID,
 		ToolID:            tool.ToolID,
-		HTTPRequestParams: req.HTTPRequestParams,
+		HTTPRequestParams: params,
 	}
 	executeToolResp, err := s.ToolService.ExecuteToolCore(ctx, executeToolReq)
 	if err != nil {

@@ -3325,6 +3325,30 @@ func (m *mgnt) HandleAuditorsMacth(ctx context.Context, msg *AuditorInfo) error 
 	return nil
 }
 
+// getLastTaskIDs 递归获取步骤列表中的最后一个(或多个)任务ID
+// 对于普通步骤,返回该步骤的ID
+// 对于并行分支,递归收集所有子分支的最后任务ID
+func getLastTaskIDs(steps []entity.Step) []string {
+	if len(steps) == 0 {
+		return []string{}
+	}
+
+	lastStep := steps[len(steps)-1]
+
+	// 如果最后一个步骤是并行节点,递归获取其所有分支的最后任务
+	if lastStep.Operator == common.ControlFlowParallel {
+		result := []string{}
+		for _, branch := range lastStep.Branches {
+			branchLastTasks := getLastTaskIDs(branch.Steps)
+			result = append(result, branchLastTasks...)
+		}
+		return result
+	}
+
+	// 否则,返回该步骤的ID
+	return []string{lastStep.ID}
+}
+
 func (m *mgnt) buildTasks(triggerStep *entity.Step, steps []entity.Step, tasks *[]entity.Task, bch *entity.Branch, stepList *[]map[string]interface{}, inheritChecks *entity.PreChecks, branchsID *string) { //nolint
 	prechecks := entity.PreChecks{}
 	if inheritChecks != nil {
@@ -3346,9 +3370,11 @@ func (m *mgnt) buildTasks(triggerStep *entity.Step, steps []entity.Step, tasks *
 			*stepList = append(*stepList, conMap...)
 		}
 	}
+	dependOn := []string{} // 在循环外声明,以便保留并行分支设置的依赖数组
 	for _, step := range steps {
-		dependOn := []string{}
-		if len(*tasks) != 0 {
+		// 只有在dependOn为空时才从上一个task计算依赖
+		// 这样可以保留并行分支设置的多个依赖项
+		if len(dependOn) == 0 && len(*tasks) != 0 {
 			dependOn = append(dependOn, (*tasks)[len(*tasks)-1].ID)
 		}
 		var stepMap = map[string]interface{}{}
@@ -3371,6 +3397,37 @@ func (m *mgnt) buildTasks(triggerStep *entity.Step, steps []entity.Step, tasks *
 			for _, bch := range step.Branches {
 				m.buildTasks(triggerStep, bch.Steps, tasks, &bch, stepList, &prechecks, &step.ID)
 			}
+		} else if step.Operator == common.ControlFlowParallel {
+			// 并行分支节点处理
+			parallelBranchLastTasks := []string{}
+
+			// 保存进入并行分支前的依赖节点
+			// 所有并行分支的第一个节点都应该依赖这个节点
+			branchEntryDependOn := dependOn
+
+			for _, branch := range step.Branches {
+				// 记录当前tasks的长度，用于确定分支起始位置
+				branchStartIdx := len(*tasks)
+
+				// 递归处理每个分支内的 steps
+				// 这样可以支持嵌套的并行分支、条件分支、循环等控制流结构
+				m.buildTasks(triggerStep, branch.Steps, tasks, &branch, stepList, &prechecks, &step.ID)
+
+				// 修正该分支第一个task的依赖关系
+				// 并行分支中不同分支的step不会互相依赖
+				// 各个分支第一个节点依赖的都是进入并行分支前的那个节点
+				if branchStartIdx < len(*tasks) {
+					(*tasks)[branchStartIdx].DependOn = branchEntryDependOn
+				}
+
+				// 找到该分支的最后一个(或多个)task ID
+				// 使用递归函数处理嵌套并行分支的情况
+				branchLastTasks := getLastTaskIDs(branch.Steps)
+				parallelBranchLastTasks = append(parallelBranchLastTasks, branchLastTasks...)
+			}
+
+			// 更新dependOn，后续step依赖所有分支的最后一个task
+			dependOn = parallelBranchLastTasks
 		} else if step.Operator == common.Loop {
 			task := entity.Task{
 				ID:         step.ID,
@@ -3428,6 +3485,12 @@ func (m *mgnt) buildTasks(triggerStep *entity.Step, steps []entity.Step, tasks *
 			task.TimeoutSecs += 60
 
 			*tasks = append(*tasks, task)
+		}
+
+		// 清空dependOn,让下一个step重新计算依赖
+		// 但并行分支除外,因为它已经设置了正确的多依赖数组
+		if step.Operator != common.ControlFlowParallel {
+			dependOn = []string{}
 		}
 	}
 }

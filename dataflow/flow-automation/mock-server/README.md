@@ -12,6 +12,10 @@ This directory contains mock services that simulate the Kubernetes cluster servi
    - Endpoint: `GET /api/deploy-manager/v1/access-addr/app`
    - Purpose: Mock cluster access information
 
+3. **Authorization Service** (port 30920)
+   - Endpoint: `POST /api/authorization/v1/operation-check`
+   - Purpose: Mock authorization permission checks and policy management
+
 ## Usage
 
 ### Option 1: Using the start script (recommended)
@@ -36,11 +40,13 @@ go run main.go
 The mock services use the following default ports:
 - User Management: 30980
 - Deploy Service: 9703
+- Authorization: 30920
 
 You can override these by setting environment variables:
 ```bash
 export USER_MANAGEMENT_MOCK_PORT=30980
 export DEPLOY_SERVICE_MOCK_PORT=9703
+export AUTHORIZATION_MOCK_PORT=30920
 ```
 
 ## Integration with Main Application
@@ -61,3 +67,4 @@ To add more mock services:
 Each mock service provides a health check endpoint:
 - User Management: http://localhost:30980/health
 - Deploy Service: http://localhost:9703/health
+- Authorization: http://localhost:30920/health

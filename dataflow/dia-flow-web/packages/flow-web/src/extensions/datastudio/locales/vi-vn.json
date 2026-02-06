@@ -69,7 +69,7 @@
     "db.addTag": "Thêm mới nhãn",
     "db.updateTag": "Cập nhật nhãn",
     "db.delTag": "Nhãn đã bị xóa",
-    "MdlDataDataview": "数据视图",
-    "MdlDataDataviewDes": "数据视图数据源",
-    "WriteFile":"文档库写入"
+    "MdlDataDataview": "View Dữ Liệu",
+    "MdlDataDataviewDes": "Nguồn Dữ Liệu View Dữ Liệu",
+    "WriteFile":"Ghi Thư Viện Tài Liệu"
 }

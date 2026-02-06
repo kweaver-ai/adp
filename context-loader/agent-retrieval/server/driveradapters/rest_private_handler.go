@@ -10,6 +10,7 @@ package driveradapters
 
 import (
 	"github.com/gin-gonic/gin"
+
 	"github.com/kweaver-ai/adp/context-loader/agent-retrieval/server/driveradapters/knactionrecall"
 	"github.com/kweaver-ai/adp/context-loader/agent-retrieval/server/driveradapters/knlogicpropertyresolver"
 	"github.com/kweaver-ai/adp/context-loader/agent-retrieval/server/driveradapters/knontologyjob"

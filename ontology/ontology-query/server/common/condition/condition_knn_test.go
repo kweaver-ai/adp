@@ -73,7 +73,7 @@ func Test_NewKnnCond(t *testing.T) {
 			So(cond, ShouldNotBeNil)
 		})
 
-		Convey("成功 - AllField", func() {
+		Convey("失败 - AllField", func() {
 			cfg := &CondCfg{
 				Name:      AllField,
 				Operation: OperationKNN,
@@ -86,8 +86,8 @@ func Test_NewKnnCond(t *testing.T) {
 				},
 			}
 			cond, err := NewKnnCond(ctx, cfg, CUSTOM, fieldsMap)
-			So(err, ShouldBeNil)
-			So(cond, ShouldNotBeNil)
+			So(err.Error(), ShouldContainSubstring, "the knn operation does not support the [*] query, please specify the field name explicitly")
+			So(cond, ShouldBeNil)
 		})
 
 		Convey("成功 - 带子条件", func() {

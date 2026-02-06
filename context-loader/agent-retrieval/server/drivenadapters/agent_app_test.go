@@ -10,82 +10,83 @@ import (
 	"errors"
 	"testing"
 
+	"github.com/smartystreets/goconvey/convey"
+	"go.uber.org/mock/gomock"
+
 	"github.com/kweaver-ai/adp/context-loader/agent-retrieval/server/infra/config"
 	"github.com/kweaver-ai/adp/context-loader/agent-retrieval/server/interfaces"
 	"github.com/kweaver-ai/adp/context-loader/agent-retrieval/server/mocks"
-	. "github.com/smartystreets/goconvey/convey"
-	"go.uber.org/mock/gomock"
 )
 
 // TestParseResultFromAgentV1Answer 测试 parseResultFromAgentV1Answer 函数
 func TestParseResultFromAgentV1Answer(t *testing.T) {
-	Convey("TestParseResultFromAgentV1Answer", t, func() {
-		Convey("正常 JSON", func() {
+	convey.Convey("TestParseResultFromAgentV1Answer", t, func() {
+		convey.Convey("正常 JSON", func() {
 			input := `{"key": "value"}`
 			result, err := parseResultFromAgentV1Answer(input)
-			So(err, ShouldBeNil)
-			So(result, ShouldEqual, `{"key": "value"}`)
+			convey.So(err, convey.ShouldBeNil)
+			convey.So(result, convey.ShouldEqual, `{"key": "value"}`)
 		})
 
-		Convey("带前缀文本的 JSON", func() {
+		convey.Convey("带前缀文本的 JSON", func() {
 			input := `Here is the result: {"key": "value"}`
 			result, err := parseResultFromAgentV1Answer(input)
-			So(err, ShouldBeNil)
-			So(result, ShouldEqual, `{"key": "value"}`)
+			convey.So(err, convey.ShouldBeNil)
+			convey.So(result, convey.ShouldEqual, `{"key": "value"}`)
 		})
 
-		Convey("带转义字符的 JSON", func() {
+		convey.Convey("带转义字符的 JSON", func() {
 			input := `{"key": "value with \\n newline"}`
 			result, err := parseResultFromAgentV1Answer(input)
-			So(err, ShouldBeNil)
-			So(result, ShouldContainSubstring, "value with")
+			convey.So(err, convey.ShouldBeNil)
+			convey.So(result, convey.ShouldContainSubstring, "value with")
 		})
 
-		Convey("无效格式 - 无大括号", func() {
+		convey.Convey("无效格式 - 无大括号", func() {
 			input := `no json here`
 			_, err := parseResultFromAgentV1Answer(input)
-			So(err, ShouldNotBeNil)
+			convey.So(err, convey.ShouldNotBeNil)
 		})
 
-		Convey("空字符串", func() {
+		convey.Convey("空字符串", func() {
 			_, err := parseResultFromAgentV1Answer("")
-			So(err, ShouldNotBeNil)
+			convey.So(err, convey.ShouldNotBeNil)
 		})
 	})
 }
 
 // TestParseMetricMissingParamsFromError 测试 parseMetricMissingParamsFromError 函数
 func TestParseMetricMissingParamsFromError(t *testing.T) {
-	Convey("TestParseMetricMissingParamsFromError", t, func() {
-		Convey("正常错误消息", func() {
+	convey.Convey("TestParseMetricMissingParamsFromError", t, func() {
+		convey.Convey("正常错误消息", func() {
 			result := parseMetricMissingParamsFromError("test_prop", "缺少时间参数")
-			So(result, ShouldNotBeNil)
-			So(result.Property, ShouldEqual, "test_prop")
-			So(result.ErrorMsg, ShouldEqual, "缺少时间参数")
+			convey.So(result, convey.ShouldNotBeNil)
+			convey.So(result.Property, convey.ShouldEqual, "test_prop")
+			convey.So(result.ErrorMsg, convey.ShouldEqual, "缺少时间参数")
 		})
 
-		Convey("空错误消息", func() {
+		convey.Convey("空错误消息", func() {
 			result := parseMetricMissingParamsFromError("test_prop", "")
-			So(result, ShouldNotBeNil)
-			So(result.Property, ShouldEqual, "test_prop")
-			So(result.ErrorMsg, ShouldEqual, "")
+			convey.So(result, convey.ShouldNotBeNil)
+			convey.So(result.Property, convey.ShouldEqual, "test_prop")
+			convey.So(result.ErrorMsg, convey.ShouldEqual, "")
 		})
 	})
 }
 
 // TestParseOperatorMissingParamsFromError 测试 parseOperatorMissingParamsFromError 函数
 func TestParseOperatorMissingParamsFromError(t *testing.T) {
-	Convey("TestParseOperatorMissingParamsFromError", t, func() {
+	convey.Convey("TestParseOperatorMissingParamsFromError", t, func() {
 		result := parseOperatorMissingParamsFromError("test_prop", "缺少参数")
-		So(result, ShouldNotBeNil)
-		So(result.Property, ShouldEqual, "test_prop")
-		So(result.ErrorMsg, ShouldEqual, "缺少参数")
+		convey.So(result, convey.ShouldNotBeNil)
+		convey.So(result.Property, convey.ShouldEqual, "test_prop")
+		convey.So(result.ErrorMsg, convey.ShouldEqual, "缺少参数")
 	})
 }
 
 // TestAPIChat_Success 测试 APIChat 成功场景
 func TestAPIChat_Success(t *testing.T) {
-	Convey("TestAPIChat_Success", t, func() {
+	convey.Convey("TestAPIChat_Success", t, func() {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 
@@ -96,7 +97,7 @@ func TestAPIChat_Success(t *testing.T) {
 
 		client := &agentClient{
 			logger:      mockLogger,
-			baseURL:     "http://localhost:8080/api/agent-app",
+			baseURL:     "http://localhost:8080/api/agent-factory",
 			httpClient:  mockHTTPClient,
 			DeployAgent: config.DeployAgentConfig{},
 		}
@@ -116,14 +117,14 @@ func TestAPIChat_Success(t *testing.T) {
 			}, nil)
 
 		resp, err := client.APIChat(ctx, req)
-		So(err, ShouldBeNil)
-		So(resp, ShouldNotBeNil)
+		convey.So(err, convey.ShouldBeNil)
+		convey.So(resp, convey.ShouldNotBeNil)
 	})
 }
 
 // TestAPIChat_HTTPError 测试 APIChat HTTP 错误
 func TestAPIChat_HTTPError(t *testing.T) {
-	Convey("TestAPIChat_HTTPError", t, func() {
+	convey.Convey("TestAPIChat_HTTPError", t, func() {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 
@@ -135,7 +136,7 @@ func TestAPIChat_HTTPError(t *testing.T) {
 
 		client := &agentClient{
 			logger:      mockLogger,
-			baseURL:     "http://localhost:8080/api/agent-app",
+			baseURL:     "http://localhost:8080/api/agent-factory",
 			httpClient:  mockHTTPClient,
 			DeployAgent: config.DeployAgentConfig{},
 		}
@@ -151,6 +152,6 @@ func TestAPIChat_HTTPError(t *testing.T) {
 			Return(0, nil, errors.New("connection refused"))
 
 		_, err := client.APIChat(ctx, req)
-		So(err, ShouldNotBeNil)
+		convey.So(err, convey.ShouldNotBeNil)
 	})
 }

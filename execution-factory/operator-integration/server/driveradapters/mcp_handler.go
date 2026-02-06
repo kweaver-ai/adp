@@ -3,11 +3,11 @@ package driveradapters
 import (
 	"sync"
 
+	"github.com/gin-gonic/gin"
 	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/drivenadapters"
 	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/driveradapters/mcp"
 	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/infra/config"
 	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/interfaces"
-	"github.com/gin-gonic/gin"
 )
 
 type MCPRestHandler interface {
@@ -54,16 +54,8 @@ func (r *mcpRestHandler) RegisterPrivate(engine *gin.RouterGroup) {
 	mcpProxyGroup.POST("/:mcp_id/tool/call", r.MCPPrivateHandler.CallMCPTool)
 
 	// MCP 内置相关接口
-	mcpGroup.POST("/intcomp/register",
-		middlewareBusinessDomain(true, true),
-		r.MCPPrivateHandler.RegisterBuiltinMCPServerPrivate)
-	mcpGroup.POST("/intcomp/unregister/:mcp_id",
-		middlewareBusinessDomain(true, true),
-		r.MCPPrivateHandler.UnregisterBuiltinMCPServerPrivate)
-
-	// MCP 执行相关接口
-	// 执行MCP工具 POST /api/agent-operator-integration/internal-v1/mcp/execute/tool/{mcp_tool_id}
-	mcpGroup.POST("/execute/tool/:mcp_tool_id", r.MCPPrivateHandler.ExecuteTool)
+	mcpGroup.POST("/intcomp/register", middlewareBusinessDomain(true, true), r.MCPPrivateHandler.RegisterBuiltinMCPServerPrivate)
+	mcpGroup.POST("/intcomp/unregister/:mcp_id", middlewareBusinessDomain(true, true), r.MCPPrivateHandler.UnregisterBuiltinMCPServerPrivate)
 }
 
 func (r *mcpRestHandler) RegisterPublic(engine *gin.RouterGroup) {

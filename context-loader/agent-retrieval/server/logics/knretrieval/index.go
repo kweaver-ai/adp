@@ -13,7 +13,12 @@ import (
 	"github.com/kweaver-ai/adp/context-loader/agent-retrieval/server/drivenadapters"
 	"github.com/kweaver-ai/adp/context-loader/agent-retrieval/server/infra/config"
 	"github.com/kweaver-ai/adp/context-loader/agent-retrieval/server/interfaces"
+	"github.com/kweaver-ai/adp/context-loader/agent-retrieval/server/logics/knrerank"
 )
+
+// useLocalRerank Feature Flag: 是否使用本地Rerank
+// 迁移验证通过后改为true，最终删除此开关和远程调用代码
+const useLocalRerank = true
 
 type knRetrievalServiceImpl struct {
 	logger                interfaces.Logger
@@ -21,6 +26,8 @@ type knRetrievalServiceImpl struct {
 	ontologyQueryAccess   interfaces.DrivenOntologyQuery
 	ontologyManagerAccess interfaces.OntologyManagerAccess
 	dataRetrieval         interfaces.DataRetrieval
+	knReranker            *knrerank.KnowledgeReranker
+	useLocalRerank        bool
 }
 
 var (
@@ -30,12 +37,20 @@ var (
 
 func NewKnRetrievalService() interfaces.IKnRetrievalService {
 	krOnce.Do(func() {
+		conf := config.NewConfigLoader()
+		logger := conf.GetLogger()
+
+		// 创建统一的mf-model-api客户端（同时提供LLM和Rerank能力）
+		mfModelClient := drivenadapters.NewMFModelAPIClient()
+
 		knRetrievalService = &knRetrievalServiceImpl{
-			logger:                config.NewConfigLoader().GetLogger(),
+			logger:                logger,
 			agentClient:           drivenadapters.NewAgentAppClient(),
 			ontologyQueryAccess:   drivenadapters.NewOntologyQueryAccess(),
 			ontologyManagerAccess: drivenadapters.NewOntologyManagerAccess(),
 			dataRetrieval:         drivenadapters.NewDataRetrievalClient(),
+			knReranker:            knrerank.NewKnowledgeReranker(mfModelClient, logger), // 单例
+			useLocalRerank:        useLocalRerank,
 		}
 	})
 	return knRetrievalService

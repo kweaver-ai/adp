@@ -43,6 +43,12 @@ func main() {
 	// Business System Service Mock (port 8085)
 	go startBusinessSystemMock()
 
+	// Authorization Service Mock (port 30920)
+	go startAuthorizationMock()
+
+	// OSS Gateway Service Mock (port 9002)
+	go startOSSGatewayMock()
+
 	fmt.Println("Mock services started:")
 	fmt.Println("  - User Management Service: http://localhost:30980")
 	fmt.Println("  - Deploy Service: http://localhost:9703")
@@ -50,6 +56,8 @@ func main() {
 	fmt.Println("  - Hydra Admin Service: http://localhost:4445")
 	fmt.Println("  - Hydra Public Service: http://localhost:4444")
 	fmt.Println("  - Business System Service: http://localhost:8085")
+	fmt.Println("  - Authorization Service: http://localhost:30920")
+	fmt.Println("  - OSS Gateway Service: http://localhost:9002")
 	fmt.Println("Press Ctrl+C to stop...")
 
 	select {}
@@ -341,5 +349,292 @@ func startBusinessSystemMock() {
 	log.Printf("[BusinessSystem] Starting mock server on port %s", port)
 	if err := router.Run(":" + port); err != nil {
 		log.Fatalf("[BusinessSystem] Failed to start: %v", err)
+	}
+}
+
+func startAuthorizationMock() {
+	router := gin.New()
+	router.Use(gin.Recovery())
+
+	// Mock operation permission check endpoint
+	router.POST("/api/authorization/v1/operation-check", func(c *gin.Context) {
+		var requestBody map[string]interface{}
+		if err := c.BindJSON(&requestBody); err != nil {
+			log.Printf("[Authorization] Invalid request body: %v", err)
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body"})
+			return
+		}
+		log.Printf("[Authorization] Received operation-check request: %+v", requestBody)
+
+		// Return success with result: true (permission granted)
+		c.JSON(http.StatusOK, gin.H{
+			"result": true,
+		})
+	})
+
+	// Mock create policy endpoint
+	router.POST("/api/authorization/v1/policy", func(c *gin.Context) {
+		var requestBody []map[string]interface{}
+		if err := c.BindJSON(&requestBody); err != nil {
+			log.Printf("[Authorization] Invalid request body: %v", err)
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body"})
+			return
+		}
+		log.Printf("[Authorization] Received create policy request: %+v", requestBody)
+		c.JSON(http.StatusOK, gin.H{"status": "success"})
+	})
+
+	// Mock update policy endpoint
+	router.PUT("/api/authorization/v1/policy/:policy_ids", func(c *gin.Context) {
+		policyIDs := c.Param("policy_ids")
+		var requestBody []map[string]interface{}
+		if err := c.BindJSON(&requestBody); err != nil {
+			log.Printf("[Authorization] Invalid request body: %v", err)
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body"})
+			return
+		}
+		log.Printf("[Authorization] Received update policy request for IDs %s: %+v", policyIDs, requestBody)
+		c.JSON(http.StatusOK, gin.H{"status": "success"})
+	})
+
+	// Mock delete policy endpoint
+	router.POST("/api/authorization/v1/policy-delete", func(c *gin.Context) {
+		var requestBody map[string]interface{}
+		if err := c.BindJSON(&requestBody); err != nil {
+			log.Printf("[Authorization] Invalid request body: %v", err)
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body"})
+			return
+		}
+		log.Printf("[Authorization] Received delete policy request: %+v", requestBody)
+		c.JSON(http.StatusOK, gin.H{"status": "success"})
+	})
+
+	// Mock resource filter endpoint
+	router.POST("/api/authorization/v1/resource-filter", func(c *gin.Context) {
+		var requestBody map[string]interface{}
+		if err := c.BindJSON(&requestBody); err != nil {
+			log.Printf("[Authorization] Invalid request body: %v", err)
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body"})
+			return
+		}
+		log.Printf("[Authorization] Received resource-filter request: %+v", requestBody)
+
+		// Return the same resources that were sent (all pass the filter)
+		resources := requestBody["resources"]
+		if resources == nil {
+			resources = []interface{}{}
+		}
+		c.JSON(http.StatusOK, resources)
+	})
+
+	// Mock resource operation list endpoint
+	router.POST("/api/authorization/v1/resource-operation", func(c *gin.Context) {
+		var requestBody map[string]interface{}
+		if err := c.BindJSON(&requestBody); err != nil {
+			log.Printf("[Authorization] Invalid request body: %v", err)
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body"})
+			return
+		}
+		log.Printf("[Authorization] Received resource-operation request: %+v", requestBody)
+
+		// Return mock operation list for each resource
+		resources := []gin.H{}
+		if reqResources, ok := requestBody["resources"].([]interface{}); ok {
+			for _, res := range reqResources {
+				if resMap, ok := res.(map[string]interface{}); ok {
+					resources = append(resources, gin.H{
+						"id":        resMap["id"],
+						"operation": []string{"read", "write", "delete", "execute"},
+					})
+				}
+			}
+		}
+		c.JSON(http.StatusOK, resources)
+	})
+
+	// Mock resource list endpoint
+	router.POST("/api/authorization/v1/resource-list", func(c *gin.Context) {
+		var requestBody map[string]interface{}
+		if err := c.BindJSON(&requestBody); err != nil {
+			log.Printf("[Authorization] Invalid request body: %v", err)
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body"})
+			return
+		}
+		log.Printf("[Authorization] Received resource-list request: %+v", requestBody)
+
+		// Return empty resource list
+		c.JSON(http.StatusOK, []interface{}{})
+	})
+
+	// Health check
+	router.GET("/health", func(c *gin.Context) {
+		c.JSON(http.StatusOK, gin.H{"status": "ok", "service": "authorization-mock"})
+	})
+
+	port := os.Getenv("AUTHORIZATION_MOCK_PORT")
+	if port == "" {
+		port = "30920"
+	}
+
+	log.Printf("[Authorization] Starting mock server on port %s", port)
+	if err := router.Run(":" + port); err != nil {
+		log.Fatalf("[Authorization] Failed to start: %v", err)
+	}
+}
+
+func startOSSGatewayMock() {
+	router := gin.New()
+	router.Use(gin.Recovery())
+
+	// Mock get default storage endpoint
+	router.GET("/api/ossgateway/v1/default-storage", func(c *gin.Context) {
+		log.Printf("[OSSGateway] Received get default storage request")
+
+		response := gin.H{
+			"storage_id": "mock-oss-storage-id",
+			"name":       "Mock OSS Storage",
+			"enabled":    true,
+			"default":    true,
+		}
+
+		log.Printf("[OSSGateway] Returning mock response: %+v", response)
+		c.JSON(http.StatusOK, response)
+	})
+
+	// Mock get object storage info endpoint
+	router.GET("/api/ossgateway/v1/objectstorageinfo", func(c *gin.Context) {
+		app := c.Query("app")
+		log.Printf("[OSSGateway] Received get object storage info request for app: %s", app)
+
+		response := []gin.H{
+			{
+				"id":      "mock-oss-storage-id",
+				"name":    "Mock OSS Storage",
+				"enabled": true,
+				"default": true,
+			},
+		}
+
+		log.Printf("[OSSGateway] Returning mock response: %+v", response)
+		c.JSON(http.StatusOK, response)
+	})
+
+	// Mock upload endpoint - returns request body for actual upload
+	router.GET("/api/ossgateway/v1/upload/:oss_id/*key", func(c *gin.Context) {
+		ossID := c.Param("oss_id")
+		key := c.Param("key")
+		requestMethod := c.Query("request_method")
+		internalRequest := c.Query("internal_request")
+		log.Printf("[OSSGateway] Received upload request for oss_id: %s, key: %s, method: %s, internal: %s",
+			ossID, key, requestMethod, internalRequest)
+
+		// Return a mock request body that simulates what the real OSS gateway would return
+		response := gin.H{
+			"method": "PUT",
+			"url":    "http://localhost:9002/mock-oss-storage/upload",
+			"headers": gin.H{
+				"Content-Type": "application/octet-stream",
+			},
+		}
+
+		log.Printf("[OSSGateway] Returning mock upload request body: %+v", response)
+		c.JSON(http.StatusOK, response)
+	})
+
+	// Mock actual upload endpoint (receives the file data)
+	router.PUT("/mock-oss-storage/upload", func(c *gin.Context) {
+		log.Printf("[OSSGateway] Received actual file upload")
+		c.Status(http.StatusOK)
+	})
+
+	// Mock download endpoint
+	router.GET("/api/ossgateway/v1/download/:oss_id/*key", func(c *gin.Context) {
+		ossID := c.Param("oss_id")
+		key := c.Param("key")
+		internalRequest := c.Query("internal_request")
+		downloadType := c.Query("type")
+		log.Printf("[OSSGateway] Received download request for oss_id: %s, key: %s, internal: %s, type: %s",
+			ossID, key, internalRequest, downloadType)
+
+		response := gin.H{
+			"method": "GET",
+			"url":    "http://localhost:9002/mock-oss-storage/download",
+			"headers": gin.H{
+				"Content-Type": "application/octet-stream",
+			},
+		}
+
+		log.Printf("[OSSGateway] Returning mock download request body: %+v", response)
+		c.JSON(http.StatusOK, response)
+	})
+
+	// Mock actual download endpoint
+	router.GET("/mock-oss-storage/download", func(c *gin.Context) {
+		log.Printf("[OSSGateway] Received actual file download")
+		c.JSON(http.StatusOK, gin.H{"data": "mock file content"})
+	})
+
+	// Mock delete endpoint
+	router.GET("/api/ossgateway/v1/delete/:oss_id/*key", func(c *gin.Context) {
+		ossID := c.Param("oss_id")
+		key := c.Param("key")
+		internalRequest := c.Query("internal_request")
+		log.Printf("[OSSGateway] Received delete request for oss_id: %s, key: %s, internal: %s",
+			ossID, key, internalRequest)
+
+		response := gin.H{
+			"method":  "DELETE",
+			"url":     "http://localhost:9002/mock-oss-storage/delete",
+			"headers": gin.H{},
+		}
+
+		log.Printf("[OSSGateway] Returning mock delete request body: %+v", response)
+		c.JSON(http.StatusOK, response)
+	})
+
+	// Mock actual delete endpoint
+	router.DELETE("/mock-oss-storage/delete", func(c *gin.Context) {
+		log.Printf("[OSSGateway] Received actual file delete")
+		c.Status(http.StatusOK)
+	})
+
+	// Mock head (metadata) endpoint
+	router.GET("/api/ossgateway/v1/head/:oss_id/*key", func(c *gin.Context) {
+		ossID := c.Param("oss_id")
+		key := c.Param("key")
+		internalRequest := c.Query("internal_request")
+		log.Printf("[OSSGateway] Received head request for oss_id: %s, key: %s, internal: %s",
+			ossID, key, internalRequest)
+
+		response := gin.H{
+			"method":  "HEAD",
+			"url":     "http://localhost:9002/mock-oss-storage/head",
+			"headers": gin.H{},
+		}
+
+		log.Printf("[OSSGateway] Returning mock head request body: %+v", response)
+		c.JSON(http.StatusOK, response)
+	})
+
+	// Mock actual head endpoint
+	router.HEAD("/mock-oss-storage/head", func(c *gin.Context) {
+		log.Printf("[OSSGateway] Received actual file head request")
+		c.Header("Content-Length", "1024")
+		c.Status(http.StatusOK)
+	})
+
+	// Health check
+	router.GET("/health", func(c *gin.Context) {
+		c.JSON(http.StatusOK, gin.H{"status": "ok", "service": "ossgateway-mock"})
+	})
+
+	port := os.Getenv("OSSGATEWAY_MOCK_PORT")
+	if port == "" {
+		port = "9002"
+	}
+
+	log.Printf("[OSSGateway] Starting mock server on port %s", port)
+	if err := router.Run(":" + port); err != nil {
+		log.Fatalf("[OSSGateway] Failed to start: %v", err)
 	}
 }

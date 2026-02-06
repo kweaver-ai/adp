@@ -60,7 +60,10 @@ service:
     importOperatorMaxCount: 10 # 批量导入算子的最大数量
     descriptionLengthLimit: 500 # 算子描述的长度限制，单位字符
   mcp:
-    connTimeout: 10 # 单位: 秒
+    connTimeout: 30 # 单位: 秒
+    maxInstances: 100 # 最大实例数
+    instanceTTL: 1800 # 单位秒
+    cleanupInterval: 600 # 单位秒
   category:
     initSwitch: true # 是否初始化算子分类
   proxyModule:
@@ -103,10 +106,6 @@ depServices:
     privateHost: authorization-private
     privatePort: 30920
     privateProtocol: http
-  agent-operator-app:
-    privateHost: agent-operator-app
-    privatePort: 9000
-    privateProtocol: http
   business-system-service:
     privateHost: business-system-service
     privatePort: 80
@@ -137,10 +136,6 @@ depServices:
     privateHost: flow-automation-private
     privatePort: 8680
     privateProtocol: http
-  sandbox-runtime:
-    privateHost: sandbox-runtime
-    privatePort: 9101
-    privateProtocol: http
   mf-model-api:
     privateHost: "mf-model-api"
     privatePort: 9898
@@ -160,6 +155,19 @@ depServices:
       topP: 0.95
       frequencyPenalty: 0.0
       presencePenalty: 0.0
+  sandbox-control-plane:
+    privateHost: "sandbox-control-plane"
+    privatePort: 8000
+    privateProtocol: "http"
+    templateID: "" # 模板ID,模式使用python-basic
+    sessionResources:
+      cpu: 1
+      memory: 512Mi
+      disk: 1Gi
+      timeout: 3600 # 单位:秒
+    maxSessions: 3
+    activeSessions: 1
+    maxConcurrentTasks: 100
 
 env:
   language: en_US.UTF-8

@@ -8,13 +8,13 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	o11y "github.com/kweaver-ai/kweaver-go-lib/observability"
 	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/infra/common"
 	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/infra/errors"
 	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/interfaces"
 	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/interfaces/model"
 	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/logics/metric"
 	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/utils"
+	o11y "github.com/kweaver-ai/kweaver-go-lib/observability"
 )
 
 // RegisterOperatorByOpenAPI 算子注册
@@ -89,6 +89,16 @@ func (m *operatorManager) UpdateOperatorByOpenAPI(ctx context.Context, req *inte
 		Status:     interfaces.ResultStatusFailed,
 		OperatorID: req.OperatorID,
 	}
+	funcInputEdit := &interfaces.FunctionInputEdit{}
+	if req.FunctionInput != nil {
+		funcInputEdit = &interfaces.FunctionInputEdit{
+			Inputs:       req.FunctionInput.Inputs,
+			Outputs:      req.FunctionInput.Outputs,
+			ScriptType:   req.FunctionInput.ScriptType,
+			Code:         req.FunctionInput.Code,
+			Dependencies: req.FunctionInput.Dependencies,
+		}
+	}
 	updateReq := &interfaces.OperatorEditReq{
 		OperatorID:  req.OperatorID,
 		Name:        metadataDBs[0].GetSummary(),
@@ -107,13 +117,7 @@ func (m *operatorManager) UpdateOperatorByOpenAPI(ctx context.Context, req *inte
 		OpenAPIInput: &interfaces.OpenAPIInput{
 			Data: []byte(req.Data),
 		},
-		FunctionInputEdit: &interfaces.FunctionInputEdit{
-			Inputs:       req.FunctionInput.Inputs,
-			Outputs:      req.FunctionInput.Outputs,
-			ScriptType:   req.FunctionInput.ScriptType,
-			Code:         req.FunctionInput.Code,
-			Dependencies: req.FunctionInput.Dependencies,
-		},
+		FunctionInputEdit: funcInputEdit,
 	}
 	operator, metadataDB, accessor, needUpdateMetadata, err := m.preCheckEdit(ctx, updateReq, req.DirectPublish)
 	if err != nil {

@@ -53,16 +53,41 @@ func (k *knRetrievalServiceImpl) rerankByDataRetrieval(ctx context.Context, quer
 	action interfaces.KnowledgeRerankActionType, limit int) (rerankResults []*interfaces.ConceptResult, err error) {
 	// 去重
 	conceptResults = k.deduplicateConcepts(conceptResults)
+
+	// 优化1：如果没有概念，直接返回空列表，无需调用 rerank
+	if len(conceptResults) == 0 {
+		k.logger.WithContext(ctx).Debug("[knretrieval#rerank] No concepts to rerank, returning empty list")
+		return []*interfaces.ConceptResult{}, nil
+	}
+
 	if action == interfaces.KnowledgeRerankActionDefault {
 		rerankResults = conceptResults
+	} else if k.useLocalRerank {
+		// 使用本地Rerank模块
+		k.logger.WithContext(ctx).Info("[knretrieval#rerank] Using local KnowledgeReranker")
+		rerankResults, err = k.knReranker.Rerank(ctx, &interfaces.KnowledgeRerankReq{
+			QueryUnderstanding: queryUnderstandResult,
+			KnowledgeConcepts:  conceptResults,
+			Action:             action,
+		})
+		if err != nil {
+			// 优化2：本地 rerank 失败时，直接返回原始概念列表（降级），不再调用远程服务
+			k.logger.WithContext(ctx).Warnf("[knretrieval#rerank] Local rerank failed: %v, using original concepts as fallback", err)
+			rerankResults = conceptResults
+			err = nil // 清除错误，确保不影响核心功能
+		}
 	} else {
+		// 使用原有远程调用
 		rerankResults, err = k.dataRetrieval.KnowledgeRerank(ctx, &interfaces.KnowledgeRerankReq{
 			QueryUnderstanding: queryUnderstandResult,
 			KnowledgeConcepts:  conceptResults,
 			Action:             action,
 		})
 		if err != nil {
-			return
+			// 远程 rerank 失败时，也降级到返回原始概念列表
+			k.logger.WithContext(ctx).Warnf("[knretrieval#rerank] Remote rerank failed: %v, using original concepts as fallback", err)
+			rerankResults = conceptResults
+			err = nil // 清除错误，确保不影响核心功能
 		}
 	}
 	// 过滤rerankScore等于0的数据
@@ -74,7 +99,7 @@ func (k *knRetrievalServiceImpl) rerankByDataRetrieval(ctx context.Context, quer
 	return
 }
 
-// 过滤rerankScore等于0的数据
+// filterRerankScoreZero 过滤rerankScore等于0的数据
 func (k *knRetrievalServiceImpl) filterRerankScoreZero(conceptResults []*interfaces.ConceptResult) []*interfaces.ConceptResult {
 	var result []*interfaces.ConceptResult
 	for _, concept := range conceptResults {

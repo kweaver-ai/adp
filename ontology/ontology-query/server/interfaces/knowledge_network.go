@@ -15,11 +15,12 @@ var (
 
 // 基于起点、方向和路径长度获取对象子图的请求体
 type SubGraphQueryBaseOnSource struct {
-	ConceptGroups     []string       `json:"concept_groups,omitempty"`
-	SourceObjecTypeId string         `json:"source_object_type_id"`
-	Condition         map[string]any `json:"condition,omitempty"`
-	Direction         string         `json:"direction"`
-	PathLength        int            `json:"path_length"`
+	ConceptGroups         []string       `json:"concept_groups,omitempty"`
+	SourceObjecTypeId     string         `json:"source_object_type_id"`
+	Condition             map[string]any `json:"condition,omitempty"`
+	Direction             string         `json:"direction"`
+	PathLength            int            `json:"path_length"`
+	IncludeIncompletePath bool           `json:"include_incomplete_path,omitempty"` // 当路径探索无下一个节点时，是否拼接当前路径（true：拼接，false：跳过）
 	PageQuery
 
 	ActualCondition *cond.CondCfg `json:"-"`
@@ -36,6 +37,20 @@ type SubGraphQueryBaseOnTypePath struct {
 	KNID   string
 	Branch string
 	CommonQueryParameters
+}
+
+// 基于一组对象实例组织关系子图的请求体
+type SubGraphQueryBaseOnObjects struct {
+	Entries []InputObjectInstance `json:"entries"`
+	KNID    string                `json:"-"`
+	Branch  string                `json:"-"`
+	CommonQueryParameters
+}
+
+// 输入的对象实例
+type InputObjectInstance struct {
+	ObjectTypeID     string         `json:"object_type_id"`
+	InstanceIdentity map[string]any `json:"_instance_identity"`
 }
 
 type QueryRelationTypePaths struct {
@@ -72,6 +87,7 @@ type BatchQueryState struct {
 // 对象子图的返回体
 type ObjectSubGraph struct {
 	Objects           map[string]ObjectInfoInSubgraph `json:"objects"`
+	IsolatedObjects   map[string]ObjectInfoInSubgraph `json:"isolated_objects,omitempty"`
 	RelationPaths     []RelationPath                  `json:"relation_paths"`
 	TotalCount        int64                           `json:"total_count,omitempty"`
 	SearchAfter       []any                           `json:"search_after,omitempty"`

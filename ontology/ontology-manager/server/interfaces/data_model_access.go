@@ -54,13 +54,41 @@ var (
 		condition.OperationNotEq,
 		condition.OperationIn,
 		condition.OperationNotIn,
+		condition.OperationGt,
+		condition.OperationGte,
+		condition.OperationLt,
+		condition.OperationLte,
+		condition.OperationRange,
+		condition.OperationOutRange,
+		condition.OperationRegex,
+		condition.OperationLike,
+		condition.OperationNotLike,
+	}
+
+	DSL_KEYWORD_OPS_MAP = map[string]string{
+		condition.OperationEq:       condition.OperationEq,
+		condition.OperationNotEq:    condition.OperationNotEq,
+		condition.OperationIn:       condition.OperationIn,
+		condition.OperationNotIn:    condition.OperationNotIn,
+		condition.OperationGt:       condition.OperationGt,
+		condition.OperationGte:      condition.OperationGte,
+		condition.OperationLt:       condition.OperationLt,
+		condition.OperationLte:      condition.OperationLte,
+		condition.OperationRange:    condition.OperationRange,
+		condition.OperationOutRange: condition.OperationOutRange,
+		condition.OperationRegex:    condition.OperationRegex,
+		condition.OperationLike:     condition.OperationLike,
+		condition.OperationNotLike:  condition.OperationNotLike,
 	}
 
 	DSL_TEXT_OPS = []string{
-		condition.OperationEq,
-		condition.OperationNotEq,
 		condition.OperationMatch,
 		condition.OperationMultiMatch,
+	}
+
+	DSL_TEXT_OPS_MAP = map[string]string{
+		condition.OperationMatch:      condition.OperationMatch,
+		condition.OperationMultiMatch: condition.OperationMultiMatch,
 	}
 
 	SQL_STRING_OPS = []string{
@@ -70,6 +98,12 @@ var (
 		condition.OperationNotLike,
 		condition.OperationIn,
 		condition.OperationNotIn,
+		condition.OperationGt,
+		condition.OperationGte,
+		condition.OperationLt,
+		condition.OperationLte,
+		condition.OperationRange,
+		condition.OperationOutRange,
 	}
 
 	// 配置了对象索引的操作符集合
@@ -82,8 +116,9 @@ var (
 		condition.OperationLte,
 		condition.OperationIn,
 		condition.OperationNotIn,
-		// condition.OperationLike,
-		// condition.OperationNotLike,
+		condition.OperationLike,
+		condition.OperationNotLike,
+		condition.OperationRegex,
 		condition.OperationRange,
 		condition.OperationOutRange,
 		condition.OperationExist,

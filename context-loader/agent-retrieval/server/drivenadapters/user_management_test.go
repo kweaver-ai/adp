@@ -10,14 +10,15 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/kweaver-ai/adp/context-loader/agent-retrieval/server/mocks"
-	. "github.com/smartystreets/goconvey/convey"
+	"github.com/smartystreets/goconvey/convey"
 	"go.uber.org/mock/gomock"
+
+	"github.com/kweaver-ai/adp/context-loader/agent-retrieval/server/mocks"
 )
 
 // TestGetAppInfo_Success 测试 GetAppInfo 成功场景
 func TestGetAppInfo_Success(t *testing.T) {
-	Convey("TestGetAppInfo_Success", t, func() {
+	convey.Convey("TestGetAppInfo_Success", t, func() {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 
@@ -42,14 +43,14 @@ func TestGetAppInfo_Success(t *testing.T) {
 			}, nil)
 
 		resp, err := client.GetAppInfo(ctx, "app-001")
-		So(err, ShouldBeNil)
-		So(resp, ShouldNotBeNil)
+		convey.So(err, convey.ShouldBeNil)
+		convey.So(resp, convey.ShouldNotBeNil)
 	})
 }
 
 // TestGetAppInfo_HTTPError 测试 GetAppInfo HTTP 错误
 func TestGetAppInfo_HTTPError(t *testing.T) {
-	Convey("TestGetAppInfo_HTTPError", t, func() {
+	convey.Convey("TestGetAppInfo_HTTPError", t, func() {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 
@@ -71,13 +72,13 @@ func TestGetAppInfo_HTTPError(t *testing.T) {
 			Return(0, nil, errors.New("connection refused"))
 
 		_, err := client.GetAppInfo(ctx, "app-001")
-		So(err, ShouldNotBeNil)
+		convey.So(err, convey.ShouldNotBeNil)
 	})
 }
 
 // TestGetUsersInfo_Success 测试 GetUsersInfo 成功场景
 func TestGetUsersInfo_Success(t *testing.T) {
-	Convey("TestGetUsersInfo_Success", t, func() {
+	convey.Convey("TestGetUsersInfo_Success", t, func() {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 
@@ -108,54 +109,54 @@ func TestGetUsersInfo_Success(t *testing.T) {
 			}, nil)
 
 		resp, err := client.GetUsersInfo(ctx, []string{"user-001", "user-002"}, []string{"name"})
-		So(err, ShouldBeNil)
-		So(resp, ShouldNotBeNil)
+		convey.So(err, convey.ShouldBeNil)
+		convey.So(resp, convey.ShouldNotBeNil)
 	})
 }
 
 // TestRemoveUserIDs 测试 removeUserIDs 函数
 func TestRemoveUserIDs(t *testing.T) {
-	Convey("TestRemoveUserIDs", t, func() {
+	convey.Convey("TestRemoveUserIDs", t, func() {
 		client := &userManagementClient{}
 
-		Convey("移除部分元素", func() {
+		convey.Convey("移除部分元素", func() {
 			source := []string{"a", "b", "c", "d", "e"}
 			toRemove := []string{"b", "d"}
 			result := client.removeUserIDs(source, toRemove)
-			So(len(result), ShouldEqual, 3)
-			So(result, ShouldContain, "a")
-			So(result, ShouldContain, "c")
-			So(result, ShouldContain, "e")
-			So(result, ShouldNotContain, "b")
-			So(result, ShouldNotContain, "d")
+			convey.So(len(result), convey.ShouldEqual, 3)
+			convey.So(result, convey.ShouldContain, "a")
+			convey.So(result, convey.ShouldContain, "c")
+			convey.So(result, convey.ShouldContain, "e")
+			convey.So(result, convey.ShouldNotContain, "b")
+			convey.So(result, convey.ShouldNotContain, "d")
 		})
 
-		Convey("移除全部元素", func() {
+		convey.Convey("移除全部元素", func() {
 			source := []string{"a", "b"}
 			toRemove := []string{"a", "b"}
 			result := client.removeUserIDs(source, toRemove)
-			So(len(result), ShouldEqual, 0)
+			convey.So(len(result), convey.ShouldEqual, 0)
 		})
 
-		Convey("移除不存在的元素", func() {
+		convey.Convey("移除不存在的元素", func() {
 			source := []string{"a", "b", "c"}
 			toRemove := []string{"x", "y"}
 			result := client.removeUserIDs(source, toRemove)
-			So(len(result), ShouldEqual, 3)
+			convey.So(len(result), convey.ShouldEqual, 3)
 		})
 
-		Convey("空数组", func() {
+		convey.Convey("空数组", func() {
 			source := []string{}
 			toRemove := []string{"a"}
 			result := client.removeUserIDs(source, toRemove)
-			So(len(result), ShouldEqual, 0)
+			convey.So(len(result), convey.ShouldEqual, 0)
 		})
 	})
 }
 
 // TestGetUserInfo_Success 测试 GetUserInfo 成功场景
 func TestGetUserInfo_Success(t *testing.T) {
-	Convey("TestGetUserInfo_Success", t, func() {
+	convey.Convey("TestGetUserInfo_Success", t, func() {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 
@@ -182,14 +183,14 @@ func TestGetUserInfo_Success(t *testing.T) {
 			}, nil)
 
 		resp, err := client.GetUserInfo(ctx, "user-001")
-		So(err, ShouldBeNil)
-		So(resp, ShouldNotBeNil)
+		convey.So(err, convey.ShouldBeNil)
+		convey.So(resp, convey.ShouldNotBeNil)
 	})
 }
 
 // TestGetUserInfo_NotFound 测试 GetUserInfo 用户不存在
 func TestGetUserInfo_NotFound(t *testing.T) {
-	Convey("TestGetUserInfo_NotFound", t, func() {
+	convey.Convey("TestGetUserInfo_NotFound", t, func() {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 
@@ -212,6 +213,6 @@ func TestGetUserInfo_NotFound(t *testing.T) {
 			Return(200, []interface{}{}, nil)
 
 		_, err := client.GetUserInfo(ctx, "nonexistent-user")
-		So(err, ShouldNotBeNil)
+		convey.So(err, convey.ShouldNotBeNil)
 	})
 }

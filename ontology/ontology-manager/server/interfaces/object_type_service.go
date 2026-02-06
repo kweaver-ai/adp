@@ -9,7 +9,7 @@ import (
 type ObjectTypeService interface {
 	CheckObjectTypeExistByID(ctx context.Context, knID string, branch string, otID string) (string, bool, error)
 	CheckObjectTypeExistByName(ctx context.Context, knID string, branch string, otName string) (string, bool, error)
-	CreateObjectTypes(ctx context.Context, tx *sql.Tx, objectTypes []*ObjectType, mode string, needCreateConceptGroupRelation bool) ([]string, error)
+	CreateObjectTypes(ctx context.Context, tx *sql.Tx, objectTypes []*ObjectType, mode string, needCreateConceptGroupRelation bool, validateDependency bool) ([]string, error)
 	ListObjectTypes(ctx context.Context, tx *sql.Tx, query ObjectTypesQueryParams) ([]*ObjectType, int, error)
 	GetObjectTypesByIDs(ctx context.Context, tx *sql.Tx, knID string, branch string, otIDs []string) ([]*ObjectType, error)
 	UpdateObjectType(ctx context.Context, tx *sql.Tx, objectType *ObjectType) error

@@ -22,6 +22,7 @@ import { IStep } from "../../components/editor/expr";
 export interface DataSourceConfigProps {
     step?: IStep;
     onChange(step?: IStep): void;
+    dagsId?: string
 }
 
 export const DataSourceConfig = forwardRef<Validatable, DataSourceConfigProps>(

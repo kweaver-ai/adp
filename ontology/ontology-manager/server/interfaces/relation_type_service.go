@@ -9,7 +9,7 @@ import (
 type RelationTypeService interface {
 	CheckRelationTypeExistByID(ctx context.Context, knID string, branch string, rtID string) (string, bool, error)
 	CheckRelationTypeExistByName(ctx context.Context, knID string, branch string, rtName string) (string, bool, error)
-	CreateRelationTypes(ctx context.Context, tx *sql.Tx, relationTypes []*RelationType, mode string) ([]string, error)
+	CreateRelationTypes(ctx context.Context, tx *sql.Tx, relationTypes []*RelationType, mode string, validateDependency bool) ([]string, error)
 	ListRelationTypes(ctx context.Context, query RelationTypesQueryParams) ([]*RelationType, int, error)
 	GetRelationTypesByIDs(ctx context.Context, knID string, branch string, rtIDs []string) ([]*RelationType, error)
 	UpdateRelationType(ctx context.Context, tx *sql.Tx, relationType *RelationType) error

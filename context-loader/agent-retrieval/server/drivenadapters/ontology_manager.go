@@ -15,6 +15,7 @@ import (
 	"sync"
 
 	"github.com/bytedance/sonic"
+
 	"github.com/kweaver-ai/adp/context-loader/agent-retrieval/server/infra/common"
 	"github.com/kweaver-ai/adp/context-loader/agent-retrieval/server/infra/config"
 	infraErr "github.com/kweaver-ai/adp/context-loader/agent-retrieval/server/infra/errors"
@@ -47,6 +48,61 @@ func NewOntologyManagerAccess() interfaces.OntologyManagerAccess {
 		}
 	})
 	return omAccess
+}
+
+// GetKnowledgeNetworkDetail 获取知识网络详情（include_detail=true, mode=export）
+// 对应 Python 的 _get_knowledge_network_detail
+func (oma *ontologyManagerAccess) GetKnowledgeNetworkDetail(ctx context.Context, knID string) (*interfaces.KnowledgeNetworkDetail, error) {
+	src := fmt.Sprintf("%s/in/v1/knowledge-networks/%s", oma.baseURL, knID)
+	header := common.GetHeaderFromCtx(ctx)
+	header[rest.ContentTypeKey] = rest.ContentTypeJSON
+
+	queryValues := url.Values{}
+	queryValues.Set("include_detail", "true")
+	queryValues.Set("mode", "export")
+
+	respCode, respBody, err := oma.httpClient.GetNoUnmarshal(ctx, src, queryValues, header)
+
+	result := &interfaces.KnowledgeNetworkDetail{ID: knID}
+	if err != nil {
+		oma.logger.WithContext(ctx).Errorf("[OntologyManagerAccess] GetKnowledgeNetworkDetail request failed, err: %v", err)
+		return result, fmt.Errorf("[OntologyManagerAccess] GetKnowledgeNetworkDetail request failed, err: %v", err)
+	}
+
+	if respCode == http.StatusNotFound {
+		oma.logger.WithContext(ctx).Warnf("[OntologyManagerAccess] request not found, [%s]", src)
+		return result, fmt.Errorf("[OntologyManagerAccess] request not found, [%s]", src)
+	}
+
+	if (respCode < http.StatusOK) || (respCode >= http.StatusMultipleChoices) {
+		oma.logger.Errorf("[OntologyManagerAccess] GetKnowledgeNetworkDetail get resp failed, [%s], %v\n", src, respBody)
+
+		var baseError interfaces.KnBaseError
+		if err := sonic.Unmarshal(respBody, &baseError); err != nil {
+			oma.logger.Errorf("unmarshal KnBaseError failed: %v\n", err)
+			return result, err
+		}
+
+		return result, &infraErr.HTTPError{
+			HTTPCode:     respCode,
+			Code:         baseError.ErrorCode,
+			Description:  baseError.Description,
+			Solution:     baseError.Solution,
+			ErrorLink:    baseError.ErrorLink,
+			ErrorDetails: baseError.ErrorDetails,
+		}
+	}
+
+	if len(respBody) == 0 {
+		return result, nil
+	}
+
+	if err := sonic.Unmarshal(respBody, result); err != nil {
+		oma.logger.Errorf("[OntologyManagerAccess] GetKnowledgeNetworkDetail unmarshal failed: %v\n", err)
+		return result, err
+	}
+
+	return result, nil
 }
 
 // SearchObjectTypes 搜索对象类

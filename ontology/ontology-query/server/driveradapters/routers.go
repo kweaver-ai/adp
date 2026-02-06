@@ -62,6 +62,7 @@ func (r *restHandler) RegisterPublic(c *gin.Engine) {
 		apiV1.POST("/knowledge-networks/:kn_id/object-types/:ot_id/properties", r.verifyJsonContentTypeMiddleWare(), r.GetObjectsPropertiesByEx)
 		// 基于起点、方向和路径长度获取对象子图
 		apiV1.POST("/knowledge-networks/:kn_id/subgraph", r.verifyJsonContentTypeMiddleWare(), r.GetObjectsSubgraphByEx)
+		apiV1.POST("/knowledge-networks/:kn_id/subgraph/objects", r.verifyJsonContentTypeMiddleWare(), r.GetObjectsSubgraphByObjectsByEx)
 		apiV1.POST("/knowledge-networks/:kn_id/action-types/:at_id", r.verifyJsonContentTypeMiddleWare(), r.GetActionsInActionTypeByEx)
 
 		// 行动执行相关 API
@@ -78,6 +79,7 @@ func (r *restHandler) RegisterPublic(c *gin.Engine) {
 		apiInV1.POST("/knowledge-networks/:kn_id/object-types/:ot_id/properties", r.verifyJsonContentTypeMiddleWare(), r.GetObjectsPropertiesByIn)
 		// 基于起点、方向和路径长度获取对象子图
 		apiInV1.POST("/knowledge-networks/:kn_id/subgraph", r.verifyJsonContentTypeMiddleWare(), r.GetObjectsSubgraphByIn)
+		apiInV1.POST("/knowledge-networks/:kn_id/subgraph/objects", r.verifyJsonContentTypeMiddleWare(), r.GetObjectsSubgraphByObjectsByIn)
 		apiInV1.POST("/knowledge-networks/:kn_id/action-types/:at_id", r.verifyJsonContentTypeMiddleWare(), r.GetActionsInActionTypeByIn)
 
 		// 行动执行相关 API (内部)

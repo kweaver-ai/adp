@@ -8,16 +8,17 @@ package knretrieval
 import (
 	"testing"
 
+	"github.com/smartystreets/goconvey/convey"
+
 	"github.com/kweaver-ai/adp/context-loader/agent-retrieval/server/interfaces"
-	. "github.com/smartystreets/goconvey/convey"
 )
 
 // TestDeduplicateConcepts 测试 deduplicateConcepts 函数
 func TestDeduplicateConcepts(t *testing.T) {
-	Convey("TestDeduplicateConcepts", t, func() {
+	convey.Convey("TestDeduplicateConcepts", t, func() {
 		service := &knRetrievalServiceImpl{}
 
-		Convey("去重重复概念", func() {
+		convey.Convey("去重重复概念", func() {
 			concepts := []*interfaces.ConceptResult{
 				{ConceptType: interfaces.KnConceptTypeObject, ConceptID: "obj-001"},
 				{ConceptType: interfaces.KnConceptTypeObject, ConceptID: "obj-001"}, // 重复
@@ -27,42 +28,42 @@ func TestDeduplicateConcepts(t *testing.T) {
 			}
 
 			result := service.deduplicateConcepts(concepts)
-			So(len(result), ShouldEqual, 3)
+			convey.So(len(result), convey.ShouldEqual, 3)
 		})
 
-		Convey("相同 ID 不同类型不去重", func() {
+		convey.Convey("相同 ID 不同类型不去重", func() {
 			concepts := []*interfaces.ConceptResult{
 				{ConceptType: interfaces.KnConceptTypeObject, ConceptID: "id-001"},
 				{ConceptType: interfaces.KnConceptTypeAction, ConceptID: "id-001"},
 			}
 
 			result := service.deduplicateConcepts(concepts)
-			So(len(result), ShouldEqual, 2)
+			convey.So(len(result), convey.ShouldEqual, 2)
 		})
 
-		Convey("空数组", func() {
+		convey.Convey("空数组", func() {
 			result := service.deduplicateConcepts([]*interfaces.ConceptResult{})
-			So(len(result), ShouldEqual, 0)
+			convey.So(len(result), convey.ShouldEqual, 0)
 		})
 
-		Convey("无重复", func() {
+		convey.Convey("无重复", func() {
 			concepts := []*interfaces.ConceptResult{
 				{ConceptType: interfaces.KnConceptTypeObject, ConceptID: "obj-001"},
 				{ConceptType: interfaces.KnConceptTypeObject, ConceptID: "obj-002"},
 			}
 
 			result := service.deduplicateConcepts(concepts)
-			So(len(result), ShouldEqual, 2)
+			convey.So(len(result), convey.ShouldEqual, 2)
 		})
 	})
 }
 
 // TestFilterQueryStrategysBySearchScope 测试 filterQueryStrategysBySearchScope 函数
 func TestFilterQueryStrategysBySearchScope(t *testing.T) {
-	Convey("TestFilterQueryStrategysBySearchScope", t, func() {
+	convey.Convey("TestFilterQueryStrategysBySearchScope", t, func() {
 		service := &knRetrievalServiceImpl{}
 
-		Convey("包含所有概念类型", func() {
+		convey.Convey("包含所有概念类型", func() {
 			includeAll := true
 			searchScope := &interfaces.SearchScopeConfig{
 				IncludeObjectTypes:   &includeAll,
@@ -77,10 +78,10 @@ func TestFilterQueryStrategysBySearchScope(t *testing.T) {
 			}
 
 			result := service.filterQueryStrategysBySearchScope(strategies, searchScope)
-			So(len(result), ShouldEqual, 3)
+			convey.So(len(result), convey.ShouldEqual, 3)
 		})
 
-		Convey("排除对象类型", func() {
+		convey.Convey("排除对象类型", func() {
 			includeTrue := true
 			includeFalse := false
 			searchScope := &interfaces.SearchScopeConfig{
@@ -96,11 +97,11 @@ func TestFilterQueryStrategysBySearchScope(t *testing.T) {
 			}
 
 			result := service.filterQueryStrategysBySearchScope(strategies, searchScope)
-			So(len(result), ShouldEqual, 2)
-			So(result[0].Filter.ConceptType, ShouldEqual, interfaces.KnConceptTypeRelation)
+			convey.So(len(result), convey.ShouldEqual, 2)
+			convey.So(result[0].Filter.ConceptType, convey.ShouldEqual, interfaces.KnConceptTypeRelation)
 		})
 
-		Convey("仅包含行动类型", func() {
+		convey.Convey("仅包含行动类型", func() {
 			includeTrue := true
 			includeFalse := false
 			searchScope := &interfaces.SearchScopeConfig{
@@ -116,11 +117,11 @@ func TestFilterQueryStrategysBySearchScope(t *testing.T) {
 			}
 
 			result := service.filterQueryStrategysBySearchScope(strategies, searchScope)
-			So(len(result), ShouldEqual, 1)
-			So(result[0].Filter.ConceptType, ShouldEqual, interfaces.KnConceptTypeAction)
+			convey.So(len(result), convey.ShouldEqual, 1)
+			convey.So(result[0].Filter.ConceptType, convey.ShouldEqual, interfaces.KnConceptTypeAction)
 		})
 
-		Convey("策略无 Filter", func() {
+		convey.Convey("策略无 Filter", func() {
 			includeTrue := true
 			searchScope := &interfaces.SearchScopeConfig{
 				IncludeObjectTypes:   &includeTrue,
@@ -133,10 +134,10 @@ func TestFilterQueryStrategysBySearchScope(t *testing.T) {
 			}
 
 			result := service.filterQueryStrategysBySearchScope(strategies, searchScope)
-			So(len(result), ShouldEqual, 1)
+			convey.So(len(result), convey.ShouldEqual, 1)
 		})
 
-		Convey("空策略数组", func() {
+		convey.Convey("空策略数组", func() {
 			includeTrue := true
 			searchScope := &interfaces.SearchScopeConfig{
 				IncludeObjectTypes:   &includeTrue,
@@ -145,7 +146,7 @@ func TestFilterQueryStrategysBySearchScope(t *testing.T) {
 			}
 
 			result := service.filterQueryStrategysBySearchScope([]*interfaces.SemanticQueryStrategy{}, searchScope)
-			So(len(result), ShouldEqual, 0)
+			convey.So(len(result), convey.ShouldEqual, 0)
 		})
 	})
 }

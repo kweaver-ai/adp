@@ -29,8 +29,8 @@ user_management:
   private_protocol: "http"
 agent_app:
   private_protocol: "http"
-  private_host: "agent-app.anyshare"
-  private_port: 30777
+  private_host: "agent-factory.anyshare"
+  private_port: 13020
 ontology_manager:
   private_protocol: "http"
   private_host: "ontology-manager-svc.anyshare"
@@ -55,3 +55,15 @@ redis:
   certName: ""
   keyName: ""
   poolSize: 10
+mf_model_api:
+  private_protocol: "http"
+  private_host: "mf-model-api.anyshare"
+  private_port: 9898
+rerank_llm:
+  model: ""
+  temperature: 0
+  top_k: 2
+  top_p: 0.5
+  frequency_penalty: 0.5
+  presence_penalty: 0.5
+  max_tokens: 5000

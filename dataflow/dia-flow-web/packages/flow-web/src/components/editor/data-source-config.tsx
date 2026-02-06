@@ -23,6 +23,7 @@ import styles from "./editor.module.less";
 export interface DataSourceConfigProps {
     step?: IStep;
     onChange(step?: IStep): void;
+    dagsId?: string
 }
 
 export const DataSourceConfig = forwardRef<Validatable, DataSourceConfigProps>(

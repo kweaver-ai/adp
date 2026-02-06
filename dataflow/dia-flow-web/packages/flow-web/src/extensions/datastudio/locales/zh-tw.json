@@ -118,7 +118,7 @@
     "ecconfig.type.base": "基本訊息",
     "ecconfig.type.slice_vector": "向量索引",
     "ecconfig.status": "寫入結果",
-    "MdlDataDataview": "数据视图",
-    "MdlDataDataviewDes": "数据视图数据源",
-    "WriteFile":"文档库写入"
+    "MdlDataDataview": "數據視圖",
+    "MdlDataDataviewDes": "數據視圖數據源",
+    "WriteFile":"文檔庫寫入"
 }

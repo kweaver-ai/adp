@@ -59,6 +59,22 @@ paths:
           description: ok
       summary: 获取业务知识网络列表
     post:
+      parameters:
+        - name: import_mode
+          description: 导入模式，可选normal、ignore、overwrite，默认为normal
+          schema:
+            enum:
+              - normal
+              - ignore
+              - overwrite
+            type: string
+          in: query
+        - name: validate_dependency
+          description: 是否需要校验依赖，默认为true。为true时，需要校验对象类的视图是否存在、关系类的视图是否存在；为false时，依赖不存在不报错
+          schema:
+            type: boolean
+            default: true
+          in: query
       requestBody:
         content:
           application/json:

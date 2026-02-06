@@ -247,17 +247,17 @@ func (mr *MockObjectTypeAccessMockRecorder) ListObjectTypes(ctx, tx, query inter
 }
 
 // UpdateDataProperties mocks base method.
-func (m *MockObjectTypeAccess) UpdateDataProperties(ctx context.Context, objectType *interfaces.ObjectType) error {
+func (m *MockObjectTypeAccess) UpdateDataProperties(ctx context.Context, tx *sql.Tx, objectType *interfaces.ObjectType) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "UpdateDataProperties", ctx, objectType)
+	ret := m.ctrl.Call(m, "UpdateDataProperties", ctx, tx, objectType)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // UpdateDataProperties indicates an expected call of UpdateDataProperties.
-func (mr *MockObjectTypeAccessMockRecorder) UpdateDataProperties(ctx, objectType interface{}) *gomock.Call {
+func (mr *MockObjectTypeAccessMockRecorder) UpdateDataProperties(ctx, tx, objectType interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateDataProperties", reflect.TypeOf((*MockObjectTypeAccess)(nil).UpdateDataProperties), ctx, objectType)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateDataProperties", reflect.TypeOf((*MockObjectTypeAccess)(nil).UpdateDataProperties), ctx, tx, objectType)
 }
 
 // UpdateObjectType mocks base method.

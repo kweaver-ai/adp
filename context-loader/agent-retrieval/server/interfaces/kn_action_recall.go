@@ -32,7 +32,7 @@ type KnActionRecallRequest struct {
 	AtID string `json:"at_id" validate:"required"` // Action Type ID
 
 	// Request Body
-	UniqueIdentity map[string]interface{} `json:"unique_identity" validate:"required,min=1"` // Object Unique Identity
+	InstanceIdentity map[string]interface{} `json:"_instance_identity" validate:"required,min=1"` // Object Instance Identity
 
 	// Header Fields
 	AccountID   string `json:"-" header:"x-account-id" validate:"required"`
@@ -70,7 +70,7 @@ type KnFixedParams struct {
 type QueryActionsRequest struct {
 	KnID                string                   `json:"kn_id"`
 	AtID                string                   `json:"at_id"`
-	UniqueIdentities    []map[string]interface{} `json:"unique_identities"`
+	InstanceIdentities  []map[string]interface{} `json:"_instance_identities"`
 	IncludeTypeInfo     bool                     `json:"include_type_info"`
 	XHTTPMethodOverride string                   `json:"-"` // Fixed to GET
 }

@@ -10,15 +10,16 @@ import (
 	"errors"
 	"testing"
 
+	"github.com/smartystreets/goconvey/convey"
+	"go.uber.org/mock/gomock"
+
 	"github.com/kweaver-ai/adp/context-loader/agent-retrieval/server/interfaces"
 	"github.com/kweaver-ai/adp/context-loader/agent-retrieval/server/mocks"
-	. "github.com/smartystreets/goconvey/convey"
-	"go.uber.org/mock/gomock"
 )
 
 // TestQueryInstanceSubgraph_Success 测试 QueryInstanceSubgraph 成功场景
 func TestQueryInstanceSubgraph_Success(t *testing.T) {
-	Convey("TestQueryInstanceSubgraph_Success", t, func() {
+	convey.Convey("TestQueryInstanceSubgraph_Success", t, func() {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 
@@ -47,14 +48,14 @@ func TestQueryInstanceSubgraph_Success(t *testing.T) {
 			}, nil)
 
 		resp, err := service.QueryInstanceSubgraph(ctx, req)
-		So(err, ShouldBeNil)
-		So(resp, ShouldNotBeNil)
+		convey.So(err, convey.ShouldBeNil)
+		convey.So(resp, convey.ShouldNotBeNil)
 	})
 }
 
 // TestQueryInstanceSubgraph_Error 测试 QueryInstanceSubgraph 错误场景
 func TestQueryInstanceSubgraph_Error(t *testing.T) {
-	Convey("TestQueryInstanceSubgraph_Error", t, func() {
+	convey.Convey("TestQueryInstanceSubgraph_Error", t, func() {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 
@@ -78,13 +79,13 @@ func TestQueryInstanceSubgraph_Error(t *testing.T) {
 			Return(nil, errors.New("query failed"))
 
 		_, err := service.QueryInstanceSubgraph(ctx, req)
-		So(err, ShouldNotBeNil)
+		convey.So(err, convey.ShouldNotBeNil)
 	})
 }
 
 // TestQueryInstanceSubgraph_WithEntries 测试有返回结果的场景
 func TestQueryInstanceSubgraph_WithEntries(t *testing.T) {
-	Convey("TestQueryInstanceSubgraph_WithEntries", t, func() {
+	convey.Convey("TestQueryInstanceSubgraph_WithEntries", t, func() {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 
@@ -122,8 +123,8 @@ func TestQueryInstanceSubgraph_WithEntries(t *testing.T) {
 			}, nil)
 
 		resp, err := service.QueryInstanceSubgraph(ctx, req)
-		So(err, ShouldBeNil)
-		So(resp, ShouldNotBeNil)
-		So(resp.Entries, ShouldNotBeNil)
+		convey.So(err, convey.ShouldBeNil)
+		convey.So(resp, convey.ShouldNotBeNil)
+		convey.So(resp.Entries, convey.ShouldNotBeNil)
 	})
 }

@@ -19,7 +19,7 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/go-redis/redis/v8"
+	redis "github.com/go-redis/redis/v8"
 )
 
 const (
@@ -111,7 +111,7 @@ func DecryptPEM(pemRaw, passwd []byte) (pemDer []byte, err error) {
 		return nil, fmt.Errorf("failed decoding PEM. Block must be different from nil. [% x]", pemRaw)
 	}
 
-	//nolint:staticcheck // TODO: 升级加密方案，x509.IsEncryptedPEMBlock 和 x509.DecryptPEMBlock 已废弃
+	//nolint:staticcheck // TODO: 升级加密方案，x509.IsEncryptedPEMBlock/DecryptPEMBlock 已废弃
 	if !x509.IsEncryptedPEMBlock(block) {
 		return nil, fmt.Errorf("failed decryptPEM PEM. it's not a decryped PEM [%s]", pemRaw)
 	}

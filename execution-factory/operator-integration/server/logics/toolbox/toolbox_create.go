@@ -7,12 +7,12 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	o11y "github.com/kweaver-ai/kweaver-go-lib/observability"
 	infracommon "github.com/kweaver-ai/adp/execution-factory/operator-integration/server/infra/common"
 	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/infra/errors"
 	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/interfaces"
 	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/interfaces/model"
 	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/logics/metric"
+	o11y "github.com/kweaver-ai/kweaver-go-lib/observability"
 )
 
 // CreateToolBox 工具箱管理
@@ -78,7 +78,7 @@ func (s *ToolServiceImpl) CreateToolBox(ctx context.Context, req *interfaces.Cre
 	var detils []metric.AuditLogToolDetil
 	if len(metadatas) > 0 {
 		var tools []*model.ToolDB
-		tools, _, _, err = s.parseOpenAPIToMetadata(ctx, boxID, req.UserID, metadatas)
+		tools, _, _, err = s.parseOpenAPIToMetadata(ctx, boxID, req.UserID, metadatas, false)
 		if err != nil {
 			return
 		}
@@ -201,7 +201,7 @@ func (s *ToolServiceImpl) parseAndInitDefaultValues(ctx context.Context, req *in
 
 // 从元数据中提取工具信息
 func (s *ToolServiceImpl) parseOpenAPIToMetadata(ctx context.Context, boxID, userID string,
-	metadatas []interfaces.IMetadataDB) (tools []*model.ToolDB, validatorNameMap, validatorMethodPathMap map[string]bool, err error) {
+	metadatas []interfaces.IMetadataDB, isInternalTool bool) (tools []*model.ToolDB, validatorNameMap, validatorMethodPathMap map[string]bool, err error) {
 	// 检查工具是否重名
 	validatorMethodPathMap = make(map[string]bool)
 	validatorNameMap = make(map[string]bool)
@@ -211,10 +211,17 @@ func (s *ToolServiceImpl) parseOpenAPIToMetadata(ctx context.Context, boxID, use
 		if err != nil {
 			return
 		}
-		// 检查工具描述
-		err = s.Validator.ValidatorToolDesc(ctx, metadata.GetDescription())
+		var useRule string
+		description := metadata.GetDescription()
+		// 如果是内置工具，desc超出限制将内容注入到useRule,desc使用summary填充
+		err = s.Validator.ValidatorToolDesc(ctx, description)
 		if err != nil {
-			return
+			if !isInternalTool {
+				return
+			}
+			err = nil
+			useRule = description
+			description = metadata.GetSummary()
 		}
 		// 工具名称是否重复
 		if validatorNameMap[metadata.GetSummary()] {
@@ -242,7 +249,8 @@ func (s *ToolServiceImpl) parseOpenAPIToMetadata(ctx context.Context, boxID, use
 		tools = append(tools, &model.ToolDB{
 			BoxID:       boxID,
 			Name:        metadata.GetSummary(),
-			Description: metadata.GetDescription(),
+			Description: description,
+			UseRule:     useRule,
 			SourceID:    metadata.GetVersion(),
 			SourceType:  model.SourceType(metadata.GetType()),
 			Status:      string(interfaces.ToolStatusTypeDisabled),

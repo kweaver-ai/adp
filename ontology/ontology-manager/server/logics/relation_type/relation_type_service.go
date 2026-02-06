@@ -103,7 +103,7 @@ func (rts *relationTypeService) CheckRelationTypeExistByName(ctx context.Context
 }
 
 func (rts *relationTypeService) CreateRelationTypes(ctx context.Context, tx *sql.Tx,
-	relationTypes []*interfaces.RelationType, mode string) ([]string, error) {
+	relationTypes []*interfaces.RelationType, mode string, validateDependency bool) ([]string, error) {
 
 	ctx, span := ar_trace.Tracer.Start(ctx, "Create relation type")
 	defer span.End()
@@ -171,7 +171,7 @@ func (rts *relationTypeService) CreateRelationTypes(ctx context.Context, tx *sql
 		relationType.UpdateTime = currentTime
 
 		// 校验起点对象类、终点对象类非空时，需校验存在性
-		err = rts.validateDependency(ctx, tx, relationType)
+		err = rts.validateDependency(ctx, tx, relationType, validateDependency)
 		if err != nil {
 			return []string{}, err
 		}
@@ -520,7 +520,8 @@ func (rts *relationTypeService) UpdateRelationType(ctx context.Context, tx *sql.
 	}
 
 	// 校验起点对象类、终点对象类非空时，需校验存在性
-	err = rts.validateDependency(ctx, tx, relationType)
+	// 更新操作默认进行依赖校验
+	err = rts.validateDependency(ctx, tx, relationType, true)
 	if err != nil {
 		return err
 	}
@@ -832,7 +833,7 @@ func (rts *relationTypeService) SearchRelationTypes(ctx context.Context,
 	if condtion != nil {
 		conditionDslStr, err = condtion.Convert(ctx, func(ctx context.Context, words []string) ([]*cond.VectorResp, error) {
 			if !rts.appSetting.ServerSetting.DefaultSmallModelEnabled {
-				err = errors.New("DefaultSmallModelEnabled is false, does not support knn condition")
+				err = errors.New(cond.DEFAULT_SMALL_MODEL_ENABLED_FALSE_ERROR)
 				span.SetStatus(codes.Error, err.Error())
 				return nil, err
 			}
@@ -848,6 +849,10 @@ func (rts *relationTypeService) SearchRelationTypes(ctx context.Context,
 			return response, rest.NewHTTPError(ctx, http.StatusBadRequest,
 				oerrors.OntologyManager_RelationType_InvalidParameter_ConceptCondition).
 				WithErrorDetails(fmt.Sprintf("failed to convert condition to dsl, %s", err.Error()))
+		}
+		// 如果 Convert 返回空字符串（所有条件都被忽略），保持为 "{}"
+		if conditionDslStr == "" {
+			conditionDslStr = "{}"
 		}
 	}
 
@@ -1125,7 +1130,7 @@ func (rts *relationTypeService) GetTotalWithRTIDs(ctx context.Context,
 }
 
 // 校验关系类相关的对象类、数据视图存在性
-func (rts *relationTypeService) validateDependency(ctx context.Context, tx *sql.Tx, relationType *interfaces.RelationType) error {
+func (rts *relationTypeService) validateDependency(ctx context.Context, tx *sql.Tx, relationType *interfaces.RelationType, validateDependency bool) error {
 	var sourceObjectType *interfaces.ObjectType
 	var targetObjectType *interfaces.ObjectType
 	var err error
@@ -1166,43 +1171,45 @@ func (rts *relationTypeService) validateDependency(ctx context.Context, tx *sql.
 			}
 		case interfaces.RELATION_TYPE_DATA_VIEW:
 			inDirectMappingRules := relationType.MappingRules.(interfaces.InDirectMapping)
-			// 校验数据视图存在
-			dataView, err := rts.dva.GetDataViewByID(ctx, inDirectMappingRules.BackingDataSource.ID)
-			if err != nil {
-				return err
-			}
-			if dataView == nil {
-				return rest.NewHTTPError(ctx, http.StatusBadRequest, oerrors.OntologyManager_RelationType_InvalidParameter).
-					WithErrorDetails(fmt.Sprintf("关系类中的[%s]数据视图[%s]不存在", relationType.RTID, inDirectMappingRules.BackingDataSource.ID))
-			}
-
-			// 校验起点属性在起点对象类中存在，校验关联字段在视图中存在
-			for _, mapping := range inDirectMappingRules.SourceMappingRules {
-				if sourceObjectType != nil {
-					// 检查起点属性是否在起点对象类的数据属性中存在
-					if _, exist := sourceObjectType.PropertyMap[mapping.SourceProp.Name]; !exist {
-						return rest.NewHTTPError(ctx, http.StatusBadRequest, oerrors.OntologyManager_RelationType_InvalidParameter).
-							WithErrorDetails(fmt.Sprintf("起点关联属性[%s]在起点对象类[%s]中不存在", mapping.SourceProp.Name, sourceObjectType.OTName))
-					}
+			// validateDependency为true时才校验数据视图存在性,不需要校验时，跳过后续的字段校验
+			if validateDependency && inDirectMappingRules.BackingDataSource != nil && inDirectMappingRules.BackingDataSource.ID != "" {
+				dataView, err := rts.dva.GetDataViewByID(ctx, inDirectMappingRules.BackingDataSource.ID)
+				if err != nil {
+					return err
 				}
-
-				// 检查关联字段是否在视图中存在
-				if _, exist := dataView.FieldsMap[mapping.TargetProp.Name]; !exist {
+				if validateDependency && dataView == nil {
 					return rest.NewHTTPError(ctx, http.StatusBadRequest, oerrors.OntologyManager_RelationType_InvalidParameter).
-						WithErrorDetails(fmt.Sprintf("中间关联字段[%s]在视图[%s]中不存在", mapping.SourceProp.Name, dataView.ViewName))
+						WithErrorDetails(fmt.Sprintf("关系类中的[%s]数据视图[%s]不存在", relationType.RTID, inDirectMappingRules.BackingDataSource.ID))
 				}
-			}
-			for _, mapping := range inDirectMappingRules.TargetMappingRules {
-				if targetObjectType != nil {
-					// 检查中间关联字段是否在视图中存在
-					if _, exist := dataView.FieldsMap[mapping.SourceProp.Name]; !exist {
+
+				// 校验起点属性在起点对象类中存在，校验关联字段在视图中存在
+				for _, mapping := range inDirectMappingRules.SourceMappingRules {
+					if sourceObjectType != nil {
+						// 检查起点属性是否在起点对象类的数据属性中存在
+						if _, exist := sourceObjectType.PropertyMap[mapping.SourceProp.Name]; !exist {
+							return rest.NewHTTPError(ctx, http.StatusBadRequest, oerrors.OntologyManager_RelationType_InvalidParameter).
+								WithErrorDetails(fmt.Sprintf("起点关联属性[%s]在起点对象类[%s]中不存在", mapping.SourceProp.Name, sourceObjectType.OTName))
+						}
+					}
+
+					// 检查关联字段是否在视图中存在
+					if _, exist := dataView.FieldsMap[mapping.TargetProp.Name]; !exist {
 						return rest.NewHTTPError(ctx, http.StatusBadRequest, oerrors.OntologyManager_RelationType_InvalidParameter).
 							WithErrorDetails(fmt.Sprintf("中间关联字段[%s]在视图[%s]中不存在", mapping.SourceProp.Name, dataView.ViewName))
 					}
-					// 检查终点属性是否在终点对象类的数据属性中存在
-					if _, exist := targetObjectType.PropertyMap[mapping.TargetProp.Name]; !exist {
-						return rest.NewHTTPError(ctx, http.StatusBadRequest, oerrors.OntologyManager_RelationType_InvalidParameter).
-							WithErrorDetails(fmt.Sprintf("终点关联属性[%s]在终点对象类[%s]中不存在", mapping.TargetProp.Name, targetObjectType.OTName))
+				}
+				for _, mapping := range inDirectMappingRules.TargetMappingRules {
+					if targetObjectType != nil {
+						// 检查中间关联字段是否在视图中存在
+						if _, exist := dataView.FieldsMap[mapping.SourceProp.Name]; !exist {
+							return rest.NewHTTPError(ctx, http.StatusBadRequest, oerrors.OntologyManager_RelationType_InvalidParameter).
+								WithErrorDetails(fmt.Sprintf("中间关联字段[%s]在视图[%s]中不存在", mapping.SourceProp.Name, dataView.ViewName))
+						}
+						// 检查终点属性是否在终点对象类的数据属性中存在
+						if _, exist := targetObjectType.PropertyMap[mapping.TargetProp.Name]; !exist {
+							return rest.NewHTTPError(ctx, http.StatusBadRequest, oerrors.OntologyManager_RelationType_InvalidParameter).
+								WithErrorDetails(fmt.Sprintf("终点关联属性[%s]在终点对象类[%s]中不存在", mapping.TargetProp.Name, targetObjectType.OTName))
+						}
 					}
 				}
 			}
