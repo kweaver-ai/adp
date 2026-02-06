@@ -190,186 +190,201 @@
                                 "default": 30
                             }
                         }
-                    },
-                    "s3": {
-                        "type": "object",
-                        "title": "S3 配置",
-                        "properties": {
-                            "endpoint": {
-                                "type": "string",
-                                "title": "S3 Endpoint",
-                                "description": "S3 服务地址"
-                            },
-                            "accessKeyId": {
-                                "type": "string",
-                                "title": "Access Key",
-                                "description": "S3 访问密钥"
-                            },
-                            "secretAccessKey": {
-                                "type": "string",
-                                "title": "Secret Key",
-                                "description": "S3 密钥"
-                            },
-                            "bucket": {
-                                "type": "string",
-                                "title": "Bucket",
-                                "description": "S3 存储桶"
-                            },
-                            "region": {
-                                "type": "string",
-                                "title": "Region",
-                                "description": "S3 区域",
-                                "default": "cn-north-1"
-                            },
-                            "useSSL": {
-                                "type": "boolean",
-                                "title": "Use SSL",
-                                "description": "是否使用 SSL",
-                                "default": false
-                            },
-                            "skipVerify": {
-                                "type": "boolean",
-                                "title": "Skip Verify",
-                                "description": "是否跳过证书验证",
-                                "default": true
-                            }
-                        }
-                    },
-                    "flowAutomation": {
+                    }
+                }
+            },
+            "flowAutomation": {
+                "type": "object",
+                "title": "工作流配置",
+                "properties": {
+                    "service": {
                         "type": "object",
                         "title": "工作流配置",
                         "properties": {
-                            "service": {
-                                "type": "object",
-                                "title": "工作流配置",
-                                "properties": {
-                                    "highestExecutorCount": {
-                                        "type": "number",
-                                        "title": "安全策略流程最大并行任务数",
-                                        "default": 200
-                                    },
-                                    "highExecutorCount": {
-                                        "type": "number",
-                                        "title": "图谱构建（管理员）流程最大并行任务数",
-                                        "default": 200
-                                    },
-                                    "lowestExecutorCount": {
-                                        "type": "number",
-                                        "title": "工作中心流程最大并行任务数",
-                                        "default": 200
-                                    },
-                                    "listdagCount": {
-                                        "type": "number",
-                                        "title": "每次调度最大流程数",
-                                        "default": 500
-                                    },
-                                    "executorTimeout": {
-                                        "type": "number",
-                                        "title": "节点默认执行超时事件",
-                                        "default": 600
-                                    },
-                                    "scheduleTimeout": {
-                                        "type": "number",
-                                        "title": "流程默认调度超时事件",
-                                        "default": 150
-                                    },
-                                    "keepHistory": {
-                                        "type": "string",
-                                        "title": "最近历史运行记录保留时间",
-                                        "description": "支持按天或按小时配置 7d:保留近七天的记录 7h:保留近7小时的运行记录, 不支持的值默认保留最近7天",
-                                        "default": "7d"
-                                    },
-                                    "mongoMaxInlineSize": {
-                                        "type": "integer",
-                                        "title": "Mongo 最大内联流程运行过程数据比特数",
-                                        "description": "超过此大小的 sharedata、dump 上传到对象存储, 默认 256K",
-                                        "default": 262144
-                                    },
-                                    "storagePrefix": {
-                                        "type": "string",
-                                        "title": "流程运行数据上传到对象存储路径前缀",
-                                        "default": "29376f25-1aad-4a03-91d4-901c5ee4b905"
-                                    },
-                                    "deleteExtDataCron": {
-                                        "type": "string",
-                                        "title": "定期清理已删除流程过程数据 CRON 表达式",
-                                        "default": "0 1 * * *"
-                                    },
-                                    "deleteExpiredTaskCacheCron": {
-                                        "type": "string",
-                                        "title": "定期清理过期任务缓存 CRON 表达式",
-                                        "default": "0 3 * * *"
-                                    },
-                                    "dagInstanceEventMaxInlineSize": {
-                                        "type": "integer",
-                                        "title": "DagInstanceEvent 最大内联数据比特数",
-                                        "description": "超过此大小的事件数据上传到对象存储, 默认 256K, 设置为 -1 则始终内联",
-                                        "default": 262144
-                                    },
-                                    "dagInstanceEventArchivePolicy": {
-                                        "title": "DagInstanceEvent 归档策略",
-                                        "description": "运行完成后将事件归档到对象存储, never - 从不, successOnly - 仅归档执行成功的, 默认 successOnly",
-                                        "type": "string",
-                                        "enum": [
-                                            "never",
-                                            "successOnly"
-                                        ],
-                                        "default": "successOnly"
-                                    }
-                                }
-                            }
-                        }
-                    },
-                    "image": {
-                        "type": "object",
-                        "title": "镜像配置",
-                        "properties": {
-                            "registry": {
-                                "type": "string",
-                                "title": "镜像注册地址"
+                            "highestExecutorCount": {
+                                "type": "number",
+                                "title": "安全策略流程最大并行任务数",
+                                "default": 200
                             },
-                            "repository": {
-                                "type": "string",
-                                "title": "镜像仓库"
+                            "highExecutorCount": {
+                                "type": "number",
+                                "title": "图谱构建（管理员）流程最大并行任务数",
+                                "default": 200
                             },
-                            "tag": {
-                                "type": "string",
-                                "title": "镜像版本"
+                            "lowestExecutorCount": {
+                                "type": "number",
+                                "title": "工作中心流程最大并行任务数",
+                                "default": 200
                             },
-                            "pullPolicy": {
+                            "listdagCount": {
+                                "type": "number",
+                                "title": "每次调度最大流程数",
+                                "default": 500
+                            },
+                            "executorTimeout": {
+                                "type": "number",
+                                "title": "节点默认执行超时事件",
+                                "default": 600
+                            },
+                            "scheduleTimeout": {
+                                "type": "number",
+                                "title": "流程默认调度超时事件",
+                                "default": 150
+                            },
+                            "keepHistory": {
                                 "type": "string",
-                                "title": "镜像拉取策略"
+                                "title": "最近历史运行记录保留时间",
+                                "description": "支持按天或按小时配置 7d:保留近七天的记录 7h:保留近7小时的运行记录, 不支持的值默认保留最近7天",
+                                "default": "7d"
+                            },
+                            "mongoMaxInlineSize": {
+                                "type": "integer",
+                                "title": "Mongo 最大内联流程运行过程数据比特数",
+                                "description": "超过此大小的 sharedata、dump 上传到对象存储, 默认 256K",
+                                "default": 262144
+                            },
+                            "storagePrefix": {
+                                "type": "string",
+                                "title": "流程运行数据上传到对象存储路径前缀",
+                                "default": "29376f25-1aad-4a03-91d4-901c5ee4b905"
+                            },
+                            "deleteExtDataCron": {
+                                "type": "string",
+                                "title": "定期清理已删除流程过程数据 CRON 表达式",
+                                "default": "0 1 * * *"
+                            },
+                            "deleteExpiredTaskCacheCron": {
+                                "type": "string",
+                                "title": "定期清理过期任务缓存 CRON 表达式",
+                                "default": "0 3 * * *"
+                            },
+                            "dagInstanceEventMaxInlineSize": {
+                                "type": "integer",
+                                "title": "DagInstanceEvent 最大内联数据比特数",
+                                "description": "超过此大小的事件数据上传到对象存储, 默认 256K, 设置为 -1 则始终内联",
+                                "default": 262144
+                            },
+                            "dagInstanceEventArchivePolicy": {
+                                "title": "DagInstanceEvent 归档策略",
+                                "description": "运行完成后将事件归档到对象存储, never - 从不, successOnly - 仅归档执行成功的, 默认 successOnly",
+                                "type": "string",
+                                "enum": [
+                                    "never",
+                                    "successOnly"
+                                ],
+                                "default": "successOnly"
                             }
                         }
                     }
                 }
             },
-            "dependence": [
-                {
-                    "name": "dataflow-dm-pre"
-                },
-                {
-                    "name": "mongodb"
-                },
-                {
-                    "name": "mq"
-                },
-                {
-                    "name": "redis"
-                },
-                {
-                    "name": "rds"
-                },
-                {
-                    "name": "hydra"
-                },
-                {
-                    "name": "user-management"
-                },
-                {
-                    "name": "business-system-service"
+            "image": {
+                "type": "object",
+                "title": "镜像配置",
+                "properties": {
+                    "registry": {
+                        "type": "string",
+                        "title": "镜像注册地址"
+                    },
+                    "repository": {
+                        "type": "string",
+                        "title": "镜像仓库"
+                    },
+                    "tag": {
+                        "type": "string",
+                        "title": "镜像版本"
+                    },
+                    "pullPolicy": {
+                        "type": "string",
+                        "title": "镜像拉取策略"
+                    }
                 }
-            ]
+            },
+            "s3": {
+                "type": "object",
+                "title": "S3 配置",
+                "properties": {
+                    "endpoint": {
+                        "type": "string",
+                        "title": "S3 Endpoint",
+                        "description": "S3 服务地址"
+                    },
+                    "accessKeyId": {
+                        "type": "string",
+                        "title": "Access Key",
+                        "description": "S3 访问密钥"
+                    },
+                    "secretAccessKey": {
+                        "type": "string",
+                        "title": "Secret Key",
+                        "description": "S3 密钥"
+                    },
+                    "bucket": {
+                        "type": "string",
+                        "title": "Bucket",
+                        "description": "S3 存储桶"
+                    },
+                    "region": {
+                        "type": "string",
+                        "title": "Region",
+                        "description": "S3 区域",
+                        "default": "cn-north-1"
+                    },
+                    "useSSL": {
+                        "type": "boolean",
+                        "title": "Use SSL",
+                        "description": "是否使用 SSL",
+                        "default": false
+                    },
+                    "skipVerify": {
+                        "type": "boolean",
+                        "title": "Skip Verify",
+                        "description": "是否跳过证书验证",
+                        "default": true
+                    }
+                }
+            }
         }
-    }
+    },
+    "dependence": [
+        {
+            "name": "dataflow-dm-pre"
+        },
+        {
+            "name": "mongodb"
+        },
+        {
+            "name": "mq"
+        },
+        {
+            "name": "redis"
+        },
+        {
+            "name": "rds"
+        },
+        {
+            "name": "authentication"
+        },
+        {
+            "name": "deploy-service"
+        },
+        {
+            "name": "efast"
+        },
+        {
+            "name": "hydra"
+        },
+        {
+            "name": "user-management"
+        },
+        {
+            "name": "ossgatewaymanager"
+        },
+        {
+            "name": "sharemgnt"
+        },
+        {
+            "name": "business-system-service"
+        }
+    ]
 }
