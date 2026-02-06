@@ -1771,6 +1771,8 @@ func (a *DataFlowDocTrigger) Run(ctx entity.ExecuteContext, params interface{}, 
 
 		if idStr, ok := id.(string); ok && idStr != "" {
 			data["id"] = idStr
+			data["object_id"] = idStr
+			data["doc_id"] = idStr
 		}
 		if bucketStr, ok := bucket.(string); ok && bucketStr != "" {
 			data["bucket"] = bucketStr
