@@ -1788,7 +1788,9 @@ func (a *DataFlowDocTrigger) Run(ctx entity.ExecuteContext, params interface{}, 
 			data["size"] = sizeStr
 		}
 		if lastModifiedStr, ok := lastModified.(string); ok && lastModifiedStr != "" {
-			data["last_modified"] = lastModifiedStr
+			data["modify_time"] = lastModifiedStr
+			data["create_time"] = lastModifiedStr
+
 		}
 		if etagStr, ok := etag.(string); ok && etagStr != "" {
 			data["etag"] = etagStr
