@@ -10,11 +10,11 @@ import (
 	"github.com/getkin/kin-openapi/openapi3"
 	"github.com/go-python/gpython/ast"
 	"github.com/go-python/gpython/parser"
-	o11y "github.com/kweaver-ai/kweaver-go-lib/observability"
 	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/infra/errors"
 	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/interfaces"
 	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/interfaces/model"
 	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/utils"
+	o11y "github.com/kweaver-ai/kweaver-go-lib/observability"
 )
 
 // pythonFunctionParser Python 函数解析器
@@ -161,7 +161,7 @@ func (p *pythonFunctionParser) GetAllContent(ctx context.Context, inputValue any
 // 将input\output转换成 PathItemContent
 func convertToPathItemContent(input *interfaces.FunctionInput) (result *interfaces.PathItemContent) {
 	result = &interfaces.PathItemContent{
-		Path:        interfaces.AOIFuncExecPath,
+		Path:        interfaces.GetAOIFuncExecPath(),
 		Method:      http.MethodPost,
 		ServerURL:   interfaces.AOIServerURL,
 		Summary:     input.Name,

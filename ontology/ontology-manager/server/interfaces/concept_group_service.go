@@ -9,7 +9,7 @@ import (
 type ConceptGroupService interface {
 	CheckConceptGroupExistByID(ctx context.Context, knID string, branch string, cgID string) (string, bool, error)
 	CheckConceptGroupExistByName(ctx context.Context, knID string, branch string, cgName string) (string, bool, error)
-	CreateConceptGroup(ctx context.Context, tx *sql.Tx, conceptGroup *ConceptGroup, mode string) (string, error)
+	CreateConceptGroup(ctx context.Context, tx *sql.Tx, conceptGroup *ConceptGroup, mode string, validateDependency bool) (string, error)
 	ListConceptGroups(ctx context.Context, query ConceptGroupsQueryParams) ([]*ConceptGroup, int, error)
 	GetConceptGroupByID(ctx context.Context, knID string, branch string, cgID string, mode string) (*ConceptGroup, error)
 	UpdateConceptGroup(ctx context.Context, tx *sql.Tx, conceptGroup *ConceptGroup) error

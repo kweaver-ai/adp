@@ -727,7 +727,7 @@ func (ats *actionTypeService) SearchActionTypes(ctx context.Context, query *inte
 	if condtion != nil {
 		conditionDslStr, err = condtion.Convert(ctx, func(ctx context.Context, words []string) ([]*cond.VectorResp, error) {
 			if !ats.appSetting.ServerSetting.DefaultSmallModelEnabled {
-				err = errors.New("DefaultSmallModelEnabled is false, does not support knn condition")
+				err = errors.New(cond.DEFAULT_SMALL_MODEL_ENABLED_FALSE_ERROR)
 				span.SetStatus(codes.Error, err.Error())
 				return nil, err
 			}
@@ -744,6 +744,7 @@ func (ats *actionTypeService) SearchActionTypes(ctx context.Context, query *inte
 				oerrors.OntologyManager_ActionType_InvalidParameter_ConceptCondition).
 				WithErrorDetails(fmt.Sprintf("failed to convert condition to dsl, %s", err.Error()))
 		}
+
 	}
 
 	// 1. 获取组下的关系类

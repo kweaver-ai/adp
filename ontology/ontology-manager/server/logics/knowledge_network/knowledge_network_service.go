@@ -118,7 +118,7 @@ func (kns *knowledgeNetworkService) CheckKNExistByName(ctx context.Context, knNa
 	return KNID, exist, nil
 }
 
-func (kns *knowledgeNetworkService) CreateKN(ctx context.Context, kn *interfaces.KN, mode string) (string, error) {
+func (kns *knowledgeNetworkService) CreateKN(ctx context.Context, kn *interfaces.KN, mode string, validateDependency bool) (string, error) {
 	ctx, span := ar_trace.Tracer.Start(ctx, "Create knowledge network")
 	defer span.End()
 
@@ -216,7 +216,7 @@ func (kns *knowledgeNetworkService) CreateKN(ctx context.Context, kn *interfaces
 		// 导入概念分组
 		if len(kn.ConceptGroups) > 0 {
 			for _, cg := range kn.ConceptGroups {
-				_, err = kns.cgs.CreateConceptGroup(ctx, tx, cg, mode)
+				_, err = kns.cgs.CreateConceptGroup(ctx, tx, cg, mode, validateDependency)
 				if err != nil {
 					logger.Errorf("CreateObjectTypes error: %s", err.Error())
 					span.SetStatus(codes.Error, "创建业务知识网络概念分组失败")
@@ -228,7 +228,7 @@ func (kns *knowledgeNetworkService) CreateKN(ctx context.Context, kn *interfaces
 		}
 
 		if len(kn.ObjectTypes) > 0 {
-			_, err = kns.ots.CreateObjectTypes(ctx, tx, kn.ObjectTypes, mode, true)
+			_, err = kns.ots.CreateObjectTypes(ctx, tx, kn.ObjectTypes, mode, true, validateDependency)
 			if err != nil {
 				logger.Errorf("CreateObjectTypes error: %s", err.Error())
 				span.SetStatus(codes.Error, "创建业务知识网络对象类失败")
@@ -239,7 +239,7 @@ func (kns *knowledgeNetworkService) CreateKN(ctx context.Context, kn *interfaces
 		}
 
 		if len(kn.RelationTypes) > 0 {
-			_, err = kns.rts.CreateRelationTypes(ctx, tx, kn.RelationTypes, mode)
+			_, err = kns.rts.CreateRelationTypes(ctx, tx, kn.RelationTypes, mode, validateDependency)
 			if err != nil {
 				logger.Errorf("CreateRelationTypes error: %s", err.Error())
 				span.SetStatus(codes.Error, "创建业务知识网络关系类失败")
@@ -276,7 +276,7 @@ func (kns *knowledgeNetworkService) CreateKN(ctx context.Context, kn *interfaces
 
 		if len(kn.ConceptGroups) > 0 {
 			for _, cg := range kn.ConceptGroups {
-				_, err = kns.cgs.CreateConceptGroup(ctx, tx, cg, mode)
+				_, err = kns.cgs.CreateConceptGroup(ctx, tx, cg, mode, validateDependency)
 				if err != nil {
 					logger.Errorf("CreateObjectTypes error: %s", err.Error())
 					span.SetStatus(codes.Error, "创建业务知识网络概念分组失败")
@@ -288,7 +288,7 @@ func (kns *knowledgeNetworkService) CreateKN(ctx context.Context, kn *interfaces
 		}
 
 		if len(kn.ObjectTypes) > 0 {
-			_, err = kns.ots.CreateObjectTypes(ctx, tx, kn.ObjectTypes, mode, true)
+			_, err = kns.ots.CreateObjectTypes(ctx, tx, kn.ObjectTypes, mode, true, validateDependency)
 			if err != nil {
 				logger.Errorf("CreateObjectTypes error: %s", err.Error())
 				span.SetStatus(codes.Error, "创建业务知识网络对象类失败")
@@ -299,7 +299,7 @@ func (kns *knowledgeNetworkService) CreateKN(ctx context.Context, kn *interfaces
 		}
 
 		if len(kn.RelationTypes) > 0 {
-			_, err = kns.rts.CreateRelationTypes(ctx, tx, kn.RelationTypes, mode)
+			_, err = kns.rts.CreateRelationTypes(ctx, tx, kn.RelationTypes, mode, validateDependency)
 			if err != nil {
 				logger.Errorf("CreateRelationTypes error: %s", err.Error())
 				span.SetStatus(codes.Error, "创建业务知识网络关系类失败")

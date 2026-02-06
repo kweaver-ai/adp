@@ -10,15 +10,16 @@ import (
 	"errors"
 	"testing"
 
+	"github.com/smartystreets/goconvey/convey"
+	"go.uber.org/mock/gomock"
+
 	"github.com/kweaver-ai/adp/context-loader/agent-retrieval/server/interfaces"
 	"github.com/kweaver-ai/adp/context-loader/agent-retrieval/server/mocks"
-	. "github.com/smartystreets/goconvey/convey"
-	"go.uber.org/mock/gomock"
 )
 
 // TestGetToolDetail_Success 测试 GetToolDetail 成功场景
 func TestGetToolDetail_Success(t *testing.T) {
-	Convey("TestGetToolDetail_Success", t, func() {
+	convey.Convey("TestGetToolDetail_Success", t, func() {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 
@@ -56,16 +57,16 @@ func TestGetToolDetail_Success(t *testing.T) {
 			}, nil)
 
 		resp, err := client.GetToolDetail(ctx, req)
-		So(err, ShouldBeNil)
-		So(resp, ShouldNotBeNil)
-		So(resp.ToolID, ShouldEqual, "tool-001")
-		So(resp.Name, ShouldEqual, "测试工具")
+		convey.So(err, convey.ShouldBeNil)
+		convey.So(resp, convey.ShouldNotBeNil)
+		convey.So(resp.ToolID, convey.ShouldEqual, "tool-001")
+		convey.So(resp.Name, convey.ShouldEqual, "测试工具")
 	})
 }
 
 // TestGetToolDetail_HTTPError 测试 GetToolDetail HTTP 错误
 func TestGetToolDetail_HTTPError(t *testing.T) {
-	Convey("TestGetToolDetail_HTTPError", t, func() {
+	convey.Convey("TestGetToolDetail_HTTPError", t, func() {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 
@@ -93,13 +94,13 @@ func TestGetToolDetail_HTTPError(t *testing.T) {
 			Return(0, nil, errors.New("connection refused"))
 
 		_, err := client.GetToolDetail(ctx, req)
-		So(err, ShouldNotBeNil)
+		convey.So(err, convey.ShouldNotBeNil)
 	})
 }
 
 // TestGetMCPToolDetail_Success 测试 GetMCPToolDetail 成功场景
 func TestGetMCPToolDetail_Success(t *testing.T) {
-	Convey("TestGetMCPToolDetail_Success", t, func() {
+	convey.Convey("TestGetMCPToolDetail_Success", t, func() {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 
@@ -143,15 +144,15 @@ func TestGetMCPToolDetail_Success(t *testing.T) {
 			}, nil)
 
 		resp, err := client.GetMCPToolDetail(ctx, req)
-		So(err, ShouldBeNil)
-		So(resp, ShouldNotBeNil)
-		So(resp.Name, ShouldEqual, "test_tool")
+		convey.So(err, convey.ShouldBeNil)
+		convey.So(resp, convey.ShouldNotBeNil)
+		convey.So(resp.Name, convey.ShouldEqual, "test_tool")
 	})
 }
 
 // TestGetMCPToolDetail_NotFound 测试 GetMCPToolDetail 工具未找到
 func TestGetMCPToolDetail_NotFound(t *testing.T) {
-	Convey("TestGetMCPToolDetail_NotFound", t, func() {
+	convey.Convey("TestGetMCPToolDetail_NotFound", t, func() {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 
@@ -185,13 +186,13 @@ func TestGetMCPToolDetail_NotFound(t *testing.T) {
 			}, nil)
 
 		_, err := client.GetMCPToolDetail(ctx, req)
-		So(err, ShouldNotBeNil)
+		convey.So(err, convey.ShouldNotBeNil)
 	})
 }
 
 // TestGetMCPToolDetail_HTTPError 测试 GetMCPToolDetail HTTP 错误
 func TestGetMCPToolDetail_HTTPError(t *testing.T) {
-	Convey("TestGetMCPToolDetail_HTTPError", t, func() {
+	convey.Convey("TestGetMCPToolDetail_HTTPError", t, func() {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 
@@ -219,13 +220,13 @@ func TestGetMCPToolDetail_HTTPError(t *testing.T) {
 			Return(0, nil, errors.New("connection refused"))
 
 		_, err := client.GetMCPToolDetail(ctx, req)
-		So(err, ShouldNotBeNil)
+		convey.So(err, convey.ShouldNotBeNil)
 	})
 }
 
 // TestCallMCPTool_Success 测试 CallMCPTool 成功场景
 func TestCallMCPTool_Success(t *testing.T) {
-	Convey("TestCallMCPTool_Success", t, func() {
+	convey.Convey("TestCallMCPTool_Success", t, func() {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 
@@ -258,15 +259,15 @@ func TestCallMCPTool_Success(t *testing.T) {
 			}, nil)
 
 		resp, err := client.CallMCPTool(ctx, req)
-		So(err, ShouldBeNil)
-		So(resp, ShouldNotBeNil)
-		So(resp["result"], ShouldEqual, "success")
+		convey.So(err, convey.ShouldBeNil)
+		convey.So(resp, convey.ShouldNotBeNil)
+		convey.So(resp["result"], convey.ShouldEqual, "success")
 	})
 }
 
 // TestCallMCPTool_HTTPError 测试 CallMCPTool HTTP 错误
 func TestCallMCPTool_HTTPError(t *testing.T) {
-	Convey("TestCallMCPTool_HTTPError", t, func() {
+	convey.Convey("TestCallMCPTool_HTTPError", t, func() {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 
@@ -297,6 +298,6 @@ func TestCallMCPTool_HTTPError(t *testing.T) {
 			Return(0, nil, errors.New("connection refused"))
 
 		_, err := client.CallMCPTool(ctx, req)
-		So(err, ShouldNotBeNil)
+		convey.So(err, convey.ShouldNotBeNil)
 	})
 }

@@ -57,7 +57,14 @@ func InitMQClient(config *MQConfig) error {
 	var mq msqclient.ProtonMQClient
 	mqConfigPath := extractMQInfoFromServiceAccess(config.ConfigPath)
 	if mqConfigPath == "" {
-		opts := []msqclient.ClientOpt{msqclient.AuthMechanism(config.Auth.Mechanism), msqclient.UserInfo(config.Auth.Username, config.Auth.Password)}
+		// Only add authentication options if mechanism is provided
+		var opts []msqclient.ClientOpt
+		if config.Auth.Mechanism != "" {
+			opts = []msqclient.ClientOpt{
+				msqclient.AuthMechanism(config.Auth.Mechanism),
+				msqclient.UserInfo(config.Auth.Username, config.Auth.Password),
+			}
+		}
 		mq, err = msqclient.NewProtonMQClient(config.Host, config.Port, config.LookupdHost, config.LookupdPort, config.MQType, opts...)
 		if err != nil {
 			return err

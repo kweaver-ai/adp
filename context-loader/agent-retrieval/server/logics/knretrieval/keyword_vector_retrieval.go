@@ -8,8 +8,9 @@ package knretrieval
 import (
 	"context"
 
-	"github.com/kweaver-ai/adp/context-loader/agent-retrieval/server/interfaces"
 	o11y "github.com/kweaver-ai/kweaver-go-lib/observability"
+
+	"github.com/kweaver-ai/adp/context-loader/agent-retrieval/server/interfaces"
 )
 
 // KeywordVectorRetrieval 基于关键词+向量召回

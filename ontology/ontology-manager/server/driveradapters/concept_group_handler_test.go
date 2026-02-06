@@ -65,7 +65,7 @@ func Test_ConceptGroupRestHandler_CreateConceptGroup(t *testing.T) {
 
 		Convey("Success CreateConceptGroup \n", func() {
 			kns.EXPECT().CheckKNExistByID(gomock.Any(), knID, gomock.Any()).Return(knID, true, nil)
-			cgs.EXPECT().CreateConceptGroup(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return("cg1", nil)
+			cgs.EXPECT().CreateConceptGroup(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return("cg1", nil)
 
 			reqParamByte, _ := sonic.Marshal(conceptGroup)
 			req := httptest.NewRequest(http.MethodPost, url, bytes.NewReader(reqParamByte))
@@ -133,7 +133,7 @@ func Test_ConceptGroupRestHandler_CreateConceptGroup(t *testing.T) {
 
 		Convey("CreateConceptGroupByIn - Success\n", func() {
 			kns.EXPECT().CheckKNExistByID(gomock.Any(), knID, gomock.Any()).Return(knID, true, nil)
-			cgs.EXPECT().CreateConceptGroup(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return("cg1", nil)
+			cgs.EXPECT().CreateConceptGroup(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return("cg1", nil)
 
 			urlIn := "/api/ontology-manager/in/v1/knowledge-networks/" + knID + "/concept-groups"
 			reqParamByte, _ := sonic.Marshal(conceptGroup)

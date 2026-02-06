@@ -125,6 +125,27 @@ paths:
           description: ok
       summary: 获取概念分组列表
     post:
+      parameters:
+        - name: branch
+          description: 分支，不填是则使用 main 分支
+          schema:
+            type: string
+          in: query
+        - name: import_mode
+          description: 导入模式，可选normal、ignore、overwrite，默认为normal
+          schema:
+            enum:
+              - normal
+              - ignore
+              - overwrite
+            type: string
+          in: query
+        - name: validate_dependency
+          description: 是否需要校验依赖，默认为true。为true时，需要校验对象类的视图是否存在、关系类的视图是否存在；为false时，依赖不存在不报错
+          schema:
+            type: boolean
+            default: true
+          in: query
       requestBody:
         content:
           application/json:

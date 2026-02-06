@@ -13,11 +13,11 @@ import "context"
 // ResolveLogicPropertiesRequest Logic property resolution request
 type ResolveLogicPropertiesRequest struct {
 	// Required fields
-	KnID             string                   `json:"kn_id" validate:"required"`
-	OtID             string                   `json:"ot_id" validate:"required"`
-	Query            string                   `json:"query"`
-	UniqueIdentities []map[string]interface{} `json:"unique_identities" validate:"required"`
-	Properties       []string                 `json:"properties" validate:"required"`
+	KnID               string                   `json:"kn_id" validate:"required"`
+	OtID               string                   `json:"ot_id" validate:"required"`
+	Query              string                   `json:"query"`
+	InstanceIdentities []map[string]interface{} `json:"_instance_identities" validate:"required"`
+	Properties         []string                 `json:"properties" validate:"required"`
 
 	// Optional fields
 	AdditionalContext string          `json:"additional_context,omitempty"`
@@ -121,12 +121,12 @@ type IKnLogicPropertyResolverService interface {
 
 // LLMPromptInput LLM prompt input
 type LLMPromptInput struct {
-	LogicProperty     *LogicPropertyDef `json:"logic_property"`
-	Query             string            `json:"query"`
-	UniqueIdentities  []map[string]any  `json:"unique_identities"`
-	AdditionalContext string            `json:"additional_context,omitempty"`
-	NowMs             int64             `json:"now_ms,omitempty"`
-	Timezone          string            `json:"timezone,omitempty"`
+	LogicProperty      *LogicPropertyDef `json:"logic_property"`
+	Query              string            `json:"query"`
+	InstanceIdentities []map[string]any  `json:"_instance_identities"`
+	AdditionalContext  string            `json:"additional_context,omitempty"`
+	NowMs              int64             `json:"now_ms,omitempty"`
+	Timezone           string            `json:"timezone,omitempty"`
 }
 
 // LLMPromptOutput LLM prompt output

@@ -403,6 +403,7 @@ func (kns *knowledgeNetworkService) buildSingleTypePathObjects(
 		SourceObjecTypeId:     query.SourceObjecTypeId,
 		Direction:             query.Direction,
 		PathLength:            query.PathLength,
+		IncludeIncompletePath: query.IncludeIncompletePath,
 		Condition:             query.Condition,
 		ActualCondition:       query.ActualCondition,
 		PageQuery:             query.PageQuery,
@@ -435,6 +436,10 @@ func (kns *knowledgeNetworkService) buildSingleTypePathObjects(
 		if currentGlobal > query.PathQuotaManager.TotalLimit {
 			// 合并一批超，那么就合并差的那部分进去，直到超
 			fixedNum := query.PathQuotaManager.TotalLimit - int64(len(typePathObjectCtx.relationPaths))
+			// 限制 fixedNum 不超过当前批次的实际数量，避免数组越界
+			if fixedNum > int64(len(currentObjectPaths)) {
+				fixedNum = int64(len(currentObjectPaths))
+			}
 			for i := int64(0); i < fixedNum; i++ {
 				typePathObjectCtx.relationPaths = append(typePathObjectCtx.relationPaths, currentObjectPaths[i])
 				for _, edge := range currentObjectPaths[i].Relations {
@@ -525,7 +530,31 @@ func (kns *knowledgeNetworkService) expandObjectPathsBatch(ctx context.Context,
 				return err
 			}
 			if len(nextLevelObjects) == 0 {
-				// 无下一层的对象，则无需构造路径，继续下一批的遍历
+				// 无下一层的对象
+				if query.IncludeIncompletePath {
+					// 如果需要包含不完整路径，将当前批次中所有对象的路径添加到结果中
+					batchObjectIDs := make(map[string]bool)
+					for _, obj := range batch {
+						batchObjectIDs[obj.ObjectID] = true
+					}
+					totalPathsInThisBatch := 0
+					for _, currentObj := range currentLevel {
+						if batchObjectIDs[currentObj.ObjectID] && len(currentObj.Paths) > 0 {
+							for _, path := range currentObj.Paths {
+								if len(path.Relations) > 0 {
+									paths = append(paths, path)
+									totalPathsInThisBatch += len(path.Relations)
+								}
+							}
+						}
+					}
+					if totalPathsInThisBatch > 0 {
+						logics.RecordGenerated(query.PathQuotaManager, typePath.ID, totalPathsInThisBatch)
+						logger.Debugf("添加不完整路径 - 路径ID: %d, 新增路径: %d, 深度: %d",
+							typePath.ID, totalPathsInThisBatch, depth)
+					}
+				}
+				// 继续下一批的遍历
 				continue
 			}
 
@@ -542,6 +571,16 @@ func (kns *knowledgeNetworkService) expandObjectPathsBatch(ctx context.Context,
 
 				nextObjects, exists := nextLevelObjects[currentObj.ObjectID]
 				if !exists {
+					// 当前对象没有找到下一层对象
+					if query.IncludeIncompletePath {
+						// 如果需要包含不完整路径，将当前对象的路径添加到结果中
+						paths = append(paths, currentObj.Paths...)
+						if len(currentObj.Paths) > 0 {
+							logics.RecordGenerated(query.PathQuotaManager, typePath.ID, len(currentObj.Paths))
+							logger.Debugf("添加不完整路径 - 路径ID: %d, 对象ID: %s, 新增路径: %d, 深度: %d",
+								typePath.ID, currentObj.ObjectID, len(currentObj.Paths), depth)
+						}
+					}
 					continue
 				}
 
@@ -1151,4 +1190,404 @@ func (kns *knowledgeNetworkService) isPathEndsWith(path interfaces.RelationPath,
 	// 检查最后一条边的目标对象是否匹配
 	lastEdge := path.Relations[len(path.Relations)-1]
 	return lastEdge.TargetObjectId == objectID
+}
+
+// 基于一组对象实例组织关系子图
+func (kns *knowledgeNetworkService) SearchSubgraphByObjects(ctx context.Context,
+	query *interfaces.SubGraphQueryBaseOnObjects) (interfaces.ObjectSubGraph, error) {
+
+	ctx, span := ar_trace.Tracer.Start(ctx, "基于一组对象实例组织关系子图")
+	defer span.End()
+
+	var result interfaces.ObjectSubGraph
+	result.Objects = make(map[string]interfaces.ObjectInfoInSubgraph)
+	result.IsolatedObjects = make(map[string]interfaces.ObjectInfoInSubgraph)
+	result.RelationPaths = []interfaces.RelationPath{}
+
+	// 1. 处理输入对象实例，验证并查询对象数据
+	objectsByType, objectTypeMap, err := kns.processInputObjects(ctx, query)
+	if err != nil {
+		return result, err
+	}
+
+	if len(objectsByType) == 0 {
+		return result, nil
+	}
+
+	// 2. 发现相关关系类
+	allRelationTypes, err := kns.discoverRelationTypes(ctx, query, objectTypeMap)
+	if err != nil {
+		return result, err
+	}
+
+	// 3. 匹配关系
+	relations, objectsInRelations, err := kns.matchRelations(ctx, query, objectsByType, allRelationTypes)
+	if err != nil {
+		return result, err
+	}
+
+	// 4. 构建子图
+	result = kns.buildSubgraphFromObjects(query, objectsByType, relations, objectsInRelations)
+
+	return result, nil
+}
+
+// 处理输入对象实例，验证并查询对象数据
+func (kns *knowledgeNetworkService) processInputObjects(ctx context.Context,
+	query *interfaces.SubGraphQueryBaseOnObjects) (map[string][]interfaces.LevelObject, map[string]*interfaces.ObjectType, error) {
+
+	objectsByType := make(map[string][]interfaces.LevelObject)
+	objectTypeMap := make(map[string]*interfaces.ObjectType)
+
+	// 按对象类型分组输入对象
+	typeGroups := make(map[string][]interfaces.InputObjectInstance)
+	for _, entry := range query.Entries {
+		typeGroups[entry.ObjectTypeID] = append(typeGroups[entry.ObjectTypeID], entry)
+	}
+
+	// 对每个对象类型，批量查询对象数据
+	for otID, entries := range typeGroups {
+		// 获取对象类型信息
+		objectType, exists, err := kns.omAccess.GetObjectType(ctx, query.KNID, query.Branch, otID)
+		if err != nil {
+			return nil, nil, rest.NewHTTPError(ctx, http.StatusInternalServerError,
+				oerrors.OntologyQuery_ObjectType_InternalError_GetObjectTypesByIDFailed).WithErrorDetails(err.Error())
+		}
+		if !exists {
+			return nil, nil, rest.NewHTTPError(ctx, http.StatusNotFound,
+				oerrors.OntologyQuery_ObjectType_ObjectTypeNotFound).WithErrorDetails(fmt.Sprintf("对象类型[%s]不存在", otID))
+		}
+		objectTypeMap[otID] = &objectType
+
+		// 构建唯一标识条件
+		instanceIdentities := make([]map[string]any, len(entries))
+		for i, entry := range entries {
+			instanceIdentities[i] = entry.InstanceIdentity
+		}
+		ukCond := logics.BuildUniqueIdentitiesCondition(instanceIdentities)
+
+		// 查询对象数据
+		objectQuery := &interfaces.ObjectQueryBaseOnObjectType{
+			ActualCondition: ukCond,
+			PageQuery: interfaces.PageQuery{
+				Limit:     interfaces.MAX_LIMIT,
+				NeedTotal: false,
+			},
+			KNID:         query.KNID,
+			Branch:       query.Branch,
+			ObjectTypeID: otID,
+			CommonQueryParameters: interfaces.CommonQueryParameters{
+				IncludeTypeInfo:    true,
+				IncludeLogicParams: query.IncludeLogicParams,
+				IgnoringStore:      query.IgnoringStore,
+			},
+		}
+
+		objects, err := kns.ots.GetObjectsByObjectTypeID(ctx, objectQuery)
+		if err != nil {
+			return nil, nil, err
+		}
+
+		// 构建LevelObject列表
+		levelObjects := make([]interfaces.LevelObject, 0, len(objects.Datas))
+		for _, objData := range objects.Datas {
+			objectID, uk := logics.GetObjectID(objData, objects.ObjectType)
+			if objectID == "" {
+				continue
+			}
+			levelObjects = append(levelObjects, interfaces.LevelObject{
+				ObjectID:   objectID,
+				ObjectUK:   uk,
+				ObjectData: objData,
+				ObjectType: objects.ObjectType,
+			})
+		}
+		objectsByType[otID] = levelObjects
+	}
+
+	return objectsByType, objectTypeMap, nil
+}
+
+// 发现与输入对象类型相关的关系类
+func (kns *knowledgeNetworkService) discoverRelationTypes(ctx context.Context,
+	query *interfaces.SubGraphQueryBaseOnObjects, objectTypeMap map[string]*interfaces.ObjectType) (map[string]interfaces.RelationType, error) {
+
+	// 提取所有对象类型ID集合
+	objectTypeIDs := make([]string, 0, len(objectTypeMap))
+	for otID := range objectTypeMap {
+		objectTypeIDs = append(objectTypeIDs, otID)
+	}
+
+	// 一次性查询所有相关关系类
+	relationTypes, err := kns.omAccess.ListRelationTypes(ctx, query.KNID, query.Branch, interfaces.RelationTypesQuery{
+		SourceObjectTypeIDs: objectTypeIDs,
+		TargetObjectTypeIDs: objectTypeIDs,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	// 收集并过滤关系类（确保源和目标都在输入集合中）
+	allRelationTypes := make(map[string]interfaces.RelationType) // key: relationTypeID
+	for _, rt := range relationTypes {
+		// 确保源和目标都在输入集合中
+		if _, exists := objectTypeMap[rt.SourceObjectTypeID]; !exists {
+			continue
+		}
+		if _, exists := objectTypeMap[rt.TargetObjectTypeID]; !exists {
+			continue
+		}
+		allRelationTypes[rt.RTID] = rt
+	}
+
+	return allRelationTypes, nil
+}
+
+// 匹配对象实例之间的关系
+func (kns *knowledgeNetworkService) matchRelations(ctx context.Context,
+	query *interfaces.SubGraphQueryBaseOnObjects,
+	objectsByType map[string][]interfaces.LevelObject,
+	allRelationTypes map[string]interfaces.RelationType) ([]interfaces.Relation, map[string]bool, error) {
+
+	relations := []interfaces.Relation{}
+	objectsInRelations := make(map[string]bool) // 记录参与关系的对象ID
+
+	// 直接遍历所有关系类
+	for _, relationType := range allRelationTypes {
+
+		logger.Debugf("匹配关系类: %s, 源对象类型: %s, 目标对象类型: %s", relationType.RTID, relationType.SourceObjectTypeID, relationType.TargetObjectTypeID)
+
+		sourceOTID := relationType.SourceObjectTypeID
+		targetOTID := relationType.TargetObjectTypeID
+
+		sourceObjects := objectsByType[sourceOTID]
+		targetObjects := objectsByType[targetOTID]
+
+		if len(sourceObjects) == 0 || len(targetObjects) == 0 {
+			continue
+		}
+
+		// 构建TypeEdge用于复用现有逻辑
+		edge := &interfaces.TypeEdge{
+			RelationTypeId:     relationType.RTID,
+			RelationType:       relationType,
+			SourceObjectTypeId: sourceOTID,
+			TargetObjectTypeId: targetOTID,
+			Direction:          interfaces.DIRECTION_FORWARD,
+		}
+
+		// 用关系类的起点对象集和终点对象集去匹配关系，返回匹配到的关系
+		matchedRelations, err := kns.matchRelationsForPair(ctx, query, sourceObjects, targetObjects, edge)
+		if err != nil {
+			logger.Warnf("匹配关系失败: relationType=%s, error=%v", relationType.RTID, err)
+			continue
+		}
+
+		// 添加到结果中
+		for _, rel := range matchedRelations {
+			relations = append(relations, rel)
+			objectsInRelations[rel.SourceObjectId] = true
+			objectsInRelations[rel.TargetObjectId] = true
+		}
+	}
+
+	return relations, objectsInRelations, nil
+}
+
+// 匹配一对对象类型之间的关系
+func (kns *knowledgeNetworkService) matchRelationsForPair(ctx context.Context,
+	query *interfaces.SubGraphQueryBaseOnObjects,
+	sourceObjects []interfaces.LevelObject,
+	targetObjects []interfaces.LevelObject,
+	edge *interfaces.TypeEdge) ([]interfaces.Relation, error) {
+
+	// 判断关系类型，分别处理直接关联和间接关联
+	switch edge.RelationType.MappingRules.(type) {
+	case []interfaces.Mapping:
+		// 直接关联：直接使用已有的 targetObjects 进行匹配，避免数据库查询
+		return kns.matchDirectRelations(sourceObjects, targetObjects, edge)
+
+	case interfaces.InDirectMapping:
+		// 间接关联：需要查询视图数据，但只匹配输入的目标对象
+		return kns.matchIndirectRelations(ctx, query, sourceObjects, targetObjects, edge)
+	}
+
+	return []interfaces.Relation{}, nil
+}
+
+// 匹配直接关联关系（无需查询数据库）
+func (kns *knowledgeNetworkService) matchDirectRelations(
+	sourceObjects []interfaces.LevelObject,
+	targetObjects []interfaces.LevelObject,
+	edge *interfaces.TypeEdge) ([]interfaces.Relation, error) {
+
+	relations := []interfaces.Relation{}
+	mappingRules := edge.RelationType.MappingRules.([]interfaces.Mapping)
+
+	// 直接遍历源对象和目标对象进行匹配
+	for _, sourceObj := range sourceObjects {
+		for _, targetObj := range targetObjects {
+			if logics.CheckDirectMappingConditions(sourceObj.ObjectData, targetObj.ObjectData, mappingRules, true) {
+				relations = append(relations, interfaces.Relation{
+					RelationTypeId:   edge.RelationTypeId,
+					RelationTypeName: edge.RelationType.RTName,
+					SourceObjectId:   sourceObj.ObjectID,
+					TargetObjectId:   targetObj.ObjectID,
+				})
+			}
+		}
+	}
+
+	return relations, nil
+}
+
+// 匹配间接关联关系（需要查询视图数据，但只匹配输入的目标对象）
+func (kns *knowledgeNetworkService) matchIndirectRelations(ctx context.Context,
+	query *interfaces.SubGraphQueryBaseOnObjects,
+	sourceObjects []interfaces.LevelObject,
+	targetObjects []interfaces.LevelObject,
+	edge *interfaces.TypeEdge) ([]interfaces.Relation, error) {
+
+	relations := []interfaces.Relation{}
+
+	// 查询视图数据（这是必要的，因为视图数据不在输入对象中）
+	_, viewDataMap, err := kns.buildBatchConditionsForObjects(ctx, query, sourceObjects, edge, true)
+	if err != nil {
+		return nil, err
+	}
+
+	// 直接使用输入的目标对象进行匹配（而不是查询数据库）
+	for _, sourceObj := range sourceObjects {
+		objectViewData := viewDataMap[sourceObj.ObjectID]
+
+		for _, targetObj := range targetObjects {
+			mappingRules := edge.RelationType.MappingRules.(interfaces.InDirectMapping)
+			if logics.CheckIndirectMappingConditionsWithViewData(
+				sourceObj.ObjectData,
+				targetObj.ObjectData,
+				mappingRules,
+				true,
+				objectViewData) {
+				relations = append(relations, interfaces.Relation{
+					RelationTypeId:   edge.RelationTypeId,
+					RelationTypeName: edge.RelationType.RTName,
+					SourceObjectId:   sourceObj.ObjectID,
+					TargetObjectId:   targetObj.ObjectID,
+				})
+			}
+		}
+	}
+
+	return relations, nil
+}
+
+// 为对象构建批量查询条件（适配SubGraphQueryBaseOnObjects）
+func (kns *knowledgeNetworkService) buildBatchConditionsForObjects(ctx context.Context,
+	query *interfaces.SubGraphQueryBaseOnObjects,
+	currentLevelObjects []interfaces.LevelObject,
+	edge *interfaces.TypeEdge,
+	isForward bool) ([]*cond.CondCfg, map[string][]map[string]any, error) {
+
+	var conditions []*cond.CondCfg
+	viewDataMap := make(map[string][]map[string]any)
+
+	// 先处理直接映射的情况
+	directObjects := make([]interfaces.LevelObject, 0)
+	indirectObjects := make([]interfaces.LevelObject, 0)
+
+	for _, levelObj := range currentLevelObjects {
+		switch edge.RelationType.MappingRules.(type) {
+		case []interfaces.Mapping:
+			directObjects = append(directObjects, levelObj)
+		case interfaces.InDirectMapping:
+			indirectObjects = append(indirectObjects, levelObj)
+		}
+	}
+
+	// 处理直接映射
+	if len(directObjects) > 0 {
+		directConditions, err := logics.BuildDirectBatchConditions(directObjects, edge, isForward)
+		if err != nil {
+			return nil, nil, err
+		}
+		conditions = append(conditions, directConditions...)
+	}
+
+	// 处理间接映射 - 批量查询视图数据
+	if len(indirectObjects) > 0 {
+		// 构建一个临时的SubGraphQueryBaseOnSource用于调用buildIndirectBatchConditions
+		tempQuery := &interfaces.SubGraphQueryBaseOnSource{
+			KNID:   query.KNID,
+			Branch: query.Branch,
+			PageQuery: interfaces.PageQuery{
+				NeedTotal: false,
+			},
+			CommonQueryParameters: interfaces.CommonQueryParameters{
+				IncludeLogicParams: query.IncludeLogicParams,
+				IgnoringStore:      query.IgnoringStore,
+			},
+		}
+		indirectConditions, indirectViewData, err := kns.buildIndirectBatchConditions(ctx, tempQuery, indirectObjects, edge, isForward)
+		if err != nil {
+			return nil, nil, err
+		}
+		conditions = append(conditions, indirectConditions...)
+
+		// 合并视图数据映射
+		for k, v := range indirectViewData {
+			viewDataMap[k] = v
+		}
+	}
+
+	return conditions, viewDataMap, nil
+}
+
+// 构建子图
+func (kns *knowledgeNetworkService) buildSubgraphFromObjects(query *interfaces.SubGraphQueryBaseOnObjects,
+	objectsByType map[string][]interfaces.LevelObject,
+	relations []interfaces.Relation,
+	objectsInRelations map[string]bool) interfaces.ObjectSubGraph {
+
+	result := interfaces.ObjectSubGraph{
+		Objects:         make(map[string]interfaces.ObjectInfoInSubgraph),
+		IsolatedObjects: make(map[string]interfaces.ObjectInfoInSubgraph),
+		RelationPaths:   []interfaces.RelationPath{},
+	}
+
+	// 构建对象映射表
+	for _, levelObjects := range objectsByType {
+		for _, levelObj := range levelObjects {
+			objInfo := interfaces.ObjectInfoInSubgraph{
+				ObjectTypeId:   levelObj.ObjectType.OTID,
+				ObjectTypeName: levelObj.ObjectType.OTName,
+				Properties:     levelObj.ObjectData,
+			}
+			if !logics.ShouldExcludeSystemProperty(interfaces.SYSTEM_PROPERTY_INSTANCE_ID, query.ExcludeSystemProperties) {
+				objInfo.InstanceID = levelObj.ObjectID
+			}
+			if !logics.ShouldExcludeSystemProperty(interfaces.SYSTEM_PROPERTY_INSTANCE_IDENTITY, query.ExcludeSystemProperties) {
+				objInfo.InstanceIdentity = levelObj.ObjectUK
+			}
+			if !logics.ShouldExcludeSystemProperty(interfaces.SYSTEM_PROPERTY_DISPLAY, query.ExcludeSystemProperties) {
+				objInfo.Display = levelObj.ObjectData[levelObj.ObjectType.DisplayKey]
+			}
+
+			// 判断是否为孤立对象
+			if objectsInRelations[levelObj.ObjectID] {
+				result.Objects[levelObj.ObjectID] = objInfo
+			} else {
+				result.IsolatedObjects[levelObj.ObjectID] = objInfo
+			}
+		}
+	}
+
+	// 构建关系路径（长度为1）
+	for _, rel := range relations {
+		result.RelationPaths = append(result.RelationPaths, interfaces.RelationPath{
+			Relations: []interfaces.Relation{rel},
+			Length:    1,
+		})
+	}
+
+	return result
 }

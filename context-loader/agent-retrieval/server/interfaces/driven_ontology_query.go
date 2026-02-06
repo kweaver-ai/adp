@@ -24,20 +24,21 @@ type QueryObjectInstancesReq struct {
 	IncludeLogicParams bool         `form:"include_logic_params"`           // Include calculation parameters for logic properties, default false
 	Cond               *KnCondition `json:"condition"`                      // Retrieval conditions
 	Limit              int          `json:"limit" validate:"min=1,max=100"` // Quantity limit, default 10, range 1-100
+	Properties         []string     `json:"properties"`                     // 指定返回的对象属性字段列表，默认返回所有属性
 }
 
 type QueryObjectInstancesResp struct {
-	Data          []any          `json:"datas"`       // List of object instances
-	ObjectConcept map[string]any `json:"object_type"` // Object type definition
+	Data          []any          `json:"datas"`                 // List of object instances
+	ObjectConcept map[string]any `json:"object_type,omitempty"` // Object type definition，由 req.include_type_info 控制是否返回
 }
 
 // QueryLogicPropertiesReq Request for querying logic properties values
 type QueryLogicPropertiesReq struct {
-	KnID             string                   `json:"kn_id"`
-	OtID             string                   `json:"ot_id"`
-	UniqueIdentities []map[string]interface{} `json:"unique_identities"`
-	Properties       []string                 `json:"properties"`
-	DynamicParams    map[string]interface{}   `json:"dynamic_params"`
+	KnID               string                   `json:"kn_id"`
+	OtID               string                   `json:"ot_id"`
+	InstanceIdentities []map[string]interface{} `json:"_instance_identities"`
+	Properties         []string                 `json:"properties"`
+	DynamicParams      map[string]interface{}   `json:"dynamic_params"`
 }
 
 // QueryLogicPropertiesResp Response for querying logic properties values

@@ -63,6 +63,18 @@ data:
       certName: {{ .Values.depServices.redis.certName | quote }}
       keyName: {{ .Values.depServices.redis.keyName | quote }}
       poolSize: {{ .Values.depServices.redis.connectInfo.poolSize }}
+    mf_model_api:
+      private_protocol: {{ index .Values "depServices" "mf-model-api" "privateProtocol" | quote }}
+      private_host: {{ index .Values "depServices" "mf-model-api" "privateHost" | quote }}
+      private_port: {{ index .Values "depServices" "mf-model-api" "privatePort" }}
+    rerank_llm:
+      model: {{ .Values.service.rerank_llm.model | quote }}
+      temperature: {{ default 0 .Values.service.rerank_llm.temperature }}
+      top_k: {{ default 2 .Values.service.rerank_llm.top_k }}
+      top_p: {{ default 0.5 .Values.service.rerank_llm.top_p }}
+      frequency_penalty: {{ default 0.5 .Values.service.rerank_llm.frequency_penalty }}
+      presence_penalty: {{ default 0.5 .Values.service.rerank_llm.presence_penalty }}
+      max_tokens: {{ default 5000 .Values.service.rerank_llm.max_tokens }}
 
   observability.yaml: |
     # 可观测相关配置

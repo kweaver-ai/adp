@@ -20,6 +20,9 @@ data:
       operator_description_length_limit: {{ .Values.service.operator.descriptionLengthLimit }}
     mcp:
       conn_timeout: {{ .Values.service.mcp.connTimeout }}
+      max_instances: {{ .Values.service.mcp.maxInstances }}
+      instance_ttl: {{ .Values.service.mcp.instanceTTL }}
+      cleanup_interval: {{ .Values.service.mcp.cleanupInterval }}
     category:
       init_switch: {{ .Values.service.category.initSwitch }}
     proxy_module:
@@ -47,10 +50,6 @@ data:
       private_protocol: {{ index .Values "depServices" "business-system-service" "privateProtocol" | quote }}
       private_host: {{ index .Values "depServices" "business-system-service" "privateHost" | quote }}
       private_port: {{ index .Values "depServices" "business-system-service" "privatePort" }}
-    agent-operator-app:
-      private_protocol: {{ index .Values "depServices" "agent-operator-app" "privateProtocol" | quote }}
-      private_host: {{ index .Values "depServices" "agent-operator-app" "privateHost" | quote }}
-      private_port: {{ index .Values "depServices" "agent-operator-app" "privatePort" }}
     db:
       conn_timeout: {{ .Values.depServices.rds.connTimeout }}
       read_timeout: {{ .Values.depServices.rds.readTimeout }}
@@ -69,10 +68,19 @@ data:
       private_protocol: {{ index .Values "depServices" "flow-automation" "privateProtocol" | quote }}
       private_host: {{ index .Values "depServices" "flow-automation" "privateHost" | quote }}
       private_port: {{ index .Values "depServices" "flow-automation" "privatePort" }}
-    sandbox-runtime:
-      private_protocol: {{ index .Values "depServices" "sandbox-runtime" "privateProtocol" | quote }}
-      private_host: {{ index .Values "depServices" "sandbox-runtime" "privateHost" | quote }}
-      private_port: {{ index .Values "depServices" "sandbox-runtime" "privatePort" }}
+    sandbox-control-plane:
+      private_protocol: {{ index .Values "depServices" "sandbox-control-plane" "privateProtocol" | quote }}
+      private_host: {{ index .Values "depServices" "sandbox-control-plane" "privateHost" | quote }}
+      private_port: {{ index .Values "depServices" "sandbox-control-plane" "privatePort" }}
+      template_id: {{ index .Values "depServices" "sandbox-control-plane" "templateID" | quote }}
+      session_resources:
+        cpu: {{ index .Values "depServices" "sandbox-control-plane" "sessionResources" "cpu" | quote }}
+        memory: {{ index .Values "depServices" "sandbox-control-plane" "sessionResources" "memory" | quote }}
+        disk: {{ index .Values "depServices" "sandbox-control-plane" "sessionResources" "disk" | quote }}
+        timeout: {{ index .Values "depServices" "sandbox-control-plane" "sessionResources" "timeout" }}
+      max_sessions: {{ index .Values "depServices" "sandbox-control-plane" "maxSessions" }}
+      active_sessions: {{ index .Values "depServices" "sandbox-control-plane" "activeSessions" }}
+      max_concurrent_tasks: {{ index .Values "depServices" "sandbox-control-plane" "maxConcurrentTasks" }}
     mf-model-api:
       private_protocol: {{ index .Values "depServices" "mf-model-api" "privateProtocol" | quote }}
       private_host: {{ index .Values "depServices" "mf-model-api" "privateHost" | quote }}

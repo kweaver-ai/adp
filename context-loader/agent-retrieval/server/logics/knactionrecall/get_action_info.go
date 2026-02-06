@@ -17,15 +17,15 @@ import (
 
 // GetActionInfo 获取行动信息（行动召回）
 func (s *knActionRecallServiceImpl) GetActionInfo(ctx context.Context, req *interfaces.KnActionRecallRequest) (*interfaces.KnActionRecallResponse, error) {
-	// 1. 参数转换：unique_identity -> unique_identities (数组)
-	uniqueIdentities := []map[string]interface{}{req.UniqueIdentity}
+	// 1. 参数转换：_instance_identity -> _instance_identity (数组)
+	instanceIdentities := []map[string]interface{}{req.InstanceIdentity}
 
 	// 2. 调用行动查询接口
 	actionsReq := &interfaces.QueryActionsRequest{
-		KnID:             req.KnID,
-		AtID:             req.AtID,
-		UniqueIdentities: uniqueIdentities,
-		IncludeTypeInfo:  false, // 不需要类型信息
+		KnID:               req.KnID,
+		AtID:               req.AtID,
+		InstanceIdentities: instanceIdentities,
+		IncludeTypeInfo:    false, // 不需要类型信息
 	}
 
 	actionsResp, err := s.ontologyQuery.QueryActions(ctx, actionsReq)

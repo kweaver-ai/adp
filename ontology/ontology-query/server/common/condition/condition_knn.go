@@ -18,9 +18,9 @@ func NewKnnCond(ctx context.Context, cfg *CondCfg, fieldScope uint8, fieldsMap m
 	// 校验名称是否存在
 	name := getFilterFieldName(cfg.Name, fieldsMap, true)
 	var field string
-	// 如果指定*查询，则把 * 换成 _vector_*
+	// 如果指定*查询,报错，不支持，因为字段太多，向量耗时太长
 	if name == AllField {
-		field = "_vector_*"
+		return nil, fmt.Errorf(`the knn operation does not support the [*] query, please specify the field name explicitly`)
 	} else {
 		// 向量字段做knn查询时需要把向量字段换成 "_vector_"+property.Name
 		// 字段是否做了knn
@@ -95,6 +95,16 @@ func (cond *KnnCond) Convert(ctx context.Context, vectorizer func(ctx context.Co
 		subDSL = fmt.Sprintf(subDSL, subCondStr)
 	}
 
+	// limit_key 和 limit_value 未给时，填入默认值
+	key := cond.mCfg.RemainCfg["limit_key"]
+	value := cond.mCfg.RemainCfg["limit_value"]
+	if key == nil || key == "" {
+		key = KNN_LIMIT_KEY_DEFAULT
+	}
+	if value == nil {
+		value = KNN_LIMIT_VALUE_DEFAULT
+	}
+
 	dslStr := fmt.Sprintf(`
 					{
 						"knn": {
@@ -104,7 +114,7 @@ func (cond *KnnCond) Convert(ctx context.Context, vectorizer func(ctx context.Co
 								%s
 							}
 						}
-					}`, cond.mFilterFieldName, cond.mCfg.RemainCfg["limit_key"], cond.mCfg.RemainCfg["limit_value"],
+					}`, cond.mFilterFieldName, key, value,
 		string(res), subDSL)
 
 	return dslStr, nil

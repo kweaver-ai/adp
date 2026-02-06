@@ -1625,7 +1625,7 @@ func Test_knowledgeNetworkService_CreateKN(t *testing.T) {
 			bsa.EXPECT().BindResource(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
 			smock.ExpectCommit()
 
-			knID, err := service.CreateKN(ctx, kn, mode)
+			knID, err := service.CreateKN(ctx, kn, mode, true)
 			So(err, ShouldBeNil)
 			So(knID, ShouldNotBeEmpty)
 		})
@@ -1640,7 +1640,7 @@ func Test_knowledgeNetworkService_CreateKN(t *testing.T) {
 
 			ps.EXPECT().CheckPermission(gomock.Any(), gomock.Any(), gomock.Any()).Return(rest.NewHTTPError(ctx, 403, oerrors.OntologyManager_KnowledgeNetwork_InternalError))
 
-			knID, err := service.CreateKN(ctx, kn, mode)
+			knID, err := service.CreateKN(ctx, kn, mode, true)
 			So(err, ShouldNotBeNil)
 			So(knID, ShouldEqual, "")
 		})
@@ -1659,7 +1659,7 @@ func Test_knowledgeNetworkService_CreateKN(t *testing.T) {
 			kna.EXPECT().CheckKNExistByName(gomock.Any(), gomock.Any(), gomock.Any()).Return("", false, nil)
 			smock.ExpectRollback()
 
-			knID, err := service.CreateKN(ctx, kn, mode)
+			knID, err := service.CreateKN(ctx, kn, mode, true)
 			So(err, ShouldNotBeNil)
 			So(knID, ShouldEqual, "")
 			httpErr := err.(*rest.HTTPError)
@@ -1686,7 +1686,7 @@ func Test_knowledgeNetworkService_CreateKN(t *testing.T) {
 			bsa.EXPECT().BindResource(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
 			smock.ExpectCommit()
 
-			knID, err := service.CreateKN(ctx, kn, mode)
+			knID, err := service.CreateKN(ctx, kn, mode, true)
 			So(err, ShouldBeNil)
 			So(knID, ShouldNotBeEmpty)
 		})
@@ -1705,7 +1705,7 @@ func Test_knowledgeNetworkService_CreateKN(t *testing.T) {
 			kna.EXPECT().CheckKNExistByName(gomock.Any(), gomock.Any(), gomock.Any()).Return("", false, nil)
 			smock.ExpectCommit()
 
-			knID, err := service.CreateKN(ctx, kn, mode)
+			knID, err := service.CreateKN(ctx, kn, mode, true)
 			So(err, ShouldBeNil)
 			So(knID, ShouldEqual, "kn1")
 		})
@@ -1744,7 +1744,7 @@ func Test_knowledgeNetworkService_CreateKN(t *testing.T) {
 			osa.EXPECT().InsertData(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
 			smock.ExpectCommit()
 
-			knID, err := service.CreateKN(ctx, kn, mode)
+			knID, err := service.CreateKN(ctx, kn, mode, true)
 			So(err, ShouldBeNil)
 			So(knID, ShouldEqual, "kn1")
 		})
@@ -1770,7 +1770,7 @@ func Test_knowledgeNetworkService_CreateKN(t *testing.T) {
 				db:         db2,
 			}
 
-			knID, err := service2.CreateKN(ctx, kn, mode)
+			knID, err := service2.CreateKN(ctx, kn, mode, true)
 			So(err, ShouldNotBeNil)
 			So(knID, ShouldEqual, "")
 		})
@@ -1790,7 +1790,7 @@ func Test_knowledgeNetworkService_CreateKN(t *testing.T) {
 			kna.EXPECT().CreateKN(gomock.Any(), gomock.Any(), gomock.Any()).Return(rest.NewHTTPError(ctx, 500, oerrors.OntologyManager_KnowledgeNetwork_InternalError))
 			smock.ExpectRollback()
 
-			knID, err := service.CreateKN(ctx, kn, mode)
+			knID, err := service.CreateKN(ctx, kn, mode, true)
 			So(err, ShouldNotBeNil)
 			So(knID, ShouldEqual, "")
 		})
@@ -1825,10 +1825,10 @@ func Test_knowledgeNetworkService_CreateKN(t *testing.T) {
 			kna.EXPECT().CheckKNExistByID(gomock.Any(), gomock.Any(), gomock.Any()).Return("", false, nil)
 			kna.EXPECT().CheckKNExistByName(gomock.Any(), gomock.Any(), gomock.Any()).Return("", false, nil)
 			kna.EXPECT().CreateKN(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
-			cgs.EXPECT().CreateConceptGroup(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return("", rest.NewHTTPError(ctx, 500, oerrors.OntologyManager_KnowledgeNetwork_InternalError))
+			cgs.EXPECT().CreateConceptGroup(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return("", rest.NewHTTPError(ctx, 500, oerrors.OntologyManager_KnowledgeNetwork_InternalError))
 			smock.ExpectRollback()
 
-			knID, err := service3.CreateKN(ctx, kn, mode)
+			knID, err := service3.CreateKN(ctx, kn, mode, true)
 			So(err, ShouldNotBeNil)
 			So(knID, ShouldEqual, "")
 		})
@@ -1865,10 +1865,10 @@ func Test_knowledgeNetworkService_CreateKN(t *testing.T) {
 			kna.EXPECT().CheckKNExistByID(gomock.Any(), gomock.Any(), gomock.Any()).Return("", false, nil)
 			kna.EXPECT().CheckKNExistByName(gomock.Any(), gomock.Any(), gomock.Any()).Return("", false, nil)
 			kna.EXPECT().CreateKN(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
-			ots.EXPECT().CreateObjectTypes(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil, rest.NewHTTPError(ctx, 500, oerrors.OntologyManager_KnowledgeNetwork_InternalError))
+			ots.EXPECT().CreateObjectTypes(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil, rest.NewHTTPError(ctx, 500, oerrors.OntologyManager_KnowledgeNetwork_InternalError))
 			smock.ExpectRollback()
 
-			knID, err := service4.CreateKN(ctx, kn, mode)
+			knID, err := service4.CreateKN(ctx, kn, mode, true)
 			So(err, ShouldNotBeNil)
 			So(knID, ShouldEqual, "")
 		})
@@ -1905,10 +1905,10 @@ func Test_knowledgeNetworkService_CreateKN(t *testing.T) {
 			kna.EXPECT().CheckKNExistByID(gomock.Any(), gomock.Any(), gomock.Any()).Return("", false, nil)
 			kna.EXPECT().CheckKNExistByName(gomock.Any(), gomock.Any(), gomock.Any()).Return("", false, nil)
 			kna.EXPECT().CreateKN(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
-			rts.EXPECT().CreateRelationTypes(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil, rest.NewHTTPError(ctx, 500, oerrors.OntologyManager_KnowledgeNetwork_InternalError))
+			rts.EXPECT().CreateRelationTypes(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil, rest.NewHTTPError(ctx, 500, oerrors.OntologyManager_KnowledgeNetwork_InternalError))
 			smock.ExpectRollback()
 
-			knID, err := service5.CreateKN(ctx, kn, mode)
+			knID, err := service5.CreateKN(ctx, kn, mode, true)
 			So(err, ShouldNotBeNil)
 			So(knID, ShouldEqual, "")
 		})
@@ -1948,7 +1948,7 @@ func Test_knowledgeNetworkService_CreateKN(t *testing.T) {
 			ats.EXPECT().CreateActionTypes(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil, rest.NewHTTPError(ctx, 500, oerrors.OntologyManager_KnowledgeNetwork_InternalError))
 			smock.ExpectRollback()
 
-			knID, err := service6.CreateKN(ctx, kn, mode)
+			knID, err := service6.CreateKN(ctx, kn, mode, true)
 			So(err, ShouldNotBeNil)
 			So(knID, ShouldEqual, "")
 		})
@@ -1969,7 +1969,7 @@ func Test_knowledgeNetworkService_CreateKN(t *testing.T) {
 			osa.EXPECT().InsertData(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(rest.NewHTTPError(ctx, 500, oerrors.OntologyManager_KnowledgeNetwork_InternalError))
 			smock.ExpectRollback()
 
-			knID, err := service.CreateKN(ctx, kn, mode)
+			knID, err := service.CreateKN(ctx, kn, mode, true)
 			So(err, ShouldNotBeNil)
 			So(knID, ShouldEqual, "")
 		})
@@ -1991,7 +1991,7 @@ func Test_knowledgeNetworkService_CreateKN(t *testing.T) {
 			ps.EXPECT().CreateResources(gomock.Any(), gomock.Any(), gomock.Any()).Return(rest.NewHTTPError(ctx, 500, oerrors.OntologyManager_KnowledgeNetwork_InternalError))
 			smock.ExpectRollback()
 
-			knID, err := service.CreateKN(ctx, kn, mode)
+			knID, err := service.CreateKN(ctx, kn, mode, true)
 			So(err, ShouldNotBeNil)
 			So(knID, ShouldEqual, "")
 		})
@@ -2014,7 +2014,7 @@ func Test_knowledgeNetworkService_CreateKN(t *testing.T) {
 			bsa.EXPECT().BindResource(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(rest.NewHTTPError(ctx, 500, oerrors.OntologyManager_KnowledgeNetwork_InternalError))
 			smock.ExpectRollback()
 
-			knID, err := service.CreateKN(ctx, kn, mode)
+			knID, err := service.CreateKN(ctx, kn, mode, true)
 			So(err, ShouldNotBeNil)
 			So(knID, ShouldEqual, "")
 		})

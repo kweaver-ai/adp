@@ -9,7 +9,7 @@ import (
 type KNService interface {
 	CheckKNExistByID(ctx context.Context, knID string, branch string) (string, bool, error)
 	CheckKNExistByName(ctx context.Context, knName string, branch string) (string, bool, error)
-	CreateKN(ctx context.Context, kn *KN, mode string) (string, error)
+	CreateKN(ctx context.Context, kn *KN, mode string, validateDependency bool) (string, error)
 	ListKNs(ctx context.Context, query KNsQueryParams) ([]*KN, int, error)
 	GetKNByID(ctx context.Context, knID string, branch string, mode string) (*KN, error)
 	UpdateKN(ctx context.Context, tx *sql.Tx, kn *KN) error

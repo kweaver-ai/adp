@@ -868,8 +868,8 @@ func (ata *actionTypeAccess) GetActionTypeIDsByKnID(ctx context.Context, knID st
 // 拼接 sql 过滤条件
 func processQueryCondition(query interfaces.ActionTypesQueryParams, subBuilder sq.SelectBuilder) sq.SelectBuilder {
 	if query.NamePattern != "" {
-		// 模糊查询
-		subBuilder = subBuilder.Where(sq.Expr("instr(f_name, ?) > 0", query.NamePattern))
+		// 模糊查询，名称或id进行模糊查询，匹配任一即可
+		subBuilder = subBuilder.Where(sq.Expr("(instr(f_name, ?) > 0 OR instr(f_id, ?) > 0)", query.NamePattern, query.NamePattern))
 	}
 
 	if query.Tag != "" {

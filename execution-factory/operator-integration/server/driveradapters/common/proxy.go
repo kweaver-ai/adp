@@ -5,14 +5,15 @@ import (
 	"net/http"
 	"sync"
 
-	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/drivenadapters"
+	"github.com/creasty/defaults"
+	"github.com/gin-gonic/gin"
+	"github.com/go-playground/validator/v10"
 	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/infra/config"
 	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/infra/errors"
 	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/infra/rest"
 	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/interfaces"
 	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/logics/metadata"
-	"github.com/gin-gonic/gin"
-	"github.com/go-playground/validator/v10"
+	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/logics/sandbox"
 )
 
 // UnifiedProxyHandler 统一代理处理接口
@@ -23,9 +24,9 @@ type UnifiedProxyHandler interface {
 
 // unifiedProxyHandler 代理处理实现
 type unifiedProxyHandler struct {
-	Logger           interfaces.Logger
-	MetadataService  interfaces.IMetadataService
-	SandBoxEnvClient interfaces.SandBoxEnv
+	Logger          interfaces.Logger
+	MetadataService interfaces.IMetadataService
+	SessionPool     sandbox.SessionPool
 }
 
 var (
@@ -37,26 +38,28 @@ func NewUnifiedProxyHandler() UnifiedProxyHandler {
 	pOnce.Do(func() {
 		conf := config.NewConfigLoader()
 		proxyHandler = &unifiedProxyHandler{
-			Logger:           conf.Logger,
-			MetadataService:  metadata.NewMetadataService(),
-			SandBoxEnvClient: drivenadapters.NewSandBoxEnvClient(),
+			Logger:          conf.Logger,
+			MetadataService: metadata.NewMetadataService(),
+			SessionPool:     sandbox.GetSessionPool(),
 		}
 	})
 	return proxyHandler
 }
 
-// FunctionExecuteReq 函数执行请求参数
-type FunctionExecuteReq struct {
-	Code  string         `json:"code" validate:"required"`  // 执行代码
-	Event map[string]any `json:"event" validate:"required"` // 事件
-}
-
+// FunctionExecute 函数执行
 func (h *unifiedProxyHandler) FunctionExecute(c *gin.Context) {
 	var err error
-	req := &FunctionExecuteReq{}
+	req := &interfaces.ExecuteCodeReq{}
 	if err = c.ShouldBindJSON(req); err != nil {
 		err = errors.NewHTTPError(c.Request.Context(), http.StatusBadRequest, errors.ErrExtDebugParamsInvalid,
 			fmt.Sprintf("invalid request body, err: %v", err))
+		rest.ReplyError(c, err)
+		return
+	}
+
+	err = defaults.Set(req)
+	if err != nil {
+		err = errors.DefaultHTTPError(c.Request.Context(), http.StatusBadRequest, fmt.Sprintf("set default value failed, err: %v", err))
 		rest.ReplyError(c, err)
 		return
 	}
@@ -65,15 +68,27 @@ func (h *unifiedProxyHandler) FunctionExecute(c *gin.Context) {
 		rest.ReplyError(c, err)
 		return
 	}
-	resp, err := h.SandBoxEnvClient.ExecuteCode(c.Request.Context(), &interfaces.ExecuteCodeReq{
-		HandlerCode: req.Code,
-		Event:       req.Event,
-	})
+	resp, err := h.SessionPool.ExecuteCode(c.Request.Context(), req)
 	if err != nil {
 		rest.ReplyError(c, err)
 		return
 	}
-	rest.ReplyOK(c, http.StatusOK, resp)
+	h.Logger.Infof("FunctionExecute resp: %v", resp)
+	result := &FunctionExecuteResp{
+		Stdout:  resp.Stdout,
+		Stderr:  resp.Stderr,
+		Result:  resp.ReturnValue,
+		Metrics: resp.Metrics,
+	}
+	rest.ReplyOK(c, http.StatusOK, result)
+}
+
+// FunctionExecuteResp 函数执行响应
+type FunctionExecuteResp struct {
+	Stdout  string `json:"stdout"`  // 标准输出
+	Stderr  string `json:"stderr"`  // 标准错误输出
+	Result  any    `json:"result"`  // 执行结果值
+	Metrics any    `json:"metrics"` // 执行指标
 }
 
 // FunctionExecuteProxyReq 函数执行代理请求参数
@@ -128,18 +143,23 @@ func (h *unifiedProxyHandler) FunctionExecuteProxy(c *gin.Context) {
 		rest.ReplyError(c, err)
 		return
 	}
-	resp, err := h.SandBoxEnvClient.ExecuteCode(c.Request.Context(), &interfaces.ExecuteCodeReq{
-		HandlerCode: code,
-		Event:       event,
-		ExecuteContext: interfaces.ExecuteContext{
-			FunctionName:          metadata.GetSummary(),
-			FunctionVersion:       req.Version,
-			RemainingTimeInMillis: req.Timeout,
-		},
+	resp, err := h.SessionPool.ExecuteCode(c.Request.Context(), &interfaces.ExecuteCodeReq{
+		Code:     code,
+		Event:    event,
+		Timeout:  int(req.Timeout / 1000),
+		Language: string(interfaces.ScriptTypePython),
 	})
 	if err != nil {
 		rest.ReplyError(c, err)
 		return
 	}
-	rest.ReplyOK(c, http.StatusOK, resp)
+	h.Logger.Infof("FunctionExecuteProxy resp: %v", resp)
+	// 转换为 FunctionExecuteResp
+	result := &FunctionExecuteResp{
+		Stdout:  resp.Stdout,
+		Stderr:  resp.Stderr,
+		Result:  resp.ReturnValue,
+		Metrics: resp.Metrics,
+	}
+	rest.ReplyOK(c, http.StatusOK, result)
 }

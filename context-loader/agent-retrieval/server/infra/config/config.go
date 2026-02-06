@@ -16,13 +16,14 @@ import (
 	"sync"
 
 	"github.com/creasty/defaults"
+	o11y "github.com/kweaver-ai/kweaver-go-lib/observability"
+	"github.com/spf13/viper"
+	yaml "gopkg.in/yaml.v3"
+
 	"github.com/kweaver-ai/adp/context-loader/agent-retrieval/server/infra/logger"
 	"github.com/kweaver-ai/adp/context-loader/agent-retrieval/server/infra/telemetry"
 	"github.com/kweaver-ai/adp/context-loader/agent-retrieval/server/interfaces"
 	"github.com/kweaver-ai/adp/context-loader/agent-retrieval/server/utils"
-	o11y "github.com/kweaver-ai/kweaver-go-lib/observability"
-	"github.com/spf13/viper"
-	"gopkg.in/yaml.v3"
 )
 
 // Config configuration
@@ -40,11 +41,18 @@ type Config struct {
 	ConceptSearchConfig KnConceptSearchConfig `yaml:"concept_search_config"` // Knowledge network concept search configuration
 	DataRetrieval       PrivateBaseConfig     `yaml:"data_retrieval"`        // Data retrieval configuration
 	Observability       ObservabilityConfig   `yaml:"-"`
+	// 新增配置 - 知识重排和检索相关
+	MFModelAPI PrivateBaseConfig `yaml:"mf_model_api"` // MF-Model API统一服务配置
+	RerankLLM  RerankLLMConfig   `yaml:"rerank_llm"`   // Rerank用的LLM参数配置
 }
 
 // ObservabilityConfig trace configuration
 type ObservabilityConfig struct {
 	TraceType                 telemetry.ExporterType `mapstructure:"traceType"`
+	TraceEnabled              bool                   `mapstructure:"traceEnabled"`
+	TraceProvider             string                 `mapstructure:"traceProvider"`
+	LogEnabled                bool                   `mapstructure:"logEnabled"`
+	GrpcTraceFeedIngesterURL  string                 `mapstructure:"grpcTraceFeedIngesterUrl"`
 	o11y.ObservabilitySetting `mapstructure:",squash"`
 }
 
@@ -105,6 +113,19 @@ type OpenSearchConfig struct {
 type KnConceptSearchConfig struct {
 	ConceptRecallSize int `yaml:"concept_recall_size"` // Concept rough recall size
 	KnnKValue         int `yaml:"knn_k"`               // knn k value
+}
+
+// MFModelAPI 配置使用统一的 PrivateBaseConfig 结构
+
+// RerankLLMConfig Rerank用的LLM参数配置
+type RerankLLMConfig struct {
+	Model            string  `yaml:"model" env:"RERANK_LLM_MODEL" default:"Tome-pro"` // 模型名称
+	Temperature      float64 `yaml:"temperature" default:"0"`                         // 生成随机性
+	TopK             int     `yaml:"top_k" default:"2"`                               // 采样范围
+	TopP             float64 `yaml:"top_p" default:"0.5"`                             // 核采样阈值
+	FrequencyPenalty float64 `yaml:"frequency_penalty" default:"0.5"`                 // 频率惩罚
+	PresencePenalty  float64 `yaml:"presence_penalty" default:"0.5"`                  // 存在惩罚
+	MaxTokens        int     `yaml:"max_tokens" default:"5000"`                       // 最大token数
 }
 
 // SetMachineID sets machine ID
@@ -215,7 +236,7 @@ func overrideWithEnv(cfg interface{}) {
 		}
 
 		// Use reflection to set field value directly, type match required
-		//nolint:exhaustive // 只处理需要的类型，其他类型自动跳过
+		//nolint:exhaustive // 只处理 String/Int/Bool，其他类型走 default 跳过
 		switch field.Kind() {
 		case reflect.String:
 			field.SetString(envValue)
@@ -263,7 +284,7 @@ func (conf *Config) initO11yAndLog() {
 
 	// Initialize observability
 	if conf.Observability.TraceEnabled && conf.Observability.TraceType == telemetry.ExporterTypeJaeger {
-		_, err := telemetry.InitJaegerExporter(conf.Project.Name, conf.Observability.TraceProvider, conf.Observability.GrpcTraceFeedIngesterUrl)
+		_, err := telemetry.InitJaegerExporter(conf.Project.Name, conf.Observability.TraceProvider, conf.Observability.GrpcTraceFeedIngesterURL)
 		if err != nil {
 			panic(err)
 		}

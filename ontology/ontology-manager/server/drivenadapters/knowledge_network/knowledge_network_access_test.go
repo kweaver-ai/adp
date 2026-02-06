@@ -319,7 +319,7 @@ func Test_knowledgeNetworkAccess_ListKNs(t *testing.T) {
 			}
 			sqlStrWithAll := fmt.Sprintf("SELECT f_id, f_name, f_tags, f_comment, f_icon, f_color, f_detail, "+
 				"f_branch, f_business_domain, f_creator, f_creator_type, f_create_time, f_updater, f_updater_type, f_update_time "+
-				"FROM %s WHERE instr(f_name, ?) > 0 AND instr(f_tags, ?) > 0 AND f_business_domain = ? ORDER BY f_name ASC",
+				"FROM %s WHERE (instr(f_name, ?) > 0 OR instr(f_id, ?) > 0) AND instr(f_tags, ?) > 0 AND f_business_domain = ? ORDER BY f_name ASC",
 				KN_TABLE_NAME)
 
 			rows := sqlmock.NewRows([]string{
@@ -383,7 +383,7 @@ func Test_knowledgeNetworkAccess_GetKNsTotal(t *testing.T) {
 				Tag:            "tag1",
 				BusinessDomain: "domain1",
 			}
-			sqlStrWithAll := fmt.Sprintf("SELECT COUNT(f_id) FROM %s WHERE instr(f_name, ?) > 0 AND instr(f_tags, ?) > 0 AND f_business_domain = ?", KN_TABLE_NAME)
+			sqlStrWithAll := fmt.Sprintf("SELECT COUNT(f_id) FROM %s WHERE (instr(f_name, ?) > 0 OR instr(f_id, ?) > 0) AND instr(f_tags, ?) > 0 AND f_business_domain = ?", KN_TABLE_NAME)
 
 			rows := sqlmock.NewRows([]string{"COUNT(f_id)"}).AddRow(5)
 			smock.ExpectQuery(sqlStrWithAll).WithArgs().WillReturnRows(rows)
@@ -803,7 +803,7 @@ func Test_knowledgeNetworkAccess_ListKnSrcs(t *testing.T) {
 					Direction: "ASC",
 				},
 			}
-			sqlStr1WithParams := fmt.Sprintf("SELECT f_id, f_name FROM %s WHERE instr(f_name, ?) > 0 ORDER BY graph_name ASC", KN_TABLE_NAME)
+			sqlStr1WithParams := fmt.Sprintf("SELECT f_id, f_name FROM %s WHERE (instr(f_name, ?) > 0 OR instr(f_id, ?) > 0) ORDER BY graph_name ASC", KN_TABLE_NAME)
 			sqlStr2WithParams := "SELECT id, graph_name FROM dip_kn.graph_config_table WHERE instr(graph_name, ?) > 0 ORDER BY graph_name ASC"
 			sqlStrWithParams := fmt.Sprintf("(%s) UNION ALL (%s)", sqlStr1WithParams, sqlStr2WithParams)
 
@@ -836,7 +836,7 @@ func Test_knowledgeNetworkAccess_ProcessQueryCondition(t *testing.T) {
 			}
 
 			expectedSqlStr := fmt.Sprintf("SELECT COUNT(f_id) FROM %s "+
-				"WHERE instr(f_name, ?) > 0", KN_TABLE_NAME)
+				"WHERE (instr(f_name, ?) > 0 OR instr(f_id, ?) > 0)", KN_TABLE_NAME)
 
 			sqlBuilder := processQueryCondition(query, sqlBuilder)
 			sqlStr, _, _ := sqlBuilder.ToSql()

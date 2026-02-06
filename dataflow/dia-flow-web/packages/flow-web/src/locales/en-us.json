@@ -48,6 +48,7 @@
     "err.title.run": "Failed to run",
     "err.tasksExceeds": "Create 50 automated tasks at most.",
     "err.fileSizeExceed.10m": "File has exceeded 10M, please reselect.",
+    "datastudio.upload.source": "Select data source",
     "err.fileSizeExceed.20m": "File has exceeded 20M, please reselect.",
     "err.fileSizeExceed.1g": "File has exceeded 1GB, please reselect.",
     "err.log.expires": "The authorization has expired.",
@@ -1052,8 +1053,8 @@
     "datastudio.trigger.event.updateTag": "Tag Modified",
     "datastudio.trigger.event.delTag": "Tag Deleted",
     "datastudio.trigger.event.mode": "Trigger Mode",
-    "datastudio.trigger.scope": "Applicable Scope",
-    "datastudio.trigger.scope.placeholder": "Please select the required documents.",
+    "datastudio.trigger.scope": "Select Data Range",
+    "datastudio.trigger.scope.placeholder": "Please select data range",
     "datastudio.trigger.scope.select": "Select",
     "datastudio.trigger.scope.addMore": "Add More Documents",
     "datastudio.selectsource": "Select Data Source",
@@ -1208,5 +1209,9 @@
     "failed.node": "Failed node:",
     "customExecutor.workflow": "Workflow",
     "customExecutor.dataflow": "Dataflow",
-    "customExecutor.subprocess.error": "There is a circular call relationship in the current subprocess or its referenced subprocesses. Please modify it."
+    "customExecutor.subprocess.error": "There is a circular call relationship in the current subprocess or its referenced subprocesses. Please modify it.",
+    "datastudio.upload.anyshareDataFile": "Select Existing Document from DocLib",
+    "datastudio.upload.s3DataFile": "Upload Local Document to S3 Storage",
+    "datastudio.upload.file": "Upload Local Document",
+    "datastudio.upload.file.placeholder": "Documents will be uploaded to the default path, specifying a path is not currently supported"
 }

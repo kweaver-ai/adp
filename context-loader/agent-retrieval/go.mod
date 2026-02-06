@@ -10,6 +10,7 @@ require (
 	github.com/json-iterator/go v1.1.12
 	github.com/kweaver-ai/TelemetrySDK-Go/span/v2 v2.10.3
 	github.com/kweaver-ai/kweaver-go-lib v1.0.2
+	github.com/mark3labs/mcp-go v0.43.2
 	github.com/nicksnyder/go-i18n/v2 v2.6.0
 	github.com/panjf2000/ants v1.3.0
 	github.com/pkg/errors v0.9.1
@@ -27,13 +28,18 @@ require (
 )
 
 require (
+	github.com/bahlo/generic-list-go v0.2.0 // indirect
+	github.com/buger/jsonparser v1.1.1 // indirect
 	github.com/bytedance/gopkg v0.1.3 // indirect
 	github.com/goccy/go-yaml v1.18.0 // indirect
+	github.com/invopop/jsonschema v0.13.0 // indirect
 	github.com/kweaver-ai/TelemetrySDK-Go/event/v2 v2.10.3 // indirect
 	github.com/kweaver-ai/TelemetrySDK-Go/exporter/v2 v2.10.3 // indirect
 	github.com/kweaver-ai/proton-mq-sdk-go v1.9.1 // indirect
 	github.com/quic-go/qpack v0.6.0 // indirect
 	github.com/quic-go/quic-go v0.58.0 // indirect
+	github.com/wk8/go-ordered-map/v2 v2.1.8 // indirect
+	github.com/yosida95/uritemplate/v3 v3.0.2 // indirect
 )
 
 require (

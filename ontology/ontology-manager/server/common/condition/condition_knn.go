@@ -17,30 +17,6 @@ func NewKnnCond(ctx context.Context, cfg *CondCfg, fieldScope uint8, fieldsMap m
 		return nil, fmt.Errorf("condition [knn] does not support value_from type '%s'", cfg.ValueFrom)
 	}
 
-	// knnByte, err := json.Marshal(cfg.ValueOptCfg.Value)
-	// if err != nil {
-	// 	return nil, err
-	// }
-	// var knnParam KnnParams
-	// err = json.Unmarshal(knnByte, &knnParam)
-	// if err != nil {
-	// 	return nil, err
-	// }
-
-	// val, ok := cfg.ValueOptCfg.Value.([]any)
-	// if !ok {
-	// 	return nil, fmt.Errorf("condition [knn] right value should be an array of length 2")
-	// }
-
-	// if len(val) != 2 {
-	// 	return nil, fmt.Errorf("condition [knn] right value should be an array of length 2")
-	// }
-
-	// _, ok = val[1].(float64)
-	// if !ok {
-	// 	return nil, fmt.Errorf("condition [knn]'s interval value should be a integer")
-	// }
-
 	name := getFilterFieldName(cfg.Name, fieldsMap, true)
 	var field string
 	// 如果指定*查询，则把 * 换成 _vector
@@ -75,6 +51,10 @@ func (cond *KnnCond) Convert(ctx context.Context, vectorizer func(ctx context.Co
 
 	vector, err := vectorizer(ctx, []string{v})
 	if err != nil {
+		// 如果错误是因为 DefaultSmallModelEnabled 为 false，则忽略此 knn 条件，返回空字符串
+		if err.Error() == DEFAULT_SMALL_MODEL_ENABLED_FALSE_ERROR {
+			return "", nil
+		}
 		return "", fmt.Errorf("condition [knn]: vectorizer [%s] failed, error: %s", v, err.Error())
 	}
 	res, err := json.Marshal(vector[0].Vector)
@@ -97,20 +77,43 @@ func (cond *KnnCond) Convert(ctx context.Context, vectorizer func(ctx context.Co
 		`
 
 		subCondStr := ""
-		for i, subCond := range cond.mSubConds {
+		validSubDSLs := []string{}
+		for _, subCond := range cond.mSubConds {
 			dsl, err := subCond.Convert(ctx, vectorizer)
 			if err != nil {
 				return "", err
 			}
 
-			if i != len(cond.mSubConds)-1 {
-				dsl += ","
+			// 过滤掉空字符串（被忽略的条件）
+			if dsl != "" && dsl != "{}" {
+				validSubDSLs = append(validSubDSLs, dsl)
 			}
-
-			subCondStr += dsl
-
 		}
-		subDSL = fmt.Sprintf(subDSL, subCondStr)
+
+		// 如果有有效的子条件，才添加 filter
+		if len(validSubDSLs) > 0 {
+			for i, dsl := range validSubDSLs {
+				if i != len(validSubDSLs)-1 {
+					subCondStr += dsl + ","
+				} else {
+					subCondStr += dsl
+				}
+			}
+			subDSL = fmt.Sprintf(subDSL, subCondStr)
+		} else {
+			// 所有子条件都被忽略，不添加 filter
+			subDSL = ""
+		}
+	}
+
+	// limit_key 和 limit_value 未给时，填入默认值
+	key := cond.mCfg.RemainCfg["limit_key"]
+	value := cond.mCfg.RemainCfg["limit_value"]
+	if key == nil || key == "" {
+		key = KNN_LIMIT_KEY_DEFAULT
+	}
+	if value == nil {
+		value = KNN_LIMIT_VALUE_DEFAULT
 	}
 
 	dslStr := fmt.Sprintf(`
@@ -122,7 +125,7 @@ func (cond *KnnCond) Convert(ctx context.Context, vectorizer func(ctx context.Co
 								%s
 							}
 						}
-					}`, cond.mFilterFieldName, cond.mCfg.RemainCfg["limit_key"], cond.mCfg.RemainCfg["limit_value"],
+					}`, cond.mFilterFieldName, key, value,
 		string(res), subDSL)
 
 	return dslStr, nil

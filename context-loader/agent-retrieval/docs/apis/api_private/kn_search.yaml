@@ -35,13 +35,6 @@ paths:
               - anonymous
             default: user
           description: 账户类型：user(用户), app(应用), anonymous(匿名)
-        - name: Content-Type
-          in: header
-          required: false
-          schema:
-            type: string
-            default: application/json
-          description: 内容类型
       requestBody:
         required: true
         description: kn_search 请求体
@@ -83,14 +76,6 @@ components:
         kn_id:
           type: string
           description: 指定的知识网络ID，必须传递
-        session_id:
-          type: string
-          nullable: true
-          description: 会话ID，用于维护多轮对话存储的历史召回记录
-        additional_context:
-          type: string
-          nullable: true
-          description: 额外的上下文信息，用于二次检索时提供更精确的检索信息
         retrieval_config:
           type: object
           nullable: true
@@ -98,10 +83,6 @@ components:
           properties:
             concept_retrieval:
               $ref: '#/components/schemas/ConceptRetrievalConfig'
-            semantic_instance_retrieval:
-              $ref: '#/components/schemas/SemanticInstanceRetrievalConfig'
-            property_filter:
-              $ref: '#/components/schemas/PropertyFilterConfig'
         only_schema:
           type: boolean
           default: false
@@ -120,55 +101,14 @@ components:
           minimum: 1
           default: 10
           description: 概念召回返回最相关关系类型数量（对象类型会随关系类型自动过滤）。
-        skip_llm:
-          type: boolean
-          default: true
-          description: 是否跳过LLM筛选相关关系类型，直接使用前top_k个关系类型（高召回/低成本）。
-        return_union:
-          type: boolean
-          default: false
-          description: 概念召回多轮检索时是否返回并集。True返回所有轮次并集；False仅返回当前轮次增量（默认False）。
-        include_sample_data:
-          type: boolean
-          default: false
-          description: 是否获取对象类型的样例数据。True会为每个召回对象类型获取一条样例数据。
         schema_brief:
           type: boolean
           default: true
           description: 概念召回时是否返回精简schema。True仅返回必要字段（概念ID/名称/关系source&target），不返回大字段。
-        enable_coarse_recall:
+        include_sample_data:
           type: boolean
-          default: true
-          description: 是否在概念召回前启用对象/关系粗召回，用于在大规模知识网络中先裁剪候选集合。
-        coarse_object_limit:
-          type: integer
-          minimum: 1
-          default: 2000
-          description: 对象类型粗召回的最大返回数量，用于限制候选对象规模。
-        coarse_relation_limit:
-          type: integer
-          minimum: 1
-          default: 300
-          description: 关系类型粗召回的最大返回数量，用于限制候选关系规模。
-        coarse_min_relation_count:
-          type: integer
-          minimum: 1
-          default: 5000
-          description: 仅当知识网络内关系类型总数达到该阈值时才启用粗召回；小规模网络直接走精排流程。
-        enable_property_brief:
-          type: boolean
-          default: true
-          description: 在 schema_brief=True 时，是否对返回的对象属性做相关性裁剪（每对象TopK，全局TopK）。
-        per_object_property_top_k:
-          type: integer
-          minimum: 1
-          default: 8
-          description: 属性裁剪时，每个对象类型最多保留的属性数量。生产环境建议值：8-10，适配表多、字段多的场景。
-        global_property_top_k:
-          type: integer
-          minimum: 1
-          default: 30
-          description: 属性裁剪时，全局最多保留的属性总数量。生产环境建议值：30-50，确保在多对象类型场景下保留足够的全局属性信息。
+          default: false
+          description: 是否获取对象类型的样例数据。True会为每个召回对象类型获取一条样例数据。
 
     SemanticInstanceRetrievalConfig:
       type: object

@@ -1,0 +1,47 @@
+{
+  "input_schema": {
+    "type": "object",
+    "properties": {
+      "query": {
+        "type": "string",
+        "description": "用户查询问题或关键词"
+      },
+      "rerank_action": {
+        "type": "string",
+        "description": "重排序策略：default / llm / vector"
+      },
+      "search_scope": {
+        "type": "object",
+        "description": "检索范围配置",
+        "additionalProperties": true
+      },
+      "max_concepts": {
+        "type": "integer",
+        "description": "最大概念数量"
+      }
+    },
+    "required": ["query"]
+  },
+  "output_schema": {
+    "type": "object",
+    "properties": {
+      "concepts": {
+        "type": "array",
+        "description": "相关概念列表",
+        "items": {
+          "type": "object",
+          "additionalProperties": true
+        }
+      },
+      "query_understanding": {
+        "type": "object",
+        "description": "查询理解信息（可选）",
+        "additionalProperties": true
+      },
+      "hits_total": {
+        "type": "integer",
+        "description": "命中总数"
+      }
+    }
+  }
+}

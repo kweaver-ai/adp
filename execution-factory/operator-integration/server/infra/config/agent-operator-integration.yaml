@@ -13,6 +13,9 @@ operator:
   operator_description_length_limit: 255
 mcp:
   conn_timeout: 10 # 单位:秒
+  max_instances: 200
+  instance_ttl: 1800 # 单位:秒
+  cleanup_interval: 60 # 单位:秒
 category:
   init_switch: true # 是否初始化算子分类
 
@@ -65,10 +68,19 @@ business-system-service:
   private_host: "business-system-service.anyshare"
   private_port: 80
   private_protocol: "http"
-sandbox-runtime:
-  private_host: "10.4.174.129"
-  private_port: 9101
+sandbox-control-plane:
+  private_host: "sandbox-control-plane.anyshare"
+  private_port: 8000
   private_protocol: "http"
+  template_id: "" # 模板ID
+  session_resources:
+    cpu: 1
+    memory: 512Mi
+    disk: 1Gi
+    timeout: 3600 # 单位:秒
+  max_sessions: 3
+  active_sessions: 1
+  max_concurrent_tasks: 100
 
 redis:
   connectType: "sentinel"

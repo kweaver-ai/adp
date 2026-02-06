@@ -69,18 +69,18 @@ func (mr *MockObjectTypeServiceMockRecorder) CheckObjectTypeExistByName(ctx, knI
 }
 
 // CreateObjectTypes mocks base method.
-func (m *MockObjectTypeService) CreateObjectTypes(ctx context.Context, tx *sql.Tx, objectTypes []*interfaces.ObjectType, mode string, needCreateConceptGroupRelation bool) ([]string, error) {
+func (m *MockObjectTypeService) CreateObjectTypes(ctx context.Context, tx *sql.Tx, objectTypes []*interfaces.ObjectType, mode string, needCreateConceptGroupRelation, validateDependency bool) ([]string, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "CreateObjectTypes", ctx, tx, objectTypes, mode, needCreateConceptGroupRelation)
+	ret := m.ctrl.Call(m, "CreateObjectTypes", ctx, tx, objectTypes, mode, needCreateConceptGroupRelation, validateDependency)
 	ret0, _ := ret[0].([]string)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // CreateObjectTypes indicates an expected call of CreateObjectTypes.
-func (mr *MockObjectTypeServiceMockRecorder) CreateObjectTypes(ctx, tx, objectTypes, mode, needCreateConceptGroupRelation interface{}) *gomock.Call {
+func (mr *MockObjectTypeServiceMockRecorder) CreateObjectTypes(ctx, tx, objectTypes, mode, needCreateConceptGroupRelation, validateDependency interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateObjectTypes", reflect.TypeOf((*MockObjectTypeService)(nil).CreateObjectTypes), ctx, tx, objectTypes, mode, needCreateConceptGroupRelation)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateObjectTypes", reflect.TypeOf((*MockObjectTypeService)(nil).CreateObjectTypes), ctx, tx, objectTypes, mode, needCreateConceptGroupRelation, validateDependency)
 }
 
 // DeleteObjectTypesByIDs mocks base method.

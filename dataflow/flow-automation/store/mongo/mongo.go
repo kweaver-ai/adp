@@ -205,6 +205,14 @@ func (s *Store) Init() error {
 				{Key: "hash", Value: 1},
 			},
 		},
+		// 唯一索引：防止并行分支执行时创建重复的任务实例
+		{
+			Keys: bson.D{
+				{Key: "dagInsId", Value: 1},
+				{Key: "taskId", Value: 1},
+			},
+			Options: options.Index().SetUnique(true).SetName("idx_dagInsId_taskId_unique"),
+		},
 	})
 
 	if err != nil {
@@ -395,6 +403,17 @@ func (s *Store) WithTransaction(ctx context.Context, fn func(sessCtx mongo.Sessi
 	ctx, cancel := context.WithTimeout(ctx, s.opt.Timeout)
 	defer cancel()
 
+	// 检查是否配置了副本集，如果没有配置则直接执行函数而不使用事务
+	// 这是为了支持本地开发环境中的单节点 MongoDB
+	if s.config.MongoDB.ReplicaSet == "" {
+		// 非副本集模式：直接执行函数，不使用事务
+		log.Debugf("[Store.WithTransaction] Running without transaction (non-replica-set mode)")
+		// 创建一个假的 SessionContext 来满足函数签名
+		// 在非事务模式下，直接使用 context 即可
+		return fn(mongo.NewSessionContext(ctx, nil))
+	}
+
+	// 副本集模式：使用事务
 	// 启动会话
 	session, err := s.mongoClient.StartSession()
 	if err != nil {

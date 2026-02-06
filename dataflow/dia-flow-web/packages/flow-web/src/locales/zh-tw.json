@@ -48,6 +48,7 @@
     "err.title.run": "無法執行此任務",
     "err.tasksExceeds": "您建立的自動任務數已達上限。（最多允許建立50個）",
     "err.fileSizeExceed.10m": "當前檔案大小超過10M，請重新選擇。",
+    "datastudio.upload.source": "選擇數據來源",
     "err.fileSizeExceed.20m": "當前檔案大小超過20M，請重新選擇。",
     "err.fileSizeExceed.1g": "當前檔案大小超過1GB，請重新選擇。",
     "err.log.expires": "授權已過期。",
@@ -1040,8 +1041,8 @@
     "datastudio.trigger.event.updateTag": "當修改標籤時",
     "datastudio.trigger.event.delTag": "當刪除標籤時",
     "datastudio.trigger.event.mode": "觸發方式",
-    "datastudio.trigger.scope": "適用範圍",
-    "datastudio.trigger.scope.placeholder": "請選擇文件庫",
+    "datastudio.trigger.scope": "選擇數據範圍",
+    "datastudio.trigger.scope.placeholder": "請選擇數據範圍",
     "datastudio.trigger.scope.select": "選擇",
     "datastudio.trigger.scope.addMore": "新增更多文件庫",
     "datastudio.selectsource": "選擇資料來源",
@@ -1209,5 +1210,9 @@
     "failed.node": "失敗節點：",
     "customExecutor.workflow": "工作流",
     "customExecutor.dataflow": "資料流",
-    "customExecutor.subprocess.error": "在目前子流程或其引用的子流程中，存在循環呼叫關係，請修改"
+    "customExecutor.subprocess.error": "在目前子流程或其引用的子流程中，存在循環呼叫關係，請修改",
+    "datastudio.upload.anyshareDataFile": "選擇文檔庫已有文檔",
+    "datastudio.upload.s3DataFile": "上傳本地文檔至S3存儲",
+    "datastudio.upload.file": "上傳本地文檔",
+    "datastudio.upload.file.placeholder": "文檔將上傳到默認路徑，暫不支持指定路徑上傳"
 }

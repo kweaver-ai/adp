@@ -16,14 +16,15 @@ import (
 	"strings"
 	"time"
 
-	"github.com/kweaver-ai/adp/context-loader/agent-retrieval/server/infra/common"
-	"github.com/kweaver-ai/adp/context-loader/agent-retrieval/server/infra/errors"
-	"github.com/kweaver-ai/adp/context-loader/agent-retrieval/server/infra/rest"
-	"github.com/kweaver-ai/adp/context-loader/agent-retrieval/server/interfaces"
 	o11y "github.com/kweaver-ai/kweaver-go-lib/observability"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/trace"
+
+	"github.com/kweaver-ai/adp/context-loader/agent-retrieval/server/infra/common"
+	"github.com/kweaver-ai/adp/context-loader/agent-retrieval/server/infra/errors"
+	"github.com/kweaver-ai/adp/context-loader/agent-retrieval/server/infra/rest"
+	"github.com/kweaver-ai/adp/context-loader/agent-retrieval/server/interfaces"
 
 	"github.com/gin-gonic/gin"
 	jsoniter "github.com/json-iterator/go"

@@ -7,7 +7,7 @@ server:
   maxConcurrentTasks: 4
   viewDataLimit: 1000
   defaultSmallModelName: embedding
-  defaultSmallModelEnabled: true
+  defaultSmallModelEnabled: false
   jobMaxRetryTimes: 3
   reloadJobEnabled: false
 log:

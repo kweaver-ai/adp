@@ -630,11 +630,12 @@ func convert2TimeSeries(ctx context.Context, vegaData interfaces.VegaFetchData,
 	dimensionIndices := make([]int, 0)
 	dimensionNames := make([]string, 0)
 	for i, col := range vegaData.Columns {
-		if col.Name == interfaces.TIME_FIELD {
+		switch col.Name {
+		case interfaces.TIME_FIELD:
 			timeIndex = i
-		} else if col.Name == interfaces.VALUE_FIELD {
+		case interfaces.VALUE_FIELD:
 			valueIndex = i
-		} else {
+		default:
 			dimensionNames = append(dimensionNames, col.Name)
 			dimensionIndices = append(dimensionIndices, i)
 		}

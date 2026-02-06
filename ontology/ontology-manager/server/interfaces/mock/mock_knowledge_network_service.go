@@ -69,18 +69,18 @@ func (mr *MockKNServiceMockRecorder) CheckKNExistByName(ctx, knName, branch inte
 }
 
 // CreateKN mocks base method.
-func (m *MockKNService) CreateKN(ctx context.Context, kn *interfaces.KN, mode string) (string, error) {
+func (m *MockKNService) CreateKN(ctx context.Context, kn *interfaces.KN, mode string, validateDependency bool) (string, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "CreateKN", ctx, kn, mode)
+	ret := m.ctrl.Call(m, "CreateKN", ctx, kn, mode, validateDependency)
 	ret0, _ := ret[0].(string)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // CreateKN indicates an expected call of CreateKN.
-func (mr *MockKNServiceMockRecorder) CreateKN(ctx, kn, mode interface{}) *gomock.Call {
+func (mr *MockKNServiceMockRecorder) CreateKN(ctx, kn, mode, validateDependency interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateKN", reflect.TypeOf((*MockKNService)(nil).CreateKN), ctx, kn, mode)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateKN", reflect.TypeOf((*MockKNService)(nil).CreateKN), ctx, kn, mode, validateDependency)
 }
 
 // DeleteKN mocks base method.

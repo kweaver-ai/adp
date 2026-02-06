@@ -213,7 +213,7 @@ func (m *mgnt) generateLoopTaskResults(task entity.Task, dagIns *entity.DagInsta
 
 		// loop内部step创建
 		for _, step := range task.Steps {
-			if step.Operator == common.BranchOpt {
+			if step.Operator == common.BranchOpt || step.Operator == common.ControlFlowParallel {
 				breanchTaskID := fmt.Sprintf("%s_i%v_s%v", task.ID, i, step.ID)
 				isReturn, tasks := m.generateBranchTaskResults(breanchTaskID, step, dagIns, loopParam, false)
 				allTasks = append(allTasks, tasks...)
@@ -482,7 +482,7 @@ func buildStepMap(steps []entity.Step, stepMap map[string]*entity.Step) {
 		case common.Loop:
 			stepMap[step.ID] = &step
 			buildStepMap(step.Steps, stepMap)
-		case common.BranchOpt:
+		case common.BranchOpt, common.ControlFlowParallel:
 			for _, branch := range step.Branches {
 				buildStepMap(branch.Steps, stepMap)
 			}
@@ -494,10 +494,9 @@ func buildStepMap(steps []entity.Step, stepMap map[string]*entity.Step) {
 
 func buildTaskInstanceFromEvents(events []*entity.DagInstanceEvent, dagIns *entity.DagInstance, dag *entity.Dag) (tasks []*entity.TaskInstance) {
 	var (
-		current              *entity.TaskInstance
-		env                  = make(map[string]any)
-		stepMap              = make(map[string]*entity.Step)
-		lastStepTaskIndexMap = make(map[string]int)
+		allTasksMap = make(map[string]*entity.TaskInstance)
+		env         = make(map[string]any)
+		stepMap     = make(map[string]*entity.Step)
 	)
 
 	buildStepMap(dag.Steps, stepMap)
@@ -507,11 +506,13 @@ func buildTaskInstanceFromEvents(events []*entity.DagInstanceEvent, dagIns *enti
 		case rds.DagInstanceEventTypeVariable:
 			env[event.Name] = event.Data
 			stepId := event.Name[2:]
+			// 尝试更新Loop节点的输出结果
+			// 注意：对于循环节点，这里总是更新该TaskID对应的"最新"一个实例
 			if step, ok := stepMap[stepId]; ok && step.Operator == common.Loop {
 				if data, ok := event.Data.(map[string]any); ok {
 					if _, ok := data["outputs"]; ok {
-						if lastStepTaskIndex, ok := lastStepTaskIndexMap[stepId]; ok {
-							resultsMap, isMap := tasks[lastStepTaskIndex].Results.(map[string]any)
+						if taskIns, ok := allTasksMap[stepId]; ok {
+							resultsMap, isMap := taskIns.Results.(map[string]any)
 							if resultsMap == nil || !isMap {
 								resultsMap = make(map[string]any)
 							}
@@ -520,78 +521,89 @@ func buildTaskInstanceFromEvents(events []*entity.DagInstanceEvent, dagIns *enti
 								resultsMap[k] = v
 							}
 
-							tasks[lastStepTaskIndex].Results = resultsMap
+							taskIns.Results = resultsMap
 						}
 					}
 				}
 			}
 		case rds.DagInstanceEventTypeTaskStatus:
-			if current != nil {
-				if current.TaskID == event.TaskID {
-					current.Status = entity.TaskInstanceStatus(event.Status)
-					current.UpdatedAt = event.Timestamp / 1e6
-					current.LastModifiedAt = current.UpdatedAt
-					current.MetaData.ElapsedTime = event.Timestamp/1e3 - current.MetaData.StartedAt
+			current, exists := allTasksMap[event.TaskID]
+			isNewInstance := false
 
-					switch current.Status {
-					case entity.TaskInstanceStatusSuccess:
-						if result, ok := env[fmt.Sprintf("__%s", current.TaskID)]; ok {
-							current.Results = result
+			// 检测是否需要创建新实例：
+			// 1. Map中不存在该TaskID
+			// 2. Map中存在，但已处于最终状态，且当前事件为非最终状态（循环节点的下一次迭代复用ID）
+			if !exists {
+				isNewInstance = true
+			} else {
+				isFinished := current.Status == entity.TaskInstanceStatusSuccess ||
+					current.Status == entity.TaskInstanceStatusFailed ||
+					current.Status == entity.TaskInstanceStatusSkipped
+
+				// 如果是开始类状态（Running/Blocked/Pending），且旧实例已完成，视为新迭代
+				isStarting := event.Status == "running" || event.Status == "blocked" || event.Status == "pending"
+
+				if isFinished && isStarting {
+					isNewInstance = true
+				}
+			}
+
+			if isNewInstance {
+				timestampSec := event.Timestamp / 1e6
+				current = &entity.TaskInstance{
+					BaseInfo: entity.BaseInfo{
+						ID:        fmt.Sprintf("%d", len(tasks)),
+						CreatedAt: timestampSec,
+						UpdatedAt: timestampSec,
+					},
+					TaskID:         event.TaskID,
+					DagInsID:       dagIns.ID,
+					ActionName:     event.Operator,
+					Status:         entity.TaskInstanceStatus(event.Status),
+					LastModifiedAt: event.Timestamp,
+					MetaData: &entity.TaskMetaData{
+						StartedAt: event.Timestamp / 1e3,
+					},
+				}
+
+				if step, ok := stepMap[event.TaskID]; ok {
+					current.Name = step.Title
+
+					switch step.Operator {
+					case common.InternalAssignOpt:
+						target := step.Parameters["target"]
+						value, valueOk := step.Parameters["value"]
+						if valueOk {
+							value = renderParams(value, env)
 						}
-
-					case entity.TaskInstanceStatusFailed:
-						current.Reason = event.Data
-					}
-					continue
-				} else {
-					lastStepTaskIndexMap[current.TaskID] = len(tasks)
-					tasks = append(tasks, current)
-				}
-			}
-
-			timestampSec := event.Timestamp / 1e6
-			current = &entity.TaskInstance{
-				BaseInfo: entity.BaseInfo{
-					ID:        fmt.Sprintf("%d", len(tasks)),
-					CreatedAt: timestampSec,
-					UpdatedAt: timestampSec,
-				},
-				TaskID:         event.TaskID,
-				DagInsID:       dagIns.ID,
-				ActionName:     event.Operator,
-				Status:         entity.TaskInstanceStatus(event.Status),
-				LastModifiedAt: event.Timestamp,
-				MetaData: &entity.TaskMetaData{
-					StartedAt: event.Timestamp / 1e3,
-				},
-			}
-
-			if step, ok := stepMap[event.TaskID]; ok {
-
-				current.Name = step.Title
-
-				switch step.Operator {
-				case common.InternalAssignOpt:
-					target := step.Parameters["target"]
-					value, valueOk := step.Parameters["value"]
-					if valueOk {
-						value = renderParams(value, env)
-					}
-					current.Params = map[string]any{
-						"target": target,
-						"value":  value,
-					}
-				case common.BranchOpt:
-				default:
-					realParam := renderParams(step.Parameters, env)
-					if p, ok := realParam.(map[string]any); ok {
-						current.Params = p
-					} else {
-						current.Params = step.Parameters
+						current.Params = map[string]any{
+							"target": target,
+							"value":  value,
+						}
+					case common.BranchOpt:
+					default:
+						realParam := renderParams(step.Parameters, env)
+						if p, ok := realParam.(map[string]any); ok {
+							current.Params = p
+						} else {
+							current.Params = step.Parameters
+						}
 					}
 				}
+
+				// 加入列表和Map
+				tasks = append(tasks, current)
+				allTasksMap[event.TaskID] = current
+			} else {
+				// 更新现有实例
+				current.Status = entity.TaskInstanceStatus(event.Status)
+				current.UpdatedAt = event.Timestamp / 1e6
+				current.LastModifiedAt = current.UpdatedAt
+				// 注意：这里更新MetaData.ElapsedTime依赖于正确的StartedAt，而StartedAt是在创建时设置的
+				current.MetaData.ElapsedTime = event.Timestamp/1e3 - current.MetaData.StartedAt
 			}
 
+			// 处理完成状态的Result/Reason更新
 			switch current.Status {
 			case entity.TaskInstanceStatusSuccess:
 				if result, ok := env[fmt.Sprintf("__%s", current.TaskID)]; ok {
@@ -600,15 +612,15 @@ func buildTaskInstanceFromEvents(events []*entity.DagInstanceEvent, dagIns *enti
 			case entity.TaskInstanceStatusFailed:
 				current.Reason = event.Data
 			}
+
 		case rds.DagInstanceEventTypeTrace:
-			dataBytes, _ := json.Marshal(event.Data)
-			_ = json.Unmarshal(dataBytes, current.MetaData)
+			if current, ok := allTasksMap[event.TaskID]; ok {
+				dataBytes, _ := json.Marshal(event.Data)
+				_ = json.Unmarshal(dataBytes, current.MetaData)
+			}
 		}
 	}
 
-	if current != nil {
-		tasks = append(tasks, current)
-	}
 	return
 }
 

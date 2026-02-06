@@ -55,6 +55,7 @@ const TriggerConfig = ({
   isTemplCreate,
   onBack,
   isEditTrigger,
+  dagsId,
 }: {
   flowDetail: FlowDetail;
   onFinish: (value: any) => void;
@@ -62,6 +63,7 @@ const TriggerConfig = ({
   isTemplCreate?: boolean;
   onBack?: () => void;
   isEditTrigger?: boolean;
+  dagsId?: string;
 }) => {
   const {
     trigger_config: { operator, dataSource, ...parameters } = { operator: "" },
@@ -99,6 +101,9 @@ const TriggerConfig = ({
     Actions[currentOperator!]?.trigger
   );
   const [currentParameters, setCurrentParameters] = useState<any>(parameters);
+
+  const [currentSourceOperator, setCurrentSourceOperator] = useState<string | undefined>(flowDetail?.trigger_config?.dataSource?.operator);
+
   const [currrentDSParameters, setCurrrentDSParameters] = useState<any>(
     (() => {
       if (isTag) {
@@ -157,7 +162,7 @@ const TriggerConfig = ({
 
         dataSource = {
           dataSource: {
-            operator: getDataSourceOperator[dataSourceOperator] || "",
+            operator: currentSourceOperator || getDataSourceOperator[dataSourceOperator] || "",
             parameters: isTemplCreate
               ? currrentDSParameters
               : omit(currrentDSParameters, ["docs"]),
@@ -269,9 +274,12 @@ const TriggerConfig = ({
               <DataSource
                 ref={targetRef}
                 parameters={currrentDSParameters}
-                onChange={(value: any) => {
+                currentSourceOperator={currentSourceOperator}
+                onChange={(value: any, operator?: string) => {
                   setCurrrentDSParameters(value);
+                  if(operator) setCurrentSourceOperator(operator)
                 }}
+                dagsId={dagsId || flowDetail?.id}
               />
             ) : null}
           </div>

@@ -6,15 +6,20 @@
 package driveradapters
 
 import (
+	"net/http"
+
 	"github.com/gin-gonic/gin"
+
 	"github.com/kweaver-ai/adp/context-loader/agent-retrieval/server/drivenadapters"
 	"github.com/kweaver-ai/adp/context-loader/agent-retrieval/server/driveradapters/knretrieval"
+	"github.com/kweaver-ai/adp/context-loader/agent-retrieval/server/driveradapters/mcp"
 	"github.com/kweaver-ai/adp/context-loader/agent-retrieval/server/interfaces"
 )
 
 type restPublicHandler struct {
 	Hydra              interfaces.Hydra
 	KnRetrievalHandler knretrieval.KnRetrievalHandler
+	MCPHandler         http.Handler
 	Logger             interfaces.Logger
 }
 
@@ -23,6 +28,7 @@ func NewRestPublicHandler(logger interfaces.Logger) interfaces.HTTPRouterInterfa
 	return &restPublicHandler{
 		Hydra:              drivenadapters.NewHydra(),
 		KnRetrievalHandler: knretrieval.NewKnRetrievalHandler(),
+		MCPHandler:         mcp.NewMCPHandler(),
 		Logger:             logger,
 	}
 }
@@ -34,4 +40,7 @@ func (r *restPublicHandler) RegisterRouter(engine *gin.RouterGroup) {
 	engine.Use(mws...)
 
 	engine.POST("/kn/semantic-search", r.KnRetrievalHandler.SemanticSearch)
+
+	// MCP Server (Bearer token auth, supports Cursor/Claude Desktop)
+	engine.Any("/mcp/*path", gin.WrapH(r.MCPHandler))
 }

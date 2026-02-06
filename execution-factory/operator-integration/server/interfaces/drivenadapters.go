@@ -218,6 +218,8 @@ type MCPClient interface {
 	ListTools(ctx context.Context, req mcp.ListToolsRequest) (*mcp.ListToolsResult, error)
 	// CallTool 调用工具
 	CallTool(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error)
+	// Close 关闭客户端连接
+	Close() error
 }
 
 type MCPToolConfig struct {
@@ -253,20 +255,6 @@ type MCPInstanceUpdateResponse struct {
 	MCPVersion int    `json:"version"`
 	StreamURL  string `json:"stream_url"`
 	SSEURL     string `json:"sse_url"`
-}
-
-// AgentOperatorApp MCP实例管理接口
-type AgentOperatorApp interface {
-	// 创建MCP实例
-	CreateMCPInstance(ctx context.Context, req *MCPInstanceCreateRequest) (*MCPInstanceCreateResponse, error)
-	// 删除MCP实例
-	DeleteMCPInstance(ctx context.Context, mcpID string, mcpVersion int) error
-	// 更新MCP实例
-	UpdateMCPInstance(ctx context.Context, mcpID string, mcpVersion int, req *MCPInstanceUpdateRequest) (*MCPInstanceUpdateResponse, error)
-	// 删除该MCP所有实例
-	DeleteAllMCPInstances(ctx context.Context, mcpID string) error
-	// 升级MCP实例
-	UpgradeMCPInstance(ctx context.Context, req *MCPInstanceCreateRequest) (*MCPInstanceCreateResponse, error)
 }
 
 // AccessorType 访问类型
@@ -546,26 +534,31 @@ type BusinessDomainManagement interface {
 
 // ExecuteCodeReq 执行代码请求
 type ExecuteCodeReq struct {
-	HandlerCode    string         `json:"handler_code" validate:"required"` // 执行代码
-	Event          map[string]any `json:"event" validate:"required"`        // 事件
-	ExecuteContext ExecuteContext `json:"context"`                          // 执行上下文
-}
-
-// ExecuteContext 执行上下文
-type ExecuteContext struct {
-	FunctionName          string `json:"function_name"`            // 函数名称
-	FunctionVersion       string `json:"function_version"`         // 函数版本
-	RemainingTimeInMillis int64  `json:"remaining_time_in_millis"` // 最大执行超时时间（毫秒）
-	MemoryLimitInMB       int64  `json:"memory_limit_in_mb"`       // 内存限制，单位MB
-	LogGroupName          string `json:"log_group_name"`           // 日志组名称
+	Code     string         `json:"code" validate:"required"`  // 执行代码
+	Event    map[string]any `json:"event" validate:"required"` // 事件
+	Language string         `json:"language" default:"python"` // 执行语言
+	Timeout  int            `json:"timeout,omitempty"`         // 超时时间，单位秒
 }
 
 // ExecuteCodeResp 执行代码响应
 type ExecuteCodeResp struct {
-	Stdout  string `json:"stdout"`  // 标准输出
-	Stderr  string `json:"stderr"`  // 标准错误输出
-	Result  any    `json:"result"`  // 执行结果
-	Metrics any    `json:"metrics"` // 执行指标
+	ID            string `json:"id"`             // 执行ID
+	SessionID     string `json:"session_id"`     // 会话ID
+	Code          string `json:"code"`           // 执行代码
+	Language      string `json:"language"`       // 执行语言
+	Timeout       int    `json:"timeout"`        // 超时时间，单位秒
+	ExitCode      int    `json:"exit_code"`      // 退出码
+	ErrorMessage  string `json:"error_message"`  // 错误信息
+	ExecutionTime int64  `json:"execution_time"` // 执行时间，单位毫秒
+	Artifacts     any    `json:"artifacts"`      // 文件制品响应
+	RetryCount    int    `json:"retry_count"`    // 重试次数
+	Stdout        string `json:"stdout"`         // 标准输出
+	Stderr        string `json:"stderr"`         // 标准错误输出
+	Metrics       any    `json:"metrics"`        // 执行指标
+	CreatedAt     string `json:"created_at"`     // 创建时间，单位毫秒
+	StartedAt     string `json:"started_at"`     // 开始时间，单位毫秒
+	CompletedAt   string `json:"completed_at"`   // 完成时间，单位毫秒
+	ReturnValue   any    `json:"return_value"`   // 执行结果值
 }
 
 // SandBoxConfigReq 沙箱环境配置请求
@@ -584,6 +577,81 @@ type SandBoxEnv interface {
 	GetSandBoxRequestConfig(ctx context.Context, req *SandBoxConfigReq) (*HTTPRequest, error)
 	// 执行代码
 	ExecuteCode(ctx context.Context, req *ExecuteCodeReq) (*ExecuteCodeResp, error)
+}
+
+// CreateSessionReq 创建会话请求
+type CreateSessionReq struct {
+	ID                    string         `json:"id"`                                 // 会话ID
+	TemplateID            string         `json:"template_id"`                        // 模板ID
+	Timeout               int            `json:"timeout"`                            // 超时时间，单位秒
+	CPU                   string         `json:"cpu,omitempty"`                      // CPU 核心数
+	Memory                string         `json:"memory,omitempty"`                   // 内存限制，单位MB
+	Disk                  string         `json:"disk,omitempty"`                     // 磁盘挂载点
+	EnvVars               map[string]any `json:"env_vars,omitempty"`                 // 环境变量
+	Event                 map[string]any `json:"event,omitempty"`                    // 事件数据
+	Dependencies          []string       `json:"dependencies,omitempty"`             // 依赖资源
+	InstallTimeout        int            `json:"install_timeout,omitempty"`          // 依赖安装超时时间（秒），默认 300
+	FailOnDependencyError bool           `json:"fail_on_dependency_error,omitempty"` // 依赖安装失败是否直接失败会话，默认 true
+	AllowVersionConflicts bool           `json:"allow_version_conflicts,omitempty"`  // 是否允许版本冲突，默认 false
+}
+
+type SessionStatus string
+
+const (
+	SessionStatusCreating   SessionStatus = "creating"   // 创建中
+	SessionStatusFailed     SessionStatus = "failed"     // 失败
+	SessionStatusRunning    SessionStatus = "running"    // 运行中
+	SessionStatusTerminated SessionStatus = "terminated" // 已终止
+)
+
+// SessionDetail 会话详情
+type SessionDetail struct {
+	ID             string         `json:"id"`               // 会话ID
+	TemplateID     string         `json:"template_id"`      // 模板ID
+	Status         SessionStatus  `json:"status"`           // 会话状态
+	ResourceLimit  map[string]any `json:"resource_limit"`   // 会话资源配置
+	WorkspacePath  string         `json:"workspace_path"`   // 工作空间路径
+	RuntimeType    string         `json:"runtime_type"`     // 运行时类型
+	RuntimeNode    string         `json:"runtime_node"`     // 运行时节点
+	PodName        string         `json:"pod_name"`         // 容器名称
+	EnvVars        map[string]any `json:"env_vars"`         // 环境变量
+	Timeout        int            `json:"timeout"`          // 超时时间，单位秒
+	CreateAt       string         `json:"created_at"`       // 创建时间
+	UpdateAt       string         `json:"updated_at"`       // 更新时间
+	CompletedAt    string         `json:"completed_at"`     // 完成时间
+	LastActivityAt string         `json:"last_activity_at"` // 最后活动时间
+}
+
+// ListSessionsReq 列举会话请求
+type ListSessionsReq struct {
+	Limit  int           `json:"limit"`  // 分页大小
+	Offset int           `json:"offset"` // 分页偏移量
+	Status SessionStatus `json:"status"` // 会话状态
+}
+
+// ListSessionsResp 列举会话响应
+type ListSessionsResp struct {
+	Sessions []*SessionDetail `json:"items"`    // 会话列表
+	Total    int              `json:"total"`    // 会话总数
+	Limit    int              `json:"limit"`    // 分页大小
+	Offset   int              `json:"offset"`   // 分页偏移量
+	HasMore  bool             `json:"has_more"` // 是否还有更多数据
+}
+
+// SandBoxControlPlane 沙箱控制服务接口
+type SandBoxControlPlane interface {
+	// 获取模版详情
+	GetTemplateDetail(ctx context.Context, tempID string) (any, error)
+	// 创建会话
+	CreateSession(ctx context.Context, req *CreateSessionReq) (any, error)
+	// 查询会话
+	QuerySession(ctx context.Context, sessionID string) (exists bool, detail *SessionDetail, err error)
+	// 删除会话
+	DeleteSession(ctx context.Context, sessionID string) (err error)
+	// 列举会话
+	ListSessions(ctx context.Context, req *ListSessionsReq) (resp *ListSessionsResp, err error)
+	// 执行函数(同步)
+	ExecuteCodeSync(ctx context.Context, sessionID string, req *ExecuteCodeReq) (*ExecuteCodeResp, error)
 }
 
 // ChatCompletionReq 聊天完成请求

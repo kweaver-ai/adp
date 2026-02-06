@@ -49,18 +49,36 @@ func (cond *OrCond) Convert(ctx context.Context, vectorizer func(ctx context.Con
 	`
 
 	dslStr := ""
-	for i, subCond := range cond.mSubConds {
+	validDSLs := []string{}
+	for _, subCond := range cond.mSubConds {
 		dsl, err := subCond.Convert(ctx, vectorizer)
 		if err != nil {
 			return "", err
 		}
 
-		if i != len(cond.mSubConds)-1 {
-			dsl += ","
+		// 过滤掉空字符串（被忽略的条件）
+		if dsl != "" && dsl != "{}" {
+			validDSLs = append(validDSLs, dsl)
 		}
+	}
 
-		dslStr += dsl
+	// 如果所有子条件都被过滤掉，返回空对象
+	if len(validDSLs) == 0 {
+		return "{}", nil
+	}
 
+	// 如果只有一个有效子条件，直接返回该子条件的 DSL，不需要包装在 bool.should 中
+	if len(validDSLs) == 1 {
+		return validDSLs[0], nil
+	}
+
+	// 多个有效子条件，用逗号连接
+	for i, dsl := range validDSLs {
+		if i != len(validDSLs)-1 {
+			dslStr += dsl + ","
+		} else {
+			dslStr += dsl
+		}
 	}
 
 	res = fmt.Sprintf(res, dslStr)

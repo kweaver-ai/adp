@@ -89,12 +89,6 @@ func (dr *dataRetrievalClient) KnSearch(ctx context.Context, req *interfaces.KnS
 		"query":  req.Query,
 		"kn_ids": req.GetKnIDs(),
 	}
-	if req.SessionID != nil {
-		body["session_id"] = *req.SessionID
-	}
-	if req.AdditionalContext != nil {
-		body["additional_context"] = *req.AdditionalContext
-	}
 	if req.RetrievalConfig != nil {
 		body["retrieval_config"] = req.RetrievalConfig
 	}

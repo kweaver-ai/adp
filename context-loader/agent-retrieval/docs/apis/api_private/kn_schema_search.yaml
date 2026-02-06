@@ -27,16 +27,6 @@ paths:
           schema:
             type: string
           description: 账户类型
-        - name: mode
-          in: query
-          schema:
-            type: string
-            enum:
-              - agent_intent_planning #  基于智能体意图分析与规划策略
-              - agent_intent_retrieval #  意图分析智能体 + 传统召回策略
-              - keyword_vector_retrieval # 基于关键词+向量召回
-            default: keyword_vector_retrieval
-          description: 模式
       requestBody:
         required: true
         content:
@@ -76,11 +66,6 @@ components:
         kn_id:
           type: string
           description: 业务知识网络ID
-        previous_queries:
-          type: array
-          items:
-            type: string
-          description: 之前的查询历史
         search_scope:
           $ref: "#/components/schemas/SearchScope"
         max_concepts:
@@ -95,10 +80,6 @@ components:
             - "default"
             - "vector"
             - "llm"
-        return_query_understanding:
-          type: boolean
-          default: false
-          description: 是否返回查询理解信息
 
     SearchScope:
       type: object
