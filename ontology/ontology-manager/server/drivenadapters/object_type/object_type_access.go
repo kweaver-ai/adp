@@ -1359,8 +1359,8 @@ func (ota *objectTypeAccess) UpdateObjectTypeStatus(ctx context.Context, tx *sql
 // 拼接 sql 过滤条件
 func processQueryCondition(query interfaces.ObjectTypesQueryParams, subBuilder sq.SelectBuilder) sq.SelectBuilder {
 	if query.NamePattern != "" {
-		// 模糊查询
-		subBuilder = subBuilder.Where(sq.Expr("instr(ot.f_name, ?) > 0", query.NamePattern))
+		// 模糊查询，名称或id进行模糊查询，匹配任一即可
+		subBuilder = subBuilder.Where(sq.Expr("instr(ot.f_name, ?) > 0 OR instr(ot.f_id, ?) > 0", query.NamePattern, query.NamePattern))
 	}
 
 	if query.Tag != "" {
