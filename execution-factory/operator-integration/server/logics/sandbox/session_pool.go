@@ -8,7 +8,9 @@ import (
 
 	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/drivenadapters"
 	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/infra/config"
+	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/infra/telemetry"
 	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/interfaces"
+	o11y "github.com/kweaver-ai/kweaver-go-lib/observability"
 )
 
 const (
@@ -81,9 +83,9 @@ func (p *sessionPoolImpl) findBestSession() (bestSession *sessionItem) {
 	// 1. 堆叠分配策略：寻找负载最高但未满的会话
 	sessionIDs := []string{}
 	for _, item := range p.sessions {
+		p.logger.Infof("Session %s: RunningTasks=%d, LastUsedAt=%v\n", item.ID, item.RunningTasks, item.LastUsedAt)
 		if item.RunningTasks < p.maxConcurrentTasks {
 			if bestSession == nil || item.RunningTasks > bestSession.RunningTasks {
-
 				// 检查任务是否可用
 				exists, _, _ := p.client.QuerySession(context.Background(), item.ID)
 				if !exists {
@@ -182,25 +184,37 @@ func (p *sessionPoolImpl) initSessions() {
 	p.prewarmSessions()
 }
 
-func (p *sessionPoolImpl) ExecuteCode(ctx context.Context, req *interfaces.ExecuteCodeReq) (*interfaces.ExecuteCodeResp, error) {
+func (p *sessionPoolImpl) ExecuteCode(ctx context.Context, req *interfaces.ExecuteCodeReq) (resp *interfaces.ExecuteCodeResp, err error) {
+	// 记录可观测
+	ctx, _ = o11y.StartInternalSpan(ctx)
+	defer o11y.EndSpan(ctx, err)
+	telemetry.SetSpanAttributes(ctx, map[string]interface{}{
+		"language": req.Language,
+		"timeout":  req.Timeout,
+		"code":     req.Code,
+		"event":    req.Event,
+	})
 	sessionID, err := p.acquireSession(ctx, maxRetryCount)
 	if err != nil {
 		return nil, err
 	}
-
 	defer p.releaseSession(sessionID)
-	resp, err := p.client.ExecuteCodeSync(ctx, sessionID, req)
+	resp, err = p.client.ExecuteCodeSync(ctx, sessionID, req)
 	if err != nil {
-		p.logger.Errorf("ExecuteCodeSync failed for session %s: %v", sessionID, err)
+		p.logger.WithContext(ctx).Errorf("ExecuteCodeSync failed for session %s: %v", sessionID, err)
 		return nil, err
 	}
-
 	return resp, nil
 }
 
 // acquireSession 从会话池中获取一个会话
 func (p *sessionPoolImpl) acquireSession(ctx context.Context, retryCount int) (sessionID string, err error) {
-
+	// 记录可观测
+	ctx, _ = o11y.StartInternalSpan(ctx)
+	defer o11y.EndSpan(ctx, err)
+	telemetry.SetSpanAttributes(ctx, map[string]interface{}{
+		"retryCount": retryCount,
+	})
 	// 是否需要重试
 	var needRetry bool
 	defer func(count int) {
@@ -208,7 +222,7 @@ func (p *sessionPoolImpl) acquireSession(ctx context.Context, retryCount int) (s
 			return
 		}
 		// 重试次数达到上限
-		if count > maxRetryCount {
+		if count < 0 {
 			err = fmt.Errorf("[acquireSession] retryCount %d exceeds maxRetryCount %d", count, maxRetryCount)
 			return
 		}
@@ -346,8 +360,6 @@ func (p *sessionPoolImpl) releaseSession(sessionID string) {
 
 // invalidateSession 从会话池移除会话槽位，同时异步删除远程资源
 func (p *sessionPoolImpl) invalidateSession(sessionID string) {
-	// 从会话池移除会话槽位
-	p.removeSession(sessionID)
 	// 异步删除远程资源
 	go func() {
 		ctx, cancel := context.WithTimeout(context.Background(), defaultContextTimeout)
@@ -430,6 +442,7 @@ func (p *sessionPoolImpl) maintainPool() {
 		exists, detail, err := p.client.QuerySession(ctx, id)
 		if err != nil || !exists || (detail.Status != interfaces.SessionStatusRunning && detail.Status != interfaces.SessionStatusCreating) {
 			p.logger.Warnf("Session %s is unhealthy or missing, removing from pool", id)
+			p.removeSession(id)
 			p.invalidateSession(id)
 		}
 	}
@@ -461,6 +474,7 @@ func (p *sessionPoolImpl) maintainPool() {
 			}
 			p.logger.Infof("Scaling down idle session: %s", item.ID)
 			// 从会话池移除会话槽位
+			delete(p.sessions, item.ID)
 			p.invalidateSession(item.ID)
 		}
 	}
