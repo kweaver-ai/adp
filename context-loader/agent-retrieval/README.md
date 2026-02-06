@@ -1,4 +1,4 @@
-# Agent Retrieval
+# Context Loader
 
 中文文档请见 [README-zh.md](README-zh.md)。
 
