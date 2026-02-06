@@ -58,8 +58,5 @@ func loadToolSchemas(toolKey string) (input, output json.RawMessage) {
 	if len(wrapper.InputSchema) == 0 {
 		panic(path + ": missing input_schema")
 	}
-	if len(wrapper.OutputSchema) == 0 {
-		panic(path + ": missing output_schema")
-	}
 	return wrapper.InputSchema, wrapper.OutputSchema
 }

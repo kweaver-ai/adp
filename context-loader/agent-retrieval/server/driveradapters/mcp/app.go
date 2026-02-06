@@ -101,6 +101,6 @@ func NewMCPHandler() http.Handler {
 
 func newToolWithSchemas(name, description string, input, output json.RawMessage) mcp.Tool {
 	tool := mcp.NewToolWithRawSchema(name, description, input)
-	tool.RawOutputSchema = output
+	// tool.RawOutputSchema = output
 	return tool
 }

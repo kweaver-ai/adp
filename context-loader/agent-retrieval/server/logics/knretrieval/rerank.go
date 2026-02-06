@@ -90,8 +90,8 @@ func (k *knRetrievalServiceImpl) rerankByDataRetrieval(ctx context.Context, quer
 			err = nil // 清除错误，确保不影响核心功能
 		}
 	}
-	// 过滤rerankScore等于0的数据
-	rerankResults = k.filterRerankScoreZero(rerankResults)
+	// 按 RerankScore 降序、相同时按 MatchScore 降序排序（不再过滤 RerankScore=0，避免 concepts 为 null）
+	rerankResults = k.sortByRerankAndMatchScore(rerankResults)
 	// 分页
 	if len(rerankResults) > limit {
 		rerankResults = rerankResults[:limit]
@@ -99,13 +99,16 @@ func (k *knRetrievalServiceImpl) rerankByDataRetrieval(ctx context.Context, quer
 	return
 }
 
-// filterRerankScoreZero 过滤rerankScore等于0的数据
-func (k *knRetrievalServiceImpl) filterRerankScoreZero(conceptResults []*interfaces.ConceptResult) []*interfaces.ConceptResult {
-	var result []*interfaces.ConceptResult
-	for _, concept := range conceptResults {
-		if concept.RerankScore > 0 {
-			result = append(result, concept)
-		}
+// sortByRerankAndMatchScore 按 RerankScore 降序排序，相同时按 MatchScore 降序
+func (k *knRetrievalServiceImpl) sortByRerankAndMatchScore(conceptResults []*interfaces.ConceptResult) []*interfaces.ConceptResult {
+	if conceptResults == nil {
+		return nil
 	}
-	return result
+	sort.Slice(conceptResults, func(i, j int) bool {
+		if conceptResults[i].RerankScore != conceptResults[j].RerankScore {
+			return conceptResults[i].RerankScore > conceptResults[j].RerankScore
+		}
+		return conceptResults[i].MatchScore > conceptResults[j].MatchScore
+	})
+	return conceptResults
 }
