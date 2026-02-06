@@ -260,7 +260,7 @@ data:
   S3_REGION: {{ .Values.depServices.s3.region | quote }}
   S3_USE_SSL: {{ .Values.depServices.s3.useSSL | quote }}
   S3_SKIP_VERIFY: {{ .Values.depServices.s3.skipVerify | quote }}
-  S3_BUCKET: {{ .Values.depServices.s3.bucket | quote }}
+  S3_BUCKET_NAME: {{ .Values.depServices.s3.bucket | quote }}
   S3_ACCESS_KEY_ID: {{ .Values.depServices.s3.accessKeyId | quote }}
   S3_SECRET_ACCESS_KEY: {{ .Values.depServices.s3.secretAccessKey | quote }}
   {{- end }}

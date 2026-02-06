@@ -13,19 +13,20 @@ Authorization: Bearer {{token}}
 
 ### 创建带S3数据源的DataFlow
 
-POST http://localhost:8080/api/automation/v1/dataflows
+POST http://localhost:8082/api/automation/v1/data-flow/flow
 Content-Type: application/json
 Authorization: Bearer {{token}}
+X-Business-Domain: bd-public
 
 {
-    "title": "S3数据流示例11111111",
+    "title": "S3数据流示例1111111111",
     "description": "从S3读取数据并处理1",
     "status": "normal",
     "steps": [
         {
             "id": "0",
             "title": "触发器",
-            "operator": "@trigger/dataflow-s3"
+            "operator": "@trigger/dataflow-doc"
         },
         {
             "id": "4",
@@ -49,19 +50,8 @@ Authorization: Bearer {{token}}
                     }
                 ]
             }
-          ]
         }
-      }
-    },
-    {
-      "id": "1",
-      "title": "处理数据",
-      "operator": "@internal/python",
-      "parameters": {
-        "code": "# 处理S3数据\nfor item in __0['items']:\n    print(f\"Processing {item['key']}\")"
-      }
     }
-  ]
 }
 
 ###
@@ -71,7 +61,6 @@ Authorization: Bearer {{token}}
 POST {{host}}/api/automation/v1/run-instance/604851178156619196
 Authorization: {{token}}
 Content-Type: application/json
-Authorization: Bearer {{token}}
 
 {}
 

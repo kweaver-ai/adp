@@ -4827,8 +4827,9 @@ func (m *mgnt) getDataSourceType(dataSource *entity.DataSource) string {
 		return "user"
 	case common.AnyshareDataTagTree:
 		return "tagtree"
+	case common.S3DataListObjects:
+		return "s3"
 	}
-
 	return ""
 }
 
