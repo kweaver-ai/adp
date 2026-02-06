@@ -190,6 +190,50 @@
                                 "default": 30
                             }
                         }
+                    },
+                    "s3": {
+                        "type": "object",
+                        "title": "S3 配置",
+                        "properties": {
+                            "endpoint": {
+                                "type": "string",
+                                "title": "S3 Endpoint",
+                                "description": "S3 服务地址"
+                            },
+                            "accessKeyId": {
+                                "type": "string",
+                                "title": "Access Key",
+                                "description": "S3 访问密钥"
+                            },
+                            "secretAccessKey": {
+                                "type": "string",
+                                "title": "Secret Key",
+                                "description": "S3 密钥"
+                            },
+                            "bucket": {
+                                "type": "string",
+                                "title": "Bucket",
+                                "description": "S3 存储桶"
+                            },
+                            "region": {
+                                "type": "string",
+                                "title": "Region",
+                                "description": "S3 区域",
+                                "default": "cn-north-1"
+                            },
+                            "useSSL": {
+                                "type": "boolean",
+                                "title": "Use SSL",
+                                "description": "是否使用 SSL",
+                                "default": false
+                            },
+                            "skipVerify": {
+                                "type": "boolean",
+                                "title": "Skip Verify",
+                                "description": "是否跳过证书验证",
+                                "default": true
+                            }
+                        }
                     }
                 }
             },
@@ -297,50 +341,6 @@
                     "pullPolicy": {
                         "type": "string",
                         "title": "镜像拉取策略"
-                    }
-                }
-            },
-            "s3": {
-                "type": "object",
-                "title": "S3 配置",
-                "properties": {
-                    "endpoint": {
-                        "type": "string",
-                        "title": "S3 Endpoint",
-                        "description": "S3 服务地址"
-                    },
-                    "accessKeyId": {
-                        "type": "string",
-                        "title": "Access Key",
-                        "description": "S3 访问密钥"
-                    },
-                    "secretAccessKey": {
-                        "type": "string",
-                        "title": "Secret Key",
-                        "description": "S3 密钥"
-                    },
-                    "bucket": {
-                        "type": "string",
-                        "title": "Bucket",
-                        "description": "S3 存储桶"
-                    },
-                    "region": {
-                        "type": "string",
-                        "title": "Region",
-                        "description": "S3 区域",
-                        "default": "cn-north-1"
-                    },
-                    "useSSL": {
-                        "type": "boolean",
-                        "title": "Use SSL",
-                        "description": "是否使用 SSL",
-                        "default": false
-                    },
-                    "skipVerify": {
-                        "type": "boolean",
-                        "title": "Skip Verify",
-                        "description": "是否跳过证书验证",
-                        "default": true
                     }
                 }
             }
