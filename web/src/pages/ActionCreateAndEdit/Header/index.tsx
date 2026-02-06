@@ -23,8 +23,8 @@ const Header = (props: any) => {
           current={stepsCurrent}
           items={[
             { title: intl.get('Action.conceptDefinition') },
-            { title: intl.get('Action.resourceMapping') },
-            { title: intl.get('Action.runStrategy') || '运行策略' },
+            { title: intl.get('Action.resourceMapping') }
+            // { title: intl.get('Action.runStrategy') || '运行策略' },
           ]}
           onChange={(value) => {
             // Disable click navigation for now as validation is tricky

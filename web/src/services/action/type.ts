@@ -220,7 +220,7 @@ export enum ActionExecutionStatusEnum {
   Running = 'running',
   Completed = 'completed',
   Failed = 'failed',
-  Cancelled = 'cancelled',
+  Cancelled = 'cancelled'
 }
 
 // 行动执行请求
@@ -299,6 +299,7 @@ export interface ActionExecutionResult {
   duration_ms: number;
   start_time: number;
   end_time?: number;
+  _display?: string;
 }
 
 // 行动执行日志详情
