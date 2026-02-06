@@ -378,7 +378,7 @@ func Test_relationTypeAccess_ListRelationTypes(t *testing.T) {
 			sqlStrWithAll := `SELECT f_id, f_name, f_tags, f_comment, f_icon, f_color, f_detail,
 			 f_kn_id, f_branch, f_source_object_type_id, f_target_object_type_id, f_type, f_mapping_rules, 
 			 f_creator, f_creator_type, f_create_time, f_updater, f_updater_type, f_update_time 
-			 FROM t_relation_type WHERE instr(f_name, ?) > 0 AND instr(f_tags, ?) > 0 AND f_branch = ? 
+			 FROM t_relation_type WHERE (instr(f_name, ?) > 0 OR instr(f_id, ?) > 0) AND instr(f_tags, ?) > 0 AND f_branch = ? 
 			 AND f_source_object_type_id IN (?) AND f_target_object_type_id IN (?) ORDER BY f_name ASC`
 
 			rows := sqlmock.NewRows([]string{
@@ -446,7 +446,7 @@ func Test_relationTypeAccess_GetRelationTypesTotal(t *testing.T) {
 				SourceObjectTypeIDs: []string{"ot1"},
 				TargetObjectTypeIDs: []string{"ot2"},
 			}
-			sqlStrWithAll := `SELECT COUNT(f_id) FROM t_relation_type WHERE instr(f_name, ?) > 0 
+			sqlStrWithAll := `SELECT COUNT(f_id) FROM t_relation_type WHERE (instr(f_name, ?) > 0 OR instr(f_id, ?) > 0) 
 			AND instr(f_tags, ?) > 0 AND f_branch = ? AND f_source_object_type_id IN (?) 
 			AND f_target_object_type_id IN (?)`
 
@@ -1092,7 +1092,7 @@ func Test_relationTypeAccess_ProcessQueryCondition(t *testing.T) {
 			}
 
 			expectedSqlStr := fmt.Sprintf("SELECT COUNT(f_id) FROM %s "+
-				"WHERE instr(f_name, ?) > 0 AND f_kn_id = ? AND f_branch = ?", RT_TABLE_NAME)
+				"WHERE (instr(f_name, ?) > 0 OR instr(f_id, ?) > 0) AND f_kn_id = ? AND f_branch = ?", RT_TABLE_NAME)
 
 			sqlBuilder := processQueryCondition(query, sqlBuilder)
 			sqlStr, _, _ := sqlBuilder.ToSql()

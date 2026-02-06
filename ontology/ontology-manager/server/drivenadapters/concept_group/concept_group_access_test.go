@@ -1070,7 +1070,7 @@ func Test_conceptGroupAccess_ProcessQueryCondition(t *testing.T) {
 			}
 
 			expectedSqlStr := fmt.Sprintf("SELECT COUNT(f_id) FROM %s "+
-				"WHERE instr(f_name, ?) > 0 AND f_kn_id = ? AND f_branch = ?", CONCEPT_GROUP_TABLE_NAME)
+				"WHERE (instr(f_name, ?) > 0 OR instr(f_id, ?) > 0) AND f_kn_id = ? AND f_branch = ?", CONCEPT_GROUP_TABLE_NAME)
 
 			sqlBuilder := processQueryCondition(query, sqlBuilder)
 			sqlStr, _, _ := sqlBuilder.ToSql()
