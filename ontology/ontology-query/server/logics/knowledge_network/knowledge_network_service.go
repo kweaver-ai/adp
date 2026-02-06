@@ -1264,7 +1264,7 @@ func (kns *knowledgeNetworkService) processInputObjects(ctx context.Context,
 		for i, entry := range entries {
 			instanceIdentities[i] = entry.InstanceIdentity
 		}
-		ukCond := logics.BuildUniqueIdentitiesCondition(instanceIdentities)
+		ukCond := logics.BuildInstanceIdentitiesCondition(instanceIdentities)
 
 		// 查询对象数据
 		objectQuery := &interfaces.ObjectQueryBaseOnObjectType{
