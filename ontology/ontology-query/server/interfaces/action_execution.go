@@ -31,12 +31,15 @@ const (
 
 // ActionExecutionRequest represents the request to execute an action
 type ActionExecutionRequest struct {
-	KNID             string           `json:"-"`
-	Branch           string           `json:"-"`
-	ActionTypeID     string           `json:"-"`
-	TriggerType      string           `json:"trigger_type,omitempty"` // "manual" or "scheduled", defaults to "manual"
-	UniqueIdentities []map[string]any `json:"unique_identities"`
-	DynamicParams    map[string]any   `json:"dynamic_params,omitempty"`
+	KNID               string           `json:"-"`
+	Branch             string           `json:"-"`
+	ActionTypeID       string           `json:"-"`
+	TriggerType        string           `json:"trigger_type,omitempty"` // "manual" or "scheduled", defaults to "manual"
+	InstanceIdentities []map[string]any `json:"_instance_identities"`
+	DynamicParams      map[string]any   `json:"dynamic_params,omitempty"`
+
+	Instances []ObjectSystemInfo `json:"-"`
+	ObjDatas  []map[string]any   `json:"-"`
 }
 
 // ActionExecutionResponse represents the immediate response after submitting execution
@@ -76,12 +79,14 @@ type ActionExecution struct {
 
 // ObjectExecutionResult represents execution result for a single object
 type ObjectExecutionResult struct {
-	UniqueIdentity map[string]any `json:"unique_identity"`
-	Status         string         `json:"status"` // "pending" | "success" | "failed"
-	Parameters     map[string]any `json:"parameters,omitempty"`
-	Result         any            `json:"result,omitempty"`
-	ErrorMessage   string         `json:"error_message,omitempty"`
-	DurationMs     int64          `json:"duration_ms,omitempty"`
+	ObjectSystemInfo
+	Status       string         `json:"status"` // "pending" | "success" | "failed"
+	Parameters   map[string]any `json:"parameters,omitempty"`
+	Result       any            `json:"result,omitempty"`
+	ErrorMessage string         `json:"error_message,omitempty"`
+	StartTime    int64          `json:"start_time,omitempty"`
+	EndTime      int64          `json:"end_time,omitempty"`
+	DurationMs   int64          `json:"duration_ms,omitempty"`
 }
 
 // ActionLogQuery represents query parameters for execution logs (supports both GET query params and JSON body)
@@ -93,6 +98,7 @@ type ActionLogQuery struct {
 	StartTimeRange []int64 `json:"start_time_range,omitempty"` // [start, end] for JSON body
 	StartTimeFrom  int64   `json:"-" form:"start_time_from"`   // for GET query params
 	StartTimeTo    int64   `json:"-" form:"start_time_to"`     // for GET query params
+	Offset         int     `json:"offset,omitempty" form:"offset"`
 	Limit          int     `json:"limit,omitempty" form:"limit"`
 	NeedTotal      bool    `json:"need_total,omitempty" form:"need_total"`
 	SearchAfter    []any   `json:"search_after,omitempty"`

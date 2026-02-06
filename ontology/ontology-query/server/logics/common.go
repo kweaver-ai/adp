@@ -483,7 +483,7 @@ func CheckIndirectMappingConditionsWithViewData(currentObjectData map[string]any
 }
 
 // 根据对象唯一标识构建对象查询的过滤条件
-func BuildUniqueIdentitiesCondition(uks []map[string]any) *cond.CondCfg {
+func BuildInstanceIdentitiesCondition(uks []map[string]any) *cond.CondCfg {
 
 	if len(uks) == 0 {
 		return nil

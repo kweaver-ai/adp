@@ -96,16 +96,16 @@ func (r *restHandler) CreateActionSchedule(c *gin.Context, visitor rest.Visitor)
 
 	// Build schedule object
 	schedule := &interfaces.ActionSchedule{
-		Name:             reqBody.Name,
-		KNID:             knID,
-		Branch:           branch,
-		ActionTypeID:     reqBody.ActionTypeID,
-		CronExpression:   reqBody.CronExpression,
-		UniqueIdentities: reqBody.UniqueIdentities,
-		DynamicParams:    reqBody.DynamicParams,
-		Status:           reqBody.Status,
-		Creator:          accountInfo,
-		Updater:          accountInfo,
+		Name:               reqBody.Name,
+		KNID:               knID,
+		Branch:             branch,
+		ActionTypeID:       reqBody.ActionTypeID,
+		CronExpression:     reqBody.CronExpression,
+		InstanceIdentities: reqBody.InstanceIdentities,
+		DynamicParams:      reqBody.DynamicParams,
+		Status:             reqBody.Status,
+		Creator:            accountInfo,
+		Updater:            accountInfo,
 	}
 
 	scheduleID, err := r.ass.CreateSchedule(ctx, schedule)

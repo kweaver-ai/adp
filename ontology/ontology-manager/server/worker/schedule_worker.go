@@ -25,8 +25,8 @@ const (
 )
 
 var (
-	swOnce   sync.Once
-	sWorker  *ScheduleWorker
+	swOnce  sync.Once
+	sWorker *ScheduleWorker
 )
 
 // ScheduleWorker polls for due schedules and executes them
@@ -190,9 +190,9 @@ func (w *ScheduleWorker) executeSchedule(ctx context.Context, schedule *interfac
 		w.appSetting.OntologyQueryUrl, schedule.KNID, schedule.ActionTypeID)
 
 	requestBody := map[string]any{
-		"trigger_type":      "scheduled",
-		"unique_identities": schedule.UniqueIdentities,
-		"dynamic_params":    schedule.DynamicParams,
+		"trigger_type":         "scheduled",
+		"_instance_identities": schedule.InstanceIdentities,
+		"dynamic_params":       schedule.DynamicParams,
 	}
 
 	bodyBytes, err := json.Marshal(requestBody)

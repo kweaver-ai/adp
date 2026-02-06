@@ -242,6 +242,11 @@ func (s *actionLogsService) QueryExecutions(ctx context.Context, query *interfac
 	}
 
 	// Build the query
+	offset := query.Offset
+	if offset < 0 {
+		offset = 0
+	}
+
 	limit := query.Limit
 	if limit <= 0 {
 		limit = 20
@@ -256,6 +261,7 @@ func (s *actionLogsService) QueryExecutions(ctx context.Context, query *interfac
 				"must": mustConditions,
 			},
 		},
+		"from": offset,
 		"size": limit,
 		"sort": []map[string]any{
 			{"start_time": map[string]any{"order": "desc"}},

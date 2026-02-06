@@ -792,7 +792,7 @@ paths:
             examples:
               行动查询-request:
                 value:
-                  unique_identities:
+                  _instance_identities:
                   - c_commentid: "32485"
                   - c_commentid: "32696"
         required: true
@@ -1028,7 +1028,7 @@ paths:
                     objects:
                       person-870:
                         id: person-870
-                        unique_identities:
+                        _instance_identities:
                           p_personid: 870
                         object_type_id: person
                         object_type_name: person
@@ -1044,7 +1044,7 @@ paths:
                           p_birthday: 1987-05-23
                       place-78:
                         id: place-78
-                        unique_identities:
+                        _instance_identities:
                           p_placeid: 78
                         object_type_id: place
                         object_type_name: place
@@ -1056,7 +1056,7 @@ paths:
                           p_type: country
                       post-4.81036361318e+11:
                         id: post-4.81036361318e+11
-                        unique_identities:
+                        _instance_identities:
                           ps_postid: 481036361318
                         object_type_id: post
                         object_type_name: post
@@ -1072,7 +1072,7 @@ paths:
                           ps_imagefile: photo481036361318.jpg
                       post-4.12316884425e+11:
                         id: post-4.12316884425e+11
-                        unique_identities:
+                        _instance_identities:
                           ps_postid: 412316884425
                         object_type_id: post
                         object_type_name: post
@@ -1088,7 +1088,7 @@ paths:
                           ps_language: ""
                       comment-2.06158448803e+11:
                         id: comment-2.06158448803e+11
-                        unique_identities:
+                        _instance_identities:
                           c_commentid: 206158448803
                         object_type_id: comment
                         object_type_name: comment
@@ -1106,7 +1106,7 @@ paths:
                           c_length: 111
                       comment-7.55914262659e+11:
                         id: comment-7.55914262659e+11
-                        unique_identities:
+                        _instance_identities:
                           c_commentid: 755914262659
                         object_type_id: comment
                         object_type_name: comment
@@ -1124,7 +1124,7 @@ paths:
                             \ Dismantle an Atomic Bomb.About Original of the Spec"
                       comment-1.030792168521e+12:
                         id: comment-1.030792168521e+12
-                        unique_identities:
+                        _instance_identities:
                           c_commentid: 1030792168521
                         object_type_id: comment
                         object_type_name: comment
@@ -1140,7 +1140,7 @@ paths:
                           c_length: 88
                       comment-32485:
                         id: comment-32485
-                        unique_identities:
+                        _instance_identities:
                           c_commentid: 32485
                         object_type_id: comment
                         object_type_name: comment
@@ -1154,7 +1154,7 @@ paths:
                           c_creationdate: 2010-01-23 06:20:25.000
                       post-32484:
                         id: post-32484
-                        unique_identities:
+                        _instance_identities:
                           ps_postid: 32484
                         object_type_id: post
                         object_type_name: post
@@ -1174,7 +1174,7 @@ paths:
                           ps_postid: 32484
                       person-555:
                         id: person-555
-                        unique_identities:
+                        _instance_identities:
                           p_personid: 555
                         object_type_id: person
                         object_type_name: person
@@ -1190,7 +1190,7 @@ paths:
                           p_gender: female
                       place-1456:
                         id: place-1456
-                        unique_identities:
+                        _instance_identities:
                           p_placeid: 1456
                         object_type_id: place
                         object_type_name: place
@@ -1202,7 +1202,7 @@ paths:
                           p_placeid: 1456
                       tag-1672:
                         id: tag-1672
-                        unique_identities:
+                        _instance_identities:
                           t_tagid: 1672
                         object_type_id: tag
                         object_type_name: tag
@@ -1213,7 +1213,7 @@ paths:
                           t_url: http://dbpedia.org/resource/Nicholas_II_of_Russia
                       post-3.43597402501e+11:
                         id: post-3.43597402501e+11
-                        unique_identities:
+                        _instance_identities:
                           ps_postid: 343597402501
                         object_type_id: post
                         object_type_name: post
@@ -1229,7 +1229,7 @@ paths:
                           ps_imagefile: photo343597402501.jpg
                       comment-32486:
                         id: comment-32486
-                        unique_identities:
+                        _instance_identities:
                           c_commentid: 32486
                         object_type_id: comment
                         object_type_name: comment
@@ -1243,7 +1243,7 @@ paths:
                           c_content: ok
                       tag-6:
                         id: tag-6
-                        unique_identities:
+                        _instance_identities:
                           t_tagid: 6
                         object_type_id: tag
                         object_type_name: tag
@@ -1254,7 +1254,7 @@ paths:
                           t_tagid: 6
                       person-143:
                         id: person-143
-                        unique_identities:
+                        _instance_identities:
                           p_personid: 143
                         object_type_id: person
                         object_type_name: person
@@ -1270,7 +1270,7 @@ paths:
                           p_creationdate: 2010-01-06 07:19:10.000
                       person-345:
                         id: person-345
-                        unique_identities:
+                        _instance_identities:
                           p_personid: 345
                         object_type_id: person
                         object_type_name: person
@@ -1286,7 +1286,7 @@ paths:
                           p_firstname: David
                       tag-273:
                         id: tag-273
-                        unique_identities:
+                        _instance_identities:
                           t_tagid: 273
                         object_type_id: tag
                         object_type_name: tag
@@ -1297,7 +1297,7 @@ paths:
                           t_tagid: 273
                       tag-779:
                         id: tag-779
-                        unique_identities:
+                        _instance_identities:
                           t_tagid: 779
                         object_type_id: tag
                         object_type_name: tag
@@ -1308,7 +1308,7 @@ paths:
                           t_name: George_Frideric_Handel
                       tag-1024:
                         id: tag-1024
-                        unique_identities:
+                        _instance_identities:
                           t_tagid: 1024
                         object_type_id: tag
                         object_type_name: tag
@@ -1319,7 +1319,7 @@ paths:
                           t_url: http://dbpedia.org/resource/George_Orwell
                       post-6.87194784952e+11:
                         id: post-6.87194784952e+11
-                        unique_identities:
+                        _instance_identities:
                           ps_postid: 687194784952
                         object_type_id: post
                         object_type_name: post
@@ -1335,7 +1335,7 @@ paths:
                           ps_language: ""
                       comment-3.43597407147e+11:
                         id: comment-3.43597407147e+11
-                        unique_identities:
+                        _instance_identities:
                           c_commentid: 343597407147
                         object_type_id: comment
                         object_type_name: comment
@@ -1351,7 +1351,7 @@ paths:
                           c_locationip: 41.138.42.48
                       person-318:
                         id: person-318
-                        unique_identities:
+                        _instance_identities:
                           p_personid: 318
                         object_type_id: person
                         object_type_name: person
@@ -1367,7 +1367,7 @@ paths:
                           p_locationip: 41.188.54.178
                       organisation-2941:
                         id: organisation-2941
-                        unique_identities:
+                        _instance_identities:
                           o_organisationid: 2941
                         object_type_id: organisation
                         object_type_name: organisation
@@ -1379,7 +1379,7 @@ paths:
                           o_url: http://dbpedia.org/resource/National_and_Kapodistrian_University_of_Athens
                       place-1142:
                         id: place-1142
-                        unique_identities:
+                        _instance_identities:
                           p_placeid: 1142
                         object_type_id: place
                         object_type_name: place
@@ -1391,7 +1391,7 @@ paths:
                           p_name: Athens
                       place-1:
                         id: place-1
-                        unique_identities:
+                        _instance_identities:
                           p_placeid: 1
                         object_type_id: place
                         object_type_name: place
@@ -1855,7 +1855,7 @@ paths:
                     - objects:
                         comment-32487:
                           id: comment-32487
-                          unique_identities:
+                          _instance_identities:
                             c_commentid: 32487
                           object_type_id: comment
                           object_type_name: comment
@@ -1869,7 +1869,7 @@ paths:
                             c_commentid: 32487
                         comment-32489:
                           id: comment-32489
-                          unique_identities:
+                          _instance_identities:
                             c_commentid: 32489
                           object_type_id: comment
                           object_type_name: comment
@@ -1885,7 +1885,7 @@ paths:
                             c_length: 88
                         comment-32490:
                           id: comment-32490
-                          unique_identities:
+                          _instance_identities:
                             c_commentid: 32490
                           object_type_id: comment
                           object_type_name: comment
@@ -1899,7 +1899,7 @@ paths:
                             c_locationip: 62.217.119.183
                         comment-32492:
                           id: comment-32492
-                          unique_identities:
+                          _instance_identities:
                             c_commentid: 32492
                           object_type_id: comment
                           object_type_name: comment
@@ -1915,7 +1915,7 @@ paths:
                             c_length: 75
                         comment-32486:
                           id: comment-32486
-                          unique_identities:
+                          _instance_identities:
                             c_commentid: 32486
                           object_type_id: comment
                           object_type_name: comment
@@ -1929,7 +1929,7 @@ paths:
                             c_length: 2
                         comment-32485:
                           id: comment-32485
-                          unique_identities:
+                          _instance_identities:
                             c_commentid: 32485
                           object_type_id: comment
                           object_type_name: comment
@@ -1943,7 +1943,7 @@ paths:
                             c_length: 5
                         comment-32488:
                           id: comment-32488
-                          unique_identities:
+                          _instance_identities:
                             c_commentid: 32488
                           object_type_id: comment
                           object_type_name: comment
@@ -1959,7 +1959,7 @@ paths:
                             c_browserused: Firefox
                         comment-32491:
                           id: comment-32491
-                          unique_identities:
+                          _instance_identities:
                             c_commentid: 32491
                           object_type_id: comment
                           object_type_name: comment
@@ -1973,7 +1973,7 @@ paths:
                             c_browserused: Firefox
                         comment-32494:
                           id: comment-32494
-                          unique_identities:
+                          _instance_identities:
                             c_commentid: 32494
                           object_type_id: comment
                           object_type_name: comment
@@ -1987,7 +1987,7 @@ paths:
                             c_locationip: 62.217.119.183
                         comment-32493:
                           id: comment-32493
-                          unique_identities:
+                          _instance_identities:
                             c_commentid: 32493
                           object_type_id: comment
                           object_type_name: comment
@@ -2191,7 +2191,7 @@ paths:
             examples:
               含指标、算子的属性值查询:
                 value:
-                  unique_identities:
+                  _instance_identities:
                   - id: 1479
                     pod_ip: 192.169.37.60
                   - id: 1480
@@ -2407,7 +2407,7 @@ paths:
             examples:
               执行行动-多个对象:
                 value:
-                  unique_identities:
+                  _instance_identities:
                     - pod_ip: "192.168.1.1"
                       id: 1
                     - pod_ip: "192.168.1.2"
@@ -2493,7 +2493,7 @@ paths:
                     success_count: 1
                     failed_count: 1
                     results:
-                      - unique_identity:
+                      - instance_identity:
                           pod_ip: "192.168.1.1"
                           id: 1
                         status: "success"
@@ -2502,7 +2502,7 @@ paths:
                         result:
                           message: "Pod restarted successfully"
                         duration_ms: 1200
-                      - unique_identity:
+                      - instance_identity:
                           pod_ip: "192.168.1.2"
                           id: 2
                         status: "failed"
@@ -3925,10 +3925,10 @@ components:
       description: 属性查询请求体
       required:
       - properties
-      - _instance_identities
+      - __instance_identities
       type: object
       properties:
-        _instance_identities:
+        __instance_identities:
           description: 对象主键的数组，代表多个对象。map，key为主键属性名，value为对应的属性值
           type: array
           items:
@@ -4880,10 +4880,10 @@ components:
     InstanceIdentities:
       description: 对象唯一标识
       required:
-      - _instance_identities
+      - __instance_identities
       type: object
       properties:
-        _instance_identities:
+        __instance_identities:
           description: 对象主键的数组，代表多个对象。map，key为主键属性名，value为对应的属性值
           type: array
           items:
@@ -5021,8 +5021,8 @@ components:
       description: 单个对象的执行结果
       type: object
       properties:
-        unique_identity:
-          description: 对象唯一标识
+        instance_identity:
+          description: 对象实例标识
           type: object
           additionalProperties: true
         status:

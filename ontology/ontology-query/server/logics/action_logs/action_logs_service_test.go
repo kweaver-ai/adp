@@ -73,9 +73,9 @@ func Test_mapToActionExecution(t *testing.T) {
 				"status": "completed",
 				"results": []any{
 					map[string]any{
-						"unique_identity": map[string]any{"pod_ip": "192.168.1.1"},
-						"status":          "success",
-						"duration_ms":     float64(1200),
+						"_instance_identity": map[string]any{"pod_ip": "192.168.1.1"},
+						"status":             "success",
+						"duration_ms":        float64(1200),
 					},
 				},
 			}

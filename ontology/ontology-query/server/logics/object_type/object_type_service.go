@@ -140,11 +140,11 @@ func (ots *objectTypeService) GetObjectsByObjectTypeID(ctx context.Context,
 	// 对于数据属性的查询的参数校验
 	if query.ObjectQueryInfo != nil {
 		// 唯一标识包含主键字段
-		for i, uniqueIdentity := range query.ObjectQueryInfo.InstanceIdentity {
+		for i, instanceIdentity := range query.ObjectQueryInfo.InstanceIdentity {
 			for _, key := range objectType.PrimaryKeys {
-				if _, exist := uniqueIdentity[key]; !exist {
+				if _, exist := instanceIdentity[key]; !exist {
 					return resps, rest.NewHTTPError(ctx, http.StatusBadRequest, oerrors.OntologyQuery_ObjectType_InvalidParameter).
-						WithErrorDetails(fmt.Sprintf("第%d个对象的的唯一标识字段[%s]不能为空", i+1, key))
+						WithErrorDetails(fmt.Sprintf("第%d个对象的实例标识字段[%s]不能为空", i+1, key))
 				}
 			}
 		}
@@ -576,7 +576,7 @@ func (ots *objectTypeService) GetObjectPropertyValue(ctx context.Context,
 	var resps interfaces.Objects
 
 	// 1. 根据唯一标识构建过滤条件
-	ukCond := logics.BuildUniqueIdentitiesCondition(query.InstanceIdentities)
+	ukCond := logics.BuildInstanceIdentitiesCondition(query.InstanceIdentities)
 	// 2. 根据唯一标识组成的条件检索对象类的对象实例
 	objectQuery := &interfaces.ObjectQueryBaseOnObjectType{
 		ActualCondition: ukCond,

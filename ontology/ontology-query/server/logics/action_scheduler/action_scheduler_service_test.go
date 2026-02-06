@@ -33,12 +33,19 @@ func Test_buildExecutionParams(t *testing.T) {
 					},
 				},
 			}
-			identity := map[string]any{
+
+			objData := map[string]any{
+				"_instance_id": "test-instance",
+				"_instance_identity": map[string]any{
+					"pod_ip":   "192.168.1.1",
+					"pod_name": "test-pod",
+				},
+				"_display": "test-pod",
 				"pod_ip":   "192.168.1.1",
 				"pod_name": "test-pod",
 			}
 
-			params, err := s.buildExecutionParams(actionType, identity, nil)
+			params, err := s.buildExecutionParams(actionType, objData, nil)
 
 			So(err, ShouldBeNil)
 			So(params["target_ip"], ShouldEqual, "192.168.1.1")
@@ -54,9 +61,10 @@ func Test_buildExecutionParams(t *testing.T) {
 					},
 				},
 			}
-			identity := map[string]any{}
 
-			params, err := s.buildExecutionParams(actionType, identity, nil)
+			objData := map[string]any{}
+
+			params, err := s.buildExecutionParams(actionType, objData, nil)
 
 			So(err, ShouldBeNil)
 			So(params["timeout"], ShouldEqual, 60)
@@ -71,12 +79,12 @@ func Test_buildExecutionParams(t *testing.T) {
 					},
 				},
 			}
-			identity := map[string]any{}
+			objData := map[string]any{}
 			dynamicParams := map[string]any{
 				"Authorization": "Bearer token123",
 			}
 
-			params, err := s.buildExecutionParams(actionType, identity, dynamicParams)
+			params, err := s.buildExecutionParams(actionType, objData, dynamicParams)
 
 			So(err, ShouldBeNil)
 			So(params["Authorization"], ShouldEqual, "Bearer token123")
@@ -101,14 +109,19 @@ func Test_buildExecutionParams(t *testing.T) {
 					},
 				},
 			}
-			identity := map[string]any{
-				"pod_ip": "10.0.0.1",
+			objData := map[string]any{
+				"_instance_id": "test-instance",
+				"_instance_identity": map[string]any{
+					"pod_ip": "10.0.0.1",
+				},
+				"_display": "test-pod",
+				"pod_ip":   "10.0.0.1",
 			}
 			dynamicParams := map[string]any{
 				"token": "abc123",
 			}
 
-			params, err := s.buildExecutionParams(actionType, identity, dynamicParams)
+			params, err := s.buildExecutionParams(actionType, objData, dynamicParams)
 
 			So(err, ShouldBeNil)
 			So(params["target_ip"], ShouldEqual, "10.0.0.1")
@@ -126,11 +139,16 @@ func Test_buildExecutionParams(t *testing.T) {
 					},
 				},
 			}
-			identity := map[string]any{
+			objData := map[string]any{
+				"_instance_id": "test-instance",
+				"_instance_identity": map[string]any{
+					"pod_name": "test-pod", // pod_ip is missing
+				},
+				"_display": "test-pod",
 				"pod_name": "test-pod", // pod_ip is missing
 			}
 
-			params, err := s.buildExecutionParams(actionType, identity, nil)
+			params, err := s.buildExecutionParams(actionType, objData, nil)
 
 			So(err, ShouldBeNil)
 			_, exists := params["target_ip"]
@@ -146,9 +164,9 @@ func Test_buildExecutionParams(t *testing.T) {
 					},
 				},
 			}
-			identity := map[string]any{}
+			objData := map[string]any{}
 
-			params, err := s.buildExecutionParams(actionType, identity, nil)
+			params, err := s.buildExecutionParams(actionType, objData, nil)
 
 			So(err, ShouldBeNil)
 			_, exists := params["token"]
@@ -159,9 +177,9 @@ func Test_buildExecutionParams(t *testing.T) {
 			actionType := &interfaces.ActionType{
 				Parameters: []interfaces.Parameter{},
 			}
-			identity := map[string]any{}
+			objData := map[string]any{}
 
-			params, err := s.buildExecutionParams(actionType, identity, nil)
+			params, err := s.buildExecutionParams(actionType, objData, nil)
 
 			So(err, ShouldBeNil)
 			So(len(params), ShouldEqual, 0)
@@ -175,14 +193,14 @@ func Test_ActionExecutionRequest_Validation(t *testing.T) {
 			req := &interfaces.ActionExecutionRequest{
 				KNID:         "kn_001",
 				ActionTypeID: "at_001",
-				UniqueIdentities: []map[string]any{
+				InstanceIdentities: []map[string]any{
 					{"pod_ip": "192.168.1.1"},
 				},
 			}
 
 			So(req.KNID, ShouldEqual, "kn_001")
 			So(req.ActionTypeID, ShouldEqual, "at_001")
-			So(len(req.UniqueIdentities), ShouldEqual, 1)
+			So(len(req.InstanceIdentities), ShouldEqual, 1)
 		})
 
 		Convey("should support branch field", func() {
@@ -190,7 +208,7 @@ func Test_ActionExecutionRequest_Validation(t *testing.T) {
 				KNID:         "kn_001",
 				Branch:       "feature/test",
 				ActionTypeID: "at_001",
-				UniqueIdentities: []map[string]any{
+				InstanceIdentities: []map[string]any{
 					{"pod_ip": "192.168.1.1"},
 				},
 			}
@@ -211,14 +229,14 @@ func Test_ActionExecutionRequest_Validation(t *testing.T) {
 
 		Convey("should handle multiple objects", func() {
 			req := &interfaces.ActionExecutionRequest{
-				UniqueIdentities: []map[string]any{
+				InstanceIdentities: []map[string]any{
 					{"pod_ip": "192.168.1.1", "id": 1},
 					{"pod_ip": "192.168.1.2", "id": 2},
 					{"pod_ip": "192.168.1.3", "id": 3},
 				},
 			}
 
-			So(len(req.UniqueIdentities), ShouldEqual, 3)
+			So(len(req.InstanceIdentities), ShouldEqual, 3)
 		})
 
 		Convey("should handle dynamic params", func() {
@@ -257,11 +275,15 @@ func Test_ObjectExecutionResult(t *testing.T) {
 	Convey("Test ObjectExecutionResult", t, func() {
 		Convey("should represent success result", func() {
 			result := interfaces.ObjectExecutionResult{
-				UniqueIdentity: map[string]any{"pod_ip": "192.168.1.1"},
-				Status:         interfaces.ObjectStatusSuccess,
-				Parameters:     map[string]any{"target_ip": "192.168.1.1"},
-				Result:         map[string]any{"message": "OK"},
-				DurationMs:     1200,
+				ObjectSystemInfo: interfaces.ObjectSystemInfo{
+					InstanceID:       "",
+					InstanceIdentity: map[string]any{"pod_ip": "192.168.1.1"},
+					Display:          "",
+				},
+				Status:     interfaces.ObjectStatusSuccess,
+				Parameters: map[string]any{"target_ip": "192.168.1.1"},
+				Result:     map[string]any{"message": "OK"},
+				DurationMs: 1200,
 			}
 
 			So(result.Status, ShouldEqual, "success")
@@ -271,11 +293,15 @@ func Test_ObjectExecutionResult(t *testing.T) {
 
 		Convey("should represent failed result", func() {
 			result := interfaces.ObjectExecutionResult{
-				UniqueIdentity: map[string]any{"pod_ip": "192.168.1.2"},
-				Status:         interfaces.ObjectStatusFailed,
-				Parameters:     map[string]any{"target_ip": "192.168.1.2"},
-				ErrorMessage:   "Connection timeout",
-				DurationMs:     5000,
+				ObjectSystemInfo: interfaces.ObjectSystemInfo{
+					InstanceID:       "",
+					InstanceIdentity: map[string]any{"pod_ip": "192.168.1.2"},
+					Display:          "",
+				},
+				Status:       interfaces.ObjectStatusFailed,
+				Parameters:   map[string]any{"target_ip": "192.168.1.2"},
+				ErrorMessage: "Connection timeout",
+				DurationMs:   5000,
 			}
 
 			So(result.Status, ShouldEqual, "failed")
@@ -382,7 +408,7 @@ func Test_ActionExecution_Snapshot(t *testing.T) {
 }
 
 func Test_ExecuteAction_ScanMode(t *testing.T) {
-	Convey("Test ExecuteAction with scan mode (empty unique_identities)", t, func() {
+	Convey("Test ExecuteAction with scan mode (empty _instance_identities)", t, func() {
 		mockCtrl := gomock.NewController(t)
 		defer mockCtrl.Finish()
 
@@ -411,10 +437,10 @@ func Test_ExecuteAction_ScanMode(t *testing.T) {
 
 		Convey("成功 - 扫描模式：找到符合条件的实例", func() {
 			req := &interfaces.ActionExecutionRequest{
-				KNID:             knID,
-				Branch:           interfaces.MAIN_BRANCH,
-				ActionTypeID:     actionTypeID,
-				UniqueIdentities: []map[string]any{}, // Empty, triggers scan mode
+				KNID:               knID,
+				Branch:             interfaces.MAIN_BRANCH,
+				ActionTypeID:       actionTypeID,
+				InstanceIdentities: []map[string]any{}, // Empty, triggers scan mode
 			}
 
 			actionType := interfaces.ActionType{
@@ -440,14 +466,18 @@ func Test_ExecuteAction_ScanMode(t *testing.T) {
 			scannedObjects := interfaces.Objects{
 				Datas: []map[string]any{
 					{
+						interfaces.SYSTEM_PROPERTY_INSTANCE_ID:       "1",
 						interfaces.SYSTEM_PROPERTY_INSTANCE_IDENTITY: map[string]any{"pod_ip": "192.168.1.1", "id": "1"},
-						"pod_ip": "192.168.1.1",
-						"id":     "1",
+						interfaces.SYSTEM_PROPERTY_DISPLAY:           "pod-192.168.1.1",
+						"pod_ip":                                     "192.168.1.1",
+						"id":                                         "1",
 					},
 					{
+						interfaces.SYSTEM_PROPERTY_INSTANCE_ID:       "2",
 						interfaces.SYSTEM_PROPERTY_INSTANCE_IDENTITY: map[string]any{"pod_ip": "192.168.1.2", "id": "2"},
-						"pod_ip": "192.168.1.2",
-						"id":     "2",
+						interfaces.SYSTEM_PROPERTY_DISPLAY:           "pod-192.168.1.2",
+						"pod_ip":                                     "192.168.1.2",
+						"id":                                         "2",
 					},
 				},
 				TotalCount: 2,
@@ -475,17 +505,17 @@ func Test_ExecuteAction_ScanMode(t *testing.T) {
 
 			// Verify scan mode was triggered and identities were populated
 			So(scanVerified, ShouldBeTrue)
-			So(len(req.UniqueIdentities), ShouldEqual, 2)
-			So(req.UniqueIdentities[0]["pod_ip"], ShouldEqual, "192.168.1.1")
-			So(req.UniqueIdentities[1]["pod_ip"], ShouldEqual, "192.168.1.2")
+			So(len(req.Instances), ShouldEqual, 2)
+			So(req.Instances[0].InstanceID, ShouldEqual, "1")
+			So(req.Instances[1].InstanceID, ShouldEqual, "2")
 		})
 
 		Convey("失败 - 扫描模式：扫描后没有找到符合条件的实例", func() {
 			req := &interfaces.ActionExecutionRequest{
-				KNID:             knID,
-				Branch:           interfaces.MAIN_BRANCH,
-				ActionTypeID:     actionTypeID,
-				UniqueIdentities: []map[string]any{}, // Empty, triggers scan mode
+				KNID:               knID,
+				Branch:             interfaces.MAIN_BRANCH,
+				ActionTypeID:       actionTypeID,
+				InstanceIdentities: []map[string]any{}, // Empty, triggers scan mode
 			}
 
 			actionType := interfaces.ActionType{
@@ -513,10 +543,10 @@ func Test_ExecuteAction_ScanMode(t *testing.T) {
 
 		Convey("失败 - 扫描模式：扫描过程出错", func() {
 			req := &interfaces.ActionExecutionRequest{
-				KNID:             knID,
-				Branch:           interfaces.MAIN_BRANCH,
-				ActionTypeID:     actionTypeID,
-				UniqueIdentities: []map[string]any{}, // Empty, triggers scan mode
+				KNID:               knID,
+				Branch:             interfaces.MAIN_BRANCH,
+				ActionTypeID:       actionTypeID,
+				InstanceIdentities: []map[string]any{}, // Empty, triggers scan mode
 			}
 
 			actionType := interfaces.ActionType{
@@ -549,10 +579,10 @@ func Test_ExecuteAction_ScanMode(t *testing.T) {
 			defer func() { maxExecutionObjects = originalLimit }()
 
 			req := &interfaces.ActionExecutionRequest{
-				KNID:             knID,
-				Branch:           interfaces.MAIN_BRANCH,
-				ActionTypeID:     actionTypeID,
-				UniqueIdentities: []map[string]any{}, // Empty, triggers scan mode
+				KNID:               knID,
+				Branch:             interfaces.MAIN_BRANCH,
+				ActionTypeID:       actionTypeID,
+				InstanceIdentities: []map[string]any{}, // Empty, triggers scan mode
 			}
 
 			actionType := interfaces.ActionType{

@@ -17,6 +17,7 @@ import (
 	"go.opentelemetry.io/otel/trace"
 
 	"ontology-query/common"
+	cond "ontology-query/common/condition"
 	oerrors "ontology-query/errors"
 	"ontology-query/interfaces"
 	"ontology-query/logics"
@@ -95,61 +96,87 @@ func (s *actionSchedulerService) ExecuteAction(ctx context.Context, req *interfa
 			WithErrorDetails(fmt.Sprintf("Action type not found: %s", req.ActionTypeID))
 	}
 
-	// When unique_identities is empty, scan all matching instances based on action type condition
-	if len(req.UniqueIdentities) == 0 {
-		logger.Infof("No unique_identities provided, scanning all matching instances for action type %s", req.ActionTypeID)
-
-		// Query objects matching the action type condition
-		objectQuery := &interfaces.ObjectQueryBaseOnObjectType{
-			ActualCondition: actionType.Condition, // Use action type's condition directly
-			PageQuery: interfaces.PageQuery{
-				Limit:     interfaces.MAX_LIMIT,
-				NeedTotal: true,
-			},
-			KNID:         req.KNID,
-			Branch:       req.Branch,
-			ObjectTypeID: actionType.ObjectTypeID,
-			CommonQueryParameters: interfaces.CommonQueryParameters{
-				IncludeTypeInfo: false,
-			},
-		}
-
-		objects, err := s.ots.GetObjectsByObjectTypeID(ctx, objectQuery)
-		if err != nil {
-			logger.Errorf("Failed to scan matching instances: %v", err)
-			return nil, rest.NewHTTPError(ctx, http.StatusInternalServerError, oerrors.OntologyQuery_ActionExecution_GetActionTypeFailed).
-				WithErrorDetails(fmt.Sprintf("Failed to scan matching instances: %v", err))
-		}
-
-		// Extract unique identities from objects using primary keys
-		for _, objData := range objects.Datas {
-			if identity, ok := objData[interfaces.SYSTEM_PROPERTY_INSTANCE_IDENTITY]; ok {
-				if identityMap, ok := identity.(map[string]any); ok {
-					req.UniqueIdentities = append(req.UniqueIdentities, identityMap)
-				}
-			}
-		}
-
-		// If no matching instances found after scanning, return appropriate response
-		if len(req.UniqueIdentities) == 0 {
-			logger.Infof("No matching instances found for action type %s after scanning", req.ActionTypeID)
-			return nil, rest.NewHTTPError(ctx, http.StatusBadRequest, oerrors.OntologyQuery_ActionExecution_InvalidParameter).
-				WithErrorDetails("No matching instances found for the action type condition")
-		}
-
-		logger.Infof("Scanned and found %d matching instances for action type %s", len(req.UniqueIdentities), req.ActionTypeID)
+	var condition *cond.CondCfg
+	// When _instance_identities is empty, scan all matching instances based on action type condition
+	if len(req.InstanceIdentities) == 0 {
+		logger.Infof("No _instance_identities provided, scanning all matching instances for action type %s", req.ActionTypeID)
 		span.SetAttributes(attr.Key("scan_mode").Bool(true))
-		span.SetAttributes(attr.Key("scanned_count").Int(len(req.UniqueIdentities)))
+
+		condition = actionType.Condition
 	} else {
+		logger.Infof("_instance_identities provided, scanning only matching instances for action type %s", req.ActionTypeID)
 		span.SetAttributes(attr.Key("scan_mode").Bool(false))
+
+		if actionType.Condition != nil {
+			instance_condition := logics.BuildInstanceIdentitiesCondition(req.InstanceIdentities)
+			condition = &cond.CondCfg{
+				Operation: "and",
+				SubConds:  []*cond.CondCfg{instance_condition, actionType.Condition},
+			}
+		} else {
+			condition = logics.BuildInstanceIdentitiesCondition(req.InstanceIdentities)
+		}
 	}
 
+	// Query objects matching the action type condition
+	objectQuery := &interfaces.ObjectQueryBaseOnObjectType{
+		ActualCondition: condition, // Use action type's condition directly
+		PageQuery: interfaces.PageQuery{
+			Limit:     interfaces.MAX_LIMIT,
+			NeedTotal: true,
+		},
+		KNID:         req.KNID,
+		Branch:       req.Branch,
+		ObjectTypeID: actionType.ObjectTypeID,
+		CommonQueryParameters: interfaces.CommonQueryParameters{
+			IncludeTypeInfo: false,
+		},
+	}
+
+	objects, err := s.ots.GetObjectsByObjectTypeID(ctx, objectQuery)
+	if err != nil {
+		logger.Errorf("Failed to scan matching instances: %v", err)
+		return nil, rest.NewHTTPError(ctx, http.StatusInternalServerError, oerrors.OntologyQuery_ActionExecution_GetActionTypeFailed).
+			WithErrorDetails(fmt.Sprintf("Failed to scan matching instances: %v", err))
+	}
+
+	// Extract unique identities from objects using primary keys
+	for _, objData := range objects.Datas {
+		instanceInfo := interfaces.ObjectSystemInfo{
+			InstanceIdentity: map[string]any{},
+		}
+		if instance_id, ok := objData[interfaces.SYSTEM_PROPERTY_INSTANCE_ID]; ok {
+			instanceInfo.InstanceID = instance_id
+		}
+		if identity, ok := objData[interfaces.SYSTEM_PROPERTY_INSTANCE_IDENTITY]; ok {
+			if identityMap, ok := identity.(map[string]any); ok {
+				instanceInfo.InstanceIdentity = identityMap
+			}
+		}
+		if display, ok := objData[interfaces.SYSTEM_PROPERTY_DISPLAY]; ok {
+			instanceInfo.Display = display
+		}
+		req.Instances = append(req.Instances, instanceInfo)
+		req.ObjDatas = append(req.ObjDatas, objData)
+	}
+
+	// If no matching instances found after scanning, return appropriate response
+	if len(req.Instances) == 0 {
+		logger.Infof("No matching instances found for action type %s after scanning", req.ActionTypeID)
+		return nil, rest.NewHTTPError(ctx, http.StatusBadRequest, oerrors.OntologyQuery_ActionExecution_InvalidParameter).
+			WithErrorDetails("No matching instances found for the action type condition")
+	}
+
+	logger.Infof("Scanned and found %d matching instances for action type %s", len(req.Instances), req.ActionTypeID)
+	span.SetAttributes(attr.Key("scan_mode").Bool(true))
+	span.SetAttributes(attr.Key("scanned_count").Int(len(req.Instances)))
+
 	// Check execution objects limit
-	if len(req.UniqueIdentities) > maxExecutionObjects {
-		logger.Warnf("Execution objects count %d exceeds limit %d", len(req.UniqueIdentities), maxExecutionObjects)
+	if len(req.Instances) > maxExecutionObjects {
+		logger.Warnf("Execution objects count %d exceeds limit %d", len(req.Instances), maxExecutionObjects)
 		return nil, rest.NewHTTPError(ctx, http.StatusBadRequest, oerrors.OntologyQuery_ActionExecution_InvalidParameter).
 			WithErrorDetails(fmt.Sprintf("Number of objects (%d) exceeds the maximum limit (%d). Please reduce the scope or adjust the ACTION_EXECUTION_MAX_OBJECTS environment variable.",
-				len(req.UniqueIdentities), maxExecutionObjects))
+				len(req.Instances), maxExecutionObjects))
 	}
 
 	// Get executor info from context
@@ -199,7 +226,7 @@ func (s *actionSchedulerService) ExecuteAction(ctx context.Context, req *interfa
 		ObjectTypeID:       actionType.ObjectTypeID,
 		TriggerType:        triggerType,
 		Status:             interfaces.ExecutionStatusPending,
-		TotalCount:         len(req.UniqueIdentities),
+		TotalCount:         len(req.Instances),
 		SuccessCount:       0,
 		FailedCount:        0,
 		Results:            []interfaces.ObjectExecutionResult{}, // Empty initially to save space
@@ -257,28 +284,21 @@ func (s *actionSchedulerService) GetExecution(ctx context.Context, knID, executi
 const batchSize = 100
 
 // executeAsync executes the action asynchronously with batch storage and cancellation support
-func (s *actionSchedulerService) executeAsync(execution *interfaces.ActionExecution, actionType *interfaces.ActionType, req *interfaces.ActionExecutionRequest) {
+func (s *actionSchedulerService) executeAsync(execution *interfaces.ActionExecution,
+	actionType *interfaces.ActionType, req *interfaces.ActionExecutionRequest) {
+
 	// Create a new context for async execution
 	ctx := context.Background()
 	// Restore account info from execution record for downstream API calls (user_id header)
 	ctx = context.WithValue(ctx, interfaces.ACCOUNT_INFO_KEY, execution.Executor)
 
-	logger.Infof("Starting async execution: %s, total objects: %d", execution.ID, len(req.UniqueIdentities))
+	logger.Infof("Starting async execution: %s, total objects: %d", execution.ID, len(req.Instances))
 
 	// Update status to running
 	if err := s.logsService.UpdateExecution(ctx, execution.KNID, execution.ID, map[string]any{
 		"status": interfaces.ExecutionStatusRunning,
 	}); err != nil {
 		logger.Warnf("Failed to update execution status to running: %v", err)
-	}
-
-	// Check if we need to fetch full object data for property-based parameters
-	needFullObjectData := s.needsFullObjectData(actionType.Parameters)
-	var fullObjectsMap map[string]map[string]any
-	if needFullObjectData {
-		logger.Debugf("Parameters require full object data, fetching objects for execution %s", execution.ID)
-		fullObjectsMap = s.fetchFullObjectData(ctx, req.KNID, req.Branch, actionType.ObjectTypeID, req.UniqueIdentities)
-		logger.Debugf("Fetched %d full objects for execution %s", len(fullObjectsMap), execution.ID)
 	}
 
 	// Execute objects in batches
@@ -288,19 +308,19 @@ func (s *actionSchedulerService) executeAsync(execution *interfaces.ActionExecut
 	allResults := []interfaces.ObjectExecutionResult{}
 	cancelled := false
 
-	for i, identity := range req.UniqueIdentities {
+	for i, objData := range req.ObjDatas {
 		// Check cancellation status at the start of each batch
 		if i%batchSize == 0 && i > 0 {
 			// Check if execution has been cancelled
 			if s.isExecutionCancelled(ctx, execution.KNID, execution.ID) {
-				logger.Infof("Execution %s cancelled, stopping at object %d/%d", execution.ID, i, len(req.UniqueIdentities))
+				logger.Infof("Execution %s cancelled, stopping at object %d/%d", execution.ID, i, len(req.ObjDatas))
 				cancelled = true
 				// Mark remaining objects as cancelled
-				for j := i; j < len(req.UniqueIdentities); j++ {
+				for j := i; j < len(req.Instances); j++ {
 					allResults = append(allResults, interfaces.ObjectExecutionResult{
-						UniqueIdentity: req.UniqueIdentities[j],
-						Status:         interfaces.ObjectStatusCancelled,
-						ErrorMessage:   "execution cancelled",
+						ObjectSystemInfo: req.Instances[j],
+						Status:           interfaces.ObjectStatusCancelled,
+						ErrorMessage:     "execution cancelled",
 					})
 					cancelledCount++
 				}
@@ -309,29 +329,22 @@ func (s *actionSchedulerService) executeAsync(execution *interfaces.ActionExecut
 
 			// Batch update: save current progress
 			s.updateExecutionProgress(ctx, execution, successCount, failedCount, allResults)
-			logger.Debugf("Execution %s progress: %d/%d completed", execution.ID, i, len(req.UniqueIdentities))
+			logger.Debugf("Execution %s progress: %d/%d completed", execution.ID, i, len(req.ObjDatas))
 		}
 
-		objectStart := time.Now()
-
-		// Get object data for building parameters
-		// If we have full object data, use it; otherwise use the identity (unique_identity)
-		objectData := identity
-		if needFullObjectData && fullObjectsMap != nil {
-			identityKey := s.getIdentityKey(identity)
-			if fullObj, exists := fullObjectsMap[identityKey]; exists {
-				objectData = fullObj
-			}
-		}
+		startTime := time.Now().UnixMilli()
 
 		// Build parameters for this object
-		params, err := s.buildExecutionParams(actionType, objectData, req.DynamicParams)
+		params, err := s.buildExecutionParams(actionType, objData, req.DynamicParams)
 		if err != nil {
+			endTime := time.Now().UnixMilli()
 			allResults = append(allResults, interfaces.ObjectExecutionResult{
-				UniqueIdentity: identity,
-				Status:         interfaces.ObjectStatusFailed,
-				ErrorMessage:   fmt.Sprintf("Failed to build parameters: %v", err),
-				DurationMs:     time.Since(objectStart).Milliseconds(),
+				ObjectSystemInfo: req.Instances[i],
+				Status:           interfaces.ObjectStatusFailed,
+				ErrorMessage:     fmt.Sprintf("Failed to build parameters: %v", err),
+				StartTime:        startTime,
+				EndTime:          endTime,
+				DurationMs:       endTime - startTime,
 			})
 			failedCount++
 			continue
@@ -350,22 +363,27 @@ func (s *actionSchedulerService) executeAsync(execution *interfaces.ActionExecut
 			execErr = fmt.Errorf("unsupported action source type: %s", actionType.ActionSource.Type)
 		}
 
+		endTime := time.Now().UnixMilli()
 		if execErr != nil {
 			allResults = append(allResults, interfaces.ObjectExecutionResult{
-				UniqueIdentity: identity,
-				Status:         interfaces.ObjectStatusFailed,
-				Parameters:     params,
-				ErrorMessage:   execErr.Error(),
-				DurationMs:     time.Since(objectStart).Milliseconds(),
+				ObjectSystemInfo: req.Instances[i],
+				Status:           interfaces.ObjectStatusFailed,
+				Parameters:       params,
+				ErrorMessage:     execErr.Error(),
+				StartTime:        startTime,
+				EndTime:          endTime,
+				DurationMs:       endTime - startTime,
 			})
 			failedCount++
 		} else {
 			allResults = append(allResults, interfaces.ObjectExecutionResult{
-				UniqueIdentity: identity,
-				Status:         interfaces.ObjectStatusSuccess,
-				Parameters:     params,
-				Result:         result,
-				DurationMs:     time.Since(objectStart).Milliseconds(),
+				ObjectSystemInfo: req.Instances[i],
+				Status:           interfaces.ObjectStatusSuccess,
+				Parameters:       params,
+				Result:           result,
+				StartTime:        startTime,
+				EndTime:          endTime,
+				DurationMs:       endTime - startTime,
 			})
 			successCount++
 		}
@@ -375,7 +393,7 @@ func (s *actionSchedulerService) executeAsync(execution *interfaces.ActionExecut
 	var finalStatus string
 	if cancelled {
 		finalStatus = interfaces.ExecutionStatusCancelled
-	} else if failedCount == len(req.UniqueIdentities) {
+	} else if failedCount == len(req.Instances) {
 		finalStatus = interfaces.ExecutionStatusFailed
 	} else {
 		finalStatus = interfaces.ExecutionStatusCompleted
@@ -429,7 +447,9 @@ func (s *actionSchedulerService) updateExecutionProgress(ctx context.Context, ex
 }
 
 // buildExecutionParams builds the execution parameters from action type parameters and object data
-func (s *actionSchedulerService) buildExecutionParams(actionType *interfaces.ActionType, identity map[string]any, dynamicParams map[string]any) (map[string]any, error) {
+func (s *actionSchedulerService) buildExecutionParams(actionType *interfaces.ActionType,
+	instance map[string]any, dynamicParams map[string]any) (map[string]any, error) {
+
 	params := make(map[string]any)
 
 	for _, param := range actionType.Parameters {
@@ -437,7 +457,7 @@ func (s *actionSchedulerService) buildExecutionParams(actionType *interfaces.Act
 		case interfaces.LOGIC_PARAMS_VALUE_FROM_PROP:
 			// Get value from object property
 			if propName, ok := param.Value.(string); ok {
-				if val, exists := identity[propName]; exists {
+				if val, exists := instance[propName]; exists {
 					params[param.Name] = val
 				}
 			}
@@ -455,67 +475,4 @@ func (s *actionSchedulerService) buildExecutionParams(actionType *interfaces.Act
 	}
 
 	return params, nil
-}
-
-// needsFullObjectData checks if any parameter requires property-based values
-func (s *actionSchedulerService) needsFullObjectData(params []interfaces.Parameter) bool {
-	for _, param := range params {
-		if param.ValueFrom == interfaces.LOGIC_PARAMS_VALUE_FROM_PROP {
-			return true
-		}
-	}
-	return false
-}
-
-// fetchFullObjectData fetches complete object data for all unique identities
-func (s *actionSchedulerService) fetchFullObjectData(ctx context.Context, knID, branch, objectTypeID string, identities []map[string]any) map[string]map[string]any {
-	result := make(map[string]map[string]any)
-
-	if len(identities) == 0 {
-		return result
-	}
-
-	// Build query to fetch objects by their unique identities
-	// We use the _instance_identity field to match objects
-	objectQuery := &interfaces.ObjectQueryBaseOnObjectType{
-		PageQuery: interfaces.PageQuery{
-			Limit:     len(identities),
-			NeedTotal: false,
-		},
-		KNID:         knID,
-		Branch:       branch,
-		ObjectTypeID: objectTypeID,
-		CommonQueryParameters: interfaces.CommonQueryParameters{
-			IncludeTypeInfo: false,
-		},
-	}
-
-	objects, err := s.ots.GetObjectsByObjectTypeID(ctx, objectQuery)
-	if err != nil {
-		logger.Warnf("Failed to fetch full object data: %v", err)
-		return result
-	}
-
-	// Build a map keyed by identity for quick lookup
-	for _, objData := range objects.Datas {
-		if identity, ok := objData[interfaces.SYSTEM_PROPERTY_INSTANCE_IDENTITY]; ok {
-			if identityMap, ok := identity.(map[string]any); ok {
-				key := s.getIdentityKey(identityMap)
-				result[key] = objData
-			}
-		}
-	}
-
-	return result
-}
-
-// getIdentityKey generates a unique key from an identity map for lookup purposes
-func (s *actionSchedulerService) getIdentityKey(identity map[string]any) string {
-	// Simple approach: serialize identity to a string
-	// For more complex cases, you might want to sort keys first
-	key := ""
-	for k, v := range identity {
-		key += fmt.Sprintf("%s=%v;", k, v)
-	}
-	return key
 }

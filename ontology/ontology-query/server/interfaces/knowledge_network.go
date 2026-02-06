@@ -100,14 +100,18 @@ type PathsEntries struct {
 	Entries []ObjectSubGraph `json:"entries"`
 }
 
-// 在对象子图中的对象信息
-type ObjectInfoInSubgraph struct {
-	InstanceID       string         `json:"_instance_id"`
+type ObjectSystemInfo struct {
+	InstanceID       any            `json:"_instance_id"`
 	InstanceIdentity map[string]any `json:"_instance_identity"`
 	Display          any            `json:"_display"`
-	ObjectTypeId     string         `json:"object_type_id"`
-	ObjectTypeName   string         `json:"object_type_name"`
-	Properties       map[string]any `json:"properties"`
+}
+
+// 在对象子图中的对象信息
+type ObjectInfoInSubgraph struct {
+	ObjectSystemInfo
+	ObjectTypeId   string         `json:"object_type_id"`
+	ObjectTypeName string         `json:"object_type_name"`
+	Properties     map[string]any `json:"properties"`
 }
 
 // 由关系实例组成的路径

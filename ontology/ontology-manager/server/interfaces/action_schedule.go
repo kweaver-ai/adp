@@ -10,41 +10,41 @@ const (
 
 // ActionSchedule represents a scheduled action configuration
 type ActionSchedule struct {
-	ID               string           `json:"id"`
-	Name             string           `json:"name"`
-	KNID             string           `json:"kn_id"`
-	Branch           string           `json:"branch"`
-	ActionTypeID     string           `json:"action_type_id"`
-	CronExpression   string           `json:"cron_expression"`
-	UniqueIdentities []map[string]any `json:"unique_identities,omitempty"`
-	DynamicParams    map[string]any   `json:"dynamic_params,omitempty"`
-	Status           string           `json:"status"`
-	LastRunTime      int64            `json:"last_run_time,omitempty"`
-	NextRunTime      int64            `json:"next_run_time,omitempty"`
-	LockHolder       string           `json:"lock_holder,omitempty"`
-	LockTime         int64            `json:"lock_time,omitempty"`
-	Creator          AccountInfo      `json:"creator,omitempty"`
-	CreateTime       int64            `json:"create_time,omitempty"`
-	Updater          AccountInfo      `json:"updater,omitempty"`
-	UpdateTime       int64            `json:"update_time,omitempty"`
+	ID                 string           `json:"id"`
+	Name               string           `json:"name"`
+	KNID               string           `json:"kn_id"`
+	Branch             string           `json:"branch"`
+	ActionTypeID       string           `json:"action_type_id"`
+	CronExpression     string           `json:"cron_expression"`
+	InstanceIdentities []map[string]any `json:"_instance_identities,omitempty"`
+	DynamicParams      map[string]any   `json:"dynamic_params,omitempty"`
+	Status             string           `json:"status"`
+	LastRunTime        int64            `json:"last_run_time,omitempty"`
+	NextRunTime        int64            `json:"next_run_time,omitempty"`
+	LockHolder         string           `json:"lock_holder,omitempty"`
+	LockTime           int64            `json:"lock_time,omitempty"`
+	Creator            AccountInfo      `json:"creator,omitempty"`
+	CreateTime         int64            `json:"create_time,omitempty"`
+	Updater            AccountInfo      `json:"updater,omitempty"`
+	UpdateTime         int64            `json:"update_time,omitempty"`
 }
 
 // ActionScheduleCreateRequest represents the request to create a schedule
 type ActionScheduleCreateRequest struct {
-	Name             string           `json:"name"`
-	ActionTypeID     string           `json:"action_type_id"`
-	CronExpression   string           `json:"cron_expression"`
-	UniqueIdentities []map[string]any `json:"unique_identities"`
-	DynamicParams    map[string]any   `json:"dynamic_params,omitempty"`
-	Status           string           `json:"status,omitempty"` // defaults to "inactive"
+	Name               string           `json:"name"`
+	ActionTypeID       string           `json:"action_type_id"`
+	CronExpression     string           `json:"cron_expression"`
+	InstanceIdentities []map[string]any `json:"_instance_identities"`
+	DynamicParams      map[string]any   `json:"dynamic_params,omitempty"`
+	Status             string           `json:"status,omitempty"` // defaults to "inactive"
 }
 
 // ActionScheduleUpdateRequest represents the request to update a schedule
 type ActionScheduleUpdateRequest struct {
-	Name             string           `json:"name,omitempty"`
-	CronExpression   string           `json:"cron_expression,omitempty"`
-	UniqueIdentities []map[string]any `json:"unique_identities,omitempty"`
-	DynamicParams    map[string]any   `json:"dynamic_params,omitempty"`
+	Name               string           `json:"name,omitempty"`
+	CronExpression     string           `json:"cron_expression,omitempty"`
+	InstanceIdentities []map[string]any `json:"_instance_identities,omitempty"`
+	DynamicParams      map[string]any   `json:"dynamic_params,omitempty"`
 }
 
 // ActionScheduleStatusRequest represents the request to update schedule status

@@ -1239,8 +1239,8 @@ func Test_CheckIndirectMappingConditionsWithViewData(t *testing.T) {
 	})
 }
 
-func Test_BuildUniqueIdentitiesCondition(t *testing.T) {
-	Convey("Test BuildUniqueIdentitiesCondition", t, func() {
+func Test_BuildInstanceIdentitiesCondition(t *testing.T) {
+	Convey("Test BuildInstanceIdentitiesCondition", t, func() {
 		Convey("成功 - 单个对象", func() {
 			uks := []map[string]any{
 				{
@@ -1249,7 +1249,7 @@ func Test_BuildUniqueIdentitiesCondition(t *testing.T) {
 				},
 			}
 
-			result := BuildUniqueIdentitiesCondition(uks)
+			result := BuildInstanceIdentitiesCondition(uks)
 			So(result.Operation, ShouldEqual, "and")
 			So(len(result.SubConds), ShouldEqual, 2)
 		})
@@ -1264,7 +1264,7 @@ func Test_BuildUniqueIdentitiesCondition(t *testing.T) {
 				},
 			}
 
-			result := BuildUniqueIdentitiesCondition(uks)
+			result := BuildInstanceIdentitiesCondition(uks)
 			So(result.Operation, ShouldEqual, "or")
 			So(len(result.SubConds), ShouldEqual, 2)
 		})
@@ -1272,7 +1272,7 @@ func Test_BuildUniqueIdentitiesCondition(t *testing.T) {
 		Convey("成功 - 空列表", func() {
 			uks := []map[string]any{}
 
-			result := BuildUniqueIdentitiesCondition(uks)
+			result := BuildInstanceIdentitiesCondition(uks)
 			So(result, ShouldBeNil)
 		})
 	})

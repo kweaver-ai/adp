@@ -34,10 +34,10 @@ func ValidateActionScheduleCreate(ctx context.Context, req *interfaces.ActionSch
 			WithErrorDetails("cron_expression is required")
 	}
 
-	// Validate unique_identities
-	if len(req.UniqueIdentities) == 0 {
+	// Validate _instance_identities
+	if len(req.InstanceIdentities) == 0 {
 		return rest.NewHTTPError(ctx, http.StatusBadRequest, oerrors.OntologyManager_ActionSchedule_InvalidParameter).
-			WithErrorDetails("unique_identities is required and cannot be empty")
+			WithErrorDetails("_instance_identities is required and cannot be empty")
 	}
 
 	// Validate status if provided
@@ -58,7 +58,7 @@ func ValidateActionScheduleUpdate(ctx context.Context, req *interfaces.ActionSch
 	}
 
 	// At least one field should be provided
-	if req.Name == "" && req.CronExpression == "" && req.UniqueIdentities == nil && req.DynamicParams == nil {
+	if req.Name == "" && req.CronExpression == "" && req.InstanceIdentities == nil && req.DynamicParams == nil {
 		return rest.NewHTTPError(ctx, http.StatusBadRequest, oerrors.OntologyManager_ActionSchedule_InvalidParameter).
 			WithErrorDetails("at least one field must be provided for update")
 	}

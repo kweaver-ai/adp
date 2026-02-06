@@ -142,8 +142,8 @@ func (s *actionScheduleService) UpdateSchedule(ctx context.Context, scheduleID s
 		UpdateTime:     now,
 	}
 
-	if req.UniqueIdentities != nil {
-		update.UniqueIdentities = req.UniqueIdentities
+	if req.InstanceIdentities != nil {
+		update.InstanceIdentities = req.InstanceIdentities
 	}
 	if req.DynamicParams != nil {
 		update.DynamicParams = req.DynamicParams
