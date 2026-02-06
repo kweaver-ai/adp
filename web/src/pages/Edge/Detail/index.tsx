@@ -2,6 +2,7 @@ import { useMemo, useState, useEffect } from 'react';
 import intl from 'react-intl-universal';
 import { Tag, Table, Divider, Dropdown, Tooltip } from 'antd';
 import { map, uniqueId } from 'lodash-es';
+import FieldTypeIcon from '@/components/FieldTypeIcon';
 import ObjectIcon from '@/components/ObjectIcon';
 import ENUMS from '@/enums';
 import SERVICE from '@/services';
@@ -16,6 +17,25 @@ const ObjectItem = (props: any) => {
       <div>
         <Text className="g-ellipsis-1">{value}</Text>
       </div>
+    </div>
+  );
+};
+
+const FieldItem = (props: any) => {
+  const { property } = props;
+  if (!property) return <span>{intl.get('Global.emptyValue')}</span>;
+
+  const displayName = property.display_name || property.name;
+  return (
+    <div className="g-flex-align-center" style={{ gap: '8px' }}>
+      {property?.type && (
+        <div style={{ flexShrink: 0 }}>
+          <FieldTypeIcon type={property.type} />
+        </div>
+      )}
+      <Tooltip title={displayName?.length > 20 ? displayName : undefined}>
+        <Text className="g-ellipsis-1">{displayName}</Text>
+      </Tooltip>
     </div>
   );
 };
@@ -63,7 +83,7 @@ const Detail = (props: any) => {
         dataIndex: 'source',
         width: 415,
         render: (value: string, data: any) => {
-          if (data?.type === 'property') return value || intl.get('Global.emptyValue');
+          if (data?.type === 'property') return <FieldItem property={data?.source_property} />;
           if (data?.type === 'object') {
             const { icon, color } = data?.source_object_type || {};
             return <ObjectItem value={value} icon={icon} color={color} />;
@@ -75,7 +95,7 @@ const Detail = (props: any) => {
         dataIndex: 'target',
         width: 415,
         render: (value: string, data: any) => {
-          if (data?.type === 'property') return value || intl.get('Global.emptyValue');
+          if (data?.type === 'property') return <FieldItem property={data?.target_property} />;
           if (data?.type === 'object') {
             const { icon, color } = data?.target_object_type || {};
             return <ObjectItem value={value} icon={icon} color={color} />;
@@ -100,6 +120,8 @@ const Detail = (props: any) => {
           id: index,
           type: 'property',
           name: intl.get('Global.dataProperty'),
+          source_property,
+          target_property,
           source: source_property?.display_name || source_property?.name,
           target: target_property?.display_name || target_property?.name,
         };
@@ -119,7 +141,7 @@ const Detail = (props: any) => {
         dataIndex: 'source',
         width: 415,
         render: (value: string, data: any) => {
-          if (data?.type === 'property') return value || intl.get('Global.emptyValue');
+          if (data?.type === 'property') return <FieldItem property={data?.source_property} />;
           if (data?.type === 'object') {
             const { icon, color } = data?.source_object_type || {};
             return <ObjectItem value={value} icon={icon} color={color} />;
@@ -154,7 +176,7 @@ const Detail = (props: any) => {
         dataIndex: 'target',
         width: 415,
         render: (value: string, data: any) => {
-          if (data?.type === 'property') return value || intl.get('Global.emptyValue');
+          if (data?.type === 'property') return <FieldItem property={data?.target_property} />;
           if (data?.type === 'object') {
             const { icon, color } = data?.target_object_type || {};
             return <ObjectItem value={value} icon={icon} color={color} />;
@@ -178,6 +200,8 @@ const Detail = (props: any) => {
         return {
           id: index,
           type: 'property',
+          source_property: item?.source_property,
+          target_property: targetMapping?.target_property,
           source: item?.source_property?.display_name || item?.source_property?.name,
           target: targetMapping?.target_property?.display_name || targetMapping?.target_property?.name,
           dataView: {
@@ -240,7 +264,9 @@ const Detail = (props: any) => {
   );
 };
 
-export default (props: any) => {
+const EdgeDetail = (props: any) => {
   if (!props.open) return null;
   return <Detail {...props} />;
 };
+
+export default EdgeDetail;

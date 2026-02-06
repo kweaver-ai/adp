@@ -6,6 +6,7 @@ import { Dropdown, MenuProps, Splitter } from 'antd';
 import { TablePaginationConfig } from 'antd/es/table';
 import dayjs from 'dayjs';
 import ContainerIsVisible, { getTypePermissionOperation, matchPermission, PERMISSION_CODES } from '@/components/ContainerIsVisible';
+import { showDeleteConfirm } from '@/components/DeleteConfirm';
 import DetailDrawer, { DataItem } from '@/components/DetailDrawer';
 import FieldFeatureModal from '@/components/FieldFeatureModal';
 import { useAuthorization } from '@/hooks/useAuthorization';
@@ -169,19 +170,8 @@ const AtomDataView = (): JSX.Element => {
 
   const deleteConfirm = async (record?: any): Promise<void> => {
     const content = record ? intl.get('Global.deleteConfirm', { name: record.name }) : intl.get('Global.deleteConfirmMultiple', { count: selectedRows.length });
-    modal.confirm({
+    showDeleteConfirm(modal, {
       content,
-      icon: <IconFont type="icon-about" />,
-      okText: intl.get('Global.ok'),
-      okButtonProps: {
-        style: { backgroundColor: '#ff4d4f', borderColor: '#ff4d4f' },
-      },
-      footer: (_: any, { OkBtn, CancelBtn }: { OkBtn: React.ElementType; CancelBtn: React.ElementType }) => (
-        <>
-          <OkBtn />
-          <CancelBtn />
-        </>
-      ),
       onOk: async () => {
         await api.batchDeleteDataViews(record?.id ? [record.id] : selectedRowKeys);
         await getData();

@@ -13,6 +13,12 @@ export interface TransformCanvasDataParams {
   attrClick?: (val: OntologyObjectType.Field) => void;
   pickAttribute?: () => void;
   autoLine?: () => void;
+  deleteAttribute?: (attrName: string) => void;
+  togglePrimaryKey?: (attrName: string) => void;
+  toggleDisplayKey?: (attrName: string) => void;
+  toggleIncrementalKey?: (attrName: string) => void;
+  clearAllAttributes?: () => void;
+  clearSearchTrigger?: number;
 }
 
 export const transformCanvasData = (
@@ -34,6 +40,12 @@ export const transformCanvasData = (
     attrClick,
     pickAttribute,
     autoLine,
+    deleteAttribute,
+    togglePrimaryKey,
+    toggleDisplayKey,
+    toggleIncrementalKey,
+    clearAllAttributes,
+    clearSearchTrigger,
   } = props;
   const logics = logicProperties.map((item) => item.name) || [];
 
@@ -68,6 +80,12 @@ export const transformCanvasData = (
       attrClick,
       pickAttribute,
       autoLine,
+      deleteAttribute,
+      togglePrimaryKey,
+      toggleDisplayKey,
+      toggleIncrementalKey,
+      clearAllAttributes,
+      clearSearchTrigger,
       attributes: fields.map((item) => ({
         id: item.name,
         name: item.name,
@@ -91,6 +109,13 @@ export const transformCanvasData = (
       icon: basicValue.icon,
       addDataAttribute,
       attrClick,
+      pickAttribute,
+      deleteAttribute,
+      togglePrimaryKey,
+      toggleDisplayKey,
+      toggleIncrementalKey,
+      clearAllAttributes,
+      clearSearchTrigger,
       attributes: [...dataNodes],
     },
   };

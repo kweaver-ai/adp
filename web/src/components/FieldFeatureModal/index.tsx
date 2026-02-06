@@ -254,7 +254,7 @@ const FieldFeatureModal: FC<FieldFeatureModalProps> = ({
       className={styles['field-feature-modal-container']}
       open={visible}
       title={renderTitle()}
-      width={1100}
+      width={1200}
       centered
       maskClosable={false}
       closeIcon={<CloseOutlined />}
@@ -268,14 +268,14 @@ const FieldFeatureModal: FC<FieldFeatureModalProps> = ({
       {!i18nLoaded ? null : (
         <div className={styles['field-feature-modal']}>
           <div className={styles['table-header']}>
-            <div className={styles['header-item']} style={{ width: 200 }}>
+            <div className={styles['header-item']} style={{ width: 170 }}>
               {mode === 'edit' && <span className={styles['required']}>*</span>}
               {intl.get('FieldFeatureModal.featureName')}
             </div>
             <div className={styles['header-item']} style={{ width: 100 }}>
               {intl.get('FieldFeatureModal.type')}
             </div>
-            <div className={styles['header-item']} style={{ width: 200 }}>
+            <div className={styles['header-item']} style={{ width: 170 }}>
               {intl.get('FieldFeatureModal.viewField')}
             </div>
             <div className={styles['header-item']} style={{ width: 60 }}>
@@ -284,10 +284,10 @@ const FieldFeatureModal: FC<FieldFeatureModalProps> = ({
             <div className={styles['header-item']} style={{ width: 60 }}>
               {intl.get('FieldFeatureModal.isNative')}
             </div>
-            <div className={styles['header-item']} style={{ width: 200 }}>
+            <div className={styles['header-item']} style={{ width: 170 }}>
               {intl.get('FieldFeatureModal.remark')}
             </div>
-            <div className={styles['header-item']} style={{ width: 200 }}>
+            <div className={styles['header-item']} style={{ width: 170 }}>
               {intl.get('FieldFeatureModal.config')}
             </div>
             {mode === 'edit' && (
@@ -303,7 +303,7 @@ const FieldFeatureModal: FC<FieldFeatureModalProps> = ({
                 {mode === 'edit' ? (
                   // 编辑模式:使用表单控件
                   <>
-                    <div className={styles['row-item']} style={{ width: 200 }}>
+                    <div className={styles['row-item']} style={{ width: 170 }}>
                       <Tooltip title={errors[item.id]?.name || (item.name?.length > 20 ? item.name : undefined)}>
                         <Input
                           value={item.name}
@@ -323,7 +323,7 @@ const FieldFeatureModal: FC<FieldFeatureModalProps> = ({
                         disabled={item.is_native}
                       />
                     </div>
-                    <div className={styles['row-item']} style={{ width: 200 }}>
+                    <div className={styles['row-item']} style={{ width: 170 }}>
                       <Tooltip title={errors[item.id]?.ref_field || (item.ref_field?.length > 20 ? item.ref_field : undefined)}>
                         <Select
                           value={item.ref_field || undefined}
@@ -342,7 +342,7 @@ const FieldFeatureModal: FC<FieldFeatureModalProps> = ({
                     <div className={styles['row-item']} style={{ width: 60 }}>
                       <span className={styles['status-text']}>{item.is_native ? intl.get('FieldFeatureModal.yes') : intl.get('FieldFeatureModal.no')}</span>
                     </div>
-                    <div className={styles['row-item']} style={{ width: 200 }}>
+                    <div className={styles['row-item']} style={{ width: 170 }}>
                       <Tooltip title={item.comment?.length > 20 ? item.comment : undefined}>
                         <Input
                           value={item.comment}
@@ -352,7 +352,7 @@ const FieldFeatureModal: FC<FieldFeatureModalProps> = ({
                         />
                       </Tooltip>
                     </div>
-                    <div className={styles['row-item']} style={{ width: 200 }}>
+                    <div className={styles['row-item']} style={{ width: 170 }}>
                       <Tooltip title={item.config ? JSON.stringify(item.config) : undefined}>
                         <span className={styles['text-value']}>{item.config ? JSON.stringify(item.config) : '—'}</span>
                       </Tooltip>
@@ -375,7 +375,7 @@ const FieldFeatureModal: FC<FieldFeatureModalProps> = ({
                 ) : (
                   // 查看模式:纯文本展示
                   <>
-                    <div className={styles['row-item']} style={{ width: 200 }}>
+                    <div className={styles['row-item']} style={{ width: 170 }}>
                       <Tooltip title={item.name?.length > 20 ? item.name : undefined}>
                         <span className={styles['text-value']}>{item.name || '—'}</span>
                       </Tooltip>
@@ -383,7 +383,7 @@ const FieldFeatureModal: FC<FieldFeatureModalProps> = ({
                     <div className={styles['row-item']} style={{ width: 100 }}>
                       <span className={styles['text-value']}>{item.type || '—'}</span>
                     </div>
-                    <div className={styles['row-item']} style={{ width: 200 }}>
+                    <div className={styles['row-item']} style={{ width: 170 }}>
                       <Tooltip title={item.ref_field?.length > 20 ? item.ref_field : undefined}>
                         <span className={styles['text-value']}>{item.ref_field || '—'}</span>
                       </Tooltip>
@@ -394,12 +394,12 @@ const FieldFeatureModal: FC<FieldFeatureModalProps> = ({
                     <div className={styles['row-item']} style={{ width: 60 }}>
                       <span className={styles['text-value']}>{item.is_native ? intl.get('FieldFeatureModal.yes') : intl.get('FieldFeatureModal.no')}</span>
                     </div>
-                    <div className={styles['row-item']} style={{ width: 200 }}>
+                    <div className={styles['row-item']} style={{ width: 170 }}>
                       <Tooltip title={item.comment?.length > 20 ? item.comment : undefined}>
                         <span className={styles['text-value']}>{item.comment || '—'}</span>
                       </Tooltip>
                     </div>
-                    <div className={styles['row-item']} style={{ width: 200 }}>
+                    <div className={styles['row-item']} style={{ width: 170 }}>
                       <Tooltip title={item.config ? JSON.stringify(item.config) : undefined}>
                         <span className={styles['text-value']}>{item.config ? JSON.stringify(item.config) : '—'}</span>
                       </Tooltip>

@@ -22,9 +22,10 @@ const ImportCom = (props: TProps) => {
 
   /** 上传逻辑 */
   const changeUpload = async (jsonData: any): Promise<void> => {
-    const res: any = await api.knowledgeNetwork.createNetwork(jsonData);
+    const params = { ...jsonData, validate_dependency: false };
+    const res: any = await api.knowledgeNetwork.createNetwork(params);
     const confirm = async (val: 'ignore' | 'overwrite', modalContext: any): Promise<void> => {
-      const resConfirm: any = await api.knowledgeNetwork.createNetwork(jsonData, val);
+      const resConfirm: any = await api.knowledgeNetwork.createNetwork(params, val);
       modalContext.destroy();
       if (!resConfirm?.error_code) {
         message.success(intl.get('Global.importSuccess'));

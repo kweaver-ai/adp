@@ -1,12 +1,11 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import intl from 'react-intl-universal';
 import { QuestionCircleFilled } from '@ant-design/icons';
-import { Button, InputNumber, Popover, Select, Switch, Tooltip } from 'antd';
+import { Button, InputNumber, Modal, Popover, Select, Switch, Tooltip } from 'antd';
 import { useImmer } from 'use-immer';
 import * as OntologyObjectType from '@/services/object/type';
 import HOOKS from '@/hooks';
 import SERVICE from '@/services';
-import { Drawer } from '@/web-library/common';
 import styles from './index.module.less';
 
 interface Props {
@@ -144,7 +143,7 @@ const IndexSetting: React.FC<Props> = ({ open, values, onClose, onOK }) => {
   const footer = (
     <div className={styles.footer}>
       <Button type="primary" onClick={handleSubmit}>
-        {intl.get('Global.ok')}
+        {intl.get('Global.save')}
       </Button>
       <Button onClick={onClose}>{intl.get('Global.cancel')}</Button>
     </div>
@@ -175,7 +174,7 @@ const IndexSetting: React.FC<Props> = ({ open, values, onClose, onOK }) => {
   );
 
   return (
-    <Drawer title={intl.get('Object.indexConfiguration')} width={420} open={open} onClose={onClose} footer={footer} className={styles.drawerBox}>
+    <Modal title={intl.get('Object.indexConfiguration')} width={480} open={open} onCancel={onClose} footer={footer} className={styles.drawerBox}>
       <div>
         <div className={styles.selectedBox}>
           <div>{intl.get('Global.selectedAttribute')}</div>
@@ -312,7 +311,7 @@ const IndexSetting: React.FC<Props> = ({ open, values, onClose, onOK }) => {
           </div>
         )}
       </div>
-    </Drawer>
+    </Modal>
   );
 };
 

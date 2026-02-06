@@ -4,6 +4,7 @@ import { Spin, Tag, Tooltip } from 'antd';
 import dayjs from 'dayjs';
 import { map } from 'lodash-es';
 import DataFilterNew from '@/components/DataFilterNew';
+import ObjectIcon from '@/components/ObjectIcon';
 import { renderObjectTypeLabel } from '@/components/ObjectSelector';
 import ToolParamsTable from '@/components/ToolParamsTable';
 import * as ActionType from '@/services/action/type';
@@ -149,9 +150,7 @@ const Overview: FC<OverviewProps> = ({ knId, atId, detail }) => {
         {data?.id && <div className={styles['id-text']}>ID:{data.id}</div>}
         <div className={styles['header-title']}>
           <div className={styles['header-title-left']}>
-            <div className={styles['name-icon']} style={{ backgroundColor: '#90c06b' }}>
-              <IconFont type="icon-dip-hangdonglei" style={{ color: '#fff', fontSize: 20 }} />
-            </div>
+            <ObjectIcon icon="icon-dip-hangdonglei" color={detail?.color} />
             <div className={styles['name-text']}>{detail?.name}</div>
           </div>
           <div className={styles['header-title-right']}></div>
@@ -206,7 +205,7 @@ const Overview: FC<OverviewProps> = ({ knId, atId, detail }) => {
         )}
         {renderItem(intl.get('Action.affectedObjectType'), data.affect?.object_type?.name ? renderObjectTypeLabel(data.affect.object_type) : '--')}
         {renderItem(intl.get('Action.affectDescription'), data.affect?.comment || <span className="g-c-watermark">{intl.get('Global.noDescription')}</span>)}
-        <div style={{height: 6}}></div>
+        <div style={{ height: 6 }}></div>
       </div>
 
       {/* Resource Info */}

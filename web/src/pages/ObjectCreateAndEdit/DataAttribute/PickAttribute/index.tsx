@@ -76,7 +76,7 @@ const PickAttribute: React.FC<Props> = ({ visible, onOk, onCancel, dataSource = 
           render={(item) => (
             <div className={styles.transferItem}>
               <div className={styles.itemIcon}>
-                <FieldTypeIcon type={item.type || 'string'} />
+                <FieldTypeIcon type={item.type || ''} />
               </div>
               <div className={styles.itemContent}>
                 <div className={styles.itemTitle}>{item.display_name}</div>

@@ -2,11 +2,12 @@ import { useEffect, useState } from 'react';
 import intl from 'react-intl-universal';
 import { Route, Switch, useHistory, useLocation, useParams, useRouteMatch, Redirect } from 'react-router-dom';
 import { LeftOutlined } from '@ant-design/icons';
-import { baseConfig } from '@/services/request';
 import { Button, message } from 'antd';
 import classnames from 'classnames';
+import ObjectIcon from '@/components/ObjectIcon';
 import actionApi from '@/services/action';
 import * as ActionType from '@/services/action/type';
+import { baseConfig } from '@/services/request';
 import { IconFont } from '@/web-library/common';
 import styles from './index.module.less';
 import Overview from './Overview';
@@ -101,7 +102,7 @@ const ActionDetail = () => {
       <div className={styles['main-header']}>
         <LeftOutlined onClick={goback} />
         <div className={styles['name-icon']}>
-          <IconFont type="icon-dip-hangdonglei" style={{ fontSize: 24 }} />
+          <ObjectIcon icon="icon-dip-hangdonglei" color={detail?.color} />
         </div>
         <h4>{detail?.name}</h4>
         <Button type="primary" style={{ marginLeft: 'auto' }} onClick={handleExecute} loading={executing}>

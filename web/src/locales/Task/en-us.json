@@ -10,7 +10,7 @@
     "buildMethod": "Build Method",
     "buildTypeFull": "Full Build",
     "buildTypeIncremental": "Incremental Build",
-    "fullBuildDescription": "Perform complete scan and processing of all data, regenerating the entire knowledge network.",
+    "fullBuildDescription": "Perform complete scan and processing of all data, regenerating the entire KBN.",
     "incrementalUpdateTitle": "Incremental Update",
     "incrementalUpdateDescription": "Only perform partial updates on changed data with incremental identifiers; if the data source is not configured with incremental identifiers, a full build will be automatically executed.",
     "buildCount": "Build Data Volume",

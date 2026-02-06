@@ -1,4 +1,6 @@
 .field-feature-modal {
+  overflow-y: auto;
+
   .table-header {
     display: flex;
     gap: 16px;
@@ -9,6 +11,7 @@
 
     .header-item {
       display: flex;
+      flex-shrink: 0;
       align-items: center;
       font-size: 13px;
       color: rgba(0, 0, 0, 0.65);
@@ -22,7 +25,6 @@
 
   .table-body {
     max-height: 400px;
-    overflow-y: auto;
 
     .table-row {
       display: flex;
@@ -32,6 +34,7 @@
 
       .row-item {
         display: flex;
+        flex-shrink: 0;
         align-items: center;
 
         .text-value {

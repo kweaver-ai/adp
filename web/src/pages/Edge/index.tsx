@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react';
 import intl from 'react-intl-universal';
 import { useHistory } from 'react-router-dom';
-import { EllipsisOutlined, ExclamationCircleFilled } from '@ant-design/icons';
+import { EllipsisOutlined } from '@ant-design/icons';
 import { Dropdown, Empty } from 'antd';
 import dayjs from 'dayjs';
 import { map, filter, includes } from 'lodash-es';
+import { showDeleteConfirm } from '@/components/DeleteConfirm';
 import ObjectIcon from '@/components/ObjectIcon';
 import Tags from '@/components/Tags';
 import createImage from '@/assets/images/common/create.svg';
@@ -156,13 +157,8 @@ const Edge = (props: TProps) => {
   const onDeleteConfirm = (items: any, isBatch?: boolean, callBack?: () => void) => {
     const name = map(items, (item) => `「${item?.name}」`).join('、');
     const length = items.length || 0;
-    modal.confirm({
-      title: intl.get('Global.tipTitle'),
-      closable: true,
-      icon: <ExclamationCircleFilled />,
+    showDeleteConfirm(modal, {
       content: length > 1 ? intl.get('Global.deleteConfirmMultiple', { count: length }) : intl.get('Global.deleteConfirm', { name }),
-      okText: intl.get('Global.ok'),
-      cancelText: intl.get('Global.cancel'),
       onOk: async () => {
         await onDelete(items, isBatch);
         if (callBack) callBack();
@@ -304,7 +300,7 @@ const Edge = (props: TProps) => {
         }}
       >
         <Table.Operation
-          nameConfig={{ key: 'name_pattern', placeholder: intl.get('Global.searchName') }}
+          nameConfig={{ key: 'name_pattern', placeholder: intl.get('Global.searchNameId') }}
           sortConfig={{ items: EDGE_MENU_SORT_ITEMS, order: direction, rule: sort, onChange: onSortChange }}
           initialFilter={filterValues}
           onChange={onChangeFilter}

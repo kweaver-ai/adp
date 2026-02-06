@@ -9,7 +9,6 @@ import * as OntologyObjectType from '@/services/object/type';
 import { baseConfig } from '@/services/request';
 import HOOKS from '@/hooks';
 import SERVICE from '@/services';
-import { Button } from '@/web-library/common';
 import BasicInformation from './BasicInformation';
 import DataAttribute from './DataAttribute';
 import styles from './index.module.less';
@@ -293,26 +292,42 @@ const ObjectCreateAndEdit = () => {
     }
   };
 
+  const headerActions = useMemo(() => {
+    const actions: any = {};
+
+    if (currentStep?.prevClick) {
+      actions.prev = {
+        text: currentStep.prevText,
+        onClick: currentStep.prevClick,
+        loading,
+        disabled: loading,
+      };
+    }
+
+    if (currentStep?.saveClick) {
+      actions.save = {
+        text: currentStep.saveText,
+        onClick: currentStep.saveClick,
+        loading,
+        disabled: loading,
+      };
+    }
+
+    if (currentStep?.nextClick) {
+      actions.next = {
+        text: currentStep.nextText,
+        onClick: currentStep.nextClick,
+        loading,
+        disabled: loading,
+      };
+    }
+
+    return Object.keys(actions).length > 0 ? actions : undefined;
+  }, [currentStep, loading]);
+
   return (
     <div className={styles['object-root']}>
-      <HeaderSteps title={title} stepsCurrent={stepsCurrent} items={steps} />
-      <div className={styles['object-header-actions']}>
-        {currentStep?.prevClick && (
-          <Button onClick={currentStep.prevClick} loading={loading} disabled={loading}>
-            {currentStep.prevText}
-          </Button>
-        )}
-        {currentStep?.saveClick && (
-          <Button className="g-ml-2" type="primary" loading={loading} disabled={loading} onClick={currentStep.saveClick}>
-            {currentStep.saveText}
-          </Button>
-        )}
-        {currentStep?.nextClick && (
-          <Button className="g-ml-2" type="primary" loading={loading} disabled={loading} onClick={currentStep.nextClick}>
-            {currentStep.nextText}
-          </Button>
-        )}
-      </div>
+      <HeaderSteps title={title} stepsCurrent={stepsCurrent} items={steps} actions={headerActions} />
       <div className={styles['object-content']}>{currentStep?.content}</div>
     </div>
   );

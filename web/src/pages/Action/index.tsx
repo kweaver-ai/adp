@@ -8,6 +8,8 @@ import { EllipsisOutlined } from '@ant-design/icons';
 import { Dropdown, Tag, Popover, Empty } from 'antd';
 import dayjs from 'dayjs';
 import { map } from 'lodash-es';
+import { showDeleteConfirm } from '@/components/DeleteConfirm';
+import ObjectIcon from '@/components/ObjectIcon';
 import { renderObjectTypeLabel } from '@/components/ObjectSelector';
 import api from '@/services/action';
 import * as ActionType from '@/services/action/type';
@@ -16,7 +18,7 @@ import emptyImage from '@/assets/images/common/empty.png';
 import noSearchResultImage from '@/assets/images/common/no_search_result.svg';
 import HOOKS from '@/hooks';
 import SERVICE, { KnowledgeNetworkType } from '@/services';
-import { Table, Button, Select, Title, IconFont } from '@/web-library/common';
+import { Table, Button, Select, Title } from '@/web-library/common';
 import DetailView from './DetailView';
 import styles from './index.module.less';
 
@@ -90,7 +92,7 @@ const Action: FC<TProps> = ({ detail, isPermission }) => {
       __selected: true,
       render: (_value: any, record: any) => (
         <div className="g-flex-align-center" style={{ cursor: 'pointer' }}>
-          <IconFont type="icon-dip-hangdonglei" />
+          <ObjectIcon icon="icon-dip-hangdonglei" color={record.color} />
           <div className="g-ellipsis-1 g-ml-2" title={_value}>
             {_value}
           </div>
@@ -251,19 +253,10 @@ const Action: FC<TProps> = ({ detail, isPermission }) => {
     const itemsToDelete = record ? [record] : selectedRows;
     const isSingleDelete = itemsToDelete.length === 1;
 
-    modal.confirm({
-      title: intl.get('Action.deleteActionClass'),
-      centered: true,
+    showDeleteConfirm(modal, {
       content: isSingleDelete
         ? intl.get('Global.deleteConfirm', { name: itemsToDelete[0].name })
         : intl.get('Global.deleteConfirmMultiple', { count: itemsToDelete.length }),
-      okText: intl.get('Global.delete'),
-      footer: (__: any, { OkBtn, CancelBtn }: any) => (
-        <>
-          <OkBtn />
-          <CancelBtn />
-        </>
-      ),
       async onOk() {
         try {
           await api.deleteActionType(
@@ -435,7 +428,7 @@ const Action: FC<TProps> = ({ detail, isPermission }) => {
         }}
       >
         <Table.Operation
-          nameConfig={{ key: 'name', placeholder: intl.get('Global.searchName') }}
+          nameConfig={{ key: 'name', placeholder: intl.get('Global.searchNameId') }}
           sortConfig={{
             items: ACTION_MENU_SORT_ITEMS,
             rule: sortRule,

@@ -53,7 +53,8 @@ const TITLE: Record<string, string> = { 'zh-cn': '工作站', 'en-us': 'Studio',
 const App = (props: AppProps) => {
   const [modal, modalContextHolder] = Modal.useModal();
   const [messageApi, messageContextHolder] = message.useMessage();
-  const { protocol = 'https:', host = location.hostname, port = 443, lang: language = 'zh-cn', container, token, prefix = '', oemConfigs } = props;
+  const { lang: language = 'zh-cn', container, token, prefix = '', oemConfigs } = props;
+  const { protocol = 'https:', hostname, port = 443 } = props?.config?.systemInfo?.location || {};
 
   useEffect(() => {
     document.title = TITLE[language];
@@ -70,7 +71,7 @@ const App = (props: AppProps) => {
       const { apis } = module;
       apis.setup({
         protocol,
-        host,
+        host: hostname,
         port,
         lang: language,
         getToken: () => token?.getToken.access_token,

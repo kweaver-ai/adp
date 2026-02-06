@@ -1,12 +1,13 @@
 import { useEffect, useState, useCallback } from 'react';
 import intl from 'react-intl-universal';
 import { useHistory } from 'react-router-dom';
-import { EllipsisOutlined, ExclamationCircleFilled } from '@ant-design/icons';
+import { EllipsisOutlined } from '@ant-design/icons';
 import { Dropdown, Empty, message, Tooltip } from 'antd';
 import { SorterResult } from 'antd/es/table/interface';
 import { TableProps } from 'antd/lib/table';
 import dayjs from 'dayjs';
 import { map } from 'lodash-es';
+import { showDeleteConfirm } from '@/components/DeleteConfirm';
 import ObjectIcon from '@/components/ObjectIcon';
 import Tags from '@/components/Tags';
 import api from '@/services/object';
@@ -118,13 +119,8 @@ const KnowledgeNetwork = (props: TProps) => {
     (items: ObjectType.Detail[], isBatch?: boolean, callBack?: () => void) => {
       const name = map(items, (item) => `「${item?.name}」`).join('、');
       const length = items.length || 0;
-      modal.confirm({
-        title: intl.get('Global.tipTitle'),
-        closable: true,
-        icon: <ExclamationCircleFilled />,
+      showDeleteConfirm(modal, {
         content: length > 1 ? intl.get('Global.deleteConfirmMultiple', { count: length }) : intl.get('Global.deleteConfirm', { name }),
-        okText: intl.get('Global.ok'),
-        cancelText: intl.get('Global.cancel'),
         onOk: async () => {
           await onDelete(items, isBatch);
           if (callBack) callBack();
@@ -303,7 +299,7 @@ const KnowledgeNetwork = (props: TProps) => {
         }}
       >
         <Table.Operation
-          nameConfig={{ key: 'name_pattern', placeholder: intl.get('Global.searchName') }}
+          nameConfig={{ key: 'name_pattern', placeholder: intl.get('Global.searchNameId') }}
           sortConfig={{ items: OBJECT_MENU_SORT_ITEMS, order: direction, rule: sort, onChange: handleSortChange }}
           initialFilter={filterValues}
           onChange={onChangeTableOperation}

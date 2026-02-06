@@ -4,6 +4,7 @@ import { DownOutlined } from '@ant-design/icons';
 import { Table } from 'antd';
 import { map, keyBy, cloneDeep, filter, uniqueId, forEach } from 'lodash-es';
 import { DataViewSource } from '@/components/DataViewSource';
+import FieldSelect from '@/components/FieldSelect';
 import ObjectIcon from '@/components/ObjectIcon';
 import ENUMS from '@/enums';
 import SERVICE from '@/services';
@@ -24,16 +25,16 @@ const MappingRulesDataView = (props: any) => {
   const sourceOptions = useMemo(() => {
     if (!value?.source_object_type_id || !objectOptionsKV[value?.source_object_type_id]) return [];
     return _.map(objectOptionsKV?.[value.source_object_type_id]?.data_properties, (item) => {
-      const { name, type, display_name } = item;
-      return { value: name, label: display_name || name, type, name };
+      const { name, type, display_name, comment } = item;
+      return { value: name, label: display_name || name, display_name: display_name, type, name, comment };
     });
   }, [objectOptionsKV, value?.source_object_type_id]);
   /** 终点对象数据属性 */
   const targetOptions = useMemo(() => {
     if (!value?.target_object_type_id || !objectOptionsKV[value?.target_object_type_id]) return [];
     return _.map(objectOptionsKV?.[value.target_object_type_id]?.data_properties, (item) => {
-      const { name, type, display_name } = item;
-      return { value: name, label: display_name || name, type, name };
+      const { name, type, display_name, comment } = item;
+      return { value: name, label: display_name || name, display_name: display_name, type, name, comment };
     });
   }, [objectOptionsKV, value?.target_object_type_id]);
 
@@ -41,8 +42,8 @@ const MappingRulesDataView = (props: any) => {
   /** 数据视图属性 */
   const viewDataOptions = useMemo(() => {
     return _.map(viewData?.fields, (item) => {
-      const { name, type, display_name } = item;
-      return { value: name, label: display_name || name, type, name };
+      const { name, type, display_name, comment } = item;
+      return { value: name, label: display_name || name, display_name: display_name, type, name, comment };
     });
   }, [viewData]);
 
@@ -259,15 +260,24 @@ const MappingRulesDataView = (props: any) => {
       dataIndex: 'source',
       width: 215,
       render: (value: string, data: any) => {
-        return (
+        return data?.type === 'object' ? (
           <Select
             allowClear
             showSearch
             value={value}
-            placeholder={data?.type === 'object' ? intl.get('Edge.selectSourcePoint') : intl.get('Edge.selectSourceProperty')}
-            options={data?.type === 'object' ? objectOptions : sourceOptions}
+            placeholder={intl.get('Edge.selectSourcePoint')}
+            options={objectOptions}
             filterOption={(input, option) => (option?.name ?? '').toLowerCase().includes(input.toLowerCase())}
-            onChange={data?.type === 'object' ? onChangeSourceObject : (value) => onChangeSourceProperty(value, data)}
+            onChange={onChangeSourceObject}
+          />
+        ) : (
+          <FieldSelect
+            value={value}
+            onChange={(value) => onChangeSourceProperty(value, data)}
+            style={{ width: '100%' }}
+            placeholder={intl.get('Edge.selectSourceProperty')}
+            allowClear
+            fields={sourceOptions}
           />
         );
       },
@@ -288,41 +298,21 @@ const MappingRulesDataView = (props: any) => {
           const { source, target } = value;
           return (
             <div className="g-flex-align-center">
-              <Select
+              <FieldSelect
                 className="g-mr-4"
-                allowClear
-                showSearch
                 value={source}
                 placeholder={intl.get('Edge.selectDataViewSource')}
-                options={viewDataOptions}
-                filterOption={(input, option) => (option?.name ?? '').toLowerCase().includes(input.toLowerCase())}
-                labelRender={(props: any) => {
-                  return (
-                    <div className="g-flex-align-center" title={props?.label}>
-                      <div className={styles['view-data-option-label']}>{intl.get('Edge.detailDataViewSource')}</div>
-                      <Text className="g-ellipsis-1">{props?.label}</Text>
-                    </div>
-                  );
-                }}
+                allowClear
+                fields={viewDataOptions}
+                style={{ width: '100%' }}
                 onChange={(value) => onChangeDataViewSourceProperty(value, data)}
               />
-              <Select
-                allowClear
-                showSearch
+              <FieldSelect
                 value={target}
                 placeholder={intl.get('Edge.selectDataViewTarget')}
-                options={viewDataOptions}
-                filterOption={(input, option) => (option?.name ?? '').toLowerCase().includes(input.toLowerCase())}
-                labelRender={(props: any) => {
-                  return (
-                    <div className="g-flex-align-center" title={props?.label}>
-                      <div className={styles['view-data-option-label']} style={{ background: '#000' }}>
-                        {intl.get('Edge.detailDataViewTarget')}
-                      </div>
-                      <Text className="g-ellipsis-1">{props?.label}</Text>
-                    </div>
-                  );
-                }}
+                allowClear
+                fields={viewDataOptions}
+                style={{ width: '100%' }}
                 onChange={(value) => onChangeDataViewTargetProperty(value, data)}
               />
             </div>
@@ -335,15 +325,24 @@ const MappingRulesDataView = (props: any) => {
       dataIndex: 'target',
       width: 215,
       render: (value: string, data: any) => {
-        return (
+        return data?.type === 'object' ? (
           <Select
             allowClear
             showSearch
             value={value}
-            placeholder={data?.type === 'object' ? intl.get('Edge.selectTargetPoint') : intl.get('Edge.selectTargetProperty')}
-            options={data?.type === 'object' ? objectOptions : targetOptions}
+            placeholder={intl.get('Edge.selectTargetPoint')}
+            options={objectOptions}
             filterOption={(input, option) => (option?.name ?? '').toLowerCase().includes(input.toLowerCase())}
-            onChange={data?.type === 'object' ? onChangeTargetObject : (value) => onChangeTargetProperty(value, data)}
+            onChange={onChangeTargetObject}
+          />
+        ) : (
+          <FieldSelect
+            value={value}
+            onChange={(value) => onChangeTargetProperty(value, data)}
+            style={{ width: '100%' }}
+            placeholder={intl.get('Edge.selectTargetProperty')}
+            allowClear
+            fields={targetOptions}
           />
         );
       },

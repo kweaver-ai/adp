@@ -108,7 +108,7 @@ const Detail = (props: TDetailProps) => {
         const { icon, color, name, display_name } = data?.source_object_type || {};
         return (
           <div className="g-flex-align-center">
-            {icon && <ObjectIcon icon={icon} color={color} />}
+            {icon && <ObjectIcon icon={icon} color={color} style={{ marginRight: 8 }} />}
             <Text>{display_name || name || value}</Text>
           </div>
         );
@@ -122,7 +122,7 @@ const Detail = (props: TDetailProps) => {
         const { icon, color, name, display_name } = data?.target_object_type || {};
         return (
           <div className="g-flex-align-center">
-            {icon && <ObjectIcon icon={icon} color={color} />}
+            {icon && <ObjectIcon icon={icon} color={color} style={{ marginRight: 8 }} />}
             <Text>{display_name || name || value}</Text>
           </div>
         );
@@ -150,7 +150,7 @@ const Detail = (props: TDetailProps) => {
       width: 240,
       render: (_value: string, record: any) => (
         <div className="g-flex-align-center">
-          <IconFont type="icon-dip-hangdonglei" />
+          <ObjectIcon icon="icon-dip-hangdonglei" color={record.color} />
           <div className="g-ellipsis-1 g-ml-2" title={_value}>
             {_value}
           </div>

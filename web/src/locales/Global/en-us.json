@@ -87,6 +87,7 @@
     "noContent": "No content",
     "noData": "No data",
     "noResult": "Sorry, no relevant content found",
+    "noSearchResults": "No search results",
     "noDataToPreview": "No data to preview",
     "noPreviewPermission": "You do not have preview permission for 【{title}】, unable to view data preview.",
     "noComment": "No comment",
@@ -159,7 +160,14 @@
     "basicConfig": "Basic Config",
     "basicInfo": "Basic Info",
     "searchName": "Search Name",
+    "searchNameId": "Search Name/ID",
     "primaryKey": "Primary Key",
+    "setPrimaryKey": "Set Primary Key",
+    "cancelPrimaryKey": "Cancel Primary Key",
+    "setTitle": "Set Title",
+    "cancelTitle": "Cancel Title",
+    "setIncrementalKey": "Set Incremental Key",
+    "cancelIncrementalKey": "Cancel Incremental Key",
     "keywordIndex": "Keyword Index",
     "fulltextIndex": "Fulltext Index",
     "vectorIndex": "Vector Index",
@@ -292,6 +300,8 @@
     "fieldFeature": "Field Feature",
     "fieldFeatureTip": "Field features are configurable extensions that support advanced search capabilities, such as vector search, full-text search, and exact matching",
     "setFieldFeature": "Set Field Feature",
-    "unset": "Unset"
+    "unset": "Unset",
+    "clearSuccess": "Cleared successfully",
+    "clear": "Clear"
   }
 }

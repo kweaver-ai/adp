@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
 import intl from 'react-intl-universal';
-import { EllipsisOutlined, ExclamationCircleFilled } from '@ant-design/icons';
+import { EllipsisOutlined } from '@ant-design/icons';
 import { Dropdown, Empty, Modal } from 'antd';
 import classnames from 'classnames';
 import dayjs from 'dayjs';
+import { showDeleteConfirm } from '@/components/DeleteConfirm';
 import { formatMsToHMS } from '@/utils/time';
 import * as TaskType from '@/services/task/type';
 import createImage from '@/assets/images/common/create.svg';
@@ -159,20 +160,8 @@ const Task = (props: TProps) => {
   /** 删除 */
   const onDeleteConfirm = (record: any) => {
     if (!record?.id) return;
-    modal.confirm({
-      title: intl.get('Global.tipTitle'),
-      closable: true,
-      icon: <ExclamationCircleFilled />,
+    showDeleteConfirm(modal, {
       content: intl.get('Global.deleteConfirm', { name: `"${record?.name}"` }),
-      okText: intl.get('Global.delete'),
-      okType: 'danger',
-      cancelText: intl.get('Global.cancel'),
-      footer: (__: any, { OkBtn, CancelBtn }: any) => (
-        <>
-          <OkBtn />
-          <CancelBtn />
-        </>
-      ),
       onOk: async () => {
         await onDelete(record.id);
       },

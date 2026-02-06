@@ -1,7 +1,8 @@
 import { useState, forwardRef, useImperativeHandle, useMemo } from 'react';
 import intl from 'react-intl-universal';
-import { EllipsisOutlined, ExclamationCircleFilled } from '@ant-design/icons';
+import { EllipsisOutlined } from '@ant-design/icons';
 import { Dropdown, Empty, Tooltip } from 'antd';
+import { showDeleteConfirm } from '@/components/DeleteConfirm';
 import ObjectIcon from '@/components/ObjectIcon';
 import { deduplicateObjects } from '@/utils/object';
 import * as OntologyObjectType from '@/services/object/type';
@@ -50,15 +51,8 @@ const LogicAttribute = forwardRef((props: LogicAttributeProps, ref: any) => {
 
   const handleDelete = (record: any) => {
     const content = record ? intl.get('Global.deleteConfirm', { name: record.name }) : intl.get('Global.deleteConfirmMultiple', { count: selectedRows.length });
-    modal.confirm({
-      title: intl.get('Global.tipTitle'),
-      icon: <ExclamationCircleFilled />,
+    showDeleteConfirm(modal, {
       content,
-      okText: intl.get('Global.ok'),
-      okButtonProps: {
-        style: { backgroundColor: '#ff4d4f', borderColor: '#ff4d4f' },
-      },
-      cancelText: intl.get('Global.cancel'),
       onOk: () => {
         if (record) {
           setLocalLogicProperties(localLogicProperties.filter((item) => item.name !== record.name));

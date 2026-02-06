@@ -35,9 +35,9 @@ spec:
                   "parent": "root",
                   "orderIndex": 3000,
                   "app": {
-                    "textZHCN": "本体引擎",
-                    "textZHTW": "本体引擎",
-                    "textENUS": "Ontology Engine",
+                    "textZHCN": "BKN引擎",
+                    "textZHTW": "BKN引擎",
+                    "textENUS": "BKN Engine",
                     "icon": "//ip:port/kn-manage/side.svg"
                   },
                   "subapp": {
@@ -53,7 +53,7 @@ spec:
                   "app": {
                     "textZHCN": "业务知识网络",
                     "textZHTW": "业务知识网络",
-                    "textENUS": "Business Knowledge Network",
+                    "textENUS": "BKN",
                     "pathname": "/vega/ontology",
                     "icon": "//ip:port/kn-manage/side.svg"
                   },
@@ -68,8 +68,8 @@ spec:
                   "parent": "root",
                   "orderIndex": 4000,
                   "app": {
-                    "textZHCN": "VEGA虚拟化",
-                    "textZHTW": "VEGA虚拟化",
+                    "textZHCN": "VEGA数据虚拟化",
+                    "textZHTW": "VEGA資料虛擬化",
                     "textENUS": "VEGA Virtualization",
                     "icon": "//ip:port/vega/side.svg"
                   },

@@ -35,7 +35,10 @@ export const getNetworkList = async (
  * @param importMode 导入模式 'ignore' | 'overwrite'
  */
 export const createNetwork = async (data: KnowledgeNetworkType.CreateNetworkRequest, importMode?: 'ignore' | 'overwrite'): Promise<any> => {
-  const url = importMode ? `${BASE_URL}?import_mode=${importMode}` : BASE_URL;
+  const validate_dependency = data?.validate_dependency !== undefined ? data.validate_dependency : true;
+  const url = importMode
+    ? `${BASE_URL}?validate_dependency=${validate_dependency}&import_mode=${importMode}`
+    : `${BASE_URL}?validate_dependency=${validate_dependency}`;
   return await Request.post(url, data, {
     isNoHint: true,
     headers: { 'x-business-domain': getBusinessDomainID() },

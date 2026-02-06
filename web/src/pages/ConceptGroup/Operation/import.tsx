@@ -99,7 +99,7 @@ const ImportCom = (props: ImportComProps) => {
 
   /** 上传逻辑 */
   const changeUpload = async (jsonData: any): Promise<void> => {
-    const res: any = await api.createConceptGroup(knId, { ...jsonData, kn_id: knId, branch: 'main' });
+    const res: any = await api.createConceptGroup(knId, { ...jsonData, kn_id: knId, branch: 'main', validate_dependency: false });
     await changeChecked(res, jsonData);
   };
 

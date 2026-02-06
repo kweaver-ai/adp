@@ -6,6 +6,7 @@ import { Dropdown, MenuProps, Tag } from 'antd';
 import { TablePaginationConfig } from 'antd/es/table';
 import dayjs from 'dayjs';
 import { map } from 'lodash-es';
+import { showDeleteConfirm } from '@/components/DeleteConfirm';
 import useAuthorization from '@/hooks/useAuthorization';
 import { DATE_FORMAT } from '@/hooks/useConstants';
 import { formatKeyOfObjectToLine } from '@/utils/format-objectkey-structure';
@@ -123,8 +124,8 @@ const RowColumnPermission: React.FC = (): JSX.Element => {
 
   /** 删除规则 */
   const handleDeleteRule = (record: RowColumnRule): void => {
-    modal.confirm({
-      title: intl.get('RowColumnPermission.deleteConfirm'),
+    showDeleteConfirm(modal, {
+      content: intl.get('RowColumnPermission.deleteConfirm'),
       onOk: async () => {
         try {
           await SERVICE.rowColumnPermission.deleteRowColumnRule(record.id);

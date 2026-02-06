@@ -4,7 +4,10 @@ import * as ConceptGroupType from './type';
 const BASE_URL = '/api/ontology-manager/v1/knowledge-networks';
 
 export const createConceptGroup = (knId: string, data: ConceptGroupType.CreateRequest, mode?: 'ignore' | 'overwrite'): Promise<void> => {
-  const url = mode ? `${BASE_URL}/${knId}/concept-groups?import_mode=${mode}` : `${BASE_URL}/${knId}/concept-groups`;
+  const validate_dependency = data?.validate_dependency !== undefined ? data.validate_dependency : true;
+  const url = mode
+    ? `${BASE_URL}/${knId}/concept-groups?validate_dependency=${validate_dependency}&import_mode=${mode}`
+    : `${BASE_URL}/${knId}/concept-groups?validate_dependency=${validate_dependency}`;
   return Request.post(url, data, { isNoHint: true });
 };
 

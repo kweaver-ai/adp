@@ -75,6 +75,9 @@ const DataAttribute = forwardRef((props: TProps, ref) => {
   const [dataViewInfo, setDataViewInfo] = useState<OntologyObjectType.DataSource | undefined>(undefined);
   const [pickAttributeVisible, setPickAttributeVisible] = useState(false);
   const [alertMessage, setAlertMessage] = useState<string>('');
+  const [hoveredEdge, setHoveredEdge] = useState<string | null>(null);
+  const [isInitialized, setIsInitialized] = useState(false);
+  const [clearSearchTrigger, setClearSearchTrigger] = useState(0);
 
   // 自定义边变化处理，同步更新 localDataProperties 的 mapped_field
   const handleEdgesChange = useCallback(
@@ -112,7 +115,9 @@ const DataAttribute = forwardRef((props: TProps, ref) => {
     ref,
     () => ({
       validateFields: () => {
-        console.log('localDataProperties', localDataProperties);
+        // 清空搜索内容
+        setClearSearchTrigger((prev) => prev + 1);
+
         return new Promise((resolve, reject) => {
           if (localDataProperties.length === 0) {
             setAlertMessage(intl.get('Object.dataPropertiesRequired'));
@@ -129,13 +134,20 @@ const DataAttribute = forwardRef((props: TProps, ref) => {
           }
 
           const hasPrimaryKey = localDataProperties.some((p) => p.primary_key);
+          const hasDisplayKey = localDataProperties.some((p) => p.display_key);
+
+          if (!hasPrimaryKey || !hasDisplayKey) {
+            setAlertMessage(intl.get('Object.dataAttributeConfigIncomplete'));
+            reject(new Error(intl.get('Object.dataAttributeConfigIncomplete')));
+            return;
+          }
+
           if (!hasPrimaryKey) {
             setAlertMessage(intl.get('Object.primaryKeyRequired'));
             reject(new Error(intl.get('Object.primaryKeyRequired')));
             return;
           }
 
-          const hasDisplayKey = localDataProperties.some((p) => p.display_key);
           if (!hasDisplayKey) {
             setAlertMessage(intl.get('Object.displayKeyRequired'));
             reject(new Error(intl.get('Object.displayKeyRequired')));
@@ -161,7 +173,7 @@ const DataAttribute = forwardRef((props: TProps, ref) => {
     [localDataProperties, edges, logicProperties, dataViewInfo, message]
   );
 
-  const getDataViewDetail = async (dataViewId: string) => {
+  const getDataViewDetail = async (dataViewId: string, shouldAutoInitialize = false) => {
     if (!dataViewId) return;
     try {
       const result = await SERVICE.dataView.getDataViewDetail(dataViewId);
@@ -174,8 +186,52 @@ const DataAttribute = forwardRef((props: TProps, ref) => {
             id: nanoid(),
             name: item.name.replace(/\./g, '_'),
           }));
-        setEdges([]);
         setFields(resetFields);
+
+        // 只有手动选择数据源时才自动初始化
+        if (shouldAutoInitialize) {
+          const newDataProperties = resetFields.map((field: OntologyObjectType.Field) => ({
+            name: field.name,
+            display_name: field.display_name,
+            type: field.type,
+            comment: field.comment,
+            primary_key: primaryKeys.includes(field.name) || field.primary_key || false,
+            display_key: field.name === displayKey || field.display_key || false,
+            incremental_key: field.name === incrementalKey || field.incremental_key || false,
+            mapped_field: {
+              name: field.name,
+              display_name: field.display_name,
+              type: field.type,
+            },
+          }));
+
+          // 合并去重:保留原有的 localDataProperties,只添加新字段
+          setLocalDataProperties((prev) => {
+            const existingNames = new Set(prev.map((p) => p.name));
+            const newProperties = newDataProperties.filter((prop: OntologyObjectType.DataProperty) => !existingNames.has(prop.name));
+            return [...prev, ...newProperties];
+          });
+
+          // 自动创建连接线(只为新添加的字段创建)
+          const existingEdgeTargets = new Set(edges.map((e) => e.targetHandle));
+          const newEdges = resetFields
+            .filter((field: OntologyObjectType.Field) => !existingEdgeTargets.has(`view-${field.name}`))
+            .map((field: OntologyObjectType.Field) => ({
+              id: `${field.name}&&${field.name}`,
+              type: 'customEdge',
+              source: 'data',
+              sourceHandle: `data-${field.name}`,
+              target: 'view',
+              targetHandle: `view-${field.name}`,
+              data: { deletable: true },
+            }));
+
+          if (newEdges.length > 0) {
+            setTimeout(() => {
+              setEdges((prev) => [...prev, ...(newEdges as Edge[])]);
+            }, EDGE_RENDER_DELAY);
+          }
+        }
       }
     } catch (event) {
       console.log('getDataViewDetail event: ', event);
@@ -184,7 +240,9 @@ const DataAttribute = forwardRef((props: TProps, ref) => {
 
   useEffect(() => {
     const initializeData = async () => {
-      if (dataProperties?.length > 0) {
+      const hasExistingData = dataProperties?.length > 0;
+
+      if (hasExistingData) {
         const initializedProperties = dataProperties.map((prop) => ({
           ...prop,
           primary_key: primaryKeys.includes(prop.name) || prop.primary_key || false,
@@ -192,27 +250,53 @@ const DataAttribute = forwardRef((props: TProps, ref) => {
           incremental_key: prop.name === incrementalKey || prop.incremental_key || false,
         }));
         setLocalDataProperties(initializedProperties);
+
+        // 编辑模式下,根据 mapped_field 恢复连线
+        if (dataSource?.id) {
+          const edgesFromMappedField = initializedProperties
+            .filter((prop) => prop.mapped_field)
+            .map((prop) => ({
+              id: `${prop.name}&&${prop.mapped_field!.name}`,
+              type: 'customEdge',
+              source: 'data',
+              sourceHandle: `data-${prop.name}`,
+              target: 'view',
+              targetHandle: `view-${prop.mapped_field!.name}`,
+              data: { deletable: true },
+            }));
+
+          if (edgesFromMappedField.length > 0) {
+            setTimeout(() => {
+              setEdges(edgesFromMappedField as Edge[]);
+            }, EDGE_RENDER_DELAY);
+          }
+        }
       }
       if (dataSource) {
         setDataViewInfo(dataSource);
         if (dataSource.id) {
-          await getDataViewDetail(dataSource.id);
+          // 组件初始化时只加载 fields,不自动初始化属性
+          await getDataViewDetail(dataSource.id, false);
         }
       }
+      setIsInitialized(true);
     };
 
     initializeData();
   }, []);
 
   const handleOpenDataViewSource = () => {
+    setClearSearchTrigger((prev) => prev + 1);
     setOpen(true);
   };
 
   const handlePickAttribute = () => {
+    setClearSearchTrigger((prev) => prev + 1);
     setPickAttributeVisible(true);
   };
 
   const handleAutoLine = () => {
+    setClearSearchTrigger((prev) => prev + 1);
     setNodes((currentNodes) => {
       const viewNode = currentNodes.find((node) => node.id === 'view');
       const dataNode = currentNodes.find((node) => node.id === 'data');
@@ -282,7 +366,7 @@ const DataAttribute = forwardRef((props: TProps, ref) => {
           message.success(`${intl.get('Global.add')}${newEdges.length}条连线`);
           return [...currentEdges, ...newEdges];
         }
-        message.info(intl.get('Object.noMatchingAttributesToConnect'));
+        // message.info(intl.get('Object.noMatchingAttributesToConnect'));
         return currentEdges;
       });
 
@@ -291,12 +375,14 @@ const DataAttribute = forwardRef((props: TProps, ref) => {
   };
 
   const handleDeleteDataViewSource = () => {
+    setClearSearchTrigger((prev) => prev + 1);
     setDataViewInfo(undefined);
     setFields([]);
     setEdges([]);
   };
 
   const handleAddDataAttribute = () => {
+    setClearSearchTrigger((prev) => prev + 1);
     setEditAttrData(undefined);
     setAddAttrVisible(true);
   };
@@ -305,15 +391,17 @@ const DataAttribute = forwardRef((props: TProps, ref) => {
     if (editAttrData) {
       const nameExistsInLocal = localDataProperties.some((p) => p.name === data.name && p.name !== editAttrData.name);
       if (nameExistsInLocal) {
-        message.error(`${intl.get('Global.attributeName')}「${data.name}」${intl.get('Global.alreadyExists')}`);
-        return;
+        return {
+          name: `${intl.get('Global.attributeName')}「${data.name}」${intl.get('Global.alreadyExists')}`,
+        };
       }
 
       if (data.display_name) {
         const displayNameExistsInLocal = localDataProperties.some((p) => p.display_name === data.display_name && p.name !== editAttrData.name);
         if (displayNameExistsInLocal) {
-          message.error(`${intl.get('Global.displayName')}「${data.display_name}」${intl.get('Global.alreadyExists')}`);
-          return;
+          return {
+            display_name: `${intl.get('Global.displayName')}「${data.display_name}」${intl.get('Global.alreadyExists')}`,
+          };
         }
       }
 
@@ -328,6 +416,7 @@ const DataAttribute = forwardRef((props: TProps, ref) => {
               primary_key: data.primary_key || false,
               display_key: data.display_key || false,
               incremental_key: data.incremental_key || false,
+              // 保留 mapped_field，因为视图字段不会变
               mapped_field: p.mapped_field,
               index_config: p.index_config,
             };
@@ -342,36 +431,44 @@ const DataAttribute = forwardRef((props: TProps, ref) => {
         })
       );
 
-      if (editAttrData.type !== data.type) {
-        // 类型改变，删除相关的边
-        setEdges((prev) => prev.filter((edge) => !edge.sourceHandle?.includes(editAttrData.name) && !edge.targetHandle?.includes(editAttrData.name)));
-      } else if (editAttrData.name !== data.name || editAttrData.display_name !== data.display_name) {
-        // 只改名称，不改类型，更新边的引用
-        setEdges((prev) =>
-          prev.map((edge) => {
-            const newEdge = { ...edge };
-            if (edge.sourceHandle?.includes(editAttrData.name)) {
-              newEdge.sourceHandle = edge.sourceHandle.replace(editAttrData.name, data.name);
-            }
-            if (edge.targetHandle?.includes(editAttrData.name)) {
-              newEdge.targetHandle = edge.targetHandle.replace(editAttrData.name, data.name);
-            }
-            if (edge.id?.includes(editAttrData.name)) {
-              newEdge.id = edge.id.replace(editAttrData.name, data.name);
-            }
-            return newEdge;
-          })
-        );
-      }
+      // 处理边的更新或删除
+      if (editAttrData.name !== data.name || editAttrData.type !== data.type) {
+        setEdges((prev) => {
+          if (editAttrData.type !== data.type) {
+            // 类型改变，删除相关的边
+            return prev.filter((edge) => !edge.sourceHandle?.includes(editAttrData.name) && !edge.targetHandle?.includes(editAttrData.name));
+          }
+          // 仅名称改变，更新边的 sourceHandle 和 id
+          return prev.map((edge) => {
+            const isSourceChanged = edge.sourceHandle?.includes(`data-${editAttrData.name}`);
+            const isTargetChanged = edge.targetHandle?.includes(`data-${editAttrData.name}`);
 
-      message.success(intl.get('Global.saveSuccess'));
+            if (!isSourceChanged && !isTargetChanged) return edge;
+
+            // 更新 sourceHandle（data 侧的属性名变了）
+            const newSourceHandle = isSourceChanged ? `data-${data.name}` : edge.sourceHandle;
+            // targetHandle 不变（view 侧的字段名没变）
+            const newTargetHandle = edge.targetHandle;
+
+            // 从 targetHandle 中提取视图字段名
+            const viewFieldName = newTargetHandle?.replace('view-', '') || '';
+
+            return {
+              ...edge,
+              id: `${data.name}&&${viewFieldName}`,
+              sourceHandle: newSourceHandle,
+              targetHandle: newTargetHandle,
+            };
+          });
+        });
+      }
     } else {
-      const nameExistsInFields = fields.some((f) => f.name === data.name);
       const nameExistsInLocal = localDataProperties.some((p) => p.name === data.name);
 
-      if (nameExistsInFields || nameExistsInLocal) {
-        message.error(`${intl.get('Global.attributeName')}「${data.name}」${intl.get('Global.alreadyExists')}`);
-        return;
+      if (nameExistsInLocal) {
+        return {
+          name: `${intl.get('Global.attributeName')}「${data.name}」${intl.get('Global.alreadyExists')}`,
+        };
       }
 
       if (data.display_name) {
@@ -379,8 +476,9 @@ const DataAttribute = forwardRef((props: TProps, ref) => {
         const displayNameExistsInLocal = localDataProperties.some((p) => p.display_name === data.display_name);
 
         if (displayNameExistsInFields || displayNameExistsInLocal) {
-          message.error(`${intl.get('Global.displayName')}「${data.display_name}」${intl.get('Global.alreadyExists')}`);
-          return;
+          return {
+            display_name: `${intl.get('Global.displayName')}「${data.display_name}」${intl.get('Global.alreadyExists')}`,
+          };
         }
       }
 
@@ -424,7 +522,6 @@ const DataAttribute = forwardRef((props: TProps, ref) => {
     setEdges((prev) => prev.filter((edge) => !edge.sourceHandle?.includes(data.name) && !edge.targetHandle?.includes(data.name)));
     setAddAttrVisible(false);
     setEditAttrData(undefined);
-    message.success(intl.get('Global.deleteSuccess'));
   };
 
   const attrClick = (val: OntologyObjectType.Field) => {
@@ -441,6 +538,65 @@ const DataAttribute = forwardRef((props: TProps, ref) => {
     setAddAttrVisible(true);
   };
 
+  const handleDeleteAttribute = (attrName: string) => {
+    setLocalDataProperties((prev) => prev.filter((p) => p.name !== attrName));
+    setEdges((prev) => prev.filter((edge) => !edge.sourceHandle?.includes(attrName) && !edge.targetHandle?.includes(attrName)));
+  };
+
+  const handleTogglePrimaryKey = (attrName: string) => {
+    setLocalDataProperties((prev) =>
+      prev.map((p) => {
+        if (p.name === attrName) {
+          return { ...p, primary_key: !p.primary_key };
+        }
+        return p;
+      })
+    );
+  };
+
+  const handleToggleDisplayKey = (attrName: string) => {
+    setLocalDataProperties((prev) =>
+      prev.map((p) => {
+        if (p.name === attrName) {
+          const newDisplayKeyValue = !p.display_key;
+          return {
+            ...p,
+            display_key: newDisplayKeyValue,
+          };
+        }
+        if (p.display_key) {
+          return { ...p, display_key: false };
+        }
+        return p;
+      })
+    );
+  };
+
+  const handleToggleIncrementalKey = (attrName: string) => {
+    setLocalDataProperties((prev) =>
+      prev.map((p) => {
+        if (p.name === attrName) {
+          const newIncrementalKeyValue = !p.incremental_key;
+          return {
+            ...p,
+            incremental_key: newIncrementalKeyValue,
+          };
+        }
+        if (p.incremental_key) {
+          return { ...p, incremental_key: false };
+        }
+        return p;
+      })
+    );
+  };
+
+  const handleClearAllAttributes = () => {
+    setClearSearchTrigger((prev) => prev + 1);
+    setLocalDataProperties([]);
+    setEdges([]);
+    message.success(intl.get('Global.clearSuccess'));
+  };
+
   useEffect(() => {
     const { nodes: newNodes, edges: newEdges } = transformCanvasData({
       dataProperties: localDataProperties,
@@ -454,16 +610,100 @@ const DataAttribute = forwardRef((props: TProps, ref) => {
       pickAttribute: handlePickAttribute,
       autoLine: handleAutoLine,
       attrClick,
+      deleteAttribute: handleDeleteAttribute,
+      togglePrimaryKey: handleTogglePrimaryKey,
+      toggleDisplayKey: handleToggleDisplayKey,
+      toggleIncrementalKey: handleToggleIncrementalKey,
+      clearAllAttributes: handleClearAllAttributes,
+      clearSearchTrigger,
     });
-    setNodes(newNodes);
 
-    if (edges.length === 0 && newEdges.length > 0) {
+    // 保留当前节点的位置信息
+    setNodes((currentNodes) => {
+      return newNodes.map((newNode) => {
+        const existingNode = currentNodes.find((node) => node.id === newNode.id);
+        if (existingNode) {
+          // 如果节点已存在，保留其当前的位置
+          return {
+            ...newNode,
+            position: existingNode.position,
+          };
+        }
+        return newNode;
+      });
+    });
+
+    if (!isInitialized && edges.length === 0 && newEdges.length > 0) {
       const timer = setTimeout(() => {
         setEdges(newEdges);
       }, EDGE_RENDER_DELAY);
       return () => clearTimeout(timer);
     }
-  }, [localDataProperties, fields, logicProperties, dataViewInfo?.id, basicValue]);
+  }, [localDataProperties, fields, logicProperties, dataViewInfo?.id, basicValue, isInitialized, clearSearchTrigger]);
+
+  // 处理节点和连接线高亮效果
+  useEffect(() => {
+    if (!hoveredEdge) {
+      // 清除节点高亮
+      setNodes((nds) =>
+        nds.map((node) => ({
+          ...node,
+          data: {
+            ...node.data,
+            highlightedAttributes: [],
+          },
+        }))
+      );
+      // 清除连接线高亮
+      setEdges((eds) =>
+        eds.map((edge) => ({
+          ...edge,
+          data: {
+            ...edge.data,
+            isHovered: false,
+          },
+        }))
+      );
+      return;
+    }
+
+    // 更新节点高亮
+    setNodes((nds) => {
+      const edge = edges.find((e) => e.id === hoveredEdge);
+      if (!edge) return nds;
+
+      const sourceAttr = edge.sourceHandle?.replace(/^(view|data)-/, '');
+      const targetAttr = edge.targetHandle?.replace(/^(view|data)-/, '');
+
+      return nds.map((node) => {
+        const highlightedAttributes: string[] = [];
+        if (node.id === edge.source && sourceAttr) {
+          highlightedAttributes.push(sourceAttr);
+        }
+        if (node.id === edge.target && targetAttr) {
+          highlightedAttributes.push(targetAttr);
+        }
+        return {
+          ...node,
+          data: {
+            ...node.data,
+            highlightedAttributes,
+          },
+        };
+      });
+    });
+
+    // 更新连接线高亮
+    setEdges((eds) =>
+      eds.map((e) => ({
+        ...e,
+        data: {
+          ...e.data,
+          isHovered: e.id === hoveredEdge,
+        },
+      }))
+    );
+  }, [hoveredEdge]);
 
   const onConnect = useCallback(
     (params: Connection) => {
@@ -486,28 +726,39 @@ const DataAttribute = forwardRef((props: TProps, ref) => {
       }
 
       setEdges((prev) => {
-        // 检查是否已存在相同的连接
         const exists = prev.some((edge) => edge.id === `${dataAttr}&&${viewAttr}`);
         if (exists) {
-          message.error(intl.get('Object.onlyOneConnection'));
+          // message.error(intl.get('Object.onlyOneConnection'));
           return prev;
         }
 
-        // 1对1限制：检查 sourceHandle 是否已被使用
-        const sourceAlreadyConnected = prev.some((edge) => edge.sourceHandle === sourceHandle || edge.targetHandle === sourceHandle);
-        if (sourceAlreadyConnected) {
-          message.error(intl.get('Object.attributeAlreadyConnected'));
-          return prev;
-        }
-
-        // 1对1限制：检查 targetHandle 是否已被使用
         const targetAlreadyConnected = prev.some((edge) => edge.sourceHandle === targetHandle || edge.targetHandle === targetHandle);
-        if (targetAlreadyConnected) {
+        const sourceAlreadyConnected = prev.some((edge) => edge.sourceHandle === sourceHandle || edge.targetHandle === sourceHandle);
+
+        if (targetAlreadyConnected && sourceAlreadyConnected) {
           message.error(intl.get('Object.attributeAlreadyConnected'));
           return prev;
         }
 
-        // 更新 localDataProperties 中的 mapped_field
+        let updatedEdges = prev;
+        let oldDataAttrToRemove: string | undefined;
+
+        if (sourceAlreadyConnected) {
+          const oldEdge = prev.find((edge) => edge.sourceHandle === sourceHandle || edge.targetHandle === sourceHandle);
+          if (oldEdge) {
+            const oldConnectionNames = extractConnectionNames(oldEdge.sourceHandle!, oldEdge.targetHandle!);
+            oldDataAttrToRemove = oldConnectionNames.dataAttr;
+            updatedEdges = prev.filter((edge) => edge.id !== oldEdge.id);
+          }
+        } else if (targetAlreadyConnected) {
+          const oldEdge = prev.find((edge) => edge.sourceHandle === targetHandle || edge.targetHandle === targetHandle);
+          if (oldEdge) {
+            const oldConnectionNames = extractConnectionNames(oldEdge.sourceHandle!, oldEdge.targetHandle!);
+            oldDataAttrToRemove = oldConnectionNames.dataAttr;
+            updatedEdges = prev.filter((edge) => edge.id !== oldEdge.id);
+          }
+        }
+
         setLocalDataProperties((prevProps) =>
           prevProps.map((p) => {
             if (p.name === dataAttr) {
@@ -520,6 +771,10 @@ const DataAttribute = forwardRef((props: TProps, ref) => {
                 },
               };
             }
+            if (oldDataAttrToRemove && p.name === oldDataAttrToRemove) {
+              const { mapped_field, ...rest } = p;
+              return rest;
+            }
             return p;
           })
         );
@@ -531,7 +786,7 @@ const DataAttribute = forwardRef((props: TProps, ref) => {
             type: 'customEdge',
             data: { deletable: true },
           },
-          prev
+          updatedEdges
         );
       });
     },
@@ -541,7 +796,8 @@ const DataAttribute = forwardRef((props: TProps, ref) => {
   const handleChooseOk = (e: OntologyObjectType.DataSource[]) => {
     const dataView = e?.[0] || {};
     setDataViewInfo(dataView);
-    getDataViewDetail(dataView.id);
+    // 手动选择数据源时,自动初始化属性和连线
+    getDataViewDetail(dataView.id, true);
   };
 
   const onNodesChange: OnNodesChange = (changes) =>
@@ -552,6 +808,14 @@ const DataAttribute = forwardRef((props: TProps, ref) => {
         type: node.type || 'customNode',
       }));
     });
+
+  const handleEdgeMouseEnter = useCallback((_: React.MouseEvent, edge: Edge) => {
+    setHoveredEdge(edge.id);
+  }, []);
+
+  const handleEdgeMouseLeave = useCallback(() => {
+    setHoveredEdge(null);
+  }, []);
 
   const handlePickAttributeOk = (targetKeys: string[]) => {
     setPickAttributeVisible(false);
@@ -570,6 +834,22 @@ const DataAttribute = forwardRef((props: TProps, ref) => {
         },
       }));
     setLocalDataProperties((prev) => [...newAttributes, ...prev]);
+
+    // 自动创建连接线
+    const newEdges = newAttributes.map((attr) => ({
+      id: `${attr.name}&&${attr.name}`,
+      type: 'customEdge',
+      source: 'data',
+      sourceHandle: `data-${attr.name}`,
+      target: 'view',
+      targetHandle: `view-${attr.name}`,
+      data: { deletable: true },
+    }));
+    if (newEdges.length > 0) {
+      setTimeout(() => {
+        setEdges((prev) => [...prev, ...(newEdges as Edge[])]);
+      }, EDGE_RENDER_DELAY);
+    }
   };
 
   const handlePickAttributeClose = () => {
@@ -577,19 +857,13 @@ const DataAttribute = forwardRef((props: TProps, ref) => {
   };
 
   const availableFields = useMemo(() => {
-    const connectedFieldNames = new Set<string>();
-    edges.forEach((edge) => {
-      if (edge.sourceHandle) {
-        const fieldName = edge.sourceHandle.replace(/^(view|data)-/, '');
-        connectedFieldNames.add(fieldName);
-      }
-      if (edge.targetHandle) {
-        const fieldName = edge.targetHandle.replace(/^(view|data)-/, '');
-        connectedFieldNames.add(fieldName);
-      }
-    });
-    return fields.filter((f) => !connectedFieldNames.has(f.name));
-  }, [fields, edges]);
+    const existingPropertyNames = new Set(localDataProperties.map((p) => p.name));
+    const existingDisplayNames = new Set(localDataProperties.map((p) => p.display_name).filter(Boolean));
+    const connectedFieldNames = new Set(edges.map((edge) => edge.targetHandle?.replace('view-', '')).filter(Boolean));
+    return fields.filter((f) => !existingPropertyNames.has(f.name) && !existingDisplayNames.has(f.display_name) && !connectedFieldNames.has(f.name));
+  }, [fields, localDataProperties, edges]);
+
+  const selectedRowKeys = useMemo(() => (dataViewInfo?.id ? [dataViewInfo.id] : []), [dataViewInfo?.id]);
 
   return (
     <div className={styles['data-attribute-root']}>
@@ -667,6 +941,8 @@ const DataAttribute = forwardRef((props: TProps, ref) => {
           onNodesChange={onNodesChange}
           onEdgesChange={handleEdgesChange}
           onConnect={onConnect}
+          onEdgeMouseEnter={handleEdgeMouseEnter}
+          onEdgeMouseLeave={handleEdgeMouseLeave}
           nodeTypes={nodeTypes as any}
           edgeTypes={edgeTypes}
           proOptions={{ hideAttribution: true }}
@@ -707,7 +983,7 @@ const DataAttribute = forwardRef((props: TProps, ref) => {
         onCancel={() => {
           setOpen(false);
         }}
-        selectedRowKeys={[dataViewInfo?.id]}
+        selectedRowKeys={selectedRowKeys}
         maxCheckedCount={1}
         onOk={(checkedList: OntologyObjectType.DataSource[]) => {
           handleChooseOk(checkedList);

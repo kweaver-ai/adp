@@ -196,6 +196,12 @@ export interface TNode {
   position: { x: number; y: number };
   selected?: boolean;
   data: {
+    toggleIncrementalKey?: (attrName: string) => unknown;
+    toggleDisplayKey?: (attrName: string) => unknown;
+    togglePrimaryKey?: (attrName: string) => unknown;
+    deleteAttribute?: (name: string) => unknown;
+    clearAllAttributes?: () => void;
+    clearSearchTrigger?: number;
     label: string;
     bg: string;
     icon: string;

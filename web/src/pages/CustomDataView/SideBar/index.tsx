@@ -4,6 +4,7 @@ import { Checkbox, Divider, Button } from 'antd';
 import classNames from 'classnames';
 import { forEach, map } from 'lodash-es';
 import { arNotification } from '@/components/ARNotification';
+import { showDeleteConfirm } from '@/components/DeleteConfirm';
 import downFile from '@/utils/down-file';
 import api from '@/services/customDataView/index';
 import { GroupType } from '@/services/customDataView/type';
@@ -94,21 +95,14 @@ export const SideBar: React.FC = () => {
   /** 删除分组 */
   const handleDeleteGroupClick = (item: GroupType) => {
     let isGroupDeleteForce = false;
-    modal.confirm({
-      title: `${intl.get('Global.confirmDeleteGroup')}${item.name}？`,
+    showDeleteConfirm(modal, {
       content: (
-        <div>
-          <Checkbox onChange={(e) => (isGroupDeleteForce = e.target.checked)}></Checkbox>
-          <span style={{ marginLeft: 5 }}>{intl.get('CustomDataView.confirmDeleteGroupDescription')}</span>
-        </div>
-      ),
-      okButtonProps: {
-        style: { backgroundColor: '#ff4d4f', borderColor: '#ff4d4f' },
-      },
-      footer: (_: any, { OkBtn, CancelBtn }: { OkBtn: React.ElementType; CancelBtn: React.ElementType }) => (
         <>
-          <OkBtn />
-          <CancelBtn />
+          <b>{`${intl.get('Global.confirmDeleteGroup')}${item.name}？`}</b>
+          <div>
+            <Checkbox onChange={(e) => (isGroupDeleteForce = e.target.checked)}></Checkbox>
+            <span style={{ marginLeft: 5 }}>{intl.get('CustomDataView.confirmDeleteGroupDescription')}</span>
+          </div>
         </>
       ),
       onOk: async () => {

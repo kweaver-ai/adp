@@ -44,7 +44,8 @@ service.interceptors.request.use(
 
     // 2. 设置基础 Headers
     config.headers['Content-Type'] = 'application/json; charset=utf-8';
-    config.headers['Accept-Language'] = baseConfig.lang === 'en-us' ? 'en-us' : 'zh-cn';
+    config.headers['Accept-Language'] = baseConfig.lang || 'zh-cn';
+    config.headers['X-Language'] = baseConfig.lang || 'zh-cn';
 
     // 3. 注入 Token
     if (baseConfig.token) {

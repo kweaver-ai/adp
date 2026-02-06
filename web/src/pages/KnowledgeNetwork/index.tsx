@@ -1,12 +1,13 @@
 import { useEffect, useState } from 'react';
 import intl from 'react-intl-universal';
 import { useHistory } from 'react-router-dom';
-import { EllipsisOutlined, ExclamationCircleFilled } from '@ant-design/icons';
+import { EllipsisOutlined } from '@ant-design/icons';
 import { Dropdown, Empty, message } from 'antd';
 import { SorterResult } from 'antd/es/table/interface';
 import { TableProps } from 'antd/lib/table';
 import dayjs from 'dayjs';
 import ContainerIsVisible, { getTypePermissionOperation, matchPermission, PERMISSION_CODES } from '@/components/ContainerIsVisible';
+import { showDeleteConfirm } from '@/components/DeleteConfirm';
 import ObjectIcon from '@/components/ObjectIcon';
 import Tags from '@/components/Tags';
 import downFile from '@/utils/down-file';
@@ -93,10 +94,8 @@ const KnowledgeNetwork = () => {
 
   const changeDel = (row?: KnowledgeNetworkType.KnowledgeNetwork) => {
     const content = row ? intl.get('Global.deleteConfirm', { name: row.name }) : intl.get('Global.deleteConfirmMultiple', { count: selectedRows.length });
-    modal.confirm({
-      title: '',
-      content: content,
-      icon: <ExclamationCircleFilled />,
+    showDeleteConfirm(modal, {
+      content,
       async onOk() {
         await api.deleteNetwork(row ? [row.id] : selectedRowKeys);
         message.success(intl.get('Global.deleteSuccess'));

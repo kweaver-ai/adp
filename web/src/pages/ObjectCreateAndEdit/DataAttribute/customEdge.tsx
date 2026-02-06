@@ -4,7 +4,7 @@ import { BaseEdge, EdgeLabelRenderer, getBezierPath, useReactFlow, type EdgeProp
 import styles from './index.module.less';
 
 export const CustomEdge = memo((props: EdgeProps) => {
-  const { selected, sourceX, sourceY, targetX, targetY, sourcePosition, targetPosition, style = {}, markerEnd, id } = props;
+  const { selected, sourceX, sourceY, targetX, targetY, sourcePosition, targetPosition, style = {}, id, data } = props;
   const [edgePath, labelX, labelY] = getBezierPath({
     sourceX,
     sourceY,
@@ -19,11 +19,14 @@ export const CustomEdge = memo((props: EdgeProps) => {
     reactFlowInstance.deleteElements({ edges: [{ id }] });
   };
 
+  const isHovered = data?.isHovered || false;
+  const strokeColor = selected || isHovered ? '#000' : '#b1b1b1';
+
   return (
     <>
-      <BaseEdge path={edgePath} style={{ ...style, pointerEvents: 'all', stroke: selected ? '#555' : '#b1b1b1' }} />
+      <BaseEdge path={edgePath} style={{ ...style, pointerEvents: 'all', stroke: strokeColor, transition: 'all 0.2s ease' }} />
       <EdgeLabelRenderer>
-        {selected && (
+        {isHovered && (
           <div
             className={styles['edge-btn']}
             style={{

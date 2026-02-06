@@ -4,9 +4,17 @@ import { useHistory } from 'react-router-dom';
 import { LeftOutlined } from '@ant-design/icons';
 import { Divider } from 'antd';
 import HOOKS from '@/hooks';
-import { Text, Title, Steps } from '@/web-library/common';
+import { Text, Title, Steps, Button } from '@/web-library/common';
 import styles from './index.module.less';
 import locales from './locales';
+
+interface ActionButton {
+  text: string;
+  onClick: () => void;
+  type?: 'default' | 'primary';
+  loading?: boolean;
+  disabled?: boolean;
+}
 
 interface TProps {
   title?: string;
@@ -14,10 +22,15 @@ interface TProps {
   goBack?: () => void;
   items?: { title: string }[];
   onStepChange?: (current: number) => void;
+  actions?: {
+    prev?: ActionButton;
+    next?: ActionButton;
+    save?: ActionButton;
+  };
 }
 
 const HeaderSteps = (props: TProps) => {
-  const { title = '', stepsCurrent, goBack: goBackProp, items, onStepChange } = props;
+  const { title = '', stepsCurrent, goBack: goBackProp, items, onStepChange, actions } = props;
   const history = useHistory();
   const { modal } = HOOKS.useGlobalContext();
   const [i18nLoaded, setI18nLoaded] = useState(false);
@@ -54,8 +67,28 @@ const HeaderSteps = (props: TProps) => {
         <Title>{title}</Title>
       </div>
       {items && <Steps.GapIcon size="small" current={stepsCurrent} items={items} onChange={onStepChange} />}
+      {actions && (
+        <div className={styles['header-actions']}>
+          {actions.prev && (
+            <Button onClick={actions.prev.onClick} loading={actions.prev.loading} disabled={actions.prev.disabled}>
+              {actions.prev.text}
+            </Button>
+          )}
+          {actions.save && (
+            <Button className="g-ml-2" type="primary" loading={actions.save.loading} disabled={actions.save.disabled} onClick={actions.save.onClick}>
+              {actions.save.text}
+            </Button>
+          )}
+          {actions.next && (
+            <Button className="g-ml-2" type="primary" loading={actions.next.loading} disabled={actions.next.disabled} onClick={actions.next.onClick}>
+              {actions.next.text}
+            </Button>
+          )}
+        </div>
+      )}
     </div>
   );
 };
 
 export default HeaderSteps;
+export type { ActionButton };

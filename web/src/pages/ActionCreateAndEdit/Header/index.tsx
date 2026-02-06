@@ -23,7 +23,7 @@ const Header = (props: any) => {
           current={stepsCurrent}
           items={[
             { title: intl.get('Action.conceptDefinition') },
-            { title: intl.get('Action.resourceMapping') }
+            { title: intl.get('Action.resourceMapping') },
             // { title: intl.get('Action.runStrategy') || '运行策略' },
           ]}
           onChange={(value) => {
@@ -41,8 +41,7 @@ const Header = (props: any) => {
             // The original code only supported 2 steps (0 and 1).
             // If I am at 2, clicking 0 or 1 is fine (prev).
             // If I am at 0, clicking 1 or 2 is next (needs validation).
-            
-            // For safety, let's disable direct click navigation for now unless requested, 
+            // For safety, let's disable direct click navigation for now unless requested,
             // or just allow going back.
           }}
         />

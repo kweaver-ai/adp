@@ -7,6 +7,7 @@ import { Tag, Divider, Modal, Spin, Dropdown, Tooltip } from 'antd';
 import classNames from 'classnames';
 import { map } from 'lodash-es';
 import DataFilterNew from '@/components/DataFilterNew';
+import ObjectIcon from '@/components/ObjectIcon';
 import { renderObjectTypeLabel } from '@/components/ObjectSelector';
 import ToolParamsTable from '@/components/ToolParamsTable';
 import actionApi from '@/services/action';
@@ -272,7 +273,7 @@ const DetailView: FC<DetailViewProps> = ({ atId, knId, hasModifyPerm, onClose, o
         <div className={styles['detail-view-root']}>
           {data.name ? (
             <div className={classNames('g-flex-align-center', styles['line-height-32'])} style={{ gap: 8 }}>
-              <IconFont type="icon-dip-hangdonglei" />
+              <ObjectIcon icon="icon-dip-hangdonglei" color={data.color} />
               <span className="g-ellipsis-1" title={data.name} style={{ flex: 1 }}>
                 {data.name}
               </span>

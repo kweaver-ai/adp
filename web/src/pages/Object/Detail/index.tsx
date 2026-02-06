@@ -160,9 +160,14 @@ const Detail = (props: TDetailProps) => {
   ];
 
   const dataSource: ObjectType.Field[] = useMemo(() => {
-    const { primary_keys = [], display_key = '' } = source || {};
+    const { primary_keys = [], display_key = '', incremental_key } = source || {};
     const dataPropertite =
-      source?.data_properties?.map((item) => ({ ...item, primary_key: primary_keys.includes(item.name), display_key: item.name === display_key })) || [];
+      source?.data_properties?.map((item) => ({
+        ...item,
+        primary_key: primary_keys.includes(item.name),
+        display_key: item.name === display_key,
+        incremental_key: item.name === incremental_key,
+      })) || [];
     const logicPropertite =
       source?.logic_properties?.map((item) => ({ ...item, primary_key: primary_keys.includes(item.name), display_key: item.name === display_key })) || [];
     const data: any = type === OBJECT_PROPERTY_TYPES.DATA_PROPERTY ? dataPropertite : logicPropertite;

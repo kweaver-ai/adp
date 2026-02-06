@@ -14,6 +14,7 @@ export interface BasicInfo {
   create_time?: number;
   updater?: { id: string; name: string; type: string };
   update_time?: number;
+  validate_dependency?: boolean;
 }
 
 export type CreateRequest = BasicInfo;

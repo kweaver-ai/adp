@@ -1,14 +1,12 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import intl from 'react-intl-universal';
 import { useHistory, useParams } from 'react-router-dom';
 import { Form } from 'antd';
-import Request from '@/services/request';
+import HeaderSteps from '@/components/HeaderSteps';
 import ENUMS from '@/enums';
 import HOOKS from '@/hooks';
 import SERVICE from '@/services';
-import { Button } from '@/web-library/common';
 import BasicInformation from './BasicInformation';
-import Header from './Header';
 import styles from './index.module.less';
 import Mapping from './Mapping';
 
@@ -115,9 +113,11 @@ const EdgeCreateAndEdit = () => {
   };
 
   const title = isEditPage ? basicValue?.name : intl.get('Global.createEdgeClass');
+  const steps = [{ title: intl.get('Global.basicInfo') }, { title: intl.get('Edge.mappingStep') }];
   const StepsContent: any = {
     0: {
       content: <BasicInformation form={basicForm} values={basicValue} isEditPage={isEditPage} />,
+      prevText: intl.get('Global.prev'),
       nextText: intl.get('Global.next'),
       nextClick: () => {
         basicForm.validateFields().then((values) => {
@@ -129,7 +129,9 @@ const EdgeCreateAndEdit = () => {
     },
     1: {
       content: <Mapping form={mappingForm} values={mappingValue} />,
+      prevText: intl.get('Global.prev'),
       nextText: intl.get('Global.saveAndExit'),
+      prevClick: onPrev,
       nextClick: () => {
         mappingForm.validateFields().then((values) => {
           console.log('Mapping values', values);
@@ -140,34 +142,36 @@ const EdgeCreateAndEdit = () => {
     },
   };
 
+  const currentStep = StepsContent[stepsCurrent];
+
+  const headerActions = useMemo(() => {
+    const actions: any = {};
+
+    if (currentStep?.prevClick) {
+      actions.prev = {
+        text: currentStep.prevText,
+        onClick: currentStep.prevClick,
+        loading,
+        disabled: loading,
+      };
+    }
+
+    if (currentStep?.nextClick) {
+      actions.next = {
+        text: currentStep.nextText,
+        onClick: currentStep.nextClick,
+        loading,
+        disabled: loading,
+      };
+    }
+
+    return Object.keys(actions).length > 0 ? actions : undefined;
+  }, [currentStep, loading]);
+
   return (
     <div className={styles['edge-create-and-edit-root']}>
-      {/* {isIntercept && <RouterPrompt modal={modal} isIntercept title="确认要退出此页面吗?" content="当前内容尚未保存的更改， 是否保存？" />} */}
-      <Header title={title} stepsCurrent={stepsCurrent} goBack={goBack} />
-      <div className={styles['edge-create-and-edit-content']}>{StepsContent?.[stepsCurrent]?.content}</div>
-      <div className={styles['edge-create-and-edit-footer']}>
-        {stepsCurrent === 0 ? (
-          <div />
-        ) : (
-          <Button onClick={onPrev} loading={loading} disabled={loading}>
-            {intl.get('Global.prev')}
-          </Button>
-        )}
-        <div className="g-flex-align-center">
-          <Button className="g-mr-2" type="primary" loading={loading} disabled={loading} onClick={StepsContent?.[stepsCurrent]?.nextClick}>
-            {StepsContent?.[stepsCurrent]?.nextText}
-          </Button>
-          <Button
-            onClick={() => {
-              if (Request.cancels?.createEdge) Request.cancels.createEdge();
-              if (Request.cancels?.updateEdge) Request.cancels.updateEdge();
-              goBack();
-            }}
-          >
-            {intl.get('Global.cancel')}
-          </Button>
-        </div>
-      </div>
+      <HeaderSteps title={title} stepsCurrent={stepsCurrent} items={steps} goBack={goBack} actions={headerActions} />
+      <div className={styles['edge-create-and-edit-content']}>{currentStep?.content}</div>
     </div>
   );
 };

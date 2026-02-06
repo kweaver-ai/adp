@@ -45,14 +45,18 @@
     "attributeTypeInconsistent": "屬性類型不一致",
     "indexInfo": "包含索引對象{docCount}個、佔用索引空間{storageSize}",
     "dataPropertiesRequired": "請至少添加一個數據屬性",
-    "primaryKeyRequired": "請配置至少一個主鍵",
-    "displayKeyRequired": "至少需要設定一個標題欄位（可設定多個）",
+    "primaryKeyRequired": "當前數據屬性未配置主鍵。請點擊需要配置的屬性並開啟主鍵配置，至少需配置一個主鍵（可配置多個）。",
+    "displayKeyRequired": "目前資料屬性未設定標題。請在屬性清單中選擇屬性並開啟標題設定，至少需設定一個標題（可設定多個）。",
+    "dataAttributeConfigIncomplete": "數據屬性配置不完整：未配置主鍵和標題。請至少配置 1 個主鍵字段和 1 個標題字段再提交。",
     "addDataAttribute": "添加數據屬性",
     "noMatchingAttributesToConnect": "沒有找到名稱和類型都匹配的屬性",
     "replaceDataView": "替換數據視圖",
     "clearDataView": "清除數據視圖",
     "smartMatchingConnection": "智能匹配連接",
     "addFieldAsNewDataAttribute": "將字段添加為新數據屬性",
-    "skipLogicPropertyTip": "如果沒有需要通過計算或規則推算出來的值，可以跳過此步驟，點擊右上角的【保存並退出】完成物件類別創建。"
+    "skipLogicPropertyTip": "如果沒有需要通過計算或規則推算出來的值,可以跳過此步驟,點擊右上角的【保存並退出】完成物件類別創建。",
+    "manualCreate": "手動新建",
+    "syncDataViewFields": "同步數據視圖字段",
+    "clearAllDataAttributesConfirm": "確定清空所有數據屬性嗎？清空後不能恢復，請謹慎操作。"
   }
 }

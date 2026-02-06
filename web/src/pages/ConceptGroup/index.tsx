@@ -1,11 +1,12 @@
 import { useEffect, useRef, useState } from 'react';
 import intl from 'react-intl-universal';
-import { EllipsisOutlined, ExclamationCircleFilled } from '@ant-design/icons';
+import { EllipsisOutlined } from '@ant-design/icons';
 import { Dropdown, Empty, message } from 'antd';
 import { type MenuProps } from 'antd';
 import { SorterResult } from 'antd/es/table/interface';
 import { TableProps } from 'antd/lib/table';
 import dayjs from 'dayjs';
+import { showDeleteConfirm } from '@/components/DeleteConfirm';
 import Tags from '@/components/Tags';
 import downFile from '@/utils/down-file';
 import api from '@/services/conceptGroup';
@@ -113,10 +114,8 @@ const ConceptGroup = (props: ConceptGroupProps) => {
           names: selectedRows.map((val) => val.name).join(','),
           count: selectedRows.length,
         });
-    modal.confirm({
-      title: '',
-      content: content,
-      icon: <ExclamationCircleFilled />,
+    showDeleteConfirm(modal, {
+      content,
       async onOk() {
         await api.deleteConceptGroup(knId, row ? [row.id] : selectedRowKeys);
         message.success(intl.get('Global.deleteSuccess'));

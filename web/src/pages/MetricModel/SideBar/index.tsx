@@ -5,6 +5,7 @@ import { Dropdown, Checkbox, Select, Form, Divider, Button } from 'antd';
 import classNames from 'classnames';
 import { forEach, map } from 'lodash-es';
 import { arNotification } from '@/components/ARNotification';
+import { showDeleteConfirm } from '@/components/DeleteConfirm';
 import { FORM_LAYOUT } from '@/hooks/useConstants';
 import downFile from '@/utils/down-file';
 import api from '@/services/metricModel';
@@ -169,14 +170,18 @@ const SideBar: React.FC<SideBarProps> = (props) => {
   /** 删除分组 */
   const handleDeleteGroupClick = (item: any) => {
     let isGroupDeleteForce = false;
-    modal.confirm({
-      title: `${intl.get('Global.confirmDeleteGroup')}${item.name}？`,
-      content: <Checkbox onChange={(e) => (isGroupDeleteForce = e.target.checked)}>{intl.get('MetricModel.isGroupDeleteForceDescription')}</Checkbox>,
+    showDeleteConfirm(modal, {
+      content: (
+        <>
+          <b>{`${intl.get('Global.confirmDeleteGroup')}${item.name}？`}</b>
+          <Checkbox onChange={(e) => (isGroupDeleteForce = e.target.checked)}>{intl.get('MetricModel.isGroupDeleteForceDescription')}</Checkbox>
+        </>
+      ),
       onOk: async () => {
         const res = await api.deleteGroup(item.id, isGroupDeleteForce);
         getGroupList();
         getMetricModelData();
-        // 如果删除的分组是当前展示的分组，且删除成功（res===''），跳转到“所有指标模型”
+        // 如果删除的分组是当前展示的分组，且删除成功（res===''），跳转到"所有指标模型"
         if (item.id === currentSelectGroup.id && !res.code) setCurrentSelectGroup({});
       },
     });

@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import intl from 'react-intl-universal';
 import { useParams, useHistory } from 'react-router-dom';
 import { CheckCircleFilled, InfoCircleFilled, LeftOutlined } from '@ant-design/icons';
-import { Divider, Empty } from 'antd';
+import { Divider, Empty, Tooltip } from 'antd';
 import { nanoid } from 'nanoid';
 import * as OntologyObjectType from '@/services/object/type';
 import emptyImage from '@/assets/images/common/empty.png';
@@ -59,13 +59,14 @@ const ObjectSetting = () => {
       const result = await SERVICE.object.getDetail(knId, [id]);
       const data = result?.[0];
       if (!data) return;
-      const { name, tags, comment, icon, color, data_properties, logic_properties = [], primary_keys = [], display_key = '' } = data;
+      const { name, tags, comment, icon, color, data_properties, primary_keys = [], display_key = '', incremental_key = '' } = data;
       setBasicValue({ name, id, tags, comment, icon, color });
       const mergeData = data_properties.map((item: any) => ({
         ...item,
         id: nanoid(),
         primary_key: primary_keys.includes(item.name),
         display_key: item.name === display_key,
+        incremental_key: item.name === incremental_key,
       }));
 
       const sortedData = mergeData.sort((a, b) => {
@@ -124,8 +125,21 @@ const ObjectSetting = () => {
       render: (value: string, record: any) => (
         <div className={styles.propertyTitle}>
           <div>{value}</div>
-          {record.primary_key && <div className={styles.keyTag}>{intl.get('Global.primaryKey')}</div>}
-          {record.display_key && <div className={styles.titleTag}>{intl.get('Global.title')}</div>}
+          {record.primary_key && (
+            <Tooltip title={intl.get('Global.primaryKey')}>
+              <IconFont type="icon-dip-color-primary-key" />
+            </Tooltip>
+          )}
+          {record.display_key && (
+            <Tooltip title={intl.get('Global.title')}>
+              <IconFont type="icon-dip-color-star" />
+            </Tooltip>
+          )}
+          {record.incremental_key && (
+            <Tooltip title={intl.get('Global.incrementalKey')}>
+              <IconFont type="icon-dip-color-increment" />
+            </Tooltip>
+          )}
         </div>
       ),
     },

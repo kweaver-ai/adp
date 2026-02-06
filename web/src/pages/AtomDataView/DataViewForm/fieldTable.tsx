@@ -138,8 +138,6 @@ const EditableTable = ({ isEdit, page, setPage, dataSource = [], onChange, onFie
               onChange={(e): void => handleFieldChange(record, 'display_name', e.target.value)}
               onBlur={(e): void => validateField(record, 'display_name', e.target.value)}
               placeholder={intl.get('Global.pleaseInput')}
-              maxLength={255}
-              showCount
             />
           </Tooltip>
         );
@@ -161,16 +159,10 @@ const EditableTable = ({ isEdit, page, setPage, dataSource = [], onChange, onFie
       title: intl.get('Global.fieldComment'),
       dataIndex: 'comment',
       key: 'comment',
-      width: 300,
+      width: 200,
       render: (text: string, record: AtomDataViewType.Field): JSX.Element => (
         <Tooltip placement="left" title={text}>
-          <Input
-            value={text}
-            onChange={(e): void => handleFieldChange(record, 'comment', e.target.value)}
-            placeholder={intl.get('Global.pleaseInput')}
-            maxLength={1000}
-            showCount
-          />
+          <Input value={text} onChange={(e): void => handleFieldChange(record, 'comment', e.target.value)} placeholder={intl.get('Global.pleaseInput')} />
         </Tooltip>
       ),
     },
@@ -178,7 +170,7 @@ const EditableTable = ({ isEdit, page, setPage, dataSource = [], onChange, onFie
       title: intl.get('Global.fieldFeatureType'),
       dataIndex: 'features',
       key: 'features_type',
-      width: 100,
+      width: 150,
       render: (features: any[]) => {
         if (!features || features.length === 0) {
           return <span style={{ color: 'rgba(0, 0, 0, 0.25)' }}>{intl.get('Global.unset')}</span>;

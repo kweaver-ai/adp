@@ -48,6 +48,7 @@ export interface CreateNetworkRequest {
   base_version: string; // 来源版本
   color?: string; // 颜色
   icon?: string; // 图标
+  validate_dependency?: boolean;
 }
 
 // 更新请求参数

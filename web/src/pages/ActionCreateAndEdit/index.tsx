@@ -116,10 +116,10 @@ const ActionCreateAndEdit: FC = () => {
       // 执行映射组件的验证逻辑
       const { isValid } = (mappingRef.current as any)?.validate?.() || {};
       if (!isValid) return;
-      
+
       // 更新映射值
       setMappingValue(mappingForm.getFieldsValue());
-      
+
       const { 'affect.object_type_id': affectObjectType, 'affect.comment': affectComment, condition } = basicValue;
       const affect = affectObjectType || affectComment ? { object_type_id: affectObjectType, comment: affectComment } : undefined;
       const step1Params = {

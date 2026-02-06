@@ -8,6 +8,7 @@ import Cookie from 'js-cookie';
 import { map } from 'lodash-es';
 import { arNotification } from '@/components/ARNotification';
 import ContainerIsVisible, { getTypePermissionOperation, matchPermission, PERMISSION_CODES } from '@/components/ContainerIsVisible';
+import { showDeleteConfirm } from '@/components/DeleteConfirm';
 import { DATE_FORMAT, PAGINATION_DEFAULT } from '@/hooks/useConstants';
 import api from '@/services/metricModel';
 import HOOKS from '@/hooks';
@@ -177,19 +178,8 @@ const MetricModel = () => {
   /** 删除弹窗 */
   const deleteConfirm = (record?: any): void => {
     const content = record ? intl.get('Global.deleteConfirm', { name: record.name }) : intl.get('Global.deleteConfirmMultiple', { count: selectedRows.length });
-    modal.confirm({
+    showDeleteConfirm(modal, {
       content,
-      icon: <IconFont type="icon-about" />,
-      okText: intl.get('Global.ok'),
-      okButtonProps: {
-        style: { backgroundColor: '#ff4d4f', borderColor: '#ff4d4f' },
-      },
-      footer: (_: any, { OkBtn, CancelBtn }: { OkBtn: React.ElementType; CancelBtn: React.ElementType }) => (
-        <>
-          <OkBtn />
-          <CancelBtn />
-        </>
-      ),
       onOk: async () => {
         const res = await api.deleteMetricModel(record?.id || selectedRowKeys?.join(','));
 

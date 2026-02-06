@@ -45,14 +45,18 @@
     "attributeTypeInconsistent": "属性类型不一致",
     "indexInfo": "包含索引对象{docCount}个、占用索引空间{storageSize}",
     "dataPropertiesRequired": "请至少添加一个数据属性",
-    "primaryKeyRequired": "请配置至少一个主键",
-    "displayKeyRequired": "至少需要配置一个标题字段（可配置多个）",
+    "primaryKeyRequired": "当前数据属性未配置主键。请单击需要配置的属性并开启主键配置，至少需配置一个主键（可配置多个）。",
+    "displayKeyRequired": "当前数据属性未配置标题。请在属性列表中选择属性并开启标题配置",
+    "dataAttributeConfigIncomplete": "数据属性配置不完整：未配置主键和标题。请至少配置 1 个主键字段和 1 个标题字段再提交。",
     "addDataAttribute": "添加数据属性",
     "noMatchingAttributesToConnect": "没有找到名称和类型都匹配的属性",
     "replaceDataView": "替换数据视图",
     "clearDataView": "清除数据视图",
     "smartMatchingConnection": "智能匹配连接",
     "addFieldAsNewDataAttribute": "将字段添加为新数据属性",
-    "skipLogicPropertyTip": "如果没有需要通过计算或规则推算出来的值，可以跳过此步骤，点击右上角的【保存并退出】完成对象类创建。"
+    "skipLogicPropertyTip": "如果没有需要通过计算或规则推算出来的值,可以跳过此步骤,点击右上角的【保存并退出】完成对象类创建。",
+    "manualCreate": "手动新建",
+    "syncDataViewFields": "同步数据视图字段",
+    "clearAllDataAttributesConfirm": "确定清空所有数据属性吗？清空后不能恢复，请谨慎操作。"
   }
 }

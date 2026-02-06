@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState, useMemo } from 'react';
 import intl from 'react-intl-universal';
-import { ExclamationCircleOutlined } from '@ant-design/icons';
 import { Form, Input, Select, Switch, Tooltip } from 'antd';
 import { useForm } from 'antd/es/form/Form';
 import * as OntologyObjectType from '@/services/object/type';
@@ -17,11 +16,16 @@ const canBePrimaryKey = (type: string) => canPrimaryKeys.includes(type);
 const canBeDisplayKey = (type: string) => canTitleKeys.includes(type);
 const canBeIncrementalKey = (type: string) => canAddIncrementalKeys.includes(type);
 
+export type TAddDataAttributeError = {
+  name?: string;
+  display_name?: string;
+};
+
 export type TAddDataAttribute = {
   data?: OntologyObjectType.Field;
   open: boolean;
   onClose: () => void;
-  onOk: (data: OntologyObjectType.Field) => void;
+  onOk: (data: OntologyObjectType.Field) => TAddDataAttributeError | void;
   onDelete: (data: OntologyObjectType.Field) => void;
 };
 
@@ -30,6 +34,7 @@ const AddDataAttribute = (props: TAddDataAttribute) => {
   const [form] = useForm();
   const isDisplayNameManuallyEdited = useRef(false);
   const [currentType, setCurrentType] = useState<string>('string');
+  const [isFormEdited, setIsFormEdited] = useState(false);
   const { modal } = HOOKS.useGlobalContext();
 
   useEffect(() => {
@@ -38,10 +43,19 @@ const AddDataAttribute = (props: TAddDataAttribute) => {
         form.setFieldsValue(data);
         setCurrentType(data.type || 'string');
         isDisplayNameManuallyEdited.current = true;
+        setIsFormEdited(false);
+
+        // 执行表单校验,检查编辑数据是否有错误
+        try {
+          await form.validateFields();
+        } catch (error) {
+          console.log('编辑数据校验失败:', error);
+        }
       } else if (open) {
         form.resetFields();
         setCurrentType('string');
         isDisplayNameManuallyEdited.current = false;
+        setIsFormEdited(false);
       }
     };
 
@@ -56,12 +70,23 @@ const AddDataAttribute = (props: TAddDataAttribute) => {
   const handleOk = async () => {
     try {
       const values = await form.validateFields();
-      onOk({
+      const errors = onOk({
         ...data,
         ...values,
         error: {},
       });
-      form.resetFields();
+
+      if (errors && (errors.name || errors.display_name)) {
+        const fieldErrors = [];
+        if (errors.name) {
+          fieldErrors.push({ name: 'name', errors: [errors.name] });
+        }
+        if (errors.display_name) {
+          fieldErrors.push({ name: 'display_name', errors: [errors.display_name] });
+        }
+        form.setFields(fieldErrors);
+        return;
+      }
     } catch (error) {
       console.log('Validation failed:', error);
     }
@@ -70,20 +95,10 @@ const AddDataAttribute = (props: TAddDataAttribute) => {
   const handleDelete = () => {
     if (!data) return;
 
-    modal.confirm({
-      title: '',
-      icon: <ExclamationCircleOutlined />,
-      content: intl.get('Global.deleteConfirm', { name: data.display_name || data.name }),
-      okText: intl.get('Global.ok'),
-      cancelText: intl.get('Global.cancel'),
-      okButtonProps: { danger: true },
-      onOk: () => {
-        onDelete(data);
-      },
-    });
+    onDelete(data);
   };
 
-  const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleNameChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const name = e.target.value;
     if (!isDisplayNameManuallyEdited.current) {
       form.setFieldValue('display_name', name);
@@ -140,10 +155,10 @@ const AddDataAttribute = (props: TAddDataAttribute) => {
   );
 
   return (
-    <Drawer width={400} title={title} open={open} maskClosable={false} onClose={handleCancel} footer={footer}>
+    <Drawer width={400} title={title} open={open} maskClosable={!isFormEdited} onClose={handleCancel} footer={footer}>
       <div className={styles.container}>
         <div className={styles.formContent}>
-          <Form form={form} layout="vertical" autoComplete="off">
+          <Form form={form} layout="vertical" autoComplete="off" onValuesChange={() => setIsFormEdited(true)}>
             <Form.Item
               name="name"
               label={intl.get('Global.attributeName')}
@@ -155,11 +170,11 @@ const AddDataAttribute = (props: TAddDataAttribute) => {
                 },
               ]}
             >
-              <Input placeholder={intl.get('Global.pleaseInput')} onChange={handleNameChange} />
+              <Input.TextArea autoSize={{ minRows: 2, maxRows: 4 }} placeholder={intl.get('Global.pleaseInput')} onChange={handleNameChange} />
             </Form.Item>
 
             <Form.Item name="display_name" label={intl.get('Global.displayName')} rules={[{ required: true, message: intl.get('Global.pleaseInput') }]}>
-              <Input placeholder={intl.get('Global.pleaseInput')} onChange={handleDisplayNameChange} />
+              <Input.TextArea autoSize={{ minRows: 2, maxRows: 4 }} placeholder={intl.get('Global.pleaseInput')} onChange={handleDisplayNameChange} />
             </Form.Item>
 
             <Form.Item name="type" label={intl.get('Global.attributeType')} initialValue="string">
@@ -167,7 +182,7 @@ const AddDataAttribute = (props: TAddDataAttribute) => {
             </Form.Item>
 
             <Form.Item name="comment" label={intl.get('Global.description')}>
-              <Input.TextArea placeholder={intl.get('Global.pleaseInput')} rows={3} maxLength={1000} showCount />
+              <Input.TextArea autoSize={{ minRows: 3, maxRows: 7 }} placeholder={intl.get('Global.pleaseInput')} maxLength={1000} showCount />
             </Form.Item>
 
             <Form.Item

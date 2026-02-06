@@ -37,7 +37,7 @@
     "objectDetail": "Object Class Details",
     "logicProperty": "Logical Property",
     "logicPropertyTip": "Logical properties are values calculated or derived through rules, rather than data stored directly in the database, such as 'discounted price' of a product or 'is active' status of a user.",
-    "objectClassName": "Object Class Name",
+    "objectClassName": "Name",
     "pleaseFillObjectClassName": "Please fill in object class name",
     "configurationSteps": "Configuration Steps",
     "onlyOneConnection": "There can only be one connection line between attributes",
@@ -45,14 +45,18 @@
     "attributeTypeInconsistent": "Attribute types are inconsistent",
     "indexInfo": "Contains {docCount} indexed objects, occupying {storageSize} of index space",
     "dataPropertiesRequired": "Please add at least one data property",
-    "primaryKeyRequired": "Please configure at least one primary key",
-    "displayKeyRequired": "Please configure at least one display key",
+    "primaryKeyRequired": "The current data attribute is not configured with a primary key. Please click on the attribute that needs to be configured and enable the primary key configuration. At least one primary key must be configured (multiple can be configured).",
+    "displayKeyRequired": "The current data attribute has not been configured with a title. Please select an attribute from the attribute list and enable title configuration. At least one title must be configured (multiple titles can be configured).",
+    "dataAttributeConfigIncomplete": "Data attribute configuration is incomplete: No primary key and title configured. Please configure at least one primary key field and one title field before submitting.",
     "addDataAttribute": "Add Data Attribute",
     "noMatchingAttributesToConnect": "No matching attributes found with same name and type",
     "replaceDataView": "Replace Data View",
     "clearDataView": "Clear Data View",
     "smartMatchingConnection": "Smart Matching Connection",
     "addFieldAsNewDataAttribute": "Add Field as New Data Attribute",
-    "skipLogicPropertyTip": "If there are no values that need to be calculated or derived through rules, you can skip this step and click [Save and Exit] in the upper right corner to complete the object class creation."
+    "skipLogicPropertyTip": "If there are no values that need to be calculated or derived through rules, you can skip this step and click [Save and Exit] in the upper right corner to complete the object class creation.",
+    "manualCreate": "Manual Create",
+    "syncDataViewFields": "Sync Data View Fields",
+    "clearAllDataAttributesConfirm": "Are you sure you want to clear all data attributes? This action cannot be undone. Please proceed with caution."
   }
 }

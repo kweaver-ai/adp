@@ -175,7 +175,7 @@ const CreateAndEditForm = (props: any) => {
               <TagsSelector />
             </Form.Item>
             <Form.Item label={intl.get('Global.comment')} name="comment">
-              <Input.TextArea placeholder={intl.get('Global.pleaseInput')} />
+              <Input.TextArea maxLength={1000} showCount rows={3} placeholder={intl.get('Global.pleaseInput')} />
             </Form.Item>
           </Form>
         ) : (

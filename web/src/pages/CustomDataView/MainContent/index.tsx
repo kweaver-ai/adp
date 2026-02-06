@@ -8,6 +8,7 @@ import Cookie from 'js-cookie';
 import { map } from 'lodash-es';
 import { arNotification } from '@/components/ARNotification';
 import ContainerIsVisible, { getTypePermissionOperation, matchPermission, PERMISSION_CODES } from '@/components/ContainerIsVisible';
+import { showDeleteConfirm } from '@/components/DeleteConfirm';
 import { useAuthorization } from '@/hooks/useAuthorization';
 import { PAGINATION_DEFAULT } from '@/hooks/useConstants';
 import api from '@/services/customDataView';
@@ -69,19 +70,8 @@ export const MainContent: React.FC = () => {
   /** 删除弹窗 */
   const deleteConfirm = (record: any): void => {
     const content = record ? intl.get('Global.deleteConfirm', { name: record.name }) : intl.get('Global.deleteConfirmMultiple', { count: selectedRows.length });
-    modal.confirm({
+    showDeleteConfirm(modal, {
       content,
-      icon: <IconFont type="icon-about" />,
-      okText: intl.get('Global.ok'),
-      okButtonProps: {
-        style: { backgroundColor: '#ff4d4f', borderColor: '#ff4d4f' },
-      },
-      footer: (_: any, { OkBtn, CancelBtn }: { OkBtn: React.ElementType; CancelBtn: React.ElementType }) => (
-        <>
-          <OkBtn />
-          <CancelBtn />
-        </>
-      ),
       onOk: async () => {
         const res = await api.deleteCustomDataView(record?.id || selectedRowKeys?.join(','));
         if (!res?.code) arNotification.success(intl.get('Global.deleteSuccess'));

@@ -87,6 +87,7 @@
     "noContent": "暂无内容",
     "noData": "暂无数据",
     "noResult": "抱歉，没有找到相关内容",
+    "noSearchResults": "暂无搜索结果",
     "noDataToPreview": "无数据可预览",
     "noPreviewPermission": "您对【{title}】无预览权限，无法查看数据预览。",
     "noComment": "暂无备注",
@@ -159,7 +160,14 @@
     "basicConfig": "基本配置",
     "basicInfo": "基本信息",
     "searchName": "搜索名称",
+    "searchNameId": "搜索名称/ID",
     "primaryKey": "主键",
+    "setPrimaryKey": "设置主键",
+    "cancelPrimaryKey": "取消主键",
+    "setTitle": "设置标题",
+    "cancelTitle": "取消标题",
+    "setIncrementalKey": "设置增量",
+    "cancelIncrementalKey": "取消增量",
     "keywordIndex": "关键字索引",
     "fulltextIndex": "全文索引",
     "vectorIndex": "向量索引",
@@ -292,6 +300,8 @@
     "fieldFeature": "字段特征",
     "fieldFeatureTip": "字段特征是字段的可配置扩展能力,用于支持高级搜索功能,如向量搜索、全文检索和精确匹配",
     "setFieldFeature": "设置字段特征",
-    "unset": "未设置"
+    "unset": "未设置",
+    "clearSuccess": "清空成功",
+    "clear": "清空"
   }
 }

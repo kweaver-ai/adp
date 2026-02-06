@@ -79,8 +79,11 @@ const EditDrawer: React.FC<{
         form.setFieldValue('display_name', attrInfo.display_name);
         form.setFieldValue('comment', attrInfo.comment);
       } else {
-        // 新增模式，重置表单
+        // 新增模式，重置表单并设置默认类型为第一个选项
         form.resetFields();
+        if (LOGIC_ATTR_TYPE_OPTIONS.length > 0) {
+          form.setFieldValue('type', LOGIC_ATTR_TYPE_OPTIONS[0].value);
+        }
         isDisplayNameManuallyEdited.current = false;
       }
       if (attrInfo?.parameters?.length) {
@@ -467,11 +470,10 @@ const EditDrawer: React.FC<{
             </Form.Item>
           </Col>
         </Row>
-        <Row gutter={16}></Row>
         <Row gutter={16}>
           <Col span={24}>
             <Form.Item label={intl.get('Global.description')} name="comment">
-              <Input.TextArea placeholder={intl.get('Global.pleaseInput')} rows={3} maxLength={1000} showCount />
+              <Input.TextArea autoSize={{ minRows: 3, maxRows: 7 }} placeholder={intl.get('Global.pleaseInput')} maxLength={1000} showCount />
             </Form.Item>
           </Col>
         </Row>
