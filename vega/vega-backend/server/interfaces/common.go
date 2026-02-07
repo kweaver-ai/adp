@@ -19,7 +19,7 @@ const (
 
 	ACCOUNT_INFO_KEY contextKey = "x-account-info" // 避免直接使用string
 
-	NAME_MAX_LENGTH        = 128
+	NAME_MAX_LENGTH        = 255
 	DESCRIPTION_MAX_LENGTH = 1000
 	TAGS_MAX_NUMBER        = 5
 	TAG_MAX_LENGTH         = 40

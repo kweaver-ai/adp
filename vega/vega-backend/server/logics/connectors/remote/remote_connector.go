@@ -82,15 +82,19 @@ func (rc *RemoteConnector) New(cfg interfaces.ConnectorConfig) (connectors.Conne
 	}, nil
 }
 
-func (rc *RemoteConnector) Close(ctx context.Context) error {
-	return nil
-}
-
 func (rc *RemoteConnector) Connect(ctx context.Context) error {
 	return nil
 }
 
+func (rc *RemoteConnector) Close(ctx context.Context) error {
+	return nil
+}
+
 func (rc *RemoteConnector) Ping(ctx context.Context) error {
+	return nil
+}
+
+func (rc *RemoteConnector) TestConnection(ctx context.Context) error {
 	return nil
 }
 

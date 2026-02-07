@@ -45,6 +45,15 @@ var (
 	}
 )
 
+const (
+	// DATABASE_NAME_MAX_LENGTH MySQL 数据库名最大长度
+	DATABASE_NAME_MAX_LENGTH = 64
+	// PORT_MIN 有效端口最小值
+	PORT_MIN = 1
+	// PORT_MAX 有效端口最大值
+	PORT_MAX = 65535
+)
+
 // MySQLConnector implements TableConnector for MySQL.
 type MySQLConnector struct {
 	enabled bool
@@ -108,8 +117,7 @@ func (c *MySQLConnector) GetFieldConfig() map[string]interfaces.ConnectorFieldCo
 }
 
 // New creates a new MySQL connector.
-// Database 为可选字段，不指定时连接到实例级别。
-// New creates a new MySQL connector.
+// Databases 为可选字段，不指定时连接到实例级别。
 func (c *MySQLConnector) New(cfg interfaces.ConnectorConfig) (connectors.Connector, error) {
 	var mCfg mysqlConfig
 	if err := mapstructure.Decode(cfg, &mCfg); err != nil {
@@ -119,6 +127,19 @@ func (c *MySQLConnector) New(cfg interfaces.ConnectorConfig) (connectors.Connect
 	if mCfg.Host == "" || mCfg.Port == 0 || mCfg.Username == "" || mCfg.Password == "" {
 		return nil, fmt.Errorf("mysql connector config is incomplete")
 	}
+
+	// 验证端口号范围
+	if mCfg.Port < PORT_MIN || mCfg.Port > PORT_MAX {
+		return nil, fmt.Errorf("port %d is out of valid range (%d-%d)", mCfg.Port, PORT_MIN, PORT_MAX)
+	}
+
+	// 验证 databases 名称长度（MySQL 数据库名最大 64 字符）
+	for _, db := range mCfg.Databases {
+		if len(db) > DATABASE_NAME_MAX_LENGTH {
+			return nil, fmt.Errorf("database name '%s' exceeds maximum length of %d characters", db, DATABASE_NAME_MAX_LENGTH)
+		}
+	}
+
 	return &MySQLConnector{
 		config: &mCfg,
 	}, nil
@@ -157,6 +178,76 @@ func (c *MySQLConnector) Connect(ctx context.Context) error {
 
 	c.db = db
 	c.connected = true
+
+	return nil
+}
+
+// Close closes the database connection.
+func (c *MySQLConnector) Close(ctx context.Context) error {
+	if c.db != nil {
+		err := c.db.Close()
+		c.connected = false
+		c.db = nil
+		return err
+	}
+	return nil
+}
+
+// Ping checks the database connection.
+func (c *MySQLConnector) Ping(ctx context.Context) error {
+	if err := c.Connect(ctx); err != nil {
+		return err
+	}
+
+	return c.db.Ping()
+}
+
+// TestConnection tests the connection to MySQL database.
+func (c *MySQLConnector) TestConnection(ctx context.Context) error {
+	if err := c.Connect(ctx); err != nil {
+		return err
+	}
+
+	// 如果配置了 databases 列表，验证这些数据库是否存在
+	if len(c.config.Databases) > 0 {
+		if err := c.validateDatabases(ctx); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+// validateDatabases 验证配置的数据库是否存在
+func (c *MySQLConnector) validateDatabases(ctx context.Context) error {
+	// 获取所有数据库列表
+	rows, err := c.db.QueryContext(ctx, "SHOW DATABASES")
+	if err != nil {
+		return fmt.Errorf("failed to list databases: %w", err)
+	}
+	defer rows.Close()
+
+	existingDBs := make(map[string]bool)
+	for rows.Next() {
+		var dbName string
+		if err := rows.Scan(&dbName); err != nil {
+			return fmt.Errorf("failed to scan database name: %w", err)
+		}
+		existingDBs[dbName] = true
+	}
+
+	// 检查配置的数据库是否都存在
+	var notFoundDBs []string
+	for _, db := range c.config.Databases {
+		if !existingDBs[db] {
+			notFoundDBs = append(notFoundDBs, db)
+		}
+	}
+
+	if len(notFoundDBs) > 0 {
+		return fmt.Errorf("databases not found: %v", notFoundDBs)
+	}
+
 	return nil
 }
 
@@ -183,26 +274,6 @@ func (c *MySQLConnector) ListDatabases(ctx context.Context) ([]string, error) {
 		}
 	}
 	return databases, nil
-}
-
-// Close closes the database connection.
-func (c *MySQLConnector) Close(ctx context.Context) error {
-	if c.db != nil {
-		err := c.db.Close()
-		c.connected = false
-		c.db = nil
-		return err
-	}
-	return nil
-}
-
-// Ping checks the database connection.
-func (c *MySQLConnector) Ping(ctx context.Context) error {
-	if err := c.Connect(ctx); err != nil {
-		return err
-	}
-
-	return c.db.Ping()
 }
 
 // ListTables 返回数据库中的所有表。

@@ -120,10 +120,10 @@ CREATE TABLE IF NOT EXISTS t_catalog (
     f_health_check_result     TEXT NOT NULL COMMENT '健康检查结果',
 
     -- 审计字段
-    f_creator                 VARCHAR(128) COMMENT '创建者id',
+    f_creator                 VARCHAR(128) NOT NULL DEFAULT '' COMMENT '创建者id',
     f_creator_type            VARCHAR(20) NOT NULL DEFAULT '' COMMENT '创建者类型',
     f_create_time             BIGINT(20) NOT NULL DEFAULT 0 COMMENT '创建时间',
-    f_updater                 VARCHAR(128) COMMENT '更新者id',
+    f_updater                 VARCHAR(128) NOT NULL DEFAULT ''COMMENT '更新者id',
     f_updater_type            VARCHAR(20) NOT NULL DEFAULT '' COMMENT '更新者类型',
     f_update_time             BIGINT(20) NOT NULL DEFAULT 0 COMMENT '更新时间',
 
@@ -210,10 +210,10 @@ CREATE TABLE IF NOT EXISTS t_resource (
     f_sync_error_message      TEXT NOT NULL COMMENT '同步错误信息',
 
     -- 审计字段
-    f_creator                 VARCHAR(128) COMMENT '创建者id',
+    f_creator                 VARCHAR(128) NOT NULL DEFAULT '' COMMENT '创建者id',
     f_creator_type            VARCHAR(20) NOT NULL DEFAULT '' COMMENT '创建者类型',
     f_create_time             BIGINT(20) NOT NULL DEFAULT 0 COMMENT '创建时间',
-    f_updater                 VARCHAR(128) COMMENT '更新者id',
+    f_updater                 VARCHAR(128) NOT NULL DEFAULT '' COMMENT '更新者id',
     f_updater_type            VARCHAR(20) NOT NULL DEFAULT '' COMMENT '更新者类型',
     f_update_time             BIGINT(20) NOT NULL DEFAULT 0 COMMENT '更新时间',
 
@@ -329,7 +329,7 @@ CREATE TABLE IF NOT EXISTS t_discovery_task (
     f_result                  MEDIUMTEXT NOT NULL COMMENT '发现结果（JSON格式，包含发现的资源统计等）',
 
     -- 审计字段
-    f_creator                 VARCHAR(128) COMMENT '创建者id',
+    f_creator                 VARCHAR(128) NOT NULL DEFAULT '' COMMENT '创建者id',
     f_creator_type            VARCHAR(20) NOT NULL DEFAULT '' COMMENT '创建者类型',
     f_create_time             BIGINT(20) NOT NULL DEFAULT 0 COMMENT '创建时间',
 

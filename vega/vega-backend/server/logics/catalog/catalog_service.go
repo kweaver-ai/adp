@@ -103,9 +103,9 @@ func (cs *catalogService) Create(ctx context.Context, req *interfaces.CatalogReq
 				WithErrorDetails(err.Error())
 		}
 
-		if err := connector.Connect(ctx); err != nil {
-			logger.Errorf("Failed to connect to data source: %v", err)
-			o11y.Error(ctx, fmt.Sprintf("Failed to connect to data source: %v", err))
+		if err := connector.TestConnection(ctx); err != nil {
+			logger.Errorf("Failed to test connection to data source: %v", err)
+			o11y.Error(ctx, fmt.Sprintf("Failed to test connection to data source: %v", err))
 			span.SetStatus(codes.Error, "Connection failed")
 			connector.Close(ctx)
 			return "", rest.NewHTTPError(ctx, http.StatusBadRequest, oerrors.VegaManager_Catalog_InternalError_TestConnectionFailed).
@@ -254,7 +254,7 @@ func (cs *catalogService) Update(ctx context.Context, id string, req *interfaces
 	if catalog.ConnectorType != req.ConnectorType {
 		span.SetStatus(codes.Error, "can not change connector type")
 		return rest.NewHTTPError(ctx, http.StatusBadRequest, oerrors.VegaManager_Catalog_InvalidParameter_ConnectorType)
-	} else {
+	} else if req.ConnectorType != "" {
 		// 验证敏感字段是否为合法 RSA 密文，获取明文用于连接测试
 		sensitiveFields := factory.GetFactory().GetSensitiveFields(req.ConnectorType)
 		decryptedConfig, err := cs.validateAndDecryptSensitiveFields(sensitiveFields, req.ConnectorConfig)
@@ -277,9 +277,9 @@ func (cs *catalogService) Update(ctx context.Context, id string, req *interfaces
 				WithErrorDetails(err.Error())
 		}
 
-		if err := connector.Connect(ctx); err != nil {
-			logger.Errorf("Failed to connect to data source: %v", err)
-			o11y.Error(ctx, fmt.Sprintf("Failed to connect to data source: %v", err))
+		if err := connector.TestConnection(ctx); err != nil {
+			logger.Errorf("Failed to test connection to data source: %v", err)
+			o11y.Error(ctx, fmt.Sprintf("Failed to test connection to data source: %v", err))
 			span.SetStatus(codes.Error, "Connection failed")
 			connector.Close(ctx)
 			return rest.NewHTTPError(ctx, http.StatusBadRequest, oerrors.VegaManager_Catalog_InternalError_TestConnectionFailed).

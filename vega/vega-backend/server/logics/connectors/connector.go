@@ -32,6 +32,7 @@ type Connector interface {
 	Connect(ctx context.Context) error
 	Ping(ctx context.Context) error
 	Close(ctx context.Context) error
+	TestConnection(ctx context.Context) error
 
 	GetMetadata(ctx context.Context) (map[string]any, error)
 }
