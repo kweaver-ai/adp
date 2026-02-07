@@ -1,3 +1,7 @@
+# Copyright The kweaver.ai Authors.
+# Licensed under the Apache License, Version 2.0.
+# See the LICENSE file in the project root for details.
+
 ########################### Stage 0 ########################
 ARG BUILD_IMAGE=golang:1.24.11
 ARG BASE_IMAGE=ubuntu:24.04

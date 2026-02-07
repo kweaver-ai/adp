@@ -1,4 +1,10 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# Copyright The kweaver.ai Authors.
+#
+# Licensed under the Apache License, Version 2.0.
+# See the LICENSE file in the project root for details.
+
 """
 概念索引删除脚本
 功能：连接 OpenSearch 并删除概念索引 adp-kn_concept
@@ -157,9 +163,7 @@ class ConceptIndexDeleter:
             logger.info("-" * 60)
             logger.info(f"  索引名称: {CONCEPT_INDEX_NAME}")
             logger.info(f"  文档数: {index_info['docs']:,}")
-            logger.info(
-                f"  存储大小: {self._format_bytes(index_info['size'])}"
-            )
+            logger.info(f"  存储大小: {self._format_bytes(index_info['size'])}")
             logger.info("-" * 60)
         else:
             logger.warning("无法获取索引信息，将继续尝试删除")

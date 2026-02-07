@@ -1,3 +1,8 @@
+// Copyright The kweaver.ai Authors.
+//
+// Licensed under the Apache License, Version 2.0.
+// See the LICENSE file in the project root for details.
+
 // Code generated from SqlBase.g4 by ANTLR 4.13.2. DO NOT EDIT.
 
 package parsing

@@ -1,3 +1,8 @@
+// Copyright The kweaver.ai Authors.
+//
+// Licensed under the Apache License, Version 2.0.
+// See the LICENSE file in the project root for details.
+
 package data_type
 
 // // region 虚拟化引擎类型(非全部只定义了需要使用的)
