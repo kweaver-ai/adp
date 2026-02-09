@@ -16,7 +16,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/golang/mock/gomock"
 	"github.com/kweaver-ai/kweaver-go-lib/rest"
-	rmock "github.com/kweaver-ai/kweaver-go-lib/rest/mock"
+	
 	. "github.com/smartystreets/goconvey/convey"
 
 	"ontology-query/common"
@@ -37,12 +37,12 @@ func Test_RestHandler_GetActionsInActionTypeByIn(t *testing.T) {
 		defer mockCtrl.Finish()
 
 		appSetting := &common.AppSetting{}
-		hydra := rmock.NewMockHydra(mockCtrl)
+		as := dmock.NewMockAuthService(mockCtrl)
 		ats := dmock.NewMockActionTypeService(mockCtrl)
 		kns := dmock.NewMockKnowledgeNetworkService(mockCtrl)
 		ots := dmock.NewMockObjectTypeService(mockCtrl)
 
-		handler := MockNewRestHandler(appSetting, hydra, ats, kns, ots)
+		handler := MockNewRestHandler(appSetting, as, ats, kns, ots)
 		handler.RegisterPublic(engine)
 
 		knID := "kn1"
@@ -133,12 +133,12 @@ func Test_RestHandler_GetActionsInActionTypeByEx(t *testing.T) {
 		defer mockCtrl.Finish()
 
 		appSetting := &common.AppSetting{}
-		hydra := rmock.NewMockHydra(mockCtrl)
+		as := dmock.NewMockAuthService(mockCtrl)
 		ats := dmock.NewMockActionTypeService(mockCtrl)
 		kns := dmock.NewMockKnowledgeNetworkService(mockCtrl)
 		ots := dmock.NewMockObjectTypeService(mockCtrl)
 
-		handler := MockNewRestHandler(appSetting, hydra, ats, kns, ots)
+		handler := MockNewRestHandler(appSetting, as, ats, kns, ots)
 		handler.RegisterPublic(engine)
 
 		knID := "kn1"
@@ -156,7 +156,7 @@ func Test_RestHandler_GetActionsInActionTypeByEx(t *testing.T) {
 				ID:   "user1",
 				Type: rest.VisitorType_User,
 			}
-			hydra.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).Return(visitor, nil)
+			as.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).Return(visitor, nil)
 			ats.EXPECT().GetActionsByActionTypeID(gomock.Any(), gomock.Any()).Return(interfaces.Actions{
 				Actions: []interfaces.ActionParam{
 					{
@@ -177,7 +177,7 @@ func Test_RestHandler_GetActionsInActionTypeByEx(t *testing.T) {
 		})
 
 		Convey("失败 - Token验证失败", func() {
-			hydra.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).Return(rest.Visitor{}, rest.NewHTTPError(context.TODO(), http.StatusUnauthorized, rest.PublicError_Unauthorized))
+			as.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).Return(rest.Visitor{}, rest.NewHTTPError(context.TODO(), http.StatusUnauthorized, rest.PublicError_Unauthorized))
 
 			reqParamByte, _ := sonic.Marshal(actionQuery)
 			req := httptest.NewRequest(http.MethodPost, url, bytes.NewReader(reqParamByte))
@@ -202,12 +202,12 @@ func Test_RestHandler_GetActionsInActionType(t *testing.T) {
 		defer mockCtrl.Finish()
 
 		appSetting := &common.AppSetting{}
-		hydra := rmock.NewMockHydra(mockCtrl)
+		as := dmock.NewMockAuthService(mockCtrl)
 		ats := dmock.NewMockActionTypeService(mockCtrl)
 		kns := dmock.NewMockKnowledgeNetworkService(mockCtrl)
 		ots := dmock.NewMockObjectTypeService(mockCtrl)
 
-		handler := MockNewRestHandler(appSetting, hydra, ats, kns, ots)
+		handler := MockNewRestHandler(appSetting, as, ats, kns, ots)
 
 		knID := "kn1"
 		atID := "at1"
