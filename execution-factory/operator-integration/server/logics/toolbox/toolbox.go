@@ -51,7 +51,7 @@ func (s *ToolServiceImpl) GetToolBox(ctx context.Context, req *interfaces.GetToo
 		return
 	}
 	if !exist {
-		err = errors.NewHTTPError(ctx, http.StatusBadRequest, errors.ErrExtToolBoxNotFound,
+		err = errors.NewHTTPError(ctx, http.StatusNotFound, errors.ErrExtToolBoxNotFound,
 			fmt.Sprintf("toolbox %s not found", req.BoxID))
 		return
 	}
