@@ -8,15 +8,14 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/config"
-	"github.com/aws/aws-sdk-go-v2/credentials"
-	"github.com/aws/aws-sdk-go-v2/service/s3"
-	awsS3 "github.com/aws/aws-sdk-go-v2/service/s3"
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/credentials"
+	"github.com/aws/aws-sdk-go/aws/session"
+	"github.com/aws/aws-sdk-go/service/s3"
 )
 
 type S3Connection struct {
-	client          *awsS3.Client
+	client          *s3.S3
 	Name            string `json:"name"`
 	Endpoint        string `json:"endpoint"`
 	Region          string `json:"region"`
@@ -32,46 +31,27 @@ func (c *S3Connection) InitClient() error {
 		return nil
 	}
 
-	cfg, err := config.LoadDefaultConfig(
-		context.TODO(),
-		config.WithRegion(c.Region),
-		config.WithCredentialsProvider(credentials.NewStaticCredentialsProvider(
-			c.AccessKeyID,
-			c.SecretAccessKey,
-			"",
-		)),
-	)
-
-	if err != nil {
-		return fmt.Errorf("failed to load AWS config: %w", err)
+	awsConfig := &aws.Config{
+		Endpoint:         aws.String(c.Endpoint),
+		Region:           aws.String(c.Region),
+		Credentials:      credentials.NewStaticCredentials(c.AccessKeyID, c.SecretAccessKey, ""),
+		DisableSSL:       aws.Bool(c.DisableHTTPS),
+		S3ForcePathStyle: aws.Bool(true),
 	}
 
-	var s3Opts []func(*awsS3.Options)
-
-	if c.Endpoint != "" {
-		s3Opts = append(s3Opts, func(o *awsS3.Options) {
-			o.BaseEndpoint = aws.String(c.Endpoint)
-			o.UsePathStyle = true
-			o.EndpointOptions.DisableHTTPS = c.DisableHTTPS
-		})
-	}
-
-	// https 模式下跳过证书验证
 	if c.SkipVerify && !c.DisableHTTPS {
-		httpClient := &http.Client{
-			Transport: &http.Transport{
-				TLSClientConfig: &tls.Config{
-					InsecureSkipVerify: true,
-				},
-			},
+		tr := &http.Transport{
+			TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
 		}
-		s3Opts = append(s3Opts, func(o *awsS3.Options) {
-			o.HTTPClient = httpClient
-		})
+		awsConfig.HTTPClient = &http.Client{Transport: tr}
 	}
 
-	// 创建 S3 客户端
-	c.client = awsS3.NewFromConfig(cfg, s3Opts...)
+	sess, err := session.NewSession(awsConfig)
+	if err != nil {
+		return fmt.Errorf("failed to create AWS session: %w", err)
+	}
+
+	c.client = s3.New(sess)
 
 	return nil
 }
@@ -82,27 +62,18 @@ func (c *S3Connection) GetDownloadURL(ctx context.Context, key string, expires i
 		return "", err
 	}
 
-	// 1. 创建预签名客户端
-	presignClient := s3.NewPresignClient(c.client)
-
-	// 2. 构建请求参数
-	// expires 单位通常为秒
-	duration := time.Duration(expires) * time.Second
-
-	// 3. 调用 PresignGetObject
-	presignedRequest, err := presignClient.PresignGetObject(ctx, &s3.GetObjectInput{
+	req, _ := c.client.GetObjectRequest(&s3.GetObjectInput{
 		Bucket: aws.String(c.BucketName),
 		Key:    aws.String(key),
-	}, func(opts *s3.PresignOptions) {
-		opts.Expires = duration
 	})
 
+	duration := time.Duration(expires) * time.Second
+	urlStr, err := req.Presign(duration)
 	if err != nil {
 		return "", fmt.Errorf("failed to generate presigned URL: %w", err)
 	}
 
-	// 返回生成的 URL
-	return presignedRequest.URL, nil
+	return urlStr, nil
 }
 
 func (c *S3Connection) DeleteObject(ctx context.Context, key string) error {
@@ -110,7 +81,7 @@ func (c *S3Connection) DeleteObject(ctx context.Context, key string) error {
 		return fmt.Errorf("s3 client is not initialized")
 	}
 
-	_, err := c.client.DeleteObject(ctx, &awsS3.DeleteObjectInput{
+	_, err := c.client.DeleteObjectWithContext(ctx, &s3.DeleteObjectInput{
 		Bucket: aws.String(c.BucketName),
 		Key:    aws.String(key),
 	})
@@ -123,10 +94,10 @@ func (c *S3Connection) UploadObject(ctx context.Context, key string, file io.Rea
 		return fmt.Errorf("s3 client is not initialized")
 	}
 
-	_, err := c.client.PutObject(ctx, &awsS3.PutObjectInput{
+	_, err := c.client.PutObjectWithContext(ctx, &s3.PutObjectInput{
 		Bucket:        aws.String(c.BucketName),
 		Key:           aws.String(key),
-		Body:          file,
+		Body:          aws.ReadSeekCloser(file),
 		ContentLength: aws.Int64(size),
 	})
 
@@ -138,7 +109,7 @@ func (c *S3Connection) GetObjectSize(ctx context.Context, key string) (int64, er
 		return 0, fmt.Errorf("s3 client is not initialized")
 	}
 
-	resp, err := c.client.HeadObject(ctx, &awsS3.HeadObjectInput{
+	resp, err := c.client.HeadObjectWithContext(ctx, &s3.HeadObjectInput{
 		Bucket: aws.String(c.BucketName),
 		Key:    aws.String(key),
 	})
@@ -155,7 +126,7 @@ func (c *S3Connection) GetObject(ctx context.Context, key string) (io.ReadCloser
 		return nil, fmt.Errorf("s3 client is not initialized")
 	}
 
-	resp, err := c.client.GetObject(ctx, &awsS3.GetObjectInput{
+	resp, err := c.client.GetObjectWithContext(ctx, &s3.GetObjectInput{
 		Bucket: aws.String(c.BucketName),
 		Key:    aws.String(key),
 	})
