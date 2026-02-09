@@ -87,6 +87,7 @@ func (r *restHandler) CreateCatalog(c *gin.Context) {
 		httpErr := err.(*rest.HTTPError)
 		o11y.AddHttpAttrs4HttpError(span, httpErr)
 		rest.ReplyError(c, httpErr)
+		return
 	}
 
 	// Check if name exists
@@ -193,6 +194,7 @@ func (r *restHandler) UpdateCatalog(c *gin.Context) {
 		httpErr := err.(*rest.HTTPError)
 		o11y.AddHttpAttrs4HttpError(span, httpErr)
 		rest.ReplyError(c, httpErr)
+		return
 	}
 
 	// Check if id exists
