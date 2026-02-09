@@ -76,7 +76,6 @@ type Config struct {
 	BusinessDomain           BusinessDomain           `mapstructure:"business_domain"`
 	AccessAddress            AccessAddress            `mapstructure:"access_address"`
 	Sandbox                  Sandbox                  `mapstructure:"sandbox"`
-	S3                       S3                       `mapstructure:"s3"`
 }
 
 type DagInstanceEventArchivePolicy string
@@ -505,17 +504,6 @@ type AccessAddress struct {
 	Port   string `mapstructure:"port"`
 	Schema string `mapstructure:"schema"`
 	Path   string `mapstructure:"path"`
-}
-
-// S3 S3存储配置
-type S3 struct {
-	Endpoint        string `mapstructure:"endpoint"`
-	Region          string `mapstructure:"region"`
-	AccessKeyID     string `mapstructure:"access_key_id"`
-	SecretAccessKey string `mapstructure:"secret_access_key"`
-	BucketName      string `mapstructure:"bucket_name"`
-	UseSSL          bool   `mapstructure:"use_ssl"`
-	SkipVerify      bool   `mapstructure:"skip_verify"`
 }
 
 // DSN 获取连接地址

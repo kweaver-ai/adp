@@ -21,6 +21,7 @@ import (
 	ierrors "github.com/kweaver-ai/adp/autoflow/flow-automation/errors"
 	libErrors "github.com/kweaver-ai/adp/autoflow/flow-automation/libs/go/errors"
 	threadPool "github.com/kweaver-ai/adp/autoflow/flow-automation/libs/go/pools"
+	"github.com/kweaver-ai/adp/autoflow/flow-automation/libs/go/s3"
 	cstore "github.com/kweaver-ai/adp/autoflow/flow-automation/libs/go/store"
 	traceLog "github.com/kweaver-ai/adp/autoflow/flow-automation/libs/go/telemetry/log"
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/libs/go/telemetry/trace"
@@ -450,15 +451,25 @@ func NewMgnt() MgntHandler {
 		}
 
 		// Initialize S3 adapter if configured
-		if s3cfg, err := pkgconfig.LoadS3Config(); err == nil {
+		s3Conn := s3.NewS3().GetDefaultConnection()
+		if s3Conn != nil {
+			s3cfg := &pkgconfig.S3Config{
+				Endpoint:        s3Conn.Endpoint,
+				Region:          s3Conn.Region,
+				AccessKeyID:     s3Conn.AccessKeyID,
+				SecretAccessKey: s3Conn.SecretAccessKey,
+				BucketName:      s3Conn.BucketName,
+				UseSSL:          !s3Conn.DisableHTTPS,
+				SkipVerify:      s3Conn.SkipVerify,
+			}
 			if s3Adapter, err := drivenadapters.NewS3Adapter(s3cfg); err == nil {
 				mIns.s3Adapter = s3Adapter
 				log.Info("[mgnt.NewMgnt] S3 adapter initialized successfully")
 			} else {
 				log.Warnf("[mgnt.NewMgnt] Failed to create S3 adapter: %v", err)
 			}
-		} else if pkgconfig.IsS3Configured() {
-			log.Warnf("[mgnt.NewMgnt] S3 is configured but failed to load config: %v", err)
+		} else {
+			log.Warnf("[mgnt.NewMgnt] S3 connection not found or failed to load")
 		}
 
 		perm.RegisterChecker(common.DagTypeDataFlow, &perm.DataFlowDagPermChecker{PermPolicy: perm.NewPermPolicy()})

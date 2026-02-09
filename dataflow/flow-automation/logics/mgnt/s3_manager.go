@@ -10,6 +10,7 @@ import (
 
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/common"
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/drivenadapters"
+	"github.com/kweaver-ai/adp/autoflow/flow-automation/libs/go/s3"
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/pkg/entity"
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/pkg/log"
 )
@@ -40,11 +41,12 @@ func (m *mgnt) ValidateS3Config(ctx context.Context, bucket, path, mode string) 
 		return nil, fmt.Errorf("unsupported mode: %s", mode)
 	}
 
-	// 使用系统配置的Bucket
-	sysBucket := m.config.S3.BucketName
-	if sysBucket == "" {
-		return nil, fmt.Errorf("system S3 bucket not configured")
+	// 使用libs/go/s3的Bucket
+	conn := s3.NewS3().GetDefaultConnection()
+	if conn == nil {
+		return nil, fmt.Errorf("system S3 connection not configured")
 	}
+	sysBucket := conn.BucketName
 
 	// 验证Bucket
 	if err := m.s3Adapter.ValidateBucket(ctx, sysBucket); err != nil {
@@ -67,10 +69,11 @@ func (m *mgnt) ValidateS3Config(ctx context.Context, bucket, path, mode string) 
 // UploadS3File 上传S3文件
 func (m *mgnt) UploadS3File(ctx context.Context, dagID string, fileHeader *multipart.FileHeader, userInfo *drivenadapters.UserInfo) (*S3DataItem, error) {
 	// 1. 验证系统S3配置
-	sysBucket := m.config.S3.BucketName
-	if sysBucket == "" {
-		return nil, fmt.Errorf("system S3 bucket not configured")
+	conn := s3.NewS3().GetDefaultConnection()
+	if conn == nil {
+		return nil, fmt.Errorf("system S3 connection not configured")
 	}
+	sysBucket := conn.BucketName
 
 	if m.s3Adapter == nil {
 		return nil, fmt.Errorf("S3 adapter not initialized")
@@ -111,7 +114,7 @@ func (m *mgnt) UploadS3File(ctx context.Context, dagID string, fileHeader *multi
 	if err != nil {
 		log.Warnf("[mgnt.UploadS3File] GeneratePresignedURL failed: %v", err)
 		// fallback
-		downloadURL = fmt.Sprintf("%s/%s/%s", m.config.S3.Endpoint, sysBucket, key)
+		downloadURL = fmt.Sprintf("%s/%s/%s", conn.Endpoint, sysBucket, key)
 	}
 
 	// 7. 返回结果
@@ -132,10 +135,11 @@ func (m *mgnt) UploadS3File(ctx context.Context, dagID string, fileHeader *multi
 // ListS3Files 列举S3文件
 func (m *mgnt) ListS3Files(ctx context.Context, dagID string, userInfo *drivenadapters.UserInfo) ([]*S3DataItem, error) {
 	// 1. 验证系统S3配置
-	sysBucket := m.config.S3.BucketName
-	if sysBucket == "" {
-		return nil, fmt.Errorf("system S3 bucket not configured")
+	conn := s3.NewS3().GetDefaultConnection()
+	if conn == nil {
+		return nil, fmt.Errorf("system S3 connection not configured")
 	}
+	sysBucket := conn.BucketName
 
 	if m.s3Adapter == nil {
 		return nil, fmt.Errorf("S3 adapter not initialized")
@@ -166,7 +170,7 @@ func (m *mgnt) ListS3Files(ctx context.Context, dagID string, userInfo *drivenad
 		downloadURL, err := m.s3Adapter.GeneratePresignedURL(ctx, sysBucket, obj.Key, 7*24*time.Hour)
 		if err != nil {
 			log.Warnf("[mgnt.ListS3Files] GeneratePresignedURL failed for %s: %v", obj.Key, err)
-			downloadURL = fmt.Sprintf("%s/%s/%s", m.config.S3.Endpoint, sysBucket, obj.Key)
+			downloadURL = fmt.Sprintf("%s/%s/%s", conn.Endpoint, sysBucket, obj.Key)
 		}
 
 		items = append(items, &S3DataItem{
@@ -187,10 +191,11 @@ func (m *mgnt) ListS3Files(ctx context.Context, dagID string, userInfo *drivenad
 // DeleteS3File 删除S3文件
 func (m *mgnt) DeleteS3File(ctx context.Context, dagID, key string, userInfo *drivenadapters.UserInfo) error {
 	// 1. 验证系统S3配置
-	sysBucket := m.config.S3.BucketName
-	if sysBucket == "" {
-		return fmt.Errorf("system S3 bucket not configured")
+	conn := s3.NewS3().GetDefaultConnection()
+	if conn == nil {
+		return fmt.Errorf("system S3 connection not configured")
 	}
+	sysBucket := conn.BucketName
 
 	if m.s3Adapter == nil {
 		return fmt.Errorf("S3 adapter not initialized")
@@ -219,10 +224,11 @@ func (m *mgnt) DeleteS3File(ctx context.Context, dagID, key string, userInfo *dr
 // MoveS3Files 移动S3文件或目录 (用于从临时目录移动到正式目录)
 // sources: key或path的列表
 func (m *mgnt) MoveS3Files(ctx context.Context, sources []string, targetDagID string) ([]string, error) {
-	sysBucket := m.config.S3.BucketName
-	if sysBucket == "" {
-		return nil, fmt.Errorf("system S3 bucket not configured")
+	conn := s3.NewS3().GetDefaultConnection()
+	if conn == nil {
+		return nil, fmt.Errorf("system S3 connection not configured")
 	}
+	sysBucket := conn.BucketName
 
 	if m.s3Adapter == nil {
 		return nil, fmt.Errorf("S3 adapter not initialized")
@@ -314,10 +320,11 @@ func (m *mgnt) handleS3DataSource(ctx context.Context, dag *entity.Dag, dagIns *
 	}
 
 	// 获取系统配置的Bucket
-	sysBucket := m.config.S3.BucketName
-	if sysBucket == "" {
-		return fmt.Errorf("system S3 bucket not configured")
+	conn := s3.NewS3().GetDefaultConnection()
+	if conn == nil {
+		return fmt.Errorf("system S3 connection not configured")
 	}
+	sysBucket := conn.BucketName
 
 	// 获取S3适配器
 	s3Adapter := m.s3Adapter
@@ -380,7 +387,7 @@ func (m *mgnt) handleS3DataSource(ctx context.Context, dag *entity.Dag, dagIns *
 			downloadURL, err := s3Adapter.GeneratePresignedURL(ctx, sysBucket, effectiveKey, 7*24*time.Hour)
 			if err != nil {
 				log.Warnf("[mgnt.handleS3DataSource] Failed to generate presigned URL for %s: %v", effectiveKey, err)
-				downloadURL = fmt.Sprintf("%s/%s/%s", m.config.S3.Endpoint, sysBucket, effectiveKey)
+				downloadURL = fmt.Sprintf("%s/%s/%s", conn.Endpoint, sysBucket, effectiveKey)
 			}
 
 			// 获取对象元数据
@@ -427,7 +434,7 @@ func (m *mgnt) handleS3DataSource(ctx context.Context, dag *entity.Dag, dagIns *
 			id := fmt.Sprintf("%s/%s", sysBucket, obj.Key)
 			downloadURL, err := s3Adapter.GeneratePresignedURL(ctx, sysBucket, obj.Key, 7*24*time.Hour)
 			if err != nil {
-				downloadURL = fmt.Sprintf("%s/%s/%s", m.config.S3.Endpoint, sysBucket, obj.Key)
+				downloadURL = fmt.Sprintf("%s/%s/%s", conn.Endpoint, sysBucket, obj.Key)
 			}
 
 			allItems = append(allItems, S3DataItem{
@@ -462,10 +469,11 @@ func (m *mgnt) handleS3DataSource(ctx context.Context, dag *entity.Dag, dagIns *
 // GetS3FileDownloadURL 获取S3文件下载链接
 func (m *mgnt) GetS3FileDownloadURL(ctx context.Context, dagID, key string, userInfo *drivenadapters.UserInfo) (string, error) {
 	// 1. 验证系统S3配置
-	sysBucket := m.config.S3.BucketName
-	if sysBucket == "" {
-		return "", fmt.Errorf("system S3 bucket not configured")
+	conn := s3.NewS3().GetDefaultConnection()
+	if conn == nil {
+		return "", fmt.Errorf("system S3 connection not configured")
 	}
+	sysBucket := conn.BucketName
 
 	if m.s3Adapter == nil {
 		return "", fmt.Errorf("S3 adapter not initialized")
