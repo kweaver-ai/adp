@@ -1,4 +1,10 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# Copyright The kweaver.ai Authors.
+#
+# Licensed under the Apache License, Version 2.0.
+# See the LICENSE file in the project root for details.
+
 """
 OpenSearch索引清理脚本
 功能：检查所有OpenSearch中的索引，删除不在失败或取消的job对应的task中的索引

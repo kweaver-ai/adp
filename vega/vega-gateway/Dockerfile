@@ -1,3 +1,7 @@
+# Copyright The kweaver.ai Authors.
+# Licensed under the Apache License, Version 2.0.
+# See the LICENSE file in the project root for details.
+
 FROM acr.aishu.cn/af/openjdk:8u342-bullseye-all
 ENV TZ=Asia/Shanghai
 ENV JAVA_OPTS="-Xms256m -Xmx1024m"

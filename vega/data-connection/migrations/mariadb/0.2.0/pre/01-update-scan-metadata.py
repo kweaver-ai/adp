@@ -1,5 +1,10 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+# Copyright The kweaver.ai Authors.
+#
+# Licensed under the Apache License, Version 2.0.
+# See the LICENSE file in the project root for details.
+
 import os
 
 import rdsdriver
@@ -8,13 +13,14 @@ import rdsdriver
 def get_conn(user, password, host, port, database):
     """获取数据库连接，支持多租户模式"""
     try:
-
-        conn = rdsdriver.connect(host=host,
-                                 port=int(port),
-                                 user=user,
-                                 password=password,
-                                 database=database,
-                                 autocommit=False)
+        conn = rdsdriver.connect(
+            host=host,
+            port=int(port),
+            user=user,
+            password=password,
+            database=database,
+            autocommit=False,
+        )
     except Exception as e:
         print(f"connect database error: {str(e)}")
         raise e
@@ -181,15 +187,17 @@ on t1.f_table_id=t2.f_id;
 if __name__ == "__main__":
     try:
         # 从环境变量获取数据库连接信息
-        conn = get_conn(os.environ["DB_USER"],
-                        os.environ["DB_PASSWD"],
-                        os.environ["DB_HOST"],
-                        os.environ["DB_PORT"],
-                        "adp")
+        conn = get_conn(
+            os.environ["DB_USER"],
+            os.environ["DB_PASSWD"],
+            os.environ["DB_HOST"],
+            os.environ["DB_PORT"],
+            "adp",
+        )
         migrate_data_source(conn)
     except Exception as e:
         print(f"执行过程中发生错误: {str(e)}")
         raise e
     finally:
-        if 'conn' in locals() and conn:
+        if "conn" in locals() and conn:
             conn.close()
