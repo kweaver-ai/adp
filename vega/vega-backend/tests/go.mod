@@ -1,6 +1,8 @@
 module vega-backend-tests
 
-go 1.24.3
+go 1.24.0
+
+toolchain go1.24.11
 
 require (
 	github.com/kweaver-ai/kweaver-go-lib v1.0.3-0.20260202054858-6bd59c1aca87
