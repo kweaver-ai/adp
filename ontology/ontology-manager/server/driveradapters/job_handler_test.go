@@ -19,18 +19,17 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/golang/mock/gomock"
 	"github.com/kweaver-ai/kweaver-go-lib/rest"
-	rmock "github.com/kweaver-ai/kweaver-go-lib/rest/mock"
 	. "github.com/smartystreets/goconvey/convey"
 )
 
 func MockNewJobRestHandler(appSetting *common.AppSetting,
-	hydra rest.Hydra,
+	as interfaces.AuthService,
 	js interfaces.JobService,
 	kns interfaces.KNService) (r *restHandler) {
 
 	r = &restHandler{
 		appSetting: appSetting,
-		hydra:      hydra,
+		as:         as,
 		js:         js,
 		kns:        kns,
 	}
@@ -49,14 +48,14 @@ func Test_JobRestHandler_CreateJob(t *testing.T) {
 		defer mockCtrl.Finish()
 
 		appSetting := &common.AppSetting{}
-		hydra := rmock.NewMockHydra(mockCtrl)
+		as := dmock.NewMockAuthService(mockCtrl)
 		js := dmock.NewMockJobService(mockCtrl)
 		kns := dmock.NewMockKNService(mockCtrl)
 
-		handler := MockNewJobRestHandler(appSetting, hydra, js, kns)
+		handler := MockNewJobRestHandler(appSetting, as, js, kns)
 		handler.RegisterPublic(engine)
 
-		hydra.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(rest.Visitor{}, nil)
+		as.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(rest.Visitor{}, nil)
 
 		knID := "kn1"
 		url := "/api/ontology-manager/v1/knowledge-networks/" + knID + "/jobs"
@@ -170,14 +169,14 @@ func Test_JobRestHandler_DeleteJobs(t *testing.T) {
 		defer mockCtrl.Finish()
 
 		appSetting := &common.AppSetting{}
-		hydra := rmock.NewMockHydra(mockCtrl)
+		as := dmock.NewMockAuthService(mockCtrl)
 		js := dmock.NewMockJobService(mockCtrl)
 		kns := dmock.NewMockKNService(mockCtrl)
 
-		handler := MockNewJobRestHandler(appSetting, hydra, js, kns)
+		handler := MockNewJobRestHandler(appSetting, as, js, kns)
 		handler.RegisterPublic(engine)
 
-		hydra.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(rest.Visitor{}, nil)
+		as.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(rest.Visitor{}, nil)
 
 		knID := "kn1"
 		jobIDs := "job1,job2"
@@ -235,14 +234,14 @@ func Test_JobRestHandler_ListJobs(t *testing.T) {
 		defer mockCtrl.Finish()
 
 		appSetting := &common.AppSetting{}
-		hydra := rmock.NewMockHydra(mockCtrl)
+		as := dmock.NewMockAuthService(mockCtrl)
 		js := dmock.NewMockJobService(mockCtrl)
 		kns := dmock.NewMockKNService(mockCtrl)
 
-		handler := MockNewJobRestHandler(appSetting, hydra, js, kns)
+		handler := MockNewJobRestHandler(appSetting, as, js, kns)
 		handler.RegisterPublic(engine)
 
-		hydra.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(rest.Visitor{}, nil)
+		as.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(rest.Visitor{}, nil)
 
 		knID := "kn1"
 		url := "/api/ontology-manager/v1/knowledge-networks/" + knID + "/jobs"
@@ -330,14 +329,14 @@ func Test_JobRestHandler_ListTasks(t *testing.T) {
 		defer mockCtrl.Finish()
 
 		appSetting := &common.AppSetting{}
-		hydra := rmock.NewMockHydra(mockCtrl)
+		as := dmock.NewMockAuthService(mockCtrl)
 		js := dmock.NewMockJobService(mockCtrl)
 		kns := dmock.NewMockKNService(mockCtrl)
 
-		handler := MockNewJobRestHandler(appSetting, hydra, js, kns)
+		handler := MockNewJobRestHandler(appSetting, as, js, kns)
 		handler.RegisterPublic(engine)
 
-		hydra.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(rest.Visitor{}, nil)
+		as.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(rest.Visitor{}, nil)
 
 		knID := "kn1"
 		jobID := "job1"

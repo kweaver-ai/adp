@@ -13,17 +13,18 @@ import (
 
 var (
 	DB  *sql.DB
+	AA  interfaces.AuthAccess
 	ASA interfaces.ActionScheduleAccess
 	ATA interfaces.ActionTypeAccess
 	BSA interfaces.BusinessSystemAccess
 	CGA interfaces.ConceptGroupAccess
-	KNA interfaces.KNAccess
 	DDA interfaces.DataModelAccess
 	DVA interfaces.DataViewAccess
 	JA  interfaces.JobAccess
+	KNA interfaces.KNAccess
 	MFA interfaces.ModelFactoryAccess
-	OTA interfaces.ObjectTypeAccess
 	OSA interfaces.OpenSearchAccess
+	OTA interfaces.ObjectTypeAccess
 	PA  interfaces.PermissionAccess
 	RTA interfaces.RelationTypeAccess
 	UMA interfaces.UserMgmtAccess
@@ -33,8 +34,32 @@ func SetDB(db *sql.DB) {
 	DB = db
 }
 
+func SetAuthAccess(aa interfaces.AuthAccess) {
+	AA = aa
+}
+
+func SetActionScheduleAccess(asa interfaces.ActionScheduleAccess) {
+	ASA = asa
+}
+
+func SetActionTypeAccess(ata interfaces.ActionTypeAccess) {
+	ATA = ata
+}
+
+func SetBusinessSystemAccess(bsa interfaces.BusinessSystemAccess) {
+	BSA = bsa
+}
+
 func SetConceptGroupAccess(cga interfaces.ConceptGroupAccess) {
 	CGA = cga
+}
+
+func SetDataModelAccess(dda interfaces.DataModelAccess) {
+	DDA = dda
+}
+
+func SetDataViewAccess(dva interfaces.DataViewAccess) {
+	DVA = dva
 }
 
 func SetJobAccess(ja interfaces.JobAccess) {
@@ -49,20 +74,12 @@ func SetModelFactoryAccess(mfa interfaces.ModelFactoryAccess) {
 	MFA = mfa
 }
 
-func SetDataModelAccess(dda interfaces.DataModelAccess) {
-	DDA = dda
-}
-
-func SetDataViewAccess(dda interfaces.DataViewAccess) {
-	DVA = dda
+func SetOpenSearchAccess(osa interfaces.OpenSearchAccess) {
+	OSA = osa
 }
 
 func SetObjectTypeAccess(ota interfaces.ObjectTypeAccess) {
 	OTA = ota
-}
-
-func SetOpenSearchAccess(i interfaces.OpenSearchAccess) {
-	OSA = i
 }
 
 func SetPermissionAccess(pa interfaces.PermissionAccess) {
@@ -73,18 +90,6 @@ func SetRelationTypeAccess(rta interfaces.RelationTypeAccess) {
 	RTA = rta
 }
 
-func SetActionScheduleAccess(asa interfaces.ActionScheduleAccess) {
-	ASA = asa
-}
-
-func SetActionTypeAccess(ata interfaces.ActionTypeAccess) {
-	ATA = ata
-}
-
 func SetUserMgmtAccess(uma interfaces.UserMgmtAccess) {
 	UMA = uma
-}
-
-func SetBusinessSystemAccess(bsa interfaces.BusinessSystemAccess) {
-	BSA = bsa
 }

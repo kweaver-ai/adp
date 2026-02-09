@@ -23,6 +23,7 @@ import (
 	"ontology-manager/interfaces"
 	"ontology-manager/logics/action_schedule"
 	"ontology-manager/logics/action_type"
+	"ontology-manager/logics/auth"
 	"ontology-manager/logics/concept_group"
 	"ontology-manager/logics/job"
 	"ontology-manager/logics/knowledge_network"
@@ -37,7 +38,7 @@ type RestHandler interface {
 
 type restHandler struct {
 	appSetting *common.AppSetting
-	hydra      rest.Hydra
+	as         interfaces.AuthService
 	ass        interfaces.ActionScheduleService
 	ats        interfaces.ActionTypeService
 	cgs        interfaces.ConceptGroupService
@@ -50,7 +51,7 @@ type restHandler struct {
 func NewRestHandler(appSetting *common.AppSetting) RestHandler {
 	r := &restHandler{
 		appSetting: appSetting,
-		hydra:      rest.NewHydra(appSetting.HydraAdminSetting),
+		as:         auth.NewAuthService(appSetting),
 		ass:        action_schedule.NewActionScheduleService(appSetting),
 		ats:        action_type.NewActionTypeService(appSetting),
 		cgs:        concept_group.NewConceptGroupService(appSetting),
@@ -231,7 +232,11 @@ func (r *restHandler) AccessLog() gin.HandlerFunc {
 
 // 校验oauth
 func (r *restHandler) verifyOAuth(ctx context.Context, c *gin.Context) (rest.Visitor, error) {
-	vistor, err := r.hydra.VerifyToken(ctx, c)
+	if !common.GetAuthEnabled() {
+		return GenerateVisitor(c), nil
+	}
+
+	vistor, err := r.as.VerifyToken(ctx, c)
 	if err != nil {
 		httpErr := rest.NewHTTPError(ctx, http.StatusUnauthorized, rest.PublicError_Unauthorized).
 			WithErrorDetails(err.Error())

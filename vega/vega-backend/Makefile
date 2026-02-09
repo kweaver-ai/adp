@@ -8,28 +8,28 @@ help:
 	@echo "运行AT测试前的准备工作:"
 	@echo "  1. 启动VEGA Manager服务 (cd server && go run main.go)"
 	@echo "  2. 准备测试目标MySQL"
-	@echo "  3. 配置测试文件: server/tests/at/testdata/test-config.yaml"
+	@echo "  3. 配置测试文件: tests/at/testdata/test-config.yaml"
 
 .PHONY: test-at
 test-at: test-at-setup
 	@echo "运行AT测试..."
 	@echo ""
-	cd server && go test -v ./tests/at/... -timeout 5m
+	cd tests && go test -v ./at/... -timeout 5m
 
 .PHONY: test-at-catalog
 test-at-catalog: test-at-setup
 	@echo "运行Catalog AT测试..."
 	@echo ""
-	cd server && go test -v ./tests/at/catalog/... -timeout 2m
+	cd tests && go test -v ./at/catalog/... -timeout 2m
 
 .PHONY: test-at-setup
 test-at-setup:
 	@echo "检查AT测试配置..."
-	@if [ ! -f server/tests/at/testdata/test-config.yaml ]; then \
+	@if [ ! -f tests/at/testdata/test-config.yaml ]; then \
 		echo "❌ 错误: 测试配置文件不存在"; \
 		echo ""; \
 		echo "请执行以下步骤:"; \
-		echo "  1. 复制配置模板: cp server/tests/at/testdata/test-config.yaml.example server/tests/at/testdata/test-config.yaml"; \
+		echo "  1. 复制配置模板: cp tests/at/testdata/test-config.yaml.example tests/at/testdata/test-config.yaml"; \
 		echo "  2. 编辑 test-config.yaml，填入实际的连接信息"; \
 		echo ""; \
 		exit 1; \
@@ -45,17 +45,17 @@ test-at-setup:
 test-at-verbose: test-at-setup
 	@echo "运行AT测试（详细输出）..."
 	@echo ""
-	cd server && go test -v -count=1 ./tests/at/... -timeout 5m
+	cd tests && go test -v -count=1 ./at/... -timeout 5m
 
 .PHONY: test-at-catalog-verbose
 test-at-catalog-verbose: test-at-setup
 	@echo "运行Catalog AT测试（详细输出）..."
 	@echo ""
-	cd server && go test -v -count=1 ./tests/at/catalog/... -timeout 2m
+	cd tests && go test -v -count=1 ./at/catalog/... -timeout 2m
 
 .PHONY: clean-test
 clean-test:
 	@echo "清理测试输出..."
-	cd server && rm -f coverage.out
+	cd tests && rm -f coverage.out
 
 .DEFAULT_GOAL := help

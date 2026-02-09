@@ -19,18 +19,17 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/golang/mock/gomock"
 	"github.com/kweaver-ai/kweaver-go-lib/rest"
-	rmock "github.com/kweaver-ai/kweaver-go-lib/rest/mock"
 	. "github.com/smartystreets/goconvey/convey"
 )
 
 func MockNewActionTypeRestHandler(appSetting *common.AppSetting,
-	hydra rest.Hydra,
+	as interfaces.AuthService,
 	ats interfaces.ActionTypeService,
 	kns interfaces.KNService) (r *restHandler) {
 
 	r = &restHandler{
 		appSetting: appSetting,
-		hydra:      hydra,
+		as:         as,
 		ats:        ats,
 		kns:        kns,
 	}
@@ -49,14 +48,14 @@ func Test_ActionTypeRestHandler_CreateActionTypes(t *testing.T) {
 		defer mockCtrl.Finish()
 
 		appSetting := &common.AppSetting{}
-		hydra := rmock.NewMockHydra(mockCtrl)
+		as := dmock.NewMockAuthService(mockCtrl)
 		ats := dmock.NewMockActionTypeService(mockCtrl)
 		kns := dmock.NewMockKNService(mockCtrl)
 
-		handler := MockNewActionTypeRestHandler(appSetting, hydra, ats, kns)
+		handler := MockNewActionTypeRestHandler(appSetting, as, ats, kns)
 		handler.RegisterPublic(engine)
 
-		hydra.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(rest.Visitor{}, nil)
+		as.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(rest.Visitor{}, nil)
 
 		knID := "kn1"
 		url := "/api/ontology-manager/v1/knowledge-networks/" + knID + "/action-types"
@@ -198,14 +197,14 @@ func Test_ActionTypeRestHandler_UpdateActionType(t *testing.T) {
 		defer mockCtrl.Finish()
 
 		appSetting := &common.AppSetting{}
-		hydra := rmock.NewMockHydra(mockCtrl)
+		as := dmock.NewMockAuthService(mockCtrl)
 		ats := dmock.NewMockActionTypeService(mockCtrl)
 		kns := dmock.NewMockKNService(mockCtrl)
 
-		handler := MockNewActionTypeRestHandler(appSetting, hydra, ats, kns)
+		handler := MockNewActionTypeRestHandler(appSetting, as, ats, kns)
 		handler.RegisterPublic(engine)
 
-		hydra.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(rest.Visitor{}, nil)
+		as.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(rest.Visitor{}, nil)
 
 		knID := "kn1"
 		atID := "at1"
@@ -302,14 +301,14 @@ func Test_ActionTypeRestHandler_DeleteActionTypes(t *testing.T) {
 		defer mockCtrl.Finish()
 
 		appSetting := &common.AppSetting{}
-		hydra := rmock.NewMockHydra(mockCtrl)
+		as := dmock.NewMockAuthService(mockCtrl)
 		ats := dmock.NewMockActionTypeService(mockCtrl)
 		kns := dmock.NewMockKNService(mockCtrl)
 
-		handler := MockNewActionTypeRestHandler(appSetting, hydra, ats, kns)
+		handler := MockNewActionTypeRestHandler(appSetting, as, ats, kns)
 		handler.RegisterPublic(engine)
 
-		hydra.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(rest.Visitor{}, nil)
+		as.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(rest.Visitor{}, nil)
 
 		knID := "kn1"
 		atIDs := "at1,at2"
@@ -364,14 +363,14 @@ func Test_ActionTypeRestHandler_ListActionTypes(t *testing.T) {
 		defer mockCtrl.Finish()
 
 		appSetting := &common.AppSetting{}
-		hydra := rmock.NewMockHydra(mockCtrl)
+		as := dmock.NewMockAuthService(mockCtrl)
 		ats := dmock.NewMockActionTypeService(mockCtrl)
 		kns := dmock.NewMockKNService(mockCtrl)
 
-		handler := MockNewActionTypeRestHandler(appSetting, hydra, ats, kns)
+		handler := MockNewActionTypeRestHandler(appSetting, as, ats, kns)
 		handler.RegisterPublic(engine)
 
-		hydra.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(rest.Visitor{}, nil)
+		as.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(rest.Visitor{}, nil)
 
 		knID := "kn1"
 		url := "/api/ontology-manager/v1/knowledge-networks/" + knID + "/action-types"
@@ -424,14 +423,14 @@ func Test_ActionTypeRestHandler_GetActionTypes(t *testing.T) {
 		defer mockCtrl.Finish()
 
 		appSetting := &common.AppSetting{}
-		hydra := rmock.NewMockHydra(mockCtrl)
+		as := dmock.NewMockAuthService(mockCtrl)
 		ats := dmock.NewMockActionTypeService(mockCtrl)
 		kns := dmock.NewMockKNService(mockCtrl)
 
-		handler := MockNewActionTypeRestHandler(appSetting, hydra, ats, kns)
+		handler := MockNewActionTypeRestHandler(appSetting, as, ats, kns)
 		handler.RegisterPublic(engine)
 
-		hydra.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(rest.Visitor{}, nil)
+		as.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(rest.Visitor{}, nil)
 
 		knID := "kn1"
 		atIDs := "at1,at2"
@@ -534,14 +533,14 @@ func Test_ActionTypeRestHandler_SearchActionTypes(t *testing.T) {
 		defer mockCtrl.Finish()
 
 		appSetting := &common.AppSetting{}
-		hydra := rmock.NewMockHydra(mockCtrl)
+		as := dmock.NewMockAuthService(mockCtrl)
 		ats := dmock.NewMockActionTypeService(mockCtrl)
 		kns := dmock.NewMockKNService(mockCtrl)
 
-		handler := MockNewActionTypeRestHandler(appSetting, hydra, ats, kns)
+		handler := MockNewActionTypeRestHandler(appSetting, as, ats, kns)
 		handler.RegisterPublic(engine)
 
-		hydra.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(rest.Visitor{}, nil)
+		as.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(rest.Visitor{}, nil)
 
 		knID := "kn1"
 		url := "/api/ontology-manager/v1/knowledge-networks/" + knID + "/action-types"
@@ -641,14 +640,14 @@ func Test_ActionTypeRestHandler_HandleActionTypeGetOverride(t *testing.T) {
 		defer mockCtrl.Finish()
 
 		appSetting := &common.AppSetting{}
-		hydra := rmock.NewMockHydra(mockCtrl)
+		as := dmock.NewMockAuthService(mockCtrl)
 		ats := dmock.NewMockActionTypeService(mockCtrl)
 		kns := dmock.NewMockKNService(mockCtrl)
 
-		handler := MockNewActionTypeRestHandler(appSetting, hydra, ats, kns)
+		handler := MockNewActionTypeRestHandler(appSetting, as, ats, kns)
 		handler.RegisterPublic(engine)
 
-		hydra.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(rest.Visitor{}, nil)
+		as.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(rest.Visitor{}, nil)
 
 		knID := "kn1"
 		urlEx := "/api/ontology-manager/v1/knowledge-networks/" + knID + "/action-types"

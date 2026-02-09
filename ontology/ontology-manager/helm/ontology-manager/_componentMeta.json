@@ -1,7 +1,7 @@
 {
     "conponentDefineType": "helm/service",
     "name": "ontology-manager",
-    "version": "6.0.0",
+    "version": "0.3.0",
     "configSchema": {
         "title": "ontology-manager",
         "description": "组件配置定义",

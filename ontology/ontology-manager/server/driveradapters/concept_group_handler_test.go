@@ -19,18 +19,17 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/golang/mock/gomock"
 	"github.com/kweaver-ai/kweaver-go-lib/rest"
-	rmock "github.com/kweaver-ai/kweaver-go-lib/rest/mock"
 	. "github.com/smartystreets/goconvey/convey"
 )
 
 func MockNewConceptGroupRestHandler(appSetting *common.AppSetting,
-	hydra rest.Hydra,
+	as interfaces.AuthService,
 	cgs interfaces.ConceptGroupService,
 	kns interfaces.KNService) (r *restHandler) {
 
 	r = &restHandler{
 		appSetting: appSetting,
-		hydra:      hydra,
+		as:         as,
 		cgs:        cgs,
 		kns:        kns,
 	}
@@ -49,14 +48,14 @@ func Test_ConceptGroupRestHandler_CreateConceptGroup(t *testing.T) {
 		defer mockCtrl.Finish()
 
 		appSetting := &common.AppSetting{}
-		hydra := rmock.NewMockHydra(mockCtrl)
+		as := dmock.NewMockAuthService(mockCtrl)
 		cgs := dmock.NewMockConceptGroupService(mockCtrl)
 		kns := dmock.NewMockKNService(mockCtrl)
 
-		handler := MockNewConceptGroupRestHandler(appSetting, hydra, cgs, kns)
+		handler := MockNewConceptGroupRestHandler(appSetting, as, cgs, kns)
 		handler.RegisterPublic(engine)
 
-		hydra.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(rest.Visitor{}, nil)
+		as.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(rest.Visitor{}, nil)
 
 		knID := "kn1"
 		url := "/api/ontology-manager/v1/knowledge-networks/" + knID + "/concept-groups"
@@ -165,14 +164,14 @@ func Test_ConceptGroupRestHandler_UpdateConceptGroup(t *testing.T) {
 		defer mockCtrl.Finish()
 
 		appSetting := &common.AppSetting{}
-		hydra := rmock.NewMockHydra(mockCtrl)
+		as := dmock.NewMockAuthService(mockCtrl)
 		cgs := dmock.NewMockConceptGroupService(mockCtrl)
 		kns := dmock.NewMockKNService(mockCtrl)
 
-		handler := MockNewConceptGroupRestHandler(appSetting, hydra, cgs, kns)
+		handler := MockNewConceptGroupRestHandler(appSetting, as, cgs, kns)
 		handler.RegisterPublic(engine)
 
-		hydra.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(rest.Visitor{}, nil)
+		as.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(rest.Visitor{}, nil)
 
 		knID := "kn1"
 		cgID := "cg1"
@@ -265,14 +264,14 @@ func Test_ConceptGroupRestHandler_DeleteConceptGroup(t *testing.T) {
 		defer mockCtrl.Finish()
 
 		appSetting := &common.AppSetting{}
-		hydra := rmock.NewMockHydra(mockCtrl)
+		as := dmock.NewMockAuthService(mockCtrl)
 		cgs := dmock.NewMockConceptGroupService(mockCtrl)
 		kns := dmock.NewMockKNService(mockCtrl)
 
-		handler := MockNewConceptGroupRestHandler(appSetting, hydra, cgs, kns)
+		handler := MockNewConceptGroupRestHandler(appSetting, as, cgs, kns)
 		handler.RegisterPublic(engine)
 
-		hydra.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(rest.Visitor{}, nil)
+		as.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(rest.Visitor{}, nil)
 
 		knID := "kn1"
 		cgID := "cg1"
@@ -325,14 +324,14 @@ func Test_ConceptGroupRestHandler_ListConceptGroups(t *testing.T) {
 		defer mockCtrl.Finish()
 
 		appSetting := &common.AppSetting{}
-		hydra := rmock.NewMockHydra(mockCtrl)
+		as := dmock.NewMockAuthService(mockCtrl)
 		cgs := dmock.NewMockConceptGroupService(mockCtrl)
 		kns := dmock.NewMockKNService(mockCtrl)
 
-		handler := MockNewConceptGroupRestHandler(appSetting, hydra, cgs, kns)
+		handler := MockNewConceptGroupRestHandler(appSetting, as, cgs, kns)
 		handler.RegisterPublic(engine)
 
-		hydra.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(rest.Visitor{}, nil)
+		as.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(rest.Visitor{}, nil)
 
 		knID := "kn1"
 		url := "/api/ontology-manager/v1/knowledge-networks/" + knID + "/concept-groups"
@@ -385,14 +384,14 @@ func Test_ConceptGroupRestHandler_GetConceptGroup(t *testing.T) {
 		defer mockCtrl.Finish()
 
 		appSetting := &common.AppSetting{}
-		hydra := rmock.NewMockHydra(mockCtrl)
+		as := dmock.NewMockAuthService(mockCtrl)
 		cgs := dmock.NewMockConceptGroupService(mockCtrl)
 		kns := dmock.NewMockKNService(mockCtrl)
 
-		handler := MockNewConceptGroupRestHandler(appSetting, hydra, cgs, kns)
+		handler := MockNewConceptGroupRestHandler(appSetting, as, cgs, kns)
 		handler.RegisterPublic(engine)
 
-		hydra.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(rest.Visitor{}, nil)
+		as.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(rest.Visitor{}, nil)
 
 		knID := "kn1"
 		cgID := "cg1"
@@ -515,14 +514,14 @@ func Test_ConceptGroupRestHandler_AddObjectTypesToConceptGroup(t *testing.T) {
 		defer mockCtrl.Finish()
 
 		appSetting := &common.AppSetting{}
-		hydra := rmock.NewMockHydra(mockCtrl)
+		as := dmock.NewMockAuthService(mockCtrl)
 		cgs := dmock.NewMockConceptGroupService(mockCtrl)
 		kns := dmock.NewMockKNService(mockCtrl)
 
-		handler := MockNewConceptGroupRestHandler(appSetting, hydra, cgs, kns)
+		handler := MockNewConceptGroupRestHandler(appSetting, as, cgs, kns)
 		handler.RegisterPublic(engine)
 
-		hydra.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(rest.Visitor{}, nil)
+		as.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(rest.Visitor{}, nil)
 
 		knID := "kn1"
 		cgID := "cg1"
@@ -656,14 +655,14 @@ func Test_ConceptGroupRestHandler_DeleteObjectTypesFromGroup(t *testing.T) {
 		defer mockCtrl.Finish()
 
 		appSetting := &common.AppSetting{}
-		hydra := rmock.NewMockHydra(mockCtrl)
+		as := dmock.NewMockAuthService(mockCtrl)
 		cgs := dmock.NewMockConceptGroupService(mockCtrl)
 		kns := dmock.NewMockKNService(mockCtrl)
 
-		handler := MockNewConceptGroupRestHandler(appSetting, hydra, cgs, kns)
+		handler := MockNewConceptGroupRestHandler(appSetting, as, cgs, kns)
 		handler.RegisterPublic(engine)
 
-		hydra.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(rest.Visitor{}, nil)
+		as.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(rest.Visitor{}, nil)
 
 		knID := "kn1"
 		cgID := "cg1"

@@ -16,17 +16,16 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/golang/mock/gomock"
 	"github.com/kweaver-ai/kweaver-go-lib/rest"
-	rmock "github.com/kweaver-ai/kweaver-go-lib/rest/mock"
 	. "github.com/smartystreets/goconvey/convey"
 )
 
 func MockNewResourceRestHandler(appSetting *common.AppSetting,
-	hydra rest.Hydra,
+	as interfaces.AuthService,
 	kns interfaces.KNService) (r *restHandler) {
 
 	r = &restHandler{
 		appSetting: appSetting,
-		hydra:      hydra,
+		as:         as,
 		kns:        kns,
 	}
 	return r
@@ -44,13 +43,13 @@ func Test_RestHandler_ListResources(t *testing.T) {
 		defer mockCtrl.Finish()
 
 		appSetting := &common.AppSetting{}
-		hydra := rmock.NewMockHydra(mockCtrl)
+		as := dmock.NewMockAuthService(mockCtrl)
 		kns := dmock.NewMockKNService(mockCtrl)
 
-		handler := MockNewResourceRestHandler(appSetting, hydra, kns)
+		handler := MockNewResourceRestHandler(appSetting, as, kns)
 		handler.RegisterPublic(engine)
 
-		hydra.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(rest.Visitor{}, nil)
+		as.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(rest.Visitor{}, nil)
 
 		url := "/api/ontology-manager/v1/resources"
 

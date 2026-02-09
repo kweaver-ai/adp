@@ -19,18 +19,17 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/golang/mock/gomock"
 	"github.com/kweaver-ai/kweaver-go-lib/rest"
-	rmock "github.com/kweaver-ai/kweaver-go-lib/rest/mock"
 	. "github.com/smartystreets/goconvey/convey"
 )
 
 func MockNewRelationTypeRestHandler(appSetting *common.AppSetting,
-	hydra rest.Hydra,
+	as interfaces.AuthService,
 	rts interfaces.RelationTypeService,
 	kns interfaces.KNService) (r *restHandler) {
 
 	r = &restHandler{
 		appSetting: appSetting,
-		hydra:      hydra,
+		as:         as,
 		rts:        rts,
 		kns:        kns,
 	}
@@ -49,14 +48,14 @@ func Test_RelationTypeRestHandler_CreateRelationTypes(t *testing.T) {
 		defer mockCtrl.Finish()
 
 		appSetting := &common.AppSetting{}
-		hydra := rmock.NewMockHydra(mockCtrl)
+		as := dmock.NewMockAuthService(mockCtrl)
 		rts := dmock.NewMockRelationTypeService(mockCtrl)
 		kns := dmock.NewMockKNService(mockCtrl)
 
-		handler := MockNewRelationTypeRestHandler(appSetting, hydra, rts, kns)
+		handler := MockNewRelationTypeRestHandler(appSetting, as, rts, kns)
 		handler.RegisterPublic(engine)
 
-		hydra.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(rest.Visitor{}, nil)
+		as.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(rest.Visitor{}, nil)
 
 		knID := "kn1"
 		url := "/api/ontology-manager/v1/knowledge-networks/" + knID + "/relation-types"
@@ -210,14 +209,14 @@ func Test_RelationTypeRestHandler_UpdateRelationType(t *testing.T) {
 		defer mockCtrl.Finish()
 
 		appSetting := &common.AppSetting{}
-		hydra := rmock.NewMockHydra(mockCtrl)
+		as := dmock.NewMockAuthService(mockCtrl)
 		rts := dmock.NewMockRelationTypeService(mockCtrl)
 		kns := dmock.NewMockKNService(mockCtrl)
 
-		handler := MockNewRelationTypeRestHandler(appSetting, hydra, rts, kns)
+		handler := MockNewRelationTypeRestHandler(appSetting, as, rts, kns)
 		handler.RegisterPublic(engine)
 
-		hydra.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(rest.Visitor{}, nil)
+		as.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(rest.Visitor{}, nil)
 
 		knID := "kn1"
 		rtID := "rt1"
@@ -365,14 +364,14 @@ func Test_RelationTypeRestHandler_DeleteRelationTypes(t *testing.T) {
 		defer mockCtrl.Finish()
 
 		appSetting := &common.AppSetting{}
-		hydra := rmock.NewMockHydra(mockCtrl)
+		as := dmock.NewMockAuthService(mockCtrl)
 		rts := dmock.NewMockRelationTypeService(mockCtrl)
 		kns := dmock.NewMockKNService(mockCtrl)
 
-		handler := MockNewRelationTypeRestHandler(appSetting, hydra, rts, kns)
+		handler := MockNewRelationTypeRestHandler(appSetting, as, rts, kns)
 		handler.RegisterPublic(engine)
 
-		hydra.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(rest.Visitor{}, nil)
+		as.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(rest.Visitor{}, nil)
 
 		knID := "kn1"
 		rtIDs := "rt1,rt2"
@@ -447,14 +446,14 @@ func Test_RelationTypeRestHandler_ListRelationTypes(t *testing.T) {
 		defer mockCtrl.Finish()
 
 		appSetting := &common.AppSetting{}
-		hydra := rmock.NewMockHydra(mockCtrl)
+		as := dmock.NewMockAuthService(mockCtrl)
 		rts := dmock.NewMockRelationTypeService(mockCtrl)
 		kns := dmock.NewMockKNService(mockCtrl)
 
-		handler := MockNewRelationTypeRestHandler(appSetting, hydra, rts, kns)
+		handler := MockNewRelationTypeRestHandler(appSetting, as, rts, kns)
 		handler.RegisterPublic(engine)
 
-		hydra.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(rest.Visitor{}, nil)
+		as.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(rest.Visitor{}, nil)
 
 		knID := "kn1"
 		url := "/api/ontology-manager/v1/knowledge-networks/" + knID + "/relation-types"
@@ -526,14 +525,14 @@ func Test_RelationTypeRestHandler_GetRelationTypes(t *testing.T) {
 		defer mockCtrl.Finish()
 
 		appSetting := &common.AppSetting{}
-		hydra := rmock.NewMockHydra(mockCtrl)
+		as := dmock.NewMockAuthService(mockCtrl)
 		rts := dmock.NewMockRelationTypeService(mockCtrl)
 		kns := dmock.NewMockKNService(mockCtrl)
 
-		handler := MockNewRelationTypeRestHandler(appSetting, hydra, rts, kns)
+		handler := MockNewRelationTypeRestHandler(appSetting, as, rts, kns)
 		handler.RegisterPublic(engine)
 
-		hydra.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(rest.Visitor{}, nil)
+		as.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(rest.Visitor{}, nil)
 
 		knID := "kn1"
 		rtIDs := "rt1,rt2"
@@ -606,14 +605,14 @@ func Test_RelationTypeRestHandler_SearchRelationTypes(t *testing.T) {
 		defer mockCtrl.Finish()
 
 		appSetting := &common.AppSetting{}
-		hydra := rmock.NewMockHydra(mockCtrl)
+		as := dmock.NewMockAuthService(mockCtrl)
 		rts := dmock.NewMockRelationTypeService(mockCtrl)
 		kns := dmock.NewMockKNService(mockCtrl)
 
-		handler := MockNewRelationTypeRestHandler(appSetting, hydra, rts, kns)
+		handler := MockNewRelationTypeRestHandler(appSetting, as, rts, kns)
 		handler.RegisterPublic(engine)
 
-		hydra.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(rest.Visitor{}, nil)
+		as.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(rest.Visitor{}, nil)
 
 		knID := "kn1"
 		url := "/api/ontology-manager/v1/knowledge-networks/" + knID + "/relation-types"
@@ -717,14 +716,14 @@ func Test_RelationTypeRestHandler_HandleRelationTypeGetOverride(t *testing.T) {
 		defer mockCtrl.Finish()
 
 		appSetting := &common.AppSetting{}
-		hydra := rmock.NewMockHydra(mockCtrl)
+		as := dmock.NewMockAuthService(mockCtrl)
 		rts := dmock.NewMockRelationTypeService(mockCtrl)
 		kns := dmock.NewMockKNService(mockCtrl)
 
-		handler := MockNewRelationTypeRestHandler(appSetting, hydra, rts, kns)
+		handler := MockNewRelationTypeRestHandler(appSetting, as, rts, kns)
 		handler.RegisterPublic(engine)
 
-		hydra.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(rest.Visitor{}, nil)
+		as.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(rest.Visitor{}, nil)
 
 		knID := "kn1"
 		urlEx := "/api/ontology-manager/v1/knowledge-networks/" + knID + "/relation-types"

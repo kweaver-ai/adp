@@ -33,6 +33,10 @@ antiAffinity:
   enabled: true
   rule: "soft" # 可选参数 hard, soft
 
+# 认证开关
+auth:
+  enabled: true
+
 # 微服务通信依赖配置
 depServices:
   class-443:
@@ -63,9 +67,9 @@ depServices:
     host: authorization-private
     port: 30920
     protocol: http
-  user-management: 
+  user-management:
     host: user-management-private
-    port:  30980
+    port: 30980
     protocol: http
   hydra-admin:
     host: hydra-admin

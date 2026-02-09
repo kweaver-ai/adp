@@ -13,6 +13,6 @@ type PermissionService interface {
 	CreateResources(ctx context.Context, resources []Resource, ops []string) error
 	DeleteResources(ctx context.Context, resourceType string, ids []string) error
 	FilterResources(ctx context.Context, resourceType string, ids []string,
-		ops []string, allowOperation bool) (map[string]ResourceOps, error)
+		ops []string, allowOperation bool, fullOps []string) (map[string]ResourceOps, error)
 	UpdateResource(ctx context.Context, resource Resource) error
 }
