@@ -92,6 +92,12 @@ func (dvmService *dataViewMonitorService) PollingMetadata(ctx context.Context) {
 
 // syncViews 执行视图同步
 func (dvmService *dataViewMonitorService) syncViews(ctx context.Context) error {
+	defer func() {
+		if r := recover(); r != nil {
+			logger.Errorf("Error syncing views: %v", r)
+		}
+	}()
+
 	if !dvmService.initialized {
 		logger.Infof("Service not initialized, skipping sync")
 		return nil

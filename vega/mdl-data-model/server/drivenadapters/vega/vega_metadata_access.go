@@ -75,16 +75,13 @@ func (vma *vegaMetadataAccess) ListMetadataTablesBySourceID(ctx context.Context,
 	}
 
 	respCode, respData, err := vma.httpClient.PostNoUnmarshal(ctx, urlStr, headers, requestBody)
-	logger.Debugf("get %s finished, response code is %d, request body is %+v, error is %v",
-		urlStr, respCode, requestBody, err)
+	logger.Debugf("get %s finished, response code is %d, request body is %+v, error is %v", urlStr, respCode, requestBody, err)
 
 	if err != nil {
 		logger.Errorf("DrivenMetadata ListMetadataTables request failed: %v", err)
-
 		o11y.AddHttpAttrs4Error(span, respCode, "InternalError", "Http Post Failed")
 		o11y.Error(ctx, fmt.Sprintf("DrivenMetadata ListMetadataTables request failed: %v", err))
-
-		return nil, fmt.Errorf("DrivenMetadata ListMetadataTables request failed: %v", err)
+		return []interfaces.SimpleMetadataTable{}, fmt.Errorf("DrivenMetadata ListMetadataTables request failed: %v", err)
 	}
 
 	// 错误码结构是 code, description, detail，需要对错误码做转换
@@ -93,12 +90,11 @@ func (vma *vegaMetadataAccess) ListMetadataTablesBySourceID(ctx context.Context,
 		var vegaError VegaError
 		if err = sonic.Unmarshal(respData, &vegaError); err != nil {
 			logger.Errorf("unmalshal VegaError failed: %v\n", err)
-
 			o11y.AddHttpAttrs4Error(span, respCode, "InternalError", "Unmalshal VegaError failed")
 			o11y.Error(ctx, fmt.Sprintf("Unmalshal VegaError failed: %v", err))
-
-			return nil, err
+			return []interfaces.SimpleMetadataTable{}, err
 		}
+
 		httpErr := &rest.HTTPError{HTTPCode: respCode,
 			BaseError: rest.BaseError{
 				ErrorCode:    vegaError.Code,
@@ -106,11 +102,9 @@ func (vma *vegaMetadataAccess) ListMetadataTablesBySourceID(ctx context.Context,
 				ErrorDetails: vegaError.Detail,
 			}}
 		logger.Errorf("List Vega Metadata Tables Error: %v", httpErr.Error())
-
 		o11y.AddHttpAttrs4Error(span, respCode, "InternalError", "Http status is not 200")
 		o11y.Error(ctx, fmt.Sprintf("List Vega Metadata Tables failed: %v", vegaError))
-
-		return nil, fmt.Errorf("list Vega Metadata Tables Error: %v", httpErr.Error())
+		return []interfaces.SimpleMetadataTable{}, fmt.Errorf("list Vega Metadata Tables Error: %v", httpErr.Error())
 	}
 
 	if respData == nil {
@@ -118,8 +112,7 @@ func (vma *vegaMetadataAccess) ListMetadataTablesBySourceID(ctx context.Context,
 		o11y.AddHttpAttrs4Ok(span, respCode)
 		// 记录模型不存在的日志
 		o11y.Warn(ctx, "Http response body is null")
-
-		return nil, nil
+		return []interfaces.SimpleMetadataTable{}, nil
 	}
 
 	result := struct {
@@ -130,11 +123,10 @@ func (vma *vegaMetadataAccess) ListMetadataTablesBySourceID(ctx context.Context,
 		logger.Errorf("DrivenMetadata ListMetadataTables sonic.Unmarshal error: %v", err)
 		o11y.AddHttpAttrs4Error(span, respCode, "InternalError", "Unmalshal vega metadata tables failed")
 		o11y.Error(ctx, fmt.Sprintf("Unmalshal vega metadata tables failed: %v", err))
-
-		return nil, err
+		return []interfaces.SimpleMetadataTable{}, err
 	}
-	logger.Debugf("list vega metadata tables result count is %d", len(result.Entries))
 
+	logger.Debugf("list vega metadata tables result count is %d", len(result.Entries))
 	o11y.AddHttpAttrs4Ok(span, respCode)
 	return result.Entries, nil
 }
@@ -168,16 +160,13 @@ func (vma *vegaMetadataAccess) GetMetadataTablesByIDs(ctx context.Context, table
 	}
 
 	respCode, respData, err := vma.httpClient.PostNoUnmarshal(ctx, urlStr, headers, requestBody)
-	logger.Debugf("get %s finished, response code is %d, request body is %+v, error is %v",
-		urlStr, respCode, requestBody, err)
+	logger.Debugf("get %s finished, response code is %d, request body is %+v, error is %v", urlStr, respCode, requestBody, err)
 
 	if err != nil {
 		logger.Errorf("DrivenMetadata GetMetadataTablesByIDs request failed: %v", err)
-
 		o11y.AddHttpAttrs4Error(span, respCode, "InternalError", "Http Post Failed")
 		o11y.Error(ctx, fmt.Sprintf("DrivenMetadata GetMetadataTablesByIDs request failed: %v", err))
-
-		return nil, fmt.Errorf("DrivenMetadata GetMetadataTablesByIDs request failed: %v", err)
+		return []interfaces.MetadataTable{}, fmt.Errorf("DrivenMetadata GetMetadataTablesByIDs request failed: %v", err)
 	}
 
 	// 错误码结构是 code, description, detail，需要对错误码做转换
@@ -186,12 +175,11 @@ func (vma *vegaMetadataAccess) GetMetadataTablesByIDs(ctx context.Context, table
 		var vegaError VegaError
 		if err = sonic.Unmarshal(respData, &vegaError); err != nil {
 			logger.Errorf("unmalshal VegaError failed: %v\n", err)
-
 			o11y.AddHttpAttrs4Error(span, respCode, "InternalError", "Unmalshal VegaError failed")
 			o11y.Error(ctx, fmt.Sprintf("Unmalshal VegaError failed: %v", err))
-
-			return nil, err
+			return []interfaces.MetadataTable{}, err
 		}
+
 		httpErr := &rest.HTTPError{HTTPCode: respCode,
 			BaseError: rest.BaseError{
 				ErrorCode:    vegaError.Code,
@@ -199,11 +187,9 @@ func (vma *vegaMetadataAccess) GetMetadataTablesByIDs(ctx context.Context, table
 				ErrorDetails: vegaError.Detail,
 			}}
 		logger.Errorf("Get Vega Metadata Tables By IDs Error: %v", httpErr.Error())
-
 		o11y.AddHttpAttrs4Error(span, respCode, "InternalError", "Http status is not 200")
 		o11y.Error(ctx, fmt.Sprintf("Get Vega Metadata Tables By IDs failed: %v", vegaError))
-
-		return nil, fmt.Errorf("get Vega Metadata Tables By IDs Error: %v", httpErr.Error())
+		return []interfaces.MetadataTable{}, fmt.Errorf("get Vega Metadata Tables By IDs Error: %v", httpErr.Error())
 	}
 
 	if respData == nil {
@@ -211,8 +197,7 @@ func (vma *vegaMetadataAccess) GetMetadataTablesByIDs(ctx context.Context, table
 		o11y.AddHttpAttrs4Ok(span, respCode)
 		// 记录模型不存在的日志
 		o11y.Warn(ctx, "Http response body is null")
-
-		return nil, nil
+		return []interfaces.MetadataTable{}, nil
 	}
 
 	result := struct {
@@ -223,11 +208,10 @@ func (vma *vegaMetadataAccess) GetMetadataTablesByIDs(ctx context.Context, table
 		logger.Errorf("DrivenMetadata GetMetadataTablesByIDs sonic.Unmarshal error: %v", err)
 		o11y.AddHttpAttrs4Error(span, respCode, "InternalError", "Unmalshal vega metadata tables failed")
 		o11y.Error(ctx, fmt.Sprintf("Unmalshal vega metadata tables failed: %v", err))
-
-		return nil, err
+		return []interfaces.MetadataTable{}, err
 	}
-	logger.Debugf("get vega metadata tables by ids result count is %d", len(result.Entries))
 
+	logger.Debugf("get vega metadata tables by ids result count is %d", len(result.Entries))
 	o11y.AddHttpAttrs4Ok(span, respCode)
 	return result.Entries, nil
 }
