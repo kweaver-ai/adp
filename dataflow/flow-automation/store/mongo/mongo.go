@@ -167,6 +167,11 @@ func (s *Store) Init() error {
 		return fmt.Errorf("create index failed: %w", err)
 	}
 
+	err = s.dropIndex(ctx, s.taskInsClsName, []string{"idx_dagInsId_taskId_unique"})
+	if err != nil {
+		return fmt.Errorf("drop task index failed: %w", err)
+	}
+
 	_, err = s.mongoDB.Collection(s.taskInsClsName).Indexes().CreateMany(ctx, []mongo.IndexModel{
 		{
 			Keys: bson.D{
@@ -205,13 +210,13 @@ func (s *Store) Init() error {
 				{Key: "hash", Value: 1},
 			},
 		},
-		// 唯一索引：防止并行分支执行时创建重复的任务实例
+		// 索引：dagInsId和taskId (移除唯一限制以支持VM模式下的循环任务)
 		{
 			Keys: bson.D{
 				{Key: "dagInsId", Value: 1},
 				{Key: "taskId", Value: 1},
 			},
-			Options: options.Index().SetUnique(true).SetName("idx_dagInsId_taskId_unique"),
+			Options: options.Index().SetName("idx_dagInsId_taskId"),
 		},
 	})
 

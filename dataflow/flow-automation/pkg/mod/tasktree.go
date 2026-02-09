@@ -66,9 +66,16 @@ func BuildRootNode(tasks []TaskInfoGetter) (*TaskNode, error) {
 		return nil, err
 	}
 
-	for i := range tasks {
+	processed := make(map[string]bool)
+	for i := len(tasks) - 1; i >= 0; i-- {
+		id := tasks[i].GetGraphID()
+		if processed[id] {
+			continue
+		}
+		processed[id] = true
+
 		if len(tasks[i].GetDepend()) == 0 {
-			n := m[tasks[i].GetGraphID()]
+			n := m[id]
 			n.AppendParent(root)
 			root.children = append(root.children, n)
 		}
@@ -77,10 +84,16 @@ func BuildRootNode(tasks []TaskInfoGetter) (*TaskNode, error) {
 			for _, dependId := range tasks[i].GetDepend() {
 				parent, ok := m[dependId]
 				if !ok {
-					return nil, fmt.Errorf("does not find task[%s] depend: %s", tasks[i].GetGraphID(), dependId)
+					// Check if it's a self-dependency (which shouldn't happen but good to be safe)
+					if dependId == id {
+						continue
+					}
+					// If strict mode, return error. But for now maybe just warn?
+					// The original code returned error. Let's keep it strict for dependencies.
+					return nil, fmt.Errorf("does not find task[%s] depend: %s", id, dependId)
 				}
-				parent.AppendChild(m[tasks[i].GetGraphID()])
-				m[tasks[i].GetGraphID()].AppendParent(parent)
+				parent.AppendChild(m[id])
+				m[id].AppendParent(parent)
 			}
 		}
 	}
@@ -100,7 +113,7 @@ func buildGraphNodeMap(tasks []TaskInfoGetter) (map[string]*TaskNode, error) {
 	m := map[string]*TaskNode{}
 	for i := range tasks {
 		if _, ok := m[tasks[i].GetGraphID()]; ok {
-			return nil, fmt.Errorf("task id is repeat, id: %s", tasks[i].GetGraphID())
+			log.Warnf("task id is repeat, id: %s", tasks[i].GetGraphID())
 		}
 		m[tasks[i].GetGraphID()] = NewTaskNodeFromGetter(tasks[i])
 	}
