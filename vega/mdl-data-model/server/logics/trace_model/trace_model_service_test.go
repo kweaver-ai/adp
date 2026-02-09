@@ -548,7 +548,7 @@ func Test_TraceModelService_DeleteTraceModels(t *testing.T) {
 			expectedErr := errors.New("some errors")
 
 			tma.EXPECT().DeleteTraceModels(gomock.Any(), gomock.Any()).Return(expectedErr)
-			ps.EXPECT().FilterResources(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+			ps.EXPECT().FilterResources(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
 				Return(resrc, nil)
 
 			modelIDs := []string{"0", "1"}
@@ -558,7 +558,7 @@ func Test_TraceModelService_DeleteTraceModels(t *testing.T) {
 
 		Convey("Update succeed", func() {
 			tma.EXPECT().DeleteTraceModels(gomock.Any(), gomock.Any()).Return(nil)
-			ps.EXPECT().FilterResources(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+			ps.EXPECT().FilterResources(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
 				Return(resrc, nil)
 			ps.EXPECT().DeleteResources(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
 
@@ -1062,7 +1062,7 @@ func Test_TraceModelService_GetTraceModels(t *testing.T) {
 				derrors.DataModel_TraceModel_InternalError_GetDetailedTraceModelMapByIDsFailed).WithErrorDetails(expectedErr.Error())
 
 			tma.EXPECT().GetDetailedTraceModelMapByIDs(gomock.Any(), gomock.Any()).Return(nil, expectedErr)
-			ps.EXPECT().FilterResources(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+			ps.EXPECT().FilterResources(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
 				Return(resrc, nil)
 
 			_, err := tms.GetTraceModels(testCtx, modelIDs)
@@ -1075,7 +1075,7 @@ func Test_TraceModelService_GetTraceModels(t *testing.T) {
 				WithErrorDetails(fmt.Sprintf("The trace model whose id equal to %v was not found", modelIDs[0]))
 
 			tma.EXPECT().GetDetailedTraceModelMapByIDs(gomock.Any(), gomock.Any()).Return(nil, nil)
-			ps.EXPECT().FilterResources(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+			ps.EXPECT().FilterResources(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
 				Return(resrc, nil)
 
 			_, err := tms.GetTraceModels(testCtx, modelIDs)
@@ -1088,7 +1088,7 @@ func Test_TraceModelService_GetTraceModels(t *testing.T) {
 			expectedModelMap := map[string]interfaces.TraceModel{"1": {}}
 
 			tma.EXPECT().GetDetailedTraceModelMapByIDs(gomock.Any(), gomock.Any()).Return(expectedModelMap, nil)
-			ps.EXPECT().FilterResources(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+			ps.EXPECT().FilterResources(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
 				Return(resrc, nil)
 
 			patch1 := ApplyPrivateMethod(&traceModelService{}, "getDependentViewIDs",
@@ -1113,7 +1113,7 @@ func Test_TraceModelService_GetTraceModels(t *testing.T) {
 			expectedModelMap := map[string]interfaces.TraceModel{"1": {}}
 
 			tma.EXPECT().GetDetailedTraceModelMapByIDs(gomock.Any(), gomock.Any()).Return(expectedModelMap, nil)
-			ps.EXPECT().FilterResources(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+			ps.EXPECT().FilterResources(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
 				Return(resrc, nil)
 
 			patch1 := ApplyPrivateMethod(&traceModelService{}, "getDependentViewIDs",
@@ -1149,7 +1149,7 @@ func Test_TraceModelService_GetTraceModels(t *testing.T) {
 			expectedModelMap := map[string]interfaces.TraceModel{"1": {}}
 
 			tma.EXPECT().GetDetailedTraceModelMapByIDs(gomock.Any(), gomock.Any()).Return(expectedModelMap, nil)
-			ps.EXPECT().FilterResources(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+			ps.EXPECT().FilterResources(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
 				Return(resrc, nil)
 
 			patch1 := ApplyPrivateMethod(&traceModelService{}, "getDependentViewIDs",
@@ -1231,7 +1231,7 @@ func Test_TraceModelService_ListTraceModels(t *testing.T) {
 
 		Convey("List succeed", func() {
 			queryParams := interfaces.TraceModelListQueryParams{}
-			ps.EXPECT().FilterResources(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+			ps.EXPECT().FilterResources(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
 				Return(resrc, nil).AnyTimes()
 			tma.EXPECT().ListTraceModels(gomock.Any(), gomock.Any()).Return(nil, nil)
 			// tma.EXPECT().GetTraceModelTotal(gomock.Any(), gomock.Any()).Return(int64(0), nil)
@@ -1266,7 +1266,7 @@ func Test_TraceModelService_GetTraceModelFieldInfo(t *testing.T) {
 				derrors.DataModel_TraceModel_InternalError_GetDetailedTraceModelMapByIDsFailed).WithErrorDetails(expectedErr.Error())
 
 			tma.EXPECT().GetDetailedTraceModelMapByIDs(gomock.Any(), gomock.Any()).Return(nil, expectedErr)
-			ps.EXPECT().FilterResources(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+			ps.EXPECT().FilterResources(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
 				Return(resrc, nil)
 
 			modelID := "1"
@@ -1281,7 +1281,7 @@ func Test_TraceModelService_GetTraceModelFieldInfo(t *testing.T) {
 				WithErrorDetails(errDetails)
 
 			tma.EXPECT().GetDetailedTraceModelMapByIDs(gomock.Any(), gomock.Any()).Return(nil, nil)
-			ps.EXPECT().FilterResources(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+			ps.EXPECT().FilterResources(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
 				Return(resrc, nil)
 
 			_, err := tms.GetTraceModelFieldInfo(testCtx, modelID)
@@ -1302,7 +1302,7 @@ func Test_TraceModelService_GetTraceModelFieldInfo(t *testing.T) {
 			)
 			defer patch.Reset()
 
-			ps.EXPECT().FilterResources(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+			ps.EXPECT().FilterResources(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
 				Return(resrc, nil)
 
 			_, err := tms.GetTraceModelFieldInfo(testCtx, modelID)
@@ -1326,7 +1326,7 @@ func Test_TraceModelService_GetTraceModelFieldInfo(t *testing.T) {
 			patch2 := ApplyFuncReturn(data_source.NewTraceModelProcessor, tmp, expectedErr)
 			defer patch2.Reset()
 
-			ps.EXPECT().FilterResources(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+			ps.EXPECT().FilterResources(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
 				Return(resrc, nil)
 			_, err := tms.GetTraceModelFieldInfo(testCtx, modelID)
 			So(err, ShouldResemble, expectedErr)
@@ -1350,7 +1350,7 @@ func Test_TraceModelService_GetTraceModelFieldInfo(t *testing.T) {
 			defer patch2.Reset()
 
 			tmp.EXPECT().GetSpanFieldInfo(gomock.Any(), gomock.Any()).Return([]interfaces.TraceModelField(nil), expectedErr)
-			ps.EXPECT().FilterResources(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+			ps.EXPECT().FilterResources(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
 				Return(resrc, nil)
 
 			_, err := tms.GetTraceModelFieldInfo(testCtx, modelID)
@@ -1381,7 +1381,7 @@ func Test_TraceModelService_GetTraceModelFieldInfo(t *testing.T) {
 			defer patch2.Reset()
 
 			tmp.EXPECT().GetSpanFieldInfo(gomock.Any(), gomock.Any()).Return([]interfaces.TraceModelField(nil), nil)
-			ps.EXPECT().FilterResources(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+			ps.EXPECT().FilterResources(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
 				Return(resrc, nil)
 
 			_, err := tms.GetTraceModelFieldInfo(testCtx, modelID)
@@ -1411,7 +1411,7 @@ func Test_TraceModelService_GetTraceModelFieldInfo(t *testing.T) {
 			defer patch2.Reset()
 
 			tmp.EXPECT().GetSpanFieldInfo(gomock.Any(), gomock.Any()).Return([]interfaces.TraceModelField(nil), nil)
-			ps.EXPECT().FilterResources(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+			ps.EXPECT().FilterResources(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
 				Return(resrc, nil)
 
 			_, err := tms.GetTraceModelFieldInfo(testCtx, modelID)
@@ -1439,7 +1439,7 @@ func Test_TraceModelService_GetTraceModelFieldInfo(t *testing.T) {
 
 			tmp.EXPECT().GetSpanFieldInfo(gomock.Any(), gomock.Any()).Return([]interfaces.TraceModelField(nil), nil)
 			tmp.EXPECT().GetRelatedLogFieldInfo(gomock.Any(), gomock.Any()).Return([]interfaces.TraceModelField(nil), expectedErr)
-			ps.EXPECT().FilterResources(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+			ps.EXPECT().FilterResources(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
 				Return(resrc, nil)
 
 			_, err := tms.GetTraceModelFieldInfo(testCtx, modelID)
@@ -1465,7 +1465,7 @@ func Test_TraceModelService_GetTraceModelFieldInfo(t *testing.T) {
 
 			tmp.EXPECT().GetSpanFieldInfo(gomock.Any(), gomock.Any()).Return([]interfaces.TraceModelField(nil), nil)
 			tmp.EXPECT().GetRelatedLogFieldInfo(gomock.Any(), gomock.Any()).Return([]interfaces.TraceModelField(nil), nil)
-			ps.EXPECT().FilterResources(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+			ps.EXPECT().FilterResources(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
 				Return(resrc, nil)
 
 			_, err := tms.GetTraceModelFieldInfo(testCtx, modelID)

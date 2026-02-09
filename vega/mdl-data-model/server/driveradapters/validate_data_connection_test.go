@@ -14,7 +14,6 @@ import (
 	. "github.com/agiledragon/gomonkey/v2"
 	"github.com/golang/mock/gomock"
 	"github.com/kweaver-ai/kweaver-go-lib/rest"
-	rmock "github.com/kweaver-ai/kweaver-go-lib/rest/mock"
 	. "github.com/smartystreets/goconvey/convey"
 
 	"data-model/common"
@@ -30,10 +29,10 @@ func Test_ValidateDataConnection_ValidateDataConnectionWhenCreate(t *testing.T) 
 		defer mockCtrl.Finish()
 
 		appSetting := &common.AppSetting{}
-		hydra := rmock.NewMockHydra(mockCtrl)
+		as := dmock.NewMockAuthService(mockCtrl)
 		dcs := dmock.NewMockDataConnectionService(mockCtrl)
 
-		handler := MockNewDataConnectionRestHandler(appSetting, hydra, dcs)
+		handler := MockNewDataConnectionRestHandler(appSetting, as, dcs)
 
 		Convey("Invalid conn, caused by the error from func `validateObjectName`", func() {
 			expectedErr := errors.New("some errors")
@@ -163,10 +162,10 @@ func Test_ValidateDataConnection_ValidateDataConnectionWhenUpdate(t *testing.T) 
 		defer mockCtrl.Finish()
 
 		appSetting := &common.AppSetting{}
-		hydra := rmock.NewMockHydra(mockCtrl)
+		as := dmock.NewMockAuthService(mockCtrl)
 		dcs := dmock.NewMockDataConnectionService(mockCtrl)
 
-		handler := MockNewDataConnectionRestHandler(appSetting, hydra, dcs)
+		handler := MockNewDataConnectionRestHandler(appSetting, as, dcs)
 
 		Convey("Invalid conn, caused by the error from func `validateObjectName`", func() {
 			preConn := interfaces.DataConnection{

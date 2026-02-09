@@ -17,7 +17,6 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/golang/mock/gomock"
 	"github.com/kweaver-ai/kweaver-go-lib/rest"
-	rmock "github.com/kweaver-ai/kweaver-go-lib/rest/mock"
 	. "github.com/smartystreets/goconvey/convey"
 
 	"data-model/common"
@@ -27,12 +26,12 @@ import (
 )
 
 func MockNewDataViewGroupRestHandler(appSetting *common.AppSetting,
-	hydra rest.Hydra,
+	as interfaces.AuthService,
 	dvgs interfaces.DataViewGroupService,
 	dvs interfaces.DataViewService) (r *restHandler) {
 	r = &restHandler{
 		appSetting: appSetting,
-		hydra:      hydra,
+		as:         as,
 		dvgs:       dvgs,
 		dvs:        dvs,
 	}
@@ -51,14 +50,14 @@ func Test_DataViewGroupRestHandler_CreateDataViewGroup(t *testing.T) {
 		defer mockCtrl.Finish()
 
 		appSetting := &common.AppSetting{}
-		hydra := rmock.NewMockHydra(mockCtrl)
+		as := dmock.NewMockAuthService(mockCtrl)
 		dvgs := dmock.NewMockDataViewGroupService(mockCtrl)
 		dvs := dmock.NewMockDataViewService(mockCtrl)
 
-		handler := MockNewDataViewGroupRestHandler(appSetting, hydra, dvgs, dvs)
+		handler := MockNewDataViewGroupRestHandler(appSetting, as, dvgs, dvs)
 		handler.RegisterPublic(engine)
 
-		hydra.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(rest.Visitor{}, nil)
+		as.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(rest.Visitor{}, nil)
 
 		url := "/api/mdl-data-model/v1/data-view-groups"
 
@@ -162,14 +161,14 @@ func Test_DataViewGroupRestHandler_DeleteDataViewGroup(t *testing.T) {
 		defer mockCtrl.Finish()
 
 		appSetting := &common.AppSetting{}
-		hydra := rmock.NewMockHydra(mockCtrl)
+		as := dmock.NewMockAuthService(mockCtrl)
 		dvgs := dmock.NewMockDataViewGroupService(mockCtrl)
 		dvs := dmock.NewMockDataViewService(mockCtrl)
 
-		handler := MockNewDataViewGroupRestHandler(appSetting, hydra, dvgs, dvs)
+		handler := MockNewDataViewGroupRestHandler(appSetting, as, dvgs, dvs)
 		handler.RegisterPublic(engine)
 
-		hydra.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(rest.Visitor{}, nil)
+		as.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(rest.Visitor{}, nil)
 
 		url := "/api/mdl-data-model/v1/data-view-groups/1a"
 
@@ -239,14 +238,14 @@ func Test_DataViewGroupRestHandler_UpdateDataViewGroup(t *testing.T) {
 		defer mockCtrl.Finish()
 
 		appSetting := &common.AppSetting{}
-		hydra := rmock.NewMockHydra(mockCtrl)
+		as := dmock.NewMockAuthService(mockCtrl)
 		dvgs := dmock.NewMockDataViewGroupService(mockCtrl)
 		dvs := dmock.NewMockDataViewService(mockCtrl)
 
-		handler := MockNewDataViewGroupRestHandler(appSetting, hydra, dvgs, dvs)
+		handler := MockNewDataViewGroupRestHandler(appSetting, as, dvgs, dvs)
 		handler.RegisterPublic(engine)
 
-		hydra.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(rest.Visitor{}, nil)
+		as.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(rest.Visitor{}, nil)
 
 		url := "/api/mdl-data-model/v1/data-view-groups/1a"
 
@@ -369,14 +368,14 @@ func Test_DataViewGroupRestHandler_ListDataViewGroups(t *testing.T) {
 		defer mockCtrl.Finish()
 
 		appSetting := &common.AppSetting{}
-		hydra := rmock.NewMockHydra(mockCtrl)
+		as := dmock.NewMockAuthService(mockCtrl)
 		dvgs := dmock.NewMockDataViewGroupService(mockCtrl)
 		dvs := dmock.NewMockDataViewService(mockCtrl)
 
-		handler := MockNewDataViewGroupRestHandler(appSetting, hydra, dvgs, dvs)
+		handler := MockNewDataViewGroupRestHandler(appSetting, as, dvgs, dvs)
 		handler.RegisterPublic(engine)
 
-		hydra.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(rest.Visitor{}, nil)
+		as.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(rest.Visitor{}, nil)
 
 		url := "/api/mdl-data-model/v1/data-view-groups"
 
@@ -428,14 +427,14 @@ func Test_DataViewGroupRestHandler_GetDataViewsInGroup(t *testing.T) {
 		defer mockCtrl.Finish()
 
 		appSetting := &common.AppSetting{}
-		hydra := rmock.NewMockHydra(mockCtrl)
+		as := dmock.NewMockAuthService(mockCtrl)
 		dvgs := dmock.NewMockDataViewGroupService(mockCtrl)
 		dvs := dmock.NewMockDataViewService(mockCtrl)
 
-		handler := MockNewDataViewGroupRestHandler(appSetting, hydra, dvgs, dvs)
+		handler := MockNewDataViewGroupRestHandler(appSetting, as, dvgs, dvs)
 		handler.RegisterPublic(engine)
 
-		hydra.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(rest.Visitor{}, nil)
+		as.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(rest.Visitor{}, nil)
 
 		url := "/api/mdl-data-model/v1/data-view-groups/1a/data-views"
 

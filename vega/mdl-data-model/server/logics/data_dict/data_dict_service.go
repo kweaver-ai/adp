@@ -81,7 +81,7 @@ func (dds *dataDictService) ListDataDicts(ctx context.Context,
 		resMids = append(resMids, m.DictID)
 	}
 	matchResoucesMap, err := dds.ps.FilterResources(ctx, interfaces.RESOURCE_TYPE_DATA_DICT, resMids,
-		[]string{interfaces.OPERATION_TYPE_VIEW_DETAIL}, true)
+		[]string{interfaces.OPERATION_TYPE_VIEW_DETAIL}, true, interfaces.DICT_COMMON_OPERATIONS)
 	if err != nil {
 		return dictArr, 0, err
 	}
@@ -123,7 +123,7 @@ func (dds *dataDictService) GetDataDicts(ctx context.Context, dictIDs []string) 
 
 	// 根据权限过滤有查看权限的对象，过滤后的数组的总长度就是总数，无需再请求总数
 	matchResoucesMap, err := dds.ps.FilterResources(ctx, interfaces.RESOURCE_TYPE_DATA_DICT, dictIDs,
-		[]string{interfaces.OPERATION_TYPE_VIEW_DETAIL}, true)
+		[]string{interfaces.OPERATION_TYPE_VIEW_DETAIL}, true, interfaces.DICT_COMMON_OPERATIONS)
 	if err != nil {
 		return []interfaces.DataDict{}, err
 	}
@@ -451,7 +451,7 @@ func (dds *dataDictService) DeleteDataDict(ctx context.Context, dict interfaces.
 
 	// 先获取资源序列 fmt.Sprintf("%s%s", interfaces.METRIC_MODEL_RESOURCE_ID_PREFIX, metricModel.ModelID),
 	matchResouces, err := dds.ps.FilterResources(ctx, interfaces.RESOURCE_TYPE_DATA_DICT, []string{dict.DictID},
-		[]string{interfaces.OPERATION_TYPE_DELETE}, false)
+		[]string{interfaces.OPERATION_TYPE_DELETE}, false, interfaces.DICT_COMMON_OPERATIONS)
 	if err != nil {
 		return 0, err
 	}
@@ -549,7 +549,7 @@ func (dds *dataDictService) ListDataDictSrcs(ctx context.Context,
 	}
 	// 校验权限管理的操作权限
 	matchResoucesMap, err := dds.ps.FilterResources(ctx, interfaces.RESOURCE_TYPE_DATA_DICT, resMids,
-		[]string{interfaces.OPERATION_TYPE_VIEW_DETAIL}, false)
+		[]string{interfaces.OPERATION_TYPE_VIEW_DETAIL}, false, interfaces.DICT_COMMON_OPERATIONS)
 	if err != nil {
 		return []interfaces.Resource{}, 0, err
 	}

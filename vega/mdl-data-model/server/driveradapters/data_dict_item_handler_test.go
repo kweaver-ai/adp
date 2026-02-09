@@ -20,7 +20,6 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/golang/mock/gomock"
 	"github.com/kweaver-ai/kweaver-go-lib/rest"
-	rmock "github.com/kweaver-ai/kweaver-go-lib/rest/mock"
 	. "github.com/smartystreets/goconvey/convey"
 
 	"data-model/common"
@@ -30,13 +29,13 @@ import (
 )
 
 func MockNewDataDictItemRestHandler(appSetting *common.AppSetting,
-	hydra rest.Hydra,
+	as interfaces.AuthService,
 	dds interfaces.DataDictService,
 	ddis interfaces.DataDictItemsService) (r *restHandler) {
 
 	r = &restHandler{
 		appSetting: appSetting,
-		hydra:      hydra,
+		as:         as,
 		dds:        dds,
 		ddis:       ddis,
 	}
@@ -55,14 +54,14 @@ func Test_DataDictItemRestHandler_GetDataDictItems(t *testing.T) {
 		defer mockCtrl.Finish()
 
 		appSetting := &common.AppSetting{}
-		hydra := rmock.NewMockHydra(mockCtrl)
+		as := dmock.NewMockAuthService(mockCtrl)
 		dds := dmock.NewMockDataDictService(mockCtrl)
 		ddis := dmock.NewMockDataDictItemsService(mockCtrl)
 
-		handler := MockNewDataDictItemRestHandler(appSetting, hydra, dds, ddis)
+		handler := MockNewDataDictItemRestHandler(appSetting, as, dds, ddis)
 		handler.RegisterPublic(engine)
 
-		hydra.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(rest.Visitor{}, nil)
+		as.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(rest.Visitor{}, nil)
 
 		url := "/api/mdl-data-model/v1/data-dicts/11/items"
 
@@ -116,14 +115,14 @@ func Test_DataDictItemRestHandler_ExportDataDictItems(t *testing.T) {
 		defer mockCtrl.Finish()
 
 		appSetting := &common.AppSetting{}
-		hydra := rmock.NewMockHydra(mockCtrl)
+		as := dmock.NewMockAuthService(mockCtrl)
 		dds := dmock.NewMockDataDictService(mockCtrl)
 		ddis := dmock.NewMockDataDictItemsService(mockCtrl)
 
-		handler := MockNewDataDictItemRestHandler(appSetting, hydra, dds, ddis)
+		handler := MockNewDataDictItemRestHandler(appSetting, as, dds, ddis)
 		handler.RegisterPublic(engine)
 
-		hydra.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(rest.Visitor{}, nil)
+		as.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(rest.Visitor{}, nil)
 
 		url := "/api/mdl-data-model/v1/data-dicts/11/items?format=csv"
 
@@ -185,14 +184,14 @@ func Test_DataDictItemRestHandler_CreateDataDictItem(t *testing.T) {
 		defer mockCtrl.Finish()
 
 		appSetting := &common.AppSetting{}
-		hydra := rmock.NewMockHydra(mockCtrl)
+		as := dmock.NewMockAuthService(mockCtrl)
 		dds := dmock.NewMockDataDictService(mockCtrl)
 		ddis := dmock.NewMockDataDictItemsService(mockCtrl)
 
-		handler := MockNewDataDictItemRestHandler(appSetting, hydra, dds, ddis)
+		handler := MockNewDataDictItemRestHandler(appSetting, as, dds, ddis)
 		handler.RegisterPublic(engine)
 
-		hydra.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(rest.Visitor{}, nil)
+		as.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(rest.Visitor{}, nil)
 
 		url := "/api/mdl-data-model/v1/data-dicts/11/items"
 		dictItemInfo := interfaces.KvDictItem{
@@ -286,14 +285,14 @@ func Test_DataDictItemRestHandler_ImportDataDictItems(t *testing.T) {
 		defer mockCtrl.Finish()
 
 		appSetting := &common.AppSetting{}
-		hydra := rmock.NewMockHydra(mockCtrl)
+		as := dmock.NewMockAuthService(mockCtrl)
 		dds := dmock.NewMockDataDictService(mockCtrl)
 		ddis := dmock.NewMockDataDictItemsService(mockCtrl)
 
-		handler := MockNewDataDictItemRestHandler(appSetting, hydra, dds, ddis)
+		handler := MockNewDataDictItemRestHandler(appSetting, as, dds, ddis)
 		handler.RegisterPublic(engine)
 
-		hydra.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(rest.Visitor{}, nil)
+		as.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(rest.Visitor{}, nil)
 
 		url := "/api/mdl-data-model/v1/data-dicts/11/items"
 
@@ -573,14 +572,14 @@ func Test_DataDictItemRestHandler_UpdateDataDictItem(t *testing.T) {
 		defer mockCtrl.Finish()
 
 		appSetting := &common.AppSetting{}
-		hydra := rmock.NewMockHydra(mockCtrl)
+		as := dmock.NewMockAuthService(mockCtrl)
 		dds := dmock.NewMockDataDictService(mockCtrl)
 		ddis := dmock.NewMockDataDictItemsService(mockCtrl)
 
-		handler := MockNewDataDictItemRestHandler(appSetting, hydra, dds, ddis)
+		handler := MockNewDataDictItemRestHandler(appSetting, as, dds, ddis)
 		handler.RegisterPublic(engine)
 
-		hydra.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(rest.Visitor{}, nil)
+		as.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(rest.Visitor{}, nil)
 
 		url := "/api/mdl-data-model/v1/data-dicts/11/items/111"
 
@@ -677,14 +676,14 @@ func Test_DataDictItemRestHandler_DeleteDataDictItems(t *testing.T) {
 		defer mockCtrl.Finish()
 
 		appSetting := &common.AppSetting{}
-		hydra := rmock.NewMockHydra(mockCtrl)
+		as := dmock.NewMockAuthService(mockCtrl)
 		dds := dmock.NewMockDataDictService(mockCtrl)
 		ddis := dmock.NewMockDataDictItemsService(mockCtrl)
 
-		handler := MockNewDataDictItemRestHandler(appSetting, hydra, dds, ddis)
+		handler := MockNewDataDictItemRestHandler(appSetting, as, dds, ddis)
 		handler.RegisterPublic(engine)
 
-		hydra.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(rest.Visitor{}, nil)
+		as.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(rest.Visitor{}, nil)
 
 		url := "/api/mdl-data-model/v1/data-dicts/11/items/1,2,3"
 

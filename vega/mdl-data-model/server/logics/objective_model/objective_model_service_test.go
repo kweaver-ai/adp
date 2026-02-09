@@ -534,7 +534,7 @@ func Test_ObjectiveModelService_ListObjectiveModels(t *testing.T) {
 			}
 			oma.EXPECT().ListObjectiveModels(gomock.Any(), gomock.Any()).Return(models, nil)
 			mmts.EXPECT().GetMetricTasksByModelIDs(gomock.Any(), gomock.Any()).Return(nil, errors.New("get metric tasks error"))
-			ps.EXPECT().FilterResources(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+			ps.EXPECT().FilterResources(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
 				Return(resrc, nil)
 
 			_, _, err := oms.ListObjectiveModels(testCtx, params)
@@ -569,7 +569,7 @@ func Test_ObjectiveModelService_ListObjectiveModels(t *testing.T) {
 				ModelID:   "test-id",
 				IndexBase: "test-index",
 			}
-			ps.EXPECT().FilterResources(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+			ps.EXPECT().FilterResources(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
 				Return(resrc, nil)
 			oma.EXPECT().ListObjectiveModels(gomock.Any(), gomock.Any()).Return(models, nil)
 			mmts.EXPECT().GetMetricTasksByModelIDs(gomock.Any(), gomock.Any()).Return(map[string]interfaces.MetricTask{"test-id": task}, nil)
@@ -607,7 +607,7 @@ func Test_ObjectiveModelService_ListObjectiveModels(t *testing.T) {
 				ModelID:   "test-id",
 				IndexBase: "test-index",
 			}
-			ps.EXPECT().FilterResources(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+			ps.EXPECT().FilterResources(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
 				Return(resrc, nil)
 			oma.EXPECT().ListObjectiveModels(gomock.Any(), gomock.Any()).Return(models, nil)
 			mmts.EXPECT().GetMetricTasksByModelIDs(gomock.Any(), gomock.Any()).Return(map[string]interfaces.MetricTask{"test-id": task}, nil)
@@ -686,7 +686,7 @@ func Test_ObjectiveModelService_ListObjectiveModels(t *testing.T) {
 					ResourceID: "test-id2",
 				},
 			}
-			ps.EXPECT().FilterResources(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+			ps.EXPECT().FilterResources(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
 				Return(resrctmp, nil)
 			oma.EXPECT().ListObjectiveModels(gomock.Any(), gomock.Any()).Return(models, nil)
 			mmts.EXPECT().GetMetricTasksByModelIDs(gomock.Any(), gomock.Any()).Return(map[string]interfaces.MetricTask{"test-id": task}, nil)
@@ -763,7 +763,7 @@ func Test_ObjectiveModelService_GetObjectiveModels(t *testing.T) {
 					},
 				},
 			}
-			ps.EXPECT().FilterResources(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+			ps.EXPECT().FilterResources(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
 				Return(resrc, nil)
 			oma.EXPECT().GetObjectiveModelsByModelIDs(gomock.Any(), gomock.Any()).Return(models, nil)
 			mmts.EXPECT().GetMetricTasksByModelIDs(gomock.Any(), gomock.Any()).Return(nil, errors.New("get metric tasks error"))
@@ -791,7 +791,7 @@ func Test_ObjectiveModelService_GetObjectiveModels(t *testing.T) {
 				IndexBase: "test-index",
 			}
 
-			ps.EXPECT().FilterResources(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+			ps.EXPECT().FilterResources(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
 				Return(resrc, nil)
 			oma.EXPECT().GetObjectiveModelsByModelIDs(gomock.Any(), gomock.Any()).Return(models, nil)
 			mmts.EXPECT().GetMetricTasksByModelIDs(gomock.Any(), gomock.Any()).Return(map[string]interfaces.MetricTask{"test-id": task}, nil)
@@ -834,7 +834,7 @@ func Test_ObjectiveModelService_GetObjectiveModels(t *testing.T) {
 				IndexBase: "test-index",
 			}
 
-			ps.EXPECT().FilterResources(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+			ps.EXPECT().FilterResources(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
 				Return(resrc, nil)
 			oma.EXPECT().GetObjectiveModelsByModelIDs(gomock.Any(), gomock.Any()).Return(models, nil)
 			mmts.EXPECT().GetMetricTasksByModelIDs(gomock.Any(), gomock.Any()).Return(map[string]interfaces.MetricTask{"test-id": task}, nil)
@@ -876,7 +876,7 @@ func Test_ObjectiveModelService_GetObjectiveModels(t *testing.T) {
 				IndexBase: "test-index",
 			}
 
-			ps.EXPECT().FilterResources(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+			ps.EXPECT().FilterResources(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
 				Return(resrc, nil)
 			oma.EXPECT().GetObjectiveModelsByModelIDs(gomock.Any(), gomock.Any()).Return(models, nil)
 			mmts.EXPECT().GetMetricTasksByModelIDs(gomock.Any(), gomock.Any()).Return(map[string]interfaces.MetricTask{"test-id": task}, nil)
@@ -944,7 +944,7 @@ func Test_ObjectiveModelService_GetObjectiveModels(t *testing.T) {
 					ResourceID: "test-id2",
 				},
 			}
-			ps.EXPECT().FilterResources(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+			ps.EXPECT().FilterResources(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
 				Return(resrctmp, nil)
 			oma.EXPECT().GetObjectiveModelsByModelIDs(gomock.Any(), gomock.Any()).Return(models, nil)
 			mmts.EXPECT().GetMetricTasksByModelIDs(gomock.Any(), gomock.Any()).Return(map[string]interfaces.MetricTask{"test-id": task}, nil)
@@ -1253,7 +1253,7 @@ func Test_ObjectiveModelService_DeleteObjectiveModels(t *testing.T) {
 		}
 		Convey("When begin transaction fails", func() {
 			modelIDs := []string{"test-id"}
-			ps.EXPECT().FilterResources(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+			ps.EXPECT().FilterResources(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
 				Return(resrc, nil)
 			mmts.EXPECT().GetMetricTaskIDsByModelIDs(gomock.Any(), gomock.Any()).Return(nil, nil)
 			smock.ExpectBegin().WillReturnError(errors.New("begin transaction error"))
@@ -1264,7 +1264,7 @@ func Test_ObjectiveModelService_DeleteObjectiveModels(t *testing.T) {
 
 		Convey("When delete objective models fails", func() {
 			modelIDs := []string{"test-id"}
-			ps.EXPECT().FilterResources(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+			ps.EXPECT().FilterResources(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
 				Return(resrc, nil)
 			mmts.EXPECT().GetMetricTaskIDsByModelIDs(gomock.Any(), gomock.Any()).Return(nil, nil)
 			smock.ExpectBegin()
@@ -1280,7 +1280,7 @@ func Test_ObjectiveModelService_DeleteObjectiveModels(t *testing.T) {
 		Convey("When GetMetricTaskIDsByModelIDs fails", func() {
 			modelIDs := []string{"test-id"}
 
-			ps.EXPECT().FilterResources(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+			ps.EXPECT().FilterResources(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
 				Return(resrc, nil)
 			smock.ExpectBegin()
 			mmts.EXPECT().GetMetricTaskIDsByModelIDs(gomock.Any(), gomock.Any()).Return(nil, errors.New("get metric task ids error"))
@@ -1296,7 +1296,7 @@ func Test_ObjectiveModelService_DeleteObjectiveModels(t *testing.T) {
 			modelIDs := []string{"test-id"}
 			taskIDs := []string{"1"}
 
-			ps.EXPECT().FilterResources(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+			ps.EXPECT().FilterResources(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
 				Return(resrc, nil)
 			smock.ExpectBegin()
 			oma.EXPECT().DeleteObjectiveModels(gomock.Any(), gomock.Any(), gomock.Any()).Return(int64(0), nil)
@@ -1315,7 +1315,7 @@ func Test_ObjectiveModelService_DeleteObjectiveModels(t *testing.T) {
 			modelIDs := []string{"test-id"}
 			taskIDs := []string{"1"}
 
-			ps.EXPECT().FilterResources(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+			ps.EXPECT().FilterResources(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
 				Return(resrc, nil)
 			ps.EXPECT().DeleteResources(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
 			smock.ExpectBegin()

@@ -17,7 +17,6 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/golang/mock/gomock"
 	"github.com/kweaver-ai/kweaver-go-lib/rest"
-	rmock "github.com/kweaver-ai/kweaver-go-lib/rest/mock"
 	. "github.com/smartystreets/goconvey/convey"
 
 	"data-model/common"
@@ -27,12 +26,12 @@ import (
 )
 
 func MockNewDataConnectionRestHandler(appSetting *common.AppSetting,
-	hydra rest.Hydra,
+	as interfaces.AuthService,
 	dcs interfaces.DataConnectionService) (r *restHandler) {
 
 	r = &restHandler{
 		appSetting: appSetting,
-		hydra:      hydra,
+		as:         as,
 		dcs:        dcs,
 	}
 	return r
@@ -50,13 +49,13 @@ func Test_DataConnectionRestHandler_CreateDataConnection(t *testing.T) {
 		defer mockCtrl.Finish()
 
 		appSetting := &common.AppSetting{}
-		hydra := rmock.NewMockHydra(mockCtrl)
+		as := dmock.NewMockAuthService(mockCtrl)
 		dcs := dmock.NewMockDataConnectionService(mockCtrl)
 
-		handler := MockNewDataConnectionRestHandler(appSetting, hydra, dcs)
+		handler := MockNewDataConnectionRestHandler(appSetting, as, dcs)
 		handler.RegisterPublic(engine)
 
-		hydra.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(rest.Visitor{}, nil)
+		as.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(rest.Visitor{}, nil)
 
 		url := "/api/mdl-data-model/v1/data-connections"
 
@@ -153,13 +152,13 @@ func Test_DataConnectionRestHandler_DeleteDataConnections(t *testing.T) {
 		defer mockCtrl.Finish()
 
 		appSetting := &common.AppSetting{}
-		hydra := rmock.NewMockHydra(mockCtrl)
+		as := dmock.NewMockAuthService(mockCtrl)
 		dcs := dmock.NewMockDataConnectionService(mockCtrl)
 
-		handler := MockNewDataConnectionRestHandler(appSetting, hydra, dcs)
+		handler := MockNewDataConnectionRestHandler(appSetting, as, dcs)
 		handler.RegisterPublic(engine)
 
-		hydra.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(rest.Visitor{}, nil)
+		as.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(rest.Visitor{}, nil)
 
 		url := "/api/mdl-data-model/v1/data-connections/1,2"
 
@@ -242,13 +241,13 @@ func Test_DataConnectionRestHandler_UpdateDataConnection(t *testing.T) {
 		defer mockCtrl.Finish()
 
 		appSetting := &common.AppSetting{}
-		hydra := rmock.NewMockHydra(mockCtrl)
+		as := dmock.NewMockAuthService(mockCtrl)
 		dcs := dmock.NewMockDataConnectionService(mockCtrl)
 
-		handler := MockNewDataConnectionRestHandler(appSetting, hydra, dcs)
+		handler := MockNewDataConnectionRestHandler(appSetting, as, dcs)
 		handler.RegisterPublic(engine)
 
-		hydra.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(rest.Visitor{}, nil)
+		as.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(rest.Visitor{}, nil)
 
 		url := "/api/mdl-data-model/v1/data-connections/1"
 
@@ -381,13 +380,13 @@ func Test_DataConnectionRestHandler_GetDataConnection(t *testing.T) {
 		defer mockCtrl.Finish()
 
 		appSetting := &common.AppSetting{}
-		hydra := rmock.NewMockHydra(mockCtrl)
+		as := dmock.NewMockAuthService(mockCtrl)
 		dcs := dmock.NewMockDataConnectionService(mockCtrl)
 
-		handler := MockNewDataConnectionRestHandler(appSetting, hydra, dcs)
+		handler := MockNewDataConnectionRestHandler(appSetting, as, dcs)
 		handler.RegisterPublic(engine)
 
-		hydra.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(rest.Visitor{}, nil)
+		as.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(rest.Visitor{}, nil)
 
 		url := "/api/mdl-data-model/v1/data-connections/1"
 
@@ -438,13 +437,13 @@ func Test_DataConnectionRestHandler_ListDataConnections(t *testing.T) {
 		defer mockCtrl.Finish()
 
 		appSetting := &common.AppSetting{}
-		hydra := rmock.NewMockHydra(mockCtrl)
+		as := dmock.NewMockAuthService(mockCtrl)
 		dcs := dmock.NewMockDataConnectionService(mockCtrl)
 
-		handler := MockNewDataConnectionRestHandler(appSetting, hydra, dcs)
+		handler := MockNewDataConnectionRestHandler(appSetting, as, dcs)
 		handler.RegisterPublic(engine)
 
-		hydra.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(rest.Visitor{}, nil)
+		as.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(rest.Visitor{}, nil)
 
 		url := "/api/mdl-data-model/v1/data-connections"
 

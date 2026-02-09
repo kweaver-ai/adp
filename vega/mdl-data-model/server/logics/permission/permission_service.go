@@ -35,18 +35,22 @@ type permissionService struct {
 
 func NewPermissionService(appSetting *common.AppSetting) interfaces.PermissionService {
 	pServiceOnce.Do(func() {
-		client, err := mqclient.NewProtonMQClient(appSetting.MQSetting.MQHost, appSetting.MQSetting.MQPort,
-			appSetting.MQSetting.MQHost, appSetting.MQSetting.MQPort, appSetting.MQSetting.MQType,
-			mqclient.UserInfo(appSetting.MQSetting.Auth.Username, appSetting.MQSetting.Auth.Password),
-			mqclient.AuthMechanism(appSetting.MQSetting.Auth.Mechanism),
-		)
-		if err != nil {
-			logger.Fatal("failed to create a proton mq client:", err)
-		}
-		pService = &permissionService{
-			appSetting: appSetting,
-			mqClient:   client,
-			pa:         logics.PA,
+		if !common.GetAuthEnabled() {
+			pService = NewNoopPermissionService()
+		} else {
+			client, err := mqclient.NewProtonMQClient(appSetting.MQSetting.MQHost, appSetting.MQSetting.MQPort,
+				appSetting.MQSetting.MQHost, appSetting.MQSetting.MQPort, appSetting.MQSetting.MQType,
+				mqclient.UserInfo(appSetting.MQSetting.Auth.Username, appSetting.MQSetting.Auth.Password),
+				mqclient.AuthMechanism(appSetting.MQSetting.Auth.Mechanism),
+			)
+			if err != nil {
+				logger.Fatal("failed to create a proton mq client:", err)
+			}
+			pService = &permissionService{
+				appSetting: appSetting,
+				mqClient:   client,
+				pa:         logics.PA,
+			}
 		}
 	})
 	return pService
@@ -151,7 +155,7 @@ func (ps *permissionService) DeleteResources(ctx context.Context, resourceType s
 
 // 过滤资源列表
 func (ps *permissionService) FilterResources(ctx context.Context, resourceType string, ids []string,
-	ops []string, allowOperation bool) (map[string]interfaces.ResourceOps, error) {
+	ops []string, allowOperation bool, fullOps []string) (map[string]interfaces.ResourceOps, error) {
 
 	if len(ids) == 0 {
 		return map[string]interfaces.ResourceOps{}, nil

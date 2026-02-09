@@ -15,7 +15,6 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/golang/mock/gomock"
 	"github.com/kweaver-ai/kweaver-go-lib/rest"
-	rmock "github.com/kweaver-ai/kweaver-go-lib/rest/mock"
 	. "github.com/smartystreets/goconvey/convey"
 
 	"data-model/common"
@@ -82,7 +81,7 @@ var (
 )
 
 func MockNewMetricModelRestHandler(appSetting *common.AppSetting,
-	hydra rest.Hydra,
+	as interfaces.AuthService,
 	mms interfaces.MetricModelService,
 	dvs interfaces.DataViewService,
 	mmgs interfaces.MetricModelGroupService,
@@ -90,7 +89,7 @@ func MockNewMetricModelRestHandler(appSetting *common.AppSetting,
 
 	r = &restHandler{
 		appSetting: appSetting,
-		hydra:      hydra,
+		as:         as,
 		mms:        mms,
 		dvs:        dvs,
 		mmgs:       mmgs,
@@ -111,16 +110,16 @@ func Test_MetricModelRestHandler_CreateMetricModels(t *testing.T) {
 		defer mockCtrl.Finish()
 
 		appSetting := &common.AppSetting{}
-		hydra := rmock.NewMockHydra(mockCtrl)
+		as := dmock.NewMockAuthService(mockCtrl)
 		mms := dmock.NewMockMetricModelService(mockCtrl)
 		dvs := dmock.NewMockDataViewService(mockCtrl)
 		mmgs := dmock.NewMockMetricModelGroupService(mockCtrl)
 		mmts := dmock.NewMockMetricModelTaskService(mockCtrl)
 
-		handler := MockNewMetricModelRestHandler(appSetting, hydra, mms, dvs, mmgs, mmts)
+		handler := MockNewMetricModelRestHandler(appSetting, as, mms, dvs, mmgs, mmts)
 		handler.RegisterPublic(engine)
 
-		hydra.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(rest.Visitor{}, nil)
+		as.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(rest.Visitor{}, nil)
 
 		url := "/api/mdl-data-model/v1/metric-models"
 
@@ -618,16 +617,16 @@ func Test_MetricModelRestHandler_UpdateMetricModel(t *testing.T) {
 		defer mockCtrl.Finish()
 
 		appSetting := &common.AppSetting{}
-		hydra := rmock.NewMockHydra(mockCtrl)
+		as := dmock.NewMockAuthService(mockCtrl)
 		mms := dmock.NewMockMetricModelService(mockCtrl)
 		dvs := dmock.NewMockDataViewService(mockCtrl)
 		mmgs := dmock.NewMockMetricModelGroupService(mockCtrl)
 		mmts := dmock.NewMockMetricModelTaskService(mockCtrl)
 
-		handler := MockNewMetricModelRestHandler(appSetting, hydra, mms, dvs, mmgs, mmts)
+		handler := MockNewMetricModelRestHandler(appSetting, as, mms, dvs, mmgs, mmts)
 		handler.RegisterPublic(engine)
 
-		hydra.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(rest.Visitor{}, nil)
+		as.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(rest.Visitor{}, nil)
 
 		url := "/api/mdl-data-model/v1/metric-models/1"
 
@@ -1068,16 +1067,16 @@ func Test_MetricModelRestHandler_DeleteMetricModels(t *testing.T) {
 		defer mockCtrl.Finish()
 
 		appSetting := &common.AppSetting{}
-		hydra := rmock.NewMockHydra(mockCtrl)
+		as := dmock.NewMockAuthService(mockCtrl)
 		mms := dmock.NewMockMetricModelService(mockCtrl)
 		dvs := dmock.NewMockDataViewService(mockCtrl)
 		mmgs := dmock.NewMockMetricModelGroupService(mockCtrl)
 		mmts := dmock.NewMockMetricModelTaskService(mockCtrl)
 
-		handler := MockNewMetricModelRestHandler(appSetting, hydra, mms, dvs, mmgs, mmts)
+		handler := MockNewMetricModelRestHandler(appSetting, as, mms, dvs, mmgs, mmts)
 		handler.RegisterPublic(engine)
 
-		hydra.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(rest.Visitor{}, nil)
+		as.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(rest.Visitor{}, nil)
 
 		url := "/api/mdl-data-model/v1/metric-models/1,2"
 
@@ -1144,16 +1143,16 @@ func Test_MetricModelRestHandler_ListMetricModels(t *testing.T) {
 		defer mockCtrl.Finish()
 
 		appSetting := &common.AppSetting{}
-		hydra := rmock.NewMockHydra(mockCtrl)
+		as := dmock.NewMockAuthService(mockCtrl)
 		mms := dmock.NewMockMetricModelService(mockCtrl)
 		dvs := dmock.NewMockDataViewService(mockCtrl)
 		mmgs := dmock.NewMockMetricModelGroupService(mockCtrl)
 		mmts := dmock.NewMockMetricModelTaskService(mockCtrl)
 
-		handler := MockNewMetricModelRestHandler(appSetting, hydra, mms, dvs, mmgs, mmts)
+		handler := MockNewMetricModelRestHandler(appSetting, as, mms, dvs, mmgs, mmts)
 		handler.RegisterPublic(engine)
 
-		hydra.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(rest.Visitor{}, nil)
+		as.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(rest.Visitor{}, nil)
 
 		url := "/api/mdl-data-model/v1/metric-models"
 
@@ -1219,16 +1218,16 @@ func Test_MetricModelRestHandler_GetMetricModels(t *testing.T) {
 		defer mockCtrl.Finish()
 
 		appSetting := &common.AppSetting{}
-		hydra := rmock.NewMockHydra(mockCtrl)
+		as := dmock.NewMockAuthService(mockCtrl)
 		mms := dmock.NewMockMetricModelService(mockCtrl)
 		dvs := dmock.NewMockDataViewService(mockCtrl)
 		mmgs := dmock.NewMockMetricModelGroupService(mockCtrl)
 		mmts := dmock.NewMockMetricModelTaskService(mockCtrl)
 
-		handler := MockNewMetricModelRestHandler(appSetting, hydra, mms, dvs, mmgs, mmts)
+		handler := MockNewMetricModelRestHandler(appSetting, as, mms, dvs, mmgs, mmts)
 		handler.RegisterPublic(engine)
 
-		hydra.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(rest.Visitor{}, nil)
+		as.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(rest.Visitor{}, nil)
 
 		url := "/api/mdl-data-model/v1/metric-models/1"
 
@@ -1291,16 +1290,16 @@ func Test_MetricModelRestHandler_UpdateMetricModels(t *testing.T) {
 		defer mockCtrl.Finish()
 
 		appSetting := &common.AppSetting{}
-		hydra := rmock.NewMockHydra(mockCtrl)
+		as := dmock.NewMockAuthService(mockCtrl)
 		mms := dmock.NewMockMetricModelService(mockCtrl)
 		dvs := dmock.NewMockDataViewService(mockCtrl)
 		mmgs := dmock.NewMockMetricModelGroupService(mockCtrl)
 		mmts := dmock.NewMockMetricModelTaskService(mockCtrl)
 
-		handler := MockNewMetricModelRestHandler(appSetting, hydra, mms, dvs, mmgs, mmts)
+		handler := MockNewMetricModelRestHandler(appSetting, as, mms, dvs, mmgs, mmts)
 		handler.RegisterPublic(engine)
 
-		hydra.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(rest.Visitor{}, nil)
+		as.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(rest.Visitor{}, nil)
 
 		url := "/api/mdl-data-model/v1/metric-models/1,2/attributes"
 
@@ -1431,16 +1430,16 @@ func Test_MetricModelRestHandler_GetMetricTask(t *testing.T) {
 		defer mockCtrl.Finish()
 
 		appSetting := &common.AppSetting{}
-		hydra := rmock.NewMockHydra(mockCtrl)
+		as := dmock.NewMockAuthService(mockCtrl)
 		mms := dmock.NewMockMetricModelService(mockCtrl)
 		dvs := dmock.NewMockDataViewService(mockCtrl)
 		mmgs := dmock.NewMockMetricModelGroupService(mockCtrl)
 		mmts := dmock.NewMockMetricModelTaskService(mockCtrl)
 
-		handler := MockNewMetricModelRestHandler(appSetting, hydra, mms, dvs, mmgs, mmts)
+		handler := MockNewMetricModelRestHandler(appSetting, as, mms, dvs, mmgs, mmts)
 		handler.RegisterPublic(engine)
 
-		hydra.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(rest.Visitor{}, nil)
+		as.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(rest.Visitor{}, nil)
 
 		url := "/api/mdl-data-model/v1/metric-tasks/1"
 
@@ -1499,16 +1498,16 @@ func Test_MetricModelRestHandler_UpdateMetricTaskAttributes(t *testing.T) {
 		defer mockCtrl.Finish()
 
 		appSetting := &common.AppSetting{}
-		hydra := rmock.NewMockHydra(mockCtrl)
+		as := dmock.NewMockAuthService(mockCtrl)
 		mms := dmock.NewMockMetricModelService(mockCtrl)
 		dvs := dmock.NewMockDataViewService(mockCtrl)
 		mmgs := dmock.NewMockMetricModelGroupService(mockCtrl)
 		mmts := dmock.NewMockMetricModelTaskService(mockCtrl)
 
-		handler := MockNewMetricModelRestHandler(appSetting, hydra, mms, dvs, mmgs, mmts)
+		handler := MockNewMetricModelRestHandler(appSetting, as, mms, dvs, mmgs, mmts)
 		handler.RegisterPublic(engine)
 
-		hydra.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(rest.Visitor{}, nil)
+		as.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(rest.Visitor{}, nil)
 
 		url := "/api/mdl-data-model/v1/metric-tasks/1/attr"
 
@@ -1576,16 +1575,16 @@ func Test_MetricModelRestHandler_GetMetricModelSourceFields(t *testing.T) {
 		defer mockCtrl.Finish()
 
 		appSetting := &common.AppSetting{}
-		hydra := rmock.NewMockHydra(mockCtrl)
+		as := dmock.NewMockAuthService(mockCtrl)
 		mms := dmock.NewMockMetricModelService(mockCtrl)
 		dvs := dmock.NewMockDataViewService(mockCtrl)
 		mmgs := dmock.NewMockMetricModelGroupService(mockCtrl)
 		mmts := dmock.NewMockMetricModelTaskService(mockCtrl)
 
-		handler := MockNewMetricModelRestHandler(appSetting, hydra, mms, dvs, mmgs, mmts)
+		handler := MockNewMetricModelRestHandler(appSetting, as, mms, dvs, mmgs, mmts)
 		handler.RegisterPublic(engine)
 
-		hydra.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(rest.Visitor{}, nil)
+		as.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(rest.Visitor{}, nil)
 
 		url := "/api/mdl-data-model/v1/metric-models/1/fields"
 
