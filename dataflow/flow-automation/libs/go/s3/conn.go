@@ -67,6 +67,10 @@ func (c *S3Connection) GetDownloadURL(ctx context.Context, key string, expires i
 		Key:    aws.String(key),
 	})
 
+	if expires <= 0 {
+		expires = 3600
+	}
+
 	duration := time.Duration(expires) * time.Second
 	urlStr, err := req.Presign(duration)
 	if err != nil {
