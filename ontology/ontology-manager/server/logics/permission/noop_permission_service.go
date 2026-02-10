@@ -8,14 +8,17 @@ package permission
 import (
 	"context"
 
+	"ontology-manager/common"
 	"ontology-manager/interfaces"
 )
 
 // NoopPermissionService 空权限服务（跳过所有权限检查）
-type NoopPermissionService struct{}
+type NoopPermissionService struct {
+	appSetting *common.AppSetting
+}
 
-func NewNoopPermissionService() interfaces.PermissionService {
-	return &NoopPermissionService{}
+func NewNoopPermissionService(appSetting *common.AppSetting) interfaces.PermissionService {
+	return &NoopPermissionService{appSetting: appSetting}
 }
 
 func (n *NoopPermissionService) CheckPermission(ctx context.Context, resource interfaces.Resource, ops []string) error {

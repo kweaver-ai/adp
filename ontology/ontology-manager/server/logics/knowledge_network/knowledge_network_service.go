@@ -31,6 +31,7 @@ import (
 	"ontology-manager/logics/object_type"
 	"ontology-manager/logics/permission"
 	"ontology-manager/logics/relation_type"
+	"ontology-manager/logics/user_mgmt"
 )
 
 var (
@@ -55,7 +56,7 @@ type knowledgeNetworkService struct {
 	rta        interfaces.RelationTypeAccess
 	ps         interfaces.PermissionService
 	rts        interfaces.RelationTypeService
-	uma        interfaces.UserMgmtAccess
+	ums        interfaces.UserMgmtService
 }
 
 func NewKNService(appSetting *common.AppSetting) interfaces.KNService {
@@ -77,7 +78,7 @@ func NewKNService(appSetting *common.AppSetting) interfaces.KNService {
 			ps:         permission.NewPermissionService(appSetting),
 			rta:        logics.RTA,
 			rts:        relation_type.NewRelationTypeService(appSetting),
-			uma:        logics.UMA,
+			ums:        user_mgmt.NewUserMgmtService(appSetting),
 		}
 	})
 	return knService
@@ -435,7 +436,7 @@ func (kns *knowledgeNetworkService) ListKNs(ctx context.Context,
 		accountInfos = append(accountInfos, &kn.Creator, &kn.Updater)
 	}
 
-	err = kns.uma.GetAccountNames(ctx, accountInfos)
+	err = kns.ums.GetAccountNames(ctx, accountInfos)
 	if err != nil {
 		span.SetStatus(codes.Error, "GetAccountNames error")
 
@@ -491,7 +492,7 @@ func (kns *knowledgeNetworkService) GetKNByID(ctx context.Context, knID string, 
 	}
 
 	accountInfos := []*interfaces.AccountInfo{&kn.Creator, &kn.Updater}
-	err = kns.uma.GetAccountNames(ctx, accountInfos)
+	err = kns.ums.GetAccountNames(ctx, accountInfos)
 	if err != nil {
 		span.SetStatus(codes.Error, "GetAccountNames error")
 

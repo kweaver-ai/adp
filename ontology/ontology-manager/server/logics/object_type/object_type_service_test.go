@@ -832,7 +832,7 @@ func Test_objectTypeService_ListObjectTypes(t *testing.T) {
 		ota := omock.NewMockObjectTypeAccess(mockCtrl)
 		ps := omock.NewMockPermissionService(mockCtrl)
 		cga := omock.NewMockConceptGroupAccess(mockCtrl)
-		uma := omock.NewMockUserMgmtAccess(mockCtrl)
+		ums := omock.NewMockUserMgmtService(mockCtrl)
 		dva := omock.NewMockDataViewAccess(mockCtrl)
 		db, smock, _ := sqlmock.New(sqlmock.QueryMatcherOption(sqlmock.QueryMatcherEqual))
 
@@ -842,7 +842,7 @@ func Test_objectTypeService_ListObjectTypes(t *testing.T) {
 			ota:        ota,
 			ps:         ps,
 			cga:        cga,
-			uma:        uma,
+			ums:        ums,
 			dva:        dva,
 		}
 
@@ -869,7 +869,7 @@ func Test_objectTypeService_ListObjectTypes(t *testing.T) {
 			smock.ExpectBegin()
 			ps.EXPECT().CheckPermission(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
 			ota.EXPECT().ListObjectTypes(gomock.Any(), gomock.Any(), gomock.Any()).Return(objectTypes, nil)
-			uma.EXPECT().GetAccountNames(gomock.Any(), gomock.Any()).Return(nil)
+			ums.EXPECT().GetAccountNames(gomock.Any(), gomock.Any()).Return(nil)
 			cga.EXPECT().GetConceptGroupsByOTIDs(gomock.Any(), gomock.Any(), gomock.Any()).Return(map[string][]*interfaces.ConceptGroup{}, nil)
 			smock.ExpectCommit()
 
@@ -954,7 +954,7 @@ func Test_objectTypeService_ListObjectTypes(t *testing.T) {
 			smock.ExpectBegin()
 			ps.EXPECT().CheckPermission(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
 			ota.EXPECT().ListObjectTypes(gomock.Any(), gomock.Any(), gomock.Any()).Return(objectTypes, nil)
-			uma.EXPECT().GetAccountNames(gomock.Any(), gomock.Any()).Return(rest.NewHTTPError(ctx, 500, oerrors.OntologyManager_ObjectType_InternalError))
+			ums.EXPECT().GetAccountNames(gomock.Any(), gomock.Any()).Return(rest.NewHTTPError(ctx, 500, oerrors.OntologyManager_ObjectType_InternalError))
 			smock.ExpectRollback()
 
 			result, total, err := service.ListObjectTypes(ctx, nil, query)
@@ -986,7 +986,7 @@ func Test_objectTypeService_ListObjectTypes(t *testing.T) {
 			smock.ExpectBegin()
 			ps.EXPECT().CheckPermission(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
 			ota.EXPECT().ListObjectTypes(gomock.Any(), gomock.Any(), gomock.Any()).Return(objectTypes, nil)
-			uma.EXPECT().GetAccountNames(gomock.Any(), gomock.Any()).Return(nil)
+			ums.EXPECT().GetAccountNames(gomock.Any(), gomock.Any()).Return(nil)
 			cga.EXPECT().GetConceptGroupsByOTIDs(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil, rest.NewHTTPError(ctx, 500, oerrors.OntologyManager_ObjectType_InternalError))
 			smock.ExpectRollback()
 
@@ -1019,7 +1019,7 @@ func Test_objectTypeService_ListObjectTypes(t *testing.T) {
 			smock.ExpectBegin()
 			ps.EXPECT().CheckPermission(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
 			ota.EXPECT().ListObjectTypes(gomock.Any(), gomock.Any(), gomock.Any()).Return(objectTypes, nil)
-			uma.EXPECT().GetAccountNames(gomock.Any(), gomock.Any()).Return(nil)
+			ums.EXPECT().GetAccountNames(gomock.Any(), gomock.Any()).Return(nil)
 			cga.EXPECT().GetConceptGroupsByOTIDs(gomock.Any(), gomock.Any(), gomock.Any()).Return(map[string][]*interfaces.ConceptGroup{}, nil)
 			smock.ExpectCommit()
 

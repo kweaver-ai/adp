@@ -296,13 +296,13 @@ func Test_conceptGroupService_ListConceptGroups(t *testing.T) {
 		appSetting := &common.AppSetting{}
 		cga := omock.NewMockConceptGroupAccess(mockCtrl)
 		ps := omock.NewMockPermissionService(mockCtrl)
-		uma := omock.NewMockUserMgmtAccess(mockCtrl)
+		ums := omock.NewMockUserMgmtService(mockCtrl)
 
 		service := &conceptGroupService{
 			appSetting: appSetting,
 			cga:        cga,
 			ps:         ps,
-			uma:        uma,
+			ums:        ums,
 		}
 
 		Convey("Success listing concept groups\n", func() {
@@ -323,7 +323,7 @@ func Test_conceptGroupService_ListConceptGroups(t *testing.T) {
 
 			ps.EXPECT().CheckPermission(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
 			cga.EXPECT().ListConceptGroups(gomock.Any(), gomock.Any()).Return(cgArr, nil)
-			uma.EXPECT().GetAccountNames(gomock.Any(), gomock.Any()).Return(nil)
+			ums.EXPECT().GetAccountNames(gomock.Any(), gomock.Any()).Return(nil)
 			cga.EXPECT().GetConceptIDsByConceptGroupIDs(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return([]string{}, nil).AnyTimes()
 
 			cgs, total, err := service.ListConceptGroups(ctx, query)
@@ -398,7 +398,7 @@ func Test_conceptGroupService_ListConceptGroups(t *testing.T) {
 
 			ps.EXPECT().CheckPermission(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
 			cga.EXPECT().ListConceptGroups(gomock.Any(), gomock.Any()).Return(cgArr, nil)
-			uma.EXPECT().GetAccountNames(gomock.Any(), gomock.Any()).Return(rest.NewHTTPError(ctx, 500, oerrors.OntologyManager_ConceptGroup_InternalError))
+			ums.EXPECT().GetAccountNames(gomock.Any(), gomock.Any()).Return(rest.NewHTTPError(ctx, 500, oerrors.OntologyManager_ConceptGroup_InternalError))
 
 			cgs, total, err := service.ListConceptGroups(ctx, query)
 			So(err, ShouldNotBeNil)
@@ -428,14 +428,14 @@ func Test_conceptGroupService_ListConceptGroups(t *testing.T) {
 				appSetting: appSetting,
 				cga:        cga,
 				ps:         ps,
-				uma:        uma,
+				ums:        ums,
 				rta:        rta,
 				ata:        ata,
 			}
 
 			ps.EXPECT().CheckPermission(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
 			cga.EXPECT().ListConceptGroups(gomock.Any(), gomock.Any()).Return(cgArr, nil)
-			uma.EXPECT().GetAccountNames(gomock.Any(), gomock.Any()).Return(nil)
+			ums.EXPECT().GetAccountNames(gomock.Any(), gomock.Any()).Return(nil)
 			cga.EXPECT().GetConceptIDsByConceptGroupIDs(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil, rest.NewHTTPError(ctx, 500, oerrors.OntologyManager_ConceptGroup_InternalError))
 
 			cgs, total, err := service.ListConceptGroups(ctx, query)
@@ -462,7 +462,7 @@ func Test_conceptGroupService_ListConceptGroups(t *testing.T) {
 
 			ps.EXPECT().CheckPermission(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
 			cga.EXPECT().ListConceptGroups(gomock.Any(), gomock.Any()).Return(cgArr, nil)
-			uma.EXPECT().GetAccountNames(gomock.Any(), gomock.Any()).Return(nil)
+			ums.EXPECT().GetAccountNames(gomock.Any(), gomock.Any()).Return(nil)
 			cga.EXPECT().GetConceptIDsByConceptGroupIDs(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return([]string{}, nil)
 
 			cgs, total, err := service.ListConceptGroups(ctx, query)
@@ -513,7 +513,7 @@ func Test_conceptGroupService_ListConceptGroups(t *testing.T) {
 
 			ps.EXPECT().CheckPermission(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
 			cga.EXPECT().ListConceptGroups(gomock.Any(), gomock.Any()).Return(cgArr, nil)
-			uma.EXPECT().GetAccountNames(gomock.Any(), gomock.Any()).Return(nil)
+			ums.EXPECT().GetAccountNames(gomock.Any(), gomock.Any()).Return(nil)
 			cga.EXPECT().GetConceptIDsByConceptGroupIDs(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return([]string{}, nil).AnyTimes()
 
 			cgs, total, err := service.ListConceptGroups(ctx, query)

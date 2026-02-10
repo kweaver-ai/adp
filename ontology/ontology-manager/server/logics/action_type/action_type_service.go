@@ -31,6 +31,7 @@ import (
 	"ontology-manager/logics"
 	"ontology-manager/logics/object_type"
 	"ontology-manager/logics/permission"
+	"ontology-manager/logics/user_mgmt"
 )
 
 var (
@@ -47,7 +48,7 @@ type actionTypeService struct {
 	osa        interfaces.OpenSearchAccess
 	ots        interfaces.ObjectTypeService
 	ps         interfaces.PermissionService
-	uma        interfaces.UserMgmtAccess
+	ums        interfaces.UserMgmtService
 }
 
 func NewActionTypeService(appSetting *common.AppSetting) interfaces.ActionTypeService {
@@ -61,7 +62,7 @@ func NewActionTypeService(appSetting *common.AppSetting) interfaces.ActionTypeSe
 			osa:        logics.OSA,
 			ots:        object_type.NewObjectTypeService(appSetting),
 			ps:         permission.NewPermissionService(appSetting),
-			uma:        logics.UMA,
+			ums:        user_mgmt.NewUserMgmtService(appSetting),
 		}
 	})
 	return atService
@@ -290,7 +291,7 @@ func (ats *actionTypeService) ListActionTypes(ctx context.Context, query interfa
 		accountInfos = append(accountInfos, &at.Creator, &at.Updater)
 	}
 
-	err = ats.uma.GetAccountNames(ctx, accountInfos)
+	err = ats.ums.GetAccountNames(ctx, accountInfos)
 	if err != nil {
 		span.SetStatus(codes.Error, "GetAccountNames error")
 		return []*interfaces.ActionType{}, 0, rest.NewHTTPError(ctx, http.StatusInternalServerError,

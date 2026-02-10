@@ -30,6 +30,7 @@ import (
 	"ontology-manager/interfaces"
 	"ontology-manager/logics"
 	"ontology-manager/logics/permission"
+	"ontology-manager/logics/user_mgmt"
 )
 
 var (
@@ -46,8 +47,8 @@ type objectTypeService struct {
 	mfa        interfaces.ModelFactoryAccess
 	osa        interfaces.OpenSearchAccess
 	ota        interfaces.ObjectTypeAccess
-	uma        interfaces.UserMgmtAccess
 	ps         interfaces.PermissionService
+	ums        interfaces.UserMgmtService
 }
 
 func NewObjectTypeService(appSetting *common.AppSetting) interfaces.ObjectTypeService {
@@ -61,8 +62,8 @@ func NewObjectTypeService(appSetting *common.AppSetting) interfaces.ObjectTypeSe
 			mfa:        logics.MFA,
 			osa:        logics.OSA,
 			ota:        logics.OTA,
-			uma:        logics.UMA,
 			ps:         permission.NewPermissionService(appSetting),
+			ums:        user_mgmt.NewUserMgmtService(appSetting),
 		}
 	})
 	return otService
@@ -353,7 +354,7 @@ func (ots *objectTypeService) ListObjectTypes(ctx context.Context, tx *sql.Tx,
 		otIDs = append(otIDs, objectType.OTID)
 	}
 
-	err = ots.uma.GetAccountNames(ctx, accountInfos)
+	err = ots.ums.GetAccountNames(ctx, accountInfos)
 	if err != nil {
 		span.SetStatus(codes.Error, "GetAccountNames error")
 

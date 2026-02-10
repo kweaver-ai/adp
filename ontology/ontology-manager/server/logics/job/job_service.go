@@ -26,6 +26,7 @@ import (
 	"ontology-manager/logics"
 	"ontology-manager/logics/object_type"
 	"ontology-manager/logics/permission"
+	"ontology-manager/logics/user_mgmt"
 	"ontology-manager/worker"
 )
 
@@ -41,7 +42,7 @@ type jobService struct {
 	je         interfaces.JobExecutor
 	ps         interfaces.PermissionService
 	ots        interfaces.ObjectTypeService
-	uma        interfaces.UserMgmtAccess
+	ums        interfaces.UserMgmtService
 }
 
 func NewJobService(appSetting *common.AppSetting) interfaces.JobService {
@@ -53,7 +54,7 @@ func NewJobService(appSetting *common.AppSetting) interfaces.JobService {
 			je:         worker.NewJobExecutor(appSetting),
 			ps:         permission.NewPermissionService(appSetting),
 			ots:        object_type.NewObjectTypeService(appSetting),
-			uma:        logics.UMA,
+			ums:        user_mgmt.NewUserMgmtService(appSetting),
 		}
 	})
 	return jService
@@ -359,7 +360,7 @@ func (js *jobService) ListJobs(ctx context.Context, queryParams interfaces.JobsQ
 		accountInfos = append(accountInfos, &job.Creator)
 	}
 
-	err = js.uma.GetAccountNames(ctx, accountInfos)
+	err = js.ums.GetAccountNames(ctx, accountInfos)
 	if err != nil {
 		span.SetStatus(codes.Error, "GetAccountNames error")
 

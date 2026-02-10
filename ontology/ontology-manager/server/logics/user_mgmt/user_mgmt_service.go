@@ -20,7 +20,7 @@ var (
 func NewUserMgmtService(appSetting *common.AppSetting) interfaces.UserMgmtService {
 	umServiceOnce.Do(func() {
 		if !common.GetAuthEnabled() {
-			umService = NewNoopUserMgmtService()
+			umService = NewNoopUserMgmtService(appSetting)
 		} else {
 			umService = NewUserMgmtServiceImpl(appSetting)
 		}

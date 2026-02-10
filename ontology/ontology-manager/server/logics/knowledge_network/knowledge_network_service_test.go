@@ -290,13 +290,13 @@ func Test_knowledgeNetworkService_ListKNs(t *testing.T) {
 		appSetting := &common.AppSetting{}
 		kna := omock.NewMockKNAccess(mockCtrl)
 		ps := omock.NewMockPermissionService(mockCtrl)
-		uma := omock.NewMockUserMgmtAccess(mockCtrl)
+		ums := omock.NewMockUserMgmtService(mockCtrl)
 
 		service := &knowledgeNetworkService{
 			appSetting: appSetting,
 			kna:        kna,
 			ps:         ps,
-			uma:        uma,
+			ums:        ums,
 		}
 
 		Convey("Success listing KNs\n", func() {
@@ -320,7 +320,7 @@ func Test_knowledgeNetworkService_ListKNs(t *testing.T) {
 						Operations: []string{interfaces.OPERATION_TYPE_VIEW_DETAIL},
 					},
 				}, nil)
-			uma.EXPECT().GetAccountNames(gomock.Any(), gomock.Any()).Return(nil)
+			ums.EXPECT().GetAccountNames(gomock.Any(), gomock.Any()).Return(nil)
 
 			kns, total, err := service.ListKNs(ctx, parameter)
 			So(err, ShouldBeNil)
@@ -405,7 +405,7 @@ func Test_knowledgeNetworkService_ListKNs(t *testing.T) {
 						Operations: []string{interfaces.OPERATION_TYPE_VIEW_DETAIL},
 					},
 				}, nil)
-			uma.EXPECT().GetAccountNames(gomock.Any(), gomock.Any()).Return(rest.NewHTTPError(ctx, 500, oerrors.OntologyManager_KnowledgeNetwork_InternalError))
+			ums.EXPECT().GetAccountNames(gomock.Any(), gomock.Any()).Return(rest.NewHTTPError(ctx, 500, oerrors.OntologyManager_KnowledgeNetwork_InternalError))
 
 			kns, total, err := service.ListKNs(ctx, parameter)
 			So(err, ShouldNotBeNil)
@@ -434,7 +434,7 @@ func Test_knowledgeNetworkService_ListKNs(t *testing.T) {
 						Operations: []string{interfaces.OPERATION_TYPE_VIEW_DETAIL},
 					},
 				}, nil)
-			uma.EXPECT().GetAccountNames(gomock.Any(), gomock.Any()).Return(nil)
+			ums.EXPECT().GetAccountNames(gomock.Any(), gomock.Any()).Return(nil)
 
 			kns, total, err := service.ListKNs(ctx, parameter)
 			So(err, ShouldBeNil)
@@ -499,7 +499,7 @@ func Test_knowledgeNetworkService_ListKNs(t *testing.T) {
 					"kn2": {Operations: []string{interfaces.OPERATION_TYPE_VIEW_DETAIL}},
 					"kn3": {Operations: []string{interfaces.OPERATION_TYPE_VIEW_DETAIL}},
 				}, nil)
-			uma.EXPECT().GetAccountNames(gomock.Any(), gomock.Any()).Return(nil)
+			ums.EXPECT().GetAccountNames(gomock.Any(), gomock.Any()).Return(nil)
 
 			kns, total, err := service.ListKNs(ctx, parameter)
 			So(err, ShouldBeNil)
@@ -519,13 +519,13 @@ func Test_knowledgeNetworkService_GetKNByID(t *testing.T) {
 		appSetting := &common.AppSetting{}
 		kna := omock.NewMockKNAccess(mockCtrl)
 		ps := omock.NewMockPermissionService(mockCtrl)
-		uma := omock.NewMockUserMgmtAccess(mockCtrl)
+		ums := omock.NewMockUserMgmtAccess(mockCtrl)
 
 		service := &knowledgeNetworkService{
 			appSetting: appSetting,
 			kna:        kna,
 			ps:         ps,
-			uma:        uma,
+			ums:        ums,
 		}
 
 		Convey("Success getting KN by ID\n", func() {
@@ -544,7 +544,7 @@ func Test_knowledgeNetworkService_GetKNByID(t *testing.T) {
 						Operations: []string{interfaces.OPERATION_TYPE_VIEW_DETAIL},
 					},
 				}, nil)
-			uma.EXPECT().GetAccountNames(gomock.Any(), gomock.Any()).Return(nil)
+			ums.EXPECT().GetAccountNames(gomock.Any(), gomock.Any()).Return(nil)
 
 			result, err := service.GetKNByID(ctx, knID, branch, mode)
 			So(err, ShouldBeNil)
@@ -634,7 +634,7 @@ func Test_knowledgeNetworkService_GetKNByID(t *testing.T) {
 						Operations: []string{interfaces.OPERATION_TYPE_VIEW_DETAIL},
 					},
 				}, nil)
-			uma.EXPECT().GetAccountNames(gomock.Any(), gomock.Any()).Return(rest.NewHTTPError(ctx, 500, oerrors.OntologyManager_KnowledgeNetwork_InternalError))
+			ums.EXPECT().GetAccountNames(gomock.Any(), gomock.Any()).Return(rest.NewHTTPError(ctx, 500, oerrors.OntologyManager_KnowledgeNetwork_InternalError))
 
 			result, err := service.GetKNByID(ctx, knID, branch, mode)
 			So(err, ShouldNotBeNil)
@@ -659,7 +659,7 @@ func Test_knowledgeNetworkService_GetKNByID(t *testing.T) {
 				appSetting: appSetting,
 				kna:        kna,
 				ps:         ps,
-				uma:        uma,
+				ums:        ums,
 				cgs:        cgs,
 				ots:        ots,
 				rts:        rts,
@@ -673,7 +673,7 @@ func Test_knowledgeNetworkService_GetKNByID(t *testing.T) {
 						Operations: []string{interfaces.OPERATION_TYPE_VIEW_DETAIL},
 					},
 				}, nil)
-			uma.EXPECT().GetAccountNames(gomock.Any(), gomock.Any()).Return(nil)
+			ums.EXPECT().GetAccountNames(gomock.Any(), gomock.Any()).Return(nil)
 			cgs.EXPECT().ListConceptGroups(gomock.Any(), gomock.Any()).Return([]*interfaces.ConceptGroup{}, 0, nil)
 			ots.EXPECT().ListObjectTypes(gomock.Any(), gomock.Any(), gomock.Any()).Return([]*interfaces.ObjectType{}, 0, nil)
 			rts.EXPECT().ListRelationTypes(gomock.Any(), gomock.Any()).Return([]*interfaces.RelationType{}, 0, nil)

@@ -8,14 +8,17 @@ package user_mgmt
 import (
 	"context"
 
+	"ontology-manager/common"
 	"ontology-manager/interfaces"
 )
 
 // NoopUserMgmtService 空用户管理服务（认证禁用时使用）
-type NoopUserMgmtService struct{}
+type NoopUserMgmtService struct {
+	appSetting *common.AppSetting
+}
 
-func NewNoopUserMgmtService() interfaces.UserMgmtService {
-	return &NoopUserMgmtService{}
+func NewNoopUserMgmtService(appSetting *common.AppSetting) interfaces.UserMgmtService {
+	return &NoopUserMgmtService{appSetting: appSetting}
 }
 
 func (n *NoopUserMgmtService) GetAccountNames(ctx context.Context, accountInfos []*interfaces.AccountInfo) error {

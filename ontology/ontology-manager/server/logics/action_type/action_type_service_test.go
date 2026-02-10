@@ -370,14 +370,14 @@ func Test_actionTypeService_ListActionTypes(t *testing.T) {
 		ata := omock.NewMockActionTypeAccess(mockCtrl)
 		ps := omock.NewMockPermissionService(mockCtrl)
 		ots := omock.NewMockObjectTypeService(mockCtrl)
-		uma := omock.NewMockUserMgmtAccess(mockCtrl)
+		ums := omock.NewMockUserMgmtService(mockCtrl)
 
 		service := &actionTypeService{
 			appSetting: appSetting,
 			ata:        ata,
 			ps:         ps,
 			ots:        ots,
-			uma:        uma,
+			ums:        ums,
 		}
 
 		Convey("Success listing action types\n", func() {
@@ -402,7 +402,7 @@ func Test_actionTypeService_ListActionTypes(t *testing.T) {
 			ps.EXPECT().CheckPermission(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
 			ata.EXPECT().ListActionTypes(gomock.Any(), gomock.Any()).Return(atArr, nil)
 			ots.EXPECT().GetObjectTypesMapByIDs(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(map[string]*interfaces.ObjectType{}, nil)
-			uma.EXPECT().GetAccountNames(gomock.Any(), gomock.Any()).Return(nil)
+			ums.EXPECT().GetAccountNames(gomock.Any(), gomock.Any()).Return(nil)
 
 			ats, total, err := service.ListActionTypes(ctx, query)
 			So(err, ShouldBeNil)
@@ -505,7 +505,7 @@ func Test_actionTypeService_ListActionTypes(t *testing.T) {
 			ps.EXPECT().CheckPermission(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
 			ata.EXPECT().ListActionTypes(gomock.Any(), gomock.Any()).Return(atArr, nil)
 			ots.EXPECT().GetObjectTypesMapByIDs(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(map[string]*interfaces.ObjectType{}, nil)
-			uma.EXPECT().GetAccountNames(gomock.Any(), gomock.Any()).Return(rest.NewHTTPError(ctx, 500, oerrors.OntologyManager_ActionType_InternalError))
+			ums.EXPECT().GetAccountNames(gomock.Any(), gomock.Any()).Return(rest.NewHTTPError(ctx, 500, oerrors.OntologyManager_ActionType_InternalError))
 
 			ats, total, err := service.ListActionTypes(ctx, query)
 			So(err, ShouldNotBeNil)
@@ -535,7 +535,7 @@ func Test_actionTypeService_ListActionTypes(t *testing.T) {
 			ps.EXPECT().CheckPermission(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
 			ata.EXPECT().ListActionTypes(gomock.Any(), gomock.Any()).Return(atArr, nil)
 			ots.EXPECT().GetObjectTypesMapByIDs(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(map[string]*interfaces.ObjectType{}, nil)
-			uma.EXPECT().GetAccountNames(gomock.Any(), gomock.Any()).Return(nil)
+			ums.EXPECT().GetAccountNames(gomock.Any(), gomock.Any()).Return(nil)
 
 			ats, total, err := service.ListActionTypes(ctx, query)
 			So(err, ShouldBeNil)
@@ -608,7 +608,7 @@ func Test_actionTypeService_ListActionTypes(t *testing.T) {
 			ps.EXPECT().CheckPermission(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
 			ata.EXPECT().ListActionTypes(gomock.Any(), gomock.Any()).Return(atArr, nil)
 			ots.EXPECT().GetObjectTypesMapByIDs(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(map[string]*interfaces.ObjectType{}, nil).AnyTimes()
-			uma.EXPECT().GetAccountNames(gomock.Any(), gomock.Any()).Return(nil)
+			ums.EXPECT().GetAccountNames(gomock.Any(), gomock.Any()).Return(nil)
 
 			ats, total, err := service.ListActionTypes(ctx, query)
 			So(err, ShouldBeNil)

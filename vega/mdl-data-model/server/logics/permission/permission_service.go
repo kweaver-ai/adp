@@ -20,7 +20,7 @@ var (
 func NewPermissionService(appSetting *common.AppSetting) interfaces.PermissionService {
 	pServiceOnce.Do(func() {
 		if !common.GetAuthEnabled() {
-			pService = NewNoopPermissionService()
+			pService = NewNoopPermissionService(appSetting)
 		} else {
 			pService = NewPermissionServiceImpl(appSetting)
 		}

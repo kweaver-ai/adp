@@ -523,14 +523,14 @@ func Test_relationTypeService_ListRelationTypes(t *testing.T) {
 		rta := omock.NewMockRelationTypeAccess(mockCtrl)
 		ps := omock.NewMockPermissionService(mockCtrl)
 		ots := omock.NewMockObjectTypeService(mockCtrl)
-		uma := omock.NewMockUserMgmtAccess(mockCtrl)
+		ums := omock.NewMockUserMgmtService(mockCtrl)
 
 		service := &relationTypeService{
 			appSetting: appSetting,
 			rta:        rta,
 			ps:         ps,
 			ots:        ots,
-			uma:        uma,
+			ums:        ums,
 		}
 
 		Convey("Success listing relation types\n", func() {
@@ -556,7 +556,7 @@ func Test_relationTypeService_ListRelationTypes(t *testing.T) {
 			ps.EXPECT().CheckPermission(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
 			rta.EXPECT().ListRelationTypes(gomock.Any(), gomock.Any()).Return(rtArr, nil)
 			ots.EXPECT().GetObjectTypesMapByIDs(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(map[string]*interfaces.ObjectType{}, nil)
-			uma.EXPECT().GetAccountNames(gomock.Any(), gomock.Any()).Return(nil)
+			ums.EXPECT().GetAccountNames(gomock.Any(), gomock.Any()).Return(nil)
 
 			rts, total, err := service.ListRelationTypes(ctx, query)
 			So(err, ShouldBeNil)
@@ -665,7 +665,7 @@ func Test_relationTypeService_ListRelationTypes(t *testing.T) {
 			ps.EXPECT().CheckPermission(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
 			rta.EXPECT().ListRelationTypes(gomock.Any(), gomock.Any()).Return(rtArr, nil)
 			ots.EXPECT().GetObjectTypesMapByIDs(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(map[string]*interfaces.ObjectType{}, nil)
-			uma.EXPECT().GetAccountNames(gomock.Any(), gomock.Any()).Return(rest.NewHTTPError(ctx, 500, oerrors.OntologyManager_RelationType_InternalError))
+			ums.EXPECT().GetAccountNames(gomock.Any(), gomock.Any()).Return(rest.NewHTTPError(ctx, 500, oerrors.OntologyManager_RelationType_InternalError))
 
 			rts, total, err := service.ListRelationTypes(ctx, query)
 			So(err, ShouldNotBeNil)
@@ -696,7 +696,7 @@ func Test_relationTypeService_ListRelationTypes(t *testing.T) {
 			ps.EXPECT().CheckPermission(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
 			rta.EXPECT().ListRelationTypes(gomock.Any(), gomock.Any()).Return(rtArr, nil)
 			ots.EXPECT().GetObjectTypesMapByIDs(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(map[string]*interfaces.ObjectType{}, nil)
-			uma.EXPECT().GetAccountNames(gomock.Any(), gomock.Any()).Return(nil)
+			ums.EXPECT().GetAccountNames(gomock.Any(), gomock.Any()).Return(nil)
 
 			rts, total, err := service.ListRelationTypes(ctx, query)
 			So(err, ShouldBeNil)
@@ -727,7 +727,7 @@ func Test_relationTypeService_ListRelationTypes(t *testing.T) {
 			ps.EXPECT().CheckPermission(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
 			rta.EXPECT().ListRelationTypes(gomock.Any(), gomock.Any()).Return(rtArr, nil)
 			ots.EXPECT().GetObjectTypesMapByIDs(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(map[string]*interfaces.ObjectType{}, nil)
-			uma.EXPECT().GetAccountNames(gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
+			ums.EXPECT().GetAccountNames(gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
 
 			rts, total, err := service.ListRelationTypes(ctx, query)
 			So(err, ShouldBeNil)
@@ -774,7 +774,7 @@ func Test_relationTypeService_ListRelationTypes(t *testing.T) {
 			ps.EXPECT().CheckPermission(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
 			rta.EXPECT().ListRelationTypes(gomock.Any(), gomock.Any()).Return(rtArr, nil)
 			ots.EXPECT().GetObjectTypesMapByIDs(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(map[string]*interfaces.ObjectType{}, nil).AnyTimes()
-			uma.EXPECT().GetAccountNames(gomock.Any(), gomock.Any()).Return(nil)
+			ums.EXPECT().GetAccountNames(gomock.Any(), gomock.Any()).Return(nil)
 
 			rts, total, err := service.ListRelationTypes(ctx, query)
 			So(err, ShouldBeNil)

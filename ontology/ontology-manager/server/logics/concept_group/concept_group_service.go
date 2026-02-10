@@ -29,6 +29,7 @@ import (
 	"ontology-manager/logics/object_type"
 	"ontology-manager/logics/permission"
 	"ontology-manager/logics/relation_type"
+	"ontology-manager/logics/user_mgmt"
 )
 
 var (
@@ -50,7 +51,7 @@ type conceptGroupService struct {
 	rta        interfaces.RelationTypeAccess
 	ps         interfaces.PermissionService
 	rts        interfaces.RelationTypeService
-	uma        interfaces.UserMgmtAccess
+	ums        interfaces.UserMgmtService
 }
 
 func NewConceptGroupService(appSetting *common.AppSetting) interfaces.ConceptGroupService {
@@ -69,7 +70,7 @@ func NewConceptGroupService(appSetting *common.AppSetting) interfaces.ConceptGro
 			ps:         permission.NewPermissionService(appSetting),
 			rta:        logics.RTA,
 			rts:        relation_type.NewRelationTypeService(appSetting),
-			uma:        logics.UMA,
+			ums:        user_mgmt.NewUserMgmtService(appSetting),
 		}
 	})
 	return cgService
@@ -386,7 +387,7 @@ func (cgs *conceptGroupService) ListConceptGroups(ctx context.Context,
 		accountInfos = append(accountInfos, &cg.Creator, &cg.Updater)
 	}
 
-	err = cgs.uma.GetAccountNames(ctx, accountInfos)
+	err = cgs.ums.GetAccountNames(ctx, accountInfos)
 	if err != nil {
 		span.SetStatus(codes.Error, "GetAccountNames error")
 

@@ -9,17 +9,19 @@ import (
 	"context"
 
 	"ontology-manager/common"
-	umAccess "ontology-manager/drivenadapters/user_mgmt"
 	"ontology-manager/interfaces"
+	"ontology-manager/logics"
 )
 
 type UserMgmtServiceImpl struct {
-	uma interfaces.UserMgmtAccess
+	appSetting *common.AppSetting
+	uma        interfaces.UserMgmtAccess
 }
 
 func NewUserMgmtServiceImpl(appSetting *common.AppSetting) interfaces.UserMgmtService {
 	return &UserMgmtServiceImpl{
-		uma: umAccess.NewUserMgmtAccess(appSetting),
+		appSetting: appSetting,
+		uma:        logics.UMA,
 	}
 }
 
