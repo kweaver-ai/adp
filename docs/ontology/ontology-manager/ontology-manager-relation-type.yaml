@@ -71,6 +71,13 @@ paths:
           schema:
             type: string
           in: query
+        - name: bound_object_type_id
+          description: 绑定的对象类ID，查询起点等于此对象类或者终点等于此对象类的关系类。支持传入多个值
+          schema:
+            type: array
+            items:
+              type: string
+          in: query
       responses:
         "200":
           content:

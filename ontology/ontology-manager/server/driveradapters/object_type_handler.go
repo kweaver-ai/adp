@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"strconv"
 	"strings"
 
 	"github.com/gin-gonic/gin"
@@ -545,6 +546,19 @@ func (r *restHandler) DeleteObjectTypes(c *gin.Context) {
 	//解析字符串 转换为 []string
 	otIDs := common.StringToStringSlice(otIDsStr)
 
+	// 读取 force_delete 参数，默认为 false
+	forceDeleteStr := c.DefaultQuery("force_delete", interfaces.DEFAULT_FORCE_DELETE)
+	forceDelete, err := strconv.ParseBool(forceDeleteStr)
+	if err != nil {
+		httpErr := rest.NewHTTPError(ctx, http.StatusBadRequest,
+			oerrors.OntologyManager_ObjectType_InvalidParameter).
+			WithErrorDetails(fmt.Sprintf("Invalid force_delete parameter: %s", forceDeleteStr))
+		o11y.AddHttpAttrs4HttpError(span, httpErr)
+		rest.ReplyError(c, httpErr)
+		return
+	}
+	span.SetAttributes(attr.Key("force_delete").Bool(forceDelete))
+
 	//检查 otIDs 是否都存在
 	var objectTypes []*interfaces.ObjectTypeWithKeyField
 	for _, otID := range otIDs {
@@ -570,6 +584,39 @@ func (r *restHandler) DeleteObjectTypes(c *gin.Context) {
 		}
 
 		objectTypes = append(objectTypes, &interfaces.ObjectTypeWithKeyField{OTID: otID, OTName: otName})
+	}
+
+	// 如果 force_delete 为 false，需要校验对象类是否被关系类绑定
+	if !forceDelete {
+		// 查询关系类，检查对象类是否被绑定
+		// 查询对象类作为源对象类的关系类
+		relationTypes, _, err := r.rts.ListRelationTypes(ctx, interfaces.RelationTypesQueryParams{
+			KNID:               knID,
+			Branch:             branch,
+			BoundObjectTypeIDs: otIDs,
+		})
+		if err != nil {
+			httpErr := err.(*rest.HTTPError)
+			o11y.AddHttpAttrs4HttpError(span, httpErr)
+			rest.ReplyError(c, httpErr)
+			return
+		}
+
+		// 如果查询到关系类，说明对象类被绑定，返回错误
+		if len(relationTypes) > 0 {
+			// 收集绑定的关系类名称
+			relationTypeNames := make([]string, 0, len(relationTypes))
+			for _, rt := range relationTypes {
+				relationTypeNames = append(relationTypeNames, rt.RTName)
+			}
+			errorDetails := fmt.Sprintf("对象类被以下关系类绑定，无法删除: %s", strings.Join(relationTypeNames, ", "))
+			httpErr := rest.NewHTTPError(ctx, http.StatusBadRequest,
+				oerrors.OntologyManager_ObjectType_ObjectTypeBoundByRelationType).
+				WithErrorDetails(errorDetails)
+			o11y.AddHttpAttrs4HttpError(span, httpErr)
+			rest.ReplyError(c, httpErr)
+			return
+		}
 	}
 
 	// 批量删除对象类

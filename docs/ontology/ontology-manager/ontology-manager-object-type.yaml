@@ -1685,6 +1685,12 @@ paths:
               type: string
           in: path
           required: true
+        - name: force_delete
+          description: 是否强制删除，默认为false。当为false时，如果对象类被关系类绑定则报错；当为true时，跳过校验直接删除
+          schema:
+            type: boolean
+            default: false
+          in: query
       responses:
         "204":
           description: ok

@@ -546,6 +546,7 @@ func (r *restHandler) ListRelationTypes(c *gin.Context, visitor rest.Visitor) {
 	groupID := c.Query("group_id")
 	sourceObjectTypeIDs := c.QueryArray("source_object_type_id")
 	targetObjectTypeIDs := c.QueryArray("target_object_type_id")
+	boundObjectTypeIDs := c.QueryArray("bound_object_type_id")
 
 	offset := c.DefaultQuery("offset", interfaces.DEFAULT_OFFEST)
 	limit := c.DefaultQuery("limit", interfaces.DEFAULT_LIMIT)
@@ -586,6 +587,9 @@ func (r *restHandler) ListRelationTypes(c *gin.Context, visitor rest.Visitor) {
 	}
 	if len(targetObjectTypeIDs) > 0 {
 		parameter.TargetObjectTypeIDs = targetObjectTypeIDs
+	}
+	if len(boundObjectTypeIDs) > 0 {
+		parameter.BoundObjectTypeIDs = boundObjectTypeIDs
 	}
 
 	parameter.Sort = pageParam.Sort
