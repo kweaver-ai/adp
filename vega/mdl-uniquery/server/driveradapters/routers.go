@@ -21,6 +21,7 @@ import (
 	"uniquery/common"
 	uerrors "uniquery/errors"
 	"uniquery/interfaces"
+	"uniquery/logics/auth"
 	"uniquery/logics/data_connection"
 	"uniquery/logics/data_view"
 	"uniquery/logics/dsl"
@@ -71,7 +72,7 @@ type SubHandler struct {
 
 type restHandler struct {
 	appSetting    *common.AppSetting
-	hydra         rest.Hydra
+	authService   interfaces.AuthService
 	dcService     interfaces.DataConnectionService
 	dvService     interfaces.DataViewService
 	dslService    interfaces.DslService
@@ -92,7 +93,7 @@ func NewRestHandler(appSetting *common.AppSetting) RestHandler {
 	mmService := metric_model.NewMetricModelService(appSetting)
 	r := &restHandler{
 		appSetting:    appSetting,
-		hydra:         rest.NewHydra(appSetting.HydraAdminSetting),
+		authService:   auth.NewAuthService(appSetting),
 		dcService:     data_connection.NewDataConnectionService(appSetting),
 		dvService:     data_view.NewDataViewService(appSetting),
 		dslService:    dsl.NewDslService(appSetting),
@@ -350,7 +351,7 @@ func (r *restHandler) promqlMiddleWare() gin.HandlerFunc {
 
 // 校验oauth
 func (r *restHandler) verifyOAuth(ctx context.Context, c *gin.Context) (rest.Visitor, error) {
-	vistor, err := r.hydra.VerifyToken(ctx, c)
+	vistor, err := r.authService.VerifyToken(ctx, c)
 	if err != nil {
 		httpErr := rest.NewHTTPError(ctx, http.StatusUnauthorized, rest.PublicError_Unauthorized).
 			WithErrorDetails(err.Error())

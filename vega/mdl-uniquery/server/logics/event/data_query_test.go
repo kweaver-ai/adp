@@ -15,7 +15,7 @@ import (
 	. "github.com/smartystreets/goconvey/convey"
 
 	"uniquery/interfaces"
-	imock "uniquery/interfaces/mock"
+	umock "uniquery/interfaces/mock"
 )
 
 func mockNewMetricDataQuery(dataSource []string, dataSourceType string, t interfaces.TimeInterval, query interfaces.EventQuery,
@@ -39,7 +39,7 @@ func TestMetricFetchSourceRecordsFrom(t *testing.T) {
 		mockCtrl := gomock.NewController(t)
 		defer mockCtrl.Finish()
 
-		mmsMock := imock.NewMockMetricModelService(mockCtrl)
+		mmsMock := umock.NewMockMetricModelService(mockCtrl)
 
 		dataSource := []string{"1"}
 		dataSourceType := "metric_model"
@@ -137,7 +137,7 @@ func TestEventFetchSourceRecordsFrom(t *testing.T) {
 		mockCtrl := gomock.NewController(t)
 		defer mockCtrl.Finish()
 
-		esMock := imock.NewMockEventService(mockCtrl)
+		esMock := umock.NewMockEventService(mockCtrl)
 
 		dataSource := []string{"1"}
 		dataSourceType := "event_model"
@@ -272,8 +272,8 @@ func TestLogFetchSourceRecordsFrom(t *testing.T) {
 		mockCtrl := gomock.NewController(t)
 		defer mockCtrl.Finish()
 
-		dvsMock := imock.NewMockDataViewService(mockCtrl)
-		oMock := imock.NewMockOpenSearchAccess(mockCtrl)
+		dvsMock := umock.NewMockDataViewService(mockCtrl)
+		oMock := umock.NewMockOpenSearchAccess(mockCtrl)
 
 		dataSource := []string{"1"}
 		dataSourceType := "data_view"

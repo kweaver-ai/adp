@@ -13,7 +13,6 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/golang/mock/gomock"
 	"github.com/kweaver-ai/kweaver-go-lib/rest"
-	rmock "github.com/kweaver-ai/kweaver-go-lib/rest/mock"
 	. "github.com/smartystreets/goconvey/convey"
 
 	"uniquery/common"
@@ -24,11 +23,11 @@ import (
 )
 
 func mockNewTraceRestHandler(appSetting *common.AppSetting,
-	hydra rest.Hydra, tService interfaces.TraceService) (r *restHandler) {
+	authService interfaces.AuthService, tService interfaces.TraceService) (r *restHandler) {
 	r = &restHandler{
-		appSetting: appSetting,
-		hydra:      hydra,
-		tService:   tService,
+		appSetting:  appSetting,
+		authService: authService,
+		tService:    tService,
 	}
 	r.InitMetric()
 	return r
@@ -259,12 +258,12 @@ func TestGetTraceDetail(t *testing.T) {
 		defer mockCtrl.Finish()
 
 		appSetting := &common.AppSetting{}
-		hydraMock := rmock.NewMockHydra(mockCtrl)
+		authMock := umock.NewMockAuthService(mockCtrl)
 		tService := umock.NewMockTraceService(mockCtrl)
-		handler := mockNewTraceRestHandler(appSetting, hydraMock, tService)
+		handler := mockNewTraceRestHandler(appSetting, authMock, tService)
 		handler.RegisterPublic(engine)
 
-		hydraMock.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(rest.Visitor{}, nil)
+		authMock.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(rest.Visitor{}, nil)
 
 		// spanJson1 := `{
 		// 	"Name" : "Span2-1",

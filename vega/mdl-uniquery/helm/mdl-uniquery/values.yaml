@@ -8,6 +8,11 @@ env:
 
 replicaCount: 1
 
+# 认证开关
+# AUTH_ENABLED 控制是否启用 ISF 认证和权限检查
+auth:
+  enabled: "true"
+
 # 节点选择器
 nodeSelector: {}
 

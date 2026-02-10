@@ -15,7 +15,6 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/golang/mock/gomock"
 	"github.com/kweaver-ai/kweaver-go-lib/rest"
-	rmock "github.com/kweaver-ai/kweaver-go-lib/rest/mock"
 	. "github.com/smartystreets/goconvey/convey"
 
 	"uniquery/common"
@@ -25,12 +24,12 @@ import (
 )
 
 func mockNewDataViewRestHandler(appSetting *common.AppSetting,
-	hydra rest.Hydra, dvService interfaces.DataViewService) (r *restHandler) {
+	authService interfaces.AuthService, dvService interfaces.DataViewService) (r *restHandler) {
 
 	r = &restHandler{
-		appSetting: appSetting,
-		hydra:      hydra,
-		dvService:  dvService,
+		appSetting:  appSetting,
+		authService: authService,
+		dvService:   dvService,
 	}
 	r.InitMetric()
 	return r
@@ -48,12 +47,12 @@ func mockNewDataViewRestHandler(appSetting *common.AppSetting,
 // 		defer mockCtrl.Finish()
 
 // 		appSetting := &common.AppSetting{}
-// 		hydraMock := rmock.NewMockHydra(mockCtrl)
+// 		authMock := umock.NewMockAuthService(mockCtrl)
 // 		dvService := umock.NewMockDataViewService(mockCtrl)
-// 		handler := mockNewDataViewRestHandler(appSetting, hydraMock, dvService)
+// 		handler := mockNewDataViewRestHandler(appSetting, authMock, dvService)
 // 		handler.RegisterPublic(engine)
 
-// 		hydraMock.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(rest.Visitor{}, nil)
+// 		authMock.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(rest.Visitor{}, nil)
 
 // 		url := "/api/mdl-uniquery/v1/data-views"
 
@@ -173,12 +172,12 @@ func mockNewDataViewRestHandler(appSetting *common.AppSetting,
 // 		defer mockCtrl.Finish()
 
 // 		appSetting := &common.AppSetting{}
-// 		hydraMock := rmock.NewMockHydra(mockCtrl)
+// 		authMock := umock.NewMockAuthService(mockCtrl)
 // 		dvService := umock.NewMockDataViewService(mockCtrl)
-// 		handler := mockNewDataViewRestHandler(appSetting, hydraMock, dvService)
+// 		handler := mockNewDataViewRestHandler(appSetting, authMock, dvService)
 // 		handler.RegisterPublic(engine)
 
-// 		hydraMock.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(rest.Visitor{}, nil)
+// 		authMock.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(rest.Visitor{}, nil)
 
 // 		query := interfaces.DataViewQueryV1{
 // 			ViewQueryCommonParams: interfaces.ViewQueryCommonParams{
@@ -389,12 +388,12 @@ func TestGetViewData(t *testing.T) {
 		defer mockCtrl.Finish()
 
 		appSetting := &common.AppSetting{}
-		hydraMock := rmock.NewMockHydra(mockCtrl)
+		authMock := umock.NewMockAuthService(mockCtrl)
 		dvService := umock.NewMockDataViewService(mockCtrl)
-		handler := mockNewDataViewRestHandler(appSetting, hydraMock, dvService)
+		handler := mockNewDataViewRestHandler(appSetting, authMock, dvService)
 		handler.RegisterPublic(engine)
 
-		hydraMock.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(rest.Visitor{}, nil)
+		authMock.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(rest.Visitor{}, nil)
 
 		url := "/api/mdl-uniquery/v1/data-views/1a"
 
@@ -616,12 +615,12 @@ func TestDeleteDataViewPits(t *testing.T) {
 		defer mockCtrl.Finish()
 
 		appSetting := &common.AppSetting{}
-		hydraMock := rmock.NewMockHydra(mockCtrl)
+		authMock := umock.NewMockAuthService(mockCtrl)
 		dvService := umock.NewMockDataViewService(mockCtrl)
-		handler := mockNewDataViewRestHandler(appSetting, hydraMock, dvService)
+		handler := mockNewDataViewRestHandler(appSetting, authMock, dvService)
 		handler.RegisterPublic(engine)
 
-		hydraMock.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(rest.Visitor{}, nil)
+		authMock.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(rest.Visitor{}, nil)
 
 		url := "/api/mdl-uniquery/v1/data-view-pits"
 
