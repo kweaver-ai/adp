@@ -594,6 +594,9 @@ func (r *restHandler) DeleteObjectTypes(c *gin.Context) {
 			KNID:               knID,
 			Branch:             branch,
 			BoundObjectTypeIDs: otIDs,
+			PaginationQueryParameters: interfaces.PaginationQueryParameters{
+				Limit: -1,
+			},
 		})
 		if err != nil {
 			httpErr := err.(*rest.HTTPError)
