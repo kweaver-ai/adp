@@ -535,9 +535,10 @@ func PreprocessExpr(expr parser.Expr, start, end int64) (parser.Expr, error) {
 func preprocessExprHelper(expr parser.Expr, start, end int64) (bool, error) {
 	switch n := expr.(type) {
 	case *parser.VectorSelector:
-		if n.StartOrEnd == parser.START {
+		switch n.StartOrEnd {
+		case parser.START:
 			n.Timestamp = makeInt64Pointer(start)
-		} else if n.StartOrEnd == parser.END {
+		case parser.END:
 			n.Timestamp = makeInt64Pointer(end)
 		}
 		return n.Timestamp != nil, nil

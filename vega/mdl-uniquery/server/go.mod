@@ -12,7 +12,6 @@ require (
 	github.com/dlclark/regexp2 v1.11.5
 	github.com/fsnotify/fsnotify v1.9.0
 	github.com/gin-gonic/gin v1.11.0
-	github.com/go-viper/mapstructure/v2 v2.5.0
 	github.com/golang/mock v1.6.0
 	github.com/json-iterator/go v1.1.12
 	github.com/kweaver-ai/TelemetrySDK-Go/exporter/v2 v2.10.3
@@ -20,7 +19,7 @@ require (
 	github.com/kweaver-ai/proton-rds-sdk-go v1.5.0
 	github.com/mitchellh/mapstructure v1.5.0
 	github.com/opensearch-project/opensearch-go/v2 v2.3.0
-	github.com/panjf2000/ants/v2 v2.11.3
+	github.com/panjf2000/ants/v2 v2.11.5
 	github.com/patrickmn/go-cache v2.1.0+incompatible
 	github.com/smartystreets/goconvey v1.8.1
 	github.com/spf13/viper v1.21.0
@@ -34,8 +33,6 @@ require (
 	golang.org/x/sync v0.19.0
 )
 
-require github.com/emirpasic/gods v1.18.1 // indirect
-
 require (
 	filippo.io/edwards25519 v1.1.0 // indirect
 	gitee.com/chunanyong/dm v1.8.22 // indirect
@@ -47,6 +44,7 @@ require (
 	github.com/cloudwego/base64x v0.1.6 // indirect
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
 	github.com/emicklei/go-restful/v3 v3.11.0 // indirect
+	github.com/emirpasic/gods v1.18.1 // indirect
 	github.com/gabriel-vasile/mimetype v1.4.12 // indirect
 	github.com/gin-contrib/sse v1.1.0 // indirect
 	github.com/go-logr/logr v1.4.2 // indirect
@@ -59,6 +57,7 @@ require (
 	github.com/go-playground/universal-translator v0.18.1 // indirect
 	github.com/go-playground/validator/v10 v10.30.1 // indirect
 	github.com/go-sql-driver/mysql v1.9.3 // indirect
+	github.com/go-viper/mapstructure/v2 v2.5.0 // indirect
 	github.com/goccy/go-json v0.10.5 // indirect
 	github.com/goccy/go-yaml v1.18.0 // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
@@ -128,7 +127,7 @@ require (
 	go.yaml.in/yaml/v3 v3.0.4 // indirect
 	golang.org/x/arch v0.24.0 // indirect
 	golang.org/x/crypto v0.48.0 // indirect
-	golang.org/x/exp v0.0.0-20251219203646-944ab1f22d93 // indirect
+	golang.org/x/exp v0.0.0-20260209203927-2842357ff358 // indirect
 	golang.org/x/net v0.50.0 // indirect
 	golang.org/x/oauth2 v0.35.0 // indirect
 	golang.org/x/sys v0.41.0 // indirect

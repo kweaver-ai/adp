@@ -16,8 +16,8 @@ import (
 
 	"github.com/bytedance/sonic"
 	"github.com/dlclark/regexp2"
-	"github.com/go-viper/mapstructure/v2"
 	"github.com/kweaver-ai/kweaver-go-lib/rest"
+	"github.com/mitchellh/mapstructure"
 
 	"uniquery/common"
 	cond "uniquery/common/condition"
