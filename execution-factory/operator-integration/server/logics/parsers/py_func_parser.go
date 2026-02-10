@@ -62,7 +62,7 @@ func (p *pythonFunctionParser) validate(ctx context.Context, inputValue any) (in
 // 检查是否包含入口函数handler
 func checkRegexpHandler(ctx context.Context, code string) (err error) {
 	// 使用正则表达式检查是否包含 handler 函数定义
-	pattern := `def\s+handler\s*\(`
+	pattern := `def\s+handler\s*\(`  
 	matched, err := regexp.MatchString(pattern, code)
 	if err != nil {
 		return errors.DefaultHTTPError(ctx, http.StatusInternalServerError, fmt.Sprintf("check handler regexp failed: %v", err))

@@ -52,9 +52,13 @@ func (m *operatorManager) QueryOperatorMarketDetail(ctx context.Context, req *in
 		}
 	}
 	// 获取元数据信息
-	metadataDB, err := m.MetadataService.GetMetadataByVersion(ctx, interfaces.MetadataType(releaseDB.MetadataType), releaseDB.MetadataVersion)
+	exists, metadataDB, err := m.MetadataService.CheckMetadataExists(ctx, interfaces.MetadataType(releaseDB.MetadataType), releaseDB.MetadataVersion)
 	if err != nil {
 		m.Logger.WithContext(ctx).Errorf("query metadata failed, err: %v", err)
+		return
+	}
+	if !exists {
+		err = errors.NewHTTPError(ctx, http.StatusNotFound, errors.ErrExtMetadataNotFound, "metadata not found")
 		return
 	}
 	// 组装算子信息结果

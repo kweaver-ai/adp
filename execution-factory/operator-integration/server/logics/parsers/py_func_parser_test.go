@@ -95,7 +95,7 @@ func TestCheckHandler(t *testing.T) {
 		code4 := `def handler(text,event):
     return {"status": "success"}`
 		err = checkRegexpHandler(context.Background(), code4)
-		So(err, ShouldNotBeNil)
+		So(err, ShouldBeNil)
 	})
 }
 

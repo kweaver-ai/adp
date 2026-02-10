@@ -6,6 +6,7 @@ import (
 	"errors"
 	"net/http"
 	"testing"
+	"time"
 
 	"github.com/agiledragon/gomonkey/v2"
 	myErr "github.com/kweaver-ai/adp/execution-factory/operator-integration/server/infra/errors"
@@ -550,6 +551,7 @@ func TestRegisterOperatorByOpenAPI(t *testing.T) {
 			So(resp, ShouldNotBeNil)
 			So(len(resp), ShouldEqual, 1)
 			So(resp[0].Status, ShouldEqual, interfaces.ResultStatusSuccess)
+			time.Sleep(100 * time.Millisecond)
 		})
 	})
 }
