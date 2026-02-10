@@ -456,9 +456,9 @@ func TestEventSubServiceDivideRecordBySourceId(t *testing.T) {
 // 		defer mockCtrl.Finish()
 
 // 		// field.metricModelService.EXPECT().GetMetricModelSimpleInfosByIDs(gomock.Any(), gomock.Any()).AnyTimes().Return(nil, nil)
-// 		emAccess := dmock.NewMockEventModelAccess(mockCtrl)
-// 		kafkaAccess := dmock.NewMockKafkaAccess(mockCtrl)
-// 		engine := dmock.NewMockEventEngine(mockCtrl)
+// 		emAccess := umock.NewMockEventModelAccess(mockCtrl)
+// 		kafkaAccess := umock.NewMockKafkaAccess(mockCtrl)
+// 		engine := umock.NewMockEventEngine(mockCtrl)
 // 		topics := []string{"default.mdl.view"}
 // 		consumer, _ := kafka.NewConsumer(&kafka.ConfigMap{"bootstrap.servers": "localhost"})
 // 		producer, _ := kafka.NewProducer(&kafka.ConfigMap{"bootstrap.servers": "localhost"})

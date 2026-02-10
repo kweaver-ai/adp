@@ -19,7 +19,7 @@ import (
 	"ontology-query/common"
 	oerrors "ontology-query/errors"
 	"ontology-query/interfaces"
-	dmock "ontology-query/interfaces/mock"
+	omock "ontology-query/interfaces/mock"
 	"ontology-query/logics"
 	"ontology-query/logics/action_logs"
 )
@@ -418,9 +418,9 @@ func Test_ExecuteAction_ScanMode(t *testing.T) {
 		defer mockCtrl.Finish()
 
 		appSetting := &common.AppSetting{}
-		omAccess := dmock.NewMockOntologyManagerAccess(mockCtrl)
-		aoAccess := dmock.NewMockAgentOperatorAccess(mockCtrl)
-		ots := dmock.NewMockObjectTypeService(mockCtrl)
+		omAccess := omock.NewMockOntologyManagerAccess(mockCtrl)
+		aoAccess := omock.NewMockAgentOperatorAccess(mockCtrl)
+		ots := omock.NewMockObjectTypeService(mockCtrl)
 		logsService := action_logs.NewActionLogsService(appSetting)
 
 		// Set global variables

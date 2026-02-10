@@ -18,7 +18,7 @@ import (
 	cond "ontology-manager/common/condition"
 	oerrors "ontology-manager/errors"
 	"ontology-manager/interfaces"
-	dmock "ontology-manager/interfaces/mock"
+	omock "ontology-manager/interfaces/mock"
 )
 
 func Test_actionTypeService_CheckActionTypeExistByID(t *testing.T) {
@@ -28,7 +28,7 @@ func Test_actionTypeService_CheckActionTypeExistByID(t *testing.T) {
 		defer mockCtrl.Finish()
 
 		appSetting := &common.AppSetting{}
-		ata := dmock.NewMockActionTypeAccess(mockCtrl)
+		ata := omock.NewMockActionTypeAccess(mockCtrl)
 
 		service := &actionTypeService{
 			appSetting: appSetting,
@@ -86,7 +86,7 @@ func Test_actionTypeService_CheckActionTypeExistByName(t *testing.T) {
 		defer mockCtrl.Finish()
 
 		appSetting := &common.AppSetting{}
-		ata := dmock.NewMockActionTypeAccess(mockCtrl)
+		ata := omock.NewMockActionTypeAccess(mockCtrl)
 
 		service := &actionTypeService{
 			appSetting: appSetting,
@@ -144,7 +144,7 @@ func Test_actionTypeService_GetActionTypeIDsByKnID(t *testing.T) {
 		defer mockCtrl.Finish()
 
 		appSetting := &common.AppSetting{}
-		ata := dmock.NewMockActionTypeAccess(mockCtrl)
+		ata := omock.NewMockActionTypeAccess(mockCtrl)
 
 		service := &actionTypeService{
 			appSetting: appSetting,
@@ -196,9 +196,9 @@ func Test_actionTypeService_GetActionTypesByIDs(t *testing.T) {
 		defer mockCtrl.Finish()
 
 		appSetting := &common.AppSetting{}
-		ata := dmock.NewMockActionTypeAccess(mockCtrl)
-		ps := dmock.NewMockPermissionService(mockCtrl)
-		ots := dmock.NewMockObjectTypeService(mockCtrl)
+		ata := omock.NewMockActionTypeAccess(mockCtrl)
+		ps := omock.NewMockPermissionService(mockCtrl)
+		ots := omock.NewMockObjectTypeService(mockCtrl)
 
 		service := &actionTypeService{
 			appSetting: appSetting,
@@ -367,10 +367,10 @@ func Test_actionTypeService_ListActionTypes(t *testing.T) {
 		defer mockCtrl.Finish()
 
 		appSetting := &common.AppSetting{}
-		ata := dmock.NewMockActionTypeAccess(mockCtrl)
-		ps := dmock.NewMockPermissionService(mockCtrl)
-		ots := dmock.NewMockObjectTypeService(mockCtrl)
-		uma := dmock.NewMockUserMgmtAccess(mockCtrl)
+		ata := omock.NewMockActionTypeAccess(mockCtrl)
+		ps := omock.NewMockPermissionService(mockCtrl)
+		ots := omock.NewMockObjectTypeService(mockCtrl)
+		uma := omock.NewMockUserMgmtAccess(mockCtrl)
 
 		service := &actionTypeService{
 			appSetting: appSetting,
@@ -626,7 +626,7 @@ func Test_actionTypeService_GetTotal(t *testing.T) {
 		defer mockCtrl.Finish()
 
 		appSetting := &common.AppSetting{}
-		osa := dmock.NewMockOpenSearchAccess(mockCtrl)
+		osa := omock.NewMockOpenSearchAccess(mockCtrl)
 
 		service := &actionTypeService{
 			appSetting: appSetting,
@@ -701,7 +701,7 @@ func Test_actionTypeService_GetTotalWithATIDs(t *testing.T) {
 		defer mockCtrl.Finish()
 
 		appSetting := &common.AppSetting{}
-		osa := dmock.NewMockOpenSearchAccess(mockCtrl)
+		osa := omock.NewMockOpenSearchAccess(mockCtrl)
 
 		service := &actionTypeService{
 			appSetting: appSetting,
@@ -751,7 +751,7 @@ func Test_actionTypeService_GetTotalWithLargeATIDs(t *testing.T) {
 		defer mockCtrl.Finish()
 
 		appSetting := &common.AppSetting{}
-		osa := dmock.NewMockOpenSearchAccess(mockCtrl)
+		osa := omock.NewMockOpenSearchAccess(mockCtrl)
 
 		service := &actionTypeService{
 			appSetting: appSetting,
@@ -803,7 +803,7 @@ func Test_actionTypeService_InsertOpenSearchData(t *testing.T) {
 				DefaultSmallModelEnabled: false,
 			},
 		}
-		osa := dmock.NewMockOpenSearchAccess(mockCtrl)
+		osa := omock.NewMockOpenSearchAccess(mockCtrl)
 
 		service := &actionTypeService{
 			appSetting: appSetting,
@@ -859,8 +859,8 @@ func Test_actionTypeService_InsertOpenSearchData(t *testing.T) {
 					DefaultSmallModelEnabled: true,
 				},
 			}
-			osaWithVector := dmock.NewMockOpenSearchAccess(mockCtrl)
-			mfa := dmock.NewMockModelFactoryAccess(mockCtrl)
+			osaWithVector := omock.NewMockOpenSearchAccess(mockCtrl)
+			mfa := omock.NewMockModelFactoryAccess(mockCtrl)
 
 			serviceWithVector := &actionTypeService{
 				appSetting: appSettingWithVector,
@@ -904,7 +904,7 @@ func Test_actionTypeService_InsertOpenSearchData(t *testing.T) {
 					DefaultSmallModelEnabled: true,
 				},
 			}
-			mfa := dmock.NewMockModelFactoryAccess(mockCtrl)
+			mfa := omock.NewMockModelFactoryAccess(mockCtrl)
 
 			serviceWithVector := &actionTypeService{
 				appSetting: appSettingWithVector,
@@ -934,7 +934,7 @@ func Test_actionTypeService_InsertOpenSearchData(t *testing.T) {
 					DefaultSmallModelEnabled: true,
 				},
 			}
-			mfa := dmock.NewMockModelFactoryAccess(mockCtrl)
+			mfa := omock.NewMockModelFactoryAccess(mockCtrl)
 
 			serviceWithVector := &actionTypeService{
 				appSetting: appSettingWithVector,
@@ -965,7 +965,7 @@ func Test_actionTypeService_InsertOpenSearchData(t *testing.T) {
 					DefaultSmallModelEnabled: true,
 				},
 			}
-			mfa := dmock.NewMockModelFactoryAccess(mockCtrl)
+			mfa := omock.NewMockModelFactoryAccess(mockCtrl)
 
 			serviceWithVector := &actionTypeService{
 				appSetting: appSettingWithVector,
@@ -1001,9 +1001,9 @@ func Test_actionTypeService_DeleteActionTypesByIDs(t *testing.T) {
 
 		appSetting := &common.AppSetting{}
 		db, smock, _ := sqlmock.New(sqlmock.QueryMatcherOption(sqlmock.QueryMatcherEqual))
-		ata := dmock.NewMockActionTypeAccess(mockCtrl)
-		ps := dmock.NewMockPermissionService(mockCtrl)
-		osa := dmock.NewMockOpenSearchAccess(mockCtrl)
+		ata := omock.NewMockActionTypeAccess(mockCtrl)
+		ps := omock.NewMockPermissionService(mockCtrl)
+		osa := omock.NewMockOpenSearchAccess(mockCtrl)
 
 		service := &actionTypeService{
 			appSetting: appSetting,
@@ -1088,9 +1088,9 @@ func Test_actionTypeService_UpdateActionType(t *testing.T) {
 				DefaultSmallModelEnabled: false,
 			},
 		}
-		ata := dmock.NewMockActionTypeAccess(mockCtrl)
-		ps := dmock.NewMockPermissionService(mockCtrl)
-		osa := dmock.NewMockOpenSearchAccess(mockCtrl)
+		ata := omock.NewMockActionTypeAccess(mockCtrl)
+		ps := omock.NewMockPermissionService(mockCtrl)
+		osa := omock.NewMockOpenSearchAccess(mockCtrl)
 		db, smock, _ := sqlmock.New(sqlmock.QueryMatcherOption(sqlmock.QueryMatcherEqual))
 
 		service := &actionTypeService{
@@ -1186,9 +1186,9 @@ func Test_actionTypeService_CreateActionTypes(t *testing.T) {
 				DefaultSmallModelEnabled: false,
 			},
 		}
-		ata := dmock.NewMockActionTypeAccess(mockCtrl)
-		ps := dmock.NewMockPermissionService(mockCtrl)
-		osa := dmock.NewMockOpenSearchAccess(mockCtrl)
+		ata := omock.NewMockActionTypeAccess(mockCtrl)
+		ps := omock.NewMockPermissionService(mockCtrl)
+		osa := omock.NewMockOpenSearchAccess(mockCtrl)
 		db, smock, _ := sqlmock.New(sqlmock.QueryMatcherOption(sqlmock.QueryMatcherEqual))
 
 		service := &actionTypeService{
@@ -1383,8 +1383,8 @@ func Test_actionTypeService_SearchActionTypes(t *testing.T) {
 				DefaultSmallModelEnabled: false,
 			},
 		}
-		osa := dmock.NewMockOpenSearchAccess(mockCtrl)
-		cga := dmock.NewMockConceptGroupAccess(mockCtrl)
+		osa := omock.NewMockOpenSearchAccess(mockCtrl)
+		cga := omock.NewMockConceptGroupAccess(mockCtrl)
 
 		service := &actionTypeService{
 			appSetting: appSetting,

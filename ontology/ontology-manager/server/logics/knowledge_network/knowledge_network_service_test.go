@@ -18,7 +18,7 @@ import (
 	cond "ontology-manager/common/condition"
 	oerrors "ontology-manager/errors"
 	"ontology-manager/interfaces"
-	dmock "ontology-manager/interfaces/mock"
+	omock "ontology-manager/interfaces/mock"
 )
 
 func Test_knowledgeNetworkService_CheckKNExistByID(t *testing.T) {
@@ -28,8 +28,8 @@ func Test_knowledgeNetworkService_CheckKNExistByID(t *testing.T) {
 		defer mockCtrl.Finish()
 
 		appSetting := &common.AppSetting{}
-		kna := dmock.NewMockKNAccess(mockCtrl)
-		ps := dmock.NewMockPermissionService(mockCtrl)
+		kna := omock.NewMockKNAccess(mockCtrl)
+		ps := omock.NewMockPermissionService(mockCtrl)
 
 		service := &knowledgeNetworkService{
 			appSetting: appSetting,
@@ -85,7 +85,7 @@ func Test_knowledgeNetworkService_CheckKNExistByName(t *testing.T) {
 		defer mockCtrl.Finish()
 
 		appSetting := &common.AppSetting{}
-		kna := dmock.NewMockKNAccess(mockCtrl)
+		kna := omock.NewMockKNAccess(mockCtrl)
 
 		service := &knowledgeNetworkService{
 			appSetting: appSetting,
@@ -140,7 +140,7 @@ func Test_knowledgeNetworkService_UpdateKNDetail(t *testing.T) {
 		defer mockCtrl.Finish()
 
 		appSetting := &common.AppSetting{}
-		kna := dmock.NewMockKNAccess(mockCtrl)
+		kna := omock.NewMockKNAccess(mockCtrl)
 
 		service := &knowledgeNetworkService{
 			appSetting: appSetting,
@@ -180,10 +180,10 @@ func Test_knowledgeNetworkService_GetStatByKN(t *testing.T) {
 		defer mockCtrl.Finish()
 
 		appSetting := &common.AppSetting{}
-		ota := dmock.NewMockObjectTypeAccess(mockCtrl)
-		rta := dmock.NewMockRelationTypeAccess(mockCtrl)
-		ata := dmock.NewMockActionTypeAccess(mockCtrl)
-		cga := dmock.NewMockConceptGroupAccess(mockCtrl)
+		ota := omock.NewMockObjectTypeAccess(mockCtrl)
+		rta := omock.NewMockRelationTypeAccess(mockCtrl)
+		ata := omock.NewMockActionTypeAccess(mockCtrl)
+		cga := omock.NewMockConceptGroupAccess(mockCtrl)
 
 		service := &knowledgeNetworkService{
 			appSetting: appSetting,
@@ -288,9 +288,9 @@ func Test_knowledgeNetworkService_ListKNs(t *testing.T) {
 		defer mockCtrl.Finish()
 
 		appSetting := &common.AppSetting{}
-		kna := dmock.NewMockKNAccess(mockCtrl)
-		ps := dmock.NewMockPermissionService(mockCtrl)
-		uma := dmock.NewMockUserMgmtAccess(mockCtrl)
+		kna := omock.NewMockKNAccess(mockCtrl)
+		ps := omock.NewMockPermissionService(mockCtrl)
+		uma := omock.NewMockUserMgmtAccess(mockCtrl)
 
 		service := &knowledgeNetworkService{
 			appSetting: appSetting,
@@ -517,9 +517,9 @@ func Test_knowledgeNetworkService_GetKNByID(t *testing.T) {
 		defer mockCtrl.Finish()
 
 		appSetting := &common.AppSetting{}
-		kna := dmock.NewMockKNAccess(mockCtrl)
-		ps := dmock.NewMockPermissionService(mockCtrl)
-		uma := dmock.NewMockUserMgmtAccess(mockCtrl)
+		kna := omock.NewMockKNAccess(mockCtrl)
+		ps := omock.NewMockPermissionService(mockCtrl)
+		uma := omock.NewMockUserMgmtAccess(mockCtrl)
 
 		service := &knowledgeNetworkService{
 			appSetting: appSetting,
@@ -650,10 +650,10 @@ func Test_knowledgeNetworkService_GetKNByID(t *testing.T) {
 				KNName: "kn1",
 				Branch: branch,
 			}
-			cgs := dmock.NewMockConceptGroupService(mockCtrl)
-			ots := dmock.NewMockObjectTypeService(mockCtrl)
-			rts := dmock.NewMockRelationTypeService(mockCtrl)
-			ats := dmock.NewMockActionTypeService(mockCtrl)
+			cgs := omock.NewMockConceptGroupService(mockCtrl)
+			ots := omock.NewMockObjectTypeService(mockCtrl)
+			rts := omock.NewMockRelationTypeService(mockCtrl)
+			ats := omock.NewMockActionTypeService(mockCtrl)
 
 			service := &knowledgeNetworkService{
 				appSetting: appSetting,
@@ -698,7 +698,7 @@ func Test_knowledgeNetworkService_InsertOpenSearchData(t *testing.T) {
 				DefaultSmallModelEnabled: false,
 			},
 		}
-		osa := dmock.NewMockOpenSearchAccess(mockCtrl)
+		osa := omock.NewMockOpenSearchAccess(mockCtrl)
 
 		service := &knowledgeNetworkService{
 			appSetting: appSetting,
@@ -737,8 +737,8 @@ func Test_knowledgeNetworkService_InsertOpenSearchData(t *testing.T) {
 					DefaultSmallModelEnabled: true,
 				},
 			}
-			osaWithVector := dmock.NewMockOpenSearchAccess(mockCtrl)
-			mfa := dmock.NewMockModelFactoryAccess(mockCtrl)
+			osaWithVector := omock.NewMockOpenSearchAccess(mockCtrl)
+			mfa := omock.NewMockModelFactoryAccess(mockCtrl)
 
 			serviceWithVector := &knowledgeNetworkService{
 				appSetting: appSettingWithVector,
@@ -774,7 +774,7 @@ func Test_knowledgeNetworkService_InsertOpenSearchData(t *testing.T) {
 					DefaultSmallModelEnabled: true,
 				},
 			}
-			mfa := dmock.NewMockModelFactoryAccess(mockCtrl)
+			mfa := omock.NewMockModelFactoryAccess(mockCtrl)
 
 			serviceWithVector := &knowledgeNetworkService{
 				appSetting: appSettingWithVector,
@@ -799,7 +799,7 @@ func Test_knowledgeNetworkService_InsertOpenSearchData(t *testing.T) {
 					DefaultSmallModelEnabled: true,
 				},
 			}
-			mfa := dmock.NewMockModelFactoryAccess(mockCtrl)
+			mfa := omock.NewMockModelFactoryAccess(mockCtrl)
 
 			serviceWithVector := &knowledgeNetworkService{
 				appSetting: appSettingWithVector,
@@ -832,9 +832,9 @@ func Test_knowledgeNetworkService_UpdateKN(t *testing.T) {
 				DefaultSmallModelEnabled: false,
 			},
 		}
-		kna := dmock.NewMockKNAccess(mockCtrl)
-		ps := dmock.NewMockPermissionService(mockCtrl)
-		osa := dmock.NewMockOpenSearchAccess(mockCtrl)
+		kna := omock.NewMockKNAccess(mockCtrl)
+		ps := omock.NewMockPermissionService(mockCtrl)
+		osa := omock.NewMockOpenSearchAccess(mockCtrl)
 		db, smock, _ := sqlmock.New(sqlmock.QueryMatcherOption(sqlmock.QueryMatcherEqual))
 
 		service := &knowledgeNetworkService{
@@ -915,7 +915,7 @@ func Test_knowledgeNetworkService_UpdateKN(t *testing.T) {
 				Branch:       interfaces.MAIN_BRANCH,
 				IfNameModify: true,
 			}
-			ps2 := dmock.NewMockPermissionService(mockCtrl)
+			ps2 := omock.NewMockPermissionService(mockCtrl)
 
 			service := &knowledgeNetworkService{
 				appSetting: appSetting,
@@ -943,7 +943,7 @@ func Test_knowledgeNetworkService_UpdateKN(t *testing.T) {
 				Branch:       interfaces.MAIN_BRANCH,
 				IfNameModify: true,
 			}
-			ps2 := dmock.NewMockPermissionService(mockCtrl)
+			ps2 := omock.NewMockPermissionService(mockCtrl)
 
 			service := &knowledgeNetworkService{
 				appSetting: appSetting,
@@ -973,15 +973,15 @@ func Test_knowledgeNetworkService_DeleteKN(t *testing.T) {
 		defer mockCtrl.Finish()
 
 		appSetting := &common.AppSetting{}
-		kna := dmock.NewMockKNAccess(mockCtrl)
-		ps := dmock.NewMockPermissionService(mockCtrl)
-		osa := dmock.NewMockOpenSearchAccess(mockCtrl)
-		bsa := dmock.NewMockBusinessSystemAccess(mockCtrl)
-		ots := dmock.NewMockObjectTypeService(mockCtrl)
-		rts := dmock.NewMockRelationTypeService(mockCtrl)
-		ats := dmock.NewMockActionTypeService(mockCtrl)
-		js := dmock.NewMockJobService(mockCtrl)
-		cgs := dmock.NewMockConceptGroupService(mockCtrl)
+		kna := omock.NewMockKNAccess(mockCtrl)
+		ps := omock.NewMockPermissionService(mockCtrl)
+		osa := omock.NewMockOpenSearchAccess(mockCtrl)
+		bsa := omock.NewMockBusinessSystemAccess(mockCtrl)
+		ots := omock.NewMockObjectTypeService(mockCtrl)
+		rts := omock.NewMockRelationTypeService(mockCtrl)
+		ats := omock.NewMockActionTypeService(mockCtrl)
+		js := omock.NewMockJobService(mockCtrl)
+		cgs := omock.NewMockConceptGroupService(mockCtrl)
 
 		db, smock, _ := sqlmock.New(sqlmock.QueryMatcherOption(sqlmock.QueryMatcherEqual))
 
@@ -1264,8 +1264,8 @@ func Test_knowledgeNetworkService_ListKnSrcs(t *testing.T) {
 		defer mockCtrl.Finish()
 
 		appSetting := &common.AppSetting{}
-		kna := dmock.NewMockKNAccess(mockCtrl)
-		ps := dmock.NewMockPermissionService(mockCtrl)
+		kna := omock.NewMockKNAccess(mockCtrl)
+		ps := omock.NewMockPermissionService(mockCtrl)
 
 		service := &knowledgeNetworkService{
 			appSetting: appSetting,
@@ -1450,8 +1450,8 @@ func Test_knowledgeNetworkService_GetRelationTypePaths(t *testing.T) {
 		defer mockCtrl.Finish()
 
 		appSetting := &common.AppSetting{}
-		kna := dmock.NewMockKNAccess(mockCtrl)
-		ots := dmock.NewMockObjectTypeService(mockCtrl)
+		kna := omock.NewMockKNAccess(mockCtrl)
+		ots := omock.NewMockObjectTypeService(mockCtrl)
 
 		service := &knowledgeNetworkService{
 			appSetting: appSetting,
@@ -1597,10 +1597,10 @@ func Test_knowledgeNetworkService_CreateKN(t *testing.T) {
 				DefaultSmallModelEnabled: false,
 			},
 		}
-		kna := dmock.NewMockKNAccess(mockCtrl)
-		ps := dmock.NewMockPermissionService(mockCtrl)
-		osa := dmock.NewMockOpenSearchAccess(mockCtrl)
-		bsa := dmock.NewMockBusinessSystemAccess(mockCtrl)
+		kna := omock.NewMockKNAccess(mockCtrl)
+		ps := omock.NewMockPermissionService(mockCtrl)
+		osa := omock.NewMockOpenSearchAccess(mockCtrl)
+		bsa := omock.NewMockBusinessSystemAccess(mockCtrl)
 		db, smock, _ := sqlmock.New(sqlmock.QueryMatcherOption(sqlmock.QueryMatcherEqual))
 
 		service := &knowledgeNetworkService{
@@ -1722,11 +1722,11 @@ func Test_knowledgeNetworkService_CreateKN(t *testing.T) {
 				Branch: interfaces.MAIN_BRANCH,
 			}
 			mode := interfaces.ImportMode_Overwrite
-			kna2 := dmock.NewMockKNAccess(mockCtrl)
-			ots := dmock.NewMockObjectTypeService(mockCtrl)
-			rts := dmock.NewMockRelationTypeService(mockCtrl)
-			ats := dmock.NewMockActionTypeService(mockCtrl)
-			cgs := dmock.NewMockConceptGroupService(mockCtrl)
+			kna2 := omock.NewMockKNAccess(mockCtrl)
+			ots := omock.NewMockObjectTypeService(mockCtrl)
+			rts := omock.NewMockRelationTypeService(mockCtrl)
+			ats := omock.NewMockActionTypeService(mockCtrl)
+			cgs := omock.NewMockConceptGroupService(mockCtrl)
 
 			service := &knowledgeNetworkService{
 				appSetting: appSetting,
@@ -1813,7 +1813,7 @@ func Test_knowledgeNetworkService_CreateKN(t *testing.T) {
 				},
 			}
 			mode := interfaces.ImportMode_Normal
-			cgs := dmock.NewMockConceptGroupService(mockCtrl)
+			cgs := omock.NewMockConceptGroupService(mockCtrl)
 
 			service3 := &knowledgeNetworkService{
 				appSetting: appSetting,
@@ -1853,7 +1853,7 @@ func Test_knowledgeNetworkService_CreateKN(t *testing.T) {
 				},
 			}
 			mode := interfaces.ImportMode_Normal
-			ots := dmock.NewMockObjectTypeService(mockCtrl)
+			ots := omock.NewMockObjectTypeService(mockCtrl)
 
 			service4 := &knowledgeNetworkService{
 				appSetting: appSetting,
@@ -1893,7 +1893,7 @@ func Test_knowledgeNetworkService_CreateKN(t *testing.T) {
 				},
 			}
 			mode := interfaces.ImportMode_Normal
-			rts := dmock.NewMockRelationTypeService(mockCtrl)
+			rts := omock.NewMockRelationTypeService(mockCtrl)
 
 			service5 := &knowledgeNetworkService{
 				appSetting: appSetting,
@@ -1933,7 +1933,7 @@ func Test_knowledgeNetworkService_CreateKN(t *testing.T) {
 				},
 			}
 			mode := interfaces.ImportMode_Normal
-			ats := dmock.NewMockActionTypeService(mockCtrl)
+			ats := omock.NewMockActionTypeService(mockCtrl)
 
 			service6 := &knowledgeNetworkService{
 				appSetting: appSetting,

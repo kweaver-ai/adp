@@ -17,7 +17,7 @@ import (
 
 	"ontology-manager/common"
 	"ontology-manager/interfaces"
-	dmock "ontology-manager/interfaces/mock"
+	omock "ontology-manager/interfaces/mock"
 )
 
 func MockNewResourceRestHandler(appSetting *common.AppSetting,
@@ -44,8 +44,8 @@ func Test_RestHandler_ListResources(t *testing.T) {
 		defer mockCtrl.Finish()
 
 		appSetting := &common.AppSetting{}
-		as := dmock.NewMockAuthService(mockCtrl)
-		kns := dmock.NewMockKNService(mockCtrl)
+		as := omock.NewMockAuthService(mockCtrl)
+		kns := omock.NewMockKNService(mockCtrl)
 
 		handler := MockNewResourceRestHandler(appSetting, as, kns)
 		handler.RegisterPublic(engine)

@@ -18,7 +18,7 @@ import (
 	cond "ontology-query/common/condition"
 	oerrors "ontology-query/errors"
 	"ontology-query/interfaces"
-	dmock "ontology-query/interfaces/mock"
+	omock "ontology-query/interfaces/mock"
 	"ontology-query/logics"
 )
 
@@ -45,9 +45,9 @@ func Test_actionTypeService_GetActionsByActionTypeID(t *testing.T) {
 		defer mockCtrl.Finish()
 
 		appSetting := &common.AppSetting{}
-		omAccess := dmock.NewMockOntologyManagerAccess(mockCtrl)
-		ots := dmock.NewMockObjectTypeService(mockCtrl)
-		uAccess := dmock.NewMockUniqueryAccess(mockCtrl)
+		omAccess := omock.NewMockOntologyManagerAccess(mockCtrl)
+		ots := omock.NewMockObjectTypeService(mockCtrl)
+		uAccess := omock.NewMockUniqueryAccess(mockCtrl)
 
 		// 设置全局变量
 		logics.OMA = omAccess

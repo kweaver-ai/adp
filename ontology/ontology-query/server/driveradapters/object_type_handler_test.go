@@ -22,7 +22,7 @@ import (
 	"ontology-query/common"
 	oerrors "ontology-query/errors"
 	"ontology-query/interfaces"
-	dmock "ontology-query/interfaces/mock"
+	omock "ontology-query/interfaces/mock"
 )
 
 func Test_RestHandler_GetObjectsInObjectTypeByIn(t *testing.T) {
@@ -37,10 +37,10 @@ func Test_RestHandler_GetObjectsInObjectTypeByIn(t *testing.T) {
 		defer mockCtrl.Finish()
 
 		appSetting := &common.AppSetting{}
-		as := dmock.NewMockAuthService(mockCtrl)
-		ats := dmock.NewMockActionTypeService(mockCtrl)
-		kns := dmock.NewMockKnowledgeNetworkService(mockCtrl)
-		ots := dmock.NewMockObjectTypeService(mockCtrl)
+		as := omock.NewMockAuthService(mockCtrl)
+		ats := omock.NewMockActionTypeService(mockCtrl)
+		kns := omock.NewMockKnowledgeNetworkService(mockCtrl)
+		ots := omock.NewMockObjectTypeService(mockCtrl)
 
 		handler := MockNewRestHandler(appSetting, as, ats, kns, ots)
 		handler.RegisterPublic(engine)
@@ -116,10 +116,10 @@ func Test_RestHandler_GetObjectsInObjectTypeByEx(t *testing.T) {
 		defer mockCtrl.Finish()
 
 		appSetting := &common.AppSetting{}
-		as := dmock.NewMockAuthService(mockCtrl)
-		ats := dmock.NewMockActionTypeService(mockCtrl)
-		kns := dmock.NewMockKnowledgeNetworkService(mockCtrl)
-		ots := dmock.NewMockObjectTypeService(mockCtrl)
+		as := omock.NewMockAuthService(mockCtrl)
+		ats := omock.NewMockActionTypeService(mockCtrl)
+		kns := omock.NewMockKnowledgeNetworkService(mockCtrl)
+		ots := omock.NewMockObjectTypeService(mockCtrl)
 
 		handler := MockNewRestHandler(appSetting, as, ats, kns, ots)
 		handler.RegisterPublic(engine)
@@ -183,10 +183,10 @@ func Test_RestHandler_GetObjectsInObjectType(t *testing.T) {
 		defer mockCtrl.Finish()
 
 		appSetting := &common.AppSetting{}
-		as := dmock.NewMockAuthService(mockCtrl)
-		ats := dmock.NewMockActionTypeService(mockCtrl)
-		kns := dmock.NewMockKnowledgeNetworkService(mockCtrl)
-		ots := dmock.NewMockObjectTypeService(mockCtrl)
+		as := omock.NewMockAuthService(mockCtrl)
+		ats := omock.NewMockActionTypeService(mockCtrl)
+		kns := omock.NewMockKnowledgeNetworkService(mockCtrl)
+		ots := omock.NewMockObjectTypeService(mockCtrl)
 
 		handler := MockNewRestHandler(appSetting, as, ats, kns, ots)
 
@@ -315,10 +315,10 @@ func Test_RestHandler_GetObjectsPropertiesByIn(t *testing.T) {
 		defer mockCtrl.Finish()
 
 		appSetting := &common.AppSetting{}
-		as := dmock.NewMockAuthService(mockCtrl)
-		ats := dmock.NewMockActionTypeService(mockCtrl)
-		kns := dmock.NewMockKnowledgeNetworkService(mockCtrl)
-		ots := dmock.NewMockObjectTypeService(mockCtrl)
+		as := omock.NewMockAuthService(mockCtrl)
+		ats := omock.NewMockActionTypeService(mockCtrl)
+		kns := omock.NewMockKnowledgeNetworkService(mockCtrl)
+		ots := omock.NewMockObjectTypeService(mockCtrl)
 
 		handler := MockNewRestHandler(appSetting, as, ats, kns, ots)
 		handler.RegisterPublic(engine)
@@ -402,10 +402,10 @@ func Test_RestHandler_GetObjectsPropertiesByEx(t *testing.T) {
 		defer mockCtrl.Finish()
 
 		appSetting := &common.AppSetting{}
-		as := dmock.NewMockAuthService(mockCtrl)
-		ats := dmock.NewMockActionTypeService(mockCtrl)
-		kns := dmock.NewMockKnowledgeNetworkService(mockCtrl)
-		ots := dmock.NewMockObjectTypeService(mockCtrl)
+		as := omock.NewMockAuthService(mockCtrl)
+		ats := omock.NewMockActionTypeService(mockCtrl)
+		kns := omock.NewMockKnowledgeNetworkService(mockCtrl)
+		ots := omock.NewMockObjectTypeService(mockCtrl)
 
 		handler := MockNewRestHandler(appSetting, as, ats, kns, ots)
 		handler.RegisterPublic(engine)
@@ -470,10 +470,10 @@ func Test_RestHandler_GetObjectsProperties(t *testing.T) {
 		defer mockCtrl.Finish()
 
 		appSetting := &common.AppSetting{}
-		as := dmock.NewMockAuthService(mockCtrl)
-		ats := dmock.NewMockActionTypeService(mockCtrl)
-		kns := dmock.NewMockKnowledgeNetworkService(mockCtrl)
-		ots := dmock.NewMockObjectTypeService(mockCtrl)
+		as := omock.NewMockAuthService(mockCtrl)
+		ats := omock.NewMockActionTypeService(mockCtrl)
+		kns := omock.NewMockKnowledgeNetworkService(mockCtrl)
+		ots := omock.NewMockObjectTypeService(mockCtrl)
 
 		handler := MockNewRestHandler(appSetting, as, ats, kns, ots)
 

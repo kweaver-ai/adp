@@ -21,7 +21,7 @@ import (
 	"ontology-manager/common"
 	oerrors "ontology-manager/errors"
 	"ontology-manager/interfaces"
-	dmock "ontology-manager/interfaces/mock"
+	omock "ontology-manager/interfaces/mock"
 )
 
 func MockNewConceptGroupRestHandler(appSetting *common.AppSetting,
@@ -50,9 +50,9 @@ func Test_ConceptGroupRestHandler_CreateConceptGroup(t *testing.T) {
 		defer mockCtrl.Finish()
 
 		appSetting := &common.AppSetting{}
-		as := dmock.NewMockAuthService(mockCtrl)
-		cgs := dmock.NewMockConceptGroupService(mockCtrl)
-		kns := dmock.NewMockKNService(mockCtrl)
+		as := omock.NewMockAuthService(mockCtrl)
+		cgs := omock.NewMockConceptGroupService(mockCtrl)
+		kns := omock.NewMockKNService(mockCtrl)
 
 		handler := MockNewConceptGroupRestHandler(appSetting, as, cgs, kns)
 		handler.RegisterPublic(engine)
@@ -166,9 +166,9 @@ func Test_ConceptGroupRestHandler_UpdateConceptGroup(t *testing.T) {
 		defer mockCtrl.Finish()
 
 		appSetting := &common.AppSetting{}
-		as := dmock.NewMockAuthService(mockCtrl)
-		cgs := dmock.NewMockConceptGroupService(mockCtrl)
-		kns := dmock.NewMockKNService(mockCtrl)
+		as := omock.NewMockAuthService(mockCtrl)
+		cgs := omock.NewMockConceptGroupService(mockCtrl)
+		kns := omock.NewMockKNService(mockCtrl)
 
 		handler := MockNewConceptGroupRestHandler(appSetting, as, cgs, kns)
 		handler.RegisterPublic(engine)
@@ -266,9 +266,9 @@ func Test_ConceptGroupRestHandler_DeleteConceptGroup(t *testing.T) {
 		defer mockCtrl.Finish()
 
 		appSetting := &common.AppSetting{}
-		as := dmock.NewMockAuthService(mockCtrl)
-		cgs := dmock.NewMockConceptGroupService(mockCtrl)
-		kns := dmock.NewMockKNService(mockCtrl)
+		as := omock.NewMockAuthService(mockCtrl)
+		cgs := omock.NewMockConceptGroupService(mockCtrl)
+		kns := omock.NewMockKNService(mockCtrl)
 
 		handler := MockNewConceptGroupRestHandler(appSetting, as, cgs, kns)
 		handler.RegisterPublic(engine)
@@ -326,9 +326,9 @@ func Test_ConceptGroupRestHandler_ListConceptGroups(t *testing.T) {
 		defer mockCtrl.Finish()
 
 		appSetting := &common.AppSetting{}
-		as := dmock.NewMockAuthService(mockCtrl)
-		cgs := dmock.NewMockConceptGroupService(mockCtrl)
-		kns := dmock.NewMockKNService(mockCtrl)
+		as := omock.NewMockAuthService(mockCtrl)
+		cgs := omock.NewMockConceptGroupService(mockCtrl)
+		kns := omock.NewMockKNService(mockCtrl)
 
 		handler := MockNewConceptGroupRestHandler(appSetting, as, cgs, kns)
 		handler.RegisterPublic(engine)
@@ -386,9 +386,9 @@ func Test_ConceptGroupRestHandler_GetConceptGroup(t *testing.T) {
 		defer mockCtrl.Finish()
 
 		appSetting := &common.AppSetting{}
-		as := dmock.NewMockAuthService(mockCtrl)
-		cgs := dmock.NewMockConceptGroupService(mockCtrl)
-		kns := dmock.NewMockKNService(mockCtrl)
+		as := omock.NewMockAuthService(mockCtrl)
+		cgs := omock.NewMockConceptGroupService(mockCtrl)
+		kns := omock.NewMockKNService(mockCtrl)
 
 		handler := MockNewConceptGroupRestHandler(appSetting, as, cgs, kns)
 		handler.RegisterPublic(engine)
@@ -516,9 +516,9 @@ func Test_ConceptGroupRestHandler_AddObjectTypesToConceptGroup(t *testing.T) {
 		defer mockCtrl.Finish()
 
 		appSetting := &common.AppSetting{}
-		as := dmock.NewMockAuthService(mockCtrl)
-		cgs := dmock.NewMockConceptGroupService(mockCtrl)
-		kns := dmock.NewMockKNService(mockCtrl)
+		as := omock.NewMockAuthService(mockCtrl)
+		cgs := omock.NewMockConceptGroupService(mockCtrl)
+		kns := omock.NewMockKNService(mockCtrl)
 
 		handler := MockNewConceptGroupRestHandler(appSetting, as, cgs, kns)
 		handler.RegisterPublic(engine)
@@ -657,9 +657,9 @@ func Test_ConceptGroupRestHandler_DeleteObjectTypesFromGroup(t *testing.T) {
 		defer mockCtrl.Finish()
 
 		appSetting := &common.AppSetting{}
-		as := dmock.NewMockAuthService(mockCtrl)
-		cgs := dmock.NewMockConceptGroupService(mockCtrl)
-		kns := dmock.NewMockKNService(mockCtrl)
+		as := omock.NewMockAuthService(mockCtrl)
+		cgs := omock.NewMockConceptGroupService(mockCtrl)
+		kns := omock.NewMockKNService(mockCtrl)
 
 		handler := MockNewConceptGroupRestHandler(appSetting, as, cgs, kns)
 		handler.RegisterPublic(engine)

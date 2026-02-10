@@ -18,7 +18,7 @@ import (
 	cond "ontology-manager/common/condition"
 	oerrors "ontology-manager/errors"
 	"ontology-manager/interfaces"
-	dmock "ontology-manager/interfaces/mock"
+	omock "ontology-manager/interfaces/mock"
 )
 
 func Test_conceptGroupService_CheckConceptGroupExistByID(t *testing.T) {
@@ -28,7 +28,7 @@ func Test_conceptGroupService_CheckConceptGroupExistByID(t *testing.T) {
 		defer mockCtrl.Finish()
 
 		appSetting := &common.AppSetting{}
-		cga := dmock.NewMockConceptGroupAccess(mockCtrl)
+		cga := omock.NewMockConceptGroupAccess(mockCtrl)
 
 		service := &conceptGroupService{
 			appSetting: appSetting,
@@ -86,7 +86,7 @@ func Test_conceptGroupService_CheckConceptGroupExistByName(t *testing.T) {
 		defer mockCtrl.Finish()
 
 		appSetting := &common.AppSetting{}
-		cga := dmock.NewMockConceptGroupAccess(mockCtrl)
+		cga := omock.NewMockConceptGroupAccess(mockCtrl)
 
 		service := &conceptGroupService{
 			appSetting: appSetting,
@@ -144,7 +144,7 @@ func Test_conceptGroupService_UpdateConceptGroupDetail(t *testing.T) {
 		defer mockCtrl.Finish()
 
 		appSetting := &common.AppSetting{}
-		cga := dmock.NewMockConceptGroupAccess(mockCtrl)
+		cga := omock.NewMockConceptGroupAccess(mockCtrl)
 
 		service := &conceptGroupService{
 			appSetting: appSetting,
@@ -186,9 +186,9 @@ func Test_conceptGroupService_GetStatByConceptGroup(t *testing.T) {
 		defer mockCtrl.Finish()
 
 		appSetting := &common.AppSetting{}
-		cga := dmock.NewMockConceptGroupAccess(mockCtrl)
-		rta := dmock.NewMockRelationTypeAccess(mockCtrl)
-		ata := dmock.NewMockActionTypeAccess(mockCtrl)
+		cga := omock.NewMockConceptGroupAccess(mockCtrl)
+		rta := omock.NewMockRelationTypeAccess(mockCtrl)
+		ata := omock.NewMockActionTypeAccess(mockCtrl)
 
 		service := &conceptGroupService{
 			appSetting: appSetting,
@@ -294,9 +294,9 @@ func Test_conceptGroupService_ListConceptGroups(t *testing.T) {
 		defer mockCtrl.Finish()
 
 		appSetting := &common.AppSetting{}
-		cga := dmock.NewMockConceptGroupAccess(mockCtrl)
-		ps := dmock.NewMockPermissionService(mockCtrl)
-		uma := dmock.NewMockUserMgmtAccess(mockCtrl)
+		cga := omock.NewMockConceptGroupAccess(mockCtrl)
+		ps := omock.NewMockPermissionService(mockCtrl)
+		uma := omock.NewMockUserMgmtAccess(mockCtrl)
 
 		service := &conceptGroupService{
 			appSetting: appSetting,
@@ -421,8 +421,8 @@ func Test_conceptGroupService_ListConceptGroups(t *testing.T) {
 					CGName: "cg1",
 				},
 			}
-			rta := dmock.NewMockRelationTypeAccess(mockCtrl)
-			ata := dmock.NewMockActionTypeAccess(mockCtrl)
+			rta := omock.NewMockRelationTypeAccess(mockCtrl)
+			ata := omock.NewMockActionTypeAccess(mockCtrl)
 
 			service := &conceptGroupService{
 				appSetting: appSetting,
@@ -532,8 +532,8 @@ func Test_conceptGroupService_GetConceptGroupByID(t *testing.T) {
 		defer mockCtrl.Finish()
 
 		appSetting := &common.AppSetting{}
-		cga := dmock.NewMockConceptGroupAccess(mockCtrl)
-		ps := dmock.NewMockPermissionService(mockCtrl)
+		cga := omock.NewMockConceptGroupAccess(mockCtrl)
+		ps := omock.NewMockPermissionService(mockCtrl)
 
 		service := &conceptGroupService{
 			appSetting: appSetting,
@@ -639,9 +639,9 @@ func Test_conceptGroupService_GetConceptGroupByID(t *testing.T) {
 				Branch: branch,
 			}
 			otIDs := []string{"ot1"}
-			ots := dmock.NewMockObjectTypeService(mockCtrl)
-			rts := dmock.NewMockRelationTypeService(mockCtrl)
-			ats := dmock.NewMockActionTypeService(mockCtrl)
+			ots := omock.NewMockObjectTypeService(mockCtrl)
+			rts := omock.NewMockRelationTypeService(mockCtrl)
+			ats := omock.NewMockActionTypeService(mockCtrl)
 
 			service := &conceptGroupService{
 				appSetting: appSetting,
@@ -677,7 +677,7 @@ func Test_conceptGroupService_GetConceptGroupByID(t *testing.T) {
 				Branch: branch,
 			}
 			otIDs := []string{"ot1"}
-			ots := dmock.NewMockObjectTypeService(mockCtrl)
+			ots := omock.NewMockObjectTypeService(mockCtrl)
 
 			service := &conceptGroupService{
 				appSetting: appSetting,
@@ -708,8 +708,8 @@ func Test_conceptGroupService_GetConceptGroupByID(t *testing.T) {
 				Branch: branch,
 			}
 			otIDs := []string{"ot1"}
-			ots := dmock.NewMockObjectTypeService(mockCtrl)
-			rts := dmock.NewMockRelationTypeService(mockCtrl)
+			ots := omock.NewMockObjectTypeService(mockCtrl)
+			rts := omock.NewMockRelationTypeService(mockCtrl)
 
 			service := &conceptGroupService{
 				appSetting: appSetting,
@@ -742,9 +742,9 @@ func Test_conceptGroupService_GetConceptGroupByID(t *testing.T) {
 				Branch: branch,
 			}
 			otIDs := []string{"ot1"}
-			ots := dmock.NewMockObjectTypeService(mockCtrl)
-			rts := dmock.NewMockRelationTypeService(mockCtrl)
-			ats := dmock.NewMockActionTypeService(mockCtrl)
+			ots := omock.NewMockObjectTypeService(mockCtrl)
+			rts := omock.NewMockRelationTypeService(mockCtrl)
+			ats := omock.NewMockActionTypeService(mockCtrl)
 
 			service := &conceptGroupService{
 				appSetting: appSetting,
@@ -780,7 +780,7 @@ func Test_conceptGroupService_InsertOpenSearchData(t *testing.T) {
 				DefaultSmallModelEnabled: false,
 			},
 		}
-		osa := dmock.NewMockOpenSearchAccess(mockCtrl)
+		osa := omock.NewMockOpenSearchAccess(mockCtrl)
 
 		service := &conceptGroupService{
 			appSetting: appSetting,
@@ -821,8 +821,8 @@ func Test_conceptGroupService_InsertOpenSearchData(t *testing.T) {
 					DefaultSmallModelEnabled: true,
 				},
 			}
-			osaWithVector := dmock.NewMockOpenSearchAccess(mockCtrl)
-			mfa := dmock.NewMockModelFactoryAccess(mockCtrl)
+			osaWithVector := omock.NewMockOpenSearchAccess(mockCtrl)
+			mfa := omock.NewMockModelFactoryAccess(mockCtrl)
 
 			serviceWithVector := &conceptGroupService{
 				appSetting: appSettingWithVector,
@@ -861,7 +861,7 @@ func Test_conceptGroupService_InsertOpenSearchData(t *testing.T) {
 					DefaultSmallModelEnabled: true,
 				},
 			}
-			mfa := dmock.NewMockModelFactoryAccess(mockCtrl)
+			mfa := omock.NewMockModelFactoryAccess(mockCtrl)
 
 			serviceWithVector := &conceptGroupService{
 				appSetting: appSettingWithVector,
@@ -887,7 +887,7 @@ func Test_conceptGroupService_InsertOpenSearchData(t *testing.T) {
 					DefaultSmallModelEnabled: true,
 				},
 			}
-			mfa := dmock.NewMockModelFactoryAccess(mockCtrl)
+			mfa := omock.NewMockModelFactoryAccess(mockCtrl)
 
 			serviceWithVector := &conceptGroupService{
 				appSetting: appSettingWithVector,
@@ -917,9 +917,9 @@ func Test_conceptGroupService_DeleteConceptGroupByID(t *testing.T) {
 		defer mockCtrl.Finish()
 
 		appSetting := &common.AppSetting{}
-		cga := dmock.NewMockConceptGroupAccess(mockCtrl)
-		ps := dmock.NewMockPermissionService(mockCtrl)
-		osa := dmock.NewMockOpenSearchAccess(mockCtrl)
+		cga := omock.NewMockConceptGroupAccess(mockCtrl)
+		ps := omock.NewMockPermissionService(mockCtrl)
+		osa := omock.NewMockOpenSearchAccess(mockCtrl)
 		db, smock, _ := sqlmock.New(sqlmock.QueryMatcherOption(sqlmock.QueryMatcherEqual))
 
 		service := &conceptGroupService{
@@ -1031,9 +1031,9 @@ func Test_conceptGroupService_UpdateConceptGroup(t *testing.T) {
 				DefaultSmallModelEnabled: false,
 			},
 		}
-		cga := dmock.NewMockConceptGroupAccess(mockCtrl)
-		ps := dmock.NewMockPermissionService(mockCtrl)
-		osa := dmock.NewMockOpenSearchAccess(mockCtrl)
+		cga := omock.NewMockConceptGroupAccess(mockCtrl)
+		ps := omock.NewMockPermissionService(mockCtrl)
+		osa := omock.NewMockOpenSearchAccess(mockCtrl)
 		db, smock, _ := sqlmock.New(sqlmock.QueryMatcherOption(sqlmock.QueryMatcherEqual))
 
 		service := &conceptGroupService{
@@ -1120,8 +1120,8 @@ func Test_conceptGroupService_ListConceptGroupRelations(t *testing.T) {
 		defer mockCtrl.Finish()
 
 		appSetting := &common.AppSetting{}
-		cga := dmock.NewMockConceptGroupAccess(mockCtrl)
-		ps := dmock.NewMockPermissionService(mockCtrl)
+		cga := omock.NewMockConceptGroupAccess(mockCtrl)
+		ps := omock.NewMockPermissionService(mockCtrl)
 		db, smock, _ := sqlmock.New(sqlmock.QueryMatcherOption(sqlmock.QueryMatcherEqual))
 
 		service := &conceptGroupService{
@@ -1313,8 +1313,8 @@ func Test_conceptGroupService_DeleteObjectTypesFromGroup(t *testing.T) {
 		defer mockCtrl.Finish()
 
 		appSetting := &common.AppSetting{}
-		cga := dmock.NewMockConceptGroupAccess(mockCtrl)
-		ps := dmock.NewMockPermissionService(mockCtrl)
+		cga := omock.NewMockConceptGroupAccess(mockCtrl)
+		ps := omock.NewMockPermissionService(mockCtrl)
 		db, smock, _ := sqlmock.New(sqlmock.QueryMatcherOption(sqlmock.QueryMatcherEqual))
 
 		service := &conceptGroupService{
@@ -1394,9 +1394,9 @@ func Test_conceptGroupService_CreateConceptGroup(t *testing.T) {
 				DefaultSmallModelEnabled: false,
 			},
 		}
-		cga := dmock.NewMockConceptGroupAccess(mockCtrl)
-		ps := dmock.NewMockPermissionService(mockCtrl)
-		osa := dmock.NewMockOpenSearchAccess(mockCtrl)
+		cga := omock.NewMockConceptGroupAccess(mockCtrl)
+		ps := omock.NewMockPermissionService(mockCtrl)
+		osa := omock.NewMockOpenSearchAccess(mockCtrl)
 		db, smock, _ := sqlmock.New(sqlmock.QueryMatcherOption(sqlmock.QueryMatcherEqual))
 
 		service := &conceptGroupService{
@@ -1592,7 +1592,7 @@ func Test_conceptGroupService_CreateConceptGroup(t *testing.T) {
 				},
 			}
 			mode := interfaces.ImportMode_Normal
-			ots := dmock.NewMockObjectTypeService(mockCtrl)
+			ots := omock.NewMockObjectTypeService(mockCtrl)
 
 			service := &conceptGroupService{
 				appSetting: appSetting,
@@ -1637,7 +1637,7 @@ func Test_conceptGroupService_CreateConceptGroup(t *testing.T) {
 				},
 			}
 			mode := interfaces.ImportMode_Normal
-			ots := dmock.NewMockObjectTypeService(mockCtrl)
+			ots := omock.NewMockObjectTypeService(mockCtrl)
 
 			service := &conceptGroupService{
 				appSetting: appSetting,
@@ -1677,7 +1677,7 @@ func Test_conceptGroupService_CreateConceptGroup(t *testing.T) {
 				},
 			}
 			mode := interfaces.ImportMode_Normal
-			ots := dmock.NewMockObjectTypeService(mockCtrl)
+			ots := omock.NewMockObjectTypeService(mockCtrl)
 
 			service := &conceptGroupService{
 				appSetting: appSetting,
@@ -1718,7 +1718,7 @@ func Test_conceptGroupService_CreateConceptGroup(t *testing.T) {
 				},
 			}
 			mode := interfaces.ImportMode_Normal
-			rts := dmock.NewMockRelationTypeService(mockCtrl)
+			rts := omock.NewMockRelationTypeService(mockCtrl)
 
 			service := &conceptGroupService{
 				appSetting: appSetting,
@@ -1759,7 +1759,7 @@ func Test_conceptGroupService_CreateConceptGroup(t *testing.T) {
 				},
 			}
 			mode := interfaces.ImportMode_Normal
-			rts := dmock.NewMockRelationTypeService(mockCtrl)
+			rts := omock.NewMockRelationTypeService(mockCtrl)
 
 			service := &conceptGroupService{
 				appSetting: appSetting,
@@ -1799,7 +1799,7 @@ func Test_conceptGroupService_CreateConceptGroup(t *testing.T) {
 				},
 			}
 			mode := interfaces.ImportMode_Normal
-			ats := dmock.NewMockActionTypeService(mockCtrl)
+			ats := omock.NewMockActionTypeService(mockCtrl)
 
 			service := &conceptGroupService{
 				appSetting: appSetting,
@@ -1840,7 +1840,7 @@ func Test_conceptGroupService_CreateConceptGroup(t *testing.T) {
 				},
 			}
 			mode := interfaces.ImportMode_Normal
-			ats := dmock.NewMockActionTypeService(mockCtrl)
+			ats := omock.NewMockActionTypeService(mockCtrl)
 
 			service := &conceptGroupService{
 				appSetting: appSetting,
@@ -1873,8 +1873,8 @@ func Test_conceptGroupService_AddObjectTypesToConceptGroup(t *testing.T) {
 		defer mockCtrl.Finish()
 
 		appSetting := &common.AppSetting{}
-		cga := dmock.NewMockConceptGroupAccess(mockCtrl)
-		ots := dmock.NewMockObjectTypeService(mockCtrl)
+		cga := omock.NewMockConceptGroupAccess(mockCtrl)
+		ots := omock.NewMockObjectTypeService(mockCtrl)
 		db, smock, _ := sqlmock.New(sqlmock.QueryMatcherOption(sqlmock.QueryMatcherEqual))
 
 		service := &conceptGroupService{

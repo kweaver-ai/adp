@@ -10,7 +10,7 @@ import (
 
 	"flow-stream-data-pipeline/common"
 	"flow-stream-data-pipeline/pipeline-worker/interfaces"
-	dmock "flow-stream-data-pipeline/pipeline-worker/interfaces/mock"
+	fmock "flow-stream-data-pipeline/pipeline-worker/interfaces/mock"
 )
 
 func TestIndexMgmtService_GetIndexBases(t *testing.T) {
@@ -20,7 +20,7 @@ func TestIndexMgmtService_GetIndexBases(t *testing.T) {
 		mockCtl := gomock.NewController(t)
 		defer mockCtl.Finish()
 
-		imaMock := dmock.NewMockIndexBaseAccess(mockCtl)
+		imaMock := fmock.NewMockIndexBaseAccess(mockCtl)
 		imsMock := &indexBaseService{
 			appSetting: &common.AppSetting{},
 			ima:        imaMock,

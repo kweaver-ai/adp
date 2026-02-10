@@ -17,7 +17,7 @@ import (
 	"ontology-manager/common"
 	cond "ontology-manager/common/condition"
 	"ontology-manager/interfaces"
-	dmock "ontology-manager/interfaces/mock"
+	omock "ontology-manager/interfaces/mock"
 )
 
 func TestNewObjectTypeTask(t *testing.T) {
@@ -83,10 +83,10 @@ func TestObjectTypeTask_HandleObjectTypeTask(t *testing.T) {
 			},
 		}
 
-		dva := dmock.NewMockDataViewAccess(mockCtrl)
-		mfa := dmock.NewMockModelFactoryAccess(mockCtrl)
-		ja := dmock.NewMockJobAccess(mockCtrl)
-		osa := dmock.NewMockOpenSearchAccess(mockCtrl)
+		dva := omock.NewMockDataViewAccess(mockCtrl)
+		mfa := omock.NewMockModelFactoryAccess(mockCtrl)
+		ja := omock.NewMockJobAccess(mockCtrl)
+		osa := omock.NewMockOpenSearchAccess(mockCtrl)
 
 		jobInfo := &interfaces.JobInfo{
 			ID:         "job1",
@@ -493,7 +493,7 @@ func TestObjectTypeTask_handlerIndex(t *testing.T) {
 		mockCtrl := gomock.NewController(t)
 		defer mockCtrl.Finish()
 
-		osa := dmock.NewMockOpenSearchAccess(mockCtrl)
+		osa := omock.NewMockOpenSearchAccess(mockCtrl)
 
 		task := &ObjectTypeTask{
 			osa: osa,
@@ -558,7 +558,7 @@ func TestObjectTypeTask_handlerIndexData(t *testing.T) {
 		mockCtrl := gomock.NewController(t)
 		defer mockCtrl.Finish()
 
-		osa := dmock.NewMockOpenSearchAccess(mockCtrl)
+		osa := omock.NewMockOpenSearchAccess(mockCtrl)
 
 		task := &ObjectTypeTask{
 			osa: osa,
@@ -619,7 +619,7 @@ func TestObjectTypeTask_handlerIndexData(t *testing.T) {
 		})
 
 		Convey("Success with vector properties", func() {
-			mfa := dmock.NewMockModelFactoryAccess(mockCtrl)
+			mfa := omock.NewMockModelFactoryAccess(mockCtrl)
 			task.mfa = mfa
 			task.JobMaxRetryTimes = 3
 
@@ -651,7 +651,7 @@ func TestObjectTypeTask_handlerIndexData(t *testing.T) {
 		})
 
 		Convey("Failed when handlerVector returns error after retries", func() {
-			mfa := dmock.NewMockModelFactoryAccess(mockCtrl)
+			mfa := omock.NewMockModelFactoryAccess(mockCtrl)
 			task.mfa = mfa
 			task.JobMaxRetryTimes = 3
 
@@ -685,7 +685,7 @@ func TestObjectTypeTask_handlerVector(t *testing.T) {
 		mockCtrl := gomock.NewController(t)
 		defer mockCtrl.Finish()
 
-		mfa := dmock.NewMockModelFactoryAccess(mockCtrl)
+		mfa := omock.NewMockModelFactoryAccess(mockCtrl)
 
 		task := &ObjectTypeTask{
 			mfa: mfa,

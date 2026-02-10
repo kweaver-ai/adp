@@ -21,7 +21,7 @@ import (
 	"ontology-manager/common"
 	oerrors "ontology-manager/errors"
 	"ontology-manager/interfaces"
-	dmock "ontology-manager/interfaces/mock"
+	omock "ontology-manager/interfaces/mock"
 )
 
 func MockNewRelationTypeRestHandler(appSetting *common.AppSetting,
@@ -50,9 +50,9 @@ func Test_RelationTypeRestHandler_CreateRelationTypes(t *testing.T) {
 		defer mockCtrl.Finish()
 
 		appSetting := &common.AppSetting{}
-		as := dmock.NewMockAuthService(mockCtrl)
-		rts := dmock.NewMockRelationTypeService(mockCtrl)
-		kns := dmock.NewMockKNService(mockCtrl)
+		as := omock.NewMockAuthService(mockCtrl)
+		rts := omock.NewMockRelationTypeService(mockCtrl)
+		kns := omock.NewMockKNService(mockCtrl)
 
 		handler := MockNewRelationTypeRestHandler(appSetting, as, rts, kns)
 		handler.RegisterPublic(engine)
@@ -211,9 +211,9 @@ func Test_RelationTypeRestHandler_UpdateRelationType(t *testing.T) {
 		defer mockCtrl.Finish()
 
 		appSetting := &common.AppSetting{}
-		as := dmock.NewMockAuthService(mockCtrl)
-		rts := dmock.NewMockRelationTypeService(mockCtrl)
-		kns := dmock.NewMockKNService(mockCtrl)
+		as := omock.NewMockAuthService(mockCtrl)
+		rts := omock.NewMockRelationTypeService(mockCtrl)
+		kns := omock.NewMockKNService(mockCtrl)
 
 		handler := MockNewRelationTypeRestHandler(appSetting, as, rts, kns)
 		handler.RegisterPublic(engine)
@@ -366,9 +366,9 @@ func Test_RelationTypeRestHandler_DeleteRelationTypes(t *testing.T) {
 		defer mockCtrl.Finish()
 
 		appSetting := &common.AppSetting{}
-		as := dmock.NewMockAuthService(mockCtrl)
-		rts := dmock.NewMockRelationTypeService(mockCtrl)
-		kns := dmock.NewMockKNService(mockCtrl)
+		as := omock.NewMockAuthService(mockCtrl)
+		rts := omock.NewMockRelationTypeService(mockCtrl)
+		kns := omock.NewMockKNService(mockCtrl)
 
 		handler := MockNewRelationTypeRestHandler(appSetting, as, rts, kns)
 		handler.RegisterPublic(engine)
@@ -448,9 +448,9 @@ func Test_RelationTypeRestHandler_ListRelationTypes(t *testing.T) {
 		defer mockCtrl.Finish()
 
 		appSetting := &common.AppSetting{}
-		as := dmock.NewMockAuthService(mockCtrl)
-		rts := dmock.NewMockRelationTypeService(mockCtrl)
-		kns := dmock.NewMockKNService(mockCtrl)
+		as := omock.NewMockAuthService(mockCtrl)
+		rts := omock.NewMockRelationTypeService(mockCtrl)
+		kns := omock.NewMockKNService(mockCtrl)
 
 		handler := MockNewRelationTypeRestHandler(appSetting, as, rts, kns)
 		handler.RegisterPublic(engine)
@@ -527,9 +527,9 @@ func Test_RelationTypeRestHandler_GetRelationTypes(t *testing.T) {
 		defer mockCtrl.Finish()
 
 		appSetting := &common.AppSetting{}
-		as := dmock.NewMockAuthService(mockCtrl)
-		rts := dmock.NewMockRelationTypeService(mockCtrl)
-		kns := dmock.NewMockKNService(mockCtrl)
+		as := omock.NewMockAuthService(mockCtrl)
+		rts := omock.NewMockRelationTypeService(mockCtrl)
+		kns := omock.NewMockKNService(mockCtrl)
 
 		handler := MockNewRelationTypeRestHandler(appSetting, as, rts, kns)
 		handler.RegisterPublic(engine)
@@ -607,9 +607,9 @@ func Test_RelationTypeRestHandler_SearchRelationTypes(t *testing.T) {
 		defer mockCtrl.Finish()
 
 		appSetting := &common.AppSetting{}
-		as := dmock.NewMockAuthService(mockCtrl)
-		rts := dmock.NewMockRelationTypeService(mockCtrl)
-		kns := dmock.NewMockKNService(mockCtrl)
+		as := omock.NewMockAuthService(mockCtrl)
+		rts := omock.NewMockRelationTypeService(mockCtrl)
+		kns := omock.NewMockKNService(mockCtrl)
 
 		handler := MockNewRelationTypeRestHandler(appSetting, as, rts, kns)
 		handler.RegisterPublic(engine)
@@ -718,9 +718,9 @@ func Test_RelationTypeRestHandler_HandleRelationTypeGetOverride(t *testing.T) {
 		defer mockCtrl.Finish()
 
 		appSetting := &common.AppSetting{}
-		as := dmock.NewMockAuthService(mockCtrl)
-		rts := dmock.NewMockRelationTypeService(mockCtrl)
-		kns := dmock.NewMockKNService(mockCtrl)
+		as := omock.NewMockAuthService(mockCtrl)
+		rts := omock.NewMockRelationTypeService(mockCtrl)
+		kns := omock.NewMockKNService(mockCtrl)
 
 		handler := MockNewRelationTypeRestHandler(appSetting, as, rts, kns)
 		handler.RegisterPublic(engine)

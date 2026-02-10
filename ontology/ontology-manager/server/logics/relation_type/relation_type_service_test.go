@@ -19,7 +19,7 @@ import (
 	cond "ontology-manager/common/condition"
 	oerrors "ontology-manager/errors"
 	"ontology-manager/interfaces"
-	dmock "ontology-manager/interfaces/mock"
+	omock "ontology-manager/interfaces/mock"
 )
 
 func Test_relationTypeService_CheckRelationTypeExistByID(t *testing.T) {
@@ -29,7 +29,7 @@ func Test_relationTypeService_CheckRelationTypeExistByID(t *testing.T) {
 		defer mockCtrl.Finish()
 
 		appSetting := &common.AppSetting{}
-		rta := dmock.NewMockRelationTypeAccess(mockCtrl)
+		rta := omock.NewMockRelationTypeAccess(mockCtrl)
 
 		service := &relationTypeService{
 			appSetting: appSetting,
@@ -87,7 +87,7 @@ func Test_relationTypeService_CheckRelationTypeExistByName(t *testing.T) {
 		defer mockCtrl.Finish()
 
 		appSetting := &common.AppSetting{}
-		rta := dmock.NewMockRelationTypeAccess(mockCtrl)
+		rta := omock.NewMockRelationTypeAccess(mockCtrl)
 
 		service := &relationTypeService{
 			appSetting: appSetting,
@@ -145,7 +145,7 @@ func Test_relationTypeService_GetRelationTypeIDsByKnID(t *testing.T) {
 		defer mockCtrl.Finish()
 
 		appSetting := &common.AppSetting{}
-		rta := dmock.NewMockRelationTypeAccess(mockCtrl)
+		rta := omock.NewMockRelationTypeAccess(mockCtrl)
 
 		service := &relationTypeService{
 			appSetting: appSetting,
@@ -197,9 +197,9 @@ func Test_relationTypeService_GetRelationTypesByIDs(t *testing.T) {
 		defer mockCtrl.Finish()
 
 		appSetting := &common.AppSetting{}
-		rta := dmock.NewMockRelationTypeAccess(mockCtrl)
-		ps := dmock.NewMockPermissionService(mockCtrl)
-		ots := dmock.NewMockObjectTypeService(mockCtrl)
+		rta := omock.NewMockRelationTypeAccess(mockCtrl)
+		ps := omock.NewMockPermissionService(mockCtrl)
+		ots := omock.NewMockObjectTypeService(mockCtrl)
 
 		service := &relationTypeService{
 			appSetting: appSetting,
@@ -436,7 +436,7 @@ func Test_relationTypeService_GetRelationTypesByIDs(t *testing.T) {
 					},
 				},
 			}
-			dva := dmock.NewMockDataViewAccess(mockCtrl)
+			dva := omock.NewMockDataViewAccess(mockCtrl)
 
 			service := &relationTypeService{
 				appSetting: appSetting,
@@ -491,7 +491,7 @@ func Test_relationTypeService_GetRelationTypesByIDs(t *testing.T) {
 					},
 				},
 			}
-			dva := dmock.NewMockDataViewAccess(mockCtrl)
+			dva := omock.NewMockDataViewAccess(mockCtrl)
 
 			service := &relationTypeService{
 				appSetting: appSetting,
@@ -520,10 +520,10 @@ func Test_relationTypeService_ListRelationTypes(t *testing.T) {
 		defer mockCtrl.Finish()
 
 		appSetting := &common.AppSetting{}
-		rta := dmock.NewMockRelationTypeAccess(mockCtrl)
-		ps := dmock.NewMockPermissionService(mockCtrl)
-		ots := dmock.NewMockObjectTypeService(mockCtrl)
-		uma := dmock.NewMockUserMgmtAccess(mockCtrl)
+		rta := omock.NewMockRelationTypeAccess(mockCtrl)
+		ps := omock.NewMockPermissionService(mockCtrl)
+		ots := omock.NewMockObjectTypeService(mockCtrl)
+		uma := omock.NewMockUserMgmtAccess(mockCtrl)
 
 		service := &relationTypeService{
 			appSetting: appSetting,
@@ -796,10 +796,10 @@ func Test_relationTypeService_CreateRelationTypes(t *testing.T) {
 				DefaultSmallModelEnabled: false,
 			},
 		}
-		rta := dmock.NewMockRelationTypeAccess(mockCtrl)
-		ps := dmock.NewMockPermissionService(mockCtrl)
-		ots := dmock.NewMockObjectTypeService(mockCtrl)
-		osa := dmock.NewMockOpenSearchAccess(mockCtrl)
+		rta := omock.NewMockRelationTypeAccess(mockCtrl)
+		ps := omock.NewMockPermissionService(mockCtrl)
+		ots := omock.NewMockObjectTypeService(mockCtrl)
+		osa := omock.NewMockOpenSearchAccess(mockCtrl)
 		db, smock, _ := sqlmock.New(sqlmock.QueryMatcherOption(sqlmock.QueryMatcherEqual))
 
 		service := &relationTypeService{
@@ -1055,10 +1055,10 @@ func Test_relationTypeService_UpdateRelationType(t *testing.T) {
 				DefaultSmallModelEnabled: false,
 			},
 		}
-		rta := dmock.NewMockRelationTypeAccess(mockCtrl)
-		ps := dmock.NewMockPermissionService(mockCtrl)
-		ots := dmock.NewMockObjectTypeService(mockCtrl)
-		osa := dmock.NewMockOpenSearchAccess(mockCtrl)
+		rta := omock.NewMockRelationTypeAccess(mockCtrl)
+		ps := omock.NewMockPermissionService(mockCtrl)
+		ots := omock.NewMockObjectTypeService(mockCtrl)
+		osa := omock.NewMockOpenSearchAccess(mockCtrl)
 		db, smock, _ := sqlmock.New(sqlmock.QueryMatcherOption(sqlmock.QueryMatcherEqual))
 
 		service := &relationTypeService{
@@ -1182,9 +1182,9 @@ func Test_relationTypeService_DeleteRelationTypesByIDs(t *testing.T) {
 		defer mockCtrl.Finish()
 
 		appSetting := &common.AppSetting{}
-		rta := dmock.NewMockRelationTypeAccess(mockCtrl)
-		ps := dmock.NewMockPermissionService(mockCtrl)
-		osa := dmock.NewMockOpenSearchAccess(mockCtrl)
+		rta := omock.NewMockRelationTypeAccess(mockCtrl)
+		ps := omock.NewMockPermissionService(mockCtrl)
+		osa := omock.NewMockOpenSearchAccess(mockCtrl)
 		db, smock, _ := sqlmock.New(sqlmock.QueryMatcherOption(sqlmock.QueryMatcherEqual))
 
 		service := &relationTypeService{
@@ -1263,7 +1263,7 @@ func Test_relationTypeService_InsertOpenSearchData(t *testing.T) {
 				DefaultSmallModelEnabled: false,
 			},
 		}
-		osa := dmock.NewMockOpenSearchAccess(mockCtrl)
+		osa := omock.NewMockOpenSearchAccess(mockCtrl)
 
 		service := &relationTypeService{
 			appSetting: appSetting,
@@ -1319,8 +1319,8 @@ func Test_relationTypeService_InsertOpenSearchData(t *testing.T) {
 					DefaultSmallModelEnabled: true,
 				},
 			}
-			osaWithVector := dmock.NewMockOpenSearchAccess(mockCtrl)
-			mfa := dmock.NewMockModelFactoryAccess(mockCtrl)
+			osaWithVector := omock.NewMockOpenSearchAccess(mockCtrl)
+			mfa := omock.NewMockModelFactoryAccess(mockCtrl)
 
 			serviceWithVector := &relationTypeService{
 				appSetting: appSettingWithVector,
@@ -1363,7 +1363,7 @@ func Test_relationTypeService_InsertOpenSearchData(t *testing.T) {
 					DefaultSmallModelEnabled: true,
 				},
 			}
-			mfa := dmock.NewMockModelFactoryAccess(mockCtrl)
+			mfa := omock.NewMockModelFactoryAccess(mockCtrl)
 
 			serviceWithVector := &relationTypeService{
 				appSetting: appSettingWithVector,
@@ -1393,7 +1393,7 @@ func Test_relationTypeService_InsertOpenSearchData(t *testing.T) {
 					DefaultSmallModelEnabled: true,
 				},
 			}
-			mfa := dmock.NewMockModelFactoryAccess(mockCtrl)
+			mfa := omock.NewMockModelFactoryAccess(mockCtrl)
 
 			serviceWithVector := &relationTypeService{
 				appSetting: appSettingWithVector,
@@ -1424,7 +1424,7 @@ func Test_relationTypeService_InsertOpenSearchData(t *testing.T) {
 					DefaultSmallModelEnabled: true,
 				},
 			}
-			mfa := dmock.NewMockModelFactoryAccess(mockCtrl)
+			mfa := omock.NewMockModelFactoryAccess(mockCtrl)
 
 			serviceWithVector := &relationTypeService{
 				appSetting: appSettingWithVector,
@@ -1459,7 +1459,7 @@ func Test_relationTypeService_GetTotal(t *testing.T) {
 		defer mockCtrl.Finish()
 
 		appSetting := &common.AppSetting{}
-		osa := dmock.NewMockOpenSearchAccess(mockCtrl)
+		osa := omock.NewMockOpenSearchAccess(mockCtrl)
 
 		service := &relationTypeService{
 			appSetting: appSetting,
@@ -1522,7 +1522,7 @@ func Test_relationTypeService_GetTotalWithLargeRTIDs(t *testing.T) {
 		defer mockCtrl.Finish()
 
 		appSetting := &common.AppSetting{}
-		osa := dmock.NewMockOpenSearchAccess(mockCtrl)
+		osa := omock.NewMockOpenSearchAccess(mockCtrl)
 
 		service := &relationTypeService{
 			appSetting: appSetting,
@@ -1571,7 +1571,7 @@ func Test_relationTypeService_GetTotalWithRTIDs(t *testing.T) {
 		defer mockCtrl.Finish()
 
 		appSetting := &common.AppSetting{}
-		osa := dmock.NewMockOpenSearchAccess(mockCtrl)
+		osa := omock.NewMockOpenSearchAccess(mockCtrl)
 
 		service := &relationTypeService{
 			appSetting: appSetting,
@@ -1623,8 +1623,8 @@ func Test_relationTypeService_SearchRelationTypes(t *testing.T) {
 				DefaultSmallModelEnabled: false,
 			},
 		}
-		cga := dmock.NewMockConceptGroupAccess(mockCtrl)
-		osa := dmock.NewMockOpenSearchAccess(mockCtrl)
+		cga := omock.NewMockConceptGroupAccess(mockCtrl)
+		osa := omock.NewMockOpenSearchAccess(mockCtrl)
 
 		service := &relationTypeService{
 			appSetting: appSetting,
@@ -1748,8 +1748,8 @@ func Test_relationTypeService_validateDependency(t *testing.T) {
 		defer mockCtrl.Finish()
 
 		appSetting := &common.AppSetting{}
-		ots := dmock.NewMockObjectTypeService(mockCtrl)
-		dva := dmock.NewMockDataViewAccess(mockCtrl)
+		ots := omock.NewMockObjectTypeService(mockCtrl)
+		dva := omock.NewMockDataViewAccess(mockCtrl)
 		db, smock, _ := sqlmock.New(sqlmock.QueryMatcherOption(sqlmock.QueryMatcherEqual))
 
 		service := &relationTypeService{

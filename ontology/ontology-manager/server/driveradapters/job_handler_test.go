@@ -21,7 +21,7 @@ import (
 	"ontology-manager/common"
 	oerrors "ontology-manager/errors"
 	"ontology-manager/interfaces"
-	dmock "ontology-manager/interfaces/mock"
+	omock "ontology-manager/interfaces/mock"
 )
 
 func MockNewJobRestHandler(appSetting *common.AppSetting,
@@ -50,9 +50,9 @@ func Test_JobRestHandler_CreateJob(t *testing.T) {
 		defer mockCtrl.Finish()
 
 		appSetting := &common.AppSetting{}
-		as := dmock.NewMockAuthService(mockCtrl)
-		js := dmock.NewMockJobService(mockCtrl)
-		kns := dmock.NewMockKNService(mockCtrl)
+		as := omock.NewMockAuthService(mockCtrl)
+		js := omock.NewMockJobService(mockCtrl)
+		kns := omock.NewMockKNService(mockCtrl)
 
 		handler := MockNewJobRestHandler(appSetting, as, js, kns)
 		handler.RegisterPublic(engine)
@@ -171,9 +171,9 @@ func Test_JobRestHandler_DeleteJobs(t *testing.T) {
 		defer mockCtrl.Finish()
 
 		appSetting := &common.AppSetting{}
-		as := dmock.NewMockAuthService(mockCtrl)
-		js := dmock.NewMockJobService(mockCtrl)
-		kns := dmock.NewMockKNService(mockCtrl)
+		as := omock.NewMockAuthService(mockCtrl)
+		js := omock.NewMockJobService(mockCtrl)
+		kns := omock.NewMockKNService(mockCtrl)
 
 		handler := MockNewJobRestHandler(appSetting, as, js, kns)
 		handler.RegisterPublic(engine)
@@ -236,9 +236,9 @@ func Test_JobRestHandler_ListJobs(t *testing.T) {
 		defer mockCtrl.Finish()
 
 		appSetting := &common.AppSetting{}
-		as := dmock.NewMockAuthService(mockCtrl)
-		js := dmock.NewMockJobService(mockCtrl)
-		kns := dmock.NewMockKNService(mockCtrl)
+		as := omock.NewMockAuthService(mockCtrl)
+		js := omock.NewMockJobService(mockCtrl)
+		kns := omock.NewMockKNService(mockCtrl)
 
 		handler := MockNewJobRestHandler(appSetting, as, js, kns)
 		handler.RegisterPublic(engine)
@@ -331,9 +331,9 @@ func Test_JobRestHandler_ListTasks(t *testing.T) {
 		defer mockCtrl.Finish()
 
 		appSetting := &common.AppSetting{}
-		as := dmock.NewMockAuthService(mockCtrl)
-		js := dmock.NewMockJobService(mockCtrl)
-		kns := dmock.NewMockKNService(mockCtrl)
+		as := omock.NewMockAuthService(mockCtrl)
+		js := omock.NewMockJobService(mockCtrl)
+		kns := omock.NewMockKNService(mockCtrl)
 
 		handler := MockNewJobRestHandler(appSetting, as, js, kns)
 		handler.RegisterPublic(engine)

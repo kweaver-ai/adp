@@ -21,7 +21,7 @@ import (
 	"ontology-manager/common"
 	oerrors "ontology-manager/errors"
 	"ontology-manager/interfaces"
-	dmock "ontology-manager/interfaces/mock"
+	omock "ontology-manager/interfaces/mock"
 )
 
 func MockNewKnowledgeNetworkRestHandler(appSetting *common.AppSetting,
@@ -48,8 +48,8 @@ func Test_KnowledgeNetworkRestHandler_CreateKN(t *testing.T) {
 		defer mockCtrl.Finish()
 
 		appSetting := &common.AppSetting{}
-		as := dmock.NewMockAuthService(mockCtrl)
-		kns := dmock.NewMockKNService(mockCtrl)
+		as := omock.NewMockAuthService(mockCtrl)
+		kns := omock.NewMockKNService(mockCtrl)
 
 		handler := MockNewKnowledgeNetworkRestHandler(appSetting, as, kns)
 		handler.RegisterPublic(engine)
@@ -144,8 +144,8 @@ func Test_KnowledgeNetworkRestHandler_UpdateKN(t *testing.T) {
 		defer mockCtrl.Finish()
 
 		appSetting := &common.AppSetting{}
-		as := dmock.NewMockAuthService(mockCtrl)
-		kns := dmock.NewMockKNService(mockCtrl)
+		as := omock.NewMockAuthService(mockCtrl)
+		kns := omock.NewMockKNService(mockCtrl)
 
 		handler := MockNewKnowledgeNetworkRestHandler(appSetting, as, kns)
 		handler.RegisterPublic(engine)
@@ -210,8 +210,8 @@ func Test_KnowledgeNetworkRestHandler_DeleteKN(t *testing.T) {
 		defer mockCtrl.Finish()
 
 		appSetting := &common.AppSetting{}
-		as := dmock.NewMockAuthService(mockCtrl)
-		kns := dmock.NewMockKNService(mockCtrl)
+		as := omock.NewMockAuthService(mockCtrl)
+		kns := omock.NewMockKNService(mockCtrl)
 
 		handler := MockNewKnowledgeNetworkRestHandler(appSetting, as, kns)
 		handler.RegisterPublic(engine)
@@ -259,8 +259,8 @@ func Test_KnowledgeNetworkRestHandler_ListKNs(t *testing.T) {
 		defer mockCtrl.Finish()
 
 		appSetting := &common.AppSetting{}
-		as := dmock.NewMockAuthService(mockCtrl)
-		kns := dmock.NewMockKNService(mockCtrl)
+		as := omock.NewMockAuthService(mockCtrl)
+		kns := omock.NewMockKNService(mockCtrl)
 
 		handler := MockNewKnowledgeNetworkRestHandler(appSetting, as, kns)
 		handler.RegisterPublic(engine)
@@ -302,8 +302,8 @@ func Test_KnowledgeNetworkRestHandler_GetKN(t *testing.T) {
 		defer mockCtrl.Finish()
 
 		appSetting := &common.AppSetting{}
-		as := dmock.NewMockAuthService(mockCtrl)
-		kns := dmock.NewMockKNService(mockCtrl)
+		as := omock.NewMockAuthService(mockCtrl)
+		kns := omock.NewMockKNService(mockCtrl)
 
 		handler := MockNewKnowledgeNetworkRestHandler(appSetting, as, kns)
 		handler.RegisterPublic(engine)
@@ -355,8 +355,8 @@ func Test_KnowledgeNetworkRestHandler_GetRelationTypePaths(t *testing.T) {
 		defer mockCtrl.Finish()
 
 		appSetting := &common.AppSetting{}
-		as := dmock.NewMockAuthService(mockCtrl)
-		kns := dmock.NewMockKNService(mockCtrl)
+		as := omock.NewMockAuthService(mockCtrl)
+		kns := omock.NewMockKNService(mockCtrl)
 
 		handler := MockNewKnowledgeNetworkRestHandler(appSetting, as, kns)
 		handler.RegisterPublic(engine)

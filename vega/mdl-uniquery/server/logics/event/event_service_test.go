@@ -601,10 +601,10 @@ func Test_eventService_Query(t *testing.T) {
 		mockCtrl := gomock.NewController(t)
 		defer mockCtrl.Finish()
 
-		// emAccess:    dmock.NewMockEventModelAccess(mockCtrl),
-		// kafkaAccess: dmock.NewMockKafkaAccess(mockCtrl),
+		// emAccess:    umock.NewMockEventModelAccess(mockCtrl),
+		// kafkaAccess: umock.NewMockKafkaAccess(mockCtrl),
 		// topics:      []string{"default.mdl.view"},
-		// engine:      dmock.NewMockEventEngine(mockCtrl),
+		// engine:      umock.NewMockEventEngine(mockCtrl),
 
 		engine := umock.NewMockEventEngine(mockCtrl)
 		emAccess := umock.NewMockEventModelAccess(mockCtrl)

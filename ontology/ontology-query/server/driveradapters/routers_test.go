@@ -21,7 +21,7 @@ import (
 	"ontology-query/common"
 	"ontology-query/common/visitor"
 	"ontology-query/interfaces"
-	dmock "ontology-query/interfaces/mock"
+	omock "ontology-query/interfaces/mock"
 )
 
 // setGinMode 设置 Gin 为测试模式并返回恢复函数
@@ -62,10 +62,10 @@ func Test_RestHandler_HealthCheck(t *testing.T) {
 		defer mockCtrl.Finish()
 
 		appSetting := &common.AppSetting{}
-		as := dmock.NewMockAuthService(mockCtrl)
-		ats := dmock.NewMockActionTypeService(mockCtrl)
-		kns := dmock.NewMockKnowledgeNetworkService(mockCtrl)
-		ots := dmock.NewMockObjectTypeService(mockCtrl)
+		as := omock.NewMockAuthService(mockCtrl)
+		ats := omock.NewMockActionTypeService(mockCtrl)
+		kns := omock.NewMockKnowledgeNetworkService(mockCtrl)
+		ots := omock.NewMockObjectTypeService(mockCtrl)
 
 		handler := MockNewRestHandler(appSetting, as, ats, kns, ots)
 		handler.RegisterPublic(engine)
@@ -92,10 +92,10 @@ func Test_RestHandler_verifyJsonContentTypeMiddleWare(t *testing.T) {
 		defer mockCtrl.Finish()
 
 		appSetting := &common.AppSetting{}
-		as := dmock.NewMockAuthService(mockCtrl)
-		ats := dmock.NewMockActionTypeService(mockCtrl)
-		kns := dmock.NewMockKnowledgeNetworkService(mockCtrl)
-		ots := dmock.NewMockObjectTypeService(mockCtrl)
+		as := omock.NewMockAuthService(mockCtrl)
+		ats := omock.NewMockActionTypeService(mockCtrl)
+		kns := omock.NewMockKnowledgeNetworkService(mockCtrl)
+		ots := omock.NewMockObjectTypeService(mockCtrl)
 
 		handler := MockNewRestHandler(appSetting, as, ats, kns, ots)
 
@@ -144,10 +144,10 @@ func Test_RestHandler_verifyOAuth(t *testing.T) {
 		defer mockCtrl.Finish()
 
 		appSetting := &common.AppSetting{}
-		as := dmock.NewMockAuthService(mockCtrl)
-		ats := dmock.NewMockActionTypeService(mockCtrl)
-		kns := dmock.NewMockKnowledgeNetworkService(mockCtrl)
-		ots := dmock.NewMockObjectTypeService(mockCtrl)
+		as := omock.NewMockAuthService(mockCtrl)
+		ats := omock.NewMockActionTypeService(mockCtrl)
+		kns := omock.NewMockKnowledgeNetworkService(mockCtrl)
+		ots := omock.NewMockObjectTypeService(mockCtrl)
 
 		handler := MockNewRestHandler(appSetting, as, ats, kns, ots)
 

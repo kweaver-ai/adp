@@ -17,7 +17,7 @@ import (
 	"ontology-manager/common"
 	cond "ontology-manager/common/condition"
 	"ontology-manager/interfaces"
-	dmock "ontology-manager/interfaces/mock"
+	omock "ontology-manager/interfaces/mock"
 )
 
 func TestNewConceptSyncer(t *testing.T) {
@@ -46,8 +46,8 @@ func TestConceptSyncer_handleKNs(t *testing.T) {
 			},
 		}
 
-		kna := dmock.NewMockKNAccess(mockCtrl)
-		osa := dmock.NewMockOpenSearchAccess(mockCtrl)
+		kna := omock.NewMockKNAccess(mockCtrl)
+		osa := omock.NewMockOpenSearchAccess(mockCtrl)
 
 		cs := &ConceptSyncer{
 			appSetting: appSetting,
@@ -73,10 +73,10 @@ func TestConceptSyncer_handleKNs(t *testing.T) {
 				UpdateTime: time.Now().UnixMilli(),
 			}
 
-			ota := dmock.NewMockObjectTypeAccess(mockCtrl)
-			rta := dmock.NewMockRelationTypeAccess(mockCtrl)
-			ata := dmock.NewMockActionTypeAccess(mockCtrl)
-			cga := dmock.NewMockConceptGroupAccess(mockCtrl)
+			ota := omock.NewMockObjectTypeAccess(mockCtrl)
+			rta := omock.NewMockRelationTypeAccess(mockCtrl)
+			ata := omock.NewMockActionTypeAccess(mockCtrl)
+			cga := omock.NewMockConceptGroupAccess(mockCtrl)
 
 			cs.ota = ota
 			cs.rta = rta
@@ -133,12 +133,12 @@ func TestConceptSyncer_handleKnowledgeNetwork(t *testing.T) {
 			},
 		}
 
-		kna := dmock.NewMockKNAccess(mockCtrl)
-		osa := dmock.NewMockOpenSearchAccess(mockCtrl)
-		ota := dmock.NewMockObjectTypeAccess(mockCtrl)
-		rta := dmock.NewMockRelationTypeAccess(mockCtrl)
-		ata := dmock.NewMockActionTypeAccess(mockCtrl)
-		cga := dmock.NewMockConceptGroupAccess(mockCtrl)
+		kna := omock.NewMockKNAccess(mockCtrl)
+		osa := omock.NewMockOpenSearchAccess(mockCtrl)
+		ota := omock.NewMockObjectTypeAccess(mockCtrl)
+		rta := omock.NewMockRelationTypeAccess(mockCtrl)
+		ata := omock.NewMockActionTypeAccess(mockCtrl)
+		cga := omock.NewMockConceptGroupAccess(mockCtrl)
 
 		cs := &ConceptSyncer{
 			appSetting: appSetting,
@@ -207,8 +207,8 @@ func TestConceptSyncer_handleObjectTypes(t *testing.T) {
 			},
 		}
 
-		ota := dmock.NewMockObjectTypeAccess(mockCtrl)
-		osa := dmock.NewMockOpenSearchAccess(mockCtrl)
+		ota := omock.NewMockObjectTypeAccess(mockCtrl)
+		osa := omock.NewMockOpenSearchAccess(mockCtrl)
 
 		cs := &ConceptSyncer{
 			appSetting: appSetting,
@@ -263,8 +263,8 @@ func TestConceptSyncer_handleRelationTypes(t *testing.T) {
 			},
 		}
 
-		rta := dmock.NewMockRelationTypeAccess(mockCtrl)
-		osa := dmock.NewMockOpenSearchAccess(mockCtrl)
+		rta := omock.NewMockRelationTypeAccess(mockCtrl)
+		osa := omock.NewMockOpenSearchAccess(mockCtrl)
 
 		cs := &ConceptSyncer{
 			appSetting: appSetting,
@@ -325,8 +325,8 @@ func TestConceptSyncer_handleActionTypes(t *testing.T) {
 			},
 		}
 
-		ata := dmock.NewMockActionTypeAccess(mockCtrl)
-		osa := dmock.NewMockOpenSearchAccess(mockCtrl)
+		ata := omock.NewMockActionTypeAccess(mockCtrl)
+		osa := omock.NewMockOpenSearchAccess(mockCtrl)
 
 		cs := &ConceptSyncer{
 			appSetting: appSetting,
@@ -385,8 +385,8 @@ func TestConceptSyncer_handleConceptGroups(t *testing.T) {
 			},
 		}
 
-		cga := dmock.NewMockConceptGroupAccess(mockCtrl)
-		osa := dmock.NewMockOpenSearchAccess(mockCtrl)
+		cga := omock.NewMockConceptGroupAccess(mockCtrl)
+		osa := omock.NewMockOpenSearchAccess(mockCtrl)
 
 		cs := &ConceptSyncer{
 			appSetting: appSetting,
@@ -439,8 +439,8 @@ func TestConceptSyncer_insertOpenSearchDataForKN(t *testing.T) {
 			},
 		}
 
-		osa := dmock.NewMockOpenSearchAccess(mockCtrl)
-		mfa := dmock.NewMockModelFactoryAccess(mockCtrl)
+		osa := omock.NewMockOpenSearchAccess(mockCtrl)
+		mfa := omock.NewMockModelFactoryAccess(mockCtrl)
 
 		cs := &ConceptSyncer{
 			appSetting: appSetting,
@@ -476,7 +476,7 @@ func TestConceptSyncer_getAllKNsFromOpenSearch(t *testing.T) {
 		mockCtrl := gomock.NewController(t)
 		defer mockCtrl.Finish()
 
-		osa := dmock.NewMockOpenSearchAccess(mockCtrl)
+		osa := omock.NewMockOpenSearchAccess(mockCtrl)
 
 		cs := &ConceptSyncer{
 			osa: osa,
@@ -535,8 +535,8 @@ func TestConceptSyncer_insertOpenSearchDataForKN_WithVector(t *testing.T) {
 				DefaultSmallModelEnabled: true,
 			},
 		}
-		osa := dmock.NewMockOpenSearchAccess(mockCtrl)
-		mfa := dmock.NewMockModelFactoryAccess(mockCtrl)
+		osa := omock.NewMockOpenSearchAccess(mockCtrl)
+		mfa := omock.NewMockModelFactoryAccess(mockCtrl)
 
 		cs := &ConceptSyncer{
 			appSetting: appSetting,
@@ -604,7 +604,7 @@ func TestConceptSyncer_insertOpenSearchDataForObjectTypes(t *testing.T) {
 				DefaultSmallModelEnabled: false,
 			},
 		}
-		osa := dmock.NewMockOpenSearchAccess(mockCtrl)
+		osa := omock.NewMockOpenSearchAccess(mockCtrl)
 
 		cs := &ConceptSyncer{
 			appSetting: appSetting,
@@ -667,8 +667,8 @@ func TestConceptSyncer_insertOpenSearchDataForObjectTypes_WithVector(t *testing.
 				DefaultSmallModelEnabled: true,
 			},
 		}
-		osa := dmock.NewMockOpenSearchAccess(mockCtrl)
-		mfa := dmock.NewMockModelFactoryAccess(mockCtrl)
+		osa := omock.NewMockOpenSearchAccess(mockCtrl)
+		mfa := omock.NewMockModelFactoryAccess(mockCtrl)
 
 		cs := &ConceptSyncer{
 			appSetting: appSetting,
@@ -776,7 +776,7 @@ func TestConceptSyncer_insertOpenSearchDataForRelationTypes(t *testing.T) {
 				DefaultSmallModelEnabled: false,
 			},
 		}
-		osa := dmock.NewMockOpenSearchAccess(mockCtrl)
+		osa := omock.NewMockOpenSearchAccess(mockCtrl)
 
 		cs := &ConceptSyncer{
 			appSetting: appSetting,
@@ -839,8 +839,8 @@ func TestConceptSyncer_insertOpenSearchDataForRelationTypes_WithVector(t *testin
 				DefaultSmallModelEnabled: true,
 			},
 		}
-		osa := dmock.NewMockOpenSearchAccess(mockCtrl)
-		mfa := dmock.NewMockModelFactoryAccess(mockCtrl)
+		osa := omock.NewMockOpenSearchAccess(mockCtrl)
+		mfa := omock.NewMockModelFactoryAccess(mockCtrl)
 
 		cs := &ConceptSyncer{
 			appSetting: appSetting,
@@ -948,7 +948,7 @@ func TestConceptSyncer_insertOpenSearchDataForActionTypes(t *testing.T) {
 				DefaultSmallModelEnabled: false,
 			},
 		}
-		osa := dmock.NewMockOpenSearchAccess(mockCtrl)
+		osa := omock.NewMockOpenSearchAccess(mockCtrl)
 
 		cs := &ConceptSyncer{
 			appSetting: appSetting,
@@ -1011,8 +1011,8 @@ func TestConceptSyncer_insertOpenSearchDataForActionTypes_WithVector(t *testing.
 				DefaultSmallModelEnabled: true,
 			},
 		}
-		osa := dmock.NewMockOpenSearchAccess(mockCtrl)
-		mfa := dmock.NewMockModelFactoryAccess(mockCtrl)
+		osa := omock.NewMockOpenSearchAccess(mockCtrl)
+		mfa := omock.NewMockModelFactoryAccess(mockCtrl)
 
 		cs := &ConceptSyncer{
 			appSetting: appSetting,
@@ -1120,7 +1120,7 @@ func TestConceptSyncer_insertOpenSearchDataForConceptGroups(t *testing.T) {
 				DefaultSmallModelEnabled: false,
 			},
 		}
-		osa := dmock.NewMockOpenSearchAccess(mockCtrl)
+		osa := omock.NewMockOpenSearchAccess(mockCtrl)
 
 		cs := &ConceptSyncer{
 			appSetting: appSetting,
@@ -1179,8 +1179,8 @@ func TestConceptSyncer_insertOpenSearchDataForConceptGroups_WithVector(t *testin
 				DefaultSmallModelEnabled: true,
 			},
 		}
-		osa := dmock.NewMockOpenSearchAccess(mockCtrl)
-		mfa := dmock.NewMockModelFactoryAccess(mockCtrl)
+		osa := omock.NewMockOpenSearchAccess(mockCtrl)
+		mfa := omock.NewMockModelFactoryAccess(mockCtrl)
 
 		cs := &ConceptSyncer{
 			appSetting: appSetting,
@@ -1275,7 +1275,7 @@ func TestConceptSyncer_getAllObjectTypesFromOpenSearchByKnID(t *testing.T) {
 		mockCtrl := gomock.NewController(t)
 		defer mockCtrl.Finish()
 
-		osa := dmock.NewMockOpenSearchAccess(mockCtrl)
+		osa := omock.NewMockOpenSearchAccess(mockCtrl)
 
 		cs := &ConceptSyncer{
 			osa: osa,
@@ -1331,7 +1331,7 @@ func TestConceptSyncer_getAllRelationTypesFromOpenSearchByKnID(t *testing.T) {
 		mockCtrl := gomock.NewController(t)
 		defer mockCtrl.Finish()
 
-		osa := dmock.NewMockOpenSearchAccess(mockCtrl)
+		osa := omock.NewMockOpenSearchAccess(mockCtrl)
 
 		cs := &ConceptSyncer{
 			osa: osa,
@@ -1387,7 +1387,7 @@ func TestConceptSyncer_getAllActionTypesFromOpenSearchByKnID(t *testing.T) {
 		mockCtrl := gomock.NewController(t)
 		defer mockCtrl.Finish()
 
-		osa := dmock.NewMockOpenSearchAccess(mockCtrl)
+		osa := omock.NewMockOpenSearchAccess(mockCtrl)
 
 		cs := &ConceptSyncer{
 			osa: osa,
@@ -1443,7 +1443,7 @@ func TestConceptSyncer_getAllConceptGroupsFromOpenSearchByKnID(t *testing.T) {
 		mockCtrl := gomock.NewController(t)
 		defer mockCtrl.Finish()
 
-		osa := dmock.NewMockOpenSearchAccess(mockCtrl)
+		osa := omock.NewMockOpenSearchAccess(mockCtrl)
 
 		cs := &ConceptSyncer{
 			osa: osa,
@@ -1505,12 +1505,12 @@ func TestConceptSyncer_handleKnowledgeNetwork_Errors(t *testing.T) {
 			},
 		}
 
-		kna := dmock.NewMockKNAccess(mockCtrl)
-		osa := dmock.NewMockOpenSearchAccess(mockCtrl)
-		ota := dmock.NewMockObjectTypeAccess(mockCtrl)
-		rta := dmock.NewMockRelationTypeAccess(mockCtrl)
-		ata := dmock.NewMockActionTypeAccess(mockCtrl)
-		cga := dmock.NewMockConceptGroupAccess(mockCtrl)
+		kna := omock.NewMockKNAccess(mockCtrl)
+		osa := omock.NewMockOpenSearchAccess(mockCtrl)
+		ota := omock.NewMockObjectTypeAccess(mockCtrl)
+		rta := omock.NewMockRelationTypeAccess(mockCtrl)
+		ata := omock.NewMockActionTypeAccess(mockCtrl)
+		cga := omock.NewMockConceptGroupAccess(mockCtrl)
 
 		cs := &ConceptSyncer{
 			appSetting: appSetting,
@@ -1600,8 +1600,8 @@ func TestConceptSyncer_handleObjectTypes_Errors(t *testing.T) {
 			},
 		}
 
-		ota := dmock.NewMockObjectTypeAccess(mockCtrl)
-		osa := dmock.NewMockOpenSearchAccess(mockCtrl)
+		ota := omock.NewMockObjectTypeAccess(mockCtrl)
+		osa := omock.NewMockOpenSearchAccess(mockCtrl)
 
 		cs := &ConceptSyncer{
 			appSetting: appSetting,
@@ -1653,8 +1653,8 @@ func TestConceptSyncer_handleRelationTypes_Errors(t *testing.T) {
 			},
 		}
 
-		rta := dmock.NewMockRelationTypeAccess(mockCtrl)
-		osa := dmock.NewMockOpenSearchAccess(mockCtrl)
+		rta := omock.NewMockRelationTypeAccess(mockCtrl)
+		osa := omock.NewMockOpenSearchAccess(mockCtrl)
 
 		cs := &ConceptSyncer{
 			appSetting: appSetting,
@@ -1709,8 +1709,8 @@ func TestConceptSyncer_handleActionTypes_Errors(t *testing.T) {
 			},
 		}
 
-		ata := dmock.NewMockActionTypeAccess(mockCtrl)
-		osa := dmock.NewMockOpenSearchAccess(mockCtrl)
+		ata := omock.NewMockActionTypeAccess(mockCtrl)
+		osa := omock.NewMockOpenSearchAccess(mockCtrl)
 
 		cs := &ConceptSyncer{
 			appSetting: appSetting,
@@ -1765,8 +1765,8 @@ func TestConceptSyncer_handleConceptGroups_Errors(t *testing.T) {
 			},
 		}
 
-		cga := dmock.NewMockConceptGroupAccess(mockCtrl)
-		osa := dmock.NewMockOpenSearchAccess(mockCtrl)
+		cga := omock.NewMockConceptGroupAccess(mockCtrl)
+		osa := omock.NewMockOpenSearchAccess(mockCtrl)
 
 		cs := &ConceptSyncer{
 			appSetting: appSetting,

@@ -19,7 +19,7 @@ import (
 	"ontology-manager/common"
 	oerrors "ontology-manager/errors"
 	"ontology-manager/interfaces"
-	dmock "ontology-manager/interfaces/mock"
+	omock "ontology-manager/interfaces/mock"
 )
 
 func Test_jobService_CreateJob(t *testing.T) {
@@ -29,11 +29,11 @@ func Test_jobService_CreateJob(t *testing.T) {
 		defer mockCtrl.Finish()
 
 		appSetting := &common.AppSetting{}
-		ja := dmock.NewMockJobAccess(mockCtrl)
-		je := dmock.NewMockJobExecutor(mockCtrl)
-		ps := dmock.NewMockPermissionService(mockCtrl)
-		ots := dmock.NewMockObjectTypeService(mockCtrl)
-		uma := dmock.NewMockUserMgmtAccess(mockCtrl)
+		ja := omock.NewMockJobAccess(mockCtrl)
+		je := omock.NewMockJobExecutor(mockCtrl)
+		ps := omock.NewMockPermissionService(mockCtrl)
+		ots := omock.NewMockObjectTypeService(mockCtrl)
+		uma := omock.NewMockUserMgmtAccess(mockCtrl)
 		db, smock, _ := sqlmock.New(sqlmock.QueryMatcherOption(sqlmock.QueryMatcherEqual))
 
 		service := &jobService{
@@ -412,8 +412,8 @@ func Test_jobService_DeleteJobsByIDs(t *testing.T) {
 		defer mockCtrl.Finish()
 
 		appSetting := &common.AppSetting{}
-		ja := dmock.NewMockJobAccess(mockCtrl)
-		ps := dmock.NewMockPermissionService(mockCtrl)
+		ja := omock.NewMockJobAccess(mockCtrl)
+		ps := omock.NewMockPermissionService(mockCtrl)
 		db, smock, _ := sqlmock.New(sqlmock.QueryMatcherOption(sqlmock.QueryMatcherEqual))
 
 		service := &jobService{
@@ -520,9 +520,9 @@ func Test_jobService_ListJobs(t *testing.T) {
 		defer mockCtrl.Finish()
 
 		appSetting := &common.AppSetting{}
-		ja := dmock.NewMockJobAccess(mockCtrl)
-		ps := dmock.NewMockPermissionService(mockCtrl)
-		uma := dmock.NewMockUserMgmtAccess(mockCtrl)
+		ja := omock.NewMockJobAccess(mockCtrl)
+		ps := omock.NewMockPermissionService(mockCtrl)
+		uma := omock.NewMockUserMgmtAccess(mockCtrl)
 		db, _, _ := sqlmock.New(sqlmock.QueryMatcherOption(sqlmock.QueryMatcherEqual))
 
 		service := &jobService{
@@ -660,8 +660,8 @@ func Test_jobService_ListTasks(t *testing.T) {
 		defer mockCtrl.Finish()
 
 		appSetting := &common.AppSetting{}
-		ja := dmock.NewMockJobAccess(mockCtrl)
-		ps := dmock.NewMockPermissionService(mockCtrl)
+		ja := omock.NewMockJobAccess(mockCtrl)
+		ps := omock.NewMockPermissionService(mockCtrl)
 		db, _, _ := sqlmock.New(sqlmock.QueryMatcherOption(sqlmock.QueryMatcherEqual))
 
 		service := &jobService{
@@ -756,7 +756,7 @@ func Test_jobService_GetJobsByIDs(t *testing.T) {
 		defer mockCtrl.Finish()
 
 		appSetting := &common.AppSetting{}
-		ja := dmock.NewMockJobAccess(mockCtrl)
+		ja := omock.NewMockJobAccess(mockCtrl)
 		db, _, _ := sqlmock.New(sqlmock.QueryMatcherOption(sqlmock.QueryMatcherEqual))
 
 		service := &jobService{
@@ -821,7 +821,7 @@ func Test_jobService_GetJobByID(t *testing.T) {
 		defer mockCtrl.Finish()
 
 		appSetting := &common.AppSetting{}
-		ja := dmock.NewMockJobAccess(mockCtrl)
+		ja := omock.NewMockJobAccess(mockCtrl)
 		db, _, _ := sqlmock.New(sqlmock.QueryMatcherOption(sqlmock.QueryMatcherEqual))
 
 		service := &jobService{

@@ -277,3 +277,8 @@ func SetPermissionSetting() {
 func GetMQType() string {
 	return os.Getenv("MQ_TYPE")
 }
+
+func GetAuthEnabled() bool {
+	envVal := os.Getenv("AUTH_ENABLED")
+	return envVal != "false" && envVal != "0"
+}

@@ -18,7 +18,7 @@ import (
 
 	"ontology-manager/common"
 	"ontology-manager/interfaces"
-	dmock "ontology-manager/interfaces/mock"
+	omock "ontology-manager/interfaces/mock"
 )
 
 func TestNewJobExecutor(t *testing.T) {
@@ -52,7 +52,7 @@ func TestJobExecutor_reloadJobs(t *testing.T) {
 			},
 		}
 
-		ja := dmock.NewMockJobAccess(mockCtrl)
+		ja := omock.NewMockJobAccess(mockCtrl)
 		db, _, _ := sqlmock.New()
 
 		je := &jobExecutor{
@@ -120,8 +120,8 @@ func TestJobExecutor_AddJob(t *testing.T) {
 			},
 		}
 
-		ja := dmock.NewMockJobAccess(mockCtrl)
-		ota := dmock.NewMockObjectTypeAccess(mockCtrl)
+		ja := omock.NewMockJobAccess(mockCtrl)
+		ota := omock.NewMockObjectTypeAccess(mockCtrl)
 
 		je := &jobExecutor{
 			appSetting: appSetting,
@@ -192,8 +192,8 @@ func TestJobExecutor_HandleTaskCallback(t *testing.T) {
 
 		appSetting := &common.AppSetting{}
 
-		ja := dmock.NewMockJobAccess(mockCtrl)
-		ota := dmock.NewMockObjectTypeAccess(mockCtrl)
+		ja := omock.NewMockJobAccess(mockCtrl)
+		ota := omock.NewMockObjectTypeAccess(mockCtrl)
 		db, smock, _ := sqlmock.New()
 
 		je := &jobExecutor{
@@ -301,7 +301,7 @@ func TestJobExecutor_UpdateTaskStateFailed(t *testing.T) {
 		mockCtrl := gomock.NewController(t)
 		defer mockCtrl.Finish()
 
-		ja := dmock.NewMockJobAccess(mockCtrl)
+		ja := omock.NewMockJobAccess(mockCtrl)
 
 		je := &jobExecutor{
 			ja: ja,
@@ -336,7 +336,7 @@ func TestJobExecutor_UpdateTaskStateCompleted(t *testing.T) {
 		mockCtrl := gomock.NewController(t)
 		defer mockCtrl.Finish()
 
-		ja := dmock.NewMockJobAccess(mockCtrl)
+		ja := omock.NewMockJobAccess(mockCtrl)
 
 		je := &jobExecutor{
 			ja: ja,
@@ -378,7 +378,7 @@ func TestJobExecutor_HandleTask(t *testing.T) {
 			},
 		}
 
-		ja := dmock.NewMockJobAccess(mockCtrl)
+		ja := omock.NewMockJobAccess(mockCtrl)
 
 		je := &jobExecutor{
 			appSetting:        appSetting,
@@ -469,7 +469,7 @@ func TestJobExecutor_reloadJobs_Errors(t *testing.T) {
 			},
 		}
 
-		ja := dmock.NewMockJobAccess(mockCtrl)
+		ja := omock.NewMockJobAccess(mockCtrl)
 		db, _, _ := sqlmock.New()
 
 		je := &jobExecutor{
@@ -524,8 +524,8 @@ func TestJobExecutor_HandleTaskCallback_Errors(t *testing.T) {
 
 		appSetting := &common.AppSetting{}
 
-		ja := dmock.NewMockJobAccess(mockCtrl)
-		ota := dmock.NewMockObjectTypeAccess(mockCtrl)
+		ja := omock.NewMockJobAccess(mockCtrl)
+		ota := omock.NewMockObjectTypeAccess(mockCtrl)
 		db, smock, _ := sqlmock.New()
 
 		je := &jobExecutor{

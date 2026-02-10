@@ -16,6 +16,7 @@ import (
 	"flow-stream-data-pipeline/common"
 	"flow-stream-data-pipeline/pipeline-mgmt/interfaces"
 	"flow-stream-data-pipeline/pipeline-mgmt/logics"
+	"flow-stream-data-pipeline/pipeline-mgmt/logics/auth"
 	"flow-stream-data-pipeline/version"
 )
 
@@ -25,14 +26,14 @@ type RestHandler interface {
 
 type restHandler struct {
 	appSetting          *common.AppSetting
-	hydra               hydra.Hydra
+	as                  interfaces.AuthService
 	pipelineMgmtService interfaces.PipelineMgmtService
 }
 
 func NewRestHandler(appSetting *common.AppSetting) RestHandler {
 	return &restHandler{
 		appSetting:          appSetting,
-		hydra:               hydra.NewHydra(appSetting.HydraAdminSetting),
+		as:                  auth.NewAuthService(appSetting),
 		pipelineMgmtService: logics.NewPipelineMgmtService(appSetting),
 	}
 }
@@ -102,7 +103,7 @@ func (r *restHandler) AccessLog() gin.HandlerFunc {
 
 // 校验oauth
 func (r *restHandler) verifyOAuth(ctx context.Context, c *gin.Context) (hydra.Visitor, error) {
-	visitor, err := r.hydra.VerifyToken(ctx, c)
+	visitor, err := r.as.VerifyToken(ctx, c)
 	if err != nil {
 		httpErr := rest.NewHTTPError(ctx, http.StatusUnauthorized, rest.PublicError_Unauthorized).
 			WithErrorDetails(err.Error())

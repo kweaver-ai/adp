@@ -21,7 +21,7 @@ import (
 	"ontology-manager/common"
 	oerrors "ontology-manager/errors"
 	"ontology-manager/interfaces"
-	dmock "ontology-manager/interfaces/mock"
+	omock "ontology-manager/interfaces/mock"
 )
 
 func MockNewObjectTypeRestHandler(appSetting *common.AppSetting,
@@ -50,9 +50,9 @@ func Test_ObjectTypeRestHandler_CreateObjectTypes(t *testing.T) {
 		defer mockCtrl.Finish()
 
 		appSetting := &common.AppSetting{}
-		as := dmock.NewMockAuthService(mockCtrl)
-		ots := dmock.NewMockObjectTypeService(mockCtrl)
-		kns := dmock.NewMockKNService(mockCtrl)
+		as := omock.NewMockAuthService(mockCtrl)
+		ots := omock.NewMockObjectTypeService(mockCtrl)
+		kns := omock.NewMockKNService(mockCtrl)
 
 		handler := MockNewObjectTypeRestHandler(appSetting, as, ots, kns)
 		handler.RegisterPublic(engine)
@@ -206,9 +206,9 @@ func Test_ObjectTypeRestHandler_UpdateObjectType(t *testing.T) {
 		defer mockCtrl.Finish()
 
 		appSetting := &common.AppSetting{}
-		as := dmock.NewMockAuthService(mockCtrl)
-		ots := dmock.NewMockObjectTypeService(mockCtrl)
-		kns := dmock.NewMockKNService(mockCtrl)
+		as := omock.NewMockAuthService(mockCtrl)
+		ots := omock.NewMockObjectTypeService(mockCtrl)
+		kns := omock.NewMockKNService(mockCtrl)
 
 		handler := MockNewObjectTypeRestHandler(appSetting, as, ots, kns)
 		handler.RegisterPublic(engine)
@@ -336,9 +336,9 @@ func Test_ObjectTypeRestHandler_DeleteObjectTypes(t *testing.T) {
 		defer mockCtrl.Finish()
 
 		appSetting := &common.AppSetting{}
-		as := dmock.NewMockAuthService(mockCtrl)
-		ots := dmock.NewMockObjectTypeService(mockCtrl)
-		kns := dmock.NewMockKNService(mockCtrl)
+		as := omock.NewMockAuthService(mockCtrl)
+		ots := omock.NewMockObjectTypeService(mockCtrl)
+		kns := omock.NewMockKNService(mockCtrl)
 
 		handler := MockNewObjectTypeRestHandler(appSetting, as, ots, kns)
 		handler.RegisterPublic(engine)
@@ -418,9 +418,9 @@ func Test_ObjectTypeRestHandler_UpdateDataProperties(t *testing.T) {
 		defer mockCtrl.Finish()
 
 		appSetting := &common.AppSetting{}
-		as := dmock.NewMockAuthService(mockCtrl)
-		ots := dmock.NewMockObjectTypeService(mockCtrl)
-		kns := dmock.NewMockKNService(mockCtrl)
+		as := omock.NewMockAuthService(mockCtrl)
+		ots := omock.NewMockObjectTypeService(mockCtrl)
+		kns := omock.NewMockKNService(mockCtrl)
 
 		handler := MockNewObjectTypeRestHandler(appSetting, as, ots, kns)
 		handler.RegisterPublic(engine)
@@ -508,9 +508,9 @@ func Test_ObjectTypeRestHandler_ListObjectTypes(t *testing.T) {
 		defer mockCtrl.Finish()
 
 		appSetting := &common.AppSetting{}
-		as := dmock.NewMockAuthService(mockCtrl)
-		ots := dmock.NewMockObjectTypeService(mockCtrl)
-		kns := dmock.NewMockKNService(mockCtrl)
+		as := omock.NewMockAuthService(mockCtrl)
+		ots := omock.NewMockObjectTypeService(mockCtrl)
+		kns := omock.NewMockKNService(mockCtrl)
 
 		handler := MockNewObjectTypeRestHandler(appSetting, as, ots, kns)
 		handler.RegisterPublic(engine)
@@ -587,9 +587,9 @@ func Test_ObjectTypeRestHandler_GetObjectTypes(t *testing.T) {
 		defer mockCtrl.Finish()
 
 		appSetting := &common.AppSetting{}
-		as := dmock.NewMockAuthService(mockCtrl)
-		ots := dmock.NewMockObjectTypeService(mockCtrl)
-		kns := dmock.NewMockKNService(mockCtrl)
+		as := omock.NewMockAuthService(mockCtrl)
+		ots := omock.NewMockObjectTypeService(mockCtrl)
+		kns := omock.NewMockKNService(mockCtrl)
 
 		handler := MockNewObjectTypeRestHandler(appSetting, as, ots, kns)
 		handler.RegisterPublic(engine)
@@ -681,9 +681,9 @@ func Test_ObjectTypeRestHandler_SearchObjectTypes(t *testing.T) {
 		defer mockCtrl.Finish()
 
 		appSetting := &common.AppSetting{}
-		as := dmock.NewMockAuthService(mockCtrl)
-		ots := dmock.NewMockObjectTypeService(mockCtrl)
-		kns := dmock.NewMockKNService(mockCtrl)
+		as := omock.NewMockAuthService(mockCtrl)
+		ots := omock.NewMockObjectTypeService(mockCtrl)
+		kns := omock.NewMockKNService(mockCtrl)
 
 		handler := MockNewObjectTypeRestHandler(appSetting, as, ots, kns)
 		handler.RegisterPublic(engine)

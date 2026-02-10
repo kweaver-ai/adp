@@ -18,7 +18,7 @@ import (
 	cond "ontology-query/common/condition"
 	oerrors "ontology-query/errors"
 	"ontology-query/interfaces"
-	dmock "ontology-query/interfaces/mock"
+	omock "ontology-query/interfaces/mock"
 	"ontology-query/logics"
 )
 
@@ -45,11 +45,11 @@ func Test_objectTypeService_GetObjectsByObjectTypeID(t *testing.T) {
 		defer mockCtrl.Finish()
 
 		appSetting := &common.AppSetting{}
-		omAccess := dmock.NewMockOntologyManagerAccess(mockCtrl)
-		osa := dmock.NewMockOpenSearchAccess(mockCtrl)
-		uAccess := dmock.NewMockUniqueryAccess(mockCtrl)
-		mfa := dmock.NewMockModelFactoryAccess(mockCtrl)
-		aoAccess := dmock.NewMockAgentOperatorAccess(mockCtrl)
+		omAccess := omock.NewMockOntologyManagerAccess(mockCtrl)
+		osa := omock.NewMockOpenSearchAccess(mockCtrl)
+		uAccess := omock.NewMockUniqueryAccess(mockCtrl)
+		mfa := omock.NewMockModelFactoryAccess(mockCtrl)
+		aoAccess := omock.NewMockAgentOperatorAccess(mockCtrl)
 
 		logics.OMA = omAccess
 		logics.OSA = osa
@@ -978,7 +978,7 @@ func Test_objectTypeService_GetTotal(t *testing.T) {
 		defer mockCtrl.Finish()
 
 		service := &objectTypeService{
-			osa: dmock.NewMockOpenSearchAccess(mockCtrl),
+			osa: omock.NewMockOpenSearchAccess(mockCtrl),
 		}
 
 		ctx := context.Background()
@@ -993,7 +993,7 @@ func Test_objectTypeService_GetTotal(t *testing.T) {
 		}
 
 		Convey("成功 - 获取总数", func() {
-			mockOSA := service.osa.(*dmock.MockOpenSearchAccess)
+			mockOSA := service.osa.(*omock.MockOpenSearchAccess)
 			mockOSA.EXPECT().Count(gomock.Any(), gomock.Any(), gomock.Any()).Return([]byte(`{"count":100}`), nil)
 
 			result, err := service.GetTotal(ctx, index, dsl)
@@ -1002,7 +1002,7 @@ func Test_objectTypeService_GetTotal(t *testing.T) {
 		})
 
 		Convey("失败 - Count错误", func() {
-			mockOSA := service.osa.(*dmock.MockOpenSearchAccess)
+			mockOSA := service.osa.(*omock.MockOpenSearchAccess)
 			mockOSA.EXPECT().Count(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil, rest.NewHTTPError(ctx, http.StatusInternalServerError, oerrors.OntologyQuery_InternalError))
 
 			result, err := service.GetTotal(ctx, index, dsl)
@@ -1011,7 +1011,7 @@ func Test_objectTypeService_GetTotal(t *testing.T) {
 		})
 
 		Convey("失败 - 无效JSON", func() {
-			mockOSA := service.osa.(*dmock.MockOpenSearchAccess)
+			mockOSA := service.osa.(*omock.MockOpenSearchAccess)
 			mockOSA.EXPECT().Count(gomock.Any(), gomock.Any(), gomock.Any()).Return([]byte(`invalid json`), nil)
 
 			result, err := service.GetTotal(ctx, index, dsl)
@@ -1020,7 +1020,7 @@ func Test_objectTypeService_GetTotal(t *testing.T) {
 		})
 
 		Convey("失败 - 获取count字段失败", func() {
-			mockOSA := service.osa.(*dmock.MockOpenSearchAccess)
+			mockOSA := service.osa.(*omock.MockOpenSearchAccess)
 			mockOSA.EXPECT().Count(gomock.Any(), gomock.Any(), gomock.Any()).Return([]byte(`{"total":100}`), nil)
 
 			result, err := service.GetTotal(ctx, index, dsl)
@@ -1029,7 +1029,7 @@ func Test_objectTypeService_GetTotal(t *testing.T) {
 		})
 
 		Convey("失败 - 转换为int64失败", func() {
-			mockOSA := service.osa.(*dmock.MockOpenSearchAccess)
+			mockOSA := service.osa.(*omock.MockOpenSearchAccess)
 			mockOSA.EXPECT().Count(gomock.Any(), gomock.Any(), gomock.Any()).Return([]byte(`{"count":"not_a_number"}`), nil)
 
 			result, err := service.GetTotal(ctx, index, dsl)
@@ -1045,11 +1045,11 @@ func Test_objectTypeService_GetObjectPropertyValue(t *testing.T) {
 		defer mockCtrl.Finish()
 
 		appSetting := &common.AppSetting{}
-		omAccess := dmock.NewMockOntologyManagerAccess(mockCtrl)
-		osa := dmock.NewMockOpenSearchAccess(mockCtrl)
-		uAccess := dmock.NewMockUniqueryAccess(mockCtrl)
-		mfa := dmock.NewMockModelFactoryAccess(mockCtrl)
-		aoAccess := dmock.NewMockAgentOperatorAccess(mockCtrl)
+		omAccess := omock.NewMockOntologyManagerAccess(mockCtrl)
+		osa := omock.NewMockOpenSearchAccess(mockCtrl)
+		uAccess := omock.NewMockUniqueryAccess(mockCtrl)
+		mfa := omock.NewMockModelFactoryAccess(mockCtrl)
+		aoAccess := omock.NewMockAgentOperatorAccess(mockCtrl)
 
 		logics.OMA = omAccess
 		logics.OSA = osa
