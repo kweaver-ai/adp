@@ -52,7 +52,7 @@ type Resource struct {
 
 type Property struct {
 	Name         string `json:"name"`
-	Type         string `json:"type"`
+	Type         string `json:"type"`              // if vector, type is "vector[dimension]"
 	DisplayName  string `json:"display_name"`
 	OriginalName string `json:"original_name"`
 	Description  string `json:"description"`
@@ -78,8 +78,9 @@ type ResourceRequest struct {
 
 	Status string `json:"status"`
 
-	Database         string `json:"database,omitempty"` // 所属数据库（实例级 Catalog 时填充）
-	SourceIdentifier string `json:"source_identifier"`  // 源端标识（原始表名/路径）
+	Database         string        `json:"database,omitempty"`          // 所属数据库（实例级 Catalog 时填充）
+	SourceIdentifier string        `json:"source_identifier"`           // 源端标识（原始表名/路径）
+	SchemaDefinition []Property    `json:"schema_definition,omitempty"` // Schema定义
 
 	OriginResource *Resource `json:"-"`
 }

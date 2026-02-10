@@ -20,6 +20,7 @@ import (
 	"vega-backend/interfaces"
 	"vega-backend/logics/catalog"
 	connectortype "vega-backend/logics/connector_type"
+	dataset "vega-backend/logics/dataset"
 	discoverytask "vega-backend/logics/discovery_task"
 	"vega-backend/logics/resource"
 	"vega-backend/version"
@@ -34,6 +35,7 @@ type restHandler struct {
 	appSetting *common.AppSetting
 	cs         interfaces.CatalogService
 	rs         interfaces.ResourceService
+	ds         interfaces.DatasetService
 	cts        interfaces.ConnectorTypeService
 	dts        interfaces.DiscoveryTaskService // 任务服务
 }
@@ -42,10 +44,12 @@ type restHandler struct {
 func NewRestHandler(appSetting *common.AppSetting) RestHandler {
 	cs := catalog.NewCatalogService(appSetting)
 	rs := resource.NewResourceService(appSetting)
+	ds := dataset.NewDatasetService(appSetting)
 	return &restHandler{
 		appSetting: appSetting,
 		cs:         cs,
 		rs:         rs,
+		ds:         ds,
 		cts:        connectortype.NewConnectorTypeService(appSetting),
 		dts:        discoverytask.NewDiscoveryTaskService(appSetting),
 	}
@@ -82,6 +86,11 @@ func (r *restHandler) RegisterPublic(engine *gin.Engine) {
 			resources.GET("/:ids", r.GetResources)
 			resources.PUT("/:id", r.verifyJsonContentType(), r.UpdateResource)
 			resources.DELETE("/:ids", r.DeleteResources)
+			resources.GET("/dataset/:id/docs", r.ListDatasetDocuments)
+			resources.POST("/dataset/:id/docs", r.verifyJsonContentType(), r.CreateDatasetDocuments)
+			resources.GET("/dataset/:id/:docid", r.GetDatasetDocument)
+			resources.PUT("/dataset/:id/:docid", r.verifyJsonContentType(), r.UpdateDatasetDocument)
+			resources.DELETE("/dataset/:id/:docid", r.DeleteDatasetDocument)
 		}
 
 		// ConnectorType APIs

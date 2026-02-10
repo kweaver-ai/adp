@@ -22,6 +22,7 @@ import (
 
 	"vega-backend/common"
 	resourceAccess "vega-backend/drivenadapters/resource"
+	dataset "vega-backend/logics/dataset"
 	oerrors "vega-backend/errors"
 	"vega-backend/interfaces"
 )
@@ -34,6 +35,7 @@ var (
 type resourceService struct {
 	appSetting *common.AppSetting
 	ra         interfaces.ResourceAccess
+	ds         interfaces.DatasetService
 }
 
 // NewResourceService creates a new ResourceService.
@@ -42,6 +44,7 @@ func NewResourceService(appSetting *common.AppSetting) interfaces.ResourceServic
 		rService = &resourceService{
 			appSetting: appSetting,
 			ra:         resourceAccess.NewResourceAccess(appSetting),
+			ds:         dataset.NewDatasetService(appSetting),
 		}
 	})
 	return rService
@@ -69,6 +72,7 @@ func (rs *resourceService) Create(ctx context.Context, req *interfaces.ResourceR
 		Status:           req.Status,
 		Database:         req.Database,
 		SourceIdentifier: req.SourceIdentifier,
+		SchemaDefinition: req.SchemaDefinition,
 		Creator:          accountInfo,
 		CreateTime:       now,
 		Updater:          accountInfo,
@@ -81,6 +85,15 @@ func (rs *resourceService) Create(ctx context.Context, req *interfaces.ResourceR
 		span.SetStatus(codes.Error, "Create resource failed")
 		return "", rest.NewHTTPError(ctx, http.StatusInternalServerError, oerrors.VegaManager_Resource_InternalError_CreateFailed).
 			WithErrorDetails(err.Error())
+	}
+
+	switch resource.Category {
+	case interfaces.ResourceCategoryDataset:
+		// create dataset
+		if err := rs.ds.Create(ctx, resource); err != nil {
+			logger.Errorf("Create dataset failed: %v", err)
+			// 数据集创建失败不影响资源创建，只记录错误
+		}
 	}
 
 	span.SetStatus(codes.Ok, "")
@@ -249,6 +262,24 @@ func (rs *resourceService) DeleteByIDs(ctx context.Context, ids []string) error 
 	if len(ids) == 0 {
 		span.SetStatus(codes.Ok, "")
 		return nil
+	}
+
+	// 先获取要删除的资源信息，以便对不同的资源进行不同的处理
+	resources, err := rs.ra.GetByIDs(ctx, ids)
+	if err != nil {
+		span.SetStatus(codes.Error, "Get resources failed")
+		return rest.NewHTTPError(ctx, http.StatusInternalServerError, oerrors.VegaManager_Resource_InternalError_GetFailed).
+			WithErrorDetails(err.Error())
+	}
+
+	for _, resource := range resources {
+		switch resource.Category {
+		case interfaces.ResourceCategoryDataset:
+			if err := rs.ds.Delete(ctx, resource); err != nil {
+				logger.Errorf("Delete dataset failed: %v", err)
+				// 数据集删除失败不影响资源删除，只记录错误
+			}
+		}
 	}
 
 	if err := rs.ra.DeleteByIDs(ctx, ids); err != nil {

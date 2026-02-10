@@ -47,6 +47,26 @@ type ListResult[T any] struct {
 	TotalCount int64 `json:"total_count"`
 }
 
+// SortField represents a field to sort by.
+type SortField struct {
+	Field     string `json:"field"`
+	Direction string `json:"direction"`
+}
+
+// QueryParams represents query parameters for data retrieval.
+type QueryParams struct {
+	Start           int64       `json:"start,omitempty"`
+	End             int64       `json:"end,omitempty"`
+	Sort            []SortField `json:"sort,omitempty"`
+	Offset          int         `json:"offset,omitempty"`
+	Limit           int         `json:"limit,omitempty"`
+	NeedTotal       bool        `json:"need_total,omitempty"`
+	UseSearchAfter  bool        `json:"use_search_after,omitempty"`
+	SearchAfter     []any       `json:"search_after,omitempty"`
+	Format          string      `json:"format,omitempty"`
+	Filters         interface{} `json:"filters,omitempty"`
+}
+
 // Default pagination values
 const (
 	DefaultOffset = 0
