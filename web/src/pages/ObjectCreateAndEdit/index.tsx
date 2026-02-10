@@ -66,10 +66,10 @@ const ObjectCreateAndEdit = () => {
     };
 
     fetchConceptGroups();
-    if (id) {
+    if (id && knId) {
       getObjectDetail();
     }
-  }, [id]);
+  }, [id, knId]);
 
   const getObjectDetail = async () => {
     try {
@@ -113,12 +113,12 @@ const ObjectCreateAndEdit = () => {
     }
   };
 
-  const goBack = () => history.goBack();
-  const onPrev = () => setStepsCurrent((prev) => prev - 1);
-  const onNext = () => {
+  const goBack = useCallback(() => history.goBack(), [history]);
+  const onPrev = useCallback(() => setStepsCurrent((prev) => prev - 1), []);
+  const onNext = useCallback(() => {
     setDoneStep((prev) => prev + 1);
     setStepsCurrent((prev) => prev + 1);
-  };
+  }, []);
 
   const onSubmit = useCallback(
     async (data: { logicProperties: OntologyObjectType.LogicProperty[] }) => {
@@ -174,14 +174,14 @@ const ObjectCreateAndEdit = () => {
 
   const title = isEditPage ? basicValue?.name : intl.get('Global.createObjectType');
 
-  const handleBasicNext = () => {
+  const handleBasicNext = useCallback(() => {
     basicForm.validateFields().then((values) => {
       setBasicValue(values);
       onNext();
     });
-  };
+  }, [basicForm, onNext]);
 
-  const handleDataPrev = () => {
+  const handleDataPrev = useCallback(() => {
     dataAttributeRef.current
       .getDataProperties()
       .then((values: { dataProperties: OntologyObjectType.DataProperty[]; dataSource: OntologyObjectType.DataSource }) => {
@@ -189,9 +189,9 @@ const ObjectCreateAndEdit = () => {
         setDataSource(values.dataSource);
         onPrev();
       });
-  };
+  }, [onPrev]);
 
-  const handleDataNext = () => {
+  const handleDataNext = useCallback(() => {
     dataAttributeRef.current
       .validateFields()
       .then((values: { dataProperties: OntologyObjectType.DataProperty[]; dataSource: OntologyObjectType.DataSource }) => {
@@ -199,20 +199,20 @@ const ObjectCreateAndEdit = () => {
         setDataSource(values.dataSource);
         onNext();
       });
-  };
+  }, [onNext]);
 
-  const handleLogicPrev = () => {
+  const handleLogicPrev = useCallback(() => {
     logicAttributeRef.current.validateFields().then((values: { logicProperties: OntologyObjectType.LogicProperty[] }) => {
       setLogicProperties(values.logicProperties);
       onPrev();
     });
-  };
+  }, [onPrev]);
 
-  const handleLogicSave = () => {
+  const handleLogicSave = useCallback(() => {
     logicAttributeRef.current.validateFields().then((logicValues: { logicProperties: OntologyObjectType.LogicProperty[] }) => {
       onSubmit({ logicProperties: logicValues.logicProperties });
     });
-  };
+  }, [onSubmit]);
 
   const stepsContent = useMemo(
     () => ({

@@ -220,7 +220,7 @@ export enum ActionExecutionStatusEnum {
   Running = 'running',
   Completed = 'completed',
   Failed = 'failed',
-  Cancelled = 'cancelled'
+  Cancelled = 'cancelled',
 }
 
 // 行动执行请求
@@ -250,7 +250,7 @@ export interface ActionExecution {
 }
 
 // 查询行动日志参数
-export interface QueryActionLogsRequest { 
+export interface QueryActionLogsRequest {
   action_type_id?: string; // 按行动类过滤（可选）
   status?: ActionExecutionStatusEnum; // 按状态过滤：pending/running/completed/failed/cancelled
   trigger_type?: string; // 按触发类型：manual(手动)/schedule(定时)/event(事件)

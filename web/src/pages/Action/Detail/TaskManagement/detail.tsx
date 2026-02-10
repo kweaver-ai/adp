@@ -1,11 +1,11 @@
 import React, { useMemo } from 'react';
 import intl from 'react-intl-universal';
-import DetailDrawer, { DataItem } from '@/components/DetailDrawer';
-import { Table, Tag, Space, Badge, Tooltip } from 'antd';
+import { Table, Badge, Tooltip } from 'antd';
 import dayjs from 'dayjs';
+import DetailDrawer, { DataItem } from '@/components/DetailDrawer';
+import { formatMsToHMS } from '@/utils/time';
 import type { ActionExecutionResult, ActionExecutionLogDetail } from '@/services/action/type';
 import * as ActionType from '@/services/action/type';
-import { formatMsToHMS } from '@/utils/time';
 
 interface TaskDetailProps {
   visible: boolean;

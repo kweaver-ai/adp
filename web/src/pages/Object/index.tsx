@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useMemo } from 'react';
 import intl from 'react-intl-universal';
 import { useHistory } from 'react-router-dom';
 import { EllipsisOutlined } from '@ant-design/icons';
@@ -46,6 +46,7 @@ const KnowledgeNetwork = (props: TProps) => {
 
   const getTableData = useCallback(
     async (val?: any): Promise<void> => {
+      if (!knId) return;
       const postData = {
         offset: val?.page ? limit * (val?.page - 1) : limit * (page - 1),
         limit,
@@ -60,7 +61,7 @@ const KnowledgeNetwork = (props: TProps) => {
       if (val?.page) delete postData.page;
       setIsLoading(true);
       try {
-        const res = await api.objectGet(detail?.id as string, postData);
+        const res = await api.objectGet(knId as string, postData);
         if (!res) return;
         const { total_count, entries } = res;
 
@@ -74,19 +75,22 @@ const KnowledgeNetwork = (props: TProps) => {
         setIsLoading(false);
       }
     },
-    [detail?.id, limit, page, direction, sort, name_pattern, tag, onUpdateState]
+    [knId, limit, page, direction, sort, name_pattern, tag, onUpdateState]
   );
 
   useEffect(() => {
-    if (detail?.id) {
+    if (knId) {
       getTableData();
     }
-  }, [detail?.id]);
+  }, [knId]);
 
-  const onChangeTableOperation = (values: Pick<ObjectType.ListQuery, 'name_pattern' | 'tag'>) => {
-    getTableData({ offset: 0, ...values });
-    setFilterValues(values);
-  };
+  const onChangeTableOperation = useCallback(
+    (values: Pick<ObjectType.ListQuery, 'name_pattern' | 'tag'>) => {
+      getTableData({ offset: 0, ...values });
+      setFilterValues(values);
+    },
+    [getTableData]
+  );
 
   const handleTableChange: TableProps['onChange'] = useCallback(
     async (pagination: any, _filters: any, sorter: any): Promise<void> => {
@@ -130,137 +134,143 @@ const KnowledgeNetwork = (props: TProps) => {
     [modal, onDelete]
   );
 
-  const toCreateOrEdit = (objId?: string) => {
-    if (objId) {
-      history.push(`/ontology/object/edit/${objId}`);
-      return;
-    }
-    history.push(`/ontology/object/create`);
-  };
-
-  const onOpenDetail = (val: ObjectType.Detail) => setObjectDetail(val);
-  const onCloseDetail = () => setObjectDetail(undefined);
-
-  const onOperate = (key: string, record: ObjectType.Detail) => {
-    if (key === 'view') {
-      onOpenDetail(record);
-    }
-    if (key === 'edit') {
-      toCreateOrEdit(record.id);
-    }
-    if (key === 'delete') onDeleteConfirm([record]);
-    if (key === 'index') {
-      history.push(`/ontology/object/settting/${record.id}`);
-    }
-  };
-
-  const columns: any = [
-    {
-      title: intl.get('Global.name'),
-      dataIndex: 'name',
-      fixed: 'left',
-      sorter: true,
-      width: 350,
-      __fixed: true,
-      __selected: true,
-      render: (value: string, record: ObjectType.Detail) => (
-        <div className={styles['object-title-box']} title={value} onClick={() => onOpenDetail(record)}>
-          <ObjectIcon icon={record.icon} color={record.color} />
-          <span>{record.name}</span>
-        </div>
-      ),
+  const toCreateOrEdit = useCallback(
+    (objId?: string) => {
+      if (objId) {
+        history.push(`/ontology/object/edit/${objId}`);
+        return;
+      }
+      history.push(`/ontology/object/create`);
     },
-    {
-      title: intl.get('Global.operation'),
-      dataIndex: 'operation',
-      fixed: 'left',
-      width: 80,
-      __fixed: true,
-      __selected: true,
-      render: (_value: any, record: any) => {
-        const allOperations = [
-          { key: 'view', label: intl.get('Global.view'), visible: true },
-          { key: 'edit', label: intl.get('Global.edit'), visible: isPermission },
-          { key: 'index', label: intl.get('Object.indexConfiguration'), visible: isPermission },
-          { key: 'delete', label: intl.get('Global.delete'), visible: isPermission },
-        ];
-        const dropdownMenu: any = allOperations.filter((item) => item.visible).map(({ key, label }: any) => ({ key, label }));
-        return (
-          <Dropdown
-            trigger={['click']}
-            menu={{
-              items: dropdownMenu,
-              onClick: (event: any) => {
-                event.domEvent.stopPropagation();
-                onOperate(event?.key, record);
-              },
-            }}
-          >
-            <Button.Icon icon={<EllipsisOutlined style={{ fontSize: 20 }} />} onClick={(event) => event.stopPropagation()} />
-          </Dropdown>
-        );
+    [history]
+  );
+
+  const columns: any = useMemo(() => {
+    const onOperate = (key: string, record: ObjectType.Detail) => {
+      if (key === 'view') {
+        setObjectDetail(record);
+      }
+      if (key === 'edit') {
+        toCreateOrEdit(record.id);
+      }
+      if (key === 'delete') onDeleteConfirm([record]);
+      if (key === 'index') {
+        history.push(`/ontology/object/settting/${record.id}`);
+      }
+    };
+
+    return [
+      {
+        title: intl.get('Global.name'),
+        dataIndex: 'name',
+        fixed: 'left',
+        sorter: true,
+        width: 350,
+        __fixed: true,
+        __selected: true,
+        render: (value: string, record: ObjectType.Detail) => (
+          <div className={styles['object-title-box']} title={value} onClick={() => setObjectDetail(record)}>
+            <ObjectIcon icon={record.icon} color={record.color} />
+            <span>{record.name}</span>
+          </div>
+        ),
       },
-    },
-    {
-      title: () => (
-        <div className={styles['has-index']}>
-          <span>{intl.get('Object.hasIndex')}</span>
-          <Tooltip title={intl.get('Object.hasIndexTip')}>
-            <IconFont type="icon-dip-color-tip" />
-          </Tooltip>
-        </div>
-      ),
-      dataIndex: 'status',
-      width: 150,
-      __selected: true,
-      render: (value: any) => (value?.index_available === true ? intl.get('Global.yes') : intl.get('Global.no')),
-    },
-    {
-      title: intl.get('Global.tag'),
-      dataIndex: 'tags',
-      width: 150,
-      __selected: true,
-      render: (value: string[]) => <Tags value={value} />,
-    },
-    {
-      title: intl.get('Global.modifier'),
-      dataIndex: 'updater',
-      width: 150,
-      __selected: true,
-      render: (value: any, record: any) => record?.updater?.name || '--',
-    },
-    {
-      title: intl.get('Global.updateTime'),
-      dataIndex: 'update_time',
-      width: 200,
-      __selected: true,
-      render: (value: string) => (value ? dayjs(value).format('YYYY/MM/DD HH:mm:ss') : '--'),
-    },
-  ];
+      {
+        title: intl.get('Global.operation'),
+        dataIndex: 'operation',
+        fixed: 'left',
+        width: 80,
+        __fixed: true,
+        __selected: true,
+        render: (_value: any, record: ObjectType.Detail) => {
+          const allOperations = [
+            { key: 'view', label: intl.get('Global.view'), visible: true },
+            { key: 'edit', label: intl.get('Global.edit'), visible: isPermission },
+            { key: 'index', label: intl.get('Object.indexConfiguration'), visible: isPermission },
+            { key: 'delete', label: intl.get('Global.delete'), visible: isPermission },
+          ];
+          const dropdownMenu: any = allOperations.filter((item) => item.visible).map(({ key, label }: any) => ({ key, label }));
+          return (
+            <Dropdown
+              trigger={['click']}
+              menu={{
+                items: dropdownMenu,
+                onClick: (event: any) => {
+                  event.domEvent.stopPropagation();
+                  onOperate(event?.key, record);
+                },
+              }}
+            >
+              <Button.Icon icon={<EllipsisOutlined style={{ fontSize: 20 }} />} onClick={(event) => event.stopPropagation()} />
+            </Dropdown>
+          );
+        },
+      },
+      {
+        title: () => (
+          <div className={styles['has-index']}>
+            <span>{intl.get('Object.hasIndex')}</span>
+            <Tooltip title={intl.get('Object.hasIndexTip')}>
+              <IconFont type="icon-dip-color-tip" />
+            </Tooltip>
+          </div>
+        ),
+        dataIndex: 'status',
+        width: 150,
+        __selected: true,
+        render: (value: any) => (value?.index_available === true ? intl.get('Global.yes') : intl.get('Global.no')),
+      },
+      {
+        title: intl.get('Global.tag'),
+        dataIndex: 'tags',
+        width: 150,
+        __selected: true,
+        render: (value: string[]) => <Tags value={value} />,
+      },
+      {
+        title: intl.get('Global.modifier'),
+        dataIndex: 'updater',
+        width: 150,
+        __selected: true,
+        render: (_value: any, record: any) => record?.updater?.name || '--',
+      },
+      {
+        title: intl.get('Global.updateTime'),
+        dataIndex: 'update_time',
+        width: 200,
+        __selected: true,
+        render: (value: string) => (value ? dayjs(value).format('YYYY/MM/DD HH:mm:ss') : '--'),
+      },
+    ];
+  }, [history, isPermission, onDeleteConfirm, toCreateOrEdit]);
 
-  const rowSelection = {
-    selectedRowKeys,
-    onChange: (selectedRowKeys: any, selectedRows: any): void => {
-      setSelectedRowKeys(selectedRowKeys);
-      setSelectedRows(selectedRows);
-    },
-    onSelectAll: (selected: any): void => {
-      const newSelectedRowKeys = selected ? tableData.map((item) => item.id) : [];
-      const newSelectedRows = selected ? tableData : [];
+  const rowSelection: any = useMemo(() => {
+    return {
+      selectedRowKeys,
+      onChange: (nextSelectedRowKeys: any, nextSelectedRows: any): void => {
+        setSelectedRowKeys(nextSelectedRowKeys);
+        setSelectedRows(nextSelectedRows);
+      },
+      onSelectAll: (selected: any): void => {
+        const selectableData = tableData.filter((item) => !(item as any).builtin);
+        const newSelectedRowKeys = selected ? selectableData.map((item) => item.id) : [];
+        const newSelectedRows = selected ? selectableData : [];
 
-      setSelectedRowKeys(newSelectedRowKeys);
-      setSelectedRows(newSelectedRows);
-    },
-    getCheckboxProps: (row: any): Record<string, any> => ({
-      disabled: row.builtin,
-    }),
-  };
+        setSelectedRowKeys(newSelectedRowKeys);
+        setSelectedRows(newSelectedRows);
+      },
+      getCheckboxProps: (row: any): Record<string, any> => ({
+        disabled: (row as any).builtin,
+      }),
+    };
+  }, [selectedRowKeys, tableData]);
 
   const handleSortChange = (val: { key: string }) => {
     const state = {
       sort: val.key,
       direction: val.key !== sort ? 'desc' : direction === 'desc' ? 'asc' : 'desc',
     };
+    onUpdateState(state);
     getTableData(state);
   };
 
@@ -320,7 +330,7 @@ const KnowledgeNetwork = (props: TProps) => {
       <Detail
         open={!!objectDetail}
         sourceData={objectDetail}
-        onClose={onCloseDetail}
+        onClose={() => setObjectDetail(undefined)}
         onDeleteConfirm={onDeleteConfirm}
         goToCreateAndEditPage={toCreateOrEdit}
         isPermission={isPermission}

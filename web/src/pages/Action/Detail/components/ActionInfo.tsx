@@ -1,7 +1,6 @@
 import { useEffect, useState, FC } from 'react';
 import intl from 'react-intl-universal';
-import { Tag, Divider, Spin, Tooltip } from 'antd';
-import classNames from 'classnames';
+import { Tag, Spin, Tooltip } from 'antd';
 import { map } from 'lodash-es';
 import DataFilterNew from '@/components/DataFilterNew';
 import { renderObjectTypeLabel } from '@/components/ObjectSelector';

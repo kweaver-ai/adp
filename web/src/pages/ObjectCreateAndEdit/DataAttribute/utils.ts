@@ -1,12 +1,24 @@
 import intl from 'react-intl-universal';
 import * as OntologyObjectType from '@/services/object/type';
 
+export const makeEdgeId = (dataAttr: string, viewAttr: string) => `${dataAttr}&&${viewAttr}`;
+
+export const parseEdgeId = (id?: string) => {
+  const [dataAttr = '', viewAttr = ''] = (id || '').split('&&');
+  return { dataAttr, viewAttr };
+};
+
 export interface TransformCanvasDataParams {
   dataProperties: OntologyObjectType.DataProperty[];
   logicProperties: OntologyObjectType.LogicProperty[];
   fields: OntologyObjectType.Field[];
   dataSource?: OntologyObjectType.DataSource;
   basicValue: OntologyObjectType.BasicInfo;
+  /**
+   * 是否需要计算初始连线。初始化阶段需要；后续交互阶段 edges 由 ReactFlow state 维护，
+   * 每次重建 edges 会造成不必要的计算。
+   */
+  includeEdges?: boolean;
   openDataViewSource?: () => void;
   deleteDataViewSource?: () => void;
   addDataAttribute?: () => void;
@@ -26,7 +38,6 @@ export const transformCanvasData = (
 ): {
   nodes: OntologyObjectType.TNode[];
   edges: OntologyObjectType.TEdge[];
-  allData: OntologyObjectType.ViewField[];
 } => {
   const {
     dataProperties,
@@ -34,6 +45,7 @@ export const transformCanvasData = (
     fields,
     dataSource,
     basicValue,
+    includeEdges = true,
     openDataViewSource,
     deleteDataViewSource,
     addDataAttribute,
@@ -59,13 +71,6 @@ export const transformCanvasData = (
       display_key: item.display_key,
       incremental_key: item.incremental_key,
     }));
-  const logicNodes = logicProperties.map((item) => ({
-    id: item.name,
-    name: item.name,
-    display_name: item.display_name,
-    type: item.type,
-    comment: item.comment,
-  }));
 
   const nodesView: OntologyObjectType.TNode = {
     id: 'view',
@@ -116,42 +121,46 @@ export const transformCanvasData = (
       toggleIncrementalKey,
       clearAllAttributes,
       clearSearchTrigger,
-      attributes: [...dataNodes],
+      attributes: dataNodes,
     },
   };
 
-  const edgesData = dataProperties
-    .filter((val) => val.mapped_field?.name && val.type == val.mapped_field?.type)
-    .map((item) => ({
-      id: item.name + '&&' + item.mapped_field?.name,
-      type: 'customEdge',
-      source: 'data',
-      sourceHandle: 'data-' + item.name,
-      target: 'view',
-      targetHandle: 'view-' + item.mapped_field?.name,
-      data: { deletable: true },
-    }));
+  const edgesData: OntologyObjectType.TEdge[] = [];
+  if (includeEdges) {
+    const edgesFromMappedField = dataProperties
+      .filter((val) => val.mapped_field?.name && val.type == val.mapped_field?.type)
+      .map((item) => ({
+        id: makeEdgeId(item.name, item.mapped_field?.name || ''),
+        type: 'customEdge',
+        source: 'data',
+        sourceHandle: 'data-' + item.name,
+        target: 'view',
+        targetHandle: 'view-' + item.mapped_field?.name,
+        data: { deletable: true },
+      }));
 
-  if (!(edgesData.length > 0)) {
-    dataProperties.forEach((val) => {
-      const beField = fields.find((item) => item.name === val.name && (item.type === val.type || !val.type));
-      if (beField) {
-        edgesData.push({
-          id: val.name + '&&' + beField.name,
-          type: 'customEdge',
-          source: 'data',
-          sourceHandle: 'data-' + val.name,
-          target: 'view',
-          targetHandle: 'view-' + beField.name,
-          data: { deletable: true },
-        });
-      }
-    });
+    edgesData.push(...edgesFromMappedField);
+
+    if (!(edgesData.length > 0)) {
+      const fieldByName = new Map(fields.map((f) => [f.name, f] as const));
+      dataProperties.forEach((val) => {
+        const beField = fieldByName.get(val.name);
+        if (beField && (beField.type === val.type || !val.type)) {
+          edgesData.push({
+            id: makeEdgeId(val.name, beField.name),
+            type: 'customEdge',
+            source: 'data',
+            sourceHandle: 'data-' + val.name,
+            target: 'view',
+            targetHandle: 'view-' + beField.name,
+          });
+        }
+      });
+    }
   }
   return {
     nodes: [nodesData, nodesView],
     edges: edgesData,
-    allData: [...dataNodes, ...logicNodes],
   };
 };
 interface TransformAttrDataParams {
@@ -191,7 +200,7 @@ export const transformAttrData = (props: TransformAttrDataParams): OntologyObjec
   const viewNode = nodes.find((val) => val.id === 'view')!;
   const realDataAttr = dataNode.data.attributes.filter((val) => !logics.includes(val.name));
   edges.forEach((val) => {
-    const [source, target] = val.id.split('&&');
+    const { dataAttr: source, viewAttr: target } = parseEdgeId(val.id);
     const sourceAttr = realDataAttr.find((item) => item.name === source);
     const targetAttr = viewNode.data.attributes.find((item) => item.name === target);
     sourceAttr!.mapped_field = {

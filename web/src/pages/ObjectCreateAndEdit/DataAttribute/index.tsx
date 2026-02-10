@@ -1,24 +1,42 @@
-import { forwardRef, useCallback, useEffect, useImperativeHandle, useMemo, useState } from 'react';
+import { forwardRef, useCallback, useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react';
 import intl from 'react-intl-universal';
-import { ReactFlow, addEdge, useNodesState, useEdgesState, Edge, Connection, applyNodeChanges, type OnNodesChange, Controls } from '@xyflow/react';
+import {
+  ReactFlow,
+  addEdge,
+  useNodesState,
+  useEdgesState,
+  Edge,
+  Connection,
+  applyNodeChanges,
+  type OnNodesChange,
+  type EdgeChange,
+  type Node,
+  type NodeTypes,
+  Controls,
+} from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 import { Alert, Popover, Tooltip } from 'antd';
 import { nanoid } from 'nanoid';
 import { DataViewSource } from '@/components/DataViewSource';
-import FieldTypeIcon from '@/components/FieldTypeIcon';
+import FieldSelect from '@/components/FieldSelect';
 import ObjectIcon from '@/components/ObjectIcon';
 import * as OntologyObjectType from '@/services/object/type';
 import HOOKS from '@/hooks';
 import SERVICE from '@/services';
 import { IconFont } from '@/web-library/common';
 import AddDataAttribute from './AddDataAttribute';
+import { canBeDisplayKey, canBeIncrementalKey, canBePrimaryKey } from './constants';
 import CustomEdge from './customEdge';
 import CustomNode from './customNode';
+import { HoveredEdgeIdContext } from './hoverContext';
 import styles from './index.module.less';
 import PickAttribute from './PickAttribute';
-import { transformCanvasData } from './utils';
+import { makeEdgeId, parseEdgeId, transformCanvasData } from './utils';
 
-const nodeTypes = {
+type TNodeData = OntologyObjectType.TNode['data'];
+type TFlowNode = Node<TNodeData>;
+
+const nodeTypes: NodeTypes = {
   customNode: CustomNode,
 };
 
@@ -29,6 +47,25 @@ const edgeTypes = {
 const EDGE_RENDER_DELAY = 150;
 
 const getHandleName = (handle: string, prefix: string) => handle.replace(new RegExp(`^${prefix}-`), '');
+
+type TFieldSelectOption = {
+  name: string;
+  display_name: string;
+  type: string;
+  comment?: string;
+};
+
+const orderFieldsWithSelectedFirst = (fields: TFieldSelectOption[], selectedNames: string[]) => {
+  if (!selectedNames.length || !fields.length) return fields;
+
+  const indexByName = new Map(fields.map((f) => [f.name, f]));
+  const selectedSet = new Set(selectedNames);
+
+  const selectedFields = selectedNames.map((name) => indexByName.get(name)).filter(Boolean) as TFieldSelectOption[];
+  const restFields = fields.filter((f) => !selectedSet.has(f.name));
+
+  return [...selectedFields, ...restFields];
+};
 
 const isConnectionValid = (sourceHandle: string, targetHandle: string) => {
   const isViewToData = sourceHandle.startsWith('view') && targetHandle.startsWith('data');
@@ -65,7 +102,47 @@ const DataAttribute = forwardRef((props: TProps, ref) => {
   } = props;
   const { message } = HOOKS.useGlobalContext();
 
-  const [nodes, setNodes] = useNodesState<any>([]);
+  const hashStringFNV1a = (input: string) => {
+    let hash = 2166136261;
+    for (let i = 0; i < input.length; i++) {
+      hash ^= input.charCodeAt(i);
+      hash = Math.imul(hash, 16777619);
+    }
+    return (hash >>> 0).toString(16);
+  };
+
+  // 用“内容签名”避免父层同内容新引用导致重复重初始化（排序 + hash，避免超长字符串）
+  const initKey = useMemo(() => {
+    const tokens: string[] = [];
+
+    tokens.push(basicValue?.id || '');
+    tokens.push(dataSource?.id || '');
+    tokens.push(displayKey || '');
+    tokens.push(incrementalKey || '');
+
+    const primaryKeysSig = [...primaryKeys].sort().join('|');
+    tokens.push(primaryKeysSig);
+
+    const sortedProps = [...(dataProperties || [])].sort((a, b) => String(a.name).localeCompare(String(b.name)));
+    for (const p of sortedProps) {
+      tokens.push(
+        [
+          p.name,
+          p.display_name || '',
+          p.type || '',
+          p.mapped_field?.name || '',
+          p.mapped_field?.type || '',
+          p.primary_key ? '1' : '0',
+          p.display_key ? '1' : '0',
+          p.incremental_key ? '1' : '0',
+        ].join(':')
+      );
+    }
+
+    return hashStringFNV1a(tokens.join('::'));
+  }, [basicValue?.id, dataSource?.id, displayKey, incrementalKey, primaryKeys, dataProperties]);
+
+  const [nodes, setNodes] = useNodesState<TFlowNode>([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>([]);
   const [fields, setFields] = useState<OntologyObjectType.Field[]>([]);
   const [addAttrVisible, setAddAttrVisible] = useState(false);
@@ -77,27 +154,29 @@ const DataAttribute = forwardRef((props: TProps, ref) => {
   const [alertMessage, setAlertMessage] = useState<string>('');
   const [hoveredEdge, setHoveredEdge] = useState<string | null>(null);
   const [isInitialized, setIsInitialized] = useState(false);
+  const initSeqRef = useRef(0);
   const [clearSearchTrigger, setClearSearchTrigger] = useState(0);
+  const [displayKeyDropdownOpen, setDisplayKeyDropdownOpen] = useState(false);
+  const [incrementalKeyDropdownOpen, setIncrementalKeyDropdownOpen] = useState(false);
+  const [primaryKeyDropdownOpen, setPrimaryKeyDropdownOpen] = useState(false);
 
   // 自定义边变化处理，同步更新 localDataProperties 的 mapped_field
   const handleEdgesChange = useCallback(
-    (changes: any[]) => {
+    (changes: EdgeChange<Edge>[]) => {
       // 检查是否有边被删除
       const removedEdges = changes.filter((change) => change.type === 'remove');
       if (removedEdges.length > 0) {
-        // 获取被删除边的 id 列表
-        const removedEdgeIds = removedEdges.map((change) => {
-          const edge = edges.find((e) => e.id === change.id);
-          return edge?.id;
-        });
+        // 获取被删除边的 id 列表（edge.id 约定为 `${dataAttr}&&${viewAttr}`）
+        const removedEdgeIds = removedEdges.map((change) => change.id).filter(Boolean);
+        const removedDataAttrs = new Set(removedEdgeIds.map((id) => parseEdgeId(id).dataAttr).filter(Boolean));
 
         // 清除对应属性的 mapped_field
         setLocalDataProperties((prevProps) =>
           prevProps.map((p) => {
             // 检查这个属性的连线是否被删除
-            const hasRemovedEdge = removedEdgeIds.some((edgeId) => edgeId && edgeId.startsWith(`${p.name}&&`));
+            const hasRemovedEdge = removedDataAttrs.has(p.name);
             if (hasRemovedEdge) {
-              const { mapped_field, ...rest } = p;
+              const { mapped_field: _mapped_field, ...rest } = p;
               return rest;
             }
             return p;
@@ -108,7 +187,7 @@ const DataAttribute = forwardRef((props: TProps, ref) => {
       // 调用原始的 onEdgesChange
       onEdgesChange(changes);
     },
-    [edges, onEdgesChange]
+    [onEdgesChange]
   );
 
   useImperativeHandle(
@@ -135,12 +214,6 @@ const DataAttribute = forwardRef((props: TProps, ref) => {
 
           const hasPrimaryKey = localDataProperties.some((p) => p.primary_key);
           const hasDisplayKey = localDataProperties.some((p) => p.display_key);
-
-          if (!hasPrimaryKey || !hasDisplayKey) {
-            setAlertMessage(intl.get('Object.dataAttributeConfigIncomplete'));
-            reject(new Error(intl.get('Object.dataAttributeConfigIncomplete')));
-            return;
-          }
 
           if (!hasPrimaryKey) {
             setAlertMessage(intl.get('Object.primaryKeyRequired'));
@@ -170,7 +243,7 @@ const DataAttribute = forwardRef((props: TProps, ref) => {
       },
     }),
 
-    [localDataProperties, edges, logicProperties, dataViewInfo, message]
+    [localDataProperties, dataViewInfo]
   );
 
   const getDataViewDetail = async (dataViewId: string, shouldAutoInitialize = false) => {
@@ -212,25 +285,24 @@ const DataAttribute = forwardRef((props: TProps, ref) => {
             return [...prev, ...newProperties];
           });
 
-          // 自动创建连接线(只为新添加的字段创建)
-          const existingEdgeTargets = new Set(edges.map((e) => e.targetHandle));
-          const newEdges = resetFields
-            .filter((field: OntologyObjectType.Field) => !existingEdgeTargets.has(`view-${field.name}`))
-            .map((field: OntologyObjectType.Field) => ({
-              id: `${field.name}&&${field.name}`,
-              type: 'customEdge',
-              source: 'data',
-              sourceHandle: `data-${field.name}`,
-              target: 'view',
-              targetHandle: `view-${field.name}`,
-              data: { deletable: true },
-            }));
-
-          if (newEdges.length > 0) {
-            setTimeout(() => {
-              setEdges((prev) => [...prev, ...(newEdges as Edge[])]);
-            }, EDGE_RENDER_DELAY);
-          }
+          // 自动创建连接线(只为新添加的字段创建) —— 用 setEdges(prev) 避免闭包读到旧 edges
+          setTimeout(() => {
+            setEdges((prev) => {
+              const existingEdgeTargets = new Set(prev.map((e) => e.targetHandle));
+              const newEdges = resetFields
+                .filter((field: OntologyObjectType.Field) => !existingEdgeTargets.has(`view-${field.name}`))
+                .map((field: OntologyObjectType.Field) => ({
+                  id: makeEdgeId(field.name, field.name),
+                  type: 'customEdge',
+                  source: 'data',
+                  sourceHandle: `data-${field.name}`,
+                  target: 'view',
+                  targetHandle: `view-${field.name}`,
+                  data: { deletable: true },
+                }));
+              return newEdges.length > 0 ? [...prev, ...(newEdges as Edge[])] : prev;
+            });
+          }, EDGE_RENDER_DELAY);
         }
       }
     } catch (event) {
@@ -240,50 +312,62 @@ const DataAttribute = forwardRef((props: TProps, ref) => {
 
   useEffect(() => {
     const initializeData = async () => {
-      const hasExistingData = dataProperties?.length > 0;
+      const seq = ++initSeqRef.current;
 
-      if (hasExistingData) {
-        const initializedProperties = dataProperties.map((prop) => ({
-          ...prop,
-          primary_key: primaryKeys.includes(prop.name) || prop.primary_key || false,
-          display_key: prop.name === displayKey || prop.display_key || false,
-          incremental_key: prop.name === incrementalKey || prop.incremental_key || false,
-        }));
-        setLocalDataProperties(initializedProperties);
+      // 重初始化：父层切换对象/数据源时，避免沿用旧状态
+      setIsInitialized(false);
+      setAlertMessage('');
+      setHoveredEdge(null);
 
-        // 编辑模式下,根据 mapped_field 恢复连线
-        if (dataSource?.id) {
-          const edgesFromMappedField = initializedProperties
-            .filter((prop) => prop.mapped_field)
-            .map((prop) => ({
-              id: `${prop.name}&&${prop.mapped_field!.name}`,
-              type: 'customEdge',
-              source: 'data',
-              sourceHandle: `data-${prop.name}`,
-              target: 'view',
-              targetHandle: `view-${prop.mapped_field!.name}`,
-              data: { deletable: true },
-            }));
+      setDataViewInfo(dataSource);
+      setFields([]);
+      setEdges([]);
 
-          if (edgesFromMappedField.length > 0) {
-            setTimeout(() => {
-              setEdges(edgesFromMappedField as Edge[]);
-            }, EDGE_RENDER_DELAY);
-          }
+      const initializedProperties =
+        dataProperties?.length > 0
+          ? dataProperties.map((prop) => ({
+              ...prop,
+              primary_key: primaryKeys.includes(prop.name) || prop.primary_key || false,
+              display_key: prop.name === displayKey || prop.display_key || false,
+              incremental_key: prop.name === incrementalKey || prop.incremental_key || false,
+            }))
+          : [];
+      setLocalDataProperties(initializedProperties);
+
+      // 编辑模式下,根据 mapped_field 恢复连线
+      if (dataSource?.id && initializedProperties.length > 0) {
+        const edgesFromMappedField = initializedProperties
+          .filter((prop) => prop.mapped_field)
+          .map((prop) => ({
+            id: makeEdgeId(prop.name, prop.mapped_field!.name),
+            type: 'customEdge',
+            source: 'data',
+            sourceHandle: `data-${prop.name}`,
+            target: 'view',
+            targetHandle: `view-${prop.mapped_field!.name}`,
+            data: { deletable: true },
+          }));
+
+        if (edgesFromMappedField.length > 0) {
+          setTimeout(() => {
+            // 只在仍是最新一轮初始化时生效
+            if (seq !== initSeqRef.current) return;
+            setEdges(edgesFromMappedField as Edge[]);
+          }, EDGE_RENDER_DELAY);
         }
       }
-      if (dataSource) {
-        setDataViewInfo(dataSource);
-        if (dataSource.id) {
-          // 组件初始化时只加载 fields,不自动初始化属性
-          await getDataViewDetail(dataSource.id, false);
-        }
+
+      if (dataSource?.id) {
+        // 初始化/重初始化时只加载 fields,不自动初始化属性
+        await getDataViewDetail(dataSource.id, false);
       }
+
+      if (seq !== initSeqRef.current) return;
       setIsInitialized(true);
     };
 
     initializeData();
-  }, []);
+  }, [initKey]);
 
   const handleOpenDataViewSource = () => {
     setClearSearchTrigger((prev) => prev + 1);
@@ -318,19 +402,19 @@ const DataAttribute = forwardRef((props: TProps, ref) => {
         });
 
         const newEdges: Edge[] = [];
-        const newMappings: Array<{ dataAttr: string; viewAttr: any }> = [];
+        type TAttrLite = { name: string; display_name: string; type: string };
+        const newMappings: Array<{ dataAttr: string; viewAttr: TAttrLite }> = [];
 
-        dataAttrs.forEach((dataAttr: { name: string; display_name: string; type: string }) => {
+        (dataAttrs as TAttrLite[]).forEach((dataAttr) => {
           if (connectedAttrs.has(dataAttr.name)) return;
 
           const matchedViewAttr = viewAttrs.find(
-            (viewAttr: { name: string; display_name: string; type: string }) =>
-              viewAttr.name === dataAttr.name && viewAttr.display_name === dataAttr.display_name && viewAttr.type === dataAttr.type
+            (viewAttr: TAttrLite) => viewAttr.name === dataAttr.name && viewAttr.display_name === dataAttr.display_name && viewAttr.type === dataAttr.type
           );
 
           if (matchedViewAttr && !connectedAttrs.has(matchedViewAttr.name)) {
             newEdges.push({
-              id: `${dataAttr.name}&&${matchedViewAttr.name}`,
+              id: makeEdgeId(dataAttr.name, matchedViewAttr.name),
               type: 'customEdge',
               source: 'data',
               sourceHandle: `data-${dataAttr.name}`,
@@ -340,7 +424,7 @@ const DataAttribute = forwardRef((props: TProps, ref) => {
             } as Edge);
             connectedAttrs.add(dataAttr.name);
             connectedAttrs.add(matchedViewAttr.name);
-            newMappings.push({ dataAttr: dataAttr.name, viewAttr: matchedViewAttr });
+            newMappings.push({ dataAttr: dataAttr.name, viewAttr: matchedViewAttr as TAttrLite });
           }
         });
 
@@ -388,26 +472,38 @@ const DataAttribute = forwardRef((props: TProps, ref) => {
   };
 
   const handleAddAttrOk = (data: OntologyObjectType.Field) => {
-    if (editAttrData) {
-      const nameExistsInLocal = localDataProperties.some((p) => p.name === data.name && p.name !== editAttrData.name);
-      if (nameExistsInLocal) {
-        return {
-          name: `${intl.get('Global.attributeName')}「${data.name}」${intl.get('Global.alreadyExists')}`,
-        };
+    const buildDuplicateErrors = (ignoreName?: string) => {
+      let nameExists = false;
+      let displayNameExists = false;
+
+      for (const p of localDataProperties) {
+        if (ignoreName && p.name === ignoreName) continue;
+        if (p.name === data.name) nameExists = true;
+        if (p.display_name === data.display_name) displayNameExists = true;
+        if (nameExists && displayNameExists) break;
       }
 
-      if (data.display_name) {
-        const displayNameExistsInLocal = localDataProperties.some((p) => p.display_name === data.display_name && p.name !== editAttrData.name);
-        if (displayNameExistsInLocal) {
-          return {
-            display_name: `${intl.get('Global.displayName')}「${data.display_name}」${intl.get('Global.alreadyExists')}`,
-          };
-        }
-      }
+      if (!nameExists && !displayNameExists) return;
+
+      return {
+        ...(nameExists ? { name: `${intl.get('Global.attributeName')}「${data.name}」${intl.get('Global.alreadyExists')}` } : {}),
+        ...(displayNameExists ? { display_name: `${intl.get('Global.displayName')}「${data.display_name}」${intl.get('Global.alreadyExists')}` } : {}),
+      };
+    };
+
+    if (editAttrData) {
+      const duplicateErrors = buildDuplicateErrors(editAttrData.name);
+      if (duplicateErrors) return duplicateErrors;
+
+      const oldName = editAttrData.name;
+      const oldType = editAttrData.type;
+      const typeChanged = oldType !== data.type;
+      const nameChanged = oldName !== data.name;
 
       setLocalDataProperties((prev) =>
         prev.map((p) => {
-          if (p.name === editAttrData.name) {
+          if (p.name === oldName) {
+            const mapped_field = typeChanged ? undefined : p.mapped_field;
             return {
               name: data.name,
               display_name: data.display_name,
@@ -416,8 +512,8 @@ const DataAttribute = forwardRef((props: TProps, ref) => {
               primary_key: data.primary_key || false,
               display_key: data.display_key || false,
               incremental_key: data.incremental_key || false,
-              // 保留 mapped_field，因为视图字段不会变
-              mapped_field: p.mapped_field,
+              // 类型改变时，清理 mapped_field，避免“无连线但仍有映射”的脏状态
+              ...(mapped_field ? { mapped_field } : {}),
               index_config: p.index_config,
             };
           }
@@ -432,55 +528,33 @@ const DataAttribute = forwardRef((props: TProps, ref) => {
       );
 
       // 处理边的更新或删除
-      if (editAttrData.name !== data.name || editAttrData.type !== data.type) {
+      if (nameChanged || typeChanged) {
         setEdges((prev) => {
-          if (editAttrData.type !== data.type) {
-            // 类型改变，删除相关的边
-            return prev.filter((edge) => !edge.sourceHandle?.includes(editAttrData.name) && !edge.targetHandle?.includes(editAttrData.name));
+          const isEdgeForOldAttr = (edge: Edge) => {
+            if (edge.sourceHandle === `data-${oldName}`) return true;
+            return parseEdgeId(edge.id).dataAttr === oldName;
+          };
+
+          if (typeChanged) {
+            // 类型改变，删除相关的边（精确匹配，避免 includes 误删）
+            return prev.filter((edge) => !isEdgeForOldAttr(edge));
           }
-          // 仅名称改变，更新边的 sourceHandle 和 id
+
+          // 仅名称改变，更新边的 sourceHandle 和 id（保持 view 侧字段名不变）
           return prev.map((edge) => {
-            const isSourceChanged = edge.sourceHandle?.includes(`data-${editAttrData.name}`);
-            const isTargetChanged = edge.targetHandle?.includes(`data-${editAttrData.name}`);
-
-            if (!isSourceChanged && !isTargetChanged) return edge;
-
-            // 更新 sourceHandle（data 侧的属性名变了）
-            const newSourceHandle = isSourceChanged ? `data-${data.name}` : edge.sourceHandle;
-            // targetHandle 不变（view 侧的字段名没变）
-            const newTargetHandle = edge.targetHandle;
-
-            // 从 targetHandle 中提取视图字段名
-            const viewFieldName = newTargetHandle?.replace('view-', '') || '';
-
+            if (!isEdgeForOldAttr(edge)) return edge;
+            const { viewAttr } = parseEdgeId(edge.id);
             return {
               ...edge,
-              id: `${data.name}&&${viewFieldName}`,
-              sourceHandle: newSourceHandle,
-              targetHandle: newTargetHandle,
+              id: makeEdgeId(data.name, viewAttr),
+              sourceHandle: `data-${data.name}`,
             };
           });
         });
       }
     } else {
-      const nameExistsInLocal = localDataProperties.some((p) => p.name === data.name);
-
-      if (nameExistsInLocal) {
-        return {
-          name: `${intl.get('Global.attributeName')}「${data.name}」${intl.get('Global.alreadyExists')}`,
-        };
-      }
-
-      if (data.display_name) {
-        const displayNameExistsInFields = fields.some((f) => f.display_name === data.display_name);
-        const displayNameExistsInLocal = localDataProperties.some((p) => p.display_name === data.display_name);
-
-        if (displayNameExistsInFields || displayNameExistsInLocal) {
-          return {
-            display_name: `${intl.get('Global.displayName')}「${data.display_name}」${intl.get('Global.alreadyExists')}`,
-          };
-        }
-      }
+      const duplicateErrors = buildDuplicateErrors();
+      if (duplicateErrors) return duplicateErrors;
 
       const newProperty: OntologyObjectType.DataProperty = {
         name: data.name,
@@ -519,7 +593,7 @@ const DataAttribute = forwardRef((props: TProps, ref) => {
 
   const handleAddAttrDelete = (data: OntologyObjectType.Field) => {
     setLocalDataProperties((prev) => prev.filter((p) => p.name !== data.name));
-    setEdges((prev) => prev.filter((edge) => !edge.sourceHandle?.includes(data.name) && !edge.targetHandle?.includes(data.name)));
+    setEdges((prev) => prev.filter((edge) => parseEdgeId(edge.id).dataAttr !== data.name));
     setAddAttrVisible(false);
     setEditAttrData(undefined);
   };
@@ -540,7 +614,7 @@ const DataAttribute = forwardRef((props: TProps, ref) => {
 
   const handleDeleteAttribute = (attrName: string) => {
     setLocalDataProperties((prev) => prev.filter((p) => p.name !== attrName));
-    setEdges((prev) => prev.filter((edge) => !edge.sourceHandle?.includes(attrName) && !edge.targetHandle?.includes(attrName)));
+    setEdges((prev) => prev.filter((edge) => parseEdgeId(edge.id).dataAttr !== attrName));
   };
 
   const handleTogglePrimaryKey = (attrName: string) => {
@@ -551,6 +625,16 @@ const DataAttribute = forwardRef((props: TProps, ref) => {
         }
         return p;
       })
+    );
+  };
+
+  const handleSelectPrimaryKeys = (attrNames?: string[]) => {
+    const selected = new Set(attrNames || []);
+    setLocalDataProperties((prev) =>
+      prev.map((p) => ({
+        ...p,
+        primary_key: selected.has(p.name),
+      }))
     );
   };
 
@@ -590,6 +674,28 @@ const DataAttribute = forwardRef((props: TProps, ref) => {
     );
   };
 
+  const handleSelectDisplayKey = (attrName?: string) => {
+    setLocalDataProperties((prev) =>
+      prev.map((p) => {
+        if (!attrName) return { ...p, display_key: false };
+        if (p.name === attrName) return { ...p, display_key: true };
+        if (p.display_key) return { ...p, display_key: false };
+        return p;
+      })
+    );
+  };
+
+  const handleSelectIncrementalKey = (attrName?: string) => {
+    setLocalDataProperties((prev) =>
+      prev.map((p) => {
+        if (!attrName) return { ...p, incremental_key: false };
+        if (p.name === attrName) return { ...p, incremental_key: true };
+        if (p.incremental_key) return { ...p, incremental_key: false };
+        return p;
+      })
+    );
+  };
+
   const handleClearAllAttributes = () => {
     setClearSearchTrigger((prev) => prev + 1);
     setLocalDataProperties([]);
@@ -604,6 +710,7 @@ const DataAttribute = forwardRef((props: TProps, ref) => {
       fields,
       dataSource: dataViewInfo,
       basicValue,
+      includeEdges: !isInitialized,
       openDataViewSource: handleOpenDataViewSource,
       deleteDataViewSource: handleDeleteDataViewSource,
       addDataAttribute: handleAddDataAttribute,
@@ -618,92 +725,37 @@ const DataAttribute = forwardRef((props: TProps, ref) => {
       clearSearchTrigger,
     });
 
-    // 保留当前节点的位置信息
+    // 保留当前节点的位置信息（O(n)）
     setNodes((currentNodes) => {
+      const positionById = new Map(currentNodes.map((node) => [node.id, node.position] as const));
       return newNodes.map((newNode) => {
-        const existingNode = currentNodes.find((node) => node.id === newNode.id);
-        if (existingNode) {
-          // 如果节点已存在，保留其当前的位置
-          return {
-            ...newNode,
-            position: existingNode.position,
-          };
-        }
-        return newNode;
+        const position = positionById.get(newNode.id);
+        return position ? { ...newNode, position } : newNode;
       });
     });
 
-    if (!isInitialized && edges.length === 0 && newEdges.length > 0) {
+    if (!isInitialized && newEdges.length > 0) {
       const timer = setTimeout(() => {
-        setEdges(newEdges);
+        setEdges((prev) => (prev.length === 0 ? newEdges : prev));
       }, EDGE_RENDER_DELAY);
       return () => clearTimeout(timer);
     }
   }, [localDataProperties, fields, logicProperties, dataViewInfo?.id, basicValue, isInitialized, clearSearchTrigger]);
 
   // 处理节点和连接线高亮效果
-  useEffect(() => {
-    if (!hoveredEdge) {
-      // 清除节点高亮
-      setNodes((nds) =>
-        nds.map((node) => ({
-          ...node,
-          data: {
-            ...node.data,
-            highlightedAttributes: [],
-          },
-        }))
-      );
-      // 清除连接线高亮
-      setEdges((eds) =>
-        eds.map((edge) => ({
-          ...edge,
-          data: {
-            ...edge.data,
-            isHovered: false,
-          },
-        }))
-      );
-      return;
+  // 高亮逻辑改为在 CustomNode 内根据 hoveredEdgeId 派生（避免 hover 时 setNodes 引发整批节点更新）
+
+  // 连接校验/映射查找用 Map，避免每次连线都从 nodes 里 find
+  const logicNameSet = useMemo(() => new Set(logicProperties.map((p) => p.name)), [logicProperties]);
+  const viewFieldByName = useMemo(() => new Map(fields.map((f) => [f.name, f] as const)), [fields]);
+  const dataPropertyByName = useMemo(() => {
+    const map = new Map<string, OntologyObjectType.DataProperty>();
+    for (const p of localDataProperties) {
+      if (logicNameSet.has(p.name)) continue;
+      map.set(p.name, p);
     }
-
-    // 更新节点高亮
-    setNodes((nds) => {
-      const edge = edges.find((e) => e.id === hoveredEdge);
-      if (!edge) return nds;
-
-      const sourceAttr = edge.sourceHandle?.replace(/^(view|data)-/, '');
-      const targetAttr = edge.targetHandle?.replace(/^(view|data)-/, '');
-
-      return nds.map((node) => {
-        const highlightedAttributes: string[] = [];
-        if (node.id === edge.source && sourceAttr) {
-          highlightedAttributes.push(sourceAttr);
-        }
-        if (node.id === edge.target && targetAttr) {
-          highlightedAttributes.push(targetAttr);
-        }
-        return {
-          ...node,
-          data: {
-            ...node.data,
-            highlightedAttributes,
-          },
-        };
-      });
-    });
-
-    // 更新连接线高亮
-    setEdges((eds) =>
-      eds.map((e) => ({
-        ...e,
-        data: {
-          ...e.data,
-          isHovered: e.id === hoveredEdge,
-        },
-      }))
-    );
-  }, [hoveredEdge]);
+    return map;
+  }, [localDataProperties, logicNameSet]);
 
   const onConnect = useCallback(
     (params: Connection) => {
@@ -714,19 +766,17 @@ const DataAttribute = forwardRef((props: TProps, ref) => {
 
       const { viewAttr, dataAttr } = extractConnectionNames(sourceHandle, targetHandle);
 
-      const viewNode = nodes.find((node) => node.id === 'view');
-      const dataNode = nodes.find((node) => node.id === 'data');
+      const viewAttrObj = viewFieldByName.get(viewAttr);
+      const dataAttrObj = dataPropertyByName.get(dataAttr);
+      if (!viewAttrObj || !dataAttrObj) return;
 
-      const viewAttrObj = viewNode?.data.attributes.find((attr: { name: string }) => attr.name === viewAttr);
-      const dataAttrObj = dataNode?.data.attributes.find((attr: { name: string }) => attr.name === dataAttr);
-
-      if (viewAttrObj?.type !== dataAttrObj?.type) {
+      if ((viewAttrObj.type || '') !== (dataAttrObj.type || '')) {
         message.error(intl.get('Object.attributeTypeInconsistent'));
         return;
       }
 
       setEdges((prev) => {
-        const exists = prev.some((edge) => edge.id === `${dataAttr}&&${viewAttr}`);
+        const exists = prev.some((edge) => edge.id === makeEdgeId(dataAttr, viewAttr));
         if (exists) {
           // message.error(intl.get('Object.onlyOneConnection'));
           return prev;
@@ -772,7 +822,7 @@ const DataAttribute = forwardRef((props: TProps, ref) => {
               };
             }
             if (oldDataAttrToRemove && p.name === oldDataAttrToRemove) {
-              const { mapped_field, ...rest } = p;
+              const { mapped_field: _mapped_field, ...rest } = p;
               return rest;
             }
             return p;
@@ -782,7 +832,7 @@ const DataAttribute = forwardRef((props: TProps, ref) => {
         return addEdge(
           {
             ...params,
-            id: `${dataAttr}&&${viewAttr}`,
+            id: makeEdgeId(dataAttr, viewAttr),
             type: 'customEdge',
             data: { deletable: true },
           },
@@ -790,7 +840,7 @@ const DataAttribute = forwardRef((props: TProps, ref) => {
         );
       });
     },
-    [nodes, setEdges, message]
+    [viewFieldByName, dataPropertyByName, setEdges, message]
   );
 
   const handleChooseOk = (e: OntologyObjectType.DataSource[]) => {
@@ -800,7 +850,7 @@ const DataAttribute = forwardRef((props: TProps, ref) => {
     getDataViewDetail(dataView.id, true);
   };
 
-  const onNodesChange: OnNodesChange = (changes) =>
+  const onNodesChange: OnNodesChange<TFlowNode> = (changes) =>
     setNodes((nds) => {
       const updatedNodes = applyNodeChanges(changes, nds);
       return updatedNodes.map((node) => ({
@@ -817,11 +867,21 @@ const DataAttribute = forwardRef((props: TProps, ref) => {
     setHoveredEdge(null);
   }, []);
 
+  const connectedViewFieldNames = useMemo(() => {
+    const set = new Set<string>();
+    for (const edge of edges) {
+      const name = edge.targetHandle?.replace('view-', '');
+      if (name) set.add(name);
+    }
+    return set;
+  }, [edges]);
+
   const handlePickAttributeOk = (targetKeys: string[]) => {
     setPickAttributeVisible(false);
-    const existingNames = localDataProperties.map((p) => p.name);
+    const targetKeySet = new Set(targetKeys);
+    const existingNameSet = new Set(localDataProperties.map((p) => p.name));
     const newAttributes = fields
-      .filter((f) => targetKeys.includes(f.name) && !existingNames.includes(f.name))
+      .filter((f) => targetKeySet.has(f.name) && !existingNameSet.has(f.name))
       .map((f) => ({
         name: f.name,
         display_name: f.display_name,
@@ -837,7 +897,7 @@ const DataAttribute = forwardRef((props: TProps, ref) => {
 
     // 自动创建连接线
     const newEdges = newAttributes.map((attr) => ({
-      id: `${attr.name}&&${attr.name}`,
+      id: makeEdgeId(attr.name, attr.name),
       type: 'customEdge',
       source: 'data',
       sourceHandle: `data-${attr.name}`,
@@ -859,11 +919,70 @@ const DataAttribute = forwardRef((props: TProps, ref) => {
   const availableFields = useMemo(() => {
     const existingPropertyNames = new Set(localDataProperties.map((p) => p.name));
     const existingDisplayNames = new Set(localDataProperties.map((p) => p.display_name).filter(Boolean));
-    const connectedFieldNames = new Set(edges.map((edge) => edge.targetHandle?.replace('view-', '')).filter(Boolean));
-    return fields.filter((f) => !existingPropertyNames.has(f.name) && !existingDisplayNames.has(f.display_name) && !connectedFieldNames.has(f.name));
-  }, [fields, localDataProperties, edges]);
+    return fields.filter((f) => !existingPropertyNames.has(f.name) && !existingDisplayNames.has(f.display_name) && !connectedViewFieldNames.has(f.name));
+  }, [fields, localDataProperties, connectedViewFieldNames]);
 
-  const selectedRowKeys = useMemo(() => (dataViewInfo?.id ? [dataViewInfo.id] : []), [dataViewInfo?.id]);
+  const selectedRowKeys = useMemo(() => (dataViewInfo?.id ? [dataViewInfo.id] : []), [dataViewInfo]);
+
+  const fieldSelectOptions: TFieldSelectOption[] = useMemo(
+    () =>
+      localDataProperties.map((p) => ({
+        name: p.name,
+        display_name: p.display_name || p.name,
+        type: p.type || '',
+        comment: p.comment,
+      })),
+    [localDataProperties]
+  );
+
+  const keySelection = useMemo(() => {
+    const primaryNames: string[] = [];
+    let primaryCount = 0;
+    let primarySingleDisplayName: string | undefined;
+    let displayKeyName: string | undefined;
+    let displayKeyDisplayName: string | undefined;
+    let incrementalKeyName: string | undefined;
+    let incrementalKeyDisplayName: string | undefined;
+
+    for (const p of localDataProperties) {
+      if (p.primary_key) {
+        primaryNames.push(p.name);
+        primaryCount += 1;
+        if (primaryCount === 1) primarySingleDisplayName = p.display_name || p.name;
+      }
+      if (p.display_key) {
+        displayKeyName = p.name;
+        displayKeyDisplayName = p.display_name || p.name;
+      }
+      if (p.incremental_key) {
+        incrementalKeyName = p.name;
+        incrementalKeyDisplayName = p.display_name || p.name;
+      }
+    }
+
+    return {
+      primaryNames,
+      primaryCount,
+      primarySingleDisplayName,
+      displayKeyName,
+      displayKeyDisplayName,
+      incrementalKeyName,
+      incrementalKeyDisplayName,
+    };
+  }, [localDataProperties]);
+
+  const orderedPrimaryKeyFields = useMemo(
+    () => orderFieldsWithSelectedFirst(fieldSelectOptions, keySelection.primaryNames),
+    [fieldSelectOptions, keySelection.primaryNames]
+  );
+  const orderedDisplayKeyFields = useMemo(
+    () => orderFieldsWithSelectedFirst(fieldSelectOptions, keySelection.displayKeyName ? [keySelection.displayKeyName] : []),
+    [fieldSelectOptions, keySelection.displayKeyName]
+  );
+  const orderedIncrementalKeyFields = useMemo(
+    () => orderFieldsWithSelectedFirst(fieldSelectOptions, keySelection.incrementalKeyName ? [keySelection.incrementalKeyName] : []),
+    [fieldSelectOptions, keySelection.incrementalKeyName]
+  );
 
   return (
     <div className={styles['data-attribute-root']}>
@@ -881,31 +1000,35 @@ const DataAttribute = forwardRef((props: TProps, ref) => {
               <IconFont type="icon-dip-color-tip" className={styles.helpIcon} />
             </Tooltip>
             <span className={styles['info-label']}>:</span>
-            {localDataProperties.filter((p) => p.primary_key).length > 1 ? (
-              <Popover
-                content={
-                  <div className={styles['key-list-popover']}>
-                    {localDataProperties
-                      .filter((p) => p.primary_key)
-                      .map((item) => (
-                        <div key={item.name} className={styles['key-list-item']}>
-                          {item.type && <FieldTypeIcon type={item.type} />}
-                          <span className={styles['key-item-text']}>{item.display_name}</span>
-                        </div>
-                      ))}
-                  </div>
-                }
-                trigger="hover"
-                placement="bottomRight"
-                overlayClassName={styles['key-list-popover-wrapper']}
-              >
-                <span className={styles['count-badge']}>{localDataProperties.filter((p) => p.primary_key).length}</span>
-              </Popover>
-            ) : (
-              <span className={localDataProperties.find((p) => p.primary_key) ? styles['info-value'] : styles['info-value-empty']}>
-                {localDataProperties.find((p) => p.primary_key)?.display_name || intl.get('Global.notConfigured')}
-              </span>
-            )}
+            <Popover
+              trigger="click"
+              open={primaryKeyDropdownOpen}
+              onOpenChange={setPrimaryKeyDropdownOpen}
+              placement="bottomRight"
+              content={
+                <FieldSelect
+                  style={{ minWidth: 260 }}
+                  mode="multiple"
+                  maxTagCount={1}
+                  allowClear
+                  value={keySelection.primaryNames}
+                  placeholder={intl.get('Global.notConfigured')}
+                  fields={orderedPrimaryKeyFields}
+                  getOptionDisabled={(field) => !canBePrimaryKey(field?.type)}
+                  onChange={(value) => {
+                    handleSelectPrimaryKeys(value as string[] | undefined);
+                  }}
+                />
+              }
+            >
+              {keySelection.primaryCount > 1 ? (
+                <span className={styles['count-badge']}>{keySelection.primaryCount}</span>
+              ) : (
+                <span className={keySelection.primaryCount === 1 ? styles['info-value'] : styles['info-value-empty']}>
+                  {keySelection.primarySingleDisplayName || intl.get('Global.notConfigured')}
+                </span>
+              )}
+            </Popover>
           </div>
 
           <div className={styles['divider']} />
@@ -916,9 +1039,30 @@ const DataAttribute = forwardRef((props: TProps, ref) => {
               <IconFont type="icon-dip-color-tip" className={styles.helpIcon} />
             </Tooltip>
             <span className={styles['info-label']}>:</span>
-            <span className={localDataProperties.find((p) => p.display_key) ? styles['info-value'] : styles['info-value-empty']}>
-              {localDataProperties.find((p) => p.display_key)?.display_name || intl.get('Global.notConfigured')}
-            </span>
+            <Popover
+              trigger="click"
+              open={displayKeyDropdownOpen}
+              onOpenChange={setDisplayKeyDropdownOpen}
+              placement="bottomRight"
+              content={
+                <FieldSelect
+                  style={{ minWidth: 220 }}
+                  value={keySelection.displayKeyName}
+                  placeholder={intl.get('Global.notConfigured')}
+                  allowClear
+                  fields={orderedDisplayKeyFields}
+                  getOptionDisabled={(field) => !canBeDisplayKey(field?.type)}
+                  onChange={(value) => {
+                    handleSelectDisplayKey(value as string | undefined);
+                    setDisplayKeyDropdownOpen(false);
+                  }}
+                />
+              }
+            >
+              <span className={keySelection.displayKeyName ? styles['info-value'] : styles['info-value-empty']}>
+                {keySelection.displayKeyDisplayName || intl.get('Global.notConfigured')}
+              </span>
+            </Popover>
           </div>
           <div className={styles['divider']} />
           <div className={styles['info-item']}>
@@ -928,54 +1072,77 @@ const DataAttribute = forwardRef((props: TProps, ref) => {
               <IconFont type="icon-dip-color-tip" className={styles.helpIcon} />
             </Tooltip>
             <span className={styles['info-label']}>:</span>
-            <span className={localDataProperties.find((p) => p.incremental_key) ? styles['info-value'] : styles['info-value-empty']}>
-              {localDataProperties.find((p) => p.incremental_key)?.display_name || intl.get('Global.notConfigured')}
-            </span>
+            <Popover
+              trigger="click"
+              open={incrementalKeyDropdownOpen}
+              onOpenChange={setIncrementalKeyDropdownOpen}
+              placement="bottomRight"
+              content={
+                <FieldSelect
+                  style={{ minWidth: 220 }}
+                  value={keySelection.incrementalKeyName}
+                  placeholder={intl.get('Global.notConfigured')}
+                  allowClear
+                  fields={orderedIncrementalKeyFields}
+                  getOptionDisabled={(field) => !canBeIncrementalKey(field?.type)}
+                  onChange={(value) => {
+                    handleSelectIncrementalKey(value as string | undefined);
+                    setIncrementalKeyDropdownOpen(false);
+                  }}
+                />
+              }
+            >
+              <span className={keySelection.incrementalKeyName ? styles['info-value'] : styles['info-value-empty']}>
+                {keySelection.incrementalKeyDisplayName || intl.get('Global.notConfigured')}
+              </span>
+            </Popover>
           </div>
         </div>
       </div>
       <div style={{ flex: 1, position: 'relative' }}>
-        <ReactFlow
-          nodes={nodes}
-          edges={edges}
-          onNodesChange={onNodesChange}
-          onEdgesChange={handleEdgesChange}
-          onConnect={onConnect}
-          onEdgeMouseEnter={handleEdgeMouseEnter}
-          onEdgeMouseLeave={handleEdgeMouseLeave}
-          nodeTypes={nodeTypes as any}
-          edgeTypes={edgeTypes}
-          proOptions={{ hideAttribution: true }}
-          nodesDraggable={true}
-          nodesConnectable={true}
-          nodesFocusable={false}
-          edgesFocusable={true}
-          elementsSelectable={true}
-          edgesReconnectable={false}
-          panOnDrag={true}
-          zoomOnScroll={true}
-          zoomOnPinch={true}
-          zoomOnDoubleClick={false}
-          preventScrolling={false}
-          minZoom={0.3}
-          maxZoom={2}
-          defaultViewport={{ x: 0, y: 0, zoom: 1 }}
-          onKeyDown={(e) => {
-            if (e.target instanceof HTMLInputElement) {
-              return;
-            }
-            if (e.key === 'Backspace' || e.key === 'Delete') {
-              e.stopPropagation();
-              e.preventDefault();
-            }
-          }}
-          fitViewOptions={{
-            minZoom: 0.3,
-            maxZoom: 2,
-          }}
-        >
-          <Controls showInteractive={false} position="bottom-right" />
-        </ReactFlow>
+        <HoveredEdgeIdContext.Provider value={hoveredEdge}>
+          <ReactFlow
+            nodes={nodes}
+            edges={edges}
+            onNodesChange={onNodesChange}
+            onEdgesChange={handleEdgesChange}
+            onConnect={onConnect}
+            onEdgeMouseEnter={handleEdgeMouseEnter}
+            onEdgeMouseLeave={handleEdgeMouseLeave}
+            nodeTypes={nodeTypes}
+            edgeTypes={edgeTypes}
+            proOptions={{ hideAttribution: true }}
+            nodesDraggable={true}
+            nodesConnectable={true}
+            nodesFocusable={false}
+            edgesFocusable={true}
+            elementsSelectable={true}
+            edgesReconnectable={false}
+            panOnDrag={true}
+            zoomOnScroll={true}
+            zoomOnPinch={true}
+            zoomOnDoubleClick={false}
+            preventScrolling={false}
+            minZoom={0.3}
+            maxZoom={2}
+            defaultViewport={{ x: 0, y: 0, zoom: 1 }}
+            onKeyDown={(e) => {
+              if (e.target instanceof HTMLInputElement) {
+                return;
+              }
+              if (e.key === 'Backspace' || e.key === 'Delete') {
+                e.stopPropagation();
+                e.preventDefault();
+              }
+            }}
+            fitViewOptions={{
+              minZoom: 0.3,
+              maxZoom: 2,
+            }}
+          >
+            <Controls showInteractive={false} position="bottom-right" />
+          </ReactFlow>
+        </HoveredEdgeIdContext.Provider>
       </div>
       <AddDataAttribute open={addAttrVisible} data={editAttrData} onClose={handleAddAttrClose} onOk={handleAddAttrOk} onDelete={handleAddAttrDelete} />
       <DataViewSource

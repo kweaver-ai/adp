@@ -1,10 +1,9 @@
 import { useEffect, useState } from 'react';
 import intl from 'react-intl-universal';
 import { useHistory } from 'react-router-dom';
-import { Col, Form, Row, Segmented } from 'antd';
+import { Form, Segmented } from 'antd';
 import { useForm } from 'antd/es/form/Form';
 import ColorSelect from '@/components/ColorSelect';
-import IconSelect from '@/components/IconSelect';
 import TagsSelector, { tagsSelectorValidator } from '@/components/TagsSelector';
 import api from '@/services/knowledgeNetwork';
 import { baseConfig } from '@/services/request';
@@ -83,6 +82,7 @@ const CreateAndEditForm = (props: any) => {
         const params = {
           ...rest,
           branch: 'main',
+          icon: 'icon-dip-graph',
         };
         await api.updateNetwork(id, params);
         message.success(intl.get('Global.editSuccess'));
@@ -92,6 +92,7 @@ const CreateAndEditForm = (props: any) => {
         const params = {
           ...e,
           branch: 'main',
+          icon: 'icon-dip-graph',
         };
         const res = await api.createNetwork(params);
         if (res.error_code) {
@@ -151,18 +152,9 @@ const CreateAndEditForm = (props: any) => {
             >
               <Input placeholder={intl.get('Global.pleaseInput')} disabled={!!id} />
             </Form.Item>
-            <Row gutter={20}>
-              <Col span={12}>
-                <Form.Item label={intl.get('Global.icon')} name="icon">
-                  <IconSelect isPopUp />
-                </Form.Item>
-              </Col>
-              <Col span={12}>
-                <Form.Item label={intl.get('Global.color')} name="color" labelCol={{ span: 10 }}>
-                  <ColorSelect isPopUp />
-                </Form.Item>
-              </Col>
-            </Row>
+            <Form.Item label={intl.get('Global.color')} name="color">
+              <ColorSelect isPopUp />
+            </Form.Item>
             <Form.Item
               label={intl.get('Global.tag')}
               name="tags"

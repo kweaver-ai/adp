@@ -3,8 +3,8 @@
   flex-direction: column;
   height: 100%;
   padding: 24px;
-  background: #f5f8ff;
   overflow-y: auto;
+  background: #f5f8ff;
 
   .overview-box-header {
     padding: 20px 20px 0;
@@ -12,25 +12,28 @@
     background: #fff;
     border: 1px solid #e5e5e5;
     border-radius: 4px;
+
     .id-text {
-      color: rgba(0, 0, 0, 0.45);
+      margin-bottom: 10px;
       font-size: 12px;
       line-height: 1em;
-      margin-bottom: 10px;
+      color: rgba(0, 0, 0, 0.45);
     }
+
     .tags {
       display: flex;
       flex-wrap: wrap;
       gap: 8px;
-      margin-left: 40px;
       margin-bottom: 20px;
+      margin-left: 40px;
 
       :global(.ant-tag) {
         height: 22px;
-        line-height: 22px;
         margin: 0;
+        line-height: 22px;
       }
     }
+
     .header-title {
       display: flex;
       justify-content: space-between;
@@ -67,11 +70,11 @@
 
     .header-comment {
       width: 100%;
+      margin-top: 16px;
       // padding: 20px 0;
       line-height: 1em;
       border-bottom: 1px solid #e5e5e5;
       opacity: 0.45;
-      margin-top: 16px;
     }
 
     .header-footer {
@@ -85,20 +88,20 @@
   }
 
   .overview-card {
+    // prevent shrinking if flex column
+    flex-shrink: 0;
     padding: 20px 20px 0;
     margin-bottom: 16px;
     background: #fff;
     border: 1px solid #e5e5e5;
     border-radius: 4px;
-    // prevent shrinking if flex column
-    flex-shrink: 0;
 
     .card-title {
       margin-bottom: 16px;
-      color: #000;
-      font-weight: 500;
       font-size: 16px;
+      font-weight: 500;
       line-height: 24px;
+      color: #000;
     }
 
     .info-item {
@@ -108,8 +111,8 @@
       line-height: 32px;
 
       .label {
-        width: 100px;
         flex-shrink: 0;
+        width: 100px;
         color: rgba(0, 0, 0, 0.65);
       }
 

@@ -7,14 +7,7 @@ import HOOKS from '@/hooks';
 import { Drawer, Button, IconFont } from '@/web-library/common';
 import Fields from '@/web-library/utils/fields';
 import styles from './index.module.less';
-
-const canAddIncrementalKeys = ['integer', 'unsigned integer', 'datetime', 'timestamp'];
-const canPrimaryKeys = ['integer', 'unsigned integer', 'string'];
-const canTitleKeys = ['integer', 'unsigned integer', 'string', 'text', 'float', 'decimal', 'date', 'time', 'datetime', 'timestamp', 'ip', 'boolean'];
-
-const canBePrimaryKey = (type: string) => canPrimaryKeys.includes(type);
-const canBeDisplayKey = (type: string) => canTitleKeys.includes(type);
-const canBeIncrementalKey = (type: string) => canAddIncrementalKeys.includes(type);
+import { canBeDisplayKey, canBeIncrementalKey, canBePrimaryKey } from '../constants';
 
 export type TAddDataAttributeError = {
   name?: string;
@@ -75,7 +68,6 @@ const AddDataAttribute = (props: TAddDataAttribute) => {
         ...values,
         error: {},
       });
-
       if (errors && (errors.name || errors.display_name)) {
         const fieldErrors = [];
         if (errors.name) {

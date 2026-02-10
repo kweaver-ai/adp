@@ -95,7 +95,17 @@ const EditDrawer: React.FC<{
       form.resetFields();
       setSettingList([]);
     }
-  }, [open, attrInfo?.name, attrInfo?.data_source?.id]);
+  }, [
+    open,
+    form,
+    LOGIC_ATTR_TYPE_OPTIONS,
+    attrInfo?.name,
+    attrInfo?.display_name,
+    attrInfo?.comment,
+    attrInfo?.data_source?.id,
+    attrInfo?.data_source?.type,
+    attrInfo?.parameters,
+  ]);
 
   useEffect(() => {
     if (type === OntologyObjectType.LogicAttributeType.METRIC) {
@@ -107,12 +117,13 @@ const EditDrawer: React.FC<{
 
   useEffect(() => {
     if (type === OntologyObjectType.LogicAttributeType.OPERATOR) {
+      if (!id || !nameOptions?.length) return;
       const api_spec = nameOptions.find((item) => item.value === id)?.api_spec;
       handleOperatorDetail(api_spec);
     } else if (type === OntologyObjectType.LogicAttributeType.METRIC) {
       getMetricModelFields(id);
     }
-  }, [id, type]);
+  }, [id, type, nameOptions]);
 
   // 处理属性名输入变化
   const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
