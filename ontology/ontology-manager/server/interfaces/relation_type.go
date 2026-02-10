@@ -73,6 +73,7 @@ type RelationTypesQueryParams struct {
 	GroupID             string
 	SourceObjectTypeIDs []string
 	TargetObjectTypeIDs []string
+	BoundObjectTypeIDs  []string
 }
 
 // 检索关系类列表

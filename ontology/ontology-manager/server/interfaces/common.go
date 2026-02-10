@@ -46,6 +46,7 @@ const (
 	DEFAULT_GROUP_ID = ""
 
 	DEFAULT_INCLUDE_DETAIL = "false"
+	DEFAULT_FORCE_DELETE   = "false"
 
 	QueryParam_ImportMode         = "import_mode"
 	QueryParam_Mode               = "mode"

@@ -39,6 +39,11 @@ Description = "对象类名称已经存在"
 Solution = "请检查参数是否正确。"
 ErrorLink = "暂无"
 
+[OntologyManager.ObjectType.ObjectTypeBoundByRelationType]
+Description = "对象类被关系类绑定，无法删除"
+Solution = "请先删除绑定的关系类，或使用force_delete=true强制删除。"
+ErrorLink = "暂无"
+
 [OntologyManager.ObjectType.LengthExceeded.Name]
 Description = "对象类名称长度超出限制"
 Solution = "请检查参数是否正确。"
