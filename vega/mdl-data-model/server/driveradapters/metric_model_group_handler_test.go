@@ -14,6 +14,7 @@ import (
 	"github.com/bytedance/sonic"
 	"github.com/gin-gonic/gin"
 	"github.com/golang/mock/gomock"
+	"github.com/kweaver-ai/kweaver-go-lib/hydra"
 	"github.com/kweaver-ai/kweaver-go-lib/rest"
 	. "github.com/smartystreets/goconvey/convey"
 
@@ -66,7 +67,7 @@ func Test_MetricModelGroupRestHandler_CreateMetricModelGroup(t *testing.T) {
 		handler := MockNewMetricModelGroupRestHandler(appSetting, as, mms, dvs, mmgs, mmts)
 		handler.RegisterPublic(engine)
 
-		as.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(rest.Visitor{}, nil)
+		as.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(hydra.Visitor{}, nil)
 
 		url := "/api/mdl-data-model/v1/metric-model-groups"
 
@@ -217,7 +218,7 @@ func Test_MetricModelGroupRestHandler_UpdateMetricModelGroup(t *testing.T) {
 		handler := MockNewMetricModelGroupRestHandler(appSetting, as, mms, dvs, mmgs, mmts)
 		handler.RegisterPublic(engine)
 
-		as.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(rest.Visitor{}, nil)
+		as.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(hydra.Visitor{}, nil)
 
 		url := "/api/mdl-data-model/v1/metric-model-groups/1"
 
@@ -391,7 +392,7 @@ func Test_MetricModelGroupRestHandler_ListMetricModelGroups(t *testing.T) {
 		handler := MockNewMetricModelGroupRestHandler(appSetting, as, mms, dvs, mmgs, mmts)
 		handler.RegisterPublic(engine)
 
-		as.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(rest.Visitor{}, nil)
+		as.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(hydra.Visitor{}, nil)
 
 		url := "/api/mdl-data-model/v1/metric-model-groups"
 
@@ -462,7 +463,7 @@ func Test_MetricModelGroupRestHandler_DeleteMetricModelGroup(t *testing.T) {
 		handler := MockNewMetricModelGroupRestHandler(appSetting, as, mms, dvs, mmgs, mmts)
 		handler.RegisterPublic(engine)
 
-		as.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(rest.Visitor{}, nil)
+		as.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(hydra.Visitor{}, nil)
 
 		url := "/api/mdl-data-model/v1/metric-model-groups/1"
 

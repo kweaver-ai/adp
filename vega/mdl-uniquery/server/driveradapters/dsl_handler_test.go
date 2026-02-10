@@ -15,7 +15,7 @@ import (
 	"github.com/bytedance/sonic"
 	"github.com/gin-gonic/gin"
 	"github.com/golang/mock/gomock"
-	"github.com/kweaver-ai/kweaver-go-lib/rest"
+	"github.com/kweaver-ai/kweaver-go-lib/hydra"
 	. "github.com/smartystreets/goconvey/convey"
 
 	"uniquery/common"
@@ -64,9 +64,9 @@ var (
 func mockNewDSLRestHandler(appSetting *common.AppSetting,
 	authService interfaces.AuthService, dslService interfaces.DslService) (r *restHandler) {
 	r = &restHandler{
-		appSetting:  appSetting,
-		authService: authService,
-		dslService:  dslService,
+		appSetting: appSetting,
+		as:         authService,
+		dslService: dslService,
 	}
 	r.InitMetric()
 	return r
@@ -89,7 +89,7 @@ func TestDslGetResult(t *testing.T) {
 		handler := mockNewDSLRestHandler(appSetting, authMock, dslService)
 		handler.RegisterPublic(engine)
 
-		authMock.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(rest.Visitor{}, nil)
+		authMock.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(hydra.Visitor{}, nil)
 
 		Convey("illegal scroll", func() {
 			searchBody := map[string]interface{}{}
@@ -179,7 +179,7 @@ func TestDslScroll(t *testing.T) {
 		handler := mockNewDSLRestHandler(appSetting, authMock, dslService)
 		handler.RegisterPublic(engine)
 
-		authMock.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(rest.Visitor{}, nil)
+		authMock.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(hydra.Visitor{}, nil)
 
 		url := "/api/mdl-uniquery/v1/dsl/_search/scroll"
 
@@ -286,7 +286,7 @@ func TestDslGetCount(t *testing.T) {
 		handler := mockNewDSLRestHandler(appSetting, authMock, dslService)
 		handler.RegisterPublic(engine)
 
-		authMock.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(rest.Visitor{}, nil)
+		authMock.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(hydra.Visitor{}, nil)
 
 		Convey("body invalid", func() {
 			url := "/api/mdl-uniquery/v1/dsl/_count"
@@ -393,7 +393,7 @@ func TestDslDeleteScroll(t *testing.T) {
 		handler := mockNewDSLRestHandler(appSetting, authMock, dslService)
 		handler.RegisterPublic(engine)
 
-		authMock.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(rest.Visitor{}, nil)
+		authMock.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(hydra.Visitor{}, nil)
 
 		Convey("delete scroll success", func() {
 			resTemp, _ := sonic.Marshal(dslDeleteAllScrollResult)
@@ -525,7 +525,7 @@ func TestDslDeleteAllScroll(t *testing.T) {
 		handler := mockNewDSLRestHandler(appSetting, authMock, dslService)
 		handler.RegisterPublic(engine)
 
-		authMock.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(rest.Visitor{}, nil)
+		authMock.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(hydra.Visitor{}, nil)
 
 		Convey("delete all scroll success", func() {
 			resTemp, _ := sonic.Marshal(dslDeleteAllScrollResult)

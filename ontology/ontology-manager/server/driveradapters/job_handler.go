@@ -9,18 +9,21 @@ import (
 	"context"
 	"fmt"
 	"net/http"
-	"ontology-manager/common"
-	oerrors "ontology-manager/errors"
-	"ontology-manager/interfaces"
 
 	"github.com/gin-gonic/gin"
 	"github.com/kweaver-ai/TelemetrySDK-Go/exporter/v2/ar_trace"
 	"github.com/kweaver-ai/kweaver-go-lib/audit"
+	"github.com/kweaver-ai/kweaver-go-lib/hydra"
 	"github.com/kweaver-ai/kweaver-go-lib/logger"
 	o11y "github.com/kweaver-ai/kweaver-go-lib/observability"
 	"github.com/kweaver-ai/kweaver-go-lib/rest"
 	attr "go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/trace"
+
+	"ontology-manager/common"
+	"ontology-manager/common/visitor"
+	oerrors "ontology-manager/errors"
+	"ontology-manager/interfaces"
 )
 
 // CreateJobByEx 创建 job
@@ -47,12 +50,12 @@ func (r *restHandler) CreateJobByIn(c *gin.Context) {
 
 	// 内部接口 account_id从header中取，跳过用户有效认证，后面在权限校验时就会校验这个用户是否有权限，无效用户无权限
 	// 自行构建一个visitor
-	visitor := GenerateVisitor(c)
+	visitor := visitor.GenerateVisitor(c)
 	r.CreateJob(c, visitor)
 }
 
 // CreateJobByEx 创建 job
-func (r *restHandler) CreateJob(c *gin.Context, visitor rest.Visitor) {
+func (r *restHandler) CreateJob(c *gin.Context, visitor hydra.Visitor) {
 	logger.Debug("Handler CreateJob Start")
 	ctx, span := ar_trace.Tracer.Start(rest.GetLanguageCtx(c),
 		"创建job", trace.WithSpanKind(trace.SpanKindServer))
@@ -177,12 +180,12 @@ func (r *restHandler) DeleteJobsByIn(c *gin.Context) {
 
 	// 内部接口 account_id从header中取，跳过用户有效认证，后面在权限校验时就会校验这个用户是否有权限，无效用户无权限
 	// 自行构建一个visitor
-	visitor := GenerateVisitor(c)
+	visitor := visitor.GenerateVisitor(c)
 	r.DeleteJobs(c, visitor)
 }
 
 // DeleteJobs 批量删除 job
-func (r *restHandler) DeleteJobs(c *gin.Context, visitor rest.Visitor) {
+func (r *restHandler) DeleteJobs(c *gin.Context, visitor hydra.Visitor) {
 	logger.Debug("Handler DeleteJobs Start")
 	ctx, span := ar_trace.Tracer.Start(rest.GetLanguageCtx(c),
 		"批量删除job", trace.WithSpanKind(trace.SpanKindServer))
@@ -321,12 +324,12 @@ func (r *restHandler) ListJobsByIn(c *gin.Context) {
 
 	// 内部接口 account_id从header中取，跳过用户有效认证，后面在权限校验时就会校验这个用户是否有权限，无效用户无权限
 	// 自行构建一个visitor
-	visitor := GenerateVisitor(c)
+	visitor := visitor.GenerateVisitor(c)
 	r.ListJobs(c, visitor)
 }
 
 // ListJobs 列出所有 job
-func (r *restHandler) ListJobs(c *gin.Context, visitor rest.Visitor) {
+func (r *restHandler) ListJobs(c *gin.Context, visitor hydra.Visitor) {
 	logger.Debug("Handler ListJobs Start")
 	ctx, span := ar_trace.Tracer.Start(rest.GetLanguageCtx(c),
 		"列出所有job", trace.WithSpanKind(trace.SpanKindServer))
@@ -477,12 +480,12 @@ func (r *restHandler) ListTasksByIn(c *gin.Context) {
 
 	// 内部接口 account_id从header中取，跳过用户有效认证，后面在权限校验时就会校验这个用户是否有权限，无效用户无权限
 	// 自行构建一个visitor
-	visitor := GenerateVisitor(c)
+	visitor := visitor.GenerateVisitor(c)
 	r.ListTasks(c, visitor)
 }
 
 // ListTasks 列出指定 job 的子任务
-func (r *restHandler) ListTasks(c *gin.Context, visitor rest.Visitor) {
+func (r *restHandler) ListTasks(c *gin.Context, visitor hydra.Visitor) {
 	logger.Debug("Handler ListTasks Start")
 	ctx, span := ar_trace.Tracer.Start(rest.GetLanguageCtx(c),
 		"列出指定job的子任务", trace.WithSpanKind(trace.SpanKindServer))

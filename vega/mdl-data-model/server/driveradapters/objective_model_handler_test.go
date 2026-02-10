@@ -17,6 +17,7 @@ import (
 	"github.com/bytedance/sonic"
 	"github.com/gin-gonic/gin"
 	"github.com/golang/mock/gomock"
+	"github.com/kweaver-ai/kweaver-go-lib/hydra"
 	"github.com/kweaver-ai/kweaver-go-lib/rest"
 	. "github.com/smartystreets/goconvey/convey"
 
@@ -98,7 +99,7 @@ func Test_ObjectiveModelRestHandler_CreateObjectiveModels(t *testing.T) {
 		handler := MockNewObjectiveModelRestHandler(appSetting, as, mms, oms, mmts)
 		handler.RegisterPublic(engine)
 
-		as.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(rest.Visitor{}, nil)
+		as.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(hydra.Visitor{}, nil)
 
 		common.PersistStepsMap = StepsMap
 
@@ -262,7 +263,7 @@ func Test_ObjectiveModelRestHandler_ListObjectiveModels(t *testing.T) {
 		handler := MockNewObjectiveModelRestHandler(appSetting, as, mms, oms, mmts)
 		handler.RegisterPublic(engine)
 
-		as.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(rest.Visitor{}, nil)
+		as.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(hydra.Visitor{}, nil)
 
 		common.PersistStepsMap = StepsMap
 
@@ -350,7 +351,7 @@ func Test_ObjectiveModelRestHandler_GetObjectiveModels(t *testing.T) {
 		handler := MockNewObjectiveModelRestHandler(appSetting, as, mms, oms, mmts)
 		handler.RegisterPublic(engine)
 
-		as.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(rest.Visitor{}, nil)
+		as.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(hydra.Visitor{}, nil)
 
 		url := "/api/mdl-data-model/v1/objective-models/test-id"
 
@@ -411,7 +412,7 @@ func Test_ObjectiveModelRestHandler_UpdateObjectiveModel(t *testing.T) {
 		handler := MockNewObjectiveModelRestHandler(appSetting, as, mms, oms, mmts)
 		handler.RegisterPublic(engine)
 
-		as.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(rest.Visitor{}, nil)
+		as.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(hydra.Visitor{}, nil)
 
 		common.PersistStepsMap = StepsMap
 
@@ -534,7 +535,7 @@ func Test_ObjectiveModelRestHandler_DeleteObjectiveModels(t *testing.T) {
 		handler := MockNewObjectiveModelRestHandler(appSetting, as, mms, oms, mmts)
 		handler.RegisterPublic(engine)
 
-		as.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(rest.Visitor{}, nil)
+		as.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(hydra.Visitor{}, nil)
 
 		url := "/api/mdl-data-model/v1/objective-models/1,2"
 

@@ -15,12 +15,14 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/kweaver-ai/TelemetrySDK-Go/exporter/v2/ar_trace"
 	"github.com/kweaver-ai/kweaver-go-lib/audit"
+	"github.com/kweaver-ai/kweaver-go-lib/hydra"
 	"github.com/kweaver-ai/kweaver-go-lib/logger"
 	o11y "github.com/kweaver-ai/kweaver-go-lib/observability"
 	"github.com/kweaver-ai/kweaver-go-lib/rest"
 	attr "go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/trace"
 
+	"ontology-manager/common/visitor"
 	oerrors "ontology-manager/errors"
 	"ontology-manager/interfaces"
 )
@@ -29,7 +31,7 @@ import (
 func (r *restHandler) CreateKNByIn(c *gin.Context) {
 	logger.Debug("Handler CreateKNByIn Start")
 	// 内部接口 user_id从header中取
-	visitor := GenerateVisitor(c)
+	visitor := visitor.GenerateVisitor(c)
 	r.CreateKN(c, visitor)
 }
 
@@ -49,7 +51,7 @@ func (r *restHandler) CreateKNByEx(c *gin.Context) {
 }
 
 // 创建业务知识网络
-func (r *restHandler) CreateKN(c *gin.Context, visitor rest.Visitor) {
+func (r *restHandler) CreateKN(c *gin.Context, visitor hydra.Visitor) {
 	logger.Debug("Handler CreateKN Start")
 	ctx, span := ar_trace.Tracer.Start(rest.GetLanguageCtx(c),
 		"创建业务知识网络", trace.WithSpanKind(trace.SpanKindServer))
@@ -206,7 +208,7 @@ func (r *restHandler) CreateKN(c *gin.Context, visitor rest.Visitor) {
 func (r *restHandler) UpdateKNByIn(c *gin.Context) {
 	logger.Debug("Handler UpdateKNByIn Start")
 	// 内部接口 user_id从header中取
-	visitor := GenerateVisitor(c)
+	visitor := visitor.GenerateVisitor(c)
 	r.UpdateKN(c, visitor)
 }
 
@@ -226,7 +228,7 @@ func (r *restHandler) UpdateKNByEx(c *gin.Context) {
 }
 
 // 更新业务知识网络
-func (r *restHandler) UpdateKN(c *gin.Context, visitor rest.Visitor) {
+func (r *restHandler) UpdateKN(c *gin.Context, visitor hydra.Visitor) {
 	logger.Debug("Handler UpdateKN Start")
 	ctx, span := ar_trace.Tracer.Start(rest.GetLanguageCtx(c),
 		"修改业务知识网络", trace.WithSpanKind(trace.SpanKindServer))
@@ -428,7 +430,7 @@ func (r *restHandler) ListKNsByIn(c *gin.Context) {
 	logger.Debug("Handler ListKNsByIn Start")
 	// 内部接口 user_id从header中取，跳过用户有效认证，后面在权限校验时就会校验这个用户是否有权限，无效用户无权限
 	// 自行构建一个visitor
-	visitor := GenerateVisitor(c)
+	visitor := visitor.GenerateVisitor(c)
 	r.ListKNs(c, visitor)
 }
 
@@ -448,7 +450,7 @@ func (r *restHandler) ListKNsByEx(c *gin.Context) {
 }
 
 // 分页获取业务知识网络列表
-func (r *restHandler) ListKNs(c *gin.Context, visitor rest.Visitor) {
+func (r *restHandler) ListKNs(c *gin.Context, visitor hydra.Visitor) {
 	logger.Debug("ListKNs Start")
 	ctx, span := ar_trace.Tracer.Start(rest.GetLanguageCtx(c),
 		"分页获取业务知识网络列表", trace.WithSpanKind(trace.SpanKindServer))
@@ -543,7 +545,7 @@ func (r *restHandler) GetKNByIn(c *gin.Context) {
 	logger.Debug("Handler GetKNByIn Start")
 	// 内部接口 user_id从header中取，跳过用户有效认证，后面在权限校验时就会校验这个用户是否有权限，无效用户无权限
 	// 自行构建一个visitor
-	visitor := GenerateVisitor(c)
+	visitor := visitor.GenerateVisitor(c)
 	r.GetKN(c, visitor)
 }
 
@@ -563,7 +565,7 @@ func (r *restHandler) GetKNByEx(c *gin.Context) {
 }
 
 // 按 id 获取业务知识网络对象信息
-func (r *restHandler) GetKN(c *gin.Context, visitor rest.Visitor) {
+func (r *restHandler) GetKN(c *gin.Context, visitor hydra.Visitor) {
 	logger.Debug("Handler GetKN Start")
 	ctx, span := ar_trace.Tracer.Start(rest.GetLanguageCtx(c),
 		"driver layer: Get knowledge network", trace.WithSpanKind(trace.SpanKindServer))
@@ -650,7 +652,7 @@ func (r *restHandler) GetRelationTypePathsByIn(c *gin.Context) {
 	logger.Debug("Handler GetRelationTypePathsByIn Start")
 	// 内部接口 user_id从header中取，跳过用户有效认证，后面在权限校验时就会校验这个用户是否有权限，无效用户无权限
 	// 自行构建一个visitor
-	visitor := GenerateVisitor(c)
+	visitor := visitor.GenerateVisitor(c)
 	r.GetRelationTypePaths(c, visitor)
 }
 
@@ -670,7 +672,7 @@ func (r *restHandler) GetRelationTypePathsByEx(c *gin.Context) {
 }
 
 // 在业务知识网络下查找概念子图
-func (r *restHandler) GetRelationTypePaths(c *gin.Context, visitor rest.Visitor) {
+func (r *restHandler) GetRelationTypePaths(c *gin.Context, visitor hydra.Visitor) {
 	logger.Debug("Handler GetRelationTypePaths Start")
 	ctx, span := ar_trace.Tracer.Start(rest.GetLanguageCtx(c),
 		"driver layer: Get knowledge network", trace.WithSpanKind(trace.SpanKindServer))

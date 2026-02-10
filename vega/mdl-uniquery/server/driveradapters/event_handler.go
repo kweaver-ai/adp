@@ -12,9 +12,11 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/kweaver-ai/kweaver-go-lib/hydra"
 	"github.com/kweaver-ai/kweaver-go-lib/logger"
 	"github.com/kweaver-ai/kweaver-go-lib/rest"
 
+	"uniquery/common/visitor"
 	ierrors "uniquery/errors"
 	"uniquery/interfaces"
 )
@@ -25,7 +27,7 @@ func (r *restHandler) QueryByIn(c *gin.Context) {
 	// 内部接口 user_id从header中取，跳过用户有效认证，后面在权限校验时就会校验这个用户是否有权限，无效用户无权限
 	// 自行构建一个visitor
 
-	visitor := GenerateVisitor(c)
+	visitor := visitor.GenerateVisitor(c)
 	r.Query(c, visitor)
 }
 
@@ -42,7 +44,7 @@ func (r *restHandler) QueryByEx(c *gin.Context) {
 }
 
 // 基于事件模型的事件数据预览，默认查询最近5m的数据
-func (r *restHandler) Query(c *gin.Context, visitor rest.Visitor) {
+func (r *restHandler) Query(c *gin.Context, visitor hydra.Visitor) {
 	logger.Debug("Handler EventModel Start")
 	startTime := time.Now()
 	ctx := rest.GetLanguageCtx(c)
@@ -97,7 +99,7 @@ func (r *restHandler) QuerySingleEventByEventIdByIn(c *gin.Context) {
 	// 内部接口 user_id从header中取，跳过用户有效认证，后面在权限校验时就会校验这个用户是否有权限，无效用户无权限
 	// 自行构建一个visitor
 
-	visitor := GenerateVisitor(c)
+	visitor := visitor.GenerateVisitor(c)
 	r.QuerySingleEventByEventId(c, visitor)
 }
 
@@ -114,7 +116,7 @@ func (r *restHandler) QuerySingleEventByEventIdByEx(c *gin.Context) {
 }
 
 // 基于事件ID的查询事件详情
-func (r *restHandler) QuerySingleEventByEventId(c *gin.Context, visitor rest.Visitor) {
+func (r *restHandler) QuerySingleEventByEventId(c *gin.Context, visitor hydra.Visitor) {
 	logger.Debug("Handler Event query Start")
 	startTime := time.Now()
 	ctx := rest.GetLanguageCtx(c)

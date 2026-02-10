@@ -8,10 +8,10 @@ package driveradapters
 import (
 	"net/http"
 
+	"github.com/gin-gonic/gin"
 	"github.com/kweaver-ai/kweaver-go-lib/logger"
 	o11y "github.com/kweaver-ai/kweaver-go-lib/observability"
 	"github.com/kweaver-ai/kweaver-go-lib/rest"
-	"github.com/gin-gonic/gin"
 
 	"data-model-job/common"
 	"data-model-job/interfaces"
@@ -61,21 +61,4 @@ func (r *restHandler) HealthCheck(c *gin.Context) {
 		GoArch:        version.GoArch,
 	}
 	rest.ReplyOK(c, http.StatusOK, serverInfo)
-}
-
-func GenerateVisitor(c *gin.Context) rest.Visitor {
-	accountInfo := interfaces.AccountInfo{
-		ID:   c.GetHeader(interfaces.HTTP_HEADER_ACCOUNT_ID),
-		Type: c.GetHeader(interfaces.HTTP_HEADER_ACCOUNT_TYPE),
-	}
-	visitor := rest.Visitor{
-		ID:         accountInfo.ID,
-		Type:       rest.VisitorType(accountInfo.Type),
-		TokenID:    "", // 无token
-		IP:         c.ClientIP(),
-		Mac:        c.GetHeader("X-Request-MAC"),
-		UserAgent:  c.GetHeader("User-Agent"),
-		ClientType: rest.ClientType_Linux,
-	}
-	return visitor
 }

@@ -15,6 +15,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/kweaver-ai/TelemetrySDK-Go/exporter/v2/ar_trace"
 	"github.com/kweaver-ai/kweaver-go-lib/audit"
+	"github.com/kweaver-ai/kweaver-go-lib/hydra"
 	"github.com/kweaver-ai/kweaver-go-lib/logger"
 	o11y "github.com/kweaver-ai/kweaver-go-lib/observability"
 	"github.com/kweaver-ai/kweaver-go-lib/rest"
@@ -22,6 +23,7 @@ import (
 	"go.opentelemetry.io/otel/trace"
 
 	"ontology-manager/common"
+	"ontology-manager/common/visitor"
 	oerrors "ontology-manager/errors"
 	"ontology-manager/interfaces"
 )
@@ -30,7 +32,7 @@ import (
 func (r *restHandler) CreateConceptGroupByIn(c *gin.Context) {
 	logger.Debug("Handler CreateConceptGroupByIn Start")
 	// 内部接口 user_id从header中取
-	visitor := GenerateVisitor(c)
+	visitor := visitor.GenerateVisitor(c)
 	r.CreateConceptGroup(c, visitor)
 }
 
@@ -50,7 +52,7 @@ func (r *restHandler) CreateConceptGroupByEx(c *gin.Context) {
 }
 
 // 创建概念分组
-func (r *restHandler) CreateConceptGroup(c *gin.Context, visitor rest.Visitor) {
+func (r *restHandler) CreateConceptGroup(c *gin.Context, visitor hydra.Visitor) {
 	logger.Debug("Handler CreateConceptGroup Start")
 	ctx, span := ar_trace.Tracer.Start(rest.GetLanguageCtx(c),
 		"创建概念分组", trace.WithSpanKind(trace.SpanKindServer))
@@ -211,7 +213,7 @@ func (r *restHandler) CreateConceptGroup(c *gin.Context, visitor rest.Visitor) {
 func (r *restHandler) UpdateConceptGroupByIn(c *gin.Context) {
 	logger.Debug("Handler UpdateConceptGroupByIn Start")
 	// 内部接口 user_id从header中取
-	visitor := GenerateVisitor(c)
+	visitor := visitor.GenerateVisitor(c)
 	r.UpdateConceptGroup(c, visitor)
 }
 
@@ -231,7 +233,7 @@ func (r *restHandler) UpdateConceptGroupByEx(c *gin.Context) {
 }
 
 // 更新概念分组
-func (r *restHandler) UpdateConceptGroup(c *gin.Context, visitor rest.Visitor) {
+func (r *restHandler) UpdateConceptGroup(c *gin.Context, visitor hydra.Visitor) {
 	logger.Debug("Handler UpdateConceptGroup Start")
 	ctx, span := ar_trace.Tracer.Start(rest.GetLanguageCtx(c),
 		"修改概念分组", trace.WithSpanKind(trace.SpanKindServer))
@@ -480,7 +482,7 @@ func (r *restHandler) ListConceptGroupsByIn(c *gin.Context) {
 	logger.Debug("Handler ListConceptGroupsByIn Start")
 	// 内部接口 user_id从header中取，跳过用户有效认证，后面在权限校验时就会校验这个用户是否有权限，无效用户无权限
 	// 自行构建一个visitor
-	visitor := GenerateVisitor(c)
+	visitor := visitor.GenerateVisitor(c)
 	r.ListConceptGroups(c, visitor)
 }
 
@@ -500,7 +502,7 @@ func (r *restHandler) ListConceptGroupsByEx(c *gin.Context) {
 }
 
 // 分页获取概念分组列表
-func (r *restHandler) ListConceptGroups(c *gin.Context, visitor rest.Visitor) {
+func (r *restHandler) ListConceptGroups(c *gin.Context, visitor hydra.Visitor) {
 	logger.Debug("ListConceptGroups Start")
 	ctx, span := ar_trace.Tracer.Start(rest.GetLanguageCtx(c),
 		"分页获取概念分组列表", trace.WithSpanKind(trace.SpanKindServer))
@@ -609,7 +611,7 @@ func (r *restHandler) GetConceptGroupByIn(c *gin.Context) {
 	logger.Debug("Handler GetKNByIn Start")
 	// 内部接口 user_id从header中取，跳过用户有效认证，后面在权限校验时就会校验这个用户是否有权限，无效用户无权限
 	// 自行构建一个visitor
-	visitor := GenerateVisitor(c)
+	visitor := visitor.GenerateVisitor(c)
 	r.GetConceptGroup(c, visitor)
 }
 
@@ -629,7 +631,7 @@ func (r *restHandler) GetConceptGroupByEx(c *gin.Context) {
 }
 
 // 按 id 获取概念分组对象信息
-func (r *restHandler) GetConceptGroup(c *gin.Context, visitor rest.Visitor) {
+func (r *restHandler) GetConceptGroup(c *gin.Context, visitor hydra.Visitor) {
 	logger.Debug("Handler GetConceptGroup Start")
 	ctx, span := ar_trace.Tracer.Start(rest.GetLanguageCtx(c),
 		"driver layer: Get concept group", trace.WithSpanKind(trace.SpanKindServer))
@@ -737,7 +739,7 @@ func (r *restHandler) GetConceptGroup(c *gin.Context, visitor rest.Visitor) {
 func (r *restHandler) AddObjectTypesToConceptGroupByIn(c *gin.Context) {
 	logger.Debug("Handler AddObjectTypesToConceptGroupByIn Start")
 	// 内部接口 user_id从header中取
-	visitor := GenerateVisitor(c)
+	visitor := visitor.GenerateVisitor(c)
 	r.AddObjectTypesToConceptGroup(c, visitor)
 }
 
@@ -757,7 +759,7 @@ func (r *restHandler) AddObjectTypesToConceptGroupByEx(c *gin.Context) {
 }
 
 // 创建概念分组
-func (r *restHandler) AddObjectTypesToConceptGroup(c *gin.Context, visitor rest.Visitor) {
+func (r *restHandler) AddObjectTypesToConceptGroup(c *gin.Context, visitor hydra.Visitor) {
 	logger.Debug("Handler AddObjectTypesToConceptGroup Start")
 	ctx, span := ar_trace.Tracer.Start(rest.GetLanguageCtx(c),
 		"添加对象类到概念分组", trace.WithSpanKind(trace.SpanKindServer))
@@ -869,7 +871,7 @@ func (r *restHandler) AddObjectTypesToConceptGroup(c *gin.Context, visitor rest.
 func (r *restHandler) DeleteObjectTypesFromGroupByIn(c *gin.Context) {
 	logger.Debug("Handler DeleteObjectTypesFromGroupByIn Start")
 	// 内部接口 user_id从header中取
-	visitor := GenerateVisitor(c)
+	visitor := visitor.GenerateVisitor(c)
 	r.DeleteObjectTypesFromGroup(c, visitor)
 }
 
@@ -889,7 +891,7 @@ func (r *restHandler) DeleteObjectTypesFromGroupByEx(c *gin.Context) {
 }
 
 // 创建概念分组
-func (r *restHandler) DeleteObjectTypesFromGroup(c *gin.Context, visitor rest.Visitor) {
+func (r *restHandler) DeleteObjectTypesFromGroup(c *gin.Context, visitor hydra.Visitor) {
 	logger.Debug("Handler DeleteObjectTypesFromGroup Start")
 	ctx, span := ar_trace.Tracer.Start(rest.GetLanguageCtx(c),
 		"从概念分组中移除对象类", trace.WithSpanKind(trace.SpanKindServer))

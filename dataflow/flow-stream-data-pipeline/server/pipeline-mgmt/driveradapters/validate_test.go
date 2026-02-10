@@ -6,7 +6,7 @@ import (
 	"testing"
 
 	"github.com/golang/mock/gomock"
-	rmock "github.com/kweaver-ai/kweaver-go-lib/rest/mock"
+	rmock "github.com/kweaver-ai/kweaver-go-lib/hydra/mock"
 	. "github.com/smartystreets/goconvey/convey"
 
 	"flow-stream-data-pipeline/common"

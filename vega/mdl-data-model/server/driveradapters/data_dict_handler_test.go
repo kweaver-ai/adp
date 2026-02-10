@@ -14,6 +14,7 @@ import (
 	"github.com/bytedance/sonic"
 	"github.com/gin-gonic/gin"
 	"github.com/golang/mock/gomock"
+	"github.com/kweaver-ai/kweaver-go-lib/hydra"
 	"github.com/kweaver-ai/kweaver-go-lib/rest"
 	. "github.com/smartystreets/goconvey/convey"
 
@@ -57,7 +58,7 @@ func Test_DataDictRestHandler_ListDataDicts(t *testing.T) {
 		handler := MockNewDataDictRestHandler(appSetting, as, dds)
 		handler.RegisterPublic(engine)
 
-		as.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(rest.Visitor{}, nil)
+		as.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(hydra.Visitor{}, nil)
 
 		url := "/api/mdl-data-model/v1/data-dicts"
 
@@ -122,7 +123,7 @@ func Test_DataDictRestHandler_GetDataDicts(t *testing.T) {
 		handler := MockNewDataDictRestHandler(appSetting, as, dds)
 		handler.RegisterPublic(engine)
 
-		as.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(rest.Visitor{}, nil)
+		as.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(hydra.Visitor{}, nil)
 
 		url := "/api/mdl-data-model/v1/data-dicts/1,2,3,4"
 
@@ -179,7 +180,7 @@ func Test_DataDictRestHandler_CreateDataDict(t *testing.T) {
 		handler := MockNewDataDictRestHandler(appSetting, as, dds)
 		handler.RegisterPublic(engine)
 
-		as.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(rest.Visitor{}, nil)
+		as.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(hydra.Visitor{}, nil)
 
 		url := "/api/mdl-data-model/v1/data-dicts"
 
@@ -361,7 +362,7 @@ func Test_DataDictRestHandler_UpdateDataDict(t *testing.T) {
 		handler := MockNewDataDictRestHandler(appSetting, as, dds)
 		handler.RegisterPublic(engine)
 
-		as.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(rest.Visitor{}, nil)
+		as.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(hydra.Visitor{}, nil)
 
 		url := "/api/mdl-data-model/v1/data-dicts/11"
 
@@ -458,7 +459,7 @@ func Test_DataDictRestHandler_DeleteDataDicts(t *testing.T) {
 		handler := MockNewDataDictRestHandler(appSetting, as, dds)
 		handler.RegisterPublic(engine)
 
-		as.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(rest.Visitor{}, nil)
+		as.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(hydra.Visitor{}, nil)
 
 		url := "/api/mdl-data-model/v1/data-dicts/1,2,3"
 

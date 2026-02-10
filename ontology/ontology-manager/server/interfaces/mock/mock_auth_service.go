@@ -10,7 +10,7 @@ import (
 
 	gin "github.com/gin-gonic/gin"
 	gomock "github.com/golang/mock/gomock"
-	rest "github.com/kweaver-ai/kweaver-go-lib/rest"
+	hydra "github.com/kweaver-ai/kweaver-go-lib/hydra"
 )
 
 // MockAuthService is a mock of AuthService interface.
@@ -37,10 +37,10 @@ func (m *MockAuthService) EXPECT() *MockAuthServiceMockRecorder {
 }
 
 // VerifyToken mocks base method.
-func (m *MockAuthService) VerifyToken(ctx context.Context, c *gin.Context) (rest.Visitor, error) {
+func (m *MockAuthService) VerifyToken(ctx context.Context, c *gin.Context) (hydra.Visitor, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "VerifyToken", ctx, c)
-	ret0, _ := ret[0].(rest.Visitor)
+	ret0, _ := ret[0].(hydra.Visitor)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }

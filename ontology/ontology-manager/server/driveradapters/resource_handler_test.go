@@ -8,15 +8,16 @@ package driveradapters
 import (
 	"net/http"
 	"net/http/httptest"
-	"ontology-manager/common"
-	"ontology-manager/interfaces"
-	dmock "ontology-manager/interfaces/mock"
 	"testing"
 
 	"github.com/gin-gonic/gin"
 	"github.com/golang/mock/gomock"
-	"github.com/kweaver-ai/kweaver-go-lib/rest"
+	"github.com/kweaver-ai/kweaver-go-lib/hydra"
 	. "github.com/smartystreets/goconvey/convey"
+
+	"ontology-manager/common"
+	"ontology-manager/interfaces"
+	dmock "ontology-manager/interfaces/mock"
 )
 
 func MockNewResourceRestHandler(appSetting *common.AppSetting,
@@ -49,7 +50,7 @@ func Test_RestHandler_ListResources(t *testing.T) {
 		handler := MockNewResourceRestHandler(appSetting, as, kns)
 		handler.RegisterPublic(engine)
 
-		as.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(rest.Visitor{}, nil)
+		as.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(hydra.Visitor{}, nil)
 
 		url := "/api/ontology-manager/v1/resources"
 

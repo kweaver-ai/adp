@@ -13,6 +13,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	libCommon "github.com/kweaver-ai/kweaver-go-lib/common"
+	"github.com/kweaver-ai/kweaver-go-lib/hydra"
 	"github.com/kweaver-ai/kweaver-go-lib/logger"
 	"github.com/kweaver-ai/kweaver-go-lib/middleware"
 	o11y "github.com/kweaver-ai/kweaver-go-lib/observability"
@@ -267,16 +268,16 @@ func (r *restHandler) HealthCheck(c *gin.Context) {
 }
 
 // 校验oauth
-func (r *restHandler) verifyOAuth(ctx context.Context, c *gin.Context) (rest.Visitor, error) {
-	vistor, err := r.as.VerifyToken(ctx, c)
+func (r *restHandler) verifyOAuth(ctx context.Context, c *gin.Context) (hydra.Visitor, error) {
+	visitor, err := r.as.VerifyToken(ctx, c)
 	if err != nil {
 		httpErr := rest.NewHTTPError(ctx, http.StatusUnauthorized, rest.PublicError_Unauthorized).
 			WithErrorDetails(err.Error())
 		rest.ReplyError(c, httpErr)
-		return vistor, err
+		return visitor, err
 	}
 
-	return vistor, nil
+	return visitor, nil
 }
 
 // gin中间件 校验content type
@@ -313,21 +314,4 @@ func (r *restHandler) AccessLog() gin.HandlerFunc {
 			durTime,
 		)
 	}
-}
-
-func GenerateVisitor(c *gin.Context) rest.Visitor {
-	accountInfo := interfaces.AccountInfo{
-		ID:   c.GetHeader(interfaces.HTTP_HEADER_ACCOUNT_ID),
-		Type: c.GetHeader(interfaces.HTTP_HEADER_ACCOUNT_TYPE),
-	}
-	visitor := rest.Visitor{
-		ID:         accountInfo.ID,
-		Type:       rest.VisitorType(accountInfo.Type),
-		TokenID:    "", // 无token
-		IP:         c.ClientIP(),
-		Mac:        c.GetHeader("X-Request-MAC"),
-		UserAgent:  c.GetHeader("User-Agent"),
-		ClientType: rest.ClientType_Linux,
-	}
-	return visitor
 }

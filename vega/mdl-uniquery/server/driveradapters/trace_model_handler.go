@@ -13,11 +13,13 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/kweaver-ai/TelemetrySDK-Go/exporter/v2/ar_trace"
+	"github.com/kweaver-ai/kweaver-go-lib/hydra"
 	"github.com/kweaver-ai/kweaver-go-lib/logger"
 	o11y "github.com/kweaver-ai/kweaver-go-lib/observability"
 	"github.com/kweaver-ai/kweaver-go-lib/rest"
 	"go.opentelemetry.io/otel/trace"
 
+	"uniquery/common/visitor"
 	uerrors "uniquery/errors"
 	"uniquery/interfaces"
 )
@@ -41,12 +43,12 @@ func (r *restHandler) PreviewSpanListByEx(c *gin.Context) {
 func (r *restHandler) PreviewSpanListByIn(c *gin.Context) {
 	logger.Debug("Handler PreviewSpanListByIn Start")
 
-	visitor := GenerateVisitor(c)
+	visitor := visitor.GenerateVisitor(c)
 	r.PreviewSpanList(c, visitor)
 }
 
 // 预览span列表
-func (r *restHandler) PreviewSpanList(c *gin.Context, visitor rest.Visitor) {
+func (r *restHandler) PreviewSpanList(c *gin.Context, visitor hydra.Visitor) {
 	logger.Debug("Handler PreviewSpanList Start")
 	start := time.Now()
 
@@ -174,12 +176,12 @@ func (r *restHandler) GetSpanListByEx(c *gin.Context) {
 func (r *restHandler) GetSpanListByIn(c *gin.Context) {
 	logger.Debug("Handler GetSpanListByIn Start")
 
-	visitor := GenerateVisitor(c)
+	visitor := visitor.GenerateVisitor(c)
 	r.GetSpanList(c, visitor)
 }
 
 // 查询span列表
-func (r *restHandler) GetSpanList(c *gin.Context, visitor rest.Visitor) {
+func (r *restHandler) GetSpanList(c *gin.Context, visitor hydra.Visitor) {
 	logger.Debug("Handler GetSpanList Start")
 	start := time.Now()
 
@@ -312,12 +314,12 @@ func (r *restHandler) PreviewTraceByEx(c *gin.Context) {
 func (r *restHandler) PreviewTraceByIn(c *gin.Context) {
 	logger.Debug("Handler PreviewTraceByIn Start")
 
-	visitor := GenerateVisitor(c)
+	visitor := visitor.GenerateVisitor(c)
 	r.PreviewTrace(c, visitor)
 }
 
 // 预览单条trace
-func (r *restHandler) PreviewTrace(c *gin.Context, visitor rest.Visitor) {
+func (r *restHandler) PreviewTrace(c *gin.Context, visitor hydra.Visitor) {
 	logger.Debug("Handler PreviewTrace Start")
 	start := time.Now()
 
@@ -424,12 +426,12 @@ func (r *restHandler) GetTraceByEx(c *gin.Context) {
 func (r *restHandler) GetTraceByIn(c *gin.Context) {
 	logger.Debug("Handler GetTraceByIn Start")
 
-	visitor := GenerateVisitor(c)
+	visitor := visitor.GenerateVisitor(c)
 	r.GetTrace(c, visitor)
 }
 
 // 查询单条trace
-func (r *restHandler) GetTrace(c *gin.Context, visitor rest.Visitor) {
+func (r *restHandler) GetTrace(c *gin.Context, visitor hydra.Visitor) {
 	// start1 := time.Now()
 	// fmt.Printf("[driver]开始查询Trace详情, 当前时间%v\n", start1)
 	// defer func() {
@@ -555,12 +557,12 @@ func (r *restHandler) PreviewSpanByEx(c *gin.Context) {
 func (r *restHandler) PreviewSpanByIn(c *gin.Context) {
 	logger.Debug("Handler PreviewSpanByIn Start")
 
-	visitor := GenerateVisitor(c)
+	visitor := visitor.GenerateVisitor(c)
 	r.PreviewSpan(c, visitor)
 }
 
 // 预览单条span
-func (r *restHandler) PreviewSpan(c *gin.Context, visitor rest.Visitor) {
+func (r *restHandler) PreviewSpan(c *gin.Context, visitor hydra.Visitor) {
 	logger.Debug("Handler PreviewSpan Start")
 	start := time.Now()
 
@@ -668,12 +670,12 @@ func (r *restHandler) GetSpanByEx(c *gin.Context) {
 func (r *restHandler) GetSpanByIn(c *gin.Context) {
 	logger.Debug("Handler GetSpanByIn Start")
 
-	visitor := GenerateVisitor(c)
+	visitor := visitor.GenerateVisitor(c)
 	r.GetSpan(c, visitor)
 }
 
 // 查询单条span
-func (r *restHandler) GetSpan(c *gin.Context, visitor rest.Visitor) {
+func (r *restHandler) GetSpan(c *gin.Context, visitor hydra.Visitor) {
 	logger.Debug("Handler GetSpan Start")
 	start := time.Now()
 
@@ -760,12 +762,12 @@ func (r *restHandler) PreviewSpanRelatedLogListByEx(c *gin.Context) {
 func (r *restHandler) PreviewSpanRelatedLogListByIn(c *gin.Context) {
 	logger.Debug("Handler PreviewSpanRelatedLogListByIn Start")
 
-	visitor := GenerateVisitor(c)
+	visitor := visitor.GenerateVisitor(c)
 	r.PreviewSpanRelatedLogList(c, visitor)
 }
 
 // 预览span关联日志列表
-func (r *restHandler) PreviewSpanRelatedLogList(c *gin.Context, visitor rest.Visitor) {
+func (r *restHandler) PreviewSpanRelatedLogList(c *gin.Context, visitor hydra.Visitor) {
 	logger.Debug("Handler PreviewSpanRelatedLogList Start")
 	start := time.Now()
 
@@ -890,12 +892,12 @@ func (r *restHandler) GetSpanRelatedLogListByEx(c *gin.Context) {
 func (r *restHandler) GetSpanRelatedLogListByIn(c *gin.Context) {
 	logger.Debug("Handler GetSpanRelatedLogListByIn Start")
 
-	visitor := GenerateVisitor(c)
+	visitor := visitor.GenerateVisitor(c)
 	r.GetSpanRelatedLogList(c, visitor)
 }
 
 // 查询span关联日志列表
-func (r *restHandler) GetSpanRelatedLogList(c *gin.Context, visitor rest.Visitor) {
+func (r *restHandler) GetSpanRelatedLogList(c *gin.Context, visitor hydra.Visitor) {
 	logger.Debug("Handler GetSpanRelatedLogList Start")
 	start := time.Now()
 

@@ -15,6 +15,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/kweaver-ai/TelemetrySDK-Go/exporter/v2/ar_trace"
 	"github.com/kweaver-ai/kweaver-go-lib/audit"
+	"github.com/kweaver-ai/kweaver-go-lib/hydra"
 	"github.com/kweaver-ai/kweaver-go-lib/logger"
 	o11y "github.com/kweaver-ai/kweaver-go-lib/observability"
 	"github.com/kweaver-ai/kweaver-go-lib/rest"
@@ -22,6 +23,7 @@ import (
 	"go.opentelemetry.io/otel/trace"
 
 	"data-model/common"
+	"data-model/common/visitor"
 	derrors "data-model/errors"
 	"data-model/interfaces"
 )
@@ -76,12 +78,12 @@ func (r *restHandler) CreateDataViewsByIn(c *gin.Context) {
 	logger.Debug("Handler CreateDataViewsByIn Start")
 	// 内部接口 user_id从header中取，跳过用户有效认证，后面在权限校验时就会校验这个用户是否有权限，无效用户无权限
 	// 自行构建一个visitor
-	visitor := GenerateVisitor(c)
+	visitor := visitor.GenerateVisitor(c)
 	r.CreateDataViews(c, visitor)
 }
 
 // 创建数据视图
-func (r *restHandler) CreateDataViews(c *gin.Context, visitor rest.Visitor) {
+func (r *restHandler) CreateDataViews(c *gin.Context, visitor hydra.Visitor) {
 	logger.Debug("Handler CreateDataViews Start")
 	ctx, span := ar_trace.Tracer.Start(rest.GetLanguageCtx(c),
 		"driver layer: Create data views", trace.WithSpanKind(trace.SpanKindServer))
@@ -337,12 +339,12 @@ func (r *restHandler) DeleteDataViewsByEx(c *gin.Context) {
 func (r *restHandler) DeleteDataViewsByIn(c *gin.Context) {
 	logger.Debug("Handler DeleteDataViewsByIn Start")
 
-	visitor := GenerateVisitor(c)
+	visitor := visitor.GenerateVisitor(c)
 	r.DeleteDataViews(c, visitor)
 }
 
 // 删除数据视图，支持批量删除
-func (r *restHandler) DeleteDataViews(c *gin.Context, visitor rest.Visitor) {
+func (r *restHandler) DeleteDataViews(c *gin.Context, visitor hydra.Visitor) {
 	logger.Debug("Handler DeleteDataViews Start")
 	ctx, span := ar_trace.Tracer.Start(rest.GetLanguageCtx(c),
 		"driver layer: Delete data views", trace.WithSpanKind(trace.SpanKindServer))
@@ -455,12 +457,12 @@ func (r *restHandler) UpdateDataViewByEx(c *gin.Context) {
 func (r *restHandler) UpdateDataViewByIn(c *gin.Context) {
 	logger.Debug("Handler UpdateDataViewByIn Start")
 
-	visitor := GenerateVisitor(c)
+	visitor := visitor.GenerateVisitor(c)
 	r.UpdateDataView(c, visitor)
 }
 
 // 更新数据视图
-func (r *restHandler) UpdateDataView(c *gin.Context, visitor rest.Visitor) {
+func (r *restHandler) UpdateDataView(c *gin.Context, visitor hydra.Visitor) {
 	logger.Debug("Handler UpdateDataView Start")
 	ctx, span := ar_trace.Tracer.Start(rest.GetLanguageCtx(c),
 		"driver layer: Update a data view", trace.WithSpanKind(trace.SpanKindServer))
@@ -547,12 +549,12 @@ func (r *restHandler) GetDataViewsByEx(c *gin.Context) {
 func (r *restHandler) GetDataViewsByIn(c *gin.Context) {
 	logger.Debug("Handler GetDataViewsByIn Start")
 
-	visitor := GenerateVisitor(c)
+	visitor := visitor.GenerateVisitor(c)
 	r.GetDataViews(c, visitor)
 }
 
 // 获取数据视图详情
-func (r *restHandler) GetDataViews(c *gin.Context, visitor rest.Visitor) {
+func (r *restHandler) GetDataViews(c *gin.Context, visitor hydra.Visitor) {
 	logger.Debug("Handler GetDataViews Start")
 	ctx, span := ar_trace.Tracer.Start(rest.GetLanguageCtx(c),
 		"driver layer: Get data views", trace.WithSpanKind(trace.SpanKindServer))
@@ -632,12 +634,12 @@ func (r *restHandler) ListDataViewsByEx(c *gin.Context) {
 func (r *restHandler) ListDataViewsByIn(c *gin.Context) {
 	logger.Debug("Handler ListDataViewsByIn Start")
 
-	visitor := GenerateVisitor(c)
+	visitor := visitor.GenerateVisitor(c)
 	r.ListDataViews(c, visitor)
 }
 
 // 获取数据视图列表
-func (r *restHandler) ListDataViews(c *gin.Context, visitor rest.Visitor) {
+func (r *restHandler) ListDataViews(c *gin.Context, visitor hydra.Visitor) {
 	logger.Debug("Handler ListDataViews Start")
 	ctx, span := ar_trace.Tracer.Start(rest.GetLanguageCtx(c),
 		"driver layer: List data views", trace.WithSpanKind(trace.SpanKindServer))

@@ -6,10 +6,10 @@
 package driveradapters
 
 import (
-	"ontology-manager/interfaces"
-
 	"github.com/gin-gonic/gin"
 	"github.com/kweaver-ai/kweaver-go-lib/logger"
+
+	"ontology-manager/interfaces"
 )
 
 const (

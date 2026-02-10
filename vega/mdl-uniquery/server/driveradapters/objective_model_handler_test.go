@@ -16,7 +16,7 @@ import (
 	"github.com/bytedance/sonic"
 	"github.com/gin-gonic/gin"
 	"github.com/golang/mock/gomock"
-	"github.com/kweaver-ai/kweaver-go-lib/rest"
+	"github.com/kweaver-ai/kweaver-go-lib/hydra"
 	. "github.com/smartystreets/goconvey/convey"
 
 	"uniquery/common"
@@ -29,10 +29,13 @@ var (
 	period90    int64   = 90
 )
 
-func mockNewObjectiveModelRestHandler(authService interfaces.AuthService, omService interfaces.ObjectiveModelService) (r *restHandler) {
+func mockNewObjectiveModelRestHandler(
+	appSetting *common.AppSetting, authService interfaces.AuthService,
+	omService interfaces.ObjectiveModelService) (r *restHandler) {
 	r = &restHandler{
-		authService: authService,
-		omService:   omService,
+		appSetting: appSetting,
+		as:         authService,
+		omService:  omService,
 	}
 	r.InitMetric()
 	return r
@@ -49,12 +52,13 @@ func TestObjectiveSimulate(t *testing.T) {
 		mockCtl := gomock.NewController(t)
 		defer mockCtl.Finish()
 
+		appSetting := &common.AppSetting{}
 		authMock := umock.NewMockAuthService(mockCtl)
 		mockOMService := umock.NewMockObjectiveModelService(mockCtl)
-		handler := mockNewObjectiveModelRestHandler(authMock, mockOMService)
+		handler := mockNewObjectiveModelRestHandler(appSetting, authMock, mockOMService)
 		handler.RegisterPublic(engine)
 
-		authMock.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(rest.Visitor{}, nil)
+		authMock.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(hydra.Visitor{}, nil)
 
 		url := "/api/mdl-uniquery/v1/objective-models"
 
@@ -165,12 +169,13 @@ func TestGetObjectiveModelData(t *testing.T) {
 		mockCtl := gomock.NewController(t)
 		defer mockCtl.Finish()
 
+		appSetting := &common.AppSetting{}
 		authMock := umock.NewMockAuthService(mockCtl)
 		mockOMService := umock.NewMockObjectiveModelService(mockCtl)
-		handler := mockNewObjectiveModelRestHandler(authMock, mockOMService)
+		handler := mockNewObjectiveModelRestHandler(appSetting, authMock, mockOMService)
 		handler.RegisterPublic(engine)
 
-		authMock.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(rest.Visitor{}, nil)
+		authMock.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(hydra.Visitor{}, nil)
 
 		url := "/api/mdl-uniquery/v1/objective-models/id1"
 

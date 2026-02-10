@@ -25,6 +25,7 @@ import (
 	_ "go.uber.org/automaxprocs"
 
 	"data-model/common"
+	"data-model/drivenadapters/auth"
 	"data-model/drivenadapters/data_connection"
 	"data-model/drivenadapters/data_dict"
 	"data-model/drivenadapters/data_model_job"
@@ -123,6 +124,10 @@ func main() {
 	audit.Init(&appSetting.MQSetting)
 
 	// Set顺序按字母升序排序
+	if common.GetAuthEnabled() {
+		logics.SetAuthAccess(auth.NewHydraAuthAccess(appSetting))
+		logics.SetPermissionAccess(permission.NewPermissionAccess(appSetting))
+	}
 	logics.SetDataConnectionAccess(data_connection.NewDataConnectionAccess(appSetting))
 	logics.SetDataDictAccess(data_dict.NewDataDictAccess(appSetting))
 	logics.SetDataDictItemAccess(data_dict.NewDictItemAccess(appSetting))
@@ -137,7 +142,6 @@ func main() {
 	logics.SetMetricModelGroupAccess(metric_model.NewMetricModelGroupAccess(appSetting))
 	logics.SetMetricModelTaskAccess(metric_model.NewMetricModelTaskAccess(appSetting))
 	logics.SetObjectiveModelAccess(objective_model.NewObjectiveModelAccess(appSetting))
-	logics.SetPermissionAccess(permission.NewPermissionAccess(appSetting))
 	logics.SetScanRecordAccess(scan_record.NewScanRecordAccess(appSetting))
 	logics.SetTraceModelAccess(trace_model.NewTraceModelAccess(appSetting))
 	logics.SetUniqueryAccess(uniquery.NewUniqueryAccess(appSetting))

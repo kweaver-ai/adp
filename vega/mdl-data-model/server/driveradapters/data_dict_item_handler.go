@@ -18,6 +18,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/kweaver-ai/TelemetrySDK-Go/exporter/v2/ar_trace"
 	"github.com/kweaver-ai/kweaver-go-lib/audit"
+	"github.com/kweaver-ai/kweaver-go-lib/hydra"
 	"github.com/kweaver-ai/kweaver-go-lib/logger"
 	o11y "github.com/kweaver-ai/kweaver-go-lib/observability"
 	"github.com/kweaver-ai/kweaver-go-lib/rest"
@@ -26,6 +27,7 @@ import (
 	"go.opentelemetry.io/otel/trace"
 
 	"data-model/common"
+	"data-model/common/visitor"
 	derrors "data-model/errors"
 	"data-model/interfaces"
 )
@@ -41,7 +43,7 @@ func (r *restHandler) HandleDataDictListOrExportByIn(c *gin.Context) {
 	logger.Debug("Handler HandleDataDictListOrExportByIn Start")
 	// 内部接口 user_id从header中取，跳过用户有效认证，后面在权限校验时就会校验这个用户是否有权限，无效用户无权限
 	// 自行构建一个visitor
-	visitor := GenerateVisitor(c)
+	visitor := visitor.GenerateVisitor(c)
 	r.HandleDataDictListOrExport(c, visitor)
 }
 
@@ -57,7 +59,7 @@ func (r *restHandler) HandleDataDictListOrExportByEx(c *gin.Context) {
 	r.HandleDataDictListOrExport(c, visitor)
 }
 
-func (r *restHandler) HandleDataDictListOrExport(c *gin.Context, visitor rest.Visitor) {
+func (r *restHandler) HandleDataDictListOrExport(c *gin.Context, visitor hydra.Visitor) {
 	requestFormat := c.DefaultQuery("format", FILE_FORMAT_JSON)
 	switch requestFormat {
 	case FILE_FORMAT_JSON:
@@ -76,7 +78,7 @@ func (r *restHandler) HandleDataDictCreateOrImportByIn(c *gin.Context) {
 	logger.Debug("Handler HandleDataDictCreateOrImportByIn Start")
 	// 内部接口 user_id从header中取，跳过用户有效认证，后面在权限校验时就会校验这个用户是否有权限，无效用户无权限
 	// 自行构建一个visitor
-	visitor := GenerateVisitor(c)
+	visitor := visitor.GenerateVisitor(c)
 	r.HandleDataDictCreateOrImport(c, visitor)
 }
 
@@ -92,7 +94,7 @@ func (r *restHandler) HandleDataDictCreateOrImportByEx(c *gin.Context) {
 	r.HandleDataDictCreateOrImport(c, visitor)
 }
 
-func (r *restHandler) HandleDataDictCreateOrImport(c *gin.Context, visitor rest.Visitor) {
+func (r *restHandler) HandleDataDictCreateOrImport(c *gin.Context, visitor hydra.Visitor) {
 	if c.ContentType() != rest.ContentTypeJson {
 		r.ImportDataDictItems(c, visitor)
 	} else {
@@ -101,7 +103,7 @@ func (r *restHandler) HandleDataDictCreateOrImport(c *gin.Context, visitor rest.
 }
 
 // 分页查询数据字典项
-func (r *restHandler) ListDataDictItems(c *gin.Context, visitor rest.Visitor) {
+func (r *restHandler) ListDataDictItems(c *gin.Context, visitor hydra.Visitor) {
 	logger.Debug("Handler GetDataDictItems Start")
 	ctx, span := ar_trace.Tracer.Start(rest.GetLanguageCtx(c), "分页获取数据字典项列表",
 		trace.WithSpanKind(trace.SpanKindServer))
@@ -200,7 +202,7 @@ func (r *restHandler) ListDataDictItems(c *gin.Context, visitor rest.Visitor) {
 }
 
 // 创建单个数据字典项
-func (r *restHandler) CreateDataDictItem(c *gin.Context, visitor rest.Visitor) {
+func (r *restHandler) CreateDataDictItem(c *gin.Context, visitor hydra.Visitor) {
 	logger.Debug("Handler CreateDataDictItem Start")
 	ctx, span := ar_trace.Tracer.Start(rest.GetLanguageCtx(c), "创建数据字典项",
 		trace.WithSpanKind(trace.SpanKindServer))
@@ -358,7 +360,7 @@ func (r *restHandler) CreateDataDictItem(c *gin.Context, visitor rest.Visitor) {
 }
 
 // csv导入数据字典项
-func (r *restHandler) ImportDataDictItems(c *gin.Context, visitor rest.Visitor) {
+func (r *restHandler) ImportDataDictItems(c *gin.Context, visitor hydra.Visitor) {
 	logger.Debug("Handler ImportDataDictItems Start")
 	beginTime := time.Now()
 
@@ -480,7 +482,8 @@ func (r *restHandler) ImportDataDictItems(c *gin.Context, visitor rest.Visitor) 
 	reader := bufio.NewReader(file)
 
 	var itemsArr []map[string]string
-	if ext == FILE_FORMAT_CSV {
+	switch ext {
+	case FILE_FORMAT_CSV:
 		itemsArr, err = r.ParseDataDictItemsFromCSV(ctx, dict, reader)
 		if err != nil {
 			httpErr := rest.NewHTTPError(ctx, http.StatusBadRequest, derrors.DataModel_DataDict_BadRequest_ParseCSVFileFailed).
@@ -496,7 +499,7 @@ func (r *restHandler) ImportDataDictItems(c *gin.Context, visitor rest.Visitor) 
 			rest.ReplyError(c, httpErr)
 			return
 		}
-	} else if ext == FILE_FORMAT_XLSX {
+	case FILE_FORMAT_XLSX:
 		itemsArr, err = r.ParseDataDictItemsFromXlsx(ctx, dict, reader)
 		if err != nil {
 			httpErr := rest.NewHTTPError(ctx, http.StatusBadRequest, derrors.DataModel_DataDict_BadRequest_ParseXlsxFileFailed).
@@ -760,7 +763,7 @@ func (r *restHandler) ParseDataDictItemsFromXlsx(ctx context.Context,
 }
 
 // 文件导出数据字典项
-func (r *restHandler) ExportDataDictItems(c *gin.Context, requestFormat string, visitor rest.Visitor) {
+func (r *restHandler) ExportDataDictItems(c *gin.Context, requestFormat string, visitor hydra.Visitor) {
 	logger.Debug("Handler ExportDataDictItems Start")
 	beginTime := time.Now()
 
@@ -855,7 +858,8 @@ func (r *restHandler) ExportDataDictItems(c *gin.Context, requestFormat string, 
 	logger.Debugf("Get items result: %+v \n", result)
 
 	var buf []byte
-	if requestFormat == FILE_FORMAT_CSV {
+	switch requestFormat {
+	case FILE_FORMAT_CSV:
 		buf, err = r.ExportDataDictItemsToCSV(dict, result)
 		if err != nil {
 			httpErr := rest.NewHTTPError(ctx, http.StatusInternalServerError,
@@ -869,7 +873,7 @@ func (r *restHandler) ExportDataDictItems(c *gin.Context, requestFormat string, 
 			rest.ReplyError(c, httpErr)
 			return
 		}
-	} else if requestFormat == FILE_FORMAT_XLSX {
+	case FILE_FORMAT_XLSX:
 		buf, err = r.ExportDataDictItemsToXLSX(dict, result)
 		if err != nil {
 			httpErr := rest.NewHTTPError(ctx, http.StatusInternalServerError,
@@ -985,7 +989,7 @@ func (r *restHandler) UpdateDataDictItemByIn(c *gin.Context) {
 	logger.Debug("Handler UpdateDataDictItemByIn Start")
 	// 内部接口 user_id从header中取，跳过用户有效认证，后面在权限校验时就会校验这个用户是否有权限，无效用户无权限
 	// 自行构建一个visitor
-	visitor := GenerateVisitor(c)
+	visitor := visitor.GenerateVisitor(c)
 	r.UpdateDataDictItem(c, visitor)
 }
 
@@ -1005,7 +1009,7 @@ func (r *restHandler) UpdateDataDictItemByEx(c *gin.Context) {
 }
 
 // 更新单个数据字典项
-func (r *restHandler) UpdateDataDictItem(c *gin.Context, visitor rest.Visitor) {
+func (r *restHandler) UpdateDataDictItem(c *gin.Context, visitor hydra.Visitor) {
 	logger.Debug("Handler UpdateDataDictItem Start")
 	ctx, span := ar_trace.Tracer.Start(rest.GetLanguageCtx(c), "修改数据字典项",
 		trace.WithSpanKind(trace.SpanKindServer))

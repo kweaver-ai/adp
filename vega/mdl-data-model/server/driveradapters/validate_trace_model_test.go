@@ -13,6 +13,7 @@ import (
 
 	. "github.com/agiledragon/gomonkey/v2"
 	"github.com/golang/mock/gomock"
+	"github.com/kweaver-ai/kweaver-go-lib/hydra"
 	"github.com/kweaver-ai/kweaver-go-lib/rest"
 	. "github.com/smartystreets/goconvey/convey"
 
@@ -34,7 +35,7 @@ func Test_ValidateTraceModel_ValidateTraceModelsWhenCreate(t *testing.T) {
 
 		handler := MockNewTraceModelRestHandler(appSetting, as, tms)
 
-		as.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(rest.Visitor{}, nil)
+		as.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(hydra.Visitor{}, nil)
 
 		Convey("Invalid models, caused by the error from func `validateTraceModelsWithName`", func() {
 			expectedErr := errors.New("some errors")
@@ -83,7 +84,7 @@ func Test_ValidateTraceModel_ValidateTraceModelWhenUpdate(t *testing.T) {
 
 		handler := MockNewTraceModelRestHandler(appSetting, as, tms)
 
-		as.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(rest.Visitor{}, nil)
+		as.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(hydra.Visitor{}, nil)
 
 		Convey("Invalid model, caused by the error from func `validateTraceModelsWithName`", func() {
 			expectedErr := errors.New("some errors")
@@ -132,7 +133,7 @@ func Test_ValidateTraceModel_ValidateTraceModelsWithName(t *testing.T) {
 
 		handler := MockNewTraceModelRestHandler(appSetting, as, tms)
 
-		as.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(rest.Visitor{}, nil)
+		as.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(hydra.Visitor{}, nil)
 
 		Convey("Invalid models, caused by the error from func `validateObjectName`", func() {
 			expectedErr := errors.New("some errors")

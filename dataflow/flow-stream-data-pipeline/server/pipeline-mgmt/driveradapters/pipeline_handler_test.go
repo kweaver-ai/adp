@@ -11,8 +11,9 @@ import (
 	"github.com/bytedance/sonic"
 	"github.com/gin-gonic/gin"
 	"github.com/golang/mock/gomock"
+	"github.com/kweaver-ai/kweaver-go-lib/hydra"
+	rmock "github.com/kweaver-ai/kweaver-go-lib/hydra/mock"
 	"github.com/kweaver-ai/kweaver-go-lib/rest"
-	rmock "github.com/kweaver-ai/kweaver-go-lib/rest/mock"
 	. "github.com/smartystreets/goconvey/convey"
 
 	"flow-stream-data-pipeline/common"
@@ -22,7 +23,7 @@ import (
 )
 
 func mockNewPipelineMgmtRestHandler(appSetting *common.AppSetting,
-	hydra rest.Hydra, pmService interfaces.PipelineMgmtService) (r *restHandler) {
+	hydra hydra.Hydra, pmService interfaces.PipelineMgmtService) (r *restHandler) {
 
 	r = &restHandler{
 		appSetting:          appSetting,
@@ -55,7 +56,7 @@ func Test_PipelineRestHandler_CreatePipeline(t *testing.T) {
 		handler := mockNewPipelineMgmtRestHandler(appSetting, hydraMock, pmService)
 		handler.RegisterPublic(engine)
 
-		hydraMock.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(rest.Visitor{}, nil)
+		hydraMock.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(hydra.Visitor{}, nil)
 
 		url := "/api/flow-stream-data-pipeline/v1/pipelines"
 
@@ -216,7 +217,7 @@ func Test_PipelineRestHandler_DeletePipelines(t *testing.T) {
 		handler := mockNewPipelineMgmtRestHandler(appSetting, hydraMock, pmService)
 		handler.RegisterPublic(engine)
 
-		hydraMock.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(rest.Visitor{}, nil)
+		hydraMock.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(hydra.Visitor{}, nil)
 
 		url := "/api/flow-stream-data-pipeline/v1/pipelines/aa"
 
@@ -289,7 +290,7 @@ func Test_PipelineRestHandler_UpdatePipeline(t *testing.T) {
 		handler := mockNewPipelineMgmtRestHandler(appSetting, hydraMock, pmService)
 		handler.RegisterPublic(engine)
 
-		hydraMock.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(rest.Visitor{}, nil)
+		hydraMock.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(hydra.Visitor{}, nil)
 
 		url := "/api/flow-stream-data-pipeline/v1/pipelines/1"
 
@@ -376,7 +377,7 @@ func Test_PipelineRestHandler_GetPipelines(t *testing.T) {
 		handler := mockNewPipelineMgmtRestHandler(appSetting, hydraMock, pmService)
 		handler.RegisterPublic(engine)
 
-		hydraMock.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(rest.Visitor{}, nil)
+		hydraMock.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(hydra.Visitor{}, nil)
 
 		url := "/api/flow-stream-data-pipeline/v1/pipelines/aa"
 
@@ -420,7 +421,7 @@ func Test_PipelineRestHandler_ListPipelines(t *testing.T) {
 		handler := mockNewPipelineMgmtRestHandler(appSetting, hydraMock, pmService)
 		handler.RegisterPublic(engine)
 
-		hydraMock.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(rest.Visitor{}, nil)
+		hydraMock.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(hydra.Visitor{}, nil)
 
 		url := "/api/flow-stream-data-pipeline/v1/pipelines"
 
@@ -491,7 +492,7 @@ func Test_PipelineRestHandler_UpdatePipelineStatus(t *testing.T) {
 		handler := mockNewPipelineMgmtRestHandler(appSetting, hydraMock, pmService)
 		handler.RegisterPublic(engine)
 
-		hydraMock.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(rest.Visitor{}, nil)
+		hydraMock.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(hydra.Visitor{}, nil)
 
 		url := "/api/flow-stream-data-pipeline/v1/pipelines/a/attrs/status,status_details"
 

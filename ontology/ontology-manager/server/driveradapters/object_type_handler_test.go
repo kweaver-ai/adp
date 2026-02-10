@@ -9,17 +9,19 @@ import (
 	"bytes"
 	"net/http"
 	"net/http/httptest"
-	"ontology-manager/common"
-	oerrors "ontology-manager/errors"
-	"ontology-manager/interfaces"
-	dmock "ontology-manager/interfaces/mock"
 	"testing"
 
 	"github.com/bytedance/sonic"
 	"github.com/gin-gonic/gin"
 	"github.com/golang/mock/gomock"
+	"github.com/kweaver-ai/kweaver-go-lib/hydra"
 	"github.com/kweaver-ai/kweaver-go-lib/rest"
 	. "github.com/smartystreets/goconvey/convey"
+
+	"ontology-manager/common"
+	oerrors "ontology-manager/errors"
+	"ontology-manager/interfaces"
+	dmock "ontology-manager/interfaces/mock"
 )
 
 func MockNewObjectTypeRestHandler(appSetting *common.AppSetting,
@@ -55,7 +57,7 @@ func Test_ObjectTypeRestHandler_CreateObjectTypes(t *testing.T) {
 		handler := MockNewObjectTypeRestHandler(appSetting, as, ots, kns)
 		handler.RegisterPublic(engine)
 
-		as.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(rest.Visitor{}, nil)
+		as.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(hydra.Visitor{}, nil)
 
 		knID := "kn1"
 		url := "/api/ontology-manager/v1/knowledge-networks/" + knID + "/object-types"
@@ -211,7 +213,7 @@ func Test_ObjectTypeRestHandler_UpdateObjectType(t *testing.T) {
 		handler := MockNewObjectTypeRestHandler(appSetting, as, ots, kns)
 		handler.RegisterPublic(engine)
 
-		as.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(rest.Visitor{}, nil)
+		as.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(hydra.Visitor{}, nil)
 
 		knID := "kn1"
 		otID := "ot1"
@@ -341,7 +343,7 @@ func Test_ObjectTypeRestHandler_DeleteObjectTypes(t *testing.T) {
 		handler := MockNewObjectTypeRestHandler(appSetting, as, ots, kns)
 		handler.RegisterPublic(engine)
 
-		as.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(rest.Visitor{}, nil)
+		as.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(hydra.Visitor{}, nil)
 
 		knID := "kn1"
 		otIDs := "ot1,ot2"
@@ -423,7 +425,7 @@ func Test_ObjectTypeRestHandler_UpdateDataProperties(t *testing.T) {
 		handler := MockNewObjectTypeRestHandler(appSetting, as, ots, kns)
 		handler.RegisterPublic(engine)
 
-		as.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(rest.Visitor{}, nil)
+		as.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(hydra.Visitor{}, nil)
 
 		knID := "kn1"
 		otID := "ot1"
@@ -513,7 +515,7 @@ func Test_ObjectTypeRestHandler_ListObjectTypes(t *testing.T) {
 		handler := MockNewObjectTypeRestHandler(appSetting, as, ots, kns)
 		handler.RegisterPublic(engine)
 
-		as.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(rest.Visitor{}, nil)
+		as.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(hydra.Visitor{}, nil)
 
 		knID := "kn1"
 		url := "/api/ontology-manager/v1/knowledge-networks/" + knID + "/object-types"
@@ -592,7 +594,7 @@ func Test_ObjectTypeRestHandler_GetObjectTypes(t *testing.T) {
 		handler := MockNewObjectTypeRestHandler(appSetting, as, ots, kns)
 		handler.RegisterPublic(engine)
 
-		as.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(rest.Visitor{}, nil)
+		as.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(hydra.Visitor{}, nil)
 
 		knID := "kn1"
 		otIDs := "ot1,ot2"
@@ -686,7 +688,7 @@ func Test_ObjectTypeRestHandler_SearchObjectTypes(t *testing.T) {
 		handler := MockNewObjectTypeRestHandler(appSetting, as, ots, kns)
 		handler.RegisterPublic(engine)
 
-		as.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(rest.Visitor{}, nil)
+		as.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(hydra.Visitor{}, nil)
 
 		knID := "kn1"
 		url := "/api/ontology-manager/v1/knowledge-networks/" + knID + "/object-types"

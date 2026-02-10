@@ -13,6 +13,7 @@ import (
 
 var (
 	DB     *sql.DB
+	AA     interfaces.AuthAccess
 	DCA    interfaces.DataConnectionAccess
 	DDA    interfaces.DataDictAccess
 	DDIA   interfaces.DataDictItemAccess
@@ -37,6 +38,10 @@ var (
 
 func SetDB(db *sql.DB) {
 	DB = db
+}
+
+func SetAuthAccess(aa interfaces.AuthAccess) {
+	AA = aa
 }
 
 func SetDataConnectionAccess(dca interfaces.DataConnectionAccess) {

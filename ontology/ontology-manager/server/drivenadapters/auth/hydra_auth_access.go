@@ -9,22 +9,22 @@ import (
 	"context"
 
 	"github.com/gin-gonic/gin"
-	"github.com/kweaver-ai/kweaver-go-lib/rest"
+	"github.com/kweaver-ai/kweaver-go-lib/hydra"
 
 	"ontology-manager/common"
 	"ontology-manager/interfaces"
 )
 
 type hydraAuthAccess struct {
-	hydra rest.Hydra
+	hydra hydra.Hydra
 }
 
 func NewHydraAuthAccess(appSetting *common.AppSetting) interfaces.AuthAccess {
 	return &hydraAuthAccess{
-		hydra: rest.NewHydra(appSetting.HydraAdminSetting),
+		hydra: hydra.NewHydra(appSetting.HydraAdminSetting),
 	}
 }
 
-func (h *hydraAuthAccess) VerifyToken(ctx context.Context, c *gin.Context) (rest.Visitor, error) {
+func (h *hydraAuthAccess) VerifyToken(ctx context.Context, c *gin.Context) (hydra.Visitor, error) {
 	return h.hydra.VerifyToken(ctx, c)
 }

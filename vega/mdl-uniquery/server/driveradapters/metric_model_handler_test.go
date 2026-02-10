@@ -17,6 +17,7 @@ import (
 	"github.com/bytedance/sonic"
 	"github.com/gin-gonic/gin"
 	"github.com/golang/mock/gomock"
+	"github.com/kweaver-ai/kweaver-go-lib/hydra"
 	"github.com/kweaver-ai/kweaver-go-lib/rest"
 	. "github.com/smartystreets/goconvey/convey"
 
@@ -55,9 +56,9 @@ func mockNewMetricModelRestHandler(appSetting *common.AppSetting,
 		IgnoringHcts: false,
 	}
 	r = &restHandler{
-		appSetting:  appSetting,
-		authService: authService,
-		mmService:   mmService,
+		appSetting: appSetting,
+		as:         authService,
+		mmService:  mmService,
 	}
 	r.InitMetric()
 	return r
@@ -83,7 +84,7 @@ func TestMetricModel(t *testing.T) {
 		handler := mockNewMetricModelRestHandler(appSetting, authMock, mmService)
 		handler.RegisterPublic(engine)
 
-		authMock.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(rest.Visitor{}, nil)
+		authMock.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(hydra.Visitor{}, nil)
 
 		url := "/api/mdl-uniquery/v1/metric-model"
 
@@ -207,7 +208,7 @@ func TestGetMetricModelData(t *testing.T) {
 		handler := mockNewMetricModelRestHandler(appSetting, authMock, mmService)
 		handler.RegisterPublic(engine)
 
-		authMock.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(rest.Visitor{}, nil)
+		authMock.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(hydra.Visitor{}, nil)
 
 		url := "/api/mdl-uniquery/v1/metric-models/1"
 
@@ -400,7 +401,7 @@ func TestGetMetricModelFields(t *testing.T) {
 		handler := mockNewMetricModelRestHandler(appSetting, authMock, mmService)
 		handler.RegisterPublic(engine)
 
-		authMock.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(rest.Visitor{}, nil)
+		authMock.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(hydra.Visitor{}, nil)
 
 		url := "/api/mdl-uniquery/v1/metric-models/modelid1/fields"
 
@@ -461,7 +462,7 @@ func TestGetMetricModelFieldValues(t *testing.T) {
 		handler := mockNewMetricModelRestHandler(appSetting, authMock, mmService)
 		handler.RegisterPublic(engine)
 
-		authMock.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(rest.Visitor{}, nil)
+		authMock.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(hydra.Visitor{}, nil)
 
 		url := "/api/mdl-uniquery/v1/metric-models/modelid1/field_values/field1"
 
@@ -531,7 +532,7 @@ func TestGetMetricModelLabels(t *testing.T) {
 		handler := mockNewMetricModelRestHandler(appSetting, authMock, mmService)
 		handler.RegisterPublic(engine)
 
-		authMock.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(rest.Visitor{}, nil)
+		authMock.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(hydra.Visitor{}, nil)
 
 		url := "/api/mdl-uniquery/v1/metric-models/modelid1/labels"
 

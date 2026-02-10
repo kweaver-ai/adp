@@ -9,32 +9,24 @@ import (
 	"context"
 
 	"github.com/gin-gonic/gin"
-	"github.com/kweaver-ai/kweaver-go-lib/rest"
+	"github.com/kweaver-ai/kweaver-go-lib/hydra"
 
+	"data-model/common"
 	"data-model/interfaces"
 )
 
 // NoopAuthService 空认证服务（认证禁用时使用）
-type NoopAuthService struct{}
-
-func NewNoopAuthService() interfaces.AuthService {
-	return &NoopAuthService{}
+type NoopAuthService struct {
+	appSetting *common.AppSetting
 }
 
-func (n *NoopAuthService) VerifyToken(ctx context.Context, c *gin.Context) (rest.Visitor, error) {
-	// 从 header 构建模拟的 Visitor，不做任何认证校验
-	accountInfo := interfaces.AccountInfo{
-		ID:   c.GetHeader(interfaces.HTTP_HEADER_ACCOUNT_ID),
-		Type: c.GetHeader(interfaces.HTTP_HEADER_ACCOUNT_TYPE),
+func NewNoopAuthService(appSetting *common.AppSetting) interfaces.AuthService {
+	return &NoopAuthService{
+		appSetting: appSetting,
 	}
-	visitor := rest.Visitor{
-		ID:         accountInfo.ID,
-		Type:       rest.VisitorType(accountInfo.Type),
-		TokenID:    "", // 无token
-		IP:         c.ClientIP(),
-		Mac:        c.GetHeader("X-Request-MAC"),
-		UserAgent:  c.GetHeader("User-Agent"),
-		ClientType: rest.ClientType_Linux,
-	}
-	return visitor, nil
+}
+
+func (n *NoopAuthService) VerifyToken(ctx context.Context, c *gin.Context) (hydra.Visitor, error) {
+	// 返回空 Visitor，不做任何认证校验
+	return hydra.Visitor{}, nil
 }

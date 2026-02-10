@@ -14,6 +14,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/kweaver-ai/TelemetrySDK-Go/exporter/v2/ar_trace"
+	"github.com/kweaver-ai/kweaver-go-lib/hydra"
 	"github.com/kweaver-ai/kweaver-go-lib/logger"
 	o11y "github.com/kweaver-ai/kweaver-go-lib/observability"
 	"github.com/kweaver-ai/kweaver-go-lib/rest"
@@ -21,6 +22,7 @@ import (
 
 	"uniquery/common"
 	"uniquery/common/convert"
+	"uniquery/common/visitor"
 	uerrors "uniquery/errors"
 	"uniquery/interfaces"
 )
@@ -44,12 +46,12 @@ func (r *restHandler) ViewSimulateByEx(c *gin.Context) {
 func (r *restHandler) ViewSimulateByIn(c *gin.Context) {
 	logger.Debug("Handler SimulateByIn Start")
 
-	visitor := GenerateVisitor(c)
+	visitor := visitor.GenerateVisitor(c)
 	r.ViewSimulate(c, visitor)
 }
 
 // 视图数据预览
-func (r *restHandler) ViewSimulate(c *gin.Context, visitor rest.Visitor) {
+func (r *restHandler) ViewSimulate(c *gin.Context, visitor hydra.Visitor) {
 	logger.Debug("Handler ViewDataSimulate Start")
 	startTime := time.Now()
 
@@ -141,12 +143,12 @@ func (r *restHandler) GetViewDataByEx(c *gin.Context) {
 func (r *restHandler) GetViewDataByIn(c *gin.Context) {
 	logger.Debug("Handler GetViewDataByIn Start")
 
-	visitor := GenerateVisitor(c)
+	visitor := visitor.GenerateVisitor(c)
 	r.GetViewData(c, visitor)
 }
 
 // 视图数据查询 V2 版
-func (r *restHandler) GetViewData(c *gin.Context, visitor rest.Visitor) {
+func (r *restHandler) GetViewData(c *gin.Context, visitor hydra.Visitor) {
 	logger.Debug("Handler GetViewData Start")
 	startTime := time.Now()
 
@@ -369,12 +371,12 @@ func (r *restHandler) DeleteDataViewPitsByEx(c *gin.Context) {
 func (r *restHandler) DeleteDataViewPitsByIn(c *gin.Context) {
 	logger.Debug("Handler DeleteDataViewPitsByIn Start")
 
-	visitor := GenerateVisitor(c)
+	visitor := visitor.GenerateVisitor(c)
 	r.DeleteDataViewPits(c, visitor)
 }
 
 // 批量删除 pit
-func (r *restHandler) DeleteDataViewPits(c *gin.Context, visitor rest.Visitor) {
+func (r *restHandler) DeleteDataViewPits(c *gin.Context, visitor hydra.Visitor) {
 	logger.Debug("Handler DeleteDataViewPits Start")
 
 	ctx, span := ar_trace.Tracer.Start(rest.GetLanguageCtx(c), "driver layer: Delete data view pits", trace.WithSpanKind(trace.SpanKindServer))

@@ -19,6 +19,7 @@ import (
 	"github.com/bytedance/sonic"
 	"github.com/gin-gonic/gin"
 	"github.com/golang/mock/gomock"
+	"github.com/kweaver-ai/kweaver-go-lib/hydra"
 	"github.com/kweaver-ai/kweaver-go-lib/rest"
 	. "github.com/smartystreets/goconvey/convey"
 
@@ -61,7 +62,7 @@ func Test_DataDictItemRestHandler_GetDataDictItems(t *testing.T) {
 		handler := MockNewDataDictItemRestHandler(appSetting, as, dds, ddis)
 		handler.RegisterPublic(engine)
 
-		as.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(rest.Visitor{}, nil)
+		as.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(hydra.Visitor{}, nil)
 
 		url := "/api/mdl-data-model/v1/data-dicts/11/items"
 
@@ -122,7 +123,7 @@ func Test_DataDictItemRestHandler_ExportDataDictItems(t *testing.T) {
 		handler := MockNewDataDictItemRestHandler(appSetting, as, dds, ddis)
 		handler.RegisterPublic(engine)
 
-		as.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(rest.Visitor{}, nil)
+		as.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(hydra.Visitor{}, nil)
 
 		url := "/api/mdl-data-model/v1/data-dicts/11/items?format=csv"
 
@@ -191,7 +192,7 @@ func Test_DataDictItemRestHandler_CreateDataDictItem(t *testing.T) {
 		handler := MockNewDataDictItemRestHandler(appSetting, as, dds, ddis)
 		handler.RegisterPublic(engine)
 
-		as.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(rest.Visitor{}, nil)
+		as.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(hydra.Visitor{}, nil)
 
 		url := "/api/mdl-data-model/v1/data-dicts/11/items"
 		dictItemInfo := interfaces.KvDictItem{
@@ -292,7 +293,7 @@ func Test_DataDictItemRestHandler_ImportDataDictItems(t *testing.T) {
 		handler := MockNewDataDictItemRestHandler(appSetting, as, dds, ddis)
 		handler.RegisterPublic(engine)
 
-		as.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(rest.Visitor{}, nil)
+		as.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(hydra.Visitor{}, nil)
 
 		url := "/api/mdl-data-model/v1/data-dicts/11/items"
 
@@ -579,7 +580,7 @@ func Test_DataDictItemRestHandler_UpdateDataDictItem(t *testing.T) {
 		handler := MockNewDataDictItemRestHandler(appSetting, as, dds, ddis)
 		handler.RegisterPublic(engine)
 
-		as.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(rest.Visitor{}, nil)
+		as.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(hydra.Visitor{}, nil)
 
 		url := "/api/mdl-data-model/v1/data-dicts/11/items/111"
 
@@ -683,7 +684,7 @@ func Test_DataDictItemRestHandler_DeleteDataDictItems(t *testing.T) {
 		handler := MockNewDataDictItemRestHandler(appSetting, as, dds, ddis)
 		handler.RegisterPublic(engine)
 
-		as.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(rest.Visitor{}, nil)
+		as.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(hydra.Visitor{}, nil)
 
 		url := "/api/mdl-data-model/v1/data-dicts/11/items/1,2,3"
 

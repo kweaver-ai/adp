@@ -21,7 +21,7 @@ func NewAuthService(appSetting *common.AppSetting) interfaces.AuthService {
 	// 认证禁用时返回空实现
 	authServiceOnce.Do(func() {
 		if !common.GetAuthEnabled() {
-			authService = NewNoopAuthService()
+			authService = NewNoopAuthService(appSetting)
 		} else {
 			authService = NewHydraAuthService(appSetting)
 		}

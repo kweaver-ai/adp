@@ -8,6 +8,7 @@ package logics
 import "data-model-job/interfaces"
 
 var (
+	AA       interfaces.AuthAccess
 	EMAccess interfaces.EventModelAccess
 	IBAccess interfaces.IndexBaseAccess
 	JAccess  interfaces.JobAccess
@@ -15,6 +16,10 @@ var (
 	MMAccess interfaces.MetricModelAccess
 	UAccess  interfaces.UniqueryAccess
 )
+
+func SetAuthAccess(aa interfaces.AuthAccess) {
+	AA = aa
+}
 
 func SetJobAccess(jAccess interfaces.JobAccess) {
 	JAccess = jAccess

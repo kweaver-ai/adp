@@ -26,7 +26,7 @@ func init() {
 // 解密
 func DecryptPassword(pasword string) string {
 	if pasword != "" {
-		pasword = aesCipter.Decrypt(pasword)
+		pasword, _ = aesCipter.Decrypt(pasword)
 	}
 	return pasword
 }
@@ -34,7 +34,7 @@ func DecryptPassword(pasword string) string {
 // 加密
 func EncryptPassword(password string) string {
 	if password != "" {
-		password = aesCipter.Encrypt(password)
+		password, _ = aesCipter.Encrypt(password)
 	}
 	return password
 }

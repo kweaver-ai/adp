@@ -9,17 +9,19 @@ import (
 	"bytes"
 	"net/http"
 	"net/http/httptest"
-	"ontology-manager/common"
-	oerrors "ontology-manager/errors"
-	"ontology-manager/interfaces"
-	dmock "ontology-manager/interfaces/mock"
 	"testing"
 
 	"github.com/bytedance/sonic"
 	"github.com/gin-gonic/gin"
 	"github.com/golang/mock/gomock"
+	"github.com/kweaver-ai/kweaver-go-lib/hydra"
 	"github.com/kweaver-ai/kweaver-go-lib/rest"
 	. "github.com/smartystreets/goconvey/convey"
+
+	"ontology-manager/common"
+	oerrors "ontology-manager/errors"
+	"ontology-manager/interfaces"
+	dmock "ontology-manager/interfaces/mock"
 )
 
 func MockNewKnowledgeNetworkRestHandler(appSetting *common.AppSetting,
@@ -52,7 +54,7 @@ func Test_KnowledgeNetworkRestHandler_CreateKN(t *testing.T) {
 		handler := MockNewKnowledgeNetworkRestHandler(appSetting, as, kns)
 		handler.RegisterPublic(engine)
 
-		as.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(rest.Visitor{}, nil)
+		as.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(hydra.Visitor{}, nil)
 
 		url := "/api/ontology-manager/v1/knowledge-networks"
 
@@ -148,7 +150,7 @@ func Test_KnowledgeNetworkRestHandler_UpdateKN(t *testing.T) {
 		handler := MockNewKnowledgeNetworkRestHandler(appSetting, as, kns)
 		handler.RegisterPublic(engine)
 
-		as.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(rest.Visitor{}, nil)
+		as.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(hydra.Visitor{}, nil)
 
 		knID := "kn1"
 		url := "/api/ontology-manager/v1/knowledge-networks/" + knID
@@ -214,7 +216,7 @@ func Test_KnowledgeNetworkRestHandler_DeleteKN(t *testing.T) {
 		handler := MockNewKnowledgeNetworkRestHandler(appSetting, as, kns)
 		handler.RegisterPublic(engine)
 
-		as.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(rest.Visitor{}, nil)
+		as.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(hydra.Visitor{}, nil)
 
 		knID := "kn1"
 		url := "/api/ontology-manager/v1/knowledge-networks/" + knID
@@ -263,7 +265,7 @@ func Test_KnowledgeNetworkRestHandler_ListKNs(t *testing.T) {
 		handler := MockNewKnowledgeNetworkRestHandler(appSetting, as, kns)
 		handler.RegisterPublic(engine)
 
-		as.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(rest.Visitor{}, nil)
+		as.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(hydra.Visitor{}, nil)
 
 		url := "/api/ontology-manager/v1/knowledge-networks"
 
@@ -306,7 +308,7 @@ func Test_KnowledgeNetworkRestHandler_GetKN(t *testing.T) {
 		handler := MockNewKnowledgeNetworkRestHandler(appSetting, as, kns)
 		handler.RegisterPublic(engine)
 
-		as.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(rest.Visitor{}, nil)
+		as.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(hydra.Visitor{}, nil)
 
 		knID := "kn1"
 		url := "/api/ontology-manager/v1/knowledge-networks/" + knID
@@ -359,7 +361,7 @@ func Test_KnowledgeNetworkRestHandler_GetRelationTypePaths(t *testing.T) {
 		handler := MockNewKnowledgeNetworkRestHandler(appSetting, as, kns)
 		handler.RegisterPublic(engine)
 
-		as.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(rest.Visitor{}, nil)
+		as.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(hydra.Visitor{}, nil)
 
 		knID := "kn1"
 		url := "/api/ontology-manager/v1/knowledge-networks/" + knID + "/relation-type-paths"

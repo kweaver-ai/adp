@@ -15,11 +15,13 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/kweaver-ai/kweaver-go-lib/audit"
+	"github.com/kweaver-ai/kweaver-go-lib/hydra"
 	"github.com/kweaver-ai/kweaver-go-lib/logger"
 	"github.com/kweaver-ai/kweaver-go-lib/rest"
 	"github.com/rs/xid"
 
 	"data-model/common"
+	"data-model/common/visitor"
 	derrors "data-model/errors"
 	"data-model/interfaces"
 )
@@ -51,7 +53,7 @@ func (r *restHandler) CreateEventModelByIn(c *gin.Context) {
 	logger.Debug("Handler CreateEventModelByIn Start")
 	// 内部接口 user_id从header中取，跳过用户有效认证，后面在权限校验时就会校验这个用户是否有权限，无效用户无权限
 	// 自行构建一个visitor
-	visitor := GenerateVisitor(c)
+	visitor := visitor.GenerateVisitor(c)
 	r.CreateEventModel(c, visitor)
 }
 
@@ -68,7 +70,7 @@ func (r *restHandler) CreateEventModelByEx(c *gin.Context) {
 }
 
 // 创建事件模型
-func (r *restHandler) CreateEventModel(c *gin.Context, visitor rest.Visitor) {
+func (r *restHandler) CreateEventModel(c *gin.Context, visitor hydra.Visitor) {
 	logger.Debug("Create EventModel Start")
 	ctx := rest.GetLanguageCtx(c)
 
@@ -373,7 +375,7 @@ func (r *restHandler) UpdateEventModelByIn(c *gin.Context) {
 	logger.Debug("Handler UpdateEventModelByIn Start")
 	// 内部接口 user_id从header中取，跳过用户有效认证，后面在权限校验时就会校验这个用户是否有权限，无效用户无权限
 	// 自行构建一个visitor
-	visitor := GenerateVisitor(c)
+	visitor := visitor.GenerateVisitor(c)
 	r.UpdateEventModel(c, visitor)
 }
 
@@ -390,7 +392,7 @@ func (r *restHandler) UpdateEventModelByEx(c *gin.Context) {
 }
 
 // 更新事件模型
-func (r *restHandler) UpdateEventModel(c *gin.Context, visitor rest.Visitor) {
+func (r *restHandler) UpdateEventModel(c *gin.Context, visitor hydra.Visitor) {
 	logger.Debug("Handler UpdateEventModel Start")
 	ctx := rest.GetLanguageCtx(c)
 
@@ -569,17 +571,18 @@ func (r *restHandler) DeleteEventModels(c *gin.Context) {
 	if err != nil {
 		//NOTE 处理未找到对象错误
 		httpErr := err.(*rest.HTTPError)
-		if httpErr.BaseError.ErrorCode == derrors.EventModel_EventModelNotFound {
+		switch httpErr.BaseError.ErrorCode {
+		case derrors.EventModel_EventModelNotFound:
 			audit.NewWarnLogWithError(audit.OPERATION, audit.DELETE, audit.TransforOperator(visitor),
 				GenerateEventModelAuditObject(emdr.EventModelIDs, ""), &httpErr.BaseError)
 			rest.ReplyError(c, httpErr)
 			return
-		} else if httpErr.BaseError.ErrorCode == derrors.EventModel_RefByOther {
+		case derrors.EventModel_RefByOther:
 			audit.NewWarnLogWithError(audit.OPERATION, audit.DELETE, audit.TransforOperator(visitor),
 				GenerateEventModelAuditObject(emdr.EventModelIDs, ""), &httpErr.BaseError)
 			rest.ReplyError(c, httpErr)
 			return
-		} else {
+		default:
 			//NOTE 处理内部错误
 			httpErr := rest.NewHTTPError(ctx, http.StatusInternalServerError, derrors.EventModel_InternalError).
 				WithErrorDetails("delete event model failed")
@@ -607,7 +610,7 @@ func (r *restHandler) QueryEventModelsByIn(c *gin.Context) {
 	logger.Debug("Handler QueryEventModelsByIn Start")
 	// 内部接口 user_id从header中取，跳过用户有效认证，后面在权限校验时就会校验这个用户是否有权限，无效用户无权限
 	// 自行构建一个visitor
-	visitor := GenerateVisitor(c)
+	visitor := visitor.GenerateVisitor(c)
 	r.QueryEventModels(c, visitor)
 }
 
@@ -624,7 +627,7 @@ func (r *restHandler) QueryEventModelsByEx(c *gin.Context) {
 }
 
 // 查询事件模型列表
-func (r *restHandler) QueryEventModels(c *gin.Context, visitor rest.Visitor) {
+func (r *restHandler) QueryEventModels(c *gin.Context, visitor hydra.Visitor) {
 	logger.Debug("Query EventModels Start")
 	ctx := rest.GetLanguageCtx(c)
 
@@ -692,7 +695,7 @@ func (r *restHandler) QueryEventModelByIDByIn(c *gin.Context) {
 	logger.Debug("Handler QueryEventModelByIDByIn Start")
 	// 内部接口 user_id从header中取，跳过用户有效认证，后面在权限校验时就会校验这个用户是否有权限，无效用户无权限
 	// 自行构建一个visitor
-	visitor := GenerateVisitor(c)
+	visitor := visitor.GenerateVisitor(c)
 	r.QueryEventModelByID(c, visitor)
 }
 
@@ -709,7 +712,7 @@ func (r *restHandler) QueryEventModelByIDByEx(c *gin.Context) {
 }
 
 // 按 id 获取事件模型对象信息
-func (r *restHandler) QueryEventModelByID(c *gin.Context, visitor rest.Visitor) {
+func (r *restHandler) QueryEventModelByID(c *gin.Context, visitor hydra.Visitor) {
 	logger.Debug("Handler GetEventModel Start")
 	ctx := rest.GetLanguageCtx(c)
 
@@ -803,7 +806,7 @@ func (r *restHandler) UpdateEventTaskStatusByIn(c *gin.Context) {
 	logger.Debug("Handler UpdateEventTaskStatusByIn Start")
 	// 内部接口 user_id从header中取，跳过用户有效认证，后面在权限校验时就会校验这个用户是否有权限，无效用户无权限
 	// 自行构建一个visitor
-	visitor := GenerateVisitor(c)
+	visitor := visitor.GenerateVisitor(c)
 	r.UpdateEventTaskStatus(c, visitor)
 }
 
@@ -819,7 +822,7 @@ func (r *restHandler) UpdateEventTaskStatusByEx(c *gin.Context) {
 	r.UpdateEventTaskStatus(c, visitor)
 }
 
-func (r *restHandler) UpdateEventTaskStatus(c *gin.Context, visitor rest.Visitor) {
+func (r *restHandler) UpdateEventTaskStatus(c *gin.Context, visitor hydra.Visitor) {
 	ctx := rest.GetLanguageCtx(c)
 
 	accountInfo := interfaces.AccountInfo{

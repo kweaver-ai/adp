@@ -14,6 +14,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/kweaver-ai/TelemetrySDK-Go/exporter/v2/ar_trace"
 	"github.com/kweaver-ai/kweaver-go-lib/audit"
+	"github.com/kweaver-ai/kweaver-go-lib/hydra"
 	"github.com/kweaver-ai/kweaver-go-lib/logger"
 	o11y "github.com/kweaver-ai/kweaver-go-lib/observability"
 	"github.com/kweaver-ai/kweaver-go-lib/rest"
@@ -21,6 +22,7 @@ import (
 	"go.opentelemetry.io/otel/trace"
 
 	"ontology-manager/common"
+	"ontology-manager/common/visitor"
 	oerrors "ontology-manager/errors"
 	"ontology-manager/interfaces"
 )
@@ -56,7 +58,7 @@ func (r *restHandler) CreateActionTypesByIn(c *gin.Context) {
 	logger.Debug("Handler CreateActionTypesByIn Start")
 	// 内部接口 account_id从header中取，跳过用户有效认证，后面在权限校验时就会校验这个用户是否有权限，无效用户无权限
 	// 自行构建一个visitor
-	visitor := GenerateVisitor(c)
+	visitor := visitor.GenerateVisitor(c)
 	r.CreateActionTypes(c, visitor)
 }
 
@@ -76,7 +78,7 @@ func (r *restHandler) CreateActionTypesByEx(c *gin.Context) {
 }
 
 // 创建行动类
-func (r *restHandler) CreateActionTypes(c *gin.Context, visitor rest.Visitor) {
+func (r *restHandler) CreateActionTypes(c *gin.Context, visitor hydra.Visitor) {
 	logger.Debug("Handler CreateActionTypes Start")
 	ctx, span := ar_trace.Tracer.Start(rest.GetLanguageCtx(c),
 		"创建行动类", trace.WithSpanKind(trace.SpanKindServer))
@@ -200,7 +202,7 @@ func (r *restHandler) UpdateActionTypeByIn(c *gin.Context) {
 	logger.Debug("Handler UpdateActionTypeByIn Start")
 	// 内部接口 account_id从header中取，跳过用户有效认证，后面在权限校验时就会校验这个用户是否有权限，无效用户无权限
 	// 自行构建一个visitor
-	visitor := GenerateVisitor(c)
+	visitor := visitor.GenerateVisitor(c)
 	r.UpdateActionType(c, visitor)
 }
 
@@ -220,7 +222,7 @@ func (r *restHandler) UpdateActionTypeByEx(c *gin.Context) {
 }
 
 // 更新行动类
-func (r *restHandler) UpdateActionType(c *gin.Context, visitor rest.Visitor) {
+func (r *restHandler) UpdateActionType(c *gin.Context, visitor hydra.Visitor) {
 	logger.Debug("Handler UpdateActionType Start")
 	ctx, span := ar_trace.Tracer.Start(rest.GetLanguageCtx(c),
 		"修改行动类", trace.WithSpanKind(trace.SpanKindServer))
@@ -478,7 +480,7 @@ func (r *restHandler) ListActionTypesByIn(c *gin.Context) {
 	logger.Debug("Handler ListActionTypesByIn Start")
 	// 内部接口 account_id从header中取，跳过用户有效认证，后面在权限校验时就会校验这个用户是否有权限，无效用户无权限
 	// 自行构建一个visitor
-	visitor := GenerateVisitor(c)
+	visitor := visitor.GenerateVisitor(c)
 	r.ListActionTypes(c, visitor)
 }
 
@@ -498,7 +500,7 @@ func (r *restHandler) ListActionTypesByEx(c *gin.Context) {
 }
 
 // 分页获取行动类列表
-func (r *restHandler) ListActionTypes(c *gin.Context, visitor rest.Visitor) {
+func (r *restHandler) ListActionTypes(c *gin.Context, visitor hydra.Visitor) {
 	logger.Debug("ListActionTypes Start")
 	ctx, span := ar_trace.Tracer.Start(rest.GetLanguageCtx(c),
 		"分页获取行动类列表", trace.WithSpanKind(trace.SpanKindServer))
@@ -618,7 +620,7 @@ func (r *restHandler) GetActionTypesByIn(c *gin.Context) {
 	logger.Debug("Handler GetActionTypesByIn Start")
 	// 内部接口 user_id从header中取，跳过用户有效认证，后面在权限校验时就会校验这个用户是否有权限，无效用户无权限
 	// 自行构建一个visitor
-	visitor := GenerateVisitor(c)
+	visitor := visitor.GenerateVisitor(c)
 	r.GetActionTypes(c, visitor)
 }
 
@@ -638,7 +640,7 @@ func (r *restHandler) GetActionTypesByEx(c *gin.Context) {
 }
 
 // 按 id 获取行动类对象信息
-func (r *restHandler) GetActionTypes(c *gin.Context, visitor rest.Visitor) {
+func (r *restHandler) GetActionTypes(c *gin.Context, visitor hydra.Visitor) {
 	logger.Debug("Handler GetActionTypes Start")
 	ctx, span := ar_trace.Tracer.Start(rest.GetLanguageCtx(c),
 		"driver layer: Get action type", trace.WithSpanKind(trace.SpanKindServer))
@@ -710,7 +712,7 @@ func (r *restHandler) SearchActionTypesByIn(c *gin.Context) {
 	logger.Debug("Handler SearchActionTypesByIn Start")
 	// 内部接口 user_id从header中取，跳过用户有效认证，后面在权限校验时就会校验这个用户是否有权限，无效用户无权限
 	// 自行构建一个visitor
-	visitor := GenerateVisitor(c)
+	visitor := visitor.GenerateVisitor(c)
 	r.SearchActionTypes(c, visitor)
 }
 
@@ -730,7 +732,7 @@ func (r *restHandler) SearchActionTypesByEx(c *gin.Context) {
 }
 
 // 检索行动类
-func (r *restHandler) SearchActionTypes(c *gin.Context, visitor rest.Visitor) {
+func (r *restHandler) SearchActionTypes(c *gin.Context, visitor hydra.Visitor) {
 	logger.Debug("SearchActionTypes Start")
 	ctx, span := ar_trace.Tracer.Start(rest.GetLanguageCtx(c),
 		"检索行动类", trace.WithSpanKind(trace.SpanKindServer))

@@ -13,6 +13,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/kweaver-ai/TelemetrySDK-Go/exporter/v2/ar_trace"
 	"github.com/kweaver-ai/kweaver-go-lib/audit"
+	"github.com/kweaver-ai/kweaver-go-lib/hydra"
 	"github.com/kweaver-ai/kweaver-go-lib/logger"
 	o11y "github.com/kweaver-ai/kweaver-go-lib/observability"
 	"github.com/kweaver-ai/kweaver-go-lib/rest"
@@ -20,6 +21,7 @@ import (
 	"go.opentelemetry.io/otel/trace"
 
 	"ontology-manager/common"
+	"ontology-manager/common/visitor"
 	oerrors "ontology-manager/errors"
 	"ontology-manager/interfaces"
 )
@@ -27,7 +29,7 @@ import (
 // CreateActionScheduleByIn creates a new action schedule (internal)
 func (r *restHandler) CreateActionScheduleByIn(c *gin.Context) {
 	logger.Debug("Handler CreateActionScheduleByIn Start")
-	visitor := GenerateVisitor(c)
+	visitor := visitor.GenerateVisitor(c)
 	r.CreateActionSchedule(c, visitor)
 }
 
@@ -45,7 +47,7 @@ func (r *restHandler) CreateActionScheduleByEx(c *gin.Context) {
 }
 
 // CreateActionSchedule creates a new action schedule (shared logic)
-func (r *restHandler) CreateActionSchedule(c *gin.Context, visitor rest.Visitor) {
+func (r *restHandler) CreateActionSchedule(c *gin.Context, visitor hydra.Visitor) {
 	ctx, span := ar_trace.Tracer.Start(rest.GetLanguageCtx(c), "创建行动计划", trace.WithSpanKind(trace.SpanKindServer))
 	defer span.End()
 
@@ -133,7 +135,7 @@ func (r *restHandler) CreateActionSchedule(c *gin.Context, visitor rest.Visitor)
 // UpdateActionScheduleByIn updates an existing action schedule (internal)
 func (r *restHandler) UpdateActionScheduleByIn(c *gin.Context) {
 	logger.Debug("Handler UpdateActionScheduleByIn Start")
-	visitor := GenerateVisitor(c)
+	visitor := visitor.GenerateVisitor(c)
 	r.UpdateActionSchedule(c, visitor)
 }
 
@@ -151,7 +153,7 @@ func (r *restHandler) UpdateActionScheduleByEx(c *gin.Context) {
 }
 
 // UpdateActionSchedule updates an existing action schedule (shared logic)
-func (r *restHandler) UpdateActionSchedule(c *gin.Context, visitor rest.Visitor) {
+func (r *restHandler) UpdateActionSchedule(c *gin.Context, visitor hydra.Visitor) {
 	ctx, span := ar_trace.Tracer.Start(rest.GetLanguageCtx(c), "更新行动计划", trace.WithSpanKind(trace.SpanKindServer))
 	defer span.End()
 
@@ -225,7 +227,7 @@ func (r *restHandler) UpdateActionSchedule(c *gin.Context, visitor rest.Visitor)
 // UpdateActionScheduleStatusByIn updates the status of an action schedule (internal)
 func (r *restHandler) UpdateActionScheduleStatusByIn(c *gin.Context) {
 	logger.Debug("Handler UpdateActionScheduleStatusByIn Start")
-	visitor := GenerateVisitor(c)
+	visitor := visitor.GenerateVisitor(c)
 	r.UpdateActionScheduleStatus(c, visitor)
 }
 
@@ -243,7 +245,7 @@ func (r *restHandler) UpdateActionScheduleStatusByEx(c *gin.Context) {
 }
 
 // UpdateActionScheduleStatus updates the status of an action schedule (shared logic)
-func (r *restHandler) UpdateActionScheduleStatus(c *gin.Context, visitor rest.Visitor) {
+func (r *restHandler) UpdateActionScheduleStatus(c *gin.Context, visitor hydra.Visitor) {
 	ctx, span := ar_trace.Tracer.Start(rest.GetLanguageCtx(c), "更新行动计划状态", trace.WithSpanKind(trace.SpanKindServer))
 	defer span.End()
 
@@ -307,7 +309,7 @@ func (r *restHandler) UpdateActionScheduleStatus(c *gin.Context, visitor rest.Vi
 // DeleteActionSchedulesByIn deletes action schedules (internal)
 func (r *restHandler) DeleteActionSchedulesByIn(c *gin.Context) {
 	logger.Debug("Handler DeleteActionSchedulesByIn Start")
-	visitor := GenerateVisitor(c)
+	visitor := visitor.GenerateVisitor(c)
 	r.DeleteActionSchedules(c, visitor)
 }
 
@@ -325,7 +327,7 @@ func (r *restHandler) DeleteActionSchedulesByEx(c *gin.Context) {
 }
 
 // DeleteActionSchedules deletes action schedules (shared logic)
-func (r *restHandler) DeleteActionSchedules(c *gin.Context, visitor rest.Visitor) {
+func (r *restHandler) DeleteActionSchedules(c *gin.Context, visitor hydra.Visitor) {
 	ctx, span := ar_trace.Tracer.Start(rest.GetLanguageCtx(c), "删除行动计划", trace.WithSpanKind(trace.SpanKindServer))
 	defer span.End()
 
@@ -377,7 +379,7 @@ func (r *restHandler) DeleteActionSchedules(c *gin.Context, visitor rest.Visitor
 // ListActionSchedulesByIn lists action schedules (internal)
 func (r *restHandler) ListActionSchedulesByIn(c *gin.Context) {
 	logger.Debug("Handler ListActionSchedulesByIn Start")
-	visitor := GenerateVisitor(c)
+	visitor := visitor.GenerateVisitor(c)
 	r.ListActionSchedules(c, visitor)
 }
 
@@ -395,7 +397,7 @@ func (r *restHandler) ListActionSchedulesByEx(c *gin.Context) {
 }
 
 // ListActionSchedules lists action schedules (shared logic)
-func (r *restHandler) ListActionSchedules(c *gin.Context, visitor rest.Visitor) {
+func (r *restHandler) ListActionSchedules(c *gin.Context, visitor hydra.Visitor) {
 	ctx, span := ar_trace.Tracer.Start(rest.GetLanguageCtx(c), "列出行动计划", trace.WithSpanKind(trace.SpanKindServer))
 	defer span.End()
 
@@ -488,7 +490,7 @@ func (r *restHandler) ListActionSchedules(c *gin.Context, visitor rest.Visitor) 
 // GetActionScheduleByIn gets a single action schedule (internal)
 func (r *restHandler) GetActionScheduleByIn(c *gin.Context) {
 	logger.Debug("Handler GetActionScheduleByIn Start")
-	visitor := GenerateVisitor(c)
+	visitor := visitor.GenerateVisitor(c)
 	r.GetActionSchedule(c, visitor)
 }
 
@@ -506,7 +508,7 @@ func (r *restHandler) GetActionScheduleByEx(c *gin.Context) {
 }
 
 // GetActionSchedule gets a single action schedule (shared logic)
-func (r *restHandler) GetActionSchedule(c *gin.Context, visitor rest.Visitor) {
+func (r *restHandler) GetActionSchedule(c *gin.Context, visitor hydra.Visitor) {
 	ctx, span := ar_trace.Tracer.Start(rest.GetLanguageCtx(c), "获取行动计划", trace.WithSpanKind(trace.SpanKindServer))
 	defer span.End()
 

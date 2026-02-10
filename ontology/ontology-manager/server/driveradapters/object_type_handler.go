@@ -14,6 +14,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/kweaver-ai/TelemetrySDK-Go/exporter/v2/ar_trace"
 	"github.com/kweaver-ai/kweaver-go-lib/audit"
+	"github.com/kweaver-ai/kweaver-go-lib/hydra"
 	"github.com/kweaver-ai/kweaver-go-lib/logger"
 	o11y "github.com/kweaver-ai/kweaver-go-lib/observability"
 	"github.com/kweaver-ai/kweaver-go-lib/rest"
@@ -21,6 +22,7 @@ import (
 	"go.opentelemetry.io/otel/trace"
 
 	"ontology-manager/common"
+	"ontology-manager/common/visitor"
 	oerrors "ontology-manager/errors"
 	"ontology-manager/interfaces"
 )
@@ -56,7 +58,7 @@ func (r *restHandler) CreateObjectTypesByIn(c *gin.Context) {
 	logger.Debug("Handler CreateObjectTypesByIn Start")
 	// 内部接口 user_id从header中取，跳过用户有效认证，后面在权限校验时就会校验这个用户是否有权限，无效用户无权限
 	// 自行构建一个visitor
-	visitor := GenerateVisitor(c)
+	visitor := visitor.GenerateVisitor(c)
 	r.CreateObjectTypes(c, visitor)
 }
 
@@ -76,7 +78,7 @@ func (r *restHandler) CreateObjectTypesByEx(c *gin.Context) {
 }
 
 // 创建对象类
-func (r *restHandler) CreateObjectTypes(c *gin.Context, visitor rest.Visitor) {
+func (r *restHandler) CreateObjectTypes(c *gin.Context, visitor hydra.Visitor) {
 	logger.Debug("Handler CreateObjectTypes Start")
 	ctx, span := ar_trace.Tracer.Start(rest.GetLanguageCtx(c),
 		"创建对象类", trace.WithSpanKind(trace.SpanKindServer))
@@ -202,7 +204,7 @@ func (r *restHandler) UpdateObjectTypeByIn(c *gin.Context) {
 	logger.Debug("Handler UpdateObjectTypeByIn Start")
 	// 内部接口 user_id从header中取，跳过用户有效认证，后面在权限校验时就会校验这个用户是否有权限，无效用户无权限
 	// 自行构建一个visitor
-	visitor := GenerateVisitor(c)
+	visitor := visitor.GenerateVisitor(c)
 	r.UpdateObjectType(c, visitor)
 }
 
@@ -222,7 +224,7 @@ func (r *restHandler) UpdateObjectTypeByEx(c *gin.Context) {
 }
 
 // 更新对象类
-func (r *restHandler) UpdateObjectType(c *gin.Context, visitor rest.Visitor) {
+func (r *restHandler) UpdateObjectType(c *gin.Context, visitor hydra.Visitor) {
 	logger.Debug("Handler UpdateObjectType Start")
 	ctx, span := ar_trace.Tracer.Start(rest.GetLanguageCtx(c),
 		"修改对象类", trace.WithSpanKind(trace.SpanKindServer))
@@ -603,7 +605,7 @@ func (r *restHandler) ListObjectTypesByIn(c *gin.Context) {
 	logger.Debug("Handler ListObjectTypesByIn Start")
 	// 内部接口 user_id从header中取，跳过用户有效认证，后面在权限校验时就会校验这个用户是否有权限，无效用户无权限
 	// 自行构建一个visitor
-	visitor := GenerateVisitor(c)
+	visitor := visitor.GenerateVisitor(c)
 	r.ListObjectTypes(c, visitor)
 }
 
@@ -623,7 +625,7 @@ func (r *restHandler) ListObjectTypesByEx(c *gin.Context) {
 }
 
 // 分页获取对象类列表
-func (r *restHandler) ListObjectTypes(c *gin.Context, visitor rest.Visitor) {
+func (r *restHandler) ListObjectTypes(c *gin.Context, visitor hydra.Visitor) {
 	logger.Debug("ListObjectTypes Start")
 	ctx, span := ar_trace.Tracer.Start(rest.GetLanguageCtx(c),
 		"分页获取对象类列表", trace.WithSpanKind(trace.SpanKindServer))
@@ -737,7 +739,7 @@ func (r *restHandler) GetObjectTypesByIn(c *gin.Context) {
 	logger.Debug("Handler GetObjectTypesByIn Start")
 	// 内部接口 user_id从header中取，跳过用户有效认证，后面在权限校验时就会校验这个用户是否有权限，无效用户无权限
 	// 自行构建一个visitor
-	visitor := GenerateVisitor(c)
+	visitor := visitor.GenerateVisitor(c)
 	r.GetObjectTypes(c, visitor)
 }
 
@@ -757,7 +759,7 @@ func (r *restHandler) GetObjectTypesByEx(c *gin.Context) {
 }
 
 // 按 id 获取对象类对象信息
-func (r *restHandler) GetObjectTypes(c *gin.Context, visitor rest.Visitor) {
+func (r *restHandler) GetObjectTypes(c *gin.Context, visitor hydra.Visitor) {
 	logger.Debug("Handler GetObjectTypes Start")
 	ctx, span := ar_trace.Tracer.Start(rest.GetLanguageCtx(c),
 		"driver layer: Get object type", trace.WithSpanKind(trace.SpanKindServer))
@@ -829,7 +831,7 @@ func (r *restHandler) SearchObjectTypesByIn(c *gin.Context) {
 	logger.Debug("Handler SearchObjectTypesByIn Start")
 	// 内部接口 user_id从header中取，跳过用户有效认证，后面在权限校验时就会校验这个用户是否有权限，无效用户无权限
 	// 自行构建一个visitor
-	visitor := GenerateVisitor(c)
+	visitor := visitor.GenerateVisitor(c)
 	r.SearchObjectTypes(c, visitor)
 }
 
@@ -849,7 +851,7 @@ func (r *restHandler) SearchObjectTypesByEx(c *gin.Context) {
 }
 
 // 检索对象类
-func (r *restHandler) SearchObjectTypes(c *gin.Context, visitor rest.Visitor) {
+func (r *restHandler) SearchObjectTypes(c *gin.Context, visitor hydra.Visitor) {
 	logger.Debug("SearchObjectTypes Start")
 	ctx, span := ar_trace.Tracer.Start(rest.GetLanguageCtx(c),
 		"检索对象类", trace.WithSpanKind(trace.SpanKindServer))

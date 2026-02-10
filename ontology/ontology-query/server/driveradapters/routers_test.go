@@ -14,10 +14,12 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/golang/mock/gomock"
+	"github.com/kweaver-ai/kweaver-go-lib/hydra"
 	"github.com/kweaver-ai/kweaver-go-lib/rest"
 	. "github.com/smartystreets/goconvey/convey"
 
 	"ontology-query/common"
+	"ontology-query/common/visitor"
 	"ontology-query/interfaces"
 	dmock "ontology-query/interfaces/mock"
 )
@@ -150,9 +152,9 @@ func Test_RestHandler_verifyOAuth(t *testing.T) {
 		handler := MockNewRestHandler(appSetting, as, ats, kns, ots)
 
 		Convey("成功 - Token验证通过", func() {
-			visitor := rest.Visitor{
+			visitor := hydra.Visitor{
 				ID:   "user1",
-				Type: rest.VisitorType_User,
+				Type: hydra.VisitorType_User,
 			}
 			as.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).Return(visitor, nil)
 
@@ -166,7 +168,7 @@ func Test_RestHandler_verifyOAuth(t *testing.T) {
 		})
 
 		Convey("失败 - Token验证失败", func() {
-			as.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).Return(rest.Visitor{}, rest.NewHTTPError(context.TODO(), http.StatusUnauthorized, rest.PublicError_Unauthorized))
+			as.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).Return(hydra.Visitor{}, rest.NewHTTPError(context.TODO(), http.StatusUnauthorized, rest.PublicError_Unauthorized))
 
 			req := httptest.NewRequest(http.MethodGet, "/test", nil)
 			w := httptest.NewRecorder()
@@ -195,7 +197,7 @@ func Test_GenerateVisitor(t *testing.T) {
 			c, _ := gin.CreateTestContext(httptest.NewRecorder())
 			c.Request = req
 
-			visitor := GenerateVisitor(c)
+			visitor := visitor.GenerateVisitor(c)
 			So(visitor.ID, ShouldEqual, "user1")
 			So(string(visitor.Type), ShouldEqual, "user")
 			So(visitor.Mac, ShouldEqual, "mac123")
@@ -207,7 +209,7 @@ func Test_GenerateVisitor(t *testing.T) {
 			c, _ := gin.CreateTestContext(httptest.NewRecorder())
 			c.Request = req
 
-			visitor := GenerateVisitor(c)
+			visitor := visitor.GenerateVisitor(c)
 			So(visitor.ID, ShouldEqual, "")
 			So(visitor.TokenID, ShouldEqual, "")
 		})

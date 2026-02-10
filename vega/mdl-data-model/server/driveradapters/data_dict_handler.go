@@ -15,6 +15,7 @@ import (
 	"github.com/kweaver-ai/TelemetrySDK-Go/exporter/v2/ar_trace"
 	"github.com/kweaver-ai/kweaver-go-lib/audit"
 	libCommon "github.com/kweaver-ai/kweaver-go-lib/common"
+	"github.com/kweaver-ai/kweaver-go-lib/hydra"
 	"github.com/kweaver-ai/kweaver-go-lib/logger"
 	o11y "github.com/kweaver-ai/kweaver-go-lib/observability"
 	"github.com/kweaver-ai/kweaver-go-lib/rest"
@@ -22,6 +23,7 @@ import (
 	"go.opentelemetry.io/otel/trace"
 
 	"data-model/common"
+	"data-model/common/visitor"
 	derrors "data-model/errors"
 	"data-model/interfaces"
 )
@@ -31,7 +33,7 @@ func (r *restHandler) ListDataDictsByIn(c *gin.Context) {
 	logger.Debug("Handler ListDataDictsByIn Start")
 	// 内部接口 user_id从header中取，跳过用户有效认证，后面在权限校验时就会校验这个用户是否有权限，无效用户无权限
 	// 自行构建一个visitor
-	visitor := GenerateVisitor(c)
+	visitor := visitor.GenerateVisitor(c)
 	r.ListDataDicts(c, visitor)
 }
 
@@ -51,7 +53,7 @@ func (r *restHandler) ListDataDictsByEx(c *gin.Context) {
 }
 
 // 分页查询数据字典
-func (r *restHandler) ListDataDicts(c *gin.Context, visitor rest.Visitor) {
+func (r *restHandler) ListDataDicts(c *gin.Context, visitor hydra.Visitor) {
 	logger.Debug("Handler ListDicts Start")
 	ctx, span := ar_trace.Tracer.Start(rest.GetLanguageCtx(c), "分页获取数据字典列表",
 		trace.WithSpanKind(trace.SpanKindServer))
@@ -149,7 +151,7 @@ func (r *restHandler) GetDataDictsByIn(c *gin.Context) {
 	logger.Debug("Handler GetDataDictsByIn Start")
 	// 内部接口 user_id从header中取，跳过用户有效认证，后面在权限校验时就会校验这个用户是否有权限，无效用户无权限
 	// 自行构建一个visitor
-	visitor := GenerateVisitor(c)
+	visitor := visitor.GenerateVisitor(c)
 	r.GetDataDicts(c, visitor)
 }
 
@@ -169,7 +171,7 @@ func (r *restHandler) GetDataDictsByEx(c *gin.Context) {
 }
 
 // 批量 获取/导出 数据字典
-func (r *restHandler) GetDataDicts(c *gin.Context, visitor rest.Visitor) {
+func (r *restHandler) GetDataDicts(c *gin.Context, visitor hydra.Visitor) {
 	logger.Debug("Handler GetDataDicts Start")
 	ctx, span := ar_trace.Tracer.Start(rest.GetLanguageCtx(c), "获取数据字典",
 		trace.WithSpanKind(trace.SpanKindServer))
@@ -224,7 +226,7 @@ func (r *restHandler) CreateDataDictsByIn(c *gin.Context) {
 	logger.Debug("Handler CreateDataDictsByIn Start")
 	// 内部接口 user_id从header中取，跳过用户有效认证，后面在权限校验时就会校验这个用户是否有权限，无效用户无权限
 	// 自行构建一个visitor
-	visitor := GenerateVisitor(c)
+	visitor := visitor.GenerateVisitor(c)
 	r.CreateDataDicts(c, visitor)
 }
 
@@ -244,7 +246,7 @@ func (r *restHandler) CreateDataDictsByEx(c *gin.Context) {
 }
 
 // 创建数据字典
-func (r *restHandler) CreateDataDicts(c *gin.Context, visitor rest.Visitor) {
+func (r *restHandler) CreateDataDicts(c *gin.Context, visitor hydra.Visitor) {
 	logger.Debug("Handler CreateDataDict Start")
 	ctx, span := ar_trace.Tracer.Start(rest.GetLanguageCtx(c), "创建数据字典",
 		trace.WithSpanKind(trace.SpanKindServer))
@@ -473,7 +475,7 @@ func (r *restHandler) UpdateDataDictByIn(c *gin.Context) {
 	logger.Debug("Handler UpdateDataDictByIn Start")
 	// 内部接口 user_id从header中取，跳过用户有效认证，后面在权限校验时就会校验这个用户是否有权限，无效用户无权限
 	// 自行构建一个visitor
-	visitor := GenerateVisitor(c)
+	visitor := visitor.GenerateVisitor(c)
 	r.UpdateDataDict(c, visitor)
 }
 
@@ -493,7 +495,7 @@ func (r *restHandler) UpdateDataDictByEx(c *gin.Context) {
 }
 
 // 更新单个数据字典
-func (r *restHandler) UpdateDataDict(c *gin.Context, visitor rest.Visitor) {
+func (r *restHandler) UpdateDataDict(c *gin.Context, visitor hydra.Visitor) {
 	logger.Debug("Handler UpdateDataDict Start")
 	ctx, span := ar_trace.Tracer.Start(rest.GetLanguageCtx(c), "修改数据字典",
 		trace.WithSpanKind(trace.SpanKindServer))

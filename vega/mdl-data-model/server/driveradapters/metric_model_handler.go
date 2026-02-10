@@ -15,6 +15,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/kweaver-ai/TelemetrySDK-Go/exporter/v2/ar_trace"
 	"github.com/kweaver-ai/kweaver-go-lib/audit"
+	"github.com/kweaver-ai/kweaver-go-lib/hydra"
 	"github.com/kweaver-ai/kweaver-go-lib/logger"
 	o11y "github.com/kweaver-ai/kweaver-go-lib/observability"
 	"github.com/kweaver-ai/kweaver-go-lib/rest"
@@ -22,6 +23,7 @@ import (
 	"go.opentelemetry.io/otel/trace"
 
 	"data-model/common"
+	"data-model/common/visitor"
 	derrors "data-model/errors"
 	"data-model/interfaces"
 )
@@ -31,7 +33,7 @@ func (r *restHandler) CreateMetricModelsByIn(c *gin.Context) {
 	logger.Debug("Handler CreateMetricModelsByIn Start")
 	// 内部接口 user_id从header中取，跳过用户有效认证，后面在权限校验时就会校验这个用户是否有权限，无效用户无权限
 	// 自行构建一个visitor
-	visitor := GenerateVisitor(c)
+	visitor := visitor.GenerateVisitor(c)
 	r.CreateMetricModels(c, visitor)
 }
 
@@ -51,7 +53,7 @@ func (r *restHandler) CreateMetricModelsByEx(c *gin.Context) {
 }
 
 // 创建指标模型
-func (r *restHandler) CreateMetricModels(c *gin.Context, visitor rest.Visitor) {
+func (r *restHandler) CreateMetricModels(c *gin.Context, visitor hydra.Visitor) {
 	//创建时新增参数groupName ，需要进行校验
 	//请求体以及数据库表中重复名称校验需要groupName 和modelName
 	//需要通过groupName更新groupID才能创建
@@ -345,7 +347,7 @@ func (r *restHandler) UpdateMetricModelByIn(c *gin.Context) {
 	logger.Debug("Handler UpdateMetricModelByIn Start")
 	// 内部接口 user_id从header中取，跳过用户有效认证，后面在权限校验时就会校验这个用户是否有权限，无效用户无权限
 	// 自行构建一个visitor
-	visitor := GenerateVisitor(c)
+	visitor := visitor.GenerateVisitor(c)
 	r.UpdateMetricModel(c, visitor)
 }
 
@@ -365,7 +367,7 @@ func (r *restHandler) UpdateMetricModelByEx(c *gin.Context) {
 }
 
 // 更新指标模型
-func (r *restHandler) UpdateMetricModel(c *gin.Context, visitor rest.Visitor) {
+func (r *restHandler) UpdateMetricModel(c *gin.Context, visitor hydra.Visitor) {
 	logger.Debug("Handler UpdateMetricModel Start")
 	ctx, span := ar_trace.Tracer.Start(rest.GetLanguageCtx(c),
 		"修改指标模型", trace.WithSpanKind(trace.SpanKindServer))
@@ -614,7 +616,7 @@ func (r *restHandler) ListMetricModelsByIn(c *gin.Context) {
 	logger.Debug("Handler ListMetricModelsByIn Start")
 	// 内部接口 user_id从header中取，跳过用户有效认证，后面在权限校验时就会校验这个用户是否有权限，无效用户无权限
 	// 自行构建一个visitor
-	visitor := GenerateVisitor(c)
+	visitor := visitor.GenerateVisitor(c)
 	r.ListMetricModels(c, visitor)
 }
 
@@ -634,7 +636,7 @@ func (r *restHandler) ListMetricModelsByEx(c *gin.Context) {
 }
 
 // 分页获取指标模型列表
-func (r *restHandler) ListMetricModels(c *gin.Context, visitor rest.Visitor) {
+func (r *restHandler) ListMetricModels(c *gin.Context, visitor hydra.Visitor) {
 	logger.Debug("ListMetricModels Start")
 	ctx, span := ar_trace.Tracer.Start(rest.GetLanguageCtx(c),
 		"分页获取指标模型列表", trace.WithSpanKind(trace.SpanKindServer))
@@ -741,7 +743,7 @@ func (r *restHandler) GetMetricModelsByIn(c *gin.Context) {
 	logger.Debug("Handler GetMetricModelsByIn Start")
 	// 内部接口 user_id从header中取，跳过用户有效认证，后面在权限校验时就会校验这个用户是否有权限，无效用户无权限
 	// 自行构建一个visitor
-	visitor := GenerateVisitor(c)
+	visitor := visitor.GenerateVisitor(c)
 	r.GetMetricModels(c, visitor)
 }
 
@@ -761,7 +763,7 @@ func (r *restHandler) GetMetricModelsByEx(c *gin.Context) {
 }
 
 // 按 id 获取指标模型对象信息
-func (r *restHandler) GetMetricModels(c *gin.Context, visitor rest.Visitor) {
+func (r *restHandler) GetMetricModels(c *gin.Context, visitor hydra.Visitor) {
 	logger.Debug("Handler GetMetricModels Start")
 	ctx, span := ar_trace.Tracer.Start(rest.GetLanguageCtx(c),
 		"driver layer: Get metric models", trace.WithSpanKind(trace.SpanKindServer))
@@ -957,7 +959,7 @@ func (r *restHandler) GetMetricTaskByIn(c *gin.Context) {
 	logger.Debug("Handler GetMetricTaskByIn Start")
 	// 内部接口 user_id从header中取，跳过用户有效认证，后面在权限校验时就会校验这个用户是否有权限，无效用户无权限
 	// 自行构建一个visitor
-	visitor := GenerateVisitor(c)
+	visitor := visitor.GenerateVisitor(c)
 	r.GetMetricTask(c, visitor)
 }
 
@@ -977,7 +979,7 @@ func (r *restHandler) GetMetricTaskByEx(c *gin.Context) {
 }
 
 // 按任务 id 获取指标模型持久化任务对象信息
-func (r *restHandler) GetMetricTask(c *gin.Context, visitor rest.Visitor) {
+func (r *restHandler) GetMetricTask(c *gin.Context, visitor hydra.Visitor) {
 	ctx, span := ar_trace.Tracer.Start(rest.GetLanguageCtx(c),
 		"按任务id获取指标模型持久化任务信息", trace.WithSpanKind(trace.SpanKindServer))
 	defer span.End()
@@ -1028,7 +1030,7 @@ func (r *restHandler) UpdateMetricTaskPlanTimeByIn(c *gin.Context) {
 	logger.Debug("Handler UpdateMetricTaskPlanTimeByIn Start")
 	// 内部接口 user_id从header中取，跳过用户有效认证，后面在权限校验时就会校验这个用户是否有权限，无效用户无权限
 	// 自行构建一个visitor
-	visitor := GenerateVisitor(c)
+	visitor := visitor.GenerateVisitor(c)
 	r.UpdateMetricTaskPlanTime(c, visitor)
 }
 
@@ -1048,7 +1050,7 @@ func (r *restHandler) UpdateMetricTaskPlanTimeByEx(c *gin.Context) {
 }
 
 // 更新任务的计划时间和执行状态
-func (r *restHandler) UpdateMetricTaskPlanTime(c *gin.Context, visitor rest.Visitor) {
+func (r *restHandler) UpdateMetricTaskPlanTime(c *gin.Context, visitor hydra.Visitor) {
 	ctx, span := ar_trace.Tracer.Start(rest.GetLanguageCtx(c),
 		"更新任务的计划时间", trace.WithSpanKind(trace.SpanKindServer))
 	defer span.End()

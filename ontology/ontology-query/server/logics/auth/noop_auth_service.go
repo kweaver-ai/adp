@@ -9,19 +9,24 @@ import (
 	"context"
 
 	"github.com/gin-gonic/gin"
-	"github.com/kweaver-ai/kweaver-go-lib/rest"
+	"github.com/kweaver-ai/kweaver-go-lib/hydra"
 
+	"ontology-query/common"
 	"ontology-query/interfaces"
 )
 
 // NoopAuthService 空认证服务（认证禁用时使用）
-type NoopAuthService struct{}
-
-func NewNoopAuthService() interfaces.AuthService {
-	return &NoopAuthService{}
+type NoopAuthService struct {
+	appSetting *common.AppSetting
 }
 
-func (n *NoopAuthService) VerifyToken(ctx context.Context, c *gin.Context) (rest.Visitor, error) {
+func NewNoopAuthService(appSetting *common.AppSetting) interfaces.AuthService {
+	return &NoopAuthService{
+		appSetting: appSetting,
+	}
+}
+
+func (n *NoopAuthService) VerifyToken(ctx context.Context, c *gin.Context) (hydra.Visitor, error) {
 	// 返回空 Visitor，不做任何认证校验
-	return rest.Visitor{}, nil
+	return hydra.Visitor{}, nil
 }

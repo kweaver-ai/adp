@@ -14,6 +14,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/golang/mock/gomock"
+	"github.com/kweaver-ai/kweaver-go-lib/hydra"
 	"github.com/kweaver-ai/kweaver-go-lib/rest"
 	. "github.com/smartystreets/goconvey/convey"
 
@@ -26,9 +27,9 @@ import (
 func mockNewMEventHandler(appSetting *common.AppSetting,
 	authService interfaces.AuthService, eService interfaces.EventService) (r *restHandler) {
 	r = &restHandler{
-		appSetting:  appSetting,
-		authService: authService,
-		eService:    eService,
+		appSetting: appSetting,
+		as:         authService,
+		eService:   eService,
 	}
 	r.InitMetric()
 	return r
@@ -51,7 +52,7 @@ func TestQuery(t *testing.T) {
 		handler := mockNewMEventHandler(appSetting, authMock, esMock)
 		handler.RegisterPublic(engine)
 
-		authMock.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(rest.Visitor{}, nil)
+		authMock.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(hydra.Visitor{}, nil)
 
 		url := "/api/mdl-uniquery/v1/events"
 
@@ -127,7 +128,7 @@ func TestQuerySingleEventByEventId(t *testing.T) {
 		handler := mockNewMEventHandler(appSetting, authMock, esMock)
 		handler.RegisterPublic(engine)
 
-		authMock.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(rest.Visitor{}, nil)
+		authMock.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(hydra.Visitor{}, nil)
 
 		url := "/api/mdl-uniquery/v1/event-models/498386860318393092/events/498406277530001114?start=1706600535000&end=1706603000000"
 

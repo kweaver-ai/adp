@@ -16,6 +16,7 @@ import (
 	"github.com/bytedance/sonic"
 	"github.com/gin-gonic/gin"
 	"github.com/golang/mock/gomock"
+	"github.com/kweaver-ai/kweaver-go-lib/hydra"
 	"github.com/kweaver-ai/kweaver-go-lib/rest"
 	. "github.com/smartystreets/goconvey/convey"
 
@@ -57,7 +58,7 @@ func Test_DataViewGroupRestHandler_CreateDataViewGroup(t *testing.T) {
 		handler := MockNewDataViewGroupRestHandler(appSetting, as, dvgs, dvs)
 		handler.RegisterPublic(engine)
 
-		as.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(rest.Visitor{}, nil)
+		as.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(hydra.Visitor{}, nil)
 
 		url := "/api/mdl-data-model/v1/data-view-groups"
 
@@ -168,7 +169,7 @@ func Test_DataViewGroupRestHandler_DeleteDataViewGroup(t *testing.T) {
 		handler := MockNewDataViewGroupRestHandler(appSetting, as, dvgs, dvs)
 		handler.RegisterPublic(engine)
 
-		as.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(rest.Visitor{}, nil)
+		as.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(hydra.Visitor{}, nil)
 
 		url := "/api/mdl-data-model/v1/data-view-groups/1a"
 
@@ -245,7 +246,7 @@ func Test_DataViewGroupRestHandler_UpdateDataViewGroup(t *testing.T) {
 		handler := MockNewDataViewGroupRestHandler(appSetting, as, dvgs, dvs)
 		handler.RegisterPublic(engine)
 
-		as.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(rest.Visitor{}, nil)
+		as.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(hydra.Visitor{}, nil)
 
 		url := "/api/mdl-data-model/v1/data-view-groups/1a"
 
@@ -375,7 +376,7 @@ func Test_DataViewGroupRestHandler_ListDataViewGroups(t *testing.T) {
 		handler := MockNewDataViewGroupRestHandler(appSetting, as, dvgs, dvs)
 		handler.RegisterPublic(engine)
 
-		as.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(rest.Visitor{}, nil)
+		as.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(hydra.Visitor{}, nil)
 
 		url := "/api/mdl-data-model/v1/data-view-groups"
 
@@ -434,7 +435,7 @@ func Test_DataViewGroupRestHandler_GetDataViewsInGroup(t *testing.T) {
 		handler := MockNewDataViewGroupRestHandler(appSetting, as, dvgs, dvs)
 		handler.RegisterPublic(engine)
 
-		as.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(rest.Visitor{}, nil)
+		as.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(hydra.Visitor{}, nil)
 
 		url := "/api/mdl-data-model/v1/data-view-groups/1a/data-views"
 

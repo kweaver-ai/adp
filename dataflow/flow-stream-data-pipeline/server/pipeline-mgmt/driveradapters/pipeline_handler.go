@@ -9,12 +9,14 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/kweaver-ai/TelemetrySDK-Go/exporter/v2/ar_trace"
+	"github.com/kweaver-ai/kweaver-go-lib/hydra"
 	"github.com/kweaver-ai/kweaver-go-lib/logger"
 	o11y "github.com/kweaver-ai/kweaver-go-lib/observability"
 	"github.com/kweaver-ai/kweaver-go-lib/rest"
 	"go.opentelemetry.io/otel/trace"
 
 	"flow-stream-data-pipeline/common"
+	"flow-stream-data-pipeline/common/visitor"
 	serrors "flow-stream-data-pipeline/errors"
 	"flow-stream-data-pipeline/pipeline-mgmt/interfaces"
 )
@@ -37,12 +39,12 @@ func (r *restHandler) CreatePipelineByIn(c *gin.Context) {
 	logger.Debug("Handler CreatePipelineByIn Start")
 
 	// 自行构建一个visitor
-	visitor := GenerateVisitor(c)
+	visitor := visitor.GenerateVisitor(c)
 	r.CreatePipeline(c, visitor)
 }
 
 // CreatePipeline 创建管道
-func (r *restHandler) CreatePipeline(c *gin.Context, visitor rest.Visitor) {
+func (r *restHandler) CreatePipeline(c *gin.Context, visitor hydra.Visitor) {
 	logger.Debug("Handler CreatePipeline Start")
 	ctx, span := ar_trace.Tracer.Start(rest.GetLanguageCtx(c),
 		"driver layer: Create pipeline", trace.WithSpanKind(trace.SpanKindServer))
@@ -175,12 +177,12 @@ func (r *restHandler) DeletePipelineByIn(c *gin.Context) {
 	logger.Debug("Handler DeletePipelineByIn Start")
 
 	// 自行构建一个visitor
-	visitor := GenerateVisitor(c)
+	visitor := visitor.GenerateVisitor(c)
 	r.DeletePipeline(c, visitor)
 }
 
 // Delete 删除管道
-func (r *restHandler) DeletePipeline(c *gin.Context, visitor rest.Visitor) {
+func (r *restHandler) DeletePipeline(c *gin.Context, visitor hydra.Visitor) {
 	logger.Debug("DeletePipeline")
 	ctx, span := ar_trace.Tracer.Start(rest.GetLanguageCtx(c),
 		"driver layer: Delete pipeline", trace.WithSpanKind(trace.SpanKindServer))
@@ -245,12 +247,12 @@ func (r *restHandler) UpdatePipelineByIn(c *gin.Context) {
 	logger.Debug("Handler UpdatePipelineByIn Start")
 
 	// 自行构建一个visitor
-	visitor := GenerateVisitor(c)
+	visitor := visitor.GenerateVisitor(c)
 	r.UpdatePipeline(c, visitor)
 }
 
 // UpdatePipeline 修改管道配置
-func (r *restHandler) UpdatePipeline(c *gin.Context, visitor rest.Visitor) {
+func (r *restHandler) UpdatePipeline(c *gin.Context, visitor hydra.Visitor) {
 	logger.Debug("Handler UpdatePipeline Start")
 	ctx, span := ar_trace.Tracer.Start(rest.GetLanguageCtx(c),
 		"driver layer: Update pipeline", trace.WithSpanKind(trace.SpanKindServer))
@@ -318,12 +320,12 @@ func (r *restHandler) GetPipelineByIn(c *gin.Context) {
 	logger.Debug("Handler GetPipelineByIn Start")
 
 	// 自行构建一个visitor
-	visitor := GenerateVisitor(c)
+	visitor := visitor.GenerateVisitor(c)
 	r.GetPipeline(c, visitor)
 }
 
 // GetPipeline 根据 pipeline_id 获取任务详情
-func (r *restHandler) GetPipeline(c *gin.Context, visitor rest.Visitor) {
+func (r *restHandler) GetPipeline(c *gin.Context, visitor hydra.Visitor) {
 	logger.Debug("Handler GetPipeline Start")
 	ctx, span := ar_trace.Tracer.Start(rest.GetLanguageCtx(c),
 		"driver layer: Get pipeline by id", trace.WithSpanKind(trace.SpanKindServer))
@@ -377,12 +379,12 @@ func (r *restHandler) ListPipelinesByIn(c *gin.Context) {
 	logger.Debug("Handler ListPipelinesByIn Start")
 
 	// 自行构建一个visitor
-	visitor := GenerateVisitor(c)
+	visitor := visitor.GenerateVisitor(c)
 	r.ListPipelines(c, visitor)
 }
 
 // ListPipelines 获取管道列表
-func (r *restHandler) ListPipelines(c *gin.Context, visitor rest.Visitor) {
+func (r *restHandler) ListPipelines(c *gin.Context, visitor hydra.Visitor) {
 	logger.Debug("Hnadler ListPipelines Start")
 	ctx, span := ar_trace.Tracer.Start(rest.GetLanguageCtx(c),
 		"driver layer: List pipelines", trace.WithSpanKind(trace.SpanKindServer))
@@ -502,12 +504,12 @@ func (r *restHandler) UpdatePipelineStatusByIn(c *gin.Context) {
 	logger.Debug("Handler UpdatePipelineStatusByIn Start")
 
 	// 自行构建一个visitor
-	visitor := GenerateVisitor(c)
+	visitor := visitor.GenerateVisitor(c)
 	r.UpdatePipelineStatus(c, visitor)
 }
 
 // UpdatePipelineStatus 根据pipeline_id修改任务状态
-func (r *restHandler) UpdatePipelineStatus(c *gin.Context, visitor rest.Visitor) {
+func (r *restHandler) UpdatePipelineStatus(c *gin.Context, visitor hydra.Visitor) {
 	logger.Debug("Handler UpdatePipelineStatus Start")
 	ctx, span := ar_trace.Tracer.Start(rest.GetLanguageCtx(c),
 		"driver layer: Update pipeline status", trace.WithSpanKind(trace.SpanKindServer))

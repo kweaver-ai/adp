@@ -14,6 +14,7 @@ import (
 	"github.com/bytedance/sonic"
 	"github.com/gin-gonic/gin"
 	"github.com/golang/mock/gomock"
+	"github.com/kweaver-ai/kweaver-go-lib/hydra"
 	"github.com/kweaver-ai/kweaver-go-lib/rest"
 	. "github.com/smartystreets/goconvey/convey"
 
@@ -119,7 +120,7 @@ func Test_MetricModelRestHandler_CreateMetricModels(t *testing.T) {
 		handler := MockNewMetricModelRestHandler(appSetting, as, mms, dvs, mmgs, mmts)
 		handler.RegisterPublic(engine)
 
-		as.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(rest.Visitor{}, nil)
+		as.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(hydra.Visitor{}, nil)
 
 		url := "/api/mdl-data-model/v1/metric-models"
 
@@ -626,7 +627,7 @@ func Test_MetricModelRestHandler_UpdateMetricModel(t *testing.T) {
 		handler := MockNewMetricModelRestHandler(appSetting, as, mms, dvs, mmgs, mmts)
 		handler.RegisterPublic(engine)
 
-		as.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(rest.Visitor{}, nil)
+		as.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(hydra.Visitor{}, nil)
 
 		url := "/api/mdl-data-model/v1/metric-models/1"
 
@@ -1076,7 +1077,7 @@ func Test_MetricModelRestHandler_DeleteMetricModels(t *testing.T) {
 		handler := MockNewMetricModelRestHandler(appSetting, as, mms, dvs, mmgs, mmts)
 		handler.RegisterPublic(engine)
 
-		as.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(rest.Visitor{}, nil)
+		as.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(hydra.Visitor{}, nil)
 
 		url := "/api/mdl-data-model/v1/metric-models/1,2"
 
@@ -1152,7 +1153,7 @@ func Test_MetricModelRestHandler_ListMetricModels(t *testing.T) {
 		handler := MockNewMetricModelRestHandler(appSetting, as, mms, dvs, mmgs, mmts)
 		handler.RegisterPublic(engine)
 
-		as.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(rest.Visitor{}, nil)
+		as.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(hydra.Visitor{}, nil)
 
 		url := "/api/mdl-data-model/v1/metric-models"
 
@@ -1227,7 +1228,7 @@ func Test_MetricModelRestHandler_GetMetricModels(t *testing.T) {
 		handler := MockNewMetricModelRestHandler(appSetting, as, mms, dvs, mmgs, mmts)
 		handler.RegisterPublic(engine)
 
-		as.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(rest.Visitor{}, nil)
+		as.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(hydra.Visitor{}, nil)
 
 		url := "/api/mdl-data-model/v1/metric-models/1"
 
@@ -1299,7 +1300,7 @@ func Test_MetricModelRestHandler_UpdateMetricModels(t *testing.T) {
 		handler := MockNewMetricModelRestHandler(appSetting, as, mms, dvs, mmgs, mmts)
 		handler.RegisterPublic(engine)
 
-		as.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(rest.Visitor{}, nil)
+		as.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(hydra.Visitor{}, nil)
 
 		url := "/api/mdl-data-model/v1/metric-models/1,2/attributes"
 
@@ -1439,7 +1440,7 @@ func Test_MetricModelRestHandler_GetMetricTask(t *testing.T) {
 		handler := MockNewMetricModelRestHandler(appSetting, as, mms, dvs, mmgs, mmts)
 		handler.RegisterPublic(engine)
 
-		as.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(rest.Visitor{}, nil)
+		as.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(hydra.Visitor{}, nil)
 
 		url := "/api/mdl-data-model/v1/metric-tasks/1"
 
@@ -1507,7 +1508,7 @@ func Test_MetricModelRestHandler_UpdateMetricTaskAttributes(t *testing.T) {
 		handler := MockNewMetricModelRestHandler(appSetting, as, mms, dvs, mmgs, mmts)
 		handler.RegisterPublic(engine)
 
-		as.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(rest.Visitor{}, nil)
+		as.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(hydra.Visitor{}, nil)
 
 		url := "/api/mdl-data-model/v1/metric-tasks/1/attr"
 
@@ -1584,7 +1585,7 @@ func Test_MetricModelRestHandler_GetMetricModelSourceFields(t *testing.T) {
 		handler := MockNewMetricModelRestHandler(appSetting, as, mms, dvs, mmgs, mmts)
 		handler.RegisterPublic(engine)
 
-		as.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(rest.Visitor{}, nil)
+		as.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(hydra.Visitor{}, nil)
 
 		url := "/api/mdl-data-model/v1/metric-models/1/fields"
 

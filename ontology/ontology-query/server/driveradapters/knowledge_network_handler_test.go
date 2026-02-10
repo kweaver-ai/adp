@@ -15,8 +15,8 @@ import (
 	"github.com/bytedance/sonic"
 	"github.com/gin-gonic/gin"
 	"github.com/golang/mock/gomock"
+	"github.com/kweaver-ai/kweaver-go-lib/hydra"
 	"github.com/kweaver-ai/kweaver-go-lib/rest"
-	
 	. "github.com/smartystreets/goconvey/convey"
 
 	"ontology-query/common"
@@ -156,9 +156,9 @@ func Test_RestHandler_GetObjectsSubgraphByEx(t *testing.T) {
 		}
 
 		Convey("成功 - Token验证通过，获取子图", func() {
-			visitor := rest.Visitor{
+			visitor := hydra.Visitor{
 				ID:   "user1",
-				Type: rest.VisitorType_User,
+				Type: hydra.VisitorType_User,
 			}
 			as.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).Return(visitor, nil)
 			kns.EXPECT().SearchSubgraph(gomock.Any(), gomock.Any()).Return(interfaces.ObjectSubGraph{
@@ -177,7 +177,7 @@ func Test_RestHandler_GetObjectsSubgraphByEx(t *testing.T) {
 		})
 
 		Convey("失败 - Token验证失败", func() {
-			as.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).Return(rest.Visitor{}, rest.NewHTTPError(context.TODO(), http.StatusUnauthorized, rest.PublicError_Unauthorized))
+			as.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).Return(hydra.Visitor{}, rest.NewHTTPError(context.TODO(), http.StatusUnauthorized, rest.PublicError_Unauthorized))
 
 			reqParamByte, _ := sonic.Marshal(subgraphQuery)
 			req := httptest.NewRequest(http.MethodPost, url, bytes.NewReader(reqParamByte))
@@ -238,9 +238,9 @@ func Test_RestHandler_GetObjectsSubgraph(t *testing.T) {
 				{Key: "kn_id", Value: knID},
 			}
 
-			visitor := rest.Visitor{
+			visitor := hydra.Visitor{
 				ID:   "user1",
-				Type: rest.VisitorType_User,
+				Type: hydra.VisitorType_User,
 			}
 			handler.GetObjectsSubgraph(c, visitor)
 
@@ -258,9 +258,9 @@ func Test_RestHandler_GetObjectsSubgraph(t *testing.T) {
 				{Key: "kn_id", Value: knID},
 			}
 
-			visitor := rest.Visitor{
+			visitor := hydra.Visitor{
 				ID:   "user1",
-				Type: rest.VisitorType_User,
+				Type: hydra.VisitorType_User,
 			}
 			handler.GetObjectsSubgraph(c, visitor)
 
@@ -284,9 +284,9 @@ func Test_RestHandler_GetObjectsSubgraph(t *testing.T) {
 				{Key: "kn_id", Value: knID},
 			}
 
-			visitor := rest.Visitor{
+			visitor := hydra.Visitor{
 				ID:   "user1",
-				Type: rest.VisitorType_User,
+				Type: hydra.VisitorType_User,
 			}
 			handler.GetObjectsSubgraph(c, visitor)
 
@@ -307,9 +307,9 @@ func Test_RestHandler_GetObjectsSubgraph(t *testing.T) {
 				{Key: "kn_id", Value: knID},
 			}
 
-			visitor := rest.Visitor{
+			visitor := hydra.Visitor{
 				ID:   "user1",
-				Type: rest.VisitorType_User,
+				Type: hydra.VisitorType_User,
 			}
 			handler.GetObjectsSubgraph(c, visitor)
 
@@ -374,9 +374,9 @@ func Test_RestHandler_GetObjectsSubgraphByTypePath(t *testing.T) {
 				{Key: "kn_id", Value: knID},
 			}
 
-			visitor := rest.Visitor{
+			visitor := hydra.Visitor{
 				ID:   "user1",
-				Type: rest.VisitorType_User,
+				Type: hydra.VisitorType_User,
 			}
 			handler.GetObjectsSubgraphByTypePath(c, visitor)
 
@@ -409,9 +409,9 @@ func Test_RestHandler_GetObjectsSubgraphByTypePath(t *testing.T) {
 				{Key: "kn_id", Value: knID},
 			}
 
-			visitor := rest.Visitor{
+			visitor := hydra.Visitor{
 				ID:   "user1",
-				Type: rest.VisitorType_User,
+				Type: hydra.VisitorType_User,
 			}
 			handler.GetObjectsSubgraphByTypePath(c, visitor)
 
@@ -432,9 +432,9 @@ func Test_RestHandler_GetObjectsSubgraphByTypePath(t *testing.T) {
 				{Key: "kn_id", Value: knID},
 			}
 
-			visitor := rest.Visitor{
+			visitor := hydra.Visitor{
 				ID:   "user1",
-				Type: rest.VisitorType_User,
+				Type: hydra.VisitorType_User,
 			}
 			handler.GetObjectsSubgraphByTypePath(c, visitor)
 

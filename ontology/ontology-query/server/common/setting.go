@@ -13,6 +13,7 @@ import (
 
 	"github.com/bytedance/sonic"
 	"github.com/fsnotify/fsnotify"
+	"github.com/kweaver-ai/kweaver-go-lib/hydra"
 	"github.com/kweaver-ai/kweaver-go-lib/logger"
 	o11y "github.com/kweaver-ai/kweaver-go-lib/observability"
 	"github.com/kweaver-ai/kweaver-go-lib/rest"
@@ -40,7 +41,7 @@ type AppSetting struct {
 	DepServices          map[string]map[string]any `mapstructure:"depServices"`
 
 	OpenSearchSetting rest.OpenSearchClientConfig
-	HydraAdminSetting rest.HydraAdminSetting
+	HydraAdminSetting hydra.HydraAdminSetting
 
 	OntologyManagerUrl string
 	UniQueryUrl        string
@@ -181,7 +182,7 @@ func SetHydraAdminSetting() {
 	if !ok {
 		logger.Fatalf("service %s not found in depServices", hydraAdminServiceName)
 	}
-	appSetting.HydraAdminSetting = rest.HydraAdminSetting{
+	appSetting.HydraAdminSetting = hydra.HydraAdminSetting{
 		HydraAdminProcotol: setting["protocol"].(string),
 		HydraAdminHost:     setting["host"].(string),
 		HydraAdminPort:     setting["port"].(int),

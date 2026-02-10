@@ -16,6 +16,7 @@ import (
 	"github.com/bytedance/sonic"
 	"github.com/gin-gonic/gin"
 	"github.com/golang/mock/gomock"
+	"github.com/kweaver-ai/kweaver-go-lib/hydra"
 	"github.com/kweaver-ai/kweaver-go-lib/rest"
 	. "github.com/smartystreets/goconvey/convey"
 
@@ -55,7 +56,7 @@ func Test_DataConnectionRestHandler_CreateDataConnection(t *testing.T) {
 		handler := MockNewDataConnectionRestHandler(appSetting, as, dcs)
 		handler.RegisterPublic(engine)
 
-		as.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(rest.Visitor{}, nil)
+		as.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(hydra.Visitor{}, nil)
 
 		url := "/api/mdl-data-model/v1/data-connections"
 
@@ -158,7 +159,7 @@ func Test_DataConnectionRestHandler_DeleteDataConnections(t *testing.T) {
 		handler := MockNewDataConnectionRestHandler(appSetting, as, dcs)
 		handler.RegisterPublic(engine)
 
-		as.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(rest.Visitor{}, nil)
+		as.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(hydra.Visitor{}, nil)
 
 		url := "/api/mdl-data-model/v1/data-connections/1,2"
 
@@ -247,7 +248,7 @@ func Test_DataConnectionRestHandler_UpdateDataConnection(t *testing.T) {
 		handler := MockNewDataConnectionRestHandler(appSetting, as, dcs)
 		handler.RegisterPublic(engine)
 
-		as.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(rest.Visitor{}, nil)
+		as.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(hydra.Visitor{}, nil)
 
 		url := "/api/mdl-data-model/v1/data-connections/1"
 
@@ -386,7 +387,7 @@ func Test_DataConnectionRestHandler_GetDataConnection(t *testing.T) {
 		handler := MockNewDataConnectionRestHandler(appSetting, as, dcs)
 		handler.RegisterPublic(engine)
 
-		as.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(rest.Visitor{}, nil)
+		as.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(hydra.Visitor{}, nil)
 
 		url := "/api/mdl-data-model/v1/data-connections/1"
 
@@ -443,7 +444,7 @@ func Test_DataConnectionRestHandler_ListDataConnections(t *testing.T) {
 		handler := MockNewDataConnectionRestHandler(appSetting, as, dcs)
 		handler.RegisterPublic(engine)
 
-		as.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(rest.Visitor{}, nil)
+		as.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(hydra.Visitor{}, nil)
 
 		url := "/api/mdl-data-model/v1/data-connections"
 

@@ -12,6 +12,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/kweaver-ai/TelemetrySDK-Go/exporter/v2/ar_metric"
+	"github.com/kweaver-ai/kweaver-go-lib/hydra"
 	"github.com/kweaver-ai/kweaver-go-lib/logger"
 	"github.com/kweaver-ai/kweaver-go-lib/middleware"
 	o11y "github.com/kweaver-ai/kweaver-go-lib/observability"
@@ -72,7 +73,7 @@ type SubHandler struct {
 
 type restHandler struct {
 	appSetting    *common.AppSetting
-	authService   interfaces.AuthService
+	as            interfaces.AuthService
 	dcService     interfaces.DataConnectionService
 	dvService     interfaces.DataViewService
 	dslService    interfaces.DslService
@@ -93,7 +94,7 @@ func NewRestHandler(appSetting *common.AppSetting) RestHandler {
 	mmService := metric_model.NewMetricModelService(appSetting)
 	r := &restHandler{
 		appSetting:    appSetting,
-		authService:   auth.NewAuthService(appSetting),
+		as:            auth.NewAuthService(appSetting),
 		dcService:     data_connection.NewDataConnectionService(appSetting),
 		dvService:     data_view.NewDataViewService(appSetting),
 		dslService:    dsl.NewDslService(appSetting),
@@ -350,31 +351,14 @@ func (r *restHandler) promqlMiddleWare() gin.HandlerFunc {
 // }
 
 // 校验oauth
-func (r *restHandler) verifyOAuth(ctx context.Context, c *gin.Context) (rest.Visitor, error) {
-	vistor, err := r.authService.VerifyToken(ctx, c)
+func (r *restHandler) verifyOAuth(ctx context.Context, c *gin.Context) (hydra.Visitor, error) {
+	visitor, err := r.as.VerifyToken(ctx, c)
 	if err != nil {
 		httpErr := rest.NewHTTPError(ctx, http.StatusUnauthorized, rest.PublicError_Unauthorized).
 			WithErrorDetails(err.Error())
 		rest.ReplyError(c, httpErr)
-		return vistor, err
+		return visitor, err
 	}
 
-	return vistor, nil
-}
-
-func GenerateVisitor(c *gin.Context) rest.Visitor {
-	accountInfo := interfaces.AccountInfo{
-		ID:   c.GetHeader(interfaces.HTTP_HEADER_ACCOUNT_ID),
-		Type: c.GetHeader(interfaces.HTTP_HEADER_ACCOUNT_TYPE),
-	}
-	visitor := rest.Visitor{
-		ID:         accountInfo.ID,
-		Type:       rest.VisitorType(accountInfo.Type),
-		TokenID:    "", // 无token
-		IP:         c.ClientIP(),
-		Mac:        c.GetHeader("X-Request-MAC"),
-		UserAgent:  c.GetHeader("User-Agent"),
-		ClientType: rest.ClientType_Linux,
-	}
-	return visitor
+	return visitor, nil
 }

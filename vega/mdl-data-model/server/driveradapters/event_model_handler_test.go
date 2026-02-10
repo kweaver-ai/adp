@@ -16,6 +16,7 @@ import (
 	"github.com/bytedance/sonic"
 	"github.com/gin-gonic/gin"
 	"github.com/golang/mock/gomock"
+	"github.com/kweaver-ai/kweaver-go-lib/hydra"
 	"github.com/kweaver-ai/kweaver-go-lib/rest"
 	. "github.com/smartystreets/goconvey/convey"
 
@@ -135,7 +136,7 @@ func Test_EventModelRestHandler_CreateEventModels(t *testing.T) {
 		handler := MockNewEventModelRestHandler(appSetting, as, ems, mms)
 		handler.RegisterPublic(engine)
 
-		as.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(rest.Visitor{}, nil)
+		as.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(hydra.Visitor{}, nil)
 
 		url := "/api/mdl-data-model/v1/event-models"
 
@@ -272,7 +273,7 @@ func Test_EventModelRestHandler_UpdateEventModels(t *testing.T) {
 		handler := MockNewEventModelRestHandler(appSetting, as, ems, mms)
 		handler.RegisterPublic(engine)
 
-		as.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(rest.Visitor{}, nil)
+		as.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(hydra.Visitor{}, nil)
 
 		url := "/api/mdl-data-model/v1/event-models/1"
 
@@ -429,7 +430,7 @@ func Test_EventModelRestHandler_DeleteEventModels(t *testing.T) {
 		handler := MockNewEventModelRestHandler(appSetting, as, ems, mms)
 		handler.RegisterPublic(engine)
 
-		as.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(rest.Visitor{}, nil)
+		as.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(hydra.Visitor{}, nil)
 
 		url := "/api/mdl-data-model/v1/event-models/1,2"
 
@@ -496,7 +497,7 @@ func Test_EventModelRestHandler_QueryEventModels(t *testing.T) {
 		handler := MockNewEventModelRestHandler(appSetting, as, ems, mms)
 		handler.RegisterPublic(engine)
 
-		as.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(rest.Visitor{}, nil)
+		as.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(hydra.Visitor{}, nil)
 
 		url := "/api/mdl-data-model/v1/event-models"
 
@@ -561,7 +562,7 @@ func Test_EventModelRestHandler_QueryEventModelByID(t *testing.T) {
 		handler := MockNewEventModelRestHandler(appSetting, as, ems, mms)
 		handler.RegisterPublic(engine)
 
-		as.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(rest.Visitor{}, nil)
+		as.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(hydra.Visitor{}, nil)
 
 		url := "/api/mdl-data-model/v1/event-models/1"
 
@@ -610,7 +611,7 @@ func Test_EventModelRestHandler_QueryEventLevel(t *testing.T) {
 		handler := MockNewEventModelRestHandler(appSetting, as, ems, mms)
 		handler.RegisterPublic(engine)
 
-		as.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(rest.Visitor{}, nil)
+		as.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(hydra.Visitor{}, nil)
 
 		url := "/api/mdl-data-model/v1/event-level"
 
@@ -659,7 +660,7 @@ func Test_EventModelRestHandler_UpdateEventTaskStatus(t *testing.T) {
 		handler := MockNewEventModelRestHandler(appSetting, as, ems, mms)
 		handler.RegisterPublic(engine)
 
-		as.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(rest.Visitor{}, nil)
+		as.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(hydra.Visitor{}, nil)
 
 		url := "/api/mdl-data-model/v1/event-task/1/attr"
 

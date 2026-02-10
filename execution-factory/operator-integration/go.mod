@@ -12,7 +12,7 @@ require (
 	github.com/google/uuid v1.6.0
 	github.com/json-iterator/go v1.1.12
 	github.com/kweaver-ai/TelemetrySDK-Go/span/v2 v2.10.3
-	github.com/kweaver-ai/kweaver-go-lib v1.0.2
+	github.com/kweaver-ai/kweaver-go-lib v1.0.3
 	github.com/kweaver-ai/proton-mq-sdk-go v1.9.1
 	github.com/kweaver-ai/proton-rds-sdk-go v1.4.2
 	github.com/mark3labs/mcp-go v0.37.0

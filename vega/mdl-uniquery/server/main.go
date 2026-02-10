@@ -25,6 +25,7 @@ import (
 	"uniquery/common"
 	"uniquery/common/middleware"
 	access "uniquery/drivenadapters"
+	auth "uniquery/drivenadapters/auth"
 	"uniquery/drivenadapters/permission"
 	"uniquery/driveradapters"
 	"uniquery/logics"
@@ -118,6 +119,9 @@ func main() {
 	otel.SetTextMapPropagator(propagation.NewCompositeTextMapPropagator(propagation.TraceContext{}, propagation.Baggage{}))
 
 	// Set顺序按字母升序排序
+	if common.GetAuthEnabled() {
+		logics.SetAuthAccess(auth.NewHydraAuthAccess(appSetting))
+	}
 	logics.SetDataConnectionAccess(access.NewDataConnectionAccess(appSetting))
 	logics.SetDataDictAccess(access.NewDataDictAccess(appSetting))
 	logics.SetDataDictService(data_dict.NewDataDictService(appSetting))

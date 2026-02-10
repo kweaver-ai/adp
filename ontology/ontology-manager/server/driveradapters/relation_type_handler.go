@@ -14,6 +14,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/kweaver-ai/TelemetrySDK-Go/exporter/v2/ar_trace"
 	"github.com/kweaver-ai/kweaver-go-lib/audit"
+	"github.com/kweaver-ai/kweaver-go-lib/hydra"
 	"github.com/kweaver-ai/kweaver-go-lib/logger"
 	o11y "github.com/kweaver-ai/kweaver-go-lib/observability"
 	"github.com/kweaver-ai/kweaver-go-lib/rest"
@@ -21,6 +22,7 @@ import (
 	"go.opentelemetry.io/otel/trace"
 
 	"ontology-manager/common"
+	"ontology-manager/common/visitor"
 	oerrors "ontology-manager/errors"
 	"ontology-manager/interfaces"
 )
@@ -56,7 +58,7 @@ func (r *restHandler) CreateRelationTypesByIn(c *gin.Context) {
 	logger.Debug("Handler CreateRelationTypesByIn Start")
 	// 内部接口 user_id从header中取，跳过用户有效认证，后面在权限校验时就会校验这个用户是否有权限，无效用户无权限
 	// 自行构建一个visitor
-	visitor := GenerateVisitor(c)
+	visitor := visitor.GenerateVisitor(c)
 	r.CreateRelationTypes(c, visitor)
 }
 
@@ -76,7 +78,7 @@ func (r *restHandler) CreateRelationTypesByEx(c *gin.Context) {
 }
 
 // 创建关系类
-func (r *restHandler) CreateRelationTypes(c *gin.Context, visitor rest.Visitor) {
+func (r *restHandler) CreateRelationTypes(c *gin.Context, visitor hydra.Visitor) {
 	logger.Debug("Handler CreateRelationTypes Start")
 	ctx, span := ar_trace.Tracer.Start(rest.GetLanguageCtx(c),
 		"创建关系类", trace.WithSpanKind(trace.SpanKindServer))
@@ -202,7 +204,7 @@ func (r *restHandler) UpdateRelationTypeByIn(c *gin.Context) {
 	logger.Debug("Handler UpdateRelationTypeByIn Start")
 	// 内部接口 user_id从header中取，跳过用户有效认证，后面在权限校验时就会校验这个用户是否有权限，无效用户无权限
 	// 自行构建一个visitor
-	visitor := GenerateVisitor(c)
+	visitor := visitor.GenerateVisitor(c)
 	r.UpdateRelationType(c, visitor)
 }
 
@@ -222,7 +224,7 @@ func (r *restHandler) UpdateRelationTypeByEx(c *gin.Context) {
 }
 
 // 更新关系类
-func (r *restHandler) UpdateRelationType(c *gin.Context, visitor rest.Visitor) {
+func (r *restHandler) UpdateRelationType(c *gin.Context, visitor hydra.Visitor) {
 	logger.Debug("Handler UpdateRelationType Start")
 	ctx, span := ar_trace.Tracer.Start(rest.GetLanguageCtx(c),
 		"修改关系类", trace.WithSpanKind(trace.SpanKindServer))
@@ -480,7 +482,7 @@ func (r *restHandler) ListRelationTypesByIn(c *gin.Context) {
 	logger.Debug("Handler ListRelationTypesByIn Start")
 	// 内部接口 user_id从header中取，跳过用户有效认证，后面在权限校验时就会校验这个用户是否有权限，无效用户无权限
 	// 自行构建一个visitor
-	visitor := GenerateVisitor(c)
+	visitor := visitor.GenerateVisitor(c)
 	r.ListRelationTypes(c, visitor)
 }
 
@@ -500,7 +502,7 @@ func (r *restHandler) ListRelationTypesByEx(c *gin.Context) {
 }
 
 // 分页获取关系类列表
-func (r *restHandler) ListRelationTypes(c *gin.Context, visitor rest.Visitor) {
+func (r *restHandler) ListRelationTypes(c *gin.Context, visitor hydra.Visitor) {
 	logger.Debug("ListRelationTypes Start")
 	ctx, span := ar_trace.Tracer.Start(rest.GetLanguageCtx(c),
 		"分页获取关系类列表", trace.WithSpanKind(trace.SpanKindServer))
@@ -626,7 +628,7 @@ func (r *restHandler) GetRelationTypesByIn(c *gin.Context) {
 	logger.Debug("Handler GetRelationTypesByIn Start")
 	// 内部接口 user_id从header中取，跳过用户有效认证，后面在权限校验时就会校验这个用户是否有权限，无效用户无权限
 	// 自行构建一个visitor
-	visitor := GenerateVisitor(c)
+	visitor := visitor.GenerateVisitor(c)
 	r.GetRelationTypes(c, visitor)
 }
 
@@ -646,7 +648,7 @@ func (r *restHandler) GetRelationTypesByEx(c *gin.Context) {
 }
 
 // 按 id 获取关系类对象信息
-func (r *restHandler) GetRelationTypes(c *gin.Context, visitor rest.Visitor) {
+func (r *restHandler) GetRelationTypes(c *gin.Context, visitor hydra.Visitor) {
 	logger.Debug("Handler GetRelationTypes Start")
 	ctx, span := ar_trace.Tracer.Start(rest.GetLanguageCtx(c),
 		"driver layer: Get relation type", trace.WithSpanKind(trace.SpanKindServer))
@@ -718,7 +720,7 @@ func (r *restHandler) SearchRelationTypesByIn(c *gin.Context) {
 	logger.Debug("Handler SearchRelationTypesByIn Start")
 	// 内部接口 user_id从header中取，跳过用户有效认证，后面在权限校验时就会校验这个用户是否有权限，无效用户无权限
 	// 自行构建一个visitor
-	visitor := GenerateVisitor(c)
+	visitor := visitor.GenerateVisitor(c)
 	r.SearchRelationTypes(c, visitor)
 }
 
@@ -738,7 +740,7 @@ func (r *restHandler) SearchRelationTypesByEx(c *gin.Context) {
 }
 
 // 检索对象类
-func (r *restHandler) SearchRelationTypes(c *gin.Context, visitor rest.Visitor) {
+func (r *restHandler) SearchRelationTypes(c *gin.Context, visitor hydra.Visitor) {
 	logger.Debug("SearchRelationTypes Start")
 	ctx, span := ar_trace.Tracer.Start(rest.GetLanguageCtx(c),
 		"检索关系类", trace.WithSpanKind(trace.SpanKindServer))

@@ -13,12 +13,14 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/kweaver-ai/TelemetrySDK-Go/exporter/v2/ar_trace"
+	"github.com/kweaver-ai/kweaver-go-lib/hydra"
 	"github.com/kweaver-ai/kweaver-go-lib/logger"
 	o11y "github.com/kweaver-ai/kweaver-go-lib/observability"
 	"github.com/kweaver-ai/kweaver-go-lib/rest"
 	attr "go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/trace"
 
+	"ontology-query/common/visitor"
 	oerrors "ontology-query/errors"
 	"ontology-query/interfaces"
 )
@@ -28,7 +30,7 @@ func (r *restHandler) GetObjectsInObjectTypeByIn(c *gin.Context) {
 	logger.Debug("Handler GetObjectsInObjectTypeByIn Start")
 	// 内部接口 user_id从header中取，跳过用户有效认证，后面在权限校验时就会校验这个用户是否有权限，无效用户无权限
 	// 自行构建一个visitor
-	visitor := GenerateVisitor(c)
+	visitor := visitor.GenerateVisitor(c)
 	r.GetObjectsInObjectType(c, visitor)
 }
 
@@ -49,7 +51,7 @@ func (r *restHandler) GetObjectsInObjectTypeByEx(c *gin.Context) {
 }
 
 // 基于对象类的对象数据查询
-func (r *restHandler) GetObjectsInObjectType(c *gin.Context, visitor rest.Visitor) {
+func (r *restHandler) GetObjectsInObjectType(c *gin.Context, visitor hydra.Visitor) {
 	logger.Debug("Handler GetObjectsInObjectType Start")
 	startTime := time.Now()
 
@@ -181,7 +183,7 @@ func (r *restHandler) GetObjectsPropertiesByIn(c *gin.Context) {
 	logger.Debug("Handler GetObjectsPropertiesByIn Start")
 	// 内部接口 user_id从header中取，跳过用户有效认证，后面在权限校验时就会校验这个用户是否有权限，无效用户无权限
 	// 自行构建一个visitor
-	visitor := GenerateVisitor(c)
+	visitor := visitor.GenerateVisitor(c)
 	r.GetObjectsProperties(c, visitor)
 }
 
@@ -202,7 +204,7 @@ func (r *restHandler) GetObjectsPropertiesByEx(c *gin.Context) {
 }
 
 // 基于对象类的对象数据查询
-func (r *restHandler) GetObjectsProperties(c *gin.Context, visitor rest.Visitor) {
+func (r *restHandler) GetObjectsProperties(c *gin.Context, visitor hydra.Visitor) {
 	logger.Debug("Handler GetObjectsProperties Start")
 	startTime := time.Now()
 

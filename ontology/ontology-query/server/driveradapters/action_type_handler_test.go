@@ -15,8 +15,8 @@ import (
 	"github.com/bytedance/sonic"
 	"github.com/gin-gonic/gin"
 	"github.com/golang/mock/gomock"
+	"github.com/kweaver-ai/kweaver-go-lib/hydra"
 	"github.com/kweaver-ai/kweaver-go-lib/rest"
-	
 	. "github.com/smartystreets/goconvey/convey"
 
 	"ontology-query/common"
@@ -152,9 +152,9 @@ func Test_RestHandler_GetActionsInActionTypeByEx(t *testing.T) {
 		}
 
 		Convey("成功 - Token验证通过，获取行动数据", func() {
-			visitor := rest.Visitor{
+			visitor := hydra.Visitor{
 				ID:   "user1",
-				Type: rest.VisitorType_User,
+				Type: hydra.VisitorType_User,
 			}
 			as.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).Return(visitor, nil)
 			ats.EXPECT().GetActionsByActionTypeID(gomock.Any(), gomock.Any()).Return(interfaces.Actions{
@@ -177,7 +177,7 @@ func Test_RestHandler_GetActionsInActionTypeByEx(t *testing.T) {
 		})
 
 		Convey("失败 - Token验证失败", func() {
-			as.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).Return(rest.Visitor{}, rest.NewHTTPError(context.TODO(), http.StatusUnauthorized, rest.PublicError_Unauthorized))
+			as.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).Return(hydra.Visitor{}, rest.NewHTTPError(context.TODO(), http.StatusUnauthorized, rest.PublicError_Unauthorized))
 
 			reqParamByte, _ := sonic.Marshal(actionQuery)
 			req := httptest.NewRequest(http.MethodPost, url, bytes.NewReader(reqParamByte))
@@ -241,9 +241,9 @@ func Test_RestHandler_GetActionsInActionType(t *testing.T) {
 				{Key: "at_id", Value: atID},
 			}
 
-			visitor := rest.Visitor{
+			visitor := hydra.Visitor{
 				ID:   "user1",
-				Type: rest.VisitorType_User,
+				Type: hydra.VisitorType_User,
 			}
 			handler.GetActionsInActionType(c, visitor)
 
@@ -262,9 +262,9 @@ func Test_RestHandler_GetActionsInActionType(t *testing.T) {
 				{Key: "at_id", Value: atID},
 			}
 
-			visitor := rest.Visitor{
+			visitor := hydra.Visitor{
 				ID:   "user1",
-				Type: rest.VisitorType_User,
+				Type: hydra.VisitorType_User,
 			}
 			handler.GetActionsInActionType(c, visitor)
 
@@ -284,9 +284,9 @@ func Test_RestHandler_GetActionsInActionType(t *testing.T) {
 				{Key: "at_id", Value: atID},
 			}
 
-			visitor := rest.Visitor{
+			visitor := hydra.Visitor{
 				ID:   "user1",
-				Type: rest.VisitorType_User,
+				Type: hydra.VisitorType_User,
 			}
 			handler.GetActionsInActionType(c, visitor)
 
