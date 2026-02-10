@@ -6,9 +6,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/interfaces"
 	"github.com/getkin/kin-openapi/openapi3"
 	jsoniter "github.com/json-iterator/go"
+	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/interfaces"
 )
 
 // APIMetadata API元数据
@@ -348,6 +348,7 @@ func (p *openAPIParser) parseAndValidateOpenAPI(ctx context.Context) (err error)
 		err = fmt.Errorf("unsupported data type: %s", p.DataType)
 	}
 	if err != nil {
+		fmt.Println("===============", p.Logger == nil)
 		p.Logger.WithContext(ctx).Warnf("Failed to load OpenAPI document: %v", err)
 		return
 	}

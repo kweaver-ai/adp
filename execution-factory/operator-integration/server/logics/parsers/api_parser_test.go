@@ -8,16 +8,16 @@ import (
 	"os"
 	"testing"
 
+	jsoniter "github.com/json-iterator/go"
 	myErr "github.com/kweaver-ai/adp/execution-factory/operator-integration/server/infra/errors"
 	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/infra/logger"
-	jsoniter "github.com/json-iterator/go"
 	. "github.com/smartystreets/goconvey/convey"
 )
 
 // 测试API元数据解析
 func TestSmokeJSONAPIAnalysis(t *testing.T) {
 	Convey("TestSmokeJSONAPIAnalysis:测试Json API文档解析", t, func() {
-		localPath := "../../tests/file/full_text_subdoc.json"
+		localPath := "../../tests/file/json/full_text_subdoc.json"
 		content, err := os.ReadFile(localPath)
 		So(err, ShouldBeNil)
 		parser := &openAPIParser{
@@ -84,9 +84,9 @@ func TestInvalidAPIAnalysis(t *testing.T) {
 		},
 		{
 			Name:        "数据为空",
-			Content:     []byte{},
-			Code:        myErr.ErrExtOpenAPIInvalidSpecification.String(),
-			Description: "OpenAPI规范验证失败，请检查完整性",
+			Content:     nil,
+			Code:        myErr.ErrExtOpenAPIInvalidSpecificationRequired.String(),
+			Description: "缺少必需字段“openapi”，请检查是否有缺失字段",
 		},
 		{
 			Name:        "Paths为空",

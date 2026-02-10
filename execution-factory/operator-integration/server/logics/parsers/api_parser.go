@@ -11,10 +11,10 @@ import (
 
 	"github.com/getkin/kin-openapi/openapi3"
 	"github.com/go-playground/validator/v10"
-	o11y "github.com/kweaver-ai/kweaver-go-lib/observability"
 	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/infra/errors"
 	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/interfaces"
 	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/interfaces/model"
+	o11y "github.com/kweaver-ai/kweaver-go-lib/observability"
 )
 
 // openAPIParser OpenAPI解析器
@@ -94,6 +94,7 @@ func (op *openAPIParser) loadAndValidate(ctx context.Context, content []byte) (d
 	err = doc.Validate(loader.Context, validationExamplesOption)
 	if err != nil {
 		err = parseOpenAPIValidationError(ctx, err)
+		fmt.Printf("err: %v\n", err)
 	}
 	return
 }
@@ -112,6 +113,10 @@ func (op *openAPIParser) getAllContent(ctx context.Context, data []byte) (conten
 		SererURL:  svcURL,
 		Info:      doc.Info,
 		PathItems: []*interfaces.PathItemContent{},
+	}
+	if doc.Paths == nil {
+		err = errors.NewHTTPError(ctx, http.StatusBadRequest, errors.ErrExtOpenAPIInvalidSpecification, "no paths found")
+		return
 	}
 	for path, pathItem := range doc.Paths.Map() {
 		for method, operation := range pathItem.Operations() {

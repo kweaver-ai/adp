@@ -76,7 +76,7 @@ func (l *PromptLoader) loadDefaulTemplates() error {
 		tempName := strings.ToLower(strings.TrimSuffix(filepath.Base(path), filepath.Ext(filepath.Base(path))))
 		tempType := interfaces.PromptTemplateType(tempName)
 		if _, ok := l.DefaulTemplates[tempType]; !ok {
-			return fmt.Errorf("prompt template %s not found", tempType)
+			return fmt.Errorf("default prompt template %s not found", tempType)
 		}
 
 		content, err := fs.ReadFile(promptTemplatesFS, path)
@@ -92,7 +92,7 @@ func (l *PromptLoader) loadDefaulTemplates() error {
 func (l *PromptLoader) GetTemplate(ctx context.Context, tempType interfaces.PromptTemplateType) (*interfaces.PromptTemplate, error) {
 	temp, ok := l.DefaulTemplates[tempType]
 	if !ok {
-		return nil, fmt.Errorf("prompt template %s not found", tempType)
+		return nil, fmt.Errorf("default prompt template %s not found", tempType)
 	}
 	customPrompt, err := l.loadCustomPromptTemplate(ctx, tempType)
 	if err != nil {
@@ -116,6 +116,9 @@ func (l *PromptLoader) loadCustomPromptTemplate(ctx context.Context, tempType in
 		promptID = l.AIGenerationConfig.PythonFunctionGeneratorPromptID
 	case interfaces.MetadataParamGenerator:
 		promptID = l.AIGenerationConfig.MetadataParamGeneratorPromptID
+	}
+	if promptID == "" {
+		return nil, nil
 	}
 	// 从模型管理器获取模型配置
 	promptResult, err := l.MFModelManager.GetPromptByPromptID(ctx, promptID)

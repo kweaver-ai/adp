@@ -9,7 +9,6 @@ import (
 
 	"github.com/creasty/defaults"
 	"github.com/google/uuid"
-	o11y "github.com/kweaver-ai/kweaver-go-lib/observability"
 	icommon "github.com/kweaver-ai/adp/execution-factory/operator-integration/server/infra/common"
 	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/infra/errors"
 	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/interfaces"
@@ -17,6 +16,7 @@ import (
 	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/logics/metadata"
 	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/logics/metric"
 	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/utils"
+	o11y "github.com/kweaver-ai/kweaver-go-lib/observability"
 )
 
 // Export 导出算子
@@ -232,7 +232,18 @@ func (m *operatorManager) batchImportOperatorMetadata(ctx context.Context, tx *s
 
 // 添加算子配置
 func (m *operatorManager) addOperatorConfig(ctx context.Context, tx *sql.Tx, operatorDB *model.OperatorRegisterDB, metadataDB interfaces.IMetadataDB) (err error) {
-	metadataDB.SetVersion(uuid.New().String())
+	// 检查该版本元数据是否存在，如果存在报错冲突
+	exists,_, err := m.MetadataService.CheckMetadataExists(ctx, interfaces.MetadataType(metadataDB.GetType()), metadataDB.GetVersion())
+	if err != nil {
+		m.Logger.WithContext(ctx).Errorf("check metadata version exists failed, err: %v", err)
+		err = errors.DefaultHTTPError(ctx, http.StatusInternalServerError, err.Error())
+		return
+	}
+	if exists {
+		err = errors.NewHTTPError(ctx, http.StatusConflict, errors.ErrExtCommonResourceIDConflict,
+			fmt.Sprintf("metadata version %s already exists", metadataDB.GetVersion()))
+		return
+	}
 	version, err := m.MetadataService.RegisterMetadata(ctx, tx, metadataDB)
 	if err != nil {
 		m.Logger.WithContext(ctx).Errorf("register metadata failed, err: %v", err)

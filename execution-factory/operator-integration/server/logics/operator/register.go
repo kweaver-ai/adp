@@ -211,7 +211,6 @@ func (m *operatorManager) checkAndParserOpenAPIOperator(ctx context.Context, req
 	if err != nil {
 		return
 	}
-
 	// 检查Items长度
 	err = m.Validator.ValidateOperatorImportCount(ctx, int64(len(metadataDBs)))
 	return

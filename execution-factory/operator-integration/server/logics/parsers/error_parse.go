@@ -7,8 +7,8 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/infra/errors"
 	"github.com/getkin/kin-openapi/openapi3"
+	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/infra/errors"
 )
 
 const (
@@ -167,6 +167,10 @@ func getValidationErrorCodeAndParams(errStr string) (errors.ErrorCode, []interfa
 		if strings.Contains(errStr, "components") {
 			return errors.ErrExtOpenAPIInvalidComponent, nil
 		}
+		if strings.Contains(errStr, "path") {
+			return errors.ErrExtOpenAPIInvalidPath, nil
+		}
+
 		// 通用处理
 		return errors.ErrExtOpenAPIInvalidSpecificationRequired, nil
 	}

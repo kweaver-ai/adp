@@ -8,7 +8,6 @@ import (
 	"net/http"
 
 	"github.com/google/uuid"
-	o11y "github.com/kweaver-ai/kweaver-go-lib/observability"
 	icommon "github.com/kweaver-ai/adp/execution-factory/operator-integration/server/infra/common"
 	infraerrors "github.com/kweaver-ai/adp/execution-factory/operator-integration/server/infra/errors"
 	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/infra/telemetry"
@@ -17,6 +16,7 @@ import (
 	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/logics/common"
 	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/logics/metric"
 	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/utils"
+	o11y "github.com/kweaver-ai/kweaver-go-lib/observability"
 )
 
 // EditOperator 编辑算子（仅支持编辑当前版本）
@@ -333,9 +333,19 @@ func (m *operatorManager) preCheckEdit(ctx context.Context, req *interfaces.Oper
 		return
 	}
 	// 根据version获取元数据
-	metadataDB, err = m.MetadataService.GetMetadataByVersion(ctx, interfaces.MetadataType(operatorDB.MetadataType), operatorDB.MetadataVersion)
+	exists, metadataDB, err := m.MetadataService.CheckMetadataExists(ctx, interfaces.MetadataType(operatorDB.MetadataType), operatorDB.MetadataVersion)
 	if err != nil {
 		m.Logger.WithContext(ctx).Warnf("select api metadata failed, OperatorID: %s, Version: %s, err: %v", operatorDB.OperatorID, operatorDB.MetadataVersion, err)
+		return
+	}
+	if !exists {
+		// 如元数据不存在
+		err = infraerrors.NewHTTPError(ctx, http.StatusNotFound, infraerrors.ErrExtMetadataNotFound, map[string]any{
+			"operator_id":      req.OperatorID,
+			"metadata_type":    req.MetadataType,
+			"metadata_version": operatorDB.MetadataVersion,
+			"error":            "metadata not found",
+		})
 		return
 	}
 	var updateMetadataDB interfaces.IMetadataDB
@@ -439,7 +449,6 @@ func (m *operatorManager) getUpdateMetadataDB(ctx context.Context, req *interfac
 			return
 		}
 		updateMetadataDB = updateMetadataDBs[0]
-
 	default:
 		err = infraerrors.DefaultHTTPError(ctx, http.StatusBadRequest, "unsupported metadata type")
 		return
