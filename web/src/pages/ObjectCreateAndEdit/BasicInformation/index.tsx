@@ -22,7 +22,16 @@ const BasicInformation = (props: BasicInformationProps) => {
     if (values) {
       form.setFieldsValue(values);
     }
-  }, [form, values]);
+  }, [
+    form,
+    values?.id,
+    values?.name,
+    values?.icon,
+    values?.color,
+    values?.comment,
+    Array.isArray(values?.tags) ? values.tags.join('|') : values?.tags,
+    Array.isArray(values?.concept_groupIds) ? values.concept_groupIds.join('|') : values?.concept_groupIds,
+  ]);
 
   const conceptGroupOptions = useMemo(
     () =>

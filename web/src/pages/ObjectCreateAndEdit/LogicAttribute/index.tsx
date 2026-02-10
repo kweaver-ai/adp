@@ -1,4 +1,4 @@
-import { useState, forwardRef, useImperativeHandle, useMemo } from 'react';
+import { useState, forwardRef, useImperativeHandle, useMemo, useEffect } from 'react';
 import intl from 'react-intl-universal';
 import { EllipsisOutlined } from '@ant-design/icons';
 import { Dropdown, Empty, Tooltip } from 'antd';
@@ -35,6 +35,16 @@ const LogicAttribute = forwardRef((props: LogicAttributeProps, ref: any) => {
     },
   }));
 
+  // props 变化时同步本地数据（避免从上一步返回/编辑详情加载后展示旧数据）
+  // 为避免覆盖抽屉编辑中的未保存内容，仅在抽屉关闭时同步
+  useEffect(() => {
+    if (!open) {
+      setLocalLogicProperties(initialLogicProperties);
+      setSelectedRowKeys([]);
+      setSelectedRows([]);
+    }
+  }, [initialLogicProperties, open]);
+
   const onClose = () => {
     setOpen(false);
   };
@@ -55,10 +65,12 @@ const LogicAttribute = forwardRef((props: LogicAttributeProps, ref: any) => {
       content,
       onOk: () => {
         if (record) {
-          setLocalLogicProperties(localLogicProperties.filter((item) => item.name !== record.name));
+          setLocalLogicProperties((prev) => prev.filter((item) => item.name !== record.name));
         } else {
-          setLocalLogicProperties(localLogicProperties.filter((item) => !selectedRowKeys.includes(item.name)));
+          setLocalLogicProperties((prev) => prev.filter((item) => !selectedRowKeys.includes(item.name)));
         }
+        setSelectedRowKeys([]);
+        setSelectedRows([]);
         message.success(intl.get('Global.deleteSuccess'));
       },
     });
@@ -183,7 +195,7 @@ const LogicAttribute = forwardRef((props: LogicAttributeProps, ref: any) => {
       setSelectedRows(selectedRows);
     },
     onSelectAll: (selected: any): void => {
-      const newSelectedRowKeys = selected ? filteredDataSource.map((item: any) => item.id) : [];
+      const newSelectedRowKeys = selected ? filteredDataSource.map((item: any) => item.name) : [];
       const newSelectedRows = selected ? filteredDataSource : [];
 
       setSelectedRowKeys(newSelectedRowKeys);

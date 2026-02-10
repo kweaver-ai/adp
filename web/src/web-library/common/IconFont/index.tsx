@@ -5,7 +5,7 @@ import { createFromIconfontCN } from '@ant-design/icons';
 import { IconFontProps } from '@ant-design/icons/lib/components/IconFont';
 
 const IconFontBase = createFromIconfontCN({
-  scriptUrl: [require('./iconfont.js'), require('./iconfont-dip.js'), require('./iconfont-dip-color')],
+  scriptUrl: [require('./iconfont.js'), require('./iconfont-dip.js'), require('./iconfont-dip-color'), require('./iconfont-dip-object')],
 });
 
 const IconFont: React.FC<IconFontProps> = ({ type, style = {}, ...restProps }) => {

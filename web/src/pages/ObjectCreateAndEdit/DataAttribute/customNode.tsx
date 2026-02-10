@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import intl from 'react-intl-universal';
 import { EllipsisOutlined, InfoCircleFilled, PlusOutlined, SearchOutlined } from '@ant-design/icons';
 import { Handle, Position } from '@xyflow/react';
@@ -10,43 +10,47 @@ import * as OntologyObjectType from '@/services/object/type';
 import noSearchResultImage from '@/assets/images/common/no_search_result.svg';
 import HOOKS from '@/hooks';
 import { IconFont, Button } from '@/web-library/common';
+import { canBeDisplayKey, canBeIncrementalKey, canBePrimaryKey } from './constants';
+import { useHoveredEdgeId } from './hoverContext';
 import styles from './index.module.less';
+import { parseEdgeId } from './utils';
+import type { Node, NodeProps } from '@xyflow/react';
 
-const canPrimaryKeys = ['integer', 'unsigned integer', 'string'];
-const canTitleKeys = ['integer', 'unsigned integer', 'string', 'text', 'float', 'decimal', 'date', 'time', 'datetime', 'timestamp', 'ip', 'boolean'];
-const canIncrementalKeys = ['integer', 'unsigned integer', 'datetime', 'timestamp'];
+type TNodeData = OntologyObjectType.TNode['data'];
+type TFlowNode = Node<TNodeData>;
 
-const canBePrimaryKey = (type: string) => canPrimaryKeys.includes(type);
-const canBeDisplayKey = (type: string) => canTitleKeys.includes(type);
-const canBeIncrementalKey = (type: string) => canIncrementalKeys.includes(type);
+const NAME_PATTERN = /^[a-z0-9][a-z0-9_-]*$/;
 
-const CustomNode = ({ data, id }: OntologyObjectType.TNode) => {
+const CustomNode = ({ data, id }: NodeProps<TFlowNode>) => {
   const { modal } = HOOKS.useGlobalContext();
   const isViewNode = id === 'view';
-  const [searchVal, setSearchVal] = useState('');
-  const [hoveredAttr, setHoveredAttr] = useState<string | null>(null);
-  const highlightedAttributes = data?.highlightedAttributes || [];
+  const clearTrigger = data.clearSearchTrigger ?? 0;
+  const [search, setSearch] = useState<{ trigger: number; value: string }>({ trigger: clearTrigger, value: '' });
+  const searchVal = search.trigger === clearTrigger ? search.value : '';
 
-  // 监听 clearSearchTrigger 变化，清空搜索内容
-  useEffect(() => {
-    if (data.clearSearchTrigger !== undefined && data.clearSearchTrigger > 0) {
-      setSearchVal('');
-    }
-  }, [data.clearSearchTrigger]);
+  const hoveredEdgeId = useHoveredEdgeId();
+  const hoveredHighlightedAttr = useMemo(() => {
+    if (!hoveredEdgeId) return null;
+    const { dataAttr, viewAttr } = parseEdgeId(hoveredEdgeId);
+    if (id === 'data') return dataAttr || null;
+    if (id === 'view') return viewAttr || null;
+    return null;
+  }, [hoveredEdgeId, id]);
 
-  // 校验字段名是否符合规范
-  const isValidName = (name: string) => {
-    const namePattern = /^[a-z0-9][a-z0-9_-]*$/;
-    return namePattern.test(name);
-  };
+  const highlightedSet = useMemo(() => {
+    const set = new Set<string>(data.highlightedAttributes || []);
+    if (hoveredHighlightedAttr) set.add(hoveredHighlightedAttr);
+    return set;
+  }, [data.highlightedAttributes, hoveredHighlightedAttr]);
 
-  const filteredAttributes = useMemo(
-    () => data.attributes.filter((attr) => (searchVal ? attr.name.toLowerCase().includes(searchVal.toLowerCase()) : true)),
-    [data, searchVal]
-  );
+  const filteredAttributes = useMemo(() => {
+    const q = searchVal.trim().toLowerCase();
+    if (!q) return data.attributes;
+    return data.attributes.filter((attr) => attr.name.toLowerCase().includes(q));
+  }, [data.attributes, searchVal]);
 
   const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchVal(e.target.value);
+    setSearch({ trigger: clearTrigger, value: e.target.value });
   };
 
   const handleDeleteAttr = (e: React.MouseEvent, attr: { name: string; display_name: string }) => {
@@ -127,7 +131,7 @@ const CustomNode = ({ data, id }: OntologyObjectType.TNode) => {
                   <Dropdown
                     menu={{
                       items: dropdownMenu,
-                      onClick: (event: any) => {
+                      onClick: (event) => {
                         event.domEvent.stopPropagation();
                         onOperate(event?.key);
                       },
@@ -163,7 +167,7 @@ const CustomNode = ({ data, id }: OntologyObjectType.TNode) => {
                       label: intl.get('Object.syncDataViewFields'),
                     },
                   ],
-                  onClick: (event: any) => {
+                  onClick: (event) => {
                     event.domEvent.stopPropagation();
                     onOperate(event?.key);
                   },
@@ -185,7 +189,7 @@ const CustomNode = ({ data, id }: OntologyObjectType.TNode) => {
                       label: intl.get('Global.clearAll'),
                     },
                   ],
-                  onClick: (event: any) => {
+                  onClick: (event) => {
                     event.domEvent.stopPropagation();
                     onOperate(event?.key);
                   },
@@ -210,15 +214,13 @@ const CustomNode = ({ data, id }: OntologyObjectType.TNode) => {
       <div className={styles['panel-content']}>
         {filteredAttributes.length > 0 ? (
           filteredAttributes.map((attr) => {
-            const isHighlighted = highlightedAttributes.includes(attr.name);
+            const isHighlighted = highlightedSet.has(attr.name);
             return (
               <div
                 key={attr.name}
                 className={`${styles['panel-item']} ${isHighlighted ? styles['panel-item-highlighted'] : ''}`}
                 style={{ cursor: isViewNode ? 'default' : 'pointer' }}
                 onClick={() => !isViewNode && data.attrClick?.(attr)}
-                onMouseEnter={() => setHoveredAttr(attr.name)}
-                onMouseLeave={() => setHoveredAttr(null)}
               >
                 <div className={styles['item-content']}>
                   <FieldTypeIcon type={attr.type} />
@@ -233,7 +235,7 @@ const CustomNode = ({ data, id }: OntologyObjectType.TNode) => {
                     </div>
                     <div className={styles['item-tech-name']}>
                       <span className={styles['tech-name-text']}>{attr.name}</span>
-                      {!isViewNode && !isValidName(attr.name) && (
+                      {!isViewNode && !NAME_PATTERN.test(attr.name) && (
                         <Tooltip title={intl.get('Global.idPatternError')}>
                           <InfoCircleFilled style={{ color: '#ff4d4f', fontSize: 12 }} />
                         </Tooltip>
@@ -244,46 +246,43 @@ const CustomNode = ({ data, id }: OntologyObjectType.TNode) => {
 
                 {!isViewNode && (
                   <div className={styles['item-icons']}>
-                    {hoveredAttr === attr.name ? (
-                      <>
-                        {canBePrimaryKey(attr.type) && (
-                          <Tooltip title={attr.primary_key ? intl.get('Global.cancelPrimaryKey') : intl.get('Global.setPrimaryKey')}>
-                            <IconFont
-                              type={attr.primary_key ? 'icon-dip-color-primary-key' : 'icon-dip-zhujian'}
-                              className={styles['delete-icon']}
-                              onClick={(e) => handleTogglePrimaryKey(e, attr.name)}
-                            />
-                          </Tooltip>
-                        )}
-                        {canBeDisplayKey(attr.type) && (
-                          <Tooltip title={attr.display_key ? intl.get('Global.cancelTitle') : intl.get('Global.setTitle')}>
-                            <IconFont
-                              type={attr.display_key ? 'icon-dip-color-star' : 'icon-dip-biaoti'}
-                              className={styles['delete-icon']}
-                              onClick={(e) => handleToggleDisplayKey(e, attr.name)}
-                            />
-                          </Tooltip>
-                        )}
-                        {canBeIncrementalKey(attr.type) && (
-                          <Tooltip title={attr.incremental_key ? intl.get('Global.cancelIncrementalKey') : intl.get('Global.setIncrementalKey')}>
-                            <IconFont
-                              type={attr.incremental_key ? 'icon-dip-color-increment' : 'icon-dip-zengliang'}
-                              className={styles['delete-icon']}
-                              onClick={(e) => handleToggleIncrementalKey(e, attr.name)}
-                            />
-                          </Tooltip>
-                        )}
-                        <Tooltip title={intl.get('Global.delete')}>
-                          <IconFont type="icon-dip-trash" className={styles['delete-icon']} onClick={(e) => handleDeleteAttr(e, attr)} />
+                    <div className={styles['item-icons-status']}>
+                      {attr.incremental_key && <IconFont type="icon-dip-color-increment" />}
+                      {attr.display_key && <IconFont type="icon-dip-color-star" />}
+                      {attr.primary_key && <IconFont type="icon-dip-color-primary-key" />}
+                    </div>
+                    <div className={styles['item-icons-actions']}>
+                      {canBeIncrementalKey(attr.type) && (
+                        <Tooltip title={attr.incremental_key ? intl.get('Global.cancelIncrementalKey') : intl.get('Global.setIncrementalKey')}>
+                          <IconFont
+                            type={attr.incremental_key ? 'icon-dip-color-increment' : 'icon-dip-zengliang'}
+                            className={styles['delete-icon']}
+                            onClick={(e) => handleToggleIncrementalKey(e, attr.name)}
+                          />
                         </Tooltip>
-                      </>
-                    ) : (
-                      <>
-                        {attr.primary_key && <IconFont type="icon-dip-color-primary-key" />}
-                        {attr.display_key && <IconFont type="icon-dip-color-star" />}
-                        {attr.incremental_key && <IconFont type="icon-dip-color-increment" />}
-                      </>
-                    )}
+                      )}
+                      {canBeDisplayKey(attr.type) && (
+                        <Tooltip title={attr.display_key ? intl.get('Global.cancelTitle') : intl.get('Global.setTitle')}>
+                          <IconFont
+                            type={attr.display_key ? 'icon-dip-color-star' : 'icon-dip-biaoti'}
+                            className={styles['delete-icon']}
+                            onClick={(e) => handleToggleDisplayKey(e, attr.name)}
+                          />
+                        </Tooltip>
+                      )}
+                      {canBePrimaryKey(attr.type) && (
+                        <Tooltip title={attr.primary_key ? intl.get('Global.cancelPrimaryKey') : intl.get('Global.setPrimaryKey')}>
+                          <IconFont
+                            type={attr.primary_key ? 'icon-dip-color-primary-key' : 'icon-dip-zhujian'}
+                            className={styles['delete-icon']}
+                            onClick={(e) => handleTogglePrimaryKey(e, attr.name)}
+                          />
+                        </Tooltip>
+                      )}
+                      <Tooltip title={intl.get('Global.delete')}>
+                        <IconFont type="icon-dip-trash" className={styles['delete-icon']} onClick={(e) => handleDeleteAttr(e, attr)} />
+                      </Tooltip>
+                    </div>
                   </div>
                 )}
                 {isViewNode ? (

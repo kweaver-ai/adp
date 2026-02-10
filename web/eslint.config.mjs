@@ -12,7 +12,7 @@ import tseslint from 'typescript-eslint';
 
 export default defineConfig([
   // 全局忽略不需要被 ESLint 扫描的目录
-  globalIgnores(['dist', 'node_modules', 'coverage', 'docker', 'helm', 'coverage', 'public', 'src/assets', '**/IconFont/**']),
+  globalIgnores(['dist', 'node_modules', 'coverage', 'docker', 'helm', 'coverage', 'public', 'src/assets', '**/IconFont/**', '**/iconfont.js']),
   {
     settings: {
       // React 设置（必须在 React 推荐规则之前）

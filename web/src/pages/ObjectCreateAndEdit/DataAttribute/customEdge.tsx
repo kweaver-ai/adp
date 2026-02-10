@@ -1,10 +1,11 @@
 import { memo } from 'react';
 import { CloseOutlined } from '@ant-design/icons';
 import { BaseEdge, EdgeLabelRenderer, getBezierPath, useReactFlow, type EdgeProps } from '@xyflow/react';
+import { useHoveredEdgeId } from './hoverContext';
 import styles from './index.module.less';
 
 export const CustomEdge = memo((props: EdgeProps) => {
-  const { selected, sourceX, sourceY, targetX, targetY, sourcePosition, targetPosition, style = {}, id, data } = props;
+  const { selected, sourceX, sourceY, targetX, targetY, sourcePosition, targetPosition, style = {}, id } = props;
   const [edgePath, labelX, labelY] = getBezierPath({
     sourceX,
     sourceY,
@@ -19,7 +20,8 @@ export const CustomEdge = memo((props: EdgeProps) => {
     reactFlowInstance.deleteElements({ edges: [{ id }] });
   };
 
-  const isHovered = data?.isHovered || false;
+  const hoveredEdgeId = useHoveredEdgeId();
+  const isHovered = hoveredEdgeId === id;
   const strokeColor = selected || isHovered ? '#000' : '#b1b1b1';
 
   return (

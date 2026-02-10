@@ -1,18 +1,17 @@
 import { useState, useEffect } from 'react';
 import intl from 'react-intl-universal';
-import { EllipsisOutlined } from '@ant-design/icons';
+import { EllipsisOutlined, CheckCircleOutlined, CloseCircleOutlined } from '@ant-design/icons';
 import { Dropdown, Empty, Badge } from 'antd';
 import dayjs from 'dayjs';
+import { formatMsToHMS } from '@/utils/time';
 import actionApi from '@/services/action';
 import * as ActionType from '@/services/action/type';
 import emptyImage from '@/assets/images/common/empty.png';
 import noSearchResultImage from '@/assets/images/common/no_search_result.svg';
-import { Title, Table, Select, Button, IconFont } from '@/web-library/common';
-import { CheckCircleOutlined, CloseCircleOutlined } from '@ant-design/icons';
-import TaskDetail from './detail';
-import { formatMsToHMS } from '@/utils/time';
-import styles from './index.module.less';
 import HOOKS from '@/hooks';
+import { Title, Table, Select, Button } from '@/web-library/common';
+import TaskDetail from './detail';
+import styles from './index.module.less';
 
 interface TaskManagementProps {
   knId: string;
@@ -20,24 +19,25 @@ interface TaskManagementProps {
   refreshTask?: boolean;
   onRefreshComplete?: () => void;
 }
-const runStatusDescCom = ({ success_count = 0, failed_count = 0 }: { success_count?: number; failed_count?: number }) =>
+const runStatusDescCom = ({ success_count = 0, failed_count = 0 }: { success_count?: number; failed_count?: number }) => (
   <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-            <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-              <CheckCircleOutlined style={{ color: '#52c41a' }} />
-              {success_count}
-            </span>
-            <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-              <CloseCircleOutlined style={{ color: '#ff4d4f' }} />
-              {failed_count}
-            </span>
-          </div>
+    <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+      <CheckCircleOutlined style={{ color: '#52c41a' }} />
+      {success_count}
+    </span>
+    <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+      <CloseCircleOutlined style={{ color: '#ff4d4f' }} />
+      {failed_count}
+    </span>
+  </div>
+);
 const TaskManagement = ({ knId, atId, refreshTask, onRefreshComplete }: TaskManagementProps) => {
   const ACTION_EXECUTION_STATE_LABELS: Record<ActionType.ActionExecutionStatusEnum, string> = {
     [ActionType.ActionExecutionStatusEnum.Pending]: intl.get('Action.pending'),
     [ActionType.ActionExecutionStatusEnum.Running]: intl.get('Action.running'),
     [ActionType.ActionExecutionStatusEnum.Completed]: intl.get('Action.completed'),
     [ActionType.ActionExecutionStatusEnum.Failed]: intl.get('Action.failed'),
-    [ActionType.ActionExecutionStatusEnum.Cancelled]: intl.get('Action.cancelled')
+    [ActionType.ActionExecutionStatusEnum.Cancelled]: intl.get('Action.cancelled'),
   };
   const ACTION_EXECUTION_STATE_OPTIONS = [
     { value: '', label: intl.get('Global.all') },
@@ -172,7 +172,7 @@ const TaskManagement = ({ knId, atId, refreshTask, onRefreshComplete }: TaskMana
         const isCancellable = [ActionType.ActionExecutionStatusEnum.Pending, ActionType.ActionExecutionStatusEnum.Running].includes(record.status);
         const dropdownMenu: any = [
           { key: 'view', label: intl.get('Global.view'), visible: true },
-          { key: 'stop', label: intl.get('Action.stop'), visible: isCancellable }
+          { key: 'stop', label: intl.get('Action.stop'), visible: isCancellable },
         ];
         return (
           <Dropdown
@@ -196,7 +196,7 @@ const TaskManagement = ({ knId, atId, refreshTask, onRefreshComplete }: TaskMana
       dataIndex: 'trigger_type',
       width: 120,
       __selected: true,
-      render: (triggerType: string) => triggerType ? intl.get(`Action.${triggerType}`) : '--',
+      render: (triggerType: string) => (triggerType ? intl.get(`Action.${triggerType}`) : '--'),
     },
     {
       title: intl.get('Action.runStatus'),
@@ -220,13 +220,8 @@ const TaskManagement = ({ knId, atId, refreshTask, onRefreshComplete }: TaskMana
               return 'default';
           }
         };
-        
-        return (
-          <Badge 
-            status={getBadgeStatus(status)} 
-            text={ACTION_EXECUTION_STATE_LABELS[status] || status} 
-          />
-        );
+
+        return <Badge status={getBadgeStatus(status)} text={ACTION_EXECUTION_STATE_LABELS[status] || status} />;
       },
     },
     {
@@ -309,10 +304,10 @@ const TaskManagement = ({ knId, atId, refreshTask, onRefreshComplete }: TaskMana
       </Table.PageTable>
 
       {currentTask && (
-        <TaskDetail 
-          visible={detailVisible} 
-          onClose={() => setDetailVisible(false)} 
-          taskData={currentTask} 
+        <TaskDetail
+          visible={detailVisible}
+          onClose={() => setDetailVisible(false)}
+          taskData={currentTask}
           loading={detailLoading}
           runStatusDescCom={runStatusDescCom}
         />

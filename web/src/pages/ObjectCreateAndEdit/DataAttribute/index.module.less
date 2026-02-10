@@ -71,6 +71,7 @@
       text-overflow: ellipsis;
       color: rgba(0, 0, 0, 0.85);
       white-space: nowrap;
+      cursor: pointer;
     }
 
     .info-value-empty {
@@ -79,6 +80,7 @@
       text-overflow: ellipsis;
       color: rgba(0, 0, 0, 0.45);
       white-space: nowrap;
+      cursor: pointer;
     }
 
     .info-value-bold {
@@ -104,6 +106,7 @@
     line-height: 2.2;
     color: rgba(0, 0, 0, 0.85);
     text-align: center;
+    cursor: pointer;
     background: rgba(0, 0, 0, 0.06);
     border-radius: 2px;
   }
@@ -134,7 +137,6 @@
     justify-content: space-between;
     padding: 12px;
     pointer-events: auto;
-    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
 
     .panel-title-box {
       display: flex;
@@ -182,6 +184,7 @@
     z-index: 2;
     padding: 12px 16px;
     pointer-events: auto;
+    border-top: 1px solid rgba(0, 0, 0, 0.1);
     border-bottom: 1px solid rgba(0, 0, 0, 0.1);
   }
 
@@ -216,6 +219,15 @@
 
       &:hover {
         background-color: #f5f7fa;
+
+        .item-icons-status {
+          display: none;
+        }
+
+        .item-icons-actions {
+          display: flex;
+          pointer-events: auto;
+        }
       }
 
       &.panel-item-highlighted {
@@ -271,6 +283,19 @@
         gap: 8px;
         align-items: center;
         margin-right: 12px;
+      }
+
+      .item-icons-status {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+      }
+
+      .item-icons-actions {
+        display: none;
+        gap: 8px;
+        align-items: center;
+        pointer-events: none;
       }
 
       .delete-icon {

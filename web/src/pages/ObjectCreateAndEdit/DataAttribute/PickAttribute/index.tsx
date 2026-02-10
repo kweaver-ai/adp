@@ -32,8 +32,7 @@ const PickAttribute: React.FC<Props> = ({ visible, onOk, onCancel, dataSource = 
 
     // 左侧选中直接移动到右侧
     if (sourceSelectedKeys.length > 0) {
-      const newTargetKeys = [...targetKeys, ...sourceSelectedKeys];
-      setTargetKeys(newTargetKeys);
+      setTargetKeys((prev) => [...prev, ...sourceSelectedKeys]);
       setSelectedKeys([]);
     }
   };
