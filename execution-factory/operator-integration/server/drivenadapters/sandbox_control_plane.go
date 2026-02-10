@@ -92,11 +92,14 @@ func (c *sandBoxControlPlaneClient) QuerySession(ctx context.Context, sessionID 
 		c.logger.WithContext(ctx).Infof("QuerySession failed, session not found, session_id: %s", sessionID)
 		return false, nil, nil
 	}
-	if respCode != http.StatusOK {
+
+	if (respCode < http.StatusOK) || (respCode >= http.StatusMultipleChoices) {
 		c.logger.WithContext(ctx).Errorf("QuerySession failed, unexpected status code: %d, session_id: %s", respCode, sessionID)
 		err = errors.NewHTTPError(ctx, http.StatusInternalServerError, errors.ErrExtSandboxControlPlaneFailed, map[string]any{
 			"error":      fmt.Sprintf("unexpected status code: %d", respCode),
 			"session_id": sessionID,
+			"response":   string(respData),
+			"http_code":  respCode,
 		})
 		return false, nil, err
 	}
@@ -117,7 +120,7 @@ func (c *sandBoxControlPlaneClient) QuerySession(ctx context.Context, sessionID 
 func (c *sandBoxControlPlaneClient) DeleteSession(ctx context.Context, sessionID string) (err error) {
 	src := fmt.Sprintf("%s/sessions/%s", c.baseURL, sessionID)
 	headers := common.GetHeaderFromCtx(ctx)
-	respCode, _, err := c.httpClient.Delete(ctx, src, headers)
+	respCode, respData, err := c.httpClient.Delete(ctx, src, headers)
 	if err != nil {
 		c.logger.WithContext(ctx).Errorf("DeleteSession failed, err: %v", err)
 		err = errors.NewHTTPError(ctx, http.StatusInternalServerError, errors.ErrExtSandboxControlPlaneFailed, map[string]any{
@@ -126,11 +129,13 @@ func (c *sandBoxControlPlaneClient) DeleteSession(ctx context.Context, sessionID
 		})
 		return err
 	}
-	if respCode != http.StatusNoContent {
+	if (respCode < http.StatusOK) || (respCode >= http.StatusMultipleChoices) {
 		c.logger.WithContext(ctx).Errorf("DeleteSession failed, unexpected status code: %d, session_id: %s", respCode, sessionID)
 		err = errors.NewHTTPError(ctx, http.StatusInternalServerError, errors.ErrExtSandboxControlPlaneFailed, map[string]any{
 			"error":      fmt.Sprintf("unexpected status code: %d", respCode),
 			"session_id": sessionID,
+			"http_code":  respCode,
+			"response":   respData,
 		})
 		return err
 	}
@@ -157,9 +162,13 @@ func (c *sandBoxControlPlaneClient) ListSessions(ctx context.Context, req *inter
 		err = errors.NewHTTPError(ctx, http.StatusInternalServerError, errors.ErrExtSandboxControlPlaneFailed, err.Error())
 		return nil, err
 	}
-	if respCode != http.StatusOK {
+	if (respCode < http.StatusOK) || (respCode >= http.StatusMultipleChoices) {
 		c.logger.WithContext(ctx).Errorf("ListSessions failed, unexpected status code: %d", respCode)
-		err = errors.NewHTTPError(ctx, http.StatusInternalServerError, errors.ErrExtSandboxControlPlaneFailed, string(respData))
+		err = errors.NewHTTPError(ctx, http.StatusInternalServerError, errors.ErrExtSandboxControlPlaneFailed, map[string]any{
+			"error":     fmt.Sprintf("unexpected status code: %d", respCode),
+			"http_code": respCode,
+			"response":  respData,
+		})
 		return nil, err
 	}
 	resp = &interfaces.ListSessionsResp{}
@@ -181,9 +190,13 @@ func (c *sandBoxControlPlaneClient) ExecuteCodeSync(ctx context.Context, session
 		c.logger.WithContext(ctx).Errorf("ExecuteCodeSync failed, err: %v", err)
 		return nil, err
 	}
-	if respCode != http.StatusOK {
+	if (respCode < http.StatusOK) || (respCode >= http.StatusMultipleChoices) {
 		c.logger.WithContext(ctx).Errorf("ExecuteCodeSync failed, unexpected status code: %d, session_id: %s", respCode, sessionID)
-		err = errors.NewHTTPError(ctx, http.StatusInternalServerError, errors.ErrExtSandboxControlPlaneFailed, string(respData))
+		err = errors.NewHTTPError(ctx, http.StatusInternalServerError, errors.ErrExtSandboxControlPlaneFailed, map[string]any{
+			"error":     fmt.Sprintf("unexpected status code: %d", respCode),
+			"http_code": respCode,
+			"response":  respData,
+		})
 		return nil, err
 	}
 	resp := &interfaces.ExecuteCodeResp{}

@@ -238,6 +238,20 @@ func (mr *MockMCPClientMockRecorder) CallTool(ctx, req any) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CallTool", reflect.TypeOf((*MockMCPClient)(nil).CallTool), ctx, req)
 }
 
+// Close mocks base method.
+func (m *MockMCPClient) Close() error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Close")
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// Close indicates an expected call of Close.
+func (mr *MockMCPClientMockRecorder) Close() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Close", reflect.TypeOf((*MockMCPClient)(nil).Close))
+}
+
 // GetInitInfo mocks base method.
 func (m *MockMCPClient) GetInitInfo(ctx context.Context) *mcp.InitializeResult {
 	m.ctrl.T.Helper()
@@ -497,6 +511,120 @@ func (m *MockSandBoxEnv) GetSandBoxServerRouter() *interfaces.APIRouter {
 func (mr *MockSandBoxEnvMockRecorder) GetSandBoxServerRouter() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSandBoxServerRouter", reflect.TypeOf((*MockSandBoxEnv)(nil).GetSandBoxServerRouter))
+}
+
+// MockSandBoxControlPlane is a mock of SandBoxControlPlane interface.
+type MockSandBoxControlPlane struct {
+	ctrl     *gomock.Controller
+	recorder *MockSandBoxControlPlaneMockRecorder
+	isgomock struct{}
+}
+
+// MockSandBoxControlPlaneMockRecorder is the mock recorder for MockSandBoxControlPlane.
+type MockSandBoxControlPlaneMockRecorder struct {
+	mock *MockSandBoxControlPlane
+}
+
+// NewMockSandBoxControlPlane creates a new mock instance.
+func NewMockSandBoxControlPlane(ctrl *gomock.Controller) *MockSandBoxControlPlane {
+	mock := &MockSandBoxControlPlane{ctrl: ctrl}
+	mock.recorder = &MockSandBoxControlPlaneMockRecorder{mock}
+	return mock
+}
+
+// EXPECT returns an object that allows the caller to indicate expected use.
+func (m *MockSandBoxControlPlane) EXPECT() *MockSandBoxControlPlaneMockRecorder {
+	return m.recorder
+}
+
+// CreateSession mocks base method.
+func (m *MockSandBoxControlPlane) CreateSession(ctx context.Context, req *interfaces.CreateSessionReq) (any, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CreateSession", ctx, req)
+	ret0, _ := ret[0].(any)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// CreateSession indicates an expected call of CreateSession.
+func (mr *MockSandBoxControlPlaneMockRecorder) CreateSession(ctx, req any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateSession", reflect.TypeOf((*MockSandBoxControlPlane)(nil).CreateSession), ctx, req)
+}
+
+// DeleteSession mocks base method.
+func (m *MockSandBoxControlPlane) DeleteSession(ctx context.Context, sessionID string) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DeleteSession", ctx, sessionID)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// DeleteSession indicates an expected call of DeleteSession.
+func (mr *MockSandBoxControlPlaneMockRecorder) DeleteSession(ctx, sessionID any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteSession", reflect.TypeOf((*MockSandBoxControlPlane)(nil).DeleteSession), ctx, sessionID)
+}
+
+// ExecuteCodeSync mocks base method.
+func (m *MockSandBoxControlPlane) ExecuteCodeSync(ctx context.Context, sessionID string, req *interfaces.ExecuteCodeReq) (*interfaces.ExecuteCodeResp, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ExecuteCodeSync", ctx, sessionID, req)
+	ret0, _ := ret[0].(*interfaces.ExecuteCodeResp)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ExecuteCodeSync indicates an expected call of ExecuteCodeSync.
+func (mr *MockSandBoxControlPlaneMockRecorder) ExecuteCodeSync(ctx, sessionID, req any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ExecuteCodeSync", reflect.TypeOf((*MockSandBoxControlPlane)(nil).ExecuteCodeSync), ctx, sessionID, req)
+}
+
+// GetTemplateDetail mocks base method.
+func (m *MockSandBoxControlPlane) GetTemplateDetail(ctx context.Context, tempID string) (any, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetTemplateDetail", ctx, tempID)
+	ret0, _ := ret[0].(any)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetTemplateDetail indicates an expected call of GetTemplateDetail.
+func (mr *MockSandBoxControlPlaneMockRecorder) GetTemplateDetail(ctx, tempID any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetTemplateDetail", reflect.TypeOf((*MockSandBoxControlPlane)(nil).GetTemplateDetail), ctx, tempID)
+}
+
+// ListSessions mocks base method.
+func (m *MockSandBoxControlPlane) ListSessions(ctx context.Context, req *interfaces.ListSessionsReq) (*interfaces.ListSessionsResp, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ListSessions", ctx, req)
+	ret0, _ := ret[0].(*interfaces.ListSessionsResp)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ListSessions indicates an expected call of ListSessions.
+func (mr *MockSandBoxControlPlaneMockRecorder) ListSessions(ctx, req any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListSessions", reflect.TypeOf((*MockSandBoxControlPlane)(nil).ListSessions), ctx, req)
+}
+
+// QuerySession mocks base method.
+func (m *MockSandBoxControlPlane) QuerySession(ctx context.Context, sessionID string) (bool, *interfaces.SessionDetail, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "QuerySession", ctx, sessionID)
+	ret0, _ := ret[0].(bool)
+	ret1, _ := ret[1].(*interfaces.SessionDetail)
+	ret2, _ := ret[2].(error)
+	return ret0, ret1, ret2
+}
+
+// QuerySession indicates an expected call of QuerySession.
+func (mr *MockSandBoxControlPlaneMockRecorder) QuerySession(ctx, sessionID any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "QuerySession", reflect.TypeOf((*MockSandBoxControlPlane)(nil).QuerySession), ctx, sessionID)
 }
 
 // MockMFModelAPIClient is a mock of MFModelAPIClient interface.

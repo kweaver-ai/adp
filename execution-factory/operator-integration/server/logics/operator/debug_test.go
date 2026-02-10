@@ -22,7 +22,7 @@ func TestDebugOperator(t *testing.T) {
 	defer ctrl.Finish()
 	Convey("TestDebugOperator:Debug 单元测试", t, func() {
 		mockDBOperatorManager := mocks.NewMockIOperatorRegisterDB(ctrl)
-		mockDBAPIMetadataManager := mocks.NewMockIAPIMetadataDB(ctrl)
+		// mockDBAPIMetadataManager := mocks.NewMockIAPIMetadataDB(ctrl)
 		mockDBTx := mocks.NewMockDBTx(ctrl)
 		mockCategoryManager := mocks.NewMockCategoryManager(ctrl)
 		mockUserMgnt := mocks.NewMockUserManagement(ctrl)
@@ -33,6 +33,7 @@ func TestDebugOperator(t *testing.T) {
 		mockIntCompConfigSvc := mocks.NewMockIIntCompConfigService(ctrl)
 		mockAuthService := mocks.NewMockIAuthorizationService(ctrl)
 		mockAuditLog := mocks.NewMockLogModelOperator[*metric.AuditLogBuilderParams](ctrl)
+		mockMetadataService := mocks.NewMockIMetadataService(ctrl)
 		operator := &operatorManager{
 			Logger:             logger.DefaultLogger(),
 			DBOperatorManager:  mockDBOperatorManager,
@@ -46,6 +47,7 @@ func TestDebugOperator(t *testing.T) {
 			IntCompConfigSvc:   mockIntCompConfigSvc,
 			AuthService:        mockAuthService,
 			AuditLog:           mockAuditLog,
+			MetadataService:    mockMetadataService,
 		}
 		operatorDB := &model.OperatorRegisterDB{}
 		accessor := &interfaces.AuthAccessor{}
@@ -73,7 +75,7 @@ func TestDebugOperator(t *testing.T) {
 			httpErr, ok := err.(*myErr.HTTPError)
 			So(ok, ShouldBeTrue)
 			So(httpErr.HTTPCode, ShouldEqual, http.StatusNotFound)
-			So(httpErr.Code, ShouldContainSubstring, myErr.ErrExtOperatorNotFound)
+			So(httpErr.Code, ShouldContainSubstring, myErr.ErrExtOperatorNotFound.String())
 		})
 		Convey("TestDebugOperator: 获取accessor信息失败", func() {
 			mockDBOperatorManager.EXPECT().SelectByOperatorID(gomock.Any(), gomock.Any(), gomock.Any()).
@@ -118,7 +120,7 @@ func TestDebugOperator(t *testing.T) {
 			So(err, ShouldNotBeNil)
 		})
 		Convey("TestDebugOperator: 调试版本与线上版本不一致,解析历史版本信息报错", func() {
-			operatorDB.MetadataType = "openapi"
+			operatorDB.MetadataType = string(interfaces.MetadataTypeFunc)
 			operatorDB.MetadataVersion = "1.0.1"
 			mockDBOperatorManager.EXPECT().SelectByOperatorID(gomock.Any(), gomock.Any(), gomock.Any()).Return(true, operatorDB, nil).Times(1)
 			mockAuthService.EXPECT().GetAccessor(gomock.Any(), gomock.Any()).Return(accessor, nil).Times(1)
@@ -128,7 +130,7 @@ func TestDebugOperator(t *testing.T) {
 			So(err, ShouldNotBeNil)
 		})
 		Convey("TestDebugOperator: 执行模式不支持", func() {
-			operatorDB.MetadataType = "openapi"
+			operatorDB.MetadataType = string(interfaces.MetadataTypeAPI)
 			operatorDB.MetadataVersion = "1.0.1"
 			mockDBOperatorManager.EXPECT().SelectByOperatorID(gomock.Any(), gomock.Any(), gomock.Any()).Return(true, operatorDB, nil).Times(1)
 			mockAuthService.EXPECT().GetAccessor(gomock.Any(), gomock.Any()).Return(accessor, nil).Times(1)
@@ -147,7 +149,8 @@ func TestDebugOperator(t *testing.T) {
 			mockDBOperatorManager.EXPECT().SelectByOperatorID(gomock.Any(), gomock.Any(), gomock.Any()).Return(true, operatorDB, nil).Times(1)
 			mockAuthService.EXPECT().GetAccessor(gomock.Any(), gomock.Any()).Return(accessor, nil).Times(1)
 			mockAuthService.EXPECT().CheckExecutePermission(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).Times(1)
-			mockDBAPIMetadataManager.EXPECT().SelectByVersion(gomock.Any(), gomock.Any()).Return(false, nil, errors.New("mock SelectByVersion error")).Times(1)
+			mockMetadataService.EXPECT().CheckMetadataExists(gomock.Any(), gomock.Any(), gomock.Any()).Return(false, nil, mocks.MockFuncErr("CheckMetadataExists")).Times(1)
+			// mockDBAPIMetadataManager.EXPECT().SelectByVersion(gomock.Any(), gomock.Any()).Return(false, nil, errors.New("mock SelectByVersion error")).Times(1)
 			_, err := operator.DebugOperator(context.TODO(), req)
 			So(err, ShouldNotBeNil)
 		})
@@ -159,7 +162,7 @@ func TestDebugOperator(t *testing.T) {
 			mockDBOperatorManager.EXPECT().SelectByOperatorID(gomock.Any(), gomock.Any(), gomock.Any()).Return(true, operatorDB, nil).Times(1)
 			mockAuthService.EXPECT().GetAccessor(gomock.Any(), gomock.Any()).Return(accessor, nil).Times(1)
 			mockAuthService.EXPECT().CheckExecutePermission(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).Times(1)
-			mockDBAPIMetadataManager.EXPECT().SelectByVersion(gomock.Any(), gomock.Any()).Return(false, nil, nil).Times(1)
+			mockMetadataService.EXPECT().CheckMetadataExists(gomock.Any(), gomock.Any(), gomock.Any()).Return(false, nil, nil).Times(1)
 			_, err := operator.DebugOperator(context.TODO(), req)
 			So(err, ShouldNotBeNil)
 		})
@@ -171,7 +174,7 @@ func TestDebugOperator(t *testing.T) {
 			mockDBOperatorManager.EXPECT().SelectByOperatorID(gomock.Any(), gomock.Any(), gomock.Any()).Return(true, operatorDB, nil).Times(1)
 			mockAuthService.EXPECT().GetAccessor(gomock.Any(), gomock.Any()).Return(accessor, nil).Times(1)
 			mockAuthService.EXPECT().CheckExecutePermission(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).Times(1)
-			mockDBAPIMetadataManager.EXPECT().SelectByVersion(gomock.Any(), gomock.Any()).Return(true, metadata, nil).Times(1)
+			mockMetadataService.EXPECT().CheckMetadataExists(gomock.Any(), gomock.Any(), gomock.Any()).Return(true, metadata, nil).Times(1)
 			mockProxy.EXPECT().HandlerRequest(gomock.Any(), gomock.Any()).Return(nil, errors.New("mock HandlerRequest error")).Times(1)
 			_, err := operator.DebugOperator(context.TODO(), req)
 			So(err, ShouldNotBeNil)
@@ -184,7 +187,7 @@ func TestDebugOperator(t *testing.T) {
 			mockDBOperatorManager.EXPECT().SelectByOperatorID(gomock.Any(), gomock.Any(), gomock.Any()).Return(true, operatorDB, nil).Times(1)
 			mockAuthService.EXPECT().GetAccessor(gomock.Any(), gomock.Any()).Return(accessor, nil).Times(1)
 			mockAuthService.EXPECT().CheckExecutePermission(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).Times(1)
-			mockDBAPIMetadataManager.EXPECT().SelectByVersion(gomock.Any(), gomock.Any()).Return(true, metadata, nil).Times(1)
+			mockMetadataService.EXPECT().CheckMetadataExists(gomock.Any(), gomock.Any(), gomock.Any()).Return(true, metadata, nil).Times(1)
 			mockProxy.EXPECT().HandlerRequest(gomock.Any(), gomock.Any()).Return(&interfaces.HTTPResponse{
 				StatusCode: 200,
 				Body:       []byte("mock Body"),

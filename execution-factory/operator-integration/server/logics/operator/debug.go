@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"time"
 
+	jsoniter "github.com/json-iterator/go"
 	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/infra/common"
 	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/infra/errors"
 	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/interfaces"
@@ -13,7 +14,6 @@ import (
 	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/logics/metric"
 	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/utils"
 	o11y "github.com/kweaver-ai/kweaver-go-lib/observability"
-	jsoniter "github.com/json-iterator/go"
 )
 
 // DebugOperator 调试接口
@@ -166,10 +166,14 @@ func (m *operatorManager) ExecuteOperator(ctx context.Context, req *interfaces.E
 func (m *operatorManager) executeOperator(ctx context.Context, operatorID string, reqParam interfaces.HTTPRequestParams,
 	metadataType interfaces.MetadataType, metadataVersion string, timeout int64) (resp *interfaces.HTTPResponse, err error) {
 	// 获取元数据
-	metadataDB, err := m.MetadataService.GetMetadataByVersion(ctx, metadataType, metadataVersion)
+	exists, metadataDB, err := m.MetadataService.CheckMetadataExists(ctx, metadataType, metadataVersion)
 	if err != nil {
 		m.Logger.WithContext(ctx).Warnf("select metadata by id failed, err: %v", err)
 		err = errors.DefaultHTTPError(ctx, http.StatusInternalServerError, err.Error())
+		return
+	}
+	if !exists {
+		err = errors.NewHTTPError(ctx, http.StatusNotFound, errors.ErrExtMetadataNotFound, fmt.Sprintf("metadata not found, type: %s, version: %s", metadataType, metadataVersion))
 		return
 	}
 	// 执行算子

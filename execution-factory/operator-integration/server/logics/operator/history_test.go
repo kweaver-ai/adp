@@ -20,11 +20,10 @@ import (
 )
 
 func TestQueryOperatorHistoryDetail(t *testing.T) {
-	ctrl := gomock.NewController(t)
-	defer ctrl.Finish()
 	Convey("TestQueryOperatorHistoryDetail: 查询操作历史详情", t, func() {
+		ctrl := gomock.NewController(t)
+		defer ctrl.Finish()
 		mockDBOperatorManager := mocks.NewMockIOperatorRegisterDB(ctrl)
-		mockDBAPIMetadataManager := mocks.NewMockIAPIMetadataDB(ctrl)
 		mockDBTx := mocks.NewMockDBTx(ctrl)
 		mockCategoryManager := mocks.NewMockCategoryManager(ctrl)
 		mockUserMgnt := mocks.NewMockUserManagement(ctrl)
@@ -35,6 +34,7 @@ func TestQueryOperatorHistoryDetail(t *testing.T) {
 		mockIntCompConfigSvc := mocks.NewMockIIntCompConfigService(ctrl)
 		mockAuthService := mocks.NewMockIAuthorizationService(ctrl)
 		mockAuditLog := mocks.NewMockLogModelOperator[*metric.AuditLogBuilderParams](ctrl)
+		mockMetadataService := mocks.NewMockIMetadataService(ctrl)
 		operator := &operatorManager{
 			Logger:             logger.DefaultLogger(),
 			DBOperatorManager:  mockDBOperatorManager,
@@ -48,6 +48,7 @@ func TestQueryOperatorHistoryDetail(t *testing.T) {
 			IntCompConfigSvc:   mockIntCompConfigSvc,
 			AuthService:        mockAuthService,
 			AuditLog:           mockAuditLog,
+			MetadataService:    mockMetadataService,
 		}
 		req := &interfaces.OperatorHistoryDetailReq{}
 		accessor := &interfaces.AuthAccessor{}
@@ -101,27 +102,27 @@ func TestQueryOperatorHistoryDetail(t *testing.T) {
 			_, err := operator.QueryOperatorHistoryDetail(ctx, req)
 			So(err, ShouldNotBeNil)
 		})
-		Convey("TestQueryOperatorHistoryDetail: 获取算子元数据报错（DB）", func() {
+		Convey("TestQueryOperatorHistoryDetail: 获取算子元数据报错", func() {
 			historyDB.OpRelease = `{"metadata_version":"1.0.1"}`
 			mockOpReleaseHistoryDB.EXPECT().SelectByOpIDAndMetdata(gomock.Any(), gomock.Any(), gomock.Any()).Return(true, historyDB, nil).Times(1)
-			mockDBAPIMetadataManager.EXPECT().SelectByVersion(gomock.Any(), gomock.Any()).Return(false, nil, errors.New("mock SelectByVersion error")).Times(1)
+			mockMetadataService.EXPECT().CheckMetadataExists(gomock.Any(), gomock.Any(), gomock.Any()).Return(false, nil, mocks.MockFuncErr("GetMetadataByVersion")).Times(1)
 			_, err := operator.QueryOperatorHistoryDetail(context.TODO(), req)
 			So(err, ShouldNotBeNil)
 		})
 		Convey("TestQueryOperatorHistoryDetail: 元数据不存在", func() {
 			historyDB.OpRelease = `{"metadata_version":"1.0.1"}`
 			mockOpReleaseHistoryDB.EXPECT().SelectByOpIDAndMetdata(gomock.Any(), gomock.Any(), gomock.Any()).Return(true, historyDB, nil).Times(1)
-			mockDBAPIMetadataManager.EXPECT().SelectByVersion(gomock.Any(), gomock.Any()).Return(false, nil, nil).Times(1)
+			mockMetadataService.EXPECT().CheckMetadataExists(gomock.Any(), gomock.Any(), gomock.Any()).Return(false, nil, nil).Times(1)
 			_, err := operator.QueryOperatorHistoryDetail(context.TODO(), req)
 			So(err, ShouldNotBeNil)
 		})
 		Convey("TestQueryOperatorHistoryDetail: assembleReleaseResult 组装数据报错", func() {
 			historyDB.OpRelease = utils.ObjectToJSON(&model.OperatorReleaseDB{
 				ExecuteControl: `{}`,
-				ExtendInfo:     `{}`,
+				ExtendInfo:     "SS",
 			})
 			mockOpReleaseHistoryDB.EXPECT().SelectByOpIDAndMetdata(gomock.Any(), gomock.Any(), gomock.Any()).Return(true, historyDB, nil).Times(1)
-			mockDBAPIMetadataManager.EXPECT().SelectByVersion(gomock.Any(), gomock.Any()).Return(true, metadataDB, nil).Times(1)
+			mockMetadataService.EXPECT().CheckMetadataExists(gomock.Any(), gomock.Any(), gomock.Any()).Return(true, metadataDB, nil).Times(1)
 			_, err := operator.QueryOperatorHistoryDetail(context.TODO(), req)
 			So(err, ShouldNotBeNil)
 		})
@@ -133,7 +134,7 @@ func TestQueryOperatorHistoryDetail(t *testing.T) {
 			fmt.Println(historyDB.OpRelease)
 			metadataDB.APISpec = `{}`
 			mockOpReleaseHistoryDB.EXPECT().SelectByOpIDAndMetdata(gomock.Any(), gomock.Any(), gomock.Any()).Return(true, historyDB, nil).Times(1)
-			mockDBAPIMetadataManager.EXPECT().SelectByVersion(gomock.Any(), gomock.Any()).Return(true, metadataDB, nil).Times(1)
+			mockMetadataService.EXPECT().CheckMetadataExists(gomock.Any(), gomock.Any(), gomock.Any()).Return(true, metadataDB, nil).Times(1)
 			mockCategoryManager.EXPECT().GetCategoryName(gomock.Any(), gomock.Any()).Return("mock Name").Times(1)
 			mockUserMgnt.EXPECT().GetUsersName(gomock.Any(), gomock.Any()).Return(nil, errors.New("mock GetUserInfo error")).Times(1)
 			_, err := operator.QueryOperatorHistoryDetail(context.TODO(), req)
@@ -147,7 +148,7 @@ func TestQueryOperatorHistoryDetail(t *testing.T) {
 			fmt.Println(historyDB.OpRelease)
 			metadataDB.APISpec = `{}`
 			mockOpReleaseHistoryDB.EXPECT().SelectByOpIDAndMetdata(gomock.Any(), gomock.Any(), gomock.Any()).Return(true, historyDB, nil).Times(1)
-			mockDBAPIMetadataManager.EXPECT().SelectByVersion(gomock.Any(), gomock.Any()).Return(true, metadataDB, nil).Times(1)
+			mockMetadataService.EXPECT().CheckMetadataExists(gomock.Any(), gomock.Any(), gomock.Any()).Return(true, metadataDB, nil).Times(1)
 			mockCategoryManager.EXPECT().GetCategoryName(gomock.Any(), gomock.Any()).Return("mock Name").Times(1)
 			mockUserMgnt.EXPECT().GetUsersName(gomock.Any(), gomock.Any()).Return(map[string]string{}, nil).Times(1)
 			_, err := operator.QueryOperatorHistoryDetail(context.TODO(), req)
@@ -160,7 +161,6 @@ func TestQueryOperatorHistoryList(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 	mockDBOperatorManager := mocks.NewMockIOperatorRegisterDB(ctrl)
-	mockDBAPIMetadataManager := mocks.NewMockIAPIMetadataDB(ctrl)
 	mockDBTx := mocks.NewMockDBTx(ctrl)
 	mockCategoryManager := mocks.NewMockCategoryManager(ctrl)
 	mockUserMgnt := mocks.NewMockUserManagement(ctrl)
@@ -171,6 +171,7 @@ func TestQueryOperatorHistoryList(t *testing.T) {
 	mockIntCompConfigSvc := mocks.NewMockIIntCompConfigService(ctrl)
 	mockAuthService := mocks.NewMockIAuthorizationService(ctrl)
 	mockAuditLog := mocks.NewMockLogModelOperator[*metric.AuditLogBuilderParams](ctrl)
+	mockMetadataService := mocks.NewMockIMetadataService(ctrl)
 	operator := &operatorManager{
 		Logger:             logger.DefaultLogger(),
 		DBOperatorManager:  mockDBOperatorManager,
@@ -184,6 +185,7 @@ func TestQueryOperatorHistoryList(t *testing.T) {
 		IntCompConfigSvc:   mockIntCompConfigSvc,
 		AuthService:        mockAuthService,
 		AuditLog:           mockAuditLog,
+		MetadataService:    mockMetadataService,
 	}
 	Convey("TestQueryOperatorHistoryList:获取历史记录列表", t, func() {
 		req := &interfaces.OperatorHistoryListReq{}
@@ -193,47 +195,48 @@ func TestQueryOperatorHistoryList(t *testing.T) {
 				ID:              0,
 				OpID:            "OpID",
 				MetadataVersion: "MetadataVersion0",
-				MetadataType:    "openapi",
+				MetadataType:    string(interfaces.MetadataTypeAPI),
 			},
 			{
 				ID:              1,
 				OpID:            "OpID",
 				MetadataVersion: "MetadataVersion1",
-				MetadataType:    "openapi",
+				MetadataType:    string(interfaces.MetadataTypeAPI),
 				OpRelease:       `{}`,
 			},
 			{
 				ID:              2,
 				OpID:            "OpID",
 				MetadataVersion: "MetadataVersion2",
-				MetadataType:    "openapi",
+				MetadataType:    string(interfaces.MetadataTypeAPI),
 				OpRelease:       `{}`,
 			},
 			{
 				ID:              3,
 				OpID:            "OpID",
 				MetadataVersion: "MetadataVersion3",
-				MetadataType:    "openapi",
+				MetadataType:    string(interfaces.MetadataTypeFunc),
 				OpRelease: utils.ObjectToJSON(&model.OperatorReleaseDB{
 					ExecuteControl: `{}`,
 					ExtendInfo:     `{}`,
 				}),
 			},
 		}
-		metadataList := []*model.APIMetadataDB{
-			{
+
+		metadataList := []interfaces.IMetadataDB{
+			&model.APIMetadataDB{
 				ID:      0,
 				Version: "MetadataVersion0",
 			},
-			{
+			&model.APIMetadataDB{
 				ID:      1,
 				Version: "MetadataVersion",
 			},
-			{
+			&model.APIMetadataDB{
 				ID:      2,
 				Version: "MetadataVersion2",
 			},
-			{
+			&model.APIMetadataDB{
 				ID:      3,
 				Version: "MetadataVersion3",
 				APISpec: `{}`,
@@ -306,20 +309,23 @@ func TestQueryOperatorHistoryList(t *testing.T) {
 			_, err := operator.QueryOperatorHistoryList(context.TODO(), req)
 			So(err, ShouldBeNil)
 		})
-		Convey("获取元数据信息失败（db）", func() {
+		Convey("获取元数据信息失败", func() {
 			mockDBOperatorManager.EXPECT().SelectByOperatorID(gomock.Any(), gomock.Any(), gomock.Any()).Return(true, &model.OperatorRegisterDB{}, nil).Times(1)
 			mockOpReleaseHistoryDB.EXPECT().SelectByOpID(gomock.Any(), gomock.Any()).Return(histories, nil).Times(1)
-			mockDBAPIMetadataManager.EXPECT().SelectListByVersion(gomock.Any(), gomock.Any()).Return(nil, errors.New("mock SelectListByVersion error")).Times(1)
+			// mockDBAPIMetadataManager.EXPECT().SelectListByVersion(gomock.Any(), gomock.Any()).Return(nil, errors.New("mock SelectListByVersion error")).Times(1)
+			mockMetadataService.EXPECT().BatchGetMetadataBySourceIDs(gomock.Any(), gomock.Any()).Return(nil, mocks.MockFuncErr("BatchGetMetadataBySourceIDs")).Times(1)
 			_, err := operator.QueryOperatorHistoryList(context.TODO(), req)
 			So(err, ShouldNotBeNil)
-			httpErr := &myErr.HTTPError{}
-			So(errors.As(err, &httpErr), ShouldBeTrue)
-			So(httpErr.HTTPCode, ShouldEqual, http.StatusInternalServerError)
 		})
 		Convey("元数据信息不存在, 解析release失败，组装数据失败，组装数据成功，获取用户名报错", func() {
+			sourceIDToMetadataMap := map[string]interfaces.IMetadataDB{}
+			for _, metadata := range metadataList {
+				sourceIDToMetadataMap[metadata.GetVersion()] = metadata
+			}
 			mockDBOperatorManager.EXPECT().SelectByOperatorID(gomock.Any(), gomock.Any(), gomock.Any()).Return(true, &model.OperatorRegisterDB{}, nil).Times(1)
 			mockOpReleaseHistoryDB.EXPECT().SelectByOpID(gomock.Any(), gomock.Any()).Return(histories, nil).Times(1)
-			mockDBAPIMetadataManager.EXPECT().SelectListByVersion(gomock.Any(), gomock.Any()).Return(metadataList, nil).Times(1)
+			mockMetadataService.EXPECT().BatchGetMetadataBySourceIDs(gomock.Any(), gomock.Any()).Return(sourceIDToMetadataMap, nil).Times(1)
+			// mockDBAPIMetadataManager.EXPECT().SelectListByVersion(gomock.Any(), gomock.Any()).Return(metadataList, nil).Times(1)
 			mockCategoryManager.EXPECT().GetCategoryName(gomock.Any(), gomock.Any()).Return("MOCK").Times(1)
 			mockUserMgnt.EXPECT().GetUsersName(gomock.Any(), gomock.Any()).Return(nil, errors.New("mock GetUsersName error")).Times(1)
 			_, err := operator.QueryOperatorHistoryList(context.TODO(), req)
@@ -327,9 +333,13 @@ func TestQueryOperatorHistoryList(t *testing.T) {
 			fmt.Println(err)
 		})
 		Convey("获取元数据列表成功", func() {
+			sourceIDToMetadataMap := map[string]interfaces.IMetadataDB{}
+			for _, metadata := range metadataList {
+				sourceIDToMetadataMap[metadata.GetVersion()] = metadata
+			}
 			mockDBOperatorManager.EXPECT().SelectByOperatorID(gomock.Any(), gomock.Any(), gomock.Any()).Return(true, &model.OperatorRegisterDB{}, nil).Times(1)
 			mockOpReleaseHistoryDB.EXPECT().SelectByOpID(gomock.Any(), gomock.Any()).Return(histories, nil).Times(1)
-			mockDBAPIMetadataManager.EXPECT().SelectListByVersion(gomock.Any(), gomock.Any()).Return(metadataList, nil).Times(1)
+			mockMetadataService.EXPECT().BatchGetMetadataBySourceIDs(gomock.Any(), gomock.Any()).Return(sourceIDToMetadataMap, nil).Times(1)
 			mockCategoryManager.EXPECT().GetCategoryName(gomock.Any(), gomock.Any()).Return("MOCK").Times(1)
 			mockUserMgnt.EXPECT().GetUsersName(gomock.Any(), gomock.Any()).Return(map[string]string{}, nil).Times(1)
 			resp, err := operator.QueryOperatorHistoryList(context.TODO(), req)

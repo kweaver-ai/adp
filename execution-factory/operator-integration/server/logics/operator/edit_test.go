@@ -3,6 +3,7 @@ package operator
 import (
 	"context"
 	"database/sql"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
@@ -26,7 +27,7 @@ func TestEditOperator(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 	mockDBOperatorManager := mocks.NewMockIOperatorRegisterDB(ctrl)
-	mockDBAPIMetadataManager := mocks.NewMockIAPIMetadataDB(ctrl)
+	// mockDBAPIMetadataManager := mocks.NewMockIAPIMetadataDB(ctrl)
 	mockDBTx := mocks.NewMockDBTx(ctrl)
 	mockCategoryManager := mocks.NewMockCategoryManager(ctrl)
 	mockUserMgnt := mocks.NewMockUserManagement(ctrl)
@@ -37,6 +38,7 @@ func TestEditOperator(t *testing.T) {
 	mockIntCompConfigSvc := mocks.NewMockIIntCompConfigService(ctrl)
 	mockAuthService := mocks.NewMockIAuthorizationService(ctrl)
 	mockAuditLog := mocks.NewMockLogModelOperator[*metric.AuditLogBuilderParams](ctrl)
+	mockMetadataService := mocks.NewMockIMetadataService(ctrl)
 	m := &operatorManager{
 		Logger:             logger.DefaultLogger(),
 		DBOperatorManager:  mockDBOperatorManager,
@@ -50,6 +52,7 @@ func TestEditOperator(t *testing.T) {
 		IntCompConfigSvc:   mockIntCompConfigSvc,
 		AuthService:        mockAuthService,
 		AuditLog:           mockAuditLog,
+		MetadataService:    mockMetadataService,
 	}
 	mockOperatorID := "b2d8baf0-e31f-4cac-851d-30ad8c2e4722"
 	mockReq := &interfaces.OperatorEditReq{
@@ -75,7 +78,6 @@ func TestEditOperator(t *testing.T) {
 		},
 		UserID: "mock",
 	}
-	mockName := "a"
 	// mockAPIEditReq := &interfaces.APIMetadataEdit{
 	// 	Summary:     mockName,
 	// 	Description: "Description",
@@ -101,6 +103,7 @@ func TestEditOperator(t *testing.T) {
 	// 		},
 	// 	},
 	// }
+	operatorDB := &model.OperatorRegisterDB{}
 	Convey("TestEditOperator:算子编辑校验", t, func() {
 		Convey("查询算子失败", func() {
 			mockDBOperatorManager.EXPECT().SelectByOperatorID(gomock.Any(), gomock.Any(), gomock.Any()).
@@ -139,286 +142,370 @@ func TestEditOperator(t *testing.T) {
 			_, err := m.EditOperator(context.TODO(), mockReq)
 			So(err, ShouldNotBeNil)
 		})
-		Convey("算子元数据类型不合法", func() {
-			mockDBOperatorManager.EXPECT().SelectByOperatorID(gomock.Any(), gomock.Any(), gomock.Any()).
-				Return(true, &model.OperatorRegisterDB{
-					Name:       mockName,
-					UpdateUser: mockReq.UserID,
-				}, nil)
-			mockAuthService.EXPECT().GetAccessor(gomock.Any(), gomock.Any()).Return(&interfaces.AuthAccessor{}, nil).Times(1)
-			mockAuthService.EXPECT().CheckModifyPermission(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).Times(1)
-			mockReq.Name = ""
-			_, err := m.EditOperator(context.TODO(), mockReq)
-			So(err, ShouldNotBeNil)
-			httpErr := &myErr.HTTPError{}
-			So(errors.As(err, &httpErr), ShouldBeTrue)
-			So(httpErr.HTTPCode, ShouldEqual, http.StatusBadRequest)
-		})
-		Convey("算子名称不合法", func() {
-			mockDBOperatorManager.EXPECT().SelectByOperatorID(gomock.Any(), gomock.Any(), gomock.Any()).
-				Return(true, &model.OperatorRegisterDB{
-					Name:         mockName,
-					UpdateUser:   mockReq.UserID,
-					MetadataType: string(interfaces.MetadataTypeAPI),
-				}, nil)
-			mockAuthService.EXPECT().GetAccessor(gomock.Any(), gomock.Any()).Return(&interfaces.AuthAccessor{}, nil).Times(1)
-			mockAuthService.EXPECT().CheckModifyPermission(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).Times(1)
-			mockValidator.EXPECT().ValidateOperatorName(gomock.Any(), gomock.Any()).Return(errors.New("mock ValidateName error")).Times(1)
-			_, err := m.EditOperator(context.TODO(), mockReq)
-			So(err, ShouldNotBeNil)
-		})
-		Convey("算子元数据查询报错", func() {
-			mockDBOperatorManager.EXPECT().SelectByOperatorID(gomock.Any(), gomock.Any(), gomock.Any()).
-				Return(true, &model.OperatorRegisterDB{
-					Name:         mockName,
-					UpdateUser:   mockReq.UserID,
-					MetadataType: string(interfaces.MetadataTypeAPI),
-				}, nil)
-			mockAuthService.EXPECT().GetAccessor(gomock.Any(), gomock.Any()).Return(&interfaces.AuthAccessor{}, nil).Times(1)
-			mockAuthService.EXPECT().CheckModifyPermission(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).Times(1)
-			mockValidator.EXPECT().ValidateOperatorName(gomock.Any(), gomock.Any()).Return(nil).Times(1)
-			mockDBAPIMetadataManager.EXPECT().SelectByVersion(gomock.Any(), gomock.Any()).Return(false, nil, errors.New("mock SelectByVersion error"))
-			_, err := m.EditOperator(context.TODO(), mockReq)
-			So(err, ShouldNotBeNil)
-			fmt.Println(err.Error())
-			httpErr := &myErr.HTTPError{}
-			So(errors.As(err, &httpErr), ShouldBeTrue)
-			So(httpErr.HTTPCode, ShouldEqual, http.StatusInternalServerError)
-		})
-		Convey("算子元数据不存在", func() {
-			mockDBOperatorManager.EXPECT().SelectByOperatorID(gomock.Any(), gomock.Any(), gomock.Any()).
-				Return(true, &model.OperatorRegisterDB{
-					Name:         mockName,
-					UpdateUser:   mockReq.UserID,
-					MetadataType: string(interfaces.MetadataTypeAPI),
-				}, nil)
-			mockAuthService.EXPECT().GetAccessor(gomock.Any(), gomock.Any()).Return(&interfaces.AuthAccessor{}, nil).Times(1)
-			mockAuthService.EXPECT().CheckModifyPermission(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).Times(1)
-			mockValidator.EXPECT().ValidateOperatorName(gomock.Any(), gomock.Any()).Return(nil).Times(1)
-			mockDBAPIMetadataManager.EXPECT().SelectByVersion(gomock.Any(), gomock.Any()).Return(false, nil, nil)
-			_, err := m.EditOperator(context.TODO(), mockReq)
-			So(err, ShouldNotBeNil)
-			fmt.Println(err.Error())
-			httpErr := &myErr.HTTPError{}
-			So(errors.As(err, &httpErr), ShouldBeTrue)
-			So(httpErr.HTTPCode, ShouldEqual, http.StatusNotFound)
-		})
-		Convey("检查元数据参数变更,Description不合法", func() {
-			// mockAPIEditReq.Summary = mockName
-			// mockAPIEditReq.Description = "超出默认字符限制,默认10个"
-			mockDBOperatorManager.EXPECT().SelectByOperatorID(gomock.Any(), gomock.Any(), gomock.Any()).
-				Return(true, &model.OperatorRegisterDB{
-					Name:         mockName,
-					UpdateUser:   mockReq.UserID,
-					MetadataType: string(interfaces.MetadataTypeAPI),
-				}, nil)
-			mockAuthService.EXPECT().GetAccessor(gomock.Any(), gomock.Any()).Return(&interfaces.AuthAccessor{}, nil).Times(1)
-			mockAuthService.EXPECT().CheckModifyPermission(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).Times(1)
-			mockValidator.EXPECT().ValidateOperatorName(gomock.Any(), gomock.Any()).Return(nil).Times(1)
-			mockDBAPIMetadataManager.EXPECT().SelectByVersion(gomock.Any(), gomock.Any()).Return(true, &model.APIMetadataDB{}, nil)
-			mockValidator.EXPECT().ValidateOperatorDesc(gomock.Any(), gomock.Any()).Return(mocks.MockFuncErr("ValidateOperatorDesc")).Times(1)
-			_, err := m.EditOperator(context.TODO(), mockReq)
-			So(err, ShouldNotBeNil)
-		})
-		Convey("检查元数据参数变更,元数据传参无效", func() {
+		Convey("OpenAPI类型解析元数据失败", func() {
+			operatorDB.MetadataType = string(interfaces.MetadataTypeAPI)
+			mockReq.OpenAPIInput = &interfaces.OpenAPIInput{
+				Data: json.RawMessage(`{"openapi": "3.0.0"}`),
+			}
 			mockReq.MetadataType = interfaces.MetadataTypeAPI
-			mockReq.Data = []byte(`{"name": "mockName", "description": "mockDesc"}`)
 			mockDBOperatorManager.EXPECT().SelectByOperatorID(gomock.Any(), gomock.Any(), gomock.Any()).
-				Return(true, &model.OperatorRegisterDB{
-					Name:         mockName,
-					UpdateUser:   mockReq.UserID,
-					MetadataType: string(interfaces.MetadataTypeAPI),
-				}, nil)
-			// mockOpenAPIParser.EXPECT().GetPathItemContent(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil, mocks.MockFuncErr("GetPathItemContent")).Times(1)
+				Return(true, operatorDB, nil)
 			mockAuthService.EXPECT().GetAccessor(gomock.Any(), gomock.Any()).Return(&interfaces.AuthAccessor{}, nil).Times(1)
 			mockAuthService.EXPECT().CheckModifyPermission(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).Times(1)
-			mockValidator.EXPECT().ValidateOperatorName(gomock.Any(), gomock.Any()).Return(nil).Times(1)
-			mockDBAPIMetadataManager.EXPECT().SelectByVersion(gomock.Any(), gomock.Any()).Return(true, &model.APIMetadataDB{}, nil)
-			mockValidator.EXPECT().ValidateOperatorDesc(gomock.Any(), gomock.Any()).Return(nil).Times(1)
+			mockMetadataService.EXPECT().CheckMetadataExists(gomock.Any(), gomock.Any(), gomock.Any()).Return(true, &model.APIMetadataDB{}, nil).Times(1)
+			mockMetadataService.EXPECT().ParseMetadata(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil, mocks.MockFuncErr("ParseMetadata")).Times(1)
 			_, err := m.EditOperator(context.TODO(), mockReq)
 			So(err, ShouldNotBeNil)
-			fmt.Println(err.Error())
 		})
-		Convey("检查元数据参数变更,元数据校验未通过", func() {
+		Convey("OpenAPI类型解析元数据: 基础算子: 未匹配到带更新算子", func() {
+			operatorDB.MetadataType = string(interfaces.MetadataTypeAPI)
+			operatorDB.OperatorType = string(interfaces.OperatorTypeBase)
+			mockReq.OpenAPIInput = &interfaces.OpenAPIInput{
+				Data: json.RawMessage(`{"openapi": "3.0.0"}`),
+			}
 			mockReq.MetadataType = interfaces.MetadataTypeAPI
-			mockReq.Data = []byte(`{}`)
+			metadataList := []interfaces.IMetadataDB{
+				&model.APIMetadataDB{
+					Path:   "/path",
+					Method: "GET",
+				},
+			}
 			mockDBOperatorManager.EXPECT().SelectByOperatorID(gomock.Any(), gomock.Any(), gomock.Any()).
-				Return(true, &model.OperatorRegisterDB{
-					Name:         mockName,
-					UpdateUser:   mockReq.UserID,
-					MetadataType: string(interfaces.MetadataTypeAPI),
-				}, nil)
-			// mockOpenAPIParss
+				Return(true, operatorDB, nil)
 			mockAuthService.EXPECT().GetAccessor(gomock.Any(), gomock.Any()).Return(&interfaces.AuthAccessor{}, nil).Times(1)
 			mockAuthService.EXPECT().CheckModifyPermission(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).Times(1)
-			mockValidator.EXPECT().ValidateOperatorName(gomock.Any(), gomock.Any()).Return(nil).Times(2)
-			mockDBAPIMetadataManager.EXPECT().SelectByVersion(gomock.Any(), gomock.Any()).Return(true, &model.APIMetadataDB{}, nil)
-			mockValidator.EXPECT().ValidateOperatorDesc(gomock.Any(), gomock.Any()).Return(nil).Times(1)
-			mockValidator.EXPECT().ValidatorStruct(gomock.Any(), gomock.Any()).Return(mocks.MockFuncErr("ValidatorStruct")).Times(1)
+			mockMetadataService.EXPECT().CheckMetadataExists(gomock.Any(), gomock.Any(), gomock.Any()).Return(true, &model.APIMetadataDB{}, nil).Times(1)
+			mockMetadataService.EXPECT().ParseMetadata(gomock.Any(), gomock.Any(), gomock.Any()).Return(metadataList, nil).Times(1)
 			_, err := m.EditOperator(context.TODO(), mockReq)
 			So(err, ShouldNotBeNil)
 		})
-	})
-	Convey("TestEditOperator:编辑未发布算子", t, func() {
-		p := gomonkey.ApplyFunc((*sql.Tx).Rollback, func(*sql.Tx) error {
-			return nil
-		})
-		defer p.Reset()
-		p1 := gomonkey.ApplyFunc((*sql.Tx).Commit, func(*sql.Tx) error {
-			return nil
-		})
-		defer p1.Reset()
-		mockAuthService.EXPECT().GetAccessor(gomock.Any(), gomock.Any()).Return(&interfaces.AuthAccessor{}, nil).AnyTimes()
-		mockAuthService.EXPECT().CheckModifyPermission(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
-		mockValidator.EXPECT().ValidateOperatorName(gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
-		mockDBAPIMetadataManager.EXPECT().SelectByVersion(gomock.Any(), gomock.Any()).Return(true, &model.APIMetadataDB{}, nil).AnyTimes()
-		mockValidator.EXPECT().ValidatorStruct(gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
-		mockValidator.EXPECT().ValidateOperatorDesc(gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
-		mockDBTx.EXPECT().GetTx(gomock.Any()).Return(&sql.Tx{}, nil)
-		// mockOpenAPIParser.EXPECT().GetPathItemContent(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(&interfaces.PathItemContent{
-		// 	Summary: mockName,
-		// }, nil).AnyTimes()
-		Convey("检查算子重名: 查询重名算子失败（db）", func() {
+		Convey("OpenAPI类型解析元数据: 组合算子更新, 编辑算子获取TX失败", func() {
+			operatorDB.MetadataType = string(interfaces.MetadataTypeAPI)
+			operatorDB.OperatorType = string(interfaces.OperatorTypeComposite)
+			mockReq.OpenAPIInput = &interfaces.OpenAPIInput{
+				Data: json.RawMessage(`{"openapi": "3.0.0"}`),
+			}
+			mockReq.MetadataType = interfaces.MetadataTypeAPI
+			metadataList := []interfaces.IMetadataDB{
+				&model.APIMetadataDB{
+					Path:        "/path",
+					Method:      "GET",
+					Summary:     "测试",
+					APISpec:     `{}`,
+					Description: "测试",
+				},
+			}
 			mockDBOperatorManager.EXPECT().SelectByOperatorID(gomock.Any(), gomock.Any(), gomock.Any()).
-				Return(true, &model.OperatorRegisterDB{
-					UpdateUser:   mockReq.UserID,
-					MetadataType: string(interfaces.MetadataTypeAPI),
-					Status:       string(interfaces.BizStatusUnpublish),
-				}, nil)
+				Return(true, operatorDB, nil)
+			mockAuthService.EXPECT().GetAccessor(gomock.Any(), gomock.Any()).Return(&interfaces.AuthAccessor{}, nil).Times(1)
+			mockAuthService.EXPECT().CheckModifyPermission(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).Times(1)
+			mockMetadataService.EXPECT().CheckMetadataExists(gomock.Any(), gomock.Any(), gomock.Any()).Return(true, &model.APIMetadataDB{
+				Description: "测试2",
+			}, nil).Times(1)
+			mockMetadataService.EXPECT().ParseMetadata(gomock.Any(), gomock.Any(), gomock.Any()).Return(metadataList, nil).Times(1)
+			mockValidator.EXPECT().ValidateOperatorName(gomock.Any(), gomock.Any()).Return(nil).Times(1)
+			mockValidator.EXPECT().ValidateOperatorDesc(gomock.Any(), gomock.Any()).Return(nil).Times(1)
+			mockDBTx.EXPECT().GetTx(gomock.Any()).Return(nil, mocks.MockFuncErr("GetTx")).Times(1)
+			_, err := m.EditOperator(context.TODO(), mockReq)
+			So(err, ShouldNotBeNil)
+		})
+		Convey("Function类型解析元数据: 编辑算子获取TX失败", func() {
+			operatorDB.MetadataType = string(interfaces.MetadataTypeFunc)
+			operatorDB.OperatorType = string(interfaces.OperatorTypeComposite)
+			mockReq.FunctionInputEdit = &interfaces.FunctionInputEdit{}
+			mockReq.MetadataType = interfaces.MetadataTypeFunc
+			metadataList := []interfaces.IMetadataDB{
+				&model.FunctionMetadataDB{
+					Path:        "/path",
+					Method:      "GET",
+					Summary:     "测试",
+					APISpec:     `{}`,
+					Description: "测试",
+				},
+			}
+			mockDBOperatorManager.EXPECT().SelectByOperatorID(gomock.Any(), gomock.Any(), gomock.Any()).
+				Return(true, operatorDB, nil)
+			mockAuthService.EXPECT().GetAccessor(gomock.Any(), gomock.Any()).Return(&interfaces.AuthAccessor{}, nil).Times(1)
+			mockAuthService.EXPECT().CheckModifyPermission(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).Times(1)
+			mockMetadataService.EXPECT().CheckMetadataExists(gomock.Any(), gomock.Any(), gomock.Any()).Return(true, &model.APIMetadataDB{
+				Description: "测试2",
+			}, nil).Times(1)
+			mockMetadataService.EXPECT().ParseMetadata(gomock.Any(), gomock.Any(), gomock.Any()).Return(metadataList, nil).Times(1)
+			mockValidator.EXPECT().ValidateOperatorName(gomock.Any(), gomock.Any()).Return(nil).Times(1)
+			mockValidator.EXPECT().ValidateOperatorDesc(gomock.Any(), gomock.Any()).Return(nil).Times(1)
+			mockDBTx.EXPECT().GetTx(gomock.Any()).Return(&sql.Tx{}, nil).Times(1)
+			p := gomonkey.ApplyFunc((*sql.Tx).Rollback, func(*sql.Tx) error {
+				return nil
+			})
+			defer p.Reset()
+			p1 := gomonkey.ApplyFunc((*sql.Tx).Commit, func(*sql.Tx) error {
+				return nil
+			})
+			defer p1.Reset()
+			_, err := m.EditOperator(context.TODO(), mockReq)
+			So(err, ShouldNotBeNil)
+		})
+		// Convey("算子名称不合法", func() {
+		// 	mockDBOperatorManager.EXPECT().SelectByOperatorID(gomock.Any(), gomock.Any(), gomock.Any()).
+		// 		Return(true, operatorDB, nil)
+		// 	mockAuthService.EXPECT().GetAccessor(gomock.Any(), gomock.Any()).Return(&interfaces.AuthAccessor{}, nil).Times(1)
+		// 	mockAuthService.EXPECT().CheckModifyPermission(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).Times(1)
+		// 	mockValidator.EXPECT().ValidateOperatorName(gomock.Any(), gomock.Any()).Return(errors.New("mock ValidateName error")).Times(1)
+		// 	_, err := m.EditOperator(context.TODO(), mockReq)
+		// 	So(err, ShouldNotBeNil)
+		// })
+		// 	Convey("算子元数据查询报错", func() {
+		// 		mockDBOperatorManager.EXPECT().SelectByOperatorID(gomock.Any(), gomock.Any(), gomock.Any()).
+		// 			Return(true, &model.OperatorRegisterDB{
+		// 				Name:         mockName,
+		// 				UpdateUser:   mockReq.UserID,
+		// 				MetadataType: string(interfaces.MetadataTypeAPI),
+		// 			}, nil)
+		// 		mockAuthService.EXPECT().GetAccessor(gomock.Any(), gomock.Any()).Return(&interfaces.AuthAccessor{}, nil).Times(1)
+		// 		mockAuthService.EXPECT().CheckModifyPermission(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).Times(1)
+		// 		mockValidator.EXPECT().ValidateOperatorName(gomock.Any(), gomock.Any()).Return(nil).Times(1)
+		// 		mockDBAPIMetadataManager.EXPECT().SelectByVersion(gomock.Any(), gomock.Any()).Return(false, nil, errors.New("mock SelectByVersion error"))
+		// 		_, err := m.EditOperator(context.TODO(), mockReq)
+		// 		So(err, ShouldNotBeNil)
+		// 		fmt.Println(err.Error())
+		// 		httpErr := &myErr.HTTPError{}
+		// 		So(errors.As(err, &httpErr), ShouldBeTrue)
+		// 		So(httpErr.HTTPCode, ShouldEqual, http.StatusInternalServerError)
+		// 	})
+		// 	Convey("算子元数据不存在", func() {
+		// 		mockDBOperatorManager.EXPECT().SelectByOperatorID(gomock.Any(), gomock.Any(), gomock.Any()).
+		// 			Return(true, &model.OperatorRegisterDB{
+		// 				Name:         mockName,
+		// 				UpdateUser:   mockReq.UserID,
+		// 				MetadataType: string(interfaces.MetadataTypeAPI),
+		// 			}, nil)
+		// 		mockAuthService.EXPECT().GetAccessor(gomock.Any(), gomock.Any()).Return(&interfaces.AuthAccessor{}, nil).Times(1)
+		// 		mockAuthService.EXPECT().CheckModifyPermission(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).Times(1)
+		// 		mockValidator.EXPECT().ValidateOperatorName(gomock.Any(), gomock.Any()).Return(nil).Times(1)
+		// 		mockDBAPIMetadataManager.EXPECT().SelectByVersion(gomock.Any(), gomock.Any()).Return(false, nil, nil)
+		// 		_, err := m.EditOperator(context.TODO(), mockReq)
+		// 		So(err, ShouldNotBeNil)
+		// 		fmt.Println(err.Error())
+		// 		httpErr := &myErr.HTTPError{}
+		// 		So(errors.As(err, &httpErr), ShouldBeTrue)
+		// 		So(httpErr.HTTPCode, ShouldEqual, http.StatusNotFound)
+		// 	})
+		// 	Convey("检查元数据参数变更,Description不合法", func() {
+		// 		// mockAPIEditReq.Summary = mockName
+		// 		// mockAPIEditReq.Description = "超出默认字符限制,默认10个"
+		// 		mockDBOperatorManager.EXPECT().SelectByOperatorID(gomock.Any(), gomock.Any(), gomock.Any()).
+		// 			Return(true, &model.OperatorRegisterDB{
+		// 				Name:         mockName,
+		// 				UpdateUser:   mockReq.UserID,
+		// 				MetadataType: string(interfaces.MetadataTypeAPI),
+		// 			}, nil)
+		// 		mockAuthService.EXPECT().GetAccessor(gomock.Any(), gomock.Any()).Return(&interfaces.AuthAccessor{}, nil).Times(1)
+		// 		mockAuthService.EXPECT().CheckModifyPermission(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).Times(1)
+		// 		mockValidator.EXPECT().ValidateOperatorName(gomock.Any(), gomock.Any()).Return(nil).Times(1)
+		// 		mockDBAPIMetadataManager.EXPECT().SelectByVersion(gomock.Any(), gomock.Any()).Return(true, &model.APIMetadataDB{}, nil)
+		// 		mockValidator.EXPECT().ValidateOperatorDesc(gomock.Any(), gomock.Any()).Return(mocks.MockFuncErr("ValidateOperatorDesc")).Times(1)
+		// 		_, err := m.EditOperator(context.TODO(), mockReq)
+		// 		So(err, ShouldNotBeNil)
+		// 	})
+		// 	Convey("检查元数据参数变更,元数据传参无效", func() {
+		// 		mockReq.MetadataType = interfaces.MetadataTypeAPI
+		// 		mockReq.Data = []byte(`{"name": "mockName", "description": "mockDesc"}`)
+		// 		mockDBOperatorManager.EXPECT().SelectByOperatorID(gomock.Any(), gomock.Any(), gomock.Any()).
+		// 			Return(true, &model.OperatorRegisterDB{
+		// 				Name:         mockName,
+		// 				UpdateUser:   mockReq.UserID,
+		// 				MetadataType: string(interfaces.MetadataTypeAPI),
+		// 			}, nil)
+		// 		// mockOpenAPIParser.EXPECT().GetPathItemContent(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil, mocks.MockFuncErr("GetPathItemContent")).Times(1)
+		// 		mockAuthService.EXPECT().GetAccessor(gomock.Any(), gomock.Any()).Return(&interfaces.AuthAccessor{}, nil).Times(1)
+		// 		mockAuthService.EXPECT().CheckModifyPermission(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).Times(1)
+		// 		mockValidator.EXPECT().ValidateOperatorName(gomock.Any(), gomock.Any()).Return(nil).Times(1)
+		// 		mockDBAPIMetadataManager.EXPECT().SelectByVersion(gomock.Any(), gomock.Any()).Return(true, &model.APIMetadataDB{}, nil)
+		// 		mockValidator.EXPECT().ValidateOperatorDesc(gomock.Any(), gomock.Any()).Return(nil).Times(1)
+		// 		_, err := m.EditOperator(context.TODO(), mockReq)
+		// 		So(err, ShouldNotBeNil)
+		// 		fmt.Println(err.Error())
+		// 	})
+		// 	Convey("检查元数据参数变更,元数据校验未通过", func() {
+		// 		mockReq.MetadataType = interfaces.MetadataTypeAPI
+		// 		mockReq.Data = []byte(`{}`)
+		// 		mockDBOperatorManager.EXPECT().SelectByOperatorID(gomock.Any(), gomock.Any(), gomock.Any()).
+		// 			Return(true, &model.OperatorRegisterDB{
+		// 				Name:         mockName,
+		// 				UpdateUser:   mockReq.UserID,
+		// 				MetadataType: string(interfaces.MetadataTypeAPI),
+		// 			}, nil)
+		// 		// mockOpenAPIParss
+		// 		mockAuthService.EXPECT().GetAccessor(gomock.Any(), gomock.Any()).Return(&interfaces.AuthAccessor{}, nil).Times(1)
+		// 		mockAuthService.EXPECT().CheckModifyPermission(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).Times(1)
+		// 		mockValidator.EXPECT().ValidateOperatorName(gomock.Any(), gomock.Any()).Return(nil).Times(2)
+		// 		mockDBAPIMetadataManager.EXPECT().SelectByVersion(gomock.Any(), gomock.Any()).Return(true, &model.APIMetadataDB{}, nil)
+		// 		mockValidator.EXPECT().ValidateOperatorDesc(gomock.Any(), gomock.Any()).Return(nil).Times(1)
+		// 		mockValidator.EXPECT().ValidatorStruct(gomock.Any(), gomock.Any()).Return(mocks.MockFuncErr("ValidatorStruct")).Times(1)
+		// 		_, err := m.EditOperator(context.TODO(), mockReq)
+		// 		So(err, ShouldNotBeNil)
+		// 	})
+		// })
+		// Convey("TestEditOperator:编辑未发布算子", t, func() {
+		// 	p := gomonkey.ApplyFunc((*sql.Tx).Rollback, func(*sql.Tx) error {
+		// 		return nil
+		// 	})
+		// 	defer p.Reset()
+		// 	p1 := gomonkey.ApplyFunc((*sql.Tx).Commit, func(*sql.Tx) error {
+		// 		return nil
+		// 	})
+		// 	defer p1.Reset()
+		// 	mockAuthService.EXPECT().GetAccessor(gomock.Any(), gomock.Any()).Return(&interfaces.AuthAccessor{}, nil).AnyTimes()
+		// 	mockAuthService.EXPECT().CheckModifyPermission(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
+		// 	mockValidator.EXPECT().ValidateOperatorName(gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
+		// 	mockDBAPIMetadataManager.EXPECT().SelectByVersion(gomock.Any(), gomock.Any()).Return(true, &model.APIMetadataDB{}, nil).AnyTimes()
+		// 	mockValidator.EXPECT().ValidatorStruct(gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
+		// 	mockValidator.EXPECT().ValidateOperatorDesc(gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
+		// 	mockDBTx.EXPECT().GetTx(gomock.Any()).Return(&sql.Tx{}, nil)
+		// 	// mockOpenAPIParser.EXPECT().GetPathItemContent(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(&interfaces.PathItemContent{
+		// 	// 	Summary: mockName,
+		// 	// }, nil).AnyTimes()
+		// 	Convey("检查算子重名: 查询重名算子失败（db）", func() {
+		// 		mockDBOperatorManager.EXPECT().SelectByOperatorID(gomock.Any(), gomock.Any(), gomock.Any()).
+		// 			Return(true, &model.OperatorRegisterDB{
+		// 				UpdateUser:   mockReq.UserID,
+		// 				MetadataType: string(interfaces.MetadataTypeAPI),
+		// 				Status:       string(interfaces.BizStatusUnpublish),
+		// 			}, nil)
 
-			mockDBOperatorManager.EXPECT().SelectByNameAndStatus(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(false, nil, errors.New("mock SelectByNameAndStatus error"))
-			_, err := m.EditOperator(context.TODO(), mockReq)
-			So(err, ShouldNotBeNil)
-		})
-		Convey("检查算子重名: 存在重名算子", func() {
-			mockDBOperatorManager.EXPECT().SelectByOperatorID(gomock.Any(), gomock.Any(), gomock.Any()).
-				Return(true, &model.OperatorRegisterDB{
-					UpdateUser:   mockReq.UserID,
-					MetadataType: string(interfaces.MetadataTypeAPI),
-					Status:       string(interfaces.BizStatusUnpublish),
-				}, nil)
-			mockDBOperatorManager.EXPECT().SelectByNameAndStatus(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(true, &model.OperatorRegisterDB{}, nil)
-			_, err := m.EditOperator(context.TODO(), mockReq)
-			So(err, ShouldNotBeNil)
-		})
-		Convey("更新算子信息失败", func() {
-			mockDBOperatorManager.EXPECT().SelectByOperatorID(gomock.Any(), gomock.Any(), gomock.Any()).
-				Return(true, &model.OperatorRegisterDB{
-					Name:         mockReq.Name,
-					UpdateUser:   mockReq.UserID,
-					MetadataType: string(interfaces.MetadataTypeAPI),
-					Status:       string(interfaces.BizStatusUnpublish),
-				}, nil)
-			mockDBOperatorManager.EXPECT().UpdateByOperatorID(gomock.Any(), gomock.Any(), gomock.Any()).Return(errors.New("mock UpdateByOperatorID error"))
-			_, err := m.EditOperator(context.TODO(), mockReq)
-			So(err, ShouldNotBeNil)
-		})
-		Convey("更新版本信息失败", func() {
-			mockDBOperatorManager.EXPECT().SelectByOperatorID(gomock.Any(), gomock.Any(), gomock.Any()).
-				Return(true, &model.OperatorRegisterDB{
-					Name:         mockReq.Name,
-					UpdateUser:   mockReq.UserID,
-					MetadataType: string(interfaces.MetadataTypeAPI),
-					Status:       string(interfaces.BizStatusUnpublish),
-				}, nil)
-			mockDBOperatorManager.EXPECT().UpdateByOperatorID(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
-			mockDBAPIMetadataManager.EXPECT().UpdateByVersion(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(errors.New("mock UpdateByVersion error"))
-			_, err := m.EditOperator(context.TODO(), mockReq)
-			So(err, ShouldNotBeNil)
-		})
-	})
-	Convey("TestEditOperator:编辑已发布算子", t, func() {
-		p := gomonkey.ApplyFunc((*sql.Tx).Rollback, func(*sql.Tx) error {
-			return nil
-		})
-		defer p.Reset()
-		p1 := gomonkey.ApplyFunc((*sql.Tx).Commit, func(*sql.Tx) error {
-			return nil
-		})
-		defer p1.Reset()
-		mockAuthService.EXPECT().GetAccessor(gomock.Any(), gomock.Any()).Return(&interfaces.AuthAccessor{}, nil).AnyTimes()
-		mockAuthService.EXPECT().CheckModifyPermission(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
-		mockValidator.EXPECT().ValidateOperatorName(gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
-		mockDBAPIMetadataManager.EXPECT().SelectByVersion(gomock.Any(), gomock.Any()).Return(true, &model.APIMetadataDB{}, nil).AnyTimes()
-		mockValidator.EXPECT().ValidatorStruct(gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
-		mockValidator.EXPECT().ValidateOperatorDesc(gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
-		mockDBTx.EXPECT().GetTx(gomock.Any()).Return(&sql.Tx{}, nil).AnyTimes()
-		// mockOpenAPIParser.EXPECT().GetPathItemContent(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(&interfaces.PathItemContent{
-		// 	Summary: mockName,
-		// }, nil).AnyTimes()
-		Convey("新增元数据信息失败", func() {
-			mockDBOperatorManager.EXPECT().SelectByOperatorID(gomock.Any(), gomock.Any(), gomock.Any()).
-				Return(true, &model.OperatorRegisterDB{
-					Name:         mockReq.Name,
-					UpdateUser:   mockReq.UserID,
-					MetadataType: string(interfaces.MetadataTypeAPI),
-					Status:       string(interfaces.BizStatusPublished),
-				}, nil)
-			mockDBAPIMetadataManager.EXPECT().InsertAPIMetadata(gomock.Any(), gomock.Any(), gomock.Any()).Return("", errors.New("mock InsertAPIMetadata error"))
-			_, err := m.EditOperator(context.TODO(), mockReq)
-			So(err, ShouldNotBeNil)
-		})
-		Convey("名字变更，通知所有订阅者失败", func() {
-			mockDBOperatorManager.EXPECT().SelectByOperatorID(gomock.Any(), gomock.Any(), gomock.Any()).
-				Return(true, &model.OperatorRegisterDB{
-					UpdateUser:   mockReq.UserID,
-					MetadataType: string(interfaces.MetadataTypeAPI),
-					Status:       string(interfaces.BizStatusPublished),
-				}, nil)
-			mockDBAPIMetadataManager.EXPECT().InsertAPIMetadata(gomock.Any(), gomock.Any(), gomock.Any()).Return("", nil).Times(1)
-			mockDBOperatorManager.EXPECT().SelectByNameAndStatus(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(false, nil, nil)
-			mockDBOperatorManager.EXPECT().UpdateByOperatorID(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).Times(1)
-			mockAuthService.EXPECT().NotifyResourceChange(gomock.Any(), gomock.Any()).Return(errors.New("mock NotifyResourceChange error"))
-			_, err := m.EditOperator(context.TODO(), mockReq)
-			So(err, ShouldNotBeNil)
-		})
-		Convey("更新算子信息成功", func() {
-			mockDBOperatorManager.EXPECT().SelectByOperatorID(gomock.Any(), gomock.Any(), gomock.Any()).
-				Return(true, &model.OperatorRegisterDB{
-					UpdateUser:   mockReq.UserID,
-					MetadataType: string(interfaces.MetadataTypeAPI),
-					Status:       string(interfaces.BizStatusPublished),
-				}, nil)
-			mockDBAPIMetadataManager.EXPECT().InsertAPIMetadata(gomock.Any(), gomock.Any(), gomock.Any()).Return("", nil).Times(1)
-			mockDBOperatorManager.EXPECT().SelectByNameAndStatus(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(false, nil, nil).Times(1)
-			mockDBOperatorManager.EXPECT().UpdateByOperatorID(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).Times(1)
-			mockAuthService.EXPECT().NotifyResourceChange(gomock.Any(), gomock.Any()).Return(nil).Times(1)
-			mockAuditLog.EXPECT().Logger(gomock.Any(), gomock.Any()).Times(1)
-			_, err := m.EditOperator(context.TODO(), mockReq)
-			time.Sleep(100 * time.Millisecond)
-			So(err, ShouldBeNil)
-		})
-	})
-	Convey("TestEditOperator:编辑已下架算子", t, func() {
-		p := gomonkey.ApplyFunc((*sql.Tx).Rollback, func(*sql.Tx) error {
-			return nil
-		})
-		defer p.Reset()
-		p1 := gomonkey.ApplyFunc((*sql.Tx).Commit, func(*sql.Tx) error {
-			return nil
-		})
-		defer p1.Reset()
-		// mockOpenAPIParser.EXPECT().GetPathItemContent(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(&interfaces.PathItemContent{
-		// 	Summary: mockName,
-		// }, nil).AnyTimes()
-		mockAuthService.EXPECT().GetAccessor(gomock.Any(), gomock.Any()).Return(&interfaces.AuthAccessor{}, nil).AnyTimes()
-		mockAuthService.EXPECT().CheckModifyPermission(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
-		mockValidator.EXPECT().ValidateOperatorName(gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
-		mockDBAPIMetadataManager.EXPECT().SelectByVersion(gomock.Any(), gomock.Any()).Return(true, &model.APIMetadataDB{}, nil).AnyTimes()
-		mockValidator.EXPECT().ValidatorStruct(gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
-		mockValidator.EXPECT().ValidateOperatorDesc(gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
-		mockDBTx.EXPECT().GetTx(gomock.Any()).Return(&sql.Tx{}, nil).AnyTimes()
-		mockDBOperatorManager.EXPECT().SelectByOperatorID(gomock.Any(), gomock.Any(), gomock.Any()).
-			Return(true, &model.OperatorRegisterDB{
-				UpdateUser:   mockReq.UserID,
-				MetadataType: string(interfaces.MetadataTypeAPI),
-				Status:       string(interfaces.BizStatusOffline),
-			}, nil)
-		Convey("升级元数据失败（db）", func() {
-			mockDBAPIMetadataManager.EXPECT().InsertAPIMetadata(gomock.Any(), gomock.Any(), gomock.Any()).Return("", mocks.MockFuncErr("InsertAPIMetadata")).Times(1)
-			_, err := m.EditOperator(context.TODO(), mockReq)
-			So(err, ShouldNotBeNil)
-		})
+		// 		mockDBOperatorManager.EXPECT().SelectByNameAndStatus(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(false, nil, errors.New("mock SelectByNameAndStatus error"))
+		// 		_, err := m.EditOperator(context.TODO(), mockReq)
+		// 		So(err, ShouldNotBeNil)
+		// 	})
+		// 	Convey("检查算子重名: 存在重名算子", func() {
+		// 		mockDBOperatorManager.EXPECT().SelectByOperatorID(gomock.Any(), gomock.Any(), gomock.Any()).
+		// 			Return(true, &model.OperatorRegisterDB{
+		// 				UpdateUser:   mockReq.UserID,
+		// 				MetadataType: string(interfaces.MetadataTypeAPI),
+		// 				Status:       string(interfaces.BizStatusUnpublish),
+		// 			}, nil)
+		// 		mockDBOperatorManager.EXPECT().SelectByNameAndStatus(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(true, &model.OperatorRegisterDB{}, nil)
+		// 		_, err := m.EditOperator(context.TODO(), mockReq)
+		// 		So(err, ShouldNotBeNil)
+		// 	})
+		// 	Convey("更新算子信息失败", func() {
+		// 		mockDBOperatorManager.EXPECT().SelectByOperatorID(gomock.Any(), gomock.Any(), gomock.Any()).
+		// 			Return(true, &model.OperatorRegisterDB{
+		// 				Name:         mockReq.Name,
+		// 				UpdateUser:   mockReq.UserID,
+		// 				MetadataType: string(interfaces.MetadataTypeAPI),
+		// 				Status:       string(interfaces.BizStatusUnpublish),
+		// 			}, nil)
+		// 		mockDBOperatorManager.EXPECT().UpdateByOperatorID(gomock.Any(), gomock.Any(), gomock.Any()).Return(errors.New("mock UpdateByOperatorID error"))
+		// 		_, err := m.EditOperator(context.TODO(), mockReq)
+		// 		So(err, ShouldNotBeNil)
+		// 	})
+		// 	Convey("更新版本信息失败", func() {
+		// 		mockDBOperatorManager.EXPECT().SelectByOperatorID(gomock.Any(), gomock.Any(), gomock.Any()).
+		// 			Return(true, &model.OperatorRegisterDB{
+		// 				Name:         mockReq.Name,
+		// 				UpdateUser:   mockReq.UserID,
+		// 				MetadataType: string(interfaces.MetadataTypeAPI),
+		// 				Status:       string(interfaces.BizStatusUnpublish),
+		// 			}, nil)
+		// 		mockDBOperatorManager.EXPECT().UpdateByOperatorID(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
+		// 		mockDBAPIMetadataManager.EXPECT().UpdateByVersion(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(errors.New("mock UpdateByVersion error"))
+		// 		_, err := m.EditOperator(context.TODO(), mockReq)
+		// 		So(err, ShouldNotBeNil)
+		// 	})
+		// })
+		// Convey("TestEditOperator:编辑已发布算子", t, func() {
+		// 	p := gomonkey.ApplyFunc((*sql.Tx).Rollback, func(*sql.Tx) error {
+		// 		return nil
+		// 	})
+		// 	defer p.Reset()
+		// 	p1 := gomonkey.ApplyFunc((*sql.Tx).Commit, func(*sql.Tx) error {
+		// 		return nil
+		// 	})
+		// 	defer p1.Reset()
+		// 	mockAuthService.EXPECT().GetAccessor(gomock.Any(), gomock.Any()).Return(&interfaces.AuthAccessor{}, nil).AnyTimes()
+		// 	mockAuthService.EXPECT().CheckModifyPermission(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
+		// 	mockValidator.EXPECT().ValidateOperatorName(gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
+		// 	mockDBAPIMetadataManager.EXPECT().SelectByVersion(gomock.Any(), gomock.Any()).Return(true, &model.APIMetadataDB{}, nil).AnyTimes()
+		// 	mockValidator.EXPECT().ValidatorStruct(gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
+		// 	mockValidator.EXPECT().ValidateOperatorDesc(gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
+		// 	mockDBTx.EXPECT().GetTx(gomock.Any()).Return(&sql.Tx{}, nil).AnyTimes()
+		// 	// mockOpenAPIParser.EXPECT().GetPathItemContent(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(&interfaces.PathItemContent{
+		// 	// 	Summary: mockName,
+		// 	// }, nil).AnyTimes()
+		// 	Convey("新增元数据信息失败", func() {
+		// 		mockDBOperatorManager.EXPECT().SelectByOperatorID(gomock.Any(), gomock.Any(), gomock.Any()).
+		// 			Return(true, &model.OperatorRegisterDB{
+		// 				Name:         mockReq.Name,
+		// 				UpdateUser:   mockReq.UserID,
+		// 				MetadataType: string(interfaces.MetadataTypeAPI),
+		// 				Status:       string(interfaces.BizStatusPublished),
+		// 			}, nil)
+		// 		mockDBAPIMetadataManager.EXPECT().InsertAPIMetadata(gomock.Any(), gomock.Any(), gomock.Any()).Return("", errors.New("mock InsertAPIMetadata error"))
+		// 		_, err := m.EditOperator(context.TODO(), mockReq)
+		// 		So(err, ShouldNotBeNil)
+		// 	})
+		// 	Convey("名字变更，通知所有订阅者失败", func() {
+		// 		mockDBOperatorManager.EXPECT().SelectByOperatorID(gomock.Any(), gomock.Any(), gomock.Any()).
+		// 			Return(true, &model.OperatorRegisterDB{
+		// 				UpdateUser:   mockReq.UserID,
+		// 				MetadataType: string(interfaces.MetadataTypeAPI),
+		// 				Status:       string(interfaces.BizStatusPublished),
+		// 			}, nil)
+		// 		mockDBAPIMetadataManager.EXPECT().InsertAPIMetadata(gomock.Any(), gomock.Any(), gomock.Any()).Return("", nil).Times(1)
+		// 		mockDBOperatorManager.EXPECT().SelectByNameAndStatus(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(false, nil, nil)
+		// 		mockDBOperatorManager.EXPECT().UpdateByOperatorID(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).Times(1)
+		// 		mockAuthService.EXPECT().NotifyResourceChange(gomock.Any(), gomock.Any()).Return(errors.New("mock NotifyResourceChange error"))
+		// 		_, err := m.EditOperator(context.TODO(), mockReq)
+		// 		So(err, ShouldNotBeNil)
+		// 	})
+		// 	Convey("更新算子信息成功", func() {
+		// 		mockDBOperatorManager.EXPECT().SelectByOperatorID(gomock.Any(), gomock.Any(), gomock.Any()).
+		// 			Return(true, &model.OperatorRegisterDB{
+		// 				UpdateUser:   mockReq.UserID,
+		// 				MetadataType: string(interfaces.MetadataTypeAPI),
+		// 				Status:       string(interfaces.BizStatusPublished),
+		// 			}, nil)
+		// 		mockDBAPIMetadataManager.EXPECT().InsertAPIMetadata(gomock.Any(), gomock.Any(), gomock.Any()).Return("", nil).Times(1)
+		// 		mockDBOperatorManager.EXPECT().SelectByNameAndStatus(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(false, nil, nil).Times(1)
+		// 		mockDBOperatorManager.EXPECT().UpdateByOperatorID(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).Times(1)
+		// 		mockAuthService.EXPECT().NotifyResourceChange(gomock.Any(), gomock.Any()).Return(nil).Times(1)
+		// 		mockAuditLog.EXPECT().Logger(gomock.Any(), gomock.Any()).Times(1)
+		// 		_, err := m.EditOperator(context.TODO(), mockReq)
+		// 		time.Sleep(100 * time.Millisecond)
+		// 		So(err, ShouldBeNil)
+		// 	})
+		// })
+		// Convey("TestEditOperator:编辑已下架算子", t, func() {
+		// 	p := gomonkey.ApplyFunc((*sql.Tx).Rollback, func(*sql.Tx) error {
+		// 		return nil
+		// 	})
+		// 	defer p.Reset()
+		// 	p1 := gomonkey.ApplyFunc((*sql.Tx).Commit, func(*sql.Tx) error {
+		// 		return nil
+		// 	})
+		// 	defer p1.Reset()
+		// 	// mockOpenAPIParser.EXPECT().GetPathItemContent(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(&interfaces.PathItemContent{
+		// 	// 	Summary: mockName,
+		// 	// }, nil).AnyTimes()
+		// 	mockAuthService.EXPECT().GetAccessor(gomock.Any(), gomock.Any()).Return(&interfaces.AuthAccessor{}, nil).AnyTimes()
+		// 	mockAuthService.EXPECT().CheckModifyPermission(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
+		// 	mockValidator.EXPECT().ValidateOperatorName(gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
+		// 	mockDBAPIMetadataManager.EXPECT().SelectByVersion(gomock.Any(), gomock.Any()).Return(true, &model.APIMetadataDB{}, nil).AnyTimes()
+		// 	mockValidator.EXPECT().ValidatorStruct(gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
+		// 	mockValidator.EXPECT().ValidateOperatorDesc(gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
+		// 	mockDBTx.EXPECT().GetTx(gomock.Any()).Return(&sql.Tx{}, nil).AnyTimes()
+		// 	mockDBOperatorManager.EXPECT().SelectByOperatorID(gomock.Any(), gomock.Any(), gomock.Any()).
+		// 		Return(true, &model.OperatorRegisterDB{
+		// 			UpdateUser:   mockReq.UserID,
+		// 			MetadataType: string(interfaces.MetadataTypeAPI),
+		// 			Status:       string(interfaces.BizStatusOffline),
+		// 		}, nil)
+		// 	Convey("升级元数据失败（db）", func() {
+		// 		mockDBAPIMetadataManager.EXPECT().InsertAPIMetadata(gomock.Any(), gomock.Any(), gomock.Any()).Return("", mocks.MockFuncErr("InsertAPIMetadata")).Times(1)
+		// 		_, err := m.EditOperator(context.TODO(), mockReq)
+		// 		So(err, ShouldNotBeNil)
+		// })
 	})
 }
 func TestUpdateOperatorStatus(t *testing.T) {

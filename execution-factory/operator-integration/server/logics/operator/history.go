@@ -6,13 +6,13 @@ import (
 	"net/http"
 
 	jsoniter "github.com/json-iterator/go"
-	o11y "github.com/kweaver-ai/kweaver-go-lib/observability"
 	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/infra/common"
 	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/infra/errors"
 	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/interfaces"
 	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/interfaces/model"
 	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/logics/metadata"
 	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/utils"
+	o11y "github.com/kweaver-ai/kweaver-go-lib/observability"
 )
 
 // QueryOperatorHistoryDetail 查询操作历史详情
@@ -58,9 +58,13 @@ func (m *operatorManager) QueryOperatorHistoryDetail(ctx context.Context, req *i
 		return
 	}
 	// 获取算子元数据
-	metadataDB, err := m.MetadataService.GetMetadataByVersion(ctx, interfaces.MetadataType(releaseDB.MetadataType), releaseDB.MetadataVersion)
+	exists, metadataDB, err := m.MetadataService.CheckMetadataExists(ctx, interfaces.MetadataType(releaseDB.MetadataType), releaseDB.MetadataVersion)
 	if err != nil {
 		m.Logger.WithContext(ctx).Errorf("select operator metadata failed, err: %v", err)
+		return
+	}
+	if !exists {
+		err = errors.NewHTTPError(ctx, http.StatusNotFound, errors.ErrExtMetadataNotFound, nil)
 		return
 	}
 	// 组装算子信息结果

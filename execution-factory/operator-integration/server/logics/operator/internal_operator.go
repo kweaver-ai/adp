@@ -96,6 +96,9 @@ func (m *operatorManager) RegisterInternalOperator(ctx context.Context, req *int
 		return
 	}
 	defer func() {
+		if tx == nil {
+			return
+		}
 		if err != nil {
 			_ = tx.Rollback()
 		} else {
