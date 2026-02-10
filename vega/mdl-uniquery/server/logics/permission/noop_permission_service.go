@@ -27,13 +27,13 @@ func (n *NoopPermissionService) CheckPermissionWithResult(ctx context.Context, r
 }
 
 func (n *NoopPermissionService) FilterResources(ctx context.Context, resourceType string, ids []string,
-	ops []string, allowOperation bool) (map[string]interfaces.ResourceOps, error) {
+	ops []string, allowOperation bool, fullOps []string) (map[string]interfaces.ResourceOps, error) {
 	// 返回所有资源，不做过滤
 	result := make(map[string]interfaces.ResourceOps)
 	for _, id := range ids {
 		result[id] = interfaces.ResourceOps{
 			ResourceID: id,
-			Operations: ops,
+			Operations: fullOps,
 		}
 	}
 	return result, nil

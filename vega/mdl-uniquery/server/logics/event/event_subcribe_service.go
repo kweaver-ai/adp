@@ -342,12 +342,13 @@ func (ess *eventSubService) Invoke(engine interfaces.EventEngine, dataSource str
 	}
 	var ems []interfaces.EventModel
 	//NOTE 如果是指标数据或日志数据
-	if dataSourceType == "data_view" || dataSourceType == "metric_data" {
+	switch dataSourceType {
+	case "data_view", "metric_data":
 		ems, _ = ess.QueryEventModelBySourceId(dataSource, dataSourceType, _cache)
-	} else if dataSourceType == "event_model" { //NOTE 如果是原子事件数据，则寻找此事件模型属性中的依赖任务进行触发。
+	case "event_model": //NOTE 如果是原子事件数据，则寻找此事件模型属性中的依赖任务进行触发。
 		var dependentModelType = dataSourceType
 		ems, _ = ess.QueryEventModelByDownstreamDependent(dataSource, dependentModelType, _cache)
-	} else {
+	default:
 		ems = []interfaces.EventModel{}
 	}
 	collectMessages := make([]*kafka.Message, 0)

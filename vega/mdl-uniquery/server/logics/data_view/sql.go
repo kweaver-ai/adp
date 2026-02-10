@@ -377,11 +377,12 @@ func (g *SQLGenerator) buildUnionNodeSQL(ctx context.Context, node *interfaces.D
 
 	// 构建UNION SQL
 	var unionType string
-	if cfg.UnionType == interfaces.UnionType_All {
+	switch cfg.UnionType {
+	case interfaces.UnionType_All:
 		unionType = "UNION ALL"
-	} else if cfg.UnionType == interfaces.UnionType_Distinct {
+	case interfaces.UnionType_Distinct:
 		unionType = "UNION"
-	} else {
+	default:
 		return "", fmt.Errorf("invalid union type %s for node %s", cfg.UnionType, node.ID)
 	}
 

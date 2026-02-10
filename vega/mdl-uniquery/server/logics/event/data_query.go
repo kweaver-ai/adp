@@ -328,11 +328,12 @@ func (md *EventDataQuery) FetchSourceRecordsFrom(ctx context.Context, format str
 
 // NOTE: 这里有空可以改用工厂模式，摈弃这种简单工厂模式
 func GenerateDataModelQuery(appSetting *common.AppSetting, em interfaces.EventModel, query interfaces.EventQuery) (_query interfaces.DataModelQuery) {
-	if em.DataSourceType == "metric_model" {
+	switch em.DataSourceType {
+	case "metric_model":
 		return NewMetricDataQuery(appSetting, em.DataSource, em.DataSourceType, em.DefaultTimeWindow, query)
-	} else if em.DataSourceType == "data_view" {
+	case "data_view":
 		return NewLogDataQuery(appSetting, em.DataSource, em.DataSourceType, em.DefaultTimeWindow, query)
-	} else {
+	default:
 		return NewEventDataQuery(appSetting, em.DataSource, em.DataSourceType, em.DefaultTimeWindow, query)
 	}
 }

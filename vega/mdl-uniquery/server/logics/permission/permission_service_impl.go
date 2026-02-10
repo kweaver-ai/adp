@@ -89,7 +89,7 @@ func (ps *permissionServiceImpl) CheckPermissionWithResult(ctx context.Context, 
 
 // 过滤资源列表
 func (ps *permissionServiceImpl) FilterResources(ctx context.Context, resourceType string, ids []string,
-	ops []string, allowOperation bool) (map[string]interfaces.ResourceOps, error) {
+	ops []string, allowOperation bool, fullOps []string) (map[string]interfaces.ResourceOps, error) {
 
 	accountInfo := interfaces.AccountInfo{}
 	if ctx.Value(interfaces.ACCOUNT_INFO_KEY) != nil {
