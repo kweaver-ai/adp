@@ -21,6 +21,7 @@ const (
 	OntologyManager_ObjectType_NullParameter_PropertyName        = "OntologyManager.ObjectType.NullParameter.PropertyName"
 	OntologyManager_ObjectType_ObjectTypeIDExisted               = "OntologyManager.ObjectType.ObjectTypeIDExisted"
 	OntologyManager_ObjectType_ObjectTypeNameExisted             = "OntologyManager.ObjectType.ObjectTypeNameExisted"
+	OntologyManager_ObjectType_ObjectTypeBoundByRelationType     = "OntologyManager.ObjectType.ObjectTypeBoundByRelationType"
 
 	// 404
 	OntologyManager_ObjectType_ObjectTypeNotFound = "OntologyManager.ObjectType.ObjectTypeNotFound"
@@ -56,6 +57,7 @@ var (
 		OntologyManager_ObjectType_NullParameter_PropertyName,
 		OntologyManager_ObjectType_ObjectTypeIDExisted,
 		OntologyManager_ObjectType_ObjectTypeNameExisted,
+		OntologyManager_ObjectType_ObjectTypeBoundByRelationType,
 
 		// 404
 		OntologyManager_ObjectType_ObjectTypeNotFound,

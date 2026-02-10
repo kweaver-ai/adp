@@ -870,6 +870,13 @@ func processQueryCondition(query interfaces.RelationTypesQueryParams, subBuilder
 		subBuilder = subBuilder.Where(sq.Eq{"f_target_object_type_id": query.TargetObjectTypeIDs})
 	}
 
+	if len(query.BoundObjectTypeIDs) > 0 {
+		subBuilder = subBuilder.Where(sq.Or{
+			sq.Eq{"f_source_object_type_id": query.BoundObjectTypeIDs},
+			sq.Eq{"f_target_object_type_id": query.BoundObjectTypeIDs},
+		})
+	}
+
 	return subBuilder
 }
 

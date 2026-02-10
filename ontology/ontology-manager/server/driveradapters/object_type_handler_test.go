@@ -26,12 +26,14 @@ import (
 func MockNewObjectTypeRestHandler(appSetting *common.AppSetting,
 	hydra rest.Hydra,
 	ots interfaces.ObjectTypeService,
+	rts interfaces.RelationTypeService,
 	kns interfaces.KNService) (r *restHandler) {
 
 	r = &restHandler{
 		appSetting: appSetting,
 		hydra:      hydra,
 		ots:        ots,
+		rts:        rts,
 		kns:        kns,
 	}
 	return r
@@ -51,9 +53,10 @@ func Test_ObjectTypeRestHandler_CreateObjectTypes(t *testing.T) {
 		appSetting := &common.AppSetting{}
 		hydra := rmock.NewMockHydra(mockCtrl)
 		ots := dmock.NewMockObjectTypeService(mockCtrl)
+		rts := dmock.NewMockRelationTypeService(mockCtrl)
 		kns := dmock.NewMockKNService(mockCtrl)
 
-		handler := MockNewObjectTypeRestHandler(appSetting, hydra, ots, kns)
+		handler := MockNewObjectTypeRestHandler(appSetting, hydra, ots, rts, kns)
 		handler.RegisterPublic(engine)
 
 		hydra.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(rest.Visitor{}, nil)
@@ -207,9 +210,10 @@ func Test_ObjectTypeRestHandler_UpdateObjectType(t *testing.T) {
 		appSetting := &common.AppSetting{}
 		hydra := rmock.NewMockHydra(mockCtrl)
 		ots := dmock.NewMockObjectTypeService(mockCtrl)
+		rts := dmock.NewMockRelationTypeService(mockCtrl)
 		kns := dmock.NewMockKNService(mockCtrl)
 
-		handler := MockNewObjectTypeRestHandler(appSetting, hydra, ots, kns)
+		handler := MockNewObjectTypeRestHandler(appSetting, hydra, ots, rts, kns)
 		handler.RegisterPublic(engine)
 
 		hydra.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(rest.Visitor{}, nil)
@@ -337,9 +341,10 @@ func Test_ObjectTypeRestHandler_DeleteObjectTypes(t *testing.T) {
 		appSetting := &common.AppSetting{}
 		hydra := rmock.NewMockHydra(mockCtrl)
 		ots := dmock.NewMockObjectTypeService(mockCtrl)
+		rts := dmock.NewMockRelationTypeService(mockCtrl)
 		kns := dmock.NewMockKNService(mockCtrl)
 
-		handler := MockNewObjectTypeRestHandler(appSetting, hydra, ots, kns)
+		handler := MockNewObjectTypeRestHandler(appSetting, hydra, ots, rts, kns)
 		handler.RegisterPublic(engine)
 
 		hydra.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(rest.Visitor{}, nil)
@@ -353,6 +358,7 @@ func Test_ObjectTypeRestHandler_DeleteObjectTypes(t *testing.T) {
 			ots.EXPECT().CheckObjectTypeExistByID(gomock.Any(), knID, gomock.Any(), "ot1").Return("object1", true, nil)
 			ots.EXPECT().CheckObjectTypeExistByID(gomock.Any(), knID, gomock.Any(), "ot2").Return("object2", true, nil)
 			ots.EXPECT().DeleteObjectTypesByIDs(gomock.Any(), gomock.Any(), knID, gomock.Any(), gomock.Any()).Return(nil)
+			rts.EXPECT().ListRelationTypes(gomock.Any(), gomock.Any()).Return([]*interfaces.RelationType{}, 0, nil)
 
 			req := httptest.NewRequest(http.MethodDelete, url, nil)
 			w := httptest.NewRecorder()
@@ -395,6 +401,7 @@ func Test_ObjectTypeRestHandler_DeleteObjectTypes(t *testing.T) {
 			ots.EXPECT().CheckObjectTypeExistByID(gomock.Any(), knID, gomock.Any(), "ot1").Return("object1", true, nil)
 			ots.EXPECT().CheckObjectTypeExistByID(gomock.Any(), knID, gomock.Any(), "ot2").Return("object2", true, nil)
 			ots.EXPECT().DeleteObjectTypesByIDs(gomock.Any(), gomock.Any(), knID, gomock.Any(), gomock.Any()).Return(err)
+			rts.EXPECT().ListRelationTypes(gomock.Any(), gomock.Any()).Return([]*interfaces.RelationType{}, 0, nil)
 
 			req := httptest.NewRequest(http.MethodDelete, url, nil)
 			w := httptest.NewRecorder()
@@ -419,9 +426,10 @@ func Test_ObjectTypeRestHandler_UpdateDataProperties(t *testing.T) {
 		appSetting := &common.AppSetting{}
 		hydra := rmock.NewMockHydra(mockCtrl)
 		ots := dmock.NewMockObjectTypeService(mockCtrl)
+		rts := dmock.NewMockRelationTypeService(mockCtrl)
 		kns := dmock.NewMockKNService(mockCtrl)
 
-		handler := MockNewObjectTypeRestHandler(appSetting, hydra, ots, kns)
+		handler := MockNewObjectTypeRestHandler(appSetting, hydra, ots, rts, kns)
 		handler.RegisterPublic(engine)
 
 		hydra.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(rest.Visitor{}, nil)
@@ -509,9 +517,10 @@ func Test_ObjectTypeRestHandler_ListObjectTypes(t *testing.T) {
 		appSetting := &common.AppSetting{}
 		hydra := rmock.NewMockHydra(mockCtrl)
 		ots := dmock.NewMockObjectTypeService(mockCtrl)
+		rts := dmock.NewMockRelationTypeService(mockCtrl)
 		kns := dmock.NewMockKNService(mockCtrl)
 
-		handler := MockNewObjectTypeRestHandler(appSetting, hydra, ots, kns)
+		handler := MockNewObjectTypeRestHandler(appSetting, hydra, ots, rts, kns)
 		handler.RegisterPublic(engine)
 
 		hydra.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(rest.Visitor{}, nil)
@@ -588,9 +597,10 @@ func Test_ObjectTypeRestHandler_GetObjectTypes(t *testing.T) {
 		appSetting := &common.AppSetting{}
 		hydra := rmock.NewMockHydra(mockCtrl)
 		ots := dmock.NewMockObjectTypeService(mockCtrl)
+		rts := dmock.NewMockRelationTypeService(mockCtrl)
 		kns := dmock.NewMockKNService(mockCtrl)
 
-		handler := MockNewObjectTypeRestHandler(appSetting, hydra, ots, kns)
+		handler := MockNewObjectTypeRestHandler(appSetting, hydra, ots, rts, kns)
 		handler.RegisterPublic(engine)
 
 		hydra.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(rest.Visitor{}, nil)
@@ -682,9 +692,10 @@ func Test_ObjectTypeRestHandler_SearchObjectTypes(t *testing.T) {
 		appSetting := &common.AppSetting{}
 		hydra := rmock.NewMockHydra(mockCtrl)
 		ots := dmock.NewMockObjectTypeService(mockCtrl)
+		rts := dmock.NewMockRelationTypeService(mockCtrl)
 		kns := dmock.NewMockKNService(mockCtrl)
 
-		handler := MockNewObjectTypeRestHandler(appSetting, hydra, ots, kns)
+		handler := MockNewObjectTypeRestHandler(appSetting, hydra, ots, rts, kns)
 		handler.RegisterPublic(engine)
 
 		hydra.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(rest.Visitor{}, nil)
