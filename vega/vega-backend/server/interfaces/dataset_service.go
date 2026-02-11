@@ -15,10 +15,12 @@ type DatasetService interface {
 	Update(ctx context.Context, res *Resource) error
 	Delete(ctx context.Context, res *Resource) error
 
-	ListDocuments(ctx context.Context, id string, params *ResourceDataQueryParams) ([]map[string]any, int64, error)
+	ListDocuments(ctx context.Context, res *Resource, params *ResourceDataQueryParams) ([]map[string]any, int64, error)
 	GetDocument(ctx context.Context, id string, docID string) (map[string]any, error)
 
 	CreateDocuments(ctx context.Context, id string, documents []map[string]any) ([]string, error)
 	UpdateDocument(ctx context.Context, id string, docID string, document map[string]any) error
 	DeleteDocument(ctx context.Context, id string, docID string) error
+	UpdateDocuments(ctx context.Context, id string, updateRequests []map[string]any) error
+	DeleteDocuments(ctx context.Context, id string, docIDs string) error
 }

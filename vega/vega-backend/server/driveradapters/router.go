@@ -97,8 +97,8 @@ func (r *restHandler) RegisterPublic(engine *gin.Engine) {
 			resources.POST("/:id/data", r.verifyJsonContentType(), r.QueryResourceData) // method override GET list and get
 
 			resources.POST("/dataset/:id/docs", r.verifyJsonContentType(), r.CreateDatasetDocuments)
-			resources.PUT("/dataset/:id/docs/ids", r.verifyJsonContentType(), r.UpdateDatasetDocument)
-			resources.DELETE("/dataset/:id/docs/:ids", r.DeleteDatasetDocument)
+			resources.PUT("/dataset/:id/docs", r.verifyJsonContentType(), r.UpdateDatasetDocuments)
+			resources.DELETE("/dataset/:id/docs/:ids", r.DeleteDatasetDocuments)
 		}
 
 		// ConnectorType APIs

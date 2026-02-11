@@ -557,13 +557,15 @@ func TestDatasetDocumentsList(t *testing.T) {
 			"need_total":       true,
 			"use_search_after": false,
 		}
-		// 使用GETWithBody发送带body的GET请求
-		resp := client.GETWithBody("/api/vega-backend/v1/resources/dataset/adp-"+resourceID+"/docs", queryPayload)
+		// 使用POST请求到/data端点（method override GET）
+		client.SetHeader("X-HTTP-Method-Override", "GET")
+		resp := client.POST("/api/vega-backend/v1/resources/"+resourceID+"/data", queryPayload)
+		client.RemoveHeader("X-HTTP-Method-Override")
 		So(resp.StatusCode, ShouldEqual, http.StatusOK)
 		So(resp.Body["entries"], ShouldNotBeEmpty)
 
 		// 清理资源
-		//cleanupResources(client, t)
+		cleanupResources(client, t)
 	})
 }
 
@@ -594,12 +596,20 @@ func TestDatasetDocumentGet(t *testing.T) {
 		ids, ok := createDocResp.Body["ids"].([]interface{})
 		So(ok, ShouldBeTrue)
 		So(len(ids), ShouldBeGreaterThan, 0)
-		docID := ids[0].(string)
 
-		// 获取文档
-		resp := client.GET("/api/vega-backend/v1/resources/dataset/adp-" + resourceID + "/" + docID)
+		// 获取文档（使用POST /:id/data端点，method override GET）
+		queryPayload := map[string]any{
+			"start": time.Now().UnixMilli() - (24 * 3600 * 1000),
+			"end":   time.Now().UnixMilli(),
+			"offset": 0,
+			"limit":  10,
+			"need_total": true,
+		}
+		client.SetHeader("X-HTTP-Method-Override", "GET")
+		resp := client.POST("/api/vega-backend/v1/resources/"+resourceID+"/data", queryPayload)
+		client.RemoveHeader("X-HTTP-Method-Override")
 		So(resp.StatusCode, ShouldEqual, http.StatusOK)
-		So(resp.Body["document"], ShouldNotBeEmpty)
+		So(resp.Body["entries"], ShouldNotBeEmpty)
 
 		// 清理资源
 		cleanupResources(client, t)
@@ -627,7 +637,7 @@ func TestDatasetDocumentUpdate(t *testing.T) {
 
 		// 先创建一个文档（使用批量创建接口）
 		docPayload := buildDatasetDocumentPayload()
-		createDocResp := client.POST("/api/vega-backend/v1/resources/dataset/adp-"+resourceID+"/docs", []map[string]any{docPayload})
+		createDocResp := client.POST("/api/vega-backend/v1/resources/dataset/"+resourceID+"/docs", []map[string]any{docPayload})
 		So(createDocResp.StatusCode, ShouldEqual, http.StatusCreated)
 		So(createDocResp.Body["ids"], ShouldNotBeEmpty)
 		ids, ok := createDocResp.Body["ids"].([]interface{})
@@ -635,17 +645,22 @@ func TestDatasetDocumentUpdate(t *testing.T) {
 		So(len(ids), ShouldBeGreaterThan, 0)
 		docID := ids[0].(string)
 
-		// 更新文档
-		updatePayload := map[string]any{
-			"title":   "Updated Test Document",
-			"content": generateVector(768),
-			"metadata": map[string]any{
-				"author":     "Updated Test User",
-				"updated_at": "2024-01-02T00:00:00Z",
+		// 更新文档（使用批量更新接口）
+		updatePayload := []map[string]any{
+			{
+				"id": docID,
+				"document": map[string]any{
+					"title":   "Updated Test Document",
+					"content": generateVector(768),
+					"metadata": map[string]any{
+						"author":     "Updated Test User",
+						"updated_at": "2024-01-02T00:00:00Z",
+					},
+				},
 			},
 		}
 
-		resp := client.PUT("/api/vega-backend/v1/resources/dataset/adp-"+resourceID+"/"+docID, updatePayload)
+		resp := client.PUT("/api/vega-backend/v1/resources/dataset/"+resourceID+"/docs", updatePayload)
 		So(resp.StatusCode, ShouldEqual, http.StatusNoContent)
 
 		// 清理资源
@@ -674,7 +689,7 @@ func TestDatasetDocumentDelete(t *testing.T) {
 
 		// 先创建一个文档（使用批量创建接口）
 		docPayload := buildDatasetDocumentPayload()
-		createDocResp := client.POST("/api/vega-backend/v1/resources/dataset/adp-"+resourceID+"/docs", []map[string]any{docPayload})
+		createDocResp := client.POST("/api/vega-backend/v1/resources/dataset/"+resourceID+"/docs", []map[string]any{docPayload})
 		So(createDocResp.StatusCode, ShouldEqual, http.StatusCreated)
 		So(createDocResp.Body["ids"], ShouldNotBeEmpty)
 		ids, ok := createDocResp.Body["ids"].([]interface{})
@@ -682,8 +697,8 @@ func TestDatasetDocumentDelete(t *testing.T) {
 		So(len(ids), ShouldBeGreaterThan, 0)
 		docID := ids[0].(string)
 
-		// 删除文档
-		resp := client.DELETE("/api/vega-backend/v1/resources/dataset/adp-" + resourceID + "/" + docID)
+		// 删除文档（使用批量删除接口）
+		resp := client.DELETE("/api/vega-backend/v1/resources/dataset/" + resourceID + "/docs/" + docID)
 		So(resp.StatusCode, ShouldEqual, http.StatusNoContent)
 
 		// 清理资源

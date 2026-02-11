@@ -106,10 +106,10 @@ func (r *restHandler) GetDatasetDocument(c *gin.Context) {
 	rest.ReplyOK(c, http.StatusOK, resultData)
 }
 
-// UpdateDatasetDocument handles PUT /api/vega-backend/v1/resources/dataset/:id/:docid
-func (r *restHandler) UpdateDatasetDocument(c *gin.Context) {
+// UpdateDatasetDocuments handles PUT /api/vega-backend/v1/resources/dataset/:id/docs
+func (r *restHandler) UpdateDatasetDocuments(c *gin.Context) {
 	ctx, span := ar_trace.Tracer.Start(rest.GetLanguageCtx(c),
-		"UpdateDatasetDocument", trace.WithSpanKind(trace.SpanKindServer))
+		"UpdateDatasetDocuments", trace.WithSpanKind(trace.SpanKindServer))
 	defer span.End()
 
 	// 校验token
@@ -126,11 +126,10 @@ func (r *restHandler) UpdateDatasetDocument(c *gin.Context) {
 	o11y.AddHttpAttrs4API(span, o11y.GetAttrsByGinCtx(c))
 
 	datasetID := c.Param("id")
-	docID := c.Param("docid")
 
-	// 获取请求体
-	var document map[string]any
-	if err := c.ShouldBindJSON(&document); err != nil {
+	// 获取请求体，支持批量更新
+	var updateRequests []map[string]any
+	if err := c.ShouldBindJSON(&updateRequests); err != nil {
 		httpErr := rest.NewHTTPError(ctx, http.StatusBadRequest, verrors.VegaBackend_InvalidParameter_RequestBody).
 			WithErrorDetails(err.Error())
 		o11y.AddHttpAttrs4HttpError(span, httpErr)
@@ -138,8 +137,8 @@ func (r *restHandler) UpdateDatasetDocument(c *gin.Context) {
 		return
 	}
 
-	// 调用 dataset 服务更新文档
-	if err := r.ds.UpdateDocument(ctx, datasetID, docID, document); err != nil {
+	// 调用 dataset 服务批量更新文档
+	if err := r.ds.UpdateDocuments(ctx, datasetID, updateRequests); err != nil {
 		println(err.Error())
 		httpErr := err.(*rest.HTTPError)
 		o11y.AddHttpAttrs4HttpError(span, httpErr)
@@ -147,15 +146,15 @@ func (r *restHandler) UpdateDatasetDocument(c *gin.Context) {
 		return
 	}
 
-	logger.Debug("Handler UpdateDatasetDocument Success")
+	logger.Debug("Handler UpdateDatasetDocuments Success")
 	o11y.AddHttpAttrs4Ok(span, http.StatusNoContent)
 	rest.ReplyOK(c, http.StatusNoContent, nil)
 }
 
-// DeleteDatasetDocument handles DELETE /api/vega-backend/v1/resources/dataset/:id/:docid
-func (r *restHandler) DeleteDatasetDocument(c *gin.Context) {
+// DeleteDatasetDocuments handles DELETE /api/vega-backend/v1/resources/dataset/:id/docs/:ids
+func (r *restHandler) DeleteDatasetDocuments(c *gin.Context) {
 	ctx, span := ar_trace.Tracer.Start(rest.GetLanguageCtx(c),
-		"DeleteDatasetDocument", trace.WithSpanKind(trace.SpanKindServer))
+		"DeleteDatasetDocuments", trace.WithSpanKind(trace.SpanKindServer))
 	defer span.End()
 
 	// 校验token
@@ -172,17 +171,17 @@ func (r *restHandler) DeleteDatasetDocument(c *gin.Context) {
 	o11y.AddHttpAttrs4API(span, o11y.GetAttrsByGinCtx(c))
 
 	datasetID := c.Param("id")
-	docID := c.Param("docid")
+	docIDs := c.Param("ids")
 
-	// 调用 dataset 服务删除文档
-	if err := r.ds.DeleteDocument(ctx, datasetID, docID); err != nil {
+	// 调用 dataset 服务批量删除文档
+	if err := r.ds.DeleteDocuments(ctx, datasetID, docIDs); err != nil {
 		httpErr := err.(*rest.HTTPError)
 		o11y.AddHttpAttrs4HttpError(span, httpErr)
 		rest.ReplyError(c, httpErr)
 		return
 	}
 
-	logger.Debug("Handler DeleteDatasetDocument Success")
+	logger.Debug("Handler DeleteDatasetDocuments Success")
 	o11y.AddHttpAttrs4Ok(span, http.StatusNoContent)
 	rest.ReplyOK(c, http.StatusNoContent, nil)
 }

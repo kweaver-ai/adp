@@ -20,4 +20,6 @@ type DatasetAccess interface {
 	GetDocument(ctx context.Context, name string, docID string) (map[string]any, error)
 	UpdateDocument(ctx context.Context, name string, docID string, document map[string]any) error
 	DeleteDocument(ctx context.Context, name string, docID string) error
+	UpdateDocuments(ctx context.Context, name string, updateRequests []map[string]any) error
+	DeleteDocuments(ctx context.Context, name string, docIDs string) error
 }

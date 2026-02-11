@@ -72,11 +72,6 @@ func (c *HTTPClient) GET(path string) HTTPResponse {
 	return c.doRequest("GET", path, nil)
 }
 
-// GETWithBody 发送带body的GET请求
-func (c *HTTPClient) GETWithBody(path string, payload any) HTTPResponse {
-	return c.doRequest("GET", path, payload)
-}
-
 // PUT 发送PUT请求
 func (c *HTTPClient) PUT(path string, payload any) HTTPResponse {
 	return c.doRequest("PUT", path, payload)

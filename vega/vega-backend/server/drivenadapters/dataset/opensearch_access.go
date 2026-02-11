@@ -533,6 +533,113 @@ func (da *datasetAccess) DeleteDocument(ctx context.Context, name string, docID 
 	return nil
 }
 
+// UpdateDocuments 批量更新 dataset 文档
+func (da *datasetAccess) UpdateDocuments(ctx context.Context, name string, updateRequests []map[string]any) error {
+	// 获取 OpenSearch 客户端
+	client, err := da.getOpenSearchClient()
+	if err != nil {
+		return err
+	}
+
+	// 构建批量更新请求
+	var bulkBody bytes.Buffer
+	for _, updateReq := range updateRequests {
+		docID, ok := updateReq["id"].(string)
+		if !ok {
+			continue
+		}
+		document := updateReq["document"]
+		if document == nil {
+			continue
+		}
+
+		// 写入更新操作的元数据
+		metadata := map[string]map[string]string{
+			"update": {
+				"_index": name,
+				"_id":    docID,
+			},
+		}
+		if err := json.NewEncoder(&bulkBody).Encode(metadata); err != nil {
+			return err
+		}
+
+		// 写入更新操作的文档
+		updateDoc := map[string]any{
+			"doc": document,
+		}
+		if err := json.NewEncoder(&bulkBody).Encode(updateDoc); err != nil {
+			return err
+		}
+	}
+
+	// 执行批量更新请求
+	req := opensearchapi.BulkRequest{
+		Body: &bulkBody,
+	}
+
+	resp, err := req.Do(ctx, client)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	if resp.IsError() {
+		return fmt.Errorf("failed to update documents: %s", resp.String())
+	}
+
+	return nil
+}
+
+// DeleteDocuments 批量删除 dataset 文档
+func (da *datasetAccess) DeleteDocuments(ctx context.Context, name string, docIDs string) error {
+	// 获取 OpenSearch 客户端
+	client, err := da.getOpenSearchClient()
+	if err != nil {
+		return err
+	}
+
+	// 解析文档 ID 列表（逗号分隔）
+	docIDList := strings.Split(docIDs, ",")
+
+	// 构建批量删除请求
+	var bulkBody bytes.Buffer
+	for _, docID := range docIDList {
+		docID = strings.TrimSpace(docID)
+		if docID == "" {
+			continue
+		}
+
+		// 写入删除操作的元数据
+		metadata := map[string]map[string]string{
+			"delete": {
+				"_index": name,
+				"_id":    docID,
+			},
+		}
+		if err := json.NewEncoder(&bulkBody).Encode(metadata); err != nil {
+			return err
+		}
+	}
+
+	// 执行批量删除请求
+	req := opensearchapi.BulkRequest{
+		Body: &bulkBody,
+	}
+
+	resp, err := req.Do(ctx, client)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	if resp.IsError() {
+		return fmt.Errorf("failed to delete documents: %s", resp.String())
+	}
+
+	return nil
+}
+
 // getOpenSearchClient 获取或创建 OpenSearch 客户端
 func (da *datasetAccess) getOpenSearchClient() (*opensearch.Client, error) {
 	if da.osClient != nil {

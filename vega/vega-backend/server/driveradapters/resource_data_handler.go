@@ -84,7 +84,7 @@ func (r *restHandler) QueryResourceData(c *gin.Context) {
 	}
 
 	// 调用 dataset 服务列出文档
-	entries, total, err := r.rds.Query(ctx, resource, &params)
+	entries, total, err := r.ds.ListDocuments(ctx, resource, &params)
 	if err != nil {
 		httpErr := err.(*rest.HTTPError)
 		o11y.AddHttpAttrs4HttpError(span, httpErr)

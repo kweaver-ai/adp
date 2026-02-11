@@ -101,11 +101,11 @@ func (ds *datasetService) Delete(ctx context.Context, res *interfaces.Resource) 
 }
 
 // ListDocuments 列出 dataset 中的文档
-func (ds *datasetService) ListDocuments(ctx context.Context, id string, params *interfaces.ResourceDataQueryParams) ([]map[string]any, int64, error) {
+func (ds *datasetService) ListDocuments(ctx context.Context, res *interfaces.Resource, params *interfaces.ResourceDataQueryParams) ([]map[string]any, int64, error) {
 	ctx, span := ar_trace.Tracer.Start(ctx, "List dataset documents")
 	defer span.End()
 
-	logger.Debugf("ListDocuments, datasetID: %s, params: %v", id, params)
+	id := fmt.Sprintf("%s-%s", res.SourceIdentifier, res.ID)
 	// 调用 dataset access 列出文档
 	documents, total, err := ds.da.ListDocuments(ctx, id, params)
 	if err != nil {
@@ -176,6 +176,38 @@ func (ds *datasetService) DeleteDocument(ctx context.Context, id string, docID s
 	// 调用 dataset access 删除文档
 	if err := ds.da.DeleteDocument(ctx, id, docID); err != nil {
 		span.SetStatus(codes.Error, "Delete dataset document failed")
+		return rest.NewHTTPError(ctx, http.StatusInternalServerError, verrors.VegaBackend_Resource_InternalError_DeleteFailed).
+			WithErrorDetails(err.Error())
+	}
+
+	span.SetStatus(codes.Ok, "")
+	return nil
+}
+
+// UpdateDocuments 批量更新 dataset 文档
+func (ds *datasetService) UpdateDocuments(ctx context.Context, id string, updateRequests []map[string]any) error {
+	ctx, span := ar_trace.Tracer.Start(ctx, "Update dataset documents")
+	defer span.End()
+
+	// 调用 dataset access 批量更新文档
+	if err := ds.da.UpdateDocuments(ctx, id, updateRequests); err != nil {
+		span.SetStatus(codes.Error, "Update dataset documents failed")
+		return rest.NewHTTPError(ctx, http.StatusInternalServerError, verrors.VegaBackend_Resource_InternalError_UpdateFailed).
+			WithErrorDetails(err.Error())
+	}
+
+	span.SetStatus(codes.Ok, "")
+	return nil
+}
+
+// DeleteDocuments 批量删除 dataset 文档
+func (ds *datasetService) DeleteDocuments(ctx context.Context, id string, docIDs string) error {
+	ctx, span := ar_trace.Tracer.Start(ctx, "Delete dataset documents")
+	defer span.End()
+
+	// 调用 dataset access 批量删除文档
+	if err := ds.da.DeleteDocuments(ctx, id, docIDs); err != nil {
+		span.SetStatus(codes.Error, "Delete dataset documents failed")
 		return rest.NewHTTPError(ctx, http.StatusInternalServerError, verrors.VegaBackend_Resource_InternalError_DeleteFailed).
 			WithErrorDetails(err.Error())
 	}
