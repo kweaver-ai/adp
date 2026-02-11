@@ -1,0 +1,100 @@
+// Copyright The kweaver.ai Authors.
+//
+// Licensed under the Apache License, Version 2.0.
+// See the LICENSE file in the project root for details.
+
+// Package mysql provides MySQL database connector implementation.
+package mysql
+
+import (
+	"context"
+	"fmt"
+
+	sq "github.com/Masterminds/squirrel"
+	_ "github.com/go-sql-driver/mysql"
+
+	"vega-backend/interfaces"
+)
+
+// convertValue converts []byte to string for MySQL driver compatibility
+func convertValue(v any) any {
+	if b, ok := v.([]byte); ok {
+		return string(b)
+	}
+	return v
+}
+
+func (c *MySQLConnector) ExecuteQuery(ctx context.Context, resource *interfaces.Resource,
+	params *interfaces.ResourceDataQueryParams) (*interfaces.QueryResult, error) {
+
+	if err := c.Connect(ctx); err != nil {
+		return nil, err
+	}
+
+	result := &interfaces.QueryResult{
+		Rows: make([]map[string]any, 0),
+	}
+
+	if params.NeedTotal {
+		countBuilder := sq.Select("COUNT(1)").
+			From(resource.SourceIdentifier)
+
+		query, args, err := countBuilder.ToSql()
+		if err != nil {
+			return nil, fmt.Errorf("failed to build query: %w", err)
+		}
+
+		var total int64
+		row := c.db.QueryRowContext(ctx, query, args...)
+		if err := row.Scan(&total); err != nil {
+			return nil, fmt.Errorf("failed to scan total: %w", err)
+		}
+
+		result.Total = total
+	}
+
+	fields := []string{"*"}
+	if len(params.OutputFields) > 0 {
+		fields = params.OutputFields
+	}
+
+	builder := sq.Select(fields...).
+		From(resource.SourceIdentifier)
+
+	query, args, err := builder.ToSql()
+	if err != nil {
+		return nil, fmt.Errorf("failed to build query: %w", err)
+	}
+
+	rows, err := c.db.QueryContext(ctx, query, args...)
+	if err != nil {
+		return nil, fmt.Errorf("failed to execute query: %w", err)
+	}
+	defer rows.Close()
+
+	columns, err := rows.Columns()
+	if err != nil {
+		return nil, err
+	}
+	result.Columns = columns
+
+	for rows.Next() {
+		values := make([]any, len(columns))
+		valuePtrs := make([]any, len(columns))
+		for i := range values {
+			valuePtrs[i] = &values[i]
+		}
+
+		if err := rows.Scan(valuePtrs...); err != nil {
+			return nil, err
+		}
+
+		row := make(map[string]any)
+		for i, col := range columns {
+			row[col] = convertValue(values[i])
+		}
+		result.Rows = append(result.Rows, row)
+	}
+
+	return result, nil
+}

@@ -23,10 +23,11 @@ import (
 	"vega-backend/interfaces"
 	"vega-backend/logics/auth"
 	"vega-backend/logics/catalog"
-	connectortype "vega-backend/logics/connector_type"
-	dataset "vega-backend/logics/dataset"
-	discoverytask "vega-backend/logics/discovery_task"
+	connector_type "vega-backend/logics/connector_type"
+	"vega-backend/logics/dataset"
+	discovery_task "vega-backend/logics/discovery_task"
 	"vega-backend/logics/resource"
+	"vega-backend/logics/resource_data"
 	"vega-backend/version"
 )
 
@@ -57,8 +58,9 @@ func NewRestHandler(appSetting *common.AppSetting) RestHandler {
 		cs:         cs,
 		rs:         rs,
 		ds:         ds,
-		cts:        connectortype.NewConnectorTypeService(appSetting),
-		dts:        discoverytask.NewDiscoveryTaskService(appSetting),
+		cts:        connector_type.NewConnectorTypeService(appSetting),
+		dts:        discovery_task.NewDiscoveryTaskService(appSetting),
+		rds:        resource_data.NewResourceDataService(appSetting),
 	}
 }
 

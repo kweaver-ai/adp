@@ -515,7 +515,7 @@ func (r *restHandler) ListCatalogResources(c *gin.Context) {
 
 	o11y.AddHttpAttrs4API(span, o11y.GetAttrsByGinCtx(c))
 
-	id := c.Param("id")
+	id := c.Param("ids")
 
 	// Check if id exists
 	exists, err := r.cs.CheckExistByID(ctx, id)

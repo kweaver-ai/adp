@@ -187,11 +187,8 @@ func (dw *discoveryWorker) discoverFileResources(ctx context.Context,
 func (dw *discoveryWorker) createAndConnectConnector(ctx context.Context,
 	catalog *interfaces.Catalog) (connectors.Connector, error) {
 
-	// 使用 mapstructure 反序列化 ConnectorConfig
-	cfg := interfaces.ConnectorConfig(catalog.ConnectorConfig)
-
 	// 创建 connector
-	connector, err := factory.GetFactory().CreateConnectorInstance(ctx, catalog.ConnectorType, cfg)
+	connector, err := factory.GetFactory().CreateConnectorInstance(ctx, catalog.ConnectorType, catalog.ConnectorCfg)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create connector: %w", err)
 	}

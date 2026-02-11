@@ -98,7 +98,7 @@ func (cs *catalogService) Create(ctx context.Context, req *interfaces.CatalogReq
 	} else {
 		// 验证敏感字段是否为合法 RSA 密文，获取明文用于连接测试
 		sensitiveFields := factory.GetFactory().GetSensitiveFields(req.ConnectorType)
-		decryptedConfig, err := cs.validateAndDecryptSensitiveFields(sensitiveFields, req.ConnectorConfig)
+		decryptedConfig, err := cs.validateAndDecryptSensitiveFields(sensitiveFields, req.ConnectorCfg)
 		if err != nil {
 			logger.Errorf("Failed to validate sensitive fields: %v", err)
 			o11y.Error(ctx, fmt.Sprintf("Failed to validate sensitive fields: %v", err))
@@ -137,7 +137,7 @@ func (cs *catalogService) Create(ctx context.Context, req *interfaces.CatalogReq
 		Description:        req.Description,
 		Type:               catalogType,
 		ConnectorType:      req.ConnectorType,
-		ConnectorConfig:    req.ConnectorConfig,
+		ConnectorCfg:       req.ConnectorCfg,
 		HealthCheckEnabled: true,
 		CatalogHealthCheckStatus: interfaces.CatalogHealthCheckStatus{
 			HealthCheckStatus: interfaces.CatalogHealthStatusHealthy,
@@ -222,7 +222,7 @@ func (cs *catalogService) GetByID(ctx context.Context, id string, withSensitiveF
 	} else {
 		// 验证敏感字段是否为合法 RSA 密文，获取明文用于连接测试
 		sensitiveFields := factory.GetFactory().GetSensitiveFields(catalog.ConnectorType)
-		decryptedConfig, err := cs.decryptSensitiveFields(sensitiveFields, catalog.ConnectorConfig)
+		decryptedConfig, err := cs.decryptSensitiveFields(sensitiveFields, catalog.ConnectorCfg)
 		if err != nil {
 			logger.Errorf("Failed to validate sensitive fields: %v", err)
 			o11y.Error(ctx, fmt.Sprintf("Failed to validate sensitive fields: %v", err))
@@ -230,7 +230,7 @@ func (cs *catalogService) GetByID(ctx context.Context, id string, withSensitiveF
 			return nil, rest.NewHTTPError(ctx, http.StatusBadRequest, verrors.VegaBackend_Catalog_InvalidParameter_SensitiveFieldNotEncrypted).
 				WithErrorDetails(err.Error())
 		}
-		catalog.ConnectorConfig = decryptedConfig
+		catalog.ConnectorCfg = decryptedConfig
 	}
 
 	span.SetStatus(codes.Ok, "")
@@ -391,7 +391,7 @@ func (cs *catalogService) Update(ctx context.Context, id string, req *interfaces
 	} else if req.ConnectorType != "" {
 		// 验证敏感字段是否为合法 RSA 密文，获取明文用于连接测试
 		sensitiveFields := factory.GetFactory().GetSensitiveFields(req.ConnectorType)
-		decryptedConfig, err := cs.validateAndDecryptSensitiveFields(sensitiveFields, req.ConnectorConfig)
+		decryptedConfig, err := cs.validateAndDecryptSensitiveFields(sensitiveFields, req.ConnectorCfg)
 		if err != nil {
 			logger.Errorf("Failed to validate sensitive fields: %v", err)
 			o11y.Error(ctx, fmt.Sprintf("Failed to validate sensitive fields: %v", err))
@@ -422,7 +422,7 @@ func (cs *catalogService) Update(ctx context.Context, id string, req *interfaces
 		defer connector.Close(ctx)
 
 		// req.ConnectorConfig 已在 validateAndDecryptSensitiveFields 中加上 ENC: 前缀
-		catalog.ConnectorConfig = req.ConnectorConfig
+		catalog.ConnectorCfg = req.ConnectorCfg
 	}
 
 	// Get account info
@@ -593,7 +593,7 @@ func (cs *catalogService) removeSensitiveFields(catalog *interfaces.Catalog) {
 	}
 	sensitiveFields := factory.GetFactory().GetSensitiveFields(catalog.ConnectorType)
 	for _, field := range sensitiveFields {
-		delete(catalog.ConnectorConfig, field)
+		delete(catalog.ConnectorCfg, field)
 	}
 }
 

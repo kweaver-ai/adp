@@ -34,9 +34,9 @@ type Catalog struct {
 	Type    string `json:"type"`
 	Enabled bool   `json:"enabled"`
 
-	ConnectorType   string         `json:"connector_type"`
-	ConnectorConfig map[string]any `json:"connector_config"`
-	Metadata        map[string]any `json:"metadata"`
+	ConnectorType string          `json:"connector_type"`
+	ConnectorCfg  ConnectorConfig `json:"connector_config"`
+	Metadata      map[string]any  `json:"metadata"`
 
 	HealthCheckEnabled bool `json:"health_check_enabled"`
 	CatalogHealthCheckStatus
@@ -66,11 +66,11 @@ type CatalogsQueryParams struct {
 
 // CatalogCreateRequest represents create catalog request.
 type CatalogRequest struct {
-	Name            string         `json:"name"`
-	Tags            []string       `json:"tags"`
-	Description     string         `json:"description"`
-	ConnectorType   string         `json:"connector_type"`
-	ConnectorConfig map[string]any `json:"connector_config"`
+	Name          string          `json:"name"`
+	Tags          []string        `json:"tags"`
+	Description   string          `json:"description"`
+	ConnectorType string          `json:"connector_type"`
+	ConnectorCfg  ConnectorConfig `json:"connector_config"`
 
 	IfNameModify  bool     `json:"-"`
 	OriginCatalog *Catalog `json:"-"`
