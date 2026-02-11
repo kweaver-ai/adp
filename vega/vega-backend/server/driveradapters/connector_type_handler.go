@@ -22,7 +22,7 @@ import (
 	"go.opentelemetry.io/otel/codes"
 	"go.opentelemetry.io/otel/trace"
 
-	oerrors "vega-backend/errors"
+	verrors "vega-backend/errors"
 	"vega-backend/interfaces"
 )
 
@@ -125,7 +125,7 @@ func (r *restHandler) RegisterConnectorType(c *gin.Context) {
 
 	var req interfaces.ConnectorTypeReq
 	if err := c.ShouldBindJSON(&req); err != nil {
-		httpErr := rest.NewHTTPError(ctx, http.StatusBadRequest, oerrors.VegaBackend_InvalidParameter_RequestBody).
+		httpErr := rest.NewHTTPError(ctx, http.StatusBadRequest, verrors.VegaBackend_InvalidParameter_RequestBody).
 			WithErrorDetails(err.Error())
 		o11y.AddHttpAttrs4HttpError(span, httpErr)
 		rest.ReplyError(c, httpErr)
@@ -142,14 +142,14 @@ func (r *restHandler) RegisterConnectorType(c *gin.Context) {
 	// Check if type exists
 	exists, err := r.cts.CheckExistByType(ctx, req.Type)
 	if err != nil {
-		httpErr := rest.NewHTTPError(ctx, http.StatusInternalServerError, oerrors.VegaBackend_ConnectorType_InternalError).
+		httpErr := rest.NewHTTPError(ctx, http.StatusInternalServerError, verrors.VegaBackend_ConnectorType_InternalError).
 			WithErrorDetails(err.Error())
 		o11y.AddHttpAttrs4HttpError(span, httpErr)
 		rest.ReplyError(c, httpErr)
 		return
 	}
 	if exists {
-		httpErr := rest.NewHTTPError(ctx, http.StatusConflict, oerrors.VegaBackend_ConnectorType_TypeExists)
+		httpErr := rest.NewHTTPError(ctx, http.StatusConflict, verrors.VegaBackend_ConnectorType_TypeExists)
 		o11y.AddHttpAttrs4HttpError(span, httpErr)
 		rest.ReplyError(c, httpErr)
 		return
@@ -202,7 +202,7 @@ func (r *restHandler) GetConnectorType(c *gin.Context) {
 		return
 	}
 	if connectorType == nil {
-		httpErr := rest.NewHTTPError(ctx, http.StatusNotFound, oerrors.VegaBackend_ConnectorType_NotFound)
+		httpErr := rest.NewHTTPError(ctx, http.StatusNotFound, verrors.VegaBackend_ConnectorType_NotFound)
 		o11y.AddHttpAttrs4HttpError(span, httpErr)
 		rest.ReplyError(c, httpErr)
 		return
@@ -236,7 +236,7 @@ func (r *restHandler) UpdateConnectorType(c *gin.Context) {
 
 	var req interfaces.ConnectorTypeReq
 	if err := c.ShouldBindJSON(&req); err != nil {
-		httpErr := rest.NewHTTPError(ctx, http.StatusBadRequest, oerrors.VegaBackend_InvalidParameter_RequestBody).
+		httpErr := rest.NewHTTPError(ctx, http.StatusBadRequest, verrors.VegaBackend_InvalidParameter_RequestBody).
 			WithErrorDetails(err.Error())
 		rest.ReplyError(c, httpErr)
 		return
@@ -269,7 +269,7 @@ func (r *restHandler) UpdateConnectorType(c *gin.Context) {
 		}
 		if exists {
 			span.SetStatus(codes.Error, "Connector type name exists")
-			httpErr := rest.NewHTTPError(ctx, http.StatusConflict, oerrors.VegaBackend_ConnectorType_NameExists)
+			httpErr := rest.NewHTTPError(ctx, http.StatusConflict, verrors.VegaBackend_ConnectorType_NameExists)
 			o11y.AddHttpAttrs4HttpError(span, httpErr)
 			rest.ReplyError(c, httpErr)
 			return
@@ -315,14 +315,14 @@ func (r *restHandler) DeleteConnectorType(c *gin.Context) {
 
 	ct, err := r.cts.GetByType(ctx, tp)
 	if err != nil {
-		httpErr := rest.NewHTTPError(ctx, http.StatusInternalServerError, oerrors.VegaBackend_ConnectorType_InternalError).
+		httpErr := rest.NewHTTPError(ctx, http.StatusInternalServerError, verrors.VegaBackend_ConnectorType_InternalError).
 			WithErrorDetails(err.Error())
 		o11y.AddHttpAttrs4HttpError(span, httpErr)
 		rest.ReplyError(c, httpErr)
 		return
 	}
 	if ct.Mode == interfaces.ConnectorModeLocal {
-		httpErr := rest.NewHTTPError(ctx, http.StatusForbidden, oerrors.VegaBackend_ConnectorType_BadRequest).
+		httpErr := rest.NewHTTPError(ctx, http.StatusForbidden, verrors.VegaBackend_ConnectorType_BadRequest).
 			WithErrorDetails("can not delete local connector type")
 		o11y.AddHttpAttrs4HttpError(span, httpErr)
 		rest.ReplyError(c, httpErr)
@@ -367,14 +367,14 @@ func (r *restHandler) SetConnectorTypeEnabled(c *gin.Context) {
 
 	exists, err := r.cts.CheckExistByType(ctx, tp)
 	if err != nil {
-		httpErr := rest.NewHTTPError(ctx, http.StatusInternalServerError, oerrors.VegaBackend_ConnectorType_InternalError).
+		httpErr := rest.NewHTTPError(ctx, http.StatusInternalServerError, verrors.VegaBackend_ConnectorType_InternalError).
 			WithErrorDetails(err.Error())
 		o11y.AddHttpAttrs4HttpError(span, httpErr)
 		rest.ReplyError(c, httpErr)
 		return
 	}
 	if !exists {
-		httpErr := rest.NewHTTPError(ctx, http.StatusNotFound, oerrors.VegaBackend_ConnectorType_NotFound)
+		httpErr := rest.NewHTTPError(ctx, http.StatusNotFound, verrors.VegaBackend_ConnectorType_NotFound)
 		o11y.AddHttpAttrs4HttpError(span, httpErr)
 		rest.ReplyError(c, httpErr)
 		return
@@ -384,7 +384,7 @@ func (r *restHandler) SetConnectorTypeEnabled(c *gin.Context) {
 		Value bool `json:"value"`
 	}
 	if err := c.ShouldBindJSON(&req); err != nil {
-		httpErr := rest.NewHTTPError(ctx, http.StatusBadRequest, oerrors.VegaBackend_InvalidParameter_RequestBody).
+		httpErr := rest.NewHTTPError(ctx, http.StatusBadRequest, verrors.VegaBackend_InvalidParameter_RequestBody).
 			WithErrorDetails(err.Error())
 		rest.ReplyError(c, httpErr)
 		return

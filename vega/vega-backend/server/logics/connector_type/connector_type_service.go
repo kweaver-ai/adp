@@ -20,7 +20,7 @@ import (
 
 	"vega-backend/common"
 	connectorTypeAccess "vega-backend/drivenadapters/connector_type"
-	oerrors "vega-backend/errors"
+	verrors "vega-backend/errors"
 	"vega-backend/interfaces"
 	"vega-backend/logics/connectors/factory"
 	"vega-backend/logics/permission"
@@ -81,7 +81,7 @@ func (cts *connectorTypeService) Register(ctx context.Context, req *interfaces.C
 		logger.Errorf("Register connector type failed: %v", err)
 		o11y.Error(ctx, fmt.Sprintf("Register connector type failed: %v", err))
 		span.SetStatus(codes.Error, "Register connector type failed")
-		return rest.NewHTTPError(ctx, http.StatusInternalServerError, oerrors.VegaBackend_ConnectorType_InternalError_RegisterFailed).
+		return rest.NewHTTPError(ctx, http.StatusInternalServerError, verrors.VegaBackend_ConnectorType_InternalError_RegisterFailed).
 			WithErrorDetails(err.Error())
 	}
 
@@ -90,7 +90,7 @@ func (cts *connectorTypeService) Register(ctx context.Context, req *interfaces.C
 		logger.Errorf("Register connector type failed: %v", err)
 		o11y.Error(ctx, fmt.Sprintf("Register connector type failed: %v", err))
 		span.SetStatus(codes.Error, "Register connector type failed")
-		return rest.NewHTTPError(ctx, http.StatusInternalServerError, oerrors.VegaBackend_ConnectorType_InternalError_RegisterFailed).
+		return rest.NewHTTPError(ctx, http.StatusInternalServerError, verrors.VegaBackend_ConnectorType_InternalError_RegisterFailed).
 			WithErrorDetails(err.Error())
 	}
 
@@ -106,12 +106,12 @@ func (cts *connectorTypeService) GetByType(ctx context.Context, tp string) (*int
 	ct, err := cts.cta.GetByType(ctx, tp)
 	if err != nil {
 		span.SetStatus(codes.Error, "Get connector type failed")
-		return nil, rest.NewHTTPError(ctx, http.StatusInternalServerError, oerrors.VegaBackend_ConnectorType_InternalError_GetFailed).
+		return nil, rest.NewHTTPError(ctx, http.StatusInternalServerError, verrors.VegaBackend_ConnectorType_InternalError_GetFailed).
 			WithErrorDetails(err.Error())
 	}
 	if ct == nil {
 		span.SetStatus(codes.Error, "Connector type not found")
-		return nil, rest.NewHTTPError(ctx, http.StatusNotFound, oerrors.VegaBackend_ConnectorType_NotFound)
+		return nil, rest.NewHTTPError(ctx, http.StatusNotFound, verrors.VegaBackend_ConnectorType_NotFound)
 	}
 
 	// 根据权限过滤有查看权限的对象，过滤后的数组的总长度就是总数，无需再请求总数
@@ -141,7 +141,7 @@ func (cts *connectorTypeService) List(ctx context.Context, params interfaces.Con
 	connectorTypesArr, total, err := cts.cta.List(ctx, params)
 	if err != nil {
 		span.SetStatus(codes.Error, "List connector types failed")
-		return nil, 0, rest.NewHTTPError(ctx, http.StatusInternalServerError, oerrors.VegaBackend_ConnectorType_InternalError_GetFailed).
+		return nil, 0, rest.NewHTTPError(ctx, http.StatusInternalServerError, verrors.VegaBackend_ConnectorType_InternalError_GetFailed).
 			WithErrorDetails(err.Error())
 	}
 
@@ -198,7 +198,7 @@ func (cts *connectorTypeService) Update(ctx context.Context, req *interfaces.Con
 	ct := req.OriginConnectorType
 	if ct == nil {
 		span.SetStatus(codes.Error, "Connector type not found")
-		return rest.NewHTTPError(ctx, http.StatusNotFound, oerrors.VegaBackend_ConnectorType_NotFound)
+		return rest.NewHTTPError(ctx, http.StatusNotFound, verrors.VegaBackend_ConnectorType_NotFound)
 	}
 
 	// 判断userid是否有创建业务知识网络的权限（策略决策）
@@ -213,15 +213,15 @@ func (cts *connectorTypeService) Update(ctx context.Context, req *interfaces.Con
 	// Apply updates
 	if req.Type != ct.Type {
 		span.SetStatus(codes.Error, "can not change connector type")
-		return rest.NewHTTPError(ctx, http.StatusBadRequest, oerrors.VegaBackend_ConnectorType_InvalidParameter_Type)
+		return rest.NewHTTPError(ctx, http.StatusBadRequest, verrors.VegaBackend_ConnectorType_InvalidParameter_Type)
 	}
 	if req.Mode != ct.Mode {
 		span.SetStatus(codes.Error, "can not change connector mode")
-		return rest.NewHTTPError(ctx, http.StatusBadRequest, oerrors.VegaBackend_ConnectorType_InvalidParameter_Mode)
+		return rest.NewHTTPError(ctx, http.StatusBadRequest, verrors.VegaBackend_ConnectorType_InvalidParameter_Mode)
 	}
 	if req.Category != ct.Category {
 		span.SetStatus(codes.Error, "can not change connector category")
-		return rest.NewHTTPError(ctx, http.StatusBadRequest, oerrors.VegaBackend_ConnectorType_InvalidParameter_Category)
+		return rest.NewHTTPError(ctx, http.StatusBadRequest, verrors.VegaBackend_ConnectorType_InvalidParameter_Category)
 	}
 
 	ct.Type = req.Type
@@ -236,7 +236,7 @@ func (cts *connectorTypeService) Update(ctx context.Context, req *interfaces.Con
 
 	if err := cts.cta.Update(ctx, ct); err != nil {
 		span.SetStatus(codes.Error, "Update connector type failed")
-		return rest.NewHTTPError(ctx, http.StatusInternalServerError, oerrors.VegaBackend_ConnectorType_InternalError_UpdateFailed).
+		return rest.NewHTTPError(ctx, http.StatusInternalServerError, verrors.VegaBackend_ConnectorType_InternalError_UpdateFailed).
 			WithErrorDetails(err.Error())
 	}
 
@@ -244,7 +244,7 @@ func (cts *connectorTypeService) Update(ctx context.Context, req *interfaces.Con
 		logger.Errorf("Register connector type failed: %v", err)
 		o11y.Error(ctx, fmt.Sprintf("Register connector type failed: %v", err))
 		span.SetStatus(codes.Error, "Register connector type failed")
-		return rest.NewHTTPError(ctx, http.StatusInternalServerError, oerrors.VegaBackend_ConnectorType_InternalError_RegisterFailed).
+		return rest.NewHTTPError(ctx, http.StatusInternalServerError, verrors.VegaBackend_ConnectorType_InternalError_RegisterFailed).
 			WithErrorDetails(err.Error())
 	}
 
@@ -280,7 +280,7 @@ func (cts *connectorTypeService) DeleteByType(ctx context.Context, tp string) er
 
 	if err := cts.cta.DeleteByType(ctx, tp); err != nil {
 		span.SetStatus(codes.Error, "Delete connector type failed")
-		return rest.NewHTTPError(ctx, http.StatusInternalServerError, oerrors.VegaBackend_ConnectorType_InternalError_DeleteFailed).
+		return rest.NewHTTPError(ctx, http.StatusInternalServerError, verrors.VegaBackend_ConnectorType_InternalError_DeleteFailed).
 			WithErrorDetails(err.Error())
 	}
 
@@ -288,7 +288,7 @@ func (cts *connectorTypeService) DeleteByType(ctx context.Context, tp string) er
 		logger.Errorf("Delete connector type failed: %v", err)
 		o11y.Error(ctx, fmt.Sprintf("Delete connector type failed: %v", err))
 		span.SetStatus(codes.Error, "Delete connector type failed")
-		return rest.NewHTTPError(ctx, http.StatusInternalServerError, oerrors.VegaBackend_ConnectorType_InternalError_DeleteFailed).
+		return rest.NewHTTPError(ctx, http.StatusInternalServerError, verrors.VegaBackend_ConnectorType_InternalError_DeleteFailed).
 			WithErrorDetails(err.Error())
 	}
 
@@ -318,7 +318,7 @@ func (cts *connectorTypeService) SetEnabled(ctx context.Context, tp string, enab
 
 	if err := cts.cta.SetEnabled(ctx, tp, enabled); err != nil {
 		span.SetStatus(codes.Error, "Set enabled connector type failed")
-		return rest.NewHTTPError(ctx, http.StatusInternalServerError, oerrors.VegaBackend_ConnectorType_InternalError_UpdateFailed).
+		return rest.NewHTTPError(ctx, http.StatusInternalServerError, verrors.VegaBackend_ConnectorType_InternalError_UpdateFailed).
 			WithErrorDetails(err.Error())
 	}
 
@@ -334,7 +334,7 @@ func (cts *connectorTypeService) CheckExistByType(ctx context.Context, tp string
 	ct, err := cts.cta.GetByType(ctx, tp)
 	if err != nil {
 		span.SetStatus(codes.Error, "GetByType failed")
-		return false, rest.NewHTTPError(ctx, http.StatusInternalServerError, oerrors.VegaBackend_ConnectorType_InternalError_GetFailed).
+		return false, rest.NewHTTPError(ctx, http.StatusInternalServerError, verrors.VegaBackend_ConnectorType_InternalError_GetFailed).
 			WithErrorDetails(err.Error())
 	}
 
@@ -350,7 +350,7 @@ func (cts *connectorTypeService) CheckExistByName(ctx context.Context, name stri
 	ct, err := cts.cta.GetByName(ctx, name)
 	if err != nil {
 		span.SetStatus(codes.Error, "GetByName failed")
-		return false, rest.NewHTTPError(ctx, http.StatusInternalServerError, oerrors.VegaBackend_ConnectorType_InternalError_GetFailed).
+		return false, rest.NewHTTPError(ctx, http.StatusInternalServerError, verrors.VegaBackend_ConnectorType_InternalError_GetFailed).
 			WithErrorDetails(err.Error())
 	}
 

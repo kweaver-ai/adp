@@ -17,7 +17,7 @@ import (
 	"github.com/kweaver-ai/kweaver-go-lib/rest"
 	"go.opentelemetry.io/otel/trace"
 
-	oerrors "vega-backend/errors"
+	verrors "vega-backend/errors"
 	"vega-backend/interfaces"
 )
 
@@ -44,14 +44,14 @@ func (r *restHandler) GetDiscoveryTask(c *gin.Context) {
 	// Get task
 	task, err := r.dts.GetByID(ctx, taskID)
 	if err != nil {
-		httpErr := rest.NewHTTPError(ctx, http.StatusInternalServerError, oerrors.VegaBackend_Catalog_InternalError).
+		httpErr := rest.NewHTTPError(ctx, http.StatusInternalServerError, verrors.VegaBackend_Catalog_InternalError).
 			WithErrorDetails(err.Error())
 		o11y.AddHttpAttrs4HttpError(span, httpErr)
 		rest.ReplyError(c, httpErr)
 		return
 	}
 	if task == nil {
-		httpErr := rest.NewHTTPError(ctx, http.StatusNotFound, oerrors.VegaBackend_Task_NotFound)
+		httpErr := rest.NewHTTPError(ctx, http.StatusNotFound, verrors.VegaBackend_Task_NotFound)
 		o11y.AddHttpAttrs4HttpError(span, httpErr)
 		rest.ReplyError(c, httpErr)
 		return
@@ -92,7 +92,7 @@ func (r *restHandler) ListDiscoveryTasks(c *gin.Context) {
 		return
 	}
 	if catalog == nil {
-		httpErr := rest.NewHTTPError(ctx, http.StatusNotFound, oerrors.VegaBackend_Catalog_NotFound)
+		httpErr := rest.NewHTTPError(ctx, http.StatusNotFound, verrors.VegaBackend_Catalog_NotFound)
 		o11y.AddHttpAttrs4HttpError(span, httpErr)
 		rest.ReplyError(c, httpErr)
 		return
@@ -113,7 +113,7 @@ func (r *restHandler) ListDiscoveryTasks(c *gin.Context) {
 	// List tasks
 	tasks, total, err := r.dts.List(ctx, params)
 	if err != nil {
-		httpErr := rest.NewHTTPError(ctx, http.StatusInternalServerError, oerrors.VegaBackend_Catalog_InternalError).
+		httpErr := rest.NewHTTPError(ctx, http.StatusInternalServerError, verrors.VegaBackend_Catalog_InternalError).
 			WithErrorDetails(err.Error())
 		o11y.AddHttpAttrs4HttpError(span, httpErr)
 		rest.ReplyError(c, httpErr)

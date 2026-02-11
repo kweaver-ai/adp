@@ -249,7 +249,7 @@ func (da *datasetAccess) CheckExist(ctx context.Context, name string) (bool, err
 }
 
 // ListDocuments 列出 dataset 中的文档
-func (da *datasetAccess) ListDocuments(ctx context.Context, name string, params *interfaces.DatasetQueryParams) ([]map[string]any, int64, error) {
+func (da *datasetAccess) ListDocuments(ctx context.Context, name string, params *interfaces.ResourceDataQueryParams) ([]map[string]any, int64, error) {
 	// 获取 OpenSearch 客户端
 	client, err := da.getOpenSearchClient()
 	if err != nil {
@@ -263,33 +263,6 @@ func (da *datasetAccess) ListDocuments(ctx context.Context, name string, params 
 		},
 		"from": 0,
 		"size": 100,
-	}
-
-	// 处理时间范围过滤
-	if params != nil && (params.Start > 0 || params.End > 0) {
-		timeRangeQuery := map[string]any{
-			"range": map[string]any{
-				"@timestamp": map[string]any{},
-			},
-		}
-
-		if params.Start > 0 {
-			if rangeMap, ok := timeRangeQuery["range"].(map[string]any); ok {
-				if timestampMap, ok := rangeMap["@timestamp"].(map[string]any); ok {
-					timestampMap["gte"] = params.Start
-				}
-			}
-		}
-
-		if params.End > 0 {
-			if rangeMap, ok := timeRangeQuery["range"].(map[string]any); ok {
-				if timestampMap, ok := rangeMap["@timestamp"].(map[string]any); ok {
-					timestampMap["lte"] = params.End
-				}
-			}
-		}
-
-		query["query"] = timeRangeQuery
 	}
 
 	// 处理排序

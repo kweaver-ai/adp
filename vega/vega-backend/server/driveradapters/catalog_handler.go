@@ -21,7 +21,7 @@ import (
 	"go.opentelemetry.io/otel/codes"
 	"go.opentelemetry.io/otel/trace"
 
-	oerrors "vega-backend/errors"
+	verrors "vega-backend/errors"
 	"vega-backend/interfaces"
 )
 
@@ -116,7 +116,7 @@ func (r *restHandler) CreateCatalog(c *gin.Context) {
 
 	var req interfaces.CatalogRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		httpErr := rest.NewHTTPError(ctx, http.StatusBadRequest, oerrors.VegaBackend_InvalidParameter_RequestBody).
+		httpErr := rest.NewHTTPError(ctx, http.StatusBadRequest, verrors.VegaBackend_InvalidParameter_RequestBody).
 			WithErrorDetails(err.Error())
 		o11y.AddHttpAttrs4HttpError(span, httpErr)
 		rest.ReplyError(c, httpErr)
@@ -133,14 +133,14 @@ func (r *restHandler) CreateCatalog(c *gin.Context) {
 	// Check if name exists
 	exists, err := r.cs.CheckExistByName(ctx, req.Name)
 	if err != nil {
-		httpErr := rest.NewHTTPError(ctx, http.StatusInternalServerError, oerrors.VegaBackend_Catalog_InternalError).
+		httpErr := rest.NewHTTPError(ctx, http.StatusInternalServerError, verrors.VegaBackend_Catalog_InternalError).
 			WithErrorDetails(err.Error())
 		o11y.AddHttpAttrs4HttpError(span, httpErr)
 		rest.ReplyError(c, httpErr)
 		return
 	}
 	if exists {
-		httpErr := rest.NewHTTPError(ctx, http.StatusConflict, oerrors.VegaBackend_Catalog_NameExists)
+		httpErr := rest.NewHTTPError(ctx, http.StatusConflict, verrors.VegaBackend_Catalog_NameExists)
 		o11y.AddHttpAttrs4HttpError(span, httpErr)
 		rest.ReplyError(c, httpErr)
 		return
@@ -204,7 +204,7 @@ func (r *restHandler) GetCatalogs(c *gin.Context) {
 				}
 			}
 			if !found {
-				httpErr := rest.NewHTTPError(ctx, http.StatusNotFound, oerrors.VegaBackend_Catalog_NotFound).
+				httpErr := rest.NewHTTPError(ctx, http.StatusNotFound, verrors.VegaBackend_Catalog_NotFound).
 					WithErrorDetails(fmt.Sprintf("id %s not found", id))
 				o11y.AddHttpAttrs4HttpError(span, httpErr)
 				rest.ReplyError(c, httpErr)
@@ -243,7 +243,7 @@ func (r *restHandler) UpdateCatalog(c *gin.Context) {
 
 	var req interfaces.CatalogRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		httpErr := rest.NewHTTPError(ctx, http.StatusBadRequest, oerrors.VegaBackend_InvalidParameter_RequestBody).
+		httpErr := rest.NewHTTPError(ctx, http.StatusBadRequest, verrors.VegaBackend_InvalidParameter_RequestBody).
 			WithErrorDetails(err.Error())
 		o11y.AddHttpAttrs4HttpError(span, httpErr)
 		rest.ReplyError(c, httpErr)
@@ -277,7 +277,7 @@ func (r *restHandler) UpdateCatalog(c *gin.Context) {
 		}
 		if exists {
 			span.SetStatus(codes.Error, "Catalog name exists")
-			httpErr := rest.NewHTTPError(ctx, http.StatusConflict, oerrors.VegaBackend_Catalog_NameExists)
+			httpErr := rest.NewHTTPError(ctx, http.StatusConflict, verrors.VegaBackend_Catalog_NameExists)
 			o11y.AddHttpAttrs4HttpError(span, httpErr)
 			rest.ReplyError(c, httpErr)
 			return
@@ -331,7 +331,7 @@ func (r *restHandler) DeleteCatalogs(c *gin.Context) {
 			return
 		}
 		if !exists {
-			httpErr := rest.NewHTTPError(ctx, http.StatusNotFound, oerrors.VegaBackend_Catalog_NotFound).
+			httpErr := rest.NewHTTPError(ctx, http.StatusNotFound, verrors.VegaBackend_Catalog_NotFound).
 				WithErrorDetails(fmt.Sprintf("id %s not found", id))
 			o11y.AddHttpAttrs4HttpError(span, httpErr)
 			rest.ReplyError(c, httpErr)
@@ -471,7 +471,7 @@ func (r *restHandler) DiscoverCatalogResources(c *gin.Context) {
 		return
 	}
 	if catalog == nil {
-		httpErr := rest.NewHTTPError(ctx, http.StatusNotFound, oerrors.VegaBackend_Catalog_NotFound)
+		httpErr := rest.NewHTTPError(ctx, http.StatusNotFound, verrors.VegaBackend_Catalog_NotFound)
 		o11y.AddHttpAttrs4HttpError(span, httpErr)
 		rest.ReplyError(c, httpErr)
 		return
@@ -480,7 +480,7 @@ func (r *restHandler) DiscoverCatalogResources(c *gin.Context) {
 	// Create discovery task (async)
 	taskID, err := r.dts.Create(ctx, catalog.ID)
 	if err != nil {
-		httpErr := rest.NewHTTPError(ctx, http.StatusInternalServerError, oerrors.VegaBackend_Catalog_InternalError).
+		httpErr := rest.NewHTTPError(ctx, http.StatusInternalServerError, verrors.VegaBackend_Catalog_InternalError).
 			WithErrorDetails(err.Error())
 		o11y.AddHttpAttrs4HttpError(span, httpErr)
 		rest.ReplyError(c, httpErr)
@@ -520,14 +520,14 @@ func (r *restHandler) ListCatalogResources(c *gin.Context) {
 	// Check if id exists
 	exists, err := r.cs.CheckExistByID(ctx, id)
 	if err != nil {
-		httpErr := rest.NewHTTPError(ctx, http.StatusInternalServerError, oerrors.VegaBackend_Catalog_InternalError).
+		httpErr := rest.NewHTTPError(ctx, http.StatusInternalServerError, verrors.VegaBackend_Catalog_InternalError).
 			WithErrorDetails(err.Error())
 		o11y.AddHttpAttrs4HttpError(span, httpErr)
 		rest.ReplyError(c, httpErr)
 		return
 	}
 	if !exists {
-		httpErr := rest.NewHTTPError(ctx, http.StatusNotFound, oerrors.VegaBackend_Catalog_NotFound)
+		httpErr := rest.NewHTTPError(ctx, http.StatusNotFound, verrors.VegaBackend_Catalog_NotFound)
 		o11y.AddHttpAttrs4HttpError(span, httpErr)
 		rest.ReplyError(c, httpErr)
 		return

@@ -25,12 +25,13 @@ const (
 	VegaBackend_Resource_AlreadyDisabled = "VegaBackend.Resource.AlreadyDisabled"
 
 	// 500 Internal Server Error
-	VegaBackend_Resource_InternalError              = "VegaBackend.Resource.InternalError"
-	VegaBackend_Resource_InternalError_CreateFailed = "VegaBackend.Resource.InternalError.CreateFailed"
-	VegaBackend_Resource_InternalError_GetFailed    = "VegaBackend.Resource.InternalError.GetFailed"
-	VegaBackend_Resource_InternalError_UpdateFailed = "VegaBackend.Resource.InternalError.UpdateFailed"
-	VegaBackend_Resource_InternalError_DeleteFailed = "VegaBackend.Resource.InternalError.DeleteFailed"
-	VegaBackend_Resource_InternalError_SyncFailed   = "VegaBackend.Resource.InternalError.SyncFailed"
+	VegaBackend_Resource_InternalError                 = "VegaBackend.Resource.InternalError"
+	VegaBackend_Resource_InternalError_CreateFailed    = "VegaBackend.Resource.InternalError.CreateFailed"
+	VegaBackend_Resource_InternalError_GetFailed       = "VegaBackend.Resource.InternalError.GetFailed"
+	VegaBackend_Resource_InternalError_UpdateFailed    = "VegaBackend.Resource.InternalError.UpdateFailed"
+	VegaBackend_Resource_InternalError_DeleteFailed    = "VegaBackend.Resource.InternalError.DeleteFailed"
+	VegaBackend_Resource_InternalError_SyncFailed      = "VegaBackend.Resource.InternalError.SyncFailed"
+	VegaBackend_Resource_InternalError_InvalidCategory = "VegaBackend.Resource.InternalError.InvalidCategory"
 )
 
 var ResourceErrCodeList = []string{

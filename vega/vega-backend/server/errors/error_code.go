@@ -15,15 +15,16 @@ import (
 // 公共错误码
 const (
 	// 400 Bad Request
-	VegaBackend_InvalidParameter_Name        = "VegaBackend.InvalidParameter.Name"
-	VegaBackend_InvalidParameter_Description = "VegaBackend.InvalidParameter.Description"
-	VegaBackend_InvalidParameter_Tag         = "VegaBackend.InvalidParameter.Tag"
-	VegaBackend_InvalidParameter_RequestBody = "VegaBackend.InvalidParameter.RequestBody"
-	VegaBackend_InvalidParameter_Limit       = "VegaBackend.InvalidParameter.Limit"
-	VegaBackend_InvalidParameter_Offset      = "VegaBackend.InvalidParameter.Offset"
-	VegaBackend_InvalidParameter_Sort        = "VegaBackend.InvalidParameter.Sort"
-	VegaBackend_InvalidParameter_Direction   = "VegaBackend.InvalidParameter.Direction"
-	VegaBackend_InvalidParameter_ID          = "VegaBackend.InvalidParameter.ID"
+	VegaBackend_InvalidParameter_Name           = "VegaBackend.InvalidParameter.Name"
+	VegaBackend_InvalidParameter_Description    = "VegaBackend.InvalidParameter.Description"
+	VegaBackend_InvalidParameter_Tag            = "VegaBackend.InvalidParameter.Tag"
+	VegaBackend_InvalidParameter_RequestBody    = "VegaBackend.InvalidParameter.RequestBody"
+	VegaBackend_InvalidParameter_Limit          = "VegaBackend.InvalidParameter.Limit"
+	VegaBackend_InvalidParameter_Offset         = "VegaBackend.InvalidParameter.Offset"
+	VegaBackend_InvalidParameter_Sort           = "VegaBackend.InvalidParameter.Sort"
+	VegaBackend_InvalidParameter_Direction      = "VegaBackend.InvalidParameter.Direction"
+	VegaBackend_InvalidParameter_ID             = "VegaBackend.InvalidParameter.ID"
+	VegaBackend_InvalidParameter_OverrideMethod = "VegaBackend.InvalidParameter.OverrideMethod"
 
 	// 406 Not Acceptable
 	VegaBackend_InvalidRequestHeader_ContentType = "VegaBackend.InvalidRequestHeader.ContentType"

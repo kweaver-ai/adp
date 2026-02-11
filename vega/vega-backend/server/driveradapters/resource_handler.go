@@ -21,7 +21,7 @@ import (
 	"go.opentelemetry.io/otel/codes"
 	"go.opentelemetry.io/otel/trace"
 
-	oerrors "vega-backend/errors"
+	verrors "vega-backend/errors"
 	"vega-backend/interfaces"
 )
 
@@ -118,7 +118,7 @@ func (r *restHandler) CreateResource(c *gin.Context) {
 	var req interfaces.ResourceRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		httpErr := rest.NewHTTPError(ctx, http.StatusBadRequest,
-			oerrors.VegaBackend_InvalidParameter_RequestBody).WithErrorDetails(err.Error())
+			verrors.VegaBackend_InvalidParameter_RequestBody).WithErrorDetails(err.Error())
 		o11y.AddHttpAttrs4HttpError(span, httpErr)
 		rest.ReplyError(c, httpErr)
 		return
@@ -135,13 +135,13 @@ func (r *restHandler) CreateResource(c *gin.Context) {
 	exists, err := r.rs.CheckExistByName(ctx, req.CatalogID, req.Name)
 	if err != nil {
 		httpErr := rest.NewHTTPError(ctx, http.StatusInternalServerError,
-			oerrors.VegaBackend_Resource_InternalError).WithErrorDetails(err.Error())
+			verrors.VegaBackend_Resource_InternalError).WithErrorDetails(err.Error())
 		o11y.AddHttpAttrs4HttpError(span, httpErr)
 		rest.ReplyError(c, httpErr)
 		return
 	}
 	if exists {
-		httpErr := rest.NewHTTPError(ctx, http.StatusConflict, oerrors.VegaBackend_Resource_NameExists)
+		httpErr := rest.NewHTTPError(ctx, http.StatusConflict, verrors.VegaBackend_Resource_NameExists)
 		o11y.AddHttpAttrs4HttpError(span, httpErr)
 		rest.ReplyError(c, httpErr)
 		return
@@ -206,7 +206,7 @@ func (r *restHandler) GetResources(c *gin.Context) {
 			}
 			if !found {
 				httpErr := rest.NewHTTPError(ctx, http.StatusNotFound,
-					oerrors.VegaBackend_Resource_NotFound).WithErrorDetails(fmt.Sprintf("id %s not found", id))
+					verrors.VegaBackend_Resource_NotFound).WithErrorDetails(fmt.Sprintf("id %s not found", id))
 				o11y.AddHttpAttrs4HttpError(span, httpErr)
 				rest.ReplyError(c, httpErr)
 				return
@@ -245,7 +245,7 @@ func (r *restHandler) UpdateResource(c *gin.Context) {
 	var req interfaces.ResourceRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		httpErr := rest.NewHTTPError(ctx, http.StatusBadRequest,
-			oerrors.VegaBackend_InvalidParameter_RequestBody).WithErrorDetails(err.Error())
+			verrors.VegaBackend_InvalidParameter_RequestBody).WithErrorDetails(err.Error())
 		o11y.AddHttpAttrs4HttpError(span, httpErr)
 		rest.ReplyError(c, httpErr)
 		return
@@ -278,7 +278,7 @@ func (r *restHandler) UpdateResource(c *gin.Context) {
 		}
 		if exists {
 			span.SetStatus(codes.Error, "Resource name exists")
-			httpErr := rest.NewHTTPError(ctx, http.StatusConflict, oerrors.VegaBackend_Resource_NameExists)
+			httpErr := rest.NewHTTPError(ctx, http.StatusConflict, verrors.VegaBackend_Resource_NameExists)
 			o11y.AddHttpAttrs4HttpError(span, httpErr)
 			rest.ReplyError(c, httpErr)
 			return
@@ -333,7 +333,7 @@ func (r *restHandler) DeleteResources(c *gin.Context) {
 		}
 		if !exists {
 			httpErr := rest.NewHTTPError(ctx, http.StatusNotFound,
-				oerrors.VegaBackend_Resource_NotFound).WithErrorDetails(fmt.Sprintf("id %s not found", id))
+				verrors.VegaBackend_Resource_NotFound).WithErrorDetails(fmt.Sprintf("id %s not found", id))
 			o11y.AddHttpAttrs4HttpError(span, httpErr)
 			rest.ReplyError(c, httpErr)
 			return
@@ -353,229 +353,6 @@ func (r *restHandler) DeleteResources(c *gin.Context) {
 	}
 
 	logger.Debug("Handler DeleteResource Success")
-	o11y.AddHttpAttrs4Ok(span, http.StatusNoContent)
-	rest.ReplyOK(c, http.StatusNoContent, nil)
-}
-
-// ListDatasetDocuments handles GET /api/vega-backend/v1/resources/dataset/:id
-func (r *restHandler) ListDatasetDocuments(c *gin.Context) {
-	ctx, span := ar_trace.Tracer.Start(rest.GetLanguageCtx(c),
-		"ListDatasetDocuments", trace.WithSpanKind(trace.SpanKindServer))
-	defer span.End()
-
-	// 校验token
-	visitor, err := r.verifyOAuth(ctx, c)
-	if err != nil {
-		return
-	}
-	accountInfo := interfaces.AccountInfo{
-		ID:   visitor.ID,
-		Type: string(visitor.Type),
-	}
-	ctx = context.WithValue(ctx, interfaces.ACCOUNT_INFO_KEY, accountInfo)
-
-	o11y.AddHttpAttrs4API(span, o11y.GetAttrsByGinCtx(c))
-
-	datasetID := c.Param("id")
-
-	// 解析请求体
-	var params interfaces.DatasetQueryParams
-	if err := c.ShouldBindJSON(&params); err != nil {
-		httpErr := rest.NewHTTPError(ctx, http.StatusBadRequest, oerrors.VegaBackend_InvalidParameter_RequestBody).
-			WithErrorDetails(err.Error())
-		o11y.AddHttpAttrs4HttpError(span, httpErr)
-		rest.ReplyError(c, httpErr)
-		return
-	}
-
-	// 调用 dataset 服务列出文档
-	documents, total, err := r.ds.ListDocuments(ctx, datasetID, &params)
-	if err != nil {
-		if httpErr, ok := err.(*rest.HTTPError); ok {
-			o11y.AddHttpAttrs4HttpError(span, httpErr)
-			rest.ReplyError(c, httpErr)
-		} else {
-			// 处理其他类型的错误
-			httpErr := rest.NewHTTPError(ctx, http.StatusInternalServerError, oerrors.VegaBackend_InternalError_MarshalDataFailed).
-				WithErrorDetails(err.Error())
-			o11y.AddHttpAttrs4HttpError(span, httpErr)
-			rest.ReplyError(c, httpErr)
-		}
-		return
-	}
-
-	resultData := map[string]any{
-		"entries":     documents,
-		"total_count": total,
-	}
-
-	logger.Debug("Handler ListDatasetDocuments Success")
-	o11y.AddHttpAttrs4Ok(span, http.StatusOK)
-	rest.ReplyOK(c, http.StatusOK, resultData)
-}
-
-// CreateDatasetDocuments handles POST /api/vega-backend/v1/resources/dataset/:id/docs
-func (r *restHandler) CreateDatasetDocuments(c *gin.Context) {
-	ctx, span := ar_trace.Tracer.Start(rest.GetLanguageCtx(c),
-		"CreateDatasetDocuments", trace.WithSpanKind(trace.SpanKindServer))
-	defer span.End()
-
-	// 校验token
-	visitor, err := r.verifyOAuth(ctx, c)
-	if err != nil {
-		return
-	}
-	accountInfo := interfaces.AccountInfo{
-		ID:   visitor.ID,
-		Type: string(visitor.Type),
-	}
-	ctx = context.WithValue(ctx, interfaces.ACCOUNT_INFO_KEY, accountInfo)
-
-	o11y.AddHttpAttrs4API(span, o11y.GetAttrsByGinCtx(c))
-
-	datasetID := c.Param("id")
-
-	// 获取请求体
-	var documents []map[string]any
-	if err := c.ShouldBindJSON(&documents); err != nil {
-		httpErr := rest.NewHTTPError(ctx, http.StatusBadRequest, oerrors.VegaBackend_InvalidParameter_RequestBody).
-			WithErrorDetails(err.Error())
-		o11y.AddHttpAttrs4HttpError(span, httpErr)
-		rest.ReplyError(c, httpErr)
-		return
-	}
-
-	// 调用 dataset 服务批量创建文档
-	docIDs, err := r.ds.CreateDocuments(ctx, datasetID, documents)
-	if err != nil {
-		httpErr := err.(*rest.HTTPError)
-		o11y.AddHttpAttrs4HttpError(span, httpErr)
-		rest.ReplyError(c, httpErr)
-		return
-	}
-
-	resultData := map[string]any{"ids": docIDs}
-
-	logger.Debug("Handler CreateDatasetDocuments Success")
-	o11y.AddHttpAttrs4Ok(span, http.StatusCreated)
-	rest.ReplyOK(c, http.StatusCreated, resultData)
-}
-
-// GetDatasetDocument handles GET /api/vega-backend/v1/resources/dataset/:id/:docid
-func (r *restHandler) GetDatasetDocument(c *gin.Context) {
-	ctx, span := ar_trace.Tracer.Start(rest.GetLanguageCtx(c),
-		"GetDatasetDocument", trace.WithSpanKind(trace.SpanKindServer))
-	defer span.End()
-
-	// 校验token
-	visitor, err := r.verifyOAuth(ctx, c)
-	if err != nil {
-		return
-	}
-	accountInfo := interfaces.AccountInfo{
-		ID:   visitor.ID,
-		Type: string(visitor.Type),
-	}
-	ctx = context.WithValue(ctx, interfaces.ACCOUNT_INFO_KEY, accountInfo)
-
-	o11y.AddHttpAttrs4API(span, o11y.GetAttrsByGinCtx(c))
-
-	datasetID := c.Param("id")
-	docID := c.Param("docid")
-
-	// 调用 dataset 服务获取文档
-	document, err := r.ds.GetDocument(ctx, datasetID, docID)
-	if err != nil {
-		httpErr := err.(*rest.HTTPError)
-		o11y.AddHttpAttrs4HttpError(span, httpErr)
-		rest.ReplyError(c, httpErr)
-		return
-	}
-
-	resultData := map[string]any{"document": document}
-
-	logger.Debug("Handler GetDatasetDocument Success")
-	o11y.AddHttpAttrs4Ok(span, http.StatusOK)
-	rest.ReplyOK(c, http.StatusOK, resultData)
-}
-
-// UpdateDatasetDocument handles PUT /api/vega-backend/v1/resources/dataset/:id/:docid
-func (r *restHandler) UpdateDatasetDocument(c *gin.Context) {
-	ctx, span := ar_trace.Tracer.Start(rest.GetLanguageCtx(c),
-		"UpdateDatasetDocument", trace.WithSpanKind(trace.SpanKindServer))
-	defer span.End()
-
-	// 校验token
-	visitor, err := r.verifyOAuth(ctx, c)
-	if err != nil {
-		return
-	}
-	accountInfo := interfaces.AccountInfo{
-		ID:   visitor.ID,
-		Type: string(visitor.Type),
-	}
-	ctx = context.WithValue(ctx, interfaces.ACCOUNT_INFO_KEY, accountInfo)
-
-	o11y.AddHttpAttrs4API(span, o11y.GetAttrsByGinCtx(c))
-
-	datasetID := c.Param("id")
-	docID := c.Param("docid")
-
-	// 获取请求体
-	var document map[string]any
-	if err := c.ShouldBindJSON(&document); err != nil {
-		httpErr := rest.NewHTTPError(ctx, http.StatusBadRequest, oerrors.VegaBackend_InvalidParameter_RequestBody).
-			WithErrorDetails(err.Error())
-		o11y.AddHttpAttrs4HttpError(span, httpErr)
-		rest.ReplyError(c, httpErr)
-		return
-	}
-
-	// 调用 dataset 服务更新文档
-	if err := r.ds.UpdateDocument(ctx, datasetID, docID, document); err != nil {
-		println(err.Error())
-		httpErr := err.(*rest.HTTPError)
-		o11y.AddHttpAttrs4HttpError(span, httpErr)
-		rest.ReplyError(c, httpErr)
-		return
-	}
-
-	logger.Debug("Handler UpdateDatasetDocument Success")
-	o11y.AddHttpAttrs4Ok(span, http.StatusNoContent)
-	rest.ReplyOK(c, http.StatusNoContent, nil)
-}
-
-// DeleteDatasetDocument handles DELETE /api/vega-backend/v1/resources/dataset/:id/:docid
-func (r *restHandler) DeleteDatasetDocument(c *gin.Context) {
-	ctx, span := ar_trace.Tracer.Start(rest.GetLanguageCtx(c),
-		"DeleteDatasetDocument", trace.WithSpanKind(trace.SpanKindServer))
-	defer span.End()
-
-	// 校验token
-	visitor, err := r.verifyOAuth(ctx, c)
-	if err != nil {
-		return
-	}
-	accountInfo := interfaces.AccountInfo{
-		ID:   visitor.ID,
-		Type: string(visitor.Type),
-	}
-	ctx = context.WithValue(ctx, interfaces.ACCOUNT_INFO_KEY, accountInfo)
-
-	o11y.AddHttpAttrs4API(span, o11y.GetAttrsByGinCtx(c))
-
-	datasetID := c.Param("id")
-	docID := c.Param("docid")
-
-	// 调用 dataset 服务删除文档
-	if err := r.ds.DeleteDocument(ctx, datasetID, docID); err != nil {
-		httpErr := err.(*rest.HTTPError)
-		o11y.AddHttpAttrs4HttpError(span, httpErr)
-		rest.ReplyError(c, httpErr)
-		return
-	}
-
-	logger.Debug("Handler DeleteDatasetDocument Success")
 	o11y.AddHttpAttrs4Ok(span, http.StatusNoContent)
 	rest.ReplyOK(c, http.StatusNoContent, nil)
 }

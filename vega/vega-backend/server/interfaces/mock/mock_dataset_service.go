@@ -108,7 +108,7 @@ func (mr *MockDatasetServiceMockRecorder) GetDocument(ctx, id, docID interface{}
 }
 
 // ListDocuments mocks base method.
-func (m *MockDatasetService) ListDocuments(ctx context.Context, id string, params *interfaces.DatasetQueryParams) ([]map[string]any, int64, error) {
+func (m *MockDatasetService) ListDocuments(ctx context.Context, id string, params *interfaces.ResourceDataQueryParams) ([]map[string]any, int64, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ListDocuments", ctx, id, params)
 	ret0, _ := ret[0].([]map[string]any)

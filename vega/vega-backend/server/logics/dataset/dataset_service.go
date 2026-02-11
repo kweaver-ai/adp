@@ -15,7 +15,7 @@ import (
 
 	"vega-backend/common"
 	datasetAccess "vega-backend/drivenadapters/dataset"
-	oerrors "vega-backend/errors"
+	verrors "vega-backend/errors"
 	"vega-backend/interfaces"
 )
 
@@ -51,7 +51,7 @@ func (ds *datasetService) Create(ctx context.Context, res *interfaces.Resource) 
 		logger.Errorf("Create dataset index failed: %v", err)
 		o11y.Error(ctx, fmt.Sprintf("Create dataset index failed: %v", err))
 		span.SetStatus(codes.Error, "Create dataset index failed")
-		return rest.NewHTTPError(ctx, http.StatusInternalServerError, oerrors.VegaBackend_Resource_InternalError_CreateFailed).
+		return rest.NewHTTPError(ctx, http.StatusInternalServerError, verrors.VegaBackend_Resource_InternalError_CreateFailed).
 			WithErrorDetails(err.Error())
 	}
 
@@ -67,7 +67,7 @@ func (ds *datasetService) Update(ctx context.Context, res *interfaces.Resource) 
 	// 调用 dataset access 更新 dataset 索引，索引名称为 <res.source_identifier>-<id>
 	if err := ds.da.Update(ctx, fmt.Sprintf("%s-%s", res.SourceIdentifier, res.ID), res.SchemaDefinition); err != nil {
 		span.SetStatus(codes.Error, "Update dataset failed")
-		return rest.NewHTTPError(ctx, http.StatusInternalServerError, oerrors.VegaBackend_Resource_InternalError_UpdateFailed).
+		return rest.NewHTTPError(ctx, http.StatusInternalServerError, verrors.VegaBackend_Resource_InternalError_UpdateFailed).
 			WithErrorDetails(err.Error())
 	}
 
@@ -84,14 +84,14 @@ func (ds *datasetService) Delete(ctx context.Context, res *interfaces.Resource) 
 	exist, err := ds.da.CheckExist(ctx, fmt.Sprintf("%s-%s", res.SourceIdentifier, res.ID))
 	if err != nil {
 		span.SetStatus(codes.Error, "Check dataset exist failed")
-		return rest.NewHTTPError(ctx, http.StatusInternalServerError, oerrors.VegaBackend_Resource_InternalError).
+		return rest.NewHTTPError(ctx, http.StatusInternalServerError, verrors.VegaBackend_Resource_InternalError).
 			WithErrorDetails(err.Error())
 	}
 	if exist {
 		// Delete from storage
 		if err := ds.da.Delete(ctx, fmt.Sprintf("%s-%s", res.SourceIdentifier, res.ID)); err != nil {
 			span.SetStatus(codes.Error, "Delete dataset failed")
-			return rest.NewHTTPError(ctx, http.StatusInternalServerError, oerrors.VegaBackend_Resource_InternalError_DeleteFailed).
+			return rest.NewHTTPError(ctx, http.StatusInternalServerError, verrors.VegaBackend_Resource_InternalError_DeleteFailed).
 				WithErrorDetails(err.Error())
 		}
 	}
@@ -101,7 +101,7 @@ func (ds *datasetService) Delete(ctx context.Context, res *interfaces.Resource) 
 }
 
 // ListDocuments 列出 dataset 中的文档
-func (ds *datasetService) ListDocuments(ctx context.Context, id string, params *interfaces.DatasetQueryParams) ([]map[string]any, int64, error) {
+func (ds *datasetService) ListDocuments(ctx context.Context, id string, params *interfaces.ResourceDataQueryParams) ([]map[string]any, int64, error) {
 	ctx, span := ar_trace.Tracer.Start(ctx, "List dataset documents")
 	defer span.End()
 
@@ -110,7 +110,7 @@ func (ds *datasetService) ListDocuments(ctx context.Context, id string, params *
 	documents, total, err := ds.da.ListDocuments(ctx, id, params)
 	if err != nil {
 		span.SetStatus(codes.Error, "List dataset documents failed")
-		return nil, 0, rest.NewHTTPError(ctx, http.StatusInternalServerError, oerrors.VegaBackend_Resource_InternalError).
+		return nil, 0, rest.NewHTTPError(ctx, http.StatusInternalServerError, verrors.VegaBackend_Resource_InternalError).
 			WithErrorDetails(err.Error())
 	}
 
@@ -127,7 +127,7 @@ func (ds *datasetService) CreateDocuments(ctx context.Context, id string, docume
 	docIDs, err := ds.da.CreateDocuments(ctx, id, documents)
 	if err != nil {
 		span.SetStatus(codes.Error, "Create dataset documents failed")
-		return nil, rest.NewHTTPError(ctx, http.StatusInternalServerError, oerrors.VegaBackend_Resource_InternalError_CreateFailed).
+		return nil, rest.NewHTTPError(ctx, http.StatusInternalServerError, verrors.VegaBackend_Resource_InternalError_CreateFailed).
 			WithErrorDetails(err.Error())
 	}
 
@@ -144,7 +144,7 @@ func (ds *datasetService) GetDocument(ctx context.Context, id string, docID stri
 	document, err := ds.da.GetDocument(ctx, id, docID)
 	if err != nil {
 		span.SetStatus(codes.Error, "Get dataset document failed")
-		return nil, rest.NewHTTPError(ctx, http.StatusInternalServerError, oerrors.VegaBackend_Resource_InternalError).
+		return nil, rest.NewHTTPError(ctx, http.StatusInternalServerError, verrors.VegaBackend_Resource_InternalError).
 			WithErrorDetails(err.Error())
 	}
 
@@ -160,7 +160,7 @@ func (ds *datasetService) UpdateDocument(ctx context.Context, id string, docID s
 	// 调用 dataset access 更新文档
 	if err := ds.da.UpdateDocument(ctx, id, docID, document); err != nil {
 		span.SetStatus(codes.Error, "Update dataset document failed")
-		return rest.NewHTTPError(ctx, http.StatusInternalServerError, oerrors.VegaBackend_Resource_InternalError_UpdateFailed).
+		return rest.NewHTTPError(ctx, http.StatusInternalServerError, verrors.VegaBackend_Resource_InternalError_UpdateFailed).
 			WithErrorDetails(err.Error())
 	}
 
@@ -176,7 +176,7 @@ func (ds *datasetService) DeleteDocument(ctx context.Context, id string, docID s
 	// 调用 dataset access 删除文档
 	if err := ds.da.DeleteDocument(ctx, id, docID); err != nil {
 		span.SetStatus(codes.Error, "Delete dataset document failed")
-		return rest.NewHTTPError(ctx, http.StatusInternalServerError, oerrors.VegaBackend_Resource_InternalError_DeleteFailed).
+		return rest.NewHTTPError(ctx, http.StatusInternalServerError, verrors.VegaBackend_Resource_InternalError_DeleteFailed).
 			WithErrorDetails(err.Error())
 	}
 

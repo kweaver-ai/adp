@@ -43,6 +43,7 @@ type restHandler struct {
 	ds         interfaces.DatasetService
 	cts        interfaces.ConnectorTypeService
 	dts        interfaces.DiscoveryTaskService
+	rds        interfaces.ResourceDataService
 }
 
 // NewRestHandler creates a new RestHandler.
@@ -93,7 +94,7 @@ func (r *restHandler) RegisterPublic(engine *gin.Engine) {
 			resources.PUT("/:id", r.verifyJsonContentType(), r.UpdateResource)
 			resources.DELETE("/:ids", r.DeleteResources)
 
-			resources.POST("/:id/data", r.verifyJsonContentType(), r.ListDatasetDocuments) // method override GET list and get
+			resources.POST("/:id/data", r.verifyJsonContentType(), r.QueryResourceData) // method override GET list and get
 
 			resources.POST("/dataset/:id/docs", r.verifyJsonContentType(), r.CreateDatasetDocuments)
 			resources.PUT("/dataset/:id/docs/ids", r.verifyJsonContentType(), r.UpdateDatasetDocument)

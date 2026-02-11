@@ -11,7 +11,7 @@ import (
 	mqclient "github.com/kweaver-ai/proton-mq-sdk-go"
 
 	"vega-backend/common"
-	oerrors "vega-backend/errors"
+	verrors "vega-backend/errors"
 	"vega-backend/interfaces"
 	"vega-backend/logics"
 )
@@ -59,7 +59,7 @@ func (ps *PermissionServiceImpl) CheckPermission(ctx context.Context, resource i
 	})
 	if err != nil {
 		return rest.NewHTTPError(ctx, http.StatusInternalServerError,
-			oerrors.VegaBackend_InternalError_CheckPermissionFailed).WithErrorDetails(err)
+			verrors.VegaBackend_InternalError_CheckPermissionFailed).WithErrorDetails(err)
 	}
 	if !ok {
 		return rest.NewHTTPError(ctx, http.StatusForbidden, rest.PublicError_Forbidden).
@@ -103,7 +103,7 @@ func (ps *PermissionServiceImpl) CreateResources(ctx context.Context, resources 
 	err := ps.pa.CreateResources(ctx, policies)
 	if err != nil {
 		return rest.NewHTTPError(ctx, http.StatusInternalServerError,
-			oerrors.VegaBackend_InternalError_CreateResourcesFailed).WithErrorDetails(err.Error())
+			verrors.VegaBackend_InternalError_CreateResourcesFailed).WithErrorDetails(err.Error())
 	}
 	return nil
 }
@@ -124,7 +124,7 @@ func (ps *PermissionServiceImpl) DeleteResources(ctx context.Context, resourceTy
 	err := ps.pa.DeleteResources(ctx, resources)
 	if err != nil {
 		return rest.NewHTTPError(ctx, http.StatusInternalServerError,
-			oerrors.VegaBackend_InternalError_DeleteResourcesFailed).WithErrorDetails(err)
+			verrors.VegaBackend_InternalError_DeleteResourcesFailed).WithErrorDetails(err)
 	}
 	return nil
 }
@@ -160,7 +160,7 @@ func (ps *PermissionServiceImpl) FilterResources(ctx context.Context, resourceTy
 	})
 	if err != nil {
 		return nil, rest.NewHTTPError(ctx, http.StatusInternalServerError,
-			oerrors.VegaBackend_InternalError_FilterResourcesFailed).WithErrorDetails(err)
+			verrors.VegaBackend_InternalError_FilterResourcesFailed).WithErrorDetails(err)
 	}
 
 	idMap := map[string]interfaces.PermissionResourceOps{}
@@ -175,13 +175,13 @@ func (ps *PermissionServiceImpl) UpdateResource(ctx context.Context, resource in
 	bytes, err := sonic.Marshal(resource)
 	if err != nil {
 		return rest.NewHTTPError(ctx, http.StatusInternalServerError,
-			oerrors.VegaBackend_InternalError_MarshalDataFailed).WithErrorDetails(err)
+			verrors.VegaBackend_InternalError_MarshalDataFailed).WithErrorDetails(err)
 	}
 
 	err = ps.mqClient.Pub(interfaces.AUTHORIZATION_RESOURCE_NAME_MODIFY, bytes)
 	if err != nil {
 		return rest.NewHTTPError(ctx, http.StatusInternalServerError,
-			oerrors.VegaBackend_InternalError_UpdateResourceFailed).WithErrorDetails(err)
+			verrors.VegaBackend_InternalError_UpdateResourceFailed).WithErrorDetails(err)
 	}
 
 	return nil
