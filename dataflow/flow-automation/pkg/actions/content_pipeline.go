@@ -12,8 +12,8 @@ import (
 	traceLog "github.com/kweaver-ai/adp/autoflow/flow-automation/libs/go/telemetry/log"
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/libs/go/telemetry/trace"
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/pkg/entity"
+	"github.com/kweaver-ai/adp/autoflow/flow-automation/pkg/rds"
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/store"
-	"github.com/kweaver-ai/adp/autoflow/flow-automation/store/rds"
 )
 
 type SourceType string
@@ -56,7 +56,7 @@ func (a *ContentPipelineFullText) Run(ctx entity.ExecuteContext, params interfac
 	og := drivenadapters.NewOssGateWay()
 	pipeline := drivenadapters.NewContentPipeline()
 
-	taskCache := rds.NewTaskCache()
+	taskCache := rds.GetTaskCache()
 	input := params.(*ContentPipelineFullText)
 
 	ossInfo, err := efast.GetOssInfo(ctx.Context(), input.DocID, input.Version)
@@ -243,7 +243,7 @@ func (a *ContentPipelineDocFormatConvert) Run(ctx entity.ExecuteContext, params 
 	og := drivenadapters.NewOssGateWay()
 	pipeline := drivenadapters.NewContentPipeline()
 
-	taskCache := rds.NewTaskCache()
+	taskCache := rds.GetTaskCache()
 	input := params.(*ContentPipelineDocFormatConvert)
 
 	ossInfo, err := efast.GetOssInfo(ctx.Context(), input.DocID, input.Version)

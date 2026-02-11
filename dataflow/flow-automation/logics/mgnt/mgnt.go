@@ -32,11 +32,11 @@ import (
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/pkg/entity"
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/pkg/log"
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/pkg/mod"
+	"github.com/kweaver-ai/adp/autoflow/flow-automation/pkg/rds"
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/pkg/render"
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/pkg/utils/value"
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/pkg/vm"
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/pkg/vm/state"
-	"github.com/kweaver-ai/adp/autoflow/flow-automation/store/rds"
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/utils"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -430,13 +430,13 @@ func NewMgnt() MgntHandler {
 			dependency:        dependency.NewDriven(),
 			executeMethods:    em,
 			personalConfig:    drivenadapters.NewPersonalConfig(),
-			executor:          rds.NewExecutor(),
-			admin:             rds.NewContentAmdin(),
-			extData:           rds.NewDagInstanceExtDataDao(),
-			eventRepository:   rds.NewDagInstanceEventRepository(),
+			executor:          rds.GetExecutorDao(),
+			admin:             rds.GetContentAdminDao(),
+			extData:           rds.GetDagInstanceExtDataDao(),
+			eventRepository:   rds.GetDagInstanceEventRepository(),
 			taskTimeoutConfig: common.NewTimeoutConfig(),
 			mq:                mod.NewMQHandler(),
-			agent:             rds.NewAgent(),
+			agent:             rds.GetAgentDao(),
 			operator:          drivenadapters.NewAgentOperatorIntegration(),
 			logger:            drivenadapters.NewLogger(),
 			permPolicy:        perm.NewPermPolicy(),

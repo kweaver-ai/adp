@@ -4,7 +4,7 @@ import (
 	"context"
 
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/drivenadapters"
-	"github.com/kweaver-ai/adp/autoflow/flow-automation/store/rds"
+	"github.com/kweaver-ai/adp/autoflow/flow-automation/pkg/rds"
 )
 
 // 依赖倒置的接口

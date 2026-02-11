@@ -11,7 +11,7 @@ import (
 	traceLog "github.com/kweaver-ai/adp/autoflow/flow-automation/libs/go/telemetry/log"
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/libs/go/telemetry/trace"
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/pkg/entity"
-	"github.com/kweaver-ai/adp/autoflow/flow-automation/store/rds"
+	"github.com/kweaver-ai/adp/autoflow/flow-automation/pkg/rds"
 )
 
 // AnyshareDocLibQuotaScale 配额扩容参数体
@@ -82,7 +82,7 @@ func (a *AnyshareDocLibQuotaScale) Run(ctx entity.ExecuteContext, params interfa
 	}
 
 	userID := ctx.GetTaskInstance().RelatedDagInstance.UserID
-	isAdmin, err := rds.NewContentAmdin().CheckAdminExistByUSerID(ctx.Context(), userID)
+	isAdmin, err := rds.GetContentAdminDao().CheckAdminExistByUSerID(ctx.Context(), userID)
 	if err != nil {
 		tLog.Warnf("[AnyshareDocLibQuotaScale.Run] CheckAdminExistByUSerID failed, detail: %s", err.Error())
 		return nil, err

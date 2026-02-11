@@ -14,8 +14,8 @@ import (
 	traceLog "github.com/kweaver-ai/adp/autoflow/flow-automation/libs/go/telemetry/log"
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/libs/go/telemetry/trace"
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/pkg/entity"
+	"github.com/kweaver-ai/adp/autoflow/flow-automation/pkg/rds"
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/store"
-	"github.com/kweaver-ai/adp/autoflow/flow-automation/store/rds"
 )
 
 const (
@@ -86,7 +86,7 @@ type AsyncTaskManager struct {
 // NewAsyncTaskManager 创建异步任务缓存管理器（使用统一的 topic）
 func NewAsyncTaskManager(executeMethods entity.ExecuteMethods) *AsyncTaskManager {
 	return &AsyncTaskManager{
-		taskCache:      rds.NewTaskCache(),
+		taskCache:      rds.GetTaskCache(),
 		resultLoader:   &DefaultTaskResultLoader{},
 		lockPrefix:     asyncTaskLockPrefix,
 		lockTTL:        asyncTaskLockTTL,

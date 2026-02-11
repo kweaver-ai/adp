@@ -37,6 +37,7 @@ import (
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/pkg/utils"
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/pkg/utils/data"
 	mongoStore "github.com/kweaver-ai/adp/autoflow/flow-automation/store/mongo"
+	"github.com/kweaver-ai/adp/autoflow/flow-automation/store/rds"
 	msqclient "github.com/kweaver-ai/proton-mq-sdk-go"
 	"github.com/shiningrush/goevent"
 	"gopkg.in/yaml.v3"
@@ -172,6 +173,7 @@ func Init(opt *InitialOption) error {
 	initKeeper(opt)
 	initCluster(config)
 	initRds(config)
+	rds.InitSingleton()
 	initMQClient(config)
 	initFlowO11yLogger()
 

@@ -10,57 +10,21 @@ import (
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/libs/go/db"
 	traceLog "github.com/kweaver-ai/adp/autoflow/flow-automation/libs/go/telemetry/log"
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/libs/go/telemetry/trace"
+	"github.com/kweaver-ai/adp/autoflow/flow-automation/pkg/rds"
 	"go.opentelemetry.io/otel/attribute"
 	"gorm.io/gorm"
 )
-
-const (
-	TaskCacheTableFormat = `t_task_cache_%s`
-)
-
-type TaskStatus int8
-
-const (
-	TaskStatusPending TaskStatus = 1
-	TaskStatusSuccess TaskStatus = 2
-	TaskStatusFailed  TaskStatus = 3
-)
-
-type TaskCacheItem struct {
-	ID         uint64     `gorm:"column:f_id;primaryKey;type:char(64);not null" json:"id"`                   // 主键id
-	Hash       string     `gorm:"column:f_hash;type:char(40);not null;default:''" json:"hash"`               // 任务hash
-	Type       string     `gorm:"column:f_type;type:varchar(32);not null;default:''" json:"type"`            // 任务类型
-	Status     TaskStatus `gorm:"column:f_status;type:tinyint(4);not null;default:0" json:"status"`          // 任务状态(1 处理中, 2 成功, 3 失败)
-	OssID      string     `gorm:"column:f_oss_id;type:char(36);not null;default:''" json:"ossId"`            // 对象存储ID
-	OssKey     string     `gorm:"column:f_oss_key;type:varchar(255);not null;default:''" json:"ossKey"`      // OSS存储key
-	Ext        string     `gorm:"column:f_ext;type:char(20);not null;default:''" json:"ext"`                 // 副文档后缀名
-	Size       int64      `gorm:"column:f_size;type:bigint(20);not null;default:0" json:"size"`              // 副文档大小
-	ErrMsg     string     `gorm:"column:f_err_msg;type:text" json:"errMsg"`                                  // 错误信息
-	CreateTime int64      `gorm:"column:f_create_time;type:bigint(20);not null;default:0" json:"createTime"` // 创建时间
-	ModifyTime int64      `gorm:"column:f_modify_time;type:bigint(20);not null;default:0" json:"modifyTime"` // 更新时间
-	ExpireTime int64      `gorm:"column:f_expire_time;type:bigint(20);not null;default:0" json:"expireTime"` // 过期时间
-}
-
-type TaskCache interface {
-	Insert(ctx context.Context, task *TaskCacheItem) error
-	GetByHash(ctx context.Context, hash string) (*TaskCacheItem, error)
-	Update(ctx context.Context, task *TaskCacheItem) error
-	DeleteByHash(ctx context.Context, hash string) error
-	ListTaskCache(ctx context.Context, opts ListTaskCacheOptions) ([]*TaskCacheItem, error)
-	BatchDeleteByHash(ctx context.Context, hashes []any) error
-}
 
 type taskCache struct {
 	db *gorm.DB
 }
 
 var (
-	taskCacheIns  TaskCache
+	taskCacheIns  rds.TaskCache
 	taskCacheOnce sync.Once
 )
 
-func NewTaskCache() TaskCache {
-
+func NewTaskCache() rds.TaskCache {
 	taskCacheOnce.Do(func() {
 		taskCacheIns = &taskCache{
 			db: db.NewDB(),
@@ -70,13 +34,12 @@ func NewTaskCache() TaskCache {
 	return taskCacheIns
 }
 
-func (d *taskCache) Insert(ctx context.Context, task *TaskCacheItem) error {
-
+func (d *taskCache) Insert(ctx context.Context, task *rds.TaskCacheItem) error {
 	var err error
 	newCtx, span := trace.StartInternalSpan(ctx)
 	defer func() { trace.TelemetrySpanEnd(span, err) }()
 	log := traceLog.WithContext(newCtx)
-	tableName := fmt.Sprintf(TaskCacheTableFormat, task.Hash[0:1])
+	tableName := fmt.Sprintf(rds.TaskCacheTableFormat, task.Hash[0:1])
 	trace.SetAttributes(newCtx, attribute.String(trace.TABLE_NAME, tableName))
 	sql := fmt.Sprintf(`
 		INSERT INTO %s (
@@ -108,7 +71,7 @@ func (d *taskCache) Insert(ctx context.Context, task *TaskCacheItem) error {
 	return nil
 }
 
-func (d *taskCache) Update(ctx context.Context, task *TaskCacheItem) error {
+func (d *taskCache) Update(ctx context.Context, task *rds.TaskCacheItem) error {
 	var err error
 	newCtx, span := trace.StartInternalSpan(ctx)
 	defer func() { trace.TelemetrySpanEnd(span, err) }()
@@ -118,7 +81,7 @@ func (d *taskCache) Update(ctx context.Context, task *TaskCacheItem) error {
 		return fmt.Errorf("hash is empty")
 	}
 
-	tableName := fmt.Sprintf(TaskCacheTableFormat, task.Hash[0:1])
+	tableName := fmt.Sprintf(rds.TaskCacheTableFormat, task.Hash[0:1])
 	trace.SetAttributes(newCtx, attribute.String(trace.TABLE_NAME, tableName))
 
 	var (
@@ -165,7 +128,7 @@ func (d *taskCache) Update(ctx context.Context, task *TaskCacheItem) error {
 	return nil
 }
 
-func (d *taskCache) GetByHash(ctx context.Context, hash string) (*TaskCacheItem, error) {
+func (d *taskCache) GetByHash(ctx context.Context, hash string) (*rds.TaskCacheItem, error) {
 	var err error
 	newCtx, span := trace.StartInternalSpan(ctx)
 	defer func() { trace.TelemetrySpanEnd(span, err) }()
@@ -175,7 +138,7 @@ func (d *taskCache) GetByHash(ctx context.Context, hash string) (*TaskCacheItem,
 		return nil, nil
 	}
 
-	tableName := fmt.Sprintf(TaskCacheTableFormat, hash[0:1])
+	tableName := fmt.Sprintf(rds.TaskCacheTableFormat, hash[0:1])
 	trace.SetAttributes(newCtx, attribute.String(trace.TABLE_NAME, tableName))
 	sql := fmt.Sprintf(`
 		SELECT 
@@ -186,7 +149,7 @@ func (d *taskCache) GetByHash(ctx context.Context, hash string) (*TaskCacheItem,
 		LIMIT 1`, tableName)
 
 	trace.SetAttributes(newCtx, attribute.String(trace.DB_SQL, sql))
-	var task TaskCacheItem
+	var task rds.TaskCacheItem
 	result := d.db.Raw(sql, hash).Scan(&task)
 	if result.Error != nil {
 		log.Errorf("[TaskCacheItem.GetTaskByHash] query failed: %v", result.Error)
@@ -208,7 +171,7 @@ func (d *taskCache) DeleteByHash(ctx context.Context, hash string) error {
 	}()
 	log := traceLog.WithContext(newCtx)
 
-	tableName := fmt.Sprintf(TaskCacheTableFormat, hash[0:1])
+	tableName := fmt.Sprintf(rds.TaskCacheTableFormat, hash[0:1])
 	trace.SetAttributes(newCtx, attribute.String(trace.TABLE_NAME, tableName))
 
 	sql := fmt.Sprintf(`DELETE FROM %s WHERE f_hash = ?`, tableName)
@@ -223,27 +186,19 @@ func (d *taskCache) DeleteByHash(ctx context.Context, hash string) error {
 	return nil
 }
 
-type ListTaskCacheOptions struct {
-	TableSuffix string
-	Expired     *bool
-	Limit       int64
-	MinID       uint64
-}
-
-func (d *taskCache) ListTaskCache(ctx context.Context, opts ListTaskCacheOptions) ([]*TaskCacheItem, error) {
+func (d *taskCache) ListTaskCache(ctx context.Context, opts rds.ListTaskCacheOptions) ([]*rds.TaskCacheItem, error) {
 	var err error
 	newCtx, span := trace.StartInternalSpan(ctx)
 	defer func() { trace.TelemetrySpanEnd(span, err) }()
 	log := traceLog.WithContext(newCtx)
 
-	tableName := fmt.Sprintf(TaskCacheTableFormat, opts.TableSuffix)
+	tableName := fmt.Sprintf(rds.TaskCacheTableFormat, opts.TableSuffix)
 
 	var (
 		whereConds []string
 		args       []interface{}
 	)
 
-	// 处理到期参数
 	if opts.Expired != nil {
 		if *opts.Expired {
 			whereConds = append(whereConds, "f_expire_time > 0 AND f_expire_time < ?")
@@ -254,7 +209,6 @@ func (d *taskCache) ListTaskCache(ctx context.Context, opts ListTaskCacheOptions
 		}
 	}
 
-	// 增加 MinID 参数
 	orderClause := ""
 	if opts.MinID != 0 {
 		whereConds = append(whereConds, "f_id > ?")
@@ -267,7 +221,6 @@ func (d *taskCache) ListTaskCache(ctx context.Context, opts ListTaskCacheOptions
 		whereClause = "WHERE " + strings.Join(whereConds, " AND ")
 	}
 
-	// 增加 Limit 参数，Limit > 0 时生效
 	limitClause := ""
 	if opts.Limit > 0 {
 		limitClause = fmt.Sprintf("LIMIT %d", opts.Limit)
@@ -286,7 +239,7 @@ func (d *taskCache) ListTaskCache(ctx context.Context, opts ListTaskCacheOptions
 	trace.SetAttributes(newCtx, attribute.String(trace.TABLE_NAME, tableName))
 	trace.SetAttributes(newCtx, attribute.String(trace.DB_SQL, sql))
 
-	var tasks []*TaskCacheItem
+	var tasks []*rds.TaskCacheItem
 	result := d.db.Raw(sql, args...).Scan(&tasks)
 	if result.Error != nil {
 		log.Errorf("[TaskCache.ListTaskCache] query failed: %v", result.Error)
@@ -301,7 +254,6 @@ func (d taskCache) BatchDeleteByHash(ctx context.Context, hashes []any) error {
 		return nil
 	}
 
-	// 将hash按分表前缀分组
 	tblHashMap := make(map[string][]any)
 	for _, h := range hashes {
 		hashStr, ok := h.(string)
@@ -309,7 +261,7 @@ func (d taskCache) BatchDeleteByHash(ctx context.Context, hashes []any) error {
 			continue
 		}
 		tableSuffix := hashStr[0:1]
-		table := fmt.Sprintf(TaskCacheTableFormat, tableSuffix)
+		table := fmt.Sprintf(rds.TaskCacheTableFormat, tableSuffix)
 		tblHashMap[table] = append(tblHashMap[table], hashStr)
 	}
 

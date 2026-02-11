@@ -17,7 +17,7 @@ import (
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/libs/go/telemetry/trace"
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/pkg/entity"
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/pkg/mod"
-	"github.com/kweaver-ai/adp/autoflow/flow-automation/store/rds"
+	"github.com/kweaver-ai/adp/autoflow/flow-automation/pkg/rds"
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/utils"
 	"go.mongodb.org/mongo-driver/bson"
 	"gorm.io/gorm"
@@ -114,7 +114,7 @@ func NewAlarm() Alarm {
 			log:          commonLog.NewLogger(),
 			config:       common.NewConfig(),
 			store:        mod.GetStore(),
-			alarmRuleDao: rds.NewAlarmRule(),
+			alarmRuleDao: rds.GetAlarmRuleDao(),
 			// sharemgnt:    thirft.NewShareMgnt(), // disabled: go-lib dependency
 			userMgnt: drivenadapters.NewUserManagement(),
 			task:     make(chan *TriggerAlarmTask, 100),

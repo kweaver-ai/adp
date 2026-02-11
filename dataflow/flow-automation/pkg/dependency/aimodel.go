@@ -19,7 +19,7 @@ import (
 	ierrors "github.com/kweaver-ai/adp/autoflow/flow-automation/errors"
 	traceLog "github.com/kweaver-ai/adp/autoflow/flow-automation/libs/go/telemetry/log"
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/libs/go/telemetry/trace"
-	"github.com/kweaver-ai/adp/autoflow/flow-automation/store/rds"
+	"github.com/kweaver-ai/adp/autoflow/flow-automation/pkg/rds"
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/utils"
 )
 
@@ -112,7 +112,7 @@ func NewAiModelService() AiModelService {
 			codeRunner: drivenadapters.NewCodeRunner(),
 			efast:      drivenadapters.NewEfast(),
 			ecotag:     drivenadapters.NewEcoTag(),
-			aiModel:    rds.NewAiModel(),
+			aiModel:    rds.GetAiModelDao(),
 			cache:      cache.New(3*time.Minute, 6*time.Minute),
 		}
 	})

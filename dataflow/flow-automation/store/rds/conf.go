@@ -8,34 +8,21 @@ import (
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/libs/go/db"
 	traceLog "github.com/kweaver-ai/adp/autoflow/flow-automation/libs/go/telemetry/log"
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/libs/go/telemetry/trace"
+	"github.com/kweaver-ai/adp/autoflow/flow-automation/pkg/rds"
 	"go.opentelemetry.io/otel/attribute"
 	"gorm.io/gorm"
 )
-
-const CONF_TABLENAME = "t_automation_conf"
-
-type ConfModel struct {
-	Key   *string `gorm:"column:f_key;type:char(32);primary_key:not null" json:"key"`
-	Value *string `gorm:"column:f_value;type:char(255)" json:"value"`
-}
-
-type ConfDao interface {
-	Get(ctx context.Context, key string) (string, error)
-	Set(ctx context.Context, key string, value string) error
-	ListConfigs(ctx context.Context, opt *Options) (configs []ConfModel, err error)
-	BatchUpdateConfig(ctx context.Context, configs []*ConfModel) (err error)
-}
 
 type ConfDaoImpl struct {
 	inner *gorm.DB
 }
 
 var (
-	conf     ConfDao
+	conf     rds.ConfDao
 	confOnce sync.Once
 )
 
-func NewConf() ConfDao {
+func NewConf() rds.ConfDao {
 	confOnce.Do(func() {
 		conf = &ConfDaoImpl{
 			inner: db.NewDB(),
@@ -50,11 +37,11 @@ func (d *ConfDaoImpl) Get(ctx context.Context, key string) (value string, err er
 	defer func() { trace.TelemetrySpanEnd(span, err) }()
 	log := traceLog.WithContext(newCtx)
 
-	trace.SetAttributes(newCtx, attribute.String(trace.TABLE_NAME, CONF_TABLENAME))
+	trace.SetAttributes(newCtx, attribute.String(trace.TABLE_NAME, rds.CONF_TABLENAME))
 	sql := "select f_value from t_automation_conf where f_key = ?"
 	trace.SetAttributes(newCtx, attribute.String(trace.DB_SQL, sql))
 
-	var m ConfModel
+	var m rds.ConfModel
 	err = d.inner.Raw(sql, key).Scan(&m).Error
 
 	if err != nil {
@@ -71,7 +58,7 @@ func (d *ConfDaoImpl) Get(ctx context.Context, key string) (value string, err er
 
 func (d *ConfDaoImpl) Set(ctx context.Context, key string, value string) (err error) {
 	newCtx, span := trace.StartInternalSpan(ctx)
-	trace.SetAttributes(newCtx, attribute.String(trace.TABLE_NAME, CONF_TABLENAME))
+	trace.SetAttributes(newCtx, attribute.String(trace.TABLE_NAME, rds.CONF_TABLENAME))
 	defer func() { trace.TelemetrySpanEnd(span, err) }()
 	log := traceLog.WithContext(newCtx)
 
@@ -117,10 +104,9 @@ func (d *ConfDaoImpl) Set(ctx context.Context, key string, value string) (err er
 	return
 }
 
-// ListConfigs 获取所有配置
-func (d *ConfDaoImpl) ListConfigs(ctx context.Context, opt *Options) (configs []ConfModel, err error) {
+func (d *ConfDaoImpl) ListConfigs(ctx context.Context, opt *rds.Options) (configs []rds.ConfModel, err error) {
 	newCtx, span := trace.StartInternalSpan(ctx)
-	trace.SetAttributes(newCtx, attribute.String(trace.TABLE_NAME, CONF_TABLENAME))
+	trace.SetAttributes(newCtx, attribute.String(trace.TABLE_NAME, rds.CONF_TABLENAME))
 	defer func() { trace.TelemetrySpanEnd(span, err) }()
 	log := traceLog.WithContext(newCtx)
 
@@ -134,14 +120,13 @@ func (d *ConfDaoImpl) ListConfigs(ctx context.Context, opt *Options) (configs []
 	return
 }
 
-// BatchUpdateConfig 批量更新配置
-func (d *ConfDaoImpl) BatchUpdateConfig(ctx context.Context, configs []*ConfModel) (err error) {
+func (d *ConfDaoImpl) BatchUpdateConfig(ctx context.Context, configs []*rds.ConfModel) (err error) {
 	if len(configs) == 0 {
 		return nil
 	}
 
 	newCtx, span := trace.StartInternalSpan(ctx)
-	trace.SetAttributes(newCtx, attribute.String(trace.TABLE_NAME, CONF_TABLENAME))
+	trace.SetAttributes(newCtx, attribute.String(trace.TABLE_NAME, rds.CONF_TABLENAME))
 	defer func() { trace.TelemetrySpanEnd(span, err) }()
 	log := traceLog.WithContext(newCtx)
 

@@ -20,8 +20,8 @@ import (
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/libs/go/telemetry/trace"
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/pkg/entity"
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/pkg/mod"
+	"github.com/kweaver-ai/adp/autoflow/flow-automation/pkg/rds"
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/pkg/vm"
-	"github.com/kweaver-ai/adp/autoflow/flow-automation/store/rds"
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/utils"
 )
 

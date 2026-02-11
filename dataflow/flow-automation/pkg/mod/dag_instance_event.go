@@ -12,16 +12,16 @@ import (
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/drivenadapters"
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/pkg/entity"
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/pkg/log"
+	"github.com/kweaver-ai/adp/autoflow/flow-automation/pkg/rds"
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/store"
-	"github.com/kweaver-ai/adp/autoflow/flow-automation/store/rds"
 )
 
 func UploadDagInstanceEvents(ctx context.Context, dagIns *entity.DagInstance) error {
 
 	config := common.NewConfig()
 	og := drivenadapters.NewOssGateWay()
-	eventRepo := rds.NewDagInstanceEventRepository()
-	extDataRepo := rds.NewDagInstanceExtDataDao()
+	eventRepo := rds.GetDagInstanceEventRepository()
+	extDataRepo := rds.GetDagInstanceExtDataDao()
 
 	if config.Server.DagInstanceEventArchivePolicy == common.DagInstanceEventArchivePolicyNever {
 		return nil
@@ -130,7 +130,7 @@ func UploadDagInstanceEvents(ctx context.Context, dagIns *entity.DagInstance) er
 
 func DeleteDagInstanceEvents(ctx context.Context, dagIns *entity.DagInstance) error {
 	og := drivenadapters.NewOssGateWay()
-	eventRepo := rds.NewDagInstanceEventRepository()
+	eventRepo := rds.GetDagInstanceEventRepository()
 	inline := false
 	events, err := eventRepo.List(ctx, &rds.DagInstanceEventListOptions{
 		DagInstanceID: dagIns.ID,
@@ -159,7 +159,7 @@ func DeleteDagInstanceEvents(ctx context.Context, dagIns *entity.DagInstance) er
 }
 
 func GetDagInstanceEvents(ctx context.Context, opts *rds.DagInstanceEventListOptions) ([]*rds.DagInstanceEvent, error) {
-	eventRepo := rds.NewDagInstanceEventRepository()
+	eventRepo := rds.GetDagInstanceEventRepository()
 	events, err := eventRepo.List(ctx, opts)
 	if err != nil {
 		return nil, err

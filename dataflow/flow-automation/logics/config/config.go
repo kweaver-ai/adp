@@ -7,7 +7,7 @@ import (
 
 	traceLog "github.com/kweaver-ai/adp/autoflow/flow-automation/libs/go/telemetry/log"
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/libs/go/telemetry/trace"
-	"github.com/kweaver-ai/adp/autoflow/flow-automation/store/rds"
+	"github.com/kweaver-ai/adp/autoflow/flow-automation/pkg/rds"
 )
 
 type ConfigHandler interface {
@@ -25,7 +25,7 @@ var c ConfigHandler
 func NewConfig() ConfigHandler {
 	oc.Do(func() {
 		c = &ConfigImpl{
-			ConfigModel: rds.NewConf(),
+			ConfigModel: rds.GetConfDao(),
 		}
 	})
 	return c

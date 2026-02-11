@@ -12,60 +12,26 @@ import (
 	cdb "github.com/kweaver-ai/adp/autoflow/flow-automation/libs/go/db"
 	traceLog "github.com/kweaver-ai/adp/autoflow/flow-automation/libs/go/telemetry/log"
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/libs/go/telemetry/trace"
+	"github.com/kweaver-ai/adp/autoflow/flow-automation/pkg/rds"
 	"go.opentelemetry.io/otel/attribute"
 	"gorm.io/gorm"
 )
 
-const (
-	AI_MODEL_TABLENAME = "t_model"
-)
-
-type UpdateParams struct {
-	Status      *int64  `column:"f_status"`
-	Rule        *string `column:"f_rule"`
-	Name        *string `column:"f_name"`
-	Description *string `column:"f_description"`
-}
-
-type UpdateCondition struct {
-	ID     *string `column:"f_id"`
-	UserID *string `column:"f_userid"`
-}
-
-type QueryCondition UpdateCondition
-
-// AiModelDao 接口
-type AiModelDao interface {
-	GetModelInfoByID(ctx context.Context, conditions *QueryCondition) (AiModel, error)
-	ListModelInfo(ctx context.Context, params *ListParams, offset, limit int64) ([]AiModel, error)
-	DeleteModelInfoByID(ctx context.Context, conditions *QueryCondition) error
-	UpdateModelInfo(ctx context.Context, conditions *UpdateCondition, data *UpdateParams) error
-	CreateTagsRule(ctx context.Context, data *AiModel) error
-	UpdateTrainLog(ctx context.Context, data *AiModel) error
-	GetInferSchema(ctx context.Context, trainID string) (string, error)
-	CreateTrainFile(ctx context.Context, data *AiModel, trainFile *TrainFileOSSInfo) error
-	GetTrainFileInfo(ctx context.Context, trainID string) (TrainFileOSSInfo, error)
-	CheckDupName(ctx context.Context, name string) (bool, error)
-	VerifyTaskUnique(ctx context.Context) (bool, error)
-	GetModelTypeByID(ctx context.Context, id string) (int, error)
-}
+type UpdateParams = rds.UpdateParams
+type UpdateCondition = rds.UpdateCondition
+type QueryCondition = rds.QueryCondition
+type ListParams = rds.ListParams
 
 var (
 	amOnce sync.Once
-	am     AiModelDao
+	am     rds.AiModelDao
 )
 
 type aiDB struct {
 	db *gorm.DB
 }
 
-type ListParams struct {
-	UserID *string
-	Status *int64
-	Name   *string
-}
-
-func NewAiModel() AiModelDao {
+func NewAiModel() rds.AiModelDao {
 	amOnce.Do(func() {
 		am = &aiDB{
 			db: cdb.NewDB(),
@@ -75,18 +41,17 @@ func NewAiModel() AiModelDao {
 	return am
 }
 
-// GetModelInfoByID 根据id和用户获取模型信息
-func (ai *aiDB) GetModelInfoByID(ctx context.Context, conditions *QueryCondition) (AiModel, error) {
+func (ai *aiDB) GetModelInfoByID(ctx context.Context, conditions *QueryCondition) (rds.AiModel, error) {
 	var (
 		err error
-		log AiModel
+		log rds.AiModel
 	)
 
 	newCtx, span := trace.StartInternalSpan(ctx)
 	conParts, cons := getUpdateSql(*conditions)
 	whereClause := strings.Join(conParts, " and ")
 	sql := fmt.Sprintf("SELECT f_id, f_name, f_description, f_train_status, f_status, f_rule, f_userid, f_type, f_created_at, f_updated_at from t_model where %s", whereClause)
-	trace.SetAttributes(newCtx, attribute.String(trace.TABLE_NAME, AI_MODEL_TABLENAME), attribute.String(trace.DB_SQL, sql), attribute.String(trace.DB_QUERY, fmt.Sprintf("%v", cons)))
+	trace.SetAttributes(newCtx, attribute.String(trace.TABLE_NAME, rds.AI_MODEL_TABLENAME), attribute.String(trace.DB_SQL, sql), attribute.String(trace.DB_QUERY, fmt.Sprintf("%v", cons)))
 	defer func() { trace.TelemetrySpanEnd(span, err) }()
 
 	err = ai.db.Raw(sql, cons...).Scan(&log).Error
@@ -100,13 +65,12 @@ func (ai *aiDB) GetModelInfoByID(ctx context.Context, conditions *QueryCondition
 	return log, err
 }
 
-// ListTagsRule 列举模型信息
-func (ai *aiDB) ListModelInfo(ctx context.Context, params *ListParams, offset, limit int64) ([]AiModel, error) {
+func (ai *aiDB) ListModelInfo(ctx context.Context, params *ListParams, offset, limit int64) ([]rds.AiModel, error) {
 	var (
 		err       error
 		sql       string
 		tx        *gorm.DB
-		tagsRules []AiModel
+		tagsRules []rds.AiModel
 		rawParam  []interface{}
 	)
 	newCtx, span := trace.StartInternalSpan(ctx)
@@ -129,12 +93,12 @@ func (ai *aiDB) ListModelInfo(ctx context.Context, params *ListParams, offset, l
 	sql = strings.Replace(sql, "and ", "", 1)
 	if limit == -1 {
 		tx = ai.db.Raw(sql, rawParam...)
-		trace.SetAttributes(newCtx, attribute.String(trace.TABLE_NAME, AI_MODEL_TABLENAME), attribute.String(trace.DB_SQL, sql))
+		trace.SetAttributes(newCtx, attribute.String(trace.TABLE_NAME, rds.AI_MODEL_TABLENAME), attribute.String(trace.DB_SQL, sql))
 	} else {
 		rawParam = append(rawParam, offset, limit)
 		sql = fmt.Sprintf("%v %v", sql, "limit ?, ?")
 		tx = ai.db.Raw(sql, rawParam...)
-		trace.SetAttributes(newCtx, attribute.String(trace.TABLE_NAME, AI_MODEL_TABLENAME), attribute.String(trace.DB_SQL, sql), attribute.String(trace.DB_QUERY, fmt.Sprintf("%v", rawParam...)))
+		trace.SetAttributes(newCtx, attribute.String(trace.TABLE_NAME, rds.AI_MODEL_TABLENAME), attribute.String(trace.DB_SQL, sql), attribute.String(trace.DB_QUERY, fmt.Sprintf("%v", rawParam...)))
 	}
 	err = tx.Scan(&tagsRules).Error
 	if err != nil {
@@ -143,7 +107,6 @@ func (ai *aiDB) ListModelInfo(ctx context.Context, params *ListParams, offset, l
 	return tagsRules, err
 }
 
-// DeleteTagsRuleByID 根据id删除标签处理规则
 func (ai *aiDB) DeleteModelInfoByID(ctx context.Context, conditions *QueryCondition) error {
 	var (
 		err error
@@ -153,7 +116,7 @@ func (ai *aiDB) DeleteModelInfoByID(ctx context.Context, conditions *QueryCondit
 	conParts, cons := getUpdateSql(*conditions)
 	whereClause := strings.Join(conParts, " and ")
 	sql := fmt.Sprintf("delete from t_model where %s", whereClause)
-	trace.SetAttributes(newCtx, attribute.String(trace.TABLE_NAME, AI_MODEL_TABLENAME), attribute.String(trace.DB_SQL, sql), attribute.String(trace.DB_QUERY, fmt.Sprintf("%v", cons)))
+	trace.SetAttributes(newCtx, attribute.String(trace.TABLE_NAME, rds.AI_MODEL_TABLENAME), attribute.String(trace.DB_SQL, sql), attribute.String(trace.DB_QUERY, fmt.Sprintf("%v", cons)))
 	defer func() { trace.TelemetrySpanEnd(span, err) }()
 
 	err = ai.db.Exec(sql, cons...).Error
@@ -163,7 +126,6 @@ func (ai *aiDB) DeleteModelInfoByID(ctx context.Context, conditions *QueryCondit
 	return err
 }
 
-// UpdateModelInfo 更新标签规则
 func (ai *aiDB) UpdateModelInfo(ctx context.Context, conditions *UpdateCondition, data *UpdateParams) error {
 	var err error
 	newCtx, span := trace.StartInternalSpan(ctx)
@@ -174,23 +136,12 @@ func (ai *aiDB) UpdateModelInfo(ctx context.Context, conditions *UpdateCondition
 	}
 	setParts, args := getUpdateSql(*data)
 	conParts, cons := getUpdateSql(*conditions)
-	// reflectDataType := reflect.TypeOf(*data)
-	// reflectDataValue := reflect.ValueOf(*data)
-	// for i := 0; i < reflectDataType.NumField(); i++ {
-	// 	field := reflectDataType.Field(i)
-	// 	value := reflectDataValue.Field(i)
-	// 	jsonTag := field.Tag.Get("column")
-	// 	if !value.IsNil() {
-	// 		setParts = append(setParts, fmt.Sprintf("%s = ?", jsonTag))
-	// 		args = append(args, value.Interface())
-	// 	}
-	// }
 
 	setClause := strings.Join(setParts, ", ")
 	whereClause := strings.Join(conParts, " and ")
 	setClause = fmt.Sprintf("%s, f_updated_at = ?", setClause)
 	sql := fmt.Sprintf("update t_model set %s where %s", setClause, whereClause)
-	trace.SetAttributes(newCtx, attribute.String(trace.TABLE_NAME, AI_MODEL_TABLENAME), attribute.String(trace.DB_SQL, sql), attribute.String(trace.DB_Values, msgStr))
+	trace.SetAttributes(newCtx, attribute.String(trace.TABLE_NAME, rds.AI_MODEL_TABLENAME), attribute.String(trace.DB_SQL, sql), attribute.String(trace.DB_Values, msgStr))
 	defer func() { trace.TelemetrySpanEnd(span, err) }()
 	updatedAt := time.Now().UnixMicro() / 1000
 	args = append(args, updatedAt)
@@ -201,14 +152,13 @@ func (ai *aiDB) UpdateModelInfo(ctx context.Context, conditions *UpdateCondition
 	return err
 }
 
-// CreateTagsRule 创建标签处理规则
-func (ai *aiDB) CreateTagsRule(ctx context.Context, data *AiModel) error {
+func (ai *aiDB) CreateTagsRule(ctx context.Context, data *rds.AiModel) error {
 	var err error
 	newCtx, span := trace.StartInternalSpan(ctx)
 	msgStr, _ := jsoniter.MarshalToString(data)
 
 	sql := "insert into t_model (f_id, f_rule, f_status, f_name, f_description, f_userid, f_type, f_created_at, f_updated_at) values (?, ?, ?, ?, ?, ?, ?, ?, ?)"
-	trace.SetAttributes(newCtx, attribute.String(trace.TABLE_NAME, AI_MODEL_TABLENAME), attribute.String(trace.DB_SQL, sql), attribute.String(trace.DB_Values, msgStr))
+	trace.SetAttributes(newCtx, attribute.String(trace.TABLE_NAME, rds.AI_MODEL_TABLENAME), attribute.String(trace.DB_SQL, sql), attribute.String(trace.DB_Values, msgStr))
 	defer func() { trace.TelemetrySpanEnd(span, err) }()
 
 	err = ai.db.Exec(sql, data.ID, data.Rule, data.Status, data.Name, data.Description, data.UserID, data.Type, data.CreatedAt, data.UpdatedAt).Error
@@ -218,7 +168,6 @@ func (ai *aiDB) CreateTagsRule(ctx context.Context, data *AiModel) error {
 	return err
 }
 
-// GetInferSchema 获取模型推理schema信息
 func (ai *aiDB) GetInferSchema(ctx context.Context, trainID string) (string, error) {
 	var (
 		err    error
@@ -226,7 +175,7 @@ func (ai *aiDB) GetInferSchema(ctx context.Context, trainID string) (string, err
 	)
 	newCtx, span := trace.StartInternalSpan(ctx)
 	sql := "select f_rule from t_model where f_id = ?"
-	trace.SetAttributes(newCtx, attribute.String(trace.TABLE_NAME, AI_MODEL_TABLENAME), attribute.String(trace.DB_SQL, sql), attribute.String(trace.DB_QUERY, trainID))
+	trace.SetAttributes(newCtx, attribute.String(trace.TABLE_NAME, rds.AI_MODEL_TABLENAME), attribute.String(trace.DB_SQL, sql), attribute.String(trace.DB_QUERY, trainID))
 	defer func() { trace.TelemetrySpanEnd(span, err) }()
 
 	err = ai.db.Raw(sql, trainID).Scan(&schema).Error
@@ -236,8 +185,7 @@ func (ai *aiDB) GetInferSchema(ctx context.Context, trainID string) (string, err
 	return schema, err
 }
 
-// CreateTrainFile 创建训练日志记录
-func (ai *aiDB) CreateTrainFile(ctx context.Context, data *AiModel, trainFile *TrainFileOSSInfo) error {
+func (ai *aiDB) CreateTrainFile(ctx context.Context, data *rds.AiModel, trainFile *rds.TrainFileOSSInfo) error {
 	var err error
 	tx := ai.db.Begin()
 	defer func() {
@@ -248,10 +196,9 @@ func (ai *aiDB) CreateTrainFile(ctx context.Context, data *AiModel, trainFile *T
 
 	newCtx, span := trace.StartInternalSpan(ctx)
 	msgStr, _ := jsoniter.MarshalToString(data)
-	trace.SetAttributes(newCtx, attribute.String(trace.TABLE_NAME, AI_MODEL_TABLENAME))
+	trace.SetAttributes(newCtx, attribute.String(trace.TABLE_NAME, rds.AI_MODEL_TABLENAME))
 	defer func() { trace.TelemetrySpanEnd(span, err) }()
 
-	// 插入训练记录
 	sql := "insert into t_model (f_id, f_train_status, f_status, f_rule, f_type, f_created_at, f_updated_at) values (?, ?, ?, ?, ?, ?, ?)"
 	trace.SetAttributes(newCtx, attribute.String(trace.DB_SQL, sql), attribute.String(trace.DB_Values, msgStr))
 	err = tx.Exec(sql, data.ID, data.TrainStatus, data.Status, data.Rule, data.Type, data.CreatedAt, data.UpdatedAt).Error
@@ -261,9 +208,8 @@ func (ai *aiDB) CreateTrainFile(ctx context.Context, data *AiModel, trainFile *T
 		return err
 	}
 
-	// 插入训练文件记录
 	sql = "insert into t_train_file (f_id, f_train_id, f_oss_id, f_key, f_created_at) values (?, ?, ?, ?, ?)"
-	trace.SetAttributes(newCtx, attribute.String(trace.TABLE_NAME, AI_MODEL_TABLENAME))
+	trace.SetAttributes(newCtx, attribute.String(trace.TABLE_NAME, rds.AI_MODEL_TABLENAME))
 	trace.SetAttributes(newCtx, attribute.String(trace.DB_SQL, sql), attribute.String(trace.DB_Values, msgStr))
 	err = tx.Exec(sql, trainFile.ID, trainFile.TrainID, trainFile.OSSID, trainFile.Key, trainFile.CreatedAt).Error
 	if err != nil {
@@ -274,16 +220,15 @@ func (ai *aiDB) CreateTrainFile(ctx context.Context, data *AiModel, trainFile *T
 	return tx.Commit().Error
 }
 
-// GetTrainFileInfo 获取训练文件oss存储信息
-func (ai *aiDB) GetTrainFileInfo(ctx context.Context, trainID string) (TrainFileOSSInfo, error) {
+func (ai *aiDB) GetTrainFileInfo(ctx context.Context, trainID string) (rds.TrainFileOSSInfo, error) {
 	var (
 		err  error
-		info TrainFileOSSInfo
+		info rds.TrainFileOSSInfo
 	)
 
 	newCtx, span := trace.StartInternalSpan(ctx)
 	sql := "select f_id, f_train_id, f_oss_id, f_key from t_train_file where f_train_id = ?"
-	trace.SetAttributes(newCtx, attribute.String(trace.TABLE_NAME, AI_MODEL_TABLENAME), attribute.String(trace.DB_SQL, sql), attribute.String(trace.DB_QUERY, trainID))
+	trace.SetAttributes(newCtx, attribute.String(trace.TABLE_NAME, rds.AI_MODEL_TABLENAME), attribute.String(trace.DB_SQL, sql), attribute.String(trace.DB_QUERY, trainID))
 	defer func() { trace.TelemetrySpanEnd(span, err) }()
 
 	err = ai.db.Raw(sql, trainID).Scan(&info).Error
@@ -298,8 +243,7 @@ func (ai *aiDB) GetTrainFileInfo(ctx context.Context, trainID string) (TrainFile
 	return info, err
 }
 
-// UpdateTrainLog 更新训练日志记录
-func (ai *aiDB) UpdateTrainLog(ctx context.Context, data *AiModel) error {
+func (ai *aiDB) UpdateTrainLog(ctx context.Context, data *rds.AiModel) error {
 	var err error
 	newCtx, span := trace.StartInternalSpan(ctx)
 	msgStr, _ := jsoniter.MarshalToString(data)
@@ -315,7 +259,6 @@ func (ai *aiDB) UpdateTrainLog(ctx context.Context, data *AiModel) error {
 	return err
 }
 
-// CheckDupName 检查重名
 func (ai *aiDB) CheckDupName(ctx context.Context, name string) (bool, error) {
 	var (
 		err   error
@@ -324,7 +267,7 @@ func (ai *aiDB) CheckDupName(ctx context.Context, name string) (bool, error) {
 
 	newCtx, span := trace.StartInternalSpan(ctx)
 	sql := "select count(*) from t_model where f_name = ?"
-	trace.SetAttributes(newCtx, attribute.String(trace.TABLE_NAME, AI_MODEL_TABLENAME), attribute.String(trace.DB_SQL, sql), attribute.String(trace.DB_QUERY, name))
+	trace.SetAttributes(newCtx, attribute.String(trace.TABLE_NAME, rds.AI_MODEL_TABLENAME), attribute.String(trace.DB_SQL, sql), attribute.String(trace.DB_QUERY, name))
 	defer func() { trace.TelemetrySpanEnd(span, err) }()
 
 	err = ai.db.Raw(sql, name).Scan(&count).Error
@@ -339,7 +282,6 @@ func (ai *aiDB) CheckDupName(ctx context.Context, name string) (bool, error) {
 	return false, nil
 }
 
-// VerifyTaskUnique 校验UIE服务是否唯一
 func (ai *aiDB) VerifyTaskUnique(ctx context.Context) (bool, error) {
 	var (
 		err   error
@@ -348,7 +290,7 @@ func (ai *aiDB) VerifyTaskUnique(ctx context.Context) (bool, error) {
 
 	newCtx, span := trace.StartInternalSpan(ctx)
 	sql := "select count(*) from t_model where f_status > -1 and f_type = 1"
-	trace.SetAttributes(newCtx, attribute.String(trace.TABLE_NAME, AI_MODEL_TABLENAME), attribute.String(trace.DB_SQL, sql))
+	trace.SetAttributes(newCtx, attribute.String(trace.TABLE_NAME, rds.AI_MODEL_TABLENAME), attribute.String(trace.DB_SQL, sql))
 	defer func() { trace.TelemetrySpanEnd(span, err) }()
 
 	err = ai.db.Raw(sql).Scan(&count).Error
@@ -363,7 +305,6 @@ func (ai *aiDB) VerifyTaskUnique(ctx context.Context) (bool, error) {
 	return false, nil
 }
 
-// GetModelTypeByID 根据id获取模型类型
 func (ai *aiDB) GetModelTypeByID(ctx context.Context, id string) (int, error) {
 	var (
 		err      error
@@ -372,7 +313,7 @@ func (ai *aiDB) GetModelTypeByID(ctx context.Context, id string) (int, error) {
 
 	newCtx, span := trace.StartInternalSpan(ctx)
 	sql := "select f_type from t_model where f_id = ?"
-	trace.SetAttributes(newCtx, attribute.String(trace.TABLE_NAME, AI_MODEL_TABLENAME), attribute.String(trace.DB_SQL, sql), attribute.String(trace.DB_QUERY, id))
+	trace.SetAttributes(newCtx, attribute.String(trace.TABLE_NAME, rds.AI_MODEL_TABLENAME), attribute.String(trace.DB_SQL, sql), attribute.String(trace.DB_QUERY, id))
 	defer func() { trace.TelemetrySpanEnd(span, err) }()
 
 	err = ai.db.Raw(sql, id).Scan(&taskType).Error
