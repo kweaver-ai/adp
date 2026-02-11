@@ -13,7 +13,7 @@ import (
 	ierr "github.com/kweaver-ai/adp/autoflow/flow-automation/libs/go/errors"
 	traceLog "github.com/kweaver-ai/adp/autoflow/flow-automation/libs/go/telemetry/log"
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/pkg/entity"
-	"github.com/kweaver-ai/adp/autoflow/flow-automation/store/rds"
+	"github.com/kweaver-ai/adp/autoflow/flow-automation/pkg/rds"
 )
 
 // ErrTypeV1 新错误码规范前的错误结构

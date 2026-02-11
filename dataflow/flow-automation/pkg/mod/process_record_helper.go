@@ -10,8 +10,8 @@ import (
 
 	traceLog "github.com/kweaver-ai/adp/autoflow/flow-automation/libs/go/telemetry/log"
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/pkg/entity"
+	"github.com/kweaver-ai/adp/autoflow/flow-automation/pkg/rds"
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/store"
-	"github.com/kweaver-ai/adp/autoflow/flow-automation/store/rds"
 )
 
 // ExtractObjectKey 从DagInstance中提取处理对象标识
@@ -131,7 +131,7 @@ func FindProcessedDagInstance(ctx context.Context, dagIns *entity.DagInstance, o
 	hash := generateProcessCacheHash(objectKey, dagIns.DagID, dagIns.VersionID)
 
 	// 查询t_task_cache表
-	taskCache := rds.NewTaskCache()
+	taskCache := rds.GetTaskCache()
 	cacheItem, err := taskCache.GetByHash(ctx, hash)
 	if err != nil {
 		log.Warnf("[FindProcessedDagInstance] GetByHash failed: %s", err.Error())
@@ -168,7 +168,7 @@ func SaveProcessedDagInstance(ctx context.Context, objectKey, dagID, versionID, 
 	hash := generateProcessCacheHash(objectKey, dagID, versionID)
 
 	// 检查是否已存在
-	taskCache := rds.NewTaskCache()
+	taskCache := rds.GetTaskCache()
 	existingItem, err := taskCache.GetByHash(ctx, hash)
 	if err != nil {
 		log.Warnf("[SaveProcessedDagInstance] GetByHash failed: %s", err.Error())

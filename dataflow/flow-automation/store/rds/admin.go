@@ -9,35 +9,21 @@ import (
 	cdb "github.com/kweaver-ai/adp/autoflow/flow-automation/libs/go/db"
 	traceLog "github.com/kweaver-ai/adp/autoflow/flow-automation/libs/go/telemetry/log"
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/libs/go/telemetry/trace"
+	"github.com/kweaver-ai/adp/autoflow/flow-automation/pkg/rds"
 	"go.opentelemetry.io/otel/attribute"
 	"gorm.io/gorm"
 )
 
-const (
-	CONTENT_ADMIN_TABLENAME = "t_content_admin"
-)
-
-// ContentAmdinDao 接口
-type ContentAmdinDao interface {
-	CreateAdmin(ctx context.Context, datas []*ContentAdmin) error
-	CheckAdminExistByUSerID(ctx context.Context, userID string) (bool, error)
-	ListAdmins(ctx context.Context) ([]ContentAdmin, error)
-	ListAdminsByUserID(ctx context.Context, userIDs []string) ([]ContentAdmin, error)
-	DeleteAdminByID(ctx context.Context, ID string) error
-	UpdateAdminByUserID(ctx context.Context, userID, userName string) error
-}
-
 var (
 	caOnce sync.Once
-	ca     ContentAmdinDao
+	ca     rds.ContentAmdinDao
 )
 
 type caDB struct {
 	db *gorm.DB
 }
 
-// NewContentAmdin 实例化
-func NewContentAmdin() ContentAmdinDao {
+func NewContentAmdin() rds.ContentAmdinDao {
 	caOnce.Do(func() {
 		ca = &caDB{
 			db: cdb.NewDB(),
@@ -47,8 +33,7 @@ func NewContentAmdin() ContentAmdinDao {
 	return ca
 }
 
-// CreateAdmin 创建流程管理员
-func (ca *caDB) CreateAdmin(ctx context.Context, datas []*ContentAdmin) error {
+func (ca *caDB) CreateAdmin(ctx context.Context, datas []*rds.ContentAdmin) error {
 	var err error
 	newCtx, span := trace.StartInternalSpan(ctx)
 	msgStr, _ := jsoniter.MarshalToString(datas)
@@ -64,7 +49,7 @@ func (ca *caDB) CreateAdmin(ctx context.Context, datas []*ContentAdmin) error {
 		values = append(values, data.ID, data.UserID, data.UserName)
 	}
 	sql := queryBuilder.String()
-	trace.SetAttributes(newCtx, attribute.String(trace.TABLE_NAME, CONTENT_ADMIN_TABLENAME), attribute.String(trace.DB_SQL, sql), attribute.String(trace.DB_Values, msgStr))
+	trace.SetAttributes(newCtx, attribute.String(trace.TABLE_NAME, rds.CONTENT_ADMIN_TABLENAME), attribute.String(trace.DB_SQL, sql), attribute.String(trace.DB_Values, msgStr))
 	defer func() { trace.TelemetrySpanEnd(span, err) }()
 
 	err = ca.db.Exec(sql, values...).Error
@@ -74,7 +59,6 @@ func (ca *caDB) CreateAdmin(ctx context.Context, datas []*ContentAdmin) error {
 	return err
 }
 
-// CheckAdminExistByUSerID 检查管理员是否存在
 func (ca *caDB) CheckAdminExistByUSerID(ctx context.Context, userID string) (bool, error) {
 	var (
 		err   error
@@ -83,7 +67,7 @@ func (ca *caDB) CheckAdminExistByUSerID(ctx context.Context, userID string) (boo
 	newCtx, span := trace.StartInternalSpan(ctx)
 
 	sql := "SELECT COUNT(f_id) FROM t_content_admin WHERE f_user_id = ?"
-	trace.SetAttributes(newCtx, attribute.String(trace.TABLE_NAME, CONTENT_ADMIN_TABLENAME), attribute.String(trace.DB_SQL, sql), attribute.String(trace.DB_QUERY, userID))
+	trace.SetAttributes(newCtx, attribute.String(trace.TABLE_NAME, rds.CONTENT_ADMIN_TABLENAME), attribute.String(trace.DB_SQL, sql), attribute.String(trace.DB_QUERY, userID))
 	defer func() { trace.TelemetrySpanEnd(span, err) }()
 
 	err = ca.db.Raw(sql, userID).Scan(&count).Error
@@ -97,15 +81,15 @@ func (ca *caDB) CheckAdminExistByUSerID(ctx context.Context, userID string) (boo
 	return true, nil
 }
 
-func (ca *caDB) ListAdmins(ctx context.Context) ([]ContentAdmin, error) {
+func (ca *caDB) ListAdmins(ctx context.Context) ([]rds.ContentAdmin, error) {
 	var (
 		err    error
-		admins []ContentAdmin
+		admins []rds.ContentAdmin
 	)
 	newCtx, span := trace.StartInternalSpan(ctx)
 
 	sql := "SELECT f_id, f_user_id, f_user_name FROM t_content_admin"
-	trace.SetAttributes(newCtx, attribute.String(trace.TABLE_NAME, CONTENT_ADMIN_TABLENAME), attribute.String(trace.DB_SQL, sql))
+	trace.SetAttributes(newCtx, attribute.String(trace.TABLE_NAME, rds.CONTENT_ADMIN_TABLENAME), attribute.String(trace.DB_SQL, sql))
 	defer func() { trace.TelemetrySpanEnd(span, err) }()
 
 	err = ca.db.Raw(sql).Scan(&admins).Error
@@ -117,15 +101,15 @@ func (ca *caDB) ListAdmins(ctx context.Context) ([]ContentAdmin, error) {
 	return admins, nil
 }
 
-func (ca *caDB) ListAdminsByUserID(ctx context.Context, userIDs []string) ([]ContentAdmin, error) {
+func (ca *caDB) ListAdminsByUserID(ctx context.Context, userIDs []string) ([]rds.ContentAdmin, error) {
 	var (
 		err    error
-		admins []ContentAdmin
+		admins []rds.ContentAdmin
 	)
 	newCtx, span := trace.StartInternalSpan(ctx)
 
 	sql := "SELECT f_id, f_user_id, f_user_name FROM t_content_admin WHERE f_user_id IN ?"
-	trace.SetAttributes(newCtx, attribute.String(trace.TABLE_NAME, CONTENT_ADMIN_TABLENAME), attribute.String(trace.DB_SQL, sql))
+	trace.SetAttributes(newCtx, attribute.String(trace.TABLE_NAME, rds.CONTENT_ADMIN_TABLENAME), attribute.String(trace.DB_SQL, sql))
 	defer func() { trace.TelemetrySpanEnd(span, err) }()
 
 	err = ca.db.Raw(sql, userIDs).Scan(&admins).Error
@@ -137,14 +121,13 @@ func (ca *caDB) ListAdminsByUserID(ctx context.Context, userIDs []string) ([]Con
 	return admins, nil
 }
 
-// DeleteAdminByID 删除管理员
 func (ca *caDB) DeleteAdminByID(ctx context.Context, ID string) error {
 	var err error
 
 	newCtx, span := trace.StartInternalSpan(ctx)
 
 	sql := "DELETE FROM t_content_admin WHERE f_id= ?"
-	trace.SetAttributes(newCtx, attribute.String(trace.TABLE_NAME, CONTENT_ADMIN_TABLENAME), attribute.String(trace.DB_SQL, sql), attribute.String(trace.DB_QUERY, ID))
+	trace.SetAttributes(newCtx, attribute.String(trace.TABLE_NAME, rds.CONTENT_ADMIN_TABLENAME), attribute.String(trace.DB_SQL, sql), attribute.String(trace.DB_QUERY, ID))
 	defer func() { trace.TelemetrySpanEnd(span, err) }()
 
 	err = ca.db.Exec(sql, ID).Error
@@ -154,13 +137,12 @@ func (ca *caDB) DeleteAdminByID(ctx context.Context, ID string) error {
 	return err
 }
 
-// UpdateAdminByUserID 更新管理员
 func (ca *caDB) UpdateAdminByUserID(ctx context.Context, userID, userName string) error {
 	var err error
 	newCtx, span := trace.StartInternalSpan(ctx)
 
 	sql := "UPDATE t_content_admin SET f_user_name = ? WHERE f_user_id = ?"
-	trace.SetAttributes(newCtx, attribute.String(trace.TABLE_NAME, CONTENT_ADMIN_TABLENAME), attribute.String(trace.DB_SQL, sql), attribute.String(trace.DB_QUERY, userID))
+	trace.SetAttributes(newCtx, attribute.String(trace.TABLE_NAME, rds.CONTENT_ADMIN_TABLENAME), attribute.String(trace.DB_SQL, sql), attribute.String(trace.DB_QUERY, userID))
 	defer func() { trace.TelemetrySpanEnd(span, err) }()
 
 	err = ca.db.Exec(sql, userName, userID).Error

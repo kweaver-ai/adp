@@ -9,7 +9,7 @@ import (
 	commonLog "github.com/kweaver-ai/adp/autoflow/flow-automation/libs/go/log"
 	traceLog "github.com/kweaver-ai/adp/autoflow/flow-automation/libs/go/telemetry/log"
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/libs/go/telemetry/trace"
-	"github.com/kweaver-ai/adp/autoflow/flow-automation/store/rds"
+	"github.com/kweaver-ai/adp/autoflow/flow-automation/pkg/rds"
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/utils"
 )
 
@@ -53,7 +53,7 @@ func NewAdmin() AdminHandler {
 	aOnce.Do(func() {
 		ah = &admin{
 			log:      commonLog.NewLogger(),
-			adminDao: rds.NewContentAmdin(),
+			adminDao: rds.GetContentAdminDao(),
 		}
 	})
 	return ah

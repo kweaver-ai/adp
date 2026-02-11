@@ -8,52 +8,21 @@ import (
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/libs/go/db"
 	traceLog "github.com/kweaver-ai/adp/autoflow/flow-automation/libs/go/telemetry/log"
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/libs/go/telemetry/trace"
+	"github.com/kweaver-ai/adp/autoflow/flow-automation/pkg/rds"
 	"go.opentelemetry.io/otel/attribute"
 	"gorm.io/gorm"
-)
-
-const DAG_INSTANCE_EXT_DATA_TABLE = "t_automation_dag_instance_ext_data"
-
-type DagInstanceExtData struct {
-	ID        string `gorm:"column:f_id;primary_key:not null" json:"id" bson:"_id"`
-	CreatedAt int64  `gorm:"column:f_created_at;type:bigint" json:"createdAt" bson:"createdAt"`
-	UpdatedAt int64  `gorm:"column:f_updated_at;type:bigint" json:"updatedAt" bson:"updatedAt"`
-	DagID     string `gorm:"column:f_dag_id;type:varchar(64)" json:"dagId" bson:"dagId"`
-	DagInsID  string `gorm:"column:f_dag_ins_id;type:varchar(64)" json:"dagInsId" bson:"dagInsId"`
-	Field     string `gorm:"column:f_field;type:varchar(64)" json:"field" bson:"field"`
-	OssID     string `gorm:"column:f_oss_id;type:varchar(64)" json:"ossId" bson:"ossId"`
-	OssKey    string `gorm:"column:f_oss_key;type:varchar(255)" json:"ossKey" bson:"ossKey"`
-	Size      int64  `gorm:"column:f_size;type:bigint" json:"size" bson:"size"`
-	Removed   bool   `gorm:"column:f_removed;type:tinyint(1)" json:"removed" bson:"removed"`
-}
-
-type ExtDataQueryOptions struct {
-	IDs         []string
-	DagID       string
-	DagInsID    string
-	Removed     bool
-	Limit       int
-	MinID       string
-	SelectField []string
-}
-
-type DagInstanceExtDataDao interface {
-	InsertMany(ctx context.Context, items []*DagInstanceExtData) error
-	List(ctx context.Context, opts *ExtDataQueryOptions) ([]*DagInstanceExtData, error)
-	Remove(ctx context.Context, opts *ExtDataQueryOptions) error
-	Delete(ctx context.Context, opts *ExtDataQueryOptions) error
-}
-
-var (
-	dagInstanceExtDataDaoIns  DagInstanceExtDataDao
-	dagInstanceExtDataDaoOnce sync.Once
 )
 
 type dagInstanceExtDataDao struct {
 	db *gorm.DB
 }
 
-func NewDagInstanceExtDataDao() DagInstanceExtDataDao {
+var (
+	dagInstanceExtDataDaoIns  rds.DagInstanceExtDataDao
+	dagInstanceExtDataDaoOnce sync.Once
+)
+
+func NewDagInstanceExtDataDao() rds.DagInstanceExtDataDao {
 	dagInstanceExtDataDaoOnce.Do(func() {
 		dagInstanceExtDataDaoIns = &dagInstanceExtDataDao{
 			db.NewDB(),
@@ -62,14 +31,14 @@ func NewDagInstanceExtDataDao() DagInstanceExtDataDao {
 	return dagInstanceExtDataDaoIns
 }
 
-func (d *dagInstanceExtDataDao) InsertMany(ctx context.Context, items []*DagInstanceExtData) error {
+func (d *dagInstanceExtDataDao) InsertMany(ctx context.Context, items []*rds.DagInstanceExtData) error {
 	var err error
 	newCtx, span := trace.StartInternalSpan(ctx)
 	defer func() { trace.TelemetrySpanEnd(span, err) }()
 	log := traceLog.WithContext(newCtx)
 
 	err = d.db.Transaction(func(tx *gorm.DB) error {
-		trace.SetAttributes(newCtx, attribute.String(trace.TABLE_NAME, DAG_INSTANCE_EXT_DATA_TABLE))
+		trace.SetAttributes(newCtx, attribute.String(trace.TABLE_NAME, rds.DAG_INSTANCE_EXT_DATA_TABLE))
 		sql := "insert into t_automation_dag_instance_ext_data (f_id, f_created_at, f_updated_at, f_dag_id, f_dag_ins_id, f_field, f_oss_id, f_oss_key, f_size, f_removed) values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
 		trace.SetAttributes(newCtx, attribute.String(trace.DB_SQL, sql))
 
@@ -98,14 +67,14 @@ func (d *dagInstanceExtDataDao) InsertMany(ctx context.Context, items []*DagInst
 	return err
 }
 
-func (d *dagInstanceExtDataDao) List(ctx context.Context, opts *ExtDataQueryOptions) ([]*DagInstanceExtData, error) {
+func (d *dagInstanceExtDataDao) List(ctx context.Context, opts *rds.ExtDataQueryOptions) ([]*rds.DagInstanceExtData, error) {
 	var err error
 	newCtx, span := trace.StartInternalSpan(ctx)
 	defer func() { trace.TelemetrySpanEnd(span, err) }()
 	log := traceLog.WithContext(newCtx)
-	trace.SetAttributes(newCtx, attribute.String(trace.TABLE_NAME, DAG_INSTANCE_EXT_DATA_TABLE))
+	trace.SetAttributes(newCtx, attribute.String(trace.TABLE_NAME, rds.DAG_INSTANCE_EXT_DATA_TABLE))
 
-	var results []*DagInstanceExtData
+	var results []*rds.DagInstanceExtData
 	selectFields := "f_id, f_created_at, f_updated_at, f_dag_id, f_dag_ins_id, f_field, f_oss_id, f_oss_key, f_size, f_removed"
 	if len(opts.SelectField) > 0 {
 		selectFields = ""
@@ -154,15 +123,15 @@ func (d *dagInstanceExtDataDao) List(ctx context.Context, opts *ExtDataQueryOpti
 	return results, nil
 }
 
-func (d *dagInstanceExtDataDao) Remove(ctx context.Context, opts *ExtDataQueryOptions) error {
+func (d *dagInstanceExtDataDao) Remove(ctx context.Context, opts *rds.ExtDataQueryOptions) error {
 	var err error
 	newCtx, span := trace.StartInternalSpan(ctx)
 	defer func() { trace.TelemetrySpanEnd(span, err) }()
 	log := traceLog.WithContext(newCtx)
-	trace.SetAttributes(newCtx, attribute.String(trace.TABLE_NAME, DAG_INSTANCE_EXT_DATA_TABLE))
+	trace.SetAttributes(newCtx, attribute.String(trace.TABLE_NAME, rds.DAG_INSTANCE_EXT_DATA_TABLE))
 
 	err = d.db.Transaction(func(tx *gorm.DB) error {
-		trace.SetAttributes(newCtx, attribute.String(trace.TABLE_NAME, DAG_INSTANCE_EXT_DATA_TABLE))
+		trace.SetAttributes(newCtx, attribute.String(trace.TABLE_NAME, rds.DAG_INSTANCE_EXT_DATA_TABLE))
 		sql := "UPDATE t_automation_dag_instance_ext_data SET f_removed = ?, f_updated_at = ? WHERE f_removed = ?"
 		trace.SetAttributes(newCtx, attribute.String(trace.DB_SQL, sql))
 
@@ -216,15 +185,15 @@ func (d *dagInstanceExtDataDao) Remove(ctx context.Context, opts *ExtDataQueryOp
 	return err
 }
 
-func (d *dagInstanceExtDataDao) Delete(ctx context.Context, opts *ExtDataQueryOptions) error {
+func (d *dagInstanceExtDataDao) Delete(ctx context.Context, opts *rds.ExtDataQueryOptions) error {
 	var err error
 	newCtx, span := trace.StartInternalSpan(ctx)
 	defer func() { trace.TelemetrySpanEnd(span, err) }()
 	log := traceLog.WithContext(newCtx)
-	trace.SetAttributes(newCtx, attribute.String(trace.TABLE_NAME, DAG_INSTANCE_EXT_DATA_TABLE))
+	trace.SetAttributes(newCtx, attribute.String(trace.TABLE_NAME, rds.DAG_INSTANCE_EXT_DATA_TABLE))
 
 	err = d.db.Transaction(func(tx *gorm.DB) error {
-		trace.SetAttributes(newCtx, attribute.String(trace.TABLE_NAME, DAG_INSTANCE_EXT_DATA_TABLE))
+		trace.SetAttributes(newCtx, attribute.String(trace.TABLE_NAME, rds.DAG_INSTANCE_EXT_DATA_TABLE))
 		sql := "DELETE FROM t_automation_dag_instance_ext_data WHERE 1=1"
 		trace.SetAttributes(newCtx, attribute.String(trace.DB_SQL, sql))
 
@@ -276,4 +245,4 @@ func (d *dagInstanceExtDataDao) Delete(ctx context.Context, opts *ExtDataQueryOp
 	return err
 }
 
-var _ DagInstanceExtDataDao = (*dagInstanceExtDataDao)(nil)
+var _ rds.DagInstanceExtDataDao = (*dagInstanceExtDataDao)(nil)

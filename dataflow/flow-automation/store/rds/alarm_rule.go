@@ -11,27 +11,14 @@ import (
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/common"
 	cdb "github.com/kweaver-ai/adp/autoflow/flow-automation/libs/go/db"
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/libs/go/telemetry/trace"
+	"github.com/kweaver-ai/adp/autoflow/flow-automation/pkg/rds"
 	"go.opentelemetry.io/otel/attribute"
 	"gorm.io/gorm"
 )
 
-const (
-	ALARM_RULE_TABLENAME = "t_alarm_rule"
-	ALARM_USER_TABLENAME = "t_alarm_user"
-)
-
-type AlarmRuleDao interface {
-	ModifyAlarmRule(ctx context.Context, ruleID string, rules []*AlarmRule, users []*AlarmUser) error
-	GetAlarmRule(ctx context.Context, ruleID string) (*AlarmRule, error)
-	ListAlarmRule(ctx context.Context, opt *Options) ([]*AlarmRule, error)
-	ListAlarmUser(ctx context.Context, opt *Options) ([]*AlarmUser, error)
-	GroupAlarmRule(ctx context.Context) ([]*AlarmRule, error)
-	ListDagIDs(ctx context.Context, ruleID string) ([]string, error)
-}
-
 var (
 	arOnce sync.Once
-	ar     AlarmRuleDao
+	ar     rds.AlarmRuleDao
 )
 
 type alarmRule struct {
@@ -39,7 +26,7 @@ type alarmRule struct {
 	db     *gorm.DB
 }
 
-func NewAlarmRule() AlarmRuleDao {
+func NewAlarmRule() rds.AlarmRuleDao {
 	arOnce.Do(func() {
 		ar = &alarmRule{
 			dbType: strings.ToUpper(os.Getenv("DB_TYPE")),
@@ -50,8 +37,7 @@ func NewAlarmRule() AlarmRuleDao {
 	return ar
 }
 
-// ModifyAlarmRule 变更告警规则
-func (ar *alarmRule) ModifyAlarmRule(ctx context.Context, ruleID string, rules []*AlarmRule, users []*AlarmUser) error {
+func (ar *alarmRule) ModifyAlarmRule(ctx context.Context, ruleID string, rules []*rds.AlarmRule, users []*rds.AlarmUser) error {
 	if len(rules) == 0 || len(users) == 0 {
 		return nil
 	}
@@ -69,7 +55,7 @@ func (ar *alarmRule) ModifyAlarmRule(ctx context.Context, ruleID string, rules [
 
 	if ruleID != "" {
 		sqlStr := `DELETE FROM t_alarm_rule WHERE f_rule_id = ?`
-		trace.SetAttributes(newCtx, attribute.String(trace.TABLE_NAME, ALARM_RULE_TABLENAME), attribute.String(trace.DB_SQL, sqlStr), attribute.String(trace.DB_QUERY, fmt.Sprintf("%v", ruleID)))
+		trace.SetAttributes(newCtx, attribute.String(trace.TABLE_NAME, rds.ALARM_RULE_TABLENAME), attribute.String(trace.DB_SQL, sqlStr), attribute.String(trace.DB_QUERY, fmt.Sprintf("%v", ruleID)))
 
 		err = tx.Exec(sqlStr, ruleID).Error
 		if err != nil {
@@ -78,7 +64,7 @@ func (ar *alarmRule) ModifyAlarmRule(ctx context.Context, ruleID string, rules [
 		}
 
 		sqlStr = `DELETE FROM t_alarm_user WHERE f_rule_id = ?`
-		trace.SetAttributes(newCtx, attribute.String(trace.TABLE_NAME, ALARM_RULE_TABLENAME), attribute.String(trace.DB_SQL, sqlStr), attribute.String(trace.DB_QUERY, fmt.Sprintf("%v", ruleID)))
+		trace.SetAttributes(newCtx, attribute.String(trace.TABLE_NAME, rds.ALARM_RULE_TABLENAME), attribute.String(trace.DB_SQL, sqlStr), attribute.String(trace.DB_QUERY, fmt.Sprintf("%v", ruleID)))
 
 		err = tx.Exec(sqlStr, ruleID).Error
 		if err != nil {
@@ -88,7 +74,7 @@ func (ar *alarmRule) ModifyAlarmRule(ctx context.Context, ruleID string, rules [
 	}
 
 	sqlStr := `INSERT INTO t_alarm_rule (f_id, f_rule_id, f_dag_id, f_frequency, f_threshold, f_created_at) VALUES `
-	trace.SetAttributes(newCtx, attribute.String(trace.TABLE_NAME, ALARM_RULE_TABLENAME), attribute.String(trace.DB_SQL, sqlStr), attribute.String(trace.DB_Values, msgStr))
+	trace.SetAttributes(newCtx, attribute.String(trace.TABLE_NAME, rds.ALARM_RULE_TABLENAME), attribute.String(trace.DB_SQL, sqlStr), attribute.String(trace.DB_Values, msgStr))
 	values := make([]interface{}, 0, len(rules)*6)
 	for _, data := range rules {
 		sqlStr += "(?, ?, ?, ?, ?, ?),"
@@ -105,7 +91,7 @@ func (ar *alarmRule) ModifyAlarmRule(ctx context.Context, ruleID string, rules [
 
 	sqlStr = `INSERT INTO t_alarm_user (f_id, f_rule_id, f_user_id, f_user_name, f_user_type) VALUES `
 	msgStr, _ = jsoniter.MarshalToString(users)
-	trace.SetAttributes(newCtx, attribute.String(trace.TABLE_NAME, ALARM_RULE_TABLENAME), attribute.String(trace.DB_SQL, sqlStr), attribute.String(trace.DB_Values, msgStr))
+	trace.SetAttributes(newCtx, attribute.String(trace.TABLE_NAME, rds.ALARM_RULE_TABLENAME), attribute.String(trace.DB_SQL, sqlStr), attribute.String(trace.DB_Values, msgStr))
 
 	values = make([]interface{}, 0, len(users)*5)
 	for _, data := range users {
@@ -123,15 +109,15 @@ func (ar *alarmRule) ModifyAlarmRule(ctx context.Context, ruleID string, rules [
 	return tx.Commit().Error
 }
 
-func (ar *alarmRule) GetAlarmRule(ctx context.Context, ruleID string) (*AlarmRule, error) {
+func (ar *alarmRule) GetAlarmRule(ctx context.Context, ruleID string) (*rds.AlarmRule, error) {
 	var err error
 	newCtx, span := trace.StartInternalSpan(ctx)
 	defer func() { trace.TelemetrySpanEnd(span, err) }()
 
 	sqlStr := `SELECT * FROM t_alarm_rule WHERE f_rule_id = ?`
-	trace.SetAttributes(newCtx, attribute.String(trace.TABLE_NAME, ALARM_RULE_TABLENAME), attribute.String(trace.DB_SQL, sqlStr), attribute.String(trace.DB_QUERY, fmt.Sprintf("%v", ruleID)))
+	trace.SetAttributes(newCtx, attribute.String(trace.TABLE_NAME, rds.ALARM_RULE_TABLENAME), attribute.String(trace.DB_SQL, sqlStr), attribute.String(trace.DB_QUERY, fmt.Sprintf("%v", ruleID)))
 
-	var alarmRule = &AlarmRule{}
+	var alarmRule = &rds.AlarmRule{}
 	err = ar.db.Raw(sqlStr, ruleID).Scan(alarmRule).Error
 	if err != nil {
 		return nil, err
@@ -143,7 +129,7 @@ func (ar *alarmRule) GetAlarmRule(ctx context.Context, ruleID string) (*AlarmRul
 	return alarmRule, nil
 }
 
-func (ar *alarmRule) ListAlarmRule(ctx context.Context, opt *Options) ([]*AlarmRule, error) {
+func (ar *alarmRule) ListAlarmRule(ctx context.Context, opt *rds.Options) ([]*rds.AlarmRule, error) {
 	var err error
 	newCtx, span := trace.StartInternalSpan(ctx)
 	defer func() { trace.TelemetrySpanEnd(span, err) }()
@@ -151,13 +137,13 @@ func (ar *alarmRule) ListAlarmRule(ctx context.Context, opt *Options) ([]*AlarmR
 	sqlStr, searchSqlVal := opt.BuildQuery("SELECT * FROM t_alarm_rule WHERE 1=1")
 	trace.SetAttributes(newCtx, attribute.String(trace.DB_SQL, sqlStr), attribute.String(trace.DB_QUERY, fmt.Sprintf("%v", searchSqlVal)))
 
-	var alarmRules = make([]*AlarmRule, 0)
+	var alarmRules = make([]*rds.AlarmRule, 0)
 	err = ar.db.Raw(sqlStr, searchSqlVal...).Scan(&alarmRules).Error
 
 	return alarmRules, err
 }
 
-func (ar *alarmRule) ListAlarmUser(ctx context.Context, opt *Options) ([]*AlarmUser, error) {
+func (ar *alarmRule) ListAlarmUser(ctx context.Context, opt *rds.Options) ([]*rds.AlarmUser, error) {
 	var err error
 	newCtx, span := trace.StartInternalSpan(ctx)
 	defer func() { trace.TelemetrySpanEnd(span, err) }()
@@ -165,26 +151,24 @@ func (ar *alarmRule) ListAlarmUser(ctx context.Context, opt *Options) ([]*AlarmU
 	sqlStr, searchSqlVal := opt.BuildQuery("SELECT * FROM t_alarm_user WHERE 1=1")
 	trace.SetAttributes(newCtx, attribute.String(trace.DB_SQL, sqlStr), attribute.String(trace.DB_QUERY, fmt.Sprintf("%v", searchSqlVal)))
 
-	var alarmUsers = make([]*AlarmUser, 0)
+	var alarmUsers = make([]*rds.AlarmUser, 0)
 	err = ar.db.Raw(sqlStr, searchSqlVal...).Scan(&alarmUsers).Error
 
 	return alarmUsers, err
 }
 
-// GroupAlarmRule 分组查询告警规则
-func (ar *alarmRule) GroupAlarmRule(ctx context.Context) ([]*AlarmRule, error) {
+func (ar *alarmRule) GroupAlarmRule(ctx context.Context) ([]*rds.AlarmRule, error) {
 	var err error
 	newCtx, span := trace.StartInternalSpan(ctx)
 	defer func() { trace.TelemetrySpanEnd(span, err) }()
 
 	sqlStr := "SELECT f_rule_id, f_frequency, f_threshold FROM t_alarm_rule GROUP BY f_rule_id"
-	// 人大金仓数据库适配group by 需要把select所有字段都加入groupby 或者不在groupby中的字段使用函数
 	if strings.HasPrefix(ar.dbType, common.DBTYPEKDB) {
 		sqlStr = "SELECT f_rule_id, max(f_frequency) as f_frequency, max(f_threshold) as f_threshold FROM t_alarm_rule GROUP BY f_rule_id"
 	}
 	trace.SetAttributes(newCtx, attribute.String(trace.DB_SQL, sqlStr))
 
-	var alarmRules = make([]*AlarmRule, 0)
+	var alarmRules = make([]*rds.AlarmRule, 0)
 	err = ar.db.Raw(sqlStr).Scan(&alarmRules).Error
 
 	return alarmRules, err

@@ -19,7 +19,7 @@ import (
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/driveradapters/middleware"
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/logics/mgnt"
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/pkg/entity"
-	"github.com/kweaver-ai/adp/autoflow/flow-automation/store/rds"
+	"github.com/kweaver-ai/adp/autoflow/flow-automation/pkg/rds"
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/tests/mock_drivenadapters"
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/tests/mock_logics"
 	. "github.com/smartystreets/goconvey/convey"

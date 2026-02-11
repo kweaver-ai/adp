@@ -11,8 +11,8 @@ import (
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/pkg/actions"
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/pkg/entity"
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/pkg/policy"
+	"github.com/kweaver-ai/adp/autoflow/flow-automation/pkg/rds"
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/pkg/vm"
-	"github.com/kweaver-ai/adp/autoflow/flow-automation/store/rds"
 
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/drivenadapters"
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/pkg/dependency"

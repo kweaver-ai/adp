@@ -17,8 +17,8 @@ import (
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/logics/perm"
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/pkg/entity"
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/pkg/mod"
+	"github.com/kweaver-ai/adp/autoflow/flow-automation/pkg/rds"
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/store"
-	"github.com/kweaver-ai/adp/autoflow/flow-automation/store/rds"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 )

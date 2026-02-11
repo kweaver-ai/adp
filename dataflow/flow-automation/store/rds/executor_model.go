@@ -9,105 +9,22 @@ import (
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/libs/go/db"
 	traceLog "github.com/kweaver-ai/adp/autoflow/flow-automation/libs/go/telemetry/log"
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/libs/go/telemetry/trace"
+	"github.com/kweaver-ai/adp/autoflow/flow-automation/pkg/rds"
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/utils"
 	"go.opentelemetry.io/otel/attribute"
 	"gorm.io/gorm"
 )
-
-const (
-	EXECUTOR_TABLENAME          = "t_automation_executor"
-	EXECUTOR_ACCESSOR_TABLENAME = "t_automation_executor_accessor"
-	EXECUTOR_ACTION_TABLENAME   = "t_automation_executor_action"
-)
-
-type ExecutorModel struct {
-	ID          *uint64                  `gorm:"column:f_id;primary_key:not null" json:"id"`
-	Name        *string                  `gorm:"column:f_name;type:varchar(64)" json:"name"`
-	Description *string                  `gorm:"column:f_description;type:varchar(256)" json:"description"`
-	CreatorID   *string                  `gorm:"column:f_creator_id;type:varchar(40)" json:"creator_id"`
-	Status      *int                     `gorm:"column:f_status;type:tinyint" json:"status"`
-	CreatedAt   *int64                   `gorm:"column:f_created_at;type:bigint" json:"created_at"`
-	UpdatedAt   *int64                   `gorm:"column:f_updated_at;type:bigint" json:"updated_at"`
-	Accessors   []*ExecutorAccessorModel `gorm:"-" json:"accessors"`
-	Actions     []*ExecutorActionModel   `gorm:"-" json:"actions"`
-}
-
-type ExecutorAccessorModel struct {
-	ID           *uint64 `gorm:"column:f_id;primary_key:not null" json:"id"`
-	ExecutorID   *uint64 `gorm:"column:f_executor_id;primary_key:not null" json:"executor_id"`
-	AccessorID   *string `gorm:"column:f_accessor_id;type:varchar(40)" json:"accessor_id"`
-	AccessorType *string `gorm:"column:f_accessor_type;type:varchar(20)" json:"accessor_type"`
-}
-
-type ExecutorActionModel struct {
-	ID          *uint64 `gorm:"column:f_id;primary_key:not null" json:"id"`
-	ExecutorID  *uint64 `gorm:"column:f_executor_id;primary_key:not null" json:"executor_id"`
-	Operator    *string `gorm:"column:f_operator;type:varchar(64)" json:"operator"`
-	Name        *string `gorm:"column:f_name;type:varchar(64)" json:"name"`
-	Description *string `gorm:"column:f_description;type:varchar(64)" json:"description"`
-	Group       *string `gorm:"column:f_group;type:varchar(64)" json:"group"`
-	Type        *string `gorm:"column:f_type;type:varchar(16)" json:"type"`
-	Inputs      *string `gorm:"column:f_inputs;type:text" json:"inputs"`
-	Outputs     *string `gorm:"column:f_outputs;type:text" json:"outputs"`
-	Config      *string `gorm:"column:f_config;type:text" json:"config"`
-	CreatedAt   *int64  `gorm:"column:f_created_at;type:bigint" json:"created_at"`
-	UpdatedAt   *int64  `gorm:"column:f_updated_at;type:bigint" json:"updated_at"`
-}
-
-type ExecutorWithActionModel struct {
-	// executor fields
-	ID          *uint64 `gorm:"column:f_id;primary_key:not null" json:"id"`
-	Name        *string `gorm:"column:f_name;type:varchar(64)" json:"name"`
-	Description *string `gorm:"column:f_description;type:varchar(256)" json:"description"`
-	CreatorID   *string `gorm:"column:f_creator_id;type:varchar(40)" json:"creator_id"`
-	Status      *int    `gorm:"column:f_status;type:tinyint" json:"status"`
-	CreatedAt   *int64  `gorm:"column:f_created_at;type:bigint" json:"created_at"`
-	UpdatedAt   *int64  `gorm:"column:f_updated_at;type:bigint" json:"updated_at"`
-
-	// action fields
-	ActionID          *uint64 `gorm:"column:f_action_id;type:bigint" json:"action_id"`
-	ActionOperator    *string `gorm:"column:f_action_operator;type:varchar(64)" json:"action_operator"`
-	ActionName        *string `gorm:"column:f_action_name;type:varchar(64)" json:"action_name"`
-	ActionDescription *string `gorm:"column:f_action_description;type:varchar(256)" json:"action_description"`
-	ActionGroup       *string `gorm:"column:f_action_group;type:varchar(64)" json:"action_group"`
-	ActionType        *string `gorm:"column:f_action_type;type:varchar(64)" json:"action_type"`
-	ActionInputs      *string `gorm:"column:f_action_inputs;type:varchar(256)" json:"action_inputs"`
-	ActionOutputs     *string `gorm:"column:f_action_outputs;type:varchar(256)" json:"action_outputs"`
-	ActionConfig      *string `gorm:"column:f_action_config;type:varchar(256)" json:"action_config"`
-	ActionCreatedAt   *int64  `gorm:"column:f_action_created_at;type:bigint" json:"action_created_at"`
-	ActionUpdatedAt   *int64  `gorm:"column:f_action_updated_at;type:bigint" json:"action_updated_at"`
-}
-
-type ExecutorDao interface {
-	CreateExecutor(ctx context.Context, executor *ExecutorModel) error
-	UpdateExecutor(ctx context.Context, executor *ExecutorModel) error
-	GetExecutors(ctx context.Context, creatorID string) ([]*ExecutorModel, error)
-	GetExecutor(ctx context.Context, id uint64) (*ExecutorModel, error)
-	GetExecutorAccessors(ctx context.Context, executorID uint64) ([]*ExecutorAccessorModel, error)
-	GetExecutorActions(ctx context.Context, executorID uint64) ([]*ExecutorActionModel, error)
-	HasAccessor(ctx context.Context, executorID uint64, accessorIDs []string) (bool, error)
-	DeleteExecutor(ctx context.Context, executorID uint64) error
-	CreateExecutorAction(ctx context.Context, action *ExecutorActionModel) error
-	UpdateExecutorAction(ctx context.Context, action *ExecutorActionModel) error
-	DeleteExecutorAction(ctx context.Context, action *ExecutorActionModel) error
-	GetAccessableExecutors(ctx context.Context, userID string, accessorIDs []string) ([]*ExecutorModel, error)
-	GetAccessableAction(ctx context.Context, actionID uint64, executorID uint64, userID string, accessorIDs []string) (*ExecutorActionModel, error)
-	CheckExecutor(ctx context.Context, executor *ExecutorModel) (bool, error)
-	CheckExecutorAction(ctx context.Context, action *ExecutorActionModel) (bool, error)
-	GetExecutorByName(ctx context.Context, userID string, name string) (executor *ExecutorModel, err error)
-}
 
 type ExecutorDaoImpl struct {
 	inner *gorm.DB
 }
 
 var (
-	executor     ExecutorDao
+	executor     rds.ExecutorDao
 	executorOnce sync.Once
 )
 
-func NewExecutor() ExecutorDao {
-
+func NewExecutor() rds.ExecutorDao {
 	executorOnce.Do(func() {
 		executor = &ExecutorDaoImpl{
 			inner: db.NewDB(),
@@ -117,7 +34,7 @@ func NewExecutor() ExecutorDao {
 	return executor
 }
 
-func (db *ExecutorDaoImpl) CreateExecutor(ctx context.Context, executor *ExecutorModel) error {
+func (db *ExecutorDaoImpl) CreateExecutor(ctx context.Context, executor *rds.ExecutorModel) error {
 	var err error
 	newCtx, span := trace.StartInternalSpan(ctx)
 	defer func() { trace.TelemetrySpanEnd(span, err) }()
@@ -125,7 +42,7 @@ func (db *ExecutorDaoImpl) CreateExecutor(ctx context.Context, executor *Executo
 
 	err = db.inner.Transaction(func(tx *gorm.DB) error {
 
-		trace.SetAttributes(newCtx, attribute.String(trace.TABLE_NAME, EXECUTOR_TABLENAME))
+		trace.SetAttributes(newCtx, attribute.String(trace.TABLE_NAME, rds.EXECUTOR_TABLENAME))
 		sql := "insert into t_automation_executor (f_id, f_name, f_description, f_creator_id, f_status, f_created_at, f_updated_at) values (?, ?, ?, ?, ?, ?, ?)"
 		trace.SetAttributes(newCtx, attribute.String(trace.DB_SQL, sql))
 
@@ -135,7 +52,7 @@ func (db *ExecutorDaoImpl) CreateExecutor(ctx context.Context, executor *Executo
 		}
 
 		if len(executor.Accessors) > 0 {
-			trace.SetAttributes(newCtx, attribute.String(trace.TABLE_NAME, EXECUTOR_ACCESSOR_TABLENAME))
+			trace.SetAttributes(newCtx, attribute.String(trace.TABLE_NAME, rds.EXECUTOR_ACCESSOR_TABLENAME))
 			sql = "insert into t_automation_executor_accessor (f_id, f_executor_id, f_accessor_id, f_accessor_type) values (?, ?, ?, ?)"
 			trace.SetAttributes(newCtx, attribute.String(trace.DB_SQL, sql))
 
@@ -148,7 +65,7 @@ func (db *ExecutorDaoImpl) CreateExecutor(ctx context.Context, executor *Executo
 		}
 
 		if len(executor.Actions) > 0 {
-			trace.SetAttributes(newCtx, attribute.String(trace.TABLE_NAME, EXECUTOR_ACTION_TABLENAME))
+			trace.SetAttributes(newCtx, attribute.String(trace.TABLE_NAME, rds.EXECUTOR_ACTION_TABLENAME))
 			sql = "insert into t_automation_executor_action (f_id, f_executor_id, f_operator, f_name, f_description, f_group, f_type, f_inputs, f_outputs, f_config, f_created_at, f_updated_at) values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
 			trace.SetAttributes(newCtx, attribute.String(trace.DB_SQL, sql))
 
@@ -172,10 +89,10 @@ func (db *ExecutorDaoImpl) CreateExecutor(ctx context.Context, executor *Executo
 	return nil
 }
 
-func (db *ExecutorDaoImpl) UpdateExecutor(ctx context.Context, executor *ExecutorModel) error {
+func (db *ExecutorDaoImpl) UpdateExecutor(ctx context.Context, executor *rds.ExecutorModel) error {
 	var err error
 	newCtx, span := trace.StartInternalSpan(ctx)
-	trace.SetAttributes(newCtx, attribute.String(trace.TABLE_NAME, EXECUTOR_TABLENAME))
+	trace.SetAttributes(newCtx, attribute.String(trace.TABLE_NAME, rds.EXECUTOR_TABLENAME))
 	defer func() { trace.TelemetrySpanEnd(span, err) }()
 	log := traceLog.WithContext(newCtx)
 
@@ -202,7 +119,7 @@ func (db *ExecutorDaoImpl) UpdateExecutor(ctx context.Context, executor *Executo
 			fields = append(fields, "f_updated_at = ?")
 			args = append(args, executor.UpdatedAt, executor.ID)
 
-			trace.SetAttributes(newCtx, attribute.String(trace.TABLE_NAME, EXECUTOR_TABLENAME))
+			trace.SetAttributes(newCtx, attribute.String(trace.TABLE_NAME, rds.EXECUTOR_TABLENAME))
 			sql := fmt.Sprintf("update t_automation_executor set %s where f_id = ?", strings.Join(fields, ","))
 			trace.SetAttributes(newCtx, attribute.String(trace.DB_SQL, sql))
 
@@ -212,7 +129,7 @@ func (db *ExecutorDaoImpl) UpdateExecutor(ctx context.Context, executor *Executo
 		}
 
 		if len(executor.Accessors) > 0 {
-			trace.SetAttributes(newCtx, attribute.String(trace.TABLE_NAME, EXECUTOR_ACCESSOR_TABLENAME))
+			trace.SetAttributes(newCtx, attribute.String(trace.TABLE_NAME, rds.EXECUTOR_ACCESSOR_TABLENAME))
 
 			var accessorMap = make(map[string]bool, 0)
 
@@ -221,7 +138,7 @@ func (db *ExecutorDaoImpl) UpdateExecutor(ctx context.Context, executor *Executo
 				accessorMap[key] = true
 			}
 
-			var currentAccessors []*ExecutorAccessorModel
+			var currentAccessors []*rds.ExecutorAccessorModel
 
 			sql := "select f_id, f_executor_id, f_accessor_id, f_accessor_type from t_automation_executor_accessor where f_executor_id = ?"
 			trace.SetAttributes(newCtx, attribute.String(trace.DB_SQL, sql))
@@ -287,14 +204,14 @@ func (db *ExecutorDaoImpl) UpdateExecutor(ctx context.Context, executor *Executo
 	return nil
 }
 
-func (db *ExecutorDaoImpl) GetExecutors(ctx context.Context, userID string) ([]*ExecutorModel, error) {
+func (db *ExecutorDaoImpl) GetExecutors(ctx context.Context, userID string) ([]*rds.ExecutorModel, error) {
 	var err error
 	newCtx, span := trace.StartInternalSpan(ctx)
 	defer func() { trace.TelemetrySpanEnd(span, err) }()
 	log := traceLog.WithContext(newCtx)
-	trace.SetAttributes(newCtx, attribute.String(trace.TABLE_NAME, EXECUTOR_TABLENAME))
+	trace.SetAttributes(newCtx, attribute.String(trace.TABLE_NAME, rds.EXECUTOR_TABLENAME))
 
-	var executors = make([]*ExecutorModel, 0)
+	var executors = make([]*rds.ExecutorModel, 0)
 
 	sql := "select" +
 		" f_id, f_name, f_description, f_creator_id, f_status, f_created_at, f_updated_at" +
@@ -313,17 +230,17 @@ func (db *ExecutorDaoImpl) GetExecutors(ctx context.Context, userID string) ([]*
 	return executors, nil
 }
 
-func (db *ExecutorDaoImpl) GetExecutor(ctx context.Context, id uint64) (*ExecutorModel, error) {
+func (db *ExecutorDaoImpl) GetExecutor(ctx context.Context, id uint64) (*rds.ExecutorModel, error) {
 	var err error
 	newCtx, span := trace.StartInternalSpan(ctx)
 	defer func() { trace.TelemetrySpanEnd(span, err) }()
 	log := traceLog.WithContext(newCtx)
 
-	trace.SetAttributes(newCtx, attribute.String(trace.TABLE_NAME, EXECUTOR_TABLENAME))
+	trace.SetAttributes(newCtx, attribute.String(trace.TABLE_NAME, rds.EXECUTOR_TABLENAME))
 	sql := "select f_id, f_name, f_description, f_creator_id, f_status, f_created_at, f_updated_at from t_automation_executor where f_id = ?"
 	trace.SetAttributes(newCtx, attribute.String(trace.DB_SQL, sql))
 
-	var executors = make([]*ExecutorModel, 0)
+	var executors = make([]*rds.ExecutorModel, 0)
 	err = db.inner.Raw(sql, id).Scan(&executors).Error
 	if err != nil {
 		log.Warnf("[ExecutorDaoImpl.GetExecutor] get executor failed: %s", err.Error())
@@ -337,17 +254,17 @@ func (db *ExecutorDaoImpl) GetExecutor(ctx context.Context, id uint64) (*Executo
 	return nil, nil
 }
 
-func (db *ExecutorDaoImpl) GetExecutorAccessors(ctx context.Context, executorID uint64) ([]*ExecutorAccessorModel, error) {
+func (db *ExecutorDaoImpl) GetExecutorAccessors(ctx context.Context, executorID uint64) ([]*rds.ExecutorAccessorModel, error) {
 	var err error
 	newCtx, span := trace.StartInternalSpan(ctx)
 	defer func() { trace.TelemetrySpanEnd(span, err) }()
 	log := traceLog.WithContext(newCtx)
 
-	trace.SetAttributes(newCtx, attribute.String(trace.TABLE_NAME, EXECUTOR_ACCESSOR_TABLENAME))
+	trace.SetAttributes(newCtx, attribute.String(trace.TABLE_NAME, rds.EXECUTOR_ACCESSOR_TABLENAME))
 	sql := "select f_id, f_executor_id, f_accessor_id, f_accessor_type from t_automation_executor_accessor where f_executor_id = ?"
 	trace.SetAttributes(newCtx, attribute.String(trace.DB_SQL, sql))
 
-	var accessors = make([]*ExecutorAccessorModel, 0)
+	var accessors = make([]*rds.ExecutorAccessorModel, 0)
 	err = db.inner.Raw(sql, executorID).Scan(&accessors).Error
 	if err != nil {
 		log.Warnf("[ExecutorDaoImpl.GetExecutorAccessors] get executor accessors failed: %s", err.Error())
@@ -356,17 +273,17 @@ func (db *ExecutorDaoImpl) GetExecutorAccessors(ctx context.Context, executorID 
 	return accessors, nil
 }
 
-func (db *ExecutorDaoImpl) GetExecutorActions(ctx context.Context, executorID uint64) ([]*ExecutorActionModel, error) {
+func (db *ExecutorDaoImpl) GetExecutorActions(ctx context.Context, executorID uint64) ([]*rds.ExecutorActionModel, error) {
 	var err error
 	newCtx, span := trace.StartInternalSpan(ctx)
 	defer func() { trace.TelemetrySpanEnd(span, err) }()
 	log := traceLog.WithContext(newCtx)
 
-	trace.SetAttributes(newCtx, attribute.String(trace.TABLE_NAME, EXECUTOR_ACTION_TABLENAME))
+	trace.SetAttributes(newCtx, attribute.String(trace.TABLE_NAME, rds.EXECUTOR_ACTION_TABLENAME))
 	sql := "select f_id, f_executor_id, f_operator, f_name, f_description, f_group, f_type, f_inputs, f_outputs, f_config, f_created_at, f_updated_at from t_automation_executor_action where f_executor_id = ?"
 	trace.SetAttributes(newCtx, attribute.String(trace.DB_SQL, sql))
 
-	var actions = make([]*ExecutorActionModel, 0)
+	var actions = make([]*rds.ExecutorActionModel, 0)
 	err = db.inner.Raw(sql, executorID).Scan(&actions).Error
 	if err != nil {
 		log.Warnf("[ExecutorDaoImpl.GetExecutorActions] get executor actions failed: %s", err.Error())
@@ -381,7 +298,7 @@ func (db *ExecutorDaoImpl) HasAccessor(ctx context.Context, executorID uint64, a
 	defer func() { trace.TelemetrySpanEnd(span, err) }()
 	log := traceLog.WithContext(newCtx)
 
-	trace.SetAttributes(newCtx, attribute.String(trace.TABLE_NAME, EXECUTOR_ACCESSOR_TABLENAME))
+	trace.SetAttributes(newCtx, attribute.String(trace.TABLE_NAME, rds.EXECUTOR_ACCESSOR_TABLENAME))
 
 	var count int64
 
@@ -415,7 +332,7 @@ func (db *ExecutorDaoImpl) DeleteExecutor(ctx context.Context, executorID uint64
 
 		var txErr error
 
-		trace.SetAttributes(newCtx, attribute.String(trace.TABLE_NAME, EXECUTOR_TABLENAME))
+		trace.SetAttributes(newCtx, attribute.String(trace.TABLE_NAME, rds.EXECUTOR_TABLENAME))
 		sql := "delete from t_automation_executor where f_id = ?"
 		trace.SetAttributes(newCtx, attribute.String(trace.DB_SQL, sql))
 		txErr = tx.Exec(sql, executorID).Error
@@ -425,7 +342,7 @@ func (db *ExecutorDaoImpl) DeleteExecutor(ctx context.Context, executorID uint64
 			return txErr
 		}
 
-		trace.SetAttributes(newCtx, attribute.String(trace.TABLE_NAME, EXECUTOR_ACTION_TABLENAME))
+		trace.SetAttributes(newCtx, attribute.String(trace.TABLE_NAME, rds.EXECUTOR_ACTION_TABLENAME))
 		sql = "delete from t_automation_executor_action where f_executor_id = ?"
 		trace.SetAttributes(newCtx, attribute.String(trace.DB_SQL, sql))
 		txErr = tx.Exec(sql, executorID).Error
@@ -435,7 +352,7 @@ func (db *ExecutorDaoImpl) DeleteExecutor(ctx context.Context, executorID uint64
 			return txErr
 		}
 
-		trace.SetAttributes(newCtx, attribute.String(trace.TABLE_NAME, EXECUTOR_ACCESSOR_TABLENAME))
+		trace.SetAttributes(newCtx, attribute.String(trace.TABLE_NAME, rds.EXECUTOR_ACCESSOR_TABLENAME))
 		sql = "delete from t_automation_executor_accessor where f_executor_id = ?"
 		trace.SetAttributes(newCtx, attribute.String(trace.DB_SQL, sql))
 		txErr = tx.Exec(sql, executorID).Error
@@ -451,14 +368,14 @@ func (db *ExecutorDaoImpl) DeleteExecutor(ctx context.Context, executorID uint64
 	return err
 }
 
-func (db *ExecutorDaoImpl) CreateExecutorAction(ctx context.Context, action *ExecutorActionModel) error {
+func (db *ExecutorDaoImpl) CreateExecutorAction(ctx context.Context, action *rds.ExecutorActionModel) error {
 	var err error
 	newCtx, span := trace.StartInternalSpan(ctx)
 	defer func() { trace.TelemetrySpanEnd(span, err) }()
 	log := traceLog.WithContext(newCtx)
 
 	err = db.inner.Transaction(func(tx *gorm.DB) error {
-		trace.SetAttributes(newCtx, attribute.String(trace.TABLE_NAME, EXECUTOR_ACTION_TABLENAME))
+		trace.SetAttributes(newCtx, attribute.String(trace.TABLE_NAME, rds.EXECUTOR_ACTION_TABLENAME))
 		sql := "insert into t_automation_executor_action (f_id, f_executor_id, f_operator, f_name, f_description, f_group, f_type, f_inputs, f_outputs, f_config, f_created_at, f_updated_at) values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
 		trace.SetAttributes(newCtx, attribute.String(trace.DB_SQL, sql))
 		result := tx.Exec(sql, action.ID, action.ExecutorID, action.Operator, action.Name, action.Description, action.Group,
@@ -469,7 +386,7 @@ func (db *ExecutorDaoImpl) CreateExecutorAction(ctx context.Context, action *Exe
 			return result.Error
 		}
 
-		trace.SetAttributes(newCtx, attribute.String(trace.TABLE_NAME, EXECUTOR_TABLENAME))
+		trace.SetAttributes(newCtx, attribute.String(trace.TABLE_NAME, rds.EXECUTOR_TABLENAME))
 		sql = "update t_automation_executor set f_updated_at = ? where f_id = ?"
 		trace.SetAttributes(newCtx, attribute.String(trace.DB_SQL, sql))
 		result = tx.Exec(sql, action.UpdatedAt, action.ExecutorID)
@@ -484,7 +401,7 @@ func (db *ExecutorDaoImpl) CreateExecutorAction(ctx context.Context, action *Exe
 	return err
 }
 
-func (db *ExecutorDaoImpl) UpdateExecutorAction(ctx context.Context, action *ExecutorActionModel) error {
+func (db *ExecutorDaoImpl) UpdateExecutorAction(ctx context.Context, action *rds.ExecutorActionModel) error {
 	var err error
 	newCtx, span := trace.StartInternalSpan(ctx)
 	defer func() { trace.TelemetrySpanEnd(span, err) }()
@@ -529,7 +446,7 @@ func (db *ExecutorDaoImpl) UpdateExecutorAction(ctx context.Context, action *Exe
 			fields = append(fields, "f_updated_at = ?")
 			args = append(args, action.UpdatedAt, action.ID, action.ExecutorID)
 
-			trace.SetAttributes(newCtx, attribute.String(trace.TABLE_NAME, EXECUTOR_TABLENAME))
+			trace.SetAttributes(newCtx, attribute.String(trace.TABLE_NAME, rds.EXECUTOR_ACTION_TABLENAME))
 			sql := fmt.Sprintf("update t_automation_executor_action set %s where f_id = ? and f_executor_id = ?", strings.Join(fields, ","))
 			trace.SetAttributes(newCtx, attribute.String(trace.DB_SQL, sql))
 
@@ -544,7 +461,7 @@ func (db *ExecutorDaoImpl) UpdateExecutorAction(ctx context.Context, action *Exe
 				return nil
 			}
 
-			trace.SetAttributes(newCtx, attribute.String(trace.TABLE_NAME, EXECUTOR_TABLENAME))
+			trace.SetAttributes(newCtx, attribute.String(trace.TABLE_NAME, rds.EXECUTOR_TABLENAME))
 			sql = "update t_automation_executor set f_updated_at = ? where f_id = ?"
 			trace.SetAttributes(newCtx, attribute.String(trace.DB_SQL, sql))
 			if result = tx.Exec(sql, action.UpdatedAt, action.ExecutorID); result.Error != nil {
@@ -559,14 +476,14 @@ func (db *ExecutorDaoImpl) UpdateExecutorAction(ctx context.Context, action *Exe
 	return err
 }
 
-func (db *ExecutorDaoImpl) DeleteExecutorAction(ctx context.Context, action *ExecutorActionModel) error {
+func (db *ExecutorDaoImpl) DeleteExecutorAction(ctx context.Context, action *rds.ExecutorActionModel) error {
 	var err error
 	newCtx, span := trace.StartInternalSpan(ctx)
 	defer func() { trace.TelemetrySpanEnd(span, err) }()
 	log := traceLog.WithContext(newCtx)
 
 	err = db.inner.Transaction(func(tx *gorm.DB) error {
-		trace.SetAttributes(newCtx, attribute.String(trace.TABLE_NAME, EXECUTOR_ACTION_TABLENAME))
+		trace.SetAttributes(newCtx, attribute.String(trace.TABLE_NAME, rds.EXECUTOR_ACTION_TABLENAME))
 		sql := "delete from t_automation_executor_action where f_id = ?"
 		trace.SetAttributes(newCtx, attribute.String(trace.DB_SQL, sql))
 		result := tx.Exec(sql, action.ID)
@@ -579,7 +496,7 @@ func (db *ExecutorDaoImpl) DeleteExecutorAction(ctx context.Context, action *Exe
 			return nil
 		}
 
-		trace.SetAttributes(newCtx, attribute.String(trace.TABLE_NAME, EXECUTOR_TABLENAME))
+		trace.SetAttributes(newCtx, attribute.String(trace.TABLE_NAME, rds.EXECUTOR_TABLENAME))
 		sql = "update t_automation_executor set f_updated_at = ? where f_id = ?"
 		trace.SetAttributes(newCtx, attribute.String(trace.DB_SQL, sql))
 		result = tx.Exec(sql, action.UpdatedAt, action.ExecutorID)
@@ -594,15 +511,15 @@ func (db *ExecutorDaoImpl) DeleteExecutorAction(ctx context.Context, action *Exe
 	return err
 }
 
-func (db *ExecutorDaoImpl) GetAccessableExecutors(ctx context.Context, userID string, accessorIDs []string) ([]*ExecutorModel, error) {
+func (db *ExecutorDaoImpl) GetAccessableExecutors(ctx context.Context, userID string, accessorIDs []string) ([]*rds.ExecutorModel, error) {
 	var err error
 	newCtx, span := trace.StartInternalSpan(ctx)
 	defer func() { trace.TelemetrySpanEnd(span, err) }()
 	log := traceLog.WithContext(newCtx)
 
-	trace.SetAttributes(newCtx, attribute.String(trace.TABLE_NAME, EXECUTOR_TABLENAME))
+	trace.SetAttributes(newCtx, attribute.String(trace.TABLE_NAME, rds.EXECUTOR_TABLENAME))
 
-	var results = make([]*ExecutorWithActionModel, 0)
+	var results = make([]*rds.ExecutorWithActionModel, 0)
 
 	sql := fmt.Sprintf(
 		"select"+
@@ -632,14 +549,14 @@ func (db *ExecutorDaoImpl) GetAccessableExecutors(ctx context.Context, userID st
 		return nil, err
 	}
 
-	var executors = make([]*ExecutorModel, 0)
+	var executors = make([]*rds.ExecutorModel, 0)
 
 	if len(results) > 0 {
-		var executorMap = make(map[uint64]*ExecutorModel, 0)
+		var executorMap = make(map[uint64]*rds.ExecutorModel, 0)
 		for _, item := range results {
 			executor, exist := executorMap[*item.ID]
 			if !exist {
-				executor = &ExecutorModel{
+				executor = &rds.ExecutorModel{
 					ID:          item.ID,
 					Name:        item.Name,
 					Description: item.Description,
@@ -653,7 +570,7 @@ func (db *ExecutorDaoImpl) GetAccessableExecutors(ctx context.Context, userID st
 			}
 
 			if item.ActionID != nil {
-				executor.Actions = append(executor.Actions, &ExecutorActionModel{
+				executor.Actions = append(executor.Actions, &rds.ExecutorActionModel{
 					ID:          item.ActionID,
 					ExecutorID:  item.ID,
 					Operator:    item.ActionOperator,
@@ -674,15 +591,15 @@ func (db *ExecutorDaoImpl) GetAccessableExecutors(ctx context.Context, userID st
 	return executors, nil
 }
 
-func (db *ExecutorDaoImpl) GetAccessableAction(ctx context.Context, actionID uint64, executorID uint64, userID string, accessorIDs []string) (*ExecutorActionModel, error) {
+func (db *ExecutorDaoImpl) GetAccessableAction(ctx context.Context, actionID uint64, executorID uint64, userID string, accessorIDs []string) (*rds.ExecutorActionModel, error) {
 	var err error
 	newCtx, span := trace.StartInternalSpan(ctx)
 	defer func() { trace.TelemetrySpanEnd(span, err) }()
 	log := traceLog.WithContext(newCtx)
 
-	trace.SetAttributes(newCtx, attribute.String(trace.TABLE_NAME, EXECUTOR_TABLENAME))
+	trace.SetAttributes(newCtx, attribute.String(trace.TABLE_NAME, rds.EXECUTOR_TABLENAME))
 
-	var results = make([]*ExecutorActionModel, 0)
+	var results = make([]*rds.ExecutorActionModel, 0)
 
 	sql := fmt.Sprintf(
 		"select"+
@@ -717,13 +634,13 @@ func (db *ExecutorDaoImpl) GetAccessableAction(ctx context.Context, actionID uin
 	return results[0], nil
 }
 
-func (db *ExecutorDaoImpl) CheckExecutor(ctx context.Context, executor *ExecutorModel) (bool, error) {
+func (db *ExecutorDaoImpl) CheckExecutor(ctx context.Context, executor *rds.ExecutorModel) (bool, error) {
 	var err error
 	newCtx, span := trace.StartInternalSpan(ctx)
 	defer func() { trace.TelemetrySpanEnd(span, err) }()
 	log := traceLog.WithContext(newCtx)
 
-	trace.SetAttributes(newCtx, attribute.String(trace.TABLE_NAME, EXECUTOR_TABLENAME))
+	trace.SetAttributes(newCtx, attribute.String(trace.TABLE_NAME, rds.EXECUTOR_TABLENAME))
 	sql := "select count(1) from t_automation_executor where f_creator_id = ? and f_name = ?"
 	args := []interface{}{executor.CreatorID, executor.Name}
 	if executor.ID != nil {
@@ -744,13 +661,13 @@ func (db *ExecutorDaoImpl) CheckExecutor(ctx context.Context, executor *Executor
 	return count == 0, nil
 }
 
-func (db *ExecutorDaoImpl) CheckExecutorAction(ctx context.Context, action *ExecutorActionModel) (bool, error) {
+func (db *ExecutorDaoImpl) CheckExecutorAction(ctx context.Context, action *rds.ExecutorActionModel) (bool, error) {
 	var err error
 	newCtx, span := trace.StartInternalSpan(ctx)
 	defer func() { trace.TelemetrySpanEnd(span, err) }()
 	log := traceLog.WithContext(newCtx)
 
-	trace.SetAttributes(newCtx, attribute.String(trace.TABLE_NAME, EXECUTOR_ACTION_TABLENAME))
+	trace.SetAttributes(newCtx, attribute.String(trace.TABLE_NAME, rds.EXECUTOR_ACTION_TABLENAME))
 
 	sql := "select count(1) from t_automation_executor_action where f_executor_id = ? and f_name = ?"
 	args := []interface{}{action.ExecutorID, action.Name}
@@ -773,18 +690,18 @@ func (db *ExecutorDaoImpl) CheckExecutorAction(ctx context.Context, action *Exec
 	return count == 0, nil
 }
 
-func (db *ExecutorDaoImpl) GetExecutorByName(ctx context.Context, userID string, name string) (executor *ExecutorModel, err error) {
+func (db *ExecutorDaoImpl) GetExecutorByName(ctx context.Context, userID string, name string) (executor *rds.ExecutorModel, err error) {
 
 	newCtx, span := trace.StartInternalSpan(ctx)
 	defer func() { trace.TelemetrySpanEnd(span, err) }()
 	log := traceLog.WithContext(newCtx)
 
-	trace.SetAttributes(newCtx, attribute.String(trace.TABLE_NAME, EXECUTOR_TABLENAME))
+	trace.SetAttributes(newCtx, attribute.String(trace.TABLE_NAME, rds.EXECUTOR_TABLENAME))
 	sql := "select * from t_automation_executor where f_creator_id = ? and f_name = ?"
 	args := []interface{}{userID, name}
 	trace.SetAttributes(newCtx, attribute.String(trace.DB_SQL, sql))
 
-	executor = &ExecutorModel{}
+	executor = &rds.ExecutorModel{}
 	err = db.inner.Raw(sql, args...).Scan(executor).Error
 
 	if err != nil {
@@ -796,5 +713,5 @@ func (db *ExecutorDaoImpl) GetExecutorByName(ctx context.Context, userID string,
 		return nil, nil
 	}
 
-	return
+	return executor, nil
 }

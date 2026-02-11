@@ -17,7 +17,7 @@ import (
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/libs/go/telemetry/trace"
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/pkg/entity"
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/pkg/mod"
-	"github.com/kweaver-ai/adp/autoflow/flow-automation/store/rds"
+	"github.com/kweaver-ai/adp/autoflow/flow-automation/pkg/rds"
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/utils"
 )
 
@@ -131,7 +131,7 @@ func NewExecutorHandler() ExecutorHandler {
 			Publish: mod.NewMQHandler().Publish,
 		}
 		executor = &ExecutorHandlerImpl{
-			executorDao:    rds.NewExecutor(),
+			executorDao:    rds.GetExecutorDao(),
 			userManagement: drivenadapters.NewUserManagement(),
 			executeMethods: em,
 			logger:         drivenadapters.NewLogger(),

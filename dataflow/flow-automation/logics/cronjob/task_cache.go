@@ -8,7 +8,7 @@ import (
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/drivenadapters"
 	traceLog "github.com/kweaver-ai/adp/autoflow/flow-automation/libs/go/telemetry/log"
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/libs/go/telemetry/trace"
-	"github.com/kweaver-ai/adp/autoflow/flow-automation/store/rds"
+	"github.com/kweaver-ai/adp/autoflow/flow-automation/pkg/rds"
 )
 
 type TaskCacheCronJob interface {
@@ -29,7 +29,7 @@ func NewTaskCacheCronJob() TaskCacheCronJob {
 	taskCacheCronJobOnce.Do(func() {
 		taskCacheCronJobIns = &taskCacheCronJob{
 			og:        drivenadapters.NewOssGateWay(),
-			taskCache: rds.NewTaskCache(),
+			taskCache: rds.GetTaskCache(),
 		}
 	})
 	return taskCacheCronJobIns

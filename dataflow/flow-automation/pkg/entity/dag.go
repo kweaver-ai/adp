@@ -20,11 +20,11 @@ import (
 	libstore "github.com/kweaver-ai/adp/autoflow/flow-automation/libs/go/store"
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/libs/go/telemetry/trace"
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/pkg/log"
+	"github.com/kweaver-ai/adp/autoflow/flow-automation/pkg/rds"
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/pkg/utils"
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/pkg/utils/value"
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/pkg/vm/opcode"
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/store"
-	"github.com/kweaver-ai/adp/autoflow/flow-automation/store/rds"
 	cutils "github.com/kweaver-ai/adp/autoflow/flow-automation/utils"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -927,7 +927,7 @@ func (dagIns *DagInstance) WriteTraceEvent(ctx context.Context, m map[string]any
 }
 
 func (dagIns *DagInstance) WriteEvents(ctx context.Context, events []*DagInstanceEvent) error {
-	eventRepo := rds.NewDagInstanceEventRepository()
+	eventRepo := rds.GetDagInstanceEventRepository()
 	rdsEvents := make([]*rds.DagInstanceEvent, 0, len(events))
 	for _, event := range events {
 		ev, err := ToRdsEvent(ctx, event)
@@ -951,7 +951,7 @@ func (dagIns *DagInstance) UploadEvents(ctx context.Context) error {
 
 	config := common.NewConfig()
 	og := drivenadapters.NewOssGateWay()
-	eventRepo := rds.NewDagInstanceEventRepository()
+	eventRepo := rds.GetDagInstanceEventRepository()
 
 	ossId, err := og.GetAvaildOSS(ctx)
 
@@ -1026,7 +1026,7 @@ func (dagIns *DagInstance) UploadEvents(ctx context.Context) error {
 
 func (dagIns *DagInstance) ListEvents(ctx context.Context, opts *rds.DagInstanceEventListOptions) ([]*DagInstanceEvent, error) {
 
-	eventRepo := rds.NewDagInstanceEventRepository()
+	eventRepo := rds.GetDagInstanceEventRepository()
 
 	if opts == nil {
 		opts = &rds.DagInstanceEventListOptions{
@@ -1453,7 +1453,7 @@ func (dagIns *DagInstance) SaveExtData(ctx context.Context) (err error) {
 				items = append(items, item.DagInstanceExtData)
 			}
 			go func() {
-				err := rds.NewDagInstanceExtDataDao().InsertMany(context.Background(), items)
+				err := rds.GetDagInstanceExtDataDao().InsertMany(context.Background(), items)
 				if err != nil {
 					for _, item := range extDataItems {
 						_ = item.Delete(context.Background())

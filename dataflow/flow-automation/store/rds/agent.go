@@ -7,37 +7,21 @@ import (
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/libs/go/db"
 	traceLog "github.com/kweaver-ai/adp/autoflow/flow-automation/libs/go/telemetry/log"
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/libs/go/telemetry/trace"
+	"github.com/kweaver-ai/adp/autoflow/flow-automation/pkg/rds"
 	"go.opentelemetry.io/otel/attribute"
 	"gorm.io/gorm"
 )
-
-const AGENT_TABLENAME = "t_automation_agent"
-
-type AgentModel struct {
-	ID      uint64 `gorm:"column:f_id;type:bigint unsigned;primary_key:not null" json:"-"`
-	Name    string `gorm:"column:f_name;type:varchar(128);not null;default:''" json:"name"`
-	AgentID string `gorm:"column:f_agent_id;type:varchar(64);not null;default:''" json:"agent_id"`
-	Version string `gorm:"column:f_version;type:varchar(32);not null;default:''" json:"version"`
-}
-
-type AgentDao interface {
-	GetAgents(ctx context.Context) (agents []*AgentModel, err error)
-	GetAgentByName(ctx context.Context, name string) (agent *AgentModel, err error)
-	DeleteAgentByName(ctx context.Context, name string) (err error)
-	CreateAgent(ctx context.Context, agent *AgentModel) (err error)
-	UpdateAgent(ctx context.Context, agent *AgentModel) (err error)
-}
 
 type AgentDaoImpl struct {
 	inner *gorm.DB
 }
 
 var (
-	agent     AgentDao
+	agent     rds.AgentDao
 	agentOnce sync.Once
 )
 
-func NewAgent() AgentDao {
+func NewAgent() rds.AgentDao {
 	agentOnce.Do(func() {
 		agent = &AgentDaoImpl{
 			inner: db.NewDB(),
@@ -47,7 +31,7 @@ func NewAgent() AgentDao {
 	return agent
 }
 
-func (d *AgentDaoImpl) GetAgents(ctx context.Context) (agents []*AgentModel, err error) {
+func (d *AgentDaoImpl) GetAgents(ctx context.Context) (agents []*rds.AgentModel, err error) {
 	newCtx, span := trace.StartInternalSpan(ctx)
 	defer func() { trace.TelemetrySpanEnd(span, err) }()
 	log := traceLog.WithContext(newCtx)
@@ -60,16 +44,16 @@ func (d *AgentDaoImpl) GetAgents(ctx context.Context) (agents []*AgentModel, err
 	return
 }
 
-func (d *AgentDaoImpl) GetAgentByName(ctx context.Context, name string) (agent *AgentModel, err error) {
+func (d *AgentDaoImpl) GetAgentByName(ctx context.Context, name string) (agent *rds.AgentModel, err error) {
 	newCtx, span := trace.StartInternalSpan(ctx)
 	defer func() { trace.TelemetrySpanEnd(span, err) }()
 	log := traceLog.WithContext(newCtx)
 
-	trace.SetAttributes(newCtx, attribute.String(trace.TABLE_NAME, AGENT_TABLENAME))
+	trace.SetAttributes(newCtx, attribute.String(trace.TABLE_NAME, rds.AGENT_TABLENAME))
 	sql := "select * from t_automation_agent where f_name = ?"
 	trace.SetAttributes(newCtx, attribute.String(trace.DB_SQL, sql))
 
-	agent = &AgentModel{}
+	agent = &rds.AgentModel{}
 	err = d.inner.Raw(sql, name).Scan(agent).Error
 
 	if err != nil {
@@ -85,7 +69,7 @@ func (d *AgentDaoImpl) DeleteAgentByName(ctx context.Context, name string) (err 
 	defer func() { trace.TelemetrySpanEnd(span, err) }()
 	log := traceLog.WithContext(newCtx)
 
-	trace.SetAttributes(newCtx, attribute.String(trace.TABLE_NAME, AGENT_TABLENAME))
+	trace.SetAttributes(newCtx, attribute.String(trace.TABLE_NAME, rds.AGENT_TABLENAME))
 	sql := "delete from t_automation_agent where f_name = ?"
 	trace.SetAttributes(newCtx, attribute.String(trace.DB_SQL, sql))
 
@@ -98,12 +82,12 @@ func (d *AgentDaoImpl) DeleteAgentByName(ctx context.Context, name string) (err 
 	return nil
 }
 
-func (d *AgentDaoImpl) CreateAgent(ctx context.Context, agent *AgentModel) (err error) {
+func (d *AgentDaoImpl) CreateAgent(ctx context.Context, agent *rds.AgentModel) (err error) {
 	newCtx, span := trace.StartInternalSpan(ctx)
 	defer func() { trace.TelemetrySpanEnd(span, err) }()
 	log := traceLog.WithContext(newCtx)
 
-	trace.SetAttributes(newCtx, attribute.String(trace.TABLE_NAME, AGENT_TABLENAME))
+	trace.SetAttributes(newCtx, attribute.String(trace.TABLE_NAME, rds.AGENT_TABLENAME))
 	sql := "insert into t_automation_agent (f_id, f_name, f_agent_id, f_version) values (?, ?, ?, ?)"
 	trace.SetAttributes(newCtx, attribute.String(trace.DB_SQL, sql))
 
@@ -116,12 +100,12 @@ func (d *AgentDaoImpl) CreateAgent(ctx context.Context, agent *AgentModel) (err 
 	return nil
 }
 
-func (d *AgentDaoImpl) UpdateAgent(ctx context.Context, agent *AgentModel) (err error) {
+func (d *AgentDaoImpl) UpdateAgent(ctx context.Context, agent *rds.AgentModel) (err error) {
 	newCtx, span := trace.StartInternalSpan(ctx)
 	defer func() { trace.TelemetrySpanEnd(span, err) }()
 	log := traceLog.WithContext(newCtx)
 
-	trace.SetAttributes(newCtx, attribute.String(trace.TABLE_NAME, AGENT_TABLENAME))
+	trace.SetAttributes(newCtx, attribute.String(trace.TABLE_NAME, rds.AGENT_TABLENAME))
 	sql := "update t_automation_agent set f_agent_id = ?, f_version = ? where f_name = ?"
 	trace.SetAttributes(newCtx, attribute.String(trace.DB_SQL, sql))
 

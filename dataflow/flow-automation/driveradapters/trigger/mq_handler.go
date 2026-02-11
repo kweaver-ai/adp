@@ -21,7 +21,7 @@ import (
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/pkg/actions"
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/pkg/entity"
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/pkg/mod"
-	"github.com/kweaver-ai/adp/autoflow/flow-automation/store/rds"
+	"github.com/kweaver-ai/adp/autoflow/flow-automation/pkg/rds"
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/utils"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -71,7 +71,7 @@ func NewMQHandler() MQHandler {
 			inbox:     inbox.NewInbox(),
 			admin:     admin.NewAdmin(),
 			userMgnt:  drivenadapters.NewUserManagement(),
-			taskCache: rds.NewTaskCache(),
+			taskCache: rds.GetTaskCache(),
 		}
 	})
 	return mqh

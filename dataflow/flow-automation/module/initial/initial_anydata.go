@@ -13,7 +13,7 @@ import (
 
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/common"
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/drivenadapters"
-	"github.com/kweaver-ai/adp/autoflow/flow-automation/store/rds"
+	"github.com/kweaver-ai/adp/autoflow/flow-automation/pkg/rds"
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/utils"
 	"golang.org/x/mod/semver"
 )
@@ -84,7 +84,7 @@ func loadAgents(model string) ([]*AgentVersionInfo, error) {
 func initAgent(ctx context.Context, agentInfo *AgentVersionInfo) {
 	var err error
 	ad := drivenadapters.NewAnyData()
-	db := rds.NewAgent()
+	db := rds.GetAgentDao()
 	agent, dbErr := db.GetAgentByName(ctx, agentInfo.Name)
 	if dbErr != nil {
 		log.Printf("[initAnyData] Failed to GetAgentByName: %s, err: %s\n", agentInfo.Name, dbErr.Error())

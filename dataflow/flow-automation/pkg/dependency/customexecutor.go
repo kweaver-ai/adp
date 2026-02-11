@@ -5,7 +5,7 @@ import (
 	"sync"
 
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/drivenadapters"
-	"github.com/kweaver-ai/adp/autoflow/flow-automation/store/rds"
+	"github.com/kweaver-ai/adp/autoflow/flow-automation/pkg/rds"
 )
 
 type CustomExecutor interface {
@@ -25,7 +25,7 @@ var (
 func NewCustomExecutor() CustomExecutor {
 	customExecutorOnce.Do(func() {
 		customExecutor = &CustomExecutorImpl{
-			executorDao:    rds.NewExecutor(),
+			executorDao:    rds.GetExecutorDao(),
 			userManagement: drivenadapters.NewUserManagement(),
 		}
 	})
