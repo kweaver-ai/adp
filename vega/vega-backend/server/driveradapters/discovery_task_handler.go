@@ -27,7 +27,15 @@ func (r *restHandler) GetDiscoveryTask(c *gin.Context) {
 		"GetDiscoveryTask", trace.WithSpanKind(trace.SpanKindServer))
 	defer span.End()
 
-	accountInfo := r.generateAccountInfo(c)
+	// 校验token
+	visitor, err := r.verifyOAuth(ctx, c)
+	if err != nil {
+		return
+	}
+	accountInfo := interfaces.AccountInfo{
+		ID:   visitor.ID,
+		Type: string(visitor.Type),
+	}
 	ctx = context.WithValue(ctx, interfaces.ACCOUNT_INFO_KEY, accountInfo)
 
 	o11y.AddHttpAttrs4API(span, o11y.GetAttrsByGinCtx(c))
@@ -36,14 +44,14 @@ func (r *restHandler) GetDiscoveryTask(c *gin.Context) {
 	// Get task
 	task, err := r.dts.GetByID(ctx, taskID)
 	if err != nil {
-		httpErr := rest.NewHTTPError(ctx, http.StatusInternalServerError, oerrors.VegaManager_Catalog_InternalError).
+		httpErr := rest.NewHTTPError(ctx, http.StatusInternalServerError, oerrors.VegaBackend_Catalog_InternalError).
 			WithErrorDetails(err.Error())
 		o11y.AddHttpAttrs4HttpError(span, httpErr)
 		rest.ReplyError(c, httpErr)
 		return
 	}
 	if task == nil {
-		httpErr := rest.NewHTTPError(ctx, http.StatusNotFound, oerrors.VegaManager_Task_NotFound)
+		httpErr := rest.NewHTTPError(ctx, http.StatusNotFound, oerrors.VegaBackend_Task_NotFound)
 		o11y.AddHttpAttrs4HttpError(span, httpErr)
 		rest.ReplyError(c, httpErr)
 		return
@@ -60,7 +68,15 @@ func (r *restHandler) ListDiscoveryTasks(c *gin.Context) {
 		"ListDiscoveryTasks", trace.WithSpanKind(trace.SpanKindServer))
 	defer span.End()
 
-	accountInfo := r.generateAccountInfo(c)
+	// 校验token
+	visitor, err := r.verifyOAuth(ctx, c)
+	if err != nil {
+		return
+	}
+	accountInfo := interfaces.AccountInfo{
+		ID:   visitor.ID,
+		Type: string(visitor.Type),
+	}
 	ctx = context.WithValue(ctx, interfaces.ACCOUNT_INFO_KEY, accountInfo)
 
 	o11y.AddHttpAttrs4API(span, o11y.GetAttrsByGinCtx(c))
@@ -76,7 +92,7 @@ func (r *restHandler) ListDiscoveryTasks(c *gin.Context) {
 		return
 	}
 	if catalog == nil {
-		httpErr := rest.NewHTTPError(ctx, http.StatusNotFound, oerrors.VegaManager_Catalog_NotFound)
+		httpErr := rest.NewHTTPError(ctx, http.StatusNotFound, oerrors.VegaBackend_Catalog_NotFound)
 		o11y.AddHttpAttrs4HttpError(span, httpErr)
 		rest.ReplyError(c, httpErr)
 		return
@@ -88,7 +104,7 @@ func (r *restHandler) ListDiscoveryTasks(c *gin.Context) {
 		Status:      c.Query("status"),
 		TriggerType: c.Query("trigger_type"),
 	}
-	if err := c.ShouldBindQuery(&params.PaginationParams); err == nil {
+	if err := c.ShouldBindQuery(&params.PaginationQueryParams); err == nil {
 		if params.Limit == 0 {
 			params.Limit = 10
 		}
@@ -97,7 +113,7 @@ func (r *restHandler) ListDiscoveryTasks(c *gin.Context) {
 	// List tasks
 	tasks, total, err := r.dts.List(ctx, params)
 	if err != nil {
-		httpErr := rest.NewHTTPError(ctx, http.StatusInternalServerError, oerrors.VegaManager_Catalog_InternalError).
+		httpErr := rest.NewHTTPError(ctx, http.StatusInternalServerError, oerrors.VegaBackend_Catalog_InternalError).
 			WithErrorDetails(err.Error())
 		o11y.AddHttpAttrs4HttpError(span, httpErr)
 		rest.ReplyError(c, httpErr)

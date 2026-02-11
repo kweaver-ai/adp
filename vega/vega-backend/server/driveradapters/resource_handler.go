@@ -14,9 +14,11 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/kweaver-ai/TelemetrySDK-Go/exporter/v2/ar_trace"
+	"github.com/kweaver-ai/kweaver-go-lib/audit"
 	"github.com/kweaver-ai/kweaver-go-lib/logger"
 	o11y "github.com/kweaver-ai/kweaver-go-lib/observability"
 	"github.com/kweaver-ai/kweaver-go-lib/rest"
+	"go.opentelemetry.io/otel/codes"
 	"go.opentelemetry.io/otel/trace"
 
 	oerrors "vega-backend/errors"
@@ -29,20 +31,50 @@ func (r *restHandler) ListResources(c *gin.Context) {
 		"ListResources", trace.WithSpanKind(trace.SpanKindServer))
 	defer span.End()
 
-	accountInfo := r.generateAccountInfo(c)
+	// 校验token
+	visitor, err := r.verifyOAuth(ctx, c)
+	if err != nil {
+		return
+	}
+	accountInfo := interfaces.AccountInfo{
+		ID:   visitor.ID,
+		Type: string(visitor.Type),
+	}
 	ctx = context.WithValue(ctx, interfaces.ACCOUNT_INFO_KEY, accountInfo)
 
 	o11y.AddHttpAttrs4API(span, o11y.GetAttrsByGinCtx(c))
 
+	catalogID := c.Query("catalog_id")
+	category := c.Query("category")
+	status := c.Query("status")
+	database := c.Query("database")
+	offset := c.DefaultQuery("offset", interfaces.DEFAULT_OFFSET)
+	limit := c.DefaultQuery("limit", interfaces.DEFAULT_LIMIT)
+	sort := c.DefaultQuery("sort", "update_time")
+	direction := c.DefaultQuery("direction", interfaces.DESC_DIRECTION)
+
+	// 校验分页查询参数
+	pageParam, err := validatePaginationQueryParams(ctx,
+		offset, limit, sort, direction, interfaces.CATALOG_SORT)
+	if err != nil {
+		httpErr := err.(*rest.HTTPError)
+
+		// 记录异常日志
+		o11y.Error(ctx, fmt.Sprintf("%s. %v", httpErr.BaseError.Description,
+			httpErr.BaseError.ErrorDetails))
+
+		// 设置 trace 的错误信息的 attributes
+		o11y.AddHttpAttrs4HttpError(span, httpErr)
+		rest.ReplyError(c, httpErr)
+		return
+	}
+
 	params := interfaces.ResourcesQueryParams{
-		PaginationParams: interfaces.PaginationParams{
-			Offset: getIntQuery(c, "offset", interfaces.DefaultOffset),
-			Limit:  getIntQuery(c, "limit", interfaces.DefaultLimit),
-		},
-		CatalogID: c.Query("catalog_id"),
-		Category:  c.Query("category"),
-		Status:    c.Query("status"),
-		Database:  c.Query("database"),
+		PaginationQueryParams: pageParam,
+		CatalogID:             catalogID,
+		Category:              category,
+		Status:                status,
+		Database:              database,
 	}
 
 	entries, total, err := r.rs.List(ctx, params)
@@ -69,7 +101,15 @@ func (r *restHandler) CreateResource(c *gin.Context) {
 		"CreateResource", trace.WithSpanKind(trace.SpanKindServer))
 	defer span.End()
 
-	accountInfo := r.generateAccountInfo(c)
+	// 校验token
+	visitor, err := r.verifyOAuth(ctx, c)
+	if err != nil {
+		return
+	}
+	accountInfo := interfaces.AccountInfo{
+		ID:   visitor.ID,
+		Type: string(visitor.Type),
+	}
 	ctx = context.WithValue(ctx, interfaces.ACCOUNT_INFO_KEY, accountInfo)
 
 	// 设置 trace 的相关 api 的属性
@@ -78,7 +118,7 @@ func (r *restHandler) CreateResource(c *gin.Context) {
 	var req interfaces.ResourceRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		httpErr := rest.NewHTTPError(ctx, http.StatusBadRequest,
-			oerrors.VegaManager_InvalidParameter_RequestBody).WithErrorDetails(err.Error())
+			oerrors.VegaBackend_InvalidParameter_RequestBody).WithErrorDetails(err.Error())
 		o11y.AddHttpAttrs4HttpError(span, httpErr)
 		rest.ReplyError(c, httpErr)
 		return
@@ -88,19 +128,20 @@ func (r *restHandler) CreateResource(c *gin.Context) {
 		httpErr := err.(*rest.HTTPError)
 		o11y.AddHttpAttrs4HttpError(span, httpErr)
 		rest.ReplyError(c, httpErr)
+		return
 	}
 
 	// Check if name exists
 	exists, err := r.rs.CheckExistByName(ctx, req.CatalogID, req.Name)
 	if err != nil {
 		httpErr := rest.NewHTTPError(ctx, http.StatusInternalServerError,
-			oerrors.VegaManager_Resource_InternalError).WithErrorDetails(err.Error())
+			oerrors.VegaBackend_Resource_InternalError).WithErrorDetails(err.Error())
 		o11y.AddHttpAttrs4HttpError(span, httpErr)
 		rest.ReplyError(c, httpErr)
 		return
 	}
 	if exists {
-		httpErr := rest.NewHTTPError(ctx, http.StatusConflict, oerrors.VegaManager_Resource_NameExists)
+		httpErr := rest.NewHTTPError(ctx, http.StatusConflict, oerrors.VegaBackend_Resource_NameExists)
 		o11y.AddHttpAttrs4HttpError(span, httpErr)
 		rest.ReplyError(c, httpErr)
 		return
@@ -113,6 +154,10 @@ func (r *restHandler) CreateResource(c *gin.Context) {
 		rest.ReplyError(c, httpErr)
 		return
 	}
+
+	// 成功创建记录审计日志
+	audit.NewInfoLog(audit.OPERATION, audit.CREATE, audit.TransforOperator(visitor),
+		interfaces.GenerateResourceAuditObject(id, req.Name), "")
 
 	result := map[string]any{"id": id}
 
@@ -127,7 +172,15 @@ func (r *restHandler) GetResources(c *gin.Context) {
 		"GetResources", trace.WithSpanKind(trace.SpanKindServer))
 	defer span.End()
 
-	accountInfo := r.generateAccountInfo(c)
+	// 校验token
+	visitor, err := r.verifyOAuth(ctx, c)
+	if err != nil {
+		return
+	}
+	accountInfo := interfaces.AccountInfo{
+		ID:   visitor.ID,
+		Type: string(visitor.Type),
+	}
 	ctx = context.WithValue(ctx, interfaces.ACCOUNT_INFO_KEY, accountInfo)
 
 	o11y.AddHttpAttrs4API(span, o11y.GetAttrsByGinCtx(c))
@@ -153,13 +206,14 @@ func (r *restHandler) GetResources(c *gin.Context) {
 			}
 			if !found {
 				httpErr := rest.NewHTTPError(ctx, http.StatusNotFound,
-					oerrors.VegaManager_Resource_NotFound).WithErrorDetails(fmt.Sprintf("id %s not found", id))
+					oerrors.VegaBackend_Resource_NotFound).WithErrorDetails(fmt.Sprintf("id %s not found", id))
 				o11y.AddHttpAttrs4HttpError(span, httpErr)
 				rest.ReplyError(c, httpErr)
 				return
 			}
 		}
 	}
+
 	result := map[string]any{"entries": resources}
 
 	logger.Debug("Handler GetResource Success")
@@ -173,7 +227,15 @@ func (r *restHandler) UpdateResource(c *gin.Context) {
 		"UpdateResource", trace.WithSpanKind(trace.SpanKindServer))
 	defer span.End()
 
-	accountInfo := r.generateAccountInfo(c)
+	// 校验token
+	visitor, err := r.verifyOAuth(ctx, c)
+	if err != nil {
+		return
+	}
+	accountInfo := interfaces.AccountInfo{
+		ID:   visitor.ID,
+		Type: string(visitor.Type),
+	}
 	ctx = context.WithValue(ctx, interfaces.ACCOUNT_INFO_KEY, accountInfo)
 
 	o11y.AddHttpAttrs4API(span, o11y.GetAttrsByGinCtx(c))
@@ -183,7 +245,7 @@ func (r *restHandler) UpdateResource(c *gin.Context) {
 	var req interfaces.ResourceRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		httpErr := rest.NewHTTPError(ctx, http.StatusBadRequest,
-			oerrors.VegaManager_InvalidParameter_RequestBody).WithErrorDetails(err.Error())
+			oerrors.VegaBackend_InvalidParameter_RequestBody).WithErrorDetails(err.Error())
 		o11y.AddHttpAttrs4HttpError(span, httpErr)
 		rest.ReplyError(c, httpErr)
 		return
@@ -193,6 +255,7 @@ func (r *restHandler) UpdateResource(c *gin.Context) {
 		httpErr := err.(*rest.HTTPError)
 		o11y.AddHttpAttrs4HttpError(span, httpErr)
 		rest.ReplyError(c, httpErr)
+		return
 	}
 
 	// Check if id exists
@@ -205,12 +268,33 @@ func (r *restHandler) UpdateResource(c *gin.Context) {
 	}
 	req.OriginResource = resource
 
+	// Apply updates
+	if req.Name != resource.Name {
+		exists, err := r.rs.CheckExistByName(ctx, req.CatalogID, req.Name)
+		if err != nil {
+			httpErr := err.(*rest.HTTPError)
+			o11y.AddHttpAttrs4HttpError(span, httpErr)
+			rest.ReplyError(c, httpErr)
+		}
+		if exists {
+			span.SetStatus(codes.Error, "Resource name exists")
+			httpErr := rest.NewHTTPError(ctx, http.StatusConflict, oerrors.VegaBackend_Resource_NameExists)
+			o11y.AddHttpAttrs4HttpError(span, httpErr)
+			rest.ReplyError(c, httpErr)
+			return
+		}
+		req.IfNameModify = true
+	}
+
 	if err := r.rs.Update(ctx, id, &req); err != nil {
 		httpErr := err.(*rest.HTTPError)
 		o11y.AddHttpAttrs4HttpError(span, httpErr)
 		rest.ReplyError(c, httpErr)
 		return
 	}
+
+	audit.NewInfoLog(audit.OPERATION, audit.UPDATE, audit.TransforOperator(visitor),
+		interfaces.GenerateResourceAuditObject(id, req.Name), "")
 
 	logger.Debug("Handler UpdateResource Success")
 	o11y.AddHttpAttrs4Ok(span, http.StatusNoContent)
@@ -223,7 +307,15 @@ func (r *restHandler) DeleteResources(c *gin.Context) {
 		"DeleteResources", trace.WithSpanKind(trace.SpanKindServer))
 	defer span.End()
 
-	accountInfo := r.generateAccountInfo(c)
+	// 校验token
+	visitor, err := r.verifyOAuth(ctx, c)
+	if err != nil {
+		return
+	}
+	accountInfo := interfaces.AccountInfo{
+		ID:   visitor.ID,
+		Type: string(visitor.Type),
+	}
 	ctx = context.WithValue(ctx, interfaces.ACCOUNT_INFO_KEY, accountInfo)
 
 	o11y.AddHttpAttrs4API(span, o11y.GetAttrsByGinCtx(c))
@@ -234,15 +326,14 @@ func (r *restHandler) DeleteResources(c *gin.Context) {
 	for _, id := range ids {
 		exists, err := r.rs.CheckExistByID(ctx, id)
 		if err != nil {
-			httpErr := rest.NewHTTPError(ctx, http.StatusInternalServerError,
-				oerrors.VegaManager_Resource_InternalError).WithErrorDetails(err.Error())
+			httpErr := err.(*rest.HTTPError)
 			o11y.AddHttpAttrs4HttpError(span, httpErr)
 			rest.ReplyError(c, httpErr)
 			return
 		}
 		if !exists {
 			httpErr := rest.NewHTTPError(ctx, http.StatusNotFound,
-				oerrors.VegaManager_Resource_NotFound).WithErrorDetails(fmt.Sprintf("id %s not found", id))
+				oerrors.VegaBackend_Resource_NotFound).WithErrorDetails(fmt.Sprintf("id %s not found", id))
 			o11y.AddHttpAttrs4HttpError(span, httpErr)
 			rest.ReplyError(c, httpErr)
 			return
@@ -256,6 +347,11 @@ func (r *restHandler) DeleteResources(c *gin.Context) {
 		return
 	}
 
+	for _, id := range ids {
+		audit.NewWarnLog(audit.OPERATION, audit.DELETE, audit.TransforOperator(visitor),
+			interfaces.GenerateResourceAuditObject(id, ""), audit.SUCCESS, "")
+	}
+
 	logger.Debug("Handler DeleteResource Success")
 	o11y.AddHttpAttrs4Ok(span, http.StatusNoContent)
 	rest.ReplyOK(c, http.StatusNoContent, nil)
@@ -267,7 +363,15 @@ func (r *restHandler) ListDatasetDocuments(c *gin.Context) {
 		"ListDatasetDocuments", trace.WithSpanKind(trace.SpanKindServer))
 	defer span.End()
 
-	accountInfo := r.generateAccountInfo(c)
+	// 校验token
+	visitor, err := r.verifyOAuth(ctx, c)
+	if err != nil {
+		return
+	}
+	accountInfo := interfaces.AccountInfo{
+		ID:   visitor.ID,
+		Type: string(visitor.Type),
+	}
 	ctx = context.WithValue(ctx, interfaces.ACCOUNT_INFO_KEY, accountInfo)
 
 	o11y.AddHttpAttrs4API(span, o11y.GetAttrsByGinCtx(c))
@@ -275,9 +379,9 @@ func (r *restHandler) ListDatasetDocuments(c *gin.Context) {
 	datasetID := c.Param("id")
 
 	// 解析请求体
-	var params interfaces.QueryParams
+	var params interfaces.DatasetQueryParams
 	if err := c.ShouldBindJSON(&params); err != nil {
-		httpErr := rest.NewHTTPError(ctx, http.StatusBadRequest, oerrors.VegaManager_InvalidParameter_RequestBody).
+		httpErr := rest.NewHTTPError(ctx, http.StatusBadRequest, oerrors.VegaBackend_InvalidParameter_RequestBody).
 			WithErrorDetails(err.Error())
 		o11y.AddHttpAttrs4HttpError(span, httpErr)
 		rest.ReplyError(c, httpErr)
@@ -292,7 +396,7 @@ func (r *restHandler) ListDatasetDocuments(c *gin.Context) {
 			rest.ReplyError(c, httpErr)
 		} else {
 			// 处理其他类型的错误
-			httpErr := rest.NewHTTPError(ctx, http.StatusInternalServerError, oerrors.VegaManager_InternalError_MarshalDataFailed).
+			httpErr := rest.NewHTTPError(ctx, http.StatusInternalServerError, oerrors.VegaBackend_InternalError_MarshalDataFailed).
 				WithErrorDetails(err.Error())
 			o11y.AddHttpAttrs4HttpError(span, httpErr)
 			rest.ReplyError(c, httpErr)
@@ -316,7 +420,15 @@ func (r *restHandler) CreateDatasetDocuments(c *gin.Context) {
 		"CreateDatasetDocuments", trace.WithSpanKind(trace.SpanKindServer))
 	defer span.End()
 
-	accountInfo := r.generateAccountInfo(c)
+	// 校验token
+	visitor, err := r.verifyOAuth(ctx, c)
+	if err != nil {
+		return
+	}
+	accountInfo := interfaces.AccountInfo{
+		ID:   visitor.ID,
+		Type: string(visitor.Type),
+	}
 	ctx = context.WithValue(ctx, interfaces.ACCOUNT_INFO_KEY, accountInfo)
 
 	o11y.AddHttpAttrs4API(span, o11y.GetAttrsByGinCtx(c))
@@ -326,7 +438,7 @@ func (r *restHandler) CreateDatasetDocuments(c *gin.Context) {
 	// 获取请求体
 	var documents []map[string]any
 	if err := c.ShouldBindJSON(&documents); err != nil {
-		httpErr := rest.NewHTTPError(ctx, http.StatusBadRequest, oerrors.VegaManager_InvalidParameter_RequestBody).
+		httpErr := rest.NewHTTPError(ctx, http.StatusBadRequest, oerrors.VegaBackend_InvalidParameter_RequestBody).
 			WithErrorDetails(err.Error())
 		o11y.AddHttpAttrs4HttpError(span, httpErr)
 		rest.ReplyError(c, httpErr)
@@ -355,7 +467,15 @@ func (r *restHandler) GetDatasetDocument(c *gin.Context) {
 		"GetDatasetDocument", trace.WithSpanKind(trace.SpanKindServer))
 	defer span.End()
 
-	accountInfo := r.generateAccountInfo(c)
+	// 校验token
+	visitor, err := r.verifyOAuth(ctx, c)
+	if err != nil {
+		return
+	}
+	accountInfo := interfaces.AccountInfo{
+		ID:   visitor.ID,
+		Type: string(visitor.Type),
+	}
 	ctx = context.WithValue(ctx, interfaces.ACCOUNT_INFO_KEY, accountInfo)
 
 	o11y.AddHttpAttrs4API(span, o11y.GetAttrsByGinCtx(c))
@@ -385,7 +505,15 @@ func (r *restHandler) UpdateDatasetDocument(c *gin.Context) {
 		"UpdateDatasetDocument", trace.WithSpanKind(trace.SpanKindServer))
 	defer span.End()
 
-	accountInfo := r.generateAccountInfo(c)
+	// 校验token
+	visitor, err := r.verifyOAuth(ctx, c)
+	if err != nil {
+		return
+	}
+	accountInfo := interfaces.AccountInfo{
+		ID:   visitor.ID,
+		Type: string(visitor.Type),
+	}
 	ctx = context.WithValue(ctx, interfaces.ACCOUNT_INFO_KEY, accountInfo)
 
 	o11y.AddHttpAttrs4API(span, o11y.GetAttrsByGinCtx(c))
@@ -396,7 +524,7 @@ func (r *restHandler) UpdateDatasetDocument(c *gin.Context) {
 	// 获取请求体
 	var document map[string]any
 	if err := c.ShouldBindJSON(&document); err != nil {
-		httpErr := rest.NewHTTPError(ctx, http.StatusBadRequest, oerrors.VegaManager_InvalidParameter_RequestBody).
+		httpErr := rest.NewHTTPError(ctx, http.StatusBadRequest, oerrors.VegaBackend_InvalidParameter_RequestBody).
 			WithErrorDetails(err.Error())
 		o11y.AddHttpAttrs4HttpError(span, httpErr)
 		rest.ReplyError(c, httpErr)
@@ -417,14 +545,21 @@ func (r *restHandler) UpdateDatasetDocument(c *gin.Context) {
 	rest.ReplyOK(c, http.StatusNoContent, nil)
 }
 
-
 // DeleteDatasetDocument handles DELETE /api/vega-backend/v1/resources/dataset/:id/:docid
 func (r *restHandler) DeleteDatasetDocument(c *gin.Context) {
 	ctx, span := ar_trace.Tracer.Start(rest.GetLanguageCtx(c),
 		"DeleteDatasetDocument", trace.WithSpanKind(trace.SpanKindServer))
 	defer span.End()
 
-	accountInfo := r.generateAccountInfo(c)
+	// 校验token
+	visitor, err := r.verifyOAuth(ctx, c)
+	if err != nil {
+		return
+	}
+	accountInfo := interfaces.AccountInfo{
+		ID:   visitor.ID,
+		Type: string(visitor.Type),
+	}
 	ctx = context.WithValue(ctx, interfaces.ACCOUNT_INFO_KEY, accountInfo)
 
 	o11y.AddHttpAttrs4API(span, o11y.GetAttrsByGinCtx(c))
@@ -444,5 +579,3 @@ func (r *restHandler) DeleteDatasetDocument(c *gin.Context) {
 	o11y.AddHttpAttrs4Ok(span, http.StatusNoContent)
 	rest.ReplyOK(c, http.StatusNoContent, nil)
 }
-
-

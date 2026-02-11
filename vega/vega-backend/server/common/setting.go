@@ -14,6 +14,7 @@ import (
 	"github.com/bytedance/sonic"
 	"github.com/fsnotify/fsnotify"
 	libdb "github.com/kweaver-ai/kweaver-go-lib/db"
+	"github.com/kweaver-ai/kweaver-go-lib/hydra"
 	"github.com/kweaver-ai/kweaver-go-lib/logger"
 	libmq "github.com/kweaver-ai/kweaver-go-lib/mq"
 	o11y "github.com/kweaver-ai/kweaver-go-lib/observability"
@@ -60,7 +61,11 @@ type AppSetting struct {
 	DBSetting         libdb.DBSetting
 	MQSetting         libmq.MQSetting
 	OpenSearchSetting rest.OpenSearchClientConfig
+	HydraAdminSetting hydra.HydraAdminSetting
 	RedisSetting      RedisSetting
+
+	PermissionUrl string
+	UserMgmtUrl   string
 }
 
 const (
@@ -72,6 +77,9 @@ const (
 	mqServiceName         string = "mq"
 	opensearchServiceName string = "opensearch"
 	redisServiceName      string = "redis"
+	permissionServiceName string = "authorization-private"
+	userMgmtServiceName   string = "user-management"
+	hydraAdminServiceName string = "hydra-admin"
 
 	DATA_BASE_NAME string = "adp"
 )
@@ -134,6 +142,12 @@ func loadSetting(vp *viper.Viper) {
 	SetOpenSearchSetting()
 
 	SetRedisSetting()
+
+	if GetAuthEnabled() {
+		SetHydraAdminSetting()
+		SetPermissionSetting()
+		SetUserMgmtSetting()
+	}
 
 	serverInfo := o11y.ServerInfo{
 		ServerName:    version.ServerName,
@@ -266,4 +280,61 @@ func loadCryptoKeys() error {
 	appSetting.CryptoSetting.PublicKey = string(publicKeyContent)
 
 	return nil
+}
+
+func SetPermissionSetting() {
+	if !GetAuthEnabled() {
+		logger.Info("ISF authentication disabled via AUTH_ENABLED env, skipping authorization configuration")
+		return
+	}
+	setting, ok := appSetting.DepServices[permissionServiceName]
+	if !ok {
+		logger.Fatalf("service %s not found in depServices", permissionServiceName)
+	}
+
+	protocol := setting["protocol"].(string)
+	host := setting["host"].(string)
+	port := setting["port"].(int)
+
+	appSetting.PermissionUrl = fmt.Sprintf("%s://%s:%d/api/authorization/v1", protocol, host, port)
+}
+
+func SetUserMgmtSetting() {
+	if !GetAuthEnabled() {
+		logger.Info("ISF authentication disabled via AUTH_ENABLED env, skipping user-management configuration")
+		return
+	}
+	setting, ok := appSetting.DepServices[userMgmtServiceName]
+	if !ok {
+		logger.Fatalf("service %s not found in depServices", userMgmtServiceName)
+	}
+
+	protocol := setting["protocol"].(string)
+	host := setting["host"].(string)
+	port := setting["port"].(int)
+
+	appSetting.UserMgmtUrl = fmt.Sprintf("%s://%s:%d", protocol, host, port)
+}
+
+// GetAuthEnabled 获取认证开关状态
+// 通过环境变量 AUTH_ENABLED 控制，默认 true（安全优先）
+func GetAuthEnabled() bool {
+	envVal := os.Getenv("AUTH_ENABLED")
+	return envVal != "false" && envVal != "0"
+}
+
+func SetHydraAdminSetting() {
+	if !GetAuthEnabled() {
+		logger.Info("ISF authentication disabled via AUTH_ENABLED env, skipping hydra-admin configuration")
+		return
+	}
+	setting, ok := appSetting.DepServices[hydraAdminServiceName]
+	if !ok {
+		logger.Fatalf("service %s not found in depServices", hydraAdminServiceName)
+	}
+	appSetting.HydraAdminSetting = hydra.HydraAdminSetting{
+		HydraAdminProcotol: setting["protocol"].(string),
+		HydraAdminHost:     setting["host"].(string),
+		HydraAdminPort:     setting["port"].(int),
+	}
 }

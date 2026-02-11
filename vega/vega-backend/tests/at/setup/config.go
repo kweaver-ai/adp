@@ -15,7 +15,7 @@ import (
 
 // TestConfig AT测试配置
 type TestConfig struct {
-	VegaManager      VegaManagerConfig `mapstructure:"vega_manager"`
+	VegaBackend      VegaBackendConfig `mapstructure:"vega_backend"`
 	TargetMySQL      MySQLConfig       `mapstructure:"target_mysql"`
 	TargetOpenSearch OpenSearchConfig  `mapstructure:"target_opensearch"`
 	Crypto           CryptoConfig      `mapstructure:"crypto"`
@@ -24,9 +24,9 @@ type TestConfig struct {
 	Cipher kwcrypto.Cipher `mapstructure:"-"`
 }
 
-// VegaManagerConfig VEGA Manager服务配置
-type VegaManagerConfig struct {
-	BaseURL string `mapstructure:"base_url"` // VEGA Manager HTTP服务地址
+// VegaBackendConfig VEGA Backend服务配置
+type VegaBackendConfig struct {
+	BaseURL string `mapstructure:"base_url"` // VEGA Backend HTTP服务地址
 }
 
 // MySQLConfig 测试目标MySQL配置
@@ -83,7 +83,7 @@ func LoadTestConfig() (*TestConfig, error) {
 	}
 
 	// 验证必填字段
-	if config.VegaManager.BaseURL == "" {
+	if config.VegaBackend.BaseURL == "" {
 		return nil, fmt.Errorf("配置错误: vega_manager.base_url 不能为空")
 	}
 	if config.TargetMySQL.Host == "" {

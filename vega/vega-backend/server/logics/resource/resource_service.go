@@ -22,9 +22,11 @@ import (
 
 	"vega-backend/common"
 	resourceAccess "vega-backend/drivenadapters/resource"
-	dataset "vega-backend/logics/dataset"
 	oerrors "vega-backend/errors"
 	"vega-backend/interfaces"
+	dataset "vega-backend/logics/dataset"
+	"vega-backend/logics/permission"
+	"vega-backend/logics/user_mgmt"
 )
 
 var (
@@ -34,8 +36,10 @@ var (
 
 type resourceService struct {
 	appSetting *common.AppSetting
-	ra         interfaces.ResourceAccess
 	ds         interfaces.DatasetService
+	ps         interfaces.PermissionService
+	ra         interfaces.ResourceAccess
+	ums        interfaces.UserMgmtService
 }
 
 // NewResourceService creates a new ResourceService.
@@ -43,8 +47,10 @@ func NewResourceService(appSetting *common.AppSetting) interfaces.ResourceServic
 	rServiceOnce.Do(func() {
 		rService = &resourceService{
 			appSetting: appSetting,
-			ra:         resourceAccess.NewResourceAccess(appSetting),
 			ds:         dataset.NewDatasetService(appSetting),
+			ps:         permission.NewPermissionService(appSetting),
+			ra:         resourceAccess.NewResourceAccess(appSetting),
+			ums:        user_mgmt.NewUserMgmtService(appSetting),
 		}
 	})
 	return rService
@@ -54,6 +60,15 @@ func NewResourceService(appSetting *common.AppSetting) interfaces.ResourceServic
 func (rs *resourceService) Create(ctx context.Context, req *interfaces.ResourceRequest) (string, error) {
 	ctx, span := ar_trace.Tracer.Start(ctx, "Create resource")
 	defer span.End()
+
+	// 判断userid是否有创建业务知识网络的权限（策略决策）
+	err := rs.ps.CheckPermission(ctx, interfaces.PermissionResource{
+		Type: interfaces.RESOURCE_TYPE_RESOURCE,
+		ID:   interfaces.RESOURCE_ID_ALL,
+	}, []string{interfaces.OPERATION_TYPE_CREATE})
+	if err != nil {
+		return "", err
+	}
 
 	// Get account info from context
 	accountInfo := interfaces.AccountInfo{}
@@ -79,11 +94,12 @@ func (rs *resourceService) Create(ctx context.Context, req *interfaces.ResourceR
 		UpdateTime:       now,
 	}
 
-	if err := rs.ra.Create(ctx, resource); err != nil {
+	err = rs.ra.Create(ctx, resource)
+	if err != nil {
 		logger.Errorf("Create resource failed: %v", err)
 		o11y.Error(ctx, fmt.Sprintf("Create resource failed: %v", err))
 		span.SetStatus(codes.Error, "Create resource failed")
-		return "", rest.NewHTTPError(ctx, http.StatusInternalServerError, oerrors.VegaManager_Resource_InternalError_CreateFailed).
+		return "", rest.NewHTTPError(ctx, http.StatusInternalServerError, oerrors.VegaBackend_Resource_InternalError_CreateFailed).
 			WithErrorDetails(err.Error())
 	}
 
@@ -94,6 +110,20 @@ func (rs *resourceService) Create(ctx context.Context, req *interfaces.ResourceR
 			logger.Errorf("Create dataset failed: %v", err)
 			// 数据集创建失败不影响资源创建，只记录错误
 		}
+	}
+
+	// 注册资源
+	err = rs.ps.CreateResources(ctx, []interfaces.PermissionResource{{
+		ID:   resource.ID,
+		Type: interfaces.RESOURCE_TYPE_RESOURCE,
+		Name: resource.Name,
+	}}, interfaces.COMMON_OPERATIONS)
+	if err != nil {
+		logger.Errorf("CreateResources error: %s", err.Error())
+		span.SetStatus(codes.Error, "创建资源失败")
+		return "", rest.NewHTTPError(ctx, http.StatusInternalServerError,
+			oerrors.VegaBackend_Catalog_InternalError_CreateResourcesFailed).
+			WithErrorDetails(err.Error())
 	}
 
 	span.SetStatus(codes.Ok, "")
@@ -108,12 +138,36 @@ func (rs *resourceService) GetByID(ctx context.Context, id string) (*interfaces.
 	resource, err := rs.ra.GetByID(ctx, id)
 	if err != nil {
 		span.SetStatus(codes.Error, "Get resource failed")
-		return nil, rest.NewHTTPError(ctx, http.StatusInternalServerError, oerrors.VegaManager_Resource_InternalError_GetFailed).
+		return nil, rest.NewHTTPError(ctx, http.StatusInternalServerError, oerrors.VegaBackend_Resource_InternalError_GetFailed).
 			WithErrorDetails(err.Error())
 	}
 	if resource == nil {
 		span.SetStatus(codes.Error, "Resource not found")
-		return nil, rest.NewHTTPError(ctx, http.StatusNotFound, oerrors.VegaManager_Resource_NotFound)
+		return nil, rest.NewHTTPError(ctx, http.StatusNotFound, oerrors.VegaBackend_Resource_NotFound)
+	}
+
+	// 根据权限过滤有查看权限的对象，过滤后的数组的总长度就是总数，无需再请求总数
+	matchResoucesMap, err := rs.ps.FilterResources(ctx, interfaces.RESOURCE_TYPE_RESOURCE, []string{resource.ID},
+		[]string{interfaces.OPERATION_TYPE_VIEW_DETAIL}, true)
+	if err != nil {
+		span.SetStatus(codes.Error, "Filter resources error")
+		return nil, err
+	}
+
+	if resrc, exist := matchResoucesMap[resource.ID]; exist {
+		resource.Operations = resrc.Operations // 用户当前有权限的操作
+	} else {
+		return nil, rest.NewHTTPError(ctx, http.StatusForbidden, rest.PublicError_Forbidden).
+			WithErrorDetails(fmt.Sprintf("Access denied: insufficient permissions for[%v]", interfaces.OPERATION_TYPE_VIEW_DETAIL))
+	}
+
+	accountInfos := []*interfaces.AccountInfo{&resource.Creator, &resource.Updater}
+	err = rs.ums.GetAccountNames(ctx, accountInfos)
+	if err != nil {
+		span.SetStatus(codes.Error, "GetAccountNames error")
+
+		return nil, rest.NewHTTPError(ctx, http.StatusInternalServerError,
+			oerrors.VegaBackend_Catalog_InternalError_GetAccountNamesFailed).WithErrorDetails(err.Error())
 	}
 
 	span.SetStatus(codes.Ok, "")
@@ -128,7 +182,7 @@ func (rs *resourceService) GetByIDs(ctx context.Context, ids []string) ([]*inter
 	resources, err := rs.ra.GetByIDs(ctx, ids)
 	if err != nil {
 		span.SetStatus(codes.Error, "Get resources failed")
-		return nil, rest.NewHTTPError(ctx, http.StatusInternalServerError, oerrors.VegaManager_Resource_InternalError_GetFailed).
+		return nil, rest.NewHTTPError(ctx, http.StatusInternalServerError, oerrors.VegaBackend_Resource_InternalError_GetFailed).
 			WithErrorDetails(err.Error())
 	}
 
@@ -144,7 +198,7 @@ func (rs *resourceService) GetByCatalogID(ctx context.Context, catalogID string)
 	resources, err := rs.ra.GetByCatalogID(ctx, catalogID)
 	if err != nil {
 		span.SetStatus(codes.Error, "Get resources failed")
-		return nil, rest.NewHTTPError(ctx, http.StatusInternalServerError, oerrors.VegaManager_Resource_InternalError_GetFailed).
+		return nil, rest.NewHTTPError(ctx, http.StatusInternalServerError, oerrors.VegaBackend_Resource_InternalError_GetFailed).
 			WithErrorDetails(err.Error())
 	}
 
@@ -160,12 +214,12 @@ func (rs *resourceService) GetByName(ctx context.Context, catalogID string, name
 	resource, err := rs.ra.GetByName(ctx, catalogID, name)
 	if err != nil {
 		span.SetStatus(codes.Error, "Get resource failed")
-		return nil, rest.NewHTTPError(ctx, http.StatusInternalServerError, oerrors.VegaManager_Resource_InternalError_GetFailed).
+		return nil, rest.NewHTTPError(ctx, http.StatusInternalServerError, oerrors.VegaBackend_Resource_InternalError_GetFailed).
 			WithErrorDetails(err.Error())
 	}
 	if resource == nil {
 		span.SetStatus(codes.Error, "Resource not found")
-		return nil, rest.NewHTTPError(ctx, http.StatusNotFound, oerrors.VegaManager_Resource_NotFound)
+		return nil, rest.NewHTTPError(ctx, http.StatusNotFound, oerrors.VegaBackend_Resource_NotFound)
 	}
 
 	span.SetStatus(codes.Ok, "")
@@ -177,10 +231,64 @@ func (rs *resourceService) List(ctx context.Context, params interfaces.Resources
 	ctx, span := ar_trace.Tracer.Start(ctx, "List resources")
 	defer span.End()
 
-	resources, total, err := rs.ra.List(ctx, params)
+	resourcesArr, total, err := rs.ra.List(ctx, params)
 	if err != nil {
 		span.SetStatus(codes.Error, "List resources failed")
-		return []*interfaces.Resource{}, 0, rest.NewHTTPError(ctx, http.StatusInternalServerError, oerrors.VegaManager_Resource_InternalError_GetFailed).
+		return []*interfaces.Resource{}, 0, rest.NewHTTPError(ctx, http.StatusInternalServerError, oerrors.VegaBackend_Resource_InternalError_GetFailed).
+			WithErrorDetails(err.Error())
+	}
+
+	// 处理资源id
+	ids := make([]string, 0)
+	for _, m := range resourcesArr {
+		ids = append(ids, m.ID)
+	}
+
+	// 根据权限过滤有查看权限的对象，过滤后的数组的总长度就是总数，无需再请求总数
+	matchResoucesMap, err := rs.ps.FilterResources(ctx, interfaces.RESOURCE_TYPE_RESOURCE, ids,
+		[]string{interfaces.OPERATION_TYPE_VIEW_DETAIL}, true)
+	if err != nil {
+		span.SetStatus(codes.Error, "Filter resources error")
+		return []*interfaces.Resource{}, 0, err
+	}
+
+	resources := make([]*interfaces.Resource, 0)
+	for _, c := range resourcesArr {
+		// 只留下有权限的模型
+		if resrc, exist := matchResoucesMap[c.ID]; exist {
+			c.Operations = resrc.Operations // 用户当前有权限的操作
+			resources = append(resources, c)
+		}
+	}
+	total = int64(len(resources))
+
+	// limit = -1,则返回所有
+	if params.Limit != -1 {
+		// 分页
+		// 检查起始位置是否越界
+		if params.Offset < 0 || params.Offset >= len(resources) {
+			span.SetStatus(codes.Ok, "")
+			return []*interfaces.Resource{}, total, nil
+		}
+		// 计算结束位置
+		end := params.Offset + params.Limit
+		if end > len(resources) {
+			end = len(resources)
+		}
+
+		resources = resources[params.Offset:end]
+	}
+
+	accountInfos := make([]*interfaces.AccountInfo, 0, len(resources)*2)
+	for _, c := range resources {
+		accountInfos = append(accountInfos, &c.Creator, &c.Updater)
+	}
+
+	err = rs.ums.GetAccountNames(ctx, accountInfos)
+	if err != nil {
+		span.SetStatus(codes.Error, "GetAccountNames error")
+
+		return []*interfaces.Resource{}, 0, rest.NewHTTPError(ctx, http.StatusInternalServerError, oerrors.VegaBackend_Resource_InternalError_GetFailed).
 			WithErrorDetails(err.Error())
 	}
 
@@ -193,29 +301,23 @@ func (rs *resourceService) Update(ctx context.Context, id string, req *interface
 	ctx, span := ar_trace.Tracer.Start(ctx, "Update resource")
 	defer span.End()
 
-	resource, err := rs.ra.GetByID(ctx, id)
-	if err != nil {
-		span.SetStatus(codes.Error, "Get resource failed")
-		return rest.NewHTTPError(ctx, http.StatusInternalServerError, oerrors.VegaManager_Resource_InternalError_GetFailed).
-			WithErrorDetails(err.Error())
-	}
+	resource := req.OriginResource
 	if resource == nil {
 		span.SetStatus(codes.Error, "Resource not found")
-		return rest.NewHTTPError(ctx, http.StatusNotFound, oerrors.VegaManager_Resource_NotFound)
+		return rest.NewHTTPError(ctx, http.StatusNotFound, oerrors.VegaBackend_Resource_NotFound)
+	}
+
+	// 判断userid是否有修改权限
+	err := rs.ps.CheckPermission(ctx, interfaces.PermissionResource{
+		Type: interfaces.RESOURCE_TYPE_RESOURCE,
+		ID:   resource.ID,
+	}, []string{interfaces.OPERATION_TYPE_MODIFY})
+	if err != nil {
+		return err
 	}
 
 	// Apply updates
-	if req.Name != resource.Name {
-		exists, err := rs.CheckExistByName(ctx, resource.CatalogID, req.Name)
-		if err != nil {
-			return err
-		}
-		if exists {
-			span.SetStatus(codes.Error, "Resource name exists")
-			return rest.NewHTTPError(ctx, http.StatusConflict, oerrors.VegaManager_Resource_NameExists)
-		}
-		resource.Name = req.Name
-	}
+	resource.Name = req.Name
 	resource.Tags = req.Tags
 	resource.Description = req.Description
 
@@ -231,8 +333,20 @@ func (rs *resourceService) Update(ctx context.Context, id string, req *interface
 
 	if err := rs.ra.Update(ctx, resource); err != nil {
 		span.SetStatus(codes.Error, "Update resource failed")
-		return rest.NewHTTPError(ctx, http.StatusInternalServerError, oerrors.VegaManager_Resource_InternalError_UpdateFailed).
+		return rest.NewHTTPError(ctx, http.StatusInternalServerError, oerrors.VegaBackend_Resource_InternalError_UpdateFailed).
 			WithErrorDetails(err.Error())
+	}
+
+	// 请求更新资源名称的接口，更新资源的名称
+	if req.IfNameModify {
+		err = rs.ps.UpdateResource(ctx, interfaces.PermissionResource{
+			ID:   resource.ID,
+			Type: interfaces.RESOURCE_TYPE_RESOURCE,
+			Name: resource.Name,
+		})
+		if err != nil {
+			return err
+		}
 	}
 
 	span.SetStatus(codes.Ok, "")
@@ -246,7 +360,7 @@ func (rs *resourceService) UpdateStatus(ctx context.Context, id string, status s
 
 	if err := rs.ra.UpdateStatus(ctx, id, status, statusMessage); err != nil {
 		span.SetStatus(codes.Error, "Update resource status failed")
-		return rest.NewHTTPError(ctx, http.StatusInternalServerError, oerrors.VegaManager_Resource_InternalError_UpdateFailed).
+		return rest.NewHTTPError(ctx, http.StatusInternalServerError, oerrors.VegaBackend_Resource_InternalError_UpdateFailed).
 			WithErrorDetails(err.Error())
 	}
 
@@ -264,11 +378,30 @@ func (rs *resourceService) DeleteByIDs(ctx context.Context, ids []string) error 
 		return nil
 	}
 
+	// 判断userid是否有删除权限
+	matchResoucesMap, err := rs.ps.FilterResources(ctx, interfaces.RESOURCE_TYPE_RESOURCE, ids,
+		[]string{interfaces.OPERATION_TYPE_DELETE}, true)
+	if err != nil {
+		span.SetStatus(codes.Error, "Filter resources error")
+		return err
+	}
+
+	// 检查是否有删除权限
+	if len(matchResoucesMap) != len(ids) {
+		// 请求的资源id可以重复，未去重，资源过滤出来的资源id是去重过的，所以单纯判断数量不准确
+		for _, id := range ids {
+			if _, exist := matchResoucesMap[id]; !exist {
+				return rest.NewHTTPError(ctx, http.StatusForbidden, rest.PublicError_Forbidden).
+					WithErrorDetails("Access denied: insufficient permissions for resource's delete operation.")
+			}
+		}
+	}
+
 	// 先获取要删除的资源信息，以便对不同的资源进行不同的处理
 	resources, err := rs.ra.GetByIDs(ctx, ids)
 	if err != nil {
 		span.SetStatus(codes.Error, "Get resources failed")
-		return rest.NewHTTPError(ctx, http.StatusInternalServerError, oerrors.VegaManager_Resource_InternalError_GetFailed).
+		return rest.NewHTTPError(ctx, http.StatusInternalServerError, oerrors.VegaBackend_Resource_InternalError_GetFailed).
 			WithErrorDetails(err.Error())
 	}
 
@@ -284,8 +417,14 @@ func (rs *resourceService) DeleteByIDs(ctx context.Context, ids []string) error 
 
 	if err := rs.ra.DeleteByIDs(ctx, ids); err != nil {
 		span.SetStatus(codes.Error, "Delete resources failed")
-		return rest.NewHTTPError(ctx, http.StatusInternalServerError, oerrors.VegaManager_Resource_InternalError_DeleteFailed).
+		return rest.NewHTTPError(ctx, http.StatusInternalServerError, oerrors.VegaBackend_Resource_InternalError_DeleteFailed).
 			WithErrorDetails(err.Error())
+	}
+
+	//  清除资源策略
+	err = rs.ps.DeleteResources(ctx, interfaces.RESOURCE_TYPE_RESOURCE, ids)
+	if err != nil {
+		return err
 	}
 
 	span.SetStatus(codes.Ok, "")
@@ -300,7 +439,7 @@ func (rs *resourceService) CheckExistByID(ctx context.Context, id string) (bool,
 	resource, err := rs.ra.GetByID(ctx, id)
 	if err != nil {
 		span.SetStatus(codes.Error, "GetByID failed")
-		return false, rest.NewHTTPError(ctx, http.StatusInternalServerError, oerrors.VegaManager_Resource_InternalError_GetFailed).
+		return false, rest.NewHTTPError(ctx, http.StatusInternalServerError, oerrors.VegaBackend_Resource_InternalError_GetFailed).
 			WithErrorDetails(err.Error())
 	}
 
@@ -316,7 +455,7 @@ func (rs *resourceService) CheckExistByName(ctx context.Context, catalogID strin
 	resource, err := rs.ra.GetByName(ctx, catalogID, name)
 	if err != nil {
 		span.SetStatus(codes.Error, "GetByName failed")
-		return false, rest.NewHTTPError(ctx, http.StatusInternalServerError, oerrors.VegaManager_Resource_InternalError_GetFailed).
+		return false, rest.NewHTTPError(ctx, http.StatusInternalServerError, oerrors.VegaBackend_Resource_InternalError_GetFailed).
 			WithErrorDetails(err.Error())
 	}
 
@@ -331,7 +470,7 @@ func (rs *resourceService) UpdateResource(ctx context.Context, resource *interfa
 
 	if err := rs.ra.Update(ctx, resource); err != nil {
 		span.SetStatus(codes.Error, "Update resource failed")
-		return rest.NewHTTPError(ctx, http.StatusInternalServerError, oerrors.VegaManager_Resource_InternalError_UpdateFailed).
+		return rest.NewHTTPError(ctx, http.StatusInternalServerError, oerrors.VegaBackend_Resource_InternalError_UpdateFailed).
 			WithErrorDetails(err.Error())
 	}
 

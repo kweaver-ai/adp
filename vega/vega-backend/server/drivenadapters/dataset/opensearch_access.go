@@ -52,7 +52,7 @@ func (da *datasetAccess) Create(ctx context.Context, name string, schemaDefiniti
 	}
 	mapping["settings"] = map[string]any{
 		"index": map[string]any{
-			"number_of_shards": 1,
+			"number_of_shards":   1,
 			"number_of_replicas": 0,
 		},
 	}
@@ -60,13 +60,13 @@ func (da *datasetAccess) Create(ctx context.Context, name string, schemaDefiniti
 	// 根据 schemaDefinition 添加字段映射
 	properties := mapping["mappings"].(map[string]any)["properties"].(map[string]any)
 	for _, column := range schemaDefinition {
-		if (column.Name == "_id") {
+		if column.Name == "_id" {
 			continue
 		}
 		// "type": "vector[768]"，表示向量字段，需要特殊处理
 		if strings.HasPrefix(column.Type, "vector") {
 			properties[column.Name] = map[string]any{
-				"type": "knn_vector",
+				"type":      "knn_vector",
 				"dimension": strings.TrimSuffix(strings.TrimPrefix(column.Type, "vector["), "]"),
 				// "method": map[string]any{
 				// 	"name": "hnsw",
@@ -249,7 +249,7 @@ func (da *datasetAccess) CheckExist(ctx context.Context, name string) (bool, err
 }
 
 // ListDocuments 列出 dataset 中的文档
-func (da *datasetAccess) ListDocuments(ctx context.Context, name string, params *interfaces.QueryParams) ([]map[string]any, int64, error) {
+func (da *datasetAccess) ListDocuments(ctx context.Context, name string, params *interfaces.DatasetQueryParams) ([]map[string]any, int64, error) {
 	// 获取 OpenSearch 客户端
 	client, err := da.getOpenSearchClient()
 	if err != nil {
@@ -424,8 +424,8 @@ func (da *datasetAccess) CreateDocuments(ctx context.Context, name string, docum
 
 	// 执行批量请求
 	req := opensearchapi.BulkRequest{
-		Body:     strings.NewReader(bulkBody.String()),
-		Refresh:  "true",
+		Body:    strings.NewReader(bulkBody.String()),
+		Refresh: "true",
 	}
 
 	resp, err := req.Do(ctx, client)

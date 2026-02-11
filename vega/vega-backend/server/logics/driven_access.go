@@ -8,12 +8,29 @@ package logics
 
 import (
 	"database/sql"
+
+	"vega-backend/interfaces"
 )
 
 var (
-	DB *sql.DB
+	DB  *sql.DB
+	AA  interfaces.AuthAccess
+	PA  interfaces.PermissionAccess
+	UMA interfaces.UserMgmtAccess
 )
 
 func SetDB(db *sql.DB) {
 	DB = db
+}
+
+func SetAuthAccess(aa interfaces.AuthAccess) {
+	AA = aa
+}
+
+func SetPermissionAccess(pa interfaces.PermissionAccess) {
+	PA = pa
+}
+
+func SetUserMgmtAccess(uma interfaces.UserMgmtAccess) {
+	UMA = uma
 }

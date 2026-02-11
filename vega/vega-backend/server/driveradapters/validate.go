@@ -9,6 +9,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"strconv"
 	"strings"
 	"unicode/utf8"
 
@@ -21,11 +22,11 @@ import (
 // 名称合法性校验
 func validateName(ctx context.Context, name string) error {
 	if name == "" {
-		return rest.NewHTTPError(ctx, http.StatusBadRequest, verrors.VegaManager_InvalidParameter_Name)
+		return rest.NewHTTPError(ctx, http.StatusBadRequest, verrors.VegaBackend_InvalidParameter_Name)
 	}
 
 	if utf8.RuneCountInString(name) > interfaces.NAME_MAX_LENGTH {
-		return rest.NewHTTPError(ctx, http.StatusBadRequest, verrors.VegaManager_InvalidParameter_Name).
+		return rest.NewHTTPError(ctx, http.StatusBadRequest, verrors.VegaBackend_InvalidParameter_Name).
 			WithErrorDetails(fmt.Sprintf("The length of the name %v exceeds %v", name, interfaces.NAME_MAX_LENGTH))
 	}
 
@@ -35,7 +36,7 @@ func validateName(ctx context.Context, name string) error {
 // tags 的合法性校验
 func ValidateTags(ctx context.Context, Tags []string) error {
 	if len(Tags) > interfaces.TAGS_MAX_NUMBER {
-		return rest.NewHTTPError(ctx, http.StatusBadRequest, verrors.VegaManager_InvalidParameter_Tag).
+		return rest.NewHTTPError(ctx, http.StatusBadRequest, verrors.VegaBackend_InvalidParameter_Tag).
 			WithErrorDetails(fmt.Sprintf("The number of tags exceeds %v", interfaces.TAGS_MAX_NUMBER))
 	}
 
@@ -54,17 +55,17 @@ func validateTag(ctx context.Context, tag string) error {
 	tag = strings.Trim(tag, " ")
 
 	if tag == "" {
-		return rest.NewHTTPError(ctx, http.StatusBadRequest, verrors.VegaManager_InvalidParameter_Tag)
+		return rest.NewHTTPError(ctx, http.StatusBadRequest, verrors.VegaBackend_InvalidParameter_Tag)
 		// .WithErrorDetails("Data tag name is null")
 	}
 
 	if utf8.RuneCountInString(tag) > interfaces.TAG_MAX_LENGTH {
-		return rest.NewHTTPError(ctx, http.StatusBadRequest, verrors.VegaManager_InvalidParameter_Tag).
+		return rest.NewHTTPError(ctx, http.StatusBadRequest, verrors.VegaBackend_InvalidParameter_Tag).
 			WithErrorDetails(fmt.Sprintf("The length of the tag name exceeds %d", interfaces.TAG_MAX_LENGTH))
 	}
 
 	if isInvalid := strings.ContainsAny(tag, interfaces.TAG_INVALID_CHARACTER); isInvalid {
-		return rest.NewHTTPError(ctx, http.StatusBadRequest, verrors.VegaManager_InvalidParameter_Tag).
+		return rest.NewHTTPError(ctx, http.StatusBadRequest, verrors.VegaBackend_InvalidParameter_Tag).
 			WithErrorDetails(fmt.Sprintf("Tag name contains special characters, such as %s", interfaces.TAG_INVALID_CHARACTER))
 	}
 
@@ -74,8 +75,58 @@ func validateTag(ctx context.Context, tag string) error {
 // 备注合法性校验
 func validateDescription(ctx context.Context, description string) error {
 	if utf8.RuneCountInString(description) > interfaces.DESCRIPTION_MAX_LENGTH {
-		return rest.NewHTTPError(ctx, http.StatusBadRequest, verrors.VegaManager_InvalidParameter_Description).
+		return rest.NewHTTPError(ctx, http.StatusBadRequest, verrors.VegaBackend_InvalidParameter_Description).
 			WithErrorDetails(fmt.Sprintf("The length of the description exceeds %v", interfaces.DESCRIPTION_MAX_LENGTH))
 	}
 	return nil
+}
+
+// 分页参数合法性校验
+func validatePaginationQueryParams(ctx context.Context, offset, limit, sort, direction string,
+	supportedSortTypes map[string]string) (interfaces.PaginationQueryParams, error) {
+	pageParams := interfaces.PaginationQueryParams{}
+
+	off, err := strconv.Atoi(offset)
+	if err != nil {
+		return pageParams, rest.NewHTTPError(ctx, http.StatusBadRequest, verrors.VegaBackend_InvalidParameter_Offset).
+			WithErrorDetails(err.Error())
+	}
+
+	if off < interfaces.MIN_OFFSET {
+		return pageParams, rest.NewHTTPError(ctx, http.StatusBadRequest, verrors.VegaBackend_InvalidParameter_Offset).
+			WithErrorDetails(fmt.Sprintf("The offset is not greater than %d", interfaces.MIN_OFFSET))
+	}
+
+	lim, err := strconv.Atoi(limit)
+	if err != nil {
+		return pageParams, rest.NewHTTPError(ctx, http.StatusBadRequest, verrors.VegaBackend_InvalidParameter_Limit).
+			WithErrorDetails(err.Error())
+	}
+
+	if !(limit == interfaces.NO_LIMIT || (lim >= interfaces.MIN_LIMIT && lim <= interfaces.MAX_LIMIT)) {
+		return pageParams, rest.NewHTTPError(ctx, http.StatusBadRequest, verrors.VegaBackend_InvalidParameter_Limit).
+			WithErrorDetails(fmt.Sprintf("The number per page does not equal %s is not in the range of [%d,%d]", interfaces.NO_LIMIT, interfaces.MIN_LIMIT, interfaces.MAX_LIMIT))
+	}
+
+	_, ok := supportedSortTypes[sort]
+	if !ok {
+		types := make([]string, 0)
+		for t := range supportedSortTypes {
+			types = append(types, t)
+		}
+		return pageParams, rest.NewHTTPError(ctx, http.StatusBadRequest, verrors.VegaBackend_InvalidParameter_Sort).
+			WithErrorDetails(fmt.Sprintf("Wrong sort type, does not belong to any item in set %v ", types))
+	}
+
+	if direction != interfaces.DESC_DIRECTION && direction != interfaces.ASC_DIRECTION {
+		return pageParams, rest.NewHTTPError(ctx, http.StatusBadRequest, verrors.VegaBackend_InvalidParameter_Direction).
+			WithErrorDetails("The sort direction is not desc or asc")
+	}
+
+	return interfaces.PaginationQueryParams{
+		Offset:    off,
+		Limit:     lim,
+		Sort:      supportedSortTypes[sort],
+		Direction: direction,
+	}, nil
 }

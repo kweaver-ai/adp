@@ -3,12 +3,13 @@
 // Licensed under the Apache License, Version 2.0.
 // See the LICENSE file in the project root for details.
 
-// Package interfaces defines entities, DTOs, and service interfaces.
 package interfaces
 
 import "context"
 
 // ConnectorTypeService 定义 connector 类型业务逻辑接口
+//
+//go:generate mockgen -source ../interfaces/connector_type_service.go -destination ../interfaces/mock/mock_connector_type_service.go
 type ConnectorTypeService interface {
 	// Register 注册 connector 类型
 	Register(ctx context.Context, ct *ConnectorTypeReq) error

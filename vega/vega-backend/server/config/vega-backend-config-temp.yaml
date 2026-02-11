@@ -44,3 +44,15 @@ depServices:
     port: 6379
     username: username
     password: password
+  authorization-private:
+    protocol: http
+    host: localhost
+    port: 8080
+  user-management:
+    protocol: http
+    host: localhost
+    port: 8080
+  hydra-admin:
+    protocol: http
+    host: localhost
+    port: 8080

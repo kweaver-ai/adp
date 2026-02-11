@@ -28,6 +28,8 @@ import (
 	oerrors "vega-backend/errors"
 	"vega-backend/interfaces"
 	"vega-backend/logics/connectors/factory"
+	"vega-backend/logics/permission"
+	"vega-backend/logics/user_mgmt"
 )
 
 const (
@@ -42,8 +44,10 @@ var (
 
 type catalogService struct {
 	appSetting *common.AppSetting
-	ca         interfaces.CatalogAccess
 	cipher     kwcrypto.Cipher
+	ca         interfaces.CatalogAccess
+	ps         interfaces.PermissionService
+	ums        interfaces.UserMgmtService
 }
 
 // NewCatalogService creates a new CatalogService.
@@ -59,8 +63,10 @@ func NewCatalogService(appSetting *common.AppSetting) interfaces.CatalogService 
 		}
 		cService = &catalogService{
 			appSetting: appSetting,
-			ca:         catalogAccess.NewCatalogAccess(appSetting),
 			cipher:     cipher,
+			ca:         catalogAccess.NewCatalogAccess(appSetting),
+			ps:         permission.NewPermissionService(appSetting),
+			ums:        user_mgmt.NewUserMgmtService(appSetting),
 		}
 	})
 	return cService
@@ -70,6 +76,15 @@ func NewCatalogService(appSetting *common.AppSetting) interfaces.CatalogService 
 func (cs *catalogService) Create(ctx context.Context, req *interfaces.CatalogRequest) (string, error) {
 	ctx, span := ar_trace.Tracer.Start(ctx, "Create catalog")
 	defer span.End()
+
+	// 判断userid是否有创建业务知识网络的权限（策略决策）
+	err := cs.ps.CheckPermission(ctx, interfaces.PermissionResource{
+		Type: interfaces.RESOURCE_TYPE_CATALOG,
+		ID:   interfaces.RESOURCE_ID_ALL,
+	}, []string{interfaces.OPERATION_TYPE_CREATE})
+	if err != nil {
+		return "", err
+	}
 
 	// Get account info from context
 	accountInfo := interfaces.AccountInfo{}
@@ -88,7 +103,7 @@ func (cs *catalogService) Create(ctx context.Context, req *interfaces.CatalogReq
 			logger.Errorf("Failed to validate sensitive fields: %v", err)
 			o11y.Error(ctx, fmt.Sprintf("Failed to validate sensitive fields: %v", err))
 			span.SetStatus(codes.Error, "Validate sensitive fields failed")
-			return "", rest.NewHTTPError(ctx, http.StatusBadRequest, oerrors.VegaManager_Catalog_InvalidParameter_SensitiveFieldNotEncrypted).
+			return "", rest.NewHTTPError(ctx, http.StatusBadRequest, oerrors.VegaBackend_Catalog_InvalidParameter_SensitiveFieldNotEncrypted).
 				WithErrorDetails(err.Error())
 		}
 
@@ -99,7 +114,7 @@ func (cs *catalogService) Create(ctx context.Context, req *interfaces.CatalogReq
 			logger.Errorf("Failed to create connector: %v", err)
 			o11y.Error(ctx, fmt.Sprintf("Failed to create connector: %v", err))
 			span.SetStatus(codes.Error, "Create connector failed")
-			return "", rest.NewHTTPError(ctx, http.StatusBadRequest, oerrors.VegaManager_Catalog_InternalError_CreateFailed).
+			return "", rest.NewHTTPError(ctx, http.StatusBadRequest, oerrors.VegaBackend_Catalog_InternalError_CreateFailed).
 				WithErrorDetails(err.Error())
 		}
 
@@ -108,7 +123,7 @@ func (cs *catalogService) Create(ctx context.Context, req *interfaces.CatalogReq
 			o11y.Error(ctx, fmt.Sprintf("Failed to test connection to data source: %v", err))
 			span.SetStatus(codes.Error, "Connection failed")
 			connector.Close(ctx)
-			return "", rest.NewHTTPError(ctx, http.StatusBadRequest, oerrors.VegaManager_Catalog_InternalError_TestConnectionFailed).
+			return "", rest.NewHTTPError(ctx, http.StatusBadRequest, oerrors.VegaBackend_Catalog_InternalError_TestConnectionFailed).
 				WithErrorDetails(err.Error())
 		}
 		defer connector.Close(ctx)
@@ -134,11 +149,26 @@ func (cs *catalogService) Create(ctx context.Context, req *interfaces.CatalogReq
 		UpdateTime: now,
 	}
 
-	if err := cs.ca.Create(ctx, catalog); err != nil {
+	err = cs.ca.Create(ctx, catalog)
+	if err != nil {
 		logger.Errorf("Create catalog failed: %v", err)
 		o11y.Error(ctx, fmt.Sprintf("Create catalog failed: %v", err))
 		span.SetStatus(codes.Error, "Create catalog failed")
-		return "", rest.NewHTTPError(ctx, http.StatusInternalServerError, oerrors.VegaManager_Catalog_InternalError_CreateFailed).
+		return "", rest.NewHTTPError(ctx, http.StatusInternalServerError, oerrors.VegaBackend_Catalog_InternalError_CreateFailed).
+			WithErrorDetails(err.Error())
+	}
+
+	// 注册资源
+	err = cs.ps.CreateResources(ctx, []interfaces.PermissionResource{{
+		ID:   catalog.ID,
+		Type: interfaces.RESOURCE_TYPE_CATALOG,
+		Name: catalog.Name,
+	}}, interfaces.COMMON_OPERATIONS)
+	if err != nil {
+		logger.Errorf("CreateResources error: %s", err.Error())
+		span.SetStatus(codes.Error, "创建目录资源失败")
+		return "", rest.NewHTTPError(ctx, http.StatusInternalServerError,
+			oerrors.VegaBackend_Catalog_InternalError_CreateResourcesFailed).
 			WithErrorDetails(err.Error())
 	}
 
@@ -154,12 +184,36 @@ func (cs *catalogService) GetByID(ctx context.Context, id string, withSensitiveF
 	catalog, err := cs.ca.GetByID(ctx, id)
 	if err != nil {
 		span.SetStatus(codes.Error, "Get catalog failed")
-		return nil, rest.NewHTTPError(ctx, http.StatusInternalServerError, oerrors.VegaManager_Catalog_InternalError_GetFailed).
+		return nil, rest.NewHTTPError(ctx, http.StatusInternalServerError, oerrors.VegaBackend_Catalog_InternalError_GetFailed).
 			WithErrorDetails(err.Error())
 	}
 	if catalog == nil {
 		span.SetStatus(codes.Error, "Catalog not found")
-		return nil, rest.NewHTTPError(ctx, http.StatusNotFound, oerrors.VegaManager_Catalog_NotFound)
+		return nil, rest.NewHTTPError(ctx, http.StatusNotFound, oerrors.VegaBackend_Catalog_NotFound)
+	}
+
+	// 根据权限过滤有查看权限的对象，过滤后的数组的总长度就是总数，无需再请求总数
+	matchResoucesMap, err := cs.ps.FilterResources(ctx, interfaces.RESOURCE_TYPE_CATALOG, []string{catalog.ID},
+		[]string{interfaces.OPERATION_TYPE_VIEW_DETAIL}, true)
+	if err != nil {
+		span.SetStatus(codes.Error, "Filter resources error")
+		return nil, err
+	}
+
+	if resrc, exist := matchResoucesMap[catalog.ID]; exist {
+		catalog.Operations = resrc.Operations // 用户当前有权限的操作
+	} else {
+		return nil, rest.NewHTTPError(ctx, http.StatusForbidden, rest.PublicError_Forbidden).
+			WithErrorDetails(fmt.Sprintf("Access denied: insufficient permissions for[%v]", interfaces.OPERATION_TYPE_VIEW_DETAIL))
+	}
+
+	accountInfos := []*interfaces.AccountInfo{&catalog.Creator, &catalog.Updater}
+	err = cs.ums.GetAccountNames(ctx, accountInfos)
+	if err != nil {
+		span.SetStatus(codes.Error, "GetAccountNames error")
+
+		return nil, rest.NewHTTPError(ctx, http.StatusInternalServerError,
+			oerrors.VegaBackend_Catalog_InternalError_GetAccountNamesFailed).WithErrorDetails(err.Error())
 	}
 
 	if !withSensitiveFields {
@@ -173,7 +227,7 @@ func (cs *catalogService) GetByID(ctx context.Context, id string, withSensitiveF
 			logger.Errorf("Failed to validate sensitive fields: %v", err)
 			o11y.Error(ctx, fmt.Sprintf("Failed to validate sensitive fields: %v", err))
 			span.SetStatus(codes.Error, "Validate sensitive fields failed")
-			return nil, rest.NewHTTPError(ctx, http.StatusBadRequest, oerrors.VegaManager_Catalog_InvalidParameter_SensitiveFieldNotEncrypted).
+			return nil, rest.NewHTTPError(ctx, http.StatusBadRequest, oerrors.VegaBackend_Catalog_InvalidParameter_SensitiveFieldNotEncrypted).
 				WithErrorDetails(err.Error())
 		}
 		catalog.ConnectorConfig = decryptedConfig
@@ -191,13 +245,40 @@ func (cs *catalogService) GetByIDs(ctx context.Context, ids []string) ([]*interf
 	catalogs, err := cs.ca.GetByIDs(ctx, ids)
 	if err != nil {
 		span.SetStatus(codes.Error, "Get catalog failed")
-		return nil, rest.NewHTTPError(ctx, http.StatusInternalServerError, oerrors.VegaManager_Catalog_InternalError_GetFailed).
+		return nil, rest.NewHTTPError(ctx, http.StatusInternalServerError, oerrors.VegaBackend_Catalog_InternalError_GetFailed).
 			WithErrorDetails(err.Error())
 	}
 
 	// 移除敏感字段，不返回给前端
 	for _, c := range catalogs {
 		cs.removeSensitiveFields(c)
+	}
+
+	// 根据权限过滤有查看权限的对象，过滤后的数组的总长度就是总数，无需再请求总数
+	matchResoucesMap, err := cs.ps.FilterResources(ctx, interfaces.RESOURCE_TYPE_CATALOG, ids,
+		[]string{interfaces.OPERATION_TYPE_VIEW_DETAIL}, true)
+	if err != nil {
+		span.SetStatus(codes.Error, "Filter resources error")
+		return nil, err
+	}
+
+	accountInfos := make([]*interfaces.AccountInfo, 0)
+	for _, c := range catalogs {
+		if resrc, exist := matchResoucesMap[c.ID]; exist {
+			c.Operations = resrc.Operations // 用户当前有权限的操作
+		} else {
+			return nil, rest.NewHTTPError(ctx, http.StatusForbidden, rest.PublicError_Forbidden).
+				WithErrorDetails(fmt.Sprintf("Access denied: insufficient permissions for[%v]", interfaces.OPERATION_TYPE_VIEW_DETAIL))
+		}
+		accountInfos = append(accountInfos, &c.Creator, &c.Updater)
+	}
+
+	err = cs.ums.GetAccountNames(ctx, accountInfos)
+	if err != nil {
+		span.SetStatus(codes.Error, "GetAccountNames error")
+
+		return nil, rest.NewHTTPError(ctx, http.StatusInternalServerError,
+			oerrors.VegaBackend_Catalog_InternalError_GetAccountNamesFailed).WithErrorDetails(err.Error())
 	}
 
 	span.SetStatus(codes.Ok, "")
@@ -209,10 +290,64 @@ func (cs *catalogService) List(ctx context.Context, params interfaces.CatalogsQu
 	ctx, span := ar_trace.Tracer.Start(ctx, "List catalogs")
 	defer span.End()
 
-	catalogs, total, err := cs.ca.List(ctx, params)
+	catalogsArr, total, err := cs.ca.List(ctx, params)
 	if err != nil {
 		span.SetStatus(codes.Error, "List catalogs failed")
-		return nil, 0, rest.NewHTTPError(ctx, http.StatusInternalServerError, oerrors.VegaManager_Catalog_InternalError_GetFailed).
+		return []*interfaces.Catalog{}, 0, rest.NewHTTPError(ctx, http.StatusInternalServerError, oerrors.VegaBackend_Catalog_InternalError_GetFailed).
+			WithErrorDetails(err.Error())
+	}
+
+	// 处理资源id
+	ids := make([]string, 0)
+	for _, m := range catalogsArr {
+		ids = append(ids, m.ID)
+	}
+
+	// 根据权限过滤有查看权限的对象，过滤后的数组的总长度就是总数，无需再请求总数
+	matchResoucesMap, err := cs.ps.FilterResources(ctx, interfaces.RESOURCE_TYPE_CATALOG, ids,
+		[]string{interfaces.OPERATION_TYPE_VIEW_DETAIL}, true)
+	if err != nil {
+		span.SetStatus(codes.Error, "Filter resources error")
+		return []*interfaces.Catalog{}, 0, err
+	}
+
+	catalogs := make([]*interfaces.Catalog, 0)
+	for _, c := range catalogsArr {
+		// 只留下有权限的模型
+		if resrc, exist := matchResoucesMap[c.ID]; exist {
+			c.Operations = resrc.Operations // 用户当前有权限的操作
+			catalogs = append(catalogs, c)
+		}
+	}
+	total = int64(len(catalogs))
+
+	// limit = -1,则返回所有
+	if params.Limit != -1 {
+		// 分页
+		// 检查起始位置是否越界
+		if params.Offset < 0 || params.Offset >= len(catalogs) {
+			span.SetStatus(codes.Ok, "")
+			return []*interfaces.Catalog{}, total, nil
+		}
+		// 计算结束位置
+		end := params.Offset + params.Limit
+		if end > len(catalogs) {
+			end = len(catalogs)
+		}
+
+		catalogs = catalogs[params.Offset:end]
+	}
+
+	accountInfos := make([]*interfaces.AccountInfo, 0, len(catalogs)*2)
+	for _, c := range catalogs {
+		accountInfos = append(accountInfos, &c.Creator, &c.Updater)
+	}
+
+	err = cs.ums.GetAccountNames(ctx, accountInfos)
+	if err != nil {
+		span.SetStatus(codes.Error, "GetAccountNames error")
+
+		return []*interfaces.Catalog{}, 0, rest.NewHTTPError(ctx, http.StatusInternalServerError, oerrors.VegaBackend_Catalog_InternalError_GetFailed).
 			WithErrorDetails(err.Error())
 	}
 
@@ -233,27 +368,26 @@ func (cs *catalogService) Update(ctx context.Context, id string, req *interfaces
 	catalog := req.OriginCatalog
 	if catalog == nil {
 		span.SetStatus(codes.Error, "Catalog not found")
-		return rest.NewHTTPError(ctx, http.StatusNotFound, oerrors.VegaManager_Catalog_NotFound)
+		return rest.NewHTTPError(ctx, http.StatusNotFound, oerrors.VegaBackend_Catalog_NotFound)
+	}
+
+	// 判断userid是否有修改权限
+	err := cs.ps.CheckPermission(ctx, interfaces.PermissionResource{
+		Type: interfaces.RESOURCE_TYPE_CATALOG,
+		ID:   catalog.ID,
+	}, []string{interfaces.OPERATION_TYPE_MODIFY})
+	if err != nil {
+		return err
 	}
 
 	// Apply updates
-	if req.Name != catalog.Name {
-		exists, err := cs.CheckExistByName(ctx, req.Name)
-		if err != nil {
-			return err
-		}
-		if exists {
-			span.SetStatus(codes.Error, "Catalog name exists")
-			return rest.NewHTTPError(ctx, http.StatusConflict, oerrors.VegaManager_Catalog_NameExists)
-		}
-		catalog.Name = req.Name
-	}
+	catalog.Name = req.Name
 	catalog.Tags = req.Tags
 	catalog.Description = req.Description
 
 	if catalog.ConnectorType != req.ConnectorType {
 		span.SetStatus(codes.Error, "can not change connector type")
-		return rest.NewHTTPError(ctx, http.StatusBadRequest, oerrors.VegaManager_Catalog_InvalidParameter_ConnectorType)
+		return rest.NewHTTPError(ctx, http.StatusBadRequest, oerrors.VegaBackend_Catalog_InvalidParameter_ConnectorType)
 	} else if req.ConnectorType != "" {
 		// 验证敏感字段是否为合法 RSA 密文，获取明文用于连接测试
 		sensitiveFields := factory.GetFactory().GetSensitiveFields(req.ConnectorType)
@@ -262,7 +396,7 @@ func (cs *catalogService) Update(ctx context.Context, id string, req *interfaces
 			logger.Errorf("Failed to validate sensitive fields: %v", err)
 			o11y.Error(ctx, fmt.Sprintf("Failed to validate sensitive fields: %v", err))
 			span.SetStatus(codes.Error, "Validate sensitive fields failed")
-			return rest.NewHTTPError(ctx, http.StatusBadRequest, oerrors.VegaManager_Catalog_InvalidParameter_SensitiveFieldNotEncrypted).
+			return rest.NewHTTPError(ctx, http.StatusBadRequest, oerrors.VegaBackend_Catalog_InvalidParameter_SensitiveFieldNotEncrypted).
 				WithErrorDetails(err.Error())
 		}
 
@@ -273,7 +407,7 @@ func (cs *catalogService) Update(ctx context.Context, id string, req *interfaces
 			logger.Errorf("Failed to create connector: %v", err)
 			o11y.Error(ctx, fmt.Sprintf("Failed to create connector: %v", err))
 			span.SetStatus(codes.Error, "Create connector failed")
-			return rest.NewHTTPError(ctx, http.StatusBadRequest, oerrors.VegaManager_Catalog_InternalError_CreateFailed).
+			return rest.NewHTTPError(ctx, http.StatusBadRequest, oerrors.VegaBackend_Catalog_InternalError_CreateFailed).
 				WithErrorDetails(err.Error())
 		}
 
@@ -282,7 +416,7 @@ func (cs *catalogService) Update(ctx context.Context, id string, req *interfaces
 			o11y.Error(ctx, fmt.Sprintf("Failed to test connection to data source: %v", err))
 			span.SetStatus(codes.Error, "Connection failed")
 			connector.Close(ctx)
-			return rest.NewHTTPError(ctx, http.StatusBadRequest, oerrors.VegaManager_Catalog_InternalError_TestConnectionFailed).
+			return rest.NewHTTPError(ctx, http.StatusBadRequest, oerrors.VegaBackend_Catalog_InternalError_TestConnectionFailed).
 				WithErrorDetails(err.Error())
 		}
 		defer connector.Close(ctx)
@@ -307,8 +441,20 @@ func (cs *catalogService) Update(ctx context.Context, id string, req *interfaces
 
 	if err := cs.ca.Update(ctx, catalog); err != nil {
 		span.SetStatus(codes.Error, "Update catalog failed")
-		return rest.NewHTTPError(ctx, http.StatusInternalServerError, oerrors.VegaManager_Catalog_InternalError_UpdateFailed).
+		return rest.NewHTTPError(ctx, http.StatusInternalServerError, oerrors.VegaBackend_Catalog_InternalError_UpdateFailed).
 			WithErrorDetails(err.Error())
+	}
+
+	// 请求更新资源名称的接口，更新资源的名称
+	if req.IfNameModify {
+		err = cs.ps.UpdateResource(ctx, interfaces.PermissionResource{
+			ID:   catalog.ID,
+			Type: interfaces.RESOURCE_TYPE_CATALOG,
+			Name: catalog.Name,
+		})
+		if err != nil {
+			return err
+		}
 	}
 
 	span.SetStatus(codes.Ok, "")
@@ -325,10 +471,35 @@ func (cs *catalogService) DeleteByIDs(ctx context.Context, ids []string) error {
 		return nil
 	}
 
+	// 判断userid是否有删除权限
+	matchResoucesMap, err := cs.ps.FilterResources(ctx, interfaces.RESOURCE_TYPE_CATALOG, ids,
+		[]string{interfaces.OPERATION_TYPE_DELETE}, true)
+	if err != nil {
+		span.SetStatus(codes.Error, "Filter resources error")
+		return err
+	}
+
+	// 检查是否有删除权限
+	if len(matchResoucesMap) != len(ids) {
+		// 请求的资源id可以重复，未去重，资源过滤出来的资源id是去重过的，所以单纯判断数量不准确
+		for _, id := range ids {
+			if _, exist := matchResoucesMap[id]; !exist {
+				return rest.NewHTTPError(ctx, http.StatusForbidden, rest.PublicError_Forbidden).
+					WithErrorDetails("Access denied: insufficient permissions for catalog's delete operation.")
+			}
+		}
+	}
+
 	if err := cs.ca.DeleteByIDs(ctx, ids); err != nil {
 		span.SetStatus(codes.Error, "Delete catalogs failed")
-		return rest.NewHTTPError(ctx, http.StatusInternalServerError, oerrors.VegaManager_Catalog_InternalError_DeleteFailed).
+		return rest.NewHTTPError(ctx, http.StatusInternalServerError, oerrors.VegaBackend_Catalog_InternalError_DeleteFailed).
 			WithErrorDetails(err.Error())
+	}
+
+	//  清除资源策略
+	err = cs.ps.DeleteResources(ctx, interfaces.RESOURCE_TYPE_CATALOG, ids)
+	if err != nil {
+		return err
 	}
 
 	span.SetStatus(codes.Ok, "")
@@ -343,7 +514,7 @@ func (cs *catalogService) CheckExistByID(ctx context.Context, id string) (bool, 
 	catalog, err := cs.ca.GetByID(ctx, id)
 	if err != nil {
 		span.SetStatus(codes.Error, "GetByID failed")
-		return false, rest.NewHTTPError(ctx, http.StatusInternalServerError, oerrors.VegaManager_Catalog_InternalError_GetFailed).
+		return false, rest.NewHTTPError(ctx, http.StatusInternalServerError, oerrors.VegaBackend_Catalog_InternalError_GetFailed).
 			WithErrorDetails(err.Error())
 	}
 
@@ -359,7 +530,7 @@ func (cs *catalogService) CheckExistByName(ctx context.Context, name string) (bo
 	catalog, err := cs.ca.GetByName(ctx, name)
 	if err != nil {
 		span.SetStatus(codes.Error, "GetByName failed")
-		return false, rest.NewHTTPError(ctx, http.StatusInternalServerError, oerrors.VegaManager_Catalog_InternalError_GetFailed).
+		return false, rest.NewHTTPError(ctx, http.StatusInternalServerError, oerrors.VegaBackend_Catalog_InternalError_GetFailed).
 			WithErrorDetails(err.Error())
 	}
 
@@ -374,7 +545,7 @@ func (cs *catalogService) TestConnection(ctx context.Context, catalog *interface
 
 	if catalog == nil {
 		span.SetStatus(codes.Error, "Catalog not found")
-		return nil, rest.NewHTTPError(ctx, http.StatusNotFound, oerrors.VegaManager_Catalog_NotFound)
+		return nil, rest.NewHTTPError(ctx, http.StatusNotFound, oerrors.VegaBackend_Catalog_NotFound)
 	}
 
 	result := catalog.CatalogHealthCheckStatus
@@ -473,7 +644,7 @@ func (cs *catalogService) UpdateMetadata(ctx context.Context, id string, metadat
 		logger.Errorf("Update metadata failed: %v", err)
 		o11y.Error(ctx, fmt.Sprintf("Update metadata failed: %v", err))
 		span.SetStatus(codes.Error, "Update metadata failed")
-		return rest.NewHTTPError(ctx, http.StatusInternalServerError, oerrors.VegaManager_Catalog_InternalError_UpdateFailed).
+		return rest.NewHTTPError(ctx, http.StatusInternalServerError, oerrors.VegaBackend_Catalog_InternalError_UpdateFailed).
 			WithErrorDetails(err.Error())
 	}
 

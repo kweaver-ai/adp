@@ -3,12 +3,13 @@
 // Licensed under the Apache License, Version 2.0.
 // See the LICENSE file in the project root for details.
 
-// Package interfaces defines entities, DTOs, and service interfaces.
 package interfaces
 
 import "context"
 
 // CatalogAccess defines catalog data access interface.
+//
+//go:generate mockgen -source ../interfaces/catalog_access.go -destination ../interfaces/mock/mock_catalog_access.go
 type CatalogAccess interface {
 	// Create creates a new Catalog.
 	Create(ctx context.Context, catalog *Catalog) error

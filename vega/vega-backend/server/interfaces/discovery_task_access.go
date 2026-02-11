@@ -3,12 +3,13 @@
 // Licensed under the Apache License, Version 2.0.
 // See the LICENSE file in the project root for details.
 
-// Package interfaces defines entities, DTOs, and service interfaces.
 package interfaces
 
 import "context"
 
 // DiscoveryTaskAccess defines discovery task data access interface.
+//
+//go:generate mockgen -source ../interfaces/discovery_task_access.go -destination ../interfaces/mock/mock_discovery_task_access.go
 type DiscoveryTaskAccess interface {
 	// Create creates a new DiscoveryTask.
 	Create(ctx context.Context, task *DiscoveryTask) error

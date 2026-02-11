@@ -3,8 +3,9 @@
 // Licensed under the Apache License, Version 2.0.
 // See the LICENSE file in the project root for details.
 
-// Package interfaces defines entities, DTOs, and service interfaces.
 package interfaces
+
+import "github.com/kweaver-ai/kweaver-go-lib/audit"
 
 type contextKey string // 自定义专属的key类型
 
@@ -24,6 +25,22 @@ const (
 	TAGS_MAX_NUMBER        = 5
 	TAG_MAX_LENGTH         = 40
 	TAG_INVALID_CHARACTER  = "/:?\\\"<>|：？‘’“”！《》,#[]{}%&*$^!=.'"
+
+	DEFAULT_OFFSET = "0"
+	MIN_OFFSET     = 0
+
+	DEFAULT_LIMIT = "20"
+	MIN_LIMIT     = 1
+	MAX_LIMIT     = 1000
+	NO_LIMIT      = "-1"
+
+	DEFAULT_DIRECTION = "desc"
+	DESC_DIRECTION    = "desc"
+	ASC_DIRECTION     = "asc"
+
+	MODULE_TYPE_CATALOG        = "catalog"
+	MODULE_TYPE_RESOURCE       = "resource"
+	MODULE_TYPE_CONNECTOR_TYPE = "connector_type"
 )
 
 // AccountInfo represents user/account information.
@@ -33,46 +50,34 @@ type AccountInfo struct {
 	Name string `json:"name,omitempty"`
 }
 
-// PaginationParams holds common pagination parameters.
-type PaginationParams struct {
+// PaginationQueryParams holds common pagination parameters.
+type PaginationQueryParams struct {
 	Offset    int
 	Limit     int
 	Sort      string
 	Direction string
 }
 
-// ListResult wraps list response with pagination info.
-type ListResult[T any] struct {
-	Entries    []T   `json:"entries"`
-	TotalCount int64 `json:"total_count"`
+func GenerateCatalogAuditObject(id string, name string) audit.AuditObject {
+	return audit.AuditObject{
+		Type: MODULE_TYPE_CATALOG,
+		ID:   id,
+		Name: name,
+	}
 }
 
-// SortField represents a field to sort by.
-type SortField struct {
-	Field     string `json:"field"`
-	Direction string `json:"direction"`
+func GenerateConnectorTypeAuditObject(typ string, name string) audit.AuditObject {
+	return audit.AuditObject{
+		Type: MODULE_TYPE_CONNECTOR_TYPE,
+		ID:   typ,
+		Name: name,
+	}
 }
 
-// QueryParams represents query parameters for data retrieval.
-type QueryParams struct {
-	Start           int64       `json:"start,omitempty"`
-	End             int64       `json:"end,omitempty"`
-	Sort            []SortField `json:"sort,omitempty"`
-	Offset          int         `json:"offset,omitempty"`
-	Limit           int         `json:"limit,omitempty"`
-	NeedTotal       bool        `json:"need_total,omitempty"`
-	UseSearchAfter  bool        `json:"use_search_after,omitempty"`
-	SearchAfter     []any       `json:"search_after,omitempty"`
-	Format          string      `json:"format,omitempty"`
-	Filters         interface{} `json:"filters,omitempty"`
+func GenerateResourceAuditObject(id string, name string) audit.AuditObject {
+	return audit.AuditObject{
+		Type: MODULE_TYPE_RESOURCE,
+		ID:   id,
+		Name: name,
+	}
 }
-
-// Default pagination values
-const (
-	DefaultOffset = 0
-	DefaultLimit  = 20
-	MaxLimit      = 100
-
-	SortDirectionASC  = "asc"
-	SortDirectionDESC = "desc"
-)

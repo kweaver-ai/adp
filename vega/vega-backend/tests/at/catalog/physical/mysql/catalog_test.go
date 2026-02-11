@@ -37,10 +37,10 @@ func TestMySQLCatalogCreate(t *testing.T) {
 		So(config, ShouldNotBeNil)
 		So(config.TargetMySQL.Host, ShouldNotBeEmpty)
 
-		client = testutil.NewHTTPClient(config.VegaManager.BaseURL)
+		client = testutil.NewHTTPClient(config.VegaBackend.BaseURL)
 		err = client.CheckHealth()
 		So(err, ShouldBeNil)
-		t.Logf("✓ AT测试环境就绪，VEGA Manager: %s", config.VegaManager.BaseURL)
+		t.Logf("✓ AT测试环境就绪，VEGA Manager: %s", config.VegaBackend.BaseURL)
 
 		builder = NewMySQLPayloadBuilder(config.TargetMySQL)
 		builder.SetTestConfig(config)
@@ -409,7 +409,7 @@ func TestMySQLCatalogRead(t *testing.T) {
 		config, err = setup.LoadTestConfig()
 		So(err, ShouldBeNil)
 
-		client = testutil.NewHTTPClient(config.VegaManager.BaseURL)
+		client = testutil.NewHTTPClient(config.VegaBackend.BaseURL)
 		err = client.CheckHealth()
 		So(err, ShouldBeNil)
 
@@ -520,7 +520,7 @@ func TestMySQLCatalogUpdate(t *testing.T) {
 		config, err = setup.LoadTestConfig()
 		So(err, ShouldBeNil)
 
-		client = testutil.NewHTTPClient(config.VegaManager.BaseURL)
+		client = testutil.NewHTTPClient(config.VegaBackend.BaseURL)
 		err = client.CheckHealth()
 		So(err, ShouldBeNil)
 
@@ -678,7 +678,7 @@ func TestMySQLCatalogDelete(t *testing.T) {
 		config, err = setup.LoadTestConfig()
 		So(err, ShouldBeNil)
 
-		client = testutil.NewHTTPClient(config.VegaManager.BaseURL)
+		client = testutil.NewHTTPClient(config.VegaBackend.BaseURL)
 		err = client.CheckHealth()
 		So(err, ShouldBeNil)
 
@@ -738,7 +738,7 @@ func TestMySQLSpecificOptions(t *testing.T) {
 		config, err = setup.LoadTestConfig()
 		So(err, ShouldBeNil)
 
-		client = testutil.NewHTTPClient(config.VegaManager.BaseURL)
+		client = testutil.NewHTTPClient(config.VegaBackend.BaseURL)
 		err = client.CheckHealth()
 		So(err, ShouldBeNil)
 

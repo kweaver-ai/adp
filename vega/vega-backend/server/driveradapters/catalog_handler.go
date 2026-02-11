@@ -10,14 +10,15 @@ import (
 	"context"
 	"fmt"
 	"net/http"
-	"strconv"
 	"strings"
 
 	"github.com/gin-gonic/gin"
 	"github.com/kweaver-ai/TelemetrySDK-Go/exporter/v2/ar_trace"
+	"github.com/kweaver-ai/kweaver-go-lib/audit"
 	"github.com/kweaver-ai/kweaver-go-lib/logger"
 	o11y "github.com/kweaver-ai/kweaver-go-lib/observability"
 	"github.com/kweaver-ai/kweaver-go-lib/rest"
+	"go.opentelemetry.io/otel/codes"
 	"go.opentelemetry.io/otel/trace"
 
 	oerrors "vega-backend/errors"
@@ -30,18 +31,49 @@ func (r *restHandler) ListCatalogs(c *gin.Context) {
 		"ListCatalogs", trace.WithSpanKind(trace.SpanKindServer))
 	defer span.End()
 
-	accountInfo := r.generateAccountInfo(c)
+	// 校验token
+	visitor, err := r.verifyOAuth(ctx, c)
+	if err != nil {
+		return
+	}
+	accountInfo := interfaces.AccountInfo{
+		ID:   visitor.ID,
+		Type: string(visitor.Type),
+	}
 	ctx = context.WithValue(ctx, interfaces.ACCOUNT_INFO_KEY, accountInfo)
 
 	o11y.AddHttpAttrs4API(span, o11y.GetAttrsByGinCtx(c))
 
+	// 获取查询参数
+	tag := strings.TrimSpace(c.Query("tag"))
+	typ := c.Query("type")
+	healthCheckStatus := c.Query("health_check_status")
+	offset := c.DefaultQuery("offset", interfaces.DEFAULT_OFFSET)
+	limit := c.DefaultQuery("limit", interfaces.DEFAULT_LIMIT)
+	sort := c.DefaultQuery("sort", "update_time")
+	direction := c.DefaultQuery("direction", interfaces.DESC_DIRECTION)
+
+	// 校验分页查询参数
+	pageParam, err := validatePaginationQueryParams(ctx,
+		offset, limit, sort, direction, interfaces.CATALOG_SORT)
+	if err != nil {
+		httpErr := err.(*rest.HTTPError)
+
+		// 记录异常日志
+		o11y.Error(ctx, fmt.Sprintf("%s. %v", httpErr.BaseError.Description,
+			httpErr.BaseError.ErrorDetails))
+
+		// 设置 trace 的错误信息的 attributes
+		o11y.AddHttpAttrs4HttpError(span, httpErr)
+		rest.ReplyError(c, httpErr)
+		return
+	}
+
 	params := interfaces.CatalogsQueryParams{
-		PaginationParams: interfaces.PaginationParams{
-			Offset: getIntQuery(c, "offset", interfaces.DefaultOffset),
-			Limit:  getIntQuery(c, "limit", interfaces.DefaultLimit),
-		},
-		Type:              c.Query("type"),
-		HealthCheckStatus: c.Query("health_check_status"),
+		PaginationQueryParams: pageParam,
+		Tag:                   tag,
+		Type:                  typ,
+		HealthCheckStatus:     healthCheckStatus,
 	}
 
 	entries, total, err := r.cs.List(ctx, params)
@@ -68,7 +100,15 @@ func (r *restHandler) CreateCatalog(c *gin.Context) {
 		"CreateCatalog", trace.WithSpanKind(trace.SpanKindServer))
 	defer span.End()
 
-	accountInfo := r.generateAccountInfo(c)
+	// 校验token
+	visitor, err := r.verifyOAuth(ctx, c)
+	if err != nil {
+		return
+	}
+	accountInfo := interfaces.AccountInfo{
+		ID:   visitor.ID,
+		Type: string(visitor.Type),
+	}
 	ctx = context.WithValue(ctx, interfaces.ACCOUNT_INFO_KEY, accountInfo)
 
 	// 设置 trace 的相关 api 的属性
@@ -76,7 +116,7 @@ func (r *restHandler) CreateCatalog(c *gin.Context) {
 
 	var req interfaces.CatalogRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		httpErr := rest.NewHTTPError(ctx, http.StatusBadRequest, oerrors.VegaManager_InvalidParameter_RequestBody).
+		httpErr := rest.NewHTTPError(ctx, http.StatusBadRequest, oerrors.VegaBackend_InvalidParameter_RequestBody).
 			WithErrorDetails(err.Error())
 		o11y.AddHttpAttrs4HttpError(span, httpErr)
 		rest.ReplyError(c, httpErr)
@@ -93,14 +133,14 @@ func (r *restHandler) CreateCatalog(c *gin.Context) {
 	// Check if name exists
 	exists, err := r.cs.CheckExistByName(ctx, req.Name)
 	if err != nil {
-		httpErr := rest.NewHTTPError(ctx, http.StatusInternalServerError, oerrors.VegaManager_Catalog_InternalError).
+		httpErr := rest.NewHTTPError(ctx, http.StatusInternalServerError, oerrors.VegaBackend_Catalog_InternalError).
 			WithErrorDetails(err.Error())
 		o11y.AddHttpAttrs4HttpError(span, httpErr)
 		rest.ReplyError(c, httpErr)
 		return
 	}
 	if exists {
-		httpErr := rest.NewHTTPError(ctx, http.StatusConflict, oerrors.VegaManager_Catalog_NameExists)
+		httpErr := rest.NewHTTPError(ctx, http.StatusConflict, oerrors.VegaBackend_Catalog_NameExists)
 		o11y.AddHttpAttrs4HttpError(span, httpErr)
 		rest.ReplyError(c, httpErr)
 		return
@@ -113,6 +153,10 @@ func (r *restHandler) CreateCatalog(c *gin.Context) {
 		rest.ReplyError(c, httpErr)
 		return
 	}
+
+	// 成功创建记录审计日志
+	audit.NewInfoLog(audit.OPERATION, audit.CREATE, audit.TransforOperator(visitor),
+		interfaces.GenerateCatalogAuditObject(id, req.Name), "")
 
 	result := map[string]any{"id": id}
 
@@ -127,7 +171,15 @@ func (r *restHandler) GetCatalogs(c *gin.Context) {
 		"GetCatalogs", trace.WithSpanKind(trace.SpanKindServer))
 	defer span.End()
 
-	accountInfo := r.generateAccountInfo(c)
+	// 校验token
+	visitor, err := r.verifyOAuth(ctx, c)
+	if err != nil {
+		return
+	}
+	accountInfo := interfaces.AccountInfo{
+		ID:   visitor.ID,
+		Type: string(visitor.Type),
+	}
 	ctx = context.WithValue(ctx, interfaces.ACCOUNT_INFO_KEY, accountInfo)
 
 	o11y.AddHttpAttrs4API(span, o11y.GetAttrsByGinCtx(c))
@@ -152,7 +204,7 @@ func (r *restHandler) GetCatalogs(c *gin.Context) {
 				}
 			}
 			if !found {
-				httpErr := rest.NewHTTPError(ctx, http.StatusNotFound, oerrors.VegaManager_Catalog_NotFound).
+				httpErr := rest.NewHTTPError(ctx, http.StatusNotFound, oerrors.VegaBackend_Catalog_NotFound).
 					WithErrorDetails(fmt.Sprintf("id %s not found", id))
 				o11y.AddHttpAttrs4HttpError(span, httpErr)
 				rest.ReplyError(c, httpErr)
@@ -174,7 +226,15 @@ func (r *restHandler) UpdateCatalog(c *gin.Context) {
 		"UpdateCatalog", trace.WithSpanKind(trace.SpanKindServer))
 	defer span.End()
 
-	accountInfo := r.generateAccountInfo(c)
+	// 校验token
+	visitor, err := r.verifyOAuth(ctx, c)
+	if err != nil {
+		return
+	}
+	accountInfo := interfaces.AccountInfo{
+		ID:   visitor.ID,
+		Type: string(visitor.Type),
+	}
 	ctx = context.WithValue(ctx, interfaces.ACCOUNT_INFO_KEY, accountInfo)
 
 	o11y.AddHttpAttrs4API(span, o11y.GetAttrsByGinCtx(c))
@@ -183,7 +243,7 @@ func (r *restHandler) UpdateCatalog(c *gin.Context) {
 
 	var req interfaces.CatalogRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		httpErr := rest.NewHTTPError(ctx, http.StatusBadRequest, oerrors.VegaManager_InvalidParameter_RequestBody).
+		httpErr := rest.NewHTTPError(ctx, http.StatusBadRequest, oerrors.VegaBackend_InvalidParameter_RequestBody).
 			WithErrorDetails(err.Error())
 		o11y.AddHttpAttrs4HttpError(span, httpErr)
 		rest.ReplyError(c, httpErr)
@@ -207,12 +267,33 @@ func (r *restHandler) UpdateCatalog(c *gin.Context) {
 	}
 	req.OriginCatalog = catalog
 
+	// Apply updates
+	if req.Name != catalog.Name {
+		exists, err := r.cs.CheckExistByName(ctx, req.Name)
+		if err != nil {
+			httpErr := err.(*rest.HTTPError)
+			o11y.AddHttpAttrs4HttpError(span, httpErr)
+			rest.ReplyError(c, httpErr)
+		}
+		if exists {
+			span.SetStatus(codes.Error, "Catalog name exists")
+			httpErr := rest.NewHTTPError(ctx, http.StatusConflict, oerrors.VegaBackend_Catalog_NameExists)
+			o11y.AddHttpAttrs4HttpError(span, httpErr)
+			rest.ReplyError(c, httpErr)
+			return
+		}
+		req.IfNameModify = true
+	}
+
 	if err := r.cs.Update(ctx, id, &req); err != nil {
 		httpErr := err.(*rest.HTTPError)
 		o11y.AddHttpAttrs4HttpError(span, httpErr)
 		rest.ReplyError(c, httpErr)
 		return
 	}
+
+	audit.NewInfoLog(audit.OPERATION, audit.UPDATE, audit.TransforOperator(visitor),
+		interfaces.GenerateCatalogAuditObject(id, req.Name), "")
 
 	logger.Debug("Handler UpdateCatalog Success")
 	o11y.AddHttpAttrs4Ok(span, http.StatusNoContent)
@@ -225,7 +306,15 @@ func (r *restHandler) DeleteCatalogs(c *gin.Context) {
 		"DeleteCatalogs", trace.WithSpanKind(trace.SpanKindServer))
 	defer span.End()
 
-	accountInfo := r.generateAccountInfo(c)
+	// 校验token
+	visitor, err := r.verifyOAuth(ctx, c)
+	if err != nil {
+		return
+	}
+	accountInfo := interfaces.AccountInfo{
+		ID:   visitor.ID,
+		Type: string(visitor.Type),
+	}
 	ctx = context.WithValue(ctx, interfaces.ACCOUNT_INFO_KEY, accountInfo)
 
 	o11y.AddHttpAttrs4API(span, o11y.GetAttrsByGinCtx(c))
@@ -236,14 +325,14 @@ func (r *restHandler) DeleteCatalogs(c *gin.Context) {
 	for _, id := range ids {
 		exists, err := r.cs.CheckExistByID(ctx, id)
 		if err != nil {
-			httpErr := rest.NewHTTPError(ctx, http.StatusInternalServerError, oerrors.VegaManager_Catalog_InternalError).
-				WithErrorDetails(err.Error())
+			httpErr := err.(*rest.HTTPError)
 			o11y.AddHttpAttrs4HttpError(span, httpErr)
 			rest.ReplyError(c, httpErr)
 			return
 		}
 		if !exists {
-			httpErr := rest.NewHTTPError(ctx, http.StatusNotFound, oerrors.VegaManager_Catalog_NotFound)
+			httpErr := rest.NewHTTPError(ctx, http.StatusNotFound, oerrors.VegaBackend_Catalog_NotFound).
+				WithErrorDetails(fmt.Sprintf("id %s not found", id))
 			o11y.AddHttpAttrs4HttpError(span, httpErr)
 			rest.ReplyError(c, httpErr)
 			return
@@ -257,6 +346,11 @@ func (r *restHandler) DeleteCatalogs(c *gin.Context) {
 		return
 	}
 
+	for _, id := range ids {
+		audit.NewWarnLog(audit.OPERATION, audit.DELETE, audit.TransforOperator(visitor),
+			interfaces.GenerateCatalogAuditObject(id, ""), audit.SUCCESS, "")
+	}
+
 	logger.Debug("Handler DeleteCatalog Success")
 	o11y.AddHttpAttrs4Ok(span, http.StatusNoContent)
 	rest.ReplyOK(c, http.StatusNoContent, nil)
@@ -268,7 +362,15 @@ func (r *restHandler) GetCatalogHealthStatus(c *gin.Context) {
 		"GetCatalogHealthStatus", trace.WithSpanKind(trace.SpanKindServer))
 	defer span.End()
 
-	accountInfo := r.generateAccountInfo(c)
+	// 校验token
+	visitor, err := r.verifyOAuth(ctx, c)
+	if err != nil {
+		return
+	}
+	accountInfo := interfaces.AccountInfo{
+		ID:   visitor.ID,
+		Type: string(visitor.Type),
+	}
 	ctx = context.WithValue(ctx, interfaces.ACCOUNT_INFO_KEY, accountInfo)
 
 	o11y.AddHttpAttrs4API(span, o11y.GetAttrsByGinCtx(c))
@@ -301,7 +403,15 @@ func (r *restHandler) TestConnection(c *gin.Context) {
 		"TestConnection", trace.WithSpanKind(trace.SpanKindServer))
 	defer span.End()
 
-	accountInfo := r.generateAccountInfo(c)
+	// 校验token
+	visitor, err := r.verifyOAuth(ctx, c)
+	if err != nil {
+		return
+	}
+	accountInfo := interfaces.AccountInfo{
+		ID:   visitor.ID,
+		Type: string(visitor.Type),
+	}
 	ctx = context.WithValue(ctx, interfaces.ACCOUNT_INFO_KEY, accountInfo)
 
 	o11y.AddHttpAttrs4API(span, o11y.GetAttrsByGinCtx(c))
@@ -337,7 +447,15 @@ func (r *restHandler) DiscoverCatalogResources(c *gin.Context) {
 		"DiscoverCatalogResources", trace.WithSpanKind(trace.SpanKindServer))
 	defer span.End()
 
-	accountInfo := r.generateAccountInfo(c)
+	// 校验token
+	visitor, err := r.verifyOAuth(ctx, c)
+	if err != nil {
+		return
+	}
+	accountInfo := interfaces.AccountInfo{
+		ID:   visitor.ID,
+		Type: string(visitor.Type),
+	}
 	ctx = context.WithValue(ctx, interfaces.ACCOUNT_INFO_KEY, accountInfo)
 
 	o11y.AddHttpAttrs4API(span, o11y.GetAttrsByGinCtx(c))
@@ -353,7 +471,7 @@ func (r *restHandler) DiscoverCatalogResources(c *gin.Context) {
 		return
 	}
 	if catalog == nil {
-		httpErr := rest.NewHTTPError(ctx, http.StatusNotFound, oerrors.VegaManager_Catalog_NotFound)
+		httpErr := rest.NewHTTPError(ctx, http.StatusNotFound, oerrors.VegaBackend_Catalog_NotFound)
 		o11y.AddHttpAttrs4HttpError(span, httpErr)
 		rest.ReplyError(c, httpErr)
 		return
@@ -362,7 +480,7 @@ func (r *restHandler) DiscoverCatalogResources(c *gin.Context) {
 	// Create discovery task (async)
 	taskID, err := r.dts.Create(ctx, catalog.ID)
 	if err != nil {
-		httpErr := rest.NewHTTPError(ctx, http.StatusInternalServerError, oerrors.VegaManager_Catalog_InternalError).
+		httpErr := rest.NewHTTPError(ctx, http.StatusInternalServerError, oerrors.VegaBackend_Catalog_InternalError).
 			WithErrorDetails(err.Error())
 		o11y.AddHttpAttrs4HttpError(span, httpErr)
 		rest.ReplyError(c, httpErr)
@@ -384,7 +502,15 @@ func (r *restHandler) ListCatalogResources(c *gin.Context) {
 		"ListCatalogResources", trace.WithSpanKind(trace.SpanKindServer))
 	defer span.End()
 
-	accountInfo := r.generateAccountInfo(c)
+	// 校验token
+	visitor, err := r.verifyOAuth(ctx, c)
+	if err != nil {
+		return
+	}
+	accountInfo := interfaces.AccountInfo{
+		ID:   visitor.ID,
+		Type: string(visitor.Type),
+	}
 	ctx = context.WithValue(ctx, interfaces.ACCOUNT_INFO_KEY, accountInfo)
 
 	o11y.AddHttpAttrs4API(span, o11y.GetAttrsByGinCtx(c))
@@ -394,25 +520,50 @@ func (r *restHandler) ListCatalogResources(c *gin.Context) {
 	// Check if id exists
 	exists, err := r.cs.CheckExistByID(ctx, id)
 	if err != nil {
-		httpErr := rest.NewHTTPError(ctx, http.StatusInternalServerError, oerrors.VegaManager_Catalog_InternalError).
+		httpErr := rest.NewHTTPError(ctx, http.StatusInternalServerError, oerrors.VegaBackend_Catalog_InternalError).
 			WithErrorDetails(err.Error())
 		o11y.AddHttpAttrs4HttpError(span, httpErr)
 		rest.ReplyError(c, httpErr)
 		return
 	}
 	if !exists {
-		httpErr := rest.NewHTTPError(ctx, http.StatusNotFound, oerrors.VegaManager_Catalog_NotFound)
+		httpErr := rest.NewHTTPError(ctx, http.StatusNotFound, oerrors.VegaBackend_Catalog_NotFound)
+		o11y.AddHttpAttrs4HttpError(span, httpErr)
+		rest.ReplyError(c, httpErr)
+		return
+	}
+
+	// 获取查询参数
+	category := c.Query("category")
+	status := c.Query("status")
+	database := c.Query("database")
+	offset := c.DefaultQuery("offset", interfaces.DEFAULT_OFFSET)
+	limit := c.DefaultQuery("limit", interfaces.DEFAULT_LIMIT)
+	sort := c.DefaultQuery("sort", "update_time")
+	direction := c.DefaultQuery("direction", interfaces.DESC_DIRECTION)
+
+	// 校验分页查询参数
+	pageParam, err := validatePaginationQueryParams(ctx,
+		offset, limit, sort, direction, interfaces.CATALOG_SORT)
+	if err != nil {
+		httpErr := err.(*rest.HTTPError)
+
+		// 记录异常日志
+		o11y.Error(ctx, fmt.Sprintf("%s. %v", httpErr.BaseError.Description,
+			httpErr.BaseError.ErrorDetails))
+
+		// 设置 trace 的错误信息的 attributes
 		o11y.AddHttpAttrs4HttpError(span, httpErr)
 		rest.ReplyError(c, httpErr)
 		return
 	}
 
 	params := interfaces.ResourcesQueryParams{
-		PaginationParams: interfaces.PaginationParams{
-			Offset: getIntQuery(c, "offset", interfaces.DefaultOffset),
-			Limit:  getIntQuery(c, "limit", interfaces.DefaultLimit),
-		},
-		CatalogID: id,
+		PaginationQueryParams: pageParam,
+		CatalogID:             id,
+		Category:              category,
+		Status:                status,
+		Database:              database,
 	}
 
 	entries, total, err := r.rs.List(ctx, params)
@@ -431,17 +582,4 @@ func (r *restHandler) ListCatalogResources(c *gin.Context) {
 	logger.Debug("Handler ListCatalogResources Success")
 	o11y.AddHttpAttrs4Ok(span, http.StatusOK)
 	rest.ReplyOK(c, http.StatusOK, result)
-}
-
-// getIntQuery gets int query parameter with default value
-func getIntQuery(c *gin.Context, key string, defaultVal int) int {
-	val := c.Query(key)
-	if val == "" {
-		return defaultVal
-	}
-	result, err := strconv.Atoi(val)
-	if err != nil {
-		return defaultVal
-	}
-	return result
 }

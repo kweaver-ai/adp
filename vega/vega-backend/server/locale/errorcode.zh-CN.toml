@@ -1,69 +1,94 @@
-[VegaManager.InvalidParameter.Name]
+[VegaBackend.InvalidParameter.Name]
 Description = "无效的名称"
 Solution = "请检查参数"
 ErrorLink = "暂无"
 
-[VegaManager.InvalidParameter.Tag]
+[VegaBackend.InvalidParameter.Tag]
 Description = "无效的标签"
 Solution = "请检查参数"
 ErrorLink = "暂无"
 
-[VegaManager.InvalidParameter.Description]
+[VegaBackend.InvalidParameter.Description]
 Description = "无效的描述"
 Solution = "请检查参数"
 ErrorLink = "暂无"
 
-[VegaManager.InvalidParameter.RequestBody]
+[VegaBackend.InvalidParameter.RequestBody]
 Description = "无效的请求体"
 Solution = "请检查参数"
 ErrorLink = "暂无"
 
-[VegaManager.InvalidParameter.Limit]
+[VegaBackend.InvalidParameter.Limit]
 Description = "无效的分页限制参数"
 Solution = "请检查参数"
 ErrorLink = "暂无"
 
-[VegaManager.InvalidParameter.Offset]
+[VegaBackend.InvalidParameter.Offset]
 Description = "无效的分页偏移参数"
 Solution = "请检查参数"
 ErrorLink = "暂无"
 
-[VegaManager.InvalidParameter.Sort]
+[VegaBackend.InvalidParameter.Sort]
 Description = "无效的排序参数"
 Solution = "请检查参数"
 ErrorLink = "暂无"
 
-[VegaManager.InvalidParameter.Direction]
+[VegaBackend.InvalidParameter.Direction]
 Description = "无效的排序方向参数"
 Solution = "请检查参数"
 ErrorLink = "暂无"
 
-[VegaManager.InvalidParameter.ID]
+[VegaBackend.InvalidParameter.ID]
 Description = "无效的ID参数"
 Solution = "请检查参数"
 ErrorLink = "暂无"
 
-[VegaManager.InvalidRequestHeader.ContentType]
+[VegaBackend.InvalidRequestHeader.ContentType]
 Description = "不支持的Content-Type请求头"
 Solution = "请检查请求头"
 ErrorLink = "暂无"
 
-[VegaManager.InternalError.BeginTransactionFailed]
+[VegaBackend.InternalError.BeginTransactionFailed]
 Description = "开启事务失败"
 Solution = "请联系管理员"
 ErrorLink = "暂无"
 
-[VegaManager.InternalError.CommitTransactionFailed]
+[VegaBackend.InternalError.CommitTransactionFailed]
 Description = "提交事务失败"
 Solution = "请联系管理员"
 ErrorLink = "暂无"
 
-[VegaManager.InternalError.MarshalDataFailed]
+[VegaBackend.InternalError.MarshalDataFailed]
 Description = "序列化数据失败"
 Solution = "请联系管理员"
 ErrorLink = "暂无"
 
-[VegaManager.InternalError.UnMarshalDataFailed]
+[VegaBackend.InternalError.UnMarshalDataFailed]
 Description = "反序列化数据失败"
+Solution = "请联系管理员"
+ErrorLink = "暂无"
+
+[VegaBackend.InternalError.CheckPermissionFailed]
+Description = "权限检查失败"
+Solution = "请联系管理员"
+ErrorLink = "暂无"
+
+[VegaBackend.InternalError.CreateResourcesFailed]
+Description = "创建资源权限失败"
+Solution = "请联系管理员"
+ErrorLink = "暂无"
+
+[VegaBackend.InternalError.DeleteResourcesFailed]
+Description = "删除资源权限失败"
+Solution = "请联系管理员"
+ErrorLink = "暂无"
+
+[VegaBackend.InternalError.FilterResourcesFailed]
+Description = "过滤资源权限失败"
+Solution = "请联系管理员"
+ErrorLink = "暂无"
+
+[VegaBackend.InternalError.UpdateResourceFailed]
+Description = "更新资源权限失败"
 Solution = "请联系管理员"
 ErrorLink = "暂无"

@@ -9,47 +9,47 @@ package errors
 // Resource 错误码
 const (
 	// 400 Bad Request
-	VegaManager_Resource_InvalidParameter           = "VegaManager.Resource.InvalidParameter"
-	VegaManager_Resource_InvalidParameter_Type      = "VegaManager.Resource.InvalidParameter.Type"
-	VegaManager_Resource_InvalidParameter_Name      = "VegaManager.Resource.InvalidParameter.Name"
-	VegaManager_Resource_InvalidParameter_CatalogID = "VegaManager.Resource.InvalidParameter.CatalogID"
-	VegaManager_Resource_LengthExceeded_Name        = "VegaManager.Resource.LengthExceeded.Name"
-	VegaManager_Resource_LengthExceeded_Description = "VegaManager.Resource.LengthExceeded.Description"
+	VegaBackend_Resource_InvalidParameter           = "VegaBackend.Resource.InvalidParameter"
+	VegaBackend_Resource_InvalidParameter_Type      = "VegaBackend.Resource.InvalidParameter.Type"
+	VegaBackend_Resource_InvalidParameter_Name      = "VegaBackend.Resource.InvalidParameter.Name"
+	VegaBackend_Resource_InvalidParameter_CatalogID = "VegaBackend.Resource.InvalidParameter.CatalogID"
+	VegaBackend_Resource_LengthExceeded_Name        = "VegaBackend.Resource.LengthExceeded.Name"
+	VegaBackend_Resource_LengthExceeded_Description = "VegaBackend.Resource.LengthExceeded.Description"
 
 	// 403 Forbidden
-	VegaManager_Resource_NotFound        = "VegaManager.Resource.NotFound"
-	VegaManager_Resource_NameExists      = "VegaManager.Resource.NameExists"
-	VegaManager_Resource_CatalogNotFound = "VegaManager.Resource.CatalogNotFound"
-	VegaManager_Resource_IsDisabled      = "VegaManager.Resource.IsDisabled"
-	VegaManager_Resource_AlreadyEnabled  = "VegaManager.Resource.AlreadyEnabled"
-	VegaManager_Resource_AlreadyDisabled = "VegaManager.Resource.AlreadyDisabled"
+	VegaBackend_Resource_NotFound        = "VegaBackend.Resource.NotFound"
+	VegaBackend_Resource_NameExists      = "VegaBackend.Resource.NameExists"
+	VegaBackend_Resource_CatalogNotFound = "VegaBackend.Resource.CatalogNotFound"
+	VegaBackend_Resource_IsDisabled      = "VegaBackend.Resource.IsDisabled"
+	VegaBackend_Resource_AlreadyEnabled  = "VegaBackend.Resource.AlreadyEnabled"
+	VegaBackend_Resource_AlreadyDisabled = "VegaBackend.Resource.AlreadyDisabled"
 
 	// 500 Internal Server Error
-	VegaManager_Resource_InternalError              = "VegaManager.Resource.InternalError"
-	VegaManager_Resource_InternalError_CreateFailed = "VegaManager.Resource.InternalError.CreateFailed"
-	VegaManager_Resource_InternalError_GetFailed    = "VegaManager.Resource.InternalError.GetFailed"
-	VegaManager_Resource_InternalError_UpdateFailed = "VegaManager.Resource.InternalError.UpdateFailed"
-	VegaManager_Resource_InternalError_DeleteFailed = "VegaManager.Resource.InternalError.DeleteFailed"
-	VegaManager_Resource_InternalError_SyncFailed   = "VegaManager.Resource.InternalError.SyncFailed"
+	VegaBackend_Resource_InternalError              = "VegaBackend.Resource.InternalError"
+	VegaBackend_Resource_InternalError_CreateFailed = "VegaBackend.Resource.InternalError.CreateFailed"
+	VegaBackend_Resource_InternalError_GetFailed    = "VegaBackend.Resource.InternalError.GetFailed"
+	VegaBackend_Resource_InternalError_UpdateFailed = "VegaBackend.Resource.InternalError.UpdateFailed"
+	VegaBackend_Resource_InternalError_DeleteFailed = "VegaBackend.Resource.InternalError.DeleteFailed"
+	VegaBackend_Resource_InternalError_SyncFailed   = "VegaBackend.Resource.InternalError.SyncFailed"
 )
 
 var ResourceErrCodeList = []string{
-	VegaManager_Resource_InvalidParameter,
-	VegaManager_Resource_InvalidParameter_Type,
-	VegaManager_Resource_InvalidParameter_Name,
-	VegaManager_Resource_InvalidParameter_CatalogID,
-	VegaManager_Resource_LengthExceeded_Name,
-	VegaManager_Resource_LengthExceeded_Description,
-	VegaManager_Resource_NotFound,
-	VegaManager_Resource_NameExists,
-	VegaManager_Resource_CatalogNotFound,
-	VegaManager_Resource_IsDisabled,
-	VegaManager_Resource_AlreadyEnabled,
-	VegaManager_Resource_AlreadyDisabled,
-	VegaManager_Resource_InternalError,
-	VegaManager_Resource_InternalError_CreateFailed,
-	VegaManager_Resource_InternalError_GetFailed,
-	VegaManager_Resource_InternalError_UpdateFailed,
-	VegaManager_Resource_InternalError_DeleteFailed,
-	VegaManager_Resource_InternalError_SyncFailed,
+	VegaBackend_Resource_InvalidParameter,
+	VegaBackend_Resource_InvalidParameter_Type,
+	VegaBackend_Resource_InvalidParameter_Name,
+	VegaBackend_Resource_InvalidParameter_CatalogID,
+	VegaBackend_Resource_LengthExceeded_Name,
+	VegaBackend_Resource_LengthExceeded_Description,
+	VegaBackend_Resource_NotFound,
+	VegaBackend_Resource_NameExists,
+	VegaBackend_Resource_CatalogNotFound,
+	VegaBackend_Resource_IsDisabled,
+	VegaBackend_Resource_AlreadyEnabled,
+	VegaBackend_Resource_AlreadyDisabled,
+	VegaBackend_Resource_InternalError,
+	VegaBackend_Resource_InternalError_CreateFailed,
+	VegaBackend_Resource_InternalError_GetFailed,
+	VegaBackend_Resource_InternalError_UpdateFailed,
+	VegaBackend_Resource_InternalError_DeleteFailed,
+	VegaBackend_Resource_InternalError_SyncFailed,
 }

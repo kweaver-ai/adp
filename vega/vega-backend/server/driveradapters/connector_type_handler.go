@@ -8,14 +8,18 @@ package driveradapters
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"strconv"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 	"github.com/kweaver-ai/TelemetrySDK-Go/exporter/v2/ar_trace"
+	"github.com/kweaver-ai/kweaver-go-lib/audit"
 	"github.com/kweaver-ai/kweaver-go-lib/logger"
 	o11y "github.com/kweaver-ai/kweaver-go-lib/observability"
 	"github.com/kweaver-ai/kweaver-go-lib/rest"
+	"go.opentelemetry.io/otel/codes"
 	"go.opentelemetry.io/otel/trace"
 
 	oerrors "vega-backend/errors"
@@ -28,11 +32,21 @@ func (r *restHandler) ListConnectorTypes(c *gin.Context) {
 		"ListConnectorTypes", trace.WithSpanKind(trace.SpanKindServer))
 	defer span.End()
 
-	accountInfo := r.generateAccountInfo(c)
+	// 校验token
+	visitor, err := r.verifyOAuth(ctx, c)
+	if err != nil {
+		return
+	}
+	accountInfo := interfaces.AccountInfo{
+		ID:   visitor.ID,
+		Type: string(visitor.Type),
+	}
 	ctx = context.WithValue(ctx, interfaces.ACCOUNT_INFO_KEY, accountInfo)
 
 	o11y.AddHttpAttrs4API(span, o11y.GetAttrsByGinCtx(c))
 
+	// 获取查询参数
+	tag := strings.TrimSpace(c.Query("tag"))
 	var enabled *bool
 	if enabledStr := c.Query("enabled"); enabledStr != "" {
 		b, err := strconv.ParseBool(enabledStr)
@@ -40,15 +54,35 @@ func (r *restHandler) ListConnectorTypes(c *gin.Context) {
 			enabled = &b
 		}
 	}
+	mode := c.Query("mode")
+	category := c.Query("category")
+	offset := c.DefaultQuery("offset", interfaces.DEFAULT_OFFSET)
+	limit := c.DefaultQuery("limit", interfaces.DEFAULT_LIMIT)
+	sort := c.DefaultQuery("sort", "update_time")
+	direction := c.DefaultQuery("direction", interfaces.DESC_DIRECTION)
+
+	// 校验分页查询参数
+	pageParam, err := validatePaginationQueryParams(ctx,
+		offset, limit, sort, direction, interfaces.CONNECTOR_TYPE_SORT)
+	if err != nil {
+		httpErr := err.(*rest.HTTPError)
+
+		// 记录异常日志
+		o11y.Error(ctx, fmt.Sprintf("%s. %v", httpErr.BaseError.Description,
+			httpErr.BaseError.ErrorDetails))
+
+		// 设置 trace 的错误信息的 attributes
+		o11y.AddHttpAttrs4HttpError(span, httpErr)
+		rest.ReplyError(c, httpErr)
+		return
+	}
 
 	params := interfaces.ConnectorTypesQueryParams{
-		PaginationParams: interfaces.PaginationParams{
-			Offset: getIntQuery(c, "offset", interfaces.DefaultOffset),
-			Limit:  getIntQuery(c, "limit", interfaces.DefaultLimit),
-		},
-		Mode:     c.Query("mode"),
-		Category: c.Query("category"),
-		Enabled:  enabled,
+		PaginationQueryParams: pageParam,
+		Tag:                   tag,
+		Mode:                  mode,
+		Category:              category,
+		Enabled:               enabled,
 	}
 
 	entries, total, err := r.cts.List(ctx, params)
@@ -60,8 +94,8 @@ func (r *restHandler) ListConnectorTypes(c *gin.Context) {
 	}
 
 	result := map[string]any{
-		"entries": entries,
-		"total":   total,
+		"entries":     entries,
+		"total_count": total,
 	}
 
 	logger.Debug("Handler ListConnectorTypes Success")
@@ -75,7 +109,15 @@ func (r *restHandler) RegisterConnectorType(c *gin.Context) {
 		"RegisterConnectorType", trace.WithSpanKind(trace.SpanKindServer))
 	defer span.End()
 
-	accountInfo := r.generateAccountInfo(c)
+	// 校验token
+	visitor, err := r.verifyOAuth(ctx, c)
+	if err != nil {
+		return
+	}
+	accountInfo := interfaces.AccountInfo{
+		ID:   visitor.ID,
+		Type: string(visitor.Type),
+	}
 	ctx = context.WithValue(ctx, interfaces.ACCOUNT_INFO_KEY, accountInfo)
 
 	// 设置 trace 的相关 api 的属性
@@ -83,8 +125,16 @@ func (r *restHandler) RegisterConnectorType(c *gin.Context) {
 
 	var req interfaces.ConnectorTypeReq
 	if err := c.ShouldBindJSON(&req); err != nil {
-		httpErr := rest.NewHTTPError(ctx, http.StatusBadRequest, oerrors.VegaManager_InvalidParameter_RequestBody).
+		httpErr := rest.NewHTTPError(ctx, http.StatusBadRequest, oerrors.VegaBackend_InvalidParameter_RequestBody).
 			WithErrorDetails(err.Error())
+		o11y.AddHttpAttrs4HttpError(span, httpErr)
+		rest.ReplyError(c, httpErr)
+		return
+	}
+
+	if err := ValidateConnectorTypeReq(ctx, &req); err != nil {
+		httpErr := err.(*rest.HTTPError)
+		o11y.AddHttpAttrs4HttpError(span, httpErr)
 		rest.ReplyError(c, httpErr)
 		return
 	}
@@ -92,21 +142,16 @@ func (r *restHandler) RegisterConnectorType(c *gin.Context) {
 	// Check if type exists
 	exists, err := r.cts.CheckExistByType(ctx, req.Type)
 	if err != nil {
-		httpErr := rest.NewHTTPError(ctx, http.StatusInternalServerError, oerrors.VegaManager_ConnectorType_InternalError).
+		httpErr := rest.NewHTTPError(ctx, http.StatusInternalServerError, oerrors.VegaBackend_ConnectorType_InternalError).
 			WithErrorDetails(err.Error())
 		o11y.AddHttpAttrs4HttpError(span, httpErr)
 		rest.ReplyError(c, httpErr)
 		return
 	}
 	if exists {
-		httpErr := rest.NewHTTPError(ctx, http.StatusConflict, oerrors.VegaManager_ConnectorType_TypeExists)
+		httpErr := rest.NewHTTPError(ctx, http.StatusConflict, oerrors.VegaBackend_ConnectorType_TypeExists)
 		o11y.AddHttpAttrs4HttpError(span, httpErr)
 		rest.ReplyError(c, httpErr)
-		return
-	}
-
-	if err := ValidateConnectorTypeReq(ctx, &req); err != nil {
-		rest.ReplyError(c, err)
 		return
 	}
 
@@ -117,9 +162,13 @@ func (r *restHandler) RegisterConnectorType(c *gin.Context) {
 		return
 	}
 
+	// 成功创建记录审计日志
+	audit.NewInfoLog(audit.OPERATION, audit.CREATE, audit.TransforOperator(visitor),
+		interfaces.GenerateConnectorTypeAuditObject(req.Type, req.Name), "")
+
 	result := map[string]any{"type": req.Type}
 
-	logger.Debug("Handler CreateCatalog Success")
+	logger.Debug("Handler RegisterConnectorType Success")
 	o11y.AddHttpAttrs4Ok(span, http.StatusOK)
 	rest.ReplyOK(c, http.StatusCreated, result)
 }
@@ -130,7 +179,15 @@ func (r *restHandler) GetConnectorType(c *gin.Context) {
 		"GetConnectorType", trace.WithSpanKind(trace.SpanKindServer))
 	defer span.End()
 
-	accountInfo := r.generateAccountInfo(c)
+	// 校验token
+	visitor, err := r.verifyOAuth(ctx, c)
+	if err != nil {
+		return
+	}
+	accountInfo := interfaces.AccountInfo{
+		ID:   visitor.ID,
+		Type: string(visitor.Type),
+	}
 	ctx = context.WithValue(ctx, interfaces.ACCOUNT_INFO_KEY, accountInfo)
 
 	o11y.AddHttpAttrs4API(span, o11y.GetAttrsByGinCtx(c))
@@ -140,6 +197,12 @@ func (r *restHandler) GetConnectorType(c *gin.Context) {
 	connectorType, err := r.cts.GetByType(ctx, id)
 	if err != nil {
 		httpErr := err.(*rest.HTTPError)
+		o11y.AddHttpAttrs4HttpError(span, httpErr)
+		rest.ReplyError(c, httpErr)
+		return
+	}
+	if connectorType == nil {
+		httpErr := rest.NewHTTPError(ctx, http.StatusNotFound, oerrors.VegaBackend_ConnectorType_NotFound)
 		o11y.AddHttpAttrs4HttpError(span, httpErr)
 		rest.ReplyError(c, httpErr)
 		return
@@ -156,7 +219,15 @@ func (r *restHandler) UpdateConnectorType(c *gin.Context) {
 		"UpdateConnectorType", trace.WithSpanKind(trace.SpanKindServer))
 	defer span.End()
 
-	accountInfo := r.generateAccountInfo(c)
+	// 校验token
+	visitor, err := r.verifyOAuth(ctx, c)
+	if err != nil {
+		return
+	}
+	accountInfo := interfaces.AccountInfo{
+		ID:   visitor.ID,
+		Type: string(visitor.Type),
+	}
 	ctx = context.WithValue(ctx, interfaces.ACCOUNT_INFO_KEY, accountInfo)
 
 	o11y.AddHttpAttrs4API(span, o11y.GetAttrsByGinCtx(c))
@@ -165,7 +236,7 @@ func (r *restHandler) UpdateConnectorType(c *gin.Context) {
 
 	var req interfaces.ConnectorTypeReq
 	if err := c.ShouldBindJSON(&req); err != nil {
-		httpErr := rest.NewHTTPError(ctx, http.StatusBadRequest, oerrors.VegaManager_InvalidParameter_RequestBody).
+		httpErr := rest.NewHTTPError(ctx, http.StatusBadRequest, oerrors.VegaBackend_InvalidParameter_RequestBody).
 			WithErrorDetails(err.Error())
 		rest.ReplyError(c, httpErr)
 		return
@@ -179,11 +250,31 @@ func (r *restHandler) UpdateConnectorType(c *gin.Context) {
 		return
 	}
 
-	if _, err := r.cts.GetByType(ctx, tp); err != nil {
+	connectorType, err := r.cts.GetByType(ctx, tp)
+	if err != nil {
 		httpErr := err.(*rest.HTTPError)
 		o11y.AddHttpAttrs4HttpError(span, httpErr)
 		rest.ReplyError(c, httpErr)
 		return
+	}
+	req.OriginConnectorType = connectorType
+
+	// Apply updates
+	if req.Name != connectorType.Name {
+		exists, err := r.cts.CheckExistByName(ctx, req.Name)
+		if err != nil {
+			httpErr := err.(*rest.HTTPError)
+			o11y.AddHttpAttrs4HttpError(span, httpErr)
+			rest.ReplyError(c, httpErr)
+		}
+		if exists {
+			span.SetStatus(codes.Error, "Connector type name exists")
+			httpErr := rest.NewHTTPError(ctx, http.StatusConflict, oerrors.VegaBackend_ConnectorType_NameExists)
+			o11y.AddHttpAttrs4HttpError(span, httpErr)
+			rest.ReplyError(c, httpErr)
+			return
+		}
+		req.IfNameModify = true
 	}
 
 	if err := r.cts.Update(ctx, &req); err != nil {
@@ -192,6 +283,9 @@ func (r *restHandler) UpdateConnectorType(c *gin.Context) {
 		rest.ReplyError(c, httpErr)
 		return
 	}
+
+	audit.NewInfoLog(audit.OPERATION, audit.UPDATE, audit.TransforOperator(visitor),
+		interfaces.GenerateConnectorTypeAuditObject(tp, req.Name), "")
 
 	logger.Debug("Handler UpdateConnectorType Success")
 	o11y.AddHttpAttrs4Ok(span, http.StatusNoContent)
@@ -204,7 +298,15 @@ func (r *restHandler) DeleteConnectorType(c *gin.Context) {
 		"DeleteConnectorType", trace.WithSpanKind(trace.SpanKindServer))
 	defer span.End()
 
-	accountInfo := r.generateAccountInfo(c)
+	// 校验token
+	visitor, err := r.verifyOAuth(ctx, c)
+	if err != nil {
+		return
+	}
+	accountInfo := interfaces.AccountInfo{
+		ID:   visitor.ID,
+		Type: string(visitor.Type),
+	}
 	ctx = context.WithValue(ctx, interfaces.ACCOUNT_INFO_KEY, accountInfo)
 
 	o11y.AddHttpAttrs4API(span, o11y.GetAttrsByGinCtx(c))
@@ -213,14 +315,14 @@ func (r *restHandler) DeleteConnectorType(c *gin.Context) {
 
 	ct, err := r.cts.GetByType(ctx, tp)
 	if err != nil {
-		httpErr := rest.NewHTTPError(ctx, http.StatusInternalServerError, oerrors.VegaManager_ConnectorType_InternalError).
+		httpErr := rest.NewHTTPError(ctx, http.StatusInternalServerError, oerrors.VegaBackend_ConnectorType_InternalError).
 			WithErrorDetails(err.Error())
 		o11y.AddHttpAttrs4HttpError(span, httpErr)
 		rest.ReplyError(c, httpErr)
 		return
 	}
 	if ct.Mode == interfaces.ConnectorModeLocal {
-		httpErr := rest.NewHTTPError(ctx, http.StatusForbidden, oerrors.VegaManager_ConnectorType_BadRequest).
+		httpErr := rest.NewHTTPError(ctx, http.StatusForbidden, oerrors.VegaBackend_ConnectorType_BadRequest).
 			WithErrorDetails("can not delete local connector type")
 		o11y.AddHttpAttrs4HttpError(span, httpErr)
 		rest.ReplyError(c, httpErr)
@@ -234,6 +336,9 @@ func (r *restHandler) DeleteConnectorType(c *gin.Context) {
 		return
 	}
 
+	audit.NewWarnLog(audit.OPERATION, audit.DELETE, audit.TransforOperator(visitor),
+		interfaces.GenerateConnectorTypeAuditObject(tp, ""), audit.SUCCESS, "")
+
 	logger.Debug("Handler DeleteConnectorType Success")
 	o11y.AddHttpAttrs4Ok(span, http.StatusNoContent)
 	rest.ReplyOK(c, http.StatusNoContent, nil)
@@ -245,7 +350,15 @@ func (r *restHandler) SetConnectorTypeEnabled(c *gin.Context) {
 		"SetConnectorTypeEnabled", trace.WithSpanKind(trace.SpanKindServer))
 	defer span.End()
 
-	accountInfo := r.generateAccountInfo(c)
+	// 校验token
+	visitor, err := r.verifyOAuth(ctx, c)
+	if err != nil {
+		return
+	}
+	accountInfo := interfaces.AccountInfo{
+		ID:   visitor.ID,
+		Type: string(visitor.Type),
+	}
 	ctx = context.WithValue(ctx, interfaces.ACCOUNT_INFO_KEY, accountInfo)
 
 	o11y.AddHttpAttrs4API(span, o11y.GetAttrsByGinCtx(c))
@@ -254,14 +367,14 @@ func (r *restHandler) SetConnectorTypeEnabled(c *gin.Context) {
 
 	exists, err := r.cts.CheckExistByType(ctx, tp)
 	if err != nil {
-		httpErr := rest.NewHTTPError(ctx, http.StatusInternalServerError, oerrors.VegaManager_ConnectorType_InternalError).
+		httpErr := rest.NewHTTPError(ctx, http.StatusInternalServerError, oerrors.VegaBackend_ConnectorType_InternalError).
 			WithErrorDetails(err.Error())
 		o11y.AddHttpAttrs4HttpError(span, httpErr)
 		rest.ReplyError(c, httpErr)
 		return
 	}
 	if !exists {
-		httpErr := rest.NewHTTPError(ctx, http.StatusNotFound, oerrors.VegaManager_ConnectorType_NotFound)
+		httpErr := rest.NewHTTPError(ctx, http.StatusNotFound, oerrors.VegaBackend_ConnectorType_NotFound)
 		o11y.AddHttpAttrs4HttpError(span, httpErr)
 		rest.ReplyError(c, httpErr)
 		return
@@ -271,7 +384,7 @@ func (r *restHandler) SetConnectorTypeEnabled(c *gin.Context) {
 		Value bool `json:"value"`
 	}
 	if err := c.ShouldBindJSON(&req); err != nil {
-		httpErr := rest.NewHTTPError(ctx, http.StatusBadRequest, oerrors.VegaManager_InvalidParameter_RequestBody).
+		httpErr := rest.NewHTTPError(ctx, http.StatusBadRequest, oerrors.VegaBackend_InvalidParameter_RequestBody).
 			WithErrorDetails(err.Error())
 		rest.ReplyError(c, httpErr)
 		return
@@ -283,6 +396,9 @@ func (r *restHandler) SetConnectorTypeEnabled(c *gin.Context) {
 		rest.ReplyError(c, err)
 		return
 	}
+
+	audit.NewInfoLog(audit.OPERATION, audit.UPDATE, audit.TransforOperator(visitor),
+		interfaces.GenerateConnectorTypeAuditObject(tp, ""), "")
 
 	logger.Debug("Handler SetConnectorTypeEnabled Success")
 	o11y.AddHttpAttrs4Ok(span, http.StatusNoContent)

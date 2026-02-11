@@ -3,12 +3,13 @@
 // Licensed under the Apache License, Version 2.0.
 // See the LICENSE file in the project root for details.
 
-// Package interfaces defines entities, DTOs, and service interfaces.
 package interfaces
 
 import "context"
 
 // ResourceAccess defines resource data access interface.
+//
+//go:generate mockgen -source ../interfaces/resource_access.go -destination ../interfaces/mock/mock_resource_access.go
 type ResourceAccess interface {
 	// Create creates a new Resource.
 	Create(ctx context.Context, resource *Resource) error

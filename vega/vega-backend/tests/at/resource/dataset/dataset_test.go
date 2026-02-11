@@ -38,12 +38,12 @@ func TestDatasetResourceCreate(t *testing.T) {
 		So(config, ShouldNotBeNil)
 
 		// 创建HTTP客户端
-		client = testutil.NewHTTPClient(config.VegaManager.BaseURL)
+		client = testutil.NewHTTPClient(config.VegaBackend.BaseURL)
 
 		// 验证服务可用性
 		err = client.CheckHealth()
 		So(err, ShouldBeNil)
-		t.Logf("✓ AT测试环境就绪，VEGA Manager: %s", config.VegaManager.BaseURL)
+		t.Logf("✓ AT测试环境就绪，VEGA Manager: %s", config.VegaBackend.BaseURL)
 
 		// 清理现有dataset资源
 		cleanupResources(client, t)
@@ -113,7 +113,7 @@ func TestDatasetResourceCreate(t *testing.T) {
 
 		Convey("DS122: 缺少必填字段 - name", func() {
 			payload := map[string]any{
-				"category":      "dataset",
+				"category":       "dataset",
 				"connector_type": "mysql",
 				"config": map[string]any{
 					"host":     "localhost",
@@ -241,12 +241,12 @@ func buildUpdatePayload(originalData map[string]any, updates map[string]any) map
 	for k, v := range originalData {
 		payload[k] = v
 	}
-	
+
 	// 应用更新
 	for k, v := range updates {
 		payload[k] = v
 	}
-	
+
 	return payload
 }
 
@@ -285,7 +285,7 @@ func TestDatasetResourceRead(t *testing.T) {
 		config, err = setup.LoadTestConfig()
 		So(err, ShouldBeNil)
 
-		client = testutil.NewHTTPClient(config.VegaManager.BaseURL)
+		client = testutil.NewHTTPClient(config.VegaBackend.BaseURL)
 		err = client.CheckHealth()
 		So(err, ShouldBeNil)
 
@@ -350,7 +350,7 @@ func TestDatasetResourceUpdate(t *testing.T) {
 		config, err = setup.LoadTestConfig()
 		So(err, ShouldBeNil)
 
-		client = testutil.NewHTTPClient(config.VegaManager.BaseURL)
+		client = testutil.NewHTTPClient(config.VegaBackend.BaseURL)
 		err = client.CheckHealth()
 		So(err, ShouldBeNil)
 
@@ -425,7 +425,7 @@ func TestDatasetResourceDelete(t *testing.T) {
 		config, err = setup.LoadTestConfig()
 		So(err, ShouldBeNil)
 
-		client = testutil.NewHTTPClient(config.VegaManager.BaseURL)
+		client = testutil.NewHTTPClient(config.VegaBackend.BaseURL)
 		err = client.CheckHealth()
 		So(err, ShouldBeNil)
 
@@ -466,7 +466,7 @@ func TestDatasetDocumentsCreate(t *testing.T) {
 		config, err := setup.LoadTestConfig()
 		So(err, ShouldBeNil)
 
-		client := testutil.NewHTTPClient(config.VegaManager.BaseURL)
+		client := testutil.NewHTTPClient(config.VegaBackend.BaseURL)
 		err = client.CheckHealth()
 		So(err, ShouldBeNil)
 
@@ -518,7 +518,7 @@ func TestDatasetDocumentsList(t *testing.T) {
 		config, err := setup.LoadTestConfig()
 		So(err, ShouldBeNil)
 
-		client := testutil.NewHTTPClient(config.VegaManager.BaseURL)
+		client := testutil.NewHTTPClient(config.VegaBackend.BaseURL)
 		err = client.CheckHealth()
 		So(err, ShouldBeNil)
 
@@ -545,16 +545,16 @@ func TestDatasetDocumentsList(t *testing.T) {
 		// 构建查询条件
 		queryPayload := map[string]any{
 			"start": time.Now().UnixMilli() - (24 * 3600 * 1000),
-			"end": time.Now().UnixMilli(),
+			"end":   time.Now().UnixMilli(),
 			"sort": []map[string]any{
 				{
-					"field": "@timestamp",
+					"field":     "@timestamp",
 					"direction": "asc",
 				},
 			},
-			"offset": 0,
-			"limit": 10,
-			"need_total": true,
+			"offset":           0,
+			"limit":            10,
+			"need_total":       true,
 			"use_search_after": false,
 		}
 		// 使用GETWithBody发送带body的GET请求
@@ -574,7 +574,7 @@ func TestDatasetDocumentGet(t *testing.T) {
 		config, err := setup.LoadTestConfig()
 		So(err, ShouldBeNil)
 
-		client := testutil.NewHTTPClient(config.VegaManager.BaseURL)
+		client := testutil.NewHTTPClient(config.VegaBackend.BaseURL)
 		err = client.CheckHealth()
 		So(err, ShouldBeNil)
 
@@ -597,7 +597,7 @@ func TestDatasetDocumentGet(t *testing.T) {
 		docID := ids[0].(string)
 
 		// 获取文档
-		resp := client.GET("/api/vega-backend/v1/resources/dataset/adp-"+resourceID+"/" + docID)
+		resp := client.GET("/api/vega-backend/v1/resources/dataset/adp-" + resourceID + "/" + docID)
 		So(resp.StatusCode, ShouldEqual, http.StatusOK)
 		So(resp.Body["document"], ShouldNotBeEmpty)
 
@@ -613,7 +613,7 @@ func TestDatasetDocumentUpdate(t *testing.T) {
 		config, err := setup.LoadTestConfig()
 		So(err, ShouldBeNil)
 
-		client := testutil.NewHTTPClient(config.VegaManager.BaseURL)
+		client := testutil.NewHTTPClient(config.VegaBackend.BaseURL)
 		err = client.CheckHealth()
 		So(err, ShouldBeNil)
 
@@ -645,7 +645,7 @@ func TestDatasetDocumentUpdate(t *testing.T) {
 			},
 		}
 
-		resp := client.PUT("/api/vega-backend/v1/resources/dataset/adp-"+resourceID+"/" + docID, updatePayload)
+		resp := client.PUT("/api/vega-backend/v1/resources/dataset/adp-"+resourceID+"/"+docID, updatePayload)
 		So(resp.StatusCode, ShouldEqual, http.StatusNoContent)
 
 		// 清理资源
@@ -660,7 +660,7 @@ func TestDatasetDocumentDelete(t *testing.T) {
 		config, err := setup.LoadTestConfig()
 		So(err, ShouldBeNil)
 
-		client := testutil.NewHTTPClient(config.VegaManager.BaseURL)
+		client := testutil.NewHTTPClient(config.VegaBackend.BaseURL)
 		err = client.CheckHealth()
 		So(err, ShouldBeNil)
 
@@ -683,7 +683,7 @@ func TestDatasetDocumentDelete(t *testing.T) {
 		docID := ids[0].(string)
 
 		// 删除文档
-		resp := client.DELETE("/api/vega-backend/v1/resources/dataset/adp-"+resourceID+"/" + docID)
+		resp := client.DELETE("/api/vega-backend/v1/resources/dataset/adp-" + resourceID + "/" + docID)
 		So(resp.StatusCode, ShouldEqual, http.StatusNoContent)
 
 		// 清理资源

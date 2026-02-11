@@ -3,7 +3,6 @@
 // Licensed under the Apache License, Version 2.0.
 // See the LICENSE file in the project root for details.
 
-// Package interfaces defines entities, DTOs, and service interfaces.
 package interfaces
 
 const (
@@ -40,10 +39,10 @@ type DiscoveryTask struct {
 
 // DiscoveryTaskQueryParams holds discovery task list query parameters.
 type DiscoveryTaskQueryParams struct {
-	PaginationParams
-	CatalogID   string
-	Status      string
-	TriggerType string
+	PaginationQueryParams
+	CatalogID   string `json:"catalog_id"`
+	Status      string `json:"status"`
+	TriggerType string `json:"trigger_type"`
 }
 
 // DiscoveryTaskMessage represents the Kafka message for discovery task.

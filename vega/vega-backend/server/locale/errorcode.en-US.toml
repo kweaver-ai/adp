@@ -1,69 +1,94 @@
-[VegaManager.InvalidParameter.Name]
+[VegaBackend.InvalidParameter.Name]
 Description = "Invalid name"
 Solution = "Please check the parameter"
 ErrorLink = "None"
 
-[VegaManager.InvalidParameter.Tag]
+[VegaBackend.InvalidParameter.Tag]
 Description = "Invalid tag"
 Solution = "Please check the parameter"
 ErrorLink = "None"
 
-[VegaManager.InvalidParameter.Description]
+[VegaBackend.InvalidParameter.Description]
 Description = "Invalid description"
 Solution = "Please check the parameter"
 ErrorLink = "None"
 
-[VegaManager.InvalidParameter.RequestBody]
+[VegaBackend.InvalidParameter.RequestBody]
 Description = "Invalid request body"
 Solution = "Please check the parameter"
 ErrorLink = "None"
 
-[VegaManager.InvalidParameter.Limit]
+[VegaBackend.InvalidParameter.Limit]
 Description = "Invalid limit parameter"
 Solution = "Please check the parameter"
 ErrorLink = "None"
 
-[VegaManager.InvalidParameter.Offset]
+[VegaBackend.InvalidParameter.Offset]
 Description = "Invalid offset parameter"
 Solution = "Please check the parameter"
 ErrorLink = "None"
 
-[VegaManager.InvalidParameter.Sort]
+[VegaBackend.InvalidParameter.Sort]
 Description = "Invalid sort parameter"
 Solution = "Please check the parameter"
 ErrorLink = "None"
 
-[VegaManager.InvalidParameter.Direction]
+[VegaBackend.InvalidParameter.Direction]
 Description = "Invalid direction parameter"
 Solution = "Please check the parameter"
 ErrorLink = "None"
 
-[VegaManager.InvalidParameter.ID]
+[VegaBackend.InvalidParameter.ID]
 Description = "Invalid ID parameter"
 Solution = "Please check the parameter"
 ErrorLink = "None"
 
-[VegaManager.InvalidRequestHeader.ContentType]
+[VegaBackend.InvalidRequestHeader.ContentType]
 Description = "Content-Type header is not supported"
 Solution = "Please check the request header"
 ErrorLink = "None"
 
-[VegaManager.InternalError.BeginTransactionFailed]
+[VegaBackend.InternalError.BeginTransactionFailed]
 Description = "Failed to begin transaction"
 Solution = "Please contact the administrator"
 ErrorLink = "None"
 
-[VegaManager.InternalError.CommitTransactionFailed]
+[VegaBackend.InternalError.CommitTransactionFailed]
 Description = "Failed to commit transaction"
 Solution = "Please contact the administrator"
 ErrorLink = "None"
 
-[VegaManager.InternalError.MarshalDataFailed]
+[VegaBackend.InternalError.MarshalDataFailed]
 Description = "Failed to marshal data"
 Solution = "Please contact the administrator"
 ErrorLink = "None"
 
-[VegaManager.InternalError.UnMarshalDataFailed]
+[VegaBackend.InternalError.UnMarshalDataFailed]
 Description = "Failed to unmarshal data"
+Solution = "Please contact the administrator"
+ErrorLink = "None"
+
+[VegaBackend.InternalError.CheckPermissionFailed]
+Description = "Failed to check permission"
+Solution = "Please contact the administrator"
+ErrorLink = "None"
+
+[VegaBackend.InternalError.CreateResourcesFailed]
+Description = "Failed to create resource permissions"
+Solution = "Please contact the administrator"
+ErrorLink = "None"
+
+[VegaBackend.InternalError.DeleteResourcesFailed]
+Description = "Failed to delete resource permissions"
+Solution = "Please contact the administrator"
+ErrorLink = "None"
+
+[VegaBackend.InternalError.FilterResourcesFailed]
+Description = "Failed to filter resource permissions"
+Solution = "Please contact the administrator"
+ErrorLink = "None"
+
+[VegaBackend.InternalError.UpdateResourceFailed]
+Description = "Failed to update resource permission"
 Solution = "Please contact the administrator"
 ErrorLink = "None"

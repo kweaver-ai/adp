@@ -62,7 +62,7 @@ func Init(appSetting *common.AppSetting) *ConnectorFactory {
 // RegisterAllConnectors 注册所有 connector 构建器
 func (cf *ConnectorFactory) RegisterAllConnectors(appSetting *common.AppSetting) {
 	cts, _, err := cf.cta.List(context.Background(), interfaces.ConnectorTypesQueryParams{
-		PaginationParams: interfaces.PaginationParams{
+		PaginationQueryParams: interfaces.PaginationQueryParams{
 			Limit: -1,
 		},
 	})

@@ -488,12 +488,13 @@ func (ra *resourceAccess) List(ctx context.Context, params interfaces.ResourcesQ
 		return nil, 0, err
 	}
 
-	// Pagination
-	if params.Limit > 0 {
-		builder = builder.Limit(uint64(params.Limit)).Offset(uint64(params.Offset))
-	}
+	// 分页
+	// if params.Limit > 0 {
+	// 	builder = builder.Limit(uint64(params.Limit)).Offset(uint64(params.Offset))
+	// }
+	// 排序
 	if params.Sort != "" {
-		builder = builder.OrderBy(fmt.Sprintf("f_%s %s", params.Sort, params.Direction))
+		builder = builder.OrderBy(fmt.Sprintf("%s %s", params.Sort, params.Direction))
 	} else {
 		builder = builder.OrderBy("f_update_time DESC")
 	}

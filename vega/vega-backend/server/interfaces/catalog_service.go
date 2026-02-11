@@ -3,12 +3,13 @@
 // Licensed under the Apache License, Version 2.0.
 // See the LICENSE file in the project root for details.
 
-// Package interfaces defines entities, DTOs, and service interfaces.
 package interfaces
 
 import "context"
 
 // CatalogService defines catalog business logic interface.
+//
+//go:generate mockgen -source ../interfaces/catalog_service.go -destination ../interfaces/mock/mock_catalog_service.go
 type CatalogService interface {
 	// Create creates a new Catalog.
 	Create(ctx context.Context, req *CatalogRequest) (string, error)

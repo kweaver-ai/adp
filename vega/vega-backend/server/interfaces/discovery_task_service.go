@@ -3,12 +3,13 @@
 // Licensed under the Apache License, Version 2.0.
 // See the LICENSE file in the project root for details.
 
-// Package interfaces defines entities, DTOs, and service interfaces.
 package interfaces
 
 import "context"
 
 // DiscoveryTaskService defines discovery task business logic interface.
+//
+//go:generate mockgen -source ../interfaces/discovery_task_service.go -destination ../interfaces/mock/mock_discovery_task_service.go
 type DiscoveryTaskService interface {
 	// Create creates a new DiscoveryTask and sends message to Kafka.
 	Create(ctx context.Context, catalogID string) (string, error)

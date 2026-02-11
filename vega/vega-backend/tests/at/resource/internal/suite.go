@@ -44,7 +44,7 @@ func NewTestSuite(t *testing.T, connectorType string) (*TestSuite, error) {
 	}
 
 	// 创建HTTP客户端
-	client := testutil.NewHTTPClient(config.VegaManager.BaseURL)
+	client := testutil.NewHTTPClient(config.VegaBackend.BaseURL)
 
 	// 创建对应类型的CatalogBuilder
 	catalogBuilder := NewCatalogPayloadBuilder(connectorType, config)
@@ -69,7 +69,7 @@ func (s *TestSuite) Setup() error {
 		return err
 	}
 
-	s.T.Logf("✓ AT测试环境就绪，VEGA Manager: %s", s.Config.VegaManager.BaseURL)
+	s.T.Logf("✓ AT测试环境就绪，VEGA Manager: %s", s.Config.VegaBackend.BaseURL)
 	s.T.Logf("✓ 测试Connector类型: %s", s.ConnectorType)
 
 	// 清理现有资源（先Resource后Catalog）

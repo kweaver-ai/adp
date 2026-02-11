@@ -38,12 +38,12 @@ func TestLogicalCatalogCreate(t *testing.T) {
 		So(config, ShouldNotBeNil)
 
 		// 创建HTTP客户端
-		client = testutil.NewHTTPClient(config.VegaManager.BaseURL)
+		client = testutil.NewHTTPClient(config.VegaBackend.BaseURL)
 
 		// 验证服务可用性
 		err = client.CheckHealth()
 		So(err, ShouldBeNil)
-		t.Logf("✓ AT测试环境就绪，VEGA Manager: %s", config.VegaManager.BaseURL)
+		t.Logf("✓ AT测试环境就绪，VEGA Manager: %s", config.VegaBackend.BaseURL)
 
 		// 清理现有logical catalog
 		cataloghelpers.CleanupCatalogs(client, t)
@@ -358,7 +358,7 @@ func TestLogicalCatalogRead(t *testing.T) {
 		config, err = setup.LoadTestConfig()
 		So(err, ShouldBeNil)
 
-		client = testutil.NewHTTPClient(config.VegaManager.BaseURL)
+		client = testutil.NewHTTPClient(config.VegaBackend.BaseURL)
 		err = client.CheckHealth()
 		So(err, ShouldBeNil)
 
@@ -472,7 +472,7 @@ func TestLogicalCatalogUpdate(t *testing.T) {
 		config, err = setup.LoadTestConfig()
 		So(err, ShouldBeNil)
 
-		client = testutil.NewHTTPClient(config.VegaManager.BaseURL)
+		client = testutil.NewHTTPClient(config.VegaBackend.BaseURL)
 		err = client.CheckHealth()
 		So(err, ShouldBeNil)
 
@@ -638,7 +638,7 @@ func TestLogicalCatalogDelete(t *testing.T) {
 		config, err = setup.LoadTestConfig()
 		So(err, ShouldBeNil)
 
-		client = testutil.NewHTTPClient(config.VegaManager.BaseURL)
+		client = testutil.NewHTTPClient(config.VegaBackend.BaseURL)
 		err = client.CheckHealth()
 		So(err, ShouldBeNil)
 
@@ -725,7 +725,7 @@ func TestLogicalCatalogSpecific(t *testing.T) {
 		config, err = setup.LoadTestConfig()
 		So(err, ShouldBeNil)
 
-		client = testutil.NewHTTPClient(config.VegaManager.BaseURL)
+		client = testutil.NewHTTPClient(config.VegaBackend.BaseURL)
 		err = client.CheckHealth()
 		So(err, ShouldBeNil)
 

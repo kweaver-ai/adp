@@ -1,94 +1,99 @@
-[VegaManager.Catalog.InvalidParameter]
+[VegaBackend.Catalog.InvalidParameter]
 Description = "Invalid catalog parameter"
 Solution = "Please check the parameter"
 ErrorLink = "None"
 
-[VegaManager.Catalog.InvalidParameter.Type]
+[VegaBackend.Catalog.InvalidParameter.Type]
 Description = "Invalid catalog type"
 Solution = "Please check the parameter"
 ErrorLink = "None"
 
-[VegaManager.Catalog.InvalidParameter.Name]
+[VegaBackend.Catalog.InvalidParameter.Name]
 Description = "Invalid catalog name"
 Solution = "Please check the parameter"
 ErrorLink = "None"
 
-[VegaManager.Catalog.InvalidParameter.ConnectorType]
+[VegaBackend.Catalog.InvalidParameter.ConnectorType]
 Description = "Invalid connector type"
 Solution = "Please check the parameter"
 ErrorLink = "None"
 
-[VegaManager.Catalog.InvalidParameter.ConnectorConfig]
+[VegaBackend.Catalog.InvalidParameter.ConnectorConfig]
 Description = "Invalid connector config"
 Solution = "Please check the parameter"
 ErrorLink = "None"
 
-[VegaManager.Catalog.LengthExceeded.Name]
+[VegaBackend.Catalog.LengthExceeded.Name]
 Description = "Catalog name length exceeded"
 Solution = "Please shorten the name"
 ErrorLink = "None"
 
-[VegaManager.Catalog.LengthExceeded.Description]
+[VegaBackend.Catalog.LengthExceeded.Description]
 Description = "Catalog description length exceeded"
 Solution = "Please shorten the description"
 ErrorLink = "None"
 
-[VegaManager.Catalog.NotFound]
+[VegaBackend.Catalog.NotFound]
 Description = "Catalog not found"
 Solution = "Please check the catalog ID"
 ErrorLink = "None"
 
-[VegaManager.Catalog.NameExists]
+[VegaBackend.Catalog.NameExists]
 Description = "Catalog name already exists"
 Solution = "Please use a different name"
 ErrorLink = "None"
 
-[VegaManager.Catalog.HasAssets]
+[VegaBackend.Catalog.HasAssets]
 Description = "Catalog has assets and cannot be deleted"
 Solution = "Please delete all assets in the catalog first"
 ErrorLink = "None"
 
-[VegaManager.Catalog.IsDisabled]
+[VegaBackend.Catalog.IsDisabled]
 Description = "Catalog is disabled"
 Solution = "Please enable the catalog first"
 ErrorLink = "None"
 
-[VegaManager.Catalog.InternalError]
+[VegaBackend.Catalog.InternalError]
 Description = "Catalog internal error"
 Solution = "Please contact the administrator"
 ErrorLink = "None"
 
-[VegaManager.Catalog.InternalError.CreateFailed]
+[VegaBackend.Catalog.InternalError.CreateFailed]
 Description = "Failed to create catalog"
-Solution = "Please contact the administrator"
+Solution = "Please contact administrator"
 ErrorLink = "None"
 
-[VegaManager.Catalog.InternalError.GetFailed]
+[VegaBackend.Catalog.InternalError.CreateResourcesFailed]
+Description = "Failed to create catalog resource permissions"
+Solution = "Please contact administrator"
+ErrorLink = "None"
+
+[VegaBackend.Catalog.InternalError.GetFailed]
 Description = "Failed to get catalog"
-Solution = "Please contact the administrator"
+Solution = "Please contact administrator"
 ErrorLink = "None"
 
-[VegaManager.Catalog.InternalError.UpdateFailed]
+[VegaBackend.Catalog.InternalError.UpdateFailed]
 Description = "Failed to update catalog"
 Solution = "Please contact the administrator"
 ErrorLink = "None"
 
-[VegaManager.Catalog.InternalError.DeleteFailed]
+[VegaBackend.Catalog.InternalError.DeleteFailed]
 Description = "Failed to delete catalog"
 Solution = "Please contact the administrator"
 ErrorLink = "None"
 
-[VegaManager.Catalog.InternalError.TestConnectionFailed]
+[VegaBackend.Catalog.InternalError.TestConnectionFailed]
 Description = "Failed to test catalog connection"
 Solution = "Please contact the administrator"
 ErrorLink = "None"
 
-[VegaManager.Catalog.InternalError.EncryptFailed]
+[VegaBackend.Catalog.InternalError.EncryptFailed]
 Description = "Failed to entrypt config"
 Solution = "Please contact the administrator"
 ErrorLink = "None"
 
-[VegaManager.Catalog.InvalidParameter.SensitiveFieldNotEncrypted]
+[VegaBackend.Catalog.InvalidParameter.SensitiveFieldNotEncrypted]
 Description = "Sensitive field is not properly encrypted"
 Solution = "Please encrypt the sensitive field with the public key before submitting"
 ErrorLink = "None"

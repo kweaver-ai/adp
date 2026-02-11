@@ -3,12 +3,13 @@
 // Licensed under the Apache License, Version 2.0.
 // See the LICENSE file in the project root for details.
 
-// Package interfaces defines entities, DTOs, and service interfaces.
 package interfaces
 
 import "context"
 
 // ResourceService defines resource business logic interface.
+//
+//go:generate mockgen -source ../interfaces/resource_service.go -destination ../interfaces/mock/mock_resource_service.go
 type ResourceService interface {
 	// Create creates a new Resource.
 	Create(ctx context.Context, req *ResourceRequest) (string, error)

@@ -15,44 +15,54 @@ import (
 // 公共错误码
 const (
 	// 400 Bad Request
-	VegaManager_InvalidParameter_Name        = "VegaManager.InvalidParameter.Name"
-	VegaManager_InvalidParameter_Description = "VegaManager.InvalidParameter.Description"
-	VegaManager_InvalidParameter_Tag         = "VegaManager.InvalidParameter.Tag"
-	VegaManager_InvalidParameter_RequestBody = "VegaManager.InvalidParameter.RequestBody"
-	VegaManager_InvalidParameter_Limit       = "VegaManager.InvalidParameter.Limit"
-	VegaManager_InvalidParameter_Offset      = "VegaManager.InvalidParameter.Offset"
-	VegaManager_InvalidParameter_Sort        = "VegaManager.InvalidParameter.Sort"
-	VegaManager_InvalidParameter_Direction   = "VegaManager.InvalidParameter.Direction"
-	VegaManager_InvalidParameter_ID          = "VegaManager.InvalidParameter.ID"
+	VegaBackend_InvalidParameter_Name        = "VegaBackend.InvalidParameter.Name"
+	VegaBackend_InvalidParameter_Description = "VegaBackend.InvalidParameter.Description"
+	VegaBackend_InvalidParameter_Tag         = "VegaBackend.InvalidParameter.Tag"
+	VegaBackend_InvalidParameter_RequestBody = "VegaBackend.InvalidParameter.RequestBody"
+	VegaBackend_InvalidParameter_Limit       = "VegaBackend.InvalidParameter.Limit"
+	VegaBackend_InvalidParameter_Offset      = "VegaBackend.InvalidParameter.Offset"
+	VegaBackend_InvalidParameter_Sort        = "VegaBackend.InvalidParameter.Sort"
+	VegaBackend_InvalidParameter_Direction   = "VegaBackend.InvalidParameter.Direction"
+	VegaBackend_InvalidParameter_ID          = "VegaBackend.InvalidParameter.ID"
 
 	// 406 Not Acceptable
-	VegaManager_InvalidRequestHeader_ContentType = "VegaManager.InvalidRequestHeader.ContentType"
+	VegaBackend_InvalidRequestHeader_ContentType = "VegaBackend.InvalidRequestHeader.ContentType"
 
 	// 500 Internal Server Error
-	VegaManager_InternalError_BeginTransactionFailed  = "VegaManager.InternalError.BeginTransactionFailed"
-	VegaManager_InternalError_CommitTransactionFailed = "VegaManager.InternalError.CommitTransactionFailed"
-	VegaManager_InternalError_MarshalDataFailed       = "VegaManager.InternalError.MarshalDataFailed"
-	VegaManager_InternalError_UnMarshalDataFailed     = "VegaManager.InternalError.UnMarshalDataFailed"
+	VegaBackend_InternalError_BeginTransactionFailed  = "VegaBackend.InternalError.BeginTransactionFailed"
+	VegaBackend_InternalError_CommitTransactionFailed = "VegaBackend.InternalError.CommitTransactionFailed"
+	VegaBackend_InternalError_MarshalDataFailed       = "VegaBackend.InternalError.MarshalDataFailed"
+	VegaBackend_InternalError_UnMarshalDataFailed     = "VegaBackend.InternalError.UnMarshalDataFailed"
+	VegaBackend_InternalError_CheckPermissionFailed   = "VegaBackend.InternalError.CheckPermissionFailed"
+	VegaBackend_InternalError_CreateResourcesFailed   = "VegaBackend.InternalError.CreateResourcesFailed"
+	VegaBackend_InternalError_DeleteResourcesFailed   = "VegaBackend.InternalError.DeleteResourcesFailed"
+	VegaBackend_InternalError_FilterResourcesFailed   = "VegaBackend.InternalError.FilterResourcesFailed"
+	VegaBackend_InternalError_UpdateResourceFailed    = "VegaBackend.InternalError.UpdateResourceFailed"
 )
 
 var (
 	commonErrCodeList = []string{
-		VegaManager_InvalidParameter_Name,
-		VegaManager_InvalidParameter_Description,
-		VegaManager_InvalidParameter_Tag,
+		VegaBackend_InvalidParameter_Name,
+		VegaBackend_InvalidParameter_Description,
+		VegaBackend_InvalidParameter_Tag,
 
-		VegaManager_InvalidParameter_RequestBody,
-		VegaManager_InvalidParameter_Limit,
-		VegaManager_InvalidParameter_Offset,
-		VegaManager_InvalidParameter_Sort,
-		VegaManager_InvalidParameter_Direction,
-		VegaManager_InvalidParameter_ID,
-		VegaManager_InvalidRequestHeader_ContentType,
+		VegaBackend_InvalidParameter_RequestBody,
+		VegaBackend_InvalidParameter_Limit,
+		VegaBackend_InvalidParameter_Offset,
+		VegaBackend_InvalidParameter_Sort,
+		VegaBackend_InvalidParameter_Direction,
+		VegaBackend_InvalidParameter_ID,
+		VegaBackend_InvalidRequestHeader_ContentType,
 
-		VegaManager_InternalError_BeginTransactionFailed,
-		VegaManager_InternalError_CommitTransactionFailed,
-		VegaManager_InternalError_MarshalDataFailed,
-		VegaManager_InternalError_UnMarshalDataFailed,
+		VegaBackend_InternalError_BeginTransactionFailed,
+		VegaBackend_InternalError_CommitTransactionFailed,
+		VegaBackend_InternalError_MarshalDataFailed,
+		VegaBackend_InternalError_UnMarshalDataFailed,
+		VegaBackend_InternalError_CheckPermissionFailed,
+		VegaBackend_InternalError_CreateResourcesFailed,
+		VegaBackend_InternalError_DeleteResourcesFailed,
+		VegaBackend_InternalError_FilterResourcesFailed,
+		VegaBackend_InternalError_UpdateResourceFailed,
 	}
 )
 

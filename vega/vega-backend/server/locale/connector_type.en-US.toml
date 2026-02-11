@@ -1,74 +1,74 @@
-[VegaManager.ConnectorType.InvalidParameter]
+[VegaBackend.ConnectorType.InvalidParameter]
 Description = "Invalid connector type parameter"
 Solution = "Please check the parameter"
 ErrorLink = "None"
 
-[VegaManager.ConnectorType.InvalidParameter.Type]
+[VegaBackend.ConnectorType.InvalidParameter.Type]
 Description = "Invalid connector type"
 Solution = "Please check the parameter"
 ErrorLink = "None"
 
-[VegaManager.ConnectorType.InvalidParameter.Name]
+[VegaBackend.ConnectorType.InvalidParameter.Name]
 Description = "Invalid connector type name"
 Solution = "Please check the parameter"
 ErrorLink = "None"
 
-[VegaManager.ConnectorType.InvalidParameter.Mode]
+[VegaBackend.ConnectorType.InvalidParameter.Mode]
 Description = "Invalid connector type mode"
 Solution = "Please check the parameter"
 ErrorLink = "None"
 
-[VegaManager.ConnectorType.InvalidParameter.Category]
+[VegaBackend.ConnectorType.InvalidParameter.Category]
 Description = "Invalid connector type category"
 Solution = "Please check the parameter"
 ErrorLink = "None"
 
-[VegaManager.ConnectorType.InvalidParameter.Endpoint]
+[VegaBackend.ConnectorType.InvalidParameter.Endpoint]
 Description = "Invalid connector type endpoint"
 Solution = "Please check the parameter"
 ErrorLink = "None"
 
-[VegaManager.ConnectorType.BadRequest]
+[VegaBackend.ConnectorType.BadRequest]
 Description = "Invalid connector type parameter"
 Solution = "Please check the parameter"
 ErrorLink = "None"
 
-[VegaManager.ConnectorType.NotFound]
+[VegaBackend.ConnectorType.NotFound]
 Description = "Connector type not found"
 Solution = "Please check the connector type ID"
 ErrorLink = "None"
 
-[VegaManager.ConnectorType.TypeExists]
+[VegaBackend.ConnectorType.TypeExists]
 Description = "Connector type already exists"
 Solution = "Please use a different type"
 ErrorLink = "None"
 
-[VegaManager.ConnectorType.NameExists]
+[VegaBackend.ConnectorType.NameExists]
 Description = "Connector type name already exists"
 Solution = "Please use a different name"
 ErrorLink = "None"
 
-[VegaManager.ConnectorType.InternalError]
+[VegaBackend.ConnectorType.InternalError]
 Description = "Connector type internal error"
 Solution = "Please contact the administrator"
 ErrorLink = "None"
 
-[VegaManager.ConnectorType.InternalError.RegisterFailed]
+[VegaBackend.ConnectorType.InternalError.RegisterFailed]
 Description = "Failed to reqister connector type"
 Solution = "Please contact the administrator"
 ErrorLink = "None"
 
-[VegaManager.ConnectorType.InternalError.GetFailed]
+[VegaBackend.ConnectorType.InternalError.GetFailed]
 Description = "Failed to get connector type"
 Solution = "Please contact the administrator"
 ErrorLink = "None"
 
-[VegaManager.ConnectorType.InternalError.UpdateFailed]
+[VegaBackend.ConnectorType.InternalError.UpdateFailed]
 Description = "Failed to update connector type"
 Solution = "Please contact the administrator"
 ErrorLink = "None"
 
-[VegaManager.ConnectorType.InternalError.DeleteFailed]
+[VegaBackend.ConnectorType.InternalError.DeleteFailed]
 Description = "Failed to delete connector type"
 Solution = "Please contact the administrator"
 ErrorLink = "None"

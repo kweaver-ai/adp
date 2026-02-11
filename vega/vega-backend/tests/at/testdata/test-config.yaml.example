@@ -1,10 +1,10 @@
 # AT测试配置文件模板
 # 复制此文件为 test-config.yaml 并填入实际连接信息
 
-# VEGA Manager服务配置
-vega_manager:
-  # VEGA Manager HTTP服务地址
-  # 测试运行前必须先启动VEGA Manager服务
+# VEGA Backend服务配置
+vega_backend:
+  # VEGA Backend HTTP服务地址
+  # 测试运行前必须先启动VEGA Backend服务
   base_url: http://localhost:8080
 
 # 测试目标MySQL配置

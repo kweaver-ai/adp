@@ -9,41 +9,41 @@ package errors
 // ConnectorType 错误码
 const (
 	// 400 Bad Request
-	VegaManager_ConnectorType_InvalidParameter          = "VegaManager.ConnectorType.InvalidParameter"
-	VegaManager_ConnectorType_InvalidParameter_Type     = "VegaManager.ConnectorType.InvalidParameter.Type"
-	VegaManager_ConnectorType_InvalidParameter_Name     = "VegaManager.ConnectorType.InvalidParameter.Name"
-	VegaManager_ConnectorType_InvalidParameter_Mode     = "VegaManager.ConnectorType.InvalidParameter.Mode"
-	VegaManager_ConnectorType_InvalidParameter_Category = "VegaManager.ConnectorType.InvalidParameter.Category"
-	VegaManager_ConnectorType_InvalidParameter_Endpoint = "VegaManager.ConnectorType.InvalidParameter.Endpoint"
-	VegaManager_ConnectorType_BadRequest                = "VegaManager.ConnectorType.BadRequest"
+	VegaBackend_ConnectorType_InvalidParameter          = "VegaBackend.ConnectorType.InvalidParameter"
+	VegaBackend_ConnectorType_InvalidParameter_Type     = "VegaBackend.ConnectorType.InvalidParameter.Type"
+	VegaBackend_ConnectorType_InvalidParameter_Name     = "VegaBackend.ConnectorType.InvalidParameter.Name"
+	VegaBackend_ConnectorType_InvalidParameter_Mode     = "VegaBackend.ConnectorType.InvalidParameter.Mode"
+	VegaBackend_ConnectorType_InvalidParameter_Category = "VegaBackend.ConnectorType.InvalidParameter.Category"
+	VegaBackend_ConnectorType_InvalidParameter_Endpoint = "VegaBackend.ConnectorType.InvalidParameter.Endpoint"
+	VegaBackend_ConnectorType_BadRequest                = "VegaBackend.ConnectorType.BadRequest"
 
 	// 404 Not Found / 409 Conflict
-	VegaManager_ConnectorType_NotFound   = "VegaManager.ConnectorType.NotFound"
-	VegaManager_ConnectorType_TypeExists = "VegaManager.ConnectorType.TypeExists"
-	VegaManager_ConnectorType_NameExists = "VegaManager.ConnectorType.NameExists"
+	VegaBackend_ConnectorType_NotFound   = "VegaBackend.ConnectorType.NotFound"
+	VegaBackend_ConnectorType_TypeExists = "VegaBackend.ConnectorType.TypeExists"
+	VegaBackend_ConnectorType_NameExists = "VegaBackend.ConnectorType.NameExists"
 
 	// 500 Internal Server Error
-	VegaManager_ConnectorType_InternalError                = "VegaManager.ConnectorType.InternalError"
-	VegaManager_ConnectorType_InternalError_RegisterFailed = "VegaManager.ConnectorType.InternalError.RegisterFailed"
-	VegaManager_ConnectorType_InternalError_GetFailed      = "VegaManager.ConnectorType.InternalError.GetFailed"
-	VegaManager_ConnectorType_InternalError_UpdateFailed   = "VegaManager.ConnectorType.InternalError.UpdateFailed"
-	VegaManager_ConnectorType_InternalError_DeleteFailed   = "VegaManager.ConnectorType.InternalError.DeleteFailed"
+	VegaBackend_ConnectorType_InternalError                = "VegaBackend.ConnectorType.InternalError"
+	VegaBackend_ConnectorType_InternalError_RegisterFailed = "VegaBackend.ConnectorType.InternalError.RegisterFailed"
+	VegaBackend_ConnectorType_InternalError_GetFailed      = "VegaBackend.ConnectorType.InternalError.GetFailed"
+	VegaBackend_ConnectorType_InternalError_UpdateFailed   = "VegaBackend.ConnectorType.InternalError.UpdateFailed"
+	VegaBackend_ConnectorType_InternalError_DeleteFailed   = "VegaBackend.ConnectorType.InternalError.DeleteFailed"
 )
 
 var ConnectorTypeErrCodeList = []string{
-	VegaManager_ConnectorType_InvalidParameter,
-	VegaManager_ConnectorType_InvalidParameter_Type,
-	VegaManager_ConnectorType_InvalidParameter_Name,
-	VegaManager_ConnectorType_InvalidParameter_Mode,
-	VegaManager_ConnectorType_InvalidParameter_Category,
-	VegaManager_ConnectorType_InvalidParameter_Endpoint,
-	VegaManager_ConnectorType_BadRequest,
-	VegaManager_ConnectorType_NotFound,
-	VegaManager_ConnectorType_NameExists,
-	VegaManager_ConnectorType_TypeExists,
-	VegaManager_ConnectorType_InternalError,
-	VegaManager_ConnectorType_InternalError_RegisterFailed,
-	VegaManager_ConnectorType_InternalError_GetFailed,
-	VegaManager_ConnectorType_InternalError_UpdateFailed,
-	VegaManager_ConnectorType_InternalError_DeleteFailed,
+	VegaBackend_ConnectorType_InvalidParameter,
+	VegaBackend_ConnectorType_InvalidParameter_Type,
+	VegaBackend_ConnectorType_InvalidParameter_Name,
+	VegaBackend_ConnectorType_InvalidParameter_Mode,
+	VegaBackend_ConnectorType_InvalidParameter_Category,
+	VegaBackend_ConnectorType_InvalidParameter_Endpoint,
+	VegaBackend_ConnectorType_BadRequest,
+	VegaBackend_ConnectorType_NotFound,
+	VegaBackend_ConnectorType_NameExists,
+	VegaBackend_ConnectorType_TypeExists,
+	VegaBackend_ConnectorType_InternalError,
+	VegaBackend_ConnectorType_InternalError_RegisterFailed,
+	VegaBackend_ConnectorType_InternalError_GetFailed,
+	VegaBackend_ConnectorType_InternalError_UpdateFailed,
+	VegaBackend_ConnectorType_InternalError_DeleteFailed,
 }

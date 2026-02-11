@@ -3,7 +3,6 @@
 // Licensed under the Apache License, Version 2.0.
 // See the LICENSE file in the project root for details.
 
-// Package interfaces defines entities, DTOs, and service interfaces.
 package interfaces
 
 const (
@@ -21,6 +20,12 @@ const (
 	ConnectorCategoryAPI     string = "api"     // API 服务
 )
 
+var (
+	CONNECTOR_TYPE_SORT = map[string]string{
+		"name": "f_name",
+	}
+)
+
 // ConnectorFieldConfig 定义连接器配置字段的元数据（兼容 JSON Schema properties）
 type ConnectorFieldConfig struct {
 	Name        string `json:"name"`        // 字段显示名
@@ -34,26 +39,31 @@ type ConnectorFieldConfig struct {
 type ConnectorType struct {
 	Type        string                          `json:"type"`
 	Name        string                          `json:"name"`         // mysql, postgresql, kafka...
+	Tags        []string                        `json:"tags"`         // 标签
 	Description string                          `json:"description"`  // 类型描述
 	Mode        string                          `json:"mode"`         // local | remote
 	Category    string                          `json:"category"`     // table | index | topic | file | fileset | metric | api
 	Endpoint    string                          `json:"endpoint"`     // 仅 remote 模式，远程服务地址
 	FieldConfig map[string]ConnectorFieldConfig `json:"field_config"` // 字段配置（兼容 JSON Schema properties）
 	Enabled     bool                            `json:"enabled"`      // 是否启用
+
+	Operations []string `json:"operations"`
 }
 
 // ConnectorTypesQueryParams 查询参数
 type ConnectorTypesQueryParams struct {
-	PaginationParams
-	Mode     string // 按模式筛选
-	Category string // 按分类筛选
-	Enabled  *bool  // 按启用状态筛选
+	PaginationQueryParams
+	Tag      string `json:"tag"`      // 按标签筛选
+	Mode     string `json:"mode"`     // 按模式筛选
+	Category string `json:"category"` // 按分类筛选
+	Enabled  *bool  `json:"enabled"`  // 按启用状态筛选
 }
 
 // ConnectorTypeReq 表示创建/更新 connector 类型的请求
 type ConnectorTypeReq struct {
 	Type        string                          `json:"type"`
 	Name        string                          `json:"name"`         // mysql, postgresql, kafka...
+	Tags        []string                        `json:"tags"`         // 标签
 	Description string                          `json:"description"`  // 类型描述
 	Mode        string                          `json:"mode"`         // local | remote
 	Category    string                          `json:"category"`     // table | index | topic | file | fileset | metric | api
@@ -61,5 +71,6 @@ type ConnectorTypeReq struct {
 	FieldConfig map[string]ConnectorFieldConfig `json:"field_config"` // 字段配置（兼容 JSON Schema properties）
 	Enabled     bool                            `json:"enabled"`      // 是否启用
 
+	IfNameModify        bool           `json:"-"`
 	OriginConnectorType *ConnectorType `json:"-"`
 }
