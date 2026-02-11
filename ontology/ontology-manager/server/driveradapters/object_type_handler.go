@@ -625,6 +625,35 @@ func (r *restHandler) DeleteObjectTypes(c *gin.Context) {
 			rest.ReplyError(c, httpErr)
 			return
 		}
+
+		// 校验对象类是否被行动类绑定
+		actionTypes, _, err := r.ats.ListActionTypes(ctx, interfaces.ActionTypesQueryParams{
+			KNID:          knID,
+			Branch:        branch,
+			ObjectTypeIDs: otIDs,
+			PaginationQueryParameters: interfaces.PaginationQueryParameters{
+				Limit: -1,
+			},
+		})
+		if err != nil {
+			httpErr := err.(*rest.HTTPError)
+			o11y.AddHttpAttrs4HttpError(span, httpErr)
+			rest.ReplyError(c, httpErr)
+			return
+		}
+		if len(actionTypes) > 0 {
+			actionTypeNames := make([]string, 0, len(actionTypes))
+			for _, at := range actionTypes {
+				actionTypeNames = append(actionTypeNames, at.ATName)
+			}
+			errorDetails := fmt.Sprintf("对象类被以下行动类绑定，无法删除: %s", strings.Join(actionTypeNames, ", "))
+			httpErr := rest.NewHTTPError(ctx, http.StatusBadRequest,
+				oerrors.OntologyManager_ObjectType_ObjectTypeBoundByActionType).
+				WithErrorDetails(errorDetails)
+			o11y.AddHttpAttrs4HttpError(span, httpErr)
+			rest.ReplyError(c, httpErr)
+			return
+		}
 	}
 
 	// 批量删除对象类

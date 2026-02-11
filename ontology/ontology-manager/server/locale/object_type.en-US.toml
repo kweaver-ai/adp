@@ -39,6 +39,11 @@ Description = "Same Object Type Name Existed"
 Solution = "Please check whether the parameter is correct."
 ErrorLink = "None"
 
+[OntologyManager.ObjectType.ObjectTypeBoundBActionType]
+Description = "Object type is bound by action type, cannot delete"
+Solution = "Please delete the bound action type first, or use force_delete=true to force delete."
+ErrorLink = "None"
+
 [OntologyManager.ObjectType.ObjectTypeBoundByRelationType]
 Description = "Object type is bound by relation type, cannot delete"
 Solution = "Please delete the bound relation type first, or use force_delete=true to force delete."
