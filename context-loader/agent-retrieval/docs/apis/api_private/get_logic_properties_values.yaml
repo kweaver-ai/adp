@@ -125,6 +125,8 @@ components:
           $ref: '#/components/schemas/ResolveOptions'
     ResolveOptions:
       type: object
+      description: |
+        【可选配置】控制接口行为的高级选项
       properties:
         return_debug:
           type: boolean
