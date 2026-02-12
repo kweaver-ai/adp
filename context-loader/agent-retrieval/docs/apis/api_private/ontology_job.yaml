@@ -12,7 +12,7 @@ paths:
     post:
       tags:
         - OntologyJob
-      summary: 创建业务知识网络构建任务
+      summary: create_kn_index_build_job
       description: 创建一个全量构建业务知识网络的任务
       parameters:
         - name: x-account-id
@@ -72,7 +72,7 @@ paths:
     get:
       tags:
         - OntologyJob
-      summary: 获取业务知识网络构建状态
+      summary: get_kn_index_build_status
       description: 查询最新50个构建任务的整体状态（按创建时间倒排）。如果所有任务都已完成则返回completed，如果有任务正在运行则返回running
       parameters:
         - name: x-account-id

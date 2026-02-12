@@ -83,6 +83,8 @@ components:
 
     SearchScope:
       type: object
+      description: |
+        【可选】搜索域配置
       properties:
         concept_groups:
           type: array

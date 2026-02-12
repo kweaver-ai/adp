@@ -1,9 +1,8 @@
-# v5.0.4 版本交付物
+# v0.1.0 版本交付物
 
 ## 1. 版本信息
 
-- 版本号：v5.0.4
-- 内部版本映射：5004
+- 版本号：v0.1.0
 - 发布日期：2026-01-04
 - Git 基线：待补充（Tag/Commit）
 
@@ -22,7 +21,7 @@
 ### 3.2 工具定义（快照）
 
 - OpenAPI（本版本快照）：[toolset/openapi/](./toolset/openapi/)
-- ADP（本版本快照）：[toolset/adp/contextloader_toolset_v5.0.4.adp](./toolset/adp/contextloader_toolset_v5.0.4.adp)
+- ADP（本版本快照）：[toolset/adp/contextloader_toolset_v0.1.0.adp](./toolset/adp/contextloader_toolset_v0.1.0.adp)
 
 长期维护的契约 SSOT：
 - `docs/apis/`（如与快照存在差异，应以 SSOT 为准并补充差异说明）
