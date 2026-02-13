@@ -60,7 +60,7 @@ type Resource struct {
 
 type Property struct {
 	Name         string `json:"name"`
-	Type         string `json:"type"` // if vector, type is "vector[dimension]"
+	Type         string `json:"type"`
 	DisplayName  string `json:"display_name"`
 	OriginalName string `json:"original_name"`
 	Description  string `json:"description"`

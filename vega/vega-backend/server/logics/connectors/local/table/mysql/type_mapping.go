@@ -6,68 +6,70 @@
 // Package mysql provides MySQL database connector implementation.
 package mysql
 
+import "vega-backend/interfaces/data_type"
+
 // TypeMapping maps MySQL native types to VEGA types.
 var TypeMapping = map[string]string{
 	// Integer types
-	"tinyint":   "integer",
-	"smallint":  "integer",
-	"mediumint": "integer",
-	"int":       "integer",
-	"integer":   "integer",
-	"bigint":    "integer",
-	"year":      "integer",
+	"tinyint":   data_type.DataType_Integer,
+	"smallint":  data_type.DataType_Integer,
+	"mediumint": data_type.DataType_Integer,
+	"int":       data_type.DataType_Integer,
+	"integer":   data_type.DataType_Integer,
+	"bigint":    data_type.DataType_Integer,
+	"year":      data_type.DataType_Integer,
 
 	// Unsigned integer types
-	"tinyint unsigned":   "unsigned_integer",
-	"smallint unsigned":  "unsigned_integer",
-	"mediumint unsigned": "unsigned_integer",
-	"int unsigned":       "unsigned_integer",
-	"integer unsigned":   "unsigned_integer",
-	"bigint unsigned":    "unsigned_integer",
+	"tinyint unsigned":   data_type.DataType_UnsignedInteger,
+	"smallint unsigned":  data_type.DataType_UnsignedInteger,
+	"mediumint unsigned": data_type.DataType_UnsignedInteger,
+	"int unsigned":       data_type.DataType_UnsignedInteger,
+	"integer unsigned":   data_type.DataType_UnsignedInteger,
+	"bigint unsigned":    data_type.DataType_UnsignedInteger,
 
 	// Float types
-	"float":            "float",
-	"double":           "float",
-	"real":             "float",
-	"double precision": "float",
+	"float":            data_type.DataType_Float,
+	"double":           data_type.DataType_Float,
+	"real":             data_type.DataType_Float,
+	"double precision": data_type.DataType_Float,
 
 	// Decimal types
-	"decimal": "decimal",
-	"numeric": "decimal",
-	"fixed":   "decimal",
-	"dec":     "decimal",
+	"decimal": data_type.DataType_Decimal,
+	"numeric": data_type.DataType_Decimal,
+	"fixed":   data_type.DataType_Decimal,
+	"dec":     data_type.DataType_Decimal,
 
 	// String types
-	"char":    "string",
-	"varchar": "string",
+	"char":    data_type.DataType_String,
+	"varchar": data_type.DataType_String,
 
 	// Text types
-	"tinytext":   "text",
-	"text":       "text",
-	"mediumtext": "text",
-	"longtext":   "text",
+	"tinytext":   data_type.DataType_Text,
+	"text":       data_type.DataType_Text,
+	"mediumtext": data_type.DataType_Text,
+	"longtext":   data_type.DataType_Text,
 
 	// Date/Time types
-	"date":      "date",
-	"datetime":  "datetime",
-	"timestamp": "datetime",
-	"time":      "time",
+	"date":      data_type.DataType_Date,
+	"datetime":  data_type.DataType_Datetime,
+	"timestamp": data_type.DataType_Datetime,
+	"time":      data_type.DataType_Time,
 
 	// Boolean
-	"boolean": "boolean",
-	"bool":    "boolean",
-	"bit":     "boolean",
+	"boolean": data_type.DataType_Boolean,
+	"bool":    data_type.DataType_Boolean,
+	"bit":     data_type.DataType_Boolean,
 
 	// Binary types
-	"binary":     "binary",
-	"varbinary":  "binary",
-	"tinyblob":   "binary",
-	"blob":       "binary",
-	"mediumblob": "binary",
-	"longblob":   "binary",
+	"binary":     data_type.DataType_Binary,
+	"varbinary":  data_type.DataType_Binary,
+	"tinyblob":   data_type.DataType_Binary,
+	"blob":       data_type.DataType_Binary,
+	"mediumblob": data_type.DataType_Binary,
+	"longblob":   data_type.DataType_Binary,
 
 	// JSON
-	"json": "json",
+	"json": data_type.DataType_Json,
 }
 
 // MapType returns VEGA type for MySQL native type.
@@ -75,5 +77,5 @@ func MapType(nativeType string) string {
 	if vegaType, ok := TypeMapping[nativeType]; ok {
 		return vegaType
 	}
-	return "unsupported" // default
+	return data_type.DataType_Other // default
 }
