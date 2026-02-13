@@ -69,6 +69,15 @@ func (r *restHandler) QueryResourceData(c *gin.Context) {
 		return
 	}
 
+	// 视图查询的参数校验
+	err = ValidateResourceDataQueryParams(ctx, &params)
+	if err != nil {
+		httpErr := err.(*rest.HTTPError)
+		o11y.AddHttpAttrs4HttpError(span, httpErr)
+		rest.ReplyError(c, httpErr)
+		return
+	}
+
 	resource, err := r.rs.GetByID(ctx, resourceID)
 	if err != nil {
 		httpErr := err.(*rest.HTTPError)

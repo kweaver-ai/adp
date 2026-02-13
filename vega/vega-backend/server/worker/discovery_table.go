@@ -77,9 +77,9 @@ func (dw *discoveryWorker) enrichTableMetadata(ctx context.Context,
 
 		// 填充 Resource 元数据
 		resource.Database = table.Database
-		resource.SchemaDefinition = []interfaces.Property{}
+		resource.SchemaDefinition = []*interfaces.Property{}
 		for _, column := range table.Columns {
-			resource.SchemaDefinition = append(resource.SchemaDefinition, interfaces.Property{
+			resource.SchemaDefinition = append(resource.SchemaDefinition, &interfaces.Property{
 				Name:         column.Name,
 				Type:         column.Type,
 				DisplayName:  column.Name,

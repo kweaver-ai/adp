@@ -161,9 +161,9 @@ func (dw *discoveryWorker) enrichIndexMetadata(ctx context.Context,
 		}
 
 		// Map fields to SchemaDefinition
-		var columns []interfaces.Property
+		var columns []*interfaces.Property
 		for _, field := range idx.Mapping {
-			columns = append(columns, interfaces.Property{
+			columns = append(columns, &interfaces.Property{
 				Name:         field.Name,
 				Type:         field.Type,
 				DisplayName:  field.Name,

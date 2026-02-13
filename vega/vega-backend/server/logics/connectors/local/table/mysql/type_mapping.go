@@ -6,70 +6,70 @@
 // Package mysql provides MySQL database connector implementation.
 package mysql
 
-import "vega-backend/interfaces/data_type"
+import "vega-backend/interfaces"
 
 // TypeMapping maps MySQL native types to VEGA types.
 var TypeMapping = map[string]string{
 	// Integer types
-	"tinyint":   data_type.DataType_Integer,
-	"smallint":  data_type.DataType_Integer,
-	"mediumint": data_type.DataType_Integer,
-	"int":       data_type.DataType_Integer,
-	"integer":   data_type.DataType_Integer,
-	"bigint":    data_type.DataType_Integer,
-	"year":      data_type.DataType_Integer,
+	"tinyint":   interfaces.DataType_Integer,
+	"smallint":  interfaces.DataType_Integer,
+	"mediumint": interfaces.DataType_Integer,
+	"int":       interfaces.DataType_Integer,
+	"integer":   interfaces.DataType_Integer,
+	"bigint":    interfaces.DataType_Integer,
+	"year":      interfaces.DataType_Integer,
 
 	// Unsigned integer types
-	"tinyint unsigned":   data_type.DataType_UnsignedInteger,
-	"smallint unsigned":  data_type.DataType_UnsignedInteger,
-	"mediumint unsigned": data_type.DataType_UnsignedInteger,
-	"int unsigned":       data_type.DataType_UnsignedInteger,
-	"integer unsigned":   data_type.DataType_UnsignedInteger,
-	"bigint unsigned":    data_type.DataType_UnsignedInteger,
+	"tinyint unsigned":   interfaces.DataType_UnsignedInteger,
+	"smallint unsigned":  interfaces.DataType_UnsignedInteger,
+	"mediumint unsigned": interfaces.DataType_UnsignedInteger,
+	"int unsigned":       interfaces.DataType_UnsignedInteger,
+	"integer unsigned":   interfaces.DataType_UnsignedInteger,
+	"bigint unsigned":    interfaces.DataType_UnsignedInteger,
 
 	// Float types
-	"float":            data_type.DataType_Float,
-	"double":           data_type.DataType_Float,
-	"real":             data_type.DataType_Float,
-	"double precision": data_type.DataType_Float,
+	"float":            interfaces.DataType_Float,
+	"double":           interfaces.DataType_Float,
+	"real":             interfaces.DataType_Float,
+	"double precision": interfaces.DataType_Float,
 
 	// Decimal types
-	"decimal": data_type.DataType_Decimal,
-	"numeric": data_type.DataType_Decimal,
-	"fixed":   data_type.DataType_Decimal,
-	"dec":     data_type.DataType_Decimal,
+	"decimal": interfaces.DataType_Decimal,
+	"numeric": interfaces.DataType_Decimal,
+	"fixed":   interfaces.DataType_Decimal,
+	"dec":     interfaces.DataType_Decimal,
 
 	// String types
-	"char":    data_type.DataType_String,
-	"varchar": data_type.DataType_String,
+	"char":    interfaces.DataType_String,
+	"varchar": interfaces.DataType_String,
 
 	// Text types
-	"tinytext":   data_type.DataType_Text,
-	"text":       data_type.DataType_Text,
-	"mediumtext": data_type.DataType_Text,
-	"longtext":   data_type.DataType_Text,
+	"tinytext":   interfaces.DataType_Text,
+	"text":       interfaces.DataType_Text,
+	"mediumtext": interfaces.DataType_Text,
+	"longtext":   interfaces.DataType_Text,
 
 	// Date/Time types
-	"date":      data_type.DataType_Date,
-	"datetime":  data_type.DataType_Datetime,
-	"timestamp": data_type.DataType_Datetime,
-	"time":      data_type.DataType_Time,
+	"date":      interfaces.DataType_Date,
+	"datetime":  interfaces.DataType_Datetime,
+	"timestamp": interfaces.DataType_Datetime,
+	"time":      interfaces.DataType_Time,
 
 	// Boolean
-	"boolean": data_type.DataType_Boolean,
-	"bool":    data_type.DataType_Boolean,
-	"bit":     data_type.DataType_Boolean,
+	"boolean": interfaces.DataType_Boolean,
+	"bool":    interfaces.DataType_Boolean,
+	"bit":     interfaces.DataType_Boolean,
 
 	// Binary types
-	"binary":     data_type.DataType_Binary,
-	"varbinary":  data_type.DataType_Binary,
-	"tinyblob":   data_type.DataType_Binary,
-	"blob":       data_type.DataType_Binary,
-	"mediumblob": data_type.DataType_Binary,
-	"longblob":   data_type.DataType_Binary,
+	"binary":     interfaces.DataType_Binary,
+	"varbinary":  interfaces.DataType_Binary,
+	"tinyblob":   interfaces.DataType_Binary,
+	"blob":       interfaces.DataType_Binary,
+	"mediumblob": interfaces.DataType_Binary,
+	"longblob":   interfaces.DataType_Binary,
 
 	// JSON
-	"json": data_type.DataType_Json,
+	"json": interfaces.DataType_Json,
 }
 
 // MapType returns VEGA type for MySQL native type.
@@ -77,5 +77,5 @@ func MapType(nativeType string) string {
 	if vegaType, ok := TypeMapping[nativeType]; ok {
 		return vegaType
 	}
-	return data_type.DataType_Other // default
+	return interfaces.DataType_Other // default
 }

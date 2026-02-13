@@ -31,6 +31,20 @@ func (c *MySQLConnector) ExecuteQuery(ctx context.Context, resource *interfaces.
 		return nil, err
 	}
 
+	fieldMap := map[string]*interfaces.Property{}
+	for _, prop := range resource.SchemaDefinition {
+		fieldMap[prop.Name] = prop
+	}
+
+	var condition sq.Sqlizer
+	var err error
+	if params.ActualFilterCond != nil {
+		condition, err = ConvertFilterCondition(ctx, params.ActualFilterCond, fieldMap)
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	result := &interfaces.QueryResult{
 		Rows: make([]map[string]any, 0),
 	}
@@ -38,6 +52,10 @@ func (c *MySQLConnector) ExecuteQuery(ctx context.Context, resource *interfaces.
 	if params.NeedTotal {
 		countBuilder := sq.Select("COUNT(1)").
 			From(resource.SourceIdentifier)
+
+		if condition != nil {
+			countBuilder.Where(condition)
+		}
 
 		query, args, err := countBuilder.ToSql()
 		if err != nil {
@@ -60,6 +78,10 @@ func (c *MySQLConnector) ExecuteQuery(ctx context.Context, resource *interfaces.
 
 	builder := sq.Select(fields...).
 		From(resource.SourceIdentifier)
+
+	if condition != nil {
+		builder.Where(condition)
+	}
 
 	query, args, err := builder.ToSql()
 	if err != nil {

@@ -11,8 +11,8 @@ import "context"
 //
 //go:generate mockgen -source ../interfaces/dataset_access.go -destination ../interfaces/mock/mock_dataset_access.go
 type DatasetAccess interface {
-	Create(ctx context.Context, name string, schemaDefinition []Property) error
-	Update(ctx context.Context, name string, schemaDefinition []Property) error
+	Create(ctx context.Context, name string, schemaDefinition []*Property) error
+	Update(ctx context.Context, name string, schemaDefinition []*Property) error
 	Delete(ctx context.Context, name string) error
 	CheckExist(ctx context.Context, name string) (bool, error)
 	ListDocuments(ctx context.Context, name string, params *ResourceDataQueryParams) ([]map[string]any, int64, error)

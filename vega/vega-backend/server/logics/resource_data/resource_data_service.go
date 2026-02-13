@@ -19,6 +19,7 @@ import (
 	"vega-backend/logics/connectors"
 	"vega-backend/logics/connectors/factory"
 	"vega-backend/logics/dataset"
+	"vega-backend/logics/filter_condition"
 )
 
 var (
@@ -50,6 +51,18 @@ func (rds *resourceDataService) Query(ctx context.Context, resource *interfaces.
 	defer span.End()
 
 	logger.Debugf("Query, resourceID: %s, params: %v", resource.ID, params)
+
+	fieldMap := map[string]*interfaces.Property{}
+	for _, prop := range resource.SchemaDefinition {
+		fieldMap[prop.Name] = prop
+	}
+	actualFilterCond, err := filter_condition.NewFilterCondition(ctx, params.FilterCondCfg, fieldMap)
+	if err != nil {
+		span.SetStatus(codes.Error, "Create filter condition failed")
+		return nil, 0, rest.NewHTTPError(ctx, http.StatusInternalServerError, verrors.VegaBackend_Resource_InternalError).
+			WithErrorDetails(err.Error())
+	}
+	params.ActualFilterCond = actualFilterCond
 
 	switch resource.Category {
 	case interfaces.ResourceCategoryDataset:

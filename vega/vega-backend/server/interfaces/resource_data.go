@@ -5,7 +5,17 @@
 
 package interfaces
 
-import "time"
+import (
+	"time"
+)
+
+const (
+	Format_Original = "original"
+	Format_Flat     = "flat"
+
+	// 最大查询长度设置为10000
+	MAX_SEARCH_SIZE = 10000
+)
 
 // SortField represents a field to sort by.
 type SortField struct {
@@ -15,13 +25,11 @@ type SortField struct {
 
 // ResourceDataQueryParams represents query parameters for data retrieval.
 type ResourceDataQueryParams struct {
-	Offset         int         `json:"offset,omitempty"`
-	Limit          int         `json:"limit,omitempty"`
-	Sort           []SortField `json:"sort,omitempty"`
-	UseSearchAfter bool        `json:"use_search_after,omitempty"`
-	SearchAfter    []any       `json:"search_after,omitempty"`
+	Offset int          `json:"offset,omitempty"`
+	Limit  int          `json:"limit,omitempty"`
+	Sort   []*SortField `json:"sort,omitempty"`
 
-	Filters any `json:"filters,omitempty"`
+	FilterCondition any `json:"filter_condition,omitempty"`
 
 	OutputFields []string `json:"output_fields"` // 指定输出的字段列表
 
@@ -29,5 +37,6 @@ type ResourceDataQueryParams struct {
 	Format    string        `json:"-"`
 	Timeout   time.Duration `json:"-"` // 超时时间，查询参数
 
-	//ActualCondition *cond.CondCfg `json:"-"`
+	FilterCondCfg    *FilterCondCfg  `json:"-"`
+	ActualFilterCond FilterCondition `json:"-"`
 }

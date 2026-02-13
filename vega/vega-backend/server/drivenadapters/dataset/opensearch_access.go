@@ -37,7 +37,7 @@ func NewDatasetAccess(appSetting *common.AppSetting) interfaces.DatasetAccess {
 }
 
 // Create a new Dataset.
-func (da *datasetAccess) Create(ctx context.Context, name string, schemaDefinition []interfaces.Property) error {
+func (da *datasetAccess) Create(ctx context.Context, name string, schemaDefinition []*interfaces.Property) error {
 	// 获取 OpenSearch 客户端
 	client, err := da.getOpenSearchClient()
 	if err != nil {
@@ -118,7 +118,7 @@ func (da *datasetAccess) Create(ctx context.Context, name string, schemaDefiniti
 }
 
 // Update updates a Dataset.
-func (da *datasetAccess) Update(ctx context.Context, name string, schemaDefinition []interfaces.Property) error {
+func (da *datasetAccess) Update(ctx context.Context, name string, schemaDefinition []*interfaces.Property) error {
 	// 获取 OpenSearch 客户端
 	client, err := da.getOpenSearchClient()
 	if err != nil {
@@ -290,7 +290,7 @@ func (da *datasetAccess) ListDocuments(ctx context.Context, name string, params 
 	}
 
 	// 处理过滤器
-	if params != nil && params.Filters != nil {
+	if params != nil && params.FilterCondition != nil {
 		// 这里可以根据实际需要处理复杂的过滤条件
 		// 暂时先保持简单实现
 	}
