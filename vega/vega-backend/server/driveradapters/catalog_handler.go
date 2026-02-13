@@ -1,3 +1,8 @@
+// Copyright The kweaver.ai Authors.
+//
+// Licensed under the Apache License, Version 2.0.
+// See the LICENSE file in the project root for details.
+
 // Package driveradapters provides HTTP handlers (primary adapters).
 package driveradapters
 
@@ -82,6 +87,7 @@ func (r *restHandler) CreateCatalog(c *gin.Context) {
 		httpErr := err.(*rest.HTTPError)
 		o11y.AddHttpAttrs4HttpError(span, httpErr)
 		rest.ReplyError(c, httpErr)
+		return
 	}
 
 	// Check if name exists
@@ -188,6 +194,7 @@ func (r *restHandler) UpdateCatalog(c *gin.Context) {
 		httpErr := err.(*rest.HTTPError)
 		o11y.AddHttpAttrs4HttpError(span, httpErr)
 		rest.ReplyError(c, httpErr)
+		return
 	}
 
 	// Check if id exists

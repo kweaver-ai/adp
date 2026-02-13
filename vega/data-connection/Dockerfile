@@ -1,3 +1,7 @@
+# Copyright The kweaver.ai Authors.
+# Licensed under the Apache License, Version 2.0.
+# See the LICENSE file in the project root for details.
+
 FROM acr.aishu.cn/af/openjdk:8u342-bullseye-all
 ENV TZ=Asia/Shanghai
 ENV JAVA_OPTS="-XX:+UseContainerSupport -XX:InitialRAMPercentage=70.0 -XX:MaxRAMPercentage=70.0 -XX:MaxMetaspaceSize=512M -XX:MetaspaceSize=128M -XX:+UseG1GC -XX:InitiatingHeapOccupancyPercent=30 -XX:ParallelGCThreads=8 -XX:+ExitOnOutOfMemoryError"

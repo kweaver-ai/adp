@@ -7,6 +7,9 @@ import classNames from 'classnames';
 import { isArray, includes, debounce, isEmpty } from 'lodash-es';
 import styles from './index.module.less';
 import type { EditorProps } from '@monaco-editor/react';
+import { initMonacoLoader } from '../initLoader';
+
+initMonacoLoader();
 
 const EDITOR_OPTIONS = {
   folding: false, // 支持代码折叠

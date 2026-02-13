@@ -1,3 +1,8 @@
+-- Copyright The kweaver.ai Authors.
+--
+-- Licensed under the Apache License, Version 2.0.
+-- See the LICENSE file in the project root for details.
+
 -- 迁移数据从6.1.0 dip_mdl schema 到 6.2.0 adp schema
 -- 注意：使用WHERE NOT EXISTS避免重复插入数据
 SET SCHEMA adp;

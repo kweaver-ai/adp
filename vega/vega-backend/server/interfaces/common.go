@@ -1,3 +1,8 @@
+// Copyright The kweaver.ai Authors.
+//
+// Licensed under the Apache License, Version 2.0.
+// See the LICENSE file in the project root for details.
+
 // Package interfaces defines entities, DTOs, and service interfaces.
 package interfaces
 
@@ -14,7 +19,7 @@ const (
 
 	ACCOUNT_INFO_KEY contextKey = "x-account-info" // 避免直接使用string
 
-	NAME_MAX_LENGTH        = 128
+	NAME_MAX_LENGTH        = 255
 	DESCRIPTION_MAX_LENGTH = 1000
 	TAGS_MAX_NUMBER        = 5
 	TAG_MAX_LENGTH         = 40

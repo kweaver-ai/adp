@@ -1,3 +1,8 @@
+// Copyright The kweaver.ai Authors.
+//
+// Licensed under the Apache License, Version 2.0.
+// See the LICENSE file in the project root for details.
+
 // Package connectors defines the port interfaces for hexagonal architecture.
 package connectors
 
@@ -27,6 +32,7 @@ type Connector interface {
 	Connect(ctx context.Context) error
 	Ping(ctx context.Context) error
 	Close(ctx context.Context) error
+	TestConnection(ctx context.Context) error
 
 	GetMetadata(ctx context.Context) (map[string]any, error)
 }

@@ -1,3 +1,8 @@
+// Copyright The kweaver.ai Authors.
+//
+// Licensed under the Apache License, Version 2.0.
+// See the LICENSE file in the project root for details.
+
 // Package remote provides HTTP-based remote connector implementations.
 package remote
 
@@ -77,15 +82,19 @@ func (rc *RemoteConnector) New(cfg interfaces.ConnectorConfig) (connectors.Conne
 	}, nil
 }
 
-func (rc *RemoteConnector) Close(ctx context.Context) error {
-	return nil
-}
-
 func (rc *RemoteConnector) Connect(ctx context.Context) error {
 	return nil
 }
 
+func (rc *RemoteConnector) Close(ctx context.Context) error {
+	return nil
+}
+
 func (rc *RemoteConnector) Ping(ctx context.Context) error {
+	return nil
+}
+
+func (rc *RemoteConnector) TestConnection(ctx context.Context) error {
 	return nil
 }
 
