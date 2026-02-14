@@ -15,18 +15,18 @@ import (
 	"vega-backend/logics/connectors"
 )
 
-type indexDiscoveryItem struct {
+type indexDiscoverItem struct {
 	resource  *interfaces.Resource
 	indexMeta *interfaces.IndexMeta
 }
 
 // discoverIndexResources discovers index resources from an index connector.
-func (dw *discoveryWorker) discoverIndexResources(ctx context.Context,
-	catalog *interfaces.Catalog, connector connectors.Connector) (*interfaces.DiscoveryResult, error) {
+func (dw *discoverWorker) discoverIndexResources(ctx context.Context,
+	catalog *interfaces.Catalog, connector connectors.Connector) (*interfaces.DiscoverResult, error) {
 
 	indexConnector, ok := connector.(connectors.IndexConnector)
 	if !ok {
-		return nil, fmt.Errorf("connector does not support index discovery")
+		return nil, fmt.Errorf("connector does not support index discover")
 	}
 
 	// Step 1: List Indices
@@ -53,22 +53,22 @@ func (dw *discoveryWorker) discoverIndexResources(ctx context.Context,
 		return nil, fmt.Errorf("failed to enrich index metadata: %w", err)
 	}
 
-	logger.Infof("Discovery completed for catalog %s: new=%d, stale=%d, unchanged=%d",
+	logger.Infof("Discover completed for catalog %s: new=%d, stale=%d, unchanged=%d",
 		catalog.ID, result.NewCount, result.StaleCount, result.UnchangedCount)
 
 	return result, nil
 }
 
 // reconcileIndexResources reconciles source indices with existing resources.
-func (dw *discoveryWorker) reconcileIndexResources(ctx context.Context,
+func (dw *discoverWorker) reconcileIndexResources(ctx context.Context,
 	catalog *interfaces.Catalog, sourceIndices []*interfaces.IndexMeta,
-	existingResources []*interfaces.Resource) (*interfaces.DiscoveryResult, []indexDiscoveryItem, error) {
+	existingResources []*interfaces.Resource) (*interfaces.DiscoverResult, []indexDiscoverItem, error) {
 
-	result := &interfaces.DiscoveryResult{
+	result := &interfaces.DiscoverResult{
 		CatalogID: catalog.ID,
 	}
 
-	var items []indexDiscoveryItem
+	var items []indexDiscoverItem
 
 	existingMap := make(map[string]*interfaces.Resource)
 	for _, r := range existingResources {
@@ -91,7 +91,7 @@ func (dw *discoveryWorker) reconcileIndexResources(ctx context.Context,
 				}
 			}
 			result.UnchangedCount++
-			items = append(items, indexDiscoveryItem{
+			items = append(items, indexDiscoverItem{
 				resource:  resource,
 				indexMeta: idx,
 			})
@@ -101,7 +101,7 @@ func (dw *discoveryWorker) reconcileIndexResources(ctx context.Context,
 				logger.Errorf("Failed to create resource %s: %v", sourceIdentifier, err)
 			} else {
 				result.NewCount++
-				items = append(items, indexDiscoveryItem{
+				items = append(items, indexDiscoverItem{
 					resource:  resource,
 					indexMeta: idx,
 				})
@@ -122,14 +122,14 @@ func (dw *discoveryWorker) reconcileIndexResources(ctx context.Context,
 		}
 	}
 
-	result.Message = fmt.Sprintf("Discovery completed: %d new, %d stale, %d unchanged",
+	result.Message = fmt.Sprintf("Discover completed: %d new, %d stale, %d unchanged",
 		result.NewCount, result.StaleCount, result.UnchangedCount)
 
 	return result, items, nil
 }
 
 // createIndexResource creates a new resource for an index.
-func (dw *discoveryWorker) createIndexResource(ctx context.Context, catalog *interfaces.Catalog,
+func (dw *discoverWorker) createIndexResource(ctx context.Context, catalog *interfaces.Catalog,
 	index *interfaces.IndexMeta) (*interfaces.Resource, error) {
 
 	req := &interfaces.ResourceRequest{
@@ -147,8 +147,8 @@ func (dw *discoveryWorker) createIndexResource(ctx context.Context, catalog *int
 }
 
 // enrichIndexMetadata enriches index resources with detailed metadata.
-func (dw *discoveryWorker) enrichIndexMetadata(ctx context.Context,
-	indexConnector connectors.IndexConnector, items []indexDiscoveryItem) error {
+func (dw *discoverWorker) enrichIndexMetadata(ctx context.Context,
+	indexConnector connectors.IndexConnector, items []indexDiscoverItem) error {
 
 	for _, item := range items {
 		idx := item.indexMeta

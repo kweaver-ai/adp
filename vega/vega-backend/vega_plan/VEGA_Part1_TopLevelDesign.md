@@ -1116,7 +1116,7 @@ catalog:
       on_connection_test: true       # 连接测试时触发扫描
 
     # ========== 发现模式 ==========
-    discovery_mode: "incremental"    # full | incremental
+    discover_mode: "incremental"    # full | incremental
     # full: 全量扫描，对比完整列表
     # incremental: 增量扫描，仅检测变化
 

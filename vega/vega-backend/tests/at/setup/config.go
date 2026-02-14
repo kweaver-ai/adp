@@ -61,12 +61,13 @@ func LoadTestConfig() (*TestConfig, error) {
 	viper.SetConfigType("yaml")
 
 	// 添加多个可能的配置文件路径
-	viper.AddConfigPath("./testdata")          // 从测试目录运行
-	viper.AddConfigPath("./at/testdata")       // 从tests目录运行
-	viper.AddConfigPath("./tests/at/testdata") // 从server目录运行
-	viper.AddConfigPath("../testdata")         // 从子目录运行
-	viper.AddConfigPath("../../testdata")      // 从深层子目录运行
-	viper.AddConfigPath("../../../testdata")   // 从深层子目录运行
+	viper.AddConfigPath("./testdata")           // 从测试目录运行
+	viper.AddConfigPath("./at/testdata")        // 从tests目录运行
+	viper.AddConfigPath("./tests/at/testdata")  // 从server目录运行
+	viper.AddConfigPath("../testdata")          // 从子目录运行
+	viper.AddConfigPath("../../testdata")       // 从深层子目录运行
+	viper.AddConfigPath("../../../testdata")    // 从深层子目录运行
+	viper.AddConfigPath("../../../../testdata") // 从深层子目录运行
 
 	// 支持环境变量覆盖
 	viper.SetEnvPrefix("VEGA_TEST")

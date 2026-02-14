@@ -68,10 +68,10 @@ func (b *OpenSearchPayloadBuilder) BuildFullCreatePayload() map[string]any {
 	// 添加OpenSearch options
 	connectorConfig := payload["connector_config"].(map[string]any)
 	connectorConfig["options"] = map[string]any{
-		"timeout":            "30s",
-		"max_retries":        3,
-		"compress":           true,
-		"discovery_interval": "5m",
+		"timeout":           "30s",
+		"max_retries":       3,
+		"compress":          true,
+		"discover_interval": "5m",
 	}
 
 	return payload

@@ -176,7 +176,7 @@ func buildDatasetResourcePayload() map[string]any {
 			"password": "Password123",
 			"database": "test",
 		},
-		"source_identifier": "adp",
+		"source_identifier": "at_db",
 		"schema_definition": []map[string]any{
 			{"name": "_id", "type": "keyword"},
 			{"name": "@timestamp", "type": "long"},
@@ -202,7 +202,7 @@ func buildFullDatasetResourcePayload() map[string]any {
 			"password": "Password123",
 			"database": "test",
 		},
-		"source_identifier": "adp",
+		"source_identifier": "at_db",
 		"schema_definition": []map[string]any{
 			{"name": "_id", "type": "keyword"},
 			{"name": "@timestamp", "type": "long"},

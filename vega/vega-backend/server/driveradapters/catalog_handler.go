@@ -477,7 +477,7 @@ func (r *restHandler) DiscoverCatalogResources(c *gin.Context) {
 		return
 	}
 
-	// Create discovery task (async)
+	// Create discover task (async)
 	taskID, err := r.dts.Create(ctx, catalog.ID)
 	if err != nil {
 		httpErr := rest.NewHTTPError(ctx, http.StatusInternalServerError, verrors.VegaBackend_Catalog_InternalError).

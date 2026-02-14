@@ -6,7 +6,6 @@
 package logical
 
 import (
-	"context"
 	"net/http"
 	"testing"
 	"time"
@@ -22,23 +21,16 @@ import (
 // TestLogicalCatalogCreate Logical Catalog创建AT测试
 // 测试编号前缀: LG1xx (Logical Create)
 func TestLogicalCatalogCreate(t *testing.T) {
-	var (
-		ctx    context.Context
-		config *setup.TestConfig
-		client *testutil.HTTPClient
-	)
 
 	Convey("Logical Catalog创建AT测试 - 初始化", t, func() {
-		ctx = context.Background()
 
 		// 加载测试配置
-		var err error
-		config, err = setup.LoadTestConfig()
+		config, err := setup.LoadTestConfig()
 		So(err, ShouldBeNil)
 		So(config, ShouldNotBeNil)
 
 		// 创建HTTP客户端
-		client = testutil.NewHTTPClient(config.VegaBackend.BaseURL)
+		client := testutil.NewHTTPClient(config.VegaBackend.BaseURL)
 
 		// 验证服务可用性
 		err = client.CheckHealth()
@@ -69,9 +61,8 @@ func TestLogicalCatalogCreate(t *testing.T) {
 			createResp := client.POST("/api/vega-backend/v1/catalogs", payload)
 			So(createResp.StatusCode, ShouldEqual, http.StatusCreated)
 
-			catalogID := createResp.Body["id"].(string)
-
 			// 查询验证
+			catalogID := createResp.Body["id"].(string)
 			getResp := client.GET("/api/vega-backend/v1/catalogs/" + catalogID)
 			So(getResp.StatusCode, ShouldEqual, http.StatusOK)
 
@@ -85,9 +76,8 @@ func TestLogicalCatalogCreate(t *testing.T) {
 			createResp := client.POST("/api/vega-backend/v1/catalogs", payload)
 			So(createResp.StatusCode, ShouldEqual, http.StatusCreated)
 
-			catalogID := createResp.Body["id"].(string)
-
 			// 立即查询
+			catalogID := createResp.Body["id"].(string)
 			getResp := client.GET("/api/vega-backend/v1/catalogs/" + catalogID)
 			So(getResp.StatusCode, ShouldEqual, http.StatusOK)
 			catalog := cataloghelpers.ExtractFromEntriesResponse(getResp)
@@ -107,11 +97,9 @@ func TestLogicalCatalogCreate(t *testing.T) {
 			listResp := client.GET("/api/vega-backend/v1/catalogs?type=logical&offset=0&limit=10")
 			So(listResp.StatusCode, ShouldEqual, http.StatusOK)
 
-			if listResp.Body != nil {
-				if entries, ok := listResp.Body["entries"].([]any); ok {
-					So(len(entries), ShouldBeGreaterThanOrEqualTo, 3)
-				}
-			}
+			entries, ok := listResp.Body["entries"].([]any)
+			So(ok, ShouldBeTrue)
+			So(len(entries), ShouldEqual, 3)
 		})
 
 		Convey("LG106: logical catalog无connector_type", func() {
@@ -119,19 +107,15 @@ func TestLogicalCatalogCreate(t *testing.T) {
 			createResp := client.POST("/api/vega-backend/v1/catalogs", payload)
 			So(createResp.StatusCode, ShouldEqual, http.StatusCreated)
 
-			catalogID := createResp.Body["id"].(string)
-
 			// 查询验证
+			catalogID := createResp.Body["id"].(string)
 			getResp := client.GET("/api/vega-backend/v1/catalogs/" + catalogID)
 			So(getResp.StatusCode, ShouldEqual, http.StatusOK)
 
 			catalog := cataloghelpers.ExtractFromEntriesResponse(getResp)
 			So(catalog, ShouldNotBeNil)
 			// logical catalog没有connector_type
-			connectorType, hasConnectorType := catalog["connector_type"]
-			if hasConnectorType {
-				So(connectorType, ShouldEqual, "")
-			}
+			So(catalog["connector_type"], ShouldEqual, "")
 		})
 
 		// ========== 负向测试（LG121-LG127） ==========
@@ -338,27 +322,18 @@ func TestLogicalCatalogCreate(t *testing.T) {
 			So(resp.StatusCode, ShouldEqual, http.StatusCreated)
 		})
 	})
-
-	_ = ctx
 }
 
 // TestLogicalCatalogRead Logical Catalog读取AT测试
 // 测试编号前缀: LG2xx
 func TestLogicalCatalogRead(t *testing.T) {
-	var (
-		ctx    context.Context
-		config *setup.TestConfig
-		client *testutil.HTTPClient
-	)
 
 	Convey("Logical Catalog读取AT测试 - 初始化", t, func() {
-		ctx = context.Background()
 
-		var err error
-		config, err = setup.LoadTestConfig()
+		config, err := setup.LoadTestConfig()
 		So(err, ShouldBeNil)
 
-		client = testutil.NewHTTPClient(config.VegaBackend.BaseURL)
+		client := testutil.NewHTTPClient(config.VegaBackend.BaseURL)
 		err = client.CheckHealth()
 		So(err, ShouldBeNil)
 
@@ -371,9 +346,9 @@ func TestLogicalCatalogRead(t *testing.T) {
 			payload := logicalhelpers.BuildLogicalCatalogPayload()
 			createResp := client.POST("/api/vega-backend/v1/catalogs", payload)
 			So(createResp.StatusCode, ShouldEqual, http.StatusCreated)
-			catalogID := createResp.Body["id"].(string)
 
 			// 查询
+			catalogID := createResp.Body["id"].(string)
 			getResp := client.GET("/api/vega-backend/v1/catalogs/" + catalogID)
 			So(getResp.StatusCode, ShouldEqual, http.StatusOK)
 
@@ -397,15 +372,12 @@ func TestLogicalCatalogRead(t *testing.T) {
 			logicalResp := client.GET("/api/vega-backend/v1/catalogs?type=logical&offset=0&limit=100")
 			So(logicalResp.StatusCode, ShouldEqual, http.StatusOK)
 
-			if logicalResp.Body != nil && logicalResp.Body["entries"] != nil {
-				entries := logicalResp.Body["entries"].([]any)
-				So(len(entries), ShouldBeGreaterThanOrEqualTo, 1)
+			entries := logicalResp.Body["entries"].([]any)
+			So(len(entries), ShouldEqual, 1)
 
-				// 验证都是logical类型
-				for _, entry := range entries {
-					catalogEntry := entry.(map[string]any)
-					So(catalogEntry["type"], ShouldEqual, "logical")
-				}
+			// 验证都是logical类型
+			for _, entry := range entries {
+				So(entry.(map[string]any)["type"], ShouldEqual, "logical")
 			}
 		})
 
@@ -420,10 +392,7 @@ func TestLogicalCatalogRead(t *testing.T) {
 			// 分页查询
 			listResp := client.GET("/api/vega-backend/v1/catalogs?type=logical&offset=0&limit=2")
 			So(listResp.StatusCode, ShouldEqual, http.StatusOK)
-
-			if entries, ok := listResp.Body["entries"].([]any); ok {
-				So(len(entries), ShouldEqual, 2)
-			}
+			So(len(listResp.Body["entries"].([]any)), ShouldEqual, 2)
 		})
 
 		Convey("LG205: 列表查询 - 按name模糊搜索", func() {
@@ -436,43 +405,28 @@ func TestLogicalCatalogRead(t *testing.T) {
 			// 模糊搜索
 			searchResp := client.GET("/api/vega-backend/v1/catalogs?name=" + searchPrefix[:20] + "&offset=0&limit=10")
 			So(searchResp.StatusCode, ShouldEqual, http.StatusOK)
-
-			if entries, ok := searchResp.Body["entries"].([]any); ok {
-				So(len(entries), ShouldBeGreaterThanOrEqualTo, 1)
-			}
+			So(len(searchResp.Body["entries"].([]any)), ShouldEqual, 1)
 		})
 
 		Convey("LG206: 列表查询 - 空结果", func() {
 			// 使用不存在的type查询
 			listResp := client.GET("/api/vega-backend/v1/catalogs?name=non-existent-catalog-xyz-12345&offset=0&limit=10")
 			So(listResp.StatusCode, ShouldEqual, http.StatusOK)
-
-			if entries, ok := listResp.Body["entries"].([]any); ok {
-				So(len(entries), ShouldEqual, 0)
-			}
+			So(len(listResp.Body["entries"].([]any)), ShouldEqual, 0)
 		})
 	})
-
-	_ = ctx
 }
 
 // TestLogicalCatalogUpdate Logical Catalog更新AT测试
 // 测试编号前缀: LG3xx
 func TestLogicalCatalogUpdate(t *testing.T) {
-	var (
-		ctx    context.Context
-		config *setup.TestConfig
-		client *testutil.HTTPClient
-	)
 
 	Convey("Logical Catalog更新AT测试 - 初始化", t, func() {
-		ctx = context.Background()
 
-		var err error
-		config, err = setup.LoadTestConfig()
+		config, err := setup.LoadTestConfig()
 		So(err, ShouldBeNil)
 
-		client = testutil.NewHTTPClient(config.VegaBackend.BaseURL)
+		client := testutil.NewHTTPClient(config.VegaBackend.BaseURL)
 		err = client.CheckHealth()
 		So(err, ShouldBeNil)
 
@@ -485,9 +439,9 @@ func TestLogicalCatalogUpdate(t *testing.T) {
 			payload := logicalhelpers.BuildLogicalCatalogPayload()
 			createResp := client.POST("/api/vega-backend/v1/catalogs", payload)
 			So(createResp.StatusCode, ShouldEqual, http.StatusCreated)
-			catalogID := createResp.Body["id"].(string)
 
 			// 获取原始数据
+			catalogID := createResp.Body["id"].(string)
 			getResp := client.GET("/api/vega-backend/v1/catalogs/" + catalogID)
 			catalogData := cataloghelpers.ExtractFromEntriesResponse(getResp)
 
@@ -589,9 +543,7 @@ func TestLogicalCatalogUpdate(t *testing.T) {
 			// 验证
 			verifyResp := client.GET("/api/vega-backend/v1/catalogs/" + catalogID)
 			catalog := cataloghelpers.ExtractFromEntriesResponse(verifyResp)
-			if tags, ok := catalog["tags"].([]any); ok {
-				So(len(tags), ShouldEqual, 3)
-			}
+			So(len(catalog["tags"].([]any)), ShouldEqual, 3)
 		})
 
 		Convey("LG306: 更新为已存在的name", func() {
@@ -618,27 +570,18 @@ func TestLogicalCatalogUpdate(t *testing.T) {
 			So(updateResp.StatusCode, ShouldEqual, http.StatusConflict)
 		})
 	})
-
-	_ = ctx
 }
 
 // TestLogicalCatalogDelete Logical Catalog删除AT测试
 // 测试编号前缀: LG4xx
 func TestLogicalCatalogDelete(t *testing.T) {
-	var (
-		ctx    context.Context
-		config *setup.TestConfig
-		client *testutil.HTTPClient
-	)
 
 	Convey("Logical Catalog删除AT测试 - 初始化", t, func() {
-		ctx = context.Background()
 
-		var err error
-		config, err = setup.LoadTestConfig()
+		config, err := setup.LoadTestConfig()
 		So(err, ShouldBeNil)
 
-		client = testutil.NewHTTPClient(config.VegaBackend.BaseURL)
+		client := testutil.NewHTTPClient(config.VegaBackend.BaseURL)
 		err = client.CheckHealth()
 		So(err, ShouldBeNil)
 
@@ -651,9 +594,9 @@ func TestLogicalCatalogDelete(t *testing.T) {
 			payload := logicalhelpers.BuildLogicalCatalogPayload()
 			createResp := client.POST("/api/vega-backend/v1/catalogs", payload)
 			So(createResp.StatusCode, ShouldEqual, http.StatusCreated)
-			catalogID := createResp.Body["id"].(string)
 
 			// 删除
+			catalogID := createResp.Body["id"].(string)
 			deleteResp := client.DELETE("/api/vega-backend/v1/catalogs/" + catalogID)
 			So(deleteResp.StatusCode, ShouldEqual, http.StatusNoContent)
 
@@ -689,9 +632,9 @@ func TestLogicalCatalogDelete(t *testing.T) {
 			catalogName := payload["name"]
 			createResp1 := client.POST("/api/vega-backend/v1/catalogs", payload)
 			So(createResp1.StatusCode, ShouldEqual, http.StatusCreated)
-			catalogID1 := createResp1.Body["id"].(string)
 
 			// 删除
+			catalogID1 := createResp1.Body["id"].(string)
 			deleteResp := client.DELETE("/api/vega-backend/v1/catalogs/" + catalogID1)
 			So(deleteResp.StatusCode, ShouldEqual, http.StatusNoContent)
 
@@ -705,27 +648,18 @@ func TestLogicalCatalogDelete(t *testing.T) {
 			So(catalogID2, ShouldNotEqual, catalogID1)
 		})
 	})
-
-	_ = ctx
 }
 
 // TestLogicalCatalogSpecific Logical Catalog特有测试
 // 测试编号前缀: LG5xx
 func TestLogicalCatalogSpecific(t *testing.T) {
-	var (
-		ctx    context.Context
-		config *setup.TestConfig
-		client *testutil.HTTPClient
-	)
 
 	Convey("Logical Catalog特有AT测试 - 初始化", t, func() {
-		ctx = context.Background()
 
-		var err error
-		config, err = setup.LoadTestConfig()
+		config, err := setup.LoadTestConfig()
 		So(err, ShouldBeNil)
 
-		client = testutil.NewHTTPClient(config.VegaBackend.BaseURL)
+		client := testutil.NewHTTPClient(config.VegaBackend.BaseURL)
 		err = client.CheckHealth()
 		So(err, ShouldBeNil)
 
@@ -738,9 +672,9 @@ func TestLogicalCatalogSpecific(t *testing.T) {
 			payload := logicalhelpers.BuildLogicalCatalogPayload()
 			createResp := client.POST("/api/vega-backend/v1/catalogs", payload)
 			So(createResp.StatusCode, ShouldEqual, http.StatusCreated)
-			catalogID := createResp.Body["id"].(string)
 
 			// logical catalog测试连接永远返回200 OK
+			catalogID := createResp.Body["id"].(string)
 			testConnResp := client.POST("/api/vega-backend/v1/catalogs/"+catalogID+"/test-connection", nil)
 			So(testConnResp.StatusCode, ShouldEqual, http.StatusOK)
 		})
@@ -750,13 +684,11 @@ func TestLogicalCatalogSpecific(t *testing.T) {
 			payload := logicalhelpers.BuildLogicalCatalogPayload()
 			createResp := client.POST("/api/vega-backend/v1/catalogs", payload)
 			So(createResp.StatusCode, ShouldEqual, http.StatusCreated)
-			catalogID := createResp.Body["id"].(string)
 
 			// logical catalog健康检查永远返回200 OK
+			catalogID := createResp.Body["id"].(string)
 			healthResp := client.GET("/api/vega-backend/v1/catalogs/" + catalogID + "/health-status")
 			So(healthResp.StatusCode, ShouldEqual, http.StatusOK)
 		})
 	})
-
-	_ = ctx
 }

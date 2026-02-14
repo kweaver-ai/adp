@@ -11,8 +11,8 @@ import (
 	"github.com/hibiken/asynq"
 )
 
-// DiscoveryResult represents the result of a discovery operation.
-type DiscoveryResult struct {
+// DiscoverResult represents the result of a discover operation.
+type DiscoverResult struct {
 	CatalogID      string `json:"catalog_id"`
 	NewCount       int    `json:"new_count"`
 	StaleCount     int    `json:"stale_count"`
@@ -20,11 +20,11 @@ type DiscoveryResult struct {
 	Message        string `json:"message"`
 }
 
-// DiscoveryWorker interface defines discovery execution functionality.
-// This worker is called by the task management service to execute the actual discovery.
+// DiscoverWorker interface defines discover execution functionality.
+// This worker is called by the task management service to execute the actual discover.
 //
-//go:generate mockgen -source ../interfaces/discovery_worker.go -destination ../interfaces/mock/mock_discovery_worker.go
-type DiscoveryWorker interface {
+//go:generate mockgen -source ../interfaces/discover_worker.go -destination ../interfaces/mock/mock_discover_worker.go
+type DiscoverWorker interface {
 	Start()
 
 	Run(ctx context.Context) error

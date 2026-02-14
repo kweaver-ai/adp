@@ -218,6 +218,51 @@ func CleanupCatalogsByType(client *testutil.HTTPClient, t *testing.T, catalogTyp
 	}
 }
 
+// CleanupResources 清理所有现有的resource，确保测试环境干净
+func CleanupResources(client *testutil.HTTPClient, t *testing.T) {
+	// 获取所有resource（使用offset+limit分页）
+	listResp := client.GET("/api/vega-backend/v1/resources?offset=0&limit=1000")
+	if listResp.StatusCode != http.StatusOK {
+		t.Logf("⚠ 获取resource列表失败，状态码: %d", listResp.StatusCode)
+		return
+	}
+
+	if listResp.Body == nil {
+		t.Logf("✓ resource列表为空，无需清理")
+		return
+	}
+
+	entries, ok := listResp.Body["entries"].([]any)
+	if !ok || len(entries) == 0 {
+		t.Logf("✓ resource列表为空，无需清理")
+		return
+	}
+
+	t.Logf("⏳ 开始清理 %d 个现有resource...", len(entries))
+
+	deletedCount := 0
+	for _, entry := range entries {
+		resourceMap, ok := entry.(map[string]any)
+		if !ok {
+			continue
+		}
+
+		resourceID, ok := resourceMap["id"].(string)
+		if !ok {
+			continue
+		}
+
+		deleteResp := client.DELETE("/api/vega-backend/v1/resources/" + resourceID)
+		if deleteResp.StatusCode == http.StatusOK || deleteResp.StatusCode == http.StatusNoContent {
+			deletedCount++
+		} else {
+			t.Logf("⚠ 删除resource %s 失败，状态码: %d", resourceID, deleteResp.StatusCode)
+		}
+	}
+
+	t.Logf("✓ 清理完成，成功删除 %d 个resource", deletedCount)
+}
+
 // ========== 响应提取辅助函数 ==========
 
 // ExtractFromEntriesResponse 从entries格式响应中提取第一个对象
@@ -231,11 +276,6 @@ func ExtractFromEntriesResponse(resp testutil.HTTPResponse) map[string]any {
 		if item, ok := entries[0].(map[string]any); ok {
 			return item
 		}
-	}
-
-	// 如果响应直接就是对象（向后兼容）
-	if _, hasID := resp.Body["id"]; hasID {
-		return resp.Body
 	}
 
 	return nil

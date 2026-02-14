@@ -15,19 +15,19 @@ import (
 	"vega-backend/logics/connectors"
 )
 
-type tableDiscoveryItem struct {
+type tableDiscoverItem struct {
 	resource  *interfaces.Resource
 	tableMeta *interfaces.TableMeta
 }
 
 // discoverTableResources discovers table resources from a table connector.
 // 分步执行：1. 获取表名列表 2. 创建/更新 Resource 3. 逐个补齐详细元数据
-func (dw *discoveryWorker) discoverTableResources(ctx context.Context,
-	catalog *interfaces.Catalog, connector connectors.Connector) (*interfaces.DiscoveryResult, error) {
+func (dw *discoverWorker) discoverTableResources(ctx context.Context,
+	catalog *interfaces.Catalog, connector connectors.Connector) (*interfaces.DiscoverResult, error) {
 
 	tableConnector, ok := connector.(connectors.TableConnector)
 	if !ok {
-		return nil, fmt.Errorf("connector does not support table discovery")
+		return nil, fmt.Errorf("connector does not support table discover")
 	}
 
 	// Step 1: 获取表名列表
@@ -54,15 +54,15 @@ func (dw *discoveryWorker) discoverTableResources(ctx context.Context,
 		return nil, fmt.Errorf("failed to enrich table metadata: %w", err)
 	}
 
-	logger.Infof("Discovery completed for catalog %s: new=%d, stale=%d, unchanged=%d",
+	logger.Infof("Discover completed for catalog %s: new=%d, stale=%d, unchanged=%d",
 		catalog.ID, result.NewCount, result.StaleCount, result.UnchangedCount)
 
 	return result, nil
 }
 
 // enrichTableMetadata enriches table resources with detailed metadata.
-func (dw *discoveryWorker) enrichTableMetadata(ctx context.Context,
-	tableConnector connectors.TableConnector, items []tableDiscoveryItem) error {
+func (dw *discoverWorker) enrichTableMetadata(ctx context.Context,
+	tableConnector connectors.TableConnector, items []tableDiscoverItem) error {
 
 	for _, item := range items {
 		table := item.tableMeta
@@ -123,16 +123,16 @@ func (dw *discoveryWorker) enrichTableMetadata(ctx context.Context,
 }
 
 // reconcileTableResources reconciles source tables with existing resources.
-func (dw *discoveryWorker) reconcileTableResources(ctx context.Context,
+func (dw *discoverWorker) reconcileTableResources(ctx context.Context,
 	catalog *interfaces.Catalog, sourceTables []*interfaces.TableMeta,
-	existingResources []*interfaces.Resource) (*interfaces.DiscoveryResult, []tableDiscoveryItem, error) {
+	existingResources []*interfaces.Resource) (*interfaces.DiscoverResult, []tableDiscoverItem, error) {
 
-	result := &interfaces.DiscoveryResult{
+	result := &interfaces.DiscoverResult{
 		CatalogID: catalog.ID,
 	}
 
-	// 用于返回的 Discovery Items
-	var items []tableDiscoveryItem
+	// 用于返回的 Discover Items
+	var items []tableDiscoverItem
 
 	// 构建现有资源的 map（按 SourceIdentifier 索引）
 	existingMap := make(map[string]*interfaces.Resource)
@@ -160,7 +160,7 @@ func (dw *discoveryWorker) reconcileTableResources(ctx context.Context,
 				}
 			}
 			result.UnchangedCount++
-			items = append(items, tableDiscoveryItem{
+			items = append(items, tableDiscoverItem{
 				resource:  resource,
 				tableMeta: table,
 			})
@@ -171,7 +171,7 @@ func (dw *discoveryWorker) reconcileTableResources(ctx context.Context,
 				logger.Errorf("Failed to create resource %s: %v", sourceIdentifier, err)
 			} else {
 				result.NewCount++
-				items = append(items, tableDiscoveryItem{
+				items = append(items, tableDiscoverItem{
 					resource:  resource,
 					tableMeta: table,
 				})
@@ -193,14 +193,14 @@ func (dw *discoveryWorker) reconcileTableResources(ctx context.Context,
 		}
 	}
 
-	result.Message = fmt.Sprintf("Discovery completed: %d new, %d stale, %d unchanged",
+	result.Message = fmt.Sprintf("Discover completed: %d new, %d stale, %d unchanged",
 		result.NewCount, result.StaleCount, result.UnchangedCount)
 
 	return result, items, nil
 }
 
 // buildSourceIdentifier builds the source identifier for a table.
-func (dw *discoveryWorker) buildSourceIdentifier(table *interfaces.TableMeta) string {
+func (dw *discoverWorker) buildSourceIdentifier(table *interfaces.TableMeta) string {
 	if table.Database != "" {
 		return fmt.Sprintf("%s.%s", table.Database, table.Name)
 	}
@@ -208,7 +208,7 @@ func (dw *discoveryWorker) buildSourceIdentifier(table *interfaces.TableMeta) st
 }
 
 // createResource creates a new resource.
-func (dw *discoveryWorker) createResource(ctx context.Context, catalog *interfaces.Catalog,
+func (dw *discoverWorker) createResource(ctx context.Context, catalog *interfaces.Catalog,
 	table *interfaces.TableMeta, sourceIdentifier string) (*interfaces.Resource, error) {
 
 	req := &interfaces.ResourceRequest{

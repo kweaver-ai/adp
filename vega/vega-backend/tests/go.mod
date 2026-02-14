@@ -5,13 +5,21 @@ go 1.24.0
 toolchain go1.24.11
 
 require (
+	github.com/go-sql-driver/mysql v1.9.3
 	github.com/kweaver-ai/kweaver-go-lib v1.0.3-0.20260202054858-6bd59c1aca87
 	github.com/smartystreets/goconvey v1.8.1
 	github.com/spf13/viper v1.21.0
 )
 
 require (
+	github.com/lann/builder v0.0.0-20180802200727-47ae307949d0 // indirect
+	github.com/lann/ps v0.0.0-20150810152359-62de8c46ede0 // indirect
+)
+
+require (
+	filippo.io/edwards25519 v1.1.0 // indirect
 	github.com/BurntSushi/toml v1.6.0 // indirect
+	github.com/Masterminds/squirrel v1.5.4
 	github.com/bytedance/gopkg v0.1.3 // indirect
 	github.com/bytedance/sonic v1.15.0 // indirect
 	github.com/bytedance/sonic/loader v0.5.0 // indirect

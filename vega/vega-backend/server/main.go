@@ -118,9 +118,9 @@ func main() {
 	factory.Init(appSetting)
 	logger.Info("VEGA Manager Init Connector Factory Success")
 
-	dw := worker.NewDiscoveryWorker(appSetting)
+	dw := worker.NewDiscoverWorker(appSetting)
 	dw.Start()
-	logger.Info("VEGA Manager Init Discovery Worker Success")
+	logger.Info("VEGA Manager Init Discover Worker Success")
 
 	// 创建并启动服务
 	server := &vegaService{

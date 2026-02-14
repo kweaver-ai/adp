@@ -3,8 +3,8 @@
 // Licensed under the Apache License, Version 2.0.
 // See the LICENSE file in the project root for details.
 
-// Package discovery_task provides DiscoveryTask data access operations.
-package discovery_task
+// Package discover_task provides DiscoverTask data access operations.
+package discover_task
 
 import (
 	"context"
@@ -28,23 +28,23 @@ import (
 )
 
 const (
-	DISCOVERY_TASK_TABLE_NAME = "t_discovery_task"
+	DISCOVER_TASK_TABLE_NAME = "t_discover_task"
 )
 
 var (
 	dtAccessOnce sync.Once
-	dtAccess     interfaces.DiscoveryTaskAccess
+	dtAccess     interfaces.DiscoverTaskAccess
 )
 
-type discoveryTaskAccess struct {
+type discoverTaskAccess struct {
 	appSetting *common.AppSetting
 	db         *sql.DB
 }
 
-// NewDiscoveryTaskAccess creates a new DiscoveryTaskAccess.
-func NewDiscoveryTaskAccess(appSetting *common.AppSetting) interfaces.DiscoveryTaskAccess {
+// NewDiscoverTaskAccess creates a new DiscoverTaskAccess.
+func NewDiscoverTaskAccess(appSetting *common.AppSetting) interfaces.DiscoverTaskAccess {
 	dtAccessOnce.Do(func() {
-		dtAccess = &discoveryTaskAccess{
+		dtAccess = &discoverTaskAccess{
 			appSetting: appSetting,
 			db:         libdb.NewDB(&appSetting.DBSetting),
 		}
@@ -52,9 +52,9 @@ func NewDiscoveryTaskAccess(appSetting *common.AppSetting) interfaces.DiscoveryT
 	return dtAccess
 }
 
-// Create creates a new DiscoveryTask.
-func (da *discoveryTaskAccess) Create(ctx context.Context, task *interfaces.DiscoveryTask) error {
-	ctx, span := ar_trace.Tracer.Start(ctx, "Insert into discovery_task",
+// Create creates a new DiscoverTask.
+func (da *discoverTaskAccess) Create(ctx context.Context, task *interfaces.DiscoverTask) error {
+	ctx, span := ar_trace.Tracer.Start(ctx, "Insert into discover_task",
 		trace.WithSpanKind(trace.SpanKindClient))
 	defer span.End()
 
@@ -62,7 +62,7 @@ func (da *discoveryTaskAccess) Create(ctx context.Context, task *interfaces.Disc
 		attr.Key("db_url").String(libdb.GetDBUrl()),
 		attr.Key("db_type").String(libdb.GetDBType()))
 
-	sqlStr, vals, err := sq.Insert(DISCOVERY_TASK_TABLE_NAME).
+	sqlStr, vals, err := sq.Insert(DISCOVER_TASK_TABLE_NAME).
 		Columns(
 			"f_id",
 			"f_catalog_id",
@@ -92,18 +92,18 @@ func (da *discoveryTaskAccess) Create(ctx context.Context, task *interfaces.Disc
 			task.CreateTime,
 		).ToSql()
 	if err != nil {
-		logger.Errorf("Failed to build insert discovery_task sql: %v", err)
-		o11y.Error(ctx, fmt.Sprintf("Failed to build insert discovery_task sql: %v", err))
+		logger.Errorf("Failed to build insert discover_task sql: %v", err)
+		o11y.Error(ctx, fmt.Sprintf("Failed to build insert discover_task sql: %v", err))
 		span.SetStatus(codes.Error, "Build sql failed")
 		return err
 	}
 
-	o11y.Info(ctx, fmt.Sprintf("Insert discovery_task SQL: %s", sqlStr))
+	o11y.Info(ctx, fmt.Sprintf("Insert discover_task SQL: %s", sqlStr))
 
 	_, err = da.db.ExecContext(ctx, sqlStr, vals...)
 	if err != nil {
-		logger.Errorf("Insert discovery_task failed: %v", err)
-		o11y.Error(ctx, fmt.Sprintf("Insert discovery_task failed: %v", err))
+		logger.Errorf("Insert discover_task failed: %v", err)
+		o11y.Error(ctx, fmt.Sprintf("Insert discover_task failed: %v", err))
 		span.SetStatus(codes.Error, "Insert failed")
 		return err
 	}
@@ -112,9 +112,9 @@ func (da *discoveryTaskAccess) Create(ctx context.Context, task *interfaces.Disc
 	return nil
 }
 
-// GetByID retrieves a DiscoveryTask by ID.
-func (da *discoveryTaskAccess) GetByID(ctx context.Context, id string) (*interfaces.DiscoveryTask, error) {
-	ctx, span := ar_trace.Tracer.Start(ctx, "Query discovery_task by ID",
+// GetByID retrieves a DiscoverTask by ID.
+func (da *discoverTaskAccess) GetByID(ctx context.Context, id string) (*interfaces.DiscoverTask, error) {
+	ctx, span := ar_trace.Tracer.Start(ctx, "Query discover_task by ID",
 		trace.WithSpanKind(trace.SpanKindClient))
 	defer span.End()
 
@@ -133,16 +133,16 @@ func (da *discoveryTaskAccess) GetByID(ctx context.Context, id string) (*interfa
 		"f_creator",
 		"f_creator_type",
 		"f_create_time",
-	).From(DISCOVERY_TASK_TABLE_NAME).
+	).From(DISCOVER_TASK_TABLE_NAME).
 		Where(sq.Eq{"f_id": id}).
 		ToSql()
 	if err != nil {
-		logger.Errorf("Failed to build select discovery_task sql: %v", err)
+		logger.Errorf("Failed to build select discover_task sql: %v", err)
 		span.SetStatus(codes.Error, "Build sql failed")
 		return nil, err
 	}
 
-	task := &interfaces.DiscoveryTask{}
+	task := &interfaces.DiscoverTask{}
 	var resultStr sql.NullString
 
 	row := da.db.QueryRowContext(ctx, sqlStr, vals...)
@@ -165,14 +165,14 @@ func (da *discoveryTaskAccess) GetByID(ctx context.Context, id string) (*interfa
 		return nil, nil
 	}
 	if err != nil {
-		logger.Errorf("Scan discovery_task failed: %v", err)
+		logger.Errorf("Scan discover_task failed: %v", err)
 		span.SetStatus(codes.Error, "Scan failed")
 		return nil, err
 	}
 
 	// Deserialize result
 	if resultStr.Valid && resultStr.String != "" {
-		task.Result = &interfaces.DiscoveryResult{}
+		task.Result = &interfaces.DiscoverResult{}
 		_ = sonic.UnmarshalString(resultStr.String, task.Result)
 	}
 
@@ -180,9 +180,9 @@ func (da *discoveryTaskAccess) GetByID(ctx context.Context, id string) (*interfa
 	return task, nil
 }
 
-// List lists DiscoveryTasks with filters.
-func (da *discoveryTaskAccess) List(ctx context.Context, params interfaces.DiscoveryTaskQueryParams) ([]*interfaces.DiscoveryTask, int64, error) {
-	ctx, span := ar_trace.Tracer.Start(ctx, "List discovery_tasks",
+// List lists DiscoverTasks with filters.
+func (da *discoverTaskAccess) List(ctx context.Context, params interfaces.DiscoverTaskQueryParams) ([]*interfaces.DiscoverTask, int64, error) {
+	ctx, span := ar_trace.Tracer.Start(ctx, "List discover_tasks",
 		trace.WithSpanKind(trace.SpanKindClient))
 	defer span.End()
 
@@ -199,9 +199,9 @@ func (da *discoveryTaskAccess) List(ctx context.Context, params interfaces.Disco
 		"f_creator",
 		"f_creator_type",
 		"f_create_time",
-	).From(DISCOVERY_TASK_TABLE_NAME)
+	).From(DISCOVER_TASK_TABLE_NAME)
 
-	countBuilder := sq.Select("COUNT(*)").From(DISCOVERY_TASK_TABLE_NAME)
+	countBuilder := sq.Select("COUNT(*)").From(DISCOVER_TASK_TABLE_NAME)
 
 	if params.CatalogID != "" {
 		builder = builder.Where(sq.Eq{"f_catalog_id": params.CatalogID})
@@ -220,7 +220,7 @@ func (da *discoveryTaskAccess) List(ctx context.Context, params interfaces.Disco
 	var total int64
 	err := da.db.QueryRowContext(ctx, countSql, countVals...).Scan(&total)
 	if err != nil {
-		logger.Errorf("Failed to count discovery_tasks: %v", err)
+		logger.Errorf("Failed to count discover_tasks: %v", err)
 		span.SetStatus(codes.Error, "Count failed")
 		return nil, 0, err
 	}
@@ -244,9 +244,9 @@ func (da *discoveryTaskAccess) List(ctx context.Context, params interfaces.Disco
 	}
 	defer rows.Close()
 
-	tasks := make([]*interfaces.DiscoveryTask, 0)
+	tasks := make([]*interfaces.DiscoverTask, 0)
 	for rows.Next() {
-		task := &interfaces.DiscoveryTask{}
+		task := &interfaces.DiscoverTask{}
 		var resultStr sql.NullString
 
 		err := rows.Scan(
@@ -269,7 +269,7 @@ func (da *discoveryTaskAccess) List(ctx context.Context, params interfaces.Disco
 		}
 
 		if resultStr.Valid && resultStr.String != "" {
-			task.Result = &interfaces.DiscoveryResult{}
+			task.Result = &interfaces.DiscoverResult{}
 			_ = sonic.UnmarshalString(resultStr.String, task.Result)
 		}
 
@@ -280,9 +280,9 @@ func (da *discoveryTaskAccess) List(ctx context.Context, params interfaces.Disco
 	return tasks, total, nil
 }
 
-// UpdateStatus updates a DiscoveryTask's status and message.
-func (da *discoveryTaskAccess) UpdateStatus(ctx context.Context, id, status, message string, stime int64) error {
-	ctx, span := ar_trace.Tracer.Start(ctx, "Update discovery_task status",
+// UpdateStatus updates a DiscoverTask's status and message.
+func (da *discoverTaskAccess) UpdateStatus(ctx context.Context, id, status, message string, stime int64) error {
+	ctx, span := ar_trace.Tracer.Start(ctx, "Update discover_task status",
 		trace.WithSpanKind(trace.SpanKindClient))
 	defer span.End()
 
@@ -295,10 +295,10 @@ func (da *discoveryTaskAccess) UpdateStatus(ctx context.Context, id, status, mes
 		"f_status":  status,
 		"f_message": message,
 	}
-	if status == interfaces.DiscoveryTaskStatusRunning {
+	if status == interfaces.DiscoverTaskStatusRunning {
 		data["f_start_time"] = stime
 	}
-	sqlStr, vals, err := sq.Update(DISCOVERY_TASK_TABLE_NAME).
+	sqlStr, vals, err := sq.Update(DISCOVER_TASK_TABLE_NAME).
 		SetMap(data).
 		Where(sq.Eq{"f_id": id}).
 		ToSql()
@@ -317,13 +317,13 @@ func (da *discoveryTaskAccess) UpdateStatus(ctx context.Context, id, status, mes
 	return nil
 }
 
-// UpdateProgress updates a DiscoveryTask's progress.
-func (da *discoveryTaskAccess) UpdateProgress(ctx context.Context, id string, progress int) error {
-	ctx, span := ar_trace.Tracer.Start(ctx, "Update discovery_task progress",
+// UpdateProgress updates a DiscoverTask's progress.
+func (da *discoverTaskAccess) UpdateProgress(ctx context.Context, id string, progress int) error {
+	ctx, span := ar_trace.Tracer.Start(ctx, "Update discover_task progress",
 		trace.WithSpanKind(trace.SpanKindClient))
 	defer span.End()
 
-	sqlStr, vals, err := sq.Update(DISCOVERY_TASK_TABLE_NAME).
+	sqlStr, vals, err := sq.Update(DISCOVER_TASK_TABLE_NAME).
 		Set("f_progress", progress).
 		Set("f_update_time", time.Now().UnixMilli()).
 		Where(sq.Eq{"f_id": id}).
@@ -343,16 +343,16 @@ func (da *discoveryTaskAccess) UpdateProgress(ctx context.Context, id string, pr
 	return nil
 }
 
-// UpdateResult updates a DiscoveryTask's result and sets status to completed.
-func (da *discoveryTaskAccess) UpdateResult(ctx context.Context, id string, result *interfaces.DiscoveryResult, stime int64) error {
-	ctx, span := ar_trace.Tracer.Start(ctx, "Update discovery_task result",
+// UpdateResult updates a DiscoverTask's result and sets status to completed.
+func (da *discoverTaskAccess) UpdateResult(ctx context.Context, id string, result *interfaces.DiscoverResult, stime int64) error {
+	ctx, span := ar_trace.Tracer.Start(ctx, "Update discover_task result",
 		trace.WithSpanKind(trace.SpanKindClient))
 	defer span.End()
 
 	resultBytes, _ := sonic.MarshalString(result)
 
-	sqlStr, vals, err := sq.Update(DISCOVERY_TASK_TABLE_NAME).
-		Set("f_status", interfaces.DiscoveryTaskStatusCompleted).
+	sqlStr, vals, err := sq.Update(DISCOVER_TASK_TABLE_NAME).
+		Set("f_status", interfaces.DiscoverTaskStatusCompleted).
 		Set("f_result", resultBytes).
 		Set("f_progress", 100).
 		Set("f_finish_time", stime).

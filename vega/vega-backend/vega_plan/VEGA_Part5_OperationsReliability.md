@@ -235,7 +235,7 @@ load_balancer:
 
 ### 17.3. 服务发现与注册
 ```yaml
-service_discovery:
+service_discover:
   provider: "consul"  # consul | etcd | kubernetes
 
   registration:
@@ -247,7 +247,7 @@ service_discovery:
       - "api"
       - "v2"
 
-  discovery:
+  discover:
     services:
       - name: "vega-worker"
         load_balance: "round_robin"

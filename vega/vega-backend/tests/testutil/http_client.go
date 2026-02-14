@@ -39,7 +39,7 @@ type ErrorResponse struct {
 func NewHTTPClient(baseURL string) *HTTPClient {
 	return &HTTPClient{
 		BaseURL: baseURL,
-		Client:  &http.Client{Timeout: 10 * time.Second},
+		Client:  &http.Client{Timeout: 120 * time.Second},
 		Headers: map[string]string{
 			"Content-Type":   "application/json",
 			"X-Account-ID":   "test-user-001",

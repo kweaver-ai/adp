@@ -23,9 +23,9 @@ import (
 	"vega-backend/interfaces"
 	"vega-backend/logics/auth"
 	"vega-backend/logics/catalog"
-	connector_type "vega-backend/logics/connector_type"
+	"vega-backend/logics/connector_type"
 	"vega-backend/logics/dataset"
-	discovery_task "vega-backend/logics/discovery_task"
+	"vega-backend/logics/discover_task"
 	"vega-backend/logics/resource"
 	"vega-backend/logics/resource_data"
 	"vega-backend/version"
@@ -43,7 +43,7 @@ type restHandler struct {
 	rs         interfaces.ResourceService
 	ds         interfaces.DatasetService
 	cts        interfaces.ConnectorTypeService
-	dts        interfaces.DiscoveryTaskService
+	dts        interfaces.DiscoverTaskService
 	rds        interfaces.ResourceDataService
 }
 
@@ -59,7 +59,7 @@ func NewRestHandler(appSetting *common.AppSetting) RestHandler {
 		rs:         rs,
 		ds:         ds,
 		cts:        connector_type.NewConnectorTypeService(appSetting),
-		dts:        discovery_task.NewDiscoveryTaskService(appSetting),
+		dts:        discover_task.NewDiscoverTaskService(appSetting),
 		rds:        resource_data.NewResourceDataService(appSetting),
 	}
 }
@@ -114,11 +114,11 @@ func (r *restHandler) RegisterPublic(engine *gin.Engine) {
 			connectorTypes.POST("/:type/enabled", r.SetConnectorTypeEnabled)
 		}
 
-		// DiscoveryTask APIs
-		discoveryTasks := apiV1.Group("/discovery-tasks")
+		// DiscoverTask APIs
+		discoverTasks := apiV1.Group("/discover-tasks")
 		{
-			discoveryTasks.GET("", r.ListDiscoveryTasks)
-			discoveryTasks.GET("/:id", r.GetDiscoveryTask)
+			discoverTasks.GET("", r.ListDiscoverTasks)
+			discoverTasks.GET("/:id", r.GetDiscoverTask)
 		}
 	}
 

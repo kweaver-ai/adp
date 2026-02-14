@@ -22,54 +22,54 @@ import (
 	logicsCatalog "vega-backend/logics/catalog"
 	"vega-backend/logics/connectors"
 	"vega-backend/logics/connectors/factory"
-	"vega-backend/logics/discovery_task"
+	"vega-backend/logics/discover_task"
 	"vega-backend/logics/resource"
 )
 
 var (
 	dWorkerOnce sync.Once
-	dWorker     interfaces.DiscoveryWorker
+	dWorker     interfaces.DiscoverWorker
 )
 
-// discoveryWorker provides resource discovery functionality.
-type discoveryWorker struct {
+// discoverWorker provides resource discover functionality.
+type discoverWorker struct {
 	appSetting *common.AppSetting
 	aqa        interfaces.AsynqAccess
 	rs         interfaces.ResourceService
 	cs         interfaces.CatalogService
-	dts        interfaces.DiscoveryTaskService
+	dts        interfaces.DiscoverTaskService
 }
 
-// NewDiscoveryWorker creates or returns the singleton DiscoveryWorker.
-func NewDiscoveryWorker(appSetting *common.AppSetting) interfaces.DiscoveryWorker {
+// NewDiscoverWorker creates or returns the singleton DiscoverWorker.
+func NewDiscoverWorker(appSetting *common.AppSetting) interfaces.DiscoverWorker {
 	dWorkerOnce.Do(func() {
-		dWorker = &discoveryWorker{
+		dWorker = &discoverWorker{
 			appSetting: appSetting,
 			aqa:        asynq_access.NewAsynqAccess(appSetting),
 			rs:         resource.NewResourceService(appSetting),
 			cs:         logicsCatalog.NewCatalogService(appSetting),
-			dts:        discovery_task.NewDiscoveryTaskService(appSetting),
+			dts:        discover_task.NewDiscoverTaskService(appSetting),
 		}
 	})
 	return dWorker
 }
 
-func (dw *discoveryWorker) Start() {
+func (dw *discoverWorker) Start() {
 	// Start server in a goroutine
 	go func() {
 		for {
 			if err := dw.Run(context.Background()); err != nil {
-				logger.Errorf("Discovery worker failed: %v", err)
+				logger.Errorf("Discover worker failed: %v", err)
 			}
 			time.Sleep(1 * time.Second)
 		}
 	}()
 }
 
-func (dw *discoveryWorker) Run(ctx context.Context) error {
+func (dw *discoverWorker) Run(ctx context.Context) error {
 	defer func() {
 		if err := recover(); err != nil {
-			logger.Errorf("Discovery worker failed: %v", err)
+			logger.Errorf("Discover worker failed: %v", err)
 		}
 	}()
 
@@ -77,26 +77,26 @@ func (dw *discoveryWorker) Run(ctx context.Context) error {
 
 	// Register task handler
 	mux := asynq.NewServeMux()
-	mux.Handle(interfaces.DiscoveryTaskType, dw)
+	mux.Handle(interfaces.DiscoverTaskType, dw)
 
-	logger.Infof("Discovery worker starting, listening for task type: %s", interfaces.DiscoveryTaskType)
+	logger.Infof("Discover worker starting, listening for task type: %s", interfaces.DiscoverTaskType)
 	if err := srv.Run(mux); err != nil {
-		logger.Errorf("Discovery worker failed: %v", err)
+		logger.Errorf("Discover worker failed: %v", err)
 		return err
 	}
 	return nil
 }
 
-// handleDiscoveryTask handles a discovery task from the queue.
-func (dw *discoveryWorker) ProcessTask(ctx context.Context, event *asynq.Task) error {
-	var msg interfaces.DiscoveryTaskMessage
+// handleDiscoverTask handles a discover task from the queue.
+func (dw *discoverWorker) ProcessTask(ctx context.Context, event *asynq.Task) error {
+	var msg interfaces.DiscoverTaskMessage
 	if err := sonic.Unmarshal(event.Payload(), &msg); err != nil {
 		logger.Errorf("Failed to unmarshal task message: %v", err)
 		return err
 	}
 
 	taskID := msg.TaskID
-	logger.Infof("Starting discovery for task: %s", taskID)
+	logger.Infof("Starting discover for task: %s", taskID)
 
 	task, err := dw.dts.GetByID(ctx, taskID)
 	if err != nil {
@@ -112,16 +112,16 @@ func (dw *discoveryWorker) ProcessTask(ctx context.Context, event *asynq.Task) e
 
 	// Update task status to running and set start time
 	now := time.Now().UnixMilli()
-	if err := dw.dts.UpdateStatus(ctx, taskID, interfaces.DiscoveryTaskStatusRunning, "", now); err != nil {
+	if err := dw.dts.UpdateStatus(ctx, taskID, interfaces.DiscoverTaskStatusRunning, "", now); err != nil {
 		logger.Errorf("Failed to set start time for task %s: %v", taskID, err)
 	}
 
-	// Execute discovery
+	// Execute discover
 	result, err := dw.discoverCatalog(ctx, catalog)
 	if err != nil {
 		// Update task status to failed
 		now = time.Now().UnixMilli()
-		_ = dw.dts.UpdateStatus(ctx, taskID, interfaces.DiscoveryTaskStatusFailed, err.Error(), now)
+		_ = dw.dts.UpdateStatus(ctx, taskID, interfaces.DiscoverTaskStatusFailed, err.Error(), now)
 		return err
 	}
 
@@ -131,19 +131,19 @@ func (dw *discoveryWorker) ProcessTask(ctx context.Context, event *asynq.Task) e
 		logger.Errorf("Failed to update result for task %s: %v", taskID, err)
 	}
 
-	logger.Infof("Discovery completed for task: %s, catalog: %s", taskID, catalog.ID)
+	logger.Infof("Discover completed for task: %s, catalog: %s", taskID, catalog.ID)
 	return nil
 }
 
 // discoverCatalog discovers resources for a specific catalog.
-func (dw *discoveryWorker) discoverCatalog(ctx context.Context,
-	catalog *interfaces.Catalog) (*interfaces.DiscoveryResult, error) {
+func (dw *discoverWorker) discoverCatalog(ctx context.Context,
+	catalog *interfaces.Catalog) (*interfaces.DiscoverResult, error) {
 
-	logger.Infof("Starting discovery for catalog: %s", catalog.ID)
+	logger.Infof("Starting discover for catalog: %s", catalog.ID)
 
 	// 验证 catalog 类型
 	if catalog.Type != interfaces.CatalogTypePhysical {
-		return nil, fmt.Errorf("discovery only supports physical catalogs")
+		return nil, fmt.Errorf("discover only supports physical catalogs")
 	}
 
 	// 1. 创建 Connector 并连接
@@ -172,19 +172,19 @@ func (dw *discoveryWorker) discoverCatalog(ctx context.Context,
 	case interfaces.ConnectorCategoryFile, interfaces.ConnectorCategoryFileset:
 		return dw.discoverFileResources(ctx, catalog, connector)
 	default:
-		return nil, fmt.Errorf("unsupported connector category for discovery: %s", category)
+		return nil, fmt.Errorf("unsupported connector category for discover: %s", category)
 	}
 }
 
 // discoverFileResources discovers file resources from a file connector.
-func (dw *discoveryWorker) discoverFileResources(ctx context.Context,
-	catalog *interfaces.Catalog, connector connectors.Connector) (*interfaces.DiscoveryResult, error) {
+func (dw *discoverWorker) discoverFileResources(ctx context.Context,
+	catalog *interfaces.Catalog, connector connectors.Connector) (*interfaces.DiscoverResult, error) {
 	// TODO: 实现文件资源发现逻辑
-	return nil, fmt.Errorf("file resource discovery not implemented yet")
+	return nil, fmt.Errorf("file resource discover not implemented yet")
 }
 
 // createAndConnectConnector creates and connects a connector for the catalog.
-func (dw *discoveryWorker) createAndConnectConnector(ctx context.Context,
+func (dw *discoverWorker) createAndConnectConnector(ctx context.Context,
 	catalog *interfaces.Catalog) (connectors.Connector, error) {
 
 	// 创建 connector

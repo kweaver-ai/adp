@@ -137,18 +137,18 @@ CREATE TABLE IF NOT EXISTS t_catalog (
 
 
 -- ==========================================
--- 2. t_catalog_discovery_policy 发现与变更策略表
+-- 2. t_catalog_discover_policy 发现与变更策略表
 -- ==========================================
-CREATE TABLE IF NOT EXISTS t_catalog_discovery_policy (
+CREATE TABLE IF NOT EXISTS t_catalog_discover_policy (
     f_id                      VARCHAR(40) NOT NULL DEFAULT '' COMMENT '所属catalog ID',
 
     -- 状态
     f_enabled                 BOOLEAN NOT NULL DEFAULT FALSE COMMENT '是否启用',
 
     -- 发现策略配置
-    f_discovery_mode          VARCHAR(20) NOT NULL DEFAULT 'manual' COMMENT '数据资源发现模式: manual, scheduled, event_driven',
-    f_discovery_cron          VARCHAR(100) NOT NULL DEFAULT '' COMMENT 'scheduled模式的cron表达式',
-    f_discovery_config        MEDIUMTEXT NOT NULL COMMENT '发现策略详细配置',
+    f_discover_mode          VARCHAR(20) NOT NULL DEFAULT 'manual' COMMENT '数据资源发现模式: manual, scheduled, event_driven',
+    f_discover_cron          VARCHAR(100) NOT NULL DEFAULT '' COMMENT 'scheduled模式的cron表达式',
+    f_discover_config        MEDIUMTEXT NOT NULL COMMENT '发现策略详细配置',
 
     -- 变更处理策略
     f_on_resource_added       VARCHAR(20) NOT NULL DEFAULT 'auto_register' COMMENT '新增数据资源策略: auto_register, pending_review, ignore',
@@ -161,7 +161,7 @@ CREATE TABLE IF NOT EXISTS t_catalog_discovery_policy (
 
     -- 索引
     PRIMARY KEY (f_id),
-    INDEX idx_discovery_mode (f_discovery_mode),
+    INDEX idx_discover_mode (f_discover_mode),
     INDEX idx_enabled (f_enabled)
 )  ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_bin COMMENT='Catalog发现与变更策略配置表';
 
@@ -308,9 +308,9 @@ FROM DUAL WHERE NOT EXISTS ( SELECT f_type FROM t_connector_type WHERE f_type = 
 
 
 -- ==========================================
--- 7. t_discovery_task 发现任务表
+-- 7. t_discover_task 发现任务表
 -- ==========================================
-CREATE TABLE IF NOT EXISTS t_discovery_task (
+CREATE TABLE IF NOT EXISTS t_discover_task (
     -- 主键与关联信息
     f_id                      VARCHAR(40) NOT NULL DEFAULT '' COMMENT '任务唯一标识',
     f_catalog_id              VARCHAR(40) NOT NULL DEFAULT '' COMMENT '所属catalog ID',

@@ -13,8 +13,8 @@ import (
 )
 
 const (
-	// DiscoveryTaskType is the task type for discovery tasks.
-	DiscoveryTaskType = "discovery:execute"
+	// DiscoverTaskType is the task type for discover tasks.
+	DiscoverTaskType = "discover:execute"
 )
 
 // AsynqAccess defines the interface for creating Asynq client and server.

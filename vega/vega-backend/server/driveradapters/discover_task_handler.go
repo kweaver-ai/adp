@@ -21,10 +21,10 @@ import (
 	"vega-backend/interfaces"
 )
 
-// GetDiscoveryTask handles GET /api/vega-backend/v1/discovery-tasks/:id
-func (r *restHandler) GetDiscoveryTask(c *gin.Context) {
+// GetDiscoverTask handles GET /api/vega-backend/v1/discover-tasks/:id
+func (r *restHandler) GetDiscoverTask(c *gin.Context) {
 	ctx, span := ar_trace.Tracer.Start(rest.GetLanguageCtx(c),
-		"GetDiscoveryTask", trace.WithSpanKind(trace.SpanKindServer))
+		"GetDiscoverTask", trace.WithSpanKind(trace.SpanKindServer))
 	defer span.End()
 
 	// 校验token
@@ -57,15 +57,15 @@ func (r *restHandler) GetDiscoveryTask(c *gin.Context) {
 		return
 	}
 
-	logger.Debug("Handler GetDiscoveryTask Success")
+	logger.Debug("Handler GetDiscoverTask Success")
 	o11y.AddHttpAttrs4Ok(span, http.StatusOK)
 	rest.ReplyOK(c, http.StatusOK, task)
 }
 
-// ListDiscoveryTasks handles GET /api/vega-backend/v1/catalogs/:id/discover/tasks
-func (r *restHandler) ListDiscoveryTasks(c *gin.Context) {
+// ListDiscoverTasks handles GET /api/vega-backend/v1/catalogs/:id/discover/tasks
+func (r *restHandler) ListDiscoverTasks(c *gin.Context) {
 	ctx, span := ar_trace.Tracer.Start(rest.GetLanguageCtx(c),
-		"ListDiscoveryTasks", trace.WithSpanKind(trace.SpanKindServer))
+		"ListDiscoverTasks", trace.WithSpanKind(trace.SpanKindServer))
 	defer span.End()
 
 	// 校验token
@@ -99,7 +99,7 @@ func (r *restHandler) ListDiscoveryTasks(c *gin.Context) {
 	}
 
 	// Parse query params
-	params := interfaces.DiscoveryTaskQueryParams{
+	params := interfaces.DiscoverTaskQueryParams{
 		CatalogID:   catalogID,
 		Status:      c.Query("status"),
 		TriggerType: c.Query("trigger_type"),
@@ -120,7 +120,7 @@ func (r *restHandler) ListDiscoveryTasks(c *gin.Context) {
 		return
 	}
 
-	logger.Debug("Handler ListDiscoveryTasks Success")
+	logger.Debug("Handler ListDiscoverTasks Success")
 	o11y.AddHttpAttrs4Ok(span, http.StatusOK)
 	rest.ReplyOK(c, http.StatusOK, gin.H{
 		"items": tasks,
