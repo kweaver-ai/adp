@@ -3,7 +3,7 @@
 // Licensed under the Apache License, Version 2.0.
 // See the LICENSE file in the project root for details.
 
-package mysql
+package mariadb
 
 import (
 	"testing"
@@ -13,12 +13,12 @@ import (
 	"vega-backend-tests/at/resource/internal"
 )
 
-// TestMySQLResourceCommon MySQL Resource通用AT测试
+// TestMariaDBResourceCommon MariaDB Resource通用AT测试
 // 使用resource/internal包中的通用测试用例
-func TestMySQLResourceCommon(t *testing.T) {
-	Convey("MySQL Resource通用AT测试 - 初始化", t, func() {
+func TestMariaDBResourceCommon(t *testing.T) {
+	Convey("MariaDB Resource通用AT测试 - 初始化", t, func() {
 		// 创建测试套件
-		suite, err := internal.NewTestSuite(t, "mysql")
+		suite, err := internal.NewTestSuite(t, "mariadb")
 		So(err, ShouldBeNil)
 		So(suite, ShouldNotBeNil)
 
@@ -51,10 +51,10 @@ func TestMySQLResourceCommon(t *testing.T) {
 	})
 }
 
-// TestMySQLResourceRead MySQL Resource读取AT测试
-func TestMySQLResourceRead(t *testing.T) {
-	Convey("MySQL Resource读取AT测试 - 初始化", t, func() {
-		suite, err := internal.NewTestSuite(t, "mysql")
+// TestMariaDBResourceRead MariaDB Resource读取AT测试
+func TestMariaDBResourceRead(t *testing.T) {
+	Convey("MariaDB Resource读取AT测试 - 初始化", t, func() {
+		suite, err := internal.NewTestSuite(t, "mariadb")
 		So(err, ShouldBeNil)
 
 		err = suite.Setup()
@@ -68,10 +68,10 @@ func TestMySQLResourceRead(t *testing.T) {
 	})
 }
 
-// TestMySQLResourceUpdate MySQL Resource更新AT测试
-func TestMySQLResourceUpdate(t *testing.T) {
-	Convey("MySQL Resource更新AT测试 - 初始化", t, func() {
-		suite, err := internal.NewTestSuite(t, "mysql")
+// TestMariaDBResourceUpdate MariaDB Resource更新AT测试
+func TestMariaDBResourceUpdate(t *testing.T) {
+	Convey("MariaDB Resource更新AT测试 - 初始化", t, func() {
+		suite, err := internal.NewTestSuite(t, "mariadb")
 		So(err, ShouldBeNil)
 
 		err = suite.Setup()
@@ -85,10 +85,10 @@ func TestMySQLResourceUpdate(t *testing.T) {
 	})
 }
 
-// TestMySQLResourceDelete MySQL Resource删除AT测试
-func TestMySQLResourceDelete(t *testing.T) {
-	Convey("MySQL Resource删除AT测试 - 初始化", t, func() {
-		suite, err := internal.NewTestSuite(t, "mysql")
+// TestMariaDBResourceDelete MariaDB Resource删除AT测试
+func TestMariaDBResourceDelete(t *testing.T) {
+	Convey("MariaDB Resource删除AT测试 - 初始化", t, func() {
+		suite, err := internal.NewTestSuite(t, "mariadb")
 		So(err, ShouldBeNil)
 
 		err = suite.Setup()

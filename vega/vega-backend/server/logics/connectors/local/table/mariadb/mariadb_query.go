@@ -3,8 +3,8 @@
 // Licensed under the Apache License, Version 2.0.
 // See the LICENSE file in the project root for details.
 
-// Package mysql provides MySQL database connector implementation.
-package mysql
+// Package mariadb provides MariaDB database connector implementation.
+package mariadb
 
 import (
 	"context"
@@ -17,7 +17,7 @@ import (
 	"vega-backend/interfaces"
 )
 
-// convertValue converts []byte to string for MySQL driver compatibility
+// convertValue converts []byte to string for MariaDB driver compatibility
 func convertValue(v any) any {
 	if b, ok := v.([]byte); ok {
 		return string(b)
@@ -25,7 +25,7 @@ func convertValue(v any) any {
 	return v
 }
 
-func (c *MySQLConnector) ExecuteQuery(ctx context.Context, resource *interfaces.Resource,
+func (c *MariaDBConnector) ExecuteQuery(ctx context.Context, resource *interfaces.Resource,
 	params *interfaces.ResourceDataQueryParams) (*interfaces.QueryResult, error) {
 
 	if err := c.Connect(ctx); err != nil {
@@ -40,7 +40,7 @@ func (c *MySQLConnector) ExecuteQuery(ctx context.Context, resource *interfaces.
 	var condition sq.Sqlizer
 	var err error
 	if params.ActualFilterCond != nil {
-		condition, err = ConvertFilterCondition(ctx, params.ActualFilterCond, fieldMap)
+		condition, err = c.ConvertFilterCondition(ctx, params.ActualFilterCond, fieldMap)
 		if err != nil {
 			return nil, err
 		}

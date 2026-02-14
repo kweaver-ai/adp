@@ -3,12 +3,12 @@
 // Licensed under the Apache License, Version 2.0.
 // See the LICENSE file in the project root for details.
 
-// Package mysql provides MySQL database connector implementation.
-package mysql
+// Package mariadb provides MariaDB database connector implementation.
+package mariadb
 
 import "vega-backend/interfaces"
 
-// TypeMapping maps MySQL native types to VEGA types.
+// TypeMapping maps MariaDB native types to VEGA types.
 var TypeMapping = map[string]string{
 	// Integer types
 	"tinyint":   interfaces.DataType_Integer,
@@ -72,7 +72,7 @@ var TypeMapping = map[string]string{
 	"json": interfaces.DataType_Json,
 }
 
-// MapType returns VEGA type for MySQL native type.
+// MapType returns VEGA type for MariaDB native type.
 func MapType(nativeType string) string {
 	if vegaType, ok := TypeMapping[nativeType]; ok {
 		return vegaType

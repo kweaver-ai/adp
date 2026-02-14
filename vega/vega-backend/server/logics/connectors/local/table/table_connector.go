@@ -12,7 +12,7 @@ import (
 	"vega-backend/interfaces"
 )
 
-// convertValue converts []byte to string for MySQL driver compatibility
+// convertValue converts []byte to string for MariaDB driver compatibility
 func convertValue(v any) any {
 	if b, ok := v.([]byte); ok {
 		return string(b)

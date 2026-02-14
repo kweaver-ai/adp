@@ -23,11 +23,11 @@ tests/
 │   │   │   │   ├── fixtures.go
 │   │   │   │   ├── suite.go
 │   │   │   │   ├── test_cases.go
-│   │   │   │   ├── mysql_builder.go
+│   │   │   │   ├── mariadb_builder.go
 │   │   │   │   └── opensearch_builder.go
-│   │   │   ├── mysql/               # MySQL Catalog测试
+│   │   │   ├── mariadb/               # MariaDB Catalog测试
 │   │   │   │   ├── catalog_test.go
-│   │   │   │   ├── mysql_specific_test.go
+│   │   │   │   ├── mariadb_specific_test.go
 │   │   │   │   └── README.md
 │   │   │   └── opensearch/          # OpenSearch Catalog测试
 │   │   │       ├── catalog_test.go
@@ -46,7 +46,7 @@ tests/
 │   │   │   ├── suite.go
 │   │   │   ├── test_cases.go
 │   │   │   └── catalog_builder.go
-│   │   ├── mysql/
+│   │   ├── mariadb/
 │   │   │   ├── resource_test.go
 │   │   │   └── README.md
 │   │   └── opensearch/
@@ -79,23 +79,23 @@ go run main.go -config ./config/vega-backend-config.yaml
 # 确保服务成功启动，默认监听 http://localhost:8080
 ```
 
-### 2. 准备测试目标MySQL
+### 2. 准备测试目标MariaDB
 
-AT测试需要一个可访问的MySQL实例来测试catalog连接功能。
+AT测试需要一个可访问的MariaDB实例来测试catalog连接功能。
 
-#### 使用Docker启动MySQL（推荐）
+#### 使用Docker启动MariaDB（推荐）
 
 ```bash
-docker run -d --name test-mysql \
-  -e MYSQL_ROOT_PASSWORD=testpass123 \
-  -e MYSQL_DATABASE=testdb \
+docker run -d --name test-mariadb \
+  -e MARIADB_ROOT_PASSWORD=testpass123 \
+  -e MARIADB_DATABASE=testdb \
   -p 3306:3306 \
-  mysql:8.0
+  mariadb:10.6
 ```
 
-#### 或使用已有MySQL实例
+#### 或使用已有MariaDB实例
 
-确保MySQL可访问，并记录以下信息：
+确保MariaDB可访问，并记录以下信息：
 - Host
 - Port
 - Database
@@ -112,7 +112,7 @@ cp test-config.yaml.example test-config.yaml
 
 # 编辑test-config.yaml，填入实际配置
 # 1. vega_manager.base_url: VEGA Manager服务地址（默认 http://localhost:8080）
-# 2. target_mysql: MySQL连接信息
+# 2. target_mariadb: MariaDB连接信息
 nano test-config.yaml
 ```
 
@@ -122,7 +122,7 @@ nano test-config.yaml
 vega_manager:
   base_url: http://localhost:8080
 
-target_mysql:
+target_mariadb:
   host: localhost
   port: 3306
   database: testdb
@@ -155,23 +155,23 @@ make test-at-setup
 ```bash
 cd /mnt/c/aishu_code/vega-backend/server
 
-# 运行所有Catalog测试（包含MySQL和OpenSearch）
+# 运行所有Catalog测试（包含MariaDB和OpenSearch）
 go test -v ./tests/at/catalog/...
 
-# 运行所有Resource测试（包含MySQL和OpenSearch）
+# 运行所有Resource测试（包含MariaDB和OpenSearch）
 go test -v ./tests/at/resource/...
 
-# 运行MySQL Catalog测试
-go test -v ./tests/at/catalog/mysql/...
+# 运行MariaDB Catalog测试
+go test -v ./tests/at/catalog/mariadb/...
 
 # 运行OpenSearch Catalog测试
 go test -v ./tests/at/catalog/opensearch/...
 
-# 运行MySQL Resource测试
-go test -v ./tests/at/resource/mysql/...
+# 运行MariaDB Resource测试
+go test -v ./tests/at/resource/mariadb/...
 
-# 运行特定测试（例如：MySQL特定测试）
-go test -v ./tests/at/catalog/mysql/... -run TestMySQLSpecific
+# 运行特定测试（例如：MariaDB特定测试）
+go test -v ./tests/at/catalog/mariadb/... -run TestMariaDBSpecific
 
 # 详细输出（禁用缓存）
 go test -v -count=1 ./tests/at/catalog/... ./tests/at/resource/...
@@ -186,7 +186,7 @@ go test -v ./tests/at/catalog/... -timeout 5m
 
 | 测试文件 | 测试内容 | 用例数量 |
 |----------|----------|----------|
-| catalog_create_test.go | Catalog创建测试（MySQL） | 30个 |
+| catalog_create_test.go | Catalog创建测试（MariaDB） | 30个 |
 | catalog_read_test.go | Catalog查询测试 | 11个 |
 | catalog_update_test.go | Catalog更新测试 | 13个 |
 | catalog_delete_test.go | Catalog删除测试 | 13个 |
@@ -199,11 +199,11 @@ go test -v ./tests/at/catalog/... -timeout 5m
 
 | 用例ID | 测试场景 | 预期结果 |
 |--------|----------|----------|
-| TC001  | 创建MySQL physical catalog - 基本场景 | 201 Created，返回完整catalog对象 |
+| TC001  | 创建MariaDB physical catalog - 基本场景 | 201 Created，返回完整catalog对象 |
 | TC002  | 创建catalog - 最小字段（仅name和type） | 201 Created |
 | TC003  | 创建catalog - 完整字段 | 201 Created，所有字段正确存储 |
 | TC004  | 创建后立即查询 | 创建成功，查询返回一致数据 |
-| TC005  | 创建带options的MySQL catalog | 201 Created |
+| TC005  | 创建带options的MariaDB catalog | 201 Created |
 | TC006  | 创建logical类型catalog | 201 Created |
 | TC007  | 创建后测试连接成功 | 连接测试成功，返回version和latency |
 | TC008  | 获取catalog状态 | 200 OK，返回health_check_status |
@@ -222,8 +222,8 @@ go test -v ./tests/at/catalog/... -timeout 5m
 | TC106  | 错误的Content-Type | 400/406/415 |
 | TC107  | 超长name字段（>255字符） | 400 Bad Request |
 | TC108  | 超长description字段（>1000字符） | 400 Bad Request或允许 |
-| TC109  | 错误的MySQL连接密码 | test-connector失败 |
-| TC110  | 不存在的MySQL数据库 | test-connector失败 |
+| TC109  | 错误的MariaDB连接密码 | test-connector失败 |
+| TC110  | 不存在的MariaDB数据库 | test-connector失败 |
 
 #### 边界测试（5个）
 
@@ -312,7 +312,7 @@ go test -v ./tests/at/catalog/... -timeout 5m
 | TC712  | OpenSearch catalog测试连接 - 错误密码 | success=false |
 | TC713  | OpenSearch catalog测试连接 - 无效host | success=false |
 | TC714  | OpenSearch完整CRUD流程 | 完整流程成功 |
-| TC715  | MySQL和OpenSearch catalog共存 | 两者共存，列表可查询 |
+| TC715  | MariaDB和OpenSearch catalog共存 | 两者共存，列表可查询 |
 | TC716  | OpenSearch catalog状态查询 | 200 OK，返回状态 |
 
 ## 测试输出示例
@@ -322,12 +322,12 @@ go test -v ./tests/at/catalog/... -timeout 5m
 ```
 === RUN   TestCatalogCreateATSuite
 ✓ AT测试环境就绪，VEGA Manager: http://localhost:8080
-=== RUN   TestCatalogCreateATSuite/TestTC001_CreateMySQLCatalog_BasicScenario
+=== RUN   TestCatalogCreateATSuite/TestTC001_CreateMariaDBCatalog_BasicScenario
 === RUN   TestCatalogCreateATSuite/TestTC002_CreateCatalog_MinimalFields
 === RUN   TestCatalogCreateATSuite/TestTC003_CreateCatalog_FullFields
 ...
 --- PASS: TestCatalogCreateATSuite (45.23s)
-    --- PASS: TestCatalogCreateATSuite/TestTC001_CreateMySQLCatalog_BasicScenario (1.20s)
+    --- PASS: TestCatalogCreateATSuite/TestTC001_CreateMariaDBCatalog_BasicScenario (1.20s)
     --- PASS: TestCatalogCreateATSuite/TestTC002_CreateCatalog_MinimalFields (0.85s)
     --- PASS: TestCatalogCreateATSuite/TestTC003_CreateCatalog_FullFields (1.10s)
 PASS
@@ -364,10 +364,10 @@ cp test-config.yaml.example test-config.yaml
 
 如果TC007或TC109测试失败，检查：
 
-1. MySQL是否正常运行: `docker ps | grep test-mysql`
-2. MySQL连接信息是否正确
+1. MariaDB是否正常运行: `docker ps | grep test-mariadb`
+2. MariaDB连接信息是否正确
 3. 网络是否可达: `telnet localhost 3306`
-4. 数据库是否存在: `mysql -h localhost -u root -p -e "SHOW DATABASES;"`
+4. 数据库是否存在: `mariadb -h localhost -u root -p -e "SHOW DATABASES;"`
 
 ### 错误: 测试超时
 
@@ -378,7 +378,7 @@ panic: test timed out after 2m0s
 **解决方法**:
 - 增加超时时间: `go test -v ./tests/at/catalog/... -timeout 10m`
 - 检查VEGA Manager服务响应是否正常
-- 检查MySQL连接是否稳定
+- 检查MariaDB连接是否稳定
 
 ## 环境变量覆盖配置
 
@@ -386,11 +386,11 @@ panic: test timed out after 2m0s
 
 ```bash
 export VEGA_TEST_VEGA_MANAGER_BASE_URL=http://localhost:8080
-export VEGA_TEST_TARGET_MYSQL_HOST=localhost
-export VEGA_TEST_TARGET_MYSQL_PORT=3306
-export VEGA_TEST_TARGET_MYSQL_DATABASE=testdb
-export VEGA_TEST_TARGET_MYSQL_USERNAME=root
-export VEGA_TEST_TARGET_MYSQL_PASSWORD=testpass123
+export VEGA_TEST_TARGET_MARIADB_HOST=localhost
+export VEGA_TEST_TARGET_MARIADB_PORT=3306
+export VEGA_TEST_TARGET_MARIADB_DATABASE=testdb
+export VEGA_TEST_TARGET_MARIADB_USERNAME=root
+export VEGA_TEST_TARGET_MARIADB_PASSWORD=testpass123
 
 # 运行测试
 go test -v ./tests/at/catalog/...
@@ -406,7 +406,7 @@ curl -X DELETE http://localhost:8080/api/vega-backend/v1/catalogs/{catalog_id} \
   -H "X-Account-ID: test-user-001"
 
 # 或直接操作数据库
-mysql -h localhost -u root -p -e "DELETE FROM testdb.t_catalog WHERE name LIKE 'test-%';"
+mariadb -h localhost -u root -p -e "DELETE FROM testdb.t_catalog WHERE name LIKE 'test-%';"
 ```
 
 ## CI/CD集成
@@ -424,15 +424,15 @@ jobs:
     runs-on: ubuntu-latest
 
     services:
-      mysql:
-        image: mysql:8.0
+      mariadb:
+        image: mariadb:10.6
         env:
-          MYSQL_ROOT_PASSWORD: testpass123
-          MYSQL_DATABASE: testdb
+          MARIADB_ROOT_PASSWORD: testpass123
+          MARIADB_DATABASE: testdb
         ports:
           - 3306:3306
         options: >-
-          --health-cmd="mysqladmin ping"
+          --health-cmd="mariadbadmin ping"
           --health-interval=10s
           --health-timeout=5s
           --health-retries=3
@@ -457,7 +457,7 @@ jobs:
           cat > test-config.yaml <<EOF
           vega_manager:
             base_url: http://localhost:8080
-          target_mysql:
+          target_mariadb:
             host: 127.0.0.1
             port: 3306
             database: testdb
@@ -510,7 +510,7 @@ So(failed, ShouldBeFalse)
 
 ```go
 Convey("TC011: 你的测试描述", func() {
-    payload := testutil.BuildBasicMySQLPayload(config.TargetMySQL)
+    payload := testutil.BuildBasicMariaDBPayload(config.TargetMariaDB)
 
     resp := client.POST("/api/vega-backend/v1/catalogs", payload)
 

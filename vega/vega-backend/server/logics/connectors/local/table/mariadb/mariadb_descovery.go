@@ -3,8 +3,8 @@
 // Licensed under the Apache License, Version 2.0.
 // See the LICENSE file in the project root for details.
 
-// Package mysql provides MySQL database connector implementation.
-package mysql
+// Package mariadb provides MariaDB database connector implementation.
+package mariadb
 
 import (
 	"context"
@@ -19,7 +19,7 @@ import (
 )
 
 // ListDatabases 列出实例下所有可访问的用户数据库（排除系统库）。
-func (c *MySQLConnector) ListDatabases(ctx context.Context) ([]string, error) {
+func (c *MariaDBConnector) ListDatabases(ctx context.Context) ([]string, error) {
 	if err := c.Connect(ctx); err != nil {
 		return nil, err
 	}
@@ -46,7 +46,7 @@ func (c *MySQLConnector) ListDatabases(ctx context.Context) ([]string, error) {
 // ListTables 返回数据库中的所有表。
 // 如果 Config.Database 非空，只列出该数据库的表；
 // 如果 Config.Database 为空（实例级连接），遍历所有用户数据库，返回的 TableMeta.Database 字段标记所属库。
-func (c *MySQLConnector) ListTables(ctx context.Context) ([]*interfaces.TableMeta, error) {
+func (c *MariaDBConnector) ListTables(ctx context.Context) ([]*interfaces.TableMeta, error) {
 	if err := c.Connect(ctx); err != nil {
 		return nil, err
 	}
@@ -151,7 +151,7 @@ func (c *MySQLConnector) ListTables(ctx context.Context) ([]*interfaces.TableMet
 
 // GetTableMeta returns metadata for a specific table.
 // table 格式: "table_name" 或 "database.table_name"
-func (c *MySQLConnector) GetTableMeta(ctx context.Context, table *interfaces.TableMeta) error {
+func (c *MariaDBConnector) GetTableMeta(ctx context.Context, table *interfaces.TableMeta) error {
 	if err := c.Connect(ctx); err != nil {
 		return err
 	}
@@ -180,7 +180,7 @@ func (c *MySQLConnector) GetTableMeta(ctx context.Context, table *interfaces.Tab
 }
 
 // fetchTableStatus retrieves table status from information_schema.TABLES.
-func (c *MySQLConnector) fetchTableStatus(ctx context.Context, table *interfaces.TableMeta) error {
+func (c *MariaDBConnector) fetchTableStatus(ctx context.Context, table *interfaces.TableMeta) error {
 	query, args, err := sq.Select(
 		"TABLE_TYPE",
 		"AUTO_INCREMENT",
@@ -266,7 +266,7 @@ func (c *MySQLConnector) fetchTableStatus(ctx context.Context, table *interfaces
 }
 
 // fetchColumns retrieves column metadata from information_schema.COLUMNS.
-func (c *MySQLConnector) fetchColumns(ctx context.Context, table *interfaces.TableMeta) error {
+func (c *MariaDBConnector) fetchColumns(ctx context.Context, table *interfaces.TableMeta) error {
 	query, args, err := sq.Select(
 		"COLUMN_NAME",
 		"DATA_TYPE",
@@ -354,7 +354,7 @@ func (c *MySQLConnector) fetchColumns(ctx context.Context, table *interfaces.Tab
 }
 
 // fetchIndexes retrieves index metadata from information_schema.STATISTICS.
-func (c *MySQLConnector) fetchIndexes(ctx context.Context, table *interfaces.TableMeta) error {
+func (c *MariaDBConnector) fetchIndexes(ctx context.Context, table *interfaces.TableMeta) error {
 	query, args, err := sq.Select(
 		"INDEX_NAME",
 		"COLUMN_NAME",
@@ -412,7 +412,7 @@ func (c *MySQLConnector) fetchIndexes(ctx context.Context, table *interfaces.Tab
 }
 
 // fetchForeignKeys retrieves foreign key metadata from information_schema.KEY_COLUMN_USAGE.
-func (c *MySQLConnector) fetchForeignKeys(ctx context.Context, table *interfaces.TableMeta) error {
+func (c *MariaDBConnector) fetchForeignKeys(ctx context.Context, table *interfaces.TableMeta) error {
 	query, args, err := sq.Select(
 		"CONSTRAINT_NAME",
 		"COLUMN_NAME",
@@ -473,7 +473,7 @@ func (c *MySQLConnector) fetchForeignKeys(ctx context.Context, table *interfaces
 }
 
 // GetMetadata returns the metadata for the catalog.
-func (c *MySQLConnector) GetMetadata(ctx context.Context) (map[string]any, error) {
+func (c *MariaDBConnector) GetMetadata(ctx context.Context) (map[string]any, error) {
 	if err := c.Connect(ctx); err != nil {
 		return nil, err
 	}

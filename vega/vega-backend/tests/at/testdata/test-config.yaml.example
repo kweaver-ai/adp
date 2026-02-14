@@ -7,9 +7,9 @@ vega_backend:
   # 测试运行前必须先启动VEGA Backend服务
   base_url: http://localhost:8080
 
-# 测试目标MySQL配置
+# 测试目标MariaDB配置
 # 用于测试catalog连接功能
-target_mysql:
+target_mariadb:
   host: localhost
   port: 3306
   database: testdb

@@ -9,45 +9,45 @@ import (
 	"vega-backend-tests/at/setup"
 )
 
-// ========== MySQL Catalog Builder ==========
+// ========== MariaDB Catalog Builder ==========
 
-// MySQLCatalogBuilder MySQL Catalog payload构建器
-type MySQLCatalogBuilder struct {
-	config        setup.MySQLConfig
+// MariaDBCatalogBuilder MariaDB Catalog payload构建器
+type MariaDBCatalogBuilder struct {
+	config        setup.MariaDBConfig
 	testConfig    *setup.TestConfig
 	connectorType string
 }
 
-// NewMySQLCatalogBuilder 创建MySQL Catalog构建器
-func NewMySQLCatalogBuilder(config setup.MySQLConfig) *MySQLCatalogBuilder {
-	return &MySQLCatalogBuilder{
+// NewMariaDBCatalogBuilder 创建MariaDB Catalog构建器
+func NewMariaDBCatalogBuilder(config setup.MariaDBConfig) *MariaDBCatalogBuilder {
+	return &MariaDBCatalogBuilder{
 		config:        config,
-		connectorType: "mysql",
+		connectorType: "mariadb",
 	}
 }
 
 // SetTestConfig 设置测试配置（用于密码加密等）
-func (b *MySQLCatalogBuilder) SetTestConfig(config *setup.TestConfig) {
+func (b *MariaDBCatalogBuilder) SetTestConfig(config *setup.TestConfig) {
 	b.testConfig = config
 }
 
 // GetConnectorType 返回connector类型
-func (b *MySQLCatalogBuilder) GetConnectorType() string {
+func (b *MariaDBCatalogBuilder) GetConnectorType() string {
 	return b.connectorType
 }
 
 // GetEncryptedPassword 获取加密后的密码
-func (b *MySQLCatalogBuilder) GetEncryptedPassword() string {
+func (b *MariaDBCatalogBuilder) GetEncryptedPassword() string {
 	if b.testConfig != nil {
 		return b.testConfig.EncryptString(b.config.Password)
 	}
 	return b.config.Password
 }
 
-// BuildCreatePayload 构建MySQL catalog创建payload
-func (b *MySQLCatalogBuilder) BuildCreatePayload() map[string]any {
+// BuildCreatePayload 构建MariaDB catalog创建payload
+func (b *MariaDBCatalogBuilder) BuildCreatePayload() map[string]any {
 	return map[string]any{
-		"name":           GenerateUniqueName("test-mysql-catalog"),
+		"name":           GenerateUniqueName("test-mariadb-catalog"),
 		"connector_type": b.connectorType,
 		"connector_config": map[string]any{
 			"host":     b.config.Host,
@@ -114,8 +114,8 @@ func (b *OpenSearchCatalogBuilder) BuildCreatePayload() map[string]any {
 // NewCatalogPayloadBuilder 根据connector类型创建对应的CatalogPayloadBuilder
 func NewCatalogPayloadBuilder(connectorType string, config *setup.TestConfig) CatalogPayloadBuilder {
 	switch connectorType {
-	case "mysql":
-		b := NewMySQLCatalogBuilder(config.TargetMySQL)
+	case "mariadb":
+		b := NewMariaDBCatalogBuilder(config.TargetMariaDB)
 		b.SetTestConfig(config)
 		return b
 	case "opensearch":

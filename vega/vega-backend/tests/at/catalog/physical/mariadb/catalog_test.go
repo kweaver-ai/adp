@@ -3,7 +3,7 @@
 // Licensed under the Apache License, Version 2.0.
 // See the LICENSE file in the project root for details.
 
-package mysql
+package mariadb
 
 import (
 	"context"
@@ -18,45 +18,45 @@ import (
 	"vega-backend-tests/testutil"
 )
 
-// TestMySQLCatalogCreate MySQL Catalog创建AT测试
-// 编号规则：MY1xx
-func TestMySQLCatalogCreate(t *testing.T) {
+// TestMariaDBCatalogCreate MariaDB Catalog创建AT测试
+// 编号规则：MD1xx
+func TestMariaDBCatalogCreate(t *testing.T) {
 	var (
 		ctx     context.Context
 		config  *setup.TestConfig
 		client  *testutil.HTTPClient
-		builder *MySQLPayloadBuilder
+		builder *MariaDBPayloadBuilder
 	)
 
-	Convey("MySQL Catalog创建AT测试 - 初始化", t, func() {
+	Convey("MariaDB Catalog创建AT测试 - 初始化", t, func() {
 		ctx = context.Background()
 
 		var err error
 		config, err = setup.LoadTestConfig()
 		So(err, ShouldBeNil)
 		So(config, ShouldNotBeNil)
-		So(config.TargetMySQL.Host, ShouldNotBeEmpty)
+		So(config.TargetMariaDB.Host, ShouldNotBeEmpty)
 
 		client = testutil.NewHTTPClient(config.VegaBackend.BaseURL)
 		err = client.CheckHealth()
 		So(err, ShouldBeNil)
 		t.Logf("✓ AT测试环境就绪，VEGA Manager: %s", config.VegaBackend.BaseURL)
 
-		builder = NewMySQLPayloadBuilder(config.TargetMySQL)
+		builder = NewMariaDBPayloadBuilder(config.TargetMariaDB)
 		builder.SetTestConfig(config)
 
 		cataloghelpers.CleanupCatalogs(client, t)
 
-		// ========== 正向测试（MY101-MY110） ==========
+		// ========== 正向测试（MD101-MD110） ==========
 
-		Convey("MY101: 创建MySQL catalog - 基本场景", func() {
+		Convey("MD101: 创建MariaDB catalog - 基本场景", func() {
 			payload := builder.BuildCreatePayload()
 			resp := client.POST("/api/vega-backend/v1/catalogs", payload)
 			So(resp.StatusCode, ShouldEqual, http.StatusCreated)
 			So(resp.Body["id"], ShouldNotBeEmpty)
 		})
 
-		Convey("MY102: 创建后验证connector_type为mysql", func() {
+		Convey("MD102: 创建后验证connector_type为mariadb", func() {
 			payload := builder.BuildCreatePayload()
 			createResp := client.POST("/api/vega-backend/v1/catalogs", payload)
 			So(createResp.StatusCode, ShouldEqual, http.StatusCreated)
@@ -64,10 +64,10 @@ func TestMySQLCatalogCreate(t *testing.T) {
 			catalogID := createResp.Body["id"].(string)
 			getResp := client.GET("/api/vega-backend/v1/catalogs/" + catalogID)
 			catalog := cataloghelpers.ExtractFromEntriesResponse(getResp)
-			So(catalog["connector_type"], ShouldEqual, "mysql")
+			So(catalog["connector_type"], ShouldEqual, "mariadb")
 		})
 
-		Convey("MY103: 创建后验证type为physical", func() {
+		Convey("MD103: 创建后验证type为physical", func() {
 			payload := builder.BuildCreatePayload()
 			createResp := client.POST("/api/vega-backend/v1/catalogs", payload)
 			So(createResp.StatusCode, ShouldEqual, http.StatusCreated)
@@ -78,7 +78,7 @@ func TestMySQLCatalogCreate(t *testing.T) {
 			So(catalog["type"], ShouldEqual, cataloghelpers.CatalogTypePhysical)
 		})
 
-		Convey("MY104: 创建MySQL catalog - 完整字段", func() {
+		Convey("MD104: 创建MariaDB catalog - 完整字段", func() {
 			payload := builder.BuildFullCreatePayload()
 			resp := client.POST("/api/vega-backend/v1/catalogs", payload)
 			So(resp.StatusCode, ShouldEqual, http.StatusCreated)
@@ -93,7 +93,7 @@ func TestMySQLCatalogCreate(t *testing.T) {
 			So(len(tags), ShouldBeGreaterThan, 0)
 		})
 
-		Convey("MY105: 创建带MySQL特定options（charset/timeout）", func() {
+		Convey("MD105: 创建带MariaDB特定options（charset/timeout）", func() {
 			options := map[string]any{
 				"charset": "utf8mb4",
 				"timeout": "10s",
@@ -103,7 +103,7 @@ func TestMySQLCatalogCreate(t *testing.T) {
 			So(resp.StatusCode, ShouldEqual, http.StatusCreated)
 		})
 
-		Convey("MY106: 创建后立即查询", func() {
+		Convey("MD106: 创建后立即查询", func() {
 			payload := builder.BuildCreatePayload()
 			createResp := client.POST("/api/vega-backend/v1/catalogs", payload)
 			So(createResp.StatusCode, ShouldEqual, http.StatusCreated)
@@ -117,7 +117,7 @@ func TestMySQLCatalogCreate(t *testing.T) {
 			So(catalog["name"], ShouldEqual, payload["name"])
 		})
 
-		Convey("MY107: MySQL连接测试成功", func() {
+		Convey("MD107: MariaDB连接测试成功", func() {
 			payload := builder.BuildCreatePayload()
 			createResp := client.POST("/api/vega-backend/v1/catalogs", payload)
 			So(createResp.StatusCode, ShouldEqual, http.StatusCreated)
@@ -127,7 +127,7 @@ func TestMySQLCatalogCreate(t *testing.T) {
 			So(testResp.StatusCode, ShouldEqual, http.StatusOK)
 		})
 
-		Convey("MY108: 获取MySQL catalog健康状态", func() {
+		Convey("MD108: 获取MariaDB catalog健康状态", func() {
 			payload := builder.BuildCreatePayload()
 			createResp := client.POST("/api/vega-backend/v1/catalogs", payload)
 			So(createResp.StatusCode, ShouldEqual, http.StatusCreated)
@@ -137,13 +137,13 @@ func TestMySQLCatalogCreate(t *testing.T) {
 			So(statusResp.StatusCode, ShouldEqual, http.StatusOK)
 		})
 
-		Convey("MY109: 创建实例级MySQL catalog（不指定database）", func() {
+		Convey("MD109: 创建实例级MariaDB catalog（不指定database）", func() {
 			payload := builder.BuildCreatePayloadWithoutDatabase()
 			resp := client.POST("/api/vega-backend/v1/catalogs", payload)
 			So(resp.StatusCode, ShouldEqual, http.StatusCreated)
 		})
 
-		Convey("MY110: 实例级MySQL catalog连接测试成功", func() {
+		Convey("MD110: 实例级MariaDB catalog连接测试成功", func() {
 			payload := builder.BuildCreatePayloadWithoutDatabase()
 			createResp := client.POST("/api/vega-backend/v1/catalogs", payload)
 			So(createResp.StatusCode, ShouldEqual, http.StatusCreated)
@@ -153,17 +153,17 @@ func TestMySQLCatalogCreate(t *testing.T) {
 			So(testResp.StatusCode, ShouldEqual, http.StatusOK)
 		})
 
-		// ========== connector_config负向测试（MY121-MY129） ==========
+		// ========== connector_config负向测试（MD121-MD129） ==========
 
-		Convey("MY121: 缺少host字段", func() {
-			mysqlConfig := builder.GetConfig()
+		Convey("MD121: 缺少host字段", func() {
+			mariadbConfig := builder.GetConfig()
 			payload := map[string]any{
 				"name":           cataloghelpers.GenerateUniqueName("missing-host"),
-				"connector_type": "mysql",
+				"connector_type": "mariadb",
 				"connector_config": map[string]any{
-					"port":      mysqlConfig.Port,
-					"databases": []string{mysqlConfig.Database},
-					"username":  mysqlConfig.Username,
+					"port":      mariadbConfig.Port,
+					"databases": []string{mariadbConfig.Database},
+					"username":  mariadbConfig.Username,
 					"password":  builder.GetEncryptedPassword(),
 				},
 			}
@@ -171,15 +171,15 @@ func TestMySQLCatalogCreate(t *testing.T) {
 			So(resp.StatusCode, ShouldEqual, http.StatusBadRequest)
 		})
 
-		Convey("MY122: 缺少port字段", func() {
-			mysqlConfig := builder.GetConfig()
+		Convey("MD122: 缺少port字段", func() {
+			mariadbConfig := builder.GetConfig()
 			payload := map[string]any{
 				"name":           cataloghelpers.GenerateUniqueName("missing-port"),
-				"connector_type": "mysql",
+				"connector_type": "mariadb",
 				"connector_config": map[string]any{
-					"host":      mysqlConfig.Host,
-					"databases": []string{mysqlConfig.Database},
-					"username":  mysqlConfig.Username,
+					"host":      mariadbConfig.Host,
+					"databases": []string{mariadbConfig.Database},
+					"username":  mariadbConfig.Username,
 					"password":  builder.GetEncryptedPassword(),
 				},
 			}
@@ -187,15 +187,15 @@ func TestMySQLCatalogCreate(t *testing.T) {
 			So(resp.StatusCode, ShouldEqual, http.StatusBadRequest)
 		})
 
-		Convey("MY123: 缺少user字段", func() {
-			mysqlConfig := builder.GetConfig()
+		Convey("MD123: 缺少user字段", func() {
+			mariadbConfig := builder.GetConfig()
 			payload := map[string]any{
 				"name":           cataloghelpers.GenerateUniqueName("missing-user"),
-				"connector_type": "mysql",
+				"connector_type": "mariadb",
 				"connector_config": map[string]any{
-					"host":      mysqlConfig.Host,
-					"port":      mysqlConfig.Port,
-					"databases": []string{mysqlConfig.Database},
+					"host":      mariadbConfig.Host,
+					"port":      mariadbConfig.Port,
+					"databases": []string{mariadbConfig.Database},
 					"password":  builder.GetEncryptedPassword(),
 				},
 			}
@@ -203,87 +203,87 @@ func TestMySQLCatalogCreate(t *testing.T) {
 			So(resp.StatusCode, ShouldEqual, http.StatusBadRequest)
 		})
 
-		Convey("MY124: 空用户名", func() {
-			mysqlConfig := builder.GetConfig()
+		Convey("MD124: 空用户名", func() {
+			mariadbConfig := builder.GetConfig()
 			payload := map[string]any{
 				"name":           cataloghelpers.GenerateUniqueName("empty-user"),
-				"connector_type": "mysql",
+				"connector_type": "mariadb",
 				"connector_config": map[string]any{
-					"host":      mysqlConfig.Host,
-					"port":      mysqlConfig.Port,
-					"databases": []string{mysqlConfig.Database},
+					"host":      mariadbConfig.Host,
+					"port":      mariadbConfig.Port,
+					"databases": []string{mariadbConfig.Database},
 					"username":  "",
-					"password":  mysqlConfig.Password,
+					"password":  mariadbConfig.Password,
 				},
 			}
 			resp := client.POST("/api/vega-backend/v1/catalogs", payload)
 			So(resp.StatusCode, ShouldEqual, http.StatusBadRequest)
 		})
 
-		Convey("MY125: 错误密码", func() {
+		Convey("MD125: 错误密码", func() {
 			payload := builder.BuildCreatePayloadWithWrongCredentials()
 			resp := client.POST("/api/vega-backend/v1/catalogs", payload)
 			So(resp.StatusCode, ShouldEqual, http.StatusBadRequest)
 		})
 
-		Convey("MY126: 不存在的数据库", func() {
+		Convey("MD126: 不存在的数据库", func() {
 			payload := builder.BuildCreatePayloadWithNonExistentDB()
 			resp := client.POST("/api/vega-backend/v1/catalogs", payload)
 			So(resp.StatusCode, ShouldEqual, http.StatusBadRequest)
 		})
 
-		Convey("MY127: 无效端口（非数字）", func() {
+		Convey("MD127: 无效端口（非数字）", func() {
 			payload := builder.BuildCreatePayloadWithInvalidPort()
 			resp := client.POST("/api/vega-backend/v1/catalogs", payload)
 			So(resp.StatusCode, ShouldEqual, http.StatusBadRequest)
 		})
 
-		Convey("MY128: 超出范围端口（65536）", func() {
-			mysqlConfig := builder.GetConfig()
+		Convey("MD128: 超出范围端口（65536）", func() {
+			mariadbConfig := builder.GetConfig()
 			payload := map[string]any{
 				"name":           cataloghelpers.GenerateUniqueName("overflow-port"),
-				"connector_type": "mysql",
+				"connector_type": "mariadb",
 				"connector_config": map[string]any{
-					"host":      mysqlConfig.Host,
+					"host":      mariadbConfig.Host,
 					"port":      65536,
-					"databases": []string{mysqlConfig.Database},
-					"username":  mysqlConfig.Username,
-					"password":  mysqlConfig.Password,
+					"databases": []string{mariadbConfig.Database},
+					"username":  mariadbConfig.Username,
+					"password":  mariadbConfig.Password,
 				},
 			}
 			resp := client.POST("/api/vega-backend/v1/catalogs", payload)
 			So(resp.StatusCode, ShouldEqual, http.StatusBadRequest)
 		})
 
-		Convey("MY129: 负数端口", func() {
-			mysqlConfig := builder.GetConfig()
+		Convey("MD129: 负数端口", func() {
+			mariadbConfig := builder.GetConfig()
 			payload := map[string]any{
 				"name":           cataloghelpers.GenerateUniqueName("negative-port"),
-				"connector_type": "mysql",
+				"connector_type": "mariadb",
 				"connector_config": map[string]any{
-					"host":      mysqlConfig.Host,
+					"host":      mariadbConfig.Host,
 					"port":      -1,
-					"databases": []string{mysqlConfig.Database},
-					"username":  mysqlConfig.Username,
-					"password":  mysqlConfig.Password,
+					"databases": []string{mariadbConfig.Database},
+					"username":  mariadbConfig.Username,
+					"password":  mariadbConfig.Password,
 				},
 			}
 			resp := client.POST("/api/vega-backend/v1/catalogs", payload)
 			So(resp.StatusCode, ShouldEqual, http.StatusBadRequest)
 		})
 
-		// ========== 边界测试（MY131-MY138） ==========
+		// ========== 边界测试（MD131-MD138） ==========
 
-		Convey("MY131: port边界值（1）", func() {
-			mysqlConfig := builder.GetConfig()
+		Convey("MD131: port边界值（1）", func() {
+			mariadbConfig := builder.GetConfig()
 			payload := map[string]any{
 				"name":           cataloghelpers.GenerateUniqueName("port-1"),
-				"connector_type": "mysql",
+				"connector_type": "mariadb",
 				"connector_config": map[string]any{
-					"host":      mysqlConfig.Host,
+					"host":      mariadbConfig.Host,
 					"port":      1,
-					"databases": []string{mysqlConfig.Database},
-					"username":  mysqlConfig.Username,
+					"databases": []string{mariadbConfig.Database},
+					"username":  mariadbConfig.Username,
 					"password":  builder.GetEncryptedPassword(),
 				},
 			}
@@ -291,16 +291,16 @@ func TestMySQLCatalogCreate(t *testing.T) {
 			So(resp.StatusCode, ShouldBeIn, []int{http.StatusCreated, http.StatusBadRequest})
 		})
 
-		Convey("MY132: port边界值（65535）", func() {
-			mysqlConfig := builder.GetConfig()
+		Convey("MD132: port边界值（65535）", func() {
+			mariadbConfig := builder.GetConfig()
 			payload := map[string]any{
 				"name":           cataloghelpers.GenerateUniqueName("port-65535"),
-				"connector_type": "mysql",
+				"connector_type": "mariadb",
 				"connector_config": map[string]any{
-					"host":      mysqlConfig.Host,
+					"host":      mariadbConfig.Host,
 					"port":      65535,
-					"databases": []string{mysqlConfig.Database},
-					"username":  mysqlConfig.Username,
+					"databases": []string{mariadbConfig.Database},
+					"username":  mariadbConfig.Username,
 					"password":  builder.GetEncryptedPassword(),
 				},
 			}
@@ -308,16 +308,16 @@ func TestMySQLCatalogCreate(t *testing.T) {
 			So(resp.StatusCode, ShouldBeIn, []int{http.StatusCreated, http.StatusBadRequest})
 		})
 
-		Convey("MY133: database名称最大长度（64字符）", func() {
-			mysqlConfig := builder.GetConfig()
+		Convey("MD133: database名称最大长度（64字符）", func() {
+			mariadbConfig := builder.GetConfig()
 			payload := map[string]any{
 				"name":           cataloghelpers.GenerateUniqueName("long-db"),
-				"connector_type": "mysql",
+				"connector_type": "mariadb",
 				"connector_config": map[string]any{
-					"host":      mysqlConfig.Host,
-					"port":      mysqlConfig.Port,
+					"host":      mariadbConfig.Host,
+					"port":      mariadbConfig.Port,
 					"databases": []string{strings.Repeat("d", 64)},
-					"username":  mysqlConfig.Username,
+					"username":  mariadbConfig.Username,
 					"password":  builder.GetEncryptedPassword(),
 				},
 			}
@@ -325,16 +325,16 @@ func TestMySQLCatalogCreate(t *testing.T) {
 			So(resp.StatusCode, ShouldBeIn, []int{http.StatusCreated, http.StatusBadRequest})
 		})
 
-		Convey("MY134: database名称超过最大长度", func() {
-			mysqlConfig := builder.GetConfig()
+		Convey("MD134: database名称超过最大长度", func() {
+			mariadbConfig := builder.GetConfig()
 			payload := map[string]any{
 				"name":           cataloghelpers.GenerateUniqueName("too-long-db"),
-				"connector_type": "mysql",
+				"connector_type": "mariadb",
 				"connector_config": map[string]any{
-					"host":      mysqlConfig.Host,
-					"port":      mysqlConfig.Port,
+					"host":      mariadbConfig.Host,
+					"port":      mariadbConfig.Port,
 					"databases": []string{strings.Repeat("d", 65)},
-					"username":  mysqlConfig.Username,
+					"username":  mariadbConfig.Username,
 					"password":  builder.GetEncryptedPassword(),
 				},
 			}
@@ -342,22 +342,22 @@ func TestMySQLCatalogCreate(t *testing.T) {
 			So(resp.StatusCode, ShouldEqual, http.StatusBadRequest)
 		})
 
-		Convey("MY135: host为IP地址", func() {
+		Convey("MD135: host为IP地址", func() {
 			payload := builder.BuildCreatePayload()
 			resp := client.POST("/api/vega-backend/v1/catalogs", payload)
 			So(resp.StatusCode, ShouldEqual, http.StatusCreated)
 		})
 
-		Convey("MY136: host为域名", func() {
-			mysqlConfig := builder.GetConfig()
+		Convey("MD136: host为域名", func() {
+			mariadbConfig := builder.GetConfig()
 			payload := map[string]any{
 				"name":           cataloghelpers.GenerateUniqueName("domain-host"),
-				"connector_type": "mysql",
+				"connector_type": "mariadb",
 				"connector_config": map[string]any{
 					"host":      "localhost",
-					"port":      mysqlConfig.Port,
-					"databases": []string{mysqlConfig.Database},
-					"username":  mysqlConfig.Username,
+					"port":      mariadbConfig.Port,
+					"databases": []string{mariadbConfig.Database},
+					"username":  mariadbConfig.Username,
 					"password":  builder.GetEncryptedPassword(),
 				},
 			}
@@ -365,22 +365,22 @@ func TestMySQLCatalogCreate(t *testing.T) {
 			So(resp.StatusCode, ShouldBeIn, []int{http.StatusCreated, http.StatusBadRequest})
 		})
 
-		Convey("MY137: 不指定database（实例级连接）", func() {
+		Convey("MD137: 不指定database（实例级连接）", func() {
 			payload := builder.BuildCreatePayloadWithoutDatabase()
 			resp := client.POST("/api/vega-backend/v1/catalogs", payload)
 			So(resp.StatusCode, ShouldEqual, http.StatusCreated)
 		})
 
-		Convey("MY138: password为空（无密码连接）", func() {
-			mysqlConfig := builder.GetConfig()
+		Convey("MD138: password为空（无密码连接）", func() {
+			mariadbConfig := builder.GetConfig()
 			payload := map[string]any{
 				"name":           cataloghelpers.GenerateUniqueName("no-password"),
-				"connector_type": "mysql",
+				"connector_type": "mariadb",
 				"connector_config": map[string]any{
-					"host":      mysqlConfig.Host,
-					"port":      mysqlConfig.Port,
-					"databases": []string{mysqlConfig.Database},
-					"username":  mysqlConfig.Username,
+					"host":      mariadbConfig.Host,
+					"port":      mariadbConfig.Port,
+					"databases": []string{mariadbConfig.Database},
+					"username":  mariadbConfig.Username,
 					"password":  "",
 				},
 			}
@@ -392,17 +392,17 @@ func TestMySQLCatalogCreate(t *testing.T) {
 	_ = ctx
 }
 
-// TestMySQLCatalogRead MySQL Catalog读取AT测试
-// 编号规则：MY2xx
-func TestMySQLCatalogRead(t *testing.T) {
+// TestMariaDBCatalogRead MariaDB Catalog读取AT测试
+// 编号规则：MD2xx
+func TestMariaDBCatalogRead(t *testing.T) {
 	var (
 		ctx     context.Context
 		config  *setup.TestConfig
 		client  *testutil.HTTPClient
-		builder *MySQLPayloadBuilder
+		builder *MariaDBPayloadBuilder
 	)
 
-	Convey("MySQL Catalog读取AT测试 - 初始化", t, func() {
+	Convey("MariaDB Catalog读取AT测试 - 初始化", t, func() {
 		ctx = context.Background()
 
 		var err error
@@ -413,14 +413,14 @@ func TestMySQLCatalogRead(t *testing.T) {
 		err = client.CheckHealth()
 		So(err, ShouldBeNil)
 
-		builder = NewMySQLPayloadBuilder(config.TargetMySQL)
+		builder = NewMariaDBPayloadBuilder(config.TargetMariaDB)
 		builder.SetTestConfig(config)
 
 		cataloghelpers.CleanupCatalogs(client, t)
 
-		// ========== 读取测试（MY201-MY205） ==========
+		// ========== 读取测试（MD201-MD205） ==========
 
-		Convey("MY201: 获取存在的MySQL catalog", func() {
+		Convey("MD201: 获取存在的MariaDB catalog", func() {
 			payload := builder.BuildCreatePayload()
 			createResp := client.POST("/api/vega-backend/v1/catalogs", payload)
 			So(createResp.StatusCode, ShouldEqual, http.StatusCreated)
@@ -433,7 +433,7 @@ func TestMySQLCatalogRead(t *testing.T) {
 			So(catalog["id"], ShouldEqual, catalogID)
 		})
 
-		Convey("MY202: 列表查询 - 按type过滤physical", func() {
+		Convey("MD202: 列表查询 - 按type过滤physical", func() {
 			payload := builder.BuildCreatePayload()
 			createResp := client.POST("/api/vega-backend/v1/catalogs", payload)
 			So(createResp.StatusCode, ShouldEqual, http.StatusCreated)
@@ -449,23 +449,23 @@ func TestMySQLCatalogRead(t *testing.T) {
 			}
 		})
 
-		Convey("MY203: 列表查询 - 按connector_type过滤mysql", func() {
+		Convey("MD203: 列表查询 - 按connector_type过滤mariadb", func() {
 			payload := builder.BuildCreatePayload()
 			createResp := client.POST("/api/vega-backend/v1/catalogs", payload)
 			So(createResp.StatusCode, ShouldEqual, http.StatusCreated)
 
-			listResp := client.GET("/api/vega-backend/v1/catalogs?connector_type=mysql&offset=0&limit=100")
+			listResp := client.GET("/api/vega-backend/v1/catalogs?connector_type=mariadb&offset=0&limit=100")
 			So(listResp.StatusCode, ShouldEqual, http.StatusOK)
 
 			if entries, ok := listResp.Body["entries"].([]any); ok {
 				So(len(entries), ShouldBeGreaterThanOrEqualTo, 1)
 				for _, entry := range entries {
-					So(entry.(map[string]any)["connector_type"], ShouldEqual, "mysql")
+					So(entry.(map[string]any)["connector_type"], ShouldEqual, "mariadb")
 				}
 			}
 		})
 
-		Convey("MY204: 查询catalog - 验证所有字段返回", func() {
+		Convey("MD204: 查询catalog - 验证所有字段返回", func() {
 			payload := builder.BuildFullCreatePayload()
 			createResp := client.POST("/api/vega-backend/v1/catalogs", payload)
 			So(createResp.StatusCode, ShouldEqual, http.StatusCreated)
@@ -478,12 +478,12 @@ func TestMySQLCatalogRead(t *testing.T) {
 			So(catalog["id"], ShouldNotBeEmpty)
 			So(catalog["name"], ShouldNotBeEmpty)
 			So(catalog["type"], ShouldEqual, cataloghelpers.CatalogTypePhysical)
-			So(catalog["connector_type"], ShouldEqual, "mysql")
+			So(catalog["connector_type"], ShouldEqual, "mariadb")
 			So(catalog["create_time"], ShouldNotBeZeroValue)
 			So(catalog["update_time"], ShouldNotBeZeroValue)
 		})
 
-		Convey("MY205: 验证connector_config.password不返回", func() {
+		Convey("MD205: 验证connector_config.password不返回", func() {
 			payload := builder.BuildCreatePayload()
 			createResp := client.POST("/api/vega-backend/v1/catalogs", payload)
 			So(createResp.StatusCode, ShouldEqual, http.StatusCreated)
@@ -503,17 +503,17 @@ func TestMySQLCatalogRead(t *testing.T) {
 	_ = ctx
 }
 
-// TestMySQLCatalogUpdate MySQL Catalog更新AT测试
-// 编号规则：MY3xx
-func TestMySQLCatalogUpdate(t *testing.T) {
+// TestMariaDBCatalogUpdate MariaDB Catalog更新AT测试
+// 编号规则：MD3xx
+func TestMariaDBCatalogUpdate(t *testing.T) {
 	var (
 		ctx     context.Context
 		config  *setup.TestConfig
 		client  *testutil.HTTPClient
-		builder *MySQLPayloadBuilder
+		builder *MariaDBPayloadBuilder
 	)
 
-	Convey("MySQL Catalog更新AT测试 - 初始化", t, func() {
+	Convey("MariaDB Catalog更新AT测试 - 初始化", t, func() {
 		ctx = context.Background()
 
 		var err error
@@ -524,14 +524,14 @@ func TestMySQLCatalogUpdate(t *testing.T) {
 		err = client.CheckHealth()
 		So(err, ShouldBeNil)
 
-		builder = NewMySQLPayloadBuilder(config.TargetMySQL)
+		builder = NewMariaDBPayloadBuilder(config.TargetMariaDB)
 		builder.SetTestConfig(config)
 
 		cataloghelpers.CleanupCatalogs(client, t)
 
-		// ========== 更新测试（MY301-MY305） ==========
+		// ========== 更新测试（MD301-MD305） ==========
 
-		Convey("MY301: 整体更新connector_config", func() {
+		Convey("MD301: 整体更新connector_config", func() {
 			payload := builder.BuildCreatePayload()
 			createResp := client.POST("/api/vega-backend/v1/catalogs", payload)
 			So(createResp.StatusCode, ShouldEqual, http.StatusCreated)
@@ -541,13 +541,13 @@ func TestMySQLCatalogUpdate(t *testing.T) {
 			getResp := client.GET("/api/vega-backend/v1/catalogs/" + catalogID)
 			originalData := cataloghelpers.ExtractFromEntriesResponse(getResp)
 
-			mysqlConfig := builder.GetConfig()
+			mariadbConfig := builder.GetConfig()
 			updatePayload := cataloghelpers.BuildUpdatePayload(originalData, map[string]any{
 				"connector_config": map[string]any{
-					"host":      mysqlConfig.Host,
-					"port":      mysqlConfig.Port,
-					"databases": []string{mysqlConfig.Database},
-					"username":  mysqlConfig.Username,
+					"host":      mariadbConfig.Host,
+					"port":      mariadbConfig.Port,
+					"databases": []string{mariadbConfig.Database},
+					"username":  mariadbConfig.Username,
 					"password":  builder.GetEncryptedPassword(),
 					"options": map[string]any{
 						"charset": "utf8mb4",
@@ -558,7 +558,7 @@ func TestMySQLCatalogUpdate(t *testing.T) {
 			So(updateResp.StatusCode, ShouldEqual, http.StatusNoContent)
 		})
 
-		Convey("MY302: 更新connector_config后连接测试", func() {
+		Convey("MD302: 更新connector_config后连接测试", func() {
 			payload := builder.BuildCreatePayload()
 			createResp := client.POST("/api/vega-backend/v1/catalogs", payload)
 			So(createResp.StatusCode, ShouldEqual, http.StatusCreated)
@@ -568,13 +568,13 @@ func TestMySQLCatalogUpdate(t *testing.T) {
 			getResp := client.GET("/api/vega-backend/v1/catalogs/" + catalogID)
 			originalData := cataloghelpers.ExtractFromEntriesResponse(getResp)
 
-			mysqlConfig := builder.GetConfig()
+			mariadbConfig := builder.GetConfig()
 			updatePayload := cataloghelpers.BuildUpdatePayload(originalData, map[string]any{
 				"connector_config": map[string]any{
-					"host":      mysqlConfig.Host,
-					"port":      mysqlConfig.Port,
-					"databases": []string{mysqlConfig.Database},
-					"username":  mysqlConfig.Username,
+					"host":      mariadbConfig.Host,
+					"port":      mariadbConfig.Port,
+					"databases": []string{mariadbConfig.Database},
+					"username":  mariadbConfig.Username,
 					"password":  builder.GetEncryptedPassword(),
 				},
 			})
@@ -585,7 +585,7 @@ func TestMySQLCatalogUpdate(t *testing.T) {
 			So(testResp.StatusCode, ShouldEqual, http.StatusOK)
 		})
 
-		Convey("MY303: 更新host为无效地址", func() {
+		Convey("MD303: 更新host为无效地址", func() {
 			payload := builder.BuildCreatePayload()
 			createResp := client.POST("/api/vega-backend/v1/catalogs", payload)
 			So(createResp.StatusCode, ShouldEqual, http.StatusCreated)
@@ -595,13 +595,13 @@ func TestMySQLCatalogUpdate(t *testing.T) {
 			getResp := client.GET("/api/vega-backend/v1/catalogs/" + catalogID)
 			originalData := cataloghelpers.ExtractFromEntriesResponse(getResp)
 
-			mysqlConfig := builder.GetConfig()
+			mariadbConfig := builder.GetConfig()
 			updatePayload := cataloghelpers.BuildUpdatePayload(originalData, map[string]any{
 				"connector_config": map[string]any{
 					"host":      "invalid-host-12345.example.com",
-					"port":      mysqlConfig.Port,
-					"databases": []string{mysqlConfig.Database},
-					"username":  mysqlConfig.Username,
+					"port":      mariadbConfig.Port,
+					"databases": []string{mariadbConfig.Database},
+					"username":  mariadbConfig.Username,
 					"password":  builder.GetEncryptedPassword(),
 				},
 			})
@@ -609,7 +609,7 @@ func TestMySQLCatalogUpdate(t *testing.T) {
 			So(updateResp.StatusCode, ShouldEqual, http.StatusBadRequest)
 		})
 
-		Convey("MY304: 更新port为无效值", func() {
+		Convey("MD304: 更新port为无效值", func() {
 			payload := builder.BuildCreatePayload()
 			createResp := client.POST("/api/vega-backend/v1/catalogs", payload)
 			So(createResp.StatusCode, ShouldEqual, http.StatusCreated)
@@ -619,13 +619,13 @@ func TestMySQLCatalogUpdate(t *testing.T) {
 			getResp := client.GET("/api/vega-backend/v1/catalogs/" + catalogID)
 			originalData := cataloghelpers.ExtractFromEntriesResponse(getResp)
 
-			mysqlConfig := builder.GetConfig()
+			mariadbConfig := builder.GetConfig()
 			updatePayload := cataloghelpers.BuildUpdatePayload(originalData, map[string]any{
 				"connector_config": map[string]any{
-					"host":      mysqlConfig.Host,
+					"host":      mariadbConfig.Host,
 					"port":      65536,
-					"databases": []string{mysqlConfig.Database},
-					"username":  mysqlConfig.Username,
+					"databases": []string{mariadbConfig.Database},
+					"username":  mariadbConfig.Username,
 					"password":  builder.GetEncryptedPassword(),
 				},
 			})
@@ -633,7 +633,7 @@ func TestMySQLCatalogUpdate(t *testing.T) {
 			So(updateResp.StatusCode, ShouldEqual, http.StatusBadRequest)
 		})
 
-		Convey("MY305: 更新password", func() {
+		Convey("MD305: 更新password", func() {
 			payload := builder.BuildCreatePayload()
 			createResp := client.POST("/api/vega-backend/v1/catalogs", payload)
 			So(createResp.StatusCode, ShouldEqual, http.StatusCreated)
@@ -643,13 +643,13 @@ func TestMySQLCatalogUpdate(t *testing.T) {
 			getResp := client.GET("/api/vega-backend/v1/catalogs/" + catalogID)
 			originalData := cataloghelpers.ExtractFromEntriesResponse(getResp)
 
-			mysqlConfig := builder.GetConfig()
+			mariadbConfig := builder.GetConfig()
 			updatePayload := cataloghelpers.BuildUpdatePayload(originalData, map[string]any{
 				"connector_config": map[string]any{
-					"host":      mysqlConfig.Host,
-					"port":      mysqlConfig.Port,
-					"databases": []string{mysqlConfig.Database},
-					"username":  mysqlConfig.Username,
+					"host":      mariadbConfig.Host,
+					"port":      mariadbConfig.Port,
+					"databases": []string{mariadbConfig.Database},
+					"username":  mariadbConfig.Username,
 					"password":  builder.GetEncryptedPassword(),
 				},
 			})
@@ -661,17 +661,17 @@ func TestMySQLCatalogUpdate(t *testing.T) {
 	_ = ctx
 }
 
-// TestMySQLCatalogDelete MySQL Catalog删除AT测试
-// 编号规则：MY4xx
-func TestMySQLCatalogDelete(t *testing.T) {
+// TestMariaDBCatalogDelete MariaDB Catalog删除AT测试
+// 编号规则：MD4xx
+func TestMariaDBCatalogDelete(t *testing.T) {
 	var (
 		ctx     context.Context
 		config  *setup.TestConfig
 		client  *testutil.HTTPClient
-		builder *MySQLPayloadBuilder
+		builder *MariaDBPayloadBuilder
 	)
 
-	Convey("MySQL Catalog删除AT测试 - 初始化", t, func() {
+	Convey("MariaDB Catalog删除AT测试 - 初始化", t, func() {
 		ctx = context.Background()
 
 		var err error
@@ -682,14 +682,14 @@ func TestMySQLCatalogDelete(t *testing.T) {
 		err = client.CheckHealth()
 		So(err, ShouldBeNil)
 
-		builder = NewMySQLPayloadBuilder(config.TargetMySQL)
+		builder = NewMariaDBPayloadBuilder(config.TargetMariaDB)
 		builder.SetTestConfig(config)
 
 		cataloghelpers.CleanupCatalogs(client, t)
 
-		// ========== 删除测试（MY401-MY402） ==========
+		// ========== 删除测试（MD401-MD402） ==========
 
-		Convey("MY401: 删除MySQL catalog后健康状态不可查", func() {
+		Convey("MD401: 删除MariaDB catalog后健康状态不可查", func() {
 			payload := builder.BuildCreatePayload()
 			createResp := client.POST("/api/vega-backend/v1/catalogs", payload)
 			So(createResp.StatusCode, ShouldEqual, http.StatusCreated)
@@ -703,7 +703,7 @@ func TestMySQLCatalogDelete(t *testing.T) {
 			So(statusResp.StatusCode, ShouldEqual, http.StatusNotFound)
 		})
 
-		Convey("MY402: 删除MySQL catalog后不能测试连接", func() {
+		Convey("MD402: 删除MariaDB catalog后不能测试连接", func() {
 			payload := builder.BuildCreatePayload()
 			createResp := client.POST("/api/vega-backend/v1/catalogs", payload)
 			So(createResp.StatusCode, ShouldEqual, http.StatusCreated)
@@ -721,17 +721,17 @@ func TestMySQLCatalogDelete(t *testing.T) {
 	_ = ctx
 }
 
-// TestMySQLSpecificOptions MySQL特有选项测试
-// 编号规则：MY5xx
-func TestMySQLSpecificOptions(t *testing.T) {
+// TestMariaDBSpecificOptions MariaDB特有选项测试
+// 编号规则：MD5xx
+func TestMariaDBSpecificOptions(t *testing.T) {
 	var (
 		ctx     context.Context
 		config  *setup.TestConfig
 		client  *testutil.HTTPClient
-		builder *MySQLPayloadBuilder
+		builder *MariaDBPayloadBuilder
 	)
 
-	Convey("MySQL特有选项AT测试 - 初始化", t, func() {
+	Convey("MariaDB特有选项AT测试 - 初始化", t, func() {
 		ctx = context.Background()
 
 		var err error
@@ -742,49 +742,49 @@ func TestMySQLSpecificOptions(t *testing.T) {
 		err = client.CheckHealth()
 		So(err, ShouldBeNil)
 
-		builder = NewMySQLPayloadBuilder(config.TargetMySQL)
+		builder = NewMariaDBPayloadBuilder(config.TargetMariaDB)
 		builder.SetTestConfig(config)
 
 		cataloghelpers.CleanupCatalogs(client, t)
 
-		// ========== MySQL特有选项测试（MY501-MY506） ==========
+		// ========== MariaDB特有选项测试（MD501-MD506） ==========
 
-		Convey("MY501: MySQL charset选项测试（utf8mb4）", func() {
+		Convey("MD501: MariaDB charset选项测试（utf8mb4）", func() {
 			options := map[string]any{"charset": "utf8mb4"}
 			payload := builder.BuildCreatePayloadWithOptions(options)
 			resp := client.POST("/api/vega-backend/v1/catalogs", payload)
 			So(resp.StatusCode, ShouldEqual, http.StatusCreated)
 		})
 
-		Convey("MY502: MySQL parseTime选项测试", func() {
+		Convey("MD502: MariaDB parseTime选项测试", func() {
 			options := map[string]any{"parseTime": "true"}
 			payload := builder.BuildCreatePayloadWithOptions(options)
 			resp := client.POST("/api/vega-backend/v1/catalogs", payload)
 			So(resp.StatusCode, ShouldEqual, http.StatusCreated)
 		})
 
-		Convey("MY503: MySQL loc选项测试（时区）", func() {
+		Convey("MD503: MariaDB loc选项测试（时区）", func() {
 			options := map[string]any{"loc": "Local"}
 			payload := builder.BuildCreatePayloadWithOptions(options)
 			resp := client.POST("/api/vega-backend/v1/catalogs", payload)
 			So(resp.StatusCode, ShouldEqual, http.StatusCreated)
 		})
 
-		Convey("MY504: MySQL timeout选项测试", func() {
+		Convey("MD504: MariaDB timeout选项测试", func() {
 			options := map[string]any{"timeout": "10s"}
 			payload := builder.BuildCreatePayloadWithOptions(options)
 			resp := client.POST("/api/vega-backend/v1/catalogs", payload)
 			So(resp.StatusCode, ShouldEqual, http.StatusCreated)
 		})
 
-		Convey("MY505: MySQL SSL连接测试", func() {
+		Convey("MD505: MariaDB SSL连接测试", func() {
 			options := map[string]any{"tls": "skip-verify"}
 			payload := builder.BuildCreatePayloadWithOptions(options)
 			resp := client.POST("/api/vega-backend/v1/catalogs", payload)
 			So(resp.StatusCode, ShouldBeIn, []int{http.StatusCreated, http.StatusBadRequest})
 		})
 
-		Convey("MY506: MySQL collation选项测试", func() {
+		Convey("MD506: MariaDB collation选项测试", func() {
 			options := map[string]any{"collation": "utf8mb4_unicode_ci"}
 			payload := builder.BuildCreatePayloadWithOptions(options)
 			resp := client.POST("/api/vega-backend/v1/catalogs", payload)

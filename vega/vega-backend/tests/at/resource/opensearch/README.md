@@ -14,7 +14,7 @@
 
 ### 通用测试（RMxxx）
 
-来自 `resource/internal/test_cases.go`，与 MySQL 共用，详见 [../mysql/README.md](../mysql/README.md)。
+来自 `resource/internal/test_cases.go`，与 MariaDB 共用，详见 [../mariadb/README.md](../mariadb/README.md)。
 
 ## 运行测试
 

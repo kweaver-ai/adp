@@ -1,8 +1,8 @@
-# MySQL Resource AT 测试
+# MariaDB Resource AT 测试
 
 ## 概述
 
-本目录包含 MySQL Resource 的验收测试（AT 测试），运行通用 Resource 测试用例。
+本目录包含 MariaDB Resource 的验收测试（AT 测试），运行通用 Resource 测试用例。
 
 ## 测试文件
 
@@ -114,12 +114,12 @@
 ## 运行测试
 
 ```bash
-# 运行所有 MySQL Resource 测试
-go test -v ./tests/at/resource/mysql/...
+# 运行所有 MariaDB Resource 测试
+go test -v ./tests/at/resource/mariadb/...
 
 # 运行特定测试套件
-go test -v ./tests/at/resource/mysql/... -run TestMySQLResourceCommon
+go test -v ./tests/at/resource/mariadb/... -run TestMariaDBResourceCommon
 
 # 运行单个用例
-go test -v ./tests/at/resource/mysql/... -run RM101
+go test -v ./tests/at/resource/mariadb/... -run RM101
 ```

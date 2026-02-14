@@ -3,7 +3,7 @@
 // Licensed under the Apache License, Version 2.0.
 // See the LICENSE file in the project root for details.
 
-package mysql
+package mariadb
 
 import (
 	"context"
@@ -18,22 +18,22 @@ import (
 
 var Special = strings.NewReplacer(`\`, `\\\\`, `'`, `\'`, `%`, `\%`, `_`, `\_`)
 
-func ConvertFilterCondition(ctx context.Context, condition interfaces.FilterCondition,
+func (c *MariaDBConnector) ConvertFilterCondition(ctx context.Context, condition interfaces.FilterCondition,
 	fieldsMap map[string]*interfaces.Property) (sq.Sqlizer, error) {
 
 	switch condition.GetOperation() {
 	case filter_condition.OperationAnd:
-		return ConvertFilterConditionAnd(ctx, condition, fieldsMap)
+		return c.ConvertFilterConditionAnd(ctx, condition, fieldsMap)
 
 	case filter_condition.OperationOr:
-		return ConvertFilterConditionOr(ctx, condition, fieldsMap)
+		return c.ConvertFilterConditionOr(ctx, condition, fieldsMap)
 
 	default:
-		return ConvertFilterConditionWithOpr(ctx, condition, fieldsMap)
+		return c.ConvertFilterConditionWithOpr(ctx, condition, fieldsMap)
 	}
 }
 
-func ConvertFilterConditionAnd(ctx context.Context, condition interfaces.FilterCondition,
+func (c *MariaDBConnector) ConvertFilterConditionAnd(ctx context.Context, condition interfaces.FilterCondition,
 	fieldsMap map[string]*interfaces.Property) (sq.Sqlizer, error) {
 
 	condAnd, ok := condition.(*filter_condition.AndCond)
@@ -43,7 +43,7 @@ func ConvertFilterConditionAnd(ctx context.Context, condition interfaces.FilterC
 
 	convertedConds := sq.And{}
 	for _, subCond := range condAnd.SubConds {
-		convertedCond, err := ConvertFilterConditionWithOpr(ctx, subCond, fieldsMap)
+		convertedCond, err := c.ConvertFilterConditionWithOpr(ctx, subCond, fieldsMap)
 		if err != nil {
 			return nil, err
 		}
@@ -53,7 +53,7 @@ func ConvertFilterConditionAnd(ctx context.Context, condition interfaces.FilterC
 	return convertedConds, nil
 }
 
-func ConvertFilterConditionOr(ctx context.Context, condition interfaces.FilterCondition,
+func (c *MariaDBConnector) ConvertFilterConditionOr(ctx context.Context, condition interfaces.FilterCondition,
 	fieldsMap map[string]*interfaces.Property) (sq.Sqlizer, error) {
 
 	condOr, ok := condition.(*filter_condition.OrCond)
@@ -63,7 +63,7 @@ func ConvertFilterConditionOr(ctx context.Context, condition interfaces.FilterCo
 
 	convertedConds := sq.Or{}
 	for _, subCond := range condOr.SubConds {
-		convertedCond, err := ConvertFilterConditionWithOpr(ctx, subCond, fieldsMap)
+		convertedCond, err := c.ConvertFilterConditionWithOpr(ctx, subCond, fieldsMap)
 		if err != nil {
 			return nil, err
 		}
@@ -73,72 +73,72 @@ func ConvertFilterConditionOr(ctx context.Context, condition interfaces.FilterCo
 	return convertedConds, nil
 }
 
-func ConvertFilterConditionWithOpr(ctx context.Context, condition interfaces.FilterCondition,
+func (c *MariaDBConnector) ConvertFilterConditionWithOpr(ctx context.Context, condition interfaces.FilterCondition,
 	fieldsMap map[string]*interfaces.Property) (sq.Sqlizer, error) {
 
 	switch condition.GetOperation() {
 	case filter_condition.OperationEqual, filter_condition.OperationEqual2:
-		return ConvertFilterConditionEqual(ctx, condition, fieldsMap)
+		return c.ConvertFilterConditionEqual(ctx, condition, fieldsMap)
 	case filter_condition.OperationNotEqual, filter_condition.OperationNotEqual2:
-		return ConvertFilterConditionNotEqual(ctx, condition, fieldsMap)
+		return c.ConvertFilterConditionNotEqual(ctx, condition, fieldsMap)
 	case filter_condition.OperationGt, filter_condition.OperationGt2:
-		return ConvertFilterConditionGt(ctx, condition, fieldsMap)
+		return c.ConvertFilterConditionGt(ctx, condition, fieldsMap)
 	case filter_condition.OperationGte, filter_condition.OperationGte2:
-		return ConvertFilterConditionGte(ctx, condition, fieldsMap)
+		return c.ConvertFilterConditionGte(ctx, condition, fieldsMap)
 	case filter_condition.OperationLt, filter_condition.OperationLt2:
-		return ConvertFilterConditionLt(ctx, condition, fieldsMap)
+		return c.ConvertFilterConditionLt(ctx, condition, fieldsMap)
 	case filter_condition.OperationLte, filter_condition.OperationLte2:
-		return ConvertFilterConditionLte(ctx, condition, fieldsMap)
+		return c.ConvertFilterConditionLte(ctx, condition, fieldsMap)
 	case filter_condition.OperationIn:
-		return ConvertFilterConditionIn(ctx, condition, fieldsMap)
+		return c.ConvertFilterConditionIn(ctx, condition, fieldsMap)
 	case filter_condition.OperationNotIn:
-		return ConvertFilterConditionNotIn(ctx, condition, fieldsMap)
+		return c.ConvertFilterConditionNotIn(ctx, condition, fieldsMap)
 	case filter_condition.OperationLike:
-		return ConvertFilterConditionLike(ctx, condition, fieldsMap)
+		return c.ConvertFilterConditionLike(ctx, condition, fieldsMap)
 	case filter_condition.OperationNotLike:
-		return ConvertFilterConditionNotLike(ctx, condition, fieldsMap)
+		return c.ConvertFilterConditionNotLike(ctx, condition, fieldsMap)
 	case filter_condition.OperationContain:
-		return ConvertFilterConditionContain(ctx, condition, fieldsMap)
+		return c.ConvertFilterConditionContain(ctx, condition, fieldsMap)
 	case filter_condition.OperationNotContain:
-		return ConvertFilterConditionNotContain(ctx, condition, fieldsMap)
+		return c.ConvertFilterConditionNotContain(ctx, condition, fieldsMap)
 	case filter_condition.OperationRange:
-		return ConvertFilterConditionRange(ctx, condition, fieldsMap)
+		return c.ConvertFilterConditionRange(ctx, condition, fieldsMap)
 	case filter_condition.OperationOutRange:
-		return ConvertFilterConditionOutRange(ctx, condition, fieldsMap)
+		return c.ConvertFilterConditionOutRange(ctx, condition, fieldsMap)
 	case filter_condition.OperationNull:
-		return ConvertFilterConditionNull(ctx, condition, fieldsMap)
+		return c.ConvertFilterConditionNull(ctx, condition, fieldsMap)
 	case filter_condition.OperationNotNull:
-		return ConvertFilterConditionNotNull(ctx, condition, fieldsMap)
+		return c.ConvertFilterConditionNotNull(ctx, condition, fieldsMap)
 	case filter_condition.OperationEmpty:
-		return ConvertFilterConditionEmpty(ctx, condition, fieldsMap)
+		return c.ConvertFilterConditionEmpty(ctx, condition, fieldsMap)
 	case filter_condition.OperationNotEmpty:
-		return ConvertFilterConditionNotEmpty(ctx, condition, fieldsMap)
+		return c.ConvertFilterConditionNotEmpty(ctx, condition, fieldsMap)
 	case filter_condition.OperationPrefix:
-		return ConvertFilterConditionPrefix(ctx, condition, fieldsMap)
+		return c.ConvertFilterConditionPrefix(ctx, condition, fieldsMap)
 	case filter_condition.OperationNotPrefix:
-		return ConvertFilterConditionNotPrefix(ctx, condition, fieldsMap)
+		return c.ConvertFilterConditionNotPrefix(ctx, condition, fieldsMap)
 	case filter_condition.OperationBetween:
-		return ConvertFilterConditionBetween(ctx, condition, fieldsMap)
+		return c.ConvertFilterConditionBetween(ctx, condition, fieldsMap)
 	case filter_condition.OperationExist:
-		return ConvertFilterConditionExist(ctx, condition, fieldsMap)
+		return c.ConvertFilterConditionExist(ctx, condition, fieldsMap)
 	case filter_condition.OperationNotExist:
-		return ConvertFilterConditionNotExist(ctx, condition, fieldsMap)
+		return c.ConvertFilterConditionNotExist(ctx, condition, fieldsMap)
 	case filter_condition.OperationRegex:
-		return ConvertFilterConditionRegex(ctx, condition, fieldsMap)
+		return c.ConvertFilterConditionRegex(ctx, condition, fieldsMap)
 	case filter_condition.OperationTrue:
-		return ConvertFilterConditionTrue(ctx, condition, fieldsMap)
+		return c.ConvertFilterConditionTrue(ctx, condition, fieldsMap)
 	case filter_condition.OperationFalse:
-		return ConvertFilterConditionFalse(ctx, condition, fieldsMap)
+		return c.ConvertFilterConditionFalse(ctx, condition, fieldsMap)
 	case filter_condition.OperationBefore:
-		return ConvertFilterConditionBefore(ctx, condition, fieldsMap)
+		return c.ConvertFilterConditionBefore(ctx, condition, fieldsMap)
 	case filter_condition.OperationCurrent:
-		return ConvertFilterConditionCurrent(ctx, condition, fieldsMap)
+		return c.ConvertFilterConditionCurrent(ctx, condition, fieldsMap)
 	default:
 		return nil, fmt.Errorf("operation %s is not supported", condition.GetOperation())
 	}
 }
 
-func ConvertFilterConditionEqual(ctx context.Context, condition interfaces.FilterCondition,
+func (c *MariaDBConnector) ConvertFilterConditionEqual(ctx context.Context, condition interfaces.FilterCondition,
 	fieldsMap map[string]*interfaces.Property) (sq.Sqlizer, error) {
 
 	cond, ok := condition.(*filter_condition.EqualCond)
@@ -156,7 +156,7 @@ func ConvertFilterConditionEqual(ctx context.Context, condition interfaces.Filte
 	}
 }
 
-func ConvertFilterConditionNotEqual(ctx context.Context, condition interfaces.FilterCondition,
+func (c *MariaDBConnector) ConvertFilterConditionNotEqual(ctx context.Context, condition interfaces.FilterCondition,
 	fieldsMap map[string]*interfaces.Property) (sq.Sqlizer, error) {
 
 	cond, ok := condition.(*filter_condition.NotEqualCond)
@@ -174,7 +174,7 @@ func ConvertFilterConditionNotEqual(ctx context.Context, condition interfaces.Fi
 	}
 }
 
-func ConvertFilterConditionGt(ctx context.Context, condition interfaces.FilterCondition,
+func (c *MariaDBConnector) ConvertFilterConditionGt(ctx context.Context, condition interfaces.FilterCondition,
 	fieldsMap map[string]*interfaces.Property) (sq.Sqlizer, error) {
 
 	cond, ok := condition.(*filter_condition.GtCond)
@@ -192,7 +192,7 @@ func ConvertFilterConditionGt(ctx context.Context, condition interfaces.FilterCo
 	}
 }
 
-func ConvertFilterConditionGte(ctx context.Context, condition interfaces.FilterCondition,
+func (c *MariaDBConnector) ConvertFilterConditionGte(ctx context.Context, condition interfaces.FilterCondition,
 	fieldsMap map[string]*interfaces.Property) (sq.Sqlizer, error) {
 
 	cond, ok := condition.(*filter_condition.GteCond)
@@ -210,7 +210,7 @@ func ConvertFilterConditionGte(ctx context.Context, condition interfaces.FilterC
 	}
 }
 
-func ConvertFilterConditionLt(ctx context.Context, condition interfaces.FilterCondition,
+func (c *MariaDBConnector) ConvertFilterConditionLt(ctx context.Context, condition interfaces.FilterCondition,
 	fieldsMap map[string]*interfaces.Property) (sq.Sqlizer, error) {
 
 	cond, ok := condition.(*filter_condition.LtCond)
@@ -228,7 +228,7 @@ func ConvertFilterConditionLt(ctx context.Context, condition interfaces.FilterCo
 	}
 }
 
-func ConvertFilterConditionLte(ctx context.Context, condition interfaces.FilterCondition,
+func (c *MariaDBConnector) ConvertFilterConditionLte(ctx context.Context, condition interfaces.FilterCondition,
 	fieldsMap map[string]*interfaces.Property) (sq.Sqlizer, error) {
 
 	cond, ok := condition.(*filter_condition.LteCond)
@@ -246,7 +246,7 @@ func ConvertFilterConditionLte(ctx context.Context, condition interfaces.FilterC
 	}
 }
 
-func ConvertFilterConditionIn(ctx context.Context, condition interfaces.FilterCondition,
+func (c *MariaDBConnector) ConvertFilterConditionIn(ctx context.Context, condition interfaces.FilterCondition,
 	fieldsMap map[string]*interfaces.Property) (sq.Sqlizer, error) {
 
 	cond, ok := condition.(*filter_condition.InCond)
@@ -261,7 +261,7 @@ func ConvertFilterConditionIn(ctx context.Context, condition interfaces.FilterCo
 	return sq.Eq{fmt.Sprintf("`%s`", cond.Lfield.OriginalName): cond.Value}, nil
 }
 
-func ConvertFilterConditionNotIn(ctx context.Context, condition interfaces.FilterCondition,
+func (c *MariaDBConnector) ConvertFilterConditionNotIn(ctx context.Context, condition interfaces.FilterCondition,
 	fieldsMap map[string]*interfaces.Property) (sq.Sqlizer, error) {
 
 	cond, ok := condition.(*filter_condition.NotInCond)
@@ -276,7 +276,7 @@ func ConvertFilterConditionNotIn(ctx context.Context, condition interfaces.Filte
 	return sq.NotEq{fmt.Sprintf("`%s`", cond.Lfield.OriginalName): cond.Value}, nil
 }
 
-func ConvertFilterConditionLike(ctx context.Context, condition interfaces.FilterCondition,
+func (c *MariaDBConnector) ConvertFilterConditionLike(ctx context.Context, condition interfaces.FilterCondition,
 	fieldsMap map[string]*interfaces.Property) (sq.Sqlizer, error) {
 
 	cond, ok := condition.(*filter_condition.LikeCond)
@@ -292,7 +292,7 @@ func ConvertFilterConditionLike(ctx context.Context, condition interfaces.Filter
 	return sq.Like{fmt.Sprintf("`%s`", cond.Lfield.OriginalName): vStr}, nil
 }
 
-func ConvertFilterConditionNotLike(ctx context.Context, condition interfaces.FilterCondition,
+func (c *MariaDBConnector) ConvertFilterConditionNotLike(ctx context.Context, condition interfaces.FilterCondition,
 	fieldsMap map[string]*interfaces.Property) (sq.Sqlizer, error) {
 
 	cond, ok := condition.(*filter_condition.NotLikeCond)
@@ -308,7 +308,7 @@ func ConvertFilterConditionNotLike(ctx context.Context, condition interfaces.Fil
 	return sq.NotLike{fmt.Sprintf("`%s`", cond.Lfield.OriginalName): vStr}, nil
 }
 
-func ConvertFilterConditionContain(ctx context.Context, condition interfaces.FilterCondition,
+func (c *MariaDBConnector) ConvertFilterConditionContain(ctx context.Context, condition interfaces.FilterCondition,
 	fieldsMap map[string]*interfaces.Property) (sq.Sqlizer, error) {
 
 	cond, ok := condition.(*filter_condition.ContainCond)
@@ -328,7 +328,7 @@ func ConvertFilterConditionContain(ctx context.Context, condition interfaces.Fil
 	return exprs, nil
 }
 
-func ConvertFilterConditionNotContain(ctx context.Context, condition interfaces.FilterCondition,
+func (c *MariaDBConnector) ConvertFilterConditionNotContain(ctx context.Context, condition interfaces.FilterCondition,
 	fieldsMap map[string]*interfaces.Property) (sq.Sqlizer, error) {
 
 	cond, ok := condition.(*filter_condition.NotContainCond)
@@ -348,7 +348,7 @@ func ConvertFilterConditionNotContain(ctx context.Context, condition interfaces.
 	return exprs, nil
 }
 
-func ConvertFilterConditionRange(ctx context.Context, condition interfaces.FilterCondition,
+func (c *MariaDBConnector) ConvertFilterConditionRange(ctx context.Context, condition interfaces.FilterCondition,
 	fieldsMap map[string]*interfaces.Property) (sq.Sqlizer, error) {
 
 	cond, ok := condition.(*filter_condition.RangeCond)
@@ -371,7 +371,7 @@ func ConvertFilterConditionRange(ctx context.Context, condition interfaces.Filte
 	}, nil
 }
 
-func ConvertFilterConditionOutRange(ctx context.Context, condition interfaces.FilterCondition,
+func (c *MariaDBConnector) ConvertFilterConditionOutRange(ctx context.Context, condition interfaces.FilterCondition,
 	fieldsMap map[string]*interfaces.Property) (sq.Sqlizer, error) {
 
 	cond, ok := condition.(*filter_condition.OutRangeCond)
@@ -394,7 +394,7 @@ func ConvertFilterConditionOutRange(ctx context.Context, condition interfaces.Fi
 	}, nil
 }
 
-func ConvertFilterConditionNull(ctx context.Context, condition interfaces.FilterCondition,
+func (c *MariaDBConnector) ConvertFilterConditionNull(ctx context.Context, condition interfaces.FilterCondition,
 	fieldsMap map[string]*interfaces.Property) (sq.Sqlizer, error) {
 
 	cond, ok := condition.(*filter_condition.NullCond)
@@ -405,7 +405,7 @@ func ConvertFilterConditionNull(ctx context.Context, condition interfaces.Filter
 	return sq.Eq{fmt.Sprintf("`%s`", cond.Lfield.OriginalName): nil}, nil
 }
 
-func ConvertFilterConditionNotNull(ctx context.Context, condition interfaces.FilterCondition,
+func (c *MariaDBConnector) ConvertFilterConditionNotNull(ctx context.Context, condition interfaces.FilterCondition,
 	fieldsMap map[string]*interfaces.Property) (sq.Sqlizer, error) {
 
 	cond, ok := condition.(*filter_condition.NotNullCond)
@@ -416,7 +416,7 @@ func ConvertFilterConditionNotNull(ctx context.Context, condition interfaces.Fil
 	return sq.NotEq{fmt.Sprintf("`%s`", cond.Lfield.OriginalName): nil}, nil
 }
 
-func ConvertFilterConditionEmpty(ctx context.Context, condition interfaces.FilterCondition,
+func (c *MariaDBConnector) ConvertFilterConditionEmpty(ctx context.Context, condition interfaces.FilterCondition,
 	fieldsMap map[string]*interfaces.Property) (sq.Sqlizer, error) {
 
 	cond, ok := condition.(*filter_condition.EmptyCond)
@@ -427,7 +427,7 @@ func ConvertFilterConditionEmpty(ctx context.Context, condition interfaces.Filte
 	return sq.Eq{fmt.Sprintf("`%s`", cond.Lfield.OriginalName): ""}, nil
 }
 
-func ConvertFilterConditionNotEmpty(ctx context.Context, condition interfaces.FilterCondition,
+func (c *MariaDBConnector) ConvertFilterConditionNotEmpty(ctx context.Context, condition interfaces.FilterCondition,
 	fieldsMap map[string]*interfaces.Property) (sq.Sqlizer, error) {
 
 	cond, ok := condition.(*filter_condition.NotEmptyCond)
@@ -438,7 +438,7 @@ func ConvertFilterConditionNotEmpty(ctx context.Context, condition interfaces.Fi
 	return sq.NotEq{fmt.Sprintf("`%s`", cond.Lfield.OriginalName): ""}, nil
 }
 
-func ConvertFilterConditionPrefix(ctx context.Context, condition interfaces.FilterCondition,
+func (c *MariaDBConnector) ConvertFilterConditionPrefix(ctx context.Context, condition interfaces.FilterCondition,
 	fieldsMap map[string]*interfaces.Property) (sq.Sqlizer, error) {
 
 	cond, ok := condition.(*filter_condition.PrefixCond)
@@ -450,7 +450,7 @@ func ConvertFilterConditionPrefix(ctx context.Context, condition interfaces.Filt
 	return sq.Like{fmt.Sprintf("`%s`", cond.Lfield.OriginalName): vStr}, nil
 }
 
-func ConvertFilterConditionNotPrefix(ctx context.Context, condition interfaces.FilterCondition,
+func (c *MariaDBConnector) ConvertFilterConditionNotPrefix(ctx context.Context, condition interfaces.FilterCondition,
 	fieldsMap map[string]*interfaces.Property) (sq.Sqlizer, error) {
 
 	cond, ok := condition.(*filter_condition.NotPrefixCond)
@@ -466,7 +466,7 @@ func ConvertFilterConditionNotPrefix(ctx context.Context, condition interfaces.F
 	return sq.NotLike{fmt.Sprintf("`%s`", cond.Lfield.OriginalName): vStr}, nil
 }
 
-func ConvertFilterConditionBetween(ctx context.Context, condition interfaces.FilterCondition,
+func (c *MariaDBConnector) ConvertFilterConditionBetween(ctx context.Context, condition interfaces.FilterCondition,
 	fieldsMap map[string]*interfaces.Property) (sq.Sqlizer, error) {
 
 	cond, ok := condition.(*filter_condition.BetweenCond)
@@ -489,7 +489,7 @@ func ConvertFilterConditionBetween(ctx context.Context, condition interfaces.Fil
 	}, nil
 }
 
-func ConvertFilterConditionExist(ctx context.Context, condition interfaces.FilterCondition,
+func (c *MariaDBConnector) ConvertFilterConditionExist(ctx context.Context, condition interfaces.FilterCondition,
 	fieldsMap map[string]*interfaces.Property) (sq.Sqlizer, error) {
 
 	cond, ok := condition.(*filter_condition.ExistCond)
@@ -500,7 +500,7 @@ func ConvertFilterConditionExist(ctx context.Context, condition interfaces.Filte
 	return sq.NotEq{fmt.Sprintf("`%s`", cond.Lfield.OriginalName): nil}, nil
 }
 
-func ConvertFilterConditionNotExist(ctx context.Context, condition interfaces.FilterCondition,
+func (c *MariaDBConnector) ConvertFilterConditionNotExist(ctx context.Context, condition interfaces.FilterCondition,
 	fieldsMap map[string]*interfaces.Property) (sq.Sqlizer, error) {
 
 	cond, ok := condition.(*filter_condition.NotExistCond)
@@ -511,7 +511,7 @@ func ConvertFilterConditionNotExist(ctx context.Context, condition interfaces.Fi
 	return sq.Eq{fmt.Sprintf("`%s`", cond.Lfield.OriginalName): nil}, nil
 }
 
-func ConvertFilterConditionRegex(ctx context.Context, condition interfaces.FilterCondition,
+func (c *MariaDBConnector) ConvertFilterConditionRegex(ctx context.Context, condition interfaces.FilterCondition,
 	fieldsMap map[string]*interfaces.Property) (sq.Sqlizer, error) {
 
 	cond, ok := condition.(*filter_condition.RegexCond)
@@ -526,7 +526,7 @@ func ConvertFilterConditionRegex(ctx context.Context, condition interfaces.Filte
 	return sq.Expr(fmt.Sprintf("`%s` REGEXP ?", cond.Lfield.OriginalName), cond.Value), nil
 }
 
-func ConvertFilterConditionTrue(ctx context.Context, condition interfaces.FilterCondition,
+func (c *MariaDBConnector) ConvertFilterConditionTrue(ctx context.Context, condition interfaces.FilterCondition,
 	fieldsMap map[string]*interfaces.Property) (sq.Sqlizer, error) {
 
 	cond, ok := condition.(*filter_condition.TrueCond)
@@ -537,7 +537,7 @@ func ConvertFilterConditionTrue(ctx context.Context, condition interfaces.Filter
 	return sq.Eq{fmt.Sprintf("`%s`", cond.Lfield.OriginalName): true}, nil
 }
 
-func ConvertFilterConditionFalse(ctx context.Context, condition interfaces.FilterCondition,
+func (c *MariaDBConnector) ConvertFilterConditionFalse(ctx context.Context, condition interfaces.FilterCondition,
 	fieldsMap map[string]*interfaces.Property) (sq.Sqlizer, error) {
 
 	cond, ok := condition.(*filter_condition.FalseCond)
@@ -548,7 +548,7 @@ func ConvertFilterConditionFalse(ctx context.Context, condition interfaces.Filte
 	return sq.Eq{fmt.Sprintf("`%s`", cond.Lfield.OriginalName): false}, nil
 }
 
-func ConvertFilterConditionBefore(ctx context.Context, condition interfaces.FilterCondition,
+func (c *MariaDBConnector) ConvertFilterConditionBefore(ctx context.Context, condition interfaces.FilterCondition,
 	fieldsMap map[string]*interfaces.Property) (sq.Sqlizer, error) {
 
 	cond, ok := condition.(*filter_condition.BeforeCond)
@@ -577,7 +577,7 @@ func ConvertFilterConditionBefore(ctx context.Context, condition interfaces.Filt
 	return sq.Expr(fmt.Sprintf("`%s` < DATE_SUB(NOW(), INTERVAL ? %s)", cond.Lfield.OriginalName, unit), int(interval)), nil
 }
 
-func ConvertFilterConditionCurrent(ctx context.Context, condition interfaces.FilterCondition,
+func (c *MariaDBConnector) ConvertFilterConditionCurrent(ctx context.Context, condition interfaces.FilterCondition,
 	fieldsMap map[string]*interfaces.Property) (sq.Sqlizer, error) {
 
 	cond, ok := condition.(*filter_condition.CurrentCond)

@@ -16,7 +16,7 @@ import (
 // TestConfig AT测试配置
 type TestConfig struct {
 	VegaBackend      VegaBackendConfig `mapstructure:"vega_backend"`
-	TargetMySQL      MySQLConfig       `mapstructure:"target_mysql"`
+	TargetMariaDB    MariaDBConfig     `mapstructure:"target_mariadb"`
 	TargetOpenSearch OpenSearchConfig  `mapstructure:"target_opensearch"`
 	Crypto           CryptoConfig      `mapstructure:"crypto"`
 
@@ -29,8 +29,8 @@ type VegaBackendConfig struct {
 	BaseURL string `mapstructure:"base_url"` // VEGA Backend HTTP服务地址
 }
 
-// MySQLConfig 测试目标MySQL配置
-type MySQLConfig struct {
+// MariaDBConfig 测试目标MariaDB配置
+type MariaDBConfig struct {
 	Host     string `mapstructure:"host"`
 	Port     int    `mapstructure:"port"`
 	Database string `mapstructure:"database"`
@@ -86,8 +86,8 @@ func LoadTestConfig() (*TestConfig, error) {
 	if config.VegaBackend.BaseURL == "" {
 		return nil, fmt.Errorf("配置错误: vega_manager.base_url 不能为空")
 	}
-	if config.TargetMySQL.Host == "" {
-		return nil, fmt.Errorf("配置错误: target_mysql.host 不能为空")
+	if config.TargetMariaDB.Host == "" {
+		return nil, fmt.Errorf("配置错误: target_mariadb.host 不能为空")
 	}
 
 	// 初始化RSA加密器（用于加密敏感字段）

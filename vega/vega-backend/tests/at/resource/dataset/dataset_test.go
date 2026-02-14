@@ -114,7 +114,7 @@ func TestDatasetResourceCreate(t *testing.T) {
 		Convey("DS122: 缺少必填字段 - name", func() {
 			payload := map[string]any{
 				"category":       "dataset",
-				"connector_type": "mysql",
+				"connector_type": "mariadb",
 				"config": map[string]any{
 					"host":     "localhost",
 					"port":     3306,
@@ -168,7 +168,7 @@ func buildDatasetResourcePayload() map[string]any {
 	return map[string]any{
 		"name":           generateUniqueName("test-dataset"),
 		"category":       "dataset",
-		"connector_type": "mysql",
+		"connector_type": "mariadb",
 		"config": map[string]any{
 			"host":     "localhost",
 			"port":     3306,
@@ -192,7 +192,7 @@ func buildFullDatasetResourcePayload() map[string]any {
 	return map[string]any{
 		"name":           generateUniqueName("test-dataset-full"),
 		"category":       "dataset",
-		"connector_type": "mysql",
+		"connector_type": "mariadb",
 		"description":    "测试数据集资源",
 		"tags":           []string{"test", "dataset"},
 		"config": map[string]any{
@@ -599,10 +599,10 @@ func TestDatasetDocumentGet(t *testing.T) {
 
 		// 获取文档（使用POST /:id/data端点，method override GET）
 		queryPayload := map[string]any{
-			"start": time.Now().UnixMilli() - (24 * 3600 * 1000),
-			"end":   time.Now().UnixMilli(),
-			"offset": 0,
-			"limit":  10,
+			"start":      time.Now().UnixMilli() - (24 * 3600 * 1000),
+			"end":        time.Now().UnixMilli(),
+			"offset":     0,
+			"limit":      10,
 			"need_total": true,
 		}
 		client.SetHeader("X-HTTP-Method-Override", "GET")

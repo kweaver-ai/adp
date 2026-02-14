@@ -31,10 +31,10 @@
 ```yaml
 catalogs:
   # Physical Catalog: 对应真实数据源
-  - name: mysql_prod
+  - name: mariadb_prod
     type: physical
     connection:
-      type: mysql
+      type: mariadb
       host: db.example.com
       database: production
 

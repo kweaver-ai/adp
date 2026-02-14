@@ -3,8 +3,8 @@
 // Licensed under the Apache License, Version 2.0.
 // See the LICENSE file in the project root for details.
 
-// Package mysql provides MySQL database connector implementation.
-package mysql
+// Package mariadb provides MariaDB database connector implementation.
+package mariadb
 
 import (
 	"context"
@@ -19,7 +19,7 @@ import (
 	"vega-backend/logics/connectors"
 )
 
-type mysqlConfig struct {
+type mariadbConfig struct {
 	Host      string         `mapstructure:"host"`
 	Port      int            `mapstructure:"port"`
 	Username  string         `mapstructure:"username"`
@@ -31,20 +31,20 @@ type mysqlConfig struct {
 var (
 	SYSTEM_DBS = []string{
 		"information_schema",
-		"mysql",
+		"mariadb",
 		"performance_schema",
 		"sys",
 	}
 	SYSTEM_DBS_MAP = map[string]bool{
 		"information_schema": true,
-		"mysql":              true,
+		"mariadb":            true,
 		"performance_schema": true,
 		"sys":                true,
 	}
 )
 
 const (
-	// DATABASE_NAME_MAX_LENGTH MySQL 数据库名最大长度
+	// DATABASE_NAME_MAX_LENGTH MariaDB 数据库名最大长度
 	DATABASE_NAME_MAX_LENGTH = 64
 	// PORT_MIN 有效端口最小值
 	PORT_MIN = 1
@@ -52,61 +52,61 @@ const (
 	PORT_MAX = 65535
 )
 
-// MySQLConnector implements TableConnector for MySQL.
-type MySQLConnector struct {
+// MariaDBConnector implements TableConnector for MariaDB.
+type MariaDBConnector struct {
 	enabled bool
 
-	config *mysqlConfig
+	config *mariadbConfig
 
 	connected bool
 	db        *sql.DB
 }
 
-// NewMySQLConnector 创建 MySQL connector 构建器
-func NewMySQLConnector() connectors.TableConnector {
-	return &MySQLConnector{}
+// NewMariaDBConnector 创建 MariaDB connector 构建器
+func NewMariaDBConnector() connectors.TableConnector {
+	return &MariaDBConnector{}
 }
 
 // GetType returns the data source type.
-func (c *MySQLConnector) GetType() string {
-	return "mysql"
+func (c *MariaDBConnector) GetType() string {
+	return "mariadb"
 }
 
 // GetName returns the connector name.
-func (c *MySQLConnector) GetName() string {
-	return "mysql"
+func (c *MariaDBConnector) GetName() string {
+	return "mariadb"
 }
 
 // GetMode returns the connector mode.
-func (c *MySQLConnector) GetMode() string {
+func (c *MariaDBConnector) GetMode() string {
 	return interfaces.ConnectorModeLocal
 }
 
 // GetCategory returns the connector category.
-func (c *MySQLConnector) GetCategory() string {
+func (c *MariaDBConnector) GetCategory() string {
 	return interfaces.ConnectorCategoryTable
 }
 
 // GetEnabled returns the enabled status.
-func (c *MySQLConnector) GetEnabled() bool {
+func (c *MariaDBConnector) GetEnabled() bool {
 	return c.enabled
 }
 
 // SetEnabled sets the enabled status.
-func (c *MySQLConnector) SetEnabled(enabled bool) {
+func (c *MariaDBConnector) SetEnabled(enabled bool) {
 	c.enabled = enabled
 }
 
-// GetSensitiveFields returns the sensitive fields for MySQL connector.
-func (c *MySQLConnector) GetSensitiveFields() []string {
+// GetSensitiveFields returns the sensitive fields for MariaDB connector.
+func (c *MariaDBConnector) GetSensitiveFields() []string {
 	return []string{"password"}
 }
 
-// GetFieldConfig returns the field configuration for MySQL connector.
-func (c *MySQLConnector) GetFieldConfig() map[string]interfaces.ConnectorFieldConfig {
+// GetFieldConfig returns the field configuration for MariaDB connector.
+func (c *MariaDBConnector) GetFieldConfig() map[string]interfaces.ConnectorFieldConfig {
 	return map[string]interfaces.ConnectorFieldConfig{
-		"host":      {Name: "主机地址", Type: "string", Description: "MySQL 服务器主机地址", Required: true, Encrypted: false},
-		"port":      {Name: "端口号", Type: "integer", Description: "MySQL 服务器端口", Required: true, Encrypted: false},
+		"host":      {Name: "主机地址", Type: "string", Description: "MariaDB 服务器主机地址", Required: true, Encrypted: false},
+		"port":      {Name: "端口号", Type: "integer", Description: "MariaDB 服务器端口", Required: true, Encrypted: false},
 		"username":  {Name: "用户名", Type: "string", Description: "数据库用户名", Required: true, Encrypted: false},
 		"password":  {Name: "密码", Type: "string", Description: "数据库密码", Required: true, Encrypted: true},
 		"databases": {Name: "数据库列表", Type: "array", Description: "数据库名称列表（可选，为空则连接实例级别）", Required: false, Encrypted: false},
@@ -114,16 +114,16 @@ func (c *MySQLConnector) GetFieldConfig() map[string]interfaces.ConnectorFieldCo
 	}
 }
 
-// New creates a new MySQL connector.
+// New creates a new MariaDB connector.
 // Databases 为可选字段，不指定时连接到实例级别。
-func (c *MySQLConnector) New(cfg interfaces.ConnectorConfig) (connectors.Connector, error) {
-	var mCfg mysqlConfig
+func (c *MariaDBConnector) New(cfg interfaces.ConnectorConfig) (connectors.Connector, error) {
+	var mCfg mariadbConfig
 	if err := mapstructure.Decode(cfg, &mCfg); err != nil {
-		return nil, fmt.Errorf("failed to decode mysql config: %w", err)
+		return nil, fmt.Errorf("failed to decode mariadb config: %w", err)
 	}
 
 	if mCfg.Host == "" || mCfg.Port == 0 || mCfg.Username == "" || mCfg.Password == "" {
-		return nil, fmt.Errorf("mysql connector config is incomplete")
+		return nil, fmt.Errorf("mariadb connector config is incomplete")
 	}
 
 	// 验证端口号范围
@@ -131,21 +131,21 @@ func (c *MySQLConnector) New(cfg interfaces.ConnectorConfig) (connectors.Connect
 		return nil, fmt.Errorf("port %d is out of valid range (%d-%d)", mCfg.Port, PORT_MIN, PORT_MAX)
 	}
 
-	// 验证 databases 名称长度（MySQL 数据库名最大 64 字符）
+	// 验证 databases 名称长度（MariaDB 数据库名最大 64 字符）
 	for _, db := range mCfg.Databases {
 		if len(db) > DATABASE_NAME_MAX_LENGTH {
 			return nil, fmt.Errorf("database name '%s' exceeds maximum length of %d characters", db, DATABASE_NAME_MAX_LENGTH)
 		}
 	}
 
-	return &MySQLConnector{
+	return &MariaDBConnector{
 		config: &mCfg,
 	}, nil
 }
 
-// Connect establishes connection to MySQL database.
+// Connect establishes connection to MariaDB database.
 // 如果 Config.Database 为空，则连接到实例级别（不指定数据库）。
-func (c *MySQLConnector) Connect(ctx context.Context) error {
+func (c *MariaDBConnector) Connect(ctx context.Context) error {
 	if c.connected {
 		return nil
 	}
@@ -181,7 +181,7 @@ func (c *MySQLConnector) Connect(ctx context.Context) error {
 }
 
 // Close closes the database connection.
-func (c *MySQLConnector) Close(ctx context.Context) error {
+func (c *MariaDBConnector) Close(ctx context.Context) error {
 	if c.db != nil {
 		err := c.db.Close()
 		c.connected = false
@@ -192,7 +192,7 @@ func (c *MySQLConnector) Close(ctx context.Context) error {
 }
 
 // Ping checks the database connection.
-func (c *MySQLConnector) Ping(ctx context.Context) error {
+func (c *MariaDBConnector) Ping(ctx context.Context) error {
 	if err := c.Connect(ctx); err != nil {
 		return err
 	}
@@ -200,8 +200,8 @@ func (c *MySQLConnector) Ping(ctx context.Context) error {
 	return c.db.Ping()
 }
 
-// TestConnection tests the connection to MySQL database.
-func (c *MySQLConnector) TestConnection(ctx context.Context) error {
+// TestConnection tests the connection to MariaDB database.
+func (c *MariaDBConnector) TestConnection(ctx context.Context) error {
 	if err := c.Connect(ctx); err != nil {
 		return err
 	}
@@ -217,7 +217,7 @@ func (c *MySQLConnector) TestConnection(ctx context.Context) error {
 }
 
 // validateDatabases 验证配置的数据库是否存在
-func (c *MySQLConnector) validateDatabases(ctx context.Context) error {
+func (c *MariaDBConnector) validateDatabases(ctx context.Context) error {
 	// 获取所有数据库列表
 	rows, err := c.db.QueryContext(ctx, "SHOW DATABASES")
 	if err != nil {
