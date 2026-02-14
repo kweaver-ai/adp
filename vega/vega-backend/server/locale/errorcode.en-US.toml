@@ -44,54 +44,54 @@ Solution = "Please check the parameter"
 ErrorLink = "None"
 
 [VegaBackend.InvalidParameter.OverrideMethod]
-Description = "无效的参数"
-Solution = "请检查参数"
-ErrorLink = "暂无"
+Description = "Invalid parameter"
+Solution = "Please check the parameter"
+ErrorLink = "None"
 
 [VegaBackend.InvalidParameter.Format]
-Description = "无效的参数"
-Solution = "请检查参数"
-ErrorLink = "暂无"
+Description = "Invalid parameter"
+Solution = "Please check the parameter"
+ErrorLink = "None"
 
 [VegaBackend.InvalidParameter.FilterCondition]
-Description = "无效的参数"
-Solution = "请检查参数"
-ErrorLink = "暂无"
+Description = "Invalid parameter"
+Solution = "Please check the parameter"
+ErrorLink = "None"
 
 [VegaBackend.InvalidParameter.FilterConditionValue]
-Description = "无效的参数"
-Solution = "请检查参数"
-ErrorLink = "暂无"
+Description = "Invalid parameter"
+Solution = "Please check the parameter"
+ErrorLink = "None"
 
 [VegaBackend.InvalidParameter.FilterConditionValueFrom]
-Description = "无效的参数"
-Solution = "请检查参数"
-ErrorLink = "暂无"
+Description = "Invalid parameter"
+Solution = "Please check the parameter"
+ErrorLink = "None"
 
 [VegaBackend.NullParameter.FilterConditionName]
-Description = "无效的参数"
-Solution = "请检查参数"
-ErrorLink = "暂无"
+Description = "Invalid parameter"
+Solution = "Please check the parameter"
+ErrorLink = "None"
 
 [VegaBackend.NullParameter.FilterConditionValue]
-Description = "无效的参数"
-Solution = "请检查参数"
-ErrorLink = "暂无"
+Description = "Invalid parameter"
+Solution = "Please check the parameter"
+ErrorLink = "None"
 
 [VegaBackend.NullParameter.FilterConditionOperation]
-Description = "无效的参数"
-Solution = "请检查参数"
-ErrorLink = "暂无"
+Description = "Invalid parameter"
+Solution = "Please check the parameter"
+ErrorLink = "None"
 
 [VegaBackend.CountExceeded.FilterConditionSubConds]
-Description = "无效的参数"
-Solution = "请检查参数"
-ErrorLink = "暂无"
+Description = "Invalid parameter"
+Solution = "Please check the parameter"
+ErrorLink = "None"
 
 [VegaBackend.UnsupportFilterConditionOperation]
-Description = "无效的参数"
-Solution = "请检查参数"
-ErrorLink = "暂无"
+Description = "Invalid parameter"
+Solution = "Please check the parameter"
+ErrorLink = "None"
 
 [VegaBackend.InvalidRequestHeader.ContentType]
 Description = "Content-Type header is not supported"

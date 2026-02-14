@@ -14,7 +14,7 @@
 
 ### 通用测试（RMxxx）
 
-来自 `resource/internal/test_cases.go`，适用于所有 connector 类型。
+来自 `resource/helpers/test_cases.go`，适用于所有 connector 类型。
 
 #### 创建测试（RM101-109）
 

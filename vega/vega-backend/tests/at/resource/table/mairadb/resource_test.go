@@ -10,15 +10,15 @@ import (
 
 	. "github.com/smartystreets/goconvey/convey"
 
-	"vega-backend-tests/at/resource/internal"
+	"vega-backend-tests/at/resource/helpers"
 )
 
 // TestMariaDBResourceCommon MariaDB Resource通用AT测试
-// 使用resource/internal包中的通用测试用例
+// 使用resource/helpers包中的通用测试用例
 func TestMariaDBResourceCommon(t *testing.T) {
 	Convey("MariaDB Resource通用AT测试 - 初始化", t, func() {
 		// 创建测试套件
-		suite, err := internal.NewTestSuite(t, "mariadb")
+		suite, err := helpers.NewTestSuite(t, "mariadb")
 		So(err, ShouldBeNil)
 		So(suite, ShouldNotBeNil)
 
@@ -31,22 +31,22 @@ func TestMariaDBResourceCommon(t *testing.T) {
 
 		// ========== 创建测试（RM1xx） ==========
 		Convey("创建测试（RM1xx）", func() {
-			internal.RunCommonCreateTests(suite)
+			helpers.RunCommonCreateTests(suite)
 		})
 
 		// ========== 负向测试（RM1xx 121-140） ==========
 		Convey("负向测试（RM1xx 121-140）", func() {
-			internal.RunCommonNegativeTests(suite)
+			helpers.RunCommonNegativeTests(suite)
 		})
 
 		// ========== 边界测试（RM1xx 141-160） ==========
 		Convey("边界测试（RM1xx 141-160）", func() {
-			internal.RunCommonBoundaryTests(suite)
+			helpers.RunCommonBoundaryTests(suite)
 		})
 
 		// ========== 安全测试（RM1xx 161-170） ==========
 		Convey("安全测试（RM1xx 161-170）", func() {
-			internal.RunCommonSecurityTests(suite)
+			helpers.RunCommonSecurityTests(suite)
 		})
 	})
 }
@@ -54,7 +54,7 @@ func TestMariaDBResourceCommon(t *testing.T) {
 // TestMariaDBResourceRead MariaDB Resource读取AT测试
 func TestMariaDBResourceRead(t *testing.T) {
 	Convey("MariaDB Resource读取AT测试 - 初始化", t, func() {
-		suite, err := internal.NewTestSuite(t, "mariadb")
+		suite, err := helpers.NewTestSuite(t, "mariadb")
 		So(err, ShouldBeNil)
 
 		err = suite.Setup()
@@ -63,7 +63,7 @@ func TestMariaDBResourceRead(t *testing.T) {
 
 		// ========== 读取测试（RM2xx） ==========
 		Convey("读取测试（RM2xx）", func() {
-			internal.RunCommonReadTests(suite)
+			helpers.RunCommonReadTests(suite)
 		})
 	})
 }
@@ -71,7 +71,7 @@ func TestMariaDBResourceRead(t *testing.T) {
 // TestMariaDBResourceUpdate MariaDB Resource更新AT测试
 func TestMariaDBResourceUpdate(t *testing.T) {
 	Convey("MariaDB Resource更新AT测试 - 初始化", t, func() {
-		suite, err := internal.NewTestSuite(t, "mariadb")
+		suite, err := helpers.NewTestSuite(t, "mariadb")
 		So(err, ShouldBeNil)
 
 		err = suite.Setup()
@@ -80,7 +80,7 @@ func TestMariaDBResourceUpdate(t *testing.T) {
 
 		// ========== 更新测试（RM3xx） ==========
 		Convey("更新测试（RM3xx）", func() {
-			internal.RunCommonUpdateTests(suite)
+			helpers.RunCommonUpdateTests(suite)
 		})
 	})
 }
@@ -88,7 +88,7 @@ func TestMariaDBResourceUpdate(t *testing.T) {
 // TestMariaDBResourceDelete MariaDB Resource删除AT测试
 func TestMariaDBResourceDelete(t *testing.T) {
 	Convey("MariaDB Resource删除AT测试 - 初始化", t, func() {
-		suite, err := internal.NewTestSuite(t, "mariadb")
+		suite, err := helpers.NewTestSuite(t, "mariadb")
 		So(err, ShouldBeNil)
 
 		err = suite.Setup()
@@ -97,12 +97,12 @@ func TestMariaDBResourceDelete(t *testing.T) {
 
 		// ========== 删除测试（RM4xx） ==========
 		Convey("删除测试（RM4xx）", func() {
-			internal.RunCommonDeleteTests(suite)
+			helpers.RunCommonDeleteTests(suite)
 		})
 
 		// ========== 名称唯一性测试（RM5xx） ==========
 		Convey("名称唯一性测试（RM5xx）", func() {
-			internal.RunCommonNameUniquenessTests(suite)
+			helpers.RunCommonNameUniquenessTests(suite)
 		})
 	})
 }
