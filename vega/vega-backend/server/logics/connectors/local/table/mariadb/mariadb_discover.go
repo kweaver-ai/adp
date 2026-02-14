@@ -106,14 +106,14 @@ func (c *MariaDBConnector) ListTables(ctx context.Context) ([]*interfaces.TableM
 			return nil, fmt.Errorf("failed to scan table info: %w", err)
 		}
 
-		subType := "table"
-		if tableType == "VIEW" {
-			subType = "view"
+		tableType = strings.ToLower(tableType)
+		if tableType != "view" {
+			tableType = "table"
 		}
 
 		meta := &interfaces.TableMeta{
 			Name:        name,
-			SubType:     subType,
+			TableType:   tableType,
 			Description: description.String,
 			Database:    schema,
 		}
@@ -223,17 +223,14 @@ func (c *MariaDBConnector) fetchTableStatus(ctx context.Context, table *interfac
 		return err
 	}
 
+	table.TableType = strings.ToLower(tableType.String)
+	if table.TableType != "view" {
+		table.TableType = "table"
+	}
+
 	// 初始化 Properties map
 	if table.Properties == nil {
 		table.Properties = make(map[string]any)
-	}
-
-	if table.SubType == "" {
-		if tableType.String == "VIEW" {
-			table.SubType = "view"
-		} else {
-			table.SubType = "table"
-		}
 	}
 
 	table.Properties["engine"] = engine.String
@@ -403,11 +400,11 @@ func (c *MariaDBConnector) fetchIndexes(ctx context.Context, table *interfaces.T
 		}
 	}
 
-	var indexes []interfaces.IndexInfo
+	var indices []interfaces.IndexInfo
 	for _, idx := range indexMap {
-		indexes = append(indexes, *idx)
+		indices = append(indices, *idx)
 	}
-	table.Indexes = indexes
+	table.Indices = indices
 	return nil
 }
 

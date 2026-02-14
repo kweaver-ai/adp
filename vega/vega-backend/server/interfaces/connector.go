@@ -13,11 +13,11 @@ type TableMeta struct {
 	Name        string           `json:"name"`
 	Description string           `json:"description"`
 	Database    string           `json:"database"`   // 所属数据库名称（实例级连接时使用）
-	SubType     string           `json:"sub_type"`   // table | view | materialized_view
+	TableType   string           `json:"table_type"` // table | view | materialized_view
 	Properties  map[string]any   `json:"properties"` // 扩展属性：charset, collation, engine, row_count 等
 	Columns     []ColumnMeta     `json:"columns"`
 	PKs         []string         `json:"primary_keys"`
-	Indexes     []IndexInfo      `json:"indexes"`      // 索引列表
+	Indices     []IndexInfo      `json:"indices"`      // 索引列表
 	ForeignKeys []ForeignKeyInfo `json:"foreign_keys"` // 外键列表
 
 }

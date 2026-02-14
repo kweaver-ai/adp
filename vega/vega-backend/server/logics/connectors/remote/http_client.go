@@ -123,16 +123,6 @@ type CreateConnectionResponse struct {
 	Message      string `json:"message,omitempty"`
 }
 
-// TableMetaResponse 表元数据响应
-type TableMetaResponse struct {
-	Name        string       `json:"name"`
-	Schema      string       `json:"schema"`
-	SubType     string       `json:"sub_type"`
-	Columns     []ColumnMeta `json:"columns"`
-	PrimaryKey  []string     `json:"primary_key"`
-	Description string       `json:"description"`
-}
-
 // ColumnMeta 列元数据
 type ColumnMeta struct {
 	Name        string `json:"name"`

@@ -93,8 +93,8 @@ func (dw *discoverWorker) enrichTableMetadata(ctx context.Context,
 			sourceMetadata = resource.SourceMetadata
 		}
 		sourceMetadata["columns"] = table.Columns
-		if table.SubType != "" {
-			sourceMetadata["sub_type"] = table.SubType
+		if table.TableType != "" {
+			sourceMetadata["table_type"] = table.TableType
 		}
 		if len(table.Properties) > 0 {
 			sourceMetadata["properties"] = table.Properties
@@ -102,8 +102,8 @@ func (dw *discoverWorker) enrichTableMetadata(ctx context.Context,
 		if len(table.PKs) > 0 {
 			sourceMetadata["primary_keys"] = table.PKs
 		}
-		if len(table.Indexes) > 0 {
-			sourceMetadata["indexes"] = table.Indexes
+		if len(table.Indices) > 0 {
+			sourceMetadata["indices"] = table.Indices
 		}
 		if len(table.ForeignKeys) > 0 {
 			sourceMetadata["foreign_keys"] = table.ForeignKeys
@@ -116,8 +116,8 @@ func (dw *discoverWorker) enrichTableMetadata(ctx context.Context,
 			return err
 		}
 
-		logger.Infof("Enriched table %s: properties=%v, columns=%d, indexes=%d",
-			table.Name, table.Properties, len(table.Columns), len(table.Indexes))
+		logger.Infof("Enriched table %s: properties=%v, columns=%d, indices=%d, foreign_keys=%d",
+			table.Name, table.Properties, len(table.Columns), len(table.Indices), len(table.ForeignKeys))
 	}
 	return nil
 }

@@ -32,12 +32,14 @@ var (
 	SYSTEM_DBS = []string{
 		"information_schema",
 		"mariadb",
+		"mysql",
 		"performance_schema",
 		"sys",
 	}
 	SYSTEM_DBS_MAP = map[string]bool{
 		"information_schema": true,
 		"mariadb":            true,
+		"mysql":              true,
 		"performance_schema": true,
 		"sys":                true,
 	}

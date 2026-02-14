@@ -105,8 +105,9 @@
 | MD503 | 验证发现的 Resource 的 category | category = "table" |
 | MD504 | Discover 后验证 Resource 与 Catalog 关联 | catalog_id 正确 |
 | MD505 | 验证发现的 Resource 的 schema_definition | schema_definition 包含字段列表 |
-| MD506 | Discover 后重复执行 | 幂等，不产生重复 Resource |
-| MD507 | 实例级 Catalog Discovery（不指定 database） | 发现所有数据库的表 |
+| MD506 | 验证发现的 Resource 的 source_metadata | source_metadata 包含表结构信息 |
+| MD507 | Discover 后重复执行 | 幂等，不产生重复 Resource |
+| MD508 | 实例级 Catalog Discovery（不指定 database） | 发现所有数据库的表 |
 
 #### Discover 负向测试（MD521-MD528）
 

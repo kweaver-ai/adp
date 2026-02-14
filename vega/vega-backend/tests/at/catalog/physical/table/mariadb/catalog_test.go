@@ -775,83 +775,65 @@ func TestMariaDBCatalogDiscover(t *testing.T) {
 			map[string]any{"description": "", "display_name": "c_collate", "name": "c_collate", "original_name": "c_collate", "type": "string"},
 		}
 
-		tableSchema2 := []map[string]any{
-			{"name": "c_int", "type": "integer", "orig_type": "int(11)",
-				"nullable": false, "description": "", "num_precision": 10, "ordinal_position": 1, "column_key": "PRI"},
-			{"name": "c_int2", "type": "integer", "orig_type": "int(11)",
-				"nullable": true, "description": "", "num_precision": 10, "ordinal_position": 2, "column_key": ""},
-			{"name": "c_bigint", "type": "integer", "orig_type": "bigint(20)",
-				"nullable": true, "description": "", "num_precision": 20, "ordinal_position": 3, "column_key": ""},
-			{"name": "c_bigint2", "type": "integer", "orig_type": "bigint(20)",
-				"nullable": true, "description": "", "num_precision": 20, "ordinal_position": 4, "column_key": ""},
-			{"name": "c_smallint", "type": "integer", "orig_type": "smallint(6)",
-				"nullable": true, "description": "", "num_precision": 6, "ordinal_position": 5, "column_key": ""},
-			{"name": "c_smallint2", "type": "integer", "orig_type": "smallint(6)",
-				"nullable": true, "description": "", "num_precision": 6, "ordinal_position": 6, "column_key": ""},
-			{"name": "c_tinyint", "type": "integer", "orig_type": "tinyint(4)",
-				"nullable": true, "description": "", "num_precision": 4, "ordinal_position": 7, "column_key": ""},
-			{"name": "c_tinyint2", "type": "integer", "orig_type": "tinyint(4)",
-				"nullable": true, "description": "", "num_precision": 4, "ordinal_position": 8, "column_key": ""},
-			{"name": "c_mediumint", "type": "integer", "orig_type": "mediumint(8)",
-				"nullable": true, "description": "", "num_precision": 8, "ordinal_position": 9, "column_key": ""},
-			{"name": "c_mediumint2", "type": "integer", "orig_type": "mediumint(8)",
-				"nullable": true, "description": "", "num_precision": 8, "ordinal_position": 10, "column_key": ""},
-			{"name": "c_decimal", "type": "float", "orig_type": "decimal(10,2)",
-				"nullable": true, "description": "", "num_precision": 10, "ordinal_position": 11, "column_key": ""},
-			{"name": "c_float", "type": "float", "orig_type": "float",
-				"nullable": true, "description": "", "num_precision": 24, "ordinal_position": 12, "column_key": ""},
-			{"name": "c_double", "type": "float", "orig_type": "double",
-				"nullable": true, "description": "", "num_precision": 24, "ordinal_position": 13, "column_key": ""},
-			{"name": "c_char", "type": "string", "orig_type": "char(10)",
-				"nullable": true, "description": "", "num_precision": 10, "ordinal_position": 14, "column_key": ""},
-			{"name": "c_varchar", "type": "string", "orig_type": "varchar(255)",
-				"nullable": true, "description": "", "num_precision": 255, "ordinal_position": 15, "column_key": ""},
-			{"name": "c_text", "type": "text", "orig_type": "text",
-				"nullable": true, "description": "", "num_precision": 0, "ordinal_position": 16, "column_key": ""},
-			{"name": "c_mediumtext", "type": "text", "orig_type": "mediumtext",
-				"nullable": true, "description": "", "num_precision": 0, "ordinal_position": 17, "column_key": ""},
-			{"name": "c_longtext", "type": "text", "orig_type": "longtext",
-				"nullable": true, "description": "", "num_precision": 0, "ordinal_position": 18, "column_key": ""},
-			{"name": "c_date", "type": "date", "orig_type": "date",
-				"nullable": true, "description": "", "num_precision": 0, "ordinal_position": 19, "column_key": ""},
-			{"name": "c_time", "type": "time", "orig_type": "time",
-				"nullable": true, "description": "", "num_precision": 0, "ordinal_position": 20, "column_key": ""},
-			{"name": "c_datetime", "type": "datetime", "orig_type": "datetime",
-				"nullable": true, "description": "", "num_precision": 0, "ordinal_position": 21, "column_key": ""},
-			{"name": "c_datetime2", "type": "datetime", "orig_type": "datetime(6)",
-				"nullable": true, "description": "", "num_precision": 0, "ordinal_position": 22, "column_key": ""},
-			{"name": "c_timestamp", "type": "datetime", "orig_type": "timestamp",
-				"nullable": true, "description": "", "num_precision": 0, "ordinal_position": 23, "column_key": ""},
-			{"name": "c_timestamp2", "type": "datetime", "orig_type": "timestamp(6)",
-				"nullable": true, "description": "", "num_precision": 0, "ordinal_position": 24, "column_key": ""},
-			{"name": "c_year", "type": "integer", "orig_type": "year(4)",
-				"nullable": true, "description": "", "num_precision": 4, "ordinal_position": 25, "column_key": ""},
-			{"name": "c_binary", "type": "binary", "orig_type": "binary(16)",
-				"nullable": true, "description": "", "num_precision": 0, "ordinal_position": 26, "column_key": ""},
-			{"name": "c_varbinary", "type": "binary", "orig_type": "varbinary(255)",
-				"nullable": true, "description": "", "num_precision": 0, "ordinal_position": 27, "column_key": ""},
-			{"name": "c_blob", "type": "binary", "orig_type": "blob",
-				"nullable": true, "description": "", "num_precision": 0, "ordinal_position": 28, "column_key": ""},
-			{"name": "c_longblob", "type": "binary", "orig_type": "longblob",
-				"nullable": true, "description": "", "num_precision": 0, "ordinal_position": 29, "column_key": ""},
-			{"name": "c_bit", "type": "boolean", "orig_type": "bit(8)",
-				"nullable": true, "description": "", "num_precision": 0, "ordinal_position": 30, "column_key": ""},
-			{"name": "c_bool", "type": "boolean", "orig_type": "bool",
-				"nullable": true, "description": "", "num_precision": 0, "ordinal_position": 31, "column_key": ""},
-			{"name": "c_boolean", "type": "boolean", "orig_type": "boolean",
-				"nullable": true, "description": "", "num_precision": 0, "ordinal_position": 32, "column_key": ""},
-			{"name": "c_null", "type": "string", "orig_type": "varchar(20)",
-				"nullable": true, "description": "", "num_precision": 0, "ordinal_position": 33, "column_key": ""},
-			{"name": "c_not_null", "type": "string", "orig_type": "varchar(20)",
-				"nullable": false, "description": "", "num_precision": 0, "ordinal_position": 34, "column_key": ""},
-			{"name": "c_default", "type": "string", "orig_type": "varchar(20)",
-				"nullable": true, "description": "", "num_precision": 0, "ordinal_position": 35, "column_key": ""},
-			{"name": "c_comment", "type": "string", "orig_type": "varchar(20)",
-				"nullable": true, "description": "这是注释", "num_precision": 0, "ordinal_position": 36, "column_key": ""},
-			{"name": "c_collate", "type": "string", "orig_type": "varchar(20)",
-				"nullable": true, "description": "", "num_precision": 0, "ordinal_position": 37, "column_key": "", "collate": "utf8mb4_unicode_ci"},
+		tableSourceMeta := map[string]any{
+			"columns": []any{
+				map[string]any{"name": "c_int", "type": "integer", "orig_type": "int(11)", "nullable": false, "description": "", "num_precision": 10, "ordinal_position": 1, "column_key": "PRI"},
+				map[string]any{"name": "c_int2", "type": "integer", "orig_type": "int(11)", "nullable": true, "default_value": "NULL", "description": "", "num_precision": 10, "ordinal_position": 2, "column_key": "UNI"},
+				map[string]any{"name": "c_bigint", "type": "integer", "orig_type": "bigint(20)", "nullable": true, "default_value": "NULL", "description": "", "num_precision": 19, "ordinal_position": 3, "column_key": "MUL"},
+				map[string]any{"name": "c_bigint2", "type": "integer", "orig_type": "bigint(20)", "nullable": true, "default_value": "NULL", "description": "", "num_precision": 19, "ordinal_position": 4, "column_key": ""},
+				map[string]any{"name": "c_smallint", "type": "integer", "orig_type": "smallint(6)", "nullable": true, "default_value": "NULL", "description": "", "num_precision": 5, "ordinal_position": 5, "column_key": "MUL"},
+				map[string]any{"name": "c_smallint2", "type": "integer", "orig_type": "smallint(6)", "nullable": true, "default_value": "NULL", "description": "", "num_precision": 5, "ordinal_position": 6, "column_key": ""},
+				map[string]any{"name": "c_tinyint", "type": "integer", "orig_type": "tinyint(4)", "nullable": true, "default_value": "NULL", "description": "", "num_precision": 3, "ordinal_position": 7, "column_key": ""},
+				map[string]any{"name": "c_tinyint2", "type": "integer", "orig_type": "tinyint(4)", "nullable": true, "default_value": "NULL", "description": "", "num_precision": 3, "ordinal_position": 8, "column_key": ""},
+				map[string]any{"name": "c_mediumint", "type": "integer", "orig_type": "mediumint(9)", "nullable": true, "default_value": "NULL", "description": "", "num_precision": 7, "ordinal_position": 9, "column_key": ""},
+				map[string]any{"name": "c_mediumint2", "type": "integer", "orig_type": "mediumint(8)", "nullable": true, "default_value": "NULL", "description": "", "num_precision": 7, "ordinal_position": 10, "column_key": ""},
+				map[string]any{"name": "c_decimal", "type": "decimal", "orig_type": "decimal(10,2)", "nullable": true, "default_value": "NULL", "description": "", "num_precision": 10, "num_scale": 2, "ordinal_position": 11, "column_key": ""},
+				map[string]any{"name": "c_float", "type": "float", "orig_type": "float", "nullable": true, "default_value": "NULL", "description": "", "num_precision": 12, "ordinal_position": 12, "column_key": ""},
+				map[string]any{"name": "c_double", "type": "float", "orig_type": "double", "nullable": true, "default_value": "NULL", "description": "", "num_precision": 22, "ordinal_position": 13, "column_key": ""},
+				map[string]any{"name": "c_char", "type": "string", "orig_type": "char(10)", "nullable": true, "default_value": "NULL", "description": "", "char_max_len": 10, "charset": "utf8mb4", "collation": "utf8mb4_unicode_ci", "ordinal_position": 14, "column_key": ""},
+				map[string]any{"name": "c_varchar", "type": "string", "orig_type": "varchar(255)", "nullable": true, "default_value": "NULL", "description": "", "char_max_len": 255, "charset": "utf8mb4", "collation": "utf8mb4_unicode_ci", "ordinal_position": 15, "column_key": ""},
+				map[string]any{"name": "c_text", "type": "text", "orig_type": "text", "nullable": true, "default_value": "NULL", "description": "", "char_max_len": 65535, "charset": "utf8mb4", "collation": "utf8mb4_unicode_ci", "ordinal_position": 16, "column_key": ""},
+				map[string]any{"name": "c_mediumtext", "type": "text", "orig_type": "mediumtext", "nullable": true, "default_value": "NULL", "description": "", "char_max_len": 16777215, "charset": "utf8mb4", "collation": "utf8mb4_unicode_ci", "ordinal_position": 17, "column_key": ""},
+				map[string]any{"name": "c_longtext", "type": "text", "orig_type": "longtext", "nullable": true, "default_value": "NULL", "description": "", "char_max_len": 4294967295, "charset": "utf8mb4", "collation": "utf8mb4_unicode_ci", "ordinal_position": 18, "column_key": ""},
+				map[string]any{"name": "c_date", "type": "date", "orig_type": "date", "nullable": true, "default_value": "NULL", "description": "", "ordinal_position": 19, "column_key": ""},
+				map[string]any{"name": "c_time", "type": "time", "orig_type": "time", "nullable": true, "default_value": "NULL", "description": "", "ordinal_position": 20, "column_key": ""},
+				map[string]any{"name": "c_datetime", "type": "datetime", "orig_type": "datetime", "nullable": true, "default_value": "NULL", "description": "", "ordinal_position": 21, "column_key": ""},
+				map[string]any{"name": "c_datetime2", "type": "datetime", "orig_type": "datetime(6)", "nullable": true, "default_value": "NULL", "description": "", "datetime_precision": 6, "ordinal_position": 22, "column_key": ""},
+				map[string]any{"name": "c_timestamp", "type": "datetime", "orig_type": "timestamp", "nullable": true, "default_value": "current_timestamp()", "description": "", "ordinal_position": 23, "column_key": ""},
+				map[string]any{"name": "c_timestamp2", "type": "datetime", "orig_type": "timestamp(6)", "nullable": true, "default_value": "current_timestamp(6)", "description": "", "datetime_precision": 6, "ordinal_position": 24, "column_key": ""},
+				map[string]any{"name": "c_year", "type": "integer", "orig_type": "year(4)", "nullable": true, "default_value": "NULL", "description": "", "ordinal_position": 25, "column_key": ""},
+				map[string]any{"name": "c_binary", "type": "binary", "orig_type": "binary(16)", "nullable": true, "default_value": "NULL", "description": "", "char_max_len": 16, "ordinal_position": 26, "column_key": ""},
+				map[string]any{"name": "c_varbinary", "type": "binary", "orig_type": "varbinary(255)", "nullable": true, "default_value": "NULL", "description": "", "char_max_len": 255, "ordinal_position": 27, "column_key": ""},
+				map[string]any{"name": "c_blob", "type": "binary", "orig_type": "blob", "nullable": true, "default_value": "NULL", "description": "", "char_max_len": 65535, "ordinal_position": 28, "column_key": ""},
+				map[string]any{"name": "c_longblob", "type": "binary", "orig_type": "longblob", "nullable": true, "default_value": "NULL", "description": "", "char_max_len": 4294967295, "ordinal_position": 29, "column_key": ""},
+				map[string]any{"name": "c_bit", "type": "boolean", "orig_type": "bit(8)", "nullable": true, "default_value": "NULL", "description": "", "num_precision": 8, "ordinal_position": 30, "column_key": ""},
+				map[string]any{"name": "c_bool", "type": "integer", "orig_type": "tinyint(1)", "nullable": true, "default_value": "NULL", "description": "", "num_precision": 3, "ordinal_position": 31, "column_key": ""},
+				map[string]any{"name": "c_boolean", "type": "integer", "orig_type": "tinyint(1)", "nullable": true, "default_value": "NULL", "description": "", "num_precision": 3, "ordinal_position": 32, "column_key": ""},
+				map[string]any{"name": "c_null", "type": "string", "orig_type": "varchar(20)", "nullable": true, "default_value": "NULL", "description": "", "char_max_len": 20, "charset": "utf8mb4", "collation": "utf8mb4_unicode_ci", "ordinal_position": 33, "column_key": ""},
+				map[string]any{"name": "c_not_null", "type": "string", "orig_type": "varchar(20)", "nullable": false, "description": "", "char_max_len": 20, "charset": "utf8mb4", "collation": "utf8mb4_unicode_ci", "ordinal_position": 34, "column_key": ""},
+				map[string]any{"name": "c_default", "type": "string", "orig_type": "varchar(20)", "nullable": true, "default_value": "'default_value'", "description": "", "char_max_len": 20, "charset": "utf8mb4", "collation": "utf8mb4_unicode_ci", "ordinal_position": 35, "column_key": ""},
+				map[string]any{"name": "c_comment", "type": "string", "orig_type": "varchar(20)", "nullable": true, "default_value": "NULL", "description": "这是注释", "char_max_len": 20, "charset": "utf8mb4", "collation": "utf8mb4_unicode_ci", "ordinal_position": 36, "column_key": ""},
+				map[string]any{"name": "c_collate", "type": "string", "orig_type": "varchar(20)", "nullable": true, "default_value": "NULL", "description": "", "char_max_len": 20, "charset": "utf8mb4", "collation": "utf8mb4_unicode_ci", "ordinal_position": 37, "column_key": ""},
+			},
+			"indices": []map[string]any{
+				{"name": "idx_c_bigint", "columns": []any{"c_bigint"}, "unique": false, "primary": false},
+				{"name": "idx_multi", "columns": []any{"c_smallint", "c_smallint2"}, "unique": false, "primary": false},
+				{"name": "PRIMARY", "columns": []any{"c_int"}, "unique": true, "primary": true},
+				{"name": "uk_c_int2", "columns": []any{"c_int2"}, "unique": true, "primary": false},
+			},
+			"primary_keys": []any{"c_int"},
+			"properties": map[string]any{
+				"charset":      "utf8mb4",
+				"collation":    "utf8mb4_unicode_ci",
+				"create_time":  1771056294000,
+				"data_length":  16384,
+				"engine":       "InnoDB",
+				"index_length": 49152,
+				"row_count":    0,
+			},
+			"table_type": "table",
 		}
-		_ = tableSchema2
+		_ = tableSourceMeta
 
 		// ========== Discover 正向测试（MD501-MD510） ==========
 		Convey("MD501: 触发Discover - 基本场景", func() {
@@ -940,13 +922,41 @@ func TestMariaDBCatalogDiscover(t *testing.T) {
 			for _, entry := range entries {
 				resource, ok := entry.(map[string]any)
 				So(ok, ShouldBeTrue)
-				schemaList, ok := resource["schema_definition"].([]any)
+				schema_definition, ok := resource["schema_definition"].([]any)
 				So(ok, ShouldBeTrue)
-				So(schemaList, ShouldResemble, tableSchema)
+				So(schema_definition, ShouldResemble, tableSchema)
 			}
 		})
 
-		Convey("MD506: Discover后重复执行", func() {
+		Convey("MD506: 验证发现的Resource的source_metadata", func() {
+			payload := builder.BuildCreatePayload()
+			createResp := client.POST("/api/vega-backend/v1/catalogs", payload)
+			So(createResp.StatusCode, ShouldEqual, http.StatusCreated)
+
+			catalogID := createResp.Body["id"].(string)
+			err = builder.RunDiscoverTask(client, catalogID)
+			So(err, ShouldBeNil)
+
+			resourceResp := client.GET("/api/vega-backend/v1/resources?catalog_id=" + catalogID + "&offset=0&limit=100")
+			So(resourceResp.StatusCode, ShouldEqual, http.StatusOK)
+			entries, ok := resourceResp.Body["entries"].([]any)
+			So(ok, ShouldBeTrue)
+			So(len(entries), ShouldEqual, tableSize)
+
+			for _, entry := range entries {
+				resource, ok := entry.(map[string]any)
+				So(ok, ShouldBeTrue)
+				source_metadata, ok := resource["source_metadata"].(map[string]any)
+				So(ok, ShouldBeTrue)
+				So(source_metadata["columns"], ShouldNotBeEmpty)
+				So(source_metadata["indices"], ShouldNotBeEmpty)
+				So(source_metadata["primary_keys"], ShouldNotBeEmpty)
+				So(source_metadata["properties"], ShouldNotBeEmpty)
+				So(source_metadata["table_type"], ShouldEqual, "table")
+			}
+		})
+
+		Convey("MD507: Discover后重复执行", func() {
 			payload := builder.BuildCreatePayload()
 			createResp := client.POST("/api/vega-backend/v1/catalogs", payload)
 			So(createResp.StatusCode, ShouldEqual, http.StatusCreated)
@@ -969,7 +979,7 @@ func TestMariaDBCatalogDiscover(t *testing.T) {
 			So(len(entries2), ShouldEqual, tableSize)
 		})
 
-		Convey("MD507: 实例级Catalog Discover（不指定database）", func() {
+		Convey("MD508: 实例级Catalog Discover（不指定database）", func() {
 			payload := builder.BuildCreatePayloadWithoutDatabase()
 			createResp := client.POST("/api/vega-backend/v1/catalogs", payload)
 			So(createResp.StatusCode, ShouldEqual, http.StatusCreated)
