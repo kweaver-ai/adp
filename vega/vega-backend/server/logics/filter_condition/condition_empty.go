@@ -13,8 +13,8 @@ import (
 )
 
 type EmptyCond struct {
-	mCfg   *interfaces.FilterCondCfg
-	mField *interfaces.Property
+	Cfg    *interfaces.FilterCondCfg
+	Lfield *interfaces.Property
 }
 
 func (c *EmptyCond) GetOperation() string { return OperationEmpty }
@@ -44,8 +44,8 @@ func (c *EmptyCond) New(ctx context.Context, cfg *interfaces.FilterCondCfg,
 	}
 
 	return &EmptyCond{
-		mCfg:   cfg,
-		mField: field,
+		Cfg:    cfg,
+		Lfield: field,
 	}, nil
 
 }

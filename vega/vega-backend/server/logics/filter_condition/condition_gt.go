@@ -13,9 +13,10 @@ import (
 )
 
 type GtCond struct {
-	mCfg   *interfaces.FilterCondCfg
-	mField *interfaces.Property
-	mValue any
+	Cfg    *interfaces.FilterCondCfg
+	Lfield *interfaces.Property
+	Rfield *interfaces.Property
+	Value  any
 }
 
 func (c *GtCond) GetOperation() string { return OperationGt }
@@ -23,7 +24,7 @@ func (c *GtCond) GetOperation() string { return OperationGt }
 func (c *GtCond) SupportSubCond() bool       { return false }
 func (c *GtCond) NeedName() bool             { return true }
 func (c *GtCond) NeedValue() bool            { return true }
-func (c *GtCond) NeedConstValue() bool       { return true }
+func (c *GtCond) NeedConstValue() bool       { return false }
 func (c *GtCond) IsSingleValue() bool        { return true }
 func (c *GtCond) IsFixedLenArrayValue() bool { return false }
 func (c *GtCond) RequiredValueLen() int      { return -1 }
@@ -40,16 +41,27 @@ func (c *GtCond) New(ctx context.Context, cfg *interfaces.FilterCondCfg,
 		return nil, fmt.Errorf("condition [gt] left field '%s' not found", cfg.Name)
 	}
 
-	if cfg.ValueOptCfg.ValueFrom != interfaces.ValueFrom_Const {
-		return nil, fmt.Errorf("condition [gt] does not support value_from type '%s'", cfg.ValueFrom)
-	}
 	if IsSlice(cfg.ValueOptCfg.Value) {
 		return nil, fmt.Errorf("condition [gt] only supports single value")
 	}
 
-	return &GtCond{
-		mCfg:   cfg,
-		mField: field,
-		mValue: cfg.ValueOptCfg.Value,
-	}, nil
+	cond := &GtCond{
+		Cfg:    cfg,
+		Lfield: field,
+		Value:  cfg.ValueOptCfg.Value,
+	}
+
+	if cfg.ValueFrom == interfaces.ValueFrom_Field {
+		valueStr, ok := cfg.Value.(string)
+		if !ok {
+			return nil, fmt.Errorf("condition [gt] right value should be a string field name")
+		}
+		rfield, ok := fieldsMap[valueStr]
+		if !ok {
+			return nil, fmt.Errorf("condition [gt] right field '%s' not found", valueStr)
+		}
+		cond.Rfield = rfield
+	}
+
+	return cond, nil
 }

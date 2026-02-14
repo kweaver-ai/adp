@@ -62,6 +62,17 @@ var (
 		VegaBackend_InvalidParameter_Sort,
 		VegaBackend_InvalidParameter_Direction,
 		VegaBackend_InvalidParameter_ID,
+		VegaBackend_InvalidParameter_OverrideMethod,
+		VegaBackend_InvalidParameter_Format,
+		VegaBackend_InvalidParameter_FilterCondition,
+		VegaBackend_InvalidParameter_FilterConditionValue,
+		VegaBackend_InvalidParameter_FilterConditionValueFrom,
+		VegaBackend_NullParameter_FilterConditionName,
+		VegaBackend_NullParameter_FilterConditionValue,
+		VegaBackend_NullParameter_FilterConditionOperation,
+		VegaBackend_CountExceeded_FilterConditionSubConds,
+		VegaBackend_UnsupportFilterConditionOperation,
+
 		VegaBackend_InvalidRequestHeader_ContentType,
 
 		VegaBackend_InternalError_BeginTransactionFailed,

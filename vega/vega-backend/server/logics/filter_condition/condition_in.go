@@ -13,9 +13,9 @@ import (
 )
 
 type InCond struct {
-	mCfg   *interfaces.FilterCondCfg
-	mField *interfaces.Property
-	mValue []any
+	Cfg    *interfaces.FilterCondCfg
+	Lfield *interfaces.Property
+	Value  []any
 }
 
 func (c *InCond) GetOperation() string { return OperationIn }
@@ -52,8 +52,8 @@ func (c *InCond) New(ctx context.Context, cfg *interfaces.FilterCondCfg,
 	}
 
 	return &InCond{
-		mCfg:   cfg,
-		mField: field,
-		mValue: val,
+		Cfg:    cfg,
+		Lfield: field,
+		Value:  val,
 	}, nil
 }

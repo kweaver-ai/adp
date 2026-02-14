@@ -13,9 +13,10 @@ import (
 )
 
 type NotEqualCond struct {
-	Cfg   *interfaces.FilterCondCfg
-	Field *interfaces.Property
-	Value any
+	Cfg    *interfaces.FilterCondCfg
+	Lfield *interfaces.Property
+	Rfield *interfaces.Property
+	Value  any
 }
 
 func (c *NotEqualCond) GetOperation() string { return OperationNotEqual }
@@ -44,9 +45,23 @@ func (c *NotEqualCond) New(ctx context.Context, cfg *interfaces.FilterCondCfg,
 		return nil, fmt.Errorf("condition [not_eq] only supports single value")
 	}
 
-	return &NotEqualCond{
-		Cfg:   cfg,
-		Field: field,
-		Value: cfg.ValueOptCfg.Value,
-	}, nil
+	cond := &NotEqualCond{
+		Cfg:    cfg,
+		Lfield: field,
+		Value:  cfg.ValueOptCfg.Value,
+	}
+
+	if cfg.ValueFrom == interfaces.ValueFrom_Field {
+		valueStr, ok := cfg.Value.(string)
+		if !ok {
+			return nil, fmt.Errorf("condition [not_eq] right value should be a string field name")
+		}
+		rfield, ok := fieldsMap[valueStr]
+		if !ok {
+			return nil, fmt.Errorf("condition [not_eq] right field '%s' not found", valueStr)
+		}
+		cond.Rfield = rfield
+	}
+
+	return cond, nil
 }

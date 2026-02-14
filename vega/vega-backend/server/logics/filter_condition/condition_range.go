@@ -13,9 +13,9 @@ import (
 )
 
 type RangeCond struct {
-	mCfg   *interfaces.FilterCondCfg
-	mField *interfaces.Property
-	mValue []any
+	Cfg    *interfaces.FilterCondCfg
+	Lfield *interfaces.Property
+	Value  []any
 }
 
 func (c *RangeCond) GetOperation() string { return OperationRange }
@@ -55,8 +55,8 @@ func (c *RangeCond) New(ctx context.Context, cfg *interfaces.FilterCondCfg,
 	}
 
 	return &RangeCond{
-		mCfg:   cfg,
-		mField: field,
-		mValue: val,
+		Cfg:    cfg,
+		Lfield: field,
+		Value:  val,
 	}, nil
 }

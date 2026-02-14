@@ -13,9 +13,9 @@ import (
 )
 
 type NotInCond struct {
-	mCfg   *interfaces.FilterCondCfg
-	mField *interfaces.Property
-	mValue []any
+	Cfg    *interfaces.FilterCondCfg
+	Lfield *interfaces.Property
+	Value  []any
 }
 
 func (c *NotInCond) GetOperation() string { return OperationNotIn }
@@ -52,8 +52,8 @@ func (c *NotInCond) New(ctx context.Context, cfg *interfaces.FilterCondCfg,
 	}
 
 	return &NotInCond{
-		mCfg:   cfg,
-		mField: field,
-		mValue: val,
+		Cfg:    cfg,
+		Lfield: field,
+		Value:  val,
 	}, nil
 }

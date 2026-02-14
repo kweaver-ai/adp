@@ -22,13 +22,17 @@ import (
 // 资源数据查询参数校验
 func ValidateResourceDataQueryParams(ctx context.Context, params *interfaces.ResourceDataQueryParams) error {
 	// 校验format是否为 original 或者 flat
-	err := validateFormat(ctx, params.Format)
-	if err != nil {
-		return err
+	if params.Format == "" {
+		params.Format = interfaces.Format_Original
+	} else {
+		err := validateFormat(ctx, params.Format)
+		if err != nil {
+			return err
+		}
 	}
 
 	// 校验分页参数
-	err = validatePaginationParams(ctx, params.Offset, params.Limit)
+	err := validatePaginationParams(ctx, params.Offset, params.Limit)
 	if err != nil {
 		return err
 	}
@@ -49,7 +53,7 @@ func ValidateResourceDataQueryParams(ctx context.Context, params *interfaces.Res
 	params.FilterCondCfg = actualCond
 
 	// 校验全局过滤条件：操作符、字段类型和操作符是否匹配
-	err = validateCond(ctx, params.FilterCondCfg)
+	err = validateFilterCondCfg(ctx, params.FilterCondCfg)
 	if err != nil {
 		return err
 	}
@@ -87,9 +91,11 @@ func validatePaginationParams(ctx context.Context, offset, limit int) error {
 	return nil
 }
 
-func validateSortFields(ctx context.Context, sort []*interfaces.SortField) error {
-	for _, s := range sort {
-		if s.Direction != interfaces.ASC_DIRECTION && s.Direction != interfaces.DESC_DIRECTION {
+func validateSortFields(ctx context.Context, sortFields []*interfaces.SortField) error {
+	for _, sortField := range sortFields {
+		if sortField.Direction != interfaces.ASC_DIRECTION &&
+			sortField.Direction != interfaces.DESC_DIRECTION {
+
 			return rest.NewHTTPError(ctx, http.StatusBadRequest, verrors.VegaBackend_InvalidParameter_Direction).
 				WithErrorDetails("The sort direction should be desc or asc")
 		}
@@ -98,7 +104,7 @@ func validateSortFields(ctx context.Context, sort []*interfaces.SortField) error
 	return nil
 }
 
-func validateCond(ctx context.Context, cfg *interfaces.FilterCondCfg) error {
+func validateFilterCondCfg(ctx context.Context, cfg *interfaces.FilterCondCfg) error {
 	if cfg == nil {
 		return nil
 	}
@@ -130,7 +136,7 @@ func validateCond(ctx context.Context, cfg *interfaces.FilterCondCfg) error {
 		}
 
 		for _, subCond := range cfg.SubConds {
-			err := validateCond(ctx, subCond)
+			err := validateFilterCondCfg(ctx, subCond)
 			if err != nil {
 				return err
 			}
@@ -149,10 +155,10 @@ func validateCond(ctx context.Context, cfg *interfaces.FilterCondCfg) error {
 			return rest.NewHTTPError(ctx, http.StatusBadRequest, verrors.VegaBackend_NullParameter_FilterConditionValue)
 		}
 
+		if cfg.ValueFrom == "" {
+			cfg.ValueFrom = interfaces.ValueFrom_Const
+		}
 		if condFactory.NeedConstValue() {
-			if cfg.ValueFrom == "" {
-				cfg.ValueFrom = interfaces.ValueFrom_Const
-			}
 			// 过滤字段值不能为空
 			if cfg.ValueFrom != interfaces.ValueFrom_Const {
 				return rest.NewHTTPError(ctx, http.StatusBadRequest, verrors.VegaBackend_InvalidParameter_FilterConditionValueFrom)

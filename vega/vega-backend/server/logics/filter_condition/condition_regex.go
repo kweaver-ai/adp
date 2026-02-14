@@ -15,10 +15,10 @@ import (
 )
 
 type RegexCond struct {
-	mCfg    *interfaces.FilterCondCfg
-	mField  *interfaces.Property
-	mValue  string
-	mRegexp *regexp2.Regexp
+	Cfg    *interfaces.FilterCondCfg
+	Lfield *interfaces.Property
+	Value  string
+	Regexp *regexp2.Regexp
 }
 
 func (c *RegexCond) GetOperation() string { return OperationRegex }
@@ -59,9 +59,9 @@ func (c *RegexCond) New(ctx context.Context, cfg *interfaces.FilterCondCfg,
 	}
 
 	return &RegexCond{
-		mCfg:    cfg,
-		mField:  field,
-		mValue:  val,
-		mRegexp: regexp,
+		Cfg:    cfg,
+		Lfield: field,
+		Value:  val,
+		Regexp: regexp,
 	}, nil
 }

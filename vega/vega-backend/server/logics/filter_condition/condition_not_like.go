@@ -13,9 +13,9 @@ import (
 )
 
 type NotLikeCond struct {
-	mCfg   *interfaces.FilterCondCfg
-	mField *interfaces.Property
-	mValue string
+	Cfg    *interfaces.FilterCondCfg
+	Lfield *interfaces.Property
+	Value  string
 }
 
 func (c *NotLikeCond) GetOperation() string { return OperationNotLike }
@@ -51,8 +51,8 @@ func (c *NotLikeCond) New(ctx context.Context, cfg *interfaces.FilterCondCfg,
 	}
 
 	return &NotLikeCond{
-		mCfg:   cfg,
-		mField: field,
-		mValue: val,
+		Cfg:    cfg,
+		Lfield: field,
+		Value:  val,
 	}, nil
 }

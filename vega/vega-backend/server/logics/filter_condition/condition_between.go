@@ -13,9 +13,9 @@ import (
 )
 
 type BetweenCond struct {
-	mCfg   *interfaces.FilterCondCfg
-	mField *interfaces.Property
-	mValue []any
+	Cfg    *interfaces.FilterCondCfg
+	Lfield *interfaces.Property
+	Value  []any
 }
 
 func (c *BetweenCond) GetOperation() string { return OperationBetween }
@@ -55,8 +55,8 @@ func (c *BetweenCond) New(ctx context.Context, cfg *interfaces.FilterCondCfg,
 	}
 
 	return &BetweenCond{
-		mCfg:   cfg,
-		mField: field,
-		mValue: val,
+		Cfg:    cfg,
+		Lfield: field,
+		Value:  val,
 	}, nil
 }

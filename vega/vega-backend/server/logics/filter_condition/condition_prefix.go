@@ -13,9 +13,9 @@ import (
 )
 
 type PrefixCond struct {
-	mCfg   *interfaces.FilterCondCfg
-	mField *interfaces.Property
-	mValue string
+	Cfg    *interfaces.FilterCondCfg
+	Lfield *interfaces.Property
+	Value  string
 }
 
 func (c *PrefixCond) GetOperation() string { return OperationPrefix }
@@ -52,8 +52,8 @@ func (c *PrefixCond) New(ctx context.Context, cfg *interfaces.FilterCondCfg,
 	}
 
 	return &PrefixCond{
-		mCfg:   cfg,
-		mField: field,
-		mValue: val,
+		Cfg:    cfg,
+		Lfield: field,
+		Value:  val,
 	}, nil
 }

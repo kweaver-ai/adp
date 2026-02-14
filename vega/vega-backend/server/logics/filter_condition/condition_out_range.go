@@ -13,9 +13,9 @@ import (
 )
 
 type OutRangeCond struct {
-	mCfg   *interfaces.FilterCondCfg
-	mField *interfaces.Property
-	mValue []any
+	Cfg    *interfaces.FilterCondCfg
+	Lfield *interfaces.Property
+	Value  []any
 }
 
 func (c *OutRangeCond) GetOperation() string { return OperationOutRange }
@@ -55,8 +55,8 @@ func (c *OutRangeCond) New(ctx context.Context, cfg *interfaces.FilterCondCfg,
 	}
 
 	return &OutRangeCond{
-		mCfg:   cfg,
-		mField: field,
-		mValue: val,
+		Cfg:    cfg,
+		Lfield: field,
+		Value:  val,
 	}, nil
 }

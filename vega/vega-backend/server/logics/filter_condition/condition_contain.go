@@ -13,9 +13,9 @@ import (
 )
 
 type ContainCond struct {
-	mCfg   *interfaces.FilterCondCfg
-	mField *interfaces.Property
-	mValue []any
+	Cfg    *interfaces.FilterCondCfg
+	Lfield *interfaces.Property
+	Value  []any
 }
 
 func (c *ContainCond) GetOperation() string { return OperationContain }
@@ -52,8 +52,8 @@ func (c *ContainCond) New(ctx context.Context, cfg *interfaces.FilterCondCfg,
 	}
 
 	return &ContainCond{
-		mCfg:   cfg,
-		mField: field,
-		mValue: val,
+		Cfg:    cfg,
+		Lfield: field,
+		Value:  val,
 	}, nil
 }

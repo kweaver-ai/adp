@@ -43,6 +43,56 @@ Description = "无效的ID参数"
 Solution = "请检查参数"
 ErrorLink = "暂无"
 
+[VegaBackend.InvalidParameter.OverrideMethod]
+Description = "无效的参数"
+Solution = "请检查参数"
+ErrorLink = "暂无"
+
+[VegaBackend.InvalidParameter.Format]
+Description = "无效的参数"
+Solution = "请检查参数"
+ErrorLink = "暂无"
+
+[VegaBackend.InvalidParameter.FilterCondition]
+Description = "无效的参数"
+Solution = "请检查参数"
+ErrorLink = "暂无"
+
+[VegaBackend.InvalidParameter.FilterConditionValue]
+Description = "无效的参数"
+Solution = "请检查参数"
+ErrorLink = "暂无"
+
+[VegaBackend.InvalidParameter.FilterConditionValueFrom]
+Description = "无效的参数"
+Solution = "请检查参数"
+ErrorLink = "暂无"
+
+[VegaBackend.NullParameter.FilterConditionName]
+Description = "无效的参数"
+Solution = "请检查参数"
+ErrorLink = "暂无"
+
+[VegaBackend.NullParameter.FilterConditionValue]
+Description = "无效的参数"
+Solution = "请检查参数"
+ErrorLink = "暂无"
+
+[VegaBackend.NullParameter.FilterConditionOperation]
+Description = "无效的参数"
+Solution = "请检查参数"
+ErrorLink = "暂无"
+
+[VegaBackend.CountExceeded.FilterConditionSubConds]
+Description = "无效的参数"
+Solution = "请检查参数"
+ErrorLink = "暂无"
+
+[VegaBackend.UnsupportFilterConditionOperation]
+Description = "无效的参数"
+Solution = "请检查参数"
+ErrorLink = "暂无"
+
 [VegaBackend.InvalidRequestHeader.ContentType]
 Description = "不支持的Content-Type请求头"
 Solution = "请检查请求头"

@@ -13,8 +13,8 @@ import (
 )
 
 type ExistCond struct {
-	mCfg   *interfaces.FilterCondCfg
-	mfield *interfaces.Property
+	Cfg    *interfaces.FilterCondCfg
+	Lfield *interfaces.Property
 }
 
 func (c *ExistCond) GetOperation() string { return OperationExist }
@@ -32,15 +32,15 @@ func (c *ExistCond) New(ctx context.Context, cfg *interfaces.FilterCondCfg,
 	fieldsMap map[string]*interfaces.Property) (interfaces.FilterCondition, error) {
 
 	if cfg.Name == "" {
-		return nil, fmt.Errorf("condition [eq] left field is empty")
+		return nil, fmt.Errorf("condition [exist] left field is empty")
 	}
 	field, ok := fieldsMap[cfg.Name]
 	if !ok {
-		return nil, fmt.Errorf("condition [eq] left field '%s' not found", cfg.Name)
+		return nil, fmt.Errorf("condition [exist] left field '%s' not found", cfg.Name)
 	}
 
 	return &ExistCond{
-		mCfg:   cfg,
-		mfield: field,
+		Cfg:    cfg,
+		Lfield: field,
 	}, nil
 }

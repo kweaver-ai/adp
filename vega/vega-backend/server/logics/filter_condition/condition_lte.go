@@ -13,9 +13,10 @@ import (
 )
 
 type LteCond struct {
-	mCfg   *interfaces.FilterCondCfg
-	mField *interfaces.Property
-	mValue any
+	Cfg    *interfaces.FilterCondCfg
+	Lfield *interfaces.Property
+	Rfield *interfaces.Property
+	Value  any
 }
 
 func (c *LteCond) GetOperation() string { return OperationLte }
@@ -23,7 +24,7 @@ func (c *LteCond) GetOperation() string { return OperationLte }
 func (c *LteCond) SupportSubCond() bool       { return false }
 func (c *LteCond) NeedName() bool             { return true }
 func (c *LteCond) NeedValue() bool            { return true }
-func (c *LteCond) NeedConstValue() bool       { return true }
+func (c *LteCond) NeedConstValue() bool       { return false }
 func (c *LteCond) IsSingleValue() bool        { return true }
 func (c *LteCond) IsFixedLenArrayValue() bool { return false }
 func (c *LteCond) RequiredValueLen() int      { return -1 }
@@ -40,16 +41,27 @@ func (c *LteCond) New(ctx context.Context, cfg *interfaces.FilterCondCfg,
 		return nil, fmt.Errorf("condition [lte] left field '%s' not found", cfg.Name)
 	}
 
-	if cfg.ValueOptCfg.ValueFrom != interfaces.ValueFrom_Const {
-		return nil, fmt.Errorf("condition [lte] does not support value_from type '%s'", cfg.ValueFrom)
-	}
 	if IsSlice(cfg.ValueOptCfg.Value) {
 		return nil, fmt.Errorf("condition [lte] only supports single value")
 	}
 
-	return &LteCond{
-		mCfg:   cfg,
-		mField: field,
-		mValue: cfg.ValueOptCfg.Value,
-	}, nil
+	cond := &LteCond{
+		Cfg:    cfg,
+		Lfield: field,
+		Value:  cfg.ValueOptCfg.Value,
+	}
+
+	if cfg.ValueFrom == interfaces.ValueFrom_Field {
+		valueStr, ok := cfg.Value.(string)
+		if !ok {
+			return nil, fmt.Errorf("condition [lte] right value should be a string field name")
+		}
+		rfield, ok := fieldsMap[valueStr]
+		if !ok {
+			return nil, fmt.Errorf("condition [lte] right field '%s' not found", valueStr)
+		}
+		cond.Rfield = rfield
+	}
+
+	return cond, nil
 }

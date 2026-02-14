@@ -13,8 +13,8 @@ import (
 )
 
 type TrueCond struct {
-	mCfg   *interfaces.FilterCondCfg
-	mField *interfaces.Property
+	Cfg    *interfaces.FilterCondCfg
+	Lfield *interfaces.Property
 }
 
 func (c *TrueCond) GetOperation() string { return OperationTrue }
@@ -42,7 +42,7 @@ func (c *TrueCond) New(ctx context.Context, cfg *interfaces.FilterCondCfg,
 	}
 
 	return &TrueCond{
-		mCfg:   cfg,
-		mField: field,
+		Cfg:    cfg,
+		Lfield: field,
 	}, nil
 }

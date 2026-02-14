@@ -12,6 +12,7 @@ import (
 
 	sq "github.com/Masterminds/squirrel"
 	_ "github.com/go-sql-driver/mysql"
+	"github.com/kweaver-ai/kweaver-go-lib/logger"
 
 	"vega-backend/interfaces"
 )
@@ -54,13 +55,15 @@ func (c *MySQLConnector) ExecuteQuery(ctx context.Context, resource *interfaces.
 			From(resource.SourceIdentifier)
 
 		if condition != nil {
-			countBuilder.Where(condition)
+			countBuilder = countBuilder.Where(condition)
 		}
 
 		query, args, err := countBuilder.ToSql()
 		if err != nil {
 			return nil, fmt.Errorf("failed to build query: %w", err)
 		}
+
+		logger.Debugf("count query: %s, args: %v", query, args)
 
 		var total int64
 		row := c.db.QueryRowContext(ctx, query, args...)
@@ -80,13 +83,15 @@ func (c *MySQLConnector) ExecuteQuery(ctx context.Context, resource *interfaces.
 		From(resource.SourceIdentifier)
 
 	if condition != nil {
-		builder.Where(condition)
+		builder = builder.Where(condition)
 	}
 
 	query, args, err := builder.ToSql()
 	if err != nil {
 		return nil, fmt.Errorf("failed to build query: %w", err)
 	}
+
+	logger.Debugf("query: %s, args: %v", query, args)
 
 	rows, err := c.db.QueryContext(ctx, query, args...)
 	if err != nil {

@@ -32,9 +32,9 @@ var (
 )
 
 type CurrentCond struct {
-	mCfg   *interfaces.FilterCondCfg
-	mField *interfaces.Property
-	mValue string
+	Cfg    *interfaces.FilterCondCfg
+	Lfield *interfaces.Property
+	Value  string
 }
 
 func (c *CurrentCond) GetOperation() string { return OperationCurrent }
@@ -75,8 +75,8 @@ func (c *CurrentCond) New(ctx context.Context, cfg *interfaces.FilterCondCfg,
 	}
 
 	return &CurrentCond{
-		mCfg:   cfg,
-		mField: field,
-		mValue: val,
+		Cfg:    cfg,
+		Lfield: field,
+		Value:  val,
 	}, nil
 }

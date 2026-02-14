@@ -13,9 +13,9 @@ import (
 )
 
 type LikeCond struct {
-	mCfg   *interfaces.FilterCondCfg
-	mField *interfaces.Property
-	mValue string
+	Cfg    *interfaces.FilterCondCfg
+	Lfield *interfaces.Property
+	Value  string
 }
 
 func (c *LikeCond) GetOperation() string { return OperationLike }
@@ -52,8 +52,8 @@ func (c *LikeCond) New(ctx context.Context, cfg *interfaces.FilterCondCfg,
 	}
 
 	return &LikeCond{
-		mCfg:   cfg,
-		mField: field,
-		mValue: val,
+		Cfg:    cfg,
+		Lfield: field,
+		Value:  val,
 	}, nil
 }

@@ -13,8 +13,8 @@ import (
 )
 
 type NotExistCond struct {
-	mCfg   *interfaces.FilterCondCfg
-	mfield *interfaces.Property
+	Cfg    *interfaces.FilterCondCfg
+	Lfield *interfaces.Property
 }
 
 func (c *NotExistCond) GetOperation() string { return OperationNotExist }
@@ -39,7 +39,7 @@ func (c *NotExistCond) New(ctx context.Context, cfg *interfaces.FilterCondCfg,
 	}
 
 	return &NotExistCond{
-		mCfg:   cfg,
-		mfield: field,
+		Cfg:    cfg,
+		Lfield: field,
 	}, nil
 }

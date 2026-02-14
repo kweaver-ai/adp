@@ -13,8 +13,8 @@ import (
 )
 
 type NotNullCond struct {
-	mCfg   *interfaces.FilterCondCfg
-	mField *interfaces.Property
+	Cfg    *interfaces.FilterCondCfg
+	Lfield *interfaces.Property
 }
 
 func (c *NotNullCond) GetOperation() string { return OperationNotNull }
@@ -40,8 +40,8 @@ func (c *NotNullCond) New(ctx context.Context, cfg *interfaces.FilterCondCfg,
 	}
 
 	return &NotNullCond{
-		mCfg:   cfg,
-		mField: field,
+		Cfg:    cfg,
+		Lfield: field,
 	}, nil
 
 }

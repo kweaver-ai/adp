@@ -13,9 +13,9 @@ import (
 )
 
 type BeforeCond struct {
-	mCfg   *interfaces.FilterCondCfg
-	mField *interfaces.Property
-	mValue []any
+	Cfg    *interfaces.FilterCondCfg
+	Lfield *interfaces.Property
+	Value  []any
 }
 
 func (c *BeforeCond) GetOperation() string { return OperationBefore }
@@ -61,8 +61,8 @@ func (c *BeforeCond) New(ctx context.Context, cfg *interfaces.FilterCondCfg,
 	}
 
 	return &BeforeCond{
-		mCfg:   cfg,
-		mField: field,
-		mValue: val,
+		Cfg:    cfg,
+		Lfield: field,
+		Value:  val,
 	}, nil
 }

@@ -13,8 +13,8 @@ import (
 )
 
 type FalseCond struct {
-	mCfg   *interfaces.FilterCondCfg
-	mField *interfaces.Property
+	Cfg    *interfaces.FilterCondCfg
+	Lfield *interfaces.Property
 }
 
 func (c *FalseCond) GetOperation() string { return OperationFalse }
@@ -43,7 +43,7 @@ func (c *FalseCond) New(ctx context.Context, cfg *interfaces.FilterCondCfg,
 	}
 
 	return &FalseCond{
-		mCfg:   cfg,
-		mField: field,
+		Cfg:    cfg,
+		Lfield: field,
 	}, nil
 }

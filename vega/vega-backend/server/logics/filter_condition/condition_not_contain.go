@@ -13,9 +13,9 @@ import (
 )
 
 type NotContainCond struct {
-	mCfg   *interfaces.FilterCondCfg
-	mField *interfaces.Property
-	mValue []any
+	Cfg    *interfaces.FilterCondCfg
+	Lfield *interfaces.Property
+	Value  []any
 }
 
 func (c *NotContainCond) GetOperation() string { return OperationNotContain }
@@ -52,8 +52,8 @@ func (c *NotContainCond) New(ctx context.Context, cfg *interfaces.FilterCondCfg,
 	}
 
 	return &NotContainCond{
-		mCfg:   cfg,
-		mField: field,
-		mValue: val,
+		Cfg:    cfg,
+		Lfield: field,
+		Value:  val,
 	}, nil
 }

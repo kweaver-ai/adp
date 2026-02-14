@@ -13,9 +13,9 @@ import (
 )
 
 type NotPrefixCond struct {
-	mCfg   *interfaces.FilterCondCfg
-	mField *interfaces.Property
-	mValue string
+	Cfg    *interfaces.FilterCondCfg
+	Lfield *interfaces.Property
+	Value  string
 }
 
 func (c *NotPrefixCond) GetOperation() string { return OperationNotPrefix }
@@ -52,8 +52,8 @@ func (c *NotPrefixCond) New(ctx context.Context, cfg *interfaces.FilterCondCfg,
 	}
 
 	return &NotPrefixCond{
-		mCfg:   cfg,
-		mField: field,
-		mValue: val,
+		Cfg:    cfg,
+		Lfield: field,
+		Value:  val,
 	}, nil
 }
