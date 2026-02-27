@@ -61,7 +61,7 @@ func (rs *resourceService) Create(ctx context.Context, req *interfaces.ResourceR
 	ctx, span := ar_trace.Tracer.Start(ctx, "Create resource")
 	defer span.End()
 
-	// 判断userid是否有创建业务知识网络的权限（策略决策）
+	// 判断userid是否有创建数据资源的权限（策略决策）
 	err := rs.ps.CheckPermission(ctx, interfaces.PermissionResource{
 		Type: interfaces.RESOURCE_TYPE_RESOURCE,
 		ID:   interfaces.RESOURCE_ID_ALL,
