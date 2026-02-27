@@ -105,6 +105,7 @@ type IndexMeta struct {
 type FieldMeta struct {
 	Name       string `json:"name"`
 	Type       string `json:"type"`
+	OrigType   string `json:"orig_type"`
 	Analyzer   string `json:"analyzer,omitempty"`
 	Searchable bool   `json:"searchable"`
 }

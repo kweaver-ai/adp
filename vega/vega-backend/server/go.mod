@@ -17,6 +17,7 @@ require (
 	github.com/opensearch-project/opensearch-go/v2 v2.3.0
 	github.com/rs/xid v1.6.0
 	github.com/segmentio/kafka-go v0.4.49
+	github.com/sijms/go-ora/v2 v2.8.24
 	github.com/spf13/viper v1.21.0
 	go.opentelemetry.io/otel v1.29.0
 	go.opentelemetry.io/otel/trace v1.29.0

@@ -8,6 +8,7 @@ package common
 import (
 	"fmt"
 	"os"
+	"strconv"
 	"sync"
 	"time"
 
@@ -182,12 +183,19 @@ func SetDBSetting() {
 	if !ok {
 		logger.Fatalf("service %s not found in depServices", rdsServiceName)
 	}
-
+	password := setting["password"]
+	pwd := ""
+	switch password.(type) {
+	case int:
+		pwd = strconv.Itoa(password.(int))
+	case string:
+		pwd = password.(string)
+	}
 	appSetting.DBSetting = libdb.DBSetting{
 		Host:     setting["host"].(string),
 		Port:     setting["port"].(int),
 		Username: setting["user"].(string),
-		Password: setting["password"].(string),
+		Password: pwd,
 		DBName:   DATA_BASE_NAME,
 	}
 }
