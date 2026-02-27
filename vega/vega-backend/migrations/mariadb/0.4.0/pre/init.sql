@@ -136,6 +136,9 @@ CREATE TABLE IF NOT EXISTS t_catalog (
 )  ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_bin COMMENT='目录表，管理数据源连接和命名空间';
 
 
+-- 插入默认catalog
+
+
 -- ==========================================
 -- 2. t_catalog_discover_policy 发现与变更策略表
 -- ==========================================
