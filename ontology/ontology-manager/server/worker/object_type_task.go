@@ -175,6 +175,9 @@ func (ott *ObjectTypeTask) HandleObjectTypeTask(ctx context.Context, jobInfo *in
 	if err != nil {
 		return err
 	}
+	if dataView == nil {
+		return fmt.Errorf("object type %s's data view %s not found", objectType.OTName, dataSource.ID)
+	}
 
 	currentStartTime := time.Now()
 	viewQueryResult, err := ott.dva.GetDataStart(ctx, dataView.ViewID, incFieldName,
