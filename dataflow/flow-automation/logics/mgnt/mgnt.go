@@ -2900,7 +2900,7 @@ func (m *mgnt) ListDagInstanceV2(ctx context.Context, dagID string, param map[st
 			Source:    source,
 			Reason:    reason,
 		}
-		if _dag.Status == entity.DagInstanceStatusBlocked {
+		if _dag.Status != entity.DagInstanceStatusSuccess && _dag.Status != entity.DagInstanceStatusFailed && _dag.Status != entity.DagInstanceStatusCancled {
 			dagInstanceRunInfo.EndedAt = 0
 		}
 		switch fmt.Sprintf("%v", _dag.Status) {
