@@ -287,14 +287,14 @@ func (d *dagVersion) RevertToVersion(ctx context.Context, params RevertDagReq, u
 		newDagVersion.ChangeLog = fmt.Sprintf("版本: %v 退回至 版本: %v", dagVersion.Version, historyDag.Version)
 	}
 
-	err = d.mongo.WithTransaction(ctx, func(sctx mongo.SessionContext) error {
+	err = d.mongo.WithTransaction(ctx, func(nctx context.Context, ms mod.Store) error {
 		// 更新dag
-		if err = d.mongo.UpdateDag(sctx, prevDag); err != nil {
+		if err = ms.UpdateDag(nctx, prevDag); err != nil {
 			log.Warnf("[logic.RevertToVersion] UpdateDag err, detail: %s", err.Error())
 			return err
 		}
 
-		_, err = d.mongo.CreateDagVersion(sctx, newDagVersion)
+		_, err = ms.CreateDagVersion(nctx, newDagVersion)
 		if err != nil {
 			log.Warnf("[logic.RevertToVersion] CreateDagVersion err, detail: %s", err.Error())
 			return err

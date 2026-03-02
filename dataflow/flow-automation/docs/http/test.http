@@ -1,5 +1,5 @@
 @host = http://localhost:8082
-@token = Bearer ory_at_oA1s21XvDiMT-QVEOppwnC9C1B57zm1FGq_zxg18tQc.yY-PcFKcXIig-YK3gtIp3CYXOK0Blo-lhD96IsKCiiM
+@token = Bearer ory_at_Dqtcr03pUFeFB2Kn1wyCKqhDe6rJsNnrwoXs4_sq7UU.tz-1kBG7VP2wuJ7nCBbwowrhDP3wN9H8Jo0x3ZkG2mU
 
 ### 检查授权
 POST {{host}}/api/automation/v1/oauth2/auth
@@ -523,11 +523,107 @@ GET   {{host}}/api/automation/v1/operators?page=0&limit=20
 Authorization: {{token}}
 Content-Type: application/json
 
+### 创建dataflow (定时任务)
+POST {{host}}/api/automation/v1/run-instance-form/606252203769886140
+Authorization: {{token}}
+Content-Type: application/json
+X-Business-Domain: bd_public
+
+{
+    "data": {
+        "vtHWJyNbitlEMtvr": "a"
+    }
+}
+
+### 创建dataflow (表单任务)
+POST {{host}}/api/automation/v1/data-flow/flow
+Authorization: {{token}}
+Content-Type: application/json
+X-Business-Domain: bd_public
+
+{
+    "steps": [
+        {
+            "id": "0",
+            "operator": "@trigger/form",
+            "parameters": {
+                "fields": [
+                    {
+                        "key": "vtHWJyNbitlEMtvr",
+                        "type": "string",
+                        "name": "a"
+                    }
+                ]
+            }
+        },
+        {
+            "id": "1",
+            "operator": "@internal/json/get",
+            "parameters": {
+                "json": "{\"a\": \"1\"}",
+                "fields": [
+                    {
+                        "key": "a",
+                        "type": "string",
+                        "value": "{{__0.fields.vtHWJyNbitlEMtvr}}"
+                    }
+                ]
+            }
+        }
+    ],
+    "trigger_config": {
+        "operator": "@trigger/manual",
+        "dataSource": {
+            "operator": "",
+            "parameters": {
+                "accessorid": "00000000-0000-0000-0000-000000000000"
+            }
+        }
+    },
+    "title": "表单手动触发"
+}
+
+### 创建dataflow (定时任务)
+POST {{host}}/api/automation/v1/data-flow/flow
+Authorization: {{token}}
+Content-Type: application/json
+X-Business-Domain: bd_public
+
+{
+    "steps": [
+        {
+            "id": "0",
+            "operator": "@trigger/dataflow-user"
+        },
+        {
+            "id": "1",
+            "operator": "@internal/text/split",
+            "parameters": {
+                "text": "a-b",
+                "separator": "custom",
+                "custom": "-"
+            }
+        }
+    ],
+    "trigger_config": {
+        "operator": "@trigger/cron/month",
+        "dataSource": {
+            "operator": "@anyshare-data/user",
+            "parameters": {
+                "accessorid": "00000000-0000-0000-0000-000000000000"
+            }
+        },
+        "cron": "0 58 16 1 * ?"
+    },
+    "title": "测试定时任务",
+    "version": "v0.0.0"
+}
 
 ### 创建dataflow (表不存在)
 POST {{host}}/api/automation/v1/data-flow/flow
 Authorization: {{token}}
 Content-Type: application/json
+X-Business-Domain: bd_public
 
 {
     "steps": [
@@ -812,7 +908,8 @@ Content-Type: application/json
             }
         }
     },
-    "title": "09005db-newdb-long2-postgresql"
+    "title": "09005db-newdb-long2-postgresql1",
+    "debug_id": "605828158578521532"
 }
 
 
@@ -964,27 +1061,14 @@ Content-Type: application/json
 POST   {{host}}/api/automation/v1/dags/single-debug
 Authorization: {{token}}
 Content-Type: application/json
+X-Business-Domain: bd_publc
 
 {
-    "id": "4",
-    "operator": "@internal/tool/py3",
+    "id": "3",
+    "operator": "@internal/json/get",
     "parameters": {
-        "input_params": [
-            {
-                "id": "8oo7d",
-                "key": "aa",
-                "type": "string",
-                "value": "vvv+"
-            }
-        ],
-        "output_params": [
-            {
-                "id": "bhpv5",
-                "key": "res",
-                "type": "string"
-            }
-        ],
-        "code": "def main(aa):\n    return aa+\"123\""
+        "fields": [],
+        "json": "a"
     }
 }
 
@@ -992,6 +1076,7 @@ Content-Type: application/json
 POST   {{host}}/api/automation/v1/dags/full-debug
 Authorization: {{token}}
 Content-Type: application/json
+X-Business-Domain: bd_publc
 
 {
     "steps": [

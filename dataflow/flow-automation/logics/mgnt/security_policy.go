@@ -99,6 +99,14 @@ func (m *mgnt) CreateSecurityPolicyFlow(ctx context.Context, param *CreateFlowPa
 		Removed:     false,
 	}
 
+	dag.SetCheckRootNode(func(t []entity.Task) error {
+		_, bErr := mod.BuildRootNode(mod.MapTasksToGetter(dag.Tasks))
+		if bErr != nil {
+			return bErr
+		}
+		return nil
+	})
+
 	dagID, err = m.mongo.CreateDag(ctx, dag)
 
 	if err != nil {

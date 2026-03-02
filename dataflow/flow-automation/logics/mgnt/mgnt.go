@@ -448,6 +448,7 @@ func NewMgnt() MgntHandler {
 				CleanUpInterval: 10 * time.Minute,
 			}),
 			bizDomain: drivenadapters.NewBusinessDomain(),
+			// dagModel:  dagmodel.NewDagRepository(),
 		}
 
 		// Initialize S3 adapter if configured
@@ -601,8 +602,15 @@ func (m *mgnt) CreateDag(ctx context.Context, param *CreateDagReq, userInfo *dri
 		return "", err
 	}
 
-	err = m.mongo.WithTransaction(ctx, func(sctx mongo.SessionContext) error {
-		dagID, err = m.mongo.CreateDag(sctx, dag)
+	dag.SetCheckRootNode(func(t []entity.Task) error {
+		_, bErr := mod.BuildRootNode(mod.MapTasksToGetter(dag.Tasks))
+		if bErr != nil {
+			return bErr
+		}
+		return nil
+	})
+	err = m.mongo.WithTransaction(ctx, func(nctx context.Context, ms mod.Store) error {
+		dagID, err = ms.CreateDag(nctx, dag)
 		if err != nil {
 			logger.Warnf("[logic.CreateDag] CreateDag err, deail: %s", err.Error())
 			return ierrors.NewIError(ierrors.InternalError, "", nil)
@@ -612,7 +620,7 @@ func (m *mgnt) CreateDag(ctx context.Context, param *CreateDagReq, userInfo *dri
 		dagVersion := dagVersions[0]
 		dagVersion.DagID = dagID
 		dagVersion.Config = entity.Config(config)
-		_, err = m.mongo.CreateDagVersion(sctx, dagVersion)
+		_, err = ms.CreateDagVersion(nctx, dagVersion)
 		if err != nil {
 			log.Warnf("[logic.CreateDag] CreateDagVersion err, detail: %s", err.Error())
 			return err
@@ -908,15 +916,15 @@ func (m *mgnt) UpdateDag(ctx context.Context, dagID string, param *OptionalUpdat
 		return err
 	}
 
-	err = m.mongo.WithTransaction(ctx, func(sctx mongo.SessionContext) error {
+	err = m.mongo.WithTransaction(ctx, func(nctx context.Context, ms mod.Store) error {
 		// 更新dag
-		if err := m.mongo.UpdateDag(sctx, dag); err != nil {
+		if err := ms.UpdateDag(nctx, dag); err != nil {
 			log.Warnf("[logic.UpdateDag] UpdateDag err, deail: %s", err.Error())
 			return ierrors.NewIError(ierrors.InternalError, "", nil)
 		}
 
 		for _, dagVersion := range dagVersions {
-			_, err = m.mongo.CreateDagVersion(sctx, dagVersion)
+			_, err = ms.CreateDagVersion(nctx, dagVersion)
 			if err != nil {
 				log.Warnf("[logic.UpdateDag] CreateDagVersion err, detail: %s", err.Error())
 				return err
@@ -1684,23 +1692,23 @@ func (m *mgnt) RunFormInstance(ctx context.Context, params *RunDagParams, userIn
 	}
 	dag.SetPushMessage(m.executeMethods.Publish)
 
-	opMap := &perm.MapOperationProvider{
-		OpMap: map[string][]string{
-			common.DagTypeDataFlow: {perm.ManualExecOperation},
-		},
-	}
-	if dag.Published {
-		opMap.OpMap[common.DagTypeDefault] = []string{perm.OldPublishOperatiuon}
-	} else if userInfo.AccountType == common.APP.ToString() {
-		opMap.OpMap[common.DagTypeDefault] = []string{perm.OldAppTokenOperation}
-	} else {
-		opMap.OpMap[common.DagTypeDefault] = []string{perm.OldShareOperation}
-	}
+	// opMap := &perm.MapOperationProvider{
+	// 	OpMap: map[string][]string{
+	// 		common.DagTypeDataFlow: {perm.ManualExecOperation},
+	// 	},
+	// }
+	// if dag.Published {
+	// 	opMap.OpMap[common.DagTypeDefault] = []string{perm.OldPublishOperatiuon}
+	// } else if userInfo.AccountType == common.APP.ToString() {
+	// 	opMap.OpMap[common.DagTypeDefault] = []string{perm.OldAppTokenOperation}
+	// } else {
+	// 	opMap.OpMap[common.DagTypeDefault] = []string{perm.OldShareOperation}
+	// }
 
-	_, err = m.permCheck.CheckDagAndPerm(ctx, dag.ID, userInfo, opMap)
-	if err != nil {
-		return "", err
-	}
+	// _, err = m.permCheck.CheckDagAndPerm(ctx, dag.ID, userInfo, opMap)
+	// if err != nil {
+	// 	return "", err
+	// }
 
 	if !dag.Published && userInfo == nil {
 		return "", ierrors.NewIError(ierrors.Forbidden, "", map[string]string{"dagId": params.ID})
@@ -4117,15 +4125,15 @@ func (m *mgnt) handleTriggerError(ctx context.Context, triggerType entity.Trigge
 		Reason:     err,
 	}
 
-	err = m.mongo.WithTransaction(ctx, func(sctx mongo.SessionContext) error {
-		_, dbErr := m.mongo.CreateDagIns(sctx, dagIns)
+	err = m.mongo.WithTransaction(ctx, func(nctx context.Context, ms mod.Store) error {
+		_, dbErr := ms.CreateDagIns(nctx, dagIns)
 
 		if dbErr != nil {
 			log.Warnf("[logic.handleTriggerError] CreateDagIns err: %s", dbErr.Error())
 			return err
 		}
 
-		dbErr = m.mongo.CreateTaskIns(sctx, taskIns)
+		dbErr = ms.CreateTaskIns(nctx, taskIns)
 		if dbErr != nil {
 			log.Warnf("[logic.handleTriggerError] CreateTaskIns err: %s", dbErr.Error())
 			return err

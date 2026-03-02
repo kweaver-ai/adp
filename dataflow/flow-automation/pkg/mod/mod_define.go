@@ -109,7 +109,8 @@ type Closer interface {
 // Store used to persist obj
 type Store interface {
 	Closer
-	WithTransaction(ctx context.Context, fn func(sessCtx mongo.SessionContext) error) error
+	WithTransaction(ctx context.Context, fn func(context.Context, Store) error) error
+	// WithTransaction(ctx context.Context, fn func(sessCtx mongo.SessionContext) error) error
 	CreateToken(token *entity.Token) error
 	UpdateToken(token *entity.Token) error
 	DeleteToken(id string) error
