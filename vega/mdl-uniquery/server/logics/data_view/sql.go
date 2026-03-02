@@ -243,62 +243,64 @@ func (g *SQLGenerator) buildJoinNodeSQL(ctx context.Context, node *interfaces.Da
 	onClause := strings.Join(onConditionsStr, " AND ")
 
 	// 构建输出字段
-	// fields := make([]string, 0, len(node.OutputFields))
+	fields := make([]string, 0, len(node.OutputFields))
 	outputFieldsMap := make(map[string]*cond.ViewField)
 	for _, of := range node.OutputFields {
-		// var tableAlias string
-		// // 要判断 src_node 是否在inout_nodes里，又多判断了一次
-		// if of.SrcNodeID == leftNodeID {
-		// 	tableAlias = "lft"
-		// } else if of.SrcNodeID == rightNodeID {
-		// 	tableAlias = "rgt"
-		// } else {
-		// 	return "", fmt.Errorf("output field src_node %s not in input nodes for node %s", of.SrcNodeID, node.ID)
-		// }
+		var tableAlias string
+		// 要判断 src_node 是否在input_nodes里，又多判断了一次
+		switch of.SrcNodeID {
+		case leftNodeID:
+			tableAlias = "lft"
+		case rightNodeID:
+			tableAlias = "rgt"
+		default:
+			return "", fmt.Errorf("output field src_node %s not in input nodes for node %s", of.SrcNodeID, node.ID)
+		}
 
-		// fieldExpr := fmt.Sprintf("%s.%s", tableAlias, of.OriginalName)
-		// fields = append(fields, fieldExpr)
+		fieldExpr := fmt.Sprintf("%s.%s AS %s", tableAlias, common.QuotationMark(of.OriginalName), common.QuotationMark(of.Name))
+		fields = append(fields, fieldExpr)
 
 		// 构造输出视图的fieldsMap, name 和 字段的映射
 		outputFieldsMap[of.Name] = of
 	}
 	// 维护每个节点的output fields map
 	node.OutputFieldsMap = outputFieldsMap
-	// fieldsStr := strings.Join(fields, ", ")
+	fieldsStr := strings.Join(fields, ", ")
 	// 简化 sql 生成，join 或者 union 这里 select 的时候直接 select *
 	// 实际业务使用时建议在view节点配置好字段，view节点select的时候会select具体的字段
-	fieldsStr := "*"
+	// fieldsStr := "*"
 
+	// join节点不支持去重和过滤
 	fieldsClause := fieldsStr
-	if cfg.Distinct.Enable {
-		if len(cfg.Distinct.Fields) > 0 {
-			// 名称映射，将 去重的字段name 映射为视图的原始字段名original_name
-			distinctFields := make([]string, 0, len(cfg.Distinct.Fields))
-			for _, df := range cfg.Distinct.Fields {
-				if of, ok := outputFieldsMap[df]; ok {
-					distinctFields = append(distinctFields, common.QuotationMark(of.OriginalName))
-				}
-			}
+	// if cfg.Distinct.Enable {
+	// 	if len(cfg.Distinct.Fields) > 0 {
+	// 		// 名称映射，将 去重的字段name 映射为视图的原始字段名original_name
+	// 		distinctFields := make([]string, 0, len(cfg.Distinct.Fields))
+	// 		for _, df := range cfg.Distinct.Fields {
+	// 			if of, ok := outputFieldsMap[df]; ok {
+	// 				distinctFields = append(distinctFields,  common.QuotationMark(of.OriginalName))
+	// 			}
+	// 		}
 
-			fieldsClause = "DISTINCT " + strings.Join(distinctFields, ", ")
-		} else {
-			fieldsClause = "DISTINCT " + fieldsStr
-		}
-	}
+	// 		fieldsClause = "DISTINCT " + strings.Join(distinctFields, ", ")
+	// 	} else {
+	// 		fieldsClause = "DISTINCT " + fieldsStr
+	// 	}
+	// }
 
 	whereClause := ""
-	if cfg.Filters != nil {
-		// join后过滤，字段应该使用 outputFieldsMap 中的字段
-		condition, err := buildSQLCondition(ctx, cfg.Filters, interfaces.ViewType_Custom, outputFieldsMap)
-		if err != nil {
-			return "", err
-		}
-		if condition != "" {
-			whereClause = "WHERE " + condition
-		}
-	}
+	// if cfg.Filters != nil {
+	// 	// join后过滤，字段应该使用 outputFieldsMap 中的字段
+	// 	condition, err := buildSQLCondition(ctx, cfg.Filters, interfaces.ViewType_Custom, outputFieldsMap)
+	// 	if err != nil {
+	// 		return "", err
+	// 	}
+	// 	if condition != "" {
+	// 		whereClause = "WHERE " + condition
+	// 	}
+	// }
 
-	sql := fmt.Sprintf("SELECT %s FROM (%s) AS lft %s JOIN (%s) AS rgt ON %s %s",
+	sql := fmt.Sprintf("SELECT %s FROM ((%s) AS lft %s JOIN (%s) AS rgt ON %s) %s",
 		fieldsClause, leftSQL, strings.ToUpper(cfg.JoinType), rightSQL, onClause, whereClause)
 	return sql, nil
 }
