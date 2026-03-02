@@ -1,4 +1,5 @@
 import type React from 'react';
+import { useMemo } from 'react';
 import { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { Layout, Input, Button, Typography, message, Skeleton } from 'antd';
@@ -34,6 +35,8 @@ export default function McpDetail() {
   const port = microWidgetProps.config.systemInfo.location.port;
   const newProtocol = isIPv4(host) ? 'http:' : protocol;
   const domain = `${newProtocol}//${host}${port ? ':' : ''}${port}`;
+
+  const selectedMcpInfo = useMemo(() => ({ ...selectedTool, mcp_id }), [selectedTool, mcp_id]);
 
   useEffect(() => {
     fetchInfo();
@@ -214,17 +217,9 @@ export default function McpDetail() {
         </Sider>
         {/* 右侧内容区域 */}
         <Content style={{ background: 'white', borderRadius: '8px' }}>
-          <McpInfo
-            selectedTool={{ ...selectedTool, mcp_id }}
-            type={OperatorTypeEnum.MCP}
-            onUpdateInputs={setParsedInputs}
-          />
+          <McpInfo selectedTool={selectedMcpInfo} type={OperatorTypeEnum.MCP} onUpdateInputs={setParsedInputs} />
           {permissionCheckInfo?.includes(PermConfigTypeEnum.Execute) && (
-            <DebugResult
-              selectedTool={{ ...selectedTool, mcp_id }}
-              type={OperatorTypeEnum.MCP}
-              parsedInputs={parsedInputs}
-            />
+            <DebugResult selectedTool={selectedMcpInfo} type={OperatorTypeEnum.MCP} parsedInputs={parsedInputs} />
           )}
         </Content>
       </Layout>

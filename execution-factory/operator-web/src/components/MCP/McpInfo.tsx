@@ -1,26 +1,27 @@
 import { useMemo } from 'react';
 import { Collapse } from 'antd';
 import './style.less';
-import { dereference, getTableData } from '@/utils/operator';
 import JsonschemaTab from '../MyOperator/JsonschemaTab';
 import { EditOutlined, InteractionOutlined, ProfileOutlined } from '@ant-design/icons';
 
 const { Panel } = Collapse;
 
 export default function McpInfo({ selectedTool, onUpdateInputs }: any) {
-  // 处理json schema成table数据，供JsonschemaTab使用
-  const tableData = useMemo(() => {
-    if (selectedTool?.inputSchema) {
-      const tableData: any[] = [];
-
-      for (const location in selectedTool?.inputSchema?.properties) {
-        const params = dereference(selectedTool?.inputSchema?.properties[location], selectedTool?.inputSchema);
-        tableData.push(getTableData(params, location, location));
-      }
-
-      return tableData.flat();
-    }
-  }, [selectedTool?.inputSchema]);
+  const jsonschemaTool = useMemo(
+    () => ({
+      ...selectedTool,
+      metadata: {
+        api_spec: {
+          request_body: {
+            content: {
+              'application/json': selectedTool?.inputSchema,
+            },
+          },
+        },
+      },
+    }),
+    [selectedTool]
+  );
 
   return (
     <div className="operator-info">
@@ -55,7 +56,12 @@ export default function McpInfo({ selectedTool, onUpdateInputs }: any) {
           }
           forceRender
         >
-          <JsonschemaTab data={tableData} type="Inputs" onTableDataChange={onUpdateInputs} />
+          <JsonschemaTab
+            operatorInfo={jsonschemaTool}
+            showIn={false}
+            type="Inputs"
+            onTableDataChange={onUpdateInputs}
+          />
         </Panel>
       </Collapse>
     </div>
