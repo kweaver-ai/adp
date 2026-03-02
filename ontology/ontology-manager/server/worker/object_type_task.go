@@ -178,6 +178,9 @@ func (ott *ObjectTypeTask) HandleObjectTypeTask(ctx context.Context, jobInfo *in
 		logger.Errorf("从 %s 读取第一批数据失败: %s", dataView.ViewName, err.Error())
 		return err
 	}
+	if dataView == nil {
+		return fmt.Errorf("object type %s's data view %s not found", objectType.OTName, dataSource.ID)
+	}
 
 	ott.totalCount = viewQueryResult.TotalCount
 	logger.Infof("从 %s 读取第一批数据, 总条数：%d, 当前条数：%d, 耗时：%dms, searchAfter: %v, 进度：%d/%d",
