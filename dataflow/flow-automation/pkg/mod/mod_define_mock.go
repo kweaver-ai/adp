@@ -15,7 +15,6 @@ import (
 
 	entity "github.com/kweaver-ai/adp/autoflow/flow-automation/pkg/entity"
 	bson "go.mongodb.org/mongo-driver/bson"
-	mongo "go.mongodb.org/mongo-driver/mongo"
 	options "go.mongodb.org/mongo-driver/mongo/options"
 	gomock "go.uber.org/mock/gomock"
 )
@@ -1222,7 +1221,7 @@ func (mr *MockStoreMockRecorder) UpdateToken(token any) *gomock.Call {
 }
 
 // WithTransaction mocks base method.
-func (m *MockStore) WithTransaction(ctx context.Context, fn func(mongo.SessionContext) error) error {
+func (m *MockStore) WithTransaction(ctx context.Context, fn func(context.Context, Store) error) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "WithTransaction", ctx, fn)
 	ret0, _ := ret[0].(error)

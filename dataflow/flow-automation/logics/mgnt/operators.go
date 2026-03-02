@@ -204,6 +204,14 @@ func (m *mgnt) CreateComboOperator(ctx context.Context, param *ComboOperatorReq,
 		return "", "", err
 	}
 
+	dag.SetCheckRootNode(func(t []entity.Task) error {
+		_, bErr := mod.BuildRootNode(mod.MapTasksToGetter(dag.Tasks))
+		if bErr != nil {
+			return bErr
+		}
+		return nil
+	})
+
 	dagID, err := m.mongo.CreateDag(ctx, dag)
 	if err != nil {
 		log.Warnf("[logic.CreateComboOperator] CreateDag err, detail: %s", err.Error())
@@ -318,6 +326,14 @@ func (m *mgnt) UpdateComboOperator(ctx context.Context, param *OptionalComboOper
 			opStatus = v.Status
 		}
 	}
+
+	dag.SetCheckRootNode(func(t []entity.Task) error {
+		_, bErr := mod.BuildRootNode(mod.MapTasksToGetter(dag.Tasks))
+		if bErr != nil {
+			return bErr
+		}
+		return nil
+	})
 
 	updateFlag := true
 	// case1：如果存在更新，则需要生成新版本
@@ -922,14 +938,14 @@ func (m *mgnt) ImportOperator(ctx context.Context, params *ImportOperatorReq, us
 		dags = append(dags, dag)
 	}
 
-	err = m.mongo.WithTransaction(ctx, func(sessCtx mongo.SessionContext) error {
-		err = m.mongo.DeleteDag(sessCtx, coverIDs...)
+	err = m.mongo.WithTransaction(ctx, func(nctx context.Context, ms mod.Store) error {
+		err = ms.DeleteDag(nctx, coverIDs...)
 		if err != nil {
 			log.Warnf("[logic.ExportOperator] DeleteDag err, detail: %s", err.Error())
 			return err
 		}
 
-		_, err := m.mongo.BatchCreateDag(sessCtx, dags)
+		_, err := ms.BatchCreateDag(nctx, dags)
 		if err != nil {
 			log.Warnf("[logic.ExportOperator] BatchCreateDag err, detail: %s", err.Error())
 			return err

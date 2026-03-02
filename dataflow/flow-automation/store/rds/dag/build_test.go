@@ -1,0 +1,216 @@
+package dagmodel
+
+import (
+	"encoding/json"
+	"fmt"
+	"testing"
+
+	"github.com/kweaver-ai/adp/autoflow/flow-automation/pkg/entity"
+	"github.com/kweaver-ai/adp/autoflow/flow-automation/pkg/mod"
+	"go.mongodb.org/mongo-driver/bson"
+)
+
+func Test_Convert(t *testing.T) {
+	conv := NewConverter("users")
+
+	tests := []struct {
+		name  string
+		query map[string]interface{}
+	}{
+		{
+			name: "1. 简单等值查询",
+			query: map[string]interface{}{
+				"name": "john",
+			},
+			// → SELECT * FROM users WHERE name = ?
+			// params: ["john"]
+		},
+		{
+			name: "2. 多字段 AND",
+			query: map[string]interface{}{
+				"_id":  "abc123",
+				"type": "admin",
+			},
+			// → SELECT * FROM users WHERE _id = ? AND type = ?
+			// params: ["abc123", "admin"]
+		},
+		{
+			name: "3. 比较操作符",
+			query: map[string]interface{}{
+				"age": map[string]interface{}{
+					"$gt":  18,
+					"$lte": 65,
+				},
+				"status": "active",
+			},
+			// → SELECT * FROM users WHERE age > ? AND age <= ? AND status = ?
+			// params: [18, 65, "active"]
+		},
+		{
+			name: "4. $or 查询",
+			query: map[string]interface{}{
+				"_id": "abc123",
+				"$or": []interface{}{
+					map[string]interface{}{"userid": "u001"},
+					map[string]interface{}{"type": "admin"},
+				},
+			},
+			// → SELECT * FROM users WHERE _id = ? AND (userid = ? OR type = ?)
+			// params: ["abc123", "u001", "admin"]
+		},
+		{
+			name: "5. $in 查询",
+			query: map[string]interface{}{
+				"status": map[string]interface{}{
+					"$in": []interface{}{"active", "pending", "review"},
+				},
+			},
+			// → SELECT * FROM users WHERE status IN (?, ?, ?)
+			// params: ["active", "pending", "review"]
+		},
+		{
+			name: "6. $ne 和 $exists",
+			query: map[string]interface{}{
+				"removed": map[string]interface{}{
+					"$ne": true,
+				},
+				"email": map[string]interface{}{
+					"$exists": true,
+				},
+			},
+			// → SELECT * FROM users WHERE email IS NOT NULL AND removed != ?
+			// params: [true]
+		},
+		{
+			name: "7. 复杂嵌套查询",
+			query: map[string]interface{}{
+				"name":    "john",
+				"userid":  "u001",
+				"removed": false,
+				"$or": []interface{}{
+					map[string]interface{}{
+						"age": map[string]interface{}{"$gte": 18},
+					},
+					map[string]interface{}{
+						"type": map[string]interface{}{
+							"$in": []interface{}{"admin", "superadmin"},
+						},
+					},
+				},
+			},
+		},
+		{
+			name: "8. NULL 查询",
+			query: map[string]interface{}{
+				"deleted_at": nil,
+				"name":       "john",
+			},
+			// → SELECT * FROM users WHERE deleted_at IS NULL AND name = ?
+		},
+		{
+			name: "9. $regex 模糊查询",
+			query: map[string]interface{}{
+				"name": map[string]interface{}{
+					"$regex": "^john",
+				},
+			},
+			// → SELECT * FROM users WHERE name LIKE ?
+			// params: ["john%"]
+		},
+		{
+			name: "10. $nin 查询",
+			query: map[string]interface{}{
+				"type": map[string]interface{}{
+					"$nin": []interface{}{"banned", "deleted"},
+				},
+			},
+			// → SELECT * FROM users WHERE type NOT IN (?, ?)
+		},
+		{
+			name: "11. $nin 查询",
+			query: map[string]interface{}{
+				"_id":  "dagID",
+				"type": "type",
+				"removed": bson.M{
+					"$ne": true,
+				},
+			},
+			// → SELECT * FROM users WHERE _id = ? AND removed != ? AND type = ?
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result, err := conv.Convert(tt.query)
+			if err != nil {
+				t.Fatalf("Error: %v", err)
+			}
+
+			queryJSON, _ := json.MarshalIndent(tt.query, "  ", "  ")
+			fmt.Printf("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n")
+			fmt.Printf("📋 %s\n", tt.name)
+			fmt.Printf("  MongoDB: %s\n", string(queryJSON))
+			fmt.Printf("  SQL:     %s\n", result.SQL)
+			fmt.Printf("  Params:  %v\n", result.Params...)
+			fmt.Println()
+		})
+	}
+}
+
+func Test_Build(t *testing.T) {
+	tests := []struct {
+		name  string
+		query map[string]interface{}
+	}{
+		{
+			name: "1. 简单等值查询",
+			query: map[string]interface{}{
+				"name": "john",
+			},
+			// → SELECT * FROM users WHERE name = ?
+			// params: ["john"]
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			sql, args := BuildListDagInstanceQuery(&mod.ListDagInstanceInput{
+				Worker:     "aaa",
+				DagIDs:     []string{"123"},
+				UpdatedEnd: 111,
+				Status: []entity.DagInstanceStatus{
+					entity.DagInstanceStatusInit,
+					entity.DagInstanceStatusRunning,
+				},
+				HasCmd:        true,
+				Limit:         10,
+				Offset:        0,
+				Order:         0,
+				SortBy:        "createdAt",
+				DistinctField: "",
+				UserIDs:       []string{"id1"},
+				Priority: []interface{}{
+					1,
+					2,
+				},
+				TimeRange: &mod.TimeRangeSearch{
+					Begin: 10,
+					End:   20,
+					Field: "updatedAt",
+				},
+				ExcludeModeVM: true,
+				MatchQuery: &mod.MatchQuery{
+					Field: "vars.bund_id.run",
+					Value: "bundID",
+				},
+				SelectField: []string{},
+			}, true)
+
+			fmt.Printf("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n")
+			fmt.Printf("📋 %s\n", tt.name)
+			fmt.Printf("  SQL:     %s\n", sql)
+			fmt.Printf("  Params:  %v\n", args...)
+			fmt.Println()
+		})
+	}
+}

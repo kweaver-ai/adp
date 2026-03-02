@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"strconv"
 	"strings"
 	"time"
 
@@ -19,8 +20,11 @@ import (
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/pkg/mod"
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/pkg/rds"
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/store"
+	dagmodel "github.com/kweaver-ai/adp/autoflow/flow-automation/store/rds/dag"
+	"github.com/kweaver-ai/adp/autoflow/flow-automation/utils"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
+	"gorm.io/gorm"
 )
 
 // CreateDataFlowReq 创建数据流程请求
@@ -64,7 +68,7 @@ func (m *mgnt) CreateDataFlow(ctx context.Context, param *CreateDataFlowReq, use
 
 	// check duplicated name
 	dagInfo, err := m.mongo.GetDagByFields(ctx, map[string]interface{}{"name": param.Title})
-	if err != nil && !errors.Is(err, mongo.ErrNoDocuments) {
+	if err != nil && !errors.Is(err, mongo.ErrNoDocuments) && !errors.Is(err, gorm.ErrRecordNotFound) {
 		log.Warnf("[logic.CreateDag] GetDagByFields err, deail: %s", err.Error())
 		return "", ierrors.NewIError(ierrors.InternalError, "", nil)
 	}
@@ -180,6 +184,14 @@ func (m *mgnt) CreateDataFlow(ctx context.Context, param *CreateDataFlowReq, use
 		Enable: false,
 	}
 
+	dag.SetCheckRootNode(func(t []entity.Task) error {
+		_, bErr := mod.BuildRootNode(mod.MapTasksToGetter(dag.Tasks))
+		if bErr != nil {
+			return bErr
+		}
+		return nil
+	})
+
 	err = m.validSteps(&Validate{
 		Ctx:         ctx,
 		Steps:       stepList,
@@ -219,11 +231,9 @@ func (m *mgnt) CreateDataFlow(ctx context.Context, param *CreateDataFlowReq, use
 		return "", err
 	}
 
-	err = m.mongo.WithTransaction(ctx, func(sctx mongo.SessionContext) error {
-		// 设置定时任务
-		dagID, err = m.mongo.CreateDag(sctx, dag)
+	err = m.mongo.WithTransaction(ctx, func(nctx context.Context, ms mod.Store) error {
+		dagID, err = ms.CreateDag(nctx, dag)
 		if err != nil {
-			log.Warnf("[logic.CreateDataFlow] CreateDag err, detail: %s", err.Error())
 			return err
 		}
 
@@ -231,15 +241,16 @@ func (m *mgnt) CreateDataFlow(ctx context.Context, param *CreateDataFlowReq, use
 		dagVersion := dagVersions[0]
 		dagVersion.DagID = dagID
 		dagVersion.Config = entity.Config(config)
-		_, err = m.mongo.CreateDagVersion(sctx, dagVersion)
+		_, err = ms.CreateDagVersion(nctx, dagVersion)
 		if err != nil {
-			log.Warnf("[logic.CreateDataFlow] CreateDagVersion err, detail: %s", err.Error())
 			return err
 		}
 
 		return nil
 	})
+
 	if err != nil {
+		log.Warnf("[logic.CreateDataFlow] Transaction err, detail: %s", err.Error())
 		return "", ierrors.NewIError(ierrors.InternalError, "", nil)
 	}
 
@@ -281,8 +292,11 @@ func (m *mgnt) CreateDataFlow(ctx context.Context, param *CreateDataFlowReq, use
 			if !exist {
 				log.Warnf("[logic.CreateDataFlow] RegisterCronJob err, detail: %s", err.Error())
 				// 删除已创建的 dag
-				if berr := m.mongo.BatchDeleteDagWithTransaction(ctx, []string{dagID}); berr != nil {
-					log.Warnf("[logic.CreateDataFlow] BatchDeleteDagWithTransaction err, detail: %s", berr.Error())
+				// if berr := m.mongo.BatchDeleteDagWithTransaction(ctx, []string{dagID}); berr != nil {
+				// 	log.Warnf("[logic.CreateDataFlow] BatchDeleteDagWithTransaction err, detail: %s", berr.Error())
+				// }
+				if berr := m.mongo.DeleteDag(ctx, dagID); berr != nil {
+					log.Warnf("[logic.CreateDataFlow] DeleteDag err, detail: %s", berr.Error())
 				}
 
 				// 创建失败清除已绑定的权限策略配置
@@ -400,7 +414,7 @@ func (m *mgnt) UpdateDataFlow(ctx context.Context, dagID string, param *UpdateDa
 	query := map[string]interface{}{"_id": dagID, "type": common.DagTypeDataFlow}
 	dag, err := m.mongo.GetDagByFields(ctx, query)
 	if err != nil {
-		if errors.Is(err, mongo.ErrNoDocuments) {
+		if errors.Is(err, mongo.ErrNoDocuments) || errors.Is(err, gorm.ErrRecordNotFound) {
 			return ierrors.NewIError(ierrors.TaskNotFound, "", map[string]string{"dagId": dagID})
 		}
 		log.Warnf("[logic.UpdateDataFlow] GetDagByFields err, query: %v, detail: %s", query, err.Error())
@@ -588,24 +602,23 @@ func (m *mgnt) UpdateDataFlow(ctx context.Context, dagID string, param *UpdateDa
 		return err
 	}
 
-	err = m.mongo.WithTransaction(ctx, func(sctx mongo.SessionContext) error {
-		// 更新dag
-		if err = m.mongo.UpdateDag(sctx, dag); err != nil {
-			log.Warnf("[logic.UpdateDataFlow] UpdateDag err, detail: %s", err.Error())
+	err = m.mongo.WithTransaction(ctx, func(nctx context.Context, ms mod.Store) error {
+		if err = m.mongo.UpdateDag(ctx, dag); err != nil {
 			return err
 		}
 
 		for _, dagVersion := range dagVersions {
-			_, err = m.mongo.CreateDagVersion(sctx, dagVersion)
+			_, err = ms.CreateDagVersion(ctx, dagVersion)
 			if err != nil {
-				log.Warnf("[logic.UpdateDataFlow] CreateDagVersion err, detail: %s", err.Error())
 				return err
 			}
 		}
 
 		return nil
 	})
+
 	if err != nil {
+		log.Warnf("[logic.UpdateDataFlow] Transaction err, detail: %s", err.Error())
 		return ierrors.NewIError(ierrors.InternalError, "", nil)
 	}
 
@@ -725,4 +738,76 @@ func (m *mgnt) DeleteDataFlow(ctx context.Context, dagID, bizDomainID string, us
 	}()
 
 	return nil
+}
+
+func (m *mgnt) BuildDagVars(dag *entity.Dag) []*dagmodel.DagVar {
+	var vars []*dagmodel.DagVar
+	for k, v := range dag.Vars {
+		id, _ := utils.GetUniqueID()
+		dagID, _ := strconv.ParseUint(dag.ID, 10, 64)
+		vars = append(vars, &dagmodel.DagVar{
+			ID:           id,
+			DagID:        dagID,
+			VarName:      k,
+			DefaultValue: v.DefaultValue,
+			VarType:      "string",
+			Description:  v.Desc,
+		})
+	}
+
+	return vars
+}
+
+func (m *mgnt) BuildMetaDataSearch(dag *entity.Dag) []*dagmodel.MetadataSearch {
+	datas := []*dagmodel.MetadataSearch{}
+	dagID, _ := strconv.ParseUint(dag.ID, 10, 64)
+	for _, accessor := range dag.Accessors {
+		id, _ := utils.GetUniqueID()
+		datas = append(datas, &dagmodel.MetadataSearch{
+			ID:        id,
+			ObjID:     dagID,
+			Key:       "accessor.id",
+			Value:     accessor.ID,
+			ValueType: "string",
+			Type:      "dag",
+		})
+	}
+
+	for _, task := range dag.Tasks {
+		id, _ := utils.GetUniqueID()
+		if docid, ok := task.Params["docid"]; ok {
+			datas = append(datas, &dagmodel.MetadataSearch{
+				ID:        id,
+				ObjID:     dagID,
+				Key:       "steps.*.parameters.docid",
+				Value:     fmt.Sprintf("%v", docid),
+				ValueType: "string",
+				Type:      "dag",
+			})
+		}
+		if docids, ok := task.Params["docids"]; ok {
+			for _, docid := range docids.([]interface{}) {
+				id, _ := utils.GetUniqueID()
+				datas = append(datas, &dagmodel.MetadataSearch{
+					ID:        id,
+					ObjID:     dagID,
+					Key:       "steps.*.parameters.docid",
+					Value:     fmt.Sprintf("%v", docid),
+					ValueType: "string",
+					Type:      "dag",
+				})
+			}
+		}
+
+		datas = append(datas, &dagmodel.MetadataSearch{
+			ID:        id,
+			ObjID:     dagID,
+			Key:       "steps.*.operator",
+			Value:     task.ActionName,
+			ValueType: "string",
+			Type:      "dag",
+		})
+	}
+
+	return datas
 }

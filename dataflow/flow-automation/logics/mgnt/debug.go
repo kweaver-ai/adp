@@ -660,6 +660,13 @@ func (m *mgnt) FullDebug(ctx context.Context, params FullDeBugReq, userInfo *dri
 		}
 
 		dag.Initial()
+		dag.SetCheckRootNode(func(t []entity.Task) error {
+			_, bErr := mod.BuildRootNode(mod.MapTasksToGetter(dag.Tasks))
+			if bErr != nil {
+				return bErr
+			}
+			return nil
+		})
 		dag.Name = fmt.Sprintf("%v_DEBUG", dag.ID)
 		_, err = m.mongo.CreateDag(ctx, dag)
 		if err != nil {

@@ -72,6 +72,8 @@ func NewStore(option *StoreOption) *Store {
 	}
 }
 
+var _ mod.Store = (*Store)(nil)
+
 // Init store 初始化
 func (s *Store) Init() error {
 	if err := s.readOpt(); err != nil {
@@ -396,7 +398,7 @@ func (s *Store) Close() {
 }
 
 // WithTransaction 通用事务封装，自动管理会话与超时，并接入链路追踪
-func (s *Store) WithTransaction(ctx context.Context, fn func(sessCtx mongo.SessionContext) error) error {
+func (s *Store) WithTransaction(ctx context.Context, fn func(ctx context.Context, _ mod.Store) error) error {
 	var err error
 	if ctx != nonContext {
 		newCtx, span := trace.StartInternalSpan(ctx)
@@ -415,7 +417,7 @@ func (s *Store) WithTransaction(ctx context.Context, fn func(sessCtx mongo.Sessi
 		log.Debugf("[Store.WithTransaction] Running without transaction (non-replica-set mode)")
 		// 创建一个假的 SessionContext 来满足函数签名
 		// 在非事务模式下，直接使用 context 即可
-		return fn(mongo.NewSessionContext(ctx, nil))
+		return fn(ctx, s)
 	}
 
 	// 副本集模式：使用事务
@@ -428,7 +430,7 @@ func (s *Store) WithTransaction(ctx context.Context, fn func(sessCtx mongo.Sessi
 
 	// 执行事务
 	_, err = session.WithTransaction(ctx, func(sessCtx mongo.SessionContext) (interface{}, error) {
-		if err := fn(sessCtx); err != nil {
+		if err := fn(sessCtx, s); err != nil {
 			return nil, err
 		}
 		return nil, nil

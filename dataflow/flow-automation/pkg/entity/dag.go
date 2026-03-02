@@ -63,7 +63,8 @@ type Dag struct {
 	Template    string     `yaml:"template,omitempty" json:"template,omitempty" bson:"template,omitempty"`
 	Published   bool       `yaml:"publish,omitempty" json:"publish,omitempty" bson:"publish,omitempty"`
 
-	pushMessage func(topic string, message []byte) error `yaml:"-" json:"-" bson:"-"`
+	pushMessage   func(topic string, message []byte) error `yaml:"-" json:"-" bson:"-"`
+	checkRootNode func([]Task) error                       `yaml:"-" json:"-" bson:"-"`
 
 	TriggerConfig *TriggerConfig `yaml:"trigger_config,omitempty" json:"trigger_config,omitempty" bson:"trigger_config,omitempty"`
 
@@ -153,6 +154,17 @@ func WithCallBack(successCallBack, failCallBack string) DagRunOption {
 
 func (d *Dag) SetPushMessage(publish func(topic string, message []byte) error) {
 	d.pushMessage = publish
+}
+
+func (d *Dag) SetCheckRootNode(fn func([]Task) error) {
+	d.checkRootNode = fn
+}
+
+func (d *Dag) CheckRootNode(tasks []Task) error {
+	if d.checkRootNode == nil {
+		return nil
+	}
+	return d.checkRootNode(tasks)
 }
 
 // Run used to build a new DagInstance, then you also need save it to Store
