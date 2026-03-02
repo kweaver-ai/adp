@@ -128,6 +128,15 @@ func (g *SQLGenerator) GetNodeFieldsMap(nodeID string) (map[string]*cond.ViewFie
 	return node.OutputFieldsMap, nil
 }
 
+// GetNodeType 获取节点类型
+func (g *SQLGenerator) GetNodeType(nodeID string) (string, error) {
+	node, ok := g.nodes[nodeID]
+	if !ok {
+		return "", fmt.Errorf("node %s not found", nodeID)
+	}
+	return node.Type, nil
+}
+
 // buildViewSQL 生成view节点的SQL
 // SELECT [DISTINCT] fields FROM view_id WHERE conditions
 func (g *SQLGenerator) buildViewNodeSQL(ctx context.Context, node *interfaces.DataScopeNode) (string, error) {
@@ -367,8 +376,16 @@ func (g *SQLGenerator) buildUnionNodeSQL(ctx context.Context, node *interfaces.D
 				if err != nil {
 					return "", fmt.Errorf("failed to get node fields map for node %s in union node %s: %v", inputNodeID, node.ID, err)
 				}
-				if of, ok := inputNodeFieldsMap[field.Field]; ok {
-					selectFields[j] = fmt.Sprintf("%s AS %s", common.QuotationMark(of.OriginalName), common.QuotationMark(outputField))
+				inputNodeType, err := g.GetNodeType(inputNodeID)
+				if err != nil {
+					return "", fmt.Errorf("failed to get node type for node %s in union node %s: %v", inputNodeID, node.ID, err)
+				}
+				if inputNodeType == interfaces.DataScopeNodeType_View {
+					if of, ok := inputNodeFieldsMap[field.Field]; ok {
+						selectFields[j] = fmt.Sprintf("%s AS %s", common.QuotationMark(of.OriginalName), common.QuotationMark(outputField))
+					} else {
+						selectFields[j] = fmt.Sprintf("%s AS %s", common.QuotationMark(field.Field), common.QuotationMark(outputField))
+					}
 				} else {
 					selectFields[j] = fmt.Sprintf("%s AS %s", common.QuotationMark(field.Field), common.QuotationMark(outputField))
 				}
@@ -379,11 +396,12 @@ func (g *SQLGenerator) buildUnionNodeSQL(ctx context.Context, node *interfaces.D
 
 	// 构建UNION SQL
 	var unionType string
-	if cfg.UnionType == interfaces.UnionType_All {
+	switch cfg.UnionType {
+	case interfaces.UnionType_All:
 		unionType = "UNION ALL"
-	} else if cfg.UnionType == interfaces.UnionType_Distinct {
+	case interfaces.UnionType_Distinct:
 		unionType = "UNION"
-	} else {
+	default:
 		return "", fmt.Errorf("invalid union type %s for node %s", cfg.UnionType, node.ID)
 	}
 

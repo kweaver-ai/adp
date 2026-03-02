@@ -2531,6 +2531,10 @@ func (dvs *dataViewService) BuildViewQuery4MetricModel(ctx context.Context, star
 				WithErrorDetails(err.Error())
 		}
 
+		// 移除SQL开头的空白字符和结尾的空白字符和分号
+		selectSql = strings.TrimSpace(selectSql)
+		selectSql = strings.TrimSuffix(selectSql, ";")
+
 		return interfaces.ViewQuery4Metric{
 			QueryStr: selectSql,
 		}, nil
