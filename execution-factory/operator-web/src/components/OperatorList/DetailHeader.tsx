@@ -67,7 +67,7 @@ export default function DetailHeader({
             {metadataTypeLabel}
           </div>
         )}
-        <div className="operator-detail-nav">
+        <div className="operator-detail-nav" style={{ width: 'fit-content' }}>
           <span className="operator-detail-nav-back" onClick={handleBackToList}>
             <span style={{ marginRight: '6px', fontSize: '12px' }}>
               <LeftOutlined />
@@ -86,6 +86,7 @@ export default function DetailHeader({
                   whiteSpace: 'nowrap',
                   overflow: 'hidden',
                   textOverflow: 'ellipsis',
+                  lineHeight: 1.5,
                 }}
                 title={detailInfo?.name || detailInfo?.box_name}
               >

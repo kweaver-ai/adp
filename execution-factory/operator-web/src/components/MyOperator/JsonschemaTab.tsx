@@ -16,17 +16,11 @@ const generateParamsTableData = (parameters: any[], jsonSchema: any) => {
   });
 };
 
-const JsonschemaTab = ({ operatorInfo, type, data, onTableDataChange }: any) => {
+const JsonschemaTab = ({ operatorInfo, type, onTableDataChange, showIn = true }: any) => {
   const [tableData, setTableData] = useState<any>([]);
   const jsonSchema = operatorInfo?.metadata?.api_spec;
 
   useEffect(() => {
-    if (data) {
-      // mcp的数据结构跟工具/算子的不一样，所以由父组件处理好传进来
-      setTableData(data);
-      return;
-    }
-
     if (type === 'Inputs') {
       // 生成 header、query、path、cookie 参数的表格数据
       const headerQueryPathCookieParams = generateParamsTableData(jsonSchema?.parameters || [], jsonSchema);
@@ -52,7 +46,7 @@ const JsonschemaTab = ({ operatorInfo, type, data, onTableDataChange }: any) => 
       const resolvedParameters = dereference(newSchemas.parameters, newSchemas);
       setTableData(getTableData(resolvedParameters));
     }
-  }, [operatorInfo, data]);
+  }, [operatorInfo]);
 
   useEffect(() => {
     onTableDataChange?.(tableData);
@@ -70,7 +64,7 @@ const JsonschemaTab = ({ operatorInfo, type, data, onTableDataChange }: any) => 
       key: 'type',
     },
     // 仅 Inputs 类型需要来源列
-    ...(type === 'Inputs'
+    ...(showIn && type === 'Inputs'
       ? [
           {
             title: '来源',

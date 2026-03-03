@@ -47,6 +47,7 @@ export default function DebugResult({ selectedTool, type, parsedInputs }: any) {
             <DebugPanel
               selectedTool={selectedTool}
               type={type}
+              showInBodyHeader={type !== OperatorTypeEnum.MCP}
               onClose={() => setDebugDrawerVisible(false)}
               parsedInputs={parsedInputs}
               debugSettings={debugSettings}

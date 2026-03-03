@@ -24,10 +24,18 @@ interface TestCodeProps {
   selectedTool: any;
   type: OperatorTypeEnum;
   parsedInputs: any[];
+  showInBodyHeader: boolean; // 是否显示"body参数"header
   onClose: () => void;
 }
 
-const DebugPanel: FC<TestCodeProps> = ({ debugSettings, selectedTool, type, parsedInputs, onClose }) => {
+const DebugPanel: FC<TestCodeProps> = ({
+  debugSettings,
+  selectedTool,
+  type,
+  parsedInputs,
+  showInBodyHeader = true,
+  onClose,
+}) => {
   const microWidgetProps = useMicroWidgetProps();
   const [searchParams] = useSearchParams();
   const box_id = searchParams.get('box_id') || ''; // 从url中获取box_id
@@ -541,10 +549,12 @@ const DebugPanel: FC<TestCodeProps> = ({ debugSettings, selectedTool, type, pars
                 </div>
               ))}
             {hasBodyParam && (
-              <div className="dip-pl-20">
-                <div className="dip-c-bold dip-mt-10 dip-mb-10" style={{ marginLeft: '-10px' }}>
-                  body参数：
-                </div>
+              <div className={showInBodyHeader ? 'dip-pl-20' : ''}>
+                {showInBodyHeader && (
+                  <div className="dip-c-bold dip-mt-10 dip-mb-10" style={{ marginLeft: '-10px' }}>
+                    body参数：
+                  </div>
+                )}
                 <JSONEditor
                   className={classNames(styles['input-editor'], {
                     [styles['body-error']]: errorParams.has('body'),
