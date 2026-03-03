@@ -499,7 +499,7 @@ func TestDatasetDocumentsCreate(t *testing.T) {
 				"content":    generateVector(768),
 			},
 		}
-		resp := client.POST("/api/vega-backend/v1/resources/dataset/adp-"+resourceID+"/docs", documentsPayload)
+		resp := client.POST("/api/vega-backend/v1/resources/dataset/"+resourceID+"/docs", documentsPayload)
 		So(resp.StatusCode, ShouldEqual, http.StatusCreated)
 		So(resp.Body["ids"], ShouldNotBeEmpty)
 		ids, ok := resp.Body["ids"].([]interface{})
@@ -539,7 +539,7 @@ func TestDatasetDocumentsList(t *testing.T) {
 				"content":    generateVector(768),
 			},
 		}
-		createDocsResp := client.POST("/api/vega-backend/v1/resources/dataset/adp-"+resourceID+"/docs", documentsPayload)
+		createDocsResp := client.POST("/api/vega-backend/v1/resources/dataset/"+resourceID+"/docs", documentsPayload)
 		So(createDocsResp.StatusCode, ShouldEqual, http.StatusCreated)
 
 		// 构建查询条件
@@ -590,7 +590,7 @@ func TestDatasetDocumentGet(t *testing.T) {
 
 		// 先创建一个文档（使用批量创建接口）
 		docPayload := buildDatasetDocumentPayload()
-		createDocResp := client.POST("/api/vega-backend/v1/resources/dataset/adp-"+resourceID+"/docs", []map[string]any{docPayload})
+		createDocResp := client.POST("/api/vega-backend/v1/resources/dataset/"+resourceID+"/docs", []map[string]any{docPayload})
 		So(createDocResp.StatusCode, ShouldEqual, http.StatusCreated)
 		So(createDocResp.Body["ids"], ShouldNotBeEmpty)
 		ids, ok := createDocResp.Body["ids"].([]interface{})

@@ -46,7 +46,7 @@ func (ds *datasetService) Create(ctx context.Context, res *interfaces.Resource) 
 	defer span.End()
 
 	// 调用 dataset access 创建 dataset 索引，索引名称为 <res.source_identifier>-<catalog_id>
-	err := ds.da.Create(ctx, fmt.Sprintf("%s-%s", res.SourceIdentifier, res.ID), res.SchemaDefinition)
+	err := ds.da.Create(ctx, res.ID, res.SchemaDefinition)
 	if err != nil {
 		logger.Errorf("Create dataset index failed: %v", err)
 		o11y.Error(ctx, fmt.Sprintf("Create dataset index failed: %v", err))
@@ -81,7 +81,7 @@ func (ds *datasetService) Delete(ctx context.Context, res *interfaces.Resource) 
 	defer span.End()
 
 	// Check dataset exist first
-	exist, err := ds.da.CheckExist(ctx, fmt.Sprintf("%s-%s", res.SourceIdentifier, res.ID))
+	exist, err := ds.da.CheckExist(ctx, res.ID)
 	if err != nil {
 		span.SetStatus(codes.Error, "Check dataset exist failed")
 		return rest.NewHTTPError(ctx, http.StatusInternalServerError, verrors.VegaBackend_Resource_InternalError).
@@ -89,7 +89,7 @@ func (ds *datasetService) Delete(ctx context.Context, res *interfaces.Resource) 
 	}
 	if exist {
 		// Delete from storage
-		if err := ds.da.Delete(ctx, fmt.Sprintf("%s-%s", res.SourceIdentifier, res.ID)); err != nil {
+		if err := ds.da.Delete(ctx, res.ID); err != nil {
 			span.SetStatus(codes.Error, "Delete dataset failed")
 			return rest.NewHTTPError(ctx, http.StatusInternalServerError, verrors.VegaBackend_Resource_InternalError_DeleteFailed).
 				WithErrorDetails(err.Error())
@@ -105,9 +105,8 @@ func (ds *datasetService) ListDocuments(ctx context.Context, res *interfaces.Res
 	ctx, span := ar_trace.Tracer.Start(ctx, "List dataset documents")
 	defer span.End()
 
-	id := fmt.Sprintf("%s-%s", res.SourceIdentifier, res.ID)
 	// 调用 dataset access 列出文档
-	documents, total, err := ds.da.ListDocuments(ctx, id, params)
+	documents, total, err := ds.da.ListDocuments(ctx, res.ID, params)
 	if err != nil {
 		span.SetStatus(codes.Error, "List dataset documents failed")
 		return nil, 0, rest.NewHTTPError(ctx, http.StatusInternalServerError, verrors.VegaBackend_Resource_InternalError).

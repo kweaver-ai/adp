@@ -300,11 +300,6 @@ func (da *datasetAccess) ListDocuments(ctx context.Context, name string, params 
 	if err != nil {
 		return nil, 0, err
 	}
-	// 打印 queryJSON
-	println("---------------------------")
-	println(name)
-	println(string(queryJSON))
-	println("---------------------------")
 
 	// 列出文档
 	req := opensearchapi.SearchRequest{
