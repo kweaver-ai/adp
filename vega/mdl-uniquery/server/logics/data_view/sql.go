@@ -123,6 +123,15 @@ func (g *SQLGenerator) GetNodeFieldsMap(nodeID string) (map[string]*cond.ViewFie
 	return node.OutputFieldsMap, nil
 }
 
+// GetNodeType 获取节点类型
+func (g *SQLGenerator) GetNodeType(nodeID string) (string, error) {
+	node, ok := g.nodes[nodeID]
+	if !ok {
+		return "", fmt.Errorf("node %s not found", nodeID)
+	}
+	return node.Type, nil
+}
+
 // buildViewSQL 生成view节点的SQL
 // SELECT [DISTINCT] fields FROM view_id WHERE conditions
 func (g *SQLGenerator) buildViewNodeSQL(ctx context.Context, node *interfaces.DataScopeNode) (string, error) {
@@ -238,62 +247,64 @@ func (g *SQLGenerator) buildJoinNodeSQL(ctx context.Context, node *interfaces.Da
 	onClause := strings.Join(onConditionsStr, " AND ")
 
 	// 构建输出字段
-	// fields := make([]string, 0, len(node.OutputFields))
+	fields := make([]string, 0, len(node.OutputFields))
 	outputFieldsMap := make(map[string]*cond.ViewField)
 	for _, of := range node.OutputFields {
-		// var tableAlias string
-		// // 要判断 src_node 是否在inout_nodes里，又多判断了一次
-		// if of.SrcNodeID == leftNodeID {
-		// 	tableAlias = "lft"
-		// } else if of.SrcNodeID == rightNodeID {
-		// 	tableAlias = "rgt"
-		// } else {
-		// 	return "", fmt.Errorf("output field src_node %s not in input nodes for node %s", of.SrcNodeID, node.ID)
-		// }
+		var tableAlias string
+		// 要判断 src_node 是否在input_nodes里，又多判断了一次
+		switch of.SrcNodeID {
+		case leftNodeID:
+			tableAlias = "lft"
+		case rightNodeID:
+			tableAlias = "rgt"
+		default:
+			return "", fmt.Errorf("output field src_node %s not in input nodes for node %s", of.SrcNodeID, node.ID)
+		}
 
-		// fieldExpr := fmt.Sprintf("%s.%s", tableAlias, of.OriginalName)
-		// fields = append(fields, fieldExpr)
+		fieldExpr := fmt.Sprintf("%s.%s AS %s", tableAlias, common.QuotationMark(of.OriginalName), common.QuotationMark(of.Name))
+		fields = append(fields, fieldExpr)
 
 		// 构造输出视图的fieldsMap, name 和 字段的映射
 		outputFieldsMap[of.Name] = of
 	}
 	// 维护每个节点的output fields map
 	node.OutputFieldsMap = outputFieldsMap
-	// fieldsStr := strings.Join(fields, ", ")
+	fieldsStr := strings.Join(fields, ", ")
 	// 简化 sql 生成，join 或者 union 这里 select 的时候直接 select *
 	// 实际业务使用时建议在view节点配置好字段，view节点select的时候会select具体的字段
-	fieldsStr := "*"
+	// fieldsStr := "*"
 
+	// join节点不支持去重和过滤
 	fieldsClause := fieldsStr
-	if cfg.Distinct.Enable {
-		if len(cfg.Distinct.Fields) > 0 {
-			// 名称映射，将 去重的字段name 映射为视图的原始字段名original_name
-			distinctFields := make([]string, 0, len(cfg.Distinct.Fields))
-			for _, df := range cfg.Distinct.Fields {
-				if of, ok := outputFieldsMap[df]; ok {
-					distinctFields = append(distinctFields, common.QuotationMark(of.OriginalName))
-				}
-			}
+	// if cfg.Distinct.Enable {
+	// 	if len(cfg.Distinct.Fields) > 0 {
+	// 		// 名称映射，将 去重的字段name 映射为视图的原始字段名original_name
+	// 		distinctFields := make([]string, 0, len(cfg.Distinct.Fields))
+	// 		for _, df := range cfg.Distinct.Fields {
+	// 			if of, ok := outputFieldsMap[df]; ok {
+	// 				distinctFields = append(distinctFields,  common.QuotationMark(of.OriginalName))
+	// 			}
+	// 		}
 
-			fieldsClause = "DISTINCT " + strings.Join(distinctFields, ", ")
-		} else {
-			fieldsClause = "DISTINCT " + fieldsStr
-		}
-	}
+	// 		fieldsClause = "DISTINCT " + strings.Join(distinctFields, ", ")
+	// 	} else {
+	// 		fieldsClause = "DISTINCT " + fieldsStr
+	// 	}
+	// }
 
 	whereClause := ""
-	if cfg.Filters != nil {
-		// join后过滤，字段应该使用 outputFieldsMap 中的字段
-		condition, err := buildSQLCondition(ctx, cfg.Filters, interfaces.ViewType_Custom, outputFieldsMap)
-		if err != nil {
-			return "", err
-		}
-		if condition != "" {
-			whereClause = "WHERE " + condition
-		}
-	}
+	// if cfg.Filters != nil {
+	// 	// join后过滤，字段应该使用 outputFieldsMap 中的字段
+	// 	condition, err := buildSQLCondition(ctx, cfg.Filters, interfaces.ViewType_Custom, outputFieldsMap)
+	// 	if err != nil {
+	// 		return "", err
+	// 	}
+	// 	if condition != "" {
+	// 		whereClause = "WHERE " + condition
+	// 	}
+	// }
 
-	sql := fmt.Sprintf("SELECT %s FROM (%s) AS lft %s JOIN (%s) AS rgt ON %s %s",
+	sql := fmt.Sprintf("SELECT %s FROM ((%s) AS lft %s JOIN (%s) AS rgt ON %s) %s",
 		fieldsClause, leftSQL, strings.ToUpper(cfg.JoinType), rightSQL, onClause, whereClause)
 	return sql, nil
 }
@@ -360,8 +371,16 @@ func (g *SQLGenerator) buildUnionNodeSQL(ctx context.Context, node *interfaces.D
 				if err != nil {
 					return "", fmt.Errorf("failed to get node fields map for node %s in union node %s: %v", inputNodeID, node.ID, err)
 				}
-				if of, ok := inputNodeFieldsMap[field.Field]; ok {
-					selectFields[j] = fmt.Sprintf("%s AS %s", common.QuotationMark(of.OriginalName), common.QuotationMark(outputField))
+				inputNodeType, err := g.GetNodeType(inputNodeID)
+				if err != nil {
+					return "", fmt.Errorf("failed to get node type for node %s in union node %s: %v", inputNodeID, node.ID, err)
+				}
+				if inputNodeType == interfaces.DataScopeNodeType_View {
+					if of, ok := inputNodeFieldsMap[field.Field]; ok {
+						selectFields[j] = fmt.Sprintf("%s AS %s", common.QuotationMark(of.OriginalName), common.QuotationMark(outputField))
+					} else {
+						selectFields[j] = fmt.Sprintf("%s AS %s", common.QuotationMark(field.Field), common.QuotationMark(outputField))
+					}
 				} else {
 					selectFields[j] = fmt.Sprintf("%s AS %s", common.QuotationMark(field.Field), common.QuotationMark(outputField))
 				}
@@ -372,11 +391,12 @@ func (g *SQLGenerator) buildUnionNodeSQL(ctx context.Context, node *interfaces.D
 
 	// 构建UNION SQL
 	var unionType string
-	if cfg.UnionType == interfaces.UnionType_All {
+	switch cfg.UnionType {
+	case interfaces.UnionType_All:
 		unionType = "UNION ALL"
-	} else if cfg.UnionType == interfaces.UnionType_Distinct {
+	case interfaces.UnionType_Distinct:
 		unionType = "UNION"
-	} else {
+	default:
 		return "", fmt.Errorf("invalid union type %s for node %s", cfg.UnionType, node.ID)
 	}
 
