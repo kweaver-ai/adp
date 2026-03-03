@@ -27,14 +27,17 @@ import (
 )
 
 const (
-	DAG_TABLENAME            = "t_dag"
-	DAGINSTANCE_TABLENAME    = "t_dag_instance"
-	TASKINSTANCE_TABLENAME   = "t_task_instance"
-	DAGVAR_TABLENAME         = "t_dag_var"
-	DAGVERSIONS_TABLENAME    = "t_dag_versions"
-	METADATASEARCH_TABLENAME = "t_metadata_search"
-	OUTBOXMESSAGE_TABLENAME  = "t_outbox"
-	INBOXMESSAGE_TABLENAME   = "t_inbox"
+	DAG_TABLENAME              = "t_dag"
+	DAGINSTANCE_TABLENAME      = "t_dag_instance"
+	TASKINSTANCE_TABLENAME     = "t_task_instance"
+	DAGVAR_TABLENAME           = "t_dag_var"
+	DAGVERSIONS_TABLENAME      = "t_dag_versions"
+	METADATASEARCH_TABLENAME   = "t_metadata_search"
+	DAGSTEPINDEX_TABLENAME     = "t_dag_step_index"
+	DAGTRIGGERINDEX_TABLENAME  = "t_dag_trigger_config_index"
+	DAGACCESSORINDEX_TABLENAME = "t_dag_accessor_index"
+	OUTBOXMESSAGE_TABLENAME    = "t_outbox"
+	INBOXMESSAGE_TABLENAME     = "t_inbox"
 )
 
 // Dag 流程配置数据库模型
@@ -96,6 +99,27 @@ type MetadataSearch struct {
 	Value     string `json:"f_value" gorm:"column:f_value"`
 	ValueType string `json:"f_value_type" gorm:"column:f_value_type"`
 	Type      string `json:"f_type" gorm:"column:f_type"`
+}
+
+type DagStepIndex struct {
+	ID            uint64 `gorm:"column:f_id;primaryKey"`
+	DagID         uint64 `gorm:"column:f_dag_id"`
+	Operator      string `gorm:"column:f_operator"`
+	SourceID      string `gorm:"column:f_source_id"`
+	HasDatasource bool   `gorm:"column:f_has_datasource"`
+}
+
+type DagTriggerConfigIndex struct {
+	ID       uint64 `gorm:"column:f_id;primaryKey"`
+	DagID    uint64 `gorm:"column:f_dag_id"`
+	Operator string `gorm:"column:f_operator"`
+	SourceID string `gorm:"column:f_source_id"`
+}
+
+type DagAccessorIndex struct {
+	ID         uint64 `gorm:"column:f_id;primaryKey"`
+	DagID      uint64 `gorm:"column:f_dag_id"`
+	AccessorID string `gorm:"column:f_accessor_id"`
 }
 
 type DagVersion struct {
@@ -918,6 +942,11 @@ func (d *dag) CreateDag(ctx context.Context, dag *entity.Dag) (string, error) {
 			return err
 		}
 
+		err = d.refreshDagIndexes(newCtx, dag)
+		if err != nil {
+			return err
+		}
+
 		return nil
 	}
 
@@ -1036,6 +1065,98 @@ func (d *dag) CreateMetaDataSearch(ctx context.Context, searchs []*MetadataSearc
 	return err
 }
 
+func (d *dag) refreshDagIndexes(ctx context.Context, dag *entity.Dag) error {
+	var err error
+	newCtx, span := trace.StartInternalSpan(ctx)
+	defer func() { trace.TelemetrySpanEnd(span, err) }()
+
+	if dag == nil {
+		return nil
+	}
+
+	dagID, parseErr := strconv.ParseUint(dag.ID, 10, 64)
+	if parseErr != nil {
+		return parseErr
+	}
+
+	stepRows := BuildDagStepIndex(dag)
+	triggerRows := BuildDagTriggerConfigIndex(dag)
+	accessorRows := BuildDagAccessorIndex(dag)
+
+	deleteIndexes := func(table string) error {
+		sqlStr := fmt.Sprintf("DELETE FROM %s WHERE f_dag_id = ?", table)
+		trace.SetAttributes(newCtx, attribute.String(trace.TABLE_NAME, table), attribute.String(trace.DB_SQL, sqlStr), attribute.String(trace.DB_QUERY, fmt.Sprintf("%v", dagID)))
+		return d.db.Exec(sqlStr, dagID).Error
+	}
+
+	if err = deleteIndexes(DAGSTEPINDEX_TABLENAME); err != nil {
+		return err
+	}
+	if err = deleteIndexes(DAGTRIGGERINDEX_TABLENAME); err != nil {
+		return err
+	}
+	if err = deleteIndexes(DAGACCESSORINDEX_TABLENAME); err != nil {
+		return err
+	}
+
+	insertStepRows := func(rows []*DagStepIndex) error {
+		if len(rows) == 0 {
+			return nil
+		}
+		sqlStr := fmt.Sprintf("INSERT INTO %s (f_id, f_dag_id, f_operator, f_source_id, f_has_datasource) VALUES ", DAGSTEPINDEX_TABLENAME)
+		values := make([]any, 0, len(rows)*5)
+		for _, row := range rows {
+			sqlStr += "(?, ?, ?, ?, ?),"
+			values = append(values, row.ID, row.DagID, row.Operator, row.SourceID, row.HasDatasource)
+		}
+		sqlStr = strings.TrimSuffix(sqlStr, ",")
+		trace.SetAttributes(newCtx, attribute.String(trace.TABLE_NAME, DAGSTEPINDEX_TABLENAME), attribute.String(trace.DB_SQL, sqlStr))
+		return d.db.Exec(sqlStr, values...).Error
+	}
+
+	insertTriggerRows := func(rows []*DagTriggerConfigIndex) error {
+		if len(rows) == 0 {
+			return nil
+		}
+		sqlStr := fmt.Sprintf("INSERT INTO %s (f_id, f_dag_id, f_operator, f_source_id) VALUES ", DAGTRIGGERINDEX_TABLENAME)
+		values := make([]any, 0, len(rows)*4)
+		for _, row := range rows {
+			sqlStr += "(?, ?, ?, ?),"
+			values = append(values, row.ID, row.DagID, row.Operator, row.SourceID)
+		}
+		sqlStr = strings.TrimSuffix(sqlStr, ",")
+		trace.SetAttributes(newCtx, attribute.String(trace.TABLE_NAME, DAGTRIGGERINDEX_TABLENAME), attribute.String(trace.DB_SQL, sqlStr))
+		return d.db.Exec(sqlStr, values...).Error
+	}
+
+	insertAccessorRows := func(rows []*DagAccessorIndex) error {
+		if len(rows) == 0 {
+			return nil
+		}
+		sqlStr := fmt.Sprintf("INSERT INTO %s (f_id, f_dag_id, f_accessor_id) VALUES ", DAGACCESSORINDEX_TABLENAME)
+		values := make([]any, 0, len(rows)*3)
+		for _, row := range rows {
+			sqlStr += "(?, ?, ?),"
+			values = append(values, row.ID, row.DagID, row.AccessorID)
+		}
+		sqlStr = strings.TrimSuffix(sqlStr, ",")
+		trace.SetAttributes(newCtx, attribute.String(trace.TABLE_NAME, DAGACCESSORINDEX_TABLENAME), attribute.String(trace.DB_SQL, sqlStr))
+		return d.db.Exec(sqlStr, values...).Error
+	}
+
+	if err = insertStepRows(stepRows); err != nil {
+		return err
+	}
+	if err = insertTriggerRows(triggerRows); err != nil {
+		return err
+	}
+	if err = insertAccessorRows(accessorRows); err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func (d *dag) CreateDagVersion(ctx context.Context, dagVersion *entity.DagVersion) (string, error) {
 	var err error
 	newCtx, span := trace.StartInternalSpan(ctx)
@@ -1145,6 +1266,11 @@ func (d *dag) UpdateDag(ctx context.Context, dag *entity.Dag) error {
 		}
 
 		err = d.CreateMetaDataSearch(newCtx, BuildDagSearch(dag))
+		if err != nil {
+			return err
+		}
+
+		err = d.refreshDagIndexes(newCtx, dag)
 		if err != nil {
 			return err
 		}
@@ -2571,67 +2697,10 @@ func (d *dag) ListDag(ctx context.Context, input *mod.ListDagInput) ([]*entity.D
 
 	conds = append(conds, "f_removed <> 1", "f_is_debug <> 1")
 
-	// metadata filters
-	var dynKeys []string
-	var dynArgs []interface{}
-
-	if len(input.Trigger) > 0 {
-		dynKeys = append(dynKeys, "(f_key = ? AND f_value IN ?)")
-		dynArgs = append(dynArgs, "steps.*.operator", input.Trigger)
-		if len(input.Sources) > 0 {
-			dynKeys = append(dynKeys, "(f_key = ? AND f_value IN ?)")
-			dynArgs = append(dynArgs, "steps.*.parameters.docid", input.Sources)
-		}
-	}
-
-	if input.Accessors != nil && input.UserID == "" {
-		dynKeys = append(dynKeys, "(f_key = ? AND f_value IN ?)")
-		dynArgs = append(dynArgs, "accessor.id", input.Accessors)
-	}
-
-	if input.Scope == "all" {
-		if len(input.Accessors) > 0 {
-			var subKeys []string
-			var subArgs []interface{}
-			subKeys = append(subKeys, "(f_key = ? AND f_value IN ?)")
-			subArgs = append(subArgs, "accessor.id", input.Accessors)
-			ids, qerr := queryDagIDsByMetadata(d.db, subKeys, subArgs, ObjTypeDag)
-			if qerr != nil {
-				return nil, qerr
-			}
-			if len(ids) > 0 {
-				conds = append(conds, "(f_id IN ? OR f_user_id = ?)")
-				args = append(args, ids, input.UserID)
-			} else {
-				conds = append(conds, "f_user_id = ?")
-				args = append(args, input.UserID)
-			}
-		}
-	}
-
-	if len(dynKeys) > 0 {
-		ids, qerr := queryDagIDsByMetadata(d.db, dynKeys, dynArgs, ObjTypeDag)
-		if qerr != nil {
-			return nil, qerr
-		}
-		if len(ids) == 0 {
-			return []*entity.Dag{}, nil
-		}
-		conds = append(conds, "f_id IN ?")
-		args = append(args, ids)
-	}
-
-	if len(input.TriggerExclude) > 0 && input.Scope != "all" {
-		exKeys := []string{"(f_key = ? AND f_value IN ?)"}
-		exArgs := []interface{}{"steps.*.operator", input.TriggerExclude}
-		exIDs, qerr := queryDagIDsByMetadata(d.db, exKeys, exArgs, ObjTypeDag)
-		if qerr != nil {
-			return nil, qerr
-		}
-		if len(exIDs) > 0 {
-			conds = append(conds, "f_id NOT IN ?")
-			args = append(args, exIDs)
-		}
+	indexCond, indexArgs := BuildDagIndexSubquery(input)
+	if indexCond != "" {
+		conds = append(conds, indexCond)
+		args = append(args, indexArgs...)
 	}
 
 	sql := "SELECT * FROM t_dag"
@@ -2850,34 +2919,13 @@ func (d *dag) ListDagCount(ctx context.Context, input *mod.ListDagInput) (int64,
 	conds = append(conds, "f_removed <> 1", "f_is_debug <> 1")
 
 	if len(input.Sources) != 0 && len(input.Trigger) > 0 {
-		var dynKeys []string
-		var dynArgs []interface{}
-		dynKeys = append(dynKeys, "(f_key = ? AND f_value IN ?)")
-		dynArgs = append(dynArgs, "steps.*.operator", input.Trigger)
-		dynKeys = append(dynKeys, "(f_key = ? AND f_value IN ?)")
-		dynArgs = append(dynArgs, "steps.*.parameters.docid", input.Sources)
-
-		ids, qerr := queryDagIDsByMetadata(d.db, dynKeys, dynArgs, ObjTypeDag)
-		if qerr != nil {
-			return 0, qerr
-		}
-		if len(ids) == 0 {
-			return 0, nil
-		}
-		conds = append(conds, "f_id IN ?")
-		args = append(args, ids)
+		conds = append(conds, "f_id IN (SELECT f_dag_id FROM t_dag_step_index WHERE f_operator IN ? AND f_source_id IN ?)")
+		args = append(args, input.Trigger, input.Sources)
 	}
 
 	if input.Accessors != nil && input.UserID == "" {
-		ids, qerr := queryDagIDsByMetadata(d.db, []string{"(f_key = ? AND f_value IN ?)"}, []interface{}{"accessor.id", input.Accessors}, ObjTypeDag)
-		if qerr != nil {
-			return 0, qerr
-		}
-		if len(ids) == 0 {
-			return 0, nil
-		}
-		conds = append(conds, "f_id IN ?")
-		args = append(args, ids)
+		conds = append(conds, "f_id IN (SELECT f_dag_id FROM t_dag_accessor_index WHERE f_accessor_id IN ?)")
+		args = append(args, input.Accessors)
 	}
 
 	sql := "SELECT COUNT(*) FROM t_dag"

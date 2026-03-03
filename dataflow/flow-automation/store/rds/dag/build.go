@@ -722,3 +722,170 @@ func BuildDagSearch(dag *entity.Dag) []*MetadataSearch {
 
 	return datas
 }
+
+func BuildDagStepIndex(dag *entity.Dag) []*DagStepIndex {
+	if dag == nil {
+		return nil
+	}
+	dagID, _ := strconv.ParseUint(dag.ID, 10, 64)
+	rows := []*DagStepIndex{}
+
+	addRow := func(operator, sourceID string, hasDatasource bool) {
+		id, _ := utils.GetUniqueID()
+		rows = append(rows, &DagStepIndex{
+			ID:            id,
+			DagID:         dagID,
+			Operator:      operator,
+			SourceID:      sourceID,
+			HasDatasource: hasDatasource,
+		})
+	}
+
+	var walkSteps func(steps []entity.Step)
+	walkSteps = func(steps []entity.Step) {
+		for _, step := range steps {
+			hasDatasource := step.DataSource != nil
+			if step.Operator != "" {
+				addRow(step.Operator, "", hasDatasource)
+				for _, sourceID := range extractSourceIDs(step.Parameters) {
+					addRow(step.Operator, sourceID, hasDatasource)
+				}
+			} else if hasDatasource {
+				addRow("", "", true)
+			}
+			if len(step.Steps) > 0 {
+				walkSteps(step.Steps)
+			}
+			if len(step.Branches) > 0 {
+				for _, br := range step.Branches {
+					if len(br.Steps) > 0 {
+						walkSteps(br.Steps)
+					}
+				}
+			}
+		}
+	}
+
+	walkSteps(dag.Steps)
+	return rows
+}
+
+func BuildDagTriggerConfigIndex(dag *entity.Dag) []*DagTriggerConfigIndex {
+	if dag == nil || dag.TriggerConfig == nil || dag.TriggerConfig.Operator == "" {
+		return nil
+	}
+	dagID, _ := strconv.ParseUint(dag.ID, 10, 64)
+	rows := []*DagTriggerConfigIndex{}
+
+	addRow := func(sourceID string) {
+		id, _ := utils.GetUniqueID()
+		rows = append(rows, &DagTriggerConfigIndex{
+			ID:       id,
+			DagID:    dagID,
+			Operator: dag.TriggerConfig.Operator,
+			SourceID: sourceID,
+		})
+	}
+
+	addRow("")
+	for _, sourceID := range extractSourceIDs(dag.TriggerConfig.Parameters) {
+		addRow(sourceID)
+	}
+	return rows
+}
+
+func BuildDagAccessorIndex(dag *entity.Dag) []*DagAccessorIndex {
+	if dag == nil {
+		return nil
+	}
+	dagID, _ := strconv.ParseUint(dag.ID, 10, 64)
+	rows := []*DagAccessorIndex{}
+	for _, accessor := range dag.Accessors {
+		if accessor.ID == "" {
+			continue
+		}
+		id, _ := utils.GetUniqueID()
+		rows = append(rows, &DagAccessorIndex{
+			ID:         id,
+			DagID:      dagID,
+			AccessorID: accessor.ID,
+		})
+	}
+	return rows
+}
+
+func extractSourceIDs(params map[string]interface{}) []string {
+	if len(params) == 0 {
+		return nil
+	}
+	sourceIDs := make([]string, 0)
+	if v, ok := params["docid"]; ok {
+		sourceIDs = append(sourceIDs, fmt.Sprintf("%v", v))
+	}
+	if v, ok := params["docids"]; ok {
+		switch typed := v.(type) {
+		case []interface{}:
+			for _, item := range typed {
+				sourceIDs = append(sourceIDs, fmt.Sprintf("%v", item))
+			}
+		case []string:
+			sourceIDs = append(sourceIDs, typed...)
+		}
+	}
+	return sourceIDs
+}
+
+func BuildDagIndexSubquery(input *mod.ListDagInput) (string, []interface{}) {
+	if input == nil {
+		return "", nil
+	}
+
+	conds := make([]string, 0)
+	args := make([]interface{}, 0)
+
+	if input.Scope == "all" {
+		unionParts := make([]string, 0, 2)
+		if len(input.Accessors) > 0 {
+			sub := "SELECT f_dag_id FROM t_dag_accessor_index WHERE f_accessor_id IN ?"
+			args = append(args, input.Accessors)
+			if len(input.TriggerExclude) > 0 {
+				sub += " AND f_dag_id NOT IN (SELECT f_dag_id FROM t_dag_step_index WHERE f_operator IN ?)"
+				args = append(args, input.TriggerExclude)
+			}
+			unionParts = append(unionParts, sub)
+		}
+		if input.UserID != "" {
+			unionParts = append(unionParts, "SELECT f_id FROM t_dag WHERE f_user_id = ?")
+			args = append(args, input.UserID)
+		}
+		if len(unionParts) > 0 {
+			conds = append(conds, fmt.Sprintf("f_id IN (%s)", strings.Join(unionParts, " UNION ")))
+		}
+		conds = append(conds, "f_id NOT IN (SELECT f_dag_id FROM t_dag_step_index WHERE f_has_datasource = 1)")
+		return strings.Join(conds, " AND "), args
+	}
+
+	if len(input.Trigger) > 0 {
+		if len(input.Sources) > 0 {
+			subStep := "SELECT f_dag_id FROM t_dag_step_index WHERE f_operator IN ? AND f_source_id IN ?"
+			subTrigger := "SELECT f_dag_id FROM t_dag_trigger_config_index WHERE f_operator IN ? AND f_source_id IN ?"
+			conds = append(conds, fmt.Sprintf("f_id IN (%s UNION %s)", subStep, subTrigger))
+			args = append(args, input.Trigger, input.Sources, input.Trigger, input.Sources)
+		} else {
+			subStep := "SELECT f_dag_id FROM t_dag_step_index WHERE f_operator IN ?"
+			subTrigger := "SELECT f_dag_id FROM t_dag_trigger_config_index WHERE f_operator IN ?"
+			conds = append(conds, fmt.Sprintf("f_id IN (%s UNION %s)", subStep, subTrigger))
+			args = append(args, input.Trigger, input.Trigger)
+		}
+	} else if len(input.TriggerExclude) > 0 {
+		conds = append(conds, "f_id NOT IN (SELECT f_dag_id FROM t_dag_step_index WHERE f_operator IN ?)")
+		args = append(args, input.TriggerExclude)
+	}
+
+	if input.Accessors != nil && input.UserID == "" {
+		conds = append(conds, "f_id IN (SELECT f_dag_id FROM t_dag_accessor_index WHERE f_accessor_id IN ?)")
+		args = append(args, input.Accessors)
+	}
+
+	return strings.Join(conds, " AND "), args
+}

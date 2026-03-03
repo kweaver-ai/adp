@@ -3,6 +3,7 @@ package dagmodel
 import (
 	"encoding/json"
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/pkg/entity"
@@ -212,5 +213,54 @@ func Test_Build(t *testing.T) {
 			fmt.Printf("  Params:  %v\n", args...)
 			fmt.Println()
 		})
+	}
+}
+
+func TestBuildDagStepIndex(t *testing.T) {
+	dag := &entity.Dag{BaseInfo: entity.BaseInfo{ID: "1"}, Steps: []entity.Step{
+		{Operator: "op1", Parameters: map[string]interface{}{"docid": "d1"}},
+		{Operator: "op2", Parameters: map[string]interface{}{"docids": []interface{}{"d2", "d3"}}, DataSource: &entity.DataSource{}},
+	}}
+	rows := BuildDagStepIndex(dag)
+	if len(rows) < 3 {
+		t.Fatalf("expected >= 3 rows, got %d", len(rows))
+	}
+}
+
+func TestBuildDagTriggerConfigIndex(t *testing.T) {
+	dag := &entity.Dag{BaseInfo: entity.BaseInfo{ID: "1"}, TriggerConfig: &entity.TriggerConfig{
+		Operator:   "trig",
+		Parameters: map[string]interface{}{"docids": []string{"s1", "s2"}},
+	}}
+	rows := BuildDagTriggerConfigIndex(dag)
+	if len(rows) == 0 {
+		t.Fatalf("expected trigger config rows")
+	}
+}
+
+func TestBuildDagAccessorIndex(t *testing.T) {
+	dag := &entity.Dag{BaseInfo: entity.BaseInfo{ID: "1"}, Accessors: []entity.Accessor{{ID: "a1"}, {ID: "a2"}}}
+	rows := BuildDagAccessorIndex(dag)
+	if len(rows) != 2 {
+		t.Fatalf("expected 2 rows, got %d", len(rows))
+	}
+}
+
+func TestBuildDagIndexSubquery_TriggerSources(t *testing.T) {
+	input := &mod.ListDagInput{Trigger: []string{"op"}, Sources: []string{"s1"}}
+	sql, args := BuildDagIndexSubquery(input)
+	if !strings.Contains(sql, "t_dag_step_index") || !strings.Contains(sql, "UNION") {
+		t.Fatalf("unexpected sql: %s", sql)
+	}
+	if len(args) == 0 {
+		t.Fatalf("expected args")
+	}
+}
+
+func TestBuildDagIndexSubquery_ScopeAll(t *testing.T) {
+	input := &mod.ListDagInput{Scope: "all", UserID: "u1", Accessors: []string{"a1"}, TriggerExclude: []string{"op"}}
+	sql, _ := BuildDagIndexSubquery(input)
+	if !strings.Contains(sql, "t_dag_accessor_index") || !strings.Contains(sql, "t_dag_step_index") {
+		t.Fatalf("unexpected sql: %s", sql)
 	}
 }
