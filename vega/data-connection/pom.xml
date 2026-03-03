@@ -42,14 +42,16 @@
 
     <repositories>
         <repository>
-            <id>eisoomaven</id>
-            <name>爱数公共仓库</name>
-            <url>http://repository.aishu.cn:8081/repository/maven-public/</url>
+            <id>data-connection-packages</id>
+            <name>data-connection-packages</name>
+            <url>https://raw.githubusercontent.com/kweaver-ai/kweaver-deps/main/adp/vega-lib/</url>
             <releases>
                 <enabled>true</enabled>
+                <updatePolicy>never</updatePolicy>
+                <checksumPolicy>warn</checksumPolicy>
             </releases>
             <snapshots>
-                <enabled>false</enabled>
+                <enabled>true</enabled>
             </snapshots>
         </repository>
     </repositories>

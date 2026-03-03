@@ -19,6 +19,22 @@
         <maven.compiler.target>8</maven.compiler.target>
     </properties>
 
+    <repositories>
+        <repository>
+            <id>data-connection-packages</id>
+            <name>data-connection-packages</name>
+            <url>https://raw.githubusercontent.com/kweaver-ai/kweaver-deps/main/adp/vega-lib/</url>
+            <releases>
+                <enabled>true</enabled>
+                <updatePolicy>never</updatePolicy>
+                <checksumPolicy>warn</checksumPolicy>
+            </releases>
+            <snapshots>
+                <enabled>true</enabled>
+            </snapshots>
+        </repository>
+    </repositories>
+
     <dependencies>
         <dependency>
             <groupId>org.apache.httpcomponents</groupId>
