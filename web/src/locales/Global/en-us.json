@@ -267,6 +267,10 @@
     "cellRangeTip": "After selecting the sheet page, fill in the starting and ending cells of the data to determine the data range of the view. For example \"Start-End Cell: A2-C3\"",
     "dataProperty": "Data Property",
     "dataView": "Data View",
+    "dataViewField": "Data View Field",
+    "resource": "Resource",
+    "indexedObject": "Indexed Object",
+    "indexedObjectStats": "{count} (Storage: {size})",
     "cronTip": "Specify task scheduling time through Cron expression, and check query and analysis results according to the specified task scheduling time.<br/>The minimum accuracy of Cron expression is second, 24-hour clock. For example: 0 */1 * * * ? Starting from 0:00, check every 1 minute",
     "every": "Every",
     "fixRate": "Fixed Rate",
@@ -302,6 +306,7 @@
     "setFieldFeature": "Set Field Feature",
     "unset": "Unset",
     "clearSuccess": "Cleared successfully",
-    "clear": "Clear"
+    "clear": "Clear",
+    "collapse": "Collapse"
   }
 }

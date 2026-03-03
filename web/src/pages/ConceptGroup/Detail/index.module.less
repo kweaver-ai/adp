@@ -1,37 +1,57 @@
-.name-icon {
-  display: flex;
-  align-items: center;
-  justify-content: center;
+.concept-group-detail-page {
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 100%;
+  padding: 0 24px 24px;
+  background: #f5f7fa;
+}
+
+.top-edit-btn {
+  width: 74px;
+  height: 32px;
+}
+
+.top-more-btn {
   width: 32px;
   height: 32px;
-  margin-right: 12px;
-  border-radius: 4px;
+  padding: 0 !important;
 }
 
-.base-info-item {
-  display: flex;
-  margin-bottom: 16px;
-
-  &:last-child {
-    margin-bottom: 0;
-  }
+.section-card {
+  padding: 16px 20px;
+  margin-bottom: 12px;
+  background: #fff;
+  border: 1px solid #e5e6eb;
+  border-radius: 8px;
 }
 
-.base-info-label {
-  flex-shrink: 0;
-  width: 40px;
-  margin-right: 20px;
-  font-weight: 500;
-  color: rgb(0 0 0 / 85%);
-  text-align: left;
+.section-title {
+  margin-bottom: 12px !important;
 }
 
-.obj-name-icon {
+.section-toolbar {
   display: flex;
   align-items: center;
-  justify-content: center;
-  width: 24px;
-  height: 24px;
-  margin-right: 10px;
-  border-radius: 4px;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.toolbar-left {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.toolbar-right {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.table-name-cell {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  min-width: 0;
+  cursor: pointer;
 }

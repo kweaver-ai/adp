@@ -53,6 +53,8 @@ const EditDrawer: React.FC<{
   const [form] = Form.useForm();
   const type = Form.useWatch('type', form);
   const id = Form.useWatch('id', form);
+  const optionsRequestIdRef = useRef(0);
+  const metricFieldsRequestIdRef = useRef(0);
 
   const { message } = HOOKS.useGlobalContext();
   const { VALUE_FROM_OPTIONS, LOGIC_ATTR_TYPE_OPTIONS, OPERATOR_TYPE_OPTIONS, FIELD_TYPE_INPUT } = HOOKS.useConstants();
@@ -81,9 +83,7 @@ const EditDrawer: React.FC<{
       } else {
         // 新增模式，重置表单并设置默认类型为第一个选项
         form.resetFields();
-        if (LOGIC_ATTR_TYPE_OPTIONS.length > 0) {
-          form.setFieldValue('type', LOGIC_ATTR_TYPE_OPTIONS[0].value);
-        }
+        form.setFieldValue('type', OntologyObjectType.LogicAttributeType.METRIC);
         isDisplayNameManuallyEdited.current = false;
       }
       if (attrInfo?.parameters?.length) {
@@ -95,35 +95,7 @@ const EditDrawer: React.FC<{
       form.resetFields();
       setSettingList([]);
     }
-  }, [
-    open,
-    form,
-    LOGIC_ATTR_TYPE_OPTIONS,
-    attrInfo?.name,
-    attrInfo?.display_name,
-    attrInfo?.comment,
-    attrInfo?.data_source?.id,
-    attrInfo?.data_source?.type,
-    attrInfo?.parameters,
-  ]);
-
-  useEffect(() => {
-    if (type === OntologyObjectType.LogicAttributeType.METRIC) {
-      getMetricModelList();
-    } else if (type === OntologyObjectType.LogicAttributeType.OPERATOR) {
-      getOperatorList();
-    }
-  }, [type]);
-
-  useEffect(() => {
-    if (type === OntologyObjectType.LogicAttributeType.OPERATOR) {
-      if (!id || !nameOptions?.length) return;
-      const api_spec = nameOptions.find((item) => item.value === id)?.api_spec;
-      handleOperatorDetail(api_spec);
-    } else if (type === OntologyObjectType.LogicAttributeType.METRIC) {
-      getMetricModelFields(id);
-    }
-  }, [id, type, nameOptions]);
+  }, [open, form, attrInfo?.name, attrInfo?.display_name, attrInfo?.comment, attrInfo?.data_source?.id, attrInfo?.data_source?.type, attrInfo?.parameters]);
 
   // 处理属性名输入变化
   const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -135,7 +107,7 @@ const EditDrawer: React.FC<{
   };
 
   // 处理显示名输入变化
-  const handleDisplayNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleDisplayNameChange = (_e: React.ChangeEvent<HTMLInputElement>) => {
     // 用户手动修改了显示名，标记为已手动编辑
     isDisplayNameManuallyEdited.current = true;
   };
@@ -182,18 +154,19 @@ const EditDrawer: React.FC<{
   };
 
   // 获取算子列表
-  const getOperatorList = async () => {
+  const getOperatorList = async (requestId?: number) => {
     const res = await objectApi.getOperatorList({
       page: 1,
       page_size: -1,
       execution_mode: 'sync',
     });
     const data = res?.data || [];
+    if (requestId && requestId !== optionsRequestIdRef.current) return;
     setNameOptions(data.map((item: any) => ({ label: item.name, value: item.operator_id, api_spec: item.metadata?.api_spec })));
   };
 
   // 获取指标模型列表
-  const getMetricModelList = async () => {
+  const getMetricModelList = async (requestId?: number) => {
     const res = await objectApi.getMetricModelList({
       limit: -1,
       offset: 0,
@@ -201,6 +174,7 @@ const EditDrawer: React.FC<{
       direction: 'desc',
     });
 
+    if (requestId && requestId !== optionsRequestIdRef.current) return;
     setMetricModelList(res?.entries || []);
 
     const groupedData = groupBy(res?.entries || [], 'group_name');
@@ -218,13 +192,40 @@ const EditDrawer: React.FC<{
   };
 
   // 获取指标模型维度字段
-  const getMetricModelFields = async (id: string) => {
+  const getMetricModelFields = async (id: string, requestId?: number) => {
     if (!id) {
       return;
     }
     const res = await objectApi.getMetricModelFields(id);
+    if (requestId && requestId !== metricFieldsRequestIdRef.current) return;
     setDimensionFields(res?.map((item) => ({ label: item.display_name, value: item.name, type: item.type })) || []);
   };
+
+  useEffect(() => {
+    setNameOptions([]);
+    setDimensionFields([]);
+    const requestId = ++optionsRequestIdRef.current;
+
+    if (type === OntologyObjectType.LogicAttributeType.METRIC) {
+      getMetricModelList(requestId);
+    } else if (type === OntologyObjectType.LogicAttributeType.OPERATOR) {
+      getOperatorList(requestId);
+    }
+  }, [type]);
+
+  useEffect(() => {
+    if (type !== OntologyObjectType.LogicAttributeType.OPERATOR) return;
+    if (!id || !nameOptions?.length) return;
+    const api_spec = nameOptions.find((item) => item.value === id)?.api_spec;
+    handleOperatorDetail(api_spec);
+  }, [id, type, nameOptions]);
+
+  useEffect(() => {
+    if (type !== OntologyObjectType.LogicAttributeType.METRIC) return;
+    if (!id) return;
+    const requestId = ++metricFieldsRequestIdRef.current;
+    getMetricModelFields(id, requestId);
+  }, [id, type]);
 
   // 数据处理函数
   const updateSettingData = (id: string, updateValue: Record<string, any>) => {

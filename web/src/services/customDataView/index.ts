@@ -93,7 +93,7 @@ const getCustomDataViewList = async (params: CustomDataViewType.DataViewListPara
     offset = 0,
     sort = 'update_time',
     direction = 'desc',
-    name_pattern = '',
+    keyword = '',
     query_type = [],
     tag = '',
     group_id,
@@ -105,7 +105,7 @@ const getCustomDataViewList = async (params: CustomDataViewType.DataViewListPara
   const group_id_val = group_id === undefined || group_id === null ? '__all' : group_id || '';
 
   const queryParams = processQueryParams({
-    name_pattern,
+    keyword,
     sort,
     query_type,
     direction,
@@ -193,7 +193,7 @@ const getAtomViewList = async (params: CustomDataViewType.AtomViewListParams): P
 
   const queryParams = processQueryParams({
     type,
-    name_pattern: name,
+    keyword: name,
     direction,
     offset,
     limit,

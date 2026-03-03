@@ -23,16 +23,19 @@ const loadAishuComponents = () => {
 const ActionCreateAndEdit = lazy(() => import('./ActionCreateAndEdit'));
 const ActionDetail = lazy(() => import('./Action/Detail'));
 const AtomDataView = lazy(() => import('./AtomDataView'));
+const ConceptGroupDetail = lazy(() => import('./ConceptGroup/Detail'));
 const CustomDataView = lazy(() => import('./CustomDataView'));
 const CustomDataViewDetailContent = lazy(() => import('./CustomDataView/MainContent/DetailContent'));
 const DataConnectForm = lazy(() => import('./DataConnect/DataConnectForm'));
 const DataConnect = lazy(() => import('./DataConnect/tabs'));
 const EdgeCreateAndEdit = lazy(() => import('./EdgeCreateAndEdit'));
+const EdgeDetail = lazy(() => import('./Edge/Detail'));
 const KnowledgeNetwork = lazy(() => import('./KnowledgeNetwork'));
 const KnowledgeNetworkMain = lazy(() => import('./KnowledgeNetworkMain'));
 const MetricModel = lazy(() => import('./MetricModel'));
 const FormContainer = lazy(() => import('./MetricModel/FormContainer'));
 const ObjectCreateAndEdit = lazy(() => import('./ObjectCreateAndEdit'));
+const ObjectDetail = lazy(() => import('./Object/Detail'));
 const ObjectIndexSetting = lazy(() => import('./ObjectIndexSetting'));
 const RowColumnPermission = lazy(() => import('./RowColumnPermission'));
 
@@ -109,8 +112,11 @@ const App = (props: AppProps) => {
               <Route path="/ontology/main" render={() => <KnowledgeNetworkMain />} />
               <Route exact path="/ontology/edge/create" render={() => <EdgeCreateAndEdit />} />
               <Route exact path="/ontology/edge/edit/:id" render={() => <EdgeCreateAndEdit />} />
+              <Route exact path="/ontology/edge/detail/:id" render={() => <EdgeDetail />} />
               <Route exact path="/ontology/object/create" render={() => <ObjectCreateAndEdit />} />
               <Route exact path="/ontology/object/edit/:id" render={() => <ObjectCreateAndEdit />} />
+              <Route exact path="/ontology/object/detail/:id" render={() => <ObjectDetail />} />
+              <Route exact path="/ontology/concept-group/detail/:id" render={() => <ConceptGroupDetail />} />
               <Route exact path="/ontology/action/create" render={() => <ActionCreateAndEdit />} />
               <Route exact path="/ontology/action/edit/:id" render={() => <ActionCreateAndEdit />} />
               <Route path="/ontology/action/detail/:knId/:atId" render={() => <ActionDetail />} />

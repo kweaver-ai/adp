@@ -53,7 +53,7 @@ const BasicInformation = (props: BasicInformationProps) => {
             { max: 40, message: intl.get('Global.lenErr', { len: 40 }) },
           ]}
         >
-          <Input placeholder={intl.get('Global.pleaseInput')} autoComplete="off" aria-autocomplete="none" />
+          <Input placeholder={intl.get('Global.pleaseInput')} autoComplete="off" aria-autocomplete="none" maxLength={40} showCount />
         </Form.Item>
         <Form.Item
           label="ID"

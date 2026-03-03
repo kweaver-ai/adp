@@ -14,7 +14,7 @@ export interface PaginationParams {
 }
 
 export interface DataViewListParams extends PaginationParams {
-  name_pattern?: string;
+  keyword?: string;
   query_type?: string[];
   tag?: string;
   group_id?: string | null;

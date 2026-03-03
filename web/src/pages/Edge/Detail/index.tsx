@@ -1,12 +1,19 @@
-import { useMemo, useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import intl from 'react-intl-universal';
-import { Tag, Table, Divider, Dropdown, Tooltip } from 'antd';
+import { useHistory, useLocation, useParams } from 'react-router-dom';
+import { EllipsisOutlined } from '@ant-design/icons';
+import { Table, Dropdown, Tooltip } from 'antd';
 import { map, uniqueId } from 'lodash-es';
+import { showDeleteConfirm } from '@/components/DeleteConfirm';
+import DetailPageHeader from '@/components/DetailPageHeader';
+import DetailSummaryCard from '@/components/DetailSummaryCard';
 import FieldTypeIcon from '@/components/FieldTypeIcon';
 import ObjectIcon from '@/components/ObjectIcon';
+import { baseConfig } from '@/services/request';
 import ENUMS from '@/enums';
+import HOOKS from '@/hooks';
 import SERVICE from '@/services';
-import { Text, Title, Button, IconFont, Drawer } from '@/web-library/common';
+import { Text, Title, Button, IconFont } from '@/web-library/common';
 import styles from './index.module.less';
 
 const ObjectItem = (props: any) => {
@@ -41,42 +48,64 @@ const FieldItem = (props: any) => {
 };
 
 const uniqueIdPrefix = 'edgeDetail';
-const Detail = (props: any) => {
-  const { open, knId, sourceData, isPermission } = props;
-  const { onClose, onDeleteConfirm, goToCreateAndEditPage } = props;
+const EdgeDetail = () => {
+  const history = useHistory();
+  const location = useLocation<{ isPermission?: boolean }>();
+  const { id: detailId = '' } = useParams<{ id?: string }>();
+  const { modal, message } = HOOKS.useGlobalContext();
 
-  const [source, setSource] = useState(sourceData);
+  const finalKnId = localStorage.getItem('KnowledgeNetwork.id') || sessionStorage.getItem('knId') || '';
+  const finalIsPermission = location.state?.isPermission ?? true;
+  const [source, setSource] = useState<any>({});
   const { id, tags, name, comment } = source;
 
+  const goBack = () => {
+    history.goBack();
+  };
+
   useEffect(() => {
-    if (!id) return;
-    getDetail();
-  }, [id]);
+    baseConfig?.toggleSideBarShow(false);
+    return () => {
+      baseConfig?.toggleSideBarShow(true);
+    };
+  }, []);
 
   const getDetail = async () => {
-    const result = await SERVICE.edge.getEdgeDetail(knId, id);
+    if (!finalKnId || !detailId) return;
+    const result = await SERVICE.edge.getEdgeDetail(finalKnId, detailId);
     if (result[0]) setSource(result[0]);
+  };
+
+  useEffect(() => {
+    if (!detailId) return;
+    getDetail();
+  }, [detailId, finalKnId]);
+
+  const deleteInPageMode = async () => {
+    if (!finalKnId || !source?.id) return;
+    await SERVICE.edge.deleteEdge(finalKnId, [source.id]);
+    message.success(intl.get('Global.deleteSuccess'));
+    goBack();
   };
 
   /** 下来菜单变更 */
   const onChange = (data: any) => {
     if (data.key === 'delete') {
-      onDeleteConfirm([source], false, () => onClose());
+      showDeleteConfirm(modal, {
+        content: intl.get('Global.deleteConfirm', { name: `「${source?.name || ''}」` }),
+        onOk: deleteInPageMode,
+      });
     }
   };
 
-  /** 基础数据 */
-  const baseInfo = [
-    { label: intl.get('Global.id'), value: id },
-    { label: intl.get('Global.tag'), value: Array.isArray(tags) && tags.length ? map(tags, (i) => <Tag key={i}>{i}</Tag>) : '--' },
-    { label: intl.get('Global.comment'), value: comment || '--' },
-  ];
+  const onEdit = () => {
+    if (!source?.id) return;
+    history.push(`/ontology/edge/edit/${source.id}`);
+  };
 
-  /** 构建直接连接表格的列配置和数据 */
   const getDirectData = () => {
     const { mapping_rules, source_object_type, source_object_type_id, target_object_type, target_object_type_id } = source;
-    /** 直接连接的表格列配置 */
-    const columns: any = [
+    const directColumns: any = [
       { dataIndex: 'name', width: 100, render: (value: string) => <Title>{value}</Title> },
       {
         title: intl.get('Edge.detailSourcePoint'),
@@ -103,8 +132,7 @@ const Detail = (props: any) => {
         },
       },
     ];
-    /** 直接连接的表格数据 */
-    const dataSource = [
+    const directDataSource = [
       {
         id: uniqueId(uniqueIdPrefix),
         name: intl.get('Global.objectClass'),
@@ -127,15 +155,13 @@ const Detail = (props: any) => {
         };
       }),
     ];
-    return { columns, dataSource };
+    return { columns: directColumns, dataSource: directDataSource };
   };
 
-  /** 构建数据视图连接表格的列配置和数据 */
   const getDataViewData = () => {
     const { mapping_rules, source_object_type, source_object_type_id, target_object_type, target_object_type_id } = source;
     const { backing_data_source, source_mapping_rules, target_mapping_rules } = mapping_rules || {};
-    /** 数据视图的表格列配置 */
-    const columns: any = [
+    const viewColumns: any = [
       {
         title: intl.get('Edge.detailSourceObject'),
         dataIndex: 'source',
@@ -184,8 +210,7 @@ const Detail = (props: any) => {
         },
       },
     ];
-    /** 数据视图的表格数据 */
-    const dataSource = [
+    const viewDataSource = [
       {
         id: uniqueId(uniqueIdPrefix),
         type: 'object',
@@ -211,62 +236,58 @@ const Detail = (props: any) => {
         };
       }),
     ];
-    return { columns, dataSource };
+    return { columns: viewColumns, dataSource: viewDataSource };
   };
 
-  const { columns, dataSource }: any = useMemo(() => {
-    if (source?.type === ENUMS.EDGE.TYPE_DIRECT) return getDirectData();
-    if (source?.type === ENUMS.EDGE.TYPE_DATA_VIEW) return getDataViewData();
-    return { columns: [], dataSource: [] };
-  }, [source]);
+  let detailTableData: any = { columns: [], dataSource: [] };
+  if (source?.type === ENUMS.EDGE.TYPE_DIRECT) detailTableData = getDirectData();
+  if (source?.type === ENUMS.EDGE.TYPE_DATA_VIEW) detailTableData = getDataViewData();
+  const { columns, dataSource } = detailTableData;
 
-  // console.log('source', source);
+  const summaryCard = (
+    <DetailSummaryCard
+      id={id}
+      icon={<ObjectIcon size={32} iconSize={20} icon="icon-dip-guanxilei" color="#5381DF" />}
+      name={name}
+      tags={tags}
+      comment={comment}
+      modifier={source?.updater?.name}
+      updateTime={source?.update_time}
+    />
+  );
+
+  const mainContent = (
+    <div className={styles['section-card']}>
+      <Title className={styles['section-title']}>{intl.get('Global.config')}</Title>
+      <Table size="small" rowKey="id" bordered columns={columns} dataSource={dataSource} pagination={false} />
+    </div>
+  );
 
   return (
-    <Drawer open={open} className={styles['edge-root-drawer']} width={1000} title={intl.get('Edge.detailTitle')} onClose={onClose} maskClosable={true}>
-      <div className={styles['edge-root-drawer-content']}>
-        <div className="g-flex-space-between">
-          <Title>{name}</Title>
-          <div className="g-flex-align-center">
-            {isPermission && (
-              <Button className="g-mr-2" icon={<IconFont type="icon-dip-bianji" />} onClick={() => goToCreateAndEditPage('edit', source)}>
+    <div className={styles['edge-detail-page']}>
+      <DetailPageHeader
+        onBack={goBack}
+        icon={<ObjectIcon icon="icon-dip-guanxilei" color="#5381DF" />}
+        title={name || '--'}
+        actions={
+          <>
+            {finalIsPermission && (
+              <Button className={styles['top-edit-btn']} icon={<IconFont type="icon-dip-bianji" />} onClick={onEdit}>
                 {intl.get('Global.edit')}
               </Button>
             )}
-            {isPermission && (
+            {finalIsPermission && (
               <Dropdown trigger={['click']} menu={{ items: [{ key: 'delete', label: intl.get('Global.delete') }], onClick: onChange }}>
-                <Button icon={<IconFont type="icon-dip-gengduo" />} />
+                <Button className={styles['top-more-btn']} icon={<EllipsisOutlined style={{ fontSize: 20 }} />} />
               </Dropdown>
             )}
-          </div>
-        </div>
-        <Divider className="g-mt-4 g-mb-4" />
-        <div>
-          {map(baseInfo, (item) => {
-            const { label, value } = item;
-            return (
-              <div key={label} className={styles['edge-root-drawer-base-info']}>
-                <div className={styles['edge-root-drawer-base-info-label']}>{label}</div>
-                <Tooltip title={value.length > 50 ? value : ''}>
-                  <div className="g-ellipsis-1">{value}</div>
-                </Tooltip>
-              </div>
-            );
-          })}
-        </div>
-        <Divider className="g-mt-4 g-mb-4" />
-        <div>
-          <Title className="g-mt-1 g-mb-3">{intl.get('Global.config')}</Title>
-          <Table bordered size="small" rowKey="id" pagination={false} columns={columns} dataSource={dataSource} />
-        </div>
-      </div>
-    </Drawer>
+          </>
+        }
+      />
+      {summaryCard}
+      {mainContent}
+    </div>
   );
-};
-
-const EdgeDetail = (props: any) => {
-  if (!props.open) return null;
-  return <Detail {...props} />;
 };
 
 export default EdgeDetail;

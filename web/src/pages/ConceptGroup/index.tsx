@@ -1,5 +1,6 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import intl from 'react-intl-universal';
+import { useHistory } from 'react-router-dom';
 import { EllipsisOutlined } from '@ant-design/icons';
 import { Dropdown, Empty, message } from 'antd';
 import { type MenuProps } from 'antd';
@@ -18,9 +19,7 @@ import noSearchResultImage from '@/assets/images/common/no_search_result.svg';
 import ENUMS from '@/enums';
 import HOOKS from '@/hooks';
 import { Table, Button, Title, IconFont } from '@/web-library/common';
-import AddObjectTypesModal from './AddObjectTypesModal';
 import CreateAndEditForm from './CreateAndEditForm';
-import Detail from './Detail';
 import styles from './index.module.less';
 import ImportCom from './Operation/import';
 
@@ -35,6 +34,7 @@ interface ConceptGroupProps {
 }
 
 const ConceptGroup = (props: ConceptGroupProps) => {
+  const history = useHistory();
   const { modal } = HOOKS.useGlobalContext();
   const { detail, isPermission } = props;
   const { pageState, pagination, onUpdateState } = HOOKS.usePageStateNew(); // 分页信息
@@ -45,11 +45,6 @@ const ConceptGroup = (props: ConceptGroupProps) => {
   const [filterValues, setFilterValues] = useState<Pick<ConceptGroupType.ListQuery, 'name_pattern' | 'tag'>>({ name_pattern: '', tag: 'all' }); // 筛选条件
   const [checkId, setCheckId] = useState<string>();
   const [open, setOpen] = useState<boolean>(false);
-  const [addObjectTypesOpen, setAddObjectTypesOpen] = useState<boolean>(false);
-  const [currentGroup, setCurrentGroup] = useState<ConceptGroupType.Detail | null>(null);
-  const [detailOpen, setDetailOpen] = useState<boolean>(false);
-  const [currentDetail, setCurrentDetail] = useState<ConceptGroupType.Detail | null>(null);
-  const detailId = useRef<string>('');
 
   const knId = detail?.id || localStorage.getItem('KnowledgeNetwork.id')!;
   const { page, limit, direction, sort } = pageState || {};
@@ -124,12 +119,6 @@ const ConceptGroup = (props: ConceptGroupProps) => {
     });
   };
 
-  const getObjectTypes = async (id: string) => {
-    const detailData = await api.detailConceptGroup(knId, id);
-    setCurrentDetail(detailData);
-    setDetailOpen(true);
-  };
-
   const exportData = async (id: string): Promise<void> => {
     const res = await api.detailConceptGroup(knId, id);
     downFile(JSON.stringify(res, null, 2), res.name, 'json');
@@ -139,26 +128,13 @@ const ConceptGroup = (props: ConceptGroupProps) => {
   /** 操作按钮 */
   const onOperate = async (key: string, record: ConceptGroupType.Detail) => {
     if (key === 'view') {
-      detailId.current = record.id;
-      // 调用详情接口获取完整数据
-      setIsLoading(true);
-      try {
-        getObjectTypes(record.id);
-      } catch (error) {
-        console.log('error', error);
-      } finally {
-        setIsLoading(false);
-      }
+      history.push(`/ontology/concept-group/detail/${record.id}`, { isPermission });
     }
     if (key === 'edit') {
       setCheckId(record.id);
       setOpen(true);
     }
     if (key === 'delete') changeDel(record);
-    if (key === 'addObjectTypes') {
-      setCurrentGroup(record);
-      setAddObjectTypesOpen(true);
-    }
     if (key === 'export') exportData(record.id);
   };
 
@@ -177,7 +153,9 @@ const ConceptGroup = (props: ConceptGroupProps) => {
             <IconFont type="icon-dip-fenzu" style={{ color: '#fff', fontSize: 20 }} />
           </div>
           <div style={{ flex: 1 }}>
-            <span style={{ fontSize: 14, color: '#000' }}>{record.name}</span>
+            <span className="g-ellipsis-1" style={{ fontSize: 14, color: '#000' }}>
+              {record.name}
+            </span>
             <p className="g-ellipsis-1" style={{ fontSize: 12, opacity: 0.45 }} title={record.comment}>
               {record.comment || '--'}
             </p>
@@ -335,33 +313,9 @@ const ConceptGroup = (props: ConceptGroupProps) => {
           onCancel={onCancel}
           id={checkId}
           callBack={() => {
-            if (detailOpen) {
-              getObjectTypes(detailId.current);
-            }
             getTableData({ offset: 0 });
           }}
           knId={knId}
-        />
-        <AddObjectTypesModal
-          open={addObjectTypesOpen}
-          onCancel={() => setAddObjectTypesOpen(false)}
-          onSuccess={() => getTableData({ offset: 0 })}
-          knId={knId}
-          groupId={currentGroup?.id || ''}
-          groupName={currentGroup?.name || ''}
-        />
-        <Detail
-          open={detailOpen}
-          sourceData={currentDetail as ConceptGroupType.Detail}
-          onClose={() => setDetailOpen(false)}
-          onRefresh={getObjectTypes}
-          exportData={exportData}
-          isPermission={isPermission}
-          onEdit={(id: string) => {
-            // setDetailOpen(false);
-            setCheckId(id);
-            setOpen(true);
-          }}
         />
       </div>
     </div>

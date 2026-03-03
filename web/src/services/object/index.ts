@@ -25,8 +25,9 @@ export const getDetail = (knId: string, obIds: string[], query?: OntologyObjectT
   );
 };
 
-export const deleteObjectTypes = (knId: string, obIds: string[]): Promise<void> => {
-  return Request.delete(`${BASE_URL}/${knId}/object-types/${obIds.join(',')}`);
+export const deleteObjectTypes = (knId: string, obIds: string[], forceDelete?: boolean): Promise<void> => {
+  const query = forceDelete !== undefined ? `?force_delete=${forceDelete}` : '';
+  return Request.delete(`${BASE_URL}/${knId}/object-types/${obIds.join(',')}${query}`);
 };
 
 export const getOperatorList = (params?: { page: number; page_size: number; execution_mode?: 'sync' | 'async' }): Promise<OntologyObjectType.OperatorList> => {

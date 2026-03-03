@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback, useMemo } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import intl from 'react-intl-universal';
 import { useHistory } from 'react-router-dom';
 import { EllipsisOutlined } from '@ant-design/icons';
@@ -7,7 +7,6 @@ import { SorterResult } from 'antd/es/table/interface';
 import { TableProps } from 'antd/lib/table';
 import dayjs from 'dayjs';
 import { map } from 'lodash-es';
-import { showDeleteConfirm } from '@/components/DeleteConfirm';
 import ObjectIcon from '@/components/ObjectIcon';
 import Tags from '@/components/Tags';
 import api from '@/services/object';
@@ -19,7 +18,7 @@ import ENUMS from '@/enums';
 import HOOKS from '@/hooks';
 import { KnowledgeNetworkType } from '@/services';
 import { Table, Button, Select, Title, IconFont } from '@/web-library/common';
-import Detail from './Detail';
+import DeleteConfirmModal from './DeleteConfirmModal';
 import styles from './index.module.less';
 
 interface TProps {
@@ -31,15 +30,17 @@ const KnowledgeNetwork = (props: TProps) => {
   const history = useHistory();
   const { detail, isPermission } = props;
   const knId = detail?.id || localStorage.getItem('KnowledgeNetwork.id');
-  const { modal } = HOOKS.useGlobalContext();
   const { pageState, pagination, onUpdateState } = HOOKS.usePageStateNew();
   const [selectedRowKeys, setSelectedRowKeys] = useState<string[]>([]);
   const [selectedRows, setSelectedRows] = useState<ObjectType.Detail[]>([]);
   const [tableData, setTableData] = useState<ObjectType.Detail[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [filterValues, setFilterValues] = useState<Pick<ObjectType.ListQuery, 'name_pattern' | 'tag'>>({ name_pattern: '', tag: 'all' });
-  const [objectDetail, setObjectDetail] = useState<ObjectType.Detail>();
-
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [deleteConfirmLoading, setDeleteConfirmLoading] = useState(false);
+  const [pendingDeleteRows, setPendingDeleteRows] = useState<ObjectType.Detail[]>([]);
+  const [pendingDeleteIsBatch, setPendingDeleteIsBatch] = useState(false);
+  const [pendingDeleteCallback, setPendingDeleteCallback] = useState<(() => void) | undefined>();
   const { page, limit, direction, sort } = pageState || {};
   const { name_pattern, tag } = filterValues || {};
   const { OBJECT_MENU_SORT_ITEMS } = HOOKS.useConstants();
@@ -84,186 +85,186 @@ const KnowledgeNetwork = (props: TProps) => {
     }
   }, [knId]);
 
-  const onChangeTableOperation = useCallback(
-    (values: Pick<ObjectType.ListQuery, 'name_pattern' | 'tag'>) => {
-      getTableData({ offset: 0, ...values });
-      setFilterValues(values);
+  const onChangeTableOperation = (values: Pick<ObjectType.ListQuery, 'name_pattern' | 'tag'>) => {
+    getTableData({ offset: 0, ...values });
+    setFilterValues(values);
+  };
+
+  const handleTableChange: TableProps['onChange'] = async (pagination: any, _filters: any, sorter: any): Promise<void> => {
+    const { field, order } = sorter as SorterResult;
+    const { current, pageSize } = pagination;
+    const stateOrder = ENUMS.SORT_ENUM[order as keyof typeof ENUMS.SORT_ENUM] || 'desc';
+    const state = { page: current, limit: pageSize, sort: (field as string) || 'update_time', direction: stateOrder };
+    onUpdateState(state);
+    getTableData(state);
+  };
+
+  const onDelete = async (items: ObjectType.Detail[], isBatch?: boolean, forceDelete?: boolean) => {
+    try {
+      const objectIds = map(items, (item) => item?.id);
+      await api.deleteObjectTypes(knId as string, objectIds, forceDelete);
+      getTableData();
+      message.success(intl.get('Global.deleteSuccess'));
+      if (isBatch) setSelectedRowKeys([]);
+    } catch (error) {
+      console.error('onDelete error:', error);
+    }
+  };
+
+  const onDeleteConfirm = (items: ObjectType.Detail[], isBatch?: boolean, callBack?: () => void) => {
+    if (!items.length || !knId) return;
+    setPendingDeleteRows(items);
+    setPendingDeleteIsBatch(Boolean(isBatch));
+    setPendingDeleteCallback(() => callBack);
+    setDeleteConfirmOpen(true);
+  };
+
+  const onDeleteConfirmOk = async () => {
+    if (!pendingDeleteRows.length) return;
+    setDeleteConfirmLoading(true);
+    try {
+      await onDelete(pendingDeleteRows, pendingDeleteIsBatch, true);
+      pendingDeleteCallback?.();
+      setDeleteConfirmOpen(false);
+      setPendingDeleteRows([]);
+    } finally {
+      setDeleteConfirmLoading(false);
+    }
+  };
+
+  const onDeleteConfirmCancel = () => {
+    setDeleteConfirmOpen(false);
+    setDeleteConfirmLoading(false);
+    setPendingDeleteRows([]);
+  };
+
+  const toCreateOrEdit = (objId?: string) => {
+    if (objId) {
+      history.push(`/ontology/object/edit/${objId}`);
+      return;
+    }
+    history.push(`/ontology/object/create`);
+  };
+
+  const toDetail = (objId: string) => {
+    history.push(`/ontology/object/detail/${objId}`, { isPermission });
+  };
+
+  const onOperate = (key: string, record: ObjectType.Detail) => {
+    if (key === 'view') {
+      toDetail(record.id);
+    }
+    if (key === 'edit') {
+      toCreateOrEdit(record.id);
+    }
+    if (key === 'delete') onDeleteConfirm([record]);
+    if (key === 'index') {
+      history.push(`/ontology/object/settting/${record.id}`);
+    }
+  };
+
+  const columns: any = [
+    {
+      title: intl.get('Global.name'),
+      dataIndex: 'name',
+      fixed: 'left',
+      sorter: true,
+      width: 350,
+      __fixed: true,
+      __selected: true,
+      render: (value: string, record: ObjectType.Detail) => (
+        <div className={styles['object-title-box']} title={value} onClick={() => toDetail(record.id)}>
+          <ObjectIcon icon={record.icon} color={record.color} />
+          <span className="g-ellipsis-1">{record.name}</span>
+        </div>
+      ),
     },
-    [getTableData]
-  );
-
-  const handleTableChange: TableProps['onChange'] = useCallback(
-    async (pagination: any, _filters: any, sorter: any): Promise<void> => {
-      const { field, order } = sorter as SorterResult;
-      const { current, pageSize } = pagination;
-      const stateOrder = ENUMS.SORT_ENUM[order as keyof typeof ENUMS.SORT_ENUM] || 'desc';
-      const state = { page: current, limit: pageSize, sort: (field as string) || 'update_time', direction: stateOrder };
-      onUpdateState(state);
-      getTableData(state);
+    {
+      title: intl.get('Global.operation'),
+      dataIndex: 'operation',
+      fixed: 'left',
+      width: 80,
+      __fixed: true,
+      __selected: true,
+      render: (_value: any, record: ObjectType.Detail) => {
+        const allOperations = [
+          { key: 'view', label: intl.get('Global.view'), visible: true },
+          { key: 'edit', label: intl.get('Global.edit'), visible: isPermission },
+          { key: 'index', label: intl.get('Object.indexConfiguration'), visible: isPermission },
+          { key: 'delete', label: intl.get('Global.delete'), visible: isPermission },
+        ];
+        const dropdownMenu: any = allOperations.filter((item) => item.visible).map(({ key, label }: any) => ({ key, label }));
+        return (
+          <Dropdown
+            trigger={['click']}
+            menu={{
+              items: dropdownMenu,
+              onClick: (event: any) => {
+                event.domEvent.stopPropagation();
+                onOperate(event?.key, record);
+              },
+            }}
+          >
+            <Button.Icon icon={<EllipsisOutlined style={{ fontSize: 20 }} />} onClick={(event) => event.stopPropagation()} />
+          </Dropdown>
+        );
+      },
     },
-    [onUpdateState, getTableData]
-  );
-
-  const onDelete = useCallback(
-    async (items: ObjectType.Detail[], isBatch?: boolean) => {
-      try {
-        const objectIds = map(items, (item) => item?.id);
-        await api.deleteObjectTypes(knId as string, objectIds);
-        getTableData();
-        message.success(intl.get('Global.deleteSuccess'));
-        if (isBatch) setSelectedRowKeys([]);
-      } catch (error) {
-        console.error('onDelete error:', error);
-      }
+    {
+      title: () => (
+        <div className={styles['has-index']}>
+          <span>{intl.get('Object.hasIndex')}</span>
+          <Tooltip title={intl.get('Object.hasIndexTip')}>
+            <IconFont type="icon-dip-color-tip" />
+          </Tooltip>
+        </div>
+      ),
+      dataIndex: 'status',
+      width: 150,
+      __selected: true,
+      render: (value: any) => (value?.index_available === true ? intl.get('Global.yes') : intl.get('Global.no')),
     },
-    [knId, getTableData]
-  );
-
-  const onDeleteConfirm = useCallback(
-    (items: ObjectType.Detail[], isBatch?: boolean, callBack?: () => void) => {
-      const name = map(items, (item) => `「${item?.name}」`).join('、');
-      const length = items.length || 0;
-      showDeleteConfirm(modal, {
-        content: length > 1 ? intl.get('Global.deleteConfirmMultiple', { count: length }) : intl.get('Global.deleteConfirm', { name }),
-        onOk: async () => {
-          await onDelete(items, isBatch);
-          if (callBack) callBack();
-        },
-      });
+    {
+      title: intl.get('Global.tag'),
+      dataIndex: 'tags',
+      width: 150,
+      __selected: true,
+      render: (value: string[]) => <Tags value={value} />,
     },
-    [modal, onDelete]
-  );
-
-  const toCreateOrEdit = useCallback(
-    (objId?: string) => {
-      if (objId) {
-        history.push(`/ontology/object/edit/${objId}`);
-        return;
-      }
-      history.push(`/ontology/object/create`);
+    {
+      title: intl.get('Global.modifier'),
+      dataIndex: 'updater',
+      width: 150,
+      __selected: true,
+      render: (_value: any, record: any) => record?.updater?.name || '--',
     },
-    [history]
-  );
+    {
+      title: intl.get('Global.updateTime'),
+      dataIndex: 'update_time',
+      width: 200,
+      __selected: true,
+      render: (value: string) => (value ? dayjs(value).format('YYYY/MM/DD HH:mm:ss') : '--'),
+    },
+  ];
 
-  const columns: any = useMemo(() => {
-    const onOperate = (key: string, record: ObjectType.Detail) => {
-      if (key === 'view') {
-        setObjectDetail(record);
-      }
-      if (key === 'edit') {
-        toCreateOrEdit(record.id);
-      }
-      if (key === 'delete') onDeleteConfirm([record]);
-      if (key === 'index') {
-        history.push(`/ontology/object/settting/${record.id}`);
-      }
-    };
+  const rowSelection: any = {
+    selectedRowKeys,
+    onChange: (nextSelectedRowKeys: any, nextSelectedRows: any): void => {
+      setSelectedRowKeys(nextSelectedRowKeys);
+      setSelectedRows(nextSelectedRows);
+    },
+    onSelectAll: (selected: any): void => {
+      const selectableData = tableData.filter((item) => !(item as any).builtin);
+      const newSelectedRowKeys = selected ? selectableData.map((item) => item.id) : [];
+      const newSelectedRows = selected ? selectableData : [];
 
-    return [
-      {
-        title: intl.get('Global.name'),
-        dataIndex: 'name',
-        fixed: 'left',
-        sorter: true,
-        width: 350,
-        __fixed: true,
-        __selected: true,
-        render: (value: string, record: ObjectType.Detail) => (
-          <div className={styles['object-title-box']} title={value} onClick={() => setObjectDetail(record)}>
-            <ObjectIcon icon={record.icon} color={record.color} />
-            <span>{record.name}</span>
-          </div>
-        ),
-      },
-      {
-        title: intl.get('Global.operation'),
-        dataIndex: 'operation',
-        fixed: 'left',
-        width: 80,
-        __fixed: true,
-        __selected: true,
-        render: (_value: any, record: ObjectType.Detail) => {
-          const allOperations = [
-            { key: 'view', label: intl.get('Global.view'), visible: true },
-            { key: 'edit', label: intl.get('Global.edit'), visible: isPermission },
-            { key: 'index', label: intl.get('Object.indexConfiguration'), visible: isPermission },
-            { key: 'delete', label: intl.get('Global.delete'), visible: isPermission },
-          ];
-          const dropdownMenu: any = allOperations.filter((item) => item.visible).map(({ key, label }: any) => ({ key, label }));
-          return (
-            <Dropdown
-              trigger={['click']}
-              menu={{
-                items: dropdownMenu,
-                onClick: (event: any) => {
-                  event.domEvent.stopPropagation();
-                  onOperate(event?.key, record);
-                },
-              }}
-            >
-              <Button.Icon icon={<EllipsisOutlined style={{ fontSize: 20 }} />} onClick={(event) => event.stopPropagation()} />
-            </Dropdown>
-          );
-        },
-      },
-      {
-        title: () => (
-          <div className={styles['has-index']}>
-            <span>{intl.get('Object.hasIndex')}</span>
-            <Tooltip title={intl.get('Object.hasIndexTip')}>
-              <IconFont type="icon-dip-color-tip" />
-            </Tooltip>
-          </div>
-        ),
-        dataIndex: 'status',
-        width: 150,
-        __selected: true,
-        render: (value: any) => (value?.index_available === true ? intl.get('Global.yes') : intl.get('Global.no')),
-      },
-      {
-        title: intl.get('Global.tag'),
-        dataIndex: 'tags',
-        width: 150,
-        __selected: true,
-        render: (value: string[]) => <Tags value={value} />,
-      },
-      {
-        title: intl.get('Global.modifier'),
-        dataIndex: 'updater',
-        width: 150,
-        __selected: true,
-        render: (_value: any, record: any) => record?.updater?.name || '--',
-      },
-      {
-        title: intl.get('Global.updateTime'),
-        dataIndex: 'update_time',
-        width: 200,
-        __selected: true,
-        render: (value: string) => (value ? dayjs(value).format('YYYY/MM/DD HH:mm:ss') : '--'),
-      },
-    ];
-  }, [history, isPermission, onDeleteConfirm, toCreateOrEdit]);
-
-  const rowSelection: any = useMemo(() => {
-    return {
-      selectedRowKeys,
-      onChange: (nextSelectedRowKeys: any, nextSelectedRows: any): void => {
-        setSelectedRowKeys(nextSelectedRowKeys);
-        setSelectedRows(nextSelectedRows);
-      },
-      onSelectAll: (selected: any): void => {
-        const selectableData = tableData.filter((item) => !(item as any).builtin);
-        const newSelectedRowKeys = selected ? selectableData.map((item) => item.id) : [];
-        const newSelectedRows = selected ? selectableData : [];
-
-        setSelectedRowKeys(newSelectedRowKeys);
-        setSelectedRows(newSelectedRows);
-      },
-      getCheckboxProps: (row: any): Record<string, any> => ({
-        disabled: (row as any).builtin,
-      }),
-    };
-  }, [selectedRowKeys, tableData]);
+      setSelectedRowKeys(newSelectedRowKeys);
+      setSelectedRows(newSelectedRows);
+    },
+    getCheckboxProps: (row: any): Record<string, any> => ({
+      disabled: (row as any).builtin,
+    }),
+  };
 
   const handleSortChange = (val: { key: string }) => {
     const state = {
@@ -327,13 +328,12 @@ const KnowledgeNetwork = (props: TProps) => {
           />
         </Table.Operation>
       </Table.PageTable>
-      <Detail
-        open={!!objectDetail}
-        sourceData={objectDetail}
-        onClose={() => setObjectDetail(undefined)}
-        onDeleteConfirm={onDeleteConfirm}
-        goToCreateAndEditPage={toCreateOrEdit}
-        isPermission={isPermission}
+      <DeleteConfirmModal
+        open={deleteConfirmOpen}
+        loading={deleteConfirmLoading}
+        objects={pendingDeleteRows}
+        onCancel={onDeleteConfirmCancel}
+        onConfirm={onDeleteConfirmOk}
       />
     </div>
   );

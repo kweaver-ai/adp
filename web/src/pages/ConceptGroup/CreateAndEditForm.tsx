@@ -67,10 +67,10 @@ const CreateAndEditForm = (props: CreateAndEditFormProps) => {
           name="name"
           rules={[
             { required: true, message: intl.get('Global.cannotBeNull', { name: intl.get('Global.name') }) },
-            { max: 50, message: intl.get('Global.lenErr', { len: 50 }) },
+            { max: 40, message: intl.get('Global.lenErr', { len: 40 }) },
           ]}
         >
-          <Input placeholder={intl.get('Global.pleaseInputName')} />
+          <Input placeholder={intl.get('Global.pleaseInputName')} maxLength={40} showCount />
         </Form.Item>
         <Form.Item
           label={intl.get('Global.id')}
@@ -97,7 +97,7 @@ const CreateAndEditForm = (props: CreateAndEditFormProps) => {
           <TagsSelector />
         </Form.Item>
         <Form.Item label={intl.get('Global.comment')} name="comment">
-          <Input.TextArea placeholder={intl.get('Global.pleaseInputComment')} rows={4} />
+          <Input.TextArea placeholder={intl.get('Global.pleaseInputComment')} rows={4} maxLength={1000} showCount />
         </Form.Item>
       </Form>
     </Modal>

@@ -64,7 +64,9 @@ const HeaderSteps = (props: TProps) => {
           <Text>{intl.get('HeaderSteps.exit')}</Text>
         </div>
         <Divider type="vertical" />
-        <Title>{title}</Title>
+        <Title title={title} className={styles['title']}>
+          {title}
+        </Title>
       </div>
       {items && <Steps.GapIcon size="small" current={stepsCurrent} items={items} onChange={onStepChange} />}
       {actions && (
