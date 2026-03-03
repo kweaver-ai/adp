@@ -27,17 +27,17 @@ import (
 )
 
 const (
-	DAG_TABLENAME              = "t_dag"
-	DAGINSTANCE_TABLENAME      = "t_dag_instance"
-	TASKINSTANCE_TABLENAME     = "t_task_instance"
-	DAGVAR_TABLENAME           = "t_dag_var"
-	DAGVERSIONS_TABLENAME      = "t_dag_versions"
-	METADATASEARCH_TABLENAME   = "t_metadata_search"
-	DAGSTEPINDEX_TABLENAME     = "t_dag_step_index"
-	DAGTRIGGERINDEX_TABLENAME  = "t_dag_trigger_config_index"
-	DAGACCESSORINDEX_TABLENAME = "t_dag_accessor_index"
-	OUTBOXMESSAGE_TABLENAME    = "t_outbox"
-	INBOXMESSAGE_TABLENAME     = "t_inbox"
+	DAG_TABLENAME                = "t_dag"
+	DAGINSTANCE_TABLENAME        = "t_dag_instance"
+	TASKINSTANCE_TABLENAME       = "t_task_instance"
+	DAGVAR_TABLENAME             = "t_dag_var"
+	DAGVERSIONS_TABLENAME        = "t_dag_versions"
+	DAGSTEPINDEX_TABLENAME       = "t_dag_step_index"
+	DAGTRIGGERINDEX_TABLENAME    = "t_dag_trigger_config_index"
+	DAGACCESSORINDEX_TABLENAME   = "t_dag_accessor_index"
+	DAGINSTANCEKEYWORD_TABLENAME = "t_dag_instance_keyword"
+	OUTBOXMESSAGE_TABLENAME      = "t_outbox"
+	INBOXMESSAGE_TABLENAME       = "t_inbox"
 )
 
 // Dag 流程配置数据库模型
@@ -91,14 +91,11 @@ type DagVar struct {
 	Description  string `json:"f_description" gorm:"column:f_description"`
 }
 
-// MetadataSearch 流程搜索字段数据库模型
-type MetadataSearch struct {
-	ID        uint64 `json:"f_id" gorm:"column:f_id;primaryKey;autoIncrement"`
-	ObjID     uint64 `json:"f_obj_id" gorm:"column:f_obj_id"`
-	Key       string `json:"f_key" gorm:"column:f_key"`
-	Value     string `json:"f_value" gorm:"column:f_value"`
-	ValueType string `json:"f_value_type" gorm:"column:f_value_type"`
-	Type      string `json:"f_type" gorm:"column:f_type"`
+// DagInstanceKeyword dag instance keyword table model
+type DagInstanceKeyword struct {
+	ID       uint64 `json:"f_id" gorm:"column:f_id;primaryKey"`
+	DagInsID uint64 `json:"f_dag_ins_id" gorm:"column:f_dag_ins_id"`
+	Keyword  string `json:"f_keyword" gorm:"column:f_keyword"`
 }
 
 type DagStepIndex struct {
@@ -153,6 +150,8 @@ type DagInstance struct {
 	Status           string `gorm:"column:f_status" json:"f_status"`
 	Reason           string `gorm:"column:f_reason" json:"f_reason,omitempty"`
 	Cmd              string `gorm:"column:f_cmd" json:"f_cmd,omitempty"`
+	HasCmd           bool   `gorm:"column:f_has_cmd" json:"f_has_cmd"`
+	BatchRunID       string `gorm:"column:f_batch_run_id" json:"f_batch_run_id"`
 	UserID           string `gorm:"column:f_user_id" json:"f_user_id"`
 	EndedAt          int64  `gorm:"column:f_ended_at" json:"f_ended_at"`
 	DagType          string `gorm:"column:f_dag_type" json:"f_dag_type"`
@@ -253,7 +252,6 @@ type DagRepository interface {
 	CreateDag(ctx context.Context, dag *entity.Dag) (string, error)
 	CreateDagIns(ctx context.Context, dagIns *entity.DagInstance) (string, error)
 	CreateDagVars(ctx context.Context, dagVars []*DagVar) error
-	CreateMetaDataSearch(ctx context.Context, searchs []*MetadataSearch) error
 	UpdateDag(ctx context.Context, dag *entity.Dag) error
 	GetDag(ctx context.Context, dagId string) (*entity.Dag, error)
 	GetDagByFields(ctx context.Context, params map[string]interface{}) (*entity.Dag, error)
@@ -426,6 +424,11 @@ func ToDagInstanceModel(dagIns *entity.DagInstance, isupdate bool) *DagInstance 
 	appInfoBytes, _ := json.Marshal(dagIns.AppInfo)
 	dumpextbytes, _ := json.Marshal(dagIns.DumpExt)
 	callchainBytes, _ := json.Marshal(dagIns.CallChain)
+	hasCmd := dagIns.Cmd != nil && !reflect.DeepEqual(*dagIns.Cmd, entity.Command{})
+	batchRunID := ""
+	if val, ok := dagIns.Vars["batch_run_id"]; ok {
+		batchRunID = val.Value
+	}
 
 	return &DagInstance{
 		ID:               id,
@@ -444,6 +447,8 @@ func ToDagInstanceModel(dagIns *entity.DagInstance, isupdate bool) *DagInstance 
 		Status:           string(dagIns.Status),
 		Reason:           dagIns.Reason,
 		Cmd:              string(cmdBytes),
+		HasCmd:           hasCmd,
+		BatchRunID:       batchRunID,
 		UserID:           dagIns.UserID,
 		EndedAt:          dagIns.EndedAt,
 		DagType:          dagIns.DagType,
@@ -780,18 +785,6 @@ func parseUint64Slice(ids []string) []uint64 {
 	return res
 }
 
-func queryDagIDsByMetadata(db *gorm.DB, dynKeys []string, dynArgs []interface{}, objType uint8) ([]uint64, error) {
-	if len(dynKeys) == 0 {
-		return nil, nil
-	}
-	sub, subArgs := BuildMetadataSearchQuery(dynKeys, dynArgs, objType)
-	var ids []uint64
-	if err := db.Raw(sub, subArgs...).Scan(&ids).Error; err != nil {
-		return nil, err
-	}
-	return ids, nil
-}
-
 func toInt64(val interface{}) int64 {
 	switch v := val.(type) {
 	case int:
@@ -937,11 +930,6 @@ func (d *dag) CreateDag(ctx context.Context, dag *entity.Dag) (string, error) {
 			return err
 		}
 
-		err = d.CreateMetaDataSearch(newCtx, BuildDagSearch(dag))
-		if err != nil {
-			return err
-		}
-
 		err = d.refreshDagIndexes(newCtx, dag)
 		if err != nil {
 			return err
@@ -1017,52 +1005,50 @@ func (d *dag) CreateDagVars(ctx context.Context, dagVars []*DagVar) error {
 	return err
 }
 
-func (d *dag) CreateMetaDataSearch(ctx context.Context, searchs []*MetadataSearch) error {
+func (d *dag) deleteDagInstanceKeywords(ctx context.Context, dagInsID uint64) error {
 	var err error
 	newCtx, span := trace.StartInternalSpan(ctx)
-	msgStr, _ := jsoniter.MarshalToString(searchs)
 	defer func() { trace.TelemetrySpanEnd(span, err) }()
 
-	fn := func(search []*MetadataSearch) error {
-		if len(search) == 0 {
-			return nil
-		}
+	sqlStr := `DELETE FROM t_dag_instance_keyword WHERE f_dag_ins_id = ?`
+	trace.SetAttributes(newCtx, attribute.String(trace.TABLE_NAME, DAGINSTANCEKEYWORD_TABLENAME), attribute.String(trace.DB_SQL, sqlStr), attribute.String(trace.DB_QUERY, fmt.Sprintf("%v", dagInsID)))
+	err = d.db.Exec(sqlStr, dagInsID).Error
+	return err
+}
 
-		objID := search[0].ObjID
-		sqlStr := `DELETE FROM t_metadata_search WHERE f_obj_id = ?`
-		trace.SetAttributes(newCtx, attribute.String(trace.TABLE_NAME, METADATASEARCH_TABLENAME), attribute.String(trace.DB_SQL, sqlStr), attribute.String(trace.DB_QUERY, fmt.Sprintf("%v", objID)))
-		err = d.db.Exec(sqlStr, objID).Error
-		if err != nil {
-			return err
-		}
-
-		sqlStr = `INSERT INTO t_metadata_search (f_id, f_obj_id, f_key, f_value, f_value_type, f_type) VALUES `
-		trace.SetAttributes(newCtx, attribute.String(trace.TABLE_NAME, METADATASEARCH_TABLENAME), attribute.String(trace.DB_SQL, sqlStr), attribute.String(trace.DB_Values, msgStr))
-		values := make([]any, 0, len(searchs)*6)
-		for _, data := range searchs {
-			sqlStr += "(?, ?, ?, ?, ?, ?),"
-			values = append(values, data.ID, data.ObjID, data.Key, data.Value, data.ValueType, data.Type)
-		}
-
-		sqlStr = sqlStr[:len(sqlStr)-1]
-
-		err = d.db.Exec(sqlStr, values...).Error
-		if err != nil {
-			return err
-		}
-
+func (d *dag) insertDagInstanceKeywords(ctx context.Context, dagInsID uint64, keywords []string) error {
+	var err error
+	if len(keywords) == 0 {
 		return nil
 	}
+	newCtx, span := trace.StartInternalSpan(ctx)
+	defer func() { trace.TelemetrySpanEnd(span, err) }()
 
-	if !d.isTX {
-		err = d.WithTransaction(newCtx, func(context.Context, mod.Store) error {
-			return fn(searchs)
-		})
-	} else {
-		err = fn(searchs)
+	sqlStr := `INSERT INTO t_dag_instance_keyword (f_id, f_dag_ins_id, f_keyword) VALUES `
+	values := make([]any, 0, len(keywords)*3)
+	for _, keyword := range keywords {
+		if keyword == "" {
+			continue
+		}
+		id, _ := utils.GetUniqueID()
+		sqlStr += "(?, ?, ?),"
+		values = append(values, id, dagInsID, keyword)
 	}
-
+	if len(values) == 0 {
+		return nil
+	}
+	sqlStr = strings.TrimSuffix(sqlStr, ",")
+	msgStr, _ := jsoniter.MarshalToString(values)
+	trace.SetAttributes(newCtx, attribute.String(trace.TABLE_NAME, DAGINSTANCEKEYWORD_TABLENAME), attribute.String(trace.DB_SQL, sqlStr), attribute.String(trace.DB_Values, msgStr))
+	err = d.db.Exec(sqlStr, values...).Error
 	return err
+}
+
+func (d *dag) replaceDagInstanceKeywords(ctx context.Context, dagInsID uint64, keywords []string) error {
+	if err := d.deleteDagInstanceKeywords(ctx, dagInsID); err != nil {
+		return err
+	}
+	return d.insertDagInstanceKeywords(ctx, dagInsID, keywords)
 }
 
 func (d *dag) refreshDagIndexes(ctx context.Context, dag *entity.Dag) error {
@@ -1265,11 +1251,6 @@ func (d *dag) UpdateDag(ctx context.Context, dag *entity.Dag) error {
 			return err
 		}
 
-		err = d.CreateMetaDataSearch(newCtx, BuildDagSearch(dag))
-		if err != nil {
-			return err
-		}
-
 		err = d.refreshDagIndexes(newCtx, dag)
 		if err != nil {
 			return err
@@ -1371,13 +1352,6 @@ func (d *dag) DeleteDag(ctx context.Context, id ...string) error {
 			return err
 		}
 
-		sqlStr = `DELETE FROM t_metadata_search WHERE f_obj_id IN ?`
-		trace.SetAttributes(newCtx, attribute.String(trace.TABLE_NAME, METADATASEARCH_TABLENAME), attribute.String(trace.DB_SQL, sqlStr), attribute.String(trace.DB_QUERY, msgStr))
-		err = d.db.Exec(sqlStr, ids).Error
-		if err != nil {
-			return err
-		}
-
 		sqlStr = `DELETE FROM t_dag_versions WHERE f_dag_id IN ?`
 		trace.SetAttributes(newCtx, attribute.String(trace.TABLE_NAME, DAGVERSIONS_TABLENAME), attribute.String(trace.DB_SQL, sqlStr), attribute.String(trace.DB_QUERY, msgStr))
 		err = d.db.Exec(sqlStr, ids).Error
@@ -1436,10 +1410,10 @@ func (d *dag) CreateDagIns(ctx context.Context, dagIns *entity.DagInstance) (str
 	sql := `INSERT INTO t_dag_instance (
 		f_id, f_created_at, f_updated_at, f_dag_id, f_trigger, f_worker, f_source,
 		f_vars, f_keywords, f_event_persistence, f_event_oss_path, f_share_data, f_share_data_ext,
-		f_status, f_reason, f_cmd, f_user_id, f_ended_at, f_dag_type, f_policy_type, f_appinfo,
+		f_status, f_reason, f_cmd, f_has_cmd, f_batch_run_id, f_user_id, f_ended_at, f_dag_type, f_policy_type, f_appinfo,
 		f_priority, f_mode, f_dump, f_dump_ext, f_success_callback, f_error_callback, f_call_chain,
 		f_resume_data, f_resume_status, f_version, f_version_id, f_biz_domain_id)
-		VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+		VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
 
 	// 执行 SQL 语句
 	t := ToDagInstanceModel(dagIns, false)
@@ -1463,6 +1437,8 @@ func (d *dag) CreateDagIns(ctx context.Context, dagIns *entity.DagInstance) (str
 		t.Status,
 		t.Reason,
 		t.Cmd,
+		t.HasCmd,
+		t.BatchRunID,
 		t.UserID,
 		t.EndedAt,
 		t.DagType,
@@ -1483,6 +1459,10 @@ func (d *dag) CreateDagIns(ctx context.Context, dagIns *entity.DagInstance) (str
 	).Error
 
 	if err != nil {
+		return "", err
+	}
+
+	if err = d.insertDagInstanceKeywords(newCtx, t.ID, dagIns.Keywords); err != nil {
 		return "", err
 	}
 
@@ -1594,15 +1574,17 @@ func (d *dag) BatchCreateDagIns(ctx context.Context, dagIns []*entity.DagInstanc
 	sqlStr := `INSERT INTO t_dag_instance (
 		f_id, f_created_at, f_updated_at, f_dag_id, f_trigger, f_worker, f_source,
 		f_vars, f_keywords, f_event_persistence, f_event_oss_path, f_share_data, f_share_data_ext,
-		f_status, f_reason, f_cmd, f_user_id, f_ended_at, f_dag_type, f_policy_type, f_appinfo,
+		f_status, f_reason, f_cmd, f_has_cmd, f_batch_run_id, f_user_id, f_ended_at, f_dag_type, f_policy_type, f_appinfo,
 		f_priority, f_mode, f_dump, f_dump_ext, f_success_callback, f_error_callback, f_call_chain,
 		f_resume_data, f_resume_status, f_version, f_version_id, f_biz_domain_id)
 		VALUES `
 
-	values := make([]any, 0, len(dagIns)*33)
+	values := make([]any, 0, len(dagIns)*35)
+	models := make([]*DagInstance, 0, len(dagIns))
 	for _, data := range dagIns {
-		sqlStr += "(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?), "
+		sqlStr += "(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?), "
 		t := ToDagInstanceModel(data, false)
+		models = append(models, t)
 		values = append(values,
 			t.ID,
 			t.CreatedAt,
@@ -1620,6 +1602,8 @@ func (d *dag) BatchCreateDagIns(ctx context.Context, dagIns []*entity.DagInstanc
 			t.Status,
 			t.Reason,
 			t.Cmd,
+			t.HasCmd,
+			t.BatchRunID,
 			t.UserID,
 			t.EndedAt,
 			t.DagType,
@@ -1648,6 +1632,12 @@ func (d *dag) BatchCreateDagIns(ctx context.Context, dagIns []*entity.DagInstanc
 	err = d.db.Exec(sqlStr, values...).Error
 	if err != nil {
 		return nil, err
+	}
+
+	for i, data := range dagIns {
+		if err = d.insertDagInstanceKeywords(newCtx, models[i].ID, data.Keywords); err != nil {
+			return nil, err
+		}
 	}
 
 	return dagIns, nil
@@ -1863,7 +1853,7 @@ func (d *dag) BatchUpdateDagIns(ctx context.Context, dagIns []*entity.DagInstanc
 			sql := `UPDATE t_dag_instance SET
 				f_updated_at = ?, f_trigger = ?, f_worker = ?, f_source = ?,
 				f_vars = ?, f_keywords = ?, f_event_persistence = ?, f_event_oss_path = ?, f_share_data = ?, f_share_data_ext = ?,
-				f_status = ?, f_reason = ?, f_cmd = ?, f_user_id = ?, f_ended_at = ?, f_dag_type = ?, f_policy_type = ?, f_appinfo = ?,
+				f_status = ?, f_reason = ?, f_cmd = ?, f_has_cmd = ?, f_batch_run_id = ?, f_user_id = ?, f_ended_at = ?, f_dag_type = ?, f_policy_type = ?, f_appinfo = ?,
 				f_priority = ?, f_mode = ?, f_dump = ?, f_dump_ext = ?, f_success_callback = ?, f_error_callback = ?, f_call_chain = ?,
 				f_resume_data = ?, f_resume_status = ?, f_version = ?, f_version_id = ?, f_biz_domain_id = ?
 				WHERE f_id = ?`
@@ -1885,6 +1875,8 @@ func (d *dag) BatchUpdateDagIns(ctx context.Context, dagIns []*entity.DagInstanc
 				t.Status,
 				t.Reason,
 				t.Cmd,
+				t.HasCmd,
+				t.BatchRunID,
 				t.UserID,
 				t.EndedAt,
 				t.DagType,
@@ -1904,6 +1896,13 @@ func (d *dag) BatchUpdateDagIns(ctx context.Context, dagIns []*entity.DagInstanc
 				t.BizDomainID,
 				t.ID,
 			).Error
+			if err != nil {
+				return err
+			}
+
+			if err = d.replaceDagInstanceKeywords(ctx, t.ID, dagIns.Keywords); err != nil {
+				return err
+			}
 		}
 
 		if err != nil {
@@ -2736,47 +2735,6 @@ func (d *dag) ListDag(ctx context.Context, input *mod.ListDagInput) ([]*entity.D
 	return res, nil
 }
 
-// func (d *dag) listSubDag(ctx context.Context, input *mod.ListDagInput) ([]*entity.DagInstance, error) {
-// 	var err error
-// 	newCtx, span := trace.StartInternalSpan(ctx)
-// 	defer func() { trace.TelemetrySpanEnd(span, err) }()
-
-// 	var Args []interface{}
-
-// 	var subsql string
-// 	if input.Scope == "all" {
-// 		var subKeys []string
-// 		var subArgs []interface{}
-// 		subKeys = append(subKeys, "(f_key = ? AND f_value IN ?)")
-// 		subArgs = append(subArgs, "steps.*.operator", input.TriggerExclude)
-
-// 		subKeys = append(subKeys, "(f_key = ? AND f_value IN ?)")
-// 		subArgs = append(subArgs, "accessors.id", input.Accessors)
-
-// 		subKeys = append(subKeys, "(f_key = ? AND f_value = ?)")
-// 		subArgs = append(subArgs, "steps.datasource", 0)
-
-// 		res, subArgs := BuildMetadataSearchQuery(subKeys, subArgs, ObjTypeDag)
-// 		subsql = fmt.Sprintf("UNION %s", res)
-// 		Args = append(Args, subArgs...)
-
-// 		subKeys = subKeys[0:0]
-// 		subArgs = subArgs[0:0]
-
-// 		subKeys = append(subKeys, "(f_key = ? AND f_value = ?)")
-// 		subArgs = append(subArgs, "userid", input.UserID)
-
-// 		subKeys = append(subKeys, "(f_key = ? AND f_value = ?)")
-// 		subArgs = append(subArgs, "steps.datasource", 0)
-
-// 		res, subArgs = BuildMetadataSearchQuery(subKeys, subArgs, ObjTypeDag)
-// 		subsql = fmt.Sprintf("UNION %s", res)
-// 		Args = append(Args, subArgs...)
-// 		subsql = strings.TrimPrefix(subsql, "UNION ")
-// 	}
-
-// }
-
 // ListDagByFields implements [DagRepository].
 func (d *dag) ListDagByFields(ctx context.Context, filter bson.M, opt options.FindOptions) ([]*entity.Dag, error) {
 	var err error
@@ -3423,6 +3381,7 @@ func (d *dag) PatchDagIns(ctx context.Context, dagIns *entity.DagInstance, musts
 
 	setClauses := []string{"f_updated_at = ?"}
 	values := []any{time.Now().Unix()}
+	updateKeywords := false
 
 	if dagIns.EndedAt != 0 {
 		setClauses = append(setClauses, "f_ended_at = ?")
@@ -3463,8 +3422,8 @@ func (d *dag) PatchDagIns(ctx context.Context, dagIns *entity.DagInstance, musts
 		values = append(values, string(dagIns.Status))
 	}
 	if utils.IsContain("Cmd", mustsPatchFields) || dagIns.Cmd != nil {
-		setClauses = append(setClauses, "f_cmd = ?")
-		values = append(values, marshalToString(dagIns.Cmd))
+		setClauses = append(setClauses, "f_cmd = ?", "f_has_cmd = ?")
+		values = append(values, marshalToString(dagIns.Cmd), dagIns.Cmd != nil)
 	}
 	if dagIns.Worker != "" {
 		setClauses = append(setClauses, "f_worker = ?")
@@ -3489,6 +3448,7 @@ func (d *dag) PatchDagIns(ctx context.Context, dagIns *entity.DagInstance, musts
 	if len(dagIns.Keywords) > 0 {
 		setClauses = append(setClauses, "f_keywords = ?")
 		values = append(values, marshalToString(dagIns.Keywords))
+		updateKeywords = true
 	}
 
 	sql := fmt.Sprintf("UPDATE t_dag_instance SET %s WHERE f_id = ?", strings.Join(setClauses, ", "))
@@ -3499,6 +3459,13 @@ func (d *dag) PatchDagIns(ctx context.Context, dagIns *entity.DagInstance, musts
 
 	if err = d.db.Exec(sql, values...).Error; err != nil {
 		return err
+	}
+
+	if updateKeywords {
+		dagInsID, _ := strconv.ParseUint(dagIns.ID, 10, 64)
+		if err = d.replaceDagInstanceKeywords(newCtx, dagInsID, dagIns.Keywords); err != nil {
+			return err
+		}
 	}
 
 	goevent.Publish(&event.DagInstancePatched{
@@ -3656,7 +3623,7 @@ func (d *dag) UpdateDagIns(ctx context.Context, dagIns *entity.DagInstance) erro
 	sql := `UPDATE t_dag_instance SET
 		f_updated_at = ?, f_dag_id = ?, f_trigger = ?, f_worker = ?, f_source = ?,
 		f_vars = ?, f_keywords = ?, f_event_persistence = ?, f_event_oss_path = ?, f_share_data = ?, f_share_data_ext = ?,
-		f_status = ?, f_reason = ?, f_cmd = ?, f_user_id = ?, f_ended_at = ?, f_dag_type = ?, f_policy_type = ?, f_appinfo = ?,
+		f_status = ?, f_reason = ?, f_cmd = ?, f_has_cmd = ?, f_batch_run_id = ?, f_user_id = ?, f_ended_at = ?, f_dag_type = ?, f_policy_type = ?, f_appinfo = ?,
 		f_priority = ?, f_mode = ?, f_dump = ?, f_dump_ext = ?, f_success_callback = ?, f_error_callback = ?, f_call_chain = ?,
 		f_resume_data = ?, f_resume_status = ?, f_version = ?, f_version_id = ?, f_biz_domain_id = ?
 		WHERE f_id = ?`
@@ -3680,6 +3647,8 @@ func (d *dag) UpdateDagIns(ctx context.Context, dagIns *entity.DagInstance) erro
 		t.Status,
 		t.Reason,
 		t.Cmd,
+		t.HasCmd,
+		t.BatchRunID,
 		t.UserID,
 		t.EndedAt,
 		t.DagType,
@@ -3699,6 +3668,10 @@ func (d *dag) UpdateDagIns(ctx context.Context, dagIns *entity.DagInstance) erro
 		t.BizDomainID,
 		t.ID,
 	).Error; err != nil {
+		return err
+	}
+
+	if err = d.replaceDagInstanceKeywords(newCtx, t.ID, dagIns.Keywords); err != nil {
 		return err
 	}
 
