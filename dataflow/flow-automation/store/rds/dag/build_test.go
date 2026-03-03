@@ -201,8 +201,8 @@ func Test_Build(t *testing.T) {
 				},
 				ExcludeModeVM: true,
 				MatchQuery: &mod.MatchQuery{
-					Field: "vars.bund_id.run",
-					Value: "bundID",
+					Field: "vars.batch_run_id.value",
+					Value: "batchID",
 				},
 				SelectField: []string{},
 			}, true)
@@ -213,6 +213,42 @@ func Test_Build(t *testing.T) {
 			fmt.Printf("  Params:  %v\n", args...)
 			fmt.Println()
 		})
+	}
+}
+
+func TestBuildListDagInstanceQuery_HasCmdAndBatchRunID(t *testing.T) {
+	sql, args := BuildListDagInstanceQuery(&mod.ListDagInstanceInput{
+		HasCmd: true,
+		MatchQuery: &mod.MatchQuery{
+			Field: "vars.batch_run_id.value",
+			Value: "batch123",
+		},
+	}, false)
+
+	if !strings.Contains(sql, "f_has_cmd") {
+		t.Fatalf("expected f_has_cmd condition in sql: %s", sql)
+	}
+	if !strings.Contains(sql, "f_batch_run_id") {
+		t.Fatalf("expected f_batch_run_id condition in sql: %s", sql)
+	}
+	if len(args) == 0 || args[len(args)-1] != "batch123" {
+		t.Fatalf("expected args to include batch_run_id, got: %v", args)
+	}
+}
+
+func TestBuildListDagInstanceQuery_KeywordsRegex(t *testing.T) {
+	sql, args := BuildListDagInstanceQuery(&mod.ListDagInstanceInput{
+		MatchQuery: &mod.MatchQuery{
+			Field: "keywords",
+			Value: bson.M{"$regex": "^foo"},
+		},
+	}, false)
+
+	if !strings.Contains(sql, "t_dag_instance_keyword") || !strings.Contains(sql, "EXISTS") {
+		t.Fatalf("expected keyword EXISTS subquery, got: %s", sql)
+	}
+	if len(args) != 1 || args[0] != "foo%" {
+		t.Fatalf("expected regex converted to like pattern, got args: %v", args)
 	}
 }
 

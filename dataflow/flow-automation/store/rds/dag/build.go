@@ -543,14 +543,9 @@ func regexToLike(pattern string) string {
 	return result
 }
 
-const ObjTypeDag uint8 = 1
-const ObjTypeDagInstance uint8 = 2
-
 func BuildListDagInstanceQuery(input *mod.ListDagInstanceInput, cnt bool) (string, []interface{}) {
 	var conds []string
 	var args []interface{}
-	var dynKeys []string
-	var dynArgs []interface{}
 	var dagIDs []uint64
 	var status []string
 
@@ -563,31 +558,10 @@ func BuildListDagInstanceQuery(input *mod.ListDagInstanceInput, cnt bool) (strin
 		status = append(status, string(v))
 	}
 
-	if input.HasCmd {
-		dynKeys = append(dynKeys, "(f_key = ?)")
-		dynArgs = append(dynArgs, "cmd")
-	}
-
-	if input.TimeRange != nil {
-		dynKeys = append(dynKeys, "(f_key = ? AND f_value >= ? AND f_value <= ?)")
-		dynArgs = append(dynArgs, input.TimeRange.Field, input.TimeRange.Begin, input.TimeRange.End)
-	}
-
-	if input.MatchQuery != nil {
-		dynKeys = append(dynKeys, "(f_key = ? AND f_value = ?)")
-		dynArgs = append(dynArgs, input.MatchQuery.Field, input.MatchQuery.Value)
-	}
-
-	needJoin := len(dynKeys) > 0
-	p := ""
-	if needJoin {
-		p = "di."
-	}
-
 	// 主表条件
 	addSlice := func(col string, vals []interface{}) {
 		if len(vals) > 0 {
-			conds = append(conds, fmt.Sprintf("%s%s IN (%s)", p, camelToFSnake(col), strings.TrimSuffix(strings.Repeat("?,", len(vals)), ",")))
+			conds = append(conds, fmt.Sprintf("%s IN (%s)", camelToFSnake(col), strings.TrimSuffix(strings.Repeat("?,", len(vals)), ",")))
 			args = append(args, vals...)
 		}
 	}
@@ -611,35 +585,44 @@ func BuildListDagInstanceQuery(input *mod.ListDagInstanceInput, cnt bool) (strin
 	addStrSlice("f_user_id", input.UserIDs)
 	addSlice("f_priority", input.Priority)
 	if input.Worker != "" {
-		conds = append(conds, p+"f_worker = ?")
+		conds = append(conds, "f_worker = ?")
 		args = append(args, input.Worker)
 	}
+	if input.HasCmd {
+		conds = append(conds, "f_has_cmd = ?")
+		args = append(args, true)
+	}
 	if input.ExcludeModeVM {
-		conds = append(conds, p+"f_mode < 1")
+		conds = append(conds, "f_mode < 1")
 	}
 	if input.UpdatedEnd > 0 {
-		conds = append(conds, p+"f_updated_at <= ?")
+		conds = append(conds, "f_updated_at <= ?")
 		args = append(args, input.UpdatedEnd)
+	}
+	if input.TimeRange != nil {
+		col := camelToFSnake(input.TimeRange.Field)
+		conds = append(conds, fmt.Sprintf("%s >= ? AND %s <= ?", col, col))
+		args = append(args, input.TimeRange.Begin, input.TimeRange.End)
+	}
+	if input.MatchQuery != nil {
+		switch input.MatchQuery.Field {
+		case "vars.batch_run_id.value":
+			conds = append(conds, "f_batch_run_id = ?")
+			args = append(args, input.MatchQuery.Value)
+		case "keywords":
+			if like, ok := buildKeywordLike(input.MatchQuery.Value); ok {
+				conds = append(conds, "EXISTS (SELECT 1 FROM t_dag_instance_keyword dik WHERE dik.f_dag_ins_id = f_id AND dik.f_keyword LIKE ?)")
+				args = append(args, like)
+			}
+		}
 	}
 
 	// 构建 SQL
 	var sql string
-	if needJoin {
-		// 子查询: GROUP BY + HAVING
-		sub, subArgs := BuildMetadataSearchQuery(dynKeys, dynArgs, ObjTypeDagInstance)
-
-		if cnt {
-			sql = "SELECT COUNT(*) FROM dag_instance di INNER JOIN (" + sub + ") ms ON di.f_id = ms.f_obj_id"
-		} else {
-			sql = "SELECT di.* FROM t_dag_instance di INNER JOIN (" + sub + ") ms ON di.f_id = ms.f_obj_id"
-		}
-		args = append(subArgs, args...)
+	if cnt {
+		sql = "SELECT COUNT(*) FROM t_dag_instance"
 	} else {
-		if cnt {
-			sql = "SELECT COUNT(*) FROM t_dag_instance"
-		} else {
-			sql = "SELECT * FROM t_dag_instance"
-		}
+		sql = "SELECT * FROM t_dag_instance"
 	}
 
 	if len(conds) > 0 {
@@ -649,7 +632,7 @@ func BuildListDagInstanceQuery(input *mod.ListDagInstanceInput, cnt bool) (strin
 	if !cnt {
 		if input.SortBy != "" {
 			dir := utils.IfNot(input.Order == 0, "DESC", "ASC")
-			sql += fmt.Sprintf(" ORDER BY %s%s %s", p, input.SortBy, dir)
+			sql += fmt.Sprintf(" ORDER BY %s %s", input.SortBy, dir)
 		}
 		if input.Limit > 0 {
 			sql += " LIMIT ? OFFSET ?"
@@ -660,14 +643,23 @@ func BuildListDagInstanceQuery(input *mod.ListDagInstanceInput, cnt bool) (strin
 	return sql, args
 }
 
-func BuildMetadataSearchQuery(dynKeys []string, dynArgs []interface{}, objType uint8) (string, []interface{}) {
-	sub := fmt.Sprintf(
-		"SELECT f_obj_id FROM t_metadata_search WHERE f_type = ? AND (%s) GROUP BY f_obj_id HAVING COUNT(DISTINCT f_key) = ?",
-		strings.Join(dynKeys, " OR "),
-	)
-	subArgs := append([]interface{}{objType}, dynArgs...)
-	subArgs = append(subArgs, len(dynKeys))
-	return sub, subArgs
+func buildKeywordLike(val interface{}) (string, bool) {
+	if val == nil {
+		return "", false
+	}
+	switch v := val.(type) {
+	case bson.M:
+		if pattern, ok := v["$regex"]; ok {
+			return regexToLike(fmt.Sprintf("%v", pattern)), true
+		}
+	case map[string]interface{}:
+		if pattern, ok := v["$regex"]; ok {
+			return regexToLike(fmt.Sprintf("%v", pattern)), true
+		}
+	case primitive.Regex:
+		return regexToLike(v.Pattern), true
+	}
+	return "%" + fmt.Sprintf("%v", val) + "%", true
 }
 
 func BuildDagVars(dag *entity.Dag) []*DagVar {
@@ -688,40 +680,6 @@ func BuildDagVars(dag *entity.Dag) []*DagVar {
 	return vars
 }
 
-func BuildDagSearch(dag *entity.Dag) []*MetadataSearch {
-	datas := []*MetadataSearch{}
-	dagID, _ := strconv.ParseUint(dag.ID, 10, 64)
-
-	buildSearch := func(key, value, vtype string) *MetadataSearch {
-		id, _ := utils.GetUniqueID()
-		return &MetadataSearch{
-			ID:        id,
-			ObjID:     dagID,
-			Key:       key,
-			Value:     value,
-			ValueType: vtype,
-			Type:      "dag",
-		}
-	}
-
-	for _, accessor := range dag.Accessors {
-		datas = append(datas, buildSearch("accessor.id", accessor.ID, "string"))
-	}
-
-	for _, task := range dag.Tasks {
-		if docid, ok := task.Params["docid"]; ok {
-			datas = append(datas, buildSearch("steps.*.parameters.docid", fmt.Sprintf("%v", docid), "string"))
-		}
-		if docids, ok := task.Params["docids"]; ok {
-			for _, docid := range docids.([]interface{}) {
-				datas = append(datas, buildSearch("steps.*.parameters.docid", fmt.Sprintf("%v", docid), "string"))
-			}
-		}
-		datas = append(datas, buildSearch("steps.*.operator", task.ActionName, "string"))
-	}
-
-	return datas
-}
 
 func BuildDagStepIndex(dag *entity.Dag) []*DagStepIndex {
 	if dag == nil {
