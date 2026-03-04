@@ -1754,13 +1754,19 @@ func (ots *objectTypeService) processConditionOperations(objectType *interfaces.
 			}
 		}
 	} else {
-		opMap := map[string]string{}
+		opMap := make(map[string]string)
 		// 先看本类型，text 类型支持 match,其余的字符串类型可支持 == != in not_in
 		switch prop.Type {
 		case "keyword", "varchar", "string":
-			opMap = interfaces.DSL_KEYWORD_OPS_MAP
+			// Copy map content instead of assigning reference to avoid concurrent map access
+			for k, v := range interfaces.DSL_KEYWORD_OPS_MAP {
+				opMap[k] = v
+			}
 		case "text":
-			opMap = interfaces.DSL_KEYWORD_OPS_MAP
+			// Copy map content instead of assigning reference to avoid concurrent map access
+			for k, v := range interfaces.DSL_KEYWORD_OPS_MAP {
+				opMap[k] = v
+			}
 			for k, v := range interfaces.DSL_TEXT_OPS_MAP {
 				opMap[k] = v
 			}
