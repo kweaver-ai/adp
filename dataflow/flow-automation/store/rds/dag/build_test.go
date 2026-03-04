@@ -252,6 +252,50 @@ func TestBuildListDagInstanceQuery_KeywordsRegex(t *testing.T) {
 	}
 }
 
+func TestBuildDagInstanceCountQueryFromParams_Keywords(t *testing.T) {
+	params := map[string]interface{}{
+		"dagId":   "123",
+		"keywords": bson.M{"$regex": "^foo"},
+	}
+
+	sql, args, err := BuildDagInstanceCountQueryFromParams(params)
+	if err != nil {
+		t.Fatalf("expected nil error, got: %v", err)
+	}
+	if !strings.Contains(sql, "SELECT COUNT(*) FROM t_dag_instance") {
+		t.Fatalf("expected count query, got: %s", sql)
+	}
+	if !strings.Contains(sql, "f_dag_id") {
+		t.Fatalf("expected dagId condition, got: %s", sql)
+	}
+	if !strings.Contains(sql, "t_dag_instance_keyword") || !strings.Contains(sql, "EXISTS") {
+		t.Fatalf("expected keyword EXISTS subquery, got: %s", sql)
+	}
+	if len(args) != 2 {
+		t.Fatalf("expected 2 args, got: %v", args)
+	}
+	if args[1] != "foo%" {
+		t.Fatalf("expected regex converted to like pattern, got: %v", args)
+	}
+}
+
+func TestBuildDagInstanceCountQueryFromParams_BatchRunID(t *testing.T) {
+	params := map[string]interface{}{
+		"vars.batch_run_id.value": "batch-1",
+	}
+
+	sql, args, err := BuildDagInstanceCountQueryFromParams(params)
+	if err != nil {
+		t.Fatalf("expected nil error, got: %v", err)
+	}
+	if !strings.Contains(sql, "f_batch_run_id") {
+		t.Fatalf("expected batch_run_id condition, got: %s", sql)
+	}
+	if len(args) != 1 || args[0] != "batch-1" {
+		t.Fatalf("expected args to include batch_run_id, got: %v", args)
+	}
+}
+
 func TestBuildDagStepIndex(t *testing.T) {
 	dag := &entity.Dag{BaseInfo: entity.BaseInfo{ID: "1"}, Steps: []entity.Step{
 		{Operator: "op1", Parameters: map[string]interface{}{"docid": "d1"}},

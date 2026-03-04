@@ -643,6 +643,48 @@ func BuildListDagInstanceQuery(input *mod.ListDagInstanceInput, cnt bool) (strin
 	return sql, args
 }
 
+func BuildDagInstanceCountQueryFromParams(params map[string]interface{}) (string, []interface{}, error) {
+	baseParams := make(map[string]interface{}, len(params))
+	for k, v := range params {
+		baseParams[k] = v
+	}
+
+	var extraConds []string
+	var extraArgs []interface{}
+	if kw, ok := baseParams["keywords"]; ok {
+		delete(baseParams, "keywords")
+		if like, ok := buildKeywordLike(kw); ok {
+			extraConds = append(extraConds, "EXISTS (SELECT 1 FROM t_dag_instance_keyword dik WHERE dik.f_dag_ins_id = f_id AND dik.f_keyword LIKE ?)")
+			extraArgs = append(extraArgs, like)
+		}
+	}
+
+	conv := NewConverter(DAGINSTANCE_TABLENAME, WithAutoConvert(true), WithFieldMap(map[string]string{
+		"vars.batch_run_id.value": "f_batch_run_id",
+	}))
+	result, err := conv.ConvertConds(baseParams)
+	if err != nil {
+		return "", nil, err
+	}
+
+	var conds []string
+	var args []interface{}
+	if result.Conds != "" {
+		conds = append(conds, result.Conds)
+		args = append(args, result.Params...)
+	}
+	if len(extraConds) > 0 {
+		conds = append(conds, extraConds...)
+		args = append(args, extraArgs...)
+	}
+	if len(conds) == 0 {
+		conds = append(conds, "1=1")
+	}
+
+	sql := fmt.Sprintf("SELECT COUNT(*) FROM %s WHERE %s", DAGINSTANCE_TABLENAME, strings.Join(conds, " AND "))
+	return sql, args, nil
+}
+
 func buildKeywordLike(val interface{}) (string, bool) {
 	if val == nil {
 		return "", false
