@@ -133,11 +133,7 @@ export const updateGroup = async (groupId: string, name: string, comment = ''): 
 };
 
 export const deleteGroup = async (groupId: string, force: boolean): Promise<any> => {
-  const params = {
-    force,
-  };
-
-  return Request.delete(`${GROUP_BASE_URL}/${groupId}`, params);
+  return Request.delete(`${GROUP_BASE_URL}/${groupId}?force=${force}`);
 };
 
 export const batchChangeMetricModelGroup = async (metricModelIds: string[], groupName: string): Promise<any> => {
