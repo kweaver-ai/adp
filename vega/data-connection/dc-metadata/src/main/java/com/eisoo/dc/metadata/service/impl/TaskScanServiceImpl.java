@@ -39,6 +39,7 @@ import com.google.common.util.concurrent.ListeningExecutorService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 import org.springframework.scheduling.config.CronTask;
@@ -104,6 +105,10 @@ public class TaskScanServiceImpl extends ServiceImpl<TaskScanMapper, TaskScanEnt
     private ConnectorConfigCache connectorConfigCache;
     @Autowired
     private ITaskScanScheduleService taskScanScheduleService;
+
+
+    @Value(value = "#{systemEnvironment['AUTH_ENABLED'] ?: false}")
+    private boolean authEnabled;
 
     @Override
     public ResponseEntity<?> createScanTaskAndStart(HttpServletRequest request, TaskScanVO taskScanVO) {
@@ -312,9 +317,14 @@ public class TaskScanServiceImpl extends ServiceImpl<TaskScanMapper, TaskScanEnt
         Set<String> ids = dsList.stream().map(TaskScanEntity::getId).collect(Collectors.toSet());
         List<TaskScanEntity> taskScanEntities = taskScanMapper.selectPage(ids, keyword, offset, limit, sort, direction);
         // 获取用户名称
-        Set<String> userIds = new HashSet<>();
-        taskScanEntities.forEach(t -> userIds.add(t.getCreateUser()));
-        Map<String, String[]> userInfosMap = UserManagement.batchGetUserInfosByUserIds(serviceEndpoints.getUserManagementPrivate(), userIds);
+        Map<String, String[]> userInfosMap;
+        if (authEnabled) {
+            Set<String> userIds = new HashSet<>();
+            taskScanEntities.forEach(t -> userIds.add(t.getCreateUser()));
+            userInfosMap = UserManagement.batchGetUserInfosByUserIds(serviceEndpoints.getUserManagementPrivate(), userIds);
+        } else {
+            userInfosMap = new HashMap<>();
+        }
 
         List<TaskScanDto> results = taskScanEntities.stream().map(t -> {
             String userName = userInfosMap.getOrDefault(t.getCreateUser(), new String[]{"", ""})[1];
@@ -1155,20 +1165,22 @@ public class TaskScanServiceImpl extends ServiceImpl<TaskScanMapper, TaskScanEnt
             validateCronExpressionObj(cronExpressionObj);
         }
         // 判断是否有扫描数据源的权限
-        if (StringUtils.isBlank(userId)) {
-            throw new AiShuException(ErrorCodeEnum.UnauthorizedError);
-        }
-        boolean isOk = Authorization.checkResourceOperation(
-                serviceEndpoints.getAuthorizationPrivate(),
-                userId,
-                introspectInfo.getAccountType(),
-                new ResourceAuthVo(dsId, ResourceAuthConstant.RESOURCE_TYPE_DATA_SOURCE),
-                ResourceAuthConstant.RESOURCE_OPERATION_TYPE_SCAN);
-        if (!isOk) {
-            throw new AiShuException(ErrorCodeEnum.ForbiddenError,
-                    String.format(Detail.RESOURCE_PERMISSION_ERROR,
-                            ResourceAuthConstant.RESOURCE_OPERATION_TYPE_SCAN)
-            );
+        if (authEnabled) {
+            if (StringUtils.isBlank(userId)) {
+                throw new AiShuException(ErrorCodeEnum.UnauthorizedError);
+            }
+            boolean isOk = Authorization.checkResourceOperation(
+                    serviceEndpoints.getAuthorizationPrivate(),
+                    userId,
+                    introspectInfo.getAccountType(),
+                    new ResourceAuthVo(dsId, ResourceAuthConstant.RESOURCE_TYPE_DATA_SOURCE),
+                    ResourceAuthConstant.RESOURCE_OPERATION_TYPE_SCAN);
+            if (!isOk) {
+                throw new AiShuException(ErrorCodeEnum.ForbiddenError,
+                        String.format(Detail.RESOURCE_PERMISSION_ERROR,
+                                ResourceAuthConstant.RESOURCE_OPERATION_TYPE_SCAN)
+                );
+            }
         }
         // 检查数据源是否正在扫描:当type=0时
         if (type == ScanTaskEnm.IMMEDIATE_DS.getCode()) {

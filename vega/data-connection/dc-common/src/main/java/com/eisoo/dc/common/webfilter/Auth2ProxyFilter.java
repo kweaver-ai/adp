@@ -1,5 +1,6 @@
 package com.eisoo.dc.common.webfilter;
 
+import com.eisoo.dc.common.auditLog.enums.OperatorType;
 import com.eisoo.dc.common.constant.Detail;
 import com.eisoo.dc.common.constant.Message;
 import com.eisoo.dc.common.exception.enums.ErrorCodeEnum;
@@ -23,9 +24,11 @@ import java.util.*;
 public class Auth2ProxyFilter implements Filter {
 
     private String  url;
+    private boolean authEnabled;
     private Gson gson = new Gson();
-    public Auth2ProxyFilter(String  url) {
+    public Auth2ProxyFilter(String  url, boolean authEnabled) {
         this.url=url;
+        this.authEnabled=authEnabled;
     }
 
     @Override
@@ -39,9 +42,9 @@ public class Auth2ProxyFilter implements Filter {
         String auth2Token = null;
         // uri
         String uri = request.getRequestURI();
-        if (uri.startsWith("/api/data-connection/v1/datasource")
+        if (authEnabled && (uri.startsWith("/api/data-connection/v1/datasource")
                 || uri.startsWith("/api/data-connection/v1/metadata")
-                || uri.startsWith("/api/data-connection/v1/gateway")) {
+                || uri.startsWith("/api/data-connection/v1/gateway"))) {
 
             auth2Token = request.getHeader(Constants.HEADER_TOKEN_KEY);
             if(auth2Token == null)

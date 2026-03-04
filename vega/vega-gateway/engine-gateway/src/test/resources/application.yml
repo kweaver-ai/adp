@@ -65,8 +65,7 @@ sql:
   enabled: true
 
 #AF权限相关配置
-af-auth:
-  is-open: true
+auth:
   register-clientid-url: http://127.0.0.1:31125/admin/clients
   clientid-token: http://127.0.0.1:31125/admin/clients
   token-introspect: http://127.0.0.1:31125/oauth2/introspect

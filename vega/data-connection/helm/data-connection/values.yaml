@@ -82,6 +82,8 @@ depServices:
   metadata:
     protocol: http
     host: vega-metadata:80
+  auth:
+    enabled: true
 resources:
   requests:
     cpu: 100m

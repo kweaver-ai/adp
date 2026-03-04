@@ -57,8 +57,8 @@ public class CatalogController {
 
     @ApiOperation(value = "查询数据源列表（内部）", notes = "查询数据源列表（内部）")
     @GetMapping("/internal/data-connection/v1/datasource")
-    public ResponseEntity<?> getDatasourceListByInternal(@RequestHeader(name = "x-account-id") String accountId,
-                                                         @RequestHeader(name = "x-account-type")
+    public ResponseEntity<?> getDatasourceListByInternal(@RequestHeader(name = "x-account-id", required = false) String accountId,
+                                                         @RequestHeader(name = "x-account-type", required = false)
                                                          @Pattern(regexp = "user|app|anonymous", message = "可选参数值：user、app、anonymous")
                                                          String accountType,
                                                @RequestParam(value = "limit", required = false, defaultValue = "-1") @Min(value = -1) int limit,
@@ -106,8 +106,8 @@ public class CatalogController {
 
     @ApiOperation(value = "查询数据源详情（内部）", notes = "根据id查询数据源详情（内部）")
     @GetMapping("/internal/data-connection/v1/datasource/{id}")
-    public ResponseEntity<?> getDatasourceByInternal(@RequestHeader(name = "x-account-id") String accountId,
-                                                     @RequestHeader(name = "x-account-type")
+    public ResponseEntity<?> getDatasourceByInternal(@RequestHeader(name = "x-account-id", required = false) String accountId,
+                                                     @RequestHeader(name = "x-account-type", required = false)
                                                      @Pattern(regexp = "user|app|anonymous", message = "可选参数值：user、app、anonymous")
                                                      String accountType,
                                                      @PathVariable("id") @Size(max = 36) String id){

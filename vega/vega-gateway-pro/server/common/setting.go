@@ -7,16 +7,17 @@ package common
 
 import (
 	"fmt"
-	"github.com/bytedance/sonic"
-	"github.com/fsnotify/fsnotify"
-	"github.com/kweaver-ai/kweaver-go-lib/logger"
-	o11y "github.com/kweaver-ai/kweaver-go-lib/observability"
-	"github.com/kweaver-ai/kweaver-go-lib/rest"
-	"github.com/spf13/viper"
 	"os"
 	"sync"
 	"time"
 	"vega-gateway-pro/version"
+
+	"github.com/bytedance/sonic"
+	"github.com/fsnotify/fsnotify"
+	"github.com/kweaver-ai/kweaver-go-lib/hydra"
+	"github.com/kweaver-ai/kweaver-go-lib/logger"
+	o11y "github.com/kweaver-ai/kweaver-go-lib/observability"
+	"github.com/spf13/viper"
 )
 
 // server配置项
@@ -71,7 +72,7 @@ type AppSetting struct {
 	DepServices          map[string]map[string]any `mapstructure:"depServices"`
 	RSASetting           RSASetting                `mapstructure:"rsa"`
 
-	HydraAdminSetting rest.HydraAdminSetting
+	HydraAdminSetting hydra.HydraAdminSetting
 
 	DataConnectionUrl           string
 	VegaCalculateCoordinatorUrl string
@@ -173,12 +174,22 @@ func loadSetting(vp *viper.Viper) {
 	logger.Debug(s)
 }
 
+func GetAuthEnabled() bool {
+	envVal := os.Getenv("AUTH_ENABLED")
+	return envVal != "false" && envVal != "0"
+}
+
 func SetHydraAdminSetting() {
+	if !GetAuthEnabled() {
+		logger.Info("ISF authentication disabled via AUTH_ENABLED env, skipping hydra-admin configuration")
+		return
+	}
+
 	setting, ok := appSetting.DepServices[hydraAdminServiceName]
 	if !ok {
 		logger.Fatalf("service %s not found in depServices", hydraAdminServiceName)
 	}
-	appSetting.HydraAdminSetting = rest.HydraAdminSetting{
+	appSetting.HydraAdminSetting = hydra.HydraAdminSetting{
 		HydraAdminProcotol: setting["protocol"].(string),
 		HydraAdminHost:     setting["host"].(string),
 		HydraAdminPort:     setting["port"].(int),

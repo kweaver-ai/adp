@@ -82,6 +82,13 @@ public class ServiceConfig {
         }
     }
 
+    private String updateUrl(CoreV1Api api, String url) {
+        try {
+            return getServiceFQDN(api, url);
+        } catch (Exception e) {
+            return url;
+        }
+    }
 
     @Bean
     public ServiceEndpoints serviceEndpoints() {
@@ -97,11 +104,11 @@ public class ServiceConfig {
         }else{
             return new ServiceEndpoints(
                     () -> vegaCalculateCoordinatorFQDN.get(),
-                    () -> getServiceFQDN(coreV1Api, hydraAdmin),
-                    () -> getServiceFQDN(coreV1Api, userManagementPrivate),
-                    () -> getServiceFQDN(coreV1Api, authorizationPrivate),
-                    () -> getServiceFQDN(coreV1Api, efastPublic),
-                    () -> getServiceFQDN(coreV1Api, efastPrivate)
+                    () -> updateUrl(coreV1Api, hydraAdmin),
+                    () -> updateUrl(coreV1Api, userManagementPrivate),
+                    () -> updateUrl(coreV1Api, authorizationPrivate),
+                    () -> updateUrl(coreV1Api, efastPublic),
+                    () -> updateUrl(coreV1Api, efastPrivate)
             );
         }
     }

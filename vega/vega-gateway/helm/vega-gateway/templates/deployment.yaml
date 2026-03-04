@@ -51,6 +51,8 @@ spec:
                 fieldRef:
                   apiVersion: v1
                   fieldPath: status.podIP
+            - name: AUTH_ENABLED
+              value: {{ .Values.depServices.auth.enabled | quote }}
       volumes:
         - name: {{ .Values.name }}-vol
           configMap:

@@ -15,9 +15,9 @@ import org.springframework.core.Ordered;
  */
 @Configuration
 public class FilterConfig {
-    @Value(value = "${af-auth.token-introspect}")
+    @Value(value = "${auth.token-introspect}")
     private String tokenInstropect;
-    @Value(value = "${af-auth.is-open}")
+    @Value(value = "#{systemEnvironment['AUTH_ENABLED'] ?: false}")
     private boolean isOpen;
 
 

@@ -6,16 +6,18 @@
 package driveradapters
 
 import (
-	"github.com/gin-gonic/gin"
-	"github.com/kweaver-ai/kweaver-go-lib/logger"
-	"github.com/kweaver-ai/kweaver-go-lib/middleware"
-	o11y "github.com/kweaver-ai/kweaver-go-lib/observability"
-	"github.com/kweaver-ai/kweaver-go-lib/rest"
 	"net/http"
 	"vega-gateway-pro/common"
 	"vega-gateway-pro/interfaces"
 	"vega-gateway-pro/logics/fetch"
 	"vega-gateway-pro/version"
+
+	"github.com/gin-gonic/gin"
+	"github.com/kweaver-ai/kweaver-go-lib/hydra"
+	"github.com/kweaver-ai/kweaver-go-lib/logger"
+	"github.com/kweaver-ai/kweaver-go-lib/middleware"
+	o11y "github.com/kweaver-ai/kweaver-go-lib/observability"
+	"github.com/kweaver-ai/kweaver-go-lib/rest"
 )
 
 type RestHandler interface {
@@ -24,13 +26,13 @@ type RestHandler interface {
 
 type restHandler struct {
 	fetchService interfaces.FetchService
-	hydra        rest.Hydra
+	hydra        hydra.Hydra
 }
 
 func NewRestHandler(appSetting *common.AppSetting) RestHandler {
 	r := &restHandler{
 		fetchService: fetch.NewFetchService(appSetting),
-		hydra:        rest.NewHydra(appSetting.HydraAdminSetting),
+		hydra:        hydra.NewHydra(appSetting.HydraAdminSetting),
 	}
 	return r
 }
@@ -77,14 +79,16 @@ func (r *restHandler) HealthCheck(c *gin.Context) {
 // gin中间件 校验oauth
 func (r *restHandler) verifyOAuthMiddleWare() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		ctx := rest.GetLanguageCtx(c)
-		_, err := r.hydra.VerifyToken(ctx, c)
-		if err != nil {
-			httpError := rest.NewHTTPError(ctx, http.StatusUnauthorized, rest.PublicError_Unauthorized).
-				WithErrorDetails(err.Error())
-			rest.ReplyError(c, httpError)
-			c.Abort()
-			return
+		if common.GetAuthEnabled() {
+			ctx := rest.GetLanguageCtx(c)
+			_, err := r.hydra.VerifyToken(ctx, c)
+			if err != nil {
+				httpError := rest.NewHTTPError(ctx, http.StatusUnauthorized, rest.PublicError_Unauthorized).
+					WithErrorDetails(err.Error())
+				rest.ReplyError(c, httpError)
+				c.Abort()
+				return
+			}
 		}
 
 		//执行后续操作

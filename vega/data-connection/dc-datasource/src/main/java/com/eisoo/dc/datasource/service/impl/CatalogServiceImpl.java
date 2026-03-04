@@ -121,6 +121,9 @@ public class CatalogServiceImpl implements CatalogService {
     @Value(value = "${collector-data-source}")
     private String collectorDataSource;
 
+    @Value(value = "#{systemEnvironment['AUTH_ENABLED'] ?: false}")
+    private boolean authEnabled;
+
     @Override
     public ResponseEntity<?> createDatasource(HttpServletRequest request, DataSourceVo params) {
         IntrospectInfo introspectInfo = CommonUtil.getOrCreateIntrospectInfo(request);
@@ -128,7 +131,7 @@ public class CatalogServiceImpl implements CatalogService {
         String token = CommonUtil.getToken(request);
 
         //非扫描用数据源,判断是否有创建数据源的权限
-        if (!params.getName().equals(collectorDataSource)) {
+        if (authEnabled && !params.getName().equals(collectorDataSource)) {
             if (StringUtils.isBlank(userId)) {
                 throw new AiShuException(ErrorCodeEnum.UnauthorizedError);
             }
@@ -230,25 +233,28 @@ public class CatalogServiceImpl implements CatalogService {
 
         //非扫描用数据源,添加资源权限,发送审计日志
         if (!params.getName().equals(collectorDataSource)) {
-            try {
-                Authorization.addResourceOperations(
-                        serviceEndpoints.getAuthorizationPrivate(),
-                        userId,
-                        introspectInfo.getAccountType(),
-                        dataSourceEntity.getFId(),
-                        ResourceAuthConstant.RESOURCE_TYPE_DATA_SOURCE,
-                        params.getName(),
-                        ResourceAuthConstant.ALLOW_OPERATION_DATA_SOURCE_CREATED,
-                        new String[]{});
-                log.info("添加资源权限成功");
-            } catch (Exception e) {
-                dataSourceMapper.deleteById(dataSourceEntity.getFId());
-                if (serviceEndpoints.getVegaCalculateCoordinator() != null && catalogName != null) {
-                    catalogRuleMapper.deleteByCatalogName(catalogName);
-                    Calculate.deleteCatalog(serviceEndpoints.getVegaCalculateCoordinator(), catalogName);
+            // 添加资源权限
+            if (authEnabled) {
+                try {
+                    Authorization.addResourceOperations(
+                            serviceEndpoints.getAuthorizationPrivate(),
+                            userId,
+                            introspectInfo.getAccountType(),
+                            dataSourceEntity.getFId(),
+                            ResourceAuthConstant.RESOURCE_TYPE_DATA_SOURCE,
+                            params.getName(),
+                            ResourceAuthConstant.ALLOW_OPERATION_DATA_SOURCE_CREATED,
+                            new String[]{});
+                    log.info("添加资源权限成功");
+                } catch (Exception e) {
+                    dataSourceMapper.deleteById(dataSourceEntity.getFId());
+                    if (serviceEndpoints.getVegaCalculateCoordinator() != null && catalogName != null) {
+                        catalogRuleMapper.deleteByCatalogName(catalogName);
+                        Calculate.deleteCatalog(serviceEndpoints.getVegaCalculateCoordinator(), catalogName);
+                    }
+                    log.info("新增数据源{},添加资源权限失败，并删除数据源成功。", params.getName());
+                    throw e;
                 }
-                log.info("新增数据源{},添加资源权限失败，并删除数据源成功。", params.getName());
-                throw e;
             }
 
             //发送审计日志消息
@@ -571,58 +577,73 @@ public class CatalogServiceImpl implements CatalogService {
             connectors = getConnectorsByTypes(typeList);
         }
 
-        //获取分页前的未认证的资源id列表
-        List<DataSourceEntity> dsList = dataSourceMapper.selectDataSources(null, keyword, connectors);
-        if (dsList.size() == 0) {
-            response.set("entries", entries);
-            response.set("total_count", 0);
-            return ResponseEntity.ok(response);
-        }
-        List<ResourceAuthVo> resourceAuthList = new ArrayList<>();
-        for (DataSourceEntity ds : dsList) {
-            resourceAuthList.add(new ResourceAuthVo(ds.getFId(), ResourceAuthConstant.RESOURCE_TYPE_DATA_SOURCE));
-        }
-
-        if (StringUtils.isBlank(userId)) {
-            throw new AiShuException(ErrorCodeEnum.UnauthorizedError);
-        }
-
-        //获取有显示权限的数据源id列表，及获取对应id的资源权限列表
-        Map<String, Object> idOperationsMap = Authorization.getAuthIdsByResourceIds(
-                serviceEndpoints.getAuthorizationPrivate(),
-                userId,
-                userType,
-                resourceAuthList,
-                ResourceAuthConstant.RESOURCE_OPERATION_TYPE_DISPLAY);
-        if (idOperationsMap.size() == 0) {
-            response.set("entries", entries);
-            response.set("total_count", 0);
-            return ResponseEntity.ok(response);
-        }
-
-        //根据有权限的id列表进行数据源分页查询
-        List<DataSourceEntity> resultList = dataSourceMapper.selectPage(idOperationsMap.keySet(), keyword, connectors, offset, limit, sort, direction);
-        long count = dataSourceMapper.selectCount(idOperationsMap.keySet(), keyword, connectors);
-
-
-        Set<String> userIds = new HashSet<>();
+        List<DataSourceEntity> resultList;
+        long count;
+        Map<String, Object> idOperationsMap = new HashMap<>();
+        Map<String, String[]> userInfosMap = new HashMap<>();
         Set<String> dsIds = new HashSet<>();
-        for (DataSourceEntity entity : resultList) {
-            if (StringUtils.isNotBlank(entity.getFCreatedByUid())) {
-                userIds.add(entity.getFCreatedByUid());
+
+        //获取数据源列表
+        if (authEnabled) {
+            //获取分页前的未认证的资源id列表
+            List<DataSourceEntity> dsList = dataSourceMapper.selectDataSources(null, keyword, connectors);
+            if (dsList.isEmpty()) {
+                response.set("entries", entries);
+                response.set("total_count", 0);
+                return ResponseEntity.ok(response);
             }
-            if (StringUtils.isNotBlank(entity.getFUpdatedByUid())) {
-                userIds.add(entity.getFUpdatedByUid());
+            List<ResourceAuthVo> resourceAuthList = new ArrayList<>();
+            for (DataSourceEntity ds : dsList) {
+                resourceAuthList.add(new ResourceAuthVo(ds.getFId(), ResourceAuthConstant.RESOURCE_TYPE_DATA_SOURCE));
             }
-            dsIds.add(entity.getFId());
+
+            if (StringUtils.isBlank(userId) || StringUtils.isBlank(userType)) {
+                throw new AiShuException(ErrorCodeEnum.UnauthorizedError);
+            }
+
+            //获取有显示权限的数据源id列表，及获取对应id的资源权限列表
+            idOperationsMap = Authorization.getAuthIdsByResourceIds(
+                    serviceEndpoints.getAuthorizationPrivate(),
+                    userId,
+                    userType,
+                    resourceAuthList,
+                    ResourceAuthConstant.RESOURCE_OPERATION_TYPE_DISPLAY);
+            if (idOperationsMap.isEmpty()) {
+                response.set("entries", entries);
+                response.set("total_count", 0);
+                return ResponseEntity.ok(response);
+            }
+
+            //根据有权限的id列表进行数据源分页查询
+            resultList = dataSourceMapper.selectPage(idOperationsMap.keySet(), keyword, connectors, offset, limit, sort, direction);
+            count = dataSourceMapper.selectCount(idOperationsMap.keySet(), keyword, connectors);
+
+            Set<String> userIds = new HashSet<>();
+            for (DataSourceEntity entity : resultList) {
+                if (StringUtils.isNotBlank(entity.getFCreatedByUid())) {
+                    userIds.add(entity.getFCreatedByUid());
+                }
+                if (StringUtils.isNotBlank(entity.getFUpdatedByUid())) {
+                    userIds.add(entity.getFUpdatedByUid());
+                }
+                dsIds.add(entity.getFId());
+            }
+            //获取用户类型和名称
+            userInfosMap = UserManagement.batchGetUserInfosByUserIds(serviceEndpoints.getUserManagementPrivate(), userIds);
+
+        } else {
+            resultList = dataSourceMapper.selectPage(null, keyword, connectors, offset, limit, sort, direction);
+            count = dataSourceMapper.selectCount(null, keyword, connectors);
+
+            for (DataSourceEntity entity : resultList) {
+                dsIds.add(entity.getFId());
+            }
         }
-        //获取用户类型和名称
-        Map<String, String[]> userInfosMap = UserManagement.batchGetUserInfosByUserIds(serviceEndpoints.getUserManagementPrivate(), userIds);
 
         //获取数据源最近一次任务状态
         List<TaskScanEntity> taskScanEntities;
         Map<String, Integer> statusMap = null;
-        if (dsIds.size() > 0) {
+        if (!dsIds.isEmpty()) {
             taskScanEntities = taskScanMapper.selectTaskStatusByDsIds(dsIds);
             statusMap = taskScanEntities.stream()
                     .collect(Collectors.toMap(
@@ -657,7 +678,7 @@ public class CatalogServiceImpl implements CatalogService {
             entry.set("latest_task_status", ScanStatusEnum.fromCode(statusMap.getOrDefault(entity.getFId(), ScanStatusEnum.UNSCANNED.getCode())));
             entry.set("metadata_obtain_level", MetadataObtainLevel.getByDsType(entity.getFType()));
             entry.set("comment", StringUtils.isNotBlank(entity.getFComment()) ? entity.getFComment() : "");
-            entry.set("operations", idOperationsMap.get(entity.getFId()));
+            entry.set("operations", authEnabled ? idOperationsMap.get(entity.getFId()) : ResourceAuthConstant.ALLOW_OPERATION_DATA_SOURCE_CREATED);
             entry.set("created_by_uid", StringUtils.isNotBlank(entity.getFCreatedByUid()) ? entity.getFCreatedByUid() : "");
             entry.set("created_by_user_type", userInfosMap.get(entity.getFCreatedByUid()) != null ? userInfosMap.get(entity.getFCreatedByUid())[0] : "");
             entry.set("created_by_username", userInfosMap.get(entity.getFCreatedByUid()) != null ? userInfosMap.get(entity.getFCreatedByUid())[1] : "");
@@ -679,38 +700,47 @@ public class CatalogServiceImpl implements CatalogService {
         JSONObject response = new JSONObject();
         JSONArray entries = new JSONArray();
 
-        //获取分页前的未认证的资源id列表
-        List<DataSourceEntity> dsList = dataSourceMapper.selectDataSources(null, keyword, null);
-        if (dsList.size() == 0) {
-            response.set("entries", entries);
-            response.set("total_count", 0);
-            return ResponseEntity.ok(response);
-        }
-        List<ResourceAuthVo> resourceAuthList = new ArrayList<>();
-        for (DataSourceEntity ds : dsList) {
-            resourceAuthList.add(new ResourceAuthVo(ds.getFId(), ResourceAuthConstant.RESOURCE_TYPE_DATA_SOURCE));
-        }
+        List<DataSourceEntity> resultList;
+        long count;
 
-        if (StringUtils.isBlank(userId)) {
-            throw new AiShuException(ErrorCodeEnum.UnauthorizedError);
-        }
+        //获取数据源列表
+        if (authEnabled) {
+            //获取分页前的未认证的资源id列表
+            List<DataSourceEntity> dsList = dataSourceMapper.selectDataSources(null, keyword, null);
+            if (dsList.isEmpty()) {
+                response.set("entries", entries);
+                response.set("total_count", 0);
+                return ResponseEntity.ok(response);
+            }
+            List<ResourceAuthVo> resourceAuthList = new ArrayList<>();
+            for (DataSourceEntity ds : dsList) {
+                resourceAuthList.add(new ResourceAuthVo(ds.getFId(), ResourceAuthConstant.RESOURCE_TYPE_DATA_SOURCE));
+            }
 
-        //获取有显示权限的数据源id列表，及获取对应id的资源权限列表
-        Map<String, Object> idOperationsMap = Authorization.getAuthIdsByResourceIds(
-                serviceEndpoints.getAuthorizationPrivate(),
-                userId,
-                userType,
-                resourceAuthList,
-                ResourceAuthConstant.RESOURCE_OPERATION_TYPE_DISPLAY);
-        if (idOperationsMap.size() == 0) {
-            response.set("entries", entries);
-            response.set("total_count", 0);
-            return ResponseEntity.ok(response);
-        }
+            if (StringUtils.isBlank(userId) || StringUtils.isBlank(userType)) {
+                throw new AiShuException(ErrorCodeEnum.UnauthorizedError);
+            }
 
-        //根据有权限的id列表进行数据源分页查询
-        List<DataSourceEntity> resultList = dataSourceMapper.selectPage(idOperationsMap.keySet(), keyword, null, offset, limit, sort, direction);
-        long count = dataSourceMapper.selectCount(idOperationsMap.keySet(), keyword, null);
+            //获取有显示权限的数据源id列表，及获取对应id的资源权限列表
+            Map<String, Object> idOperationsMap = Authorization.getAuthIdsByResourceIds(
+                    serviceEndpoints.getAuthorizationPrivate(),
+                    userId,
+                    userType,
+                    resourceAuthList,
+                    ResourceAuthConstant.RESOURCE_OPERATION_TYPE_DISPLAY);
+            if (idOperationsMap.isEmpty()) {
+                response.set("entries", entries);
+                response.set("total_count", 0);
+                return ResponseEntity.ok(response);
+            }
+
+            //根据有权限的id列表进行数据源分页查询
+            resultList = dataSourceMapper.selectPage(idOperationsMap.keySet(), keyword, null, offset, limit, sort, direction);
+            count = dataSourceMapper.selectCount(idOperationsMap.keySet(), keyword, null);
+        } else {
+            resultList = dataSourceMapper.selectPage(null, keyword, null, offset, limit, sort, direction);
+            count = dataSourceMapper.selectCount(null, keyword, null);
+        }
 
         for (DataSourceEntity entity : resultList) {
             JSONObject entry = new JSONObject();
@@ -732,29 +762,33 @@ public class CatalogServiceImpl implements CatalogService {
             throw new AiShuException(ErrorCodeEnum.BadRequest, Description.DATASOURCE_NOT_EXIST, Detail.ID_NOT_EXISTS, Message.MESSAGE_DATANOTEXIST_ERROR_SOLUTION);
         }
 
-        if (StringUtils.isBlank(userId)) {
-            throw new AiShuException(ErrorCodeEnum.UnauthorizedError);
-        }
-        //判断是否有查看数据源的权限，及获取对应id的资源权限列表
-        Map<String, Object> idOperationsMap = Authorization.getAuthIdsByResourceIds(
-                serviceEndpoints.getAuthorizationPrivate(),
-                userId,
-                userType,
-                Collections.singletonList(new ResourceAuthVo(entity.getFId(), ResourceAuthConstant.RESOURCE_TYPE_DATA_SOURCE)),
-                ResourceAuthConstant.RESOURCE_OPERATION_TYPE_VIEW_DETAIL);
-        if (idOperationsMap.size() == 0) {
-            throw new AiShuException(ErrorCodeEnum.ForbiddenError, String.format(Detail.RESOURCE_PERMISSION_ERROR, ResourceAuthConstant.RESOURCE_OPERATION_TYPE_VIEW_DETAIL));
-        }
+        Map<String, String[]> userInfosMap = new HashMap<>();
+        Map<String, Object> idOperationsMap = new HashMap<>();
+        if (authEnabled) {
+            if (StringUtils.isBlank(userId) || StringUtils.isBlank(userType)) {
+                throw new AiShuException(ErrorCodeEnum.UnauthorizedError);
+            }
+            //判断是否有查看数据源的权限，及获取对应id的资源权限列表
+            idOperationsMap = Authorization.getAuthIdsByResourceIds(
+                    serviceEndpoints.getAuthorizationPrivate(),
+                    userId,
+                    userType,
+                    Collections.singletonList(new ResourceAuthVo(entity.getFId(), ResourceAuthConstant.RESOURCE_TYPE_DATA_SOURCE)),
+                    ResourceAuthConstant.RESOURCE_OPERATION_TYPE_VIEW_DETAIL);
+            if (idOperationsMap.isEmpty()) {
+                throw new AiShuException(ErrorCodeEnum.ForbiddenError, String.format(Detail.RESOURCE_PERMISSION_ERROR, ResourceAuthConstant.RESOURCE_OPERATION_TYPE_VIEW_DETAIL));
+            }
 
-        //获取用户名称
-        Set<String> userIds = new HashSet<>();
-        if (StringUtils.isNotBlank(entity.getFCreatedByUid())) {
-            userIds.add(entity.getFCreatedByUid());
+            //获取用户名称
+            Set<String> userIds = new HashSet<>();
+            if (StringUtils.isNotBlank(entity.getFCreatedByUid())) {
+                userIds.add(entity.getFCreatedByUid());
+            }
+            if (StringUtils.isNotBlank(entity.getFUpdatedByUid())) {
+                userIds.add(entity.getFUpdatedByUid());
+            }
+            userInfosMap = UserManagement.batchGetUserInfosByUserIds(serviceEndpoints.getUserManagementPrivate(), userIds);
         }
-        if (StringUtils.isNotBlank(entity.getFUpdatedByUid())) {
-            userIds.add(entity.getFUpdatedByUid());
-        }
-        Map<String, String[]> userInfosMap = UserManagement.batchGetUserInfosByUserIds(serviceEndpoints.getUserManagementPrivate(), userIds);
 
         //获取数据源最近一次任务状态
         List<TaskScanEntity> taskScanEntities = taskScanMapper.selectTaskStatusByDsIds(new HashSet<>(Collections.singletonList(id)));
@@ -783,7 +817,7 @@ public class CatalogServiceImpl implements CatalogService {
         entry.set("is_built_in", DsBuiltInStatus.isBuiltIn(entity.getFIsBuiltIn()));
         entry.set("latest_task_status", ScanStatusEnum.fromCode(status));
         entry.set("comment", StringUtils.isNotBlank(entity.getFComment()) ? entity.getFComment() : "");
-        entry.set("operations", idOperationsMap.get(entity.getFId()));
+        entry.set("operations", authEnabled ? idOperationsMap.get(entity.getFId()) : ResourceAuthConstant.ALLOW_OPERATION_DATA_SOURCE_CREATED);
         entry.set("created_by_uid", StringUtils.isNotBlank(entity.getFCreatedByUid()) ? entity.getFCreatedByUid() : "");
         entry.set("created_by_user_type", userInfosMap.get(entity.getFCreatedByUid()) != null ? userInfosMap.get(entity.getFCreatedByUid())[0] : "");
         entry.set("created_by_username", userInfosMap.get(entity.getFCreatedByUid()) != null ? userInfosMap.get(entity.getFCreatedByUid())[1] : "");
@@ -824,18 +858,21 @@ public class CatalogServiceImpl implements CatalogService {
         IntrospectInfo introspectInfo = CommonUtil.getOrCreateIntrospectInfo(request);
         String userId = StringUtils.defaultString(introspectInfo.getSub());
         String token = CommonUtil.getToken(request);
-        if (StringUtils.isBlank(userId)) {
-            throw new AiShuException(ErrorCodeEnum.UnauthorizedError);
-        }
-        //判断是否有修改数据源的权限
-        boolean isOk = Authorization.checkResourceOperation(
-                serviceEndpoints.getAuthorizationPrivate(),
-                userId,
-                introspectInfo.getAccountType(),
-                new ResourceAuthVo(id, ResourceAuthConstant.RESOURCE_TYPE_DATA_SOURCE),
-                ResourceAuthConstant.RESOURCE_OPERATION_TYPE_MODIFY);
-        if (!isOk) {
-            throw new AiShuException(ErrorCodeEnum.ForbiddenError, String.format(Detail.RESOURCE_PERMISSION_ERROR, ResourceAuthConstant.RESOURCE_OPERATION_TYPE_MODIFY));
+
+        if (authEnabled) {
+            if (StringUtils.isBlank(userId)) {
+                throw new AiShuException(ErrorCodeEnum.UnauthorizedError);
+            }
+            //判断是否有修改数据源的权限
+            boolean isOk = Authorization.checkResourceOperation(
+                    serviceEndpoints.getAuthorizationPrivate(),
+                    userId,
+                    introspectInfo.getAccountType(),
+                    new ResourceAuthVo(id, ResourceAuthConstant.RESOURCE_TYPE_DATA_SOURCE),
+                    ResourceAuthConstant.RESOURCE_OPERATION_TYPE_MODIFY);
+            if (!isOk) {
+                throw new AiShuException(ErrorCodeEnum.ForbiddenError, String.format(Detail.RESOURCE_PERMISSION_ERROR, ResourceAuthConstant.RESOURCE_OPERATION_TYPE_MODIFY));
+            }
         }
 
         String type = params.getType();
@@ -1158,18 +1195,20 @@ public class CatalogServiceImpl implements CatalogService {
 
         IntrospectInfo introspectInfo = CommonUtil.getOrCreateIntrospectInfo(request);
         String userId = StringUtils.defaultString(introspectInfo.getSub());
-        if (StringUtils.isBlank(userId)) {
-            throw new AiShuException(ErrorCodeEnum.UnauthorizedError);
-        }
-        //判断是否有删除数据源的权限
-        boolean isOk = Authorization.checkResourceOperation(
-                serviceEndpoints.getAuthorizationPrivate(),
-                userId,
-                introspectInfo.getAccountType(),
-                new ResourceAuthVo(id, ResourceAuthConstant.RESOURCE_TYPE_DATA_SOURCE),
-                ResourceAuthConstant.RESOURCE_OPERATION_TYPE_DELETE);
-        if (!isOk) {
-            throw new AiShuException(ErrorCodeEnum.ForbiddenError, String.format(Detail.RESOURCE_PERMISSION_ERROR, ResourceAuthConstant.RESOURCE_OPERATION_TYPE_DELETE));
+        if (authEnabled) {
+            if (StringUtils.isBlank(userId)) {
+                throw new AiShuException(ErrorCodeEnum.UnauthorizedError);
+            }
+            //判断是否有删除数据源的权限
+            boolean isOk = Authorization.checkResourceOperation(
+                    serviceEndpoints.getAuthorizationPrivate(),
+                    userId,
+                    introspectInfo.getAccountType(),
+                    new ResourceAuthVo(id, ResourceAuthConstant.RESOURCE_TYPE_DATA_SOURCE),
+                    ResourceAuthConstant.RESOURCE_OPERATION_TYPE_DELETE);
+            if (!isOk) {
+                throw new AiShuException(ErrorCodeEnum.ForbiddenError, String.format(Detail.RESOURCE_PERMISSION_ERROR, ResourceAuthConstant.RESOURCE_OPERATION_TYPE_DELETE));
+            }
         }
 
         dataSourceMapper.deleteById(id);
@@ -1190,10 +1229,12 @@ public class CatalogServiceImpl implements CatalogService {
         }
 
         //清除资源权限
-        try {
-            Authorization.deleteResourceOperations(serviceEndpoints.getAuthorizationPrivate(), id, ResourceAuthConstant.RESOURCE_TYPE_DATA_SOURCE);
-        } catch (Exception e) {
-            log.error("删除数据源{}成功，删除资源权限失败。", dataSourceEntity.getFName(), e);
+        if (authEnabled) {
+            try {
+                Authorization.deleteResourceOperations(serviceEndpoints.getAuthorizationPrivate(), id, ResourceAuthConstant.RESOURCE_TYPE_DATA_SOURCE);
+            } catch (Exception e) {
+                log.error("删除数据源{}成功，删除资源权限失败。", dataSourceEntity.getFName(), e);
+            }
         }
 
         //日志
@@ -1274,7 +1315,9 @@ public class CatalogServiceImpl implements CatalogService {
     private Operator buildOperator(HttpServletRequest request) {
         IntrospectInfo introspectInfo = CommonUtil.getOrCreateIntrospectInfo(request);
         OperatorType operatorType;
-        if (introspectInfo.isAppUser()) {
+        if (!authEnabled) {
+            operatorType = OperatorType.ANONYMOUS_USER;
+        } else if (introspectInfo.isAppUser()) {
             operatorType = OperatorType.APP;
         } else {
             operatorType = OperatorType.visitorTypeMap.getOrDefault(introspectInfo.getExt().getVisitorType(), OperatorType.INTERNAL_SERVICE);

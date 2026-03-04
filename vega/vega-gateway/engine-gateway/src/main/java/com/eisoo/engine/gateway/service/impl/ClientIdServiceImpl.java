@@ -26,7 +26,7 @@ public class ClientIdServiceImpl extends MPJBaseServiceImpl<ClientIdMapper, Clie
     @Autowired(required = false)
     ClientIdMapper clientIdMapper;
 
-    @Value(value = "${af-auth.register-clientid-url}")
+    @Value(value = "${auth.register-clientid-url}")
     private String registerClientIdUrl;
 
     @Override

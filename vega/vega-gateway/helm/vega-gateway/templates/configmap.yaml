@@ -73,8 +73,7 @@ data:
     sql:
       enabled: true
 
-    af-auth:
-      is-open: true
+    auth:
       register-clientid-url: {{ .Values.depServices.hydra.administrativeProtocol }}://{{ .Values.depServices.hydra.administrativeHost }}:{{ .Values.depServices.hydra.administrativePort }}/admin/clients
       clientid-token: {{ .Values.depServices.hydra.publicProtocol }}://{{ .Values.depServices.hydra.publicHost }}:{{ .Values.depServices.hydra.publicPort }}/oauth2/token
       token-introspect: {{ .Values.depServices.hydra.administrativeProtocol }}://{{ .Values.depServices.hydra.administrativeHost }}:{{ .Values.depServices.hydra.administrativePort }}/admin/oauth2/introspect

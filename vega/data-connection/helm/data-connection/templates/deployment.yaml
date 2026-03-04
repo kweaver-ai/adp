@@ -44,6 +44,8 @@ spec:
                   fieldPath: status.podIP
             - name: JAVA_OPTS
               value: {{ .Values.javaOpts }}
+            - name: AUTH_ENABLED
+              value: {{ .Values.depServices.auth.enabled | quote }}
       volumes:
         - name: {{ .Values.name }}-vol
           configMap:

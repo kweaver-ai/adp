@@ -50,6 +50,8 @@ depServices:
     host: vega-calculate-coordinator
     port: 8090
     protocol: http
+  auth:
+    enabled: true
 
 config:
   server:
