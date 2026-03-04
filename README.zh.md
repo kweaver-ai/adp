@@ -100,10 +100,10 @@ DataFlow 是一个专为数据处理设计的可视化流程编排引擎。
 
 3.  **构建模块**
 
-    *   **本体引擎 (Go)**:
-        详细说明请参考 [ontology/README.zh.md](ontology/README.zh.md)。
+    *   **BKN 引擎 (Go)**:
+        详细说明请参考 [bkn/README.zh.md](bkn/README.zh.md)。
         ```bash
-        cd ontology/ontology-manager/server
+        cd bkn/bkn-backend
         go run main.go
         ```
 

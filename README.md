@@ -100,10 +100,10 @@ DataFlow is a visual pipeline orchestration engine designed for data processing.
 
 3.  **Build Modules**
 
-    *   **Ontology (Go)**:
-        Refer to [ontology/README.md](ontology/README.md) for detailed instructions.
+    *   **BKN (Go)**:
+        Refer to [bkn/README.md](bkn/README.md) for detailed instructions.
         ```bash
-        cd ontology/ontology-manager/server
+        cd bkn/bkn-backend
         go run main.go
         ```
 
