@@ -15,7 +15,6 @@ import ENUMS from '@/enums';
 import HOOKS from '@/hooks';
 import SERVICE, { KnowledgeNetworkType } from '@/services';
 import { Text, Title, Table, Select, Button } from '@/web-library/common';
-import Detail from './Detail';
 import styles from './index.module.less';
 
 type CAETypeType = 'create' | 'edit';
@@ -41,7 +40,6 @@ const Edge = (props: TProps) => {
   const [selectedRowKeys, setSelectedRowKeys] = useState<any[]>([]); // 选中行
   const [filterValues, setFilterValues] = useState<any>({ name_pattern: '', source_object_type_id: 'all', target_object_type_id: 'all' }); // 表格的筛选条件
   const [objectOptions, setObjectOptions] = useState<any[]>([]); // 对象类的选择列表
-  const [edgeDetail, setEdgeDetail] = useState(null);
 
   const knId = detail?.id || localStorage.getItem('KnowledgeNetwork.id')!;
   const { sort, direction } = pageState || {};
@@ -129,10 +127,11 @@ const Edge = (props: TProps) => {
     getList(state);
   };
 
-  /** 打开关系类详情侧边栏 */
-  const onOpenDetail = (sourceData = null) => setEdgeDetail(sourceData);
-  /** 打开关系类详情侧边栏  */
-  const onCloseDetail = () => setEdgeDetail(null);
+  /** 跳转详情页 */
+  const goToDetailPage = (data?: any) => {
+    if (!data?.id) return;
+    history.push(`/ontology/edge/detail/${data.id}`, { isPermission });
+  };
 
   /** 跳转创建和编辑弹窗 */
   const goToCreateAndEditPage = (type: CAETypeType, data?: any) => {
@@ -168,7 +167,7 @@ const Edge = (props: TProps) => {
 
   /** 操作按钮 */
   const onOperate = (key: any, record: any) => {
-    if (key === 'view') onOpenDetail(record);
+    if (key === 'view') goToDetailPage(record);
     if (key === 'edit') goToCreateAndEditPage('edit', record);
     if (key === 'delete') onDeleteConfirm([record]);
   };
@@ -183,8 +182,9 @@ const Edge = (props: TProps) => {
       __fixed: true,
       __selected: true,
       render: (value: string, record: any) => (
-        <div onClick={() => onOpenDetail(record)} style={{ cursor: 'pointer' }}>
-          {value}
+        <div className="g-flex-align-center" style={{ gap: '8px', cursor: 'pointer' }} onClick={() => goToDetailPage(record)}>
+          <ObjectIcon icon="icon-dip-guanxilei" color="#5381DF" />
+          <span className="g-ellipsis-1">{value}</span>
         </div>
       ),
     },
@@ -227,7 +227,7 @@ const Edge = (props: TProps) => {
         return (
           <div className="g-flex-align-center" style={{ gap: '8px' }}>
             {icon && <ObjectIcon icon={icon} color={color} />}
-            <Text>{display_name || name || value}</Text>
+            <span className="g-ellipsis-1">{name}</span>
           </div>
         );
       },
@@ -242,7 +242,7 @@ const Edge = (props: TProps) => {
         return (
           <div className="g-flex-align-center" style={{ gap: '8px' }}>
             {icon && <ObjectIcon icon={icon} color={color} />}
-            <Text>{display_name || name || value}</Text>
+            <span className="g-ellipsis-1">{name}</span>
           </div>
         );
       },
@@ -346,15 +346,6 @@ const Edge = (props: TProps) => {
                     /> */}
         </Table.Operation>
       </Table.PageTable>
-      <Detail
-        open={!!edgeDetail}
-        knId={knId}
-        sourceData={edgeDetail}
-        onClose={onCloseDetail}
-        onDeleteConfirm={onDeleteConfirm}
-        isPermission={isPermission}
-        goToCreateAndEditPage={goToCreateAndEditPage}
-      />
     </div>
   );
 };

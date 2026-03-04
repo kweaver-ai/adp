@@ -207,7 +207,7 @@ const AddObjectTypesModal: React.FC<AddObjectTypesModalProps> = ({ open, onCance
           <div className={styles['obj-name-icon']} style={{ background: record.color }}>
             <IconFont type={record.icon} style={{ color: '#fff', fontSize: 16 }} />
           </div>
-          <span>{record.name}</span>
+          <span className="g-ellipsis-1">{record.name}</span>
         </div>
       ),
     },

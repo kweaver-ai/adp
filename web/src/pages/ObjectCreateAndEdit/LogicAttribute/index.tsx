@@ -1,7 +1,7 @@
 import { useState, forwardRef, useImperativeHandle, useMemo, useEffect } from 'react';
 import intl from 'react-intl-universal';
 import { EllipsisOutlined } from '@ant-design/icons';
-import { Dropdown, Empty, Tooltip } from 'antd';
+import { Dropdown, Empty } from 'antd';
 import { showDeleteConfirm } from '@/components/DeleteConfirm';
 import ObjectIcon from '@/components/ObjectIcon';
 import { deduplicateObjects } from '@/utils/object';
@@ -9,7 +9,7 @@ import * as OntologyObjectType from '@/services/object/type';
 import createImage from '@/assets/images/common/create.svg';
 import noSearchResultImage from '@/assets/images/common/no_search_result.svg';
 import HOOKS from '@/hooks';
-import { Button, IconFont, Table } from '@/web-library/common';
+import { Button, IconFont, Table, Tooltip } from '@/web-library/common';
 import EditDrawer from './EditDrawer';
 import styles from './index.module.less';
 
@@ -43,7 +43,7 @@ const LogicAttribute = forwardRef((props: LogicAttributeProps, ref: any) => {
       setSelectedRowKeys([]);
       setSelectedRows([]);
     }
-  }, [initialLogicProperties, open]);
+  }, [initialLogicProperties]);
 
   const onClose = () => {
     setOpen(false);
@@ -159,9 +159,13 @@ const LogicAttribute = forwardRef((props: LogicAttributeProps, ref: any) => {
     {
       title: intl.get('Global.description'),
       dataIndex: 'comment',
-      width: 400,
+      width: 200,
       __selected: true,
-      render: (value: string) => <span className={styles['data-desc']}>{value}</span>,
+      render: (value: string) => (
+        <Tooltip title={value}>
+          <div style={{ width: '200px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{value}</div>
+        </Tooltip>
+      ),
     },
     {
       title: intl.get('Object.bindResource'),
@@ -174,10 +178,10 @@ const LogicAttribute = forwardRef((props: LogicAttributeProps, ref: any) => {
             <div className={styles['bind-resource-cell']}>
               <div className={styles['data-resource']}>
                 {record.data_source?.type === OntologyObjectType.LogicAttributeType.METRIC && (
-                  <IconFont type="icon-dip-color-zhibiaometirc" style={{ fontSize: '24px' }} />
+                  <IconFont type="icon-dip-color-MCP" style={{ fontSize: '24px' }} />
                 )}
                 {record.data_source?.type === OntologyObjectType.LogicAttributeType.OPERATOR && (
-                  <IconFont type="icon-dip-color-suanzitool" style={{ fontSize: '24px' }} />
+                  <IconFont type="icon-dip-color-tool" style={{ fontSize: '24px' }} />
                 )}
                 <span className={styles['resource-name']}>{record.data_source?.name || ''}</span>
               </div>

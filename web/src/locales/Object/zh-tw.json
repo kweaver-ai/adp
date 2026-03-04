@@ -57,6 +57,12 @@
     "skipLogicPropertyTip": "如果沒有需要通過計算或規則推算出來的值,可以跳過此步驟,點擊右上角的【保存並退出】完成物件類別創建。",
     "manualCreate": "手動新建",
     "syncDataViewFields": "同步數據視圖字段",
-    "clearAllDataAttributesConfirm": "確定清空所有數據屬性嗎？清空後不能恢復，請謹慎操作。"
+    "clearAllDataAttributesConfirm": "確定清空所有數據屬性嗎？清空後不能恢復，請謹慎操作。",
+    "deleteIgnoreAndConfirm": "忽略，立即刪除",
+    "deleteObjectUsedByRelationAndAction": "對象類已被其他關係及行為類使用，刪除後相關能力將無法正常使用。",
+    "affectedRelationAndActionList": "以下為受影響的關係類與行動類列表：",
+    "objectToDelete": "待刪除對象類",
+    "affectedRelationOrAction": "受影響關係類/行動類",
+    "confirmDeleteObjectClass": "是否確認繼續刪除該對象類？"
   }
 }

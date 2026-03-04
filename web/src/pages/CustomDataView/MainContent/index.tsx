@@ -15,11 +15,11 @@ import api from '@/services/customDataView';
 import HOOKS from '@/hooks';
 import { Button, Table, IconFont, Text, Select } from '@/web-library/common';
 import ExportFile from '@/web-library/components/ExportFile';
+import { useCustomDataViewContext } from '../context';
 import { DataViewItem } from '../type';
+import DataViewDetail from './DataViewDetail';
 import { MoveToGroupModal } from './DetailContent/MoveToGroupModal';
 import PreviewData from './PreviewData';
-import { useCustomDataViewContext } from '../context';
-import DataViewDetail from './DataViewDetail';
 
 export const MainContent: React.FC = () => {
   const history = useHistory();
@@ -220,7 +220,7 @@ export const MainContent: React.FC = () => {
         sort: sorter?.field || 'update_time',
         direction: sorter?.order === 'ascend' ? 'asc' : 'desc',
         query_type: filters?.query_type || [],
-        name_pattern: searchValue,
+        keyword: searchValue,
         tag: selectedTag === 'all' ? '' : selectedTag,
         group_id: currentSelectGroup?.id,
         type: 'custom',

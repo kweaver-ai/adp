@@ -266,6 +266,10 @@
     "cellRangeTip": "選取Sheet頁後填寫數據開始、結束的單元，確定視圖數據範圍。例\"開始-結束單元為：A2-C3\"",
     "dataProperty": "數據屬性",
     "dataView": "數據視圖",
+    "dataViewField": "數據視圖字段",
+    "resource": "資源",
+    "indexedObject": "索引對象",
+    "indexedObjectStats": "{count}個（佔用空間：{size}）",
     "cronTip": "通過Cron表達式指定任務調度時間，按照指定的任務調度時間檢查查詢和分析結果。<br/>Cron表達式的最小精度為秒，24小時制，例如 0 */1 * * * ? 從0:00開始，每隔1分鐘檢查一次",
     "every": "每",
     "fixRate": "固定頻率",
@@ -301,6 +305,7 @@
     "setFieldFeature": "設置字段特徵",
     "unset": "未設置",
     "clearSuccess": "清空成功",
-    "clear": "清空"
+    "clear": "清空",
+    "collapse": "收起"
   }
 }
