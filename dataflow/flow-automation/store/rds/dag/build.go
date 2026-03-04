@@ -2,6 +2,7 @@ package dagmodel
 
 import (
 	"fmt"
+	"reflect"
 	"sort"
 	"strconv"
 	"strings"
@@ -220,6 +221,17 @@ func toSlice(v interface{}) ([]interface{}, error) {
 		}
 		return result, nil
 	default:
+		if v == nil {
+			return nil, fmt.Errorf("unsupported slice type: %T", v)
+		}
+		rv := reflect.ValueOf(v)
+		if rv.Kind() == reflect.Slice || rv.Kind() == reflect.Array {
+			result := make([]interface{}, rv.Len())
+			for i := 0; i < rv.Len(); i++ {
+				result[i] = rv.Index(i).Interface()
+			}
+			return result, nil
+		}
 		return nil, fmt.Errorf("unsupported slice type: %T", v)
 	}
 }
@@ -641,6 +653,125 @@ func BuildListDagInstanceQuery(input *mod.ListDagInstanceInput, cnt bool) (strin
 	}
 
 	return sql, args
+}
+
+func BuildGroupDagInstanceQuery(input *mod.GroupInput) (string, []interface{}, error) {
+	if input == nil {
+		return "", nil, nil
+	}
+
+	conv := NewConverter(DAGINSTANCE_TABLENAME, WithAutoConvert(true))
+	baseConds := make([]string, 0)
+	baseArgs := make([]interface{}, 0)
+
+	for _, opt := range input.SearchOptions {
+		m := map[string]interface{}{
+			opt.Field: map[string]interface{}{
+				opt.Condition: opt.Value,
+			},
+		}
+		res, err := conv.ConvertConds(m)
+		if err != nil {
+			return "", nil, err
+		}
+		if res.Conds != "" {
+			baseConds = append(baseConds, res.Conds)
+			baseArgs = append(baseArgs, res.Params...)
+		}
+	}
+
+	if input.TimeRange != nil {
+		m := map[string]interface{}{
+			input.TimeRange.Field: map[string]interface{}{
+				"$gte": input.TimeRange.Begin,
+				"$lte": input.TimeRange.End,
+			},
+		}
+		res, err := conv.ConvertConds(m)
+		if err != nil {
+			return "", nil, err
+		}
+		if res.Conds != "" {
+			baseConds = append(baseConds, res.Conds)
+			baseArgs = append(baseArgs, res.Params...)
+		}
+	}
+
+	groupCols := make([]string, 0)
+	if input.GroupBy != "" {
+		groupCols = append(groupCols, camelToFSnake(input.GroupBy))
+	}
+	for _, g := range input.GroupBys {
+		groupCols = append(groupCols, camelToFSnake(g))
+	}
+	if len(groupCols) == 0 {
+		return "", nil, nil
+	}
+
+	where := ""
+	if len(baseConds) > 0 {
+		where = " WHERE " + strings.Join(baseConds, " AND ")
+	}
+
+	if !input.IsFirst {
+		sql := fmt.Sprintf("SELECT COUNT(*) AS total FROM %s%s GROUP BY %s", DAGINSTANCE_TABLENAME, where, strings.Join(groupCols, ", "))
+		args := append([]interface{}{}, baseArgs...)
+		if input.Limit > 0 {
+			sql += " LIMIT ?"
+			args = append(args, input.Limit)
+		}
+		return sql, args, nil
+	}
+
+	sortCol := "f_id"
+	if input.SortBy != "" {
+		sortCol = camelToFSnake(input.SortBy)
+	}
+
+	minmax := "MAX"
+	if input.Order > 0 {
+		minmax = "MIN"
+	}
+
+	selectCols := "di.*"
+	if len(input.ProjectFields) > 0 {
+		cols := make([]string, 0, len(input.ProjectFields))
+		for _, f := range input.ProjectFields {
+			cols = append(cols, "di."+camelToFSnake(f))
+		}
+		selectCols = strings.Join(cols, ", ")
+	}
+
+	selectTotal := "0 AS total"
+	gSelectCols := strings.Join(groupCols, ", ")
+	if input.IsSum {
+		gSelectCols = gSelectCols + ", COUNT(*) AS total"
+		selectTotal = "g.total"
+	}
+
+	gSQL := fmt.Sprintf("SELECT %s, %s(%s) AS sort_val FROM %s%s GROUP BY %s", gSelectCols, minmax, sortCol, DAGINSTANCE_TABLENAME, where, strings.Join(groupCols, ", "))
+	gArgs := append([]interface{}{}, baseArgs...)
+	if input.Limit > 0 {
+		gSQL += " LIMIT ?"
+		gArgs = append(gArgs, input.Limit)
+	}
+
+	pSQL := fmt.Sprintf("SELECT %s, %s AS sort_val, MAX(f_id) AS max_id FROM %s%s GROUP BY %s, %s", strings.Join(groupCols, ", "), sortCol, DAGINSTANCE_TABLENAME, where, strings.Join(groupCols, ", "), sortCol)
+	pArgs := append([]interface{}{}, baseArgs...)
+
+	joinConds := make([]string, 0, len(groupCols)+1)
+	for _, col := range groupCols {
+		joinConds = append(joinConds, fmt.Sprintf("g.%s = p.%s", col, col))
+	}
+	joinConds = append(joinConds, "p.sort_val = g.sort_val")
+
+	finalSQL := fmt.Sprintf("SELECT %s, %s FROM (%s) g JOIN (%s) p ON %s JOIN %s di ON di.f_id = p.max_id",
+		selectTotal, selectCols, gSQL, pSQL, strings.Join(joinConds, " AND "), DAGINSTANCE_TABLENAME)
+
+	finalArgs := append([]interface{}{}, gArgs...)
+	finalArgs = append(finalArgs, pArgs...)
+
+	return finalSQL, finalArgs, nil
 }
 
 func BuildDagInstanceCountQueryFromParams(params map[string]interface{}) (string, []interface{}, error) {

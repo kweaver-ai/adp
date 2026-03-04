@@ -2518,111 +2518,50 @@ func (d *dag) GroupDagInstance(ctx context.Context, input *mod.GroupInput) ([]*e
 	_, span := trace.StartInternalSpan(ctx)
 	defer func() { trace.TelemetrySpanEnd(span, err) }()
 
-	conds := make([]string, 0)
-	args := make([]interface{}, 0)
-	conv := NewConverter(DAGINSTANCE_TABLENAME, WithAutoConvert(true))
-
-	for _, opt := range input.SearchOptions {
-		m := map[string]interface{}{
-			opt.Field: map[string]interface{}{
-				opt.Condition: opt.Value,
-			},
-		}
-		res, cerr := conv.ConvertConds(m)
-		if cerr != nil {
-			return nil, cerr
-		}
-		if res.Conds != "" {
-			conds = append(conds, res.Conds)
-			args = append(args, res.Params...)
-		}
+	sql, args, qerr := BuildGroupDagInstanceQuery(input)
+	if qerr != nil {
+		err = qerr
+		return nil, qerr
 	}
-	if input.TimeRange != nil {
-		m := map[string]interface{}{
-			input.TimeRange.Field: map[string]interface{}{
-				"$gte": input.TimeRange.Begin,
-				"$lte": input.TimeRange.End,
-			},
-		}
-		res, cerr := conv.ConvertConds(m)
-		if cerr != nil {
-			return nil, cerr
-		}
-		if res.Conds != "" {
-			conds = append(conds, res.Conds)
-			args = append(args, res.Params...)
-		}
-	}
-
-	groupCols := []string{}
-	if input.GroupBy != "" {
-		groupCols = append(groupCols, camelToFSnake(input.GroupBy))
-	}
-	for _, g := range input.GroupBys {
-		groupCols = append(groupCols, camelToFSnake(g))
-	}
-	if len(groupCols) == 0 {
+	if sql == "" {
 		return nil, nil
 	}
 
-	sortCol := "f_updated_at"
-	if input.SortBy != "" {
-		sortCol = camelToFSnake(input.SortBy)
-	}
-	order := "DESC"
-	if input.Order > 0 {
-		order = "ASC"
-	}
-
-	baseSQL := "FROM t_dag_instance"
-	if len(conds) > 0 {
-		baseSQL += " WHERE " + strings.Join(conds, " AND ")
-	}
-
-	groupSQL := fmt.Sprintf("SELECT %s, COUNT(*) AS total, MAX(%s) AS max_sort %s GROUP BY %s ORDER BY max_sort %s",
-		strings.Join(groupCols, ", "), sortCol, baseSQL, strings.Join(groupCols, ", "), order,
-	)
-	if input.Limit > 0 {
-		groupSQL += " LIMIT ?"
-		args = append(args, input.Limit)
+	if input != nil && !input.IsFirst {
+		type totalRow struct {
+			Total int64 `gorm:"column:total"`
+		}
+		rows := make([]totalRow, 0)
+		if err = d.db.Raw(sql, args...).Scan(&rows).Error; err != nil {
+			return nil, err
+		}
+		result := make([]*entity.DagInstanceGroup, 0, len(rows))
+		for _, row := range rows {
+			result = append(result, &entity.DagInstanceGroup{Total: row.Total})
+		}
+		return result, nil
 	}
 
 	type groupRow struct {
-		Total   int64
-		MaxSort int64
+		Total int64 `gorm:"column:total"`
+		DagInstance
 	}
-	rows := make([]map[string]interface{}, 0)
-	if err = d.db.Raw(groupSQL, args...).Scan(&rows).Error; err != nil {
+	rows := make([]groupRow, 0)
+	if err = d.db.Raw(sql, args...).Scan(&rows).Error; err != nil {
 		return nil, err
 	}
 
-	var result []*entity.DagInstanceGroup
+	result := make([]*entity.DagInstanceGroup, 0, len(rows))
 	for _, row := range rows {
-		totalVal := toInt64(row["total"])
-
-		conds2 := make([]string, 0, len(groupCols)+1)
-		args2 := make([]interface{}, 0, len(groupCols)+1)
-		for _, col := range groupCols {
-			conds2 = append(conds2, fmt.Sprintf("%s = ?", col))
-			args2 = append(args2, row[col])
-		}
-		conds2 = append(conds2, fmt.Sprintf("%s = ?", sortCol))
-		args2 = append(args2, row["max_sort"])
-
-		sql := "SELECT * FROM t_dag_instance WHERE " + strings.Join(conds2, " AND ") + " ORDER BY f_id DESC LIMIT 1"
-		model := &DagInstance{}
-		if err = d.db.Raw(sql, args2...).Scan(model).Error; err != nil {
-			return nil, err
-		}
-		if model.ID == 0 {
+		if row.DagInstance.ID == 0 {
 			continue
 		}
 		dagIns := &entity.DagInstance{}
-		if err = ToEntity(model, dagIns); err != nil {
+		if err = ToEntity(&row.DagInstance, dagIns); err != nil {
 			return nil, err
 		}
 		result = append(result, &entity.DagInstanceGroup{
-			Total:  totalVal,
+			Total:  row.Total,
 			DagIns: dagIns,
 		})
 	}
