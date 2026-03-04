@@ -2388,21 +2388,15 @@ func (d *dag) GetDagInstanceCount(ctx context.Context, params map[string]interfa
 	newCtx, span := trace.StartInternalSpan(ctx)
 	defer func() { trace.TelemetrySpanEnd(span, err) }()
 
-	result, err := NewConverter(DAGINSTANCE_TABLENAME, WithAutoConvert(true)).ConvertConds(params)
+	sql, args, err := BuildDagInstanceCountQueryFromParams(params)
 	if err != nil {
 		return 0, err
 	}
-
-	conds := result.Conds
-	if conds == "" {
-		conds = "1=1"
-	}
-	sql := fmt.Sprintf("SELECT COUNT(*) FROM %s WHERE %s", DAGINSTANCE_TABLENAME, conds)
-	query, _ := jsoniter.MarshalToString(result.Params)
+	query, _ := jsoniter.MarshalToString(args)
 	trace.SetAttributes(newCtx, attribute.String(trace.TABLE_NAME, DAGINSTANCE_TABLENAME), attribute.String(trace.DB_SQL, sql), attribute.String(trace.DB_QUERY, query))
 
 	var count int64
-	err = d.db.Raw(sql, result.Params...).Scan(&count).Error
+	err = d.db.Raw(sql, args...).Scan(&count).Error
 	return count, err
 }
 
