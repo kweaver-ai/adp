@@ -27,6 +27,7 @@ import (
 	"vega-backend/interfaces"
 	"vega-backend/logics"
 	"vega-backend/logics/permission"
+	logical_view "vega-backend/server/drivenadapters/logical_view"
 )
 
 var (
@@ -37,17 +38,23 @@ var (
 type dataViewService struct {
 	appSetting *common.AppSetting
 	ps         interfaces.PermissionService
-	dvrcrs     interfaces.LogicalViewRowColumnRuleService
+	dvrcrs     interfaces.LogicalViewRowColumnRuleAccess
+	dva        interfaces.LogicalViewAccess
+	dvga       interfaces.LogicalViewGroupAccess
+	iba        interfaces.IndexBaseAccess
 	db         *sql.DB
 	dsa        interfaces.DataSourceAccess
 }
 
-func NewDataViewService(appSetting *common.AppSetting) interfaces.DataViewService {
+func NewDataViewService(appSetting *common.AppSetting) interfaces.LogicalViewService {
 	dvServiceOnce.Do(func() {
 		dvService = &dataViewService{
 			appSetting: appSetting,
 			ps:         permission.NewPermissionService(appSetting),
-			dvrcrs:     NewDataViewRowColumnRuleService(appSetting),
+			dvrcrs:     logical_view.NewLogicalViewRowColumnRuleAccess(appSetting),
+			dva:        logical_view.NewLogicalViewAccess(appSetting),
+			dvga:       logical_view.NewDataViewGroupAccess(appSetting),
+			iba:        mdl_uniquery.NewIndexBaseAccess(appSetting),
 			db:         logics.DB,
 			dsa:        logics.DSA,
 		}

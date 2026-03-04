@@ -84,6 +84,16 @@ func (rds *resourceDataService) Query(ctx context.Context, resource *interfaces.
 		}
 		return data, total, nil
 
+	case interfaces.ResourceCategoryLogicView:
+		// 逻辑视图查询数据
+		data, total, err := rds.QueryData(ctx, resource, params)
+		if err != nil {
+			span.SetStatus(codes.Error, "Query logic view data failed")
+			return nil, 0, rest.NewHTTPError(ctx, http.StatusInternalServerError, verrors.VegaBackend_Resource_InternalError).
+				WithErrorDetails(err.Error())
+		}
+		return data, total, nil
+
 	default:
 		span.SetStatus(codes.Error, "Unsupported resource category")
 		return nil, 0, rest.NewHTTPError(ctx, http.StatusBadRequest, verrors.VegaBackend_Resource_InternalError_InvalidCategory).
