@@ -114,3 +114,7 @@ data:
     rsa:
       publicKeyPath: public_key.pem
       privateKeyPath: private_key.pem
+      
+    # ISF 认证和鉴权开关
+    auth:
+      enabled: false

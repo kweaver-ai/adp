@@ -98,3 +98,7 @@ resources:
   limits:
     cpu: 6
     memory: 4Gi
+
+# 认证开关
+auth:
+  enabled: true
