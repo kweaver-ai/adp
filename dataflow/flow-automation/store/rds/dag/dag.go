@@ -485,6 +485,40 @@ func (d *dag) insertDagInstanceKeywords(ctx context.Context, dagInsID uint64, ke
 	return err
 }
 
+func (d *dag) insertDagInstanceKeywordsBatch(ctx context.Context, rows []DagInstanceKeyword) error {
+	var err error
+	if len(rows) == 0 {
+		return nil
+	}
+	newCtx, span := trace.StartInternalSpan(ctx)
+	defer func() { trace.TelemetrySpanEnd(span, err) }()
+
+	batchSize := 1000
+	for i := 0; i < len(rows); i += batchSize {
+		end := i + batchSize
+		if end > len(rows) {
+			end = len(rows)
+		}
+		batch := rows[i:end]
+
+		sqlStr := `INSERT INTO t_dag_instance_keyword (f_id, f_dag_ins_id, f_keyword) VALUES `
+		values := make([]any, 0, len(batch)*3)
+		for _, row := range batch {
+			sqlStr += "(?, ?, ?),"
+			values = append(values, row.ID, row.DagInsID, row.Keyword)
+		}
+		sqlStr = strings.TrimSuffix(sqlStr, ",")
+
+		msgStr, _ := jsoniter.MarshalToString(values)
+		trace.SetAttributes(newCtx, attribute.String(trace.TABLE_NAME, DAGINSTANCEKEYWORD_TABLENAME), attribute.String(trace.DB_SQL, sqlStr), attribute.String(trace.DB_Values, msgStr))
+		if err = d.db.Exec(sqlStr, values...).Error; err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
 func (d *dag) replaceDagInstanceKeywords(ctx context.Context, dagInsID uint64, keywords []string) error {
 	if err := d.deleteDagInstanceKeywords(ctx, dagInsID); err != nil {
 		return err
@@ -1102,7 +1136,19 @@ func (d *dag) BatchCreateDagIns(ctx context.Context, dagIns []*entity.DagInstanc
 	newCtx, span := trace.StartInternalSpan(ctx)
 	defer func() { trace.TelemetrySpanEnd(span, err) }()
 
-	sqlStr := `INSERT INTO t_dag_instance (
+	if len(dagIns) == 0 {
+		return dagIns, nil
+	}
+
+	batchSize := 1000
+	for i := 0; i < len(dagIns); i += batchSize {
+		end := i + batchSize
+		if end > len(dagIns) {
+			end = len(dagIns)
+		}
+		batch := dagIns[i:end]
+
+		sqlStr := `INSERT INTO t_dag_instance (
 		f_id, f_created_at, f_updated_at, f_dag_id, f_trigger, f_worker, f_source,
 		f_vars, f_keywords, f_event_persistence, f_event_oss_path, f_share_data, f_share_data_ext,
 		f_status, f_reason, f_cmd, f_has_cmd, f_batch_run_id, f_user_id, f_ended_at, f_dag_type, f_policy_type, f_appinfo,
@@ -1110,63 +1156,62 @@ func (d *dag) BatchCreateDagIns(ctx context.Context, dagIns []*entity.DagInstanc
 		f_resume_data, f_resume_status, f_version, f_version_id, f_biz_domain_id)
 		VALUES `
 
-	values := make([]any, 0, len(dagIns)*35)
-	models := make([]*DagInstance, 0, len(dagIns))
-	for _, data := range dagIns {
-		sqlStr += "(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?), "
-		t := ToDagInstanceModel(data, false)
-		models = append(models, t)
-		values = append(values,
-			t.ID,
-			t.CreatedAt,
-			t.UpdatedAt,
-			t.DagID,
-			t.Trigger,
-			t.Worker,
-			t.Source,
-			t.Vars,
-			t.Keywords,
-			t.EventPersistence,
-			t.EventOssPath,
-			t.ShareData,
-			t.ShareDataExt,
-			t.Status,
-			t.Reason,
-			t.Cmd,
-			t.HasCmd,
-			t.BatchRunID,
-			t.UserID,
-			t.EndedAt,
-			t.DagType,
-			t.PolicyType,
-			t.AppInfo,
-			t.Priority,
-			t.Mode,
-			t.Dump,
-			t.DumpExt,
-			t.SuccessCallback,
-			t.ErrorCallback,
-			t.CallChain,
-			t.ResumeData,
-			t.ResumeStatus,
-			t.Version,
-			t.VersionID,
-			t.BizDomainID,
-		)
-	}
+		values := make([]any, 0, len(batch)*35)
+		keywordRows := make([]DagInstanceKeyword, 0)
+		for _, data := range batch {
+			sqlStr += "(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?),"
+			t := ToDagInstanceModel(data, false)
+			values = append(values,
+				t.ID,
+				t.CreatedAt,
+				t.UpdatedAt,
+				t.DagID,
+				t.Trigger,
+				t.Worker,
+				t.Source,
+				t.Vars,
+				t.Keywords,
+				t.EventPersistence,
+				t.EventOssPath,
+				t.ShareData,
+				t.ShareDataExt,
+				t.Status,
+				t.Reason,
+				t.Cmd,
+				t.HasCmd,
+				t.BatchRunID,
+				t.UserID,
+				t.EndedAt,
+				t.DagType,
+				t.PolicyType,
+				t.AppInfo,
+				t.Priority,
+				t.Mode,
+				t.Dump,
+				t.DumpExt,
+				t.SuccessCallback,
+				t.ErrorCallback,
+				t.CallChain,
+				t.ResumeData,
+				t.ResumeStatus,
+				t.Version,
+				t.VersionID,
+				t.BizDomainID,
+			)
+			keywordRows = append(keywordRows, buildDagInstanceKeywordRows(t.ID, data.Keywords)...)
+		}
 
-	sqlStr = sqlStr[:len(sqlStr)-1]
+		sqlStr = strings.TrimSuffix(sqlStr, ",")
 
-	msgStr, _ := jsoniter.MarshalToString(values)
-	trace.SetAttributes(newCtx, attribute.String(trace.TABLE_NAME, DAGVAR_TABLENAME), attribute.String(trace.DB_SQL, sqlStr), attribute.String(trace.DB_Values, msgStr))
+		msgStr, _ := jsoniter.MarshalToString(values)
+		trace.SetAttributes(newCtx, attribute.String(trace.TABLE_NAME, DAGVAR_TABLENAME), attribute.String(trace.DB_SQL, sqlStr), attribute.String(trace.DB_Values, msgStr))
 
-	err = d.db.Exec(sqlStr, values...).Error
-	if err != nil {
-		return nil, err
-	}
+		err = d.db.Exec(sqlStr, values...).Error
+		if err != nil {
+			return nil, err
+		}
 
-	for i, data := range dagIns {
-		if err = d.insertDagInstanceKeywords(newCtx, models[i].ID, data.Keywords); err != nil {
+		if err = d.insertDagInstanceKeywordsBatch(newCtx, keywordRows); err != nil {
 			return nil, err
 		}
 	}
