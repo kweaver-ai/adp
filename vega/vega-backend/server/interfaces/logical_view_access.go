@@ -7,78 +7,77 @@ package interfaces
 
 import (
 	"context"
-	"database/sql"
 	"fmt"
 )
 
 // 导入视图的结构体，condition 为 any 类型，兼容新旧过滤器格式
 // builtin 为 any 类型,兼容数字 0, 1 和 bool 类型
 // 添加 loggroup_filters 字段，防止由日志分组升级上来的视图导出后，分组条件丢失
-type CreateDataView struct {
-	ViewID        string           `json:"id"`
-	ViewName      string           `json:"name"`
-	TechnicalName string           `json:"technical_name"`
-	GroupID       string           `json:"group_id"`
-	GroupName     string           `json:"group_name"`
-	Type          string           `json:"type"`
-	QueryType     string           `json:"query_type"`
-	Tags          []string         `json:"tags"`
-	Comment       string           `json:"comment"`
-	Builtin       any              `json:"builtin"`
-	DataSourceID  string           `json:"data_source_id"`
-	FileName      string           `json:"file_name"`
-	ExcelConfig   *ExcelConfig     `json:"excel_config"`
-	DataScope     []*DataScopeNode `json:"data_scope"`
-	Fields        []*ViewField     `json:"fields"`
-	PrimaryKeys   []string         `json:"primary_keys"`
-	ModuleType    string           `json:"module_type"`
-	DataSource    map[string]any   `json:"data_source"` // TODO 暂时为索引库创建视图保留，后续删掉
-}
+// type CreateDataView struct {
+// 	ViewID        string           `json:"id"`
+// 	ViewName      string           `json:"name"`
+// 	TechnicalName string           `json:"technical_name"`
+// 	GroupID       string           `json:"group_id"`
+// 	GroupName     string           `json:"group_name"`
+// 	Type          string           `json:"type"`
+// 	QueryType     string           `json:"query_type"`
+// 	Tags          []string         `json:"tags"`
+// 	Comment       string           `json:"comment"`
+// 	Builtin       any              `json:"builtin"`
+// 	DataSourceID  string           `json:"data_source_id"`
+// 	FileName      string           `json:"file_name"`
+// 	ExcelConfig   *ExcelConfig     `json:"excel_config"`
+// 	DataScope     []*DataScopeNode `json:"data_scope"`
+// 	Fields        []*ViewField     `json:"fields"`
+// 	PrimaryKeys   []string         `json:"primary_keys"`
+// 	ModuleType    string           `json:"module_type"`
+// 	DataSource    map[string]any   `json:"data_source"` // TODO 暂时为索引库创建视图保留，后续删掉
+// }
 
-// 数据视图结构体
-type DataView struct {
-	SimpleDataView
-	Fields         []*ViewField          `json:"fields"`
-	FieldTypeMap   map[string]string     `json:"-"`
-	FieldsMap      map[string]*ViewField `json:"fields_map"` // todo: 指标模型需要的字段,文月确认结构体,临时加的
-	ModuleType     string                `json:"module_type"`
-	Creator        AccountInfo           `json:"creator"`
-	Updater        AccountInfo           `json:"updater"`
-	DataScope      []*DataScopeNode      `json:"data_scope,omitempty"`
-	ExcelConfig    *ExcelConfig          `json:"excel_config,omitempty"`
-	MetadataFormID string                `json:"metadata_form_id,omitempty"`
-	PrimaryKeys    []string              `json:"primary_keys"`
-	SQLStr         string                `json:"sql_str,omitempty"`
-	MetaTableName  string                `json:"meta_table_name,omitempty"`
-	VegaDataSource *DataSource           `json:"-"`
-}
+// // 数据视图结构体
+// type DataView struct {
+// 	SimpleDataView
+// 	Fields         []*ViewField          `json:"fields"`
+// 	FieldTypeMap   map[string]string     `json:"-"`
+// 	FieldsMap      map[string]*ViewField `json:"fields_map"` // todo: 指标模型需要的字段,文月确认结构体,临时加的
+// 	ModuleType     string                `json:"module_type"`
+// 	Creator        AccountInfo           `json:"creator"`
+// 	Updater        AccountInfo           `json:"updater"`
+// 	DataScope      []*DataScopeNode      `json:"data_scope,omitempty"`
+// 	ExcelConfig    *ExcelConfig          `json:"excel_config,omitempty"`
+// 	MetadataFormID string                `json:"metadata_form_id,omitempty"`
+// 	PrimaryKeys    []string              `json:"primary_keys"`
+// 	SQLStr         string                `json:"sql_str,omitempty"`
+// 	MetaTableName  string                `json:"meta_table_name,omitempty"`
+// 	VegaDataSource *DataSource           `json:"-"`
+// }
 
-// 简单的视图结构，列表查询接口使用
-type SimpleDataView struct {
-	ViewID            string         `json:"id"`
-	ViewName          string         `json:"name"`
-	TechnicalName     string         `json:"technical_name"`
-	GroupID           string         `json:"group_id"`
-	GroupName         string         `json:"group_name"`
-	Type              string         `json:"type" binding:"required,oneof=atomic custom"`
-	QueryType         string         `json:"query_type" binding:"required,oneof=SQL DSL IndexBase"`
-	Tags              []string       `json:"tags"`
-	Comment           string         `json:"comment"`
-	Builtin           bool           `json:"builtin"`
-	DataSource        map[string]any `json:"data_source"` // TODO 暂时为索引库创建视图保留，后续删掉
-	CreateTime        int64          `json:"create_time"`
-	UpdateTime        int64          `json:"update_time"`
-	DeleteTime        int64          `json:"delete_time"`
-	DataSourceType    string         `json:"data_source_type,omitempty"`
-	DataSourceID      string         `json:"data_source_id,omitempty"`
-	DataSourceName    string         `json:"data_source_name,omitempty"`
-	DataSourceCatalog string         `json:"data_source_catalog,omitempty"`
-	FileName          string         `json:"file_name,omitempty"`
-	Status            string         `json:"status,omitempty"`
+// // 简单的视图结构，列表查询接口使用
+// type SimpleDataView struct {
+// 	ViewID            string         `json:"id"`
+// 	ViewName          string         `json:"name"`
+// 	TechnicalName     string         `json:"technical_name"`
+// 	GroupID           string         `json:"group_id"`
+// 	GroupName         string         `json:"group_name"`
+// 	Type              string         `json:"type" binding:"required,oneof=atomic custom"`
+// 	QueryType         string         `json:"query_type" binding:"required,oneof=SQL DSL IndexBase"`
+// 	Tags              []string       `json:"tags"`
+// 	Comment           string         `json:"comment"`
+// 	Builtin           bool           `json:"builtin"`
+// 	DataSource        map[string]any `json:"data_source"` // TODO 暂时为索引库创建视图保留，后续删掉
+// 	CreateTime        int64          `json:"create_time"`
+// 	UpdateTime        int64          `json:"update_time"`
+// 	DeleteTime        int64          `json:"delete_time"`
+// 	DataSourceType    string         `json:"data_source_type,omitempty"`
+// 	DataSourceID      string         `json:"data_source_id,omitempty"`
+// 	DataSourceName    string         `json:"data_source_name,omitempty"`
+// 	DataSourceCatalog string         `json:"data_source_catalog,omitempty"`
+// 	FileName          string         `json:"file_name,omitempty"`
+// 	Status            string         `json:"status,omitempty"`
 
-	// 操作权限
-	Operations []string `json:"operations"`
-}
+// 	// 操作权限
+// 	Operations []string `json:"operations"`
+// }
 
 // DataScopeNode 表示图中的节点
 type DataScopeNode struct {
@@ -95,7 +94,7 @@ type ViewNodeCfg struct {
 	ViewID   string         `json:"view_id" mapstructure:"view_id"`
 	Filters  *FilterCondCfg `json:"filters,omitempty" mapstructure:"filters"`
 	Distinct Distinct       `json:"distinct" mapstructure:"distinct"`
-	View     *DataView      `json:"view,omitempty" mapstructure:"view"`
+	View     *Resource      `json:"view,omitempty" mapstructure:"view"`
 }
 
 type Distinct struct {
@@ -134,29 +133,15 @@ type SQLNodeCfg struct {
 	SQLExpression string `json:"sql_expression" mapstructure:"sql_expression"`
 }
 
-type ExcelConfig struct {
-	Sheet            string `json:"sheet"`               // sheet页，逗号分隔
-	StartCell        string `json:"start_cell"`          // 起始单元格
-	EndCell          string `json:"end_cell"`            // 结束单元格
-	HasHeaders       bool   `json:"has_headers"`         // 是否首行作为列名
-	SheetAsNewColumn bool   `json:"sheet_as_new_column"` // 是否将sheet作为新列
-}
-
 // 数据视图字段
 type ViewField struct {
-	Name              string       `json:"name"`
-	Type              string       `json:"type"`
-	Comment           string       `json:"comment"`
-	DisplayName       string       `json:"display_name"`
-	OriginalName      string       `json:"original_name"`
-	DataLength        int32        `json:"data_length"`
-	DataAccuracy      int32        `json:"data_accuracy"`
-	Status            string       `json:"status"`
-	IsNullable        string       `json:"is_nullable"`
-	BusinessTimestamp bool         `json:"business_timestamp"`
-	SrcNodeID         string       `json:"src_node_id,omitempty"`
-	SrcNodeName       string       `json:"src_node_name,omitempty"`
-	IsPrimaryKey      sql.NullBool `json:"is_primary_key,omitempty"`
+	Name         string `json:"name"`
+	Type         string `json:"type"`
+	DisplayName  string `json:"display_name"`
+	OriginalName string `json:"original_name"`
+	Description  string `json:"description"`
+	SrcNodeID    string `json:"src_node_id,omitempty"`
+	SrcNodeName  string `json:"src_node_name,omitempty"`
 
 	Features []FieldFeature `json:"features,omitempty"`
 }
@@ -187,8 +172,8 @@ type VectorConfig struct {
 }
 
 func (v *ViewField) String() string {
-	return fmt.Sprintf("ViewField{name: %s, type: %s, comment: %s, display_name: %s, original_name: %s}",
-		v.Name, v.Type, v.Comment, v.DisplayName, v.OriginalName)
+	return fmt.Sprintf("ViewField{name: %s, type: %s, description: %s, display_name: %s, original_name: %s}",
+		v.Name, v.Type, v.Description, v.DisplayName, v.OriginalName)
 }
 
 type ListViewQueryParams struct {
@@ -213,107 +198,6 @@ type ListViewQueryParams struct {
 	Operations      []string
 	PaginationQueryParams
 }
-
-// 允许/不允许实时订阅的配置
-type RealTimeStreaming struct {
-	OpenStreaming bool   `json:"open_streaming"`
-	CreateTime    int64  `json:"-"`
-	UpdateTime    int64  `json:"-"`
-	ViewID        string `json:"-"`
-	JobID         string `json:"-"`
-}
-
-// 更新视图状态
-type UpdateViewStatus struct {
-	ViewStatus string      `json:"status"`
-	DeleteTime int64       `json:"delete_time"`
-	UpdateTime int64       `json:"update_time"`
-	Updater    AccountInfo `json:"-"`
-}
-
-// 视图分组
-type ViewGroupReq struct {
-	GroupID   string `json:"group_id"`
-	GroupName string `json:"group_name"`
-	Builtin   bool   `json:"builtin"`
-}
-
-// 原子视图更新的信息
-type AtomicViewUpdateReq struct {
-	ViewName   string       `json:"name"`
-	Fields     []*ViewField `json:"fields"`
-	Comment    string       `json:"comment"`
-	ViewID     string       `json:"-"`
-	Updater    AccountInfo  `json:"-"`
-	UpdateTime int64        `json:"-"`
-}
-
-type MarkViewDeletedParams struct {
-	ViewIDs    []string
-	DeleteTime int64
-	ViewStatus string
-}
-
-//go:generate mockgen -source ../interfaces/logical_view_access.go -destination ../interfaces/mock/mock_logical_view_access.go
-type LogicalViewAccess interface {
-	CreateLogicalViews(ctx context.Context, tx *sql.Tx, views []*DataView) error
-	DeleteLogicalViews(ctx context.Context, tx *sql.Tx, viewIDs []string) error
-	UpdateLogicalView(ctx context.Context, tx *sql.Tx, view *DataView) error
-	GetLogicalViews(ctx context.Context, viewID []string) ([]*DataView, error)
-	ListLogicalViews(ctx context.Context, viewsQuery *ListViewQueryParams) ([]*SimpleDataView, error)
-	GetLogicalViewsTotal(ctx context.Context, viewsQuery *ListViewQueryParams) (int, error)
-
-	CheckLogicalViewExistByName(ctx context.Context, tx *sql.Tx, viewName, groupName string) (string, bool, error)
-	CheckLogicalViewExistByTechnicalName(ctx context.Context, tx *sql.Tx, viewTechnicalName, groupName string) (string, bool, error)
-	CheckLogicalViewExistByID(ctx context.Context, tx *sql.Tx, viewID string) (string, bool, error)
-
-	GetDetailedLogicalViewMapByIDs(ctx context.Context, viewIDs []string) (map[string]*DataView, error)
-	GetSimpleLogicalViewMapByIDs(ctx context.Context, viewIDs []string) (map[string]*DataView, error)
-
-	// 更新视图分组
-	UpdateLogicalViewsGroup(ctx context.Context, tx *sql.Tx, viewIDs []string, groupID string) error
-
-	UpdateLogicalViewsAttrs(ctx context.Context, attrs *AtomicViewUpdateReq) error
-	UpdateViewStatus(ctx context.Context, tx *sql.Tx, viewIDs []string, param *UpdateViewStatus) error
-
-	// 根据分组id获取视图
-	GetSimpleLogicalViewsByGroupID(ctx context.Context, tx *sql.Tx, groupID string) ([]*SimpleDataView, error)
-	GetLogicalViewsByGroupID(ctx context.Context, groupID string) ([]*DataView, error)
-
-	// 根据数据源id获取视图
-	GetLogicalViewsBySourceID(ctx context.Context, sourceID string) ([]*DataView, error)
-
-	// 批量标记删除视图
-	MarkLogicalViewsDeleted(ctx context.Context, tx *sql.Tx, params *MarkViewDeletedParams) error
-}
-
-const (
-	DataSourceType_Excel      = "excel"
-	DataSourceType_TingYun    = "tingyun"
-	DataSourceType_AS7        = "anyshare7"
-	DataSourceType_IndexBase  = "index_base"
-	DataSourceType_OpenSearch = "opensearch"
-
-	DataSourceID_IndexBase = "cedb5294-07c3-45b1-a273-17baefa62800"
-)
-
-const (
-	// 字段的advanced params
-	FieldAdvancedParams_VirtualDataType = "virtualFieldType"
-	FieldAdvancedParams_OriginFieldType = "originFieldType"
-	FieldAdvancedParams_IsNullable      = "IS_NULLABLE"
-	FieldAdvancedParams_ColumnDef       = "COLUMN_DEF"
-	FieldAdvancedParams_CheckPrimaryKey = "checkPrimaryKey"
-	FieldAdvancedParams_MappingConfig   = "mappingConfig"
-
-	// 表的advanced params
-	TableAdvancedParams_ExcelSheet            = "sheet"
-	TableAdvancedParams_ExcelStartCell        = "startCell"
-	TableAdvancedParams_ExcelEndCell          = "endCell"
-	TableAdvancedParams_ExcelHasHeaders       = "hasHeaders"
-	TableAdvancedParams_ExcelSheetAsNewColumn = "sheetAsNewColumn"
-	TableAdvancedParams_ExcelFileName         = "fileName"
-)
 
 type DataSource struct {
 	ID           string  `json:"id"`                   // 数据源业务id
@@ -345,7 +229,6 @@ type BinData struct {
 	StorageProtocol string `json:"storage_protocol"`
 	StorageBase     string `json:"storage_base"`
 	ReplicaSet      string `json:"replica_set"`
-	// DataViewSource  string `json:"data_view_source"`
 }
 
 type DataSourceStatus struct {

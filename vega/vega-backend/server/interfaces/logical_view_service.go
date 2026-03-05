@@ -5,11 +5,6 @@
 
 package interfaces
 
-import (
-	"context"
-	"database/sql"
-)
-
 // 特征类型
 type FieldFeatureType string
 
@@ -83,12 +78,7 @@ const (
 	AttrFields_Name          = "name"
 	AttrFields_Comment       = "comment"
 
-	// tenent.mdl.view.view_id
-	DataViewRealTimeStreamingTopicName = "%s.mdl.view.%s"
 
-	// 实时订阅任务的状态
-	JobStatus_Running = "running"
-	JobStatus_Error   = "error"
 
 	RegexPattern_Builtin_ViewID    = "^[a-z0-9_][a-z0-9_-]{0,39}$"
 	RegexPattern_NonBuiltin_ViewID = "^[a-z0-9][a-z0-9_-]{0,39}$"
@@ -96,11 +86,6 @@ const (
 	RegexPattern_TechnicalName = "^[a-z_][a-z0-9_]{0,39}$"
 )
 
-// 字段范围
-const (
-	FieldScope_Partial = "partial"
-	FieldScope_All     = "all"
-)
 
 var (
 	AttrFieldsMap = map[string]struct{}{
@@ -157,40 +142,3 @@ var (
 		"tags":          DataType_String,
 	}
 )
-
-// POST 重载请求体
-type ViewIDsReq struct {
-	IDs []string `json:"view_ids"`
-}
-
-//go:generate mockgen -source ../interfaces/logical_view_service.go -destination ../interfaces/mock/mock_logical_view_service.go
-type LogicalViewService interface {
-	CreateLogicalViews(ctx context.Context, dataViews []*DataView, mode string, checkPermission bool) ([]string, error)
-	DeleteLogicalViews(ctx context.Context, viewIDs []string) error
-	UpdateLogicalView(ctx context.Context, tx *sql.Tx, dataView *DataView) error
-	GetLogicalViews(ctx context.Context, viewIDs []string, includeDataScopeViews bool) ([]*DataView, error)
-	GetLogicalView(ctx context.Context, viewID string) (*DataView, error)
-	ListLogicalViews(ctx context.Context, params *ListViewQueryParams) ([]*SimpleDataView, int, error)
-
-	GetSimpleLogicalViewsByIDs(ctx context.Context, viewIDs []string, allowNonExist bool) (map[string]*DataView, error)
-	GetDetailedLogicalViewMapByIDs(ctx context.Context, viewIDs []string) (map[string]*DataView, error)
-
-	CheckLogicalViewExistByName(ctx context.Context, tx *sql.Tx, viewName, groupName string) (string, bool, error)
-	CheckLogicalViewExistByID(ctx context.Context, tx *sql.Tx, viewID string) (string, bool, error)
-
-	RetriveGroupIDByGroupName(ctx context.Context, tx *sql.Tx, viewGroupReq *ViewGroupReq) (string, bool, error)
-	UpdateLogicalViewsGroup(ctx context.Context, views map[string]*DataView, group *ViewGroupReq) error
-	UpdateAtomicLogicalViews(ctx context.Context, attrs *AtomicViewUpdateReq) error
-	// UpdateDataViewRealTimeStreaming(ctx context.Context, realTimeStreaming *RealTimeStreaming) error
-
-	// 导出分组下的视图
-	GetLogicalViewsByGroupID(ctx context.Context, groupID string) ([]*DataView, error)
-	GetLogicalViewsBySourceID(ctx context.Context, sourceID string) ([]*DataView, error)
-
-	// 获取数据视图的资源实例列表
-	ListLogicalViewSrcs(ctx context.Context, params *ListViewQueryParams) ([]*Resource, int, error)
-
-	UpdateLogicalViewInternal(ctx context.Context, view *DataView) error
-	// 批量标记删除视图
-	MarkLogicalViewsDeleted(ctx context.Context, tx *sql.Tx, viewIDs []string) error
-}
