@@ -214,7 +214,7 @@ const FieldJoin = () => {
       render: (_: any, record: any) => (
         <div className={styles.srcNodeBox}>
           <IconFont type={record.position === 'left' ? 'icon-dip-color-zuobiao' : 'icon-dip-color-youbiao'} style={{ fontSize: 16 }} />
-          <span>{record.src_node_name}</span>
+          <span className="g-ellipsis-1">{record.src_node_name}</span>
         </div>
       ),
     },
