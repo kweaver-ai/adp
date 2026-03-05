@@ -117,4 +117,4 @@ data:
       
     # ISF 认证和鉴权开关
     auth:
-      enabled: false
+      enabled: {{ .Values.depServices.auth.enabled }}

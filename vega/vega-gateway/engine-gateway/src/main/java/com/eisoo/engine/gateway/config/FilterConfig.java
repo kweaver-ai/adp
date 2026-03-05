@@ -17,7 +17,7 @@ import org.springframework.core.Ordered;
 public class FilterConfig {
     @Value(value = "${auth.token-introspect}")
     private String tokenInstropect;
-    @Value(value = "${auth.is-open}")
+    @Value(value = "${auth.enabled}")
     private boolean isOpen;
 
 

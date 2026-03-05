@@ -62,6 +62,8 @@ depServices:
     publicHost: efast-public
     publicPort: 9123
     publicProtocol: http
+  auth:
+    enabled: true
 resources:
   requests:
     cpu: 200m
