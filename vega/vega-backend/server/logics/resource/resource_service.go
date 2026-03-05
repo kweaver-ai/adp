@@ -76,6 +76,18 @@ func (rs *resourceService) Create(ctx context.Context, req *interfaces.ResourceR
 		accountInfo = v.(interfaces.AccountInfo)
 	}
 
+	switch req.Category {
+	case interfaces.ResourceCategoryLogicView:
+		err = rs.validateLogicDefinition(ctx, req)
+		if err != nil {
+			return "", err
+		}
+	}
+
+	if req.ResourceID == "" {
+		req.ResourceID = xid.New().String()
+	}
+
 	now := time.Now().UnixMilli()
 	id := req.ID
 	if id == "" {
@@ -92,6 +104,7 @@ func (rs *resourceService) Create(ctx context.Context, req *interfaces.ResourceR
 		Database:         req.Database,
 		SourceIdentifier: req.SourceIdentifier,
 		SchemaDefinition: req.SchemaDefinition,
+		LogicDefinition:  req.LogicDefinition,
 		Creator:          accountInfo,
 		CreateTime:       now,
 		Updater:          accountInfo,
