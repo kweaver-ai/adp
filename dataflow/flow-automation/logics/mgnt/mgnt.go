@@ -42,6 +42,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
+	"gorm.io/gorm"
 )
 
 //go:generate mockgen -package mock_logics -source ../../logics/mgnt/mgnt.go -destination ../../tests/mock_logics/mgnt_mock.go
@@ -574,7 +575,7 @@ func (m *mgnt) CreateDag(ctx context.Context, param *CreateDagReq, userInfo *dri
 
 	// check duplicated name
 	dagInfo, err := m.mongo.GetDagByFields(ctx, map[string]interface{}{"name": param.Title, "userid": userInfo.UserID})
-	if err != nil && !errors.Is(err, mongo.ErrNoDocuments) {
+	if err != nil && !errors.Is(err, mongo.ErrNoDocuments) && !errors.Is(err, gorm.ErrRecordNotFound) {
 		logger.Warnf("[logic.CreateDag] GetDagByFields err, deail: %s", err.Error())
 		return dagID, ierrors.NewIError(ierrors.InternalError, "", nil)
 	}
@@ -693,9 +694,10 @@ func (m *mgnt) CreateDag(ctx context.Context, param *CreateDagReq, userInfo *dri
 		}
 
 		createBy := common.CreateByDirectName
-		if param.CreateBy == common.CreateByTemplate {
+		switch param.CreateBy {
+		case common.CreateByTemplate:
 			createBy = common.CreateByTemplateName
-		} else if param.CreateBy == common.CreateByLocal {
+		case common.CreateByLocal:
 			createBy = common.CreateByLocalName
 		}
 
@@ -747,7 +749,7 @@ func (m *mgnt) UpdateDag(ctx context.Context, dagID string, param *OptionalUpdat
 	// check dag whether exisis
 	dag, err := m.mongo.GetDagByFields(ctx, query)
 	if err != nil {
-		if errors.Is(err, mongo.ErrNoDocuments) {
+		if errors.Is(err, mongo.ErrNoDocuments) || errors.Is(err, gorm.ErrRecordNotFound) {
 			return ierrors.NewIError(ierrors.TaskNotFound, "", map[string]string{"dagId": dagID})
 		}
 		log.Warnf("[logic.UpdateDag] GetDagByFields err, query: %v, deail: %s", query, err.Error())
@@ -785,7 +787,7 @@ func (m *mgnt) UpdateDag(ctx context.Context, dagID string, param *OptionalUpdat
 		}
 		_dag, err := m.mongo.GetDagByFields(ctx, _query) //nolint
 		if err != nil {
-			if !errors.Is(err, mongo.ErrNoDocuments) {
+			if !errors.Is(err, mongo.ErrNoDocuments) && !errors.Is(err, gorm.ErrRecordNotFound) {
 				log.Warnf("[logic.UpdateDag] GetDagByFields err, query: %v, deail: %s", _query, err.Error())
 				return ierrors.NewIError(ierrors.InternalError, "", nil)
 			}
@@ -997,7 +999,7 @@ func (m *mgnt) GetDagByID(ctx context.Context, dagID, versionID, bizDomainID str
 	// 检查 dag 是否存在
 	DBDag, err := m.mongo.GetDag(ctx, dagID)
 	if err != nil {
-		if errors.Is(err, mongo.ErrNoDocuments) || strings.Contains(err.Error(), "data not found") {
+		if errors.Is(err, mongo.ErrNoDocuments) || strings.Contains(err.Error(), "data not found") || errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, ierrors.NewIError(ierrors.TaskNotFound, "", map[string]string{"dagId": dagID})
 		}
 		log.Warnf("[logic.UpdateDag] GetDag err, deail: %s", err.Error())
@@ -1036,7 +1038,7 @@ func (m *mgnt) GetDagByID(ctx context.Context, dagID, versionID, bizDomainID str
 	if versionID != "" && DBDag.VersionID != versionID {
 		historyDag, err := m.mongo.GetHistoryDagByVersionID(ctx, dagID, versionID)
 		if err != nil {
-			if errors.Is(err, mongo.ErrNoDocuments) || strings.Contains(err.Error(), "data not found") {
+			if errors.Is(err, mongo.ErrNoDocuments) || strings.Contains(err.Error(), "data not found") || errors.Is(err, gorm.ErrRecordNotFound) {
 				return nil, ierrors.NewIError(ierrors.TaskNotFound, "", map[string]string{"dagId": dagID, "version": versionID})
 			}
 			log.Warnf("[logic.GetDagByID] GetHistoryDagByVersionID err, deail: %s", err.Error())
@@ -1191,7 +1193,7 @@ func (m *mgnt) DeleteDagByID(ctx context.Context, dagID, bizDomainID string, use
 
 	dag, err := m.mongo.GetDagByFields(ctx, query)
 	if err != nil {
-		if errors.Is(err, mongo.ErrNoDocuments) || strings.Contains(err.Error(), "data not found") {
+		if errors.Is(err, mongo.ErrNoDocuments) || strings.Contains(err.Error(), "data not found") || errors.Is(err, gorm.ErrRecordNotFound) {
 			return ierrors.NewIError(ierrors.TaskNotFound, "", map[string]string{"dagId": dagID})
 		}
 		log.Warnf("[logic.DeleteDagByID] GetDagByID err, detail: %s", err.Error())
@@ -1409,7 +1411,7 @@ func (m *mgnt) RunCronInstance(ctx context.Context, id, webhook string) error {
 	}()
 	dag, err := m.mongo.GetDag(ctx, id)
 	if err != nil {
-		if errors.Is(err, mongo.ErrNoDocuments) {
+		if errors.Is(err, mongo.ErrNoDocuments) || errors.Is(err, gorm.ErrRecordNotFound) {
 			return ierrors.NewIError(ierrors.TaskNotFound, "", map[string]string{"dagId": id})
 		}
 		log.Warnf("[logic.RunCronInstance] GetDag err, deail: %s", err.Error())
@@ -1537,7 +1539,7 @@ func (m *mgnt) RunInstance(ctx context.Context, params *RunDagParams, userInfo *
 
 	dag, err := m.mongo.GetDagWithOptionalVersion(ctx, params.ID, params.VersionID)
 	if err != nil {
-		if errors.Is(err, mongo.ErrNoDocuments) {
+		if errors.Is(err, mongo.ErrNoDocuments) || errors.Is(err, gorm.ErrRecordNotFound) {
 			return ierrors.NewIError(ierrors.TaskNotFound, "", map[string]string{"dagId": params.ID})
 		}
 		log.Warnf("[logic.RunInstance] GetDag err, deail: %s", err.Error())
@@ -1684,7 +1686,7 @@ func (m *mgnt) RunFormInstance(ctx context.Context, params *RunDagParams, userIn
 
 	dag, err := m.mongo.GetDagWithOptionalVersion(ctx, params.ID, params.VersionID)
 	if err != nil {
-		if errors.Is(err, mongo.ErrNoDocuments) {
+		if errors.Is(err, mongo.ErrNoDocuments) || errors.Is(err, gorm.ErrRecordNotFound) {
 			return "", ierrors.NewIError(ierrors.TaskNotFound, "", map[string]string{"dagId": params.ID})
 		}
 		log.Warnf("[logic.RunFormInstance] GetDag err, deail: %s", err.Error())
@@ -1692,23 +1694,23 @@ func (m *mgnt) RunFormInstance(ctx context.Context, params *RunDagParams, userIn
 	}
 	dag.SetPushMessage(m.executeMethods.Publish)
 
-	// opMap := &perm.MapOperationProvider{
-	// 	OpMap: map[string][]string{
-	// 		common.DagTypeDataFlow: {perm.ManualExecOperation},
-	// 	},
-	// }
-	// if dag.Published {
-	// 	opMap.OpMap[common.DagTypeDefault] = []string{perm.OldPublishOperatiuon}
-	// } else if userInfo.AccountType == common.APP.ToString() {
-	// 	opMap.OpMap[common.DagTypeDefault] = []string{perm.OldAppTokenOperation}
-	// } else {
-	// 	opMap.OpMap[common.DagTypeDefault] = []string{perm.OldShareOperation}
-	// }
+	opMap := &perm.MapOperationProvider{
+		OpMap: map[string][]string{
+			common.DagTypeDataFlow: {perm.ManualExecOperation},
+		},
+	}
+	if dag.Published {
+		opMap.OpMap[common.DagTypeDefault] = []string{perm.OldPublishOperatiuon}
+	} else if userInfo.AccountType == common.APP.ToString() {
+		opMap.OpMap[common.DagTypeDefault] = []string{perm.OldAppTokenOperation}
+	} else {
+		opMap.OpMap[common.DagTypeDefault] = []string{perm.OldShareOperation}
+	}
 
-	// _, err = m.permCheck.CheckDagAndPerm(ctx, dag.ID, userInfo, opMap)
-	// if err != nil {
-	// 	return "", err
-	// }
+	_, err = m.permCheck.CheckDagAndPerm(ctx, dag.ID, userInfo, opMap)
+	if err != nil {
+		return "", err
+	}
 
 	if !dag.Published && userInfo == nil {
 		return "", ierrors.NewIError(ierrors.Forbidden, "", map[string]string{"dagId": params.ID})
@@ -2390,7 +2392,7 @@ func (m *mgnt) CancelRunningInstance(ctx context.Context, id string, dagInsReq *
 	query := map[string]interface{}{"_id": id}
 	dagIns, err := m.mongo.GetDagInstanceByFields(ctx, query)
 	if err != nil {
-		if errors.Is(err, mongo.ErrNoDocuments) {
+		if errors.Is(err, mongo.ErrNoDocuments) || errors.Is(err, gorm.ErrRecordNotFound) {
 			return ierrors.NewIError(ierrors.DagInsNotFound, "", map[string]string{"dagInsID": id})
 		}
 		log.Warnf("[logic.CancelRunningInstance] GetDagInstanceByFields err, deail: %s", err.Error())
@@ -2399,7 +2401,7 @@ func (m *mgnt) CancelRunningInstance(ctx context.Context, id string, dagInsReq *
 
 	dag, err := m.mongo.GetDagByFields(ctx, map[string]interface{}{"_id": dagIns.DagID})
 	if err != nil {
-		if errors.Is(err, mongo.ErrNoDocuments) {
+		if errors.Is(err, mongo.ErrNoDocuments) || errors.Is(err, gorm.ErrRecordNotFound) {
 			return ierrors.NewIError(ierrors.DagInsNotFound, "", map[string]string{"dagInsID": id})
 		}
 		log.Warnf("[logic.CancelRunningInstance] GetDagByFields err, deail: %s", err.Error())
@@ -4933,7 +4935,7 @@ func (m *mgnt) RunInstanceWithDoc(ctx context.Context, id string, params RunWith
 	dag, err := m.mongo.GetDag(ctx, id)
 
 	if err != nil {
-		if errors.Is(err, mongo.ErrNoDocuments) {
+		if errors.Is(err, mongo.ErrNoDocuments) || errors.Is(err, gorm.ErrRecordNotFound) {
 			return ierrors.NewIError(ierrors.TaskNotFound, "", map[string]string{"dagId": id})
 		}
 		log.Warnf("[logic.RunInstanceWithDoc] GetDagByFields err, deail: %s", err.Error())
@@ -5345,7 +5347,7 @@ func (m *mgnt) GetDagTriggerConfig(ctx context.Context, taskInsID, typeBy string
 	taskIns, err := m.mongo.GetTaskIns(ctx, taskInsID)
 	if err != nil {
 		log.Warnf("[logic.GetDagTriggerConfig] GetTaskIns err, detail: %s", err.Error())
-		if errors.Is(err, mongo.ErrNoDocuments) || strings.Contains(err.Error(), "data not found") {
+		if errors.Is(err, mongo.ErrNoDocuments) || strings.Contains(err.Error(), "data not found") || errors.Is(err, gorm.ErrRecordNotFound) {
 			return triggerConfig, ierrors.NewIError(ierrors.TaskNotFound, "", map[string]string{"taskId": taskInsID})
 		}
 		return triggerConfig, err
@@ -5360,7 +5362,7 @@ func (m *mgnt) GetDagTriggerConfig(ctx context.Context, taskInsID, typeBy string
 	dagIns, err := m.mongo.GetDagInstanceByFields(ctx, queryBy)
 	if err != nil {
 		log.Warnf("[logic.GetDagTriggerConfig] GetDagInstance err, detail: %s", err.Error())
-		if errors.Is(err, mongo.ErrNoDocuments) {
+		if errors.Is(err, mongo.ErrNoDocuments) || errors.Is(err, gorm.ErrRecordNotFound) {
 			return triggerConfig, ierrors.NewIError(ierrors.DagInsNotFound, "", map[string]string{"dagInsId": taskIns.DagInsID})
 		}
 		return triggerConfig, err
@@ -5374,7 +5376,7 @@ func (m *mgnt) GetDagTriggerConfig(ctx context.Context, taskInsID, typeBy string
 	dag, err := m.mongo.GetDag(ctx, dagIns.DagID)
 	if err != nil {
 		log.Warnf("[logic.GetDagTriggerConfig] GetDag err, detail: %s", err.Error())
-		if errors.Is(err, mongo.ErrNoDocuments) || strings.Contains(err.Error(), "data not found") {
+		if errors.Is(err, mongo.ErrNoDocuments) || strings.Contains(err.Error(), "data not found") || errors.Is(err, gorm.ErrRecordNotFound) {
 			return triggerConfig, ierrors.NewIError(ierrors.TaskNotFound, "", map[string]string{"dagId": dagIns.DagID})
 		}
 		return triggerConfig, err
@@ -5575,7 +5577,7 @@ func (m *mgnt) runDagInstance(ctx context.Context, dag *entity.Dag, triggerType 
 func (m *mgnt) RetryDagInstance(ctx context.Context, dagInsID string, userInfo *drivenadapters.UserInfo) error {
 	dagIns, err := m.mongo.GetDagInstance(ctx, dagInsID)
 	if err != nil {
-		if errors.Is(err, mongo.ErrNoDocuments) {
+		if errors.Is(err, mongo.ErrNoDocuments) || errors.Is(err, gorm.ErrRecordNotFound) {
 			return ierrors.NewIError(ierrors.TaskNotFound, "", nil)
 		}
 		return ierrors.NewIError(ierrors.InternalError, "", nil)
@@ -5633,7 +5635,7 @@ func (m *mgnt) RunFormInstanceV2(ctx context.Context, id string, formData map[st
 
 	dag, err := m.mongo.GetDag(ctx, id)
 	if err != nil {
-		if errors.Is(err, mongo.ErrNoDocuments) {
+		if errors.Is(err, mongo.ErrNoDocuments) || errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, nil, ierrors.NewIError(ierrors.TaskNotFound, "", map[string]string{"dagId": id})
 		}
 		log.Warnf("[logic.RunFormInstanceV2] GetDagByFields err, deail: %s", err.Error())

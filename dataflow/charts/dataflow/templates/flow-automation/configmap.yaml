@@ -34,6 +34,7 @@ data:
   SERVER_DAG_INSTANCE_EVENT_ARCHIVE_POLICY: {{ .Values.flowAutomation.service.dagInstanceEventArchivePolicy | quote }}
   SERVER_STORAGE_PREFIX: {{ .Values.flowAutomation.service.storagePrefix | quote }}
   SERVER_EDITION: {{ .Values.flowAutomation.service.edition | quote }}
+  SERVER_DB_TYPE: {{ .Values.flowAutomation.service.dbType | quote }}
   MONGODB_USER: {{ .Values.depServices.mongodb.user | quote }}
   MONGODB_HOST: {{ .Values.depServices.mongodb.host | quote }}
   MONGODB_PORT: {{ .Values.depServices.mongodb.port | quote }}

@@ -111,6 +111,7 @@ type Server struct {
 	DagInstanceEventMaxInlineSize int                           `mapstructure:"dag_instance_event_max_inline_size"`
 	DagInstanceEventArchivePolicy DagInstanceEventArchivePolicy `mapstructure:"dag_instance_event_archive_policy"`
 	Edition                       Edition                       `mapstructure:"edition"`
+	DBType                        string                        `mapstructure:"db_type"`
 }
 
 // DB database config
