@@ -812,3 +812,18 @@ func BuildDagIndexSubquery(input *mod.ListDagInput) (string, []interface{}) {
 
 	return strings.Join(conds, " AND "), args
 }
+
+func buildDagInstanceKeywordRows(dagInsID uint64, keywords []string) []DagInstanceKeyword {
+	if len(keywords) == 0 {
+		return nil
+	}
+	rows := make([]DagInstanceKeyword, 0, len(keywords))
+	for _, keyword := range keywords {
+		if keyword == "" {
+			continue
+		}
+		id, _ := utils.GetUniqueID()
+		rows = append(rows, DagInstanceKeyword{ID: id, DagInsID: dagInsID, Keyword: keyword})
+	}
+	return rows
+}
