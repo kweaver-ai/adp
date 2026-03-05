@@ -37,10 +37,10 @@ public class RewriteSqlServiceImpl implements RewriteSqlService {
     @Autowired
     ClientIdService clientIdService;
 
-    @Value(value = "${af-auth.clientid-token}")
+    @Value(value = "${auth.clientid-token}")
     private String clientIdTokenUrl;
 
-    @Value(value = "${af-auth.row-column-rule}")
+    @Value(value = "${auth.row-column-rule}")
     private String rowColumnRuleUrl;
 
     @Value(value = "${openlookeng.url}")
