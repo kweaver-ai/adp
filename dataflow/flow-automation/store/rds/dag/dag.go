@@ -2,9 +2,7 @@ package dagmodel
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
-	"reflect"
 	"strconv"
 	"strings"
 	"sync"
@@ -32,9 +30,9 @@ const (
 	TASKINSTANCE_TABLENAME       = "t_task_instance"
 	DAGVAR_TABLENAME             = "t_dag_var"
 	DAGVERSIONS_TABLENAME        = "t_dag_versions"
-	DAGSTEPINDEX_TABLENAME       = "t_dag_step_index"
-	DAGTRIGGERINDEX_TABLENAME    = "t_dag_trigger_config_index"
-	DAGACCESSORINDEX_TABLENAME   = "t_dag_accessor_index"
+	DAGSTEPINDEX_TABLENAME       = "t_dag_step"
+	DAGTRIGGERINDEX_TABLENAME    = "t_dag_trigger_config"
+	DAGACCESSORINDEX_TABLENAME   = "t_dag_accessor"
 	DAGINSTANCEKEYWORD_TABLENAME = "t_dag_instance_keyword"
 	OUTBOXMESSAGE_TABLENAME      = "t_outbox"
 	INBOXMESSAGE_TABLENAME       = "t_inbox"
@@ -181,6 +179,14 @@ type InBox struct {
 	Dags      string `gorm:"column:f_dag" json:"f_dags"`
 }
 
+type OutBox struct {
+	ID        uint64 `gorm:"column:f_id;primaryKey" json:"f_id"`
+	CreatedAt int64  `gorm:"column:f_created_at" json:"f_created_at"`
+	UpdatedAt int64  `gorm:"column:f_updated_at" json:"f_updated_at"`
+	Msg       string `gorm:"column:f_msg" json:"f_msg"`
+	Topic     string `gorm:"column:f_topic" json:"f_topic"`
+}
+
 type TaskInstanceModel struct {
 	ID             uint64 `gorm:"column:f_id;primaryKey" json:"f_id"`
 	CreatedAt      int64  `gorm:"column:f_created_at" json:"f_created_at"`
@@ -239,93 +245,9 @@ type LogModel struct {
 	ID        uint64 `gorm:"column:f_id;primaryKey" json:"f_id"`
 	CreatedAt int64  `gorm:"column:f_created_at" json:"f_created_at"`
 	UpdatedAt int64  `gorm:"column:f_updated_at" json:"f_updated_at"`
-	OssID     string `gorm:"column:f_oss_id" json:"f_oss_id"`
+	OssID     string `gorm:"column:f_ossid" json:"f_ossid"`
 	Key       string `gorm:"column:f_key" json:"f_key"`
-	FileName  string `gorm:"column:f_file_name" json:"f_file_name"`
-}
-
-type Closer interface {
-	Close()
-}
-
-type DagRepository interface {
-	CreateDag(ctx context.Context, dag *entity.Dag) (string, error)
-	CreateDagIns(ctx context.Context, dagIns *entity.DagInstance) (string, error)
-	CreateDagVars(ctx context.Context, dagVars []*DagVar) error
-	UpdateDag(ctx context.Context, dag *entity.Dag) error
-	GetDag(ctx context.Context, dagId string) (*entity.Dag, error)
-	GetDagByFields(ctx context.Context, params map[string]interface{}) (*entity.Dag, error)
-	GetDagWithOptionalVersion(ctx context.Context, dagID, versionID string) (*entity.Dag, error)
-	ListDagInstance(ctx context.Context, input *mod.ListDagInstanceInput) ([]*entity.DagInstance, error)
-
-	DeleteDag(ctx context.Context, id ...string) error
-	CreateDagVersion(ctx context.Context, dagVersion *entity.DagVersion) (string, error)
-	GetHistoryDagByVersionID(ctx context.Context, dagID, versionID string) (*entity.DagVersion, error)
-
-	Closer
-	WithTransaction(ctx context.Context, fn func(context.Context, mod.Store) error) error
-	CreateToken(token *entity.Token) error
-	UpdateToken(token *entity.Token) error
-	DeleteToken(id string) error
-	GetTokenByUserID(userID string) (*entity.Token, error)
-	CreateClient(clientName, clientID, clientSecret string) error
-	GetClient(clientName string) (client *entity.Client, err error)
-	RemoveClient(clientName string) (err error)
-	BatchCreateDag(ctx context.Context, dags []*entity.Dag) ([]*entity.Dag, error)
-	BatchCreateDagIns(ctx context.Context, dagIns []*entity.DagInstance) ([]*entity.DagInstance, error)
-	BatchDeleteDagIns(ctx context.Context, ids []string) error
-	CreateTaskIns(ctx context.Context, taskIns *entity.TaskInstance) error
-	BatchCreateTaskIns(ctx context.Context, taskIns []*entity.TaskInstance) ([]*entity.TaskInstance, error)
-	PatchTaskIns(ctx context.Context, taskIns *entity.TaskInstance) error
-	PatchDagIns(ctx context.Context, dagIns *entity.DagInstance, mustsPatchFields ...string) error
-	UpdateDagIncValue(ctx context.Context, dagId string, incKey string, incValue any) error
-	UpdateDagIns(ctx context.Context, dagIns *entity.DagInstance) error
-	UpdateTaskIns(ctx context.Context, taskIns *entity.TaskInstance) error
-	BatchUpdateDagIns(ctx context.Context, dagIns []*entity.DagInstance) error
-	BatchUpdateTaskIns(taskIns []*entity.TaskInstance) error
-	BatchDeleteTaskIns(ctx context.Context, ids []string) error
-	GetTaskIns(ctx context.Context, taskIns string) (*entity.TaskInstance, error)
-	GetDagInstance(ctx context.Context, dagInsId string) (*entity.DagInstance, error)
-	GetDagInstanceByFields(ctx context.Context, params map[string]interface{}) (*entity.DagInstance, error)
-	ListDag(ctx context.Context, input *mod.ListDagInput) ([]*entity.Dag, error)
-	ListDagByFields(ctx context.Context, filter bson.M, opt options.FindOptions) ([]*entity.Dag, error)
-	DisdinctDagInstance(input *mod.ListDagInstanceInput) ([]interface{}, error)
-	ListTaskInstance(ctx context.Context, input *mod.ListTaskInstanceInput) ([]*entity.TaskInstance, error)
-	Marshal(obj interface{}) ([]byte, error)
-	Unmarshal(bytes []byte, ptr interface{}) error
-	BatchDeleteDagWithTransaction(ctx context.Context, ids []string) error
-	GetDagCount(ctx context.Context, params map[string]interface{}) (int64, error)
-	ListDagCount(ctx context.Context, input *mod.ListDagInput) (int64, error)
-	ListDagCountByFields(ctx context.Context, filter bson.M) (int64, error)
-	GetDagInstanceCount(ctx context.Context, params map[string]interface{}) (int64, error)
-	CreateInbox(ctx context.Context, msg *entity.InBox) error
-	DeleteInbox(ctx context.Context, ids []string) error
-	GetInbox(ctx context.Context, id string) (*entity.InBox, error)
-	ListInbox(ctx context.Context, input *mod.ListInboxInput) ([]*entity.InBox, error)
-	GetSwitchStatus() (bool, error)
-	SetSwitchStatus(status bool) error
-	CreateLogs(ctx context.Context, ossLogs []*entity.Log) error
-	ListHistoryDagIns(ctx context.Context, params map[string]interface{}, dataChannel chan []bson.M) error
-	ListHistoryTaskIns(ctx context.Context, params map[string]interface{}, dataChannel chan []bson.M) error
-	DeleteDagInsByID(ctx context.Context, params map[string]interface{}) error
-	DeleteTaskInsByID(ctx context.Context, params map[string]interface{}) error
-	DeleteTaskInsByDagInsID(ctx context.Context, dagInsID string) error
-	GetTaskInstanceCount(ctx context.Context, params map[string]interface{}) (int64, error)
-	CreatOutBoxMessage(ctx context.Context, outBox *entity.OutBox) error
-	BatchCreatOutBoxMessage(ctx context.Context, outBox []*entity.OutBox) error
-	DeleteOutBoxMessage(ctx context.Context, ids []string) error
-	ListOutBoxMessage(ctx context.Context, input *entity.OutBoxInput) ([]*entity.OutBox, error)
-	ListDagInstanceInRangeTime(ctx context.Context, status string, begin, end int64) ([]*entity.DagInstance, error)
-	ListExistDagInsID(ctx context.Context, dagInsIDs []string) ([]string, error)
-	ListExistDagID(ctx context.Context, dagIDs []string) ([]string, error)
-	GroupDagInstance(ctx context.Context, input *mod.GroupInput) ([]*entity.DagInstanceGroup, error)
-	RetryDagIns(ctx context.Context, dagInsID string, taskInsIDs []string) error
-
-	// DeleteDag 删除Dag配置,仅在组合算子注册失败时，删除dag配置时使用
-	ListDagVersions(ctx context.Context, input *mod.ListDagVersionInput) ([]entity.DagVersion, error)
-
-	// 事务操作
-	// WithTransaction(ctx context.Context, fn func(DagRepository) error) error
+	FileName  string `gorm:"column:f_filename" json:"f_filename"`
 }
 
 type dag struct {
@@ -335,497 +257,16 @@ type dag struct {
 
 var (
 	dagOnce sync.Once
-	dagRep  DagRepository
+	dagRep  mod.Store
 )
 
-func NewDagRepository() DagRepository {
+func NewDagRepository() mod.Store {
 	dagOnce.Do(func() {
 		dagRep = &dag{
-			db: db.NewDB().Debug(),
+			db: db.NewDB(),
 		}
 	})
 	return dagRep
-}
-
-func ToDagModel(dag *entity.Dag, isupdate bool) *Dag {
-	if isupdate {
-		dag.Update()
-	} else {
-		dag.Initial()
-	}
-	id, _ := strconv.ParseUint(dag.ID, 10, 64)
-	dagVarBytes, _ := json.Marshal(dag.Vars)
-	tasksBytes, _ := json.Marshal(dag.Tasks)
-	stepsBytes, _ := json.Marshal(dag.Steps)
-	shortcutsBytes, _ := json.Marshal(dag.Shortcuts)
-	accessorBytes, _ := json.Marshal(dag.Accessors)
-	appInfoBytes, _ := json.Marshal(dag.AppInfo)
-	emailsBytes, _ := json.Marshal(dag.Emails)
-	triggerConfigBytes, _ := json.Marshal(dag.TriggerConfig)
-	subIDsBytes, _ := json.Marshal(dag.SubIDs)
-	outputsBytes, _ := json.Marshal(dag.OutPuts)
-	instructionsBytes, _ := json.Marshal(dag.Instructions)
-	incValuesBytes, _ := json.Marshal(dag.IncValues)
-
-	return &Dag{
-		ID:            id,
-		CreatedAt:     dag.CreatedAt,
-		UpdatedAt:     dag.UpdatedAt,
-		UserID:        dag.UserID,
-		Name:          dag.Name,
-		Desc:          dag.Desc,
-		Trigger:       string(dag.Trigger),
-		Cron:          dag.Cron,
-		Vars:          string(dagVarBytes),
-		Status:        string(dag.Status),
-		Tasks:         string(tasksBytes),
-		Steps:         string(stepsBytes),
-		Description:   dag.Description,
-		Shortcuts:     string(shortcutsBytes),
-		Accessors:     string(accessorBytes),
-		Type:          dag.Type,
-		PolicyType:    dag.PolicyType,
-		AppInfo:       string(appInfoBytes),
-		Priority:      dag.Priority,
-		Emails:        string(emailsBytes),
-		Template:      dag.Template,
-		Published:     dag.Published,
-		TriggerConfig: string(triggerConfigBytes),
-		SubIDs:        string(subIDsBytes),
-		ExecMode:      dag.ExecMode,
-		Category:      dag.Category,
-		OutPuts:       string(outputsBytes),
-		Instructions:  string(instructionsBytes),
-		OperatorID:    dag.OperatorID,
-		IncValues:     string(incValuesBytes),
-		Version:       dag.Version.ToString(),
-		VersionID:     dag.VersionID,
-		ModifyBy:      dag.ModifyBy,
-		IsDebug:       dag.IsDebug,
-		DeBugID:       dag.DeBugID,
-		BizDomainID:   dag.BizDomainID,
-	}
-}
-
-func ToDagInstanceModel(dagIns *entity.DagInstance, isupdate bool) *DagInstance {
-	if isupdate {
-		dagIns.Update()
-	} else {
-		dagIns.Initial()
-	}
-
-	id, _ := strconv.ParseUint(dagIns.ID, 10, 64)
-	dagInsID, _ := strconv.ParseUint(dagIns.DagID, 10, 64)
-	varsBytes, _ := json.Marshal(dagIns.Vars)
-	keywordsBytes, _ := json.Marshal(dagIns.Keywords)
-	sharedataBytes, _ := json.Marshal(dagIns.ShareData)
-	sharedataextBytes, _ := json.Marshal(dagIns.ShareDataExt)
-	cmdBytes, _ := json.Marshal(dagIns.Cmd)
-	appInfoBytes, _ := json.Marshal(dagIns.AppInfo)
-	dumpextbytes, _ := json.Marshal(dagIns.DumpExt)
-	callchainBytes, _ := json.Marshal(dagIns.CallChain)
-	hasCmd := dagIns.Cmd != nil && !reflect.DeepEqual(*dagIns.Cmd, entity.Command{})
-	batchRunID := ""
-	if val, ok := dagIns.Vars["batch_run_id"]; ok {
-		batchRunID = val.Value
-	}
-
-	return &DagInstance{
-		ID:               id,
-		CreatedAt:        dagIns.CreatedAt,
-		UpdatedAt:        dagIns.UpdatedAt,
-		DagID:            dagInsID,
-		Trigger:          string(dagIns.Trigger),
-		Worker:           dagIns.Worker,
-		Source:           dagIns.Source,
-		Vars:             string(varsBytes),
-		Keywords:         string(keywordsBytes),
-		EventPersistence: int(dagIns.EventPersistence),
-		EventOssPath:     dagIns.EventOssPath,
-		ShareData:        string(sharedataBytes),
-		ShareDataExt:     string(sharedataextBytes),
-		Status:           string(dagIns.Status),
-		Reason:           dagIns.Reason,
-		Cmd:              string(cmdBytes),
-		HasCmd:           hasCmd,
-		BatchRunID:       batchRunID,
-		UserID:           dagIns.UserID,
-		EndedAt:          dagIns.EndedAt,
-		DagType:          dagIns.DagType,
-		PolicyType:       dagIns.PolicyType,
-		AppInfo:          string(appInfoBytes),
-		Priority:         dagIns.Priority,
-		Mode:             int(dagIns.Mode),
-		Dump:             dagIns.Dump,
-		DumpExt:          string(dumpextbytes),
-		SuccessCallback:  dagIns.SuccessCallback,
-		ErrorCallback:    dagIns.ErrorCallback,
-		CallChain:        string(callchainBytes),
-		ResumeData:       dagIns.ResumeData,
-		ResumeStatus:     string(dagIns.ResumeStatus),
-		Version:          dagIns.Version.ToString(),
-		VersionID:        dagIns.VersionID,
-		BizDomainID:      dagIns.BizDomainID,
-	}
-}
-
-func ToTaskInstanceModel(taskIns *entity.TaskInstance, isupdate bool) *TaskInstanceModel {
-	if isupdate {
-		taskIns.Update()
-	} else {
-		taskIns.Initial()
-	}
-
-	id, _ := strconv.ParseUint(taskIns.ID, 10, 64)
-	dagInsID, _ := strconv.ParseUint(taskIns.DagInsID, 10, 64)
-
-	return &TaskInstanceModel{
-		ID:             id,
-		CreatedAt:      taskIns.CreatedAt,
-		UpdatedAt:      taskIns.UpdatedAt,
-		TaskID:         taskIns.TaskID,
-		DagInsID:       dagInsID,
-		Name:           taskIns.Name,
-		DependOn:       marshalToString(taskIns.DependOn),
-		ActionName:     taskIns.ActionName,
-		TimeoutSecs:    taskIns.TimeoutSecs,
-		Params:         marshalToString(taskIns.Params),
-		Traces:         marshalToString(taskIns.Traces),
-		Status:         string(taskIns.Status),
-		Reason:         marshalToString(taskIns.Reason),
-		PreChecks:      marshalToString(taskIns.PreChecks),
-		Results:        marshalToString(taskIns.Results),
-		Steps:          marshalToString(taskIns.Steps),
-		LastModifiedAt: taskIns.LastModifiedAt,
-		RenderedParams: marshalToString(taskIns.RenderedParams),
-		Hash:           taskIns.Hash,
-		Settings:       marshalToString(taskIns.Settings),
-		MetaData:       marshalToString(taskIns.MetaData),
-	}
-}
-
-func ToEntity(src, dest interface{}) error {
-	return copyFields(src, dest)
-}
-
-func marshalToString(val interface{}) string {
-	if val == nil {
-		return ""
-	}
-	bytes, err := json.Marshal(val)
-	if err != nil {
-		return ""
-	}
-	return string(bytes)
-}
-
-func copyFields(src interface{}, dest interface{}) error {
-	srcVal := reflect.ValueOf(src)
-	destVal := reflect.ValueOf(dest)
-
-	if srcVal.Kind() != reflect.Ptr || destVal.Kind() != reflect.Ptr {
-		return fmt.Errorf("both src and dest must be pointers")
-	}
-
-	srcVal = srcVal.Elem()
-	destVal = destVal.Elem()
-
-	if srcVal.Kind() != reflect.Struct || destVal.Kind() != reflect.Struct {
-		return fmt.Errorf("both src and dest must be structs")
-	}
-
-	srcType := srcVal.Type()
-
-	for i := 0; i < srcVal.NumField(); i++ {
-		srcField := srcVal.Field(i)
-		srcFieldType := srcType.Field(i)
-
-		destField := destVal.FieldByName(srcFieldType.Name)
-		if !destField.IsValid() || !destField.CanSet() {
-			continue
-		}
-
-		// 1. 类型完全一致，直接赋值
-		if srcField.Type().AssignableTo(destField.Type()) {
-			destField.Set(srcField)
-			continue
-		}
-
-		// 2. 数值 → 字符串类型（包括自定义字符串类型如 type MyStr string）
-		if isNumeric(srcField) && isStringKind(destField) {
-			strVal := numericToString(srcField)
-			destField.Set(reflect.ValueOf(strVal).Convert(destField.Type()))
-			continue
-		}
-
-		// 3. 字符串类型 → 数值（如 "12345" → uint64）
-		if isStringKind(srcField) && isNumeric(destField) {
-			if converted, ok := stringToNumeric(srcField.String(), destField.Type()); ok {
-				destField.Set(converted)
-				continue
-			}
-		}
-
-		// 4. 底层类型相同的转换（string ↔ MyStr, int ↔ MyInt 等，但排除整数→string的误转换）
-		if safeConvertible(srcField.Type(), destField.Type()) {
-			destField.Set(srcField.Convert(destField.Type()))
-			continue
-		}
-
-		// 5. 指针与非指针之间的转换
-		if handlePtrConversion(srcField, destField) {
-			continue
-		}
-
-		// 6. 字符串 → 复杂类型，尝试 JSON 反序列化
-		if isStringKind(srcField) && srcField.String() != "" {
-			strValue := srcField.String()
-			destFieldType := destField.Type()
-
-			var destInstancePtr reflect.Value
-			var isPtr bool
-
-			if destFieldType.Kind() == reflect.Ptr {
-				destInstancePtr = reflect.New(destFieldType.Elem())
-				isPtr = true
-			} else {
-				destInstancePtr = reflect.New(destFieldType)
-				isPtr = false
-			}
-
-			if err := json.Unmarshal([]byte(strValue), destInstancePtr.Interface()); err == nil {
-				if isPtr {
-					destField.Set(destInstancePtr)
-				} else {
-					destField.Set(destInstancePtr.Elem())
-				}
-			}
-		}
-	}
-
-	return nil
-}
-
-// ======================== 辅助函数 ========================
-
-// isNumeric 判断是否为数值类型（包括自定义数值类型如 type MyInt int）
-func isNumeric(v reflect.Value) bool {
-	switch v.Kind() {
-	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
-		return true
-	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
-		return true
-	case reflect.Float32, reflect.Float64:
-		return true
-	}
-	return false
-}
-
-// isStringKind 判断底层是否为字符串类型（包括 type MyStr string）
-func isStringKind(v reflect.Value) bool {
-	return v.Kind() == reflect.String
-}
-
-// numericToString 将数值转为字符串
-func numericToString(v reflect.Value) string {
-	switch v.Kind() {
-	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
-		return strconv.FormatInt(v.Int(), 10)
-	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
-		return strconv.FormatUint(v.Uint(), 10)
-	case reflect.Float32:
-		return strconv.FormatFloat(v.Float(), 'f', -1, 32)
-	case reflect.Float64:
-		return strconv.FormatFloat(v.Float(), 'f', -1, 64)
-	}
-	return fmt.Sprintf("%v", v.Interface())
-}
-
-// stringToNumeric 将字符串转为目标数值类型
-func stringToNumeric(s string, targetType reflect.Type) (reflect.Value, bool) {
-	// 获取底层 Kind
-	kind := targetType.Kind()
-
-	switch kind {
-	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
-		n, err := strconv.ParseInt(s, 10, 64)
-		if err != nil {
-			return reflect.Value{}, false
-		}
-		val := reflect.New(targetType).Elem()
-		val.SetInt(n)
-		return val, true
-
-	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
-		n, err := strconv.ParseUint(s, 10, 64)
-		if err != nil {
-			return reflect.Value{}, false
-		}
-		val := reflect.New(targetType).Elem()
-		val.SetUint(n)
-		return val, true
-
-	case reflect.Float32, reflect.Float64:
-		n, err := strconv.ParseFloat(s, 64)
-		if err != nil {
-			return reflect.Value{}, false
-		}
-		val := reflect.New(targetType).Elem()
-		val.SetFloat(n)
-		return val, true
-
-	case reflect.Bool:
-		b, err := strconv.ParseBool(s)
-		if err != nil {
-			return reflect.Value{}, false
-		}
-		val := reflect.New(targetType).Elem()
-		val.SetBool(b)
-		return val, true
-	}
-
-	return reflect.Value{}, false
-}
-
-// safeConvertible 安全的类型转换判断，排除整数→字符串的 Unicode 码点误转换
-func safeConvertible(srcType, destType reflect.Type) bool {
-	if !srcType.ConvertibleTo(destType) {
-		return false
-	}
-
-	srcKind := srcType.Kind()
-	destKind := destType.Kind()
-
-	// 排除: 整数 → 字符串（Go 会把整数当 rune 转换，不是我们要的行为）
-	if isIntKind(srcKind) && destKind == reflect.String {
-		return false
-	}
-	// 排除: 字符串 → 整数（Convert 本身也不支持，但以防万一）
-	if srcKind == reflect.String && isIntKind(destKind) {
-		return false
-	}
-
-	return true
-}
-
-func isIntKind(k reflect.Kind) bool {
-	switch k {
-	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64,
-		reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
-		return true
-	}
-	return false
-}
-
-// handlePtrConversion 处理指针与非指针之间的转换
-func handlePtrConversion(srcField, destField reflect.Value) bool {
-	srcType := srcField.Type()
-	destType := destField.Type()
-
-	// 非指针 → 指针
-	if srcType.Kind() != reflect.Ptr && destType.Kind() == reflect.Ptr {
-		elemType := destType.Elem()
-		if safeConvertible(srcType, elemType) {
-			newVal := reflect.New(elemType)
-			newVal.Elem().Set(srcField.Convert(elemType))
-			destField.Set(newVal)
-			return true
-		}
-	}
-
-	// 指针 → 非指针
-	if srcType.Kind() == reflect.Ptr && destType.Kind() != reflect.Ptr {
-		if !srcField.IsNil() {
-			srcElem := srcField.Elem()
-			if safeConvertible(srcElem.Type(), destType) {
-				destField.Set(srcElem.Convert(destType))
-				return true
-			}
-		}
-	}
-
-	// 指针 → 指针
-	if srcType.Kind() == reflect.Ptr && destType.Kind() == reflect.Ptr {
-		if !srcField.IsNil() {
-			srcElem := srcField.Elem()
-			destElemType := destType.Elem()
-			if safeConvertible(srcElem.Type(), destElemType) {
-				newVal := reflect.New(destElemType)
-				newVal.Elem().Set(srcElem.Convert(destElemType))
-				destField.Set(newVal)
-				return true
-			}
-		}
-	}
-
-	return false
-}
-
-func updateJSONMapString(raw, key string, val any) (string, error) {
-	m := map[string]any{}
-	if raw != "" {
-		if err := jsoniter.UnmarshalFromString(raw, &m); err != nil {
-			return "", err
-		}
-	}
-	m[key] = val
-	bytes, err := jsoniter.Marshal(m)
-	if err != nil {
-		return "", err
-	}
-	return string(bytes), nil
-}
-
-func parseUint64Slice(ids []string) []uint64 {
-	var res []uint64
-	for _, id := range ids {
-		v, _ := strconv.ParseUint(id, 10, 64)
-		res = append(res, v)
-	}
-	return res
-}
-
-func toInt64(val interface{}) int64 {
-	switch v := val.(type) {
-	case int:
-		return int64(v)
-	case int32:
-		return int64(v)
-	case int64:
-		return v
-	case uint:
-		return int64(v)
-	case uint32:
-		return int64(v)
-	case uint64:
-		return int64(v)
-	case []byte:
-		i, _ := strconv.ParseInt(string(v), 10, 64)
-		return i
-	case string:
-		i, _ := strconv.ParseInt(v, 10, 64)
-		return i
-	default:
-		return 0
-	}
-}
-
-func ToDagVersionModel(dagVersion *entity.DagVersion) *DagVersion {
-	dagVersion.Initial()
-	id, _ := strconv.ParseUint(dagVersion.ID, 10, 64)
-
-	return &DagVersion{
-		ID:        id,
-		CreatedAt: dagVersion.CreatedAt,
-		UpdatedAt: dagVersion.UpdatedAt,
-		DagID:     dagVersion.DagID,
-		UserID:    dagVersion.UserID,
-		Version:   dagVersion.Version.ToString(),
-		VersionID: dagVersion.VersionID,
-		ChangeLog: dagVersion.ChangeLog,
-		Config:    string(dagVersion.Config),
-		SortTime:  0,
-	}
 }
 
 // TransactionWithContext 带 Context 的事务
@@ -1066,7 +507,7 @@ func (d *dag) refreshDagIndexes(ctx context.Context, dag *entity.Dag) error {
 	}
 
 	stepRows := BuildDagStepIndex(dag)
-	triggerRows := BuildDagTriggerConfigIndex(dag)
+	// triggerRows := BuildDagTriggerConfigIndex(dag)
 	accessorRows := BuildDagAccessorIndex(dag)
 
 	deleteIndexes := func(table string) error {
@@ -1078,9 +519,9 @@ func (d *dag) refreshDagIndexes(ctx context.Context, dag *entity.Dag) error {
 	if err = deleteIndexes(DAGSTEPINDEX_TABLENAME); err != nil {
 		return err
 	}
-	if err = deleteIndexes(DAGTRIGGERINDEX_TABLENAME); err != nil {
-		return err
-	}
+	// if err = deleteIndexes(DAGTRIGGERINDEX_TABLENAME); err != nil {
+	// 	return err
+	// }
 	if err = deleteIndexes(DAGACCESSORINDEX_TABLENAME); err != nil {
 		return err
 	}
@@ -1100,20 +541,20 @@ func (d *dag) refreshDagIndexes(ctx context.Context, dag *entity.Dag) error {
 		return d.db.Exec(sqlStr, values...).Error
 	}
 
-	insertTriggerRows := func(rows []*DagTriggerConfigIndex) error {
-		if len(rows) == 0 {
-			return nil
-		}
-		sqlStr := fmt.Sprintf("INSERT INTO %s (f_id, f_dag_id, f_operator, f_source_id) VALUES ", DAGTRIGGERINDEX_TABLENAME)
-		values := make([]any, 0, len(rows)*4)
-		for _, row := range rows {
-			sqlStr += "(?, ?, ?, ?),"
-			values = append(values, row.ID, row.DagID, row.Operator, row.SourceID)
-		}
-		sqlStr = strings.TrimSuffix(sqlStr, ",")
-		trace.SetAttributes(newCtx, attribute.String(trace.TABLE_NAME, DAGTRIGGERINDEX_TABLENAME), attribute.String(trace.DB_SQL, sqlStr))
-		return d.db.Exec(sqlStr, values...).Error
-	}
+	// insertTriggerRows := func(rows []*DagTriggerConfigIndex) error {
+	// 	if len(rows) == 0 {
+	// 		return nil
+	// 	}
+	// 	sqlStr := fmt.Sprintf("INSERT INTO %s (f_id, f_dag_id, f_operator, f_source_id) VALUES ", DAGTRIGGERINDEX_TABLENAME)
+	// 	values := make([]any, 0, len(rows)*4)
+	// 	for _, row := range rows {
+	// 		sqlStr += "(?, ?, ?, ?),"
+	// 		values = append(values, row.ID, row.DagID, row.Operator, row.SourceID)
+	// 	}
+	// 	sqlStr = strings.TrimSuffix(sqlStr, ",")
+	// 	trace.SetAttributes(newCtx, attribute.String(trace.TABLE_NAME, DAGTRIGGERINDEX_TABLENAME), attribute.String(trace.DB_SQL, sqlStr))
+	// 	return d.db.Exec(sqlStr, values...).Error
+	// }
 
 	insertAccessorRows := func(rows []*DagAccessorIndex) error {
 		if len(rows) == 0 {
@@ -1133,9 +574,9 @@ func (d *dag) refreshDagIndexes(ctx context.Context, dag *entity.Dag) error {
 	if err = insertStepRows(stepRows); err != nil {
 		return err
 	}
-	if err = insertTriggerRows(triggerRows); err != nil {
-		return err
-	}
+	// if err = insertTriggerRows(triggerRows); err != nil {
+	// 	return err
+	// }
 	if err = insertAccessorRows(accessorRows); err != nil {
 		return err
 	}
@@ -1378,12 +819,102 @@ func (d *dag) ListDagInstance(ctx context.Context, input *mod.ListDagInstanceInp
 	newCtx, span := trace.StartInternalSpan(ctx)
 	defer func() { trace.TelemetrySpanEnd(span, err) }()
 
-	sqlStr, args := BuildListDagInstanceQuery(input, false)
+	var conds []string
+	var args []interface{}
+
+	if len(input.DagIDs) > 0 {
+		dagIDs := make([]interface{}, len(input.DagIDs))
+		for i, v := range input.DagIDs {
+			id, _ := strconv.ParseUint(v, 10, 64)
+			dagIDs[i] = id
+		}
+		conds = append(conds, "f_dag_id IN ?")
+		args = append(args, dagIDs)
+	}
+
+	if len(input.Status) > 0 {
+		conds = append(conds, "f_status IN ?")
+		args = append(args, input.Status)
+	}
+
+	if len(input.UserIDs) > 0 {
+		conds = append(conds, "f_user_id IN ?")
+		args = append(args, input.UserIDs)
+	}
+
+	if len(input.Priority) > 0 {
+		conds = append(conds, "f_priority IN ?")
+		args = append(args, input.Priority)
+	}
+
+	if input.Worker != "" {
+		conds = append(conds, "f_worker = ?")
+		args = append(args, input.Worker)
+	}
+	if input.HasCmd {
+		conds = append(conds, "f_has_cmd = ?")
+		args = append(args, true)
+	}
+	if input.ExcludeModeVM {
+		conds = append(conds, "f_mode < 1")
+	}
+	if input.UpdatedEnd > 0 {
+		conds = append(conds, "f_updated_at <= ?")
+		args = append(args, input.UpdatedEnd)
+	}
+	if input.TimeRange != nil {
+		col := camelToFSnake(input.TimeRange.Field)
+		conds = append(conds, fmt.Sprintf("%s >= ? AND %s <= ?", col, col))
+		args = append(args, input.TimeRange.Begin, input.TimeRange.End)
+	}
+	if input.MatchQuery != nil {
+		switch input.MatchQuery.Field {
+		case "vars.batch_run_id.value":
+			conds = append(conds, "f_batch_run_id = ?")
+			args = append(args, input.MatchQuery.Value)
+		case "keywords":
+			if like, ok := buildKeywordLike(input.MatchQuery.Value); ok {
+				conds = append(conds, "EXISTS (SELECT 1 FROM t_dag_instance_keyword dik WHERE dik.f_dag_ins_id = di.f_id AND dik.f_keyword LIKE ?)")
+				args = append(args, like)
+			}
+		}
+	}
+
+	// 构建 SQL
+	var sql string
+	if len(input.SelectField) > 0 {
+		selectFileds := []string{}
+		for _, v := range input.SelectField {
+			selectFileds = append(selectFileds, camelToFSnake(v))
+		}
+		sql = fmt.Sprintf("SELECT %s FROM t_dag_instance di", strings.Join(selectFileds, ", "))
+	} else {
+		sql = "SELECT * FROM t_dag_instance di"
+	}
+
+	if len(conds) > 0 {
+		sql += " WHERE " + strings.Join(conds, " AND ")
+	}
+
+	if input.SortBy != "" {
+		sortBy := camelToFSnake(input.SortBy)
+		dir := utils.IfNot(input.Order == 0, "DESC", "ASC")
+		sql += fmt.Sprintf(" ORDER BY %s %s", sortBy, dir)
+	}
+
+	if input.Limit > 0 {
+		sql += " LIMIT ? OFFSET ?"
+		args = append(args, input.Limit, input.Limit*input.Offset)
+	} else if input.Limit < 0 {
+		sql += " LIMIT ?"
+		args = append(args, -1)
+	}
+
 	query, _ := jsoniter.MarshalToString(args)
-	trace.SetAttributes(newCtx, attribute.String(trace.TABLE_NAME, DAGINSTANCE_TABLENAME), attribute.String(trace.DB_SQL, sqlStr), attribute.String(trace.DB_QUERY, query))
+	trace.SetAttributes(newCtx, attribute.String(trace.TABLE_NAME, DAGINSTANCE_TABLENAME), attribute.String(trace.DB_SQL, sql), attribute.String(trace.DB_QUERY, query))
 
 	dagInstances := make([]*DagInstance, 0)
-	err = d.db.Raw(sqlStr, args...).Scan(&dagInstances).Error
+	err = d.db.Raw(sql, args...).Scan(&dagInstances).Error
 	if err != nil {
 		return nil, err
 	}
@@ -1495,7 +1026,7 @@ func (d *dag) GetHistoryDagByVersionID(ctx context.Context, dagID, versionID str
 	return dest, nil
 }
 
-// BatchCreatOutBoxMessage implements [DagRepository].
+// BatchCreatOutBoxMessage
 func (d *dag) BatchCreatOutBoxMessage(ctx context.Context, outBox []*entity.OutBox) error {
 	var err error
 	newCtx, span := trace.StartInternalSpan(ctx)
@@ -1523,7 +1054,7 @@ func (d *dag) BatchCreatOutBoxMessage(ctx context.Context, outBox []*entity.OutB
 	return err
 }
 
-// BatchCreateDag implements [DagRepository].
+// BatchCreateDag
 func (d *dag) BatchCreateDag(ctx context.Context, dags []*entity.Dag) ([]*entity.Dag, error) {
 	var err error
 	newCtx, span := trace.StartInternalSpan(ctx)
@@ -1565,7 +1096,7 @@ func (d *dag) BatchCreateDag(ctx context.Context, dags []*entity.Dag) ([]*entity
 	return dags, nil
 }
 
-// BatchCreateDagIns implements [DagRepository].
+// BatchCreateDagIns
 func (d *dag) BatchCreateDagIns(ctx context.Context, dagIns []*entity.DagInstance) ([]*entity.DagInstance, error) {
 	var err error
 	newCtx, span := trace.StartInternalSpan(ctx)
@@ -1643,7 +1174,7 @@ func (d *dag) BatchCreateDagIns(ctx context.Context, dagIns []*entity.DagInstanc
 	return dagIns, nil
 }
 
-// BatchCreateTaskIns implements [DagRepository].
+// BatchCreateTaskIns
 func (d *dag) BatchCreateTaskIns(ctx context.Context, taskIns []*entity.TaskInstance) ([]*entity.TaskInstance, error) {
 	var err error
 	newCtx, span := trace.StartInternalSpan(ctx)
@@ -1662,7 +1193,7 @@ func (d *dag) BatchCreateTaskIns(ctx context.Context, taskIns []*entity.TaskInst
 		batch := taskIns[i:end]
 
 		sqlStr := `INSERT INTO t_task_instance (
-			f_id, f_created_at, f_updated_at, f_task_id, f_dag_ins_id, f_name, f_depend_on,
+			f_id, f_created_at, f_updated_at, f_expired_at, f_task_id, f_dag_ins_id, f_name, f_depend_on,
 			f_action_name, f_timeout_secs, f_params, f_traces, f_status, f_reason, f_pre_checks,
 			f_results, f_steps, f_last_modified_at, f_rendered_params, f_hash, f_settings, f_metadata
 		) VALUES `
@@ -1670,11 +1201,12 @@ func (d *dag) BatchCreateTaskIns(ctx context.Context, taskIns []*entity.TaskInst
 		values := make([]any, 0, len(batch)*21)
 		for _, data := range batch {
 			t := ToTaskInstanceModel(data, false)
-			sqlStr += "(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?),"
+			sqlStr += "(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?),"
 			values = append(values,
 				t.ID,
 				t.CreatedAt,
 				t.UpdatedAt,
+				t.UpdatedAt+int64(t.TimeoutSecs),
 				t.TaskID,
 				t.DagInsID,
 				t.Name,
@@ -1708,7 +1240,7 @@ func (d *dag) BatchCreateTaskIns(ctx context.Context, taskIns []*entity.TaskInst
 	return taskIns, nil
 }
 
-// BatchDeleteDagIns implements [DagRepository].
+// BatchDeleteDagIns
 func (d *dag) BatchDeleteDagIns(ctx context.Context, ids []string) error {
 	return d.delete(ctx, ids, DAGINSTANCE_TABLENAME)
 }
@@ -1727,7 +1259,7 @@ func (d *dag) delete(ctx context.Context, ids []string, tableName string) error 
 	return err
 }
 
-// BatchDeleteDagWithTransaction implements [DagRepository].
+// BatchDeleteDagWithTransaction
 func (d *dag) BatchDeleteDagWithTransaction(ctx context.Context, ids []string) error {
 	var err error
 	newCtx, span := trace.StartInternalSpan(ctx)
@@ -1825,12 +1357,12 @@ func (d *dag) BatchDeleteDagWithTransaction(ctx context.Context, ids []string) e
 	return err
 }
 
-// BatchDeleteTaskIns implements [DagRepository].
+// BatchDeleteTaskIns
 func (d *dag) BatchDeleteTaskIns(ctx context.Context, ids []string) error {
 	return d.delete(ctx, ids, TASKINSTANCE_TABLENAME)
 }
 
-// BatchUpdateDagIns implements [DagRepository].
+// BatchUpdateDagIns
 func (d *dag) BatchUpdateDagIns(ctx context.Context, dagIns []*entity.DagInstance) error {
 	var err error
 	_, span := trace.StartInternalSpan(ctx)
@@ -1913,7 +1445,7 @@ func (d *dag) BatchUpdateDagIns(ctx context.Context, dagIns []*entity.DagInstanc
 	return nil
 }
 
-// BatchUpdateTaskIns implements [DagRepository].
+// BatchUpdateTaskIns
 func (d *dag) BatchUpdateTaskIns(taskIns []*entity.TaskInstance) error {
 	if len(taskIns) == 0 {
 		return nil
@@ -1923,7 +1455,7 @@ func (d *dag) BatchUpdateTaskIns(taskIns []*entity.TaskInstance) error {
 		t := ToTaskInstanceModel(taskIns[i], true)
 
 		sql := `UPDATE t_task_instance SET
-			f_updated_at = ?, f_task_id = ?, f_dag_ins_id = ?, f_name = ?, f_depend_on = ?,
+			f_updated_at = ?, f_expired_at, f_task_id = ?, f_dag_ins_id = ?, f_name = ?, f_depend_on = ?,
 			f_action_name = ?, f_timeout_secs = ?, f_params = ?, f_traces = ?, f_status = ?,
 			f_reason = ?, f_pre_checks = ?, f_results = ?, f_steps = ?, f_last_modified_at = ?,
 			f_rendered_params = ?, f_hash = ?, f_settings = ?, f_metadata = ?
@@ -1931,6 +1463,7 @@ func (d *dag) BatchUpdateTaskIns(taskIns []*entity.TaskInstance) error {
 
 		if err := d.db.Exec(sql,
 			t.UpdatedAt,
+			t.UpdatedAt+int64(t.TimeoutSecs),
 			t.TaskID,
 			t.DagInsID,
 			t.Name,
@@ -1958,7 +1491,7 @@ func (d *dag) BatchUpdateTaskIns(taskIns []*entity.TaskInstance) error {
 	return nil
 }
 
-// Close implements [DagRepository].
+// Close
 func (d *dag) Close() {
 	if d == nil || d.db == nil {
 		return
@@ -1970,7 +1503,7 @@ func (d *dag) Close() {
 	_ = sqlDB.Close()
 }
 
-// CreatOutBoxMessage implements [DagRepository].
+// CreatOutBoxMessage
 func (d *dag) CreatOutBoxMessage(ctx context.Context, outBox *entity.OutBox) error {
 	var err error
 	newCtx, span := trace.StartInternalSpan(ctx)
@@ -1992,7 +1525,7 @@ func (d *dag) CreatOutBoxMessage(ctx context.Context, outBox *entity.OutBox) err
 	return err
 }
 
-// CreateClient implements [DagRepository].
+// CreateClient
 func (d *dag) CreateClient(clientName string, clientID string, clientSecret string) error {
 	id, err := utils.GetUniqueID()
 	if err != nil {
@@ -2003,7 +1536,7 @@ func (d *dag) CreateClient(clientName string, clientID string, clientSecret stri
 	return d.db.Exec(sql, id, now, now, clientName, clientID, clientSecret).Error
 }
 
-// CreateInbox implements [DagRepository].
+// CreateInbox
 func (d *dag) CreateInbox(ctx context.Context, msg *entity.InBox) error {
 	var err error
 	newCtx, span := trace.StartInternalSpan(ctx)
@@ -2029,7 +1562,7 @@ func (d *dag) CreateInbox(ctx context.Context, msg *entity.InBox) error {
 	return err
 }
 
-// CreateLogs implements [DagRepository].
+// CreateLogs
 func (d *dag) CreateLogs(ctx context.Context, ossLogs []*entity.Log) error {
 	var err error
 	newCtx, span := trace.StartInternalSpan(ctx)
@@ -2067,14 +1600,14 @@ func (d *dag) CreateLogs(ctx context.Context, ossLogs []*entity.Log) error {
 	return nil
 }
 
-// CreateTaskIns implements [DagRepository].
+// CreateTaskIns
 func (d *dag) CreateTaskIns(ctx context.Context, taskIns *entity.TaskInstance) error {
 	var err error
 	newCtx, span := trace.StartInternalSpan(ctx)
 	defer func() { trace.TelemetrySpanEnd(span, err) }()
 
 	sql := `INSERT INTO t_task_instance (
-		f_id, f_created_at, f_updated_at, f_task_id, f_dag_ins_id, f_name, f_depend_on,
+		f_id, f_created_at, f_updated_at, f_expired_at, f_task_id, f_dag_ins_id, f_name, f_depend_on,
 		f_action_name, f_timeout_secs, f_params, f_traces, f_status, f_reason, f_pre_checks,
 		f_results, f_steps, f_last_modified_at, f_rendered_params, f_hash, f_settings, f_metadata
 	) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
@@ -2087,6 +1620,7 @@ func (d *dag) CreateTaskIns(ctx context.Context, taskIns *entity.TaskInstance) e
 		t.ID,
 		t.CreatedAt,
 		t.UpdatedAt,
+		t.UpdatedAt+int64(t.TimeoutSecs),
 		t.TaskID,
 		t.DagInsID,
 		t.Name,
@@ -2108,7 +1642,7 @@ func (d *dag) CreateTaskIns(ctx context.Context, taskIns *entity.TaskInstance) e
 	).Error
 }
 
-// CreateToken implements [DagRepository].
+// CreateToken
 func (d *dag) CreateToken(token *entity.Token) error {
 	baseInfo := token.GetBaseInfo()
 	baseInfo.Initial()
@@ -2136,27 +1670,49 @@ func (d *dag) CreateToken(token *entity.Token) error {
 	return nil
 }
 
-// DeleteDagInsByID implements [DagRepository].
+// DeleteDagInsByID
 func (d *dag) DeleteDagInsByID(ctx context.Context, params map[string]interface{}) error {
 	var err error
 	newCtx, span := trace.StartInternalSpan(ctx)
 	defer func() { trace.TelemetrySpanEnd(span, err) }()
 
-	result, err := NewConverter(DAGINSTANCE_TABLENAME, WithAutoConvert(true)).Convert(params)
-	if err != nil {
-		return err
+	delete(params, "dagInsIDs")
+
+	var id interface{}
+	if i, ok := params["_id"]; ok {
+		if idStr, ok := i.(string); ok {
+			id, err = strconv.ParseUint(idStr, 10, 64)
+			if err != nil {
+				return err
+			}
+		} else {
+			id = i
+		}
 	}
 
-	sql := fmt.Sprintf("DELETE FROM t_dag_instance WHERE %s", result.Conds)
-	msyBytes, _ := jsoniter.MarshalToString(result.Params)
+	var status []string
+	if s, ok := params["status"]; ok {
+		if statusSlice, ok := s.([]string); ok {
+			status = statusSlice
+		}
+	}
+
+	// 安全地获取 updatedAt
+	var updatedAt interface{}
+	if ua, ok := params["updatedAt"]; ok {
+		updatedAt = ua
+	}
+
+	sql := "DELETE FROM t_dag_instance WHERE f_id <= ? AND f_status IN ? AND f_updated_at <= ?"
+	msyBytes, _ := jsoniter.MarshalToString(params)
 	trace.SetAttributes(newCtx, attribute.String(trace.TABLE_NAME, DAGINSTANCE_TABLENAME), attribute.String(trace.DB_SQL, sql), attribute.String(trace.DB_QUERY, msyBytes))
 
-	err = d.db.Exec(sql, result.Params...).Error
+	err = d.db.Debug().Exec(sql, id, status, updatedAt).Error
 
 	return err
 }
 
-// DeleteInbox implements [DagRepository].
+// DeleteInbox
 func (d *dag) DeleteInbox(ctx context.Context, ids []string) error {
 	var err error
 	newCtx, span := trace.StartInternalSpan(ctx)
@@ -2172,7 +1728,7 @@ func (d *dag) DeleteInbox(ctx context.Context, ids []string) error {
 	return err
 }
 
-// DeleteOutBoxMessage implements [DagRepository].
+// DeleteOutBoxMessage
 func (d *dag) DeleteOutBoxMessage(ctx context.Context, ids []string) error {
 	var err error
 	newCtx, span := trace.StartInternalSpan(ctx)
@@ -2188,7 +1744,7 @@ func (d *dag) DeleteOutBoxMessage(ctx context.Context, ids []string) error {
 	return err
 }
 
-// DeleteTaskInsByDagInsID implements [DagRepository].
+// DeleteTaskInsByDagInsID
 func (d *dag) DeleteTaskInsByDagInsID(ctx context.Context, dagInsID string) error {
 	var err error
 	newCtx, span := trace.StartInternalSpan(ctx)
@@ -2201,47 +1757,68 @@ func (d *dag) DeleteTaskInsByDagInsID(ctx context.Context, dagInsID string) erro
 	return d.db.Exec(sql, id).Error
 }
 
-// DeleteTaskInsByID implements [DagRepository].
+// DeleteTaskInsByID
 func (d *dag) DeleteTaskInsByID(ctx context.Context, params map[string]interface{}) error {
 	var err error
 	newCtx, span := trace.StartInternalSpan(ctx)
 	defer func() { trace.TelemetrySpanEnd(span, err) }()
 
-	status, _ := params["status"].([]entity.TaskInstanceStatus)
-	var statusVals []string
-	for _, s := range status {
-		statusVals = append(statusVals, string(s))
+	var status []string
+	if s, ok := params["status"]; ok {
+		if statusSlice, ok := s.([]string); ok {
+			status = statusSlice
+		}
 	}
 
-	dagInsIDs, _ := params["dagInsIDs"].([]string)
+	var dagInsIDs []string
+	if ids, ok := params["dagInsIDs"]; ok {
+		if idSlice, ok := ids.([]string); ok {
+			dagInsIDs = idSlice
+		}
+	}
+
 	var dagInsU64 []uint64
 	for _, id := range dagInsIDs {
-		v, _ := strconv.ParseUint(id, 10, 64)
+		v, err := strconv.ParseUint(id, 10, 64)
+		if err != nil {
+			continue
+		}
 		dagInsU64 = append(dagInsU64, v)
 	}
-	if len(dagInsU64) == 0 || len(statusVals) == 0 {
-		return nil
+
+	// 安全地获取 updatedAt
+	var updatedAt interface{}
+	if ua, ok := params["updatedAt"]; ok {
+		updatedAt = ua
 	}
 
-	updatedAt, _ := params["updatedAt"].(int64)
-	maxIDStr, _ := params["_id"].(string)
-	maxID, _ := strconv.ParseUint(maxIDStr, 10, 64)
+	// 安全地获取 _id 参数
+	var maxID uint64
+	if maxIDStr, ok := params["_id"].(string); ok && maxIDStr != "" {
+		var err error
+		maxID, err = strconv.ParseUint(maxIDStr, 10, 64)
+		if err != nil {
+			return err
+		}
+	}
 
 	sql := `DELETE FROM t_task_instance WHERE f_id <= ? AND f_dag_ins_id IN ? AND f_status IN ? AND f_updated_at <= ?`
 	msgStr, _ := jsoniter.MarshalToString(params)
 	trace.SetAttributes(newCtx, attribute.String(trace.TABLE_NAME, TASKINSTANCE_TABLENAME), attribute.String(trace.DB_SQL, sql), attribute.String(trace.DB_QUERY, msgStr))
 
-	return d.db.Exec(sql, maxID, dagInsU64, statusVals, updatedAt).Error
+	err = d.db.Exec(sql, maxID, dagInsU64, status, updatedAt).Error
+
+	return err
 }
 
-// DeleteToken implements [DagRepository].
+// DeleteToken
 func (d *dag) DeleteToken(id string) error {
 	sql := `DELETE FROM t_token WHERE f_id = ?`
 	uid, _ := strconv.ParseUint(id, 10, 64)
 	return d.db.Exec(sql, uid).Error
 }
 
-// DisdinctDagInstance implements [DagRepository].
+// DisdinctDagInstance
 func (d *dag) DisdinctDagInstance(input *mod.ListDagInstanceInput) ([]interface{}, error) {
 	var conds []string
 	var args []interface{}
@@ -2291,13 +1868,19 @@ func (d *dag) DisdinctDagInstance(input *mod.ListDagInstanceInput) ([]interface{
 	}
 
 	var res []interface{}
-	if err := d.db.Raw(sql, args...).Scan(&res).Error; err != nil {
+	var dagIns []*DagInstance
+
+	if err := d.db.Raw(sql, args...).Scan(&dagIns).Error; err != nil {
 		return nil, err
+	}
+
+	for _, v := range dagIns {
+		res = append(res, v.UserID)
 	}
 	return res, nil
 }
 
-// GetClient implements [DagRepository].
+// GetClient
 func (d *dag) GetClient(clientName string) (client *entity.Client, err error) {
 	sql := `SELECT f_id, f_created_at, f_updated_at, f_client_name, f_client_id, f_client_secret FROM t_client WHERE f_client_name = ?`
 	model := &ClientModel{}
@@ -2314,7 +1897,7 @@ func (d *dag) GetClient(clientName string) (client *entity.Client, err error) {
 	return dest, nil
 }
 
-// GetDagCount implements [DagRepository].
+// GetDagCount
 func (d *dag) GetDagCount(ctx context.Context, params map[string]interface{}) (int64, error) {
 	var err error
 	newCtx, span := trace.StartInternalSpan(ctx)
@@ -2345,7 +1928,7 @@ func (d *dag) GetDagCount(ctx context.Context, params map[string]interface{}) (i
 	return count, err
 }
 
-// GetDagInstance implements [DagRepository].
+// GetDagInstance
 func (d *dag) GetDagInstance(ctx context.Context, dagInsId string) (*entity.DagInstance, error) {
 	var err error
 	newCtx, span := trace.StartInternalSpan(ctx)
@@ -2354,7 +1937,7 @@ func (d *dag) GetDagInstance(ctx context.Context, dagInsId string) (*entity.DagI
 	return d.GetDagInstanceByFields(newCtx, map[string]interface{}{"f_id": dagInsId})
 }
 
-// GetDagInstanceByFields implements [DagRepository].
+// GetDagInstanceByFields
 func (d *dag) GetDagInstanceByFields(ctx context.Context, params map[string]interface{}) (*entity.DagInstance, error) {
 	var err error
 	newCtx, span := trace.StartInternalSpan(ctx)
@@ -2382,16 +1965,52 @@ func (d *dag) GetDagInstanceByFields(ctx context.Context, params map[string]inte
 	return dest, err
 }
 
-// GetDagInstanceCount implements [DagRepository].
+// GetDagInstanceCount
 func (d *dag) GetDagInstanceCount(ctx context.Context, params map[string]interface{}) (int64, error) {
 	var err error
 	newCtx, span := trace.StartInternalSpan(ctx)
 	defer func() { trace.TelemetrySpanEnd(span, err) }()
 
-	sql, args, err := BuildDagInstanceCountQueryFromParams(params)
+	delete(params, "log_clean_ttl")
+	baseParams := make(map[string]interface{}, len(params))
+	for k, v := range params {
+		baseParams[k] = v
+	}
+
+	var extraConds []string
+	var extraArgs []interface{}
+	if kw, ok := baseParams["keywords"]; ok {
+		delete(baseParams, "keywords")
+		if like, ok := buildKeywordLike(kw); ok {
+			extraConds = append(extraConds, "EXISTS (SELECT 1 FROM t_dag_instance_keyword dik WHERE dik.f_dag_ins_id = di.f_id AND dik.f_keyword LIKE ?)")
+			extraArgs = append(extraArgs, like)
+		}
+	}
+
+	conv := NewConverter(DAGINSTANCE_TABLENAME, WithAutoConvert(true), WithFieldMap(map[string]string{
+		"vars.batch_run_id.value": "f_batch_run_id",
+	}))
+	result, err := conv.ConvertConds(baseParams)
 	if err != nil {
 		return 0, err
 	}
+
+	var conds []string
+	var args []interface{}
+	if result.Conds != "" {
+		conds = append(conds, result.Conds)
+		args = append(args, result.Params...)
+	}
+	if len(extraConds) > 0 {
+		conds = append(conds, extraConds...)
+		args = append(args, extraArgs...)
+	}
+	if len(conds) == 0 {
+		conds = append(conds, "1=1")
+	}
+
+	sql := fmt.Sprintf("SELECT COUNT(*) FROM t_dag_instance di WHERE %s", strings.Join(conds, " AND "))
+
 	query, _ := jsoniter.MarshalToString(args)
 	trace.SetAttributes(newCtx, attribute.String(trace.TABLE_NAME, DAGINSTANCE_TABLENAME), attribute.String(trace.DB_SQL, sql), attribute.String(trace.DB_QUERY, query))
 
@@ -2400,7 +2019,7 @@ func (d *dag) GetDagInstanceCount(ctx context.Context, params map[string]interfa
 	return count, err
 }
 
-// GetInbox implements [DagRepository].
+// GetInbox
 func (d *dag) GetInbox(ctx context.Context, id string) (*entity.InBox, error) {
 	var err error
 	newCtx, span := trace.StartInternalSpan(ctx)
@@ -2434,7 +2053,7 @@ func (d *dag) GetInbox(ctx context.Context, id string) (*entity.InBox, error) {
 	}, nil
 }
 
-// GetSwitchStatus implements [DagRepository].
+// GetSwitchStatus
 func (d *dag) GetSwitchStatus() (bool, error) {
 	sql := `SELECT f_id, f_created_at, f_updated_at, f_name, f_status FROM t_switch WHERE f_name = ?`
 	sw := &SwitchModel{}
@@ -2447,7 +2066,7 @@ func (d *dag) GetSwitchStatus() (bool, error) {
 	return sw.Status, nil
 }
 
-// GetTaskIns implements [DagRepository].
+// GetTaskIns
 func (d *dag) GetTaskIns(ctx context.Context, taskIns string) (*entity.TaskInstance, error) {
 	var err error
 	newCtx, span := trace.StartInternalSpan(ctx)
@@ -2471,12 +2090,13 @@ func (d *dag) GetTaskIns(ctx context.Context, taskIns string) (*entity.TaskInsta
 	return dest, nil
 }
 
-// GetTaskInstanceCount implements [DagRepository].
+// GetTaskInstanceCount
 func (d *dag) GetTaskInstanceCount(ctx context.Context, params map[string]interface{}) (int64, error) {
 	var err error
 	newCtx, span := trace.StartInternalSpan(ctx)
 	defer func() { trace.TelemetrySpanEnd(span, err) }()
 
+	delete(params, "log_clean_ttl")
 	result, err := NewConverter(TASKINSTANCE_TABLENAME, WithAutoConvert(true)).ConvertConds(params)
 	if err != nil {
 		return 0, err
@@ -2495,7 +2115,7 @@ func (d *dag) GetTaskInstanceCount(ctx context.Context, params map[string]interf
 	return count, err
 }
 
-// GetTokenByUserID implements [DagRepository].
+// GetTokenByUserID
 func (d *dag) GetTokenByUserID(userID string) (*entity.Token, error) {
 	sql := `SELECT f_id, f_created_at, f_updated_at, f_user_id, f_user_name, f_refresh_token, f_token, f_expires_in, f_login_ip, f_is_app FROM t_token WHERE f_user_id = ?`
 	model := &TokenModel{}
@@ -2512,7 +2132,7 @@ func (d *dag) GetTokenByUserID(userID string) (*entity.Token, error) {
 	return dest, nil
 }
 
-// GroupDagInstance implements [DagRepository].
+// GroupDagInstance
 func (d *dag) GroupDagInstance(ctx context.Context, input *mod.GroupInput) ([]*entity.DagInstanceGroup, error) {
 	var err error
 	_, span := trace.StartInternalSpan(ctx)
@@ -2524,7 +2144,7 @@ func (d *dag) GroupDagInstance(ctx context.Context, input *mod.GroupInput) ([]*e
 		return nil, qerr
 	}
 	if sql == "" {
-		return nil, nil
+		return nil, fmt.Errorf("sql is empty")
 	}
 
 	if input != nil && !input.IsFirst {
@@ -2532,7 +2152,7 @@ func (d *dag) GroupDagInstance(ctx context.Context, input *mod.GroupInput) ([]*e
 			Total int64 `gorm:"column:total"`
 		}
 		rows := make([]totalRow, 0)
-		if err = d.db.Raw(sql, args...).Scan(&rows).Error; err != nil {
+		if err = d.db.Debug().Raw(sql, args...).Scan(&rows).Error; err != nil {
 			return nil, err
 		}
 		result := make([]*entity.DagInstanceGroup, 0, len(rows))
@@ -2547,7 +2167,7 @@ func (d *dag) GroupDagInstance(ctx context.Context, input *mod.GroupInput) ([]*e
 		DagInstance
 	}
 	rows := make([]groupRow, 0)
-	if err = d.db.Raw(sql, args...).Scan(&rows).Error; err != nil {
+	if err = d.db.Debug().Raw(sql, args...).Scan(&rows).Error; err != nil {
 		return nil, err
 	}
 
@@ -2569,7 +2189,7 @@ func (d *dag) GroupDagInstance(ctx context.Context, input *mod.GroupInput) ([]*e
 	return result, nil
 }
 
-// ListDag implements [DagRepository].
+// ListDag
 func (d *dag) ListDag(ctx context.Context, input *mod.ListDagInput) ([]*entity.Dag, error) {
 	var err error
 	newCtx, span := trace.StartInternalSpan(ctx)
@@ -2627,7 +2247,7 @@ func (d *dag) ListDag(ctx context.Context, input *mod.ListDagInput) ([]*entity.D
 		args = append(args, status)
 	}
 
-	conds = append(conds, "f_removed <> 1", "f_is_debug <> 1")
+	conds = append(conds, "f_removed < 1", "f_is_debug < 1")
 
 	indexCond, indexArgs := BuildDagIndexSubquery(input)
 	if indexCond != "" {
@@ -2668,7 +2288,7 @@ func (d *dag) ListDag(ctx context.Context, input *mod.ListDagInput) ([]*entity.D
 	return res, nil
 }
 
-// ListDagByFields implements [DagRepository].
+// ListDagByFields
 func (d *dag) ListDagByFields(ctx context.Context, filter bson.M, opt options.FindOptions) ([]*entity.Dag, error) {
 	var err error
 	newCtx, span := trace.StartInternalSpan(ctx)
@@ -2742,7 +2362,7 @@ func (d *dag) ListDagByFields(ctx context.Context, filter bson.M, opt options.Fi
 	return res, nil
 }
 
-// ListDagCount implements [DagRepository].
+// ListDagCount
 func (d *dag) ListDagCount(ctx context.Context, input *mod.ListDagInput) (int64, error) {
 	var err error
 	newCtx, span := trace.StartInternalSpan(ctx)
@@ -2799,7 +2419,7 @@ func (d *dag) ListDagCount(ctx context.Context, input *mod.ListDagInput) (int64,
 	}
 	if input.BizDomainID != "" {
 		if input.BizDomainID == common.BizDomainDefaultID {
-			conds = append(conds, "(f_biz_domain_id = '' OR f_biz_domain_id = ? OR f_biz_domain_id IS NULL)")
+			conds = append(conds, "(f_biz_domain_id = '' OR f_biz_domain_id = ?)")
 			args = append(args, common.BizDomainDefaultID)
 		} else {
 			conds = append(conds, "f_biz_domain_id = ?")
@@ -2807,15 +2427,15 @@ func (d *dag) ListDagCount(ctx context.Context, input *mod.ListDagInput) (int64,
 		}
 	}
 
-	conds = append(conds, "f_removed <> 1", "f_is_debug <> 1")
+	conds = append(conds, "f_removed < 1", "f_is_debug < 1")
 
 	if len(input.Sources) != 0 && len(input.Trigger) > 0 {
-		conds = append(conds, "f_id IN (SELECT f_dag_id FROM t_dag_step_index WHERE f_operator IN ? AND f_source_id IN ?)")
+		conds = append(conds, "f_id IN (SELECT f_dag_id FROM t_dag_step WHERE f_operator IN ? AND f_source_id IN ?)")
 		args = append(args, input.Trigger, input.Sources)
 	}
 
 	if input.Accessors != nil && input.UserID == "" {
-		conds = append(conds, "f_id IN (SELECT f_dag_id FROM t_dag_accessor_index WHERE f_accessor_id IN ?)")
+		conds = append(conds, "f_id IN (SELECT f_dag_id FROM t_dag_accessor WHERE f_accessor_id IN ?)")
 		args = append(args, input.Accessors)
 	}
 
@@ -2831,7 +2451,7 @@ func (d *dag) ListDagCount(ctx context.Context, input *mod.ListDagInput) (int64,
 	return count, err
 }
 
-// ListDagCountByFields implements [DagRepository].
+// ListDagCountByFields
 func (d *dag) ListDagCountByFields(ctx context.Context, filter bson.M) (int64, error) {
 	var err error
 	newCtx, span := trace.StartInternalSpan(ctx)
@@ -2864,7 +2484,7 @@ func (d *dag) ListDagCountByFields(ctx context.Context, filter bson.M) (int64, e
 	return count, err
 }
 
-// ListDagInstanceInRangeTime implements [DagRepository].
+// ListDagInstanceInRangeTime
 func (d *dag) ListDagInstanceInRangeTime(ctx context.Context, status string, begin int64, end int64) ([]*entity.DagInstance, error) {
 	var err error
 	newCtx, span := trace.StartInternalSpan(ctx)
@@ -2891,7 +2511,7 @@ func (d *dag) ListDagInstanceInRangeTime(ctx context.Context, status string, beg
 	return res, nil
 }
 
-// ListDagVersions implements [DagRepository].
+// ListDagVersions
 func (d *dag) ListDagVersions(ctx context.Context, input *mod.ListDagVersionInput) ([]entity.DagVersion, error) {
 	var err error
 	newCtx, span := trace.StartInternalSpan(ctx)
@@ -2928,7 +2548,7 @@ func (d *dag) ListDagVersions(ctx context.Context, input *mod.ListDagVersionInpu
 	return res, nil
 }
 
-// ListExistDagID implements [DagRepository].
+// ListExistDagID
 func (d *dag) ListExistDagID(ctx context.Context, dagIDs []string) ([]string, error) {
 	var err error
 	newCtx, span := trace.StartInternalSpan(ctx)
@@ -2953,7 +2573,7 @@ func (d *dag) ListExistDagID(ctx context.Context, dagIDs []string) ([]string, er
 	return out, nil
 }
 
-// ListExistDagInsID implements [DagRepository].
+// ListExistDagInsID
 func (d *dag) ListExistDagInsID(ctx context.Context, dagInsIDs []string) ([]string, error) {
 	var err error
 	newCtx, span := trace.StartInternalSpan(ctx)
@@ -2978,18 +2598,14 @@ func (d *dag) ListExistDagInsID(ctx context.Context, dagInsIDs []string) ([]stri
 	return out, nil
 }
 
-// ListHistoryDagIns implements [DagRepository].
+// ListHistoryDagIns
 func (d *dag) ListHistoryDagIns(ctx context.Context, params map[string]interface{}, dataChannel chan []bson.M) error {
 	var err error
 	newCtx, span := trace.StartInternalSpan(ctx)
 	defer func() { trace.TelemetrySpanEnd(span, err) }()
 
-	status, _ := params["status"].([]entity.DagInstanceStatus)
-	var statusVals []string
-	for _, s := range status {
-		statusVals = append(statusVals, string(s))
-	}
-	updatedAt, _ := params["updatedAt"].(int64)
+	status, _ := params["status"]
+	updatedAt, _ := params["updatedAt"]
 
 	lastID := uint64(0)
 	batchSize := common.DefaultQuerySize
@@ -3004,7 +2620,7 @@ func (d *dag) ListHistoryDagIns(ctx context.Context, params map[string]interface
 
 		sql := `SELECT * FROM t_dag_instance WHERE f_status IN ? AND f_updated_at <= ? AND f_id > ? ORDER BY f_id ASC LIMIT ?`
 		var models []DagInstance
-		if err = d.db.Raw(sql, statusVals, updatedAt, lastID, batchSize).Scan(&models).Error; err != nil {
+		if err = d.db.Debug().Raw(sql, status, updatedAt, lastID, batchSize).Scan(&models).Error; err != nil {
 			return err
 		}
 		if len(models) == 0 {
@@ -3034,18 +2650,14 @@ func (d *dag) ListHistoryDagIns(ctx context.Context, params map[string]interface
 	}
 }
 
-// ListHistoryTaskIns implements [DagRepository].
+// ListHistoryTaskIns
 func (d *dag) ListHistoryTaskIns(ctx context.Context, params map[string]interface{}, dataChannel chan []bson.M) error {
 	var err error
 	newCtx, span := trace.StartInternalSpan(ctx)
 	defer func() { trace.TelemetrySpanEnd(span, err) }()
 
-	status, _ := params["status"].([]entity.TaskInstanceStatus)
-	var statusVals []string
-	for _, s := range status {
-		statusVals = append(statusVals, string(s))
-	}
-	updatedAt, _ := params["updatedAt"].(int64)
+	status, _ := params["status"]
+	updatedAt, _ := params["updatedAt"]
 
 	lastID := uint64(0)
 	batchSize := common.DefaultQuerySize
@@ -3060,7 +2672,7 @@ func (d *dag) ListHistoryTaskIns(ctx context.Context, params map[string]interfac
 
 		sql := `SELECT * FROM t_task_instance WHERE f_status IN ? AND f_updated_at <= ? AND f_id > ? ORDER BY f_id ASC LIMIT ?`
 		var models []TaskInstanceModel
-		if err = d.db.Raw(sql, statusVals, updatedAt, lastID, batchSize).Scan(&models).Error; err != nil {
+		if err = d.db.Raw(sql, status, updatedAt, lastID, batchSize).Scan(&models).Error; err != nil {
 			return err
 		}
 		if len(models) == 0 {
@@ -3090,10 +2702,10 @@ func (d *dag) ListHistoryTaskIns(ctx context.Context, params map[string]interfac
 	}
 }
 
-// ListInbox implements [DagRepository].
+// ListInbox
 func (d *dag) ListInbox(ctx context.Context, input *mod.ListInboxInput) ([]*entity.InBox, error) {
 	// 构建 SQL 查询
-	sqlQuery := "SELECT * FROM in_box WHERE 1=1"
+	sqlQuery := "SELECT * FROM t_inbox WHERE 1=1"
 	var args []interface{}
 
 	// 应用筛选条件
@@ -3165,17 +2777,16 @@ func (d *dag) ListInbox(ctx context.Context, input *mod.ListInboxInput) ([]*enti
 	return res, nil
 }
 
-// ListOutBoxMessage implements [DagRepository].
-// TODO : 数据结构标签不一致需要转换
+// ListOutBoxMessage
 func (d *dag) ListOutBoxMessage(ctx context.Context, input *entity.OutBoxInput) ([]*entity.OutBox, error) {
 	var err error
-	var msgs []*entity.OutBox
+	var msgs []*OutBox
 
 	newCtx, span := trace.StartInternalSpan(ctx)
 	defer func() { trace.TelemetrySpanEnd(span, err) }()
 	ctx = newCtx
 
-	sqlStr := `SELECT f_id, f_topic, f_msg, f_created_at, f_updated_at FROM t_outbox WHERE 1 == 1 `
+	sqlStr := `SELECT f_id, f_topic, f_msg, f_created_at, f_updated_at FROM t_outbox WHERE 1 = 1 `
 
 	values := make([]interface{}, 0)
 	if input.CreateTime > 0 {
@@ -3185,7 +2796,7 @@ func (d *dag) ListOutBoxMessage(ctx context.Context, input *entity.OutBoxInput) 
 
 	if input.Limit > 0 {
 		sqlStr += " LIMIT ?"
-		values = append(values, input.CreateTime)
+		values = append(values, input.Limit)
 	}
 
 	err = d.db.Raw(sqlStr, values...).Scan(&msgs).Error
@@ -3193,10 +2804,21 @@ func (d *dag) ListOutBoxMessage(ctx context.Context, input *entity.OutBoxInput) 
 		return nil, err
 	}
 
-	return msgs, nil
+	var res []*entity.OutBox
+	for _, msg := range msgs {
+		t := &entity.OutBox{}
+		err = ToEntity(&msg, t)
+		if err != nil {
+			return nil, err
+		}
+
+		res = append(res, t)
+	}
+
+	return res, nil
 }
 
-// ListTaskInstance implements [DagRepository].
+// ListTaskInstance
 func (d *dag) ListTaskInstance(ctx context.Context, input *mod.ListTaskInstanceInput) ([]*entity.TaskInstance, error) {
 	var err error
 	newCtx, span := trace.StartInternalSpan(ctx)
@@ -3240,7 +2862,7 @@ func (d *dag) ListTaskInstance(ctx context.Context, input *mod.ListTaskInstanceI
 	}
 
 	if input.Expired {
-		conds = append(conds, "f_updated_at <= ? - f_timeout_secs")
+		conds = append(conds, "f_expired_at <= ?")
 		args = append(args, time.Now().Unix()-5)
 	}
 
@@ -3297,12 +2919,12 @@ func (d *dag) ListTaskInstance(ctx context.Context, input *mod.ListTaskInstanceI
 	return res, nil
 }
 
-// Marshal implements [DagRepository].
+// Marshal
 func (d *dag) Marshal(obj interface{}) ([]byte, error) {
 	return jsoniter.Marshal(obj)
 }
 
-// PatchDagIns implements [DagRepository].
+// PatchDagIns
 func (d *dag) PatchDagIns(ctx context.Context, dagIns *entity.DagInstance, mustsPatchFields ...string) error {
 	var err error
 	newCtx, span := trace.StartInternalSpan(ctx)
@@ -3409,7 +3031,7 @@ func (d *dag) PatchDagIns(ctx context.Context, dagIns *entity.DagInstance, musts
 	return nil
 }
 
-// PatchTaskIns implements [DagRepository].
+// PatchTaskIns
 func (d *dag) PatchTaskIns(ctx context.Context, taskIns *entity.TaskInstance) error {
 	var err error
 	newCtx, span := trace.StartInternalSpan(ctx)
@@ -3468,13 +3090,13 @@ func (d *dag) PatchTaskIns(ctx context.Context, taskIns *entity.TaskInstance) er
 	return d.db.Exec(sql, values...).Error
 }
 
-// RemoveClient implements [DagRepository].
+// RemoveClient
 func (d *dag) RemoveClient(clientName string) (err error) {
 	sql := `DELETE FROM t_client WHERE f_client_name = ?`
 	return d.db.Exec(sql, clientName).Error
 }
 
-// RetryDagIns implements [DagRepository].
+// RetryDagIns
 func (d *dag) RetryDagIns(ctx context.Context, dagInsID string, taskInsIDs []string) error {
 	var err error
 	newCtx, span := trace.StartInternalSpan(ctx)
@@ -3506,7 +3128,7 @@ func (d *dag) RetryDagIns(ctx context.Context, dagInsID string, taskInsIDs []str
 	return fn()
 }
 
-// SetSwitchStatus implements [DagRepository].
+// SetSwitchStatus
 func (d *dag) SetSwitchStatus(status bool) error {
 	now := time.Now().Unix()
 	sql := `INSERT INTO t_switch (f_id, f_created_at, f_updated_at, f_name, f_status)
@@ -3516,12 +3138,12 @@ func (d *dag) SetSwitchStatus(status bool) error {
 	return d.db.Exec(sql, id, now, now, entity.SwitchName, status).Error
 }
 
-// Unmarshal implements [DagRepository].
+// Unmarshal
 func (d *dag) Unmarshal(bytes []byte, ptr interface{}) error {
 	return jsoniter.Unmarshal(bytes, ptr)
 }
 
-// UpdateDagIncValue implements [DagRepository].
+// UpdateDagIncValue
 func (d *dag) UpdateDagIncValue(ctx context.Context, dagId string, incKey string, incValue any) error {
 	var err error
 	newCtx, span := trace.StartInternalSpan(ctx)
@@ -3547,7 +3169,7 @@ func (d *dag) UpdateDagIncValue(ctx context.Context, dagId string, incKey string
 	return fn()
 }
 
-// UpdateDagIns implements [DagRepository].
+// UpdateDagIns
 func (d *dag) UpdateDagIns(ctx context.Context, dagIns *entity.DagInstance) error {
 	var err error
 	newCtx, span := trace.StartInternalSpan(ctx)
@@ -3612,7 +3234,7 @@ func (d *dag) UpdateDagIns(ctx context.Context, dagIns *entity.DagInstance) erro
 	return nil
 }
 
-// UpdateTaskIns implements [DagRepository].
+// UpdateTaskIns
 func (d *dag) UpdateTaskIns(ctx context.Context, taskIns *entity.TaskInstance) error {
 	var err error
 	newCtx, span := trace.StartInternalSpan(ctx)
@@ -3654,7 +3276,7 @@ func (d *dag) UpdateTaskIns(ctx context.Context, taskIns *entity.TaskInstance) e
 	).Error
 }
 
-// UpdateToken implements [DagRepository].
+// UpdateToken
 func (d *dag) UpdateToken(token *entity.Token) error {
 	baseInfo := token.GetBaseInfo()
 	baseInfo.Update()

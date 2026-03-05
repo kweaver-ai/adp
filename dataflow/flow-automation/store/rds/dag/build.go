@@ -51,8 +51,6 @@ func NewConverter(tableName string, opts ...Option) *Converter {
 	return c
 }
 
-// ==================== 字段名转换核心 ====================
-
 // convertField 将 MongoDB 字段名转为 SQL 字段名
 //
 // 规则：
@@ -101,6 +99,10 @@ func camelToFSnake(s string) string {
 		return s
 	}
 
+	if s == "userid" {
+		return "f_user_id"
+	}
+
 	// 去除开头的 _ (如 _id → id，后面统一加 f_)
 	s = strings.TrimLeft(s, "_")
 	if s == "" {
@@ -137,8 +139,6 @@ func camelToFSnake(s string) string {
 
 	return "f_" + snaked
 }
-
-// ==================== 转换主入口 ====================
 
 type Result struct {
 	SQL    string
@@ -178,8 +178,6 @@ func (c *Converter) ConvertConds(query interface{}) (*Result, error) {
 
 	return &Result{Conds: where, Params: params}, nil
 }
-
-// ==================== 类型统一转换 ====================
 
 func toMap(v interface{}) (map[string]interface{}, error) {
 	switch val := v.(type) {
@@ -258,8 +256,6 @@ func normalizeValue(v interface{}) interface{} {
 		return v
 	}
 }
-
-// ==================== 核心解析 ====================
 
 func (c *Converter) parseCondition(query map[string]interface{}) (string, []interface{}, error) {
 	var conditions []string
@@ -555,106 +551,6 @@ func regexToLike(pattern string) string {
 	return result
 }
 
-func BuildListDagInstanceQuery(input *mod.ListDagInstanceInput, cnt bool) (string, []interface{}) {
-	var conds []string
-	var args []interface{}
-	var dagIDs []uint64
-	var status []string
-
-	for _, v := range input.DagIDs {
-		id, _ := strconv.ParseUint(v, 10, 64)
-		dagIDs = append(dagIDs, id)
-	}
-
-	for _, v := range input.Status {
-		status = append(status, string(v))
-	}
-
-	// 主表条件
-	addSlice := func(col string, vals []interface{}) {
-		if len(vals) > 0 {
-			conds = append(conds, fmt.Sprintf("%s IN (%s)", camelToFSnake(col), strings.TrimSuffix(strings.Repeat("?,", len(vals)), ",")))
-			args = append(args, vals...)
-		}
-	}
-	addU64Slice := func(col string, ids []uint64) {
-		v := make([]interface{}, len(ids))
-		for i, id := range ids {
-			v[i] = id
-		}
-		addSlice(col, v)
-	}
-	addStrSlice := func(col string, ss []string) {
-		v := make([]interface{}, len(ss))
-		for i, s := range ss {
-			v[i] = s
-		}
-		addSlice(col, v)
-	}
-
-	addU64Slice("f_dag_id", dagIDs)
-	addStrSlice("f_status", status)
-	addStrSlice("f_user_id", input.UserIDs)
-	addSlice("f_priority", input.Priority)
-	if input.Worker != "" {
-		conds = append(conds, "f_worker = ?")
-		args = append(args, input.Worker)
-	}
-	if input.HasCmd {
-		conds = append(conds, "f_has_cmd = ?")
-		args = append(args, true)
-	}
-	if input.ExcludeModeVM {
-		conds = append(conds, "f_mode < 1")
-	}
-	if input.UpdatedEnd > 0 {
-		conds = append(conds, "f_updated_at <= ?")
-		args = append(args, input.UpdatedEnd)
-	}
-	if input.TimeRange != nil {
-		col := camelToFSnake(input.TimeRange.Field)
-		conds = append(conds, fmt.Sprintf("%s >= ? AND %s <= ?", col, col))
-		args = append(args, input.TimeRange.Begin, input.TimeRange.End)
-	}
-	if input.MatchQuery != nil {
-		switch input.MatchQuery.Field {
-		case "vars.batch_run_id.value":
-			conds = append(conds, "f_batch_run_id = ?")
-			args = append(args, input.MatchQuery.Value)
-		case "keywords":
-			if like, ok := buildKeywordLike(input.MatchQuery.Value); ok {
-				conds = append(conds, "EXISTS (SELECT 1 FROM t_dag_instance_keyword dik WHERE dik.f_dag_ins_id = f_id AND dik.f_keyword LIKE ?)")
-				args = append(args, like)
-			}
-		}
-	}
-
-	// 构建 SQL
-	var sql string
-	if cnt {
-		sql = "SELECT COUNT(*) FROM t_dag_instance"
-	} else {
-		sql = "SELECT * FROM t_dag_instance"
-	}
-
-	if len(conds) > 0 {
-		sql += " WHERE " + strings.Join(conds, " AND ")
-	}
-
-	if !cnt {
-		if input.SortBy != "" {
-			dir := utils.IfNot(input.Order == 0, "DESC", "ASC")
-			sql += fmt.Sprintf(" ORDER BY %s %s", input.SortBy, dir)
-		}
-		if input.Limit > 0 {
-			sql += " LIMIT ? OFFSET ?"
-			args = append(args, input.Limit, input.Limit*input.Offset)
-		}
-	}
-
-	return sql, args
-}
-
 func BuildGroupDagInstanceQuery(input *mod.GroupInput) (string, []interface{}, error) {
 	if input == nil {
 		return "", nil, nil
@@ -749,6 +645,7 @@ func BuildGroupDagInstanceQuery(input *mod.GroupInput) (string, []interface{}, e
 		selectTotal = "g.total"
 	}
 
+	// 子查询 g：算"每组的总数 + 每组的极值 sort_col"
 	gSQL := fmt.Sprintf("SELECT %s, %s(%s) AS sort_val FROM %s%s GROUP BY %s", gSelectCols, minmax, sortCol, DAGINSTANCE_TABLENAME, where, strings.Join(groupCols, ", "))
 	gArgs := append([]interface{}{}, baseArgs...)
 	if input.Limit > 0 {
@@ -756,15 +653,18 @@ func BuildGroupDagInstanceQuery(input *mod.GroupInput) (string, []interface{}, e
 		gArgs = append(gArgs, input.Limit)
 	}
 
+	// 子查询 p：在每组 + 每个 sort_col 下，取 f_id 最大的那条
 	pSQL := fmt.Sprintf("SELECT %s, %s AS sort_val, MAX(f_id) AS max_id FROM %s%s GROUP BY %s, %s", strings.Join(groupCols, ", "), sortCol, DAGINSTANCE_TABLENAME, where, strings.Join(groupCols, ", "), sortCol)
 	pArgs := append([]interface{}{}, baseArgs...)
 
+	// 把 g 和 p 连起来：只保留每组的"极值 sort_col"对应的那条 max_id
 	joinConds := make([]string, 0, len(groupCols)+1)
 	for _, col := range groupCols {
 		joinConds = append(joinConds, fmt.Sprintf("g.%s = p.%s", col, col))
 	}
 	joinConds = append(joinConds, "p.sort_val = g.sort_val")
 
+	// JOIN 回原表 di：拿到那条代表记录的明细
 	finalSQL := fmt.Sprintf("SELECT %s, %s FROM (%s) g JOIN (%s) p ON %s JOIN %s di ON di.f_id = p.max_id",
 		selectTotal, selectCols, gSQL, pSQL, strings.Join(joinConds, " AND "), DAGINSTANCE_TABLENAME)
 
@@ -772,48 +672,6 @@ func BuildGroupDagInstanceQuery(input *mod.GroupInput) (string, []interface{}, e
 	finalArgs = append(finalArgs, pArgs...)
 
 	return finalSQL, finalArgs, nil
-}
-
-func BuildDagInstanceCountQueryFromParams(params map[string]interface{}) (string, []interface{}, error) {
-	baseParams := make(map[string]interface{}, len(params))
-	for k, v := range params {
-		baseParams[k] = v
-	}
-
-	var extraConds []string
-	var extraArgs []interface{}
-	if kw, ok := baseParams["keywords"]; ok {
-		delete(baseParams, "keywords")
-		if like, ok := buildKeywordLike(kw); ok {
-			extraConds = append(extraConds, "EXISTS (SELECT 1 FROM t_dag_instance_keyword dik WHERE dik.f_dag_ins_id = f_id AND dik.f_keyword LIKE ?)")
-			extraArgs = append(extraArgs, like)
-		}
-	}
-
-	conv := NewConverter(DAGINSTANCE_TABLENAME, WithAutoConvert(true), WithFieldMap(map[string]string{
-		"vars.batch_run_id.value": "f_batch_run_id",
-	}))
-	result, err := conv.ConvertConds(baseParams)
-	if err != nil {
-		return "", nil, err
-	}
-
-	var conds []string
-	var args []interface{}
-	if result.Conds != "" {
-		conds = append(conds, result.Conds)
-		args = append(args, result.Params...)
-	}
-	if len(extraConds) > 0 {
-		conds = append(conds, extraConds...)
-		args = append(args, extraArgs...)
-	}
-	if len(conds) == 0 {
-		conds = append(conds, "1=1")
-	}
-
-	sql := fmt.Sprintf("SELECT COUNT(*) FROM %s WHERE %s", DAGINSTANCE_TABLENAME, strings.Join(conds, " AND "))
-	return sql, args, nil
 }
 
 func buildKeywordLike(val interface{}) (string, bool) {
@@ -832,7 +690,7 @@ func buildKeywordLike(val interface{}) (string, bool) {
 	case primitive.Regex:
 		return regexToLike(v.Pattern), true
 	}
-	return "%" + fmt.Sprintf("%v", val) + "%", true
+	return fmt.Sprintf("%v", val) + "%", true
 }
 
 func BuildDagVars(dag *entity.Dag) []*DagVar {
@@ -852,7 +710,6 @@ func BuildDagVars(dag *entity.Dag) []*DagVar {
 
 	return vars
 }
-
 
 func BuildDagStepIndex(dag *entity.Dag) []*DagStepIndex {
 	if dag == nil {
@@ -878,9 +735,6 @@ func BuildDagStepIndex(dag *entity.Dag) []*DagStepIndex {
 			hasDatasource := step.DataSource != nil
 			if step.Operator != "" {
 				addRow(step.Operator, "", hasDatasource)
-				for _, sourceID := range extractSourceIDs(step.Parameters) {
-					addRow(step.Operator, sourceID, hasDatasource)
-				}
 			} else if hasDatasource {
 				addRow("", "", true)
 			}
@@ -898,30 +752,6 @@ func BuildDagStepIndex(dag *entity.Dag) []*DagStepIndex {
 	}
 
 	walkSteps(dag.Steps)
-	return rows
-}
-
-func BuildDagTriggerConfigIndex(dag *entity.Dag) []*DagTriggerConfigIndex {
-	if dag == nil || dag.TriggerConfig == nil || dag.TriggerConfig.Operator == "" {
-		return nil
-	}
-	dagID, _ := strconv.ParseUint(dag.ID, 10, 64)
-	rows := []*DagTriggerConfigIndex{}
-
-	addRow := func(sourceID string) {
-		id, _ := utils.GetUniqueID()
-		rows = append(rows, &DagTriggerConfigIndex{
-			ID:       id,
-			DagID:    dagID,
-			Operator: dag.TriggerConfig.Operator,
-			SourceID: sourceID,
-		})
-	}
-
-	addRow("")
-	for _, sourceID := range extractSourceIDs(dag.TriggerConfig.Parameters) {
-		addRow(sourceID)
-	}
 	return rows
 }
 
@@ -945,27 +775,6 @@ func BuildDagAccessorIndex(dag *entity.Dag) []*DagAccessorIndex {
 	return rows
 }
 
-func extractSourceIDs(params map[string]interface{}) []string {
-	if len(params) == 0 {
-		return nil
-	}
-	sourceIDs := make([]string, 0)
-	if v, ok := params["docid"]; ok {
-		sourceIDs = append(sourceIDs, fmt.Sprintf("%v", v))
-	}
-	if v, ok := params["docids"]; ok {
-		switch typed := v.(type) {
-		case []interface{}:
-			for _, item := range typed {
-				sourceIDs = append(sourceIDs, fmt.Sprintf("%v", item))
-			}
-		case []string:
-			sourceIDs = append(sourceIDs, typed...)
-		}
-	}
-	return sourceIDs
-}
-
 func BuildDagIndexSubquery(input *mod.ListDagInput) (string, []interface{}) {
 	if input == nil {
 		return "", nil
@@ -977,10 +786,10 @@ func BuildDagIndexSubquery(input *mod.ListDagInput) (string, []interface{}) {
 	if input.Scope == "all" {
 		unionParts := make([]string, 0, 2)
 		if len(input.Accessors) > 0 {
-			sub := "SELECT f_dag_id FROM t_dag_accessor_index WHERE f_accessor_id IN ?"
+			sub := "SELECT f_dag_id FROM t_dag_accessor WHERE f_accessor_id IN ?"
 			args = append(args, input.Accessors)
 			if len(input.TriggerExclude) > 0 {
-				sub += " AND f_dag_id NOT IN (SELECT f_dag_id FROM t_dag_step_index WHERE f_operator IN ?)"
+				sub += " AND NOT EXISTS (SELECT 1 FROM t_dag_step ds WHERE ds.f_dag_id = t_dag.f_id AND ds.f_operator IN ?)"
 				args = append(args, input.TriggerExclude)
 			}
 			unionParts = append(unionParts, sub)
@@ -990,31 +799,14 @@ func BuildDagIndexSubquery(input *mod.ListDagInput) (string, []interface{}) {
 			args = append(args, input.UserID)
 		}
 		if len(unionParts) > 0 {
-			conds = append(conds, fmt.Sprintf("f_id IN (%s)", strings.Join(unionParts, " UNION ")))
+			conds = append(conds, fmt.Sprintf("f_id IN (%s)", strings.Join(unionParts, " UNION ALL ")))
 		}
-		conds = append(conds, "f_id NOT IN (SELECT f_dag_id FROM t_dag_step_index WHERE f_has_datasource = 1)")
+		conds = append(conds, "NOT EXISTS  (SELECT 1 FROM t_dag_step ds WHERE ds.f_dag_id = t_dag.f_id AND ds.f_has_datasource = 1)")
 		return strings.Join(conds, " AND "), args
 	}
 
-	if len(input.Trigger) > 0 {
-		if len(input.Sources) > 0 {
-			subStep := "SELECT f_dag_id FROM t_dag_step_index WHERE f_operator IN ? AND f_source_id IN ?"
-			subTrigger := "SELECT f_dag_id FROM t_dag_trigger_config_index WHERE f_operator IN ? AND f_source_id IN ?"
-			conds = append(conds, fmt.Sprintf("f_id IN (%s UNION %s)", subStep, subTrigger))
-			args = append(args, input.Trigger, input.Sources, input.Trigger, input.Sources)
-		} else {
-			subStep := "SELECT f_dag_id FROM t_dag_step_index WHERE f_operator IN ?"
-			subTrigger := "SELECT f_dag_id FROM t_dag_trigger_config_index WHERE f_operator IN ?"
-			conds = append(conds, fmt.Sprintf("f_id IN (%s UNION %s)", subStep, subTrigger))
-			args = append(args, input.Trigger, input.Trigger)
-		}
-	} else if len(input.TriggerExclude) > 0 {
-		conds = append(conds, "f_id NOT IN (SELECT f_dag_id FROM t_dag_step_index WHERE f_operator IN ?)")
-		args = append(args, input.TriggerExclude)
-	}
-
 	if input.Accessors != nil && input.UserID == "" {
-		conds = append(conds, "f_id IN (SELECT f_dag_id FROM t_dag_accessor_index WHERE f_accessor_id IN ?)")
+		conds = append(conds, "f_id IN (SELECT f_dag_id FROM t_dag_accessor WHERE f_accessor_id IN ?)")
 		args = append(args, input.Accessors)
 	}
 

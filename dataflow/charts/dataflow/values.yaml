@@ -420,6 +420,8 @@ flowAutomation:
     dagInstanceEventMaxInlineSize: 262144
     dagInstanceEventArchivePolicy: successOnly
     edition: "community"
+    # 用于控制使用哪种数据库
+    dbType: "mongo"
 
   kafka:
     sessionTimeoutMs: 45000

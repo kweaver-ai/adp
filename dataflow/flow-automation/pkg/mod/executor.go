@@ -3,6 +3,7 @@ package mod
 import (
 	"context"
 	"fmt"
+	"reflect"
 	"strconv"
 	"strings"
 	"sync"
@@ -448,7 +449,7 @@ func (e *DefExecutor) runActionWithRetry(ctx context.Context, taskIns *entity.Ta
 	start := time.Now()
 
 	if _, ok := skipPolicyMap[actName]; !ok {
-		config := utils.IfNot(taskIns.Settings != nil, taskIns.Settings, &entity.Settings{
+		config := utils.IfNot(taskIns.Settings != nil && !reflect.DeepEqual(taskIns.Settings, &entity.Settings{}), taskIns.Settings, &entity.Settings{
 			Retry: &entity.RetryConfig{
 				Max:   3,
 				Delay: 3,
