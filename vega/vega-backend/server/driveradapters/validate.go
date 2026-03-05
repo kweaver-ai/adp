@@ -13,11 +13,30 @@ import (
 	"strings"
 	"unicode/utf8"
 
+	"github.com/dlclark/regexp2"
 	"github.com/kweaver-ai/kweaver-go-lib/rest"
 
 	verrors "vega-backend/errors"
 	"vega-backend/interfaces"
 )
+
+func validateID(ctx context.Context, ID string) error {
+	if ID == "" {
+		return nil
+	}
+
+	// 非内置视图校验数据视图 id，只包含小写英文字母和数字和下划线(_)和连字符(-)，且不能以下划线开头，不能超过40个字符
+	re := regexp2.MustCompile(interfaces.RegexPattern_NonBuiltin_ViewID, regexp2.RE2)
+	match, err := re.MatchString(ID)
+	if err != nil || !match {
+		errDetails := `The ID can contain only lowercase letters, digits and underscores(_),
+			it cannot start with underscores and cannot exceed 40 characters`
+		return rest.NewHTTPError(ctx, http.StatusBadRequest, verrors.VegaBackend_InvalidParameter_ID).
+			WithErrorDetails(errDetails)
+	}
+
+	return nil
+}
 
 // 名称合法性校验
 func validateName(ctx context.Context, name string) error {
