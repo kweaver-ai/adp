@@ -2,7 +2,7 @@
 
 ## 1. 概述
 
-本文档定义**统一查询接口**：单表 / 同数据源多表 JOIN（直连）、大数据量分页（前端 limit+offset，后端游标取数）、多数据源 JOIN（预留 501）。**同一轮查询由前端传递 query_id 标识，后端据此做游标 session 管理。**
+本文档定义**统一查询接口**：单表 / 同数据源多表 JOIN（直连）、大数据量分页（前端 limit+offset，后端游标取数）、多数据源 JOIN（预留 501）。**同一轮查询由 query_id 标识：首次查询可不传，后端生成并在响应中返回；后续分页请求必须带回该 query_id，用于后端游标 session 管理。**
 
 | 能力 | 说明 | 实现方式 |
 |------|------|----------|
@@ -32,13 +32,12 @@
 - 单源/跨源不传模式，由服务端根据 `tables` 中 resource_id 解析出的 Catalog 集合识别。
 - 表通过 **resource_id** 指定（非 resource name）。
 - **分页**：前端仅传 **offset**、**limit**；不传 cursor。后端内部用游标取数时，依赖 **query_id** 关联"同一轮查询"的 session。
-- **query_id**：**必填**（或强推荐）。由前端在用户执行该次查询时生成（如 UUID），同一轮所有分页请求（含首页）均带**同一 query_id**，用于后端游标 session 与缓存。
+- **query_id**：**首页可不传**。用户执行该次查询的**首次请求**可以不携带 query_id，由后端生成并在响应中返回；从第二页开始（offset>0）必须携带该 query_id，用于后端游标 session 与缓存。
 
 **示例**：
 
 ```json
 {
-  "query_id": "550e8400-e29b-41d4-a716-446655440000",
   "tables": [
     { "resource_id": "res-orders-id", "alias": "o" },
     { "resource_id": "res-users-id", "alias": "u" }
@@ -66,7 +65,7 @@
 
 | 字段 | 必填 | 说明 |
 |------|------|------|
-| **query_id** | **是** | 同一轮查询的唯一标识；前端生成（如 UUID），该轮所有分页请求保持一致，用于后端游标 session（见第 4 节） |
+| **query_id** | 否（首页可不传） | 查询轮次标识；首次请求可不传，后端生成并回传；从第二页开始必须携带，用于后端游标 session（见第 4 节） |
 | tables | 是 | 表列表，每项 resource_id + 可选 alias；单表时仅一个元素 |
 | joins | 否 | JOIN 定义；单表时为空或不传 |
 | output_fields | 否 | 输出列，可带表别名（如 o.id、u.name） |
@@ -80,6 +79,7 @@
 
 ```json
 {
+  "query_id": "550e8400-e29b-41d4-a716-446655440000",
   "entries": [
     { "o.id": 1, "o.amount": 99.0, "u.name": "Alice" },
     { "o.id": 2, "o.amount": 199.0, "u.name": "Bob" }
@@ -99,19 +99,71 @@
 
 响应中**不包含** cursor/next_cursor，仅 offset/limit 与 next_offset/has_more。
 
-### 2.4 跨源（多数据源）响应（501）
+### 2.4 “第一次查询 / 第二次查询”接口能力与示例
+
+#### 能力说明
+
+- **第一次查询（首页）**：调用 `POST /api/vega-backend/v1/query/execute`，`offset=0`，`query_id` **可不传**。后端会生成 `query_id` 并在响应体返回。
+- **第二次查询（下一页/分页）**：仍然调用同一个接口，`offset=offset+limit`，并且 **必须**带上第一次响应返回的 `query_id`。后端会尝试命中 `(query_id, 上一页 offset)` 的游标缓存以走 keyset 分页；未命中则回退 OFFSET/LIMIT。
+
+#### 第一次查询示例（不传 query_id）
+
+```json
+{
+  "tables": [
+    { "resource_id": "res-orders-id", "alias": "o" }
+  ],
+  "output_fields": ["o.id", "o.amount"],
+  "sort": [{ "field": "o.id", "direction": "asc" }],
+  "offset": 0,
+  "limit": 100,
+  "need_total": true
+}
+```
+
+响应示例（后端返回 query_id）：
+
+```json
+{
+  "query_id": "d3p9kq0qg4m6m4s9g6d0",
+  "entries": [
+    { "o.id": 1, "o.amount": 99.0 }
+  ],
+  "total_count": 1000,
+  "next_offset": 100,
+  "has_more": true
+}
+```
+
+#### 第二次查询示例（必须带 query_id）
+
+```json
+{
+  "query_id": "d3p9kq0qg4m6m4s9g6d0",
+  "tables": [
+    { "resource_id": "res-orders-id", "alias": "o" }
+  ],
+  "output_fields": ["o.id", "o.amount"],
+  "sort": [{ "field": "o.id", "direction": "asc" }],
+  "offset": 100,
+  "limit": 100,
+  "need_total": false
+}
+```
+
+### 2.5 跨源（多数据源）响应（501）
 
 当解析出多个不同 catalog_id 时：
 
 - HTTP **501 Not Implemented**
 - Body：`{ "code": "VegaBackend.Query.MultiCatalogNotSupported", "message": "暂不支持多数据源 JOIN，计划使用 Trino/DuckDB 实现。" }`
 
-### 2.5 错误码（与 query_id / session 相关）
+### 2.6 错误码（与 query_id / session 相关）
 
 | 错误码 | HTTP | 说明 |
 |--------|------|------|
-| VegaBackend.Query.InvalidParameter | 400 | 请求参数非法（如缺少 query_id、tables 为空等） |
-| VegaBackend.Query.InvalidParameter.QueryIDRequired | 400 | 未传 query_id（若接口约定必填） |
+| VegaBackend.Query.InvalidParameter | 400 | 请求参数非法（如 tables 为空等） |
+| VegaBackend.Query.InvalidParameter.QueryIDRequired | 400 | 非首页请求未传 query_id（offset>0 时必填） |
 | VegaBackend.Query.InvalidParameter.LimitExceeded | 400 | limit > 10000 |
 | VegaBackend.Query.InvalidParameter.JoinTableNotInTables | 400 | joins 中 alias 不在 tables 中 |
 | VegaBackend.Query.SessionExpired | 410 | 该 query_id 对应 session 已过期（可选，便于前端提示重新查询） |
@@ -131,9 +183,11 @@
 
 ### 3.2 Session 的创建与识别
 
-- **创建**：后端在收到某个 **query_id** 的**第一次**请求时，为该 query_id 创建 session（可懒创建：仅当需要缓存游标时才写入存储）。
+- **创建**：首次请求若未传 query_id，后端会生成一个 query_id 并在响应中返回；后续请求带回该 query_id 后，后端为该 query_id 创建/维护 session（可懒创建：仅当需要缓存游标时才写入存储）。
 - **识别**：后续请求只要带上**同一 query_id**，即视为同一 query session，后端用 `(query_id, 上一页 offset)` 查找该 session 下缓存的游标。
-- **不传 query_id**：若请求未传 query_id，后端**不**使用游标优化，仅用 `OFFSET :offset LIMIT :limit` 执行；可返回 400 要求必填 query_id（由产品/接口约定决定）。
+- **不传 query_id**：
+  - **首页（offset=0）**：允许不传，后端生成并回传 query_id。
+  - **非首页（offset>0）**：必须传 query_id；否则返回 400（QueryIDRequired）。
 
 ### 3.3 Session 内存储内容（建议）
 
@@ -163,12 +217,12 @@
 
 ### 4.1 约定
 
-- **前端**：只传 **offset**、**limit**、**query_id**（必填）；只收 entries、next_offset、has_more、total_count；不涉及 cursor。
+- **前端**：首页可不传 query_id（后端会在响应返回）；从第二页开始传 **offset**、**limit**、**query_id**；只收 entries、next_offset、has_more、total_count；不涉及 cursor。
 - **后端**：用 **query_id** 定位 session；在 session 内用 `(query_id, 当前 offset - limit)` 即"上一页 offset"查游标缓存；命中则用 keyset SQL，否则用 OFFSET/LIMIT；返回前将本页最后一行排序键写入 `(query_id, 当前 offset)`，供下一页使用。
 
 ### 4.2 单次请求处理流程
 
-1. 校验 query_id 存在；校验 tables、joins、limit 等。
+1. 校验 tables、joins、limit 等；若 offset>0 则必须有 query_id（首页可不传）。
 2. 解析 tables 得到 resources、catalog_id 集合；若多 catalog → 501。
 3. 若单源：根据 **query_id** 取 session 中 key=`(query_id, offset - limit)` 的游标值（即"上一页"的游标）。
 4. **若命中游标**：拼 SQL `WHERE (sort_cols) > (cursor_vals) ORDER BY sort_cols LIMIT :limit`，执行查询。
@@ -185,7 +239,7 @@
 
 | 角色 | 行为 |
 |------|------|
-| 前端 | 生成并传递 query_id（同一轮不变）；传 offset、limit；消费 next_offset、has_more、entries、total_count |
+| 前端 | 首页可不传 query_id（后端回传）；从第二页开始携带 query_id（同一轮不变）；传 offset、limit；消费 query_id、next_offset、has_more、entries、total_count |
 | 后端 | 用 query_id 定位 session；用 (query_id, 上一页 offset) 取游标；命中则 keyset SQL，否则 OFFSET；写回 (query_id, 当前 offset) 游标并刷新 TTL |
 
 ---
@@ -196,7 +250,7 @@
 
 ```
 POST /api/vega-backend/v1/query/execute
-  → 校验 query_id 必填（及 tables、joins、limit 等）
+  → 校验 tables、joins、limit 等；若 offset>0 则 query_id 必填（首页可不传）
   → ResourceService.GetByIDs(tables 的 resource_id) → resources[]
   → 从 resources 取 catalog_id 集合（去重）
   → 若 len(catalog_id) > 1 → 返回 501
@@ -216,7 +270,7 @@ POST /api/vega-backend/v1/query/execute
 | 层次 | 新增/扩展 |
 |------|-----------|
 | driveradapters | query_handler：POST /query/execute，校验 query_id 等 |
-| interfaces | QueryExecuteRequest（含必填 QueryID）、TableInQuery、JoinSpec、SessionStore 抽象（可选） |
+| interfaces | QueryExecuteRequest（QueryID：首页可不传/后续必填）、TableInQuery、JoinSpec、SessionStore 抽象（可选） |
 | logics | query.ExecuteSingleCatalogQuery；游标 session 的读/写与 TTL |
 | connectors | TableConnector.ExecuteJoinQuery(ctx, catalog, resources, joins, params)；params 可带 cursor 供 keyset |
 | mariadb | 多表 JOIN SQL；支持 keyset WHERE 或 OFFSET/LIMIT |
@@ -224,9 +278,9 @@ POST /api/vega-backend/v1/query/execute
 ### 5.3 核心数据结构
 
 ```go
-// 统一查询请求；query_id 必填，用于游标 session
+// 统一查询请求；query_id：首页可不传（后端生成并回传），非首页必填，用于游标 session
 type QueryExecuteRequest struct {
-    QueryID         string         `json:"query_id"`              // 必填，同一轮查询一致
+    QueryID         string         `json:"query_id"`              // 首页可不传（后端生成并回传）；非首页必填
     Tables          []TableInQuery `json:"tables"`
     Joins           []JoinSpec     `json:"joins,omitempty"`
     OutputFields    []string       `json:"output_fields,omitempty"`
@@ -284,7 +338,7 @@ type QuerySessionStore interface {
 ## 6. 与现有接口的关系
 
 - **保留**：`POST /api/vega-backend/v1/resources/:id/data` 单表查询不变。
-- **新能力**：单表也可走 `query/execute`（tables 仅 1 个，joins 为空）；同源多表仅通过 `query/execute`；**所有请求需带 query_id**。
+- **新能力**：单表也可走 `query/execute`（tables 仅 1 个，joins 为空）；同源多表仅通过 `query/execute`；**首页可不传 query_id（后端回传），后续分页必须带回**。
 - **跨源**：同一请求体，服务端识别多 Catalog 后返回 501。
 
 ---
@@ -294,8 +348,8 @@ type QuerySessionStore interface {
 | 场景 | 方法 | 路径 | 说明 |
 |------|------|------|------|
 | 单表查询（现有） | POST | `/api/vega-backend/v1/resources/:id/data` | 不变 |
-| 统一查询（新） | POST | `/api/vega-backend/v1/query/execute` | query_id 必填；前端 offset+limit，后端游标 session |
+| 统一查询（新） | POST | `/api/vega-backend/v1/query/execute` | 首页 query_id 可不传（后端回传）；后续分页必填；前端 offset+limit，后端游标 session |
 
-错误码见 2.5；Session 相关见 3.4（如 SessionExpired 410）。
+错误码见 2.6；Session 相关见 3.4（如 SessionExpired 410）。
 
 以上为基于 **query_id + 游标 session** 的完整方案，可直接作为开发与联调依据。

@@ -42,6 +42,7 @@ type JoinOnCond struct {
 
 // QueryExecuteResponse 统一查询响应
 type QueryExecuteResponse struct {
+	QueryID    string           `json:"query_id"` // 后端生成或回传，用于后续分页
 	Entries    []map[string]any `json:"entries"`
 	TotalCount *int64           `json:"total_count,omitempty"`
 	NextOffset int              `json:"next_offset"`

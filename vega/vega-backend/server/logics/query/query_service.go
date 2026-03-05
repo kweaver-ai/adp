@@ -16,6 +16,7 @@ import (
 	"github.com/kweaver-ai/kweaver-go-lib/logger"
 	"github.com/kweaver-ai/kweaver-go-lib/rest"
 	"github.com/mitchellh/mapstructure"
+	"github.com/rs/xid"
 	"go.opentelemetry.io/otel/codes"
 
 	verrors "vega-backend/errors"
@@ -49,6 +50,11 @@ func (qs *queryService) Execute(ctx context.Context, req *interfaces.QueryExecut
 	if err := qs.validateRequest(ctx, req); err != nil {
 		span.SetStatus(codes.Error, "validate request failed")
 		return nil, err
+	}
+
+	// 1.1 首页允许不传 query_id，后端生成并回传
+	if req.QueryID == "" && req.Offset == 0 {
+		req.QueryID = xid.New().String()
 	}
 
 	// 2. 获取 resources
@@ -239,6 +245,7 @@ func (qs *queryService) Execute(ctx context.Context, req *interfaces.QueryExecut
 
 	// 10. 构建响应
 	resp := &interfaces.QueryExecuteResponse{
+		QueryID:    req.QueryID,
 		Entries:    result.Rows,
 		NextOffset: req.Offset + req.Limit,
 		HasMore:    int64(len(result.Rows)) == int64(req.Limit),
@@ -254,10 +261,6 @@ func (qs *queryService) validateRequest(ctx context.Context, req *interfaces.Que
 	if ctx == nil {
 		ctx = context.Background()
 	}
-	if req.QueryID == "" {
-		return rest.NewHTTPError(ctx, http.StatusBadRequest, verrors.VegaBackend_Query_InvalidParameter_QueryIDRequired).
-			WithErrorDetails("query_id is required")
-	}
 	if len(req.Tables) == 0 {
 		return rest.NewHTTPError(ctx, http.StatusBadRequest, verrors.VegaBackend_Query_InvalidParameter).
 			WithErrorDetails("tables cannot be empty")
@@ -271,6 +274,11 @@ func (qs *queryService) validateRequest(ctx context.Context, req *interfaces.Que
 	}
 	if req.Offset < 0 {
 		req.Offset = 0
+	}
+	// 首页（offset=0）允许不传 query_id；非首页必须带 query_id 才能命中 session 游标
+	if req.QueryID == "" && req.Offset > 0 {
+		return rest.NewHTTPError(ctx, http.StatusBadRequest, verrors.VegaBackend_Query_InvalidParameter_QueryIDRequired).
+			WithErrorDetails("query_id is required for non-first page requests")
 	}
 	return nil
 }

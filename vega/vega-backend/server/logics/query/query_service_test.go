@@ -50,6 +50,8 @@ func TestValidateRequest_QueryIDRequired(t *testing.T) {
 	req := &interfaces.QueryExecuteRequest{
 		QueryID: "",
 		Tables:  []interfaces.TableInQuery{{ResourceID: "r1"}},
+		Offset:  100,
+		Limit:   100,
 	}
 	err := qs.validateRequest(context.Background(), req)
 	if err == nil {
@@ -57,6 +59,20 @@ func TestValidateRequest_QueryIDRequired(t *testing.T) {
 	}
 	if !strings.Contains(err.Error(), "QueryIDRequired") && !strings.Contains(err.Error(), "query_id") {
 		t.Errorf("expected query_id related error, got %v", err)
+	}
+}
+
+func TestValidateRequest_QueryIDOptionalForFirstPage(t *testing.T) {
+	qs := &queryService{}
+	req := &interfaces.QueryExecuteRequest{
+		QueryID: "",
+		Tables:  []interfaces.TableInQuery{{ResourceID: "r1"}},
+		Offset:  0,
+		Limit:   100,
+	}
+	err := qs.validateRequest(context.Background(), req)
+	if err != nil {
+		t.Fatalf("expected no error for missing query_id on first page, got %v", err)
 	}
 }
 
