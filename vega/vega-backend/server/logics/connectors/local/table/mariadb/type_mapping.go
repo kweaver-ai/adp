@@ -6,7 +6,11 @@
 // Package mariadb provides MariaDB database connector implementation.
 package mariadb
 
-import "vega-backend/interfaces"
+import (
+	"strings"
+
+	"vega-backend/interfaces"
+)
 
 // TypeMapping maps MariaDB native types to VEGA types.
 var TypeMapping = map[string]string{
@@ -73,8 +77,10 @@ var TypeMapping = map[string]string{
 }
 
 // MapType returns VEGA type for MariaDB native type.
+// nativeType 应使用 COLUMN_TYPE（如 "int unsigned"）以正确识别 unsigned 类型。
 func MapType(nativeType string) string {
-	if vegaType, ok := TypeMapping[nativeType]; ok {
+	t := strings.ToLower(strings.TrimSpace(nativeType))
+	if vegaType, ok := TypeMapping[t]; ok {
 		return vegaType
 	}
 	return interfaces.DataType_Other // default

@@ -94,4 +94,5 @@ func init() {
 	rest.Register(ResourceErrCodeList)
 	rest.Register(ConnectorTypeErrCodeList)
 	rest.Register(TaskErrCodeList)
+	rest.Register(QueryErrCodeList)
 }

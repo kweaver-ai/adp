@@ -183,12 +183,16 @@ func SetDBSetting() {
 		logger.Fatalf("service %s not found in depServices", rdsServiceName)
 	}
 
+	dbName := DATA_BASE_NAME
+	if d, ok := setting["database"].(string); ok && d != "" {
+		dbName = d
+	}
 	appSetting.DBSetting = libdb.DBSetting{
 		Host:     setting["host"].(string),
 		Port:     setting["port"].(int),
 		Username: setting["user"].(string),
 		Password: setting["password"].(string),
-		DBName:   DATA_BASE_NAME,
+		DBName:   dbName,
 	}
 }
 

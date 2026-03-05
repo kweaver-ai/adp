@@ -39,4 +39,7 @@ type ResourceDataQueryParams struct {
 
 	FilterCondCfg    *FilterCondCfg  `json:"-"`
 	ActualFilterCond FilterCondition `json:"-"`
+
+	// CursorEncoded keyset 游标值，由 query session 注入；非空时用 WHERE (sort_cols) > cursor 替代 OFFSET
+	CursorEncoded string `json:"-"`
 }

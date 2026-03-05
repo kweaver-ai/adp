@@ -26,6 +26,7 @@ import (
 	"vega-backend/logics/connector_type"
 	"vega-backend/logics/dataset"
 	"vega-backend/logics/discover_task"
+	"vega-backend/logics/query"
 	"vega-backend/logics/resource"
 	"vega-backend/logics/resource_data"
 	"vega-backend/version"
@@ -37,14 +38,15 @@ type RestHandler interface {
 }
 
 type restHandler struct {
-	appSetting *common.AppSetting
-	as         interfaces.AuthService
-	cs         interfaces.CatalogService
-	rs         interfaces.ResourceService
-	ds         interfaces.DatasetService
-	cts        interfaces.ConnectorTypeService
-	dts        interfaces.DiscoverTaskService
-	rds        interfaces.ResourceDataService
+	appSetting        *common.AppSetting
+	as                interfaces.AuthService
+	cs                interfaces.CatalogService
+	rs                interfaces.ResourceService
+	ds                interfaces.DatasetService
+	cts               interfaces.ConnectorTypeService
+	dts               interfaces.DiscoverTaskService
+	rds               interfaces.ResourceDataService
+	querySessionStore interfaces.QuerySessionStore
 }
 
 // NewRestHandler creates a new RestHandler.
@@ -53,14 +55,15 @@ func NewRestHandler(appSetting *common.AppSetting) RestHandler {
 	rs := resource.NewResourceService(appSetting)
 	ds := dataset.NewDatasetService(appSetting)
 	return &restHandler{
-		appSetting: appSetting,
-		as:         auth.NewAuthService(appSetting),
-		cs:         cs,
-		rs:         rs,
-		ds:         ds,
-		cts:        connector_type.NewConnectorTypeService(appSetting),
-		dts:        discover_task.NewDiscoverTaskService(appSetting),
-		rds:        resource_data.NewResourceDataService(appSetting),
+		appSetting:        appSetting,
+		as:                auth.NewAuthService(appSetting),
+		cs:                cs,
+		rs:                rs,
+		ds:                ds,
+		cts:               connector_type.NewConnectorTypeService(appSetting),
+		dts:               discover_task.NewDiscoverTaskService(appSetting),
+		rds:               resource_data.NewResourceDataService(appSetting),
+		querySessionStore: query.NewMemorySessionStore(0),
 	}
 }
 
@@ -112,6 +115,12 @@ func (r *restHandler) RegisterPublic(engine *gin.Engine) {
 			connectorTypes.PUT("/:type", r.verifyJsonContentType(), r.UpdateConnectorType)
 			connectorTypes.DELETE("/:type", r.DeleteConnectorType)
 			connectorTypes.POST("/:type/enabled", r.SetConnectorTypeEnabled)
+		}
+
+		// Query APIs
+		queryGroup := apiV1.Group("/query")
+		{
+			queryGroup.POST("/execute", r.verifyJsonContentType(), r.QueryExecute)
 		}
 
 		// DiscoverTask APIs

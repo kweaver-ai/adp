@@ -50,9 +50,12 @@ type TableConnector interface {
 	ListTables(ctx context.Context) ([]*interfaces.TableMeta, error)
 	GetTableMeta(ctx context.Context, table *interfaces.TableMeta) error
 
-	// ExecuteQuery 执行查询语句
+	// ExecuteQuery 执行单表查询语句
 	ExecuteQuery(ctx context.Context, resource *interfaces.Resource,
 		params *interfaces.ResourceDataQueryParams) (*interfaces.QueryResult, error)
+
+	// ExecuteJoinQuery 执行多表 JOIN 查询；单表时 resources 长度 1、joins 为空
+	ExecuteJoinQuery(ctx context.Context, catalog *interfaces.Catalog, params *interfaces.JoinQueryParams) (*interfaces.QueryResult, error)
 }
 
 // FileConnector defines the interface for file/document storage connectors.

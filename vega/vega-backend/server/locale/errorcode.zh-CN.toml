@@ -142,3 +142,49 @@ ErrorLink = "暂无"
 Description = "更新资源权限失败"
 Solution = "请联系管理员"
 ErrorLink = "暂无"
+
+# Query 模块错误码
+[VegaBackend.Query.InvalidParameter]
+Description = "查询参数非法"
+Solution = "请检查请求参数"
+ErrorLink = "暂无"
+
+[VegaBackend.Query.InvalidParameter.QueryIDRequired]
+Description = "query_id 为必填项"
+Solution = "请提供 query_id"
+ErrorLink = "暂无"
+
+[VegaBackend.Query.InvalidParameter.LimitExceeded]
+Description = "limit 不能超过 10000"
+Solution = "请调整 limit 参数"
+ErrorLink = "暂无"
+
+[VegaBackend.Query.InvalidParameter.JoinTableNotInTables]
+Description = "JOIN 中的表别名不在 tables 中"
+Solution = "请检查 joins 配置"
+ErrorLink = "暂无"
+
+[VegaBackend.Query.CatalogNotFound]
+Description = "Catalog 不存在"
+Solution = "请检查 catalog_id"
+ErrorLink = "暂无"
+
+[VegaBackend.Query.ResourceNotFound]
+Description = "Resource 不存在"
+Solution = "请检查 resource_id"
+ErrorLink = "暂无"
+
+[VegaBackend.Query.SessionExpired]
+Description = "查询 session 已过期"
+Solution = "请重新执行查询"
+ErrorLink = "暂无"
+
+[VegaBackend.Query.MultiCatalogNotSupported]
+Description = "暂不支持多数据源 JOIN"
+Solution = "计划使用 Trino/DuckDB 实现"
+ErrorLink = "暂无"
+
+[VegaBackend.Query.ExecuteFailed]
+Description = "执行查询失败"
+Solution = "请联系管理员"
+ErrorLink = "暂无"

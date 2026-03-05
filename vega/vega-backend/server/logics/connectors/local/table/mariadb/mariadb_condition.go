@@ -18,6 +18,19 @@ import (
 
 var Special = strings.NewReplacer(`\`, `\\\\`, `'`, `\'`, `%`, `\%`, `_`, `\_`)
 
+// quoteColumnName 将列名转为 SQL 标识符；支持 "alias.col" -> "`alias`.`col`"
+func quoteColumnName(name string) string {
+	if name == "" {
+		return "``"
+	}
+	if idx := strings.Index(name, "."); idx >= 0 {
+		alias := strings.TrimSpace(name[:idx])
+		col := strings.TrimSpace(name[idx+1:])
+		return "`" + strings.ReplaceAll(alias, "`", "``") + "`." + "`" + strings.ReplaceAll(col, "`", "``") + "`"
+	}
+	return "`" + strings.ReplaceAll(strings.TrimSpace(name), "`", "``") + "`"
+}
+
 func (c *MariaDBConnector) ConvertFilterCondition(ctx context.Context, condition interfaces.FilterCondition,
 	fieldsMap map[string]*interfaces.Property) (sq.Sqlizer, error) {
 
@@ -148,9 +161,9 @@ func (c *MariaDBConnector) ConvertFilterConditionEqual(ctx context.Context, cond
 
 	switch cond.Cfg.ValueFrom {
 	case interfaces.ValueFrom_Const:
-		return sq.Eq{fmt.Sprintf("`%s`", cond.Lfield.OriginalName): cond.Value}, nil
+		return sq.Eq{quoteColumnName(cond.Lfield.OriginalName): cond.Value}, nil
 	case interfaces.ValueFrom_Field:
-		return sq.Expr(fmt.Sprintf("`%s` = `%s`", cond.Lfield.OriginalName, cond.Rfield.OriginalName)), nil
+		return sq.Expr(quoteColumnName(cond.Lfield.OriginalName) + " = " + quoteColumnName(cond.Rfield.OriginalName)), nil
 	default:
 		return nil, fmt.Errorf("value_from %s is not supported", cond.Cfg.ValueFrom)
 	}
@@ -166,9 +179,9 @@ func (c *MariaDBConnector) ConvertFilterConditionNotEqual(ctx context.Context, c
 
 	switch cond.Cfg.ValueFrom {
 	case interfaces.ValueFrom_Const:
-		return sq.NotEq{fmt.Sprintf("`%s`", cond.Lfield.OriginalName): cond.Value}, nil
+		return sq.NotEq{quoteColumnName(cond.Lfield.OriginalName): cond.Value}, nil
 	case interfaces.ValueFrom_Field:
-		return sq.Expr(fmt.Sprintf("`%s` <> `%s`", cond.Lfield.OriginalName, cond.Rfield.OriginalName)), nil
+		return sq.Expr(quoteColumnName(cond.Lfield.OriginalName) + " <> " + quoteColumnName(cond.Rfield.OriginalName)), nil
 	default:
 		return nil, fmt.Errorf("value_from %s is not supported", cond.Cfg.ValueFrom)
 	}
@@ -184,9 +197,9 @@ func (c *MariaDBConnector) ConvertFilterConditionGt(ctx context.Context, conditi
 
 	switch cond.Cfg.ValueFrom {
 	case interfaces.ValueFrom_Const:
-		return sq.Gt{fmt.Sprintf("`%s`", cond.Lfield.OriginalName): cond.Value}, nil
+		return sq.Gt{quoteColumnName(cond.Lfield.OriginalName): cond.Value}, nil
 	case interfaces.ValueFrom_Field:
-		return sq.Expr(fmt.Sprintf("`%s` > `%s`", cond.Lfield.OriginalName, cond.Rfield.OriginalName)), nil
+		return sq.Expr(quoteColumnName(cond.Lfield.OriginalName) + " > " + quoteColumnName(cond.Rfield.OriginalName)), nil
 	default:
 		return nil, fmt.Errorf("value_from %s is not supported", cond.Cfg.ValueFrom)
 	}
@@ -202,9 +215,9 @@ func (c *MariaDBConnector) ConvertFilterConditionGte(ctx context.Context, condit
 
 	switch cond.Cfg.ValueFrom {
 	case interfaces.ValueFrom_Const:
-		return sq.GtOrEq{fmt.Sprintf("`%s`", cond.Lfield.OriginalName): cond.Value}, nil
+		return sq.GtOrEq{quoteColumnName(cond.Lfield.OriginalName): cond.Value}, nil
 	case interfaces.ValueFrom_Field:
-		return sq.Expr(fmt.Sprintf("`%s` >= `%s`", cond.Lfield.OriginalName, cond.Rfield.OriginalName)), nil
+		return sq.Expr(quoteColumnName(cond.Lfield.OriginalName) + " >= " + quoteColumnName(cond.Rfield.OriginalName)), nil
 	default:
 		return nil, fmt.Errorf("value_from %s is not supported", cond.Cfg.ValueFrom)
 	}
@@ -220,9 +233,9 @@ func (c *MariaDBConnector) ConvertFilterConditionLt(ctx context.Context, conditi
 
 	switch cond.Cfg.ValueFrom {
 	case interfaces.ValueFrom_Const:
-		return sq.Lt{fmt.Sprintf("`%s`", cond.Lfield.OriginalName): cond.Value}, nil
+		return sq.Lt{quoteColumnName(cond.Lfield.OriginalName): cond.Value}, nil
 	case interfaces.ValueFrom_Field:
-		return sq.Expr(fmt.Sprintf("`%s` < `%s`", cond.Lfield.OriginalName, cond.Rfield.OriginalName)), nil
+		return sq.Expr(quoteColumnName(cond.Lfield.OriginalName) + " < " + quoteColumnName(cond.Rfield.OriginalName)), nil
 	default:
 		return nil, fmt.Errorf("value_from %s is not supported", cond.Cfg.ValueFrom)
 	}
@@ -238,9 +251,9 @@ func (c *MariaDBConnector) ConvertFilterConditionLte(ctx context.Context, condit
 
 	switch cond.Cfg.ValueFrom {
 	case interfaces.ValueFrom_Const:
-		return sq.LtOrEq{fmt.Sprintf("`%s`", cond.Lfield.OriginalName): cond.Value}, nil
+		return sq.LtOrEq{quoteColumnName(cond.Lfield.OriginalName): cond.Value}, nil
 	case interfaces.ValueFrom_Field:
-		return sq.Expr(fmt.Sprintf("`%s` <= `%s`", cond.Lfield.OriginalName, cond.Rfield.OriginalName)), nil
+		return sq.Expr(quoteColumnName(cond.Lfield.OriginalName) + " <= " + quoteColumnName(cond.Rfield.OriginalName)), nil
 	default:
 		return nil, fmt.Errorf("value_from %s is not supported", cond.Cfg.ValueFrom)
 	}
@@ -258,7 +271,7 @@ func (c *MariaDBConnector) ConvertFilterConditionIn(ctx context.Context, conditi
 		return nil, fmt.Errorf("condition [in] only supports ValueFrom_Const, got %s", cond.Cfg.ValueFrom)
 	}
 
-	return sq.Eq{fmt.Sprintf("`%s`", cond.Lfield.OriginalName): cond.Value}, nil
+	return sq.Eq{quoteColumnName(cond.Lfield.OriginalName): cond.Value}, nil
 }
 
 func (c *MariaDBConnector) ConvertFilterConditionNotIn(ctx context.Context, condition interfaces.FilterCondition,
@@ -273,7 +286,7 @@ func (c *MariaDBConnector) ConvertFilterConditionNotIn(ctx context.Context, cond
 		return nil, fmt.Errorf("condition [not_in] only supports ValueFrom_Const, got %s", cond.Cfg.ValueFrom)
 	}
 
-	return sq.NotEq{fmt.Sprintf("`%s`", cond.Lfield.OriginalName): cond.Value}, nil
+	return sq.NotEq{quoteColumnName(cond.Lfield.OriginalName): cond.Value}, nil
 }
 
 func (c *MariaDBConnector) ConvertFilterConditionLike(ctx context.Context, condition interfaces.FilterCondition,
@@ -289,7 +302,7 @@ func (c *MariaDBConnector) ConvertFilterConditionLike(ctx context.Context, condi
 	}
 
 	vStr := "%" + Special.Replace(cond.Value) + "%"
-	return sq.Like{fmt.Sprintf("`%s`", cond.Lfield.OriginalName): vStr}, nil
+	return sq.Like{quoteColumnName(cond.Lfield.OriginalName): vStr}, nil
 }
 
 func (c *MariaDBConnector) ConvertFilterConditionNotLike(ctx context.Context, condition interfaces.FilterCondition,
@@ -305,7 +318,7 @@ func (c *MariaDBConnector) ConvertFilterConditionNotLike(ctx context.Context, co
 	}
 
 	vStr := "%" + Special.Replace(cond.Value) + "%"
-	return sq.NotLike{fmt.Sprintf("`%s`", cond.Lfield.OriginalName): vStr}, nil
+	return sq.NotLike{quoteColumnName(cond.Lfield.OriginalName): vStr}, nil
 }
 
 func (c *MariaDBConnector) ConvertFilterConditionContain(ctx context.Context, condition interfaces.FilterCondition,
@@ -323,7 +336,7 @@ func (c *MariaDBConnector) ConvertFilterConditionContain(ctx context.Context, co
 	values := cond.Value
 	exprs := make(sq.And, len(values))
 	for i, v := range values {
-		exprs[i] = sq.Expr(fmt.Sprintf("FIND_IN_SET(?, `%s`) > 0", cond.Lfield.OriginalName), v)
+		exprs[i] = sq.Expr("FIND_IN_SET(?, "+quoteColumnName(cond.Lfield.OriginalName)+") > 0", v)
 	}
 	return exprs, nil
 }
@@ -343,7 +356,7 @@ func (c *MariaDBConnector) ConvertFilterConditionNotContain(ctx context.Context,
 	values := cond.Value
 	exprs := make(sq.Or, len(values))
 	for i, v := range values {
-		exprs[i] = sq.Expr(fmt.Sprintf("FIND_IN_SET(?, `%s`) = 0", cond.Lfield.OriginalName), v)
+		exprs[i] = sq.Expr("FIND_IN_SET(?, "+quoteColumnName(cond.Lfield.OriginalName)+") = 0", v)
 	}
 	return exprs, nil
 }
@@ -366,8 +379,8 @@ func (c *MariaDBConnector) ConvertFilterConditionRange(ctx context.Context, cond
 	}
 
 	return sq.And{
-		sq.GtOrEq{fmt.Sprintf("`%s`", cond.Lfield.OriginalName): values[0]},
-		sq.LtOrEq{fmt.Sprintf("`%s`", cond.Lfield.OriginalName): values[1]},
+		sq.GtOrEq{quoteColumnName(cond.Lfield.OriginalName): values[0]},
+		sq.LtOrEq{quoteColumnName(cond.Lfield.OriginalName): values[1]},
 	}, nil
 }
 
@@ -389,8 +402,8 @@ func (c *MariaDBConnector) ConvertFilterConditionOutRange(ctx context.Context, c
 	}
 
 	return sq.Or{
-		sq.Lt{fmt.Sprintf("`%s`", cond.Lfield.OriginalName): values[0]},
-		sq.Gt{fmt.Sprintf("`%s`", cond.Lfield.OriginalName): values[1]},
+		sq.Lt{quoteColumnName(cond.Lfield.OriginalName): values[0]},
+		sq.Gt{quoteColumnName(cond.Lfield.OriginalName): values[1]},
 	}, nil
 }
 
@@ -402,7 +415,7 @@ func (c *MariaDBConnector) ConvertFilterConditionNull(ctx context.Context, condi
 		return nil, fmt.Errorf("condition is not *filter_condition.NullCond")
 	}
 
-	return sq.Eq{fmt.Sprintf("`%s`", cond.Lfield.OriginalName): nil}, nil
+	return sq.Eq{quoteColumnName(cond.Lfield.OriginalName): nil}, nil
 }
 
 func (c *MariaDBConnector) ConvertFilterConditionNotNull(ctx context.Context, condition interfaces.FilterCondition,
@@ -413,7 +426,7 @@ func (c *MariaDBConnector) ConvertFilterConditionNotNull(ctx context.Context, co
 		return nil, fmt.Errorf("condition is not *filter_condition.NotNullCond")
 	}
 
-	return sq.NotEq{fmt.Sprintf("`%s`", cond.Lfield.OriginalName): nil}, nil
+	return sq.NotEq{quoteColumnName(cond.Lfield.OriginalName): nil}, nil
 }
 
 func (c *MariaDBConnector) ConvertFilterConditionEmpty(ctx context.Context, condition interfaces.FilterCondition,
@@ -424,7 +437,7 @@ func (c *MariaDBConnector) ConvertFilterConditionEmpty(ctx context.Context, cond
 		return nil, fmt.Errorf("condition is not *filter_condition.EmptyCond")
 	}
 
-	return sq.Eq{fmt.Sprintf("`%s`", cond.Lfield.OriginalName): ""}, nil
+	return sq.Eq{quoteColumnName(cond.Lfield.OriginalName): ""}, nil
 }
 
 func (c *MariaDBConnector) ConvertFilterConditionNotEmpty(ctx context.Context, condition interfaces.FilterCondition,
@@ -435,7 +448,7 @@ func (c *MariaDBConnector) ConvertFilterConditionNotEmpty(ctx context.Context, c
 		return nil, fmt.Errorf("condition is not *filter_condition.NotEmptyCond")
 	}
 
-	return sq.NotEq{fmt.Sprintf("`%s`", cond.Lfield.OriginalName): ""}, nil
+	return sq.NotEq{quoteColumnName(cond.Lfield.OriginalName): ""}, nil
 }
 
 func (c *MariaDBConnector) ConvertFilterConditionPrefix(ctx context.Context, condition interfaces.FilterCondition,
@@ -447,7 +460,7 @@ func (c *MariaDBConnector) ConvertFilterConditionPrefix(ctx context.Context, con
 	}
 
 	vStr := Special.Replace(cond.Value) + "%"
-	return sq.Like{fmt.Sprintf("`%s`", cond.Lfield.OriginalName): vStr}, nil
+	return sq.Like{quoteColumnName(cond.Lfield.OriginalName): vStr}, nil
 }
 
 func (c *MariaDBConnector) ConvertFilterConditionNotPrefix(ctx context.Context, condition interfaces.FilterCondition,
@@ -463,7 +476,7 @@ func (c *MariaDBConnector) ConvertFilterConditionNotPrefix(ctx context.Context, 
 	}
 
 	vStr := Special.Replace(cond.Value) + "%"
-	return sq.NotLike{fmt.Sprintf("`%s`", cond.Lfield.OriginalName): vStr}, nil
+	return sq.NotLike{quoteColumnName(cond.Lfield.OriginalName): vStr}, nil
 }
 
 func (c *MariaDBConnector) ConvertFilterConditionBetween(ctx context.Context, condition interfaces.FilterCondition,
@@ -484,8 +497,8 @@ func (c *MariaDBConnector) ConvertFilterConditionBetween(ctx context.Context, co
 	}
 
 	return sq.And{
-		sq.GtOrEq{fmt.Sprintf("`%s`", cond.Lfield.OriginalName): values[0]},
-		sq.LtOrEq{fmt.Sprintf("`%s`", cond.Lfield.OriginalName): values[1]},
+		sq.GtOrEq{quoteColumnName(cond.Lfield.OriginalName): values[0]},
+		sq.LtOrEq{quoteColumnName(cond.Lfield.OriginalName): values[1]},
 	}, nil
 }
 
@@ -497,7 +510,7 @@ func (c *MariaDBConnector) ConvertFilterConditionExist(ctx context.Context, cond
 		return nil, fmt.Errorf("condition is not *filter_condition.ExistCond")
 	}
 
-	return sq.NotEq{fmt.Sprintf("`%s`", cond.Lfield.OriginalName): nil}, nil
+	return sq.NotEq{quoteColumnName(cond.Lfield.OriginalName): nil}, nil
 }
 
 func (c *MariaDBConnector) ConvertFilterConditionNotExist(ctx context.Context, condition interfaces.FilterCondition,
@@ -508,7 +521,7 @@ func (c *MariaDBConnector) ConvertFilterConditionNotExist(ctx context.Context, c
 		return nil, fmt.Errorf("condition is not *filter_condition.NotExistCond")
 	}
 
-	return sq.Eq{fmt.Sprintf("`%s`", cond.Lfield.OriginalName): nil}, nil
+	return sq.Eq{quoteColumnName(cond.Lfield.OriginalName): nil}, nil
 }
 
 func (c *MariaDBConnector) ConvertFilterConditionRegex(ctx context.Context, condition interfaces.FilterCondition,
@@ -523,7 +536,7 @@ func (c *MariaDBConnector) ConvertFilterConditionRegex(ctx context.Context, cond
 		return nil, fmt.Errorf("condition [regex] only supports ValueFrom_Const, got %s", cond.Cfg.ValueFrom)
 	}
 
-	return sq.Expr(fmt.Sprintf("`%s` REGEXP ?", cond.Lfield.OriginalName), cond.Value), nil
+	return sq.Expr(quoteColumnName(cond.Lfield.OriginalName)+" REGEXP ?", cond.Value), nil
 }
 
 func (c *MariaDBConnector) ConvertFilterConditionTrue(ctx context.Context, condition interfaces.FilterCondition,
@@ -534,7 +547,7 @@ func (c *MariaDBConnector) ConvertFilterConditionTrue(ctx context.Context, condi
 		return nil, fmt.Errorf("condition is not *filter_condition.TrueCond")
 	}
 
-	return sq.Eq{fmt.Sprintf("`%s`", cond.Lfield.OriginalName): true}, nil
+	return sq.Eq{quoteColumnName(cond.Lfield.OriginalName): true}, nil
 }
 
 func (c *MariaDBConnector) ConvertFilterConditionFalse(ctx context.Context, condition interfaces.FilterCondition,
@@ -545,7 +558,7 @@ func (c *MariaDBConnector) ConvertFilterConditionFalse(ctx context.Context, cond
 		return nil, fmt.Errorf("condition is not *filter_condition.FalseCond")
 	}
 
-	return sq.Eq{fmt.Sprintf("`%s`", cond.Lfield.OriginalName): false}, nil
+	return sq.Eq{quoteColumnName(cond.Lfield.OriginalName): false}, nil
 }
 
 func (c *MariaDBConnector) ConvertFilterConditionBefore(ctx context.Context, condition interfaces.FilterCondition,
@@ -574,7 +587,7 @@ func (c *MariaDBConnector) ConvertFilterConditionBefore(ctx context.Context, con
 		return nil, fmt.Errorf("condition [before] unit value should be a string")
 	}
 
-	return sq.Expr(fmt.Sprintf("`%s` < DATE_SUB(NOW(), INTERVAL ? %s)", cond.Lfield.OriginalName, unit), int(interval)), nil
+	return sq.Expr(quoteColumnName(cond.Lfield.OriginalName)+" < DATE_SUB(NOW(), INTERVAL ? "+unit+")", int(interval)), nil
 }
 
 func (c *MariaDBConnector) ConvertFilterConditionCurrent(ctx context.Context, condition interfaces.FilterCondition,
@@ -607,5 +620,5 @@ func (c *MariaDBConnector) ConvertFilterConditionCurrent(ctx context.Context, co
 		return nil, fmt.Errorf("condition [current] unsupported format: %s", cond.Value)
 	}
 
-	return sq.Expr(fmt.Sprintf("DATE_FORMAT(`%s`, '%s') = DATE_FORMAT(NOW(), '%s')", cond.Lfield.OriginalName, dateFormat, dateFormat)), nil
+	return sq.Expr("DATE_FORMAT(" + quoteColumnName(cond.Lfield.OriginalName) + ", '" + dateFormat + "') = DATE_FORMAT(NOW(), '" + dateFormat + "')"), nil
 }

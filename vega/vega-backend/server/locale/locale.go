@@ -6,7 +6,6 @@
 package locale
 
 import (
-	"log"
 	"os"
 	"path"
 	"runtime"
@@ -21,17 +20,17 @@ var (
 func Register() {
 	var abPath string
 
-	// UT MODE
-	if os.Getenv("I18N_MODE_UT") == "true" {
-		_, filename, _, ok := runtime.Caller(0)
-		if ok {
-			abPath = path.Dir(filename)
-		} else {
-			log.Fatal("failed to get absolute path")
+	// 优先使用包所在目录（保证 UT 与任意 cwd 下都能找到 locale）
+	_, filename, _, ok := runtime.Caller(0)
+	if ok {
+		abPath = path.Dir(filename)
+		if _, err := os.Stat(abPath); err == nil {
+			i18n.RegisterI18n(abPath)
+			return
 		}
-	} else {
-		abPath, _ = os.Getwd()
-		abPath += localeDir
 	}
+	// 回退：使用 cwd + /locale（兼容旧行为）
+	abPath, _ = os.Getwd()
+	abPath += localeDir
 	i18n.RegisterI18n(abPath)
 }
