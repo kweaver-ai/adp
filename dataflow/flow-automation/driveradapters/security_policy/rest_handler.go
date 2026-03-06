@@ -6,14 +6,14 @@ import (
 	"net/http"
 	"sync"
 
+	"github.com/gin-gonic/gin"
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/common"
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/drivenadapters"
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/driveradapters/middleware"
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/errors"
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/logics/mgnt"
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/pkg/entity"
-	"github.com/gin-gonic/gin"
-	"go.mongodb.org/mongo-driver/bson/primitive"
+	normalizeutil "github.com/kweaver-ai/adp/autoflow/flow-automation/utils/normalize"
 )
 
 type RESTHandler interface {
@@ -184,7 +184,7 @@ func (h *SecurityPolicyHandler) getFlowForm(c *gin.Context) {
 	}
 
 	if len(flow.Steps) > 0 && flow.Steps[0].Parameters != nil && flow.Steps[0].Parameters["fields"] != nil {
-		fields, ok := flow.Steps[0].Parameters["fields"].(primitive.A)
+		fields, ok := normalizeutil.AsSlice(flow.Steps[0].Parameters["fields"])
 
 		if ok {
 

@@ -38,8 +38,8 @@ import (
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/pkg/vm"
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/pkg/vm/state"
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/utils"
+	normalizeutil "github.com/kweaver-ai/adp/autoflow/flow-automation/utils/normalize"
 	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"gorm.io/gorm"
@@ -1114,10 +1114,7 @@ func (m *mgnt) GetDagByID(ctx context.Context, dagID, versionID, bizDomainID str
 		parameters := dag.TriggerConfig.Parameters
 		if parameters != nil && parameters["docids"] != nil {
 			var docIDs []interface{}
-			// 安全地处理 primitive.A 或 []interface{} 类型
-			if ids, ok := parameters["docids"].(primitive.A); ok {
-				docIDs = ids
-			} else if ids, ok := parameters["docids"].([]interface{}); ok {
+			if ids, ok := normalizeutil.AsSlice(parameters["docids"]); ok {
 				docIDs = ids
 			} else {
 				log.Warnf("[logic.GetDagByID] docids parameter is not a valid array type")
@@ -1927,7 +1924,7 @@ func (m *mgnt) HandleDocEvent(ctx context.Context, msg *DocMsg, topic string) er
 				continue
 			}
 		} else {
-			ids, ok := docids.(primitive.A)
+			ids, ok := normalizeutil.AsSlice(docids)
 			if !ok {
 				continue
 			}
@@ -3160,11 +3157,11 @@ func (m *mgnt) ContinueBlockInstances(ctx context.Context, blockedTaskIDs []stri
 				return ierrors.NewIError(ierrors.InternalError, "", nil)
 			}
 
-			instanceData, ok := instance.Results.(primitive.D)
+			instanceData, ok := normalizeutil.AsMap(instance.Results)
 			if !ok {
 				continue
 			}
-			groupID, ok := instanceData.Map()["group_id"].(string)
+			groupID, ok := instanceData["group_id"].(string)
 			if ok && groupID != "" {
 				err := m.usermgnt.DeleteInternalGroup([]string{groupID})
 				if err != nil {
@@ -3179,9 +3176,9 @@ func (m *mgnt) ContinueBlockInstances(ctx context.Context, blockedTaskIDs []stri
 			instance.Status = status
 
 			var results = make(map[string]interface{}, 0)
-			for _, elem := range instanceData {
-				if elem.Key != "group_id" {
-					results[elem.Key] = elem.Value
+			for key, value := range instanceData {
+				if key != "group_id" {
+					results[key] = value
 				}
 			}
 
@@ -3209,8 +3206,8 @@ func (m *mgnt) ContinueBlockInstances(ctx context.Context, blockedTaskIDs []stri
 			if instance.ActionName == common.WorkflowApproval {
 				workflowApprovalTaskIds, ok := dagIns.ShareData.Get(common.WorkflowApprovalTaskIds)
 				if ok {
-					taskIDs := make(primitive.A, 0)
-					if ids, idsOK := workflowApprovalTaskIds.(primitive.A); idsOK {
+					taskIDs := make([]interface{}, 0)
+					if ids, idsOK := normalizeutil.AsSlice(workflowApprovalTaskIds); idsOK {
 						taskIDs = append(taskIDs, ids...)
 					}
 					taskIDs = append(taskIDs, instance.TaskID)
@@ -3353,11 +3350,11 @@ func (m *mgnt) HandleAuditorsMacth(ctx context.Context, msg *AuditorInfo) error 
 	for index := range instances {
 		instance := instances[index]
 		// instance.Results 为 nil
-		instanceData, ok := instance.Results.(primitive.D)
+		instanceData, ok := normalizeutil.AsMap(instance.Results)
 		if !ok {
 			continue
 		}
-		groupID, ok := instanceData.Map()["group_id"].(string)
+		groupID, ok := instanceData["group_id"].(string)
 		if !ok || groupID == "" {
 			continue
 		}
@@ -4979,8 +4976,12 @@ func (m *mgnt) RunInstanceWithDoc(ctx context.Context, id string, params RunWith
 	}
 
 	if traiggerDir, ok := dag.Steps[0].Parameters["docids"]; ok {
-		for _, docID := range traiggerDir.(primitive.A) {
-			triggerDirs = append(triggerDirs, docID.(string))
+		if docIDs, ok := normalizeutil.AsSlice(traiggerDir); ok {
+			for _, docID := range docIDs {
+				if docIDStr, ok := docID.(string); ok {
+					triggerDirs = append(triggerDirs, docIDStr)
+				}
+			}
 		}
 	}
 
@@ -5028,7 +5029,7 @@ func (m *mgnt) RunInstanceWithDoc(ctx context.Context, id string, params RunWith
 		"operator_type": userInfo.AccountType,
 	}
 
-	if fields, ok := dag.Steps[0].Parameters["fields"].(primitive.A); ok {
+	if fields, ok := normalizeutil.AsSlice(dag.Steps[0].Parameters["fields"]); ok {
 		err = ParseFields(ctx, fields, params.Data, runVar, ErrTypeV1).BuildError()
 		if err != nil {
 			log.Warnf("[logic.RunInstanceWithDoc] ParseFields err, deail: %s", err.Error())
@@ -5075,7 +5076,7 @@ func (m *mgnt) RunInstanceWithDoc(ctx context.Context, id string, params RunWith
 	return nil
 }
 
-func ParseFields(ctx context.Context, fields primitive.A, reqData map[string]interface{}, runVar map[string]string, errType string) *ValidateError {
+func ParseFields(ctx context.Context, fields []interface{}, reqData map[string]interface{}, runVar map[string]string, errType string) *ValidateError {
 	vErr := &ValidateError{
 		Ctx:             ctx,
 		ErrType:         errType,
@@ -5092,13 +5093,9 @@ func ParseFields(ctx context.Context, fields primitive.A, reqData map[string]int
 			continue
 		}
 
-		data, ok := field["data"].(primitive.A)
-
+		data, ok := normalizeutil.AsSlice(field["data"])
 		if !ok {
-			data, ok = field["data"].([]interface{})
-			if !ok {
-				continue
-			}
+			continue
 		}
 
 		for _, item := range data {
@@ -5107,13 +5104,9 @@ func ParseFields(ctx context.Context, fields primitive.A, reqData map[string]int
 				continue
 			}
 
-			related, hasRelated := radioOption["related"].(primitive.A)
-
+			related, hasRelated := normalizeutil.AsSlice(radioOption["related"])
 			if !hasRelated {
-				related, hasRelated = radioOption["related"].([]interface{})
-				if !hasRelated {
-					continue
-				}
+				continue
 			}
 
 			for _, fieldKey := range related {
@@ -5403,7 +5396,7 @@ func (m *mgnt) GetDagTriggerConfig(ctx context.Context, taskInsID, typeBy string
 			continue
 		}
 
-		resultsMap := utils.PrimitiveToMap(task.Results)
+		resultsMap := normalizeutil.PrimitiveToMap(task.Results)
 		if len(resultsMap) != 0 {
 			triggerConfig.Result = resultsMap
 		}

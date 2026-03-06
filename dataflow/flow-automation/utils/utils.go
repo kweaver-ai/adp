@@ -29,7 +29,6 @@ import (
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/pkg/log"
 	"github.com/sony/sonyflake"
 	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/bson/primitive"
 	"golang.org/x/text/encoding/simplifiedchinese"
 	"golang.org/x/text/transform"
 )
@@ -734,33 +733,6 @@ func ComputeLevelDifference(parentPath, childPath string) int {
 	relativePath := strings.TrimPrefix(childPath, parentPath)
 
 	return len(strings.Split(strings.Trim(relativePath, "/"), "/"))
-}
-
-// PrimitiveToMap Primitive To Map
-func PrimitiveToMap(data interface{}) map[string]interface{} {
-	result := make(map[string]interface{})
-	switch v := data.(type) {
-	case primitive.D:
-		for _, val := range v {
-			key, value := val.Key, val.Value
-			switch v := value.(type) {
-			case primitive.D, primitive.E:
-				result[key] = PrimitiveToMap(v)
-			default:
-				result[key] = v
-			}
-		}
-	case primitive.E:
-		key, value := v.Key, v.Value
-		switch v := value.(type) {
-		case primitive.D, primitive.E:
-			result[key] = PrimitiveToMap(v)
-		default:
-			result[key] = v
-		}
-	}
-
-	return result
 }
 
 // SpliceDepPath 拼接部门全路径

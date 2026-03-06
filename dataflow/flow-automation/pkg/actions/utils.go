@@ -19,6 +19,7 @@ import (
 	commonLog "github.com/kweaver-ai/adp/autoflow/flow-automation/libs/go/log"
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/pkg/entity"
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/utils"
+	normalizeutil "github.com/kweaver-ai/adp/autoflow/flow-automation/utils/normalize"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -487,7 +488,7 @@ func handleAddRelevance(ctx context.Context, params *AnyShareRelevanceParams, to
 		docids = append(docids, s...)
 	} else if str, ok := params.Relevance.(string); ok {
 		docids = append(docids, str)
-	} else if arr, ok := params.Relevance.(primitive.A); ok {
+	} else if arr, ok := normalizeutil.AsSlice(params.Relevance); ok {
 		for _, item := range arr {
 			if docid, ok := item.(string); ok {
 				docids = append(docids, docid)
@@ -688,7 +689,7 @@ func (ps PermInfos) Build(permInfoMap PermInfoMap) error {
 		case map[string]interface{}:
 			parsedAllow := []string{}
 			parsedDeny := []string{}
-			if allow, ok := parsedPerm["allow"].(primitive.A); ok {
+			if allow, ok := normalizeutil.AsSlice(parsedPerm["allow"]); ok {
 				for _, item := range allow {
 					if str, ok := item.(string); ok {
 						parsedAllow = append(parsedAllow, str)
@@ -696,23 +697,7 @@ func (ps PermInfos) Build(permInfoMap PermInfoMap) error {
 				}
 			}
 
-			if allow, ok := parsedPerm["allow"].([]interface{}); ok {
-				for _, item := range allow {
-					if str, ok := item.(string); ok {
-						parsedAllow = append(parsedAllow, str)
-					}
-				}
-			}
-
-			if deny, ok := parsedPerm["deny"].(primitive.A); ok {
-				for _, item := range deny {
-					if str, ok := item.(string); ok {
-						parsedDeny = append(parsedDeny, str)
-					}
-				}
-			}
-
-			if deny, ok := parsedPerm["deny"].([]interface{}); ok {
+			if deny, ok := normalizeutil.AsSlice(parsedPerm["deny"]); ok {
 				for _, item := range deny {
 					if str, ok := item.(string); ok {
 						parsedDeny = append(parsedDeny, str)

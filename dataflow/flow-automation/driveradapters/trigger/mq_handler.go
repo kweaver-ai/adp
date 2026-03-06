@@ -23,7 +23,7 @@ import (
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/pkg/mod"
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/pkg/rds"
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/utils"
-	"go.mongodb.org/mongo-driver/bson/primitive"
+	normalizeutil "github.com/kweaver-ai/adp/autoflow/flow-automation/utils/normalize"
 )
 
 // MQHandler 消息队列Handler接口
@@ -541,54 +541,56 @@ func (m *mqHandler) handleGraphInfoResult(message []byte) error {
 	var deleteKeys = make([]string, 0)
 	efast := drivenadapters.NewEfast()
 	for _, taskIns := range taskInstances {
-		if result, ok := taskIns.Results.(primitive.D); ok {
-			if __subdocParams, ok := result.Map()["__subdocParams"].(string); ok {
-				subdocParams := drivenadapters.DocSetSubdocParams{}
-				err1 := json.Unmarshal([]byte(__subdocParams), &subdocParams)
-				if err1 != nil {
-					deleteKeys = append(deleteKeys, taskIns.ID)
-					continue
-				}
-
-				res, err1 := efast.DocSetSubdoc(ctx, subdocParams, -1)
-
-				if err1 != nil {
-					deleteKeys = append(deleteKeys, taskIns.ID)
-					if err2 := m.mgnt.ContinueBlockInstances(ctx, []string{taskIns.ID}, map[string]interface{}{
-						"__subdocParams": "{}",
-						"doc_id":         subdocParams.DocID,
-						"rev":            subdocParams.Version,
-						"status":         "error",
-						"err_msg":        err1.Error(),
-						"data":           "{}",
-						"url":            "",
-					}, entity.TaskInstanceStatusSuccess); err2 != nil {
-						log.Warnf("handle docset.graph_info.result faild, taskId: %s, docId: %s, detail: %s", taskIns.ID, subdocParams.DocID, err2.Error())
-					}
-					continue
-				}
-
-				if res.Status == "processing" {
-					continue
-				}
-
+		result, ok := normalizeutil.AsMap(taskIns.Results)
+		if !ok {
+			continue
+		}
+		if __subdocParams, ok := result["__subdocParams"].(string); ok {
+			subdocParams := drivenadapters.DocSetSubdocParams{}
+			err1 := json.Unmarshal([]byte(__subdocParams), &subdocParams)
+			if err1 != nil {
 				deleteKeys = append(deleteKeys, taskIns.ID)
-				data := res.Data
-				if data == nil || data == "" {
-					data = "{}"
-				}
+				continue
+			}
 
+			res, err1 := efast.DocSetSubdoc(ctx, subdocParams, -1)
+
+			if err1 != nil {
+				deleteKeys = append(deleteKeys, taskIns.ID)
 				if err2 := m.mgnt.ContinueBlockInstances(ctx, []string{taskIns.ID}, map[string]interface{}{
 					"__subdocParams": "{}",
-					"doc_id":         res.DocID,
-					"rev":            res.Rev,
-					"status":         res.Status,
-					"err_msg":        res.ErrMsg,
-					"data":           data,
-					"url":            res.Url,
+					"doc_id":         subdocParams.DocID,
+					"rev":            subdocParams.Version,
+					"status":         "error",
+					"err_msg":        err1.Error(),
+					"data":           "{}",
+					"url":            "",
 				}, entity.TaskInstanceStatusSuccess); err2 != nil {
-					log.Warnf("handle docset.graph_info.result faild, taskId: %s, docId: %s, detail: %s", taskIns.ID, res.DocID, err2.Error())
+					log.Warnf("handle docset.graph_info.result faild, taskId: %s, docId: %s, detail: %s", taskIns.ID, subdocParams.DocID, err2.Error())
 				}
+				continue
+			}
+
+			if res.Status == "processing" {
+				continue
+			}
+
+			deleteKeys = append(deleteKeys, taskIns.ID)
+			data := res.Data
+			if data == nil || data == "" {
+				data = "{}"
+			}
+
+			if err2 := m.mgnt.ContinueBlockInstances(ctx, []string{taskIns.ID}, map[string]interface{}{
+				"__subdocParams": "{}",
+				"doc_id":         res.DocID,
+				"rev":            res.Rev,
+				"status":         res.Status,
+				"err_msg":        res.ErrMsg,
+				"data":           data,
+				"url":            res.Url,
+			}, entity.TaskInstanceStatusSuccess); err2 != nil {
+				log.Warnf("handle docset.graph_info.result faild, taskId: %s, docId: %s, detail: %s", taskIns.ID, res.DocID, err2.Error())
 			}
 		}
 	}

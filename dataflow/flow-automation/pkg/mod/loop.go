@@ -11,7 +11,7 @@ import (
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/pkg/entity"
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/pkg/log"
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/pkg/render"
-	"go.mongodb.org/mongo-driver/bson/primitive"
+	normalizeutil "github.com/kweaver-ai/adp/autoflow/flow-automation/utils/normalize"
 )
 
 // LoopHandler 循环处理器，从DefExecutor中独立出来
@@ -381,7 +381,7 @@ func (h *LoopHandler) collectLoopOutputs(ctx context.Context, taskIns *entity.Ta
 				for _, task := range taskList {
 					// 从任务的参数中获取输出
 					taskParams := task.GetParams()
-					if outputs, ok := taskParams["outputs"].(primitive.A); ok {
+					if outputs, ok := normalizeutil.AsSlice(taskParams["outputs"]); ok {
 						for _, output := range outputs {
 							if outputMap, ok := output.(map[string]interface{}); ok {
 								if key, ok := outputMap["key"].(string); ok && key == outputConfig.Key {

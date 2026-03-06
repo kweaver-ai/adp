@@ -1312,7 +1312,7 @@ func (d *dag) BatchDeleteDagWithTransaction(ctx context.Context, ids []string) e
 	defer func() { trace.TelemetrySpanEnd(span, err) }()
 
 	fn := func() error {
-		sql := `UPDATE t_dags SET f_removed = 1 WHERE f_id IN (?) AND f_type NOT IN (?)`
+		sql := `UPDATE t_dag SET f_removed = 1 WHERE f_id IN (?) AND f_type NOT IN (?)`
 		msgStr, _ := jsoniter.MarshalToString(ids)
 		trace.SetAttributes(newCtx, attribute.String(trace.TABLE_NAME, DAG_TABLENAME), attribute.String(trace.DB_SQL, sql), attribute.String(trace.DB_QUERY, msgStr), attribute.String(trace.DB_QUERY, common.DagTypeSecurityPolicy))
 
