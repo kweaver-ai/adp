@@ -92,3 +92,13 @@ ErrorLink = "None"
 Description = "Failed to sync resource"
 Solution = "Please contact the administrator"
 ErrorLink = "None"
+
+[VegaBackend.Resource.InternalError.InvalidCategory]
+Description = "Invalid resource category"
+Solution = "Please check the parameter"
+ErrorLink = "None"
+
+[VegaBackend.Resource.InternalError.GetAccountNamesFailed]
+Description = "Failed to get account names"
+Solution = "Please contact the administrator"
+ErrorLink = "None"

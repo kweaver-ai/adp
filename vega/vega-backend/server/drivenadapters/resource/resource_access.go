@@ -65,7 +65,7 @@ func (ra *resourceAccess) Create(ctx context.Context, resource *interfaces.Resou
 	// tags 转成 string 的格式
 	tagsStr := libCommon.TagSlice2TagString(resource.Tags)
 
-	// 序列化 SourceMetadata 和 SchemaDefinition
+	// 序列化 SourceMetadata, SchemaDefinition, LogicDefinition
 	sourceMetadataBytes, _ := json.Marshal(resource.SourceMetadata)
 	if resource.SourceMetadata == nil {
 		sourceMetadataBytes = []byte("{}")
@@ -73,6 +73,10 @@ func (ra *resourceAccess) Create(ctx context.Context, resource *interfaces.Resou
 	schemaDefinitionBytes, _ := json.Marshal(resource.SchemaDefinition)
 	if resource.SchemaDefinition == nil {
 		schemaDefinitionBytes = []byte("[]")
+	}
+	logicDefinitionBytes, _ := json.Marshal(resource.LogicDefinition)
+	if resource.LogicDefinition == nil {
+		logicDefinitionBytes = []byte("[]")
 	}
 
 	sqlStr, vals, err := sq.Insert(RESOURCE_TABLE_NAME).
@@ -90,9 +94,9 @@ func (ra *resourceAccess) Create(ctx context.Context, resource *interfaces.Resou
 			"f_source_metadata",
 			"f_schema_definition",
 
-			"f_logic_type",
+			// "f_logic_type",
 			"f_logic_definition",
-			"f_logic_definition_type",
+			// "f_logic_definition_type",
 
 			"f_local_enabled",
 			"f_local_storage_engine",
@@ -126,9 +130,9 @@ func (ra *resourceAccess) Create(ctx context.Context, resource *interfaces.Resou
 			string(sourceMetadataBytes),
 			string(schemaDefinitionBytes),
 
-			"",
-			"",
-			"",
+			// "",
+			string(logicDefinitionBytes),
+			// "",
 
 			false,
 			"",
@@ -190,6 +194,7 @@ func (ra *resourceAccess) GetByID(ctx context.Context, id string) (*interfaces.R
 		"f_source_identifier",
 		"f_source_metadata",
 		"f_schema_definition",
+		"f_logical_definition",
 		"f_creator",
 		"f_creator_type",
 		"f_create_time",
@@ -207,7 +212,7 @@ func (ra *resourceAccess) GetByID(ctx context.Context, id string) (*interfaces.R
 
 	resource := &interfaces.Resource{}
 	var tagsStr string
-	var database, sourceIdentifier, sourceMetadata, schemaDefinition sql.NullString
+	var database, sourceIdentifier, sourceMetadata, schemaDefinition, logicDefinition sql.NullString
 
 	row := ra.db.QueryRowContext(ctx, sqlStr, vals...)
 	err = row.Scan(
@@ -223,6 +228,7 @@ func (ra *resourceAccess) GetByID(ctx context.Context, id string) (*interfaces.R
 		&sourceIdentifier,
 		&sourceMetadata,
 		&schemaDefinition,
+		&logicDefinition,
 		&resource.Creator.ID,
 		&resource.Creator.Type,
 		&resource.CreateTime,
@@ -250,6 +256,9 @@ func (ra *resourceAccess) GetByID(ctx context.Context, id string) (*interfaces.R
 	if schemaDefinition.Valid && schemaDefinition.String != "" {
 		_ = json.Unmarshal([]byte(schemaDefinition.String), &resource.SchemaDefinition)
 	}
+	if logicDefinition.Valid && logicDefinition.String != "" {
+		_ = json.Unmarshal([]byte(logicDefinition.String), &resource.LogicDefinition)
+	}
 
 	span.SetStatus(codes.Ok, "")
 	return resource, nil
@@ -276,6 +285,7 @@ func (ra *resourceAccess) GetByIDs(ctx context.Context, ids []string) ([]*interf
 		"f_source_identifier",
 		"f_source_metadata",
 		"f_schema_definition",
+		"f_logic_definition",
 		"f_creator",
 		"f_creator_type",
 		"f_create_time",
@@ -303,7 +313,7 @@ func (ra *resourceAccess) GetByIDs(ctx context.Context, ids []string) ([]*interf
 	for rows.Next() {
 		resource := &interfaces.Resource{}
 		var tagsStr string
-		var database, sourceIdentifier, sourceMetadata, schemaDefinition sql.NullString
+		var database, sourceIdentifier, sourceMetadata, schemaDefinition, logicDefinition sql.NullString
 
 		err := rows.Scan(
 			&resource.ID,
@@ -318,6 +328,7 @@ func (ra *resourceAccess) GetByIDs(ctx context.Context, ids []string) ([]*interf
 			&sourceIdentifier,
 			&sourceMetadata,
 			&schemaDefinition,
+			&logicDefinition,
 			&resource.Creator.ID,
 			&resource.Creator.Type,
 			&resource.CreateTime,
@@ -341,6 +352,9 @@ func (ra *resourceAccess) GetByIDs(ctx context.Context, ids []string) ([]*interf
 		}
 		if schemaDefinition.Valid && schemaDefinition.String != "" {
 			_ = json.Unmarshal([]byte(schemaDefinition.String), &resource.SchemaDefinition)
+		}
+		if logicDefinition.Valid && logicDefinition.String != "" {
+			_ = json.Unmarshal([]byte(logicDefinition.String), &resource.LogicDefinition)
 		}
 
 		resources = append(resources, resource)
@@ -572,7 +586,7 @@ func (ra *resourceAccess) Update(ctx context.Context, resource *interfaces.Resou
 	// tags 转成 string 的格式
 	tagsStr := libCommon.TagSlice2TagString(resource.Tags)
 
-	// 序列化 SourceMetadata 和 SchemaDefinition
+	// 序列化 SourceMetadata, SchemaDefinition, logicDefinition
 	sourceMetadataBytes, _ := json.Marshal(resource.SourceMetadata)
 	if resource.SourceMetadata == nil {
 		sourceMetadataBytes = []byte("{}")
@@ -581,13 +595,19 @@ func (ra *resourceAccess) Update(ctx context.Context, resource *interfaces.Resou
 	if resource.SchemaDefinition == nil {
 		schemaDefinitionBytes = []byte("[]")
 	}
+	logicDefinitionBytes, _ := json.Marshal(resource.LogicDefinition)
+	if resource.LogicDefinition == nil {
+		logicDefinitionBytes = []byte("[]")
+	}
 
 	sqlStr, vals, err := sq.Update(RESOURCE_TABLE_NAME).
+		Set("f_catalog_id", resource.CatalogID).
 		Set("f_name", resource.Name).
 		Set("f_tags", tagsStr).
 		Set("f_description", resource.Description).
 		Set("f_source_metadata", string(sourceMetadataBytes)).
 		Set("f_schema_definition", string(schemaDefinitionBytes)).
+		Set("f_logic_definition", string(logicDefinitionBytes)).
 		Set("f_updater", resource.Updater.ID).
 		Set("f_updater_type", resource.Updater.Type).
 		Set("f_update_time", resource.UpdateTime).
