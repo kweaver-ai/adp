@@ -5,6 +5,8 @@
 
 package interfaces
 
+import "fmt"
+
 // 特征类型
 type FieldFeatureType string
 
@@ -18,9 +20,6 @@ const (
 	FieldProperty_Analyzer    = "analyzer"
 	FieldProperty_Fields      = "fields"
 	FieldProperty_Dimension   = "dimension"
-
-	ViewType_Atomic = "atomic"
-	ViewType_Custom = "custom"
 
 	QueryType_DSL       = "DSL"
 	QueryType_SQL       = "SQL"
@@ -49,26 +48,14 @@ const (
 	MODULE_TYPE_DATA_VIEW_ROW_COLUMN_RULE = "data_view_row_column_rule"
 	INDEX_BASE                            = "index_base"
 
-	ALLOW     = "ID_AUDIT_ACTION_ALLOW"
-	NOT_ALLOW = "ID_AUDIT_ACTION_NOT_ALLOW"
+	OBJECTTYPE_DATA_VIEW = "ID_AUDIT_DATA_VIEW"
 
-	OBJECTTYPE_DATA_VIEW           = "ID_AUDIT_DATA_VIEW"
-	OBJECTTYPE_REAL_TIME_STREAMING = "ID_AUDIT_REAL_TIME_STREAMING"
-
-	// 视图名称、视图备注、视图分组名最大长度
-	MaxLength_ViewName      = 255
-	MaxLength_ViewComment   = 255
-	MaxLength_ViewGroupName = 40
 	// 视图字段名称、字段显示名、字段备注、字段特征备注的最大长度
 	MaxLength_ViewFieldName           = 255
 	MaxLength_ViewFieldDisplayName    = 255
 	MaxLength_ViewFieldFeatureName    = 255
 	MaxLength_ViewFieldComment        = 1000
 	MaxLength_ViewFieldFeatureComment = 1000
-
-	Non_Builtin             = 0
-	Builtin                 = 1
-	Default_Include_Builtin = "false"
 
 	QueryParam_ImportMode = "import_mode"
 
@@ -78,18 +65,14 @@ const (
 	AttrFields_Name          = "name"
 	AttrFields_Comment       = "comment"
 
-
-
 	RegexPattern_Builtin_ViewID    = "^[a-z0-9_][a-z0-9_-]{0,39}$"
 	RegexPattern_NonBuiltin_ViewID = "^[a-z0-9][a-z0-9_-]{0,39}$"
 
 	RegexPattern_TechnicalName = "^[a-z_][a-z0-9_]{0,39}$"
 )
 
-
 var (
 	AttrFieldsMap = map[string]struct{}{
-		// AttrFields_OpenStreaming: {},
 		AttrFields_GroupName: {},
 		AttrFields_Fields:    {},
 		AttrFields_Name:      {},
@@ -142,3 +125,74 @@ var (
 		"tags":          DataType_String,
 	}
 )
+
+type LogicalView struct {
+	Resource
+	FieldsMap map[string]*ViewProperty `json:"fields_map,omitempty" mapstructure:"-"`
+}
+
+// DataScopeNode 表示图中的节点
+type DataScopeNode struct {
+	ID           string          `json:"id"`
+	Title        string          `json:"title"`
+	Type         string          `json:"type"`
+	InputNodes   []string        `json:"input_nodes"`
+	Config       map[string]any  `json:"config"`
+	OutputFields []*ViewProperty `json:"output_fields"`
+}
+
+// 节点类型为view的节点配置
+type ResourceNodeCfg struct {
+	ResourceID string         `json:"resource_id" mapstructure:"resource_id"`
+	Filters    *FilterCondCfg `json:"filters,omitempty" mapstructure:"filters"`
+	Distinct   Distinct       `json:"distinct" mapstructure:"distinct"`
+	Resource   *Resource      `json:"resource,omitempty" mapstructure:"resource"`
+}
+
+type Distinct struct {
+	Enable bool     `json:"enable" mapstructure:"enable"`
+	Fields []string `json:"fields,omitempty" mapstructure:"fields"`
+}
+
+// 节点类型为join的节点配置
+type JoinNodeCfg struct {
+	JoinType string         `json:"join_type" mapstructure:"join_type"`
+	JoinOn   []*JoinOn      `json:"join_on" mapstructure:"join_on"`
+	Filters  *FilterCondCfg `json:"filters,omitempty" mapstructure:"filters"`
+	Distinct Distinct       `json:"distinct,omitempty" mapstructure:"distinct"`
+}
+
+// join on 配置
+type JoinOn struct {
+	LeftField  string `json:"left_field" mapstructure:"left_field"`   //传递 name
+	RightField string `json:"right_field" mapstructure:"right_field"` //传递 name
+	Operator   string `json:"operator" mapstructure:"operator"`
+}
+
+// 节点类型为union的节点配置
+type UnionNodeCfg struct {
+	UnionType   string         `json:"union_type" mapstructure:"union_type"`
+	UnionFields [][]UnionField `json:"union_fields" mapstructure:"union_fields"`
+	Filters     *FilterCondCfg `json:"filters,omitempty" mapstructure:"filters"`
+}
+
+type UnionField struct {
+	Field     string `json:"field" mapstructure:"field"`
+	ValueFrom string `json:"value_from" mapstructure:"value_from"` // "field" 或 "const"
+}
+
+type SQLNodeCfg struct {
+	SQLExpression string `json:"sql_expression" mapstructure:"sql_expression"`
+}
+
+// 逻辑视图字段
+type ViewProperty struct {
+	Property
+	SrcNodeID   string `json:"src_node_id,omitempty"`
+	SrcNodeName string `json:"src_node_name,omitempty"`
+}
+
+func (v *ViewProperty) String() string {
+	return fmt.Sprintf("ViewProperty{name: %s, type: %s, description: %s, display_name: %s, original_name: %s}",
+		v.Name, v.Type, v.Description, v.DisplayName, v.OriginalName)
+}
