@@ -249,82 +249,110 @@ func copyFields(src interface{}, dest interface{}) error {
 			continue
 		}
 
-		// 1. 类型完全一致，直接赋值（字符串 -> interface{} 除外，后续按 JSON 优先处理）
-		if srcField.Type().AssignableTo(destField.Type()) &&
-			!(isStringKind(srcField) && destField.Kind() == reflect.Interface) {
-			destField.Set(srcField)
-			continue
-		}
-
-		// 2. 数值 → 字符串类型（包括自定义字符串类型如 type MyStr string）
-		if isNumeric(srcField) && isStringKind(destField) {
-			strVal := numericToString(srcField)
-			destField.Set(reflect.ValueOf(strVal).Convert(destField.Type()))
-			continue
-		}
-
-		// 3. 字符串类型 → 数值（如 "12345" → uint64）
-		if isStringKind(srcField) && isNumeric(destField) {
-			if converted, ok := stringToNumeric(srcField.String(), destField.Type()); ok {
-				destField.Set(converted)
-				continue
-			}
-		}
-
-		// 4. 字符串 → interface{} 时优先尝试 JSON 反序列化，避免把 "null"/"{}" 当普通字符串
-		if isStringKind(srcField) && destField.Kind() == reflect.Interface && srcField.String() != "" {
-			var parsed interface{}
-			if err := json.Unmarshal([]byte(srcField.String()), &parsed); err == nil {
-				if parsed == nil {
-					destField.Set(reflect.Zero(destField.Type()))
-				} else {
-					destField.Set(reflect.ValueOf(parsed))
-				}
-				continue
-			}
-		}
-
-		// 5. 底层类型相同的转换（string ↔ MyStr, int ↔ MyInt 等，但排除整数→string的误转换）
-		if safeConvertible(srcField.Type(), destField.Type()) {
-			destField.Set(srcField.Convert(destField.Type()))
-			continue
-		}
-
-		// 6. 指针与非指针之间的转换
-		if handlePtrConversion(srcField, destField) {
-			continue
-		}
-
-		// 7. 字符串 → 复杂类型，尝试 JSON 反序列化
-		if isStringKind(srcField) && srcField.String() != "" {
-			strValue := srcField.String()
-			destFieldType := destField.Type()
-
-			var destInstancePtr reflect.Value
-			var isPtr bool
-
-			if destFieldType.Kind() == reflect.Ptr {
-				destInstancePtr = reflect.New(destFieldType.Elem())
-				isPtr = true
-			} else {
-				destInstancePtr = reflect.New(destFieldType)
-				isPtr = false
-			}
-
-			if err := json.Unmarshal([]byte(strValue), destInstancePtr.Interface()); err == nil {
-				if isPtr {
-					destField.Set(destInstancePtr)
-				} else {
-					destField.Set(destInstancePtr.Elem())
-				}
-			}
+		if converted, ok := convertFieldValue(srcField, destField.Type()); ok {
+			destField.Set(converted)
 		}
 	}
 
 	return nil
 }
 
-// ======================== 辅助函数 ========================
+func convertFieldValue(srcField reflect.Value, destType reflect.Type) (reflect.Value, bool) {
+	if !srcField.IsValid() {
+		return reflect.Value{}, false
+	}
+
+	// 类型完全一致直接赋值，但 string -> interface{} 需要优先尝试 JSON 解析。
+	if srcField.Type().AssignableTo(destType) &&
+		!(isStringKind(srcField) && destType.Kind() == reflect.Interface) {
+		return srcField, true
+	}
+
+	// 指针转换通过递归复用同一套规则，避免分支重复。
+	if srcField.Kind() == reflect.Ptr {
+		if srcField.IsNil() {
+			return reflect.Value{}, false
+		}
+
+		if destType.Kind() == reflect.Ptr {
+			converted, ok := convertFieldValue(srcField.Elem(), destType.Elem())
+			if !ok {
+				return reflect.Value{}, false
+			}
+
+			newVal := reflect.New(destType.Elem())
+			newVal.Elem().Set(converted)
+			return newVal, true
+		}
+
+		return convertFieldValue(srcField.Elem(), destType)
+	}
+
+	if destType.Kind() == reflect.Ptr {
+		converted, ok := convertFieldValue(srcField, destType.Elem())
+		if !ok {
+			return reflect.Value{}, false
+		}
+
+		newVal := reflect.New(destType.Elem())
+		newVal.Elem().Set(converted)
+		return newVal, true
+	}
+
+	// 数值 -> 字符串（含自定义字符串类型）
+	if isNumeric(srcField) && destType.Kind() == reflect.String {
+		strVal := numericToString(srcField)
+		return reflect.ValueOf(strVal).Convert(destType), true
+	}
+
+	// 字符串 -> 数值
+	if isStringKind(srcField) && isNumericKind(destType.Kind()) {
+		if converted, ok := stringToNumeric(srcField.String(), destType); ok {
+			return converted, true
+		}
+	}
+
+	// 字符串 -> 复杂类型 / interface{} 的 JSON 反序列化
+	if isStringKind(srcField) && srcField.String() != "" {
+		if converted, ok := unmarshalJSONStringToType(srcField.String(), destType); ok {
+			return converted, true
+		}
+	}
+
+	// 底层可转换类型（string ↔ MyStr, int ↔ MyInt 等）
+	if safeConvertible(srcField.Type(), destType) {
+		return srcField.Convert(destType), true
+	}
+
+	return reflect.Value{}, false
+}
+
+func unmarshalJSONStringToType(raw string, destType reflect.Type) (reflect.Value, bool) {
+	if destType.Kind() == reflect.Interface {
+		var parsed interface{}
+		if err := json.Unmarshal([]byte(raw), &parsed); err != nil {
+			return reflect.Value{}, false
+		}
+		if parsed == nil {
+			return reflect.Zero(destType), true
+		}
+		return reflect.ValueOf(parsed), true
+	}
+
+	if destType.Kind() == reflect.Ptr {
+		destInstancePtr := reflect.New(destType.Elem())
+		if err := json.Unmarshal([]byte(raw), destInstancePtr.Interface()); err != nil {
+			return reflect.Value{}, false
+		}
+		return destInstancePtr, true
+	}
+
+	destInstancePtr := reflect.New(destType)
+	if err := json.Unmarshal([]byte(raw), destInstancePtr.Interface()); err != nil {
+		return reflect.Value{}, false
+	}
+	return destInstancePtr.Elem(), true
+}
 
 // isNumeric 判断是否为数值类型（包括自定义数值类型如 type MyInt int）
 func isNumeric(v reflect.Value) bool {
@@ -435,47 +463,15 @@ func isIntKind(k reflect.Kind) bool {
 	return false
 }
 
-// handlePtrConversion 处理指针与非指针之间的转换
-func handlePtrConversion(srcField, destField reflect.Value) bool {
-	srcType := srcField.Type()
-	destType := destField.Type()
-
-	// 非指针 → 指针
-	if srcType.Kind() != reflect.Ptr && destType.Kind() == reflect.Ptr {
-		elemType := destType.Elem()
-		if safeConvertible(srcType, elemType) {
-			newVal := reflect.New(elemType)
-			newVal.Elem().Set(srcField.Convert(elemType))
-			destField.Set(newVal)
-			return true
-		}
+func isNumericKind(k reflect.Kind) bool {
+	switch k {
+	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
+		return true
+	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
+		return true
+	case reflect.Float32, reflect.Float64:
+		return true
 	}
-
-	// 指针 → 非指针
-	if srcType.Kind() == reflect.Ptr && destType.Kind() != reflect.Ptr {
-		if !srcField.IsNil() {
-			srcElem := srcField.Elem()
-			if safeConvertible(srcElem.Type(), destType) {
-				destField.Set(srcElem.Convert(destType))
-				return true
-			}
-		}
-	}
-
-	// 指针 → 指针
-	if srcType.Kind() == reflect.Ptr && destType.Kind() == reflect.Ptr {
-		if !srcField.IsNil() {
-			srcElem := srcField.Elem()
-			destElemType := destType.Elem()
-			if safeConvertible(srcElem.Type(), destElemType) {
-				newVal := reflect.New(destElemType)
-				newVal.Elem().Set(srcElem.Convert(destElemType))
-				destField.Set(newVal)
-				return true
-			}
-		}
-	}
-
 	return false
 }
 
