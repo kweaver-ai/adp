@@ -36,6 +36,7 @@ const (
 	DAGINSTANCEKEYWORD_TABLENAME = "t_dag_instance_keyword"
 	OUTBOXMESSAGE_TABLENAME      = "t_outbox"
 	INBOXMESSAGE_TABLENAME       = "t_inbox"
+	LOG_TABLENAME                = "t_log"
 )
 
 // Dag 流程配置数据库模型
@@ -1593,15 +1594,15 @@ func (d *dag) CreateInbox(ctx context.Context, msg *entity.InBox) error {
 
 	trace.SetAttributes(newCtx, attribute.String(trace.TABLE_NAME, INBOXMESSAGE_TABLENAME), attribute.String(trace.DB_SQL, sql), attribute.String(trace.DB_Values, msgStr))
 
-	dagStr, _ := jsoniter.MarshalToString(msg.Dags)
+	t := ToInboxModel(msg)
 	err = d.db.Exec(sql,
-		msg.ID,
-		msg.Msg,
-		msg.Topic,
-		msg.DocID,
-		dagStr,
-		msg.CreatedAt,
-		msg.UpdatedAt,
+		t.ID,
+		t.Msg,
+		t.Topic,
+		t.DocID,
+		t.Dags,
+		t.CreatedAt,
+		t.UpdatedAt,
 	).Error
 
 	return err
@@ -1636,7 +1637,7 @@ func (d *dag) CreateLogs(ctx context.Context, ossLogs []*entity.Log) error {
 		sqlStr = strings.TrimSuffix(sqlStr, ",")
 
 		msgStr, _ := jsoniter.MarshalToString(values)
-		trace.SetAttributes(newCtx, attribute.String(trace.TABLE_NAME, "t_log"), attribute.String(trace.DB_SQL, sqlStr), attribute.String(trace.DB_Values, msgStr))
+		trace.SetAttributes(newCtx, attribute.String(trace.TABLE_NAME, LOG_TABLENAME), attribute.String(trace.DB_SQL, sqlStr), attribute.String(trace.DB_Values, msgStr))
 
 		if err = d.db.Exec(sqlStr, values...).Error; err != nil {
 			return err

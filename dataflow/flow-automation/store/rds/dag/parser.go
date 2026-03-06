@@ -10,6 +10,7 @@ import (
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/pkg/entity"
 )
 
+// ToDagModel 转换为DagModel
 func ToDagModel(dag *entity.Dag, isupdate bool) *DagModel {
 	if isupdate {
 		dag.Update()
@@ -70,6 +71,7 @@ func ToDagModel(dag *entity.Dag, isupdate bool) *DagModel {
 	}
 }
 
+// ToDagInstanceModel 转换为DagInstanceModel
 func ToDagInstanceModel(dagIns *entity.DagInstance, isupdate bool) *DagInstanceModel {
 	if isupdate {
 		dagIns.Update()
@@ -132,6 +134,7 @@ func ToDagInstanceModel(dagIns *entity.DagInstance, isupdate bool) *DagInstanceM
 	}
 }
 
+// ToTaskInstanceModel 转换为TaskInstanceModel
 func ToTaskInstanceModel(taskIns *entity.TaskInstance, isupdate bool) *TaskInstanceModel {
 	if isupdate {
 		taskIns.Update()
@@ -167,6 +170,7 @@ func ToTaskInstanceModel(taskIns *entity.TaskInstance, isupdate bool) *TaskInsta
 	}
 }
 
+// ToDagVersionModel 转换为DagVersionModel
 func ToDagVersionModel(dagVersion *entity.DagVersion) *DagVersionModel {
 	dagVersion.Initial()
 	id, _ := strconv.ParseUint(dagVersion.ID, 10, 64)
@@ -185,6 +189,25 @@ func ToDagVersionModel(dagVersion *entity.DagVersion) *DagVersionModel {
 	}
 }
 
+// ToInboxModel 转换为InboxModel
+func ToInboxModel(inbox *entity.InBox) *InBoxModel {
+	inbox.Initial()
+	id, _ := strconv.ParseUint(inbox.ID, 10, 64)
+	msg, _ := jsoniter.MarshalToString(inbox.Msg)
+	dags, _ := jsoniter.MarshalToString(inbox.Dags)
+
+	return &InBoxModel{
+		ID:        id,
+		CreatedAt: inbox.CreatedAt,
+		UpdatedAt: inbox.UpdatedAt,
+		Msg:       msg,
+		Topic:     inbox.Topic,
+		DocID:     inbox.DocID,
+		Dags:      dags,
+	}
+}
+
+// ToEntity 将src转换为dest
 func ToEntity(src, dest interface{}) error {
 	return copyFields(src, dest)
 }
