@@ -10,7 +10,7 @@ import (
 	ierrors "github.com/kweaver-ai/adp/autoflow/flow-automation/errors"
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/pkg/entity"
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/utils"
-	"go.mongodb.org/mongo-driver/bson/primitive"
+	normalizeutil "github.com/kweaver-ai/adp/autoflow/flow-automation/utils/normalize"
 )
 
 var tokenRequiredOps = map[string]bool{
@@ -160,7 +160,7 @@ func (s *SecurityPolicyTokenStrategy) appendAuditorIDs(taskIns *entity.TaskInsta
 		return
 	}
 
-	taskIds, ok := workflowApprovalTaskIds.(primitive.A)
+	taskIds, ok := normalizeutil.AsSlice(workflowApprovalTaskIds)
 	if !ok || len(taskIds) == 0 {
 		return
 	}
@@ -176,15 +176,19 @@ func (s *SecurityPolicyTokenStrategy) appendAuditorIDs(taskIns *entity.TaskInsta
 			continue
 		}
 
-		if allAuditorIds, ok := data["all_auditor_ids"].(primitive.A); ok {
+		if allAuditorIds, ok := normalizeutil.AsSlice(data["all_auditor_ids"]); ok {
 			for _, id := range allAuditorIds {
-				*userIDs = append(*userIDs, id.(string))
+				if userID, ok := id.(string); ok {
+					*userIDs = append(*userIDs, userID)
+				}
 			}
 		}
 
-		if finallyAuditorIds, ok := data["finally_auditor_ids"].(primitive.A); ok {
+		if finallyAuditorIds, ok := normalizeutil.AsSlice(data["finally_auditor_ids"]); ok {
 			for _, id := range finallyAuditorIds {
-				*userIDs = append(*userIDs, id.(string))
+				if userID, ok := id.(string); ok {
+					*userIDs = append(*userIDs, userID)
+				}
 			}
 		}
 	}

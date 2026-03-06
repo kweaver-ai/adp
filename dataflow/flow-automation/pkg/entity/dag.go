@@ -26,9 +26,8 @@ import (
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/pkg/utils/value"
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/pkg/vm/opcode"
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/store"
-	cutils "github.com/kweaver-ai/adp/autoflow/flow-automation/utils"
+	normalizeutil "github.com/kweaver-ai/adp/autoflow/flow-automation/utils/normalize"
 	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 )
 
@@ -1151,8 +1150,8 @@ func (dagIns *DagInstance) Fail(reason string) {
 }
 
 func (dagIns *DagInstance) FailDetail(reason map[string]any) {
-	if _, ok := reason["detail"].(primitive.D); ok {
-		reason["detail"] = cutils.PrimitiveToMap(reason["detail"])
+	if detail, ok := reason["detail"]; ok {
+		reason["detail"] = normalizeutil.NormalizeContainer(detail)
 	}
 	b, _ := json.Marshal(reason)
 	dagIns.Fail(string(b))

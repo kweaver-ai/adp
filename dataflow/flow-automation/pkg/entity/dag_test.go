@@ -1,10 +1,13 @@
 package entity
 
 import (
+	"encoding/json"
 	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 func TestDagInstance_VarsIterator(t *testing.T) {
@@ -107,6 +110,45 @@ func TestDagInstance_Block(t *testing.T) {
 	testHook(t, dagIns, string(DagInstanceStatusBlocked), DagInstanceStatusBlocked, func() {
 		dagIns.Block("")
 	})
+}
+
+func TestDagInstance_FailDetailNormalizesContainers(t *testing.T) {
+	dagIns := &DagInstance{}
+
+	dagIns.FailDetail(map[string]any{
+		"detail": bson.M{
+			"group": primitive.D{{Key: "id", Value: "g1"}},
+			"items": primitive.A{
+				primitive.M{"name": "alice"},
+				primitive.D{{Key: "name", Value: "bob"}},
+			},
+		},
+	})
+
+	var reason map[string]any
+	if err := json.Unmarshal([]byte(dagIns.Reason), &reason); err != nil {
+		t.Fatalf("unmarshal reason failed: %v", err)
+	}
+
+	detail, ok := reason["detail"].(map[string]any)
+	if !ok {
+		t.Fatalf("expected detail map, got %T", reason["detail"])
+	}
+
+	group, ok := detail["group"].(map[string]any)
+	if !ok || group["id"] != "g1" {
+		t.Fatalf("expected normalized group map, got %#v", detail["group"])
+	}
+
+	items, ok := detail["items"].([]any)
+	if !ok {
+		t.Fatalf("expected items slice, got %T", detail["items"])
+	}
+
+	second, ok := items[1].(map[string]any)
+	if !ok || second["name"] != "bob" {
+		t.Fatalf("expected normalized second item, got %#v", items[1])
+	}
 }
 
 func testHook(t *testing.T, dagIns *DagInstance, wantRet string, wantStatus DagInstanceStatus, call func()) {

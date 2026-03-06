@@ -17,8 +17,8 @@ import (
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/pkg/entity"
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/pkg/mod"
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/utils"
+	normalizeutil "github.com/kweaver-ai/adp/autoflow/flow-automation/utils/normalize"
 	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
@@ -369,7 +369,7 @@ func (m *mgnt) StartSecurityPolicyFlowProc(ctx context.Context, params ProcParam
 		runVar["source"] = string(bytes)
 	}
 
-	if fields, ok := dag.Steps[0].Parameters["fields"].(primitive.A); ok {
+	if fields, ok := normalizeutil.AsSlice(dag.Steps[0].Parameters["fields"]); ok {
 		for _, f := range fields {
 			if field, ok := f.(map[string]interface{}); ok {
 				key := field["key"].(string)

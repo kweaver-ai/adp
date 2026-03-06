@@ -16,7 +16,7 @@ import (
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/pkg/entity"
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/pkg/log"
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/utils"
-	"go.mongodb.org/mongo-driver/bson/primitive"
+	normalizeutil "github.com/kweaver-ai/adp/autoflow/flow-automation/utils/normalize"
 )
 
 const conflictCode = 409
@@ -684,10 +684,10 @@ func (a *WorkflowAsyncTask) Cancel(taskIns entity.TaskInstance, executeMethods e
 
 	log.Infof("[asyncDocAudit] cancel applyId: %v", applyId)
 
-	taskResult, ok := taskIns.Results.(primitive.D)
+	taskResult, ok := normalizeutil.AsMap(taskIns.Results)
 
 	if ok {
-		groupID, ok := taskResult.Map()["group_id"].(string)
+		groupID, ok := taskResult["group_id"].(string)
 		if ok && groupID != "" {
 			usermgnt := drivenadapters.NewUserManagement()
 			err := usermgnt.DeleteInternalGroup([]string{groupID})
