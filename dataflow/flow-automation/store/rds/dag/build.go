@@ -693,12 +693,12 @@ func buildKeywordLike(val interface{}) (string, bool) {
 	return fmt.Sprintf("%v", val) + "%", true
 }
 
-func BuildDagVars(dag *entity.Dag) []*DagVar {
-	var vars []*DagVar
+func BuildDagVars(dag *entity.Dag) []*DagVarModel {
+	var vars []*DagVarModel
 	for k, v := range dag.Vars {
 		id, _ := utils.GetUniqueID()
 		dagID, _ := strconv.ParseUint(dag.ID, 10, 64)
-		vars = append(vars, &DagVar{
+		vars = append(vars, &DagVarModel{
 			ID:           id,
 			DagID:        dagID,
 			VarName:      k,
@@ -711,16 +711,16 @@ func BuildDagVars(dag *entity.Dag) []*DagVar {
 	return vars
 }
 
-func BuildDagStepIndex(dag *entity.Dag) []*DagStepIndex {
+func BuildDagStepIndex(dag *entity.Dag) []*DagStepModel {
 	if dag == nil {
 		return nil
 	}
 	dagID, _ := strconv.ParseUint(dag.ID, 10, 64)
-	rows := []*DagStepIndex{}
+	rows := []*DagStepModel{}
 
 	addRow := func(operator, sourceID string, hasDatasource bool) {
 		id, _ := utils.GetUniqueID()
-		rows = append(rows, &DagStepIndex{
+		rows = append(rows, &DagStepModel{
 			ID:            id,
 			DagID:         dagID,
 			Operator:      operator,
@@ -755,18 +755,18 @@ func BuildDagStepIndex(dag *entity.Dag) []*DagStepIndex {
 	return rows
 }
 
-func BuildDagAccessorIndex(dag *entity.Dag) []*DagAccessorIndex {
+func BuildDagAccessorIndex(dag *entity.Dag) []*DagAccessorModel {
 	if dag == nil {
 		return nil
 	}
 	dagID, _ := strconv.ParseUint(dag.ID, 10, 64)
-	rows := []*DagAccessorIndex{}
+	rows := []*DagAccessorModel{}
 	for _, accessor := range dag.Accessors {
 		if accessor.ID == "" {
 			continue
 		}
 		id, _ := utils.GetUniqueID()
-		rows = append(rows, &DagAccessorIndex{
+		rows = append(rows, &DagAccessorModel{
 			ID:         id,
 			DagID:      dagID,
 			AccessorID: accessor.ID,
@@ -813,17 +813,17 @@ func BuildDagIndexSubquery(input *mod.ListDagInput) (string, []interface{}) {
 	return strings.Join(conds, " AND "), args
 }
 
-func buildDagInstanceKeywordRows(dagInsID uint64, keywords []string) []DagInstanceKeyword {
+func buildDagInstanceKeywordRows(dagInsID uint64, keywords []string) []DagInstanceKeywordModel {
 	if len(keywords) == 0 {
 		return nil
 	}
-	rows := make([]DagInstanceKeyword, 0, len(keywords))
+	rows := make([]DagInstanceKeywordModel, 0, len(keywords))
 	for _, keyword := range keywords {
 		if keyword == "" {
 			continue
 		}
 		id, _ := utils.GetUniqueID()
-		rows = append(rows, DagInstanceKeyword{ID: id, DagInsID: dagInsID, Keyword: keyword})
+		rows = append(rows, DagInstanceKeywordModel{ID: id, DagInsID: dagInsID, Keyword: keyword})
 	}
 	return rows
 }

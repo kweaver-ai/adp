@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"strconv"
 	"strings"
 	"time"
 
@@ -20,8 +19,6 @@ import (
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/pkg/mod"
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/pkg/rds"
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/store"
-	dagmodel "github.com/kweaver-ai/adp/autoflow/flow-automation/store/rds/dag"
-	"github.com/kweaver-ai/adp/autoflow/flow-automation/utils"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"gorm.io/gorm"
@@ -738,22 +735,4 @@ func (m *mgnt) DeleteDataFlow(ctx context.Context, dagID, bizDomainID string, us
 	}()
 
 	return nil
-}
-
-func (m *mgnt) BuildDagVars(dag *entity.Dag) []*dagmodel.DagVar {
-	var vars []*dagmodel.DagVar
-	for k, v := range dag.Vars {
-		id, _ := utils.GetUniqueID()
-		dagID, _ := strconv.ParseUint(dag.ID, 10, 64)
-		vars = append(vars, &dagmodel.DagVar{
-			ID:           id,
-			DagID:        dagID,
-			VarName:      k,
-			DefaultValue: v.DefaultValue,
-			VarType:      "string",
-			Description:  v.Desc,
-		})
-	}
-
-	return vars
 }
