@@ -733,7 +733,7 @@ func (s *Store) BatchCreateDagIns(ctx context.Context, dagIns []*entity.DagInsta
 				continue
 			}
 
-			if _, err := s.mongoDB.Collection(s.dagInsClsName).InsertMany(ctx, dagArr[i], &options.InsertManyOptions{Ordered: &order}); err != nil {
+			if _, err := s.mongoDB.Collection(s.dagInsClsName).InsertMany(sessCtx, dagArr[i], &options.InsertManyOptions{Ordered: &order}); err != nil {
 				return nil, fmt.Errorf("insert dag instance failed: %w", err)
 			}
 		}
@@ -827,7 +827,7 @@ func (s *Store) BatchCreateTaskIns(ctx context.Context, taskIns []*entity.TaskIn
 
 	_, err = session.WithTransaction(ctx, func(sessCtx mongo.SessionContext) (interface{}, error) {
 		for i := range taskinsArr {
-			if _, err := s.mongoDB.Collection(s.taskInsClsName).InsertMany(ctx, taskinsArr[i], &options.InsertManyOptions{Ordered: &order}); err != nil {
+			if _, err := s.mongoDB.Collection(s.taskInsClsName).InsertMany(sessCtx, taskinsArr[i], &options.InsertManyOptions{Ordered: &order}); err != nil {
 				return nil, fmt.Errorf("insert task instance failed: %w", err)
 			}
 		}
@@ -2309,7 +2309,7 @@ func (s *Store) CreateLogs(ctx context.Context, ossLogs []*entity.Log) error {
 
 	_, err = session.WithTransaction(ctx, func(sessCtx mongo.SessionContext) (interface{}, error) {
 		for i := range ossLogArr {
-			if _, err := s.mongoDB.Collection(s.logClsName).InsertMany(ctx, ossLogArr[i], &options.InsertManyOptions{Ordered: &order}); err != nil {
+			if _, err := s.mongoDB.Collection(s.logClsName).InsertMany(sessCtx, ossLogArr[i], &options.InsertManyOptions{Ordered: &order}); err != nil {
 				return nil, fmt.Errorf("insert oss log failed: %w", err)
 			}
 		}

@@ -600,12 +600,12 @@ func (m *mgnt) UpdateDataFlow(ctx context.Context, dagID string, param *UpdateDa
 	}
 
 	err = m.mongo.WithTransaction(ctx, func(nctx context.Context, ms mod.Store) error {
-		if err = m.mongo.UpdateDag(ctx, dag); err != nil {
+		if err = ms.UpdateDag(nctx, dag); err != nil {
 			return err
 		}
 
 		for _, dagVersion := range dagVersions {
-			_, err = ms.CreateDagVersion(ctx, dagVersion)
+			_, err = ms.CreateDagVersion(nctx, dagVersion)
 			if err != nil {
 				return err
 			}
