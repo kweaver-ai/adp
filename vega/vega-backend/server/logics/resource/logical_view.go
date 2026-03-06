@@ -108,7 +108,7 @@ func validateViewNode(ctx context.Context, dvs *resourceService, node *interface
 			WithErrorDetails("The view node must have no input node")
 	}
 
-	var cfg interfaces.ViewNodeCfg
+	var cfg interfaces.ResourceNodeCfg
 	err := mapstructure.Decode(node.Config, &cfg)
 	if err != nil {
 		return rest.NewHTTPError(ctx, http.StatusInternalServerError, rest.PublicError_InternalServerError).
@@ -116,10 +116,10 @@ func validateViewNode(ctx context.Context, dvs *resourceService, node *interface
 	}
 
 	// 判断自定义视图的来源表是否存在，从这个函数能够拿到字段列表
-	atomicView, err := dvs.GetByID(ctx, cfg.ViewID)
+	atomicView, err := dvs.GetByID(ctx, cfg.ResourceID)
 	if err != nil {
 		return rest.NewHTTPError(ctx, http.StatusBadRequest, verrors.VegaBackend_LogicalView_InvalidParameter_LogicDefinition).
-			WithErrorDetails(fmt.Sprintf("get resource %s failed, %v", cfg.ViewID, err))
+			WithErrorDetails(fmt.Sprintf("get resource %s failed, %v", cfg.ResourceID, err))
 	}
 
 	// 校验来源视图的类型
@@ -132,7 +132,7 @@ func validateViewNode(ctx context.Context, dvs *resourceService, node *interface
 	case interfaces.ResourceCategoryIndex:
 	default:
 		return rest.NewHTTPError(ctx, http.StatusBadRequest, verrors.VegaBackend_LogicalView_InvalidParameter_LogicDefinition).
-			WithErrorDetails(fmt.Sprintf("The source view of the custom view '%s' is not supported", cfg.ViewID))
+			WithErrorDetails(fmt.Sprintf("The source view of the custom view '%s' is not supported", cfg.ResourceID))
 
 	}
 
@@ -562,3 +562,50 @@ func validateCond(ctx context.Context, cfg *interfaces.FilterCondCfg, fieldsMap 
 
 	return nil
 }
+
+// func (rs *resourceService) getLogicViewSource(ctx context.Context, resource *interfaces.Resource) (*interfaces.Resource, error) {
+// 	// 给每个原子视图添加对应的技术名称（DSL类视图技术名称对应的是来源索引库），uniquery查询数据时需要
+// 	for _, node := range resource.LogicDefinition {
+// 		if node.Type != interfaces.DataScopeNodeType_View {
+// 			continue
+// 		}
+
+// 		var viewID string
+// 		var ok bool
+// 		if viewID, ok = node.Config["resource_id"].(string); !ok {
+// 			return nil, rest.NewHTTPError(ctx, http.StatusInternalServerError, rest.PublicError_InternalServerError).
+// 				WithErrorDetails("resource_id is not string")
+// 		}
+
+// 		// if includeDataScopeViews {
+
+// 		// 获取原子视图的信息
+// 		resource, err := rs.GetByID(ctx, viewID)
+// 		if err != nil {
+// 			return nil, err
+// 		}
+
+// 		// fieldsMap := make(map[string]*interfaces.ViewProperty)
+// 		// for _, vf := range resource.SchemaDefinition {
+// 		// 	fieldsMap[vf.Name] = &interfaces.ViewProperty{
+// 		// 		Property:    *vf,
+// 		// 		SrcNodeID:   node.ID,
+// 		// 		SrcNodeName: node.Title,
+// 		// 	}
+// 		// }
+// 		// resource.FieldsMap = fieldsMap
+
+// 		node.Config["resource"] = resource
+// 		// }
+// 	}
+
+// 	// fieldsMap := make(map[string]*interfaces.ViewProperty)
+// 	// for _, vf := range resource.SchemaDefinition {
+// 	// 	// name 作为 key
+// 	// 	fieldsMap[vf.Name] = vf
+// 	// }
+
+// 	// resource.FieldsMap = fieldsMap
+
+// 	return resource, nil
+// }

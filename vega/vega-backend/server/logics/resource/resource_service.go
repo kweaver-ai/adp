@@ -24,6 +24,7 @@ import (
 	resourceAccess "vega-backend/drivenadapters/resource"
 	verrors "vega-backend/errors"
 	"vega-backend/interfaces"
+	"vega-backend/logics/catalog"
 	dataset "vega-backend/logics/dataset"
 	"vega-backend/logics/permission"
 	"vega-backend/logics/user_mgmt"
@@ -36,6 +37,7 @@ var (
 
 type resourceService struct {
 	appSetting *common.AppSetting
+	cs         interfaces.CatalogService
 	ds         interfaces.DatasetService
 	ps         interfaces.PermissionService
 	ra         interfaces.ResourceAccess
@@ -47,6 +49,7 @@ func NewResourceService(appSetting *common.AppSetting) interfaces.ResourceServic
 	rServiceOnce.Do(func() {
 		rService = &resourceService{
 			appSetting: appSetting,
+			cs:         catalog.NewCatalogService(appSetting),
 			ds:         dataset.NewDatasetService(appSetting),
 			ps:         permission.NewPermissionService(appSetting),
 			ra:         resourceAccess.NewResourceAccess(appSetting),
@@ -82,6 +85,15 @@ func (rs *resourceService) Create(ctx context.Context, req *interfaces.ResourceR
 		if err != nil {
 			return "", err
 		}
+	}
+
+	// 检查catalog是否存在
+	exists, err := rs.cs.CheckExistByID(ctx, req.CatalogID)
+	if err != nil {
+		return "", err
+	}
+	if !exists {
+		return "", rest.NewHTTPError(ctx, http.StatusNotFound, verrors.VegaBackend_Catalog_NotFound)
 	}
 
 	if req.ResourceID == "" {
@@ -184,7 +196,7 @@ func (rs *resourceService) GetByID(ctx context.Context, id string) (*interfaces.
 		span.SetStatus(codes.Error, "GetAccountNames error")
 
 		return nil, rest.NewHTTPError(ctx, http.StatusInternalServerError,
-			verrors.VegaBackend_Catalog_InternalError_GetAccountNamesFailed).WithErrorDetails(err.Error())
+			verrors.VegaBackend_Resource_InternalError_GetAccountNamesFailed).WithErrorDetails(err.Error())
 	}
 
 	span.SetStatus(codes.Ok, "")
@@ -201,6 +213,40 @@ func (rs *resourceService) GetByIDs(ctx context.Context, ids []string) ([]*inter
 		span.SetStatus(codes.Error, "Get resources failed")
 		return nil, rest.NewHTTPError(ctx, http.StatusInternalServerError, verrors.VegaBackend_Resource_InternalError_GetFailed).
 			WithErrorDetails(err.Error())
+	}
+
+	// 根据权限过滤有查看权限的对象，过滤后的数组的总长度就是总数，无需再请求总数
+	matchResoucesMap, err := rs.ps.FilterResources(ctx, interfaces.RESOURCE_TYPE_RESOURCE, ids,
+		[]string{interfaces.OPERATION_TYPE_VIEW_DETAIL}, true)
+	if err != nil {
+		span.SetStatus(codes.Error, "Filter resources error")
+		return nil, err
+	}
+
+	accountInfos := make([]*interfaces.AccountInfo, 0)
+	for _, resource := range resources {
+		if resrc, exist := matchResoucesMap[resource.ID]; exist {
+			resource.Operations = resrc.Operations // 用户当前有权限的操作
+			// switch resource.Category {
+			// case interfaces.ResourceCategoryLogicView:
+			// 	resource, err = rs.getLogicViewSource(ctx, resource)
+			// 	if err != nil {
+			// 		return nil, err
+			// 	}
+			// }
+		} else {
+			return nil, rest.NewHTTPError(ctx, http.StatusForbidden, rest.PublicError_Forbidden).
+				WithErrorDetails(fmt.Sprintf("Access denied: insufficient permissions for[%v]", interfaces.OPERATION_TYPE_VIEW_DETAIL))
+		}
+		accountInfos = append(accountInfos, &resource.Creator, &resource.Updater)
+	}
+
+	err = rs.ums.GetAccountNames(ctx, accountInfos)
+	if err != nil {
+		span.SetStatus(codes.Error, "GetAccountNames error")
+
+		return nil, rest.NewHTTPError(ctx, http.StatusInternalServerError,
+			verrors.VegaBackend_Resource_InternalError_GetAccountNamesFailed).WithErrorDetails(err.Error())
 	}
 
 	span.SetStatus(codes.Ok, "")
@@ -331,6 +377,23 @@ func (rs *resourceService) Update(ctx context.Context, id string, req *interface
 	}, []string{interfaces.OPERATION_TYPE_MODIFY})
 	if err != nil {
 		return err
+	}
+
+	switch req.Category {
+	case interfaces.ResourceCategoryLogicView:
+		err = rs.validateLogicDefinition(ctx, req)
+		if err != nil {
+			return err
+		}
+	}
+
+	// 检查catalog是否存在
+	exists, err := rs.cs.CheckExistByID(ctx, req.CatalogID)
+	if err != nil {
+		return err
+	}
+	if !exists {
+		return rest.NewHTTPError(ctx, http.StatusNotFound, verrors.VegaBackend_Catalog_NotFound)
 	}
 
 	// Apply updates

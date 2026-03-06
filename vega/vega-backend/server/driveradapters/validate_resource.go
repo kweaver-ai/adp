@@ -34,13 +34,13 @@ func ValidateResourceRequest(ctx context.Context, req *interfaces.ResourceReques
 
 	switch req.Category {
 	case interfaces.ResourceCategoryLogicView:
-		return validateLogicalViewResourceRequest(ctx, req)
+		return validateLogicalViewRequest(ctx, req)
 	default:
 		return nil
 	}
 }
 
-func validateLogicalViewResourceRequest(ctx context.Context, req *interfaces.ResourceRequest) error {
+func validateLogicalViewRequest(ctx context.Context, req *interfaces.ResourceRequest) error {
 	outputFields, err := validateLogicDefinition(ctx, req.LogicDefinition)
 	if err != nil {
 		return err
@@ -57,7 +57,7 @@ func validateLogicalViewResourceRequest(ctx context.Context, req *interfaces.Res
 }
 
 // 校验自定义视图配置
-func validateLogicDefinition(ctx context.Context, nodes []*interfaces.DataScopeNode) (outputFields []*interfaces.ViewField, err error) {
+func validateLogicDefinition(ctx context.Context, nodes []*interfaces.DataScopeNode) (outputFields []*interfaces.ViewProperty, err error) {
 	if nodes == nil {
 		return nil, nil
 	}
@@ -83,8 +83,8 @@ func validateLogicDefinition(ctx context.Context, nodes []*interfaces.DataScopeN
 }
 
 // 校验字段和字段特征
-func validateViewFields(ctx context.Context, viewFields []*interfaces.ViewField) error {
-	fieldsMap := make(map[string]*interfaces.ViewField)
+func validateViewFields(ctx context.Context, viewFields []*interfaces.ViewProperty) error {
+	fieldsMap := make(map[string]*interfaces.ViewProperty)
 	for _, field := range viewFields {
 		fieldsMap[field.Name] = field
 	}
@@ -154,7 +154,7 @@ func validateViewFields(ctx context.Context, viewFields []*interfaces.ViewField)
 }
 
 // 校验特征
-func validateFeatures(ctx context.Context, fieldsMap map[string]*interfaces.ViewField, features []interfaces.FieldFeature) error {
+func validateFeatures(ctx context.Context, fieldsMap map[string]*interfaces.ViewProperty, features []interfaces.FieldFeature) error {
 	enabledMap := make(map[interfaces.FieldFeatureType]bool)
 	featureNameMap := make(map[string]struct{})
 	for _, f := range features {

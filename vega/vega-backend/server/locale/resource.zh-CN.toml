@@ -92,3 +92,13 @@ ErrorLink = "暂无"
 Description = "同步数据资源失败"
 Solution = "请联系管理员"
 ErrorLink = "暂无"
+
+[VegaBackend.Resource.InternalError.InvalidCategory]
+Description = "无效的数据资源分类"
+Solution = "请检查参数"
+ErrorLink = "暂无"
+
+[VegaBackend.Resource.InternalError.GetAccountNamesFailed]
+Description = "获取账户名称失败"
+Solution = "请联系管理员"
+ErrorLink = "暂无"
