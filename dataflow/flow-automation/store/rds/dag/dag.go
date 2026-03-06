@@ -933,7 +933,7 @@ func (d *dag) ListDagInstance(ctx context.Context, input *mod.ListDagInstanceInp
 
 	if input.SortBy != "" {
 		sortBy := camelToFSnake(input.SortBy)
-		dir := utils.IfNot(input.Order == 0, "DESC", "ASC")
+		dir := utils.IfNot(input.Order == 1, "ASC", "DESC")
 		sql += fmt.Sprintf(" ORDER BY %s %s", sortBy, dir)
 	}
 
@@ -1905,7 +1905,7 @@ func (d *dag) DisdinctDagInstance(input *mod.ListDagInstanceInput) ([]interface{
 		sql += " WHERE " + strings.Join(conds, " AND ")
 	}
 	if input.SortBy != "" {
-		dir := utils.IfNot(input.Order == 0, "DESC", "ASC")
+		dir := utils.IfNot(input.Order == 1, "ASC", "DESC")
 		sql += fmt.Sprintf(" ORDER BY %s %s", camelToFSnake(input.SortBy), dir)
 	}
 	if input.Limit > 0 {
@@ -2219,9 +2219,6 @@ func (d *dag) GroupDagInstance(ctx context.Context, input *mod.GroupInput) ([]*e
 
 	result := make([]*entity.DagInstanceGroup, 0, len(rows))
 	for _, row := range rows {
-		if row.DagInstanceModel.ID == 0 {
-			continue
-		}
 		dagIns := &entity.DagInstance{}
 		if err = ToEntity(&row.DagInstanceModel, dagIns); err != nil {
 			return nil, err
@@ -2306,7 +2303,7 @@ func (d *dag) ListDag(ctx context.Context, input *mod.ListDagInput) ([]*entity.D
 		sql += " WHERE " + strings.Join(conds, " AND ")
 	}
 	if input.SortBy != "" {
-		sql += fmt.Sprintf(" ORDER BY %s %s", camelToFSnake(input.SortBy), utils.IfNot(input.Order == 0, "DESC", "ASC"))
+		sql += fmt.Sprintf(" ORDER BY %s %s", camelToFSnake(input.SortBy), utils.IfNot(input.Order == 1, "ASC", "DESC"))
 	}
 	if input.Limit > 0 {
 		sql += " LIMIT ? OFFSET ?"
@@ -2322,9 +2319,6 @@ func (d *dag) ListDag(ctx context.Context, input *mod.ListDagInput) ([]*entity.D
 
 	var res []*entity.Dag
 	for _, model := range models {
-		if model.ID == 0 {
-			continue
-		}
 		dag := &entity.Dag{}
 		if err = ToEntity(model, dag); err != nil {
 			return nil, err
@@ -2363,7 +2357,7 @@ func (d *dag) ListDagByFields(ctx context.Context, filter bson.M, opt options.Fi
 		case map[string]interface{}:
 			for k, order := range v {
 				dir := "ASC"
-				if ord, ok := order.(int); ok && ord < 0 {
+				if ord, ok := order.(int); ok && ord <= 0 {
 					dir = "DESC"
 				}
 				sql += fmt.Sprintf(" ORDER BY %s %s", camelToFSnake(k), dir)
@@ -2372,7 +2366,7 @@ func (d *dag) ListDagByFields(ctx context.Context, filter bson.M, opt options.Fi
 		case bson.D:
 			if len(v) > 0 {
 				dir := "ASC"
-				if v[0].Value.(int32) < 0 {
+				if v[0].Value.(int32) <= 0 {
 					dir = "DESC"
 				}
 				sql += fmt.Sprintf(" ORDER BY %s %s", camelToFSnake(v[0].Key), dir)
@@ -2396,9 +2390,6 @@ func (d *dag) ListDagByFields(ctx context.Context, filter bson.M, opt options.Fi
 	}
 	var res []*entity.Dag
 	for _, model := range models {
-		if model.ID == 0 {
-			continue
-		}
 		dag := &entity.Dag{}
 		if err = ToEntity(model, dag); err != nil {
 			return nil, err
@@ -2545,9 +2536,6 @@ func (d *dag) ListDagInstanceInRangeTime(ctx context.Context, status string, beg
 	}
 	var res []*entity.DagInstance
 	for _, model := range models {
-		if model.ID == 0 {
-			continue
-		}
 		dagIns := &entity.DagInstance{}
 		if err = ToEntity(model, dagIns); err != nil {
 			return nil, err
@@ -2570,7 +2558,7 @@ func (d *dag) ListDagVersions(ctx context.Context, input *mod.ListDagVersionInpu
 		args = append(args, input.DagID)
 	}
 	if input.SortBy != "" {
-		sql += fmt.Sprintf(" ORDER BY %s %s", camelToFSnake(input.SortBy), utils.IfNot(input.Order == 0, "DESC", "ASC"))
+		sql += fmt.Sprintf(" ORDER BY %s %s", camelToFSnake(input.SortBy), utils.IfNot(input.Order == 1, "ASC", "DESC"))
 	}
 	if input.Limit > 0 {
 		sql += " LIMIT ? OFFSET ?"
@@ -2936,7 +2924,7 @@ func (d *dag) ListTaskInstance(ctx context.Context, input *mod.ListTaskInstanceI
 		sql += " WHERE " + strings.Join(conds, " AND ")
 	}
 	if input.SortBy != "" {
-		sql += fmt.Sprintf(" ORDER BY %s %s", camelToFSnake(input.SortBy), utils.IfNot(input.Order == 0, "DESC", "ASC"))
+		sql += fmt.Sprintf(" ORDER BY %s %s", camelToFSnake(input.SortBy), utils.IfNot(input.Order == 1, "ASC", "DESC"))
 	}
 	if input.Limit > 0 {
 		sql += " LIMIT ? OFFSET ?"
@@ -2952,9 +2940,6 @@ func (d *dag) ListTaskInstance(ctx context.Context, input *mod.ListTaskInstanceI
 
 	var res []*entity.TaskInstance
 	for _, model := range models {
-		if model.ID == 0 {
-			continue
-		}
 		task := &entity.TaskInstance{}
 		if err = ToEntity(model, task); err != nil {
 			return nil, err
