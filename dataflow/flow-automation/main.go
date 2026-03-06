@@ -251,8 +251,8 @@ func Release() {
 }
 
 func main() {
-	// go StartEcronManagement()
-	// go StartEcronAnalysis()
+	go StartEcronManagement()
+	go StartEcronAnalysis()
 	go StartDataFlow()
 
 	c := make(chan os.Signal, 1)
