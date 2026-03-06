@@ -39,7 +39,7 @@ const (
 )
 
 // Dag 流程配置数据库模型
-type Dag struct {
+type DagModel struct {
 	ID            uint64 `json:"f_id" gorm:"column:f_id;primaryKey"`
 	CreatedAt     int64  `json:"f_created_at" gorm:"column:f_created_at"`
 	UpdatedAt     int64  `json:"f_updated_at" gorm:"column:f_updated_at"`
@@ -80,7 +80,7 @@ type Dag struct {
 }
 
 // DagVar 流程配置变量数据库模型
-type DagVar struct {
+type DagVarModel struct {
 	ID           uint64 `json:"f_id" gorm:"column:f_id;primaryKey;autoIncrement"`
 	DagID        uint64 `json:"f_dag_id" gorm:"column:f_dag_id"`
 	VarName      string `json:"f_var_name" gorm:"column:f_var_name"`
@@ -90,13 +90,13 @@ type DagVar struct {
 }
 
 // DagInstanceKeyword dag instance keyword table model
-type DagInstanceKeyword struct {
+type DagInstanceKeywordModel struct {
 	ID       uint64 `json:"f_id" gorm:"column:f_id;primaryKey"`
 	DagInsID uint64 `json:"f_dag_ins_id" gorm:"column:f_dag_ins_id"`
 	Keyword  string `json:"f_keyword" gorm:"column:f_keyword"`
 }
 
-type DagStepIndex struct {
+type DagStepModel struct {
 	ID            uint64 `gorm:"column:f_id;primaryKey"`
 	DagID         uint64 `gorm:"column:f_dag_id"`
 	Operator      string `gorm:"column:f_operator"`
@@ -104,20 +104,20 @@ type DagStepIndex struct {
 	HasDatasource bool   `gorm:"column:f_has_datasource"`
 }
 
-type DagTriggerConfigIndex struct {
+type DagTriggerConfigModel struct {
 	ID       uint64 `gorm:"column:f_id;primaryKey"`
 	DagID    uint64 `gorm:"column:f_dag_id"`
 	Operator string `gorm:"column:f_operator"`
 	SourceID string `gorm:"column:f_source_id"`
 }
 
-type DagAccessorIndex struct {
+type DagAccessorModel struct {
 	ID         uint64 `gorm:"column:f_id;primaryKey"`
 	DagID      uint64 `gorm:"column:f_dag_id"`
 	AccessorID string `gorm:"column:f_accessor_id"`
 }
 
-type DagVersion struct {
+type DagVersionModel struct {
 	ID        uint64 `json:"f_id" gorm:"column:f_id;primaryKey"`
 	CreatedAt int64  `json:"f_created_at" gorm:"column:f_created_at"`
 	UpdatedAt int64  `json:"f_updated_at" gorm:"column:f_updated_at"`
@@ -131,7 +131,7 @@ type DagVersion struct {
 }
 
 // DagInstance 对应数据库表 t_dag_instance
-type DagInstance struct {
+type DagInstanceModel struct {
 	ID               uint64 `gorm:"column:f_id;primaryKey" json:"f_id"`
 	CreatedAt        int64  `gorm:"column:f_created_at" json:"f_created_at"`
 	UpdatedAt        int64  `gorm:"column:f_updated_at" json:"f_updated_at"`
@@ -169,7 +169,7 @@ type DagInstance struct {
 	BizDomainID      string `gorm:"column:f_biz_domain_id" json:"f_biz_domain_id"`
 }
 
-type InBox struct {
+type InBoxModel struct {
 	ID        uint64 `gorm:"column:f_id;primaryKey" json:"f_id"`
 	CreatedAt int64  `gorm:"column:f_created_at" json:"f_created_at"`
 	UpdatedAt int64  `gorm:"column:f_updated_at" json:"f_updated_at"`
@@ -179,7 +179,7 @@ type InBox struct {
 	Dags      string `gorm:"column:f_dag" json:"f_dags"`
 }
 
-type OutBox struct {
+type OutBoxModel struct {
 	ID        uint64 `gorm:"column:f_id;primaryKey" json:"f_id"`
 	CreatedAt int64  `gorm:"column:f_created_at" json:"f_created_at"`
 	UpdatedAt int64  `gorm:"column:f_updated_at" json:"f_updated_at"`
@@ -397,13 +397,13 @@ func (d *dag) CreateDag(ctx context.Context, dag *entity.Dag) (string, error) {
 // 	defer func() { trace.TelemetrySpanEnd(span, err) }()
 // }
 
-func (d *dag) CreateDagVars(ctx context.Context, dagVars []*DagVar) error {
+func (d *dag) CreateDagVars(ctx context.Context, dagVars []*DagVarModel) error {
 	var err error
 	newCtx, span := trace.StartInternalSpan(ctx)
 	msgStr, _ := jsoniter.MarshalToString(dagVars)
 	defer func() { trace.TelemetrySpanEnd(span, err) }()
 
-	fn := func(dagVars []*DagVar) error {
+	fn := func(dagVars []*DagVarModel) error {
 		if len(dagVars) == 0 {
 			return nil
 		}
@@ -485,7 +485,7 @@ func (d *dag) insertDagInstanceKeywords(ctx context.Context, dagInsID uint64, ke
 	return err
 }
 
-func (d *dag) insertDagInstanceKeywordsBatch(ctx context.Context, rows []DagInstanceKeyword) error {
+func (d *dag) insertDagInstanceKeywordsBatch(ctx context.Context, rows []DagInstanceKeywordModel) error {
 	var err error
 	if len(rows) == 0 {
 		return nil
@@ -560,7 +560,7 @@ func (d *dag) refreshDagIndexes(ctx context.Context, dag *entity.Dag) error {
 		return err
 	}
 
-	insertStepRows := func(rows []*DagStepIndex) error {
+	insertStepRows := func(rows []*DagStepModel) error {
 		if len(rows) == 0 {
 			return nil
 		}
@@ -590,7 +590,7 @@ func (d *dag) refreshDagIndexes(ctx context.Context, dag *entity.Dag) error {
 	// 	return d.db.Exec(sqlStr, values...).Error
 	// }
 
-	insertAccessorRows := func(rows []*DagAccessorIndex) error {
+	insertAccessorRows := func(rows []*DagAccessorModel) error {
 		if len(rows) == 0 {
 			return nil
 		}
@@ -766,7 +766,7 @@ func (d *dag) GetDagByFields(ctx context.Context, params map[string]interface{})
 	query, _ := jsoniter.MarshalToString(result.Params)
 	trace.SetAttributes(newCtx, attribute.String(trace.TABLE_NAME, DAG_TABLENAME), attribute.String(trace.DB_SQL, result.SQL), attribute.String(trace.DB_QUERY, query))
 
-	dag := &Dag{}
+	dag := &DagModel{}
 	err = d.db.Raw(result.SQL, result.Params...).Scan(dag).Error
 	if err != nil {
 		return nil, err
@@ -947,7 +947,7 @@ func (d *dag) ListDagInstance(ctx context.Context, input *mod.ListDagInstanceInp
 	query, _ := jsoniter.MarshalToString(args)
 	trace.SetAttributes(newCtx, attribute.String(trace.TABLE_NAME, DAGINSTANCE_TABLENAME), attribute.String(trace.DB_SQL, sql), attribute.String(trace.DB_QUERY, query))
 
-	dagInstances := make([]*DagInstance, 0)
+	dagInstances := make([]*DagInstanceModel, 0)
 	err = d.db.Raw(sql, args...).Scan(&dagInstances).Error
 	if err != nil {
 		return nil, err
@@ -1045,7 +1045,7 @@ func (d *dag) GetHistoryDagByVersionID(ctx context.Context, dagID, versionID str
 		WHERE f_dag_id = ? AND f_version_id = ?`
 	trace.SetAttributes(newCtx, attribute.String(trace.TABLE_NAME, DAGVERSIONS_TABLENAME), attribute.String(trace.DB_SQL, sql), attribute.String(trace.DB_QUERY, dagID), attribute.String(trace.DB_QUERY, versionID))
 
-	dagVersion := &DagVersion{}
+	dagVersion := &DagVersionModel{}
 	err = d.db.Raw(sql, dagID, versionID).Scan(dagVersion).Error
 	if err != nil {
 		return nil, err
@@ -1157,7 +1157,7 @@ func (d *dag) BatchCreateDagIns(ctx context.Context, dagIns []*entity.DagInstanc
 		VALUES `
 
 		values := make([]any, 0, len(batch)*35)
-		keywordRows := make([]DagInstanceKeyword, 0)
+		keywordRows := make([]DagInstanceKeywordModel, 0)
 		for _, data := range batch {
 			sqlStr += "(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?),"
 			t := ToDagInstanceModel(data, false)
@@ -1913,7 +1913,7 @@ func (d *dag) DisdinctDagInstance(input *mod.ListDagInstanceInput) ([]interface{
 	}
 
 	var res []interface{}
-	var dagIns []*DagInstance
+	var dagIns []*DagInstanceModel
 
 	if err := d.db.Raw(sql, args...).Scan(&dagIns).Error; err != nil {
 		return nil, err
@@ -1996,7 +1996,7 @@ func (d *dag) GetDagInstanceByFields(ctx context.Context, params map[string]inte
 	query, _ := jsoniter.MarshalToString(result.Params)
 	trace.SetAttributes(newCtx, attribute.String(trace.TABLE_NAME, DAGINSTANCE_TABLENAME), attribute.String(trace.DB_SQL, result.SQL), attribute.String(trace.DB_QUERY, query))
 
-	dagIns := &DagInstance{}
+	dagIns := &DagInstanceModel{}
 	err = d.db.Raw(result.SQL, result.Params...).Scan(dagIns).Error
 	if err != nil {
 		return nil, err
@@ -2074,7 +2074,7 @@ func (d *dag) GetInbox(ctx context.Context, id string) (*entity.InBox, error) {
 
 	trace.SetAttributes(newCtx, attribute.String(trace.TABLE_NAME, INBOXMESSAGE_TABLENAME), attribute.String(trace.DB_SQL, sql), attribute.String(trace.DB_QUERY, id))
 
-	inbox := &InBox{}
+	inbox := &InBoxModel{}
 	err = d.db.Raw(sql, id).Scan(inbox).Error
 	if err != nil {
 		return nil, err
@@ -2209,7 +2209,7 @@ func (d *dag) GroupDagInstance(ctx context.Context, input *mod.GroupInput) ([]*e
 
 	type groupRow struct {
 		Total int64 `gorm:"column:total"`
-		DagInstance
+		DagInstanceModel
 	}
 	rows := make([]groupRow, 0)
 	if err = d.db.Debug().Raw(sql, args...).Scan(&rows).Error; err != nil {
@@ -2218,11 +2218,11 @@ func (d *dag) GroupDagInstance(ctx context.Context, input *mod.GroupInput) ([]*e
 
 	result := make([]*entity.DagInstanceGroup, 0, len(rows))
 	for _, row := range rows {
-		if row.DagInstance.ID == 0 {
+		if row.DagInstanceModel.ID == 0 {
 			continue
 		}
 		dagIns := &entity.DagInstance{}
-		if err = ToEntity(&row.DagInstance, dagIns); err != nil {
+		if err = ToEntity(&row.DagInstanceModel, dagIns); err != nil {
 			return nil, err
 		}
 		result = append(result, &entity.DagInstanceGroup{
@@ -2314,7 +2314,7 @@ func (d *dag) ListDag(ctx context.Context, input *mod.ListDagInput) ([]*entity.D
 
 	trace.SetAttributes(newCtx, attribute.String(trace.TABLE_NAME, DAG_TABLENAME), attribute.String(trace.DB_SQL, sql))
 
-	models := make([]*Dag, 0)
+	models := make([]*DagModel, 0)
 	if err = d.db.Raw(sql, args...).Scan(&models).Error; err != nil {
 		return nil, err
 	}
@@ -2389,7 +2389,7 @@ func (d *dag) ListDagByFields(ctx context.Context, filter bson.M, opt options.Fi
 
 	trace.SetAttributes(newCtx, attribute.String(trace.TABLE_NAME, DAG_TABLENAME), attribute.String(trace.DB_SQL, sql))
 
-	models := make([]*Dag, 0)
+	models := make([]*DagModel, 0)
 	if err = d.db.Raw(sql, args...).Scan(&models).Error; err != nil {
 		return nil, err
 	}
@@ -2538,7 +2538,7 @@ func (d *dag) ListDagInstanceInRangeTime(ctx context.Context, status string, beg
 	sql := `SELECT * FROM t_dag_instance WHERE f_status = ? AND f_updated_at >= ? AND f_updated_at <= ?`
 	trace.SetAttributes(newCtx, attribute.String(trace.TABLE_NAME, DAGINSTANCE_TABLENAME), attribute.String(trace.DB_SQL, sql))
 
-	models := make([]*DagInstance, 0)
+	models := make([]*DagInstanceModel, 0)
 	if err = d.db.Raw(sql, status, begin, end).Scan(&models).Error; err != nil {
 		return nil, err
 	}
@@ -2578,7 +2578,7 @@ func (d *dag) ListDagVersions(ctx context.Context, input *mod.ListDagVersionInpu
 
 	trace.SetAttributes(newCtx, attribute.String(trace.TABLE_NAME, DAGVERSIONS_TABLENAME), attribute.String(trace.DB_SQL, sql))
 
-	var models []DagVersion
+	var models []DagVersionModel
 	if err = d.db.Raw(sql, args...).Scan(&models).Error; err != nil {
 		return nil, err
 	}
@@ -2664,7 +2664,7 @@ func (d *dag) ListHistoryDagIns(ctx context.Context, params map[string]interface
 		}
 
 		sql := `SELECT * FROM t_dag_instance WHERE f_status IN ? AND f_updated_at <= ? AND f_id > ? ORDER BY f_id ASC LIMIT ?`
-		var models []DagInstance
+		var models []DagInstanceModel
 		if err = d.db.Debug().Raw(sql, status, updatedAt, lastID, batchSize).Scan(&models).Error; err != nil {
 			return err
 		}
@@ -2794,7 +2794,7 @@ func (d *dag) ListInbox(ctx context.Context, input *mod.ListInboxInput) ([]*enti
 	}
 
 	// 执行原生 SQL 查询
-	var inboxes []*InBox
+	var inboxes []*InBoxModel
 	if err := d.db.Raw(sqlQuery, args...).Scan(&inboxes).Error; err != nil {
 		return nil, err
 	}
@@ -2825,7 +2825,7 @@ func (d *dag) ListInbox(ctx context.Context, input *mod.ListInboxInput) ([]*enti
 // ListOutBoxMessage
 func (d *dag) ListOutBoxMessage(ctx context.Context, input *entity.OutBoxInput) ([]*entity.OutBox, error) {
 	var err error
-	var msgs []*OutBox
+	var msgs []*OutBoxModel
 
 	newCtx, span := trace.StartInternalSpan(ctx)
 	defer func() { trace.TelemetrySpanEnd(span, err) }()

@@ -10,7 +10,7 @@ import (
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/pkg/entity"
 )
 
-func ToDagModel(dag *entity.Dag, isupdate bool) *Dag {
+func ToDagModel(dag *entity.Dag, isupdate bool) *DagModel {
 	if isupdate {
 		dag.Update()
 	} else {
@@ -30,7 +30,7 @@ func ToDagModel(dag *entity.Dag, isupdate bool) *Dag {
 	instructionsBytes, _ := json.Marshal(dag.Instructions)
 	incValuesBytes, _ := json.Marshal(dag.IncValues)
 
-	return &Dag{
+	return &DagModel{
 		ID:            id,
 		CreatedAt:     dag.CreatedAt,
 		UpdatedAt:     dag.UpdatedAt,
@@ -70,7 +70,7 @@ func ToDagModel(dag *entity.Dag, isupdate bool) *Dag {
 	}
 }
 
-func ToDagInstanceModel(dagIns *entity.DagInstance, isupdate bool) *DagInstance {
+func ToDagInstanceModel(dagIns *entity.DagInstance, isupdate bool) *DagInstanceModel {
 	if isupdate {
 		dagIns.Update()
 	} else {
@@ -93,7 +93,7 @@ func ToDagInstanceModel(dagIns *entity.DagInstance, isupdate bool) *DagInstance 
 		batchRunID = val.Value
 	}
 
-	return &DagInstance{
+	return &DagInstanceModel{
 		ID:               id,
 		CreatedAt:        dagIns.CreatedAt,
 		UpdatedAt:        dagIns.UpdatedAt,
@@ -167,11 +167,11 @@ func ToTaskInstanceModel(taskIns *entity.TaskInstance, isupdate bool) *TaskInsta
 	}
 }
 
-func ToDagVersionModel(dagVersion *entity.DagVersion) *DagVersion {
+func ToDagVersionModel(dagVersion *entity.DagVersion) *DagVersionModel {
 	dagVersion.Initial()
 	id, _ := strconv.ParseUint(dagVersion.ID, 10, 64)
 
-	return &DagVersion{
+	return &DagVersionModel{
 		ID:        id,
 		CreatedAt: dagVersion.CreatedAt,
 		UpdatedAt: dagVersion.UpdatedAt,
