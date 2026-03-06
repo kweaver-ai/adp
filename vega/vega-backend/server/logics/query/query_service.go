@@ -140,7 +140,10 @@ func (qs *queryService) Execute(ctx context.Context, req *interfaces.QueryExecut
 			key := alias + "." + prop.Name
 			fieldMap[key] = &interfaces.Property{
 				Name:         prop.Name,
+				Type:         prop.Type,
+				DisplayName:  prop.DisplayName,
 				OriginalName: key,
+				Description:  prop.Description,
 			}
 			fieldMap[prop.Name] = prop
 		}
