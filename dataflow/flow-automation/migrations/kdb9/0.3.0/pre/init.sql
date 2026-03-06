@@ -560,7 +560,7 @@ CREATE INDEX IF NOT EXISTS `idx_t_cron_job_status_index_job_id` ON `t_cron_job_s
 CREATE INDEX IF NOT EXISTS `idx_t_cron_job_status_index_job_status` ON `t_cron_job_status` (`f_job_status`);
 CREATE INDEX IF NOT EXISTS `idx_t_cron_job_status_index_time` ON `t_cron_job_status` (`f_begin_time`,`f_end_time`);
 
-CREATE TABLE IF NOT EXISTS `t_dag` (
+CREATE TABLE IF NOT EXISTS `t_flow_dag` (
  `f_id` BIGINT UNSIGNED NOT NULL COMMENT '主键ID',
  `f_created_at` BIGINT NOT NULL DEFAULT 0 COMMENT '创建时间',
  `f_updated_at` BIGINT NOT NULL DEFAULT 0 COMMENT '更新时间',
@@ -600,13 +600,13 @@ CREATE TABLE IF NOT EXISTS `t_dag` (
  `f_biz_domain_id` VARCHAR(64) NOT NULL DEFAULT '' COMMENT '业务域ID',
   PRIMARY KEY (`f_id`)
 );
-CREATE INDEX IF NOT EXISTS `idx_dag_user_id` ON `t_dag` (`f_user_id`);
-CREATE INDEX IF NOT EXISTS `idx_dag_type` ON `t_dag` (`f_type`);
-CREATE INDEX IF NOT EXISTS `idx_dag_trigger` ON `t_dag` (`f_trigger`);
-CREATE INDEX IF NOT EXISTS `idx_dag_name` ON `t_dag` (`f_name`);
-CREATE INDEX IF NOT EXISTS `idx_dag_biz_domain` ON `t_dag` (`f_biz_domain_id`);
+CREATE INDEX IF NOT EXISTS `idx_dag_user_id` ON `t_flow_dag` (`f_user_id`);
+CREATE INDEX IF NOT EXISTS `idx_dag_type` ON `t_flow_dag` (`f_type`);
+CREATE INDEX IF NOT EXISTS `idx_dag_trigger` ON `t_flow_dag` (`f_trigger`);
+CREATE INDEX IF NOT EXISTS `idx_dag_name` ON `t_flow_dag` (`f_name`);
+CREATE INDEX IF NOT EXISTS `idx_dag_biz_domain` ON `t_flow_dag` (`f_biz_domain_id`);
 
-CREATE TABLE IF NOT EXISTS `t_dag_vars` (
+CREATE TABLE IF NOT EXISTS `t_flow_dag_var` (
  `f_id` BIGINT UNSIGNED NOT NULL COMMENT '主键ID',
  `f_dag_id` BIGINT UNSIGNED NOT NULL DEFAULT 0 COMMENT 'DAG ID',
  `f_var_name` VARCHAR(255) NOT NULL DEFAULT '' COMMENT '变量名',
@@ -615,17 +615,17 @@ CREATE TABLE IF NOT EXISTS `t_dag_vars` (
  `f_description` VARCHAR(255) NOT NULL DEFAULT '' COMMENT '变量描述',
   PRIMARY KEY (`f_id`)
 );
-CREATE INDEX IF NOT EXISTS `idx_dag_vars_dag_id` ON `t_dag_vars` (`f_dag_id`);
+CREATE INDEX IF NOT EXISTS `idx_dag_vars_dag_id` ON `t_flow_dag_var` (`f_dag_id`);
 
-CREATE TABLE IF NOT EXISTS `t_dag_instance_keyword` (
+CREATE TABLE IF NOT EXISTS `t_flow_dag_instance_keyword` (
  `f_id` BIGINT UNSIGNED NOT NULL COMMENT '主键ID',
  `f_dag_ins_id` BIGINT UNSIGNED NOT NULL DEFAULT 0 COMMENT 'DAG实例ID',
  `f_keyword` VARCHAR(255) NOT NULL DEFAULT '' COMMENT '关键词',
   PRIMARY KEY (`f_id`)
 );
-CREATE INDEX IF NOT EXISTS `idx_dag_ins_kw` ON `t_dag_instance_keyword` (`f_dag_ins_id`, `f_keyword`);
+CREATE INDEX IF NOT EXISTS `idx_dag_ins_kw` ON `t_flow_dag_instance_keyword` (`f_dag_ins_id`, `f_keyword`);
 
-CREATE TABLE IF NOT EXISTS `t_dag_step` (
+CREATE TABLE IF NOT EXISTS `t_flow_dag_step` (
  `f_id` BIGINT UNSIGNED NOT NULL COMMENT '主键ID',
  `f_dag_id` BIGINT UNSIGNED NOT NULL DEFAULT 0 COMMENT 'DAG ID',
  `f_operator` VARCHAR(255) NOT NULL DEFAULT '' COMMENT '操作符',
@@ -633,11 +633,11 @@ CREATE TABLE IF NOT EXISTS `t_dag_step` (
  `f_has_datasource` TINYINT(1) NOT NULL DEFAULT 0 COMMENT '是否有数据源',
   PRIMARY KEY (`f_id`)
 );
-CREATE INDEX IF NOT EXISTS `idx_dag_step_op_src_dag` ON `t_dag_step` (`f_source_id`, `f_operator`, `f_dag_id`);
-CREATE INDEX IF NOT EXISTS `idx_dag_step_op_dag` ON `t_dag_step` (`f_dag_id`, `f_operator`);
-CREATE INDEX IF NOT EXISTS `idx_dag_step_has_ds_dag` ON `t_dag_step` (`f_dag_id`, `f_has_datasource`);
+CREATE INDEX IF NOT EXISTS `idx_dag_step_op_src_dag` ON `t_flow_dag_step` (`f_source_id`, `f_operator`, `f_dag_id`);
+CREATE INDEX IF NOT EXISTS `idx_dag_step_op_dag` ON `t_flow_dag_step` (`f_dag_id`, `f_operator`);
+CREATE INDEX IF NOT EXISTS `idx_dag_step_has_ds_dag` ON `t_flow_dag_step` (`f_dag_id`, `f_has_datasource`);
 
-CREATE TABLE IF NOT EXISTS `t_dag_trigger_config` (
+CREATE TABLE IF NOT EXISTS `t_flow_dag_trigger_config` (
  `f_id` BIGINT UNSIGNED NOT NULL COMMENT '主键ID',
  `f_dag_id` BIGINT UNSIGNED NOT NULL DEFAULT 0 COMMENT 'DAG ID',
  `f_operator` VARCHAR(255) NOT NULL DEFAULT '' COMMENT '操作符',
@@ -645,15 +645,15 @@ CREATE TABLE IF NOT EXISTS `t_dag_trigger_config` (
   PRIMARY KEY (`f_id`)
 );
 
-CREATE TABLE IF NOT EXISTS `t_dag_accessor` (
+CREATE TABLE IF NOT EXISTS `t_flow_dag_accessor` (
  `f_id` BIGINT UNSIGNED NOT NULL COMMENT '主键ID',
  `f_dag_id` BIGINT UNSIGNED NOT NULL DEFAULT 0 COMMENT 'DAG ID',
  `f_accessor_id` VARCHAR(255) NOT NULL DEFAULT '' COMMENT '访问者ID',
   PRIMARY KEY (`f_id`)
 );
-CREATE INDEX IF NOT EXISTS `idx_dag_accessor_id_dag` ON `t_dag_accessor` (`f_accessor_id`, `f_dag_id`);
+CREATE INDEX IF NOT EXISTS `idx_dag_accessor_id_dag` ON `t_flow_dag_accessor` (`f_accessor_id`, `f_dag_id`);
 
-CREATE TABLE IF NOT EXISTS `t_dag_versions` (
+CREATE TABLE IF NOT EXISTS `t_flow_dag_version` (
  `f_id` BIGINT UNSIGNED NOT NULL COMMENT '主键ID',
  `f_created_at` BIGINT NOT NULL DEFAULT 0 COMMENT '创建时间',
  `f_updated_at` BIGINT NOT NULL DEFAULT 0 COMMENT '更新时间',
@@ -666,10 +666,10 @@ CREATE TABLE IF NOT EXISTS `t_dag_versions` (
  `f_sort_time` BIGINT UNSIGNED NOT NULL DEFAULT 0 COMMENT '排序时间',
   PRIMARY KEY (`f_id`)
 );
-CREATE INDEX IF NOT EXISTS `idx_dag_versions_dag_version` ON `t_dag_versions` (`f_version_id`, `f_dag_id`);
-CREATE INDEX IF NOT EXISTS `idx_dag_versions_dag_sort` ON `t_dag_versions` (`f_dag_id`, `f_sort_time`);
+CREATE INDEX IF NOT EXISTS `idx_dag_versions_dag_version` ON `t_flow_dag_version` (`f_version_id`, `f_dag_id`);
+CREATE INDEX IF NOT EXISTS `idx_dag_versions_dag_sort` ON `t_flow_dag_version` (`f_dag_id`, `f_sort_time`);
 
-CREATE TABLE IF NOT EXISTS `t_dag_instance` (
+CREATE TABLE IF NOT EXISTS `t_flow_dag_instance` (
  `f_id` BIGINT UNSIGNED NOT NULL COMMENT '主键ID',
  `f_created_at` BIGINT NOT NULL DEFAULT 0 COMMENT '创建时间',
  `f_updated_at` BIGINT NOT NULL DEFAULT 0 COMMENT '更新时间',
@@ -707,13 +707,13 @@ CREATE TABLE IF NOT EXISTS `t_dag_instance` (
  `f_biz_domain_id` VARCHAR(64) NOT NULL DEFAULT '' COMMENT '业务域ID',
   PRIMARY KEY (`f_id`)
 );
-CREATE INDEX IF NOT EXISTS `idx_dag_ins_id_status_updated` ON `t_dag_instance` (`f_id`, `f_status`, `f_updated_at`);
-CREATE INDEX IF NOT EXISTS `idx_dag_ins_dag_id` ON `t_dag_instance` (`f_dag_id`);
-CREATE INDEX IF NOT EXISTS `idx_dag_ins_user_id` ON `t_dag_instance` (`f_user_id`);
-CREATE INDEX IF NOT EXISTS `idx_dag_ins_batch_run` ON `t_dag_instance` (`f_batch_run_id`);
-CREATE INDEX IF NOT EXISTS `idx_dag_ins_worker` ON `t_dag_instance` (`f_worker`);
+CREATE INDEX IF NOT EXISTS `idx_dag_ins_id_status_updated` ON `t_flow_dag_instance` (`f_id`, `f_status`, `f_updated_at`);
+CREATE INDEX IF NOT EXISTS `idx_dag_ins_dag_id` ON `t_flow_dag_instance` (`f_dag_id`);
+CREATE INDEX IF NOT EXISTS `idx_dag_ins_user_id` ON `t_flow_dag_instance` (`f_user_id`);
+CREATE INDEX IF NOT EXISTS `idx_dag_ins_batch_run` ON `t_flow_dag_instance` (`f_batch_run_id`);
+CREATE INDEX IF NOT EXISTS `idx_dag_ins_worker` ON `t_flow_dag_instance` (`f_worker`);
 
-CREATE TABLE IF NOT EXISTS `t_inbox` (
+CREATE TABLE IF NOT EXISTS `t_flow_inbox` (
  `f_id` BIGINT UNSIGNED NOT NULL COMMENT '主键ID',
  `f_created_at` BIGINT NOT NULL DEFAULT 0 COMMENT '创建时间',
  `f_updated_at` BIGINT NOT NULL DEFAULT 0 COMMENT '更新时间',
@@ -723,10 +723,10 @@ CREATE TABLE IF NOT EXISTS `t_inbox` (
  `f_dag` LONGTEXT DEFAULT NULL COMMENT 'DAG列表',
   PRIMARY KEY (`f_id`)
 );
-CREATE INDEX IF NOT EXISTS `idx_inbox_docid` ON `t_inbox` (`f_docid`);
-CREATE INDEX IF NOT EXISTS `idx_inbox_topic_created` ON `t_inbox` (`f_topic`, `f_created_at`);
+CREATE INDEX IF NOT EXISTS `idx_inbox_docid` ON `t_flow_inbox` (`f_docid`);
+CREATE INDEX IF NOT EXISTS `idx_inbox_topic_created` ON `t_flow_inbox` (`f_topic`, `f_created_at`);
 
-CREATE TABLE IF NOT EXISTS `t_outbox` (
+CREATE TABLE IF NOT EXISTS `t_flow_outbox` (
  `f_id` BIGINT UNSIGNED NOT NULL COMMENT '主键ID',
  `f_created_at` BIGINT NOT NULL DEFAULT 0 COMMENT '创建时间',
  `f_updated_at` BIGINT NOT NULL DEFAULT 0 COMMENT '更新时间',
@@ -734,9 +734,9 @@ CREATE TABLE IF NOT EXISTS `t_outbox` (
  `f_topic` VARCHAR(255) NOT NULL DEFAULT '' COMMENT '主题',
   PRIMARY KEY (`f_id`)
 );
-CREATE INDEX IF NOT EXISTS `idx_outbox_created` ON `t_outbox` (`f_created_at`);
+CREATE INDEX IF NOT EXISTS `idx_outbox_created` ON `t_flow_outbox` (`f_created_at`);
 
-CREATE TABLE IF NOT EXISTS `t_task_instance` (
+CREATE TABLE IF NOT EXISTS `t_flow_task_instance` (
  `f_id` BIGINT UNSIGNED NOT NULL COMMENT '主键ID',
  `f_created_at` BIGINT NOT NULL DEFAULT 0 COMMENT '创建时间',
  `f_updated_at` BIGINT NOT NULL DEFAULT 0 COMMENT '更新时间',
@@ -746,7 +746,7 @@ CREATE TABLE IF NOT EXISTS `t_task_instance` (
  `f_name` VARCHAR(255) NOT NULL DEFAULT '' COMMENT '任务名称',
  `f_depend_on` VARCHAR(255) NOT NULL DEFAULT '' COMMENT '依赖关系',
  `f_action_name` VARCHAR(255) NOT NULL DEFAULT '' COMMENT '动作名称',
- `f_timeout_secs` INT NOT NULL DEFAULT 0 COMMENT '超时时间(秒)',
+ `f_timeout_secs` BIGINT NOT NULL DEFAULT 0 COMMENT '超时时间(秒)',
  `f_params` LONGTEXT DEFAULT NULL COMMENT '参数',
  `f_traces` LONGTEXT DEFAULT NULL COMMENT '链路信息',
  `f_status` VARCHAR(64) NOT NULL DEFAULT '' COMMENT '状态',
@@ -761,13 +761,13 @@ CREATE TABLE IF NOT EXISTS `t_task_instance` (
  `f_metadata` LONGTEXT DEFAULT NULL COMMENT '元数据',
   PRIMARY KEY (`f_id`)
 );
-CREATE INDEX IF NOT EXISTS `idx_task_ins_id_status_updated` ON `t_task_instance` (`f_id`, `f_status`, `f_updated_at`);
-CREATE INDEX IF NOT EXISTS `idx_task_ins_dag_ins_id` ON `t_task_instance` (`f_dag_ins_id`);
-CREATE INDEX IF NOT EXISTS `idx_task_ins_hash` ON `t_task_instance` (`f_hash`);
-CREATE INDEX IF NOT EXISTS `idx_task_ins_action` ON `t_task_instance` (`f_action_name`);
-CREATE INDEX IF NOT EXISTS `idx_task_ins_expired` ON `t_task_instance` (`f_expired_at`);
+CREATE INDEX IF NOT EXISTS `idx_task_ins_id_status_updated` ON `t_flow_task_instance` (`f_id`, `f_status`, `f_updated_at`);
+CREATE INDEX IF NOT EXISTS `idx_task_ins_dag_ins_id` ON `t_flow_task_instance` (`f_dag_ins_id`);
+CREATE INDEX IF NOT EXISTS `idx_task_ins_hash` ON `t_flow_task_instance` (`f_hash`);
+CREATE INDEX IF NOT EXISTS `idx_task_ins_action` ON `t_flow_task_instance` (`f_action_name`);
+CREATE INDEX IF NOT EXISTS `idx_task_ins_expired` ON `t_flow_task_instance` (`f_expired_at`);
 
-CREATE TABLE IF NOT EXISTS `t_token` (
+CREATE TABLE IF NOT EXISTS `t_flow_token` (
  `f_id` BIGINT UNSIGNED NOT NULL COMMENT '主键ID',
  `f_created_at` BIGINT NOT NULL DEFAULT 0 COMMENT '创建时间',
  `f_updated_at` BIGINT NOT NULL DEFAULT 0 COMMENT '更新时间',
@@ -780,9 +780,9 @@ CREATE TABLE IF NOT EXISTS `t_token` (
  `f_is_app` TINYINT(1) NOT NULL DEFAULT 0 COMMENT '是否应用',
   PRIMARY KEY (`f_id`)
 );
-CREATE INDEX IF NOT EXISTS `idx_token_user_id` ON `t_token` (`f_user_id`);
+CREATE INDEX IF NOT EXISTS `idx_token_user_id` ON `t_flow_token` (`f_user_id`);
 
-CREATE TABLE IF NOT EXISTS `t_client` (
+CREATE TABLE IF NOT EXISTS `t_flow_client` (
  `f_id` BIGINT UNSIGNED NOT NULL COMMENT '主键ID',
  `f_created_at` BIGINT NOT NULL DEFAULT 0 COMMENT '创建时间',
  `f_updated_at` BIGINT NOT NULL DEFAULT 0 COMMENT '更新时间',
@@ -791,9 +791,9 @@ CREATE TABLE IF NOT EXISTS `t_client` (
  `f_client_secret` VARCHAR(255) NOT NULL DEFAULT '' COMMENT '客户端密钥',
   PRIMARY KEY (`f_id`)
 );
-CREATE INDEX IF NOT EXISTS `idx_client_name` ON `t_client` (`f_client_name`);
+CREATE INDEX IF NOT EXISTS `idx_client_name` ON `t_flow_client` (`f_client_name`);
 
-CREATE TABLE IF NOT EXISTS `t_switch` (
+CREATE TABLE IF NOT EXISTS `t_flow_switch` (
  `f_id` BIGINT UNSIGNED NOT NULL COMMENT '主键ID',
  `f_created_at` BIGINT NOT NULL DEFAULT 0 COMMENT '创建时间',
  `f_updated_at` BIGINT NOT NULL DEFAULT 0 COMMENT '更新时间',
@@ -801,9 +801,9 @@ CREATE TABLE IF NOT EXISTS `t_switch` (
  `f_status` TINYINT(1) NOT NULL DEFAULT 0 COMMENT '开关状态',
   PRIMARY KEY (`f_id`)
 );
-CREATE INDEX IF NOT EXISTS `idx_switch_name` ON `t_switch` (`f_name`);
+CREATE INDEX IF NOT EXISTS `idx_switch_name` ON `t_flow_switch` (`f_name`);
 
-CREATE TABLE IF NOT EXISTS `t_log` (
+CREATE TABLE IF NOT EXISTS `t_flow_log` (
  `f_id` BIGINT UNSIGNED NOT NULL COMMENT '主键ID',
  `f_created_at` BIGINT NOT NULL DEFAULT 0 COMMENT '创建时间',
  `f_updated_at` BIGINT NOT NULL DEFAULT 0 COMMENT '更新时间',

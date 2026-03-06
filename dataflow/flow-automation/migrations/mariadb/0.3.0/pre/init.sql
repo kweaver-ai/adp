@@ -508,7 +508,7 @@ CREATE TABLE IF NOT EXISTS `t_cron_job_status`
     KEY `index_time`(`f_begin_time`,`f_end_time`) USING BTREE
 ) ENGINE = InnoDB AUTO_INCREMENT = 1 DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_bin COMMENT = '定时任务状态表';
 
-CREATE TABLE IF NOT EXISTS `t_dag` (
+CREATE TABLE IF NOT EXISTS `t_flow_dag` (
  `f_id` BIGINT UNSIGNED NOT NULL COMMENT '主键ID',
  `f_created_at` BIGINT NOT NULL DEFAULT 0 COMMENT '创建时间',
  `f_updated_at` BIGINT NOT NULL DEFAULT 0 COMMENT '更新时间',
@@ -554,7 +554,7 @@ CREATE TABLE IF NOT EXISTS `t_dag` (
   KEY `idx_dag_biz_domain` (`f_biz_domain_id`)
 ) ENGINE=InnoDB DEFAULT COLLATE=utf8mb4_bin;
 
-CREATE TABLE IF NOT EXISTS `t_dag_vars` (
+CREATE TABLE IF NOT EXISTS `t_flow_dag_var` (
  `f_id` BIGINT UNSIGNED NOT NULL COMMENT '主键ID',
  `f_dag_id` BIGINT UNSIGNED NOT NULL DEFAULT 0 COMMENT 'DAG ID',
  `f_var_name` VARCHAR(255) NOT NULL DEFAULT '' COMMENT '变量名',
@@ -565,7 +565,7 @@ CREATE TABLE IF NOT EXISTS `t_dag_vars` (
   KEY `idx_dag_vars_dag_id` (`f_dag_id`)
 ) ENGINE=InnoDB DEFAULT COLLATE=utf8mb4_bin;
 
-CREATE TABLE IF NOT EXISTS `t_dag_instance_keyword` (
+CREATE TABLE IF NOT EXISTS `t_flow_dag_instance_keyword` (
  `f_id` BIGINT UNSIGNED NOT NULL COMMENT '主键ID',
  `f_dag_ins_id` BIGINT UNSIGNED NOT NULL DEFAULT 0 COMMENT 'DAG实例ID',
  `f_keyword` VARCHAR(255) NOT NULL DEFAULT '' COMMENT '关键词',
@@ -573,7 +573,7 @@ CREATE TABLE IF NOT EXISTS `t_dag_instance_keyword` (
   KEY `idx_dag_ins_kw` (`f_dag_ins_id`, `f_keyword`)
 ) ENGINE=InnoDB DEFAULT COLLATE=utf8mb4_bin;
 
-CREATE TABLE IF NOT EXISTS `t_dag_step` (
+CREATE TABLE IF NOT EXISTS `t_flow_dag_step` (
  `f_id` BIGINT UNSIGNED NOT NULL COMMENT '主键ID',
  `f_dag_id` BIGINT UNSIGNED NOT NULL DEFAULT 0 COMMENT 'DAG ID',
  `f_operator` VARCHAR(255) NOT NULL DEFAULT '' COMMENT '操作符',
@@ -585,7 +585,7 @@ CREATE TABLE IF NOT EXISTS `t_dag_step` (
   KEY `idx_dag_step_has_ds_dag` (`f_dag_id`, `f_has_datasource`)
 ) ENGINE=InnoDB DEFAULT COLLATE=utf8mb4_bin;
 
-CREATE TABLE IF NOT EXISTS `t_dag_trigger_config` (
+CREATE TABLE IF NOT EXISTS `t_flow_dag_trigger_config` (
  `f_id` BIGINT UNSIGNED NOT NULL COMMENT '主键ID',
  `f_dag_id` BIGINT UNSIGNED NOT NULL DEFAULT 0 COMMENT 'DAG ID',
  `f_operator` VARCHAR(255) NOT NULL DEFAULT '' COMMENT '操作符',
@@ -593,7 +593,7 @@ CREATE TABLE IF NOT EXISTS `t_dag_trigger_config` (
   PRIMARY KEY (`f_id`)
 ) ENGINE=InnoDB DEFAULT COLLATE=utf8mb4_bin;
 
-CREATE TABLE IF NOT EXISTS `t_dag_accessor` (
+CREATE TABLE IF NOT EXISTS `t_flow_dag_accessor` (
  `f_id` BIGINT UNSIGNED NOT NULL COMMENT '主键ID',
  `f_dag_id` BIGINT UNSIGNED NOT NULL DEFAULT 0 COMMENT 'DAG ID',
  `f_accessor_id` VARCHAR(255) NOT NULL DEFAULT '' COMMENT '访问者ID',
@@ -601,7 +601,7 @@ CREATE TABLE IF NOT EXISTS `t_dag_accessor` (
   KEY `idx_dag_accessor_id_dag` (`f_accessor_id`, `f_dag_id`)
 ) ENGINE=InnoDB DEFAULT COLLATE=utf8mb4_bin;
 
-CREATE TABLE IF NOT EXISTS `t_dag_versions` (
+CREATE TABLE IF NOT EXISTS `t_flow_dag_version` (
  `f_id` BIGINT UNSIGNED NOT NULL COMMENT '主键ID',
  `f_created_at` BIGINT NOT NULL DEFAULT 0 COMMENT '创建时间',
  `f_updated_at` BIGINT NOT NULL DEFAULT 0 COMMENT '更新时间',
@@ -617,7 +617,7 @@ CREATE TABLE IF NOT EXISTS `t_dag_versions` (
   KEY `idx_dag_versions_dag_sort` (`f_dag_id`, `f_sort_time`)
 ) ENGINE=InnoDB DEFAULT COLLATE=utf8mb4_bin;
 
-CREATE TABLE IF NOT EXISTS `t_dag_instance` (
+CREATE TABLE IF NOT EXISTS `t_flow_dag_instance` (
  `f_id` BIGINT UNSIGNED NOT NULL COMMENT '主键ID',
  `f_created_at` BIGINT NOT NULL DEFAULT 0 COMMENT '创建时间',
  `f_updated_at` BIGINT NOT NULL DEFAULT 0 COMMENT '更新时间',
@@ -661,7 +661,7 @@ CREATE TABLE IF NOT EXISTS `t_dag_instance` (
   KEY `idx_dag_ins_worker` (`f_worker`)
 ) ENGINE=InnoDB DEFAULT COLLATE=utf8mb4_bin;
 
-CREATE TABLE IF NOT EXISTS `t_inbox` (
+CREATE TABLE IF NOT EXISTS `t_flow_inbox` (
  `f_id` BIGINT UNSIGNED NOT NULL COMMENT '主键ID',
  `f_created_at` BIGINT NOT NULL DEFAULT 0 COMMENT '创建时间',
  `f_updated_at` BIGINT NOT NULL DEFAULT 0 COMMENT '更新时间',
@@ -674,7 +674,7 @@ CREATE TABLE IF NOT EXISTS `t_inbox` (
   KEY `idx_inbox_topic_created` (`f_topic`, `f_created_at`)
 ) ENGINE=InnoDB DEFAULT COLLATE=utf8mb4_bin;
 
-CREATE TABLE IF NOT EXISTS `t_outbox` (
+CREATE TABLE IF NOT EXISTS `t_flow_outbox` (
  `f_id` BIGINT UNSIGNED NOT NULL COMMENT '主键ID',
  `f_created_at` BIGINT NOT NULL DEFAULT 0 COMMENT '创建时间',
  `f_updated_at` BIGINT NOT NULL DEFAULT 0 COMMENT '更新时间',
@@ -684,7 +684,7 @@ CREATE TABLE IF NOT EXISTS `t_outbox` (
   KEY `idx_outbox_created` (`f_created_at`)
 ) ENGINE=InnoDB DEFAULT COLLATE=utf8mb4_bin;
 
-CREATE TABLE IF NOT EXISTS `t_task_instance` (
+CREATE TABLE IF NOT EXISTS `t_flow_task_instance` (
  `f_id` BIGINT UNSIGNED NOT NULL COMMENT '主键ID',
  `f_created_at` BIGINT NOT NULL DEFAULT 0 COMMENT '创建时间',
  `f_updated_at` BIGINT NOT NULL DEFAULT 0 COMMENT '更新时间',
@@ -694,7 +694,7 @@ CREATE TABLE IF NOT EXISTS `t_task_instance` (
  `f_name` VARCHAR(255) NOT NULL DEFAULT '' COMMENT '任务名称',
  `f_depend_on` VARCHAR(255) NOT NULL DEFAULT '' COMMENT '依赖关系',
  `f_action_name` VARCHAR(255) NOT NULL DEFAULT '' COMMENT '动作名称',
- `f_timeout_secs` INT NOT NULL DEFAULT 0 COMMENT '超时时间(秒)',
+ `f_timeout_secs` BIGINT NOT NULL DEFAULT 0 COMMENT '超时时间(秒)',
  `f_params` LONGTEXT DEFAULT NULL COMMENT '参数',
  `f_traces` LONGTEXT DEFAULT NULL COMMENT '链路信息',
  `f_status` VARCHAR(64) NOT NULL DEFAULT '' COMMENT '状态',
@@ -715,7 +715,7 @@ CREATE TABLE IF NOT EXISTS `t_task_instance` (
   KEY `idx_task_ins_expired` (`f_expired_at`)
 ) ENGINE=InnoDB DEFAULT COLLATE=utf8mb4_bin;
 
-CREATE TABLE IF NOT EXISTS `t_token` (
+CREATE TABLE IF NOT EXISTS `t_flow_token` (
  `f_id` BIGINT UNSIGNED NOT NULL COMMENT '主键ID',
  `f_created_at` BIGINT NOT NULL DEFAULT 0 COMMENT '创建时间',
  `f_updated_at` BIGINT NOT NULL DEFAULT 0 COMMENT '更新时间',
@@ -730,7 +730,7 @@ CREATE TABLE IF NOT EXISTS `t_token` (
   KEY `idx_token_user_id` (`f_user_id`)
 ) ENGINE=InnoDB DEFAULT COLLATE=utf8mb4_bin;
 
-CREATE TABLE IF NOT EXISTS `t_client` (
+CREATE TABLE IF NOT EXISTS `t_flow_client` (
  `f_id` BIGINT UNSIGNED NOT NULL COMMENT '主键ID',
  `f_created_at` BIGINT NOT NULL DEFAULT 0 COMMENT '创建时间',
  `f_updated_at` BIGINT NOT NULL DEFAULT 0 COMMENT '更新时间',
@@ -741,7 +741,7 @@ CREATE TABLE IF NOT EXISTS `t_client` (
   KEY `idx_client_name` (`f_client_name`)
 ) ENGINE=InnoDB DEFAULT COLLATE=utf8mb4_bin;
 
-CREATE TABLE IF NOT EXISTS `t_switch` (
+CREATE TABLE IF NOT EXISTS `t_flow_switch` (
  `f_id` BIGINT UNSIGNED NOT NULL COMMENT '主键ID',
  `f_created_at` BIGINT NOT NULL DEFAULT 0 COMMENT '创建时间',
  `f_updated_at` BIGINT NOT NULL DEFAULT 0 COMMENT '更新时间',
@@ -751,7 +751,7 @@ CREATE TABLE IF NOT EXISTS `t_switch` (
   KEY `idx_switch_name` (`f_name`)
 ) ENGINE=InnoDB DEFAULT COLLATE=utf8mb4_bin;
 
-CREATE TABLE IF NOT EXISTS `t_log` (
+CREATE TABLE IF NOT EXISTS `t_flow_log` (
  `f_id` BIGINT UNSIGNED NOT NULL COMMENT '主键ID',
  `f_created_at` BIGINT NOT NULL DEFAULT 0 COMMENT '创建时间',
  `f_updated_at` BIGINT NOT NULL DEFAULT 0 COMMENT '更新时间',
