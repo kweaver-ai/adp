@@ -1,6 +1,60 @@
 package dagmodel
 
-import "testing"
+import (
+	"os"
+	"regexp"
+	"testing"
+)
+
+func TestFlowTablePrefixReplacesLegacyNames(t *testing.T) {
+	t.Helper()
+
+	files := []string{
+		"dag.go",
+		"build.go",
+		"../../../migrations/mariadb/0.3.0/pre/01-add-table-and-data.sql",
+		"../../../migrations/mariadb/0.3.0/pre/init.sql",
+		"../../../migrations/kdb9/0.3.0/pre/01-add-table-and-data.sql",
+		"../../../migrations/kdb9/0.3.0/pre/init.sql",
+		"../../../migrations/dm8/0.3.0/pre/01-add-table-and-data.sql",
+		"../../../migrations/dm8/0.3.0/pre/init.sql",
+	}
+
+	legacyNames := []string{
+		"t_" + "dag" + "_vars",
+		"t_" + "dag" + "_versions",
+		"t_" + "dag" + "_instances",
+		"t_" + "dag" + "_instance",
+		"t_" + "task" + "_instance",
+		"t_" + "dag" + "_trigger_config",
+		"t_" + "dag" + "_instance_keyword",
+		"t_" + "dag" + "_accessor",
+		"t_" + "dag" + "_step",
+		"t_" + "dag" + "_var",
+		"t_" + "outbox",
+		"t_" + "inbox",
+		"t_" + "token",
+		"t_" + "client",
+		"t_" + "switch",
+		"t_" + "log",
+		"t_" + "dag",
+	}
+
+	for _, file := range files {
+		content, err := os.ReadFile(file)
+		if err != nil {
+			t.Fatalf("read %s: %v", file, err)
+		}
+
+		text := string(content)
+		for _, legacyName := range legacyNames {
+			pattern := regexp.MustCompile(`\b` + regexp.QuoteMeta(legacyName) + `\b`)
+			if pattern.MatchString(text) {
+				t.Fatalf("expected %s to not contain legacy table name %q", file, legacyName)
+			}
+		}
+	}
+}
 
 func TestToEntity_StringJSONToInterface(t *testing.T) {
 	type srcStruct struct {

@@ -25,18 +25,18 @@ import (
 )
 
 const (
-	DAG_TABLENAME                = "t_dag"
-	DAGINSTANCE_TABLENAME        = "t_dag_instance"
-	TASKINSTANCE_TABLENAME       = "t_task_instance"
-	DAGVAR_TABLENAME             = "t_dag_var"
-	DAGVERSIONS_TABLENAME        = "t_dag_versions"
-	DAGSTEPINDEX_TABLENAME       = "t_dag_step"
-	DAGTRIGGERINDEX_TABLENAME    = "t_dag_trigger_config"
-	DAGACCESSORINDEX_TABLENAME   = "t_dag_accessor"
-	DAGINSTANCEKEYWORD_TABLENAME = "t_dag_instance_keyword"
-	OUTBOXMESSAGE_TABLENAME      = "t_outbox"
-	INBOXMESSAGE_TABLENAME       = "t_inbox"
-	LOG_TABLENAME                = "t_log"
+	DAG_TABLENAME                = "t_flow_dag"
+	DAGINSTANCE_TABLENAME        = "t_flow_dag_instance"
+	TASKINSTANCE_TABLENAME       = "t_flow_task_instance"
+	DAGVAR_TABLENAME             = "t_flow_dag_var"
+	DAGVERSIONS_TABLENAME        = "t_flow_dag_version"
+	DAGSTEPINDEX_TABLENAME       = "t_flow_dag_step"
+	DAGTRIGGERINDEX_TABLENAME    = "t_flow_dag_trigger_config"
+	DAGACCESSORINDEX_TABLENAME   = "t_flow_dag_accessor"
+	DAGINSTANCEKEYWORD_TABLENAME = "t_flow_dag_instance_keyword"
+	OUTBOXMESSAGE_TABLENAME      = "t_flow_outbox"
+	INBOXMESSAGE_TABLENAME       = "t_flow_inbox"
+	LOG_TABLENAME                = "t_flow_log"
 )
 
 // Dag 流程配置数据库模型
@@ -131,7 +131,7 @@ type DagVersionModel struct {
 	SortTime  int64  `json:"f_sort_time" gorm:"column:f_sort_time"`
 }
 
-// DagInstance 对应数据库表 t_dag_instance
+// DagInstance 对应数据库表 t_flow_dag_instance
 type DagInstanceModel struct {
 	ID               uint64 `gorm:"column:f_id;primaryKey" json:"f_id"`
 	CreatedAt        int64  `gorm:"column:f_created_at" json:"f_created_at"`
@@ -305,7 +305,7 @@ func (d *dag) CreateDag(ctx context.Context, dag *entity.Dag) (string, error) {
 
 	fn := func(dag *entity.Dag) error {
 		// 准备 SQL 语句，使用参数化查询防止 SQL 注入
-		sql := `INSERT INTO t_dag (
+		sql := `INSERT INTO t_flow_dag (
 			f_id, f_created_at, f_updated_at, f_user_id, f_name, f_desc, f_trigger,
 			f_cron, f_vars, f_status, f_tasks, f_steps, f_description, f_shortcuts,
 			f_accessors, f_type, f_policy_type, f_appinfo, f_priority, f_removed,
@@ -391,13 +391,6 @@ func (d *dag) CreateDag(ctx context.Context, dag *entity.Dag) (string, error) {
 	return dag.ID, err
 }
 
-// func (d *dag) BatchCreateDag(ctx context.Context, dags []*entity.Dag) ([]*entity.Dag, error) {
-// 	var err error
-// 	newCtx, span := trace.StartInternalSpan(ctx)
-// 	msgStr, _ := jsoniter.MarshalToString(dags)
-// 	defer func() { trace.TelemetrySpanEnd(span, err) }()
-// }
-
 func (d *dag) CreateDagVars(ctx context.Context, dagVars []*DagVarModel) error {
 	var err error
 	newCtx, span := trace.StartInternalSpan(ctx)
@@ -410,14 +403,14 @@ func (d *dag) CreateDagVars(ctx context.Context, dagVars []*DagVarModel) error {
 		}
 
 		dagID := dagVars[0].DagID
-		sqlStr := `DELETE FROM t_dag_vars WHERE f_dag_id = ?`
+		sqlStr := `DELETE FROM t_flow_dag_var WHERE f_dag_id = ?`
 		trace.SetAttributes(newCtx, attribute.String(trace.TABLE_NAME, DAGVAR_TABLENAME), attribute.String(trace.DB_SQL, sqlStr), attribute.String(trace.DB_QUERY, fmt.Sprintf("%v", dagID)))
 		err = d.db.Exec(sqlStr, dagID).Error
 		if err != nil {
 			return err
 		}
 
-		sqlStr = `INSERT INTO t_dag_vars (f_id, f_dag_id, f_var_name, f_default_value, f_var_type) VALUES `
+		sqlStr = `INSERT INTO t_flow_dag_var (f_id, f_dag_id, f_var_name, f_default_value, f_var_type) VALUES `
 		trace.SetAttributes(newCtx, attribute.String(trace.TABLE_NAME, DAGVAR_TABLENAME), attribute.String(trace.DB_SQL, sqlStr), attribute.String(trace.DB_Values, msgStr))
 		values := make([]any, 0, len(dagVars)*5)
 		for _, data := range dagVars {
@@ -452,7 +445,7 @@ func (d *dag) deleteDagInstanceKeywords(ctx context.Context, dagInsID uint64) er
 	newCtx, span := trace.StartInternalSpan(ctx)
 	defer func() { trace.TelemetrySpanEnd(span, err) }()
 
-	sqlStr := `DELETE FROM t_dag_instance_keyword WHERE f_dag_ins_id = ?`
+	sqlStr := `DELETE FROM t_flow_dag_instance_keyword WHERE f_dag_ins_id = ?`
 	trace.SetAttributes(newCtx, attribute.String(trace.TABLE_NAME, DAGINSTANCEKEYWORD_TABLENAME), attribute.String(trace.DB_SQL, sqlStr), attribute.String(trace.DB_QUERY, fmt.Sprintf("%v", dagInsID)))
 	err = d.db.Exec(sqlStr, dagInsID).Error
 	return err
@@ -466,7 +459,7 @@ func (d *dag) insertDagInstanceKeywords(ctx context.Context, dagInsID uint64, ke
 	newCtx, span := trace.StartInternalSpan(ctx)
 	defer func() { trace.TelemetrySpanEnd(span, err) }()
 
-	sqlStr := `INSERT INTO t_dag_instance_keyword (f_id, f_dag_ins_id, f_keyword) VALUES `
+	sqlStr := `INSERT INTO t_flow_dag_instance_keyword (f_id, f_dag_ins_id, f_keyword) VALUES `
 	values := make([]any, 0, len(keywords)*3)
 	for _, keyword := range keywords {
 		if keyword == "" {
@@ -502,7 +495,7 @@ func (d *dag) insertDagInstanceKeywordsBatch(ctx context.Context, rows []DagInst
 		}
 		batch := rows[i:end]
 
-		sqlStr := `INSERT INTO t_dag_instance_keyword (f_id, f_dag_ins_id, f_keyword) VALUES `
+		sqlStr := `INSERT INTO t_flow_dag_instance_keyword (f_id, f_dag_ins_id, f_keyword) VALUES `
 		values := make([]any, 0, len(batch)*3)
 		for _, row := range batch {
 			sqlStr += "(?, ?, ?),"
@@ -625,7 +618,7 @@ func (d *dag) CreateDagVersion(ctx context.Context, dagVersion *entity.DagVersio
 
 	defer func() { trace.TelemetrySpanEnd(span, err) }()
 
-	sqlStr := `INSERT INTO t_dag_versions (
+	sqlStr := `INSERT INTO t_flow_dag_version (
 		f_id, f_created_at, f_updated_at, f_dag_id,
 		f_user_id, f_version, f_version_id, f_change_log, f_config, f_sort_time)
 		VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
@@ -659,7 +652,7 @@ func (d *dag) UpdateDag(ctx context.Context, dag *entity.Dag) error {
 
 	fn := func(dag *entity.Dag) error {
 		// 准备 SQL 语句，使用参数化查询防止 SQL 注入
-		sql := `UPDATE t_dag SET
+		sql := `UPDATE t_flow_dag SET
 			f_created_at = ?, f_updated_at = ?, f_user_id = ?, f_name = ?, f_desc = ?,
 			f_trigger = ?, f_cron = ?, f_vars = ?, f_status = ?, f_tasks = ?, f_steps = ?,
 			f_description = ?, f_shortcuts = ?, f_accessors = ?, f_type = ?, f_policy_type = ?,
@@ -790,7 +783,7 @@ func (d *dag) GetDagWithOptionalVersion(ctx context.Context, dagID, versionID st
 	var sql string
 	if versionID != "" {
 		var config entity.Config
-		sql = `SELECT f_config FROM t_dag_versions WHERE f_dag_id = ? AND f_version_id = ?`
+		sql = `SELECT f_config FROM t_flow_dag_version WHERE f_dag_id = ? AND f_version_id = ?`
 		err = d.db.Raw(sql, dagID, versionID).Scan(&config).Error
 		if err != nil {
 			return nil, err
@@ -813,7 +806,7 @@ func (d *dag) DeleteDag(ctx context.Context, id ...string) error {
 			return nil
 		}
 
-		sqlStr := `DELETE FROM t_dag WHERE f_id IN ?`
+		sqlStr := `DELETE FROM t_flow_dag WHERE f_id IN ?`
 		trace.SetAttributes(newCtx, attribute.String(trace.TABLE_NAME, DAG_TABLENAME), attribute.String(trace.DB_SQL, sqlStr), attribute.String(trace.DB_QUERY, msgStr))
 
 		err = d.db.Exec(sqlStr, ids).Error
@@ -821,14 +814,14 @@ func (d *dag) DeleteDag(ctx context.Context, id ...string) error {
 			return err
 		}
 
-		sqlStr = `DELETE FROM t_dag_vars WHERE f_dag_id IN ?`
+		sqlStr = `DELETE FROM t_flow_dag_var WHERE f_dag_id IN ?`
 		trace.SetAttributes(newCtx, attribute.String(trace.TABLE_NAME, DAGVAR_TABLENAME), attribute.String(trace.DB_SQL, sqlStr), attribute.String(trace.DB_QUERY, msgStr))
 		err = d.db.Exec(sqlStr, ids).Error
 		if err != nil {
 			return err
 		}
 
-		sqlStr = `DELETE FROM t_dag_versions WHERE f_dag_id IN ?`
+		sqlStr = `DELETE FROM t_flow_dag_version WHERE f_dag_id IN ?`
 		trace.SetAttributes(newCtx, attribute.String(trace.TABLE_NAME, DAGVERSIONS_TABLENAME), attribute.String(trace.DB_SQL, sqlStr), attribute.String(trace.DB_QUERY, msgStr))
 		err = d.db.Exec(sqlStr, ids).Error
 		if err != nil {
@@ -909,7 +902,7 @@ func (d *dag) ListDagInstance(ctx context.Context, input *mod.ListDagInstanceInp
 			args = append(args, input.MatchQuery.Value)
 		case "keywords":
 			if like, ok := buildKeywordLike(input.MatchQuery.Value); ok {
-				conds = append(conds, "EXISTS (SELECT 1 FROM t_dag_instance_keyword dik WHERE dik.f_dag_ins_id = di.f_id AND dik.f_keyword LIKE ?)")
+				conds = append(conds, "EXISTS (SELECT 1 FROM t_flow_dag_instance_keyword dik WHERE dik.f_dag_ins_id = di.f_id AND dik.f_keyword LIKE ?)")
 				args = append(args, like)
 			}
 		}
@@ -922,9 +915,9 @@ func (d *dag) ListDagInstance(ctx context.Context, input *mod.ListDagInstanceInp
 		for _, v := range input.SelectField {
 			selectFileds = append(selectFileds, camelToFSnake(v))
 		}
-		sql = fmt.Sprintf("SELECT %s FROM t_dag_instance di", strings.Join(selectFileds, ", "))
+		sql = fmt.Sprintf("SELECT %s FROM t_flow_dag_instance di", strings.Join(selectFileds, ", "))
 	} else {
-		sql = "SELECT * FROM t_dag_instance di"
+		sql = "SELECT * FROM t_flow_dag_instance di"
 	}
 
 	if len(conds) > 0 {
@@ -973,7 +966,7 @@ func (d *dag) CreateDagIns(ctx context.Context, dagIns *entity.DagInstance) (str
 	newCtx, span := trace.StartInternalSpan(ctx)
 	defer func() { trace.TelemetrySpanEnd(span, err) }()
 
-	sql := `INSERT INTO t_dag_instance (
+	sql := `INSERT INTO t_flow_dag_instance (
 		f_id, f_created_at, f_updated_at, f_dag_id, f_trigger, f_worker, f_source,
 		f_vars, f_keywords, f_event_persistence, f_event_oss_path, f_share_data, f_share_data_ext,
 		f_status, f_reason, f_cmd, f_has_cmd, f_batch_run_id, f_user_id, f_ended_at, f_dag_type, f_policy_type, f_appinfo,
@@ -1042,7 +1035,7 @@ func (d *dag) GetHistoryDagByVersionID(ctx context.Context, dagID, versionID str
 
 	sql := `SELECT
 		f_id, f_created_at, f_updated_at, f_dag_id, f_user_id, f_version,
-		f_version_id, f_change_log, f_config, f_sort_time FROM t_dag_versions
+		f_version_id, f_change_log, f_config, f_sort_time FROM t_flow_dag_version
 		WHERE f_dag_id = ? AND f_version_id = ?`
 	trace.SetAttributes(newCtx, attribute.String(trace.TABLE_NAME, DAGVERSIONS_TABLENAME), attribute.String(trace.DB_SQL, sql), attribute.String(trace.DB_QUERY, dagID), attribute.String(trace.DB_QUERY, versionID))
 
@@ -1071,7 +1064,7 @@ func (d *dag) BatchCreatOutBoxMessage(ctx context.Context, outBox []*entity.OutB
 		return nil
 	}
 
-	sqlStr := `INSERT INTO t_outbox (f_id, f_topic, f_msg, f_created_at, f_updated_at) VALUES `
+	sqlStr := `INSERT INTO t_flow_outbox (f_id, f_topic, f_msg, f_created_at, f_updated_at) VALUES `
 
 	values := make([]any, 0, len(outBox)*5)
 	for _, data := range outBox {
@@ -1149,7 +1142,7 @@ func (d *dag) BatchCreateDagIns(ctx context.Context, dagIns []*entity.DagInstanc
 		}
 		batch := dagIns[i:end]
 
-		sqlStr := `INSERT INTO t_dag_instance (
+		sqlStr := `INSERT INTO t_flow_dag_instance (
 		f_id, f_created_at, f_updated_at, f_dag_id, f_trigger, f_worker, f_source,
 		f_vars, f_keywords, f_event_persistence, f_event_oss_path, f_share_data, f_share_data_ext,
 		f_status, f_reason, f_cmd, f_has_cmd, f_batch_run_id, f_user_id, f_ended_at, f_dag_type, f_policy_type, f_appinfo,
@@ -1238,7 +1231,7 @@ func (d *dag) BatchCreateTaskIns(ctx context.Context, taskIns []*entity.TaskInst
 		}
 		batch := taskIns[i:end]
 
-		sqlStr := `INSERT INTO t_task_instance (
+		sqlStr := `INSERT INTO t_flow_task_instance (
 			f_id, f_created_at, f_updated_at, f_expired_at, f_task_id, f_dag_ins_id, f_name, f_depend_on,
 			f_action_name, f_timeout_secs, f_params, f_traces, f_status, f_reason, f_pre_checks,
 			f_results, f_steps, f_last_modified_at, f_rendered_params, f_hash, f_settings, f_metadata
@@ -1312,7 +1305,7 @@ func (d *dag) BatchDeleteDagWithTransaction(ctx context.Context, ids []string) e
 	defer func() { trace.TelemetrySpanEnd(span, err) }()
 
 	fn := func() error {
-		sql := `UPDATE t_dag SET f_removed = 1 WHERE f_id IN (?) AND f_type NOT IN (?)`
+		sql := `UPDATE t_flow_dag SET f_removed = 1 WHERE f_id IN (?) AND f_type NOT IN (?)`
 		msgStr, _ := jsoniter.MarshalToString(ids)
 		trace.SetAttributes(newCtx, attribute.String(trace.TABLE_NAME, DAG_TABLENAME), attribute.String(trace.DB_SQL, sql), attribute.String(trace.DB_QUERY, msgStr), attribute.String(trace.DB_QUERY, common.DagTypeSecurityPolicy))
 
@@ -1334,7 +1327,7 @@ func (d *dag) BatchDeleteDagWithTransaction(ctx context.Context, ids []string) e
 			if lastID == 0 {
 				// 第一次查询
 				query = `SELECT f_id, f_dag_type
-				FROM t_dag_instances
+				FROM t_flow_dag_instance
 				WHERE f_dag_id IN ?
 				ORDER BY f_id ASC
 				LIMIT ?`
@@ -1342,7 +1335,7 @@ func (d *dag) BatchDeleteDagWithTransaction(ctx context.Context, ids []string) e
 			} else {
 				// 后续查询，使用游标
 				query = `SELECT f_id, f_dag_type
-				FROM t_dag_instances
+				FROM t_flow_dag_instance
 				WHERE f_dag_id IN ? AND f_id > ?
 				ORDER BY f_id ASC
 				LIMIT ?`
@@ -1375,14 +1368,14 @@ func (d *dag) BatchDeleteDagWithTransaction(ctx context.Context, ids []string) e
 			}
 
 			// 删除 DAG 实例
-			deleteDagInsQuery := `DELETE FROM t_dag_instances WHERE f_id IN ?`
+			deleteDagInsQuery := `DELETE FROM t_flow_dag_instance WHERE f_id IN ?`
 			err = d.db.Exec(deleteDagInsQuery, dagInsIDs).Error
 			if err != nil {
 				return err
 			}
 
 			// 删除相关的任务实例
-			deleteTaskInsQuery := `DELETE FROM t_task_instance WHERE f_dag_ins_id IN ?`
+			deleteTaskInsQuery := `DELETE FROM t_flow_task_instance WHERE f_dag_ins_id IN ?`
 			err = d.db.Exec(deleteTaskInsQuery, dagInsIDs).Error
 			if err != nil {
 				return err
@@ -1428,7 +1421,7 @@ func (d *dag) BatchUpdateDagIns(ctx context.Context, dagIns []*entity.DagInstanc
 			dagIns.Update()
 
 			// 方法1：使用UPDATE完全替换（假设文档必须存在）
-			sql := `UPDATE t_dag_instance SET
+			sql := `UPDATE t_flow_dag_instance SET
 				f_updated_at = ?, f_trigger = ?, f_worker = ?, f_source = ?,
 				f_vars = ?, f_keywords = ?, f_event_persistence = ?, f_event_oss_path = ?, f_share_data = ?, f_share_data_ext = ?,
 				f_status = ?, f_reason = ?, f_cmd = ?, f_has_cmd = ?, f_batch_run_id = ?, f_user_id = ?, f_ended_at = ?, f_dag_type = ?, f_policy_type = ?, f_appinfo = ?,
@@ -1500,7 +1493,7 @@ func (d *dag) BatchUpdateTaskIns(taskIns []*entity.TaskInstance) error {
 		taskIns[i].Update()
 		t := ToTaskInstanceModel(taskIns[i], true)
 
-		sql := `UPDATE t_task_instance SET
+		sql := `UPDATE t_flow_task_instance SET
 			f_updated_at = ?, f_expired_at, f_task_id = ?, f_dag_ins_id = ?, f_name = ?, f_depend_on = ?,
 			f_action_name = ?, f_timeout_secs = ?, f_params = ?, f_traces = ?, f_status = ?,
 			f_reason = ?, f_pre_checks = ?, f_results = ?, f_steps = ?, f_last_modified_at = ?,
@@ -1555,7 +1548,7 @@ func (d *dag) CreatOutBoxMessage(ctx context.Context, outBox *entity.OutBox) err
 	newCtx, span := trace.StartInternalSpan(ctx)
 	defer func() { trace.TelemetrySpanEnd(span, err) }()
 
-	sql := `INSERT INTO t_outbox (f_id, f_topic, f_msg, f_created_at, f_updated_at) VALUES (?, ?, ?, ?, ?)`
+	sql := `INSERT INTO t_flow_outbox (f_id, f_topic, f_msg, f_created_at, f_updated_at) VALUES (?, ?, ?, ?, ?)`
 
 	msgStr, _ := jsoniter.MarshalToString(outBox)
 	trace.SetAttributes(newCtx, attribute.String(trace.TABLE_NAME, OUTBOXMESSAGE_TABLENAME), attribute.String(trace.DB_SQL, sql), attribute.String(trace.DB_Values, msgStr), attribute.String(trace.DB_QUERY, msgStr))
@@ -1578,7 +1571,7 @@ func (d *dag) CreateClient(clientName string, clientID string, clientSecret stri
 		return err
 	}
 	now := time.Now().Unix()
-	sql := `INSERT INTO t_client (f_id, f_created_at, f_updated_at, f_client_name, f_client_id, f_client_secret) VALUES (?, ?, ?, ?, ?, ?)`
+	sql := `INSERT INTO t_flow_client (f_id, f_created_at, f_updated_at, f_client_name, f_client_id, f_client_secret) VALUES (?, ?, ?, ?, ?, ?)`
 	return d.db.Exec(sql, id, now, now, clientName, clientID, clientSecret).Error
 }
 
@@ -1588,7 +1581,7 @@ func (d *dag) CreateInbox(ctx context.Context, msg *entity.InBox) error {
 	newCtx, span := trace.StartInternalSpan(ctx)
 	defer func() { trace.TelemetrySpanEnd(span, err) }()
 
-	sql := `INSERT INTO t_inbox (f_id, f_msg, f_topic, f_docid, f_dag, f_created_at, f_updated_at) VALUES (?, ?, ?, ?, ?, ?, ?)`
+	sql := `INSERT INTO t_flow_inbox (f_id, f_msg, f_topic, f_docid, f_dag, f_created_at, f_updated_at) VALUES (?, ?, ?, ?, ?, ?, ?)`
 
 	msgStr, _ := jsoniter.MarshalToString(msg)
 
@@ -1626,7 +1619,7 @@ func (d *dag) CreateLogs(ctx context.Context, ossLogs []*entity.Log) error {
 		}
 		batch := ossLogs[i:end]
 
-		sqlStr := `INSERT INTO t_log (f_id, f_created_at, f_updated_at, f_ossid, f_key, f_filename) VALUES `
+		sqlStr := `INSERT INTO t_flow_log (f_id, f_created_at, f_updated_at, f_ossid, f_key, f_filename) VALUES `
 		values := make([]any, 0, len(batch)*6)
 		for _, logItem := range batch {
 			logItem.Initial()
@@ -1652,7 +1645,7 @@ func (d *dag) CreateTaskIns(ctx context.Context, taskIns *entity.TaskInstance) e
 	newCtx, span := trace.StartInternalSpan(ctx)
 	defer func() { trace.TelemetrySpanEnd(span, err) }()
 
-	sql := `INSERT INTO t_task_instance (
+	sql := `INSERT INTO t_flow_task_instance (
 		f_id, f_created_at, f_updated_at, f_expired_at, f_task_id, f_dag_ins_id, f_name, f_depend_on,
 		f_action_name, f_timeout_secs, f_params, f_traces, f_status, f_reason, f_pre_checks,
 		f_results, f_steps, f_last_modified_at, f_rendered_params, f_hash, f_settings, f_metadata
@@ -1694,7 +1687,7 @@ func (d *dag) CreateToken(token *entity.Token) error {
 	baseInfo.Initial()
 	id, _ := strconv.ParseUint(baseInfo.ID, 10, 64)
 
-	sql := `INSERT INTO t_token (
+	sql := `INSERT INTO t_flow_token (
 		f_id, f_created_at, f_updated_at, f_user_id, f_user_name, f_refresh_token,
 		f_token, f_expires_in, f_login_ip, f_is_app
 	) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
@@ -1749,7 +1742,7 @@ func (d *dag) DeleteDagInsByID(ctx context.Context, params map[string]interface{
 		updatedAt = ua
 	}
 
-	sql := "DELETE FROM t_dag_instance WHERE f_id <= ? AND f_status IN ? AND f_updated_at <= ?"
+	sql := "DELETE FROM t_flow_dag_instance WHERE f_id <= ? AND f_status IN ? AND f_updated_at <= ?"
 	msyBytes, _ := jsoniter.MarshalToString(params)
 	trace.SetAttributes(newCtx, attribute.String(trace.TABLE_NAME, DAGINSTANCE_TABLENAME), attribute.String(trace.DB_SQL, sql), attribute.String(trace.DB_QUERY, msyBytes))
 
@@ -1764,7 +1757,7 @@ func (d *dag) DeleteInbox(ctx context.Context, ids []string) error {
 	newCtx, span := trace.StartInternalSpan(ctx)
 	defer func() { trace.TelemetrySpanEnd(span, err) }()
 
-	sql := `DELETE FROM t_inbox WHERE f_id IN ?`
+	sql := `DELETE FROM t_flow_inbox WHERE f_id IN ?`
 
 	msgStr, _ := jsoniter.MarshalToString(ids)
 	trace.SetAttributes(newCtx, attribute.String(trace.TABLE_NAME, INBOXMESSAGE_TABLENAME), attribute.String(trace.DB_SQL, sql), attribute.String(trace.DB_QUERY, msgStr))
@@ -1780,7 +1773,7 @@ func (d *dag) DeleteOutBoxMessage(ctx context.Context, ids []string) error {
 	newCtx, span := trace.StartInternalSpan(ctx)
 	defer func() { trace.TelemetrySpanEnd(span, err) }()
 
-	sql := `DELETE FROM t_outbox WHERE f_id IN ?`
+	sql := `DELETE FROM t_flow_outbox WHERE f_id IN ?`
 
 	msgStr, _ := jsoniter.MarshalToString(ids)
 	trace.SetAttributes(newCtx, attribute.String(trace.TABLE_NAME, OUTBOXMESSAGE_TABLENAME), attribute.String(trace.DB_SQL, sql), attribute.String(trace.DB_QUERY, msgStr))
@@ -1797,7 +1790,7 @@ func (d *dag) DeleteTaskInsByDagInsID(ctx context.Context, dagInsID string) erro
 	defer func() { trace.TelemetrySpanEnd(span, err) }()
 
 	id, _ := strconv.ParseUint(dagInsID, 10, 64)
-	sql := `DELETE FROM t_task_instance WHERE f_dag_ins_id = ?`
+	sql := `DELETE FROM t_flow_task_instance WHERE f_dag_ins_id = ?`
 	trace.SetAttributes(newCtx, attribute.String(trace.TABLE_NAME, TASKINSTANCE_TABLENAME), attribute.String(trace.DB_SQL, sql), attribute.String(trace.DB_QUERY, dagInsID))
 
 	return d.db.Exec(sql, id).Error
@@ -1848,7 +1841,7 @@ func (d *dag) DeleteTaskInsByID(ctx context.Context, params map[string]interface
 		}
 	}
 
-	sql := `DELETE FROM t_task_instance WHERE f_id <= ? AND f_dag_ins_id IN ? AND f_status IN ? AND f_updated_at <= ?`
+	sql := `DELETE FROM t_flow_task_instance WHERE f_id <= ? AND f_dag_ins_id IN ? AND f_status IN ? AND f_updated_at <= ?`
 	msgStr, _ := jsoniter.MarshalToString(params)
 	trace.SetAttributes(newCtx, attribute.String(trace.TABLE_NAME, TASKINSTANCE_TABLENAME), attribute.String(trace.DB_SQL, sql), attribute.String(trace.DB_QUERY, msgStr))
 
@@ -1859,7 +1852,7 @@ func (d *dag) DeleteTaskInsByID(ctx context.Context, params map[string]interface
 
 // DeleteToken
 func (d *dag) DeleteToken(id string) error {
-	sql := `DELETE FROM t_token WHERE f_id = ?`
+	sql := `DELETE FROM t_flow_token WHERE f_id = ?`
 	uid, _ := strconv.ParseUint(id, 10, 64)
 	return d.db.Exec(sql, uid).Error
 }
@@ -1900,7 +1893,7 @@ func (d *dag) DisdinctDagInstance(input *mod.ListDagInstanceInput) ([]interface{
 	}
 
 	field := camelToFSnake(input.DistinctField)
-	sql := fmt.Sprintf("SELECT DISTINCT %s FROM t_dag_instance", field)
+	sql := fmt.Sprintf("SELECT DISTINCT %s FROM t_flow_dag_instance", field)
 	if len(conds) > 0 {
 		sql += " WHERE " + strings.Join(conds, " AND ")
 	}
@@ -1928,7 +1921,7 @@ func (d *dag) DisdinctDagInstance(input *mod.ListDagInstanceInput) ([]interface{
 
 // GetClient
 func (d *dag) GetClient(clientName string) (client *entity.Client, err error) {
-	sql := `SELECT f_id, f_created_at, f_updated_at, f_client_name, f_client_id, f_client_secret FROM t_client WHERE f_client_name = ?`
+	sql := `SELECT f_id, f_created_at, f_updated_at, f_client_name, f_client_id, f_client_secret FROM t_flow_client WHERE f_client_name = ?`
 	model := &ClientModel{}
 	if err = d.db.Raw(sql, clientName).Scan(model).Error; err != nil {
 		return nil, err
@@ -2028,7 +2021,7 @@ func (d *dag) GetDagInstanceCount(ctx context.Context, params map[string]interfa
 	if kw, ok := baseParams["keywords"]; ok {
 		delete(baseParams, "keywords")
 		if like, ok := buildKeywordLike(kw); ok {
-			extraConds = append(extraConds, "EXISTS (SELECT 1 FROM t_dag_instance_keyword dik WHERE dik.f_dag_ins_id = di.f_id AND dik.f_keyword LIKE ?)")
+			extraConds = append(extraConds, "EXISTS (SELECT 1 FROM t_flow_dag_instance_keyword dik WHERE dik.f_dag_ins_id = di.f_id AND dik.f_keyword LIKE ?)")
 			extraArgs = append(extraArgs, like)
 		}
 	}
@@ -2055,7 +2048,7 @@ func (d *dag) GetDagInstanceCount(ctx context.Context, params map[string]interfa
 		conds = append(conds, "1=1")
 	}
 
-	sql := fmt.Sprintf("SELECT COUNT(*) FROM t_dag_instance di WHERE %s", strings.Join(conds, " AND "))
+	sql := fmt.Sprintf("SELECT COUNT(*) FROM t_flow_dag_instance di WHERE %s", strings.Join(conds, " AND "))
 
 	query, _ := jsoniter.MarshalToString(args)
 	trace.SetAttributes(newCtx, attribute.String(trace.TABLE_NAME, DAGINSTANCE_TABLENAME), attribute.String(trace.DB_SQL, sql), attribute.String(trace.DB_QUERY, query))
@@ -2071,7 +2064,7 @@ func (d *dag) GetInbox(ctx context.Context, id string) (*entity.InBox, error) {
 	newCtx, span := trace.StartInternalSpan(ctx)
 	defer func() { trace.TelemetrySpanEnd(span, err) }()
 
-	sql := `SELECT f_id, f_msg, f_topic, f_docid, f_dag, f_created_at, f_updated_at FROM t_inbox WHERE f_id = ?`
+	sql := `SELECT f_id, f_msg, f_topic, f_docid, f_dag, f_created_at, f_updated_at FROM t_flow_inbox WHERE f_id = ?`
 
 	trace.SetAttributes(newCtx, attribute.String(trace.TABLE_NAME, INBOXMESSAGE_TABLENAME), attribute.String(trace.DB_SQL, sql), attribute.String(trace.DB_QUERY, id))
 
@@ -2101,7 +2094,7 @@ func (d *dag) GetInbox(ctx context.Context, id string) (*entity.InBox, error) {
 
 // GetSwitchStatus
 func (d *dag) GetSwitchStatus() (bool, error) {
-	sql := `SELECT f_id, f_created_at, f_updated_at, f_name, f_status FROM t_switch WHERE f_name = ?`
+	sql := `SELECT f_id, f_created_at, f_updated_at, f_name, f_status FROM t_flow_switch WHERE f_name = ?`
 	sw := &SwitchModel{}
 	if err := d.db.Raw(sql, entity.SwitchName).Scan(sw).Error; err != nil {
 		return false, fmt.Errorf("get switch status failed: %w", err)
@@ -2118,7 +2111,7 @@ func (d *dag) GetTaskIns(ctx context.Context, taskIns string) (*entity.TaskInsta
 	newCtx, span := trace.StartInternalSpan(ctx)
 	defer func() { trace.TelemetrySpanEnd(span, err) }()
 
-	sql := `SELECT * FROM t_task_instance WHERE f_id = ?`
+	sql := `SELECT * FROM t_flow_task_instance WHERE f_id = ?`
 	id, _ := strconv.ParseUint(taskIns, 10, 64)
 	model := &TaskInstanceModel{}
 	trace.SetAttributes(newCtx, attribute.String(trace.TABLE_NAME, TASKINSTANCE_TABLENAME), attribute.String(trace.DB_SQL, sql), attribute.String(trace.DB_QUERY, taskIns))
@@ -2163,7 +2156,7 @@ func (d *dag) GetTaskInstanceCount(ctx context.Context, params map[string]interf
 
 // GetTokenByUserID
 func (d *dag) GetTokenByUserID(userID string) (*entity.Token, error) {
-	sql := `SELECT f_id, f_created_at, f_updated_at, f_user_id, f_user_name, f_refresh_token, f_token, f_expires_in, f_login_ip, f_is_app FROM t_token WHERE f_user_id = ?`
+	sql := `SELECT f_id, f_created_at, f_updated_at, f_user_id, f_user_name, f_refresh_token, f_token, f_expires_in, f_login_ip, f_is_app FROM t_flow_token WHERE f_user_id = ?`
 	model := &TokenModel{}
 	if err := d.db.Raw(sql, userID).Scan(model).Error; err != nil {
 		return &entity.Token{}, fmt.Errorf("get token failed: %w", err)
@@ -2298,7 +2291,7 @@ func (d *dag) ListDag(ctx context.Context, input *mod.ListDagInput) ([]*entity.D
 		args = append(args, indexArgs...)
 	}
 
-	sql := "SELECT * FROM t_dag"
+	sql := "SELECT * FROM t_flow_dag"
 	if len(conds) > 0 {
 		sql += " WHERE " + strings.Join(conds, " AND ")
 	}
@@ -2467,16 +2460,16 @@ func (d *dag) ListDagCount(ctx context.Context, input *mod.ListDagInput) (int64,
 	conds = append(conds, "f_removed < 1", "f_is_debug < 1")
 
 	if len(input.Sources) != 0 && len(input.Trigger) > 0 {
-		conds = append(conds, "f_id IN (SELECT f_dag_id FROM t_dag_step WHERE f_operator IN ? AND f_source_id IN ?)")
+		conds = append(conds, "f_id IN (SELECT f_dag_id FROM t_flow_dag_step WHERE f_operator IN ? AND f_source_id IN ?)")
 		args = append(args, input.Trigger, input.Sources)
 	}
 
 	if input.Accessors != nil && input.UserID == "" {
-		conds = append(conds, "f_id IN (SELECT f_dag_id FROM t_dag_accessor WHERE f_accessor_id IN ?)")
+		conds = append(conds, "f_id IN (SELECT f_dag_id FROM t_flow_dag_accessor WHERE f_accessor_id IN ?)")
 		args = append(args, input.Accessors)
 	}
 
-	sql := "SELECT COUNT(*) FROM t_dag"
+	sql := "SELECT COUNT(*) FROM t_flow_dag"
 	if len(conds) > 0 {
 		sql += " WHERE " + strings.Join(conds, " AND ")
 	}
@@ -2527,7 +2520,7 @@ func (d *dag) ListDagInstanceInRangeTime(ctx context.Context, status string, beg
 	newCtx, span := trace.StartInternalSpan(ctx)
 	defer func() { trace.TelemetrySpanEnd(span, err) }()
 
-	sql := `SELECT * FROM t_dag_instance WHERE f_status = ? AND f_updated_at >= ? AND f_updated_at <= ?`
+	sql := `SELECT * FROM t_flow_dag_instance WHERE f_status = ? AND f_updated_at >= ? AND f_updated_at <= ?`
 	trace.SetAttributes(newCtx, attribute.String(trace.TABLE_NAME, DAGINSTANCE_TABLENAME), attribute.String(trace.DB_SQL, sql))
 
 	models := make([]*DagInstanceModel, 0)
@@ -2551,7 +2544,7 @@ func (d *dag) ListDagVersions(ctx context.Context, input *mod.ListDagVersionInpu
 	newCtx, span := trace.StartInternalSpan(ctx)
 	defer func() { trace.TelemetrySpanEnd(span, err) }()
 
-	sql := "SELECT * FROM t_dag_versions WHERE 1=1"
+	sql := "SELECT * FROM t_flow_dag_version WHERE 1=1"
 	args := make([]interface{}, 0)
 	if input.DagID != "" {
 		sql += " AND f_dag_id = ?"
@@ -2592,7 +2585,7 @@ func (d *dag) ListExistDagID(ctx context.Context, dagIDs []string) ([]string, er
 		return nil, nil
 	}
 
-	sql := `SELECT f_id FROM t_dag WHERE f_id IN ?`
+	sql := `SELECT f_id FROM t_flow_dag WHERE f_id IN ?`
 	ids := parseUint64Slice(dagIDs)
 	trace.SetAttributes(newCtx, attribute.String(trace.TABLE_NAME, DAG_TABLENAME), attribute.String(trace.DB_SQL, sql))
 
@@ -2617,7 +2610,7 @@ func (d *dag) ListExistDagInsID(ctx context.Context, dagInsIDs []string) ([]stri
 		return nil, nil
 	}
 
-	sql := `SELECT f_id FROM t_dag_instance WHERE f_id IN ?`
+	sql := `SELECT f_id FROM t_flow_dag_instance WHERE f_id IN ?`
 	ids := parseUint64Slice(dagInsIDs)
 	trace.SetAttributes(newCtx, attribute.String(trace.TABLE_NAME, DAGINSTANCE_TABLENAME), attribute.String(trace.DB_SQL, sql))
 
@@ -2652,7 +2645,7 @@ func (d *dag) ListHistoryDagIns(ctx context.Context, params map[string]interface
 		default:
 		}
 
-		sql := `SELECT * FROM t_dag_instance WHERE f_status IN ? AND f_updated_at <= ? AND f_id > ? ORDER BY f_id ASC LIMIT ?`
+		sql := `SELECT * FROM t_flow_dag_instance WHERE f_status IN ? AND f_updated_at <= ? AND f_id > ? ORDER BY f_id ASC LIMIT ?`
 		var models []DagInstanceModel
 		if err = d.db.Debug().Raw(sql, status, updatedAt, lastID, batchSize).Scan(&models).Error; err != nil {
 			return err
@@ -2704,7 +2697,7 @@ func (d *dag) ListHistoryTaskIns(ctx context.Context, params map[string]interfac
 		default:
 		}
 
-		sql := `SELECT * FROM t_task_instance WHERE f_status IN ? AND f_updated_at <= ? AND f_id > ? ORDER BY f_id ASC LIMIT ?`
+		sql := `SELECT * FROM t_flow_task_instance WHERE f_status IN ? AND f_updated_at <= ? AND f_id > ? ORDER BY f_id ASC LIMIT ?`
 		var models []TaskInstanceModel
 		if err = d.db.Raw(sql, status, updatedAt, lastID, batchSize).Scan(&models).Error; err != nil {
 			return err
@@ -2739,7 +2732,7 @@ func (d *dag) ListHistoryTaskIns(ctx context.Context, params map[string]interfac
 // ListInbox
 func (d *dag) ListInbox(ctx context.Context, input *mod.ListInboxInput) ([]*entity.InBox, error) {
 	// 构建 SQL 查询
-	sqlQuery := "SELECT * FROM t_inbox WHERE 1=1"
+	sqlQuery := "SELECT * FROM t_flow_inbox WHERE 1=1"
 	var args []interface{}
 
 	// 应用筛选条件
@@ -2820,7 +2813,7 @@ func (d *dag) ListOutBoxMessage(ctx context.Context, input *entity.OutBoxInput) 
 	defer func() { trace.TelemetrySpanEnd(span, err) }()
 	ctx = newCtx
 
-	sqlStr := `SELECT f_id, f_topic, f_msg, f_created_at, f_updated_at FROM t_outbox WHERE 1 = 1 `
+	sqlStr := `SELECT f_id, f_topic, f_msg, f_created_at, f_updated_at FROM t_flow_outbox WHERE 1 = 1 `
 
 	values := make([]interface{}, 0)
 	if input.CreateTime > 0 {
@@ -2919,7 +2912,7 @@ func (d *dag) ListTaskInstance(ctx context.Context, input *mod.ListTaskInstanceI
 		args = append(args, input.Hash)
 	}
 
-	sql := "SELECT * FROM t_task_instance"
+	sql := "SELECT * FROM t_flow_task_instance"
 	if len(conds) > 0 {
 		sql += " WHERE " + strings.Join(conds, " AND ")
 	}
@@ -3037,7 +3030,7 @@ func (d *dag) PatchDagIns(ctx context.Context, dagIns *entity.DagInstance, musts
 		updateKeywords = true
 	}
 
-	sql := fmt.Sprintf("UPDATE t_dag_instance SET %s WHERE f_id = ?", strings.Join(setClauses, ", "))
+	sql := fmt.Sprintf("UPDATE t_flow_dag_instance SET %s WHERE f_id = ?", strings.Join(setClauses, ", "))
 	values = append(values, dagIns.ID)
 
 	msgStr, _ := jsoniter.MarshalToString(values)
@@ -3112,7 +3105,7 @@ func (d *dag) PatchTaskIns(ctx context.Context, taskIns *entity.TaskInstance) er
 		values = append(values, marshalToString(taskIns.MetaData))
 	}
 
-	sql := fmt.Sprintf("UPDATE t_task_instance SET %s WHERE f_id = ?", strings.Join(setClauses, ", "))
+	sql := fmt.Sprintf("UPDATE t_flow_task_instance SET %s WHERE f_id = ?", strings.Join(setClauses, ", "))
 	values = append(values, taskIns.ID)
 
 	msgStr, _ := jsoniter.MarshalToString(values)
@@ -3123,7 +3116,7 @@ func (d *dag) PatchTaskIns(ctx context.Context, taskIns *entity.TaskInstance) er
 
 // RemoveClient
 func (d *dag) RemoveClient(clientName string) (err error) {
-	sql := `DELETE FROM t_client WHERE f_client_name = ?`
+	sql := `DELETE FROM t_flow_client WHERE f_client_name = ?`
 	return d.db.Exec(sql, clientName).Error
 }
 
@@ -3141,13 +3134,13 @@ func (d *dag) RetryDagIns(ctx context.Context, dagInsID string, taskInsIDs []str
 				v, _ := strconv.ParseUint(id, 10, 64)
 				ids = append(ids, v)
 			}
-			sqlTask := `UPDATE t_task_instance SET f_updated_at = ?, f_status = ? WHERE f_id IN ?`
+			sqlTask := `UPDATE t_flow_task_instance SET f_updated_at = ?, f_status = ? WHERE f_id IN ?`
 			if err = d.db.Exec(sqlTask, now, string(entity.TaskInstanceStatusInit), ids).Error; err != nil {
 				return err
 			}
 		}
 
-		sqlDag := `UPDATE t_dag_instance SET f_updated_at = ?, f_status = ?, f_ended_at = ? WHERE f_id = ?`
+		sqlDag := `UPDATE t_flow_dag_instance SET f_updated_at = ?, f_status = ?, f_ended_at = ? WHERE f_id = ?`
 		return d.db.Exec(sqlDag, now, string(entity.DagInstanceStatusInit), now, dagInsID).Error
 	}
 
@@ -3162,7 +3155,7 @@ func (d *dag) RetryDagIns(ctx context.Context, dagInsID string, taskInsIDs []str
 // SetSwitchStatus
 func (d *dag) SetSwitchStatus(status bool) error {
 	now := time.Now().Unix()
-	sql := `INSERT INTO t_switch (f_id, f_created_at, f_updated_at, f_name, f_status)
+	sql := `INSERT INTO t_flow_switch (f_id, f_created_at, f_updated_at, f_name, f_status)
 		VALUES (?, ?, ?, ?, ?)
 		ON DUPLICATE KEY UPDATE f_status = VALUES(f_status), f_updated_at = VALUES(f_updated_at)`
 	id, _ := utils.GetUniqueID()
@@ -3182,14 +3175,14 @@ func (d *dag) UpdateDagIncValue(ctx context.Context, dagId string, incKey string
 
 	fn := func() error {
 		var raw string
-		if err = d.db.Raw(`SELECT f_inc_values FROM t_dag WHERE f_id = ?`, dagId).Scan(&raw).Error; err != nil {
+		if err = d.db.Raw(`SELECT f_inc_values FROM t_flow_dag WHERE f_id = ?`, dagId).Scan(&raw).Error; err != nil {
 			return err
 		}
 		updated, uerr := updateJSONMapString(raw, incKey, incValue)
 		if uerr != nil {
 			return uerr
 		}
-		return d.db.Exec(`UPDATE t_dag SET f_inc_values = ? WHERE f_id = ?`, updated, dagId).Error
+		return d.db.Exec(`UPDATE t_flow_dag SET f_inc_values = ? WHERE f_id = ?`, updated, dagId).Error
 	}
 
 	if !d.isTX {
@@ -3206,7 +3199,7 @@ func (d *dag) UpdateDagIns(ctx context.Context, dagIns *entity.DagInstance) erro
 	newCtx, span := trace.StartInternalSpan(ctx)
 	defer func() { trace.TelemetrySpanEnd(span, err) }()
 
-	sql := `UPDATE t_dag_instance SET
+	sql := `UPDATE t_flow_dag_instance SET
 		f_updated_at = ?, f_dag_id = ?, f_trigger = ?, f_worker = ?, f_source = ?,
 		f_vars = ?, f_keywords = ?, f_event_persistence = ?, f_event_oss_path = ?, f_share_data = ?, f_share_data_ext = ?,
 		f_status = ?, f_reason = ?, f_cmd = ?, f_has_cmd = ?, f_batch_run_id = ?, f_user_id = ?, f_ended_at = ?, f_dag_type = ?, f_policy_type = ?, f_appinfo = ?,
@@ -3273,7 +3266,7 @@ func (d *dag) UpdateTaskIns(ctx context.Context, taskIns *entity.TaskInstance) e
 
 	t := ToTaskInstanceModel(taskIns, true)
 
-	sql := `UPDATE t_task_instance SET
+	sql := `UPDATE t_flow_task_instance SET
 		f_updated_at = ?, f_task_id = ?, f_dag_ins_id = ?, f_name = ?, f_depend_on = ?,
 		f_action_name = ?, f_timeout_secs = ?, f_params = ?, f_traces = ?, f_status = ?,
 		f_reason = ?, f_pre_checks = ?, f_results = ?, f_steps = ?, f_last_modified_at = ?,
@@ -3312,13 +3305,13 @@ func (d *dag) UpdateToken(token *entity.Token) error {
 	baseInfo := token.GetBaseInfo()
 	baseInfo.Update()
 
-	sql := `UPDATE t_token SET f_updated_at = ?, f_token = ?, f_expires_in = ? WHERE f_user_id = ?`
+	sql := `UPDATE t_flow_token SET f_updated_at = ?, f_token = ?, f_expires_in = ? WHERE f_user_id = ?`
 	res := d.db.Exec(sql, baseInfo.UpdatedAt, token.Token, token.ExpiresIn, token.UserID)
 	if res.Error != nil {
 		return fmt.Errorf("update token failed: %w", res.Error)
 	}
 	if res.RowsAffected == 0 {
-		return fmt.Errorf("t_token has no key[ %s ] to update: %w", baseInfo.ID, data.ErrDataNotFound)
+		return fmt.Errorf("t_flow_token has no key[ %s ] to update: %w", baseInfo.ID, data.ErrDataNotFound)
 	}
 	return nil
 }

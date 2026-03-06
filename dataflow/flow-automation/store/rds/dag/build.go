@@ -786,27 +786,27 @@ func BuildDagIndexSubquery(input *mod.ListDagInput) (string, []interface{}) {
 	if input.Scope == "all" {
 		unionParts := make([]string, 0, 2)
 		if len(input.Accessors) > 0 {
-			sub := "SELECT f_dag_id FROM t_dag_accessor WHERE f_accessor_id IN ?"
+			sub := "SELECT f_dag_id FROM t_flow_dag_accessor WHERE f_accessor_id IN ?"
 			args = append(args, input.Accessors)
 			if len(input.TriggerExclude) > 0 {
-				sub += " AND NOT EXISTS (SELECT 1 FROM t_dag_step ds WHERE ds.f_dag_id = t_dag.f_id AND ds.f_operator IN ?)"
+				sub += " AND NOT EXISTS (SELECT 1 FROM t_flow_dag_step ds WHERE ds.f_dag_id = t_flow_dag.f_id AND ds.f_operator IN ?)"
 				args = append(args, input.TriggerExclude)
 			}
 			unionParts = append(unionParts, sub)
 		}
 		if input.UserID != "" {
-			unionParts = append(unionParts, "SELECT f_id FROM t_dag WHERE f_user_id = ?")
+			unionParts = append(unionParts, "SELECT f_id FROM t_flow_dag WHERE f_user_id = ?")
 			args = append(args, input.UserID)
 		}
 		if len(unionParts) > 0 {
 			conds = append(conds, fmt.Sprintf("f_id IN (%s)", strings.Join(unionParts, " UNION ALL ")))
 		}
-		conds = append(conds, "NOT EXISTS  (SELECT 1 FROM t_dag_step ds WHERE ds.f_dag_id = t_dag.f_id AND ds.f_has_datasource = 1)")
+		conds = append(conds, "NOT EXISTS  (SELECT 1 FROM t_flow_dag_step ds WHERE ds.f_dag_id = t_flow_dag.f_id AND ds.f_has_datasource = 1)")
 		return strings.Join(conds, " AND "), args
 	}
 
 	if input.Accessors != nil && input.UserID == "" {
-		conds = append(conds, "f_id IN (SELECT f_dag_id FROM t_dag_accessor WHERE f_accessor_id IN ?)")
+		conds = append(conds, "f_id IN (SELECT f_dag_id FROM t_flow_dag_accessor WHERE f_accessor_id IN ?)")
 		args = append(args, input.Accessors)
 	}
 

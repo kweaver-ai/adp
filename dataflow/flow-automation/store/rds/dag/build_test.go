@@ -180,7 +180,7 @@ func TestBuildDagAccessorIndex(t *testing.T) {
 func TestBuildDagIndexSubquery_TriggerSources(t *testing.T) {
 	input := &mod.ListDagInput{Trigger: []string{"op"}, Sources: []string{"s1"}}
 	sql, args := BuildDagIndexSubquery(input)
-	if !strings.Contains(sql, "t_dag_step_index") || !strings.Contains(sql, "UNION") {
+	if !strings.Contains(sql, "t_flow_dag_step") || !strings.Contains(sql, "UNION") {
 		t.Fatalf("unexpected sql: %s", sql)
 	}
 	if len(args) == 0 {
@@ -191,7 +191,7 @@ func TestBuildDagIndexSubquery_TriggerSources(t *testing.T) {
 func TestBuildDagIndexSubquery_ScopeAll(t *testing.T) {
 	input := &mod.ListDagInput{Scope: "all", UserID: "u1", Accessors: []string{"a1"}, TriggerExclude: []string{"op"}}
 	sql, _ := BuildDagIndexSubquery(input)
-	if !strings.Contains(sql, "t_dag_accessor_index") || !strings.Contains(sql, "t_dag_step_index") {
+	if !strings.Contains(sql, "t_flow_dag_accessor") || !strings.Contains(sql, "t_flow_dag_step") {
 		t.Fatalf("unexpected sql: %s", sql)
 	}
 }
