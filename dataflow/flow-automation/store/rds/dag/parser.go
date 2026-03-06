@@ -249,8 +249,9 @@ func copyFields(src interface{}, dest interface{}) error {
 			continue
 		}
 
-		// 1. 类型完全一致，直接赋值
-		if srcField.Type().AssignableTo(destField.Type()) {
+		// 1. 类型完全一致，直接赋值（字符串 -> interface{} 除外，后续按 JSON 优先处理）
+		if srcField.Type().AssignableTo(destField.Type()) &&
+			!(isStringKind(srcField) && destField.Kind() == reflect.Interface) {
 			destField.Set(srcField)
 			continue
 		}
@@ -270,18 +271,31 @@ func copyFields(src interface{}, dest interface{}) error {
 			}
 		}
 
-		// 4. 底层类型相同的转换（string ↔ MyStr, int ↔ MyInt 等，但排除整数→string的误转换）
+		// 4. 字符串 → interface{} 时优先尝试 JSON 反序列化，避免把 "null"/"{}" 当普通字符串
+		if isStringKind(srcField) && destField.Kind() == reflect.Interface && srcField.String() != "" {
+			var parsed interface{}
+			if err := json.Unmarshal([]byte(srcField.String()), &parsed); err == nil {
+				if parsed == nil {
+					destField.Set(reflect.Zero(destField.Type()))
+				} else {
+					destField.Set(reflect.ValueOf(parsed))
+				}
+				continue
+			}
+		}
+
+		// 5. 底层类型相同的转换（string ↔ MyStr, int ↔ MyInt 等，但排除整数→string的误转换）
 		if safeConvertible(srcField.Type(), destField.Type()) {
 			destField.Set(srcField.Convert(destField.Type()))
 			continue
 		}
 
-		// 5. 指针与非指针之间的转换
+		// 6. 指针与非指针之间的转换
 		if handlePtrConversion(srcField, destField) {
 			continue
 		}
 
-		// 6. 字符串 → 复杂类型，尝试 JSON 反序列化
+		// 7. 字符串 → 复杂类型，尝试 JSON 反序列化
 		if isStringKind(srcField) && srcField.String() != "" {
 			strValue := srcField.String()
 			destFieldType := destField.Type()
