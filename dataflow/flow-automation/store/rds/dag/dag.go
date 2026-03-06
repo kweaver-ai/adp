@@ -298,12 +298,12 @@ func (d *dag) WithTransaction(ctx context.Context, fn func(context.Context, mod.
 	return nil
 }
 
-func (d *dag) CreateDag(ctx context.Context, dag *entity.Dag) (string, error) {
+func (d *dag) CreateDag(ctx context.Context, dagEntity *entity.Dag) (string, error) {
 	var err error
 	newCtx, span := trace.StartInternalSpan(ctx)
 	defer func() { trace.TelemetrySpanEnd(span, err) }()
 
-	fn := func(dag *entity.Dag) error {
+	fn := func(store *dag, dagEntity *entity.Dag) error {
 		// 准备 SQL 语句，使用参数化查询防止 SQL 注入
 		sql := `INSERT INTO t_flow_dag (
 			f_id, f_created_at, f_updated_at, f_user_id, f_name, f_desc, f_trigger,
@@ -315,16 +315,16 @@ func (d *dag) CreateDag(ctx context.Context, dag *entity.Dag) (string, error) {
 			) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
 
 		// 执行 SQL 语句
-		t := ToDagModel(dag, false)
+		t := ToDagModel(dagEntity, false)
 		msgStr, _ := jsoniter.MarshalToString(t)
 		trace.SetAttributes(newCtx, attribute.String(trace.TABLE_NAME, DAG_TABLENAME), attribute.String(trace.DB_SQL, sql), attribute.String(trace.DB_Values, msgStr))
 
-		err = dag.CheckRootNode(dag.Tasks)
+		err = dagEntity.CheckRootNode(dagEntity.Tasks)
 		if err != nil {
 			return err
 		}
 
-		err = d.db.Exec(sql,
+		err = store.db.Exec(sql,
 			t.ID,
 			t.CreatedAt,
 			t.UpdatedAt,
@@ -367,12 +367,12 @@ func (d *dag) CreateDag(ctx context.Context, dag *entity.Dag) (string, error) {
 			return err
 		}
 
-		err = d.CreateDagVars(newCtx, BuildDagVars(dag))
+		err = store.CreateDagVars(newCtx, BuildDagVars(dagEntity))
 		if err != nil {
 			return err
 		}
 
-		err = d.refreshDagIndexes(newCtx, dag)
+		err = store.refreshDagIndexes(newCtx, dagEntity)
 		if err != nil {
 			return err
 		}
@@ -381,14 +381,14 @@ func (d *dag) CreateDag(ctx context.Context, dag *entity.Dag) (string, error) {
 	}
 
 	if !d.isTX {
-		err = d.WithTransaction(newCtx, func(context.Context, mod.Store) error {
-			return fn(dag)
+		err = d.WithTransaction(newCtx, func(_ context.Context, txStore mod.Store) error {
+			return fn(txStore.(*dag), dagEntity)
 		})
 	} else {
-		err = fn(dag)
+		err = fn(d, dagEntity)
 	}
 
-	return dag.ID, err
+	return dagEntity.ID, err
 }
 
 func (d *dag) CreateDagVars(ctx context.Context, dagVars []*DagVarModel) error {
@@ -397,7 +397,7 @@ func (d *dag) CreateDagVars(ctx context.Context, dagVars []*DagVarModel) error {
 	msgStr, _ := jsoniter.MarshalToString(dagVars)
 	defer func() { trace.TelemetrySpanEnd(span, err) }()
 
-	fn := func(dagVars []*DagVarModel) error {
+	fn := func(store *dag, dagVars []*DagVarModel) error {
 		if len(dagVars) == 0 {
 			return nil
 		}
@@ -405,7 +405,7 @@ func (d *dag) CreateDagVars(ctx context.Context, dagVars []*DagVarModel) error {
 		dagID := dagVars[0].DagID
 		sqlStr := `DELETE FROM t_flow_dag_var WHERE f_dag_id = ?`
 		trace.SetAttributes(newCtx, attribute.String(trace.TABLE_NAME, DAGVAR_TABLENAME), attribute.String(trace.DB_SQL, sqlStr), attribute.String(trace.DB_QUERY, fmt.Sprintf("%v", dagID)))
-		err = d.db.Exec(sqlStr, dagID).Error
+		err = store.db.Exec(sqlStr, dagID).Error
 		if err != nil {
 			return err
 		}
@@ -420,7 +420,7 @@ func (d *dag) CreateDagVars(ctx context.Context, dagVars []*DagVarModel) error {
 
 		sqlStr = sqlStr[:len(sqlStr)-1]
 
-		err = d.db.Exec(sqlStr, values...).Error
+		err = store.db.Exec(sqlStr, values...).Error
 		if err != nil {
 			return err
 		}
@@ -430,11 +430,11 @@ func (d *dag) CreateDagVars(ctx context.Context, dagVars []*DagVarModel) error {
 	}
 
 	if !d.isTX {
-		err = d.WithTransaction(newCtx, func(context.Context, mod.Store) error {
-			return fn(dagVars)
+		err = d.WithTransaction(newCtx, func(_ context.Context, txStore mod.Store) error {
+			return fn(txStore.(*dag), dagVars)
 		})
 	} else {
-		err = fn(dagVars)
+		err = fn(d, dagVars)
 	}
 
 	return err
@@ -645,12 +645,12 @@ func (d *dag) CreateDagVersion(ctx context.Context, dagVersion *entity.DagVersio
 	return dagVersion.ID, nil
 }
 
-func (d *dag) UpdateDag(ctx context.Context, dag *entity.Dag) error {
+func (d *dag) UpdateDag(ctx context.Context, dagEntity *entity.Dag) error {
 	var err error
 	newCtx, span := trace.StartInternalSpan(ctx)
 	defer func() { trace.TelemetrySpanEnd(span, err) }()
 
-	fn := func(dag *entity.Dag) error {
+	fn := func(store *dag, dagEntity *entity.Dag) error {
 		// 准备 SQL 语句，使用参数化查询防止 SQL 注入
 		sql := `UPDATE t_flow_dag SET
 			f_created_at = ?, f_updated_at = ?, f_user_id = ?, f_name = ?, f_desc = ?,
@@ -663,16 +663,16 @@ func (d *dag) UpdateDag(ctx context.Context, dag *entity.Dag) error {
 			WHERE f_id = ?`
 
 		// 执行 SQL 语句
-		t := ToDagModel(dag, true)
+		t := ToDagModel(dagEntity, true)
 		msgStr, _ := jsoniter.MarshalToString(t)
 		trace.SetAttributes(newCtx, attribute.String(trace.TABLE_NAME, DAG_TABLENAME), attribute.String(trace.DB_SQL, sql), attribute.String(trace.DB_Values, msgStr))
 
-		err = dag.CheckRootNode(dag.Tasks)
+		err = dagEntity.CheckRootNode(dagEntity.Tasks)
 		if err != nil {
 			return err
 		}
 
-		err = d.db.Exec(sql,
+		err = store.db.Exec(sql,
 			t.CreatedAt,
 			t.UpdatedAt,
 			t.UserID,
@@ -715,12 +715,12 @@ func (d *dag) UpdateDag(ctx context.Context, dag *entity.Dag) error {
 			return err
 		}
 
-		err = d.CreateDagVars(newCtx, BuildDagVars(dag))
+		err = store.CreateDagVars(newCtx, BuildDagVars(dagEntity))
 		if err != nil {
 			return err
 		}
 
-		err = d.refreshDagIndexes(newCtx, dag)
+		err = store.refreshDagIndexes(newCtx, dagEntity)
 		if err != nil {
 			return err
 		}
@@ -729,11 +729,11 @@ func (d *dag) UpdateDag(ctx context.Context, dag *entity.Dag) error {
 	}
 
 	if !d.isTX {
-		err = d.WithTransaction(newCtx, func(context.Context, mod.Store) error {
-			return fn(dag)
+		err = d.WithTransaction(newCtx, func(_ context.Context, txStore mod.Store) error {
+			return fn(txStore.(*dag), dagEntity)
 		})
 	} else {
-		err = fn(dag)
+		err = fn(d, dagEntity)
 	}
 
 	return err
@@ -801,7 +801,7 @@ func (d *dag) DeleteDag(ctx context.Context, id ...string) error {
 	msgStr, _ := jsoniter.MarshalToString(id)
 	defer func() { trace.TelemetrySpanEnd(span, err) }()
 
-	fn := func(ids ...string) error {
+	fn := func(store *dag, ids ...string) error {
 		if len(ids) == 0 {
 			return nil
 		}
@@ -809,21 +809,21 @@ func (d *dag) DeleteDag(ctx context.Context, id ...string) error {
 		sqlStr := `DELETE FROM t_flow_dag WHERE f_id IN ?`
 		trace.SetAttributes(newCtx, attribute.String(trace.TABLE_NAME, DAG_TABLENAME), attribute.String(trace.DB_SQL, sqlStr), attribute.String(trace.DB_QUERY, msgStr))
 
-		err = d.db.Exec(sqlStr, ids).Error
+		err = store.db.Exec(sqlStr, ids).Error
 		if err != nil {
 			return err
 		}
 
 		sqlStr = `DELETE FROM t_flow_dag_var WHERE f_dag_id IN ?`
 		trace.SetAttributes(newCtx, attribute.String(trace.TABLE_NAME, DAGVAR_TABLENAME), attribute.String(trace.DB_SQL, sqlStr), attribute.String(trace.DB_QUERY, msgStr))
-		err = d.db.Exec(sqlStr, ids).Error
+		err = store.db.Exec(sqlStr, ids).Error
 		if err != nil {
 			return err
 		}
 
 		sqlStr = `DELETE FROM t_flow_dag_version WHERE f_dag_id IN ?`
 		trace.SetAttributes(newCtx, attribute.String(trace.TABLE_NAME, DAGVERSIONS_TABLENAME), attribute.String(trace.DB_SQL, sqlStr), attribute.String(trace.DB_QUERY, msgStr))
-		err = d.db.Exec(sqlStr, ids).Error
+		err = store.db.Exec(sqlStr, ids).Error
 		if err != nil {
 			return err
 		}
@@ -832,11 +832,11 @@ func (d *dag) DeleteDag(ctx context.Context, id ...string) error {
 	}
 
 	if !d.isTX {
-		err = d.WithTransaction(newCtx, func(context.Context, mod.Store) error {
-			return fn(id...)
+		err = d.WithTransaction(newCtx, func(_ context.Context, txStore mod.Store) error {
+			return fn(txStore.(*dag), id...)
 		})
 	} else {
-		err = fn(id...)
+		err = fn(d, id...)
 	}
 
 	return err
@@ -1110,8 +1110,8 @@ func (d *dag) BatchCreateDag(ctx context.Context, dags []*entity.Dag) ([]*entity
 	}
 
 	if !d.isTX {
-		err = d.WithTransaction(newCtx, func(context.Context, mod.Store) error {
-			return fn(newCtx, d)
+		err = d.WithTransaction(newCtx, func(_ context.Context, txStore mod.Store) error {
+			return fn(newCtx, txStore)
 		})
 	} else {
 		err = fn(newCtx, d)
@@ -1304,12 +1304,12 @@ func (d *dag) BatchDeleteDagWithTransaction(ctx context.Context, ids []string) e
 	newCtx, span := trace.StartInternalSpan(ctx)
 	defer func() { trace.TelemetrySpanEnd(span, err) }()
 
-	fn := func() error {
+	fn := func(store *dag) error {
 		sql := `UPDATE t_flow_dag SET f_removed = 1 WHERE f_id IN (?) AND f_type NOT IN (?)`
 		msgStr, _ := jsoniter.MarshalToString(ids)
 		trace.SetAttributes(newCtx, attribute.String(trace.TABLE_NAME, DAG_TABLENAME), attribute.String(trace.DB_SQL, sql), attribute.String(trace.DB_QUERY, msgStr), attribute.String(trace.DB_QUERY, common.DagTypeSecurityPolicy))
 
-		err = d.db.Exec(sql, ids, common.DagTypeSecurityPolicy).Error
+		err = store.db.Exec(sql, ids, common.DagTypeSecurityPolicy).Error
 		if err != nil {
 			return err
 		}
@@ -1342,7 +1342,7 @@ func (d *dag) BatchDeleteDagWithTransaction(ctx context.Context, ids []string) e
 				queryArgs = append(queryArgs, lastID, batchSize)
 			}
 
-			rows, err := d.db.Raw(query, queryArgs).Rows()
+			rows, err := store.db.Raw(query, queryArgs...).Rows()
 			if err != nil {
 				return fmt.Errorf("failed to query dag instances: %w", err)
 			}
@@ -1369,14 +1369,14 @@ func (d *dag) BatchDeleteDagWithTransaction(ctx context.Context, ids []string) e
 
 			// 删除 DAG 实例
 			deleteDagInsQuery := `DELETE FROM t_flow_dag_instance WHERE f_id IN ?`
-			err = d.db.Exec(deleteDagInsQuery, dagInsIDs).Error
+			err = store.db.Exec(deleteDagInsQuery, dagInsIDs).Error
 			if err != nil {
 				return err
 			}
 
 			// 删除相关的任务实例
 			deleteTaskInsQuery := `DELETE FROM t_flow_task_instance WHERE f_dag_ins_id IN ?`
-			err = d.db.Exec(deleteTaskInsQuery, dagInsIDs).Error
+			err = store.db.Exec(deleteTaskInsQuery, dagInsIDs).Error
 			if err != nil {
 				return err
 			}
@@ -1386,11 +1386,11 @@ func (d *dag) BatchDeleteDagWithTransaction(ctx context.Context, ids []string) e
 	}
 
 	if !d.isTX {
-		err = d.WithTransaction(newCtx, func(context.Context, mod.Store) error {
-			return fn()
+		err = d.WithTransaction(newCtx, func(_ context.Context, txStore mod.Store) error {
+			return fn(txStore.(*dag))
 		})
 	} else {
-		err = fn()
+		err = fn(d)
 	}
 
 	return err
@@ -3126,7 +3126,7 @@ func (d *dag) RetryDagIns(ctx context.Context, dagInsID string, taskInsIDs []str
 	newCtx, span := trace.StartInternalSpan(ctx)
 	defer func() { trace.TelemetrySpanEnd(span, err) }()
 
-	fn := func() error {
+	fn := func(store *dag) error {
 		now := time.Now().Unix()
 		if len(taskInsIDs) > 0 {
 			var ids []uint64
@@ -3135,21 +3135,21 @@ func (d *dag) RetryDagIns(ctx context.Context, dagInsID string, taskInsIDs []str
 				ids = append(ids, v)
 			}
 			sqlTask := `UPDATE t_flow_task_instance SET f_updated_at = ?, f_status = ? WHERE f_id IN ?`
-			if err = d.db.Exec(sqlTask, now, string(entity.TaskInstanceStatusInit), ids).Error; err != nil {
+			if err = store.db.Exec(sqlTask, now, string(entity.TaskInstanceStatusInit), ids).Error; err != nil {
 				return err
 			}
 		}
 
 		sqlDag := `UPDATE t_flow_dag_instance SET f_updated_at = ?, f_status = ?, f_ended_at = ? WHERE f_id = ?`
-		return d.db.Exec(sqlDag, now, string(entity.DagInstanceStatusInit), now, dagInsID).Error
+		return store.db.Exec(sqlDag, now, string(entity.DagInstanceStatusInit), now, dagInsID).Error
 	}
 
 	if !d.isTX {
-		return d.WithTransaction(newCtx, func(context.Context, mod.Store) error {
-			return fn()
+		return d.WithTransaction(newCtx, func(_ context.Context, txStore mod.Store) error {
+			return fn(txStore.(*dag))
 		})
 	}
-	return fn()
+	return fn(d)
 }
 
 // SetSwitchStatus
@@ -3173,24 +3173,24 @@ func (d *dag) UpdateDagIncValue(ctx context.Context, dagId string, incKey string
 	newCtx, span := trace.StartInternalSpan(ctx)
 	defer func() { trace.TelemetrySpanEnd(span, err) }()
 
-	fn := func() error {
+	fn := func(store *dag) error {
 		var raw string
-		if err = d.db.Raw(`SELECT f_inc_values FROM t_flow_dag WHERE f_id = ?`, dagId).Scan(&raw).Error; err != nil {
+		if err = store.db.Raw(`SELECT f_inc_values FROM t_flow_dag WHERE f_id = ?`, dagId).Scan(&raw).Error; err != nil {
 			return err
 		}
 		updated, uerr := updateJSONMapString(raw, incKey, incValue)
 		if uerr != nil {
 			return uerr
 		}
-		return d.db.Exec(`UPDATE t_flow_dag SET f_inc_values = ? WHERE f_id = ?`, updated, dagId).Error
+		return store.db.Exec(`UPDATE t_flow_dag SET f_inc_values = ? WHERE f_id = ?`, updated, dagId).Error
 	}
 
 	if !d.isTX {
-		return d.WithTransaction(newCtx, func(context.Context, mod.Store) error {
-			return fn()
+		return d.WithTransaction(newCtx, func(_ context.Context, txStore mod.Store) error {
+			return fn(txStore.(*dag))
 		})
 	}
-	return fn()
+	return fn(d)
 }
 
 // UpdateDagIns
