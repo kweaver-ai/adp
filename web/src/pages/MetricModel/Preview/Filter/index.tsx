@@ -32,6 +32,7 @@ const Filter = (props: any) => {
   const analysisDimensionsOptions = previewData?.analysisDimensions;
   const groupByFieldsKV = { ..._.keyBy(groupByFields, 'name'), ..._.keyBy(analysisDimensionsOptions, 'name') };
   const [timeRangeType, setTimeRangeType] = useState<string>('quick'); // 时间范围变更类型
+  const [openQuickTime, setOpenQuickTime] = useState<boolean>(false);
   const [metricsType, setMetricsType] = useState<number>(6); // 同环比
   const [openCustomMetrics, setOpenCustomMetrics] = useState(false);
   const [metricsOptions, setMetricsOptions] = useState<any>({
@@ -94,6 +95,12 @@ const Filter = (props: any) => {
 
   /** 时间范围类型切换 */
   const onChangeRangeType = (key: string) => setTimeRangeType(key);
+
+  /** 快捷时间选择变更并关闭弹层 */
+  const onChangeQuickTimeRange = (value: any) => {
+    onChange('timeRange', value);
+    setOpenQuickTime(false);
+  };
 
   /** 添加筛选条件 */
   const onAddList = () => {
@@ -194,10 +201,12 @@ const Filter = (props: any) => {
               <Dropdown
                 trigger={['click']}
                 destroyOnHidden
+                open={openQuickTime}
+                onOpenChange={setOpenQuickTime}
                 popupRender={() => {
                   return (
                     <div className="g-dropdown-menu-root" style={{ width: 450 }}>
-                      <QuickTags timeRange={timeRange} onFilterChange={(value: any) => onChange('timeRange', value)} />
+                      <QuickTags timeRange={timeRange} onFilterChange={onChangeQuickTimeRange} />
                     </div>
                   );
                 }}
