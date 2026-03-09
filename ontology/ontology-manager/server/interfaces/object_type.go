@@ -20,11 +20,12 @@ var (
 		"update_time": "f_update_time",
 	}
 
-	// 主键的属性的类型只能是: integer, unsigned integer, string
+	// 主键的属性的类型只能是: integer, unsigned integer, string, text
 	ValidPrimaryKeyTypes = map[string]bool{
 		data_type.DATATYPE_INTEGER:          true,
 		data_type.DATATYPE_UNSIGNED_INTEGER: true,
 		data_type.DATATYPE_STRING:           true,
+		data_type.DATATYPE_TEXT:             true,
 	}
 
 	//  标题的属性的类型支持： integer, unsigned integer, float, decimal, string, text, date, timestamp, time, datetime, boolean
