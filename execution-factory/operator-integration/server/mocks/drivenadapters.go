@@ -445,74 +445,6 @@ func (mr *MockBusinessDomainManagementMockRecorder) ResourceList(ctx, req any) *
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ResourceList", reflect.TypeOf((*MockBusinessDomainManagement)(nil).ResourceList), ctx, req)
 }
 
-// MockSandBoxEnv is a mock of SandBoxEnv interface.
-type MockSandBoxEnv struct {
-	ctrl     *gomock.Controller
-	recorder *MockSandBoxEnvMockRecorder
-	isgomock struct{}
-}
-
-// MockSandBoxEnvMockRecorder is the mock recorder for MockSandBoxEnv.
-type MockSandBoxEnvMockRecorder struct {
-	mock *MockSandBoxEnv
-}
-
-// NewMockSandBoxEnv creates a new mock instance.
-func NewMockSandBoxEnv(ctrl *gomock.Controller) *MockSandBoxEnv {
-	mock := &MockSandBoxEnv{ctrl: ctrl}
-	mock.recorder = &MockSandBoxEnvMockRecorder{mock}
-	return mock
-}
-
-// EXPECT returns an object that allows the caller to indicate expected use.
-func (m *MockSandBoxEnv) EXPECT() *MockSandBoxEnvMockRecorder {
-	return m.recorder
-}
-
-// ExecuteCode mocks base method.
-func (m *MockSandBoxEnv) ExecuteCode(ctx context.Context, req *interfaces.ExecuteCodeReq) (*interfaces.ExecuteCodeResp, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "ExecuteCode", ctx, req)
-	ret0, _ := ret[0].(*interfaces.ExecuteCodeResp)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// ExecuteCode indicates an expected call of ExecuteCode.
-func (mr *MockSandBoxEnvMockRecorder) ExecuteCode(ctx, req any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ExecuteCode", reflect.TypeOf((*MockSandBoxEnv)(nil).ExecuteCode), ctx, req)
-}
-
-// GetSandBoxRequestConfig mocks base method.
-func (m *MockSandBoxEnv) GetSandBoxRequestConfig(ctx context.Context, req *interfaces.SandBoxConfigReq) (*interfaces.HTTPRequest, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetSandBoxRequestConfig", ctx, req)
-	ret0, _ := ret[0].(*interfaces.HTTPRequest)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// GetSandBoxRequestConfig indicates an expected call of GetSandBoxRequestConfig.
-func (mr *MockSandBoxEnvMockRecorder) GetSandBoxRequestConfig(ctx, req any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSandBoxRequestConfig", reflect.TypeOf((*MockSandBoxEnv)(nil).GetSandBoxRequestConfig), ctx, req)
-}
-
-// GetSandBoxServerRouter mocks base method.
-func (m *MockSandBoxEnv) GetSandBoxServerRouter() *interfaces.APIRouter {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetSandBoxServerRouter")
-	ret0, _ := ret[0].(*interfaces.APIRouter)
-	return ret0
-}
-
-// GetSandBoxServerRouter indicates an expected call of GetSandBoxServerRouter.
-func (mr *MockSandBoxEnvMockRecorder) GetSandBoxServerRouter() *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSandBoxServerRouter", reflect.TypeOf((*MockSandBoxEnv)(nil).GetSandBoxServerRouter))
-}
-
 // MockSandBoxControlPlane is a mock of SandBoxControlPlane interface.
 type MockSandBoxControlPlane struct {
 	ctrl     *gomock.Controller
@@ -594,6 +526,21 @@ func (m *MockSandBoxControlPlane) GetTemplateDetail(ctx context.Context, tempID 
 func (mr *MockSandBoxControlPlaneMockRecorder) GetTemplateDetail(ctx, tempID any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetTemplateDetail", reflect.TypeOf((*MockSandBoxControlPlane)(nil).GetTemplateDetail), ctx, tempID)
+}
+
+// InstallPythonDependencies mocks base method.
+func (m *MockSandBoxControlPlane) InstallPythonDependencies(ctx context.Context, sessionID string, req *interfaces.InstallDependenciesReq) (*interfaces.SessionDetail, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "InstallPythonDependencies", ctx, sessionID, req)
+	ret0, _ := ret[0].(*interfaces.SessionDetail)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// InstallPythonDependencies indicates an expected call of InstallPythonDependencies.
+func (mr *MockSandBoxControlPlaneMockRecorder) InstallPythonDependencies(ctx, sessionID, req any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "InstallPythonDependencies", reflect.TypeOf((*MockSandBoxControlPlane)(nil).InstallPythonDependencies), ctx, sessionID, req)
 }
 
 // ListSessions mocks base method.

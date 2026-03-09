@@ -123,7 +123,7 @@ type ToolBoxImpexItem struct {
 	BoxName      string           `json:"box_name" validate:"required"`                                               // 工具箱名称
 	BoxDesc      string           `json:"box_desc"`                                                                   // 工具箱描述
 	BoxSvcURL    string           `json:"box_svc_url" validate:"required,url"`                                        // 工具箱服务地址
-	Status       BizStatus        `json:"status" validate:"oneof=unpublish published"`                                // 工具箱状态
+	Status       BizStatus        `json:"status" validate:"oneof=unpublish published offline"`                        // 工具箱状态
 	CategoryType string           `json:"category_type" validate:"required"`                                          // 分类
 	CategoryName string           `json:"category_name"`                                                              // 分类名称
 	IsInternal   bool             `json:"is_internal"`                                                                // 是否为内部工具箱

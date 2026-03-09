@@ -534,10 +534,12 @@ type BusinessDomainManagement interface {
 
 // ExecuteCodeReq 执行代码请求
 type ExecuteCodeReq struct {
-	Code     string         `json:"code" validate:"required"`  // 执行代码
-	Event    map[string]any `json:"event" validate:"required"` // 事件
-	Language string         `json:"language" default:"python"` // 执行语言
-	Timeout  int            `json:"timeout,omitempty"`         // 超时时间，单位秒
+	Code                  string            `json:"code" validate:"required"`                                    // 执行代码
+	Event                 map[string]any    `json:"event" validate:"required"`                                   // 事件
+	Language              string            `json:"language" default:"python"`                                   // 执行语言
+	Timeout               int               `json:"timeout,omitempty"`                                           // 超时时间，单位秒
+	Dependencies          []*DependencyInfo `json:"dependencies,omitempty"`                                      // 依赖资源
+	PythonPackageIndexURL string            `json:"python_package_index_url" default:"https://pypi.org/simple/"` // 安装源URL
 }
 
 // ExecuteCodeResp 执行代码响应
@@ -561,22 +563,25 @@ type ExecuteCodeResp struct {
 	ReturnValue   any    `json:"return_value"`   // 执行结果值
 }
 
+// QueryPythonPackagesReq 查询Python第三方库请求
+type QueryPythonPackagesReq struct {
+	PythonVersion string `json:"python_version"`                              // Python版本
+	PackageName   string `json:"package_name"`                                // 第三方库名称
+	PypiURL       string `json:"pypi_url" default:"https://pypi.org/simple/"` // PyPI URL
+}
+
+// QueryPythonPackagesResp 查询Python第三方库响应
+type QueryPythonPackagesResp struct {
+	PackageName string   `json:"package_name"` // 第三方库名称
+	Versions    []string `json:"versions"`     // 版本列表
+}
+
 // SandBoxConfigReq 沙箱环境配置请求
 type SandBoxConfigReq struct {
 	Timeout int            `json:"timeout"` // 超时时间，单位秒
 	Body    any            `json:"body"`    // 请求体
 	Headers map[string]any `json:"headers"` // 请求头
 	Code    string         `json:"code"`    // 执行代码
-}
-
-// SandBoxEnv 沙箱环境接口
-type SandBoxEnv interface {
-	// 获取沙箱服务器路由
-	GetSandBoxServerRouter() *APIRouter
-	// 获取沙箱环境执行请求配置
-	GetSandBoxRequestConfig(ctx context.Context, req *SandBoxConfigReq) (*HTTPRequest, error)
-	// 执行代码
-	ExecuteCode(ctx context.Context, req *ExecuteCodeReq) (*ExecuteCodeResp, error)
 }
 
 // CreateSessionReq 创建会话请求
@@ -589,10 +594,12 @@ type CreateSessionReq struct {
 	Disk                  string         `json:"disk,omitempty"`                     // 磁盘挂载点
 	EnvVars               map[string]any `json:"env_vars,omitempty"`                 // 环境变量
 	Event                 map[string]any `json:"event,omitempty"`                    // 事件数据
-	Dependencies          []string       `json:"dependencies,omitempty"`             // 依赖资源
 	InstallTimeout        int            `json:"install_timeout,omitempty"`          // 依赖安装超时时间（秒），默认 300
 	FailOnDependencyError bool           `json:"fail_on_dependency_error,omitempty"` // 依赖安装失败是否直接失败会话，默认 true
 	AllowVersionConflicts bool           `json:"allow_version_conflicts,omitempty"`  // 是否允许版本冲突，默认 false
+	// issue #253 新增字段，会话是否已安装依赖库
+	PythonPackageIndexURL string            `json:"python_package_index_url,omitempty"` // Python第三方库索引URL
+	Dependencies          []*DependencyInfo `json:"dependencies,omitempty"`             // 依赖资源
 }
 
 type SessionStatus string
@@ -620,6 +627,24 @@ type SessionDetail struct {
 	UpdateAt       string         `json:"updated_at"`       // 更新时间
 	CompletedAt    string         `json:"completed_at"`     // 完成时间
 	LastActivityAt string         `json:"last_activity_at"` // 最后活动时间
+	// issue #253 新增字段，会话是否已安装依赖库
+	LanguageRuntime              string            `json:"language_runtime"`                          // 执行语言运行时
+	PythonPackageIndexURL        string            `json:"python_package_index_url,omitempty"`        // Python第三方库索引URL
+	RequestedDependencies        []*DependencyInfo `json:"requested_dependencies,omitempty"`          // 请求的依赖资源
+	InstalledDependencies        []*DependencyInfo `json:"installed_dependencies,omitempty"`          // 已安装的依赖资源
+	DependencyInstallStatus      string            `json:"dependency_install_status,omitempty"`       // 依赖安装状态
+	DependencyInstallError       string            `json:"dependency_install_error,omitempty"`        // 依赖安装错误信息
+	DependencyInstallStartedAt   string            `json:"dependency_install_started_at,omitempty"`   // 依赖安装开始时间
+	DependencyInstallCompletedAt string            `json:"dependency_install_completed_at,omitempty"` // 依赖安装完成时间
+}
+
+// 依赖库信息
+type DependencyInfo struct {
+	Name            string `json:"name"`                       // 第三方库名称
+	Version         string `json:"version"`                    // 版本号
+	InstallLocation string `json:"install_location,omitempty"` // 安装位置
+	InstallTime     string `json:"install_time,omitempty"`     // 安装时间
+	IsFromTemplate  *bool  `json:"is_from_template,omitempty"` // 是否从模板安装
 }
 
 // ListSessionsReq 列举会话请求
@@ -638,6 +663,13 @@ type ListSessionsResp struct {
 	HasMore  bool             `json:"has_more"` // 是否还有更多数据
 }
 
+// InstallDependenciesReq 安装依赖库请求
+type InstallDependenciesReq struct {
+	Dependencies []*DependencyInfo `json:"dependencies"` // 依赖资源
+	// 例如pypi的https://pypi.org/simple
+	PythonPackageIndexURL string `json:"python_package_index_url,omitempty"` // Python第三方库索引URL
+}
+
 // SandBoxControlPlane 沙箱控制服务接口
 type SandBoxControlPlane interface {
 	// 获取模版详情
@@ -652,6 +684,8 @@ type SandBoxControlPlane interface {
 	ListSessions(ctx context.Context, req *ListSessionsReq) (resp *ListSessionsResp, err error)
 	// 执行函数(同步)
 	ExecuteCodeSync(ctx context.Context, sessionID string, req *ExecuteCodeReq) (*ExecuteCodeResp, error)
+	// 增量安装 Python 依赖
+	InstallPythonDependencies(ctx context.Context, sessionID string, req *InstallDependenciesReq) (detail *SessionDetail, err error)
 }
 
 // ChatCompletionReq 聊天完成请求

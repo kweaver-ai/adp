@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"net/http"
 
-	o11y "github.com/kweaver-ai/kweaver-go-lib/observability"
 	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/infra/common"
 	infraerrors "github.com/kweaver-ai/adp/execution-factory/operator-integration/server/infra/errors"
 	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/infra/telemetry"
@@ -14,6 +13,7 @@ import (
 	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/interfaces/model"
 	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/logics/metric"
 	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/utils"
+	o11y "github.com/kweaver-ai/kweaver-go-lib/observability"
 )
 
 // UpdateTool 更新工具
@@ -142,13 +142,14 @@ func (s *ToolServiceImpl) updateToolMetadata(ctx context.Context, req *interface
 			metadatas, err = s.MetadataService.ParseMetadata(ctx, req.MetadataType, req.OpenAPIInput)
 		case model.SourceTypeFunction:
 			functionInput := &interfaces.FunctionInput{
-				Name:         req.ToolName,
-				Description:  req.ToolDesc,
-				Inputs:       req.FunctionInputEdit.Inputs,
-				Outputs:      req.FunctionInputEdit.Outputs,
-				ScriptType:   req.FunctionInputEdit.ScriptType,
-				Code:         req.FunctionInputEdit.Code,
-				Dependencies: req.FunctionInputEdit.Dependencies,
+				Name:            req.ToolName,
+				Description:     req.ToolDesc,
+				Inputs:          req.FunctionInputEdit.Inputs,
+				Outputs:         req.FunctionInputEdit.Outputs,
+				ScriptType:      req.FunctionInputEdit.ScriptType,
+				Code:            req.FunctionInputEdit.Code,
+				Dependencies:    req.FunctionInputEdit.Dependencies,
+				DependenciesURL: req.FunctionInputEdit.DependenciesURL,
 			}
 			metadatas, err = s.MetadataService.ParseMetadata(ctx, req.MetadataType, functionInput)
 		case model.SourceTypeOperator:
@@ -227,8 +228,10 @@ func (s *ToolServiceImpl) updateToolMetadata(ctx context.Context, req *interface
 		currentMetadataDB.SetMethod(metadata.GetMethod())
 		currentMetadataDB.SetServerURL(metadata.GetServerURL())
 		currentMetadataDB.SetAPISpec(metadata.GetAPISpec())
-		code, scriptType, dependencies := metadata.GetFunctionContent()
-		currentMetadataDB.SetFunctionContent(code, scriptType, dependencies)
+		currentMetadataDB.SetCode(metadata.GetCode())
+		currentMetadataDB.SetScriptType(metadata.GetScriptType())
+		currentMetadataDB.SetDependencies(metadata.GetDependencies())
+		currentMetadataDB.SetDependenciesURL(metadata.GetDependenciesURL())
 	case model.SourceTypeOperator:
 		// 算子转换成的工具不允许直接编辑元数据
 		err = infraerrors.NewHTTPError(ctx, http.StatusMethodNotAllowed, infraerrors.ErrExtToolOperatorNotAllowEdit,

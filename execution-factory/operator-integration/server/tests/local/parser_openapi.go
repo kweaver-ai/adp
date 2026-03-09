@@ -348,7 +348,6 @@ func (p *openAPIParser) parseAndValidateOpenAPI(ctx context.Context) (err error)
 		err = fmt.Errorf("unsupported data type: %s", p.DataType)
 	}
 	if err != nil {
-		fmt.Println("===============", p.Logger == nil)
 		p.Logger.WithContext(ctx).Warnf("Failed to load OpenAPI document: %v", err)
 		return
 	}

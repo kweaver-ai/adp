@@ -54,6 +54,10 @@ func (r *restPublicHandler) RegisterRouter(engine *gin.RouterGroup) {
 	engine.POST("/impex/import/:type", middlewareBusinessDomain(true, false), r.ImpexHandler.Import)
 	// 函数执行
 	engine.POST("/function/execute", middlewareBusinessDomain(true, false), r.UnifiedProxyHandler.FunctionExecute)
+	// 查询Pypi依赖库版本
+	engine.GET("/function/dependency-versions/:package_name", middlewareBusinessDomain(true, false), r.UnifiedProxyHandler.QueryPypiVersions)
+	// 获取依赖库列表
+	engine.GET("/function/dependencies", middlewareBusinessDomain(true, false), r.UnifiedProxyHandler.GetDependencies)
 	// 获取Python模板
 	engine.GET("/template/:template_type", middlewareBusinessDomain(true, false), r.TemplateHandler.GetTemplate)
 	// AI辅助生成

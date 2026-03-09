@@ -7,12 +7,12 @@ import (
 	"sync"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/infra/common/ormhelper"
 	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/infra/config"
 	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/infra/db"
 	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/interfaces/model"
 	"github.com/kweaver-ai/proton-rds-sdk-go/sqlx"
-	"github.com/google/uuid"
 	"github.com/pkg/errors"
 )
 
@@ -58,20 +58,21 @@ func (fm *functionMetadataDB) InsertFuncMetadata(ctx context.Context, tx *sql.Tx
 	}
 
 	row, err := orm.Insert().Into(tbFunctionMetadata).Values(map[string]interface{}{
-		"f_version":      metadata.Version,
-		"f_summary":      metadata.Summary,
-		"f_description":  metadata.Description,
-		"f_path":         metadata.Path,
-		"f_method":       metadata.Method,
-		"f_svc_url":      metadata.ServerURL,
-		"f_api_spec":     metadata.APISpec,
-		"f_script_type":  metadata.ScriptType,
-		"f_dependencies": metadata.Dependencies,
-		"f_code":         metadata.Code,
-		"f_create_user":  metadata.CreateUser,
-		"f_create_time":  metadata.CreateTime,
-		"f_update_user":  metadata.UpdateUser,
-		"f_update_time":  metadata.UpdateTime,
+		"f_version":          metadata.Version,
+		"f_summary":          metadata.Summary,
+		"f_description":      metadata.Description,
+		"f_path":             metadata.Path,
+		"f_method":           metadata.Method,
+		"f_svc_url":          metadata.ServerURL,
+		"f_api_spec":         metadata.APISpec,
+		"f_script_type":      metadata.ScriptType,
+		"f_dependencies":     metadata.Dependencies,
+		"f_dependencies_url": metadata.DependenciesURL,
+		"f_code":             metadata.Code,
+		"f_create_user":      metadata.CreateUser,
+		"f_create_time":      metadata.CreateTime,
+		"f_update_user":      metadata.UpdateUser,
+		"f_update_time":      metadata.UpdateTime,
 	}).Execute(ctx)
 	if err != nil {
 		err = errors.Wrapf(err, "insert function metadata error")
@@ -96,17 +97,18 @@ func (fm *functionMetadataDB) UpdateByVersion(ctx context.Context, tx *sql.Tx, m
 		orm = fm.orm.WithTx(tx)
 	}
 	row, err := orm.Update(tbFunctionMetadata).SetData(map[string]interface{}{
-		"f_summary":      metadata.Summary,
-		"f_description":  metadata.Description,
-		"f_path":         metadata.Path,
-		"f_method":       metadata.Method,
-		"f_svc_url":      metadata.ServerURL,
-		"f_api_spec":     metadata.APISpec,
-		"f_script_type":  metadata.ScriptType,
-		"f_dependencies": metadata.Dependencies,
-		"f_code":         metadata.Code,
-		"f_update_user":  metadata.UpdateUser,
-		"f_update_time":  metadata.UpdateTime,
+		"f_summary":          metadata.Summary,
+		"f_description":      metadata.Description,
+		"f_path":             metadata.Path,
+		"f_method":           metadata.Method,
+		"f_svc_url":          metadata.ServerURL,
+		"f_api_spec":         metadata.APISpec,
+		"f_script_type":      metadata.ScriptType,
+		"f_dependencies":     metadata.Dependencies,
+		"f_dependencies_url": metadata.DependenciesURL,
+		"f_code":             metadata.Code,
+		"f_update_user":      metadata.UpdateUser,
+		"f_update_time":      metadata.UpdateTime,
 	}).WhereEq("f_version", metadata.Version).Execute(ctx)
 	if err != nil {
 		err = errors.Wrapf(err, "update function metadata error")
@@ -187,6 +189,7 @@ func (fm *functionMetadataDB) InsertFuncMetadatas(ctx context.Context, tx *sql.T
 		"f_api_spec",
 		"f_script_type",
 		"f_dependencies",
+		"f_dependencies_url",
 		"f_code",
 		"f_create_user",
 		"f_create_time",
@@ -211,6 +214,7 @@ func (fm *functionMetadataDB) InsertFuncMetadatas(ctx context.Context, tx *sql.T
 			metadata.APISpec,
 			metadata.ScriptType,
 			metadata.Dependencies,
+			metadata.DependenciesURL,
 			metadata.Code,
 			metadata.CreateUser,
 			now,

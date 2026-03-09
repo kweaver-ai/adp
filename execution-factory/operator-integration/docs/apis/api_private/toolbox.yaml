@@ -774,6 +774,10 @@ components:
           items:
             type: string
             description: "依赖包列表"
+        dependencies_url:
+          type: string
+          description: "依赖库安装源地址"
+          default: "https://pypi.org"
     ParameterSchema:
       type: object
       properties:

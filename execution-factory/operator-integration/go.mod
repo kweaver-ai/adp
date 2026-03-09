@@ -30,6 +30,7 @@ require (
 
 require (
 	github.com/DATA-DOG/go-sqlmock v1.5.2
+	github.com/Masterminds/semver/v3 v3.4.0
 	github.com/bytedance/sonic v1.14.2
 	github.com/go-python/gpython v0.2.0
 	github.com/qustavo/sqlhooks/v2 v2.1.0

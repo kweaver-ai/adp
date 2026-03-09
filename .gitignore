@@ -11,3 +11,4 @@ Thumbs.db
 .vscode
 .idea
 from_intranet/
+.claude/

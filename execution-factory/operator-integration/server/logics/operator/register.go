@@ -92,11 +92,12 @@ func (m *operatorManager) UpdateOperatorByOpenAPI(ctx context.Context, req *inte
 	funcInputEdit := &interfaces.FunctionInputEdit{}
 	if req.FunctionInput != nil {
 		funcInputEdit = &interfaces.FunctionInputEdit{
-			Inputs:       req.FunctionInput.Inputs,
-			Outputs:      req.FunctionInput.Outputs,
-			ScriptType:   req.FunctionInput.ScriptType,
-			Code:         req.FunctionInput.Code,
-			Dependencies: req.FunctionInput.Dependencies,
+			Inputs:          req.FunctionInput.Inputs,
+			Outputs:         req.FunctionInput.Outputs,
+			ScriptType:      req.FunctionInput.ScriptType,
+			Code:            req.FunctionInput.Code,
+			Dependencies:    req.FunctionInput.Dependencies,
+			DependenciesURL: req.FunctionInput.DependenciesURL,
 		}
 	}
 	updateReq := &interfaces.OperatorEditReq{

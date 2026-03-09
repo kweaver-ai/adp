@@ -1018,8 +1018,18 @@ components:
         dependencies:
           type: array
           items:
-            type: string
-            description: "依赖包列表"
+            type: object
+            description: "依赖库信息"
+            properties:
+              name:
+                type: string
+                description: "依赖库名称"
+              version:
+                type: string
+                description: "依赖库版本"
+        dependencies_url:
+          type: string
+          description: "依赖包源URL"
     ParameterSchema:
       type: object
       properties:
@@ -1538,6 +1548,23 @@ components:
           description: "函数运行时"
           default: "python"
           enum: ["python"]
+        dependencies:
+          type: array
+          description: "依赖库列表"
+          items:
+            type: object
+            description: "依赖库信息"
+            properties:
+              name:
+                type: string
+                description: "依赖库名称"
+              version:
+                type: string
+                description: "依赖库版本"
+        dependencies_url:
+          type: string
+          description: "依赖库安装源地址"
+          default: "https://pypi.org/simple/"
 
     FunctionInput:
       type: object
@@ -1567,6 +1594,23 @@ components:
           description: "函数运行时"
           default: "python"
           enum: ["python"]
+        dependencies:
+          type: array
+          description: "依赖库列表"
+          items:
+            type: object
+            description: "依赖库信息"
+            properties:
+              name:
+                type: string
+                description: "依赖库名称"
+              version:
+                type: string
+                description: "依赖库版本"
+        dependencies_url:
+          type: string
+          description: "依赖库安装源地址"
+          default: "https://pypi.org/simple/"
     FunctionParameterDef:
       type: object
       description: "函数参数定义"

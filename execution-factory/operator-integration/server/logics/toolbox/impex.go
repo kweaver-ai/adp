@@ -9,7 +9,6 @@ import (
 
 	"github.com/creasty/defaults"
 	"github.com/google/uuid"
-	o11y "github.com/kweaver-ai/kweaver-go-lib/observability"
 	icommon "github.com/kweaver-ai/adp/execution-factory/operator-integration/server/infra/common"
 	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/infra/errors"
 	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/interfaces"
@@ -17,6 +16,7 @@ import (
 	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/logics/metadata"
 	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/logics/metric"
 	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/utils"
+	o11y "github.com/kweaver-ai/kweaver-go-lib/observability"
 )
 
 // Import 导入
@@ -633,14 +633,15 @@ func (s *ToolServiceImpl) batchGetToolBoxInfo(ctx context.Context, boxDBs []*mod
 			if toolInfo.SourceType != model.SourceTypeOperator {
 				// 算子工具不直接导出元数据, 而是通过算子依赖导出
 				toolInfo.Metadata = metadata.MetadataDBToStruct(metadataDB)
-				code, scriptType, dependencies := metadataDB.GetFunctionContent()
-				toolInfo.FunctionContent = interfaces.FunctionContent{
-					ScriptType:   interfaces.ScriptType(scriptType),
-					Code:         code,
-					Dependencies: []string{},
+				dependencies := []interfaces.DependencyInfo{}
+				if metadataDB.GetDependencies() != "" {
+					dependencies = utils.JSONToObject[[]interfaces.DependencyInfo](metadataDB.GetDependencies())
 				}
-				if dependencies != "" {
-					_ = utils.StringToObject(dependencies, &toolInfo.FunctionContent.Dependencies)
+				toolInfo.FunctionContent = interfaces.FunctionContent{
+					ScriptType:      interfaces.ScriptType(metadataDB.GetScriptType()),
+					Code:            metadataDB.GetCode(),
+					Dependencies:    dependencies,
+					DependenciesURL: metadataDB.GetDependenciesURL(),
 				}
 			}
 			toolBox.Tools = append(toolBox.Tools, toolInfo)

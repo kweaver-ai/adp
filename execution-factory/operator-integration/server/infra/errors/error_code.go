@@ -198,6 +198,10 @@ const (
 	ErrExtFunctionAIGenerateModelFailed   ErrorCode = "FunctionAIGenerateModelFailed"   // 模型生成内容异常，请检查默认模型是否可用，或前往设置配置有效的模型
 	// 依赖沙箱服务异常
 	ErrExtSandboxControlPlaneFailed ErrorCode = "SandboxControlPlaneFailed" // 依赖沙箱服务异常，请查看错误详情
+	// Pypi源不可用
+	ErrExtPypiRepoUnavailable ErrorCode = "PypiRepoUnavailable" // PyPI仓库不可用，请检查网络连接或稍后重试
+	// Pypi源解析器错误
+	ErrExtPypiParserFailed ErrorCode = "PypiParserFailed" // 版本联想功能需镜像源支持 JSON API (如 PyPI 官方、清华源等)，请检查镜像源配置是否正确
 )
 
 const (

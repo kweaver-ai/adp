@@ -3,13 +3,13 @@ package toolbox
 import (
 	"net/http"
 
+	"github.com/creasty/defaults"
+	"github.com/gin-gonic/gin"
+	"github.com/go-playground/validator/v10"
 	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/infra/errors"
 	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/infra/rest"
 	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/interfaces"
 	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/utils"
-	"github.com/creasty/defaults"
-	"github.com/gin-gonic/gin"
-	"github.com/go-playground/validator/v10"
 )
 
 // CreateToolBox 创建工具箱
@@ -249,8 +249,10 @@ func (h *toolBoxHandler) QueryToolBoxPage(c *gin.Context) {
 // CreateTool 创建工具
 func (h *toolBoxHandler) CreateTool(c *gin.Context) {
 	req := &interfaces.CreateToolReq{
-		OpenAPIInput:  &interfaces.OpenAPIInput{},
-		FunctionInput: &interfaces.FunctionInput{},
+		OpenAPIInput: &interfaces.OpenAPIInput{},
+		FunctionInput: &interfaces.FunctionInput{
+			Dependencies: []*interfaces.DependencyInfo{},
+		},
 	}
 	err := c.ShouldBindHeader(req)
 	if err != nil {
@@ -300,8 +302,10 @@ func (h *toolBoxHandler) CreateTool(c *gin.Context) {
 // UpdateTool 更新工具
 func (h *toolBoxHandler) UpdateTool(c *gin.Context) {
 	req := &interfaces.UpdateToolReq{
-		OpenAPIInput:      &interfaces.OpenAPIInput{},
-		FunctionInputEdit: &interfaces.FunctionInputEdit{},
+		OpenAPIInput: &interfaces.OpenAPIInput{},
+		FunctionInputEdit: &interfaces.FunctionInputEdit{
+			Dependencies: []*interfaces.DependencyInfo{},
+		},
 	}
 	err := c.ShouldBindHeader(req)
 	if err != nil {

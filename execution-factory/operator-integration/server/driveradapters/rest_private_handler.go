@@ -4,10 +4,10 @@
 package driveradapters
 
 import (
+	"github.com/gin-gonic/gin"
 	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/driveradapters/common"
 	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/infra/config"
 	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/interfaces"
-	"github.com/gin-gonic/gin"
 )
 
 type restPrivateHandler struct {

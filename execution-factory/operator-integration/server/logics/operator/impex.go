@@ -233,7 +233,7 @@ func (m *operatorManager) batchImportOperatorMetadata(ctx context.Context, tx *s
 // 添加算子配置
 func (m *operatorManager) addOperatorConfig(ctx context.Context, tx *sql.Tx, operatorDB *model.OperatorRegisterDB, metadataDB interfaces.IMetadataDB) (err error) {
 	// 检查该版本元数据是否存在，如果存在报错冲突
-	exists,_, err := m.MetadataService.CheckMetadataExists(ctx, interfaces.MetadataType(metadataDB.GetType()), metadataDB.GetVersion())
+	exists, _, err := m.MetadataService.CheckMetadataExists(ctx, interfaces.MetadataType(metadataDB.GetType()), metadataDB.GetVersion())
 	if err != nil {
 		m.Logger.WithContext(ctx).Errorf("check metadata version exists failed, err: %v", err)
 		err = errors.DefaultHTTPError(ctx, http.StatusInternalServerError, err.Error())
@@ -301,7 +301,10 @@ func (m *operatorManager) updateOperatorConfig(ctx context.Context, tx *sql.Tx, 
 			metadataDB.SetServerURL(newMetadataDB.GetServerURL())
 			metadataDB.SetPath(newMetadataDB.GetPath())
 			metadataDB.SetMethod(newMetadataDB.GetMethod())
-			metadataDB.SetFunctionContent(newMetadataDB.GetFunctionContent())
+			metadataDB.SetCode(newMetadataDB.GetCode())
+			metadataDB.SetScriptType(newMetadataDB.GetScriptType())
+			metadataDB.SetDependencies(newMetadataDB.GetDependencies())
+			metadataDB.SetDependenciesURL(newMetadataDB.GetDependenciesURL())
 			metadataDB.SetUpdateInfo(newOperatorDB.CreateUser)
 			err = m.MetadataService.UpdateMetadata(ctx, tx, metadataDB)
 		} else {
@@ -394,20 +397,21 @@ func (m *operatorManager) importCheck(ctx context.Context, item *interfaces.Oper
 			return
 		}
 		metadataDB = &model.FunctionMetadataDB{
-			Version:      item.Metadata.Version,
-			CreateUser:   userID,
-			CreateTime:   time.Now().UnixNano(),
-			UpdateUser:   userID,
-			UpdateTime:   time.Now().UnixNano(),
-			Summary:      item.Metadata.Summary,
-			Description:  item.Metadata.Description,
-			Path:         item.Metadata.Path,
-			ServerURL:    item.Metadata.ServerURL,
-			Method:       item.Metadata.Method,
-			APISpec:      utils.ObjectToJSON(item.Metadata.APISpec),
-			ScriptType:   string(item.Metadata.FunctionContent.ScriptType),
-			Dependencies: utils.ObjectToJSON(item.Metadata.FunctionContent.Dependencies),
-			Code:         item.Metadata.FunctionContent.Code,
+			Version:         item.Metadata.Version,
+			CreateUser:      userID,
+			CreateTime:      time.Now().UnixNano(),
+			UpdateUser:      userID,
+			UpdateTime:      time.Now().UnixNano(),
+			Summary:         item.Metadata.Summary,
+			Description:     item.Metadata.Description,
+			Path:            item.Metadata.Path,
+			ServerURL:       item.Metadata.ServerURL,
+			Method:          item.Metadata.Method,
+			APISpec:         utils.ObjectToJSON(item.Metadata.APISpec),
+			ScriptType:      string(item.Metadata.FunctionContent.ScriptType),
+			Dependencies:    utils.ObjectToJSON(item.Metadata.FunctionContent.Dependencies),
+			DependenciesURL: item.Metadata.FunctionContent.DependenciesURL,
+			Code:            item.Metadata.FunctionContent.Code,
 		}
 	default:
 		err = errors.DefaultHTTPError(ctx, http.StatusBadRequest, fmt.Sprintf("operator %v metadata type %v is not supported", item.OperatorName, item.MetadataType))

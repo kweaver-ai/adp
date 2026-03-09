@@ -8,22 +8,23 @@ import (
 
 // FunctionMetadataDB 函数元数据数据库
 type FunctionMetadataDB struct {
-	ID           int64  `json:"f_id" db:"f_id"`
-	Summary      string `json:"f_summary" db:"f_summary"`
-	Version      string `json:"f_version" db:"f_version"`
-	Description  string `json:"f_description" db:"f_description"`
-	Path         string `json:"f_path" db:"f_path"`
-	ServerURL    string `json:"f_svc_url" db:"f_svc_url"`
-	Method       string `json:"f_method" db:"f_method"`
-	APISpec      string `json:"f_api_spec" db:"f_api_spec"`
-	CreateUser   string `json:"f_create_user" db:"f_create_user"`
-	CreateTime   int64  `json:"f_create_time" db:"f_create_time"`
-	UpdateUser   string `json:"f_update_user" db:"f_update_user"`
-	UpdateTime   int64  `json:"f_update_time" db:"f_update_time"`
-	ScriptType   string `json:"f_script_type" db:"f_script_type"`   // 脚本类型，如 Python、Node.js
-	Code         string `json:"f_code" db:"f_code"`                 // 函数代码
-	Dependencies string `json:"f_dependencies" db:"f_dependencies"` // 第三方库依赖，如 Python 中的 requests 库
-	ErrMessage   string `json:"-"`                                  // 错误信息
+	ID              int64  `json:"f_id" db:"f_id"`
+	Summary         string `json:"f_summary" db:"f_summary"`
+	Version         string `json:"f_version" db:"f_version"`
+	Description     string `json:"f_description" db:"f_description"`
+	Path            string `json:"f_path" db:"f_path"`
+	ServerURL       string `json:"f_svc_url" db:"f_svc_url"`
+	Method          string `json:"f_method" db:"f_method"`
+	APISpec         string `json:"f_api_spec" db:"f_api_spec"`
+	CreateUser      string `json:"f_create_user" db:"f_create_user"`
+	CreateTime      int64  `json:"f_create_time" db:"f_create_time"`
+	UpdateUser      string `json:"f_update_user" db:"f_update_user"`
+	UpdateTime      int64  `json:"f_update_time" db:"f_update_time"`
+	ScriptType      string `json:"f_script_type" db:"f_script_type"`   // 脚本类型，如 Python、Node.js
+	Code            string `json:"f_code" db:"f_code"`                 // 函数代码
+	Dependencies    string `json:"f_dependencies" db:"f_dependencies"` // 第三方库依赖，如 Python 中的 requests 库
+	DependenciesURL string `json:"f_dependencies_url" db:"f_dependencies_url"`
+	ErrMessage      string `json:"-"` // 错误信息
 }
 
 // IFunctionMetadataDB 函数元数据数据库接口
@@ -135,17 +136,25 @@ func (f *FunctionMetadataDB) GetErrMessage() string {
 	return f.ErrMessage
 }
 
-// SetFunctionContent 设置函数内容
-func (f *FunctionMetadataDB) SetFunctionContent(code, scriptType, dependencies string) {
+func (f *FunctionMetadataDB) GetCode() string {
+	return f.Code
+}
+func (f *FunctionMetadataDB) SetCode(code string) {
 	f.Code = code
-	f.ScriptType = scriptType
-	f.Dependencies = dependencies
 }
 
-// GetFunctionContent 获取函数内容
-func (f *FunctionMetadataDB) GetFunctionContent() (code, scriptType, dependencies string) {
-	code = f.Code
-	scriptType = f.ScriptType
-	dependencies = f.Dependencies
-	return
+func (f *FunctionMetadataDB) GetDependenciesURL() string {
+	return f.DependenciesURL
+}
+func (f *FunctionMetadataDB) SetDependenciesURL(dependenciesURL string) {
+	f.DependenciesURL = dependenciesURL
+}
+func (f *FunctionMetadataDB) SetDependencies(dependencies string) {
+	f.Dependencies = dependencies
+}
+func (f *FunctionMetadataDB) GetDependencies() string {
+	if f.Dependencies == "null" {
+		return ""
+	}
+	return f.Dependencies
 }

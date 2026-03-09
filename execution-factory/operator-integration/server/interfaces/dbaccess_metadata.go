@@ -14,8 +14,6 @@ type IMetadataDB interface {
 	SetDescription(description string)
 	GetVersion() string
 	SetVersion(version string)
-	GetScriptType() string
-	SetScriptType(scriptType string)
 	GetServerURL() string
 	SetServerURL(serverURL string)
 	GetAPISpec() string
@@ -32,6 +30,12 @@ type IMetadataDB interface {
 	// UpdataMetadata(metadata interface{}) error
 	// 获取ErrMessage信息
 	GetErrMessage() string
-	GetFunctionContent() (code, scriptType, dependencies string)
-	SetFunctionContent(code, scriptType, dependencies string)
+	GetCode() string
+	SetCode(code string)
+	GetScriptType() string
+	SetScriptType(scriptType string)
+	GetDependenciesURL() string
+	SetDependenciesURL(dependenciesURL string)
+	SetDependencies(dependencies string)
+	GetDependencies() string
 }
