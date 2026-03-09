@@ -1,4 +1,3 @@
-```
 # MongoDB到MySQL数据库迁移 - 设计文档
 
 ## 一、需求分析
@@ -416,31 +415,76 @@ sequenceDiagram
 ```go
 // Store 数据访问接口
 type Store interface {
-    // 事务管理
-    WithTransaction(ctx context.Context, fn func(context.Context, Store) error) error
+    	Closer
+	WithTransaction(ctx context.Context, fn func(context.Context, Store) error) error
+	CreateToken(token *entity.Token) error
+	UpdateToken(token *entity.Token) error
+	DeleteToken(id string) error
+	GetTokenByUserID(userID string) (*entity.Token, error)
+	CreateClient(clientName, clientID, clientSecret string) error
+	GetClient(clientName string) (client *entity.Client, err error)
+	RemoveClient(clientName string) (err error)
+	CreateDag(ctx context.Context, dag *entity.Dag) (string, error)
+	BatchCreateDag(ctx context.Context, dags []*entity.Dag) ([]*entity.Dag, error)
+	CreateDagIns(ctx context.Context, dagIns *entity.DagInstance) (string, error)
+	BatchCreateDagIns(ctx context.Context, dagIns []*entity.DagInstance) ([]*entity.DagInstance, error)
+	BatchDeleteDagIns(ctx context.Context, ids []string) error
+	CreateTaskIns(ctx context.Context, taskIns *entity.TaskInstance) error
+	BatchCreateTaskIns(ctx context.Context, taskIns []*entity.TaskInstance) ([]*entity.TaskInstance, error)
+	PatchTaskIns(ctx context.Context, taskIns *entity.TaskInstance) error
+	PatchDagIns(ctx context.Context, dagIns *entity.DagInstance, mustsPatchFields ...string) error
+	UpdateDag(ctx context.Context, dagIns *entity.Dag) error
+	UpdateDagIncValue(ctx context.Context, dagId string, incKey string, incValue any) error
+	UpdateDagIns(ctx context.Context, dagIns *entity.DagInstance) error
+	UpdateTaskIns(ctx context.Context, taskIns *entity.TaskInstance) error
+	BatchUpdateDagIns(ctx context.Context, dagIns []*entity.DagInstance) error
+	BatchUpdateTaskIns(taskIns []*entity.TaskInstance) error
+	BatchDeleteTaskIns(ctx context.Context, ids []string) error
+	GetTaskIns(ctx context.Context, taskIns string) (*entity.TaskInstance, error)
+	GetDag(ctx context.Context, dagId string) (*entity.Dag, error)
+	GetDagByFields(ctx context.Context, params map[string]interface{}) (*entity.Dag, error)
+	GetDagWithOptionalVersion(ctx context.Context, dagID, versionID string) (*entity.Dag, error)
+	GetDagInstance(ctx context.Context, dagInsId string) (*entity.DagInstance, error)
+	GetDagInstanceByFields(ctx context.Context, params map[string]interface{}) (*entity.DagInstance, error)
+	ListDag(ctx context.Context, input *ListDagInput) ([]*entity.Dag, error)
+	ListDagByFields(ctx context.Context, filter bson.M, opt options.FindOptions) ([]*entity.Dag, error)
+	ListDagInstance(ctx context.Context, input *ListDagInstanceInput) ([]*entity.DagInstance, error)
+	DisdinctDagInstance(input *ListDagInstanceInput) ([]interface{}, error)
+	ListTaskInstance(ctx context.Context, input *ListTaskInstanceInput) ([]*entity.TaskInstance, error)
+	Marshal(obj interface{}) ([]byte, error)
+	Unmarshal(bytes []byte, ptr interface{}) error
+	BatchDeleteDagWithTransaction(ctx context.Context, ids []string) error
+	GetDagCount(ctx context.Context, params map[string]interface{}) (int64, error)
+	ListDagCount(ctx context.Context, input *ListDagInput) (int64, error)
+	ListDagCountByFields(ctx context.Context, filter bson.M) (int64, error)
+	GetDagInstanceCount(ctx context.Context, params map[string]interface{}) (int64, error)
+	CreateInbox(ctx context.Context, msg *entity.InBox) error
+	DeleteInbox(ctx context.Context, ids []string) error
+	GetInbox(ctx context.Context, id string) (*entity.InBox, error)
+	ListInbox(ctx context.Context, input *ListInboxInput) ([]*entity.InBox, error)
+	GetSwitchStatus() (bool, error)
+	SetSwitchStatus(status bool) error
+	CreateLogs(ctx context.Context, ossLogs []*entity.Log) error
+	ListHistoryDagIns(ctx context.Context, params map[string]interface{}, dataChannel chan []bson.M) error
+	ListHistoryTaskIns(ctx context.Context, params map[string]interface{}, dataChannel chan []bson.M) error
+	DeleteDagInsByID(ctx context.Context, params map[string]interface{}) error
+	DeleteTaskInsByID(ctx context.Context, params map[string]interface{}) error
+	DeleteTaskInsByDagInsID(ctx context.Context, dagInsID string) error
+	GetTaskInstanceCount(ctx context.Context, params map[string]interface{}) (int64, error)
+	CreatOutBoxMessage(ctx context.Context, outBox *entity.OutBox) error
+	BatchCreatOutBoxMessage(ctx context.Context, outBox []*entity.OutBox) error
+	DeleteOutBoxMessage(ctx context.Context, ids []string) error
+	ListOutBoxMessage(ctx context.Context, input *entity.OutBoxInput) ([]*entity.OutBox, error)
+	ListDagInstanceInRangeTime(ctx context.Context, status string, begin, end int64) ([]*entity.DagInstance, error)
+	ListExistDagInsID(ctx context.Context, dagInsIDs []string) ([]string, error)
+	ListExistDagID(ctx context.Context, dagIDs []string) ([]string, error)
+	GroupDagInstance(ctx context.Context, input *GroupInput) ([]*entity.DagInstanceGroup, error)
+	RetryDagIns(ctx context.Context, dagInsID string, taskInsIDs []string) error
 
-    // DAG操作
-    CreateDag(ctx context.Context, dag *entity.Dag) (string, error)
-    UpdateDag(ctx context.Context, dag *entity.Dag) error
-    GetDag(ctx context.Context, dagId string) (*entity.Dag, error)
-    GetDagByFields(ctx context.Context, params map[string]interface{}) (*entity.Dag, error)
-    DeleteDag(ctx context.Context, id ...string) error
-    ListDag(ctx context.Context, input *ListDagInput) ([]*entity.Dag, int64, error)
-
-    // DAG实例操作
-    CreateDagInstance(ctx context.Context, dagIns *entity.DagInstance) (string, error)
-    UpdateDagInstance(ctx context.Context, dagIns *entity.DagInstance) error
-    GetDagInstance(ctx context.Context, dagInsId string) (*entity.DagInstance, error)
-    ListDagInstance(ctx context.Context, input *ListDagInstanceInput) ([]*entity.DagInstance, int64, error)
-
-    // 任务实例操作
-    CreateTaskInstance(ctx context.Context, taskIns *entity.TaskInstance) (string, error)
-    UpdateTaskInstance(ctx context.Context, taskIns *entity.TaskInstance) error
-    GetTaskInstance(ctx context.Context, taskInsId string) (*entity.TaskInstance, error)
-
-    // 批量操作
-    BatchCreateDagInstance(ctx context.Context, dagInsList []*entity.DagInstance) error
-    BatchUpdateTaskInstance(ctx context.Context, taskInsList []*entity.TaskInstance) error
+	DeleteDag(ctx context.Context, id ...string) error
+	CreateDagVersion(ctx context.Context, dagVersion *entity.DagVersion) (string, error)
+	ListDagVersions(ctx context.Context, input *ListDagVersionInput) ([]entity.DagVersion, error)
+	GetHistoryDagByVersionID(ctx context.Context, dagID, versionID string) (*entity.DagVersion, error)
 }
 ```
 
@@ -492,33 +536,6 @@ type ListDagInstanceInput struct {
     Sort           map[string]int         // 排序
     Limit          int64                  // 分页大小
     Offset         int64                  // 偏移量
-}
-```
-
-### 4.4 配置管理接口
-
-```go
-// DatabaseConfig 数据库配置
-type DatabaseConfig struct {
-    Type          string // 数据库类型：mysql/mariadb/kdb9/dm8
-    Host          string // 主机地址
-    Port          int    // 端口
-    Database      string // 数据库名
-    Username      string // 用户名
-    Password      string // 密码
-    MaxOpenConns  int    // 最大连接数
-    MaxIdleConns  int    // 最大空闲连接数
-    ConnMaxLife   int    // 连接最大生命周期（秒）
-}
-
-// MigrationConfig 迁移配置
-type MigrationConfig struct {
-    SourceMongo   MongoConfig    // 源MongoDB配置
-    TargetMySQL   DatabaseConfig // 目标MySQL配置
-    BatchSize     int            // 批量迁移大小
-    Timeout       int            // 超时时间（秒）
-    EnableValidate bool          // 是否启用验证
-    AutoRollback  bool           // 是否自动回滚
 }
 ```
 
