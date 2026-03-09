@@ -36,7 +36,7 @@ func NewRestPublicHandler(logger interfaces.Logger) interfaces.HTTPRouterInterfa
 // RegisterPublic 注册公共路由
 func (r *restPublicHandler) RegisterRouter(engine *gin.RouterGroup) {
 	mws := []gin.HandlerFunc{}
-	mws = append(mws, middlewareRequestLog(r.Logger), middlewareTrace, middlewareIntrospectVerify(r.Hydra))
+	mws = append(mws, middlewareRequestLog(r.Logger), middlewareTrace, middlewareIntrospectVerify(r.Hydra), middlewareResponseFormat())
 	engine.Use(mws...)
 
 	engine.POST("/kn/semantic-search", r.KnRetrievalHandler.SemanticSearch)

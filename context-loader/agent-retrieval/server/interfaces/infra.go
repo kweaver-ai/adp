@@ -46,6 +46,8 @@ const (
 	KeyRequestID ContextKey = "request_id"
 	// KeyAccountAuthContext Account authentication context
 	KeyAccountAuthContext ContextKey = "account_auth_context"
+	// KeyResponseFormat 响应格式（json / toon），用于 HTTP 与 MCP 的序列化出口
+	KeyResponseFormat ContextKey = "response_format"
 )
 
 // HeaderKey Context Key

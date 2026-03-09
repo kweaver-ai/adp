@@ -54,6 +54,17 @@ func GetTokenInfoFromCtx(ctx context.Context) (*interfaces.TokenInfo, bool) {
 	return authContext.TokenInfo, true
 }
 
+// SetResponseFormatToCtx 设置响应格式到 context（用于 HTTP 序列化出口）
+func SetResponseFormatToCtx(ctx context.Context, format interface{}) context.Context {
+	return context.WithValue(ctx, interfaces.KeyResponseFormat, format)
+}
+
+// GetResponseFormatFromCtx 从 context 获取响应格式，不存在时返回 nil（调用方按默认 json 处理）
+func GetResponseFormatFromCtx(ctx context.Context) (interface{}, bool) {
+	v := ctx.Value(interfaces.KeyResponseFormat)
+	return v, v != nil
+}
+
 // GetHeaderFromCtx 请求外部接口时，从context中获取Header参数传递
 func GetHeaderFromCtx(ctx context.Context) (header map[string]string) {
 	header = map[string]string{}
