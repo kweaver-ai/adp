@@ -28,7 +28,6 @@ Dataflow 工作流自动化系统目前使用 MongoDB 作为数据存储。随�
 | 中文 | 英文 | 定义 |
 |------|------|------|
 | 工作流系统 | Flow_System | 负责管理和执行DAG工作流的自动化系统 |
-| 迁移引擎 | Migration_Engine | 负责执行数据库迁移和模式转换的核心组件 |
 | 查询适配器 | Query_Adapter | 将MongoDB BSON查询语法转换为SQL查询的转换器 |
 | 有向无环图 | DAG | Directed Acyclic Graph，表示工作流定义的数据结构 |
 | DAG实例 | DAG_Instance | 工作流的一次具体执行实例 |
@@ -70,7 +69,7 @@ graph TB
 |------|--------|-------------|
 | 数据模式转换 | MongoDB集合转MySQL表 | 将MongoDB的10个集合转换为对应的MySQL表结构 |
 | | 字段名转换 | camelCase/PascalCase → f_snake_case（如userId → f_user_id） |
-| | 数据类型映射 | ObjectId → BIGINT UNSIGNED, 嵌套对象 → LONGTEXT(JSON) |
+| | 数据类型映射 | ObjectId → BIGINT UNSIGNED，嵌套对象/数组 → TEXT、MEDIUMTEXT 或 LONGTEXT(JSON) |
 | | 索引创建 | 为主键、外键、高频查询字段创建索引 |
 | 查询语法转换 | BSON查询转SQL | 支持$eq, $ne, $gt, $gte, $lt, $lte, $in, $nin等操作符 |
 | | 逻辑操作符转换 | $and → AND, $or → OR, $not → NOT |
@@ -106,16 +105,7 @@ flowchart TD
     MigrateDagInstance --> MigrateTaskInstance[迁移t_flow_task_instance]
     MigrateTaskInstance --> MigrateOther[迁移其他表]
 
-    MigrateOther --> Validate{数据验证}
-    Validate -->|通过| UpdateConfig[更新系统配置]
-    Validate -->|失败| Rollback[执行回滚]
-
-    UpdateConfig --> Monitor[监控系统运行]
-    Monitor --> End([迁移完成])
-
-    Rollback --> CleanMySQL[清理MySQL数据]
-    CleanMySQL --> RestoreConfig[恢复配置]
-    RestoreConfig --> Fail([迁移失败])
+    MigrateOther --> End([迁移完成])
 ```
 
 #### 2.4.2 查询转换流程
@@ -548,149 +538,152 @@ type ListDagInstanceInput struct {
 | 字段名 | 类型 | 约束 | 说明 |
 |--------|------|------|------|
 | f_id | BIGINT UNSIGNED | PRIMARY KEY | 主键ID |
-| f_created_at | BIGINT | NOT NULL | 创建时间（Unix时间戳） |
-| f_updated_at | BIGINT | NOT NULL | 更新时间（Unix时间戳） |
-| f_user_id | VARCHAR(255) | NOT NULL, INDEX | 用户ID |
+| f_created_at | BIGINT | NOT NULL DEFAULT 0 | 创建时间（Unix时间戳） |
+| f_updated_at | BIGINT | NOT NULL DEFAULT 0 | 更新时间（Unix时间戳） |
+| f_user_id | VARCHAR(40) | NOT NULL, INDEX | 用户ID |
 | f_name | VARCHAR(255) | NOT NULL, INDEX | 工作流名称 |
-| f_desc | LONGTEXT | | 描述 |
-| f_trigger | LONGTEXT | | 触发器配置（JSON） |
-| f_cron | VARCHAR(255) | | Cron表达式 |
-| f_vars | LONGTEXT | | 变量定义（JSON） |
-| f_status | VARCHAR(50) | NOT NULL | 状态 |
-| f_tasks | LONGTEXT | | 任务列表（JSON） |
-| f_steps | LONGTEXT | | 步骤列表（JSON） |
-| f_description | LONGTEXT | | 详细描述 |
-| f_shortcuts | LONGTEXT | | 快捷方式（JSON） |
-| f_accessors | LONGTEXT | | 访问者列表（JSON） |
-| f_type | VARCHAR(50) | NOT NULL, INDEX | 类型 |
-| f_policy_type | VARCHAR(50) | | 策略类型 |
-| f_appinfo | LONGTEXT | | 应用信息（JSON） |
-| f_priority | VARCHAR(50) | | 优先级 |
-| f_removed | BOOLEAN | DEFAULT FALSE | 是否删除 |
-| f_emails | LONGTEXT | | 邮件列表（JSON） |
-| f_template | VARCHAR(255) | | 模板 |
-| f_published | BOOLEAN | DEFAULT FALSE | 是否发布 |
-| f_trigger_config | LONGTEXT | | 触发器配置（JSON） |
-| f_sub_ids | LONGTEXT | | 子流程ID列表（JSON） |
-| f_exec_mode | VARCHAR(50) | | 执行模式 |
-| f_category | VARCHAR(255) | | 分类 |
-| f_outputs | LONGTEXT | | 输出定义（JSON） |
-| f_instructions | LONGTEXT | | 指令（JSON） |
-| f_operator_id | VARCHAR(255) | | 操作者ID |
-| f_inc_values | LONGTEXT | | 增量值（JSON） |
-| f_version | LONGTEXT | | 版本信息（JSON） |
-| f_version_id | VARCHAR(255) | | 版本ID |
-| f_modify_by | VARCHAR(255) | | 修改者 |
-| f_is_debug | BOOLEAN | DEFAULT FALSE | 是否调试模式 |
-| f_debug_id | VARCHAR(255) | | 调试ID |
-| f_biz_domain_id | VARCHAR(255) | | 业务域ID |
+| f_desc | VARCHAR(310) | NOT NULL DEFAULT '' | 描述 |
+| f_trigger | VARCHAR(20) | NOT NULL DEFAULT '', INDEX | 触发器类型 |
+| f_cron | VARCHAR(64) | | Cron表达式 |
+| f_vars | MEDIUMTEXT | | 变量定义（JSON） |
+| f_status | VARCHAR(16) | NOT NULL DEFAULT '' | 状态 |
+| f_tasks | MEDIUMTEXT | | 任务列表（JSON） |
+| f_steps | MEDIUMTEXT | | 步骤列表（JSON） |
+| f_description | VARCHAR(310) | NOT NULL DEFAULT '' | 详细描述 |
+| f_shortcuts | TEXT | | 快捷方式（JSON） |
+| f_accessors | TEXT | | 访问者列表（JSON） |
+| f_type | VARCHAR(32) | NOT NULL DEFAULT '', INDEX | 类型 |
+| f_policy_type | VARCHAR(32) | | 策略类型 |
+| f_appinfo | TEXT | | 应用信息（JSON） |
+| f_priority | VARCHAR(16) | | 优先级 |
+| f_removed | BOOLEAN | NOT NULL DEFAULT 0 | 是否删除 |
+| f_emails | TEXT | | 邮件列表（JSON） |
+| f_template | VARCHAR(32) | | 模板 |
+| f_published | BOOLEAN | NOT NULL DEFAULT 0 | 是否发布 |
+| f_trigger_config | TEXT | | 触发器配置详情（JSON） |
+| f_sub_ids | TEXT | | 子流程ID列表（JSON） |
+| f_exec_mode | VARCHAR(8) | | 执行模式 |
+| f_category | VARCHAR(64) | | 分类 |
+| f_outputs | MEDIUMTEXT | | 输出定义（JSON） |
+| f_instructions | MEDIUMTEXT | | 指令（JSON） |
+| f_operator_id | VARCHAR(40) | | 操作者ID |
+| f_inc_values | VARCHAR(4096) | | 增量值 |
+| f_version | VARCHAR(64) | | 版本信息 |
+| f_version_id | VARCHAR(20) | | 版本ID |
+| f_modify_by | VARCHAR(40) | | 修改者 |
+| f_is_debug | BOOLEAN | NOT NULL DEFAULT 0 | 是否调试模式 |
+| f_debug_id | VARCHAR(20) | | 调试ID |
+| f_biz_domain_id | VARCHAR(40) | INDEX | 业务域ID |
 
 **索引：**
 
 - PRIMARY KEY (f_id)
-- INDEX idx_user_id (f_user_id)
-- INDEX idx_type (f_type)
-- INDEX idx_name (f_name)
+- INDEX idx_dag_user_id (f_user_id)
+- INDEX idx_dag_type (f_type)
+- INDEX idx_dag_trigger (f_trigger)
+- INDEX idx_dag_name (f_name)
+- INDEX idx_dag_biz_domain (f_biz_domain_id)
 
 #### 5.1.2 t_flow_dag_instance（工作流实例表）
 
 | 字段名 | 类型 | 约束 | 说明 |
 |--------|------|------|------|
 | f_id | BIGINT UNSIGNED | PRIMARY KEY | 主键ID |
-| f_created_at | BIGINT | NOT NULL | 创建时间 |
-| f_updated_at | BIGINT | NOT NULL, INDEX | 更新时间 |
+| f_created_at | BIGINT | NOT NULL DEFAULT 0 | 创建时间 |
+| f_updated_at | BIGINT | NOT NULL DEFAULT 0 | 更新时间 |
 | f_dag_id | BIGINT UNSIGNED | NOT NULL, INDEX | DAG ID（外键） |
-| f_trigger | VARCHAR(255) | | 触发方式 |
-| f_worker | VARCHAR(255) | INDEX | 执行节点 |
-| f_source | VARCHAR(255) | | 来源 |
-| f_vars | LONGTEXT | | 变量（JSON） |
-| f_keywords | LONGTEXT | | 关键词（JSON） |
-| f_event_persistence | INT | | 事件持久化 |
-| f_event_oss_path | VARCHAR(500) | | 事件OSS路径 |
-| f_share_data | LONGTEXT | | 共享数据（JSON） |
-| f_share_data_ext | LONGTEXT | | 共享数据扩展（JSON） |
-| f_status | VARCHAR(50) | NOT NULL, INDEX | 状态 |
+| f_trigger | VARCHAR(20) | NOT NULL DEFAULT '' | 触发方式 |
+| f_worker | VARCHAR(32) | NOT NULL DEFAULT '', INDEX | 执行节点 |
+| f_source | TEXT | | 来源 |
+| f_vars | MEDIUMTEXT | | 变量（JSON） |
+| f_keywords | TEXT | | 关键词（JSON） |
+| f_event_persistence | TINYINT UNSIGNED | NOT NULL DEFAULT 0 | 事件持久化 |
+| f_event_oss_path | VARCHAR(255) | | 事件OSS路径 |
+| f_share_data | MEDIUMTEXT | | 共享数据（JSON） |
+| f_share_data_ext | MEDIUMTEXT | | 共享数据扩展（JSON） |
+| f_status | VARCHAR(32) | NOT NULL, INDEX | 状态 |
 | f_reason | TEXT | | 失败原因 |
-| f_cmd | LONGTEXT | | 命令（JSON） |
-| f_has_cmd | BOOLEAN | DEFAULT FALSE | 是否有命令 |
-| f_batch_run_id | VARCHAR(255) | INDEX | 批次运行ID |
-| f_user_id | VARCHAR(255) | NOT NULL, INDEX | 用户ID |
-| f_ended_at | BIGINT | | 结束时间 |
-| f_dag_type | VARCHAR(50) | | DAG类型 |
-| f_policy_type | VARCHAR(50) | | 策略类型 |
-| f_appinfo | LONGTEXT | | 应用信息（JSON） |
-| f_priority | VARCHAR(50) | | 优先级 |
-| f_mode | INT | | 模式 |
-| f_dump | TEXT | | 转储信息 |
+| f_cmd | TEXT | | 命令（JSON） |
+| f_has_cmd | BOOLEAN | NOT NULL DEFAULT 0 | 是否有命令 |
+| f_batch_run_id | VARCHAR(20) | INDEX | 批次运行ID |
+| f_user_id | VARCHAR(40) | NOT NULL, INDEX | 用户ID |
+| f_ended_at | BIGINT | NOT NULL DEFAULT 0 | 结束时间 |
+| f_dag_type | VARCHAR(32) | | DAG类型 |
+| f_policy_type | VARCHAR(32) | | 策略类型 |
+| f_appinfo | TEXT | | 应用信息（JSON） |
+| f_priority | VARCHAR(16) | | 优先级 |
+| f_mode | TINYINT UNSIGNED | NOT NULL DEFAULT 0 | 模式 |
+| f_dump | LONGTEXT | | 转储信息 |
 | f_dump_ext | LONGTEXT | | 转储扩展（JSON） |
-| f_success_callback | VARCHAR(500) | | 成功回调 |
-| f_error_callback | VARCHAR(500) | | 错误回调 |
-| f_call_chain | LONGTEXT | | 调用链（JSON） |
+| f_success_callback | VARCHAR(1024) | | 成功回调 |
+| f_error_callback | VARCHAR(1024) | | 错误回调 |
+| f_call_chain | TEXT | | 调用链（JSON） |
 | f_resume_data | TEXT | | 恢复数据 |
-| f_resume_status | VARCHAR(50) | | 恢复状态 |
-| f_version | LONGTEXT | | 版本（JSON） |
-| f_version_id | VARCHAR(255) | | 版本ID |
-| f_biz_domain_id | VARCHAR(255) | | 业务域ID |
+| f_resume_status | VARCHAR(64) | | 恢复状态 |
+| f_version | VARCHAR(64) | | 版本 |
+| f_version_id | VARCHAR(20) | | 版本ID |
+| f_biz_domain_id | VARCHAR(40) | | 业务域ID |
 
 **索引：**
 
 - PRIMARY KEY (f_id)
-- INDEX idx_dag_id (f_dag_id)
-- INDEX idx_user_id (f_user_id)
-- INDEX idx_batch_run_id (f_batch_run_id)
-- INDEX idx_worker (f_worker)
-- INDEX idx_status (f_status)
-- INDEX idx_updated_at (f_updated_at)
-- INDEX idx_composite (f_id, f_status, f_updated_at)
+- INDEX idx_dag_ins_id_status_updated (f_id, f_status, f_updated_at)
+- INDEX idx_dag_ins_dag_id (f_dag_id)
+- INDEX idx_dag_ins_user_id (f_user_id)
+- INDEX idx_dag_ins_batch_run (f_batch_run_id)
+- INDEX idx_dag_ins_worker (f_worker)
 
 #### 5.1.3 t_flow_task_instance（任务实例表）
 
 | 字段名 | 类型 | 约束 | 说明 |
 |--------|------|------|------|
 | f_id | BIGINT UNSIGNED | PRIMARY KEY | 主键ID |
-| f_created_at | BIGINT | NOT NULL | 创建时间 |
-| f_updated_at | BIGINT | NOT NULL | 更新时间 |
-| f_task_id | VARCHAR(255) | NOT NULL | 任务ID |
+| f_created_at | BIGINT | NOT NULL DEFAULT 0 | 创建时间 |
+| f_updated_at | BIGINT | NOT NULL DEFAULT 0 | 更新时间 |
+| f_expired_at | BIGINT | NOT NULL DEFAULT 0 | 过期时间 |
+| f_task_id | VARCHAR(64) | NOT NULL | 任务ID |
 | f_dag_ins_id | BIGINT UNSIGNED | NOT NULL, INDEX | DAG实例ID（外键） |
 | f_name | VARCHAR(255) | | 任务名称 |
-| f_depend_on | LONGTEXT | | 依赖关系（JSON） |
+| f_depend_on | VARCHAR(255) | | 依赖关系 |
 | f_action_name | VARCHAR(255) | INDEX | 动作名称 |
-| f_timeout_secs | INT | | 超时时间（秒） |
-| f_params | LONGTEXT | | 参数（JSON） |
-| f_traces | LONGTEXT | | 追踪信息（JSON） |
-| f_status | VARCHAR(50) | NOT NULL | 状态 |
-| f_reason | TEXT | | 失败原因 |
-| f_pre_checks | LONGTEXT | | 前置检查（JSON） |
-| f_results | LONGTEXT | | 结果（JSON） |
-| f_steps | LONGTEXT | | 步骤（JSON） |
-| f_last_modified_at | BIGINT | | 最后修改时间 |
+| f_timeout_secs | BIGINT | | 超时时间（秒） |
+| f_params | MEDIUMTEXT | | 参数（JSON） |
+| f_traces | MEDIUMTEXT | | 追踪信息（JSON） |
+| f_status | VARCHAR(32) | NOT NULL | 状态 |
+| f_reason | MEDIUMTEXT | | 失败原因 |
+| f_pre_checks | TEXT | | 前置检查（JSON） |
+| f_results | MEDIUMTEXT | | 结果（JSON） |
+| f_steps | MEDIUMTEXT | | 步骤（JSON） |
+| f_last_modified_at | BIGINT UNSIGNED | | 最后修改时间 |
 | f_rendered_params | LONGTEXT | | 渲染后参数（JSON） |
-| f_hash | VARCHAR(255) | INDEX | 哈希值 |
+| f_hash | VARCHAR(64) | INDEX | 哈希值 |
 | f_settings | LONGTEXT | | 设置（JSON） |
 | f_metadata | LONGTEXT | | 元数据（JSON） |
 
 **索引：**
 
 - PRIMARY KEY (f_id)
-- INDEX idx_dag_ins_id (f_dag_ins_id)
-- INDEX idx_hash (f_hash)
-- INDEX idx_action_name (f_action_name)
+- INDEX idx_task_ins_id_status_updated (f_id, f_status, f_updated_at)
+- INDEX idx_task_ins_dag_ins_id (f_dag_ins_id)
+- INDEX idx_task_ins_hash (f_hash)
+- INDEX idx_task_ins_action (f_action_name)
+- INDEX idx_task_ins_expired (f_expired_at)
 
 #### 5.1.4 t_flow_dag_var（DAG变量表）
 
 | 字段名 | 类型 | 约束 | 说明 |
 |--------|------|------|------|
-| f_id | BIGINT UNSIGNED | PRIMARY KEY AUTO_INCREMENT | 主键ID |
+| f_id | BIGINT UNSIGNED | PRIMARY KEY | 主键ID |
 | f_dag_id | BIGINT UNSIGNED | NOT NULL, INDEX | DAG ID（外键） |
 | f_var_name | VARCHAR(255) | NOT NULL | 变量名 |
 | f_default_value | TEXT | | 默认值 |
-| f_var_type | VARCHAR(50) | | 变量类型 |
-| f_description | VARCHAR(500) | | 描述 |
+| f_var_type | VARCHAR(16) | | 变量类型 |
+| f_description | TEXT | | 描述 |
 
 **索引：**
 
 - PRIMARY KEY (f_id)
-- INDEX idx_dag_id (f_dag_id)
+- INDEX idx_dag_vars_dag_id (f_dag_id)
 
 #### 5.1.5 其他辅助表
 
@@ -699,11 +692,11 @@ type ListDagInstanceInput struct {
 - f_id (BIGINT UNSIGNED, PRIMARY KEY)
 - f_created_at (BIGINT)
 - f_updated_at (BIGINT)
-- f_dag_id (VARCHAR(255), INDEX)
-- f_user_id (VARCHAR(255))
-- f_version (VARCHAR(50))
-- f_version_id (VARCHAR(255), INDEX)
-- f_change_log (TEXT)
+- f_dag_id (VARCHAR(20), INDEX)
+- f_user_id (VARCHAR(40))
+- f_version (VARCHAR(64))
+- f_version_id (VARCHAR(20), INDEX)
+- f_change_log (VARCHAR(512))
 - f_config (LONGTEXT) - 完整DAG配置JSON
 - f_sort_time (BIGINT)
 
@@ -711,15 +704,15 @@ type ListDagInstanceInput struct {
 
 - f_id (BIGINT UNSIGNED, PRIMARY KEY)
 - f_dag_id (BIGINT UNSIGNED, INDEX)
-- f_operator (VARCHAR(255), INDEX)
-- f_source_id (VARCHAR(255))
+- f_operator (VARCHAR(255))
+- f_source_id (VARCHAR(512))
 - f_has_datasource (BOOLEAN)
 
 **t_flow_dag_accessor（DAG访问者表）**
 
 - f_id (BIGINT UNSIGNED, PRIMARY KEY)
 - f_dag_id (BIGINT UNSIGNED, INDEX)
-- f_accessor_id (VARCHAR(255), INDEX)
+- f_accessor_id (VARCHAR(40), INDEX)
 
 **t_flow_dag_instance_keyword（实例关键词表）**
 
@@ -727,23 +720,54 @@ type ListDagInstanceInput struct {
 - f_dag_ins_id (BIGINT UNSIGNED, INDEX)
 - f_keyword (VARCHAR(255), INDEX)
 
-**t_flow_outbox（出站消息表）**
-
-- f_id (BIGINT UNSIGNED, PRIMARY KEY)
-- f_created_at (BIGINT)
-- f_updated_at (BIGINT)
-- f_msg (LONGTEXT)
-- f_topic (VARCHAR(255))
-
 **t_flow_inbox（入站消息表）**
 
 - f_id (BIGINT UNSIGNED, PRIMARY KEY)
 - f_created_at (BIGINT)
 - f_updated_at (BIGINT)
-- f_msg (LONGTEXT)
-- f_topic (VARCHAR(255))
-- f_docid (VARCHAR(255))
-- f_dag (LONGTEXT)
+- f_msg (MEDIUMTEXT)
+- f_topic (VARCHAR(128))
+- f_docid (VARCHAR(512))
+- f_dag (TEXT)
+
+**t_flow_outbox（出站消息表）**
+
+- f_id (BIGINT UNSIGNED, PRIMARY KEY)
+- f_created_at (BIGINT)
+- f_updated_at (BIGINT)
+- f_msg (MEDIUMTEXT)
+- f_topic (VARCHAR(128))
+
+**t_flow_token（令牌表）**
+
+- f_id (BIGINT UNSIGNED, PRIMARY KEY)
+- f_user_id (VARCHAR(40), INDEX)
+- f_user_name (VARCHAR(255))
+- f_refresh_token (TEXT)
+- f_token (TEXT)
+- f_expires_in (INT)
+- f_login_ip (VARCHAR(64))
+- f_is_app (BOOLEAN)
+
+**t_flow_client（客户端表）**
+
+- f_id (BIGINT UNSIGNED, PRIMARY KEY)
+- f_client_name (VARCHAR(64), INDEX)
+- f_client_id (VARCHAR(40))
+- f_client_secret (VARCHAR(16))
+
+**t_flow_switch（开关表）**
+
+- f_id (BIGINT UNSIGNED, PRIMARY KEY)
+- f_name (VARCHAR(255), INDEX)
+- f_status (BOOLEAN)
+
+**t_flow_log（日志表）**
+
+- f_id (BIGINT UNSIGNED, PRIMARY KEY)
+- f_ossid (VARCHAR(64))
+- f_key (VARCHAR(40))
+- f_filename (VARCHAR(255))
 
 ### 5.2 字段命名规范
 
@@ -795,20 +819,20 @@ func camelToFSnake(s string) string {
 | MongoDB类型 | MySQL类型 | 说明 |
 |------------|-----------|------|
 | ObjectId | BIGINT UNSIGNED | 转换为数值ID |
-| String (短) | VARCHAR(255) | 长度<255的字符串 |
-| String (长) | TEXT / LONGTEXT | 长度>=255的字符串 |
+| String (短) | VARCHAR(16/20/32/40/64/128/255/512/1024) | 按字段语义和实际长度精确收敛 |
+| String (长) | TEXT / MEDIUMTEXT / LONGTEXT | 按真实内容长度选择，避免统一使用LONGTEXT |
 | Number (整数) | INT / BIGINT | 根据范围选择 |
 | Number (浮点) | DOUBLE | 浮点数 |
 | Boolean | BOOLEAN / TINYINT(1) | 布尔值 |
 | Date | BIGINT | Unix时间戳（毫秒） |
-| Array | LONGTEXT | JSON格式存储 |
-| Object (嵌套) | LONGTEXT | JSON格式存储 |
+| Array | TEXT / MEDIUMTEXT / LONGTEXT | JSON格式存储 |
+| Object (嵌套) | TEXT / MEDIUMTEXT / LONGTEXT | JSON格式存储 |
 | Binary | BLOB | 二进制数据 |
 | Null | NULL | 空值 |
 
 **JSON字段处理：**
 
-- 所有嵌套对象和数组统一使用LONGTEXT类型存储JSON字符串
+- 嵌套对象和数组按实际体量选择 TEXT、MEDIUMTEXT 或 LONGTEXT，不再统一使用 LONGTEXT
 - 使用Go的json.Marshal/Unmarshal进行序列化/反序列化
 - 支持MySQL的JSON函数查询（JSON_EXTRACT等）
 
@@ -833,39 +857,41 @@ func camelToFSnake(s string) string {
 **t_flow_dag表：**
 
 - PRIMARY KEY (f_id)
-- INDEX idx_user_id (f_user_id) - 按用户查询
-- INDEX idx_type (f_type) - 按类型查询
-- INDEX idx_name (f_name) - 按名称查询
+- INDEX idx_dag_user_id (f_user_id) - 按用户查询
+- INDEX idx_dag_type (f_type) - 按类型查询
+- INDEX idx_dag_trigger (f_trigger) - 按触发方式查询
+- INDEX idx_dag_name (f_name) - 按名称查询
+- INDEX idx_dag_biz_domain (f_biz_domain_id) - 按业务域查询
 
 **t_flow_dag_instance表：**
 
 - PRIMARY KEY (f_id)
-- INDEX idx_dag_id (f_dag_id) - 按DAG查询实例
-- INDEX idx_user_id (f_user_id) - 按用户查询
-- INDEX idx_batch_run_id (f_batch_run_id) - 批次查询
-- INDEX idx_worker (f_worker) - 按执行节点查询
-- INDEX idx_status (f_status) - 按状态查询
-- INDEX idx_updated_at (f_updated_at) - 按更新时间排序
-- INDEX idx_composite (f_id, f_status, f_updated_at) - 复合索引优化分页查询
+- INDEX idx_dag_ins_id_status_updated (f_id, f_status, f_updated_at) - 复合索引优化分页查询
+- INDEX idx_dag_ins_dag_id (f_dag_id) - 按DAG查询实例
+- INDEX idx_dag_ins_user_id (f_user_id) - 按用户查询
+- INDEX idx_dag_ins_batch_run (f_batch_run_id) - 批次查询
+- INDEX idx_dag_ins_worker (f_worker) - 按执行节点查询
 
 **t_flow_task_instance表：**
 
 - PRIMARY KEY (f_id)
-- INDEX idx_dag_ins_id (f_dag_ins_id) - 按DAG实例查询任务
-- INDEX idx_hash (f_hash) - 按哈希值查询
-- INDEX idx_action_name (f_action_name) - 按动作名称查询
+- INDEX idx_task_ins_id_status_updated (f_id, f_status, f_updated_at) - 复合索引优化分页查询
+- INDEX idx_task_ins_dag_ins_id (f_dag_ins_id) - 按DAG实例查询任务
+- INDEX idx_task_ins_hash (f_hash) - 按哈希值查询
+- INDEX idx_task_ins_action (f_action_name) - 按动作名称查询
+- INDEX idx_task_ins_expired (f_expired_at) - 按过期时间清理查询
 
 **t_flow_dag_step表：**
 
 - PRIMARY KEY (f_id)
-- INDEX idx_dag_id (f_dag_id) - 按DAG查询步骤
-- INDEX idx_operator (f_operator) - 按操作符查询
+- INDEX idx_dag_step_op_src_dag (f_source_id, f_operator, f_dag_id) - 来源+操作符+流程联合查询
+- INDEX idx_dag_step_op_dag (f_dag_id, f_operator) - 按DAG和操作符查询
+- INDEX idx_dag_step_has_ds_dag (f_dag_id, f_has_datasource) - 按是否含数据源查询
 
 **t_flow_dag_instance_keyword表：**
 
 - PRIMARY KEY (f_id)
-- INDEX idx_dag_ins_id (f_dag_ins_id) - 按实例查询关键词
-- INDEX idx_keyword (f_keyword) - 按关键词搜索
+- INDEX idx_dag_ins_kw (f_dag_ins_id, f_keyword) - 按实例和关键词联合查询
 
 ## 六、质量目标
 
@@ -895,7 +921,6 @@ func camelToFSnake(s string) string {
 
 **数据库兼容性：**
 
-- MySQL 5.7+
 - MariaDB 10.3+
 - KDB9（人大金仓）
 - DM8（达梦数据库）
@@ -1101,8 +1126,15 @@ depservices:
 
 8. t_flow_task_instance (依赖dag_ins_id)
 
-9. t_flow_outbox (独立表)
+9. t_flow_token (独立表)
 10. t_flow_inbox (独立表)
+11. t_flow_client (独立表)
+12. t_flow_switch (独立表)
+13. t_flow_log (独立表)
+14. t_flow_outbox (独立表)
+
+说明：
+- 当前 MariaDB 基准结构已不再单独创建 t_flow_dag_trigger_config 表，其数据保留在 t_flow_dag.f_trigger_config 字段中
 ```
 
 ### D. 参考文档
