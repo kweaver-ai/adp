@@ -137,8 +137,8 @@ CREATE TABLE IF NOT EXISTS t_catalog (
 
 
 -- 插入默认 catalog
-INSERT INTO t_catalog (f_id, f_name, f_description, f_type, f_enabled) 
-SELECT 'default', 'default', 'default', '默认逻辑命名空间', TRUE 
+INSERT INTO t_catalog (f_id, f_name, f_description, f_type, f_enabled, f_connector_config, f_metadata, f_health_check_result) 
+SELECT 'default', 'default', 'default', '默认逻辑命名空间', TRUE, '{}', '{}', '{}' 
 FROM DUAL WHERE NOT EXISTS (SELECT f_id FROM t_catalog WHERE f_id = 'default');
 
 
