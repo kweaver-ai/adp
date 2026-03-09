@@ -5,40 +5,40 @@ CREATE TABLE IF NOT EXISTS "t_flow_dag" (
  "f_id" BIGINT NOT NULL,
  "f_created_at" BIGINT NOT NULL DEFAULT 0,
  "f_updated_at" BIGINT NOT NULL DEFAULT 0,
- "f_user_id" VARCHAR(64 CHAR) NOT NULL DEFAULT '',
+ "f_user_id" VARCHAR(40 CHAR) NOT NULL DEFAULT '',
  "f_name" VARCHAR(255 CHAR) NOT NULL DEFAULT '',
- "f_desc" TEXT DEFAULT NULL,
- "f_trigger" TEXT DEFAULT NULL,
- "f_cron" VARCHAR(255 CHAR) NOT NULL DEFAULT '',
+ "f_desc" VARCHAR(310 CHAR) NOT NULL DEFAULT '',
+ "f_trigger" VARCHAR(20 CHAR) NOT NULL DEFAULT '',
+ "f_cron" VARCHAR(64 CHAR) NOT NULL DEFAULT '',
  "f_vars" TEXT DEFAULT NULL,
- "f_status" VARCHAR(64 CHAR) NOT NULL DEFAULT '',
+ "f_status" VARCHAR(16 CHAR) NOT NULL DEFAULT '',
  "f_tasks" TEXT DEFAULT NULL,
  "f_steps" TEXT DEFAULT NULL,
- "f_description" TEXT DEFAULT NULL,
+ "f_description" VARCHAR(310 CHAR) NOT NULL DEFAULT '',
  "f_shortcuts" TEXT DEFAULT NULL,
  "f_accessors" TEXT DEFAULT NULL,
- "f_type" VARCHAR(64 CHAR) NOT NULL DEFAULT '',
- "f_policy_type" VARCHAR(64 CHAR) NOT NULL DEFAULT '',
+ "f_type" VARCHAR(32 CHAR) NOT NULL DEFAULT '',
+ "f_policy_type" VARCHAR(32 CHAR) NOT NULL DEFAULT '',
  "f_appinfo" TEXT DEFAULT NULL,
- "f_priority" VARCHAR(64 CHAR) NOT NULL DEFAULT '',
+ "f_priority" VARCHAR(16 CHAR) NOT NULL DEFAULT '',
  "f_removed" TINYINT NOT NULL DEFAULT 0,
  "f_emails" TEXT DEFAULT NULL,
- "f_template" VARCHAR(255 CHAR) NOT NULL DEFAULT '',
+ "f_template" VARCHAR(32 CHAR) NOT NULL DEFAULT '',
  "f_published" TINYINT NOT NULL DEFAULT 0,
  "f_trigger_config" TEXT DEFAULT NULL,
  "f_sub_ids" TEXT DEFAULT NULL,
- "f_exec_mode" VARCHAR(64 CHAR) NOT NULL DEFAULT '',
+ "f_exec_mode" VARCHAR(8 CHAR) NOT NULL DEFAULT '',
  "f_category" VARCHAR(64 CHAR) NOT NULL DEFAULT '',
  "f_outputs" TEXT DEFAULT NULL,
  "f_instructions" TEXT DEFAULT NULL,
- "f_operator_id" VARCHAR(64 CHAR) NOT NULL DEFAULT '',
- "f_inc_values" TEXT DEFAULT NULL,
- "f_version" TEXT DEFAULT NULL,
- "f_version_id" VARCHAR(64 CHAR) NOT NULL DEFAULT '',
- "f_modify_by" VARCHAR(64 CHAR) NOT NULL DEFAULT '',
+ "f_operator_id" VARCHAR(40 CHAR) NOT NULL DEFAULT '',
+ "f_inc_values" VARCHAR(4096 CHAR) DEFAULT NULL,
+ "f_version" VARCHAR(64 CHAR) DEFAULT NULL,
+ "f_version_id" VARCHAR(20 CHAR) NOT NULL DEFAULT '',
+ "f_modify_by" VARCHAR(40 CHAR) NOT NULL DEFAULT '',
  "f_is_debug" TINYINT NOT NULL DEFAULT 0,
- "f_debug_id" VARCHAR(64 CHAR) NOT NULL DEFAULT '',
- "f_biz_domain_id" VARCHAR(64 CHAR) NOT NULL DEFAULT '',
+ "f_debug_id" VARCHAR(20 CHAR) NOT NULL DEFAULT '',
+ "f_biz_domain_id" VARCHAR(40 CHAR) NOT NULL DEFAULT '',
   CLUSTER PRIMARY KEY ("f_id")
 );
 
@@ -53,8 +53,8 @@ CREATE TABLE IF NOT EXISTS "t_flow_dag_var" (
  "f_dag_id" BIGINT NOT NULL DEFAULT 0,
  "f_var_name" VARCHAR(255 CHAR) NOT NULL DEFAULT '',
  "f_default_value" TEXT DEFAULT NULL,
- "f_var_type" VARCHAR(64 CHAR) NOT NULL DEFAULT '',
- "f_description" VARCHAR(255 CHAR) NOT NULL DEFAULT '',
+ "f_var_type" VARCHAR(16 CHAR) NOT NULL DEFAULT '',
+ "f_description" TEXT DEFAULT NULL,
   CLUSTER PRIMARY KEY ("f_id")
 );
 
@@ -73,7 +73,7 @@ CREATE TABLE IF NOT EXISTS "t_flow_dag_step" (
  "f_id" BIGINT NOT NULL DEFAULT 0,
  "f_dag_id" BIGINT NOT NULL DEFAULT 0,
  "f_operator" VARCHAR(255 CHAR) NOT NULL DEFAULT '',
- "f_source_id" VARCHAR(255 CHAR) NOT NULL DEFAULT '',
+ "f_source_id" VARCHAR(512 CHAR) NOT NULL DEFAULT '',
  "f_has_datasource" TINYINT NOT NULL DEFAULT 0,
   CLUSTER PRIMARY KEY ("f_id")
 );
@@ -82,18 +82,10 @@ CREATE INDEX IF NOT EXISTS "idx_dag_step_op_src_dag" ON "t_flow_dag_step" ("f_so
 CREATE INDEX IF NOT EXISTS "idx_dag_step_op_dag" ON "t_flow_dag_step" ("f_dag_id", "f_operator");
 CREATE INDEX IF NOT EXISTS "idx_dag_step_has_ds_dag" ON "t_flow_dag_step" ("f_dag_id", "f_has_datasource");
 
-CREATE TABLE IF NOT EXISTS "t_flow_dag_trigger_config" (
- "f_id" BIGINT NOT NULL,
- "f_dag_id" BIGINT NOT NULL DEFAULT 0,
- "f_operator" VARCHAR(255 CHAR) NOT NULL DEFAULT '',
- "f_source_id" VARCHAR(255 CHAR) NOT NULL DEFAULT '',
-  CLUSTER PRIMARY KEY ("f_id")
-);
-
 CREATE TABLE IF NOT EXISTS "t_flow_dag_accessor" (
  "f_id" BIGINT NOT NULL,
  "f_dag_id" BIGINT NOT NULL DEFAULT 0,
- "f_accessor_id" VARCHAR(255 CHAR) NOT NULL DEFAULT '',
+ "f_accessor_id" VARCHAR(40 CHAR) NOT NULL DEFAULT '',
   CLUSTER PRIMARY KEY ("f_id")
 );
 
@@ -103,11 +95,11 @@ CREATE TABLE IF NOT EXISTS "t_flow_dag_version" (
  "f_id" BIGINT NOT NULL,
  "f_created_at" BIGINT NOT NULL DEFAULT 0,
  "f_updated_at" BIGINT NOT NULL DEFAULT 0,
- "f_dag_id" VARCHAR(64 CHAR) NOT NULL DEFAULT '',
- "f_user_id" VARCHAR(64 CHAR) NOT NULL DEFAULT '',
+ "f_dag_id" VARCHAR(20 CHAR) NOT NULL DEFAULT '',
+ "f_user_id" VARCHAR(40 CHAR) NOT NULL DEFAULT '',
  "f_version" VARCHAR(64 CHAR) NOT NULL DEFAULT '',
- "f_version_id" VARCHAR(64 CHAR) NOT NULL DEFAULT '',
- "f_change_log" TEXT DEFAULT NULL,
+ "f_version_id" VARCHAR(20 CHAR) NOT NULL DEFAULT '',
+ "f_change_log" VARCHAR(512 CHAR) DEFAULT NULL,
  "f_config" TEXT DEFAULT NULL,
  "f_sort_time" BIGINT NOT NULL DEFAULT 0,
   CLUSTER PRIMARY KEY ("f_id")
@@ -121,37 +113,37 @@ CREATE TABLE IF NOT EXISTS "t_flow_dag_instance" (
  "f_created_at" BIGINT NOT NULL DEFAULT 0,
  "f_updated_at" BIGINT NOT NULL DEFAULT 0,
  "f_dag_id" BIGINT NOT NULL DEFAULT 0,
- "f_trigger" TEXT DEFAULT NULL,
- "f_worker" VARCHAR(255 CHAR) NOT NULL DEFAULT '',
- "f_source" VARCHAR(255 CHAR) NOT NULL DEFAULT '',
+ "f_trigger" VARCHAR(20 CHAR) NOT NULL DEFAULT '',
+ "f_worker" VARCHAR(32 CHAR) NOT NULL DEFAULT '',
+ "f_source" TEXT DEFAULT NULL,
  "f_vars" TEXT DEFAULT NULL,
  "f_keywords" TEXT DEFAULT NULL,
- "f_event_persistence" INT NOT NULL DEFAULT 0,
+ "f_event_persistence" TINYINT NOT NULL DEFAULT 0,
  "f_event_oss_path" VARCHAR(255 CHAR) NOT NULL DEFAULT '',
  "f_share_data" TEXT DEFAULT NULL,
  "f_share_data_ext" TEXT DEFAULT NULL,
- "f_status" VARCHAR(64 CHAR) NOT NULL DEFAULT '',
+ "f_status" VARCHAR(32 CHAR) NOT NULL DEFAULT '',
  "f_reason" TEXT DEFAULT NULL,
  "f_cmd" TEXT DEFAULT NULL,
  "f_has_cmd" TINYINT NOT NULL DEFAULT 0,
  "f_batch_run_id" VARCHAR(20 CHAR) NOT NULL DEFAULT '',
- "f_user_id" VARCHAR(64 CHAR) NOT NULL DEFAULT '',
+ "f_user_id" VARCHAR(40 CHAR) NOT NULL DEFAULT '',
  "f_ended_at" BIGINT NOT NULL DEFAULT 0,
- "f_dag_type" VARCHAR(64 CHAR) NOT NULL DEFAULT '',
- "f_policy_type" VARCHAR(64 CHAR) NOT NULL DEFAULT '',
+ "f_dag_type" VARCHAR(32 CHAR) NOT NULL DEFAULT '',
+ "f_policy_type" VARCHAR(32 CHAR) NOT NULL DEFAULT '',
  "f_appinfo" TEXT DEFAULT NULL,
- "f_priority" VARCHAR(64 CHAR) NOT NULL DEFAULT '',
- "f_mode" INT NOT NULL DEFAULT 0,
+ "f_priority" VARCHAR(16 CHAR) NOT NULL DEFAULT '',
+ "f_mode" TINYINT NOT NULL DEFAULT 0,
  "f_dump" TEXT DEFAULT NULL,
  "f_dump_ext" TEXT DEFAULT NULL,
- "f_success_callback" TEXT DEFAULT NULL,
- "f_error_callback" TEXT DEFAULT NULL,
+ "f_success_callback" VARCHAR(1024 CHAR) DEFAULT NULL,
+ "f_error_callback" VARCHAR(1024 CHAR) DEFAULT NULL,
  "f_call_chain" TEXT DEFAULT NULL,
  "f_resume_data" TEXT DEFAULT NULL,
  "f_resume_status" VARCHAR(64 CHAR) NOT NULL DEFAULT '',
  "f_version" VARCHAR(64 CHAR) NOT NULL DEFAULT '',
- "f_version_id" VARCHAR(64 CHAR) NOT NULL DEFAULT '',
- "f_biz_domain_id" VARCHAR(64 CHAR) NOT NULL DEFAULT '',
+ "f_version_id" VARCHAR(20 CHAR) NOT NULL DEFAULT '',
+ "f_biz_domain_id" VARCHAR(40 CHAR) NOT NULL DEFAULT '',
   CLUSTER PRIMARY KEY ("f_id")
 );
 
@@ -166,8 +158,8 @@ CREATE TABLE IF NOT EXISTS "t_flow_inbox" (
  "f_created_at" BIGINT NOT NULL DEFAULT 0,
  "f_updated_at" BIGINT NOT NULL DEFAULT 0,
  "f_msg" TEXT DEFAULT NULL,
- "f_topic" VARCHAR(255 CHAR) NOT NULL DEFAULT '',
- "f_docid" VARCHAR(255 CHAR) NOT NULL DEFAULT '',
+ "f_topic" VARCHAR(128 CHAR) NOT NULL DEFAULT '',
+ "f_docid" VARCHAR(512 CHAR) NOT NULL DEFAULT '',
  "f_dag" TEXT DEFAULT NULL,
   CLUSTER PRIMARY KEY ("f_id")
 );
@@ -180,7 +172,7 @@ CREATE TABLE IF NOT EXISTS "t_flow_outbox" (
  "f_created_at" BIGINT NOT NULL DEFAULT 0,
  "f_updated_at" BIGINT NOT NULL DEFAULT 0,
  "f_msg" TEXT DEFAULT NULL,
- "f_topic" VARCHAR(255 CHAR) NOT NULL DEFAULT '',
+ "f_topic" VARCHAR(128 CHAR) NOT NULL DEFAULT '',
   CLUSTER PRIMARY KEY ("f_id")
 );
 
@@ -199,7 +191,7 @@ CREATE TABLE IF NOT EXISTS "t_flow_task_instance" (
  "f_timeout_secs" BIGINT NOT NULL DEFAULT 0,
  "f_params" TEXT DEFAULT NULL,
  "f_traces" TEXT DEFAULT NULL,
- "f_status" VARCHAR(64 CHAR) NOT NULL DEFAULT '',
+ "f_status" VARCHAR(32 CHAR) NOT NULL DEFAULT '',
  "f_reason" TEXT DEFAULT NULL,
  "f_pre_checks" TEXT DEFAULT NULL,
  "f_results" TEXT DEFAULT NULL,
@@ -222,7 +214,7 @@ CREATE TABLE IF NOT EXISTS "t_flow_token" (
  "f_id" BIGINT NOT NULL,
  "f_created_at" BIGINT NOT NULL DEFAULT 0,
  "f_updated_at" BIGINT NOT NULL DEFAULT 0,
- "f_user_id" VARCHAR(64 CHAR) NOT NULL DEFAULT '',
+ "f_user_id" VARCHAR(40 CHAR) NOT NULL DEFAULT '',
  "f_user_name" VARCHAR(255 CHAR) NOT NULL DEFAULT '',
  "f_refresh_token" TEXT DEFAULT NULL,
  "f_token" TEXT DEFAULT NULL,
@@ -238,9 +230,9 @@ CREATE TABLE IF NOT EXISTS "t_flow_client" (
  "f_id" BIGINT NOT NULL,
  "f_created_at" BIGINT NOT NULL DEFAULT 0,
  "f_updated_at" BIGINT NOT NULL DEFAULT 0,
- "f_client_name" VARCHAR(255 CHAR) NOT NULL DEFAULT '',
- "f_client_id" VARCHAR(255 CHAR) NOT NULL DEFAULT '',
- "f_client_secret" VARCHAR(255 CHAR) NOT NULL DEFAULT '',
+ "f_client_name" VARCHAR(64 CHAR) NOT NULL DEFAULT '',
+ "f_client_id" VARCHAR(40 CHAR) NOT NULL DEFAULT '',
+ "f_client_secret" VARCHAR(16 CHAR) NOT NULL DEFAULT '',
   CLUSTER PRIMARY KEY ("f_id")
 );
 
@@ -262,7 +254,7 @@ CREATE TABLE IF NOT EXISTS "t_flow_log" (
  "f_created_at" BIGINT NOT NULL DEFAULT 0,
  "f_updated_at" BIGINT NOT NULL DEFAULT 0,
  "f_ossid" VARCHAR(64 CHAR) NOT NULL DEFAULT '',
- "f_key" VARCHAR(255 CHAR) NOT NULL DEFAULT '',
+ "f_key" VARCHAR(40 CHAR) NOT NULL DEFAULT '',
  "f_filename" VARCHAR(255 CHAR) NOT NULL DEFAULT '',
   CLUSTER PRIMARY KEY ("f_id")
 );
