@@ -260,26 +260,6 @@ def build_dag_step_rows(document: Dict[str, Any]) -> List[Dict[str, Any]]:
     return rows
 
 
-def build_dag_trigger_config_rows(document: Dict[str, Any]) -> List[Dict[str, Any]]:
-    dag_id = to_uint64(document["_id"])
-    config = document.get("trigger_config") or {}
-    if not isinstance(config, dict):
-        return []
-    operator = stored_text(config.get("operator"))
-    data_source = config.get("dataSource") or {}
-    source_id = stored_text(data_source.get("id")) if isinstance(data_source, dict) else ""
-    if not operator and not source_id:
-        return []
-    return [
-        {
-            "f_id": stable_uint64("dag_trigger", dag_id, operator, source_id),
-            "f_dag_id": dag_id,
-            "f_operator": operator,
-            "f_source_id": source_id,
-        }
-    ]
-
-
 def build_dag_accessor_rows(document: Dict[str, Any]) -> List[Dict[str, Any]]:
     dag_id = to_uint64(document["_id"])
     accessors = document.get("accessors") or []
@@ -514,7 +494,6 @@ MAPPINGS: Sequence[CollectionMapping] = (
         child_tables=(
             ChildTableConfig("t_flow_dag_var", "f_id", build_dag_var_rows),
             ChildTableConfig("t_flow_dag_step", "f_id", build_dag_step_rows),
-            ChildTableConfig("t_flow_dag_trigger_config", "f_id", build_dag_trigger_config_rows),
             ChildTableConfig("t_flow_dag_accessor", "f_id", build_dag_accessor_rows),
         ),
     ),

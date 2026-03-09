@@ -41,7 +41,11 @@
         },
         "create_by": {
             "description": "创建方式",
-            "enum": ["local", "direct", "template"]
+            "enum": [
+                "local",
+                "direct",
+                "template"
+            ]
         },
         "trigger_config": {
             "type": "object",
@@ -61,7 +65,10 @@
                             "type": "object"
                         }
                     },
-                    "required": ["operator", "parameters"]
+                    "required": [
+                        "operator",
+                        "parameters"
+                    ]
                 },
                 "cron": {
                     "type": "string",
@@ -69,13 +76,16 @@
                     "pattern": "(@(annually|yearly|monthly|weekly|daily|hourly|reboot))|(@every (\\d+(ns|us|µs|ms|s|m|h))+)|((((\\d+,)+\\d+|(\\d+(\/|-)\\d+)|\\d+|\\*|\\?) ?){5,7})"
                 }
             },
-            "required": ["operator"]
+            "required": [
+                "operator"
+            ]
         },
-        "version" : {
+        "version": {
             "type": "string",
-            "pattern": "^v(0|[1-9]\\d*)(?:\\.(0|[1-9]\\d*)){2}$"
+            "pattern": "^v(0|[1-9]\\d*)(?:\\.(0|[1-9]\\d*)){2}$",
+            "maxLength": 64
         },
-        "change_log" : {
+        "change_log": {
             "type": "string",
             "maxLength": 300
         },
