@@ -18,13 +18,18 @@ paths:
           required: true
           schema:
             type: string
-          description: 账户ID
+          description: 账户ID，用于内部服务调用时传递账户信息
         - name: x-account-type
-          required: true
           in: header
+          required: true
           schema:
             type: string
-          description: 账户类型
+            enum:
+              - user
+              - app
+              - anonymous
+            default: user
+          description: 账户类型：user(用户), app(应用), anonymous(匿名)
         - name: kn_id
           description: 业务知识网络ID
           schema:
