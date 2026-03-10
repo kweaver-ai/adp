@@ -36,6 +36,16 @@ paths:
           schema:
             type: boolean
           in: query
+        - name: response_format
+          description: 响应格式：json 或 toon，默认 json
+          schema:
+            type: string
+            enum:
+              - json
+              - toon
+            default: json
+          in: query
+          required: false
       requestBody:
         description: 子图查询请求体
         content:

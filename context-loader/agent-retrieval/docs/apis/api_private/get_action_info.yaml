@@ -38,6 +38,16 @@ paths:
               - user
               - system
           example: user
+        - name: response_format
+          in: query
+          description: 响应格式：json 或 toon，默认 json
+          required: false
+          schema:
+            type: string
+            enum:
+              - json
+              - toon
+            default: json
       requestBody:
         required: true
         content:
@@ -59,14 +69,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ActionRecallResponse'
-              examples:
-                成功:
-                  value:
-                    _dynamic_tools:
-                      - name: 工具名
-                        description: 工具描述
-                        parameters: {}
-                        api_url: http://...
         '400':
           description: 请求参数错误
           content:
