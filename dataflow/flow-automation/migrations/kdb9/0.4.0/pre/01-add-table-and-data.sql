@@ -54,7 +54,7 @@ CREATE TABLE IF NOT EXISTS `t_flow_dag_var` (
  `f_var_name` VARCHAR(255) NOT NULL DEFAULT '' COMMENT '变量名',
  `f_default_value` TEXT DEFAULT NULL COMMENT '默认值',
  `f_var_type` VARCHAR(16) NOT NULL DEFAULT '' COMMENT '变量类型',
- `f_description` TEXT NOT NULL DEFAULT '' COMMENT '变量描述',
+ `f_description` TEXT DEFAULT NULL COMMENT '变量描述',
   PRIMARY KEY (`f_id`)
 );
 CREATE INDEX IF NOT EXISTS `idx_dag_vars_dag_id` ON `t_flow_dag_var` (`f_dag_id`);
@@ -71,11 +71,11 @@ CREATE TABLE IF NOT EXISTS `t_flow_dag_step` (
  `f_id` BIGINT UNSIGNED NOT NULL COMMENT '主键ID',
  `f_dag_id` BIGINT UNSIGNED NOT NULL DEFAULT 0 COMMENT 'DAG ID',
  `f_operator` VARCHAR(255) NOT NULL DEFAULT '' COMMENT '操作符',
- `f_source_id` VARCHAR(512) NOT NULL DEFAULT '' COMMENT '来源ID',
+ `f_source_id` TEXT NOT NULL COMMENT '来源ID',
  `f_has_datasource` TINYINT(1) NOT NULL DEFAULT 0 COMMENT '是否有数据源',
   PRIMARY KEY (`f_id`)
 );
-CREATE INDEX IF NOT EXISTS `idx_dag_step_op_src_dag` ON `t_flow_dag_step` (`f_source_id`, `f_operator`, `f_dag_id`);
+CREATE INDEX IF NOT EXISTS `idx_dag_step_op` ON `t_flow_dag_step` (`f_operator`);
 CREATE INDEX IF NOT EXISTS `idx_dag_step_op_dag` ON `t_flow_dag_step` (`f_dag_id`, `f_operator`);
 CREATE INDEX IF NOT EXISTS `idx_dag_step_has_ds_dag` ON `t_flow_dag_step` (`f_dag_id`, `f_has_datasource`);
 

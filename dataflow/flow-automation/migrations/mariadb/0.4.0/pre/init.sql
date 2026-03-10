@@ -552,7 +552,7 @@ CREATE TABLE IF NOT EXISTS `t_flow_dag` (
   KEY `idx_dag_trigger` (`f_trigger`),
   KEY `idx_dag_name` (`f_name`),
   KEY `idx_dag_biz_domain` (`f_biz_domain_id`)
-) ENGINE=InnoDB DEFAULT COLLATE=utf8mb4_bin;
+) ENGINE=InnoDB COMMENT 'DAG流程定义表';
 
 CREATE TABLE IF NOT EXISTS `t_flow_dag_var` (
  `f_id` BIGINT UNSIGNED NOT NULL COMMENT '主键ID',
@@ -560,10 +560,10 @@ CREATE TABLE IF NOT EXISTS `t_flow_dag_var` (
  `f_var_name` VARCHAR(255) NOT NULL DEFAULT '' COMMENT '变量名',
  `f_default_value` TEXT DEFAULT NULL COMMENT '默认值',
  `f_var_type` VARCHAR(16) NOT NULL DEFAULT '' COMMENT '变量类型',
- `f_description` TEXT NOT NULL DEFAULT '' COMMENT '变量描述',
+ `f_description` TEXT DEFAULT NULL COMMENT '变量描述',
   PRIMARY KEY (`f_id`),
   KEY `idx_dag_vars_dag_id` (`f_dag_id`)
-) ENGINE=InnoDB DEFAULT COLLATE=utf8mb4_bin;
+) ENGINE=InnoDB COMMENT 'DAG变量定义表';
 
 CREATE TABLE IF NOT EXISTS `t_flow_dag_instance_keyword` (
  `f_id` BIGINT UNSIGNED NOT NULL COMMENT '主键ID',
@@ -571,19 +571,19 @@ CREATE TABLE IF NOT EXISTS `t_flow_dag_instance_keyword` (
  `f_keyword` VARCHAR(255) NOT NULL DEFAULT '' COMMENT '关键词',
   PRIMARY KEY (`f_id`),
   KEY `idx_dag_ins_kw` (`f_dag_ins_id`, `f_keyword`)
-) ENGINE=InnoDB DEFAULT COLLATE=utf8mb4_bin;
+) ENGINE=InnoDB COMMENT 'DAG实例关键词表';
 
 CREATE TABLE IF NOT EXISTS `t_flow_dag_step` (
  `f_id` BIGINT UNSIGNED NOT NULL COMMENT '主键ID',
  `f_dag_id` BIGINT UNSIGNED NOT NULL DEFAULT 0 COMMENT 'DAG ID',
  `f_operator` VARCHAR(255) NOT NULL DEFAULT '' COMMENT '操作符',
- `f_source_id` VARCHAR(512) NOT NULL DEFAULT '' COMMENT '来源ID',
+ `f_source_id` TEXT NOT NULL COMMENT '来源ID',
  `f_has_datasource` BOOLEAN NOT NULL DEFAULT 0 COMMENT '是否有数据源',
   PRIMARY KEY (`f_id`),
-  KEY `idx_dag_step_op_src_dag` (`f_source_id`, `f_operator`, `f_dag_id`),
+  KEY `idx_dag_step_op` (`f_operator`),
   KEY `idx_dag_step_op_dag` (`f_dag_id`, `f_operator`),
   KEY `idx_dag_step_has_ds_dag` (`f_dag_id`, `f_has_datasource`)
-) ENGINE=InnoDB DEFAULT COLLATE=utf8mb4_bin;
+) ENGINE=InnoDB COMMENT 'DAG步骤定义表';
 
 CREATE TABLE IF NOT EXISTS `t_flow_dag_accessor` (
  `f_id` BIGINT UNSIGNED NOT NULL COMMENT '主键ID',
@@ -591,7 +591,7 @@ CREATE TABLE IF NOT EXISTS `t_flow_dag_accessor` (
  `f_accessor_id` VARCHAR(40) NOT NULL DEFAULT '' COMMENT '访问者ID',
   PRIMARY KEY (`f_id`),
   KEY `idx_dag_accessor_id_dag` (`f_accessor_id`, `f_dag_id`)
-) ENGINE=InnoDB DEFAULT COLLATE=utf8mb4_bin;
+) ENGINE=InnoDB COMMENT 'DAG访问者定义表';
 
 CREATE TABLE IF NOT EXISTS `t_flow_dag_version` (
  `f_id` BIGINT UNSIGNED NOT NULL COMMENT '主键ID',
@@ -607,7 +607,7 @@ CREATE TABLE IF NOT EXISTS `t_flow_dag_version` (
   PRIMARY KEY (`f_id`),
   KEY `idx_dag_versions_dag_version` (`f_version_id`, `f_dag_id`),
   KEY `idx_dag_versions_dag_sort` (`f_dag_id`, `f_sort_time`)
-) ENGINE=InnoDB DEFAULT COLLATE=utf8mb4_bin;
+) ENGINE=InnoDB COMMENT 'DAG版本定义表';
 
 CREATE TABLE IF NOT EXISTS `t_flow_dag_instance` (
  `f_id` BIGINT UNSIGNED NOT NULL COMMENT '主键ID',
@@ -651,7 +651,7 @@ CREATE TABLE IF NOT EXISTS `t_flow_dag_instance` (
   KEY `idx_dag_ins_user_id` (`f_user_id`),
   KEY `idx_dag_ins_batch_run` (`f_batch_run_id`),
   KEY `idx_dag_ins_worker` (`f_worker`)
-) ENGINE=InnoDB DEFAULT COLLATE=utf8mb4_bin;
+) ENGINE=InnoDB COMMENT 'DAG实例定义表';
 
 CREATE TABLE IF NOT EXISTS `t_flow_inbox` (
  `f_id` BIGINT UNSIGNED NOT NULL COMMENT '主键ID',
@@ -664,7 +664,7 @@ CREATE TABLE IF NOT EXISTS `t_flow_inbox` (
   PRIMARY KEY (`f_id`),
   KEY `idx_inbox_docid` (`f_docid`),
   KEY `idx_inbox_topic_created` (`f_topic`, `f_created_at`)
-) ENGINE=InnoDB DEFAULT COLLATE=utf8mb4_bin;
+) ENGINE=InnoDB COMMENT '事件触发流程记录表';
 
 CREATE TABLE IF NOT EXISTS `t_flow_outbox` (
  `f_id` BIGINT UNSIGNED NOT NULL COMMENT '主键ID',
@@ -674,7 +674,7 @@ CREATE TABLE IF NOT EXISTS `t_flow_outbox` (
  `f_topic` VARCHAR(128) NOT NULL DEFAULT '' COMMENT '主题',
   PRIMARY KEY (`f_id`),
   KEY `idx_outbox_created` (`f_created_at`)
-) ENGINE=InnoDB DEFAULT COLLATE=utf8mb4_bin;
+) ENGINE=InnoDB COMMENT '消息发件箱';
 
 CREATE TABLE IF NOT EXISTS `t_flow_task_instance` (
  `f_id` BIGINT UNSIGNED NOT NULL COMMENT '主键ID',
@@ -705,7 +705,7 @@ CREATE TABLE IF NOT EXISTS `t_flow_task_instance` (
   KEY `idx_task_ins_hash` (`f_hash`),
   KEY `idx_task_ins_action` (`f_action_name`),
   KEY `idx_task_ins_expired` (`f_expired_at`)
-) ENGINE=InnoDB DEFAULT COLLATE=utf8mb4_bin;
+) ENGINE=InnoDB COMMENT 'Task实例定义表';
 
 CREATE TABLE IF NOT EXISTS `t_flow_token` (
  `f_id` BIGINT UNSIGNED NOT NULL COMMENT '主键ID',
@@ -720,7 +720,7 @@ CREATE TABLE IF NOT EXISTS `t_flow_token` (
  `f_is_app` BOOLEAN NOT NULL DEFAULT 0 COMMENT '是否应用',
   PRIMARY KEY (`f_id`),
   KEY `idx_token_user_id` (`f_user_id`)
-) ENGINE=InnoDB DEFAULT COLLATE=utf8mb4_bin;
+) ENGINE=InnoDB COMMENT 'Token定义表';
 
 CREATE TABLE IF NOT EXISTS `t_flow_client` (
  `f_id` BIGINT UNSIGNED NOT NULL COMMENT '主键ID',
@@ -731,7 +731,7 @@ CREATE TABLE IF NOT EXISTS `t_flow_client` (
  `f_client_secret` VARCHAR(16) NOT NULL DEFAULT '' COMMENT '客户端密钥',
   PRIMARY KEY (`f_id`),
   KEY `idx_client_name` (`f_client_name`)
-) ENGINE=InnoDB DEFAULT COLLATE=utf8mb4_bin;
+) ENGINE=InnoDB COMMENT 'Client定义表';
 
 CREATE TABLE IF NOT EXISTS `t_flow_switch` (
  `f_id` BIGINT UNSIGNED NOT NULL COMMENT '主键ID',
@@ -741,7 +741,7 @@ CREATE TABLE IF NOT EXISTS `t_flow_switch` (
  `f_status` BOOLEAN NOT NULL DEFAULT 0 COMMENT '开关状态',
   PRIMARY KEY (`f_id`),
   KEY `idx_switch_name` (`f_name`)
-) ENGINE=InnoDB DEFAULT COLLATE=utf8mb4_bin;
+) ENGINE=InnoDB COMMENT '开关定义表';
 
 CREATE TABLE IF NOT EXISTS `t_flow_log` (
  `f_id` BIGINT UNSIGNED NOT NULL COMMENT '主键ID',
@@ -751,4 +751,4 @@ CREATE TABLE IF NOT EXISTS `t_flow_log` (
  `f_key` VARCHAR(40) NOT NULL DEFAULT '' COMMENT 'OSS Key',
  `f_filename` VARCHAR(255) NOT NULL DEFAULT '' COMMENT '文件名',
   PRIMARY KEY (`f_id`)
-) ENGINE=InnoDB DEFAULT COLLATE=utf8mb4_bin;
+) ENGINE=InnoDB COMMENT '日志定义表';
