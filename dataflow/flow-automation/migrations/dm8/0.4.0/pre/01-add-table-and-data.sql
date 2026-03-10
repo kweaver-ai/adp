@@ -73,12 +73,12 @@ CREATE TABLE IF NOT EXISTS "t_flow_dag_step" (
  "f_id" BIGINT NOT NULL DEFAULT 0,
  "f_dag_id" BIGINT NOT NULL DEFAULT 0,
  "f_operator" VARCHAR(255 CHAR) NOT NULL DEFAULT '',
- "f_source_id" VARCHAR(512 CHAR) NOT NULL DEFAULT '',
+ "f_source_id" TEXT NOT NULL,
  "f_has_datasource" TINYINT NOT NULL DEFAULT 0,
   CLUSTER PRIMARY KEY ("f_id")
 );
 
-CREATE INDEX IF NOT EXISTS "idx_dag_step_op_src_dag" ON "t_flow_dag_step" ("f_source_id", "f_operator", "f_dag_id");
+CREATE INDEX IF NOT EXISTS "idx_dag_step_op" ON "t_flow_dag_step" ("f_operator");
 CREATE INDEX IF NOT EXISTS "idx_dag_step_op_dag" ON "t_flow_dag_step" ("f_dag_id", "f_operator");
 CREATE INDEX IF NOT EXISTS "idx_dag_step_has_ds_dag" ON "t_flow_dag_step" ("f_dag_id", "f_has_datasource");
 

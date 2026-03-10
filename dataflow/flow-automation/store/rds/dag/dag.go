@@ -426,12 +426,12 @@ func (d *dag) CreateDagVars(ctx context.Context, dagVars []*DagVarModel) error {
 			return err
 		}
 
-		sqlStr = `INSERT INTO t_flow_dag_var (f_id, f_dag_id, f_var_name, f_default_value, f_var_type) VALUES `
+		sqlStr = `INSERT INTO t_flow_dag_var (f_id, f_dag_id, f_var_name, f_default_value, f_var_type, f_description) VALUES `
 		trace.SetAttributes(newCtx, attribute.String(trace.TABLE_NAME, DAGVAR_TABLENAME), attribute.String(trace.DB_SQL, sqlStr), attribute.String(trace.DB_Values, msgStr))
 		values := make([]any, 0, len(dagVars)*5)
 		for _, data := range dagVars {
-			sqlStr += "(?, ?, ?, ?, ?),"
-			values = append(values, data.ID, data.DagID, data.VarName, data.DefaultValue, data.VarType)
+			sqlStr += "(?, ?, ?, ?, ?, ?),"
+			values = append(values, data.ID, data.DagID, data.VarName, data.DefaultValue, data.VarType, data.Description)
 		}
 
 		sqlStr = sqlStr[:len(sqlStr)-1]
