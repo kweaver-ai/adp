@@ -47,11 +47,8 @@ func NewOntologyQueryAccess() interfaces.DrivenOntologyQuery {
 	ontologyQueryOnce.Do(func() {
 		configLoader := config.NewConfigLoader()
 		ontologyQuery = &ontologyQueryClient{
-			logger: configLoader.GetLogger(),
-			baseURL: fmt.Sprintf("%s://%s:%d/api/ontology-query",
-				configLoader.OntologyQuery.PrivateProtocol,
-				configLoader.OntologyQuery.PrivateHost,
-				configLoader.OntologyQuery.PrivatePort),
+			logger:     configLoader.GetLogger(),
+			baseURL:    configLoader.OntologyQuery.BuildURL("/api/ontology-query"),
 			httpClient: rest.NewHTTPClient(),
 		}
 	})

@@ -45,11 +45,8 @@ func NewMFModelAPIClient() *mfModelAPIClient {
 	mfModelAPIClientOnce.Do(func() {
 		conf := config.NewConfigLoader()
 		mfModelAPIClientInst = &mfModelAPIClient{
-			logger: conf.GetLogger(),
-			baseURL: fmt.Sprintf("%s://%s:%d/api/private/mf-model-api",
-				conf.MFModelAPI.PrivateProtocol,
-				conf.MFModelAPI.PrivateHost,
-				conf.MFModelAPI.PrivatePort),
+			logger:     conf.GetLogger(),
+			baseURL:    conf.MFModelAPI.BuildURL("/api/private/mf-model-api"),
 			httpClient: rest.NewHTTPClient(),
 		}
 	})

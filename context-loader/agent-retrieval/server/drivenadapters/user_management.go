@@ -37,8 +37,7 @@ func NewUserManagementClient() interfaces.UserManagement {
 	syncOnce.Do(func() {
 		conf := config.NewConfigLoader()
 		um = &userManagementClient{
-			baseURL: fmt.Sprintf("%s://%s:%d/api/user-management", conf.UserMgnt.PrivateProtocol,
-				conf.UserMgnt.PrivateHost, conf.UserMgnt.PrivatePort),
+			baseURL:    conf.UserMgnt.BuildURL("/api/user-management"),
 			logger:     conf.GetLogger(),
 			httpClient: rest.NewHTTPClient(),
 		}

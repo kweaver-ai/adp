@@ -7,12 +7,14 @@
 package config
 
 import (
+	"fmt"
 	"log"
 	"os"
 	"path/filepath"
 	"reflect"
 	"runtime"
 	"strconv"
+	"strings"
 	"sync"
 
 	"github.com/creasty/defaults"
@@ -84,6 +86,7 @@ type OAuthConfig struct {
 	AdminPort        int    `yaml:"admin_port"`
 	AdminProtocol    string `yaml:"admin_protocol"`
 	AdminPrefix      string `yaml:"admin_prefix"`
+	AdminBasePath    string `yaml:"admin_base_path"`
 }
 
 // PublicBaseConfig public base configuration
@@ -98,6 +101,37 @@ type PrivateBaseConfig struct {
 	PrivateHost     string `yaml:"private_host"`
 	PrivatePort     int    `yaml:"private_port"`
 	PrivateProtocol string `yaml:"private_protocol"`
+	PrivateBasePath string `yaml:"private_base_path"`
+}
+
+func buildServiceURL(protocol, host string, port int, basePath, servicePath string) string {
+	var buf strings.Builder
+	buf.WriteString(protocol)
+	buf.WriteString("://")
+	buf.WriteString(host)
+	if port != 0 && !((protocol == "https" && port == 443) || (protocol == "http" && port == 80)) {
+		fmt.Fprintf(&buf, ":%d", port)
+	}
+	basePath = strings.TrimRight(basePath, "/")
+	if basePath != "" && !strings.HasPrefix(basePath, "/") {
+		basePath = "/" + basePath
+	}
+	buf.WriteString(basePath)
+	if servicePath != "" && !strings.HasPrefix(servicePath, "/") {
+		servicePath = "/" + servicePath
+	}
+	buf.WriteString(servicePath)
+	return buf.String()
+}
+
+// BuildURL builds the full base URL for a private service endpoint.
+func (c *PrivateBaseConfig) BuildURL(servicePath string) string {
+	return buildServiceURL(c.PrivateProtocol, c.PrivateHost, c.PrivatePort, c.PrivateBasePath, servicePath)
+}
+
+// BuildAdminURL builds the full base URL for the OAuth admin endpoint.
+func (c *OAuthConfig) BuildAdminURL() string {
+	return buildServiceURL(c.AdminProtocol, c.AdminHost, c.AdminPort, c.AdminBasePath, c.AdminPrefix)
 }
 
 // OpenSearchConfig OpenSearch configuration
@@ -164,8 +198,15 @@ var (
 // NewConfigLoader gets configuration
 func NewConfigLoader() *Config {
 	once.Do(func() {
-		configFilePath := "/sysvol/config/agent-retrieval.yaml"
-		secretFilePath := "/sysvol/secret/agent-retrieval-secret.yaml"
+		profileDir := os.Getenv("CONFIG_PROFILE")
+		var configFilePath, secretFilePath string
+		if profileDir != "" {
+			configFilePath = filepath.Join(profileDir, "agent-retrieval.yaml")
+			secretFilePath = filepath.Join(profileDir, "agent-retrieval-secret.yaml")
+		} else {
+			configFilePath = "/sysvol/config/agent-retrieval.yaml"
+			secretFilePath = "/sysvol/secret/agent-retrieval-secret.yaml"
+		}
 
 		// Set default configuration
 		configLoader = &Config{}
@@ -267,7 +308,11 @@ func (conf *Config) initO11yAndLog() {
 	// Load configuration file
 	viper.SetConfigName("observability")
 	viper.SetConfigType("yaml")
-	viper.AddConfigPath("/sysvol/config/")
+	if profileDir := os.Getenv("CONFIG_PROFILE"); profileDir != "" {
+		viper.AddConfigPath(profileDir)
+	} else {
+		viper.AddConfigPath("/sysvol/config/")
+	}
 	if err := viper.ReadInConfig(); err != nil {
 		panic(err)
 	}
