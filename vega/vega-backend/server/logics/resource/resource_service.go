@@ -400,6 +400,7 @@ func (rs *resourceService) Update(ctx context.Context, id string, req *interface
 	resource.Name = req.Name
 	resource.Tags = req.Tags
 	resource.Description = req.Description
+	resource.LogicDefinition = req.LogicDefinition
 
 	// Get account info
 	accountInfo := interfaces.AccountInfo{}
