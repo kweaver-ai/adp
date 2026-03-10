@@ -39,6 +39,8 @@ const (
 	LOG_TABLENAME                = "t_flow_log"
 )
 
+const defaultCtxTimeout = 100 * time.Second
+
 // Dag 流程配置数据库模型
 type DagModel struct {
 	ID            uint64 `json:"f_id" gorm:"column:f_id;primaryKey"`
@@ -280,7 +282,7 @@ func (d *dag) dbWithContextWithTimeout(ctx context.Context, timeout time.Duratio
 }
 
 func (d *dag) dbWithContext(ctx context.Context) (*gorm.DB, context.Context, context.CancelFunc) {
-	return d.dbWithContextWithTimeout(ctx, 100*time.Second)
+	return d.dbWithContextWithTimeout(ctx, defaultCtxTimeout)
 }
 
 // TransactionWithContext 带 Context 的事务
@@ -2146,6 +2148,7 @@ func (d *dag) GetDagInstanceCount(ctx context.Context, params map[string]interfa
 	defer func() { trace.TelemetrySpanEnd(span, err) }()
 
 	logCleanTTL, _ := params["log_clean_ttl"].(time.Duration)
+	logCleanTTL = utils.IfNot(logCleanTTL == 0, defaultCtxTimeout, logCleanTTL)
 	db, _, cancel := d.dbWithContextWithTimeout(newCtx, logCleanTTL)
 	defer cancel()
 
@@ -2282,6 +2285,7 @@ func (d *dag) GetTaskInstanceCount(ctx context.Context, params map[string]interf
 	defer func() { trace.TelemetrySpanEnd(span, err) }()
 
 	logCleanTTL, _ := params["log_clean_ttl"].(time.Duration)
+	logCleanTTL = utils.IfNot(logCleanTTL == 0, defaultCtxTimeout, logCleanTTL)
 	db, _, cancel := d.dbWithContextWithTimeout(newCtx, logCleanTTL)
 	defer cancel()
 
