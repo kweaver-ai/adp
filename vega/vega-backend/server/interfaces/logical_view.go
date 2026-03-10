@@ -21,15 +21,11 @@ const (
 	FieldProperty_Fields      = "fields"
 	FieldProperty_Dimension   = "dimension"
 
-	QueryType_DSL       = "DSL"
-	QueryType_SQL       = "SQL"
-	QueryType_IndexBase = "IndexBase"
-
-	DataScopeNodeType_View   = "view"
-	DataScopeNodeType_Join   = "join"
-	DataScopeNodeType_Union  = "union"
-	DataScopeNodeType_Sql    = "sql"
-	DataScopeNodeType_Output = "output"
+	DataScopeNodeType_Resource = "resource"
+	DataScopeNodeType_Join     = "join"
+	DataScopeNodeType_Union    = "union"
+	DataScopeNodeType_Sql      = "sql"
+	DataScopeNodeType_Output   = "output"
 
 	// join的类型
 	JoinType_Inner     = "inner"
@@ -80,11 +76,11 @@ var (
 	}
 
 	DataScopeNodeTypeMap = map[string]struct{}{
-		DataScopeNodeType_View:   {},
-		DataScopeNodeType_Join:   {},
-		DataScopeNodeType_Union:  {},
-		DataScopeNodeType_Sql:    {},
-		DataScopeNodeType_Output: {},
+		DataScopeNodeType_Resource: {},
+		DataScopeNodeType_Join:     {},
+		DataScopeNodeType_Union:    {},
+		DataScopeNodeType_Sql:      {},
+		DataScopeNodeType_Output:   {},
 	}
 
 	JoinTypeMap = map[string]struct{}{

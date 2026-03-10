@@ -41,7 +41,7 @@ func (rs *resourceService) validateLogicDefinition(ctx context.Context, view *in
 
 	for _, node := range view.LogicDefinition {
 		switch node.Type {
-		case interfaces.DataScopeNodeType_View:
+		case interfaces.DataScopeNodeType_Resource:
 			// 校验视图节点
 			err := validateViewNode(ctx, rs, node, dataScopeViewMap)
 			if err != nil {
@@ -239,7 +239,7 @@ func validateJoinNode(ctx context.Context, node *interfaces.DataScopeNode, nodeM
 	return nil
 }
 
-func validateUnionNode(ctx context.Context, qType string, node *interfaces.DataScopeNode, nodeMap map[string]struct{}) error {
+func validateUnionNode(ctx context.Context, category string, node *interfaces.DataScopeNode, nodeMap map[string]struct{}) error {
 	// 当前仅支持两个视图union
 	if len(node.InputNodes) < 2 {
 		return rest.NewHTTPError(ctx, http.StatusBadRequest, verrors.VegaBackend_LogicalView_InvalidParameter_LogicDefinition).
@@ -278,14 +278,14 @@ func validateUnionNode(ctx context.Context, qType string, node *interfaces.DataS
 	}
 
 	// 如果查询类型是DSL或索引基类，只允许union all
-	if qType == interfaces.QueryType_DSL || qType == interfaces.QueryType_IndexBase {
+	if category == interfaces.ResourceCategoryIndex {
 		if cfg.UnionType != interfaces.UnionType_All {
 			return rest.NewHTTPError(ctx, http.StatusBadRequest, verrors.VegaBackend_LogicalView_InvalidParameter_LogicDefinition).
 				WithErrorDetails("The data scope union config is invalid, DSL or IndexBase view only support union all")
 		}
 	}
 
-	if qType == interfaces.QueryType_SQL {
+	if category == interfaces.ResourceCategoryTable {
 		// 校验fields列表长度
 		if len(cfg.UnionFields) != len(node.InputNodes) {
 			return rest.NewHTTPError(ctx, http.StatusBadRequest, verrors.VegaBackend_LogicalView_InvalidParameter_LogicDefinition).
@@ -566,7 +566,7 @@ func validateCond(ctx context.Context, cfg *interfaces.FilterCondCfg, fieldsMap 
 // func (rs *resourceService) getLogicViewSource(ctx context.Context, resource *interfaces.Resource) (*interfaces.Resource, error) {
 // 	// 给每个原子视图添加对应的技术名称（DSL类视图技术名称对应的是来源索引库），uniquery查询数据时需要
 // 	for _, node := range resource.LogicDefinition {
-// 		if node.Type != interfaces.DataScopeNodeType_View {
+// 		if node.Type != interfaces.DataScopeNodeType_Resource {
 // 			continue
 // 		}
 
