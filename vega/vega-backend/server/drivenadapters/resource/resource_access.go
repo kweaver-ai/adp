@@ -194,7 +194,7 @@ func (ra *resourceAccess) GetByID(ctx context.Context, id string) (*interfaces.R
 		"f_source_identifier",
 		"f_source_metadata",
 		"f_schema_definition",
-		"f_logical_definition",
+		"f_logic_definition",
 		"f_creator",
 		"f_creator_type",
 		"f_create_time",
