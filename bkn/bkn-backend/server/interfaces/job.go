@@ -61,7 +61,7 @@ type JobInfo struct {
 	KNID             string          `json:"kn_id"`
 	Branch           string          `json:"branch"`
 	JobType          JobType         `json:"job_type"`
-	JobConceptConfig []ConceptConfig `json:"Job_concept_config"`
+	JobConceptConfig []ConceptConfig `json:"job_concept_config"`
 	Creator          AccountInfo     `json:"creator"`
 	CreateTime       int64           `json:"create_time"`
 

@@ -151,6 +151,48 @@ func (js *jobService) CreateJob(ctx context.Context, jobInfo *interfaces.JobInfo
 				},
 			}
 		}
+	} else {
+		objectTypeIDs := map[string]bool{}
+		for _, conceptConfig := range jobInfo.JobConceptConfig {
+			if conceptConfig.ConceptType == interfaces.MODULE_TYPE_OBJECT_TYPE {
+				objectTypeIDs[conceptConfig.ConceptID] = true
+			}
+		}
+
+		objectTypes, err := js.ots.GetAllObjectTypesByKnID(ctx, jobInfo.KNID, jobInfo.Branch)
+		if err != nil {
+			return "", err
+		}
+		for _, objectType := range objectTypes {
+			if objectType.DataSource == nil {
+				continue
+			}
+			if len(objectType.PrimaryKeys) == 0 {
+				return "", rest.NewHTTPError(ctx, http.StatusBadRequest,
+					oerrors.OntologyManager_Job_InvalidObjectType).
+					WithErrorDetails(fmt.Sprintf("ObjectType %s has no primary key", objectType.OTName))
+			}
+			if !objectTypeIDs[objectType.OTID] {
+				continue
+			}
+
+			task_id := xid.New().String()
+
+			taskInfos[task_id] = &interfaces.TaskInfo{
+				ID:          task_id,
+				Name:        objectType.OTName,
+				JobID:       jobInfo.ID,
+				ConceptType: interfaces.MODULE_TYPE_OBJECT_TYPE,
+				ConceptID:   objectType.OTID,
+				TaskStateInfo: interfaces.TaskStateInfo{
+					State:       interfaces.TaskStatePending,
+					StateDetail: "",
+					StartTime:   0,
+					FinishTime:  0,
+					TimeCost:    0,
+				},
+			}
+		}
 	}
 	jobInfo.TaskInfos = taskInfos
 	if len(taskInfos) == 0 {
