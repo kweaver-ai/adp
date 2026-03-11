@@ -114,8 +114,10 @@ export enum MetadataTypeEnum {
 }
 
 export interface FunctionExecuteRequest {
-  code: string; // 函数代码
-  event: object; // 函数事件参数
+  code?: string; // 函数代码
+  event?: object; // 函数事件参数
+  dependencies?: FunctionDependency[];
+  dependencies_url?: string;
 }
 export interface FunctionExecuteResponse {
   stdout: string; // 标准输出
@@ -147,4 +149,26 @@ export interface PostAIGenCodeResponse {
     inputs: any[]; // 参数列表
     outputs: any[]; // 输出参数列表
   };
+}
+
+// 函数依赖库
+export interface FunctionDependency {
+  name: string; // 依赖库名称
+  version: string; // 依赖库版本
+}
+
+export interface GetFunctionDependenciesResponse {
+  dependencies: FunctionDependency[];
+  session_id: string;
+}
+
+export interface SearchFunctionDepencyVersionsRequest {
+  packageName: string; // 依赖库名称
+  pypiRepoUrl?: string; // Pypi源地址，默认 https://pypi.org/simple/
+  pythonVersion?: string; // Python版本，默认 3.10
+}
+
+export interface SearchFunctionDepencyVersionsResponse {
+  package_name: string; // 依赖库名称
+  versions: string[]; // 依赖库版本列表
 }

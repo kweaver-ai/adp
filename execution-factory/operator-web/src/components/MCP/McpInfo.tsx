@@ -17,6 +17,7 @@ export default function McpInfo({ selectedTool, onUpdateInputs }: any) {
               'application/json': selectedTool?.inputSchema,
             },
           },
+          $defs: selectedTool?.inputSchema?.$defs,
         },
       },
     }),

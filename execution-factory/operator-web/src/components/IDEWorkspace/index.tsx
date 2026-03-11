@@ -3,7 +3,9 @@
  */
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate, useParams, useLocation, useBlocker } from 'react-router-dom';
-import { Layout, Splitter, message, Modal } from 'antd';
+import { uniqBy } from 'lodash';
+import { Layout, Splitter, message, Modal, Button, Tooltip } from 'antd';
+import { LeftOutlined, RightOutlined } from '@ant-design/icons';
 import intl from 'react-intl-universal';
 import {
   getToolBoxTemplate,
@@ -13,8 +15,9 @@ import {
   postOperatorRegisterWithoutHeader,
   getOperatorInfoById,
   postOperatorInfo,
+  getFunctionDependencies,
 } from '@/apis/agent-operator-integration';
-import { MetadataTypeEnum } from '@/apis/agent-operator-integration/type';
+import { MetadataTypeEnum, type FunctionDependency } from '@/apis/agent-operator-integration/type';
 import DebugPanel from './DebugPanel';
 import { OperatorTypeEnum } from '@/components/OperatorList/types';
 import { useMicroWidgetProps, useNavigationBlocker } from '@/hooks';
@@ -22,8 +25,9 @@ import Toolbar from './Toolbar';
 import ControlSidebar from './ControlSidebar';
 import ConsolePanel from './ConsolePanel';
 import EditingArea from './EditingArea';
-import { ActionEnum, type ToolDetail } from './types';
-import { parseInputsFromToolInfo, parseOutputsFromToolInfo } from './utils';
+import DepPanel from './DepPanel';
+import { ActionEnum, type ToolDetail, DependencyTypeEnum } from './types';
+import { parseInputsFromToolInfo, parseOutputsFromToolInfo, defaultDependenciesUrl } from './utils';
 
 const commonStyle = {
   background: 'transparent',
@@ -45,20 +49,29 @@ const IDEWorkspace = ({ action, operatorType }: IDEWorkspaceProps) => {
   const willGoBackRef = useRef<boolean>(false); // 是否会返回
   const codeRef = useRef<string>(''); // 代码
 
-  const [panelVisible, setPanelVisible] = useState<{ debugPanel: boolean; consolePanel: boolean }>({
+  const [panelVisible, setPanelVisible] = useState<{ debugPanel: boolean; consolePanel: boolean; depPanel: boolean }>({
     debugPanel: true,
     consolePanel: false,
+    depPanel: true,
   }); // 面板的显示状态
   const [stdoutLines, setStdoutLines] = useState<string[][]>([]); // 控制台输出结果
   const [detail, setDetail] = useState<ToolDetail>({
     script_type: 'python',
     operator_execute_control:
       operatorType === OperatorTypeEnum.Operator && action === ActionEnum.Create ? { timeout: 3000 } : undefined, // 新建算子，默认3000超时时间
+    dependencies: [],
+    dependencies_url: defaultDependenciesUrl,
   }); // 详细信息
   const [savedName, setSavedName] = useState<string>(''); // 已经保存了的名称，用于Toolbar的显示
   const [consolePanelSize, setConsolePanelSize] = useState<number>(200); // 控制台面板的高度(因为一开始控制台面板不显示，导致defaultSize: 200 不生效，所以用受控状态来控制高度)
   const [hasChanged, setHasChanged] = useState<boolean>(false); // 是否已有改动
   const [saveLoading, setSaveLoading] = useState<boolean>(false); // 保存按钮的加载状态
+
+  const [installedDependencies, setInstalledDependencies] = useState<FunctionDependency[]>([]); // 已安装的依赖包
+
+  useEffect(() => {
+    getInstalledDeps();
+  }, []);
 
   useEffect(() => {
     codeRef.current = detail.code || '';
@@ -114,7 +127,7 @@ const IDEWorkspace = ({ action, operatorType }: IDEWorkspaceProps) => {
         description,
         use_rule,
         metadata: {
-          function_content: { code },
+          function_content: { code, dependencies, dependencies_url },
           api_spec,
         },
       } = await getToolDetail(toolBoxId, toolId);
@@ -129,6 +142,8 @@ const IDEWorkspace = ({ action, operatorType }: IDEWorkspaceProps) => {
         inputs,
         outputs,
         code,
+        dependencies: dependencies || [],
+        dependencies_url: dependencies_url || defaultDependenciesUrl,
       }));
       setSavedName(name);
     } catch (ex: any) {
@@ -151,6 +166,8 @@ const IDEWorkspace = ({ action, operatorType }: IDEWorkspaceProps) => {
           outputs: detail.outputs,
           code: codeRef.current,
           script_type: detail.script_type,
+          dependencies: detail.dependencies || [],
+          dependencies_url: detail.dependencies_url || defaultDependenciesUrl,
         },
       });
 
@@ -182,6 +199,8 @@ const IDEWorkspace = ({ action, operatorType }: IDEWorkspaceProps) => {
       detail.inputs,
       detail.outputs,
       detail.script_type,
+      detail.dependencies,
+      detail.dependencies_url,
       navigate,
     ]
   );
@@ -199,6 +218,8 @@ const IDEWorkspace = ({ action, operatorType }: IDEWorkspaceProps) => {
           outputs: detail.outputs,
           code: codeRef.current,
           script_type: detail.script_type,
+          dependencies: detail.dependencies || [],
+          dependencies_url: detail.dependencies_url || defaultDependenciesUrl,
         },
       });
       message.success('编辑成功');
@@ -215,6 +236,8 @@ const IDEWorkspace = ({ action, operatorType }: IDEWorkspaceProps) => {
       detail.inputs,
       detail.outputs,
       detail.script_type,
+      detail.dependencies,
+      detail.dependencies_url,
     ]
   );
 
@@ -225,7 +248,7 @@ const IDEWorkspace = ({ action, operatorType }: IDEWorkspaceProps) => {
         name,
         metadata: {
           description,
-          function_content: { code },
+          function_content: { code, dependencies, dependencies_url },
           api_spec,
         },
         operator_execute_control,
@@ -243,6 +266,8 @@ const IDEWorkspace = ({ action, operatorType }: IDEWorkspaceProps) => {
         code,
         operator_execute_control,
         operator_info,
+        dependencies: dependencies || [],
+        dependencies_url: dependencies_url || defaultDependenciesUrl,
       }));
       setSavedName(name);
     } catch (ex: any) {
@@ -264,6 +289,8 @@ const IDEWorkspace = ({ action, operatorType }: IDEWorkspaceProps) => {
           outputs: detail.outputs,
           code: codeRef.current,
           script_type: detail.script_type,
+          dependencies: detail.dependencies || [],
+          dependencies_url: detail.dependencies_url || defaultDependenciesUrl,
         },
         operator_info: {
           is_data_source: detail.operator_info?.is_data_source,
@@ -303,6 +330,8 @@ const IDEWorkspace = ({ action, operatorType }: IDEWorkspaceProps) => {
       detail.script_type,
       detail.operator_execute_control?.timeout,
       detail.operator_info?.is_data_source,
+      detail.dependencies,
+      detail.dependencies_url,
       navigate,
       location.state,
     ]
@@ -321,6 +350,8 @@ const IDEWorkspace = ({ action, operatorType }: IDEWorkspaceProps) => {
           outputs: detail.outputs,
           code: codeRef.current,
           script_type: detail.script_type,
+          dependencies: detail.dependencies || [],
+          dependencies_url: detail.dependencies_url || defaultDependenciesUrl,
         },
         operator_info: {
           is_data_source: detail.operator_info?.is_data_source,
@@ -343,6 +374,8 @@ const IDEWorkspace = ({ action, operatorType }: IDEWorkspaceProps) => {
       detail.script_type,
       detail.operator_info?.is_data_source,
       detail.operator_execute_control?.timeout,
+      detail.dependencies_url,
+      detail.dependencies,
       operatorId,
     ]
   );
@@ -478,6 +511,46 @@ const IDEWorkspace = ({ action, operatorType }: IDEWorkspaceProps) => {
     }));
   };
 
+  // 隐藏/显示依赖包管理面板
+  const toggleDepPanelVisible = () => {
+    setPanelVisible(prev => ({ ...prev, depPanel: !prev.depPanel }));
+  };
+
+  // 获取内置依赖包
+  const getInstalledDeps = async () => {
+    try {
+      const { dependencies } = await getFunctionDependencies();
+
+      setInstalledDependencies(
+        dependencies.map(({ name, version }) => {
+          return {
+            name,
+            version,
+            type: DependencyTypeEnum.Installed,
+          };
+        })
+      );
+    } catch (ex: any) {
+      if (ex?.description) {
+        message.error(ex.description);
+      }
+    }
+  };
+
+  // 删除外部依赖包
+  const deleteExternalDep = (dependency: FunctionDependency) => {
+    setDetail(prev => ({ ...prev, dependencies: prev.dependencies?.filter(item => item.name !== dependency.name) }));
+  };
+
+  // 添加外部依赖包
+  const addExternalDep = (dependency: FunctionDependency) => {
+    // 同一name的库，只保留后添加的
+    setDetail(prev => ({
+      ...prev,
+      dependencies: uniqBy([...prev.dependencies, dependency].reverse(), 'name').reverse(),
+    }));
+  };
+
   return (
     <Layout className="dip-position-fill" style={commonStyle}>
       {/** 顶部工具栏 */}
@@ -489,9 +562,21 @@ const IDEWorkspace = ({ action, operatorType }: IDEWorkspaceProps) => {
         loading={saveLoading}
       />
 
-      <div className="dip-flex dip-flex-1 dip-overflowY-hidden">
+      <div className="dip-flex dip-flex-1 dip-overflowY-hidden dip-position-r">
         <div className="dip-flex-1">
           <Splitter>
+            {/* 依赖包管理面板 */}
+            <Splitter.Panel size={panelVisible.depPanel ? 290 : 0} resizable={false} className="dip-h-100">
+              <DepPanel
+                pypiRepoUrl={detail?.dependencies_url}
+                installedDependencies={installedDependencies}
+                externalDependencies={detail?.dependencies || []}
+                onDeleteExternalDep={deleteExternalDep}
+                onDependenciesUrlChange={pypiRepoUrl => setDetail(prev => ({ ...prev, dependencies_url: pypiRepoUrl }))}
+                onAddExternalDep={addExternalDep}
+              />
+            </Splitter.Panel>
+
             <Splitter.Panel min={780}>
               <Splitter layout="vertical" onResize={size => setConsolePanelSize(size[1])}>
                 <Splitter.Panel min={155}>
@@ -500,6 +585,7 @@ const IDEWorkspace = ({ action, operatorType }: IDEWorkspaceProps) => {
                     value={detail}
                     onChange={handleChangeInfo}
                     ref={editingAreaRef}
+                    depPanelVisible={panelVisible.depPanel}
                   />
                 </Splitter.Panel>
 
@@ -518,6 +604,8 @@ const IDEWorkspace = ({ action, operatorType }: IDEWorkspaceProps) => {
             {panelVisible.debugPanel && (
               <Splitter.Panel min={300} defaultSize={400} className="dip-h-100">
                 <DebugPanel
+                  dependencies={detail.dependencies}
+                  dependenciesUrl={detail.dependencies_url || defaultDependenciesUrl}
                   onClose={() => setPanelVisible(prev => ({ ...prev, debugPanel: false }))}
                   code={detail.code || ''}
                   onUpdateStdoutLines={updateStdoutLines}
@@ -534,6 +622,39 @@ const IDEWorkspace = ({ action, operatorType }: IDEWorkspaceProps) => {
           panelVisible={panelVisible}
           changePanelVisible={visible => setPanelVisible(prev => ({ ...prev, ...visible }))}
         />
+
+        {panelVisible.depPanel && (
+          <Tooltip title="收起">
+            <Button
+              icon={<LeftOutlined />}
+              className="dip-position-a"
+              style={{
+                left: 260,
+                top: 12,
+                transform: 'translate(-50%, 0)',
+                opacity: 0.5,
+              }}
+              type="text"
+              onClick={toggleDepPanelVisible}
+            />
+          </Tooltip>
+        )}
+
+        {!panelVisible.depPanel && (
+          <Tooltip title="展开">
+            <Button
+              icon={<RightOutlined />}
+              className="dip-position-a"
+              style={{
+                left: 20,
+                top: 12,
+                opacity: 0.5,
+              }}
+              type="text"
+              onClick={toggleDepPanelVisible}
+            />
+          </Tooltip>
+        )}
       </div>
       {contextHolder}
     </Layout>

@@ -2,6 +2,9 @@ import { validateParamName } from '@/utils/validators';
 import { generateRandomString, generateRandomNumber, generateRandomBoolean } from '@/utils/handle-function';
 import { type ParamItem, ParamValidateResultEnum, ParamTypeEnum } from './Metadata/types';
 
+// 默认的依赖库安装源地址
+export const defaultDependenciesUrl = 'https://pypi.org/simple/';
+
 // 生成随机id
 export const generateRandomId = () => `param_${Date.now()}_${Math.floor(Math.random() * 1000)}`;
 export const defaultArraySubParamName = '[Array Item]';

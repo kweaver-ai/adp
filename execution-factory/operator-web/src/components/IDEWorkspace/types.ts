@@ -1,3 +1,4 @@
+import { type FunctionDependency } from '@/apis/agent-operator-integration/type';
 import { type ParamItem } from '@/components/IDEWorkspace/Metadata/types';
 
 export enum ActionEnum {
@@ -19,4 +20,15 @@ export interface ToolDetail {
   operator_execute_control?: {
     timeout?: number;
   };
+  dependencies: FunctionDependency[];
+  dependencies_url?: string; // 依赖库安装源地址
+}
+
+export enum DependencyTypeEnum {
+  Installed = 'installed',
+  External = 'external',
+}
+
+export interface DependencyType extends FunctionDependency {
+  type: DependencyTypeEnum;
 }

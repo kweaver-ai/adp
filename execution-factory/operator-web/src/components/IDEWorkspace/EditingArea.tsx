@@ -1,5 +1,5 @@
 import { useState, useRef, forwardRef, useImperativeHandle, useEffect } from 'react';
-import { Radio, Button, message, Input, Modal } from 'antd';
+import { Radio, Button, message, Input, Modal, Segmented } from 'antd';
 import classNames from 'classnames';
 import { type EventSourceMessage } from '@microsoft/fetch-event-source';
 import AIGenIcon from '@/assets/icons/ai-gen.svg';
@@ -25,9 +25,10 @@ interface EditingAreaProps {
   operatorType: OperatorTypeEnum.Tool | OperatorTypeEnum.Operator; // 算子类型：工具 or 算子
   value: ToolDetail;
   onChange: (value: Partial<ToolDetail>) => void;
+  depPanelVisible: boolean;
 }
 
-const EditingArea = forwardRef(({ operatorType, value, onChange }: EditingAreaProps, ref) => {
+const EditingArea = forwardRef(({ operatorType, value, onChange, depPanelVisible }: EditingAreaProps, ref) => {
   const microWidgetProps = useMicroWidgetProps();
   const metadataRef = useRef<{ validate: () => Promise<boolean>; validateInputsOnly: () => boolean }>(null);
   const hideAILoadingMessageRef = useRef<any>(null);
@@ -180,21 +181,34 @@ const EditingArea = forwardRef(({ operatorType, value, onChange }: EditingAreaPr
 
   return (
     <div className="dip-h-100 dip-flex-column dip-gap-16 dip-overflow-hidden">
-      <div className="dip-mt-24 dip-pl-32 dip-pr-32 dip-flex-space-between">
-        <Radio.Group value={activeTab} onChange={e => setActiveTab(e.target.value as TabEnum)}>
-          <Radio.Button value={TabEnum.Code}>
-            <div className="dip-flex-align-center">
-              <CodeIcon className="dip-font-16 dip-mr-8" />
-              代码
-            </div>
-          </Radio.Button>
-          <Radio.Button value={TabEnum.Metadata}>
-            <div className="dip-flex-align-center">
-              <MetadataIcon className="dip-font-16 dip-mr-8" />
-              元数据
-            </div>
-          </Radio.Button>
-        </Radio.Group>
+      <div
+        className="dip-mt-12 dip-pr-32 dip-flex-space-between"
+        style={depPanelVisible ? { paddingLeft: 32 } : { paddingLeft: 64 }}
+      >
+        <Segmented
+          options={[
+            {
+              value: TabEnum.Code,
+              label: (
+                <div className="dip-flex-align-center">
+                  <CodeIcon className="dip-font-16 dip-mr-8" />
+                  代码
+                </div>
+              ),
+            },
+            {
+              value: TabEnum.Metadata,
+              label: (
+                <div className="dip-flex-align-center">
+                  <MetadataIcon className="dip-font-16 dip-mr-8" />
+                  元数据
+                </div>
+              ),
+            },
+          ]}
+          value={activeTab}
+          onChange={setActiveTab}
+        />
         {activeTab === TabEnum.Code ? (
           <Button
             icon={<AIGenIcon className="dip-font-16" />}

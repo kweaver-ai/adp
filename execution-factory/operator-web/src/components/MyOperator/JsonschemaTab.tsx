@@ -29,10 +29,16 @@ const JsonschemaTab = ({ operatorInfo, type, onTableDataChange, showIn = true }:
         jsonSchema?.request_body?.content['application/json']?.schema ||
         jsonSchema?.request_body?.content['application/json'];
 
-      const newSchemas = {
+      let newSchemas = {
         parameters: data,
         components: jsonSchema?.components,
+        $defs: jsonSchema?.$defs,
       };
+
+      try {
+        newSchemas = JSON.parse(JSON.stringify(newSchemas));
+      } catch {}
+
       const resolvedParameters = dereference(newSchemas.parameters, newSchemas);
       setTableData([...headerQueryPathCookieParams, ...getTableData(resolvedParameters)]);
     } else {

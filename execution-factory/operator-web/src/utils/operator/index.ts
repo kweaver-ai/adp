@@ -2,7 +2,7 @@ import moment from 'moment';
 import { getConfig } from '@/utils/http';
 import { ParamTypeEnum } from './types';
 
-export function resolveRefPath(ref: any, doc: any) {
+export function resolveRefPath(ref: any, doc: any, description: string = '') {
   const parts = ref.split('/').filter((part: any) => part !== '#' && part !== '');
   let current = doc;
   for (const part of parts) {
@@ -13,6 +13,11 @@ export function resolveRefPath(ref: any, doc: any) {
       current = current[part];
     }
   }
+
+  if (!current.description && description) {
+    current.description = description;
+  }
+
   return current;
 }
 
@@ -41,7 +46,7 @@ export function dereference(obj: any, doc: any, visited = new Set()): object {
 
   // 处理 $ref 引用
   if (obj.$ref) {
-    const resolved = resolveRefPath(obj.$ref, doc);
+    const resolved = resolveRefPath(obj.$ref, doc, obj.description || '');
     if (resolved) return dereference(resolved, doc, visited); // 传递visited集合
   }
 

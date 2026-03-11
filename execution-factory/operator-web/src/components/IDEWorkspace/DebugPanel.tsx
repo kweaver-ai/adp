@@ -6,6 +6,7 @@ import copy from 'clipboard-copy';
 import PlayIcon from '@/assets/icons/play.svg';
 import AutoGenIcon from '@/assets/icons/auto-gen.svg';
 import { postFunctionExecute } from '@/apis/agent-operator-integration';
+import { type FunctionDependency } from '@/apis/agent-operator-integration/type';
 import { useJsonValidator } from '@/hooks';
 import { JSONEditor } from '@/components/CodeEditor';
 import styles from './DebugPanel.module.less';
@@ -15,12 +16,22 @@ import { type ParamItem } from './Metadata/types';
 interface TestCodeProps {
   inputs: ParamItem[]; // 输入参数数组
   code: string; // 代码字符串
+  dependencies: FunctionDependency[];
+  dependenciesUrl: string;
   onClose: () => void;
   onUpdateStdoutLines: (stdout: string) => void; // 更新控制台输出结果
   validateInputs: () => boolean; // 校验输入参数的合法性
 }
 
-const DebugPanel: FC<TestCodeProps> = ({ inputs, code, onClose, onUpdateStdoutLines, validateInputs }) => {
+const DebugPanel: FC<TestCodeProps> = ({
+  inputs,
+  code,
+  onClose,
+  onUpdateStdoutLines,
+  validateInputs,
+  dependencies,
+  dependenciesUrl,
+}) => {
   const [input, setInput] = useState('{}'); // 输入框里的json字符串
   const [output, setResult] = useState<{ stderr: string; result: any }>({
     stderr: '',
@@ -33,7 +44,12 @@ const DebugPanel: FC<TestCodeProps> = ({ inputs, code, onClose, onUpdateStdoutLi
     setLoading(true);
 
     try {
-      const { stdout, stderr, result } = await postFunctionExecute({ code, event: JSON.parse(input) });
+      const { stdout, stderr, result } = await postFunctionExecute({
+        code,
+        event: JSON.parse(input),
+        dependencies: dependencies || [],
+        dependencies_url: dependenciesUrl,
+      });
       if (stderr) {
         setResult({
           stderr,

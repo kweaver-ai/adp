@@ -7,6 +7,9 @@ import type {
   FunctionExecuteResponse,
   PostAIGenCodeRequest,
   PostAIGenCodeResponse,
+  GetFunctionDependenciesResponse,
+  SearchFunctionDepencyVersionsRequest,
+  SearchFunctionDepencyVersionsResponse,
 } from './type';
 
 const apis = {
@@ -30,6 +33,7 @@ const apis = {
   toolBoxIntegrationBaseUrl: '/api/agent-operator-integration/v1',
   impexExport: '/api/agent-operator-integration/v1/impex/export',
   impexImport: '/api/agent-operator-integration/v1/impex/import',
+  function: '/api/agent-operator-integration/v1/function',
 };
 
 export function getOperatorList(params: any) {
@@ -83,7 +87,7 @@ export function postOperatorStatus(data: any) {
 }
 
 export function operatorDebug(data: any) {
-  return post(`${apis.operatorDebug}`, { body: data });
+  return post(`${apis.operatorDebug}`, { body: data, timeout: 5 * 60 * 1000 });
 }
 
 //mcp
@@ -173,7 +177,7 @@ export function getToolList(params: any) {
 }
 
 export function debugTool(box_id: string, tool_id: string, data: any) {
-  return post(`${apis.toolBox}/${box_id}/tool/${tool_id}/debug`, { body: data });
+  return post(`${apis.toolBox}/${box_id}/tool/${tool_id}/debug`, { body: data, timeout: 5 * 60 * 1000 });
 }
 
 export function boxToolStatus(box_id: string, data: any) {
@@ -252,7 +256,7 @@ export function getToolBoxTemplate(template_type: 'python' = 'python') {
 
 // 函数块执行接口
 export function postFunctionExecute(data: FunctionExecuteRequest): Promise<FunctionExecuteResponse> {
-  return post(`${apis.toolBoxIntegrationBaseUrl}/function/execute`, { body: data });
+  return post(`${apis.toolBoxIntegrationBaseUrl}/function/execute`, { body: data, timeout: 5 * 60 * 1000 });
 }
 
 // 获取工具详情
@@ -264,3 +268,17 @@ export function getToolDetail(box_id: string, tool_id: string) {
 export function postAIGenCode({ type, ...body }: PostAIGenCodeRequest): Promise<PostAIGenCodeResponse> {
   return post(`${apis.toolBoxIntegrationBaseUrl}/ai_generate/function/${type}`, { body });
 }
+
+// 获取函数依赖库列表
+export const getFunctionDependencies = (): Promise<GetFunctionDependenciesResponse> =>
+  get(`${apis.function}/dependencies`);
+
+// 从Pypi获取依赖库版本
+export const searchFunctionDepencyVersions = ({
+  packageName,
+  pypiRepoUrl,
+  pythonVersion,
+}: SearchFunctionDepencyVersionsRequest) =>
+  get(`${apis.function}/dependency-versions/${packageName}`, {
+    params: { pypi_repo_url: pypiRepoUrl, python_version: pythonVersion },
+  });
