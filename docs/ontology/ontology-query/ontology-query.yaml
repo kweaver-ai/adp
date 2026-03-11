@@ -84,6 +84,12 @@ paths:
         explode: true
         in: query
         required: false
+      - name: ignoring_store_cache
+        description: 是否忽略索引查询，默认false，不忽略，即走索引查询
+        schema:
+          type: boolean
+        in: query
+        required: false
       - name: X-HTTP-Method-Override
         description: 重载 post，实际上是 get 方法
         schema:
@@ -1012,6 +1018,12 @@ paths:
           - ""
           - relation_path
           type: string
+        in: query
+        required: false
+      - name: ignoring_store_cache
+        description: 是否忽略索引查询，默认false，不忽略，即走索引查询
+        schema:
+          type: boolean
         in: query
         required: false
       responses:
@@ -2099,7 +2111,7 @@ paths:
         in: query
         required: false
       - name: ignoring_store_cache
-        description: 是否忽略持久化查询，默认是false，不忽略，即走持久化查询
+        description: 是否忽略索引查询，默认是false，不忽略，即走索引查询
         schema:
           type: boolean
         in: query

@@ -334,11 +334,11 @@ func validateObjectSearchRequest(ctx context.Context, query *interfaces.ObjectQu
 // 基于行动类的行动数据查询的参数校验
 func validateActionQuery(ctx context.Context, query *interfaces.ActionQuery) error {
 
-	// 唯一标识非空
-	if len(query.InstanceIdentities) == 0 {
-		return rest.NewHTTPError(ctx, http.StatusBadRequest, oerrors.OntologyQuery_ActionType_InvalidParameter).
-			WithErrorDetails("行动查询的唯一标识不能为空")
-	}
+	// 唯一标识非空，可接受空，当为空时，按action type 的条件去过滤数据
+	// if len(query.InstanceIdentities) == 0 {
+	// 	return rest.NewHTTPError(ctx, http.StatusBadRequest, oerrors.OntologyQuery_ActionType_InvalidParameter).
+	// 		WithErrorDetails("行动查询的唯一标识不能为空")
+	// }
 	return nil
 }
 
