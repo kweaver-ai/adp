@@ -8,6 +8,7 @@ import (
 	"sync"
 	"time"
 
+	aerr "github.com/kweaver-ai/adp/autoflow/flow-automation/errors"
 	liberrors "github.com/kweaver-ai/adp/autoflow/flow-automation/libs/go/errors"
 	traceLog "github.com/kweaver-ai/adp/autoflow/flow-automation/libs/go/telemetry/log"
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/pkg/entity"
@@ -16,7 +17,6 @@ import (
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/pkg/vm"
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/pkg/vm/opcode"
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/pkg/vm/state"
-	"go.mongodb.org/mongo-driver/mongo"
 )
 
 type VMExt struct {
@@ -189,7 +189,7 @@ func (vmIns *VMExt) Boot() error {
 	if err != nil {
 		logger.Warnf("[VMExt.Boot] GetDag err, deail: %s", err.Error())
 
-		if errors.Is(err, mongo.ErrNoDocuments) {
+		if aerr.IsNotFoundErr(err) {
 			err = liberrors.NewPublicRestError(ctx, liberrors.PErrorNotFound,
 				liberrors.PErrorNotFound,
 				map[string]string{"dagId": dagIns.DagID})

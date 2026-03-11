@@ -2,7 +2,6 @@ package perm
 
 import (
 	"context"
-	"errors"
 	"sync"
 
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/common"
@@ -13,7 +12,6 @@ import (
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/libs/go/telemetry/trace"
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/pkg/entity"
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/pkg/mod"
-	"go.mongodb.org/mongo-driver/mongo"
 )
 
 //go:generate mockgen -package mock_perm -source ../../logics/perm/perm.go -destination ../../tests/mock_logics/mock_perm/perm_mock.go
@@ -53,7 +51,7 @@ func (p *permChecker) CheckDagAndPerm(ctx context.Context, dagID string, userInf
 
 	dag, err := p.mongo.GetDag(ctx, dagID)
 	if err != nil {
-		if errors.Is(err, mongo.ErrNoDocuments) {
+		if aerr.IsNotFoundErr(err) {
 			return false, aerr.NewIError(aerr.TaskNotFound, "", map[string]string{"dagId": dagID})
 		}
 		log.Errorf("[logic.checkDagAndPerm] GetDag err, detail: %s", err.Error())

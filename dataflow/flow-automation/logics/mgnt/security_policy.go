@@ -3,7 +3,6 @@ package mgnt
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"strconv"
 	"time"
@@ -19,7 +18,6 @@ import (
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/utils"
 	normalizeutil "github.com/kweaver-ai/adp/autoflow/flow-automation/utils/normalize"
 	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/mongo"
 )
 
 type CreateFlowParams struct {
@@ -154,7 +152,7 @@ func (m *mgnt) UpdateSecurityPolicyFlow(ctx context.Context, dagID string, steps
 	dag, err := m.mongo.GetDagByFields(ctx, query)
 
 	if err != nil {
-		if errors.Is(err, mongo.ErrNoDocuments) {
+		if ierrors.IsNotFoundErr(err) {
 			return ierrors.NewIError(ierrors.TaskNotFound, "", nil)
 		}
 
@@ -229,7 +227,7 @@ func (m *mgnt) DeleteSecurityPolicyFlow(ctx context.Context, dagID string, userI
 	dag, err := m.mongo.GetDagByFields(ctx, query)
 
 	if err != nil {
-		if errors.Is(err, mongo.ErrNoDocuments) {
+		if ierrors.IsNotFoundErr(err) {
 			return ierrors.NewIError(ierrors.TaskNotFound, "", nil)
 		}
 
@@ -284,7 +282,7 @@ func (m *mgnt) GetSecurityPolicyFlowByID(ctx context.Context, dagID string) (flo
 	dag, err := m.mongo.GetDagByFields(ctx, query)
 
 	if err != nil {
-		if errors.Is(err, mongo.ErrNoDocuments) {
+		if ierrors.IsNotFoundErr(err) {
 			err = ierrors.NewIError(ierrors.TaskNotFound, "", map[string]string{"id": dagID})
 		}
 
@@ -330,7 +328,7 @@ func (m *mgnt) StartSecurityPolicyFlowProc(ctx context.Context, params ProcParam
 	dag, err := m.mongo.GetDagByFields(ctx, query)
 
 	if err != nil {
-		if errors.Is(err, mongo.ErrNoDocuments) {
+		if ierrors.IsNotFoundErr(err) {
 			log.Warnf("[logic.StartSecurityPolicyFlowProc] GetDagByFields err, id: %s, deail: %s", params.FlowID, err.Error())
 			return pid, ierrors.NewIError(ierrors.TaskNotFound, "", map[string]string{"id": params.FlowID})
 		}
@@ -613,7 +611,7 @@ func (m *mgnt) StopSecurityPolicyFlowProc(ctx context.Context, pid string, userI
 
 	if err != nil {
 
-		if errors.Is(err, mongo.ErrNoDocuments) {
+		if ierrors.IsNotFoundErr(err) {
 			return ierrors.NewIError(ierrors.DagInsNotFound, "", map[string]string{"dagInsID": pid})
 		}
 		log.Warnf("[logic.StopSecurityPolicyFlowProc] GetDagByFields err, deail: %s", err.Error())

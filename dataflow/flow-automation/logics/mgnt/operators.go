@@ -3,7 +3,6 @@ package mgnt
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"net/http"
 	"regexp"
@@ -22,7 +21,6 @@ import (
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/utils/openapi"
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/utils/ptr"
 	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"gopkg.in/yaml.v2"
 )
@@ -286,7 +284,7 @@ func (m *mgnt) UpdateComboOperator(ctx context.Context, param *OptionalComboOper
 	// check dag whether exisis
 	dag, err := m.mongo.GetDagByFields(ctx, query)
 	if err != nil {
-		if errors.Is(err, mongo.ErrNoDocuments) {
+		if aerr.IsNotFoundErr(err) {
 			return ierr.NewPublicRestError(ctx, ierr.PErrorNotFound, aerr.DescKeyTaskNotFound, map[string]string{"dagId": param.DagID})
 		}
 		log.Warnf("[logic.UpdateComboOperator] GetDagByFields err, query: %v, deail: %s", query, err.Error())

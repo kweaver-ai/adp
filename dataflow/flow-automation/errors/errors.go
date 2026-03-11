@@ -8,6 +8,8 @@ import (
 
 	liberrors "github.com/kweaver-ai/adp/autoflow/flow-automation/libs/go/errors"
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/utils"
+	"go.mongodb.org/mongo-driver/mongo"
+	"gorm.io/gorm"
 )
 
 var (
@@ -132,4 +134,17 @@ func Is(err error, errCode ...string) bool {
 		return apiError.ErrorCode == errCodeStr
 	}
 	return false
+}
+
+const dataNotFoundText = "data not found"
+
+// IsNotFoundErr returns whether err represents a missing record across store backends.
+func IsNotFoundErr(err error) bool {
+	if err == nil {
+		return false
+	}
+
+	return errors.Is(err, mongo.ErrNoDocuments) ||
+		errors.Is(err, gorm.ErrRecordNotFound) ||
+		strings.Contains(err.Error(), dataNotFoundText)
 }

@@ -3,7 +3,6 @@ package mgnt
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"strings"
 	"time"
@@ -19,7 +18,6 @@ import (
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/pkg/mod"
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/utils"
 	"go.mongodb.org/mongo-driver/bson/primitive"
-	"go.mongodb.org/mongo-driver/mongo"
 )
 
 var triggerHandlers = map[string]TriggerHandler{}
@@ -676,7 +674,7 @@ func (m *mgnt) FullDebug(ctx context.Context, params FullDeBugReq, userInfo *dri
 	} else {
 		dag, err = m.mongo.GetDag(ctx, params.ID)
 		if err != nil {
-			if errors.Is(err, mongo.ErrNoDocuments) {
+			if aerr.IsNotFoundErr(err) {
 				return "", "", ierr.NewPublicRestError(ctx, ierr.PErrorNotFound, ierr.PErrorNotFound, map[string]string{"dagId": params.ID})
 			}
 			log.Warnf("[logic.FullDebug] GetDag err, detail: %s", err.Error())

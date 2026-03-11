@@ -3,7 +3,6 @@ package mgnt
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"strings"
 	"time"
@@ -20,8 +19,6 @@ import (
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/pkg/rds"
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/store"
 	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/mongo"
-	"gorm.io/gorm"
 )
 
 // CreateDataFlowReq 创建数据流程请求
@@ -65,7 +62,7 @@ func (m *mgnt) CreateDataFlow(ctx context.Context, param *CreateDataFlowReq, use
 
 	// check duplicated name
 	dagInfo, err := m.mongo.GetDagByFields(ctx, map[string]interface{}{"name": param.Title})
-	if err != nil && !errors.Is(err, mongo.ErrNoDocuments) && !errors.Is(err, gorm.ErrRecordNotFound) {
+	if err != nil && !ierrors.IsNotFoundErr(err) {
 		log.Warnf("[logic.CreateDag] GetDagByFields err, deail: %s", err.Error())
 		return "", ierrors.NewIError(ierrors.InternalError, "", nil)
 	}
@@ -76,7 +73,7 @@ func (m *mgnt) CreateDataFlow(ctx context.Context, param *CreateDataFlowReq, use
 	if param.DeBugID != "" {
 		_, err = m.mongo.GetDag(ctx, param.DeBugID)
 		if err != nil {
-			if errors.Is(err, mongo.ErrNoDocuments) {
+			if ierrors.IsNotFoundErr(err) {
 				return "", ierrors.NewIError(ierrors.InvalidParameter, "", "debug id not found")
 			}
 			log.Warnf("[logic.CreateDag] GetDag err, deail: %s", err.Error())
@@ -411,7 +408,7 @@ func (m *mgnt) UpdateDataFlow(ctx context.Context, dagID string, param *UpdateDa
 	query := map[string]interface{}{"_id": dagID, "type": common.DagTypeDataFlow}
 	dag, err := m.mongo.GetDagByFields(ctx, query)
 	if err != nil {
-		if errors.Is(err, mongo.ErrNoDocuments) || errors.Is(err, gorm.ErrRecordNotFound) {
+		if ierrors.IsNotFoundErr(err) {
 			return ierrors.NewIError(ierrors.TaskNotFound, "", map[string]string{"dagId": dagID})
 		}
 		log.Warnf("[logic.UpdateDataFlow] GetDagByFields err, query: %v, detail: %s", query, err.Error())
@@ -456,7 +453,7 @@ func (m *mgnt) UpdateDataFlow(ctx context.Context, dagID string, param *UpdateDa
 		dag.DeBugID = param.DeBugID
 		_, err = m.mongo.GetDag(ctx, param.DeBugID)
 		if err != nil {
-			if errors.Is(err, mongo.ErrNoDocuments) {
+			if ierrors.IsNotFoundErr(err) {
 				return ierrors.NewIError(ierrors.InvalidParameter, "", "debug id not found")
 			}
 			log.Warnf("[logic.UpdateDataFlow] GetDag err, deail: %s", err.Error())
@@ -711,7 +708,7 @@ func (m *mgnt) DeleteDataFlow(ctx context.Context, dagID, bizDomainID string, us
 
 	dag, err := m.mongo.GetDagByFields(ctx, query)
 	if err != nil {
-		if errors.Is(err, mongo.ErrNoDocuments) || strings.Contains(err.Error(), "data not found") {
+		if ierrors.IsNotFoundErr(err) {
 			return nil
 		}
 		log.Warnf("[logic.DeleteDataFlow] GetDagByFields err, detail: %s", err.Error())
