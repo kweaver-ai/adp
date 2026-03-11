@@ -89,7 +89,7 @@ func (rds *resourceDataService) Query(ctx context.Context, resource *interfaces.
 
 	case interfaces.ResourceCategoryLogicView:
 		// 逻辑视图查询数据
-		data, total, err := rds.QueryLogicalView(ctx, resource, params)
+		data, total, err := rds.QueryLogicView(ctx, resource, params)
 		if err != nil {
 			span.SetStatus(codes.Error, "Query logic view data failed")
 			return nil, 0, rest.NewHTTPError(ctx, http.StatusInternalServerError, verrors.VegaBackend_Resource_InternalError).

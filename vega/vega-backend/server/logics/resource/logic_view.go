@@ -59,7 +59,7 @@ func (rs *resourceService) validateLogicDefinition(ctx context.Context, view *in
 			}
 		case interfaces.DataScopeNodeType_Sql:
 			if view.Category != interfaces.ResourceCategoryTable {
-				return rest.NewHTTPError(ctx, http.StatusBadRequest, verrors.VegaBackend_LogicalView_InvalidParameter_LogicDefinition).
+				return rest.NewHTTPError(ctx, http.StatusBadRequest, verrors.VegaBackend_LogicView_InvalidParameter_LogicDefinition).
 					WithErrorDetails("The sql node is only supported in sql query type")
 			}
 
@@ -73,7 +73,7 @@ func (rs *resourceService) validateLogicDefinition(ctx context.Context, view *in
 				return err
 			}
 		default:
-			return rest.NewHTTPError(ctx, http.StatusBadRequest, verrors.VegaBackend_LogicalView_InvalidParameter_LogicDefinition).
+			return rest.NewHTTPError(ctx, http.StatusBadRequest, verrors.VegaBackend_LogicView_InvalidParameter_LogicDefinition).
 				WithErrorDetails("The data scope node type is invalid")
 		}
 	}
@@ -86,13 +86,13 @@ func (rs *resourceService) validateLogicDefinition(ctx context.Context, view *in
 	}
 
 	if len(dataScopeViewCategory) != 1 {
-		return rest.NewHTTPError(ctx, http.StatusBadRequest, verrors.VegaBackend_LogicalView_InvalidParameter_LogicDefinition).
+		return rest.NewHTTPError(ctx, http.StatusBadRequest, verrors.VegaBackend_LogicView_InvalidParameter_LogicDefinition).
 			WithErrorDetails("The source view of the custom view must have the same category")
 	}
 
 	// 如果数据源类型是opensearch，则不能跨opensearch数据源选择
 	if view.Category == interfaces.ResourceCategoryIndex && len(dataScopeViewDataSourceID) > 1 {
-		return rest.NewHTTPError(ctx, http.StatusBadRequest, verrors.VegaBackend_LogicalView_InvalidParameter_LogicDefinition).
+		return rest.NewHTTPError(ctx, http.StatusBadRequest, verrors.VegaBackend_LogicView_InvalidParameter_LogicDefinition).
 			WithErrorDetails("The source view of query type DSL must have the same data source when create custom view")
 	}
 
@@ -104,7 +104,7 @@ func validateViewNode(ctx context.Context, dvs *resourceService, node *interface
 	dataScopeView map[string]*interfaces.Resource) error {
 	// 视图节点输入节点必须为空
 	if len(node.InputNodes) != 0 {
-		return rest.NewHTTPError(ctx, http.StatusBadRequest, verrors.VegaBackend_LogicalView_InvalidParameter_LogicDefinition).
+		return rest.NewHTTPError(ctx, http.StatusBadRequest, verrors.VegaBackend_LogicView_InvalidParameter_LogicDefinition).
 			WithErrorDetails("The view node must have no input node")
 	}
 
@@ -118,7 +118,7 @@ func validateViewNode(ctx context.Context, dvs *resourceService, node *interface
 	// 判断自定义视图的来源表是否存在，从这个函数能够拿到字段列表
 	atomicView, err := dvs.GetByID(ctx, cfg.ResourceID)
 	if err != nil {
-		return rest.NewHTTPError(ctx, http.StatusBadRequest, verrors.VegaBackend_LogicalView_InvalidParameter_LogicDefinition).
+		return rest.NewHTTPError(ctx, http.StatusBadRequest, verrors.VegaBackend_LogicView_InvalidParameter_LogicDefinition).
 			WithErrorDetails(fmt.Sprintf("get resource %s failed, %v", cfg.ResourceID, err))
 	}
 
@@ -131,7 +131,7 @@ func validateViewNode(ctx context.Context, dvs *resourceService, node *interface
 	case interfaces.ResourceCategoryTopic:
 	case interfaces.ResourceCategoryIndex:
 	default:
-		return rest.NewHTTPError(ctx, http.StatusBadRequest, verrors.VegaBackend_LogicalView_InvalidParameter_LogicDefinition).
+		return rest.NewHTTPError(ctx, http.StatusBadRequest, verrors.VegaBackend_LogicView_InvalidParameter_LogicDefinition).
 			WithErrorDetails(fmt.Sprintf("The source view of the custom view '%s' is not supported", cfg.ResourceID))
 
 	}
@@ -153,7 +153,7 @@ func validateViewNode(ctx context.Context, dvs *resourceService, node *interface
 	// 校验去重配置, 只有 table 去重配置
 	if cfg.Distinct.Enable {
 		if atomicView.Category != interfaces.ResourceCategoryTable {
-			return rest.NewHTTPError(ctx, http.StatusBadRequest, verrors.VegaBackend_LogicalView_InvalidParameter_LogicDefinition).
+			return rest.NewHTTPError(ctx, http.StatusBadRequest, verrors.VegaBackend_LogicView_InvalidParameter_LogicDefinition).
 				WithErrorDetails("The data scope view category is not table, distinct config is not supported")
 		}
 
@@ -180,7 +180,7 @@ func validateViewNode(ctx context.Context, dvs *resourceService, node *interface
 func validateJoinNode(ctx context.Context, node *interfaces.DataScopeNode, nodeMap map[string]struct{}) error {
 	// 仅支持两个视图join
 	if len(node.InputNodes) != 2 {
-		return rest.NewHTTPError(ctx, http.StatusBadRequest, verrors.VegaBackend_LogicalView_InvalidParameter_LogicDefinition).
+		return rest.NewHTTPError(ctx, http.StatusBadRequest, verrors.VegaBackend_LogicView_InvalidParameter_LogicDefinition).
 			WithErrorDetails("The data scope join config is invalid, only support two views join")
 	}
 
@@ -188,7 +188,7 @@ func validateJoinNode(ctx context.Context, node *interfaces.DataScopeNode, nodeM
 	inputNodesMap := make(map[string]struct{})
 	for _, inputNode := range node.InputNodes {
 		if _, ok := inputNodesMap[inputNode]; ok {
-			return rest.NewHTTPError(ctx, http.StatusBadRequest, verrors.VegaBackend_LogicalView_InvalidParameter_LogicDefinition).
+			return rest.NewHTTPError(ctx, http.StatusBadRequest, verrors.VegaBackend_LogicView_InvalidParameter_LogicDefinition).
 				WithErrorDetails("The data scope join config is invalid, input_nodes must be unique")
 		}
 		inputNodesMap[inputNode] = struct{}{}
@@ -197,7 +197,7 @@ func validateJoinNode(ctx context.Context, node *interfaces.DataScopeNode, nodeM
 	// 校验输入节点是否存在
 	for _, inputNode := range node.InputNodes {
 		if _, ok := nodeMap[inputNode]; !ok {
-			return rest.NewHTTPError(ctx, http.StatusBadRequest, verrors.VegaBackend_LogicalView_InvalidParameter_LogicDefinition).
+			return rest.NewHTTPError(ctx, http.StatusBadRequest, verrors.VegaBackend_LogicView_InvalidParameter_LogicDefinition).
 				WithErrorDetails(fmt.Sprintf("The data scope join config is invalid, input_node '%s' is not exist", inputNode))
 		}
 	}
@@ -206,32 +206,32 @@ func validateJoinNode(ctx context.Context, node *interfaces.DataScopeNode, nodeM
 	var cfg interfaces.JoinNodeCfg
 	err := mapstructure.Decode(node.Config, &cfg)
 	if err != nil {
-		return rest.NewHTTPError(ctx, http.StatusBadRequest, verrors.VegaBackend_LogicalView_InvalidParameter_LogicDefinition).
+		return rest.NewHTTPError(ctx, http.StatusBadRequest, verrors.VegaBackend_LogicView_InvalidParameter_LogicDefinition).
 			WithErrorDetails("The data scope join config is invalid")
 	}
 
 	// join_type 只能为 inner, left, right, full outer
 	if _, ok := interfaces.JoinTypeMap[cfg.JoinType]; !ok {
-		return rest.NewHTTPError(ctx, http.StatusBadRequest, verrors.VegaBackend_LogicalView_InvalidParameter_LogicDefinition).
+		return rest.NewHTTPError(ctx, http.StatusBadRequest, verrors.VegaBackend_LogicView_InvalidParameter_LogicDefinition).
 			WithErrorDetails("The data scope join config is invalid, join_type must be inner, left, right, full outer")
 	}
 
 	// join_on 校验
 	if len(cfg.JoinOn) == 0 {
-		return rest.NewHTTPError(ctx, http.StatusBadRequest, verrors.VegaBackend_LogicalView_InvalidParameter_LogicDefinition).
+		return rest.NewHTTPError(ctx, http.StatusBadRequest, verrors.VegaBackend_LogicView_InvalidParameter_LogicDefinition).
 			WithErrorDetails("The data scope join config is invalid, join_on must be set")
 	}
 
 	// join_on 校验
 	for _, joinOn := range cfg.JoinOn {
 		if joinOn.LeftField == "" || joinOn.RightField == "" {
-			return rest.NewHTTPError(ctx, http.StatusBadRequest, verrors.VegaBackend_LogicalView_InvalidParameter_LogicDefinition).
+			return rest.NewHTTPError(ctx, http.StatusBadRequest, verrors.VegaBackend_LogicView_InvalidParameter_LogicDefinition).
 				WithErrorDetails("The data scope join config is invalid, join_on left_field and right_field must be set")
 		}
 
 		// 操作符必须只为=
 		if joinOn.Operator != "=" {
-			return rest.NewHTTPError(ctx, http.StatusBadRequest, verrors.VegaBackend_LogicalView_InvalidParameter_LogicDefinition).
+			return rest.NewHTTPError(ctx, http.StatusBadRequest, verrors.VegaBackend_LogicView_InvalidParameter_LogicDefinition).
 				WithErrorDetails("The data scope join config is invalid, join_on operator must be =")
 		}
 	}
@@ -242,7 +242,7 @@ func validateJoinNode(ctx context.Context, node *interfaces.DataScopeNode, nodeM
 func validateUnionNode(ctx context.Context, category string, node *interfaces.DataScopeNode, nodeMap map[string]struct{}) error {
 	// 当前仅支持两个视图union
 	if len(node.InputNodes) < 2 {
-		return rest.NewHTTPError(ctx, http.StatusBadRequest, verrors.VegaBackend_LogicalView_InvalidParameter_LogicDefinition).
+		return rest.NewHTTPError(ctx, http.StatusBadRequest, verrors.VegaBackend_LogicView_InvalidParameter_LogicDefinition).
 			WithErrorDetails("The data scope union config is invalid, need at least two views union")
 	}
 
@@ -250,7 +250,7 @@ func validateUnionNode(ctx context.Context, category string, node *interfaces.Da
 	inputNodesMap := make(map[string]struct{})
 	for _, inputNode := range node.InputNodes {
 		if _, ok := inputNodesMap[inputNode]; ok {
-			return rest.NewHTTPError(ctx, http.StatusBadRequest, verrors.VegaBackend_LogicalView_InvalidParameter_LogicDefinition).
+			return rest.NewHTTPError(ctx, http.StatusBadRequest, verrors.VegaBackend_LogicView_InvalidParameter_LogicDefinition).
 				WithErrorDetails("The data scope union config is invalid, input_nodes must be unique")
 		}
 		inputNodesMap[inputNode] = struct{}{}
@@ -259,7 +259,7 @@ func validateUnionNode(ctx context.Context, category string, node *interfaces.Da
 	// 校验输入节点是否存在
 	for _, inputNode := range node.InputNodes {
 		if _, ok := nodeMap[inputNode]; !ok {
-			return rest.NewHTTPError(ctx, http.StatusBadRequest, verrors.VegaBackend_LogicalView_InvalidParameter_LogicDefinition).
+			return rest.NewHTTPError(ctx, http.StatusBadRequest, verrors.VegaBackend_LogicView_InvalidParameter_LogicDefinition).
 				WithErrorDetails(fmt.Sprintf("The data scope union config is invalid, input_node '%s' is not exist", inputNode))
 		}
 	}
@@ -268,19 +268,19 @@ func validateUnionNode(ctx context.Context, category string, node *interfaces.Da
 	var cfg interfaces.UnionNodeCfg
 	err := mapstructure.Decode(node.Config, &cfg)
 	if err != nil {
-		return rest.NewHTTPError(ctx, http.StatusBadRequest, verrors.VegaBackend_LogicalView_InvalidParameter_LogicDefinition).
+		return rest.NewHTTPError(ctx, http.StatusBadRequest, verrors.VegaBackend_LogicView_InvalidParameter_LogicDefinition).
 			WithErrorDetails("The data scope union config is invalid")
 	}
 
 	if _, ok := interfaces.UnionTypeMap[cfg.UnionType]; !ok {
-		return rest.NewHTTPError(ctx, http.StatusBadRequest, verrors.VegaBackend_LogicalView_InvalidParameter_LogicDefinition).
+		return rest.NewHTTPError(ctx, http.StatusBadRequest, verrors.VegaBackend_LogicView_InvalidParameter_LogicDefinition).
 			WithErrorDetails("The data scope union config is invalid, union_type must be all, distinct")
 	}
 
 	// 如果查询类型是DSL或索引基类，只允许union all
 	if category == interfaces.ResourceCategoryIndex {
 		if cfg.UnionType != interfaces.UnionType_All {
-			return rest.NewHTTPError(ctx, http.StatusBadRequest, verrors.VegaBackend_LogicalView_InvalidParameter_LogicDefinition).
+			return rest.NewHTTPError(ctx, http.StatusBadRequest, verrors.VegaBackend_LogicView_InvalidParameter_LogicDefinition).
 				WithErrorDetails("The data scope union config is invalid, DSL or IndexBase view only support union all")
 		}
 	}
@@ -288,7 +288,7 @@ func validateUnionNode(ctx context.Context, category string, node *interfaces.Da
 	if category == interfaces.ResourceCategoryTable {
 		// 校验fields列表长度
 		if len(cfg.UnionFields) != len(node.InputNodes) {
-			return rest.NewHTTPError(ctx, http.StatusBadRequest, verrors.VegaBackend_LogicalView_InvalidParameter_LogicDefinition).
+			return rest.NewHTTPError(ctx, http.StatusBadRequest, verrors.VegaBackend_LogicView_InvalidParameter_LogicDefinition).
 				WithErrorDetails("The data scope union config is invalid, union fields count not equal input nodes count")
 		}
 
@@ -296,7 +296,7 @@ func validateUnionNode(ctx context.Context, category string, node *interfaces.Da
 		firstFields := cfg.UnionFields[0]
 		for _, uFields := range cfg.UnionFields {
 			if len(firstFields) != len(uFields) {
-				return rest.NewHTTPError(ctx, http.StatusBadRequest, verrors.VegaBackend_LogicalView_InvalidParameter_LogicDefinition).
+				return rest.NewHTTPError(ctx, http.StatusBadRequest, verrors.VegaBackend_LogicView_InvalidParameter_LogicDefinition).
 					WithErrorDetails("The data scope union config is invalid, union fields count not equal")
 			}
 		}
@@ -308,7 +308,7 @@ func validateUnionNode(ctx context.Context, category string, node *interfaces.Da
 func validateSqlNode(ctx context.Context, node *interfaces.DataScopeNode, nodeMap map[string]struct{}) error {
 	// 输入节点不能为空
 	if len(node.InputNodes) == 0 {
-		return rest.NewHTTPError(ctx, http.StatusBadRequest, verrors.VegaBackend_LogicalView_InvalidParameter_LogicDefinition).
+		return rest.NewHTTPError(ctx, http.StatusBadRequest, verrors.VegaBackend_LogicView_InvalidParameter_LogicDefinition).
 			WithErrorDetails("The data scope sql config is invalid, input_nodes must be set")
 	}
 
@@ -316,7 +316,7 @@ func validateSqlNode(ctx context.Context, node *interfaces.DataScopeNode, nodeMa
 	inputNodesMap := make(map[string]struct{})
 	for _, inputNode := range node.InputNodes {
 		if _, ok := inputNodesMap[inputNode]; ok {
-			return rest.NewHTTPError(ctx, http.StatusBadRequest, verrors.VegaBackend_LogicalView_InvalidParameter_LogicDefinition).
+			return rest.NewHTTPError(ctx, http.StatusBadRequest, verrors.VegaBackend_LogicView_InvalidParameter_LogicDefinition).
 				WithErrorDetails("The data scope sql config is invalid, input_nodes must be unique")
 		}
 		inputNodesMap[inputNode] = struct{}{}
@@ -325,7 +325,7 @@ func validateSqlNode(ctx context.Context, node *interfaces.DataScopeNode, nodeMa
 	// 校验输入节点是否存在
 	for _, inputNode := range node.InputNodes {
 		if _, ok := nodeMap[inputNode]; !ok {
-			return rest.NewHTTPError(ctx, http.StatusBadRequest, verrors.VegaBackend_LogicalView_InvalidParameter_LogicDefinition).
+			return rest.NewHTTPError(ctx, http.StatusBadRequest, verrors.VegaBackend_LogicView_InvalidParameter_LogicDefinition).
 				WithErrorDetails(fmt.Sprintf("The data scope sql config is invalid, input_node '%s' is not exist", inputNode))
 		}
 	}
@@ -334,13 +334,13 @@ func validateSqlNode(ctx context.Context, node *interfaces.DataScopeNode, nodeMa
 	var cfg interfaces.SQLNodeCfg
 	err := mapstructure.Decode(node.Config, &cfg)
 	if err != nil {
-		return rest.NewHTTPError(ctx, http.StatusBadRequest, verrors.VegaBackend_LogicalView_InvalidParameter_LogicDefinition).
+		return rest.NewHTTPError(ctx, http.StatusBadRequest, verrors.VegaBackend_LogicView_InvalidParameter_LogicDefinition).
 			WithErrorDetails("The data scope sql config is invalid")
 	}
 
 	// 校验 sql_str 是否为空
 	if cfg.SQLExpression == "" {
-		return rest.NewHTTPError(ctx, http.StatusBadRequest, verrors.VegaBackend_LogicalView_InvalidParameter_LogicDefinition).
+		return rest.NewHTTPError(ctx, http.StatusBadRequest, verrors.VegaBackend_LogicView_InvalidParameter_LogicDefinition).
 			WithErrorDetails("The data scope sql config is invalid, sql_expression must be set")
 	}
 
@@ -350,20 +350,20 @@ func validateSqlNode(ctx context.Context, node *interfaces.DataScopeNode, nodeMa
 func validateOutputNode(ctx context.Context, node *interfaces.DataScopeNode, nodeMap map[string]struct{}) error {
 	// 输入节点只能有一个
 	if len(node.InputNodes) != 1 {
-		return rest.NewHTTPError(ctx, http.StatusBadRequest, verrors.VegaBackend_LogicalView_InvalidParameter_LogicDefinition).
+		return rest.NewHTTPError(ctx, http.StatusBadRequest, verrors.VegaBackend_LogicView_InvalidParameter_LogicDefinition).
 			WithErrorDetails("The output node must have one input node")
 	}
 
 	// 校验输入节点是否存在
 	inputNode := node.InputNodes[0]
 	if _, ok := nodeMap[inputNode]; !ok {
-		return rest.NewHTTPError(ctx, http.StatusBadRequest, verrors.VegaBackend_LogicalView_InvalidParameter_LogicDefinition).
+		return rest.NewHTTPError(ctx, http.StatusBadRequest, verrors.VegaBackend_LogicView_InvalidParameter_LogicDefinition).
 			WithErrorDetails(fmt.Sprintf("The output node input_node '%s' is not exist", inputNode))
 	}
 
 	// 如果没传fields字段列表，默认使用output节点的输出字段
 	if len(node.OutputFields) == 0 {
-		return rest.NewHTTPError(ctx, http.StatusBadRequest, verrors.VegaBackend_LogicalView_InvalidParameter_LogicDefinition).
+		return rest.NewHTTPError(ctx, http.StatusBadRequest, verrors.VegaBackend_LogicView_InvalidParameter_LogicDefinition).
 			WithErrorDetails("The output node must have output fields")
 	}
 
@@ -373,19 +373,19 @@ func validateOutputNode(ctx context.Context, node *interfaces.DataScopeNode, nod
 	displayNameMap := make(map[string]struct{})
 	for _, field := range node.OutputFields {
 		if _, ok := nameMap[field.Name]; ok {
-			return rest.NewHTTPError(ctx, http.StatusBadRequest, verrors.VegaBackend_LogicalView_InvalidParameter_LogicDefinition).
+			return rest.NewHTTPError(ctx, http.StatusBadRequest, verrors.VegaBackend_LogicView_InvalidParameter_LogicDefinition).
 				WithErrorDetails("The output node field name is repeated")
 		}
 		nameMap[field.Name] = struct{}{}
 
 		// if _, ok := originalNameMap[field.OriginalName]; ok {
-		// 	return rest.NewHTTPError(ctx, http.StatusBadRequest, verrors.VegaBackend_LogicalView_InvalidParameter_LogicDefinition).
+		// 	return rest.NewHTTPError(ctx, http.StatusBadRequest, verrors.VegaBackend_LogicView_InvalidParameter_LogicDefinition).
 		// 		WithErrorDetails("The output node field original_name is repeated")
 		// }
 		// originalNameMap[field.OriginalName] = struct{}{}
 
 		if _, ok := displayNameMap[field.DisplayName]; ok {
-			return rest.NewHTTPError(ctx, http.StatusBadRequest, verrors.VegaBackend_LogicalView_InvalidParameter_LogicDefinition).
+			return rest.NewHTTPError(ctx, http.StatusBadRequest, verrors.VegaBackend_LogicView_InvalidParameter_LogicDefinition).
 				WithErrorDetails("The output node field display_name is repeated")
 		}
 		displayNameMap[field.DisplayName] = struct{}{}

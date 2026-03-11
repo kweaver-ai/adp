@@ -34,13 +34,13 @@ func ValidateResourceRequest(ctx context.Context, req *interfaces.ResourceReques
 
 	switch req.Category {
 	case interfaces.ResourceCategoryLogicView:
-		return validateLogicalViewRequest(ctx, req)
+		return validateLogicViewRequest(ctx, req)
 	default:
 		return nil
 	}
 }
 
-func validateLogicalViewRequest(ctx context.Context, req *interfaces.ResourceRequest) error {
+func validateLogicViewRequest(ctx context.Context, req *interfaces.ResourceRequest) error {
 	outputFields, err := validateLogicDefinition(ctx, req.LogicDefinition)
 	if err != nil {
 		return err
@@ -63,14 +63,14 @@ func validateLogicDefinition(ctx context.Context, nodes []*interfaces.DataScopeN
 	}
 
 	if len(nodes) > 20 {
-		return nil, rest.NewHTTPError(ctx, http.StatusBadRequest, verrors.VegaBackend_LogicalView_InvalidParameter_LogicDefinition).
+		return nil, rest.NewHTTPError(ctx, http.StatusBadRequest, verrors.VegaBackend_LogicView_InvalidParameter_LogicDefinition).
 			WithErrorDetails("The data scope nodes cannot be more than 20")
 	}
 
 	for _, node := range nodes {
 		// 检测 nodeType
 		if _, ok := interfaces.DataScopeNodeTypeMap[node.Type]; !ok {
-			return nil, rest.NewHTTPError(ctx, http.StatusBadRequest, verrors.VegaBackend_LogicalView_InvalidParameter_LogicDefinition).
+			return nil, rest.NewHTTPError(ctx, http.StatusBadRequest, verrors.VegaBackend_LogicView_InvalidParameter_LogicDefinition).
 				WithErrorDetails("The data scope node type is invalid")
 		}
 
@@ -94,14 +94,14 @@ func validateViewFields(ctx context.Context, viewFields []*interfaces.ViewProper
 	displayNameMap := make(map[string]struct{})
 	for _, field := range viewFields {
 		if field.Name == "" {
-			return rest.NewHTTPError(ctx, http.StatusBadRequest, verrors.VegaBackend_LogicalView_InvalidParameter_FieldName).
+			return rest.NewHTTPError(ctx, http.StatusBadRequest, verrors.VegaBackend_LogicView_InvalidParameter_FieldName).
 				WithErrorDetails("The field name is null")
 		}
 
 		// 校验字段名称长度, 长度限制255
 		if utf8.RuneCountInString(field.Name) > interfaces.MaxLength_ViewFieldName {
 			errDetails := fmt.Sprintf("The length of the field name %s exceeds %d", field.Name, interfaces.MaxLength_ViewFieldName)
-			return rest.NewHTTPError(ctx, http.StatusBadRequest, verrors.VegaBackend_LogicalView_LengthExceeded_FieldName).
+			return rest.NewHTTPError(ctx, http.StatusBadRequest, verrors.VegaBackend_LogicView_LengthExceeded_FieldName).
 				WithErrorDetails(errDetails)
 		}
 
@@ -113,14 +113,14 @@ func validateViewFields(ctx context.Context, viewFields []*interfaces.ViewProper
 		// 校验字段显示名长度, 长度限制255
 		if utf8.RuneCountInString(field.DisplayName) > interfaces.MaxLength_ViewFieldDisplayName {
 			errDetails := fmt.Sprintf("The length of the field display name %s exceeds %d", field.DisplayName, interfaces.MaxLength_ViewFieldDisplayName)
-			return rest.NewHTTPError(ctx, http.StatusBadRequest, verrors.VegaBackend_LogicalView_LengthExceeded_FieldDisplayName).
+			return rest.NewHTTPError(ctx, http.StatusBadRequest, verrors.VegaBackend_LogicView_LengthExceeded_FieldDisplayName).
 				WithErrorDetails(errDetails)
 		}
 
 		// 校验字段备注长度，长度限制1000
 		if utf8.RuneCountInString(field.Description) > interfaces.MaxLength_ViewFieldComment {
 			errDetails := fmt.Sprintf("The length of the field comment %s exceeds %d", field.Description, interfaces.MaxLength_ViewFieldComment)
-			return rest.NewHTTPError(ctx, http.StatusBadRequest, verrors.VegaBackend_LogicalView_LengthExceeded_FieldComment).
+			return rest.NewHTTPError(ctx, http.StatusBadRequest, verrors.VegaBackend_LogicView_LengthExceeded_FieldComment).
 				WithErrorDetails(errDetails)
 		}
 
@@ -129,7 +129,7 @@ func validateViewFields(ctx context.Context, viewFields []*interfaces.ViewProper
 			nameMap[field.Name] = struct{}{}
 		} else {
 			errDetails := fmt.Sprintf("Data view field '%s' name '%s' already exists", field.Name, field.Name)
-			return rest.NewHTTPError(ctx, http.StatusBadRequest, verrors.VegaBackend_LogicalView_Duplicated_FieldName).
+			return rest.NewHTTPError(ctx, http.StatusBadRequest, verrors.VegaBackend_LogicView_Duplicated_FieldName).
 				WithDescription(map[string]any{"FieldName": field.Name}).
 				WithErrorDetails(errDetails)
 		}
@@ -138,7 +138,7 @@ func validateViewFields(ctx context.Context, viewFields []*interfaces.ViewProper
 			displayNameMap[field.DisplayName] = struct{}{}
 		} else {
 			errDetails := fmt.Sprintf("Data view field '%s' display name '%s' already exists", field.Name, field.DisplayName)
-			return rest.NewHTTPError(ctx, http.StatusBadRequest, verrors.VegaBackend_LogicalView_Duplicated_FieldDisplayName).
+			return rest.NewHTTPError(ctx, http.StatusBadRequest, verrors.VegaBackend_LogicView_Duplicated_FieldDisplayName).
 				WithDescription(map[string]any{"FieldName": field.Name, "DisplayName": field.DisplayName}).
 				WithErrorDetails(errDetails)
 		}
@@ -159,14 +159,14 @@ func validateFeatures(ctx context.Context, fieldsMap map[string]*interfaces.View
 	featureNameMap := make(map[string]struct{})
 	for _, f := range features {
 		if f.FeatureName == "" {
-			return rest.NewHTTPError(ctx, http.StatusBadRequest, verrors.VegaBackend_LogicalView_InvalidParameter_FieldFeatureName).
+			return rest.NewHTTPError(ctx, http.StatusBadRequest, verrors.VegaBackend_LogicView_InvalidParameter_FieldFeatureName).
 				WithErrorDetails("The field feature name is null")
 		}
 
 		// 校验特征名称长度, 长度限制255
 		if utf8.RuneCountInString(f.FeatureName) > interfaces.MaxLength_ViewFieldFeatureName {
 			errDetails := fmt.Sprintf("The length of the field feature name %s exceeds %d", f.FeatureName, interfaces.MaxLength_ViewFieldFeatureName)
-			return rest.NewHTTPError(ctx, http.StatusBadRequest, verrors.VegaBackend_LogicalView_LengthExceeded_FieldFeatureName).
+			return rest.NewHTTPError(ctx, http.StatusBadRequest, verrors.VegaBackend_LogicView_LengthExceeded_FieldFeatureName).
 				WithErrorDetails(errDetails)
 		}
 
@@ -175,7 +175,7 @@ func validateFeatures(ctx context.Context, fieldsMap map[string]*interfaces.View
 			featureNameMap[f.FeatureName] = struct{}{}
 		} else {
 			errDetails := fmt.Sprintf("Data view field feature '%s' name '%s' already exists", f.FeatureName, f.FeatureName)
-			return rest.NewHTTPError(ctx, http.StatusBadRequest, verrors.VegaBackend_LogicalView_Duplicated_FieldFeatureName).
+			return rest.NewHTTPError(ctx, http.StatusBadRequest, verrors.VegaBackend_LogicView_Duplicated_FieldFeatureName).
 				WithDescription(map[string]any{"FieldFeatureName": f.FeatureName}).
 				WithErrorDetails(errDetails)
 		}
@@ -188,7 +188,7 @@ func validateFeatures(ctx context.Context, fieldsMap map[string]*interfaces.View
 
 		// 校验特征备注，长度限制1000
 		if utf8.RuneCountInString(f.Comment) > interfaces.MaxLength_ViewFieldFeatureComment {
-			return rest.NewHTTPError(ctx, http.StatusBadRequest, verrors.VegaBackend_LogicalView_LengthExceeded_FieldFeatureComment).
+			return rest.NewHTTPError(ctx, http.StatusBadRequest, verrors.VegaBackend_LogicView_LengthExceeded_FieldFeatureComment).
 				WithErrorDetails(fmt.Sprintf("The length of the field feature comment %s exceeds %d", f.Comment, interfaces.MaxLength_ViewFieldFeatureComment))
 		}
 

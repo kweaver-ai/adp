@@ -1,54 +1,54 @@
-[VegaBackend.LogicalView.InvalidParameter.LogicDefinition]
+[VegaBackend.LogicView.InvalidParameter.LogicDefinition]
 Description = "Invalid logic view definition"
 Solution = "Please check the logic view definition"
 ErrorLink = "None"
 
-[VegaBackend.LogicalView.InvalidParameter.FieldName]
+[VegaBackend.LogicView.InvalidParameter.FieldName]
 Description = "Invalid field name"
 Solution = "Please check the field name"
 ErrorLink = "None"
 
-[VegaBackend.LogicalView.LengthExceeded.FieldName]
+[VegaBackend.LogicView.LengthExceeded.FieldName]
 Description = "Field name length exceeded"
 Solution = "Please shorten the field name"
 ErrorLink = "None"
 
-[VegaBackend.LogicalView.LengthExceeded.FieldDisplayName]
+[VegaBackend.LogicView.LengthExceeded.FieldDisplayName]
 Description = "Field display name length exceeded"
 Solution = "Please shorten the display name"
 ErrorLink = "None"
 
-[VegaBackend.LogicalView.LengthExceeded.FieldComment]
+[VegaBackend.LogicView.LengthExceeded.FieldComment]
 Description = "Field comment length exceeded"
 Solution = "Please shorten the field comment"
 ErrorLink = "None"
 
-[VegaBackend.LogicalView.Duplicated.FieldName]
+[VegaBackend.LogicView.Duplicated.FieldName]
 Description = "Data view field name already exists"
 Solution = "Please use a different field name"
 ErrorLink = "None"
 
-[VegaBackend.LogicalView.Duplicated.FieldDisplayName]
+[VegaBackend.LogicView.Duplicated.FieldDisplayName]
 Description = "Data view field display name already exists"
 Solution = "Please use a different display name"
 ErrorLink = "None"
 
-[VegaBackend.LogicalView.InvalidParameter.FieldFeatureName]
+[VegaBackend.LogicView.InvalidParameter.FieldFeatureName]
 Description = "Invalid field feature name"
 Solution = "Please check the feature name"
 ErrorLink = "None"
 
-[VegaBackend.LogicalView.LengthExceeded.FieldFeatureName]
+[VegaBackend.LogicView.LengthExceeded.FieldFeatureName]
 Description = "Field feature name length exceeded"
 Solution = "Please shorten the feature name"
 ErrorLink = "None"
 
-[VegaBackend.LogicalView.Duplicated.FieldFeatureName]
+[VegaBackend.LogicView.Duplicated.FieldFeatureName]
 Description = "Field feature name already exists"
 Solution = "Please use a different feature name"
 ErrorLink = "None"
 
-[VegaBackend.LogicalView.LengthExceeded.FieldFeatureComment]
+[VegaBackend.LogicView.LengthExceeded.FieldFeatureComment]
 Description = "Field feature comment length exceeded"
 Solution = "Please shorten the feature comment"
 ErrorLink = "None"
