@@ -76,6 +76,7 @@ const (
 	// 参数来源
 	VALUE_FROM_INPUT    = "input"
 	VALUE_FROM_PROPERTY = "property"
+	VALUE_FROM_CONST    = "const"
 
 	// 属性类型
 	PROPERTY_TYPE_METRIC = "metric"

@@ -784,7 +784,7 @@ func isEmpty(value any) bool {
 // isTrue checks if value is boolean true
 func isTrue(value any) bool {
 	if b, ok := value.(bool); ok {
-		return b == true
+		return b
 	}
 	return false
 }
@@ -792,7 +792,7 @@ func isTrue(value any) bool {
 // isFalse checks if value is boolean false
 func isFalse(value any) bool {
 	if b, ok := value.(bool); ok {
-		return b == false
+		return !b
 	}
 	return false
 }

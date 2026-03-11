@@ -95,10 +95,21 @@ func ValidateActionType(ctx context.Context, actionType *interfaces.ActionType) 
 				actionType.ActionType))
 	}
 
-	// 行动类绑定的对象类非空
+	// 根据是否绑定对象类，校验行动条件和参数
 	if actionType.ObjectTypeID == "" {
-		return rest.NewHTTPError(ctx, http.StatusBadRequest, oerrors.OntologyManager_ActionType_InvalidParameter).
-			WithErrorDetails("行动类绑定的对象类不能为空")
+		// 未绑定对象类时，行动条件必须为空
+		if actionType.Condition != nil {
+			return rest.NewHTTPError(ctx, http.StatusBadRequest, oerrors.OntologyManager_ActionType_InvalidParameter).
+				WithErrorDetails("未绑定对象类时，行动条件必须为空")
+		}
+
+		// 未绑定对象类时，参数 ValueFrom 不能是 property，只能是 const 或 input
+		for _, param := range actionType.Parameters {
+			if param.ValueFrom == interfaces.VALUE_FROM_PROPERTY {
+				return rest.NewHTTPError(ctx, http.StatusBadRequest, oerrors.OntologyManager_ActionType_InvalidParameter).
+					WithErrorDetails("未绑定对象类时，行动资源参数不支持从数据属性获取值")
+			}
+		}
 	}
 
 	// 校验类型
