@@ -917,12 +917,12 @@ func (d *dag) ListDagInstance(ctx context.Context, input *mod.ListDagInstanceInp
 		conds = append(conds, "f_has_cmd = ?")
 		args = append(args, true)
 	}
-	if input.ExcludeModeVM {
-		conds = append(conds, "f_mode < 1")
-	}
 	if input.UpdatedEnd > 0 {
 		conds = append(conds, "f_updated_at <= ?")
 		args = append(args, input.UpdatedEnd)
+	}
+	if input.ExcludeModeVM {
+		conds = append(conds, "f_mode < 1")
 	}
 	if input.TimeRange != nil {
 		col := camelToFSnake(input.TimeRange.Field)
@@ -1992,14 +1992,6 @@ func (d *dag) DisdinctDagInstance(input *mod.ListDagInstanceInput) ([]interface{
 	var conds []string
 	var args []interface{}
 
-	if len(input.Status) > 0 {
-		var status []string
-		for _, v := range input.Status {
-			status = append(status, string(v))
-		}
-		conds = append(conds, "f_status IN ?")
-		args = append(args, status)
-	}
 	if len(input.DagIDs) > 0 {
 		var ids []uint64
 		for _, v := range input.DagIDs {
@@ -2008,6 +2000,14 @@ func (d *dag) DisdinctDagInstance(input *mod.ListDagInstanceInput) ([]interface{
 		}
 		conds = append(conds, "f_dag_id IN ?")
 		args = append(args, ids)
+	}
+	if len(input.Status) > 0 {
+		var status []string
+		for _, v := range input.Status {
+			status = append(status, string(v))
+		}
+		conds = append(conds, "f_status IN ?")
+		args = append(args, status)
 	}
 	if input.Worker != "" {
 		conds = append(conds, "f_worker = ?")
@@ -2758,7 +2758,7 @@ func (d *dag) ListExistDagID(ctx context.Context, dagIDs []string) ([]string, er
 		return nil, nil
 	}
 
-	sql := `SELECT f_id FROM t_flow_dag WHERE f_id IN ?`
+	sql := `SELECT f_id FROM t_flow_dag WHERE f_id IN ? AND f_removed < 1 AND f_is_debug < 1`
 	ids := parseUint64Slice(dagIDs)
 	trace.SetAttributes(newCtx, attribute.String(trace.TABLE_NAME, DAG_TABLENAME), attribute.String(trace.DB_SQL, sql))
 

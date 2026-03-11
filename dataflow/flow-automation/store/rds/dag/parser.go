@@ -185,7 +185,7 @@ func ToDagVersionModel(dagVersion *entity.DagVersion) *DagVersionModel {
 		VersionID: dagVersion.VersionID,
 		ChangeLog: dagVersion.ChangeLog,
 		Config:    string(dagVersion.Config),
-		SortTime:  0,
+		SortTime:  dagVersion.SortTime,
 	}
 }
 
