@@ -233,6 +233,7 @@ func pageDagsIncr(ctx context.Context, store mod.Store, dagIDs []string, queryIn
 	var dags []*entity.Dag
 	threshold := int(queryInput.Limit * (queryInput.Offset + 1))
 	isAll := queryInput.Limit <= 0
+	queryInput.Limit = utils.IfNot(queryInput.Limit <= 0, 1024, queryInput.Limit)
 	page := int64(0)
 
 	for {
