@@ -577,7 +577,7 @@ func checkOption(opt *InitialOption) error {
 			if err := st.Init(); err != nil {
 				log.Fatal(fmt.Errorf("init store failed: %w", err))
 			}
-			opt.Store = dagmodel.NewDagRepository()
+			opt.Store = st
 		}
 	}
 

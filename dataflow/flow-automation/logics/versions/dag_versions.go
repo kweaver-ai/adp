@@ -3,9 +3,7 @@ package versions
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
-	"strings"
 	"sync"
 	"time"
 
@@ -20,7 +18,6 @@ import (
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/pkg/log"
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/pkg/mod"
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/utils"
-	"go.mongodb.org/mongo-driver/mongo"
 )
 
 //go:generate mockgen -package mock_dag_versions -source ../../logics/versions/dag_versions.go -destination ../../tests/mock_logics/mock_dag_versions/dag_versions_mock.go
@@ -139,7 +136,7 @@ func (d *dagVersion) GetNextVersion(ctx context.Context, dagID string) (string, 
 
 	_, err = d.mongo.GetDag(ctx, dagID)
 	if err != nil {
-		if errors.Is(err, mongo.ErrNoDocuments) {
+		if aerr.IsNotFoundErr(err) {
 			return "", ierr.NewPublicRestError(ctx, ierr.PErrorNotFound, ierr.PErrorNotFound, map[string]interface{}{"dag_id": dagID})
 		}
 		log.Warnf("[logic.GetLatestDagVersion] GetDag err, detail: %s", err.Error())
@@ -208,7 +205,7 @@ func (d *dagVersion) RevertToVersion(ctx context.Context, params RevertDagReq, u
 	// 判断目标版本是否存在
 	historyDag, err := d.mongo.GetHistoryDagByVersionID(ctx, params.DagID, params.VersionID)
 	if err != nil {
-		if errors.Is(err, mongo.ErrNoDocuments) || strings.Contains(err.Error(), "data not found") {
+		if aerr.IsNotFoundErr(err) {
 			return "", ierr.NewPublicRestError(ctx, ierr.PErrorNotFound, aerr.DescKeyTaskNotFound, map[string]string{"dagId": params.DagID, "version": params.VersionID})
 		}
 		log.Warnf("[logic.RevertToVersion] GetHistoryDagByVersionID err, deail: %s", err.Error())
@@ -226,7 +223,7 @@ func (d *dagVersion) RevertToVersion(ctx context.Context, params RevertDagReq, u
 		title = prevDag.Name
 	}
 	dagInfo, err := d.mongo.GetDagByFields(ctx, map[string]interface{}{"name": title})
-	if err != nil && !errors.Is(err, mongo.ErrNoDocuments) {
+	if err != nil && !aerr.IsNotFoundErr(err) {
 		log.Warnf("[logic.RevertToVersion] GetDagByFields err, deail: %s", err.Error())
 		return "", ierr.NewPublicRestError(ctx, ierr.PErrorInternalServerError, ierr.PErrorInternalServerError, nil)
 	}

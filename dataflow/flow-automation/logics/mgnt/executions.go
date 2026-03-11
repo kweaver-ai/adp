@@ -3,11 +3,11 @@ package mgnt
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
 
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/common"
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/drivenadapters"
+	aerr "github.com/kweaver-ai/adp/autoflow/flow-automation/errors"
 	liberrors "github.com/kweaver-ai/adp/autoflow/flow-automation/libs/go/errors"
 	traceLog "github.com/kweaver-ai/adp/autoflow/flow-automation/libs/go/telemetry/log"
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/libs/go/telemetry/trace"
@@ -15,7 +15,6 @@ import (
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/pkg/entity"
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/pkg/mod"
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/pkg/vm/state"
-	"go.mongodb.org/mongo-driver/mongo"
 )
 
 const MaxCallDepth = 10
@@ -34,7 +33,7 @@ func (m *mgnt) RunOperator(ctx context.Context,
 
 	dag, err := m.mongo.GetDag(ctx, id)
 	if err != nil {
-		if errors.Is(err, mongo.ErrNoDocuments) {
+		if aerr.IsNotFoundErr(err) {
 			return nil, nil, liberrors.NewPublicRestError(ctx, liberrors.PErrorNotFound,
 				liberrors.PErrorNotFound,
 				map[string]string{"dagId": id})
@@ -203,7 +202,7 @@ func (m *mgnt) GetDagInstanceResultVM(ctx context.Context, id string, userInfo *
 	dagIns, err := m.mongo.GetDagInstance(ctx, id)
 	if err != nil {
 		log.Warnf("[logic.GetDagInstanceResultVM] GetDagInstance err: %s", err.Error())
-		if errors.Is(err, mongo.ErrNoDocuments) {
+		if aerr.IsNotFoundErr(err) {
 			return 0, nil, liberrors.NewPublicRestError(ctx, liberrors.PErrorNotFound,
 				liberrors.PErrorNotFound, nil)
 		}
