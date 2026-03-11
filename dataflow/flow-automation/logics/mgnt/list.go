@@ -319,7 +319,7 @@ func ListDagWithFilters(ctx context.Context, param QueryParams, opts ...ListDagO
 	listDagInput := &mod.ListDagInput{
 		Offset:       param.Page,
 		Limit:        param.Limit,
-		Order:        int64(utils.IfNot(param.Order == common.ASC, 1, 0)),
+		Order:        -1,
 		TriggerType:  param.TriggerType,
 		TriggerTypes: param.TriggerTypes,
 		Type:         param.Type,
@@ -340,6 +340,10 @@ func ListDagWithFilters(ctx context.Context, param QueryParams, opts ...ListDagO
 
 	if param.Scope != "" {
 		listDagInput.Scope = param.Scope
+	}
+
+	if param.Order == common.ASC {
+		listDagInput.Order = 1
 	}
 
 	sortMap := map[string]string{
