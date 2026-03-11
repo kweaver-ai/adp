@@ -122,7 +122,7 @@ var (
 	}
 )
 
-type LogicalView struct {
+type LogicView struct {
 	Resource
 	FieldsMap map[string]*ViewProperty `json:"fields_map,omitempty" mapstructure:"-"`
 }

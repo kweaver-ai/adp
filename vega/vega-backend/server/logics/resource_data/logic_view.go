@@ -15,13 +15,13 @@ import (
 	"vega-backend/interfaces"
 )
 
-func (rds *resourceDataService) QueryLogicalView(ctx context.Context, resource *interfaces.Resource,
+func (rds *resourceDataService) QueryLogicView(ctx context.Context, resource *interfaces.Resource,
 	params *interfaces.ResourceDataQueryParams) ([]map[string]any, int64, error) {
 
-	ctx, span := ar_trace.Tracer.Start(ctx, "Query logical view")
+	ctx, span := ar_trace.Tracer.Start(ctx, "Query logic view")
 	defer span.End()
 
-	logger.Debugf("Query logical view, resourceID: %s, params: %v",
+	logger.Debugf("Query logic view, resourceID: %s, params: %v",
 		resource.ID, params)
 
 	var outputNode *interfaces.DataScopeNode
@@ -36,12 +36,11 @@ func (rds *resourceDataService) QueryLogicalView(ctx context.Context, resource *
 	}
 
 	type inputNode struct {
-		Node     *interfaces.DataScopeNode
-		Config   *interfaces.ResourceNodeCfg
-		Resource *interfaces.Resource
+		Node         *interfaces.DataScopeNode
+		NodeConfig   *interfaces.ResourceNodeCfg
+		NodeResource *interfaces.Resource
 	}
 
-	// 简单的衍生表查询
 	inputResources := make([]*inputNode, 0, len(inputNodes))
 	for _, sourceNode := range inputNodes {
 		var sourceNodeConfig interfaces.ResourceNodeCfg
@@ -64,9 +63,9 @@ func (rds *resourceDataService) QueryLogicalView(ctx context.Context, resource *
 				WithErrorDetails(fmt.Sprintf("source resource %s not found", sourceNodeConfig.ResourceID))
 		}
 		inputResources = append(inputResources, &inputNode{
-			Node:     sourceNode,
-			Config:   &sourceNodeConfig,
-			Resource: sourceResource,
+			Node:         sourceNode,
+			NodeConfig:   &sourceNodeConfig,
+			NodeResource: sourceResource,
 		})
 	}
 
@@ -75,16 +74,23 @@ func (rds *resourceDataService) QueryLogicalView(ctx context.Context, resource *
 		outputFields = append(outputFields, f.Name)
 	}
 
-	newParams := &interfaces.ResourceDataQueryParams{
-		Offset:        params.Offset,
-		Limit:         params.Limit,
-		Sort:          params.Sort,
-		FilterCondCfg: inputResources[0].Config.Filters,
-		OutputFields:  outputFields,
-		NeedTotal:     params.NeedTotal,
-		Format:        params.Format,
-		Timeout:       params.Timeout,
+	// 衍生表查询
+	if len(inputResources) == 1 {
+		newParams := &interfaces.ResourceDataQueryParams{
+			Offset:        params.Offset,
+			Limit:         params.Limit,
+			Sort:          params.Sort,
+			FilterCondCfg: inputResources[0].NodeConfig.Filters,
+			OutputFields:  outputFields,
+			NeedTotal:     params.NeedTotal,
+			Format:        params.Format,
+			Timeout:       params.Timeout,
+		}
+
+		return rds.Query(ctx, inputResources[0].NodeResource, newParams)
+	} else {
+		// 复合表查询
+		return nil, 0, fmt.Errorf("not implemented")
 	}
 
-	return rds.Query(ctx, inputResources[0].Resource, newParams)
 }
