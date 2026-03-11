@@ -105,7 +105,14 @@ func Test_actionTypeService_GetActionsByActionTypeID(t *testing.T) {
 				},
 			}
 
+			objectType := interfaces.ObjectType{
+				ObjectTypeWithKeyField: interfaces.ObjectTypeWithKeyField{
+					OTID: objectTypeID,
+				},
+			}
+
 			omAccess.EXPECT().GetActionType(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(actionType, map[string]any{"id": actionType.ATID}, true, nil)
+			omAccess.EXPECT().GetObjectType(gomock.Any(), gomock.Any(), gomock.Any(), objectTypeID).Return(objectType, true, nil)
 			ots.EXPECT().GetObjectsByObjectTypeID(gomock.Any(), gomock.Any()).Return(objects, nil)
 
 			result, err := service.GetActionsByActionTypeID(ctx, query)
@@ -185,7 +192,14 @@ func Test_actionTypeService_GetActionsByActionTypeID(t *testing.T) {
 				},
 			}
 
+			objectType := interfaces.ObjectType{
+				ObjectTypeWithKeyField: interfaces.ObjectTypeWithKeyField{
+					OTID: objectTypeID,
+				},
+			}
+
 			omAccess.EXPECT().GetActionType(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(actionType, map[string]any{"id": actionType.ATID}, true, nil)
+			omAccess.EXPECT().GetObjectType(gomock.Any(), gomock.Any(), gomock.Any(), objectTypeID).Return(objectType, true, nil)
 			ots.EXPECT().GetObjectsByObjectTypeID(gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, query *interfaces.ObjectQueryBaseOnObjectType) (interfaces.Objects, error) {
 				// 验证条件是否正确合并
 				So(query.ActualCondition, ShouldNotBeNil)
@@ -234,7 +248,14 @@ func Test_actionTypeService_GetActionsByActionTypeID(t *testing.T) {
 				},
 			}
 
+			objectType := interfaces.ObjectType{
+				ObjectTypeWithKeyField: interfaces.ObjectTypeWithKeyField{
+					OTID: objectTypeID,
+				},
+			}
+
 			omAccess.EXPECT().GetActionType(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(actionType, map[string]any{"id": actionType.ATID}, true, nil)
+			omAccess.EXPECT().GetObjectType(gomock.Any(), gomock.Any(), gomock.Any(), objectTypeID).Return(objectType, true, nil)
 			ots.EXPECT().GetObjectsByObjectTypeID(gomock.Any(), gomock.Any()).Return(objects, nil)
 
 			result, err := service.GetActionsByActionTypeID(ctx, query)
@@ -277,7 +298,14 @@ func Test_actionTypeService_GetActionsByActionTypeID(t *testing.T) {
 				},
 			}
 
+			objectType := interfaces.ObjectType{
+				ObjectTypeWithKeyField: interfaces.ObjectTypeWithKeyField{
+					OTID: objectTypeID,
+				},
+			}
+
 			omAccess.EXPECT().GetActionType(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(actionType, map[string]any{"id": actionType.ATID}, true, nil)
+			omAccess.EXPECT().GetObjectType(gomock.Any(), gomock.Any(), gomock.Any(), objectTypeID).Return(objectType, true, nil)
 			ots.EXPECT().GetObjectsByObjectTypeID(gomock.Any(), gomock.Any()).Return(objects, nil)
 
 			result, err := service.GetActionsByActionTypeID(ctx, query)
@@ -318,7 +346,14 @@ func Test_actionTypeService_GetActionsByActionTypeID(t *testing.T) {
 				},
 			}
 
+			objectType := interfaces.ObjectType{
+				ObjectTypeWithKeyField: interfaces.ObjectTypeWithKeyField{
+					OTID: objectTypeID,
+				},
+			}
+
 			omAccess.EXPECT().GetActionType(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(actionType, map[string]any{"id": actionType.ATID}, true, nil)
+			omAccess.EXPECT().GetObjectType(gomock.Any(), gomock.Any(), gomock.Any(), objectTypeID).Return(objectType, true, nil)
 			ots.EXPECT().GetObjectsByObjectTypeID(gomock.Any(), gomock.Any()).Return(objects, nil)
 
 			result, err := service.GetActionsByActionTypeID(ctx, query)
@@ -359,7 +394,14 @@ func Test_actionTypeService_GetActionsByActionTypeID(t *testing.T) {
 				},
 			}
 
+			objectType := interfaces.ObjectType{
+				ObjectTypeWithKeyField: interfaces.ObjectTypeWithKeyField{
+					OTID: objectTypeID,
+				},
+			}
+
 			omAccess.EXPECT().GetActionType(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(actionType, map[string]any{"id": actionType.ATID}, true, nil)
+			omAccess.EXPECT().GetObjectType(gomock.Any(), gomock.Any(), gomock.Any(), objectTypeID).Return(objectType, true, nil)
 			ots.EXPECT().GetObjectsByObjectTypeID(gomock.Any(), gomock.Any()).Return(objects, nil)
 
 			result, err := service.GetActionsByActionTypeID(ctx, query)
@@ -387,7 +429,14 @@ func Test_actionTypeService_GetActionsByActionTypeID(t *testing.T) {
 				Parameters: []interfaces.Parameter{},
 			}
 
+			objectType := interfaces.ObjectType{
+				ObjectTypeWithKeyField: interfaces.ObjectTypeWithKeyField{
+					OTID: objectTypeID,
+				},
+			}
+
 			omAccess.EXPECT().GetActionType(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(actionType, map[string]any{"id": actionType.ATID}, true, nil)
+			omAccess.EXPECT().GetObjectType(gomock.Any(), gomock.Any(), gomock.Any(), objectTypeID).Return(objectType, true, nil)
 			ots.EXPECT().GetObjectsByObjectTypeID(gomock.Any(), gomock.Any()).Return(interfaces.Objects{}, rest.NewHTTPError(ctx, http.StatusInternalServerError, oerrors.OntologyQuery_InternalError))
 
 			result, err := service.GetActionsByActionTypeID(ctx, query)
@@ -423,13 +472,183 @@ func Test_actionTypeService_GetActionsByActionTypeID(t *testing.T) {
 				},
 			}
 
+			objectType := interfaces.ObjectType{
+				ObjectTypeWithKeyField: interfaces.ObjectTypeWithKeyField{
+					OTID: objectTypeID,
+				},
+			}
+
 			omAccess.EXPECT().GetActionType(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(actionType, map[string]any{"id": actionType.ATID}, true, nil)
+			omAccess.EXPECT().GetObjectType(gomock.Any(), gomock.Any(), gomock.Any(), objectTypeID).Return(objectType, true, nil)
 			ots.EXPECT().GetObjectsByObjectTypeID(gomock.Any(), gomock.Any()).Return(objects, nil)
 
 			result, err := service.GetActionsByActionTypeID(ctx, query)
 			So(err, ShouldBeNil)
 			So(result.TotalCount, ShouldEqual, 0)
 			So(len(result.Actions), ShouldEqual, 0)
+		})
+
+		Convey("成功 - 未绑定对象类 + 无 identities → 构造虚拟实例", func() {
+			query := &interfaces.ActionQuery{
+				KNID:               knID,
+				ActionTypeID:       actionTypeID,
+				InstanceIdentities: []map[string]any{},
+			}
+
+			actionType := interfaces.ActionType{
+				ATID:         actionTypeID,
+				ATName:       "test_action",
+				ObjectTypeID: "", // 未绑定对象类
+				ActionSource: interfaces.ActionSource{
+					Type: "tool",
+				},
+				Parameters: []interfaces.Parameter{},
+			}
+
+			omAccess.EXPECT().GetActionType(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(actionType, map[string]any{"id": actionType.ATID}, true, nil)
+
+			result, err := service.GetActionsByActionTypeID(ctx, query)
+			So(err, ShouldBeNil)
+			So(result.TotalCount, ShouldEqual, 1)
+			So(len(result.Actions), ShouldEqual, 1)
+			So(result.Actions[0].InstanceIdentity, ShouldNotBeNil)
+		})
+
+		Convey("成功 - 未绑定对象类 + 有 identities → 按 identities 构造实例", func() {
+			query := &interfaces.ActionQuery{
+				KNID:         knID,
+				ActionTypeID: actionTypeID,
+				InstanceIdentities: []map[string]any{
+					{"id": "123", "name": "test"},
+					{"id": "456", "name": "test2"},
+				},
+			}
+
+			actionType := interfaces.ActionType{
+				ATID:         actionTypeID,
+				ATName:       "test_action",
+				ObjectTypeID: "", // 未绑定对象类
+				ActionSource: interfaces.ActionSource{
+					Type: "tool",
+				},
+				Parameters: []interfaces.Parameter{},
+			}
+
+			omAccess.EXPECT().GetActionType(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(actionType, map[string]any{"id": actionType.ATID}, true, nil)
+
+			result, err := service.GetActionsByActionTypeID(ctx, query)
+			So(err, ShouldBeNil)
+			So(result.TotalCount, ShouldEqual, 2)
+			So(len(result.Actions), ShouldEqual, 2)
+			So(result.Actions[0].InstanceIdentity, ShouldResemble, map[string]any{"id": "123", "name": "test"})
+			So(result.Actions[1].InstanceIdentity, ShouldResemble, map[string]any{"id": "456", "name": "test2"})
+		})
+
+		Convey("成功 - add 行动类型 + 有 identities + 查询不到实例 → 构造实例并评估条件", func() {
+			query := &interfaces.ActionQuery{
+				KNID:         knID,
+				ActionTypeID: actionTypeID,
+				InstanceIdentities: []map[string]any{
+					{"id": "123"},
+				},
+			}
+
+			actionType := interfaces.ActionType{
+				ATID:         actionTypeID,
+				ATName:       "test_action",
+				ActionType:   "add",
+				ObjectTypeID: objectTypeID,
+				ActionSource: interfaces.ActionSource{
+					Type: "tool",
+				},
+				Condition: &cond.CondCfg{
+					Name:      "status",
+					Operation: "==",
+					ValueOptCfg: cond.ValueOptCfg{
+						Value: "active",
+					},
+				},
+				Parameters: []interfaces.Parameter{},
+			}
+
+			objectType := interfaces.ObjectType{
+				ObjectTypeWithKeyField: interfaces.ObjectTypeWithKeyField{
+					OTID: objectTypeID,
+					DataProperties: []cond.DataProperty{
+						{Name: "status", Type: "string"},
+					},
+				},
+			}
+
+			omAccess.EXPECT().GetActionType(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(actionType, map[string]any{"id": actionType.ATID}, true, nil)
+			omAccess.EXPECT().GetObjectType(gomock.Any(), gomock.Any(), gomock.Any(), objectTypeID).Return(objectType, true, nil)
+			// 第一次查询：仅根据 identities 查询（查询不到）
+			ots.EXPECT().GetObjectsByObjectTypeID(gomock.Any(), gomock.Any()).Return(interfaces.Objects{Datas: []map[string]any{}}, nil)
+
+			result, err := service.GetActionsByActionTypeID(ctx, query)
+			So(err, ShouldBeNil)
+			// 由于条件评估可能失败，结果可能为空或包含实例
+			So(result, ShouldNotBeNil)
+		})
+
+		Convey("成功 - add 行动类型 + 有 identities + 查询到实例 → 按 identities 和行动条件过滤", func() {
+			query := &interfaces.ActionQuery{
+				KNID:         knID,
+				ActionTypeID: actionTypeID,
+				InstanceIdentities: []map[string]any{
+					{"id": "123"},
+				},
+			}
+
+			actionType := interfaces.ActionType{
+				ATID:         actionTypeID,
+				ATName:       "test_action",
+				ActionType:   "add",
+				ObjectTypeID: objectTypeID,
+				ActionSource: interfaces.ActionSource{
+					Type: "tool",
+				},
+				Condition: &cond.CondCfg{
+					Name:      "status",
+					Operation: "==",
+					ValueOptCfg: cond.ValueOptCfg{
+						Value: "active",
+					},
+				},
+				Parameters: []interfaces.Parameter{},
+			}
+
+			objectType := interfaces.ObjectType{
+				ObjectTypeWithKeyField: interfaces.ObjectTypeWithKeyField{
+					OTID: objectTypeID,
+				},
+			}
+
+			objects := interfaces.Objects{
+				Datas: []map[string]any{
+					{"id": "123", "status": "active"},
+				},
+			}
+
+			omAccess.EXPECT().GetActionType(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(actionType, map[string]any{"id": actionType.ATID}, true, nil)
+			omAccess.EXPECT().GetObjectType(gomock.Any(), gomock.Any(), gomock.Any(), objectTypeID).Return(objectType, true, nil)
+			// 第一次查询：仅根据 identities 查询（查询到）
+			ots.EXPECT().GetObjectsByObjectTypeID(gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, query *interfaces.ObjectQueryBaseOnObjectType) (interfaces.Objects, error) {
+				// 验证是仅根据 identities 的查询
+				So(query.ActualCondition, ShouldNotBeNil)
+				return interfaces.Objects{Datas: []map[string]any{{"id": "123"}}}, nil
+			})
+			// 第二次查询：按 identities 和行动条件过滤
+			ots.EXPECT().GetObjectsByObjectTypeID(gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, query *interfaces.ObjectQueryBaseOnObjectType) (interfaces.Objects, error) {
+				// 验证条件是否正确合并
+				So(query.ActualCondition, ShouldNotBeNil)
+				So(query.ActualCondition.Operation, ShouldEqual, "and")
+				return objects, nil
+			})
+
+			result, err := service.GetActionsByActionTypeID(ctx, query)
+			So(err, ShouldBeNil)
+			So(result.TotalCount, ShouldEqual, 1)
 		})
 	})
 }

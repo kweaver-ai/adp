@@ -89,17 +89,74 @@ func (ats *actionTypeService) GetActionsByActionTypeID(ctx context.Context,
 		return resps, rest.NewHTTPError(ctx, http.StatusNotFound, oerrors.OntologyQuery_ObjectType_ObjectTypeNotFound)
 	}
 
-	// 2. 获取对象类信息（用于条件评估）
-	// todo: 对象类可以不绑定。
-	objectType, exists, err := ats.omAccess.GetObjectType(ctx, query.KNID, query.Branch, actionType.ObjectTypeID)
-	if err != nil {
-		logger.Errorf("Get Object Type error: %s", err.Error())
-		return resps, rest.NewHTTPError(ctx, http.StatusInternalServerError,
-			oerrors.OntologyQuery_ObjectType_InternalError_GetObjectTypesByIDFailed).WithErrorDetails(err.Error())
-	}
-	if !exists {
-		logger.Debugf("Object Type %s not found!", actionType.ObjectTypeID)
-		return resps, rest.NewHTTPError(ctx, http.StatusNotFound, oerrors.OntologyQuery_ObjectType_ObjectTypeNotFound)
+	// 2. 检查是否绑定了对象类
+	isObjectTypeBound := actionType.ObjectTypeID != ""
+	var objectType interfaces.ObjectType
+
+	if isObjectTypeBound {
+		// 获取对象类信息（用于条件评估）
+		var exists bool
+		var err error
+		objectType, exists, err = ats.omAccess.GetObjectType(ctx, query.KNID, query.Branch, actionType.ObjectTypeID)
+		if err != nil {
+			logger.Errorf("Get Object Type error: %s", err.Error())
+			return resps, rest.NewHTTPError(ctx, http.StatusInternalServerError,
+				oerrors.OntologyQuery_ObjectType_InternalError_GetObjectTypesByIDFailed).WithErrorDetails(err.Error())
+		}
+		if !exists {
+			logger.Debugf("Object Type %s not found!", actionType.ObjectTypeID)
+			return resps, rest.NewHTTPError(ctx, http.StatusNotFound, oerrors.OntologyQuery_ObjectType_ObjectTypeNotFound)
+		}
+	} else {
+		// 未绑定对象类的情况
+		logger.Infof("Action type %s has no bound object type", actionType.ATID)
+		if len(query.InstanceIdentities) == 0 {
+			// Case 4: 未绑定对象类 + 无 identities → 构造一个临时的虚拟实例
+			logger.Infof("No identities provided, creating virtual instance for action type %s", actionType.ATID)
+			virtualAction, err := buildActionFromInstanceData(map[string]any{}, &actionType)
+			if err != nil {
+				logger.Errorf("Error building virtual action: %v", err)
+				return resps, rest.NewHTTPError(ctx, http.StatusBadRequest, oerrors.OntologyQuery_InternalError_UnMarshalDataFailed).
+					WithErrorDetails(err.Error())
+			}
+
+			respActions := interfaces.Actions{
+				ActionSource: actionType.ActionSource,
+				Actions:      []interfaces.ActionParam{virtualAction},
+				TotalCount:   1,
+			}
+
+			if query.IncludeTypeInfo {
+				respActions.ActionType = &actionType
+			}
+
+			return respActions, nil
+		} else {
+			// Case 5: 未绑定对象类 + 有 identities → 按 identities 构造实例
+			logger.Infof("Constructing instances from identities for action type %s", actionType.ATID)
+			actions := []interfaces.ActionParam{}
+			for _, identity := range query.InstanceIdentities {
+				action, err := buildActionFromInstanceData(identity, &actionType)
+				if err != nil {
+					logger.Errorf("Error building action from instance data: %v", err)
+					return resps, rest.NewHTTPError(ctx, http.StatusBadRequest, oerrors.OntologyQuery_InternalError_UnMarshalDataFailed).
+						WithErrorDetails(err.Error())
+				}
+				actions = append(actions, action)
+			}
+
+			respActions := interfaces.Actions{
+				ActionSource: actionType.ActionSource,
+				Actions:      actions,
+				TotalCount:   len(actions),
+			}
+
+			if query.IncludeTypeInfo {
+				respActions.ActionType = &actionType
+			}
+
+			return respActions, nil
+		}
 	}
 
 	// 3. 处理 add 行动类型的特殊逻辑
@@ -131,6 +188,8 @@ func (ats *actionTypeService) GetActionsByActionTypeID(ctx context.Context,
 
 		// 如果查询结果为空，将 _instance_identities 视为新实例，评估是否满足行动条件
 		if len(instanceObjects.Datas) == 0 {
+			// Case 2a: 都搜索不到，则按identites构造实例，再套用行动条件，满足，产生实例
+			logger.Infof("No instances found by identities for add action, constructing instances and evaluating condition")
 			actions := []interfaces.ActionParam{}
 			for _, instanceIdentity := range query.InstanceIdentities {
 				// 评估实例是否满足行动条件
@@ -168,7 +227,8 @@ func (ats *actionTypeService) GetActionsByActionTypeID(ctx context.Context,
 
 			return respActions, nil
 		}
-		// 如果查询结果不为空，继续使用原有逻辑处理
+		// Case 2b: 搜索得到，就按identites和行动条件过滤出来的实例（继续执行后续逻辑）
+		logger.Infof("Instances found by identities for add action, filtering by identities and action condition")
 	}
 
 	// 4. 根据行动条件+请求的唯一标识，去请求对象类的对象实例数据（当前行动条件只能选绑定的对象类的，不能选其他类，所以当前就直接拼，认为这些条件都在作用在这个对象类上）
