@@ -46,13 +46,19 @@ func MarshalResponse(format ResponseFormat, body interface{}) (contentType strin
 		return ContentTypeJSON, nil, nil
 	}
 	switch format {
+	case FormatJSON:
+		bodyBytes, err = sonic.Marshal(body)
+		if err != nil {
+			return "", nil, err
+		}
+		return ContentTypeJSON, bodyBytes, nil
 	case FormatTOON:
 		bodyBytes, err = marshalTOON(body)
 		if err != nil {
 			return "", nil, err
 		}
 		return ContentTypeTOON, bodyBytes, nil
-	default:
+	default: // fallback to JSON for unknown values
 		bodyBytes, err = sonic.Marshal(body)
 		if err != nil {
 			return "", nil, err

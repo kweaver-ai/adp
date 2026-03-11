@@ -39,9 +39,9 @@ func TestSortByRerankAndMatchScore(t *testing.T) {
 
 			result := service.sortByRerankAndMatchScore(concepts)
 			convey.So(len(result), convey.ShouldEqual, 4)
-			convey.So(result[0].ConceptID, convey.ShouldEqual, "1")   // 0.8 最高
-			convey.So(result[1].ConceptID, convey.ShouldEqual, "3")   // 0.5
-			convey.So(result[2].ConceptID, convey.ShouldEqual, "2")   // 0, MatchScore 5 > 3
+			convey.So(result[0].ConceptID, convey.ShouldEqual, "1") // 0.8 最高
+			convey.So(result[1].ConceptID, convey.ShouldEqual, "3") // 0.5
+			convey.So(result[2].ConceptID, convey.ShouldEqual, "2") // 0, MatchScore 5 > 3
 			convey.So(result[3].ConceptID, convey.ShouldEqual, "4")
 		})
 
