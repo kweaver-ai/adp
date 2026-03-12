@@ -135,10 +135,32 @@ func (a *APIMetadataDB) GetErrMessage() string {
 	return a.ErrMessage
 }
 
-func (a *APIMetadataDB) GetFunctionContent() (code, scriptType, dependencies string) {
+// func (a *APIMetadataDB) GetFunctionContent() (code, scriptType, dependencies string) {
+// 	// 不支持获取函数内容
+// 	return code, scriptType, dependencies
+// }
+// func (a *APIMetadataDB) SetFunctionContent(code, scriptType, dependencies string) {
+// 	// 不支持设置函数内容
+// }
+
+func (a *APIMetadataDB) GetCode() string {
 	// 不支持获取函数内容
-	return code, scriptType, dependencies
+	return ""
 }
-func (a *APIMetadataDB) SetFunctionContent(code, scriptType, dependencies string) {
+func (a *APIMetadataDB) SetCode(code string) {
 	// 不支持设置函数内容
+}
+func (a *APIMetadataDB) GetDependenciesURL() string {
+	// 不支持获取函数内容
+	return ""
+}
+func (a *APIMetadataDB) SetDependenciesURL(dependenciesURL string) {
+	// 不支持设置函数依赖URL
+}
+func (a *APIMetadataDB) SetDependencies(dependencies string) {
+	// 不支持设置函数依赖
+}
+func (a *APIMetadataDB) GetDependencies() string {
+	// 不支持获取函数依赖
+	return ""
 }

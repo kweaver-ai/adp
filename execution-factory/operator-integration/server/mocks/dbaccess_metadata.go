@@ -54,6 +54,20 @@ func (mr *MockIMetadataDBMockRecorder) GetAPISpec() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAPISpec", reflect.TypeOf((*MockIMetadataDB)(nil).GetAPISpec))
 }
 
+// GetCode mocks base method.
+func (m *MockIMetadataDB) GetCode() string {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetCode")
+	ret0, _ := ret[0].(string)
+	return ret0
+}
+
+// GetCode indicates an expected call of GetCode.
+func (mr *MockIMetadataDBMockRecorder) GetCode() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetCode", reflect.TypeOf((*MockIMetadataDB)(nil).GetCode))
+}
+
 // GetCreateUser mocks base method.
 func (m *MockIMetadataDB) GetCreateUser() string {
 	m.ctrl.T.Helper()
@@ -66,6 +80,34 @@ func (m *MockIMetadataDB) GetCreateUser() string {
 func (mr *MockIMetadataDBMockRecorder) GetCreateUser() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetCreateUser", reflect.TypeOf((*MockIMetadataDB)(nil).GetCreateUser))
+}
+
+// GetDependencies mocks base method.
+func (m *MockIMetadataDB) GetDependencies() string {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetDependencies")
+	ret0, _ := ret[0].(string)
+	return ret0
+}
+
+// GetDependencies indicates an expected call of GetDependencies.
+func (mr *MockIMetadataDBMockRecorder) GetDependencies() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetDependencies", reflect.TypeOf((*MockIMetadataDB)(nil).GetDependencies))
+}
+
+// GetDependenciesURL mocks base method.
+func (m *MockIMetadataDB) GetDependenciesURL() string {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetDependenciesURL")
+	ret0, _ := ret[0].(string)
+	return ret0
+}
+
+// GetDependenciesURL indicates an expected call of GetDependenciesURL.
+func (mr *MockIMetadataDBMockRecorder) GetDependenciesURL() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetDependenciesURL", reflect.TypeOf((*MockIMetadataDB)(nil).GetDependenciesURL))
 }
 
 // GetDescription mocks base method.
@@ -94,22 +136,6 @@ func (m *MockIMetadataDB) GetErrMessage() string {
 func (mr *MockIMetadataDBMockRecorder) GetErrMessage() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetErrMessage", reflect.TypeOf((*MockIMetadataDB)(nil).GetErrMessage))
-}
-
-// GetFunctionContent mocks base method.
-func (m *MockIMetadataDB) GetFunctionContent() (string, string, string) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetFunctionContent")
-	ret0, _ := ret[0].(string)
-	ret1, _ := ret[1].(string)
-	ret2, _ := ret[2].(string)
-	return ret0, ret1, ret2
-}
-
-// GetFunctionContent indicates an expected call of GetFunctionContent.
-func (mr *MockIMetadataDBMockRecorder) GetFunctionContent() *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetFunctionContent", reflect.TypeOf((*MockIMetadataDB)(nil).GetFunctionContent))
 }
 
 // GetMethod mocks base method.
@@ -236,6 +262,18 @@ func (mr *MockIMetadataDBMockRecorder) SetAPISpec(apiSpec any) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetAPISpec", reflect.TypeOf((*MockIMetadataDB)(nil).SetAPISpec), apiSpec)
 }
 
+// SetCode mocks base method.
+func (m *MockIMetadataDB) SetCode(code string) {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "SetCode", code)
+}
+
+// SetCode indicates an expected call of SetCode.
+func (mr *MockIMetadataDBMockRecorder) SetCode(code any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetCode", reflect.TypeOf((*MockIMetadataDB)(nil).SetCode), code)
+}
+
 // SetCreateInfo mocks base method.
 func (m *MockIMetadataDB) SetCreateInfo(user string) {
 	m.ctrl.T.Helper()
@@ -248,6 +286,30 @@ func (mr *MockIMetadataDBMockRecorder) SetCreateInfo(user any) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetCreateInfo", reflect.TypeOf((*MockIMetadataDB)(nil).SetCreateInfo), user)
 }
 
+// SetDependencies mocks base method.
+func (m *MockIMetadataDB) SetDependencies(dependencies any) {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "SetDependencies", dependencies)
+}
+
+// SetDependencies indicates an expected call of SetDependencies.
+func (mr *MockIMetadataDBMockRecorder) SetDependencies(dependencies any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetDependencies", reflect.TypeOf((*MockIMetadataDB)(nil).SetDependencies), dependencies)
+}
+
+// SetDependenciesURL mocks base method.
+func (m *MockIMetadataDB) SetDependenciesURL(dependenciesURL string) {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "SetDependenciesURL", dependenciesURL)
+}
+
+// SetDependenciesURL indicates an expected call of SetDependenciesURL.
+func (mr *MockIMetadataDBMockRecorder) SetDependenciesURL(dependenciesURL any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetDependenciesURL", reflect.TypeOf((*MockIMetadataDB)(nil).SetDependenciesURL), dependenciesURL)
+}
+
 // SetDescription mocks base method.
 func (m *MockIMetadataDB) SetDescription(description string) {
 	m.ctrl.T.Helper()
@@ -258,18 +320,6 @@ func (m *MockIMetadataDB) SetDescription(description string) {
 func (mr *MockIMetadataDBMockRecorder) SetDescription(description any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetDescription", reflect.TypeOf((*MockIMetadataDB)(nil).SetDescription), description)
-}
-
-// SetFunctionContent mocks base method.
-func (m *MockIMetadataDB) SetFunctionContent(code, scriptType, dependencies string) {
-	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "SetFunctionContent", code, scriptType, dependencies)
-}
-
-// SetFunctionContent indicates an expected call of SetFunctionContent.
-func (mr *MockIMetadataDBMockRecorder) SetFunctionContent(code, scriptType, dependencies any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetFunctionContent", reflect.TypeOf((*MockIMetadataDB)(nil).SetFunctionContent), code, scriptType, dependencies)
 }
 
 // SetMethod mocks base method.

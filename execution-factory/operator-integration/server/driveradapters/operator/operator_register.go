@@ -5,14 +5,14 @@ import (
 	"mime/multipart"
 	"net/http"
 
+	"github.com/creasty/defaults"
+	"github.com/gin-gonic/gin"
+	"github.com/gin-gonic/gin/binding"
 	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/infra/common"
 	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/infra/errors"
 	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/infra/rest"
 	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/interfaces"
 	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/utils"
-	"github.com/creasty/defaults"
-	"github.com/gin-gonic/gin"
-	"github.com/gin-gonic/gin/binding"
 )
 
 // OperatorUpdateByOpenAPI 【内部接口】算子更新
@@ -21,7 +21,9 @@ func (op *operatorHandle) OperatorUpdateByOpenAPI(c *gin.Context) {
 		OperatorRegisterReq: &interfaces.OperatorRegisterReq{
 			OperatorInfo:           &interfaces.OperatorInfo{},
 			OperatorExecuteControl: &interfaces.OperatorExecuteControl{},
-			FunctionInput:          &interfaces.FunctionInput{},
+			FunctionInput: &interfaces.FunctionInput{
+				Dependencies: []*interfaces.DependencyInfo{},
+			},
 		},
 	}
 	data, err := op.parseCommonParams(c, req)
@@ -68,7 +70,9 @@ func (op *operatorHandle) OperatorRegister(c *gin.Context) {
 	req := &interfaces.OperatorRegisterReq{
 		OperatorInfo:           &interfaces.OperatorInfo{},
 		OperatorExecuteControl: &interfaces.OperatorExecuteControl{},
-		FunctionInput:          &interfaces.FunctionInput{},
+		FunctionInput: &interfaces.FunctionInput{
+			Dependencies: []*interfaces.DependencyInfo{},
+		},
 	}
 	data, err := op.parseCommonParams(c, req)
 	if err != nil {

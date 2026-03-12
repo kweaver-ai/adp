@@ -8,13 +8,13 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	o11y "github.com/kweaver-ai/kweaver-go-lib/observability"
 	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/infra/common"
 	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/infra/errors"
 	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/interfaces"
 	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/interfaces/model"
 	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/logics/metric"
 	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/utils"
+	o11y "github.com/kweaver-ai/kweaver-go-lib/observability"
 )
 
 // RegisterInternalOperator 注册内置算子
@@ -336,7 +336,10 @@ func (m *operatorManager) upgradeInternalOperator(ctx context.Context, tx *sql.T
 	currentMetadataDB.SetScriptType(metadataDB.GetScriptType())
 	currentMetadataDB.SetServerURL(metadataDB.GetServerURL())
 	currentMetadataDB.SetAPISpec(metadataDB.GetAPISpec())
-	currentMetadataDB.SetFunctionContent(metadataDB.GetFunctionContent())
+	currentMetadataDB.SetCode(metadataDB.GetCode())
+	currentMetadataDB.SetScriptType(metadataDB.GetScriptType())
+	currentMetadataDB.SetDependencies(metadataDB.GetDependencies())
+	currentMetadataDB.SetDependenciesURL(metadataDB.GetDependenciesURL())
 	currentMetadataDB.SetVersion(uuid.New().String())
 	// 升级元数据，并更新版本号
 	version, err := m.MetadataService.RegisterMetadata(ctx, tx, currentMetadataDB)

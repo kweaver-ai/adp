@@ -24,14 +24,15 @@ func MetadataDBToStruct(metadataDB interfaces.IMetadataDB) *interfaces.MetadataI
 			APISpec:     v.APISpec,
 		}
 		metadata := apimetadataDBToAPIMetadata(apiMetadataDB)
-		dependencies := []string{}
-		if v.Dependencies != "" {
-			_ = utils.StringToObject(v.Dependencies, &dependencies)
+		dependencies := []interfaces.DependencyInfo{}
+		if v.GetDependencies() != "" {
+			dependencies = utils.JSONToObject[[]interfaces.DependencyInfo](v.GetDependencies())
 		}
 		metadata.FunctionContent = &interfaces.FunctionContent{
-			ScriptType:   interfaces.ScriptType(v.GetScriptType()),
-			Code:         v.Code,
-			Dependencies: dependencies,
+			ScriptType:      interfaces.ScriptType(v.GetScriptType()),
+			Code:            v.GetCode(),
+			Dependencies:    dependencies,
+			DependenciesURL: v.GetDependenciesURL(),
 		}
 		return metadata
 	case *model.APIMetadataDB:
@@ -49,7 +50,9 @@ func DefaultMetadataInfo(metadataType interfaces.MetadataType) *interfaces.Metad
 		metadataInfo.APISpec = &interfaces.APISpec{}
 		return metadataInfo
 	case interfaces.MetadataTypeFunc:
-		metadataInfo.FunctionContent = &interfaces.FunctionContent{}
+		metadataInfo.FunctionContent = &interfaces.FunctionContent{
+			Dependencies: []interfaces.DependencyInfo{},
+		}
 		return metadataInfo
 	default:
 		return nil

@@ -103,7 +103,10 @@ func (c *sandBoxControlPlaneClient) QuerySession(ctx context.Context, sessionID 
 		})
 		return false, nil, err
 	}
-	detail = &interfaces.SessionDetail{}
+	detail = &interfaces.SessionDetail{
+		RequestedDependencies: []*interfaces.DependencyInfo{},
+		InstalledDependencies: []*interfaces.DependencyInfo{},
+	}
 	err = utils.StringToObject(string(respData), detail)
 	if err != nil {
 		c.logger.WithContext(ctx).Errorf("QuerySession failed, StringToObject failed, err: %v", err)
@@ -207,4 +210,34 @@ func (c *sandBoxControlPlaneClient) ExecuteCodeSync(ctx context.Context, session
 		return nil, err
 	}
 	return resp, nil
+}
+
+// InstallPythonDependencies 安装python依赖库
+func (c *sandBoxControlPlaneClient) InstallPythonDependencies(ctx context.Context, sessionID string, req *interfaces.InstallDependenciesReq) (detail *interfaces.SessionDetail, err error) {
+	src := fmt.Sprintf("%s/sessions/%s/dependencies/install", c.baseURL, sessionID)
+	headers := common.GetHeaderFromCtx(ctx)
+	respCode, respData, err := c.httpClient.PostNoUnmarshal(ctx, src, headers, req)
+	if err != nil {
+		c.logger.WithContext(ctx).Errorf("InstallPythonDependencies failed, err: %v", err)
+		return nil, err
+	}
+	if (respCode < http.StatusOK) || (respCode >= http.StatusMultipleChoices) {
+		c.logger.WithContext(ctx).Errorf("InstallPythonDependencies failed, unexpected status code: %d, session_id: %s", respCode, sessionID)
+		err = errors.NewHTTPError(ctx, http.StatusInternalServerError, errors.ErrExtSandboxControlPlaneFailed, map[string]any{
+			"error":          fmt.Sprintf("unexpected status code: %d", respCode),
+			"http_code":      respCode,
+			"response":       string(respData),
+			"session_id":     sessionID,
+			"request_params": utils.ObjectToJSON(req),
+		})
+		return nil, err
+	}
+	detail = &interfaces.SessionDetail{}
+	err = utils.StringToObject(string(respData), detail)
+	if err != nil {
+		c.logger.WithContext(ctx).Errorf("InstallPythonDependencies failed, StringToObject failed, err: %v", err)
+		err = errors.NewHTTPError(ctx, http.StatusInternalServerError, errors.ErrExtSandboxControlPlaneFailed, err.Error())
+		return nil, err
+	}
+	return detail, nil
 }

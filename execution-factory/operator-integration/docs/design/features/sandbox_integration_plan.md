@@ -21,7 +21,8 @@
 - **目的**: 尽可能填满一个 Session 后再启用下一个，确保空闲 Session 能被及时缩容。
 
 ### 3.2 预热与空闲维持 (ActiveSessions)
-- **启动预热**: 服务启动时，自动同步现有 Session 并补足至 `activeSessions` 配置的数量。
+- **初始化恢复**: 服务启动时，会首先检查并恢复（Recover）所有状态为 `Running` 的现有会话，将其纳入池管理。
+- **启动预热**: 初始化恢复后，若可用会话数不足 `activeSessions`，则自动创建补足。
 - **水位维持**: 后台任务每分钟检查一次，若健康 Session 数少于 `activeSessions` 则自动创建（预热），若多余且空闲则进行缩容。
 
 ### 3.3 健康检查与修复
@@ -40,7 +41,7 @@
 | 创建会话 | `POST /api/v1/sessions` | 根据确定性 ID 创建沙箱环境 |
 | 查询会话 | `GET /api/v1/sessions/{id}` | 获取状态及资源详情 |
 | 删除会话 | `DELETE /api/v1/sessions/{id}` | 回收资源 |
-| 同步执行 | `POST /api/v1/executions/sessions/{id}/execute-sync` | 提交代码并获取 Stdout/Stderr/Result |
+| 同步执行 | `POST /api/v1/executions/sessions/{id}/execute-sync` | 提交代码（支持动态依赖）并获取 Stdout/Stderr/Result |
 
 ### 4.2 配置参数 (SandboxControlPlaneConfig)
 - `max_sessions`: 最大物理会话数（槽位上限）。
@@ -51,4 +52,24 @@
 - **池满载**: 若 `max_sessions * max_concurrent_tasks` 均满载，返回 `503 Service Unavailable`。
 - **执行失败**: 若请求沙箱发生网络错误，该 Session 会被标记为失效并异步移除。
 - **超时控制**: 默认执行超时 30 秒，预热超时 40 秒。
+
+## 6. 依赖管理
+
+系统支持在沙箱环境中动态管理和使用 Python 依赖库。
+
+### 6.1 动态依赖安装
+- 在执行代码请求 (`ExecuteCodeReq`) 中，支持携带 `dependencies` 列表和 `dependencies_url`。
+- **执行流程**:
+    1. 检查请求中是否包含依赖信息。
+    2. 如果存在，调用沙箱接口安装指定依赖。
+    3. 依赖安装成功后，继续执行用户代码。
+    4. 若安装失败，记录错误日志并尝试继续执行（或根据策略报错）。
+
+### 6.2 预置依赖
+系统默认预置了常用的数据科学和工具库，包括但不限于：
+- `requests==2.28.1`
+- `pandas==1.5.2`
+- `numpy==1.23.4`
+- `matplotlib==3.7.1`
+- `mock==0.0.1`
 

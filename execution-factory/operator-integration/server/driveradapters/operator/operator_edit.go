@@ -3,13 +3,13 @@ package operator
 import (
 	"net/http"
 
+	"github.com/creasty/defaults"
+	"github.com/gin-gonic/gin"
+	"github.com/go-playground/validator/v10"
 	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/infra/errors"
 	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/infra/rest"
 	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/interfaces"
 	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/utils"
-	"github.com/creasty/defaults"
-	"github.com/gin-gonic/gin"
-	"github.com/go-playground/validator/v10"
 )
 
 func (op *operatorHandle) OperatorEdit(c *gin.Context) {
@@ -17,7 +17,9 @@ func (op *operatorHandle) OperatorEdit(c *gin.Context) {
 		OperatorInfoEdit:       &interfaces.OperatorInfoEdit{},
 		OperatorExecuteControl: &interfaces.OperatorExecuteControl{},
 		OpenAPIInput:           &interfaces.OpenAPIInput{},
-		FunctionInputEdit:      &interfaces.FunctionInputEdit{},
+		FunctionInputEdit: &interfaces.FunctionInputEdit{
+			Dependencies: []*interfaces.DependencyInfo{},
+		},
 	}
 	err := c.ShouldBindHeader(req)
 	if err != nil {

@@ -357,11 +357,21 @@ func (m *operatorManager) preCheckEdit(ctx context.Context, req *interfaces.Oper
 	if updateMetadataDB != nil {
 		if req.MetadataType == interfaces.MetadataTypeFunc {
 			// 更新的函数内容是否有变化
-			code, scriptType, dependencies := updateMetadataDB.GetFunctionContent()
-			compareCode, compareScriptType, compareDependencies := metadataDB.GetFunctionContent()
-			if code != compareCode || scriptType != compareScriptType || dependencies != compareDependencies {
-				metadataDB.SetFunctionContent(code, scriptType, dependencies)
+			if updateMetadataDB.GetScriptType() != metadataDB.GetScriptType() {
 				needUpdateMetadata = true
+				metadataDB.SetScriptType(updateMetadataDB.GetScriptType())
+			}
+			if updateMetadataDB.GetCode() != metadataDB.GetCode() {
+				needUpdateMetadata = true
+				metadataDB.SetCode(updateMetadataDB.GetCode())
+			}
+			if len(updateMetadataDB.GetDependencies()) > 0 || len(updateMetadataDB.GetDependencies()) != len(metadataDB.GetDependencies()) {
+				needUpdateMetadata = true
+				metadataDB.SetDependencies(updateMetadataDB.GetDependencies())
+			}
+			if updateMetadataDB.GetDependenciesURL() != metadataDB.GetDependenciesURL() {
+				needUpdateMetadata = true
+				metadataDB.SetDependenciesURL(updateMetadataDB.GetDependenciesURL())
 			}
 		}
 		if metadataDB.GetServerURL() != updateMetadataDB.GetServerURL() {
@@ -435,13 +445,14 @@ func (m *operatorManager) getUpdateMetadataDB(ctx context.Context, req *interfac
 			return
 		}
 		funcInput := &interfaces.FunctionInput{
-			Name:         req.Name,
-			Description:  req.Description,
-			Inputs:       req.FunctionInputEdit.Inputs,
-			Outputs:      req.FunctionInputEdit.Outputs,
-			ScriptType:   req.FunctionInputEdit.ScriptType,
-			Code:         req.FunctionInputEdit.Code,
-			Dependencies: req.FunctionInputEdit.Dependencies,
+			Name:            req.Name,
+			Description:     req.Description,
+			Inputs:          req.FunctionInputEdit.Inputs,
+			Outputs:         req.FunctionInputEdit.Outputs,
+			ScriptType:      req.FunctionInputEdit.ScriptType,
+			Code:            req.FunctionInputEdit.Code,
+			Dependencies:    req.FunctionInputEdit.Dependencies,
+			DependenciesURL: req.FunctionInputEdit.DependenciesURL,
 		}
 		var updateMetadataDBs []interfaces.IMetadataDB
 		updateMetadataDBs, err = m.MetadataService.ParseMetadata(ctx, req.MetadataType, funcInput)

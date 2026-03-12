@@ -3,13 +3,17 @@ package sandbox
 import (
 	"context"
 	"fmt"
+	"net/http"
+	"sort"
 	"sync"
 	"time"
 
 	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/drivenadapters"
 	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/infra/config"
+	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/infra/errors"
 	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/infra/telemetry"
 	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/interfaces"
+	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/utils"
 	o11y "github.com/kweaver-ai/kweaver-go-lib/observability"
 )
 
@@ -29,79 +33,24 @@ const (
 	backgroundWorkerInterval = time.Minute
 )
 
+// 当前环境依赖库信息
+type DependenciesInfo struct {
+	Dependencies []*interfaces.DependencyInfo `json:"dependencies"`
+	SessionID    string                       `json:"session_id"`
+}
+
 // SessionPool 会话池接口
 type SessionPool interface {
 	ExecuteCode(ctx context.Context, req *interfaces.ExecuteCodeReq) (*interfaces.ExecuteCodeResp, error)
+	// 获取依赖库列表
+	GetDependencies(ctx context.Context) (resp *DependenciesInfo, err error)
 }
 
 type sessionItem struct {
 	ID           string
+	Dependencies []*interfaces.DependencyInfo
 	RunningTasks int
 	LastUsedAt   time.Time
-}
-
-// 添加会话到池
-func (p *sessionPoolImpl) addSession(sessionID string) {
-	p.mu.Lock()
-	defer p.mu.Unlock()
-	p.sessions[sessionID] = &sessionItem{
-		ID:           sessionID,
-		RunningTasks: 0,
-		LastUsedAt:   time.Now(),
-	}
-}
-
-// getSessionItem 获取会话项
-func (p *sessionPoolImpl) getSessionItem(sessionID string) (sessionItem *sessionItem, ok bool) {
-	p.mu.Lock()
-	defer p.mu.Unlock()
-	sessionItem, ok = p.sessions[sessionID]
-	return
-}
-
-// 删除会话
-func (p *sessionPoolImpl) removeSession(sessionID string) {
-	p.mu.Lock()
-	defer p.mu.Unlock()
-	delete(p.sessions, sessionID)
-}
-
-// 更新运行任务数
-// updateRunningTasks 更新会话运行任务数
-func (p *sessionPoolImpl) updateRunningTasks(sessionID string, delta int) {
-	p.mu.Lock()
-	defer p.mu.Unlock()
-	if item, exists := p.sessions[sessionID]; exists {
-		item.RunningTasks += delta
-		item.LastUsedAt = time.Now()
-	}
-}
-
-// findBestSession 寻找最佳会话: 堆叠分配策略：寻找负载最高但未满的会话
-func (p *sessionPoolImpl) findBestSession() (bestSession *sessionItem) {
-	p.mu.Lock()
-	// 1. 堆叠分配策略：寻找负载最高但未满的会话
-	sessionIDs := []string{}
-	for _, item := range p.sessions {
-		p.logger.Infof("Session %s: RunningTasks=%d, LastUsedAt=%v\n", item.ID, item.RunningTasks, item.LastUsedAt)
-		if item.RunningTasks < p.maxConcurrentTasks {
-			if bestSession == nil || item.RunningTasks > bestSession.RunningTasks {
-				// 检查任务是否可用
-				exists, _, _ := p.client.QuerySession(context.Background(), item.ID)
-				if !exists {
-					sessionIDs = append(sessionIDs, item.ID)
-					continue
-				}
-				bestSession = item
-			}
-		}
-	}
-	p.mu.Unlock()
-	// 删除所有无效会话
-	for _, sessionID := range sessionIDs {
-		p.removeSession(sessionID)
-	}
-	return bestSession
 }
 
 type sessionPoolImpl struct {
@@ -166,24 +115,35 @@ func GetSessionPool() SessionPool {
 	return poolInstance
 }
 
-func (p *sessionPoolImpl) initSessions() {
-	ctx := context.Background()
-	recoveredCount := 0
-	for i := 0; i < p.maxSessions; i++ {
-		id := fmt.Sprintf("%s%d", sessionIDPrefix, i)
-		// 检查会话是否存在且状态为 Running
-		exists, detail, err := p.client.QuerySession(ctx, id)
-		if err == nil && exists && detail != nil && detail.Status == interfaces.SessionStatusRunning {
-			poolInstance.addSession(id)
-			recoveredCount++
-		}
+func (p *sessionPoolImpl) GetDependencies(ctx context.Context) (resp *DependenciesInfo, err error) {
+	sessionID, err := p.acquireSession(ctx, maxRetryCount)
+	if err != nil {
+		return nil, err
 	}
-	p.logger.Infof("Recovered %d sessions during initialization", recoveredCount)
+	defer p.releaseSession(sessionID)
 
-	// 初始预热，补足到 activeSessions
-	p.prewarmSessions()
+	exists, detail, err := p.querySessionAndCache(ctx, sessionID)
+	if err != nil {
+		return nil, err
+	}
+	if !exists {
+		return nil, fmt.Errorf("session %s not found", sessionID)
+	}
+
+	var deps []*interfaces.DependencyInfo
+	if detail != nil && detail.InstalledDependencies != nil {
+		deps = detail.InstalledDependencies
+	} else if item, ok := p.getSessionItem(sessionID); ok && item.Dependencies != nil {
+		deps = item.Dependencies
+	}
+	resp = &DependenciesInfo{
+		SessionID:    sessionID,
+		Dependencies: deps,
+	}
+	return resp, nil
 }
 
+// ExecuteCode 执行代码
 func (p *sessionPoolImpl) ExecuteCode(ctx context.Context, req *interfaces.ExecuteCodeReq) (resp *interfaces.ExecuteCodeResp, err error) {
 	// 记录可观测
 	ctx, _ = o11y.StartInternalSpan(ctx)
@@ -199,12 +159,50 @@ func (p *sessionPoolImpl) ExecuteCode(ctx context.Context, req *interfaces.Execu
 		return nil, err
 	}
 	defer p.releaseSession(sessionID)
+	// 安装依赖库
+	if len(req.Dependencies) > 0 && req.PythonPackageIndexURL != "" {
+		detail, err := p.client.InstallPythonDependencies(ctx, sessionID, &interfaces.InstallDependenciesReq{
+			Dependencies:          req.Dependencies,
+			PythonPackageIndexURL: req.PythonPackageIndexURL,
+		})
+		if err != nil {
+			p.logger.WithContext(ctx).Errorf("InstallPythonDependencies failed for session %s: %v", sessionID, err)
+			err = errors.NewHTTPError(ctx, http.StatusInternalServerError, errors.ErrExtPypiRepoUnavailable, map[string]any{
+				"error":            err.Error(),
+				"session_id":       sessionID,
+				"request_params":   utils.ObjectToJSON(req),
+				"dependencies":     utils.ObjectToJSON(req.Dependencies),
+				"dependencies_url": req.PythonPackageIndexURL,
+			})
+			return nil, err
+		}
+		p.updateSessionDependencies(sessionID, detail)
+	}
 	resp, err = p.client.ExecuteCodeSync(ctx, sessionID, req)
 	if err != nil {
 		p.logger.WithContext(ctx).Errorf("ExecuteCodeSync failed for session %s: %v", sessionID, err)
 		return nil, err
 	}
 	return resp, nil
+}
+
+func (p *sessionPoolImpl) initSessions() {
+	ctx := context.Background()
+	recoveredCount := 0
+	for i := 0; i < p.maxSessions; i++ {
+		id := fmt.Sprintf("%s%d", sessionIDPrefix, i)
+		// 检查会话是否存在且状态为 Running
+		exists, detail, err := p.querySessionAndCache(ctx, id)
+		if err == nil && exists && detail != nil && detail.Status == interfaces.SessionStatusRunning {
+			poolInstance.addSession(id)
+			p.updateSessionDependencies(id, detail)
+			recoveredCount++
+		}
+	}
+	p.logger.Infof("Recovered %d sessions during initialization", recoveredCount)
+
+	// 初始预热，补足到 activeSessions
+	p.prewarmSessions()
 }
 
 // acquireSession 从会话池中获取一个会话
@@ -275,7 +273,7 @@ func (p *sessionPoolImpl) acquireSession(ctx context.Context, retryCount int) (s
 
 func (p *sessionPoolImpl) ensureRemoteSession(ctx context.Context, sessionID string) error {
 	// 创建前检查是否存在
-	exists, _, err := p.client.QuerySession(ctx, sessionID)
+	exists, _, err := p.querySessionAndCache(ctx, sessionID)
 	if err != nil {
 		p.logger.Errorf("QuerySession failed for session %s: %v", sessionID, err)
 		return err
@@ -319,7 +317,7 @@ func (p *sessionPoolImpl) waitForSessionRunning(ctx context.Context, sessionID s
 		case <-ctx.Done():
 			return ctx.Err()
 		case <-ticker.C:
-			exists, detail, err := p.client.QuerySession(ctx, sessionID)
+			exists, detail, err := p.querySessionAndCache(ctx, sessionID)
 			if err != nil {
 				p.logger.Errorf("QuerySession failed for session %s: %v", sessionID, err)
 				return err
@@ -439,11 +437,12 @@ func (p *sessionPoolImpl) maintainPool() {
 
 	// 1. 健康检查与修复
 	for _, id := range currentSessions {
-		exists, detail, err := p.client.QuerySession(ctx, id)
+		exists, detail, err := p.querySessionAndCache(ctx, id)
 		if err != nil || !exists || (detail.Status != interfaces.SessionStatusRunning && detail.Status != interfaces.SessionStatusCreating) {
 			p.logger.Warnf("Session %s is unhealthy or missing, removing from pool", id)
 			p.removeSession(id)
 			p.invalidateSession(id)
+			continue
 		}
 	}
 
@@ -498,4 +497,112 @@ func Close() {
 		}(pool.ID)
 	}
 	waitGroup.Wait()
+}
+
+// 添加会话到池
+func (p *sessionPoolImpl) addSession(sessionID string) {
+	p.mu.Lock()
+	defer p.mu.Unlock()
+	p.sessions[sessionID] = &sessionItem{
+		ID:           sessionID,
+		RunningTasks: 0,
+		LastUsedAt:   time.Now(),
+	}
+}
+
+// getSessionItem 获取会话项
+func (p *sessionPoolImpl) getSessionItem(sessionID string) (sessionItem *sessionItem, ok bool) {
+	p.mu.Lock()
+	defer p.mu.Unlock()
+	sessionItem, ok = p.sessions[sessionID]
+	return
+}
+
+// 删除会话
+func (p *sessionPoolImpl) removeSession(sessionID string) {
+	p.mu.Lock()
+	defer p.mu.Unlock()
+	delete(p.sessions, sessionID)
+}
+
+// 更新运行任务数
+// updateRunningTasks 更新会话运行任务数
+func (p *sessionPoolImpl) updateRunningTasks(sessionID string, delta int) {
+	p.mu.Lock()
+	defer p.mu.Unlock()
+	if item, exists := p.sessions[sessionID]; exists {
+		item.RunningTasks += delta
+		item.LastUsedAt = time.Now()
+	}
+}
+
+// findBestSession 寻找最佳会话: 堆叠分配策略：寻找负载最高但未满的会话
+func (p *sessionPoolImpl) findBestSession() (bestSession *sessionItem) {
+	p.mu.Lock()
+	type sessionCandidate struct {
+		id           string
+		runningTasks int
+		lastUsedAt   time.Time
+	}
+	candidates := make([]sessionCandidate, 0, len(p.sessions))
+	for _, item := range p.sessions {
+		p.logger.Infof("Session %s: RunningTasks=%d, LastUsedAt=%v\n", item.ID, item.RunningTasks, item.LastUsedAt)
+		if item.RunningTasks < p.maxConcurrentTasks {
+			candidates = append(candidates, sessionCandidate{
+				id:           item.ID,
+				runningTasks: item.RunningTasks,
+				lastUsedAt:   item.LastUsedAt,
+			})
+		}
+	}
+	p.mu.Unlock()
+
+	sort.Slice(candidates, func(i, j int) bool {
+		return candidates[i].runningTasks > candidates[j].runningTasks
+	})
+
+	invalidIDs := make([]string, 0)
+	for _, c := range candidates {
+		exists, _, _ := p.querySessionAndCache(context.Background(), c.id)
+		if !exists {
+			invalidIDs = append(invalidIDs, c.id)
+			continue
+		}
+		if item, ok := p.getSessionItem(c.id); ok {
+			return item
+		}
+	}
+
+	for _, sessionID := range invalidIDs {
+		p.removeSession(sessionID)
+	}
+	return nil
+}
+
+func (p *sessionPoolImpl) querySessionAndCache(ctx context.Context, sessionID string) (exists bool, detail *interfaces.SessionDetail, err error) {
+	exists, detail, err = p.client.QuerySession(ctx, sessionID)
+	if err != nil || !exists || detail == nil {
+		return exists, detail, err
+	}
+	p.updateSessionDependencies(sessionID, detail)
+	return exists, detail, nil
+}
+
+func (p *sessionPoolImpl) updateSessionDependencies(sessionID string, detail *interfaces.SessionDetail) {
+	if detail == nil {
+		return
+	}
+	var deps []*interfaces.DependencyInfo
+	if detail.InstalledDependencies != nil {
+		deps = detail.InstalledDependencies
+	} else if detail.RequestedDependencies != nil {
+		deps = detail.RequestedDependencies
+	} else {
+		return
+	}
+	p.mu.Lock()
+	defer p.mu.Unlock()
+	if item, ok := p.sessions[sessionID]; ok {
+		item.Dependencies = deps
+	}
 }

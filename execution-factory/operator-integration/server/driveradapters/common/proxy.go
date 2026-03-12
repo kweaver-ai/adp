@@ -14,12 +14,17 @@ import (
 	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/interfaces"
 	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/logics/metadata"
 	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/logics/sandbox"
+	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/utils"
 )
 
 // UnifiedProxyHandler 统一代理处理接口
 type UnifiedProxyHandler interface {
 	FunctionExecuteProxy(c *gin.Context)
 	FunctionExecute(c *gin.Context)
+	// 从Pypi源查询依赖库版本
+	QueryPypiVersions(c *gin.Context)
+	// 获取依赖库列表
+	GetDependencies(c *gin.Context)
 }
 
 // unifiedProxyHandler 代理处理实现
@@ -49,7 +54,7 @@ func NewUnifiedProxyHandler() UnifiedProxyHandler {
 // FunctionExecute 函数执行
 func (h *unifiedProxyHandler) FunctionExecute(c *gin.Context) {
 	var err error
-	req := &interfaces.ExecuteCodeReq{}
+	req := &interfaces.FunctionProxyExecuteCodeReq{}
 	if err = c.ShouldBindJSON(req); err != nil {
 		err = errors.NewHTTPError(c.Request.Context(), http.StatusBadRequest, errors.ErrExtDebugParamsInvalid,
 			fmt.Sprintf("invalid request body, err: %v", err))
@@ -68,7 +73,15 @@ func (h *unifiedProxyHandler) FunctionExecute(c *gin.Context) {
 		rest.ReplyError(c, err)
 		return
 	}
-	resp, err := h.SessionPool.ExecuteCode(c.Request.Context(), req)
+	execReq := &interfaces.ExecuteCodeReq{
+		Code:                  req.Code,
+		Event:                 req.Event,
+		Language:              req.Language,
+		Timeout:               req.Timeout,
+		Dependencies:          req.Dependencies,
+		PythonPackageIndexURL: req.DependenciesURL,
+	}
+	resp, err := h.SessionPool.ExecuteCode(c.Request.Context(), execReq)
 	if err != nil {
 		rest.ReplyError(c, err)
 		return
@@ -132,23 +145,36 @@ func (h *unifiedProxyHandler) FunctionExecuteProxy(c *gin.Context) {
 	}
 
 	// 执行函数
-	code, scriptType, _ := metadata.GetFunctionContent()
+	scriptType := metadata.GetScriptType()
 	if scriptType != string(interfaces.ScriptTypePython) {
 		err = errors.DefaultHTTPError(c.Request.Context(), http.StatusBadRequest, fmt.Sprintf("script_type %s not supported", scriptType))
 		rest.ReplyError(c, err)
 		return
 	}
+	code := metadata.GetCode()
 	if code == "" {
 		err = errors.DefaultHTTPError(c.Request.Context(), http.StatusBadRequest, fmt.Sprintf("function code is empty for version %s", req.Version))
 		rest.ReplyError(c, err)
 		return
 	}
-	resp, err := h.SessionPool.ExecuteCode(c.Request.Context(), &interfaces.ExecuteCodeReq{
-		Code:     code,
-		Event:    event,
-		Timeout:  int(req.Timeout / 1000),
-		Language: string(interfaces.ScriptTypePython),
-	})
+	dependencies := []*interfaces.DependencyInfo{}
+	if metadata.GetDependencies() != "" {
+		dependencies = utils.JSONToObject[[]*interfaces.DependencyInfo](metadata.GetDependencies())
+	}
+	execReq := &interfaces.ExecuteCodeReq{
+		Code:                  code,
+		Event:                 event,
+		Timeout:               int(req.Timeout / 1000),
+		Language:              scriptType,
+		Dependencies:          dependencies,
+		PythonPackageIndexURL: metadata.GetDependenciesURL(),
+	}
+	if err = defaults.Set(execReq); err != nil {
+		err = errors.DefaultHTTPError(c.Request.Context(), http.StatusBadRequest, fmt.Sprintf("set default value failed, err: %v", err))
+		rest.ReplyError(c, err)
+		return
+	}
+	resp, err := h.SessionPool.ExecuteCode(c.Request.Context(), execReq)
 	if err != nil {
 		rest.ReplyError(c, err)
 		return
@@ -162,4 +188,43 @@ func (h *unifiedProxyHandler) FunctionExecuteProxy(c *gin.Context) {
 		Metrics: resp.Metrics,
 	}
 	rest.ReplyOK(c, http.StatusOK, result)
+}
+
+// QueryPypiVersions 查询Pypi依赖库版本
+func (h *unifiedProxyHandler) QueryPypiVersions(c *gin.Context) {
+	req := &sandbox.ParsePypiReq{}
+	if err := c.ShouldBindUri(req); err != nil {
+		rest.ReplyError(c, err)
+		return
+	}
+	if err := c.ShouldBindQuery(req); err != nil {
+		rest.ReplyError(c, err)
+		return
+	}
+	if err := defaults.Set(req); err != nil {
+		err = errors.DefaultHTTPError(c.Request.Context(), http.StatusBadRequest, err.Error())
+		rest.ReplyError(c, err)
+		return
+	}
+	if err := validator.New().Struct(req); err != nil {
+		rest.ReplyError(c, err)
+		return
+	}
+	resp, err := sandbox.ParsePypi(c.Request.Context(), req)
+	if err != nil {
+		rest.ReplyError(c, err)
+		return
+	}
+	rest.ReplyOK(c, http.StatusOK, resp)
+}
+
+// GetDependencies 获取依赖库列表
+func (h *unifiedProxyHandler) GetDependencies(c *gin.Context) {
+	var err error
+	resp, err := h.SessionPool.GetDependencies(c.Request.Context())
+	if err != nil {
+		rest.ReplyError(c, err)
+		return
+	}
+	rest.ReplyOK(c, http.StatusOK, resp)
 }

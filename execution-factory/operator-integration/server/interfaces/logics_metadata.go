@@ -127,9 +127,10 @@ const (
 
 // FunctionContent 函数内容定义
 type FunctionContent struct {
-	ScriptType   ScriptType `json:"script_type" form:"script_type" default:"python" validate:"required,oneof=python"` // 脚本类型
-	Code         string     `json:"code" form:"code" validate:"required"`                                             // Python 代码（必填）
-	Dependencies []string   `json:"dependencies,omitempty" form:"dependencies"`                                       // 依赖库列表
+	ScriptType      ScriptType       `json:"script_type" form:"script_type" default:"python" validate:"required,oneof=python"` // 脚本类型
+	Code            string           `json:"code" form:"code" validate:"required"`                                             // Python 代码（必填）
+	Dependencies    []DependencyInfo `json:"dependencies" form:"dependencies"`                                                 // 依赖库列表
+	DependenciesURL string           `json:"dependencies_url" form:"dependencies_url"`                                         // 依赖库安装源地址
 }
 
 // ParameterType 参数类型
@@ -175,9 +176,10 @@ type FunctionInput struct {
 	Inputs  []*ParameterDef `json:"inputs,omitempty" form:"inputs"`   // 输入参数列表
 	Outputs []*ParameterDef `json:"outputs,omitempty" form:"outputs"` // 输出参数列表
 	// 代码相关
-	ScriptType   ScriptType `json:"script_type" form:"script_type" default:"python" validate:"required,oneof=python"` // 脚本类型
-	Code         string     `json:"code" form:"code"`                                                                 // Python 代码（必填）
-	Dependencies []string   `json:"dependencies,omitempty" form:"dependencies"`                                       // 依赖库列表
+	ScriptType      ScriptType        `json:"script_type" form:"script_type" default:"python" validate:"required,oneof=python"` // 脚本类型
+	Code            string            `json:"code" form:"code"`                                                                 // Python 代码（必填）
+	Dependencies    []*DependencyInfo `json:"dependencies,omitempty" form:"dependencies"`                                       // 依赖库列表
+	DependenciesURL string            `json:"dependencies_url,omitempty" form:"dependencies_url"`                               // 依赖库安装源地址
 }
 
 // FunctionInputEdit 函数输入编辑定义
@@ -186,9 +188,10 @@ type FunctionInputEdit struct {
 	Inputs  []*ParameterDef `json:"inputs,omitempty" form:"inputs"`   // 输入参数列表
 	Outputs []*ParameterDef `json:"outputs,omitempty" form:"outputs"` // 输出参数列表
 	// 代码相关
-	ScriptType   ScriptType `json:"script_type" form:"script_type" default:"python" validate:"required,oneof=python"` // 脚本类型
-	Code         string     `json:"code" form:"code"`                                                                 // Python 代码（必填）
-	Dependencies []string   `json:"dependencies,omitempty" form:"dependencies"`                                       // 依赖库列表
+	ScriptType      ScriptType        `json:"script_type" form:"script_type" default:"python" validate:"required,oneof=python"` // 脚本类型
+	Code            string            `json:"code" form:"code"`                                                                 // Python 代码（必填）
+	Dependencies    []*DependencyInfo `json:"dependencies,omitempty" form:"dependencies"`                                       // 依赖库列表
+	DependenciesURL string            `json:"dependencies_url,omitempty" form:"dependencies_url"`                               // 依赖库安装源地址
 }
 
 // OpenAPIInput OpenAPI 输入定义

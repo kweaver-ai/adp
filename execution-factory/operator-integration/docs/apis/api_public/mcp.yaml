@@ -1244,12 +1244,7 @@ components:
           $ref: "#/components/schemas/MCPConnectionInfo"
     MCPToolDebugRequest:
       type: object
-      properties:
-        parameters:
-          type: object
-          additionalProperties: true
-          description: 工具请求参数
-      required: [parameters]
+      description: MCP工具调试请求, 工具调试请求参数
     MCPToolDebugResponse:
       type: object
       properties:
