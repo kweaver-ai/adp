@@ -442,8 +442,8 @@ const EditDrawer: React.FC<{
               rules={[
                 { required: true, message: intl.get('Global.pleaseInput') },
                 {
-                  pattern: /^[a-z0-9][a-z0-9_-]*$/,
-                  message: intl.get('Global.idPatternError'),
+                  pattern: /^[a-zA-Z0-9][a-zA-Z0-9_-]*$/,
+                  message: intl.get('Global.idCompletePatternError'),
                 },
               ]}
             >

@@ -78,6 +78,7 @@
     "idMaxLength": "ID不能超过40个字符",
     "idSpecialVerification": "仅支持小写字母、数字及下划线，且不能以数字开头",
     "idPatternError": "只能包含小写英文字母、数字、下划线（_）、连字符（-），且不能以下划线和连字符开头",
+    "idCompletePatternError": "只能包含英文字母、数字、下划线（_）、连字符（-），且不能以下划线和连字符开头",
     "idLowercaseLetterNumberOnly": "只能输入小写英文字母和数字",
     "fieldNameCannotRepeat": "字段名称不能重复",
     "pleaseSelectAtLeastOneField": "请选择至少一个字段",
