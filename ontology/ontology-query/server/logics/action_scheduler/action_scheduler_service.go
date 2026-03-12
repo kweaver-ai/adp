@@ -101,80 +101,25 @@ func (s *actionSchedulerService) ExecuteAction(ctx context.Context, req *interfa
 			WithErrorDetails(fmt.Sprintf("Action type not found: %s", req.ActionTypeID))
 	}
 
-	var condition *cond.CondCfg
-	// When _instance_identities is empty, scan all matching instances based on action type condition
-	if len(req.InstanceIdentities) == 0 {
-		logger.Infof("No _instance_identities provided, scanning all matching instances for action type %s", req.ActionTypeID)
-		span.SetAttributes(attr.Key("scan_mode").Bool(true))
-
-		condition = actionType.Condition
-	} else {
-		logger.Infof("_instance_identities provided, scanning only matching instances for action type %s", req.ActionTypeID)
-		span.SetAttributes(attr.Key("scan_mode").Bool(false))
-
-		if actionType.Condition != nil {
-			instance_condition := logics.BuildInstanceIdentitiesCondition(req.InstanceIdentities)
-			condition = &cond.CondCfg{
-				Operation: "and",
-				SubConds:  []*cond.CondCfg{instance_condition, actionType.Condition},
-			}
-		} else {
-			condition = logics.BuildInstanceIdentitiesCondition(req.InstanceIdentities)
-		}
-	}
-
-	// Query objects matching the action type condition
-	objectQuery := &interfaces.ObjectQueryBaseOnObjectType{
-		ActualCondition: condition, // Use action type's condition directly
-		PageQuery: interfaces.PageQuery{
-			Limit:     interfaces.MAX_LIMIT,
-			NeedTotal: true,
-		},
-		KNID:         req.KNID,
-		Branch:       req.Branch,
-		ObjectTypeID: actionType.ObjectTypeID,
-		CommonQueryParameters: interfaces.CommonQueryParameters{
-			IncludeTypeInfo: false,
-		},
-	}
-
-	objects, err := s.ots.GetObjectsByObjectTypeID(ctx, objectQuery)
+	// Get instances based on action type configuration and request parameters
+	instances, objDatas, err := s.getInstancesForAction(ctx, &actionType, req.KNID, req.Branch, req.InstanceIdentities)
 	if err != nil {
-		logger.Errorf("Failed to scan matching instances: %v", err)
-		return nil, rest.NewHTTPError(ctx, http.StatusInternalServerError, oerrors.OntologyQuery_ActionExecution_GetActionTypeFailed).
-			WithErrorDetails(fmt.Sprintf("Failed to scan matching instances: %v", err))
+		return nil, err
 	}
 
-	// Extract unique identities from objects using primary keys
-	for _, objData := range objects.Datas {
-		instanceInfo := interfaces.ObjectSystemInfo{
-			InstanceIdentity: map[string]any{},
-		}
-		if instance_id, ok := objData[interfaces.SYSTEM_PROPERTY_INSTANCE_ID]; ok {
-			instanceInfo.InstanceID = instance_id
-		}
-		if identity, ok := objData[interfaces.SYSTEM_PROPERTY_INSTANCE_IDENTITY]; ok {
-			if identityMap, ok := identity.(map[string]any); ok {
-				instanceInfo.InstanceIdentity = identityMap
-			}
-		}
-		if display, ok := objData[interfaces.SYSTEM_PROPERTY_DISPLAY]; ok {
-			instanceInfo.Display = display
-		}
-		req.Instances = append(req.Instances, instanceInfo)
-		req.ObjDatas = append(req.ObjDatas, objData)
-	}
+	// Set instances and object data to request
+	req.Instances = instances
+	req.ObjDatas = objDatas
 
 	// If no matching instances found after scanning, return appropriate response
 	if len(req.Instances) == 0 {
-		logger.Infof("No matching instances found for action type %s after scanning", req.ActionTypeID)
+		logger.Infof("No matching instances found for action type %s", req.ActionTypeID)
 		return nil, rest.NewHTTPError(ctx, http.StatusBadRequest, oerrors.OntologyQuery_ActionExecution_InvalidParameter).
 			WithErrorDetails("No matching instances found for the action type condition")
 	}
 
-	logger.Infof("Scanned and found %d matching instances for action type %s", len(req.Instances), req.ActionTypeID)
-	span.SetAttributes(attr.Key("scan_mode").Bool(true))
-	span.SetAttributes(attr.Key("scanned_count").Int(len(req.Instances)))
+	logger.Infof("Found %d matching instances for action type %s", len(req.Instances), req.ActionTypeID)
+	span.SetAttributes(attr.Key("instances_count").Int(len(req.Instances)))
 
 	// Check execution objects limit
 	if len(req.Instances) > maxExecutionObjects {
@@ -449,6 +394,274 @@ func (s *actionSchedulerService) updateExecutionProgress(ctx context.Context, ex
 	if err := s.logsService.UpdateExecution(ctx, execution.KNID, execution.ID, updates); err != nil {
 		logger.Warnf("Failed to update execution progress: %v", err)
 	}
+}
+
+// getInstancesForAction gets instances based on action type configuration and request parameters.
+// Handles all combinations: bound/unbound object type, with/without identities, action types (add/update/delete).
+func (s *actionSchedulerService) getInstancesForAction(ctx context.Context, actionType *interfaces.ActionType,
+	knID, branch string, instanceIdentities []map[string]any) ([]interfaces.ObjectSystemInfo, []map[string]any, error) {
+
+	var instances []interfaces.ObjectSystemInfo
+	var objDatas []map[string]any
+
+	// Check if object type is bound
+	isObjectTypeBound := actionType.ObjectTypeID != ""
+
+	if !isObjectTypeBound {
+		// Case: 未绑定对象类
+		if len(instanceIdentities) == 0 {
+			// Case 4: 未绑定对象类 + 无 identities → 构造一个临时的虚拟实例
+			logger.Infof("Action type %s has no bound object type and no identities provided, creating virtual instance", actionType.ATID)
+			virtualInstance := interfaces.ObjectSystemInfo{
+				InstanceIdentity: map[string]any{},
+			}
+			virtualObjData := map[string]any{}
+			instances = append(instances, virtualInstance)
+			objDatas = append(objDatas, virtualObjData)
+		} else {
+			// Case 5: 未绑定对象类 + 有 identities → 按 identities 构造实例
+			logger.Infof("Action type %s has no bound object type, constructing instances from identities", actionType.ATID)
+			for _, identity := range instanceIdentities {
+				instanceInfo := interfaces.ObjectSystemInfo{
+					InstanceIdentity: identity,
+				}
+				objData := make(map[string]any)
+				for k, v := range identity {
+					objData[k] = v
+				}
+				instances = append(instances, instanceInfo)
+				objDatas = append(objDatas, objData)
+			}
+		}
+		return instances, objDatas, nil
+	}
+
+	// Case: 绑定对象类
+	hasIdentities := len(instanceIdentities) > 0
+	isAddAction := actionType.ActionType == "add"
+
+	if !hasIdentities {
+		// Case 1: 绑定对象类 + 无 identities → 扫描满足行动条件的实例
+		logger.Infof("No _instance_identities provided, scanning all matching instances for action type %s", actionType.ATID)
+		condition := actionType.Condition
+
+		objectQuery := &interfaces.ObjectQueryBaseOnObjectType{
+			ActualCondition: condition,
+			PageQuery: interfaces.PageQuery{
+				Limit:     interfaces.MAX_LIMIT,
+				NeedTotal: true,
+			},
+			KNID:         knID,
+			Branch:       branch,
+			ObjectTypeID: actionType.ObjectTypeID,
+			CommonQueryParameters: interfaces.CommonQueryParameters{
+				IncludeTypeInfo: false,
+			},
+		}
+
+		objects, err := s.ots.GetObjectsByObjectTypeID(ctx, objectQuery)
+		if err != nil {
+			logger.Errorf("Failed to scan matching instances: %v", err)
+			return nil, nil, rest.NewHTTPError(ctx, http.StatusInternalServerError, oerrors.OntologyQuery_ActionExecution_GetActionTypeFailed).
+				WithErrorDetails(fmt.Sprintf("Failed to scan matching instances: %v", err))
+		}
+
+		for _, objData := range objects.Datas {
+			instanceInfo := interfaces.ObjectSystemInfo{
+				InstanceIdentity: map[string]any{},
+			}
+			if instance_id, ok := objData[interfaces.SYSTEM_PROPERTY_INSTANCE_ID]; ok {
+				instanceInfo.InstanceID = instance_id
+			}
+			if identity, ok := objData[interfaces.SYSTEM_PROPERTY_INSTANCE_IDENTITY]; ok {
+				if identityMap, ok := identity.(map[string]any); ok {
+					instanceInfo.InstanceIdentity = identityMap
+				}
+			}
+			if display, ok := objData[interfaces.SYSTEM_PROPERTY_DISPLAY]; ok {
+				instanceInfo.Display = display
+			}
+			instances = append(instances, instanceInfo)
+			objDatas = append(objDatas, objData)
+		}
+	} else {
+		// Case: 绑定对象类 + 有 identities
+		if isAddAction {
+			// Case 2: 绑定对象类 + 有 identities + add → 先查询，查询不到则构造实例并评估条件，查询到则按 identities 和行动条件过滤
+			logger.Infof("Add action type with identities provided, checking instances first for action type %s", actionType.ATID)
+
+			// First, query instances only by identities (without action condition)
+			instanceCondition := logics.BuildInstanceIdentitiesCondition(instanceIdentities)
+			instanceQuery := &interfaces.ObjectQueryBaseOnObjectType{
+				ActualCondition: instanceCondition,
+				PageQuery: interfaces.PageQuery{
+					Limit:     interfaces.MAX_LIMIT,
+					NeedTotal: true,
+				},
+				KNID:         knID,
+				Branch:       branch,
+				ObjectTypeID: actionType.ObjectTypeID,
+				CommonQueryParameters: interfaces.CommonQueryParameters{
+					IncludeTypeInfo: false,
+				},
+			}
+
+			instanceObjects, err := s.ots.GetObjectsByObjectTypeID(ctx, instanceQuery)
+			if err != nil {
+				logger.Errorf("Failed to query instances by identities: %v", err)
+				return nil, nil, rest.NewHTTPError(ctx, http.StatusInternalServerError, oerrors.OntologyQuery_ActionExecution_GetActionTypeFailed).
+					WithErrorDetails(fmt.Sprintf("Failed to query instances by identities: %v", err))
+			}
+
+			if len(instanceObjects.Datas) == 0 {
+				// All instances not found: construct instances from identities and evaluate condition
+				logger.Infof("No instances found by identities, constructing instances and evaluating condition")
+				objectType, exists, err := s.omAccess.GetObjectType(ctx, knID, branch, actionType.ObjectTypeID)
+				if err != nil {
+					logger.Errorf("Failed to get object type: %v", err)
+					return nil, nil, rest.NewHTTPError(ctx, http.StatusInternalServerError, oerrors.OntologyQuery_ActionExecution_GetActionTypeFailed).
+						WithErrorDetails(fmt.Sprintf("Failed to get object type: %v", err))
+				}
+				if !exists {
+					return nil, nil, rest.NewHTTPError(ctx, http.StatusNotFound, oerrors.OntologyQuery_ActionExecution_ActionTypeNotFound).
+						WithErrorDetails(fmt.Sprintf("Object type not found: %s", actionType.ObjectTypeID))
+				}
+
+				for _, identity := range instanceIdentities {
+					// Evaluate condition if exists
+					if actionType.Condition != nil {
+						satisfies, err := logics.EvaluateInstanceAgainstCondition(ctx, identity, actionType.Condition, &objectType)
+						if err != nil {
+							logger.Errorf("Error evaluating condition for instance[%v], error: %v", identity, err)
+							continue
+						}
+						if !satisfies {
+							// Condition not satisfied, skip
+							continue
+						}
+					}
+
+					// Condition satisfied (or no condition), construct instance
+					instanceInfo := interfaces.ObjectSystemInfo{
+						InstanceIdentity: identity,
+					}
+					objData := make(map[string]any)
+					for k, v := range identity {
+						objData[k] = v
+					}
+					instances = append(instances, instanceInfo)
+					objDatas = append(objDatas, objData)
+				}
+			} else {
+				// Instances found: filter by identities and action condition
+				logger.Infof("Instances found by identities, filtering by action condition")
+				var condition *cond.CondCfg
+				if actionType.Condition != nil {
+					condition = &cond.CondCfg{
+						Operation: "and",
+						SubConds:  []*cond.CondCfg{instanceCondition, actionType.Condition},
+					}
+				} else {
+					condition = instanceCondition
+				}
+
+				filteredQuery := &interfaces.ObjectQueryBaseOnObjectType{
+					ActualCondition: condition,
+					PageQuery: interfaces.PageQuery{
+						Limit:     interfaces.MAX_LIMIT,
+						NeedTotal: true,
+					},
+					KNID:         knID,
+					Branch:       branch,
+					ObjectTypeID: actionType.ObjectTypeID,
+					CommonQueryParameters: interfaces.CommonQueryParameters{
+						IncludeTypeInfo: false,
+					},
+				}
+
+				filteredObjects, err := s.ots.GetObjectsByObjectTypeID(ctx, filteredQuery)
+				if err != nil {
+					logger.Errorf("Failed to filter instances: %v", err)
+					return nil, nil, rest.NewHTTPError(ctx, http.StatusInternalServerError, oerrors.OntologyQuery_ActionExecution_GetActionTypeFailed).
+						WithErrorDetails(fmt.Sprintf("Failed to filter instances: %v", err))
+				}
+
+				for _, objData := range filteredObjects.Datas {
+					instanceInfo := interfaces.ObjectSystemInfo{
+						InstanceIdentity: map[string]any{},
+					}
+					if instance_id, ok := objData[interfaces.SYSTEM_PROPERTY_INSTANCE_ID]; ok {
+						instanceInfo.InstanceID = instance_id
+					}
+					if identity, ok := objData[interfaces.SYSTEM_PROPERTY_INSTANCE_IDENTITY]; ok {
+						if identityMap, ok := identity.(map[string]any); ok {
+							instanceInfo.InstanceIdentity = identityMap
+						}
+					}
+					if display, ok := objData[interfaces.SYSTEM_PROPERTY_DISPLAY]; ok {
+						instanceInfo.Display = display
+					}
+					instances = append(instances, instanceInfo)
+					objDatas = append(objDatas, objData)
+				}
+			}
+		} else {
+			// Case 3: 绑定对象类 + 有 identities + update/delete → 按 identities 和行动条件过滤实例
+			logger.Infof("_instance_identities provided, filtering instances by identities and action condition for action type %s", actionType.ATID)
+			var condition *cond.CondCfg
+			instanceCondition := logics.BuildInstanceIdentitiesCondition(instanceIdentities)
+			if actionType.Condition != nil {
+				condition = &cond.CondCfg{
+					Operation: "and",
+					SubConds:  []*cond.CondCfg{instanceCondition, actionType.Condition},
+				}
+			} else {
+				condition = instanceCondition
+			}
+
+			objectQuery := &interfaces.ObjectQueryBaseOnObjectType{
+				ActualCondition: condition,
+				PageQuery: interfaces.PageQuery{
+					Limit:     interfaces.MAX_LIMIT,
+					NeedTotal: true,
+				},
+				KNID:         knID,
+				Branch:       branch,
+				ObjectTypeID: actionType.ObjectTypeID,
+				CommonQueryParameters: interfaces.CommonQueryParameters{
+					IncludeTypeInfo: false,
+				},
+			}
+
+			objects, err := s.ots.GetObjectsByObjectTypeID(ctx, objectQuery)
+			if err != nil {
+				logger.Errorf("Failed to filter matching instances: %v", err)
+				return nil, nil, rest.NewHTTPError(ctx, http.StatusInternalServerError, oerrors.OntologyQuery_ActionExecution_GetActionTypeFailed).
+					WithErrorDetails(fmt.Sprintf("Failed to filter matching instances: %v", err))
+			}
+
+			for _, objData := range objects.Datas {
+				instanceInfo := interfaces.ObjectSystemInfo{
+					InstanceIdentity: map[string]any{},
+				}
+				if instance_id, ok := objData[interfaces.SYSTEM_PROPERTY_INSTANCE_ID]; ok {
+					instanceInfo.InstanceID = instance_id
+				}
+				if identity, ok := objData[interfaces.SYSTEM_PROPERTY_INSTANCE_IDENTITY]; ok {
+					if identityMap, ok := identity.(map[string]any); ok {
+						instanceInfo.InstanceIdentity = identityMap
+					}
+				}
+				if display, ok := objData[interfaces.SYSTEM_PROPERTY_DISPLAY]; ok {
+					instanceInfo.Display = display
+				}
+				instances = append(instances, instanceInfo)
+				objDatas = append(objDatas, objData)
+			}
+		}
+	}
+
+	return instances, objDatas, nil
 }
 
 // buildExecutionParams builds the execution parameters from action type parameters and object data.

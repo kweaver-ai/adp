@@ -441,5 +441,190 @@ func Test_ValidateActionType(t *testing.T) {
 			err := ValidateActionType(ctx, at)
 			So(err, ShouldBeNil)
 		})
+
+		Convey("Success with empty ObjectTypeID\n", func() {
+			at := &interfaces.ActionType{
+				ActionTypeWithKeyField: interfaces.ActionTypeWithKeyField{
+					ATID:         "at1",
+					ATName:       "action1",
+					ActionType:   interfaces.ACTION_TYPE_ADD,
+					ObjectTypeID: "",
+				},
+			}
+			err := ValidateActionType(ctx, at)
+			So(err, ShouldBeNil)
+		})
+
+		Convey("Failed with empty ObjectTypeID but having condition\n", func() {
+			at := &interfaces.ActionType{
+				ActionTypeWithKeyField: interfaces.ActionTypeWithKeyField{
+					ATID:         "at1",
+					ATName:       "action1",
+					ActionType:   interfaces.ACTION_TYPE_ADD,
+					ObjectTypeID: "",
+					Condition: &interfaces.CondCfg{
+						ObjectTypeID: "ot1",
+						Field:        "field1",
+						Operation:    cond.OperationEq,
+						ValueOptCfg: interfaces.ValueOptCfg{
+							Value: "value1",
+						},
+					},
+				},
+			}
+			err := ValidateActionType(ctx, at)
+			So(err, ShouldNotBeNil)
+			httpErr := err.(*rest.HTTPError)
+			So(httpErr.BaseError.ErrorCode, ShouldEqual, oerrors.OntologyManager_ActionType_InvalidParameter)
+		})
+
+		Convey("Failed with empty ObjectTypeID but parameter using property\n", func() {
+			at := &interfaces.ActionType{
+				ActionTypeWithKeyField: interfaces.ActionTypeWithKeyField{
+					ATID:         "at1",
+					ATName:       "action1",
+					ActionType:   interfaces.ACTION_TYPE_ADD,
+					ObjectTypeID: "",
+					Parameters: []interfaces.Parameter{
+						{
+							Name:      "param1",
+							ValueFrom: interfaces.VALUE_FROM_PROPERTY,
+							Value:     "prop1",
+						},
+					},
+				},
+			}
+			err := ValidateActionType(ctx, at)
+			So(err, ShouldNotBeNil)
+			httpErr := err.(*rest.HTTPError)
+			So(httpErr.BaseError.ErrorCode, ShouldEqual, oerrors.OntologyManager_ActionType_InvalidParameter)
+		})
+
+		Convey("Success with empty ObjectTypeID and parameter using const\n", func() {
+			at := &interfaces.ActionType{
+				ActionTypeWithKeyField: interfaces.ActionTypeWithKeyField{
+					ATID:         "at1",
+					ATName:       "action1",
+					ActionType:   interfaces.ACTION_TYPE_ADD,
+					ObjectTypeID: "",
+					Parameters: []interfaces.Parameter{
+						{
+							Name:      "param1",
+							ValueFrom: interfaces.VALUE_FROM_CONST,
+							Value:     "const_value",
+						},
+					},
+				},
+			}
+			err := ValidateActionType(ctx, at)
+			So(err, ShouldBeNil)
+		})
+
+		Convey("Success with empty ObjectTypeID and parameter using input\n", func() {
+			at := &interfaces.ActionType{
+				ActionTypeWithKeyField: interfaces.ActionTypeWithKeyField{
+					ATID:         "at1",
+					ATName:       "action1",
+					ActionType:   interfaces.ACTION_TYPE_ADD,
+					ObjectTypeID: "",
+					Parameters: []interfaces.Parameter{
+						{
+							Name:      "param1",
+							ValueFrom: interfaces.VALUE_FROM_INPUT,
+						},
+					},
+				},
+			}
+			err := ValidateActionType(ctx, at)
+			So(err, ShouldBeNil)
+		})
+
+		Convey("Success with ObjectTypeID and parameter using property\n", func() {
+			at := &interfaces.ActionType{
+				ActionTypeWithKeyField: interfaces.ActionTypeWithKeyField{
+					ATID:         "at1",
+					ATName:       "action1",
+					ActionType:   interfaces.ACTION_TYPE_ADD,
+					ObjectTypeID: "ot1",
+					Parameters: []interfaces.Parameter{
+						{
+							Name:      "param1",
+							ValueFrom: interfaces.VALUE_FROM_PROPERTY,
+							Value:     "prop1",
+						},
+					},
+				},
+			}
+			err := ValidateActionType(ctx, at)
+			So(err, ShouldBeNil)
+		})
+
+		Convey("Success with ObjectTypeID and parameter using const\n", func() {
+			at := &interfaces.ActionType{
+				ActionTypeWithKeyField: interfaces.ActionTypeWithKeyField{
+					ATID:         "at1",
+					ATName:       "action1",
+					ActionType:   interfaces.ACTION_TYPE_ADD,
+					ObjectTypeID: "ot1",
+					Parameters: []interfaces.Parameter{
+						{
+							Name:      "param1",
+							ValueFrom: interfaces.VALUE_FROM_CONST,
+							Value:     "const_value",
+						},
+					},
+				},
+			}
+			err := ValidateActionType(ctx, at)
+			So(err, ShouldBeNil)
+		})
+
+		Convey("Success with ObjectTypeID and parameter using input\n", func() {
+			at := &interfaces.ActionType{
+				ActionTypeWithKeyField: interfaces.ActionTypeWithKeyField{
+					ATID:         "at1",
+					ATName:       "action1",
+					ActionType:   interfaces.ACTION_TYPE_ADD,
+					ObjectTypeID: "ot1",
+					Parameters: []interfaces.Parameter{
+						{
+							Name:      "param1",
+							ValueFrom: interfaces.VALUE_FROM_INPUT,
+						},
+					},
+				},
+			}
+			err := ValidateActionType(ctx, at)
+			So(err, ShouldBeNil)
+		})
+
+		Convey("Success with ObjectTypeID and multiple parameters with different ValueFrom\n", func() {
+			at := &interfaces.ActionType{
+				ActionTypeWithKeyField: interfaces.ActionTypeWithKeyField{
+					ATID:         "at1",
+					ATName:       "action1",
+					ActionType:   interfaces.ACTION_TYPE_ADD,
+					ObjectTypeID: "ot1",
+					Parameters: []interfaces.Parameter{
+						{
+							Name:      "param1",
+							ValueFrom: interfaces.VALUE_FROM_PROPERTY,
+							Value:     "prop1",
+						},
+						{
+							Name:      "param2",
+							ValueFrom: interfaces.VALUE_FROM_CONST,
+							Value:     "const_value",
+						},
+						{
+							Name:      "param3",
+							ValueFrom: interfaces.VALUE_FROM_INPUT,
+						},
+					},
+				},
+			}
+			err := ValidateActionType(ctx, at)
+			So(err, ShouldBeNil)
+		})
 	})
 }

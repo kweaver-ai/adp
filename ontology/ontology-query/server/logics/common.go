@@ -10,8 +10,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"reflect"
+	"strconv"
 	"strings"
 	"sync/atomic"
+	"time"
 
 	"github.com/kweaver-ai/kweaver-go-lib/logger"
 	"github.com/kweaver-ai/kweaver-go-lib/rest"
@@ -609,4 +612,430 @@ func ShouldExcludeSystemProperty(fieldName string, excludeList []string) bool {
 		}
 	}
 	return false
+}
+
+// EvaluateInstanceAgainstCondition evaluates whether instance data satisfies the condition
+func EvaluateInstanceAgainstCondition(ctx context.Context,
+	instanceData map[string]any,
+	condition *cond.CondCfg,
+	objectType *interfaces.ObjectType) (bool, error) {
+
+	if condition == nil {
+		return true, nil
+	}
+
+	// Build property map for quick lookup
+	propMap := make(map[string]*cond.DataProperty)
+	for i := range objectType.DataProperties {
+		propMap[objectType.DataProperties[i].Name] = &objectType.DataProperties[i]
+	}
+
+	return evaluateConditionRecursive(ctx, instanceData, condition, propMap)
+}
+
+// evaluateConditionRecursive recursively evaluates condition
+func evaluateConditionRecursive(ctx context.Context,
+	instanceData map[string]any,
+	condition *cond.CondCfg,
+	propMap map[string]*cond.DataProperty) (bool, error) {
+
+	if condition == nil {
+		return true, nil
+	}
+
+	// Handle logical operators
+	switch condition.Operation {
+	case cond.OperationAnd:
+		for _, subCond := range condition.SubConds {
+			result, err := evaluateConditionRecursive(ctx, instanceData, subCond, propMap)
+			if err != nil {
+				return false, err
+			}
+			if !result {
+				return false, nil
+			}
+		}
+		return true, nil
+
+	case cond.OperationOr:
+		for _, subCond := range condition.SubConds {
+			result, err := evaluateConditionRecursive(ctx, instanceData, subCond, propMap)
+			if err != nil {
+				return false, err
+			}
+			if result {
+				return true, nil
+			}
+		}
+		return false, nil
+	}
+
+	// Handle field-based operators
+	fieldName := condition.Name
+	fieldValue, fieldExists := instanceData[fieldName]
+
+	// Handle operators that don't require field existence
+	switch condition.Operation {
+	case cond.OperationExist:
+		return fieldExists, nil
+	case cond.OperationNotExist:
+		return !fieldExists, nil
+	case cond.OperationEmpty:
+		if !fieldExists {
+			return true, nil
+		}
+		return isEmpty(fieldValue), nil
+	case cond.OperationNotEmpty:
+		if !fieldExists {
+			return false, nil
+		}
+		return !isEmpty(fieldValue), nil
+	}
+
+	// For other operators, field must exist (except for != which can return true if field doesn't exist)
+	if !fieldExists {
+		if condition.Operation == cond.OperationNotEq {
+			return true, nil
+		}
+		return false, nil
+	}
+
+	// Get property info for type checking
+	prop, hasProp := propMap[fieldName]
+	fieldType := ""
+	if hasProp {
+		fieldType = prop.Type
+	}
+
+	// Evaluate based on operation
+	switch condition.Operation {
+	case cond.OperationEq:
+		return compareValues(fieldValue, condition.ValueOptCfg.Value, "==", fieldType)
+	case cond.OperationNotEq:
+		return compareValues(fieldValue, condition.ValueOptCfg.Value, "!=", fieldType)
+	case cond.OperationGt:
+		return compareValues(fieldValue, condition.ValueOptCfg.Value, ">", fieldType)
+	case cond.OperationGte:
+		return compareValues(fieldValue, condition.ValueOptCfg.Value, ">=", fieldType)
+	case cond.OperationLt:
+		return compareValues(fieldValue, condition.ValueOptCfg.Value, "<", fieldType)
+	case cond.OperationLte:
+		return compareValues(fieldValue, condition.ValueOptCfg.Value, "<=", fieldType)
+	case cond.OperationIn:
+		return evaluateIn(fieldValue, condition.ValueOptCfg.Value)
+	case cond.OperationNotIn:
+		result, err := evaluateIn(fieldValue, condition.ValueOptCfg.Value)
+		if err != nil {
+			return false, err
+		}
+		return !result, nil
+	case cond.OperationRange:
+		return evaluateRange(fieldValue, condition.ValueOptCfg.Value, fieldType, true)
+	case cond.OperationOutRange:
+		result, err := evaluateRange(fieldValue, condition.ValueOptCfg.Value, fieldType, true)
+		if err != nil {
+			return false, err
+		}
+		return !result, nil
+	case cond.OperationTrue:
+		return isTrue(fieldValue), nil
+	case cond.OperationFalse:
+		return isFalse(fieldValue), nil
+	case cond.OperationBefore:
+		return evaluateBefore(fieldValue, condition.ValueOptCfg.Value)
+	case cond.OperationBetween:
+		return evaluateRange(fieldValue, condition.ValueOptCfg.Value, fieldType, false)
+	default:
+		return false, fmt.Errorf("unsupported operation: %s", condition.Operation)
+	}
+}
+
+// isEmpty checks if a value is empty
+func isEmpty(value any) bool {
+	if value == nil {
+		return true
+	}
+
+	switch v := value.(type) {
+	case string:
+		return v == ""
+	case []any:
+		return len(v) == 0
+	case []string:
+		return len(v) == 0
+	case map[string]any:
+		return len(v) == 0
+	case map[any]any:
+		return len(v) == 0
+	}
+
+	// Use reflection for other types
+	rv := reflect.ValueOf(value)
+	switch rv.Kind() {
+	case reflect.Slice, reflect.Array, reflect.Map:
+		return rv.Len() == 0
+	case reflect.String:
+		return rv.Len() == 0
+	}
+
+	return false
+}
+
+// isTrue checks if value is boolean true
+func isTrue(value any) bool {
+	if b, ok := value.(bool); ok {
+		return b
+	}
+	return false
+}
+
+// isFalse checks if value is boolean false
+func isFalse(value any) bool {
+	if b, ok := value.(bool); ok {
+		return !b
+	}
+	return false
+}
+
+// evaluateIn checks if fieldValue is in the value list
+func evaluateIn(fieldValue any, valueList any) (bool, error) {
+	if valueList == nil {
+		return false, nil
+	}
+
+	list, ok := valueList.([]any)
+	if !ok {
+		return false, fmt.Errorf("in operation requires array value")
+	}
+
+	for _, v := range list {
+		if compareValuesSimple(fieldValue, v) {
+			return true, nil
+		}
+	}
+	return false, nil
+}
+
+// evaluateRange checks if fieldValue is in range [min, max) or [min, max] based on inclusive
+func evaluateRange(fieldValue any, rangeValue any, fieldType string, leftClosedRightOpen bool) (bool, error) {
+	if rangeValue == nil {
+		return false, nil
+	}
+
+	rangeList, ok := rangeValue.([]any)
+	if !ok || len(rangeList) != 2 {
+		return false, fmt.Errorf("range operation requires array of length 2")
+	}
+
+	min := rangeList[0]
+	max := rangeList[1]
+
+	// Compare fieldValue with min
+	minResult, err := compareValues(fieldValue, min, ">=", fieldType)
+	if err != nil {
+		return false, err
+	}
+	if !minResult {
+		return false, nil
+	}
+
+	// Compare fieldValue with max
+	if leftClosedRightOpen {
+		maxResult, err := compareValues(fieldValue, max, "<", fieldType)
+		if err != nil {
+			return false, err
+		}
+		return maxResult, nil
+	} else {
+		maxResult, err := compareValues(fieldValue, max, "<=", fieldType)
+		if err != nil {
+			return false, err
+		}
+		return maxResult, nil
+	}
+}
+
+// evaluateBefore checks if fieldValue (date) is before conditionValue
+func evaluateBefore(fieldValue any, conditionValue any) (bool, error) {
+	fieldTime, err := parseTime(fieldValue)
+	if err != nil {
+		return false, err
+	}
+
+	condTime, err := parseTime(conditionValue)
+	if err != nil {
+		return false, err
+	}
+
+	return fieldTime.Before(condTime), nil
+}
+
+// parseTime parses time from various formats
+func parseTime(value any) (time.Time, error) {
+	if value == nil {
+		return time.Time{}, fmt.Errorf("time value is nil")
+	}
+
+	// Try to parse as timestamp (int64 or float64)
+	switch v := value.(type) {
+	case int64:
+		return time.Unix(v, 0), nil
+	case float64:
+		return time.Unix(int64(v), 0), nil
+	case string:
+		// Try parsing as RFC3339
+		if t, err := time.Parse(time.RFC3339, v); err == nil {
+			return t, nil
+		}
+		// Try parsing as Unix timestamp string
+		if ts, err := strconv.ParseInt(v, 10, 64); err == nil {
+			return time.Unix(ts, 0), nil
+		}
+		return time.Time{}, fmt.Errorf("unable to parse time string: %s", v)
+	default:
+		return time.Time{}, fmt.Errorf("unsupported time type: %T", value)
+	}
+}
+
+// compareValues compares two values based on operation
+func compareValues(left any, right any, operation string, fieldType string) (bool, error) {
+	if left == nil || right == nil {
+		return false, nil
+	}
+
+	// Handle datetime comparison
+	if fieldType == dtype.DATATYPE_DATETIME {
+		leftTime, err := parseTime(left)
+		if err != nil {
+			return false, err
+		}
+		rightTime, err := parseTime(right)
+		if err != nil {
+			return false, err
+		}
+
+		switch operation {
+		case "==":
+			return leftTime.Equal(rightTime), nil
+		case "!=":
+			return !leftTime.Equal(rightTime), nil
+		case ">":
+			return leftTime.After(rightTime), nil
+		case ">=":
+			return leftTime.After(rightTime) || leftTime.Equal(rightTime), nil
+		case "<":
+			return leftTime.Before(rightTime), nil
+		case "<=":
+			return leftTime.Before(rightTime) || leftTime.Equal(rightTime), nil
+		}
+	}
+
+	// Handle numeric comparison
+	if isNumeric(left) && isNumeric(right) {
+		leftNum := toFloat64(left)
+		rightNum := toFloat64(right)
+
+		switch operation {
+		case "==":
+			return leftNum == rightNum, nil
+		case "!=":
+			return leftNum != rightNum, nil
+		case ">":
+			return leftNum > rightNum, nil
+		case ">=":
+			return leftNum >= rightNum, nil
+		case "<":
+			return leftNum < rightNum, nil
+		case "<=":
+			return leftNum <= rightNum, nil
+		}
+	}
+
+	// Handle string comparison
+	leftStr := fmt.Sprintf("%v", left)
+	rightStr := fmt.Sprintf("%v", right)
+
+	switch operation {
+	case "==":
+		return leftStr == rightStr, nil
+	case "!=":
+		return leftStr != rightStr, nil
+	case ">":
+		return leftStr > rightStr, nil
+	case ">=":
+		return leftStr >= rightStr, nil
+	case "<":
+		return leftStr < rightStr, nil
+	case "<=":
+		return leftStr <= rightStr, nil
+	}
+
+	return false, fmt.Errorf("unsupported operation: %s", operation)
+}
+
+// compareValuesSimple compares two values for equality (used in in/not_in)
+func compareValuesSimple(left any, right any) bool {
+	if left == nil && right == nil {
+		return true
+	}
+	if left == nil || right == nil {
+		return false
+	}
+
+	// Try direct comparison first
+	if left == right {
+		return true
+	}
+
+	// Try numeric comparison
+	if isNumeric(left) && isNumeric(right) {
+		return toFloat64(left) == toFloat64(right)
+	}
+
+	// String comparison
+	return fmt.Sprintf("%v", left) == fmt.Sprintf("%v", right)
+}
+
+// isNumeric checks if value is numeric
+func isNumeric(value any) bool {
+	switch value.(type) {
+	case int, int8, int16, int32, int64:
+		return true
+	case uint, uint8, uint16, uint32, uint64:
+		return true
+	case float32, float64:
+		return true
+	}
+	return false
+}
+
+// toFloat64 converts numeric value to float64
+func toFloat64(value any) float64 {
+	switch v := value.(type) {
+	case int:
+		return float64(v)
+	case int8:
+		return float64(v)
+	case int16:
+		return float64(v)
+	case int32:
+		return float64(v)
+	case int64:
+		return float64(v)
+	case uint:
+		return float64(v)
+	case uint8:
+		return float64(v)
+	case uint16:
+		return float64(v)
+	case uint32:
+		return float64(v)
+	case uint64:
+		return float64(v)
+	case float32:
+		return float64(v)
+	case float64:
+		return v
+	}
+	return 0
 }

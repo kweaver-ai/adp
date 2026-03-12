@@ -89,8 +89,151 @@ func (ats *actionTypeService) GetActionsByActionTypeID(ctx context.Context,
 		return resps, rest.NewHTTPError(ctx, http.StatusNotFound, oerrors.OntologyQuery_ObjectType_ObjectTypeNotFound)
 	}
 
-	// 2.根据行动条件+请求的唯一标识，去请求对象类的对象实例数据（当前行动条件只能选绑定的对象类的，不能选其他类，所以当前就直接拼，认为这些条件都在作用在这个对象类上）
+	// 2. 检查是否绑定了对象类
+	isObjectTypeBound := actionType.ObjectTypeID != ""
+	var objectType interfaces.ObjectType
+
+	if isObjectTypeBound {
+		// 获取对象类信息（用于条件评估）
+		var exists bool
+		var err error
+		objectType, exists, err = ats.omAccess.GetObjectType(ctx, query.KNID, query.Branch, actionType.ObjectTypeID)
+		if err != nil {
+			logger.Errorf("Get Object Type error: %s", err.Error())
+			return resps, rest.NewHTTPError(ctx, http.StatusInternalServerError,
+				oerrors.OntologyQuery_ObjectType_InternalError_GetObjectTypesByIDFailed).WithErrorDetails(err.Error())
+		}
+		if !exists {
+			logger.Debugf("Object Type %s not found!", actionType.ObjectTypeID)
+			return resps, rest.NewHTTPError(ctx, http.StatusNotFound, oerrors.OntologyQuery_ObjectType_ObjectTypeNotFound)
+		}
+	} else {
+		// 未绑定对象类的情况
+		logger.Infof("Action type %s has no bound object type", actionType.ATID)
+		if len(query.InstanceIdentities) == 0 {
+			// Case 4: 未绑定对象类 + 无 identities → 构造一个临时的虚拟实例
+			logger.Infof("No identities provided, creating virtual instance for action type %s", actionType.ATID)
+			virtualAction, err := buildActionFromInstanceData(map[string]any{}, &actionType)
+			if err != nil {
+				logger.Errorf("Error building virtual action: %v", err)
+				return resps, rest.NewHTTPError(ctx, http.StatusBadRequest, oerrors.OntologyQuery_InternalError_UnMarshalDataFailed).
+					WithErrorDetails(err.Error())
+			}
+
+			respActions := interfaces.Actions{
+				ActionSource: actionType.ActionSource,
+				Actions:      []interfaces.ActionParam{virtualAction},
+				TotalCount:   1,
+			}
+
+			if query.IncludeTypeInfo {
+				respActions.ActionType = &actionType
+			}
+
+			return respActions, nil
+		} else {
+			// Case 5: 未绑定对象类 + 有 identities → 按 identities 构造实例
+			logger.Infof("Constructing instances from identities for action type %s", actionType.ATID)
+			actions := []interfaces.ActionParam{}
+			for _, identity := range query.InstanceIdentities {
+				action, err := buildActionFromInstanceData(identity, &actionType)
+				if err != nil {
+					logger.Errorf("Error building action from instance data: %v", err)
+					return resps, rest.NewHTTPError(ctx, http.StatusBadRequest, oerrors.OntologyQuery_InternalError_UnMarshalDataFailed).
+						WithErrorDetails(err.Error())
+				}
+				actions = append(actions, action)
+			}
+
+			respActions := interfaces.Actions{
+				ActionSource: actionType.ActionSource,
+				Actions:      actions,
+				TotalCount:   len(actions),
+			}
+
+			if query.IncludeTypeInfo {
+				respActions.ActionType = &actionType
+			}
+
+			return respActions, nil
+		}
+	}
+
+	// 3. 处理 add 行动类型的特殊逻辑
+	if actionType.ActionType == "add" && len(query.InstanceIdentities) > 0 {
+		// 先仅根据 _instance_identities 查询对象实例（不包含行动条件）
+		instanceCondition := logics.BuildInstanceIdentitiesCondition(query.InstanceIdentities)
+		instanceQuery := &interfaces.ObjectQueryBaseOnObjectType{
+			ActualCondition: instanceCondition,
+			PageQuery: interfaces.PageQuery{
+				Limit:     interfaces.MAX_LIMIT,
+				NeedTotal: true,
+			},
+			KNID:         query.KNID,
+			Branch:       query.Branch,
+			ObjectTypeID: actionType.ObjectTypeID,
+			CommonQueryParameters: interfaces.CommonQueryParameters{
+				IncludeTypeInfo:         true,
+				IncludeLogicParams:      query.IncludeLogicParams,
+				ExcludeSystemProperties: query.ExcludeSystemProperties,
+			},
+			ObjectQueryInfo: &interfaces.ObjectQueryInfo{
+				InstanceIdentity: query.InstanceIdentities,
+			},
+		}
+		instanceObjects, err := ats.ots.GetObjectsByObjectTypeID(ctx, instanceQuery)
+		if err != nil {
+			return resps, err
+		}
+
+		// 如果查询结果为空，将 _instance_identities 视为新实例，评估是否满足行动条件
+		if len(instanceObjects.Datas) == 0 {
+			// Case 2a: 都搜索不到，则按identites构造实例，再套用行动条件，满足，产生实例
+			logger.Infof("No instances found by identities for add action, constructing instances and evaluating condition")
+			actions := []interfaces.ActionParam{}
+			for _, instanceIdentity := range query.InstanceIdentities {
+				// 评估实例是否满足行动条件
+				if actionType.Condition != nil {
+					satisfies, err := logics.EvaluateInstanceAgainstCondition(ctx, instanceIdentity, actionType.Condition, &objectType)
+					if err != nil {
+						logger.Errorf("Error evaluating condition for instance[%v], error: %v", instanceIdentity, err)
+						continue
+					}
+					if !satisfies {
+						// 不满足条件，跳过
+						continue
+					}
+				}
+
+				// 满足条件，构造行动数据
+				action, err := buildActionFromInstanceData(instanceIdentity, &actionType)
+				if err != nil {
+					logger.Errorf("Error building action from instance data: %v", err)
+					return resps, rest.NewHTTPError(ctx, http.StatusBadRequest, oerrors.OntologyQuery_InternalError_UnMarshalDataFailed).
+						WithErrorDetails(err.Error())
+				}
+				actions = append(actions, action)
+			}
+
+			respActions := interfaces.Actions{
+				ActionSource: actionType.ActionSource,
+				Actions:      actions,
+				TotalCount:   len(actions),
+			}
+
+			if query.IncludeTypeInfo {
+				respActions.ActionType = &actionType
+			}
+
+			return respActions, nil
+		}
+		// Case 2b: 搜索得到，就按identites和行动条件过滤出来的实例（继续执行后续逻辑）
+		logger.Infof("Instances found by identities for add action, filtering by identities and action condition")
+	}
+
+	// 4. 根据行动条件+请求的唯一标识，去请求对象类的对象实例数据（当前行动条件只能选绑定的对象类的，不能选其他类，所以当前就直接拼，认为这些条件都在作用在这个对象类上）
 	// 条件转换，唯一标识换成主键过滤，各个对象之间用or连接，主键间用and连接，然后再跟行动条件and去请求对象类的对象数据
+	// 可接受instance_identities为空
 	condition := logics.BuildInstanceIdentitiesCondition(query.InstanceIdentities)
 
 	if actionType.Condition != nil {
@@ -100,7 +243,7 @@ func (ats *actionTypeService) GetActionsByActionTypeID(ctx context.Context,
 		}
 	}
 
-	// 3. 根据行动条件和唯一标识组成的条件检索起点对象类的对象实例
+	// 5. 根据行动条件和唯一标识组成的条件检索起点对象类的对象实例
 	objectQuery := &interfaces.ObjectQueryBaseOnObjectType{
 		ActualCondition: condition,
 		PageQuery: interfaces.PageQuery{
@@ -124,7 +267,7 @@ func (ats *actionTypeService) GetActionsByActionTypeID(ctx context.Context,
 		return resps, err
 	}
 
-	// 3 获得的对象是满足条件的对象，这些对象都应该实例化为行动
+	// 6. 获得的对象是满足条件的对象，这些对象都应该实例化为行动
 	actions := []interfaces.ActionParam{}
 	for _, object := range objects.Datas {
 		paramsJson := "{}"
@@ -202,4 +345,76 @@ func (ats *actionTypeService) GetActionsByActionTypeID(ctx context.Context,
 	}
 
 	return respActions, nil
+}
+
+// buildActionFromInstanceData builds action data from instance data
+func buildActionFromInstanceData(instanceData map[string]any,
+	actionType *interfaces.ActionType) (interfaces.ActionParam, error) {
+
+	var action interfaces.ActionParam
+
+	paramsJson := "{}"
+	dynamicParamsJson := "{}"
+	var err error
+
+	for _, param := range actionType.Parameters {
+		switch param.ValueFrom {
+		case interfaces.LOGIC_PARAMS_VALUE_FROM_PROP:
+			propName, ok := param.Value.(string)
+			if !ok {
+				return action, fmt.Errorf("parameter %s value_from is property but value is not string", param.Name)
+			}
+			value := instanceData[propName]
+			paramsJson, err = sjson.Set(paramsJson, param.Name, value)
+			if err != nil {
+				return action, fmt.Errorf("error setting action type[%s]'s parameter path %s: %v",
+					actionType.ATName, param.Name, err)
+			}
+		case interfaces.LOGIC_PARAMS_VALUE_FROM_INPUT:
+			dynamicParamsJson, err = sjson.Set(dynamicParamsJson, param.Name, nil)
+			if err != nil {
+				return action, fmt.Errorf("error setting action type[%s]'s dynamic parameter path %s: %v",
+					actionType.ATName, param.Name, err)
+			}
+		case interfaces.LOGIC_PARAMS_VALUE_FROM_CONST:
+			paramsJson, err = sjson.Set(paramsJson, param.Name, param.Value)
+			if err != nil {
+				return action, fmt.Errorf("error setting action type[%s]'s parameter path %s: %v",
+					actionType.ATName, param.Name, err)
+			}
+		}
+	}
+
+	params := map[string]any{}
+	err = json.Unmarshal([]byte(paramsJson), &params)
+	if err != nil {
+		return action, fmt.Errorf("failed to Unmarshal action type[%s]'s paramtersJson to map, %s",
+			actionType.ATName, err.Error())
+	}
+
+	dynamicParams := map[string]any{}
+	err = json.Unmarshal([]byte(dynamicParamsJson), &dynamicParams)
+	if err != nil {
+		return action, fmt.Errorf("failed to Unmarshal action type[%s]'s dynamicParamsJson to map, %s",
+			actionType.ATName, err.Error())
+	}
+
+	action = interfaces.ActionParam{
+		Parameters:    params,
+		DynamicParams: dynamicParams,
+	}
+
+	// Set instance identity from instanceData
+	if identity, exist := instanceData[interfaces.SYSTEM_PROPERTY_INSTANCE_IDENTITY]; exist {
+		action.InstanceIdentity = identity
+	} else {
+		// If not found, construct from primary keys
+		identityMap := make(map[string]any)
+		for k, v := range instanceData {
+			identityMap[k] = v
+		}
+		action.InstanceIdentity = identityMap
+	}
+
+	return action, nil
 }
