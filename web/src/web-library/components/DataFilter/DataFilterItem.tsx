@@ -187,7 +187,7 @@ const DataFilterItem = forwardRef(
             onChange={(value) => {
               if (formatType === 'number') {
                 value = map(value, (item) => {
-                  const match = item.match(/-?\d+(\.\d+)?/);
+                  const match = String(item).match(/-?\d+(\.\d+)?/);
                   if (match) return Number.parseFloat(item);
                   return '';
                 });

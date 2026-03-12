@@ -64,7 +64,7 @@
     "searchTaskName": "搜索任务名称",
     "newScanTask": "新建扫描任务",
     "dataSourceManagement": "数据源管理",
-    "dataConnectManagement": "数据连接管理",
+    "dataConnectManagement": "连接管理",
     "inputStartCell": "请输入开始单元格",
     "cellFormatTip": "仅支持输入大写字母加数字(例:A1)",
     "inputEndCell": "请输入结束单元格",

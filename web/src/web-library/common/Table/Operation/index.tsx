@@ -153,7 +153,7 @@ const Operation: React.FC<OperationProps> = (props) => {
                 placeholder={ncPlaceholder}
                 value={filterValue}
                 prefix={<IconFont type="icon-dip-search" style={{ color: '#d9d9d9', paddingRight: 4 }} />}
-                style={{ paddingLeft: 8, boxShadow: 'none', background: 'transparent', borderColor: 'transparent' }}
+                style={{ paddingLeft: 12, boxShadow: 'none', background: 'transparent', borderColor: 'transparent' }}
                 onChange={onSearch}
               />
             </div>
