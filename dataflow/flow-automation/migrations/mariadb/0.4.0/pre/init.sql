@@ -646,8 +646,9 @@ CREATE TABLE IF NOT EXISTS `t_flow_dag_instance` (
  `f_version_id` VARCHAR(20) NOT NULL DEFAULT '' COMMENT '版本ID',
  `f_biz_domain_id` VARCHAR(40) NOT NULL DEFAULT '' COMMENT '业务域ID',
   PRIMARY KEY (`f_id`),
-  KEY `idx_dag_ins_id_status_updated` (`f_id`, `f_status`, `f_updated_at`),
-  KEY `idx_dag_ins_dag_id` (`f_dag_id`),
+  KEY `idx_dag_ins_dag_status` (`f_dag_id`, `f_status`),
+  KEY `idx_dag_ins_status_upd` (`f_status`, `f_updated_at`),
+  KEY `idx_dag_ins_status_user_pri` (`f_status`, `f_user_id`, `f_priority`),
   KEY `idx_dag_ins_user_id` (`f_user_id`),
   KEY `idx_dag_ins_batch_run` (`f_batch_run_id`),
   KEY `idx_dag_ins_worker` (`f_worker`)
@@ -700,11 +701,11 @@ CREATE TABLE IF NOT EXISTS `t_flow_task_instance` (
  `f_settings` LONGTEXT DEFAULT NULL COMMENT '配置',
  `f_metadata` LONGTEXT DEFAULT NULL COMMENT '元数据',
   PRIMARY KEY (`f_id`),
-  KEY `idx_task_ins_id_status_updated` (`f_id`, `f_status`, `f_updated_at`),
   KEY `idx_task_ins_dag_ins_id` (`f_dag_ins_id`),
   KEY `idx_task_ins_hash` (`f_hash`),
   KEY `idx_task_ins_action` (`f_action_name`),
-  KEY `idx_task_ins_expired` (`f_expired_at`)
+  KEY `idx_task_ins_status_expire` (`f_status`, `f_expired_at`),
+  KEY `idx_task_ins_status_upd_id` (`f_status`, `f_updated_at`, `f_id`)
 ) ENGINE=InnoDB COMMENT 'Task实例定义表';
 
 CREATE TABLE IF NOT EXISTS `t_flow_token` (

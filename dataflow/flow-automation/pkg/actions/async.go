@@ -591,7 +591,7 @@ func (a *WorkflowAsyncTask) Run(ctx entity.ExecuteContext, params interface{}, _
 			auditMsgData["automation_flow_name"] = dag.Name
 		}
 
-		auditMsgData["dagid"] = dag.ID
+		auditMsgData["dagid"] = taskIns.RelatedDagInstance.DagID
 
 		if !showMsgForEmail {
 			workflowMsg.MsgForEmail = []string{}

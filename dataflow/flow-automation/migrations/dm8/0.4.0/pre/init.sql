@@ -7,7 +7,7 @@ CREATE TABLE IF NOT EXISTS "t_model" (
   "f_description" VARCHAR(300 CHAR) NOT NULL DEFAULT '',
   "f_train_status" VARCHAR(16 CHAR) NOT NULL DEFAULT '',
   "f_status" TINYINT NOT NULL,
-  "f_rule" text DEFAULT NULL,
+  "f_rule" TEXT DEFAULT NULL,
   "f_userid" VARCHAR(40 CHAR) NOT NULL DEFAULT '',
   "f_type" TINYINT NOT NULL DEFAULT -1,
   "f_created_at" BIGINT DEFAULT NULL,
@@ -603,7 +603,7 @@ CREATE INDEX IF NOT EXISTS "idx_dag_name" ON "t_flow_dag" ("f_name");
 CREATE INDEX IF NOT EXISTS "idx_dag_biz_domain" ON "t_flow_dag" ("f_biz_domain_id");
 
 CREATE TABLE IF NOT EXISTS "t_flow_dag_var" (
- "f_id" BIGINT IDENTITY(1, 1) NOT NULL,
+ "f_id" BIGINT NOT NULL,
  "f_dag_id" BIGINT NOT NULL DEFAULT 0,
  "f_var_name" VARCHAR(255 CHAR) NOT NULL DEFAULT '',
  "f_default_value" TEXT DEFAULT NULL,
@@ -701,8 +701,9 @@ CREATE TABLE IF NOT EXISTS "t_flow_dag_instance" (
   CLUSTER PRIMARY KEY ("f_id")
 );
 
-CREATE INDEX IF NOT EXISTS "idx_dag_ins_id_status_updated" ON "t_flow_dag_instance" ("f_id", "f_status", "f_updated_at");
-CREATE INDEX IF NOT EXISTS "idx_dag_ins_dag_id" ON "t_flow_dag_instance" ("f_dag_id");
+CREATE INDEX IF NOT EXISTS "idx_dag_ins_dag_status" ON "t_flow_dag_instance" ("f_dag_id", "f_status");
+CREATE INDEX IF NOT EXISTS "idx_dag_ins_status_upd" ON "t_flow_dag_instance" ("f_status", "f_updated_at");
+CREATE INDEX IF NOT EXISTS "idx_dag_ins_status_user_pri" ON "t_flow_dag_instance" ("f_status", "f_user_id", "f_priority");
 CREATE INDEX IF NOT EXISTS "idx_dag_ins_user_id" ON "t_flow_dag_instance" ("f_user_id");
 CREATE INDEX IF NOT EXISTS "idx_dag_ins_batch_run" ON "t_flow_dag_instance" ("f_batch_run_id");
 CREATE INDEX IF NOT EXISTS "idx_dag_ins_worker" ON "t_flow_dag_instance" ("f_worker");
@@ -758,11 +759,11 @@ CREATE TABLE IF NOT EXISTS "t_flow_task_instance" (
   CLUSTER PRIMARY KEY ("f_id")
 );
 
-CREATE INDEX IF NOT EXISTS "idx_task_ins_id_status_updated" ON "t_flow_task_instance" ("f_id", "f_status", "f_updated_at");
 CREATE INDEX IF NOT EXISTS "idx_task_ins_dag_ins_id" ON "t_flow_task_instance" ("f_dag_ins_id");
 CREATE INDEX IF NOT EXISTS "idx_task_ins_hash" ON "t_flow_task_instance" ("f_hash");
 CREATE INDEX IF NOT EXISTS "idx_task_ins_action" ON "t_flow_task_instance" ("f_action_name");
-CREATE INDEX IF NOT EXISTS "idx_task_ins_expired" ON "t_flow_task_instance" ("f_expired_at");
+CREATE INDEX IF NOT EXISTS "idx_task_ins_status_expire" ON "t_flow_task_instance" ("f_status", "f_expired_at");
+CREATE INDEX IF NOT EXISTS "idx_task_ins_status_upd_id" ON "t_flow_task_instance" ("f_status", "f_updated_at", "f_id");
 
 CREATE TABLE IF NOT EXISTS "t_flow_token" (
  "f_id" BIGINT NOT NULL,
