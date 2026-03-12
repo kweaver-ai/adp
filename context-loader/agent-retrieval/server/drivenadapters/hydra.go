@@ -59,7 +59,7 @@ func NewHydra() interfaces.Hydra {
 	once.Do(func() {
 		config := config.NewConfigLoader()
 		h = &hydra{
-			adminAddress: fmt.Sprintf("http://%s:%d%s", config.OAuth.AdminHost, config.OAuth.AdminPort, config.OAuth.AdminPrefix),
+			adminAddress: config.OAuth.BuildAdminURL(),
 			logger:       config.GetLogger(),
 			httpClient:   rest.NewHTTPClient(),
 		}

@@ -15,7 +15,6 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/bytedance/sonic"
 	"github.com/gin-gonic/gin"
 	validator "github.com/go-playground/validator/v10"
 	errorwrap "github.com/pkg/errors"
@@ -32,25 +31,37 @@ const (
 	ContentTypeJSON = "application/json"
 )
 
-// ReplyOK 响应成功
+// ReplyOK 响应成功；根据 context 中的 response_format 决定输出 JSON 或 TOON
 func ReplyOK(c *gin.Context, statusCode int, body interface{}) {
-	var (
-		bodyStr string
-		err     error
-	)
+	format := FormatJSON
+	if v, ok := common.GetResponseFormatFromCtx(c.Request.Context()); ok {
+		if f, ok := v.(ResponseFormat); ok {
+			format = f
+		}
+	}
 
+	contentType := ContentTypeJSON
+	var bodyBytes []byte
+	var err error
 	if body != nil {
-		bodyStr, err = sonic.MarshalString(body)
+		contentType, bodyBytes, err = MarshalResponse(format, body)
 		if err != nil {
 			logger.DefaultLogger().Errorf("marshal body error: %v", err)
 			statusCode = http.StatusInternalServerError
 			ctx := c.Request.Context()
-			bodyStr = myErr.DefaultHTTPError(ctx, statusCode, err.Error()).Error()
+			bodyStr := myErr.DefaultHTTPError(ctx, statusCode, err.Error()).Error()
+			c.Writer.Header().Set(ContentTypeKey, ContentTypeJSON)
+			c.String(statusCode, bodyStr)
+			return
 		}
 	}
 
-	c.Writer.Header().Set(ContentTypeKey, ContentTypeJSON)
-	c.String(statusCode, bodyStr)
+	if len(bodyBytes) > 0 {
+		c.Data(statusCode, contentType, bodyBytes)
+	} else {
+		c.Writer.Header().Set(ContentTypeKey, contentType)
+		c.String(statusCode, "")
+	}
 }
 
 // ReplyError 响应错误

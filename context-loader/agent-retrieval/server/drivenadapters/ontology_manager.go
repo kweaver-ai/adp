@@ -39,11 +39,8 @@ func NewOntologyManagerAccess() interfaces.OntologyManagerAccess {
 	omAccessOnce.Do(func() {
 		conf := config.NewConfigLoader()
 		omAccess = &ontologyManagerAccess{
-			logger: conf.GetLogger(),
-			baseURL: fmt.Sprintf("%s://%s:%d/api/ontology-manager",
-				conf.OntologyManager.PrivateProtocol,
-				conf.OntologyManager.PrivateHost,
-				conf.OntologyManager.PrivatePort),
+			logger:     conf.GetLogger(),
+			baseURL:    conf.OntologyManager.BuildURL("/api/ontology-manager"),
 			httpClient: rest.NewHTTPClient(),
 		}
 	})

@@ -16,6 +16,7 @@ require (
 	github.com/pkg/errors v0.9.1
 	github.com/smartystreets/goconvey v1.8.1
 	github.com/spf13/viper v1.21.0
+	github.com/toon-format/toon-go v0.0.0-20251202084852-7ca0e27c4e8c
 	go.opentelemetry.io/otel v1.38.0
 	go.opentelemetry.io/otel/exporters/otlp/otlptrace v1.38.0
 	go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc v1.38.0

@@ -19,7 +19,6 @@ import (
 	"github.com/kweaver-ai/adp/context-loader/agent-retrieval/server/interfaces"
 	logicsKqs "github.com/kweaver-ai/adp/context-loader/agent-retrieval/server/logics/knquerysubgraph"
 	"github.com/kweaver-ai/adp/context-loader/agent-retrieval/server/logics/knsearch"
-	"github.com/kweaver-ai/adp/context-loader/agent-retrieval/server/utils"
 )
 
 // handleKnSearch returns a tool handler for kn_search.
@@ -51,7 +50,13 @@ func handleKnSearch(knSearchService knsearch.KnSearchService) func(ctx context.C
 			return mcp.NewToolResultError("query is required"), nil
 		}
 
-		// 4. Build KnSearchReq
+		// 4. Parse response_format early to avoid wasting a service call on bad input
+		format, err := GetResponseFormatFromRequest(req)
+		if err != nil {
+			return mcp.NewToolResultError(err.Error()), nil
+		}
+
+		// 5. Build KnSearchReq
 		onlySchema := req.GetBool("only_schema", false)
 		enableRerank := req.GetBool("enable_rerank", true)
 		searchReq := &interfaces.KnSearchReq{
@@ -68,19 +73,28 @@ func handleKnSearch(knSearchService knsearch.KnSearchService) func(ctx context.C
 			}
 		}
 
-		// 5. Call KnSearchService
+		// 6. Call KnSearchService
 		resp, err := knSearchService.KnSearch(ctx, searchReq)
 		if err != nil {
 			return mcp.NewToolResultError(err.Error()), nil
 		}
 
-		return mcp.NewToolResultStructured(resp, utils.ObjectToJSON(resp)), nil
+		result, err := BuildMCPToolResult(resp, format)
+		if err != nil {
+			return mcp.NewToolResultError(err.Error()), nil
+		}
+		return result, nil
 	}
 }
 
 // handleKnSchemaSearch handles kn_schema_search tool calls.
 func handleKnSchemaSearch(service interfaces.IKnRetrievalService) func(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	return func(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+		format, err := GetResponseFormatFromRequest(req)
+		if err != nil {
+			return mcp.NewToolResultError(err.Error()), nil
+		}
+
 		searchReq := &interfaces.SemanticSearchRequest{
 			SearchScope: &interfaces.SearchScopeConfig{},
 		}
@@ -105,7 +119,6 @@ func handleKnSchemaSearch(service interfaces.IKnRetrievalService) func(ctx conte
 		}
 
 		var resp *interfaces.SemanticSearchResponse
-		var err error
 		switch searchReq.Mode {
 		case interfaces.AgentIntentRetrieval:
 			resp, err = service.AgentIntentRetrieval(ctx, searchReq)
@@ -123,13 +136,22 @@ func handleKnSchemaSearch(service interfaces.IKnRetrievalService) func(ctx conte
 		if searchReq.ReturnQueryUnderstanding != nil && !*searchReq.ReturnQueryUnderstanding {
 			resp.QueryUnderstanding = nil
 		}
-		return mcp.NewToolResultStructured(resp, utils.ObjectToJSON(resp)), nil
+		result, err := BuildMCPToolResult(resp, format)
+		if err != nil {
+			return mcp.NewToolResultError(err.Error()), nil
+		}
+		return result, nil
 	}
 }
 
 // handleQueryObjectInstance handles query_object_instance tool calls.
 func handleQueryObjectInstance(ontologyQuery interfaces.DrivenOntologyQuery) func(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	return func(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+		format, err := GetResponseFormatFromRequest(req)
+		if err != nil {
+			return mcp.NewToolResultError(err.Error()), nil
+		}
+
 		queryReq := &interfaces.QueryObjectInstancesReq{}
 		if err := bindArguments(req, queryReq); err != nil {
 			return mcp.NewToolResultError(err.Error()), nil
@@ -156,13 +178,22 @@ func handleQueryObjectInstance(ontologyQuery interfaces.DrivenOntologyQuery) fun
 		if err != nil {
 			return mcp.NewToolResultError(err.Error()), nil
 		}
-		return mcp.NewToolResultStructured(resp, utils.ObjectToJSON(resp)), nil
+		result, err := BuildMCPToolResult(resp, format)
+		if err != nil {
+			return mcp.NewToolResultError(err.Error()), nil
+		}
+		return result, nil
 	}
 }
 
 // handleQueryInstanceSubgraph handles query_instance_subgraph tool calls.
 func handleQueryInstanceSubgraph(service logicsKqs.KnQuerySubgraphService) func(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	return func(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+		format, err := GetResponseFormatFromRequest(req)
+		if err != nil {
+			return mcp.NewToolResultError(err.Error()), nil
+		}
+
 		subgraphReq := &interfaces.QueryInstanceSubgraphReq{}
 		if err := bindArguments(req, subgraphReq); err != nil {
 			return mcp.NewToolResultError(err.Error()), nil
@@ -184,7 +215,11 @@ func handleQueryInstanceSubgraph(service logicsKqs.KnQuerySubgraphService) func(
 		if err != nil {
 			return mcp.NewToolResultError(err.Error()), nil
 		}
-		return mcp.NewToolResultStructured(resp, utils.ObjectToJSON(resp)), nil
+		result, err := BuildMCPToolResult(resp, format)
+		if err != nil {
+			return mcp.NewToolResultError(err.Error()), nil
+		}
+		return result, nil
 	}
 }
 
@@ -194,6 +229,11 @@ func handleGetLogicPropertiesValues(service interfaces.IKnLogicPropertyResolverS
 		authCtx, ok := common.GetAccountAuthContextFromCtx(ctx)
 		if !ok {
 			return mcp.NewToolResultError("authentication required"), nil
+		}
+
+		format, err := GetResponseFormatFromRequest(req)
+		if err != nil {
+			return mcp.NewToolResultError(err.Error()), nil
 		}
 
 		resolveReq := &interfaces.ResolveLogicPropertiesRequest{
@@ -219,7 +259,11 @@ func handleGetLogicPropertiesValues(service interfaces.IKnLogicPropertyResolverS
 		if err != nil {
 			return mcp.NewToolResultError(err.Error()), nil
 		}
-		return mcp.NewToolResultStructured(resp, utils.ObjectToJSON(resp)), nil
+		result, err := BuildMCPToolResult(resp, format)
+		if err != nil {
+			return mcp.NewToolResultError(err.Error()), nil
+		}
+		return result, nil
 	}
 }
 
@@ -229,6 +273,11 @@ func handleGetActionInfo(service interfaces.IKnActionRecallService) func(ctx con
 		authCtx, ok := common.GetAccountAuthContextFromCtx(ctx)
 		if !ok {
 			return mcp.NewToolResultError("authentication required"), nil
+		}
+
+		format, err := GetResponseFormatFromRequest(req)
+		if err != nil {
+			return mcp.NewToolResultError(err.Error()), nil
 		}
 
 		actionReq := &interfaces.KnActionRecallRequest{}
@@ -249,7 +298,11 @@ func handleGetActionInfo(service interfaces.IKnActionRecallService) func(ctx con
 		if err != nil {
 			return mcp.NewToolResultError(err.Error()), nil
 		}
-		return mcp.NewToolResultStructured(resp, utils.ObjectToJSON(resp)), nil
+		result, err := BuildMCPToolResult(resp, format)
+		if err != nil {
+			return mcp.NewToolResultError(err.Error()), nil
+		}
+		return result, nil
 	}
 }
 

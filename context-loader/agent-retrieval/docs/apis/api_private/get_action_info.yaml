@@ -23,21 +23,31 @@ paths:
       parameters:
         - name: x-account-id
           in: header
-          description: 账户 ID
           required: true
           schema:
             type: string
-          example: bdb78b62-6c48-11f0-af96-fa8dcc0a06b2
+          description: 账户ID，用于内部服务调用时传递账户信息
         - name: x-account-type
           in: header
-          description: 账户类型
           required: true
           schema:
             type: string
             enum:
               - user
-              - system
-          example: user
+              - app
+              - anonymous
+            default: user
+          description: 账户类型：user(用户), app(应用), anonymous(匿名)
+        - name: response_format
+          in: query
+          description: 响应格式：json 或 toon，默认 json
+          required: false
+          schema:
+            type: string
+            enum:
+              - json
+              - toon
+            default: json
       requestBody:
         required: true
         content:
@@ -59,14 +69,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ActionRecallResponse'
-              examples:
-                成功:
-                  value:
-                    _dynamic_tools:
-                      - name: 工具名
-                        description: 工具描述
-                        parameters: {}
-                        api_url: http://...
         '400':
           description: 请求参数错误
           content:

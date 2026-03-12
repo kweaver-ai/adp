@@ -46,11 +46,8 @@ func NewAgentAppClient() interfaces.AgentApp {
 	agentOnce.Do(func() {
 		configLoader := config.NewConfigLoader()
 		ag = &agentClient{
-			logger: configLoader.GetLogger(),
-			baseURL: fmt.Sprintf("%s://%s:%d/api/agent-factory",
-				configLoader.AgentApp.PrivateProtocol,
-				configLoader.AgentApp.PrivateHost,
-				configLoader.AgentApp.PrivatePort),
+			logger:      configLoader.GetLogger(),
+			baseURL:     configLoader.AgentApp.BuildURL("/api/agent-factory"),
 			httpClient:  rest.NewHTTPClient(),
 			DeployAgent: configLoader.DeployAgent,
 		}

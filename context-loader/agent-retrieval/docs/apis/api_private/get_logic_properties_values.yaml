@@ -14,15 +14,30 @@ paths:
         - name: x-account-id
           in: header
           required: true
-          description: 用户ID
           schema:
             type: string
+          description: 账户ID，用于内部服务调用时传递账户信息
         - name: x-account-type
           in: header
           required: true
-          description: 账户类型
           schema:
             type: string
+            enum:
+              - user
+              - app
+              - anonymous
+            default: user
+          description: 账户类型：user(用户), app(应用), anonymous(匿名)
+        - name: response_format
+          in: query
+          required: false
+          schema:
+            type: string
+            enum:
+              - json
+              - toon
+            default: json
+          description: 响应格式：json 或 toon，默认 json
       requestBody:
         required: true
         content:
@@ -47,27 +62,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ResolveLogicPropertiesResponse'
-              examples:
-                成功示例:
-                  value:
-                    datas:
-                      - company_id: company_000001
-                        approved_drug_count:
-                          datas:
-                            - values: [12]
-                        business_health_score:
-                          score: 0.82
-                缺参示例:
-                  value:
-                    error_code: MISSING_INPUT_PARAMS
-                    message: dynamic_params 缺少必需参数
-                    missing:
-                      - property: approved_drug_count
-                        params:
-                          - name: start
-                            type: INTEGER
-                            hint: 在 additional_context 中补充明确时间范围（start/end 或 “最近半年”），或在 query 中明确时间范围
-                    trace_id: 3f5d6c1c-xxxx-xxxx-xxxx-xxxxxxxxxxxx
         "400":
           description: bad request
           content:

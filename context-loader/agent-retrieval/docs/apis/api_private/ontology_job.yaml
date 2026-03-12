@@ -17,13 +17,13 @@ paths:
       parameters:
         - name: x-account-id
           in: header
-          required: false
+          required: true
           schema:
             type: string
           description: 账户ID，用于内部服务调用时传递账户信息
         - name: x-account-type
           in: header
-          required: false
+          required: true
           schema:
             type: string
             enum:

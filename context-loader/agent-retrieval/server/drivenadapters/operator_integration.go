@@ -44,14 +44,9 @@ const (
 func NewOperatorIntegrationClient() interfaces.DrivenOperatorIntegration {
 	operatorIntegrationOnce.Do(func() {
 		configLoader := config.NewConfigLoader()
-		// 从配置中读取算子集成服务地址
-		baseURL := fmt.Sprintf("%s://%s:%d/api/agent-operator-integration",
-			configLoader.OperatorIntegration.PrivateProtocol,
-			configLoader.OperatorIntegration.PrivateHost,
-			configLoader.OperatorIntegration.PrivatePort)
 		operatorIntegration = &operatorIntegrationClient{
 			logger:     configLoader.GetLogger(),
-			baseURL:    baseURL,
+			baseURL:    configLoader.OperatorIntegration.BuildURL("/api/agent-operator-integration"),
 			httpClient: rest.NewHTTPClient(),
 		}
 	})

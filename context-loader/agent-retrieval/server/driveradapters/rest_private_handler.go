@@ -52,7 +52,7 @@ func NewRestPrivateHandler(logger interfaces.Logger) interfaces.HTTPRouterInterf
 // RegisterRouter 注册路由
 func (r *restPrivateHandler) RegisterRouter(engine *gin.RouterGroup) {
 	mws := []gin.HandlerFunc{}
-	mws = append(mws, middlewareRequestLog(r.Logger), middlewareTrace, middlewareHeaderAuthContext())
+	mws = append(mws, middlewareRequestLog(r.Logger), middlewareTrace, middlewareHeaderAuthContext(), middlewareResponseFormat())
 	engine.Use(mws...)
 
 	engine.POST("/kn/semantic-search", r.KnRetrievalHandler.SemanticSearch)

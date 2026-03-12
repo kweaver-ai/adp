@@ -21,14 +21,14 @@ import (
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/trace"
 
+	"github.com/gin-gonic/gin"
+	jsoniter "github.com/json-iterator/go"
+	"github.com/kweaver-ai/TelemetrySDK-Go/span/v2/field"
+
 	"github.com/kweaver-ai/adp/context-loader/agent-retrieval/server/infra/common"
 	"github.com/kweaver-ai/adp/context-loader/agent-retrieval/server/infra/errors"
 	"github.com/kweaver-ai/adp/context-loader/agent-retrieval/server/infra/rest"
 	"github.com/kweaver-ai/adp/context-loader/agent-retrieval/server/interfaces"
-
-	"github.com/gin-gonic/gin"
-	jsoniter "github.com/json-iterator/go"
-	"github.com/kweaver-ai/TelemetrySDK-Go/span/v2/field"
 )
 
 type apiLogModel struct {
@@ -172,4 +172,23 @@ func byteToInterface(byt []byte) interface{} {
 
 	m["string"] = string(byt)
 	return m
+}
+
+// middlewareResponseFormat 解析 Query 参数 response_format（默认 json），非法值返回 400，并写入 context
+func middlewareResponseFormat() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		formatStr := c.Query("response_format")
+		if formatStr == "" {
+			formatStr = "json"
+		}
+		format, err := rest.ParseResponseFormat(formatStr)
+		if err != nil {
+			rest.ReplyError(c, errors.DefaultHTTPError(c.Request.Context(), http.StatusBadRequest, err.Error()))
+			c.Abort()
+			return
+		}
+		ctx := common.SetResponseFormatToCtx(c.Request.Context(), format)
+		c.Request = c.Request.WithContext(ctx)
+		c.Next()
+	}
 }

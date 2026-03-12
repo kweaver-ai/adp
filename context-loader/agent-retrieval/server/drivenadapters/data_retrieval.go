@@ -40,8 +40,7 @@ func NewDataRetrievalClient() interfaces.DataRetrieval {
 	drOnce.Do(func() {
 		conf := config.NewConfigLoader()
 		dr = &dataRetrievalClient{
-			baseURL: fmt.Sprintf("%s://%s:%d", conf.DataRetrieval.PrivateProtocol,
-				conf.DataRetrieval.PrivateHost, conf.DataRetrieval.PrivatePort),
+			baseURL:    conf.DataRetrieval.BuildURL(""),
 			logger:     conf.GetLogger(),
 			httpClient: rest.NewHTTPClient(),
 		}

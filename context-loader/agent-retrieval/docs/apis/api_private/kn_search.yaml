@@ -20,13 +20,13 @@ paths:
       parameters:
         - name: x-account-id
           in: header
-          required: false
+          required: true
           schema:
             type: string
           description: 账户ID，用于内部服务调用时传递账户信息
         - name: x-account-type
           in: header
-          required: false
+          required: true
           schema:
             type: string
             enum:
@@ -35,6 +35,16 @@ paths:
               - anonymous
             default: user
           description: 账户类型：user(用户), app(应用), anonymous(匿名)
+        - name: response_format
+          in: query
+          required: false
+          schema:
+            type: string
+            enum:
+              - json
+              - toon
+            default: json
+          description: 响应格式：json 或 toon，默认 json
       requestBody:
         required: true
         description: kn_search 请求体
