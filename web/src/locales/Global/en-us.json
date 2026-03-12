@@ -78,6 +78,7 @@
     "idMaxLength": "ID cannot exceed 40 characters",
     "idSpecialVerification": "Only lowercase letters, numbers, and underscores are supported, and cannot start with a number",
     "idPatternError": "Can only contain lowercase English letters, numbers, underscores (_), hyphens (-), and cannot start with underscores and hyphens",
+    "idCompletePatternError": "Can only contain English letters, numbers, underscores (_), hyphens (-), and cannot start with underscores and hyphens",
     "idLowercaseLetterNumberOnly": "Can only input lowercase English letters and numbers",
     "fieldNameCannotRepeat": "Field name cannot be duplicated",
     "pleaseSelectAtLeastOneField": "Please select at least one field",

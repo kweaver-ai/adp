@@ -204,11 +204,11 @@ const DataAttribute = forwardRef((props: TProps, ref) => {
             return;
           }
 
-          const namePattern = /^[a-z0-9][a-z0-9_-]*$/;
+          const namePattern = /^[a-zA-Z0-9][a-zA-Z0-9_-]*$/;
           const invalidProperty = localDataProperties.find((p) => !namePattern.test(p.name));
           if (invalidProperty) {
-            setAlertMessage(`${intl.get('Global.attributeName')}  ${intl.get('Global.idPatternError')}`);
-            reject(new Error(intl.get('Global.idPatternError')));
+            setAlertMessage(`${intl.get('Global.attributeName')}  ${intl.get('Global.idCompletePatternError')}`);
+            reject(new Error(intl.get('Global.idCompletePatternError')));
             return;
           }
 

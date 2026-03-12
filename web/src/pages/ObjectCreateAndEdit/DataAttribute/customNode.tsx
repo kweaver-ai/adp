@@ -19,7 +19,7 @@ import type { Node, NodeProps } from '@xyflow/react';
 type TNodeData = OntologyObjectType.TNode['data'];
 type TFlowNode = Node<TNodeData>;
 
-const NAME_PATTERN = /^[a-z0-9][a-z0-9_-]*$/;
+const NAME_PATTERN = /^[a-zA-Z0-9][a-zA-Z0-9_-]*$/;
 
 const CustomNode = ({ data, id }: NodeProps<TFlowNode>) => {
   const { modal } = HOOKS.useGlobalContext();
@@ -236,7 +236,7 @@ const CustomNode = ({ data, id }: NodeProps<TFlowNode>) => {
                     <div className={styles['item-tech-name']}>
                       <span className={styles['tech-name-text']}>{attr.name}</span>
                       {!isViewNode && !NAME_PATTERN.test(attr.name) && (
-                        <Tooltip title={intl.get('Global.idPatternError')}>
+                        <Tooltip title={intl.get('Global.idCompletePatternError')}>
                           <InfoCircleFilled style={{ color: '#ff4d4f', fontSize: 12 }} />
                         </Tooltip>
                       )}
