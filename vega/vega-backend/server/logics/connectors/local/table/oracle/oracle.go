@@ -366,7 +366,7 @@ func (c *OracleConnector) ListTables(ctx context.Context) ([]*interfaces.TableMe
 
 		meta := &interfaces.TableMeta{
 			Name:        name,
-			SubType:     "table",
+			TableType:   "table",
 			Description: "",
 			Database:    schema,
 		}
@@ -444,8 +444,8 @@ func (c *OracleConnector) fetchTableStatus(ctx context.Context, table *interface
 		table.Properties = make(map[string]any)
 	}
 
-	if table.SubType == "" {
-		table.SubType = "table"
+	if table.TableType == "" {
+		table.TableType = "table"
 	}
 
 	table.Properties["row_count"] = tableRows.Int64
@@ -577,7 +577,7 @@ func (c *OracleConnector) fetchIndexes(ctx context.Context, table *interfaces.Ta
 	for _, idx := range indexMap {
 		indexes = append(indexes, *idx)
 	}
-	table.Indexes = indexes
+	table.Indices = indexes
 	return nil
 }
 
@@ -640,7 +640,8 @@ func (c *OracleConnector) fetchForeignKeys(ctx context.Context, table *interface
 	return nil
 }
 
-func (c *OracleConnector) ExecuteQuery(ctx context.Context, query string, args ...any) (*interfaces.QueryResult, error) {
+func (c *OracleConnector) ExecuteQuery(ctx context.Context, resource *interfaces.Resource,
+	params *interfaces.ResourceDataQueryParams) (*interfaces.QueryResult, error) {
 	return nil, nil
 }
 

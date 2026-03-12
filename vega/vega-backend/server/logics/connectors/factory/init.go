@@ -8,14 +8,12 @@ package factory
 import (
 	"vega-backend/logics/connectors/local/index/opensearch"
 	"vega-backend/logics/connectors/local/table/mariadb"
-	"vega-backend/logics/connectors/local/table/mysql"
-	"vega-backend/logics/connectors/local/table/oracle"
 )
 
 // InitLocalConnectors 初始化本地 connector
 func (cf *ConnectorFactory) InitLocalConnectors() {
-	cf.connectors["mysql"] = mysql.NewMySQLConnector()
+	cf.connectors["mysql"] = mariadb.NewMariaDBConnector()
 	cf.connectors["opensearch"] = opensearch.NewOpenSearchConnector()
-	cf.connectors["oracle"] = oracle.NewOracleConnector()
+	//cf.connectors["oracle"] = oracle.NewOracleConnector()
 	cf.connectors["mariadb"] = mariadb.NewMariaDBConnector()
 }
