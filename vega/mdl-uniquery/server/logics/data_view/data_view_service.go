@@ -1783,7 +1783,7 @@ func processDocBySQL(taskCtx *taskContext, view *interfaces.DataView, columns []
 		// 遍历每列，将每列的值变成 key-value 对象
 		for j, col := range columns {
 			fieldName, _ := col.Get("name").String()
-			// fieldType, _ := col.Get("type").String()
+			// fieldType, _ := col.Get("vega_type").String()
 
 			if j < len(values) {
 				node := values[j]
@@ -2786,7 +2786,7 @@ func processAllFields(view *interfaces.DataView, columns []ast.Node) error {
 			return fmt.Errorf("SQL column name convert to string failed, %s", err.Error())
 		}
 
-		fieldType, err := col.Get("type").String()
+		fieldType, err := col.Get("vega_type").String()
 		if err != nil {
 			return fmt.Errorf("SQL column type convert to string failed, %s", err.Error())
 		}
@@ -2835,7 +2835,7 @@ func processSQLNodeFields(view *interfaces.DataView, columns []ast.Node) error {
 		if err != nil {
 			return fmt.Errorf("SQL column name convert to string failed, %s", err.Error())
 		}
-		fieldType, err := col.Get("type").String()
+		fieldType, err := col.Get("vega_type").String()
 		if err != nil {
 			return fmt.Errorf("SQL column type convert to string failed, %s", err.Error())
 		}

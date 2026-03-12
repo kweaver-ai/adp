@@ -37,7 +37,37 @@ type BinData struct {
 	ReplicaSet      string `json:"replica_set"`
 }
 
+// SourceType 原始数据类型
+type SourceType struct {
+	Index         *int64 `json:"index"`          // 数据类型索引
+	SourceType    string `json:"source_type"`    // 原始数据类型
+	Precision     *int64 `json:"precision"`      // 原始数据类型长度
+	DecimalDigits *int64 `json:"decimal_digits"` // 原始数据类型精度
+}
+
+// TypeMappingReq 类型映射请求
+type TypeMappingReq struct {
+	SourceConnector string       `json:"source_connector"` // 原始数据源类型
+	TargetConnector string       `json:"target_connector"` // 目标数据源类型
+	Type            []SourceType `json:"type"`             // 原始数据源数据类型
+}
+
+// TargetType 目标数据类型
+type TargetType struct {
+	Index         *int64 `json:"index"`          // 数据类型索引
+	TargetType    string `json:"target_type"`    // 目标数据类型
+	Precision     *int64 `json:"precision"`      // 目标数据类型长度
+	DecimalDigits *int64 `json:"decimal_digits"` // 目标数据类型精度
+}
+
+// TypeMappingResp 类型映射响应
+type TypeMappingResp struct {
+	TargetConnector string       `json:"target_connector"` // 目标数据源类型
+	Type            []TargetType `json:"type"`             // 目标数据源数据类型
+}
+
 //go:generate mockgen -source ../interfaces/data_connection_access.go -destination ../interfaces/mock/mock_data_connection_access.go
 type DataConnectionAccess interface {
 	GetDataSourceById(ctx context.Context, dataSourceId string) (*DataSource, error)
+	TypeMapping(ctx context.Context, typeMappingReq *TypeMappingReq) (*TypeMappingResp, error)
 }

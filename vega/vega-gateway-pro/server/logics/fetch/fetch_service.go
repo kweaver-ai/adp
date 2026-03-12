@@ -264,7 +264,7 @@ func (fs *Service) fetchSqlQuery(ctx context.Context, query *interfaces.FetchQue
 
 			// 数据源类型连接器未适配，查询退化，转发给Etrino
 			logger.Infof("Degradation to Etrino, SQL: %s", query.Sql)
-			err := fs.getDataFromEtrino(ctx, query.Sql, queryId, slug)
+			err := fs.getDataFromEtrino(ctx, dataSource.Type, query.Sql, queryId, slug)
 			if err != nil {
 				return nil, err
 			}
@@ -284,7 +284,7 @@ func (fs *Service) fetchSqlQuery(ctx context.Context, query *interfaces.FetchQue
 					logger.Errorf("Transpile SQL failed: %s", err.Error())
 					// 查询退化，转发给Etrino
 					logger.Infof("Degradation to Etrino query, SQL: %s", query.Sql)
-					err := fs.getDataFromEtrino(ctx, query.Sql, queryId, slug)
+					err := fs.getDataFromEtrino(ctx, dataSource.Type, query.Sql, queryId, slug)
 					if err != nil {
 						return nil, err
 					}
@@ -297,7 +297,7 @@ func (fs *Service) fetchSqlQuery(ctx context.Context, query *interfaces.FetchQue
 
 						// 数据源类型连接器未适配，查询退化，转发给Etrino
 						logger.Infof("Degradation to Etrino, SQL: %s", query.Sql)
-						err := fs.getDataFromEtrino(ctx, query.Sql, queryId, slug)
+						err := fs.getDataFromEtrino(ctx, dataSource.Type, query.Sql, queryId, slug)
 						if err != nil {
 							return nil, err
 						}
@@ -308,13 +308,13 @@ func (fs *Service) fetchSqlQuery(ctx context.Context, query *interfaces.FetchQue
 
 							// 查询退化，转发给Etrino
 							logger.Infof("Degradation to Etrino query, SQL: %s", query.Sql)
-							err := fs.getDataFromEtrino(ctx, query.Sql, queryId, slug)
+							err := fs.getDataFromEtrino(ctx, dataSource.Type, query.Sql, queryId, slug)
 							if err != nil {
 								return nil, err
 							}
 						} else {
 							// 直连数据查询
-							err = fs.getDataFromQueryResult(ctx, connector, resultSet, queryId, slug)
+							err = fs.getDataFromQueryResult(ctx, dataSource.Type, connector, resultSet, queryId, slug)
 							if err != nil {
 								return nil, err
 							}
@@ -323,7 +323,7 @@ func (fs *Service) fetchSqlQuery(ctx context.Context, query *interfaces.FetchQue
 				}
 			} else {
 				// 直连数据查询
-				err = fs.getDataFromQueryResult(ctx, connector, resultSet, queryId, slug)
+				err = fs.getDataFromQueryResult(ctx, dataSource.Type, connector, resultSet, queryId, slug)
 				if err != nil {
 					return nil, err
 				}
@@ -332,7 +332,7 @@ func (fs *Service) fetchSqlQuery(ctx context.Context, query *interfaces.FetchQue
 	} else {
 		//多源查询，转发给Etrino
 		logger.Infof("Multi-source query, degradation to Etrino query, SQL: %s", query.Sql)
-		err := fs.getDataFromEtrino(ctx, query.Sql, queryId, slug)
+		err := fs.getDataFromEtrino(ctx, "", query.Sql, queryId, slug)
 		if err != nil {
 			return nil, err
 		}
@@ -343,7 +343,7 @@ func (fs *Service) fetchSqlQuery(ctx context.Context, query *interfaces.FetchQue
 }
 
 // getDataFromQueryResult 从查询结果集中获取数据
-func (fs *Service) getDataFromQueryResult(ctx context.Context, connector sql_connectors.ConnectorHandler, resultSet any, queryId string, slug string) error {
+func (fs *Service) getDataFromQueryResult(ctx context.Context, dsType string, connector sql_connectors.ConnectorHandler, resultSet any, queryId string, slug string) error {
 
 	queryCacheKey := fmt.Sprintf("%s_%s", queryId, slug)
 
@@ -372,7 +372,13 @@ func (fs *Service) getDataFromQueryResult(ctx context.Context, connector sql_con
 		// 获取列信息
 		columns, err := connector.GetColumns(resultSet)
 		if err != nil {
+			logger.Error(fmt.Errorf("QueryId: %s, slug: %s, get columns error: %v", queryId, slug, err))
 			fs.storeToCache(resultCache, nil, nil, nil, err)
+		} else {
+			// 映射列类型到 Vega 类型
+			if err := fs.mapColumnTypes(ctx, dsType, columns); err != nil {
+				logger.Error(fmt.Errorf("QueryId: %s, slug: %s, map column types error: %v", queryId, slug, err))
+			}
 		}
 
 		for {
@@ -412,6 +418,56 @@ func (fs *Service) getDataFromQueryResult(ctx context.Context, connector sql_con
 	return nil
 }
 
+// mapColumnTypes 映射列类型到 Vega 类型
+func (fs *Service) mapColumnTypes(ctx context.Context, sourceDSType string, columns []*interfaces.Column) error {
+	if len(columns) == 0 {
+		return nil
+	}
+
+	// 构建源类型列表
+	sourceTypes := make([]interfaces.SourceType, len(columns))
+	for i, column := range columns {
+		index := int64(i)
+
+		// 处理大写或带长度精度的类型
+		sourceType := strings.ToLower(column.Type)
+		if strings.Contains(sourceType, "(") {
+			sourceType = strings.TrimSpace(strings.Split(sourceType, "(")[0])
+		}
+
+		var precision int64
+		var decimalDigits int64
+
+		sourceTypes[i] = interfaces.SourceType{
+			Index:         &index,
+			SourceType:    sourceType,
+			Precision:     &precision,
+			DecimalDigits: &decimalDigits,
+		}
+	}
+
+	// 构建类型映射请求
+	typeMappingReq := &interfaces.TypeMappingReq{
+		SourceConnector: sourceDSType,
+		TargetConnector: "vega",
+		Type:            sourceTypes,
+	}
+
+	// 调用类型映射接口
+	typeMappingResp, err := fs.dataConnectionAccess.TypeMapping(ctx, typeMappingReq)
+	if err != nil {
+		logger.Errorf("Type mapping failed: %s", err.Error())
+		return err
+	}
+
+	// 应用类型映射结果
+	for i, vegaType := range typeMappingResp.Type {
+		columns[i].VegaType = vegaType.TargetType
+	}
+
+	return nil
+}
+
 // storeToCache 存储查询到缓存中
 func (fs *Service) storeToCache(oldResultCache *interfaces.ResultCache, resultSet any, columns []*interfaces.Column, resData []*[]any, err error) {
 	if err != nil {
@@ -439,7 +495,7 @@ func (fs *Service) checkCachePeriodically(cache *interfaces.ResultCache) {
 }
 
 // getDataFromEtrino 从Etrino获取数据
-func (fs *Service) getDataFromEtrino(ctx context.Context, sql string, queryId string, slug string) error {
+func (fs *Service) getDataFromEtrino(ctx context.Context, dsType string, sql string, queryId string, slug string) error {
 
 	statementData, err := fs.vegaCalculateAccess.StatementQuery(ctx, sql)
 	if err != nil {
@@ -471,11 +527,11 @@ func (fs *Service) getDataFromEtrino(ctx context.Context, sql string, queryId st
 	}
 
 	// 第二阶段：处理executing阶段
-	return fs.getDataFromEtrinoExecutingNextUri(ctx, nextUri, queryId, slug)
+	return fs.getDataFromEtrinoExecutingNextUri(ctx, dsType, nextUri, queryId, slug)
 }
 
 // getDataFromEtrinoExecutingNextUri 从Etrino获取executing阶段的数据
-func (fs *Service) getDataFromEtrinoExecutingNextUri(ctx context.Context, nextUri string, queryId string, slug string) error {
+func (fs *Service) getDataFromEtrinoExecutingNextUri(ctx context.Context, dsType string, nextUri string, queryId string, slug string) error {
 
 	// 初始化结果通道缓存
 	queryCacheKey := fmt.Sprintf("%s_%s", queryId, slug)
@@ -509,6 +565,7 @@ func (fs *Service) getDataFromEtrinoExecutingNextUri(ctx context.Context, nextUr
 
 		var columns []*interfaces.Column
 		var queryErr error
+		var mapped bool
 
 		for {
 			var data []*[]any
@@ -529,12 +586,22 @@ func (fs *Service) getDataFromEtrinoExecutingNextUri(ctx context.Context, nextUr
 					break
 				} else {
 					nextUri = nextData.NextUri
-					columns = nextData.Columns
+					if len(columns) == 0 {
+						columns = nextData.Columns
+					}
 
 					if nextData.Data != nil {
 						data = append(data, nextData.Data...)
 						break
 					}
+				}
+			}
+
+			if dsType != "" && len(columns) > 0 && !mapped {
+				mapped = true
+				// 映射列类型到 Vega 类型
+				if err := fs.mapColumnTypes(ctx, dsType, columns); err != nil {
+					logger.Error(fmt.Errorf("QueryId: %s, slug: %s, map column types error: %v", queryId, slug, err))
 				}
 			}
 

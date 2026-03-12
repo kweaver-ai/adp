@@ -1136,7 +1136,7 @@ func MergeFeaturesOptimized(dbFeatures []interfaces.FieldFeature, osFeatures []i
 		if existing, exists := dbNativeMap[fingerprint]; exists {
 			// 保留用户修改后的 Name, Comment和启用状态,更新物理层面的 Config (分词器、ignore_above 等)
 			if !reflect.DeepEqual(existing.Config, osF.Config) {
-				logger.Infof("检测到特征 [%s] 的物理配置变更，已同步新参数", existing.FeatureName)
+				// logger.Infof("检测到特征 [%s] 的物理配置变更，已同步新参数", existing.FeatureName)
 				existing.Config = osF.Config
 			}
 

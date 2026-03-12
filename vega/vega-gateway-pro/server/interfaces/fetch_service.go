@@ -43,8 +43,9 @@ type FetchResp struct {
 }
 
 type Column struct {
-	Name string `json:"name"`
-	Type string `json:"type"`
+	Name     string `json:"name"`
+	Type     string `json:"type"`      //原始类型
+	VegaType string `json:"vega_type"` //映射后的VEGA类型
 }
 
 type QueryResult struct {
