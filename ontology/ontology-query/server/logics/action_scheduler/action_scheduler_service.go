@@ -451,7 +451,8 @@ func (s *actionSchedulerService) updateExecutionProgress(ctx context.Context, ex
 	}
 }
 
-// buildExecutionParams builds the execution parameters from action type parameters and object data
+// buildExecutionParams builds the execution parameters from action type parameters and object data.
+// Uses getNestedValue to support dot-separated nested parameter names (e.g. "props.headers").
 func (s *actionSchedulerService) buildExecutionParams(actionType *interfaces.ActionType,
 	instance map[string]any, dynamicParams map[string]any) (map[string]any, error) {
 
@@ -460,21 +461,16 @@ func (s *actionSchedulerService) buildExecutionParams(actionType *interfaces.Act
 	for _, param := range actionType.Parameters {
 		switch param.ValueFrom {
 		case interfaces.LOGIC_PARAMS_VALUE_FROM_PROP:
-			// Get value from object property
 			if propName, ok := param.Value.(string); ok {
-				if val, exists := instance[propName]; exists {
-					params[param.Name] = val
+				if val := getNestedValue(instance, propName); val != nil {
+					setNestedValue(params, param.Name, val)
 				}
 			}
 		case interfaces.LOGIC_PARAMS_VALUE_FROM_CONST:
-			// Use constant value
-			params[param.Name] = param.Value
+			setNestedValue(params, param.Name, param.Value)
 		case interfaces.LOGIC_PARAMS_VALUE_FROM_INPUT:
-			// Get value from dynamic params
-			if dynamicParams != nil {
-				if val, exists := dynamicParams[param.Name]; exists {
-					params[param.Name] = val
-				}
+			if val := getNestedValue(dynamicParams, param.Name); val != nil {
+				setNestedValue(params, param.Name, val)
 			}
 		}
 	}

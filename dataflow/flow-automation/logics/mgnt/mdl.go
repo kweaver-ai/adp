@@ -296,7 +296,7 @@ func (m *mgnt) triggerFromMDLDataViewFull(
 
 		if isFirstPage {
 			isFirstPage = false
-			if isLastPage {
+			if isLastPage && len(data.Entries) == 0 {
 				err := ierrors.NewIError(ierrors.DataSourceIsEmpty, "", map[string]any{
 					"data_view_id": param.ID,
 					"start":        start,

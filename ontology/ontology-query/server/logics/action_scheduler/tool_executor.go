@@ -59,31 +59,83 @@ func buildToolExecutionRequest(configParams []interfaces.Parameter, params map[s
 	}
 
 	// Process each configured parameter - get value from params (already processed by buildExecutionParams)
-	// and assign to the appropriate location based on Source
+	// and assign to the appropriate location based on Source.
+	// Uses getNestedValue/setNestedValue to support dot-separated nested parameter names (e.g. "props.headers").
 	for _, param := range configParams {
-		// Get value from params (params keys are param.Name from buildExecutionParams)
-		value := params[param.Name]
-
-		// Skip if value is nil
+		value := getNestedValue(params, param.Name)
 		if value == nil {
 			continue
 		}
 
-		// Assign to appropriate location based on source
 		switch strings.ToLower(param.Source) {
-		case "header":
-			request.Header[param.Name] = value
-		case "query":
-			request.Query[param.Name] = value
-		case "body":
-			request.Body[param.Name] = value
-		case "path":
-			request.Path[param.Name] = value
+		case interfaces.PARAMETER_HEADER:
+			setNestedValue(request.Header, param.Name, value)
+		case interfaces.PARAMETER_QUERY:
+			setNestedValue(request.Query, param.Name, value)
+		case interfaces.PARAMETER_BODY:
+			setNestedValue(request.Body, param.Name, value)
+		case interfaces.PARAMETER_PATH:
+			setNestedValue(request.Path, param.Name, value)
 		default:
-			// Default to body
-			request.Body[param.Name] = value
+			setNestedValue(request.Body, param.Name, value)
 		}
 	}
 
 	return request
+}
+
+// getNestedValue retrieves a value from a map using a dot-separated key for nested access.
+func getNestedValue(data map[string]any, key string) any {
+	if data == nil {
+		return nil
+	}
+
+	if strings.Contains(key, ".") {
+		parts := strings.Split(key, ".")
+		current := data
+
+		for i, part := range parts {
+			if i == len(parts)-1 {
+				return current[part]
+			}
+			if next, ok := current[part].(map[string]any); ok {
+				current = next
+			} else {
+				return nil
+			}
+		}
+	}
+
+	return data[key]
+}
+
+// setNestedValue sets a value in a map using a dot-separated key, creating intermediate maps as needed.
+func setNestedValue(target map[string]any, key string, value any) {
+	if value == nil {
+		return
+	}
+
+	if strings.Contains(key, ".") {
+		parts := strings.Split(key, ".")
+		current := target
+
+		for i, part := range parts {
+			if i == len(parts)-1 {
+				current[part] = value
+				return
+			}
+			if _, exists := current[part]; !exists {
+				current[part] = make(map[string]any)
+			}
+			if next, ok := current[part].(map[string]any); ok {
+				current = next
+			} else {
+				current[part] = make(map[string]any)
+				current = current[part].(map[string]any)
+			}
+		}
+		return
+	}
+
+	target[key] = value
 }

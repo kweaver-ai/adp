@@ -24,8 +24,6 @@ func Test_ExecuteTool_Validation(t *testing.T) {
 				},
 			}
 
-			// Without mock, this should fail validation
-			// In production, you'd use a mock AgentOperatorAccess
 			So(actionType.ActionSource.BoxID, ShouldEqual, "")
 			So(actionType.ActionSource.ToolID, ShouldEqual, "")
 		})
@@ -43,11 +41,231 @@ func Test_ExecuteTool_Validation(t *testing.T) {
 				"timeout":   60,
 			}
 
-			// Verify action source is correctly configured
 			So(actionType.ActionSource.Type, ShouldEqual, "tool")
 			So(actionType.ActionSource.BoxID, ShouldEqual, "box_001")
 			So(actionType.ActionSource.ToolID, ShouldEqual, "tool_001")
 			So(params["target_ip"], ShouldEqual, "192.168.1.1")
+		})
+	})
+}
+
+func Test_buildToolExecutionRequest(t *testing.T) {
+	Convey("Test buildToolExecutionRequest", t, func() {
+		Convey("should put all params in body when no configParams", func() {
+			params := map[string]any{"key1": "value1", "key2": 42}
+			result := buildToolExecutionRequest(nil, params)
+
+			So(result.Body["key1"], ShouldEqual, "value1")
+			So(result.Body["key2"], ShouldEqual, 42)
+		})
+
+		Convey("should route flat params to correct locations by source", func() {
+			configParams := []interfaces.Parameter{
+				{Name: "Authorization", Source: "Header"},
+				{Name: "page", Source: "Query"},
+				{Name: "data", Source: "Body"},
+				{Name: "id", Source: "Path"},
+			}
+			params := map[string]any{
+				"Authorization": "Bearer token",
+				"page":          1,
+				"data":          "payload",
+				"id":            "123",
+			}
+
+			result := buildToolExecutionRequest(configParams, params)
+
+			So(result.Header["Authorization"], ShouldEqual, "Bearer token")
+			So(result.Query["page"], ShouldEqual, 1)
+			So(result.Body["data"], ShouldEqual, "payload")
+			So(result.Path["id"], ShouldEqual, "123")
+		})
+
+		Convey("should handle nested parameter names with dots", func() {
+			configParams := []interfaces.Parameter{
+				{Name: "props.headers", Source: "Body"},
+				{Name: "query", Source: "Body"},
+			}
+			params := map[string]any{
+				"props": map[string]any{
+					"headers": map[string]any{"Authorization": "Bearer xxx"},
+				},
+				"query": "test",
+			}
+
+			result := buildToolExecutionRequest(configParams, params)
+
+			propsMap, ok := result.Body["props"].(map[string]any)
+			So(ok, ShouldBeTrue)
+			So(propsMap["headers"], ShouldResemble, map[string]any{"Authorization": "Bearer xxx"})
+			So(result.Body["query"], ShouldEqual, "test")
+		})
+
+		Convey("should skip nil values", func() {
+			configParams := []interfaces.Parameter{
+				{Name: "existing", Source: "Body"},
+				{Name: "missing", Source: "Body"},
+			}
+			params := map[string]any{
+				"existing": "value",
+			}
+
+			result := buildToolExecutionRequest(configParams, params)
+
+			So(result.Body["existing"], ShouldEqual, "value")
+			_, exists := result.Body["missing"]
+			So(exists, ShouldBeFalse)
+		})
+
+		Convey("should default to body when source is empty", func() {
+			configParams := []interfaces.Parameter{
+				{Name: "key1", Source: ""},
+			}
+			params := map[string]any{"key1": "value1"}
+
+			result := buildToolExecutionRequest(configParams, params)
+
+			So(result.Body["key1"], ShouldEqual, "value1")
+		})
+
+		Convey("should handle deeply nested parameter names across different sources", func() {
+			configParams := []interfaces.Parameter{
+				{Name: "auth.token", Source: "Header"},
+				{Name: "filter.status.value", Source: "Query"},
+				{Name: "payload.data.items", Source: "Body"},
+			}
+			params := map[string]any{
+				"auth": map[string]any{
+					"token": "Bearer xxx",
+				},
+				"filter": map[string]any{
+					"status": map[string]any{
+						"value": "active",
+					},
+				},
+				"payload": map[string]any{
+					"data": map[string]any{
+						"items": []string{"a", "b"},
+					},
+				},
+			}
+
+			result := buildToolExecutionRequest(configParams, params)
+
+			authMap := result.Header["auth"].(map[string]any)
+			So(authMap["token"], ShouldEqual, "Bearer xxx")
+
+			filterMap := result.Query["filter"].(map[string]any)
+			statusMap := filterMap["status"].(map[string]any)
+			So(statusMap["value"], ShouldEqual, "active")
+
+			payloadMap := result.Body["payload"].(map[string]any)
+			dataMap := payloadMap["data"].(map[string]any)
+			So(dataMap["items"], ShouldResemble, []string{"a", "b"})
+		})
+	})
+}
+
+func Test_getNestedValue(t *testing.T) {
+	Convey("Test getNestedValue", t, func() {
+		Convey("should return nil for nil map", func() {
+			So(getNestedValue(nil, "key"), ShouldBeNil)
+		})
+
+		Convey("should get flat key", func() {
+			data := map[string]any{"key": "value"}
+			So(getNestedValue(data, "key"), ShouldEqual, "value")
+		})
+
+		Convey("should get nested key", func() {
+			data := map[string]any{
+				"props": map[string]any{
+					"headers": "Bearer xxx",
+				},
+			}
+			So(getNestedValue(data, "props.headers"), ShouldEqual, "Bearer xxx")
+		})
+
+		Convey("should return nil for missing nested key", func() {
+			data := map[string]any{
+				"props": map[string]any{},
+			}
+			So(getNestedValue(data, "props.headers"), ShouldBeNil)
+		})
+
+		Convey("should return nil when intermediate key is not a map", func() {
+			data := map[string]any{
+				"props": "not-a-map",
+			}
+			So(getNestedValue(data, "props.headers"), ShouldBeNil)
+		})
+
+		Convey("should handle deeply nested keys", func() {
+			data := map[string]any{
+				"a": map[string]any{
+					"b": map[string]any{
+						"c": 42,
+					},
+				},
+			}
+			So(getNestedValue(data, "a.b.c"), ShouldEqual, 42)
+		})
+	})
+}
+
+func Test_setNestedValue(t *testing.T) {
+	Convey("Test setNestedValue", t, func() {
+		Convey("should skip nil value", func() {
+			target := map[string]any{}
+			setNestedValue(target, "key", nil)
+			_, exists := target["key"]
+			So(exists, ShouldBeFalse)
+		})
+
+		Convey("should set flat key", func() {
+			target := map[string]any{}
+			setNestedValue(target, "key", "value")
+			So(target["key"], ShouldEqual, "value")
+		})
+
+		Convey("should set nested key creating intermediate maps", func() {
+			target := map[string]any{}
+			setNestedValue(target, "props.headers", "Bearer xxx")
+
+			propsMap, ok := target["props"].(map[string]any)
+			So(ok, ShouldBeTrue)
+			So(propsMap["headers"], ShouldEqual, "Bearer xxx")
+		})
+
+		Convey("should set deeply nested key", func() {
+			target := map[string]any{}
+			setNestedValue(target, "a.b.c", 42)
+
+			aMap := target["a"].(map[string]any)
+			bMap := aMap["b"].(map[string]any)
+			So(bMap["c"], ShouldEqual, 42)
+		})
+
+		Convey("should overwrite non-map intermediate with new map", func() {
+			target := map[string]any{"props": "old-string"}
+			setNestedValue(target, "props.headers", "Bearer xxx")
+
+			propsMap, ok := target["props"].(map[string]any)
+			So(ok, ShouldBeTrue)
+			So(propsMap["headers"], ShouldEqual, "Bearer xxx")
+		})
+
+		Convey("should merge into existing nested map", func() {
+			target := map[string]any{
+				"props": map[string]any{
+					"existing": "keep-me",
+				},
+			}
+			setNestedValue(target, "props.headers", "Bearer xxx")
+
+			propsMap := target["props"].(map[string]any)
+			So(propsMap["existing"], ShouldEqual, "keep-me")
+			So(propsMap["headers"], ShouldEqual, "Bearer xxx")
 		})
 	})
 }

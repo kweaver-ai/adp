@@ -50,10 +50,19 @@ func NewDiscoverTaskService(appSetting *common.AppSetting) interfaces.DiscoverTa
 }
 
 // Create creates a new DiscoverTask and enqueues it to the task queue.
+// Create 创建一个新的发现任务
+// 参数:
+//   - ctx: 上下文，用于传递请求范围的数据和取消信号
+//   - catalogID: 目录ID，用于标识要执行发现任务的目录
+//
+// 返回值:
+//   - string: 创建的任务ID
+//   - error: 错误信息，如果创建失败则返回错误
 func (dts *discoverTaskService) Create(ctx context.Context, catalogID string) (string, error) {
+	// 使用分布式追踪系统创建一个span，用于追踪服务调用
 	ctx, span := ar_trace.Tracer.Start(ctx, "DiscoverTaskService.Create",
 		trace.WithSpanKind(trace.SpanKindServer))
-	defer span.End()
+	defer span.End() // 确保span在函数结束时结束
 
 	// Get account info from context
 	accountInfo := interfaces.AccountInfo{}
@@ -89,12 +98,13 @@ func (dts *discoverTaskService) Create(ctx context.Context, catalogID string) (s
 		o11y.Error(ctx, "Failed to marshal discover task")
 		return "", err
 	}
-
+	// 设置任务执行超时时间为 30 分钟
 	asynqTask := asynq.NewTask(interfaces.DiscoverTaskType, payload)
 	info, err := dts.client.Enqueue(asynqTask,
 		asynq.Queue("high"),
 		asynq.MaxRetry(3),
 		asynq.Timeout(30*time.Minute),
+		asynq.Deadline(time.Now().Add(12*time.Hour)),
 	)
 	if err != nil {
 		logger.Errorf("Failed to enqueue discover task: %v", err)

@@ -115,8 +115,12 @@ func (dw *discoverWorker) ProcessTask(ctx context.Context, event *asynq.Task) er
 	if err := dw.dts.UpdateStatus(ctx, taskID, interfaces.DiscoverTaskStatusRunning, "", now); err != nil {
 		logger.Errorf("Failed to set start time for task %s: %v", taskID, err)
 	}
-
-	// Execute discover
+	// Execute discover : 元数据采集主要逻辑
+	//首先根据 catalog ID 获取 catalog 信息，
+	//然后根据 catalog 信息获取 connector 信息，
+	//然后根据 connector 信息获取 connector 实例，
+	//然后根据 connector 实例获取 catalog 的元数据，
+	//然后根据 catalog 的元数据获取 catalog 的资源信息：元数据
 	result, err := dw.discoverCatalog(ctx, catalog)
 	if err != nil {
 		// Update task status to failed
@@ -136,6 +140,15 @@ func (dw *discoverWorker) ProcessTask(ctx context.Context, event *asynq.Task) er
 }
 
 // discoverCatalog discovers resources for a specific catalog.
+// discoverCatalog 是一个发现目录资源的方法
+// 它接收上下文和目录信息，返回发现结果或错误
+// 参数:
+//   - ctx: 上下文信息，用于控制请求的超时和取消
+//   - catalog: 目录信息，包含目录ID和类型等
+//
+// 返回值:
+//   - *interfaces.DiscoverResult: 发现结果，包含发现的资源信息
+//   - error: 错误信息，如果发现过程中出现错误
 func (dw *discoverWorker) discoverCatalog(ctx context.Context,
 	catalog *interfaces.Catalog) (*interfaces.DiscoverResult, error) {
 
@@ -161,12 +174,13 @@ func (dw *discoverWorker) discoverCatalog(ctx context.Context,
 	} else {
 		logger.Warnf("Failed to get metadata: %v", err)
 	}
-
-	// 2. 根据 connector category 分发到不同的发现函数
+	// 2. 根据 connector category 分发到不同的发现函数：例如mysql会到mysql.go下面进行元数据的采集，里面会有具体的实现
 	category := connector.GetCategory()
 	switch category {
+	// table类型的会到这里，例如mysql
 	case interfaces.ConnectorCategoryTable:
 		return dw.discoverTableResources(ctx, catalog, connector)
+	// index类型的会到这里，例如open search
 	case interfaces.ConnectorCategoryIndex:
 		return dw.discoverIndexResources(ctx, catalog, connector)
 	case interfaces.ConnectorCategoryFile, interfaces.ConnectorCategoryFileset:

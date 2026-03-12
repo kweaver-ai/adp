@@ -362,12 +362,17 @@ const DebugPanel: FC<TestCodeProps> = ({
     const path = paths.reduce((acc, item) => ({ ...acc, [item.name]: item.value }), {});
     const header = headers.reduce((acc, item) => ({ ...acc, [item.name]: item.value }), {});
     const query = querys.reduce((acc, item) => ({ ...acc, [item.name]: item.value }), {});
-    const requestBody = {
-      ...(isEmpty(path) ? {} : { path }),
-      ...(isEmpty(header) ? {} : { header }),
-      ...(isEmpty(query) ? {} : { query }),
-      ...(isEmpty(body) ? {} : { body: JSON.parse(body) }),
-    };
+    const requestBody =
+      type === OperatorTypeEnum.MCP
+        ? isEmpty(body)
+          ? {}
+          : JSON.parse(body)
+        : {
+            ...(isEmpty(path) ? {} : { path }),
+            ...(isEmpty(header) ? {} : { header }),
+            ...(isEmpty(query) ? {} : { query }),
+            ...(isEmpty(body) ? {} : { body: JSON.parse(body) }),
+          };
 
     if (debugSettings.stream && debugSettings.mode === StreamModeType.HTTP) {
       httpDebugRun(requestBody);

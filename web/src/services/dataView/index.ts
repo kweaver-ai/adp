@@ -66,7 +66,7 @@ const getAtomViewList = async (params: DataViewType.GetAtomViewListParams): Prom
   } = params;
 
   const queryParams = UTILS.filterEmptyFields({
-    name_pattern: name,
+    keyword: name,
     sort,
     direction,
     offset,

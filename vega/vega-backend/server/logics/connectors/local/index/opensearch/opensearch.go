@@ -154,26 +154,41 @@ func (c *OpenSearchConnector) TestConnection(ctx context.Context) error {
 }
 
 // GetMetadata returns the metadata for the catalog.
+// GetMetadata 方法用于获取OpenSearch的元数据信息
+// 参数:
+//   - ctx: 上下文，用于控制请求的超时和取消
+//
+// 返回值:
+//   - map[string]any: 包含OpenSearch元数据的键值对映射
+//   - error: 如果操作过程中发生错误，返回相应的错误信息
 func (c *OpenSearchConnector) GetMetadata(ctx context.Context) (map[string]any, error) {
+	// 检查客户端是否已初始化连接
 	if c.client == nil {
 		return nil, fmt.Errorf("connector not connected")
 	}
 
+	// 创建OpenSearch信息请求
 	req := opensearchapi.InfoRequest{}
+	// 发送请求到OpenSearch服务器
 	resp, err := req.Do(ctx, c.client)
 	if err != nil {
 		return nil, err
 	}
+	// 确保响应体被关闭，以释放资源
 	defer resp.Body.Close()
+	// 检查响应是否包含错误
 	if resp.IsError() {
 		return nil, fmt.Errorf("get metadata failed: %s", resp.String())
 	}
 
+	// 用于存储解析后的元数据信息
 	var info map[string]any
+	// 将响应体中的JSON数据解码到info变量中
 	if err := json.NewDecoder(resp.Body).Decode(&info); err != nil {
 		return nil, err
 	}
 
+	// 返回解析后的元数据信息
 	return info, nil
 }
 
@@ -227,11 +242,20 @@ func (c *OpenSearchConnector) ListIndexes(ctx context.Context) ([]*interfaces.In
 }
 
 // GetIndexMeta retrieves index metadata (mappings, settings).
+// GetIndexMeta 获取指定索引的元数据信息，包括映射和设置
+// 参数:
+//   - ctx: 上下文信息，用于控制请求的超时和取消
+//   - index: 指向接口 IndexMeta 的指针，用于存储获取到的元数据
+//
+// 返回值:
+//   - error: 如果操作过程中发生错误，则返回错误信息
 func (c *OpenSearchConnector) GetIndexMeta(ctx context.Context, index *interfaces.IndexMeta) error {
+	// 首先确保连接器已连接到 OpenSearch 服务
 	if err := c.Connect(ctx); err != nil {
 		return err
 	}
 
+	// 检查索引的属性映射是否为空，如果为空则初始化一个空的 map
 	if index.Properties == nil {
 		index.Properties = make(map[string]any)
 	}
@@ -272,17 +296,29 @@ func (c *OpenSearchConnector) fetchMappings(ctx context.Context, index *interfac
 			} `json:"properties"`
 		} `json:"mappings"`
 	}
+	//{
+	//	"test-index" : {
+	//	"mappings" : {
+	//		"properties" : {
+	//			"ip_address" : {
+	//				"type" : "ip",
+	//				"ignore_malformed" : true
+	//			}
+	//		}
+	//	}
+	//}
+	//}
 	if err := json.NewDecoder(resp.Body).Decode(&mappingResp); err != nil {
 		return err
 	}
-
-	// Parse mappings
+	// Parse mappings:这里是存储的字段元数据，包括type映射
 	fieldMap := make(map[string]interfaces.FieldMeta)
 	if idxData, ok := mappingResp[index.Name]; ok {
 		for fieldName, props := range idxData.Mappings.Properties {
 			fieldMap[fieldName] = interfaces.FieldMeta{
 				Name:       fieldName,
-				Type:       props.Type,
+				Type:       MapType(props.Type),
+				OrigType:   props.Type,
 				Searchable: true, // Default to true for now
 			}
 		}
@@ -311,10 +347,21 @@ func (c *OpenSearchConnector) fetchSettings(ctx context.Context, index *interfac
 	var settingsResp map[string]struct {
 		Settings map[string]any `json:"settings"`
 	}
+	//{
+	//	"test-index" : {
+	//	"settings" : {
+	//		"index.creation_date" : "1772682337114",
+	//			"index.number_of_replicas" : "1",
+	//			"index.number_of_shards" : "1",
+	//			"index.provided_name" : "test-index",
+	//			"index.uuid" : "2G4vPna8SIC0vTEzZ0NK3Q",
+	//			"index.version.created" : "136287827"
+	//	}
+	//}
+	//}
 	if err := json.NewDecoder(resp.Body).Decode(&settingsResp); err != nil {
 		return err
 	}
-
 	if idxData, ok := settingsResp[index.Name]; ok {
 		for k, v := range idxData.Settings {
 			index.Properties[k] = v

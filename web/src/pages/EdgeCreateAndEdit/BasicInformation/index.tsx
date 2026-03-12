@@ -24,7 +24,7 @@ const BasicInformation = (props: any) => {
             { max: 40, message: intl.get('Global.lenErr', { len: 40 }) },
           ]}
         >
-          <Input placeholder={intl.get('Global.pleaseInput')} autoComplete="off" aria-autocomplete="none" />
+          <Input placeholder={intl.get('Global.pleaseInput')} autoComplete="off" aria-autocomplete="none" maxLength={40} showCount />
         </Form.Item>
         <Form.Item
           label="ID"
@@ -56,7 +56,7 @@ const BasicInformation = (props: any) => {
           <TagsSelector />
         </Form.Item>
         <Form.Item name="comment" label={intl.get('Global.description')}>
-          <Input.TextArea showCount rows={4} maxLength={1000} placeholder={intl.get('Global.pleaseInput')} />
+          <Input.TextArea showCount rows={5} maxLength={1000} placeholder={intl.get('Global.pleaseInput')} />
         </Form.Item>
       </Form>
     </div>

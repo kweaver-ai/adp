@@ -49,7 +49,7 @@ func (dw *discoverWorker) discoverTableResources(ctx context.Context,
 		return nil, fmt.Errorf("failed to reconcile resources: %w", err)
 	}
 
-	// Step 4: 逐个补齐详细元数据
+	// Step 4: 逐个补齐详细元数据:元数据采集就是补充每一个table的元数据信息
 	if err := dw.enrichTableMetadata(ctx, tableConnector, items); err != nil {
 		return nil, fmt.Errorf("failed to enrich table metadata: %w", err)
 	}
@@ -60,13 +60,21 @@ func (dw *discoverWorker) discoverTableResources(ctx context.Context,
 	return result, nil
 }
 
-// enrichTableMetadata enriches table resources with detailed metadata.
+// enrichTableMetadata 为表元数据添加详细信息
+// 参数:
+//   - ctx: 上下文信息，用于控制请求的超时和取消
+//   - tableConnector: 表连接器，用于获取表的元数据
+//   - items: 表发现项目列表，包含表元数据和资源信息
+//
+// 返回值:
+//   - error: 如果在处理过程中发生错误，则返回错误信息
 func (dw *discoverWorker) enrichTableMetadata(ctx context.Context,
 	tableConnector connectors.TableConnector, items []tableDiscoverItem) error {
 
+	// 遍历所有表发现项目
 	for _, item := range items {
-		table := item.tableMeta
-		resource := item.resource
+		table := item.tableMeta   // 获取表元数据
+		resource := item.resource // 获取资源信息
 
 		// 获取详细元数据
 		err := tableConnector.GetTableMeta(ctx, table)
@@ -75,7 +83,7 @@ func (dw *discoverWorker) enrichTableMetadata(ctx context.Context,
 			return err
 		}
 
-		// 填充 Resource 元数据
+		// 填充 Resource 元数据 ：schema_definition 字段
 		resource.Database = table.Database
 		resource.SchemaDefinition = []*interfaces.Property{}
 		for _, column := range table.Columns {
@@ -87,7 +95,7 @@ func (dw *discoverWorker) enrichTableMetadata(ctx context.Context,
 				Description:  column.Description,
 			})
 		}
-
+		// 填充 Resource 元数据 ：source_metadata 字段
 		sourceMetadata := make(map[string]any)
 		if resource.SourceMetadata != nil {
 			sourceMetadata = resource.SourceMetadata

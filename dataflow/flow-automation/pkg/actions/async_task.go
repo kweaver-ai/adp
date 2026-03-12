@@ -328,7 +328,6 @@ func PublishAsyncTaskResult(ctx context.Context, executeMethods entity.ExecuteMe
 		notification.Error = err.Error()
 	} else {
 		notification.Status = "success"
-		notification.Result = result
 	}
 
 	msgBytes, marshalErr := json.Marshal(notification)

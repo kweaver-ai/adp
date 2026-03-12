@@ -175,7 +175,7 @@ func Test_buildExecutionParams(t *testing.T) {
 
 			So(err, ShouldBeNil)
 			_, exists := params["token"]
-			So(exists, ShouldBeFalse) // Parameter should not be set if dynamic param is missing
+			So(exists, ShouldBeFalse)
 		})
 
 		Convey("should handle empty parameters", func() {
@@ -188,6 +188,92 @@ func Test_buildExecutionParams(t *testing.T) {
 
 			So(err, ShouldBeNil)
 			So(len(params), ShouldEqual, 0)
+		})
+
+		Convey("should handle nested dynamic param name (dot-separated)", func() {
+			actionType := &interfaces.ActionType{
+				Parameters: []interfaces.Parameter{
+					{
+						Name:      "props.headers",
+						ValueFrom: interfaces.LOGIC_PARAMS_VALUE_FROM_INPUT,
+					},
+				},
+			}
+			objData := map[string]any{}
+			dynamicParams := map[string]any{
+				"props": map[string]any{
+					"headers": map[string]any{"Authorization": "Bearer xxx"},
+				},
+			}
+
+			params, err := s.buildExecutionParams(actionType, objData, dynamicParams)
+
+			So(err, ShouldBeNil)
+			propsMap, ok := params["props"].(map[string]any)
+			So(ok, ShouldBeTrue)
+			So(propsMap["headers"], ShouldResemble, map[string]any{"Authorization": "Bearer xxx"})
+		})
+
+		Convey("should handle nested property name (dot-separated)", func() {
+			actionType := &interfaces.ActionType{
+				Parameters: []interfaces.Parameter{
+					{
+						Name:      "target.ip",
+						ValueFrom: interfaces.LOGIC_PARAMS_VALUE_FROM_PROP,
+						Value:     "network.ip",
+					},
+				},
+			}
+			objData := map[string]any{
+				"network": map[string]any{
+					"ip": "10.0.0.1",
+				},
+			}
+
+			params, err := s.buildExecutionParams(actionType, objData, nil)
+
+			So(err, ShouldBeNil)
+			targetMap, ok := params["target"].(map[string]any)
+			So(ok, ShouldBeTrue)
+			So(targetMap["ip"], ShouldEqual, "10.0.0.1")
+		})
+
+		Convey("should handle mixed nested and flat params", func() {
+			actionType := &interfaces.ActionType{
+				Parameters: []interfaces.Parameter{
+					{
+						Name:      "props.headers",
+						ValueFrom: interfaces.LOGIC_PARAMS_VALUE_FROM_INPUT,
+					},
+					{
+						Name:      "query",
+						ValueFrom: interfaces.LOGIC_PARAMS_VALUE_FROM_CONST,
+						Value:     "test-query",
+					},
+					{
+						Name:      "target_ip",
+						ValueFrom: interfaces.LOGIC_PARAMS_VALUE_FROM_PROP,
+						Value:     "pod_ip",
+					},
+				},
+			}
+			objData := map[string]any{
+				"pod_ip": "192.168.1.1",
+			}
+			dynamicParams := map[string]any{
+				"props": map[string]any{
+					"headers": "Bearer token",
+				},
+			}
+
+			params, err := s.buildExecutionParams(actionType, objData, dynamicParams)
+
+			So(err, ShouldBeNil)
+			propsMap, ok := params["props"].(map[string]any)
+			So(ok, ShouldBeTrue)
+			So(propsMap["headers"], ShouldEqual, "Bearer token")
+			So(params["query"], ShouldEqual, "test-query")
+			So(params["target_ip"], ShouldEqual, "192.168.1.1")
 		})
 	})
 }

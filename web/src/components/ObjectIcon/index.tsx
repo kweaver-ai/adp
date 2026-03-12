@@ -34,6 +34,7 @@ const ObjectIcon = (props: ObjectIconProps) => {
     height: size,
     background: color,
     borderRadius,
+    flexShrink: 0,
     ...style,
   };
 

@@ -1,0 +1,37 @@
+{
+    "name": "Dataflow Dev Container",
+
+    // 使用 docker-compose
+    "dockerComposeFile": "./docker-compose.yml",
+
+    // 远程用户设置 - 容器内使用 devuser 用户
+    "remoteUser": "devuser",
+    "containerUser": "devuser",
+
+    // 自动将容器用户 UID/GID 映射到主机用户
+    "updateRemoteUserUID": true,
+
+    // 指定要连接的服务（容器）
+    "service": "dataflow-dev",
+
+    // 工作目录
+    "workspaceFolder": "/workspace",
+
+    // 容器启动后不运行其他命令
+    "shutdownAction": "stopCompose",
+
+    "customizations": {
+        "vscode": {
+            "extensions": [
+                "golang.go",           // Go 核心插件
+                "ms-vscode.cpptools",  // 辅助调试
+                "eamodio.gitlens"      // Git 增强
+            ],
+            "settings": {
+                "go.toolsManagement.checkForUpdates": "local",
+                "go.gopath": "/home/devuser/go",
+                "go.useLanguageServer": true
+            }
+        }
+    },
+}

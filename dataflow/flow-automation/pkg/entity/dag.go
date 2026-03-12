@@ -1,7 +1,6 @@
 package entity
 
 import (
-	"bufio"
 	"bytes"
 	"context"
 	"crypto/tls"
@@ -1087,29 +1086,19 @@ func (dagIns *DagInstance) ListOssEvents(ctx context.Context) (events []*DagInst
 		return nil, fmt.Errorf("failed to fetch file: %s", string(body))
 	}
 
-	scanner := bufio.NewScanner(resp.Body)
-	// 增加缓冲区大小以支持大行数据（默认64KB，设置为10MB）
-	maxCapacity := 10 * 1024 * 1024 // 10MB
-	buf := make([]byte, 0, bufio.MaxScanTokenSize)
-	scanner.Buffer(buf, maxCapacity)
+	decoder := json.NewDecoder(resp.Body)
 
-	for scanner.Scan() {
-		line := scanner.Bytes()
-		if len(line) == 0 {
-			continue
-		}
-
+	for {
 		var elem DagInstanceEvent
-		if perr := json.Unmarshal(line, &elem); perr != nil {
-			log.Warnf("[dagIns.ListOssEvents] unmarshal err %s", perr.Error())
+
+		if err := decoder.Decode(&elem); err == io.EOF {
+			break
+		} else if err != nil {
+			log.Warnf("[dagIns.ListOssEvents] decode err %s", err.Error())
 			continue
 		}
 
 		events = append(events, &elem)
-	}
-
-	if err = scanner.Err(); err != nil {
-		return nil, fmt.Errorf("failed to scan file: %w", err)
 	}
 
 	return

@@ -1,4 +1,4 @@
-export const PRIMARY_KEY_TYPES = ['integer', 'unsigned integer', 'string'] as const;
+export const PRIMARY_KEY_TYPES = ['integer', 'unsigned integer', 'string', 'text'] as const;
 
 export const INCREMENTAL_KEY_TYPES = ['integer', 'unsigned integer', 'datetime', 'timestamp'] as const;
 

@@ -307,7 +307,7 @@ Trino (分布式)
   - Polling Scheduler: 定时轮询 API 数据
   - Stream Consumer: 消费消息队列数据
 
-#### 4.2.3 Discovery & Monitoring (发现与监控)
+#### 4.2.3 Discover & Monitoring (发现与监控)
 - **Inventory Worker**: 自动发现数据源中的数据资源
 - **Health Checker**: 监控数据源连接状态
 - **Metrics Collector**: 收集查询性能和同步进度指标
@@ -350,7 +350,7 @@ Catalog 连接粒度?
   └─→ 库级 → ListTables()
         └─→ Resource Name = table
   ↓
-Auto Discovery
+Auto Discover
   ├─→ New Resource → Register as Virtual
   ├─→ Deleted Resource → Mark as Stale
   └─→ Schema Change → Update Metadata

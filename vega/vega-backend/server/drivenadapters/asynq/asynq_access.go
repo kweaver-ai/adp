@@ -10,6 +10,7 @@ import (
 	"context"
 	"fmt"
 	"sync"
+	"time"
 
 	"github.com/hibiken/asynq"
 	"github.com/kweaver-ai/kweaver-go-lib/logger"
@@ -41,9 +42,13 @@ func NewAsynqAccess(appSetting *common.AppSetting) interfaces.AsynqAccess {
 // CreateClient creates and returns the Asynq client for enqueueing tasks.
 func (aqa *asynqAccess) CreateClient(ctx context.Context) *asynq.Client {
 	redisOpt := asynq.RedisClientOpt{
-		Addr:     fmt.Sprintf("%s:%d", aqa.appSetting.RedisSetting.Host, aqa.appSetting.RedisSetting.Port),
-		Username: aqa.appSetting.RedisSetting.Username,
-		Password: aqa.appSetting.RedisSetting.Password,
+		Addr:         fmt.Sprintf("%s:%d", aqa.appSetting.RedisSetting.Host, aqa.appSetting.RedisSetting.Port),
+		Username:     aqa.appSetting.RedisSetting.Username,
+		Password:     aqa.appSetting.RedisSetting.Password,
+		DialTimeout:  5 * time.Second,  // 连接超时（默认 5s，调大）
+		ReadTimeout:  60 * time.Second, // 读超时（默认 3s，调大）
+		WriteTimeout: 60 * time.Second, // 写超时（默认 3s，调大）
+		PoolSize:     20,               // 连接池大小（默认 10，根据并发调大）
 	}
 	return asynq.NewClient(redisOpt)
 }
@@ -51,9 +56,13 @@ func (aqa *asynqAccess) CreateClient(ctx context.Context) *asynq.Client {
 // CreateServer creates and returns the Asynq server for processing tasks.
 func (aqa *asynqAccess) CreateServer(ctx context.Context) *asynq.Server {
 	redisOpt := asynq.RedisClientOpt{
-		Addr:     fmt.Sprintf("%s:%d", aqa.appSetting.RedisSetting.Host, aqa.appSetting.RedisSetting.Port),
-		Username: aqa.appSetting.RedisSetting.Username,
-		Password: aqa.appSetting.RedisSetting.Password,
+		Addr:         fmt.Sprintf("%s:%d", aqa.appSetting.RedisSetting.Host, aqa.appSetting.RedisSetting.Port),
+		Username:     aqa.appSetting.RedisSetting.Username,
+		Password:     aqa.appSetting.RedisSetting.Password,
+		DialTimeout:  5 * time.Second,  // 连接超时（默认 5s，调大）
+		ReadTimeout:  60 * time.Second, // 读超时（默认 3s，调大）
+		WriteTimeout: 60 * time.Second, // 写超时（默认 3s，调大）
+		PoolSize:     20,               // 连接池大小（默认 10，根据并发调大）
 	}
 	return asynq.NewServer(redisOpt, asynq.Config{
 		Concurrency: 10,

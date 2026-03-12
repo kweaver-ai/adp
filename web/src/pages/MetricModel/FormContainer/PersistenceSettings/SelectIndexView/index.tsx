@@ -142,7 +142,7 @@ const SelectIndexView = (props: any) => {
       <Drawer
         className={styles['model-settings-select-index-view-root']}
         open={open}
-        title={intl.get('Global.chooseDataView')}
+        title={intl.get('Global.indexBase')}
         width={1000}
         maskClosable={true}
         onClose={() => toggleDrawer(false)}

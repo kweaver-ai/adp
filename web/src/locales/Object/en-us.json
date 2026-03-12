@@ -57,6 +57,12 @@
     "skipLogicPropertyTip": "If there are no values that need to be calculated or derived through rules, you can skip this step and click [Save and Exit] in the upper right corner to complete the object class creation.",
     "manualCreate": "Manual Create",
     "syncDataViewFields": "Sync Data View Fields",
-    "clearAllDataAttributesConfirm": "Are you sure you want to clear all data attributes? This action cannot be undone. Please proceed with caution."
+    "clearAllDataAttributesConfirm": "Are you sure you want to clear all data attributes? This action cannot be undone. Please proceed with caution.",
+    "deleteIgnoreAndConfirm": "Ignore and Delete",
+    "deleteObjectUsedByRelationAndAction": "The object class is used by other relation and action classes. After deletion, related capabilities will not work properly.",
+    "affectedRelationAndActionList": "The following is a list of affected relation and action classes:",
+    "objectToDelete": "Object Class to Delete",
+    "affectedRelationOrAction": "Affected Relation/Action Class",
+    "confirmDeleteObjectClass": "Are you sure you want to continue deleting this object class?"
   }
 }
