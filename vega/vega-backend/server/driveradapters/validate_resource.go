@@ -154,8 +154,8 @@ func validateViewFields(ctx context.Context, viewFields []*interfaces.ViewProper
 }
 
 // 校验特征
-func validateFeatures(ctx context.Context, fieldsMap map[string]*interfaces.ViewProperty, features []interfaces.FieldFeature) error {
-	enabledMap := make(map[interfaces.FieldFeatureType]bool)
+func validateFeatures(ctx context.Context, fieldsMap map[string]*interfaces.ViewProperty, features []interfaces.PropertyFeature) error {
+	enabledMap := make(map[string]bool)
 	featureNameMap := make(map[string]struct{})
 	for _, f := range features {
 		if f.FeatureName == "" {
@@ -187,12 +187,12 @@ func validateFeatures(ctx context.Context, fieldsMap map[string]*interfaces.View
 		}
 
 		// 校验特征备注，长度限制1000
-		if utf8.RuneCountInString(f.Comment) > interfaces.MaxLength_ViewFieldFeatureComment {
+		if utf8.RuneCountInString(f.Description) > interfaces.MaxLength_ViewFieldFeatureComment {
 			return rest.NewHTTPError(ctx, http.StatusBadRequest, verrors.VegaBackend_LogicView_LengthExceeded_FieldFeatureComment).
-				WithErrorDetails(fmt.Sprintf("The length of the field feature comment %s exceeds %d", f.Comment, interfaces.MaxLength_ViewFieldFeatureComment))
+				WithErrorDetails(fmt.Sprintf("The length of the field feature comment %s exceeds %d", f.Description, interfaces.MaxLength_ViewFieldFeatureComment))
 		}
 
-		if f.RefField == "" {
+		if f.RefProperty == "" {
 			return rest.NewHTTPError(ctx, http.StatusBadRequest, rest.PublicError_BadRequest).
 				WithErrorDetails("The field feature ref field is null")
 		}
@@ -200,15 +200,15 @@ func validateFeatures(ctx context.Context, fieldsMap map[string]*interfaces.View
 		// 校验非原生特征的引用字段
 		if !f.IsNative {
 			// 引用字段是否在字段列表里
-			if _, ok := fieldsMap[f.RefField]; !ok {
+			if _, ok := fieldsMap[f.RefProperty]; !ok {
 				return rest.NewHTTPError(ctx, http.StatusBadRequest, rest.PublicError_BadRequest).
-					WithErrorDetails(fmt.Sprintf("The field feature ref field '%s' is not in the field list", f.RefField))
+					WithErrorDetails(fmt.Sprintf("The field feature ref field '%s' is not in the field list", f.RefProperty))
 			}
 
 			// 引用字段的类型是否符合特征类型
-			if !IsFeatureSupported(fieldsMap[f.RefField].Type, f.FeatureType) {
+			if !IsFeatureSupported(fieldsMap[f.RefProperty].Type, f.FeatureType) {
 				return rest.NewHTTPError(ctx, http.StatusBadRequest, rest.PublicError_BadRequest).
-					WithErrorDetails(fmt.Sprintf("The field feature ref field '%s' type '%s' is not supported", f.RefField, fieldsMap[f.RefField].Type))
+					WithErrorDetails(fmt.Sprintf("The field feature ref field '%s' type '%s' is not supported", f.RefProperty, fieldsMap[f.RefProperty].Type))
 			}
 		}
 
@@ -226,7 +226,7 @@ func validateFeatures(ctx context.Context, fieldsMap map[string]*interfaces.View
 	return nil
 }
 
-func IsFeatureSupported(fieldType string, featureType interfaces.FieldFeatureType) bool {
+func IsFeatureSupported(fieldType string, featureType string) bool {
 	switch featureType {
 	case interfaces.FieldFeatureType_Fulltext:
 		return fieldType == interfaces.DataType_Text
