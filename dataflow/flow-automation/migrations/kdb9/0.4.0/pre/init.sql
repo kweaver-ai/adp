@@ -676,7 +676,7 @@ CREATE TABLE IF NOT EXISTS `t_flow_dag_instance` (
  `f_share_data` MEDIUMTEXT DEFAULT NULL COMMENT '共享数据',
  `f_share_data_ext` MEDIUMTEXT DEFAULT NULL COMMENT '共享数据扩展',
  `f_status` VARCHAR(32) NOT NULL DEFAULT '' COMMENT '状态',
- `f_reason` TEXT DEFAULT NULL COMMENT '原因',
+ `f_reason` MEDIUMTEXT DEFAULT NULL COMMENT '原因',
  `f_cmd` TEXT DEFAULT NULL COMMENT '命令',
  `f_has_cmd` TINYINT(1) NOT NULL DEFAULT 0 COMMENT '是否包含命令',
  `f_batch_run_id` VARCHAR(20) NOT NULL DEFAULT '' COMMENT '批次运行ID',
@@ -699,8 +699,9 @@ CREATE TABLE IF NOT EXISTS `t_flow_dag_instance` (
  `f_biz_domain_id` VARCHAR(40) NOT NULL DEFAULT '' COMMENT '业务域ID',
   PRIMARY KEY (`f_id`)
 );
-CREATE INDEX IF NOT EXISTS `idx_dag_ins_id_status_updated` ON `t_flow_dag_instance` (`f_id`, `f_status`, `f_updated_at`);
-CREATE INDEX IF NOT EXISTS `idx_dag_ins_dag_id` ON `t_flow_dag_instance` (`f_dag_id`);
+CREATE INDEX IF NOT EXISTS `idx_dag_ins_dag_status` ON `t_flow_dag_instance` (`f_dag_id`, `f_status`);
+CREATE INDEX IF NOT EXISTS `idx_dag_ins_status_upd` ON `t_flow_dag_instance` (`f_status`, `f_updated_at`);
+CREATE INDEX IF NOT EXISTS `idx_dag_ins_status_user_pri` ON `t_flow_dag_instance` (`f_status`, `f_user_id`, `f_priority`);
 CREATE INDEX IF NOT EXISTS `idx_dag_ins_user_id` ON `t_flow_dag_instance` (`f_user_id`);
 CREATE INDEX IF NOT EXISTS `idx_dag_ins_batch_run` ON `t_flow_dag_instance` (`f_batch_run_id`);
 CREATE INDEX IF NOT EXISTS `idx_dag_ins_worker` ON `t_flow_dag_instance` (`f_worker`);
@@ -753,11 +754,11 @@ CREATE TABLE IF NOT EXISTS `t_flow_task_instance` (
  `f_metadata` LONGTEXT DEFAULT NULL COMMENT '元数据',
   PRIMARY KEY (`f_id`)
 );
-CREATE INDEX IF NOT EXISTS `idx_task_ins_id_status_updated` ON `t_flow_task_instance` (`f_id`, `f_status`, `f_updated_at`);
 CREATE INDEX IF NOT EXISTS `idx_task_ins_dag_ins_id` ON `t_flow_task_instance` (`f_dag_ins_id`);
 CREATE INDEX IF NOT EXISTS `idx_task_ins_hash` ON `t_flow_task_instance` (`f_hash`);
 CREATE INDEX IF NOT EXISTS `idx_task_ins_action` ON `t_flow_task_instance` (`f_action_name`);
-CREATE INDEX IF NOT EXISTS `idx_task_ins_expired` ON `t_flow_task_instance` (`f_expired_at`);
+CREATE INDEX IF NOT EXISTS `idx_task_ins_status_expire` ON `t_flow_task_instance` (`f_status`, `f_expired_at`);
+CREATE INDEX IF NOT EXISTS `idx_task_ins_status_upd_id` ON `t_flow_task_instance` (`f_status`, `f_updated_at`, `f_id`);
 
 CREATE TABLE IF NOT EXISTS `t_flow_token` (
  `f_id` BIGINT UNSIGNED NOT NULL COMMENT '主键ID',
