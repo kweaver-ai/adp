@@ -306,6 +306,18 @@ SELECT 'opensearch', 'opensearch', 'OpenSearch 搜索引擎连接器', 'local', 
     TRUE
 FROM DUAL WHERE NOT EXISTS ( SELECT f_type FROM t_connector_type WHERE f_type = 'opensearch' );
 
+INSERT INTO t_connector_type (f_type, f_name, f_description, f_mode, f_category, f_field_config, f_enabled)
+SELECT 'mysql', 'mysql', 'Mysql 关系型数据库连接器', 'local', 'table',
+       '{
+           "host":      {"name":"主机地址","type":"string","description":"MariaDB 服务器主机地址","required":true,"encrypted":false},
+           "port":      {"name":"端口号","type":"integer","description":"MariaDB 服务器端口","required":true,"encrypted":false},
+           "username":  {"name":"用户名","type":"string","description":"数据库用户名","required":true,"encrypted":false},
+           "password":  {"name":"密码","type":"string","description":"数据库密码","required":true,"encrypted":true},
+           "databases": {"name":"数据库列表","type":"array","description":"数据库名称列表（可选，为空则连接实例级别）","required":false,"encrypted":false},
+           "options":   {"name":"连接参数","type":"object","description":"连接参数（如 charset, timeout 等）","required":false,"encrypted":false}
+       }',
+       TRUE
+FROM DUAL WHERE NOT EXISTS ( SELECT f_type FROM t_connector_type WHERE f_type = 'mysql' );
 
 -- ==========================================
 -- 7. t_discover_task 发现任务表
