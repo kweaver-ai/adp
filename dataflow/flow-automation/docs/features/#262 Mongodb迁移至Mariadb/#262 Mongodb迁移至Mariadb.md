@@ -1,4 +1,4 @@
-# MongoDB到MySQL数据库迁移 - 设计文档
+# MongoDB到MariaDB数据库迁移 - 设计文档
 
 ## 一、需求分析
 
@@ -17,7 +17,7 @@
 Dataflow 工作流自动化系统目前使用 MongoDB 作为数据存储。随着项目开源计划的推进，需要优化系统架构，尽可能减少外部服务依赖，使开源版本具备最小化的服务依赖和更简单的部署环境
 
 #### 用户期望
-1. 无缝迁移现有MongoDB数据到MySQL，保证数据完整性和一致性
+1. 无缝迁移现有MongoDB数据到MariaDB，保证数据完整性和一致性
 2. 业务代码改动最小化，保持API接口兼容
 3. 提供完整的迁移工具和验证机制
 
@@ -67,18 +67,18 @@ graph TB
 
 | 模块 | 功能点 | 业务规则说明 |
 |------|--------|-------------|
-| 数据模式转换 | MongoDB集合转MySQL表 | 将MongoDB的10个集合转换为对应的MySQL表结构 |
+| 数据模式转换 | MongoDB集合转MariaDB表 | 将MongoDB的10个集合迁移到10张主表，并在迁移过程中拆分生成4张派生关系表，共14张业务表 |
 | | 字段名转换 | camelCase/PascalCase → f_snake_case（如userId → f_user_id） |
 | | 数据类型映射 | ObjectId → BIGINT UNSIGNED，嵌套对象/数组 → TEXT、MEDIUMTEXT 或 LONGTEXT(JSON) |
-| | 索引创建 | 为主键、外键、高频查询字段创建索引 |
+| | 索引创建 | 索引在 MariaDB DDL 中随建表语句一并创建，覆盖主键、高频查询和组合查询场景 |
 | 查询语法转换 | BSON查询转SQL | 支持$eq, $ne, $gt, $gte, $lt, $lte, $in, $nin等操作符 |
 | | 逻辑操作符转换 | $and → AND, $or → OR, $not → NOT |
 | | 正则表达式转换 | $regex → LIKE模式匹配 |
 | | 复杂查询支持 | 支持嵌套查询、分页、排序、聚合 |
-| 数据迁移执行 | 按依赖顺序迁移 | 先迁移主表（t_flow_dag），再迁移关联表 |
-| | 批量数据迁移 | 使用批量插入提高迁移效率 |
-| | 进度跟踪 | 记录迁移进度和错误日志 |
-| | 迁移报告生成 | 生成包含成功/失败统计的报告 |
+| 数据迁移执行 | 按脚本映射顺序迁移 | 按 `dag → dag_version → dag_instance → task_instance → token → inbox → client → switch → log → outbox` 顺序迁移，其中 `dag` 和 `dag_instance` 会同步拆分子表 |
+| | 批量数据迁移 | 使用固定批大小1000读取 MongoDB，并通过 `executemany` 批量写入 MariaDB |
+| | 进度跟踪 | 按表输出 `scanned / inserted / skipped / failed` 统计日志 |
+| | 幂等重入 | 写入前按主键查询已存在记录，重复执行时自动跳过已迁移数据 |
 | 事务支持 | ACID事务 | 支持BEGIN、COMMIT、ROLLBACK操作 |
 | | 多表原子操作 | 在同一事务中创建DAG实例和关联记录 |
 | | 事务超时处理 | 超时自动回滚 |
@@ -94,16 +94,15 @@ graph TB
 ```mermaid
 flowchart TD
     Start([开始迁移]) --> CheckEnv[检查环境配置]
-    CheckEnv --> CreateSchema[创建MySQL表结构]
-    CreateSchema --> CreateIndex[创建索引]
-    CreateIndex --> MigrateData[按依赖顺序迁移数据]
+    CheckEnv --> CreateSchema[执行MariaDB DDL（含索引）]
+    CreateSchema --> MigrateData[按脚本顺序迁移数据]
 
     MigrateData --> MigrateDag[迁移t_flow_dag]
-    MigrateDag --> MigrateDagVar[迁移t_flow_dag_var]
-    MigrateDagVar --> MigrateDagStep[迁移t_flow_dag_step]
-    MigrateDagStep --> MigrateDagInstance[迁移t_flow_dag_instance]
+    MigrateDag --> MigrateDagVar[同步生成t_flow_dag_var / t_flow_dag_step / t_flow_dag_accessor]
+    MigrateDagVar --> MigrateDagVersion[迁移t_flow_dag_version]
+    MigrateDagVersion --> MigrateDagInstance[迁移t_flow_dag_instance]
     MigrateDagInstance --> MigrateTaskInstance[迁移t_flow_task_instance]
-    MigrateTaskInstance --> MigrateOther[迁移其他表]
+    MigrateTaskInstance --> MigrateOther[迁移token / inbox / client / switch / log / outbox]
 
     MigrateOther --> End([迁移完成])
 ```
@@ -243,7 +242,7 @@ C4Component
      - `parseOperator()` - 解析操作符
 2. **FieldMapper（字段映射器）**
 
-   - 职责：将MongoDB字段名转换为MySQL字段名
+   - 职责：将MongoDB字段名转换为MariaDB字段名
    - 转换规则：camelCase → f_snake_case
    - 示例：userId → f_user_id, createdAt → f_created_at
    - 支持自定义映射表
@@ -627,8 +626,9 @@ type ListDagInstanceInput struct {
 **索引：**
 
 - PRIMARY KEY (f_id)
-- INDEX idx_dag_ins_id_status_updated (f_id, f_status, f_updated_at)
-- INDEX idx_dag_ins_dag_id (f_dag_id)
+- INDEX idx_dag_ins_dag_status (f_dag_id, f_status)
+- INDEX idx_dag_ins_status_upd (f_status, f_updated_at)
+- INDEX idx_dag_ins_status_user_pri (f_status, f_user_id, f_priority)
 - INDEX idx_dag_ins_user_id (f_user_id)
 - INDEX idx_dag_ins_batch_run (f_batch_run_id)
 - INDEX idx_dag_ins_worker (f_worker)
@@ -663,11 +663,11 @@ type ListDagInstanceInput struct {
 **索引：**
 
 - PRIMARY KEY (f_id)
-- INDEX idx_task_ins_id_status_updated (f_id, f_status, f_updated_at)
 - INDEX idx_task_ins_dag_ins_id (f_dag_ins_id)
 - INDEX idx_task_ins_hash (f_hash)
 - INDEX idx_task_ins_action (f_action_name)
-- INDEX idx_task_ins_expired (f_expired_at)
+- INDEX idx_task_ins_status_expire (f_status, f_expired_at)
+- INDEX idx_task_ins_status_upd_id (f_status, f_updated_at, f_id)
 
 #### 5.1.4 t_flow_dag_var（DAG变量表）
 
@@ -692,33 +692,40 @@ type ListDagInstanceInput struct {
 - f_id (BIGINT UNSIGNED, PRIMARY KEY)
 - f_created_at (BIGINT)
 - f_updated_at (BIGINT)
-- f_dag_id (VARCHAR(20), INDEX)
+- f_dag_id (VARCHAR(20))
 - f_user_id (VARCHAR(40))
 - f_version (VARCHAR(64))
-- f_version_id (VARCHAR(20), INDEX)
+- f_version_id (VARCHAR(20))
 - f_change_log (VARCHAR(512))
 - f_config (LONGTEXT) - 完整DAG配置JSON
 - f_sort_time (BIGINT)
+- INDEX idx_dag_versions_dag_version (f_version_id, f_dag_id)
+- INDEX idx_dag_versions_dag_sort (f_dag_id, f_sort_time)
 
 **t_flow_dag_step（DAG步骤索引表）**
 
 - f_id (BIGINT UNSIGNED, PRIMARY KEY)
-- f_dag_id (BIGINT UNSIGNED, INDEX)
+- f_dag_id (BIGINT UNSIGNED)
 - f_operator (VARCHAR(255))
-- f_source_id (VARCHAR(512))
+- f_source_id (TEXT)
 - f_has_datasource (BOOLEAN)
+- INDEX idx_dag_step_op (f_operator)
+- INDEX idx_dag_step_op_dag (f_dag_id, f_operator)
+- INDEX idx_dag_step_has_ds_dag (f_dag_id, f_has_datasource)
 
 **t_flow_dag_accessor（DAG访问者表）**
 
 - f_id (BIGINT UNSIGNED, PRIMARY KEY)
-- f_dag_id (BIGINT UNSIGNED, INDEX)
-- f_accessor_id (VARCHAR(40), INDEX)
+- f_dag_id (BIGINT UNSIGNED)
+- f_accessor_id (VARCHAR(40))
+- INDEX idx_dag_accessor_id_dag (f_accessor_id, f_dag_id)
 
 **t_flow_dag_instance_keyword（实例关键词表）**
 
 - f_id (BIGINT UNSIGNED, PRIMARY KEY)
-- f_dag_ins_id (BIGINT UNSIGNED, INDEX)
-- f_keyword (VARCHAR(255), INDEX)
+- f_dag_ins_id (BIGINT UNSIGNED)
+- f_keyword (VARCHAR(255))
+- INDEX idx_dag_ins_kw (f_dag_ins_id, f_keyword)
 
 **t_flow_inbox（入站消息表）**
 
@@ -729,6 +736,8 @@ type ListDagInstanceInput struct {
 - f_topic (VARCHAR(128))
 - f_docid (VARCHAR(512))
 - f_dag (TEXT)
+- INDEX idx_inbox_docid (f_docid)
+- INDEX idx_inbox_topic_created (f_topic, f_created_at)
 
 **t_flow_outbox（出站消息表）**
 
@@ -737,34 +746,46 @@ type ListDagInstanceInput struct {
 - f_updated_at (BIGINT)
 - f_msg (MEDIUMTEXT)
 - f_topic (VARCHAR(128))
+- INDEX idx_outbox_created (f_created_at)
 
 **t_flow_token（令牌表）**
 
 - f_id (BIGINT UNSIGNED, PRIMARY KEY)
-- f_user_id (VARCHAR(40), INDEX)
+- f_created_at (BIGINT)
+- f_updated_at (BIGINT)
+- f_user_id (VARCHAR(40))
 - f_user_name (VARCHAR(255))
 - f_refresh_token (TEXT)
 - f_token (TEXT)
 - f_expires_in (INT)
 - f_login_ip (VARCHAR(64))
 - f_is_app (BOOLEAN)
+- INDEX idx_token_user_id (f_user_id)
 
 **t_flow_client（客户端表）**
 
 - f_id (BIGINT UNSIGNED, PRIMARY KEY)
-- f_client_name (VARCHAR(64), INDEX)
+- f_created_at (BIGINT)
+- f_updated_at (BIGINT)
+- f_client_name (VARCHAR(64))
 - f_client_id (VARCHAR(40))
 - f_client_secret (VARCHAR(16))
+- INDEX idx_client_name (f_client_name)
 
 **t_flow_switch（开关表）**
 
 - f_id (BIGINT UNSIGNED, PRIMARY KEY)
-- f_name (VARCHAR(255), INDEX)
+- f_created_at (BIGINT)
+- f_updated_at (BIGINT)
+- f_name (VARCHAR(255))
 - f_status (BOOLEAN)
+- INDEX idx_switch_name (f_name)
 
 **t_flow_log（日志表）**
 
 - f_id (BIGINT UNSIGNED, PRIMARY KEY)
+- f_created_at (BIGINT)
+- f_updated_at (BIGINT)
 - f_ossid (VARCHAR(64))
 - f_key (VARCHAR(40))
 - f_filename (VARCHAR(255))
@@ -773,7 +794,7 @@ type ListDagInstanceInput struct {
 
 **转换规则：**
 
-1. MongoDB字段名（camelCase/PascalCase）→ MySQL字段名（f_snake_case）
+1. MongoDB字段名（camelCase/PascalCase）→ MariaDB字段名（f_snake_case）
 2. 所有字段名添加 `f_` 前缀
 3. 驼峰命名转下划线分隔
 
@@ -786,37 +807,15 @@ type ListDagInstanceInput struct {
 - `HTMLParser` → `f_html_parser`
 - `dagInsID` → `f_dag_ins_id`
 
-**实现代码：**
+**当前迁移脚本实现方式：**
 
-```go
-func camelToFSnake(s string) string {
-    if strings.HasPrefix(s, "f_") {
-        return s
-    }
-    s = strings.TrimLeft(s, "_")
-    var result strings.Builder
-    runes := []rune(s)
-    for i, r := range runes {
-        if unicode.IsUpper(r) {
-            if i > 0 {
-                prevIsUpper := unicode.IsUpper(runes[i-1])
-                nextIsLower := i+1 < len(runes) && unicode.IsLower(runes[i+1])
-                if !prevIsUpper || nextIsLower {
-                    result.WriteRune('_')
-                }
-            }
-            result.WriteRune(unicode.ToLower(r))
-        } else {
-            result.WriteRune(r)
-        }
-    }
-    return "f_" + result.String()
-}
-```
+- 当前 `migrations/mariadb/0.4.0/pre/02-mongodb_to_mysql_migration.py` 未采用运行时通用字段名转换器
+- 迁移脚本通过 `build_*_row` / `build_*_rows` 函数对每张表做显式字段映射，确保 MariaDB 列名、默认值和派生字段与 DDL 保持一致
+- `_id`、`dagId`、`dagInsId` 等主键或关联键在无法直接转成无符号整数时，会基于稳定哈希生成 `BIGINT UNSIGNED` 主键值
 
 ### 5.3 数据类型映射规则
 
-| MongoDB类型 | MySQL类型 | 说明 |
+| MongoDB类型 | MariaDB类型 | 说明 |
 |------------|-----------|------|
 | ObjectId | BIGINT UNSIGNED | 转换为数值ID |
 | String (短) | VARCHAR(16/20/32/40/64/128/255/512/1024) | 按字段语义和实际长度精确收敛 |
@@ -833,8 +832,8 @@ func camelToFSnake(s string) string {
 **JSON字段处理：**
 
 - 嵌套对象和数组按实际体量选择 TEXT、MEDIUMTEXT 或 LONGTEXT，不再统一使用 LONGTEXT
-- 使用Go的json.Marshal/Unmarshal进行序列化/反序列化
-- 支持MySQL的JSON函数查询（JSON_EXTRACT等）
+- 迁移脚本使用 Python `json.dumps(..., ensure_ascii=False, default=str)` 将对象、数组、集合统一序列化为 JSON 字符串
+- 目标库保留文本型 JSON 存储方式，便于兼容现有 MariaDB DDL
 
 **时间戳处理：**
 
@@ -866,8 +865,9 @@ func camelToFSnake(s string) string {
 **t_flow_dag_instance表：**
 
 - PRIMARY KEY (f_id)
-- INDEX idx_dag_ins_id_status_updated (f_id, f_status, f_updated_at) - 复合索引优化分页查询
-- INDEX idx_dag_ins_dag_id (f_dag_id) - 按DAG查询实例
+- INDEX idx_dag_ins_dag_status (f_dag_id, f_status) - 按DAG和状态查询实例
+- INDEX idx_dag_ins_status_upd (f_status, f_updated_at) - 按状态和更新时间拉取任务
+- INDEX idx_dag_ins_status_user_pri (f_status, f_user_id, f_priority) - 按状态、用户和优先级筛选
 - INDEX idx_dag_ins_user_id (f_user_id) - 按用户查询
 - INDEX idx_dag_ins_batch_run (f_batch_run_id) - 批次查询
 - INDEX idx_dag_ins_worker (f_worker) - 按执行节点查询
@@ -875,16 +875,16 @@ func camelToFSnake(s string) string {
 **t_flow_task_instance表：**
 
 - PRIMARY KEY (f_id)
-- INDEX idx_task_ins_id_status_updated (f_id, f_status, f_updated_at) - 复合索引优化分页查询
 - INDEX idx_task_ins_dag_ins_id (f_dag_ins_id) - 按DAG实例查询任务
 - INDEX idx_task_ins_hash (f_hash) - 按哈希值查询
 - INDEX idx_task_ins_action (f_action_name) - 按动作名称查询
-- INDEX idx_task_ins_expired (f_expired_at) - 按过期时间清理查询
+- INDEX idx_task_ins_status_expire (f_status, f_expired_at) - 按状态和过期时间清理查询
+- INDEX idx_task_ins_status_upd_id (f_status, f_updated_at, f_id) - 按状态和更新时间分页扫描
 
 **t_flow_dag_step表：**
 
 - PRIMARY KEY (f_id)
-- INDEX idx_dag_step_op_src_dag (f_source_id, f_operator, f_dag_id) - 来源+操作符+流程联合查询
+- INDEX idx_dag_step_op (f_operator) - 按操作符查询
 - INDEX idx_dag_step_op_dag (f_dag_id, f_operator) - 按DAG和操作符查询
 - INDEX idx_dag_step_has_ds_dag (f_dag_id, f_has_datasource) - 按是否含数据源查询
 
@@ -907,6 +907,7 @@ func camelToFSnake(s string) string {
 
 ### 6.2 性能
 
+接口性能依照实际情况考虑，下表仅参考
 | 场景 | 配置 | 目标 |
 |------|------|------|
 | 列表查询 | 数据量<10000条 | 响应时间 ≤ 500ms |
@@ -988,7 +989,7 @@ graph TB
     end
 
     subgraph "数据层"
-        MySQL[(MySQL/MariaDB/KDB9/DM8)]
+        MariaDB[(MariaDB)]
     end
 
     subgraph "迁移工具"
@@ -996,12 +997,12 @@ graph TB
         MongoDB[(MongoDB - 只读)]
     end
 
-    App1 --> MySQL
-    App2 --> MySQL
-    App3 --> MySQL
+    App1 --> MariaDB
+    App2 --> MariaDB
+    App3 --> MariaDB
 
     MigTool --> MongoDB
-    MigTool --> MySQL
+    MigTool --> MariaDB
 
     style MongoDB fill:#f9f,stroke:#333,stroke-width:2px,stroke-dasharray: 5 5
 ```
@@ -1014,9 +1015,9 @@ graph TB
 
 **迁移工具：**
 
-- 02-mongodb_to_mysql_migration.py 迁移脚本
-- DDL脚本：01-add-table-and-data.sql
-- 迁移配置：migration-config.yaml
+- `migrations/mariadb/0.4.0/pre/02-mongodb_to_mysql_migration.py` 迁移脚本
+- `migrations/mariadb/0.4.0/pre/01-add-table-and-data.sql` 业务表 DDL
+- `migrations/mariadb/0.4.0/pre/init.sql` MariaDB 初始化基线 DDL
 
 **文档：**
 
@@ -1024,40 +1025,45 @@ graph TB
 - 迁移操作手册
 - 故障排查手册
 
-### 7.3 配置文件
+### 7.3 迁移脚本配置
 
-**config.yaml（应用配置）**
+迁移脚本通过环境变量读取 MongoDB 和 MariaDB 连接信息，不再依赖独立的 `migration-config.yaml`。
 
-```yaml
-depservices:
-  rds:
-    source_type: internal
-    type: MariaDB
-    host: mariadb-mariadb-master .resource.svc.cluster.local.
-    port: 3330
-    user: anyshare
-    password: eisoo.com123
-    hostRead: mariadb-mariadb-cluster.resource.svc.cluster.local
-    portRead: 3330
-    admin_key:"cm9vdDplaXNvby5jb20xMiM="
-    mgmt host: mariadb-mgmt-cluster.resource.svc.cluster.local.
-    mgmt_port; 8888
-    system id:
-  mongodb :
-    admin_key: cm9vdDplaXNvby5jb20xMjM=
-    db: automation
-    deployTrait:
-    version: ..
-    host: mongodb-mongodb-0.mongodb-mongodb.resource.svc.cluster.local.
-    mgmt_host: mongodb-mgmt-cluster.resource.svc.cluster.local.mgmt_port: 30281
-    options:
-        auth source: anyshare
-        authSource: anyshare
-    password: eisoo.com123
-    port: 28000
-    replicaSet: rsosource_type: internal
-    ssl: false
-    user: anyshare
+| 变量名 | 是否必填 | 说明 |
+|--------|----------|------|
+| `MONGODB_HOST` | 是 | MongoDB 主机 |
+| `MONGODB_PORT` | 是 | MongoDB 端口 |
+| `MONGODB_USER` | 是 | MongoDB 用户 |
+| `MONGODB_PASSWORD` | 是 | MongoDB 密码 |
+| `MONGODB_AUTH_SOURCE` | 是 | MongoDB 认证库 |
+| `MONGODB_DATABASE` | 否 | 源库名，默认 `automation` |
+| `MONGODB_PREFIX` | 否 | 集合名前缀，默认 `flow` |
+| `DB_HOST` | 是 | MariaDB 主机 |
+| `DB_PORT` | 是 | MariaDB 端口 |
+| `DB_USER` | 是 | MariaDB 用户 |
+| `DB_PASSWD` | 是 | MariaDB 密码 |
+| `DB_NAME` | 否 | 目标库名，默认 `adp` |
+
+说明：
+
+- `MONGODB_DATABASE` 兼容 `MONGO_DATABASE`
+- `MONGODB_PREFIX` 兼容 `MONGO_PREFIX`、`STORE_PREFIX`
+- `DB_NAME` 兼容 `DB_DATABASE`、`MYSQL_DATABASE`
+- 脚本默认批量大小固定为 `1000`
+
+执行示例：
+
+```bash
+export MONGODB_HOST=127.0.0.1
+export MONGODB_PORT=28000
+export MONGODB_USER=anyshare
+export MONGODB_PASSWORD='***'
+export MONGODB_AUTH_SOURCE=anyshare
+export DB_HOST=127.0.0.1
+export DB_PORT=3306
+export DB_USER=root
+export DB_PASSWD='***'
+python3 migrations/mariadb/0.4.0/pre/02-mongodb_to_mysql_migration.py
 ```
 
 
@@ -1099,7 +1105,7 @@ depservices:
 
 ### B. 字段名转换示例
 
-| MongoDB字段名 | MySQL字段名 | 说明 |
+| MongoDB字段名 | MariaDB字段名 | 说明 |
 |--------------|-------------|------|
 | _id | f_id | 去除下划线前缀 |
 | id | f_id | 直接添加前缀 |
@@ -1115,26 +1121,28 @@ depservices:
 ### C. 数据迁移依赖顺序
 
 ```
-1. t_flow_dag (主表)
-   ├── 2. t_flow_dag_var (依赖dag_id)
-   ├── 3. t_flow_dag_step (依赖dag_id)
-   ├── 4. t_flow_dag_accessor (依赖dag_id)
-   └── 5. t_flow_dag_version (依赖dag_id)
+1. flow_dag -> t_flow_dag
+   ├── 派生 t_flow_dag_var
+   ├── 派生 t_flow_dag_step
+   └── 派生 t_flow_dag_accessor
 
-6. t_flow_dag_instance (依赖dag_id)
-   └── 7. t_flow_dag_instance_keyword (依赖dag_ins_id)
+2. flow_dag_version -> t_flow_dag_version
 
-8. t_flow_task_instance (依赖dag_ins_id)
+3. flow_dag_instance -> t_flow_dag_instance
+   └── 派生 t_flow_dag_instance_keyword
 
-9. t_flow_token (独立表)
-10. t_flow_inbox (独立表)
-11. t_flow_client (独立表)
-12. t_flow_switch (独立表)
-13. t_flow_log (独立表)
-14. t_flow_outbox (独立表)
+4. flow_task_instance -> t_flow_task_instance
+5. flow_token -> t_flow_token
+6. flow_inbox -> t_flow_inbox
+7. flow_client -> t_flow_client
+8. flow_switch -> t_flow_switch
+9. flow_log -> t_flow_log
+10. flow_outbox -> t_flow_outbox
 
 说明：
-- 当前 MariaDB 基准结构已不再单独创建 t_flow_dag_trigger_config 表，其数据保留在 t_flow_dag.f_trigger_config 字段中
+- 默认集合名前缀为 `flow`，实际读取集合名为 `${MONGODB_PREFIX}_<suffix>`
+- 当前 MariaDB 基准结构未单独创建 `t_flow_dag_trigger_config` 表，其数据保留在 `t_flow_dag.f_trigger_config` 字段中
+- 写入前会按主键检查目标表，重复执行脚本时会跳过已迁移记录
 ```
 
 ### D. 参考文档

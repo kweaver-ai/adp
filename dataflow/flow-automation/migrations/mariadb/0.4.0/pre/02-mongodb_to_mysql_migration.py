@@ -9,10 +9,11 @@ import sys
 from dataclasses import dataclass, field
 from typing import Any, Callable, Dict, Iterator, List, Sequence
 import rdsdriver
+from pymongo import MongoClient
 
 logger = logging.getLogger(__name__)
 
-DEFAULT_BATCH_SIZE = 500
+DEFAULT_BATCH_SIZE = 1000
 MIN_STABLE_ID = 100_000_000_000_000_000
 STABLE_ID_RANGE = 900_000_000_000_000_000
 
@@ -500,24 +501,15 @@ class DatabaseManager:
         self.mysql_conn = None
 
     def connect_mongodb(self):
-        try:
-            from pymongo import MongoClient
-        except ImportError as exc:
-            raise RuntimeError("missing dependency: pymongo") from exc
+        mongodb_host = os.environ["MONGODB_HOST"]
+        mongodb_port = os.environ["MONGODB_PORT"]
+        mongodb_user = os.environ["MONGODB_USER"]
+        mongodb_pwd = os.environ["MONGODB_PASSWORD"]
+        mongodb_auth_source = os.environ["MONGODB_AUTH_SOURCE"]
 
-        uri = os.getenv("MONGODB_URI")
-        if not uri:
-            host = os.getenv("MONGODB_HOST", "127.0.0.1")
-            port = os.getenv("MONGODB_PORT", "28000")
-            user = os.getenv("MONGODB_USER", "anyshare")
-            password = os.getenv("MONGODB_PASSWORD", "eisoo.com123")
-            auth_source = os.getenv("MONGODB_AUTH_SOURCE", "")
-            if user:
-                uri = f"mongodb://{user}:{password}@{host}:{port}?authSource={auth_source}"
-            else:
-                uri = f"mongodb://{host}:{port}"
+        dns = f"mongodb://{mongodb_user}:{mongodb_pwd}@{mongodb_host}:{mongodb_port}?authSource={mongodb_auth_source}"
 
-        client = MongoClient(uri, serverSelectionTimeoutMS=5000)
+        client = MongoClient(dns, serverSelectionTimeoutMS=5000)
         client.admin.command("ping")
         self.mongo_client = client
         self.mongo_db = client[self.mongo_database]
@@ -526,12 +518,12 @@ class DatabaseManager:
 
     def connect_mysql(self):
         params = {
-            "host": os.getenv("DB_HOST", "127.0.0.1"),
-            "port": int(os.getenv("DB_PORT", "3306")),
-            "user": os.getenv("DB_USER", ""),
-            "password": os.getenv("DB_PASSWORD", ""),
-            "charset": "utf8mb4",
-            "autocommit": True,
+            'host': os.environ["DB_HOST"],
+            'port': int(os.environ["DB_PORT"]),
+            'user': os.environ["DB_USER"],
+            'password': os.environ["DB_PASSWD"],
+            'autocommit': True,
+            'charset': 'utf8mb4'
         }
         try:
             self.mysql_conn = rdsdriver.connect(**params)
