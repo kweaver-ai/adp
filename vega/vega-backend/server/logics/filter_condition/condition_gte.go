@@ -20,6 +20,12 @@ type GteCond struct {
 }
 
 func (c *GteCond) GetOperation() string { return OperationGte }
+func (c *GteCond) GetConfig() *interfaces.FilterCondCfg {
+	if c == nil {
+		return nil
+	}
+	return c.Cfg
+}
 
 func (c *GteCond) SupportSubCond() bool       { return false }
 func (c *GteCond) NeedName() bool             { return true }

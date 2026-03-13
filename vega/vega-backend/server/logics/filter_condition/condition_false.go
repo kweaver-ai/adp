@@ -18,6 +18,12 @@ type FalseCond struct {
 }
 
 func (c *FalseCond) GetOperation() string { return OperationFalse }
+func (c *FalseCond) GetConfig() *interfaces.FilterCondCfg {
+	if c == nil {
+		return nil
+	}
+	return c.Cfg
+}
 
 func (c *FalseCond) SupportSubCond() bool       { return false }
 func (c *FalseCond) NeedName() bool             { return true }

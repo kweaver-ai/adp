@@ -22,6 +22,12 @@ type RegexCond struct {
 }
 
 func (c *RegexCond) GetOperation() string { return OperationRegex }
+func (c *RegexCond) GetConfig() *interfaces.FilterCondCfg {
+	if c == nil {
+		return nil
+	}
+	return c.Cfg
+}
 
 func (c *RegexCond) SupportSubCond() bool       { return false }
 func (c *RegexCond) NeedName() bool             { return true }

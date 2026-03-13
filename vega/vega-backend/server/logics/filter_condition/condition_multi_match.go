@@ -30,6 +30,12 @@ type MultiMatchCond struct {
 }
 
 func (c *MultiMatchCond) GetOperation() string { return OperationMultiMatch }
+func (c *MultiMatchCond) GetConfig() *interfaces.FilterCondCfg {
+	if c == nil {
+		return nil
+	}
+	return c.mCfg
+}
 
 func (c *MultiMatchCond) SupportSubCond() bool       { return false }
 func (c *MultiMatchCond) NeedName() bool             { return true }

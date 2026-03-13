@@ -7,6 +7,7 @@
 package opensearch
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -18,6 +19,7 @@ import (
 
 	"vega-backend/interfaces"
 	"vega-backend/logics/connectors"
+	"vega-backend/logics/filter_condition"
 )
 
 type opensearchConfig struct {
@@ -368,4 +370,318 @@ func (c *OpenSearchConnector) fetchSettings(ctx context.Context, index *interfac
 		}
 	}
 	return nil
+}
+
+// ExecuteIndexQuery 执行索引查询
+func (c *OpenSearchConnector) ExecuteIndexQuery(ctx context.Context, catalog *interfaces.Catalog, params *interfaces.IndexQueryParams) (*interfaces.QueryResult, error) {
+	if err := c.Connect(ctx); err != nil {
+		return nil, err
+	}
+
+	// 1. 构建 OpenSearch 查询
+	osQuery := c.buildOpenSearchQuery(params)
+	dslBytes, err := json.Marshal(osQuery)
+
+	// 2. 执行查询
+	indexName := params.Resources[0].Name
+	searchReq := opensearchapi.SearchRequest{
+		Index: []string{indexName},
+		Body:  bytes.NewReader(dslBytes),
+		Size:  &params.Limit,
+		From:  &params.Offset,
+	}
+
+	// 处理深度分页
+	// if len(params.SearchAfter) > 0 {
+	// 	searchReq.SearchAfter = params.SearchAfter
+	// }
+
+	resp, err := searchReq.Do(ctx, c.client)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	if resp.IsError() {
+		return nil, fmt.Errorf("opensearch query failed: %s", resp.String())
+	}
+
+	// 3. 解析响应
+	var searchResp map[string]any
+	if err := json.NewDecoder(resp.Body).Decode(&searchResp); err != nil {
+		return nil, err
+	}
+
+	// 4. 转换结果
+	result := &interfaces.QueryResult{
+		Rows:         make([]map[string]any, 0),
+		Aggregations: make(map[string]any),
+	}
+
+	// 解析 hits
+	if hits, ok := searchResp["hits"].(map[string]any); ok {
+		if total, ok := hits["total"].(map[string]any); ok {
+			if value, ok := total["value"].(float64); ok {
+				result.Total = int64(value)
+			}
+		}
+
+		if hitsList, ok := hits["hits"].([]any); ok {
+			for _, hit := range hitsList {
+				if hitMap, ok := hit.(map[string]any); ok {
+					row := make(map[string]any)
+					if source, ok := hitMap["_source"].(map[string]any); ok {
+						for k, v := range source {
+							row[k] = v
+						}
+					}
+					// 添加 _id 字段
+					if id, ok := hitMap["_id"].(string); ok {
+						row["_id"] = id
+					}
+					result.Rows = append(result.Rows, row)
+				}
+			}
+		}
+	}
+
+	// 解析聚合结果
+	if aggs, ok := searchResp["aggregations"].(map[string]any); ok {
+		result.Aggregations = aggs
+	}
+
+	return result, nil
+}
+
+// buildOpenSearchQuery 构建 OpenSearch 查询 DSL
+func (c *OpenSearchConnector) buildOpenSearchQuery(params *interfaces.IndexQueryParams) map[string]any {
+	query := make(map[string]any)
+
+	// 1. 构建 query/filter
+	if params.ActualFilterCond != nil {
+		query["query"] = c.buildFilterQuery(params.ActualFilterCond)
+	} else {
+		query["query"] = map[string]any{
+			"match_all": map[string]any{},
+		}
+	}
+
+	// 2. 构建排序
+	if len(params.Sort) > 0 {
+		sortClauses := make([]map[string]any, 0)
+		for _, sf := range params.Sort {
+			sortClauses = append(sortClauses, map[string]any{
+				sf.Field: map[string]any{"order": sf.Direction},
+			})
+		}
+		query["sort"] = sortClauses
+	}
+
+	// 3. 构建聚合
+	if len(params.Aggregations) > 0 {
+		query["aggs"] = params.Aggregations
+	}
+
+	// 4. 处理输出字段
+	if len(params.OutputFields) > 0 && !contains(params.OutputFields, "*") {
+		fields := make([]string, 0)
+		for _, f := range params.OutputFields {
+			// 移除表别名前缀
+			if idx := strings.LastIndex(f, "."); idx > 0 {
+				fields = append(fields, f[idx+1:])
+			} else {
+				fields = append(fields, f)
+			}
+		}
+		query["_source"] = fields
+	}
+
+	return query
+}
+
+// buildFilterQuery 根据过滤条件构建 OpenSearch 查询
+func (c *OpenSearchConnector) buildFilterQuery(cond interfaces.FilterCondition) map[string]any {
+	if cond == nil {
+		return map[string]any{
+			"match_all": map[string]any{},
+		}
+	}
+
+	// 获取过滤条件的配置
+	cfg := cond.GetConfig()
+	if cfg == nil {
+		return map[string]any{
+			"match_all": map[string]any{},
+		}
+	}
+
+	// 处理 _id 字段的特殊查询
+	if cfg.Name == "_id" || strings.HasSuffix(cfg.Name, "._id") {
+		return c.buildIdQuery(cfg)
+	}
+
+	// 处理其他字段的查询
+	return c.buildFieldQuery(cond)
+}
+
+// buildIdQuery 构建基于 _id 的查询
+func (c *OpenSearchConnector) buildIdQuery(cfg *interfaces.FilterCondCfg) map[string]any {
+	switch cfg.Operation {
+	case "eq":
+		// 使用 term 查询 _id
+		return map[string]any{
+			"term": map[string]any{
+				"_id": cfg.Value,
+			},
+		}
+	case "in":
+		// 使用 ids 查询
+		return map[string]any{
+			"ids": map[string]any{
+				"values": cfg.Value,
+			},
+		}
+	default:
+		// 默认使用 term 查询
+		return map[string]any{
+			"term": map[string]any{
+				"_id": cfg.Value,
+			},
+		}
+	}
+}
+
+// buildFieldQuery 构建普通字段的查询
+func (c *OpenSearchConnector) buildFieldQuery(cond interfaces.FilterCondition) map[string]any {
+	cfg := cond.GetConfig()
+	if cfg == nil {
+		return map[string]any{
+			"match_all": map[string]any{},
+		}
+	}
+
+	// 移除字段名中的表别名前缀
+	fieldName := cfg.Name
+	if idx := strings.LastIndex(fieldName, "."); idx > 0 {
+		fieldName = fieldName[idx+1:]
+	}
+
+	switch cfg.Operation {
+	case "eq":
+		return map[string]any{
+			"term": map[string]any{
+				fieldName: cfg.Value,
+			},
+		}
+	case "ne":
+		return map[string]any{
+			"bool": map[string]any{
+				"must_not": []map[string]any{
+					{
+						"term": map[string]any{
+							fieldName: cfg.Value,
+						},
+					},
+				},
+			},
+		}
+	case "gt":
+		return map[string]any{
+			"range": map[string]any{
+				fieldName: map[string]any{
+					"gt": cfg.Value,
+				},
+			},
+		}
+	case "gte":
+		return map[string]any{
+			"range": map[string]any{
+				fieldName: map[string]any{
+					"gte": cfg.Value,
+				},
+			},
+		}
+	case "lt":
+		return map[string]any{
+			"range": map[string]any{
+				fieldName: map[string]any{
+					"lt": cfg.Value,
+				},
+			},
+		}
+	case "lte":
+		return map[string]any{
+			"range": map[string]any{
+				fieldName: map[string]any{
+					"lte": cfg.Value,
+				},
+			},
+		}
+	case "in":
+		return map[string]any{
+			"terms": map[string]any{
+				fieldName: cfg.Value,
+			},
+		}
+	case "not_in":
+		return map[string]any{
+			"bool": map[string]any{
+				"must_not": []map[string]any{
+					{
+						"terms": map[string]any{
+							fieldName: cfg.Value,
+						},
+					},
+				},
+			},
+		}
+	case "and":
+		if len(cfg.SubConds) > 0 {
+			mustClauses := make([]map[string]any, 0, len(cfg.SubConds))
+			for _, subCond := range cfg.SubConds {
+				subFilterCond, err := filter_condition.NewFilterCondition(context.Background(), subCond, nil)
+				if err != nil {
+					continue
+				}
+				mustClauses = append(mustClauses, c.buildFilterQuery(subFilterCond))
+			}
+			return map[string]any{
+				"bool": map[string]any{
+					"must": mustClauses,
+				},
+			}
+		}
+	case "or":
+		if len(cfg.SubConds) > 0 {
+			shouldClauses := make([]map[string]any, 0, len(cfg.SubConds))
+			for _, subCond := range cfg.SubConds {
+				subFilterCond, err := filter_condition.NewFilterCondition(context.Background(), subCond, nil)
+				if err != nil {
+					continue
+				}
+				shouldClauses = append(shouldClauses, c.buildFilterQuery(subFilterCond))
+			}
+			return map[string]any{
+				"bool": map[string]any{
+					"should":               shouldClauses,
+					"minimum_should_match": 1,
+				},
+			}
+		}
+	}
+
+	// 默认返回 match_all
+	return map[string]any{
+		"match_all": map[string]any{},
+	}
+}
+
+// contains 检查字符串切片是否包含某个元素
+func contains(slice []string, item string) bool {
+	for _, s := range slice {
+		if s == item {
+			return true
+		}
+	}
+	return false
 }

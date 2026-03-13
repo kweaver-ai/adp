@@ -19,6 +19,12 @@ type NotPrefixCond struct {
 }
 
 func (c *NotPrefixCond) GetOperation() string { return OperationNotPrefix }
+func (c *NotPrefixCond) GetConfig() *interfaces.FilterCondCfg {
+	if c == nil {
+		return nil
+	}
+	return c.Cfg
+}
 
 func (c *NotPrefixCond) SupportSubCond() bool       { return false }
 func (c *NotPrefixCond) NeedName() bool             { return true }

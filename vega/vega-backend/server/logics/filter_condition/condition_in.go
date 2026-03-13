@@ -19,6 +19,12 @@ type InCond struct {
 }
 
 func (c *InCond) GetOperation() string { return OperationIn }
+func (c *InCond) GetConfig() *interfaces.FilterCondCfg {
+	if c == nil {
+		return nil
+	}
+	return c.Cfg
+}
 
 func (c *InCond) SupportSubCond() bool       { return false }
 func (c *InCond) NeedName() bool             { return true }

@@ -18,6 +18,12 @@ type NullCond struct {
 }
 
 func (c *NullCond) GetOperation() string { return OperationNull }
+func (c *NullCond) GetConfig() *interfaces.FilterCondCfg {
+	if c == nil {
+		return nil
+	}
+	return c.Cfg
+}
 
 func (c *NullCond) SupportSubCond() bool       { return false }
 func (c *NullCond) NeedName() bool             { return true }

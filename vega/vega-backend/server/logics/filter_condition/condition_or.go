@@ -17,6 +17,12 @@ type OrCond struct {
 }
 
 func (c *OrCond) GetOperation() string { return OperationOr }
+func (c *OrCond) GetConfig() *interfaces.FilterCondCfg {
+	if c == nil {
+		return nil
+	}
+	return c.Cfg
+}
 
 func (c *OrCond) SupportSubCond() bool       { return true }
 func (c *OrCond) NeedName() bool             { return false }

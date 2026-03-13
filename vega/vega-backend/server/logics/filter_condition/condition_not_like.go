@@ -19,6 +19,12 @@ type NotLikeCond struct {
 }
 
 func (c *NotLikeCond) GetOperation() string { return OperationNotLike }
+func (c *NotLikeCond) GetConfig() *interfaces.FilterCondCfg {
+	if c == nil {
+		return nil
+	}
+	return c.Cfg
+}
 
 func (c *NotLikeCond) SupportSubCond() bool       { return false }
 func (c *NotLikeCond) NeedName() bool             { return true }

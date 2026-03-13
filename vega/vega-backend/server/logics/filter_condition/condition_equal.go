@@ -20,6 +20,12 @@ type EqualCond struct {
 }
 
 func (c *EqualCond) GetOperation() string { return OperationEqual }
+func (c *EqualCond) GetConfig() *interfaces.FilterCondCfg {
+	if c == nil {
+		return nil
+	}
+	return c.Cfg
+}
 
 func (c *EqualCond) SupportSubCond() bool       { return false }
 func (c *EqualCond) NeedName() bool             { return true }

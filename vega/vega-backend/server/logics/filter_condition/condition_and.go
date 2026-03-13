@@ -17,6 +17,12 @@ type AndCond struct {
 }
 
 func (c *AndCond) GetOperation() string { return OperationAnd }
+func (c *AndCond) GetConfig() *interfaces.FilterCondCfg {
+	if c == nil {
+		return nil
+	}
+	return c.Cfg
+}
 
 func (c *AndCond) SupportSubCond() bool       { return true }
 func (c *AndCond) NeedName() bool             { return false }

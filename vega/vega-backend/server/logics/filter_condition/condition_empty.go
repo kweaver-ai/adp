@@ -26,6 +26,12 @@ func (c *EmptyCond) NeedConstValue() bool       { return false }
 func (c *EmptyCond) IsSingleValue() bool        { return false }
 func (c *EmptyCond) IsFixedLenArrayValue() bool { return false }
 func (c *EmptyCond) RequiredValueLen() int      { return -1 }
+func (c *EmptyCond) GetConfig() *interfaces.FilterCondCfg {
+	if c == nil {
+		return nil
+	}
+	return c.Cfg
+}
 
 // empty 条件，判断字段是否为空字符串
 func (c *EmptyCond) New(ctx context.Context, cfg *interfaces.FilterCondCfg,

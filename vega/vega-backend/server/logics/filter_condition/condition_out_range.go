@@ -19,6 +19,12 @@ type OutRangeCond struct {
 }
 
 func (c *OutRangeCond) GetOperation() string { return OperationOutRange }
+func (c *OutRangeCond) GetConfig() *interfaces.FilterCondCfg {
+	if c == nil {
+		return nil
+	}
+	return c.Cfg
+}
 
 func (c *OutRangeCond) SupportSubCond() bool       { return false }
 func (c *OutRangeCond) NeedName() bool             { return true }

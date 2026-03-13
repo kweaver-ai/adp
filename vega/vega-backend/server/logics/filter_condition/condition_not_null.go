@@ -18,6 +18,12 @@ type NotNullCond struct {
 }
 
 func (c *NotNullCond) GetOperation() string { return OperationNotNull }
+func (c *NotNullCond) GetConfig() *interfaces.FilterCondCfg {
+	if c == nil {
+		return nil
+	}
+	return c.Cfg
+}
 
 func (c *NotNullCond) SupportSubCond() bool       { return false }
 func (c *NotNullCond) NeedName() bool             { return true }

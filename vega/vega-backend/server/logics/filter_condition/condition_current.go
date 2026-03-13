@@ -46,6 +46,12 @@ func (c *CurrentCond) NeedConstValue() bool       { return true }
 func (c *CurrentCond) IsSingleValue() bool        { return true }
 func (c *CurrentCond) IsFixedLenArrayValue() bool { return false }
 func (c *CurrentCond) RequiredValueLen() int      { return 1 }
+func (c *CurrentCond) GetConfig() *interfaces.FilterCondCfg {
+	if c == nil {
+		return nil
+	}
+	return c.Cfg
+}
 
 // 当前时间 current，判断字段是否为当前时间，时间格式为 "%Y-%m-%d %H:%i"
 func (c *CurrentCond) New(ctx context.Context, cfg *interfaces.FilterCondCfg,

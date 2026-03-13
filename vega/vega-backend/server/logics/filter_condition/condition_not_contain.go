@@ -19,6 +19,12 @@ type NotContainCond struct {
 }
 
 func (c *NotContainCond) GetOperation() string { return OperationNotContain }
+func (c *NotContainCond) GetConfig() *interfaces.FilterCondCfg {
+	if c == nil {
+		return nil
+	}
+	return c.Cfg
+}
 
 func (c *NotContainCond) SupportSubCond() bool       { return false }
 func (c *NotContainCond) NeedName() bool             { return true }

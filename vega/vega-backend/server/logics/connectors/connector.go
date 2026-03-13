@@ -89,6 +89,9 @@ type IndexConnector interface {
 
 	ListIndexes(ctx context.Context) ([]*interfaces.IndexMeta, error)
 	GetIndexMeta(ctx context.Context, index *interfaces.IndexMeta) error
+
+	// ExecuteIndexQuery 执行索引查询；支持单索引或多索引查询
+	ExecuteIndexQuery(ctx context.Context, catalog *interfaces.Catalog, params *interfaces.IndexQueryParams) (*interfaces.QueryResult, error)
 }
 
 // APIConnector defines the interface for REST/GraphQL API connectors.

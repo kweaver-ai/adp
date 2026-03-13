@@ -136,6 +136,22 @@ func (qs *queryService) Execute(ctx context.Context, req *interfaces.QueryExecut
 		if alias == "" {
 			alias = r.ID
 		}
+		// 添加 _id 字段（OpenSearch 元数据字段）
+		_idKey := alias + "._id"
+		fieldMap[_idKey] = &interfaces.Property{
+			Name:         "_id",
+			Type:         "keyword",
+			DisplayName:  "文档ID",
+			OriginalName: _idKey,
+			Description:  "OpenSearch 文档唯一标识",
+		}
+		fieldMap["_id"] = &interfaces.Property{
+			Name:         "_id",
+			Type:         "keyword",
+			DisplayName:  "文档ID",
+			OriginalName: "_id",
+			Description:  "OpenSearch 文档唯一标识",
+		}
 		for _, prop := range r.SchemaDefinition {
 			key := alias + "." + prop.Name
 			fieldMap[key] = &interfaces.Property{
@@ -189,27 +205,46 @@ func (qs *queryService) Execute(ctx context.Context, req *interfaces.QueryExecut
 	}
 	defer connector.Close(ctx)
 
-	tableConnector, ok := connector.(connectors.TableConnector)
-	if !ok {
+	var result *interfaces.QueryResult
+
+	// 根据连接器类型选择查询策略
+	switch c := connector.(type) {
+	case connectors.TableConnector:
+		joinParams := &interfaces.JoinQueryParams{
+			Resources:         resources,
+			ResourceIDToAlias: resourceIDToAlias,
+			Joins:             ptrSlice(req.Joins),
+			OutputFields:      req.OutputFields,
+			FilterCondCfg:     filterCondCfg,
+			ActualFilterCond:  filterCond,
+			Sort:              req.Sort,
+			Offset:            req.Offset,
+			Limit:             req.Limit,
+			NeedTotal:         req.NeedTotal,
+			CursorEncoded:     cursorEncoded,
+		}
+		result, err = c.ExecuteJoinQuery(ctx, cat, joinParams)
+	case connectors.IndexConnector:
+		indexParams := &interfaces.IndexQueryParams{
+			Resources:         resources,
+			ResourceIDToAlias: resourceIDToAlias,
+			OutputFields:      req.OutputFields,
+			FilterCondCfg:     filterCondCfg,
+			ActualFilterCond:  filterCond,
+			Sort:              req.Sort,
+			Offset:            req.Offset,
+			Limit:             req.Limit,
+			NeedTotal:         req.NeedTotal,
+			CursorEncoded:     cursorEncoded,
+			QueryType:         req.QueryType,
+			Aggregations:      req.Aggregations,
+			SearchAfter:       req.SearchAfter,
+		}
+		result, err = c.ExecuteIndexQuery(ctx, cat, indexParams)
+	default:
 		return nil, rest.NewHTTPError(ctx, http.StatusBadRequest, verrors.VegaBackend_Query_ExecuteFailed).
-			WithErrorDetails("connector does not support table join query")
+			WithErrorDetails("unsupported connector type for query")
 	}
-
-	joinParams := &interfaces.JoinQueryParams{
-		Resources:         resources,
-		ResourceIDToAlias: resourceIDToAlias,
-		Joins:             ptrSlice(req.Joins),
-		OutputFields:      req.OutputFields,
-		FilterCondCfg:     filterCondCfg,
-		ActualFilterCond:  filterCond,
-		Sort:              req.Sort,
-		Offset:            req.Offset,
-		Limit:             req.Limit,
-		NeedTotal:         req.NeedTotal,
-		CursorEncoded:     cursorEncoded,
-	}
-
-	result, err := tableConnector.ExecuteJoinQuery(ctx, cat, joinParams)
 	if err != nil {
 		logger.Errorf("ExecuteJoinQuery failed: %v", err)
 		span.SetStatus(codes.Error, "execute query failed")
@@ -255,6 +290,14 @@ func (qs *queryService) Execute(ctx context.Context, req *interfaces.QueryExecut
 	}
 	if req.NeedTotal {
 		resp.TotalCount = &result.Total
+	}
+
+	// 添加 OpenSearch 特有字段
+	if req.Aggregations != nil {
+		resp.Aggregations = result.Aggregations
+	}
+	if result.ScrollID != "" {
+		resp.ScrollID = result.ScrollID
 	}
 
 	return resp, nil

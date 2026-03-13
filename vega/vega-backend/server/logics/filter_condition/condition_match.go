@@ -18,6 +18,12 @@ type MatchCond struct {
 }
 
 func (c *MatchCond) GetOperation() string { return OperationMatch }
+func (c *MatchCond) GetConfig() *interfaces.FilterCondCfg {
+	if c == nil {
+		return nil
+	}
+	return c.mCfg
+}
 
 func (c *MatchCond) SupportSubCond() bool       { return false }
 func (c *MatchCond) NeedName() bool             { return true }

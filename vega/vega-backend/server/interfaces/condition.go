@@ -37,6 +37,7 @@ type FilterCondCfg struct {
 //go:generate mockgen -source ../filter_condition.go -destination ../mock/mock_filter_condition.go
 type FilterCondition interface {
 	GetOperation() string
+	GetConfig() *FilterCondCfg
 
 	SupportSubCond() bool
 	NeedName() bool

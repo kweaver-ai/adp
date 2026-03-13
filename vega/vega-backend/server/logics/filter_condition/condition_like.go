@@ -19,6 +19,12 @@ type LikeCond struct {
 }
 
 func (c *LikeCond) GetOperation() string { return OperationLike }
+func (c *LikeCond) GetConfig() *interfaces.FilterCondCfg {
+	if c == nil {
+		return nil
+	}
+	return c.Cfg
+}
 
 func (c *LikeCond) SupportSubCond() bool       { return false }
 func (c *LikeCond) NeedName() bool             { return true }

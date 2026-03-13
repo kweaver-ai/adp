@@ -19,6 +19,12 @@ type RangeCond struct {
 }
 
 func (c *RangeCond) GetOperation() string { return OperationRange }
+func (c *RangeCond) GetConfig() *interfaces.FilterCondCfg {
+	if c == nil {
+		return nil
+	}
+	return c.Cfg
+}
 
 func (c *RangeCond) SupportSubCond() bool       { return false }
 func (c *RangeCond) NeedName() bool             { return true }

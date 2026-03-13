@@ -18,6 +18,12 @@ type TrueCond struct {
 }
 
 func (c *TrueCond) GetOperation() string { return OperationTrue }
+func (c *TrueCond) GetConfig() *interfaces.FilterCondCfg {
+	if c == nil {
+		return nil
+	}
+	return c.Cfg
+}
 
 func (c *TrueCond) SupportSubCond() bool       { return false }
 func (c *TrueCond) NeedName() bool             { return true }
