@@ -14,7 +14,7 @@ import (
 
 type KnnVectorCond struct {
 	mCfg             *interfaces.FilterCondCfg
-	mFilterFieldName string
+	// mFilterFieldName string
 	mSubConds        []interfaces.FilterCondition
 }
 
