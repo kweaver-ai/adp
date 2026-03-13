@@ -14,6 +14,7 @@ crypto:
   enabled: true
   privateKeyPath: /opt/vega-backend/secret-config/rsa_private_key_pkcs8.pem
   publicKeyPath: /opt/vega-backend/secret-config/rsa_public_key.pem
+
 depServices:
   class-443:
     ingressClass: class-443

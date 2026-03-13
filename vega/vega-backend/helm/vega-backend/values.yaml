@@ -105,6 +105,8 @@ config:
     enabled: true
     publicKey: ""  # RSA 公钥内容，通过 --set-file crypto.publicKey=./config/rsa_public_key.pem 注入  
     privateKey: ""  # RSA 私钥内容，通过 --set-file crypto.privateKey=./config/rsa_private_key_pkcs8.pem 注入
+    privateKeyPath: /opt/vega-backend/secret-config/rsa_private_key_pkcs8.pem
+    publicKeyPath: /opt/vega-backend/secret-config/rsa_public_key.pem
 
 
 # 资源配置

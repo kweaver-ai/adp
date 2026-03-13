@@ -105,7 +105,7 @@ spec:
         volumeMounts:
           - name: {{ .Values.moduleName }}-cm
             mountPath: /opt/vega-backend/config
-          {{- if .Values.rsa.enabled }}
+          {{- if .Values.config.crypto.enabled }}
           - name: {{ .Values.moduleName }}-secret
             mountPath: /opt/vega-backend/secret-config
             readOnly: true
@@ -115,7 +115,7 @@ spec:
       - name: {{ .Values.moduleName }}-cm
         configMap:
           name: {{ .Values.moduleName }}-cm
-      {{- if .Values.rsa.enabled }}
+      {{- if .Values.config.crypto.enabled }}
       - name: {{ .Values.moduleName }}-secret
         secret:
           secretName: {{ .Values.moduleName }}-secret
