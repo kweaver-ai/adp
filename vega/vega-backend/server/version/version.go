@@ -13,7 +13,7 @@ import (
 
 var (
 	ServerName    string = "vega-backend"
-	ServerVersion string = "1.0.0"
+	ServerVersion string = "0.0.1"
 	LanguageGo    string = "go"
 	GoVersion     string = runtime.Version()
 	GoArch        string = runtime.GOARCH
