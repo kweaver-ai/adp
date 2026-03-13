@@ -248,6 +248,16 @@
                                     "successOnly"
                                 ],
                                 "default": "successOnly"
+                            },
+                            "dbType": {
+                                "type": "string",
+                                "title": "服务使用数据库类型",
+                                "description": "支持服务使用的数据库类型, 默认为 mysql, 目前支持取值: mysql、mongodb",
+                                "enum": [
+                                    "mysql",
+                                    "mongodb"
+                                ],
+                                "default": "mysql"
                             }
                         }
                     },
