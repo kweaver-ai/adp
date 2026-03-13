@@ -260,7 +260,7 @@ func SetRedisSetting() {
 		logger.Fatalf("service %s not found in depServices", redisServiceName)
 	}
 
-	connectInfo, ok := setting["connectinfo"].(map[string]any)
+	connectInfo, ok := setting["connectInfo"].(map[string]any)
 	if !ok {
 		logger.Fatalf("service %s connectinfo not found in depServices", redisServiceName)
 	}
