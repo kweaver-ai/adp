@@ -17,12 +17,12 @@ import (
 // Pypi源解析器
 
 const (
-	DefaultPypiRepo = "https://pypi.org/" // 默认Pypi源
+	DefaultPypiRepo = "https://pypi.org/simple" // 默认Pypi源
 )
 
 // ParsePypiReq 解析Pypi源请求参数
 type ParsePypiReq struct {
-	PypiRepoURL   string `form:"pypi_repo_url" default:"https://pypi.org/" validate:"required,url"`
+	PypiRepoURL   string `form:"pypi_repo_url" default:"https://pypi.org/simple" validate:"required,url"`
 	PackageName   string `uri:"package_name" validate:"required"`
 	PythonVersion string `form:"python_version" default:"3.10"`
 }
@@ -82,6 +82,12 @@ func ParsePypi(ctx context.Context, req *ParsePypiReq) (resp *ParsePypiResp, err
 		return nil, errors.NewHTTPError(ctx, http.StatusInternalServerError, errors.ErrExtPypiParserFailed, fmt.Sprintf("request failed: %s", err.Error()))
 	}
 	defer rsp.Body.Close()
+	if rsp.StatusCode == http.StatusNotFound {
+		return &ParsePypiResp{
+			PackageName: packageName,
+			Versions:    []string{},
+		}, nil
+	}
 
 	if rsp.StatusCode != http.StatusOK {
 		return nil, errors.NewHTTPError(ctx, http.StatusInternalServerError, errors.ErrExtPypiParserFailed, fmt.Sprintf("HTTP %s", rsp.Status))
