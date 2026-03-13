@@ -624,7 +624,7 @@ CREATE TABLE IF NOT EXISTS `t_flow_dag_instance` (
  `f_share_data` MEDIUMTEXT DEFAULT NULL COMMENT '共享数据',
  `f_share_data_ext` MEDIUMTEXT DEFAULT NULL COMMENT '共享数据扩展',
  `f_status` VARCHAR(32) NOT NULL DEFAULT '' COMMENT '状态',
- `f_reason` TEXT DEFAULT NULL COMMENT '原因',
+ `f_reason` MEDIUMTEXT DEFAULT NULL COMMENT '原因',
  `f_cmd` TEXT DEFAULT NULL COMMENT '命令',
  `f_has_cmd` BOOLEAN NOT NULL DEFAULT 0 COMMENT '是否包含命令',
  `f_batch_run_id` VARCHAR(20) NOT NULL DEFAULT '' COMMENT '批次运行ID',
