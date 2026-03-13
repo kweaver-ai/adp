@@ -389,5 +389,5 @@ func SetVegaBackendSetting() {
 	host := setting["host"].(string)
 	port := setting["port"].(int)
 
-	appSetting.VegaBackendUrl = fmt.Sprintf("%s://%s:%d/api/vega-backend/v1", protocol, host, port)
+	appSetting.VegaBackendUrl = fmt.Sprintf("%s://%s:%d/api/vega-backend/in/v1", protocol, host, port)
 }
