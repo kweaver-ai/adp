@@ -41,5 +41,3 @@ __debug_bin*
 
 go.work
 go.work.sum
-
-vega-backend-config.yaml

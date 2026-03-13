@@ -1,5 +1,5 @@
-{{- if .Values.service.vegaManager.ingress.enabled -}}
-{{ if .Values.service.vegaManager.ingress.interface }}
+{{- if .Values.service.vegaBackend.ingress.enabled -}}
+{{ if .Values.service.vegaBackend.ingress.interface }}
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
@@ -15,14 +15,14 @@ spec:
   rules:
   - http:
       paths:
-        {{- range .Values.service.vegaManager.ingress.interface.path }}
+        {{- range .Values.service.vegaBackend.ingress.interface.path }}
         - path: {{ . }}
           pathType: ImplementationSpecific
           backend:
             service:
               name: {{ $.Values.moduleName }}-svc
               port:
-                number: {{ $.Values.service.vegaManager.port }}
+                number: {{ $.Values.service.vegaBackend.port }}
         {{- end }}
 {{ end }}
 {{- end }}

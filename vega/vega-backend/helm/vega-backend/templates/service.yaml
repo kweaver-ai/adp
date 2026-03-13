@@ -8,12 +8,12 @@ metadata:
 spec:
   selector:
     module: {{ .Values.moduleName }}
-  type: {{ .Values.service.vegaManager.type }}
+  type: {{ .Values.service.vegaBackend.type }}
   ports:
     - name: {{ .Values.moduleName }}
-      port: {{ .Values.service.vegaManager.port }}
+      port: {{ .Values.service.vegaBackend.port }}
       protocol: TCP
       targetPort: manager
-      {{- if eq .Values.service.vegaManager.type "NodePort" }}
-      nodePort: {{ .Values.service.vegaManager.nodePort }}
+      {{- if eq .Values.service.vegaBackend.type "NodePort" }}
+      nodePort: {{ .Values.service.vegaBackend.nodePort }}
       {{- end }}

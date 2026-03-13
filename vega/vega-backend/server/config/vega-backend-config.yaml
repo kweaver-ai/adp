@@ -2,7 +2,7 @@ server:
   runMode: release
   httpPort: 13014
   language: zh-CN
-  readTimeOut: 120
+  readTimeOut: 600
   writeTimeOut: 600
 log:
   logLevel: info
@@ -12,8 +12,8 @@ log:
   maxSize: 100
 crypto:
   enabled: true
-  privateKeyPath: /mnt/c/aishu_code/vega-backend/server/config/rsa_private_key_pkcs8.pem
-  publicKeyPath: /mnt/c/aishu_code/vega-backend/server/config/rsa_public_key.pem
+  privateKeyPath: /opt/vega-backend/secret-config/rsa_private_key_pkcs8.pem
+  publicKeyPath: /opt/vega-backend/secret-config/rsa_public_key.pem
 depServices:
   class-443:
     ingressClass: class-443
