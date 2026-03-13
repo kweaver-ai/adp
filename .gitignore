@@ -12,3 +12,6 @@ Thumbs.db
 .idea
 from_intranet/
 .claude/
+
+go.work
+go.work.sum
