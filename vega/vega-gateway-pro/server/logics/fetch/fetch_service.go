@@ -405,7 +405,7 @@ func (fs *Service) getDataFromQueryResult(ctx context.Context, dsType string, co
 			}
 
 			// 定期检查缓存中是否有数据
-			fs.checkCachePeriodically(resultCache)
+			fs.checkCachePeriodically(queryCacheKey)
 		}
 	})
 
@@ -482,13 +482,18 @@ func (fs *Service) storeToCache(oldResultCache *interfaces.ResultCache, resultSe
 }
 
 // checkCachePeriodically 定期检查缓存通道是否有数据
-func (fs *Service) checkCachePeriodically(cache *interfaces.ResultCache) {
+func (fs *Service) checkCachePeriodically(queryCacheKey string) {
 	ticker := time.NewTicker(1 * time.Millisecond)
 	defer ticker.Stop()
 
 	for range ticker.C {
 		// 定期检查是否有数据
-		if len(cache.ResultChan) < fs.appSetting.QuerySetting.DataQuerySize {
+		existingCache, ok := fs.queryCache.Load(queryCacheKey)
+		if !ok {
+			return
+		}
+		resultCache, _ := existingCache.(*interfaces.ResultCache)
+		if len(resultCache.ResultChan) < fs.appSetting.QuerySetting.DataQuerySize {
 			return
 		}
 	}
@@ -623,7 +628,7 @@ func (fs *Service) getDataFromEtrinoExecutingNextUri(ctx context.Context, dsType
 			}
 
 			// 定期检查缓存中是否有数据
-			fs.checkCachePeriodically(resultCache)
+			fs.checkCachePeriodically(queryCacheKey)
 		}
 	CacheNotFound:
 	})
@@ -733,7 +738,7 @@ func (fs *Service) handleQueryResult(ctx context.Context, queryType int, timeout
 	}
 
 	// 检查流式查询是否还有更多数据
-	if queryType == 2 && resultCache.ResultSet != nil || len(resultCache.ResultChan) > 0 {
+	if queryType == 2 && (resultCache.ResultSet != nil || len(resultCache.ResultChan) > 0) {
 		resultCache.Token++
 		finalResult.NextUri = fmt.Sprintf("http://%s:%d/api/vega-gateway/v2/fetch/%s/%s/%d",
 			version.ServerName, fs.appSetting.ServerSetting.HttpPort, queryId, slug, resultCache.Token)
