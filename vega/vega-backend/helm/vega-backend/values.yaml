@@ -40,8 +40,8 @@ depServices:
   rds:
     host: mariadb-mariadb-master.resource.svc.cluster.local.
     port: 3330
-    user: test
-    password: testpwd
+    user: root
+    password: ''
     type: MariaDB
   mq:
     mqType: kafka
@@ -50,30 +50,31 @@ depServices:
     protocol: sasl_plaintext
     tenant: default
     auth:
-      username: username
-      password: password
+      username: admin
+      password: ''
       mechanism: PLAIN
   opensearch:
     host: opensearch-master.resource.svc.cluster.local.
     port: 9200
     protocol: http
-    username: username
-    password: password
+    username: admin
+    password: ''
   redis:
-    connecttype: ""
-    username: ""
-    password: ""
-    host: ""
-    port: 0
-    masterhost: ""
-    masterport: 0
-    slavehost: ""
-    slaveport: 0
-    sentinelhost: ""
-    sentinelport: 0
-    sentinelusername: ""
-    sentinelpassword: ""
-    mastergroupname: ""
+    connectInfo:
+      username: root
+      password: ''
+      sentinelHost: proton-redis-proton-redis-sentinel.resource.svc.cluster.local
+      sentinelPort: 26379
+      sentinelUsername: root
+      sentinelPassword: ''
+      masterGroupName: mymaster
+      host: ""
+      port: 0
+      masterHost: ""
+      masterPort: 0
+      slaveHost: ""
+      slavePort: 0
+    connectType: sentinel
   authorization-private:
     host: authorization-private
     port: 30920
