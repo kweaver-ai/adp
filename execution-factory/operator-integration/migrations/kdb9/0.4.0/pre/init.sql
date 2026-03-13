@@ -318,7 +318,7 @@ CREATE TABLE IF NOT EXISTS `t_metadata_function` (
   `f_update_user` VARCHAR(50) NOT NULL COMMENT '编辑者',
   `f_create_time` BIGINT(20) NOT NULL COMMENT '创建时间',
   `f_update_time` BIGINT(20) NOT NULL COMMENT '编辑时间',
-  `f_dependencies_url` TEXT DEFAULT '' COMMENT '依赖库URL',
+  `f_dependencies_url` TEXT COMMENT '依赖库URL',
   PRIMARY KEY (`f_id`),
   UNIQUE KEY `idx_t_metadata_function_uk_version` (f_version)
 );

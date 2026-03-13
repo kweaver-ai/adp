@@ -335,7 +335,7 @@ CREATE TABLE IF NOT EXISTS "t_metadata_function" (
     "f_update_user" VARCHAR(50 CHAR) NOT NULL,
     "f_create_time" BIGINT NOT NULL,
     "f_update_time" BIGINT NOT NULL,
-    "f_dependencies_url" text DEFAULT '',
+    "f_dependencies_url" text,
     CLUSTER PRIMARY KEY ("f_id")
 );
 

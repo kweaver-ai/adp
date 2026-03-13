@@ -297,7 +297,7 @@ CREATE TABLE IF NOT EXISTS `t_metadata_function` (
     `f_update_user` varchar(50) NOT NULL COMMENT '编辑者',
     `f_create_time` bigint(20) NOT NULL COMMENT '创建时间',
     `f_update_time` bigint(20) NOT NULL COMMENT '编辑时间',
-    `f_dependencies_url` text DEFAULT '' COMMENT '依赖库安装源地址',
+    `f_dependencies_url` text COMMENT '依赖库安装源地址',
     PRIMARY KEY (`f_id`),
     UNIQUE KEY uk_version (f_version) USING BTREE
 ) ENGINE = InnoDB COMMENT = '函数元数据表';
