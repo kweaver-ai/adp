@@ -37,9 +37,9 @@ depServices:
     ingressClass: class-443
   rds:
     host: localhost
-    port: 30006
-    user: test
-    password: testpwd
+    port: 3330
+    user: root
+    password: eisoo.com
     type: MariaDB
   opensearch:
     host: localhost

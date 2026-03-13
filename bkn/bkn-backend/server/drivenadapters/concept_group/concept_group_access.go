@@ -165,7 +165,7 @@ func (cga *conceptGroupAccess) CreateConceptGroup(ctx context.Context, tx *sql.T
 			"f_comment",
 			"f_icon",
 			"f_color",
-			"f_detail",
+			"f_bkn_raw_content",
 			"f_kn_id",
 			"f_branch",
 			"f_creator",
@@ -182,7 +182,7 @@ func (cga *conceptGroupAccess) CreateConceptGroup(ctx context.Context, tx *sql.T
 			conceptGroup.Comment,
 			conceptGroup.Icon,
 			conceptGroup.Color,
-			conceptGroup.Detail,
+			conceptGroup.BKNRawContent,
 			conceptGroup.KNID,
 			conceptGroup.Branch,
 			conceptGroup.Creator.ID,
@@ -230,7 +230,7 @@ func (cga *conceptGroupAccess) ListConceptGroups(ctx context.Context, query inte
 		"f_comment",
 		"f_icon",
 		"f_color",
-		"f_detail",
+		"f_bkn_raw_content",
 		"f_kn_id",
 		"f_branch",
 		"f_creator",
@@ -282,7 +282,7 @@ func (cga *conceptGroupAccess) ListConceptGroups(ctx context.Context, query inte
 			&conceptGroup.Comment,
 			&conceptGroup.Icon,
 			&conceptGroup.Color,
-			&conceptGroup.Detail,
+			&conceptGroup.BKNRawContent,
 			&conceptGroup.KNID,
 			&conceptGroup.Branch,
 			&conceptGroup.Creator.ID,
@@ -327,7 +327,7 @@ func (cga *conceptGroupAccess) GetConceptGroupsByIDs(ctx context.Context, tx *sq
 		"f_comment",
 		"f_icon",
 		"f_color",
-		"f_detail",
+		"f_bkn_raw_content",
 		"f_kn_id",
 		"f_branch",
 		"f_creator",
@@ -372,7 +372,7 @@ func (cga *conceptGroupAccess) GetConceptGroupsByIDs(ctx context.Context, tx *sq
 			&conceptGroup.Comment,
 			&conceptGroup.Icon,
 			&conceptGroup.Color,
-			&conceptGroup.Detail,
+			&conceptGroup.BKNRawContent,
 			&conceptGroup.KNID,
 			&conceptGroup.Branch,
 			&conceptGroup.Creator.ID,
@@ -452,7 +452,7 @@ func (cga *conceptGroupAccess) GetConceptGroupByID(ctx context.Context, knID str
 		"f_comment",
 		"f_icon",
 		"f_color",
-		"f_detail",
+		"f_bkn_raw_content",
 		"f_kn_id",
 		"f_branch",
 		"f_creator",
@@ -486,7 +486,7 @@ func (cga *conceptGroupAccess) GetConceptGroupByID(ctx context.Context, knID str
 		&conceptGroup.Comment,
 		&conceptGroup.Icon,
 		&conceptGroup.Color,
-		&conceptGroup.Detail,
+		&conceptGroup.BKNRawContent,
 		&conceptGroup.KNID,
 		&conceptGroup.Branch,
 		&conceptGroup.Creator.ID,
@@ -527,14 +527,15 @@ func (cga *conceptGroupAccess) UpdateConceptGroup(ctx context.Context, tx *sql.T
 	tagsStr := libCommon.TagSlice2TagString(conceptGroup.Tags)
 
 	data := map[string]any{
-		"f_name":         conceptGroup.CGName,
-		"f_tags":         tagsStr,
-		"f_comment":      conceptGroup.Comment,
-		"f_icon":         conceptGroup.Icon,
-		"f_color":        conceptGroup.Color,
-		"f_updater":      conceptGroup.Updater.ID,
-		"f_updater_type": conceptGroup.Updater.Type,
-		"f_update_time":  conceptGroup.UpdateTime,
+		"f_name":            conceptGroup.CGName,
+		"f_tags":            tagsStr,
+		"f_comment":         conceptGroup.Comment,
+		"f_icon":            conceptGroup.Icon,
+		"f_color":           conceptGroup.Color,
+		"f_bkn_raw_content": conceptGroup.BKNRawContent,
+		"f_updater":         conceptGroup.Updater.ID,
+		"f_updater_type":    conceptGroup.Updater.Type,
+		"f_update_time":     conceptGroup.UpdateTime,
 	}
 	sqlStr, vals, err := sq.Update(CONCEPT_GROUP_TABLE_NAME).
 		SetMap(data).
@@ -591,7 +592,7 @@ func (cga *conceptGroupAccess) UpdateConceptGroupDetail(ctx context.Context, knI
 	)
 
 	data := map[string]any{
-		"f_detail": detail,
+		"f_bkn_raw_content": detail,
 	}
 	sqlStr, vals, err := sq.Update(CONCEPT_GROUP_TABLE_NAME).
 		SetMap(data).
@@ -872,7 +873,7 @@ func (cga *conceptGroupAccess) GetAllConceptGroupsByKnID(ctx context.Context, kn
 		"f_comment",
 		"f_icon",
 		"f_color",
-		"f_detail",
+		"f_bkn_raw_content",
 		"f_kn_id",
 		"f_branch",
 		"f_creator",
@@ -919,7 +920,7 @@ func (cga *conceptGroupAccess) GetAllConceptGroupsByKnID(ctx context.Context, kn
 			&conceptGroup.Comment,
 			&conceptGroup.Icon,
 			&conceptGroup.Color,
-			&conceptGroup.Detail,
+			&conceptGroup.BKNRawContent,
 			&conceptGroup.KNID,
 			&conceptGroup.Branch,
 			&conceptGroup.Creator.ID,
@@ -1384,7 +1385,7 @@ func (cga *conceptGroupAccess) GetConceptGroupsByOTIDs(ctx context.Context, tx *
 		"cg.f_comment",
 		"cg.f_icon",
 		"cg.f_color",
-		// "cg.f_detail",
+		// "cg.f_bkn_raw_content",
 		"cg.f_kn_id",
 		"cg.f_branch",
 	).From(CONCEPT_GROUP_TABLE_NAME + " AS cg").

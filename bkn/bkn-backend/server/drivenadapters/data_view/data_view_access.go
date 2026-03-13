@@ -46,6 +46,7 @@ func NewDataViewAccess(appSetting *common.AppSetting) interfaces.DataViewAccess 
 
 // 根据 id 获取视图
 func (dva *dataViewAccess) GetDataViewByID(ctx context.Context, id string) (*interfaces.DataView, error) {
+
 	ctx, span := ar_trace.Tracer.Start(ctx, "driven layer: Get views by IDs from data-model service", trace.WithSpanKind(trace.SpanKindClient))
 	defer span.End()
 

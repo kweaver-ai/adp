@@ -201,7 +201,7 @@ func (cs *ConceptSyncer) handleKnowledgeNetwork(ctx context.Context, kn *interfa
 	}
 
 	// 更新知识网络详情
-	kn.Detail = jsonData
+	kn.BKNRawContent = jsonData
 	err = cs.kna.UpdateKNDetail(ctx, kn.KNID, kn.Branch, jsonData)
 	if err != nil {
 		logger.Errorf("Failed to update KN detail for %s (%s %s): %v", kn.KNName, kn.KNID, kn.Branch, err)
@@ -427,7 +427,7 @@ func (cs *ConceptSyncer) insertDatasetDataForKN(ctx context.Context, kn *interfa
 	if cs.appSetting.ServerSetting.DefaultSmallModelEnabled {
 		words := []string{kn.KNName}
 		words = append(words, kn.Tags...)
-		words = append(words, kn.Comment, kn.Detail)
+		words = append(words, kn.Comment, kn.BKNRawContent)
 		word := strings.Join(words, "\n")
 
 		defaultModel, err := cs.mfa.GetDefaultModel(ctx)
@@ -482,7 +482,7 @@ func (cs *ConceptSyncer) insertDatasetDataForObjectTypes(ctx context.Context, ob
 		for _, objectType := range objectTypes {
 			arr := []string{objectType.OTName}
 			arr = append(arr, objectType.Tags...)
-			arr = append(arr, objectType.Comment, objectType.Detail)
+			arr = append(arr, objectType.Comment, objectType.BKNRawContent)
 			word := strings.Join(arr, "\n")
 			words = append(words, word)
 		}
@@ -567,7 +567,7 @@ func (cs *ConceptSyncer) insertDatasetDataForActionTypes(ctx context.Context, ac
 		for _, actionType := range actionTypes {
 			arr := []string{actionType.ATName}
 			arr = append(arr, actionType.Tags...)
-			arr = append(arr, actionType.Comment, actionType.Detail)
+			arr = append(arr, actionType.Comment, actionType.BKNRawContent)
 			word := strings.Join(arr, "\n")
 			words = append(words, word)
 		}
@@ -656,7 +656,7 @@ func (cs *ConceptSyncer) insertDatasetDataForRelationTypes(ctx context.Context, 
 		for _, relationType := range relationTypes {
 			arr := []string{relationType.RTName}
 			arr = append(arr, relationType.Tags...)
-			arr = append(arr, relationType.Comment, relationType.Detail)
+			arr = append(arr, relationType.Comment, relationType.BKNRawContent)
 			word := strings.Join(arr, "\n")
 			words = append(words, word)
 		}
@@ -725,7 +725,7 @@ func (cs *ConceptSyncer) insertDatasetDataForConceptGroups(ctx context.Context, 
 		for _, conceptGroup := range conceptGroups {
 			arr := []string{conceptGroup.CGName}
 			arr = append(arr, conceptGroup.Tags...)
-			arr = append(arr, conceptGroup.Comment, conceptGroup.Detail)
+			arr = append(arr, conceptGroup.Comment, conceptGroup.BKNRawContent)
 			word := strings.Join(arr, "\n")
 			words = append(words, word)
 		}

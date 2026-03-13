@@ -18,6 +18,7 @@ import (
 
 	"github.com/bytedance/sonic"
 	"github.com/kweaver-ai/TelemetrySDK-Go/exporter/v2/ar_trace"
+	bknsdk "github.com/kweaver-ai/bkn-specification/sdk/golang/bkn"
 	"github.com/kweaver-ai/kweaver-go-lib/logger"
 	o11y "github.com/kweaver-ai/kweaver-go-lib/observability"
 	"github.com/kweaver-ai/kweaver-go-lib/rest"
@@ -142,6 +143,9 @@ func (ats *actionTypeService) CreateActionTypes(ctx context.Context, tx *sql.Tx,
 				return []string{}, err
 			}
 		}
+
+		bknAction := logics.ToBKNActionType(actionType)
+		actionType.BKNRawContent = bknsdk.SerializeActionType(bknAction)
 	}
 
 	// 0. 开始事务
@@ -395,6 +399,9 @@ func (ats *actionTypeService) UpdateActionType(ctx context.Context, tx *sql.Tx, 
 
 	currentTime := time.Now().UnixMilli() // 行动类的update_time是int类型
 	actionType.UpdateTime = currentTime
+
+	bknAction := logics.ToBKNActionType(actionType)
+	actionType.BKNRawContent = bknsdk.SerializeActionType(bknAction)
 
 	if tx == nil {
 		// 0. 开始事务
@@ -671,7 +678,7 @@ func (ats *actionTypeService) InsertDatasetData(ctx context.Context, actionTypes
 		for _, actionType := range actionTypes {
 			arr := []string{actionType.ATName}
 			arr = append(arr, actionType.Tags...)
-			arr = append(arr, actionType.Comment, actionType.Detail)
+			arr = append(arr, actionType.Comment, actionType.BKNRawContent)
 			word := strings.Join(arr, "\n")
 			words = append(words, word)
 		}

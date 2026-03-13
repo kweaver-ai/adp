@@ -18,6 +18,7 @@ import (
 
 	"github.com/bytedance/sonic"
 	"github.com/kweaver-ai/TelemetrySDK-Go/exporter/v2/ar_trace"
+	bknsdk "github.com/kweaver-ai/bkn-specification/sdk/golang/bkn"
 	"github.com/kweaver-ai/kweaver-go-lib/logger"
 	o11y "github.com/kweaver-ai/kweaver-go-lib/observability"
 	"github.com/kweaver-ai/kweaver-go-lib/rest"
@@ -180,6 +181,9 @@ func (rts *relationTypeService) CreateRelationTypes(ctx context.Context, tx *sql
 		if err != nil {
 			return []string{}, err
 		}
+
+		bknRel := logics.ToBKNRelationType(relationType)
+		relationType.BKNRawContent = bknsdk.SerializeRelationType(bknRel)
 	}
 
 	createRelationTypes, updateRelationTypes, err := rts.handleRelationTypeImportMode(ctx, mode, relationTypes)
@@ -488,6 +492,9 @@ func (rts *relationTypeService) UpdateRelationType(ctx context.Context, tx *sql.
 	currentTime := time.Now().UnixMilli() // 关系类的update_time是int类型
 	relationType.UpdateTime = currentTime
 
+	bknRel := logics.ToBKNRelationType(relationType)
+	relationType.BKNRawContent = bknsdk.SerializeRelationType(bknRel)
+
 	if tx == nil {
 		// 0. 开始事务
 		tx, err = rts.db.Begin()
@@ -775,7 +782,7 @@ func (rts *relationTypeService) InsertDatasetData(ctx context.Context, relationT
 		for _, relationType := range relationTypes {
 			arr := []string{relationType.RTName}
 			arr = append(arr, relationType.Tags...)
-			arr = append(arr, relationType.Comment, relationType.Detail)
+			arr = append(arr, relationType.Comment, relationType.BKNRawContent)
 			word := strings.Join(arr, "\n")
 			words = append(words, word)
 		}

@@ -500,7 +500,7 @@ func (kns *knowledgeNetworkService) GetKNByID(ctx context.Context, knID string, 
 			berrors.BknBackend_KnowledgeNetwork_InternalError).WithErrorDetails(err.Error())
 	}
 
-	if mode == "export" {
+	if mode == interfaces.Mode_Export {
 		conceptGroups, _, err := kns.cgs.ListConceptGroups(ctx, interfaces.ConceptGroupsQueryParams{
 			PaginationQueryParameters: interfaces.PaginationQueryParameters{
 				Limit: -1,
@@ -1025,7 +1025,7 @@ func (kns *knowledgeNetworkService) InsertDatasetData(ctx context.Context, origK
 		Comment:        origKN.Comment,
 		Icon:           origKN.Icon,
 		Color:          origKN.Color,
-		Detail:         origKN.Detail,
+		BKNRawContent:  origKN.BKNRawContent,
 		Branch:         origKN.Branch,
 		BusinessDomain: origKN.BusinessDomain,
 		Creator:        origKN.Creator,
@@ -1038,7 +1038,7 @@ func (kns *knowledgeNetworkService) InsertDatasetData(ctx context.Context, origK
 	if kns.appSetting.ServerSetting.DefaultSmallModelEnabled {
 		words := []string{kn.KNName}
 		words = append(words, kn.Tags...)
-		words = append(words, kn.Comment, kn.Detail)
+		words = append(words, kn.Comment, kn.BKNRawContent)
 		word := strings.Join(words, "\n")
 
 		defaultModel, err := kns.mfa.GetDefaultModel(ctx)

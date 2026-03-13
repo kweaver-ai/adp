@@ -40,11 +40,11 @@ var (
 			IncrementalKey:  "update_time",
 		},
 		CommonInfo: interfaces.CommonInfo{
-			Tags:    testTags,
-			Comment: "test comment",
-			Icon:    "icon1",
-			Color:   "color1",
-			Detail:  "detail1",
+			Tags:          testTags,
+			Comment:       "test comment",
+			Icon:          "icon1",
+			Color:         "color1",
+			BKNRawContent: "bkn1",
 		},
 		KNID:   "kn1",
 		Branch: interfaces.MAIN_BRANCH,
@@ -193,7 +193,7 @@ func Test_objectTypeAccess_CreateObjectType(t *testing.T) {
 		appSetting := &common.AppSetting{}
 		ota, smock := MockNewObjectTypeAccess(appSetting)
 
-		sqlStr := fmt.Sprintf("INSERT INTO %s (f_id,f_name,f_tags,f_comment,f_icon,f_color,f_detail,"+
+		sqlStr := fmt.Sprintf("INSERT INTO %s (f_id,f_name,f_tags,f_comment,f_icon,f_color,f_bkn_raw_content,"+
 			"f_kn_id,f_branch,f_data_source,f_data_properties,f_logic_properties,f_primary_keys,"+
 			"f_display_key,f_incremental_key,f_creator,f_creator_type,f_create_time,f_updater,f_updater_type,f_update_time) "+
 			"VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)", OT_TABLE_NAME)
@@ -239,11 +239,11 @@ func Test_objectTypeAccess_CreateObjectType(t *testing.T) {
 					IncrementalKey:  "update_time",
 				},
 				CommonInfo: interfaces.CommonInfo{
-					Tags:    testTags,
-					Comment: "test comment",
-					Icon:    "icon1",
-					Color:   "color1",
-					Detail:  "detail1",
+					Tags:          testTags,
+					Comment:       "test comment",
+					Icon:          "icon1",
+					Color:         "color1",
+					BKNRawContent: "bkn1",
 				},
 				KNID:   "kn1",
 				Branch: interfaces.MAIN_BRANCH,
@@ -281,11 +281,11 @@ func Test_objectTypeAccess_CreateObjectType(t *testing.T) {
 					IncrementalKey:  "update_time",
 				},
 				CommonInfo: interfaces.CommonInfo{
-					Tags:    testTags,
-					Comment: "test comment",
-					Icon:    "icon1",
-					Color:   "color1",
-					Detail:  "detail1",
+					Tags:          testTags,
+					Comment:       "test comment",
+					Icon:          "icon1",
+					Color:         "color1",
+					BKNRawContent: "bkn1",
 				},
 				KNID:   "kn1",
 				Branch: interfaces.MAIN_BRANCH,
@@ -321,11 +321,11 @@ func Test_objectTypeAccess_CreateObjectType(t *testing.T) {
 					IncrementalKey:  "update_time",
 				},
 				CommonInfo: interfaces.CommonInfo{
-					Tags:    testTags,
-					Comment: "test comment",
-					Icon:    "icon1",
-					Color:   "color1",
-					Detail:  "detail1",
+					Tags:          testTags,
+					Comment:       "test comment",
+					Icon:          "icon1",
+					Color:         "color1",
+					BKNRawContent: "bkn1",
 				},
 				KNID:   "kn1",
 				Branch: interfaces.MAIN_BRANCH,
@@ -361,11 +361,11 @@ func Test_objectTypeAccess_CreateObjectType(t *testing.T) {
 					IncrementalKey:  "update_time",
 				},
 				CommonInfo: interfaces.CommonInfo{
-					Tags:    testTags,
-					Comment: "test comment",
-					Icon:    "icon1",
-					Color:   "color1",
-					Detail:  "detail1",
+					Tags:          testTags,
+					Comment:       "test comment",
+					Icon:          "icon1",
+					Color:         "color1",
+					BKNRawContent: "bkn1",
 				},
 				KNID:   "kn1",
 				Branch: interfaces.MAIN_BRANCH,
@@ -467,7 +467,7 @@ func Test_objectTypeAccess_ListObjectTypes(t *testing.T) {
 		appSetting := &common.AppSetting{}
 		ota, smock := MockNewObjectTypeAccess(appSetting)
 
-		sqlStr := fmt.Sprintf("SELECT ot.f_id, ot.f_name, ot.f_tags, ot.f_comment, ot.f_icon, ot.f_color, ot.f_detail, "+
+		sqlStr := fmt.Sprintf("SELECT ot.f_id, ot.f_name, ot.f_tags, ot.f_comment, ot.f_icon, ot.f_color, ot.f_bkn_raw_content, "+
 			"ot.f_kn_id, ot.f_branch, ot.f_data_source, ot.f_data_properties, ot.f_logic_properties, ot.f_primary_keys, "+
 			"ot.f_display_key, ot.f_incremental_key, ot.f_creator, ot.f_creator_type, ot.f_create_time, "+
 			"ot.f_updater, ot.f_updater_type, ot.f_update_time, "+
@@ -482,7 +482,7 @@ func Test_objectTypeAccess_ListObjectTypes(t *testing.T) {
 		primaryKeysBytes, _ := sonic.Marshal(testObjectType.PrimaryKeys)
 
 		rows := sqlmock.NewRows([]string{
-			"ot.f_id", "ot.f_name", "ot.f_tags", "ot.f_comment", "ot.f_icon", "ot.f_color", "ot.f_detail",
+			"ot.f_id", "ot.f_name", "ot.f_tags", "ot.f_comment", "ot.f_icon", "ot.f_color", "ot.f_bkn_raw_content",
 			"ot.f_kn_id", "ot.f_branch", "ot.f_data_source", "ot.f_data_properties", "ot.f_logic_properties",
 			"ot.f_primary_keys", "ot.f_display_key", "ot.f_incremental_key", "ot.f_creator", "ot.f_creator_type",
 			"ot.f_create_time", "ot.f_updater", "ot.f_updater_type", "ot.f_update_time",
@@ -547,7 +547,7 @@ func Test_objectTypeAccess_ListObjectTypes(t *testing.T) {
 
 		Convey("ListObjectTypes Scan error \n", func() {
 			rows := sqlmock.NewRows([]string{
-				"ot.f_id", "ot.f_name", "ot.f_tags", "ot.f_comment", "ot.f_icon", "ot.f_color", "ot.f_detail",
+				"ot.f_id", "ot.f_name", "ot.f_tags", "ot.f_comment", "ot.f_icon", "ot.f_color", "ot.f_bkn_raw_content",
 				"ot.f_kn_id", "ot.f_branch", "ot.f_data_source", "ot.f_data_properties", "ot.f_logic_properties",
 				"ot.f_primary_keys", "ot.f_display_key", "ot.f_incremental_key", "ot.f_creator", "ot.f_creator_type",
 				"ot.f_create_time", "ot.f_updater", "ot.f_updater_type", "ot.f_update_time",
@@ -577,7 +577,7 @@ func Test_objectTypeAccess_ListObjectTypes(t *testing.T) {
 		Convey("ListObjectTypes Unmarshal dataSource error \n", func() {
 			invalidBytes := []byte("invalid json")
 			rows := sqlmock.NewRows([]string{
-				"ot.f_id", "ot.f_name", "ot.f_tags", "ot.f_comment", "ot.f_icon", "ot.f_color", "ot.f_detail",
+				"ot.f_id", "ot.f_name", "ot.f_tags", "ot.f_comment", "ot.f_icon", "ot.f_color", "ot.f_bkn_raw_content",
 				"ot.f_kn_id", "ot.f_branch", "ot.f_data_source", "ot.f_data_properties", "ot.f_logic_properties",
 				"ot.f_primary_keys", "ot.f_display_key", "ot.f_incremental_key", "ot.f_creator", "ot.f_creator_type",
 				"ot.f_create_time", "ot.f_updater", "ot.f_updater_type", "ot.f_update_time",
@@ -607,7 +607,7 @@ func Test_objectTypeAccess_ListObjectTypes(t *testing.T) {
 		Convey("ListObjectTypes Unmarshal dataProperties error \n", func() {
 			invalidBytes := []byte("invalid json")
 			rows := sqlmock.NewRows([]string{
-				"ot.f_id", "ot.f_name", "ot.f_tags", "ot.f_comment", "ot.f_icon", "ot.f_color", "ot.f_detail",
+				"ot.f_id", "ot.f_name", "ot.f_tags", "ot.f_comment", "ot.f_icon", "ot.f_color", "ot.f_bkn_raw_content",
 				"ot.f_kn_id", "ot.f_branch", "ot.f_data_source", "ot.f_data_properties", "ot.f_logic_properties",
 				"ot.f_primary_keys", "ot.f_display_key", "ot.f_incremental_key", "ot.f_creator", "ot.f_creator_type",
 				"ot.f_create_time", "ot.f_updater", "ot.f_updater_type", "ot.f_update_time",
@@ -637,7 +637,7 @@ func Test_objectTypeAccess_ListObjectTypes(t *testing.T) {
 		Convey("ListObjectTypes Unmarshal logicProperties error \n", func() {
 			invalidBytes := []byte("invalid json")
 			rows := sqlmock.NewRows([]string{
-				"ot.f_id", "ot.f_name", "ot.f_tags", "ot.f_comment", "ot.f_icon", "ot.f_color", "ot.f_detail",
+				"ot.f_id", "ot.f_name", "ot.f_tags", "ot.f_comment", "ot.f_icon", "ot.f_color", "ot.f_bkn_raw_content",
 				"ot.f_kn_id", "ot.f_branch", "ot.f_data_source", "ot.f_data_properties", "ot.f_logic_properties",
 				"ot.f_primary_keys", "ot.f_display_key", "ot.f_incremental_key", "ot.f_creator", "ot.f_creator_type",
 				"ot.f_create_time", "ot.f_updater", "ot.f_updater_type", "ot.f_update_time",
@@ -667,7 +667,7 @@ func Test_objectTypeAccess_ListObjectTypes(t *testing.T) {
 		Convey("ListObjectTypes Unmarshal primaryKeys error \n", func() {
 			invalidBytes := []byte("invalid json")
 			rows := sqlmock.NewRows([]string{
-				"ot.f_id", "ot.f_name", "ot.f_tags", "ot.f_comment", "ot.f_icon", "ot.f_color", "ot.f_detail",
+				"ot.f_id", "ot.f_name", "ot.f_tags", "ot.f_comment", "ot.f_icon", "ot.f_color", "ot.f_bkn_raw_content",
 				"ot.f_kn_id", "ot.f_branch", "ot.f_data_source", "ot.f_data_properties", "ot.f_logic_properties",
 				"ot.f_primary_keys", "ot.f_display_key", "ot.f_incremental_key", "ot.f_creator", "ot.f_creator_type",
 				"ot.f_create_time", "ot.f_updater", "ot.f_updater_type", "ot.f_update_time",
@@ -706,7 +706,7 @@ func Test_objectTypeAccess_ListObjectTypes(t *testing.T) {
 					Direction: "ASC",
 				},
 			}
-			sqlStrWithAll := `SELECT ot.f_id, ot.f_name, ot.f_tags, ot.f_comment, ot.f_icon, ot.f_color, ot.f_detail,
+			sqlStrWithAll := `SELECT ot.f_id, ot.f_name, ot.f_tags, ot.f_comment, ot.f_icon, ot.f_color, ot.f_bkn_raw_content,
 			 ot.f_kn_id, ot.f_branch, ot.f_data_source, ot.f_data_properties, ot.f_logic_properties, ot.f_primary_keys,
 			  ot.f_display_key, ot.f_incremental_key, ot.f_creator, ot.f_creator_type, ot.f_create_time, 
 			  ot.f_updater, ot.f_updater_type, ot.f_update_time,
@@ -718,7 +718,7 @@ func Test_objectTypeAccess_ListObjectTypes(t *testing.T) {
 			   AND ot.f_id IN (?,?) ORDER BY ot.ot.f_name ASC`
 
 			rows := sqlmock.NewRows([]string{
-				"ot.f_id", "ot.f_name", "ot.f_tags", "ot.f_comment", "ot.f_icon", "ot.f_color", "ot.f_detail",
+				"ot.f_id", "ot.f_name", "ot.f_tags", "ot.f_comment", "ot.f_icon", "ot.f_color", "ot.f_bkn_raw_content",
 				"ot.f_kn_id", "ot.f_branch", "ot.f_data_source", "ot.f_data_properties", "ot.f_logic_properties",
 				"ot.f_primary_keys", "ot.f_display_key", "ot.f_incremental_key", "ot.f_creator", "ot.f_creator_type",
 				"ot.f_create_time", "ot.f_updater", "ot.f_updater_type", "ot.f_update_time",
@@ -809,7 +809,7 @@ func Test_objectTypeAccess_GetObjectTypeByID(t *testing.T) {
 		appSetting := &common.AppSetting{}
 		ota, smock := MockNewObjectTypeAccess(appSetting)
 
-		sqlStr := fmt.Sprintf("SELECT ot.f_id, ot.f_name, ot.f_tags, ot.f_comment, ot.f_icon, ot.f_color, ot.f_detail, "+
+		sqlStr := fmt.Sprintf("SELECT ot.f_id, ot.f_name, ot.f_tags, ot.f_comment, ot.f_icon, ot.f_color, ot.f_bkn_raw_content, "+
 			"ot.f_kn_id, ot.f_branch, ot.f_data_source, ot.f_data_properties, ot.f_logic_properties, ot.f_primary_keys, "+
 			"ot.f_display_key, ot.f_incremental_key, ot.f_creator, ot.f_creator_type, ot.f_create_time, "+
 			"ot.f_updater, ot.f_updater_type, ot.f_update_time, "+
@@ -829,7 +829,7 @@ func Test_objectTypeAccess_GetObjectTypeByID(t *testing.T) {
 
 		Convey("GetObjectTypeByID Success \n", func() {
 			rows := sqlmock.NewRows([]string{
-				"ot.f_id", "ot.f_name", "ot.f_tags", "ot.f_comment", "ot.f_icon", "ot.f_color", "ot.f_detail",
+				"ot.f_id", "ot.f_name", "ot.f_tags", "ot.f_comment", "ot.f_icon", "ot.f_color", "ot.f_bkn_raw_content",
 				"ot.f_kn_id", "ot.f_branch", "ot.f_data_source", "ot.f_data_properties", "ot.f_logic_properties",
 				"ot.f_primary_keys", "ot.f_display_key", "ot.f_incremental_key", "ot.f_creator", "ot.f_creator_type",
 				"ot.f_create_time", "ot.f_updater", "ot.f_updater_type", "ot.f_update_time",
@@ -871,7 +871,7 @@ func Test_objectTypeAccess_GetObjectTypeByID(t *testing.T) {
 		Convey("GetObjectTypeByID Unmarshal dataSource error \n", func() {
 			invalidBytes := []byte("invalid json")
 			rows := sqlmock.NewRows([]string{
-				"ot.f_id", "ot.f_name", "ot.f_tags", "ot.f_comment", "ot.f_icon", "ot.f_color", "ot.f_detail",
+				"ot.f_id", "ot.f_name", "ot.f_tags", "ot.f_comment", "ot.f_icon", "ot.f_color", "ot.f_bkn_raw_content",
 				"ot.f_kn_id", "ot.f_branch", "ot.f_data_source", "ot.f_data_properties", "ot.f_logic_properties",
 				"ot.f_primary_keys", "ot.f_display_key", "ot.f_incremental_key", "ot.f_creator", "ot.f_creator_type",
 				"ot.f_create_time", "ot.f_updater", "ot.f_updater_type", "ot.f_update_time",
@@ -899,7 +899,7 @@ func Test_objectTypeAccess_GetObjectTypeByID(t *testing.T) {
 		Convey("GetObjectTypeByID Unmarshal dataProperties error \n", func() {
 			invalidBytes := []byte("invalid json")
 			rows := sqlmock.NewRows([]string{
-				"ot.f_id", "ot.f_name", "ot.f_tags", "ot.f_comment", "ot.f_icon", "ot.f_color", "ot.f_detail",
+				"ot.f_id", "ot.f_name", "ot.f_tags", "ot.f_comment", "ot.f_icon", "ot.f_color", "ot.f_bkn_raw_content",
 				"ot.f_kn_id", "ot.f_branch", "ot.f_data_source", "ot.f_data_properties", "ot.f_logic_properties",
 				"ot.f_primary_keys", "ot.f_display_key", "ot.f_incremental_key", "ot.f_creator", "ot.f_creator_type",
 				"ot.f_create_time", "ot.f_updater", "ot.f_updater_type", "ot.f_update_time",
@@ -927,7 +927,7 @@ func Test_objectTypeAccess_GetObjectTypeByID(t *testing.T) {
 		Convey("GetObjectTypeByID Unmarshal logicProperties error \n", func() {
 			invalidBytes := []byte("invalid json")
 			rows := sqlmock.NewRows([]string{
-				"ot.f_id", "ot.f_name", "ot.f_tags", "ot.f_comment", "ot.f_icon", "ot.f_color", "ot.f_detail",
+				"ot.f_id", "ot.f_name", "ot.f_tags", "ot.f_comment", "ot.f_icon", "ot.f_color", "ot.f_bkn_raw_content",
 				"ot.f_kn_id", "ot.f_branch", "ot.f_data_source", "ot.f_data_properties", "ot.f_logic_properties",
 				"ot.f_primary_keys", "ot.f_display_key", "ot.f_incremental_key", "ot.f_creator", "ot.f_creator_type",
 				"ot.f_create_time", "ot.f_updater", "ot.f_updater_type", "ot.f_update_time",
@@ -955,7 +955,7 @@ func Test_objectTypeAccess_GetObjectTypeByID(t *testing.T) {
 		Convey("GetObjectTypeByID Unmarshal primaryKeys error \n", func() {
 			invalidBytes := []byte("invalid json")
 			rows := sqlmock.NewRows([]string{
-				"ot.f_id", "ot.f_name", "ot.f_tags", "ot.f_comment", "ot.f_icon", "ot.f_color", "ot.f_detail",
+				"ot.f_id", "ot.f_name", "ot.f_tags", "ot.f_comment", "ot.f_icon", "ot.f_color", "ot.f_bkn_raw_content",
 				"ot.f_kn_id", "ot.f_branch", "ot.f_data_source", "ot.f_data_properties", "ot.f_logic_properties",
 				"ot.f_primary_keys", "ot.f_display_key", "ot.f_incremental_key", "ot.f_creator", "ot.f_creator_type",
 				"ot.f_create_time", "ot.f_updater", "ot.f_updater_type", "ot.f_update_time",
@@ -987,7 +987,7 @@ func Test_objectTypeAccess_GetObjectTypesByIDs(t *testing.T) {
 		appSetting := &common.AppSetting{}
 		ota, smock := MockNewObjectTypeAccess(appSetting)
 
-		sqlStr := fmt.Sprintf("SELECT ot.f_id, ot.f_name, ot.f_tags, ot.f_comment, ot.f_icon, ot.f_color, ot.f_detail, "+
+		sqlStr := fmt.Sprintf("SELECT ot.f_id, ot.f_name, ot.f_tags, ot.f_comment, ot.f_icon, ot.f_color, ot.f_bkn_raw_content, "+
 			"ot.f_kn_id, ot.f_branch, ot.f_data_source, ot.f_data_properties, ot.f_logic_properties, ot.f_primary_keys, "+
 			"ot.f_display_key, ot.f_incremental_key, ot.f_creator, ot.f_creator_type, ot.f_create_time, "+
 			"ot.f_updater, ot.f_updater_type, ot.f_update_time, "+
@@ -1007,7 +1007,7 @@ func Test_objectTypeAccess_GetObjectTypesByIDs(t *testing.T) {
 
 		Convey("GetObjectTypesByIDs Success \n", func() {
 			rows := sqlmock.NewRows([]string{
-				"ot.f_id", "ot.f_name", "ot.f_tags", "ot.f_comment", "ot.f_icon", "ot.f_color", "ot.f_detail",
+				"ot.f_id", "ot.f_name", "ot.f_tags", "ot.f_comment", "ot.f_icon", "ot.f_color", "ot.f_bkn_raw_content",
 				"ot.f_kn_id", "ot.f_branch", "ot.f_data_source", "ot.f_data_properties", "ot.f_logic_properties",
 				"ot.f_primary_keys", "ot.f_display_key", "ot.f_incremental_key", "ot.f_creator", "ot.f_creator_type",
 				"ot.f_create_time", "ot.f_updater", "ot.f_updater_type", "ot.f_update_time",
@@ -1060,7 +1060,7 @@ func Test_objectTypeAccess_GetObjectTypesByIDs(t *testing.T) {
 		Convey("GetObjectTypesByIDs unmarshal DataSource error \n", func() {
 			invalidBytes := []byte("invalid json")
 			rows := sqlmock.NewRows([]string{
-				"ot.f_id", "ot.f_name", "ot.f_tags", "ot.f_comment", "ot.f_icon", "ot.f_color", "ot.f_detail",
+				"ot.f_id", "ot.f_name", "ot.f_tags", "ot.f_comment", "ot.f_icon", "ot.f_color", "ot.f_bkn_raw_content",
 				"ot.f_kn_id", "ot.f_branch", "ot.f_data_source", "ot.f_data_properties", "ot.f_logic_properties",
 				"ot.f_primary_keys", "ot.f_display_key", "ot.f_incremental_key", "ot.f_creator", "ot.f_creator_type",
 				"ot.f_create_time", "ot.f_updater", "ot.f_updater_type", "ot.f_update_time",
@@ -1086,7 +1086,7 @@ func Test_objectTypeAccess_GetObjectTypesByIDs(t *testing.T) {
 		Convey("GetObjectTypesByIDs unmarshal dataProperties error \n", func() {
 			invalidBytes := []byte("invalid json")
 			rows := sqlmock.NewRows([]string{
-				"ot.f_id", "ot.f_name", "ot.f_tags", "ot.f_comment", "ot.f_icon", "ot.f_color", "ot.f_detail",
+				"ot.f_id", "ot.f_name", "ot.f_tags", "ot.f_comment", "ot.f_icon", "ot.f_color", "ot.f_bkn_raw_content",
 				"ot.f_kn_id", "ot.f_branch", "ot.f_data_source", "ot.f_data_properties", "ot.f_logic_properties",
 				"ot.f_primary_keys", "ot.f_display_key", "ot.f_incremental_key", "ot.f_creator", "ot.f_creator_type",
 				"ot.f_create_time", "ot.f_updater", "ot.f_updater_type", "ot.f_update_time",
@@ -1112,7 +1112,7 @@ func Test_objectTypeAccess_GetObjectTypesByIDs(t *testing.T) {
 		Convey("GetObjectTypesByIDs unmarshal logicProperties error \n", func() {
 			invalidBytes := []byte("invalid json")
 			rows := sqlmock.NewRows([]string{
-				"ot.f_id", "ot.f_name", "ot.f_tags", "ot.f_comment", "ot.f_icon", "ot.f_color", "ot.f_detail",
+				"ot.f_id", "ot.f_name", "ot.f_tags", "ot.f_comment", "ot.f_icon", "ot.f_color", "ot.f_bkn_raw_content",
 				"ot.f_kn_id", "ot.f_branch", "ot.f_data_source", "ot.f_data_properties", "ot.f_logic_properties",
 				"ot.f_primary_keys", "ot.f_display_key", "ot.f_incremental_key", "ot.f_creator", "ot.f_creator_type",
 				"ot.f_create_time", "ot.f_updater", "ot.f_updater_type", "ot.f_update_time",
@@ -1138,7 +1138,7 @@ func Test_objectTypeAccess_GetObjectTypesByIDs(t *testing.T) {
 		Convey("GetObjectTypesByIDs unmarshal primaryKeys error \n", func() {
 			invalidBytes := []byte("invalid json")
 			rows := sqlmock.NewRows([]string{
-				"ot.f_id", "ot.f_name", "ot.f_tags", "ot.f_comment", "ot.f_icon", "ot.f_color", "ot.f_detail",
+				"ot.f_id", "ot.f_name", "ot.f_tags", "ot.f_comment", "ot.f_icon", "ot.f_color", "ot.f_bkn_raw_content",
 				"ot.f_kn_id", "ot.f_branch", "ot.f_data_source", "ot.f_data_properties", "ot.f_logic_properties",
 				"ot.f_primary_keys", "ot.f_display_key", "ot.f_incremental_key", "ot.f_creator", "ot.f_creator_type",
 				"ot.f_create_time", "ot.f_updater", "ot.f_updater_type", "ot.f_update_time",
@@ -1168,7 +1168,7 @@ func Test_objectTypeAccess_UpdateObjectType(t *testing.T) {
 		appSetting := &common.AppSetting{}
 		ota, smock := MockNewObjectTypeAccess(appSetting)
 
-		sqlStr := fmt.Sprintf("UPDATE %s SET f_color = ?, f_comment = ?, f_data_properties = ?, "+
+		sqlStr := fmt.Sprintf("UPDATE %s SET f_bkn_raw_content = ?, f_color = ?, f_comment = ?, f_data_properties = ?, "+
 			"f_data_source = ?, f_display_key = ?, f_icon = ?, f_incremental_key = ?, f_logic_properties = ?, "+
 			"f_name = ?, f_primary_keys = ?, f_tags = ?, f_update_time = ?, f_updater = ?, f_updater_type = ? "+
 			"WHERE f_id = ? AND f_kn_id = ?", OT_TABLE_NAME)
@@ -1320,7 +1320,8 @@ func Test_objectTypeAccess_UpdateDataProperties(t *testing.T) {
 		appSetting := &common.AppSetting{}
 		ota, smock := MockNewObjectTypeAccess(appSetting)
 
-		sqlStr := fmt.Sprintf("UPDATE %s SET f_data_properties = ?, f_update_time = ?, f_updater = ?, f_updater_type = ? "+
+		sqlStr := fmt.Sprintf("UPDATE %s SET f_bkn_raw_content = ?, f_data_properties = ?, "+
+			"f_update_time = ?, f_updater = ?, f_updater_type = ? "+
 			"WHERE f_id = ? AND f_kn_id = ?", OT_TABLE_NAME)
 
 		objectType := &interfaces.ObjectType{
@@ -1684,7 +1685,7 @@ func Test_objectTypeAccess_GetAllObjectTypesByKnID(t *testing.T) {
 		appSetting := &common.AppSetting{}
 		ota, smock := MockNewObjectTypeAccess(appSetting)
 
-		sqlStr := fmt.Sprintf("SELECT f_id, f_name, f_tags, f_comment, f_icon, f_color, f_detail, "+
+		sqlStr := fmt.Sprintf("SELECT f_id, f_name, f_tags, f_comment, f_icon, f_color, f_bkn_raw_content, "+
 			"f_kn_id, f_branch, f_data_source, f_data_properties, f_logic_properties, f_primary_keys, "+
 			"f_display_key, f_incremental_key, f_creator, f_creator_type, f_create_time, "+
 			"f_updater, f_updater_type, f_update_time "+
@@ -1696,7 +1697,7 @@ func Test_objectTypeAccess_GetAllObjectTypesByKnID(t *testing.T) {
 		primaryKeysBytes, _ := sonic.Marshal(testObjectType.PrimaryKeys)
 
 		rows := sqlmock.NewRows([]string{
-			"f_id", "f_name", "f_tags", "f_comment", "f_icon", "f_color", "f_detail",
+			"f_id", "f_name", "f_tags", "f_comment", "f_icon", "f_color", "f_bkn_raw_content",
 			"f_kn_id", "f_branch", "f_data_source", "f_data_properties", "f_logic_properties", "f_primary_keys",
 			"f_display_key", "f_incremental_key", "f_creator", "f_creator_type", "f_create_time",
 			"f_updater", "f_updater_type", "f_update_time",
@@ -1744,7 +1745,7 @@ func Test_objectTypeAccess_GetAllObjectTypesByKnID(t *testing.T) {
 
 		Convey("GetAllObjectTypesByKnID Scan error \n", func() {
 			rows := sqlmock.NewRows([]string{
-				"f_id", "f_name", "f_tags", "f_comment", "f_icon", "f_color", "f_detail",
+				"f_id", "f_name", "f_tags", "f_comment", "f_icon", "f_color", "f_bkn_raw_content",
 				"f_kn_id", "f_branch", "f_data_source", "f_data_properties", "f_logic_properties", "f_primary_keys",
 				"f_display_key", "f_incremental_key", "f_creator", "f_creator_type", "f_create_time",
 				"f_updater", "f_updater_type", "f_update_time", "f_update_time",
@@ -1769,7 +1770,7 @@ func Test_objectTypeAccess_GetAllObjectTypesByKnID(t *testing.T) {
 		Convey("GetAllObjectTypesByKnID Unmarshal dataSource error \n", func() {
 			invalidBytes := []byte("invalid json")
 			rows := sqlmock.NewRows([]string{
-				"f_id", "f_name", "f_tags", "f_comment", "f_icon", "f_color", "f_detail",
+				"f_id", "f_name", "f_tags", "f_comment", "f_icon", "f_color", "f_bkn_raw_content",
 				"f_kn_id", "f_branch", "f_data_source", "f_data_properties", "f_logic_properties", "f_primary_keys",
 				"f_display_key", "f_incremental_key", "f_creator", "f_creator_type", "f_create_time",
 				"f_updater", "f_updater_type", "f_update_time",
@@ -1794,7 +1795,7 @@ func Test_objectTypeAccess_GetAllObjectTypesByKnID(t *testing.T) {
 		Convey("GetAllObjectTypesByKnID Unmarshal dataProperties error \n", func() {
 			invalidBytes := []byte("invalid json")
 			rows := sqlmock.NewRows([]string{
-				"f_id", "f_name", "f_tags", "f_comment", "f_icon", "f_color", "f_detail",
+				"f_id", "f_name", "f_tags", "f_comment", "f_icon", "f_color", "f_bkn_raw_content",
 				"f_kn_id", "f_branch", "f_data_source", "f_data_properties", "f_logic_properties", "f_primary_keys",
 				"f_display_key", "f_incremental_key", "f_creator", "f_creator_type", "f_create_time",
 				"f_updater", "f_updater_type", "f_update_time",
@@ -1819,7 +1820,7 @@ func Test_objectTypeAccess_GetAllObjectTypesByKnID(t *testing.T) {
 		Convey("GetAllObjectTypesByKnID Unmarshal logicProperties error \n", func() {
 			invalidBytes := []byte("invalid json")
 			rows := sqlmock.NewRows([]string{
-				"f_id", "f_name", "f_tags", "f_comment", "f_icon", "f_color", "f_detail",
+				"f_id", "f_name", "f_tags", "f_comment", "f_icon", "f_color", "f_bkn_raw_content",
 				"f_kn_id", "f_branch", "f_data_source", "f_data_properties", "f_logic_properties", "f_primary_keys",
 				"f_display_key", "f_incremental_key", "f_creator", "f_creator_type", "f_create_time",
 				"f_updater", "f_updater_type", "f_update_time",
@@ -1844,7 +1845,7 @@ func Test_objectTypeAccess_GetAllObjectTypesByKnID(t *testing.T) {
 		Convey("GetAllObjectTypesByKnID Unmarshal primaryKeys error \n", func() {
 			invalidBytes := []byte("invalid json")
 			rows := sqlmock.NewRows([]string{
-				"f_id", "f_name", "f_tags", "f_comment", "f_icon", "f_color", "f_detail",
+				"f_id", "f_name", "f_tags", "f_comment", "f_icon", "f_color", "f_bkn_raw_content",
 				"f_kn_id", "f_branch", "f_data_source", "f_data_properties", "f_logic_properties", "f_primary_keys",
 				"f_display_key", "f_incremental_key", "f_creator", "f_creator_type", "f_create_time",
 				"f_updater", "f_updater_type", "f_update_time",

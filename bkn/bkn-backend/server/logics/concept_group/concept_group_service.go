@@ -16,6 +16,7 @@ import (
 
 	"github.com/bytedance/sonic"
 	"github.com/kweaver-ai/TelemetrySDK-Go/exporter/v2/ar_trace"
+	bknsdk "github.com/kweaver-ai/bkn-specification/sdk/golang/bkn"
 	"github.com/kweaver-ai/kweaver-go-lib/logger"
 	o11y "github.com/kweaver-ai/kweaver-go-lib/observability"
 	"github.com/kweaver-ai/kweaver-go-lib/rest"
@@ -162,6 +163,9 @@ func (cgs *conceptGroupService) CreateConceptGroup(ctx context.Context, tx *sql.
 
 	conceptGroup.CreateTime = currentTime
 	conceptGroup.UpdateTime = currentTime
+
+	bknCG := logics.ToBKNConceptGroup(conceptGroup)
+	conceptGroup.BKNRawContent = bknsdk.SerializeConceptGroup(bknCG)
 
 	if tx == nil {
 		// 0. 开始事务
@@ -620,6 +624,9 @@ func (cgs *conceptGroupService) UpdateConceptGroup(ctx context.Context, tx *sql.
 	currentTime := time.Now().UnixMilli() // 概念分组的update_time是int类型
 	conceptGroup.UpdateTime = currentTime
 
+	bknCG := logics.ToBKNConceptGroup(conceptGroup)
+	conceptGroup.BKNRawContent = bknsdk.SerializeConceptGroup(bknCG)
+
 	if tx == nil {
 		// 0. 开始事务
 		tx, err = cgs.db.Begin()
@@ -951,7 +958,7 @@ func (cgs *conceptGroupService) InsertDatasetData(ctx context.Context, origConce
 	if cgs.appSetting.ServerSetting.DefaultSmallModelEnabled {
 		words := []string{conceptGroup.CGName}
 		words = append(words, conceptGroup.Tags...)
-		words = append(words, conceptGroup.Comment, conceptGroup.Detail)
+		words = append(words, conceptGroup.Comment, conceptGroup.BKNRawContent)
 		word := strings.Join(words, "\n")
 
 		defaultModel, err := cgs.mfa.GetDefaultModel(ctx)

@@ -54,6 +54,7 @@ func NewPermissionService(appSetting *common.AppSetting) interfaces.PermissionSe
 }
 
 func (ps *permissionService) CheckPermission(ctx context.Context, resource interfaces.Resource, ops []string) error {
+	return nil
 	accountInfo := interfaces.AccountInfo{}
 	if ctx.Value(interfaces.ACCOUNT_INFO_KEY) != nil {
 		accountInfo = ctx.Value(interfaces.ACCOUNT_INFO_KEY).(interfaces.AccountInfo)
@@ -85,6 +86,7 @@ func (ps *permissionService) CheckPermission(ctx context.Context, resource inter
 
 // 添加资源权限（新建决策）
 func (ps *permissionService) CreateResources(ctx context.Context, resources []interfaces.Resource, ops []string) error {
+	return nil
 	accountInfo := interfaces.AccountInfo{}
 	if ctx.Value(interfaces.ACCOUNT_INFO_KEY) != nil {
 		accountInfo = ctx.Value(interfaces.ACCOUNT_INFO_KEY).(interfaces.AccountInfo)
@@ -127,6 +129,7 @@ func (ps *permissionService) CreateResources(ctx context.Context, resources []in
 
 // 删除策略
 func (ps *permissionService) DeleteResources(ctx context.Context, resourceType string, ids []string) error {
+	return nil
 	if len(ids) == 0 {
 		return nil
 	}
@@ -151,6 +154,11 @@ func (ps *permissionService) DeleteResources(ctx context.Context, resourceType s
 // 过滤资源列表
 func (ps *permissionService) FilterResources(ctx context.Context, resourceType string, ids []string,
 	ops []string, allowOperation bool) (map[string]interfaces.ResourceOps, error) {
+	idMp := map[string]interfaces.ResourceOps{}
+	for _, id := range ids {
+		idMp[id] = interfaces.ResourceOps{}
+	}
+	return idMp, nil
 
 	accountInfo := interfaces.AccountInfo{}
 	if ctx.Value(interfaces.ACCOUNT_INFO_KEY) != nil {
@@ -195,6 +203,7 @@ func (ps *permissionService) FilterResources(ctx context.Context, resourceType s
 
 // 更新资源名称
 func (ps *permissionService) UpdateResource(ctx context.Context, resource interfaces.Resource) error {
+	return nil
 	bytes, err := sonic.Marshal(resource)
 	if err != nil {
 		return rest.NewHTTPError(ctx, http.StatusInternalServerError,

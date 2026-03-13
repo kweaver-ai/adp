@@ -864,9 +864,9 @@ func Test_actionTypeService_InsertDatasetData(t *testing.T) {
 						ATName: "at1",
 					},
 					CommonInfo: interfaces.CommonInfo{
-						Tags:    []string{"tag1"},
-						Comment: "comment",
-						Detail:  "detail",
+						Tags:          []string{"tag1"},
+						Comment:       "comment",
+						BKNRawContent: "bkn",
 					},
 					KNID:   "kn1",
 					Branch: interfaces.MAIN_BRANCH,

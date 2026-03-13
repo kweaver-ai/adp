@@ -38,11 +38,11 @@ var (
 			MappingRules:       []interfaces.Mapping{},
 		},
 		CommonInfo: interfaces.CommonInfo{
-			Tags:    testTags,
-			Comment: "test comment",
-			Icon:    "icon1",
-			Color:   "color1",
-			Detail:  "detail1",
+			Tags:          testTags,
+			Comment:       "test comment",
+			Icon:          "icon1",
+			Color:         "color1",
+			BKNRawContent: "bkn1",
 		},
 		KNID:   "kn1",
 		Branch: interfaces.MAIN_BRANCH,
@@ -182,7 +182,7 @@ func Test_relationTypeAccess_CreateRelationType(t *testing.T) {
 		appSetting := &common.AppSetting{}
 		rta, smock := MockNewRelationTypeAccess(appSetting)
 
-		sqlStr := fmt.Sprintf("INSERT INTO %s (f_id,f_name,f_tags,f_comment,f_icon,f_color,f_detail,"+
+		sqlStr := fmt.Sprintf("INSERT INTO %s (f_id,f_name,f_tags,f_comment,f_icon,f_color,f_bkn_raw_content,"+
 			"f_kn_id,f_branch,f_source_object_type_id,f_target_object_type_id,f_type,f_mapping_rules,"+
 			"f_creator,f_creator_type,f_create_time,f_updater,f_updater_type,f_update_time) "+
 			"VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)", RT_TABLE_NAME)
@@ -226,11 +226,11 @@ func Test_relationTypeAccess_CreateRelationType(t *testing.T) {
 					MappingRules:       make(chan int), // 使用channel会导致marshal失败
 				},
 				CommonInfo: interfaces.CommonInfo{
-					Tags:    testTags,
-					Comment: "test comment",
-					Icon:    "icon1",
-					Color:   "color1",
-					Detail:  "detail1",
+					Tags:          testTags,
+					Comment:       "test comment",
+					Icon:          "icon1",
+					Color:         "color1",
+					BKNRawContent: "bkn1",
 				},
 				KNID:   "kn1",
 				Branch: interfaces.MAIN_BRANCH,
@@ -259,7 +259,7 @@ func Test_relationTypeAccess_ListRelationTypes(t *testing.T) {
 		appSetting := &common.AppSetting{}
 		rta, smock := MockNewRelationTypeAccess(appSetting)
 
-		sqlStr := fmt.Sprintf("SELECT f_id, f_name, f_tags, f_comment, f_icon, f_color, f_detail, "+
+		sqlStr := fmt.Sprintf("SELECT f_id, f_name, f_tags, f_comment, f_icon, f_color, f_bkn_raw_content, "+
 			"f_kn_id, f_branch, f_source_object_type_id, f_target_object_type_id, f_type, f_mapping_rules, "+
 			"f_creator, f_creator_type, f_create_time, f_updater, f_updater_type, f_update_time "+
 			"FROM %s WHERE f_kn_id = ? AND f_branch = ?", RT_TABLE_NAME)
@@ -267,7 +267,7 @@ func Test_relationTypeAccess_ListRelationTypes(t *testing.T) {
 		mappingRulesBytes, _ := sonic.Marshal(testRelationType.MappingRules)
 
 		rows := sqlmock.NewRows([]string{
-			"f_id", "f_name", "f_tags", "f_comment", "f_icon", "f_color", "f_detail",
+			"f_id", "f_name", "f_tags", "f_comment", "f_icon", "f_color", "f_bkn_raw_content",
 			"f_kn_id", "f_branch", "f_source_object_type_id", "f_target_object_type_id", "f_type", "f_mapping_rules",
 			"f_creator", "f_creator_type", "f_create_time", "f_updater", "f_updater_type", "f_update_time",
 		}).AddRow(
@@ -322,7 +322,7 @@ func Test_relationTypeAccess_ListRelationTypes(t *testing.T) {
 
 		Convey("ListRelationTypes Scan error \n", func() {
 			rows := sqlmock.NewRows([]string{
-				"f_id", "f_name", "f_tags", "f_comment", "f_icon", "f_color", "f_detail",
+				"f_id", "f_name", "f_tags", "f_comment", "f_icon", "f_color", "f_bkn_raw_content",
 				"f_kn_id", "f_branch", "f_source_object_type_id", "f_target_object_type_id", "f_type", "f_mapping_rules",
 				"f_creator", "f_creator_type", "f_create_time", "f_updater", "f_updater_type", "f_update_time", "f_update_time",
 			}).AddRow(
@@ -346,7 +346,7 @@ func Test_relationTypeAccess_ListRelationTypes(t *testing.T) {
 		Convey("ListRelationTypes Unmarshal mappingRules error \n", func() {
 			invalidBytes := []byte("invalid json")
 			rows := sqlmock.NewRows([]string{
-				"f_id", "f_name", "f_tags", "f_comment", "f_icon", "f_color", "f_detail",
+				"f_id", "f_name", "f_tags", "f_comment", "f_icon", "f_color", "f_bkn_raw_content",
 				"f_kn_id", "f_branch", "f_source_object_type_id", "f_target_object_type_id", "f_type", "f_mapping_rules",
 				"f_creator", "f_creator_type", "f_create_time", "f_updater", "f_updater_type", "f_update_time",
 			}).AddRow(
@@ -380,14 +380,14 @@ func Test_relationTypeAccess_ListRelationTypes(t *testing.T) {
 					Direction: "ASC",
 				},
 			}
-			sqlStrWithAll := `SELECT f_id, f_name, f_tags, f_comment, f_icon, f_color, f_detail,
+			sqlStrWithAll := `SELECT f_id, f_name, f_tags, f_comment, f_icon, f_color, f_bkn_raw_content,
 			 f_kn_id, f_branch, f_source_object_type_id, f_target_object_type_id, f_type, f_mapping_rules, 
 			 f_creator, f_creator_type, f_create_time, f_updater, f_updater_type, f_update_time 
 			 FROM t_relation_type WHERE (instr(f_name, ?) > 0 OR instr(f_id, ?) > 0) AND instr(f_tags, ?) > 0 AND f_branch = ? 
 			 AND f_source_object_type_id IN (?) AND f_target_object_type_id IN (?) ORDER BY f_name ASC`
 
 			rows := sqlmock.NewRows([]string{
-				"f_id", "f_name", "f_tags", "f_comment", "f_icon", "f_color", "f_detail",
+				"f_id", "f_name", "f_tags", "f_comment", "f_icon", "f_color", "f_bkn_raw_content",
 				"f_kn_id", "f_branch", "f_source_object_type_id", "f_target_object_type_id", "f_type", "f_mapping_rules",
 				"f_creator", "f_creator_type", "f_create_time", "f_updater", "f_updater_type", "f_update_time",
 			})
@@ -474,7 +474,7 @@ func Test_relationTypeAccess_GetRelationTypeByID(t *testing.T) {
 		appSetting := &common.AppSetting{}
 		rta, smock := MockNewRelationTypeAccess(appSetting)
 
-		sqlStr := fmt.Sprintf("SELECT f_id, f_name, f_tags, f_comment, f_icon, f_color, f_detail, "+
+		sqlStr := fmt.Sprintf("SELECT f_id, f_name, f_tags, f_comment, f_icon, f_color, f_bkn_raw_content, "+
 			"f_kn_id, f_branch, f_source_object_type_id, f_target_object_type_id, f_type, f_mapping_rules, "+
 			"f_creator, f_creator_type, f_create_time, f_updater, f_updater_type, f_update_time "+
 			"FROM %s WHERE f_kn_id = ? AND f_branch = ? AND f_id = ?", RT_TABLE_NAME)
@@ -487,7 +487,7 @@ func Test_relationTypeAccess_GetRelationTypeByID(t *testing.T) {
 
 		Convey("GetRelationTypeByID Success \n", func() {
 			rows := sqlmock.NewRows([]string{
-				"f_id", "f_name", "f_tags", "f_comment", "f_icon", "f_color", "f_detail",
+				"f_id", "f_name", "f_tags", "f_comment", "f_icon", "f_color", "f_bkn_raw_content",
 				"f_kn_id", "f_branch", "f_source_object_type_id", "f_target_object_type_id", "f_type", "f_mapping_rules",
 				"f_creator", "f_creator_type", "f_create_time", "f_updater", "f_updater_type", "f_update_time",
 			}).AddRow(
@@ -525,7 +525,7 @@ func Test_relationTypeAccess_GetRelationTypeByID(t *testing.T) {
 		Convey("GetRelationTypeByID Unmarshal mappingRules DIRECT type error \n", func() {
 			invalidBytes := []byte("invalid json")
 			rows := sqlmock.NewRows([]string{
-				"f_id", "f_name", "f_tags", "f_comment", "f_icon", "f_color", "f_detail",
+				"f_id", "f_name", "f_tags", "f_comment", "f_icon", "f_color", "f_bkn_raw_content",
 				"f_kn_id", "f_branch", "f_source_object_type_id", "f_target_object_type_id", "f_type", "f_mapping_rules",
 				"f_creator", "f_creator_type", "f_create_time", "f_updater", "f_updater_type", "f_update_time",
 			}).AddRow(
@@ -549,7 +549,7 @@ func Test_relationTypeAccess_GetRelationTypeByID(t *testing.T) {
 		Convey("GetRelationTypeByID Unmarshal mappingRules DATA_VIEW type error \n", func() {
 			invalidBytes := []byte("invalid json")
 			rows := sqlmock.NewRows([]string{
-				"f_id", "f_name", "f_tags", "f_comment", "f_icon", "f_color", "f_detail",
+				"f_id", "f_name", "f_tags", "f_comment", "f_icon", "f_color", "f_bkn_raw_content",
 				"f_kn_id", "f_branch", "f_source_object_type_id", "f_target_object_type_id", "f_type", "f_mapping_rules",
 				"f_creator", "f_creator_type", "f_create_time", "f_updater", "f_updater_type", "f_update_time",
 			}).AddRow(
@@ -574,7 +574,7 @@ func Test_relationTypeAccess_GetRelationTypeByID(t *testing.T) {
 			dataViewMapping := interfaces.InDirectMapping{}
 			dataViewMappingBytes, _ := sonic.Marshal(dataViewMapping)
 			rows := sqlmock.NewRows([]string{
-				"f_id", "f_name", "f_tags", "f_comment", "f_icon", "f_color", "f_detail",
+				"f_id", "f_name", "f_tags", "f_comment", "f_icon", "f_color", "f_bkn_raw_content",
 				"f_kn_id", "f_branch", "f_source_object_type_id", "f_target_object_type_id", "f_type", "f_mapping_rules",
 				"f_creator", "f_creator_type", "f_create_time", "f_updater", "f_updater_type", "f_update_time",
 			}).AddRow(
@@ -604,7 +604,7 @@ func Test_relationTypeAccess_GetRelationTypesByIDs(t *testing.T) {
 		appSetting := &common.AppSetting{}
 		rta, smock := MockNewRelationTypeAccess(appSetting)
 
-		sqlStr := fmt.Sprintf("SELECT f_id, f_name, f_tags, f_comment, f_icon, f_color, f_detail, "+
+		sqlStr := fmt.Sprintf("SELECT f_id, f_name, f_tags, f_comment, f_icon, f_color, f_bkn_raw_content, "+
 			"f_kn_id, f_branch, f_source_object_type_id, f_target_object_type_id, f_type, f_mapping_rules, "+
 			"f_creator, f_creator_type, f_create_time, f_updater, f_updater_type, f_update_time "+
 			"FROM %s WHERE f_kn_id = ? AND f_branch = ? AND f_id IN (?,?)", RT_TABLE_NAME)
@@ -617,7 +617,7 @@ func Test_relationTypeAccess_GetRelationTypesByIDs(t *testing.T) {
 
 		Convey("GetRelationTypesByIDs Success \n", func() {
 			rows := sqlmock.NewRows([]string{
-				"f_id", "f_name", "f_tags", "f_comment", "f_icon", "f_color", "f_detail",
+				"f_id", "f_name", "f_tags", "f_comment", "f_icon", "f_color", "f_bkn_raw_content",
 				"f_kn_id", "f_branch", "f_source_object_type_id", "f_target_object_type_id", "f_type", "f_mapping_rules",
 				"f_creator", "f_creator_type", "f_create_time", "f_updater", "f_updater_type", "f_update_time",
 			}).AddRow(
@@ -666,7 +666,7 @@ func Test_relationTypeAccess_GetRelationTypesByIDs(t *testing.T) {
 		Convey("GetRelationTypesByIDs unmarshal MappingRules DIRECT error \n", func() {
 			invalidBytes := []byte("invalid json")
 			rows := sqlmock.NewRows([]string{
-				"f_id", "f_name", "f_tags", "f_comment", "f_icon", "f_color", "f_detail",
+				"f_id", "f_name", "f_tags", "f_comment", "f_icon", "f_color", "f_bkn_raw_content",
 				"f_kn_id", "f_branch", "f_source_object_type_id", "f_target_object_type_id", "f_type", "f_mapping_rules",
 				"f_creator", "f_creator_type", "f_create_time", "f_updater", "f_updater_type", "f_update_time",
 			}).AddRow(
@@ -688,7 +688,7 @@ func Test_relationTypeAccess_GetRelationTypesByIDs(t *testing.T) {
 		Convey("GetRelationTypesByIDs unmarshal MappingRules DATA_VIEW error \n", func() {
 			invalidBytes := []byte("invalid json")
 			rows := sqlmock.NewRows([]string{
-				"f_id", "f_name", "f_tags", "f_comment", "f_icon", "f_color", "f_detail",
+				"f_id", "f_name", "f_tags", "f_comment", "f_icon", "f_color", "f_bkn_raw_content",
 				"f_kn_id", "f_branch", "f_source_object_type_id", "f_target_object_type_id", "f_type", "f_mapping_rules",
 				"f_creator", "f_creator_type", "f_create_time", "f_updater", "f_updater_type", "f_update_time",
 			}).AddRow(
@@ -711,7 +711,7 @@ func Test_relationTypeAccess_GetRelationTypesByIDs(t *testing.T) {
 			dataViewMapping := interfaces.InDirectMapping{}
 			dataViewMappingBytes, _ := sonic.Marshal(dataViewMapping)
 			rows := sqlmock.NewRows([]string{
-				"f_id", "f_name", "f_tags", "f_comment", "f_icon", "f_color", "f_detail",
+				"f_id", "f_name", "f_tags", "f_comment", "f_icon", "f_color", "f_bkn_raw_content",
 				"f_kn_id", "f_branch", "f_source_object_type_id", "f_target_object_type_id", "f_type", "f_mapping_rules",
 				"f_creator", "f_creator_type", "f_create_time", "f_updater", "f_updater_type", "f_update_time",
 			}).AddRow(
@@ -739,8 +739,8 @@ func Test_relationTypeAccess_UpdateRelationType(t *testing.T) {
 		appSetting := &common.AppSetting{}
 		rta, smock := MockNewRelationTypeAccess(appSetting)
 
-		sqlStr := fmt.Sprintf("UPDATE %s SET f_color = ?, f_comment = ?, f_icon = ?, f_mapping_rules = ?, "+
-			"f_name = ?, f_source_object_type_id = ?, f_tags = ?, f_target_object_type_id = ?, "+
+		sqlStr := fmt.Sprintf("UPDATE %s SET f_bkn_raw_content = ?, f_color = ?, f_comment = ?, f_icon = ?, "+
+			"f_mapping_rules = ?, f_name = ?, f_source_object_type_id = ?, f_tags = ?, f_target_object_type_id = ?, "+
 			"f_type = ?, f_update_time = ?, f_updater = ?, f_updater_type = ? WHERE f_id = ? AND f_kn_id = ?", RT_TABLE_NAME)
 
 		relationType := &interfaces.RelationType{
@@ -980,7 +980,7 @@ func Test_relationTypeAccess_GetAllRelationTypesByKnID(t *testing.T) {
 		appSetting := &common.AppSetting{}
 		rta, smock := MockNewRelationTypeAccess(appSetting)
 
-		sqlStr := fmt.Sprintf("SELECT f_id, f_name, f_tags, f_comment, f_icon, f_color, f_detail, "+
+		sqlStr := fmt.Sprintf("SELECT f_id, f_name, f_tags, f_comment, f_icon, f_color, f_bkn_raw_content, "+
 			"f_kn_id, f_branch, f_source_object_type_id, f_target_object_type_id, f_type, f_mapping_rules, "+
 			"f_creator, f_creator_type, f_create_time, f_updater, f_updater_type, f_update_time "+
 			"FROM %s WHERE f_kn_id = ? AND f_branch = ?", RT_TABLE_NAME)
@@ -988,7 +988,7 @@ func Test_relationTypeAccess_GetAllRelationTypesByKnID(t *testing.T) {
 		mappingRulesBytes, _ := sonic.Marshal(testRelationType.MappingRules)
 
 		rows := sqlmock.NewRows([]string{
-			"f_id", "f_name", "f_tags", "f_comment", "f_icon", "f_color", "f_detail",
+			"f_id", "f_name", "f_tags", "f_comment", "f_icon", "f_color", "f_bkn_raw_content",
 			"f_kn_id", "f_branch", "f_source_object_type_id", "f_target_object_type_id", "f_type", "f_mapping_rules",
 			"f_creator", "f_creator_type", "f_create_time", "f_updater", "f_updater_type", "f_update_time",
 		}).AddRow(
@@ -1035,7 +1035,7 @@ func Test_relationTypeAccess_GetAllRelationTypesByKnID(t *testing.T) {
 
 		Convey("GetAllRelationTypesByKnID Scan error \n", func() {
 			rows := sqlmock.NewRows([]string{
-				"f_id", "f_name", "f_tags", "f_comment", "f_icon", "f_color", "f_detail",
+				"f_id", "f_name", "f_tags", "f_comment", "f_icon", "f_color", "f_bkn_raw_content",
 				"f_kn_id", "f_branch", "f_source_object_type_id", "f_target_object_type_id", "f_type", "f_mapping_rules",
 				"f_creator", "f_creator_type", "f_create_time", "f_updater", "f_updater_type", "f_update_time", "f_update_time",
 			}).AddRow(
@@ -1059,7 +1059,7 @@ func Test_relationTypeAccess_GetAllRelationTypesByKnID(t *testing.T) {
 		Convey("GetAllRelationTypesByKnID Unmarshal mappingRules error \n", func() {
 			invalidBytes := []byte("invalid json")
 			rows := sqlmock.NewRows([]string{
-				"f_id", "f_name", "f_tags", "f_comment", "f_icon", "f_color", "f_detail",
+				"f_id", "f_name", "f_tags", "f_comment", "f_icon", "f_color", "f_bkn_raw_content",
 				"f_kn_id", "f_branch", "f_source_object_type_id", "f_target_object_type_id", "f_type", "f_mapping_rules",
 				"f_creator", "f_creator_type", "f_create_time", "f_updater", "f_updater_type", "f_update_time",
 			}).AddRow(

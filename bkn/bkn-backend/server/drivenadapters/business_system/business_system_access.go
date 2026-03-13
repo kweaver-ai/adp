@@ -47,6 +47,7 @@ func NewBusinessSystemAccess(appSetting *common.AppSetting) interfaces.BusinessS
 }
 
 func (bsa *businessSystemAccess) BindResource(ctx context.Context, bd_id string, rid string, rtype string) error {
+
 	ctx, span := ar_trace.Tracer.Start(ctx, "driven layer: Bind resource to business system",
 		trace.WithSpanKind(trace.SpanKindClient))
 	defer span.End()
@@ -99,6 +100,7 @@ func (bsa *businessSystemAccess) BindResource(ctx context.Context, bd_id string,
 }
 
 func (bsa *businessSystemAccess) UnbindResource(ctx context.Context, bd_id string, rid string, rtype string) error {
+
 	ctx, span := ar_trace.Tracer.Start(ctx, "driven layer: Unbind resource from business system",
 		trace.WithSpanKind(trace.SpanKindClient))
 	defer span.End()

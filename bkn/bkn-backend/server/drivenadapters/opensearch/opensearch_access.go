@@ -208,6 +208,7 @@ func (o *openSearchAccess) DeleteIndex(ctx context.Context, indexName string) er
 // 返回：插入成功返回nil，失败返回具体错误信息
 // 注意：数据插入后会立即刷新索引，使数据立即可搜索
 func (o *openSearchAccess) InsertData(ctx context.Context, indexName string, docID string, data any) error {
+
 	ctx, span := ar_trace.Tracer.Start(ctx, "InsertData", trace.WithSpanKind(trace.SpanKindClient))
 	defer span.End()
 
@@ -418,6 +419,7 @@ func (o *openSearchAccess) SearchData(ctx context.Context, indexName string, que
 // 返回：删除成功返回nil，失败返回具体错误信息
 // 注意：删除操作会立即刷新索引，使删除结果立即可见
 func (o *openSearchAccess) DeleteData(ctx context.Context, indexName string, docID string) error {
+
 	ctx, span := ar_trace.Tracer.Start(ctx, "DeleteData", trace.WithSpanKind(trace.SpanKindClient))
 	defer span.End()
 
@@ -631,6 +633,7 @@ func (o *openSearchAccess) Refresh(ctx context.Context, indexName string) error 
 }
 
 func (o *openSearchAccess) DeleteByQuery(ctx context.Context, indexName string, query any) error {
+
 	ctx, span := ar_trace.Tracer.Start(ctx, "DeleteByQuery", trace.WithSpanKind(trace.SpanKindClient))
 	defer span.End()
 

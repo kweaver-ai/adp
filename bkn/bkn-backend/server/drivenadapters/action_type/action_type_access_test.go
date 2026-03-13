@@ -48,11 +48,11 @@ var (
 			},
 		},
 		CommonInfo: interfaces.CommonInfo{
-			Tags:    testTags,
-			Comment: "test comment",
-			Icon:    "icon1",
-			Color:   "color1",
-			Detail:  "detail1",
+			Tags:          testTags,
+			Comment:       "test comment",
+			Icon:          "icon1",
+			Color:         "color1",
+			BKNRawContent: "bkn1",
 		},
 		KNID:   "kn1",
 		Branch: interfaces.MAIN_BRANCH,
@@ -192,7 +192,7 @@ func Test_ActionTypeAccess_CreateActionType(t *testing.T) {
 		appSetting := &common.AppSetting{}
 		ata, smock := MockNewActionTypeAccess(appSetting)
 
-		sqlStr := fmt.Sprintf("INSERT INTO %s (f_id,f_name,f_tags,f_comment,f_icon,f_color,f_detail,"+
+		sqlStr := fmt.Sprintf("INSERT INTO %s (f_id,f_name,f_tags,f_comment,f_icon,f_color,f_bkn_raw_content,"+
 			"f_kn_id,f_branch,f_action_type,f_object_type_id,f_condition,f_affect,f_action_source,"+
 			"f_parameters,f_schedule,f_creator,f_creator_type,f_create_time,f_updater,f_updater_type,f_update_time) "+
 			"VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)", AT_TABLE_NAME)
@@ -237,13 +237,13 @@ func Test_ActionTypeAccess_ListActionTypes(t *testing.T) {
 		parametersBytes, _ := sonic.Marshal([]interfaces.Parameter{})
 		scheduleBytes, _ := sonic.Marshal(interfaces.Schedule{})
 
-		sqlStr := fmt.Sprintf("SELECT f_id, f_name, f_tags, f_comment, f_icon, f_color, f_detail, "+
+		sqlStr := fmt.Sprintf("SELECT f_id, f_name, f_tags, f_comment, f_icon, f_color, f_bkn_raw_content, "+
 			"f_kn_id, f_branch, f_action_type, f_object_type_id, f_condition, f_affect, f_action_source, "+
 			"f_parameters, f_schedule, f_creator, f_creator_type, f_create_time, f_updater, f_updater_type, f_update_time "+
 			"FROM %s WHERE f_kn_id = ? AND f_branch = ?", AT_TABLE_NAME)
 
 		rows := sqlmock.NewRows([]string{
-			"f_id", "f_name", "f_tags", "f_comment", "f_icon", "f_color", "f_detail",
+			"f_id", "f_name", "f_tags", "f_comment", "f_icon", "f_color", "f_bkn_raw_content",
 			"f_kn_id", "f_branch", "f_action_type", "f_object_type_id",
 			"f_condition", "f_affect", "f_action_source", "f_parameters", "f_schedule",
 			"f_creator", "f_creator_type", "f_create_time",
@@ -314,7 +314,7 @@ func Test_ActionTypeAccess_ListActionTypes(t *testing.T) {
 		Convey("ListActionTypes unmarshal Condition error \n", func() {
 			invalidBytes := []byte("invalid json")
 			rows := sqlmock.NewRows([]string{
-				"f_id", "f_name", "f_tags", "f_comment", "f_icon", "f_color", "f_detail",
+				"f_id", "f_name", "f_tags", "f_comment", "f_icon", "f_color", "f_bkn_raw_content",
 				"f_kn_id", "f_branch", "f_action_type", "f_object_type_id",
 				"f_condition", "f_affect", "f_action_source", "f_parameters", "f_schedule",
 				"f_creator", "f_creator_type", "f_create_time",
@@ -339,7 +339,7 @@ func Test_ActionTypeAccess_ListActionTypes(t *testing.T) {
 		Convey("ListActionTypes unmarshal Affect error \n", func() {
 			invalidBytes := []byte("invalid json")
 			rows := sqlmock.NewRows([]string{
-				"f_id", "f_name", "f_tags", "f_comment", "f_icon", "f_color", "f_detail",
+				"f_id", "f_name", "f_tags", "f_comment", "f_icon", "f_color", "f_bkn_raw_content",
 				"f_kn_id", "f_branch", "f_action_type", "f_object_type_id",
 				"f_condition", "f_affect", "f_action_source", "f_parameters", "f_schedule",
 				"f_creator", "f_creator_type", "f_create_time",
@@ -364,7 +364,7 @@ func Test_ActionTypeAccess_ListActionTypes(t *testing.T) {
 		Convey("ListActionTypes unmarshal ActionSource error \n", func() {
 			invalidBytes := []byte("invalid json")
 			rows := sqlmock.NewRows([]string{
-				"f_id", "f_name", "f_tags", "f_comment", "f_icon", "f_color", "f_detail",
+				"f_id", "f_name", "f_tags", "f_comment", "f_icon", "f_color", "f_bkn_raw_content",
 				"f_kn_id", "f_branch", "f_action_type", "f_object_type_id",
 				"f_condition", "f_affect", "f_action_source", "f_parameters", "f_schedule",
 				"f_creator", "f_creator_type", "f_create_time",
@@ -389,7 +389,7 @@ func Test_ActionTypeAccess_ListActionTypes(t *testing.T) {
 		Convey("ListActionTypes unmarshal Parameters error \n", func() {
 			invalidBytes := []byte("invalid json")
 			rows := sqlmock.NewRows([]string{
-				"f_id", "f_name", "f_tags", "f_comment", "f_icon", "f_color", "f_detail",
+				"f_id", "f_name", "f_tags", "f_comment", "f_icon", "f_color", "f_bkn_raw_content",
 				"f_kn_id", "f_branch", "f_action_type", "f_object_type_id",
 				"f_condition", "f_affect", "f_action_source", "f_parameters", "f_schedule",
 				"f_creator", "f_creator_type", "f_create_time",
@@ -414,7 +414,7 @@ func Test_ActionTypeAccess_ListActionTypes(t *testing.T) {
 		Convey("ListActionTypes unmarshal Schedule error \n", func() {
 			invalidBytes := []byte("invalid json")
 			rows := sqlmock.NewRows([]string{
-				"f_id", "f_name", "f_tags", "f_comment", "f_icon", "f_color", "f_detail",
+				"f_id", "f_name", "f_tags", "f_comment", "f_icon", "f_color", "f_bkn_raw_content",
 				"f_kn_id", "f_branch", "f_action_type", "f_object_type_id",
 				"f_condition", "f_affect", "f_action_source", "f_parameters", "f_schedule",
 				"f_creator", "f_creator_type", "f_create_time",
@@ -437,13 +437,13 @@ func Test_ActionTypeAccess_ListActionTypes(t *testing.T) {
 		})
 
 		Convey("ListActionTypes with Sort ASC\n", func() {
-			sqlStr := fmt.Sprintf("SELECT f_id, f_name, f_tags, f_comment, f_icon, f_color, f_detail, "+
+			sqlStr := fmt.Sprintf("SELECT f_id, f_name, f_tags, f_comment, f_icon, f_color, f_bkn_raw_content, "+
 				"f_kn_id, f_branch, f_action_type, f_object_type_id, f_condition, f_affect, f_action_source, "+
 				"f_parameters, f_schedule, f_creator, f_creator_type, f_create_time, f_updater, f_updater_type, f_update_time "+
 				"FROM %s WHERE f_kn_id = ? AND f_branch = ? ORDER BY f_name ASC", AT_TABLE_NAME)
 
 			rows := sqlmock.NewRows([]string{
-				"f_id", "f_name", "f_tags", "f_comment", "f_icon", "f_color", "f_detail",
+				"f_id", "f_name", "f_tags", "f_comment", "f_icon", "f_color", "f_bkn_raw_content",
 				"f_kn_id", "f_branch", "f_action_type", "f_object_type_id",
 				"f_condition", "f_affect", "f_action_source", "f_parameters", "f_schedule",
 				"f_creator", "f_creator_type", "f_create_time",
@@ -477,13 +477,13 @@ func Test_ActionTypeAccess_ListActionTypes(t *testing.T) {
 		})
 
 		Convey("ListActionTypes with Sort DESC\n", func() {
-			sqlStr := fmt.Sprintf("SELECT f_id, f_name, f_tags, f_comment, f_icon, f_color, f_detail, "+
+			sqlStr := fmt.Sprintf("SELECT f_id, f_name, f_tags, f_comment, f_icon, f_color, f_bkn_raw_content, "+
 				"f_kn_id, f_branch, f_action_type, f_object_type_id, f_condition, f_affect, f_action_source, "+
 				"f_parameters, f_schedule, f_creator, f_creator_type, f_create_time, f_updater, f_updater_type, f_update_time "+
 				"FROM %s WHERE f_kn_id = ? AND f_branch = ? ORDER BY f_name DESC", AT_TABLE_NAME)
 
 			rows := sqlmock.NewRows([]string{
-				"f_id", "f_name", "f_tags", "f_comment", "f_icon", "f_color", "f_detail",
+				"f_id", "f_name", "f_tags", "f_comment", "f_icon", "f_color", "f_bkn_raw_content",
 				"f_kn_id", "f_branch", "f_action_type", "f_object_type_id",
 				"f_condition", "f_affect", "f_action_source", "f_parameters", "f_schedule",
 				"f_creator", "f_creator_type", "f_create_time",
@@ -577,7 +577,7 @@ func Test_ActionTypeAccess_GetActionTypesByIDs(t *testing.T) {
 		appSetting := &common.AppSetting{}
 		ata, smock := MockNewActionTypeAccess(appSetting)
 
-		sqlStr := fmt.Sprintf("SELECT f_id, f_name, f_tags, f_comment, f_icon, f_color, f_detail, "+
+		sqlStr := fmt.Sprintf("SELECT f_id, f_name, f_tags, f_comment, f_icon, f_color, f_bkn_raw_content, "+
 			"f_kn_id, f_branch, f_action_type, f_object_type_id, f_condition, f_affect, f_action_source, "+
 			"f_parameters, f_schedule, f_creator, f_creator_type, f_create_time, f_updater, f_updater_type, f_update_time "+
 			"FROM %s WHERE f_kn_id = ? AND f_branch = ? AND f_id IN (?,?)", AT_TABLE_NAME)
@@ -589,7 +589,7 @@ func Test_ActionTypeAccess_GetActionTypesByIDs(t *testing.T) {
 		scheduleBytes, _ := sonic.Marshal(interfaces.Schedule{})
 
 		rows := sqlmock.NewRows([]string{
-			"f_id", "f_name", "f_tags", "f_comment", "f_icon", "f_color", "f_detail",
+			"f_id", "f_name", "f_tags", "f_comment", "f_icon", "f_color", "f_bkn_raw_content",
 			"f_kn_id", "f_branch", "f_action_type", "f_object_type_id",
 			"f_condition", "f_affect", "f_action_source", "f_parameters", "f_schedule",
 			"f_creator", "f_creator_type", "f_create_time",
@@ -664,7 +664,7 @@ func Test_ActionTypeAccess_GetActionTypesByIDs(t *testing.T) {
 		Convey("GetActionTypesByIDs unmarshal Condition error \n", func() {
 			invalidBytes := []byte("invalid json")
 			rows := sqlmock.NewRows([]string{
-				"f_id", "f_name", "f_tags", "f_comment", "f_icon", "f_color", "f_detail",
+				"f_id", "f_name", "f_tags", "f_comment", "f_icon", "f_color", "f_bkn_raw_content",
 				"f_kn_id", "f_branch", "f_action_type", "f_object_type_id",
 				"f_condition", "f_affect", "f_action_source", "f_parameters", "f_schedule",
 				"f_creator", "f_creator_type", "f_create_time",
@@ -689,7 +689,7 @@ func Test_ActionTypeAccess_GetActionTypesByIDs(t *testing.T) {
 		Convey("GetActionTypesByIDs unmarshal Affect error \n", func() {
 			invalidBytes := []byte("invalid json")
 			rows := sqlmock.NewRows([]string{
-				"f_id", "f_name", "f_tags", "f_comment", "f_icon", "f_color", "f_detail",
+				"f_id", "f_name", "f_tags", "f_comment", "f_icon", "f_color", "f_bkn_raw_content",
 				"f_kn_id", "f_branch", "f_action_type", "f_object_type_id",
 				"f_condition", "f_affect", "f_action_source", "f_parameters", "f_schedule",
 				"f_creator", "f_creator_type", "f_create_time",
@@ -714,7 +714,7 @@ func Test_ActionTypeAccess_GetActionTypesByIDs(t *testing.T) {
 		Convey("GetActionTypesByIDs unmarshal ActionSource error \n", func() {
 			invalidBytes := []byte("invalid json")
 			rows := sqlmock.NewRows([]string{
-				"f_id", "f_name", "f_tags", "f_comment", "f_icon", "f_color", "f_detail",
+				"f_id", "f_name", "f_tags", "f_comment", "f_icon", "f_color", "f_bkn_raw_content",
 				"f_kn_id", "f_branch", "f_action_type", "f_object_type_id",
 				"f_condition", "f_affect", "f_action_source", "f_parameters", "f_schedule",
 				"f_creator", "f_creator_type", "f_create_time",
@@ -739,7 +739,7 @@ func Test_ActionTypeAccess_GetActionTypesByIDs(t *testing.T) {
 		Convey("GetActionTypesByIDs unmarshal Parameters error \n", func() {
 			invalidBytes := []byte("invalid json")
 			rows := sqlmock.NewRows([]string{
-				"f_id", "f_name", "f_tags", "f_comment", "f_icon", "f_color", "f_detail",
+				"f_id", "f_name", "f_tags", "f_comment", "f_icon", "f_color", "f_bkn_raw_content",
 				"f_kn_id", "f_branch", "f_action_type", "f_object_type_id",
 				"f_condition", "f_affect", "f_action_source", "f_parameters", "f_schedule",
 				"f_creator", "f_creator_type", "f_create_time",
@@ -764,7 +764,7 @@ func Test_ActionTypeAccess_GetActionTypesByIDs(t *testing.T) {
 		Convey("GetActionTypesByIDs unmarshal Schedule error \n", func() {
 			invalidBytes := []byte("invalid json")
 			rows := sqlmock.NewRows([]string{
-				"f_id", "f_name", "f_tags", "f_comment", "f_icon", "f_color", "f_detail",
+				"f_id", "f_name", "f_tags", "f_comment", "f_icon", "f_color", "f_bkn_raw_content",
 				"f_kn_id", "f_branch", "f_action_type", "f_object_type_id",
 				"f_condition", "f_affect", "f_action_source", "f_parameters", "f_schedule",
 				"f_creator", "f_creator_type", "f_create_time",
@@ -793,9 +793,9 @@ func Test_ActionTypeAccess_UpdateActionType(t *testing.T) {
 		appSetting := &common.AppSetting{}
 		ata, smock := MockNewActionTypeAccess(appSetting)
 
-		sqlStr := fmt.Sprintf("UPDATE %s SET f_action_source = ?, f_action_type = ?, f_affect = ?, f_color = ?, f_comment = ?, "+
-			"f_condition = ?, f_icon = ?, f_name = ?, f_object_type_id = ?, f_parameters = ?, f_schedule = ?, f_tags = ?, "+
-			"f_update_time = ?, f_updater = ?, f_updater_type = ? "+
+		sqlStr := fmt.Sprintf("UPDATE %s SET f_action_source = ?, f_action_type = ?, f_affect = ?, f_bkn_raw_content = ?, "+
+			"f_color = ?, f_comment = ?, f_condition = ?, f_icon = ?, f_name = ?, f_object_type_id = ?, f_parameters = ?, "+
+			"f_schedule = ?, f_tags = ?, f_update_time = ?, f_updater = ?, f_updater_type = ? "+
 			"WHERE f_id = ? AND f_kn_id = ?", AT_TABLE_NAME)
 
 		actionType := &interfaces.ActionType{
@@ -1070,7 +1070,7 @@ func Test_ActionTypeAccess_GetAllActionTypesByKnID(t *testing.T) {
 		appSetting := &common.AppSetting{}
 		ata, smock := MockNewActionTypeAccess(appSetting)
 
-		sqlStr := fmt.Sprintf("SELECT f_id, f_name, f_tags, f_comment, f_icon, f_color, f_detail, "+
+		sqlStr := fmt.Sprintf("SELECT f_id, f_name, f_tags, f_comment, f_icon, f_color, f_bkn_raw_content, "+
 			"f_kn_id, f_branch, f_action_type, f_object_type_id, f_condition, f_affect, f_action_source, "+
 			"f_parameters, f_schedule, f_creator, f_creator_type, f_create_time, f_updater, f_updater_type, f_update_time "+
 			"FROM %s WHERE f_kn_id = ? AND f_branch = ?", AT_TABLE_NAME)
@@ -1082,7 +1082,7 @@ func Test_ActionTypeAccess_GetAllActionTypesByKnID(t *testing.T) {
 		scheduleBytes, _ := sonic.Marshal(interfaces.Schedule{})
 
 		rows := sqlmock.NewRows([]string{
-			"f_id", "f_name", "f_tags", "f_comment", "f_icon", "f_color", "f_detail",
+			"f_id", "f_name", "f_tags", "f_comment", "f_icon", "f_color", "f_bkn_raw_content",
 			"f_kn_id", "f_branch", "f_action_type", "f_object_type_id",
 			"f_condition", "f_affect", "f_action_source", "f_parameters", "f_schedule",
 			"f_creator", "f_creator_type", "f_create_time",
@@ -1146,7 +1146,7 @@ func Test_ActionTypeAccess_GetAllActionTypesByKnID(t *testing.T) {
 		Convey("GetAllActionTypesByKnID unmarshal Condition error \n", func() {
 			invalidBytes := []byte("invalid json")
 			rows := sqlmock.NewRows([]string{
-				"f_id", "f_name", "f_tags", "f_comment", "f_icon", "f_color", "f_detail",
+				"f_id", "f_name", "f_tags", "f_comment", "f_icon", "f_color", "f_bkn_raw_content",
 				"f_kn_id", "f_branch", "f_action_type", "f_object_type_id",
 				"f_condition", "f_affect", "f_action_source", "f_parameters", "f_schedule",
 				"f_creator", "f_creator_type", "f_create_time",
@@ -1171,7 +1171,7 @@ func Test_ActionTypeAccess_GetAllActionTypesByKnID(t *testing.T) {
 		Convey("GetAllActionTypesByKnID unmarshal Affect error \n", func() {
 			invalidBytes := []byte("invalid json")
 			rows := sqlmock.NewRows([]string{
-				"f_id", "f_name", "f_tags", "f_comment", "f_icon", "f_color", "f_detail",
+				"f_id", "f_name", "f_tags", "f_comment", "f_icon", "f_color", "f_bkn_raw_content",
 				"f_kn_id", "f_branch", "f_action_type", "f_object_type_id",
 				"f_condition", "f_affect", "f_action_source", "f_parameters", "f_schedule",
 				"f_creator", "f_creator_type", "f_create_time",
@@ -1196,7 +1196,7 @@ func Test_ActionTypeAccess_GetAllActionTypesByKnID(t *testing.T) {
 		Convey("GetAllActionTypesByKnID unmarshal ActionSource error \n", func() {
 			invalidBytes := []byte("invalid json")
 			rows := sqlmock.NewRows([]string{
-				"f_id", "f_name", "f_tags", "f_comment", "f_icon", "f_color", "f_detail",
+				"f_id", "f_name", "f_tags", "f_comment", "f_icon", "f_color", "f_bkn_raw_content",
 				"f_kn_id", "f_branch", "f_action_type", "f_object_type_id",
 				"f_condition", "f_affect", "f_action_source", "f_parameters", "f_schedule",
 				"f_creator", "f_creator_type", "f_create_time",
@@ -1221,7 +1221,7 @@ func Test_ActionTypeAccess_GetAllActionTypesByKnID(t *testing.T) {
 		Convey("GetAllActionTypesByKnID unmarshal Parameters error \n", func() {
 			invalidBytes := []byte("invalid json")
 			rows := sqlmock.NewRows([]string{
-				"f_id", "f_name", "f_tags", "f_comment", "f_icon", "f_color", "f_detail",
+				"f_id", "f_name", "f_tags", "f_comment", "f_icon", "f_color", "f_bkn_raw_content",
 				"f_kn_id", "f_branch", "f_action_type", "f_object_type_id",
 				"f_condition", "f_affect", "f_action_source", "f_parameters", "f_schedule",
 				"f_creator", "f_creator_type", "f_create_time",
@@ -1246,7 +1246,7 @@ func Test_ActionTypeAccess_GetAllActionTypesByKnID(t *testing.T) {
 		Convey("GetAllActionTypesByKnID unmarshal Schedule error \n", func() {
 			invalidBytes := []byte("invalid json")
 			rows := sqlmock.NewRows([]string{
-				"f_id", "f_name", "f_tags", "f_comment", "f_icon", "f_color", "f_detail",
+				"f_id", "f_name", "f_tags", "f_comment", "f_icon", "f_color", "f_bkn_raw_content",
 				"f_kn_id", "f_branch", "f_action_type", "f_object_type_id",
 				"f_condition", "f_affect", "f_action_source", "f_parameters", "f_schedule",
 				"f_creator", "f_creator_type", "f_create_time",

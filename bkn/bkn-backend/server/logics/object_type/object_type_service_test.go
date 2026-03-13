@@ -1585,9 +1585,9 @@ func Test_objectTypeService_InsertDatasetData(t *testing.T) {
 						OTName: "object_type1",
 					},
 					CommonInfo: interfaces.CommonInfo{
-						Tags:    []string{"tag1"},
-						Comment: "comment",
-						Detail:  "detail",
+						Tags:          []string{"tag1"},
+						Comment:       "comment",
+						BKNRawContent: "bkn",
 					},
 					KNID:   "kn1",
 					Branch: interfaces.MAIN_BRANCH,

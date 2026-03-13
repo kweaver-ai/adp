@@ -567,12 +567,12 @@ func TestConceptSyncer_insertDatasetDataForKN_WithVector(t *testing.T) {
 		}
 
 		kn := &interfaces.KN{
-			KNID:    "kn1",
-			KNName:  "test_kn",
-			Branch:  "main",
-			Tags:    []string{"tag1"},
-			Comment: "comment",
-			Detail:  "detail",
+			KNID:          "kn1",
+			KNName:        "test_kn",
+			Branch:        "main",
+			Tags:          []string{"tag1"},
+			Comment:       "comment",
+			BKNRawContent: "detail",
 		}
 		vectors := []*cond.VectorResp{
 			{
@@ -706,9 +706,9 @@ func TestConceptSyncer_insertDatasetDataForObjectTypes_WithVector(t *testing.T) 
 						OTName: "object_type1",
 					},
 					CommonInfo: interfaces.CommonInfo{
-						Tags:    []string{"tag1"},
-						Comment: "comment",
-						Detail:  "detail",
+						Tags:          []string{"tag1"},
+						Comment:       "comment",
+						BKNRawContent: "bkn",
 					},
 					KNID:   "kn1",
 					Branch: interfaces.MAIN_BRANCH,
@@ -878,9 +878,9 @@ func TestConceptSyncer_insertDatasetDataForRelationTypes_WithVector(t *testing.T
 						RTName: "relation_type1",
 					},
 					CommonInfo: interfaces.CommonInfo{
-						Tags:    []string{"tag1"},
-						Comment: "comment",
-						Detail:  "detail",
+						Tags:          []string{"tag1"},
+						Comment:       "comment",
+						BKNRawContent: "bkn",
 					},
 					KNID:   "kn1",
 					Branch: interfaces.MAIN_BRANCH,
@@ -1050,9 +1050,9 @@ func TestConceptSyncer_insertDatasetDataForActionTypes_WithVector(t *testing.T) 
 						ATName: "action_type1",
 					},
 					CommonInfo: interfaces.CommonInfo{
-						Tags:    []string{"tag1"},
-						Comment: "comment",
-						Detail:  "detail",
+						Tags:          []string{"tag1"},
+						Comment:       "comment",
+						BKNRawContent: "bkn",
 					},
 					KNID:   "kn1",
 					Branch: interfaces.MAIN_BRANCH,
@@ -1216,9 +1216,9 @@ func TestConceptSyncer_insertDatasetDataForConceptGroups_WithVector(t *testing.T
 					CGID:   "cg1",
 					CGName: "concept_group1",
 					CommonInfo: interfaces.CommonInfo{
-						Tags:    []string{"tag1"},
-						Comment: "comment",
-						Detail:  "detail",
+						Tags:          []string{"tag1"},
+						Comment:       "comment",
+						BKNRawContent: "bkn",
 					},
 					KNID:   "kn1",
 					Branch: interfaces.MAIN_BRANCH,

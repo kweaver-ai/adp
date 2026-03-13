@@ -31,11 +31,11 @@ var (
 		CGID:   "cg1",
 		CGName: "Concept Group 1",
 		CommonInfo: interfaces.CommonInfo{
-			Tags:    testTags,
-			Comment: "test comment",
-			Icon:    "icon1",
-			Color:   "color1",
-			Detail:  "detail1",
+			Tags:          testTags,
+			Comment:       "test comment",
+			Icon:          "icon1",
+			Color:         "color1",
+			BKNRawContent: "bkn1",
 		},
 		KNID:   "kn1",
 		Branch: interfaces.MAIN_BRANCH,
@@ -175,7 +175,7 @@ func Test_conceptGroupAccess_CreateConceptGroup(t *testing.T) {
 		appSetting := &common.AppSetting{}
 		cga, smock := MockNewConceptGroupAccess(appSetting)
 
-		sqlStr := fmt.Sprintf("INSERT INTO %s (f_id,f_name,f_tags,f_comment,f_icon,f_color,f_detail,"+
+		sqlStr := fmt.Sprintf("INSERT INTO %s (f_id,f_name,f_tags,f_comment,f_icon,f_color,f_bkn_raw_content,"+
 			"f_kn_id,f_branch,f_creator,f_creator_type,f_create_time,f_updater,f_updater_type,f_update_time) "+
 			"VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)", CONCEPT_GROUP_TABLE_NAME)
 
@@ -213,12 +213,12 @@ func Test_conceptGroupAccess_ListConceptGroups(t *testing.T) {
 		appSetting := &common.AppSetting{}
 		cga, smock := MockNewConceptGroupAccess(appSetting)
 
-		sqlStr := fmt.Sprintf("SELECT f_id, f_name, f_tags, f_comment, f_icon, f_color, f_detail, "+
+		sqlStr := fmt.Sprintf("SELECT f_id, f_name, f_tags, f_comment, f_icon, f_color, f_bkn_raw_content, "+
 			"f_kn_id, f_branch, f_creator, f_creator_type, f_create_time, f_updater, f_updater_type, f_update_time "+
 			"FROM %s WHERE f_kn_id = ? AND f_branch = ?", CONCEPT_GROUP_TABLE_NAME)
 
 		rows := sqlmock.NewRows([]string{
-			"f_id", "f_name", "f_tags", "f_comment", "f_icon", "f_color", "f_detail",
+			"f_id", "f_name", "f_tags", "f_comment", "f_icon", "f_color", "f_bkn_raw_content",
 			"f_kn_id", "f_branch", "f_creator", "f_creator_type", "f_create_time",
 			"f_updater", "f_updater_type", "f_update_time",
 		}).AddRow(
@@ -271,12 +271,12 @@ func Test_conceptGroupAccess_ListConceptGroups(t *testing.T) {
 		})
 
 		Convey("ListConceptGroups with Sort ASC\n", func() {
-			sqlStr := fmt.Sprintf("SELECT f_id, f_name, f_tags, f_comment, f_icon, f_color, f_detail, "+
+			sqlStr := fmt.Sprintf("SELECT f_id, f_name, f_tags, f_comment, f_icon, f_color, f_bkn_raw_content, "+
 				"f_kn_id, f_branch, f_creator, f_creator_type, f_create_time, f_updater, f_updater_type, f_update_time "+
 				"FROM %s WHERE f_kn_id = ? AND f_branch = ? ORDER BY f_name ASC", CONCEPT_GROUP_TABLE_NAME)
 
 			rows := sqlmock.NewRows([]string{
-				"f_id", "f_name", "f_tags", "f_comment", "f_icon", "f_color", "f_detail",
+				"f_id", "f_name", "f_tags", "f_comment", "f_icon", "f_color", "f_bkn_raw_content",
 				"f_kn_id", "f_branch", "f_creator", "f_creator_type", "f_create_time",
 				"f_updater", "f_updater_type", "f_update_time",
 			}).AddRow(
@@ -365,12 +365,12 @@ func Test_conceptGroupAccess_GetConceptGroupsByIDs(t *testing.T) {
 		appSetting := &common.AppSetting{}
 		cga, smock := MockNewConceptGroupAccess(appSetting)
 
-		sqlStr := fmt.Sprintf("SELECT f_id, f_name, f_tags, f_comment, f_icon, f_color, f_detail, "+
+		sqlStr := fmt.Sprintf("SELECT f_id, f_name, f_tags, f_comment, f_icon, f_color, f_bkn_raw_content, "+
 			"f_kn_id, f_branch, f_creator, f_creator_type, f_create_time, f_updater, f_updater_type, f_update_time "+
 			"FROM %s WHERE f_id IN (?,?) AND f_kn_id = ? AND f_branch = ?", CONCEPT_GROUP_TABLE_NAME)
 
 		rows := sqlmock.NewRows([]string{
-			"f_id", "f_name", "f_tags", "f_comment", "f_icon", "f_color", "f_detail",
+			"f_id", "f_name", "f_tags", "f_comment", "f_icon", "f_color", "f_bkn_raw_content",
 			"f_kn_id", "f_branch", "f_creator", "f_creator_type", "f_create_time",
 			"f_updater", "f_updater_type", "f_update_time",
 		}).AddRow(
@@ -437,7 +437,7 @@ func Test_conceptGroupAccess_GetConceptGroupByID(t *testing.T) {
 		appSetting := &common.AppSetting{}
 		cga, smock := MockNewConceptGroupAccess(appSetting)
 
-		sqlStr := fmt.Sprintf("SELECT f_id, f_name, f_tags, f_comment, f_icon, f_color, f_detail, "+
+		sqlStr := fmt.Sprintf("SELECT f_id, f_name, f_tags, f_comment, f_icon, f_color, f_bkn_raw_content, "+
 			"f_kn_id, f_branch, f_creator, f_creator_type, f_create_time, f_updater, f_updater_type, f_update_time "+
 			"FROM %s WHERE f_id = ? AND f_kn_id = ? AND f_branch = ?", CONCEPT_GROUP_TABLE_NAME)
 
@@ -447,7 +447,7 @@ func Test_conceptGroupAccess_GetConceptGroupByID(t *testing.T) {
 
 		Convey("GetConceptGroupByID Success \n", func() {
 			rows := sqlmock.NewRows([]string{
-				"f_id", "f_name", "f_tags", "f_comment", "f_icon", "f_color", "f_detail",
+				"f_id", "f_name", "f_tags", "f_comment", "f_icon", "f_color", "f_bkn_raw_content",
 				"f_kn_id", "f_branch", "f_creator", "f_creator_type", "f_create_time",
 				"f_updater", "f_updater_type", "f_update_time",
 			}).AddRow(
@@ -500,7 +500,7 @@ func Test_conceptGroupAccess_UpdateConceptGroup(t *testing.T) {
 		appSetting := &common.AppSetting{}
 		cga, smock := MockNewConceptGroupAccess(appSetting)
 
-		sqlStr := fmt.Sprintf("UPDATE %s SET f_color = ?, f_comment = ?, f_icon = ?, f_name = ?, "+
+		sqlStr := fmt.Sprintf("UPDATE %s SET f_bkn_raw_content = ?, f_color = ?, f_comment = ?, f_icon = ?, f_name = ?, "+
 			"f_tags = ?, f_update_time = ?, f_updater = ?, f_updater_type = ? "+
 			"WHERE f_id = ? AND f_kn_id = ? AND f_branch = ?", CONCEPT_GROUP_TABLE_NAME)
 
@@ -583,7 +583,7 @@ func Test_conceptGroupAccess_UpdateConceptGroupDetail(t *testing.T) {
 		appSetting := &common.AppSetting{}
 		cga, smock := MockNewConceptGroupAccess(appSetting)
 
-		sqlStr := fmt.Sprintf("UPDATE %s SET f_detail = ? WHERE f_id = ? AND f_kn_id = ? AND f_branch = ?", CONCEPT_GROUP_TABLE_NAME)
+		sqlStr := fmt.Sprintf("UPDATE %s SET f_bkn_raw_content = ? WHERE f_id = ? AND f_kn_id = ? AND f_branch = ?", CONCEPT_GROUP_TABLE_NAME)
 
 		knID := "kn1"
 		branch := "main"
@@ -766,12 +766,12 @@ func Test_conceptGroupAccess_GetAllConceptGroupsByKnID(t *testing.T) {
 		appSetting := &common.AppSetting{}
 		cga, smock := MockNewConceptGroupAccess(appSetting)
 
-		sqlStr := fmt.Sprintf("SELECT f_id, f_name, f_tags, f_comment, f_icon, f_color, f_detail, "+
+		sqlStr := fmt.Sprintf("SELECT f_id, f_name, f_tags, f_comment, f_icon, f_color, f_bkn_raw_content, "+
 			"f_kn_id, f_branch, f_creator, f_creator_type, f_create_time, f_updater, f_updater_type, f_update_time "+
 			"FROM %s WHERE f_kn_id = ? AND f_branch = ?", CONCEPT_GROUP_TABLE_NAME)
 
 		rows := sqlmock.NewRows([]string{
-			"f_id", "f_name", "f_tags", "f_comment", "f_icon", "f_color", "f_detail",
+			"f_id", "f_name", "f_tags", "f_comment", "f_icon", "f_color", "f_bkn_raw_content",
 			"f_kn_id", "f_branch", "f_creator", "f_creator_type", "f_create_time",
 			"f_updater", "f_updater_type", "f_update_time",
 		}).AddRow(

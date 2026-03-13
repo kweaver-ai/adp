@@ -101,13 +101,13 @@ var (
 
 // knowledge_network
 type KN struct {
-	KNID    string   `json:"id" mapstructure:"id"`
-	KNName  string   `json:"name" mapstructure:"name"`
-	Tags    []string `json:"tags" mapstructure:"tags"`
-	Comment string   `json:"comment" mapstructure:"comment"`
-	Icon    string   `json:"icon" mapstructure:"icon"`
-	Color   string   `json:"color" mapstructure:"color"`
-	Detail  string   `json:"detail" mapstructure:"detail"`
+	KNID          string   `json:"id" mapstructure:"id"`
+	KNName        string   `json:"name" mapstructure:"name"`
+	Tags          []string `json:"tags" mapstructure:"tags"`
+	Comment       string   `json:"comment" mapstructure:"comment"`
+	Icon          string   `json:"icon" mapstructure:"icon"`
+	Color         string   `json:"color" mapstructure:"color"`
+	BKNRawContent string   `json:"detail" mapstructure:"detail"`
 
 	Branch         string `json:"branch,omitempty" mapstructure:"branch"`
 	BusinessDomain string `json:"business_domain,omitempty" mapstructure:"business_domain"`

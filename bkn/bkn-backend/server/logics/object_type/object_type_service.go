@@ -18,6 +18,7 @@ import (
 
 	"github.com/bytedance/sonic"
 	"github.com/kweaver-ai/TelemetrySDK-Go/exporter/v2/ar_trace"
+	bknsdk "github.com/kweaver-ai/bkn-specification/sdk/golang/bkn"
 	"github.com/kweaver-ai/kweaver-go-lib/logger"
 	o11y "github.com/kweaver-ai/kweaver-go-lib/observability"
 	"github.com/kweaver-ai/kweaver-go-lib/rest"
@@ -157,7 +158,8 @@ func (ots *objectTypeService) CreateObjectTypes(ctx context.Context, tx *sql.Tx,
 			}
 		}
 
-		// todo: 处理版本
+		bknObj := logics.ToBKNObjectType(objectType)
+		objectType.BKNRawContent = bknsdk.SerializeObjectType(bknObj)
 	}
 
 	// 0. 开始事务
@@ -675,6 +677,9 @@ func (ots *objectTypeService) UpdateObjectType(ctx context.Context, tx *sql.Tx, 
 	currentTime := time.Now().UnixMilli() // 对象类的update_time是int类型
 	objectType.UpdateTime = currentTime
 
+	bknObj := logics.ToBKNObjectType(objectType)
+	objectType.BKNRawContent = bknsdk.SerializeObjectType(bknObj)
+
 	if tx == nil {
 		// 0. 开始事务
 		tx, err = ots.db.Begin()
@@ -859,6 +864,9 @@ func (ots *objectTypeService) UpdateDataProperties(ctx context.Context,
 			objectType.DataProperties = append(objectType.DataProperties, prop) // 添加新的数据属性
 		}
 	}
+
+	bknObj := logics.ToBKNObjectType(objectType)
+	objectType.BKNRawContent = bknsdk.SerializeObjectType(bknObj)
 
 	// 0. 开始事务
 	var tx *sql.Tx
@@ -1251,7 +1259,7 @@ func (ots *objectTypeService) InsertDatasetData(ctx context.Context, objectTypes
 		for _, objectType := range objectTypes {
 			arr := []string{objectType.OTName}
 			arr = append(arr, objectType.Tags...)
-			arr = append(arr, objectType.Comment, objectType.Detail)
+			arr = append(arr, objectType.Comment, objectType.BKNRawContent)
 			word := strings.Join(arr, "\n")
 			words = append(words, word)
 		}

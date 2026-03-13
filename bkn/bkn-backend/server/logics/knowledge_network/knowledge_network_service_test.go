@@ -644,7 +644,7 @@ func Test_knowledgeNetworkService_GetKNByID(t *testing.T) {
 		Convey("Success with export mode\n", func() {
 			knID := "kn1"
 			branch := interfaces.MAIN_BRANCH
-			mode := "export"
+			mode := interfaces.Mode_Export
 			kn := &interfaces.KN{
 				KNID:   knID,
 				KNName: "kn1",
@@ -747,12 +747,12 @@ func Test_knowledgeNetworkService_InsertDatasetData(t *testing.T) {
 			}
 
 			kn := &interfaces.KN{
-				KNID:    "kn1",
-				KNName:  "kn1",
-				Tags:    []string{"tag1"},
-				Comment: "comment",
-				Detail:  "detail",
-				Branch:  interfaces.MAIN_BRANCH,
+				KNID:          "kn1",
+				KNName:        "kn1",
+				Tags:          []string{"tag1"},
+				Comment:       "comment",
+				BKNRawContent: "detail",
+				Branch:        interfaces.MAIN_BRANCH,
 			}
 			vectors := []*cond.VectorResp{
 				{

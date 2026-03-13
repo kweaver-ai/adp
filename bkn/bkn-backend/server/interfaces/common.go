@@ -327,7 +327,8 @@ type CommonInfo struct {
 	Comment string   `json:"comment" mapstructure:"comment"`
 	Icon    string   `json:"icon" mapstructure:"icon"`
 	Color   string   `json:"color" mapstructure:"color"`
-	Detail  string   `json:"detail" mapstructure:"detail"`
+
+	BKNRawContent string `json:"-" mapstructure:"-"`
 }
 
 type AccountInfo struct {
@@ -341,10 +342,10 @@ type ID struct {
 }
 
 const (
-	BKN_CATALOG_ID   = "BKN_catalog"
-	BKN_CATALOG_NAME = "BKN_catalog"
-	BKN_DATASET_ID   = "adp_bkn_concept"
-	BKN_DATASET_NAME = "adp_bkn_concept"
+	BKN_CATALOG_ID   = "adp_bkn_catalog"
+	BKN_CATALOG_NAME = "adp_bkn_catalog"
+	BKN_DATASET_ID   = "adp_bkn_concept_dataset"
+	BKN_DATASET_NAME = "adp_bkn_concept_dataset"
 
 	//特征的配置项
 	FieldFeatureType_Keyword  = "keyword"

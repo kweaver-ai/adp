@@ -44,6 +44,7 @@ func NewUserMgmtAccess(appSetting *common.AppSetting) interfaces.UserMgmtAccess 
 }
 
 func (u *userMgmtAccess) GetAccountNames(ctx context.Context, accountInfos []*interfaces.AccountInfo) error {
+
 	if len(accountInfos) == 0 {
 		return nil
 	}

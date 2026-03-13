@@ -24,6 +24,7 @@ import (
 	"bkn-backend/interfaces"
 	"bkn-backend/logics/action_schedule"
 	"bkn-backend/logics/action_type"
+	"bkn-backend/logics/bkn"
 	"bkn-backend/logics/concept_group"
 	"bkn-backend/logics/job"
 	"bkn-backend/logics/knowledge_network"
@@ -46,6 +47,7 @@ type restHandler struct {
 	kns        interfaces.KNService
 	ots        interfaces.ObjectTypeService
 	rts        interfaces.RelationTypeService
+	bs         interfaces.BKNService
 }
 
 func NewRestHandler(appSetting *common.AppSetting) RestHandler {
@@ -59,6 +61,7 @@ func NewRestHandler(appSetting *common.AppSetting) RestHandler {
 		kns:        knowledge_network.NewKNService(appSetting),
 		ots:        object_type.NewObjectTypeService(appSetting),
 		rts:        relation_type.NewRelationTypeService(appSetting),
+		bs:         bkn.NewBKNService(appSetting),
 	}
 	return r
 }
@@ -128,6 +131,10 @@ func (r *restHandler) RegisterPublic(c *gin.Engine) {
 
 		// 业务知识网络资源示例列表
 		apiV1.GET("/resources", r.ListResources)
+
+		// BKN 导入导出 (RESTful 设计)
+		apiV1.POST("/bkns", r.UploadBKN)         // 上传 BKN tar 包导入
+		apiV1.GET("/bkns/:kn_id", r.DownloadBKN) // 下载 BKN tar 包导出
 	}
 
 	bknApiInV1 := c.Group("/api/bkn-backend/in/v1")
@@ -244,7 +251,8 @@ func (r *restHandler) verifyOAuth(ctx context.Context, c *gin.Context) (hydra.Vi
 		return vistor, err
 	}
 
-	return vistor, nil
+	//return vistor, nil
+	return hydra.Visitor{}, nil
 }
 
 func GenerateVisitor(c *gin.Context) hydra.Visitor {

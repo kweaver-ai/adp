@@ -36,11 +36,11 @@ func Test_ValidateRelationType(t *testing.T) {
 					},
 				},
 				CommonInfo: interfaces.CommonInfo{
-					Tags:    []string{"tag1", "tag2", "tag3"},
-					Comment: "test comment",
-					Icon:    "icon1",
-					Color:   "color1",
-					Detail:  "detail1",
+					Tags:          []string{"tag1", "tag2", "tag3"},
+					Comment:       "test comment",
+					Icon:          "icon1",
+					Color:         "color1",
+					BKNRawContent: "bkn1",
 				},
 			}
 			err := ValidateRelationType(ctx, rt)

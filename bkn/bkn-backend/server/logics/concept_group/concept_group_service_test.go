@@ -834,9 +834,9 @@ func Test_conceptGroupService_InsertDatasetData(t *testing.T) {
 				CGID:   "cg1",
 				CGName: "cg1",
 				CommonInfo: interfaces.CommonInfo{
-					Tags:    []string{"tag1"},
-					Comment: "comment",
-					Detail:  "detail",
+					Tags:          []string{"tag1"},
+					Comment:       "comment",
+					BKNRawContent: "bkn",
 				},
 				KNID:   "kn1",
 				Branch: interfaces.MAIN_BRANCH,
