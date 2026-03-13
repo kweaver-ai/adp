@@ -175,7 +175,7 @@ export const MainContent: React.FC = () => {
     },
     {
       title: intl.get('Global.group'),
-      dataIndex: 'groupName',
+      dataIndex: 'group_name',
       minWidth: 160,
       __fixed: true,
       __selected: true,
@@ -185,7 +185,7 @@ export const MainContent: React.FC = () => {
       title: intl.get('Global.updateTime'),
       sorter: true,
       minWidth: 180,
-      dataIndex: 'updateTime',
+      dataIndex: 'update_time',
       __fixed: true,
       __selected: true,
       render: (text: any): string => (text ? dayjs(text).format('YYYY-MM-DD HH:mm:ss') : '--'),
