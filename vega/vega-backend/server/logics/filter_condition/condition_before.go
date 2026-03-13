@@ -27,6 +27,12 @@ func (c *BeforeCond) NeedConstValue() bool       { return true }
 func (c *BeforeCond) IsSingleValue() bool        { return false }
 func (c *BeforeCond) IsFixedLenArrayValue() bool { return true }
 func (c *BeforeCond) RequiredValueLen() int      { return 2 }
+func (c *BeforeCond) GetConfig() *interfaces.FilterCondCfg {
+	if c == nil {
+		return nil
+	}
+	return c.Cfg
+}
 
 // before 条件，判断字段是否在某个时间之前
 func (c *BeforeCond) New(ctx context.Context, cfg *interfaces.FilterCondCfg,

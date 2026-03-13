@@ -19,6 +19,12 @@ type BetweenCond struct {
 }
 
 func (c *BetweenCond) GetOperation() string { return OperationBetween }
+func (c *BetweenCond) GetConfig() *interfaces.FilterCondCfg {
+	if c == nil {
+		return nil
+	}
+	return c.Cfg
+}
 
 func (c *BetweenCond) SupportSubCond() bool       { return false }
 func (c *BetweenCond) NeedName() bool             { return true }

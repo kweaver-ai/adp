@@ -18,6 +18,12 @@ type MatchPhraseCond struct {
 }
 
 func (c *MatchPhraseCond) GetOperation() string { return OperationMatchPhrase }
+func (c *MatchPhraseCond) GetConfig() *interfaces.FilterCondCfg {
+	if c == nil {
+		return nil
+	}
+	return c.mCfg
+}
 
 func (c *MatchPhraseCond) SupportSubCond() bool       { return false }
 func (c *MatchPhraseCond) NeedName() bool             { return true }

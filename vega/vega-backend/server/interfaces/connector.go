@@ -60,9 +60,11 @@ type ColumnMeta struct {
 
 // QueryResult represents query execution result.
 type QueryResult struct {
-	Columns []string         `json:"columns"`
-	Rows    []map[string]any `json:"rows"`
-	Total   int64            `json:"total"`
+	Columns      []string         `json:"columns"`
+	Rows         []map[string]any `json:"rows"`
+	Total        int64            `json:"total"`
+	Aggregations map[string]any   `json:"aggregations,omitempty"` // 聚合结果（OpenSearch 特有）
+	ScrollID     string           `json:"scroll_id,omitempty"`    // 滚动查询ID（OpenSearch 特有）
 }
 
 // FileMeta represents file metadata.

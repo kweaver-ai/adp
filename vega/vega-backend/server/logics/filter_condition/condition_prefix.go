@@ -19,6 +19,12 @@ type PrefixCond struct {
 }
 
 func (c *PrefixCond) GetOperation() string { return OperationPrefix }
+func (c *PrefixCond) GetConfig() *interfaces.FilterCondCfg {
+	if c == nil {
+		return nil
+	}
+	return c.Cfg
+}
 
 func (c *PrefixCond) SupportSubCond() bool       { return false }
 func (c *PrefixCond) NeedName() bool             { return true }

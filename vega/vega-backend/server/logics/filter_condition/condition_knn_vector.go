@@ -19,6 +19,12 @@ type KnnVectorCond struct {
 }
 
 func (c *KnnVectorCond) GetOperation() string { return OperationKnnVector }
+func (c *KnnVectorCond) GetConfig() *interfaces.FilterCondCfg {
+	if c == nil {
+		return nil
+	}
+	return c.mCfg
+}
 
 func (c *KnnVectorCond) SupportSubCond() bool       { return true }
 func (c *KnnVectorCond) NeedName() bool             { return true }

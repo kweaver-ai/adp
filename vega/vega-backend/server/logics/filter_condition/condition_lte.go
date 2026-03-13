@@ -20,6 +20,12 @@ type LteCond struct {
 }
 
 func (c *LteCond) GetOperation() string { return OperationLte }
+func (c *LteCond) GetConfig() *interfaces.FilterCondCfg {
+	if c == nil {
+		return nil
+	}
+	return c.Cfg
+}
 
 func (c *LteCond) SupportSubCond() bool       { return false }
 func (c *LteCond) NeedName() bool             { return true }

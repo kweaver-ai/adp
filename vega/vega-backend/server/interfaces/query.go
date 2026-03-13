@@ -18,6 +18,11 @@ type QueryExecuteRequest struct {
 	Offset          int            `json:"offset,omitempty"`           // 分页偏移
 	Limit           int            `json:"limit,omitempty"`            // 每页条数，最大 10000
 	NeedTotal       bool           `json:"need_total,omitempty"`       // 是否返回总条数
+
+	// OpenSearch 特有参数（可选）
+	QueryType    string         `json:"query_type,omitempty"`   // query, filter, agg
+	Aggregations map[string]any `json:"aggregations,omitempty"` // 聚合查询
+	SearchAfter  []any          `json:"search_after,omitempty"` // 深度分页
 }
 
 // TableInQuery 查询中的表定义
@@ -47,6 +52,10 @@ type QueryExecuteResponse struct {
 	TotalCount *int64           `json:"total_count,omitempty"`
 	NextOffset int              `json:"next_offset"`
 	HasMore    bool             `json:"has_more"`
+
+	// OpenSearch 特有字段（可选）
+	Aggregations map[string]any `json:"aggregations,omitempty"` // 聚合结果
+	ScrollID     string         `json:"scroll_id,omitempty"`    // 滚动查询ID
 }
 
 // ResourceDataQueryParams 扩展：支持 keyset 游标
@@ -65,6 +74,25 @@ type JoinQueryParams struct {
 	Limit             int
 	NeedTotal         bool
 	CursorEncoded     string // keyset 游标值，空则用 OFFSET/LIMIT
+}
+
+// IndexQueryParams 索引查询参数，供 ExecuteIndexQuery 使用
+type IndexQueryParams struct {
+	Resources         []*Resource
+	ResourceIDToAlias map[string]string // resource_id -> alias
+	OutputFields      []string
+	FilterCondCfg     *FilterCondCfg
+	ActualFilterCond  FilterCondition
+	Sort              []*SortField
+	Offset            int
+	Limit             int
+	NeedTotal         bool
+	CursorEncoded     string // keyset 游标值，空则用 OFFSET/LIMIT
+
+	// OpenSearch 特有参数
+	QueryType    string         `json:"query_type,omitempty"`   // query, filter, agg
+	SearchAfter  []any          `json:"search_after,omitempty"` // 深度分页使用
+	Aggregations map[string]any `json:"aggregations,omitempty"` // 聚合查询
 }
 
 // QuerySessionStore 游标 session 存储抽象，便于测试与替换

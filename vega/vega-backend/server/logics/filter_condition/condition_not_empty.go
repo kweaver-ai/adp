@@ -18,6 +18,12 @@ type NotEmptyCond struct {
 }
 
 func (c *NotEmptyCond) GetOperation() string { return OperationNotEmpty }
+func (c *NotEmptyCond) GetConfig() *interfaces.FilterCondCfg {
+	if c == nil {
+		return nil
+	}
+	return c.Cfg
+}
 
 func (c *NotEmptyCond) SupportSubCond() bool       { return false }
 func (c *NotEmptyCond) NeedName() bool             { return true }

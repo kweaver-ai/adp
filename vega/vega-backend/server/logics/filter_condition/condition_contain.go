@@ -27,6 +27,12 @@ func (c *ContainCond) NeedConstValue() bool       { return true }
 func (c *ContainCond) IsSingleValue() bool        { return false }
 func (c *ContainCond) IsFixedLenArrayValue() bool { return false }
 func (c *ContainCond) RequiredValueLen() int      { return -1 }
+func (c *ContainCond) GetConfig() *interfaces.FilterCondCfg {
+	if c == nil {
+		return nil
+	}
+	return c.Cfg
+}
 
 // 包含 contain，左侧属性值为数组，右侧值为数组，组内的值都应在属性值内
 func (c *ContainCond) New(ctx context.Context, cfg *interfaces.FilterCondCfg,

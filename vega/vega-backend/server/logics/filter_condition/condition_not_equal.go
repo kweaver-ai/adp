@@ -20,6 +20,12 @@ type NotEqualCond struct {
 }
 
 func (c *NotEqualCond) GetOperation() string { return OperationNotEqual }
+func (c *NotEqualCond) GetConfig() *interfaces.FilterCondCfg {
+	if c == nil {
+		return nil
+	}
+	return c.Cfg
+}
 
 func (c *NotEqualCond) SupportSubCond() bool       { return false }
 func (c *NotEqualCond) NeedName() bool             { return true }

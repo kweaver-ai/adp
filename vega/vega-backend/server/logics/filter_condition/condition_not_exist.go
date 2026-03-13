@@ -18,6 +18,12 @@ type NotExistCond struct {
 }
 
 func (c *NotExistCond) GetOperation() string { return OperationNotExist }
+func (c *NotExistCond) GetConfig() *interfaces.FilterCondCfg {
+	if c == nil {
+		return nil
+	}
+	return c.Cfg
+}
 
 func (c *NotExistCond) SupportSubCond() bool       { return false }
 func (c *NotExistCond) NeedName() bool             { return true }

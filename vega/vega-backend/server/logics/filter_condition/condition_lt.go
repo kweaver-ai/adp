@@ -20,6 +20,12 @@ type LtCond struct {
 }
 
 func (c *LtCond) GetOperation() string { return OperationLt }
+func (c *LtCond) GetConfig() *interfaces.FilterCondCfg {
+	if c == nil {
+		return nil
+	}
+	return c.Cfg
+}
 
 func (c *LtCond) SupportSubCond() bool       { return false }
 func (c *LtCond) NeedName() bool             { return true }

@@ -26,6 +26,12 @@ func (c *ExistCond) NeedConstValue() bool       { return false }
 func (c *ExistCond) IsSingleValue() bool        { return false }
 func (c *ExistCond) IsFixedLenArrayValue() bool { return false }
 func (c *ExistCond) RequiredValueLen() int      { return -1 }
+func (c *ExistCond) GetConfig() *interfaces.FilterCondCfg {
+	if c == nil {
+		return nil
+	}
+	return c.Cfg
+}
 
 // 存在 exist，判断字段是否存在
 func (c *ExistCond) New(ctx context.Context, cfg *interfaces.FilterCondCfg,
