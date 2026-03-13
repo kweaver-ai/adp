@@ -253,8 +253,8 @@ func TestConceptSyncer_handleObjectTypes(t *testing.T) {
 			So(err, ShouldBeNil)
 			So(needUpdate, ShouldBeTrue)
 			So(len(simpleItems), ShouldEqual, 1)
-			So(simpleItems[0].ID, ShouldEqual, "ot1")
-			So(simpleItems[0].Name, ShouldEqual, "object_type1")
+			So(simpleItems[0].OTID, ShouldEqual, "ot1")
+			So(simpleItems[0].OTName, ShouldEqual, "object_type1")
 		})
 
 		Convey("Failed to get object types", func() {
@@ -289,10 +289,6 @@ func TestConceptSyncer_handleRelationTypes(t *testing.T) {
 
 		knID := "kn1"
 		branch := "main"
-		objectTypesMap := map[string]string{
-			"ot1": "object_type1",
-			"ot2": "object_type2",
-		}
 
 		Convey("Success handling relation types", func() {
 			relationTypes := map[string]*interfaces.RelationType{
@@ -313,19 +309,19 @@ func TestConceptSyncer_handleRelationTypes(t *testing.T) {
 			vba.EXPECT().QueryDatasetData(gomock.Any(), interfaces.BKN_DATASET_ID, gomock.Any()).Return(datasetResp, nil)
 			vba.EXPECT().WriteDatasetDocuments(ctx, interfaces.BKN_DATASET_ID, gomock.Any()).Return(nil)
 
-			simpleItems, needUpdate, err := cs.handleRelationTypes(ctx, knID, branch, objectTypesMap)
+			simpleItems, needUpdate, err := cs.handleRelationTypes(ctx, knID, branch)
 			So(err, ShouldBeNil)
 			So(needUpdate, ShouldBeTrue)
 			So(len(simpleItems), ShouldEqual, 1)
-			So(simpleItems[0].ID, ShouldEqual, "rt1")
-			So(simpleItems[0].SourceObjectTypeName, ShouldEqual, "object_type1")
-			So(simpleItems[0].TargetObjectTypeName, ShouldEqual, "object_type2")
+			So(simpleItems[0].RTID, ShouldEqual, "rt1")
+			So(simpleItems[0].SourceObjectTypeID, ShouldEqual, "ot1")
+			So(simpleItems[0].TargetObjectTypeID, ShouldEqual, "ot2")
 		})
 
 		Convey("Failed to get relation types", func() {
 			rta.EXPECT().GetAllRelationTypesByKnID(ctx, knID, branch).Return(nil, errors.New("db error"))
 
-			_, _, err := cs.handleRelationTypes(ctx, knID, branch, objectTypesMap)
+			_, _, err := cs.handleRelationTypes(ctx, knID, branch)
 			So(err, ShouldNotBeNil)
 		})
 	})
@@ -354,9 +350,6 @@ func TestConceptSyncer_handleActionTypes(t *testing.T) {
 
 		knID := "kn1"
 		branch := "main"
-		objectTypesMap := map[string]string{
-			"ot1": "object_type1",
-		}
 
 		Convey("Success handling action types", func() {
 			actionTypes := map[string]*interfaces.ActionType{
@@ -377,18 +370,18 @@ func TestConceptSyncer_handleActionTypes(t *testing.T) {
 			vba.EXPECT().QueryDatasetData(gomock.Any(), interfaces.BKN_DATASET_ID, gomock.Any()).Return(datasetResp, nil)
 			vba.EXPECT().WriteDatasetDocuments(ctx, interfaces.BKN_DATASET_ID, gomock.Any()).Return(nil)
 
-			simpleItems, needUpdate, err := cs.handleActionTypes(ctx, knID, branch, objectTypesMap)
+			simpleItems, needUpdate, err := cs.handleActionTypes(ctx, knID, branch)
 			So(err, ShouldBeNil)
 			So(needUpdate, ShouldBeTrue)
 			So(len(simpleItems), ShouldEqual, 1)
-			So(simpleItems[0].ID, ShouldEqual, "at1")
-			So(simpleItems[0].ObjectTypeName, ShouldEqual, "object_type1")
+			So(simpleItems[0].ATID, ShouldEqual, "at1")
+			So(simpleItems[0].ObjectTypeID, ShouldEqual, "ot1")
 		})
 
 		Convey("Failed to get action types", func() {
 			ata.EXPECT().GetAllActionTypesByKnID(ctx, knID, branch).Return(nil, errors.New("db error"))
 
-			_, _, err := cs.handleActionTypes(ctx, knID, branch, objectTypesMap)
+			_, _, err := cs.handleActionTypes(ctx, knID, branch)
 			So(err, ShouldNotBeNil)
 		})
 	})
@@ -438,8 +431,8 @@ func TestConceptSyncer_handleConceptGroups(t *testing.T) {
 			So(err, ShouldBeNil)
 			So(needUpdate, ShouldBeTrue)
 			So(len(simpleItems), ShouldEqual, 1)
-			So(simpleItems[0].ID, ShouldEqual, "cg1")
-			So(simpleItems[0].Name, ShouldEqual, "concept_group1")
+			So(simpleItems[0].CGID, ShouldEqual, "cg1")
+			So(simpleItems[0].CGName, ShouldEqual, "concept_group1")
 		})
 
 		Convey("Failed to get concept groups", func() {
@@ -1694,15 +1687,12 @@ func TestConceptSyncer_handleRelationTypes_Errors(t *testing.T) {
 
 		knID := "kn1"
 		branch := "main"
-		objectTypesMap := map[string]string{
-			"ot1": "object_type1",
-		}
 
 		Convey("Failed to get relation types from dataset\n", func() {
 			rta.EXPECT().GetAllRelationTypesByKnID(ctx, knID, branch).Return(map[string]*interfaces.RelationType{}, nil)
 			vba.EXPECT().QueryDatasetData(gomock.Any(), interfaces.BKN_DATASET_ID, gomock.Any()).Return(nil, errors.New("dataset error"))
 
-			_, _, err := cs.handleRelationTypes(ctx, knID, branch, objectTypesMap)
+			_, _, err := cs.handleRelationTypes(ctx, knID, branch)
 			So(err, ShouldNotBeNil)
 		})
 
@@ -1721,7 +1711,7 @@ func TestConceptSyncer_handleRelationTypes_Errors(t *testing.T) {
 			vba.EXPECT().QueryDatasetData(gomock.Any(), interfaces.BKN_DATASET_ID, gomock.Any()).Return(&interfaces.DatasetQueryResponse{Entries: []map[string]any{}, TotalCount: 0}, nil)
 			vba.EXPECT().WriteDatasetDocuments(ctx, interfaces.BKN_DATASET_ID, gomock.Any()).Return(errors.New("dataset error"))
 
-			_, _, err := cs.handleRelationTypes(ctx, knID, branch, objectTypesMap)
+			_, _, err := cs.handleRelationTypes(ctx, knID, branch)
 			So(err, ShouldNotBeNil)
 		})
 	})
@@ -1750,15 +1740,12 @@ func TestConceptSyncer_handleActionTypes_Errors(t *testing.T) {
 
 		knID := "kn1"
 		branch := "main"
-		objectTypesMap := map[string]string{
-			"ot1": "object_type1",
-		}
 
 		Convey("Failed to get action types from dataset\n", func() {
 			ata.EXPECT().GetAllActionTypesByKnID(ctx, knID, branch).Return(map[string]*interfaces.ActionType{}, nil)
 			vba.EXPECT().QueryDatasetData(gomock.Any(), interfaces.BKN_DATASET_ID, gomock.Any()).Return(nil, errors.New("dataset error"))
 
-			_, _, err := cs.handleActionTypes(ctx, knID, branch, objectTypesMap)
+			_, _, err := cs.handleActionTypes(ctx, knID, branch)
 			So(err, ShouldNotBeNil)
 		})
 
@@ -1777,7 +1764,7 @@ func TestConceptSyncer_handleActionTypes_Errors(t *testing.T) {
 			vba.EXPECT().QueryDatasetData(gomock.Any(), interfaces.BKN_DATASET_ID, gomock.Any()).Return(&interfaces.DatasetQueryResponse{Entries: []map[string]any{}, TotalCount: 0}, nil)
 			vba.EXPECT().WriteDatasetDocuments(ctx, interfaces.BKN_DATASET_ID, gomock.Any()).Return(errors.New("dataset error"))
 
-			_, _, err := cs.handleActionTypes(ctx, knID, branch, objectTypesMap)
+			_, _, err := cs.handleActionTypes(ctx, knID, branch)
 			So(err, ShouldNotBeNil)
 		})
 	})

@@ -16,6 +16,7 @@ import (
 
 	"github.com/bytedance/sonic"
 	"github.com/kweaver-ai/TelemetrySDK-Go/exporter/v2/ar_trace"
+	bknsdk "github.com/kweaver-ai/bkn-specification/sdk/golang/bkn"
 	"github.com/kweaver-ai/kweaver-go-lib/logger"
 	o11y "github.com/kweaver-ai/kweaver-go-lib/observability"
 	"github.com/kweaver-ai/kweaver-go-lib/rest"
@@ -165,6 +166,9 @@ func (kns *knowledgeNetworkService) CreateKN(ctx context.Context, kn *interfaces
 	kn.CreateTime = currentTime
 	kn.UpdateTime = currentTime
 
+	bknNetwork := logics.ToBKNNetWork(kn)
+	kn.BKNRawContent = bknsdk.SerializeBknNetwork(bknNetwork)
+
 	// 0. 开始事务
 	tx, err := kns.db.Begin()
 	if err != nil {
@@ -265,7 +269,6 @@ func (kns *knowledgeNetworkService) CreateKN(ctx context.Context, kn *interfaces
 					WithErrorDetails(err.Error())
 			}
 		}
-
 	}
 
 	// 处理更新情况
@@ -645,6 +648,9 @@ func (kns *knowledgeNetworkService) UpdateKN(ctx context.Context, tx *sql.Tx, kn
 
 	currentTime := time.Now().UnixMilli() // 业务知识网络的update_time是int类型
 	kn.UpdateTime = currentTime
+
+	bknNetwork := logics.ToBKNNetWork(kn)
+	kn.BKNRawContent = bknsdk.SerializeBknNetwork(bknNetwork)
 
 	if tx == nil {
 		// 0. 开始事务

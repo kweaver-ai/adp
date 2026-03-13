@@ -1,5 +1,5 @@
 ---
-type: network
+type: knowledge_network
 id: k8s-network
 name: Kubernetes网络
 tags: [Kubernetes, 拓扑架构, 运维]
