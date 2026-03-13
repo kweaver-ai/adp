@@ -267,15 +267,15 @@ func (r *restHandler) HealthCheck(c *gin.Context) {
 
 // 校验oauth
 func (r *restHandler) verifyOAuth(ctx context.Context, c *gin.Context) (rest.Visitor, error) {
-	vistor, err := r.hydra.VerifyToken(ctx, c)
+	visitor, err := r.hydra.VerifyToken(ctx, c)
 	if err != nil {
 		httpErr := rest.NewHTTPError(ctx, http.StatusUnauthorized, rest.PublicError_Unauthorized).
 			WithErrorDetails(err.Error())
 		rest.ReplyError(c, httpErr)
-		return vistor, err
+		return visitor, err
 	}
 
-	return vistor, nil
+	return visitor, nil
 }
 
 // gin中间件 校验content type

@@ -243,16 +243,15 @@ func (r *restHandler) AccessLog() gin.HandlerFunc {
 
 // 校验oauth
 func (r *restHandler) verifyOAuth(ctx context.Context, c *gin.Context) (hydra.Visitor, error) {
-	vistor, err := r.hydra.VerifyToken(ctx, c)
+	visitor, err := r.hydra.VerifyToken(ctx, c)
 	if err != nil {
 		httpErr := rest.NewHTTPError(ctx, http.StatusUnauthorized, rest.PublicError_Unauthorized).
 			WithErrorDetails(err.Error())
 		rest.ReplyError(c, httpErr)
-		return vistor, err
+		return visitor, err
 	}
 
-	//return vistor, nil
-	return hydra.Visitor{}, nil
+	return visitor, nil
 }
 
 func GenerateVisitor(c *gin.Context) hydra.Visitor {

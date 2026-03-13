@@ -19,9 +19,11 @@ require (
 	github.com/kweaver-ai/kweaver-go-lib v1.0.2
 	github.com/kweaver-ai/proton-rds-sdk-go v1.4.1
 	github.com/mitchellh/mapstructure v1.5.0
+	github.com/modern-go/reflect2 v1.0.2
 	github.com/opensearch-project/opensearch-go/v2 v2.3.0
 	github.com/panjf2000/ants/v2 v2.11.3
 	github.com/patrickmn/go-cache v2.1.0+incompatible
+	github.com/rs/xid v1.6.0
 	github.com/smartystreets/goconvey v1.8.1
 	github.com/spf13/viper v1.21.0
 	github.com/stretchr/testify v1.11.1
@@ -83,7 +85,6 @@ require (
 	github.com/mailru/easyjson v0.7.7 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
-	github.com/modern-go/reflect2 v1.0.2 // indirect
 	github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822 // indirect
 	github.com/nsqio/go-nsq v1.1.0 // indirect
 	github.com/oklog/ulid/v2 v2.1.1 // indirect
@@ -94,7 +95,6 @@ require (
 	github.com/power-devops/perfstat v0.0.0-20210106213030-5aafc221ea8c // indirect
 	github.com/quic-go/qpack v0.6.0 // indirect
 	github.com/quic-go/quic-go v0.58.0 // indirect
-	github.com/rs/xid v1.6.0
 	github.com/sagikazarmark/locafero v0.11.0 // indirect
 	github.com/segmentio/kafka-go v0.4.49 // indirect
 	github.com/shirou/gopsutil/v3 v3.24.5 // indirect

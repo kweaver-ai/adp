@@ -35,13 +35,13 @@ func NewHydraAuthAccess(appSetting *common.AppSetting) interfaces.AuthAccess {
 }
 
 func (ha *hydraAuthAccess) VerifyToken(ctx context.Context, c *gin.Context) (hydra.Visitor, error) {
-	vistor, err := ha.hydra.VerifyToken(ctx, c)
+	visitor, err := ha.hydra.VerifyToken(ctx, c)
 	if err != nil {
 		httpErr := rest.NewHTTPError(ctx, 401, rest.PublicError_Unauthorized).
 			WithErrorDetails(err.Error())
 		logger.Errorf("VerifyToken failed: %v", err)
-		return vistor, httpErr
+		return visitor, httpErr
 	}
 
-	return vistor, nil
+	return visitor, nil
 }
