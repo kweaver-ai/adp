@@ -66,6 +66,7 @@ type CatalogsQueryParams struct {
 
 // CatalogCreateRequest represents create catalog request.
 type CatalogRequest struct {
+	ID            string          `json:"id,omitempty"`
 	Name          string          `json:"name"`
 	Tags          []string        `json:"tags"`
 	Description   string          `json:"description"`

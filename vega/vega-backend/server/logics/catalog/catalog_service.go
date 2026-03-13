@@ -130,8 +130,12 @@ func (cs *catalogService) Create(ctx context.Context, req *interfaces.CatalogReq
 	}
 
 	now := time.Now().UnixMilli()
+	id := req.ID
+	if id == "" {
+		id = xid.New().String()
+	}
 	catalog := &interfaces.Catalog{
-		ID:                 xid.New().String(),
+		ID:                 id,
 		Name:               req.Name,
 		Tags:               req.Tags,
 		Description:        req.Description,

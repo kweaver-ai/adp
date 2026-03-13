@@ -13,8 +13,8 @@ import (
 )
 
 type MatchCond struct {
-	mCfg    *interfaces.FilterCondCfg
-	mFields []*interfaces.Property
+	Cfg    *interfaces.FilterCondCfg
+	Fields []*interfaces.Property
 }
 
 func (c *MatchCond) GetOperation() string { return OperationMatch }
@@ -35,17 +35,17 @@ func (c *MatchCond) New(ctx context.Context, cfg *interfaces.FilterCondCfg,
 	if cfg.Name == "" {
 		return nil, fmt.Errorf("condition [match] left field is empty")
 	}
-	mFields := make([]*interfaces.Property, 0)
+	fields := make([]*interfaces.Property, 0)
 	if cfg.Name == interfaces.AllField {
 		for fieldName := range fieldsMap {
-			mFields = append(mFields, fieldsMap[fieldName])
+			fields = append(fields, fieldsMap[fieldName])
 		}
 	} else {
 		field, ok := fieldsMap[cfg.Name]
 		if !ok {
 			return nil, fmt.Errorf("condition [match] left field '%s' not found", cfg.Name)
 		}
-		mFields = append(mFields, field)
+		fields = append(fields, field)
 	}
 
 	if cfg.ValueOptCfg.ValueFrom != interfaces.ValueFrom_Const {
@@ -53,7 +53,7 @@ func (c *MatchCond) New(ctx context.Context, cfg *interfaces.FilterCondCfg,
 	}
 
 	return &MatchCond{
-		mCfg:    cfg,
-		mFields: mFields,
+		Cfg:    cfg,
+		Fields: fields,
 	}, nil
 }

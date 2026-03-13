@@ -104,6 +104,7 @@ func (r *restHandler) RegisterPublic(engine *gin.Engine) {
 			resources.POST("/dataset/:id/docs", r.verifyJsonContentType(), r.CreateDatasetDocuments)
 			resources.PUT("/dataset/:id/docs", r.verifyJsonContentType(), r.UpdateDatasetDocuments)
 			resources.DELETE("/dataset/:id/docs/:ids", r.DeleteDatasetDocuments)
+			resources.POST("/dataset/:id/docs/query", r.DeleteDatasetDocumentsByQuery) // method override DELETE
 		}
 
 		// ConnectorType APIs

@@ -20,6 +20,7 @@ const (
 	// 403 Forbidden
 	VegaBackend_Catalog_NotFound   = "VegaBackend.Catalog.NotFound"
 	VegaBackend_Catalog_NameExists = "VegaBackend.Catalog.NameExists"
+	VegaBackend_Catalog_IDExists   = "VegaBackend.Catalog.IDExists"
 	VegaBackend_Catalog_HasAssets  = "VegaBackend.Catalog.HasAssets"
 	VegaBackend_Catalog_IsDisabled = "VegaBackend.Catalog.IsDisabled"
 
@@ -47,6 +48,7 @@ var CatalogErrCodeList = []string{
 	VegaBackend_Catalog_LengthExceeded_Description,
 	VegaBackend_Catalog_NotFound,
 	VegaBackend_Catalog_NameExists,
+	VegaBackend_Catalog_IDExists,
 	VegaBackend_Catalog_HasAssets,
 	VegaBackend_Catalog_IsDisabled,
 	VegaBackend_Catalog_InternalError,

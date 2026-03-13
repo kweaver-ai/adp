@@ -43,6 +43,11 @@ Description = "目录名称已存在"
 Solution = "请使用其他名称"
 ErrorLink = "暂无"
 
+[VegaBackend.Catalog.IDExists]
+Description = "目录ID已存在"
+Solution = "请使用其他ID"
+ErrorLink = "暂无"
+
 [VegaBackend.Catalog.HasAssets]
 Description = "目录下存在资产，无法删除"
 Solution = "请先删除目录下的所有资产"

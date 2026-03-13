@@ -77,8 +77,12 @@ func (rs *resourceService) Create(ctx context.Context, req *interfaces.ResourceR
 	}
 
 	now := time.Now().UnixMilli()
+	id := req.ID
+	if id == "" {
+		id = xid.New().String()
+	}
 	resource := &interfaces.Resource{
-		ID:               xid.New().String(),
+		ID:               id,
 		CatalogID:        req.CatalogID,
 		Name:             req.Name,
 		Tags:             req.Tags,

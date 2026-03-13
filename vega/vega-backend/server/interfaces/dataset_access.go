@@ -15,11 +15,12 @@ type DatasetAccess interface {
 	Update(ctx context.Context, name string, schemaDefinition []*Property) error
 	Delete(ctx context.Context, name string) error
 	CheckExist(ctx context.Context, name string) (bool, error)
-	ListDocuments(ctx context.Context, name string, params *ResourceDataQueryParams) ([]map[string]any, int64, error)
+	ListDocuments(ctx context.Context, name string, params *ResourceDataQueryParams, schemaDefinition []*Property) ([]map[string]any, int64, error)
 	CreateDocuments(ctx context.Context, name string, documents []map[string]any) ([]string, error)
 	GetDocument(ctx context.Context, name string, docID string) (map[string]any, error)
 	UpdateDocument(ctx context.Context, name string, docID string, document map[string]any) error
 	DeleteDocument(ctx context.Context, name string, docID string) error
 	UpdateDocuments(ctx context.Context, name string, updateRequests []map[string]any) error
 	DeleteDocuments(ctx context.Context, name string, docIDs string) error
+	DeleteDocumentsByQuery(ctx context.Context, name string, params *ResourceDataQueryParams, schemaDefinition []*Property) error
 }

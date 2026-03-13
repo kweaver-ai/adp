@@ -19,6 +19,7 @@ const (
 	// 403 Forbidden
 	VegaBackend_Resource_NotFound        = "VegaBackend.Resource.NotFound"
 	VegaBackend_Resource_NameExists      = "VegaBackend.Resource.NameExists"
+	VegaBackend_Resource_IDExists        = "VegaBackend.Resource.IDExists"
 	VegaBackend_Resource_CatalogNotFound = "VegaBackend.Resource.CatalogNotFound"
 	VegaBackend_Resource_IsDisabled      = "VegaBackend.Resource.IsDisabled"
 	VegaBackend_Resource_AlreadyEnabled  = "VegaBackend.Resource.AlreadyEnabled"
@@ -43,6 +44,7 @@ var ResourceErrCodeList = []string{
 	VegaBackend_Resource_LengthExceeded_Description,
 	VegaBackend_Resource_NotFound,
 	VegaBackend_Resource_NameExists,
+	VegaBackend_Resource_IDExists,
 	VegaBackend_Resource_CatalogNotFound,
 	VegaBackend_Resource_IsDisabled,
 	VegaBackend_Resource_AlreadyEnabled,

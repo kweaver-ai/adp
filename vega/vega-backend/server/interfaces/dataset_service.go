@@ -23,4 +23,5 @@ type DatasetService interface {
 	DeleteDocument(ctx context.Context, id string, docID string) error
 	UpdateDocuments(ctx context.Context, id string, updateRequests []map[string]any) error
 	DeleteDocuments(ctx context.Context, id string, docIDs string) error
+	DeleteDocumentsByQuery(ctx context.Context, res *Resource, params *ResourceDataQueryParams) error
 }

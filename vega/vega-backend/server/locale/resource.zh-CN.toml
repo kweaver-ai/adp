@@ -38,6 +38,11 @@ Description = "数据资源名称已存在于该目录"
 Solution = "请使用其他名称"
 ErrorLink = "暂无"
 
+[VegaBackend.Resource.IDExists]
+Description = "数据资源ID已存在"
+Solution = "请使用其他ID"
+ErrorLink = "暂无"
+
 [VegaBackend.Resource.CatalogNotFound]
 Description = "数据资源所属目录不存在"
 Solution = "请检查目录ID"

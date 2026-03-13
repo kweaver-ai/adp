@@ -43,6 +43,11 @@ Description = "Catalog name already exists"
 Solution = "Please use a different name"
 ErrorLink = "None"
 
+[VegaBackend.Catalog.IDExists]
+Description = "Catalog ID already exists"
+Solution = "Please use a different ID"
+ErrorLink = "None"
+
 [VegaBackend.Catalog.HasAssets]
 Description = "Catalog has assets and cannot be deleted"
 Solution = "Please delete all assets in the catalog first"

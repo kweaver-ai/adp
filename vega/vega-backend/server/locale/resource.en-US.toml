@@ -38,6 +38,11 @@ Description = "Resource name already exists in catalog"
 Solution = "Please use a different name"
 ErrorLink = "None"
 
+[VegaBackend.Resource.IDExists]
+Description = "Resource ID already exists"
+Solution = "Please use a different ID"
+ErrorLink = "None"
+
 [VegaBackend.Resource.CatalogNotFound]
 Description = "Catalog not found for resource"
 Solution = "Please check the catalog ID"

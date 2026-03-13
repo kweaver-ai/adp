@@ -147,6 +147,25 @@ func (r *restHandler) CreateResource(c *gin.Context) {
 		return
 	}
 
+	// Check if id exists if provided
+	if req.ID != "" {
+		exists, err := r.rs.CheckExistByID(ctx, req.ID)
+		if err != nil {
+			httpErr := rest.NewHTTPError(ctx, http.StatusInternalServerError,
+				verrors.VegaBackend_Resource_InternalError).WithErrorDetails(err.Error())
+			o11y.AddHttpAttrs4HttpError(span, httpErr)
+			rest.ReplyError(c, httpErr)
+			return
+		}
+		if exists {
+			httpErr := rest.NewHTTPError(ctx, http.StatusConflict, verrors.VegaBackend_Resource_IDExists).
+				WithErrorDetails(fmt.Sprintf("id %s already exists", req.ID))
+			o11y.AddHttpAttrs4HttpError(span, httpErr)
+			rest.ReplyError(c, httpErr)
+			return
+		}
+	}
+
 	id, err := r.rs.Create(ctx, &req)
 	if err != nil {
 		httpErr := err.(*rest.HTTPError)

@@ -59,11 +59,23 @@ type Resource struct {
 }
 
 type Property struct {
-	Name         string `json:"name"`
-	Type         string `json:"type"`
-	DisplayName  string `json:"display_name"`
-	OriginalName string `json:"original_name"`
-	Description  string `json:"description"`
+	Name         string            `json:"name"`
+	Type         string            `json:"type"`
+	DisplayName  string            `json:"display_name"`
+	OriginalName string            `json:"original_name"`
+	Description  string            `json:"description"`
+	Features     []PropertyFeature `json:"features"`
+}
+
+type PropertyFeature struct {
+	FeatureName string         `json:"name"`
+	DisplayName string         `json:"display_name"`
+	FeatureType string         `json:"feature_type"` // 特性类型：keyword, fulltext, vector
+	Description string         `json:"description"`
+	RefProperty string         `json:"ref_property"`
+	IsDefault   bool           `json:"is_default"`
+	IsNative    bool           `json:"is_native"`
+	Config      map[string]any `json:"config"`
 }
 
 // ResourcesQueryParams holds resource list query parameters.
@@ -77,6 +89,7 @@ type ResourcesQueryParams struct {
 
 // ResourceCreateRequest represents create resource request.
 type ResourceRequest struct {
+	ID          string   `json:"id,omitempty"`
 	CatalogID   string   `json:"catalog_id"`
 	Name        string   `json:"name"`
 	Tags        []string `json:"tags"`

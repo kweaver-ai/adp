@@ -19,9 +19,9 @@ import (
 	"vega-backend-tests/testutil"
 )
 
-// TestDatasetResourceCreate Dataset资源创建AT测试
-// 测试编号前缀: DS1xx (Dataset Create)
-func TestDatasetResourceCreate(t *testing.T) {
+// TestDatasetResourceCreateAndQuery Dataset资源创建和查询AT测试
+// 测试编号前缀: DS1xx (Dataset Create and Query)
+func TestDatasetResourceCreateAndQuery(t *testing.T) {
 	var (
 		ctx    context.Context
 		config *setup.TestConfig
@@ -50,37 +50,14 @@ func TestDatasetResourceCreate(t *testing.T) {
 
 		// ========== 正向测试（DS101-DS120） ==========
 
-		Convey("DS101: 创建dataset资源 - 基本场景", func() {
+		Convey("DS101: 创建dataset资源", func() {
 			payload := buildDatasetResourcePayload()
 			resp := client.POST("/api/vega-backend/v1/resources", payload)
 			So(resp.StatusCode, ShouldEqual, http.StatusCreated)
 			So(resp.Body["id"], ShouldNotBeEmpty)
 		})
 
-		Convey("DS102: 创建dataset资源 - 完整字段", func() {
-			payload := buildFullDatasetResourcePayload()
-			resp := client.POST("/api/vega-backend/v1/resources", payload)
-			So(resp.StatusCode, ShouldEqual, http.StatusCreated)
-			So(resp.Body["id"], ShouldNotBeEmpty)
-		})
-
-		Convey("DS103: 创建后验证category为dataset", func() {
-			payload := buildDatasetResourcePayload()
-			createResp := client.POST("/api/vega-backend/v1/resources", payload)
-			So(createResp.StatusCode, ShouldEqual, http.StatusCreated)
-
-			resourceID := createResp.Body["id"].(string)
-
-			// 查询验证
-			getResp := client.GET("/api/vega-backend/v1/resources/" + resourceID)
-			So(getResp.StatusCode, ShouldEqual, http.StatusOK)
-
-			resource := extractFromEntriesResponse(getResp)
-			So(resource, ShouldNotBeNil)
-			So(resource["category"], ShouldEqual, "dataset")
-		})
-
-		Convey("DS104: 创建后立即查询", func() {
+		Convey("DS102: 创建后立即查询", func() {
 			payload := buildDatasetResourcePayload()
 			createResp := client.POST("/api/vega-backend/v1/resources", payload)
 			So(createResp.StatusCode, ShouldEqual, http.StatusCreated)
@@ -91,11 +68,214 @@ func TestDatasetResourceCreate(t *testing.T) {
 			getResp := client.GET("/api/vega-backend/v1/resources/" + resourceID)
 			So(getResp.StatusCode, ShouldEqual, http.StatusOK)
 			resource := extractFromEntriesResponse(getResp)
+			So(resource, ShouldNotBeNil)
+			So(resource["category"], ShouldEqual, "dataset")
 			So(resource["id"], ShouldEqual, resourceID)
 			So(resource["name"], ShouldEqual, payload["name"])
 		})
 
-		// ========== 负向测试（DS121-DS127） ==========
+		Convey("DS103: 获取不存在的resource", func() {
+			resp := client.GET("/api/vega-backend/v1/resources/non-existent-id-12345")
+			So(resp.StatusCode, ShouldEqual, http.StatusNotFound)
+		})
+
+		Convey("DS104: 列表查询 - 按category过滤dataset", func() {
+			// 创建1个dataset resource
+			payload := buildDatasetResourcePayload()
+			createResp := client.POST("/api/vega-backend/v1/resources", payload)
+			So(createResp.StatusCode, ShouldEqual, http.StatusCreated)
+
+			// 查询dataset类型
+			datasetResp := client.GET("/api/vega-backend/v1/resources?category=dataset&offset=0&limit=10")
+			So(datasetResp.StatusCode, ShouldEqual, http.StatusOK)
+
+			if datasetResp.Body != nil && datasetResp.Body["entries"] != nil {
+				entries := datasetResp.Body["entries"].([]any)
+				So(len(entries), ShouldBeGreaterThanOrEqualTo, 1)
+			}
+		})
+
+		Convey("DS105: 创建dataset资源 - 包含object类型字段", func() {
+			// 构建带有object类型字段的payload
+			payload := map[string]any{
+				"name":           generateUniqueName("test-dataset-object-field"),
+				"category":       "dataset",
+				"connector_type": "mariadb",
+				"description":    "测试包含object类型字段的数据集",
+				"tags":           []string{"test", "dataset", "object"},
+				"config": map[string]any{
+					"host":     "localhost",
+					"port":     3306,
+					"username": "root",
+					"password": "Password123",
+					"database": "test",
+				},
+				"source_identifier": "at_db",
+				"schema_definition": []map[string]any{
+					{"name": "id", "type": "keyword"},
+					{"name": "name", "type": "text"},
+					{"name": "user_info", "type": "object"},
+				},
+			}
+
+			// 创建资源
+			resp := client.POST("/api/vega-backend/v1/resources", payload)
+			So(resp.StatusCode, ShouldEqual, http.StatusCreated)
+			So(resp.Body["id"], ShouldNotBeEmpty)
+
+			// 验证创建的资源
+			resourceID := resp.Body["id"].(string)
+			getResp := client.GET("/api/vega-backend/v1/resources/" + resourceID)
+			So(getResp.StatusCode, ShouldEqual, http.StatusOK)
+
+			resource := extractFromEntriesResponse(getResp)
+			So(resource, ShouldNotBeNil)
+			So(resource["id"], ShouldEqual, resourceID)
+			So(resource["name"], ShouldEqual, payload["name"])
+
+			// 写入包含object类型数据的文档
+			docPayload := map[string]any{
+				"id":   "obj-123",
+				"name": "Test Object User",
+				"user_info": map[string]any{
+					"age":   30,
+					"email": "test@example.com",
+					"address": map[string]any{
+						"city": "New York",
+						"zip":  "10001",
+					},
+				},
+			}
+			createDocResp := client.POST("/api/vega-backend/v1/resources/dataset/"+resourceID+"/docs", []map[string]any{docPayload})
+			So(createDocResp.StatusCode, ShouldEqual, http.StatusCreated)
+			So(createDocResp.Body["ids"], ShouldNotBeEmpty)
+
+			// 验证文档创建成功
+			ids, ok := createDocResp.Body["ids"].([]interface{})
+			So(ok, ShouldBeTrue)
+			So(len(ids), ShouldBeGreaterThan, 0)
+		})
+
+		Convey("DS106: 创建dataset资源 - object数据类型，自定定义是嵌套，非 object", func() {
+			var err error
+			config, err := setup.LoadTestConfig()
+			So(err, ShouldBeNil)
+
+			client := testutil.NewHTTPClient(config.VegaBackend.BaseURL)
+			err = client.CheckHealth()
+			So(err, ShouldBeNil)
+
+			cleanupResources(client, t)
+
+			payload := map[string]any{
+				"name":              generateUniqueName("test-dataset-specific-schema"),
+				"category":          "dataset",
+				"source_identifier": "at_db",
+				"schema_definition": []map[string]any{
+					{"name": "id", "type": "keyword"},
+					{"name": "name", "type": "text"},
+					{"name": "address.a", "type": "text"},
+					{"name": "address.b", "type": "text"},
+				},
+			}
+
+			// 创建资源
+			createResp := client.POST("/api/vega-backend/v1/resources", payload)
+			So(createResp.StatusCode, ShouldEqual, http.StatusCreated)
+			So(createResp.Body["id"], ShouldNotBeEmpty)
+
+			// 验证创建的资源
+			resourceID := createResp.Body["id"].(string)
+			getResp := client.GET("/api/vega-backend/v1/resources/" + resourceID)
+			So(getResp.StatusCode, ShouldEqual, http.StatusOK)
+
+			resource := extractFromEntriesResponse(getResp)
+			So(resource, ShouldNotBeNil)
+			So(resource["id"], ShouldEqual, resourceID)
+
+			// 写入文档
+			docPayload := map[string]any{
+				"id":   "123456",
+				"name": "Test User",
+				"address": map[string]any{
+					"a": "123 Main St",
+					"b": "Anytown, USA",
+				},
+			}
+			createDocResp := client.POST("/api/vega-backend/v1/resources/dataset/"+resourceID+"/docs", []map[string]any{docPayload})
+			So(createDocResp.StatusCode, ShouldEqual, http.StatusCreated)
+			So(createDocResp.Body["ids"], ShouldNotBeEmpty)
+			ids, ok := createDocResp.Body["ids"].([]interface{})
+			So(ok, ShouldBeTrue)
+			So(len(ids), ShouldBeGreaterThan, 0)
+			//docID := ids[0].(string)
+
+			// 通过 keyword 类型的 id 查询验证写入的文档
+			client.SetHeader("X-HTTP-Method-Override", "GET")
+			getDocResp := client.POST("/api/vega-backend/v1/resources/"+resourceID+"/data", map[string]any{
+				"offset": 0,
+				"limit":  10,
+				"filter_condition": map[string]any{
+					"operation": "eq",
+					"field":     "id",
+					"value":     "123456",
+				},
+				"output_fields": []string{"id", "name", "address"},
+				"need_total":    false,
+			})
+			client.RemoveHeader("X-HTTP-Method-Override")
+			So(getDocResp.StatusCode, ShouldEqual, http.StatusOK)
+			So(getDocResp.Body["entries"], ShouldNotBeNil)
+			entries := getDocResp.Body["entries"].([]any)
+			So(len(entries), ShouldBeGreaterThan, 0)
+			doc := entries[0].(map[string]any)
+			So(doc["id"], ShouldEqual, "123456")
+			So(doc["name"], ShouldEqual, "Test User")
+			So(doc["address"], ShouldNotBeEmpty)
+			address := doc["address"].(map[string]any)
+			So(address["a"], ShouldEqual, "123 Main St")
+			So(address["b"], ShouldEqual, "Anytown, USA")
+
+			// 通过 text 类型的 name 查询验证写入的文档
+			client.SetHeader("X-HTTP-Method-Override", "GET")
+			getDocByNameResp := client.POST("/api/vega-backend/v1/resources/"+resourceID+"/data", map[string]any{
+				"offset": 0,
+				"limit":  10,
+				"filter_condition": map[string]any{
+					"operation": "match",
+					"field":     "name",
+					"value":     "Test User",
+				},
+				"output_fields": []string{"_id", "name", "address"},
+				"need_total":    false,
+			})
+			client.RemoveHeader("X-HTTP-Method-Override")
+			So(getDocByNameResp.StatusCode, ShouldEqual, http.StatusOK)
+			So(getDocByNameResp.Body["entries"], ShouldNotBeNil)
+			entriesByName := getDocByNameResp.Body["entries"].([]any)
+			So(len(entriesByName), ShouldBeGreaterThan, 0)
+			docByName := entriesByName[0].(map[string]any)
+			So(docByName["name"], ShouldEqual, "Test User")
+
+			// 清理资源
+			cleanupResources(client, t)
+		})
+
+		Convey("DS107: 指定ID创建dataset资源", func() {
+			payload := buildDatasetResourcePayload()
+			specificID := generateUniqueName("test-dataset-specific-id")
+			payload["id"] = specificID
+			createResp := client.POST("/api/vega-backend/v1/resources", payload)
+			So(createResp.StatusCode, ShouldEqual, http.StatusCreated)
+
+			// 立即查询
+			getResp := client.GET("/api/vega-backend/v1/resources/" + specificID)
+			So(getResp.StatusCode, ShouldEqual, http.StatusOK)
+			resource := extractFromEntriesResponse(getResp)
+			So(resource, ShouldNotBeNil)
+		})
+
+		// ========== 反向测试（DS121-DS127） ==========
 
 		Convey("DS121: 重复的resource名称", func() {
 			fixedName := generateUniqueName("duplicate-dataset")
@@ -163,12 +343,16 @@ func cleanupResources(client *testutil.HTTPClient, t *testing.T) {
 	}
 }
 
-// buildDatasetResourcePayload 构建基本的dataset资源payload
+// buildDatasetResourcePayload 构建dataset资源payload
 func buildDatasetResourcePayload() map[string]any {
 	return map[string]any{
-		"name":           generateUniqueName("test-dataset"),
-		"category":       "dataset",
-		"connector_type": "mariadb",
+		"catalog_id":        "default",
+		"name":              generateUniqueName("test-dataset-full"),
+		"tags":              []string{"test", "dataset"},
+		"description":       "测试数据集资源",
+		"category":          "dataset",
+		"status":            "active",
+		"source_identifier": "at_db",
 		"config": map[string]any{
 			"host":     "localhost",
 			"port":     3306,
@@ -176,39 +360,59 @@ func buildDatasetResourcePayload() map[string]any {
 			"password": "Password123",
 			"database": "test",
 		},
-		"source_identifier": "at_db",
 		"schema_definition": []map[string]any{
-			{"name": "_id", "type": "keyword"},
-			{"name": "@timestamp", "type": "long"},
-			{"name": "name", "type": "text"},
-			{"name": "age", "type": "integer"},
-			{"name": "content", "type": "vector[768]"},
-		},
-	}
-}
-
-// buildFullDatasetResourcePayload 构建完整的dataset资源payload
-func buildFullDatasetResourcePayload() map[string]any {
-	return map[string]any{
-		"name":           generateUniqueName("test-dataset-full"),
-		"category":       "dataset",
-		"connector_type": "mariadb",
-		"description":    "测试数据集资源",
-		"tags":           []string{"test", "dataset"},
-		"config": map[string]any{
-			"host":     "localhost",
-			"port":     3306,
-			"username": "root",
-			"password": "Password123",
-			"database": "test",
-		},
-		"source_identifier": "at_db",
-		"schema_definition": []map[string]any{
-			{"name": "_id", "type": "keyword"},
-			{"name": "@timestamp", "type": "long"},
-			{"name": "name", "type": "text"},
-			{"name": "age", "type": "integer"},
-			{"name": "content", "type": "vector[768]"},
+			{"name": "id", "type": "keyword", "display_name": "ID", "original_name": "id", "description": "唯一标识符"},
+			{"name": "@timestamp", "type": "long", "display_name": "时间戳", "original_name": "@timestamp", "description": "事件发生时间"},
+			{"name": "name", "type": "text", "display_name": "名称", "original_name": "name", "description": "用户名称", "features": []map[string]any{
+				{
+					"name":         "keyword_name",
+					"display_name": "关键词名称",
+					"feature_type": "keyword",
+					"description":  "用户名称的关键词表示",
+					"ref_property": "name",
+					"is_default":   true,
+					"is_native":    true,
+					"config": map[string]any{
+						"ignore_above": 1024,
+					},
+				},
+				{
+					"name":         "fulltext_name",
+					"display_name": "全文名称",
+					"feature_type": "fulltext",
+					"description":  "用户名称的全文表示",
+					"ref_property": "name",
+					"is_default":   true,
+					"is_native":    true,
+					"config": map[string]any{
+						"analyzer": "standard",
+					},
+				},
+			}},
+			{"name": "age", "type": "integer", "display_name": "年龄", "original_name": "age", "description": "用户年龄"},
+			{"name": "email", "type": "text", "display_name": "邮箱", "original_name": "email", "description": "用户邮箱"},
+			{"name": "active", "type": "boolean", "display_name": "是否激活", "original_name": "active", "description": "用户是否激活"},
+			{"name": "tags", "type": "keyword", "display_name": "标签", "original_name": "tags", "description": "用户标签"},
+			{"name": "content", "type": "vector", "display_name": "内容向量", "original_name": "content", "description": "用户内容向量", "features": []map[string]any{
+				{
+					"name":         "content",
+					"display_name": "内容向量",
+					"feature_type": "vector",
+					"description":  "用户内容向量",
+					"ref_property": "content",
+					"is_default":   true,
+					"is_native":    true,
+					"config": map[string]any{
+						"dimension": 768,
+						"method": map[string]any{
+							"engine": "lucene",
+							"parameters": map[string]any{
+								"ef_construction": 256,
+							},
+						},
+					},
+				},
+			}},
 		},
 	}
 }
@@ -267,71 +471,6 @@ func generateVector(dims int) []float64 {
 		vector[i] = rand.Float64()*2 - 1 // 生成 [-1, 1] 范围内的随机数
 	}
 	return vector
-}
-
-// TestDatasetResourceRead Dataset资源读取AT测试
-// 测试编号前缀: DS2xx
-func TestDatasetResourceRead(t *testing.T) {
-	var (
-		ctx    context.Context
-		config *setup.TestConfig
-		client *testutil.HTTPClient
-	)
-
-	Convey("Dataset资源读取AT测试 - 初始化", t, func() {
-		ctx = context.Background()
-
-		var err error
-		config, err = setup.LoadTestConfig()
-		So(err, ShouldBeNil)
-
-		client = testutil.NewHTTPClient(config.VegaBackend.BaseURL)
-		err = client.CheckHealth()
-		So(err, ShouldBeNil)
-
-		cleanupResources(client, t)
-
-		// ========== 读取测试（DS201-DS210） ==========
-
-		Convey("DS201: 获取存在的dataset资源", func() {
-			// 先创建
-			payload := buildDatasetResourcePayload()
-			createResp := client.POST("/api/vega-backend/v1/resources", payload)
-			So(createResp.StatusCode, ShouldEqual, http.StatusCreated)
-			resourceID := createResp.Body["id"].(string)
-
-			// 查询
-			getResp := client.GET("/api/vega-backend/v1/resources/" + resourceID)
-			So(getResp.StatusCode, ShouldEqual, http.StatusOK)
-
-			resource := extractFromEntriesResponse(getResp)
-			So(resource, ShouldNotBeNil)
-			So(resource["id"], ShouldEqual, resourceID)
-		})
-
-		Convey("DS202: 获取不存在的resource", func() {
-			resp := client.GET("/api/vega-backend/v1/resources/non-existent-id-12345")
-			So(resp.StatusCode, ShouldEqual, http.StatusNotFound)
-		})
-
-		Convey("DS203: 列表查询 - 按category过滤dataset", func() {
-			// 创建1个dataset resource
-			payload := buildDatasetResourcePayload()
-			createResp := client.POST("/api/vega-backend/v1/resources", payload)
-			So(createResp.StatusCode, ShouldEqual, http.StatusCreated)
-
-			// 查询dataset类型
-			datasetResp := client.GET("/api/vega-backend/v1/resources?category=dataset&offset=0&limit=10")
-			So(datasetResp.StatusCode, ShouldEqual, http.StatusOK)
-
-			if datasetResp.Body != nil && datasetResp.Body["entries"] != nil {
-				entries := datasetResp.Body["entries"].([]any)
-				So(len(entries), ShouldBeGreaterThanOrEqualTo, 1)
-			}
-		})
-	})
-
-	_ = ctx
 }
 
 // TestDatasetResourceUpdate Dataset资源更新AT测试
@@ -534,18 +673,41 @@ func TestDatasetDocumentsList(t *testing.T) {
 		documentsPayload := []map[string]any{
 			{
 				"@timestamp": time.Now().UnixMilli(),
+				"id":         "doc1",
 				"name":       "User 1",
 				"age":        25,
+				"email":      "user1@example.com",
+				"active":     true,
+				"tags":       []string{"tag1", "tag2"},
+				"content":    generateVector(768),
+			},
+			{
+				"@timestamp": time.Now().UnixMilli() + 1000,
+				"id":         "doc2",
+				"name":       "User 2",
+				"age":        30,
+				"email":      "user2@example.com",
+				"active":     false,
+				"tags":       []string{"tag2", "tag3"},
+				"content":    generateVector(768),
+			},
+			{
+				"@timestamp": time.Now().UnixMilli() + 2000,
+				"id":         "doc3",
+				"name":       "Admin User",
+				"age":        35,
+				"email":      "admin@example.com",
+				"active":     true,
 				"content":    generateVector(768),
 			},
 		}
 		createDocsResp := client.POST("/api/vega-backend/v1/resources/dataset/"+resourceID+"/docs", documentsPayload)
 		So(createDocsResp.StatusCode, ShouldEqual, http.StatusCreated)
 
-		// 构建查询条件
-		queryPayload := map[string]any{
+		// 构建基础查询条件
+		baseQuery := map[string]any{
 			"start": time.Now().UnixMilli() - (24 * 3600 * 1000),
-			"end":   time.Now().UnixMilli(),
+			"end":   time.Now().UnixMilli() + (24 * 3600 * 1000),
 			"sort": []map[string]any{
 				{
 					"field":     "@timestamp",
@@ -557,12 +719,350 @@ func TestDatasetDocumentsList(t *testing.T) {
 			"need_total":       true,
 			"use_search_after": false,
 		}
-		// 使用POST请求到/data端点（method override GET）
-		client.SetHeader("X-HTTP-Method-Override", "GET")
-		resp := client.POST("/api/vega-backend/v1/resources/"+resourceID+"/data", queryPayload)
-		client.RemoveHeader("X-HTTP-Method-Override")
-		So(resp.StatusCode, ShouldEqual, http.StatusOK)
-		So(resp.Body["entries"], ShouldNotBeEmpty)
+
+		// 测试函数
+		testFilterQuery := func(filterCondition map[string]any, expectedMinResults int) {
+			query := make(map[string]any)
+			for k, v := range baseQuery {
+				query[k] = v
+			}
+			query["filter_condition"] = filterCondition
+
+			// 使用POST请求到/data端点（method override GET）
+			client.SetHeader("X-HTTP-Method-Override", "GET")
+			resp := client.POST("/api/vega-backend/v1/resources/"+resourceID+"/data", query)
+			client.RemoveHeader("X-HTTP-Method-Override")
+			So(resp.StatusCode, ShouldEqual, http.StatusOK)
+
+			if resp.Body != nil && resp.Body["entries"] != nil {
+				entries := resp.Body["entries"].([]any)
+				So(len(entries), ShouldBeGreaterThanOrEqualTo, expectedMinResults)
+			}
+		}
+
+		// 测试等于查询
+		Convey("DD102.1: 等于查询 (eq)", func() {
+			testFilterQuery(map[string]any{
+				"operation":  "eq",
+				"field":      "name",
+				"value":      "User 1",
+				"value_from": "const",
+			}, 1)
+		})
+
+		// 测试不等于查询
+		Convey("DD102.2: 不等于查询 (not_eq)", func() {
+			testFilterQuery(map[string]any{
+				"operation":  "!=",
+				"field":      "name",
+				"value":      "User 1",
+				"value_from": "const",
+			}, 2)
+		})
+
+		// 测试大于查询
+		Convey("DD102.3: 大于查询 (gt)", func() {
+			testFilterQuery(map[string]any{
+				"operation":  "gt",
+				"field":      "age",
+				"value":      25,
+				"value_from": "const",
+			}, 2)
+		})
+
+		// 测试大于等于查询
+		Convey("DD102.4: 大于等于查询 (gte)", func() {
+			testFilterQuery(map[string]any{
+				"operation":  "gte",
+				"field":      "age",
+				"value":      30,
+				"value_from": "const",
+			}, 2)
+		})
+
+		// 测试小于查询
+		Convey("DD102.5: 小于查询 (lt)", func() {
+			testFilterQuery(map[string]any{
+				"operation":  "lt",
+				"field":      "age",
+				"value":      30,
+				"value_from": "const",
+			}, 1)
+		})
+
+		// 测试小于等于查询
+		Convey("DD102.6: 小于等于查询 (lte)", func() {
+			testFilterQuery(map[string]any{
+				"operation":  "lte",
+				"field":      "age",
+				"value":      30,
+				"value_from": "const",
+			}, 2)
+		})
+
+		// 测试在集合中查询
+		Convey("DD102.7: 在集合中查询 (in)", func() {
+			testFilterQuery(map[string]any{
+				"operation":  "in",
+				"field":      "id",
+				"value":      []string{"doc1", "doc2"},
+				"value_from": "const",
+			}, 2)
+		})
+
+		// 测试不在集合中查询
+		Convey("DD102.8: 不在集合中查询 (not_in)", func() {
+			testFilterQuery(map[string]any{
+				"operation":  "not_in",
+				"field":      "id",
+				"value":      []string{"doc1"},
+				"value_from": "const",
+			}, 2)
+		})
+
+		// 测试模糊匹配查询
+		Convey("DD102.9: 模糊匹配查询 (like)", func() {
+			testFilterQuery(map[string]any{
+				"operation":  "like",
+				"field":      "name",
+				"value":      "User",
+				"value_from": "const",
+			}, 2)
+		})
+
+		// // 测试模糊不匹配查询
+		// Convey("DD102.10: 不模糊匹配查询 (not_like)", func() {
+		// 	testFilterQuery(map[string]any{
+		// 		"operation":  "not_like",
+		// 		"field":      "name",
+		// 		"value":      "User",
+		// 		"value_from": "const",
+		// 	}, 1)
+		// })
+
+		// // 测试包含查询
+		// Convey("DD102.11: 包含查询 (contain)", func() {
+		// 	testFilterQuery(map[string]any{
+		// 		"operation":  "contain",
+		// 		"field":      "tags",
+		// 		"value":      "tag2",
+		// 		"value_from": "const",
+		// 	}, 2)
+		// })
+
+		// // 测试不包含查询
+		// Convey("DD102.12: 不包含查询 (not_contain)", func() {
+		// 	testFilterQuery(map[string]any{
+		// 		"operation":  "not_contain",
+		// 		"field":      "tags",
+		// 		"value":      "tag3",
+		// 		"value_from": "const",
+		// 	}, 2)
+		// })
+
+		// 测试前缀匹配查询
+		Convey("DD102.13: 前缀匹配查询 (prefix)", func() {
+			testFilterQuery(map[string]any{
+				"operation":  "prefix",
+				"field":      "email",
+				"value":      "user",
+				"value_from": "const",
+			}, 2)
+		})
+
+		// 测试不前缀匹配查询
+		Convey("DD102.14: 不前缀匹配查询 (not_prefix)", func() {
+			testFilterQuery(map[string]any{
+				"operation":  "not_prefix",
+				"field":      "email",
+				"value":      "user",
+				"value_from": "const",
+			}, 1)
+		})
+
+		// 测试字段存在查询
+		Convey("DD102.15: 字段存在查询 (exist)", func() {
+			testFilterQuery(map[string]any{
+				"operation":  "exist",
+				"field":      "tags",
+				"value_from": "const",
+			}, 2)
+		})
+
+		// 测试字段不存在查询
+		Convey("DD102.16: 字段不存在查询 (not_exist)", func() {
+			testFilterQuery(map[string]any{
+				"operation":  "not_exist",
+				"field":      "tags",
+				"value_from": "const",
+			}, 1)
+		})
+
+		// 测试字段为null查询
+		Convey("DD102.17: 字段为null查询 (null)", func() {
+			testFilterQuery(map[string]any{
+				"operation":  "null",
+				"field":      "tags",
+				"value_from": "const",
+			}, 1)
+		})
+
+		// 测试字段不为null查询
+		Convey("DD102.18: 字段不为null查询 (not_null)", func() {
+			testFilterQuery(map[string]any{
+				"operation":  "not_null",
+				"field":      "tags",
+				"value_from": "const",
+			}, 2)
+		})
+
+		// 测试布尔值true查询
+		Convey("DD102.19: 布尔值true查询 (true)", func() {
+			testFilterQuery(map[string]any{
+				"operation":  "true",
+				"field":      "active",
+				"value_from": "const",
+			}, 2)
+		})
+
+		// 测试布尔值false查询
+		Convey("DD102.20: 布尔值false查询 (false)", func() {
+			testFilterQuery(map[string]any{
+				"operation":  "false",
+				"field":      "active",
+				"value_from": "const",
+			}, 1)
+		})
+
+		// 测试范围查询
+		Convey("DD102.21: 范围查询 (range)", func() {
+			testFilterQuery(map[string]any{
+				"operation":  "range",
+				"field":      "age",
+				"value":      []int{25, 35},
+				"value_from": "const",
+			}, 2)
+		})
+
+		// 测试between查询
+		Convey("DD102.22: between查询 (between)", func() {
+			testFilterQuery(map[string]any{
+				"operation":  "between",
+				"field":      "age",
+				"value":      []int{25, 35},
+				"value_from": "const",
+			}, 3)
+		})
+
+		// 测试逻辑AND查询
+		Convey("DD102.23: 逻辑AND查询 (and)", func() {
+			testFilterQuery(map[string]any{
+				"operation": "and",
+				"sub_conditions": []map[string]any{
+					{
+						"operation":  "eq",
+						"field":      "active",
+						"value":      true,
+						"value_from": "const",
+					},
+					{
+						"operation":  "gt",
+						"field":      "age",
+						"value":      30,
+						"value_from": "const",
+					},
+				},
+			}, 1)
+		})
+
+		// 测试逻辑OR查询
+		Convey("DD102.24: 逻辑OR查询 (or)", func() {
+			testFilterQuery(map[string]any{
+				"operation": "or",
+				"sub_conditions": []map[string]any{
+					{
+						"operation":  "eq",
+						"field":      "name",
+						"value":      "User 1",
+						"value_from": "const",
+					},
+					{
+						"operation":  "eq",
+						"field":      "name",
+						"value":      "User 2",
+						"value_from": "const",
+					},
+				},
+			}, 2)
+		})
+
+		// 测试match查询
+		Convey("DD102.25: match查询 (match)", func() {
+			testFilterQuery(map[string]any{
+				"operation":  "match",
+				"field":      "name",
+				"value":      "User",
+				"value_from": "const",
+			}, 2)
+		})
+
+		// 测试match_phrase查询
+		Convey("DD102.26: match_phrase查询 (match_phrase)", func() {
+			testFilterQuery(map[string]any{
+				"operation":  "match_phrase",
+				"field":      "name",
+				"value":      "Admin User",
+				"value_from": "const",
+			}, 1)
+		})
+
+		// // 测试multi_match查询
+		// Convey("DD102.27: multi_match查询 (multi_match)", func() {
+		// 	testFilterQuery(map[string]any{
+		// 		"operation":  "multi_match",
+		// 		"field":      []string{"name", "email"},
+		// 		"value":      "User",
+		// 		"value_from": "const",
+		// 	}, 2)
+		// })
+
+		// 测试regex查询
+		Convey("DD102.28: regex查询 (regex)", func() {
+			testFilterQuery(map[string]any{
+				"operation":  "regex",
+				"field":      "email",
+				"value":      ".*@example\\.com",
+				"value_from": "const",
+			}, 3)
+		})
+
+		// // 测试empty查询
+		// Convey("DD102.29: empty查询 (empty)", func() {
+		// 	testFilterQuery(map[string]any{
+		// 		"operation":  "empty",
+		// 		"field":      "tags",
+		// 		"value_from": "const",
+		// 	}, 1)
+		// })
+
+		// // 测试not_empty查询
+		// Convey("DD102.30: not_empty查询 (not_empty)", func() {
+		// 	testFilterQuery(map[string]any{
+		// 		"operation":  "not_empty",
+		// 		"field":      "tags",
+		// 		"value_from": "const",
+		// 	}, 2)
+		// })
+
+		// // 测试out_range查询
+		// Convey("DD102.31: out_range查询 (out_range)", func() {
+		// 	testFilterQuery(map[string]any{
+		// 		"operation":  "out_range",
+		// 		"field":      "age",
+		// 		"value":      []int{25, 35},
+		// 		"value_from": "const",
+		// 	}, 1)
+		// })
 
 		// 清理资源
 		cleanupResources(client, t)
@@ -700,6 +1200,234 @@ func TestDatasetDocumentDelete(t *testing.T) {
 		// 删除文档（使用批量删除接口）
 		resp := client.DELETE("/api/vega-backend/v1/resources/dataset/" + resourceID + "/docs/" + docID)
 		So(resp.StatusCode, ShouldEqual, http.StatusNoContent)
+
+		// 清理资源
+		cleanupResources(client, t)
+	})
+}
+
+// TestDatasetDocumentDeleteByQuery 测试通过查询条件删除dataset文档
+func TestDatasetDocumentDeleteByQuery(t *testing.T) {
+	Convey("DD106: 通过查询条件删除dataset文档", t, func() {
+		var err error
+		config, err := setup.LoadTestConfig()
+		So(err, ShouldBeNil)
+
+		client := testutil.NewHTTPClient(config.VegaBackend.BaseURL)
+		err = client.CheckHealth()
+		So(err, ShouldBeNil)
+
+		cleanupResources(client, t)
+
+		// 创建测试用的dataset resource
+		payload := buildDatasetResourcePayload()
+		createResp := client.POST("/api/vega-backend/v1/resources", payload)
+		So(createResp.StatusCode, ShouldEqual, http.StatusCreated)
+		resourceID := createResp.Body["id"].(string)
+
+		// 先创建多个文档（使用批量创建接口）
+		documentsPayload := []map[string]any{
+			{
+				"@timestamp": time.Now().UnixMilli(),
+				"name":       "User 1",
+				"age":        25,
+				"content":    generateVector(768),
+			},
+			{
+				"@timestamp": time.Now().UnixMilli(),
+				"name":       "User 2",
+				"age":        35,
+				"content":    generateVector(768),
+			},
+			{
+				"@timestamp": time.Now().UnixMilli(),
+				"name":       "User 3",
+				"age":        40,
+				"content":    generateVector(768),
+			},
+		}
+		createDocResp := client.POST("/api/vega-backend/v1/resources/dataset/"+resourceID+"/docs", documentsPayload)
+		So(createDocResp.StatusCode, ShouldEqual, http.StatusCreated)
+		So(createDocResp.Body["ids"], ShouldNotBeEmpty)
+
+		// 构建查询条件（例如删除age大于30的文档）
+		// 直接使用OpenSearch查询DSL格式
+		queryPayload := map[string]any{
+			"filter_condition": map[string]any{
+				"operation":  "range",
+				"field":      "age",
+				"value":      []int{25, 35},
+				"value_from": "const",
+			},
+		}
+
+		// 通过查询条件删除文档（使用POST请求，method override DELETE）
+		client.SetHeader("X-HTTP-Method-Override", "DELETE")
+		resp := client.POST("/api/vega-backend/v1/resources/dataset/"+resourceID+"/docs/query", queryPayload)
+		client.RemoveHeader("X-HTTP-Method-Override")
+		So(resp.StatusCode, ShouldEqual, http.StatusNoContent)
+
+		// 验证是否删除了符合条件的文档
+		// 使用POST请求，method override GET
+		client.SetHeader("X-HTTP-Method-Override", "GET")
+		getResp := client.POST("/api/vega-backend/v1/resources/"+resourceID+"/data", map[string]any{
+			"offset":     0,
+			"limit":      10,
+			"need_total": false,
+		})
+		client.RemoveHeader("X-HTTP-Method-Override")
+		So(getResp.StatusCode, ShouldEqual, http.StatusOK)
+		if getResp.Body != nil && getResp.Body["entries"] != nil {
+			entries := getResp.Body["entries"].([]any)
+			So(len(entries), ShouldEqual, 1) // 只有User 1符合条件（age=25）
+		}
+
+		// 清理资源
+		cleanupResources(client, t)
+	})
+}
+
+// TestDatasetDocumentsSearchAfter 测试使用search after进行分页查询
+func TestDatasetDocumentsSearchAfter(t *testing.T) {
+	Convey("DD107: 使用search after进行分页查询", t, func() {
+		var err error
+		config, err := setup.LoadTestConfig()
+		So(err, ShouldBeNil)
+
+		client := testutil.NewHTTPClient(config.VegaBackend.BaseURL)
+		err = client.CheckHealth()
+		So(err, ShouldBeNil)
+
+		cleanupResources(client, t)
+
+		// 创建测试用的dataset resource
+		payload := buildDatasetResourcePayload()
+		createResp := client.POST("/api/vega-backend/v1/resources", payload)
+		So(createResp.StatusCode, ShouldEqual, http.StatusCreated)
+		resourceID := createResp.Body["id"].(string)
+
+		// 先创建多个文档（使用批量创建接口）
+		documentsPayload := []map[string]any{}
+		for i := 1; i <= 5; i++ {
+			documentsPayload = append(documentsPayload, map[string]any{
+				"@timestamp": time.Now().UnixMilli() + int64(i),
+				"name":       fmt.Sprintf("User %d", i),
+				"age":        20 + i,
+				"content":    generateVector(768),
+			})
+		}
+		createDocResp := client.POST("/api/vega-backend/v1/resources/dataset/"+resourceID+"/docs", documentsPayload)
+		So(createDocResp.StatusCode, ShouldEqual, http.StatusCreated)
+		So(createDocResp.Body["ids"], ShouldNotBeEmpty)
+
+		// 第一次查询，使用sort和limit=2
+		client.SetHeader("X-HTTP-Method-Override", "GET")
+		firstResp := client.POST("/api/vega-backend/v1/resources/"+resourceID+"/data", map[string]any{
+			"limit": 2,
+			"sort": []map[string]any{
+				{
+					"field":     "age",
+					"direction": "asc",
+				},
+			},
+			"need_total": true,
+		})
+		client.RemoveHeader("X-HTTP-Method-Override")
+		So(firstResp.StatusCode, ShouldEqual, http.StatusOK)
+		So(firstResp.Body["entries"], ShouldNotBeEmpty)
+		entries := firstResp.Body["entries"].([]any)
+		So(len(entries), ShouldEqual, 2)
+
+		// 提取最后一个文档的sort值作为search_after参数
+		var searchAfter []any
+		if len(entries) > 0 {
+			lastEntry := entries[len(entries)-1].(map[string]any)
+			// 假设age是排序字段，使用age值作为search_after
+			if age, ok := lastEntry["age"].(float64); ok {
+				searchAfter = []any{age}
+			}
+		}
+
+		// 第二次查询，使用search_after进行分页
+		client.SetHeader("X-HTTP-Method-Override", "GET")
+		secondResp := client.POST("/api/vega-backend/v1/resources/"+resourceID+"/data", map[string]any{
+			"limit": 2,
+			"sort": []map[string]any{
+				{
+					"field":     "age",
+					"direction": "asc",
+				},
+			},
+			"search_after": searchAfter,
+			"need_total":   true,
+		})
+		client.RemoveHeader("X-HTTP-Method-Override")
+		So(secondResp.StatusCode, ShouldEqual, http.StatusOK)
+		So(secondResp.Body["entries"], ShouldNotBeEmpty)
+		secondEntries := secondResp.Body["entries"].([]any)
+		So(len(secondEntries), ShouldEqual, 2)
+
+		// 清理资源
+		cleanupResources(client, t)
+	})
+}
+
+// TestDatasetDocumentsSourceFilter 测试指定_source搜索
+func TestDatasetDocumentsSourceFilter(t *testing.T) {
+	Convey("DD108: 指定_source搜索", t, func() {
+		var err error
+		config, err := setup.LoadTestConfig()
+		So(err, ShouldBeNil)
+
+		client := testutil.NewHTTPClient(config.VegaBackend.BaseURL)
+		err = client.CheckHealth()
+		So(err, ShouldBeNil)
+
+		cleanupResources(client, t)
+
+		// 创建测试用的dataset resource
+		payload := buildDatasetResourcePayload()
+		createResp := client.POST("/api/vega-backend/v1/resources", payload)
+		So(createResp.StatusCode, ShouldEqual, http.StatusCreated)
+		resourceID := createResp.Body["id"].(string)
+
+		// 先创建文档（使用批量创建接口）
+		documentsPayload := []map[string]any{
+			{
+				"@timestamp": time.Now().UnixMilli(),
+				"name":       "Test User",
+				"age":        30,
+				"content":    generateVector(768),
+			},
+		}
+		createDocResp := client.POST("/api/vega-backend/v1/resources/dataset/"+resourceID+"/docs", documentsPayload)
+		So(createDocResp.StatusCode, ShouldEqual, http.StatusCreated)
+		So(createDocResp.Body["ids"], ShouldNotBeEmpty)
+
+		// 测试指定输出字段（只返回name和age字段）
+		client.SetHeader("X-HTTP-Method-Override", "GET")
+		resp := client.POST("/api/vega-backend/v1/resources/"+resourceID+"/data", map[string]any{
+			"offset":        0,
+			"limit":         10,
+			"output_fields": []string{"name", "age", "_score"},
+			"need_total":    false,
+		})
+		client.RemoveHeader("X-HTTP-Method-Override")
+		So(resp.StatusCode, ShouldEqual, http.StatusOK)
+		So(resp.Body["entries"], ShouldNotBeEmpty)
+
+		// 验证返回的文档只包含指定的字段
+		entries := resp.Body["entries"].([]any)
+		So(len(entries), ShouldEqual, 1)
+
+		doc := entries[0].(map[string]any)
+		// 检查是否包含name和age字段
+		So(doc["name"], ShouldNotBeEmpty)
+		So(doc["age"], ShouldNotBeEmpty)
+		So(doc["_score"], ShouldNotBeEmpty)
+		// 检查是否不包含content字段
+		_, hasContent := doc["content"]
+		So(hasContent, ShouldBeFalse)
 
 		// 清理资源
 		cleanupResources(client, t)

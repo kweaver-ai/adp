@@ -45,10 +45,20 @@ type CryptoSetting struct {
 
 // RedisSetting Redis 配置项
 type RedisSetting struct {
-	Host     string
-	Port     int
-	Username string
-	Password string
+	ConnectType      string
+	Username         string
+	Password         string
+	Host             string
+	Port             int
+	MasterHost       string
+	MasterPort       int
+	SlaveHost        string
+	SlavePort        int
+	SentinelHost     string
+	SentinelPort     int
+	SentinelUsername string
+	SentinelPassword string
+	MasterGroupName  string
 }
 
 // AppSetting app配置项
@@ -251,10 +261,20 @@ func SetRedisSetting() {
 	}
 
 	appSetting.RedisSetting = RedisSetting{
-		Host:     setting["host"].(string),
-		Port:     setting["port"].(int),
-		Username: setting["username"].(string),
-		Password: setting["password"].(string),
+		ConnectType:      setting["connecttype"].(string),
+		Username:         setting["username"].(string),
+		Password:         setting["password"].(string),
+		Host:             setting["host"].(string),
+		Port:             setting["port"].(int),
+		MasterHost:       setting["masterhost"].(string),
+		MasterPort:       setting["masterport"].(int),
+		SlaveHost:        setting["slavehost"].(string),
+		SlavePort:        setting["slaveport"].(int),
+		SentinelHost:     setting["sentinelhost"].(string),
+		SentinelPort:     setting["sentinelport"].(int),
+		SentinelUsername: setting["sentinelusername"].(string),
+		SentinelPassword: setting["sentinelpassword"].(string),
+		MasterGroupName:  setting["mastergroupname"].(string),
 	}
 }
 

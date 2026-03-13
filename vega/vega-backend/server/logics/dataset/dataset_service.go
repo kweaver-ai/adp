@@ -17,6 +17,7 @@ import (
 	datasetAccess "vega-backend/drivenadapters/dataset"
 	verrors "vega-backend/errors"
 	"vega-backend/interfaces"
+	"vega-backend/logics/filter_condition"
 )
 
 var (
@@ -106,7 +107,7 @@ func (ds *datasetService) ListDocuments(ctx context.Context, res *interfaces.Res
 	defer span.End()
 
 	// 调用 dataset access 列出文档
-	documents, total, err := ds.da.ListDocuments(ctx, res.ID, params)
+	documents, total, err := ds.da.ListDocuments(ctx, res.ID, params, res.SchemaDefinition)
 	if err != nil {
 		span.SetStatus(codes.Error, "List dataset documents failed")
 		return nil, 0, rest.NewHTTPError(ctx, http.StatusInternalServerError, verrors.VegaBackend_Resource_InternalError).
@@ -206,6 +207,36 @@ func (ds *datasetService) DeleteDocuments(ctx context.Context, id string, docIDs
 
 	// 调用 dataset access 批量删除文档
 	if err := ds.da.DeleteDocuments(ctx, id, docIDs); err != nil {
+		span.SetStatus(codes.Error, "Delete dataset documents failed")
+		return rest.NewHTTPError(ctx, http.StatusInternalServerError, verrors.VegaBackend_Resource_InternalError_DeleteFailed).
+			WithErrorDetails(err.Error())
+	}
+
+	span.SetStatus(codes.Ok, "")
+	return nil
+}
+
+// DeleteDocumentsByQuery 批量删除 dataset 文档
+func (ds *datasetService) DeleteDocumentsByQuery(ctx context.Context, res *interfaces.Resource, params *interfaces.ResourceDataQueryParams) error {
+	ctx, span := ar_trace.Tracer.Start(ctx, "Delete dataset documents by query")
+	defer span.End()
+
+	fieldMap := map[string]*interfaces.Property{}
+	for _, prop := range res.SchemaDefinition {
+		fieldMap[prop.Name] = prop
+	}
+
+	// 创建实际的过滤条件
+	actualFilterCond, err := filter_condition.NewFilterCondition(ctx, params.FilterCondCfg, fieldMap)
+	if err != nil {
+		span.SetStatus(codes.Error, "Create filter condition failed")
+		return rest.NewHTTPError(ctx, http.StatusInternalServerError, verrors.VegaBackend_Resource_InternalError).
+			WithErrorDetails(err.Error())
+	}
+	params.ActualFilterCond = actualFilterCond
+
+	// 调用 dataset access 批量删除文档
+	if err := ds.da.DeleteDocumentsByQuery(ctx, res.ID, params, res.SchemaDefinition); err != nil {
 		span.SetStatus(codes.Error, "Delete dataset documents failed")
 		return rest.NewHTTPError(ctx, http.StatusInternalServerError, verrors.VegaBackend_Resource_InternalError_DeleteFailed).
 			WithErrorDetails(err.Error())
