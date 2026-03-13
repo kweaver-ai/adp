@@ -15,6 +15,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/kweaver-ai/TelemetrySDK-Go/exporter/v2/ar_trace"
 	"github.com/kweaver-ai/kweaver-go-lib/audit"
+	"github.com/kweaver-ai/kweaver-go-lib/hydra"
 	"github.com/kweaver-ai/kweaver-go-lib/logger"
 	o11y "github.com/kweaver-ai/kweaver-go-lib/observability"
 	"github.com/kweaver-ai/kweaver-go-lib/rest"
@@ -25,17 +26,35 @@ import (
 	"vega-backend/interfaces"
 )
 
-// ListCatalogs handles GET /api/vega-backend/v1/catalogs
-func (r *restHandler) ListCatalogs(c *gin.Context) {
+// ========== ListCatalogs ==========
+
+// ListCatalogsByEx handles GET /api/vega-backend/v1/catalogs (External)
+func (r *restHandler) ListCatalogsByEx(c *gin.Context) {
 	ctx, span := ar_trace.Tracer.Start(rest.GetLanguageCtx(c),
-		"ListCatalogs", trace.WithSpanKind(trace.SpanKindServer))
+		"ListCatalogsByEx", trace.WithSpanKind(trace.SpanKindServer))
 	defer span.End()
 
-	// 校验token
+	// 外网接口：校验token
 	visitor, err := r.verifyOAuth(ctx, c)
 	if err != nil {
 		return
 	}
+	r.listCatalogs(c, ctx, span, visitor)
+}
+
+// ListCatalogsByIn handles GET /api/vega-backend/in/v1/catalogs (Internal)
+func (r *restHandler) ListCatalogsByIn(c *gin.Context) {
+	ctx, span := ar_trace.Tracer.Start(rest.GetLanguageCtx(c),
+		"ListCatalogsByIn", trace.WithSpanKind(trace.SpanKindServer))
+	defer span.End()
+
+	// 内网接口：user_id从header中取
+	visitor := GenerateVisitor(c)
+	r.listCatalogs(c, ctx, span, visitor)
+}
+
+// listCatalogs is the shared implementation
+func (r *restHandler) listCatalogs(c *gin.Context, ctx context.Context, span trace.Span, visitor hydra.Visitor) {
 	accountInfo := interfaces.AccountInfo{
 		ID:   visitor.ID,
 		Type: string(visitor.Type),
@@ -58,12 +77,8 @@ func (r *restHandler) ListCatalogs(c *gin.Context) {
 		offset, limit, sort, direction, interfaces.CATALOG_SORT)
 	if err != nil {
 		httpErr := err.(*rest.HTTPError)
-
-		// 记录异常日志
 		o11y.Error(ctx, fmt.Sprintf("%s. %v", httpErr.BaseError.Description,
 			httpErr.BaseError.ErrorDetails))
-
-		// 设置 trace 的错误信息的 attributes
 		o11y.AddHttpAttrs4HttpError(span, httpErr)
 		rest.ReplyError(c, httpErr)
 		return
@@ -94,24 +109,41 @@ func (r *restHandler) ListCatalogs(c *gin.Context) {
 	rest.ReplyOK(c, http.StatusOK, result)
 }
 
-// CreateCatalog handles POST /api/vega-backend/v1/catalogs
-func (r *restHandler) CreateCatalog(c *gin.Context) {
+// ========== CreateCatalog ==========
+
+// CreateCatalogByEx handles POST /api/vega-backend/v1/catalogs (External)
+func (r *restHandler) CreateCatalogByEx(c *gin.Context) {
 	ctx, span := ar_trace.Tracer.Start(rest.GetLanguageCtx(c),
-		"CreateCatalog", trace.WithSpanKind(trace.SpanKindServer))
+		"CreateCatalogByEx", trace.WithSpanKind(trace.SpanKindServer))
 	defer span.End()
 
-	// 校验token
+	// 外网接口：校验token
 	visitor, err := r.verifyOAuth(ctx, c)
 	if err != nil {
 		return
 	}
+	r.createCatalog(c, ctx, span, visitor)
+}
+
+// CreateCatalogByIn handles POST /api/vega-backend/in/v1/catalogs (Internal)
+func (r *restHandler) CreateCatalogByIn(c *gin.Context) {
+	ctx, span := ar_trace.Tracer.Start(rest.GetLanguageCtx(c),
+		"CreateCatalogByIn", trace.WithSpanKind(trace.SpanKindServer))
+	defer span.End()
+
+	// 内网接口：user_id从header中取
+	visitor := GenerateVisitor(c)
+	r.createCatalog(c, ctx, span, visitor)
+}
+
+// createCatalog is the shared implementation
+func (r *restHandler) createCatalog(c *gin.Context, ctx context.Context, span trace.Span, visitor hydra.Visitor) {
 	accountInfo := interfaces.AccountInfo{
 		ID:   visitor.ID,
 		Type: string(visitor.Type),
 	}
 	ctx = context.WithValue(ctx, interfaces.ACCOUNT_INFO_KEY, accountInfo)
 
-	// 设置 trace 的相关 api 的属性
 	o11y.AddHttpAttrs4API(span, o11y.GetAttrsByGinCtx(c))
 
 	var req interfaces.CatalogRequest
@@ -184,17 +216,35 @@ func (r *restHandler) CreateCatalog(c *gin.Context) {
 	rest.ReplyOK(c, http.StatusCreated, result)
 }
 
-// GetCatalogs handles GET /api/vega-backend/v1/catalogs/:ids
-func (r *restHandler) GetCatalogs(c *gin.Context) {
+// ========== GetCatalogs ==========
+
+// GetCatalogsByEx handles GET /api/vega-backend/v1/catalogs/:ids (External)
+func (r *restHandler) GetCatalogsByEx(c *gin.Context) {
 	ctx, span := ar_trace.Tracer.Start(rest.GetLanguageCtx(c),
-		"GetCatalogs", trace.WithSpanKind(trace.SpanKindServer))
+		"GetCatalogsByEx", trace.WithSpanKind(trace.SpanKindServer))
 	defer span.End()
 
-	// 校验token
+	// 外网接口：校验token
 	visitor, err := r.verifyOAuth(ctx, c)
 	if err != nil {
 		return
 	}
+	r.getCatalogs(c, ctx, span, visitor)
+}
+
+// GetCatalogsByIn handles GET /api/vega-backend/in/v1/catalogs/:ids (Internal)
+func (r *restHandler) GetCatalogsByIn(c *gin.Context) {
+	ctx, span := ar_trace.Tracer.Start(rest.GetLanguageCtx(c),
+		"GetCatalogsByIn", trace.WithSpanKind(trace.SpanKindServer))
+	defer span.End()
+
+	// 内网接口：user_id从header中取
+	visitor := GenerateVisitor(c)
+	r.getCatalogs(c, ctx, span, visitor)
+}
+
+// getCatalogs is the shared implementation
+func (r *restHandler) getCatalogs(c *gin.Context, ctx context.Context, span trace.Span, visitor hydra.Visitor) {
 	accountInfo := interfaces.AccountInfo{
 		ID:   visitor.ID,
 		Type: string(visitor.Type),
@@ -239,17 +289,35 @@ func (r *restHandler) GetCatalogs(c *gin.Context) {
 	rest.ReplyOK(c, http.StatusOK, result)
 }
 
-// UpdateCatalog handles PUT /api/vega-backend/v1/catalogs/:id
-func (r *restHandler) UpdateCatalog(c *gin.Context) {
+// ========== UpdateCatalog ==========
+
+// UpdateCatalogByEx handles PUT /api/vega-backend/v1/catalogs/:id (External)
+func (r *restHandler) UpdateCatalogByEx(c *gin.Context) {
 	ctx, span := ar_trace.Tracer.Start(rest.GetLanguageCtx(c),
-		"UpdateCatalog", trace.WithSpanKind(trace.SpanKindServer))
+		"UpdateCatalogByEx", trace.WithSpanKind(trace.SpanKindServer))
 	defer span.End()
 
-	// 校验token
+	// 外网接口：校验token
 	visitor, err := r.verifyOAuth(ctx, c)
 	if err != nil {
 		return
 	}
+	r.updateCatalog(c, ctx, span, visitor)
+}
+
+// UpdateCatalogByIn handles PUT /api/vega-backend/in/v1/catalogs/:id (Internal)
+func (r *restHandler) UpdateCatalogByIn(c *gin.Context) {
+	ctx, span := ar_trace.Tracer.Start(rest.GetLanguageCtx(c),
+		"UpdateCatalogByIn", trace.WithSpanKind(trace.SpanKindServer))
+	defer span.End()
+
+	// 内网接口：user_id从header中取
+	visitor := GenerateVisitor(c)
+	r.updateCatalog(c, ctx, span, visitor)
+}
+
+// updateCatalog is the shared implementation
+func (r *restHandler) updateCatalog(c *gin.Context, ctx context.Context, span trace.Span, visitor hydra.Visitor) {
 	accountInfo := interfaces.AccountInfo{
 		ID:   visitor.ID,
 		Type: string(visitor.Type),
@@ -293,6 +361,7 @@ func (r *restHandler) UpdateCatalog(c *gin.Context) {
 			httpErr := err.(*rest.HTTPError)
 			o11y.AddHttpAttrs4HttpError(span, httpErr)
 			rest.ReplyError(c, httpErr)
+			return
 		}
 		if exists {
 			span.SetStatus(codes.Error, "Catalog name exists")
@@ -319,17 +388,35 @@ func (r *restHandler) UpdateCatalog(c *gin.Context) {
 	rest.ReplyOK(c, http.StatusNoContent, nil)
 }
 
-// DeleteCatalog handles DELETE /api/vega-backend/v1/catalogs/:ids
-func (r *restHandler) DeleteCatalogs(c *gin.Context) {
+// ========== DeleteCatalogs ==========
+
+// DeleteCatalogsByEx handles DELETE /api/vega-backend/v1/catalogs/:ids (External)
+func (r *restHandler) DeleteCatalogsByEx(c *gin.Context) {
 	ctx, span := ar_trace.Tracer.Start(rest.GetLanguageCtx(c),
-		"DeleteCatalogs", trace.WithSpanKind(trace.SpanKindServer))
+		"DeleteCatalogsByEx", trace.WithSpanKind(trace.SpanKindServer))
 	defer span.End()
 
-	// 校验token
+	// 外网接口：校验token
 	visitor, err := r.verifyOAuth(ctx, c)
 	if err != nil {
 		return
 	}
+	r.deleteCatalogs(c, ctx, span, visitor)
+}
+
+// DeleteCatalogsByIn handles DELETE /api/vega-backend/in/v1/catalogs/:ids (Internal)
+func (r *restHandler) DeleteCatalogsByIn(c *gin.Context) {
+	ctx, span := ar_trace.Tracer.Start(rest.GetLanguageCtx(c),
+		"DeleteCatalogsByIn", trace.WithSpanKind(trace.SpanKindServer))
+	defer span.End()
+
+	// 内网接口：user_id从header中取
+	visitor := GenerateVisitor(c)
+	r.deleteCatalogs(c, ctx, span, visitor)
+}
+
+// deleteCatalogs is the shared implementation
+func (r *restHandler) deleteCatalogs(c *gin.Context, ctx context.Context, span trace.Span, visitor hydra.Visitor) {
 	accountInfo := interfaces.AccountInfo{
 		ID:   visitor.ID,
 		Type: string(visitor.Type),
@@ -375,17 +462,35 @@ func (r *restHandler) DeleteCatalogs(c *gin.Context) {
 	rest.ReplyOK(c, http.StatusNoContent, nil)
 }
 
-// GetCatalogHealthStatus handles GET /api/vega-backend/v1/catalogs/:ids/health_status
-func (r *restHandler) GetCatalogHealthStatus(c *gin.Context) {
+// ========== GetCatalogHealthStatus ==========
+
+// GetCatalogHealthStatusByEx handles GET /api/vega-backend/v1/catalogs/:ids/health-status (External)
+func (r *restHandler) GetCatalogHealthStatusByEx(c *gin.Context) {
 	ctx, span := ar_trace.Tracer.Start(rest.GetLanguageCtx(c),
-		"GetCatalogHealthStatus", trace.WithSpanKind(trace.SpanKindServer))
+		"GetCatalogHealthStatusByEx", trace.WithSpanKind(trace.SpanKindServer))
 	defer span.End()
 
-	// 校验token
+	// 外网接口：校验token
 	visitor, err := r.verifyOAuth(ctx, c)
 	if err != nil {
 		return
 	}
+	r.getCatalogHealthStatus(c, ctx, span, visitor)
+}
+
+// GetCatalogHealthStatusByIn handles GET /api/vega-backend/in/v1/catalogs/:ids/health-status (Internal)
+func (r *restHandler) GetCatalogHealthStatusByIn(c *gin.Context) {
+	ctx, span := ar_trace.Tracer.Start(rest.GetLanguageCtx(c),
+		"GetCatalogHealthStatusByIn", trace.WithSpanKind(trace.SpanKindServer))
+	defer span.End()
+
+	// 内网接口：user_id从header中取
+	visitor := GenerateVisitor(c)
+	r.getCatalogHealthStatus(c, ctx, span, visitor)
+}
+
+// getCatalogHealthStatus is the shared implementation
+func (r *restHandler) getCatalogHealthStatus(c *gin.Context, ctx context.Context, span trace.Span, visitor hydra.Visitor) {
 	accountInfo := interfaces.AccountInfo{
 		ID:   visitor.ID,
 		Type: string(visitor.Type),
@@ -416,17 +521,35 @@ func (r *restHandler) GetCatalogHealthStatus(c *gin.Context) {
 	rest.ReplyOK(c, http.StatusOK, result)
 }
 
-// TestConnection handles POST /api/vega-backend/v1/catalogs/:id/test-connection
-func (r *restHandler) TestConnection(c *gin.Context) {
+// ========== TestConnection ==========
+
+// TestConnectionByEx handles POST /api/vega-backend/v1/catalogs/:id/test-connection (External)
+func (r *restHandler) TestConnectionByEx(c *gin.Context) {
 	ctx, span := ar_trace.Tracer.Start(rest.GetLanguageCtx(c),
-		"TestConnection", trace.WithSpanKind(trace.SpanKindServer))
+		"TestConnectionByEx", trace.WithSpanKind(trace.SpanKindServer))
 	defer span.End()
 
-	// 校验token
+	// 外网接口：校验token
 	visitor, err := r.verifyOAuth(ctx, c)
 	if err != nil {
 		return
 	}
+	r.testConnection(c, ctx, span, visitor)
+}
+
+// TestConnectionByIn handles POST /api/vega-backend/in/v1/catalogs/:id/test-connection (Internal)
+func (r *restHandler) TestConnectionByIn(c *gin.Context) {
+	ctx, span := ar_trace.Tracer.Start(rest.GetLanguageCtx(c),
+		"TestConnectionByIn", trace.WithSpanKind(trace.SpanKindServer))
+	defer span.End()
+
+	// 内网接口：user_id从header中取
+	visitor := GenerateVisitor(c)
+	r.testConnection(c, ctx, span, visitor)
+}
+
+// testConnection is the shared implementation
+func (r *restHandler) testConnection(c *gin.Context, ctx context.Context, span trace.Span, visitor hydra.Visitor) {
 	accountInfo := interfaces.AccountInfo{
 		ID:   visitor.ID,
 		Type: string(visitor.Type),
@@ -459,18 +582,35 @@ func (r *restHandler) TestConnection(c *gin.Context) {
 	rest.ReplyOK(c, http.StatusOK, result)
 }
 
-// DiscoverCatalogResources handles POST /api/vega-backend/v1/catalogs/:id/discover
-// 触发异步扫描任务，返回任务信息
-func (r *restHandler) DiscoverCatalogResources(c *gin.Context) {
+// ========== DiscoverCatalogResources ==========
+
+// DiscoverCatalogResourcesByEx handles POST /api/vega-backend/v1/catalogs/:id/discover (External)
+func (r *restHandler) DiscoverCatalogResourcesByEx(c *gin.Context) {
 	ctx, span := ar_trace.Tracer.Start(rest.GetLanguageCtx(c),
-		"DiscoverCatalogResources", trace.WithSpanKind(trace.SpanKindServer))
+		"DiscoverCatalogResourcesByEx", trace.WithSpanKind(trace.SpanKindServer))
 	defer span.End()
 
-	// 校验token
+	// 外网接口：校验token
 	visitor, err := r.verifyOAuth(ctx, c)
 	if err != nil {
 		return
 	}
+	r.discoverCatalogResources(c, ctx, span, visitor)
+}
+
+// DiscoverCatalogResourcesByIn handles POST /api/vega-backend/in/v1/catalogs/:id/discover (Internal)
+func (r *restHandler) DiscoverCatalogResourcesByIn(c *gin.Context) {
+	ctx, span := ar_trace.Tracer.Start(rest.GetLanguageCtx(c),
+		"DiscoverCatalogResourcesByIn", trace.WithSpanKind(trace.SpanKindServer))
+	defer span.End()
+
+	// 内网接口：user_id从header中取
+	visitor := GenerateVisitor(c)
+	r.discoverCatalogResources(c, ctx, span, visitor)
+}
+
+// discoverCatalogResources is the shared implementation
+func (r *restHandler) discoverCatalogResources(c *gin.Context, ctx context.Context, span trace.Span, visitor hydra.Visitor) {
 	accountInfo := interfaces.AccountInfo{
 		ID:   visitor.ID,
 		Type: string(visitor.Type),
@@ -515,17 +655,35 @@ func (r *restHandler) DiscoverCatalogResources(c *gin.Context) {
 	rest.ReplyOK(c, http.StatusOK, result)
 }
 
-// ListCatalogResources handles GET /api/vega-backend/v1/catalogs/:id/resources
-func (r *restHandler) ListCatalogResources(c *gin.Context) {
+// ========== ListCatalogResources ==========
+
+// ListCatalogResourcesByEx handles GET /api/vega-backend/v1/catalogs/:ids/resources (External)
+func (r *restHandler) ListCatalogResourcesByEx(c *gin.Context) {
 	ctx, span := ar_trace.Tracer.Start(rest.GetLanguageCtx(c),
-		"ListCatalogResources", trace.WithSpanKind(trace.SpanKindServer))
+		"ListCatalogResourcesByEx", trace.WithSpanKind(trace.SpanKindServer))
 	defer span.End()
 
-	// 校验token
+	// 外网接口：校验token
 	visitor, err := r.verifyOAuth(ctx, c)
 	if err != nil {
 		return
 	}
+	r.listCatalogResources(c, ctx, span, visitor)
+}
+
+// ListCatalogResourcesByIn handles GET /api/vega-backend/in/v1/catalogs/:ids/resources (Internal)
+func (r *restHandler) ListCatalogResourcesByIn(c *gin.Context) {
+	ctx, span := ar_trace.Tracer.Start(rest.GetLanguageCtx(c),
+		"ListCatalogResourcesByIn", trace.WithSpanKind(trace.SpanKindServer))
+	defer span.End()
+
+	// 内网接口：user_id从header中取
+	visitor := GenerateVisitor(c)
+	r.listCatalogResources(c, ctx, span, visitor)
+}
+
+// listCatalogResources is the shared implementation
+func (r *restHandler) listCatalogResources(c *gin.Context, ctx context.Context, span trace.Span, visitor hydra.Visitor) {
 	accountInfo := interfaces.AccountInfo{
 		ID:   visitor.ID,
 		Type: string(visitor.Type),
@@ -566,12 +724,8 @@ func (r *restHandler) ListCatalogResources(c *gin.Context) {
 		offset, limit, sort, direction, interfaces.CATALOG_SORT)
 	if err != nil {
 		httpErr := err.(*rest.HTTPError)
-
-		// 记录异常日志
 		o11y.Error(ctx, fmt.Sprintf("%s. %v", httpErr.BaseError.Description,
 			httpErr.BaseError.ErrorDetails))
-
-		// 设置 trace 的错误信息的 attributes
 		o11y.AddHttpAttrs4HttpError(span, httpErr)
 		rest.ReplyError(c, httpErr)
 		return

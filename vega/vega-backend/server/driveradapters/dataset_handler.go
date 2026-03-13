@@ -14,6 +14,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/kweaver-ai/TelemetrySDK-Go/exporter/v2/ar_trace"
+	"github.com/kweaver-ai/kweaver-go-lib/hydra"
 	"github.com/kweaver-ai/kweaver-go-lib/logger"
 	o11y "github.com/kweaver-ai/kweaver-go-lib/observability"
 	"github.com/kweaver-ai/kweaver-go-lib/rest"
@@ -24,17 +25,35 @@ import (
 	"vega-backend/interfaces"
 )
 
-// CreateDatasetDocuments handles POST /api/vega-backend/v1/resources/dataset/:id/docs
-func (r *restHandler) CreateDatasetDocuments(c *gin.Context) {
+// ========== CreateDatasetDocuments ==========
+
+// CreateDatasetDocumentsByEx handles POST /api/vega-backend/v1/resources/dataset/:id/docs (External)
+func (r *restHandler) CreateDatasetDocumentsByEx(c *gin.Context) {
 	ctx, span := ar_trace.Tracer.Start(rest.GetLanguageCtx(c),
-		"CreateDatasetDocuments", trace.WithSpanKind(trace.SpanKindServer))
+		"CreateDatasetDocumentsByEx", trace.WithSpanKind(trace.SpanKindServer))
 	defer span.End()
 
-	// 校验token
+	// 外网接口：校验token
 	visitor, err := r.verifyOAuth(ctx, c)
 	if err != nil {
 		return
 	}
+	r.createDatasetDocuments(c, ctx, span, visitor)
+}
+
+// CreateDatasetDocumentsByIn handles POST /api/vega-backend/in/v1/resources/dataset/:id/docs (Internal)
+func (r *restHandler) CreateDatasetDocumentsByIn(c *gin.Context) {
+	ctx, span := ar_trace.Tracer.Start(rest.GetLanguageCtx(c),
+		"CreateDatasetDocumentsByIn", trace.WithSpanKind(trace.SpanKindServer))
+	defer span.End()
+
+	// 内网接口：user_id从header中取
+	visitor := GenerateVisitor(c)
+	r.createDatasetDocuments(c, ctx, span, visitor)
+}
+
+// createDatasetDocuments is the shared implementation
+func (r *restHandler) createDatasetDocuments(c *gin.Context, ctx context.Context, span trace.Span, visitor hydra.Visitor) {
 	accountInfo := interfaces.AccountInfo{
 		ID:   visitor.ID,
 		Type: string(visitor.Type),
@@ -71,55 +90,35 @@ func (r *restHandler) CreateDatasetDocuments(c *gin.Context) {
 	rest.ReplyOK(c, http.StatusCreated, resultData)
 }
 
-// GetDatasetDocument handles GET /api/vega-backend/v1/resources/dataset/:id/:docid
-func (r *restHandler) GetDatasetDocument(c *gin.Context) {
+// ========== UpdateDatasetDocuments ==========
+
+// UpdateDatasetDocumentsByEx handles PUT /api/vega-backend/v1/resources/dataset/:id/docs (External)
+func (r *restHandler) UpdateDatasetDocumentsByEx(c *gin.Context) {
 	ctx, span := ar_trace.Tracer.Start(rest.GetLanguageCtx(c),
-		"GetDatasetDocument", trace.WithSpanKind(trace.SpanKindServer))
+		"UpdateDatasetDocumentsByEx", trace.WithSpanKind(trace.SpanKindServer))
 	defer span.End()
 
-	// 校验token
+	// 外网接口：校验token
 	visitor, err := r.verifyOAuth(ctx, c)
 	if err != nil {
 		return
 	}
-	accountInfo := interfaces.AccountInfo{
-		ID:   visitor.ID,
-		Type: string(visitor.Type),
-	}
-	ctx = context.WithValue(ctx, interfaces.ACCOUNT_INFO_KEY, accountInfo)
-
-	o11y.AddHttpAttrs4API(span, o11y.GetAttrsByGinCtx(c))
-
-	datasetID := c.Param("id")
-	docID := c.Param("docid")
-
-	// 调用 dataset 服务获取文档
-	document, err := r.ds.GetDocument(ctx, datasetID, docID)
-	if err != nil {
-		httpErr := err.(*rest.HTTPError)
-		o11y.AddHttpAttrs4HttpError(span, httpErr)
-		rest.ReplyError(c, httpErr)
-		return
-	}
-
-	resultData := map[string]any{"document": document}
-
-	logger.Debug("Handler GetDatasetDocument Success")
-	o11y.AddHttpAttrs4Ok(span, http.StatusOK)
-	rest.ReplyOK(c, http.StatusOK, resultData)
+	r.updateDatasetDocuments(c, ctx, span, visitor)
 }
 
-// UpdateDatasetDocuments handles PUT /api/vega-backend/v1/resources/dataset/:id/docs
-func (r *restHandler) UpdateDatasetDocuments(c *gin.Context) {
+// UpdateDatasetDocumentsByIn handles PUT /api/vega-backend/in/v1/resources/dataset/:id/docs (Internal)
+func (r *restHandler) UpdateDatasetDocumentsByIn(c *gin.Context) {
 	ctx, span := ar_trace.Tracer.Start(rest.GetLanguageCtx(c),
-		"UpdateDatasetDocuments", trace.WithSpanKind(trace.SpanKindServer))
+		"UpdateDatasetDocumentsByIn", trace.WithSpanKind(trace.SpanKindServer))
 	defer span.End()
 
-	// 校验token
-	visitor, err := r.verifyOAuth(ctx, c)
-	if err != nil {
-		return
-	}
+	// 内网接口：user_id从header中取
+	visitor := GenerateVisitor(c)
+	r.updateDatasetDocuments(c, ctx, span, visitor)
+}
+
+// updateDatasetDocuments is the shared implementation
+func (r *restHandler) updateDatasetDocuments(c *gin.Context, ctx context.Context, span trace.Span, visitor hydra.Visitor) {
 	accountInfo := interfaces.AccountInfo{
 		ID:   visitor.ID,
 		Type: string(visitor.Type),
@@ -142,7 +141,6 @@ func (r *restHandler) UpdateDatasetDocuments(c *gin.Context) {
 
 	// 调用 dataset 服务批量更新文档
 	if err := r.ds.UpdateDocuments(ctx, datasetID, updateRequests); err != nil {
-		println(err.Error())
 		httpErr := err.(*rest.HTTPError)
 		o11y.AddHttpAttrs4HttpError(span, httpErr)
 		rest.ReplyError(c, httpErr)
@@ -154,17 +152,35 @@ func (r *restHandler) UpdateDatasetDocuments(c *gin.Context) {
 	rest.ReplyOK(c, http.StatusNoContent, nil)
 }
 
-// DeleteDatasetDocuments handles DELETE /api/vega-backend/v1/resources/dataset/:id/docs/:ids
-func (r *restHandler) DeleteDatasetDocuments(c *gin.Context) {
+// ========== DeleteDatasetDocuments ==========
+
+// DeleteDatasetDocumentsByEx handles DELETE /api/vega-backend/v1/resources/dataset/:id/docs/:ids (External)
+func (r *restHandler) DeleteDatasetDocumentsByEx(c *gin.Context) {
 	ctx, span := ar_trace.Tracer.Start(rest.GetLanguageCtx(c),
-		"DeleteDatasetDocuments", trace.WithSpanKind(trace.SpanKindServer))
+		"DeleteDatasetDocumentsByEx", trace.WithSpanKind(trace.SpanKindServer))
 	defer span.End()
 
-	// 校验token
+	// 外网接口：校验token
 	visitor, err := r.verifyOAuth(ctx, c)
 	if err != nil {
 		return
 	}
+	r.deleteDatasetDocuments(c, ctx, span, visitor)
+}
+
+// DeleteDatasetDocumentsByIn handles DELETE /api/vega-backend/in/v1/resources/dataset/:id/docs/:ids (Internal)
+func (r *restHandler) DeleteDatasetDocumentsByIn(c *gin.Context) {
+	ctx, span := ar_trace.Tracer.Start(rest.GetLanguageCtx(c),
+		"DeleteDatasetDocumentsByIn", trace.WithSpanKind(trace.SpanKindServer))
+	defer span.End()
+
+	// 内网接口：user_id从header中取
+	visitor := GenerateVisitor(c)
+	r.deleteDatasetDocuments(c, ctx, span, visitor)
+}
+
+// deleteDatasetDocuments is the shared implementation
+func (r *restHandler) deleteDatasetDocuments(c *gin.Context, ctx context.Context, span trace.Span, visitor hydra.Visitor) {
 	accountInfo := interfaces.AccountInfo{
 		ID:   visitor.ID,
 		Type: string(visitor.Type),
@@ -189,19 +205,37 @@ func (r *restHandler) DeleteDatasetDocuments(c *gin.Context) {
 	rest.ReplyOK(c, http.StatusNoContent, nil)
 }
 
-// DeleteDatasetDocumentsByQuery handles POST /api/vega-backend/v1/resources/dataset/:id/docs/query
-func (r *restHandler) DeleteDatasetDocumentsByQuery(c *gin.Context) {
+// ========== DeleteDatasetDocumentsByQuery ==========
+
+// DeleteDatasetDocumentsByQueryByEx handles POST /api/vega-backend/v1/resources/dataset/:id/docs/query (External)
+func (r *restHandler) DeleteDatasetDocumentsByQueryByEx(c *gin.Context) {
 	ctx, span := ar_trace.Tracer.Start(rest.GetLanguageCtx(c),
-		"DeleteDatasetDocumentsByQuery", trace.WithSpanKind(trace.SpanKindServer))
+		"DeleteDatasetDocumentsByQueryByEx", trace.WithSpanKind(trace.SpanKindServer))
 	defer span.End()
 
-	start := time.Now()
-
-	// 校验token
+	// 外网接口：校验token
 	visitor, err := r.verifyOAuth(ctx, c)
 	if err != nil {
 		return
 	}
+	r.deleteDatasetDocumentsByQuery(c, ctx, span, visitor)
+}
+
+// DeleteDatasetDocumentsByQueryByIn handles POST /api/vega-backend/in/v1/resources/dataset/:id/docs/query (Internal)
+func (r *restHandler) DeleteDatasetDocumentsByQueryByIn(c *gin.Context) {
+	ctx, span := ar_trace.Tracer.Start(rest.GetLanguageCtx(c),
+		"DeleteDatasetDocumentsByQueryByIn", trace.WithSpanKind(trace.SpanKindServer))
+	defer span.End()
+
+	// 内网接口：user_id从header中取
+	visitor := GenerateVisitor(c)
+	r.deleteDatasetDocumentsByQuery(c, ctx, span, visitor)
+}
+
+// deleteDatasetDocumentsByQuery is the shared implementation
+func (r *restHandler) deleteDatasetDocumentsByQuery(c *gin.Context, ctx context.Context, span trace.Span, visitor hydra.Visitor) {
+	start := time.Now()
+
 	accountInfo := interfaces.AccountInfo{
 		ID:   visitor.ID,
 		Type: string(visitor.Type),
@@ -237,7 +271,7 @@ func (r *restHandler) DeleteDatasetDocumentsByQuery(c *gin.Context) {
 
 	// 过滤条件用map接，然后再decode到condCfg中
 	var actualCond *interfaces.FilterCondCfg
-	err = mapstructure.Decode(params.FilterCondition, &actualCond)
+	err := mapstructure.Decode(params.FilterCondition, &actualCond)
 	if err != nil {
 		httpErr := rest.NewHTTPError(ctx, http.StatusBadRequest, verrors.VegaBackend_InvalidParameter_FilterCondition).
 			WithErrorDetails(fmt.Sprintf("mapstructure decode filters failed: %s", err.Error()))

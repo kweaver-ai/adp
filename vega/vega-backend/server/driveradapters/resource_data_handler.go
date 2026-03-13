@@ -14,6 +14,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/kweaver-ai/TelemetrySDK-Go/exporter/v2/ar_trace"
+	"github.com/kweaver-ai/kweaver-go-lib/hydra"
 	"github.com/kweaver-ai/kweaver-go-lib/logger"
 	o11y "github.com/kweaver-ai/kweaver-go-lib/observability"
 	"github.com/kweaver-ai/kweaver-go-lib/rest"
@@ -23,19 +24,35 @@ import (
 	"vega-backend/interfaces"
 )
 
-// QueryResourceData handles POST /api/vega-backend/v1/resources/:id/data
-func (r *restHandler) QueryResourceData(c *gin.Context) {
+// QueryResourceDataByEx handles POST /api/vega-backend/v1/resources/:id/data (External)
+func (r *restHandler) QueryResourceDataByEx(c *gin.Context) {
 	ctx, span := ar_trace.Tracer.Start(rest.GetLanguageCtx(c),
-		"QueryResourceData", trace.WithSpanKind(trace.SpanKindServer))
+		"QueryResourceDataByEx", trace.WithSpanKind(trace.SpanKindServer))
 	defer span.End()
 
-	start := time.Now()
-
-	// 校验token
+	// 外网接口：校验token
 	visitor, err := r.verifyOAuth(ctx, c)
 	if err != nil {
 		return
 	}
+	r.queryResourceData(c, ctx, span, visitor)
+}
+
+// QueryResourceDataByIn handles POST /api/vega-backend/in/v1/resources/:id/data (Internal)
+func (r *restHandler) QueryResourceDataByIn(c *gin.Context) {
+	ctx, span := ar_trace.Tracer.Start(rest.GetLanguageCtx(c),
+		"QueryResourceDataByIn", trace.WithSpanKind(trace.SpanKindServer))
+	defer span.End()
+
+	// 内网接口：user_id从header中取
+	visitor := GenerateVisitor(c)
+	r.queryResourceData(c, ctx, span, visitor)
+}
+
+// queryResourceData is the shared implementation
+func (r *restHandler) queryResourceData(c *gin.Context, ctx context.Context, span trace.Span, visitor hydra.Visitor) {
+	start := time.Now()
+
 	accountInfo := interfaces.AccountInfo{
 		ID:   visitor.ID,
 		Type: string(visitor.Type),
@@ -70,7 +87,7 @@ func (r *restHandler) QueryResourceData(c *gin.Context) {
 	}
 
 	// 视图查询的参数校验
-	err = ValidateResourceDataQueryParams(ctx, &params)
+	err := ValidateResourceDataQueryParams(ctx, &params)
 	if err != nil {
 		httpErr := err.(*rest.HTTPError)
 		o11y.AddHttpAttrs4HttpError(span, httpErr)

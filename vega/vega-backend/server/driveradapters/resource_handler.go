@@ -15,6 +15,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/kweaver-ai/TelemetrySDK-Go/exporter/v2/ar_trace"
 	"github.com/kweaver-ai/kweaver-go-lib/audit"
+	"github.com/kweaver-ai/kweaver-go-lib/hydra"
 	"github.com/kweaver-ai/kweaver-go-lib/logger"
 	o11y "github.com/kweaver-ai/kweaver-go-lib/observability"
 	"github.com/kweaver-ai/kweaver-go-lib/rest"
@@ -25,17 +26,35 @@ import (
 	"vega-backend/interfaces"
 )
 
-// ListResources handles GET /api/vega-backend/v1/resources
-func (r *restHandler) ListResources(c *gin.Context) {
+// ========== ListResources ==========
+
+// ListResourcesByEx handles GET /api/vega-backend/v1/resources (External)
+func (r *restHandler) ListResourcesByEx(c *gin.Context) {
 	ctx, span := ar_trace.Tracer.Start(rest.GetLanguageCtx(c),
-		"ListResources", trace.WithSpanKind(trace.SpanKindServer))
+		"ListResourcesByEx", trace.WithSpanKind(trace.SpanKindServer))
 	defer span.End()
 
-	// 校验token
+	// 外网接口：校验token
 	visitor, err := r.verifyOAuth(ctx, c)
 	if err != nil {
 		return
 	}
+	r.listResources(c, ctx, span, visitor)
+}
+
+// ListResourcesByIn handles GET /api/vega-backend/in/v1/resources (Internal)
+func (r *restHandler) ListResourcesByIn(c *gin.Context) {
+	ctx, span := ar_trace.Tracer.Start(rest.GetLanguageCtx(c),
+		"ListResourcesByIn", trace.WithSpanKind(trace.SpanKindServer))
+	defer span.End()
+
+	// 内网接口：user_id从header中取
+	visitor := GenerateVisitor(c)
+	r.listResources(c, ctx, span, visitor)
+}
+
+// listResources is the shared implementation
+func (r *restHandler) listResources(c *gin.Context, ctx context.Context, span trace.Span, visitor hydra.Visitor) {
 	accountInfo := interfaces.AccountInfo{
 		ID:   visitor.ID,
 		Type: string(visitor.Type),
@@ -58,12 +77,8 @@ func (r *restHandler) ListResources(c *gin.Context) {
 		offset, limit, sort, direction, interfaces.CATALOG_SORT)
 	if err != nil {
 		httpErr := err.(*rest.HTTPError)
-
-		// 记录异常日志
 		o11y.Error(ctx, fmt.Sprintf("%s. %v", httpErr.BaseError.Description,
 			httpErr.BaseError.ErrorDetails))
-
-		// 设置 trace 的错误信息的 attributes
 		o11y.AddHttpAttrs4HttpError(span, httpErr)
 		rest.ReplyError(c, httpErr)
 		return
@@ -95,24 +110,41 @@ func (r *restHandler) ListResources(c *gin.Context) {
 	rest.ReplyOK(c, http.StatusOK, result)
 }
 
-// CreateResource handles POST /api/vega-backend/v1/resources
-func (r *restHandler) CreateResource(c *gin.Context) {
+// ========== CreateResource ==========
+
+// CreateResourceByEx handles POST /api/vega-backend/v1/resources (External)
+func (r *restHandler) CreateResourceByEx(c *gin.Context) {
 	ctx, span := ar_trace.Tracer.Start(rest.GetLanguageCtx(c),
-		"CreateResource", trace.WithSpanKind(trace.SpanKindServer))
+		"CreateResourceByEx", trace.WithSpanKind(trace.SpanKindServer))
 	defer span.End()
 
-	// 校验token
+	// 外网接口：校验token
 	visitor, err := r.verifyOAuth(ctx, c)
 	if err != nil {
 		return
 	}
+	r.createResource(c, ctx, span, visitor)
+}
+
+// CreateResourceByIn handles POST /api/vega-backend/in/v1/resources (Internal)
+func (r *restHandler) CreateResourceByIn(c *gin.Context) {
+	ctx, span := ar_trace.Tracer.Start(rest.GetLanguageCtx(c),
+		"CreateResourceByIn", trace.WithSpanKind(trace.SpanKindServer))
+	defer span.End()
+
+	// 内网接口：user_id从header中取
+	visitor := GenerateVisitor(c)
+	r.createResource(c, ctx, span, visitor)
+}
+
+// createResource is the shared implementation
+func (r *restHandler) createResource(c *gin.Context, ctx context.Context, span trace.Span, visitor hydra.Visitor) {
 	accountInfo := interfaces.AccountInfo{
 		ID:   visitor.ID,
 		Type: string(visitor.Type),
 	}
 	ctx = context.WithValue(ctx, interfaces.ACCOUNT_INFO_KEY, accountInfo)
 
-	// 设置 trace 的相关 api 的属性
 	o11y.AddHttpAttrs4API(span, o11y.GetAttrsByGinCtx(c))
 
 	var req interfaces.ResourceRequest
@@ -185,17 +217,35 @@ func (r *restHandler) CreateResource(c *gin.Context) {
 	rest.ReplyOK(c, http.StatusCreated, result)
 }
 
-// GetResource handles GET /api/vega-backend/v1/resources/:ids
-func (r *restHandler) GetResources(c *gin.Context) {
+// ========== GetResources ==========
+
+// GetResourcesByEx handles GET /api/vega-backend/v1/resources/:ids (External)
+func (r *restHandler) GetResourcesByEx(c *gin.Context) {
 	ctx, span := ar_trace.Tracer.Start(rest.GetLanguageCtx(c),
-		"GetResources", trace.WithSpanKind(trace.SpanKindServer))
+		"GetResourcesByEx", trace.WithSpanKind(trace.SpanKindServer))
 	defer span.End()
 
-	// 校验token
+	// 外网接口：校验token
 	visitor, err := r.verifyOAuth(ctx, c)
 	if err != nil {
 		return
 	}
+	r.getResources(c, ctx, span, visitor)
+}
+
+// GetResourcesByIn handles GET /api/vega-backend/in/v1/resources/:ids (Internal)
+func (r *restHandler) GetResourcesByIn(c *gin.Context) {
+	ctx, span := ar_trace.Tracer.Start(rest.GetLanguageCtx(c),
+		"GetResourcesByIn", trace.WithSpanKind(trace.SpanKindServer))
+	defer span.End()
+
+	// 内网接口：user_id从header中取
+	visitor := GenerateVisitor(c)
+	r.getResources(c, ctx, span, visitor)
+}
+
+// getResources is the shared implementation
+func (r *restHandler) getResources(c *gin.Context, ctx context.Context, span trace.Span, visitor hydra.Visitor) {
 	accountInfo := interfaces.AccountInfo{
 		ID:   visitor.ID,
 		Type: string(visitor.Type),
@@ -240,17 +290,35 @@ func (r *restHandler) GetResources(c *gin.Context) {
 	rest.ReplyOK(c, http.StatusOK, result)
 }
 
-// UpdateResource handles PUT /api/vega-backend/v1/resources/:id
-func (r *restHandler) UpdateResource(c *gin.Context) {
+// ========== UpdateResource ==========
+
+// UpdateResourceByEx handles PUT /api/vega-backend/v1/resources/:id (External)
+func (r *restHandler) UpdateResourceByEx(c *gin.Context) {
 	ctx, span := ar_trace.Tracer.Start(rest.GetLanguageCtx(c),
-		"UpdateResource", trace.WithSpanKind(trace.SpanKindServer))
+		"UpdateResourceByEx", trace.WithSpanKind(trace.SpanKindServer))
 	defer span.End()
 
-	// 校验token
+	// 外网接口：校验token
 	visitor, err := r.verifyOAuth(ctx, c)
 	if err != nil {
 		return
 	}
+	r.updateResource(c, ctx, span, visitor)
+}
+
+// UpdateResourceByIn handles PUT /api/vega-backend/in/v1/resources/:id (Internal)
+func (r *restHandler) UpdateResourceByIn(c *gin.Context) {
+	ctx, span := ar_trace.Tracer.Start(rest.GetLanguageCtx(c),
+		"UpdateResourceByIn", trace.WithSpanKind(trace.SpanKindServer))
+	defer span.End()
+
+	// 内网接口：user_id从header中取
+	visitor := GenerateVisitor(c)
+	r.updateResource(c, ctx, span, visitor)
+}
+
+// updateResource is the shared implementation
+func (r *restHandler) updateResource(c *gin.Context, ctx context.Context, span trace.Span, visitor hydra.Visitor) {
 	accountInfo := interfaces.AccountInfo{
 		ID:   visitor.ID,
 		Type: string(visitor.Type),
@@ -294,6 +362,7 @@ func (r *restHandler) UpdateResource(c *gin.Context) {
 			httpErr := err.(*rest.HTTPError)
 			o11y.AddHttpAttrs4HttpError(span, httpErr)
 			rest.ReplyError(c, httpErr)
+			return
 		}
 		if exists {
 			span.SetStatus(codes.Error, "Resource name exists")
@@ -320,17 +389,35 @@ func (r *restHandler) UpdateResource(c *gin.Context) {
 	rest.ReplyOK(c, http.StatusNoContent, nil)
 }
 
-// DeleteResource handles DELETE /api/vega-backend/v1/resources/:ids
-func (r *restHandler) DeleteResources(c *gin.Context) {
+// ========== DeleteResources ==========
+
+// DeleteResourcesByEx handles DELETE /api/vega-backend/v1/resources/:ids (External)
+func (r *restHandler) DeleteResourcesByEx(c *gin.Context) {
 	ctx, span := ar_trace.Tracer.Start(rest.GetLanguageCtx(c),
-		"DeleteResources", trace.WithSpanKind(trace.SpanKindServer))
+		"DeleteResourcesByEx", trace.WithSpanKind(trace.SpanKindServer))
 	defer span.End()
 
-	// 校验token
+	// 外网接口：校验token
 	visitor, err := r.verifyOAuth(ctx, c)
 	if err != nil {
 		return
 	}
+	r.deleteResources(c, ctx, span, visitor)
+}
+
+// DeleteResourcesByIn handles DELETE /api/vega-backend/in/v1/resources/:ids (Internal)
+func (r *restHandler) DeleteResourcesByIn(c *gin.Context) {
+	ctx, span := ar_trace.Tracer.Start(rest.GetLanguageCtx(c),
+		"DeleteResourcesByIn", trace.WithSpanKind(trace.SpanKindServer))
+	defer span.End()
+
+	// 内网接口：user_id从header中取
+	visitor := GenerateVisitor(c)
+	r.deleteResources(c, ctx, span, visitor)
+}
+
+// deleteResources is the shared implementation
+func (r *restHandler) deleteResources(c *gin.Context, ctx context.Context, span trace.Span, visitor hydra.Visitor) {
 	accountInfo := interfaces.AccountInfo{
 		ID:   visitor.ID,
 		Type: string(visitor.Type),

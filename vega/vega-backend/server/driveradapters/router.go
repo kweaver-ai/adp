@@ -74,40 +74,41 @@ func (r *restHandler) RegisterPublic(engine *gin.Engine) {
 
 	engine.GET("/health", r.HealthCheck)
 
+	// 外部 API (External)
 	apiV1 := engine.Group("/api/vega-backend/v1")
 	{
-		// Catalog APIs
+		// Catalog APIs - External
 		catalogs := apiV1.Group("/catalogs")
 		{
-			catalogs.GET("", r.ListCatalogs)
-			catalogs.POST("", r.verifyJsonContentType(), r.CreateCatalog)
-			catalogs.GET("/:ids", r.GetCatalogs)
-			catalogs.PUT("/:id", r.verifyJsonContentType(), r.UpdateCatalog)
-			catalogs.DELETE("/:ids", r.DeleteCatalogs)
-			catalogs.GET("/:ids/health-status", r.GetCatalogHealthStatus)
-			catalogs.POST("/:id/test-connection", r.TestConnection)
-			catalogs.POST("/:id/discover", r.DiscoverCatalogResources)
-			catalogs.GET("/:ids/resources", r.ListCatalogResources)
+			catalogs.GET("", r.ListCatalogsByEx)
+			catalogs.POST("", r.verifyJsonContentType(), r.CreateCatalogByEx)
+			catalogs.GET("/:ids", r.GetCatalogsByEx)
+			catalogs.PUT("/:id", r.verifyJsonContentType(), r.UpdateCatalogByEx)
+			catalogs.DELETE("/:ids", r.DeleteCatalogsByEx)
+			catalogs.GET("/:ids/health-status", r.GetCatalogHealthStatusByEx)
+			catalogs.POST("/:id/test-connection", r.TestConnectionByEx)
+			catalogs.POST("/:id/discover", r.DiscoverCatalogResourcesByEx)
+			catalogs.GET("/:ids/resources", r.ListCatalogResourcesByEx)
 		}
 
-		// Resource APIs
+		// Resource APIs - External
 		resources := apiV1.Group("/resources")
 		{
-			resources.GET("", r.ListResources)
-			resources.POST("", r.verifyJsonContentType(), r.CreateResource)
-			resources.GET("/:ids", r.GetResources)
-			resources.PUT("/:id", r.verifyJsonContentType(), r.UpdateResource)
-			resources.DELETE("/:ids", r.DeleteResources)
+			resources.GET("", r.ListResourcesByEx)
+			resources.POST("", r.verifyJsonContentType(), r.CreateResourceByEx)
+			resources.GET("/:ids", r.GetResourcesByEx)
+			resources.PUT("/:id", r.verifyJsonContentType(), r.UpdateResourceByEx)
+			resources.DELETE("/:ids", r.DeleteResourcesByEx)
 
-			resources.POST("/:id/data", r.verifyJsonContentType(), r.QueryResourceData) // method override GET list and get
+			resources.POST("/:id/data", r.verifyJsonContentType(), r.QueryResourceDataByEx)
 
-			resources.POST("/dataset/:id/docs", r.verifyJsonContentType(), r.CreateDatasetDocuments)
-			resources.PUT("/dataset/:id/docs", r.verifyJsonContentType(), r.UpdateDatasetDocuments)
-			resources.DELETE("/dataset/:id/docs/:ids", r.DeleteDatasetDocuments)
-			resources.POST("/dataset/:id/docs/query", r.DeleteDatasetDocumentsByQuery) // method override DELETE
+			resources.POST("/dataset/:id/docs", r.verifyJsonContentType(), r.CreateDatasetDocumentsByEx)
+			resources.PUT("/dataset/:id/docs", r.verifyJsonContentType(), r.UpdateDatasetDocumentsByEx)
+			resources.DELETE("/dataset/:id/docs/:ids", r.DeleteDatasetDocumentsByEx)
+			resources.POST("/dataset/:id/docs/query", r.DeleteDatasetDocumentsByQueryByEx)
 		}
 
-		// ConnectorType APIs
+		// ConnectorType APIs - External
 		connectorTypes := apiV1.Group("/connector-types")
 		{
 			connectorTypes.GET("", r.ListConnectorTypes)
@@ -118,17 +119,58 @@ func (r *restHandler) RegisterPublic(engine *gin.Engine) {
 			connectorTypes.POST("/:type/enabled", r.SetConnectorTypeEnabled)
 		}
 
-		// Query APIs
+		// Query APIs - External
 		queryGroup := apiV1.Group("/query")
 		{
-			queryGroup.POST("/execute", r.verifyJsonContentType(), r.QueryExecute)
+			queryGroup.POST("/execute", r.verifyJsonContentType(), r.QueryExecuteByEx)
 		}
 
-		// DiscoverTask APIs
+		// DiscoverTask APIs - External
 		discoverTasks := apiV1.Group("/discover-tasks")
 		{
 			discoverTasks.GET("", r.ListDiscoverTasks)
 			discoverTasks.GET("/:id", r.GetDiscoverTask)
+		}
+	}
+
+	// 内部 API (Internal)
+	apiInV1 := engine.Group("/api/vega-backend/in/v1")
+	{
+		// Catalog APIs - Internal
+		catalogs := apiInV1.Group("/catalogs")
+		{
+			catalogs.GET("", r.ListCatalogsByIn)
+			catalogs.POST("", r.verifyJsonContentType(), r.CreateCatalogByIn)
+			catalogs.GET("/:ids", r.GetCatalogsByIn)
+			catalogs.PUT("/:id", r.verifyJsonContentType(), r.UpdateCatalogByIn)
+			catalogs.DELETE("/:ids", r.DeleteCatalogsByIn)
+			catalogs.GET("/:ids/health-status", r.GetCatalogHealthStatusByIn)
+			catalogs.POST("/:id/test-connection", r.TestConnectionByIn)
+			catalogs.POST("/:id/discover", r.DiscoverCatalogResourcesByIn)
+			catalogs.GET("/:ids/resources", r.ListCatalogResourcesByIn)
+		}
+
+		// Resource APIs - Internal
+		resources := apiInV1.Group("/resources")
+		{
+			resources.GET("", r.ListResourcesByIn)
+			resources.POST("", r.verifyJsonContentType(), r.CreateResourceByIn)
+			resources.GET("/:ids", r.GetResourcesByIn)
+			resources.PUT("/:id", r.verifyJsonContentType(), r.UpdateResourceByIn)
+			resources.DELETE("/:ids", r.DeleteResourcesByIn)
+
+			resources.POST("/:id/data", r.verifyJsonContentType(), r.QueryResourceDataByIn)
+
+			resources.POST("/dataset/:id/docs", r.verifyJsonContentType(), r.CreateDatasetDocumentsByIn)
+			resources.PUT("/dataset/:id/docs", r.verifyJsonContentType(), r.UpdateDatasetDocumentsByIn)
+			resources.DELETE("/dataset/:id/docs/:ids", r.DeleteDatasetDocumentsByIn)
+			resources.POST("/dataset/:id/docs/query", r.DeleteDatasetDocumentsByQueryByIn)
+		}
+
+		// Query APIs - Internal
+		queryGroup := apiInV1.Group("/query")
+		{
+			queryGroup.POST("/execute", r.verifyJsonContentType(), r.QueryExecuteByIn)
 		}
 	}
 
@@ -190,4 +232,24 @@ func (r *restHandler) verifyOAuth(ctx context.Context, c *gin.Context) (hydra.Vi
 	}
 
 	return visitor, nil
+}
+
+// GenerateVisitor generates visitor from request headers (for internal APIs)
+func GenerateVisitor(c *gin.Context) hydra.Visitor {
+	accountInfo := interfaces.AccountInfo{
+		ID:   c.GetHeader(interfaces.HTTP_HEADER_ACCOUNT_ID),
+		Type: c.GetHeader(interfaces.HTTP_HEADER_ACCOUNT_TYPE),
+	}
+
+	visitor := hydra.Visitor{
+		ID:         accountInfo.ID,
+		Type:       hydra.VisitorType(accountInfo.Type),
+		TokenID:    "", // 无token
+		IP:         c.ClientIP(),
+		Mac:        c.GetHeader("X-Request-MAC"),
+		UserAgent:  c.GetHeader("User-Agent"),
+		ClientType: hydra.ClientType_Linux,
+	}
+
+	return visitor
 }

@@ -11,6 +11,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/kweaver-ai/TelemetrySDK-Go/exporter/v2/ar_trace"
+	"github.com/kweaver-ai/kweaver-go-lib/hydra"
 	o11y "github.com/kweaver-ai/kweaver-go-lib/observability"
 	"github.com/kweaver-ai/kweaver-go-lib/rest"
 	"go.opentelemetry.io/otel/trace"
@@ -19,16 +20,33 @@ import (
 	"vega-backend/logics/query"
 )
 
-// QueryExecute 处理 POST /api/vega-backend/v1/query/execute
-func (r *restHandler) QueryExecute(c *gin.Context) {
+// QueryExecuteByEx handles POST /api/vega-backend/v1/query/execute (External)
+func (r *restHandler) QueryExecuteByEx(c *gin.Context) {
 	ctx, span := ar_trace.Tracer.Start(rest.GetLanguageCtx(c),
-		"QueryExecute", trace.WithSpanKind(trace.SpanKindServer))
+		"QueryExecuteByEx", trace.WithSpanKind(trace.SpanKindServer))
 	defer span.End()
 
+	// 外网接口：校验token
 	visitor, err := r.verifyOAuth(ctx, c)
 	if err != nil {
 		return
 	}
+	r.queryExecute(c, ctx, span, visitor)
+}
+
+// QueryExecuteByIn handles POST /api/vega-backend/in/v1/query/execute (Internal)
+func (r *restHandler) QueryExecuteByIn(c *gin.Context) {
+	ctx, span := ar_trace.Tracer.Start(rest.GetLanguageCtx(c),
+		"QueryExecuteByIn", trace.WithSpanKind(trace.SpanKindServer))
+	defer span.End()
+
+	// 内网接口：user_id从header中取
+	visitor := GenerateVisitor(c)
+	r.queryExecute(c, ctx, span, visitor)
+}
+
+// queryExecute is the shared implementation
+func (r *restHandler) queryExecute(c *gin.Context, ctx context.Context, span trace.Span, visitor hydra.Visitor) {
 	accountInfo := interfaces.AccountInfo{
 		ID:   visitor.ID,
 		Type: string(visitor.Type),
