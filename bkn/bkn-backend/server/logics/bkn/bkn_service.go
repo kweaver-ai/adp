@@ -8,7 +8,6 @@ package bkn
 import (
 	"bytes"
 	"context"
-	"fmt"
 	"sync"
 
 	"github.com/kweaver-ai/TelemetrySDK-Go/exporter/v2/ar_trace"
@@ -41,57 +40,6 @@ func NewBKNService(appSetting *common.AppSetting) interfaces.BKNService {
 		}
 	})
 	return bService
-}
-
-// ImportFromTar 从 tar 包导入 BKN 定义（纯内存处理）
-func (bs *bknService) Import(ctx context.Context, bknNetwork *bknsdk.BknNetwork) (string, error) {
-	ctx, span := ar_trace.Tracer.Start(ctx, "BKN从Tar导入", trace.WithSpanKind(trace.SpanKindServer))
-	defer span.End()
-
-	logger.Debugf("BKN Import Start: kn_id=%s, branch=%s", bknNetwork.ID, bknNetwork.Branch)
-
-	// 校验 BKN 文件
-	if err := bs.validateNetwork(bknNetwork); err != nil {
-		logger.Errorf("Validation failed: %s", err.Error())
-		return "", fmt.Errorf("validation failed: %w", err)
-	}
-
-	// 执行导入
-	kn := logics.ToADPNetWork(bknNetwork)
-	otMap := make(map[string]*interfaces.ObjectType)
-	for _, bknObj := range bknNetwork.ObjectTypes {
-		ot := logics.ToADPObjectType(kn.KNID, kn.Branch, bknObj)
-		kn.ObjectTypes = append(kn.ObjectTypes, ot)
-		otMap[ot.OTID] = ot
-	}
-	for _, bknRel := range bknNetwork.RelationTypes {
-		rt := logics.ToADPRelationType(kn.KNID, kn.Branch, bknRel)
-		kn.RelationTypes = append(kn.RelationTypes, rt)
-	}
-	for _, bknAct := range bknNetwork.ActionTypes {
-		act := logics.ToADPActionType(kn.KNID, kn.Branch, bknAct)
-		kn.ActionTypes = append(kn.ActionTypes, act)
-	}
-	for _, bknCG := range bknNetwork.ConceptGroups {
-		cg := logics.ToADPConceptGroup(kn.KNID, kn.Branch, bknCG)
-		kn.ConceptGroups = append(kn.ConceptGroups, cg)
-
-		for _, otID := range bknCG.ObjectTypes {
-			if ot, ok := otMap[otID]; ok {
-				ot.ConceptGroups = append(ot.ConceptGroups, cg)
-			}
-		}
-	}
-
-	// 调用创建单个知识网络
-	knID, err := bs.kns.CreateKN(ctx, kn, interfaces.ImportMode_Overwrite, false)
-	if err != nil {
-		logger.Errorf("Failed to create KN for %s (%s %s): %v", kn.KNName, kn.KNID, kn.Branch, err)
-		return "", err
-	}
-
-	logger.Debugf("BKN ImportFromTar Completed: kn_id=%s", knID)
-	return knID, nil
 }
 
 // ExportToTar 将知识网络导出为 tar 包
@@ -131,13 +79,4 @@ func (bs *bknService) ExportToTar(ctx context.Context, knID string, branch strin
 
 	logger.Debugf("BKN ExportToTar Completed: size=%d", len(tarData))
 	return tarData, nil
-}
-
-// validateNetwork 校验网络结构
-func (bs *bknService) validateNetwork(network *bknsdk.BknNetwork) error {
-	if network.Type != "network" {
-		return fmt.Errorf("root file must be type: network, got: %s", network.Type)
-	}
-
-	return nil
 }

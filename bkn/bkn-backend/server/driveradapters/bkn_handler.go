@@ -6,6 +6,7 @@
 package driveradapters
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"path/filepath"
@@ -13,13 +14,16 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/kweaver-ai/TelemetrySDK-Go/exporter/v2/ar_trace"
 	bknsdk "github.com/kweaver-ai/bkn-specification/sdk/golang/bkn"
+	"github.com/kweaver-ai/kweaver-go-lib/audit"
 	"github.com/kweaver-ai/kweaver-go-lib/logger"
 	o11y "github.com/kweaver-ai/kweaver-go-lib/observability"
 	"github.com/kweaver-ai/kweaver-go-lib/rest"
+	attr "go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/trace"
 
 	berrors "bkn-backend/errors"
 	"bkn-backend/interfaces"
+	"bkn-backend/logics"
 )
 
 // UploadBKN 上传 BKN tar 包并导入（外部接口）
@@ -30,11 +34,19 @@ func (r *restHandler) UploadBKN(c *gin.Context) {
 	defer span.End()
 
 	// 校验token
-	_, err := r.verifyOAuth(ctx, c)
+	visitor, err := r.verifyOAuth(ctx, c)
 	if err != nil {
 		return
 	}
 
+	accountInfo := interfaces.AccountInfo{
+		ID:   visitor.ID,
+		Type: string(visitor.Type),
+	}
+	// accountID 存入 context 中
+	ctx = context.WithValue(ctx, interfaces.ACCOUNT_INFO_KEY, accountInfo)
+
+	// 设置 trace 的相关 api 的属性
 	o11y.AddHttpAttrs4API(span, o11y.GetAttrsByGinCtx(c))
 
 	// 获取上传的文件
@@ -92,19 +104,106 @@ func (r *restHandler) UploadBKN(c *gin.Context) {
 	bknNetwork.Branch = branch
 	bknNetwork.BusinessDomain = businessDomain
 
-	// 调用服务处理 tar 包
-	knID, err := r.bs.Import(ctx, bknNetwork)
+	// 执行导入
+	kn := logics.ToADPNetWork(bknNetwork)
+	otMap := make(map[string]*interfaces.ObjectType)
+	for _, bknObj := range bknNetwork.ObjectTypes {
+		ot := logics.ToADPObjectType(kn.KNID, kn.Branch, bknObj)
+		kn.ObjectTypes = append(kn.ObjectTypes, ot)
+		otMap[ot.OTID] = ot
+	}
+	for _, bknRel := range bknNetwork.RelationTypes {
+		rt := logics.ToADPRelationType(kn.KNID, kn.Branch, bknRel)
+		kn.RelationTypes = append(kn.RelationTypes, rt)
+	}
+	for _, bknAct := range bknNetwork.ActionTypes {
+		act := logics.ToADPActionType(kn.KNID, kn.Branch, bknAct)
+		kn.ActionTypes = append(kn.ActionTypes, act)
+	}
+	for _, bknCG := range bknNetwork.ConceptGroups {
+		cg := logics.ToADPConceptGroup(kn.KNID, kn.Branch, bknCG)
+		kn.ConceptGroups = append(kn.ConceptGroups, cg)
+
+		for _, otID := range bknCG.ObjectTypes {
+			if ot, ok := otMap[otID]; ok {
+				ot.ConceptGroups = append(ot.ConceptGroups, cg)
+			}
+		}
+	}
+
+	// 1. 校验 业务知识网络必要创建参数的合法性, 非空、长度、是枚举值
+	err = ValidateKN(ctx, kn)
 	if err != nil {
-		logger.Errorf("Upload BKN failed: %s", err.Error())
-		httpErr := rest.NewHTTPError(ctx, http.StatusInternalServerError, berrors.BknBackend_KnowledgeNetwork_InternalError).
-			WithErrorDetails(err.Error())
+		httpErr := err.(*rest.HTTPError)
+
+		// 记录异常日志
+		o11y.Error(ctx, fmt.Sprintf("Validate knowledge network[%s] failed: %s. %v", kn.KNName,
+			httpErr.BaseError.Description, httpErr.BaseError.ErrorDetails))
+
+		// 设置 trace 的错误信息的 attributes
+		span.SetAttributes(attr.Key("kn_name").String(kn.KNName))
 		o11y.AddHttpAttrs4HttpError(span, httpErr)
 		rest.ReplyError(c, httpErr)
 		return
 	}
 
-	logger.Debugf("Upload BKN completed: kn_id=%s", knID)
+	// 若kn的对象类，关系类，行动类, 概念分组不为空，则应循环调用对象类、关系类、行动类, 概念分组的校验函数
+	if len(kn.ObjectTypes) > 0 {
+		err = ValidateObjectTypes(ctx, kn.KNID, kn.ObjectTypes)
+		if err != nil {
+			httpErr := err.(*rest.HTTPError)
+			o11y.AddHttpAttrs4HttpError(span, httpErr)
+			rest.ReplyError(c, httpErr)
+			return
+		}
+	}
+	if len(kn.RelationTypes) > 0 {
+		err = ValidateRelationTypes(ctx, kn.KNID, kn.RelationTypes)
+		if err != nil {
+			httpErr := err.(*rest.HTTPError)
+			o11y.AddHttpAttrs4HttpError(span, httpErr)
+			rest.ReplyError(c, httpErr)
+			return
+		}
+	}
+	if len(kn.ActionTypes) > 0 {
+		err = ValidateActionTypes(ctx, kn.KNID, kn.ActionTypes)
+		if err != nil {
+			httpErr := err.(*rest.HTTPError)
+			o11y.AddHttpAttrs4HttpError(span, httpErr)
+			rest.ReplyError(c, httpErr)
+			return
+		}
+	}
+	if len(kn.ConceptGroups) > 0 {
+		for _, conceptGroup := range kn.ConceptGroups {
+			err = ValidateConceptGroup(ctx, conceptGroup)
+			if err != nil {
+				httpErr := err.(*rest.HTTPError)
+				o11y.AddHttpAttrs4HttpError(span, httpErr)
+				rest.ReplyError(c, httpErr)
+				return
+			}
+		}
+	}
 
+	// 调用创建单个知识网络
+	knID, err := r.kns.CreateKN(ctx, kn, interfaces.ImportMode_Overwrite, false)
+	if err != nil {
+		httpErr := err.(*rest.HTTPError)
+
+		// 设置 trace 的错误信息的 attributes
+		o11y.AddHttpAttrs4HttpError(span, httpErr)
+		rest.ReplyError(c, httpErr)
+		return
+	}
+
+	// 成功创建记录审计日志
+	audit.NewInfoLog(audit.OPERATION, audit.CREATE, audit.TransforOperator(visitor),
+		interfaces.GenerateKNAuditObject(knID, kn.KNName), "")
+
+	logger.Debugf("Upload BKN completed: kn_id=%s", knID)
+	o11y.AddHttpAttrs4Ok(span, http.StatusOK)
 	rest.ReplyOK(c, http.StatusOK, map[string]string{"kn_id": knID})
 }
 
