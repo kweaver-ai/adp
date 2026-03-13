@@ -93,7 +93,7 @@ func (da *datasetAccess) Create(ctx context.Context, name string, schemaDefiniti
 		case "shape":
 			fieldType = "geo_shape"
 		default:
-			fieldType = fieldType
+			// 保持 fieldType 不变
 		}
 		// 创建字段属性映射
 		fieldProps := map[string]any{
@@ -103,7 +103,7 @@ func (da *datasetAccess) Create(ctx context.Context, name string, schemaDefiniti
 		if column.Type == "decimal" {
 			fieldProps["scaling_factor"] = 1000000000000000000.0 // 18位小数
 		}
-		if column.Features != nil && len(column.Features) > 0 {
+		if len(column.Features) > 0 {
 			for _, feature := range column.Features {
 				if feature.Config != nil {
 					for k, v := range feature.Config {
@@ -232,7 +232,7 @@ func (da *datasetAccess) Update(ctx context.Context, name string, schemaDefiniti
 		case "shape":
 			fieldType = "geo_shape"
 		default:
-			fieldType = fieldType
+			// 保持 fieldType 不变
 		}
 		// 创建字段属性映射
 		fieldProps := map[string]any{
@@ -417,7 +417,7 @@ func (da *datasetAccess) ListDocuments(ctx context.Context, name string, params 
 		}
 
 		// 处理 search_after
-		if params.SearchAfter != nil && len(params.SearchAfter) > 0 {
+		if len(params.SearchAfter) > 0 {
 			query["search_after"] = params.SearchAfter
 		}
 	}
@@ -909,7 +909,7 @@ func (da *datasetAccess) ConvertFilterConditionOr(condition interfaces.FilterCon
 
 	return map[string]any{
 		"bool": map[string]any{
-			"should": should,
+			"should":               should,
 			"minimum_should_match": 1,
 		},
 	}, nil
@@ -1014,7 +1014,7 @@ func (da *datasetAccess) ConvertFilterConditionEqual(condition interfaces.Filter
 	case interfaces.ValueFrom_Field:
 		return map[string]any{
 			"script": map[string]any{
-				"source": fmt.Sprintf("doc['%s'].value == doc['%s'].value", fieldName + keyword, cond.Rfield.OriginalName + keyword),
+				"source": fmt.Sprintf("doc['%s'].value == doc['%s'].value", fieldName+keyword, cond.Rfield.OriginalName+keyword),
 			},
 		}, nil
 	default:
@@ -1056,7 +1056,7 @@ func (da *datasetAccess) ConvertFilterConditionNotEqual(condition interfaces.Fil
 	case interfaces.ValueFrom_Field:
 		return map[string]any{
 			"script": map[string]any{
-				"source": fmt.Sprintf("doc['%s'].value != doc['%s'].value", fieldName + keyword, cond.Rfield.OriginalName + keyword),
+				"source": fmt.Sprintf("doc['%s'].value != doc['%s'].value", fieldName+keyword, cond.Rfield.OriginalName+keyword),
 			},
 		}, nil
 	default:
@@ -1304,7 +1304,7 @@ func (da *datasetAccess) ConvertFilterConditionContain(condition interfaces.Filt
 
 	return map[string]any{
 		"bool": map[string]any{
-			"should": should,
+			"should":               should,
 			"minimum_should_match": 1,
 		},
 	}, nil
@@ -1447,7 +1447,7 @@ func (da *datasetAccess) ConvertFilterConditionMatch(condition interfaces.Filter
 		}
 		return map[string]any{
 			"bool": map[string]any{
-				"should": should,
+				"should":               should,
 				"minimum_should_match": 1,
 			},
 		}, nil
@@ -1486,7 +1486,7 @@ func (da *datasetAccess) ConvertFilterConditionMatchPhrase(condition interfaces.
 		}
 		return map[string]any{
 			"bool": map[string]any{
-				"should": should,
+				"should":               should,
 				"minimum_should_match": 1,
 			},
 		}, nil
@@ -1813,14 +1813,14 @@ func (da *datasetAccess) printRequestBody(body interface{}) {
 		logger.Debugf("OpenSearch Request Body: %s", v.String())
 	case *strings.Reader:
 		buf := new(bytes.Buffer)
-		buf.ReadFrom(v)
+		_, _ = buf.ReadFrom(v)
 		bodyStr := buf.String()
 		logger.Debugf("OpenSearch Request Body: %s", bodyStr)
 		// 重置Reader位置
 		v.Reset(bodyStr)
 	case bytes.Reader:
 		buf := new(bytes.Buffer)
-		buf.ReadFrom(&v)
+		_, _ = buf.ReadFrom(&v)
 		logger.Debugf("OpenSearch Request Body: %s", buf.String())
 	default:
 		// 其他类型尝试转换为JSON

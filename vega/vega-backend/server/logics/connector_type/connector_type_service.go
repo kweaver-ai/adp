@@ -138,7 +138,7 @@ func (cts *connectorTypeService) List(ctx context.Context, params interfaces.Con
 	ctx, span := ar_trace.Tracer.Start(ctx, "List connector types")
 	defer span.End()
 
-	connectorTypesArr, total, err := cts.cta.List(ctx, params)
+	connectorTypesArr, _, err := cts.cta.List(ctx, params)
 	if err != nil {
 		span.SetStatus(codes.Error, "List connector types failed")
 		return nil, 0, rest.NewHTTPError(ctx, http.StatusInternalServerError, verrors.VegaBackend_ConnectorType_InternalError_GetFailed).
@@ -167,7 +167,7 @@ func (cts *connectorTypeService) List(ctx context.Context, params interfaces.Con
 			connectorTypes = append(connectorTypes, c)
 		}
 	}
-	total = int64(len(connectorTypes))
+	total := int64(len(connectorTypes))
 
 	// limit = -1,则返回所有
 	if params.Limit != -1 {

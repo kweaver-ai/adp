@@ -61,7 +61,8 @@ func (c *KnnVectorCond) New(ctx context.Context, cfg *interfaces.FilterCondCfg,
 	}
 
 	return &KnnVectorCond{
-		mCfg:      cfg,
-		mSubConds: subConds,
+		mCfg:             cfg,
+		mFilterFieldName: cfg.Name,
+		mSubConds:        subConds,
 	}, nil
 }

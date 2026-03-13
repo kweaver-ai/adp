@@ -294,7 +294,7 @@ func (cs *catalogService) List(ctx context.Context, params interfaces.CatalogsQu
 	ctx, span := ar_trace.Tracer.Start(ctx, "List catalogs")
 	defer span.End()
 
-	catalogsArr, total, err := cs.ca.List(ctx, params)
+	catalogsArr, _, err := cs.ca.List(ctx, params)
 	if err != nil {
 		span.SetStatus(codes.Error, "List catalogs failed")
 		return []*interfaces.Catalog{}, 0, rest.NewHTTPError(ctx, http.StatusInternalServerError, verrors.VegaBackend_Catalog_InternalError_GetFailed).
@@ -323,7 +323,7 @@ func (cs *catalogService) List(ctx context.Context, params interfaces.CatalogsQu
 			catalogs = append(catalogs, c)
 		}
 	}
-	total = int64(len(catalogs))
+	total := int64(len(catalogs))
 
 	// limit = -1,则返回所有
 	if params.Limit != -1 {

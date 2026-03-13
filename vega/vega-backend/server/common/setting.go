@@ -200,11 +200,11 @@ func SetDBSetting() {
 	}
 	password := setting["password"]
 	pwd := ""
-	switch password.(type) {
+	switch p := password.(type) {
 	case int:
-		pwd = strconv.Itoa(password.(int))
+		pwd = strconv.Itoa(p)
 	case string:
-		pwd = password.(string)
+		pwd = p
 	}
 	appSetting.DBSetting = libdb.DBSetting{
 		Host:     setting["host"].(string),
