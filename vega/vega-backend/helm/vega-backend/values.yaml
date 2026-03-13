@@ -41,24 +41,24 @@ depServices:
     host: mariadb-mariadb-master.resource.svc.cluster.local.
     port: 3330
     user: root
-    password: ''
+    password: ""
     type: MariaDB
   mq:
     mqType: kafka
     mqHost: kafka-headless.resource.svc.cluster.local.
-    mqPort: 9092
+    mqPort: 9097
     protocol: sasl_plaintext
     tenant: default
     auth:
       username: admin
-      password: ''
+      password: ""
       mechanism: PLAIN
   opensearch:
     host: opensearch-master.resource.svc.cluster.local.
     port: 9200
     protocol: http
-    username: admin
-    password: ''
+    user: admin
+    password: ""
   redis:
     connectInfo:
       username: root

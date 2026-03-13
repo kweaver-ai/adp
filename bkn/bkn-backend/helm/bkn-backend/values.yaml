@@ -41,30 +41,30 @@ depServices:
   rds:
     host: mariadb-mariadb-master.resource.svc.cluster.local.
     port: 3330
-    user: test
-    password: testpwd
+    user: root
+    password: ""
     type: MariaDB
+  mq:
+    mqType: kafka
+    mqHost: kafka-headless.resource.svc.cluster.local.
+    mqPort: 9097
+    protocol: sasl_plaintext
+    tenant: default
+    auth:
+      username: admin
+      password: ""
+      mechanism: PLAIN
   opensearch:
     host: opensearch-master.resource.svc.cluster.local.
     port: 9200
     protocol: http
-    user: test
-    password: testpwd
-  mq:
-    auth:
-      mechanism: PLAIN
-      password: testpwd
-      username: test
-    mqHost: kafka-headless.resource.svc.cluster.local.
-    mqPort: 9097
-    mqType: kafka
-    protocol: sasl_plaintext
-    tenant: default
+    user: admin
+    password: ""
   authorization-private:
     host: authorization-private
     port: 30920
     protocol: http
-  user-management: 
+  user-management:
     host: user-management-private
     port:  30980
     protocol: http
@@ -97,8 +97,8 @@ depServices:
     port: 13018
     protocol: http
   vega-backend:
-    host: vega-backend
-    port: 3014
+    host: vega-backend-svc
+    port: 13014
     protocol: http
 
 config:
@@ -106,7 +106,7 @@ config:
     runMode: release
     httpPort: 13014
     language: zh-CN
-    readTimeOut: 120
+    readTimeOut: 600
     writeTimeOut: 600
     maxConcurrentTasks: 4
     viewDataLimit: 1000

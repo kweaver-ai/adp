@@ -5,7 +5,7 @@ server:
   readTimeOut: 600
   writeTimeOut: 600
 log:
-  logLevel: info
+  logLevel: debug
   developMode: false
   maxAge: 100
   maxBackups: 20
@@ -21,25 +21,25 @@ depServices:
   rds:
     host: mariadb-mariadb-master.resource.svc.cluster.local.
     port: 3330
-    user: username
-    password: password
+    user: root
+    password: ""
     type: MariaDB
   mq:
     mqType: kafka
     mqHost: kafka-headless.resource.svc.cluster.local.
-    mqPort: 9092
+    mqPort: 9097
     protocol: sasl_plaintext
     tenant: default
     auth:
-      username: username
-      password: password
+      username: admin
+      password: ""
       mechanism: PLAIN
   opensearch:
-    host: localhost
+    host: opensearch-master.resource.svc.cluster.local.
     port: 9200
     protocol: http
-    username: username
-    password: password
+    user: admin
+    password: ""
   redis:
     connectInfo:
       username: root
