@@ -122,6 +122,10 @@ The application uses environment variables for configuration:
 Key configuration items:
 - `API_SERVER_PORT`: Public API port (default 8082)
 - `API_SERVER_PRIVATE_PORT`: Private API port (default 8083)
+- `DB_TYPE` (`dbType`/`db_type`): Selects the workflow metadata storage backend (`mongodb` or `mysql`).
+  - `mongodb`: Uses MongoDB to store DAG definitions, execution instances, and other document-style workflow data.
+  - `mysql`: Uses the MySQL/MariaDB-based repository implementation for workflow metadata after relational storage deployment or migration.
+    If the service previously ran with MongoDB storage, migrate the historical workflow data before switching to `mysql`, for example by running `python3 migrations/mariadb/0.4.0/pre/02-mongodb_to_mysql_migration.py`.
 - `MONGODB_HOST`: MongoDB address
 - `REDIS_HOST`: Redis address
 - `KAFKA_BROKERS`: Kafka cluster addresses
