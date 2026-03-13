@@ -13,6 +13,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/bytedance/sonic"
 	bknsdk "github.com/kweaver-ai/bkn-specification/sdk/golang/bkn"
 	"github.com/kweaver-ai/kweaver-go-lib/logger"
 	"github.com/mitchellh/mapstructure"
