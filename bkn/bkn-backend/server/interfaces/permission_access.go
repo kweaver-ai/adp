@@ -10,6 +10,9 @@ import (
 )
 
 const (
+	ADMIN_ACCOUNT_ID   = "266c6a42-6131-4d62-8f39-853e7093701c"
+	ADMIN_ACCOUNT_TYPE = "user"
+
 	// 访问者类型
 	ACCESSOR_TYPE_USER = "user"
 	ACCESSOR_TYPE_APP  = "app"

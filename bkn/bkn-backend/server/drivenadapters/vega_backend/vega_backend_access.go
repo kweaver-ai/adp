@@ -36,11 +36,6 @@ type vegaBackendAccess struct {
 	baseUrl    string
 }
 
-const (
-	adminID   = "266c6a42-6131-4d62-8f39-853e7093701c"
-	adminType = "user"
-)
-
 // NewVegaBackendAccess creates a new vega-backend access instance
 func NewVegaBackendAccess(appSetting *common.AppSetting) interfaces.VegaBackendAccess {
 	vbAccessOnce.Do(func() {
@@ -61,9 +56,12 @@ func (vba *vegaBackendAccess) buildHeaders(ctx context.Context) map[string]strin
 
 	// accountInfo := interfaces.AccountInfo{}
 	if ctx.Value(interfaces.ACCOUNT_INFO_KEY) != nil {
-		// accountInfo = ctx.Value(interfaces.ACCOUNT_INFO_KEY).(interfaces.AccountInfo)
-		headers[interfaces.HTTP_HEADER_ACCOUNT_ID] = adminID
-		headers[interfaces.HTTP_HEADER_ACCOUNT_TYPE] = adminType
+		accountInfo := ctx.Value(interfaces.ACCOUNT_INFO_KEY).(interfaces.AccountInfo)
+		headers[interfaces.HTTP_HEADER_ACCOUNT_ID] = accountInfo.ID
+		headers[interfaces.HTTP_HEADER_ACCOUNT_TYPE] = accountInfo.Type
+	} else {
+		headers[interfaces.HTTP_HEADER_ACCOUNT_ID] = interfaces.ADMIN_ACCOUNT_ID
+		headers[interfaces.HTTP_HEADER_ACCOUNT_TYPE] = interfaces.ADMIN_ACCOUNT_TYPE
 	}
 
 	return headers
