@@ -53,6 +53,15 @@
         },
         {
             "name": "rds"
+        },
+        {
+            "name": "redis"
+        },
+        {
+            "name": "opensearch"
+        },
+        {
+            "name": "mq"
         }
     ]
 }

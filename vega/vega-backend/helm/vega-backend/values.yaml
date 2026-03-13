@@ -43,6 +43,49 @@ depServices:
     user: test
     password: testpwd
     type: MariaDB
+  mq:
+    mqType: kafka
+    mqHost: kafka-headless.resource.svc.cluster.local.
+    mqPort: 9092
+    protocol: sasl_plaintext
+    tenant: default
+    auth:
+      username: username
+      password: password
+      mechanism: PLAIN
+  opensearch:
+    host: opensearch-master.resource.svc.cluster.local.
+    port: 9200
+    protocol: http
+    username: username
+    password: password
+  redis:
+    connecttype: ""
+    username: ""
+    password: ""
+    host: ""
+    port: 0
+    masterhost: ""
+    masterport: 0
+    slavehost: ""
+    slaveport: 0
+    sentinelhost: ""
+    sentinelport: 0
+    sentinelusername: ""
+    sentinelpassword: ""
+    mastergroupname: ""
+  authorization-private:
+    host: authorization-private
+    port: 30920
+    protocol: http
+  user-management:
+    host: user-management-private
+    port:  30980
+    protocol: http
+  hydra-admin:
+    host: hydra-admin
+    port: 4445
+    protocol: http
 
 config:
   server:
