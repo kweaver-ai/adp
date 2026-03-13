@@ -1862,7 +1862,7 @@ func (d *dag) DeleteDagInsByID(ctx context.Context, params map[string]interface{
 	msyBytes, _ := jsoniter.MarshalToString(params)
 	trace.SetAttributes(newCtx, attribute.String(trace.TABLE_NAME, DAGINSTANCE_TABLENAME), attribute.String(trace.DB_SQL, sql), attribute.String(trace.DB_QUERY, msyBytes))
 
-	err = db.Debug().Exec(sql, id, status, updatedAt).Error
+	err = db.Exec(sql, id, status, updatedAt).Error
 
 	return err
 }
@@ -2350,7 +2350,7 @@ func (d *dag) GroupDagInstance(ctx context.Context, input *mod.GroupInput) ([]*e
 			Total int64 `gorm:"column:total"`
 		}
 		rows := make([]totalRow, 0)
-		if err = db.Debug().Raw(sql, args...).Scan(&rows).Error; err != nil {
+		if err = db.Raw(sql, args...).Scan(&rows).Error; err != nil {
 			return nil, err
 		}
 		result := make([]*entity.DagInstanceGroup, 0, len(rows))
@@ -2365,7 +2365,7 @@ func (d *dag) GroupDagInstance(ctx context.Context, input *mod.GroupInput) ([]*e
 		DagInstanceModel
 	}
 	rows := make([]groupRow, 0)
-	if err = db.Debug().Raw(sql, args...).Scan(&rows).Error; err != nil {
+	if err = db.Raw(sql, args...).Scan(&rows).Error; err != nil {
 		return nil, err
 	}
 
@@ -2824,7 +2824,7 @@ func (d *dag) ListHistoryDagIns(ctx context.Context, params map[string]interface
 
 		sql := `SELECT * FROM t_flow_dag_instance WHERE f_status IN ? AND f_updated_at <= ? AND f_id > ? ORDER BY f_id ASC LIMIT ?`
 		var models []DagInstanceModel
-		if err = db.Debug().Raw(sql, status, updatedAt, lastID, batchSize).Scan(&models).Error; err != nil {
+		if err = db.Raw(sql, status, updatedAt, lastID, batchSize).Scan(&models).Error; err != nil {
 			return err
 		}
 		if len(models) == 0 {
