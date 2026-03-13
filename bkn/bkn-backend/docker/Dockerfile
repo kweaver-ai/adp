@@ -18,7 +18,8 @@ ENV GOPROXY=${GOPROXY_URL}
 RUN set -ex; \
     cd /go/src; \
     go mod download -x; \
-    CGO_ENABLED=1 go build -ldflags "-s -w" -o ./bin/bkn-backend-server;
+    export flags="-X 'bkn-backend/version.ServerVersion=${SERVER_VERSION}'"; \
+    CGO_ENABLED=1 go build -ldflags "-s -w $flags" -o ./bin/bkn-backend-server;
 
 ########################### Stage 1 ########################
 # Copy working directory to the actual release docker images
