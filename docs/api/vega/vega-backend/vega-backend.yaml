@@ -1228,7 +1228,45 @@ paths:
       summary: Get resources
       tags:
         - resources
-
+  /resources/dataset/{id}/{docid}:
+    get:
+      consumes:
+      - application/json
+      description: Get a document from a dataset
+      parameters:
+      - description: Dataset ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Document ID
+        in: path
+        name: docid
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            type: object
+      summary: Get dataset document
+      tags:
+      - resources
   /resources/dataset/{id}/docs:
     post:
       consumes:
@@ -1355,6 +1393,48 @@ paths:
       summary: Delete dataset documents
       tags:
         - resources
+  /resources/dataset/{id}/docs/query:
+    post:
+      consumes:
+      - application/json
+      description: Delete documents from a dataset by query
+      parameters:
+      - description: Dataset ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Delete query
+        in: body
+        name: query
+        required: true
+        schema:
+          additionalProperties: true
+          type: object
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema:
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            type: object
+      summary: Delete dataset documents by query
+      tags:
+      - resources
 
   /connector-types:
     get:
