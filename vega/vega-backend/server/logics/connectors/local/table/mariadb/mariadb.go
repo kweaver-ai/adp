@@ -10,9 +10,10 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"net/url"
+
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/mitchellh/mapstructure"
-	"net/url"
 
 	"vega-backend/interfaces"
 	"vega-backend/logics/connectors"
@@ -106,8 +107,8 @@ func (c *MariaDBConnector) GetSensitiveFields() []string {
 // GetFieldConfig returns the field configuration for MariaDB connector.
 func (c *MariaDBConnector) GetFieldConfig() map[string]interfaces.ConnectorFieldConfig {
 	return map[string]interfaces.ConnectorFieldConfig{
-		"host":      {Name: "主机地址", Type: "string", Description: "MariaDB 服务器主机地址", Required: true, Encrypted: false},
-		"port":      {Name: "端口号", Type: "integer", Description: "MariaDB 服务器端口", Required: true, Encrypted: false},
+		"host":      {Name: "主机地址", Type: "string", Description: "数据库服务器主机地址", Required: true, Encrypted: false},
+		"port":      {Name: "端口号", Type: "integer", Description: "数据库服务器端口", Required: true, Encrypted: false},
 		"username":  {Name: "用户名", Type: "string", Description: "数据库用户名", Required: true, Encrypted: false},
 		"password":  {Name: "密码", Type: "string", Description: "数据库密码", Required: true, Encrypted: true},
 		"databases": {Name: "数据库列表", Type: "array", Description: "数据库名称列表（可选，为空则连接实例级别）", Required: false, Encrypted: false},
