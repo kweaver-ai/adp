@@ -248,7 +248,7 @@ func SetOpenSearchSetting() {
 		Host:     setting["host"].(string),
 		Port:     setting["port"].(int),
 		Protocol: setting["protocol"].(string),
-		Username: setting["username"].(string),
+		Username: setting["user"].(string),
 		Password: setting["password"].(string),
 	}
 }
