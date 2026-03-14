@@ -802,7 +802,7 @@ func Test_knowledgeNetworkAccess_ListKnSrcs(t *testing.T) {
 			queryWithParams := interfaces.KNsQueryParams{
 				NamePattern: "test",
 				PaginationQueryParameters: interfaces.PaginationQueryParameters{
-					Sort:      "graph_name",
+					Sort:      "f_name",
 					Direction: "ASC",
 				},
 			}
