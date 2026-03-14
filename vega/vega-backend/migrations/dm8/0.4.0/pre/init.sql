@@ -106,7 +106,7 @@ CREATE TABLE IF NOT EXISTS t_catalog (
     f_description             VARCHAR(1000 CHAR) NOT NULL DEFAULT '',
 
     f_type                    VARCHAR(20 CHAR) NOT NULL DEFAULT '',
-    f_enabled                 BOOLEAN NOT NULL DEFAULT TRUE,
+    f_enabled                 TINYINT NOT NULL DEFAULT 1,
 
     -- Physical Catalog 专属字段
     f_connector_type          VARCHAR(50 CHAR) NOT NULL DEFAULT '',
@@ -114,7 +114,7 @@ CREATE TABLE IF NOT EXISTS t_catalog (
     f_metadata                TEXT NOT NULL,
 
     -- 状态管理
-    f_health_check_enabled    BOOLEAN NOT NULL DEFAULT TRUE,
+    f_health_check_enabled    TINYINT NOT NULL DEFAULT 1,
     f_health_check_status     VARCHAR(20 CHAR) NOT NULL DEFAULT 'healthy',
     f_last_check_time         BIGINT NOT NULL DEFAULT 0,
     f_health_check_result     TEXT NOT NULL,
@@ -146,7 +146,7 @@ CREATE TABLE IF NOT EXISTS t_catalog_discover_policy (
     f_id                      VARCHAR(40 CHAR) NOT NULL DEFAULT '',
 
     -- 状态
-    f_enabled                 BOOLEAN NOT NULL DEFAULT FALSE,
+    f_enabled                 TINYINT NOT NULL DEFAULT 0,
 
     -- 发现策略配置
     f_discover_mode          VARCHAR(20 CHAR) NOT NULL DEFAULT 'manual',
@@ -201,7 +201,7 @@ CREATE TABLE IF NOT EXISTS t_resource (
     f_logic_definition_type   VARCHAR(20 CHAR) NOT NULL DEFAULT '',
 
     -- Local查询配置（物化）
-    f_local_enabled           BOOLEAN NOT NULL DEFAULT FALSE,
+    f_local_enabled           TINYINT NOT NULL DEFAULT 0,
     f_local_storage_engine    VARCHAR(50 CHAR) NOT NULL DEFAULT '',
     f_local_storage_config    TEXT NOT NULL,
     f_local_index_name        VARCHAR(255 CHAR) NOT NULL DEFAULT '',
@@ -243,7 +243,7 @@ CREATE TABLE IF NOT EXISTS t_resource_schema_history (
     -- 变更信息
     f_change_type             VARCHAR(20 CHAR) NOT NULL DEFAULT '',
     f_change_summary          VARCHAR(1000 CHAR) NOT NULL DEFAULT '',
-    f_schema_inferred         BOOLEAN NOT NULL DEFAULT FALSE,
+    f_schema_inferred         TINYINT NOT NULL DEFAULT 0,
     f_change_time             BIGINT NOT NULL DEFAULT 0,
 
     -- 索引
@@ -273,7 +273,7 @@ CREATE TABLE IF NOT EXISTS t_connector_type (
     f_field_config            TEXT NOT NULL,
 
     -- 状态
-    f_enabled                 BOOLEAN NOT NULL DEFAULT TRUE,
+    f_enabled                 TINYINT NOT NULL DEFAULT 1,
 
     -- 索引
     CLUSTER PRIMARY KEY (f_type)
@@ -302,7 +302,7 @@ SELECT 'mariadb', 'mariadb', 'MariaDB 关系型数据库连接器', 'local', 'ta
         "databases": {"name":"数据库列表","type":"array","description":"数据库名称列表（可选，为空则连接实例级别）","required":false,"encrypted":false},
         "options":   {"name":"连接参数","type":"object","description":"连接参数（如 charset, timeout 等）","required":false,"encrypted":false}
     }',
-    TRUE
+    1
 FROM DUAL WHERE NOT EXISTS ( SELECT f_type FROM t_connector_type WHERE f_type = 'mariadb' );
 
 INSERT INTO t_connector_type (f_type, f_name, f_description, f_mode, f_category, f_field_config, f_enabled)
@@ -315,7 +315,7 @@ SELECT 'mysql', 'mysql', 'MySQL 关系型数据库连接器', 'local', 'table',
            "databases": {"name":"数据库列表","type":"array","description":"数据库名称列表（可选，为空则连接实例级别）","required":false,"encrypted":false},
            "options":   {"name":"连接参数","type":"object","description":"连接参数（如 charset, timeout 等）","required":false,"encrypted":false}
        }',
-       TRUE
+       1
 FROM DUAL WHERE NOT EXISTS ( SELECT f_type FROM t_connector_type WHERE f_type = 'mysql' );
 
 INSERT INTO t_connector_type (f_type, f_name, f_description, f_mode, f_category, f_field_config, f_enabled)
@@ -327,7 +327,7 @@ SELECT 'opensearch', 'opensearch', 'OpenSearch 搜索引擎连接器', 'local', 
         "password":      {"name":"密码","type":"string","description":"认证密码","required":false,"encrypted":true},
         "index_pattern": {"name":"索引模式","type":"string","description":"索引匹配模式（可选，如 log-*）","required":false,"encrypted":false}
     }',
-    TRUE
+    1
 FROM DUAL WHERE NOT EXISTS ( SELECT f_type FROM t_connector_type WHERE f_type = 'opensearch' );
 
 -- ==========================================
