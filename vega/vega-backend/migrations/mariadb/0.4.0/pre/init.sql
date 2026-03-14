@@ -284,8 +284,8 @@ CREATE TABLE IF NOT EXISTS t_connector_type (
 INSERT INTO t_connector_type (f_type, f_name, f_description, f_mode, f_category, f_field_config, f_enabled)
 SELECT 'mariadb', 'mariadb', 'MariaDB 关系型数据库连接器', 'local', 'table',
     '{
-        "host":      {"name":"主机地址","type":"string","description":"MariaDB 服务器主机地址","required":true,"encrypted":false},
-        "port":      {"name":"端口号","type":"integer","description":"MariaDB 服务器端口","required":true,"encrypted":false},
+        "host":      {"name":"主机地址","type":"string","description":"数据库服务器主机地址","required":true,"encrypted":false},
+        "port":      {"name":"端口号","type":"integer","description":"数据库服务器端口","required":true,"encrypted":false},
         "username":  {"name":"用户名","type":"string","description":"数据库用户名","required":true,"encrypted":false},
         "password":  {"name":"密码","type":"string","description":"数据库密码","required":true,"encrypted":true},
         "databases": {"name":"数据库列表","type":"array","description":"数据库名称列表（可选，为空则连接实例级别）","required":false,"encrypted":false},
@@ -293,6 +293,19 @@ SELECT 'mariadb', 'mariadb', 'MariaDB 关系型数据库连接器', 'local', 'ta
     }',
     TRUE
 FROM DUAL WHERE NOT EXISTS ( SELECT f_type FROM t_connector_type WHERE f_type = 'mariadb' );
+
+INSERT INTO t_connector_type (f_type, f_name, f_description, f_mode, f_category, f_field_config, f_enabled)
+SELECT 'mysql', 'mysql', 'MySQL 关系型数据库连接器', 'local', 'table',
+       '{
+           "host":      {"name":"主机地址","type":"string","description":"数据库服务器主机地址","required":true,"encrypted":false},
+           "port":      {"name":"端口号","type":"integer","description":"数据库服务器端口","required":true,"encrypted":false},
+           "username":  {"name":"用户名","type":"string","description":"数据库用户名","required":true,"encrypted":false},
+           "password":  {"name":"密码","type":"string","description":"数据库密码","required":true,"encrypted":true},
+           "databases": {"name":"数据库列表","type":"array","description":"数据库名称列表（可选，为空则连接实例级别）","required":false,"encrypted":false},
+           "options":   {"name":"连接参数","type":"object","description":"连接参数（如 charset, timeout 等）","required":false,"encrypted":false}
+       }',
+       TRUE
+FROM DUAL WHERE NOT EXISTS ( SELECT f_type FROM t_connector_type WHERE f_type = 'mysql' );
 
 INSERT INTO t_connector_type (f_type, f_name, f_description, f_mode, f_category, f_field_config, f_enabled)
 SELECT 'opensearch', 'opensearch', 'OpenSearch 搜索引擎连接器', 'local', 'index',
@@ -305,19 +318,6 @@ SELECT 'opensearch', 'opensearch', 'OpenSearch 搜索引擎连接器', 'local', 
     }',
     TRUE
 FROM DUAL WHERE NOT EXISTS ( SELECT f_type FROM t_connector_type WHERE f_type = 'opensearch' );
-
-INSERT INTO t_connector_type (f_type, f_name, f_description, f_mode, f_category, f_field_config, f_enabled)
-SELECT 'mysql', 'mysql', 'Mysql 关系型数据库连接器', 'local', 'table',
-       '{
-           "host":      {"name":"主机地址","type":"string","description":"MariaDB 服务器主机地址","required":true,"encrypted":false},
-           "port":      {"name":"端口号","type":"integer","description":"MariaDB 服务器端口","required":true,"encrypted":false},
-           "username":  {"name":"用户名","type":"string","description":"数据库用户名","required":true,"encrypted":false},
-           "password":  {"name":"密码","type":"string","description":"数据库密码","required":true,"encrypted":true},
-           "databases": {"name":"数据库列表","type":"array","description":"数据库名称列表（可选，为空则连接实例级别）","required":false,"encrypted":false},
-           "options":   {"name":"连接参数","type":"object","description":"连接参数（如 charset, timeout 等）","required":false,"encrypted":false}
-       }',
-       TRUE
-FROM DUAL WHERE NOT EXISTS ( SELECT f_type FROM t_connector_type WHERE f_type = 'mysql' );
 
 -- ==========================================
 -- 7. t_discover_task 发现任务表
@@ -348,6 +348,5 @@ CREATE TABLE IF NOT EXISTS t_discover_task (
     -- 索引
     PRIMARY KEY (f_id),
     INDEX idx_catalog_id (f_catalog_id),
-    INDEX idx_status (f_status),
-    INDEX idx_create_time (f_create_time)
+    INDEX idx_status (f_status)
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_bin COMMENT='发现任务表，记录异步资源发现任务的状态和结果';
