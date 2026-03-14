@@ -1013,51 +1013,23 @@ func (kna *knowledgeNetworkAccess) ListKnSrcs(ctx context.Context,
 		attr.Key("db_type").String(libdb.GetDBType()))
 
 	// 新的业务知识网络
-	subBuilder1 := sq.Select(
+	subBuilder := sq.Select(
 		"f_id",
 		"f_name").
 		From(KN_TABLE_NAME)
-	builder1 := processQueryCondition(query, subBuilder1)
+	builder := processQueryCondition(query, subBuilder)
 
 	//排序
 	if query.Sort != "" {
-		builder1 = builder1.OrderBy(fmt.Sprintf("%s %s", query.Sort, query.Direction))
+		builder = builder.OrderBy(fmt.Sprintf("%s %s", query.Sort, query.Direction))
 	}
-	sqlStr1, vals1, err := builder1.ToSql()
+	sqlStr, vals, err := builder.ToSql()
 	if err != nil {
 		logger.Errorf("Failed to build the sql of select knowledge networks, error: %s", err.Error())
 		o11y.Error(ctx, fmt.Sprintf("Failed to build the sql of select knowledge networks, error: %s", err.Error()))
 		span.SetStatus(codes.Error, "Build sql failed ")
 		return []interfaces.Resource{}, err
 	}
-
-	// 旧的业务知识网络
-	subBuilder2 := sq.Select(
-		"id",
-		"graph_name").
-		From("dip_kn.graph_config_table")
-	// 只有 graph_name 过滤
-	if query.NamePattern != "" {
-		// 模糊查询
-		subBuilder2 = subBuilder2.Where(sq.Expr("instr(graph_name, ?) > 0", query.NamePattern))
-	}
-
-	//排序
-	if query.Sort != "" {
-		subBuilder2 = subBuilder2.OrderBy(fmt.Sprintf("graph_name %s", query.Direction))
-	}
-	sqlStr2, vals2, err := subBuilder2.ToSql()
-	if err != nil {
-		logger.Errorf("Failed to build the sql of select knowledge networks, error: %s", err.Error())
-		o11y.Error(ctx, fmt.Sprintf("Failed to build the sql of select knowledge networks, error: %s", err.Error()))
-		span.SetStatus(codes.Error, "Build sql failed ")
-		return []interfaces.Resource{}, err
-	}
-	vals := []any{}
-	vals = append(vals, vals1...)
-	vals = append(vals, vals2...)
-
-	sqlStr := fmt.Sprintf(`(%s) UNION ALL (%s)`, sqlStr1, sqlStr2)
 
 	// 记录处理的 sql 字符串
 	o11y.Info(ctx, fmt.Sprintf("查询业务知识网络资源列表的 sql 语句: %s; queryParams: %v", sqlStr, query))

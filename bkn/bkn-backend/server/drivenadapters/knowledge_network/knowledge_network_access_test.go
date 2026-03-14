@@ -750,9 +750,7 @@ func Test_knowledgeNetworkAccess_ListKnSrcs(t *testing.T) {
 		appSetting := &common.AppSetting{}
 		kna, smock := MockNewKNAccess(appSetting)
 
-		sqlStr1 := fmt.Sprintf("SELECT f_id, f_name FROM %s", KN_TABLE_NAME)
-		sqlStr2 := "SELECT id, graph_name FROM dip_kn.graph_config_table"
-		sqlStr := fmt.Sprintf("(%s) UNION ALL (%s)", sqlStr1, sqlStr2)
+		sqlStr := fmt.Sprintf("SELECT f_id, f_name FROM %s", KN_TABLE_NAME)
 
 		query := interfaces.KNsQueryParams{}
 
@@ -808,9 +806,7 @@ func Test_knowledgeNetworkAccess_ListKnSrcs(t *testing.T) {
 					Direction: "ASC",
 				},
 			}
-			sqlStr1WithParams := fmt.Sprintf("SELECT f_id, f_name FROM %s WHERE (instr(f_name, ?) > 0 OR instr(f_id, ?) > 0) ORDER BY graph_name ASC", KN_TABLE_NAME)
-			sqlStr2WithParams := "SELECT id, graph_name FROM dip_kn.graph_config_table WHERE instr(graph_name, ?) > 0 ORDER BY graph_name ASC"
-			sqlStrWithParams := fmt.Sprintf("(%s) UNION ALL (%s)", sqlStr1WithParams, sqlStr2WithParams)
+			sqlStrWithParams := fmt.Sprintf("SELECT f_id, f_name FROM %s WHERE (instr(f_name, ?) > 0 OR instr(f_id, ?) > 0) ORDER BY f_name ASC", KN_TABLE_NAME)
 
 			rows := sqlmock.NewRows([]string{"f_id", "f_name"}).
 				AddRow("kn1", "Knowledge Network 1")
