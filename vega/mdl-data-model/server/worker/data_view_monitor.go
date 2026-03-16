@@ -11,6 +11,7 @@ import (
 	"errors"
 	"fmt"
 	"reflect"
+	"runtime/debug"
 	"sync"
 	"time"
 
@@ -100,6 +101,7 @@ func (dvmService *dataViewMonitorService) syncViews(ctx context.Context) error {
 	defer func() {
 		if r := recover(); r != nil {
 			logger.Errorf("Error syncing views: %v", r)
+			logger.Errorf("Stack trace: %v", debug.Stack())
 		}
 	}()
 
