@@ -1,5 +1,5 @@
 /// <reference types="@rsbuild/core/types" />
-declare module '@aishu-tech/components/dist/dip-components.min.js';
+declare module '@kweaver-ai/components/dist/dip-components.min.js';
 
 // SVG module declarations for SVGR
 declare module '*.svg' {

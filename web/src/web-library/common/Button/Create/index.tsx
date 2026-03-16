@@ -5,7 +5,7 @@ import IconFont from '../../IconFont';
 /** 预设按钮-创建 */
 const Create: React.FC<AntdButtonProps> = (props) => {
   return (
-    <AntdButton type="primary" icon={<IconFont type="icon-add" />} {...props}>
+    <AntdButton type="primary" icon={<IconFont type="icon-dip-add" />} {...props}>
       {props.children || intl.get('Global.create')}
     </AntdButton>
   );

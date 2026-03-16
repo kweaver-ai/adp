@@ -24,6 +24,7 @@ import DataViewForm from './DataViewForm';
 import styles from './index.module.less';
 import PreviewData from '../CustomDataView/MainContent/PreviewData';
 import { transformAndMapDataSources } from '../DataConnect/utils';
+import useBatchAuthorization from '@/hooks/useBatchAuthorization';
 
 const getIconCom = (type: string): JSX.Element => {
   const cur = DATABASE_ICON_MAP[type as keyof typeof DATABASE_ICON_MAP];
@@ -81,6 +82,11 @@ const AtomDataView = (): JSX.Element => {
   const { openModal: openAuthorizationModal } = useAuthorization({
     title: intl.get('Global.viewPermissionConfig'),
     resourceName: intl.get('Global.viewPermissionConfig'),
+    resourceType: 'data_view',
+    mountNodeId: 'data-view-model-container',
+  });
+  const { openModal: openBatchAuthorizationModal } = useBatchAuthorization({
+    title: intl.get('Global.authorize'),
     resourceType: 'data_view',
     mountNodeId: 'data-view-model-container',
   });
@@ -180,6 +186,18 @@ const AtomDataView = (): JSX.Element => {
     });
   };
 
+  /** 点击授权 */
+  const authorizeClick = () => {
+    const resources = selectedRowKeys.map(id => {
+      const resource = tableData.find(data => data.id === id)!;
+      return {
+        id,
+        name: `${resource.group_name || intl.get('Global.ungrouped')}/${resource.name}`
+      }
+    })
+    openBatchAuthorizationModal(resources);
+  }
+
   const getModalContent = async (val: AtomDataViewType.Data): Promise<DataItem[]> => {
     const [data] = await api.getDataViewsByIds([val.id]);
 
@@ -257,28 +275,28 @@ const AtomDataView = (): JSX.Element => {
 
     const dataRangeContent = val?.file_name
       ? [
-          {
-            title: intl.get('DataView.dataRange'),
-            content: [
-              {
-                name: intl.get('DataView.sheetSpa'),
-                value: val?.excel_config?.sheet,
-              },
-              {
-                name: intl.get('DataView.cellRange'),
-                value: `${val?.excel_config?.start_cell}-${val?.excel_config?.end_cell}`,
-              },
-              {
-                name: intl.get('DataView.hasHeaders'),
-                value: val?.excel_config?.has_headers ? intl.get('Global.selectFirstRow') : intl.get('Global.custom'),
-              },
-              {
-                name: intl.get('DataView.sheetAsNewColumn'),
-                value: val?.excel_config?.sheet_as_new_column ? intl.get('Global.yes') : intl.get('Global.no'),
-              },
-            ],
-          },
-        ]
+        {
+          title: intl.get('DataView.dataRange'),
+          content: [
+            {
+              name: intl.get('DataView.sheetSpa'),
+              value: val?.excel_config?.sheet,
+            },
+            {
+              name: intl.get('DataView.cellRange'),
+              value: `${val?.excel_config?.start_cell}-${val?.excel_config?.end_cell}`,
+            },
+            {
+              name: intl.get('DataView.hasHeaders'),
+              value: val?.excel_config?.has_headers ? intl.get('Global.selectFirstRow') : intl.get('Global.custom'),
+            },
+            {
+              name: intl.get('DataView.sheetAsNewColumn'),
+              value: val?.excel_config?.sheet_as_new_column ? intl.get('Global.yes') : intl.get('Global.no'),
+            },
+          ],
+        },
+      ]
       : [];
 
     return [baseConfigContent, ...dataRangeContent, fieldInfoContent];
@@ -484,6 +502,15 @@ const AtomDataView = (): JSX.Element => {
               >
                 <ContainerIsVisible visible={matchPermission(PERMISSION_CODES.DELETE, getTypePermissionOperation('data_view'))}>
                   <Button.Delete disabled={!selectedRowKeys?.length} onClick={() => deleteConfirm()} />
+                </ContainerIsVisible>
+                <ContainerIsVisible visible={matchPermission(PERMISSION_CODES.AUTHORIZE, getTypePermissionOperation('data_view'))}>
+                  <Button
+                    disabled={!selectedRows?.length}
+                    icon={<IconFont type="icon-dip-shouquan" />}
+                    onClick={() => authorizeClick()}
+                  >
+                    {intl.get('Global.authorize')}
+                  </Button>
                 </ContainerIsVisible>
               </Table.Operation>
             </Table.PageTable>

@@ -308,6 +308,7 @@
     "unset": "Unset",
     "clearSuccess": "Cleared successfully",
     "clear": "Clear",
-    "collapse": "Collapse"
+    "collapse": "Collapse",
+    "authorize": "Authorize"
   }
 }

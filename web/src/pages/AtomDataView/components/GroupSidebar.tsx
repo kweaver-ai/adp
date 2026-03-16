@@ -1,11 +1,10 @@
 import { useMemo, useState } from 'react';
 import intl from 'react-intl-universal';
-import { ExclamationCircleOutlined } from '@ant-design/icons';
 import { Empty, Tooltip, Tree } from 'antd';
 import { DATABASE_ICON_MAP } from '@/hooks/useConstants';
 import * as DataConnectType from '@/services/dataConnect/type';
 import ScanManagementApi from '@/services/scanManagement';
-import { Input } from '@/web-library/common';
+import { IconFont, Input } from '@/web-library/common';
 import styles from '../index.module.less';
 
 interface GroupSidebarPropsType {
@@ -99,7 +98,7 @@ const GroupSidebar = (props: GroupSidebarPropsType): JSX.Element => {
         <b>
           {intl.get('DataView.scannedDataSources')}
           <Tooltip placement="right" title={intl.get('DataView.dataViewScanManagerTip')}>
-            <ExclamationCircleOutlined style={{ color: 'rgba(0,0,0,0.65)', marginLeft: 5, verticalAlign: '20%' }} />
+            <IconFont style={{ color: 'rgba(0,0,0,0.65)', marginLeft: 5, verticalAlign: '20%' }} type="icon-dip-about" />
           </Tooltip>
         </b>
         {/* <Tooltip placement="right" title={'选择数据源扫描'}>

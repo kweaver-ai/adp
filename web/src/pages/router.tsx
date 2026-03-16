@@ -1,7 +1,7 @@
 import { useEffect, lazy, Suspense } from 'react';
 import intl from 'react-intl-universal';
 import { BrowserRouter as Router, Route, Switch } from 'react-router-dom';
-import '@aishu-tech/components/dist/dip-components.full.css';
+import '@kweaver-ai/components/dist/dip-components.full.css';
 import { message, ConfigProvider, ThemeConfig, Spin } from 'antd';
 import enUS from 'antd/lib/locale/en_US';
 import zhCN from 'antd/lib/locale/zh_CN';
@@ -11,11 +11,11 @@ import THEME from '@/theme.ts';
 import UTILS from '@/utils';
 import { Modal } from '@/web-library/common';
 
-// 异步加载 @aishu-tech/components
+// 异步加载 @kweaver-ai/components
 let aishuComponentsPromise: Promise<any> | null = null;
 const loadAishuComponents = () => {
   if (!aishuComponentsPromise) {
-    aishuComponentsPromise = import('@aishu-tech/components/dist/dip-components.min.js');
+    aishuComponentsPromise = import('@kweaver-ai/components/dist/dip-components.min.js');
   }
   return aishuComponentsPromise;
 };
@@ -69,7 +69,7 @@ const App = (props: AppProps) => {
     intl.init({ currentLocale: language, locales, warningHandler: () => '' });
     UTILS.initMessage(messageApi);
 
-    // 异步加载并初始化 @aishu-tech/components
+    // 异步加载并初始化 @kweaver-ai/components
     loadAishuComponents().then((module) => {
       const { apis } = module;
       apis.setup({

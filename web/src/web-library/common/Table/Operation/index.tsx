@@ -137,7 +137,8 @@ const Operation: React.FC<OperationProps> = (props) => {
           {hasRefreshButton && (
             <Button.Icon
               title="刷新"
-              icon={<RedoOutlined style={{ fontSize: 16, color: 'rgba(0, 0, 0, .5)', transform: 'rotate(-90deg)' }} />}
+              icon={<IconFont type="icon-dip-huanyuan" />}
+              style={{ fontSize: 16, color: 'rgba(0, 0, 0, .5)', transform: 'rotate(-90deg)' }}
               onClick={() => onRefresh()}
             />
           )}

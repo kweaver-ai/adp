@@ -139,7 +139,7 @@ export default defineConfig({
               reuseExistingChunk: true,
             },
             aishu: {
-              test: /[\\/]node_modules[\\/]@aishu-tech[\\/]/,
+              test: /[\\/]node_modules[\\/]@kweaver-ai[\\/]/,
               name: 'lib-aishu',
               priority: 11,
               reuseExistingChunk: true,

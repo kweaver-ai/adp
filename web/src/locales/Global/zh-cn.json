@@ -308,6 +308,7 @@
     "unset": "未设置",
     "clearSuccess": "清空成功",
     "clear": "清空",
-    "collapse": "收起"
+    "collapse": "收起",
+    "authorize": "授权"
   }
 }

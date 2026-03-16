@@ -20,6 +20,7 @@ import { DataViewItem } from '../type';
 import DataViewDetail from './DataViewDetail';
 import { MoveToGroupModal } from './DetailContent/MoveToGroupModal';
 import PreviewData from './PreviewData';
+import useBatchAuthorization from '@/hooks/useBatchAuthorization';
 
 export const MainContent: React.FC = () => {
   const history = useHistory();
@@ -34,6 +35,11 @@ export const MainContent: React.FC = () => {
   const { openModal: openAuthorizationModal } = useAuthorization({
     title: intl.get('Global.viewPermissionConfig'),
     resourceName: intl.get('Global.viewPermissionConfig'),
+    resourceType: 'data_view',
+    mountNodeId: 'data-view-model-container',
+  });
+  const { openModal: openBatchAuthorizationModal } = useBatchAuthorization({
+    title: intl.get('Global.authorize'),
     resourceType: 'data_view',
     mountNodeId: 'data-view-model-container',
   });
@@ -80,6 +86,18 @@ export const MainContent: React.FC = () => {
       },
     });
   };
+
+  /** 点击授权 */
+  const authorizeClick = () => {
+    const resources = selectedRowKeys.map(id => {
+      const resource = tableData.find(data => data.id === id) as any;
+      return {
+        id,
+        name: `${resource.group_name || intl.get('Global.ungrouped')}/${resource.name}`
+      }
+    })
+    openBatchAuthorizationModal(resources);
+  }
 
   /** 预览 */
   const previewData = (record: any): void => {
@@ -242,7 +260,7 @@ export const MainContent: React.FC = () => {
     const { pageSize } = tablePagination;
     try {
       return await getTableData({ ...tableParams, pageSize, current: 1 });
-    } catch (error) {}
+    } catch (error) { }
   };
 
   useEffect(() => {
@@ -316,7 +334,7 @@ export const MainContent: React.FC = () => {
         try {
           const jsonData = JSON.parse(e.target?.result as string);
           changeUpload(jsonData, file.name);
-        } catch (error) {}
+        } catch (error) { }
       };
       return false;
     },
@@ -360,25 +378,30 @@ export const MainContent: React.FC = () => {
           <ContainerIsVisible visible={matchPermission(PERMISSION_CODES.CREATE, getTypePermissionOperation('data_view'))}>
             <Button.Create onClick={() => history.push('/custom-data-view/detail/')} />
           </ContainerIsVisible>
-          <ContainerIsVisible visible={matchPermission(PERMISSION_CODES.DELETE, getTypePermissionOperation('data_view'))}>
-            <Button.Delete disabled={!selectedRows?.length} onClick={() => deleteConfirm('')} />
-          </ContainerIsVisible>
           <ContainerIsVisible visible={matchPermission(PERMISSION_CODES.IMPORT, getTypePermissionOperation('data_view'))}>
             <Upload {...uploadProps}>
-              <Button icon={<IconFont type="icon-upload" />}>{intl.get('Global.import')}</Button>
+              <Button icon={<IconFont type="icon-dip-daoru" />}>{intl.get('Global.import')}</Button>
             </Upload>
           </ContainerIsVisible>
           <ContainerIsVisible visible={matchPermission(PERMISSION_CODES.EXPORT, getTypePermissionOperation('data_view'))}>
             <ExportFile name={'customDataView'} customRequest={exportData}>
-              <Button disabled={!selectedRows?.length} icon={<IconFont type="icon-download" />}>
+              <Button disabled={!selectedRows?.length} icon={<IconFont type="icon-dip-a-daochu1" />}>
                 {intl.get('Global.export')}
               </Button>
             </ExportFile>
           </ContainerIsVisible>
           <ContainerIsVisible visible={matchPermission(PERMISSION_CODES.MODIFY, getTypePermissionOperation('data_view'))}>
-            <Button disabled={!selectedRows?.length} icon={<DragOutlined />} onClick={() => setIsMoveToGroupModalShow(true)}>
+            <Button disabled={!selectedRows?.length} icon={<IconFont type="icon-dip-yidong" />} onClick={() => setIsMoveToGroupModalShow(true)}>
               {intl.get('Global.move')}
             </Button>
+          </ContainerIsVisible>
+          <ContainerIsVisible visible={matchPermission(PERMISSION_CODES.AUTHORIZE, getTypePermissionOperation('data_view'))}>
+            <Button disabled={!selectedRows?.length} icon={<IconFont type="icon-dip-shouquan" />} onClick={() => authorizeClick()}>
+              {intl.get('Global.authorize')}
+            </Button>
+          </ContainerIsVisible>
+          <ContainerIsVisible visible={matchPermission(PERMISSION_CODES.DELETE, getTypePermissionOperation('data_view'))}>
+            <Button.Delete disabled={!selectedRows?.length} onClick={() => deleteConfirm('')} />
           </ContainerIsVisible>
           <Select.LabelSelect
             key="model_tag"

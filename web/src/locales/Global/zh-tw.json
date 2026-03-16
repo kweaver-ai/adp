@@ -307,6 +307,7 @@
     "unset": "未設置",
     "clearSuccess": "清空成功",
     "clear": "清空",
-    "collapse": "收起"
+    "collapse": "收起",
+    "authorize": "授權"
   }
 }

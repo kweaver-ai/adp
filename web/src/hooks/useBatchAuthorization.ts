@@ -12,8 +12,6 @@ const loadAishuComponents = () => {
 interface AuthorizationOptions {
   /** 弹窗标题 */
   title?: string;
-  /** 资源名称 */
-  resourceName?: string;
   /** 资源类型 */
   resourceType?: string;
   /** 权限选择器参数 */
@@ -30,10 +28,9 @@ interface AuthorizationOptions {
 /**
  * 权限管理弹窗组件
  */
-export const useAuthorization = (options: AuthorizationOptions = {}) => {
+export const useBatchAuthorization = (options: AuthorizationOptions = {}) => {
   const {
     title = '权限配置',
-    resourceName = '权限配置',
     resourceType = '',
     pickerParams = {
       tabs: ['organization', 'group', 'app'],
@@ -51,18 +48,21 @@ export const useAuthorization = (options: AuthorizationOptions = {}) => {
   });
 
   /** 打开权限管理弹窗 */
-  const openModal = async (id: string) => {
+  const openModal = async (resources: { id: string; name?: string }[]) => {
     // 异步加载组件库
     const { apis, components } = await loadAishuComponents();
 
     // 挂载权限配置组件
     const unmount = apis.mountComponent(
-      components.PermConfig,
+      components.Authorization,
       {
         title,
-        resource: { id, name: resourceName, type: resourceType },
+        resources: resources.map((resource) => ({ ...resource, type: resourceType, })),
         pickerParams,
         onCancel: () => {
+          unmount();
+        },
+        onConfirm: () => {
           unmount();
         },
       },
@@ -76,4 +76,4 @@ export const useAuthorization = (options: AuthorizationOptions = {}) => {
   };
 };
 
-export default useAuthorization;
+export default useBatchAuthorization;

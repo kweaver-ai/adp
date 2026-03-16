@@ -5,7 +5,7 @@ import IconFont from '../../IconFont';
 /** 预设按钮-删除 */
 const Delete: React.FC<AntdButtonProps> = (props) => {
   return (
-    <AntdButton icon={<IconFont type="icon-delete" />} {...props}>
+    <AntdButton icon={<IconFont type="icon-dip-trash" />} {...props}>
       {props.children || intl.get('Global.delete')}
     </AntdButton>
   );
