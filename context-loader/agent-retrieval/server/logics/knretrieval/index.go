@@ -24,7 +24,7 @@ type knRetrievalServiceImpl struct {
 	logger                interfaces.Logger
 	agentClient           interfaces.AgentApp
 	ontologyQueryAccess   interfaces.DrivenOntologyQuery
-	ontologyManagerAccess interfaces.OntologyManagerAccess
+	bknBackendAccess      interfaces.BknBackendAccess
 	dataRetrieval         interfaces.DataRetrieval
 	knReranker            *knrerank.KnowledgeReranker
 	useLocalRerank        bool
@@ -47,7 +47,7 @@ func NewKnRetrievalService() interfaces.IKnRetrievalService {
 			logger:                logger,
 			agentClient:           drivenadapters.NewAgentAppClient(),
 			ontologyQueryAccess:   drivenadapters.NewOntologyQueryAccess(),
-			ontologyManagerAccess: drivenadapters.NewOntologyManagerAccess(),
+			bknBackendAccess:      drivenadapters.NewBknBackendAccess(),
 			dataRetrieval:         drivenadapters.NewDataRetrievalClient(),
 			knReranker:            knrerank.NewKnowledgeReranker(mfModelClient, logger), // 单例
 			useLocalRerank:        useLocalRerank,

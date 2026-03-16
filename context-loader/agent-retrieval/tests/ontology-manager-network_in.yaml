@@ -3,10 +3,10 @@ info:
   title: 业务知识网络工具箱
   version: 1.0.0
 servers:
-  - url: http://ontology-manager-svc:13014
+  - url: http://bkn-backend-svc:13014
 
 paths:
-  /api/ontology-manager/in/v1/knowledge-networks/{kn_id}:
+  /api/bkn-backend/in/v1/knowledge-networks/{kn_id}:
     get:
       parameters:
         - name: include_detail
