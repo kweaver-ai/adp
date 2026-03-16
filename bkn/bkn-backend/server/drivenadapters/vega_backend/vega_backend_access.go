@@ -331,6 +331,7 @@ func (vba *vegaBackendAccess) DeleteDatasetDocumentsByQuery(ctx context.Context,
 	}
 
 	headers := vba.buildHeaders(ctx)
+	headers[o11y.HTTP_HEADER_METHOD_OVERRIDE] = http.MethodDelete
 	reqBodyJson, _ := sonic.Marshal(reqBody)
 	respCode, respData, err := vba.httpClient.PostNoUnmarshal(ctx, httpUrl, headers, reqBody)
 	logger.Debugf("DeleteDatasetDocumentsByQuery [%s] finished, request is [%s], response code is [%d], result is [%s], error is [%v]",
