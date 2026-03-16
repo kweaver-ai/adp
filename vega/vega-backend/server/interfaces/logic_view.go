@@ -7,7 +7,6 @@ package interfaces
 
 import "fmt"
 
-
 const (
 	//特征的配置项
 	FieldFeatureType_Keyword  = "keyword"
@@ -74,7 +73,6 @@ var (
 		FieldFeatureType_Fulltext: {},
 		FieldFeatureType_Vector:   {},
 	}
-
 )
 
 type LogicView struct {
