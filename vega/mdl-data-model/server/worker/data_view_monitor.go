@@ -101,7 +101,10 @@ func (dvmService *dataViewMonitorService) syncViews(ctx context.Context) error {
 	defer func() {
 		if r := recover(); r != nil {
 			logger.Errorf("Error syncing views: %v", r)
-			logger.Errorf("Stack trace: %v", debug.Stack())
+			logger.Errorf("Stack trace: %v", string(debug.Stack()))
+			// 打印完整的堆栈信息，它会告诉你具体的行号和函数调用链
+			fmt.Println("堆栈跟踪:")
+			debug.PrintStack()
 		}
 	}()
 
