@@ -144,7 +144,7 @@ func wrapKeyWordFieldName(fields ...string) string {
 
 // ConvertCondCfgToFilterCondition converts CondCfg to dataset filter condition format
 // Reference: ontology-query's RewriteCondition pattern
-func ConvertCondCfgToFilterCondition(ctx context.Context, cfg *CondCfg,
+func ConvertCondCfgToFilterCondition(ctx context.Context, cfg *CondCfg, fieldsMap map[string]*ViewField,
 	vectorizer func(ctx context.Context, word string) ([]*VectorResp, error)) (map[string]any, error) {
 	if cfg == nil {
 		return nil, nil
@@ -164,19 +164,19 @@ func ConvertCondCfgToFilterCondition(ctx context.Context, cfg *CondCfg,
 	case OperationNotLike:
 		return convertNotLikeCondToDatasetFilterCondition(cfg)
 	case OperationMatch:
-		return convertMatchCondToDatasetFilterCondition(cfg)
+		return convertMatchCondToDatasetFilterCondition(cfg, fieldsMap)
 	case OperationMatchPhrase:
-		return convertMatchPhraseCondToDatasetFilterCondition(cfg)
+		return convertMatchPhraseCondToDatasetFilterCondition(cfg, fieldsMap)
 	case OperationRegex:
 		return convertRegexCondToDatasetFilterCondition(cfg)
 	case OperationKNN:
-		return convertKnnCondToDatasetFilterCondition(ctx, cfg, vectorizer)
+		return convertKnnCondToDatasetFilterCondition(ctx, cfg, fieldsMap, vectorizer)
 	case OperationMultiMatch:
-		return convertMultiMatchCondToDatasetFilterCondition(cfg)
+		return convertMultiMatchCondToDatasetFilterCondition(cfg, fieldsMap)
 	case OperationAnd:
-		return convertAndCondToDatasetFilterCondition(ctx, cfg, vectorizer)
+		return convertAndCondToDatasetFilterCondition(ctx, cfg, fieldsMap, vectorizer)
 	case OperationOr:
-		return convertOrCondToDatasetFilterCondition(ctx, cfg, vectorizer)
+		return convertOrCondToDatasetFilterCondition(ctx, cfg, fieldsMap, vectorizer)
 	default:
 		return nil, fmt.Errorf("not support condition's operation for dataset filter: %s", cfg.Operation)
 	}

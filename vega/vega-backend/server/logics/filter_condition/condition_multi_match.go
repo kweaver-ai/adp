@@ -24,15 +24,15 @@ var (
 )
 
 type MultiMatchCond struct {
-	mCfg       *interfaces.FilterCondCfg
-	mFields    []*interfaces.Property
-	mMatchType string
+	Cfg       *interfaces.FilterCondCfg
+	Fields    []*interfaces.Property
+	MatchType string
 }
 
 func (c *MultiMatchCond) GetOperation() string { return OperationMultiMatch }
 
 func (c *MultiMatchCond) SupportSubCond() bool       { return false }
-func (c *MultiMatchCond) NeedName() bool             { return true }
+func (c *MultiMatchCond) NeedName() bool             { return false }
 func (c *MultiMatchCond) NeedValue() bool            { return true }
 func (c *MultiMatchCond) NeedConstValue() bool       { return true }
 func (c *MultiMatchCond) IsSingleValue() bool        { return true }
@@ -66,24 +66,28 @@ func (c *MultiMatchCond) New(ctx context.Context, cfg *interfaces.FilterCondCfg,
 			}
 			field, ok := fieldsMap[fieldName]
 			if !ok {
-				return nil, fmt.Errorf("condition [multi_match] 'fields' exists any field not exists in resource [%s]", fieldName)
+				return nil, fmt.Errorf("condition [multi_match] the filter field [%s] does not exist", fieldName)
 			}
 			mFields = append(mFields, field)
 		}
 	}
 
 	// 校验match_type的有效性, match_type可以为空
-	matchType, ok := cfg.RemainCfg["match_type"].(string)
-	if !ok {
-		return nil, fmt.Errorf("condition [multi_match] 'match_type' value should be a string")
-	}
-	if !MatchTypeMap[matchType] {
-		return nil, fmt.Errorf("condition [multi_match] 'match_type' value should be one of [%v], actual is[%v]", MatchTypeMap, matchType)
+	matchType := ""
+	if val, exist := cfg.RemainCfg["match_type"]; exist && val != "" {
+		mtype, ok := val.(string)
+		if !ok {
+			return nil, fmt.Errorf("condition [multi_match] 'match_type' value should be a string, actual is[%v]", val)
+		}
+		if !MatchTypeMap[mtype] {
+			return nil, fmt.Errorf("condition [multi_match] 'match_type' value should be one of [%v], actual is[%v]", MatchTypeMap, mtype)
+		}
+		matchType = mtype
 	}
 
 	return &MultiMatchCond{
-		mCfg:       cfg,
-		mFields:    mFields,
-		mMatchType: matchType,
+		Cfg:       cfg,
+		Fields:    mFields,
+		MatchType: matchType,
 	}, nil
 }

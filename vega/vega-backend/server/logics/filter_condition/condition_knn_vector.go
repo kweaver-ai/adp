@@ -13,9 +13,9 @@ import (
 )
 
 type KnnVectorCond struct {
-	mCfg             *interfaces.FilterCondCfg
-	mFilterFieldName string
-	mSubConds        []interfaces.FilterCondition
+	Cfg             *interfaces.FilterCondCfg
+	FilterFieldName string
+	SubConds        []interfaces.FilterCondition
 }
 
 func (c *KnnVectorCond) GetOperation() string { return OperationKnnVector }
@@ -28,7 +28,7 @@ func (c *KnnVectorCond) IsSingleValue() bool        { return false }
 func (c *KnnVectorCond) IsFixedLenArrayValue() bool { return false }
 func (c *KnnVectorCond) RequiredValueLen() int      { return -1 }
 
-// knn_vector 条件, 判断字段是否匹配某个向量
+// knn vector 条件, 判断字段是否匹配某个向量
 func (c *KnnVectorCond) New(ctx context.Context, cfg *interfaces.FilterCondCfg,
 	fieldsMap map[string]*interfaces.Property) (interfaces.FilterCondition, error) {
 
@@ -57,12 +57,11 @@ func (c *KnnVectorCond) New(ctx context.Context, cfg *interfaces.FilterCondCfg,
 		if cond != nil {
 			subConds = append(subConds, cond)
 		}
-
 	}
 
 	return &KnnVectorCond{
-		mCfg:             cfg,
-		mFilterFieldName: cfg.Name,
-		mSubConds:        subConds,
+		Cfg:             cfg,
+		FilterFieldName: cfg.Name,
+		SubConds:        subConds,
 	}, nil
 }

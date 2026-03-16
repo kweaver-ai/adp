@@ -126,23 +126,46 @@ func (cond *MultiMatchCond) Convert2SQL(ctx context.Context) (string, error) {
 }
 
 // convertMultiMatchCondToDatasetFilterCondition converts MultiMatchCond to dataset filter condition format
-func convertMultiMatchCondToDatasetFilterCondition(cfg *CondCfg) (map[string]any, error) {
+func convertMultiMatchCondToDatasetFilterCondition(cfg *CondCfg, fieldsMap map[string]*ViewField) (map[string]any, error) {
 	// 获取 fields 列表
 	var fields []string
-	if cfg.RemainCfg != nil {
-		if cfgFields, exist := cfg.RemainCfg["fields"]; exist {
-			if fieldsSlice, ok := cfgFields.([]any); ok {
-				for _, field := range fieldsSlice {
-					if fieldStr, ok := field.(string); ok {
-						fields = append(fields, fieldStr)
-					}
+	cfgFields, exist := cfg.RemainCfg["fields"]
+	if exist {
+		// 存在 fields 时需要是一个数组
+		if !common.IsSlice(cfgFields) {
+			return nil, fmt.Errorf("condition [multi_match] 'fields' value should be an array")
+		}
+		// 字段数组里的需要是个字符串数组
+		for _, cfgField := range cfgFields.([]any) {
+			field, ok := cfgField.(string)
+			if !ok {
+				return nil, fmt.Errorf("condition [multi_match] 'fields' value should be a string array, contain non string value[%v]", cfgField)
+			}
+
+			// 字段数组里的每个元素都需要是字符串
+			name := getFilterFieldName(field, fieldsMap, true)
+			if name == AllField {
+				fields = []string{
+					"id",
+					"name",
+					"comment",
+					"detail",
+					"data_properties.name",
+					"data_properties.display_name",
+					"data_properties.comment",
+					"logic_properties.name",
+					"logic_properties.display_name",
+					"logic_properties.comment",
 				}
+				// 遇到 * 结束循环
+				break
+			} else {
+				fields = append(fields, name)
 			}
 		}
 	}
 
 	return map[string]any{
-		"field":      "*",
 		"operation":  "multi_match",
 		"fields":     fields, // 字段列表
 		"value":      cfg.Value,

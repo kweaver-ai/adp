@@ -6,6 +6,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"strings"
 	"sync"
 
@@ -876,7 +877,7 @@ func (da *datasetAccess) ConvertFilterConditionAnd(condition interfaces.FilterCo
 
 	must := make([]map[string]any, 0, len(condAnd.SubConds))
 	for _, subCond := range condAnd.SubConds {
-		convertedCond, err := da.ConvertFilterConditionWithOpr(subCond, schemaDefinition)
+		convertedCond, err := da.ConvertFilterCondition(subCond, schemaDefinition)
 		if err != nil {
 			return nil, err
 		}
@@ -900,7 +901,7 @@ func (da *datasetAccess) ConvertFilterConditionOr(condition interfaces.FilterCon
 
 	should := make([]map[string]any, 0, len(condOr.SubConds))
 	for _, subCond := range condOr.SubConds {
-		convertedCond, err := da.ConvertFilterConditionWithOpr(subCond, schemaDefinition)
+		convertedCond, err := da.ConvertFilterCondition(subCond, schemaDefinition)
 		if err != nil {
 			return nil, err
 		}
@@ -932,9 +933,9 @@ func (da *datasetAccess) ConvertFilterConditionWithOpr(condition interfaces.Filt
 	case filter_condition.OperationLte, filter_condition.OperationLte2:
 		return da.ConvertFilterConditionLte(condition)
 	case filter_condition.OperationIn:
-		return da.ConvertFilterConditionIn(condition)
+		return da.ConvertFilterConditionIn(condition, schemaDefinition)
 	case filter_condition.OperationNotIn:
-		return da.ConvertFilterConditionNotIn(condition)
+		return da.ConvertFilterConditionNotIn(condition, schemaDefinition)
 	case filter_condition.OperationLike:
 		return da.ConvertFilterConditionLike(condition, schemaDefinition)
 	case filter_condition.OperationNotLike:
@@ -979,9 +980,41 @@ func (da *datasetAccess) ConvertFilterConditionWithOpr(condition interfaces.Filt
 		return da.ConvertFilterConditionBefore(condition)
 	case filter_condition.OperationCurrent:
 		return da.ConvertFilterConditionCurrent(condition)
+	case filter_condition.OperationMultiMatch:
+		return da.ConvertFilterConditionMultiMatch(condition)
+	case filter_condition.OperationKnnVector:
+		return da.ConvertFilterConditionKnnVector(condition)
 	default:
 		return nil, fmt.Errorf("operation %s is not supported", condition.GetOperation())
 	}
+}
+
+// ConvertFilterConditionMultiMatch converts a MultiMatchCond to OpenSearch DSL.
+func (da *datasetAccess) ConvertFilterConditionMultiMatch(condition interfaces.FilterCondition) (map[string]any, error) {
+
+	cond, ok := condition.(*filter_condition.MultiMatchCond)
+	if !ok {
+		return nil, fmt.Errorf("condition is not *filter_condition.MultiMatchCond")
+	}
+
+	value := cond.Cfg.ValueOptCfg.Value
+	fields := make([]string, 0, len(cond.Fields))
+	for _, field := range cond.Fields {
+		fields = append(fields, field.Name)
+	}
+
+	multiMatchQuery := map[string]any{
+		"query":  value,
+		"fields": fields,
+	}
+
+	if cond.MatchType != "" {
+		multiMatchQuery["type"] = cond.MatchType
+	}
+
+	return map[string]any{
+		"multi_match": multiMatchQuery,
+	}, nil
 }
 
 // ConvertFilterConditionEqual converts an EqualCond to OpenSearch DSL.
@@ -1177,7 +1210,7 @@ func (da *datasetAccess) ConvertFilterConditionLte(condition interfaces.FilterCo
 }
 
 // ConvertFilterConditionIn converts an InCond to OpenSearch DSL.
-func (da *datasetAccess) ConvertFilterConditionIn(condition interfaces.FilterCondition) (map[string]any, error) {
+func (da *datasetAccess) ConvertFilterConditionIn(condition interfaces.FilterCondition, schemaDefinition []*interfaces.Property) (map[string]any, error) {
 
 	cond, ok := condition.(*filter_condition.InCond)
 	if !ok {
@@ -1188,15 +1221,28 @@ func (da *datasetAccess) ConvertFilterConditionIn(condition interfaces.FilterCon
 		return nil, fmt.Errorf("condition [in] only supports ValueFrom_Const, got %s", cond.Cfg.ValueFrom)
 	}
 
+	keyword := ""
+	fieldName := cond.Lfield.OriginalName
+	if fieldName == "" {
+		fieldName = cond.Lfield.Name
+	}
+	// 检查字段类型，如果是 text 类型，使用 .keyword 子字段来比较
+	for _, prop := range schemaDefinition {
+		if prop.OriginalName == fieldName && prop.Type == "text" {
+			keyword = ".keyword"
+			break
+		}
+	}
+
 	return map[string]any{
 		"terms": map[string]any{
-			cond.Lfield.OriginalName: cond.Value,
+			fieldName + keyword: cond.Value,
 		},
 	}, nil
 }
 
 // ConvertFilterConditionNotIn converts a NotInCond to OpenSearch DSL.
-func (da *datasetAccess) ConvertFilterConditionNotIn(condition interfaces.FilterCondition) (map[string]any, error) {
+func (da *datasetAccess) ConvertFilterConditionNotIn(condition interfaces.FilterCondition, schemaDefinition []*interfaces.Property) (map[string]any, error) {
 
 	cond, ok := condition.(*filter_condition.NotInCond)
 	if !ok {
@@ -1207,11 +1253,24 @@ func (da *datasetAccess) ConvertFilterConditionNotIn(condition interfaces.Filter
 		return nil, fmt.Errorf("condition [not_in] only supports ValueFrom_Const, got %s", cond.Cfg.ValueFrom)
 	}
 
+	keyword := ""
+	fieldName := cond.Lfield.OriginalName
+	if fieldName == "" {
+		fieldName = cond.Lfield.Name
+	}
+	// 检查字段类型，如果是 text 类型，使用 .keyword 子字段来比较
+	for _, prop := range schemaDefinition {
+		if prop.OriginalName == fieldName && prop.Type == "text" {
+			keyword = ".keyword"
+			break
+		}
+	}
+
 	return map[string]any{
 		"bool": map[string]any{
 			"must_not": map[string]any{
 				"terms": map[string]any{
-					cond.Lfield.OriginalName: cond.Value,
+					fieldName + keyword: cond.Value,
 				},
 			},
 		},
@@ -1239,9 +1298,9 @@ func (da *datasetAccess) ConvertFilterConditionLike(condition interfaces.FilterC
 		}
 	}
 
-	vStr := "*" + cond.Value + "*"
+	vStr := da.replaceLikeWildcards(cond.Value)
 	return map[string]any{
-		"wildcard": map[string]any{
+		"regexp": map[string]any{
 			fieldName: vStr,
 		},
 	}, nil
@@ -1268,11 +1327,11 @@ func (da *datasetAccess) ConvertFilterConditionNotLike(condition interfaces.Filt
 		}
 	}
 
-	vStr := "*" + cond.Value + "*"
+	vStr := da.replaceLikeWildcards(cond.Value)
 	return map[string]any{
 		"bool": map[string]any{
 			"must_not": map[string]any{
-				"wildcard": map[string]any{
+				"regexp": map[string]any{
 					fieldName: vStr,
 				},
 			},
@@ -1818,10 +1877,15 @@ func (da *datasetAccess) printRequestBody(body interface{}) {
 		logger.Debugf("OpenSearch Request Body: %s", bodyStr)
 		// 重置Reader位置
 		v.Reset(bodyStr)
-	case bytes.Reader:
+	case *bytes.Reader:
 		buf := new(bytes.Buffer)
-		_, _ = buf.ReadFrom(&v)
-		logger.Debugf("OpenSearch Request Body: %s", buf.String())
+		// 保存原始位置
+		pos, _ := v.Seek(0, io.SeekCurrent)
+		_, _ = buf.ReadFrom(v)
+		bodyStr := buf.String()
+		logger.Debugf("OpenSearch Request Body: %s", bodyStr)
+		// 重置Reader位置
+		_, _ = v.Seek(pos, io.SeekStart)
 	default:
 		// 其他类型尝试转换为JSON
 		if data, err := json.Marshal(body); err == nil {
@@ -1851,4 +1915,107 @@ func (da *datasetAccess) getOpenSearchClient() (*opensearch.Client, error) {
 
 	da.osClient = client
 	return client, nil
+}
+
+// ConvertFilterConditionKnnVector converts a KnnVectorCond to OpenSearch DSL.
+func (da *datasetAccess) ConvertFilterConditionKnnVector(condition interfaces.FilterCondition) (map[string]any, error) {
+
+	cond, ok := condition.(*filter_condition.KnnVectorCond)
+	if !ok {
+		return nil, fmt.Errorf("condition is not *filter_condition.KnnVectorCond")
+	}
+
+	value := cond.Cfg.ValueOptCfg.Value
+
+	// 构建 knn 查询
+	knnQuery := map[string]any{
+		cond.FilterFieldName: map[string]any{
+			"vector": value,
+		},
+	}
+
+	// 添加 limit_key 和 limit_value
+	if limitKey, ok := cond.Cfg.RemainCfg["limit_key"].(string); ok && limitKey != "" {
+		if limitValue, ok := cond.Cfg.RemainCfg["limit_value"]; ok {
+			knnQuery[cond.FilterFieldName].(map[string]any)[limitKey] = limitValue
+		}
+	} else {
+		// 使用默认值
+		knnQuery[cond.FilterFieldName].(map[string]any)["k"] = 10
+	}
+
+	// 添加子条件
+	if len(cond.SubConds) > 0 {
+		filterQueries := make([]map[string]any, 0, len(cond.SubConds))
+		for _, subCond := range cond.SubConds {
+			subQuery, err := da.ConvertFilterCondition(subCond, nil)
+			if err != nil {
+				return nil, err
+			}
+			filterQueries = append(filterQueries, subQuery)
+		}
+
+		return map[string]any{
+			"knn": knnQuery,
+			"filter": map[string]any{
+				"bool": map[string]any{
+					"must": filterQueries,
+				},
+			},
+		}, nil
+	}
+
+	return map[string]any{
+		"knn": knnQuery,
+	}, nil
+}
+
+// replaceLikeWildcards，把 like 的通配符替换成正则表达式里的字符
+func (da *datasetAccess) replaceLikeWildcards(input string) string {
+	if input == "" {
+		return input
+	}
+
+	var result strings.Builder
+	escaped := false
+	runes := []rune(input)
+
+	for i := 0; i < len(runes); i++ {
+		r := runes[i]
+
+		if escaped {
+			// 转义字符后的字符
+			switch r {
+			case '%', '_', '\\':
+				result.WriteRune(r)
+			default:
+				// 如果转义了非特殊字符，保留转义符和字符
+				result.WriteRune('\\')
+				result.WriteRune(r)
+			}
+			escaped = false
+		} else if r == '\\' {
+			// 遇到转义符，检查是否是最后一个字符
+			if i == len(runes)-1 {
+				// 转义符在末尾，直接输出
+				result.WriteRune(r)
+			} else {
+				// 标记转义状态，但不立即输出转义符
+				escaped = true
+			}
+		} else if r == '%' {
+			result.WriteString(".*")
+		} else if r == '_' {
+			result.WriteString(".")
+		} else {
+			result.WriteRune(r)
+		}
+	}
+
+	// 处理以转义符结尾的情况
+	if escaped {
+		result.WriteRune('\\')
+	}
+
+	return result.String()
 }

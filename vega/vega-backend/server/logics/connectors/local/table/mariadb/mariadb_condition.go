@@ -56,7 +56,7 @@ func (c *MariaDBConnector) ConvertFilterConditionAnd(ctx context.Context, condit
 
 	convertedConds := sq.And{}
 	for _, subCond := range condAnd.SubConds {
-		convertedCond, err := c.ConvertFilterConditionWithOpr(ctx, subCond, fieldsMap)
+		convertedCond, err := c.ConvertFilterCondition(ctx, subCond, fieldsMap)
 		if err != nil {
 			return nil, err
 		}
@@ -76,7 +76,7 @@ func (c *MariaDBConnector) ConvertFilterConditionOr(ctx context.Context, conditi
 
 	convertedConds := sq.Or{}
 	for _, subCond := range condOr.SubConds {
-		convertedCond, err := c.ConvertFilterConditionWithOpr(ctx, subCond, fieldsMap)
+		convertedCond, err := c.ConvertFilterCondition(ctx, subCond, fieldsMap)
 		if err != nil {
 			return nil, err
 		}

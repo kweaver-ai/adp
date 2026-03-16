@@ -72,7 +72,7 @@ func Init(ctx context.Context, appSetting *common.AppSetting) error {
 	}
 
 	// Get schema definition
-	expectedSchema := interfaces.GetBKNConceptSchemaDefinition(vectorDim)
+	expectedSchema := interfaces.GetBKNConceptSchemaDefinition(vectorDim, appSetting.ServerSetting.DefaultSmallModelEnabled)
 
 	if dataset == nil {
 		// Create dataset
