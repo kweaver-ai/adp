@@ -372,12 +372,12 @@ var (
 
 // GetBKNConceptSchemaDefinition returns the schema definition for BKN concept dataset
 // vectorDim: the dimension of vector field, typically from small model embedding dimension
-func GetBKNConceptSchemaDefinition(vectorDim int) []*Property {
+func GetBKNConceptSchemaDefinition(vectorDim int, defaultSmallModelEnabled bool) []*Property {
 	if vectorDim <= 0 {
 		vectorDim = 768 // default dimension
 	}
 
-	return []*Property{
+	datasetProp := []*Property{
 		// Common fields
 		{
 			Name:         "module_type",
@@ -395,36 +395,6 @@ func GetBKNConceptSchemaDefinition(vectorDim int) []*Property {
 					IsDefault:   true,
 					IsNative:    false,
 					Config:      map[string]any{FIELD_KEYWORD_PROPERTY_IGNORE_ABOVE: FIELD_KEYWORD_PROPERTY_IGNORE_ABOVE_VALUE},
-				},
-			},
-		},
-		{
-			Name:         "_vector",
-			Type:         data_type.DATATYPE_VECTOR,
-			DisplayName:  "_vector",
-			OriginalName: "_vector",
-			Description:  "基于BKN概念的名称、标签、描述、详情信息生成的向量",
-			Features: []PropertyFeature{
-				{
-					FeatureName: "vector_module_type",
-					DisplayName: "vector_module_type",
-					FeatureType: FieldFeatureType_Vector,
-					Description: "向量特征",
-					RefProperty: "_vector",
-					IsDefault:   true,
-					IsNative:    false,
-					Config: map[string]any{
-						"dimension": vectorDim,
-						"method": map[string]any{
-							"name":       "hnsw",
-							"space_type": "cosinesimil",
-							"engine":     "lucene",
-							"parameters": map[string]any{
-								"ef_construction": 256,
-								"m":               48,
-							},
-						},
-					},
 				},
 			},
 		},
@@ -1092,4 +1062,40 @@ func GetBKNConceptSchemaDefinition(vectorDim int) []*Property {
 			Features:     []PropertyFeature{},
 		},
 	}
+
+	// If default small model is enabled, add vector field
+	if defaultSmallModelEnabled {
+		datasetProp = append(datasetProp, &Property{
+			Name:         "_vector",
+			Type:         data_type.DATATYPE_VECTOR,
+			DisplayName:  "_vector",
+			OriginalName: "_vector",
+			Description:  "基于BKN概念的名称、标签、描述、详情信息生成的向量",
+			Features: []PropertyFeature{
+				{
+					FeatureName: "vector_module_type",
+					DisplayName: "vector_module_type",
+					FeatureType: FieldFeatureType_Vector,
+					Description: "向量特征",
+					RefProperty: "_vector",
+					IsDefault:   true,
+					IsNative:    false,
+					Config: map[string]any{
+						"dimension": vectorDim,
+						"method": map[string]any{
+							"name":       "hnsw",
+							"space_type": "cosinesimil",
+							"engine":     "lucene",
+							"parameters": map[string]any{
+								"ef_construction": 256,
+								"m":               48,
+							},
+						},
+					},
+				},
+			},
+		})
+	}
+
+	return datasetProp
 }

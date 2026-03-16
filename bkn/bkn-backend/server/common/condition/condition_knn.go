@@ -143,6 +143,7 @@ func (cond *KnnCond) Convert2SQL(ctx context.Context) (string, error) {
 // convertKnnCondToDatasetFilterCondition converts KnnCond to dataset filter condition format
 // Reference: ontology-query's rewriteKnnCond pattern - use vectorizer to convert text to vector
 func convertKnnCondToDatasetFilterCondition(ctx context.Context, cfg *CondCfg,
+	fieldsMap map[string]*ViewField,
 	vectorizer func(ctx context.Context, word string) ([]*VectorResp, error)) (map[string]any, error) {
 	// Convert text value to vector using vectorizer
 	v := fmt.Sprintf("%v", cfg.Value)
@@ -154,11 +155,34 @@ func convertKnnCondToDatasetFilterCondition(ctx context.Context, cfg *CondCfg,
 		return nil, fmt.Errorf("condition [knn]: vectorizer [%s] returned empty result", v)
 	}
 
+	name := getFilterFieldName(cfg.Name, fieldsMap, true)
+	var field string
+	// 如果指定*查询，则把 * 换成 _vector
+	if name == AllField {
+		field = "_vector"
+	} else {
+		field = name
+	}
+
+	subConds := []map[string]any{}
+	for _, subCond := range cfg.SubConds {
+		cond, err := ConvertCondCfgToFilterCondition(ctx, subCond, fieldsMap, vectorizer)
+		if err != nil {
+			return nil, err
+		}
+
+		if cond != nil {
+			subConds = append(subConds, cond)
+		}
+
+	}
+
 	knnCond := map[string]any{
-		"field":      cfg.Name,
-		"operation":  "knn_vector",
-		"value":      vectorResp[0].Vector, // Vector value after conversion
-		"value_from": "const",
+		"field":          field,
+		"operation":      "knn_vector",
+		"value":          vectorResp[0].Vector, // Vector value after conversion
+		"value_from":     "const",
+		"sub_conditions": subConds,
 	}
 	for k, v := range cfg.RemainCfg {
 		knnCond[k] = v

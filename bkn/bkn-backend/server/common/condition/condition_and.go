@@ -114,7 +114,7 @@ func (cond *AndCond) Convert2SQL(ctx context.Context) (string, error) {
 
 // convertAndCondToDatasetFilterCondition converts AndCond to dataset filter condition format
 // Reference: ontology-query's rewriteAndCondition pattern - recursively process sub-conditions
-func convertAndCondToDatasetFilterCondition(ctx context.Context, cfg *CondCfg,
+func convertAndCondToDatasetFilterCondition(ctx context.Context, cfg *CondCfg, fieldsMap map[string]*ViewField,
 	vectorizer func(ctx context.Context, word string) ([]*VectorResp, error)) (map[string]any, error) {
 	if len(cfg.SubConds) == 0 {
 		return nil, fmt.Errorf("sub condition size is 0")
@@ -126,7 +126,7 @@ func convertAndCondToDatasetFilterCondition(ctx context.Context, cfg *CondCfg,
 
 	subConditions := make([]map[string]any, 0, len(cfg.SubConds))
 	for _, subCond := range cfg.SubConds {
-		subCondMap, err := ConvertCondCfgToFilterCondition(ctx, subCond, vectorizer)
+		subCondMap, err := ConvertCondCfgToFilterCondition(ctx, subCond, fieldsMap, vectorizer)
 		if err != nil {
 			return nil, err
 		}

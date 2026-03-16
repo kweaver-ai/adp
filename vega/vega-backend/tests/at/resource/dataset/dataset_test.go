@@ -392,7 +392,7 @@ func buildDatasetResourcePayload() map[string]any {
 			{"name": "age", "type": "integer", "display_name": "年龄", "original_name": "age", "description": "用户年龄"},
 			{"name": "email", "type": "text", "display_name": "邮箱", "original_name": "email", "description": "用户邮箱"},
 			{"name": "active", "type": "boolean", "display_name": "是否激活", "original_name": "active", "description": "用户是否激活"},
-			{"name": "tags", "type": "keyword", "display_name": "标签", "original_name": "tags", "description": "用户标签"},
+			{"name": "tags", "type": "string", "display_name": "标签", "original_name": "tags", "description": "用户标签"},
 			{"name": "content", "type": "vector", "display_name": "内容向量", "original_name": "content", "description": "用户内容向量", "features": []map[string]any{
 				{
 					"name":         "content",
@@ -405,6 +405,7 @@ func buildDatasetResourcePayload() map[string]any {
 					"config": map[string]any{
 						"dimension": 768,
 						"method": map[string]any{
+							"name":   "hnsw",
 							"engine": "lucene",
 							"parameters": map[string]any{
 								"ef_construction": 256,
@@ -825,40 +826,40 @@ func TestDatasetDocumentsList(t *testing.T) {
 			testFilterQuery(map[string]any{
 				"operation":  "like",
 				"field":      "name",
-				"value":      "User",
+				"value":      "User%",
 				"value_from": "const",
 			}, 2)
 		})
 
-		// // 测试模糊不匹配查询
-		// Convey("DD102.10: 不模糊匹配查询 (not_like)", func() {
-		// 	testFilterQuery(map[string]any{
-		// 		"operation":  "not_like",
-		// 		"field":      "name",
-		// 		"value":      "User",
-		// 		"value_from": "const",
-		// 	}, 1)
-		// })
+		// 测试模糊不匹配查询
+		Convey("DD102.10: 不模糊匹配查询 (not_like)", func() {
+			testFilterQuery(map[string]any{
+				"operation":  "not_like",
+				"field":      "name",
+				"value":      "%User",
+				"value_from": "const",
+			}, 2)
+		})
 
-		// // 测试包含查询
-		// Convey("DD102.11: 包含查询 (contain)", func() {
-		// 	testFilterQuery(map[string]any{
-		// 		"operation":  "contain",
-		// 		"field":      "tags",
-		// 		"value":      "tag2",
-		// 		"value_from": "const",
-		// 	}, 2)
-		// })
+		// 测试包含查询
+		Convey("DD102.11: 包含查询 (contain)", func() {
+			testFilterQuery(map[string]any{
+				"operation":  "contain",
+				"field":      "tags",
+				"value":      []any{"tag2"},
+				"value_from": "const",
+			}, 2)
+		})
 
-		// // 测试不包含查询
-		// Convey("DD102.12: 不包含查询 (not_contain)", func() {
-		// 	testFilterQuery(map[string]any{
-		// 		"operation":  "not_contain",
-		// 		"field":      "tags",
-		// 		"value":      "tag3",
-		// 		"value_from": "const",
-		// 	}, 2)
-		// })
+		// 测试不包含查询
+		Convey("DD102.12: 不包含查询 (not_contain)", func() {
+			testFilterQuery(map[string]any{
+				"operation":  "not_contain",
+				"field":      "tags",
+				"value":      []any{"tag3"},
+				"value_from": "const",
+			}, 2)
+		})
 
 		// 测试前缀匹配查询
 		Convey("DD102.13: 前缀匹配查询 (prefix)", func() {
@@ -997,7 +998,7 @@ func TestDatasetDocumentsList(t *testing.T) {
 		})
 
 		// 测试match查询
-		Convey("DD102.25: match查询 (match)", func() {
+		Convey("DD102.25: match查询 (match field)", func() {
 			testFilterQuery(map[string]any{
 				"operation":  "match",
 				"field":      "name",
@@ -1006,8 +1007,18 @@ func TestDatasetDocumentsList(t *testing.T) {
 			}, 2)
 		})
 
+		// 测试match查询
+		Convey("DD102.25.2: match查询 (match fields)", func() {
+			testFilterQuery(map[string]any{
+				"operation":  "match",
+				"fields":     []string{"name"},
+				"value":      "User",
+				"value_from": "const",
+			}, 2)
+		})
+
 		// 测试match_phrase查询
-		Convey("DD102.26: match_phrase查询 (match_phrase)", func() {
+		Convey("DD102.26: match_phrase查询 (match_phrase field)", func() {
 			testFilterQuery(map[string]any{
 				"operation":  "match_phrase",
 				"field":      "name",
@@ -1016,15 +1027,26 @@ func TestDatasetDocumentsList(t *testing.T) {
 			}, 1)
 		})
 
-		// // 测试multi_match查询
-		// Convey("DD102.27: multi_match查询 (multi_match)", func() {
-		// 	testFilterQuery(map[string]any{
-		// 		"operation":  "multi_match",
-		// 		"field":      []string{"name", "email"},
-		// 		"value":      "User",
-		// 		"value_from": "const",
-		// 	}, 2)
-		// })
+		// 测试match_phrase查询
+		Convey("DD102.26.2: match_phrase查询 (match_phrase fields)", func() {
+			testFilterQuery(map[string]any{
+				"operation":  "match_phrase",
+				"fields":     []string{"name"},
+				"value":      "Admin User",
+				"value_from": "const",
+			}, 1)
+		})
+
+		// 测试multi_match查询
+		Convey("DD102.27: multi_match查询 (multi_match)", func() {
+			testFilterQuery(map[string]any{
+				"operation":  "multi_match",
+				"match_type": "best_fields",
+				"fields":     []string{"name", "email"},
+				"value":      "User",
+				"value_from": "const",
+			}, 2)
+		})
 
 		// 测试regex查询
 		Convey("DD102.28: regex查询 (regex)", func() {
@@ -1036,33 +1058,97 @@ func TestDatasetDocumentsList(t *testing.T) {
 			}, 3)
 		})
 
-		// // 测试empty查询
-		// Convey("DD102.29: empty查询 (empty)", func() {
-		// 	testFilterQuery(map[string]any{
-		// 		"operation":  "empty",
-		// 		"field":      "tags",
-		// 		"value_from": "const",
-		// 	}, 1)
-		// })
+		// 测试empty查询
+		Convey("DD102.29: empty查询 (empty)", func() {
+			testFilterQuery(map[string]any{
+				"operation":  "empty",
+				"field":      "tags",
+				"value_from": "const",
+			}, 1)
+		})
 
-		// // 测试not_empty查询
-		// Convey("DD102.30: not_empty查询 (not_empty)", func() {
-		// 	testFilterQuery(map[string]any{
-		// 		"operation":  "not_empty",
-		// 		"field":      "tags",
-		// 		"value_from": "const",
-		// 	}, 2)
-		// })
+		// 测试not_empty查询
+		Convey("DD102.30: not_empty查询 (not_empty)", func() {
+			testFilterQuery(map[string]any{
+				"operation":  "not_empty",
+				"field":      "tags",
+				"value_from": "const",
+			}, 2)
+		})
 
-		// // 测试out_range查询
-		// Convey("DD102.31: out_range查询 (out_range)", func() {
-		// 	testFilterQuery(map[string]any{
-		// 		"operation":  "out_range",
-		// 		"field":      "age",
-		// 		"value":      []int{25, 35},
-		// 		"value_from": "const",
-		// 	}, 1)
-		// })
+		// 测试out_range查询
+		Convey("DD102.31: out_range查询 (out_range)", func() {
+			testFilterQuery(map[string]any{
+				"operation":  "out_range",
+				"field":      "age",
+				"value":      []int{30, 35},
+				"value_from": "const",
+			}, 1)
+		})
+
+		// 测试vector查询
+		Convey("DD102.32: vector查询 (vector)", func() {
+			testFilterQuery(map[string]any{
+				"operation":   "knn_vector",
+				"field":       "content",
+				"value":       generateVector(768),
+				"value_from":  "const",
+				"limit_key":   "k",
+				"limit_value": 3,
+			}, 1)
+		})
+
+		// 测试AND里面嵌套OR查询
+		Convey("DD102.33: AND里面嵌套OR查询 (and with nested or)", func() {
+			testFilterQuery(map[string]any{
+				"operation": "and",
+				"sub_conditions": []map[string]any{
+					{
+						"operation":  "eq",
+						"field":      "active",
+						"value":      true,
+						"value_from": "const",
+					},
+					{
+						"operation": "or",
+						"sub_conditions": []map[string]any{
+							{
+								"operation":  "eq",
+								"field":      "name",
+								"value":      "User 1",
+								"value_from": "const",
+							},
+							{
+								"operation":  "eq",
+								"field":      "name",
+								"value":      "Admin User",
+								"value_from": "const",
+							},
+						},
+					},
+				},
+			}, 2)
+		})
+
+		// 测试in查询text字段
+		Convey("DD102.34: in查询text字段 (in text field)", func() {
+			testFilterQuery(map[string]any{
+				"operation":  "in",
+				"field":      "name",
+				"value":      []string{"User 1", "Admin User"},
+				"value_from": "const",
+			}, 2)
+		})
+
+		// 测试not_in查询text字段
+		Convey("DD102.35: not_in查询text字段 (not_in text field)", func() {
+			testFilterQuery(map[string]any{
+				"operation":  "not_in",
+				"field":      "name",
+				"value":      []string{"User 2"},
+				"value_from": "const",
+			}, 2)
+		})
 
 		// 清理资源
 		cleanupResources(client, t)
