@@ -37,6 +37,9 @@ const DataType_Shape = 'shape';
 // 向量类型
 const DataType_Vector = 'vector';
 
+// 其他类型
+const DataType_Other = 'other';
+
 const DataType_All = [
   { name: DataType_Integer, type: 'number' },
   { name: DataType_UnsignedInteger, type: 'number' },
@@ -55,6 +58,7 @@ const DataType_All = [
   { name: DataType_Point, type: 'string' },
   { name: DataType_Shape, type: 'string' },
   { name: DataType_Vector, type: 'string' },
+  { name: DataType_Other, type: 'other' },
 ];
 
 const DataType_Date_Types = DataType_All.filter((item) => item.type === 'date').map((item) => item.name);

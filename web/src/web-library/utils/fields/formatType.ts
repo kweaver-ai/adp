@@ -46,6 +46,7 @@ const ICON_BY_TYPE: any = {
   number: 'icon-dip-zhengshuxing',
   boolean: 'icon-dip-buerxing',
   string: 'icon-dip-wenbenxing',
+  other: 'icon-dip-wenbenxing',
 };
 
 /** 格式化数据类型的icon */

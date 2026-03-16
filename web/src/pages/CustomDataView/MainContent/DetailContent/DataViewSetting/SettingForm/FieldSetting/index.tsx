@@ -306,15 +306,7 @@ const FiledSetting = () => {
         {switchFilter && (
           <Form form={form}>
             <Form.Item name="dataFilter">
-              <DataFilter
-                ref={dataFilterRef}
-                fieldList={filedList}
-                required={true}
-                transformType={UTILS.formatType}
-                maxCount={[10, 10, 10]}
-                level={3}
-                isFirst
-              />
+              <DataFilter ref={dataFilterRef} fieldList={filedList} required={true} maxCount={[10, 10, 10]} level={3} isFirst />
             </Form.Item>
           </Form>
         )}

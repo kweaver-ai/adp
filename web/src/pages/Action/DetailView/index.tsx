@@ -193,15 +193,7 @@ const DetailView: FC<DetailViewProps> = ({ atId, knId, hasModifyPerm, onClose, o
       label: intl.get('Action.triggerCondition'),
       content: data?.condition?.operation ? (
         <div style={{ width: 'fit-content' }}>
-          <DataFilterNew
-            isFirst
-            disabled
-            objectOptions={objectOptions}
-            value={data.condition}
-            level={3}
-            maxCount={[10, 10, 10]}
-            transformType={UTILS.formatType}
-          />
+          <DataFilterNew isFirst disabled objectOptions={objectOptions} value={data.condition} level={3} maxCount={[10, 10, 10]} />
         </div>
       ) : (
         '--'

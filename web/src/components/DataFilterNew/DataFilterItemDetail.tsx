@@ -6,33 +6,9 @@ import classNames from './classNames';
 import styles from './index.module.less';
 import locales from './locales';
 import { FieldList, Item } from './type';
+import { defaultTypeOption } from './utils';
 
 const cs = classNames.bind(styles);
-
-export const defaultTypeOption = {
-  'all Fields': ['match', 'match_phrase'],
-  textString: [
-    '==',
-    '!=',
-    'like',
-    'not_like',
-    'in',
-    'not_in',
-    'regex',
-    'contain',
-    'not_contain',
-    'exist',
-    'not_exist',
-    'match',
-    'match_phrase',
-    'not_empty',
-    'empty',
-  ],
-  string: ['==', '!=', 'in', 'not_in', 'contain', 'not_contain', 'exist', 'not_exist', 'match', 'match_phrase'],
-  number: ['==', '>', '<', '>=', '<=', '!=', 'range', 'out_range', 'in', 'not_in', 'contain', 'not_contain', 'exist', 'not_exist', 'match', 'match_phrase'],
-  date: ['range', 'out_range', 'exist', 'not_exist', 'match', 'match_phrase'],
-  boolean: ['true', 'false', 'exist', 'not_exist'],
-};
 
 // 右侧值为数组的操作符
 const aryOperation = ['in', 'not_in', 'contain', 'not_contain'];
@@ -122,6 +98,15 @@ const DataFilterItemDetail = ({ fieldList, value, onChange, transformType, typeO
     } else if (formatType === 'date') {
       curVal =
         value.value?.length === 2 ? `${dayjs(value.value[0]).format('YYYY-MM-DD HH:mm:ss')} ~ ${dayjs(value.value[1]).format('YYYY-MM-DD HH:mm:ss')}` : '';
+    } else if (operation === 'multi_match') {
+      const fields = value.fields?.join(', ') || '';
+      const matchValue = value.value || '';
+      const matchType = value.match_type || 'best_fields';
+      curVal = `${fields} : ${matchValue} (${intl.get(`DataFilterNew.${matchType}`)})`;
+    } else if (operation === 'knn') {
+      const knnValue = value.value || '';
+      const limitValue = value.limit_value || 3000;
+      curVal = `${knnValue} (Top K: ${limitValue})`;
     }
 
     return <div className={cs('detail-col')}>{curVal}</div>;

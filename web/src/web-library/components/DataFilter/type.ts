@@ -57,4 +57,8 @@ export interface Item {
   operation: string;
   value_from: string;
   value: any;
+  match_type?: string;
+  limit_value?: number;
+  limit_key?: string;
+  fields?: string[];
 }

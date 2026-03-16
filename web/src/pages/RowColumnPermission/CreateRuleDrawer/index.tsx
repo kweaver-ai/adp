@@ -219,17 +219,7 @@ const CreateRuleDrawer: React.FC<CreateRuleDrawerProps & { dataViewId: string }>
               </>
             }
           >
-            {rowFiltersEnabled && (
-              <DataFilter
-                ref={dataFilterRef}
-                fieldList={availableFields}
-                required={true}
-                transformType={UTILS.formatType}
-                maxCount={[10, 10, 10]}
-                level={3}
-                isFirst
-              />
-            )}
+            {rowFiltersEnabled && <DataFilter ref={dataFilterRef} fieldList={availableFields} required={true} maxCount={[10, 10, 10]} level={3} isFirst />}
           </Form.Item>
           <Form.Item label={intl.get('RowColumnPermission.viewDataDescription')} className={styles.viewDataButton}>
             <Button type="default" onClick={handlePreviewData} disabled={targetKeys.length === 0}>

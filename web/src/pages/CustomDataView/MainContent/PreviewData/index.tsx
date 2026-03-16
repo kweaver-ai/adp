@@ -55,7 +55,6 @@ const PreviewData: React.FC<PreviewDataProps> = ({ open, id, name, params = {}, 
 
   const getDetail = async (values?: any): Promise<void> => {
     setLoading(true);
-    resetData();
     try {
       const resData = await api.getViewDataPreview(id, { limit: 1000, offset: 0, ...values, ...params });
 
@@ -81,13 +80,12 @@ const PreviewData: React.FC<PreviewDataProps> = ({ open, id, name, params = {}, 
           type: item.type,
         }));
 
-        setFieldList(fields);
+        // setFieldList(fields);
         setColumns(cols);
         setTableData(resData.entries);
         setTitle(resData.view.name);
       }
     } catch (error: any) {
-      resetData();
       if (error?.status === 403) {
         setIsForbidden(true);
       }
@@ -96,8 +94,25 @@ const PreviewData: React.FC<PreviewDataProps> = ({ open, id, name, params = {}, 
     }
   };
 
+  // 获取字段列表（使用详情接口）
+  const getFieldList = async () => {
+    try {
+      const res = await api.getCustomDataViewDetails([id]);
+      const views = res?.[0] || {};
+      const fields: FieldItem[] = (views?.fields || []).map((item: any) => ({
+        displayName: item.display_name,
+        name: item.name,
+        type: item.type,
+      }));
+      setFieldList(fields);
+    } catch (error) {
+      console.error('获取字段列表失败:', error);
+    }
+  };
+
   useEffect(() => {
     if (open) {
+      getFieldList();
       getDetail();
     } else {
       resetData();
@@ -147,7 +162,7 @@ const PreviewData: React.FC<PreviewDataProps> = ({ open, id, name, params = {}, 
           <div style={{ marginBottom: 12, display: switchFilter ? 'block' : 'none' }}>
             <Form form={form}>
               <Form.Item name="dataFilter">
-                <DataFilter ref={dataFilterRef} fieldList={fieldList} required transformType={UTILS.formatType} maxCount={[10, 10, 10]} level={3} isFirst />
+                <DataFilter ref={dataFilterRef} fieldList={fieldList} required maxCount={[10, 10, 10]} level={3} isFirst />
               </Form.Item>
             </Form>
           </div>

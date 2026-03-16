@@ -92,7 +92,7 @@ const MultistageFilter = forwardRef((props: DataFilterProps, ref) => {
               }}
               value={item}
               disabled={disabled}
-              fieldList={fieldList}
+              fieldList={[{ name: '*', type: 'all Fields' }, ...fieldList]}
               typeOption={typeOption}
               transformType={transformType || defaultTransformType}
               required

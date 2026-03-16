@@ -8,16 +8,12 @@ import DateBefore from './components/DateBefore';
 import DateBetween from './components/DateBetween';
 import DateCurrent from './components/DateCurrent';
 import NumberItem from './components/NumberItem';
+import MultiMatchItem from './components/MultiMatchItem';
+import KNNItem from './components/KNNItem';
 import styles from './index.module.less';
 import locales from './locales';
 import { Item } from './type';
-
-export const defaultTypeOption = {
-  number: ['==', '!=', '<', '<=', '>', '>=', 'in', 'not_in'],
-  string: ['==', '!=', 'empty', 'not_empty', 'in', 'not_in'],
-  boolean: ['true', 'false'],
-  date: [],
-};
+import { defaultTypeOption } from './utils';
 
 const typeLabels: any = {
   number: '数值',
@@ -114,7 +110,11 @@ const DataFilterItem = forwardRef(
 
     /** 更新属性值 */
     const handleValueChange = (val: any): void => {
-      onChange({ ...value, value: val });
+      if (value.operation === 'multi_match' || value.operation === 'knn') {
+        onChange({ ...value, ...(val || {}) });
+      } else {
+        onChange({ ...value, value: val });
+      }
     };
 
     /** input 值变化 */
@@ -161,15 +161,31 @@ const DataFilterItem = forwardRef(
       if (formatType === 'date' && operation === 'current') {
         return <DateCurrent value={value.value ?? undefined} onChange={handleValueChange} />;
       }
-      if (formatType === 'date' && operation === 'between') {
+      if (formatType === 'date' && (operation === 'between' || operation === 'out_range' || operation === 'range')) {
         return <DateBetween value={value.value ?? undefined} onChange={handleValueChange} />;
+      }
+
+      if (operation === 'multi_match') {
+        const { fields, value: matchValue, match_type = 'best_fields' } = value || {};
+        return (
+          <MultiMatchItem
+            value={{ fields, value: matchValue, match_type }}
+            fieldList={objectTarget?.data_properties || []}
+            disabled={disabled}
+            onChange={handleValueChange}
+          />
+        );
+      }
+
+      if (operation === 'knn') {
+        const { value: knnValue, limit_value = 3000, limit_key = 'k' } = value || {};
+        return <KNNItem value={{ value: knnValue, limit_value, limit_key }} disabled={disabled} onChange={handleValueChange} />;
       }
 
       return <Input value={value?.value} disabled={disabled} onChange={handleStringValueChange} placeholder={intl.get('DataFilterNew.pleaseInputValue')} />;
     };
 
-    const hasValue =
-      formatType !== 'date' && value.operation !== 'exist' && value.operation !== 'not_exist' && value.operation !== 'not_empty' && value.operation !== 'empty';
+    const hasValue = value.operation !== 'exist' && value.operation !== 'not_exist' && value.operation !== 'not_empty' && value.operation !== 'empty';
 
     return (
       <div className={classNames(styles['filter-item'])}>
@@ -197,20 +213,15 @@ const DataFilterItem = forwardRef(
           />
         </div>
 
-        {
-          /** 日期类型，屏蔽操作符 */
-          formatType !== 'date' && (
-            <div className={classNames(styles['operation-col'])}>
-              <Select
-                value={value?.operation}
-                disabled={disabled}
-                placeholder="请选择"
-                onChange={handleChangeOperation}
-                options={map(typeOption[formatType], (item) => ({ value: item, label: intl.get(`DataFilterNew.${item}`) }))}
-              />
-            </div>
-          )
-        }
+        <div className={classNames(styles['operation-col'])}>
+          <Select
+            value={value?.operation}
+            disabled={disabled}
+            placeholder="请选择"
+            onChange={handleChangeOperation}
+            options={map(typeOption[formatType], (item) => ({ value: item, label: intl.get(`DataFilterNew.${item}`) }))}
+          />
+        </div>
 
         {hasValue && <div className={styles['value-col']}>{renderItem(formatType, value.operation)}</div>}
       </div>

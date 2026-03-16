@@ -8,6 +8,8 @@ import DateBefore from './components/DateBefore';
 import DateBetween from './components/DateBetween';
 import DateCurrent from './components/DateCurrent';
 import NumberItem from './components/NumberItem';
+import MultiMatchItem from './components/MultiMatchItem';
+import KNNItem from './components/KNNItem';
 import styles from './index.module.less';
 import locales from './locales';
 import { FieldList, Item } from './type';
@@ -55,7 +57,7 @@ const DataFilterItem = forwardRef(
     const validateValue = (value: any, required = defaultRequired): { value?: string } => {
       const error: { value?: string } = {};
 
-      if (required && (isEmpty(value) || (!Array.isArray(value) && typeof value === 'object' && !value.label && (isEmpty(value.from) || isEmpty(value.to))))) {
+      if (required && (isEmpty(value) || (Array.isArray(value) && value.length === 2 && (isEmpty(value[0]) || isEmpty(value[1]))))) {
         error.value = intl.get('DataFilter.valueCannotEmpty');
       } else {
         error.value = '';
@@ -100,11 +102,12 @@ const DataFilterItem = forwardRef(
     useImperativeHandle(ref, () => ({ validate }));
 
     const formatType = useMemo(() => {
+      console.log('formatType', transformType!(fieldType || 'number'), fieldType);
       return transformType ? transformType(fieldType || 'number') : fieldType;
     }, [fieldType]);
 
     useUpdateEffect(() => {
-      if ((formatType === 'number' && value?.value?.from) || (formatType === 'number' && (value?.operation === 'range' || value?.operation === 'out_range'))) {
+      if ((formatType === 'number' && value?.value?.[0]) || (formatType === 'number' && (value?.operation === 'range' || value?.operation === 'out_range'))) {
         onChange({ ...value, value: null });
       }
 
@@ -159,7 +162,11 @@ const DataFilterItem = forwardRef(
 
     const handleValueChange = (val: any): void => {
       setErrors({ ...errors, ...validateValue(val) });
-      onChange({ ...value, value: val });
+      if (value.operation === 'multi_match' || value.operation === 'knn') {
+        onChange({ ...value, ...(val || {}) });
+      } else {
+        onChange({ ...value, value: val });
+      }
     };
 
     /** input 值变化 */
@@ -211,8 +218,18 @@ const DataFilterItem = forwardRef(
       if (formatType === 'date' && operation === 'current') {
         return <DateCurrent value={value.value ?? undefined} onChange={handleValueChange} />;
       }
-      if (formatType === 'date' && operation === 'between') {
+      if (formatType === 'date' && (operation === 'between' || operation === 'out_range' || operation === 'range')) {
         return <DateBetween value={value.value ?? undefined} onChange={handleValueChange} />;
+      }
+
+      if (operation === 'multi_match') {
+        const { fields, value: matchValue, match_type = 'best_fields' } = value || {};
+        return <MultiMatchItem value={{ fields, value: matchValue, match_type }} fieldList={fieldList} disabled={disabled} onChange={handleValueChange} />;
+      }
+
+      if (operation === 'knn') {
+        const { value: knnValue, limit_value = 3000, limit_key = 'k' } = value || {};
+        return <KNNItem value={{ value: knnValue, limit_value, limit_key }} disabled={disabled} onChange={handleValueChange} />;
       }
 
       return <Input value={value?.value} disabled={disabled} onChange={handleStringValueChange} placeholder={intl.get('DataFilter.pleaseInputValue')} />;

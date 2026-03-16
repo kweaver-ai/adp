@@ -26,13 +26,10 @@ const NumberItem = memo(
     }, []);
 
     const handleFromChange = (val: any): void => {
-      validateValueError(val);
+      validateValueError([val, value.value?.[1]]);
       onChange({
         ...value,
-        value: {
-          from: val,
-          to: value.value?.to,
-        },
+        value: [val, value.value?.[1]],
       });
     };
 
@@ -42,13 +39,10 @@ const NumberItem = memo(
     };
 
     const handleToChange = (val: any): void => {
-      validateValueError(val);
+      validateValueError([value.value?.[0], val]);
       onChange({
         ...value,
-        value: {
-          to: val,
-          from: value.value?.from,
-        },
+        value: [value.value?.[0], val],
       });
     };
 
@@ -56,9 +50,9 @@ const NumberItem = memo(
       <>
         {value?.operation === 'range' || value?.operation === 'out_range' ? (
           <div className={styles['range-wrapper']}>
-            <InputNumber value={value?.value?.from} onChange={handleFromChange} disabled={disabled} placeholder={intl.get('DataFilter.pleaseInputValue')} />
+            <InputNumber value={value?.value?.[0]} onChange={handleFromChange} disabled={disabled} placeholder={intl.get('DataFilter.pleaseInputValue')} />
             <span className={styles['split-space']}>-</span>
-            <InputNumber value={value?.value?.to} onChange={handleToChange} disabled={disabled} placeholder={intl.get('DataFilter.pleaseInputValue')} />
+            <InputNumber value={value?.value?.[1]} onChange={handleToChange} disabled={disabled} placeholder={intl.get('DataFilter.pleaseInputValue')} />
           </div>
         ) : (
           <InputNumber onChange={handleValueChange} value={value?.value} disabled={disabled} placeholder={intl.get('DataFilter.pleaseInputValue')} />

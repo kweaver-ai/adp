@@ -132,13 +132,7 @@ const BasicInformation = (props: any) => {
           {conditionVisible && (
             <Col span={24}>
               <Form.Item name="condition" label={intl.get('Action.triggerCondition')}>
-                <DataFilterNew
-                  objectOptions={objectOptions.filter((item) => item.value === actionSource)}
-                  isFirst
-                  level={3}
-                  maxCount={[10, 10, 10]}
-                  transformType={UTILS.formatType}
-                />
+                <DataFilterNew objectOptions={objectOptions.filter((item) => item.value === actionSource)} isFirst level={3} maxCount={[10, 10, 10]} />
               </Form.Item>
             </Col>
           )}

@@ -119,8 +119,7 @@ const VegaModelFromItem = (props: any) => {
               ref={dataFilterRef}
               fieldList={fields}
               required={true}
-              typeOption={DATA_FILTER_DEFAULT_OPTION}
-              transformType={UTILS.formatType}
+              // typeOption={DATA_FILTER_DEFAULT_OPTION}
               maxCount={[10, 10, 10]}
               level={3}
               isFirst

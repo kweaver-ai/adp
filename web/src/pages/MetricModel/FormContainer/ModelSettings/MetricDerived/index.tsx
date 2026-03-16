@@ -140,8 +140,7 @@ const MetricDerived = (props: any) => {
                 ref={dataFilterDateRef}
                 fieldList={date_field}
                 defaultValue={INIT_FILTER}
-                typeOption={DATA_FILTER_DEFAULT_OPTION}
-                transformType={UTILS.formatType}
+                // typeOption={DATA_FILTER_DEFAULT_OPTION}
                 maxCount={[10, 10, 10]}
                 level={3}
                 isFirst
@@ -162,8 +161,7 @@ const MetricDerived = (props: any) => {
                 ref={dataFilterBusinessRef}
                 fieldList={business_field}
                 defaultValue={INIT_FILTER}
-                typeOption={DATA_FILTER_DEFAULT_OPTION}
-                transformType={UTILS.formatType}
+                // typeOption={DATA_FILTER_DEFAULT_OPTION}
                 maxCount={[10, 10, 10]}
                 level={3}
                 isFirst
