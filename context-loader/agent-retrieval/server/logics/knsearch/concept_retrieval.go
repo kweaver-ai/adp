@@ -32,7 +32,7 @@ func (s *localSearchImpl) conceptRetrieval(
 	defer o11y.EndSpan(ctx, err)
 
 	// 1. 获取知识网络详情
-	networkDetail, err := s.ontologyManager.GetKnowledgeNetworkDetail(ctx, req.KnID)
+	networkDetail, err := s.bknBackend.GetKnowledgeNetworkDetail(ctx, req.KnID)
 	if err != nil {
 		s.logger.WithContext(ctx).Errorf("[ConceptRetrieval] GetKnowledgeNetworkDetail failed: %v", err)
 		return nil, err
@@ -201,7 +201,7 @@ func (s *localSearchImpl) coarseRecall(
 
 	// 粗召回对象类型
 	objectReq := s.buildCoarseRecallQuery(knID, query, config.CoarseObjectLimit)
-	coarseObjects, objErr := s.ontologyManager.SearchObjectTypes(ctx, objectReq)
+	coarseObjects, objErr := s.bknBackend.SearchObjectTypes(ctx, objectReq)
 	if objErr != nil {
 		s.logger.WithContext(ctx).Warnf("[CoarseRecall] SearchObjectTypes failed: %v", objErr)
 	} else if coarseObjects != nil {
@@ -215,7 +215,7 @@ func (s *localSearchImpl) coarseRecall(
 
 	// 粗召回关系类型
 	relationReq := s.buildCoarseRecallQuery(knID, query, config.CoarseRelationLimit)
-	coarseRelations, relErr := s.ontologyManager.SearchRelationTypes(ctx, relationReq)
+	coarseRelations, relErr := s.bknBackend.SearchRelationTypes(ctx, relationReq)
 	if relErr != nil {
 		s.logger.WithContext(ctx).Warnf("[CoarseRecall] SearchRelationTypes failed: %v", relErr)
 	} else if coarseRelations != nil {

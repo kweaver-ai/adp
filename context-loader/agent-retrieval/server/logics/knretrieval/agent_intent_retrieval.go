@@ -134,7 +134,7 @@ func (k *knRetrievalServiceImpl) intentRecallGetConceptResultsByIntent(ctx conte
 	// 查询对象类概念详情
 	if len(objectConceptIDs) > 0 {
 		var objectDetails []*interfaces.ObjectType
-		objectDetails, err = k.ontologyManagerAccess.GetObjectTypeDetail(ctx, knID, objectConceptIDs, true)
+		objectDetails, err = k.bknBackendAccess.GetObjectTypeDetail(ctx, knID, objectConceptIDs, true)
 		if err != nil {
 			k.logger.WithContext(ctx).Errorf("[getConceptDetails] getObjectTypeDetail failed. knId:%s, objectConceptIDs:%v\n",
 				knID, objectConceptIDs)
@@ -145,7 +145,7 @@ func (k *knRetrievalServiceImpl) intentRecallGetConceptResultsByIntent(ctx conte
 	// 查询行动类概念详情
 	if len(actionConceptIDs) > 0 {
 		var actionDetails []*interfaces.ActionType
-		actionDetails, err = k.ontologyManagerAccess.GetActionTypeDetail(ctx, knID, actionConceptIDs, true)
+		actionDetails, err = k.bknBackendAccess.GetActionTypeDetail(ctx, knID, actionConceptIDs, true)
 		if err != nil {
 			k.logger.WithContext(ctx).Errorf("[getConceptDetails] getActionTypeDetail failed. knId:%s, actionConceptIDs:%v\n",
 				knID, actionConceptIDs)
@@ -156,7 +156,7 @@ func (k *knRetrievalServiceImpl) intentRecallGetConceptResultsByIntent(ctx conte
 	// 查询关系类概念详情
 	if len(relationConceptIDs) > 0 {
 		var relationDetails []*interfaces.RelationType
-		relationDetails, err = k.ontologyManagerAccess.GetRelationTypeDetail(ctx, knID, relationConceptIDs, true)
+		relationDetails, err = k.bknBackendAccess.GetRelationTypeDetail(ctx, knID, relationConceptIDs, true)
 		if err != nil {
 			k.logger.WithContext(ctx).Errorf("[getConceptDetails] getRelationTypeDetail failed. knId:%s, relationConceptIDs:%v\n",
 				knID, relationConceptIDs)

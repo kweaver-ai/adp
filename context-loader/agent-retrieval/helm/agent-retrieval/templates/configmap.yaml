@@ -39,10 +39,10 @@ data:
       private_protocol: {{ index .Values "depServices" "agent-app" "privateProtocol" | quote }}
       private_host: {{ index .Values "depServices" "agent-app" "privateHost" | quote }}
       private_port: {{ index .Values "depServices" "agent-app" "privatePort" }}
-    ontology_manager:
-      private_protocol: {{ index .Values "depServices" "ontology-manager" "privateProtocol" | quote }}
-      private_host: {{ index .Values "depServices" "ontology-manager" "privateHost" | quote }}
-      private_port: {{ index .Values "depServices" "ontology-manager" "privatePort" }}
+    bkn_backend:
+      private_protocol: {{ index .Values "depServices" "bkn-backend" "privateProtocol" | quote }}
+      private_host: {{ index .Values "depServices" "bkn-backend" "privateHost" | quote }}
+      private_port: {{ index .Values "depServices" "bkn-backend" "privatePort" }}
     ontology_query:
       private_protocol: {{ index .Values "depServices" "ontology-query" "privateProtocol" | quote }}
       private_host: {{ index .Values "depServices" "ontology-query" "privateHost" | quote }}

@@ -31,9 +31,9 @@ agent_app:
   private_protocol: "http"
   private_host: "agent-factory.anyshare"
   private_port: 13020
-ontology_manager:
+bkn_backend:
   private_protocol: "http"
-  private_host: "ontology-manager-svc.anyshare"
+  private_host: "bkn-backend-svc.anyshare"
   private_port: 13014
 ontology_query:
   private_protocol: "http"

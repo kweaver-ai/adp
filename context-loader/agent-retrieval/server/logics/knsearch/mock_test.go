@@ -48,8 +48,8 @@ func (m *mockLogger) Errorf(format string, args ...interface{}) {
 	m.logs = append(m.logs, fmt.Sprintf("[ERROR] "+format, args...))
 }
 
-// mockOntologyManager 模拟 OntologyManagerAccess 接口
-type mockOntologyManager struct {
+// mockBknBackend 模拟 BknBackendAccess 接口
+type mockBknBackend struct {
 	networkDetail      *interfaces.KnowledgeNetworkDetail
 	networkError       error
 	objectTypesResp    *interfaces.ObjectTypeConcepts
@@ -58,35 +58,35 @@ type mockOntologyManager struct {
 	relationTypesError error
 }
 
-func (m *mockOntologyManager) GetKnowledgeNetworkDetail(ctx context.Context, knID string) (*interfaces.KnowledgeNetworkDetail, error) {
+func (m *mockBknBackend) GetKnowledgeNetworkDetail(ctx context.Context, knID string) (*interfaces.KnowledgeNetworkDetail, error) {
 	return m.networkDetail, m.networkError
 }
 
-func (m *mockOntologyManager) SearchObjectTypes(ctx context.Context, req *interfaces.QueryConceptsReq) (*interfaces.ObjectTypeConcepts, error) {
+func (m *mockBknBackend) SearchObjectTypes(ctx context.Context, req *interfaces.QueryConceptsReq) (*interfaces.ObjectTypeConcepts, error) {
 	return m.objectTypesResp, m.objectTypesError
 }
 
-func (m *mockOntologyManager) SearchRelationTypes(ctx context.Context, req *interfaces.QueryConceptsReq) (*interfaces.RelationTypeConcepts, error) {
+func (m *mockBknBackend) SearchRelationTypes(ctx context.Context, req *interfaces.QueryConceptsReq) (*interfaces.RelationTypeConcepts, error) {
 	return m.relationTypesResp, m.relationTypesError
 }
 
 // 下面是接口中其他方法的空实现，满足接口定义
-func (m *mockOntologyManager) GetObjectTypeDetail(ctx context.Context, knID string, otIds []string, includeDetail bool) ([]*interfaces.ObjectType, error) {
+func (m *mockBknBackend) GetObjectTypeDetail(ctx context.Context, knID string, otIds []string, includeDetail bool) ([]*interfaces.ObjectType, error) {
 	return nil, nil
 }
-func (m *mockOntologyManager) GetRelationTypeDetail(ctx context.Context, knID string, rtIDs []string, includeDetail bool) ([]*interfaces.RelationType, error) {
+func (m *mockBknBackend) GetRelationTypeDetail(ctx context.Context, knID string, rtIDs []string, includeDetail bool) ([]*interfaces.RelationType, error) {
 	return nil, nil
 }
-func (m *mockOntologyManager) SearchActionTypes(ctx context.Context, query *interfaces.QueryConceptsReq) (actionTypes *interfaces.ActionTypeConcepts, err error) {
+func (m *mockBknBackend) SearchActionTypes(ctx context.Context, query *interfaces.QueryConceptsReq) (actionTypes *interfaces.ActionTypeConcepts, err error) {
 	return nil, nil
 }
-func (m *mockOntologyManager) GetActionTypeDetail(ctx context.Context, knID string, atIDs []string, includeDetail bool) ([]*interfaces.ActionType, error) {
+func (m *mockBknBackend) GetActionTypeDetail(ctx context.Context, knID string, atIDs []string, includeDetail bool) ([]*interfaces.ActionType, error) {
 	return nil, nil
 }
-func (m *mockOntologyManager) CreateFullBuildOntologyJob(ctx context.Context, knID string, req *interfaces.CreateFullBuildOntologyJobReq) (resp *interfaces.CreateJobResp, err error) {
+func (m *mockBknBackend) CreateFullBuildOntologyJob(ctx context.Context, knID string, req *interfaces.CreateFullBuildOntologyJobReq) (resp *interfaces.CreateJobResp, err error) {
 	return nil, nil
 }
-func (m *mockOntologyManager) ListOntologyJobs(ctx context.Context, knID string, req *interfaces.ListOntologyJobsReq) (resp *interfaces.ListOntologyJobsResp, err error) {
+func (m *mockBknBackend) ListOntologyJobs(ctx context.Context, knID string, req *interfaces.ListOntologyJobsReq) (resp *interfaces.ListOntologyJobsResp, err error) {
 	return nil, nil
 }
 

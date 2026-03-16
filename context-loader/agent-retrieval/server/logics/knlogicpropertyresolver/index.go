@@ -26,7 +26,7 @@ const (
 // knLogicPropertyResolverService 逻辑属性解析服务实现
 type knLogicPropertyResolverService struct {
 	logger                interfaces.Logger
-	ontologyManagerAccess interfaces.OntologyManagerAccess
+	bknBackendAccess      interfaces.BknBackendAccess
 	ontologyQueryClient   interfaces.DrivenOntologyQuery
 	agentApp              interfaces.AgentApp
 }
@@ -41,8 +41,8 @@ func NewKnLogicPropertyResolverService() interfaces.IKnLogicPropertyResolverServ
 	serviceOnce.Do(func() {
 		conf := config.NewConfigLoader()
 		service = &knLogicPropertyResolverService{
-			logger:                conf.GetLogger(),
-			ontologyManagerAccess: drivenadapters.NewOntologyManagerAccess(),
+			logger:           conf.GetLogger(),
+			bknBackendAccess: drivenadapters.NewBknBackendAccess(),
 			ontologyQueryClient:   drivenadapters.NewOntologyQueryAccess(),
 			agentApp:              drivenadapters.NewAgentAppClient(),
 		}
@@ -181,8 +181,8 @@ func (s *knLogicPropertyResolverService) getObjectTypeDefinition(
 ) (*interfaces.ObjectType, error) {
 	s.logger.WithContext(ctx).Debugf("[KnLogicPropertyResolver] Getting object type definition: kn_id=%s, ot_id=%s", knID, otID)
 
-	// 调用 ontology-manager 获取对象类定义（include_detail=true 以获取 logic_properties）
-	objectTypes, err := s.ontologyManagerAccess.GetObjectTypeDetail(ctx, knID, []string{otID}, true)
+	// 调用 BKN backend 获取对象类定义（include_detail=true 以获取 logic_properties）
+	objectTypes, err := s.bknBackendAccess.GetObjectTypeDetail(ctx, knID, []string{otID}, true)
 	if err != nil {
 		return nil, err
 	}

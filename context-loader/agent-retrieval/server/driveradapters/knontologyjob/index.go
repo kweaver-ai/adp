@@ -29,7 +29,7 @@ type KnOntologyJobHandler interface {
 
 type knOntologyJobHandler struct {
 	Logger                interfaces.Logger
-	OntologyManagerAccess interfaces.OntologyManagerAccess
+	BknBackendAccess      interfaces.BknBackendAccess
 }
 
 // DefaultJobListLimit 默认查询任务列表的数量限制
@@ -45,8 +45,8 @@ func NewKnOntologyJobHandler() KnOntologyJobHandler {
 	kojOnce.Do(func() {
 		conf := config.NewConfigLoader()
 		kojHandler = &knOntologyJobHandler{
-			Logger:                conf.GetLogger(),
-			OntologyManagerAccess: drivenadapters.NewOntologyManagerAccess(),
+			Logger:           conf.GetLogger(),
+			BknBackendAccess: drivenadapters.NewBknBackendAccess(),
 		}
 	})
 	return kojHandler
@@ -88,8 +88,8 @@ func (h *knOntologyJobHandler) FullBuildOntology(c *gin.Context) {
 		return
 	}
 
-	// Call ontology manager to create job
-	resp, err := h.OntologyManagerAccess.CreateFullBuildOntologyJob(c.Request.Context(), reqBody.KnID, req)
+	// Call BKN backend to create job
+	resp, err := h.BknBackendAccess.CreateFullBuildOntologyJob(c.Request.Context(), reqBody.KnID, req)
 	if err != nil {
 		h.Logger.Errorf("[KnOntologyJobHandler#FullBuildOntology] CreateFullBuildOntologyJob failed, knId: %s, err: %v", reqBody.KnID, err)
 		rest.ReplyError(c, err)
@@ -120,8 +120,8 @@ func (h *knOntologyJobHandler) GetFullOntologyBuildingStatus(c *gin.Context) {
 		Direction: "desc", // Descending by create_time
 	}
 
-	// Call ontology manager to list jobs
-	resp, err := h.OntologyManagerAccess.ListOntologyJobs(c.Request.Context(), knID, req)
+	// Call BKN backend to list jobs
+	resp, err := h.BknBackendAccess.ListOntologyJobs(c.Request.Context(), knID, req)
 	if err != nil {
 		h.Logger.Errorf("[KnOntologyJobHandler#GetFullOntologyBuildingStatus] ListOntologyJobs failed, knId: %s, err: %v", knID, err)
 		rest.ReplyError(c, err)

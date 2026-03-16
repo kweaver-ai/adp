@@ -102,8 +102,8 @@ depServices:
     privateHost: agent-factory
     privatePort: 13020
     privateProtocol: http
-  ontology-manager:
-    privateHost: ontology-manager-svc
+  bkn-backend:
+    privateHost: bkn-backend-svc
     privatePort: 13014
     privateProtocol: http
   ontology-query:

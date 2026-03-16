@@ -139,7 +139,7 @@ func (k *knRetrievalServiceImpl) execConceptGetStrategy(ctx context.Context,
 	switch filter.ConceptType {
 	case interfaces.KnConceptTypeObject:
 		var objectDetails []*interfaces.ObjectType
-		objectDetails, err = k.ontologyManagerAccess.GetObjectTypeDetail(ctx, knID, ConceptIDs, true)
+		objectDetails, err = k.bknBackendAccess.GetObjectTypeDetail(ctx, knID, ConceptIDs, true)
 		if err != nil {
 			k.logger.WithContext(ctx).Errorf("[execConceptGetStrategy] execConceptGetStrategy failed. knId:%s, objectConceptIDs:%v\n",
 				knID, ConceptIDs)
@@ -148,7 +148,7 @@ func (k *knRetrievalServiceImpl) execConceptGetStrategy(ctx context.Context,
 		conceptDetailsMap[interfaces.KnConceptTypeObject] = append(conceptDetailsMap[interfaces.KnConceptTypeObject], objectDetails)
 	case interfaces.KnConceptTypeRelation:
 		var relationDetails []*interfaces.RelationType
-		relationDetails, err = k.ontologyManagerAccess.GetRelationTypeDetail(ctx, knID, ConceptIDs, true)
+		relationDetails, err = k.bknBackendAccess.GetRelationTypeDetail(ctx, knID, ConceptIDs, true)
 		if err != nil {
 			k.logger.WithContext(ctx).Errorf("[execConceptGetStrategy] execConceptGetStrategy failed. knId:%s, relationConceptIDs:%v\n",
 				knID, ConceptIDs)
@@ -157,7 +157,7 @@ func (k *knRetrievalServiceImpl) execConceptGetStrategy(ctx context.Context,
 		conceptDetailsMap[interfaces.KnConceptTypeObject] = append(conceptDetailsMap[interfaces.KnConceptTypeObject], relationDetails)
 	case interfaces.KnConceptTypeAction:
 		var actionDetails []*interfaces.ActionType
-		actionDetails, err = k.ontologyManagerAccess.GetActionTypeDetail(ctx, knID, ConceptIDs, true)
+		actionDetails, err = k.bknBackendAccess.GetActionTypeDetail(ctx, knID, ConceptIDs, true)
 		if err != nil {
 			k.logger.WithContext(ctx).Errorf("[execConceptGetStrategy] execConceptGetStrategy failed. knId:%s, actionConceptIDs:%v\n",
 				knID, ConceptIDs)
@@ -276,7 +276,7 @@ func (k *knRetrievalServiceImpl) execConceptDiscoveryStrategy(ctx context.Contex
 func (k *knRetrievalServiceImpl) discoveryObjectConcepts(ctx context.Context,
 	queryConceptsReq *interfaces.QueryConceptsReq) (conceptResults []*interfaces.ConceptResult, err error) {
 	var objectTypes *interfaces.ObjectTypeConcepts
-	objectTypes, err = k.ontologyManagerAccess.SearchObjectTypes(ctx, queryConceptsReq)
+	objectTypes, err = k.bknBackendAccess.SearchObjectTypes(ctx, queryConceptsReq)
 	if err != nil {
 		k.logger.Errorf("[discoveryObjectConcepts] SearchObjectTypes failed, userId: %s, visitorType: %s, req: %v", queryConceptsReq)
 		return
@@ -308,7 +308,7 @@ func (k *knRetrievalServiceImpl) discoveryObjectConcepts(ctx context.Context,
 func (k *knRetrievalServiceImpl) discoveryRelationTypeConcepts(ctx context.Context,
 	queryConceptsReq *interfaces.QueryConceptsReq) (conceptResults []*interfaces.ConceptResult, err error) {
 	var relationTypes *interfaces.RelationTypeConcepts
-	relationTypes, err = k.ontologyManagerAccess.SearchRelationTypes(ctx, queryConceptsReq)
+	relationTypes, err = k.bknBackendAccess.SearchRelationTypes(ctx, queryConceptsReq)
 	if err != nil {
 		k.logger.Errorf("[discoveryObjectConcepts] SearchRelationTypes failed, userId: %s, visitorType: %s, req: %v", queryConceptsReq)
 		return
@@ -340,7 +340,7 @@ func (k *knRetrievalServiceImpl) discoveryRelationTypeConcepts(ctx context.Conte
 func (k *knRetrievalServiceImpl) discoveryActionTypeConcepts(ctx context.Context,
 	queryConceptsReq *interfaces.QueryConceptsReq) (conceptResults []*interfaces.ConceptResult, err error) {
 	var actionTypes *interfaces.ActionTypeConcepts
-	actionTypes, err = k.ontologyManagerAccess.SearchActionTypes(ctx, queryConceptsReq)
+	actionTypes, err = k.bknBackendAccess.SearchActionTypes(ctx, queryConceptsReq)
 	if err != nil {
 		k.logger.Errorf("[discoveryActionTypeConcepts] SearchActionTypes failed, userId: %s, visitorType: %s, req: %v", queryConceptsReq)
 		return
