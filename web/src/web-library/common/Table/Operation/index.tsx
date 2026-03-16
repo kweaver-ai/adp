@@ -138,7 +138,7 @@ const Operation: React.FC<OperationProps> = (props) => {
             <Button.Icon
               title="刷新"
               icon={<IconFont type="icon-dip-huanyuan" />}
-              style={{ fontSize: 16, color: 'rgba(0, 0, 0, .5)', transform: 'rotate(-90deg)' }}
+              style={{ fontSize: 16, color: 'rgba(0, 0, 0, .5)' }}
               onClick={() => onRefresh()}
             />
           )}
