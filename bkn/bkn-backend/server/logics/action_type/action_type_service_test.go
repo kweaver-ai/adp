@@ -1374,11 +1374,13 @@ func Test_actionTypeService_SearchActionTypes(t *testing.T) {
 		}
 		vba := bmock.NewMockVegaBackendAccess(mockCtrl)
 		cga := bmock.NewMockConceptGroupAccess(mockCtrl)
+		ps := bmock.NewMockPermissionService(mockCtrl)
 
 		service := &actionTypeService{
 			appSetting: appSetting,
 			vba:        vba,
 			cga:        cga,
+			ps:         ps,
 		}
 
 		Convey("Success searching action types without concept groups\n", func() {
@@ -1397,6 +1399,7 @@ func Test_actionTypeService_SearchActionTypes(t *testing.T) {
 				Entries: []map[string]any{entry},
 			}
 
+			ps.EXPECT().CheckPermission(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
 			vba.EXPECT().QueryDatasetData(gomock.Any(), gomock.Any(), gomock.Any()).Return(datasetResp, nil)
 
 			result, err := service.SearchActionTypes(ctx, query)
@@ -1428,6 +1431,7 @@ func Test_actionTypeService_SearchActionTypes(t *testing.T) {
 			}
 			atIDs := []string{"at1", "at2"}
 
+			ps.EXPECT().CheckPermission(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
 			cga.EXPECT().GetConceptGroupsTotal(gomock.Any(), gomock.Any()).Return(1, nil)
 			cga.EXPECT().GetActionTypeIDsFromConceptGroupRelation(gomock.Any(), gomock.Any()).Return(atIDs, nil)
 			datasetResp := &interfaces.DatasetQueryResponse{
@@ -1449,6 +1453,7 @@ func Test_actionTypeService_SearchActionTypes(t *testing.T) {
 				ConceptGroups: []string{"cg1"},
 			}
 
+			ps.EXPECT().CheckPermission(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
 			cga.EXPECT().GetConceptGroupsTotal(gomock.Any(), gomock.Any()).Return(0, nil)
 
 			result, err := service.SearchActionTypes(ctx, query)
@@ -1465,6 +1470,7 @@ func Test_actionTypeService_SearchActionTypes(t *testing.T) {
 				ConceptGroups: []string{"cg1"},
 			}
 
+			ps.EXPECT().CheckPermission(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
 			cga.EXPECT().GetConceptGroupsTotal(gomock.Any(), gomock.Any()).Return(0, rest.NewHTTPError(ctx, 500, berrors.BknBackend_ActionType_InternalError))
 
 			result, err := service.SearchActionTypes(ctx, query)
@@ -1481,6 +1487,7 @@ func Test_actionTypeService_SearchActionTypes(t *testing.T) {
 				ConceptGroups: []string{"cg1"},
 			}
 
+			ps.EXPECT().CheckPermission(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
 			cga.EXPECT().GetConceptGroupsTotal(gomock.Any(), gomock.Any()).Return(1, nil)
 			cga.EXPECT().GetActionTypeIDsFromConceptGroupRelation(gomock.Any(), gomock.Any()).Return(nil, rest.NewHTTPError(ctx, 500, berrors.BknBackend_ActionType_InternalError))
 

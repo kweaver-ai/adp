@@ -1883,6 +1883,7 @@ func Test_objectTypeService_SearchObjectTypes(t *testing.T) {
 		dva := bmock.NewMockDataViewAccess(mockCtrl)
 		dda := bmock.NewMockDataModelAccess(mockCtrl)
 		mfa := bmock.NewMockModelFactoryAccess(mockCtrl)
+		ps := bmock.NewMockPermissionService(mockCtrl)
 
 		service := &objectTypeService{
 			appSetting: appSetting,
@@ -1891,6 +1892,7 @@ func Test_objectTypeService_SearchObjectTypes(t *testing.T) {
 			dva:        dva,
 			dda:        dda,
 			mfa:        mfa,
+			ps:         ps,
 		}
 
 		Convey("Success searching object types without concept groups\n", func() {
@@ -1900,6 +1902,7 @@ func Test_objectTypeService_SearchObjectTypes(t *testing.T) {
 				Limit:  10,
 			}
 
+			ps.EXPECT().CheckPermission(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
 			datasetResp := &interfaces.DatasetQueryResponse{
 				Entries: []map[string]any{},
 			}
@@ -1932,6 +1935,7 @@ func Test_objectTypeService_SearchObjectTypes(t *testing.T) {
 				},
 			}
 
+			ps.EXPECT().CheckPermission(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
 			cga.EXPECT().GetConceptGroupsTotal(gomock.Any(), gomock.Any()).Return(1, nil)
 			cga.EXPECT().GetConceptIDsByConceptGroupIDs(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return([]string{"ot1"}, nil)
 			datasetResp := &interfaces.DatasetQueryResponse{
@@ -1953,6 +1957,7 @@ func Test_objectTypeService_SearchObjectTypes(t *testing.T) {
 				ConceptGroups: []string{"cg1"},
 			}
 
+			ps.EXPECT().CheckPermission(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
 			cga.EXPECT().GetConceptGroupsTotal(gomock.Any(), gomock.Any()).Return(0, nil)
 
 			result, err := service.SearchObjectTypes(ctx, query)
@@ -1968,6 +1973,7 @@ func Test_objectTypeService_SearchObjectTypes(t *testing.T) {
 				ConceptGroups: []string{"cg1"},
 			}
 
+			ps.EXPECT().CheckPermission(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
 			cga.EXPECT().GetConceptGroupsTotal(gomock.Any(), gomock.Any()).Return(0, rest.NewHTTPError(ctx, 500, berrors.BknBackend_ObjectType_InternalError))
 
 			result, err := service.SearchObjectTypes(ctx, query)
@@ -1983,6 +1989,7 @@ func Test_objectTypeService_SearchObjectTypes(t *testing.T) {
 				ConceptGroups: []string{"cg1"},
 			}
 
+			ps.EXPECT().CheckPermission(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
 			cga.EXPECT().GetConceptGroupsTotal(gomock.Any(), gomock.Any()).Return(1, nil)
 			cga.EXPECT().GetConceptIDsByConceptGroupIDs(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil, rest.NewHTTPError(ctx, 500, berrors.BknBackend_ObjectType_InternalError))
 
@@ -1998,6 +2005,7 @@ func Test_objectTypeService_SearchObjectTypes(t *testing.T) {
 				Limit:  10,
 			}
 
+			ps.EXPECT().CheckPermission(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
 			datasetResp := &interfaces.DatasetQueryResponse{
 				Entries: []map[string]any{},
 			}
@@ -2019,6 +2027,7 @@ func Test_objectTypeService_SearchObjectTypes(t *testing.T) {
 				},
 			}
 
+			ps.EXPECT().CheckPermission(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
 			result, err := service.SearchObjectTypes(ctx, query)
 			So(err, ShouldNotBeNil)
 			So(len(result.Entries), ShouldEqual, 0)
@@ -2038,6 +2047,7 @@ func Test_objectTypeService_SearchObjectTypes(t *testing.T) {
 				},
 			}
 
+			ps.EXPECT().CheckPermission(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
 			result, err := service.SearchObjectTypes(ctx, query)
 			So(err, ShouldNotBeNil)
 			So(len(result.Entries), ShouldEqual, 0)
@@ -2051,6 +2061,7 @@ func Test_objectTypeService_SearchObjectTypes(t *testing.T) {
 				ConceptGroups: []string{"cg1"},
 			}
 
+			ps.EXPECT().CheckPermission(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
 			cga.EXPECT().GetConceptGroupsTotal(gomock.Any(), gomock.Any()).Return(1, nil)
 			cga.EXPECT().GetConceptIDsByConceptGroupIDs(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return([]string{}, nil)
 
@@ -2067,6 +2078,7 @@ func Test_objectTypeService_SearchObjectTypes(t *testing.T) {
 				NeedTotal: true,
 			}
 
+			ps.EXPECT().CheckPermission(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
 			totalResp := &interfaces.DatasetQueryResponse{
 				TotalCount: 5,
 			}
@@ -2091,6 +2103,7 @@ func Test_objectTypeService_SearchObjectTypes(t *testing.T) {
 				ConceptGroups: []string{"cg1"},
 			}
 
+			ps.EXPECT().CheckPermission(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
 			cga.EXPECT().GetConceptGroupsTotal(gomock.Any(), gomock.Any()).Return(1, nil)
 			cga.EXPECT().GetConceptIDsByConceptGroupIDs(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return([]string{"ot1"}, nil)
 			totalResp := &interfaces.DatasetQueryResponse{
@@ -2116,6 +2129,7 @@ func Test_objectTypeService_SearchObjectTypes(t *testing.T) {
 				NeedTotal: true,
 			}
 
+			ps.EXPECT().CheckPermission(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
 			vba.EXPECT().QueryDatasetData(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil, rest.NewHTTPError(ctx, 500, berrors.BknBackend_ObjectType_InternalError))
 
 			result, err := service.SearchObjectTypes(ctx, query)
@@ -2132,6 +2146,7 @@ func Test_objectTypeService_SearchObjectTypes(t *testing.T) {
 				ConceptGroups: []string{"cg1"},
 			}
 
+			ps.EXPECT().CheckPermission(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
 			cga.EXPECT().GetConceptGroupsTotal(gomock.Any(), gomock.Any()).Return(1, nil)
 			cga.EXPECT().GetConceptIDsByConceptGroupIDs(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return([]string{"ot1"}, nil)
 			vba.EXPECT().QueryDatasetData(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil, rest.NewHTTPError(ctx, 500, berrors.BknBackend_ObjectType_InternalError))
@@ -2152,6 +2167,7 @@ func Test_objectTypeService_SearchObjectTypes(t *testing.T) {
 				},
 			}
 
+			ps.EXPECT().CheckPermission(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
 			result, err := service.SearchObjectTypes(ctx, query)
 			So(err, ShouldNotBeNil)
 			So(len(result.Entries), ShouldEqual, 0)
@@ -2172,6 +2188,7 @@ func Test_objectTypeService_SearchObjectTypes(t *testing.T) {
 				},
 			}
 
+			ps.EXPECT().CheckPermission(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
 			result, err := service.SearchObjectTypes(ctx, query)
 			So(err, ShouldNotBeNil)
 			So(len(result.Entries), ShouldEqual, 0)
@@ -2184,6 +2201,7 @@ func Test_objectTypeService_SearchObjectTypes(t *testing.T) {
 				Limit:  10,
 			}
 
+			ps.EXPECT().CheckPermission(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
 			vba.EXPECT().QueryDatasetData(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil, rest.NewHTTPError(ctx, 500, berrors.BknBackend_ObjectType_InternalError))
 
 			result, err := service.SearchObjectTypes(ctx, query)
@@ -2202,6 +2220,7 @@ func Test_objectTypeService_SearchObjectTypes(t *testing.T) {
 				"invalid": make(chan int), // channel cannot be marshaled
 			}
 
+			ps.EXPECT().CheckPermission(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
 			datasetResp := &interfaces.DatasetQueryResponse{
 				Entries: []map[string]any{entry},
 			}
@@ -2223,6 +2242,7 @@ func Test_objectTypeService_SearchObjectTypes(t *testing.T) {
 				"invalid_json": make(chan int), // channel cannot be marshaled/unmarshaled
 			}
 
+			ps.EXPECT().CheckPermission(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
 			datasetResp := &interfaces.DatasetQueryResponse{
 				Entries: []map[string]any{entry},
 			}
@@ -2260,6 +2280,7 @@ func Test_objectTypeService_SearchObjectTypes(t *testing.T) {
 				},
 			}
 
+			ps.EXPECT().CheckPermission(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
 			datasetResp := &interfaces.DatasetQueryResponse{
 				Entries: []map[string]any{entry},
 			}
@@ -2294,6 +2315,7 @@ func Test_objectTypeService_SearchObjectTypes(t *testing.T) {
 				"_score":  0.8,
 			}
 
+			ps.EXPECT().CheckPermission(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
 			cga.EXPECT().GetConceptGroupsTotal(gomock.Any(), gomock.Any()).Return(1, nil)
 			cga.EXPECT().GetConceptIDsByConceptGroupIDs(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return([]string{"ot1"}, nil)
 			datasetResp := &interfaces.DatasetQueryResponse{
