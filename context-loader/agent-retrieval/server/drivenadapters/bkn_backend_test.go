@@ -28,9 +28,9 @@ func TestSearchObjectTypes_Success(t *testing.T) {
 
 		mockLogger.EXPECT().WithContext(gomock.Any()).Return(mockLogger).AnyTimes()
 
-		client := &ontologyManagerAccess{
+		client := &bknBackendAccess{
 			logger:     mockLogger,
-			baseURL:    "http://localhost:8080/api/ontology-manager",
+			baseURL:    "http://localhost:8080/api/bkn-backend",
 			httpClient: mockHTTPClient,
 		}
 
@@ -61,9 +61,9 @@ func TestSearchObjectTypes_HTTPError(t *testing.T) {
 		mockLogger.EXPECT().WithContext(gomock.Any()).Return(mockLogger).AnyTimes()
 		mockLogger.EXPECT().Errorf(gomock.Any(), gomock.Any()).AnyTimes()
 
-		client := &ontologyManagerAccess{
+		client := &bknBackendAccess{
 			logger:     mockLogger,
-			baseURL:    "http://localhost:8080/api/ontology-manager",
+			baseURL:    "http://localhost:8080/api/bkn-backend",
 			httpClient: mockHTTPClient,
 		}
 
@@ -93,9 +93,9 @@ func TestSearchObjectTypes_NotFound(t *testing.T) {
 		mockLogger.EXPECT().WithContext(gomock.Any()).Return(mockLogger).AnyTimes()
 		mockLogger.EXPECT().Warnf(gomock.Any(), gomock.Any()).AnyTimes()
 
-		client := &ontologyManagerAccess{
+		client := &bknBackendAccess{
 			logger:     mockLogger,
-			baseURL:    "http://localhost:8080/api/ontology-manager",
+			baseURL:    "http://localhost:8080/api/bkn-backend",
 			httpClient: mockHTTPClient,
 		}
 
@@ -124,9 +124,9 @@ func TestGetObjectTypeDetail_Success(t *testing.T) {
 
 		mockLogger.EXPECT().WithContext(gomock.Any()).Return(mockLogger).AnyTimes()
 
-		client := &ontologyManagerAccess{
+		client := &bknBackendAccess{
 			logger:     mockLogger,
-			baseURL:    "http://localhost:8080/api/ontology-manager",
+			baseURL:    "http://localhost:8080/api/bkn-backend",
 			httpClient: mockHTTPClient,
 		}
 
@@ -155,9 +155,9 @@ func TestGetObjectTypeDetail_HTTPError(t *testing.T) {
 		mockLogger.EXPECT().WithContext(gomock.Any()).Return(mockLogger).AnyTimes()
 		mockLogger.EXPECT().Errorf(gomock.Any(), gomock.Any()).AnyTimes()
 
-		client := &ontologyManagerAccess{
+		client := &bknBackendAccess{
 			logger:     mockLogger,
-			baseURL:    "http://localhost:8080/api/ontology-manager",
+			baseURL:    "http://localhost:8080/api/bkn-backend",
 			httpClient: mockHTTPClient,
 		}
 
@@ -183,9 +183,9 @@ func TestSearchRelationTypes_Success(t *testing.T) {
 
 		mockLogger.EXPECT().WithContext(gomock.Any()).Return(mockLogger).AnyTimes()
 
-		client := &ontologyManagerAccess{
+		client := &bknBackendAccess{
 			logger:     mockLogger,
-			baseURL:    "http://localhost:8080/api/ontology-manager",
+			baseURL:    "http://localhost:8080/api/bkn-backend",
 			httpClient: mockHTTPClient,
 		}
 
@@ -216,9 +216,9 @@ func TestSearchRelationTypes_HTTPError(t *testing.T) {
 		mockLogger.EXPECT().WithContext(gomock.Any()).Return(mockLogger).AnyTimes()
 		mockLogger.EXPECT().Errorf(gomock.Any(), gomock.Any()).AnyTimes()
 
-		client := &ontologyManagerAccess{
+		client := &bknBackendAccess{
 			logger:     mockLogger,
-			baseURL:    "http://localhost:8080/api/ontology-manager",
+			baseURL:    "http://localhost:8080/api/bkn-backend",
 			httpClient: mockHTTPClient,
 		}
 
@@ -247,9 +247,9 @@ func TestSearchActionTypes_Success(t *testing.T) {
 
 		mockLogger.EXPECT().WithContext(gomock.Any()).Return(mockLogger).AnyTimes()
 
-		client := &ontologyManagerAccess{
+		client := &bknBackendAccess{
 			logger:     mockLogger,
-			baseURL:    "http://localhost:8080/api/ontology-manager",
+			baseURL:    "http://localhost:8080/api/bkn-backend",
 			httpClient: mockHTTPClient,
 		}
 
@@ -279,9 +279,9 @@ func TestGetActionTypeDetail_Success(t *testing.T) {
 
 		mockLogger.EXPECT().WithContext(gomock.Any()).Return(mockLogger).AnyTimes()
 
-		client := &ontologyManagerAccess{
+		client := &bknBackendAccess{
 			logger:     mockLogger,
-			baseURL:    "http://localhost:8080/api/ontology-manager",
+			baseURL:    "http://localhost:8080/api/bkn-backend",
 			httpClient: mockHTTPClient,
 		}
 
@@ -310,9 +310,9 @@ func TestGetActionTypeDetail_HTTPError(t *testing.T) {
 		mockLogger.EXPECT().WithContext(gomock.Any()).Return(mockLogger).AnyTimes()
 		mockLogger.EXPECT().Errorf(gomock.Any(), gomock.Any()).AnyTimes()
 
-		client := &ontologyManagerAccess{
+		client := &bknBackendAccess{
 			logger:     mockLogger,
-			baseURL:    "http://localhost:8080/api/ontology-manager",
+			baseURL:    "http://localhost:8080/api/bkn-backend",
 			httpClient: mockHTTPClient,
 		}
 

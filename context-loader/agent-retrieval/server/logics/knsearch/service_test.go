@@ -15,7 +15,7 @@ func TestLocalSearch_Service(t *testing.T) {
 	tests := []struct {
 		name        string
 		req         *interfaces.KnSearchLocalRequest
-		mockSetup   func(*mockOntologyManager, *mockOntologyQuery, *mockRerankClient)
+		mockSetup   func(*mockBknBackend, *mockOntologyQuery, *mockRerankClient)
 		checkResult func(*testing.T, *interfaces.KnSearchLocalResponse, error)
 	}{
 		{
@@ -24,7 +24,7 @@ func TestLocalSearch_Service(t *testing.T) {
 				KnID:  "129",
 				Query: "test",
 			},
-			mockSetup: func(m *mockOntologyManager, q *mockOntologyQuery, r *mockRerankClient) {
+			mockSetup: func(m *mockBknBackend, q *mockOntologyQuery, r *mockRerankClient) {
 				m.networkDetail = mockDetail
 				// Mock instance retrieval success
 				q.instancesResp = &interfaces.QueryObjectInstancesResp{
@@ -56,7 +56,7 @@ func TestLocalSearch_Service(t *testing.T) {
 				Query:      "test",
 				OnlySchema: true,
 			},
-			mockSetup: func(m *mockOntologyManager, q *mockOntologyQuery, r *mockRerankClient) {
+			mockSetup: func(m *mockBknBackend, q *mockOntologyQuery, r *mockRerankClient) {
 				m.networkDetail = mockDetail
 				// QueryObjectInstances should NOT be called
 			},
@@ -77,7 +77,7 @@ func TestLocalSearch_Service(t *testing.T) {
 			req: &interfaces.KnSearchLocalRequest{
 				KnID: "129",
 			},
-			mockSetup: func(m *mockOntologyManager, q *mockOntologyQuery, r *mockRerankClient) {
+			mockSetup: func(m *mockBknBackend, q *mockOntologyQuery, r *mockRerankClient) {
 				m.networkError = errors.New("network error")
 			},
 			checkResult: func(t *testing.T, res *interfaces.KnSearchLocalResponse, err error) {
@@ -95,7 +95,7 @@ func TestLocalSearch_Service(t *testing.T) {
 				KnID:  "129",
 				Query: "test",
 			},
-			mockSetup: func(m *mockOntologyManager, q *mockOntologyQuery, r *mockRerankClient) {
+			mockSetup: func(m *mockBknBackend, q *mockOntologyQuery, r *mockRerankClient) {
 				m.networkDetail = mockDetail
 				q.instancesError = errors.New("query error")
 			},
@@ -120,7 +120,7 @@ func TestLocalSearch_Service(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			mockManager := &mockOntologyManager{}
+			mockManager := &mockBknBackend{}
 			mockQuery := &mockOntologyQuery{}
 			mockRerank := &mockRerankClient{}
 
@@ -130,7 +130,7 @@ func TestLocalSearch_Service(t *testing.T) {
 
 			svc := &localSearchImpl{
 				logger:          &mockLogger{},
-				ontologyManager: mockManager,
+				bknBackend: mockManager,
 				ontologyQuery:   mockQuery,
 				rerankClient:    mockRerank,
 			}

@@ -19,7 +19,7 @@ import (
 type localSearchImpl struct {
 	logger          interfaces.Logger
 	config          *config.Config
-	ontologyManager interfaces.OntologyManagerAccess
+	bknBackend      interfaces.BknBackendAccess
 	ontologyQuery   interfaces.DrivenOntologyQuery
 	rerankClient    interfaces.DrivenMFModelAPIClient
 }
@@ -36,7 +36,7 @@ func NewLocalSearchService() interfaces.IKnSearchLocalService {
 		localSearchService = &localSearchImpl{
 			logger:          configLoader.GetLogger(),
 			config:          configLoader,
-			ontologyManager: drivenadapters.NewOntologyManagerAccess(),
+			bknBackend:      drivenadapters.NewBknBackendAccess(),
 			ontologyQuery:   drivenadapters.NewOntologyQueryAccess(),
 			rerankClient:    drivenadapters.NewMFModelAPIClient(),
 		}

@@ -280,8 +280,8 @@ type KnowledgeNetworkDetail struct {
 	ActionTypes   []*ActionType   `json:"action_types"`   // Action types
 }
 
-// OntologyManagerAccess Ontology management interface
-type OntologyManagerAccess interface {
+// BknBackendAccess BKN backend ontology management interface
+type BknBackendAccess interface {
 	// GetKnowledgeNetworkDetail Get knowledge network detail with full schema (include_detail=true, mode=export)
 	GetKnowledgeNetworkDetail(ctx context.Context, knID string) (*KnowledgeNetworkDetail, error)
 

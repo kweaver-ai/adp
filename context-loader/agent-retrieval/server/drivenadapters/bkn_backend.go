@@ -23,34 +23,34 @@ import (
 	"github.com/kweaver-ai/adp/context-loader/agent-retrieval/server/interfaces"
 )
 
-type ontologyManagerAccess struct {
+type bknBackendAccess struct {
 	logger     interfaces.Logger
 	baseURL    string
 	httpClient interfaces.HTTPClient
 }
 
 var (
-	omAccessOnce sync.Once
-	omAccess     interfaces.OntologyManagerAccess
+	bknAccessOnce sync.Once
+	bknAccess     interfaces.BknBackendAccess
 )
 
-// NewOntologyManagerAccess 创建OntologyManagerAccess
-func NewOntologyManagerAccess() interfaces.OntologyManagerAccess {
-	omAccessOnce.Do(func() {
+// NewBknBackendAccess 创建 BknBackendAccess
+func NewBknBackendAccess() interfaces.BknBackendAccess {
+	bknAccessOnce.Do(func() {
 		conf := config.NewConfigLoader()
-		omAccess = &ontologyManagerAccess{
+		bknAccess = &bknBackendAccess{
 			logger:     conf.GetLogger(),
-			baseURL:    conf.OntologyManager.BuildURL("/api/ontology-manager"),
+			baseURL:    conf.BknBackend.BuildURL("/api/bkn-backend"),
 			httpClient: rest.NewHTTPClient(),
 		}
 	})
-	return omAccess
+	return bknAccess
 }
 
 // GetKnowledgeNetworkDetail 获取知识网络详情（include_detail=true, mode=export）
 // 对应 Python 的 _get_knowledge_network_detail
-func (oma *ontologyManagerAccess) GetKnowledgeNetworkDetail(ctx context.Context, knID string) (*interfaces.KnowledgeNetworkDetail, error) {
-	src := fmt.Sprintf("%s/in/v1/knowledge-networks/%s", oma.baseURL, knID)
+func (b *bknBackendAccess) GetKnowledgeNetworkDetail(ctx context.Context, knID string) (*interfaces.KnowledgeNetworkDetail, error) {
+	src := fmt.Sprintf("%s/in/v1/knowledge-networks/%s", b.baseURL, knID)
 	header := common.GetHeaderFromCtx(ctx)
 	header[rest.ContentTypeKey] = rest.ContentTypeJSON
 
@@ -58,25 +58,25 @@ func (oma *ontologyManagerAccess) GetKnowledgeNetworkDetail(ctx context.Context,
 	queryValues.Set("include_detail", "true")
 	queryValues.Set("mode", "export")
 
-	respCode, respBody, err := oma.httpClient.GetNoUnmarshal(ctx, src, queryValues, header)
+	respCode, respBody, err := b.httpClient.GetNoUnmarshal(ctx, src, queryValues, header)
 
 	result := &interfaces.KnowledgeNetworkDetail{ID: knID}
 	if err != nil {
-		oma.logger.WithContext(ctx).Errorf("[OntologyManagerAccess] GetKnowledgeNetworkDetail request failed, err: %v", err)
-		return result, fmt.Errorf("[OntologyManagerAccess] GetKnowledgeNetworkDetail request failed, err: %v", err)
+		b.logger.WithContext(ctx).Errorf("[BknBackendAccess] GetKnowledgeNetworkDetail request failed, err: %v", err)
+		return result, fmt.Errorf("[BknBackendAccess] GetKnowledgeNetworkDetail request failed, err: %v", err)
 	}
 
 	if respCode == http.StatusNotFound {
-		oma.logger.WithContext(ctx).Warnf("[OntologyManagerAccess] request not found, [%s]", src)
-		return result, fmt.Errorf("[OntologyManagerAccess] request not found, [%s]", src)
+		b.logger.WithContext(ctx).Warnf("[BknBackendAccess] request not found, [%s]", src)
+		return result, fmt.Errorf("[BknBackendAccess] request not found, [%s]", src)
 	}
 
 	if (respCode < http.StatusOK) || (respCode >= http.StatusMultipleChoices) {
-		oma.logger.Errorf("[OntologyManagerAccess] GetKnowledgeNetworkDetail get resp failed, [%s], %v\n", src, respBody)
+		b.logger.Errorf("[BknBackendAccess] GetKnowledgeNetworkDetail get resp failed, [%s], %v\n", src, respBody)
 
 		var baseError interfaces.KnBaseError
 		if err := sonic.Unmarshal(respBody, &baseError); err != nil {
-			oma.logger.Errorf("unmarshal KnBaseError failed: %v\n", err)
+			b.logger.Errorf("unmarshal KnBaseError failed: %v\n", err)
 			return result, err
 		}
 
@@ -95,7 +95,7 @@ func (oma *ontologyManagerAccess) GetKnowledgeNetworkDetail(ctx context.Context,
 	}
 
 	if err := sonic.Unmarshal(respBody, result); err != nil {
-		oma.logger.Errorf("[OntologyManagerAccess] GetKnowledgeNetworkDetail unmarshal failed: %v\n", err)
+		b.logger.Errorf("[BknBackendAccess] GetKnowledgeNetworkDetail unmarshal failed: %v\n", err)
 		return result, err
 	}
 
@@ -103,30 +103,30 @@ func (oma *ontologyManagerAccess) GetKnowledgeNetworkDetail(ctx context.Context,
 }
 
 // SearchObjectTypes 搜索对象类
-func (oma *ontologyManagerAccess) SearchObjectTypes(ctx context.Context, query *interfaces.QueryConceptsReq) (objectTypes *interfaces.ObjectTypeConcepts, err error) {
-	src := fmt.Sprintf("%s/in/v1/knowledge-networks/%s/object-types", oma.baseURL, query.KnID)
+func (b *bknBackendAccess) SearchObjectTypes(ctx context.Context, query *interfaces.QueryConceptsReq) (objectTypes *interfaces.ObjectTypeConcepts, err error) {
+	src := fmt.Sprintf("%s/in/v1/knowledge-networks/%s/object-types", b.baseURL, query.KnID)
 	header := common.GetHeaderFromCtx(ctx)
 	header["Content-Type"] = "application/json"
 	header["x-http-method-override"] = "GET"
-	respCode, respBody, err := oma.httpClient.PostNoUnmarshal(ctx, src, header, query)
+	respCode, respBody, err := b.httpClient.PostNoUnmarshal(ctx, src, header, query)
 
 	objectTypes = &interfaces.ObjectTypeConcepts{}
 	if err != nil {
-		oma.logger.WithContext(ctx).Errorf("[OntologyManagerAccess] SearchObjectTypes request failed, err: %v", err)
-		return objectTypes, fmt.Errorf("[OntologyManagerAccess] SearchObjectTypes request failed, err: %v", err)
+		b.logger.WithContext(ctx).Errorf("[BknBackendAccess] SearchObjectTypes request failed, err: %v", err)
+		return objectTypes, fmt.Errorf("[BknBackendAccess] SearchObjectTypes request failed, err: %v", err)
 	}
 
 	if respCode == http.StatusNotFound {
-		oma.logger.WithContext(ctx).Warnf("[OntologyManagerAccess] request not found, [%s]", src)
-		return objectTypes, fmt.Errorf("[OntologyManagerAccess] request not found, [%s]", src)
+		b.logger.WithContext(ctx).Warnf("[BknBackendAccess] request not found, [%s]", src)
+		return objectTypes, fmt.Errorf("[BknBackendAccess] request not found, [%s]", src)
 	}
 
 	if (respCode < http.StatusOK) || (respCode >= http.StatusMultipleChoices) {
-		oma.logger.Errorf("[OntologyManagerAccess] SearchObjectTypes， get resp failed, [%s], %v\n", src, respBody)
+		b.logger.Errorf("[BknBackendAccess] SearchObjectTypes， get resp failed, [%s], %v\n", src, respBody)
 
 		var baseError interfaces.KnBaseError
 		if err := sonic.Unmarshal(respBody, &baseError); err != nil {
-			oma.logger.Errorf("unmalshal KnBaseError failed: %v\n", err)
+			b.logger.Errorf("unmalshal KnBaseError failed: %v\n", err)
 			return objectTypes, err
 		}
 
@@ -146,7 +146,7 @@ func (oma *ontologyManagerAccess) SearchObjectTypes(ctx context.Context, query *
 
 	// 处理返回结果
 	if err := sonic.Unmarshal(respBody, objectTypes); err != nil {
-		oma.logger.Errorf("[OntologyManagerAccess]SearchObjectTypes unmalshal ObjectTypes failed: %v\n", err)
+		b.logger.Errorf("[BknBackendAccess] SearchObjectTypes unmarshal ObjectTypes failed: %v\n", err)
 		return nil, err
 	}
 
@@ -154,33 +154,33 @@ func (oma *ontologyManagerAccess) SearchObjectTypes(ctx context.Context, query *
 }
 
 // GetObjectTypeDetail 获取对象类详情
-func (oma *ontologyManagerAccess) GetObjectTypeDetail(ctx context.Context, knID string, otIds []string, includeDetail bool) ([]*interfaces.ObjectType, error) {
-	src := fmt.Sprintf("%s/in/v1/knowledge-networks/%s/object-types/%s", oma.baseURL, knID, strings.Join(otIds, ","))
+func (b *bknBackendAccess) GetObjectTypeDetail(ctx context.Context, knID string, otIds []string, includeDetail bool) ([]*interfaces.ObjectType, error) {
+	src := fmt.Sprintf("%s/in/v1/knowledge-networks/%s/object-types/%s", b.baseURL, knID, strings.Join(otIds, ","))
 	header := common.GetHeaderFromCtx(ctx)
 	header[rest.ContentTypeKey] = rest.ContentTypeJSON
 	header["x-http-method-override"] = "GET"
 	queryValues := url.Values{}
 	queryValues.Set("include_detail", strconv.FormatBool(includeDetail))
 
-	respCode, respBody, err := oma.httpClient.GetNoUnmarshal(ctx, src, queryValues, header)
+	respCode, respBody, err := b.httpClient.GetNoUnmarshal(ctx, src, queryValues, header)
 
 	var emptyObjectTypes []*interfaces.ObjectType
 	if err != nil {
-		oma.logger.WithContext(ctx).Errorf("[OntologyManagerAccess] GetObjectTypeDetail request failed, err: %v", err)
-		return emptyObjectTypes, fmt.Errorf("[OntologyManagerAccess] GetObjectTypeDetail request failed, err: %v", err)
+		b.logger.WithContext(ctx).Errorf("[BknBackendAccess] GetObjectTypeDetail request failed, err: %v", err)
+		return emptyObjectTypes, fmt.Errorf("[BknBackendAccess] GetObjectTypeDetail request failed, err: %v", err)
 	}
 
 	if respCode == http.StatusNotFound {
-		oma.logger.WithContext(ctx).Warnf("[OntologyManagerAccess] request not found, [%s]", src)
-		return emptyObjectTypes, fmt.Errorf("[OntologyManagerAccess] request not found, [%s]", src)
+		b.logger.WithContext(ctx).Warnf("[BknBackendAccess] request not found, [%s]", src)
+		return emptyObjectTypes, fmt.Errorf("[BknBackendAccess] request not found, [%s]", src)
 	}
 
 	if (respCode < http.StatusOK) || (respCode >= http.StatusMultipleChoices) {
-		oma.logger.Errorf("[OntologyManagerAccess] GetObjectTypeDetail get resp failed, [%s], %v\n", src, respBody)
+		b.logger.Errorf("[BknBackendAccess] GetObjectTypeDetail get resp failed, [%s], %v\n", src, respBody)
 
 		var baseError interfaces.KnBaseError
 		if err := sonic.Unmarshal(respBody, &baseError); err != nil {
-			oma.logger.Errorf("unmalshal KnBaseError failed: %v\n", err)
+			b.logger.Errorf("unmalshal KnBaseError failed: %v\n", err)
 			return emptyObjectTypes, err
 		}
 
@@ -203,7 +203,7 @@ func (oma *ontologyManagerAccess) GetObjectTypeDetail(ctx context.Context, knID 
 		Entries []*interfaces.ObjectType `json:"entries"`
 	}
 	if err := sonic.Unmarshal(respBody, &response); err != nil {
-		oma.logger.Errorf("[OntologyManagerAccess]GetObjectTypeDetail unmalshal ObjectTypes failed: %v\n", err)
+		b.logger.Errorf("[BknBackendAccess]GetObjectTypeDetail unmalshal ObjectTypes failed: %v\n", err)
 		return emptyObjectTypes, err
 	}
 
@@ -211,29 +211,29 @@ func (oma *ontologyManagerAccess) GetObjectTypeDetail(ctx context.Context, knID 
 }
 
 // SearchRelationTypes 搜索关系类
-func (oma *ontologyManagerAccess) SearchRelationTypes(ctx context.Context, query *interfaces.QueryConceptsReq) (releationTypes *interfaces.RelationTypeConcepts, err error) {
-	src := fmt.Sprintf("%s/in/v1/knowledge-networks/%s/relation-types", oma.baseURL, query.KnID)
+func (b *bknBackendAccess) SearchRelationTypes(ctx context.Context, query *interfaces.QueryConceptsReq) (releationTypes *interfaces.RelationTypeConcepts, err error) {
+	src := fmt.Sprintf("%s/in/v1/knowledge-networks/%s/relation-types", b.baseURL, query.KnID)
 	header := common.GetHeaderFromCtx(ctx)
 	header[rest.ContentTypeKey] = rest.ContentTypeJSON
 	header["x-http-method-override"] = "GET"
-	respCode, respBody, err := oma.httpClient.PostNoUnmarshal(ctx, src, header, query)
+	respCode, respBody, err := b.httpClient.PostNoUnmarshal(ctx, src, header, query)
 
 	if err != nil {
-		oma.logger.WithContext(ctx).Errorf("[OntologyManagerAccess] SearchRelationTypes request failed, err: %v", err)
-		return nil, fmt.Errorf("[OntologyManagerAccess] SearchRelationTypes request failed, err: %v", err)
+		b.logger.WithContext(ctx).Errorf("[BknBackendAccess] SearchRelationTypes request failed, err: %v", err)
+		return nil, fmt.Errorf("[BknBackendAccess] SearchRelationTypes request failed, err: %v", err)
 	}
 
 	if respCode == http.StatusNotFound {
-		oma.logger.WithContext(ctx).Warnf("[OntologyManagerAccess] request not found, [%s]", src)
-		return nil, fmt.Errorf("[OntologyManagerAccess] request not found, [%s]", src)
+		b.logger.WithContext(ctx).Warnf("[BknBackendAccess] request not found, [%s]", src)
+		return nil, fmt.Errorf("[BknBackendAccess] request not found, [%s]", src)
 	}
 
 	if (respCode < http.StatusOK) || (respCode >= http.StatusMultipleChoices) {
-		oma.logger.Errorf("[OntologyManagerAccess] SearchRelationTypes get resp failed, [%s], %v\n", src, respBody)
+		b.logger.Errorf("[BknBackendAccess] SearchRelationTypes get resp failed, [%s], %v\n", src, respBody)
 
 		var baseError interfaces.KnBaseError
 		if err := sonic.Unmarshal(respBody, &baseError); err != nil {
-			oma.logger.Errorf("unmalshal KnBaseError failed: %v\n", err)
+			b.logger.Errorf("unmalshal KnBaseError failed: %v\n", err)
 			return nil, err
 		}
 
@@ -254,7 +254,7 @@ func (oma *ontologyManagerAccess) SearchRelationTypes(ctx context.Context, query
 
 	// 处理返回结果
 	if err := sonic.Unmarshal(respBody, releationTypes); err != nil {
-		oma.logger.Errorf("[OntologyManagerAccess]SearchRelationTypes unmalshal RelationTypes failed: %v\n", err)
+		b.logger.Errorf("[BknBackendAccess]SearchRelationTypes unmalshal RelationTypes failed: %v\n", err)
 		return nil, err
 	}
 
@@ -262,33 +262,33 @@ func (oma *ontologyManagerAccess) SearchRelationTypes(ctx context.Context, query
 }
 
 // GetRelationTypeDetail 获取关系类详情
-func (oma *ontologyManagerAccess) GetRelationTypeDetail(ctx context.Context, knID string, rtIDs []string, includeDetail bool) ([]*interfaces.RelationType, error) {
-	src := fmt.Sprintf("%s/in/v1/knowledge-networks/%s/relation-types/%s", oma.baseURL, knID, strings.Join(rtIDs, ","))
+func (b *bknBackendAccess) GetRelationTypeDetail(ctx context.Context, knID string, rtIDs []string, includeDetail bool) ([]*interfaces.RelationType, error) {
+	src := fmt.Sprintf("%s/in/v1/knowledge-networks/%s/relation-types/%s", b.baseURL, knID, strings.Join(rtIDs, ","))
 	header := common.GetHeaderFromCtx(ctx)
 	header[rest.ContentTypeKey] = rest.ContentTypeJSON
 	header["x-http-method-override"] = "GET"
 	queryValues := url.Values{}
 	queryValues.Set("include_detail", strconv.FormatBool(includeDetail))
 
-	respCode, respBody, err := oma.httpClient.GetNoUnmarshal(ctx, src, queryValues, header)
+	respCode, respBody, err := b.httpClient.GetNoUnmarshal(ctx, src, queryValues, header)
 
 	var emptyRelationTypes []*interfaces.RelationType
 	if err != nil {
-		oma.logger.WithContext(ctx).Errorf("[OntologyManagerAccess] GetRelationTypeDetail request failed, err: %v", err)
-		return emptyRelationTypes, fmt.Errorf("[OntologyManagerAccess] GetRelationTypeDetail request failed, err: %v", err)
+		b.logger.WithContext(ctx).Errorf("[BknBackendAccess] GetRelationTypeDetail request failed, err: %v", err)
+		return emptyRelationTypes, fmt.Errorf("[BknBackendAccess] GetRelationTypeDetail request failed, err: %v", err)
 	}
 
 	if respCode == http.StatusNotFound {
-		oma.logger.WithContext(ctx).Warnf("[OntologyManagerAccess] request not found, [%s]", src)
-		return emptyRelationTypes, fmt.Errorf("[OntologyManagerAccess] request not found, [%s]", src)
+		b.logger.WithContext(ctx).Warnf("[BknBackendAccess] request not found, [%s]", src)
+		return emptyRelationTypes, fmt.Errorf("[BknBackendAccess] request not found, [%s]", src)
 	}
 
 	if (respCode < http.StatusOK) || (respCode >= http.StatusMultipleChoices) {
-		oma.logger.Errorf("[OntologyManagerAccess] GetRelationTypeDetail get resp failed, [%s], %v\n", src, respBody)
+		b.logger.Errorf("[BknBackendAccess] GetRelationTypeDetail get resp failed, [%s], %v\n", src, respBody)
 
 		var baseError interfaces.KnBaseError
 		if err := sonic.Unmarshal(respBody, &baseError); err != nil {
-			oma.logger.Errorf("unmalshal KnBaseError failed: %v\n", err)
+			b.logger.Errorf("unmalshal KnBaseError failed: %v\n", err)
 			return emptyRelationTypes, err
 		}
 
@@ -309,7 +309,7 @@ func (oma *ontologyManagerAccess) GetRelationTypeDetail(ctx context.Context, knI
 	// 处理返回结果
 	var releationTypes []*interfaces.RelationType
 	if err := sonic.Unmarshal(respBody, &releationTypes); err != nil {
-		oma.logger.Errorf("[OntologyManagerAccess]GetRelationTypeDetail unmalshal releationTypes failed: %v\n", err)
+		b.logger.Errorf("[BknBackendAccess]GetRelationTypeDetail unmalshal releationTypes failed: %v\n", err)
 		return emptyRelationTypes, err
 	}
 
@@ -317,29 +317,29 @@ func (oma *ontologyManagerAccess) GetRelationTypeDetail(ctx context.Context, knI
 }
 
 // SearchActionTypes 搜索行动类
-func (oma *ontologyManagerAccess) SearchActionTypes(ctx context.Context, query *interfaces.QueryConceptsReq) (actionTypes *interfaces.ActionTypeConcepts, err error) {
-	src := fmt.Sprintf("%s/in/v1/knowledge-networks/%s/action-types", oma.baseURL, query.KnID)
+func (b *bknBackendAccess) SearchActionTypes(ctx context.Context, query *interfaces.QueryConceptsReq) (actionTypes *interfaces.ActionTypeConcepts, err error) {
+	src := fmt.Sprintf("%s/in/v1/knowledge-networks/%s/action-types", b.baseURL, query.KnID)
 	header := common.GetHeaderFromCtx(ctx)
 	header[rest.ContentTypeKey] = rest.ContentTypeJSON
 	header["x-http-method-override"] = "GET"
-	respCode, respBody, err := oma.httpClient.PostNoUnmarshal(ctx, src, header, query)
+	respCode, respBody, err := b.httpClient.PostNoUnmarshal(ctx, src, header, query)
 
 	if err != nil {
-		oma.logger.WithContext(ctx).Errorf("[OntologyManagerAccess] SearchActionTypes request failed, err: %v", err)
-		return nil, fmt.Errorf("[OntologyManagerAccess] SearchActionTypes request failed, err: %v", err)
+		b.logger.WithContext(ctx).Errorf("[BknBackendAccess] SearchActionTypes request failed, err: %v", err)
+		return nil, fmt.Errorf("[BknBackendAccess] SearchActionTypes request failed, err: %v", err)
 	}
 
 	if respCode == http.StatusNotFound {
-		oma.logger.WithContext(ctx).Warnf("[OntologyManagerAccess] request not found, [%s]", src)
-		return nil, fmt.Errorf("[OntologyManagerAccess] request not found, [%s]", src)
+		b.logger.WithContext(ctx).Warnf("[BknBackendAccess] request not found, [%s]", src)
+		return nil, fmt.Errorf("[BknBackendAccess] request not found, [%s]", src)
 	}
 
 	if (respCode < http.StatusOK) || (respCode >= http.StatusMultipleChoices) {
-		oma.logger.Errorf("[OntologyManagerAccess] SearchActionTypes get resp failed, [%s], %v\n", src, respBody)
+		b.logger.Errorf("[BknBackendAccess] SearchActionTypes get resp failed, [%s], %v\n", src, respBody)
 
 		var baseError interfaces.KnBaseError
 		if err := sonic.Unmarshal(respBody, &baseError); err != nil {
-			oma.logger.Errorf("unmalshal KnBaseError failed: %v\n", err)
+			b.logger.Errorf("unmalshal KnBaseError failed: %v\n", err)
 			return nil, err
 		}
 
@@ -360,7 +360,7 @@ func (oma *ontologyManagerAccess) SearchActionTypes(ctx context.Context, query *
 
 	// 处理返回结果
 	if err := sonic.Unmarshal(respBody, actionTypes); err != nil {
-		oma.logger.Errorf("[OntologyManagerAccess]SearchActionTypes unmalshal actionTypes failed: %v\n", err)
+		b.logger.Errorf("[BknBackendAccess]SearchActionTypes unmalshal actionTypes failed: %v\n", err)
 		return nil, err
 	}
 
@@ -368,33 +368,33 @@ func (oma *ontologyManagerAccess) SearchActionTypes(ctx context.Context, query *
 }
 
 // GetActionTypeDetail 获取行动类详情
-func (oma *ontologyManagerAccess) GetActionTypeDetail(ctx context.Context, knID string, atIDs []string, includeDetail bool) ([]*interfaces.ActionType, error) {
-	src := fmt.Sprintf("%s/in/v1/knowledge-networks/%s/action-types/%s", oma.baseURL, knID, strings.Join(atIDs, ","))
+func (b *bknBackendAccess) GetActionTypeDetail(ctx context.Context, knID string, atIDs []string, includeDetail bool) ([]*interfaces.ActionType, error) {
+	src := fmt.Sprintf("%s/in/v1/knowledge-networks/%s/action-types/%s", b.baseURL, knID, strings.Join(atIDs, ","))
 	header := common.GetHeaderFromCtx(ctx)
 	header[rest.ContentTypeKey] = rest.ContentTypeJSON
 	header["x-http-method-override"] = "GET"
 	queryValues := url.Values{}
 	queryValues.Set("include_detail", strconv.FormatBool(includeDetail))
 
-	respCode, respBody, err := oma.httpClient.GetNoUnmarshal(ctx, src, queryValues, header)
+	respCode, respBody, err := b.httpClient.GetNoUnmarshal(ctx, src, queryValues, header)
 
 	var emptyActionTypes []*interfaces.ActionType
 	if err != nil {
-		oma.logger.WithContext(ctx).Errorf("[OntologyManagerAccess] GetActionTypeDetail request failed, err: %v", err)
-		return emptyActionTypes, fmt.Errorf("[OntologyManagerAccess] GetActionTypeDetail request failed, err: %v", err)
+		b.logger.WithContext(ctx).Errorf("[BknBackendAccess] GetActionTypeDetail request failed, err: %v", err)
+		return emptyActionTypes, fmt.Errorf("[BknBackendAccess] GetActionTypeDetail request failed, err: %v", err)
 	}
 
 	if respCode == http.StatusNotFound {
-		oma.logger.WithContext(ctx).Warnf("[OntologyManagerAccess] request not found, [%s]", src)
-		return emptyActionTypes, fmt.Errorf("[OntologyManagerAccess] request not found, [%s]", src)
+		b.logger.WithContext(ctx).Warnf("[BknBackendAccess] request not found, [%s]", src)
+		return emptyActionTypes, fmt.Errorf("[BknBackendAccess] request not found, [%s]", src)
 	}
 
 	if (respCode < http.StatusOK) || (respCode >= http.StatusMultipleChoices) {
-		oma.logger.Errorf("[OntologyManagerAccess] GetActionTypeDetail get resp failed, [%s], %v\n", src, respBody)
+		b.logger.Errorf("[BknBackendAccess] GetActionTypeDetail get resp failed, [%s], %v\n", src, respBody)
 
 		var baseError interfaces.KnBaseError
 		if err := sonic.Unmarshal(respBody, &baseError); err != nil {
-			oma.logger.Errorf("unmalshal KnBaseError failed: %v\n", err)
+			b.logger.Errorf("unmalshal KnBaseError failed: %v\n", err)
 			return emptyActionTypes, err
 		}
 
@@ -415,7 +415,7 @@ func (oma *ontologyManagerAccess) GetActionTypeDetail(ctx context.Context, knID 
 	// 处理返回结果
 	var actionTypes []*interfaces.ActionType
 	if err := sonic.Unmarshal(respBody, &actionTypes); err != nil {
-		oma.logger.Errorf("[OntologyManagerAccess]GetActionTypeDetail unmalshal actionTypes failed: %v\n", err)
+		b.logger.Errorf("[BknBackendAccess]GetActionTypeDetail unmalshal actionTypes failed: %v\n", err)
 		return emptyActionTypes, err
 	}
 
@@ -423,8 +423,8 @@ func (oma *ontologyManagerAccess) GetActionTypeDetail(ctx context.Context, knID 
 }
 
 // CreateFullBuildOntologyJob Create a full ontology build job
-func (oma *ontologyManagerAccess) CreateFullBuildOntologyJob(ctx context.Context, knID string, req *interfaces.CreateFullBuildOntologyJobReq) (resp *interfaces.CreateJobResp, err error) {
-	src := fmt.Sprintf("%s/in/v1/knowledge-networks/%s/jobs", oma.baseURL, knID)
+func (b *bknBackendAccess) CreateFullBuildOntologyJob(ctx context.Context, knID string, req *interfaces.CreateFullBuildOntologyJobReq) (resp *interfaces.CreateJobResp, err error) {
+	src := fmt.Sprintf("%s/in/v1/knowledge-networks/%s/jobs", b.baseURL, knID)
 	header := common.GetHeaderFromCtx(ctx)
 	header[rest.ContentTypeKey] = rest.ContentTypeJSON
 
@@ -434,23 +434,23 @@ func (oma *ontologyManagerAccess) CreateFullBuildOntologyJob(ctx context.Context
 		"job_type": interfaces.OntologyJobTypeFull,
 	}
 
-	respCode, respBody, err := oma.httpClient.PostNoUnmarshal(ctx, src, header, jobReq)
+	respCode, respBody, err := b.httpClient.PostNoUnmarshal(ctx, src, header, jobReq)
 	if err != nil {
-		oma.logger.WithContext(ctx).Errorf("[OntologyManagerAccess] CreateFullBuildOntologyJob request failed, err: %v", err)
-		return nil, fmt.Errorf("[OntologyManagerAccess] CreateFullBuildOntologyJob request failed, err: %v", err)
+		b.logger.WithContext(ctx).Errorf("[BknBackendAccess] CreateFullBuildOntologyJob request failed, err: %v", err)
+		return nil, fmt.Errorf("[BknBackendAccess] CreateFullBuildOntologyJob request failed, err: %v", err)
 	}
 
 	if respCode == http.StatusNotFound {
-		oma.logger.WithContext(ctx).Warnf("[OntologyManagerAccess] request not found, [%s]", src)
-		return nil, fmt.Errorf("[OntologyManagerAccess] request not found, [%s]", src)
+		b.logger.WithContext(ctx).Warnf("[BknBackendAccess] request not found, [%s]", src)
+		return nil, fmt.Errorf("[BknBackendAccess] request not found, [%s]", src)
 	}
 
 	if (respCode < http.StatusOK) || (respCode >= http.StatusMultipleChoices) {
-		oma.logger.Errorf("[OntologyManagerAccess] CreateFullBuildOntologyJob get resp failed, [%s], %v\n", src, respBody)
+		b.logger.Errorf("[BknBackendAccess] CreateFullBuildOntologyJob get resp failed, [%s], %v\n", src, respBody)
 
 		var baseError interfaces.KnBaseError
 		if err := sonic.Unmarshal(respBody, &baseError); err != nil {
-			oma.logger.Errorf("unmarshal KnBaseError failed: %v\n", err)
+			b.logger.Errorf("unmarshal KnBaseError failed: %v\n", err)
 			return nil, err
 		}
 
@@ -466,7 +466,7 @@ func (oma *ontologyManagerAccess) CreateFullBuildOntologyJob(ctx context.Context
 
 	resp = &interfaces.CreateJobResp{}
 	if err := sonic.Unmarshal(respBody, resp); err != nil {
-		oma.logger.Errorf("[OntologyManagerAccess] CreateFullBuildOntologyJob unmarshal response failed: %v\n", err)
+		b.logger.Errorf("[BknBackendAccess] CreateFullBuildOntologyJob unmarshal response failed: %v\n", err)
 		return nil, err
 	}
 
@@ -474,8 +474,8 @@ func (oma *ontologyManagerAccess) CreateFullBuildOntologyJob(ctx context.Context
 }
 
 // ListOntologyJobs List ontology jobs with filters
-func (oma *ontologyManagerAccess) ListOntologyJobs(ctx context.Context, knID string, req *interfaces.ListOntologyJobsReq) (resp *interfaces.ListOntologyJobsResp, err error) {
-	src := fmt.Sprintf("%s/in/v1/knowledge-networks/%s/jobs", oma.baseURL, knID)
+func (b *bknBackendAccess) ListOntologyJobs(ctx context.Context, knID string, req *interfaces.ListOntologyJobsReq) (resp *interfaces.ListOntologyJobsResp, err error) {
+	src := fmt.Sprintf("%s/in/v1/knowledge-networks/%s/jobs", b.baseURL, knID)
 	header := common.GetHeaderFromCtx(ctx)
 	header[rest.ContentTypeKey] = rest.ContentTypeJSON
 
@@ -500,23 +500,23 @@ func (oma *ontologyManagerAccess) ListOntologyJobs(ctx context.Context, knID str
 		queryValues.Set("offset", strconv.Itoa(req.Offset))
 	}
 
-	respCode, respBody, err := oma.httpClient.GetNoUnmarshal(ctx, src, queryValues, header)
+	respCode, respBody, err := b.httpClient.GetNoUnmarshal(ctx, src, queryValues, header)
 	if err != nil {
-		oma.logger.WithContext(ctx).Errorf("[OntologyManagerAccess] ListOntologyJobs request failed, err: %v", err)
-		return nil, fmt.Errorf("[OntologyManagerAccess] ListOntologyJobs request failed, err: %v", err)
+		b.logger.WithContext(ctx).Errorf("[BknBackendAccess] ListOntologyJobs request failed, err: %v", err)
+		return nil, fmt.Errorf("[BknBackendAccess] ListOntologyJobs request failed, err: %v", err)
 	}
 
 	if respCode == http.StatusNotFound {
-		oma.logger.WithContext(ctx).Warnf("[OntologyManagerAccess] request not found, [%s]", src)
-		return nil, fmt.Errorf("[OntologyManagerAccess] request not found, [%s]", src)
+		b.logger.WithContext(ctx).Warnf("[BknBackendAccess] request not found, [%s]", src)
+		return nil, fmt.Errorf("[BknBackendAccess] request not found, [%s]", src)
 	}
 
 	if (respCode < http.StatusOK) || (respCode >= http.StatusMultipleChoices) {
-		oma.logger.Errorf("[OntologyManagerAccess] ListOntologyJobs get resp failed, [%s], %v\n", src, respBody)
+		b.logger.Errorf("[BknBackendAccess] ListOntologyJobs get resp failed, [%s], %v\n", src, respBody)
 
 		var baseError interfaces.KnBaseError
 		if err := sonic.Unmarshal(respBody, &baseError); err != nil {
-			oma.logger.Errorf("unmarshal KnBaseError failed: %v\n", err)
+			b.logger.Errorf("unmarshal KnBaseError failed: %v\n", err)
 			return nil, err
 		}
 
@@ -536,7 +536,7 @@ func (oma *ontologyManagerAccess) ListOntologyJobs(ctx context.Context, knID str
 	}
 
 	if err := sonic.Unmarshal(respBody, resp); err != nil {
-		oma.logger.Errorf("[OntologyManagerAccess] ListOntologyJobs unmarshal response failed: %v\n", err)
+		b.logger.Errorf("[BknBackendAccess] ListOntologyJobs unmarshal response failed: %v\n", err)
 		return nil, err
 	}
 

@@ -18,7 +18,7 @@ func TestConceptRetrieval_MainFlow(t *testing.T) {
 		name        string
 		req         *interfaces.KnSearchLocalRequest
 		config      *interfaces.KnSearchConceptRetrievalConfig
-		mockSetup   func(*mockOntologyManager, *mockRerankClient)
+		mockSetup   func(*mockBknBackend, *mockRerankClient)
 		checkResult func(*testing.T, *interfaces.KnSearchConceptResult, error)
 	}{
 		{
@@ -28,7 +28,7 @@ func TestConceptRetrieval_MainFlow(t *testing.T) {
 				Query: "对象类型_0",
 			},
 			config: baseConfig,
-			mockSetup: func(m *mockOntologyManager, r *mockRerankClient) {
+			mockSetup: func(m *mockBknBackend, r *mockRerankClient) {
 				m.networkDetail = mockDetail
 			},
 			checkResult: func(t *testing.T, res *interfaces.KnSearchConceptResult, err error) {
@@ -57,7 +57,7 @@ func TestConceptRetrieval_MainFlow(t *testing.T) {
 				KnID: "129",
 			},
 			config: baseConfig,
-			mockSetup: func(m *mockOntologyManager, r *mockRerankClient) {
+			mockSetup: func(m *mockBknBackend, r *mockRerankClient) {
 				m.networkError = errors.New("network error")
 			},
 			checkResult: func(t *testing.T, res *interfaces.KnSearchConceptResult, err error) {
@@ -78,7 +78,7 @@ func TestConceptRetrieval_MainFlow(t *testing.T) {
 				cfg.EnableCoarseRecall = boolPtr(false)
 				return cfg
 			}(),
-			mockSetup: func(m *mockOntologyManager, r *mockRerankClient) {
+			mockSetup: func(m *mockBknBackend, r *mockRerankClient) {
 				m.networkDetail = mockDetail
 				r.rerankResp = &interfaces.RerankResp{
 					Results: []interfaces.RerankResult{
@@ -103,7 +103,7 @@ func TestConceptRetrieval_MainFlow(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			mockManager := &mockOntologyManager{}
+			mockManager := &mockBknBackend{}
 			mockRerank := &mockRerankClient{}
 			if tt.mockSetup != nil {
 				tt.mockSetup(mockManager, mockRerank)
@@ -111,7 +111,7 @@ func TestConceptRetrieval_MainFlow(t *testing.T) {
 
 			svc := &localSearchImpl{
 				logger:          &mockLogger{},
-				ontologyManager: mockManager,
+				bknBackend: mockManager,
 				rerankClient:    mockRerank,
 			}
 
@@ -134,10 +134,10 @@ func TestConceptRetrieval_NoRelations_ObjectTopByScore(t *testing.T) {
 	cfg.EnableCoarseRecall = boolPtr(false)
 	cfg.TopK = 5
 
-	mockManager := &mockOntologyManager{networkDetail: detail}
+	mockManager := &mockBknBackend{networkDetail: detail}
 	svc := &localSearchImpl{
 		logger:          &mockLogger{},
-		ontologyManager: mockManager,
+		bknBackend: mockManager,
 	}
 
 	req := &interfaces.KnSearchLocalRequest{KnID: "129", Query: "q"}
@@ -176,10 +176,10 @@ func TestConceptRetrieval_ObjectFallback_FillByScore(t *testing.T) {
 	cfg.EnableCoarseRecall = boolPtr(false)
 	cfg.TopK = 10
 
-	mockManager := &mockOntologyManager{networkDetail: detail}
+	mockManager := &mockBknBackend{networkDetail: detail}
 	svc := &localSearchImpl{
 		logger:          &mockLogger{},
-		ontologyManager: mockManager,
+		bknBackend: mockManager,
 	}
 
 	req := &interfaces.KnSearchLocalRequest{KnID: "129", Query: "q"}
@@ -211,7 +211,7 @@ func TestConceptRetrieval_CoarseRecall(t *testing.T) {
 	config := DefaultConceptRetrievalConfig()
 	config.CoarseMinRelationCount = 5000 // 设定阈值
 
-	mockManager := &mockOntologyManager{
+	mockManager := &mockBknBackend{
 		networkDetail: mockDetail,
 		// 模拟粗召回返回部分对象和关系
 		objectTypesResp: &interfaces.ObjectTypeConcepts{
@@ -228,7 +228,7 @@ func TestConceptRetrieval_CoarseRecall(t *testing.T) {
 
 	svc := &localSearchImpl{
 		logger:          &mockLogger{},
-		ontologyManager: mockManager,
+		bknBackend: mockManager,
 	}
 
 	req := &interfaces.KnSearchLocalRequest{

@@ -33,7 +33,7 @@ type Config struct {
 	Project             Project               `yaml:"project"`
 	OAuth               OAuthConfig           `yaml:"oauth"`
 	UserMgnt            PrivateBaseConfig     `yaml:"user_management"`
-	OntologyManager     PrivateBaseConfig     `yaml:"ontology_manager"`
+	BknBackend          PrivateBaseConfig     `yaml:"bkn_backend"`
 	OntologyQuery       PrivateBaseConfig     `yaml:"ontology_query"`
 	AgentApp            PrivateBaseConfig     `yaml:"agent_app"`
 	OperatorIntegration PrivateBaseConfig     `yaml:"operator_integration"` // Operator integration service configuration
