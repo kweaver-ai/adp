@@ -196,8 +196,10 @@ func (fs *Service) fetchSqlQuery(ctx context.Context, query *interfaces.FetchQue
 			fs.cleanQuery(queryCacheKey, resultCache)
 		} else if err != nil { // 处理查询错误
 			logger.Errorf("Sql: %s, queryId: %s, slug: %s, fetch query failed with error: %v", query.Sql, queryId, slug, err)
-			fs.cleanQuery(queryCacheKey, resultCache)
-		} else if resultCache.ResultSet == nil && len(resultCache.ResultChan) == 0 { // 处理查询完成
+			if !strings.Contains(err.Error(), "Query timeout") {
+				fs.cleanQuery(queryCacheKey, resultCache)
+			}
+		} else if resultCache.ResultSet == nil && len(resultCache.ResultChan) == 0 && len(resultCache.Columns) > 0 { // 处理查询完成
 			logger.Debugf("Sql: %s, queryId: %s, slug: %s, query completed", query.Sql, queryId, slug)
 			fs.cleanQuery(queryCacheKey, resultCache)
 		} else if query.Type == 1 { // 处理同步查询
@@ -209,133 +211,159 @@ func (fs *Service) fetchSqlQuery(ctx context.Context, query *interfaces.FetchQue
 		logger.Debugf("Fetch sql query in %v, sql: %s, queryId: %s, slug: %s", time.Since(startTime), query.Sql, queryId, slug)
 	}()
 
-	logger.Infof("Original SQL: %s", query.Sql)
+	// 提交查询任务到查询池
+	err = fs.queryPool.Submit(func() {
 
-	//提取表名
-	tablesResult, err := sqlglot.ExtractTables(query.Sql, "trino")
-	if err != nil {
-		logger.Errorf("Extract tables failed: %s", err.Error())
-		return nil, rest.NewHTTPError(ctx, http.StatusInternalServerError, rest.PublicError_InternalServerError).
-			WithErrorDetails(err.Error())
-	}
-	if len(tablesResult.Tables) == 0 {
-		logger.Errorf("Extract tables failed: sql not contain table")
-		return nil, rest.NewHTTPError(ctx, http.StatusBadRequest, rest.PublicError_BadRequest).
-			WithErrorDetails("Sql not contain table")
-	}
+		ctx := context.Background()
 
-	catalog := ""
-	for _, table := range tablesResult.Tables {
-		if catalog == "" && table.Catalog != "" {
-			catalog = table.Catalog
-		}
-		if catalog != "" && table.Catalog != "" && table.Catalog != catalog {
-			catalog = ""
-			break
-		}
-	}
+		defer func() {
+			if r := recover(); r != nil {
+				logger.Errorf("Sql: %s, queryId: %s, slug: %s, query panic in goroutine: %v", query.Sql, queryId, slug, r)
+				resultCache.Error = fmt.Errorf("query panic: %v", r)
+			}
+		}()
 
-	if catalog != "" { //单源查询
-		logger.Infof("Single-source query, SQL: %s", query.Sql)
-		//获取数据源id对应的数据源信息
-		dataSource, err := fs.dataConnectionAccess.GetDataSourceById(ctx, query.DataSourceId)
+		logger.Infof("Original SQL: %s", query.Sql)
+
+		// 提取表名
+		tablesResult, err := sqlglot.ExtractTables(query.Sql, "trino")
 		if err != nil {
-			logger.Errorf("Get data source failed: %s", err.Error())
-			return nil, rest.NewHTTPError(ctx, http.StatusInternalServerError, rest.PublicError_InternalServerError).
-				WithErrorDetails(err.Error())
+			logger.Errorf("Extract tables failed: %s", err.Error())
+			resultCache.Error = err
+			return
+		}
+		if len(tablesResult.Tables) == 0 {
+			logger.Errorf("Extract tables failed: sql not contain table")
+			resultCache.Error = rest.NewHTTPError(ctx, http.StatusBadRequest, rest.PublicError_BadRequest).
+				WithErrorDetails("Sql not contain table")
+			return
 		}
 
-		//校验data_source_id和catalog是否匹配
-		if dataSource.BinData.CatalogName != catalog {
-			logger.Errorf("Catalog name not match: %s != %s", dataSource.BinData.CatalogName, catalog)
-			return nil, rest.NewHTTPError(ctx, http.StatusBadRequest, rest.PublicError_BadRequest).
-				WithErrorDetails("catalog name not match")
+		catalog := ""
+		for _, table := range tablesResult.Tables {
+			if catalog == "" && table.Catalog != "" {
+				catalog = table.Catalog
+			}
+			if catalog != "" && table.Catalog != "" && table.Catalog != catalog {
+				catalog = ""
+				break
+			}
 		}
 
-		//根据数据源类型创建连接器
-		connector, err := sql_connectors.NewConnectorHandler(dataSource)
-		if err != nil {
-			logger.Errorf("New connector handler failed: %s", err.Error())
-
-			if !strings.Contains(err.Error(), "unsupported data source type") {
-				return nil, rest.NewHTTPError(ctx, http.StatusInternalServerError, rest.PublicError_InternalServerError).
-					WithErrorDetails(err.Error())
+		if catalog != "" { // 单源查询
+			logger.Infof("Single-source query, SQL: %s", query.Sql)
+			// 获取数据源id对应的数据源信息
+			dataSource, err := fs.dataConnectionAccess.GetDataSourceById(ctx, query.DataSourceId)
+			if err != nil {
+				logger.Errorf("Get data source failed: %s", err.Error())
+				resultCache.Error = err
+				return
 			}
 
-			// 数据源类型连接器未适配，查询退化，转发给Etrino
-			logger.Infof("Degradation to Etrino, SQL: %s", query.Sql)
-			err := fs.getDataFromEtrino(ctx, dataSource.Type, query.Sql, queryId, slug)
-			if err != nil {
-				return nil, err
+			// 校验data_source_id和catalog是否匹配
+			if dataSource.BinData.CatalogName != catalog {
+				logger.Errorf("Catalog name not match: %s != %s", dataSource.BinData.CatalogName, catalog)
+				resultCache.Error = rest.NewHTTPError(ctx, http.StatusBadRequest, rest.PublicError_BadRequest).
+					WithErrorDetails("catalog name not match")
+				return
 			}
-		} else {
-			//去除sql中的catalog.
-			sql := strings.ReplaceAll(query.Sql, fmt.Sprintf("%s.", catalog), "")
 
-			// 直连查询获取结果集
-			logger.Infof("Direct connection query, SQL: %s", sql)
-			resultSet, err := connector.GetResultSet(sql)
+			// 根据数据源类型创建连接器
+			connector, err := sql_connectors.NewConnectorHandler(dataSource)
 			if err != nil {
-				logger.Errorf("Direct connection SQL query failed, %s", err.Error())
+				logger.Errorf("New connector handler failed: %s", err.Error())
 
-				// 方言转化
-				sqlParseResult, err := sqlglot.TranspileSQL(sql, "trino", dataSource.Type)
-				if err != nil {
-					logger.Errorf("Transpile SQL failed: %s", err.Error())
-					// 查询退化，转发给Etrino
-					logger.Infof("Degradation to Etrino query, SQL: %s", query.Sql)
-					err := fs.getDataFromEtrino(ctx, dataSource.Type, query.Sql, queryId, slug)
-					if err != nil {
-						return nil, err
-					}
-				} else {
-					// 直连查询获取结果集
-					logger.Infof("Transpiled SQL query, SQL: %s", sqlParseResult.SQL)
-					connector, err = sql_connectors.NewConnectorHandler(dataSource)
-					if err != nil {
-						logger.Errorf("New connector handler failed: %s", err.Error())
+				if !strings.Contains(err.Error(), "unsupported data source type") {
+					resultCache.Error = err
+					return
+				}
 
-						// 数据源类型连接器未适配，查询退化，转发给Etrino
-						logger.Infof("Degradation to Etrino, SQL: %s", query.Sql)
-						err := fs.getDataFromEtrino(ctx, dataSource.Type, query.Sql, queryId, slug)
-						if err != nil {
-							return nil, err
-						}
-					} else {
-						resultSet, err = connector.GetResultSet(sqlParseResult.SQL)
-						if err != nil {
-							logger.Errorf("Transpiled SQL query failed, %s", err.Error())
-
-							// 查询退化，转发给Etrino
-							logger.Infof("Degradation to Etrino query, SQL: %s", query.Sql)
-							err := fs.getDataFromEtrino(ctx, dataSource.Type, query.Sql, queryId, slug)
-							if err != nil {
-								return nil, err
-							}
-						} else {
-							// 直连数据查询
-							err = fs.getDataFromQueryResult(ctx, dataSource.Type, connector, resultSet, queryId, slug)
-							if err != nil {
-								return nil, err
-							}
-						}
-					}
+				// 数据源类型连接器未适配，查询退化，转发给Etrino
+				logger.Infof("Degradation to Etrino, SQL: %s", query.Sql)
+				if err := fs.getDataFromEtrino(ctx, dataSource.Type, query.Sql, queryId, slug); err != nil {
+					resultCache.Error = err
+					return
 				}
 			} else {
-				// 直连数据查询
-				err = fs.getDataFromQueryResult(ctx, dataSource.Type, connector, resultSet, queryId, slug)
+				// 去除sql中的catalog.
+				sql := strings.ReplaceAll(query.Sql, fmt.Sprintf("%s.", catalog), "")
+
+				// 直连查询获取结果集
+				logger.Infof("Direct connection query, SQL: %s", sql)
+				resultSet, err := connector.GetResultSet(sql)
 				if err != nil {
-					return nil, err
+					logger.Errorf("Direct connection SQL query failed, %s", err.Error())
+
+					// 方言转化
+					sqlParseResult, err := sqlglot.TranspileSQL(sql, "trino", dataSource.Type)
+					if err != nil {
+						logger.Errorf("Transpile SQL failed: %s", err.Error())
+						// 查询退化，转发给Etrino
+						logger.Infof("Degradation to Etrino query, SQL: %s", query.Sql)
+						err := fs.getDataFromEtrino(ctx, dataSource.Type, query.Sql, queryId, slug)
+						if err != nil {
+							resultCache.Error = err
+							return
+						}
+					} else {
+						// 直连查询获取结果集
+						logger.Infof("Transpiled SQL query, SQL: %s", sqlParseResult.SQL)
+						connector, err = sql_connectors.NewConnectorHandler(dataSource)
+						if err != nil {
+							logger.Errorf("New connector handler failed: %s", err.Error())
+
+							// 数据源类型连接器未适配，查询退化，转发给Etrino
+							logger.Infof("Degradation to Etrino, SQL: %s", query.Sql)
+							err := fs.getDataFromEtrino(ctx, dataSource.Type, query.Sql, queryId, slug)
+							if err != nil {
+								resultCache.Error = err
+								return
+							}
+						} else {
+							resultSet, err = connector.GetResultSet(sqlParseResult.SQL)
+							if err != nil {
+								logger.Errorf("Transpiled SQL query failed, %s", err.Error())
+
+								// 查询退化，转发给Etrino
+								logger.Infof("Degradation to Etrino query, SQL: %s", query.Sql)
+								err := fs.getDataFromEtrino(ctx, dataSource.Type, query.Sql, queryId, slug)
+								if err != nil {
+									resultCache.Error = err
+									return
+								}
+							} else {
+								// 直连数据查询
+								err = fs.getDataFromQueryResult(ctx, dataSource.Type, connector, resultSet, queryId, slug)
+								if err != nil {
+									resultCache.Error = err
+									return
+								}
+							}
+						}
+					}
+				} else {
+					// 直连数据查询
+					err = fs.getDataFromQueryResult(ctx, dataSource.Type, connector, resultSet, queryId, slug)
+					if err != nil {
+						resultCache.Error = err
+						return
+					}
 				}
 			}
+		} else {
+			// 多源查询，转发给Etrino
+			logger.Infof("Multi-source query, degradation to Etrino query, SQL: %s", query.Sql)
+			if err := fs.getDataFromEtrino(ctx, "", query.Sql, queryId, slug); err != nil {
+				resultCache.Error = err
+				return
+			}
 		}
-	} else {
-		//多源查询，转发给Etrino
-		logger.Infof("Multi-source query, degradation to Etrino query, SQL: %s", query.Sql)
-		err := fs.getDataFromEtrino(ctx, "", query.Sql, queryId, slug)
-		if err != nil {
-			return nil, err
-		}
+	})
+
+	if err != nil {
+		logger.Errorf("Submit query to pool failed, %s", err.Error())
+		return nil, rest.NewHTTPError(ctx, http.StatusInternalServerError, rest.PublicError_InternalServerError).
+			WithErrorDetails(err.Error())
 	}
 
 	// 处理查询结果
@@ -349,70 +377,54 @@ func (fs *Service) getDataFromQueryResult(ctx context.Context, dsType string, co
 
 	existingCache, ok := fs.queryCache.Load(queryCacheKey)
 	if !ok {
-		logger.Errorf("Query does not exist, queryId: %s, slug: %s", queryId, slug)
-		return rest.NewHTTPError(ctx, http.StatusInternalServerError, rest.PublicError_InternalServerError).
-			WithErrorDetails("Query does not exist")
+		logger.Errorf("QueryId: %s, slug: %s, query timeout", queryId, slug)
+		return rest.NewHTTPError(ctx, http.StatusRequestTimeout, rest.PublicError_InternalServerError).
+			WithErrorDetails("Query timeout")
 	}
 	resultCache, _ := existingCache.(*interfaces.ResultCache)
 
 	resultCache.ResultSet = resultSet
 
-	err := fs.queryPool.Submit(func() {
-
-		defer func() {
-			if r := recover(); r != nil {
-				err := fmt.Errorf("QueryId: %s, slug: %s, direct query panic in goroutine: %v", queryId, slug, r)
-				logger.Error(err)
-				fs.storeToCache(resultCache, nil, nil, nil, err)
-				connector.Close()
-			}
-			logger.Debugf("QueryId: %s, slug: %s, direct query goroutine exit", queryId, slug)
-		}()
-
-		// 获取列信息
-		columns, err := connector.GetColumns(resultSet)
-		if err != nil {
-			logger.Error(fmt.Errorf("QueryId: %s, slug: %s, get columns error: %v", queryId, slug, err))
-			fs.storeToCache(resultCache, nil, nil, nil, err)
-		} else {
-			// 映射列类型到 Vega 类型
-			if err := fs.mapColumnTypes(ctx, dsType, columns); err != nil {
-				logger.Error(fmt.Errorf("QueryId: %s, slug: %s, map column types error: %v", queryId, slug, err))
-			}
-		}
-
-		for {
-			// 如果缓存不存在, 则退出循环
-			if _, ok := fs.queryCache.Load(queryCacheKey); !ok {
-				connector.Close()
-				break
-			}
-
-			// 执行查询
-			resultSet, data, err := connector.GetData(resultSet, len(columns), fs.appSetting.QuerySetting.DataQuerySize)
-
-			// 缓存结果
-			fs.storeToCache(resultCache, resultSet, columns, data, err)
-
-			// 如果发生错误，退出循环
-			if err != nil {
-				break
-			}
-
-			// query执行完毕，退出循环
-			if resultSet == nil {
-				break
-			}
-
-			// 定期检查缓存中是否有数据
-			fs.checkCachePeriodically(queryCacheKey)
-		}
-	})
-
+	// 获取列信息
+	columns, err := connector.GetColumns(resultSet)
 	if err != nil {
-		logger.Errorf("Get data from query result failed, %s", err.Error())
-		return rest.NewHTTPError(ctx, http.StatusInternalServerError, rest.PublicError_InternalServerError).
-			WithErrorDetails(err.Error())
+		logger.Error(fmt.Errorf("QueryId: %s, slug: %s, get columns error: %v", queryId, slug, err))
+		fs.storeToCache(resultCache, nil, nil, nil, err)
+		return err
+	}
+
+	// 映射列类型到 Vega 类型
+	if err := fs.mapColumnTypes(ctx, dsType, columns); err != nil {
+		logger.Error(fmt.Errorf("QueryId: %s, slug: %s, map column types error: %v", queryId, slug, err))
+	}
+
+	for {
+		// 如果缓存不存在, 则退出循环
+		if _, ok := fs.queryCache.Load(queryCacheKey); !ok {
+			logger.Errorf("QueryId: %s, slug: %s, query timeout", queryId, slug)
+			connector.Close()
+			return rest.NewHTTPError(ctx, http.StatusRequestTimeout, rest.PublicError_InternalServerError).
+				WithErrorDetails("Query timeout")
+		}
+
+		// 执行查询
+		resultSet, data, err := connector.GetData(resultSet, len(columns), fs.appSetting.QuerySetting.DataQuerySize)
+
+		// 缓存结果
+		fs.storeToCache(resultCache, resultSet, columns, data, err)
+
+		// 如果发生错误，退出循环
+		if err != nil {
+			break
+		}
+
+		// query执行完毕，退出循环
+		if resultSet == nil {
+			break
+		}
+
+		// 定期检查缓存中是否有数据
+		fs.checkCachePeriodically(queryCacheKey)
 	}
 
 	return nil
@@ -543,100 +555,77 @@ func (fs *Service) getDataFromEtrinoExecutingNextUri(ctx context.Context, dsType
 
 	existingCache, ok := fs.queryCache.Load(queryCacheKey)
 	if !ok {
-		logger.Errorf("Query does not exist, queryId: %s, slug: %s", queryId, slug)
-		return rest.NewHTTPError(ctx, http.StatusInternalServerError, rest.PublicError_InternalServerError).
-			WithErrorDetails("Query does not exist")
+		logger.Errorf("QueryId: %s, slug: %s, query timeout", queryId, slug)
+		return rest.NewHTTPError(ctx, http.StatusRequestTimeout, rest.PublicError_InternalServerError).
+			WithErrorDetails("Query timeout")
 	}
 	resultCache, _ := existingCache.(*interfaces.ResultCache)
 
 	resultCache.ResultSet = nextUri
 
-	// 提交查询任务到查询池
-	err := fs.queryPool.Submit(func() {
+	var columns []*interfaces.Column
+	var queryErr error
+	var mapped bool
 
-		queryCtx, cancel := context.WithCancel(context.Background())
+	for {
+		var data []*[]any
 
-		defer func() {
-			if r := recover(); r != nil {
-				err := fmt.Errorf("QueryId: %s, slug: %s, etrino query panic in goroutine: %v", queryId, slug, r)
-				logger.Error(err)
-				fs.storeToCache(resultCache, nil, nil, nil, err)
+		for nextUri != "" {
+			// 如果缓存不存在, 则退出循环
+			if _, ok := fs.queryCache.Load(queryCacheKey); !ok {
+				logger.Errorf("QueryId: %s, slug: %s, query timeout", queryId, slug)
+				return rest.NewHTTPError(ctx, http.StatusRequestTimeout, rest.PublicError_InternalServerError).
+					WithErrorDetails("Query timeout")
 			}
 
-			logger.Debugf("QueryId: %s, slug: %s, etrino query goroutine exit", queryId, slug)
+			nextUri = fmt.Sprintf("%s?targetResultBatchSize=%d", nextUri, fs.appSetting.QuerySetting.DataQuerySize)
 
-			cancel()
-		}()
+			nextData, err := fs.vegaCalculateAccess.NextUriQuery(ctx, nextUri)
 
-		var columns []*interfaces.Column
-		var queryErr error
-		var mapped bool
-
-		for {
-			var data []*[]any
-
-			for nextUri != "" {
-				// 如果缓存不存在, 则退出循环
-				if _, ok := fs.queryCache.Load(queryCacheKey); !ok {
-					goto CacheNotFound
-				}
-
-				nextUri = fmt.Sprintf("%s?targetResultBatchSize=%d", nextUri, fs.appSetting.QuerySetting.DataQuerySize)
-
-				nextData, err := fs.vegaCalculateAccess.NextUriQuery(queryCtx, nextUri)
-
-				if err != nil {
-					nextUri = ""
-					queryErr = err
-					break
-				} else {
-					nextUri = nextData.NextUri
-					if len(columns) == 0 {
-						columns = nextData.Columns
-					}
-
-					if nextData.Data != nil {
-						data = append(data, nextData.Data...)
-						break
-					}
-				}
-			}
-
-			if dsType != "" && len(columns) > 0 && !mapped {
-				mapped = true
-				// 映射列类型到 Vega 类型
-				if err := fs.mapColumnTypes(ctx, dsType, columns); err != nil {
-					logger.Error(fmt.Errorf("QueryId: %s, slug: %s, map column types error: %v", queryId, slug, err))
-				}
-			}
-
-			// 缓存结果
-			if nextUri != "" {
-				fs.storeToCache(resultCache, nextUri, columns, data, queryErr)
+			if err != nil {
+				nextUri = ""
+				queryErr = err
+				break
 			} else {
-				fs.storeToCache(resultCache, nil, columns, data, queryErr)
-			}
+				nextUri = nextData.NextUri
+				if len(columns) == 0 {
+					columns = nextData.Columns
+				}
 
-			// 发生错误，退出循环
-			if queryErr != nil {
-				break
+				if nextData.Data != nil {
+					data = append(data, nextData.Data...)
+					break
+				}
 			}
-
-			// 没有更多数据，退出循环
-			if nextUri == "" {
-				break
-			}
-
-			// 定期检查缓存中是否有数据
-			fs.checkCachePeriodically(queryCacheKey)
 		}
-	CacheNotFound:
-	})
 
-	if err != nil {
-		logger.Errorf("Get data from Etrino executing nextUri failed, %s", err.Error())
-		return rest.NewHTTPError(ctx, http.StatusInternalServerError, rest.PublicError_InternalServerError).
-			WithErrorDetails(err.Error())
+		if dsType != "" && len(columns) > 0 && !mapped {
+			mapped = true
+			// 映射列类型到 Vega 类型
+			if err := fs.mapColumnTypes(ctx, dsType, columns); err != nil {
+				logger.Error(fmt.Errorf("QueryId: %s, slug: %s, map column types error: %v", queryId, slug, err))
+			}
+		}
+
+		// 缓存结果
+		if nextUri != "" {
+			fs.storeToCache(resultCache, nextUri, columns, data, queryErr)
+		} else {
+			fs.storeToCache(resultCache, nil, columns, data, queryErr)
+		}
+
+		// 发生错误，退出循环
+		if queryErr != nil {
+			break
+		}
+
+		// 没有更多数据，退出循环
+		if nextUri == "" {
+			break
+		}
+
+		// 定期检查缓存中是否有数据
+		fs.checkCachePeriodically(queryCacheKey)
 	}
 
 	return nil
@@ -650,9 +639,9 @@ func (fs *Service) handleQueryResult(ctx context.Context, queryType int, timeout
 	queryCacheKey := fmt.Sprintf("%s_%s", queryId, slug)
 	existingCache, ok := fs.queryCache.Load(queryCacheKey)
 	if !ok {
-		logger.Errorf("Query does not exist, queryId: %s, slug: %s, token: %d", queryId, slug, token)
-		return nil, rest.NewHTTPError(ctx, http.StatusInternalServerError, rest.PublicError_InternalServerError).
-			WithErrorDetails("Query does not exist")
+		logger.Errorf("QueryId: %s, slug: %s, token: %d, query timeout", queryId, slug, token)
+		return nil, rest.NewHTTPError(ctx, http.StatusRequestTimeout, rest.PublicError_InternalServerError).
+			WithErrorDetails("Query timeout")
 	}
 	resultCache, _ := existingCache.(*interfaces.ResultCache)
 
@@ -667,6 +656,13 @@ func (fs *Service) handleQueryResult(ctx context.Context, queryType int, timeout
 		ticker := time.NewTicker(1000 * time.Millisecond) // 每1000毫秒检查一次缓存
 		defer ticker.Stop()
 		for {
+
+			if _, ok := fs.queryCache.Load(queryCacheKey); !ok {
+				logger.Errorf("QueryId: %s, slug: %s, token: %d, query timeout", queryId, slug, token)
+				return nil, rest.NewHTTPError(ctx, http.StatusRequestTimeout, rest.PublicError_InternalServerError).
+					WithErrorDetails("Query timeout")
+			}
+
 			select {
 			case <-ticker.C:
 				// 定期检查缓存， 查询异常、数据足够、查询完成退出检查
@@ -703,6 +699,13 @@ func (fs *Service) handleQueryResult(ctx context.Context, queryType int, timeout
 
 	// 从缓存中获取查询结果，直到数据足够或查询完成
 	for {
+
+		if _, ok := fs.queryCache.Load(queryCacheKey); !ok {
+			logger.Errorf("QueryId: %s, slug: %s, token: %d, query timeout", queryId, slug, token)
+			return nil, rest.NewHTTPError(ctx, http.StatusRequestTimeout, rest.PublicError_InternalServerError).
+				WithErrorDetails("Query timeout")
+		}
+
 		if len(resultCache.ResultChan) > 0 {
 			for {
 				chanData := <-resultCache.ResultChan
@@ -719,15 +722,15 @@ func (fs *Service) handleQueryResult(ctx context.Context, queryType int, timeout
 		}
 
 		if totalCount == batchSize ||
-			(resultCache.ResultSet == nil && len(resultCache.ResultChan) == 0) {
+			(resultCache.ResultSet == nil && len(resultCache.ResultChan) == 0 && len(resultCache.Columns) > 0) {
 			break
 		}
-	}
 
-	if resultCache.Error != nil {
-		logger.Errorf("Query failed, %s", resultCache.Error.Error())
-		return nil, rest.NewHTTPError(ctx, http.StatusInternalServerError, rest.PublicError_InternalServerError).
-			WithErrorDetails(resultCache.Error.Error())
+		if resultCache.Error != nil {
+			logger.Errorf("Query failed, %s", resultCache.Error.Error())
+			return nil, rest.NewHTTPError(ctx, http.StatusInternalServerError, rest.PublicError_InternalServerError).
+				WithErrorDetails(resultCache.Error.Error())
+		}
 	}
 
 	// 构建最终结果
@@ -779,11 +782,11 @@ func (fs *Service) NextQuery(ctx context.Context, req *interfaces.NextQueryReq) 
 	if time.Now().After(resultCache.MaxExceedTime) {
 		logger.Errorf("QueryId: %s, slug: %s, token: %d, query timeout", req.QueryId, req.Slug, req.Token)
 		fs.cleanQuery(queryCacheKey, resultCache) // 清理查询
-		return nil, rest.NewHTTPError(ctx, http.StatusRequestTimeout, rest.PublicError_NotFound).
+		return nil, rest.NewHTTPError(ctx, http.StatusRequestTimeout, rest.PublicError_InternalServerError).
 			WithErrorDetails("Query timeout")
-	} else {
-		resultCache.MaxExceedTime = time.Now().Add(fs.appSetting.QuerySetting.MaxIntervalTime)
 	}
+
+	resultCache.MaxExceedTime = time.Now().Add(fs.appSetting.QuerySetting.MaxIntervalTime)
 
 	defer func() {
 
@@ -795,8 +798,10 @@ func (fs *Service) NextQuery(ctx context.Context, req *interfaces.NextQueryReq) 
 			fs.cleanQuery(queryCacheKey, resultCache)
 		} else if err != nil { // 处理查询错误
 			logger.Errorf("QueryId: %s, slug: %s, token: %d, next query failed with error: %v", req.QueryId, req.Slug, req.Token, err)
-			fs.cleanQuery(queryCacheKey, resultCache)
-		} else if resultCache.ResultSet == nil && len(resultCache.ResultChan) == 0 { // 处理查询完成
+			if !strings.Contains(err.Error(), "Query timeout") {
+				fs.cleanQuery(queryCacheKey, resultCache)
+			}
+		} else if resultCache.ResultSet == nil && len(resultCache.ResultChan) == 0 && len(resultCache.Columns) > 0 { // 处理查询完成
 			logger.Debugf("QueryId: %s, slug: %s, token: %d, query completed", req.QueryId, req.Slug, req.Token)
 			fs.cleanQuery(queryCacheKey, resultCache)
 		} else { // 处理查询未结束
