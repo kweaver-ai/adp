@@ -83,7 +83,14 @@ func (rds *resourceDataService) Query(ctx context.Context, resource *interfaces.
 				WithErrorDetails(err.Error())
 		}
 		return data, total, nil
-
+	case interfaces.ResourceCategoryIndex:
+		data, total, err := rds.QueryData(ctx, resource, params)
+		if err != nil {
+			span.SetStatus(codes.Error, "Query index data failed")
+			return nil, 0, rest.NewHTTPError(ctx, http.StatusInternalServerError, verrors.VegaBackend_Resource_InternalError).
+				WithErrorDetails(err.Error())
+		}
+		return data, total, nil
 	default:
 		span.SetStatus(codes.Error, "Unsupported resource category")
 		return nil, 0, rest.NewHTTPError(ctx, http.StatusBadRequest, verrors.VegaBackend_Resource_InternalError_InvalidCategory).
@@ -136,6 +143,22 @@ func (rds *resourceDataService) QueryData(ctx context.Context, resource *interfa
 		}
 
 		result, err := tableConnector.ExecuteQuery(ctx, resource, params)
+		if err != nil {
+			span.SetStatus(codes.Error, "Execute query failed")
+			return nil, 0, rest.NewHTTPError(ctx, http.StatusInternalServerError, verrors.VegaBackend_Resource_InternalError).
+				WithErrorDetails(fmt.Sprintf("failed to execute query: %v", err))
+		}
+		return result.Rows, result.Total, nil
+	// 查询opensearch的逻辑
+	case interfaces.ResourceCategoryIndex:
+		indexConnector, ok := connector.(connectors.IndexConnector)
+		if !ok {
+			span.SetStatus(codes.Error, "Connector does not support index operations")
+			return nil, 0, rest.NewHTTPError(ctx, http.StatusBadRequest, verrors.VegaBackend_Resource_InternalError_InvalidCategory).
+				WithErrorDetails(fmt.Sprintf("connector %s does not support index operations", catalog.ConnectorType))
+		}
+
+		result, err := indexConnector.ExecuteQuery(ctx, resource, params)
 		if err != nil {
 			span.SetStatus(codes.Error, "Execute query failed")
 			return nil, 0, rest.NewHTTPError(ctx, http.StatusInternalServerError, verrors.VegaBackend_Resource_InternalError).
