@@ -1350,10 +1350,19 @@ func (ots *objectTypeService) SearchObjectTypes(ctx context.Context,
 	defer span.End()
 
 	response := interfaces.ObjectTypes{}
+	var err error
+
+	// 判断userid是否有查看业务知识网络的权限
+	err = ots.ps.CheckPermission(ctx, interfaces.Resource{
+		Type: interfaces.RESOURCE_TYPE_KN,
+		ID:   query.KNID,
+	}, []string{interfaces.OPERATION_TYPE_VIEW_DETAIL})
+	if err != nil {
+		return response, err
+	}
 
 	// 转换条件为 dataset filter condition
 	var filterCondition map[string]any
-	var err error
 	if query.ActualCondition != nil {
 		filterCondition, err = cond.ConvertCondCfgToFilterCondition(ctx, query.ActualCondition,
 			interfaces.CONCPET_QUERY_FIELD,
