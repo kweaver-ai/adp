@@ -105,6 +105,13 @@ ai_generation_config:
     frequency_penalty: 0.1
     presence_penalty: 0.1
 
+s3:
+  endpoint: ""
+  bucket: ""
+  region: "us-east-1"
+  use_ssl: false
+  storage_prefix: "aoi_skill_assets"
+
 trace:
   enabled: false
   type: "otlp" # 可选值: jaeger, otlp

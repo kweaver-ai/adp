@@ -287,7 +287,7 @@ func (mr *MockIMetadataDBMockRecorder) SetCreateInfo(user any) *gomock.Call {
 }
 
 // SetDependencies mocks base method.
-func (m *MockIMetadataDB) SetDependencies(dependencies any) {
+func (m *MockIMetadataDB) SetDependencies(dependencies string) {
 	m.ctrl.T.Helper()
 	m.ctrl.Call(m, "SetDependencies", dependencies)
 }

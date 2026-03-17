@@ -16,6 +16,7 @@ type restPublicHandler struct {
 	OperatorRestHandler OperatorRestHandler
 	ToolBoxRestHandler  ToolBoxRestHandler
 	MCPRestHandler      MCPRestHandler
+	SkillRestHandler    SkillRestHandler
 	ImpexHandler        common.ImpexHandler
 	UnifiedProxyHandler common.UnifiedProxyHandler
 	TemplateHandler     common.TemplateHandler
@@ -30,6 +31,7 @@ func NewRestPublicHandler() interfaces.HTTPRouterInterface {
 		OperatorRestHandler: NewOperatorRestHandler(),
 		ToolBoxRestHandler:  NewToolBoxRestHandler(),
 		MCPRestHandler:      NewMCPRestHandler(),
+		SkillRestHandler:    NewSkillRestHandler(),
 		ImpexHandler:        common.NewImpexHandler(),
 		UnifiedProxyHandler: common.NewUnifiedProxyHandler(),
 		TemplateHandler:     common.NewTemplateHandler(),
@@ -49,6 +51,8 @@ func (r *restPublicHandler) RegisterRouter(engine *gin.RouterGroup) {
 	r.ToolBoxRestHandler.RegisterPublic(engine)
 	// MCP 相关接口
 	r.MCPRestHandler.RegisterPublic(engine)
+	// Skill 相关接口
+	r.SkillRestHandler.RegisterPublic(engine)
 	// 导入导出
 	engine.GET("/impex/export/:type/:id", r.ImpexHandler.Export)
 	engine.POST("/impex/import/:type", middlewareBusinessDomain(true, false), r.ImpexHandler.Import)
