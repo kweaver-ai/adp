@@ -384,10 +384,12 @@ func (c *OpenSearchConnector) ExecuteIndexQuery(ctx context.Context, catalog *in
 
 	// 2. 执行查询
 	indexName := params.Resources[0].Name
+	// 当 limit=0 时，OpenSearch 的 size=0 只返回总数而不返回文档
+	size := params.Limit
 	searchReq := opensearchapi.SearchRequest{
 		Index: []string{indexName},
 		Body:  bytes.NewReader(dslBytes),
-		Size:  &params.Limit,
+		Size:  &size,
 		From:  &params.Offset,
 	}
 
@@ -470,8 +472,13 @@ func (c *OpenSearchConnector) buildOpenSearchQuery(params *interfaces.IndexQuery
 	if len(params.Sort) > 0 {
 		sortClauses := make([]map[string]any, 0)
 		for _, sf := range params.Sort {
+			// 移除字段名中的表别名前缀
+			fieldName := sf.Field
+			if idx := strings.LastIndex(fieldName, "."); idx > 0 {
+				fieldName = fieldName[idx+1:]
+			}
 			sortClauses = append(sortClauses, map[string]any{
-				sf.Field: map[string]any{"order": sf.Direction},
+				fieldName: map[string]any{"order": sf.Direction},
 			})
 		}
 		query["sort"] = sortClauses

@@ -312,9 +312,10 @@ func (qs *queryService) validateRequest(ctx context.Context, req *interfaces.Que
 		return rest.NewHTTPError(ctx, http.StatusBadRequest, verrors.VegaBackend_Query_InvalidParameter).
 			WithErrorDetails("tables cannot be empty")
 	}
-	if req.Limit <= 0 {
+	if req.Limit < 0 {
 		req.Limit = 100
 	}
+	// limit=0 是合法的，用于只返回 total_count 而不返回记录
 	if req.Limit > QueryLimitMax {
 		return rest.NewHTTPError(ctx, http.StatusBadRequest, verrors.VegaBackend_Query_InvalidParameter_LimitExceeded).
 			WithErrorDetails(fmt.Sprintf("limit cannot exceed %d", QueryLimitMax))
