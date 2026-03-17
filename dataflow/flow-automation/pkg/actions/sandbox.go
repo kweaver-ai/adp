@@ -82,22 +82,17 @@ func (s *SandboxExecute) Run(ctx entity.ExecuteContext, params interface{}, toke
 		return manager.Run(ctx, executor)
 	}
 
-	hashContent := fmt.Sprintf("%s:%s", executor.GetHashContent(), taskIns.ID)
-	taskIns.Hash = hash(hashContent)
-	err = taskIns.Patch(newCtx, &entity.TaskInstance{
-		BaseInfo: taskIns.BaseInfo,
-		Hash:     taskIns.Hash,
-		Results:  map[string]any{},
-	})
+	result, err := executor.Execute(newCtx)
+
 	if err != nil {
-		log.Warnf("[SandboxExecute.Run] Patch hash err: %s, taskInsID: %s, hash: %s", err.Error(), taskIns.ID, taskIns.Hash)
+		ctx.ShareData().Set("__status_"+taskIns.ID, entity.TaskInstanceStatusFailed)
+		log.Warnf("[SandboxExecute.Run] Execute err: %s, taskInsID: %s", err.Error(), taskIns.ID)
 		return nil, err
 	}
 
-	ctx.ShareData().Set("__status_"+taskIns.ID, entity.TaskInstanceStatusBlocked)
-
-	go s.executeAsyncWithoutCache(executor, taskIns.Hash, ctx.NewExecuteMethods())
-	return nil, nil
+	ctx.ShareData().Set("__status_"+taskIns.ID, entity.TaskInstanceStatusSuccess)
+	ctx.ShareData().Set(ctx.GetTaskID(), result)
+	return result, nil
 }
 
 func (s *SandboxExecute) RunAfter(ctx entity.ExecuteContext, _ interface{}) (entity.TaskInstanceStatus, error) {
@@ -215,24 +210,4 @@ func (e *sandboxExecutor) Execute(ctx context.Context) (map[string]any, error) {
 		case <-time.After(interval):
 		}
 	}
-}
-
-func (s *SandboxExecute) executeAsyncWithoutCache(executor *sandboxExecutor, hash string, executeMethods entity.ExecuteMethods) {
-	var err error
-	ctx, span := trace.StartInternalSpan(context.Background())
-	defer func() {
-		if r := recover(); r != nil {
-			err = fmt.Errorf("panic: %v", r)
-			traceLog.WithContext(ctx).Errorf("[SandboxExecute.executeAsyncWithoutCache] panic: %v", r)
-		}
-		trace.TelemetrySpanEnd(span, err)
-	}()
-
-	result, err := executor.Execute(ctx)
-	if err != nil {
-		PublishAsyncTaskResult(ctx, executeMethods, hash, executor.GetTaskType(), nil, err)
-		return
-	}
-
-	PublishAsyncTaskResult(ctx, executeMethods, hash, executor.GetTaskType(), result, nil)
 }
