@@ -128,7 +128,7 @@ const DetailContent = () => {
         data_scope: res.data_scope || [],
       });
     } catch (error) {
-      arNotification.error(intl.get('Global.loadDataFailed'));
+      // arNotification.error(intl.get('Global.loadDataFailed'));
     } finally {
       setLoading(false);
     }

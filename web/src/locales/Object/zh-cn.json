@@ -59,7 +59,7 @@
     "syncDataViewFields": "同步数据视图字段",
     "clearAllDataAttributesConfirm": "确定清空所有数据属性吗？清空后不能恢复，请谨慎操作。",
     "deleteIgnoreAndConfirm": "忽略，立即删除",
-    "deleteObjectUsedByRelationAndAction": "对象类已被其他关系及行为类使用，删除后相关能力将无法正常使用。",
+    "deleteObjectUsedByRelationAndAction": "对象类如果被其他关系及行为类使用，删除后相关能力将无法正常使用。",
     "affectedRelationAndActionList": "以下为受影响的关系类与行动类列表：",
     "objectToDelete": "待删除对象类",
     "affectedRelationOrAction": "受影响关系类/行动类",

@@ -126,7 +126,7 @@ const OutputDataView = () => {
       dataIndex: 'name',
       key: 'name',
       width: 200,
-      render: (_: any, record: any) => renderEditableCell(record, 'name'),
+      render: (text: string) => text || '--',
     },
     {
       title: intl.get('Global.fieldType'),

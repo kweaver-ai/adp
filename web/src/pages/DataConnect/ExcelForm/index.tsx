@@ -153,7 +153,7 @@ const EditExcelDataRange = ({ detail, open, onCancel }: EditExcelDataRangeProps)
       setFileList(response.data || []);
     } catch (error) {
       console.error('Failed to get Excel file list:', error);
-      message.error(intl.get('Global.loadDataFailed'));
+      // message.error(intl.get('Global.loadDataFailed'));
     } finally {
       setFileLoading(false);
     }
@@ -168,7 +168,7 @@ const EditExcelDataRange = ({ detail, open, onCancel }: EditExcelDataRangeProps)
       setSheetList(response.data || []);
     } catch (error) {
       console.error('Failed to get Excel sheet list:', error);
-      message.error(intl.get('Global.loadDataFailed'));
+      // message.error(intl.get('Global.loadDataFailed'));
     } finally {
       setSheetLoading(false);
     }

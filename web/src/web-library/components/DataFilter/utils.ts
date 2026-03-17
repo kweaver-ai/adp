@@ -5,7 +5,7 @@ import Fields from '../../utils/fields';
 // 类型操作符映射
 export const typeOperationMapping = {
   // 全局搜索 (适用于所有字段或特殊搜索)
-  'all Fields': ['match', 'match_phrase', 'multi_match', 'knn'],
+  'all Fields': ['match', 'match_phrase', 'multi_match'],
 
   // 字符串类型 (string)
   string: [

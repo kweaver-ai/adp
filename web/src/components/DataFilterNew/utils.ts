@@ -41,9 +41,9 @@ export const typeOperationMapping = {
     'not_contain',
     'empty',
     'not_empty',
-    'match',
-    'match_phrase',
-    'multi_match',
+    // 'match',
+    // 'match_phrase',
+    // 'multi_match',
     'exist',
     'not_exist',
     'null',
@@ -84,7 +84,7 @@ export const typeOperationMapping = {
   json: ['contain', 'not_contain', 'exist', 'not_exist', 'null', 'not_null'],
 
   // 向量类型 (vector)
-  vector: ['knn', 'exist', 'not_exist', 'null', 'not_null'],
+  vector: ['exist', 'not_exist', 'null', 'not_null'],
 
   // 二进制和空间类型大类 (包含 binary, point, shape, other)
   binary: ['exist', 'not_exist', 'null', 'not_null'],

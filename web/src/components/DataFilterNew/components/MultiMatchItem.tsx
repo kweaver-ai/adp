@@ -14,8 +14,8 @@ interface MultiMatchItemProps {
 
 const MultiMatchItem = ({ value, fieldList, disabled = false, onChange }: MultiMatchItemProps) => {
   // 过滤出 text 和 string 类型的字段
-  const textFields = fieldList?.filter((field) => field.type === 'text' || field.type === 'string') || [];
-  
+  const textFields = fieldList?.filter((field) => field.type === 'text') || [];
+
   // 匹配类型选项
   const matchTypeOptions = [
     { value: 'best_fields', label: intl.get('DataFilterNew.best_fields') },
@@ -80,23 +80,13 @@ const MultiMatchItem = ({ value, fieldList, disabled = false, onChange }: MultiM
       <Popover
         content={
           <div className={styles['match-type-popover']}>
-            <Select
-              value={currentValue.match_type}
-              onChange={handleMatchTypeChange}
-              style={{ width: '160px' }}
-              options={matchTypeOptions}
-            />
+            <Select value={currentValue.match_type} onChange={handleMatchTypeChange} style={{ width: '160px' }} options={matchTypeOptions} />
           </div>
         }
         title={intl.get('DataFilterNew.match_type')}
         trigger="click"
       >
-        <Button
-          type="text"
-          icon={<SettingOutlined />}
-          disabled={disabled}
-          size="small"
-        />
+        <Button type="text" icon={<SettingOutlined />} disabled={disabled} size="small" />
       </Popover>
     </div>
   );

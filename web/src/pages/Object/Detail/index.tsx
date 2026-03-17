@@ -115,7 +115,7 @@ const Detail = () => {
       }
     } catch (error) {
       console.error('fetchObjectData error:', error);
-      message.error(intl.get('Global.loadDataFailed'));
+      // message.error(intl.get('Global.loadDataFailed'));
     } finally {
       setDataLoading(false);
     }
