@@ -770,54 +770,52 @@ func (ats *actionTypeService) SearchActionTypes(ctx context.Context, query *inte
 	defer span.End()
 
 	response := interfaces.ActionTypes{}
+	var err error
+
+	// 判断userid是否有查看业务知识网络的权限
+	err = ats.ps.CheckPermission(ctx, interfaces.Resource{
+		Type: interfaces.RESOURCE_TYPE_KN,
+		ID:   query.KNID,
+	}, []string{interfaces.OPERATION_TYPE_VIEW_DETAIL})
+	if err != nil {
+		return response, err
+	}
 
 	// 转换条件为 dataset filter condition
 	var filterCondition map[string]any
-	var err error
 	if query.ActualCondition != nil {
 		filterCondition, err = cond.ConvertCondCfgToFilterCondition(ctx, query.ActualCondition,
+			interfaces.CONCPET_QUERY_FIELD,
 			func(ctx context.Context, word string) ([]*cond.VectorResp, error) {
 				if !ats.appSetting.ServerSetting.DefaultSmallModelEnabled {
 					err = errors.New(cond.DEFAULT_SMALL_MODEL_ENABLED_FALSE_ERROR)
 					span.SetStatus(codes.Error, err.Error())
-					return nil, err
+					return nil, rest.NewHTTPError(ctx, http.StatusInternalServerError,
+						berrors.BknBackend_ActionType_InternalError).
+						WithErrorDetails(err.Error())
 				}
 				dftModel, err := ats.mfa.GetDefaultModel(ctx)
 				if err != nil {
 					logger.Errorf("GetDefaultModel error: %s", err.Error())
 					span.SetStatus(codes.Error, "获取默认模型失败")
-					return nil, err
+					return nil, rest.NewHTTPError(ctx, http.StatusInternalServerError,
+						berrors.BknBackend_ActionType_InternalError).
+						WithErrorDetails(err.Error())
 				}
-				return ats.mfa.GetVector(ctx, dftModel, []string{word})
+				result, err := ats.mfa.GetVector(ctx, dftModel, []string{word})
+				if err != nil {
+					logger.Errorf("GetVector error: %s", err.Error())
+					span.SetStatus(codes.Error, "获取业务知识网络向量失败")
+					return nil, rest.NewHTTPError(ctx, http.StatusInternalServerError,
+						berrors.BknBackend_ActionType_InternalError).
+						WithErrorDetails(err.Error())
+				}
+				return result, nil
 			})
 		if err != nil {
 			return response, rest.NewHTTPError(ctx, http.StatusBadRequest,
 				berrors.BknBackend_ActionType_InvalidParameter_ConceptCondition).
 				WithErrorDetails(fmt.Sprintf("failed to convert condition to filter condition, %s", err.Error()))
-		}
-	}
-
-	// 添加 module_type 过滤条件，只查询行动类
-	if filterCondition == nil {
-		filterCondition = map[string]any{
-			"field":      "module_type",
-			"operation":  "==",
-			"value":      interfaces.MODULE_TYPE_ACTION_TYPE,
-			"value_from": "const",
-		}
-	} else {
-		// 将现有条件和 module_type 条件组合
-		filterCondition = map[string]any{
-			"operation": "and",
-			"sub_conditions": []map[string]any{
-				filterCondition,
-				{
-					"field":      "module_type",
-					"operation":  "==",
-					"value":      interfaces.MODULE_TYPE_ACTION_TYPE,
-					"value_from": "const",
-				},
-			},
 		}
 	}
 
@@ -892,7 +890,9 @@ func (ats *actionTypeService) SearchActionTypes(ctx context.Context, query *inte
 			if err != nil {
 				logger.Errorf("QueryDatasetData error: %s", err.Error())
 				span.SetStatus(codes.Error, "业务知识网络行动类检索查询总数失败")
-				return response, err
+				return response, rest.NewHTTPError(ctx, http.StatusInternalServerError,
+					berrors.BknBackend_ActionType_InternalError).
+					WithErrorDetails(err.Error())
 			}
 			response.TotalCount = datasetResp.TotalCount
 		} else {
@@ -928,7 +928,9 @@ func (ats *actionTypeService) SearchActionTypes(ctx context.Context, query *inte
 		if err != nil {
 			logger.Errorf("QueryDatasetData error: %s", err.Error())
 			span.SetStatus(codes.Error, "业务知识网络行动类检索查询失败")
-			return response, err
+			return response, rest.NewHTTPError(ctx, http.StatusInternalServerError,
+				berrors.BknBackend_ActionType_InternalError).
+				WithErrorDetails(err.Error())
 		}
 
 		// 如果没有数据了，跳出循环

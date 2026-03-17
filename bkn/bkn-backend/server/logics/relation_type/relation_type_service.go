@@ -854,25 +854,47 @@ func (rts *relationTypeService) SearchRelationTypes(ctx context.Context,
 	defer span.End()
 
 	response := interfaces.RelationTypes{}
+	var err error
+
+	// 判断userid是否有查看业务知识网络的权限
+	err = rts.ps.CheckPermission(ctx, interfaces.Resource{
+		Type: interfaces.RESOURCE_TYPE_KN,
+		ID:   query.KNID,
+	}, []string{interfaces.OPERATION_TYPE_VIEW_DETAIL})
+	if err != nil {
+		return response, err
+	}
 
 	// 转换条件为 dataset filter condition
 	var filterCondition map[string]any
-	var err error
 	if query.ActualCondition != nil {
 		filterCondition, err = cond.ConvertCondCfgToFilterCondition(ctx, query.ActualCondition,
+			interfaces.CONCPET_QUERY_FIELD,
 			func(ctx context.Context, word string) ([]*cond.VectorResp, error) {
 				if !rts.appSetting.ServerSetting.DefaultSmallModelEnabled {
 					err = errors.New(cond.DEFAULT_SMALL_MODEL_ENABLED_FALSE_ERROR)
 					span.SetStatus(codes.Error, err.Error())
-					return nil, err
+					return nil, rest.NewHTTPError(ctx, http.StatusInternalServerError,
+						berrors.BknBackend_RelationType_InternalError).
+						WithErrorDetails(err.Error())
 				}
 				dftModel, err := rts.mfa.GetDefaultModel(ctx)
 				if err != nil {
 					logger.Errorf("GetDefaultModel error: %s", err.Error())
 					span.SetStatus(codes.Error, "获取默认模型失败")
-					return nil, err
+					return nil, rest.NewHTTPError(ctx, http.StatusInternalServerError,
+						berrors.BknBackend_RelationType_InternalError).
+						WithErrorDetails(err.Error())
 				}
-				return rts.mfa.GetVector(ctx, dftModel, []string{word})
+				result, err := rts.mfa.GetVector(ctx, dftModel, []string{word})
+				if err != nil {
+					logger.Errorf("GetVector error: %s", err.Error())
+					span.SetStatus(codes.Error, "获取业务知识网络向量失败")
+					return nil, rest.NewHTTPError(ctx, http.StatusInternalServerError,
+						berrors.BknBackend_RelationType_InternalError).
+						WithErrorDetails(err.Error())
+				}
+				return result, nil
 			})
 		if err != nil {
 			return response, rest.NewHTTPError(ctx, http.StatusBadRequest,
@@ -951,7 +973,9 @@ func (rts *relationTypeService) SearchRelationTypes(ctx context.Context,
 			if err != nil {
 				logger.Errorf("QueryDatasetData error: %s", err.Error())
 				span.SetStatus(codes.Error, "业务知识网络关系类检索查询总数失败")
-				return response, err
+				return response, rest.NewHTTPError(ctx, http.StatusInternalServerError,
+					berrors.BknBackend_RelationType_InternalError).
+					WithErrorDetails(err.Error())
 			}
 			response.TotalCount = datasetResp.TotalCount
 		} else {
@@ -986,7 +1010,9 @@ func (rts *relationTypeService) SearchRelationTypes(ctx context.Context,
 		if err != nil {
 			logger.Errorf("QueryDatasetData error: %s", err.Error())
 			span.SetStatus(codes.Error, "业务知识网络关系类检索查询失败")
-			return response, err
+			return response, rest.NewHTTPError(ctx, http.StatusInternalServerError,
+				berrors.BknBackend_RelationType_InternalError).
+				WithErrorDetails(err.Error())
 		}
 
 		// 如果没有数据了，跳出循环

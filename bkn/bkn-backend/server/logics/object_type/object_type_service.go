@@ -1350,25 +1350,47 @@ func (ots *objectTypeService) SearchObjectTypes(ctx context.Context,
 	defer span.End()
 
 	response := interfaces.ObjectTypes{}
+	var err error
+
+	// 判断userid是否有查看业务知识网络的权限
+	err = ots.ps.CheckPermission(ctx, interfaces.Resource{
+		Type: interfaces.RESOURCE_TYPE_KN,
+		ID:   query.KNID,
+	}, []string{interfaces.OPERATION_TYPE_VIEW_DETAIL})
+	if err != nil {
+		return response, err
+	}
 
 	// 转换条件为 dataset filter condition
 	var filterCondition map[string]any
-	var err error
 	if query.ActualCondition != nil {
 		filterCondition, err = cond.ConvertCondCfgToFilterCondition(ctx, query.ActualCondition,
+			interfaces.CONCPET_QUERY_FIELD,
 			func(ctx context.Context, word string) ([]*cond.VectorResp, error) {
 				if !ots.appSetting.ServerSetting.DefaultSmallModelEnabled {
 					err = errors.New(cond.DEFAULT_SMALL_MODEL_ENABLED_FALSE_ERROR)
 					span.SetStatus(codes.Error, err.Error())
-					return nil, err
+					return nil, rest.NewHTTPError(ctx, http.StatusInternalServerError,
+						berrors.BknBackend_ObjectType_InternalError).
+						WithErrorDetails(err.Error())
 				}
 				dftModel, err := ots.mfa.GetDefaultModel(ctx)
 				if err != nil {
 					logger.Errorf("GetDefaultModel error: %s", err.Error())
 					span.SetStatus(codes.Error, "获取默认模型失败")
-					return nil, err
+					return nil, rest.NewHTTPError(ctx, http.StatusInternalServerError,
+						berrors.BknBackend_ObjectType_InternalError).
+						WithErrorDetails(err.Error())
 				}
-				return ots.mfa.GetVector(ctx, dftModel, []string{word})
+				result, err := ots.mfa.GetVector(ctx, dftModel, []string{word})
+				if err != nil {
+					logger.Errorf("GetVector error: %s", err.Error())
+					span.SetStatus(codes.Error, "获取业务知识网络向量失败")
+					return nil, rest.NewHTTPError(ctx, http.StatusInternalServerError,
+						berrors.BknBackend_ObjectType_InternalError).
+						WithErrorDetails(err.Error())
+				}
+				return result, nil
 			})
 		if err != nil {
 			return response, rest.NewHTTPError(ctx, http.StatusBadRequest,
@@ -1446,7 +1468,9 @@ func (ots *objectTypeService) SearchObjectTypes(ctx context.Context,
 			if err != nil {
 				logger.Errorf("QueryDatasetData error: %s", err.Error())
 				span.SetStatus(codes.Error, "业务知识网络对象类检索查询总数失败")
-				return response, err
+				return response, rest.NewHTTPError(ctx, http.StatusInternalServerError,
+					berrors.BknBackend_ObjectType_InternalError).
+					WithErrorDetails(err.Error())
 			}
 			response.TotalCount = datasetResp.TotalCount
 		} else {
@@ -1481,7 +1505,9 @@ func (ots *objectTypeService) SearchObjectTypes(ctx context.Context,
 		if err != nil {
 			logger.Errorf("QueryDatasetData error: %s", err.Error())
 			span.SetStatus(codes.Error, "业务知识网络对象类检索查询失败")
-			return response, err
+			return response, rest.NewHTTPError(ctx, http.StatusInternalServerError,
+				berrors.BknBackend_ObjectType_InternalError).
+				WithErrorDetails(err.Error())
 		}
 
 		// 如果没有数据了，跳出循环
@@ -1491,6 +1517,28 @@ func (ots *objectTypeService) SearchObjectTypes(ctx context.Context,
 
 		// 5. 处理查询结果
 		for _, entry := range datasetResp.Entries {
+			// Deserialize logic_properties[].parameters from JSON string
+			if logicProps, exists := entry["logic_properties"]; exists {
+				if logicPropsArr, ok := logicProps.([]any); ok {
+					for _, lp := range logicPropsArr {
+						if lpMap, ok := lp.(map[string]any); ok {
+							if paramsStr, exists := lpMap["parameters"]; exists {
+								if paramsStrStr, ok := paramsStr.(string); ok && paramsStrStr != "" {
+									var params []interfaces.Parameter
+									if err := sonic.Unmarshal([]byte(paramsStrStr), &params); err != nil {
+										logger.Errorf("Failed to unmarshal object_type logic_properties parameters: %s", err.Error())
+										return response, rest.NewHTTPError(ctx, http.StatusBadRequest,
+											berrors.BknBackend_InternalError_UnMarshalDataFailed).
+											WithErrorDetails(fmt.Sprintf("failed to Unmarshal logic_properties parameters, %s", err.Error()))
+									}
+									lpMap["parameters"] = params
+								}
+							}
+						}
+					}
+				}
+			}
+
 			// 转成 object type 的 struct
 			jsonByte, err := json.Marshal(entry)
 			if err != nil {

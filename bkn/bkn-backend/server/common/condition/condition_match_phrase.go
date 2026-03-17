@@ -81,9 +81,34 @@ func (cond *MatchPhraseCond) Convert2SQL(ctx context.Context) (string, error) {
 }
 
 // convertMatchPhraseCondToDatasetFilterCondition converts MatchPhraseCond to dataset filter condition format
-func convertMatchPhraseCondToDatasetFilterCondition(cfg *CondCfg) (map[string]any, error) {
+func convertMatchPhraseCondToDatasetFilterCondition(cfg *CondCfg, fieldsMap map[string]*ViewField) (map[string]any, error) {
+	name := getFilterFieldName(cfg.Name, fieldsMap, true)
+	var fields []string
+	// 如果指定*查询，并且视图的字段范围为部分字段，那么将查询的字段替换成视图的字段列表
+	if name == AllField {
+		// fields = make([]string, 0, len(fieldsMap))
+		// for fieldName := range fieldsMap {
+		// 	fields = append(fields, fieldName)
+		// }
+		fields = []string{
+			"id",
+			"name",
+			"comment",
+			"detail",
+			"data_properties.name",
+			"data_properties.display_name",
+			"data_properties.comment",
+			"logic_properties.name",
+			"logic_properties.display_name",
+			"logic_properties.comment",
+		}
+	} else {
+		fields = append(fields, name)
+	}
+
 	return map[string]any{
-		"field":      cfg.Name,
+		// "field":      "*",
+		"fields":     fields,
 		"operation":  "match_phrase",
 		"value":      cfg.Value,
 		"value_from": "const",
