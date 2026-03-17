@@ -1608,11 +1608,13 @@ func Test_relationTypeService_SearchRelationTypes(t *testing.T) {
 		}
 		cga := bmock.NewMockConceptGroupAccess(mockCtrl)
 		vba := bmock.NewMockVegaBackendAccess(mockCtrl)
+		ps := bmock.NewMockPermissionService(mockCtrl)
 
 		service := &relationTypeService{
 			appSetting: appSetting,
 			cga:        cga,
 			vba:        vba,
+			ps:         ps,
 		}
 
 		Convey("Success searching relation types without concept groups\n", func() {
@@ -1622,6 +1624,7 @@ func Test_relationTypeService_SearchRelationTypes(t *testing.T) {
 				Limit:  10,
 			}
 
+			ps.EXPECT().CheckPermission(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
 			vba.EXPECT().QueryDatasetData(gomock.Any(), gomock.Any(), gomock.Any()).Return(&interfaces.DatasetQueryResponse{
 				Entries:     []map[string]any{},
 				TotalCount:  0,
@@ -1655,6 +1658,7 @@ func Test_relationTypeService_SearchRelationTypes(t *testing.T) {
 				},
 			}
 
+			ps.EXPECT().CheckPermission(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
 			cga.EXPECT().GetConceptGroupsTotal(gomock.Any(), gomock.Any()).Return(1, nil)
 			cga.EXPECT().GetRelationTypeIDsFromConceptGroupRelation(gomock.Any(), gomock.Any()).Return([]string{"rt1"}, nil)
 			vba.EXPECT().QueryDatasetData(gomock.Any(), gomock.Any(), gomock.Any()).Return(&interfaces.DatasetQueryResponse{
@@ -1677,6 +1681,7 @@ func Test_relationTypeService_SearchRelationTypes(t *testing.T) {
 				ConceptGroups: []string{"cg1"},
 			}
 
+			ps.EXPECT().CheckPermission(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
 			cga.EXPECT().GetConceptGroupsTotal(gomock.Any(), gomock.Any()).Return(0, nil)
 
 			result, err := service.SearchRelationTypes(ctx, query)
@@ -1692,6 +1697,7 @@ func Test_relationTypeService_SearchRelationTypes(t *testing.T) {
 				ConceptGroups: []string{"cg1"},
 			}
 
+			ps.EXPECT().CheckPermission(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
 			cga.EXPECT().GetConceptGroupsTotal(gomock.Any(), gomock.Any()).Return(0, rest.NewHTTPError(ctx, 500, berrors.BknBackend_RelationType_InternalError))
 
 			result, err := service.SearchRelationTypes(ctx, query)
@@ -1707,6 +1713,7 @@ func Test_relationTypeService_SearchRelationTypes(t *testing.T) {
 				ConceptGroups: []string{"cg1"},
 			}
 
+			ps.EXPECT().CheckPermission(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
 			cga.EXPECT().GetConceptGroupsTotal(gomock.Any(), gomock.Any()).Return(1, nil)
 			cga.EXPECT().GetRelationTypeIDsFromConceptGroupRelation(gomock.Any(), gomock.Any()).Return(nil, rest.NewHTTPError(ctx, 500, berrors.BknBackend_RelationType_InternalError))
 
@@ -1722,6 +1729,7 @@ func Test_relationTypeService_SearchRelationTypes(t *testing.T) {
 				Limit:  10,
 			}
 
+			ps.EXPECT().CheckPermission(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
 			vba.EXPECT().QueryDatasetData(gomock.Any(), gomock.Any(), gomock.Any()).Return(&interfaces.DatasetQueryResponse{
 				Entries:     []map[string]any{},
 				TotalCount:  0,
