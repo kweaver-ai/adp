@@ -106,6 +106,28 @@ func NewCondWithOpr(ctx context.Context, cfg *CondCfg, fieldScope uint8, fieldsM
 		cond, err = NewKnnCond(ctx, cfg, fieldScope, fieldsMap)
 	case OperationMultiMatch:
 		cond, err = NewMultiMatchCond(ctx, cfg, fieldScope, fieldsMap)
+	case OperationPrefix:
+		cond, err = NewPrefixCond(ctx, cfg, fieldsMap)
+	case OperationNotPrefix:
+		cond, err = NewNotPrefixCond(ctx, cfg, fieldsMap)
+	case OperationNull:
+		cond, err = NewNullCond(ctx, cfg, fieldsMap)
+	case OperationNotNull:
+		cond, err = NewNotNullCond(ctx, cfg, fieldsMap)
+	case OperationContain:
+		cond, err = NewContainCond(ctx, cfg, fieldsMap)
+	case OperationNotContain:
+		cond, err = NewNotContainCond(ctx, cfg, fieldsMap)
+	case OperationTrue:
+		cond, err = NewTrueCond(ctx, cfg, fieldsMap)
+	case OperationFalse:
+		cond, err = NewFalseCond(ctx, cfg, fieldsMap)
+	case OperationBefore:
+		cond, err = NewBeforeCond(ctx, cfg, fieldsMap)
+	case OperationCurrent:
+		cond, err = NewCurrentCond(ctx, cfg, fieldsMap)
+	case OperationBetween:
+		cond, err = NewBetweenCond(ctx, cfg, fieldsMap)
 
 	default:
 		return nil, fmt.Errorf("not support condition's operation: %s", cfg.Operation)
@@ -243,7 +265,32 @@ func rewriteCondWithOpr(ctx context.Context, cfg *CondCfg, fieldsMap map[string]
 		viewCfg, err = rewriteKnnCond(ctx, cfg, vectorizer)
 	case OperationMultiMatch:
 		viewCfg, err = rewriteMultiMatchCond(cfg, fieldsMap)
-
+	case OperationPrefix:
+		viewCfg, err = rewritePrefixCond(cfg)
+	case OperationNotPrefix:
+		viewCfg, err = rewriteNotPrefixCond(cfg)
+	case OperationNull:
+		viewCfg, err = rewriteNullCond(cfg)
+	case OperationNotNull:
+		viewCfg, err = rewriteNotNullCond(cfg)
+	case OperationContain:
+		viewCfg, err = rewriteContainCond(cfg)
+	case OperationNotContain:
+		viewCfg, err = rewriteNotContainCond(cfg)
+	case OperationTrue:
+		viewCfg, err = rewriteTrueCond(cfg)
+	case OperationFalse:
+		viewCfg, err = rewriteFalseCond(cfg)
+	case OperationBefore:
+		viewCfg, err = rewriteBeforeCond(cfg)
+	case OperationCurrent:
+		viewCfg, err = rewriteCurrentCond(cfg)
+	case OperationBetween:
+		viewCfg, err = rewriteBetweenCond(cfg)
+	case OperationEmpty:
+		viewCfg, err = rewriteEmptyCond(cfg)
+	case OperationNotEmpty:
+		viewCfg, err = rewriteNotEmptyCond(cfg)
 	default:
 		return nil, fmt.Errorf("not support condition's operation: %s", cfg.Operation)
 	}

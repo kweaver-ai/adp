@@ -236,12 +236,68 @@ func validateActionCondition(ctx context.Context, cfg *interfaces.CondCfg, objec
 		v, ok := cfg.Value.([]any)
 		if !ok {
 			return rest.NewHTTPError(ctx, http.StatusBadRequest, berrors.BknBackend_ActionType_InvalidParameter).
-				WithErrorDetails("[range, out_range] operation's value must be an array")
+				WithErrorDetails("[range, out_range, before, between] operation's value must be an array")
 		}
 
 		if len(v) != 2 {
 			return rest.NewHTTPError(ctx, http.StatusBadRequest, berrors.BknBackend_ActionType_InvalidParameter).
-				WithErrorDetails("[range, out_range] operation's value must contain 2 values")
+				WithErrorDetails("[range, out_range, before, between] operation's value must contain 2 values")
+		}
+	case cond.OperationExist, cond.OperationNotExist, cond.OperationNull, cond.OperationNotNull:
+		// exist, not_exist, null, not_null 不需要值
+		// 这些操作符已在 NotRequiredValueOperationMap 中定义，不需要额外验证
+
+	case cond.OperationLike, cond.OperationNotLike, cond.OperationPrefix, cond.OperationNotPrefix, cond.OperationRegex:
+		// like, not_like, prefix, not_prefix, regex 的值应该是单个字符串值
+		_, ok := cfg.Value.([]any)
+		if ok {
+			return rest.NewHTTPError(ctx, http.StatusBadRequest, berrors.BknBackend_ActionType_InvalidParameter).
+				WithErrorDetails(fmt.Sprintf("[%s] operation's value should be a single string value", cfg.Operation))
+		}
+		_, ok = cfg.Value.(string)
+		if !ok {
+			return rest.NewHTTPError(ctx, http.StatusBadRequest, berrors.BknBackend_ActionType_InvalidParameter).
+				WithErrorDetails(fmt.Sprintf("[%s] operation's value should be a string", cfg.Operation))
+		}
+
+	case cond.OperationContain, cond.OperationNotContain:
+		// contain, not_contain 的值可以是单个值或数组
+		// 如果是数组，长度应该大于等于1
+		if cfg.Value == nil {
+			return rest.NewHTTPError(ctx, http.StatusBadRequest, berrors.BknBackend_ActionType_InvalidParameter).
+				WithErrorDetails(fmt.Sprintf("[%s] operation's value cannot be nil", cfg.Operation))
+		}
+		if arr, ok := cfg.Value.([]any); ok {
+			if len(arr) <= 0 {
+				return rest.NewHTTPError(ctx, http.StatusBadRequest, berrors.BknBackend_ActionType_InvalidParameter).
+					WithErrorDetails(fmt.Sprintf("[%s] operation's value array should contains at least 1 value", cfg.Operation))
+			}
+		}
+
+	case cond.OperationCurrent:
+		// current 的值应该是字符串（unit），不能是数组
+		_, ok := cfg.Value.([]any)
+		if ok {
+			return rest.NewHTTPError(ctx, http.StatusBadRequest, berrors.BknBackend_ActionType_InvalidParameter).
+				WithErrorDetails("[current] operation's value should be a string, not an array")
+		}
+		unit, ok := cfg.Value.(string)
+		if !ok {
+			return rest.NewHTTPError(ctx, http.StatusBadRequest, berrors.BknBackend_ActionType_InvalidParameter).
+				WithErrorDetails("[current] operation's value should be a string")
+		}
+		// 验证 unit 值
+		validUnits := map[string]bool{
+			"year":   true,
+			"month":  true,
+			"week":   true,
+			"day":    true,
+			"hour":   true,
+			"minute": true,
+		}
+		if !validUnits[unit] {
+			return rest.NewHTTPError(ctx, http.StatusBadRequest, berrors.BknBackend_ActionType_InvalidParameter).
+				WithErrorDetails(fmt.Sprintf("[current] operation's unit value should be one of [year, month, week, day, hour, minute], actual is [%s]", unit))
 		}
 	}
 

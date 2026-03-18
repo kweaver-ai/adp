@@ -10,15 +10,19 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"os"
 	"reflect"
+	"regexp"
 	"strconv"
 	"strings"
 	"sync/atomic"
 	"time"
 
+	"github.com/dlclark/regexp2"
 	"github.com/kweaver-ai/kweaver-go-lib/logger"
 	"github.com/kweaver-ai/kweaver-go-lib/rest"
 
+	"ontology-query/common"
 	cond "ontology-query/common/condition"
 	oerrors "ontology-query/errors"
 	"ontology-query/interfaces"
@@ -690,11 +694,15 @@ func evaluateConditionRecursive(ctx context.Context,
 			return false, nil
 		}
 		return !isEmpty(fieldValue), nil
+	case cond.OperationNull:
+		return !fieldExists || fieldValue == nil, nil
+	case cond.OperationNotNull:
+		return fieldExists && fieldValue != nil, nil
 	}
 
-	// For other operators, field must exist (except for != which can return true if field doesn't exist)
+	// For other operators, field must exist (except for != and not_like which can return true if field doesn't exist)
 	if !fieldExists {
-		if condition.Operation == cond.OperationNotEq {
+		if condition.Operation == cond.OperationNotEq || condition.Operation == cond.OperationNotLike {
 			return true, nil
 		}
 		return false, nil
@@ -745,6 +753,58 @@ func evaluateConditionRecursive(ctx context.Context,
 		return evaluateBefore(fieldValue, condition.ValueOptCfg.Value)
 	case cond.OperationBetween:
 		return evaluateRange(fieldValue, condition.ValueOptCfg.Value, fieldType, false)
+	case cond.OperationLike:
+		pattern, ok := condition.ValueOptCfg.Value.(string)
+		if !ok {
+			return false, fmt.Errorf("like operation requires string value")
+		}
+		return evaluateLike(fieldValue, pattern)
+	case cond.OperationNotLike:
+		pattern, ok := condition.ValueOptCfg.Value.(string)
+		if !ok {
+			return false, fmt.Errorf("not_like operation requires string value")
+		}
+		result, err := evaluateLike(fieldValue, pattern)
+		if err != nil {
+			return false, err
+		}
+		return !result, nil
+	case cond.OperationPrefix:
+		prefix, ok := condition.ValueOptCfg.Value.(string)
+		if !ok {
+			return false, fmt.Errorf("prefix operation requires string value")
+		}
+		return evaluatePrefix(fieldValue, prefix)
+	case cond.OperationNotPrefix:
+		prefix, ok := condition.ValueOptCfg.Value.(string)
+		if !ok {
+			return false, fmt.Errorf("not_prefix operation requires string value")
+		}
+		result, err := evaluatePrefix(fieldValue, prefix)
+		if err != nil {
+			return false, err
+		}
+		return !result, nil
+	case cond.OperationRegex:
+		pattern, ok := condition.ValueOptCfg.Value.(string)
+		if !ok {
+			return false, fmt.Errorf("regex operation requires string value")
+		}
+		return evaluateRegex(fieldValue, pattern)
+	case cond.OperationContain:
+		return evaluateContain(fieldValue, condition.ValueOptCfg.Value)
+	case cond.OperationNotContain:
+		result, err := evaluateContain(fieldValue, condition.ValueOptCfg.Value)
+		if err != nil {
+			return false, err
+		}
+		return !result, nil
+	case cond.OperationCurrent:
+		unit, ok := condition.ValueOptCfg.Value.(string)
+		if !ok {
+			return false, fmt.Errorf("current operation requires string value (year/month/week/day/hour/minute)")
+		}
+		return evaluateCurrent(fieldValue, unit)
 	default:
 		return false, fmt.Errorf("unsupported operation: %s", condition.Operation)
 	}
@@ -868,6 +928,148 @@ func evaluateBefore(fieldValue any, conditionValue any) (bool, error) {
 	}
 
 	return fieldTime.Before(condTime), nil
+}
+
+// evaluateLike checks if fieldValue matches the like pattern (pattern is wrapped as %pattern% for contains semantics)
+func evaluateLike(fieldValue any, pattern string) (bool, error) {
+	if fieldValue == nil {
+		return false, nil
+	}
+	fieldStr := fmt.Sprintf("%v", fieldValue)
+	// Like semantics: %pattern% means contains; use ReplaceLikeWildcards then wrap with .* for full match
+	regexPattern := common.ReplaceLikeWildcards(pattern)
+	re, err := regexp.Compile(regexPattern)
+	if err != nil {
+		return false, fmt.Errorf("like pattern invalid: %w", err)
+	}
+	return re.MatchString(fieldStr), nil
+}
+
+// evaluatePrefix checks if fieldValue has the given prefix
+func evaluatePrefix(fieldValue any, prefix string) (bool, error) {
+	if fieldValue == nil {
+		return false, nil
+	}
+	fieldStr := fmt.Sprintf("%v", fieldValue)
+	return strings.HasPrefix(fieldStr, prefix), nil
+}
+
+// evaluateRegex checks if fieldValue matches the regex pattern
+func evaluateRegex(fieldValue any, pattern string) (bool, error) {
+	if fieldValue == nil {
+		return false, nil
+	}
+	fieldStr := fmt.Sprintf("%v", fieldValue)
+	re, err := regexp2.Compile(pattern, regexp2.RE2)
+	if err != nil {
+		return false, fmt.Errorf("regex pattern invalid: %w", err)
+	}
+	matched, err := re.MatchString(fieldStr)
+	if err != nil {
+		return false, err
+	}
+	return matched, nil
+}
+
+// evaluateContain checks if fieldValue (array or string) contains target (single value or array)
+func evaluateContain(fieldValue any, target any) (bool, error) {
+	if fieldValue == nil || target == nil {
+		return false, nil
+	}
+
+	// Target as array: field must contain all elements
+	if targetList, ok := target.([]any); ok {
+		if len(targetList) == 0 {
+			return false, fmt.Errorf("contain operation requires non-empty array value")
+		}
+		for _, t := range targetList {
+			contains, err := evaluateContainSingle(fieldValue, t)
+			if err != nil {
+				return false, err
+			}
+			if !contains {
+				return false, nil
+			}
+		}
+		return true, nil
+	}
+
+	return evaluateContainSingle(fieldValue, target)
+}
+
+// evaluateContainSingle checks if fieldValue contains a single target value
+func evaluateContainSingle(fieldValue any, target any) (bool, error) {
+	// Field is string: substring contain
+	if fieldStr, ok := fieldValue.(string); ok {
+		targetStr := fmt.Sprintf("%v", target)
+		return strings.Contains(fieldStr, targetStr), nil
+	}
+
+	// Field is slice/array: element contain
+	rv := reflect.ValueOf(fieldValue)
+	switch rv.Kind() {
+	case reflect.Slice, reflect.Array:
+		for i := 0; i < rv.Len(); i++ {
+			elem := rv.Index(i).Interface()
+			if compareValuesSimple(elem, target) {
+				return true, nil
+			}
+		}
+		return false, nil
+	}
+
+	return false, fmt.Errorf("contain operation requires string or array field, got %T", fieldValue)
+}
+
+// evaluateCurrent checks if fieldValue (datetime) falls within the current year/month/week/day/hour/minute
+func evaluateCurrent(fieldValue any, unit string) (bool, error) {
+	fieldTime, err := parseTime(fieldValue)
+	if err != nil {
+		return false, err
+	}
+
+	tz := os.Getenv("TZ")
+	if tz == "" {
+		tz = "UTC"
+	}
+	location, err := time.LoadLocation(tz)
+	if err != nil {
+		location = time.UTC
+	}
+
+	now := time.Now().In(location)
+	var start, end time.Time
+
+	switch unit {
+	case "year":
+		start = time.Date(now.Year(), 1, 1, 0, 0, 0, 0, location)
+		end = start.AddDate(1, 0, 0)
+	case "month":
+		start = time.Date(now.Year(), now.Month(), 1, 0, 0, 0, 0, location)
+		end = start.AddDate(0, 1, 0)
+	case "week":
+		weekday := now.Weekday()
+		offset := int(time.Monday - weekday)
+		if offset > 0 {
+			offset -= 7
+		}
+		start = time.Date(now.Year(), now.Month(), now.Day()+offset, 0, 0, 0, 0, location)
+		end = start.AddDate(0, 0, 7)
+	case "day":
+		start = time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, location)
+		end = start.AddDate(0, 0, 1)
+	case "hour":
+		start = time.Date(now.Year(), now.Month(), now.Day(), now.Hour(), 0, 0, 0, location)
+		end = start.Add(time.Hour)
+	case "minute":
+		start = time.Date(now.Year(), now.Month(), now.Day(), now.Hour(), now.Minute(), 0, 0, location)
+		end = start.Add(time.Minute)
+	default:
+		return false, fmt.Errorf("current operation requires unit year/month/week/day/hour/minute, got %s", unit)
+	}
+
+	// fieldTime must be in [start, end)
+	return !fieldTime.Before(start) && fieldTime.Before(end), nil
 }
 
 // parseTime parses time from various formats
