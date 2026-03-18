@@ -46,7 +46,7 @@ run_module() {
     fi
 
     if [[ ! -f "$mod/Makefile" ]]; then
-        FAILED+=("$mod:Makefile missing")
+        SKIPPED+=("$mod:Makefile missing (not yet onboarded to testing standard)")
         return
     fi
 

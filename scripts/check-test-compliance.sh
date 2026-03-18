@@ -34,6 +34,9 @@ ALL_MODULES=("${GO_MODULES[@]}" "${PYTHON_MODULES[@]}")
 for mod in "${ALL_MODULES[@]}"; do
     echo ""
     echo "=== $mod ==="
+    if [[ ! -f "$mod/Makefile" ]]; then
+        echo "  INFO  module is not yet onboarded to testing standard"
+    fi
     check "Makefile exists" "test -f $mod/Makefile"
     check "make test target" "grep -q '^test:' $mod/Makefile 2>/dev/null"
     check "make lint target" "grep -q '^lint:' $mod/Makefile 2>/dev/null"
