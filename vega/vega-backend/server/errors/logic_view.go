@@ -22,7 +22,7 @@ const (
 	VegaBackend_LogicView_LengthExceeded_FieldFeatureComment = "VegaBackend.LogicView.LengthExceeded.FieldFeatureComment"
 )
 
-var LogicViewResourceErrCodeList = []string{
+var LogicViewErrCodeList = []string{
 	VegaBackend_LogicView_InvalidParameter_LogicDefinition,
 	VegaBackend_LogicView_InvalidParameter_FieldName,
 	VegaBackend_LogicView_LengthExceeded_FieldName,

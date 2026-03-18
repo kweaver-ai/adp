@@ -95,4 +95,5 @@ func init() {
 	rest.Register(ConnectorTypeErrCodeList)
 	rest.Register(TaskErrCodeList)
 	rest.Register(QueryErrCodeList)
+	rest.Register(LogicViewErrCodeList)
 }
