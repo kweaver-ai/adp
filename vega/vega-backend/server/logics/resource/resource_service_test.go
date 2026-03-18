@@ -179,6 +179,99 @@ func TestGetByCatalogID_Success(t *testing.T) {
 	}
 }
 
+// ===== List 分页逻辑 =====
+
+func TestList_Pagination(t *testing.T) {
+	rs, mockRA, mockPS, _, mockUMS := newTestService(t)
+	resources := []*interfaces.Resource{{ID: "r1"}, {ID: "r2"}, {ID: "r3"}, {ID: "r4"}}
+	mockRA.EXPECT().List(gomock.Any(), gomock.Any()).Return(resources, int64(4), nil)
+	mockPS.EXPECT().FilterResources(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), true).
+		Return(map[string]interfaces.PermissionResourceOps{
+			"r1": {}, "r2": {}, "r3": {}, "r4": {},
+		}, nil)
+	mockUMS.EXPECT().GetAccountNames(gomock.Any(), gomock.Any()).Return(nil)
+
+	result, total, err := rs.List(context.Background(), interfaces.ResourcesQueryParams{
+		PaginationQueryParams: interfaces.PaginationQueryParams{Offset: 1, Limit: 2},
+	})
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if total != 4 {
+		t.Errorf("expected total 4, got %d", total)
+	}
+	if len(result) != 2 {
+		t.Errorf("expected 2 results, got %d", len(result))
+	}
+	if result[0].ID != "r2" {
+		t.Errorf("expected first item 'r2', got '%s'", result[0].ID)
+	}
+}
+
+func TestList_ReturnAll(t *testing.T) {
+	rs, mockRA, mockPS, _, mockUMS := newTestService(t)
+	resources := []*interfaces.Resource{{ID: "r1"}, {ID: "r2"}}
+	mockRA.EXPECT().List(gomock.Any(), gomock.Any()).Return(resources, int64(2), nil)
+	mockPS.EXPECT().FilterResources(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), true).
+		Return(map[string]interfaces.PermissionResourceOps{
+			"r1": {}, "r2": {},
+		}, nil)
+	mockUMS.EXPECT().GetAccountNames(gomock.Any(), gomock.Any()).Return(nil)
+
+	result, total, err := rs.List(context.Background(), interfaces.ResourcesQueryParams{
+		PaginationQueryParams: interfaces.PaginationQueryParams{Limit: -1},
+	})
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if total != 2 {
+		t.Errorf("expected total 2, got %d", total)
+	}
+	if len(result) != 2 {
+		t.Errorf("expected 2 results, got %d", len(result))
+	}
+}
+
+func TestList_OffsetBeyondTotal(t *testing.T) {
+	rs, mockRA, mockPS, _, _ := newTestService(t)
+	resources := []*interfaces.Resource{{ID: "r1"}}
+	mockRA.EXPECT().List(gomock.Any(), gomock.Any()).Return(resources, int64(1), nil)
+	mockPS.EXPECT().FilterResources(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), true).
+		Return(map[string]interfaces.PermissionResourceOps{"r1": {}}, nil)
+
+	result, total, err := rs.List(context.Background(), interfaces.ResourcesQueryParams{
+		PaginationQueryParams: interfaces.PaginationQueryParams{Offset: 10, Limit: 5},
+	})
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if total != 1 {
+		t.Errorf("expected total 1, got %d", total)
+	}
+	if len(result) != 0 {
+		t.Errorf("expected 0 results, got %d", len(result))
+	}
+}
+
+func TestCreate_DatasetCategory(t *testing.T) {
+	rs, mockRA, mockPS, mockDS, _ := newTestService(t)
+	mockPS.EXPECT().CheckPermission(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
+	mockRA.EXPECT().Create(gomock.Any(), gomock.Any()).Return(nil)
+	mockDS.EXPECT().Create(gomock.Any(), gomock.Any()).Return(nil)
+	mockPS.EXPECT().CreateResources(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
+
+	id, err := rs.Create(context.Background(), &interfaces.ResourceRequest{
+		Name:     "test-dataset",
+		Category: interfaces.ResourceCategoryDataset,
+	})
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if id == "" {
+		t.Error("expected non-empty ID")
+	}
+}
+
 // ===== DeleteByIDs =====
 
 func TestDeleteByIDs_Empty(t *testing.T) {

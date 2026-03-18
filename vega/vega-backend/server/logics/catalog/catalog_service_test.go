@@ -295,6 +295,138 @@ func TestTestConnection_Valid(t *testing.T) {
 	}
 }
 
+// ===== List 分页逻辑 =====
+
+func TestList_ReturnAll(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	mockCA := mock_interfaces.NewMockCatalogAccess(ctrl)
+	mockPS := mock_interfaces.NewMockPermissionService(ctrl)
+	mockUMS := mock_interfaces.NewMockUserMgmtService(ctrl)
+
+	catalogs := []*interfaces.Catalog{{ID: "c1"}, {ID: "c2"}, {ID: "c3"}}
+	mockCA.EXPECT().List(gomock.Any(), gomock.Any()).Return(catalogs, int64(3), nil)
+	mockPS.EXPECT().FilterResources(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), true).
+		Return(map[string]interfaces.PermissionResourceOps{
+			"c1": {ResourceID: "c1"}, "c2": {ResourceID: "c2"}, "c3": {ResourceID: "c3"},
+		}, nil)
+	mockUMS.EXPECT().GetAccountNames(gomock.Any(), gomock.Any()).Return(nil)
+
+	cs := &catalogService{ca: mockCA, ps: mockPS, ums: mockUMS}
+	result, total, err := cs.List(context.Background(), interfaces.CatalogsQueryParams{
+		PaginationQueryParams: interfaces.PaginationQueryParams{Limit: -1},
+	})
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if total != 3 {
+		t.Errorf("expected total 3, got %d", total)
+	}
+	if len(result) != 3 {
+		t.Errorf("expected 3 results, got %d", len(result))
+	}
+}
+
+func TestList_Pagination(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	mockCA := mock_interfaces.NewMockCatalogAccess(ctrl)
+	mockPS := mock_interfaces.NewMockPermissionService(ctrl)
+	mockUMS := mock_interfaces.NewMockUserMgmtService(ctrl)
+
+	catalogs := []*interfaces.Catalog{{ID: "c1"}, {ID: "c2"}, {ID: "c3"}, {ID: "c4"}, {ID: "c5"}}
+	mockCA.EXPECT().List(gomock.Any(), gomock.Any()).Return(catalogs, int64(5), nil)
+	mockPS.EXPECT().FilterResources(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), true).
+		Return(map[string]interfaces.PermissionResourceOps{
+			"c1": {}, "c2": {}, "c3": {}, "c4": {}, "c5": {},
+		}, nil)
+	mockUMS.EXPECT().GetAccountNames(gomock.Any(), gomock.Any()).Return(nil)
+
+	cs := &catalogService{ca: mockCA, ps: mockPS, ums: mockUMS}
+	result, total, err := cs.List(context.Background(), interfaces.CatalogsQueryParams{
+		PaginationQueryParams: interfaces.PaginationQueryParams{Offset: 1, Limit: 2},
+	})
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if total != 5 {
+		t.Errorf("expected total 5, got %d", total)
+	}
+	if len(result) != 2 {
+		t.Errorf("expected 2 results (page), got %d", len(result))
+	}
+	if result[0].ID != "c2" {
+		t.Errorf("expected first item 'c2', got '%s'", result[0].ID)
+	}
+}
+
+func TestList_OffsetBeyondTotal(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	mockCA := mock_interfaces.NewMockCatalogAccess(ctrl)
+	mockPS := mock_interfaces.NewMockPermissionService(ctrl)
+
+	catalogs := []*interfaces.Catalog{{ID: "c1"}, {ID: "c2"}}
+	mockCA.EXPECT().List(gomock.Any(), gomock.Any()).Return(catalogs, int64(2), nil)
+	mockPS.EXPECT().FilterResources(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), true).
+		Return(map[string]interfaces.PermissionResourceOps{
+			"c1": {}, "c2": {},
+		}, nil)
+
+	cs := &catalogService{ca: mockCA, ps: mockPS}
+	result, total, err := cs.List(context.Background(), interfaces.CatalogsQueryParams{
+		PaginationQueryParams: interfaces.PaginationQueryParams{Offset: 10, Limit: 5},
+	})
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if total != 2 {
+		t.Errorf("expected total 2, got %d", total)
+	}
+	if len(result) != 0 {
+		t.Errorf("expected 0 results for offset beyond total, got %d", len(result))
+	}
+}
+
+func TestList_PermissionFiltersOut(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	mockCA := mock_interfaces.NewMockCatalogAccess(ctrl)
+	mockPS := mock_interfaces.NewMockPermissionService(ctrl)
+	mockUMS := mock_interfaces.NewMockUserMgmtService(ctrl)
+
+	catalogs := []*interfaces.Catalog{{ID: "c1"}, {ID: "c2"}, {ID: "c3"}}
+	mockCA.EXPECT().List(gomock.Any(), gomock.Any()).Return(catalogs, int64(3), nil)
+	// 权限只返回 c1 和 c3，c2 被过滤
+	mockPS.EXPECT().FilterResources(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), true).
+		Return(map[string]interfaces.PermissionResourceOps{
+			"c1": {}, "c3": {},
+		}, nil)
+	mockUMS.EXPECT().GetAccountNames(gomock.Any(), gomock.Any()).Return(nil)
+
+	cs := &catalogService{ca: mockCA, ps: mockPS, ums: mockUMS}
+	result, total, err := cs.List(context.Background(), interfaces.CatalogsQueryParams{
+		PaginationQueryParams: interfaces.PaginationQueryParams{Limit: -1},
+	})
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if total != 2 {
+		t.Errorf("expected total 2 after permission filter, got %d", total)
+	}
+	if len(result) != 2 {
+		t.Errorf("expected 2 results, got %d", len(result))
+	}
+}
+
+func TestList_DBError(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	mockCA := mock_interfaces.NewMockCatalogAccess(ctrl)
+	mockCA.EXPECT().List(gomock.Any(), gomock.Any()).Return(nil, int64(0), fmt.Errorf("db error"))
+
+	cs := &catalogService{ca: mockCA}
+	_, _, err := cs.List(context.Background(), interfaces.CatalogsQueryParams{})
+	if err == nil {
+		t.Fatal("expected error")
+	}
+}
+
 // ===== DeleteByIDs empty =====
 
 func TestDeleteByIDs_Empty(t *testing.T) {
