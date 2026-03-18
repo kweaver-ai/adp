@@ -8,6 +8,10 @@ package driveradapters
 
 import (
 	"context"
+	"fmt"
+	"net/http"
+	"time"
+
 	"github.com/gin-gonic/gin"
 	"github.com/kweaver-ai/TelemetrySDK-Go/exporter/v2/ar_trace"
 	"github.com/kweaver-ai/kweaver-go-lib/hydra"
@@ -15,8 +19,6 @@ import (
 	o11y "github.com/kweaver-ai/kweaver-go-lib/observability"
 	"github.com/kweaver-ai/kweaver-go-lib/rest"
 	"go.opentelemetry.io/otel/trace"
-	//"fmt"
-	"net/http"
 
 	verrors "vega-backend/errors"
 	"vega-backend/interfaces"
@@ -49,7 +51,7 @@ func (r *restHandler) QueryResourceDataByIn(c *gin.Context) {
 
 // queryResourceData is the shared implementation
 func (r *restHandler) queryResourceData(c *gin.Context, ctx context.Context, span trace.Span, visitor hydra.Visitor) {
-	//start := time.Now()
+	start := time.Now()
 
 	accountInfo := interfaces.AccountInfo{
 		ID:   visitor.ID,
@@ -59,18 +61,18 @@ func (r *restHandler) queryResourceData(c *gin.Context, ctx context.Context, spa
 
 	o11y.AddHttpAttrs4API(span, o11y.GetAttrsByGinCtx(c))
 
-	//// 1. check重载请求头
-	//method := c.GetHeader(interfaces.HTTP_HEADER_METHOD_OVERRIDE)
-	//if method != http.MethodGet {
-	//	httpErr := rest.NewHTTPError(ctx, http.StatusBadRequest, verrors.VegaBackend_InvalidParameter_OverrideMethod)
-	//	o11y.Error(ctx, fmt.Sprintf("%s. %v", httpErr.BaseError.Description, httpErr.BaseError.ErrorDetails))
-	//
-	//	o11y.AddHttpAttrs4HttpError(span, httpErr)
-	//	rest.ReplyErrorWithHeaders(c, httpErr, map[string]string{
-	//		interfaces.X_REQUEST_TOOK: time.Since(start).String(),
-	//	})
-	//	return
-	//}
+	// 1. check重载请求头
+	method := c.GetHeader(interfaces.HTTP_HEADER_METHOD_OVERRIDE)
+	if method != http.MethodGet {
+		httpErr := rest.NewHTTPError(ctx, http.StatusBadRequest, verrors.VegaBackend_InvalidParameter_OverrideMethod)
+		o11y.Error(ctx, fmt.Sprintf("%s. %v", httpErr.BaseError.Description, httpErr.BaseError.ErrorDetails))
+
+		o11y.AddHttpAttrs4HttpError(span, httpErr)
+		rest.ReplyErrorWithHeaders(c, httpErr, map[string]string{
+			interfaces.X_REQUEST_TOOK: time.Since(start).String(),
+		})
+		return
+	}
 
 	resourceID := c.Param("id")
 

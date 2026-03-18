@@ -13,9 +13,9 @@ import (
 )
 
 type KnnVectorCond struct {
-	mCfg             *interfaces.FilterCondCfg
-	mFilterFieldName string
-	mSubConds        []interfaces.FilterCondition
+	Cfg             *interfaces.FilterCondCfg
+	FilterFieldName string
+	SubConds        []interfaces.FilterCondition
 }
 
 func (c *KnnVectorCond) GetOperation() string { return OperationKnnVector }
@@ -57,12 +57,11 @@ func (c *KnnVectorCond) New(ctx context.Context, cfg *interfaces.FilterCondCfg,
 		if cond != nil {
 			subConds = append(subConds, cond)
 		}
-
 	}
 
 	return &KnnVectorCond{
-		mCfg:             cfg,
-		mFilterFieldName: cfg.Name,
-		mSubConds:        subConds,
+		Cfg:             cfg,
+		FilterFieldName: cfg.Name,
+		SubConds:        subConds,
 	}, nil
 }

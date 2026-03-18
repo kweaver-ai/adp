@@ -11,9 +11,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"reflect"
 	"strings"
-	"time"
 
 	"github.com/mitchellh/mapstructure"
 	"github.com/opensearch-project/opensearch-go/v2"
@@ -392,7 +390,7 @@ func (c *OpenSearchConnector) ExecuteQuery(ctx context.Context, resource *interf
 	}
 
 	// Get the index name from the resource
-	indexName := resource.SourceIdentifier
+	indexName := resource.ID
 	if indexName == "" {
 		return nil, fmt.Errorf("index name is empty in resource")
 	}
@@ -459,7 +457,7 @@ func (c *OpenSearchConnector) ExecuteQuery(ctx context.Context, resource *interf
 	// Handle filter conditions
 	if params != nil && params.ActualFilterCond != nil {
 		// Build filter condition query
-		filterQuery, err := c.buildFilterQuery(params.ActualFilterCond, resource.SchemaDefinition)
+		filterQuery, err := c.ConvertFilterCondition(params.ActualFilterCond, resource.SchemaDefinition)
 		if err != nil {
 			return nil, fmt.Errorf("failed to build filter query: %w", err)
 		}
@@ -541,944 +539,591 @@ func (c *OpenSearchConnector) ExecuteQuery(ctx context.Context, resource *interf
 	}, nil
 }
 
-// buildFilterQuery builds an OpenSearch filter query from filter conditions
-func (c *OpenSearchConnector) buildFilterQuery(filterCond interfaces.FilterCondition, schemaDefinition []*interfaces.Property) (map[string]any, error) {
-	if filterCond == nil {
-		return nil, nil
+// Create index
+func (c *OpenSearchConnector) Create(ctx context.Context, name string, schemaDefinition []*interfaces.Property) error {
+	if err := c.Connect(ctx); err != nil {
+		return err
 	}
 
-	// Create a field map from schema definition
-	fieldsMap := make(map[string]*interfaces.Property)
-	for _, field := range schemaDefinition {
-		fieldsMap[field.Name] = field
+	exist, err := c.indexExist(ctx, name)
+	if err != nil {
+		return err
+	}
+	// index exist
+	if exist {
+		return fmt.Errorf("index %s already exist", name)
 	}
 
-	// Convert filter condition to OpenSearch query format based on operation type
-	operation := filterCond.GetOperation()
-
-	switch operation {
-	case "and":
-		return c.buildAndQuery(filterCond, fieldsMap)
-	case "or":
-		return c.buildOrQuery(filterCond, fieldsMap)
-	case "==", "eq":
-		return c.buildEqualQuery(filterCond, fieldsMap)
-	case "!=", "not_eq":
-		return c.buildNotEqualQuery(filterCond, fieldsMap)
-	case ">", "gt":
-		return c.buildGtQuery(filterCond, fieldsMap)
-	case ">=", "gte":
-		return c.buildGteQuery(filterCond, fieldsMap)
-	case "<", "lt":
-		return c.buildLtQuery(filterCond, fieldsMap)
-	case "<=", "lte":
-		return c.buildLteQuery(filterCond, fieldsMap)
-	case "in":
-		return c.buildInQuery(filterCond, fieldsMap)
-	case "not_in":
-		return c.buildNotInQuery(filterCond, fieldsMap)
-	case "like":
-		return c.buildLikeQuery(filterCond, fieldsMap)
-	case "not_like":
-		return c.buildNotLikeQuery(filterCond, fieldsMap)
-	case "contain":
-		return c.buildContainQuery(filterCond, fieldsMap)
-	case "not_contain":
-		return c.buildNotContainQuery(filterCond, fieldsMap)
-	case "range":
-		return c.buildRangeQuery(filterCond, fieldsMap)
-	case "out_range":
-		return c.buildOutRangeQuery(filterCond, fieldsMap)
-	case "exist":
-		return c.buildExistQuery(filterCond, fieldsMap)
-	case "not_exist":
-		return c.buildNotExistQuery(filterCond, fieldsMap)
-	case "empty":
-		return c.buildEmptyQuery(filterCond, fieldsMap)
-	case "not_empty":
-		return c.buildNotEmptyQuery(filterCond, fieldsMap)
-	case "regex":
-		return c.buildRegexQuery(filterCond, fieldsMap)
-	case "match":
-		return c.buildMatchQuery(filterCond, fieldsMap)
-	case "match_phrase":
-		return c.buildMatchPhraseQuery(filterCond, fieldsMap)
-	case "prefix":
-		return c.buildPrefixQuery(filterCond, fieldsMap)
-	case "not_prefix":
-		return c.buildNotPrefixQuery(filterCond, fieldsMap)
-	case "null":
-		return c.buildNullQuery(filterCond, fieldsMap)
-	case "not_null":
-		return c.buildNotNullQuery(filterCond, fieldsMap)
-	case "true":
-		return c.buildTrueQuery(filterCond, fieldsMap)
-	case "false":
-		return c.buildFalseQuery(filterCond, fieldsMap)
-	case "before":
-		return c.buildBeforeQuery(filterCond, fieldsMap)
-	case "current":
-		return c.buildCurrentQuery(filterCond, fieldsMap)
-	case "between":
-		return c.buildBetweenQuery(filterCond, fieldsMap)
-	case "knn_vector":
-		return c.buildKnnVectorQuery(filterCond, fieldsMap)
-	case "multi_match":
-		return c.buildMultiMatchQuery(filterCond, fieldsMap)
-	default:
-		// Default to match_all for unsupported operations
-		return map[string]any{
-			"match_all": map[string]any{},
-		}, nil
-	}
-}
-
-// getSubConditions extracts sub-conditions from a filter condition
-func (c *OpenSearchConnector) getSubConditions(filterCond interfaces.FilterCondition) ([]interfaces.FilterCondition, error) {
-	// Use reflection to access SubConds field
-	val := reflect.ValueOf(filterCond).Elem()
-	field := val.FieldByName("SubConds")
-	if !field.IsValid() {
-		return nil, fmt.Errorf("filter condition does not have SubConds field")
+	mappings := map[string]any{
+		"properties": map[string]any{},
 	}
 
-	subConds := make([]interfaces.FilterCondition, field.Len())
-	for i := 0; i < field.Len(); i++ {
-		subCond, ok := field.Index(i).Interface().(interfaces.FilterCondition)
-		if !ok {
-			return nil, fmt.Errorf("sub-condition at index %d is not a FilterCondition", i)
+	mapping := map[string]any{
+		"mappings": mappings,
+	}
+
+	mapping["settings"] = map[string]any{
+		"index": map[string]any{
+			"number_of_shards":   1,
+			"number_of_replicas": 0,
+		},
+	}
+
+	// 检查是否有vector字段
+	hasVectorField := false
+	// 根据 schemaDefinition 添加字段映射
+	properties := mapping["mappings"].(map[string]any)["properties"].(map[string]any)
+	for _, column := range schemaDefinition {
+		fieldType := column.Type
+		switch column.Type {
+		case "integer":
+			fieldType = "long"
+		case "unsigned_integer":
+			fieldType = "unsigned_long"
+		case "float":
+			fieldType = "double"
+		case "decimal":
+			fieldType = "scaled_float"
+		case "string":
+			fieldType = "keyword"
+		case "datetime":
+			fieldType = "date"
+		case "time":
+			fieldType = "keyword"
+		case "json":
+			fieldType = "object"
+		case "vector":
+			hasVectorField = true
+			fieldType = "knn_vector"
+		case "point":
+			fieldType = "geo_point"
+		case "shape":
+			fieldType = "geo_shape"
+		default:
+			// 保持 fieldType 不变
 		}
-		subConds[i] = subCond
-	}
-
-	return subConds, nil
-}
-
-// getFieldNameAndValue extracts field name and value from a filter condition
-func (c *OpenSearchConnector) getFieldNameAndValue(filterCond interfaces.FilterCondition, fieldsMap map[string]*interfaces.Property) (string, any, error) {
-	// Use reflection to access Cfg field
-	val := reflect.ValueOf(filterCond).Elem()
-	cfgField := val.FieldByName("Cfg")
-	if !cfgField.IsValid() {
-		return "", nil, fmt.Errorf("filter condition does not have Cfg field")
-	}
-
-	cfg, ok := cfgField.Interface().(*interfaces.FilterCondCfg)
-	if !ok {
-		return "", nil, fmt.Errorf("Cfg field is not a FilterCondCfg")
-	}
-
-	fieldName := cfg.Name
-	if fieldName == "" {
-		return "", nil, fmt.Errorf("field name is empty")
-	}
-
-	// Use RealValue if available, otherwise use Value
-	value := cfg.RealValue
-	if value == nil {
-		value = cfg.Value
-	}
-
-	return fieldName, value, nil
-}
-
-// buildAndQuery builds an AND query
-func (c *OpenSearchConnector) buildAndQuery(filterCond interfaces.FilterCondition, fieldsMap map[string]*interfaces.Property) (map[string]any, error) {
-	subConds, err := c.getSubConditions(filterCond)
-	if err != nil {
-		return nil, err
-	}
-
-	if len(subConds) == 0 {
-		return map[string]any{
-			"match_all": map[string]any{},
-		}, nil
-	}
-
-	mustClauses := make([]map[string]any, 0, len(subConds))
-	for _, subCond := range subConds {
-		clause, err := c.buildFilterQuery(subCond, nil)
-		if err != nil {
-			return nil, err
+		// 创建字段属性映射
+		fieldProps := map[string]any{
+			"type": fieldType,
 		}
-		mustClauses = append(mustClauses, clause)
-	}
-
-	return map[string]any{
-		"bool": map[string]any{
-			"must": mustClauses,
-		},
-	}, nil
-}
-
-// buildOrQuery builds an OR query
-func (c *OpenSearchConnector) buildOrQuery(filterCond interfaces.FilterCondition, fieldsMap map[string]*interfaces.Property) (map[string]any, error) {
-	subConds, err := c.getSubConditions(filterCond)
-	if err != nil {
-		return nil, err
-	}
-
-	if len(subConds) == 0 {
-		return map[string]any{
-			"match_all": map[string]any{},
-		}, nil
-	}
-
-	shouldClauses := make([]map[string]any, 0, len(subConds))
-	for _, subCond := range subConds {
-		clause, err := c.buildFilterQuery(subCond, nil)
-		if err != nil {
-			return nil, err
+		// 为decimal类型添加scaling_factor参数
+		if column.Type == "decimal" {
+			fieldProps["scaling_factor"] = 1000000000000000000.0 // 18位小数
 		}
-		shouldClauses = append(shouldClauses, clause)
-	}
-
-	return map[string]any{
-		"bool": map[string]any{
-			"should":               shouldClauses,
-			"minimum_should_match": 1,
-		},
-	}, nil
-}
-
-// buildEqualQuery builds an equality query
-func (c *OpenSearchConnector) buildEqualQuery(filterCond interfaces.FilterCondition, fieldsMap map[string]*interfaces.Property) (map[string]any, error) {
-	fieldName, value, err := c.getFieldNameAndValue(filterCond, fieldsMap)
-	if err != nil {
-		return nil, err
-	}
-
-	return map[string]any{
-		"term": map[string]any{
-			fieldName: value,
-		},
-	}, nil
-}
-
-// buildNotEqualQuery builds a not equality query
-func (c *OpenSearchConnector) buildNotEqualQuery(filterCond interfaces.FilterCondition, fieldsMap map[string]*interfaces.Property) (map[string]any, error) {
-	fieldName, value, err := c.getFieldNameAndValue(filterCond, fieldsMap)
-	if err != nil {
-		return nil, err
-	}
-
-	return map[string]any{
-		"bool": map[string]any{
-			"must_not": []map[string]any{
-				{
-					"term": map[string]any{
-						fieldName: value,
-					},
-				},
-			},
-		},
-	}, nil
-}
-
-// buildGtQuery builds a greater than query
-func (c *OpenSearchConnector) buildGtQuery(filterCond interfaces.FilterCondition, fieldsMap map[string]*interfaces.Property) (map[string]any, error) {
-	fieldName, value, err := c.getFieldNameAndValue(filterCond, fieldsMap)
-	if err != nil {
-		return nil, err
-	}
-
-	return map[string]any{
-		"range": map[string]any{
-			fieldName: map[string]any{
-				"gt": value,
-			},
-		},
-	}, nil
-}
-
-// buildGteQuery builds a greater than or equal query
-func (c *OpenSearchConnector) buildGteQuery(filterCond interfaces.FilterCondition, fieldsMap map[string]*interfaces.Property) (map[string]any, error) {
-	fieldName, value, err := c.getFieldNameAndValue(filterCond, fieldsMap)
-	if err != nil {
-		return nil, err
-	}
-
-	return map[string]any{
-		"range": map[string]any{
-			fieldName: map[string]any{
-				"gte": value,
-			},
-		},
-	}, nil
-}
-
-// buildLtQuery builds a less than query
-func (c *OpenSearchConnector) buildLtQuery(filterCond interfaces.FilterCondition, fieldsMap map[string]*interfaces.Property) (map[string]any, error) {
-	fieldName, value, err := c.getFieldNameAndValue(filterCond, fieldsMap)
-	if err != nil {
-		return nil, err
-	}
-
-	return map[string]any{
-		"range": map[string]any{
-			fieldName: map[string]any{
-				"lt": value,
-			},
-		},
-	}, nil
-}
-
-// buildLteQuery builds a less than or equal query
-func (c *OpenSearchConnector) buildLteQuery(filterCond interfaces.FilterCondition, fieldsMap map[string]*interfaces.Property) (map[string]any, error) {
-	fieldName, value, err := c.getFieldNameAndValue(filterCond, fieldsMap)
-	if err != nil {
-		return nil, err
-	}
-
-	return map[string]any{
-		"range": map[string]any{
-			fieldName: map[string]any{
-				"lte": value,
-			},
-		},
-	}, nil
-}
-
-// buildInQuery builds an IN query
-func (c *OpenSearchConnector) buildInQuery(filterCond interfaces.FilterCondition, fieldsMap map[string]*interfaces.Property) (map[string]any, error) {
-	fieldName, value, err := c.getFieldNameAndValue(filterCond, fieldsMap)
-	if err != nil {
-		return nil, err
-	}
-
-	// Ensure value is a slice
-	values, ok := value.([]any)
-	if !ok {
-		return nil, fmt.Errorf("IN query requires an array of values")
-	}
-
-	return map[string]any{
-		"terms": map[string]any{
-			fieldName: values,
-		},
-	}, nil
-}
-
-// buildNotInQuery builds a NOT IN query
-func (c *OpenSearchConnector) buildNotInQuery(filterCond interfaces.FilterCondition, fieldsMap map[string]*interfaces.Property) (map[string]any, error) {
-	fieldName, value, err := c.getFieldNameAndValue(filterCond, fieldsMap)
-	if err != nil {
-		return nil, err
-	}
-
-	// Ensure value is a slice
-	values, ok := value.([]any)
-	if !ok {
-		return nil, fmt.Errorf("NOT IN query requires an array of values")
-	}
-
-	return map[string]any{
-		"bool": map[string]any{
-			"must_not": []map[string]any{
-				{
-					"terms": map[string]any{
-						fieldName: values,
-					},
-				},
-			},
-		},
-	}, nil
-}
-
-// buildLikeQuery builds a LIKE query
-func (c *OpenSearchConnector) buildLikeQuery(filterCond interfaces.FilterCondition, fieldsMap map[string]*interfaces.Property) (map[string]any, error) {
-	fieldName, value, err := c.getFieldNameAndValue(filterCond, fieldsMap)
-	if err != nil {
-		return nil, err
-	}
-
-	// Convert SQL LIKE pattern to wildcard pattern
-	valueStr, ok := value.(string)
-	if !ok {
-		return nil, fmt.Errorf("LIKE query requires a string value")
-	}
-
-	// Convert SQL LIKE wildcards to OpenSearch wildcards
-	// SQL: % -> OpenSearch: *
-	// SQL: _ -> OpenSearch: ?
-	pattern := strings.ReplaceAll(valueStr, "%", "*")
-	pattern = strings.ReplaceAll(pattern, "_", "?")
-
-	return map[string]any{
-		"wildcard": map[string]any{
-			fieldName: pattern,
-		},
-	}, nil
-}
-
-// buildNotLikeQuery builds a NOT LIKE query
-func (c *OpenSearchConnector) buildNotLikeQuery(filterCond interfaces.FilterCondition, fieldsMap map[string]*interfaces.Property) (map[string]any, error) {
-	fieldName, value, err := c.getFieldNameAndValue(filterCond, fieldsMap)
-	if err != nil {
-		return nil, err
-	}
-
-	// Convert SQL LIKE pattern to wildcard pattern
-	valueStr, ok := value.(string)
-	if !ok {
-		return nil, fmt.Errorf("NOT LIKE query requires a string value")
-	}
-
-	// Convert SQL LIKE wildcards to OpenSearch wildcards
-	pattern := strings.ReplaceAll(valueStr, "%", "*")
-	pattern = strings.ReplaceAll(pattern, "_", "?")
-
-	return map[string]any{
-		"bool": map[string]any{
-			"must_not": []map[string]any{
-				{
-					"wildcard": map[string]any{
-						fieldName: pattern,
-					},
-				},
-			},
-		},
-	}, nil
-}
-
-// buildContainQuery builds a CONTAIN query
-func (c *OpenSearchConnector) buildContainQuery(filterCond interfaces.FilterCondition, fieldsMap map[string]*interfaces.Property) (map[string]any, error) {
-	fieldName, value, err := c.getFieldNameAndValue(filterCond, fieldsMap)
-	if err != nil {
-		return nil, err
-	}
-
-	// Check if value is an array/slice
-	values, isArray := value.([]any)
-	if isArray && len(values) > 0 {
-		// For array values, use a bool query with should clauses
-		// This matches documents that contain any of the values
-		shouldClauses := make([]map[string]any, 0, len(values))
-		for _, v := range values {
-			shouldClauses = append(shouldClauses, map[string]any{
-				"match": map[string]any{
-					fieldName: v,
-				},
-			})
-		}
-		return map[string]any{
-			"bool": map[string]any{
-				"should":               shouldClauses,
-				"minimum_should_match": 1,
-			},
-		}, nil
-	}
-
-	// For single value, use simple match query
-	return map[string]any{
-		"match": map[string]any{
-			fieldName: value,
-		},
-	}, nil
-}
-
-// buildNotContainQuery builds a NOT CONTAIN query
-func (c *OpenSearchConnector) buildNotContainQuery(filterCond interfaces.FilterCondition, fieldsMap map[string]*interfaces.Property) (map[string]any, error) {
-	fieldName, value, err := c.getFieldNameAndValue(filterCond, fieldsMap)
-	if err != nil {
-		return nil, err
-	}
-
-	// Check if value is an array/slice
-	values, isArray := value.([]any)
-	if isArray && len(values) > 0 {
-		// For array values, use a bool query with must_not clauses
-		// This matches documents that do not contain any of the values
-		mustNotClauses := make([]map[string]any, 0, len(values))
-		for _, v := range values {
-			mustNotClauses = append(mustNotClauses, map[string]any{
-				"match": map[string]any{
-					fieldName: v,
-				},
-			})
-		}
-		return map[string]any{
-			"bool": map[string]any{
-				"must_not": mustNotClauses,
-			},
-		}, nil
-	}
-
-	// For single value, use simple bool query with must_not
-	return map[string]any{
-		"bool": map[string]any{
-			"must_not": []map[string]any{
-				{
-					"match": map[string]any{
-						fieldName: value,
-					},
-				},
-			},
-		},
-	}, nil
-}
-
-// buildRangeQuery builds a RANGE query
-func (c *OpenSearchConnector) buildRangeQuery(filterCond interfaces.FilterCondition, fieldsMap map[string]*interfaces.Property) (map[string]any, error) {
-	fieldName, value, err := c.getFieldNameAndValue(filterCond, fieldsMap)
-	if err != nil {
-		return nil, err
-	}
-
-	// Ensure value is a slice with 2 elements
-	values, ok := value.([]any)
-	if !ok || len(values) != 2 {
-		return nil, fmt.Errorf("RANGE query requires an array with 2 values")
-	}
-
-	return map[string]any{
-		"range": map[string]any{
-			fieldName: map[string]any{
-				"gte": values[0],
-				"lte": values[1],
-			},
-		},
-	}, nil
-}
-
-// buildOutRangeQuery builds an OUT RANGE query
-func (c *OpenSearchConnector) buildOutRangeQuery(filterCond interfaces.FilterCondition, fieldsMap map[string]*interfaces.Property) (map[string]any, error) {
-	fieldName, value, err := c.getFieldNameAndValue(filterCond, fieldsMap)
-	if err != nil {
-		return nil, err
-	}
-
-	// Ensure value is a slice with 2 elements
-	values, ok := value.([]any)
-	if !ok || len(values) != 2 {
-		return nil, fmt.Errorf("OUT RANGE query requires an array with 2 values")
-	}
-
-	return map[string]any{
-		"bool": map[string]any{
-			"should": []map[string]any{
-				{
-					"range": map[string]any{
-						fieldName: map[string]any{
-							"lt": values[0],
-						},
-					},
-				},
-				{
-					"range": map[string]any{
-						fieldName: map[string]any{
-							"gt": values[1],
-						},
-					},
-				},
-			},
-			"minimum_should_match": 1,
-		},
-	}, nil
-}
-
-// buildExistQuery builds an EXIST query
-func (c *OpenSearchConnector) buildExistQuery(filterCond interfaces.FilterCondition, fieldsMap map[string]*interfaces.Property) (map[string]any, error) {
-	fieldName, _, err := c.getFieldNameAndValue(filterCond, fieldsMap)
-	if err != nil {
-		return nil, err
-	}
-
-	return map[string]any{
-		"exists": map[string]any{
-			"field": fieldName,
-		},
-	}, nil
-}
-
-// buildNotExistQuery builds a NOT EXIST query
-func (c *OpenSearchConnector) buildNotExistQuery(filterCond interfaces.FilterCondition, fieldsMap map[string]*interfaces.Property) (map[string]any, error) {
-	fieldName, _, err := c.getFieldNameAndValue(filterCond, fieldsMap)
-	if err != nil {
-		return nil, err
-	}
-
-	return map[string]any{
-		"bool": map[string]any{
-			"must_not": []map[string]any{
-				{
-					"exists": map[string]any{
-						"field": fieldName,
-					},
-				},
-			},
-		},
-	}, nil
-}
-
-// buildEmptyQuery builds an EMPTY query
-func (c *OpenSearchConnector) buildEmptyQuery(filterCond interfaces.FilterCondition, fieldsMap map[string]*interfaces.Property) (map[string]any, error) {
-	fieldName, _, err := c.getFieldNameAndValue(filterCond, fieldsMap)
-	if err != nil {
-		return nil, err
-	}
-
-	return map[string]any{
-		"bool": map[string]any{
-			"must_not": []map[string]any{
-				{
-					"exists": map[string]any{
-						"field": fieldName,
-					},
-				},
-			},
-		},
-	}, nil
-}
-
-// buildNotEmptyQuery builds a NOT EMPTY query
-func (c *OpenSearchConnector) buildNotEmptyQuery(filterCond interfaces.FilterCondition, fieldsMap map[string]*interfaces.Property) (map[string]any, error) {
-	fieldName, _, err := c.getFieldNameAndValue(filterCond, fieldsMap)
-	if err != nil {
-		return nil, err
-	}
-
-	return map[string]any{
-		"exists": map[string]any{
-			"field": fieldName,
-		},
-	}, nil
-}
-
-// buildRegexQuery builds a REGEX query
-func (c *OpenSearchConnector) buildRegexQuery(filterCond interfaces.FilterCondition, fieldsMap map[string]*interfaces.Property) (map[string]any, error) {
-	fieldName, value, err := c.getFieldNameAndValue(filterCond, fieldsMap)
-	if err != nil {
-		return nil, err
-	}
-
-	return map[string]any{
-		"regexp": map[string]any{
-			fieldName: value,
-		},
-	}, nil
-}
-
-// buildMatchQuery builds a MATCH query
-func (c *OpenSearchConnector) buildMatchQuery(filterCond interfaces.FilterCondition, fieldsMap map[string]*interfaces.Property) (map[string]any, error) {
-	fieldName, value, err := c.getFieldNameAndValue(filterCond, fieldsMap)
-	if err != nil {
-		return nil, err
-	}
-
-	return map[string]any{
-		"match": map[string]any{
-			fieldName: value,
-		},
-	}, nil
-}
-
-// buildMatchPhraseQuery builds a MATCH PHRASE query
-func (c *OpenSearchConnector) buildMatchPhraseQuery(filterCond interfaces.FilterCondition, fieldsMap map[string]*interfaces.Property) (map[string]any, error) {
-	fieldName, value, err := c.getFieldNameAndValue(filterCond, fieldsMap)
-	if err != nil {
-		return nil, err
-	}
-
-	return map[string]any{
-		"match_phrase": map[string]any{
-			fieldName: value,
-		},
-	}, nil
-}
-
-// buildPrefixQuery builds a PREFIX query
-func (c *OpenSearchConnector) buildPrefixQuery(filterCond interfaces.FilterCondition, fieldsMap map[string]*interfaces.Property) (map[string]any, error) {
-	fieldName, value, err := c.getFieldNameAndValue(filterCond, fieldsMap)
-	if err != nil {
-		return nil, err
-	}
-
-	return map[string]any{
-		"prefix": map[string]any{
-			fieldName: value,
-		},
-	}, nil
-}
-
-// buildNotPrefixQuery builds a NOT PREFIX query
-func (c *OpenSearchConnector) buildNotPrefixQuery(filterCond interfaces.FilterCondition, fieldsMap map[string]*interfaces.Property) (map[string]any, error) {
-	fieldName, value, err := c.getFieldNameAndValue(filterCond, fieldsMap)
-	if err != nil {
-		return nil, err
-	}
-
-	return map[string]any{
-		"bool": map[string]any{
-			"must_not": []map[string]any{
-				{
-					"prefix": map[string]any{
-						fieldName: value,
-					},
-				},
-			},
-		},
-	}, nil
-}
-
-// buildNullQuery builds a NULL query
-func (c *OpenSearchConnector) buildNullQuery(filterCond interfaces.FilterCondition, fieldsMap map[string]*interfaces.Property) (map[string]any, error) {
-	fieldName, _, err := c.getFieldNameAndValue(filterCond, fieldsMap)
-	if err != nil {
-		return nil, err
-	}
-
-	return map[string]any{
-		"bool": map[string]any{
-			"must_not": []map[string]any{
-				{
-					"exists": map[string]any{
-						"field": fieldName,
-					},
-				},
-			},
-		},
-	}, nil
-}
-
-// buildNotNullQuery builds a NOT NULL query
-func (c *OpenSearchConnector) buildNotNullQuery(filterCond interfaces.FilterCondition, fieldsMap map[string]*interfaces.Property) (map[string]any, error) {
-	fieldName, _, err := c.getFieldNameAndValue(filterCond, fieldsMap)
-	if err != nil {
-		return nil, err
-	}
-
-	return map[string]any{
-		"exists": map[string]any{
-			"field": fieldName,
-		},
-	}, nil
-}
-
-// buildTrueQuery builds a TRUE query
-func (c *OpenSearchConnector) buildTrueQuery(filterCond interfaces.FilterCondition, fieldsMap map[string]*interfaces.Property) (map[string]any, error) {
-	fieldName, _, err := c.getFieldNameAndValue(filterCond, fieldsMap)
-	if err != nil {
-		return nil, err
-	}
-
-	return map[string]any{
-		"term": map[string]any{
-			fieldName: true,
-		},
-	}, nil
-}
-
-// buildFalseQuery builds a FALSE query
-func (c *OpenSearchConnector) buildFalseQuery(filterCond interfaces.FilterCondition, fieldsMap map[string]*interfaces.Property) (map[string]any, error) {
-	fieldName, _, err := c.getFieldNameAndValue(filterCond, fieldsMap)
-	if err != nil {
-		return nil, err
-	}
-
-	return map[string]any{
-		"term": map[string]any{
-			fieldName: false,
-		},
-	}, nil
-}
-
-// buildBeforeQuery builds a BEFORE query
-func (c *OpenSearchConnector) buildBeforeQuery(filterCond interfaces.FilterCondition, fieldsMap map[string]*interfaces.Property) (map[string]any, error) {
-	fieldName, value, err := c.getFieldNameAndValue(filterCond, fieldsMap)
-	if err != nil {
-		return nil, err
-	}
-
-	return map[string]any{
-		"range": map[string]any{
-			fieldName: map[string]any{
-				"lt": value,
-			},
-		},
-	}, nil
-}
-
-// buildCurrentQuery builds a CURRENT query
-func (c *OpenSearchConnector) buildCurrentQuery(filterCond interfaces.FilterCondition, fieldsMap map[string]*interfaces.Property) (map[string]any, error) {
-	// CURRENT query is typically used for date/time fields
-	// It matches records where the field value equals the current time/date
-	// For date fields, it matches records with today's date
-	// For datetime fields, it matches records with the current time
-
-	fieldName, _, err := c.getFieldNameAndValue(filterCond, fieldsMap)
-	if err != nil {
-		return nil, err
-	}
-
-	// Get the field type from schema definition
-	var fieldType string
-	if field, ok := fieldsMap[fieldName]; ok {
-		fieldType = field.Type
-	}
-
-	// Build the query based on field type
-	switch fieldType {
-	case "date":
-		// For date fields, match today's date
-		today := time.Now().Format("2006-01-02")
-		return map[string]any{
-			"term": map[string]any{
-				fieldName: today,
-			},
-		}, nil
-	case "datetime", "timestamp":
-		// For datetime fields, match the current time within a reasonable range
-		now := time.Now()
-		// Match records within the last minute
-		oneMinuteAgo := now.Add(-time.Minute).Format(time.RFC3339)
-		nowStr := now.Format(time.RFC3339)
-		return map[string]any{
-			"range": map[string]any{
-				fieldName: map[string]any{
-					"gte": oneMinuteAgo,
-					"lte": nowStr,
-				},
-			},
-		}, nil
-	default:
-		// For other field types, just match the current value
-		// This might not make sense for non-date fields, but we'll handle it anyway
-		now := time.Now().Unix()
-		return map[string]any{
-			"term": map[string]any{
-				fieldName: now,
-			},
-		}, nil
-	}
-}
-
-// buildBetweenQuery builds a BETWEEN query
-func (c *OpenSearchConnector) buildBetweenQuery(filterCond interfaces.FilterCondition, fieldsMap map[string]*interfaces.Property) (map[string]any, error) {
-	fieldName, value, err := c.getFieldNameAndValue(filterCond, fieldsMap)
-	if err != nil {
-		return nil, err
-	}
-
-	// Ensure value is a slice with 2 elements
-	values, ok := value.([]any)
-	if !ok || len(values) != 2 {
-		return nil, fmt.Errorf("BETWEEN query requires an array with 2 values")
-	}
-
-	return map[string]any{
-		"range": map[string]any{
-			fieldName: map[string]any{
-				"gte": values[0],
-				"lte": values[1],
-			},
-		},
-	}, nil
-}
-
-// buildKnnVectorQuery builds a KNN VECTOR query
-func (c *OpenSearchConnector) buildKnnVectorQuery(filterCond interfaces.FilterCondition, fieldsMap map[string]*interfaces.Property) (map[string]any, error) {
-	fieldName, value, err := c.getFieldNameAndValue(filterCond, fieldsMap)
-	if err != nil {
-		return nil, err
-	}
-
-	// KNN vector query requires a vector value and k (number of neighbors)
-	// The value should be a map with "vector" and "k" keys
-	valueMap, ok := value.(map[string]any)
-	if !ok {
-		return nil, fmt.Errorf("KNN VECTOR query requires a map with vector and k keys")
-	}
-
-	vector, ok := valueMap["vector"].([]any)
-	if !ok {
-		return nil, fmt.Errorf("KNN VECTOR query requires a vector array")
-	}
-
-	k, ok := valueMap["k"].(float64)
-	if !ok {
-		return nil, fmt.Errorf("KNN VECTOR query requires a k value")
-	}
-
-	// Build the KNN query
-	knnQuery := map[string]any{
-		"field":          fieldName,
-		"query_vector":   vector,
-		"k":              int(k),
-		"num_candidates": int(k) * 10, // Use 10x candidates for better accuracy
-	}
-
-	// Check if there are sub-conditions (filter conditions for KNN)
-	subConds, err := c.getSubConditions(filterCond)
-	if err == nil && len(subConds) > 0 {
-		// Build filter clauses for each sub-condition
-		filterClauses := make([]map[string]any, 0, len(subConds))
-		for _, subCond := range subConds {
-			clause, err := c.buildFilterQuery(subCond, nil)
-			if err != nil {
-				return nil, err
+		if len(column.Features) > 0 {
+			for _, feature := range column.Features {
+				if feature.Config != nil {
+					for k, v := range feature.Config {
+						switch feature.FeatureType {
+						case "keyword":
+							if column.Type == "text" {
+								// 添加子字段
+								fieldProps["fields"] = map[string]any{
+									"keyword": map[string]any{
+										"type": "keyword",
+									},
+								}
+							} else {
+								fieldProps[k] = v
+							}
+						case "vector":
+							fieldProps[k] = v
+						case "fulltext":
+							continue
+						default:
+							return fmt.Errorf("unsupported feature type: %s", feature.FeatureType)
+						}
+					}
+				}
 			}
-			filterClauses = append(filterClauses, clause)
 		}
+		properties[column.Name] = fieldProps
+	}
 
-		// Add filter to KNN query
-		if len(filterClauses) == 1 {
-			knnQuery["filter"] = filterClauses[0]
-		} else {
-			knnQuery["filter"] = map[string]any{
-				"bool": map[string]any{
-					"must": filterClauses,
-				},
+	// 如果有vector字段，开启knn
+	if hasVectorField {
+		indexSettings := mapping["settings"].(map[string]any)["index"].(map[string]any)
+		indexSettings["knn"] = true
+	}
+
+	data, err := json.Marshal(mapping)
+	if err != nil {
+		return err
+	}
+	createReq := opensearchapi.IndicesCreateRequest{
+		Index: name,
+		Body:  bytes.NewReader(data),
+	}
+
+	createResp, err := createReq.Do(ctx, c.client)
+	if err != nil {
+		return err
+	}
+	defer createResp.Body.Close()
+
+	if createResp.IsError() {
+		return fmt.Errorf("failed to create index: %s", createResp.String())
+	}
+
+	return nil
+}
+
+// Update index.
+func (c *OpenSearchConnector) Update(ctx context.Context, name string, schemaDefinition []*interfaces.Property) error {
+	if err := c.Connect(ctx); err != nil {
+		return err
+	}
+
+	exist, err := c.indexExist(ctx, name)
+	if err != nil {
+		return err
+	}
+	// index not exist
+	if !exist {
+		return fmt.Errorf("index %s not exist", name)
+	}
+
+	// 构建properties映射
+	mappings := map[string]any{
+		"properties": map[string]any{},
+	}
+
+	// 根据 schemaDefinition 添加字段映射
+	properties := mappings["properties"].(map[string]any)
+	for _, column := range schemaDefinition {
+		fieldType := column.Type
+		switch column.Type {
+		case "integer":
+			fieldType = "long"
+		case "unsigned_integer":
+			fieldType = "unsigned_long"
+		case "float":
+			fieldType = "double"
+		case "decimal":
+			fieldType = "scaled_float"
+		case "string":
+			fieldType = "keyword"
+		case "datetime":
+			fieldType = "date"
+		case "time":
+			fieldType = "keyword"
+		case "json":
+			fieldType = "object"
+		case "vector":
+			fieldType = "knn_vector"
+		case "point":
+			fieldType = "geo_point"
+		case "shape":
+			fieldType = "geo_shape"
+		default:
+			// 保持 fieldType 不变
+		}
+		// 创建字段属性映射
+		fieldProps := map[string]any{
+			"type": fieldType,
+		}
+		// 为decimal类型添加scaling_factor参数
+		if column.Type == "decimal" {
+			fieldProps["scaling_factor"] = 1000000000000000000.0 // 18位小数
+		}
+		properties[column.Name] = fieldProps
+		// 如果有 column.Features, 则添加到 properties[column.Name] 中
+		if column.Features != nil {
+			for _, feature := range column.Features {
+				if feature.Config != nil {
+					for k, v := range feature.Config {
+						// 处理嵌套的配置键，如 "method.engine"
+						keys := strings.Split(k, ".")
+						if len(keys) > 1 {
+							// 创建嵌套对象结构
+							current := properties[column.Name].(map[string]any)
+							for i := 0; i < len(keys)-1; i++ {
+								if _, ok := current[keys[i]]; !ok {
+									current[keys[i]] = map[string]any{}
+								}
+								current = current[keys[i]].(map[string]any)
+							}
+							current[keys[len(keys)-1]] = v
+						} else {
+							// 直接添加顶层配置
+							properties[column.Name].(map[string]any)[k] = v
+						}
+					}
+				}
 			}
 		}
 	}
 
-	return map[string]any{
-		"knn": knnQuery,
-	}, nil
+	// 构建 JSON 字符串
+	data, err := json.Marshal(mappings)
+	if err != nil {
+		return err
+	}
+	updateReq := opensearchapi.IndicesPutMappingRequest{
+		Index: []string{name},
+		Body:  bytes.NewReader(data),
+	}
+	updateResp, err := updateReq.Do(ctx, c.client)
+	if err != nil {
+		return err
+	}
+	defer updateResp.Body.Close()
+
+	if updateResp.IsError() {
+		return fmt.Errorf("failed to update index mapping: %s", updateResp.String())
+	}
+
+	return nil
 }
 
-// buildMultiMatchQuery builds a MULTI MATCH query
-func (c *OpenSearchConnector) buildMultiMatchQuery(filterCond interfaces.FilterCondition, fieldsMap map[string]*interfaces.Property) (map[string]any, error) {
-	// Use reflection to access Cfg field
-	val := reflect.ValueOf(filterCond).Elem()
-	cfgField := val.FieldByName("Cfg")
-	if !cfgField.IsValid() {
-		return nil, fmt.Errorf("filter condition does not have Cfg field")
+// Delete a Dataset.
+func (c *OpenSearchConnector) Delete(ctx context.Context, name string) error {
+	if err := c.Connect(ctx); err != nil {
+		return err
 	}
 
-	cfg, ok := cfgField.Interface().(*interfaces.FilterCondCfg)
-	if !ok {
-		return nil, fmt.Errorf("Cfg field is not a FilterCondCfg")
+	exist, err := c.CheckExist(ctx, name)
+	if err != nil {
+		return err
+	}
+	// index not exist
+	if !exist {
+		return nil
 	}
 
-	// Use RealValue if available, otherwise use Value
-	value := cfg.RealValue
-	if value == nil {
-		value = cfg.Value
+	deleteReq := opensearchapi.IndicesDeleteRequest{
+		Index: []string{name},
 	}
 
-	// Get the fields to search in from the RemainCfg
-	fields, ok := cfg.RemainCfg["fields"].([]any)
-	if !ok {
-		return nil, fmt.Errorf("MULTI MATCH query requires a fields array in RemainCfg")
+	deleteResp, err := deleteReq.Do(ctx, c.client)
+	if err != nil {
+		return err
+	}
+	defer deleteResp.Body.Close()
+
+	if deleteResp.IsError() {
+		return fmt.Errorf("failed to delete index: %s", deleteResp.String())
 	}
 
-	// Convert fields to strings
-	fieldStrings := make([]string, 0, len(fields))
-	for _, field := range fields {
-		fieldStr, ok := field.(string)
-		if !ok {
-			return nil, fmt.Errorf("MULTI MATCH query fields must be strings")
+	return nil
+}
+
+// Check Index Exist
+func (c *OpenSearchConnector) CheckExist(ctx context.Context, name string) (bool, error) {
+	if err := c.Connect(ctx); err != nil {
+		return false, err
+	}
+
+	return c.indexExist(ctx, name)
+}
+
+// Create Documents
+func (c *OpenSearchConnector) CreateDocuments(ctx context.Context, name string, documents []map[string]any) ([]string, error) {
+	if err := c.Connect(ctx); err != nil {
+		return nil, err
+	}
+
+	var bulkBody strings.Builder
+	for _, doc := range documents {
+		opMeta := map[string]map[string]string{
+			"index": {
+				"_index": name,
+			},
 		}
-		fieldStrings = append(fieldStrings, fieldStr)
+		// if _id in doc, use it as document id
+		if docID, ok := doc["_id"].(string); ok {
+			opMeta["index"]["_id"] = docID
+			delete(doc, "_id")
+		}
+
+		if err := json.NewEncoder(&bulkBody).Encode(opMeta); err != nil {
+			return nil, err
+		}
+		if err := json.NewEncoder(&bulkBody).Encode(doc); err != nil {
+			return nil, err
+		}
 	}
 
-	return map[string]any{
-		"multi_match": map[string]any{
-			"query":  value,
-			"fields": fieldStrings,
-			"type":   "best_fields",
+	req := opensearchapi.BulkRequest{
+		Body:    strings.NewReader(bulkBody.String()),
+		Refresh: "true",
+	}
+
+	resp, err := req.Do(ctx, c.client)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	if resp.IsError() {
+		return nil, fmt.Errorf("failed to create documents: %s", resp.String())
+	}
+
+	var result map[string]interface{}
+	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+		return nil, err
+	}
+
+	var docIDs []string
+	if items, ok := result["items"].([]interface{}); ok {
+		for _, item := range items {
+			if itemMap, ok := item.(map[string]interface{}); ok {
+				if indexResult, ok := itemMap["index"].(map[string]interface{}); ok {
+					if docID, ok := indexResult["_id"].(string); ok {
+						docIDs = append(docIDs, docID)
+					}
+				}
+			}
+		}
+	}
+
+	return docIDs, nil
+}
+
+// Get Document
+func (c *OpenSearchConnector) GetDocument(ctx context.Context, name string, docID string) (map[string]any, error) {
+	if err := c.Connect(ctx); err != nil {
+		return nil, err
+	}
+
+	req := opensearchapi.GetRequest{
+		Index:      name,
+		DocumentID: docID,
+	}
+
+	resp, err := req.Do(ctx, c.client)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	if resp.IsError() {
+		return nil, fmt.Errorf("failed to get document: %s", resp.String())
+	}
+
+	var result map[string]any
+	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+		return nil, err
+	}
+
+	source, ok := result["_source"].(map[string]any)
+	if !ok {
+		return nil, fmt.Errorf("document not found")
+	}
+
+	source["_id"] = result["_id"]
+
+	return source, nil
+}
+
+// Update Document
+func (c *OpenSearchConnector) UpdateDocument(ctx context.Context, name string, docID string, document map[string]any) error {
+	if err := c.Connect(ctx); err != nil {
+		return err
+	}
+
+	data, err := json.Marshal(map[string]any{"doc": document})
+	if err != nil {
+		return err
+	}
+
+	req := opensearchapi.UpdateRequest{
+		Index:      name,
+		DocumentID: docID,
+		Body:       bytes.NewReader(data),
+	}
+
+	resp, err := req.Do(ctx, c.client)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	if resp.IsError() {
+		return fmt.Errorf("failed to update document: %s", resp.String())
+	}
+
+	return nil
+}
+
+// Delete Document
+func (c *OpenSearchConnector) DeleteDocument(ctx context.Context, name string, docID string) error {
+	if err := c.Connect(ctx); err != nil {
+		return err
+	}
+
+	req := opensearchapi.DeleteRequest{
+		Index:      name,
+		DocumentID: docID,
+	}
+
+	resp, err := req.Do(ctx, c.client)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	if resp.IsError() {
+		return fmt.Errorf("failed to delete document: %s", resp.String())
+	}
+
+	return nil
+}
+
+// Update Documents
+func (c *OpenSearchConnector) UpdateDocuments(ctx context.Context, name string, updateRequests []map[string]any) error {
+	if err := c.Connect(ctx); err != nil {
+		return err
+	}
+
+	var bulkBody bytes.Buffer
+	for _, updateReq := range updateRequests {
+		docID, ok := updateReq["id"].(string)
+		if !ok {
+			continue
+		}
+		document := updateReq["document"]
+		if document == nil {
+			continue
+		}
+
+		metadata := map[string]map[string]string{
+			"update": {
+				"_index": name,
+				"_id":    docID,
+			},
+		}
+		if err := json.NewEncoder(&bulkBody).Encode(metadata); err != nil {
+			return err
+		}
+
+		// 写入更新操作的文档
+		updateDoc := map[string]any{
+			"doc": document,
+		}
+		if err := json.NewEncoder(&bulkBody).Encode(updateDoc); err != nil {
+			return err
+		}
+	}
+
+	req := opensearchapi.BulkRequest{
+		Body: &bulkBody,
+	}
+
+	resp, err := req.Do(ctx, c.client)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	if resp.IsError() {
+		return fmt.Errorf("failed to update documents: %s", resp.String())
+	}
+
+	return nil
+}
+
+// Delete Documents
+func (c *OpenSearchConnector) DeleteDocuments(ctx context.Context, name string, docIDs string) error {
+	if err := c.Connect(ctx); err != nil {
+		return err
+	}
+
+	docIDList := strings.Split(docIDs, ",")
+
+	var bulkBody bytes.Buffer
+	for _, docID := range docIDList {
+		docID = strings.TrimSpace(docID)
+		if docID == "" {
+			continue
+		}
+
+		metadata := map[string]map[string]string{
+			"delete": {
+				"_index": name,
+				"_id":    docID,
+			},
+		}
+		if err := json.NewEncoder(&bulkBody).Encode(metadata); err != nil {
+			return err
+		}
+	}
+
+	req := opensearchapi.BulkRequest{
+		Body: &bulkBody,
+	}
+
+	resp, err := req.Do(ctx, c.client)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	if resp.IsError() {
+		return fmt.Errorf("failed to delete documents: %s", resp.String())
+	}
+
+	return nil
+}
+
+// Delete Documents By Query
+func (c *OpenSearchConnector) DeleteDocumentsByQuery(ctx context.Context, name string, params *interfaces.ResourceDataQueryParams, schemaDefinition []*interfaces.Property) error {
+	if err := c.Connect(ctx); err != nil {
+		return err
+	}
+
+	query := map[string]any{
+		"query": map[string]any{
+			"match_all": map[string]any{},
 		},
-	}, nil
+	}
+
+	if params != nil && params.ActualFilterCond != nil {
+		filterQuery, err := c.ConvertFilterCondition(params.ActualFilterCond, schemaDefinition)
+		if err != nil {
+			return err
+		}
+		if filterQuery != nil {
+			query["query"] = filterQuery
+		}
+	}
+
+	queryBytes, err := json.Marshal(query)
+	if err != nil {
+		return err
+	}
+
+	refresh := true
+	req := opensearchapi.DeleteByQueryRequest{
+		Index:   []string{name},
+		Body:    bytes.NewReader(queryBytes),
+		Refresh: &refresh,
+	}
+
+	resp, err := req.Do(ctx, c.client)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	if resp.IsError() {
+		return fmt.Errorf("failed to delete documents: %s", resp.String())
+	}
+
+	return nil
+}
+
+// index exist
+func (c *OpenSearchConnector) indexExist(ctx context.Context, name string) (bool, error) {
+	existsReq := opensearchapi.IndicesExistsRequest{
+		Index: []string{name},
+	}
+
+	existsResp, err := existsReq.Do(ctx, c.client)
+	if err != nil {
+		return false, err
+	}
+	defer existsResp.Body.Close()
+
+	return existsResp.StatusCode == 200, nil
 }
