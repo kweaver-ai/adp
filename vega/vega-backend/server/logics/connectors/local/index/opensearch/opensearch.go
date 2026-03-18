@@ -539,40 +539,11 @@ func (c *OpenSearchConnector) ExecuteQuery(ctx context.Context, resource *interf
 	}, nil
 }
 
-// Create index
-func (c *OpenSearchConnector) Create(ctx context.Context, name string, schemaDefinition []*interfaces.Property) error {
-	if err := c.Connect(ctx); err != nil {
-		return err
-	}
-
-	exist, err := c.indexExist(ctx, name)
-	if err != nil {
-		return err
-	}
-	// index exist
-	if exist {
-		return fmt.Errorf("index %s already exist", name)
-	}
-
-	mappings := map[string]any{
-		"properties": map[string]any{},
-	}
-
-	mapping := map[string]any{
-		"mappings": mappings,
-	}
-
-	mapping["settings"] = map[string]any{
-		"index": map[string]any{
-			"number_of_shards":   1,
-			"number_of_replicas": 0,
-		},
-	}
-
-	// 检查是否有vector字段
+// buildFieldMappings 构建字段映射
+func (c *OpenSearchConnector) buildFieldMappings(schemaDefinition []*interfaces.Property) (map[string]any, bool, error) {
+	properties := map[string]any{}
 	hasVectorField := false
-	// 根据 schemaDefinition 添加字段映射
-	properties := mapping["mappings"].(map[string]any)["properties"].(map[string]any)
+
 	for _, column := range schemaDefinition {
 		fieldType := column.Type
 		switch column.Type {
@@ -602,15 +573,19 @@ func (c *OpenSearchConnector) Create(ctx context.Context, name string, schemaDef
 		default:
 			// 保持 fieldType 不变
 		}
+
 		// 创建字段属性映射
 		fieldProps := map[string]any{
 			"type": fieldType,
 		}
+
 		// 为decimal类型添加scaling_factor参数
 		if column.Type == "decimal" {
 			fieldProps["scaling_factor"] = 1000000000000000000.0 // 18位小数
 		}
-		if len(column.Features) > 0 {
+
+		// 处理字段特性
+		if column.Features != nil {
 			for _, feature := range column.Features {
 				if feature.Config != nil {
 					for k, v := range feature.Config {
@@ -631,13 +606,53 @@ func (c *OpenSearchConnector) Create(ctx context.Context, name string, schemaDef
 						case "fulltext":
 							continue
 						default:
-							return fmt.Errorf("unsupported feature type: %s", feature.FeatureType)
+							return nil, false, fmt.Errorf("unsupported feature type: %s", feature.FeatureType)
 						}
 					}
 				}
 			}
 		}
+
 		properties[column.Name] = fieldProps
+	}
+
+	return properties, hasVectorField, nil
+}
+
+// Create index
+func (c *OpenSearchConnector) Create(ctx context.Context, name string, schemaDefinition []*interfaces.Property) error {
+	if err := c.Connect(ctx); err != nil {
+		return err
+	}
+
+	exist, err := c.indexExist(ctx, name)
+	if err != nil {
+		return err
+	}
+	// index exist
+	if exist {
+		return fmt.Errorf("index %s already exist", name)
+	}
+
+	// 构建字段映射
+	properties, hasVectorField, err := c.buildFieldMappings(schemaDefinition)
+	if err != nil {
+		return err
+	}
+
+	mappings := map[string]any{
+		"properties": properties,
+	}
+
+	mapping := map[string]any{
+		"mappings": mappings,
+	}
+
+	mapping["settings"] = map[string]any{
+		"index": map[string]any{
+			"number_of_shards":   1,
+			"number_of_replicas": 0,
+		},
 	}
 
 	// 如果有vector字段，开启knn
@@ -683,75 +698,15 @@ func (c *OpenSearchConnector) Update(ctx context.Context, name string, schemaDef
 		return fmt.Errorf("index %s not exist", name)
 	}
 
-	// 构建properties映射
-	mappings := map[string]any{
-		"properties": map[string]any{},
+	// 构建字段映射
+	properties, _, err := c.buildFieldMappings(schemaDefinition)
+	if err != nil {
+		return err
 	}
 
-	// 根据 schemaDefinition 添加字段映射
-	properties := mappings["properties"].(map[string]any)
-	for _, column := range schemaDefinition {
-		fieldType := column.Type
-		switch column.Type {
-		case "integer":
-			fieldType = "long"
-		case "unsigned_integer":
-			fieldType = "unsigned_long"
-		case "float":
-			fieldType = "double"
-		case "decimal":
-			fieldType = "scaled_float"
-		case "string":
-			fieldType = "keyword"
-		case "datetime":
-			fieldType = "date"
-		case "time":
-			fieldType = "keyword"
-		case "json":
-			fieldType = "object"
-		case "vector":
-			fieldType = "knn_vector"
-		case "point":
-			fieldType = "geo_point"
-		case "shape":
-			fieldType = "geo_shape"
-		default:
-			// 保持 fieldType 不变
-		}
-		// 创建字段属性映射
-		fieldProps := map[string]any{
-			"type": fieldType,
-		}
-		// 为decimal类型添加scaling_factor参数
-		if column.Type == "decimal" {
-			fieldProps["scaling_factor"] = 1000000000000000000.0 // 18位小数
-		}
-		properties[column.Name] = fieldProps
-		// 如果有 column.Features, 则添加到 properties[column.Name] 中
-		if column.Features != nil {
-			for _, feature := range column.Features {
-				if feature.Config != nil {
-					for k, v := range feature.Config {
-						// 处理嵌套的配置键，如 "method.engine"
-						keys := strings.Split(k, ".")
-						if len(keys) > 1 {
-							// 创建嵌套对象结构
-							current := properties[column.Name].(map[string]any)
-							for i := 0; i < len(keys)-1; i++ {
-								if _, ok := current[keys[i]]; !ok {
-									current[keys[i]] = map[string]any{}
-								}
-								current = current[keys[i]].(map[string]any)
-							}
-							current[keys[len(keys)-1]] = v
-						} else {
-							// 直接添加顶层配置
-							properties[column.Name].(map[string]any)[k] = v
-						}
-					}
-				}
-			}
-		}
+	// 构建properties映射
+	mappings := map[string]any{
+		"properties": properties,
 	}
 
 	// 构建 JSON 字符串
