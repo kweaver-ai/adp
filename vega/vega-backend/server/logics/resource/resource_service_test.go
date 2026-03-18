@@ -10,124 +10,36 @@ import (
 	"fmt"
 	"testing"
 
+	"go.uber.org/mock/gomock"
+
 	"vega-backend/interfaces"
+	mock_interfaces "vega-backend/interfaces/mock"
 )
 
-// ===== Mock implementations =====
+// newTestService 使用 mockgen 生成的 mock 构建 resourceService
+func newTestService(t *testing.T) (*resourceService, *mock_interfaces.MockResourceAccess, *mock_interfaces.MockPermissionService, *mock_interfaces.MockDatasetService, *mock_interfaces.MockUserMgmtService) {
+	ctrl := gomock.NewController(t)
+	mockRA := mock_interfaces.NewMockResourceAccess(ctrl)
+	mockPS := mock_interfaces.NewMockPermissionService(ctrl)
+	mockDS := mock_interfaces.NewMockDatasetService(ctrl)
+	mockUMS := mock_interfaces.NewMockUserMgmtService(ctrl)
 
-type mockResourceAccess struct {
-	createErr        error
-	getByIDResult    *interfaces.Resource
-	getByIDErr       error
-	getByIDsResult   []*interfaces.Resource
-	getByIDsErr      error
-	getByNameResult  *interfaces.Resource
-	getByNameErr     error
-	getByCatalogResult []*interfaces.Resource
-	getByCatalogErr  error
-	listResult       []*interfaces.Resource
-	listTotal        int64
-	listErr          error
-	updateErr        error
-	updateStatusErr  error
-	deleteErr        error
-}
-
-func (m *mockResourceAccess) Create(ctx context.Context, r *interfaces.Resource) error { return m.createErr }
-func (m *mockResourceAccess) GetByID(ctx context.Context, id string) (*interfaces.Resource, error) {
-	return m.getByIDResult, m.getByIDErr
-}
-func (m *mockResourceAccess) GetByIDs(ctx context.Context, ids []string) ([]*interfaces.Resource, error) {
-	return m.getByIDsResult, m.getByIDsErr
-}
-func (m *mockResourceAccess) GetByName(ctx context.Context, catalogID, name string) (*interfaces.Resource, error) {
-	return m.getByNameResult, m.getByNameErr
-}
-func (m *mockResourceAccess) GetByCatalogID(ctx context.Context, catalogID string) ([]*interfaces.Resource, error) {
-	return m.getByCatalogResult, m.getByCatalogErr
-}
-func (m *mockResourceAccess) List(ctx context.Context, params interfaces.ResourcesQueryParams) ([]*interfaces.Resource, int64, error) {
-	return m.listResult, m.listTotal, m.listErr
-}
-func (m *mockResourceAccess) Update(ctx context.Context, r *interfaces.Resource) error { return m.updateErr }
-func (m *mockResourceAccess) UpdateStatus(ctx context.Context, id, status, msg string) error {
-	return m.updateStatusErr
-}
-func (m *mockResourceAccess) DeleteByIDs(ctx context.Context, ids []string) error { return m.deleteErr }
-
-type mockPermissionService struct{}
-
-func (m *mockPermissionService) CheckPermission(ctx context.Context, r interfaces.PermissionResource, ops []string) error {
-	return nil
-}
-func (m *mockPermissionService) CreateResources(ctx context.Context, rs []interfaces.PermissionResource, ops []string) error {
-	return nil
-}
-func (m *mockPermissionService) DeleteResources(ctx context.Context, rt string, ids []string) error {
-	return nil
-}
-func (m *mockPermissionService) FilterResources(ctx context.Context, rt string, ids []string, ops []string, allow bool) (map[string]interfaces.PermissionResourceOps, error) {
-	result := make(map[string]interfaces.PermissionResourceOps)
-	for _, id := range ids {
-		result[id] = interfaces.PermissionResourceOps{ResourceID: id, Operations: ops}
+	rs := &resourceService{
+		ra:  mockRA,
+		ps:  mockPS,
+		ds:  mockDS,
+		ums: mockUMS,
 	}
-	return result, nil
-}
-func (m *mockPermissionService) UpdateResource(ctx context.Context, r interfaces.PermissionResource) error {
-	return nil
-}
-
-type mockUserMgmtService struct{}
-
-func (m *mockUserMgmtService) GetAccountNames(ctx context.Context, infos []*interfaces.AccountInfo) error {
-	return nil
-}
-
-type mockDatasetService struct{}
-
-func (m *mockDatasetService) Create(ctx context.Context, r *interfaces.Resource) error  { return nil }
-func (m *mockDatasetService) Update(ctx context.Context, r *interfaces.Resource) error  { return nil }
-func (m *mockDatasetService) Delete(ctx context.Context, r *interfaces.Resource) error  { return nil }
-func (m *mockDatasetService) ListDocuments(ctx context.Context, r *interfaces.Resource, params *interfaces.ResourceDataQueryParams) ([]map[string]any, int64, error) {
-	return nil, 0, nil
-}
-func (m *mockDatasetService) GetDocument(ctx context.Context, id string, docID string) (map[string]any, error) {
-	return nil, nil
-}
-func (m *mockDatasetService) CreateDocuments(ctx context.Context, id string, documents []map[string]any) ([]string, error) {
-	return nil, nil
-}
-func (m *mockDatasetService) UpdateDocument(ctx context.Context, id string, docID string, document map[string]any) error {
-	return nil
-}
-func (m *mockDatasetService) DeleteDocument(ctx context.Context, id string, docID string) error {
-	return nil
-}
-func (m *mockDatasetService) UpdateDocuments(ctx context.Context, id string, updateRequests []map[string]any) error {
-	return nil
-}
-func (m *mockDatasetService) DeleteDocuments(ctx context.Context, id string, docIDs string) error {
-	return nil
-}
-func (m *mockDatasetService) DeleteDocumentsByQuery(ctx context.Context, res *interfaces.Resource, params *interfaces.ResourceDataQueryParams) error {
-	return nil
-}
-
-func newTestService(ra *mockResourceAccess) *resourceService {
-	return &resourceService{
-		ra:  ra,
-		ps:  &mockPermissionService{},
-		ums: &mockUserMgmtService{},
-		ds:  &mockDatasetService{},
-	}
+	return rs, mockRA, mockPS, mockDS, mockUMS
 }
 
 // ===== CheckExistByID =====
 
 func TestCheckExistByID_Found(t *testing.T) {
-	rs := newTestService(&mockResourceAccess{
-		getByIDResult: &interfaces.Resource{ID: "r1"},
-	})
+	rs, mockRA, _, _, _ := newTestService(t)
+	mockRA.EXPECT().GetByID(gomock.Any(), "r1").
+		Return(&interfaces.Resource{ID: "r1"}, nil)
+
 	exists, err := rs.CheckExistByID(context.Background(), "r1")
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
@@ -138,7 +50,10 @@ func TestCheckExistByID_Found(t *testing.T) {
 }
 
 func TestCheckExistByID_NotFound(t *testing.T) {
-	rs := newTestService(&mockResourceAccess{getByIDResult: nil})
+	rs, mockRA, _, _, _ := newTestService(t)
+	mockRA.EXPECT().GetByID(gomock.Any(), "missing").
+		Return(nil, nil)
+
 	exists, err := rs.CheckExistByID(context.Background(), "missing")
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
@@ -149,7 +64,10 @@ func TestCheckExistByID_NotFound(t *testing.T) {
 }
 
 func TestCheckExistByID_Error(t *testing.T) {
-	rs := newTestService(&mockResourceAccess{getByIDErr: fmt.Errorf("db error")})
+	rs, mockRA, _, _, _ := newTestService(t)
+	mockRA.EXPECT().GetByID(gomock.Any(), "r1").
+		Return(nil, fmt.Errorf("db error"))
+
 	_, err := rs.CheckExistByID(context.Background(), "r1")
 	if err == nil {
 		t.Fatal("expected error")
@@ -159,9 +77,10 @@ func TestCheckExistByID_Error(t *testing.T) {
 // ===== CheckExistByName =====
 
 func TestCheckExistByName_Found(t *testing.T) {
-	rs := newTestService(&mockResourceAccess{
-		getByNameResult: &interfaces.Resource{Name: "test"},
-	})
+	rs, mockRA, _, _, _ := newTestService(t)
+	mockRA.EXPECT().GetByName(gomock.Any(), "cat1", "test").
+		Return(&interfaces.Resource{Name: "test"}, nil)
+
 	exists, err := rs.CheckExistByName(context.Background(), "cat1", "test")
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
@@ -172,7 +91,10 @@ func TestCheckExistByName_Found(t *testing.T) {
 }
 
 func TestCheckExistByName_NotFound(t *testing.T) {
-	rs := newTestService(&mockResourceAccess{getByNameResult: nil})
+	rs, mockRA, _, _, _ := newTestService(t)
+	mockRA.EXPECT().GetByName(gomock.Any(), "cat1", "missing").
+		Return(nil, nil)
+
 	exists, err := rs.CheckExistByName(context.Background(), "cat1", "missing")
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
@@ -185,9 +107,15 @@ func TestCheckExistByName_NotFound(t *testing.T) {
 // ===== GetByID =====
 
 func TestGetByID_Success(t *testing.T) {
-	rs := newTestService(&mockResourceAccess{
-		getByIDResult: &interfaces.Resource{ID: "r1", Name: "test"},
-	})
+	rs, mockRA, mockPS, _, mockUMS := newTestService(t)
+	mockRA.EXPECT().GetByID(gomock.Any(), "r1").
+		Return(&interfaces.Resource{ID: "r1", Name: "test"}, nil)
+	mockPS.EXPECT().FilterResources(gomock.Any(), interfaces.RESOURCE_TYPE_RESOURCE, []string{"r1"}, gomock.Any(), true).
+		Return(map[string]interfaces.PermissionResourceOps{
+			"r1": {ResourceID: "r1", Operations: []string{"view_detail"}},
+		}, nil)
+	mockUMS.EXPECT().GetAccountNames(gomock.Any(), gomock.Any()).Return(nil)
+
 	resource, err := rs.GetByID(context.Background(), "r1")
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
@@ -198,7 +126,10 @@ func TestGetByID_Success(t *testing.T) {
 }
 
 func TestGetByID_NotFound(t *testing.T) {
-	rs := newTestService(&mockResourceAccess{getByIDResult: nil})
+	rs, mockRA, _, _, _ := newTestService(t)
+	mockRA.EXPECT().GetByID(gomock.Any(), "missing").
+		Return(nil, nil)
+
 	_, err := rs.GetByID(context.Background(), "missing")
 	if err == nil {
 		t.Fatal("expected error for not found resource")
@@ -206,7 +137,10 @@ func TestGetByID_NotFound(t *testing.T) {
 }
 
 func TestGetByID_DBError(t *testing.T) {
-	rs := newTestService(&mockResourceAccess{getByIDErr: fmt.Errorf("db error")})
+	rs, mockRA, _, _, _ := newTestService(t)
+	mockRA.EXPECT().GetByID(gomock.Any(), "r1").
+		Return(nil, fmt.Errorf("db error"))
+
 	_, err := rs.GetByID(context.Background(), "r1")
 	if err == nil {
 		t.Fatal("expected error")
@@ -216,11 +150,10 @@ func TestGetByID_DBError(t *testing.T) {
 // ===== GetByIDs =====
 
 func TestGetByIDs_Success(t *testing.T) {
-	rs := newTestService(&mockResourceAccess{
-		getByIDsResult: []*interfaces.Resource{
-			{ID: "r1"}, {ID: "r2"},
-		},
-	})
+	rs, mockRA, _, _, _ := newTestService(t)
+	mockRA.EXPECT().GetByIDs(gomock.Any(), []string{"r1", "r2"}).
+		Return([]*interfaces.Resource{{ID: "r1"}, {ID: "r2"}}, nil)
+
 	resources, err := rs.GetByIDs(context.Background(), []string{"r1", "r2"})
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
@@ -233,9 +166,10 @@ func TestGetByIDs_Success(t *testing.T) {
 // ===== GetByCatalogID =====
 
 func TestGetByCatalogID_Success(t *testing.T) {
-	rs := newTestService(&mockResourceAccess{
-		getByCatalogResult: []*interfaces.Resource{{ID: "r1", CatalogID: "cat1"}},
-	})
+	rs, mockRA, _, _, _ := newTestService(t)
+	mockRA.EXPECT().GetByCatalogID(gomock.Any(), "cat1").
+		Return([]*interfaces.Resource{{ID: "r1", CatalogID: "cat1"}}, nil)
+
 	resources, err := rs.GetByCatalogID(context.Background(), "cat1")
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
@@ -248,7 +182,7 @@ func TestGetByCatalogID_Success(t *testing.T) {
 // ===== DeleteByIDs =====
 
 func TestDeleteByIDs_Empty(t *testing.T) {
-	rs := newTestService(&mockResourceAccess{})
+	rs, _, _, _, _ := newTestService(t)
 	err := rs.DeleteByIDs(context.Background(), []string{})
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
@@ -256,9 +190,16 @@ func TestDeleteByIDs_Empty(t *testing.T) {
 }
 
 func TestDeleteByIDs_Success(t *testing.T) {
-	rs := newTestService(&mockResourceAccess{
-		getByIDsResult: []*interfaces.Resource{{ID: "r1", Category: "table"}},
-	})
+	rs, mockRA, mockPS, _, _ := newTestService(t)
+	mockPS.EXPECT().FilterResources(gomock.Any(), interfaces.RESOURCE_TYPE_RESOURCE, []string{"r1"}, gomock.Any(), true).
+		Return(map[string]interfaces.PermissionResourceOps{
+			"r1": {ResourceID: "r1"},
+		}, nil)
+	mockRA.EXPECT().GetByIDs(gomock.Any(), []string{"r1"}).
+		Return([]*interfaces.Resource{{ID: "r1", Category: "table"}}, nil)
+	mockRA.EXPECT().DeleteByIDs(gomock.Any(), []string{"r1"}).Return(nil)
+	mockPS.EXPECT().DeleteResources(gomock.Any(), interfaces.RESOURCE_TYPE_RESOURCE, []string{"r1"}).Return(nil)
+
 	err := rs.DeleteByIDs(context.Background(), []string{"r1"})
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
@@ -268,7 +209,11 @@ func TestDeleteByIDs_Success(t *testing.T) {
 // ===== Create =====
 
 func TestCreate_Success(t *testing.T) {
-	rs := newTestService(&mockResourceAccess{})
+	rs, mockRA, mockPS, _, _ := newTestService(t)
+	mockPS.EXPECT().CheckPermission(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
+	mockRA.EXPECT().Create(gomock.Any(), gomock.Any()).Return(nil)
+	mockPS.EXPECT().CreateResources(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
+
 	id, err := rs.Create(context.Background(), &interfaces.ResourceRequest{
 		Name:     "test-resource",
 		Category: "table",
@@ -282,7 +227,11 @@ func TestCreate_Success(t *testing.T) {
 }
 
 func TestCreate_WithExplicitID(t *testing.T) {
-	rs := newTestService(&mockResourceAccess{})
+	rs, mockRA, mockPS, _, _ := newTestService(t)
+	mockPS.EXPECT().CheckPermission(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
+	mockRA.EXPECT().Create(gomock.Any(), gomock.Any()).Return(nil)
+	mockPS.EXPECT().CreateResources(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
+
 	id, err := rs.Create(context.Background(), &interfaces.ResourceRequest{
 		ID:       "custom-id",
 		Name:     "test-resource",
@@ -297,7 +246,10 @@ func TestCreate_WithExplicitID(t *testing.T) {
 }
 
 func TestCreate_DBError(t *testing.T) {
-	rs := newTestService(&mockResourceAccess{createErr: fmt.Errorf("db error")})
+	rs, mockRA, mockPS, _, _ := newTestService(t)
+	mockPS.EXPECT().CheckPermission(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
+	mockRA.EXPECT().Create(gomock.Any(), gomock.Any()).Return(fmt.Errorf("db error"))
+
 	_, err := rs.Create(context.Background(), &interfaces.ResourceRequest{
 		Name: "test-resource",
 	})
@@ -309,7 +261,9 @@ func TestCreate_DBError(t *testing.T) {
 // ===== UpdateStatus =====
 
 func TestUpdateStatus_Success(t *testing.T) {
-	rs := newTestService(&mockResourceAccess{})
+	rs, mockRA, _, _, _ := newTestService(t)
+	mockRA.EXPECT().UpdateStatus(gomock.Any(), "r1", "active", "").Return(nil)
+
 	err := rs.UpdateStatus(context.Background(), "r1", "active", "")
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
@@ -317,7 +271,10 @@ func TestUpdateStatus_Success(t *testing.T) {
 }
 
 func TestUpdateStatus_Error(t *testing.T) {
-	rs := newTestService(&mockResourceAccess{updateStatusErr: fmt.Errorf("db error")})
+	rs, mockRA, _, _, _ := newTestService(t)
+	mockRA.EXPECT().UpdateStatus(gomock.Any(), "r1", "active", "").
+		Return(fmt.Errorf("db error"))
+
 	err := rs.UpdateStatus(context.Background(), "r1", "active", "")
 	if err == nil {
 		t.Fatal("expected error")
@@ -327,7 +284,7 @@ func TestUpdateStatus_Error(t *testing.T) {
 // ===== Update =====
 
 func TestUpdate_NilOrigin(t *testing.T) {
-	rs := newTestService(&mockResourceAccess{})
+	rs, _, _, _, _ := newTestService(t)
 	err := rs.Update(context.Background(), "r1", &interfaces.ResourceRequest{
 		OriginResource: nil,
 	})
@@ -337,7 +294,10 @@ func TestUpdate_NilOrigin(t *testing.T) {
 }
 
 func TestUpdate_Success(t *testing.T) {
-	rs := newTestService(&mockResourceAccess{})
+	rs, mockRA, mockPS, _, _ := newTestService(t)
+	mockPS.EXPECT().CheckPermission(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
+	mockRA.EXPECT().Update(gomock.Any(), gomock.Any()).Return(nil)
+
 	err := rs.Update(context.Background(), "r1", &interfaces.ResourceRequest{
 		OriginResource: &interfaces.Resource{ID: "r1"},
 		Name:           "updated",
