@@ -1,0 +1,642 @@
+openapi: "3.0.2"
+info:
+  title: "Agent Skill 公有接口"
+  description: "Agent Skill 注册、删除、查询、读取相关公有接口"
+  version: "1.0.0"
+servers:
+  - url: "http://{host}:{port}/api/agent-operator-integration/v1"
+    description: "Agent Skill 公有接口地址"
+    variables:
+      host:
+        default: "agent-operator-integration"
+        description: "服务地址"
+      port:
+        default: "9000"
+        description: "服务端口"
+
+paths:
+  /skills:
+    post:
+      summary: "注册 Skill"
+      description: "注册 Skill，支持 JSON、表单和 multipart 三种提交方式"
+      tags:
+        - "Skill 管理"
+      parameters:
+        - name: Authorization
+          in: header
+          description: "Bearer token"
+          required: true
+          schema:
+            type: string
+        - name: x-business-domain
+          in: header
+          description: "业务域 ID"
+          required: true
+          schema:
+            type: string
+        - name: user_id
+          in: header
+          description: "用户 ID"
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RegisterSkillReq"
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: "#/components/schemas/RegisterSkillReq"
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+                - file_type
+                - file
+              properties:
+                file_type:
+                  type: string
+                  enum: ["zip", "content"]
+                  description: "文件类型"
+                file:
+                  type: string
+                  format: binary
+                  description: "Skill 文件内容"
+                source:
+                  type: string
+                  description: "Skill 来源"
+                extend_info:
+                  type: object
+                  description: "扩展信息"
+      responses:
+        "200":
+          description: "成功"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RegisterSkillResp"
+        "400":
+          description: "参数错误"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "403":
+          description: "无权限"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "500":
+          description: "内部错误"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+    get:
+      summary: "查询 Skill 列表"
+      description: "分页查询业务域下的 Skill 列表，仅返回轻量摘要，不返回 SKILL.md 正文和文件清单"
+      tags:
+        - "Skill 管理"
+      parameters:
+        - name: Authorization
+          in: header
+          description: "Bearer token"
+          required: true
+          schema:
+            type: string
+        - name: x-business-domain
+          in: header
+          description: "业务域 ID"
+          required: true
+          schema:
+            type: string
+        - name: user_id
+          in: header
+          description: "用户 ID"
+          required: false
+          schema:
+            type: string
+        - name: page
+          in: query
+          description: "页码，从 1 开始"
+          schema:
+            type: integer
+            default: 1
+        - name: page_size
+          in: query
+          description: "每页数量"
+          schema:
+            type: integer
+            default: 10
+        - name: sort_by
+          in: query
+          description: "排序字段"
+          schema:
+            type: string
+            enum: ["create_time", "update_time", "name"]
+            default: "update_time"
+        - name: sort_order
+          in: query
+          description: "排序方式"
+          schema:
+            type: string
+            enum: ["asc", "desc"]
+            default: "desc"
+        - name: all
+          in: query
+          description: "是否返回全部"
+          schema:
+            type: boolean
+            default: false
+        - name: name
+          in: query
+          description: "Skill 名称"
+          schema:
+            type: string
+        - name: status
+          in: query
+          description: "Skill 状态"
+          schema:
+            type: string
+            enum: ["draft", "active", "error", "deleting"]
+        - name: source
+          in: query
+          description: "Skill 来源"
+          schema:
+            type: string
+        - name: create_user
+          in: query
+          description: "创建用户"
+          schema:
+            type: string
+      responses:
+        "200":
+          description: "成功"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/QuerySkillListResp"
+        "400":
+          description: "参数错误"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "403":
+          description: "无权限"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "500":
+          description: "内部错误"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /skills/{skill_id}:
+    get:
+      summary: "获取 Skill 详情"
+      description: "根据 Skill ID 获取纯元数据详情，不返回 SKILL.md 正文和文件清单"
+      tags:
+        - "Skill 管理"
+      parameters:
+        - $ref: "#/components/parameters/Authorization"
+        - $ref: "#/components/parameters/BusinessDomain"
+        - $ref: "#/components/parameters/UserID"
+        - $ref: "#/components/parameters/SkillID"
+      responses:
+        "200":
+          description: "成功"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SkillInfo"
+        "400":
+          description: "参数错误"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "404":
+          description: "Skill 不存在"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "500":
+          description: "内部错误"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+    delete:
+      summary: "删除 Skill"
+      description: "物理删除指定 Skill。删除流程会先进入 deleting 中间态，完成对象存储与文件索引清理后再物理删除主记录；deleting 对外视为不存在。"
+      tags:
+        - "Skill 管理"
+      parameters:
+        - $ref: "#/components/parameters/Authorization"
+        - $ref: "#/components/parameters/BusinessDomain"
+        - $ref: "#/components/parameters/UserIDRequired"
+        - $ref: "#/components/parameters/SkillID"
+      responses:
+        "200":
+          description: "成功"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DeleteSkillResp"
+        "400":
+          description: "参数错误"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "404":
+          description: "Skill 不存在"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "500":
+          description: "内部错误"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /skills/{skill_id}/guide:
+    get:
+      summary: "获取 Skill Guide"
+      description: "获取 Skill 的 Guide 内容与文件摘要。处于 deleting 中间态的 Skill 对外视为不存在。"
+      tags:
+        - "Skill 读取"
+      parameters:
+        - $ref: "#/components/parameters/Authorization"
+        - $ref: "#/components/parameters/BusinessDomain"
+        - $ref: "#/components/parameters/UserID"
+        - $ref: "#/components/parameters/SkillID"
+      responses:
+        "200":
+          description: "成功"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GetSkillGuideResp"
+        "400":
+          description: "参数错误"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "404":
+          description: "Skill 不存在"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "500":
+          description: "内部错误"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /skills/{skill_id}/files/read:
+    post:
+      summary: "读取 Skill 文件"
+      description: "按相对路径读取 Skill 内部文件。处于 deleting 中间态的 Skill 对外视为不存在。"
+      tags:
+        - "Skill 读取"
+      parameters:
+        - $ref: "#/components/parameters/Authorization"
+        - $ref: "#/components/parameters/BusinessDomain"
+        - $ref: "#/components/parameters/UserID"
+        - $ref: "#/components/parameters/SkillID"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ReadSkillFileReq"
+      responses:
+        "200":
+          description: "成功"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReadSkillFileResp"
+        "400":
+          description: "参数错误"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "403":
+          description: "无权限或文件不可读"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "404":
+          description: "Skill 或文件不存在"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "500":
+          description: "内部错误"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+components:
+  parameters:
+    Authorization:
+      name: Authorization
+      in: header
+      description: "Bearer token"
+      required: true
+      schema:
+        type: string
+    BusinessDomain:
+      name: x-business-domain
+      in: header
+      description: "业务域 ID"
+      required: true
+      schema:
+        type: string
+    UserID:
+      name: user_id
+      in: header
+      description: "用户 ID"
+      required: false
+      schema:
+        type: string
+    UserIDRequired:
+      name: user_id
+      in: header
+      description: "用户 ID"
+      required: true
+      schema:
+        type: string
+    SkillID:
+      name: skill_id
+      in: path
+      description: "Skill ID"
+      required: true
+      schema:
+        type: string
+
+  schemas:
+    RegisterSkillReq:
+      type: object
+      required:
+        - file_type
+        - file
+      properties:
+        file_type:
+          type: string
+          enum: ["zip", "content"]
+          description: "文件类型"
+        file:
+          type: object
+          description: "Skill 内容，JSON/表单模式下为原始内容"
+        source:
+          type: string
+          description: "Skill 来源"
+        extend_info:
+          type: object
+          description: "扩展信息"
+
+    RegisterSkillResp:
+      type: object
+      properties:
+        code:
+          type: integer
+        msg:
+          type: string
+        data:
+          type: object
+          properties:
+            skill_id:
+              type: string
+            name:
+              type: string
+            description:
+              type: string
+            version:
+              type: string
+            status:
+              type: string
+              enum: ["draft", "active", "error", "deleting"]
+            files:
+              type: array
+              items:
+                type: string
+
+    DeleteSkillResp:
+      type: object
+      properties:
+        code:
+          type: integer
+        msg:
+          type: string
+        data:
+          type: object
+          properties:
+            skill_id:
+              type: string
+            deleted:
+              type: boolean
+
+    QuerySkillListResp:
+      type: object
+      properties:
+        code:
+          type: integer
+        msg:
+          type: string
+        data:
+          type: object
+          properties:
+            total_count:
+              type: integer
+            page:
+              type: integer
+            page_size:
+              type: integer
+            total_page:
+              type: integer
+            has_next:
+              type: boolean
+            has_prev:
+              type: boolean
+            data:
+              type: array
+              items:
+                $ref: "#/components/schemas/SkillSummaryData"
+
+    SkillInfo:
+      type: object
+      properties:
+        code:
+          type: integer
+        msg:
+          type: string
+        data:
+          $ref: "#/components/schemas/SkillInfoData"
+
+    SkillSummaryData:
+      type: object
+      properties:
+        skill_id:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+        version:
+          type: string
+        status:
+          type: string
+          enum: ["draft", "active", "error", "deleting"]
+        source:
+          type: string
+        owner_type:
+          type: string
+        owner_id:
+          type: string
+        create_user:
+          type: string
+        create_time:
+          type: integer
+          format: int64
+        update_user:
+          type: string
+        update_time:
+          type: integer
+          format: int64
+
+    SkillInfoData:
+      type: object
+      properties:
+        skill_id:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+        version:
+          type: string
+        status:
+          type: string
+          enum: ["draft", "active", "error", "deleting"]
+        source:
+          type: string
+        owner_type:
+          type: string
+        owner_id:
+          type: string
+        dependencies:
+          type: object
+          additionalProperties: true
+        extend_info:
+          type: object
+          additionalProperties: true
+        create_user:
+          type: string
+        create_time:
+          type: integer
+          format: int64
+        update_user:
+          type: string
+        update_time:
+          type: integer
+          format: int64
+
+    SkillFileSummary:
+      type: object
+      properties:
+        rel_path:
+          type: string
+        file_type:
+          type: string
+        access_level:
+          type: string
+          enum: ["public_manifest", "runtime_read", "restricted"]
+        size:
+          type: integer
+          format: int64
+        mime_type:
+          type: string
+
+    GetSkillGuideResp:
+      type: object
+      properties:
+        code:
+          type: integer
+        msg:
+          type: string
+        data:
+          type: object
+          properties:
+            skill_id:
+              type: string
+            content:
+              type: string
+            files:
+              type: array
+              items:
+                $ref: "#/components/schemas/SkillFileSummary"
+            status:
+              type: string
+              enum: ["draft", "active", "error", "deleting"]
+
+    ReadSkillFileReq:
+      type: object
+      required:
+        - rel_path
+      properties:
+        rel_path:
+          type: string
+          description: "Skill 文件相对路径"
+
+    ReadSkillFileResp:
+      type: object
+      properties:
+        code:
+          type: integer
+        msg:
+          type: string
+        data:
+          type: object
+          properties:
+            skill_id:
+              type: string
+            rel_path:
+              type: string
+            content:
+              type: string
+            mime_type:
+              type: string
+            file_type:
+              type: string
+            access_level:
+              type: string
+
+    Error:
+      type: object
+      properties:
+        code:
+          type: integer
+        msg:
+          type: string
+        data:
+          nullable: true

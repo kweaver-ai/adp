@@ -38,7 +38,7 @@ func (r *skillReader) GetSkillGuide(ctx context.Context, req *interfaces.GetSkil
 	if err != nil {
 		return nil, err
 	}
-	if skill == nil || skill.OwnerID != req.BusinessDomainID || skill.Status == model.SkillStatusDeleted {
+	if skill == nil || skill.Status == model.SkillStatusDeleting {
 		return nil, fmt.Errorf("skill not found: %s", req.SkillID)
 	}
 	return &interfaces.GetSkillGuideResp{
@@ -54,7 +54,7 @@ func (r *skillReader) ReadSkillFile(ctx context.Context, req *interfaces.ReadSki
 	if err != nil {
 		return nil, err
 	}
-	if skill == nil || skill.OwnerID != req.BusinessDomainID || skill.Status != model.SkillStatusActive {
+	if skill == nil || skill.Status != model.SkillStatusActive {
 		return nil, fmt.Errorf("skill not found: %s", req.SkillID)
 	}
 

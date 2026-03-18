@@ -50,7 +50,7 @@ type QuerySkillListReq struct {
 	BusinessDomainID string            `header:"x-business-domain" validate:"required"`
 	UserID           string            `header:"user_id"`
 	Name             string            `form:"name"`
-	Status           model.SkillStatus `form:"status" validate:"omitempty,oneof=draft active error deleting deleted"`
+	Status           model.SkillStatus `form:"status" validate:"omitempty,oneof=draft active error deleting"`
 	Source           string            `form:"source"`
 	CreateUser       string            `form:"create_user"`
 	CommonPageParams `json:",inline"`
@@ -61,7 +61,6 @@ type SkillInfo struct {
 	SkillID      string                 `json:"skill_id"`
 	Name         string                 `json:"name"`
 	Description  string                 `json:"description"`
-	Instructions string                 `json:"instructions"`
 	Version      string                 `json:"version"`
 	Status       model.SkillStatus      `json:"status"`
 	Source       string                 `json:"source"`
@@ -69,11 +68,26 @@ type SkillInfo struct {
 	OwnerID      string                 `json:"owner_id"`
 	Dependencies map[string]interface{} `json:"dependencies,omitempty"`
 	ExtendInfo   map[string]interface{} `json:"extend_info,omitempty"`
-	Files        []*SkillFileSummary    `json:"files"`
 	CreateUser   string                 `json:"create_user"`
 	CreateTime   int64                  `json:"create_time"`
 	UpdateUser   string                 `json:"update_user"`
 	UpdateTime   int64                  `json:"update_time"`
+}
+
+// SkillSummary Skill 列表摘要
+type SkillSummary struct {
+	SkillID     string            `json:"skill_id"`
+	Name        string            `json:"name"`
+	Description string            `json:"description"`
+	Version     string            `json:"version"`
+	Status      model.SkillStatus `json:"status"`
+	Source      string            `json:"source"`
+	OwnerType   string            `json:"owner_type"`
+	OwnerID     string            `json:"owner_id"`
+	CreateUser  string            `json:"create_user"`
+	CreateTime  int64             `json:"create_time"`
+	UpdateUser  string            `json:"update_user"`
+	UpdateTime  int64             `json:"update_time"`
 }
 
 // SkillFileSummary Skill 文件摘要
@@ -88,7 +102,7 @@ type SkillFileSummary struct {
 // QuerySkillListResp Skill 列表响应
 type QuerySkillListResp struct {
 	CommonPageResult `json:",inline"`
-	Data             []*SkillInfo `json:"data"`
+	Data             []*SkillSummary `json:"data"`
 }
 
 // GetSkillDetailReq Skill 详情查询

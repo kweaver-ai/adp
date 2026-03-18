@@ -11,7 +11,6 @@ import (
 	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/infra/config"
 	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/infra/db"
 	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/interfaces/model"
-	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/utils"
 	"github.com/kweaver-ai/proton-rds-sdk-go/sqlx"
 )
 
@@ -127,10 +126,6 @@ func (s *skillRepositoryDB) UpdateSkillStatus(ctx context.Context, tx *sql.Tx, s
 		"f_update_time": time.Now().UnixNano(),
 		"f_update_user": updateUser,
 	}
-	if status == model.SkillStatusDeleted {
-		updateData["f_delete_time"] = time.Now().UnixNano()
-		updateData["f_delete_user"] = updateUser
-	}
 	_, err := orm.Update(tbSkillRepository).SetData(updateData).WhereEq("f_skill_id", skillID).Execute(ctx)
 	return err
 }
@@ -215,8 +210,6 @@ func (s *skillRepositoryDB) applyFilterConditions(query *ormhelper.SelectBuilder
 	}
 	if status, ok := filter["status"].(string); ok && status != "" {
 		query = query.WhereEq("f_status", status)
-	} else {
-		query = query.WhereNotIn("f_status", utils.SliceToInterface([]string{string(model.SkillStatusDeleted)})...)
 	}
 	return query
 }
