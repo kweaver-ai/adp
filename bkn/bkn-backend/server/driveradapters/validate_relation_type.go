@@ -46,12 +46,18 @@ func ValidateRelationTypes(ctx context.Context, knID string, relationTypes []*in
 			return err
 		}
 
-		// 3. 校验 请求体中关系类名称重复性
+		// 2. 校验 请求体中关系类名称重复性
 		if _, ok := tmpNameMap[relationTypes[i].RTName]; !ok {
 			tmpNameMap[relationTypes[i].RTName] = nil
 		} else {
 			return rest.NewHTTPError(ctx, http.StatusBadRequest, berrors.BknBackend_RelationType_Duplicated_Name)
 		}
+
+		// 3. 如果关系类的branch为空，则赋值 main
+		if relationTypes[i].Branch == "" {
+			relationTypes[i].Branch = interfaces.MAIN_BRANCH
+		}
+
 		relationTypes[i].KNID = knID
 	}
 	return nil

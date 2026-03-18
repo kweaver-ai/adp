@@ -27,6 +27,7 @@ import (
 	"ontology-query/interfaces"
 	"ontology-query/logics"
 	"ontology-query/logics/object_type"
+	"ontology-query/logics/risk_type"
 )
 
 var (
@@ -38,6 +39,7 @@ type actionTypeService struct {
 	appSetting *common.AppSetting
 	omAccess   interfaces.OntologyManagerAccess
 	ots        interfaces.ObjectTypeService
+	riskTypeS  interfaces.RiskTypeService
 	uAccess    interfaces.UniqueryAccess
 }
 
@@ -47,6 +49,7 @@ func NewActionTypeService(appSetting *common.AppSetting) interfaces.ActionTypeSe
 			appSetting: appSetting,
 			omAccess:   logics.OMA,
 			ots:        object_type.NewObjectTypeService(appSetting),
+			riskTypeS:  risk_type.NewRiskTypeService(appSetting),
 			uAccess:    logics.UA,
 		}
 	})
@@ -119,6 +122,18 @@ func (ats *actionTypeService) GetActionsByActionTypeID(ctx context.Context,
 				return resps, rest.NewHTTPError(ctx, http.StatusBadRequest, oerrors.OntologyQuery_InternalError_UnMarshalDataFailed).
 					WithErrorDetails(err.Error())
 			}
+			if err := ats.evaluateRiskForInstance(ctx, &actionType, map[string]any{}, nil, query.KNID, query.Branch); err != nil {
+				// 风险评估不通过，过滤掉该 action
+				respActions := interfaces.Actions{
+					ActionSource: actionType.ActionSource,
+					Actions:      []interfaces.ActionParam{},
+					TotalCount:   0,
+				}
+				if query.IncludeTypeInfo {
+					respActions.ActionType = &actionType
+				}
+				return respActions, nil
+			}
 
 			respActions := interfaces.Actions{
 				ActionSource: actionType.ActionSource,
@@ -141,6 +156,9 @@ func (ats *actionTypeService) GetActionsByActionTypeID(ctx context.Context,
 					logger.Errorf("Error building action from instance data: %v", err)
 					return resps, rest.NewHTTPError(ctx, http.StatusBadRequest, oerrors.OntologyQuery_InternalError_UnMarshalDataFailed).
 						WithErrorDetails(err.Error())
+				}
+				if err := ats.evaluateRiskForInstance(ctx, &actionType, identity, nil, query.KNID, query.Branch); err != nil {
+					continue // 风险评估不通过，过滤掉该 action
 				}
 				actions = append(actions, action)
 			}
@@ -211,6 +229,9 @@ func (ats *actionTypeService) GetActionsByActionTypeID(ctx context.Context,
 					logger.Errorf("Error building action from instance data: %v", err)
 					return resps, rest.NewHTTPError(ctx, http.StatusBadRequest, oerrors.OntologyQuery_InternalError_UnMarshalDataFailed).
 						WithErrorDetails(err.Error())
+				}
+				if err := ats.evaluateRiskForInstance(ctx, &actionType, instanceIdentity, nil, query.KNID, query.Branch); err != nil {
+					continue // 风险评估不通过，过滤掉该 action
 				}
 				actions = append(actions, action)
 			}
@@ -330,6 +351,10 @@ func (ats *actionTypeService) GetActionsByActionTypeID(ctx context.Context,
 			action.Display = object[interfaces.SYSTEM_PROPERTY_DISPLAY]
 		}
 
+		if err := ats.evaluateRiskForInstance(ctx, &actionType, object, dynamicParams, query.KNID, query.Branch); err != nil {
+			continue // 风险评估不通过，过滤掉该 action
+		}
+
 		// 返回的对象数据已经按查询参数生成和排除系统字段了，此时就是按需添加
 		actions = append(actions, action)
 	}
@@ -345,6 +370,27 @@ func (ats *actionTypeService) GetActionsByActionTypeID(ctx context.Context,
 	}
 
 	return respActions, nil
+}
+
+// evaluateRiskForInstance 对单个实例进行风险评估，解析 RiskTypeConfig.Parameters 后调用 MustAllow
+func (ats *actionTypeService) evaluateRiskForInstance(ctx context.Context, actionType *interfaces.ActionType,
+	objectData map[string]any, dynamicParams map[string]any, knID, branch string) error {
+	if len(actionType.RiskTypeConfigs) == 0 {
+		return nil
+	}
+	if dynamicParams == nil {
+		dynamicParams = map[string]any{}
+	}
+	actionTypeCopy := *actionType
+	actionTypeCopy.RiskTypeConfigs = make([]interfaces.RiskTypeConfig, len(actionType.RiskTypeConfigs))
+	for i := range actionType.RiskTypeConfigs {
+		actionTypeCopy.RiskTypeConfigs[i] = interfaces.RiskTypeConfig{
+			RiskTypeID: actionType.RiskTypeConfigs[i].RiskTypeID,
+			Parameters: actionType.RiskTypeConfigs[i].Parameters,
+			Params:     logics.ResolveRiskTypeConfigParams(&actionType.RiskTypeConfigs[i], objectData, dynamicParams),
+		}
+	}
+	return ats.riskTypeS.MustAllow(ctx, &actionTypeCopy, knID, branch)
 }
 
 // buildActionFromInstanceData builds action data from instance data

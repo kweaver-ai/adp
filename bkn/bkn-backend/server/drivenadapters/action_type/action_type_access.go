@@ -190,6 +190,13 @@ func (ata *actionTypeAccess) CreateActionType(ctx context.Context, tx *sql.Tx, a
 		return err
 	}
 
+	// 2.5 序列化 risk_type_configs
+	riskTypeConfigsBytes, err := sonic.Marshal(actionType.RiskTypeConfigs)
+	if err != nil {
+		logger.Errorf("Failed to marshal RiskTypeConfigs, err: %v", err.Error())
+		return err
+	}
+
 	sqlStr, vals, err := sq.Insert(AT_TABLE_NAME).
 		Columns(
 			"f_id",
@@ -208,6 +215,7 @@ func (ata *actionTypeAccess) CreateActionType(ctx context.Context, tx *sql.Tx, a
 			"f_action_source",
 			"f_parameters",
 			"f_schedule",
+			"f_risk_type_configs",
 			"f_creator",
 			"f_creator_type",
 			"f_create_time",
@@ -232,6 +240,7 @@ func (ata *actionTypeAccess) CreateActionType(ctx context.Context, tx *sql.Tx, a
 			actionSourceBytes,
 			parameterBytes,
 			scheduleBytes,
+			riskTypeConfigsBytes,
 			actionType.Creator.ID,
 			actionType.Creator.Type,
 			actionType.CreateTime,
@@ -287,6 +296,7 @@ func (ata *actionTypeAccess) ListActionTypes(ctx context.Context, query interfac
 		"f_action_source",
 		"f_parameters",
 		"f_schedule",
+		"f_risk_type_configs",
 		"f_creator",
 		"f_creator_type",
 		"f_create_time",
@@ -329,11 +339,12 @@ func (ata *actionTypeAccess) ListActionTypes(ctx context.Context, query interfac
 		}
 		tagsStr := ""
 		var (
-			conditionBytes    []byte
-			affectBytes       []byte
-			actionSourceBytes []byte
-			parametersBytes   []byte
-			scheduleBytes     []byte
+			conditionBytes       []byte
+			affectBytes          []byte
+			actionSourceBytes    []byte
+			parametersBytes      []byte
+			scheduleBytes        []byte
+			riskTypeConfigsBytes []byte
 		)
 		err := rows.Scan(
 			&actionType.ATID,
@@ -352,6 +363,7 @@ func (ata *actionTypeAccess) ListActionTypes(ctx context.Context, query interfac
 			&actionSourceBytes,
 			&parametersBytes,
 			&scheduleBytes,
+			&riskTypeConfigsBytes,
 			&actionType.Creator.ID,
 			&actionType.Creator.Type,
 			&actionType.CreateTime,
@@ -368,6 +380,9 @@ func (ata *actionTypeAccess) ListActionTypes(ctx context.Context, query interfac
 
 		// tags string 转成数组的格式
 		actionType.Tags = libCommon.TagString2TagSlice(tagsStr)
+
+		// 2.5 反序列化 risk_type_configs
+		_ = sonic.Unmarshal(riskTypeConfigsBytes, &actionType.RiskTypeConfigs)
 
 		// 2.0 反序列化 condition
 		err = sonic.Unmarshal(conditionBytes, &actionType.Condition)
@@ -479,6 +494,7 @@ func (ata *actionTypeAccess) GetActionTypesByIDs(ctx context.Context, knID strin
 		"f_action_source",
 		"f_parameters",
 		"f_schedule",
+		"f_risk_type_configs",
 		"f_creator",
 		"f_creator_type",
 		"f_create_time",
@@ -515,11 +531,12 @@ func (ata *actionTypeAccess) GetActionTypesByIDs(ctx context.Context, knID strin
 		}
 		tagsStr := ""
 		var (
-			conditionBytes    []byte
-			affectBytes       []byte
-			actionSourceBytes []byte
-			parametersBytes   []byte
-			scheduleBytes     []byte
+			conditionBytes       []byte
+			affectBytes          []byte
+			actionSourceBytes    []byte
+			parametersBytes      []byte
+			scheduleBytes        []byte
+			riskTypeConfigsBytes []byte
 		)
 
 		err := rows.Scan(
@@ -539,6 +556,7 @@ func (ata *actionTypeAccess) GetActionTypesByIDs(ctx context.Context, knID strin
 			&actionSourceBytes,
 			&parametersBytes,
 			&scheduleBytes,
+			&riskTypeConfigsBytes,
 			&actionType.Creator.ID,
 			&actionType.Creator.Type,
 			&actionType.CreateTime,
@@ -556,6 +574,9 @@ func (ata *actionTypeAccess) GetActionTypesByIDs(ctx context.Context, knID strin
 
 		// tags string 转成数组的格式
 		actionType.Tags = libCommon.TagString2TagSlice(tagsStr)
+
+		// 2.5 反序列化 risk_type_configs
+		_ = sonic.Unmarshal(riskTypeConfigsBytes, &actionType.RiskTypeConfigs)
 
 		// 2.0 反序列化 condition
 		err = sonic.Unmarshal(conditionBytes, &actionType.Condition)
@@ -661,23 +682,33 @@ func (ata *actionTypeAccess) UpdateActionType(ctx context.Context, tx *sql.Tx, a
 		return err
 	}
 
+	// 2.5 序列化 risk_type_configs
+	riskTypeConfigsBytes, err := sonic.Marshal(actionType.RiskTypeConfigs)
+	if err != nil {
+		logger.Errorf("Failed to marshal RiskTypeConfigs, err: %v", err.Error())
+		o11y.Error(ctx, fmt.Sprintf("Failed to marshal RiskTypeConfigs, err: %v", err.Error()))
+		span.SetStatus(codes.Error, "Failed to marshal RiskTypeConfigs")
+		return err
+	}
+
 	data := map[string]any{
-		"f_name":            actionType.ATName,
-		"f_tags":            tagsStr,
-		"f_comment":         actionType.Comment,
-		"f_icon":            actionType.Icon,
-		"f_color":           actionType.Color,
-		"f_bkn_raw_content": actionType.BKNRawContent,
-		"f_action_type":     actionType.ActionType,
-		"f_object_type_id":  actionType.ObjectTypeID,
-		"f_condition":       conditionBytes,
-		"f_affect":          affectBytes,
-		"f_action_source":   actionSourceBytes,
-		"f_parameters":      parameterBytes,
-		"f_schedule":        scheduleBytes,
-		"f_updater":         actionType.Updater.ID,
-		"f_updater_type":    actionType.Updater.Type,
-		"f_update_time":     actionType.UpdateTime,
+		"f_name":              actionType.ATName,
+		"f_tags":              tagsStr,
+		"f_comment":           actionType.Comment,
+		"f_icon":              actionType.Icon,
+		"f_color":             actionType.Color,
+		"f_bkn_raw_content":   actionType.BKNRawContent,
+		"f_action_type":       actionType.ActionType,
+		"f_object_type_id":    actionType.ObjectTypeID,
+		"f_condition":         conditionBytes,
+		"f_affect":            affectBytes,
+		"f_action_source":     actionSourceBytes,
+		"f_parameters":        parameterBytes,
+		"f_schedule":          scheduleBytes,
+		"f_risk_type_configs": riskTypeConfigsBytes,
+		"f_updater":           actionType.Updater.ID,
+		"f_updater_type":      actionType.Updater.Type,
+		"f_update_time":       actionType.UpdateTime,
 	}
 	sqlStr, vals, err := sq.Update(AT_TABLE_NAME).
 		SetMap(data).
@@ -931,6 +962,7 @@ func (ata *actionTypeAccess) GetAllActionTypesByKnID(ctx context.Context, knID s
 		"f_action_source",
 		"f_parameters",
 		"f_schedule",
+		"f_risk_type_configs",
 		"f_creator",
 		"f_creator_type",
 		"f_create_time",
@@ -968,11 +1000,12 @@ func (ata *actionTypeAccess) GetAllActionTypesByKnID(ctx context.Context, knID s
 		}
 		tagsStr := ""
 		var (
-			conditionBytes    []byte
-			affectBytes       []byte
-			actionSourceBytes []byte
-			parametersBytes   []byte
-			scheduleBytes     []byte
+			conditionBytes       []byte
+			affectBytes          []byte
+			actionSourceBytes    []byte
+			parametersBytes      []byte
+			scheduleBytes        []byte
+			riskTypeConfigsBytes []byte
 		)
 		err := rows.Scan(
 			&actionType.ATID,
@@ -991,6 +1024,7 @@ func (ata *actionTypeAccess) GetAllActionTypesByKnID(ctx context.Context, knID s
 			&actionSourceBytes,
 			&parametersBytes,
 			&scheduleBytes,
+			&riskTypeConfigsBytes,
 			&actionType.Creator.ID,
 			&actionType.Creator.Type,
 			&actionType.CreateTime,
@@ -1048,6 +1082,8 @@ func (ata *actionTypeAccess) GetAllActionTypesByKnID(ctx context.Context, knID s
 			span.SetStatus(codes.Error, "Failed to unmarshal Schedule after getting action type")
 			return map[string]*interfaces.ActionType{}, err
 		}
+		// 2.5 反序列化 risk_type_configs
+		_ = sonic.Unmarshal(riskTypeConfigsBytes, &actionType.RiskTypeConfigs)
 
 		actionTypes[actionType.ATID] = &actionType
 	}

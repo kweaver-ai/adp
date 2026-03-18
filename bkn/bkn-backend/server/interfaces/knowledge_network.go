@@ -116,6 +116,7 @@ type KN struct {
 	ObjectTypes   []*ObjectType   `json:"object_types,omitempty" mapstructure:"object_types"`
 	RelationTypes []*RelationType `json:"relation_types,omitempty" mapstructure:"relation_types"`
 	ActionTypes   []*ActionType   `json:"action_types,omitempty" mapstructure:"action_types"`
+	RiskTypes     []*RiskType     `json:"risk_types,omitempty" mapstructure:"risk_types"`
 
 	Creator    AccountInfo `json:"creator" mapstructure:"creator"`
 	CreateTime int64       `json:"create_time" mapstructure:"create_time"`

@@ -633,6 +633,29 @@ func EvaluateInstanceAgainstCondition(ctx context.Context,
 	return evaluateConditionRecursive(ctx, instanceData, condition, propMap)
 }
 
+// EvaluateDataAgainstCondition 判断 data 是否满足 condition
+// data: 待评估数据，key 为字段名
+// condition: 条件配置
+// paramDefs: 参数定义，用于类型推断（可为 nil，则 fieldType 为空）
+func EvaluateDataAgainstCondition(ctx context.Context,
+	data map[string]any,
+	condition *cond.CondCfg,
+	paramDefs []interfaces.Parameter) (bool, error) {
+
+	if condition == nil {
+		return true, nil
+	}
+
+	propMap := make(map[string]*cond.DataProperty)
+	for i := range paramDefs {
+		propMap[paramDefs[i].Name] = &cond.DataProperty{
+			Name: paramDefs[i].Name,
+			Type: paramDefs[i].Type,
+		}
+	}
+	return evaluateConditionRecursive(ctx, data, condition, propMap)
+}
+
 // evaluateConditionRecursive recursively evaluates condition
 func evaluateConditionRecursive(ctx context.Context,
 	instanceData map[string]any,
@@ -1038,4 +1061,33 @@ func toFloat64(value any) float64 {
 		return v
 	}
 	return 0
+}
+
+// ResolveRiskTypeConfigParams 根据 objectData 和 dynamicParams 解析 RiskTypeConfig.Parameters，返回 name->value 的 map
+// 供 risk type 评估使用，解析规则与 buildActionFromInstanceData 一致
+func ResolveRiskTypeConfigParams(cfg *interfaces.RiskTypeConfig, objectData map[string]any, dynamicParams map[string]any) map[string]any {
+	if cfg == nil || len(cfg.Parameters) == 0 {
+		return nil
+	}
+	if dynamicParams == nil {
+		dynamicParams = map[string]any{}
+	}
+	result := make(map[string]any, len(cfg.Parameters))
+	for _, param := range cfg.Parameters {
+		var value any
+		switch param.ValueFrom {
+		case interfaces.LOGIC_PARAMS_VALUE_FROM_PROP:
+			if propName, ok := param.Value.(string); ok {
+				value = objectData[propName]
+			}
+		case interfaces.LOGIC_PARAMS_VALUE_FROM_INPUT:
+			value = dynamicParams[param.Name]
+		case interfaces.LOGIC_PARAMS_VALUE_FROM_CONST:
+			value = param.Value
+		default:
+			value = param.Value
+		}
+		result[param.Name] = value
+	}
+	return result
 }

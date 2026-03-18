@@ -51,7 +51,11 @@ func (m *MockAgentOperatorAccess) ExecuteMCP(ctx context.Context, mcpID, toolNam
 }
 
 // ExecuteMCP indicates an expected call of ExecuteMCP.
+<<<<<<< HEAD
 func (mr *MockAgentOperatorAccessMockRecorder) ExecuteMCP(ctx, mcpID, toolName, execRequest any) *gomock.Call {
+=======
+func (mr *MockAgentOperatorAccessMockRecorder) ExecuteMCP(ctx, mcpID, toolName, execRequest interface{}) *gomock.Call {
+>>>>>>> 38305883 ([feat] 3377-issue 风险类 RiskType)
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ExecuteMCP", reflect.TypeOf((*MockAgentOperatorAccess)(nil).ExecuteMCP), ctx, mcpID, toolName, execRequest)
 }
@@ -81,7 +85,11 @@ func (m *MockAgentOperatorAccess) ExecuteTool(ctx context.Context, boxID, toolID
 }
 
 // ExecuteTool indicates an expected call of ExecuteTool.
+<<<<<<< HEAD
 func (mr *MockAgentOperatorAccessMockRecorder) ExecuteTool(ctx, boxID, toolID, execRequest any) *gomock.Call {
+=======
+func (mr *MockAgentOperatorAccessMockRecorder) ExecuteTool(ctx, boxID, toolID, execRequest interface{}) *gomock.Call {
+>>>>>>> 38305883 ([feat] 3377-issue 风险类 RiskType)
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ExecuteTool", reflect.TypeOf((*MockAgentOperatorAccess)(nil).ExecuteTool), ctx, boxID, toolID, execRequest)
 }

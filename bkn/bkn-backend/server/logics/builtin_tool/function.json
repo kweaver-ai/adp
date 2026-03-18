@@ -1,0 +1,185 @@
+{
+    "metadata_type": "function",
+    "use_rule": "需要提供待评估的参数数据、风险规则列表和参数定义列表。函数会根据规则条件评估数据，返回对应的风险级别和消息。",
+    "function_input": {
+        "tool_id": "bkn_common_risk_assessment_tool",
+        "name": "bkn_common_risk_assessment_tool",
+        "description": "基于参数和规则进行风险评估，返回最终风险级别",
+        "inputs": [
+            {
+                "name": "arguments",
+                "description": "待评估的数据参数",
+                "required": true,
+                "type": "object",
+                "id": "param_1773912105260_130"
+            },
+            {
+                "name": "rules",
+                "description": "风险规则列表",
+                "required": true,
+                "type": "array",
+                "sub_parameters": [
+                    {
+                        "name": "[Array Item]",
+                        "description": "风险规则对象",
+                        "required": true,
+                        "type": "object",
+                        "sub_parameters": [
+                            {
+                                "name": "id",
+                                "description": "规则ID",
+                                "required": false,
+                                "type": "string",
+                                "id": "param_1773912105260_28"
+                            },
+                            {
+                                "name": "when",
+                                "description": "触发条件",
+                                "required": false,
+                                "type": "object",
+                                "sub_parameters": [
+                                    {
+                                        "name": "type",
+                                        "description": "条件类型",
+                                        "required": false,
+                                        "type": "string",
+                                        "id": "param_1773912105260_320"
+                                    },
+                                    {
+                                        "name": "condition",
+                                        "description": "条件表达式",
+                                        "required": false,
+                                        "type": "object",
+                                        "sub_parameters": [
+                                            {
+                                                "name": "operation",
+                                                "description": "操作符",
+                                                "required": false,
+                                                "type": "string",
+                                                "id": "param_1773912105260_859"
+                                            },
+                                            {
+                                                "name": "name",
+                                                "description": "字段名",
+                                                "required": false,
+                                                "type": "string",
+                                                "id": "param_1773912105260_654"
+                                            },
+                                            {
+                                                "name": "value_opt_cfg",
+                                                "description": "值配置",
+                                                "required": false,
+                                                "type": "object",
+                                                "sub_parameters": [
+                                                    {
+                                                        "name": "value",
+                                                        "description": "比较值",
+                                                        "required": false,
+                                                        "type": "string",
+                                                        "id": "param_1773912105260_930"
+                                                    }
+                                                ],
+                                                "id": "param_1773912105260_987"
+                                            },
+                                            {
+                                                "name": "sub_conditions",
+                                                "description": "子条件列表",
+                                                "required": false,
+                                                "type": "array",
+                                                "sub_parameters": [
+                                                    {
+                                                        "name": "[Array Item]",
+                                                        "description": "子条件对象",
+                                                        "required": true,
+                                                        "type": "object",
+                                                        "id": "param_1773912105260_255"
+                                                    }
+                                                ],
+                                                "id": "param_1773912105260_539"
+                                            }
+                                        ],
+                                        "id": "param_1773912105260_33"
+                                    }
+                                ],
+                                "id": "param_1773912105260_661"
+                            },
+                            {
+                                "name": "decision",
+                                "description": "风险决策",
+                                "required": false,
+                                "type": "string",
+                                "id": "param_1773912105260_604"
+                            },
+                            {
+                                "name": "message",
+                                "description": "风险消息",
+                                "required": false,
+                                "type": "string",
+                                "id": "param_1773912105260_64"
+                            }
+                        ],
+                        "id": "param_1773912105260_311"
+                    }
+                ],
+                "id": "param_1773912105260_693"
+            },
+            {
+                "name": "param_defs",
+                "description": "参数定义列表",
+                "required": true,
+                "type": "array",
+                "sub_parameters": [
+                    {
+                        "name": "[Array Item]",
+                        "description": "参数定义对象",
+                        "required": true,
+                        "type": "object",
+                        "sub_parameters": [
+                            {
+                                "name": "name",
+                                "description": "参数名称",
+                                "required": true,
+                                "type": "string",
+                                "id": "param_1773912105260_189"
+                            },
+                            {
+                                "name": "type",
+                                "description": "参数类型",
+                                "required": true,
+                                "type": "string",
+                                "id": "param_1773912105260_147"
+                            }
+                        ],
+                        "id": "param_1773912105260_431"
+                    }
+                ],
+                "id": "param_1773912105260_133"
+            }
+        ],
+        "outputs": [
+            {
+                "name": "risk_level",
+                "description": "最终风险级别",
+                "required": true,
+                "type": "string",
+                "id": "param_1773912105260_327"
+            },
+            {
+                "name": "success",
+                "description": "操作是否成功",
+                "required": true,
+                "type": "boolean",
+                "id": "param_1773912105260_584"
+            },
+            {
+                "name": "message",
+                "description": "对应风险级别的消息",
+                "required": true,
+                "type": "string",
+                "id": "param_1773912105260_103"
+            }
+        ],
+        "code": "import numbers\nfrom typing import Dict, Any, List, Optional\n\ndef handler(event: Dict[str, Any]):\n    \"\"\"\n    风险评估函数，根据参数和规则决策，返回最终风险级别\n\n    Parameters:\n    event: dict\n        - arguments: dict, 待评估的数据参数\n        - rules: list, 风险规则列表\n        - param_defs: list, 参数定义列表\n\n    Return:\n    dict: 包含最终风险级别的结果\n    \"\"\"\n    try:\n        # 1. 参数提取与校验\n        arguments = event.get(\"arguments\", {})\n        rules = event.get(\"rules\", [])\n        param_defs = event.get(\"param_defs\", [])\n        \n        # 风险级别定义\n        risk_levels = [\"safe\", \"low\", \"medium\", \"high\", \"critical\"]\n        risk_level_order = {level: idx for idx, level in enumerate(risk_levels)}\n        \n        max_level = \"safe\"\n        message = \"\"\n\n        for rule in rules:\n            # 无 when 条件时取 decision\n            if rule.get(\"when\") is None:\n                decision = rule.get(\"decision\", \"\")\n                if decision and risk_level_order.get(decision, -1) > risk_level_order.get(max_level, -1):\n                    max_level = decision\n                    message = rule.get(\"message\", \"\")\n                continue\n\n            # 仅支持 when.type=condition\n            if rule[\"when\"].get(\"type\") != \"condition\":\n                # natural_language 等暂不评估，视为不命中\n                continue\n\n            # when.condition 为空时视为满足\n            if rule[\"when\"].get(\"condition\") is None:\n                decision = rule.get(\"decision\", \"\")\n                if decision and risk_level_order.get(decision, -1) > risk_level_order.get(max_level, -1):\n                    max_level = decision\n                    message = rule.get(\"message\", \"\")\n                continue\n\n            # 评估条件\n            satisfies, err = evaluate_data_against_condition(arguments, rule[\"when\"][\"condition\"], param_defs)\n            if err:\n                print(f\"EvaluateDataAgainstCondition failed for rule {rule.get('id', 'unknown')}: {err}\")\n                continue\n            \n            decision = rule.get(\"decision\", \"\")\n            if satisfies and decision and risk_level_order.get(decision, -1) > risk_level_order.get(max_level, -1):\n                max_level = decision\n                message = rule.get(\"message\", \"\")\n\n        return {\"risk_level\": max_level, \"success\": True, \"message\": message}\n\n    except Exception as e:\n        import traceback\n        print(traceback.format_exc())\n        return {\n            \"error\": f\"Execution Error: {str(e)}\",\n            \"success\": False\n        }\n\ndef evaluate_data_against_condition(data: Dict[str, Any], condition: Dict[str, Any], param_defs: List[Dict[str, Any]]) -> tuple[bool, Optional[str]]:\n    \"\"\"判断数据是否满足条件\"\"\"\n    if condition is None:\n        return True, None\n\n    prop_map = {}\n    for param in param_defs:\n        prop_map[param[\"name\"]] = {\n            \"name\": param[\"name\"],\n            \"type\": param.get(\"type\", \"\")\n        }\n    \n    return evaluate_condition_recursive(data, condition, prop_map)\n\ndef evaluate_condition_recursive(instance_data: Dict[str, Any], condition: Dict[str, Any], prop_map: Dict[str, Any]) -> tuple[bool, Optional[str]]:\n    \"\"\"递归评估条件\"\"\"\n    if condition is None:\n        return True, None\n\n    operation = condition.get(\"operation\", \"\")\n    \n    # 处理逻辑运算符\n    if operation == \"and\":\n        for sub_cond in condition.get(\"sub_conditions\", []):\n            result, err = evaluate_condition_recursive(instance_data, sub_cond, prop_map)\n            if err:\n                return False, err\n            if not result:\n                return False, None\n        return True, None\n\n    elif operation == \"or\":\n        for sub_cond in condition.get(\"sub_conditions\", []):\n            result, err = evaluate_condition_recursive(instance_data, sub_cond, prop_map)\n            if err:\n                return False, err\n            if result:\n                return True, None\n        return False, None\n\n    # 处理字段基础运算符\n    field_name = condition.get(\"field\") or \"\"\n    field_value = instance_data.get(field_name)\n    field_exists = field_name in instance_data\n\n    # 处理不需要字段存在的运算符\n    if operation == \"exist\":\n        return field_exists, None\n    elif operation == \"not_exist\":\n        return not field_exists, None\n    elif operation == \"empty\":\n        if not field_exists:\n            return True, None\n        return is_empty(field_value), None\n    elif operation == \"not_empty\":\n        if not field_exists:\n            return False, None\n        return not is_empty(field_value), None\n\n    # 对于其他运算符，字段必须存在（除了 != 可以在字段不存在时返回 True）\n    if not field_exists:\n        if operation == \"!=\":\n            return True, None\n        return False, None\n\n    # 获取属性信息用于类型检查\n    prop = prop_map.get(field_name, {})\n    field_type = prop.get(\"type\", \"\")\n\n    # 基于操作符进行评估\n    condition_value = condition.get(\"value\")\n    if operation == \"==\":\n        return compare_values(field_value, condition_value, \"==\", field_type)\n    elif operation == \"!=\":\n        return compare_values(field_value, condition_value, \"!=\", field_type)\n    elif operation == \">\":\n        return compare_values(field_value, condition_value, \">\", field_type)\n    elif operation == \">=\":\n        return compare_values(field_value, condition_value, \">=\", field_type)\n    elif operation == \"<\":\n        return compare_values(field_value, condition_value, \"<\", field_type)\n    elif operation == \"<=\":\n        return compare_values(field_value, condition_value, \"<=\", field_type)\n    elif operation == \"in\":\n        return evaluate_in(field_value, condition_value)\n    elif operation == \"not_in\":\n        result, err = evaluate_in(field_value, condition_value)\n        if err:\n            return False, err\n        return not result, None\n    elif operation == \"range\":\n        return evaluate_range(field_value, condition_value, field_type, True)\n    elif operation == \"out_range\":\n        result, err = evaluate_range(field_value, condition_value, field_type, True)\n        if err:\n            return False, err\n        return not result, None\n    elif operation == \"true\":\n        return is_true(field_value), None\n    elif operation == \"false\":\n        return is_false(field_value), None\n    elif operation == \"before\":\n        return evaluate_before(field_value, condition_value)\n    elif operation == \"between\":\n        return evaluate_range(field_value, condition_value, field_type, False)\n    else:\n        return False, f\"unsupported operation: {operation}\"\n\ndef is_empty(value: Any) -> bool:\n    \"\"\"检查值是否为空\"\"\"\n    if value is None:\n        return True\n\n    if isinstance(value, str):\n        return value == \"\"\n    elif isinstance(value, (list, tuple, dict)):\n        return len(value) == 0\n\n    return False\n\ndef is_true(value: Any) -> bool:\n    \"\"\"检查值是否为布尔真\"\"\"\n    return isinstance(value, bool) and value\n\ndef is_false(value: Any) -> bool:\n    \"\"\"检查值是否为布尔假\"\"\"\n    return isinstance(value, bool) and not value\n\ndef evaluate_in(field_value: Any, value_list: Any) -> tuple[bool, Optional[str]]:\n    \"\"\"检查 field_value 是否在值列表中\"\"\"\n    if value_list is None:\n        return False, None\n\n    if not isinstance(value_list, list):\n        return False, \"in operation requires array value\"\n\n    for v in value_list:\n        if compare_values_simple(field_value, v):\n            return True, None\n    return False, None\n\ndef evaluate_range(field_value: Any, range_value: Any, field_type: str, left_closed_right_open: bool) -> tuple[bool, Optional[str]]:\n    \"\"\"检查 field_value 是否在范围内\"\"\"\n    if range_value is None:\n        return False, None\n\n    if not isinstance(range_value, list) or len(range_value) != 2:\n        return False, \"range operation requires array of length 2\"\n\n    min_val, max_val = range_value\n\n    # 比较 field_value 与最小值\n    min_result, err = compare_values(field_value, min_val, \">=\", field_type)\n    if err:\n        return False, err\n    if not min_result:\n        return False, None\n\n    # 比较 field_value 与最大值\n    if left_closed_right_open:\n        max_result, err = compare_values(field_value, max_val, \"<\", field_type)\n        if err:\n            return False, err\n        return max_result, None\n    else:\n        max_result, err = compare_values(field_value, max_val, \"<=\", field_type)\n        if err:\n            return False, err\n        return max_result, None\n\ndef evaluate_before(field_value: Any, condition_value: Any) -> tuple[bool, Optional[str]]:\n    \"\"\"检查 field_value (日期) 是否在 condition_value 之前\"\"\"\n    try:\n        field_time = parse_time(field_value)\n        cond_time = parse_time(condition_value)\n        return field_time < cond_time, None\n    except Exception as e:\n        return False, str\n\ndef compare_values(left, right, operation, field_type=\"\"):\n    if left is None or right is None:\n        return False, None\n\n    if field_type == \"datetime\":\n        try:\n            left_time = _parse_time(left)\n            right_time = _parse_time(right)\n        except ValueError as e:\n            return False, str(e)\n        if operation == \"==\":\n            return left_time == right_time, None\n        if operation == \"!=\":\n            return left_time != right_time, None\n        if operation == \">\":\n            return left_time > right_time, None\n        if operation == \">=\":\n            return left_time >= right_time, None\n        if operation == \"<\":\n            return left_time < right_time, None\n        if operation == \"<=\":\n            return left_time <= right_time, None\n\n    if _is_numeric(left) and _is_numeric(right):\n        ln = _to_float64(left)\n        rn = _to_float64(right)\n        if operation == \"==\":\n            return ln == rn, None\n        if operation == \"!=\":\n            return ln != rn, None\n        if operation == \">\":\n            return ln > rn, None\n        if operation == \">=\":\n            return ln >= rn, None\n        if operation == \"<\":\n            return ln < rn, None\n        if operation == \"<=\":\n            return ln <= rn, None\n\n    left_str = str(left)\n    right_str = str(right)\n    if operation == \"==\":\n        return left_str == right_str, None\n    if operation == \"!=\":\n        return left_str != right_str, None\n    if operation == \">\":\n        return left_str > right_str, None\n    if operation == \">=\":\n        return left_str >= right_str, None\n    if operation == \"<\":\n        return left_str < right_str, None\n    if operation == \"<=\":\n        return left_str <= right_str, None\n\n    return False, f\"unsupported operation: {operation}\"\n\ndef _is_numeric(value):\n    return isinstance(value, numbers.Number) and not isinstance(value, bool)\n\ndef _to_float64(value):\n    if isinstance(value, (int, float)) and not isinstance(value, bool):\n        return float(value)\n    return 0.0\n",
+        "script_type": "python"
+    }
+}

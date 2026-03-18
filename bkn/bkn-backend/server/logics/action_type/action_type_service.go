@@ -49,6 +49,7 @@ type actionTypeService struct {
 	ots        interfaces.ObjectTypeService
 	ps         interfaces.PermissionService
 	ums        interfaces.UserMgmtService
+	riskTypeA  interfaces.RiskTypeAccess
 	vba        interfaces.VegaBackendAccess
 }
 
@@ -63,6 +64,7 @@ func NewActionTypeService(appSetting *common.AppSetting) interfaces.ActionTypeSe
 			ots:        object_type.NewObjectTypeService(appSetting),
 			ps:         permission.NewPermissionService(appSetting),
 			ums:        user_mgmt.NewUserMgmtService(appSetting),
+			riskTypeA:  logics.RiskTypeAccess,
 			vba:        logics.VBA,
 		}
 	})
@@ -143,6 +145,11 @@ func (ats *actionTypeService) CreateActionTypes(ctx context.Context, tx *sql.Tx,
 			if err != nil {
 				return []string{}, err
 			}
+		}
+
+		// 校验 risk_type_configs 中 risk_type_id 存在性
+		if err = ats.validateRiskTypeConfigs(ctx, actionType.KNID, actionType.Branch, actionType.RiskTypeConfigs); err != nil {
+			return []string{}, err
 		}
 
 		bknAction := logics.ToBKNActionType(actionType)
@@ -400,6 +407,11 @@ func (ats *actionTypeService) UpdateActionType(ctx context.Context, tx *sql.Tx, 
 
 	currentTime := time.Now().UnixMilli() // 行动类的update_time是int类型
 	actionType.UpdateTime = currentTime
+
+	// 校验 risk_type_configs 中 risk_type_id 存在性
+	if err = ats.validateRiskTypeConfigs(ctx, actionType.KNID, actionType.Branch, actionType.RiskTypeConfigs); err != nil {
+		return err
+	}
 
 	bknAction := logics.ToBKNActionType(actionType)
 	actionType.BKNRawContent = bknsdk.SerializeActionType(bknAction)
@@ -1146,4 +1158,26 @@ func (ats *actionTypeService) GetTotalWithATIDs(ctx context.Context,
 	}
 
 	return total, nil
+}
+
+// validateRiskTypeConfigs 校验 risk_type_configs 中 risk_type_id 存在性
+func (ats *actionTypeService) validateRiskTypeConfigs(ctx context.Context, knID string, branch string, configs []interfaces.RiskTypeConfig) error {
+	if len(configs) == 0 || ats.riskTypeA == nil {
+		return nil
+	}
+	for _, cfg := range configs {
+		if cfg.RiskTypeID == "" {
+			continue
+		}
+		_, exist, err := ats.riskTypeA.CheckRiskTypeExistByID(ctx, knID, branch, cfg.RiskTypeID)
+		if err != nil {
+			return rest.NewHTTPError(ctx, http.StatusInternalServerError,
+				berrors.BknBackend_RiskType_InternalError_CheckRiskTypeIfExistFailed).WithErrorDetails(err.Error())
+		}
+		if !exist {
+			return rest.NewHTTPError(ctx, http.StatusBadRequest, berrors.BknBackend_RiskType_RiskTypeNotFound).
+				WithErrorDetails(fmt.Sprintf("risk_type_id '%s' does not exist", cfg.RiskTypeID))
+		}
+	}
+	return nil
 }

@@ -1461,3 +1461,124 @@ func Test_BuildDslQuery(t *testing.T) {
 		})
 	})
 }
+
+func Test_EvaluateDataAgainstCondition(t *testing.T) {
+	Convey("Test EvaluateDataAgainstCondition", t, func() {
+		ctx := context.Background()
+
+		Convey("成功 - condition 为 nil 返回 true", func() {
+			data := map[string]any{"amount": 100}
+			paramDefs := []interfaces.Parameter{{Name: "amount", Type: dtype.DATATYPE_INTEGER}}
+			result, err := EvaluateDataAgainstCondition(ctx, data, nil, paramDefs)
+			So(err, ShouldBeNil)
+			So(result, ShouldBeTrue)
+		})
+
+		Convey("成功 - 简单等于条件满足", func() {
+			data := map[string]any{"amount": 100}
+			condition := &cond.CondCfg{
+				Name:      "amount",
+				Operation: cond.OperationEq,
+				ValueOptCfg: cond.ValueOptCfg{
+					Value: 100,
+				},
+			}
+			paramDefs := []interfaces.Parameter{{Name: "amount", Type: dtype.DATATYPE_INTEGER}}
+			result, err := EvaluateDataAgainstCondition(ctx, data, condition, paramDefs)
+			So(err, ShouldBeNil)
+			So(result, ShouldBeTrue)
+		})
+
+		Convey("失败 - 简单等于条件不满足", func() {
+			data := map[string]any{"amount": 100}
+			condition := &cond.CondCfg{
+				Name:      "amount",
+				Operation: cond.OperationEq,
+				ValueOptCfg: cond.ValueOptCfg{
+					Value: 200,
+				},
+			}
+			paramDefs := []interfaces.Parameter{{Name: "amount", Type: dtype.DATATYPE_INTEGER}}
+			result, err := EvaluateDataAgainstCondition(ctx, data, condition, paramDefs)
+			So(err, ShouldBeNil)
+			So(result, ShouldBeFalse)
+		})
+
+		Convey("成功 - AND 条件全部满足", func() {
+			data := map[string]any{"amount": 100, "level": "high"}
+			condition := &cond.CondCfg{
+				Operation: cond.OperationAnd,
+				SubConds: []*cond.CondCfg{
+					{
+						Name:        "amount",
+						Operation:   cond.OperationGte,
+						ValueOptCfg: cond.ValueOptCfg{Value: 50},
+					},
+					{
+						Name:        "level",
+						Operation:   cond.OperationEq,
+						ValueOptCfg: cond.ValueOptCfg{Value: "high"},
+					},
+				},
+			}
+			paramDefs := []interfaces.Parameter{
+				{Name: "amount", Type: dtype.DATATYPE_INTEGER},
+				{Name: "level", Type: dtype.DATATYPE_STRING},
+			}
+			result, err := EvaluateDataAgainstCondition(ctx, data, condition, paramDefs)
+			So(err, ShouldBeNil)
+			So(result, ShouldBeTrue)
+		})
+
+		Convey("失败 - AND 条件部分不满足", func() {
+			data := map[string]any{"amount": 100, "level": "low"}
+			condition := &cond.CondCfg{
+				Operation: cond.OperationAnd,
+				SubConds: []*cond.CondCfg{
+					{
+						Name:        "amount",
+						Operation:   cond.OperationGte,
+						ValueOptCfg: cond.ValueOptCfg{Value: 50},
+					},
+					{
+						Name:        "level",
+						Operation:   cond.OperationEq,
+						ValueOptCfg: cond.ValueOptCfg{Value: "high"},
+					},
+				},
+			}
+			paramDefs := []interfaces.Parameter{
+				{Name: "amount", Type: dtype.DATATYPE_INTEGER},
+				{Name: "level", Type: dtype.DATATYPE_STRING},
+			}
+			result, err := EvaluateDataAgainstCondition(ctx, data, condition, paramDefs)
+			So(err, ShouldBeNil)
+			So(result, ShouldBeFalse)
+		})
+
+		Convey("成功 - paramDefs 为空仍可评估", func() {
+			data := map[string]any{"amount": 100}
+			condition := &cond.CondCfg{
+				Name:        "amount",
+				Operation:   cond.OperationEq,
+				ValueOptCfg: cond.ValueOptCfg{Value: 100},
+			}
+			result, err := EvaluateDataAgainstCondition(ctx, data, condition, nil)
+			So(err, ShouldBeNil)
+			So(result, ShouldBeTrue)
+		})
+
+		Convey("失败 - 字段不存在", func() {
+			data := map[string]any{}
+			condition := &cond.CondCfg{
+				Name:        "amount",
+				Operation:   cond.OperationEq,
+				ValueOptCfg: cond.ValueOptCfg{Value: 100},
+			}
+			paramDefs := []interfaces.Parameter{{Name: "amount", Type: dtype.DATATYPE_INTEGER}}
+			result, err := EvaluateDataAgainstCondition(ctx, data, condition, paramDefs)
+			So(err, ShouldBeNil)
+			So(result, ShouldBeFalse)
+		})
+	})
+}

@@ -28,6 +28,7 @@ import (
 	"bkn-backend/common"
 	"bkn-backend/drivenadapters/action_schedule"
 	"bkn-backend/drivenadapters/action_type"
+	"bkn-backend/drivenadapters/agent_operator_integration"
 	"bkn-backend/drivenadapters/auth"
 	"bkn-backend/drivenadapters/business_system"
 	"bkn-backend/drivenadapters/concept_group"
@@ -40,6 +41,7 @@ import (
 	"bkn-backend/drivenadapters/opensearch"
 	"bkn-backend/drivenadapters/permission"
 	"bkn-backend/drivenadapters/relation_type"
+	"bkn-backend/drivenadapters/risk_type"
 	"bkn-backend/drivenadapters/user_mgmt"
 	"bkn-backend/drivenadapters/vega_backend"
 	"bkn-backend/driveradapters"
@@ -148,6 +150,7 @@ func main() {
 	}
 	logics.SetActionScheduleAccess(action_schedule.NewActionScheduleAccess(appSetting))
 	logics.SetActionTypeAccess(action_type.NewActionTypeAccess(appSetting))
+	logics.SetAgentOperatorIntegrationAccess(agent_operator_integration.NewAgentOperatorIntegrationAccess(appSetting))
 	logics.SetBusinessSystemAccess(business_system.NewBusinessSystemAccess(appSetting))
 	logics.SetConceptGroupAccess(concept_group.NewConceptGroupAccess(appSetting))
 	logics.SetDataModelAccess(data_model.NewDataModelAccess(appSetting))
@@ -158,6 +161,7 @@ func main() {
 	logics.SetOpenSearchAccess(opensearch.NewOpenSearchAccess(appSetting))
 	logics.SetObjectTypeAccess(object_type.NewObjectTypeAccess(appSetting))
 	logics.SetRelationTypeAccess(relation_type.NewRelationTypeAccess(appSetting))
+	logics.SetRiskTypeAccess(risk_type.NewRiskTypeAccess(appSetting))
 	logics.SetVegaBackendAccess(vega_backend.NewVegaBackendAccess(appSetting))
 
 	server := &mgrService{

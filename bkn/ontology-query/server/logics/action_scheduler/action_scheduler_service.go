@@ -28,6 +28,7 @@ import (
 	"ontology-query/logics"
 	"ontology-query/logics/action_logs"
 	"ontology-query/logics/object_type"
+	"ontology-query/logics/risk_type"
 )
 
 // Environment variable for max execution objects limit
@@ -59,6 +60,7 @@ type actionSchedulerService struct {
 	aoAccess    interfaces.AgentOperatorAccess
 	logsService interfaces.ActionLogsService
 	ots         interfaces.ObjectTypeService
+	riskTypeS   interfaces.RiskTypeService
 
 	// Reserved hooks for future extension
 	duplicateCheckHook  interfaces.DuplicateCheckHook
@@ -74,6 +76,7 @@ func NewActionSchedulerService(appSetting *common.AppSetting) interfaces.ActionS
 			aoAccess:    logics.AOA,
 			logsService: action_logs.NewActionLogsService(appSetting),
 			ots:         object_type.NewObjectTypeService(appSetting),
+			riskTypeS:   risk_type.NewRiskTypeService(appSetting),
 		}
 	})
 	return assService
@@ -127,6 +130,29 @@ func (s *actionSchedulerService) ExecuteAction(ctx context.Context, req *interfa
 		return nil, rest.NewHTTPError(ctx, http.StatusBadRequest, oerrors.OntologyQuery_ActionExecution_InvalidParameter).
 			WithErrorDetails(fmt.Sprintf("Number of objects (%d) exceeds the maximum limit (%d). Please reduce the scope or adjust the ACTION_EXECUTION_MAX_OBJECTS environment variable.",
 				len(req.Instances), maxExecutionObjects))
+	}
+
+	// RiskType：对每个实例进行风险评估，任一失败则拒绝本次执行
+	dynamicParams := req.DynamicParams
+	if dynamicParams == nil {
+		dynamicParams = map[string]any{}
+	}
+	for _, objData := range req.ObjDatas {
+		if len(actionType.RiskTypeConfigs) == 0 {
+			break
+		}
+		actionTypeCopy := actionType
+		actionTypeCopy.RiskTypeConfigs = make([]interfaces.RiskTypeConfig, len(actionType.RiskTypeConfigs))
+		for i := range actionType.RiskTypeConfigs {
+			actionTypeCopy.RiskTypeConfigs[i] = interfaces.RiskTypeConfig{
+				RiskTypeID: actionType.RiskTypeConfigs[i].RiskTypeID,
+				Parameters: actionType.RiskTypeConfigs[i].Parameters,
+				Params:     logics.ResolveRiskTypeConfigParams(&actionType.RiskTypeConfigs[i], objData, dynamicParams),
+			}
+		}
+		if err := s.riskTypeS.MustAllow(ctx, &actionTypeCopy, req.KNID, req.Branch); err != nil {
+			return nil, err
+		}
 	}
 
 	// Get executor info from context

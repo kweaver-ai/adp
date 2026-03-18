@@ -1,0 +1,11 @@
+[
+    {
+        "db_name": "adp",
+        "table_name": "t_action_type",
+        "object_type": "COLUMN",
+        "operation_type": "ADD",
+        "object_name": "f_risk_type_configs",
+        "object_property": "TEXT DEFAULT NULL",
+        "object_comment": "风险类信息"
+    }
+]

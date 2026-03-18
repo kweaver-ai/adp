@@ -46,7 +46,7 @@ func ValidateObjectTypes(ctx context.Context, knID string, objectTypes []*interf
 			return err
 		}
 
-		// 3. 校验 请求体中对象类名称重复性
+		// 2. 校验 请求体中对象类名称重复性
 		if _, ok := tmpNameMap[objectTypes[i].OTName]; !ok {
 			tmpNameMap[objectTypes[i].OTName] = nil
 		} else {

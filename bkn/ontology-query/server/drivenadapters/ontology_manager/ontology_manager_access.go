@@ -10,6 +10,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"strings"
 	"sync"
 	"time"
 
@@ -684,4 +685,60 @@ func (oma *ontologyManagerAccess) GetActionType(ctx context.Context, knID string
 	o11y.AddHttpAttrs4Ok(span, respCode)
 
 	return response.ActionTypes[0], rawActionType, true, nil
+}
+
+// GetRiskTypesByIDs 按 ID 批量获取风险类（调用 bkn-backend 内部 API）
+func (oma *ontologyManagerAccess) GetRiskTypesByIDs(ctx context.Context, knID string, branch string, riskTypeIDs []string) ([]interfaces.RiskType, error) {
+	if len(riskTypeIDs) == 0 {
+		return []interfaces.RiskType{}, nil
+	}
+
+	idsStr := strings.Join(riskTypeIDs, ",")
+	httpUrl := fmt.Sprintf("%s/%s/risk-types?risk_type_ids=%s&branch=%s", oma.ontologyManagerUrl, knID, idsStr, branch)
+
+	ctx, span := ar_trace.Tracer.Start(ctx, "请求 bkn-backend 获取风险类", trace.WithSpanKind(trace.SpanKindClient))
+	o11y.AddAttrs4InternalHttp(span, o11y.TraceAttrs{
+		HttpUrl:         httpUrl,
+		HttpMethod:      http.MethodGet,
+		HttpContentType: rest.ContentTypeJson,
+	})
+	defer span.End()
+
+	accountInfo := interfaces.AccountInfo{}
+	if ctx.Value(interfaces.ACCOUNT_INFO_KEY) != nil {
+		accountInfo = ctx.Value(interfaces.ACCOUNT_INFO_KEY).(interfaces.AccountInfo)
+	}
+
+	headers := map[string]string{
+		interfaces.CONTENT_TYPE_NAME:        interfaces.CONTENT_TYPE_JSON,
+		interfaces.HTTP_HEADER_ACCOUNT_ID:   accountInfo.ID,
+		interfaces.HTTP_HEADER_ACCOUNT_TYPE: accountInfo.Type,
+	}
+
+	respCode, result, err := oma.httpClient.GetNoUnmarshal(ctx, httpUrl, nil, headers)
+	if err != nil {
+		logger.Errorf("GetRiskTypesByIDs request failed: %v", err)
+		o11y.AddHttpAttrs4Error(span, respCode, "InternalError", "Http Get Failed")
+		return nil, fmt.Errorf("get risk types failed: %w", err)
+	}
+
+	if respCode != http.StatusOK {
+		logger.Errorf("GetRiskTypesByIDs failed: %v", result)
+		var baseError rest.BaseError
+		if err = sonic.Unmarshal(result, &baseError); err != nil {
+			return nil, fmt.Errorf("get risk types failed: %s", string(result))
+		}
+		return nil, fmt.Errorf("get risk types failed: %s", baseError.Description)
+	}
+
+	var response struct {
+		Entries []interfaces.RiskType `json:"entries"`
+	}
+	if err = sonic.Unmarshal(result, &response); err != nil {
+		logger.Errorf("Unmarshal risk types failed: %v", err)
+		return nil, fmt.Errorf("unmarshal risk types failed: %w", err)
+	}
+
+	o11y.AddHttpAttrs4Ok(span, respCode)
+	return response.Entries, nil
 }

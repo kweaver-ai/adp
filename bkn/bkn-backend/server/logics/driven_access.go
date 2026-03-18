@@ -12,23 +12,25 @@ import (
 )
 
 var (
-	DB  *sql.DB
-	AA  interfaces.AuthAccess
-	ASA interfaces.ActionScheduleAccess
-	ATA interfaces.ActionTypeAccess
-	BSA interfaces.BusinessSystemAccess
-	CGA interfaces.ConceptGroupAccess
-	DDA interfaces.DataModelAccess
-	DVA interfaces.DataViewAccess
-	JA  interfaces.JobAccess
-	KNA interfaces.KNAccess
-	MFA interfaces.ModelFactoryAccess
-	OSA interfaces.OpenSearchAccess
-	OTA interfaces.ObjectTypeAccess
-	PA  interfaces.PermissionAccess
-	RTA interfaces.RelationTypeAccess
-	UMA interfaces.UserMgmtAccess
-	VBA interfaces.VegaBackendAccess
+	DB             *sql.DB
+	AA             interfaces.AuthAccess
+	AOIA           interfaces.AgentOperatorIntegrationAccess
+	ASA            interfaces.ActionScheduleAccess
+	ATA            interfaces.ActionTypeAccess
+	BSA            interfaces.BusinessSystemAccess
+	CGA            interfaces.ConceptGroupAccess
+	DDA            interfaces.DataModelAccess
+	DVA            interfaces.DataViewAccess
+	JA             interfaces.JobAccess
+	KNA            interfaces.KNAccess
+	MFA            interfaces.ModelFactoryAccess
+	OSA            interfaces.OpenSearchAccess
+	OTA            interfaces.ObjectTypeAccess
+	PA             interfaces.PermissionAccess
+	RTA            interfaces.RelationTypeAccess
+	RiskTypeAccess interfaces.RiskTypeAccess
+	UMA            interfaces.UserMgmtAccess
+	VBA            interfaces.VegaBackendAccess
 )
 
 func SetDB(db *sql.DB) {
@@ -37,6 +39,10 @@ func SetDB(db *sql.DB) {
 
 func SetAuthAccess(aa interfaces.AuthAccess) {
 	AA = aa
+}
+
+func SetAgentOperatorIntegrationAccess(aoia interfaces.AgentOperatorIntegrationAccess) {
+	AOIA = aoia
 }
 
 func SetActionScheduleAccess(asa interfaces.ActionScheduleAccess) {
@@ -89,6 +95,10 @@ func SetPermissionAccess(pa interfaces.PermissionAccess) {
 
 func SetRelationTypeAccess(rta interfaces.RelationTypeAccess) {
 	RTA = rta
+}
+
+func SetRiskTypeAccess(rta interfaces.RiskTypeAccess) {
+	RiskTypeAccess = rta
 }
 
 func SetUserMgmtAccess(uma interfaces.UserMgmtAccess) {

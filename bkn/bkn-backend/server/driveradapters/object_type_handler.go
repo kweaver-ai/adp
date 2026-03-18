@@ -163,6 +163,11 @@ func (r *restHandler) CreateObjectTypes(c *gin.Context, visitor hydra.Visitor) {
 	// 记录接口调用参数： c.Request.RequestURI, body
 	o11y.Info(ctx, fmt.Sprintf("创建对象类请求参数: [%s,%v]", c.Request.RequestURI, objectTypes))
 
+	// request来的objectTypes的branch都用url里的branch
+	for i := range objectTypes {
+		objectTypes[i].Branch = branch
+	}
+
 	// 校验 请求体中目标模型名称合法性
 	err = ValidateObjectTypes(ctx, knID, objectTypes)
 	if err != nil {

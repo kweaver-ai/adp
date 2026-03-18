@@ -46,12 +46,13 @@ func ValidateActionTypes(ctx context.Context, knID string, actionTypes []*interf
 			return err
 		}
 
-		// 3. 校验 请求体中行动类名称重复性
+		// 2. 校验 请求体中行动类名称重复性
 		if _, ok := tmpNameMap[actionTypes[i].ATName]; !ok {
 			tmpNameMap[actionTypes[i].ATName] = nil
 		} else {
 			return rest.NewHTTPError(ctx, http.StatusBadRequest, berrors.BknBackend_ActionType_Duplicated_Name)
 		}
+
 		actionTypes[i].KNID = knID
 	}
 	return nil

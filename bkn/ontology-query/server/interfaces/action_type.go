@@ -36,15 +36,23 @@ type ActionParam struct {
 }
 
 type ActionType struct {
-	ATID         string        `json:"id"`
-	ATName       string        `json:"name"`
-	ActionType   string        `json:"action_type"`
-	ObjectTypeID string        `json:"object_type_id"`
-	Condition    *cond.CondCfg `json:"condition,omitempty"`
-	Affect       *ActionAffect `json:"affect"`
-	ActionSource ActionSource  `json:"action_source"`
-	Parameters   []Parameter   `json:"parameters"`
-	Schedule     Schedule      `json:"schedule"`
+	ATID            string           `json:"id"`
+	ATName          string           `json:"name"`
+	ActionType      string           `json:"action_type"`
+	ObjectTypeID    string           `json:"object_type_id"`
+	Condition       *cond.CondCfg    `json:"condition,omitempty"`
+	Affect          *ActionAffect    `json:"affect"`
+	ActionSource    ActionSource     `json:"action_source"`
+	Parameters      []Parameter      `json:"parameters"`
+	Schedule        Schedule         `json:"schedule"`
+	RiskTypeConfigs []RiskTypeConfig `json:"risk_type_configs,omitempty"`
+}
+
+// RiskTypeConfig ActionType 绑定的风险类配置
+type RiskTypeConfig struct {
+	RiskTypeID string         `json:"risk_type_id"`
+	Parameters []Parameter    `json:"parameters"` // 定义（ValueFrom、Value 等），来自 API/存储
+	Params     map[string]any `json:"-"`          // 评估时传入的实参 name->value，优先于 Parameters
 }
 
 type ActionAffect struct {

@@ -68,6 +68,11 @@ func (bs *bknService) ExportToTar(ctx context.Context, knID string, branch strin
 	for _, cg := range kn.ConceptGroups {
 		bknNetwork.ConceptGroups = append(bknNetwork.ConceptGroups, logics.ToBKNConceptGroup(cg))
 	}
+	for _, rt := range kn.RiskTypes {
+		if rt != nil {
+			bknNetwork.RiskTypes = append(bknNetwork.RiskTypes, logics.ToBKNRiskType(rt))
+		}
+	}
 
 	var buf bytes.Buffer
 	err = bknsdk.WriteNetworkToTar(bknNetwork, &buf)

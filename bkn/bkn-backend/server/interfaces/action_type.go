@@ -55,16 +55,23 @@ var (
 )
 
 type ActionTypeWithKeyField struct {
-	ATID         string           `json:"id" mapstructure:"id"`
-	ATName       string           `json:"name" mapstructure:"name"`
-	ActionType   string           `json:"action_type" mapstructure:"action_type"`
-	ObjectTypeID string           `json:"object_type_id" mapstructure:"object_type_id"`
-	ObjectType   SimpleObjectType `json:"object_type,omitempty" mapstructure:"object_type"` // 翻译绑定的对象类
-	Condition    *CondCfg         `json:"condition,omitempty" mapstructure:"condition"`
-	Affect       *ActionAffect    `json:"affect" mapstructure:"affect"`
-	ActionSource ActionSource     `json:"action_source" mapstructure:"action_source"`
-	Parameters   []Parameter      `json:"parameters" mapstructure:"parameters"`
-	Schedule     Schedule         `json:"schedule" mapstructure:"schedule"`
+	ATID            string           `json:"id" mapstructure:"id"`
+	ATName          string           `json:"name" mapstructure:"name"`
+	ActionType      string           `json:"action_type" mapstructure:"action_type"`
+	ObjectTypeID    string           `json:"object_type_id" mapstructure:"object_type_id"`
+	ObjectType      SimpleObjectType `json:"object_type,omitempty" mapstructure:"object_type"` // 翻译绑定的对象类
+	Condition       *CondCfg         `json:"condition,omitempty" mapstructure:"condition"`
+	Affect          *ActionAffect    `json:"affect" mapstructure:"affect"`
+	ActionSource    ActionSource     `json:"action_source" mapstructure:"action_source"`
+	Parameters      []Parameter      `json:"parameters" mapstructure:"parameters"`
+	Schedule        Schedule         `json:"schedule" mapstructure:"schedule"`
+	RiskTypeConfigs []RiskTypeConfig `json:"risk_type_configs,omitempty" mapstructure:"risk_type_configs"`
+}
+
+// RiskTypeConfig ActionType 绑定的风险类配置
+type RiskTypeConfig struct {
+	RiskTypeID string      `json:"risk_type_id" mapstructure:"risk_type_id"`
+	Parameters []Parameter `json:"parameters,omitempty" mapstructure:"parameters"`
 }
 
 // knowledge_network

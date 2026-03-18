@@ -6,6 +6,7 @@
 package logics
 
 import (
+	"github.com/bytedance/sonic"
 	bknsdk "github.com/kweaver-ai/bkn-specification/sdk/golang/bkn"
 	"github.com/kweaver-ai/kweaver-go-lib/logger"
 
@@ -450,6 +451,8 @@ func ToBKNActionType(adpAction *interfaces.ActionType) *bknsdk.BknActionType {
 		}
 	}
 
+	// RiskTypeConfigs: bkn-specification 若支持则在此对接；当前 ADP 侧通过 action_type_access 持久化
+
 	// 转换 Parameters
 	for _, adpParam := range adpAction.Parameters {
 		param := bknsdk.Parameter{
@@ -478,6 +481,62 @@ func ToBKNActionType(adpAction *interfaces.ActionType) *bknsdk.BknActionType {
 	}
 
 	return bknAction
+}
+
+// adpRiskTypeExt 用于 RawContent 中存储 ADP RiskType 扩展字段
+type adpRiskTypeExt struct {
+	Parameters         []interfaces.ParamDef    `json:"parameters,omitempty"`
+	RiskRules          []interfaces.RiskRule    `json:"risk_rules,omitempty"`
+	RiskFunction       *interfaces.RiskFunction `json:"risk_function,omitempty"`
+	MaxAcceptableLevel string                   `json:"max_acceptable_level,omitempty"`
+}
+
+// ToADPRiskType 将 BKN RiskType 转换为 ADP RiskType
+func ToADPRiskType(knID string, branch string, bknRisk *bknsdk.BknRiskType) *interfaces.RiskType {
+	adpRisk := &interfaces.RiskType{
+		RTID:   bknRisk.ID,
+		RTName: bknRisk.Name,
+		CommonInfo: interfaces.CommonInfo{
+			Tags:    bknRisk.Tags,
+			Comment: bknRisk.Description,
+		},
+		KNID:       knID,
+		Branch:     branch,
+		ModuleType: interfaces.MODULE_TYPE_RISK_TYPE,
+	}
+	if bknRisk.RawContent != "" {
+		var ext adpRiskTypeExt
+		if err := sonic.Unmarshal([]byte(bknRisk.RawContent), &ext); err == nil {
+			adpRisk.Parameters = ext.Parameters
+			adpRisk.RiskRules = ext.RiskRules
+			adpRisk.RiskFunction = ext.RiskFunction
+			adpRisk.MaxAcceptableLevel = ext.MaxAcceptableLevel
+		}
+	}
+	return adpRisk
+}
+
+// ToBKNRiskType 将 ADP RiskType 转换为 BKN RiskType
+func ToBKNRiskType(adpRisk *interfaces.RiskType) *bknsdk.BknRiskType {
+	bknRisk := &bknsdk.BknRiskType{
+		BknRiskTypeFrontmatter: bknsdk.BknRiskTypeFrontmatter{
+			Type:        interfaces.MODULE_TYPE_RISK_TYPE,
+			ID:          adpRisk.RTID,
+			Name:        adpRisk.RTName,
+			Tags:        adpRisk.Tags,
+			Description: adpRisk.Comment,
+		},
+	}
+	ext := adpRiskTypeExt{
+		Parameters:         adpRisk.Parameters,
+		RiskRules:          adpRisk.RiskRules,
+		RiskFunction:       adpRisk.RiskFunction,
+		MaxAcceptableLevel: adpRisk.MaxAcceptableLevel,
+	}
+	if data, err := sonic.Marshal(ext); err == nil {
+		bknRisk.RawContent = string(data)
+	}
+	return bknRisk
 }
 
 // ToADPConceptGroup 将 BKN ConceptGroup 转换为 ADP ConceptGroup

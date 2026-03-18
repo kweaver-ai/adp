@@ -14,6 +14,7 @@ import (
 
 	"bkn-backend/common"
 	"bkn-backend/interfaces"
+	"bkn-backend/logics/builtin_tool"
 )
 
 func Init(ctx context.Context, appSetting *common.AppSetting) error {
@@ -109,6 +110,23 @@ func Init(ctx context.Context, appSetting *common.AppSetting) error {
 		} else {
 			logger.Infof("Schema matches, no need to recreate dataset")
 		}
+	}
+
+	// 注册内置风险评估工具到 agent-operator-integration（类似 dataset 初始化）
+	if appSetting.AgentOperatorIntegrationUrl != "" && AOIA != nil {
+		reqBody, err := builtin_tool.BuildRegisterInternalToolReq()
+		if err != nil {
+			logger.Errorf("Build builtin tool request failed: %v", err)
+		} else {
+			err = AOIA.RegisterInternalTool(ctx, reqBody)
+			if err != nil {
+				logger.Errorf("Register builtin tool failed: %v", err)
+			} else {
+				logger.Infof("Builtin tool %s registered successfully", interfaces.BuiltinToolBoxID)
+			}
+		}
+	} else {
+		logger.Info("AgentOperatorIntegrationUrl not configured or AOIA not set, skip builtin tool registration")
 	}
 
 	logger.Info("Init BKN Dataset Success")

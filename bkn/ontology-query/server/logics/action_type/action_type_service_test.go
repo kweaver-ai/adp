@@ -652,3 +652,56 @@ func Test_actionTypeService_GetActionsByActionTypeID(t *testing.T) {
 		})
 	})
 }
+
+func Test_ResolveRiskTypeConfigParams(t *testing.T) {
+	Convey("Test ResolveRiskTypeConfigParams", t, func() {
+		Convey("nil cfg 返回 nil", func() {
+			result := logics.ResolveRiskTypeConfigParams(nil, map[string]any{"a": 1}, nil)
+			So(result, ShouldBeNil)
+		})
+
+		Convey("空 Parameters 返回 nil", func() {
+			cfg := &interfaces.RiskTypeConfig{RiskTypeID: "rt1", Parameters: []interfaces.Parameter{}}
+			result := logics.ResolveRiskTypeConfigParams(cfg, map[string]any{}, nil)
+			So(result, ShouldBeNil)
+		})
+
+		Convey("ValueFrom=property 从 objectData 取值", func() {
+			cfg := &interfaces.RiskTypeConfig{
+				RiskTypeID: "rt1",
+				Parameters: []interfaces.Parameter{
+					{Name: "amount", Type: "integer", ValueFrom: interfaces.LOGIC_PARAMS_VALUE_FROM_PROP, Value: "revenue"},
+				},
+			}
+			objectData := map[string]any{"revenue": 1000}
+			result := logics.ResolveRiskTypeConfigParams(cfg, objectData, nil)
+			So(len(result), ShouldEqual, 1)
+			So(result["amount"], ShouldEqual, 1000)
+		})
+
+		Convey("ValueFrom=input 从 dynamicParams 取值", func() {
+			cfg := &interfaces.RiskTypeConfig{
+				RiskTypeID: "rt1",
+				Parameters: []interfaces.Parameter{
+					{Name: "threshold", Type: "integer", ValueFrom: interfaces.LOGIC_PARAMS_VALUE_FROM_INPUT},
+				},
+			}
+			dynamicParams := map[string]any{"threshold": 50}
+			result := logics.ResolveRiskTypeConfigParams(cfg, map[string]any{}, dynamicParams)
+			So(len(result), ShouldEqual, 1)
+			So(result["threshold"], ShouldEqual, 50)
+		})
+
+		Convey("ValueFrom=const 使用常量", func() {
+			cfg := &interfaces.RiskTypeConfig{
+				RiskTypeID: "rt1",
+				Parameters: []interfaces.Parameter{
+					{Name: "level", Type: "string", ValueFrom: interfaces.LOGIC_PARAMS_VALUE_FROM_CONST, Value: "high"},
+				},
+			}
+			result := logics.ResolveRiskTypeConfigParams(cfg, map[string]any{}, nil)
+			So(len(result), ShouldEqual, 1)
+			So(result["level"], ShouldEqual, "high")
+		})
+	})
+}

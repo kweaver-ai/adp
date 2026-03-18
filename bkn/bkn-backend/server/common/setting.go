@@ -75,6 +75,8 @@ type AppSetting struct {
 	OntologyQueryUrl string
 	// vega backend url
 	VegaBackendUrl string
+	// agent operator integration url
+	AgentOperatorIntegrationUrl string
 }
 
 const (
@@ -83,20 +85,21 @@ const (
 	configName string = "bkn-backend-config"
 	configType string = "yaml"
 
-	rdsServiceName                 string = "rds"
-	mqServiceName                  string = "mq"
-	opensearchServiceName          string = "opensearch"
-	permissionServiceName          string = "authorization-private"
-	userMgmtServiceName            string = "user-management"
-	hydraAdminServiceName          string = "hydra-admin"
-	modelFactoryManagerServiceName string = "mf-model-manager"
-	modelFactoryAPIServiceName     string = "mf-model-api"
-	dataModelServiceName           string = "data-model"
-	dataViewServiceName            string = "data-model"
-	uniQueryServiceName            string = "uniquery"
-	businessSystemServiceName      string = "business-system"
-	ontologyQueryServiceName       string = "ontology-query"
-	vegaBackendServiceName         string = "vega-backend"
+	rdsServiceName                      string = "rds"
+	mqServiceName                       string = "mq"
+	opensearchServiceName               string = "opensearch"
+	permissionServiceName               string = "authorization-private"
+	userMgmtServiceName                 string = "user-management"
+	hydraAdminServiceName               string = "hydra-admin"
+	modelFactoryManagerServiceName      string = "mf-model-manager"
+	modelFactoryAPIServiceName          string = "mf-model-api"
+	dataModelServiceName                string = "data-model"
+	dataViewServiceName                 string = "data-model"
+	uniQueryServiceName                 string = "uniquery"
+	businessSystemServiceName           string = "business-system"
+	ontologyQueryServiceName            string = "ontology-query"
+	vegaBackendServiceName              string = "vega-backend"
+	agentOperatorIntegrationServiceName string = "agent-operator-integration"
 
 	DATA_BASE_NAME string = "adp"
 )
@@ -177,6 +180,8 @@ func loadSetting(vp *viper.Viper) {
 	SetOntologyQuerySetting()
 
 	SetVegaBackendSetting()
+
+	SetAgentOperatorIntegrationSetting()
 
 	serverInfo := o11y.ServerInfo{
 		ServerName:    version.ServerName,
@@ -411,4 +416,18 @@ func SetVegaBackendSetting() {
 	port := setting["port"].(int)
 
 	appSetting.VegaBackendUrl = fmt.Sprintf("%s://%s:%d/api/vega-backend/in/v1", protocol, host, port)
+}
+
+func SetAgentOperatorIntegrationSetting() {
+	setting, ok := appSetting.DepServices[agentOperatorIntegrationServiceName]
+	if !ok {
+		logger.Warnf("service %s not found in depServices, builtin tool registration will be skipped", agentOperatorIntegrationServiceName)
+		return
+	}
+
+	protocol := setting["protocol"].(string)
+	host := setting["host"].(string)
+	port := setting["port"].(int)
+
+	appSetting.AgentOperatorIntegrationUrl = fmt.Sprintf("%s://%s:%d/api/agent-operator-integration/internal-v1", protocol, host, port)
 }

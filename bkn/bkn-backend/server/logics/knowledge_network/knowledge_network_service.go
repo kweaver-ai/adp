@@ -33,6 +33,7 @@ import (
 	"bkn-backend/logics/object_type"
 	"bkn-backend/logics/permission"
 	"bkn-backend/logics/relation_type"
+	"bkn-backend/logics/risk_type"
 	"bkn-backend/logics/user_mgmt"
 )
 
@@ -55,6 +56,8 @@ type knowledgeNetworkService struct {
 	ota        interfaces.ObjectTypeAccess
 	ots        interfaces.ObjectTypeService
 	rta        interfaces.RelationTypeAccess
+	riskTypeA  interfaces.RiskTypeAccess
+	riskTypeS  interfaces.RiskTypeService
 	ps         interfaces.PermissionService
 	rts        interfaces.RelationTypeService
 	ums        interfaces.UserMgmtService
@@ -78,6 +81,8 @@ func NewKNService(appSetting *common.AppSetting) interfaces.KNService {
 			ots:        object_type.NewObjectTypeService(appSetting),
 			ps:         permission.NewPermissionService(appSetting),
 			rta:        logics.RTA,
+			riskTypeA:  logics.RiskTypeAccess,
+			riskTypeS:  risk_type.NewRiskTypeService(appSetting),
 			rts:        relation_type.NewRelationTypeService(appSetting),
 			ums:        user_mgmt.NewUserMgmtService(appSetting),
 			vba:        logics.VBA,
@@ -270,6 +275,20 @@ func (kns *knowledgeNetworkService) CreateKN(ctx context.Context, kn *interfaces
 					WithErrorDetails(err.Error())
 			}
 		}
+
+		if len(kn.RiskTypes) > 0 && kns.riskTypeS != nil {
+			for _, rt := range kn.RiskTypes {
+				rt.Branch = kn.Branch
+			}
+			_, err = kns.riskTypeS.CreateRiskTypes(ctx, tx, kn.RiskTypes, mode)
+			if err != nil {
+				logger.Errorf("CreateRiskTypes error: %s", err.Error())
+				span.SetStatus(codes.Error, "创建业务知识网络风险类失败")
+				return "", rest.NewHTTPError(ctx, http.StatusInternalServerError,
+					berrors.BknBackend_RiskType_InternalError).
+					WithErrorDetails(err.Error())
+			}
+		}
 	}
 
 	// 处理更新情况
@@ -326,6 +345,20 @@ func (kns *knowledgeNetworkService) CreateKN(ctx context.Context, kn *interfaces
 				span.SetStatus(codes.Error, "创建业务知识网络动作类失败")
 				return "", rest.NewHTTPError(ctx, http.StatusInternalServerError,
 					berrors.BknBackend_KnowledgeNetwork_InternalError_CreateActionTypesFailed).
+					WithErrorDetails(err.Error())
+			}
+		}
+
+		if len(kn.RiskTypes) > 0 && kns.riskTypeS != nil {
+			for _, rt := range kn.RiskTypes {
+				rt.Branch = kn.Branch
+			}
+			_, err = kns.riskTypeS.CreateRiskTypes(ctx, tx, kn.RiskTypes, mode)
+			if err != nil {
+				logger.Errorf("CreateRiskTypes error: %s", err.Error())
+				span.SetStatus(codes.Error, "创建业务知识网络风险类失败")
+				return "", rest.NewHTTPError(ctx, http.StatusInternalServerError,
+					berrors.BknBackend_RiskType_InternalError).
 					WithErrorDetails(err.Error())
 			}
 		}
@@ -549,6 +582,14 @@ func (kns *knowledgeNetworkService) GetKNByID(ctx context.Context, knID string, 
 			return nil, err
 		}
 		kn.ActionTypes = actionTypes
+
+		if kns.riskTypeA != nil {
+			riskTypes, err := kns.riskTypeA.GetAllRiskTypesByKnID(ctx, kn.KNID, kn.Branch)
+			if err != nil {
+				return nil, err
+			}
+			kn.RiskTypes = riskTypes
+		}
 	}
 
 	span.SetStatus(codes.Ok, "")
@@ -832,6 +873,14 @@ func (kns *knowledgeNetworkService) DeleteKN(ctx context.Context, kn *interfaces
 	if err != nil {
 		logger.Errorf("DeleteActionTypesByKnID error: %s", err.Error())
 		span.SetStatus(codes.Error, "删除业务知识网络动作类失败")
+		return err
+	}
+
+	// 删除业务知识网络下的所有风险类
+	err = kns.riskTypeS.DeleteRiskTypesByKnID(ctx, tx, kn.KNID, kn.Branch)
+	if err != nil {
+		logger.Errorf("DeleteRiskTypesByKnID error: %s", err.Error())
+		span.SetStatus(codes.Error, "删除业务知识网络风险类失败")
 		return err
 	}
 

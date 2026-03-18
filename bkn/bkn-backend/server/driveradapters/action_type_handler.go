@@ -161,6 +161,11 @@ func (r *restHandler) CreateActionTypes(c *gin.Context, visitor hydra.Visitor) {
 	// 记录接口调用参数： c.Request.RequestURI, body
 	o11y.Info(ctx, fmt.Sprintf("创建行动类请求参数: [%s,%v]", c.Request.RequestURI, actionTypes))
 
+	// request来的actionTypes的branch都用url里的branch
+	for i := range actionTypes {
+		actionTypes[i].Branch = branch
+	}
+
 	// 校验 请求体中目标模型名称合法性
 	err = ValidateActionTypes(ctx, knID, actionTypes)
 	if err != nil {
@@ -793,6 +798,7 @@ func (r *restHandler) SearchActionTypes(c *gin.Context, visitor hydra.Visitor) {
 		return
 	}
 	query.KNID = knID
+	query.Branch = branch
 	query.ModuleType = interfaces.MODULE_TYPE_ACTION_TYPE
 
 	// todo: 校验：概念类型非空时，需要是指定的枚举类型；过滤条件的字段只能是type_id, type_name, property_name, property_dispaly_name, comment, *

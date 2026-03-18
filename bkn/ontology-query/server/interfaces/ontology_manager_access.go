@@ -5,7 +5,9 @@
 
 package interfaces
 
-import "context"
+import (
+	"context"
+)
 
 // 基于起点、方向和路径长度获取对象子图的请求体
 type PathsQueryBaseOnSource struct {
@@ -36,4 +38,5 @@ type OntologyManagerAccess interface {
 	GetActionType(ctx context.Context, knID string, branch string, atId string) (ActionType, map[string]any, bool, error)
 	GetRelationTypePathsBaseOnSource(ctx context.Context, knID string, branch string, query PathsQueryBaseOnSource) ([]RelationTypePath, error)
 	ListRelationTypes(ctx context.Context, knID string, branch string, query RelationTypesQuery) ([]RelationType, error)
+	GetRiskTypesByIDs(ctx context.Context, knID string, branch string, riskTypeIDs []string) ([]RiskType, error)
 }
