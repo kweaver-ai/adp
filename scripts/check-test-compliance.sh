@@ -37,7 +37,7 @@ for mod in "${ALL_MODULES[@]}"; do
     check "make test target" "grep -q '^test:' $mod/Makefile 2>/dev/null"
     check "make lint target" "grep -q '^lint:' $mod/Makefile 2>/dev/null"
     check "make ci target" "grep -q '^ci:' $mod/Makefile 2>/dev/null"
-    check "test-result/ in .gitignore" "grep -rq 'test-result' .gitignore 2>/dev/null"
+    check "test-result/ in .gitignore" "grep -rq 'test-result' .gitignore $mod/.gitignore 2>/dev/null"
 
     if [[ -f "$mod/go.mod" ]] || [[ -f "$mod/server/go.mod" ]]; then
         check "make test-cover target (Go)" "grep -q '^test-cover:' $mod/Makefile 2>/dev/null"

@@ -23,7 +23,7 @@ test-cover:
 	@mkdir -p test-result
 	cd server && go test $(UT_PACKAGES) -gcflags=all=-l \
 		-coverprofile=../test-result/coverage.out \
-		-covermode=atomic || true
+		-covermode=atomic
 	@if [ -s test-result/coverage.out ]; then \
 		go tool cover -func=test-result/coverage.out; \
 		go tool cover -html=test-result/coverage.out -o test-result/coverage.html; \
