@@ -40,24 +40,24 @@ test-race:
 
 test-at: test-at-setup
 	@echo "运行 AT 测试..."
-	cd server && go test -v ./tests/at/... -timeout 5m
+	cd tests && go test -v ./at/... -timeout 5m
 
 test-at-catalog: test-at-setup
 	@echo "运行 Catalog AT 测试..."
-	cd server && go test -v ./tests/at/catalog/... -timeout 2m
+	cd tests && go test -v ./at/catalog/... -timeout 2m
 
 test-at-verbose: test-at-setup
 	@echo "运行 AT 测试（详细输出）..."
-	cd server && go test -v -count=1 ./tests/at/... -timeout 5m
+	cd tests && go test -v -count=1 ./at/... -timeout 5m
 
 test-at-catalog-verbose: test-at-setup
 	@echo "运行 Catalog AT 测试（详细输出）..."
-	cd server && go test -v -count=1 ./tests/at/catalog/... -timeout 2m
+	cd tests && go test -v -count=1 ./at/catalog/... -timeout 2m
 
 test-at-setup:
-	@if [ ! -f server/tests/at/testdata/test-config.yaml ]; then \
+	@if [ ! -f tests/at/testdata/test-config.yaml ]; then \
 		echo "错误: 测试配置文件不存在"; \
-		echo "请复制: cp server/tests/at/testdata/test-config.yaml.example server/tests/at/testdata/test-config.yaml"; \
+		echo "请复制: cp tests/at/testdata/test-config.yaml.example tests/at/testdata/test-config.yaml"; \
 		exit 1; \
 	fi
 	@echo "测试配置文件已就绪"
