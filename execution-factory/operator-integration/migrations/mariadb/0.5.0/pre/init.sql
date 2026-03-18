@@ -328,8 +328,6 @@ CREATE TABLE IF NOT EXISTS `t_skill_repository` (
     `f_version` varchar(40) NOT NULL COMMENT 'Skill 版本',
     `f_status` varchar(40) NOT NULL COMMENT 'Skill 状态',
     `f_source` varchar(50) NOT NULL DEFAULT '' COMMENT 'Skill 来源',
-    `f_owner_type` varchar(50) NOT NULL DEFAULT '' COMMENT '归属类型',
-    `f_owner_id` varchar(40) NOT NULL COMMENT '归属业务域ID',
     `f_extend_info` longtext DEFAULT NULL COMMENT '扩展信息',
     `f_dependencies` longtext DEFAULT NULL COMMENT '依赖信息',
     `f_file_manifest` longtext DEFAULT NULL COMMENT '文件摘要清单',
@@ -341,7 +339,6 @@ CREATE TABLE IF NOT EXISTS `t_skill_repository` (
     `f_delete_time` bigint(20) NOT NULL DEFAULT 0 COMMENT '删除时间',
     PRIMARY KEY (`f_id`),
     UNIQUE KEY `uk_skill_id` (`f_skill_id`) USING BTREE,
-    KEY `idx_owner_update_time` (`f_owner_id`, `f_update_time`) USING BTREE,
     KEY `idx_status_update_time` (`f_status`, `f_update_time`) USING BTREE,
     KEY `idx_source_update_time` (`f_source`, `f_update_time`) USING BTREE,
     KEY `idx_create_user_update_time` (`f_create_user`, `f_update_time`) USING BTREE

@@ -29,8 +29,6 @@ type SkillRepositoryDB struct {
 	Version      string      `json:"version" db:"f_version"`
 	Status       SkillStatus `json:"status" db:"f_status"`
 	Source       string      `json:"source" db:"f_source"`
-	OwnerType    string      `json:"owner_type" db:"f_owner_type"`
-	OwnerID      string      `json:"owner_id" db:"f_owner_id"` 
 	ExtendInfo   string      `json:"extend_info" db:"f_extend_info"`
 	Dependencies string      `json:"dependencies" db:"f_dependencies"`
 	FileManifest string      `json:"file_manifest" db:"f_file_manifest"`

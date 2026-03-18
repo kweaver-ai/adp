@@ -65,8 +65,6 @@ func (s *skillRepositoryDB) InsertSkill(ctx context.Context, tx *sql.Tx, skill *
 		"f_version":       skill.Version,
 		"f_status":        skill.Status,
 		"f_source":        skill.Source,
-		"f_owner_type":    skill.OwnerType,
-		"f_owner_id":      skill.OwnerID,
 		"f_extend_info":   skill.ExtendInfo,
 		"f_dependencies":  skill.Dependencies,
 		"f_file_manifest": skill.FileManifest,
@@ -103,8 +101,6 @@ func (s *skillRepositoryDB) UpdateSkill(ctx context.Context, tx *sql.Tx, skill *
 		"f_version":       skill.Version,
 		"f_status":        skill.Status,
 		"f_source":        skill.Source,
-		"f_owner_type":    skill.OwnerType,
-		"f_owner_id":      skill.OwnerID,
 		"f_extend_info":   skill.ExtendInfo,
 		"f_dependencies":  skill.Dependencies,
 		"f_file_manifest": skill.FileManifest,
@@ -196,9 +192,6 @@ func (s *skillRepositoryDB) DeleteSkillByID(ctx context.Context, tx *sql.Tx, ski
 }
 
 func (s *skillRepositoryDB) applyFilterConditions(query *ormhelper.SelectBuilder, filter map[string]interface{}) *ormhelper.SelectBuilder {
-	if ownerID, ok := filter["owner_id"].(string); ok && ownerID != "" {
-		query = query.WhereEq("f_owner_id", ownerID)
-	}
 	if name, ok := filter["name"].(string); ok && name != "" {
 		query = query.WhereLike("f_name", "%"+name+"%")
 	}

@@ -85,8 +85,6 @@ func (p *skillParser) parseSkillContent(content string, req *interfaces.Register
 		Version:      fm.Version,
 		Status:       model.SkillStatusDraft,
 		Source:       req.Source,
-		OwnerType:    "business_domain",
-		OwnerID:      req.BusinessDomainID,
 		Dependencies: utils.ObjectToJSON(fm.Dependencies),
 		ExtendInfo:   utils.ObjectToJSON(fm.Metadata),
 		CreateUser:   req.UserID,
