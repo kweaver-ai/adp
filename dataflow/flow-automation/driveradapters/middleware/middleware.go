@@ -176,7 +176,8 @@ func CheckExecutorWhiteList(appstore drivenadapters.Appstore) gin.HandlerFunc {
 func CheckBizDomainID() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		bizDomainID := c.Request.Header.Get("X-Business-Domain")
-		if strings.TrimSpace(bizDomainID) == "" {
+		isBizDomainEnabled := common.NewConfig().IsBusinessDomainEnabled()
+		if strings.TrimSpace(bizDomainID) == "" && isBizDomainEnabled {
 			c.JSON(http.StatusBadRequest, ierr.NewPublicRestError(c.Request.Context(), ierr.PErrorBadRequest, ierr.PErrorBadRequest, "X-Business-Domain Header is required"))
 			c.Abort()
 			return

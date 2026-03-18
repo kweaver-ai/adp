@@ -347,7 +347,7 @@ func (vmIns *VMExt) HookVMStop() {
 		log.Warnf("[VMExt.HookVMStop] PatchDagIns err, detail: %s", err.Error())
 	}
 
-	go vmIns.AfterStopLog(ctx, dagIns, patch.Status)
+	go vmIns.AfterStopLog(context.Background(), dagIns, patch.Status)
 }
 
 func (vm *VMExt) AfterStopLog(ctx context.Context, dagIns *entity.DagInstance, status entity.DagInstanceStatus) {
@@ -356,12 +356,12 @@ func (vm *VMExt) AfterStopLog(ctx context.Context, dagIns *entity.DagInstance, s
 	}
 
 	if dagIns.EventPersistence == entity.DagInstanceEventPersistenceSql {
-		_ = UploadDagInstanceEvents(context.Background(), dagIns)
+		_ = UploadDagInstanceEvents(ctx, dagIns)
 	}
 
 	// 流程执行成功删除所有task信息
 	if status == entity.DagInstanceStatusSuccess {
-		dErr := GetStore().DeleteTaskInsByDagInsID(context.Background(), dagIns.ID)
+		dErr := GetStore().DeleteTaskInsByDagInsID(ctx, dagIns.ID)
 		if dErr != nil {
 			log.Warnf("run success,delete task instance failed: %s", dErr.Error())
 		}

@@ -39,6 +39,7 @@ data:
   DEBUG: {{ .Values.service.debug | quote }}
   LOG_LEVEL: {{ .Values.service.coderunnerLogLevel | quote }}
   PYTHON_MAX_WORKERS: {{ .Values.service.pythonMaxWorkers | quote }}
+  AUTH_ENABLED: {{ .Values.auth.enabled | quote }}
   T4TH_HOST: {{ index .Values "depServices" "ocr-engine" "t4th" "host" | quote }}
   T4TH_PORT: {{ index .Values "depServices" "ocr-engine" "t4th" "port" | quote }}
   T4TH_PROTOCOL: {{ index .Values "depServices" "ocr-engine" "t4th" "protocol" | quote }}

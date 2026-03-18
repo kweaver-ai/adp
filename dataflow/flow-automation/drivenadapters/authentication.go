@@ -35,11 +35,15 @@ var (
 func NewAuthentication() Authentication {
 	auOnce.Do(func() {
 		config := common.NewConfig()
-		au = &auth{
-			publicAddress:  fmt.Sprintf("http://%s:%v", config.Authentication.PublicHost, config.Authentication.PublicPort),
-			privateAddress: fmt.Sprintf("http://%s:%v", config.Authentication.PrivateHost, config.Authentication.PrivatePort),
-			log:            commonLog.NewLogger(),
-			httpClient:     NewHTTPClient(),
+		if !config.IsAuthEnabled() {
+			au = &mockAuthentication{}
+		} else {
+			au = &auth{
+				publicAddress:  fmt.Sprintf("http://%s:%v", config.Authentication.PublicHost, config.Authentication.PublicPort),
+				privateAddress: fmt.Sprintf("http://%s:%v", config.Authentication.PrivateHost, config.Authentication.PrivatePort),
+				log:            commonLog.NewLogger(),
+				httpClient:     NewHTTPClient(),
+			}
 		}
 	})
 	return au

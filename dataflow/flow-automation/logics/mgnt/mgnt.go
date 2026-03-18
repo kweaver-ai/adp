@@ -940,6 +940,7 @@ func (m *mgnt) UpdateDag(ctx context.Context, dagID string, param *OptionalUpdat
 	// stopped status terminal all running dagIns
 	go func(stopRunningTask bool) {
 		if stopRunningTask {
+			gctx := context.Background()
 			var input = &mod.ListDagInstanceInput{
 				DagIDs: []string{dagID},
 				Status: []entity.DagInstanceStatus{entity.DagInstanceStatusRunning,
@@ -949,7 +950,7 @@ func (m *mgnt) UpdateDag(ctx context.Context, dagID string, param *OptionalUpdat
 				},
 				SelectField: []string{"_id"},
 			}
-			dagInsList, err := m.mongo.ListDagInstance(ctx, input)
+			dagInsList, err := m.mongo.ListDagInstance(gctx, input)
 			if err != nil {
 				log.Warnf("[logic.UpdateDag] ListDagInstance err, detail: %s", err.Error())
 				return
@@ -961,7 +962,7 @@ func (m *mgnt) UpdateDag(ctx context.Context, dagID string, param *OptionalUpdat
 				dagInsArr = append(dagInsArr, &_dagIns)
 			}
 			// update dagIns status
-			err = m.mongo.BatchUpdateDagIns(ctx, dagInsArr)
+			err = m.mongo.BatchUpdateDagIns(gctx, dagInsArr)
 			if err != nil {
 				log.Warnf("[logic.UpdateDag] BatchUpdateDagIns err, detail: %s", err.Error())
 				return
@@ -2451,7 +2452,7 @@ func (m *mgnt) CancelRunningInstance(ctx context.Context, id string, dagInsReq *
 	}
 
 	go func() {
-		dag, err := m.mongo.GetDagWithOptionalVersion(ctx, dagIns.DagID, dagIns.VersionID)
+		dag, err := m.mongo.GetDagWithOptionalVersion(context.Background(), dagIns.DagID, dagIns.VersionID)
 		if err != nil {
 			log.Errorf("[logic.CancelRunningInstance] get dag[%s] failed: %s", dagIns.DagID, err)
 			return
@@ -5404,7 +5405,7 @@ func (m *mgnt) GetDagTriggerConfig(ctx context.Context, taskInsID, typeBy string
 }
 
 func (m *mgnt) LogDagInsResult(ctx context.Context, dagIns *entity.DagInstance) {
-	dag, err := m.mongo.GetDagWithOptionalVersion(ctx, dagIns.DagID, dagIns.VersionID)
+	dag, err := m.mongo.GetDagWithOptionalVersion(context.Background(), dagIns.DagID, dagIns.VersionID)
 	if err != nil {
 		log.Warnf("get dag[%s] failed: %s", dagIns.DagID, err)
 		return

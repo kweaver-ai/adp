@@ -6,6 +6,7 @@ import httpx
 from errors.errors import InternalErrException
 from common.logger import logger
 from common.configs import hydra_configs
+from common.configs import is_auth_enable
 
 
 class Hydra:
@@ -13,6 +14,16 @@ class Hydra:
         self.addr = f"http://{hydra_configs['admin_host']}:{hydra_configs['admin_port']}"
 
     async def check_token(self, token: str) -> Dict:
+        if not is_auth_enable():
+            return {
+                "active": True,
+                "scope": "",
+                "client_id": "mock-client-id",
+                "sub": "mock-user-id",
+                "ext": {"login_ip": "127.0.0.1", "udid": "mock-udid", "client_type": "web"},
+                "visitor_type": "realname",
+            }
+
         target = f"{self.addr}/admin/oauth2/introspect"
         headers = {'Content-Type': 'application/x-www-form-urlencoded'}
         body = 'token=' + token

@@ -2,9 +2,11 @@ package drivenadapters
 
 import (
 	"context"
+	"sync"
 	"testing"
 
 	"github.com/go-playground/assert/v2"
+	"github.com/kweaver-ai/adp/autoflow/flow-automation/common"
 	. "github.com/smartystreets/goconvey/convey"
 	"go.uber.org/mock/gomock"
 )
@@ -95,6 +97,56 @@ func TestCheckerResource(t *testing.T) {
 			exist, err := bd.CheckerResource(ctx, params, token)
 			assert.Equal(t, err, nil)
 			assert.Equal(t, exist, false)
+		})
+	})
+}
+
+func TestBusinessDomainDisabled(t *testing.T) {
+	ctx := context.Background()
+	params := BizDomainResourceParams{BizDomainID: "bd1"}
+	token := "token"
+
+	origin := common.NewConfig().Server.BusinessDomainEnabled
+	originBD := bd
+	common.NewConfig().Server.BusinessDomainEnabled = "false"
+	bOnce = sync.Once{}
+	bd = nil
+	defer func() {
+		common.NewConfig().Server.BusinessDomainEnabled = origin
+		bOnce = sync.Once{}
+		bd = originBD
+	}()
+
+	Convey("TestBusinessDomainDisabled", t, func() {
+		Convey("NewBusinessDomain should return mock implementation", func() {
+			bizDomain := NewBusinessDomain()
+			_, ok := bizDomain.(*mockBusinessDomain)
+			assert.Equal(t, ok, true)
+		})
+
+		Convey("BindResourceInternal should noop", func() {
+			err := NewBusinessDomain().BindResourceInternal(ctx, params)
+			assert.Equal(t, err, nil)
+		})
+
+		Convey("UnBindResourceInternal should noop", func() {
+			err := NewBusinessDomain().UnBindResourceInternal(ctx, params)
+			assert.Equal(t, err, nil)
+		})
+
+		Convey("ListResource should return empty result", func() {
+			res, err := NewBusinessDomain().ListResource(ctx, BizDomainResourceQuery{
+				BizDomainResourceParams: params,
+			}, token)
+			assert.Equal(t, err, nil)
+			assert.Equal(t, res.Total, int64(0))
+			assert.Equal(t, len(res.Items), 0)
+		})
+
+		Convey("CheckerResource should bypass remote check", func() {
+			exist, err := NewBusinessDomain().CheckerResource(ctx, params, token)
+			assert.Equal(t, err, nil)
+			assert.Equal(t, exist, true)
 		})
 	})
 }

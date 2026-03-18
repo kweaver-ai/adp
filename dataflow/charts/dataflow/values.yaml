@@ -341,6 +341,12 @@ components:
 nameOverride: ""
 fullnameOverride: ""
 
+auth:
+  enabled: true
+
+businessDomain:
+  enabled: true
+
 # =============================================================================
 # ecron-management Configuration
 # =============================================================================

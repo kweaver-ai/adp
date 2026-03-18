@@ -43,9 +43,13 @@ var az AuthorizationDriven
 func NewAuthorization() AuthorizationDriven {
 	authOnce.Do(func() {
 		config := common.NewConfig()
-		az = &authorization{
-			privateAddress: fmt.Sprintf("http://%s:%v", config.AuthorizationConf.PrivateHost, config.AuthorizationConf.PrivatePort),
-			httpClient:     NewOtelHTTPClient(),
+		if !config.IsAuthEnabled() {
+			az = &mockAuthorization{}
+		} else {
+			az = &authorization{
+				privateAddress: fmt.Sprintf("http://%s:%v", config.AuthorizationConf.PrivateHost, config.AuthorizationConf.PrivatePort),
+				httpClient:     NewOtelHTTPClient(),
+			}
 		}
 	})
 	return az

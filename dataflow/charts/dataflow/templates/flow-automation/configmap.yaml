@@ -35,6 +35,8 @@ data:
   SERVER_STORAGE_PREFIX: {{ .Values.flowAutomation.service.storagePrefix | quote }}
   SERVER_EDITION: {{ .Values.flowAutomation.service.edition | quote }}
   SERVER_DB_TYPE: {{ .Values.flowAutomation.service.dbType | quote }}
+  SERVER_AUTH_ENABLED: {{ .Values.auth.enabled | quote }}
+  SERVER_BUSINESSDOMAIN_ENABLED: {{ .Values.businessDomain.enabled | quote }}
   MONGODB_USER: {{ .Values.depServices.mongodb.user | quote }}
   MONGODB_HOST: {{ .Values.depServices.mongodb.host | quote }}
   MONGODB_PORT: {{ .Values.depServices.mongodb.port | quote }}
@@ -116,7 +118,7 @@ data:
   CONTENTAUTOMATION_PUBLIC_HOST: {{ index .Values "depServices" "content-automation" "publicHost" | quote }}
   CONTENTAUTOMATION_PUBLIC_PORT: {{ index .Values "depServices" "content-automation" "publicPort" | quote }}
   KCMC_HOST: {{ index .Values "depServices" "kc-mc" "host" | quote }}
-  KCMC_PORT: {{ index .Values "depServices" "kc-mc" "port" | quote }}  
+  KCMC_PORT: {{ index .Values "depServices" "kc-mc" "port" | quote }}
   KCMC_PRIVATE_HOST: {{ index .Values "depServices" "kc-mc" "privateHost" | quote }}
   KCMC_PRIVATE_PORT: {{ index .Values "depServices" "kc-mc" "privatePort" | quote }}
   OSSGATEWAY_PRIVATE_HOST: {{ .Values.depServices.ossgatewaymanager.privateHost | quote }}

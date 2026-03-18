@@ -33,10 +33,13 @@ type businessDomain struct {
 func NewBusinessDomain() BusinessDomain {
 	bOnce.Do(func() {
 		config := common.NewConfig()
-
-		bd = &businessDomain{
-			baseURL:    fmt.Sprintf("http://%s:%v", config.BusinessDomain.Host, config.BusinessDomain.Port),
-			httpClient: NewOtelHTTPClient(),
+		if !config.IsBusinessDomainEnabled() {
+			bd = &mockBusinessDomain{}
+		} else {
+			bd = &businessDomain{
+				baseURL:    fmt.Sprintf("http://%s:%v", config.BusinessDomain.Host, config.BusinessDomain.Port),
+				httpClient: NewOtelHTTPClient(),
+			}
 		}
 	})
 

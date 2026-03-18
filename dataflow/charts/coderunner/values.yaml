@@ -14,6 +14,9 @@ image:
     tag: 1.6.2-feature-680406
   pullPolicy: IfNotPresent
 
+auth:
+  enabled: true
+
 service:
   type: ClusterIP
   port: 8680

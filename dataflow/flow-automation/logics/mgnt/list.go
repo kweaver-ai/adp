@@ -22,12 +22,14 @@ type FilterFunc func(ctx context.Context, dagIDs []string) ([]string, error)
 type ListDagOption func(*listDagConfig)
 
 type listDagConfig struct {
-	filters []FilterFunc
+	AuthEnable bool
+	filters    []FilterFunc
 }
 
 func NewListDagConfig() *listDagConfig {
 	return &listDagConfig{
-		filters: []FilterFunc{},
+		AuthEnable: common.NewConfig().IsAuthEnabled(),
+		filters:    []FilterFunc{},
 	}
 }
 
@@ -291,6 +293,24 @@ func (c *listDagConfig) ApplyFilters(ctx context.Context) ([]string, error) {
 	return dagIDs, nil
 }
 
+func listDagsDirectly(ctx context.Context, store mod.Store, queryInput *mod.ListDagInput) ([]*entity.Dag, int64, error) {
+	total, err := store.ListDagCount(ctx, queryInput)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	if total == 0 {
+		return []*entity.Dag{}, 0, nil
+	}
+
+	dags, err := store.ListDag(ctx, queryInput)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	return dags, total, nil
+}
+
 // ListDagWithFilters 根据过滤器获取Dag列表
 func ListDagWithFilters(ctx context.Context, param QueryParams, opts ...ListDagOption) ([]*entity.Dag, int64, error) {
 	var err error
@@ -305,18 +325,6 @@ func ListDagWithFilters(ctx context.Context, param QueryParams, opts ...ListDagO
 		opt(config)
 	}
 
-	// 2. 依次执行所有过滤器
-	dagIDs, err := config.ApplyFilters(ctx)
-	if err != nil {
-		return nil, 0, err
-	}
-
-	total := int64(len(dagIDs))
-	if total == 0 {
-		return []*entity.Dag{}, 0, nil
-	}
-
-	// 3. 构建查询参数
 	listDagInput := &mod.ListDagInput{
 		Offset:       param.Page,
 		Limit:        param.Limit,
@@ -354,6 +362,27 @@ func ListDagWithFilters(ctx context.Context, param QueryParams, opts ...ListDagO
 	}
 	if field, ok := sortMap[param.SortBy]; ok {
 		listDagInput.SortBy = field
+	}
+
+	if !config.AuthEnable {
+		dags, total, err := listDagsDirectly(ctx, mod.GetStore(), listDagInput)
+		if err != nil {
+			log.Warnf("[logic.ListDagWithFilters] listDagsDirectly err, detail: %s", err.Error())
+			return nil, 0, ierr.NewPublicRestError(ctx, ierr.PErrorInternalServerError, ierr.PErrorInternalServerError, nil)
+		}
+
+		return dags, total, nil
+	}
+
+	// 2. 依次执行所有过滤器
+	dagIDs, err := config.ApplyFilters(ctx)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	total := int64(len(dagIDs))
+	if total == 0 {
+		return []*entity.Dag{}, 0, nil
 	}
 
 	dags, err := PageDags(ctx, mod.GetStore(), dagIDs, listDagInput)
