@@ -370,8 +370,6 @@ CREATE TABLE IF NOT EXISTS `t_skill_repository` (
   `f_version` VARCHAR(40) NOT NULL COMMENT 'Skill 版本',
   `f_status` VARCHAR(40) NOT NULL COMMENT 'Skill 状态',
   `f_source` VARCHAR(50) NOT NULL DEFAULT '' COMMENT 'Skill 来源',
-  `f_owner_type` VARCHAR(50) NOT NULL DEFAULT '' COMMENT '归属类型',
-  `f_owner_id` VARCHAR(40) NOT NULL COMMENT '归属业务域ID',
   `f_extend_info` TEXT DEFAULT NULL COMMENT '扩展信息',
   `f_dependencies` TEXT DEFAULT NULL COMMENT '依赖信息',
   `f_file_manifest` LONGTEXT DEFAULT NULL COMMENT '文件摘要清单',
@@ -385,7 +383,6 @@ CREATE TABLE IF NOT EXISTS `t_skill_repository` (
   UNIQUE KEY `idx_t_skill_repository_uk_skill_id` (f_skill_id)
 );
 
-CREATE INDEX IF NOT EXISTS `idx_t_skill_repository_idx_owner_update_time` ON `t_skill_repository` (f_owner_id, f_update_time);
 CREATE INDEX IF NOT EXISTS `idx_t_skill_repository_idx_status_update_time` ON `t_skill_repository` (f_status, f_update_time);
 CREATE INDEX IF NOT EXISTS `idx_t_skill_repository_idx_source_update_time` ON `t_skill_repository` (f_source, f_update_time);
 CREATE INDEX IF NOT EXISTS `idx_t_skill_repository_idx_create_user_update_time` ON `t_skill_repository` (f_create_user, f_update_time);

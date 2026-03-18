@@ -29,7 +29,6 @@ func TestSkillReaderAndRegistry(t *testing.T) {
 			}
 			mockSkillRepo.EXPECT().SelectSkillByID(gomock.Any(), gomock.Nil(), "skill-1").Return(&model.SkillRepositoryDB{
 				SkillID:      "skill-1",
-				OwnerID:      "bd-1",
 				Status:       model.SkillStatusActive,
 				Instructions: "demo guide",
 				FileManifest: `[{"rel_path":"refs/guide.md","file_type":"reference","access_level":"runtime_read","size":5,"mime_type":"text/markdown"}]`,
@@ -57,7 +56,7 @@ func TestSkillReaderAndRegistry(t *testing.T) {
 				assetStore: mockAssetStore,
 			}
 			mockSkillRepo.EXPECT().SelectSkillByID(gomock.Any(), gomock.Nil(), "skill-2").Return(&model.SkillRepositoryDB{
-				SkillID: "skill-2", OwnerID: "bd-1", Status: model.SkillStatusActive,
+				SkillID: "skill-2", Status: model.SkillStatusActive,
 			}, nil)
 			mockFileRepo.EXPECT().SelectSkillFileByPath(gomock.Any(), gomock.Nil(), "skill-2", "refs/secret.md").Return(&model.SkillFileIndexDB{
 				SkillID: "skill-2", RelPath: "refs/secret.md", AccessLevel: string(interfaces.SkillFileAccessLevelRestricted),
@@ -84,7 +83,7 @@ func TestSkillReaderAndRegistry(t *testing.T) {
 				assetStore: mockAssetStore,
 			}
 			mockSkillRepo.EXPECT().SelectSkillByID(gomock.Any(), gomock.Nil(), "skill-3").Return(&model.SkillRepositoryDB{
-				SkillID: "skill-3", OwnerID: "bd-1", Status: model.SkillStatusActive,
+				SkillID: "skill-3", Status: model.SkillStatusActive,
 			}, nil)
 			mockFileRepo.EXPECT().SelectSkillFileByPath(gomock.Any(), gomock.Nil(), "skill-3", "refs/guide.md").Return(&model.SkillFileIndexDB{
 				SkillID:       "skill-3",
@@ -110,7 +109,7 @@ func TestSkillReaderAndRegistry(t *testing.T) {
 			mockSkillRepo := mocks.NewMockISkillRepository(ctrl)
 			registry := &skillRegistry{skillRepo: mockSkillRepo}
 			mockSkillRepo.EXPECT().SelectSkillByID(gomock.Any(), gomock.Nil(), "skill-4").Return(&model.SkillRepositoryDB{
-				SkillID: "skill-4", OwnerID: "bd-1", Status: model.SkillStatusDeleting,
+				SkillID: "skill-4", Status: model.SkillStatusDeleting,
 			}, nil)
 
 			err := registry.DeleteSkill(context.Background(), &interfaces.DeleteSkillReq{
@@ -128,7 +127,7 @@ func TestSkillReaderAndRegistry(t *testing.T) {
 			mockDBTx := mocks.NewMockDBTx(ctrl)
 			registry := &skillRegistry{skillRepo: mockSkillRepo, dbTx: mockDBTx}
 			mockSkillRepo.EXPECT().SelectSkillByID(gomock.Any(), gomock.Nil(), "skill-5").Return(&model.SkillRepositoryDB{
-				SkillID: "skill-5", OwnerID: "bd-other", Status: model.SkillStatusActive,
+				SkillID: "skill-5", Status: model.SkillStatusActive,
 			}, nil)
 			mockDBTx.EXPECT().GetTx(gomock.Any()).Return(nil, errors.New("tx unavailable"))
 
@@ -154,7 +153,6 @@ func TestSkillReaderAndRegistry(t *testing.T) {
 					Instructions: "full skill markdown",
 					FileManifest: `[{"rel_path":"refs/guide.md","file_type":"reference"}]`,
 					Status:       model.SkillStatusActive,
-					OwnerID:      "bd-1",
 				},
 			}, nil)
 
@@ -170,6 +168,8 @@ func TestSkillReaderAndRegistry(t *testing.T) {
 			So(marshalErr, ShouldBeNil)
 			So(string(raw), ShouldNotContainSubstring, "instructions")
 			So(string(raw), ShouldNotContainSubstring, "files")
+			So(string(raw), ShouldNotContainSubstring, "owner_id")
+			So(string(raw), ShouldNotContainSubstring, "owner_type")
 		})
 
 		Convey("QuerySkillList ignores owner and business domain direct comparison", func() {
@@ -187,7 +187,7 @@ func TestSkillReaderAndRegistry(t *testing.T) {
 					_, exists := filter["owner_id"]
 					So(exists, ShouldBeFalse)
 					return []*model.SkillRepositoryDB{
-						{SkillID: "skill-6b", Name: "demo-skill", Status: model.SkillStatusActive, OwnerID: "bd-other"},
+						{SkillID: "skill-6b", Name: "demo-skill", Status: model.SkillStatusActive},
 					}, nil
 				},
 			)
@@ -213,7 +213,6 @@ func TestSkillReaderAndRegistry(t *testing.T) {
 				Instructions: "full skill markdown",
 				FileManifest: `[{"rel_path":"refs/guide.md","file_type":"reference"}]`,
 				Status:       model.SkillStatusActive,
-				OwnerID:      "bd-1",
 			}, nil)
 
 			resp, err := registry.GetSkillDetail(context.Background(), &interfaces.GetSkillDetailReq{
@@ -227,13 +226,15 @@ func TestSkillReaderAndRegistry(t *testing.T) {
 			So(marshalErr, ShouldBeNil)
 			So(string(raw), ShouldNotContainSubstring, "instructions")
 			So(string(raw), ShouldNotContainSubstring, "files")
+			So(string(raw), ShouldNotContainSubstring, "owner_id")
+			So(string(raw), ShouldNotContainSubstring, "owner_type")
 		})
 
 		Convey("GetSkillDetail ignores owner and business domain direct comparison", func() {
 			mockSkillRepo := mocks.NewMockISkillRepository(ctrl)
 			registry := &skillRegistry{skillRepo: mockSkillRepo}
 			mockSkillRepo.EXPECT().SelectSkillByID(gomock.Any(), gomock.Nil(), "skill-7b").Return(&model.SkillRepositoryDB{
-				SkillID: "skill-7b", OwnerID: "bd-other", Status: model.SkillStatusActive,
+				SkillID: "skill-7b", Status: model.SkillStatusActive,
 			}, nil)
 
 			resp, err := registry.GetSkillDetail(context.Background(), &interfaces.GetSkillDetailReq{
@@ -251,8 +252,8 @@ func TestSkillReaderAndRegistry(t *testing.T) {
 			registry := &skillRegistry{skillRepo: mockSkillRepo}
 			mockSkillRepo.EXPECT().CountByWhereClause(gomock.Any(), gomock.Nil(), gomock.Any()).Return(int64(2), nil)
 			mockSkillRepo.EXPECT().SelectSkillListPage(gomock.Any(), gomock.Nil(), gomock.Any(), gomock.Any(), gomock.Nil()).Return([]*model.SkillRepositoryDB{
-				{SkillID: "skill-10", Name: "visible", Status: model.SkillStatusActive, OwnerID: "bd-1"},
-				{SkillID: "skill-11", Name: "hiding", Status: model.SkillStatusDeleting, OwnerID: "bd-1"},
+				{SkillID: "skill-10", Name: "visible", Status: model.SkillStatusActive},
+				{SkillID: "skill-11", Name: "hiding", Status: model.SkillStatusDeleting},
 			}, nil)
 
 			resp, err := registry.QuerySkillList(context.Background(), &interfaces.QuerySkillListReq{
@@ -270,7 +271,7 @@ func TestSkillReaderAndRegistry(t *testing.T) {
 			mockSkillRepo := mocks.NewMockISkillRepository(ctrl)
 			registry := &skillRegistry{skillRepo: mockSkillRepo}
 			mockSkillRepo.EXPECT().SelectSkillByID(gomock.Any(), gomock.Nil(), "skill-12").Return(&model.SkillRepositoryDB{
-				SkillID: "skill-12", OwnerID: "bd-1", Status: model.SkillStatusDeleting,
+				SkillID: "skill-12", Status: model.SkillStatusDeleting,
 			}, nil)
 
 			resp, err := registry.GetSkillDetail(context.Background(), &interfaces.GetSkillDetailReq{
@@ -287,7 +288,7 @@ func TestSkillReaderAndRegistry(t *testing.T) {
 			mockSkillRepo := mocks.NewMockISkillRepository(ctrl)
 			reader := &skillReader{skillRepo: mockSkillRepo}
 			mockSkillRepo.EXPECT().SelectSkillByID(gomock.Any(), gomock.Nil(), "skill-13").Return(&model.SkillRepositoryDB{
-				SkillID: "skill-13", OwnerID: "bd-1", Status: model.SkillStatusDeleting,
+				SkillID: "skill-13", Status: model.SkillStatusDeleting,
 			}, nil)
 
 			resp, err := reader.GetSkillGuide(context.Background(), &interfaces.GetSkillGuideReq{
@@ -304,7 +305,7 @@ func TestSkillReaderAndRegistry(t *testing.T) {
 			mockSkillRepo := mocks.NewMockISkillRepository(ctrl)
 			reader := &skillReader{skillRepo: mockSkillRepo}
 			mockSkillRepo.EXPECT().SelectSkillByID(gomock.Any(), gomock.Nil(), "skill-13b").Return(&model.SkillRepositoryDB{
-				SkillID: "skill-13b", OwnerID: "bd-other", Status: model.SkillStatusActive, Instructions: "demo guide",
+				SkillID: "skill-13b", Status: model.SkillStatusActive, Instructions: "demo guide",
 			}, nil)
 
 			resp, err := reader.GetSkillGuide(context.Background(), &interfaces.GetSkillGuideReq{
@@ -321,7 +322,7 @@ func TestSkillReaderAndRegistry(t *testing.T) {
 			mockSkillRepo := mocks.NewMockISkillRepository(ctrl)
 			reader := &skillReader{skillRepo: mockSkillRepo}
 			mockSkillRepo.EXPECT().SelectSkillByID(gomock.Any(), gomock.Nil(), "skill-14").Return(&model.SkillRepositoryDB{
-				SkillID: "skill-14", OwnerID: "bd-1", Status: model.SkillStatusDeleting,
+				SkillID: "skill-14", Status: model.SkillStatusDeleting,
 			}, nil)
 
 			resp, err := reader.ReadSkillFile(context.Background(), &interfaces.ReadSkillFileReq{
@@ -341,7 +342,7 @@ func TestSkillReaderAndRegistry(t *testing.T) {
 			mockAssetStore := mocks.NewMockskillAssetStore(ctrl)
 			reader := &skillReader{skillRepo: mockSkillRepo, fileRepo: mockFileRepo, assetStore: mockAssetStore}
 			mockSkillRepo.EXPECT().SelectSkillByID(gomock.Any(), gomock.Nil(), "skill-14b").Return(&model.SkillRepositoryDB{
-				SkillID: "skill-14b", OwnerID: "bd-other", Status: model.SkillStatusActive,
+				SkillID: "skill-14b", Status: model.SkillStatusActive,
 			}, nil)
 			mockFileRepo.EXPECT().SelectSkillFileByPath(gomock.Any(), gomock.Nil(), "skill-14b", "refs/guide.md").Return(&model.SkillFileIndexDB{
 				SkillID: "skill-14b", RelPath: "refs/guide.md", StorageKey: "/tmp/f14b", AccessLevel: string(interfaces.SkillFileAccessLevelRuntimeRead), ContentSHA256: checksumSHA256([]byte("ok")),
@@ -372,7 +373,7 @@ func TestSkillReaderAndRegistry(t *testing.T) {
 			}
 
 			mockSkillRepo.EXPECT().SelectSkillByID(gomock.Any(), gomock.Nil(), "skill-8").Return(&model.SkillRepositoryDB{
-				SkillID: "skill-8", OwnerID: "bd-1", Status: model.SkillStatusActive,
+				SkillID: "skill-8", Status: model.SkillStatusActive,
 			}, nil)
 			mockDBTx.EXPECT().GetTx(gomock.Any()).Return(nil, nil)
 			mockSkillRepo.EXPECT().UpdateSkillStatus(gomock.Any(), gomock.Nil(), "skill-8", model.SkillStatusDeleting, "user-1").Return(nil)
@@ -406,7 +407,7 @@ func TestSkillReaderAndRegistry(t *testing.T) {
 			}
 
 			mockSkillRepo.EXPECT().SelectSkillByID(gomock.Any(), gomock.Nil(), "skill-9").Return(&model.SkillRepositoryDB{
-				SkillID: "skill-9", OwnerID: "bd-1", Status: model.SkillStatusActive,
+				SkillID: "skill-9", Status: model.SkillStatusActive,
 			}, nil)
 			mockDBTx.EXPECT().GetTx(gomock.Any()).Return(nil, nil)
 			mockSkillRepo.EXPECT().UpdateSkillStatus(gomock.Any(), gomock.Nil(), "skill-9", model.SkillStatusDeleting, "user-1").Return(nil)

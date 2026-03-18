@@ -64,8 +64,6 @@ type SkillInfo struct {
 	Version      string                 `json:"version"`
 	Status       model.SkillStatus      `json:"status"`
 	Source       string                 `json:"source"`
-	OwnerType    string                 `json:"owner_type"`
-	OwnerID      string                 `json:"owner_id"`
 	Dependencies map[string]interface{} `json:"dependencies,omitempty"`
 	ExtendInfo   map[string]interface{} `json:"extend_info,omitempty"`
 	CreateUser   string                 `json:"create_user"`
@@ -82,8 +80,6 @@ type SkillSummary struct {
 	Version     string            `json:"version"`
 	Status      model.SkillStatus `json:"status"`
 	Source      string            `json:"source"`
-	OwnerType   string            `json:"owner_type"`
-	OwnerID     string            `json:"owner_id"`
 	CreateUser  string            `json:"create_user"`
 	CreateTime  int64             `json:"create_time"`
 	UpdateUser  string            `json:"update_user"`

@@ -370,8 +370,6 @@ CREATE TABLE IF NOT EXISTS "t_skill_repository" (
     "f_version" VARCHAR(40 CHAR) NOT NULL,
     "f_status" VARCHAR(40 CHAR) NOT NULL,
     "f_source" VARCHAR(50 CHAR) NOT NULL DEFAULT '',
-    "f_owner_type" VARCHAR(50 CHAR) NOT NULL DEFAULT '',
-    "f_owner_id" VARCHAR(40 CHAR) NOT NULL,
     "f_extend_info" text DEFAULT NULL,
     "f_dependencies" text DEFAULT NULL,
     "f_file_manifest" text DEFAULT NULL,
@@ -385,7 +383,6 @@ CREATE TABLE IF NOT EXISTS "t_skill_repository" (
 );
 
 CREATE UNIQUE INDEX IF NOT EXISTS t_skill_repository_uk_skill_id ON t_skill_repository(f_skill_id);
-CREATE INDEX IF NOT EXISTS t_skill_repository_idx_owner_update_time ON t_skill_repository(f_owner_id, f_update_time);
 CREATE INDEX IF NOT EXISTS t_skill_repository_idx_status_update_time ON t_skill_repository(f_status, f_update_time);
 CREATE INDEX IF NOT EXISTS t_skill_repository_idx_source_update_time ON t_skill_repository(f_source, f_update_time);
 CREATE INDEX IF NOT EXISTS t_skill_repository_idx_create_user_update_time ON t_skill_repository(f_create_user, f_update_time);

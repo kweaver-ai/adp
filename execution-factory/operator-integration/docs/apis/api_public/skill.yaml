@@ -509,10 +509,6 @@ components:
           enum: ["draft", "active", "error", "deleting"]
         source:
           type: string
-        owner_type:
-          type: string
-        owner_id:
-          type: string
         create_user:
           type: string
         create_time:
@@ -539,10 +535,6 @@ components:
           type: string
           enum: ["draft", "active", "error", "deleting"]
         source:
-          type: string
-        owner_type:
-          type: string
-        owner_id:
           type: string
         dependencies:
           type: object

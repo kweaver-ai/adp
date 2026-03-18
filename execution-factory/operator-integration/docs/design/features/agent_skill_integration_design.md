@@ -147,8 +147,6 @@ Skill 不是 `operator`、不是 `toolbox`、也不是 `mcp server`。它更接�
 - `f_version`
 - `f_status`
 - `f_source`
-- `f_owner_type`
-- `f_owner_id`
 - `f_extend_info`
 - `f_dependencies`
 - `f_file_manifest`
