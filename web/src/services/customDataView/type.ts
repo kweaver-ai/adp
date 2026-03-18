@@ -67,6 +67,7 @@ export interface CustomDataView {
   fields: any[];
   data_scope: any;
   primary_keys: string[];
+  operations?: string[];
 }
 
 export interface GetCustomDataViewListResponse {

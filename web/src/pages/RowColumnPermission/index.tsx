@@ -16,6 +16,7 @@ import HOOKS from '@/hooks';
 import { Button, Table, IconFont } from '@/web-library/common';
 import CreateRuleDrawer from './CreateRuleDrawer';
 import styles from './index.module.less';
+import ContainerIsVisible, { matchPermission, PERMISSION_CODES } from '@/components/ContainerIsVisible';
 
 type RowColumnRule = RowColumnPermissionType.Rule;
 
@@ -36,6 +37,7 @@ const RowColumnPermission: React.FC = (): JSX.Element => {
   const [editingRule, setEditingRule] = useState<any>(null);
   const [copyRule, setCopyRule] = useState<any>(null);
   const [fieldList, setFieldList] = useState<any[]>([]);
+  const [operationList, setOperationList] = useState<string[]>([]);
 
   const { openModal: openAuthorizationModal } = useAuthorization({
     title: intl.get('Global.rowColumnPermissionConfig'),
@@ -86,8 +88,9 @@ const RowColumnPermission: React.FC = (): JSX.Element => {
     }
     const res = await SERVICE.customDataView.getCustomDataViewDetails([id]);
     const views = res?.[0] || {};
-    const { fields = [] } = views;
+    const { fields = [], operations = [] } = views;
     setFieldList(fields);
+    setOperationList(operations);
   };
 
   /** table 页面切换 */
@@ -212,13 +215,17 @@ const RowColumnPermission: React.FC = (): JSX.Element => {
       __fixed: true,
       __selected: true,
       render: (_value: unknown, record: RowColumnRule) => {
-        const dropdownMenu: MenuProps['items'] = [
-          { key: 'edit', label: intl.get('Global.editRule') },
-          { key: 'copy', label: intl.get('RowColumnPermission.copyRule') },
-          { key: 'permission', label: intl.get('RowColumnPermission.permissionConfig') },
-          { key: 'delete', label: intl.get('RowColumnPermission.deleteRule') },
+        const allOperations = [
+          { key: 'edit', label: intl.get('Global.editRule'), visible: matchPermission(PERMISSION_CODES.RULE_MANAGE, operationList) },
+          { key: 'copy', label: intl.get('RowColumnPermission.copyRule'), visible: matchPermission(PERMISSION_CODES.RULE_MANAGE, operationList) },
+          {
+            key: 'permission',
+            label: intl.get('RowColumnPermission.permissionConfig'),
+            visible: matchPermission(PERMISSION_CODES.RULE_AUTHORIZE, operationList),
+          },
+          { key: 'delete', label: intl.get('RowColumnPermission.deleteRule'), visible: matchPermission(PERMISSION_CODES.RULE_MANAGE, operationList) },
         ];
-
+        const dropdownMenu: any = allOperations.filter((val: any) => val.visible).map((item: any) => ({ key: item.key, label: item.label }));
         return (
           <Dropdown
             trigger={['click']}
@@ -320,7 +327,9 @@ const RowColumnPermission: React.FC = (): JSX.Element => {
               onChange={handleSearch}
               onRefresh={getData}
             >
-              <Button.Create onClick={handleCreateRule}>{intl.get('Global.createRule')}</Button.Create>
+              <ContainerIsVisible visible={matchPermission(PERMISSION_CODES.RULE_MANAGE, operationList)}>
+                <Button.Create onClick={handleCreateRule}>{intl.get('Global.createRule')}</Button.Create>
+              </ContainerIsVisible>
             </Table.Operation>
           </Table.PageTable>
         </div>
