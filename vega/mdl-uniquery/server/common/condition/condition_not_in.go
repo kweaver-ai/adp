@@ -30,6 +30,10 @@ func NewNotInCond(ctx context.Context, cfg *CondCfg, fieldsMap map[string]*ViewF
 		return nil, fmt.Errorf("condition [not_in] right value should be an array")
 	}
 
+	if len(cfg.ValueOptCfg.Value.([]any)) == 0 {
+		return nil, fmt.Errorf("condition [not_in] right value should not be an empty array")
+	}
+
 	if !IsSameType(cfg.ValueOptCfg.Value.([]any)) {
 		return nil, fmt.Errorf("condition [not_in] right value should be an array composed of elements of same type")
 	}
@@ -71,25 +75,20 @@ func (cond *NotInCond) Convert(ctx context.Context) (string, error) {
 					}`, cond.mFilterFieldName, string(res))
 
 	return dslStr, nil
-
 }
 
 func (cond *NotInCond) Convert2SQL(ctx context.Context) (string, error) {
-	_, err := sonic.Marshal(cond.mValue)
-	if err != nil {
-		return "", fmt.Errorf("condition [not in] json marshal right value failed, %s", err.Error())
-	}
-
 	valueList := make([]string, len(cond.mValue))
 	for i, v := range cond.mValue {
-		vStr, ok := v.(string)
-		if ok {
-			valueList[i] = fmt.Sprintf(`'%v'`, vStr)
+		if vStr, ok := v.(string); ok {
+			// 增加转义处理，防止 SQL 注入
+			escaped := strings.ReplaceAll(vStr, "'", "''")
+			valueList[i] = fmt.Sprintf("'%s'", escaped)
 		} else {
-			valueList[i] = fmt.Sprintf(`%v`, vStr)
+			valueList[i] = fmt.Sprintf("%v", v)
 		}
 	}
+
 	value := strings.Join(valueList, ",")
-	sqlStr := fmt.Sprintf(`"%s" NOT IN %s`, cond.mFilterFieldName, "("+value+")")
-	return sqlStr, nil
+	return fmt.Sprintf(`"%s" NOT IN (%s)`, cond.mFilterFieldName, value), nil
 }
