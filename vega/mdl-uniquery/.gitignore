@@ -9,4 +9,3 @@ id_rsa
 server/coverage.out
 go.work
 go.work.sum
-test-result/
