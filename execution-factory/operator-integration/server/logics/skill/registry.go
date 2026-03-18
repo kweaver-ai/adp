@@ -50,6 +50,9 @@ func (r *skillRegistry) RegisterSkill(ctx context.Context, req *interfaces.Regis
 		return nil, fmt.Errorf("get tx failed: %w", err)
 	}
 	defer func() {
+		if tx == nil {
+			return
+		}
 		if err != nil {
 			_ = tx.Rollback()
 			return
@@ -95,7 +98,7 @@ func (r *skillRegistry) DeleteSkill(ctx context.Context, req *interfaces.DeleteS
 	if err != nil {
 		return err
 	}
-	if skill == nil || skill.OwnerID != req.BusinessDomainID {
+	if skill == nil {
 		return fmt.Errorf("skill not found: %s", req.SkillID)
 	}
 	if !isSkillDeletable(skill.Status) {
@@ -107,12 +110,19 @@ func (r *skillRegistry) DeleteSkill(ctx context.Context, req *interfaces.DeleteS
 		return fmt.Errorf("get tx failed: %w", err)
 	}
 	defer func() {
+		if tx == nil {
+			return
+		}
 		if err != nil {
 			_ = tx.Rollback()
 			return
 		}
 		_ = tx.Commit()
 	}()
+
+	if err = r.skillRepo.UpdateSkillStatus(ctx, tx, req.SkillID, model.SkillStatusDeleting, req.UserID); err != nil {
+		return err
+	}
 
 	files, err := r.fileRepo.SelectSkillFileBySkillID(ctx, tx, req.SkillID)
 	if err != nil {
@@ -129,17 +139,16 @@ func (r *skillRegistry) DeleteSkill(ctx context.Context, req *interfaces.DeleteS
 	if err = r.fileRepo.DeleteSkillFileBySkillID(ctx, tx, req.SkillID); err != nil {
 		return err
 	}
-	return r.skillRepo.UpdateSkillStatus(ctx, tx, req.SkillID, model.SkillStatusDeleted, req.UserID)
+	return r.skillRepo.DeleteSkillByID(ctx, tx, req.SkillID)
 }
 
 func (r *skillRegistry) QuerySkillList(ctx context.Context, req *interfaces.QuerySkillListReq) (*interfaces.QuerySkillListResp, error) {
 	filter := map[string]interface{}{
-		"owner_id": req.BusinessDomainID,
-		"name":     req.Name,
-		"source":   req.Source,
-		"all":      req.All,
-		"limit":    req.PageSize,
-		"offset":   (req.Page - 1) * req.PageSize,
+		"name":   req.Name,
+		"source": req.Source,
+		"all":    req.All,
+		"limit":  req.PageSize,
+		"offset": (req.Page - 1) * req.PageSize,
 	}
 	if req.CreateUser != "" {
 		filter["create_user"] = req.CreateUser
@@ -170,9 +179,12 @@ func (r *skillRegistry) QuerySkillList(ctx context.Context, req *interfaces.Quer
 		return nil, err
 	}
 
-	data := make([]*interfaces.SkillInfo, 0, len(skills))
+	data := make([]*interfaces.SkillSummary, 0, len(skills))
 	for _, skill := range skills {
-		data = append(data, convertSkillInfo(skill))
+		if skill.Status == model.SkillStatusDeleting {
+			continue
+		}
+		data = append(data, convertSkillSummary(skill))
 	}
 
 	pageResult := ormhelper.CalculateQueryResult(total, &ormhelper.PaginationParams{
@@ -200,18 +212,17 @@ func (r *skillRegistry) GetSkillDetail(ctx context.Context, req *interfaces.GetS
 	if skill == nil {
 		return nil, fmt.Errorf("skill not found: %s", req.SkillID)
 	}
-	if skill.OwnerID != req.BusinessDomainID {
+	if skill.Status == model.SkillStatusDeleting {
 		return nil, fmt.Errorf("skill not found: %s", req.SkillID)
 	}
-	return convertSkillInfo(skill), nil
+	return convertSkillDetail(skill), nil
 }
 
-func convertSkillInfo(skill *model.SkillRepositoryDB) *interfaces.SkillInfo {
+func convertSkillDetail(skill *model.SkillRepositoryDB) *interfaces.SkillInfo {
 	return &interfaces.SkillInfo{
 		SkillID:      skill.SkillID,
 		Name:         skill.Name,
 		Description:  skill.Description,
-		Instructions: skill.Instructions,
 		Version:      skill.Version,
 		Status:       skill.Status,
 		Source:       skill.Source,
@@ -219,11 +230,27 @@ func convertSkillInfo(skill *model.SkillRepositoryDB) *interfaces.SkillInfo {
 		OwnerID:      skill.OwnerID,
 		Dependencies: utils.JSONToObject[map[string]interface{}](skill.Dependencies),
 		ExtendInfo:   utils.JSONToObject[map[string]interface{}](skill.ExtendInfo),
-		Files:        utils.JSONToObject[[]*interfaces.SkillFileSummary](skill.FileManifest),
 		CreateUser:   skill.CreateUser,
 		CreateTime:   skill.CreateTime,
 		UpdateUser:   skill.UpdateUser,
 		UpdateTime:   skill.UpdateTime,
+	}
+}
+
+func convertSkillSummary(skill *model.SkillRepositoryDB) *interfaces.SkillSummary {
+	return &interfaces.SkillSummary{
+		SkillID:     skill.SkillID,
+		Name:        skill.Name,
+		Description: skill.Description,
+		Version:     skill.Version,
+		Status:      skill.Status,
+		Source:      skill.Source,
+		OwnerType:   skill.OwnerType,
+		OwnerID:     skill.OwnerID,
+		CreateUser:  skill.CreateUser,
+		CreateTime:  skill.CreateTime,
+		UpdateUser:  skill.UpdateUser,
+		UpdateTime:  skill.UpdateTime,
 	}
 }
 
