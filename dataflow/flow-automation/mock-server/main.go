@@ -49,6 +49,9 @@ func main() {
 	// OSS Gateway Service Mock (port 9002)
 	go startOSSGatewayMock()
 
+	// Sandbox Service Mock (port 31700)
+	go startSandboxMockServer()
+
 	fmt.Println("Mock services started:")
 	fmt.Println("  - User Management Service: http://localhost:30980")
 	fmt.Println("  - Deploy Service: http://localhost:9703")
