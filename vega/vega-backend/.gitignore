@@ -33,7 +33,7 @@ Thumbs.db
 logs/
 
 # Test configuration (contains sensitive data like passwords)
-server/tests/at/testdata/test-config.yaml
+tests/at/testdata/test-config.yaml
 test-config.yaml
 __debug_bin*
 
