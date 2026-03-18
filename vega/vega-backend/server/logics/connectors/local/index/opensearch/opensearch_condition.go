@@ -186,17 +186,13 @@ func (c *OpenSearchConnector) ConvertFilterConditionEqual(condition interfaces.F
 		return nil, fmt.Errorf("condition is not *filter_condition.EqualCond")
 	}
 
-	keyword := ""
 	fieldName := cond.Lfield.OriginalName
 	if fieldName == "" {
 		fieldName = cond.Lfield.Name
 	}
-	// 检查字段类型，如果是 text 类型，使用 .keyword 子字段来比较
-	for _, prop := range schemaDefinition {
-		if prop.OriginalName == fieldName && prop.Type == "text" {
-			keyword = ".keyword"
-			break
-		}
+	keyword, err := c.getKeywordSuffix(fieldName, schemaDefinition)
+	if err != nil {
+		return nil, err
 	}
 	switch cond.Cfg.ValueFrom {
 	case interfaces.ValueFrom_Const:
@@ -224,17 +220,13 @@ func (c *OpenSearchConnector) ConvertFilterConditionNotEqual(condition interface
 		return nil, fmt.Errorf("condition is not *filter_condition.NotEqualCond")
 	}
 
-	keyword := ""
 	fieldName := cond.Lfield.OriginalName
 	if fieldName == "" {
 		fieldName = cond.Lfield.Name
 	}
-	// 检查字段类型，如果是 text 类型，使用 .keyword 子字段来比较
-	for _, prop := range schemaDefinition {
-		if prop.OriginalName == fieldName && prop.Type == "text" {
-			keyword = ".keyword"
-			break
-		}
+	keyword, err := c.getKeywordSuffix(fieldName, schemaDefinition)
+	if err != nil {
+		return nil, err
 	}
 	switch cond.Cfg.ValueFrom {
 	case interfaces.ValueFrom_Const:
@@ -382,17 +374,13 @@ func (c *OpenSearchConnector) ConvertFilterConditionIn(condition interfaces.Filt
 		return nil, fmt.Errorf("condition [in] only supports ValueFrom_Const, got %s", cond.Cfg.ValueFrom)
 	}
 
-	keyword := ""
 	fieldName := cond.Lfield.OriginalName
 	if fieldName == "" {
 		fieldName = cond.Lfield.Name
 	}
-	// 检查字段类型，如果是 text 类型，使用 .keyword 子字段来比较
-	for _, prop := range schemaDefinition {
-		if prop.OriginalName == fieldName && prop.Type == "text" {
-			keyword = ".keyword"
-			break
-		}
+	keyword, err := c.getKeywordSuffix(fieldName, schemaDefinition)
+	if err != nil {
+		return nil, err
 	}
 
 	return map[string]any{
@@ -414,17 +402,13 @@ func (c *OpenSearchConnector) ConvertFilterConditionNotIn(condition interfaces.F
 		return nil, fmt.Errorf("condition [not_in] only supports ValueFrom_Const, got %s", cond.Cfg.ValueFrom)
 	}
 
-	keyword := ""
 	fieldName := cond.Lfield.OriginalName
 	if fieldName == "" {
 		fieldName = cond.Lfield.Name
 	}
-	// 检查字段类型，如果是 text 类型，使用 .keyword 子字段来比较
-	for _, prop := range schemaDefinition {
-		if prop.OriginalName == fieldName && prop.Type == "text" {
-			keyword = ".keyword"
-			break
-		}
+	keyword, err := c.getKeywordSuffix(fieldName, schemaDefinition)
+	if err != nil {
+		return nil, err
 	}
 
 	return map[string]any{
@@ -451,18 +435,15 @@ func (c *OpenSearchConnector) ConvertFilterConditionLike(condition interfaces.Fi
 	}
 
 	fieldName := cond.Lfield.OriginalName
-	// 检查字段类型，如果是 text 类型，使用 .keyword 后缀
-	for _, prop := range schemaDefinition {
-		if prop.OriginalName == fieldName && prop.Type == "text" {
-			fieldName = fieldName + ".keyword"
-			break
-		}
+	keyword, err := c.getKeywordSuffix(fieldName, schemaDefinition)
+	if err != nil {
+		return nil, err
 	}
 
 	vStr := c.replaceLikeWildcards(cond.Value)
 	return map[string]any{
 		"regexp": map[string]any{
-			fieldName: vStr,
+			fieldName + keyword: vStr,
 		},
 	}, nil
 }
@@ -480,12 +461,9 @@ func (c *OpenSearchConnector) ConvertFilterConditionNotLike(condition interfaces
 	}
 
 	fieldName := cond.Lfield.OriginalName
-	// 检查字段类型，如果是 text 类型，使用 .keyword 后缀
-	for _, prop := range schemaDefinition {
-		if prop.OriginalName == fieldName && prop.Type == "text" {
-			fieldName = fieldName + ".keyword"
-			break
-		}
+	keyword, err := c.getKeywordSuffix(fieldName, schemaDefinition)
+	if err != nil {
+		return nil, err
 	}
 
 	vStr := c.replaceLikeWildcards(cond.Value)
@@ -493,7 +471,7 @@ func (c *OpenSearchConnector) ConvertFilterConditionNotLike(condition interfaces
 		"bool": map[string]any{
 			"must_not": map[string]any{
 				"regexp": map[string]any{
-					fieldName: vStr,
+					fieldName + keyword: vStr,
 				},
 			},
 		},
@@ -1127,4 +1105,23 @@ func (c *OpenSearchConnector) replaceLikeWildcards(input string) string {
 	}
 
 	return result.String()
+}
+
+// getKeywordSuffix text 类型在部分查询场景（如 eq/in）下，需使用 keyword 类型的子字段，返回关键字后缀，否则返回空字符串
+func (c *OpenSearchConnector) getKeywordSuffix(fieldName string, schemaDefinition []*interfaces.Property) (string, error) {
+	for _, prop := range schemaDefinition {
+		if prop.OriginalName == fieldName && prop.Type == "text" {
+			hasKeywordFeature := false
+			for _, feature := range prop.Features {
+				if feature.FeatureType == "keyword" {
+					hasKeywordFeature = true
+					return "." + feature.FeatureName, nil
+				}
+			}
+			if !hasKeywordFeature {
+				return "", fmt.Errorf("text field %s has no keyword feature, cannot be used for comparison", fieldName)
+			}
+		}
+	}
+	return "", nil
 }

@@ -588,26 +588,39 @@ func (c *OpenSearchConnector) buildFieldMappings(schemaDefinition []*interfaces.
 		if column.Features != nil {
 			for _, feature := range column.Features {
 				if feature.Config != nil {
-					for k, v := range feature.Config {
-						switch feature.FeatureType {
-						case "keyword":
+					switch feature.FeatureType {
+					case "keyword":
+						fieldsAdded := false
+						for k, v := range feature.Config {
 							if column.Type == "text" {
-								// 添加子字段
-								fieldProps["fields"] = map[string]any{
-									"keyword": map[string]any{
-										"type": "keyword",
-									},
+								if !fieldsAdded {
+									// 添加子字段
+									fieldProps["fields"] = map[string]any{
+										feature.FeatureName: map[string]any{
+											"type": "keyword",
+										},
+									}
+									fieldsAdded = true
+								}
+								// 添加到子字段属性中
+								if fields, ok := fieldProps["fields"].(map[string]any); ok {
+									if subField, ok := fields[feature.FeatureName].(map[string]any); ok {
+										subField[k] = v
+									}
 								}
 							} else {
+								// 直接添加到字段属性中
 								fieldProps[k] = v
 							}
-						case "vector":
-							fieldProps[k] = v
-						case "fulltext":
-							continue
-						default:
-							return nil, false, fmt.Errorf("unsupported feature type: %s", feature.FeatureType)
 						}
+					case "vector":
+						for k, v := range feature.Config {
+							fieldProps[k] = v
+						}
+					case "fulltext":
+						continue
+					default:
+						return nil, false, fmt.Errorf("unsupported feature type: %s", feature.FeatureType)
 					}
 				}
 			}
