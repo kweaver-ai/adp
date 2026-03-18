@@ -13,6 +13,7 @@ check() {
     fi
 }
 
+# 注：vega/mdl-data-model, vega/mdl-uniquery, vega/mdl-data-model-job 计划退场，不纳入
 GO_MODULES=(
     context-loader/agent-retrieval
     ontology/ontology-manager
