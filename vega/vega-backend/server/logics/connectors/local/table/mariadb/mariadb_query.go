@@ -86,6 +86,21 @@ func (c *MariaDBConnector) ExecuteQuery(ctx context.Context, resource *interface
 		builder = builder.Where(condition)
 	}
 
+	// ORDER BY
+	for _, sf := range params.Sort {
+		dir := "ASC"
+		if sf.Direction == interfaces.DESC_DIRECTION {
+			dir = "DESC"
+		}
+		builder = builder.OrderBy(sf.Field + " " + dir)
+	}
+
+	// LIMIT / OFFSET
+	if params.CursorEncoded == "" {
+		builder = builder.Offset(uint64(params.Offset))
+	}
+	builder = builder.Limit(uint64(params.Limit))
+
 	query, args, err := builder.ToSql()
 	if err != nil {
 		return nil, fmt.Errorf("failed to build query: %w", err)
