@@ -142,7 +142,7 @@ export const MainContent: React.FC = () => {
       render: (_text: any, record: any): JSX.Element => {
         const allOperations = [
           { key: 'view', label: intl.get('Global.view'), visible: matchPermission(PERMISSION_CODES.VIEW, record.operations) },
-          { key: 'preview', label: intl.get('Global.dataPreview'), visible: true },
+          { key: 'preview', label: intl.get('Global.dataPreview'), visible: matchPermission(PERMISSION_CODES.QUERY, record.operations) },
           { key: 'edit', label: intl.get('Global.edit'), visible: matchPermission(PERMISSION_CODES.MODIFY, record.operations) },
           { key: 'delete', label: intl.get('Global.delete'), visible: matchPermission(PERMISSION_CODES.DELETE, record.operations) },
           {

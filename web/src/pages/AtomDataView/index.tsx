@@ -374,7 +374,7 @@ const AtomDataView = (): JSX.Element => {
             label: intl.get('Global.edit'),
             visible: record.data_source_type !== 'index_base' && matchPermission(PERMISSION_CODES.MODIFY, record.operations),
           },
-          { key: 'preview', label: intl.get('Global.dataPreview'), visible: true },
+          { key: 'preview', label: intl.get('Global.dataPreview'), visible: matchPermission(PERMISSION_CODES.QUERY, record.operations) },
           {
             key: 'delete',
             label: intl.get('Global.delete'),
