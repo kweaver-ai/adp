@@ -8,7 +8,6 @@ require (
 	github.com/fsnotify/fsnotify v1.9.0
 	github.com/gin-gonic/gin v1.11.0
 	github.com/go-sql-driver/mysql v1.9.3
-	github.com/golang/mock v1.6.0
 	github.com/hibiken/asynq v0.26.0
 	github.com/kweaver-ai/TelemetrySDK-Go/exporter/v2 v2.10.3
 	github.com/kweaver-ai/kweaver-go-lib v1.0.3
@@ -23,6 +22,8 @@ require (
 	go.opentelemetry.io/otel/trace v1.29.0
 	go.uber.org/automaxprocs v1.6.0
 )
+
+require go.uber.org/mock v0.6.0
 
 require (
 	filippo.io/edwards25519 v1.1.0 // indirect
