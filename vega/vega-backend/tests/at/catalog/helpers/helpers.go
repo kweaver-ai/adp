@@ -265,7 +265,10 @@ func CleanupResources(client *testutil.HTTPClient, t *testing.T) {
 
 // ========== 响应提取辅助函数 ==========
 
-// ExtractFromEntriesResponse 从entries格式响应中提取第一个对象
+// ExtractFromEntriesResponse 从响应中提取catalog对象
+// 支持两种格式：
+// - entries 格式：{"entries": [{...}]}（List 响应）
+// - 直接返回：{"id": "...", "name": "..."}（Get 单个资源响应）
 func ExtractFromEntriesResponse(resp testutil.HTTPResponse) map[string]any {
 	if resp.Body == nil {
 		return nil
@@ -276,6 +279,11 @@ func ExtractFromEntriesResponse(resp testutil.HTTPResponse) map[string]any {
 		if item, ok := entries[0].(map[string]any); ok {
 			return item
 		}
+	}
+
+	// 直接返回格式（GET 单个资源），深拷贝避免修改原始数据
+	if _, ok := resp.Body["id"]; ok {
+		return DeepCopyMap(resp.Body)
 	}
 
 	return nil
