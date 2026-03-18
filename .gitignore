@@ -15,3 +15,6 @@ from_intranet/
 
 go.work
 go.work.sum
+
+# Test result output (per TESTING spec)
+test-result/

@@ -12,3 +12,4 @@ logics/eventmodel/ut_coverage.out
 ut_coverage.out
 go.work
 go.work.sum
+test-result/

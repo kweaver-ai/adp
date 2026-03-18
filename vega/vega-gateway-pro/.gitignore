@@ -1,0 +1,7 @@
+.idea
+.vscode
+__debug_bin*
+*/mock
+test-result/
+go.work
+go.work.sum
