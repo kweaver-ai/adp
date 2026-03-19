@@ -16,7 +16,8 @@ import (
 
 type BeforeCond struct {
 	mCfg             *CondCfg
-	mValue           []any
+	mValue           any
+	mUnit            string
 	mFilterFieldName string
 }
 
@@ -29,21 +30,9 @@ func NewBeforeCond(ctx context.Context, cfg *CondCfg, fieldsMap map[string]*View
 		return nil, fmt.Errorf("condition [before] does not support value_from type '%s'", cfg.ValueFrom)
 	}
 
-	val, ok := cfg.ValueOptCfg.Value.([]any)
-	if !ok {
-		return nil, fmt.Errorf("condition [before] right value should be an array of length 2")
-	}
-
-	if len(val) != 2 {
-		return nil, fmt.Errorf("condition [before] right value should be an array of length 2")
-	}
-
-	if _, ok := val[0].(string); ok {
-		return nil, fmt.Errorf("condition [before]'s interval value should be an number")
-	}
-	_, ok = val[1].(string)
-	if !ok {
-		return nil, fmt.Errorf("condition [before]'s interval value should be a string")
+	unit, exist := cfg.RemainCfg["unit"].(string)
+	if !exist {
+		return nil, fmt.Errorf("condition [before] unit is not specified")
 	}
 
 	fName, err := GetQueryField(ctx, cfg.Name, fieldsMap, FieldFeatureType_Raw)
@@ -53,19 +42,41 @@ func NewBeforeCond(ctx context.Context, cfg *CondCfg, fieldsMap map[string]*View
 
 	return &BeforeCond{
 		mCfg:             cfg,
-		mValue:           val,
+		mValue:           cfg.ValueOptCfg.Value,
+		mUnit:            unit,
 		mFilterFieldName: fName,
 	}, nil
 }
 
 func (cond *BeforeCond) Convert(ctx context.Context) (string, error) {
-	return "", nil
+	unitMap := map[string]string{
+		"year":   "y",
+		"month":  "M",
+		"week":   "w",
+		"day":    "d",
+		"hour":   "h",
+		"minute": "m",
+		"second": "s",
+	}
+
+	unit, ok := unitMap[cond.mUnit]
+	if !ok {
+		unit = cond.mUnit // 如果已经缩写过则直接用
+	}
+
+	// 统一处理数值类型
+	var val any = cond.mValue
+	if f, ok := val.(float64); ok {
+		val = int64(f)
+	}
+
+	return fmt.Sprintf(`{"range":{"%s":{"gte":"now-%v%s","lte":"now"}}}`,
+		cond.mFilterFieldName, val, unit), nil
 }
 
 func (cond *BeforeCond) Convert2SQL(ctx context.Context) (string, error) {
-	unit := cond.mValue[1].(string)
 	sqlStr := fmt.Sprintf(`"%s" >= DATE_add('%s', -%v, CURRENT_TIMESTAMP AT TIME ZONE 'UTC' AT TIME ZONE '%s') 
 								AND %s <= CURRENT_TIMESTAMP AT TIME ZONE 'UTC' AT TIME ZONE '%s'`,
-		cond.mFilterFieldName, unit, cond.mValue[0], os.Getenv("TZ"), cond.mFilterFieldName, os.Getenv("TZ"))
+		cond.mFilterFieldName, cond.mUnit, cond.mValue, os.Getenv("TZ"), cond.mFilterFieldName, os.Getenv("TZ"))
 	return sqlStr, nil
 }

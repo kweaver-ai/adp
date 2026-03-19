@@ -20,8 +20,11 @@ type BetweenCond struct {
 }
 
 func NewBetweenCond(ctx context.Context, cfg *CondCfg, fieldsMap map[string]*ViewField) (Condition, error) {
-	if !dtype.DataType_IsDate(cfg.NameField.Type) {
-		return nil, fmt.Errorf("condition [between] left field is not a date field: %s:%s", cfg.NameField.Name, cfg.NameField.Type)
+	// 1. 修改校验逻辑：支持时间类型 OR 数值类型
+	isDate := dtype.DataType_IsDate(cfg.NameField.Type)
+	isNumber := dtype.DataType_IsNumber(cfg.NameField.Type)
+	if !isDate && !isNumber {
+		return nil, fmt.Errorf("condition [between] left field is neither a date nor a numeric field: %s:%s", cfg.NameField.Name, cfg.NameField.Type)
 	}
 
 	if cfg.ValueOptCfg.ValueFrom != vopt.ValueFrom_Const {
@@ -29,11 +32,7 @@ func NewBetweenCond(ctx context.Context, cfg *CondCfg, fieldsMap map[string]*Vie
 	}
 
 	val, ok := cfg.ValueOptCfg.Value.([]any)
-	if !ok {
-		return nil, fmt.Errorf("condition [between] right value should be an array of length 2")
-	}
-
-	if len(val) != 2 {
+	if !ok || len(val) != 2 {
 		return nil, fmt.Errorf("condition [between] right value should be an array of length 2")
 	}
 
@@ -50,12 +49,37 @@ func NewBetweenCond(ctx context.Context, cfg *CondCfg, fieldsMap map[string]*Vie
 }
 
 func (cond *BetweenCond) Convert(ctx context.Context) (string, error) {
-	return "", nil
+	gte := cond.mValue[0]
+	lte := cond.mValue[1]
+
+	// 如果是时间类型，参考 RangeCond 处理格式
+	if dtype.DataType_IsDate(cond.mCfg.NameField.Type) {
+		var format string
+		switch gte.(type) {
+		case string:
+			format = "strict_date_optional_time"
+			gte = fmt.Sprintf("%q", gte)
+			lte = fmt.Sprintf("%q", lte)
+		case float64:
+			format = "epoch_millis"
+			gte = int64(gte.(float64))
+			lte = int64(lte.(float64))
+		}
+		return fmt.Sprintf(`{"range":{"%s":{"gte":%v,"lte":%v,"format":"%s"}}}`, 
+			cond.mFilterFieldName, gte, lte, format), nil
+	}
+
+	// 数值类型处理
+	return fmt.Sprintf(`{"range":{"%s":{"gte":%v,"lte":%v}}}`, cond.mFilterFieldName, gte, lte), nil
 }
 
 func (cond *BetweenCond) Convert2SQL(ctx context.Context) (string, error) {
-	sqlStr := fmt.Sprintf(`"%s" BETWEEN DATE_TRUNC('minute', CAST('%v' AS TIMESTAMP)) AND DATE_TRUNC('minute', CAST('%v' AS TIMESTAMP))`,
-		cond.mFilterFieldName, cond.mValue[0], cond.mValue[1])
+	// 1. 如果是时间类型，保留原有的 TRUNC 处理
+	if dtype.DataType_IsDate(cond.mCfg.NameField.Type) {
+		return fmt.Sprintf(`"%s" BETWEEN DATE_TRUNC('minute', CAST('%v' AS TIMESTAMP)) AND DATE_TRUNC('minute', CAST('%v' AS TIMESTAMP))`,
+			cond.mFilterFieldName, cond.mValue[0], cond.mValue[1]), nil
+	}
 
-	return sqlStr, nil
+	// 2. 如果是数值类型，直接生成简单的 BETWEEN 子句
+	return fmt.Sprintf(`"%s" BETWEEN %v AND %v`, cond.mFilterFieldName, cond.mValue[0], cond.mValue[1]), nil
 }
