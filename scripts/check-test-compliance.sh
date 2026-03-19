@@ -22,6 +22,8 @@ GO_MODULES=(
     vega/vega-gateway-pro
     execution-factory/operator-integration
     dataflow/flow-automation
+    bkn/bkn-backend
+    bkn/ontology-query
 )
 
 PYTHON_MODULES=(
