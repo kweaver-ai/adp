@@ -22,3 +22,5 @@ id_rsa
 
 go.work
 go.work.sum
+# Test result output (per TESTING spec)
+test-result/
