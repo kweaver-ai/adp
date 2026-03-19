@@ -9,15 +9,6 @@ import (
 
 //go:generate mockgen -source=logics_skill.go -destination=../mocks/logics_skill.go -package=mocks
 
-// SkillFileAccessLevel Skill 文件访问级别
-type SkillFileAccessLevel string
-
-const (
-	SkillFileAccessLevelPublicManifest SkillFileAccessLevel = "public_manifest" // 公开清单
-	SkillFileAccessLevelRuntimeRead    SkillFileAccessLevel = "runtime_read"    // 运行时读取
-	SkillFileAccessLevelRestricted     SkillFileAccessLevel = "restricted"      // 受限访问
-)
-
 // RegisterSkillReq 注册 Skill 请求
 type RegisterSkillReq struct {
 	BusinessDomainID string          `header:"x-business-domain" validate:"required"`
@@ -64,7 +55,7 @@ type QuerySkillListReq struct {
 	BusinessDomainID string            `header:"x-business-domain" validate:"required"`
 	UserID           string            `header:"user_id"`
 	Name             string            `form:"name"`
-	Status           model.SkillStatus `form:"status" validate:"omitempty,oneof=draft active error deleting"`
+	Status           model.SkillStatus `form:"status" validate:"omitempty,oneof=unpublish published offline"`
 	Source           string            `form:"source"`
 	CreateUser       string            `form:"create_user"`
 	CommonPageParams `json:",inline"`
@@ -102,11 +93,10 @@ type SkillSummary struct {
 
 // SkillFileSummary Skill 文件摘要
 type SkillFileSummary struct {
-	RelPath     string               `json:"rel_path"`
-	FileType    string               `json:"file_type"`
-	AccessLevel SkillFileAccessLevel `json:"access_level"`
-	Size        int64                `json:"size"`
-	MimeType    string               `json:"mime_type"`
+	RelPath  string `json:"rel_path"`
+	FileType string `json:"file_type"`
+	Size     int64  `json:"size"`
+	MimeType string `json:"mime_type"`
 }
 
 // QuerySkillListResp Skill 列表响应
@@ -169,12 +159,11 @@ type ReadSkillFileReq struct {
 
 // ReadSkillFileResp 读取 Skill 文件响应
 type ReadSkillFileResp struct {
-	SkillID     string `json:"skill_id"`
-	RelPath     string `json:"rel_path"`
-	Content     string `json:"content"`
-	MimeType    string `json:"mime_type"`
-	FileType    string `json:"file_type"`
-	AccessLevel string `json:"access_level"`
+	SkillID  string `json:"skill_id"`
+	RelPath  string `json:"rel_path"`
+	Content  string `json:"content"`
+	MimeType string `json:"mime_type"`
+	FileType string `json:"file_type"`
 }
 
 // AgentSkillBindingReq 查询 Agent 绑定的 Skill 请求

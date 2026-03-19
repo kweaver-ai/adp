@@ -55,7 +55,7 @@ func (s *skillRepositoryDB) InsertSkill(ctx context.Context, tx *sql.Tx, skill *
 	skill.CreateTime = now
 	skill.UpdateTime = now
 	if skill.Status == "" {
-		skill.Status = model.SkillStatusDraft
+		skill.Status = model.SkillStatusUnpublish
 	}
 	row, err := orm.Insert().Into(tbSkillRepository).Values(map[string]interface{}{
 		"f_skill_id":      skill.SkillID,

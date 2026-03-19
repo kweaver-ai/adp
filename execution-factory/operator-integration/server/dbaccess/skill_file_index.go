@@ -57,7 +57,6 @@ func (s *skillFileIndexDB) InsertSkillFile(ctx context.Context, tx *sql.Tx, file
 		"f_file_type":      file.FileType,
 		"f_content_sha256": file.ContentSHA256,
 		"f_mime_type":      file.MimeType,
-		"f_access_level":   file.AccessLevel,
 		"f_size":           file.Size,
 		"f_create_time":    file.CreateTime,
 		"f_update_time":    file.UpdateTime,
@@ -85,7 +84,6 @@ func (s *skillFileIndexDB) UpdateSkillFile(ctx context.Context, tx *sql.Tx, file
 		"f_file_type":      file.FileType,
 		"f_content_sha256": file.ContentSHA256,
 		"f_mime_type":      file.MimeType,
-		"f_access_level":   file.AccessLevel,
 		"f_size":           file.Size,
 		"f_update_time":    file.UpdateTime,
 	}).WhereEq("f_skill_id", file.SkillID).WhereEq("f_rel_path", file.RelPath).Execute(ctx)

@@ -25,16 +25,25 @@ func TestSkillReaderAndRegistry(t *testing.T) {
 			mockSkillRepo := mocks.NewMockISkillRepository(ctrl)
 			mockFileRepo := mocks.NewMockISkillFileIndex(ctrl)
 			mockAssetStore := mocks.NewMockskillAssetStore(ctrl)
+			mockAuthService := mocks.NewMockIAuthorizationService(ctrl)
+			mockBusinessDomainService := mocks.NewMockIBusinessDomainService(ctrl)
 			reader := &skillReader{
-				skillRepo:  mockSkillRepo,
-				fileRepo:   mockFileRepo,
-				assetStore: mockAssetStore,
+				skillRepo:              mockSkillRepo,
+				fileRepo:               mockFileRepo,
+				assetStore:             mockAssetStore,
+				AuthService:            mockAuthService,
+				BusinessDomainService: mockBusinessDomainService,
 			}
 			mockSkillRepo.EXPECT().SelectSkillByID(gomock.Any(), gomock.Nil(), "skill-1").Return(&model.SkillRepositoryDB{
 				SkillID:      "skill-1",
-				Status:       model.SkillStatusActive,
+				Status:       model.SkillStatusPublished,
 				SkillContent: "demo guide",
-				FileManifest: `[{"rel_path":"refs/guide.md","file_type":"reference","access_level":"runtime_read","size":5,"mime_type":"text/markdown"}]`,
+				FileManifest: `[{"rel_path":"refs/guide.md","file_type":"reference","size":5,"mime_type":"text/markdown"}]`,
+			}, nil)
+			mockAuthService.EXPECT().GetAccessor(gomock.Any(), "").Return(&interfaces.AuthAccessor{ID: "viewer"}, nil)
+			mockAuthService.EXPECT().CheckViewPermission(gomock.Any(), gomock.Any(), "skill-1", interfaces.AuthResourceTypeSkill).Return(nil)
+			mockBusinessDomainService.EXPECT().BatchResourceList(gomock.Any(), []string{"bd-1"}, interfaces.AuthResourceTypeSkill).Return(map[string]string{
+				"skill-1": "bd-1",
 			}, nil)
 
 			resp, err := reader.GetSkillContent(context.Background(), &interfaces.GetSkillContentReq{
@@ -47,23 +56,27 @@ func TestSkillReaderAndRegistry(t *testing.T) {
 			So(resp.SkillContent, ShouldEqual, "demo guide")
 			So(len(resp.Files), ShouldEqual, 1)
 			So(resp.Files[0].RelPath, ShouldEqual, "refs/guide.md")
+			So(resp.Files[0].MimeType, ShouldEqual, "text/markdown")
 		})
 
-		Convey("ReadSkillFile rejects restricted files", func() {
+		Convey("ReadSkillFile checks execute permission before reading file", func() {
 			mockSkillRepo := mocks.NewMockISkillRepository(ctrl)
 			mockFileRepo := mocks.NewMockISkillFileIndex(ctrl)
 			mockAssetStore := mocks.NewMockskillAssetStore(ctrl)
+			mockAuthService := mocks.NewMockIAuthorizationService(ctrl)
+			mockBusinessDomainService := mocks.NewMockIBusinessDomainService(ctrl)
 			reader := &skillReader{
-				skillRepo:  mockSkillRepo,
-				fileRepo:   mockFileRepo,
-				assetStore: mockAssetStore,
+				skillRepo:              mockSkillRepo,
+				fileRepo:               mockFileRepo,
+				assetStore:             mockAssetStore,
+				AuthService:            mockAuthService,
+				BusinessDomainService: mockBusinessDomainService,
 			}
 			mockSkillRepo.EXPECT().SelectSkillByID(gomock.Any(), gomock.Nil(), "skill-2").Return(&model.SkillRepositoryDB{
-				SkillID: "skill-2", Status: model.SkillStatusActive,
+				SkillID: "skill-2", Status: model.SkillStatusPublished,
 			}, nil)
-			mockFileRepo.EXPECT().SelectSkillFileByPath(gomock.Any(), gomock.Nil(), "skill-2", "refs/secret.md").Return(&model.SkillFileIndexDB{
-				SkillID: "skill-2", RelPath: "refs/secret.md", AccessLevel: string(interfaces.SkillFileAccessLevelRestricted),
-			}, nil)
+			mockAuthService.EXPECT().GetAccessor(gomock.Any(), "").Return(&interfaces.AuthAccessor{ID: "viewer"}, nil)
+			mockAuthService.EXPECT().CheckExecutePermission(gomock.Any(), gomock.Any(), "skill-2", interfaces.AuthResourceTypeSkill).Return(errors.New("execute forbidden"))
 
 			resp, err := reader.ReadSkillFile(context.Background(), &interfaces.ReadSkillFileReq{
 				BusinessDomainID: "bd-1",
@@ -73,26 +86,34 @@ func TestSkillReaderAndRegistry(t *testing.T) {
 
 			So(resp, ShouldBeNil)
 			So(err, ShouldNotBeNil)
-			So(err.Error(), ShouldContainSubstring, "access denied")
+			So(err.Error(), ShouldContainSubstring, "execute forbidden")
 		})
 
 		Convey("ReadSkillFile validates checksum", func() {
 			mockSkillRepo := mocks.NewMockISkillRepository(ctrl)
 			mockFileRepo := mocks.NewMockISkillFileIndex(ctrl)
 			mockAssetStore := mocks.NewMockskillAssetStore(ctrl)
+			mockAuthService := mocks.NewMockIAuthorizationService(ctrl)
+			mockBusinessDomainService := mocks.NewMockIBusinessDomainService(ctrl)
 			reader := &skillReader{
-				skillRepo:  mockSkillRepo,
-				fileRepo:   mockFileRepo,
-				assetStore: mockAssetStore,
+				skillRepo:              mockSkillRepo,
+				fileRepo:               mockFileRepo,
+				assetStore:             mockAssetStore,
+				AuthService:            mockAuthService,
+				BusinessDomainService: mockBusinessDomainService,
 			}
 			mockSkillRepo.EXPECT().SelectSkillByID(gomock.Any(), gomock.Nil(), "skill-3").Return(&model.SkillRepositoryDB{
-				SkillID: "skill-3", Status: model.SkillStatusActive,
+				SkillID: "skill-3", Status: model.SkillStatusPublished,
+			}, nil)
+			mockAuthService.EXPECT().GetAccessor(gomock.Any(), "").Return(&interfaces.AuthAccessor{ID: "viewer"}, nil)
+			mockAuthService.EXPECT().CheckExecutePermission(gomock.Any(), gomock.Any(), "skill-3", interfaces.AuthResourceTypeSkill).Return(nil)
+			mockBusinessDomainService.EXPECT().BatchResourceList(gomock.Any(), []string{"bd-1"}, interfaces.AuthResourceTypeSkill).Return(map[string]string{
+				"skill-3": "bd-1",
 			}, nil)
 			mockFileRepo.EXPECT().SelectSkillFileByPath(gomock.Any(), gomock.Nil(), "skill-3", "refs/guide.md").Return(&model.SkillFileIndexDB{
 				SkillID:       "skill-3",
 				RelPath:       "refs/guide.md",
 				StorageKey:    "/tmp/f1",
-				AccessLevel:   string(interfaces.SkillFileAccessLevelRuntimeRead),
 				ContentSHA256: checksumSHA256([]byte("original")),
 			}, nil)
 			mockAssetStore.EXPECT().Read(gomock.Any(), "/tmp/f1").Return([]byte("tampered"), nil)
@@ -135,7 +156,7 @@ func TestSkillReaderAndRegistry(t *testing.T) {
 				AuthService: mockAuthService,
 			}
 			mockSkillRepo.EXPECT().SelectSkillByID(gomock.Any(), gomock.Nil(), "skill-5").Return(&model.SkillRepositoryDB{
-				SkillID: "skill-5", Status: model.SkillStatusActive,
+				SkillID: "skill-5", Status: model.SkillStatusPublished,
 			}, nil)
 			mockAuthService.EXPECT().GetAccessor(gomock.Any(), "user-1").Return(&interfaces.AuthAccessor{ID: "user-1"}, nil)
 			mockAuthService.EXPECT().CheckDeletePermission(gomock.Any(), gomock.Any(), "skill-5", interfaces.AuthResourceTypeSkill).Return(nil)
@@ -203,7 +224,6 @@ func TestSkillReaderAndRegistry(t *testing.T) {
 			mockAuthService.EXPECT().CheckCreatePermission(gomock.Any(), gomock.Any(), interfaces.AuthResourceTypeSkill).Return(nil)
 			mockDBTx.EXPECT().GetTx(gomock.Any()).Return(nil, nil)
 			mockSkillRepo.EXPECT().InsertSkill(gomock.Any(), gomock.Nil(), gomock.Any()).Return("skill-registered", nil)
-			mockSkillRepo.EXPECT().UpdateSkillStatus(gomock.Any(), gomock.Nil(), "skill-registered", model.SkillStatusActive, "user-1").Return(nil)
 			mockBusinessDomainService.EXPECT().AssociateResource(gomock.Any(), "bd-1", "skill-registered", interfaces.AuthResourceTypeSkill).Return(nil)
 
 			resp, err := registry.RegisterSkill(context.Background(), &interfaces.RegisterSkillReq{
@@ -217,6 +237,7 @@ func TestSkillReaderAndRegistry(t *testing.T) {
 			So(err, ShouldBeNil)
 			So(resp, ShouldNotBeNil)
 			So(resp.SkillID, ShouldEqual, "skill-registered")
+			So(resp.Status, ShouldEqual, model.SkillStatusUnpublish)
 		})
 
 		Convey("QuerySkillList omits instructions and files from list payload", func() {
@@ -232,7 +253,7 @@ func TestSkillReaderAndRegistry(t *testing.T) {
 					Description:  "demo-desc",
 					SkillContent: "full skill markdown",
 					FileManifest: `[{"rel_path":"refs/guide.md","file_type":"reference"}]`,
-					Status:       model.SkillStatusActive,
+					Status:       model.SkillStatusPublished,
 				},
 			}, nil)
 			mockAuthService.EXPECT().ResourceFilterIDs(gomock.Any(), gomock.Any(), []string{"skill-6"}, interfaces.AuthResourceTypeSkill, interfaces.AuthOperationTypeView).Return([]string{"skill-6"}, nil)
@@ -270,7 +291,7 @@ func TestSkillReaderAndRegistry(t *testing.T) {
 					_, exists := filter["owner_id"]
 					So(exists, ShouldBeFalse)
 					return []*model.SkillRepositoryDB{
-						{SkillID: "skill-6b", Name: "demo-skill", Status: model.SkillStatusActive},
+						{SkillID: "skill-6b", Name: "demo-skill", Status: model.SkillStatusUnpublish},
 					}, nil
 				},
 			)
@@ -297,7 +318,7 @@ func TestSkillReaderAndRegistry(t *testing.T) {
 				Description:  "demo-desc",
 				SkillContent: "full skill markdown",
 				FileManifest: `[{"rel_path":"refs/guide.md","file_type":"reference"}]`,
-				Status:       model.SkillStatusActive,
+				Status:       model.SkillStatusPublished,
 			}, nil)
 			mockAuthService.EXPECT().GetAccessor(gomock.Any(), "").Return(&interfaces.AuthAccessor{ID: "viewer"}, nil)
 			mockAuthService.EXPECT().CheckViewPermission(gomock.Any(), gomock.Any(), "skill-7", interfaces.AuthResourceTypeSkill).Return(nil)
@@ -322,7 +343,7 @@ func TestSkillReaderAndRegistry(t *testing.T) {
 			mockAuthService := mocks.NewMockIAuthorizationService(ctrl)
 			registry := &skillRegistry{skillRepo: mockSkillRepo, AuthService: mockAuthService}
 			mockSkillRepo.EXPECT().SelectSkillByID(gomock.Any(), gomock.Nil(), "skill-7b").Return(&model.SkillRepositoryDB{
-				SkillID: "skill-7b", Status: model.SkillStatusActive,
+				SkillID: "skill-7b", Status: model.SkillStatusOffline,
 			}, nil)
 			mockAuthService.EXPECT().GetAccessor(gomock.Any(), "").Return(&interfaces.AuthAccessor{ID: "viewer"}, nil)
 			mockAuthService.EXPECT().CheckViewPermission(gomock.Any(), gomock.Any(), "skill-7b", interfaces.AuthResourceTypeSkill).Return(nil)
@@ -344,7 +365,7 @@ func TestSkillReaderAndRegistry(t *testing.T) {
 			mockAuthService.EXPECT().GetAccessor(gomock.Any(), "").Return(&interfaces.AuthAccessor{ID: "viewer"}, nil)
 			mockSkillRepo.EXPECT().CountByWhereClause(gomock.Any(), gomock.Nil(), gomock.Any()).Return(int64(2), nil)
 			mockSkillRepo.EXPECT().SelectSkillListPage(gomock.Any(), gomock.Nil(), gomock.Any(), gomock.Any(), gomock.Nil()).Return([]*model.SkillRepositoryDB{
-				{SkillID: "skill-10", Name: "visible", Status: model.SkillStatusActive},
+				{SkillID: "skill-10", Name: "visible", Status: model.SkillStatusPublished},
 				{SkillID: "skill-11", Name: "hiding", Status: model.SkillStatusDeleting},
 			}, nil)
 			mockAuthService.EXPECT().ResourceFilterIDs(gomock.Any(), gomock.Any(), []string{"skill-10"}, interfaces.AuthResourceTypeSkill, interfaces.AuthOperationTypeView).Return([]string{"skill-10"}, nil)
@@ -382,7 +403,7 @@ func TestSkillReaderAndRegistry(t *testing.T) {
 			mockAuthService := mocks.NewMockIAuthorizationService(ctrl)
 			registry := &skillRegistry{skillRepo: mockSkillRepo, AuthService: mockAuthService}
 			mockSkillRepo.EXPECT().SelectSkillByID(gomock.Any(), gomock.Nil(), "skill-12b").Return(&model.SkillRepositoryDB{
-				SkillID: "skill-12b", Status: model.SkillStatusActive,
+				SkillID: "skill-12b", Status: model.SkillStatusPublished,
 			}, nil)
 			mockAuthService.EXPECT().GetAccessor(gomock.Any(), "").Return(&interfaces.AuthAccessor{ID: "viewer"}, nil)
 			mockAuthService.EXPECT().CheckViewPermission(gomock.Any(), gomock.Any(), "skill-12b", interfaces.AuthResourceTypeSkill).Return(errors.New("view forbidden"))
@@ -404,8 +425,8 @@ func TestSkillReaderAndRegistry(t *testing.T) {
 			mockAuthService.EXPECT().GetAccessor(gomock.Any(), "").Return(&interfaces.AuthAccessor{ID: "viewer"}, nil)
 			mockSkillRepo.EXPECT().CountByWhereClause(gomock.Any(), gomock.Nil(), gomock.Any()).Return(int64(2), nil)
 			mockSkillRepo.EXPECT().SelectSkillListPage(gomock.Any(), gomock.Nil(), gomock.Any(), gomock.Any(), gomock.Nil()).Return([]*model.SkillRepositoryDB{
-				{SkillID: "skill-12c", Name: "visible", Status: model.SkillStatusActive},
-				{SkillID: "skill-12d", Name: "hidden", Status: model.SkillStatusActive},
+				{SkillID: "skill-12c", Name: "visible", Status: model.SkillStatusPublished},
+				{SkillID: "skill-12d", Name: "hidden", Status: model.SkillStatusOffline},
 			}, nil)
 			mockAuthService.EXPECT().ResourceFilterIDs(gomock.Any(), gomock.Any(), []string{"skill-12c", "skill-12d"}, interfaces.AuthResourceTypeSkill, interfaces.AuthOperationTypeView).Return([]string{"skill-12c"}, nil)
 
@@ -439,9 +460,20 @@ func TestSkillReaderAndRegistry(t *testing.T) {
 
 		Convey("GetSkillContent ignores owner and business domain direct comparison", func() {
 			mockSkillRepo := mocks.NewMockISkillRepository(ctrl)
-			reader := &skillReader{skillRepo: mockSkillRepo}
+			mockAuthService := mocks.NewMockIAuthorizationService(ctrl)
+			mockBusinessDomainService := mocks.NewMockIBusinessDomainService(ctrl)
+			reader := &skillReader{
+				skillRepo:              mockSkillRepo,
+				AuthService:            mockAuthService,
+				BusinessDomainService: mockBusinessDomainService,
+			}
 			mockSkillRepo.EXPECT().SelectSkillByID(gomock.Any(), gomock.Nil(), "skill-13b").Return(&model.SkillRepositoryDB{
-				SkillID: "skill-13b", Status: model.SkillStatusActive, SkillContent: "demo guide",
+				SkillID: "skill-13b", Status: model.SkillStatusPublished, SkillContent: "demo guide",
+			}, nil)
+			mockAuthService.EXPECT().GetAccessor(gomock.Any(), "").Return(&interfaces.AuthAccessor{ID: "viewer"}, nil)
+			mockAuthService.EXPECT().CheckViewPermission(gomock.Any(), gomock.Any(), "skill-13b", interfaces.AuthResourceTypeSkill).Return(nil)
+			mockBusinessDomainService.EXPECT().BatchResourceList(gomock.Any(), []string{"bd-1"}, interfaces.AuthResourceTypeSkill).Return(map[string]string{
+				"skill-13b": "other-bd",
 			}, nil)
 
 			resp, err := reader.GetSkillContent(context.Background(), &interfaces.GetSkillContentReq{
@@ -476,12 +508,25 @@ func TestSkillReaderAndRegistry(t *testing.T) {
 			mockSkillRepo := mocks.NewMockISkillRepository(ctrl)
 			mockFileRepo := mocks.NewMockISkillFileIndex(ctrl)
 			mockAssetStore := mocks.NewMockskillAssetStore(ctrl)
-			reader := &skillReader{skillRepo: mockSkillRepo, fileRepo: mockFileRepo, assetStore: mockAssetStore}
+			mockAuthService := mocks.NewMockIAuthorizationService(ctrl)
+			mockBusinessDomainService := mocks.NewMockIBusinessDomainService(ctrl)
+			reader := &skillReader{
+				skillRepo:              mockSkillRepo,
+				fileRepo:               mockFileRepo,
+				assetStore:             mockAssetStore,
+				AuthService:            mockAuthService,
+				BusinessDomainService: mockBusinessDomainService,
+			}
 			mockSkillRepo.EXPECT().SelectSkillByID(gomock.Any(), gomock.Nil(), "skill-14b").Return(&model.SkillRepositoryDB{
-				SkillID: "skill-14b", Status: model.SkillStatusActive,
+				SkillID: "skill-14b", Status: model.SkillStatusPublished,
+			}, nil)
+			mockAuthService.EXPECT().GetAccessor(gomock.Any(), "").Return(&interfaces.AuthAccessor{ID: "viewer"}, nil)
+			mockAuthService.EXPECT().CheckExecutePermission(gomock.Any(), gomock.Any(), "skill-14b", interfaces.AuthResourceTypeSkill).Return(nil)
+			mockBusinessDomainService.EXPECT().BatchResourceList(gomock.Any(), []string{"bd-1"}, interfaces.AuthResourceTypeSkill).Return(map[string]string{
+				"skill-14b": "other-bd",
 			}, nil)
 			mockFileRepo.EXPECT().SelectSkillFileByPath(gomock.Any(), gomock.Nil(), "skill-14b", "refs/guide.md").Return(&model.SkillFileIndexDB{
-				SkillID: "skill-14b", RelPath: "refs/guide.md", StorageKey: "/tmp/f14b", AccessLevel: string(interfaces.SkillFileAccessLevelRuntimeRead), ContentSHA256: checksumSHA256([]byte("ok")),
+				SkillID: "skill-14b", RelPath: "refs/guide.md", StorageKey: "/tmp/f14b", ContentSHA256: checksumSHA256([]byte("ok")),
 			}, nil)
 			mockAssetStore.EXPECT().Read(gomock.Any(), "/tmp/f14b").Return([]byte("ok"), nil)
 
@@ -494,6 +539,9 @@ func TestSkillReaderAndRegistry(t *testing.T) {
 			So(err, ShouldBeNil)
 			So(resp, ShouldNotBeNil)
 			So(resp.SkillID, ShouldEqual, "skill-14b")
+			raw, marshalErr := json.Marshal(resp)
+			So(marshalErr, ShouldBeNil)
+			So(string(raw), ShouldNotContainSubstring, "access_level")
 		})
 
 		Convey("QuerySkillMarketList filters by public access and business domain visibility", func() {
@@ -512,9 +560,10 @@ func TestSkillReaderAndRegistry(t *testing.T) {
 				"skill-m3": "bd-1",
 			}, nil)
 			mockSkillRepo.EXPECT().SelectSkillListPage(gomock.Any(), gomock.Nil(), gomock.Any(), gomock.Any(), gomock.Nil()).Return([]*model.SkillRepositoryDB{
-				{SkillID: "skill-m1", Name: "visible", Status: model.SkillStatusActive},
+				{SkillID: "skill-m1", Name: "visible", Status: model.SkillStatusPublished},
+				{SkillID: "skill-m2", Name: "unpublish", Status: model.SkillStatusUnpublish},
 				{SkillID: "skill-m3", Name: "deleting", Status: model.SkillStatusDeleting},
-				{SkillID: "skill-m4", Name: "not-public", Status: model.SkillStatusActive},
+				{SkillID: "skill-m4", Name: "not-public", Status: model.SkillStatusPublished},
 			}, nil)
 
 			resp, err := registry.QuerySkillMarketList(context.Background(), &interfaces.QuerySkillMarketListReq{
@@ -544,7 +593,7 @@ func TestSkillReaderAndRegistry(t *testing.T) {
 				Description:  "demo-desc",
 				SkillContent: "full skill markdown",
 				FileManifest: `[{"rel_path":"refs/guide.md","file_type":"reference"}]`,
-				Status:       model.SkillStatusActive,
+				Status:       model.SkillStatusPublished,
 			}, nil)
 			mockAuthService.EXPECT().GetAccessor(gomock.Any(), "").Return(&interfaces.AuthAccessor{ID: "viewer"}, nil)
 			mockAuthService.EXPECT().CheckPublicAccessPermission(gomock.Any(), gomock.Any(), "skill-m-detail", interfaces.AuthResourceTypeSkill).Return(nil)
@@ -583,6 +632,23 @@ func TestSkillReaderAndRegistry(t *testing.T) {
 			So(err.Error(), ShouldContainSubstring, "skill not found")
 		})
 
+		Convey("GetSkillMarketDetail hides non-published skills", func() {
+			mockSkillRepo := mocks.NewMockISkillRepository(ctrl)
+			registry := &skillRegistry{skillRepo: mockSkillRepo}
+			mockSkillRepo.EXPECT().SelectSkillByID(gomock.Any(), gomock.Nil(), "skill-m-unpublish").Return(&model.SkillRepositoryDB{
+				SkillID: "skill-m-unpublish", Status: model.SkillStatusUnpublish,
+			}, nil)
+
+			resp, err := registry.GetSkillMarketDetail(context.Background(), &interfaces.GetSkillMarketDetailReq{
+				BusinessDomainID: "bd-1",
+				SkillID:          "skill-m-unpublish",
+			})
+
+			So(resp, ShouldBeNil)
+			So(err, ShouldNotBeNil)
+			So(err.Error(), ShouldContainSubstring, "skill not found")
+		})
+
 		Convey("DeleteSkill marks deleting before cleanup and hard deletes repository on success", func() {
 			mockSkillRepo := mocks.NewMockISkillRepository(ctrl)
 			mockFileRepo := mocks.NewMockISkillFileIndex(ctrl)
@@ -600,7 +666,7 @@ func TestSkillReaderAndRegistry(t *testing.T) {
 			}
 
 			mockSkillRepo.EXPECT().SelectSkillByID(gomock.Any(), gomock.Nil(), "skill-8").Return(&model.SkillRepositoryDB{
-				SkillID: "skill-8", Status: model.SkillStatusActive,
+				SkillID: "skill-8", Status: model.SkillStatusPublished,
 			}, nil)
 			mockAuthService.EXPECT().GetAccessor(gomock.Any(), "user-1").Return(&interfaces.AuthAccessor{ID: "user-1"}, nil)
 			mockAuthService.EXPECT().CheckDeletePermission(gomock.Any(), gomock.Any(), "skill-8", interfaces.AuthResourceTypeSkill).Return(nil)
@@ -642,7 +708,7 @@ func TestSkillReaderAndRegistry(t *testing.T) {
 			}
 
 			mockSkillRepo.EXPECT().SelectSkillByID(gomock.Any(), gomock.Nil(), "skill-9").Return(&model.SkillRepositoryDB{
-				SkillID: "skill-9", Status: model.SkillStatusActive,
+				SkillID: "skill-9", Status: model.SkillStatusPublished,
 			}, nil)
 			mockAuthService.EXPECT().GetAccessor(gomock.Any(), "user-1").Return(&interfaces.AuthAccessor{ID: "user-1"}, nil)
 			mockAuthService.EXPECT().CheckDeletePermission(gomock.Any(), gomock.Any(), "skill-9", interfaces.AuthResourceTypeSkill).Return(nil)
@@ -672,7 +738,7 @@ func TestSkillReaderAndRegistry(t *testing.T) {
 			}
 
 			mockSkillRepo.EXPECT().SelectSkillByID(gomock.Any(), gomock.Nil(), "skill-9b").Return(&model.SkillRepositoryDB{
-				SkillID: "skill-9b", Status: model.SkillStatusActive,
+				SkillID: "skill-9b", Status: model.SkillStatusPublished,
 			}, nil)
 			mockAuthService.EXPECT().GetAccessor(gomock.Any(), "user-1").Return(&interfaces.AuthAccessor{ID: "user-1"}, nil)
 			mockAuthService.EXPECT().CheckDeletePermission(gomock.Any(), gomock.Any(), "skill-9b", interfaces.AuthResourceTypeSkill).Return(errors.New("delete forbidden"))
@@ -703,7 +769,7 @@ func TestSkillReaderAndRegistry(t *testing.T) {
 				SkillID:      "skill-zip-1",
 				Name:         "demo-skill",
 				SkillContent: "Use this skill carefully.",
-				Status:       model.SkillStatusActive,
+				Status:       model.SkillStatusPublished,
 			}, nil)
 			mockAuthService.EXPECT().GetAccessor(gomock.Any(), "").Return(&interfaces.AuthAccessor{ID: "viewer"}, nil)
 			mockAuthService.EXPECT().CheckViewPermission(gomock.Any(), gomock.Any(), "skill-zip-1", interfaces.AuthResourceTypeSkill).Return(nil)

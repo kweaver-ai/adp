@@ -83,7 +83,7 @@ func (p *skillParser) parseSkillContent(content string, req *interfaces.Register
 		Description:  fm.Description,
 		SkillContent: strings.TrimSpace(parts[2]),
 		Version:      fm.Version,
-		Status:       model.SkillStatusDraft,
+		Status:       model.SkillStatusUnpublish,
 		Source:       req.Source,
 		Dependencies: utils.ObjectToJSON(fm.Dependencies),
 		ExtendInfo:   utils.ObjectToJSON(fm.Metadata),
@@ -130,11 +130,10 @@ func (p *skillParser) parseSkillZip(req *interfaces.RegisterSkillReq) (string, [
 		}
 
 		files = append(files, &interfaces.SkillFileSummary{
-			RelPath:     relPath,
-			FileType:    detectFileType(relPath),
-			AccessLevel: interfaces.SkillFileAccessLevelRuntimeRead,
-			Size:        int64(len(content)),
-			MimeType:    detectMimeType(relPath),
+			RelPath:  relPath,
+			FileType: detectFileType(relPath),
+			Size:     int64(len(content)),
+			MimeType: detectMimeType(relPath),
 		})
 		assets = append(assets, &skillAsset{
 			RelPath:  relPath,

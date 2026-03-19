@@ -396,7 +396,6 @@ CREATE TABLE IF NOT EXISTS "t_skill_file_index" (
     "f_file_type" VARCHAR(40 CHAR) NOT NULL,
     "f_content_sha256" VARCHAR(64 CHAR) NOT NULL,
     "f_mime_type" VARCHAR(128 CHAR) NOT NULL DEFAULT '',
-    "f_access_level" VARCHAR(40 CHAR) NOT NULL,
     "f_size" BIGINT NOT NULL DEFAULT 0,
     "f_create_time" BIGINT NOT NULL,
     "f_update_time" BIGINT NOT NULL,

@@ -397,7 +397,6 @@ CREATE TABLE IF NOT EXISTS `t_skill_file_index` (
   `f_file_type` VARCHAR(40) NOT NULL COMMENT '文件类型',
   `f_content_sha256` VARCHAR(64) NOT NULL COMMENT '文件内容 SHA256',
   `f_mime_type` VARCHAR(128) NOT NULL DEFAULT '' COMMENT 'MIME 类型',
-  `f_access_level` VARCHAR(40) NOT NULL COMMENT '访问级别',
   `f_size` BIGINT(20) NOT NULL DEFAULT 0 COMMENT '文件大小',
   `f_create_time` BIGINT(20) NOT NULL COMMENT '创建时间',
   `f_update_time` BIGINT(20) NOT NULL COMMENT '编辑时间',

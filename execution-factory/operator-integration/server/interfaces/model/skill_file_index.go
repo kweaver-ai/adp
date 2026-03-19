@@ -17,7 +17,6 @@ type SkillFileIndexDB struct {
 	FileType      string `json:"file_type" db:"f_file_type"`
 	ContentSHA256 string `json:"content_sha256" db:"f_content_sha256"`
 	MimeType      string `json:"mime_type" db:"f_mime_type"`
-	AccessLevel   string `json:"access_level" db:"f_access_level"`
 	Size          int64  `json:"size" db:"f_size"`
 	CreateTime    int64  `json:"create_time" db:"f_create_time"`
 	UpdateTime    int64  `json:"update_time" db:"f_update_time"`

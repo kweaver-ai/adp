@@ -1,6 +1,6 @@
 # 🏗️ Design Doc: 执行工厂 Skill 接入与管理
 
-> 状态: Draft
+> 状态: In Review
 > 负责人: 待确认
 > Reviewers: 待确认
 > 关联 PRD: ../../product/prd/agent_skill接入与管理-prd.md
@@ -12,39 +12,30 @@
 ## 1.1 背景
 
 - 当前现状：
-  - 执行工厂已具备 `operator`、`toolbox`、`mcp` 等资源的接入与管理能力，但尚未形成 Skill 资源的统一接入、治理与运行时读取方案。
-  - Skill 既包含 `SKILL.md` 指令正文，也包含模板、脚本、参考资料等附属文件，其使用方式天然不同于单一配置类资源。
-  - 项目代码库内已存在 Skill 相关接口、模型、路由与测试实现，可作为本设计的实现输入，但不作为设计结构本身。
-
-- 存在问题：
-  - Skill 注册入口、元数据模型、文件索引和对象存储策略尚未在正式设计文档中统一定义。
-  - Skill 的管理接口、市场接口、运行时读取接口边界不清晰，容易造成职责混用。
-  - `SKILL.md` 与附件文件的读取存在渐进式加载诉求，若设计不当会导致上下文冗余、响应放大和权限暴露。
-  - 删除、下载、读取等链路同时依赖 DB 与对象存储，若缺少状态机与补偿策略，容易出现部分成功和残留数据。
+  - 执行工厂已经具备 `operator`、`toolbox`、`mcp` 等资源域的统一接入与治理能力，但 Skill 资源此前缺少正式实现设计文档。
 
 - 业务 / 技术背景：
-  - 执行工厂需要将外部 Skill 作为独立资源域纳入六边形架构，支持标准化注册、查询、下载、删除和运行时按需读取。
-  - 首版目标是建立 Skill 的整体实现基线，为后续版本治理、自动绑定、运行沙箱和市场化能力预留扩展点。
-  - 本文档聚焦“整体实现及详细设计”，仅描述首版正式方案的系统边界、架构和实现细节。
+  - Skill 是执行工厂新增资源类型，用于承载 Agent 可消费的能力包。
+  - 首版目标是建立 Skill 的正式资源模型、存储模型、接口分层、权限与业务域接入方式，以及渐进式加载能力。
 
 ---
 
 ## 1.2 目标
 
-- 为执行工厂定义一套可落地的 Skill 资源模型、接口分层和存储方案。
-- 支持 Skill 注册、列表、详情、内容读取、文件读取、zip 下载和删除的首版闭环能力。
-- 将 Skill 使用链路收敛为“列表匹配 -> 内容读取 -> 文件读取”的渐进式加载模式。
-- 明确 Skill 与权限体系、业务域体系、对象存储、审计日志和运行时调用链的对接方式。
-- 通过 `draft/active/error/deleting` 状态机和补偿策略控制 DB 与对象存储的一致性风险。
+- 建立 Skill 的首版正式实现设计，覆盖注册、查询、内容读取、文件读取、下载、删除和市场能力边界。
+- 统一 Skill 的资源命名与接口语义，对外使用 `skill_content` 与 `/content`，不保留 `instructions`、`guide` 旧语义。
+- 统一 Skill 业务状态语义，与现有资源域保持一致：`unpublish / published / offline`。
+- 将 Skill 纳入统一权限体系与业务域体系，资源类型固定为 `skill`。
+- 通过“列表/详情轻量化 -> 内容读取 -> 文件读取”的模式落实渐进式加载。
+- 明确当前代码的已实现能力、部分实现能力和未实现能力，作为后续开发和评审基线。
 
 ---
 
 ## 1.3 非目标（Out of Scope）
 
-- 首版不支持 Skill 在线编辑与内容回写。
-- 首版不支持 Skill 版本对比、回滚和多分支管理。
-- 首版不支持 Agent 与 Skill 的自动推荐、自动绑定和依赖求解。
-- 首版不负责 Skill 沙箱执行能力，仅负责 Skill 资源管理与运行时只读访问。
+- 不支持 Skill 在线编辑、在线回写和版本回滚。
+- 不支持 Skill 自动推荐、自动绑定和依赖求解。
+- 不支持 Skill 沙箱执行。
 
 ---
 
@@ -53,12 +44,14 @@
 | 术语 | 说明 |
 |------|------|
 | Skill | Agent 可消费的能力包，包含 `SKILL.md` 与附属文件 |
-| Skill Content | Skill 的 `SKILL.md` 正文，对外以只读内容提供 |
+| Skill Content | `SKILL.md` 正文，对外字段名为 `skill_content` |
 | Skill 文件 | Skill 内部模板、脚本、参考资料、配置等附属文件 |
 | 管理接口 | 面向 Skill 提供方和资源维护方的接口 |
 | 市场接口 | 面向 Skill 发现与选择场景的接口 |
-| 读取接口 | 面向 Guide 与文件渐进式读取的接口 |
-| 业务域 | 由平台统一治理的资源可见性和归属范围 |
+| 读取接口 | 面向 `skill_content` 与文件渐进式读取的接口 |
+| `deleting` | 删除补偿中间态，属于内部状态，不算业务状态，对外统一视为不存在 |
+| AuthService | 平台统一权限服务 |
+| BusinessDomainService | 平台统一业务域资源治理服务 |
 
 ---
 
@@ -71,13 +64,15 @@
 ## 🌍 2.1 系统上下文（C4 - Level 1）
 
 ### 参与者
-- 用户：Skill 提供方、Agent 配置方、平台运行链路
-- 外部系统：统一认证/鉴权服务、业务域服务、对象存储、数据库
-- 第三方服务：待确认
+- 用户：Skill 提供方、Agent 配置方、执行工厂运行链路
+- 外部系统：统一权限服务、业务域服务、对象存储、MariaDB
+- 第三方服务：新增S3对象存储
 
 ### 系统关系
 
-    [Skill 提供方 / Agent 配置方] → [执行工厂 Skill 服务] → [MySQL / 对象存储 / 权限服务 / 业务域服务]
+    [Skill 提供方 / Agent 配置方 / 运行链路]
+        → [执行工厂 Skill 资源域]
+        → [MariaDB / Object Storage / AuthService / BusinessDomainService]
 
 ---
 
@@ -85,17 +80,20 @@
 
 | 容器 | 技术栈 | 职责 |
 |------|--------|------|
-| API Service | Go + Gin | 暴露 Skill 管理、市场、读取相关 HTTP 接口 |
-| Core Service | Go | 实现 Skill 注册、查询、删除、下载、读取等核心业务逻辑 |
-| Parser | Go | 解析 `SKILL.md`、抽取 frontmatter、校验文件清单 |
-| Asset Store | Go + 对象存储 SDK | 管理 Skill 附件内容上传、下载、删除 |
-| Storage | MySQL + Object Storage | 保存 Skill 主数据、文件索引与文件正文 |
+| API Service | Go + Gin | 暴露 Skill 管理接口与读取接口；市场接口尚未公开暴露 |
+| Core Service | Go | 实现注册、查询、删除、下载、内容读取、文件读取、市场逻辑 |
+| Parser | Go | 解析 `SKILL.md` frontmatter、正文和 ZIP 内容 |
+| Asset Store | Go + S3 SDK / 本地文件 | 管理 Skill 附件对象写入、读取、删除 |
+| Storage | MariaDB + Object Storage | 保存 Skill 主记录、文件索引和文件内容 |
 
 ---
 
 ### 容器交互
 
-    Client → API Service → Core Service → Parser / Repository / Asset Store → MySQL / Object Storage
+    Client → API Service → Skill Core → Repository / Parser / Asset Store
+    Skill Core → AuthService / BusinessDomainService
+    Repository → MariaDB
+    Asset Store → Object Storage
 
 ---
 
@@ -105,14 +103,13 @@
 
 | 组件 | 职责 |
 |------|------|
-| SkillRegistry | 处理注册、删除、列表、详情、下载等管理能力 |
-| SkillMarket | 处理市场列表、市场详情与检索场景 |
-| SkillReader | 提供 Guide 与 Skill 文件的只读访问 |
-| SkillRuntimeBinder | 为 Agent 运行链路提供 Skill 绑定查询与只读解析能力 |
-| SkillParser | 解析 `SKILL.md`、校验 frontmatter、构造标准化元数据 |
-| SkillAssetStore | 管理对象存储中的附件上传、读取与删除 |
-| SkillRepository | 管理 Skill 主表与文件索引表的数据访问 |
-| Governance Adapter | 对接 AuthService、BusinessDomainService 和审计能力 |
+| SkillRegistry | 注册、删除、下载、管理列表、管理详情、市场列表、市场详情 |
+| SkillReader | `skill_content` 读取、单文件读取 |
+| SkillParser | `content` / `zip` 注册内容解析 |
+| SkillAssetStore | 附件内容写入、读取、删除；支持正式 S3 配置和本地回退 |
+| SkillRepository(DB) | Skill 主表访问 |
+| SkillFileIndex(DB) | Skill 文件索引访问 |
+| Governance Integration | 在 `skillRegistry` 中直接复用 `AuthService` 与 `BusinessDomainService` |
 
 ---
 
@@ -120,11 +117,11 @@
 
 ### 主流程
 
-    上传 zip / content → 解析 SKILL.md → 写入主表和索引 → 上传附件到对象存储 → Skill 激活 → 列表检索 → Guide 读取 → 文件按需读取
+    注册请求 → 解析 SKILL.md → 写主表 → 写文件索引 → 写对象存储 → 业务域绑定 → 列表发现 → 内容读取 → 文件读取 / 下载
 
 ### 子流程（可选）
 
-    删除请求 → 状态置为 deleting → 清理对象存储 → 清理索引与主记录 → 写入审计日志
+    删除请求 → CheckDeletePermission → 状态置为 deleting → 删除对象 → 删除索引 → 删除主记录 → 解绑业务域 → 删除权限策略
 
 ---
 
@@ -132,43 +129,47 @@
 
 | 决策 | 说明 |
 |------|------|
-| Skill 作为独立资源域 | Skill 与 `operator`、`toolbox`、`mcp` 职责不同，需要独立生命周期和接口模型 |
-| `SKILL.md` 入主表，附件入对象存储 | Guide 查询频繁且体量可控，适合保留在主表；附件正文放对象存储以避免 DB 膨胀 |
-| 管理/市场/读取三类接口分层 | 资源维护、资源发现、运行时读取的调用方和返回语义不同，必须拆分 |
-| 采用渐进式加载 | 列表不返回正文与文件，Guide 单独读取，文件再按需读取，减少不必要装载 |
-| 引入 `deleting` 和 `error` 状态 | 处理对象存储与 DB 间的部分成功问题，为补偿任务提供稳定中间态 |
-| 权限与业务域通过统一服务治理 | 避免在 Skill 资源表内固化本地归属判断规则，保持与现有资源域一致 |
+| Skill 独立为正式资源类型 | 已新增 `AuthResourceTypeSkill`，避免复用或伪装成其他资源类型 |
+| 管理 / 市场 / 读取三层分离 | 列表、详情、市场、内容读取、文件读取的调用方和返回负载不同，必须分层 |
+| `skill_content` 单独读取 | 管理列表与详情不返回正文，内容通过 `/content` 独立获取 |
+| 主表保存正文，附件入对象存储 | `SKILL.md` 读取频繁且大小可控；附件文件体量和类型不稳定，放对象存储更合理 |
+| 删除成功后物理删除主记录 | 首版不保留 `deleted` 终态，使用 `deleting` 作为中间补偿态 |
+| 权限和业务域沿用平台模式接入 | 不为 Skill 单独发明治理层，直接在 `skillRegistry` 上复用统一服务 |
+| 下载复用已登记文件索引重建 ZIP | 首版下载按“主记录 + 文件索引 + 对象存储”重建包，不保留原始 ZIP 原封不动回传 |
+| 文件读取不做文件级 ACL | Skill 附件可读性仅由 `execute` 权限决定，文件索引只承担定位职责 |
 
 ---
 
 ## 🚀 2.6 部署架构（Deployment）
 
 - 部署环境：K8s
-- 拓扑结构：Skill 能力作为执行工厂服务中的一组新增逻辑、路由和数据访问组件，与现有资源域共用服务进程、数据库和对象存储
-- 扩展策略：API 实例水平扩展；对象存储与数据库按现有平台能力扩展
+- 拓扑结构：Skill 作为执行工厂服务内的一个资源域实现，不单独拆服务
+- 扩展策略：服务实例水平扩展；MariaDB 储复用平台现有部署能力,对象存储需要单独配置，不支持默认存储；
 
 ---
 
 ## 🔐 2.7 非功能设计
 
 ### 性能
-- 列表查询只返回轻量摘要，避免读取 `SKILL.md` 与文件清单
-- Skill 内容读取直接走主表字段，减少对象存储依赖
-- 文件读取按 `skill_id + rel_path` 精确命中索引，避免全量扫描
+- 管理列表和详情仅返回轻量元数据，不返回 `skill_content` 与文件清单
+- 市场列表同样只返回轻量摘要，且仅允许 `published` 进入市场结果
+- `skill_content` 读取直接命中主表
+- 文件读取按 `(skill_id, rel_path)` 精确命中索引
 
 ### 可用性
-- 通过 `error`、`deleting` 状态和补偿任务处理跨存储介质失败
-- 对外将 `deleting` 视为不存在，避免暴露中间不一致状态
+- 删除使用 `deleting` 作为补偿态
+- `deleting` 对管理、市场、读取接口均不可见
+- 对象存储不可用时，当前支持本地存储回退，仅用于非正式对象存储场景
 
 ### 安全
-- 所有管理、市场、文件读取接口均接入统一权限服务
-- 文件读取执行路径标准化与访问级别校验，禁止路径穿越
-- 日志中禁止打印 Skill 文件正文和敏感配置
+- 注册、管理查询、删除、市场查询已接入统一权限/业务域骨架
+- 文件路径标准化，禁止路径穿越
+- 文件读取校验路径合法性与 `content_sha256`
+- 当前读取接口尚未完整接入权限与业务域校验，属于首版未收口项
 
 ### 可观测性
-- tracing：覆盖注册、删除、内容读取、文件读取、下载链路
-- logging：记录关键状态变更、权限校验失败、对象存储异常
-- metrics：记录注册成功率、读取成功率、删除补偿次数、接口时延
+- 设计要求：应记录注册失败、删除补偿、下载失败、文件校验失败
+- 当前实现状态：已有测试覆盖和错误返回，但未看到独立 metrics / tracing / 审计日志落地代码，属于未实现项
 
 ---
 
@@ -188,8 +189,8 @@
 
 ```json
 {
-  "file_type": "zip | content",
-  "content": "optional when file_type=content",
+  "file_type": "zip",
+  "file": "multipart 或原始内容",
   "source": "upload_zip",
   "extend_info": {
     "tag": "demo"
@@ -205,17 +206,16 @@
   "name": "demo-skill",
   "description": "demo",
   "version": "1.0.0",
-  "status": "active",
+  "status": "unpublish",
   "files": [
-    {
-      "rel_path": "templates/reply.md",
-      "access_level": "runtime_read"
-    }
+    "templates/reply.md"
   ]
 }
 ```
 
-### Skill 列表接口
+实现状态：已实现。
+
+### Skill 管理列表接口
 
 **Endpoint:** `GET /api/agent-operator-integration/v1/skills`
 
@@ -226,7 +226,7 @@
   "page": 1,
   "page_size": 10,
   "name": "demo",
-  "status": "active",
+  "status": "unpublish",
   "source": "upload_zip"
 }
 ```
@@ -235,19 +235,24 @@
 
 ```json
 {
-  "total": 1,
+  "total_count": 1,
+  "page": 1,
+  "page_size": 10,
   "data": [
     {
       "skill_id": "skill-xxx",
       "name": "demo-skill",
       "description": "demo",
-      "status": "active"
+      "version": "1.0.0",
+      "status": "unpublish"
     }
   ]
 }
 ```
 
-### Skill 详情接口
+实现状态：已实现。
+
+### Skill 管理详情接口
 
 **Endpoint:** `GET /api/agent-operator-integration/v1/skills/{skill_id}`
 
@@ -267,85 +272,16 @@
   "name": "demo-skill",
   "description": "demo",
   "version": "1.0.0",
-  "status": "active",
+  "status": "published",
   "source": "upload_zip",
-  "extend_info": {}
+  "extend_info": {},
+  "dependencies": {}
 }
 ```
 
-### Skill 删除接口
+实现状态：已实现。
 
-**Endpoint:** `DELETE /api/agent-operator-integration/v1/skills/{skill_id}`
-
-**Request:**
-
-```json
-{
-  "skill_id": "skill-xxx"
-}
-```
-
-**Response:**
-
-```json
-{
-  "success": true
-}
-```
-
-### Skill 下载接口
-
-**Endpoint:** `GET /api/agent-operator-integration/v1/skills/{skill_id}/download`
-
-**Request:**
-
-```json
-{
-  "skill_id": "skill-xxx"
-}
-```
-
-**Response:**
-
-```json
-{
-  "download_mode": "stream",
-  "file_name": "demo-skill.zip"
-}
-```
-
-### Skill 市场接口
-
-**Endpoint:** `GET /api/agent-operator-integration/v1/skills/market`
-
-**Request:**
-
-```json
-{
-  "page": 1,
-  "page_size": 10,
-  "name": "demo",
-  "tag": "assistant"
-}
-```
-
-**Response:**
-
-```json
-{
-  "total": 1,
-  "data": [
-    {
-      "skill_id": "skill-xxx",
-      "name": "demo-skill",
-      "description": "demo",
-      "source": "upload_zip"
-    }
-  ]
-}
-```
-
-### Skill 内容读取接口
+### Skill 内容接口
 
 **Endpoint:** `GET /api/agent-operator-integration/v1/skills/{skill_id}/content`
 
@@ -362,16 +298,17 @@
 ```json
 {
   "skill_id": "skill-xxx",
-  "content": "# Instructions\n...",
-  "status": "active",
+  "skill_content": "# Role\n...",
+  "status": "published",
   "files": [
     {
-      "rel_path": "templates/reply.md",
-      "access_level": "runtime_read"
+      "rel_path": "templates/reply.md"
     }
   ]
 }
 ```
+
+实现状态：已实现。
 
 ### Skill 文件读取接口
 
@@ -396,6 +333,63 @@
 }
 ```
 
+实现状态：已实现。
+
+### Skill 下载接口
+
+**Endpoint:** `GET /api/agent-operator-integration/v1/skills/{skill_id}/download`
+
+**Request:**
+
+```json
+{
+  "skill_id": "skill-xxx"
+}
+```
+
+**Response:**
+
+```json
+{
+  "response_type": "application/zip",
+  "file_name": "demo-skill.zip"
+}
+```
+
+实现状态：已实现。
+
+### Skill 市场接口
+
+**Endpoint:** `GET /api/agent-operator-integration/v1/skills/market`
+
+**Request:**
+
+```json
+{
+  "page": 1,
+  "page_size": 10,
+  "name": "demo"
+}
+```
+
+**Response:**
+
+```json
+{
+  "total_count": 1,
+  "data": [
+    {
+      "skill_id": "skill-xxx",
+      "name": "demo-skill",
+      "description": "demo"
+    }
+  ]
+}
+```
+
+实现状态：部分实现。
+说明：逻辑层接口 `QuerySkillMarketList` / `GetSkillMarketDetail` 已实现并有单测，但当前未接入公开 handler、路由和 API 文档。
+
 ---
 
 ## 🗂️ 3.2 数据模型
@@ -404,63 +398,74 @@
 
 | 字段 | 类型 | 说明 |
 |------|------|------|
-| skill_id | string | Skill 主键 |
+| skill_id | string | Skill 业务主键 |
 | name | string | Skill 名称 |
 | description | string | Skill 描述 |
 | skill_content | text | `SKILL.md` 正文 |
-| version | string | Skill 版本 |
-| status | enum | `draft/active/error/deleting` |
-| source | string | 来源，如 `upload_zip`、`raw_content` |
-| extend_info | json | 扩展元数据 |
-| dependencies | json | 依赖信息 |
-| file_manifest | json | 精简文件清单 |
+| version | string | 版本号 |
+| status | enum | `unpublish/published/offline`，`deleting` 仅作为内部补偿态 |
+| source | string | 来源 |
+| extend_info | json string | 扩展元数据 |
+| dependencies | json string | 依赖声明 |
+| file_manifest | json string | 精简文件摘要 |
 | create_user | string | 创建人 |
 | update_user | string | 更新人 |
-| create_time | datetime | 创建时间 |
-| update_time | datetime | 更新时间 |
-| delete_time | datetime | 删除时间，待确认 |
+| create_time | int64 | 创建时间纳秒 |
+| update_time | int64 | 更新时间纳秒 |
+| delete_time | int64 | 删除时间纳秒 |
+| delete_user | string | 删除人 |
+
+实现状态：已实现。
 
 ### SkillFileIndex
 
 | 字段 | 类型 | 说明 |
 |------|------|------|
 | skill_id | string | Skill 主键 |
-| rel_path | string | 标准化后的相对路径 |
-| path_hash | string | 路径哈希，用于辅助检索 |
-| storage_key | string | 对象存储键 |
-| file_type | string | 文件类型，如 `instruction`、`template`、`script` |
-| content_sha256 | string | 文件内容校验值 |
+| rel_path | string | 标准化相对路径 |
+| path_hash | string | 相对路径 MD5 |
+| storage_key | string | 对象存储 key |
+| file_type | string | 文件分类 |
+| content_sha256 | string | 文件内容 SHA-256 |
+| mime_type | string | 文件 MIME |
 | size | int64 | 文件大小 |
-| mime_type | string | MIME 类型 |
-| access_level | enum | `public_manifest/runtime_read/restricted` |
-| create_time | datetime | 创建时间 |
-| update_time | datetime | 更新时间 |
+| create_time | int64 | 创建时间纳秒 |
+| update_time | int64 | 更新时间纳秒 |
 
-### SkillSpec
+实现状态：已实现。
+
+### SkillSpec（解析视图）
 
 | 字段 | 类型 | 说明 |
 |------|------|------|
-| name | string | `SKILL.md` 中的必填名称 |
-| description | string | `SKILL.md` 中的必填描述 |
-| version | string | 可选版本，缺省时由系统生成 |
-| dependencies | array | 声明的依赖信息 |
-| metadata | map | 扩展信息 |
-| files | array | 文件声明，仅作为校验与展示参考 |
+| name | string | frontmatter 必填字段 |
+| description | string | frontmatter 必填字段 |
+| version | string | 可选版本，默认补 `1.0.0` |
+| dependencies | map | 依赖声明 |
+| metadata | map | 扩展元数据 |
+
+实现状态：已实现。
 
 ---
 
 ## 💾 3.3 存储设计
 
-- 存储类型：MySQL + 对象存储
+- 存储类型：MariaDB + 对象存储
 - 数据分布：
-  - MySQL 保存 Skill 主数据、状态、依赖、文件索引和轻量清单
-  - 对象存储保存 Skill 附件正文
-  - `SKILL.md` 正文同时保存在主表中，用于 Guide 快速读取
+  - `t_skill_repository` 保存 Skill 主记录和 `skill_content`
+  - `t_skill_file_index` 保存附件索引
+  - 对象存储保存附件正文
 - 索引设计：
-  - 主表按 `skill_id` 主键索引
-  - 列表场景按 `status`、`name`、`source`、`update_time` 建立查询索引
-  - 文件索引表按 `(skill_id, rel_path)` 建唯一索引
-  - `path_hash` 仅用于辅助查找，不能替代真实路径校验
+  - `t_skill_repository` 通过 `f_skill_id` 精确查询
+  - 列表查询按 `name/source/create_user/status` 过滤
+  - `t_skill_file_index` 通过 `(skill_id, rel_path)` 精确读取
+  - `path_hash` 仅作为辅助字段，不替代路径校验
+
+实现状态：
+- 主表字段和索引：已实现
+- 文件索引表：已实现
+- 正式 S3 配置接入：已实现
+- 流式大文件下载：未实现，当前下载为内存组包
 
 ---
 
@@ -468,87 +473,169 @@
 
 ### Skill 注册流程
 
-1. 接收 `zip` 或 `content` 注册请求并完成权限校验。
-2. 对 `zip` 请求执行解包，校验包内存在 `SKILL.md`。
-3. 解析 `SKILL.md` frontmatter 与正文，校验 `name`、`description` 等必填字段。
-4. 标准化所有附件路径，拒绝绝对路径、空路径和路径穿越。
-5. 生成 Skill 主记录、文件索引记录和文件清单，状态初始为 `draft`。
-6. 在 DB 事务中写入主表和索引表。
-7. 提交事务后将附件正文上传至对象存储。
-8. 全部上传成功后将状态更新为 `active`；若上传失败则更新为 `error` 并记录补偿信息。
+1. API 层绑定 header、form/json/multipart 参数。
+2. `skillRegistry.RegisterSkill` 调用 `AuthService.GetAccessor`。
+3. 调用 `CheckCreatePermission(ctx, accessor, skill)`。
+4. `skillParser` 根据 `file_type` 解析 `content` 或 `zip`。
+5. `parseSkillContent` 提取 frontmatter，构建主记录，正文写入 `SkillContent`。
+6. 若为 ZIP，解析 `SKILL.md` 之外的文件，生成 `SkillFileSummary` 与 `skillAsset`。
+7. 开启 DB 事务，写入主表。
+8. 状态保持为 `unpublish`。
+9. 将附件内容写入对象存储 / 本地存储，并写入文件索引表。
+10. 调用 `BusinessDomainService.AssociateResource` 绑定业务域。
+11. 返回注册响应。
+
+异常流：
+- `SKILL.md` 不合法、缺失 frontmatter、路径非法时直接失败。
+- 附件写入或索引写入失败时整体失败。
+
+实现状态：已实现。
+未实现项：注册成功后未看到 `CreateOwnerPolicy` 调用，若平台要求 owner 策略自动创建，需要补充实现。
 
 ### Skill 删除流程
 
-1. 校验 Skill 存在且调用方具有删除权限。
-2. 将 Skill 状态更新为 `deleting`。
-3. 查询该 Skill 对应的全部文件索引。
-4. 删除对象存储中的附件内容。
-5. 删除文件索引记录。
-6. 删除或归档主记录，并清理业务域关联与权限策略。
-7. 记录审计日志；若任一清理步骤失败，则保留 `deleting` 状态等待补偿。
+1. 查询 Skill 主记录。
+2. 校验状态可删除。
+3. 调用 `GetAccessor` 和 `CheckDeletePermission`。
+4. 开启 DB 事务并将状态更新为 `deleting`。
+5. 查询该 Skill 的文件索引。
+6. 删除对象存储单文件。
+7. 删除对象存储目录前缀。
+8. 删除文件索引记录。
+9. 删除主表记录。
+10. 调用 `BatchDisassociateResource` 解绑业务域。
+11. 调用 `DeletePolicy` 删除权限策略。
 
-### Guide 读取流程
+异常流：
+- 任意对象删除失败时，主表保留 `deleting`。
+- 成功后主表物理删除，不保留 `deleted` 终态。
 
-1. 校验 Skill 存在且状态为 `active`。
-2. 校验当前调用方具备读取权限。
-3. 从主表读取 `skill_content` 与精简文件清单。
-4. 返回 Guide 正文和可展示文件清单，不访问对象存储。
+实现状态：已实现。
+未实现项：独立补偿任务未实现；审计日志未实现。
+
+### Skill 管理查询流程
+
+1. 列表查询先 `GetAccessor`。
+2. DB 侧按名称、来源、状态、创建人等条件查询。
+3. 逻辑层剔除 `deleting`，并仅对外暴露符合当前接口语义的业务状态。
+4. 调用 `ResourceFilterIDs(..., view)` 过滤可见 Skill。
+5. 返回 `SkillSummary`。
+6. 详情查询先查单条记录，再做 `CheckViewPermission`。
+
+实现状态：已实现。
+注意：列表总数当前基于 DB count 计算，权限过滤后可能与最终 `data` 长度存在短暂差异。
+
+### Skill 市场查询流程
+
+1. 获取访问者 `Accessor`。
+2. 调用 `ResourceListIDs(..., public_access)`。
+3. 调用 `BusinessDomainService.BatchResourceList` 获取业务域资源映射。
+4. 查询候选 Skill 列表。
+5. 逻辑层过滤掉 `deleting`、无公共访问权限、无业务域映射、非 `published` 的 Skill。
+6. 市场详情通过 `CheckPublicAccessPermission` 和业务域映射校验后返回。
+
+实现状态：部分实现。
+说明：逻辑层已实现并有单测，公开 HTTP 层未实现。
+
+### Skill 内容读取流程
+
+1. `GetSkillContent` 查询主记录。
+2. 若不存在或为 `deleting`，返回未找到。
+3. 直接从主记录返回 `skill_content` 和 `file_manifest`。
+
+实现状态：已实现。
+说明：当前已接入 `GetAccessor + CheckViewPermission + BatchResourceList`。
 
 ### Skill 文件读取流程
 
-1. 校验 Skill 存在且状态为 `active`。
-2. 对 `rel_path` 执行路径标准化。
-3. 校验调用方具有文件读取权限。
-4. 按 `(skill_id, rel_path)` 查询索引记录。
-5. 校验 `access_level` 允许当前读取场景。
-6. 从对象存储读取文件正文并校验 `content_sha256`。
-7. 返回文件内容与 MIME 信息。
+1. 查询主记录，要求状态可被运行时消费；附件读取权限由 `execute` 决定。
+2. 标准化 `rel_path`。
+3. 按 `(skill_id, rel_path)` 查询文件索引。
+4. 不再依赖文件级访问控制字段，附件读取权限直接由 Skill `execute` 权限决定。
+5. 从对象存储读取正文。
+6. 校验 `content_sha256`。
+7. 返回文件正文和元数据。
+
+实现状态：已实现。
+说明：当前已接入 `GetAccessor + CheckExecutePermission + BatchResourceList`，并保留路径校验、索引校验和 SHA-256 校验。
+
+### Skill ZIP 下载流程
+
+1. 查询主记录，`deleting` 不可下载。
+2. 调用 `GetAccessor` 和 `CheckViewPermission`。
+3. 查询文件索引列表。
+4. 在内存中创建 ZIP。
+5. 重新生成 `SKILL.md`：
+   - frontmatter：`name/description/version`
+   - body：`skill_content`
+6. 逐个读取对象存储文件并写入 ZIP。
+7. 返回 zip 二进制和下载文件名。
+
+实现状态：已实现。
+注意：当前下载包不是原始上传 ZIP 的原封重放，而是按主数据和附件索引重建。
 
 ---
 
 ## 🧠 3.5 关键逻辑设计
 
-### 路径标准化模块
-- 使用 `filepath.Clean` 处理原始路径。
-- 将 `\` 统一替换为 `/`。
-- 去除前导 `/`。
-- 拒绝 `.`、`..`、空字符串和目录路径。
+### `SKILL.md` 解析逻辑
+- 通过 `---` 分隔 frontmatter 与正文。
+- frontmatter 必填 `name`、`description`。
+- `version` 缺省默认 `1.0.0`。
+- `metadata` 映射到 `extend_info`。
+- 正文写入 `SkillContent`。
 
-### `SKILL.md` 解析模块
-- 将文档拆分为 frontmatter 与 markdown body。
-- frontmatter 抽取 `name`、`description`、`version`、`dependencies`、`metadata`、`files`。
-- markdown body 直接保存为 `skill_content`。
-- 若关键字段缺失或 YAML 非法，返回明确参数错误。
+### ZIP 路径标准化逻辑
+- 使用 `filepath.Clean`
+- 统一转换为 `/`
+- 去除前导 `./` 和 `/`
+- 拒绝空路径、`.`、`..`、路径穿越
 
-### 状态机模块
-- `draft`：主记录和索引已创建，附件尚未全部就绪。
-- `active`：主记录、索引和对象存储均已就绪，可对外提供能力。
-- `error`：注册或补偿失败，需要人工或异步任务修复。
-- `deleting`：删除流程中间态，对外不可见。
+### 文件访问控制逻辑
+- 文件索引只承担路径定位、类型标识和内容校验职责
+- 附件可读性仅由 Skill `execute` 权限决定
+- 文件摘要是否出现在内容接口中，仅由内容接口返回模型决定
 
-### 权限与业务域治理模块
-- 注册前校验 `create` 权限。
-- 查询、读取、下载、删除分别校验对应资源操作权限。
-- 业务域关联通过统一服务建立和解除，不在 Skill 表内固化归属字段。
-- 市场接口在权限过滤后叠加业务域可见性过滤。
+### 状态机逻辑
+- `unpublish`：资源已存在但未进入发布态
+- `published`：可进入市场并可被正常发现
+- `offline`：资源下线，不进入市场
+- `deleting`：删除补偿中间态，对外不可见
 
-### 下载打包模块
-- 以主表中的 `skill_content` 和文件索引为数据源重建 zip 包。
-- 打包时必须写入 `SKILL.md`。
-- 仅打包已登记且允许导出的文件。
-- 任一对象缺失时整体失败，不返回不完整压缩包。
+### 权限与业务域治理逻辑
+- 资源类型固定为 `AuthResourceTypeSkill`
+- 注册：`CheckCreatePermission + AssociateResource`
+- 管理查询：`ResourceFilterIDs(..., view)`
+- 管理详情 / 内容读取：`CheckViewPermission`
+- 附件读取：`CheckExecutePermission`
+- 删除：`CheckDeletePermission + BatchDisassociateResource + DeletePolicy`
+- 市场列表：`ResourceListIDs(..., public_access) + BatchResourceList`，且仅返回 `published`
+- 市场详情：`CheckPublicAccessPermission + BatchResourceList`，且仅返回 `published`
+
+当前实现缺口：
+- 下载接口当前复用 `view` 权限，未定义独立 `download` 操作
 
 ---
 
 ## ❗ 3.6 错误处理
 
-- `SKILL.md` 缺失或解析失败：返回参数错误，不创建 Skill。
-- 文件路径非法：返回参数错误，拒绝注册。
-- 权限校验失败：返回无权限错误并记录审计日志。
-- Skill 不存在或处于 `deleting`：对外返回未找到。
-- 对象存储上传失败：状态置为 `error`，触发补偿。
-- 对象存储删除失败：保留 `deleting` 状态，等待补偿任务处理。
-- 下载阶段存在索引缺失或对象缺失：返回下载失败，不返回部分成功结果。
+- 参数错误：
+  - `SKILL.md not found in zip`
+  - `invalid SKILL.md format`
+  - `invalid skill file path`
+- 业务错误：
+  - `skill not found`
+  - `skill can not be deleted in status`
+  - `skill file access denied`
+- 一致性错误：
+  - 对象存储读取失败
+  - 文件校验和不匹配
+  - 删除过程中对象残留
+
+处理策略：
+- `deleting` 统一对外视为不存在
+- 下载和文件读取遇到对象缺失时整体失败，不返回部分内容
+- 当前未实现统一错误码枚举和独立补偿任务，需要后续补足
 
 ---
 
@@ -556,30 +643,50 @@
 
 | 配置项 | 默认值 | 说明 |
 |--------|--------|------|
-| skill.storage.bucket | 待确认 | Skill 附件对象存储桶 |
-| skill.storage.prefix | `skills/` | Skill 对象存储路径前缀 |
-| skill.register.max_zip_size | 待确认 | 注册允许的最大 zip 大小 |
-| skill.register.max_file_count | 待确认 | 注册允许的最大文件数量 |
-| skill.download.max_package_size | 待确认 | 下载打包允许的最大包体积 |
-| skill.compensation.enabled | `true` | 是否启用补偿任务 |
-| skill.compensation.scan_interval | 待确认 | 补偿任务扫描周期 |
-| skill.file.read.allowed_levels | `runtime_read,public_manifest` | 默认允许运行时读取的文件级别 |
+| `s3.endpoint` | 无 | 对象存储地址 |
+| `s3.access_id` | 无 | 对象存储访问 key |
+| `s3.access_secret_key` | 无 | 对象存储 secret |
+| `s3.bucket` | 无 | 对象存储 bucket |
+| `s3.region` | `us-east-1` | 区域 |
+| `s3.use_ssl` | `false` | 是否启用 SSL |
+| `s3.storage_prefix` | `aoi_skill_assets` | Skill 对象存储前缀 |
+
+实现状态：
+- 正式配置结构：已实现
+- 环境变量兼容回退：已实现
+- 本地文件存储回退：已实现
 
 ---
 
 ## 📊 3.8 可观测性实现
 
 - tracing：
-  - 在注册、删除、Guide 读取、文件读取、下载链路创建 span
-  - 记录 `skill_id`、操作类型、状态变更和对象存储调用结果
+  - 设计要求：注册、删除、下载、内容读取、文件读取、市场查询均应埋点
+  - 当前状态：未看到 Skill 独立 tracing 实现，未实现
 
 - metrics：
-  - `skill_register_total{result}`
-  - `skill_read_total{type,result}`
-  - `skill_delete_total{result}`
-  - `skill_compensation_total{status,result}`
-  - `skill_request_latency_ms{api}`
+  - 设计要求：注册成功率、读取成功率、下载失败次数、删除补偿次数、对象残留次数
+  - 当前状态：未看到 Skill 独立 metrics 实现，未实现
 
 - logging：
-  - 记录注册解析失败、路径非法、权限拒绝、对象存储异常、补偿执行结果
-  - 日志仅记录 `skill_id`、`rel_path`、状态和错误摘要，不记录文件正文
+  - 当前实现依赖通用错误返回和基础日志能力
+  - 设计要求：应明确记录权限失败、业务域过滤失败、对象存储异常、校验和异常
+  - 当前状态：部分实现
+
+---
+
+## 实现状态汇总
+
+| 能力 | 状态 | 说明 |
+|------|------|------|
+| Skill 注册 | 已实现 | 支持 `zip` / `content` |
+| 管理列表 / 管理详情 | 已实现 | 已接入管理侧权限过滤 |
+| `skill_content` 读取 | 已实现 | 已公开暴露，走 `view` + 业务域校验 |
+| 文件读取 | 已实现 | 已切换到 `execute` + 业务域校验 |
+| ZIP 下载 | 已实现 | 管理侧路由已暴露 |
+| 删除补偿态 | 已实现 | `deleting` 为内部态，对外不可见 |
+| 市场列表 / 市场详情逻辑 | 部分实现 | 逻辑层已实现，未暴露 handler/route/doc |
+| 权限治理骨架 | 已实现 | 已复用 `AuthService` |
+| 业务域治理骨架 | 已实现 | 已复用 `BusinessDomainService` |
+| 运行时绑定接口 | 未实现 | 仅有接口，无实现代码 |
+| 补偿任务 / 审计日志 / 指标 | 未实现 | 需后续补足 |

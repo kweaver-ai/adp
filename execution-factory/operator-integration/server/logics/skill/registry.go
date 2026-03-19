@@ -102,10 +102,6 @@ func (r *skillRegistry) RegisterSkill(ctx context.Context, req *interfaces.Regis
 	if err != nil {
 		return nil, err
 	}
-	skill.Status = model.SkillStatusActive
-	if err = r.skillRepo.UpdateSkillStatus(ctx, tx, skillID, model.SkillStatusActive, req.UserID); err != nil {
-		return nil, err
-	}
 	if len(assets) > 0 {
 		fileIndices, buildErr := r.persistSkillAssets(ctx, skillID, assets)
 		if buildErr != nil {
@@ -129,7 +125,7 @@ func (r *skillRegistry) RegisterSkill(ctx context.Context, req *interfaces.Regis
 		Name:        skill.Name,
 		Description: skill.Description,
 		Version:     skill.Version,
-		Status:      model.SkillStatusActive,
+		Status:      skill.Status,
 		Files:       filePaths,
 	}, nil
 }
@@ -421,7 +417,7 @@ func (r *skillRegistry) GetSkillMarketDetail(ctx context.Context, req *interface
 	if err != nil {
 		return nil, err
 	}
-	if skill == nil || skill.Status == model.SkillStatusDeleting {
+	if skill == nil || skill.Status == model.SkillStatusDeleting || skill.Status != model.SkillStatusPublished {
 		return nil, fmt.Errorf("skill not found: %s", req.SkillID)
 	}
 	accessor, err := r.AuthService.GetAccessor(ctx, req.UserID)
@@ -509,7 +505,6 @@ func (r *skillRegistry) persistSkillAssets(ctx context.Context, skillID string, 
 			FileType:      asset.FileType,
 			ContentSHA256: checksum,
 			MimeType:      asset.MimeType,
-			AccessLevel:   string(interfaces.SkillFileAccessLevelRuntimeRead),
 			Size:          int64(len(asset.Content)),
 		})
 	}
