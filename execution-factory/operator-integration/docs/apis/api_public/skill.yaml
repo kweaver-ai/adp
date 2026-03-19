@@ -161,7 +161,7 @@ paths:
           description: "Skill 状态"
           schema:
             type: string
-            enum: ["draft", "active", "error", "deleting"]
+            enum: ["unpublish", "published", "offline"]
         - name: source
           in: query
           description: "Skill 来源"
@@ -236,7 +236,7 @@ paths:
                 $ref: "#/components/schemas/Error"
     delete:
       summary: "删除 Skill"
-      description: "物理删除指定 Skill。删除流程会先进入 deleting 中间态，完成对象存储与文件索引清理后再物理删除主记录；deleting 对外视为不存在。"
+      description: "物理删除指定 Skill。删除流程会先进入 deleting 中间态，完成对象存储与文件索引清理后再物理删除主记录；deleting 为内部补偿态，对外视为不存在。"
       tags:
         - "Skill 管理"
       parameters:
@@ -359,7 +359,7 @@ paths:
   /skills/{skill_id}/files/read:
     post:
       summary: "读取 Skill 文件"
-      description: "按相对路径读取 Skill 内部文件。处于 deleting 中间态的 Skill 对外视为不存在。"
+      description: "按相对路径读取 Skill 内部文件。处于 deleting 中间态的 Skill 对外视为不存在。附件读取权限以 Skill execute 权限为准。"
       tags:
         - "Skill 读取"
       parameters:
@@ -484,7 +484,7 @@ components:
               type: string
             status:
               type: string
-              enum: ["draft", "active", "error", "deleting"]
+              enum: ["unpublish", "published", "offline"]
             files:
               type: array
               items:
@@ -555,7 +555,7 @@ components:
           type: string
         status:
           type: string
-          enum: ["draft", "active", "error", "deleting"]
+          enum: ["unpublish", "published", "offline"]
         source:
           type: string
         create_user:
@@ -582,7 +582,7 @@ components:
           type: string
         status:
           type: string
-          enum: ["draft", "active", "error", "deleting"]
+          enum: ["unpublish", "published", "offline"]
         source:
           type: string
         dependencies:
@@ -609,9 +609,6 @@ components:
           type: string
         file_type:
           type: string
-        access_level:
-          type: string
-          enum: ["public_manifest", "runtime_read", "restricted"]
         size:
           type: integer
           format: int64
@@ -638,7 +635,7 @@ components:
                 $ref: "#/components/schemas/SkillFileSummary"
             status:
               type: string
-              enum: ["draft", "active", "error", "deleting"]
+              enum: ["unpublish", "published", "offline"]
 
     ReadSkillFileReq:
       type: object
@@ -668,8 +665,6 @@ components:
             mime_type:
               type: string
             file_type:
-              type: string
-            access_level:
               type: string
 
     Error:

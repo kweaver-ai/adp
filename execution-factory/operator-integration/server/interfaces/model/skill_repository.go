@@ -13,10 +13,10 @@ import (
 type SkillStatus string
 
 const (
-	SkillStatusDraft    SkillStatus = "draft"
-	SkillStatusActive   SkillStatus = "active"
-	SkillStatusError    SkillStatus = "error"
-	SkillStatusDeleting SkillStatus = "deleting"
+	SkillStatusUnpublish SkillStatus = "unpublish"
+	SkillStatusPublished SkillStatus = "published"
+	SkillStatusOffline   SkillStatus = "offline"
+	SkillStatusDeleting  SkillStatus = "deleting" // deleting 仅作为内部删除补偿态使用
 )
 
 // SkillRepositoryDB Skill 主表
