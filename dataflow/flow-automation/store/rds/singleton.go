@@ -14,4 +14,8 @@ func InitSingleton() {
 	rds.SetDagInstanceExtDataDao(NewDagInstanceExtDataDao())
 	rds.SetExecutorDao(NewExecutor())
 	rds.SetTaskCache(NewTaskCache())
+	rds.SetFlowStorageDao(NewFlowStorageDao())
+	rds.SetFlowFileDao(NewFlowFileDao())
+	rds.SetFlowFileDownloadJobDao(NewFlowFileDownloadJobDao())
+	rds.SetFlowTaskResumeDao(NewFlowTaskResumeDao())
 }

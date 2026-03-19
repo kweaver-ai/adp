@@ -20,6 +20,7 @@ import (
 	cconfig "github.com/kweaver-ai/adp/autoflow/flow-automation/driveradapters/config"
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/driveradapters/database_con"
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/driveradapters/dataflow"
+	"github.com/kweaver-ai/adp/autoflow/flow-automation/driveradapters/dataflow_doc"
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/driveradapters/executor"
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/driveradapters/health"
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/driveradapters/master"
@@ -38,6 +39,7 @@ import (
 	traceLog "github.com/kweaver-ai/adp/autoflow/flow-automation/libs/go/telemetry/log"
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/libs/go/telemetry/trace"
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/module/initial"
+	"github.com/kweaver-ai/adp/autoflow/flow-automation/pkg/download_pool"
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/pkg/ecron/analysis"
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/pkg/ecron/management"
 	sdktrace "go.opentelemetry.io/otel/sdk/trace"
@@ -64,11 +66,13 @@ type app struct {
 	adRESTHandler       anydata.RESTHandler
 	alarmRESTHandler    alarm.RESTHandler
 	dfRESTHandler       dataflow.RESTHandler
+	dfDocRESTHandler    dataflow_doc.RESTHandler
 	coRESTHandler       operators.RESTHandler
 	obsRESTHandler      observability.RESTHandler
 	dvRESTHandler       versions.RESTHandler
 	dbRESTHandler       database_con.RESTHandler
 	sandboxRESTHandler  sandbox.RESTHandler
+	downloadPool        download_pool.Pool
 }
 
 func CacheControl() gin.HandlerFunc {
@@ -126,6 +130,7 @@ func (a *app) Start() {
 		groupV2 := engine.Group(common.APIPREFIXV2)
 		groupV2.Use(wlHttp.MiddlewareTrace())
 		a.mRESTHandler.RegisterAPIv2(groupV2)
+		a.dfDocRESTHandler.RegisterAPIv2(groupV2)
 
 		if err := engine.Run(":" + port); err != nil {
 			log.Errorln(err)
@@ -164,6 +169,13 @@ func (a *app) Start() {
 	go func() {
 		a.tMaster.Run()
 	}()
+
+	// 启动文件下载线程池
+	if a.downloadPool != nil {
+		go func() {
+			a.downloadPool.Start(context.Background())
+		}()
+	}
 }
 
 func StartDataFlow() {
@@ -215,11 +227,13 @@ func StartDataFlow() {
 		alarmRESTHandler:    alarm.NewRESTHandler(),
 		adRESTHandler:       anydata.NewRestHandler(),
 		dfRESTHandler:       dataflow.NewRESTHandler(),
+		dfDocRESTHandler:    dataflow_doc.NewRESTHandler(),
 		coRESTHandler:       operators.NewRESTHandler(),
 		obsRESTHandler:      observability.NewRESTHandler(),
 		dvRESTHandler:       versions.NewRESTHandler(),
 		dbRESTHandler:       database_con.NewRestHandler(),
 		sandboxRESTHandler:  sandbox.NewRESTHandler(),
+		downloadPool:        download_pool.NewPool(),
 	}
 	server.Start()
 }
@@ -251,8 +265,8 @@ func Release() {
 }
 
 func main() {
-	go StartEcronManagement()
-	go StartEcronAnalysis()
+	// go StartEcronManagement()
+	// go StartEcronAnalysis()
 	go StartDataFlow()
 
 	c := make(chan os.Signal, 1)

@@ -13,7 +13,6 @@
 | 需求号   | 276                                          |
 | 类型     | Feature                                      |
 | 标题     | 【Dataflow】内容数据湖解耦 - 适配 OssGateway |
-| 状态     | In Planning                                  |
 | 需求来源 | 产品规划                                     |
 
 #### 需求场景

@@ -19,6 +19,7 @@ import (
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/logics/inbox"
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/logics/mgnt"
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/pkg/actions"
+	"github.com/kweaver-ai/adp/autoflow/flow-automation/pkg/download_pool"
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/pkg/entity"
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/pkg/mod"
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/pkg/rds"
@@ -147,6 +148,7 @@ func (m *mqHandler) Subscribe() {
 		common.TopicContentPipelineFulltextResult:         m.handleContentPipelineFulltextResult,
 		common.TopicContentPipelineDocFormatConvertResult: m.handleContentPipelineDocFormatConvertResult,
 		common.TopicAsyncTaskResult:                       m.handleAsyncTaskResult,
+		common.TopicFlowFileDownloadResult:                m.handleFlowFileDownloadResult,
 	}
 
 	for _, val := range docTopics {
@@ -1096,6 +1098,79 @@ func (m *mqHandler) handleAsyncTaskResult(message []byte) error {
 			log.Infof("[handleAsyncTaskResult] Successfully continued instance %s, taskType: %s",
 				ins.ID, notification.TaskType)
 		}
+	}
+
+	return nil
+}
+
+// handleFlowFileDownloadResult 处理文件下载结果
+func (m *mqHandler) handleFlowFileDownloadResult(message []byte) error {
+	if len(message) == 0 {
+		return nil
+	}
+
+	var err error
+	ctx, span := trace.StartConsumerSpan(context.Background())
+	defer func() { trace.TelemetrySpanEnd(span, err) }()
+	log := traceLog.WithContext(ctx)
+
+	var result download_pool.FlowFileDownloadResult
+	if err = json.Unmarshal(message, &result); err != nil {
+		log.Warnf("[handleFlowFileDownloadResult] unmarshal message error: %s", err.Error())
+		return nil
+	}
+
+	log.Infof("[handleFlowFileDownloadResult] Received result for file %d, status: %s",
+		result.FileID, result.Status)
+
+	// 查询恢复记录
+	resumeList, err := rds.GetFlowTaskResumeDao().List(ctx, &rds.FlowTaskResumeQueryOptions{
+		ResourceType: "file",
+		ResourceID:   &result.FileID,
+		Limit:        10,
+	})
+	if err != nil {
+		log.Warnf("[handleFlowFileDownloadResult] query task_resume failed: %s", err.Error())
+		return err
+	}
+
+	if len(resumeList) == 0 {
+		log.Infof("[handleFlowFileDownloadResult] No blocked instances found for file %d", result.FileID)
+		return nil
+	}
+
+	// 确定任务状态和输出
+	var taskStatus entity.TaskInstanceStatus
+	var taskResult map[string]interface{}
+
+	if result.Status == "success" && result.NodeOutput != nil {
+		taskStatus = entity.TaskInstanceStatusSuccess
+		taskResult = result.NodeOutput
+	} else {
+		taskStatus = entity.TaskInstanceStatusFailed
+		taskResult = map[string]interface{}{
+			"error":      result.ErrorMsg,
+			"error_code": result.ErrorCode,
+			"status":     "failed",
+		}
+	}
+
+	// 恢复所有阻塞的任务实例
+	for _, resume := range resumeList {
+		err := m.mgnt.ContinueBlockInstances(ctx, []string{resume.TaskInstanceID}, taskResult, taskStatus)
+		if err != nil {
+			log.Warnf("[handleFlowFileDownloadResult] ContinueBlockInstances failed, task_instance_id: %s, err: %s",
+				resume.TaskInstanceID, err.Error())
+			continue
+		}
+
+		// 恢复成功后删除恢复记录
+		if delErr := rds.GetFlowTaskResumeDao().Delete(ctx, resume.ID); delErr != nil {
+			log.Warnf("[handleFlowFileDownloadResult] delete task_resume failed: %s", delErr.Error())
+		}
+
+		log.Infof("[handleFlowFileDownloadResult] Successfully continued instance %s for file %d",
+			resume.TaskInstanceID, result.FileID)
 	}
 
 	return nil
