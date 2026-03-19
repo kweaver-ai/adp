@@ -12,9 +12,10 @@ import (
 type SkillHandler interface {
 	RegisterSkill(c *gin.Context)
 	DeleteSkill(c *gin.Context)
+	DownloadSkill(c *gin.Context)
 	QuerySkillList(c *gin.Context)
 	GetSkillDetail(c *gin.Context)
-	GetSkillGuide(c *gin.Context)
+	GetSkillContent(c *gin.Context)
 	ReadSkillFile(c *gin.Context)
 }
 

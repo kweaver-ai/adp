@@ -55,6 +55,21 @@ func (mr *MockSkillRegistryMockRecorder) DeleteSkill(ctx, req any) *gomock.Call 
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteSkill", reflect.TypeOf((*MockSkillRegistry)(nil).DeleteSkill), ctx, req)
 }
 
+// DownloadSkill mocks base method.
+func (m *MockSkillRegistry) DownloadSkill(ctx context.Context, req *interfaces.DownloadSkillReq) (*interfaces.DownloadSkillResp, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DownloadSkill", ctx, req)
+	ret0, _ := ret[0].(*interfaces.DownloadSkillResp)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// DownloadSkill indicates an expected call of DownloadSkill.
+func (mr *MockSkillRegistryMockRecorder) DownloadSkill(ctx, req any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DownloadSkill", reflect.TypeOf((*MockSkillRegistry)(nil).DownloadSkill), ctx, req)
+}
+
 // GetSkillDetail mocks base method.
 func (m *MockSkillRegistry) GetSkillDetail(ctx context.Context, req *interfaces.GetSkillDetailReq) (*interfaces.SkillInfo, error) {
 	m.ctrl.T.Helper()
@@ -100,6 +115,60 @@ func (mr *MockSkillRegistryMockRecorder) RegisterSkill(ctx, req any) *gomock.Cal
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RegisterSkill", reflect.TypeOf((*MockSkillRegistry)(nil).RegisterSkill), ctx, req)
 }
 
+// MockSkillMarket is a mock of SkillMarket interface.
+type MockSkillMarket struct {
+	ctrl     *gomock.Controller
+	recorder *MockSkillMarketMockRecorder
+	isgomock struct{}
+}
+
+// MockSkillMarketMockRecorder is the mock recorder for MockSkillMarket.
+type MockSkillMarketMockRecorder struct {
+	mock *MockSkillMarket
+}
+
+// NewMockSkillMarket creates a new mock instance.
+func NewMockSkillMarket(ctrl *gomock.Controller) *MockSkillMarket {
+	mock := &MockSkillMarket{ctrl: ctrl}
+	mock.recorder = &MockSkillMarketMockRecorder{mock}
+	return mock
+}
+
+// EXPECT returns an object that allows the caller to indicate expected use.
+func (m *MockSkillMarket) EXPECT() *MockSkillMarketMockRecorder {
+	return m.recorder
+}
+
+// GetSkillMarketDetail mocks base method.
+func (m *MockSkillMarket) GetSkillMarketDetail(ctx context.Context, req *interfaces.GetSkillMarketDetailReq) (*interfaces.SkillInfo, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetSkillMarketDetail", ctx, req)
+	ret0, _ := ret[0].(*interfaces.SkillInfo)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetSkillMarketDetail indicates an expected call of GetSkillMarketDetail.
+func (mr *MockSkillMarketMockRecorder) GetSkillMarketDetail(ctx, req any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSkillMarketDetail", reflect.TypeOf((*MockSkillMarket)(nil).GetSkillMarketDetail), ctx, req)
+}
+
+// QuerySkillMarketList mocks base method.
+func (m *MockSkillMarket) QuerySkillMarketList(ctx context.Context, req *interfaces.QuerySkillMarketListReq) (*interfaces.QuerySkillMarketListResp, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "QuerySkillMarketList", ctx, req)
+	ret0, _ := ret[0].(*interfaces.QuerySkillMarketListResp)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// QuerySkillMarketList indicates an expected call of QuerySkillMarketList.
+func (mr *MockSkillMarketMockRecorder) QuerySkillMarketList(ctx, req any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "QuerySkillMarketList", reflect.TypeOf((*MockSkillMarket)(nil).QuerySkillMarketList), ctx, req)
+}
+
 // MockSkillReader is a mock of SkillReader interface.
 type MockSkillReader struct {
 	ctrl     *gomock.Controller
@@ -124,19 +193,19 @@ func (m *MockSkillReader) EXPECT() *MockSkillReaderMockRecorder {
 	return m.recorder
 }
 
-// GetSkillGuide mocks base method.
-func (m *MockSkillReader) GetSkillGuide(ctx context.Context, req *interfaces.GetSkillGuideReq) (*interfaces.GetSkillGuideResp, error) {
+// GetSkillContent mocks base method.
+func (m *MockSkillReader) GetSkillContent(ctx context.Context, req *interfaces.GetSkillContentReq) (*interfaces.GetSkillContentResp, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetSkillGuide", ctx, req)
-	ret0, _ := ret[0].(*interfaces.GetSkillGuideResp)
+	ret := m.ctrl.Call(m, "GetSkillContent", ctx, req)
+	ret0, _ := ret[0].(*interfaces.GetSkillContentResp)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// GetSkillGuide indicates an expected call of GetSkillGuide.
-func (mr *MockSkillReaderMockRecorder) GetSkillGuide(ctx, req any) *gomock.Call {
+// GetSkillContent indicates an expected call of GetSkillContent.
+func (mr *MockSkillReaderMockRecorder) GetSkillContent(ctx, req any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSkillGuide", reflect.TypeOf((*MockSkillReader)(nil).GetSkillGuide), ctx, req)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSkillContent", reflect.TypeOf((*MockSkillReader)(nil).GetSkillContent), ctx, req)
 }
 
 // ReadSkillFile mocks base method.

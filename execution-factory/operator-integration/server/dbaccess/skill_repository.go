@@ -61,7 +61,7 @@ func (s *skillRepositoryDB) InsertSkill(ctx context.Context, tx *sql.Tx, skill *
 		"f_skill_id":      skill.SkillID,
 		"f_name":          skill.Name,
 		"f_description":   skill.Description,
-		"f_instructions":  skill.Instructions,
+		"f_skill_content": skill.SkillContent,
 		"f_version":       skill.Version,
 		"f_status":        skill.Status,
 		"f_source":        skill.Source,
@@ -97,7 +97,7 @@ func (s *skillRepositoryDB) UpdateSkill(ctx context.Context, tx *sql.Tx, skill *
 	_, err := orm.Update(tbSkillRepository).SetData(map[string]interface{}{
 		"f_name":          skill.Name,
 		"f_description":   skill.Description,
-		"f_instructions":  skill.Instructions,
+		"f_skill_content": skill.SkillContent,
 		"f_version":       skill.Version,
 		"f_status":        skill.Status,
 		"f_source":        skill.Source,

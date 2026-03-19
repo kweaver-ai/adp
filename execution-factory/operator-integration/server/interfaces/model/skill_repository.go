@@ -25,7 +25,7 @@ type SkillRepositoryDB struct {
 	SkillID      string      `json:"skill_id" db:"f_skill_id"`
 	Name         string      `json:"name" db:"f_name"`
 	Description  string      `json:"description" db:"f_description"`
-	Instructions string      `json:"instructions" db:"f_instructions"`
+	SkillContent string      `json:"skill_content" db:"f_skill_content"`
 	Version      string      `json:"version" db:"f_version"`
 	Status       SkillStatus `json:"status" db:"f_status"`
 	Source       string      `json:"source" db:"f_source"`

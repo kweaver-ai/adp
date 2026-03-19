@@ -366,7 +366,7 @@ CREATE TABLE IF NOT EXISTS "t_skill_repository" (
     "f_skill_id" VARCHAR(40 CHAR) NOT NULL,
     "f_name" VARCHAR(255 CHAR) NOT NULL,
     "f_description" text NOT NULL,
-    "f_instructions" text NOT NULL,
+    "f_skill_content" text NOT NULL,
     "f_version" VARCHAR(40 CHAR) NOT NULL,
     "f_status" VARCHAR(40 CHAR) NOT NULL,
     "f_source" VARCHAR(50 CHAR) NOT NULL DEFAULT '',

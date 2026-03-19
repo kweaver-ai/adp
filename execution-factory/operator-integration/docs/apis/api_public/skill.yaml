@@ -270,10 +270,10 @@ paths:
               schema:
                 $ref: "#/components/schemas/Error"
 
-  /skills/{skill_id}/guide:
+  /skills/{skill_id}/content:
     get:
-      summary: "获取 Skill Guide"
-      description: "获取 Skill 的 Guide 内容与文件摘要。处于 deleting 中间态的 Skill 对外视为不存在。"
+      summary: "获取 Skill 内容"
+      description: "获取 Skill 的正文内容与文件摘要。处于 deleting 中间态的 Skill 对外视为不存在。"
       tags:
         - "Skill 读取"
       parameters:
@@ -287,9 +287,58 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/GetSkillGuideResp"
+                $ref: "#/components/schemas/GetSkillContentResp"
         "400":
           description: "参数错误"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "404":
+          description: "Skill 不存在"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "500":
+          description: "内部错误"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /skills/{skill_id}/download:
+    get:
+      summary: "下载 Skill ZIP"
+      description: "下载指定 Skill 的 ZIP 包。返回内容包含 SKILL.md 与已登记的内部文件。处于 deleting 中间态的 Skill 对外视为不存在。"
+      tags:
+        - "Skill 管理"
+      parameters:
+        - $ref: "#/components/parameters/Authorization"
+        - $ref: "#/components/parameters/BusinessDomain"
+        - $ref: "#/components/parameters/UserID"
+        - $ref: "#/components/parameters/SkillID"
+      responses:
+        "200":
+          description: "成功"
+          headers:
+            Content-Disposition:
+              description: "附件下载文件名"
+              schema:
+                type: string
+          content:
+            application/zip:
+              schema:
+                type: string
+                format: binary
+        "400":
+          description: "参数错误"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "403":
+          description: "无下载权限"
           content:
             application/json:
               schema:
@@ -569,7 +618,7 @@ components:
         mime_type:
           type: string
 
-    GetSkillGuideResp:
+    GetSkillContentResp:
       type: object
       properties:
         code:
@@ -581,7 +630,7 @@ components:
           properties:
             skill_id:
               type: string
-            content:
+            skill_content:
               type: string
             files:
               type: array
