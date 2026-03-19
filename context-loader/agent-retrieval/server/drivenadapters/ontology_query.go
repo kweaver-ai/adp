@@ -84,7 +84,7 @@ func (o *ontologyQueryClient) QueryLogicProperties(ctx context.Context, req *int
 	url := fmt.Sprintf("%s%s", o.baseURL, uri)
 
 	// 构建请求体
-	body := map[string]interface{}{
+	body := map[string]any{
 		"_instance_identities": req.InstanceIdentities,
 		"properties":           req.Properties,
 		"dynamic_params":       req.DynamicParams,
@@ -126,7 +126,7 @@ func (o *ontologyQueryClient) QueryActions(ctx context.Context, req *interfaces.
 	url := fmt.Sprintf("%s%s", o.baseURL, uri)
 
 	// 构建请求体
-	body := map[string]interface{}{
+	body := map[string]any{
 		"_instance_identities": req.InstanceIdentities,
 	}
 
@@ -182,8 +182,8 @@ func (o *ontologyQueryClient) QueryInstanceSubgraph(ctx context.Context, req *in
 	uri := fmt.Sprintf(queryInstanceSubgraphURI, req.KnID) + queryStr
 	url := fmt.Sprintf("%s%s", o.baseURL, uri)
 
-	// 构建请求体 - 直接透传 RelationTypePaths (interface{})
-	body := map[string]interface{}{
+	// 构建请求体 - 直接透传 RelationTypePaths (any)
+	body := map[string]any{
 		"relation_type_paths": req.RelationTypePaths,
 	}
 
@@ -204,7 +204,7 @@ func (o *ontologyQueryClient) QueryInstanceSubgraph(ctx context.Context, req *in
 		return nil, err
 	}
 
-	// 解析响应 - 直接解析到 interface{}
+	// 解析响应 - 直接解析到 any
 	resp = &interfaces.QueryInstanceSubgraphResp{}
 	resultByt := utils.ObjectToByte(respBody)
 	err = json.Unmarshal(resultByt, resp)

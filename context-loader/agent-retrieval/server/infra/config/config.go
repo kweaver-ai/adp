@@ -244,7 +244,7 @@ func (conf *Config) localConfig(path string) (err error) {
 }
 
 // overrideWithEnv automatically traverses struct, using reflection to override with env variables based on tags
-func overrideWithEnv(cfg interface{}) {
+func overrideWithEnv(cfg any) {
 	v := reflect.ValueOf(cfg).Elem() // Get pointer to struct
 	t := v.Type()
 

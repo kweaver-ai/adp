@@ -190,10 +190,10 @@ func TestGetActionInfo_ToolType_Success(t *testing.T) {
 		mockLogger.EXPECT().WithContext(gomock.Any()).Return(mockLogger).AnyTimes()
 
 		cfg := &config.Config{
-			OperatorIntegration: config.PrivateBaseConfig{
+			OntologyQuery: config.PrivateBaseConfig{
 				PrivateProtocol: "http",
-				PrivateHost:     "localhost",
-				PrivatePort:     8080,
+				PrivateHost:     "ontology-query",
+				PrivatePort:     13018,
 			},
 		}
 
@@ -231,20 +231,21 @@ func TestGetActionInfo_ToolType_Success(t *testing.T) {
 				Description: "Test tool description",
 				Metadata: interfaces.ToolMetadata{
 					APISpec: map[string]interface{}{
-						"paths": map[string]interface{}{
-							"/test": map[string]interface{}{
-								"post": map[string]interface{}{
-									"parameters": []interface{}{},
-									"requestBody": map[string]interface{}{
-										"content": map[string]interface{}{
-											"application/json": map[string]interface{}{
-												"schema": map[string]interface{}{
-													"type": "object",
-													"properties": map[string]interface{}{
-														"name": map[string]interface{}{"type": "string"},
-													},
-												},
-											},
+						"parameters": []interface{}{
+							map[string]interface{}{
+								"name":     "pod_name",
+								"in":       "query",
+								"required": true,
+								"schema":   map[string]interface{}{"type": "string"},
+							},
+						},
+						"request_body": map[string]interface{}{
+							"content": map[string]interface{}{
+								"application/json": map[string]interface{}{
+									"schema": map[string]interface{}{
+										"type": "object",
+										"properties": map[string]interface{}{
+											"namespace": map[string]interface{}{"type": "string"},
 										},
 									},
 								},
@@ -258,8 +259,34 @@ func TestGetActionInfo_ToolType_Success(t *testing.T) {
 		convey.So(err, convey.ShouldBeNil)
 		convey.So(resp, convey.ShouldNotBeNil)
 		convey.So(len(resp.DynamicTools), convey.ShouldEqual, 1)
-		convey.So(resp.DynamicTools[0].Name, convey.ShouldEqual, "TestTool")
-		convey.So(resp.DynamicTools[0].APICallStrategy, convey.ShouldEqual, interfaces.ResultProcessStrategyKnActionRecall)
+
+		tool := resp.DynamicTools[0]
+		convey.So(tool.Name, convey.ShouldEqual, "TestTool")
+		convey.So(tool.APICallStrategy, convey.ShouldEqual, interfaces.ResultProcessStrategyKnActionRecall)
+
+		// 验证 api_url 指向行动驱动执行接口
+		convey.So(tool.APIURL, convey.ShouldEqual,
+			"http://ontology-query:13018/api/ontology-query/in/v1/knowledge-networks/kn-001/action-types/at-001/execute")
+
+		// 验证 parameters 顶层为 dynamic_params + _instance_identities
+		params := tool.Parameters
+		convey.So(params["type"], convey.ShouldEqual, "object")
+		props := params["properties"].(map[string]interface{})
+		convey.So(props["dynamic_params"], convey.ShouldNotBeNil)
+		convey.So(props["_instance_identities"], convey.ShouldNotBeNil)
+
+		// 验证 dynamic_params 中包含去壳后的参数
+		dynamicParams := props["dynamic_params"].(map[string]interface{})
+		dynamicProps := dynamicParams["properties"].(map[string]interface{})
+		convey.So(dynamicProps["pod_name"], convey.ShouldNotBeNil)
+		convey.So(dynamicProps["namespace"], convey.ShouldNotBeNil)
+
+		// 验证 fixed_params 为 ActionDriverFixedParams 结构
+		fixedParams, ok := tool.FixedParams.(interfaces.ActionDriverFixedParams)
+		convey.So(ok, convey.ShouldBeTrue)
+		convey.So(fixedParams.DynamicParams["param1"], convey.ShouldEqual, "value1")
+		convey.So(len(fixedParams.InstanceIdentities), convey.ShouldEqual, 1)
+		convey.So(fixedParams.InstanceIdentities[0]["id"], convey.ShouldEqual, "obj-001")
 	})
 }
 
@@ -276,9 +303,10 @@ func TestGetActionInfo_MCPType_Success(t *testing.T) {
 		mockLogger.EXPECT().WithContext(gomock.Any()).Return(mockLogger).AnyTimes()
 
 		cfg := &config.Config{
-			Project: config.Project{
-				Name: "agent-retrieval",
-				Port: 8080,
+			OntologyQuery: config.PrivateBaseConfig{
+				PrivateProtocol: "http",
+				PrivateHost:     "ontology-query",
+				PrivatePort:     13018,
 			},
 		}
 
@@ -317,8 +345,9 @@ func TestGetActionInfo_MCPType_Success(t *testing.T) {
 				InputSchema: map[string]interface{}{
 					"type": "object",
 					"properties": map[string]interface{}{
-						"name": map[string]interface{}{"type": "string"},
+						"disease_id": map[string]interface{}{"type": "string"},
 					},
+					"required": []interface{}{"disease_id"},
 				},
 			}, nil)
 
@@ -326,8 +355,33 @@ func TestGetActionInfo_MCPType_Success(t *testing.T) {
 		convey.So(err, convey.ShouldBeNil)
 		convey.So(resp, convey.ShouldNotBeNil)
 		convey.So(len(resp.DynamicTools), convey.ShouldEqual, 1)
-		convey.So(resp.DynamicTools[0].Name, convey.ShouldEqual, "TestMCPTool")
-		convey.So(resp.DynamicTools[0].APICallStrategy, convey.ShouldEqual, interfaces.ResultProcessStrategyKnActionRecall)
+
+		tool := resp.DynamicTools[0]
+		convey.So(tool.Name, convey.ShouldEqual, "TestMCPTool")
+		convey.So(tool.APICallStrategy, convey.ShouldEqual, interfaces.ResultProcessStrategyKnActionRecall)
+
+		// 验证 api_url 指向行动驱动执行接口
+		convey.So(tool.APIURL, convey.ShouldEqual,
+			"http://ontology-query:13018/api/ontology-query/in/v1/knowledge-networks/kn-001/action-types/at-001/execute")
+
+		// 验证 parameters 顶层为 dynamic_params + _instance_identities
+		params := tool.Parameters
+		convey.So(params["type"], convey.ShouldEqual, "object")
+		props := params["properties"].(map[string]interface{})
+		convey.So(props["dynamic_params"], convey.ShouldNotBeNil)
+		convey.So(props["_instance_identities"], convey.ShouldNotBeNil)
+
+		// 验证 dynamic_params 中包含 MCP schema 参数
+		dynamicParams := props["dynamic_params"].(map[string]interface{})
+		dynamicProps := dynamicParams["properties"].(map[string]interface{})
+		convey.So(dynamicProps["disease_id"], convey.ShouldNotBeNil)
+
+		// 验证 fixed_params 为 ActionDriverFixedParams 结构
+		fixedParams, ok := tool.FixedParams.(interfaces.ActionDriverFixedParams)
+		convey.So(ok, convey.ShouldBeTrue)
+		convey.So(fixedParams.DynamicParams["param1"], convey.ShouldEqual, "value1")
+		convey.So(len(fixedParams.InstanceIdentities), convey.ShouldEqual, 1)
+		convey.So(fixedParams.InstanceIdentities[0]["id"], convey.ShouldEqual, "obj-001")
 	})
 }
 

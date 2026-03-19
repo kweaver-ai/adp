@@ -18,7 +18,7 @@ import (
 // GetActionInfo 获取行动信息（行动召回）
 func (s *knActionRecallServiceImpl) GetActionInfo(ctx context.Context, req *interfaces.KnActionRecallRequest) (*interfaces.KnActionRecallResponse, error) {
 	// 1. 参数转换：_instance_identity -> _instance_identity (数组)
-	instanceIdentities := []map[string]interface{}{req.InstanceIdentity}
+	instanceIdentities := []map[string]any{req.InstanceIdentity}
 
 	// 2. 调用行动查询接口
 	actionsReq := &interfaces.QueryActionsRequest{
@@ -60,10 +60,19 @@ func (s *knActionRecallServiceImpl) GetActionInfo(ctx context.Context, req *inte
 	// 5. 仅处理 actions[0]
 	firstAction := actionsResp.Actions[0]
 
+	// 6. 统一构造行动驱动 API URL
+	apiURL := s.buildActionDriverAPIURL(req.KnID, req.AtID)
+
+	// 7. 统一构造行动驱动 fixed_params
+	fixedParams := interfaces.ActionDriverFixedParams{
+		DynamicParams:      firstAction.Parameters,
+		InstanceIdentities: instanceIdentities,
+	}
+
 	var dynamicTool interfaces.KnDynamicTool
 
 	if actionsResp.ActionSource.Type == interfaces.ActionSourceTypeTool {
-		// 6. 获取工具详情
+		// 8a. Tool 类型：获取工具详情
 		toolDetailReq := &interfaces.GetToolDetailRequest{
 			BoxID:  actionsResp.ActionSource.BoxID,
 			ToolID: actionsResp.ActionSource.ToolID,
@@ -75,26 +84,15 @@ func (s *knActionRecallServiceImpl) GetActionInfo(ctx context.Context, req *inte
 			return nil, err
 		}
 
-		// 7. 生成 API URL（从配置读取）
-		apiURL := fmt.Sprintf("%s://%s:%d/api/agent-operator-integration/internal-v1/tool-box/%s/proxy/%s",
-			s.config.OperatorIntegration.PrivateProtocol,
-			s.config.OperatorIntegration.PrivateHost,
-			s.config.OperatorIntegration.PrivatePort,
-			actionsResp.ActionSource.BoxID,
-			actionsResp.ActionSource.ToolID)
-
-		// 8. 映射固定参数
-		fixedParams := s.mapFixedParams(ctx, firstAction.Parameters, toolDetail.Metadata.APISpec)
-
-		// 9. 转换 Schema 为 OpenAI Function Call 格式
-		parameters, err := s.convertSchemaToFunctionCall(ctx, toolDetail.Metadata.APISpec)
+		// 9a. 将 Tool Schema 转换为行动驱动参数结构
+		parameters, err := s.convertToolSchemaToActionDriver(ctx, toolDetail.Metadata.APISpec)
 		if err != nil {
-			s.logger.WithContext(ctx).Errorf("[KnActionRecall#GetActionInfo] ConvertSchema failed, err: %v", err)
+			s.logger.WithContext(ctx).Errorf("[KnActionRecall#GetActionInfo] ConvertToolSchemaToActionDriver failed, err: %v", err)
 			return nil, infraErr.DefaultHTTPError(ctx, http.StatusInternalServerError,
-				fmt.Sprintf("Schema 转换失败: %v", err))
+				fmt.Sprintf("Tool Schema 转换为行动驱动结构失败: %v", err))
 		}
 
-		// 10. 构建 KnDynamicTool
+		// 10a. 构建 KnDynamicTool
 		dynamicTool = interfaces.KnDynamicTool{
 			Name:            toolDetail.Name,
 			Description:     toolDetail.Description,
@@ -105,7 +103,7 @@ func (s *knActionRecallServiceImpl) GetActionInfo(ctx context.Context, req *inte
 			APICallStrategy: interfaces.ResultProcessStrategyKnActionRecall,
 		}
 	} else {
-		// MCP Logic
+		// 8b. MCP 类型：获取 MCP 工具详情
 		mcpReq := &interfaces.GetMCPToolDetailRequest{
 			McpID:    actionsResp.ActionSource.McpID,
 			ToolName: actionsResp.ActionSource.ToolName,
@@ -117,23 +115,15 @@ func (s *knActionRecallServiceImpl) GetActionInfo(ctx context.Context, req *inte
 			return nil, err
 		}
 
-		// API URL
-		apiURL := fmt.Sprintf("http://%s:%d/api/agent-retrieval/in/v1/mcp/proxy/%s/tools/%s/call",
-			s.config.Project.Name, // 使用服务名称作为 Host (如 agent-retrieval)
-			s.config.Project.Port,
-			actionsResp.ActionSource.McpID,
-			actionsResp.ActionSource.ToolName)
-
-		// Fixed Params (Flat)
-		fixedParams := firstAction.Parameters
-
-		// Schema Conversion
-		parameters, err := s.convertMCPSchemaToFunctionCall(ctx, toolDetail.InputSchema)
+		// 9b. 将 MCP Schema 转换为行动驱动参数结构
+		parameters, err := s.convertMCPSchemaToActionDriver(ctx, toolDetail.InputSchema)
 		if err != nil {
-			s.logger.WithContext(ctx).Errorf("[KnActionRecall#GetActionInfo] ConvertMCPSchema failed, err: %v", err)
-			return nil, infraErr.DefaultHTTPError(ctx, http.StatusInternalServerError, fmt.Sprintf("MCP Schema 转换失败: %v", err))
+			s.logger.WithContext(ctx).Errorf("[KnActionRecall#GetActionInfo] ConvertMCPSchemaToActionDriver failed, err: %v", err)
+			return nil, infraErr.DefaultHTTPError(ctx, http.StatusInternalServerError,
+				fmt.Sprintf("MCP Schema 转换为行动驱动结构失败: %v", err))
 		}
 
+		// 10b. 构建 KnDynamicTool
 		dynamicTool = interfaces.KnDynamicTool{
 			Name:            toolDetail.Name,
 			Description:     toolDetail.Description,
@@ -152,4 +142,11 @@ func (s *knActionRecallServiceImpl) GetActionInfo(ctx context.Context, req *inte
 		Headers:      headers,
 		DynamicTools: []interfaces.KnDynamicTool{dynamicTool},
 	}, nil
+}
+
+// buildActionDriverAPIURL 统一生成行动驱动内部执行接口地址
+// Tool 和 MCP 类型均调用此方法生成相同格式的 api_url
+func (s *knActionRecallServiceImpl) buildActionDriverAPIURL(knID, atID string) string {
+	servicePath := fmt.Sprintf("/api/ontology-query/in/v1/knowledge-networks/%s/action-types/%s/execute", knID, atID)
+	return s.config.OntologyQuery.BuildURL(servicePath)
 }

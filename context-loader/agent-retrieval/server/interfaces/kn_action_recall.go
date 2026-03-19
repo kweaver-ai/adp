@@ -32,7 +32,7 @@ type KnActionRecallRequest struct {
 	AtID string `json:"at_id" validate:"required"` // Action Type ID
 
 	// Request Body
-	InstanceIdentity map[string]interface{} `json:"_instance_identity" validate:"required,min=1"` // Object Instance Identity
+	InstanceIdentity map[string]any `json:"_instance_identity" validate:"required,min=1"` // Object Instance Identity
 
 	// Header Fields
 	AccountID   string `json:"-" header:"x-account-id" validate:"required"`
@@ -47,32 +47,38 @@ type KnActionRecallResponse struct {
 
 // KnDynamicTool Dynamic Tool Definition
 type KnDynamicTool struct {
-	Name            string                 `json:"name"`              // Tool Name
-	Description     string                 `json:"description"`       // Tool Description
-	Parameters      map[string]interface{} `json:"parameters"`        // OpenAI Function Call Schema
-	APIURL          string                 `json:"api_url"`           // Tool Execution Proxy URL
-	OriginalSchema  map[string]interface{} `json:"original_schema"`   // Original OpenAPI Definition
-	FixedParams     interface{}            `json:"fixed_params"`      // Fixed Parameters (KnFixedParams or map[string]interface{})
-	APICallStrategy string                 `json:"api_call_strategy"` // Result Processing Strategy, fixed value: kn_action_recall
+	Name            string         `json:"name"`              // Tool Name
+	Description     string         `json:"description"`       // Tool Description
+	Parameters      map[string]any `json:"parameters"`        // OpenAI Function Call Schema
+	APIURL          string         `json:"api_url"`           // Tool Execution Proxy URL
+	OriginalSchema  map[string]any `json:"original_schema"`   // Original OpenAPI Definition
+	FixedParams     any            `json:"fixed_params"`      // Fixed Parameters (KnFixedParams or map[string]any)
+	APICallStrategy string         `json:"api_call_strategy"` // Result Processing Strategy, fixed value: kn_action_recall
 }
 
-// KnFixedParams Fixed Parameters Structure
+// KnFixedParams Fixed Parameters Structure (legacy, kept for compatibility)
 type KnFixedParams struct {
-	Header map[string]interface{} `json:"header"` // HTTP Header Parameters
-	Path   map[string]interface{} `json:"path"`   // URL Path Parameters
-	Query  map[string]interface{} `json:"query"`  // URL Query Parameters
-	Body   map[string]interface{} `json:"body"`   // Request Body Parameters
+	Header map[string]any `json:"header"` // HTTP Header Parameters
+	Path   map[string]any `json:"path"`   // URL Path Parameters
+	Query  map[string]any `json:"query"`  // URL Query Parameters
+	Body   map[string]any `json:"body"`   // Request Body Parameters
+}
+
+// ActionDriverFixedParams 行动驱动请求默认值
+type ActionDriverFixedParams struct {
+	DynamicParams      map[string]any   `json:"dynamic_params"`       // 行动实例化后已确定的固定参数
+	InstanceIdentities []map[string]any `json:"_instance_identities"` // 默认填入当前 get_action_info 的 _instance_identity
 }
 
 // ==================== Action Query Related Structures ====================
 
 // QueryActionsRequest Action Query Request
 type QueryActionsRequest struct {
-	KnID                string                   `json:"kn_id"`
-	AtID                string                   `json:"at_id"`
-	InstanceIdentities  []map[string]interface{} `json:"_instance_identities"`
-	IncludeTypeInfo     bool                     `json:"include_type_info"`
-	XHTTPMethodOverride string                   `json:"-"` // Fixed to GET
+	KnID                string           `json:"kn_id"`
+	AtID                string           `json:"at_id"`
+	InstanceIdentities  []map[string]any `json:"_instance_identities"`
+	IncludeTypeInfo     bool             `json:"include_type_info"`
+	XHTTPMethodOverride string           `json:"-"` // Fixed to GET
 }
 
 // QueryActionsResponse Action Query Response
@@ -86,14 +92,14 @@ type QueryActionsResponse struct {
 
 // ActionTypeInfo Action Type Info
 type ActionTypeInfo struct {
-	ID           string                 `json:"id"`
-	Name         string                 `json:"name"`
-	ActionType   string                 `json:"action_type"` // add/modify/delete
-	ObjectTypeID string                 `json:"object_type_id"`
-	Parameters   []ActionTypeParam      `json:"parameters"`
-	Condition    map[string]interface{} `json:"condition"`
-	Affect       map[string]interface{} `json:"affect"`
-	Schedule     map[string]interface{} `json:"schedule"`
+	ID           string            `json:"id"`
+	Name         string            `json:"name"`
+	ActionType   string            `json:"action_type"` // add/modify/delete
+	ObjectTypeID string            `json:"object_type_id"`
+	Parameters   []ActionTypeParam `json:"parameters"`
+	Condition    map[string]any    `json:"condition"`
+	Affect       map[string]any    `json:"affect"`
+	Schedule     map[string]any    `json:"schedule"`
 }
 
 // ActionTypeParam Action Type Parameter
@@ -116,8 +122,8 @@ type ActionSource struct {
 
 // ActionParams Action Parameters
 type ActionParams struct {
-	Parameters    map[string]interface{} `json:"parameters"`     // Instantiated Parameters
-	DynamicParams map[string]interface{} `json:"dynamic_params"` // Dynamic Parameters (value is null)
+	Parameters    map[string]any `json:"parameters"`     // Instantiated Parameters
+	DynamicParams map[string]any `json:"dynamic_params"` // Dynamic Parameters (value is null)
 }
 
 // ==================== Service Interfaces ====================
