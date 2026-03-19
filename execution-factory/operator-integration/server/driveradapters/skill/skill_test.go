@@ -22,9 +22,11 @@ func TestSkillHandler(t *testing.T) {
 
 		Convey("RegisterSkill binds multipart form and calls registry", func() {
 			mockRegistry := mocks.NewMockSkillRegistry(ctrl)
+			mockMarket := mocks.NewMockSkillMarket(ctrl)
 			mockReader := mocks.NewMockSkillReader(ctrl)
 			handler := &skillHandler{
 				Registry: mockRegistry,
+				Market:   mockMarket,
 				Reader:   mockReader,
 			}
 			mockRegistry.EXPECT().RegisterSkill(gomock.Any(), gomock.Any()).DoAndReturn(
@@ -66,9 +68,11 @@ func TestSkillHandler(t *testing.T) {
 
 		Convey("GetSkillContent binds uri and calls reader", func() {
 			mockRegistry := mocks.NewMockSkillRegistry(ctrl)
+			mockMarket := mocks.NewMockSkillMarket(ctrl)
 			mockReader := mocks.NewMockSkillReader(ctrl)
 			handler := &skillHandler{
 				Registry: mockRegistry,
+				Market:   mockMarket,
 				Reader:   mockReader,
 			}
 			mockReader.EXPECT().GetSkillContent(gomock.Any(), gomock.Any()).DoAndReturn(
@@ -89,9 +93,11 @@ func TestSkillHandler(t *testing.T) {
 
 		Convey("ReadSkillFile binds body and calls reader", func() {
 			mockRegistry := mocks.NewMockSkillRegistry(ctrl)
+			mockMarket := mocks.NewMockSkillMarket(ctrl)
 			mockReader := mocks.NewMockSkillReader(ctrl)
 			handler := &skillHandler{
 				Registry: mockRegistry,
+				Market:   mockMarket,
 				Reader:   mockReader,
 			}
 			mockReader.EXPECT().ReadSkillFile(gomock.Any(), gomock.Any()).DoAndReturn(
@@ -113,9 +119,11 @@ func TestSkillHandler(t *testing.T) {
 
 		Convey("DownloadSkill binds uri and returns zip response", func() {
 			mockRegistry := mocks.NewMockSkillRegistry(ctrl)
+			mockMarket := mocks.NewMockSkillMarket(ctrl)
 			mockReader := mocks.NewMockSkillReader(ctrl)
 			handler := &skillHandler{
 				Registry: mockRegistry,
+				Market:   mockMarket,
 				Reader:   mockReader,
 			}
 			mockRegistry.EXPECT().DownloadSkill(gomock.Any(), gomock.Any()).DoAndReturn(
@@ -138,6 +146,77 @@ func TestSkillHandler(t *testing.T) {
 			So(recorder.Header().Get("Content-Type"), ShouldEqual, "application/zip")
 			So(recorder.Header().Get("Content-Disposition"), ShouldContainSubstring, `filename="demo-skill.zip"`)
 			So(recorder.Body.String(), ShouldEqual, "zip-bytes")
+		})
+
+		Convey("QuerySkillMarketList binds query and calls market", func() {
+			mockRegistry := mocks.NewMockSkillRegistry(ctrl)
+			mockMarket := mocks.NewMockSkillMarket(ctrl)
+			mockReader := mocks.NewMockSkillReader(ctrl)
+			handler := &skillHandler{
+				Registry: mockRegistry,
+				Market:   mockMarket,
+				Reader:   mockReader,
+			}
+			mockMarket.EXPECT().QuerySkillMarketList(gomock.Any(), gomock.Any()).DoAndReturn(
+				func(_ any, req *interfaces.QuerySkillMarketListReq) (*interfaces.QuerySkillMarketListResp, error) {
+					So(req.BusinessDomainID, ShouldEqual, "bd-test")
+					So(req.Page, ShouldEqual, 2)
+					So(req.PageSize, ShouldEqual, 5)
+					return &interfaces.QuerySkillMarketListResp{
+						CommonPageResult: interfaces.CommonPageResult{
+							Page:       2,
+							PageSize:   5,
+							TotalCount: 1,
+						},
+						Data: []*interfaces.SkillSummary{
+							{SkillID: "skill-market-1", Name: "market-demo"},
+						},
+					}, nil
+				},
+			)
+
+			gin.SetMode(gin.TestMode)
+			router := gin.New()
+			router.Handle(http.MethodGet, "/skills/market", handler.QuerySkillMarketList)
+			req := httptest.NewRequest(http.MethodGet, "/skills/market?page=2&page_size=5", nil)
+			req.Header.Set("x-business-domain", "bd-test")
+			recorder := httptest.NewRecorder()
+			router.ServeHTTP(recorder, req)
+
+			So(recorder.Code, ShouldEqual, http.StatusOK)
+			So(recorder.Body.String(), ShouldContainSubstring, `"skill_id":"skill-market-1"`)
+			So(recorder.Body.String(), ShouldContainSubstring, `"page":2`)
+		})
+
+		Convey("GetSkillMarketDetail binds uri and calls market", func() {
+			mockRegistry := mocks.NewMockSkillRegistry(ctrl)
+			mockMarket := mocks.NewMockSkillMarket(ctrl)
+			mockReader := mocks.NewMockSkillReader(ctrl)
+			handler := &skillHandler{
+				Registry: mockRegistry,
+				Market:   mockMarket,
+				Reader:   mockReader,
+			}
+			mockMarket.EXPECT().GetSkillMarketDetail(gomock.Any(), gomock.Any()).DoAndReturn(
+				func(_ any, req *interfaces.GetSkillMarketDetailReq) (*interfaces.SkillInfo, error) {
+					So(req.BusinessDomainID, ShouldEqual, "bd-test")
+					So(req.SkillID, ShouldEqual, "skill-market-2")
+					return &interfaces.SkillInfo{
+						SkillID:     "skill-market-2",
+						Name:        "market-detail",
+						Description: "detail-desc",
+						Status:      "published",
+					}, nil
+				},
+			)
+
+			recorder := performSkillRequest(http.MethodGet, "/skills/market/:skill_id", "", "", map[string]string{
+				"x-business-domain": "bd-test",
+			}, handler.GetSkillMarketDetail, "skill-market-2")
+
+			So(recorder.Code, ShouldEqual, http.StatusOK)
+			So(recorder.Body.String(), ShouldContainSubstring, `"skill_id":"skill-market-2"`)
+			So(recorder.Body.String(), ShouldContainSubstring, `"status":"published"`)
 		})
 	})
 }
