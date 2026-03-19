@@ -127,6 +127,54 @@ func (h *skillHandler) QuerySkillList(c *gin.Context) {
 	rest.ReplyOK(c, http.StatusOK, resp)
 }
 
+func (h *skillHandler) QuerySkillMarketList(c *gin.Context) {
+	req := &interfaces.QuerySkillMarketListReq{}
+	if err := c.ShouldBindHeader(req); err != nil {
+		rest.ReplyError(c, errors.DefaultHTTPError(c.Request.Context(), http.StatusBadRequest, err.Error()))
+		return
+	}
+	if err := c.ShouldBindQuery(req); err != nil {
+		rest.ReplyError(c, errors.DefaultHTTPError(c.Request.Context(), http.StatusBadRequest, err.Error()))
+		return
+	}
+	if err := defaults.Set(req); err != nil {
+		rest.ReplyError(c, errors.DefaultHTTPError(c.Request.Context(), http.StatusBadRequest, err.Error()))
+		return
+	}
+	if err := validator.New().Struct(req); err != nil {
+		rest.ReplyError(c, err)
+		return
+	}
+	resp, err := h.Market.QuerySkillMarketList(c.Request.Context(), req)
+	if err != nil {
+		rest.ReplyError(c, err)
+		return
+	}
+	rest.ReplyOK(c, http.StatusOK, resp)
+}
+
+func (h *skillHandler) GetSkillMarketDetail(c *gin.Context) {
+	req := &interfaces.GetSkillMarketDetailReq{}
+	if err := c.ShouldBindHeader(req); err != nil {
+		rest.ReplyError(c, errors.DefaultHTTPError(c.Request.Context(), http.StatusBadRequest, err.Error()))
+		return
+	}
+	if err := c.ShouldBindUri(req); err != nil {
+		rest.ReplyError(c, errors.DefaultHTTPError(c.Request.Context(), http.StatusBadRequest, err.Error()))
+		return
+	}
+	if err := validator.New().Struct(req); err != nil {
+		rest.ReplyError(c, err)
+		return
+	}
+	resp, err := h.Market.GetSkillMarketDetail(c.Request.Context(), req)
+	if err != nil {
+		rest.ReplyError(c, err)
+		return
+	}
+	rest.ReplyOK(c, http.StatusOK, resp)
+}
+
 func (h *skillHandler) GetSkillDetail(c *gin.Context) {
 	req := &interfaces.GetSkillDetailReq{}
 	if err := c.ShouldBindHeader(req); err != nil {

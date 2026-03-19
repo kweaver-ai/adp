@@ -198,6 +198,113 @@ paths:
               schema:
                 $ref: "#/components/schemas/Error"
 
+  /skills/market:
+    get:
+      summary: "查询 Skill 市场列表"
+      description: "分页查询 Skill 市场列表，仅返回已发布 Skill 的轻量摘要，不返回 skill_content 和文件清单。"
+      tags:
+        - "Skill 市场"
+      parameters:
+        - $ref: "#/components/parameters/Authorization"
+        - $ref: "#/components/parameters/BusinessDomain"
+        - $ref: "#/components/parameters/UserID"
+        - name: page
+          in: query
+          description: "页码，从 1 开始"
+          schema:
+            type: integer
+            default: 1
+        - name: page_size
+          in: query
+          description: "每页数量"
+          schema:
+            type: integer
+            default: 10
+        - name: all
+          in: query
+          description: "是否返回全部"
+          schema:
+            type: boolean
+            default: false
+        - name: name
+          in: query
+          description: "Skill 名称"
+          schema:
+            type: string
+        - name: source
+          in: query
+          description: "Skill 来源"
+          schema:
+            type: string
+      responses:
+        "200":
+          description: "成功"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/QuerySkillListResp"
+        "400":
+          description: "参数错误"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "403":
+          description: "无权限"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "500":
+          description: "内部错误"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /skills/market/{skill_id}:
+    get:
+      summary: "获取 Skill 市场详情"
+      description: "根据 Skill ID 获取已发布 Skill 的轻量市场详情，不返回 skill_content 和文件清单。"
+      tags:
+        - "Skill 市场"
+      parameters:
+        - $ref: "#/components/parameters/Authorization"
+        - $ref: "#/components/parameters/BusinessDomain"
+        - $ref: "#/components/parameters/UserID"
+        - $ref: "#/components/parameters/SkillID"
+      responses:
+        "200":
+          description: "成功"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SkillInfo"
+        "400":
+          description: "参数错误"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "403":
+          description: "无权限"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "404":
+          description: "Skill 不存在"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "500":
+          description: "内部错误"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
   /skills/{skill_id}:
     get:
       summary: "获取 Skill 详情"

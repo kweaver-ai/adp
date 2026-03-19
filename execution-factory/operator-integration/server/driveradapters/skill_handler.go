@@ -31,6 +31,8 @@ func NewSkillRestHandler() SkillRestHandler {
 
 func (r *skillRestHandler) RegisterPublic(engine *gin.RouterGroup) {
 	engine.POST("/skills", middlewareBusinessDomain(true, false), r.SkillHandler.RegisterSkill)
+	engine.GET("/skills/market", middlewareBusinessDomain(true, false), r.SkillHandler.QuerySkillMarketList)
+	engine.GET("/skills/market/:skill_id", middlewareBusinessDomain(true, false), r.SkillHandler.GetSkillMarketDetail)
 	engine.GET("/skills", middlewareBusinessDomain(true, false), r.SkillHandler.QuerySkillList)
 	engine.GET("/skills/:skill_id", middlewareBusinessDomain(true, false), r.SkillHandler.GetSkillDetail)
 	engine.GET("/skills/:skill_id/content", middlewareBusinessDomain(true, false), r.SkillHandler.GetSkillContent)
