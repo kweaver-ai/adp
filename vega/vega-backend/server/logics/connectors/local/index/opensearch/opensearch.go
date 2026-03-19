@@ -11,6 +11,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"strings"
 
 	"github.com/mitchellh/mapstructure"
@@ -288,40 +289,57 @@ func (c *OpenSearchConnector) fetchMappings(ctx context.Context, index *interfac
 	if resp.IsError() {
 		return fmt.Errorf("opensearch API error: %s", resp.String())
 	}
-
-	var mappingResp map[string]struct {
-		Mappings struct {
-			Properties map[string]struct {
-				Type string `json:"type"`
-				// Add other fields as needed
-			} `json:"properties"`
-		} `json:"mappings"`
-	}
 	//{
-	//	"test-index" : {
+	//	"product_index" : {
 	//	"mappings" : {
 	//		"properties" : {
-	//			"ip_address" : {
-	//				"type" : "ip",
-	//				"ignore_malformed" : true
+	//			"age" : {
+	//				"type" : "integer"
+	//			},
+	//			"create_time" : {
+	//				"type" : "date"
+	//			},
+	//			"description" : {
+	//				"type" : "text",
+	//				"fields" : {
+	//					"keyword" : {
+	//						"type" : "keyword",
+	//						"ignore_above" : 256
+	//					}
+	//				}
 	//			}
 	//		}
 	//	}
 	//}
 	//}
-	if err := json.NewDecoder(resp.Body).Decode(&mappingResp); err != nil {
-		return err
+	bodyBytes, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return fmt.Errorf("failed to read response body: %w", err)
+	}
+	// 解析 JSON
+	err = json.Unmarshal(bodyBytes, &dataMapping)
+	if err != nil {
+		panic(err)
+	}
+	result := make(map[string]map[string]interface{})
+	if idxData, ok := dataMapping[index.Name]; ok {
+		parseProperties("", idxData.Mappings.Properties, result)
 	}
 	// Parse mappings:这里是存储的字段元数据，包括type映射
 	fieldMap := make(map[string]interfaces.FieldMeta)
-	if idxData, ok := mappingResp[index.Name]; ok {
-		for fieldName, props := range idxData.Mappings.Properties {
-			fieldMap[fieldName] = interfaces.FieldMeta{
-				Name:       fieldName,
-				Type:       MapType(props.Type),
-				OrigType:   props.Type,
-				Searchable: true, // Default to true for now
-			}
+	// 遍历：key 和 value 都拿到
+	for fieldName, value := range result {
+		// value: {"ignore_above":256,"type":"keyword"}
+		fieldType, ok := value["type"].(string)
+		if !ok {
+			return fmt.Errorf("failed to read fieldType: %w", err)
+		}
+		fieldMap[fieldName] = interfaces.FieldMeta{
+			Name:       fieldName,
+			Type:       MapType(fieldType),
+			OrigType:   fieldType,
+			Searchable: true, // Default to true for now
+			Features:   value,
 		}
 	}
 	index.Mapping = fieldMap
@@ -390,7 +408,7 @@ func (c *OpenSearchConnector) ExecuteQuery(ctx context.Context, resource *interf
 	}
 
 	// Get the index name from the resource
-	indexName := resource.ID
+	indexName := resource.Name
 	if indexName == "" {
 		return nil, fmt.Errorf("index name is empty in resource")
 	}
@@ -471,7 +489,14 @@ func (c *OpenSearchConnector) ExecuteQuery(ctx context.Context, resource *interf
 	if err != nil {
 		return nil, fmt.Errorf("failed to serialize query: %w", err)
 	}
-
+	// Format the JSON query for better readability
+	var prettyJSON bytes.Buffer
+	err = json.Indent(&prettyJSON, queryJSON, "", "  ")
+	if err != nil {
+		fmt.Println("[OpenSearch query]:", string(queryJSON))
+	} else {
+		fmt.Println("[OpenSearch query]:\n", prettyJSON.String())
+	}
 	// Execute search request
 	req := opensearchapi.SearchRequest{
 		Index: []string{indexName},
@@ -1094,4 +1119,99 @@ func (c *OpenSearchConnector) indexExist(ctx context.Context, name string) (bool
 	defer existsResp.Body.Close()
 
 	return existsResp.StatusCode == 200, nil
+}
+
+// 映射结构定义
+var dataMapping map[string]struct {
+	Mappings struct {
+		Properties map[string]Property `json:"properties"`
+	} `json:"mappings"`
+}
+
+// Property 定义完整的字段属性
+type Property struct {
+	Type       string              `json:"type"`
+	Properties map[string]Property `json:"properties"` // object 嵌套
+	Fields     map[string]Property `json:"fields"`     // multi-fields 子字段
+	// 使用 map[string]any 存储所有其他动态属性
+	Attributes map[string]any `json:"-"`
+}
+
+// UnmarshalJSON 自定义反序列化方法
+func (p *Property) UnmarshalJSON(data []byte) error {
+	// 解析所有字段到一个临时的 map
+	var raw map[string]any
+	if err := json.Unmarshal(data, &raw); err != nil {
+		return err
+	}
+
+	// 初始化 Attributes
+	if p.Attributes == nil {
+		p.Attributes = make(map[string]any)
+	}
+
+	// 处理 type 字段
+	if typeVal, ok := raw["type"]; ok {
+		p.Type = fmt.Sprintf("%v", typeVal)
+	}
+
+	// 将除 type、properties、fields 之外的所有字段复制到 Attributes
+	for key, value := range raw {
+		switch key {
+		case "properties", "fields":
+			continue
+		default:
+			p.Attributes[key] = value
+		}
+	}
+	// 处理 properties 字段（递归解析）
+	if propsVal, ok := raw["properties"].(map[string]any); ok {
+		p.Properties = make(map[string]Property)
+		for propName, propValue := range propsVal {
+			propJSON, _ := json.Marshal(propValue)
+			var prop Property
+			if err := json.Unmarshal(propJSON, &prop); err == nil {
+				p.Properties[propName] = prop
+			}
+		}
+	}
+	// 处理 fields 字段（递归解析）
+	if fieldsVal, ok := raw["fields"].(map[string]any); ok {
+		p.Fields = make(map[string]Property)
+		for fieldName, fieldValue := range fieldsVal {
+			fieldJSON, _ := json.Marshal(fieldValue)
+			var field Property
+			if err := json.Unmarshal(fieldJSON, &field); err == nil {
+				p.Fields[fieldName] = field
+			}
+		}
+	}
+
+	return nil
+}
+
+// 递归解析字段（支持 object 嵌套 + fields 子字段）
+func parseProperties(parentPath string, props map[string]Property, result map[string]map[string]any) {
+	for name, prop := range props {
+		// 拼接完整路径：user.address.city
+		currentPath := name
+		if parentPath != "" {
+			currentPath = parentPath + "." + name
+		}
+		// 如果不是 object 类型，输出完整字段属性
+		if prop.Type != "object" {
+			result[currentPath] = prop.Attributes
+
+		}
+		// 解析 fields 子字段（title.keyword）
+		if len(prop.Fields) > 0 {
+			for fieldName, fieldProp := range prop.Fields {
+				result[currentPath+"."+fieldName] = fieldProp.Attributes
+			}
+		}
+		// 递归解析 object 嵌套字段
+		if len(prop.Properties) > 0 {
+			parseProperties(currentPath, prop.Properties, result)
+		}
+	}
 }

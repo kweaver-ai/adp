@@ -489,12 +489,12 @@ func (c *OpenSearchConnector) ConvertFilterConditionContain(condition interfaces
 	if cond.Cfg.ValueFrom != interfaces.ValueFrom_Const {
 		return nil, fmt.Errorf("condition [contain] only supports ValueFrom_Const, got %s", cond.Cfg.ValueFrom)
 	}
-
+	// 文本包含查询必须用 match /match_phrase
 	values := cond.Value
 	should := make([]map[string]any, len(values))
 	for i, v := range values {
 		should[i] = map[string]any{
-			"term": map[string]any{
+			"match": map[string]any{
 				cond.Lfield.OriginalName: v,
 			},
 		}
