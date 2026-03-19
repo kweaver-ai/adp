@@ -225,7 +225,7 @@ CREATE TABLE IF NOT EXISTS t_resource (
     CLUSTER PRIMARY KEY (f_id)
 );
 
-CREATE UNIQUE INDEX IF NOT EXISTS idx_t_resource_catalog_name ON t_resource(f_catalog_id, f_name);
+CREATE UNIQUE INDEX IF NOT EXISTS uk_t_resource_catalog_name ON t_resource(f_catalog_id, f_name);
 
 CREATE INDEX IF NOT EXISTS idx_t_resource_category ON t_resource(f_category);
 
