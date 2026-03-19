@@ -164,3 +164,23 @@ func (o *ossGatetWayS3) UploadFile(ctx context.Context, ossID string, key string
 
 	return nil
 }
+
+// GetUploadReq implements OssGateWay.
+func (o *ossGatetWayS3) GetUploadReq(ctx context.Context, ossID string, key string, expires int64, internalRequest bool) (*UploadRequest, error) {
+	conn := o.s3.GetConnection(ossID)
+	if conn == nil {
+		return nil, fmt.Errorf("s3 connection not found")
+	}
+
+	url, err := conn.GetUploadURL(ctx, key, expires)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get upload url: %w", err)
+	}
+
+	return &UploadRequest{
+		Method:  "PUT",
+		URL:     url,
+		Headers: map[string]string{},
+		Expires: expires,
+	}, nil
+}

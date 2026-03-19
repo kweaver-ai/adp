@@ -76,6 +76,7 @@ type Config struct {
 	BusinessDomain           BusinessDomain           `mapstructure:"business_domain"`
 	AccessAddress            AccessAddress            `mapstructure:"access_address"`
 	Sandbox                  Sandbox                  `mapstructure:"sandbox"`
+	FlowFileDownload         FlowFileDownload         `mapstructure:"flow_file_download"`
 }
 
 type DagInstanceEventArchivePolicy string
@@ -585,6 +586,15 @@ type Sandbox struct {
 	Memory     string `mapstructure:"memory"`
 	Disk       string `mapstructure:"disk"`
 	Timeout    int    `mapstructure:"timeout"` // 默认超时时间（秒）
+}
+
+// FlowFileDownload 文件下载线程池配置
+type FlowFileDownload struct {
+	WorkerCount     int   `mapstructure:"worker_count"`     // 每实例 worker 数
+	PollInterval    int   `mapstructure:"poll_interval"`    // 轮询间隔(秒)
+	BatchSize       int   `mapstructure:"batch_size"`       // 每次查询任务数
+	DownloadTimeout int   `mapstructure:"download_timeout"` // 下载超时(秒)
+	MaxFileSize     int64 `mapstructure:"max_file_size"`    // 最大文件大小(字节)
 }
 
 // BindEnvs bind envs

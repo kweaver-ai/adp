@@ -89,6 +89,16 @@ func startUserManagementMock() {
 		c.JSON(http.StatusOK, response)
 	})
 
+	router.GET("/api/user-management/v1/users/:user_id/accessor_ids", func(c *gin.Context) {
+		userID := c.Param("user_id")
+		log.Printf("[UserManagement] Received accessor IDs request for user_id: %s", userID)
+
+		response := []string{userID}
+
+		log.Printf("[UserManagement] Returning mock response: %+v", response)
+		c.JSON(http.StatusOK, response)
+	})
+
 	// Mock get user info endpoint
 	router.GET("/api/user-management/v1/users/:user_id/:fields", func(c *gin.Context) {
 		userID := c.Param("user_id")

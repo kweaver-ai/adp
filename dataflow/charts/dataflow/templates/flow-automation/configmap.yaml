@@ -37,6 +37,11 @@ data:
   SERVER_DB_TYPE: {{ .Values.flowAutomation.service.dbType | quote }}
   SERVER_AUTH_ENABLED: {{ .Values.auth.enabled | quote }}
   SERVER_BUSINESSDOMAIN_ENABLED: {{ .Values.businessDomain.enabled | quote }}
+  SERVER_FLOW_FILE_DOWNLOAD_WORKER_COUNT: {{ .Values.flowAutomation.flowFileDownload.workerCount | quote }}
+  SERVER_FLOW_FILE_DOWNLOAD_POLL_INTERVAL: {{ .Values.flowAutomation.flowFileDownload.pollInterval | quote }}
+  SERVER_FLOW_FILE_DOWNLOAD_BATCH_SIZE: {{ .Values.flowAutomation.flowFileDownload.batchSize | quote }}
+  SERVER_FLOW_FILE_DOWNLOAD_TIMEOUT: {{ .Values.flowAutomation.flowFileDownload.downloadTimeout | quote }}
+  SERVER_FLOW_FILE_DOWNLOAD_MAX_FILE_SIZE: {{ .Values.flowAutomation.flowFileDownload.maxFileSize | quote }}
   MONGODB_USER: {{ .Values.depServices.mongodb.user | quote }}
   MONGODB_HOST: {{ .Values.depServices.mongodb.host | quote }}
   MONGODB_PORT: {{ .Values.depServices.mongodb.port | quote }}

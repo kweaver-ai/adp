@@ -141,3 +141,27 @@ func (c *S3Connection) GetObject(ctx context.Context, key string) (io.ReadCloser
 
 	return resp.Body, nil
 }
+
+// GetUploadURL 生成一个限时的预签名上传链接
+func (c *S3Connection) GetUploadURL(ctx context.Context, key string, expires int64) (url string, err error) {
+	if err := c.InitClient(); err != nil {
+		return "", err
+	}
+
+	req, _ := c.client.PutObjectRequest(&s3.PutObjectInput{
+		Bucket: aws.String(c.BucketName),
+		Key:    aws.String(key),
+	})
+
+	if expires <= 0 {
+		expires = 3600
+	}
+
+	duration := time.Duration(expires) * time.Second
+	urlStr, err := req.Presign(duration)
+	if err != nil {
+		return "", fmt.Errorf("failed to generate presigned upload URL: %w", err)
+	}
+
+	return urlStr, nil
+}
