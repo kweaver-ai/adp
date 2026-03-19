@@ -19,11 +19,11 @@ lint:
 UT_PACKAGES = $(shell cd server && go list ./... | grep -v /mock)
 
 test:
-	cd server && go test $(UT_PACKAGES) -gcflags=all=-l -v -count=1
+	cd server && I18N_MODE_UT=true go test $(UT_PACKAGES) -gcflags=all=-l -v -count=1
 
 test-cover:
 	@mkdir -p test-result
-	cd server && go test $(UT_PACKAGES) -gcflags=all=-l \
+	cd server && I18N_MODE_UT=true go test $(UT_PACKAGES) -gcflags=all=-l \
 		-coverprofile=../test-result/coverage.out \
 		-covermode=atomic
 	go tool cover -func=test-result/coverage.out
@@ -33,7 +33,7 @@ test-cover:
 		echo "WARN: gocover-cobertura not found, coverage.xml not generated"
 
 test-race:
-	cd server && go test $(UT_PACKAGES) -gcflags=all=-l -race -count=1
+	cd server && I18N_MODE_UT=true go test $(UT_PACKAGES) -gcflags=all=-l -race -count=1
 
 ci: lint test-cover
 
