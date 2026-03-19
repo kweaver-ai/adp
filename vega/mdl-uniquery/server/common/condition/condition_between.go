@@ -57,7 +57,7 @@ func (cond *BetweenCond) Convert(ctx context.Context) (string, error) {
 		var format string
 		switch gte.(type) {
 		case string:
-			format = "strict_date_optional_time"
+			format = "yyyy-MM-dd HH:mm:ss.SSS"
 			gte = fmt.Sprintf("%q", gte)
 			lte = fmt.Sprintf("%q", lte)
 		case float64:

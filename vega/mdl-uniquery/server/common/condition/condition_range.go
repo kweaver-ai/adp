@@ -64,7 +64,7 @@ func (cond *RangeCond) Convert(ctx context.Context) (string, error) {
 		var format string
 		switch gte.(type) {
 		case string:
-			format = "strict_date_optional_time"
+			format = "yyyy-MM-dd HH:mm:ss.SSS"
 		case float64:
 			format = "epoch_millis"
 			gte = int64(gte.(float64))

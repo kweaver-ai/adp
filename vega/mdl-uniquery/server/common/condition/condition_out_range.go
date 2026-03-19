@@ -64,7 +64,7 @@ func (cond *OutRangeCond) Convert(ctx context.Context) (string, error) {
 		format := ""
 		switch lt.(type) {
 		case string:
-			format = "strict_date_optional_time"
+			format = "yyyy-MM-dd HH:mm:ss.SSS"
 		case float64:
 			format = "epoch_millis"
 			lt = int64(lt.(float64))
