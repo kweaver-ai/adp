@@ -48,7 +48,7 @@ for mod in "${ALL_MODULES[@]}"; do
     if [[ -f "$mod/go.mod" ]] || [[ -f "$mod/server/go.mod" ]]; then
         check "make test-cover target (Go)" "grep -q '^test-cover:' $mod/Makefile 2>/dev/null"
         check "no golang/mock (deprecated)" \
-            "! grep -rq 'github.com/golang/mock' $mod/"
+            "! grep -rq --include='*.go' --include='go.mod' 'github.com/golang/mock' $mod/"
     fi
 done
 
