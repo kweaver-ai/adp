@@ -11,9 +11,8 @@ import (
 	"testing"
 
 	"github.com/gin-gonic/gin"
-	"github.com/golang/mock/gomock"
+	"go.uber.org/mock/gomock"
 	"github.com/kweaver-ai/kweaver-go-lib/hydra"
-	hmock "github.com/kweaver-ai/kweaver-go-lib/hydra/mock"
 	. "github.com/smartystreets/goconvey/convey"
 
 	"bkn-backend/common"
@@ -45,7 +44,7 @@ func Test_RestHandler_ListResources(t *testing.T) {
 		defer mockCtrl.Finish()
 
 		appSetting := &common.AppSetting{}
-		hydraMock := hmock.NewMockHydra(mockCtrl)
+		hydraMock := bmock.NewMockHydra(mockCtrl)
 		kns := bmock.NewMockKNService(mockCtrl)
 
 		handler := MockNewResourceRestHandler(appSetting, hydraMock, kns)

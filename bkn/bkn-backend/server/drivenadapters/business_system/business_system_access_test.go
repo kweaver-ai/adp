@@ -11,9 +11,9 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/golang/mock/gomock"
+	"go.uber.org/mock/gomock"
 	"github.com/kweaver-ai/kweaver-go-lib/rest"
-	rmock "github.com/kweaver-ai/kweaver-go-lib/rest/mock"
+	rmock "bkn-backend/interfaces/mock"
 	. "github.com/smartystreets/goconvey/convey"
 
 	"bkn-backend/common"

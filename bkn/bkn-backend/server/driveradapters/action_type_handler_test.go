@@ -13,9 +13,8 @@ import (
 
 	"github.com/bytedance/sonic"
 	"github.com/gin-gonic/gin"
-	"github.com/golang/mock/gomock"
+	"go.uber.org/mock/gomock"
 	"github.com/kweaver-ai/kweaver-go-lib/hydra"
-	hmock "github.com/kweaver-ai/kweaver-go-lib/hydra/mock"
 	"github.com/kweaver-ai/kweaver-go-lib/rest"
 	. "github.com/smartystreets/goconvey/convey"
 
@@ -51,7 +50,7 @@ func Test_ActionTypeRestHandler_CreateActionTypes(t *testing.T) {
 		defer mockCtrl.Finish()
 
 		appSetting := &common.AppSetting{}
-		hydraMock := hmock.NewMockHydra(mockCtrl)
+		hydraMock := bmock.NewMockHydra(mockCtrl)
 		ats := bmock.NewMockActionTypeService(mockCtrl)
 		kns := bmock.NewMockKNService(mockCtrl)
 
@@ -200,7 +199,7 @@ func Test_ActionTypeRestHandler_UpdateActionType(t *testing.T) {
 		defer mockCtrl.Finish()
 
 		appSetting := &common.AppSetting{}
-		hydraMock := hmock.NewMockHydra(mockCtrl)
+		hydraMock := bmock.NewMockHydra(mockCtrl)
 		ats := bmock.NewMockActionTypeService(mockCtrl)
 		kns := bmock.NewMockKNService(mockCtrl)
 
@@ -304,7 +303,7 @@ func Test_ActionTypeRestHandler_DeleteActionTypes(t *testing.T) {
 		defer mockCtrl.Finish()
 
 		appSetting := &common.AppSetting{}
-		hydraMock := hmock.NewMockHydra(mockCtrl)
+		hydraMock := bmock.NewMockHydra(mockCtrl)
 		ats := bmock.NewMockActionTypeService(mockCtrl)
 		kns := bmock.NewMockKNService(mockCtrl)
 
@@ -366,7 +365,7 @@ func Test_ActionTypeRestHandler_ListActionTypes(t *testing.T) {
 		defer mockCtrl.Finish()
 
 		appSetting := &common.AppSetting{}
-		hydraMock := hmock.NewMockHydra(mockCtrl)
+		hydraMock := bmock.NewMockHydra(mockCtrl)
 		ats := bmock.NewMockActionTypeService(mockCtrl)
 		kns := bmock.NewMockKNService(mockCtrl)
 
@@ -426,7 +425,7 @@ func Test_ActionTypeRestHandler_GetActionTypes(t *testing.T) {
 		defer mockCtrl.Finish()
 
 		appSetting := &common.AppSetting{}
-		hydraMock := hmock.NewMockHydra(mockCtrl)
+		hydraMock := bmock.NewMockHydra(mockCtrl)
 		ats := bmock.NewMockActionTypeService(mockCtrl)
 		kns := bmock.NewMockKNService(mockCtrl)
 
@@ -536,7 +535,7 @@ func Test_ActionTypeRestHandler_SearchActionTypes(t *testing.T) {
 		defer mockCtrl.Finish()
 
 		appSetting := &common.AppSetting{}
-		hydraMock := hmock.NewMockHydra(mockCtrl)
+		hydraMock := bmock.NewMockHydra(mockCtrl)
 		ats := bmock.NewMockActionTypeService(mockCtrl)
 		kns := bmock.NewMockKNService(mockCtrl)
 
@@ -643,7 +642,7 @@ func Test_ActionTypeRestHandler_HandleActionTypeGetOverride(t *testing.T) {
 		defer mockCtrl.Finish()
 
 		appSetting := &common.AppSetting{}
-		hydraMock := hmock.NewMockHydra(mockCtrl)
+		hydraMock := bmock.NewMockHydra(mockCtrl)
 		ats := bmock.NewMockActionTypeService(mockCtrl)
 		kns := bmock.NewMockKNService(mockCtrl)
 

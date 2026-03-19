@@ -10,7 +10,6 @@ require (
 	github.com/emirpasic/gods v1.18.1
 	github.com/fsnotify/fsnotify v1.9.0
 	github.com/gin-gonic/gin v1.11.0
-	github.com/golang/mock v1.6.0
 	github.com/kweaver-ai/TelemetrySDK-Go/exporter/v2 v2.10.3
 	github.com/kweaver-ai/bkn-specification/sdk/golang v0.0.2
 	github.com/kweaver-ai/kweaver-go-lib v1.0.3
@@ -25,6 +24,7 @@ require (
 	go.opentelemetry.io/otel v1.29.0
 	go.opentelemetry.io/otel/trace v1.29.0
 	go.uber.org/automaxprocs v1.6.0
+	go.uber.org/mock v0.5.2
 )
 
 require (

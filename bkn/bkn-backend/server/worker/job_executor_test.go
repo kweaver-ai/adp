@@ -13,7 +13,7 @@ import (
 
 	"github.com/DATA-DOG/go-sqlmock"
 	llq "github.com/emirpasic/gods/queues/linkedlistqueue"
-	"github.com/golang/mock/gomock"
+	"go.uber.org/mock/gomock"
 	. "github.com/smartystreets/goconvey/convey"
 
 	"bkn-backend/common"

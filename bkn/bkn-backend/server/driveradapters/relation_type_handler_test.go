@@ -13,9 +13,8 @@ import (
 
 	"github.com/bytedance/sonic"
 	"github.com/gin-gonic/gin"
-	"github.com/golang/mock/gomock"
+	"go.uber.org/mock/gomock"
 	"github.com/kweaver-ai/kweaver-go-lib/hydra"
-	hmock "github.com/kweaver-ai/kweaver-go-lib/hydra/mock"
 	"github.com/kweaver-ai/kweaver-go-lib/rest"
 	. "github.com/smartystreets/goconvey/convey"
 
@@ -51,7 +50,7 @@ func Test_RelationTypeRestHandler_CreateRelationTypes(t *testing.T) {
 		defer mockCtrl.Finish()
 
 		appSetting := &common.AppSetting{}
-		hydraMock := hmock.NewMockHydra(mockCtrl)
+		hydraMock := bmock.NewMockHydra(mockCtrl)
 		rts := bmock.NewMockRelationTypeService(mockCtrl)
 		kns := bmock.NewMockKNService(mockCtrl)
 
@@ -212,7 +211,7 @@ func Test_RelationTypeRestHandler_UpdateRelationType(t *testing.T) {
 		defer mockCtrl.Finish()
 
 		appSetting := &common.AppSetting{}
-		hydraMock := hmock.NewMockHydra(mockCtrl)
+		hydraMock := bmock.NewMockHydra(mockCtrl)
 		rts := bmock.NewMockRelationTypeService(mockCtrl)
 		kns := bmock.NewMockKNService(mockCtrl)
 
@@ -367,7 +366,7 @@ func Test_RelationTypeRestHandler_DeleteRelationTypes(t *testing.T) {
 		defer mockCtrl.Finish()
 
 		appSetting := &common.AppSetting{}
-		hydraMock := hmock.NewMockHydra(mockCtrl)
+		hydraMock := bmock.NewMockHydra(mockCtrl)
 		rts := bmock.NewMockRelationTypeService(mockCtrl)
 		kns := bmock.NewMockKNService(mockCtrl)
 
@@ -449,7 +448,7 @@ func Test_RelationTypeRestHandler_ListRelationTypes(t *testing.T) {
 		defer mockCtrl.Finish()
 
 		appSetting := &common.AppSetting{}
-		hydraMock := hmock.NewMockHydra(mockCtrl)
+		hydraMock := bmock.NewMockHydra(mockCtrl)
 		rts := bmock.NewMockRelationTypeService(mockCtrl)
 		kns := bmock.NewMockKNService(mockCtrl)
 
@@ -528,7 +527,7 @@ func Test_RelationTypeRestHandler_GetRelationTypes(t *testing.T) {
 		defer mockCtrl.Finish()
 
 		appSetting := &common.AppSetting{}
-		hydraMock := hmock.NewMockHydra(mockCtrl)
+		hydraMock := bmock.NewMockHydra(mockCtrl)
 		rts := bmock.NewMockRelationTypeService(mockCtrl)
 		kns := bmock.NewMockKNService(mockCtrl)
 
@@ -608,7 +607,7 @@ func Test_RelationTypeRestHandler_SearchRelationTypes(t *testing.T) {
 		defer mockCtrl.Finish()
 
 		appSetting := &common.AppSetting{}
-		hydraMock := hmock.NewMockHydra(mockCtrl)
+		hydraMock := bmock.NewMockHydra(mockCtrl)
 		rts := bmock.NewMockRelationTypeService(mockCtrl)
 		kns := bmock.NewMockKNService(mockCtrl)
 
@@ -719,7 +718,7 @@ func Test_RelationTypeRestHandler_HandleRelationTypeGetOverride(t *testing.T) {
 		defer mockCtrl.Finish()
 
 		appSetting := &common.AppSetting{}
-		hydraMock := hmock.NewMockHydra(mockCtrl)
+		hydraMock := bmock.NewMockHydra(mockCtrl)
 		rts := bmock.NewMockRelationTypeService(mockCtrl)
 		kns := bmock.NewMockKNService(mockCtrl)
 
