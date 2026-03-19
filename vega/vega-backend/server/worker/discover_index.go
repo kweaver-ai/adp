@@ -198,12 +198,17 @@ func (dw *discoverWorker) enrichIndexMetadata(ctx context.Context,
 		// Map fields to SchemaDefinition
 		var columns []*interfaces.Property
 		for _, field := range idx.Mapping {
+			// {"ignore_above":256,"type":"keyword"} : 去掉type
+			delete(field.Features, "type")
+
 			columns = append(columns, &interfaces.Property{
 				Name:         field.Name,
 				Type:         field.Type,
+				OrigType:     field.OrigType,
 				DisplayName:  field.Name,
 				OriginalName: field.Name,
 				Description:  "",
+				Attributes:   field.Features,
 			})
 		}
 		resource.SchemaDefinition = columns

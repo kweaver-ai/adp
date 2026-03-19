@@ -62,10 +62,12 @@ type Resource struct {
 type Property struct {
 	Name         string            `json:"name"`
 	Type         string            `json:"type"`
+	OrigType     string            `json:"orig_type"`
 	DisplayName  string            `json:"display_name"`
 	OriginalName string            `json:"original_name"`
 	Description  string            `json:"description"`
 	Features     []PropertyFeature `json:"features"`
+	Attributes   map[string]any    `json:"attributes"`
 }
 
 type PropertyFeature struct {

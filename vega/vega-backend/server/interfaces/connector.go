@@ -104,11 +104,12 @@ type IndexMeta struct {
 
 // FieldMeta represents index field metadata.
 type FieldMeta struct {
-	Name       string `json:"name"`
-	Type       string `json:"type"`
-	OrigType   string `json:"orig_type"`
-	Analyzer   string `json:"analyzer,omitempty"`
-	Searchable bool   `json:"searchable"`
+	Name       string                 `json:"name"`
+	Type       string                 `json:"type"`
+	OrigType   string                 `json:"orig_type"`
+	Analyzer   string                 `json:"analyzer,omitempty"`
+	Searchable bool                   `json:"searchable"`
+	Features   map[string]interface{} `json:"features"`
 }
 
 // HealthStatus represents connection health status.
