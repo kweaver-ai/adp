@@ -64,27 +64,27 @@ func TestSkillHandler(t *testing.T) {
 			So(recorder.Code, ShouldEqual, http.StatusBadRequest)
 		})
 
-		Convey("GetSkillGuide binds uri and calls reader", func() {
+		Convey("GetSkillContent binds uri and calls reader", func() {
 			mockRegistry := mocks.NewMockSkillRegistry(ctrl)
 			mockReader := mocks.NewMockSkillReader(ctrl)
 			handler := &skillHandler{
 				Registry: mockRegistry,
 				Reader:   mockReader,
 			}
-			mockReader.EXPECT().GetSkillGuide(gomock.Any(), gomock.Any()).DoAndReturn(
-				func(_ any, req *interfaces.GetSkillGuideReq) (*interfaces.GetSkillGuideResp, error) {
+			mockReader.EXPECT().GetSkillContent(gomock.Any(), gomock.Any()).DoAndReturn(
+				func(_ any, req *interfaces.GetSkillContentReq) (*interfaces.GetSkillContentResp, error) {
 					So(req.BusinessDomainID, ShouldEqual, "bd-test")
 					So(req.SkillID, ShouldEqual, "skill-2")
-					return &interfaces.GetSkillGuideResp{SkillID: "skill-2", Content: "guide"}, nil
+					return &interfaces.GetSkillContentResp{SkillID: "skill-2", SkillContent: "guide"}, nil
 				},
 			)
 
-			recorder := performSkillRequest(http.MethodGet, "/skills/:skill_id/guide", "", "", map[string]string{
+			recorder := performSkillRequest(http.MethodGet, "/skills/:skill_id/content", "", "", map[string]string{
 				"x-business-domain": "bd-test",
-			}, handler.GetSkillGuide, "skill-2")
+			}, handler.GetSkillContent, "skill-2")
 
 			So(recorder.Code, ShouldEqual, http.StatusOK)
-			So(recorder.Body.String(), ShouldContainSubstring, `"content":"guide"`)
+			So(recorder.Body.String(), ShouldContainSubstring, `"skill_content":"guide"`)
 		})
 
 		Convey("ReadSkillFile binds body and calls reader", func() {
@@ -109,6 +109,35 @@ func TestSkillHandler(t *testing.T) {
 
 			So(recorder.Code, ShouldEqual, http.StatusOK)
 			So(recorder.Body.String(), ShouldContainSubstring, `"content":"body"`)
+		})
+
+		Convey("DownloadSkill binds uri and returns zip response", func() {
+			mockRegistry := mocks.NewMockSkillRegistry(ctrl)
+			mockReader := mocks.NewMockSkillReader(ctrl)
+			handler := &skillHandler{
+				Registry: mockRegistry,
+				Reader:   mockReader,
+			}
+			mockRegistry.EXPECT().DownloadSkill(gomock.Any(), gomock.Any()).DoAndReturn(
+				func(_ any, req *interfaces.DownloadSkillReq) (*interfaces.DownloadSkillResp, error) {
+					So(req.BusinessDomainID, ShouldEqual, "bd-test")
+					So(req.SkillID, ShouldEqual, "skill-4")
+					return &interfaces.DownloadSkillResp{
+						SkillID:  "skill-4",
+						FileName: "demo-skill.zip",
+						Content:  []byte("zip-bytes"),
+					}, nil
+				},
+			)
+
+			recorder := performSkillRequest(http.MethodGet, "/skills/:skill_id/download", "", "", map[string]string{
+				"x-business-domain": "bd-test",
+			}, handler.DownloadSkill, "skill-4")
+
+			So(recorder.Code, ShouldEqual, http.StatusOK)
+			So(recorder.Header().Get("Content-Type"), ShouldEqual, "application/zip")
+			So(recorder.Header().Get("Content-Disposition"), ShouldContainSubstring, `filename="demo-skill.zip"`)
+			So(recorder.Body.String(), ShouldEqual, "zip-bytes")
 		})
 	})
 }

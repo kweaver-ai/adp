@@ -324,7 +324,7 @@ CREATE TABLE IF NOT EXISTS `t_skill_repository` (
     `f_skill_id` varchar(40) NOT NULL COMMENT 'Skill ID',
     `f_name` varchar(255) NOT NULL COMMENT 'Skill 名称',
     `f_description` longtext NOT NULL COMMENT 'Skill 描述',
-    `f_instructions` longtext NOT NULL COMMENT 'Skill 指令正文',
+    `f_skill_content` longtext NOT NULL COMMENT 'Skill 指令正文',
     `f_version` varchar(40) NOT NULL COMMENT 'Skill 版本',
     `f_status` varchar(40) NOT NULL COMMENT 'Skill 状态',
     `f_source` varchar(50) NOT NULL DEFAULT '' COMMENT 'Skill 来源',

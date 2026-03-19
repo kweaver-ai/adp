@@ -33,7 +33,7 @@ func NewSkillReader() interfaces.SkillReader {
 	return readerInst
 }
 
-func (r *skillReader) GetSkillGuide(ctx context.Context, req *interfaces.GetSkillGuideReq) (*interfaces.GetSkillGuideResp, error) {
+func (r *skillReader) GetSkillContent(ctx context.Context, req *interfaces.GetSkillContentReq) (*interfaces.GetSkillContentResp, error) {
 	skill, err := r.skillRepo.SelectSkillByID(ctx, nil, req.SkillID)
 	if err != nil {
 		return nil, err
@@ -41,11 +41,11 @@ func (r *skillReader) GetSkillGuide(ctx context.Context, req *interfaces.GetSkil
 	if skill == nil || skill.Status == model.SkillStatusDeleting {
 		return nil, fmt.Errorf("skill not found: %s", req.SkillID)
 	}
-	return &interfaces.GetSkillGuideResp{
-		SkillID: skill.SkillID,
-		Content: skill.Instructions,
-		Files:   utils.JSONToObject[[]*interfaces.SkillFileSummary](skill.FileManifest),
-		Status:  skill.Status,
+	return &interfaces.GetSkillContentResp{
+		SkillID:      skill.SkillID,
+		SkillContent: skill.SkillContent,
+		Files:        utils.JSONToObject[[]*interfaces.SkillFileSummary](skill.FileManifest),
+		Status:       skill.Status,
 	}, nil
 }
 

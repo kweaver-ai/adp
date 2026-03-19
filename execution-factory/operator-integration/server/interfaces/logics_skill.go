@@ -45,6 +45,20 @@ type DeleteSkillReq struct {
 	SkillID          string `uri:"skill_id" validate:"required"`
 }
 
+// DownloadSkillReq 下载 Skill 请求
+type DownloadSkillReq struct {
+	BusinessDomainID string `header:"x-business-domain" validate:"required"`
+	UserID           string `header:"user_id"`
+	SkillID          string `uri:"skill_id" validate:"required"`
+}
+
+// DownloadSkillResp 下载 Skill 响应
+type DownloadSkillResp struct {
+	SkillID  string `json:"skill_id"`
+	FileName string `json:"file_name"`
+	Content  []byte `json:"content"`
+}
+
 // QuerySkillListReq Skill 列表查询
 type QuerySkillListReq struct {
 	BusinessDomainID string            `header:"x-business-domain" validate:"required"`
@@ -101,6 +115,21 @@ type QuerySkillListResp struct {
 	Data             []*SkillSummary `json:"data"`
 }
 
+// QuerySkillMarketListReq Skill 市场列表查询
+type QuerySkillMarketListReq struct {
+	BusinessDomainID string `header:"x-business-domain" validate:"required"`
+	UserID           string `header:"user_id"`
+	Name             string `form:"name"`
+	Source           string `form:"source"`
+	CommonPageParams `json:",inline"`
+}
+
+// QuerySkillMarketListResp Skill 市场列表响应
+type QuerySkillMarketListResp struct {
+	CommonPageResult `json:",inline"`
+	Data             []*SkillSummary `json:"data"`
+}
+
 // GetSkillDetailReq Skill 详情查询
 type GetSkillDetailReq struct {
 	BusinessDomainID string `header:"x-business-domain" validate:"required"`
@@ -108,19 +137,26 @@ type GetSkillDetailReq struct {
 	SkillID          string `uri:"skill_id" validate:"required"`
 }
 
-// GetSkillGuideReq Skill Guide 查询
-type GetSkillGuideReq struct {
+// GetSkillMarketDetailReq Skill 市场详情查询
+type GetSkillMarketDetailReq struct {
 	BusinessDomainID string `header:"x-business-domain" validate:"required"`
 	UserID           string `header:"user_id"`
 	SkillID          string `uri:"skill_id" validate:"required"`
 }
 
-// GetSkillGuideResp Skill Guide 响应
-type GetSkillGuideResp struct {
-	SkillID string              `json:"skill_id"`
-	Content string              `json:"content"`
-	Files   []*SkillFileSummary `json:"files"`
-	Status  model.SkillStatus   `json:"status"`
+// GetSkillContentReq Skill 内容查询
+type GetSkillContentReq struct {
+	BusinessDomainID string `header:"x-business-domain" validate:"required"`
+	UserID           string `header:"user_id"`
+	SkillID          string `uri:"skill_id" validate:"required"`
+}
+
+// GetSkillContentResp Skill 内容响应
+type GetSkillContentResp struct {
+	SkillID      string              `json:"skill_id"`
+	SkillContent string              `json:"skill_content"`
+	Files        []*SkillFileSummary `json:"files"`
+	Status       model.SkillStatus   `json:"status"`
 }
 
 // ReadSkillFileReq 读取 Skill 文件请求
@@ -158,13 +194,20 @@ type AgentSkillBindingResp struct {
 type SkillRegistry interface {
 	RegisterSkill(ctx context.Context, req *RegisterSkillReq) (*RegisterSkillResp, error)
 	DeleteSkill(ctx context.Context, req *DeleteSkillReq) error
+	DownloadSkill(ctx context.Context, req *DownloadSkillReq) (*DownloadSkillResp, error)
 	QuerySkillList(ctx context.Context, req *QuerySkillListReq) (*QuerySkillListResp, error)
 	GetSkillDetail(ctx context.Context, req *GetSkillDetailReq) (*SkillInfo, error)
 }
 
+// SkillMarket Skill 市场接口
+type SkillMarket interface {
+	QuerySkillMarketList(ctx context.Context, req *QuerySkillMarketListReq) (*QuerySkillMarketListResp, error)
+	GetSkillMarketDetail(ctx context.Context, req *GetSkillMarketDetailReq) (*SkillInfo, error)
+}
+
 // SkillReader Skill 只读接口
 type SkillReader interface {
-	GetSkillGuide(ctx context.Context, req *GetSkillGuideReq) (*GetSkillGuideResp, error)
+	GetSkillContent(ctx context.Context, req *GetSkillContentReq) (*GetSkillContentResp, error)
 	ReadSkillFile(ctx context.Context, req *ReadSkillFileReq) (*ReadSkillFileResp, error)
 }
 

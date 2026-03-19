@@ -54,6 +54,7 @@ const (
 	AuthResourceTypeToolBox  AuthResourceType = "tool_box" // 工具箱
 	AuthResourceTypeMCP      AuthResourceType = "mcp"      // MCP
 	AuthResourceTypeOperator AuthResourceType = "operator" // 算子
+	AuthResourceTypeSkill    AuthResourceType = "skill"    // Skill
 )
 
 func (a AuthResourceType) String() string {

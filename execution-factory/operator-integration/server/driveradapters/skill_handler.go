@@ -33,7 +33,8 @@ func (r *skillRestHandler) RegisterPublic(engine *gin.RouterGroup) {
 	engine.POST("/skills", middlewareBusinessDomain(true, false), r.SkillHandler.RegisterSkill)
 	engine.GET("/skills", middlewareBusinessDomain(true, false), r.SkillHandler.QuerySkillList)
 	engine.GET("/skills/:skill_id", middlewareBusinessDomain(true, false), r.SkillHandler.GetSkillDetail)
-	engine.GET("/skills/:skill_id/guide", middlewareBusinessDomain(true, false), r.SkillHandler.GetSkillGuide)
+	engine.GET("/skills/:skill_id/content", middlewareBusinessDomain(true, false), r.SkillHandler.GetSkillContent)
+	engine.GET("/skills/:skill_id/download", middlewareBusinessDomain(true, false), r.SkillHandler.DownloadSkill)
 	engine.POST("/skills/:skill_id/files/read", middlewareBusinessDomain(true, false), r.SkillHandler.ReadSkillFile)
 	engine.DELETE("/skills/:skill_id", middlewareBusinessDomain(true, false), r.SkillHandler.DeleteSkill)
 }

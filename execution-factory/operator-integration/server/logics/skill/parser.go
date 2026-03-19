@@ -81,7 +81,7 @@ func (p *skillParser) parseSkillContent(content string, req *interfaces.Register
 	skill := &model.SkillRepositoryDB{
 		Name:         fm.Name,
 		Description:  fm.Description,
-		Instructions: strings.TrimSpace(parts[2]),
+		SkillContent: strings.TrimSpace(parts[2]),
 		Version:      fm.Version,
 		Status:       model.SkillStatusDraft,
 		Source:       req.Source,

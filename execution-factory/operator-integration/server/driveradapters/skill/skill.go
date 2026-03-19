@@ -1,6 +1,7 @@
 package skill
 
 import (
+	"fmt"
 	"net/http"
 
 	"github.com/creasty/defaults"
@@ -77,6 +78,29 @@ func (h *skillHandler) DeleteSkill(c *gin.Context) {
 	rest.ReplyOK(c, http.StatusOK, gin.H{"skill_id": req.SkillID, "deleted": true})
 }
 
+func (h *skillHandler) DownloadSkill(c *gin.Context) {
+	req := &interfaces.DownloadSkillReq{}
+	if err := c.ShouldBindHeader(req); err != nil {
+		rest.ReplyError(c, errors.DefaultHTTPError(c.Request.Context(), http.StatusBadRequest, err.Error()))
+		return
+	}
+	if err := c.ShouldBindUri(req); err != nil {
+		rest.ReplyError(c, errors.DefaultHTTPError(c.Request.Context(), http.StatusBadRequest, err.Error()))
+		return
+	}
+	if err := validator.New().Struct(req); err != nil {
+		rest.ReplyError(c, err)
+		return
+	}
+	resp, err := h.Registry.DownloadSkill(c.Request.Context(), req)
+	if err != nil {
+		rest.ReplyError(c, err)
+		return
+	}
+	c.Header("Content-Disposition", fmt.Sprintf("attachment; filename=%q", resp.FileName))
+	c.Data(http.StatusOK, "application/zip", resp.Content)
+}
+
 func (h *skillHandler) QuerySkillList(c *gin.Context) {
 	req := &interfaces.QuerySkillListReq{}
 	if err := c.ShouldBindHeader(req); err != nil {
@@ -125,8 +149,8 @@ func (h *skillHandler) GetSkillDetail(c *gin.Context) {
 	rest.ReplyOK(c, http.StatusOK, resp)
 }
 
-func (h *skillHandler) GetSkillGuide(c *gin.Context) {
-	req := &interfaces.GetSkillGuideReq{}
+func (h *skillHandler) GetSkillContent(c *gin.Context) {
+	req := &interfaces.GetSkillContentReq{}
 	if err := c.ShouldBindHeader(req); err != nil {
 		rest.ReplyError(c, errors.DefaultHTTPError(c.Request.Context(), http.StatusBadRequest, err.Error()))
 		return
@@ -139,7 +163,7 @@ func (h *skillHandler) GetSkillGuide(c *gin.Context) {
 		rest.ReplyError(c, err)
 		return
 	}
-	resp, err := h.Reader.GetSkillGuide(c.Request.Context(), req)
+	resp, err := h.Reader.GetSkillContent(c.Request.Context(), req)
 	if err != nil {
 		rest.ReplyError(c, err)
 		return
