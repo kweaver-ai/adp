@@ -8,7 +8,7 @@ package opensearch
 import (
 	"fmt"
 	"strings"
-
+	"time"
 	"vega-backend/interfaces"
 	"vega-backend/logics/filter_condition"
 )
@@ -948,17 +948,24 @@ func (c *OpenSearchConnector) ConvertFilterConditionBefore(condition interfaces.
 	if !ok {
 		return nil, fmt.Errorf("condition [before] interval value should be a number")
 	}
-	_, ok = values[1].(string)
+	datetimeStr, ok := values[1].(string)
 	if !ok {
-		return nil, fmt.Errorf("condition [before] unit value should be a string")
+		return nil, fmt.Errorf("condition [before] datetime value should be a string")
 	}
+
+	// Parse the datetime string
+	datetime, err := time.Parse(time.RFC3339, datetimeStr)
+	if err != nil {
+		return nil, fmt.Errorf("condition [before] failed to parse datetime: %v", err)
+	}
+
+	// Subtract the interval hours from the datetime
+	resultTime := datetime.Add(-time.Duration(interval) * time.Hour)
 
 	return map[string]any{
 		"range": map[string]any{
 			cond.Lfield.OriginalName: map[string]any{
-				"lt": map[string]any{
-					"now": fmt.Sprintf("-%dh", int(interval)),
-				},
+				"lt": resultTime.Format(time.RFC3339),
 			},
 		},
 	}, nil
@@ -975,30 +982,41 @@ func (c *OpenSearchConnector) ConvertFilterConditionCurrent(condition interfaces
 	if cond.Cfg.ValueFrom != interfaces.ValueFrom_Const {
 		return nil, fmt.Errorf("condition [current] only supports ValueFrom_Const, got %s", cond.Cfg.ValueFrom)
 	}
-
-	var format string
+	// Get current time
+	now := time.Now()
+	// Calculate the start and end of the current period
+	var startTime, endTime time.Time
 	switch cond.Value {
 	case filter_condition.CurrentYear:
-		format = "yyyy"
+		startTime = time.Date(now.Year(), 1, 1, 0, 0, 0, 0, now.Location())
+		endTime = startTime.AddDate(1, 0, 0)
 	case filter_condition.CurrentMonth:
-		format = "yyyy-MM"
+		startTime = time.Date(now.Year(), now.Month(), 1, 0, 0, 0, 0, now.Location())
+		endTime = startTime.AddDate(0, 1, 0)
 	case filter_condition.CurrentWeek:
-		format = "yyyy-ww"
+		// Get Monday of the current week
+		weekday := now.Weekday()
+		if weekday == time.Sunday {
+			weekday = 7
+		}
+		startTime = time.Date(now.Year(), now.Month(), now.Day()-int(weekday)+1, 0, 0, 0, 0, now.Location())
+		endTime = startTime.AddDate(0, 0, 7)
 	case filter_condition.CurrentDay:
-		format = "yyyy-MM-dd"
+		startTime = time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, now.Location())
+		endTime = startTime.AddDate(0, 0, 1)
 	case filter_condition.CurrentHour:
-		format = "yyyy-MM-dd HH"
+		startTime = time.Date(now.Year(), now.Month(), now.Day(), now.Hour(), 0, 0, 0, now.Location())
+		endTime = startTime.Add(time.Hour)
 	case filter_condition.CurrentMinute:
-		format = "yyyy-MM-dd HH:mm"
-	default:
-		return nil, fmt.Errorf("condition [current] unsupported format: %s", cond.Value)
+		startTime = time.Date(now.Year(), now.Month(), now.Day(), now.Hour(), now.Minute(), 0, 0, now.Location())
+		endTime = startTime.Add(time.Minute)
 	}
 
 	return map[string]any{
-		"script": map[string]any{
-			"source": fmt.Sprintf("doc['%s'].value.toString('${format}') == new Date().toString('${format}')", cond.Lfield.OriginalName),
-			"params": map[string]any{
-				"format": format,
+		"range": map[string]any{
+			cond.Lfield.OriginalName: map[string]any{
+				"gte": startTime.Format(time.RFC3339),
+				"lt":  endTime.Format(time.RFC3339),
 			},
 		},
 	}, nil
