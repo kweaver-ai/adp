@@ -120,3 +120,351 @@ type Property struct {
 2. **健壮性**：`from` 路径引用彻底解决了 SQL 生成时的 `Ambiguous column` 错误。
 3. **灵活性**：支持 `["*"]` 极大地减少了大型表建模时的配置工作量。
 4. **AI 友好**：结构化的 DSL 极大降低了大模型（Agent）生成错误配置的概率。
+
+---
+
+## 7. other
+
+<details>
+<summary>完整 logic_defintition 示例</summary>
+
+### 7.1 join
+```json
+{
+    "logic_definition": [
+        {
+            "id": "node_Jdopj",
+            "title": "数据关联",
+            "type": "join",
+            "inputs": [
+                "node_8rFBz",
+                "node_xERlF"
+            ],
+            "config": {
+                "join_type": "left",
+                "join_on": [
+                    {
+                        "right_field": "supplier_number",
+                        "operator": "=",
+                        "left_field": "supplier_code"
+                    }
+                ]
+            },
+            "output_fields": [
+                {
+                    "name": "paycond_name",
+                    "from": "node_8rFBz.paycond_name"
+                },
+                {
+                    "name": "purchaserid_name",
+                    "from": "node_8rFBz.purchaserid_name"
+                },
+                {
+                    "name": "societycreditcode",
+                    "from": "node_8rFBz.societycreditcode"
+                },
+                {
+                    "name": "supplier_code",
+                    "from": "node_8rFBz.supplier_code"
+                },
+                {
+                    "name": "supplier_name",
+                    "from": "node_8rFBz.supplier_name"
+                },
+                {
+                    "name": "material_name",
+                    "from": "node_xERlF.material_name"
+                },
+                {
+                    "name": "material_number",
+                    "from": "node_xERlF.material_number"
+                },
+                {
+                    "name": "qty",
+                    "from": "node_xERlF.qty"
+                }
+            ]
+        },
+        {
+            "id": "node_8rFBz",
+            "title": "erp_supplier",
+            "type": "view",
+            "inputs": [],
+            "config": {
+                "view_id": "2017573348875202561",
+                "filters": {},
+                "distinct": false
+            },
+            "output_fields": [
+                "paycond_name",
+                "purchaserid_name",
+                "societycreditcode",
+                "supplier_code",
+                "supplier_name"
+            ]
+        },
+        {
+            "id": "node_xERlF",
+            "title": "erp_purchase_order",
+            "type": "view",
+            "inputs": [],
+            "config": {
+                "view_id": "2017573348875202562",
+                "filters": {},
+                "distinct": true
+            },
+            "output_fields": [
+                "*"
+            ]
+        },
+        {
+            "id": "node-output",
+            "type": "output",
+            "label": "",
+            "title": "输出视图",
+            "inputs": [
+                "node_Jdopj"
+            ],
+            "config": {},
+            "output_fields": [
+                "*"
+            ]
+        }
+    ]
+}
+```
+
+### 7.2 union
+```json
+{
+    "logic_definition": [
+        {
+            "id": "node_UgVju",
+            "title": "erp_real_time_inventory",
+            "type": "view",
+            "inputs": [],
+            "config": {
+                "view_id": "2017573348090867713",
+                "filters": {},
+                "distinct": false
+            },
+            "output_fields": [
+                "aux_attr",
+                "available_base_qty",
+                "available_inventory_qty",
+                "base_qty",
+                "base_uom",
+                "batch_master",
+                "batch_no",
+                "bin_location",
+                "conv_ratio",
+                "conv_ratio_available",
+                "conv_ratio_reserved",
+                "custodian",
+                "custodian_type",
+                "expiry_date",
+                "inbound_date",
+                "inventory_org",
+                "inventory_qty",
+                "inventory_uom",
+                "manufacture_date",
+                "material_code",
+                "material_name",
+                "owner",
+                "owner_type",
+                "purchase_qty",
+                "purchase_qty_available",
+                "purchase_qty_reserved",
+                "purchase_uom",
+                "reserved_base_qty",
+                "reserved_inventory_qty",
+                "seq_no",
+                "spec_model",
+                "stock_status",
+                "stock_type",
+                "total_col",
+                "warehouse"
+            ]
+        },
+        {
+            "id": "node_CRfXL",
+            "title": "erp_material",
+            "type": "view",
+            "inputs": [],
+            "config": {
+                "view_id": "2017573348468355073",
+                "filters": {
+                    "value": "库存商品-产成品",
+                    "operation": "!=",
+                    "value_from": "const",
+                    "field": "group_name"
+                },
+                "distinct": false
+            },
+            "output_fields": [
+                "baseunit_name",
+                "baseunit_number",
+                "group_name",
+                "group_type",
+                "huid_productline_name",
+                "material_code",
+                "material_name",
+                "material_standard_price",
+                "materialattr",
+                "modelnum",
+                "product_fixedleadtime",
+                "product_status",
+                "purchase_fixedleadtime",
+                "purchase_huid_batchqty",
+                "purchase_huid_minlotsize"
+            ]
+        },
+        {
+            "id": "node_DQTew",
+            "title": "SQL",
+            "type": "sql",
+            "inputs": [
+                "node_UgVju",
+                "node_CRfXL"
+            ],
+            "config": {
+                "sql": "SELECT *\nFROM {{.node_UgVju}} eri\nWHERE NOT EXISTS (\n    SELECT 1\n    FROM {{.node_CRfXL}} emf\n    WHERE emf.material_code = eri.material_code\n)\n"
+            },
+            "output_fields": [
+                "*"
+            ]
+        },
+        {
+            "id": "node-output",
+            "title": "输出视图",
+            "type": "output",
+            "inputs": [
+                "node_DQTew"
+            ],
+            "config": {},
+            "output_fields": [
+                "*"
+            ]
+        }
+    ]
+}
+```
+
+### 7.3 sql
+```json
+{
+    "logic_definition": [
+        {
+            "id": "node_UgVju",
+            "title": "erp_real_time_inventory",
+            "type": "view",
+            "inputs": [],
+            "config": {
+                "view_id": "2017573348090867713",
+                "filters": {},
+                "distinct": false
+            },
+            "output_fields": [
+                "aux_attr",
+                "available_base_qty",
+                "available_inventory_qty",
+                "base_qty",
+                "base_uom",
+                "batch_master",
+                "batch_no",
+                "bin_location",
+                "conv_ratio",
+                "conv_ratio_available",
+                "conv_ratio_reserved",
+                "custodian",
+                "custodian_type",
+                "expiry_date",
+                "inbound_date",
+                "inventory_org",
+                "inventory_qty",
+                "inventory_uom",
+                "manufacture_date",
+                "material_code",
+                "material_name",
+                "owner",
+                "owner_type",
+                "purchase_qty",
+                "purchase_qty_available",
+                "purchase_qty_reserved",
+                "purchase_uom",
+                "reserved_base_qty",
+                "reserved_inventory_qty",
+                "seq_no",
+                "spec_model",
+                "stock_status",
+                "stock_type",
+                "total_col",
+                "warehouse"
+            ]
+        },
+        {
+            "id": "node_CRfXL",
+            "title": "erp_material",
+            "type": "view",
+            "inputs": [],
+            "config": {
+                "view_id": "2017573348468355073",
+                "filters": {
+                    "value": "库存商品-产成品",
+                    "operation": "!=",
+                    "value_from": "const",
+                    "field": "group_name"
+                },
+                "distinct": false
+            },
+            "output_fields": [
+                "baseunit_name",
+                "baseunit_number",
+                "group_name",
+                "group_type",
+                "huid_productline_name",
+                "material_code",
+                "material_name",
+                "material_standard_price",
+                "materialattr",
+                "modelnum",
+                "product_fixedleadtime",
+                "product_status",
+                "purchase_fixedleadtime",
+                "purchase_huid_batchqty",
+                "purchase_huid_minlotsize"
+            ]
+        },
+        {
+            "id": "node_DQTew",
+            "title": "SQL",
+            "type": "sql",
+            "inputs": [
+                "node_UgVju",
+                "node_CRfXL"
+            ],
+            "config": {
+                "sql": "SELECT *\nFROM {{.node_UgVju}} eri\nWHERE NOT EXISTS (\n    SELECT 1\n    FROM {{.node_CRfXL}} emf\n    WHERE emf.material_code = eri.material_code\n)\n"
+            },
+            "output_fields": [
+                "*"
+            ]
+        },
+        {
+            "id": "node-output",
+            "title": "输出视图",
+            "type": "output",
+            "inputs": [
+                "node_DQTew"
+            ],
+            "config": {},
+            "output_fields": [
+                "*"
+            ]
+        }
+    ]
+}
+```
+
+</details>
+
