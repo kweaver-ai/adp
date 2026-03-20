@@ -7,7 +7,7 @@
 
 ### 2.1 节点通用结构
 所有逻辑节点遵循统一的 JSON 结构，将“转换参数”与“输出协议”分离：
-- **`id` / `type` / `title`**: 节点基础信息。
+- **`id` / `type` / `name`**: 节点基础信息。
 - **`inputs`**: 来源节点 ID 列表，定义了图的拓扑结构。
 - **`config`**: **私有配置**。存放算子特有的执行参数（如 Join 条件、SQL 语句）。
 - **`output_fields`**: **公开协议**。定义该节点向外输出哪些字段，支持多态缩写。
@@ -16,8 +16,8 @@
 为了平衡用户操作的便捷性与逻辑的严谨性，`output_fields` 数组支持以下格式：
 1. **通配符模式**：`["*"]` —— 全量透传上游字段，或由后端自动推断(SQL节点)。
 2. **投影模式**：`["field_a", "field_b"]` —— 字符串数组，仅选择字段，原样输出。
-3. **映射模式 (Join)**：`{"name": "target", "from": "node_a.src"}` —— 处理字段重命名及冲突。
-4. **对齐模式 (Union)**：`{"name": "target", "sources": ["f1", "f2"]}` —— 按索引顺序对齐多个输入源。
+3. **映射模式 (Join)**：`{"name": "target", "from": "src", "from_node": "node_a"}` —— 处理字段重命名及冲突。
+4. **对齐模式 (Union)**：`{"name": "target", "from": [{"from": "f1", "from_node": "node_a"}, {"from": "f2", "from_node": "node_b"}]}` —— 按索引顺序对齐多个输入源。
 5. **定义模式 (SQL)**：`{"name": "target", "type": "string"}` —— 显式定义字段属性。
 
 ---
@@ -36,8 +36,8 @@
     "join_on": [{ "left_field": "a_id", "operator": "=", "right_field": "b_id" }]
   },
   "output_fields": [
-    { "name": "user_name", "from": "node_source_A.name" },
-    { "name": "order_price", "from": "node_source_B.price" }
+    { "name": "user_name", "from": "name", "from_node": "node_source_A" },
+    { "name": "order_price", "from": "price", "from_node": "node_source_B" }
   ]
 }
 ```
@@ -51,7 +51,13 @@
   "inputs": ["node_A", "node_B"],
   "config": { "union_type": "all" },
   "output_fields": [
-    { "name": "total_qty", "sources": ["qty_a", "qty_b"] }
+    {
+      "name": "total_qty",
+      "from": [
+        { "from": "qty_a", "from_node": "node_A" },
+        { "from": "qty_b", "from_node": "node_B" }
+      ]
+    }
   ]
 }
 ```
@@ -88,7 +94,7 @@ type Property struct {
 
 ### 4.2 收益分析
 - 前端友好：下游节点配置时，可直接读取上游的 `runtime_output_fields` 作为下拉选项。
-- SQL 准确：生成 SQL 时不再需要递归寻找物理表，直接根据运行时定义的 `from` 或 `sources` 生成别名。
+- SQL 准确：生成 SQL 时不再需要递归寻找物理表，直接根据运行时定义的 `from`（字段映射或对齐）字段生成别名。
 
 ---
 
@@ -110,7 +116,7 @@ type Property struct {
 
 ### 5.3 前端交互建议
 - **View/Output 节点**：提供 Checkbox 列表，用户操作产生 `["a", "b"]`。
-- **Join/Union 节点**：提供 Mapping 表格，用户操作产生 `from` 或 `sources` 对象。
+- **Join/Union 节点**：提供 Mapping 表格，用户操作产生 `from` 对象（单一映射或对齐数组）。
 - **SQL 节点**：点击“解析”按钮，后端回写 `runtime_output_fields`，前端同步更新预览。
 
 ---
@@ -134,7 +140,7 @@ type Property struct {
     "logic_definition": [
         {
             "id": "node_Jdopj",
-            "title": "数据关联",
+            "name": "数据关联",
             "type": "join",
             "inputs": [
                 "node_8rFBz",
@@ -153,42 +159,50 @@ type Property struct {
             "output_fields": [
                 {
                     "name": "paycond_name",
-                    "from": "node_8rFBz.paycond_name"
+                    "from": "paycond_name",
+                    "from_node": "node_8rFBz"
                 },
                 {
                     "name": "purchaserid_name",
-                    "from": "node_8rFBz.purchaserid_name"
+                    "from": "purchaserid_name",
+                    "from_node": "node_8rFBz"
                 },
                 {
                     "name": "societycreditcode",
-                    "from": "node_8rFBz.societycreditcode"
+                    "from": "societycreditcode",
+                    "from_node": "node_8rFBz"
                 },
                 {
                     "name": "supplier_code",
-                    "from": "node_8rFBz.supplier_code"
+                    "from": "supplier_code",
+                    "from_node": "node_8rFBz"
                 },
                 {
                     "name": "supplier_name",
-                    "from": "node_8rFBz.supplier_name"
+                    "from": "supplier_name",
+                    "from_node": "node_8rFBz"
                 },
                 {
                     "name": "material_name",
-                    "from": "node_xERlF.material_name"
+                    "from": "material_name",
+                    "from_node": "node_xERlF"
                 },
                 {
                     "name": "material_number",
-                    "from": "node_xERlF.material_number"
+                    "from": "material_number",
+                    "from_node": "node_xERlF"
                 },
                 {
                     "name": "qty",
-                    "from": "node_xERlF.qty"
+                    "from": "qty",
+                    "from_node": "node_xERlF"
                 }
             ]
         },
         {
             "id": "node_8rFBz",
-            "title": "erp_supplier",
-            "type": "view",
+            "name": "erp_supplier",
+            "type": "resource",
             "inputs": [],
             "config": {
                 "view_id": "2017573348875202561",
@@ -205,8 +219,8 @@ type Property struct {
         },
         {
             "id": "node_xERlF",
-            "title": "erp_purchase_order",
-            "type": "view",
+            "name": "erp_purchase_order",
+            "type": "resource",
             "inputs": [],
             "config": {
                 "view_id": "2017573348875202562",
@@ -221,7 +235,7 @@ type Property struct {
             "id": "node-output",
             "type": "output",
             "label": "",
-            "title": "输出视图",
+            "name": "输出视图",
             "inputs": [
                 "node_Jdopj"
             ],
@@ -240,8 +254,8 @@ type Property struct {
     "logic_definition": [
         {
             "id": "node_UgVju",
-            "title": "erp_real_time_inventory",
-            "type": "view",
+            "name": "erp_real_time_inventory",
+            "type": "resource",
             "inputs": [],
             "config": {
                 "view_id": "2017573348090867713",
@@ -288,8 +302,8 @@ type Property struct {
         },
         {
             "id": "node_CRfXL",
-            "title": "erp_material",
-            "type": "view",
+            "name": "erp_material",
+            "type": "resource",
             "inputs": [],
             "config": {
                 "view_id": "2017573348468355073",
@@ -321,7 +335,7 @@ type Property struct {
         },
         {
             "id": "node_DQTew",
-            "title": "SQL",
+            "name": "SQL",
             "type": "sql",
             "inputs": [
                 "node_UgVju",
@@ -336,7 +350,7 @@ type Property struct {
         },
         {
             "id": "node-output",
-            "title": "输出视图",
+            "name": "输出视图",
             "type": "output",
             "inputs": [
                 "node_DQTew"
@@ -356,8 +370,8 @@ type Property struct {
     "logic_definition": [
         {
             "id": "node_UgVju",
-            "title": "erp_real_time_inventory",
-            "type": "view",
+            "name": "erp_real_time_inventory",
+            "type": "resource",
             "inputs": [],
             "config": {
                 "view_id": "2017573348090867713",
@@ -404,8 +418,8 @@ type Property struct {
         },
         {
             "id": "node_CRfXL",
-            "title": "erp_material",
-            "type": "view",
+            "name": "erp_material",
+            "type": "resource",
             "inputs": [],
             "config": {
                 "view_id": "2017573348468355073",
@@ -437,7 +451,7 @@ type Property struct {
         },
         {
             "id": "node_DQTew",
-            "title": "SQL",
+            "name": "SQL",
             "type": "sql",
             "inputs": [
                 "node_UgVju",
@@ -452,7 +466,7 @@ type Property struct {
         },
         {
             "id": "node-output",
-            "title": "输出视图",
+            "name": "输出视图",
             "type": "output",
             "inputs": [
                 "node_DQTew"
