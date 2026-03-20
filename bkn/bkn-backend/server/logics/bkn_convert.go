@@ -371,13 +371,13 @@ func ToADPActionType(knID string, branch string, bknAction *bknsdk.BknActionType
 	}
 
 	// 转换 ActionSource
-	if bknAction.ToolConfig != nil {
+	if bknAction.ActionSource != nil {
 		adpAction.ActionSource = interfaces.ActionSource{
-			Type:     bknAction.ToolConfig.Type,
-			BoxID:    bknAction.ToolConfig.BoxID,
-			ToolID:   bknAction.ToolConfig.ToolID,
-			McpID:    bknAction.ToolConfig.McpID,
-			ToolName: bknAction.ToolConfig.ToolName,
+			Type:     bknAction.ActionSource.Type,
+			BoxID:    bknAction.ActionSource.BoxID,
+			ToolID:   bknAction.ActionSource.ToolID,
+			McpID:    bknAction.ActionSource.McpID,
+			ToolName: bknAction.ActionSource.ToolName,
 		}
 	}
 
@@ -437,7 +437,7 @@ func ToBKNActionType(adpAction *interfaces.ActionType) *bknsdk.BknActionType {
 
 	// 转换 ActionSource
 	if adpAction.ActionSource.Type != "" {
-		bknAction.ToolConfig = &bknsdk.ToolConfiguration{
+		bknAction.ActionSource = &bknsdk.ActionSource{
 			Type:     adpAction.ActionSource.Type,
 			BoxID:    adpAction.ActionSource.BoxID,
 			ToolID:   adpAction.ActionSource.ToolID,
