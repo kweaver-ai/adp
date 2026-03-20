@@ -1,0 +1,102 @@
+{
+    "data_scope": [
+        {
+            "id": "node_Jdopj",
+            "title": "数据关联",
+            "type": "join",
+            "inputs": [
+                "node_8rFBz",
+                "node_xERlF"
+            ],
+            "config": {
+                "join_type": "left",
+                "join_on": [
+                    {
+                        "right_field": "supplier_number",
+                        "operator": "=",
+                        "left_field": "supplier_code"
+                    }
+                ]
+            },
+            "output_fields": [
+                {
+                    "name": "paycond_name",
+                    "from": "node_8rFBz.paycond_name"
+                },
+                {
+                    "name": "purchaserid_name",
+                    "from": "node_8rFBz.purchaserid_name"
+                },
+                {
+                    "name": "societycreditcode",
+                    "from": "node_8rFBz.societycreditcode"
+                },
+                {
+                    "name": "supplier_code",
+                    "from": "node_8rFBz.supplier_code"
+                },
+                {
+                    "name": "supplier_name",
+                    "from": "node_8rFBz.supplier_name"
+                },
+                {
+                    "name": "material_name",
+                    "from": "node_xERlF.material_name"
+                },
+                {
+                    "name": "material_number",
+                    "from": "node_xERlF.material_number"
+                },
+                {
+                    "name": "qty",
+                    "from": "node_xERlF.qty"
+                }
+            ]
+        },
+        {
+            "id": "node_8rFBz",
+            "title": "erp_supplier",
+            "type": "view",
+            "inputs": [],
+            "config": {
+                "view_id": "2017573348875202561",
+                "filters": {},
+                "distinct": false
+            },
+            "output_fields": [
+                "paycond_name",
+                "purchaserid_name",
+                "societycreditcode",
+                "supplier_code",
+                "supplier_name"
+            ]
+        },
+        {
+            "id": "node_xERlF",
+            "title": "erp_purchase_order",
+            "type": "view",
+            "inputs": [],
+            "config": {
+                "view_id": "2017573348875202562",
+                "filters": {},
+                "distinct": true
+            },
+            "output_fields": [
+                "*"
+            ]
+        },
+        {
+            "id": "node-output",
+            "type": "output",
+            "label": "",
+            "title": "输出视图",
+            "inputs": [
+                "node_Jdopj"
+            ],
+            "config": {},
+            "output_fields": [
+                "*"
+            ]
+        }
+    ]
+}

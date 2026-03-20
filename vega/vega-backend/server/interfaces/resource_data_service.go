@@ -12,5 +12,5 @@ import "context"
 //go:generate mockgen -source ../interfaces/resource_data_service.go -destination ../interfaces/mock/mock_resource_data_service.go
 type ResourceDataService interface {
 	// Query queries Resource data.
-	Query(ctx context.Context, resource *Resource, params *ResourceDataQueryParams) ([]map[string]any, int64, error)
+	Query(ctx context.Context, resource *Resource, params *ResourceDataQueryParams) ([]map[string]any, int64, []any, error)
 }

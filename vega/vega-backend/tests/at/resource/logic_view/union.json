@@ -1,0 +1,164 @@
+[
+  {
+    "id": "node-output",
+    "type": "output",
+    "title": "输出视图",
+    "inputs": [
+      "node_C4m1N"
+    ],
+    "config": {},
+    "output_fields": [
+      "l3_series",
+      "sales_std",
+      "area_1_region",
+      "operation_dim"
+    ]
+  },
+  {
+    "id": "node_n6KLl",
+    "type": "view",
+    "title": "t_sales",
+    "inputs": [],
+    "config": {
+      "view_id": "0d4bb3f9-e9cc-4d61-b559-3d3cfa76cd43",
+      "filters": {},
+      "distinct": false
+    },
+    "output_fields": [
+      "rowid",
+      "l3_series",
+      "sales_std",
+      "area_1_region",
+      "operation_dim",
+      "brand",
+      "date",
+      "area_3_district",
+      "area_2_province",
+      "l2_category",
+      "prd_class",
+      "target_channel",
+      "target_std",
+      "l1_bu"
+    ]
+  },
+  {
+    "id": "node_RSUgo",
+    "type": "view",
+    "title": "t_sales_2025",
+    "inputs": [],
+    "config": {
+      "view_id": "3449ddcc-8cca-4d1b-84ad-29047d5513d6",
+      "filters": {},
+      "distinct": false
+    },
+    "output_fields": [
+      "target_std",
+      "l1_bu",
+      "is_cooperation",
+      "target_channel",
+      "row_id",
+      "date",
+      "operation_dim",
+      "brand",
+      "area_3_district",
+      "sales_std",
+      "area_2_province",
+      "category_1_bu",
+      "target_blitz",
+      "l3_series",
+      "area_1_region",
+      "l2_category"
+    ]
+  },
+  {
+    "id": "node_C4m1N",
+    "type": "union",
+    "title": "数据合并",
+    "inputs": [
+      "node_n6KLl",
+      "node_RSUgo"
+    ],
+    "config": {
+      "union_type": "all"
+    },
+    "output_fields": [
+      {
+        "name": "l3_series",
+        "sources": [
+          "l3_series",
+          "l3_series_other"
+        ]
+      },
+      {
+        "name": "sales_std",
+        "sources": [
+          "sales_std",
+          "sales_std"
+        ]
+      },
+      {
+        "name": "area_1_region",
+        "sources": [
+          "area_1_region",
+          "area_1_region"
+        ]
+      },
+      {
+        "name": "operation_dim",
+        "sources": [
+          "operation_dim",
+          "operation_dim"
+        ]
+      },
+      {
+        "name": "brand",
+        "sources": [
+          "brand",
+          "brand"
+        ]
+      },
+      {
+        "name": "area_3_district",
+        "sources": [
+          "area_3_district",
+          "area_3_district"
+        ]
+      },
+      {
+        "name": "area_2_province",
+        "sources": [
+          "area_2_province",
+          "area_2_province"
+        ]
+      },
+      {
+        "name": "l2_category",
+        "sources": [
+          "l2_category",
+          "l2_category"
+        ]
+      },
+      {
+        "name": "target_channel",
+        "sources": [
+          "target_channel",
+          "target_channel"
+        ]
+      },
+      {
+        "name": "target_std",
+        "sources": [
+          "target_std",
+          "target_std"
+        ]
+      },
+      {
+        "name": "l1_bu",
+        "sources": [
+          "l1_bu",
+          "l1_bu"
+        ]
+      }
+    ]
+  }
+]

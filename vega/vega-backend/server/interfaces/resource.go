@@ -54,9 +54,6 @@ type Resource struct {
 	// 逻辑视图特有的字段
 	LogicDefinition []*DataScopeNode `json:"logic_definition,omitempty"` // 逻辑定义
 
-	// 逻辑视图特有的字段
-	LogicDefinition []*DataScopeNode `json:"logic_definition,omitempty"` // 逻辑定义
-
 	Creator    AccountInfo `json:"creator"`
 	CreateTime int64       `json:"create_time"`
 	Updater    AccountInfo `json:"updater"`

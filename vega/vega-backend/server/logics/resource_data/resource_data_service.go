@@ -49,7 +49,7 @@ func NewResourceDataService(appSetting *common.AppSetting) interfaces.ResourceDa
 }
 
 // Query 列出 resource 中的文档
-func (rds *resourceDataService) Query(ctx context.Context, resource *interfaces.Resource, params *interfaces.ResourceDataQueryParams) ([]map[string]any, int64, error) {
+func (rds *resourceDataService) Query(ctx context.Context, resource *interfaces.Resource, params *interfaces.ResourceDataQueryParams) ([]map[string]any, int64, []any, error) {
 	ctx, span := ar_trace.Tracer.Start(ctx, "List resource documents")
 	defer span.End()
 
@@ -62,7 +62,7 @@ func (rds *resourceDataService) Query(ctx context.Context, resource *interfaces.
 	actualFilterCond, err := filter_condition.NewFilterCondition(ctx, params.FilterCondCfg, fieldMap)
 	if err != nil {
 		span.SetStatus(codes.Error, "Create filter condition failed")
-		return nil, 0, rest.NewHTTPError(ctx, http.StatusInternalServerError, verrors.VegaBackend_Resource_InternalError).
+		return nil, 0, nil, rest.NewHTTPError(ctx, http.StatusInternalServerError, verrors.VegaBackend_Resource_InternalError).
 			WithErrorDetails(err.Error())
 	}
 	params.ActualFilterCond = actualFilterCond
@@ -73,39 +73,39 @@ func (rds *resourceDataService) Query(ctx context.Context, resource *interfaces.
 		documents, total, err := rds.ds.ListDocuments(ctx, resource, params)
 		if err != nil {
 			span.SetStatus(codes.Error, "List dataset documents failed")
-			return nil, 0, rest.NewHTTPError(ctx, http.StatusInternalServerError, verrors.VegaBackend_Resource_InternalError).
+			return nil, 0, nil, rest.NewHTTPError(ctx, http.StatusInternalServerError, verrors.VegaBackend_Resource_InternalError).
 				WithErrorDetails(err.Error())
 		}
-		return documents, total, nil
+		return documents, total, nil, nil
 
 	case interfaces.ResourceCategoryTable:
-		data, total, err := rds.QueryData(ctx, resource, params)
+		data, total, searchAfter, err := rds.QueryData(ctx, resource, params)
 		if err != nil {
 			span.SetStatus(codes.Error, "Query table data failed")
-			return nil, 0, rest.NewHTTPError(ctx, http.StatusInternalServerError, verrors.VegaBackend_Resource_InternalError).
+			return nil, 0, nil, rest.NewHTTPError(ctx, http.StatusInternalServerError, verrors.VegaBackend_Resource_InternalError).
 				WithErrorDetails(err.Error())
 		}
-		return data, total, nil
+		return data, total, searchAfter, nil
 
 	case interfaces.ResourceCategoryLogicView:
 		// 逻辑视图查询数据
-		data, total, err := rds.QueryLogicView(ctx, resource, params)
+		data, total, searchAfter, err := rds.QueryLogicView(ctx, resource, params)
 		if err != nil {
 			span.SetStatus(codes.Error, "Query logic view data failed")
-			return nil, 0, rest.NewHTTPError(ctx, http.StatusInternalServerError, verrors.VegaBackend_Resource_InternalError).
+			return nil, 0, nil, rest.NewHTTPError(ctx, http.StatusInternalServerError, verrors.VegaBackend_Resource_InternalError).
 				WithErrorDetails(err.Error())
 		}
-		return data, total, nil
+		return data, total, searchAfter, nil
 
 	default:
 		span.SetStatus(codes.Error, "Unsupported resource category")
-		return nil, 0, rest.NewHTTPError(ctx, http.StatusBadRequest, verrors.VegaBackend_Resource_InternalError_InvalidCategory).
+		return nil, 0, nil, rest.NewHTTPError(ctx, http.StatusBadRequest, verrors.VegaBackend_Resource_InternalError_InvalidCategory).
 			WithErrorDetails(resource.Category)
 	}
 }
 
 func (rds *resourceDataService) QueryData(ctx context.Context, resource *interfaces.Resource,
-	params *interfaces.ResourceDataQueryParams) ([]map[string]any, int64, error) {
+	params *interfaces.ResourceDataQueryParams) ([]map[string]any, int64, []any, error) {
 
 	ctx, span := ar_trace.Tracer.Start(ctx, "Query data")
 	defer span.End()
@@ -116,49 +116,49 @@ func (rds *resourceDataService) QueryData(ctx context.Context, resource *interfa
 	catalog, err := rds.cs.GetByID(ctx, resource.CatalogID, true)
 	if err != nil {
 		span.SetStatus(codes.Error, "Get catalog failed")
-		return nil, 0, rest.NewHTTPError(ctx, http.StatusInternalServerError, verrors.VegaBackend_Resource_InternalError).
+		return nil, 0, nil, rest.NewHTTPError(ctx, http.StatusInternalServerError, verrors.VegaBackend_Resource_InternalError).
 			WithErrorDetails(fmt.Sprintf("failed to get catalog: %v", err))
 	}
 	if catalog == nil {
 		span.SetStatus(codes.Error, "Catalog not found")
-		return nil, 0, rest.NewHTTPError(ctx, http.StatusNotFound, verrors.VegaBackend_Resource_CatalogNotFound).
+		return nil, 0, nil, rest.NewHTTPError(ctx, http.StatusNotFound, verrors.VegaBackend_Resource_CatalogNotFound).
 			WithErrorDetails(fmt.Sprintf("catalog %s not found", resource.CatalogID))
 	}
 
 	connector, err := factory.GetFactory().CreateConnectorInstance(ctx, catalog.ConnectorType, catalog.ConnectorCfg)
 	if err != nil {
 		span.SetStatus(codes.Error, "Create connector failed")
-		return nil, 0, rest.NewHTTPError(ctx, http.StatusInternalServerError, verrors.VegaBackend_Resource_InternalError).
+		return nil, 0, nil, rest.NewHTTPError(ctx, http.StatusInternalServerError, verrors.VegaBackend_Resource_InternalError).
 			WithErrorDetails(fmt.Sprintf("failed to create connector: %v", err))
 	}
 
 	if err := connector.Connect(ctx); err != nil {
 		span.SetStatus(codes.Error, "Connect to data source failed")
-		return nil, 0, rest.NewHTTPError(ctx, http.StatusInternalServerError, verrors.VegaBackend_Resource_InternalError).
+		return nil, 0, nil, rest.NewHTTPError(ctx, http.StatusInternalServerError, verrors.VegaBackend_Resource_InternalError).
 			WithErrorDetails(fmt.Sprintf("failed to connect to data source: %v", err))
 	}
 	defer connector.Close(ctx)
 
 	switch resource.Category {
-	case interfaces.ResourceCategoryTable:
+	case interfaces.ResourceCategoryTable, interfaces.ResourceCategoryLogicView:
 		tableConnector, ok := connector.(connectors.TableConnector)
 		if !ok {
 			span.SetStatus(codes.Error, "Connector does not support table operations")
-			return nil, 0, rest.NewHTTPError(ctx, http.StatusBadRequest, verrors.VegaBackend_Resource_InternalError_InvalidCategory).
+			return nil, 0, nil, rest.NewHTTPError(ctx, http.StatusBadRequest, verrors.VegaBackend_Resource_InternalError_InvalidCategory).
 				WithErrorDetails(fmt.Sprintf("connector %s does not support table operations", catalog.ConnectorType))
 		}
 
 		result, err := tableConnector.ExecuteQuery(ctx, resource, params)
 		if err != nil {
 			span.SetStatus(codes.Error, "Execute query failed")
-			return nil, 0, rest.NewHTTPError(ctx, http.StatusInternalServerError, verrors.VegaBackend_Resource_InternalError).
+			return nil, 0, nil, rest.NewHTTPError(ctx, http.StatusInternalServerError, verrors.VegaBackend_Resource_InternalError).
 				WithErrorDetails(fmt.Sprintf("failed to execute query: %v", err))
 		}
-		return result.Rows, result.Total, nil
+		return result.Rows, result.Total, result.SearchAfter, nil
 
 	default:
 		span.SetStatus(codes.Error, "Connector does not support table operations")
-		return nil, 0, rest.NewHTTPError(ctx, http.StatusBadRequest, verrors.VegaBackend_Resource_InternalError_InvalidCategory).
+		return nil, 0, nil, rest.NewHTTPError(ctx, http.StatusBadRequest, verrors.VegaBackend_Resource_InternalError_InvalidCategory).
 			WithErrorDetails(connector.GetCategory())
 	}
 

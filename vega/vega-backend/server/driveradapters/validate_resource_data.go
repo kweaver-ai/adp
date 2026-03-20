@@ -32,7 +32,7 @@ func ValidateResourceDataQueryParams(ctx context.Context, params *interfaces.Res
 	}
 
 	// 校验分页参数
-	err := validatePaginationParams(ctx, params.Offset, params.Limit)
+	err := validatePaginationParams(ctx, params)
 	if err != nil {
 		return err
 	}
@@ -41,6 +41,11 @@ func ValidateResourceDataQueryParams(ctx context.Context, params *interfaces.Res
 	err = validateSortFields(ctx, params.Sort)
 	if err != nil {
 		return err
+	}
+
+	if params.UseSearchAfter && len(params.Sort) == 0 {
+		return rest.NewHTTPError(ctx, http.StatusBadRequest, verrors.VegaBackend_InvalidParameter_Sort).
+			WithErrorDetails("When 'use_search_after' is true, 'sort' fields must be provided for stable ordering")
 	}
 
 	// 过滤条件用map接，然后再decode到condCfg中
@@ -71,7 +76,8 @@ func validateFormat(ctx context.Context, format string) error {
 }
 
 // 分页排序参数校验
-func validatePaginationParams(ctx context.Context, offset, limit int) error {
+func validatePaginationParams(ctx context.Context, params *interfaces.ResourceDataQueryParams) error {
+	offset, limit := params.Offset, params.Limit
 	// from + size 查询校验
 	if offset < 0 {
 		return rest.NewHTTPError(ctx, http.StatusBadRequest, verrors.VegaBackend_InvalidParameter_Offset).
@@ -83,7 +89,7 @@ func validatePaginationParams(ctx context.Context, offset, limit int) error {
 			WithErrorDetails(fmt.Sprintf("Limit should be in the range of [%d,%d]", interfaces.MIN_LIMIT, interfaces.MAX_SEARCH_SIZE))
 	}
 
-	if offset+limit > interfaces.MAX_SEARCH_SIZE {
+	if !params.UseSearchAfter && (offset+limit > interfaces.MAX_SEARCH_SIZE) {
 		return rest.NewHTTPError(ctx, http.StatusBadRequest, verrors.VegaBackend_InvalidParameter_Limit).
 			WithErrorDetails(fmt.Sprintf("Offset + limit should be <= %d", interfaces.MAX_SEARCH_SIZE))
 	}

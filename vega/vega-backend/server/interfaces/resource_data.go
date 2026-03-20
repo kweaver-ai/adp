@@ -5,9 +5,7 @@
 
 package interfaces
 
-import (
-	"time"
-)
+import "time"
 
 const (
 	Format_Original = "original"
@@ -28,6 +26,8 @@ type ResourceDataQueryParams struct {
 	Offset int          `json:"offset,omitempty"`
 	Limit  int          `json:"limit,omitempty"`
 	Sort   []*SortField `json:"sort,omitempty"`
+
+	UseSearchAfter bool  `json:"use_search_after,omitempty"`
 
 	FilterCondition any `json:"filter_condition,omitempty"`
 

@@ -165,11 +165,11 @@ type ViewField struct {
 	SrcNodeName       string       `json:"src_node_name,omitempty"`
 	IsPrimaryKey      sql.NullBool `json:"is_primary_key,omitempty"`
 
-	Features []FieldFeature `json:"features,omitempty"`
+	Features []PropertyFeature `json:"features,omitempty"`
 }
 
 // 字段特征
-type FieldFeature struct {
+type  PropertyFeature struct {
 	FeatureName string           `json:"name"`       // 特征名称
 	FeatureType FieldFeatureType `json:"type"`       // 特征类型：keyword, fulltext, vector
 	Comment     string           `json:"comment"`    // 特征描述

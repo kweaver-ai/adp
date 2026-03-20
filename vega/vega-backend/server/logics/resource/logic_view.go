@@ -42,8 +42,8 @@ func (rs *resourceService) validateLogicDefinition(ctx context.Context, view *in
 	for _, node := range view.LogicDefinition {
 		switch node.Type {
 		case interfaces.DataScopeNodeType_Resource:
-			// 校验视图节点
-			err := validateViewNode(ctx, rs, node, dataScopeViewMap)
+			// 校验资源节点
+			err := validateResourceNode(ctx, rs, node, dataScopeViewMap)
 			if err != nil {
 				return err
 			}
@@ -100,19 +100,19 @@ func (rs *resourceService) validateLogicDefinition(ctx context.Context, view *in
 	return nil
 }
 
-func validateViewNode(ctx context.Context, dvs *resourceService, node *interfaces.DataScopeNode,
+func validateResourceNode(ctx context.Context, dvs *resourceService, node *interfaces.DataScopeNode,
 	dataScopeView map[string]*interfaces.Resource) error {
-	// 视图节点输入节点必须为空
+	// 资源节点输入节点必须为空
 	if len(node.InputNodes) != 0 {
 		return rest.NewHTTPError(ctx, http.StatusBadRequest, verrors.VegaBackend_LogicView_InvalidParameter_LogicDefinition).
-			WithErrorDetails("The view node must have no input node")
+			WithErrorDetails("The resource node must have no input node")
 	}
 
 	var cfg interfaces.ResourceNodeCfg
 	err := mapstructure.Decode(node.Config, &cfg)
 	if err != nil {
 		return rest.NewHTTPError(ctx, http.StatusInternalServerError, rest.PublicError_InternalServerError).
-			WithErrorDetails(fmt.Sprintf("decode view node config failed, %v", err))
+			WithErrorDetails(fmt.Sprintf("decode resource node config failed, %v", err))
 	}
 
 	// 判断自定义视图的来源表是否存在，从这个函数能够拿到字段列表
@@ -132,7 +132,7 @@ func validateViewNode(ctx context.Context, dvs *resourceService, node *interface
 	case interfaces.ResourceCategoryIndex:
 	default:
 		return rest.NewHTTPError(ctx, http.StatusBadRequest, verrors.VegaBackend_LogicView_InvalidParameter_LogicDefinition).
-			WithErrorDetails(fmt.Sprintf("The source view of the custom view '%s' is not supported", cfg.ResourceID))
+			WithErrorDetails(fmt.Sprintf("The source resource of the custom view '%s' is not supported", cfg.ResourceID))
 
 	}
 

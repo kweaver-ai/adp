@@ -61,9 +61,10 @@ type ColumnMeta struct {
 
 // QueryResult represents query execution result.
 type QueryResult struct {
-	Columns []string         `json:"columns"`
-	Rows    []map[string]any `json:"rows"`
-	Total   int64            `json:"total"`
+	Columns     []string         `json:"columns"`
+	Rows        []map[string]any `json:"rows"`
+	Total       int64            `json:"total"`
+	SearchAfter []any            `json:"search_after,omitempty"`
 }
 
 // FileMeta represents file metadata.
