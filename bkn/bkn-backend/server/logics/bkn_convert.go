@@ -7,6 +7,7 @@ package logics
 
 import (
 	bknsdk "github.com/kweaver-ai/bkn-specification/sdk/golang/bkn"
+	"github.com/kweaver-ai/kweaver-go-lib/logger"
 
 	"bkn-backend/interfaces"
 )
@@ -255,6 +256,7 @@ func ToADPRelationType(knID string, branch string, bknRel *bknsdk.BknRelationTyp
 				})
 			}
 			relType.MappingRules = mappings
+
 		case *bknsdk.InDirectMappingRule:
 			relType.MappingRules = interfaces.InDirectMapping{
 				BackingDataSource: &interfaces.ResourceInfo{
@@ -277,6 +279,9 @@ func ToADPRelationType(knID string, branch string, bknRel *bknsdk.BknRelationTyp
 					})
 				}
 			}
+
+		default:
+			logger.Errorf("Unknown mappingRules type: %T", rules)
 		}
 	}
 
@@ -312,6 +317,7 @@ func ToBKNRelationType(adpRel *interfaces.RelationType) *bknsdk.BknRelationType 
 				})
 			}
 			bknRel.MappingRules = mappingRules
+
 		case interfaces.InDirectMapping:
 			indirectRules := &bknsdk.InDirectMappingRule{
 				BackingDataSource: &bknsdk.ResourceInfo{
@@ -333,6 +339,9 @@ func ToBKNRelationType(adpRel *interfaces.RelationType) *bknsdk.BknRelationType 
 				})
 			}
 			bknRel.MappingRules = indirectRules
+
+		default:
+			logger.Errorf("Unknown mappingRules type: %T", rules)
 		}
 	}
 
