@@ -1077,6 +1077,36 @@ func Test_objectTypeService_UpdateObjectType(t *testing.T) {
 			So(err, ShouldBeNil)
 		})
 
+		Convey("Failed when vector config enabled but small model disabled\n", func() {
+			objectType := &interfaces.ObjectType{
+				ObjectTypeWithKeyField: interfaces.ObjectTypeWithKeyField{
+					OTID:   "ot1",
+					OTName: "object_type1",
+					DataProperties: []*interfaces.DataProperty{
+						{
+							Name: "prop_with_vector",
+							IndexConfig: &interfaces.IndexConfig{
+								VectorConfig: interfaces.VectorConfig{
+									Enabled: true,
+									ModelID: "non_existent_model",
+								},
+							},
+						},
+					},
+				},
+				KNID:   "kn1",
+				Branch: interfaces.MAIN_BRANCH,
+			}
+
+			ps.EXPECT().CheckPermission(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
+
+			err := service.UpdateObjectType(ctx, nil, objectType)
+			So(err, ShouldNotBeNil)
+			httpErr := err.(*rest.HTTPError)
+			So(httpErr.HTTPCode, ShouldEqual, 400)
+			So(httpErr.BaseError.ErrorCode, ShouldEqual, berrors.BknBackend_ObjectType_InvalidParameter_SmallModel)
+		})
+
 		Convey("Failed when permission check fails\n", func() {
 			objectType := &interfaces.ObjectType{
 				ObjectTypeWithKeyField: interfaces.ObjectTypeWithKeyField{
@@ -1212,6 +1242,36 @@ func Test_objectTypeService_UpdateDataProperties(t *testing.T) {
 
 			err := service.UpdateDataProperties(ctx, objectType, dataProperties)
 			So(err, ShouldBeNil)
+		})
+
+		Convey("Failed when vector config enabled but small model disabled\n", func() {
+			objectType := &interfaces.ObjectType{
+				ObjectTypeWithKeyField: interfaces.ObjectTypeWithKeyField{
+					OTID:   "ot1",
+					OTName: "object_type1",
+				},
+				KNID:   "kn1",
+				Branch: interfaces.MAIN_BRANCH,
+			}
+			dataProperties := []*interfaces.DataProperty{
+				{
+					Name: "prop_with_vector",
+					IndexConfig: &interfaces.IndexConfig{
+						VectorConfig: interfaces.VectorConfig{
+							Enabled: true,
+							ModelID: "non_existent_model",
+						},
+					},
+				},
+			}
+
+			ps.EXPECT().CheckPermission(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
+
+			err := service.UpdateDataProperties(ctx, objectType, dataProperties)
+			So(err, ShouldNotBeNil)
+			httpErr := err.(*rest.HTTPError)
+			So(httpErr.HTTPCode, ShouldEqual, 400)
+			So(httpErr.BaseError.ErrorCode, ShouldEqual, berrors.BknBackend_ObjectType_InvalidParameter_SmallModel)
 		})
 
 		Convey("Failed when permission check fails\n", func() {
