@@ -79,16 +79,17 @@ type SkillInfo struct {
 
 // SkillSummary Skill 列表摘要
 type SkillSummary struct {
-	SkillID     string            `json:"skill_id"`
-	Name        string            `json:"name"`
-	Description string            `json:"description"`
-	Version     string            `json:"version"`
-	Status      model.SkillStatus `json:"status"`
-	Source      string            `json:"source"`
-	CreateUser  string            `json:"create_user"`
-	CreateTime  int64             `json:"create_time"`
-	UpdateUser  string            `json:"update_user"`
-	UpdateTime  int64             `json:"update_time"`
+	SkillID          string            `json:"skill_id"`
+	Name             string            `json:"name"`
+	Description      string            `json:"description"`
+	Version          string            `json:"version"`
+	Status           model.SkillStatus `json:"status"`
+	Source           string            `json:"source"`
+	CreateUser       string            `json:"create_user"`
+	CreateTime       int64             `json:"create_time"`
+	UpdateUser       string            `json:"update_user"`
+	UpdateTime       int64             `json:"update_time"`
+	BusinessDomainID string            `json:"business_domain_id"`
 }
 
 // SkillFileSummary Skill 文件摘要
@@ -111,6 +112,7 @@ type QuerySkillMarketListReq struct {
 	UserID           string `header:"user_id"`
 	Name             string `form:"name"`
 	Source           string `form:"source"`
+	CreateUser       string `form:"create_user"`
 	CommonPageParams `json:",inline"`
 }
 

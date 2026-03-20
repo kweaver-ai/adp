@@ -26,6 +26,7 @@ type skillFrontmatter struct {
 	Metadata     map[string]interface{} `yaml:"metadata"`
 }
 
+// skillAsset 技能资产
 type skillAsset struct {
 	RelPath  string
 	FileType string
@@ -37,7 +38,7 @@ func newSkillParser() *skillParser {
 	return &skillParser{}
 }
 
-func (p *skillParser) parseRegisterReq(req *interfaces.RegisterSkillReq) (*model.SkillRepositoryDB, []*interfaces.SkillFileSummary, []*skillAsset, error) {
+func (p *skillParser) parseRegisterReq(req *interfaces.RegisterSkillReq) (skillDB *model.SkillRepositoryDB, files []*interfaces.SkillFileSummary, assets []*skillAsset, err error) {
 	switch req.FileType {
 	case "content":
 		content, err := decodeContent(req.File)

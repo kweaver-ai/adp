@@ -149,11 +149,7 @@ func (s *skillRepositoryDB) SelectSkillListPage(ctx context.Context, tx *sql.Tx,
 		orm = s.orm.WithTx(tx)
 	}
 	query := orm.Select().From(tbSkillRepository)
-	query = s.applyFilterConditions(query, filter)
-	if cursor != nil {
-		query = query.Cursor(cursor)
-	}
-	query = query.Sort(sort)
+	query = s.applyFilterConditions(query, filter).Cursor(cursor).Sort(sort)
 	if filter["all"] == nil || filter["all"] == false {
 		if limit, ok := filter["limit"].(int); ok {
 			query = query.Limit(limit)
@@ -192,6 +188,9 @@ func (s *skillRepositoryDB) DeleteSkillByID(ctx context.Context, tx *sql.Tx, ski
 }
 
 func (s *skillRepositoryDB) applyFilterConditions(query *ormhelper.SelectBuilder, filter map[string]interface{}) *ormhelper.SelectBuilder {
+	if len(filter) == 0 {
+		return query
+	}
 	if name, ok := filter["name"].(string); ok && name != "" {
 		query = query.WhereLike("f_name", "%"+name+"%")
 	}
@@ -203,6 +202,21 @@ func (s *skillRepositoryDB) applyFilterConditions(query *ormhelper.SelectBuilder
 	}
 	if status, ok := filter["status"].(string); ok && status != "" {
 		query = query.WhereEq("f_status", status)
+	}
+	if filter["in"] != nil {
+		skillIDs := filter["in"].([]string)
+		if len(skillIDs) == 0 {
+			return query
+		}
+		var arr []interface{}
+		for _, id := range skillIDs {
+			if id != "" {
+				arr = append(arr, id)
+			}
+		}
+		if len(arr) > 0 {
+			query = query.WhereIn("f_skill_id", arr...)
+		}
 	}
 	return query
 }

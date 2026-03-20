@@ -6,16 +6,23 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"net/http"
 	"strings"
 	"sync"
 
 	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/dbaccess"
+	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/drivenadapters"
+	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/infra/common"
 	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/infra/common/ormhelper"
+	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/infra/config"
+	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/infra/errors"
+	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/infra/telemetry"
 	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/interfaces"
 	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/interfaces/model"
 	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/logics/auth"
 	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/logics/business_domain"
 	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/utils"
+	o11y "github.com/kweaver-ai/kweaver-go-lib/observability"
 )
 
 type skillRegistry struct {
@@ -26,6 +33,8 @@ type skillRegistry struct {
 	dbTx                  model.DBTx
 	AuthService           interfaces.IAuthorizationService
 	BusinessDomainService interfaces.IBusinessDomainService
+	UserMgnt              interfaces.UserManagement
+	Logger                interfaces.Logger
 }
 
 var (
@@ -33,9 +42,12 @@ var (
 	registryInst interfaces.SkillRegistry
 )
 
+// NewSkillRegistry 创建技能注册器
 func NewSkillRegistry() interfaces.SkillRegistry {
 	registryOnce.Do(func() {
+		conf := config.NewConfigLoader()
 		registryInst = &skillRegistry{
+			Logger:                conf.GetLogger(),
 			parser:                newSkillParser(),
 			skillRepo:             dbaccess.NewSkillRepositoryDB(),
 			fileRepo:              dbaccess.NewSkillFileIndexDB(),
@@ -43,37 +55,39 @@ func NewSkillRegistry() interfaces.SkillRegistry {
 			dbTx:                  dbaccess.NewBaseTx(),
 			AuthService:           auth.NewAuthServiceImpl(),
 			BusinessDomainService: business_domain.NewBusinessDomainService(),
+			UserMgnt:              drivenadapters.NewUserManagementClient(),
 		}
 	})
 	return registryInst
 }
 
-func (r *skillRegistry) resourceType() interfaces.AuthResourceType {
-	return interfaces.AuthResourceTypeSkill
-}
-
-func (r *skillRegistry) associateBusinessDomain(ctx context.Context, businessDomainID, skillID string) error {
-	return r.BusinessDomainService.AssociateResource(ctx, businessDomainID, skillID, r.resourceType())
-}
-
-func (r *skillRegistry) batchDisassociateBusinessDomain(ctx context.Context, businessDomainID string, skillIDs []string) error {
-	return r.BusinessDomainService.BatchDisassociateResource(ctx, businessDomainID, skillIDs, r.resourceType())
-}
+// func (r *skillRegistry) batchDisassociateBusinessDomain(ctx context.Context, businessDomainID string, skillIDs []string) error {
+// 	return r.BusinessDomainService.BatchDisassociateResource(ctx, businessDomainID, skillIDs, interfaces.AuthResourceTypeSkill)
+// }
 
 func (r *skillRegistry) listMarketVisibleIDs(ctx context.Context, accessor *interfaces.AuthAccessor) ([]string, error) {
-	return r.AuthService.ResourceListIDs(ctx, accessor, r.resourceType(), interfaces.AuthOperationTypePublicAccess)
+	return r.AuthService.ResourceListIDs(ctx, accessor, interfaces.AuthResourceTypeSkill, interfaces.AuthOperationTypePublicAccess)
 }
 
 func (r *skillRegistry) filterViewableIDs(ctx context.Context, accessor *interfaces.AuthAccessor, skillIDs []string) ([]string, error) {
-	return r.AuthService.ResourceFilterIDs(ctx, accessor, skillIDs, r.resourceType(), interfaces.AuthOperationTypeView)
+	return r.AuthService.ResourceFilterIDs(ctx, accessor, skillIDs, interfaces.AuthResourceTypeSkill, interfaces.AuthOperationTypeView)
 }
 
-func (r *skillRegistry) RegisterSkill(ctx context.Context, req *interfaces.RegisterSkillReq) (*interfaces.RegisterSkillResp, error) {
+// RegisterSkill 注册技能
+func (r *skillRegistry) RegisterSkill(ctx context.Context, req *interfaces.RegisterSkillReq) (resp *interfaces.RegisterSkillResp, err error) {
+	// 记录可观测
+	ctx, _ = o11y.StartInternalSpan(ctx)
+	defer o11y.EndSpan(ctx, err)
+	telemetry.SetSpanAttributes(ctx, map[string]interface{}{
+		"user_id": req.UserID,
+		"bd_id":   req.BusinessDomainID,
+	})
+	// 检查新建权限
 	accessor, err := r.AuthService.GetAccessor(ctx, req.UserID)
 	if err != nil {
 		return nil, err
 	}
-	if err = r.AuthService.CheckCreatePermission(ctx, accessor, r.resourceType()); err != nil {
+	if err = r.AuthService.CheckCreatePermission(ctx, accessor, interfaces.AuthResourceTypeSkill); err != nil {
 		return nil, err
 	}
 
@@ -97,7 +111,7 @@ func (r *skillRegistry) RegisterSkill(ctx context.Context, req *interfaces.Regis
 		}
 		_ = tx.Commit()
 	}()
-
+	// 插入技能
 	skillID, err := r.skillRepo.InsertSkill(ctx, tx, skill)
 	if err != nil {
 		return nil, err
@@ -112,7 +126,18 @@ func (r *skillRegistry) RegisterSkill(ctx context.Context, req *interfaces.Regis
 			return nil, err
 		}
 	}
-	if err = r.associateBusinessDomain(ctx, req.BusinessDomainID, skillID); err != nil {
+	// 关联技能到业务域
+	err = r.BusinessDomainService.AssociateResource(ctx, req.BusinessDomainID, skillID, interfaces.AuthResourceTypeSkill)
+	if err != nil {
+		return nil, err
+	}
+	// 触发新建策略，创建人默认拥有对当前资源的所有操作权限
+	err = r.AuthService.CreateOwnerPolicy(ctx, accessor, &interfaces.AuthResource{
+		ID:   skill.SkillID,
+		Type: string(interfaces.AuthResourceTypeSkill),
+		Name: skill.Name,
+	})
+	if err != nil {
 		return nil, err
 	}
 
@@ -120,33 +145,50 @@ func (r *skillRegistry) RegisterSkill(ctx context.Context, req *interfaces.Regis
 	for _, file := range files {
 		filePaths = append(filePaths, file.RelPath)
 	}
-	return &interfaces.RegisterSkillResp{
+	resp = &interfaces.RegisterSkillResp{
 		SkillID:     skillID,
 		Name:        skill.Name,
 		Description: skill.Description,
 		Version:     skill.Version,
 		Status:      skill.Status,
 		Files:       filePaths,
-	}, nil
+	}
+	// TODO: 待接入审计日志
+	return resp, nil
 }
 
-func (r *skillRegistry) DeleteSkill(ctx context.Context, req *interfaces.DeleteSkillReq) error {
-	skill, err := r.skillRepo.SelectSkillByID(ctx, nil, req.SkillID)
-	if err != nil {
-		return err
-	}
-	if skill == nil {
-		return fmt.Errorf("skill not found: %s", req.SkillID)
-	}
-	if !isSkillDeletable(skill.Status) {
-		return fmt.Errorf("skill can not be deleted in status: %s", skill.Status)
-	}
+// DeleteSkill 删除技能
+func (r *skillRegistry) DeleteSkill(ctx context.Context, req *interfaces.DeleteSkillReq) (err error) {
+	// 记录可观测
+	ctx, _ = o11y.StartInternalSpan(ctx)
+	defer o11y.EndSpan(ctx, err)
+	telemetry.SetSpanAttributes(ctx, map[string]interface{}{
+		"skill_id": req.SkillID,
+		"user_id":  req.UserID,
+		"bd_id":    req.BusinessDomainID,
+	})
+	// 检查删除权限
 	accessor, err := r.AuthService.GetAccessor(ctx, req.UserID)
 	if err != nil {
 		return err
 	}
-	if err = r.AuthService.CheckDeletePermission(ctx, accessor, req.SkillID, r.resourceType()); err != nil {
+	if err = r.AuthService.CheckDeletePermission(ctx, accessor, req.SkillID, interfaces.AuthResourceTypeSkill); err != nil {
 		return err
+	}
+	skill, err := r.skillRepo.SelectSkillByID(ctx, nil, req.SkillID)
+	if err != nil {
+		err = errors.DefaultHTTPError(ctx, http.StatusInternalServerError, fmt.Sprintf("select skill by id failed: %s", err.Error()))
+		return
+	}
+	if skill == nil || skill.Status == model.SkillStatusDeleting {
+		err = errors.DefaultHTTPError(ctx, http.StatusNotFound, fmt.Sprintf("skill not found: %s", req.SkillID))
+		return
+	}
+	// 只有未发布、已下架的技能才可以删除
+	if skill.Status != model.SkillStatusUnpublish && skill.Status != model.SkillStatusOffline {
+		err = errors.NewHTTPError(ctx, http.StatusBadRequest, errors.ErrExtSkillUnSupportDelete,
+			fmt.Sprintf("skill can not be deleted in status: %s", skill.Status))
+		return
 	}
 
 	tx, err := r.dbTx.GetTx(ctx)
@@ -164,6 +206,7 @@ func (r *skillRegistry) DeleteSkill(ctx context.Context, req *interfaces.DeleteS
 		_ = tx.Commit()
 	}()
 
+	// 将技能状态设置为删除中，TODO：需要设计一个单独的协程用于处理删除中断的兜底策略
 	if err = r.skillRepo.UpdateSkillStatus(ctx, tx, req.SkillID, model.SkillStatusDeleting, req.UserID); err != nil {
 		return err
 	}
@@ -172,6 +215,7 @@ func (r *skillRegistry) DeleteSkill(ctx context.Context, req *interfaces.DeleteS
 	if err != nil {
 		return err
 	}
+	// 先删除对象存储中的记录，再删除数据库中的记录
 	for _, file := range files {
 		if removeErr := r.assetStore.DeleteFile(ctx, file.StorageKey); removeErr != nil {
 			return removeErr
@@ -186,13 +230,39 @@ func (r *skillRegistry) DeleteSkill(ctx context.Context, req *interfaces.DeleteS
 	if err = r.skillRepo.DeleteSkillByID(ctx, tx, req.SkillID); err != nil {
 		return err
 	}
-	if err = r.batchDisassociateBusinessDomain(ctx, req.BusinessDomainID, []string{req.SkillID}); err != nil {
+	// 取消技能与业务域的关联
+	if err = r.BusinessDomainService.DisassociateResource(ctx, req.BusinessDomainID, req.SkillID, interfaces.AuthResourceTypeSkill); err != nil {
 		return err
 	}
-	return r.AuthService.DeletePolicy(ctx, []string{req.SkillID}, r.resourceType())
+	// 删除技能的权限策略
+	return r.AuthService.DeletePolicy(ctx, []string{req.SkillID}, interfaces.AuthResourceTypeSkill)
 }
 
-func (r *skillRegistry) DownloadSkill(ctx context.Context, req *interfaces.DownloadSkillReq) (*interfaces.DownloadSkillResp, error) {
+// DownloadSkill 下载技能
+func (r *skillRegistry) DownloadSkill(ctx context.Context, req *interfaces.DownloadSkillReq) (resp *interfaces.DownloadSkillResp, err error) {
+	// 记录可观测性
+	ctx, _ = o11y.StartInternalSpan(ctx)
+	defer o11y.EndSpan(ctx, err)
+	telemetry.SetSpanAttributes(ctx, map[string]interface{}{
+		"skill_id": req.SkillID,
+		"user_id":  req.UserID,
+		"bd_id":    req.BusinessDomainID,
+	})
+
+	accessor, err := r.AuthService.GetAccessor(ctx, req.UserID)
+	if err != nil {
+		return nil, err
+	}
+	// 检查是否有查看或者公开访问权限
+	authorized, err := r.AuthService.OperationCheckAny(ctx, accessor, req.SkillID, interfaces.AuthResourceTypeSkill,
+		interfaces.AuthOperationTypeView, interfaces.AuthOperationTypePublicAccess)
+	if err != nil {
+		return
+	}
+	if !authorized {
+		err = errors.NewHTTPError(ctx, http.StatusForbidden, errors.ErrExtCommonOperationForbidden, nil)
+		return
+	}
 	skill, err := r.skillRepo.SelectSkillByID(ctx, nil, req.SkillID)
 	if err != nil {
 		return nil, err
@@ -200,14 +270,6 @@ func (r *skillRegistry) DownloadSkill(ctx context.Context, req *interfaces.Downl
 	if skill == nil || skill.Status == model.SkillStatusDeleting {
 		return nil, fmt.Errorf("skill not found: %s", req.SkillID)
 	}
-	accessor, err := r.AuthService.GetAccessor(ctx, req.UserID)
-	if err != nil {
-		return nil, err
-	}
-	if err = r.AuthService.CheckViewPermission(ctx, accessor, req.SkillID, r.resourceType()); err != nil {
-		return nil, err
-	}
-
 	files, err := r.fileRepo.SelectSkillFileBySkillID(ctx, nil, req.SkillID)
 	if err != nil {
 		return nil, err
@@ -252,192 +314,260 @@ func (r *skillRegistry) DownloadSkill(ctx context.Context, req *interfaces.Downl
 	}, nil
 }
 
-func (r *skillRegistry) QuerySkillList(ctx context.Context, req *interfaces.QuerySkillListReq) (*interfaces.QuerySkillListResp, error) {
-	accessor, err := r.AuthService.GetAccessor(ctx, req.UserID)
+// QuerySkillList 查询技能列表（管理接口）
+func (r *skillRegistry) QuerySkillList(ctx context.Context, req *interfaces.QuerySkillListReq) (resp *interfaces.QuerySkillListResp, err error) {
+	// 记录可观测
+	ctx, _ = o11y.StartInternalSpan(ctx)
+	defer o11y.EndSpan(ctx, err)
+	telemetry.SetSpanAttributes(ctx, map[string]interface{}{
+		"user_id": req.UserID,
+		"bd_id":   req.BusinessDomainID,
+	})
+
+	resp = &interfaces.QuerySkillListResp{
+		CommonPageResult: interfaces.CommonPageResult{
+			Page:     req.Page,
+			PageSize: req.PageSize,
+		},
+		Data: []*interfaces.SkillSummary{},
+	}
+	// 条件构建
+	status := req.Status
+	if status == "" {
+		status = model.SkillStatusDeleting
+	}
+	filter := map[string]interface{}{
+		"all":         req.All,
+		"name":        req.Name,
+		"source":      req.Source,
+		"create_user": req.CreateUser,
+		"status":      status,
+	}
+
+	authResp, resourceToBdMap, err := r.querySkillListPage(ctx, filter, req.CommonPageParams, req.UserID, interfaces.AuthOperationTypeView)
 	if err != nil {
 		return nil, err
 	}
+	resp.CommonPageResult = authResp.CommonPageResult
+	if len(authResp.Data) == 0 {
+		return resp, nil
+	}
+	skillSummaries, err := r.assembleSkillSummaryList(ctx, authResp.Data, resourceToBdMap)
+	if err != nil {
+		return nil, err
+	}
+	resp.Data = skillSummaries
+	return resp, nil
+}
 
-	filter := map[string]interface{}{
-		"name":   req.Name,
-		"source": req.Source,
-		"all":    req.All,
-		"limit":  req.PageSize,
-		"offset": (req.Page - 1) * req.PageSize,
+// 组装技能返回信息列表
+func (r *skillRegistry) assembleSkillSummaryList(ctx context.Context, skillDBs []*model.SkillRepositoryDB, resourceToBdMap map[string]string) (skillSummaries []*interfaces.SkillSummary, err error) {
+	var userIDs, skillIDs []string
+	skillSummaries = []*interfaces.SkillSummary{}
+	for _, skill := range skillDBs {
+		skillSummaries = append(skillSummaries, convertSkillSummary(skill))
+		userIDs = append(userIDs, skill.CreateUser, skill.UpdateUser)
+		skillIDs = append(skillIDs, skill.SkillID)
 	}
-	if req.CreateUser != "" {
-		filter["create_user"] = req.CreateUser
+	// 获取用户名称
+	userMap, err := r.UserMgnt.GetUsersName(ctx, userIDs)
+	if err != nil {
+		return
 	}
-	if req.Status != "" {
-		filter["status"] = string(req.Status)
+	for _, skill := range skillSummaries {
+		skill.CreateUser = utils.GetValueOrDefault(userMap, skill.UpdateUser, interfaces.UnknownUser)
+		skill.UpdateUser = utils.GetValueOrDefault(userMap, skill.UpdateUser, interfaces.UnknownUser)
 	}
+	return
+}
 
+func (r *skillRegistry) querySkillListPage(ctx context.Context, filter map[string]interface{}, pageParamsReq interfaces.CommonPageParams, userID string, operations ...interfaces.AuthOperationType) (
+	authResp *interfaces.QueryResponse[model.SkillRepositoryDB], resourceToBdMap map[string]string, err error) {
+	// 构建查询执行器
 	sortField := "f_update_time"
-	switch req.SortBy {
+	switch pageParamsReq.SortBy {
 	case "create_time":
 		sortField = "f_create_time"
 	case "name":
 		sortField = "f_name"
 	}
 	sortOrder := ormhelper.SortOrderDesc
-	if req.SortOrder == "asc" {
+	if pageParamsReq.SortOrder == "asc" {
 		sortOrder = ormhelper.SortOrderAsc
 	}
-
 	sort := &ormhelper.SortParams{Fields: []ormhelper.SortField{{Field: sortField, Order: sortOrder}}}
-	total, err := r.skillRepo.CountByWhereClause(ctx, nil, filter)
-	if err != nil {
-		return nil, err
-	}
-	skills, err := r.skillRepo.SelectSkillListPage(ctx, nil, filter, sort, nil)
-	if err != nil {
-		return nil, err
-	}
-
-	viewableCandidates := make([]string, 0, len(skills))
-	visibleSkillMap := make(map[string]*model.SkillRepositoryDB, len(skills))
-	for _, skill := range skills {
-		if skill.Status == model.SkillStatusDeleting {
-			continue
+	// 统计总条数
+	queryTotal := func(newCtx context.Context) (int64, error) {
+		var count int64
+		count, err = r.skillRepo.CountByWhereClause(ctx, nil, filter)
+		if err != nil {
+			r.Logger.WithContext(newCtx).Errorf("count skill list failed, err: %v", err)
+			err = errors.DefaultHTTPError(newCtx, http.StatusInternalServerError, "count skill list failed")
+			return 0, err
 		}
-		viewableCandidates = append(viewableCandidates, skill.SkillID)
-		visibleSkillMap[skill.SkillID] = skill
+		return count, nil
 	}
-	viewableIDs, err := r.filterViewableIDs(ctx, accessor, viewableCandidates)
-	if err != nil {
-		return nil, err
-	}
-
-	data := make([]*interfaces.SkillSummary, 0, len(skills))
-	for _, skillID := range viewableIDs {
-		skill, ok := visibleSkillMap[skillID]
-		if !ok {
-			continue
+	// queryBatch 查询技能列表分页
+	queryBatch := func(newCtx context.Context, pageSize int, offset int, cursorValue *model.SkillRepositoryDB) ([]*model.SkillRepositoryDB, error) {
+		var skills []*model.SkillRepositoryDB
+		var cursor *ormhelper.CursorParams
+		if cursorValue != nil {
+			cursor = &ormhelper.CursorParams{
+				Field:     sortField,
+				Direction: ormhelper.SortOrder(pageParamsReq.SortOrder),
+			}
+			switch sortField {
+			case "f_update_time":
+				cursor.Value = cursorValue.UpdateTime
+			case "f_create_time":
+				cursor.Value = cursorValue.CreateTime
+			case "f_name":
+				cursor.Value = cursorValue.Name
+			}
+			// 如果使用游标不需要offset
+			offset = 0
 		}
-		data = append(data, convertSkillSummary(skill))
+		filter["limit"] = pageSize
+		filter["offset"] = offset
+		skills, err = r.skillRepo.SelectSkillListPage(ctx, nil, filter, sort, cursor)
+		if err != nil {
+			r.Logger.WithContext(newCtx).Errorf("select skill list page failed, err: %v", err)
+			err = errors.DefaultHTTPError(newCtx, http.StatusInternalServerError, "select skill list page failed")
+			return nil, err
+		}
+		return skills, nil
 	}
-
-	pageResult := ormhelper.CalculateQueryResult(total, &ormhelper.PaginationParams{
-		Page:     req.Page,
-		PageSize: req.PageSize,
-	})
-	return &interfaces.QuerySkillListResp{
-		CommonPageResult: interfaces.CommonPageResult{
-			TotalCount: int(pageResult.Total),
-			Page:       pageResult.Page,
-			PageSize:   pageResult.PageSize,
-			TotalPage:  pageResult.TotalPages,
-			HasNext:    pageResult.HasNext,
-			HasPrev:    pageResult.HasPrev,
-		},
-		Data: data,
-	}, nil
+	businessDomainStr, _ := common.GetBusinessDomainFromCtx(ctx)
+	businessDomainIDs := strings.Split(businessDomainStr, ",")
+	resourceToBdMap, err = r.BusinessDomainService.BatchResourceList(ctx, businessDomainIDs, interfaces.AuthResourceTypeOperator)
+	if err != nil {
+		return
+	}
+	queryBuilder := auth.NewQueryBuilder[model.SkillRepositoryDB]().
+		SetPage(pageParamsReq.Page, pageParamsReq.PageSize).SetAll(pageParamsReq.All).
+		SetQueryFunctions(queryTotal, queryBatch).
+		SetFilteredQueryFunctions( // 带过滤条件的查询函数
+			func(newCtx context.Context, ids []string) (int64, error) {
+				filter["in"] = ids
+				return queryTotal(newCtx)
+			},
+			func(newCtx context.Context, pageSize int, offset int, ids []string, cursorValue *model.SkillRepositoryDB) ([]*model.SkillRepositoryDB, error) {
+				filter["in"] = ids
+				return queryBatch(newCtx, pageSize, offset, cursorValue)
+			},
+		).
+		SetBusinessDomainFilter(func(newCtx context.Context) ([]string, error) {
+			// 从业务域中过滤相关技能
+			resourceIDs := make([]string, 0, len(resourceToBdMap))
+			for resourceID := range resourceToBdMap {
+				resourceIDs = append(resourceIDs, resourceID)
+			}
+			return resourceIDs, nil
+		})
+	if common.IsPublicAPIFromCtx(ctx) {
+		// 如果是外部接口，权限检查
+		queryBuilder.SetAuthFilter(func(newCtx context.Context) ([]string, error) {
+			// 检查查看权限
+			var accessor *interfaces.AuthAccessor
+			accessor, err = r.AuthService.GetAccessor(newCtx, userID)
+			if err != nil {
+				return nil, err
+			}
+			return r.AuthService.ResourceListIDs(newCtx, accessor, interfaces.AuthResourceTypeSkill, interfaces.AuthOperationTypeView)
+		})
+	}
+	authResp, err = queryBuilder.Execute(ctx)
+	return
 }
 
-func (r *skillRegistry) QuerySkillMarketList(ctx context.Context, req *interfaces.QuerySkillMarketListReq) (*interfaces.QuerySkillMarketListResp, error) {
+func (r *skillRegistry) QuerySkillMarketList(ctx context.Context, req *interfaces.QuerySkillMarketListReq) (resp *interfaces.QuerySkillMarketListResp, err error) {
+	// 记录可观测
+	ctx, _ = o11y.StartInternalSpan(ctx)
+	defer o11y.EndSpan(ctx, err)
+	telemetry.SetSpanAttributes(ctx, map[string]interface{}{
+		"user_id": req.UserID,
+		"bd_id":   req.BusinessDomainID,
+	})
+
+	resp = &interfaces.QuerySkillMarketListResp{
+		CommonPageResult: interfaces.CommonPageResult{
+			Page:     req.Page,
+			PageSize: req.PageSize,
+		},
+		Data: []*interfaces.SkillSummary{},
+	}
+	// 条件构建
+	status := model.SkillStatusPublished
+	filter := map[string]interface{}{
+		"all":         req.All,
+		"name":        req.Name,
+		"source":      req.Source,
+		"create_user": req.CreateUser,
+		"status":      status,
+	}
+
+	authResp, resourceToBdMap, err := r.querySkillListPage(ctx, filter, req.CommonPageParams, req.UserID,
+		interfaces.AuthOperationTypePublicAccess)
+	if err != nil {
+		return nil, err
+	}
+	resp.CommonPageResult = authResp.CommonPageResult
+	if len(authResp.Data) == 0 {
+		return resp, nil
+	}
+	skillSummaries, err := r.assembleSkillSummaryList(ctx, authResp.Data, resourceToBdMap)
+	if err != nil {
+		return nil, err
+	}
+	resp.Data = skillSummaries
+	return resp, nil
+}
+
+// GetSkillMarketDetail 获取技能市场详情
+func (r *skillRegistry) GetSkillMarketDetail(ctx context.Context, req *interfaces.GetSkillMarketDetailReq) (resp *interfaces.SkillInfo, err error) {
+	// 记录可观测
+	ctx, _ = o11y.StartInternalSpan(ctx)
+	defer o11y.EndSpan(ctx, err)
+	telemetry.SetSpanAttributes(ctx, map[string]interface{}{
+		"user_id":  req.UserID,
+		"bd_id":    req.BusinessDomainID,
+		"skill_id": req.SkillID,
+	})
 	accessor, err := r.AuthService.GetAccessor(ctx, req.UserID)
 	if err != nil {
 		return nil, err
 	}
-	publicIDs, err := r.listMarketVisibleIDs(ctx, accessor)
-	if err != nil {
+	if err = r.AuthService.CheckPublicAccessPermission(ctx, accessor, req.SkillID, interfaces.AuthResourceTypeSkill); err != nil {
 		return nil, err
 	}
-	resourceToBdMap, err := r.BusinessDomainService.BatchResourceList(ctx, strings.Split(req.BusinessDomainID, ","), r.resourceType())
-	if err != nil {
-		return nil, err
-	}
-
-	filter := map[string]interface{}{
-		"name":   req.Name,
-		"source": req.Source,
-		"all":    true,
-	}
-	sort := &ormhelper.SortParams{Fields: []ormhelper.SortField{{Field: "f_update_time", Order: ormhelper.SortOrderDesc}}}
-	skills, err := r.skillRepo.SelectSkillListPage(ctx, nil, filter, sort, nil)
-	if err != nil {
-		return nil, err
-	}
-
-	publicSet := make(map[string]struct{}, len(publicIDs))
-	for _, skillID := range publicIDs {
-		publicSet[skillID] = struct{}{}
-	}
-
-	filtered := make([]*interfaces.SkillSummary, 0, len(skills))
-	for _, skill := range skills {
-		if skill.Status == model.SkillStatusDeleting {
-			continue
-		}
-		if _, ok := publicSet[skill.SkillID]; !ok {
-			continue
-		}
-		if _, ok := resourceToBdMap[skill.SkillID]; !ok {
-			continue
-		}
-		filtered = append(filtered, convertSkillSummary(skill))
-	}
-
-	start := (req.Page - 1) * req.PageSize
-	if start < 0 {
-		start = 0
-	}
-	end := start + req.PageSize
-	if req.All {
-		start = 0
-		end = len(filtered)
-	}
-	if start > len(filtered) {
-		start = len(filtered)
-	}
-	if end > len(filtered) {
-		end = len(filtered)
-	}
-	pageData := filtered[start:end]
-
-	pageResult := ormhelper.CalculateQueryResult(int64(len(filtered)), &ormhelper.PaginationParams{
-		Page:     req.Page,
-		PageSize: req.PageSize,
-	})
-	return &interfaces.QuerySkillMarketListResp{
-		CommonPageResult: interfaces.CommonPageResult{
-			TotalCount: int(pageResult.Total),
-			Page:       pageResult.Page,
-			PageSize:   pageResult.PageSize,
-			TotalPage:  pageResult.TotalPages,
-			HasNext:    pageResult.HasNext,
-			HasPrev:    pageResult.HasPrev,
-		},
-		Data: pageData,
-	}, nil
-}
-
-func (r *skillRegistry) GetSkillMarketDetail(ctx context.Context, req *interfaces.GetSkillMarketDetailReq) (*interfaces.SkillInfo, error) {
 	skill, err := r.skillRepo.SelectSkillByID(ctx, nil, req.SkillID)
 	if err != nil {
 		return nil, err
 	}
-	if skill == nil || skill.Status == model.SkillStatusDeleting || skill.Status != model.SkillStatusPublished {
-		return nil, fmt.Errorf("skill not found: %s", req.SkillID)
-	}
-	accessor, err := r.AuthService.GetAccessor(ctx, req.UserID)
-	if err != nil {
+	// 技能不存在或者未发布在市场接口不能访问
+	if skill == nil || skill.Status != model.SkillStatusPublished {
+		err = errors.DefaultHTTPError(ctx, http.StatusNotFound, fmt.Sprintf("skill not found: %s", req.SkillID))
 		return nil, err
-	}
-	if err = r.AuthService.CheckPublicAccessPermission(ctx, accessor, req.SkillID, r.resourceType()); err != nil {
-		return nil, err
-	}
-	resourceToBdMap, err := r.BusinessDomainService.BatchResourceList(ctx, strings.Split(req.BusinessDomainID, ","), r.resourceType())
-	if err != nil {
-		return nil, err
-	}
-	if _, ok := resourceToBdMap[req.SkillID]; !ok {
-		return nil, fmt.Errorf("skill not found: %s", req.SkillID)
 	}
 	return convertSkillDetail(skill), nil
 }
 
-func (r *skillRegistry) GetSkillDetail(ctx context.Context, req *interfaces.GetSkillDetailReq) (*interfaces.SkillInfo, error) {
+func (r *skillRegistry) GetSkillDetail(ctx context.Context, req *interfaces.GetSkillDetailReq) (resp *interfaces.SkillInfo, err error) {
+	// 记录可观测
+	ctx, _ = o11y.StartInternalSpan(ctx)
+	defer o11y.EndSpan(ctx, err)
+	telemetry.SetSpanAttributes(ctx, map[string]interface{}{
+		"user_id":  req.UserID,
+		"bd_id":    req.BusinessDomainID,
+		"skill_id": req.SkillID,
+	})
+	accessor, err := r.AuthService.GetAccessor(ctx, req.UserID)
+	if err != nil {
+		return nil, err
+	}
+	if err = r.AuthService.CheckViewPermission(ctx, accessor, req.SkillID, interfaces.AuthResourceTypeSkill); err != nil {
+		return nil, err
+	}
 	skill, err := r.skillRepo.SelectSkillByID(ctx, nil, req.SkillID)
 	if err != nil {
 		return nil, err
@@ -448,13 +578,7 @@ func (r *skillRegistry) GetSkillDetail(ctx context.Context, req *interfaces.GetS
 	if skill.Status == model.SkillStatusDeleting {
 		return nil, fmt.Errorf("skill not found: %s", req.SkillID)
 	}
-	accessor, err := r.AuthService.GetAccessor(ctx, req.UserID)
-	if err != nil {
-		return nil, err
-	}
-	if err = r.AuthService.CheckViewPermission(ctx, accessor, req.SkillID, r.resourceType()); err != nil {
-		return nil, err
-	}
+
 	return convertSkillDetail(skill), nil
 }
 
