@@ -17,8 +17,8 @@ import (
 	"github.com/bytedance/sonic"
 	"github.com/gin-gonic/gin"
 	"github.com/golang/mock/gomock"
+	"github.com/kweaver-ai/kweaver-go-lib/hydra"
 	"github.com/kweaver-ai/kweaver-go-lib/rest"
-	rmock "github.com/kweaver-ai/kweaver-go-lib/rest/mock"
 	. "github.com/smartystreets/goconvey/convey"
 
 	"data-model/common"
@@ -28,10 +28,10 @@ import (
 )
 
 func MockNewTraceModelRestHandler(appSetting *common.AppSetting,
-	hydra rest.Hydra, tms interfaces.TraceModelService) (r *restHandler) {
+	as interfaces.AuthService, tms interfaces.TraceModelService) (r *restHandler) {
 	r = &restHandler{
 		appSetting: appSetting,
-		hydra:      hydra,
+		as:         as,
 		tms:        tms,
 	}
 	return r
@@ -50,12 +50,12 @@ func Test_TraceModelRestHandler_CreateTraceModels(t *testing.T) {
 
 		appSetting := &common.AppSetting{}
 		tms := dmock.NewMockTraceModelService(mockCtrl)
-		hydra := rmock.NewMockHydra(mockCtrl)
+		as := dmock.NewMockAuthService(mockCtrl)
 
-		handler := MockNewTraceModelRestHandler(appSetting, hydra, tms)
+		handler := MockNewTraceModelRestHandler(appSetting, as, tms)
 		handler.RegisterPublic(engine)
 
-		hydra.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(rest.Visitor{}, nil)
+		as.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(hydra.Visitor{}, nil)
 
 		url := "/api/mdl-data-model/v1/trace-models"
 
@@ -191,12 +191,12 @@ func Test_TraceModelRestHandler_SimulateCreateTraceModel(t *testing.T) {
 
 		appSetting := &common.AppSetting{}
 		tms := dmock.NewMockTraceModelService(mockCtrl)
-		hydra := rmock.NewMockHydra(mockCtrl)
+		as := dmock.NewMockAuthService(mockCtrl)
 
-		handler := MockNewTraceModelRestHandler(appSetting, hydra, tms)
+		handler := MockNewTraceModelRestHandler(appSetting, as, tms)
 		handler.RegisterPublic(engine)
 
-		hydra.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(rest.Visitor{}, nil)
+		as.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(hydra.Visitor{}, nil)
 
 		url := "/api/mdl-data-model/v1/simulate-trace-models"
 
@@ -327,12 +327,12 @@ func Test_TraceModelRestHandler_DeleteTraceModels(t *testing.T) {
 
 		appSetting := &common.AppSetting{}
 		tms := dmock.NewMockTraceModelService(mockCtrl)
-		hydra := rmock.NewMockHydra(mockCtrl)
+		as := dmock.NewMockAuthService(mockCtrl)
 
-		handler := MockNewTraceModelRestHandler(appSetting, hydra, tms)
+		handler := MockNewTraceModelRestHandler(appSetting, as, tms)
 		handler.RegisterPublic(engine)
 
-		hydra.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(rest.Visitor{}, nil)
+		as.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(hydra.Visitor{}, nil)
 
 		url := "/api/mdl-data-model/v1/trace-models/1,2"
 
@@ -409,12 +409,12 @@ func Test_TraceModelRestHandler_UpdateTraceModel(t *testing.T) {
 
 		appSetting := &common.AppSetting{}
 		tms := dmock.NewMockTraceModelService(mockCtrl)
-		hydra := rmock.NewMockHydra(mockCtrl)
+		as := dmock.NewMockAuthService(mockCtrl)
 
-		handler := MockNewTraceModelRestHandler(appSetting, hydra, tms)
+		handler := MockNewTraceModelRestHandler(appSetting, as, tms)
 		handler.RegisterPublic(engine)
 
-		hydra.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(rest.Visitor{}, nil)
+		as.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(hydra.Visitor{}, nil)
 
 		url := "/api/mdl-data-model/v1/trace-models/1"
 
@@ -582,12 +582,12 @@ func Test_TraceModelRestHandler_SimulateUpdateTraceModel(t *testing.T) {
 
 		appSetting := &common.AppSetting{}
 		tms := dmock.NewMockTraceModelService(mockCtrl)
-		hydra := rmock.NewMockHydra(mockCtrl)
+		as := dmock.NewMockAuthService(mockCtrl)
 
-		handler := MockNewTraceModelRestHandler(appSetting, hydra, tms)
+		handler := MockNewTraceModelRestHandler(appSetting, as, tms)
 		handler.RegisterPublic(engine)
 
-		hydra.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(rest.Visitor{}, nil)
+		as.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(hydra.Visitor{}, nil)
 
 		url := "/api/mdl-data-model/v1/simulate-trace-models/1"
 
@@ -755,12 +755,12 @@ func Test_TraceModelRestHandler_GetTraceModels(t *testing.T) {
 
 		appSetting := &common.AppSetting{}
 		tms := dmock.NewMockTraceModelService(mockCtrl)
-		hydra := rmock.NewMockHydra(mockCtrl)
+		as := dmock.NewMockAuthService(mockCtrl)
 
-		handler := MockNewTraceModelRestHandler(appSetting, hydra, tms)
+		handler := MockNewTraceModelRestHandler(appSetting, as, tms)
 		handler.RegisterPublic(engine)
 
-		hydra.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(rest.Visitor{}, nil)
+		as.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(hydra.Visitor{}, nil)
 
 		url := "/api/mdl-data-model/v1/trace-models/1,2"
 
@@ -803,12 +803,12 @@ func Test_TraceModelRestHandler_ListTraceModels(t *testing.T) {
 
 		appSetting := &common.AppSetting{}
 		tms := dmock.NewMockTraceModelService(mockCtrl)
-		hydra := rmock.NewMockHydra(mockCtrl)
+		as := dmock.NewMockAuthService(mockCtrl)
 
-		handler := MockNewTraceModelRestHandler(appSetting, hydra, tms)
+		handler := MockNewTraceModelRestHandler(appSetting, as, tms)
 		handler.RegisterPublic(engine)
 
-		hydra.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(rest.Visitor{}, nil)
+		as.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(hydra.Visitor{}, nil)
 
 		url := "/api/mdl-data-model/v1/trace-models?span_source_type=1"
 
@@ -926,12 +926,12 @@ func Test_TraceModelRestHandler_GetTraceModelFieldInfo(t *testing.T) {
 
 		appSetting := &common.AppSetting{}
 		tms := dmock.NewMockTraceModelService(mockCtrl)
-		hydra := rmock.NewMockHydra(mockCtrl)
+		as := dmock.NewMockAuthService(mockCtrl)
 
-		handler := MockNewTraceModelRestHandler(appSetting, hydra, tms)
+		handler := MockNewTraceModelRestHandler(appSetting, as, tms)
 		handler.RegisterPublic(engine)
 
-		hydra.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(rest.Visitor{}, nil)
+		as.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(hydra.Visitor{}, nil)
 
 		url := "/api/mdl-data-model/v1/trace-models/1/field-info"
 

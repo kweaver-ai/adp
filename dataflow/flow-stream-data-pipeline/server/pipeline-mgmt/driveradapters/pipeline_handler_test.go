@@ -11,22 +11,22 @@ import (
 	"github.com/bytedance/sonic"
 	"github.com/gin-gonic/gin"
 	"github.com/golang/mock/gomock"
+	"github.com/kweaver-ai/kweaver-go-lib/hydra"
 	"github.com/kweaver-ai/kweaver-go-lib/rest"
-	rmock "github.com/kweaver-ai/kweaver-go-lib/rest/mock"
 	. "github.com/smartystreets/goconvey/convey"
 
 	"flow-stream-data-pipeline/common"
 	ferrors "flow-stream-data-pipeline/errors"
 	"flow-stream-data-pipeline/pipeline-mgmt/interfaces"
-	dmock "flow-stream-data-pipeline/pipeline-mgmt/interfaces/mock"
+	fmock "flow-stream-data-pipeline/pipeline-mgmt/interfaces/mock"
 )
 
 func mockNewPipelineMgmtRestHandler(appSetting *common.AppSetting,
-	hydra rest.Hydra, pmService interfaces.PipelineMgmtService) (r *restHandler) {
+	as interfaces.AuthService, pmService interfaces.PipelineMgmtService) (r *restHandler) {
 
 	r = &restHandler{
 		appSetting:          appSetting,
-		hydra:               hydra,
+		as:                  as,
 		pipelineMgmtService: pmService,
 	}
 	return r
@@ -50,12 +50,12 @@ func Test_PipelineRestHandler_CreatePipeline(t *testing.T) {
 				MaxPipelineCount: 100,
 			},
 		}
-		hydraMock := rmock.NewMockHydra(mockCtrl)
-		pmService := dmock.NewMockPipelineMgmtService(mockCtrl)
-		handler := mockNewPipelineMgmtRestHandler(appSetting, hydraMock, pmService)
+		asMock := fmock.NewMockAuthService(mockCtrl)
+		pmService := fmock.NewMockPipelineMgmtService(mockCtrl)
+		handler := mockNewPipelineMgmtRestHandler(appSetting, asMock, pmService)
 		handler.RegisterPublic(engine)
 
-		hydraMock.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(rest.Visitor{}, nil)
+		asMock.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(hydra.Visitor{}, nil)
 
 		url := "/api/flow-stream-data-pipeline/v1/pipelines"
 
@@ -211,12 +211,12 @@ func Test_PipelineRestHandler_DeletePipelines(t *testing.T) {
 		defer mockCtrl.Finish()
 
 		appSetting := &common.AppSetting{}
-		hydraMock := rmock.NewMockHydra(mockCtrl)
-		pmService := dmock.NewMockPipelineMgmtService(mockCtrl)
-		handler := mockNewPipelineMgmtRestHandler(appSetting, hydraMock, pmService)
+		asMock := fmock.NewMockAuthService(mockCtrl)
+		pmService := fmock.NewMockPipelineMgmtService(mockCtrl)
+		handler := mockNewPipelineMgmtRestHandler(appSetting, asMock, pmService)
 		handler.RegisterPublic(engine)
 
-		hydraMock.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(rest.Visitor{}, nil)
+		asMock.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(hydra.Visitor{}, nil)
 
 		url := "/api/flow-stream-data-pipeline/v1/pipelines/aa"
 
@@ -284,12 +284,12 @@ func Test_PipelineRestHandler_UpdatePipeline(t *testing.T) {
 				MemoryMax: 8096,
 			},
 		}
-		hydraMock := rmock.NewMockHydra(mockCtrl)
-		pmService := dmock.NewMockPipelineMgmtService(mockCtrl)
-		handler := mockNewPipelineMgmtRestHandler(appSetting, hydraMock, pmService)
+		asMock := fmock.NewMockAuthService(mockCtrl)
+		pmService := fmock.NewMockPipelineMgmtService(mockCtrl)
+		handler := mockNewPipelineMgmtRestHandler(appSetting, asMock, pmService)
 		handler.RegisterPublic(engine)
 
-		hydraMock.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(rest.Visitor{}, nil)
+		asMock.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(hydra.Visitor{}, nil)
 
 		url := "/api/flow-stream-data-pipeline/v1/pipelines/1"
 
@@ -371,12 +371,12 @@ func Test_PipelineRestHandler_GetPipelines(t *testing.T) {
 		defer mockCtrl.Finish()
 
 		appSetting := &common.AppSetting{}
-		hydraMock := rmock.NewMockHydra(mockCtrl)
-		pmService := dmock.NewMockPipelineMgmtService(mockCtrl)
-		handler := mockNewPipelineMgmtRestHandler(appSetting, hydraMock, pmService)
+		asMock := fmock.NewMockAuthService(mockCtrl)
+		pmService := fmock.NewMockPipelineMgmtService(mockCtrl)
+		handler := mockNewPipelineMgmtRestHandler(appSetting, asMock, pmService)
 		handler.RegisterPublic(engine)
 
-		hydraMock.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(rest.Visitor{}, nil)
+		asMock.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(hydra.Visitor{}, nil)
 
 		url := "/api/flow-stream-data-pipeline/v1/pipelines/aa"
 
@@ -415,12 +415,12 @@ func Test_PipelineRestHandler_ListPipelines(t *testing.T) {
 		defer mockCtrl.Finish()
 
 		appSetting := &common.AppSetting{}
-		hydraMock := rmock.NewMockHydra(mockCtrl)
-		pmService := dmock.NewMockPipelineMgmtService(mockCtrl)
-		handler := mockNewPipelineMgmtRestHandler(appSetting, hydraMock, pmService)
+		asMock := fmock.NewMockAuthService(mockCtrl)
+		pmService := fmock.NewMockPipelineMgmtService(mockCtrl)
+		handler := mockNewPipelineMgmtRestHandler(appSetting, asMock, pmService)
 		handler.RegisterPublic(engine)
 
-		hydraMock.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(rest.Visitor{}, nil)
+		asMock.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(hydra.Visitor{}, nil)
 
 		url := "/api/flow-stream-data-pipeline/v1/pipelines"
 
@@ -486,12 +486,13 @@ func Test_PipelineRestHandler_UpdatePipelineStatus(t *testing.T) {
 				MemoryMax: 8096,
 			},
 		}
-		hydraMock := rmock.NewMockHydra(mockCtrl)
-		pmService := dmock.NewMockPipelineMgmtService(mockCtrl)
-		handler := mockNewPipelineMgmtRestHandler(appSetting, hydraMock, pmService)
+
+		asMock := fmock.NewMockAuthService(mockCtrl)
+		pmService := fmock.NewMockPipelineMgmtService(mockCtrl)
+		handler := mockNewPipelineMgmtRestHandler(appSetting, asMock, pmService)
 		handler.RegisterPublic(engine)
 
-		hydraMock.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(rest.Visitor{}, nil)
+		asMock.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(hydra.Visitor{}, nil)
 
 		url := "/api/flow-stream-data-pipeline/v1/pipelines/a/attrs/status,status_details"
 

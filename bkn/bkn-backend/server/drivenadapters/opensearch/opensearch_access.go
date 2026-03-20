@@ -11,6 +11,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"net/http"
 	"sync"
 
 	"github.com/bytedance/sonic"
@@ -162,11 +163,12 @@ func (o *openSearchAccess) IndexExists(ctx context.Context, indexName string) (b
 	// 200 - 索引存在
 	// 404 - 索引不存在
 	// 其他状态码 - 错误
-	if res.StatusCode == 200 {
+	switch res.StatusCode {
+	case http.StatusOK:
 		return true, nil
-	} else if res.StatusCode == 404 {
+	case http.StatusNotFound:
 		return false, nil
-	} else {
+	default:
 		return false, fmt.Errorf("check index existence failed: %s, %s", res.Status(), res.String())
 	}
 }

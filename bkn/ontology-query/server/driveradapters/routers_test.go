@@ -13,14 +13,15 @@ import (
 	"testing"
 
 	"github.com/gin-gonic/gin"
-	"go.uber.org/mock/gomock"
+	"github.com/kweaver-ai/kweaver-go-lib/hydra"
 	"github.com/kweaver-ai/kweaver-go-lib/rest"
-	rmock "ontology-query/interfaces/mock"
 	. "github.com/smartystreets/goconvey/convey"
+	"go.uber.org/mock/gomock"
 
 	"ontology-query/common"
+	"ontology-query/common/visitor"
 	"ontology-query/interfaces"
-	dmock "ontology-query/interfaces/mock"
+	omock "ontology-query/interfaces/mock"
 )
 
 // setGinMode 设置 Gin 为测试模式并返回恢复函数
@@ -35,14 +36,14 @@ func setGinMode() func() {
 // MockNewRestHandler 创建用于测试的 restHandler
 func MockNewRestHandler(
 	appSetting *common.AppSetting,
-	hydra rest.Hydra,
+	as interfaces.AuthService,
 	ats interfaces.ActionTypeService,
 	kns interfaces.KnowledgeNetworkService,
 	ots interfaces.ObjectTypeService,
 ) *restHandler {
 	return &restHandler{
 		appSetting: appSetting,
-		hydra:      hydra,
+		as:         as,
 		ats:        ats,
 		kns:        kns,
 		ots:        ots,
@@ -61,12 +62,12 @@ func Test_RestHandler_HealthCheck(t *testing.T) {
 		defer mockCtrl.Finish()
 
 		appSetting := &common.AppSetting{}
-		hydra := rmock.NewMockHydra(mockCtrl)
-		ats := dmock.NewMockActionTypeService(mockCtrl)
-		kns := dmock.NewMockKnowledgeNetworkService(mockCtrl)
-		ots := dmock.NewMockObjectTypeService(mockCtrl)
+		as := omock.NewMockAuthService(mockCtrl)
+		ats := omock.NewMockActionTypeService(mockCtrl)
+		kns := omock.NewMockKnowledgeNetworkService(mockCtrl)
+		ots := omock.NewMockObjectTypeService(mockCtrl)
 
-		handler := MockNewRestHandler(appSetting, hydra, ats, kns, ots)
+		handler := MockNewRestHandler(appSetting, as, ats, kns, ots)
 		handler.RegisterPublic(engine)
 
 		Convey("成功 - 健康检查", func() {
@@ -91,12 +92,12 @@ func Test_RestHandler_verifyJsonContentTypeMiddleWare(t *testing.T) {
 		defer mockCtrl.Finish()
 
 		appSetting := &common.AppSetting{}
-		hydra := rmock.NewMockHydra(mockCtrl)
-		ats := dmock.NewMockActionTypeService(mockCtrl)
-		kns := dmock.NewMockKnowledgeNetworkService(mockCtrl)
-		ots := dmock.NewMockObjectTypeService(mockCtrl)
+		as := omock.NewMockAuthService(mockCtrl)
+		ats := omock.NewMockActionTypeService(mockCtrl)
+		kns := omock.NewMockKnowledgeNetworkService(mockCtrl)
+		ots := omock.NewMockObjectTypeService(mockCtrl)
 
-		handler := MockNewRestHandler(appSetting, hydra, ats, kns, ots)
+		handler := MockNewRestHandler(appSetting, as, ats, kns, ots)
 
 		// 注册一个测试路由使用中间件
 		engine.POST("/test", handler.verifyJsonContentTypeMiddleWare(), func(c *gin.Context) {
@@ -143,19 +144,19 @@ func Test_RestHandler_verifyOAuth(t *testing.T) {
 		defer mockCtrl.Finish()
 
 		appSetting := &common.AppSetting{}
-		hydra := rmock.NewMockHydra(mockCtrl)
-		ats := dmock.NewMockActionTypeService(mockCtrl)
-		kns := dmock.NewMockKnowledgeNetworkService(mockCtrl)
-		ots := dmock.NewMockObjectTypeService(mockCtrl)
+		as := omock.NewMockAuthService(mockCtrl)
+		ats := omock.NewMockActionTypeService(mockCtrl)
+		kns := omock.NewMockKnowledgeNetworkService(mockCtrl)
+		ots := omock.NewMockObjectTypeService(mockCtrl)
 
-		handler := MockNewRestHandler(appSetting, hydra, ats, kns, ots)
+		handler := MockNewRestHandler(appSetting, as, ats, kns, ots)
 
 		Convey("成功 - Token验证通过", func() {
-			visitor := rest.Visitor{
+			visitor := hydra.Visitor{
 				ID:   "user1",
-				Type: rest.VisitorType_User,
+				Type: hydra.VisitorType_User,
 			}
-			hydra.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).Return(visitor, nil)
+			as.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).Return(visitor, nil)
 
 			req := httptest.NewRequest(http.MethodGet, "/test", nil)
 			c, _ := gin.CreateTestContext(httptest.NewRecorder())
@@ -167,7 +168,7 @@ func Test_RestHandler_verifyOAuth(t *testing.T) {
 		})
 
 		Convey("失败 - Token验证失败", func() {
-			hydra.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).Return(rest.Visitor{}, rest.NewHTTPError(context.TODO(), http.StatusUnauthorized, rest.PublicError_Unauthorized))
+			as.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).Return(hydra.Visitor{}, rest.NewHTTPError(context.TODO(), http.StatusUnauthorized, rest.PublicError_Unauthorized))
 
 			req := httptest.NewRequest(http.MethodGet, "/test", nil)
 			w := httptest.NewRecorder()
@@ -196,7 +197,7 @@ func Test_GenerateVisitor(t *testing.T) {
 			c, _ := gin.CreateTestContext(httptest.NewRecorder())
 			c.Request = req
 
-			visitor := GenerateVisitor(c)
+			visitor := visitor.GenerateVisitor(c)
 			So(visitor.ID, ShouldEqual, "user1")
 			So(string(visitor.Type), ShouldEqual, "user")
 			So(visitor.Mac, ShouldEqual, "mac123")
@@ -208,7 +209,7 @@ func Test_GenerateVisitor(t *testing.T) {
 			c, _ := gin.CreateTestContext(httptest.NewRecorder())
 			c.Request = req
 
-			visitor := GenerateVisitor(c)
+			visitor := visitor.GenerateVisitor(c)
 			So(visitor.ID, ShouldEqual, "")
 			So(visitor.TokenID, ShouldEqual, "")
 		})

@@ -13,10 +13,10 @@ import (
 
 	"github.com/bytedance/sonic"
 	"github.com/gin-gonic/gin"
-	"go.uber.org/mock/gomock"
 	"github.com/kweaver-ai/kweaver-go-lib/hydra"
 	"github.com/kweaver-ai/kweaver-go-lib/rest"
 	. "github.com/smartystreets/goconvey/convey"
+	"go.uber.org/mock/gomock"
 
 	"bkn-backend/common"
 	berrors "bkn-backend/errors"
@@ -25,13 +25,13 @@ import (
 )
 
 func MockNewConceptGroupRestHandler(appSetting *common.AppSetting,
-	hydra hydra.Hydra,
+	as interfaces.AuthService,
 	cgs interfaces.ConceptGroupService,
 	kns interfaces.KNService) (r *restHandler) {
 
 	r = &restHandler{
 		appSetting: appSetting,
-		hydra:      hydra,
+		as:         as,
 		cgs:        cgs,
 		kns:        kns,
 	}
@@ -50,14 +50,14 @@ func Test_ConceptGroupRestHandler_CreateConceptGroup(t *testing.T) {
 		defer mockCtrl.Finish()
 
 		appSetting := &common.AppSetting{}
-		hydraMock := bmock.NewMockHydra(mockCtrl)
+		as := bmock.NewMockAuthService(mockCtrl)
 		cgs := bmock.NewMockConceptGroupService(mockCtrl)
 		kns := bmock.NewMockKNService(mockCtrl)
 
-		handler := MockNewConceptGroupRestHandler(appSetting, hydraMock, cgs, kns)
+		handler := MockNewConceptGroupRestHandler(appSetting, as, cgs, kns)
 		handler.RegisterPublic(engine)
 
-		hydraMock.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(hydra.Visitor{}, nil)
+		as.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(hydra.Visitor{}, nil)
 
 		knID := "kn1"
 		url := "/api/bkn-backend/v1/knowledge-networks/" + knID + "/concept-groups"
@@ -166,14 +166,14 @@ func Test_ConceptGroupRestHandler_UpdateConceptGroup(t *testing.T) {
 		defer mockCtrl.Finish()
 
 		appSetting := &common.AppSetting{}
-		hydraMock := bmock.NewMockHydra(mockCtrl)
+		as := bmock.NewMockAuthService(mockCtrl)
 		cgs := bmock.NewMockConceptGroupService(mockCtrl)
 		kns := bmock.NewMockKNService(mockCtrl)
 
-		handler := MockNewConceptGroupRestHandler(appSetting, hydraMock, cgs, kns)
+		handler := MockNewConceptGroupRestHandler(appSetting, as, cgs, kns)
 		handler.RegisterPublic(engine)
 
-		hydraMock.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(hydra.Visitor{}, nil)
+		as.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(hydra.Visitor{}, nil)
 
 		knID := "kn1"
 		cgID := "cg1"
@@ -266,14 +266,14 @@ func Test_ConceptGroupRestHandler_DeleteConceptGroup(t *testing.T) {
 		defer mockCtrl.Finish()
 
 		appSetting := &common.AppSetting{}
-		hydraMock := bmock.NewMockHydra(mockCtrl)
+		as := bmock.NewMockAuthService(mockCtrl)
 		cgs := bmock.NewMockConceptGroupService(mockCtrl)
 		kns := bmock.NewMockKNService(mockCtrl)
 
-		handler := MockNewConceptGroupRestHandler(appSetting, hydraMock, cgs, kns)
+		handler := MockNewConceptGroupRestHandler(appSetting, as, cgs, kns)
 		handler.RegisterPublic(engine)
 
-		hydraMock.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(hydra.Visitor{}, nil)
+		as.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(hydra.Visitor{}, nil)
 
 		knID := "kn1"
 		cgID := "cg1"
@@ -326,14 +326,14 @@ func Test_ConceptGroupRestHandler_ListConceptGroups(t *testing.T) {
 		defer mockCtrl.Finish()
 
 		appSetting := &common.AppSetting{}
-		hydraMock := bmock.NewMockHydra(mockCtrl)
+		as := bmock.NewMockAuthService(mockCtrl)
 		cgs := bmock.NewMockConceptGroupService(mockCtrl)
 		kns := bmock.NewMockKNService(mockCtrl)
 
-		handler := MockNewConceptGroupRestHandler(appSetting, hydraMock, cgs, kns)
+		handler := MockNewConceptGroupRestHandler(appSetting, as, cgs, kns)
 		handler.RegisterPublic(engine)
 
-		hydraMock.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(hydra.Visitor{}, nil)
+		as.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(hydra.Visitor{}, nil)
 
 		knID := "kn1"
 		url := "/api/bkn-backend/v1/knowledge-networks/" + knID + "/concept-groups"
@@ -386,14 +386,14 @@ func Test_ConceptGroupRestHandler_GetConceptGroup(t *testing.T) {
 		defer mockCtrl.Finish()
 
 		appSetting := &common.AppSetting{}
-		hydraMock := bmock.NewMockHydra(mockCtrl)
+		as := bmock.NewMockAuthService(mockCtrl)
 		cgs := bmock.NewMockConceptGroupService(mockCtrl)
 		kns := bmock.NewMockKNService(mockCtrl)
 
-		handler := MockNewConceptGroupRestHandler(appSetting, hydraMock, cgs, kns)
+		handler := MockNewConceptGroupRestHandler(appSetting, as, cgs, kns)
 		handler.RegisterPublic(engine)
 
-		hydraMock.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(hydra.Visitor{}, nil)
+		as.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(hydra.Visitor{}, nil)
 
 		knID := "kn1"
 		cgID := "cg1"
@@ -516,14 +516,14 @@ func Test_ConceptGroupRestHandler_AddObjectTypesToConceptGroup(t *testing.T) {
 		defer mockCtrl.Finish()
 
 		appSetting := &common.AppSetting{}
-		hydraMock := bmock.NewMockHydra(mockCtrl)
+		as := bmock.NewMockAuthService(mockCtrl)
 		cgs := bmock.NewMockConceptGroupService(mockCtrl)
 		kns := bmock.NewMockKNService(mockCtrl)
 
-		handler := MockNewConceptGroupRestHandler(appSetting, hydraMock, cgs, kns)
+		handler := MockNewConceptGroupRestHandler(appSetting, as, cgs, kns)
 		handler.RegisterPublic(engine)
 
-		hydraMock.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(hydra.Visitor{}, nil)
+		as.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(hydra.Visitor{}, nil)
 
 		knID := "kn1"
 		cgID := "cg1"
@@ -657,14 +657,14 @@ func Test_ConceptGroupRestHandler_DeleteObjectTypesFromGroup(t *testing.T) {
 		defer mockCtrl.Finish()
 
 		appSetting := &common.AppSetting{}
-		hydraMock := bmock.NewMockHydra(mockCtrl)
+		as := bmock.NewMockAuthService(mockCtrl)
 		cgs := bmock.NewMockConceptGroupService(mockCtrl)
 		kns := bmock.NewMockKNService(mockCtrl)
 
-		handler := MockNewConceptGroupRestHandler(appSetting, hydraMock, cgs, kns)
+		handler := MockNewConceptGroupRestHandler(appSetting, as, cgs, kns)
 		handler.RegisterPublic(engine)
 
-		hydraMock.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(hydra.Visitor{}, nil)
+		as.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(hydra.Visitor{}, nil)
 
 		knID := "kn1"
 		cgID := "cg1"

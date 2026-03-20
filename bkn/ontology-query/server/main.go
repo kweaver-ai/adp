@@ -24,9 +24,12 @@ import (
 	_ "go.uber.org/automaxprocs"
 
 	"ontology-query/common"
-	"ontology-query/drivenadapters"
+	"ontology-query/drivenadapters/agent_operator"
+	"ontology-query/drivenadapters/auth"
 	"ontology-query/drivenadapters/model_factory"
+	"ontology-query/drivenadapters/ontology_manager"
 	"ontology-query/drivenadapters/opensearch"
+	"ontology-query/drivenadapters/uniquery"
 	"ontology-query/driveradapters"
 	"ontology-query/logics"
 )
@@ -109,11 +112,14 @@ func main() {
 	otel.SetTextMapPropagator(propagation.NewCompositeTextMapPropagator(propagation.TraceContext{}, propagation.Baggage{}))
 
 	// Set顺序按字母升序排序
-	logics.SetAgentOperatorAccess(drivenadapters.NewAgentOperatorAccess(appSetting))
+	if common.GetAuthEnabled() {
+		logics.SetAuthAccess(auth.NewHydraAuthAccess(appSetting))
+	}
+	logics.SetAgentOperatorAccess(agent_operator.NewAgentOperatorAccess(appSetting))
 	logics.SetModelFactoryAccess(model_factory.NewModelFactoryAccess(appSetting))
-	logics.SetOntologyManagerAccess(drivenadapters.NewOntologyManagerAccess(appSetting))
+	logics.SetOntologyManagerAccess(ontology_manager.NewOntologyManagerAccess(appSetting))
 	logics.SetOpenSearchAccess(opensearch.NewOpenSearchAccess(appSetting))
-	logics.SetUniqueryAccess(drivenadapters.NewUniqueryAccess(appSetting))
+	logics.SetUniqueryAccess(uniquery.NewUniqueryAccess(appSetting))
 
 	server := &mgrService{
 		appSetting:  appSetting,

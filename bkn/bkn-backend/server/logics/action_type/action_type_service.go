@@ -32,6 +32,7 @@ import (
 	"bkn-backend/logics"
 	"bkn-backend/logics/object_type"
 	"bkn-backend/logics/permission"
+	"bkn-backend/logics/user_mgmt"
 )
 
 var (
@@ -47,7 +48,7 @@ type actionTypeService struct {
 	mfa        interfaces.ModelFactoryAccess
 	ots        interfaces.ObjectTypeService
 	ps         interfaces.PermissionService
-	uma        interfaces.UserMgmtAccess
+	ums        interfaces.UserMgmtService
 	vba        interfaces.VegaBackendAccess
 }
 
@@ -61,7 +62,7 @@ func NewActionTypeService(appSetting *common.AppSetting) interfaces.ActionTypeSe
 			mfa:        logics.MFA,
 			ots:        object_type.NewObjectTypeService(appSetting),
 			ps:         permission.NewPermissionService(appSetting),
-			uma:        logics.UMA,
+			ums:        user_mgmt.NewUserMgmtService(appSetting),
 			vba:        logics.VBA,
 		}
 	})
@@ -294,7 +295,7 @@ func (ats *actionTypeService) ListActionTypes(ctx context.Context, query interfa
 		accountInfos = append(accountInfos, &at.Creator, &at.Updater)
 	}
 
-	err = ats.uma.GetAccountNames(ctx, accountInfos)
+	err = ats.ums.GetAccountNames(ctx, accountInfos)
 	if err != nil {
 		span.SetStatus(codes.Error, "GetAccountNames error")
 		return []*interfaces.ActionType{}, 0, rest.NewHTTPError(ctx, http.StatusInternalServerError,

@@ -1,0 +1,56 @@
+// Copyright The kweaver.ai Authors.
+//
+// Licensed under the Apache License, Version 2.0.
+// See the LICENSE file in the project root for details.
+
+package permission
+
+import (
+	"context"
+
+	"uniquery/common"
+	"uniquery/interfaces"
+)
+
+// NoopPermissionService 空权限服务（跳过所有权限检查）
+type NoopPermissionService struct {
+	appSetting *common.AppSetting
+}
+
+func NewNoopPermissionService(appSetting *common.AppSetting) interfaces.PermissionService {
+	return &NoopPermissionService{appSetting: appSetting}
+}
+
+func (n *NoopPermissionService) CheckPermission(ctx context.Context, resource interfaces.Resource, ops []string) error {
+	return nil // 始终通过，不检查权限
+}
+
+func (n *NoopPermissionService) CheckPermissionWithResult(ctx context.Context, resource interfaces.Resource, ops []string) (bool, error) {
+	return true, nil // 始终返回有权限
+}
+
+func (n *NoopPermissionService) FilterResources(ctx context.Context, resourceType string, ids []string,
+	ops []string, allowOperation bool, fullOps []string) (map[string]interfaces.ResourceOps, error) {
+	// 返回所有资源，不做过滤
+	result := make(map[string]interfaces.ResourceOps)
+	for _, id := range ids {
+		result[id] = interfaces.ResourceOps{
+			ResourceID: id,
+			Operations: fullOps,
+		}
+	}
+	return result, nil
+}
+
+func (n *NoopPermissionService) GetResourcesOperations(ctx context.Context,
+	resourceType string, ids []string) ([]interfaces.ResourceOps, error) {
+	// 返回所有资源及其所有操作
+	result := []interfaces.ResourceOps{}
+	for _, id := range ids {
+		result = append(result, interfaces.ResourceOps{
+			ResourceID: id,
+			Operations: interfaces.COMMON_OPERATIONS,
+		})
+	}
+	return result, nil
+}

@@ -5,9 +5,7 @@
 
 package interfaces
 
-import (
-	"github.com/kweaver-ai/kweaver-go-lib/rest"
-)
+import "github.com/kweaver-ai/kweaver-go-lib/hydra"
 
 type contextKey string // 自定义专属的key类型
 
@@ -22,7 +20,7 @@ const (
 	ACCOUNT_INFO_KEY contextKey = "x-account-info" // 避免直接使用string
 
 	ADMIN_ID   string = "266c6a42-6131-4d62-8f39-853e7093701c"
-	ADMIN_TYPE        = string(rest.VisitorType_User)
+	ADMIN_TYPE        = string(hydra.VisitorType_User)
 
 	// 模块类型
 	MODULE_TYPE_METRIC_MODEL    = "metric_model"

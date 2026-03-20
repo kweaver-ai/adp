@@ -584,7 +584,8 @@ func (dvAdapter *dataViewAdapter) isSatisfyCondition(precond *cond.CondCfg, astN
 			*val2s = append(*val2s, precond.Value)
 		}
 
-		if precond.Operation == cond.OperationEq {
+		switch precond.Operation {
+		case cond.OperationEq:
 			if len(*val1s) == 1 {
 				for i := range *val2s {
 					if (*val2s)[i] == (*val1s)[0] {
@@ -598,7 +599,7 @@ func (dvAdapter *dataViewAdapter) isSatisfyCondition(precond *cond.CondCfg, astN
 					}
 				}
 			}
-		} else if precond.Operation == cond.OperationNotEq {
+		case cond.OperationNotEq:
 			if len(*val1s) == 1 {
 				for i := range *val2s {
 					if (*val2s)[i] != (*val1s)[0] {
@@ -612,7 +613,7 @@ func (dvAdapter *dataViewAdapter) isSatisfyCondition(precond *cond.CondCfg, astN
 					}
 				}
 			}
-		} else if precond.Operation == cond.OperationRange {
+		case cond.OperationRange:
 			tStr, _ := (*val1s)[0].(string)
 			rangeTimeStrs, _ := (*val2s)[0].([]any)
 			ltStr, _ := rangeTimeStrs[0].(string)

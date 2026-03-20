@@ -13,10 +13,10 @@ import (
 
 	"github.com/bytedance/sonic"
 	"github.com/gin-gonic/gin"
-	"go.uber.org/mock/gomock"
 	"github.com/kweaver-ai/kweaver-go-lib/hydra"
 	"github.com/kweaver-ai/kweaver-go-lib/rest"
 	. "github.com/smartystreets/goconvey/convey"
+	"go.uber.org/mock/gomock"
 
 	"bkn-backend/common"
 	berrors "bkn-backend/errors"
@@ -25,13 +25,13 @@ import (
 )
 
 func MockNewActionTypeRestHandler(appSetting *common.AppSetting,
-	hydra hydra.Hydra,
+	as interfaces.AuthService,
 	ats interfaces.ActionTypeService,
 	kns interfaces.KNService) (r *restHandler) {
 
 	r = &restHandler{
 		appSetting: appSetting,
-		hydra:      hydra,
+		as:         as,
 		ats:        ats,
 		kns:        kns,
 	}
@@ -50,14 +50,14 @@ func Test_ActionTypeRestHandler_CreateActionTypes(t *testing.T) {
 		defer mockCtrl.Finish()
 
 		appSetting := &common.AppSetting{}
-		hydraMock := bmock.NewMockHydra(mockCtrl)
+		as := bmock.NewMockAuthService(mockCtrl)
 		ats := bmock.NewMockActionTypeService(mockCtrl)
 		kns := bmock.NewMockKNService(mockCtrl)
 
-		handler := MockNewActionTypeRestHandler(appSetting, hydraMock, ats, kns)
+		handler := MockNewActionTypeRestHandler(appSetting, as, ats, kns)
 		handler.RegisterPublic(engine)
 
-		hydraMock.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(hydra.Visitor{}, nil)
+		as.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(hydra.Visitor{}, nil)
 
 		knID := "kn1"
 		url := "/api/bkn-backend/v1/knowledge-networks/" + knID + "/action-types"
@@ -199,14 +199,14 @@ func Test_ActionTypeRestHandler_UpdateActionType(t *testing.T) {
 		defer mockCtrl.Finish()
 
 		appSetting := &common.AppSetting{}
-		hydraMock := bmock.NewMockHydra(mockCtrl)
+		as := bmock.NewMockAuthService(mockCtrl)
 		ats := bmock.NewMockActionTypeService(mockCtrl)
 		kns := bmock.NewMockKNService(mockCtrl)
 
-		handler := MockNewActionTypeRestHandler(appSetting, hydraMock, ats, kns)
+		handler := MockNewActionTypeRestHandler(appSetting, as, ats, kns)
 		handler.RegisterPublic(engine)
 
-		hydraMock.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(hydra.Visitor{}, nil)
+		as.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(hydra.Visitor{}, nil)
 
 		knID := "kn1"
 		atID := "at1"
@@ -303,14 +303,14 @@ func Test_ActionTypeRestHandler_DeleteActionTypes(t *testing.T) {
 		defer mockCtrl.Finish()
 
 		appSetting := &common.AppSetting{}
-		hydraMock := bmock.NewMockHydra(mockCtrl)
+		as := bmock.NewMockAuthService(mockCtrl)
 		ats := bmock.NewMockActionTypeService(mockCtrl)
 		kns := bmock.NewMockKNService(mockCtrl)
 
-		handler := MockNewActionTypeRestHandler(appSetting, hydraMock, ats, kns)
+		handler := MockNewActionTypeRestHandler(appSetting, as, ats, kns)
 		handler.RegisterPublic(engine)
 
-		hydraMock.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(hydra.Visitor{}, nil)
+		as.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(hydra.Visitor{}, nil)
 
 		knID := "kn1"
 		atIDs := "at1,at2"
@@ -365,14 +365,14 @@ func Test_ActionTypeRestHandler_ListActionTypes(t *testing.T) {
 		defer mockCtrl.Finish()
 
 		appSetting := &common.AppSetting{}
-		hydraMock := bmock.NewMockHydra(mockCtrl)
+		as := bmock.NewMockAuthService(mockCtrl)
 		ats := bmock.NewMockActionTypeService(mockCtrl)
 		kns := bmock.NewMockKNService(mockCtrl)
 
-		handler := MockNewActionTypeRestHandler(appSetting, hydraMock, ats, kns)
+		handler := MockNewActionTypeRestHandler(appSetting, as, ats, kns)
 		handler.RegisterPublic(engine)
 
-		hydraMock.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(hydra.Visitor{}, nil)
+		as.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(hydra.Visitor{}, nil)
 
 		knID := "kn1"
 		url := "/api/bkn-backend/v1/knowledge-networks/" + knID + "/action-types"
@@ -425,14 +425,14 @@ func Test_ActionTypeRestHandler_GetActionTypes(t *testing.T) {
 		defer mockCtrl.Finish()
 
 		appSetting := &common.AppSetting{}
-		hydraMock := bmock.NewMockHydra(mockCtrl)
+		as := bmock.NewMockAuthService(mockCtrl)
 		ats := bmock.NewMockActionTypeService(mockCtrl)
 		kns := bmock.NewMockKNService(mockCtrl)
 
-		handler := MockNewActionTypeRestHandler(appSetting, hydraMock, ats, kns)
+		handler := MockNewActionTypeRestHandler(appSetting, as, ats, kns)
 		handler.RegisterPublic(engine)
 
-		hydraMock.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(hydra.Visitor{}, nil)
+		as.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(hydra.Visitor{}, nil)
 
 		knID := "kn1"
 		atIDs := "at1,at2"
@@ -535,14 +535,14 @@ func Test_ActionTypeRestHandler_SearchActionTypes(t *testing.T) {
 		defer mockCtrl.Finish()
 
 		appSetting := &common.AppSetting{}
-		hydraMock := bmock.NewMockHydra(mockCtrl)
+		as := bmock.NewMockAuthService(mockCtrl)
 		ats := bmock.NewMockActionTypeService(mockCtrl)
 		kns := bmock.NewMockKNService(mockCtrl)
 
-		handler := MockNewActionTypeRestHandler(appSetting, hydraMock, ats, kns)
+		handler := MockNewActionTypeRestHandler(appSetting, as, ats, kns)
 		handler.RegisterPublic(engine)
 
-		hydraMock.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(hydra.Visitor{}, nil)
+		as.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(hydra.Visitor{}, nil)
 
 		knID := "kn1"
 		url := "/api/bkn-backend/v1/knowledge-networks/" + knID + "/action-types"
@@ -642,14 +642,14 @@ func Test_ActionTypeRestHandler_HandleActionTypeGetOverride(t *testing.T) {
 		defer mockCtrl.Finish()
 
 		appSetting := &common.AppSetting{}
-		hydraMock := bmock.NewMockHydra(mockCtrl)
+		as := bmock.NewMockAuthService(mockCtrl)
 		ats := bmock.NewMockActionTypeService(mockCtrl)
 		kns := bmock.NewMockKNService(mockCtrl)
 
-		handler := MockNewActionTypeRestHandler(appSetting, hydraMock, ats, kns)
+		handler := MockNewActionTypeRestHandler(appSetting, as, ats, kns)
 		handler.RegisterPublic(engine)
 
-		hydraMock.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(hydra.Visitor{}, nil)
+		as.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(hydra.Visitor{}, nil)
 
 		knID := "kn1"
 		urlEx := "/api/bkn-backend/v1/knowledge-networks/" + knID + "/action-types"

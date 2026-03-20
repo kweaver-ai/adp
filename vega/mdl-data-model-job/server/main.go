@@ -15,12 +15,13 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/gin-gonic/gin"
 	"github.com/kweaver-ai/kweaver-go-lib/logger"
 	"github.com/kweaver-ai/kweaver-go-lib/rest"
-	"github.com/gin-gonic/gin"
 
 	"data-model-job/common"
 	access "data-model-job/drivenadapters"
+	"data-model-job/drivenadapters/auth"
 	"data-model-job/driveradapters"
 	"data-model-job/interfaces"
 	"data-model-job/logics"
@@ -100,6 +101,9 @@ func main() {
 
 	logger.Infof("Server Start By Port:%d", appSetting.ServerSetting.HttpPort)
 
+	if common.GetAuthEnabled() {
+		logics.SetAuthAccess(auth.NewHydraAuthAccess(appSetting))
+	}
 	logics.SetJobAccess(access.NewJobAccess(appSetting))
 	logics.SetKafkaAccess(access.NewKafkaAccess(appSetting))
 	logics.SetIndexBaseAccess(access.NewIndexBaseAccess(appSetting))

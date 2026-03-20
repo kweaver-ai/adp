@@ -13,12 +13,14 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/kweaver-ai/TelemetrySDK-Go/exporter/v2/ar_trace"
+	"github.com/kweaver-ai/kweaver-go-lib/hydra"
 	"github.com/kweaver-ai/kweaver-go-lib/logger"
 	o11y "github.com/kweaver-ai/kweaver-go-lib/observability"
 	"github.com/kweaver-ai/kweaver-go-lib/rest"
 	attr "go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/trace"
 
+	"ontology-query/common/visitor"
 	oerrors "ontology-query/errors"
 	"ontology-query/interfaces"
 )
@@ -28,7 +30,7 @@ func (r *restHandler) GetObjectsSubgraphByIn(c *gin.Context) {
 	logger.Debug("Handler GetObjectsSubgraphByIn Start")
 	// 内部接口 user_id从header中取，跳过用户有效认证，后面在权限校验时就会校验这个用户是否有权限，无效用户无权限
 	// 自行构建一个visitor
-	visitor := GenerateVisitor(c)
+	visitor := visitor.GenerateVisitor(c)
 	// 查询类型，默认是以起点扩展子图。
 	queryType := c.DefaultQuery("query_type", "")
 	switch queryType {
@@ -65,7 +67,7 @@ func (r *restHandler) GetObjectsSubgraphByEx(c *gin.Context) {
 }
 
 // 基于对象类的对象数据查询
-func (r *restHandler) GetObjectsSubgraph(c *gin.Context, visitor rest.Visitor) {
+func (r *restHandler) GetObjectsSubgraph(c *gin.Context, visitor hydra.Visitor) {
 	logger.Debug("Handler GetObjectsSubgraph Start")
 	startTime := time.Now()
 
@@ -185,7 +187,7 @@ func (r *restHandler) GetObjectsSubgraph(c *gin.Context, visitor rest.Visitor) {
 }
 
 // 基于对象类的对象数据查询
-func (r *restHandler) GetObjectsSubgraphByTypePath(c *gin.Context, visitor rest.Visitor) {
+func (r *restHandler) GetObjectsSubgraphByTypePath(c *gin.Context, visitor hydra.Visitor) {
 	logger.Debug("Handler GetObjectsSubgraphByTypePath Start")
 	// startTime := time.Now()
 
@@ -323,12 +325,12 @@ func (r *restHandler) GetObjectsSubgraphByObjectsByEx(c *gin.Context) {
 // 基于一组对象实例组织关系子图（内部）
 func (r *restHandler) GetObjectsSubgraphByObjectsByIn(c *gin.Context) {
 	logger.Debug("Handler GetObjectsSubgraphByObjectsByIn Start")
-	visitor := GenerateVisitor(c)
+	visitor := visitor.GenerateVisitor(c)
 	r.GetObjectsSubgraphByObjects(c, visitor)
 }
 
 // 基于一组对象实例组织关系子图（通用处理函数）
-func (r *restHandler) GetObjectsSubgraphByObjects(c *gin.Context, visitor rest.Visitor) {
+func (r *restHandler) GetObjectsSubgraphByObjects(c *gin.Context, visitor hydra.Visitor) {
 	logger.Debug("Handler GetObjectsSubgraphByObjects Start")
 	startTime := time.Now()
 

@@ -14,6 +14,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/kweaver-ai/TelemetrySDK-Go/exporter/v2/ar_trace"
 	"github.com/kweaver-ai/kweaver-go-lib/audit"
+	"github.com/kweaver-ai/kweaver-go-lib/hydra"
 	"github.com/kweaver-ai/kweaver-go-lib/logger"
 	o11y "github.com/kweaver-ai/kweaver-go-lib/observability"
 	"github.com/kweaver-ai/kweaver-go-lib/rest"
@@ -22,6 +23,7 @@ import (
 	"go.opentelemetry.io/otel/trace"
 
 	"data-model/common"
+	"data-model/common/visitor"
 	derrors "data-model/errors"
 	"data-model/interfaces"
 )
@@ -31,7 +33,7 @@ func (r *restHandler) CreateObjectiveModelsByIn(c *gin.Context) {
 	logger.Debug("Handler CreateObjectiveModelsByIn Start")
 	// 内部接口 user_id从header中取，跳过用户有效认证，后面在权限校验时就会校验这个用户是否有权限，无效用户无权限
 	// 自行构建一个visitor
-	visitor := GenerateVisitor(c)
+	visitor := visitor.GenerateVisitor(c)
 	r.CreateObjectiveModels(c, visitor)
 }
 
@@ -51,7 +53,7 @@ func (r *restHandler) CreateObjectiveModelsByEx(c *gin.Context) {
 }
 
 // 创建目标模型
-func (r *restHandler) CreateObjectiveModels(c *gin.Context, visitor rest.Visitor) {
+func (r *restHandler) CreateObjectiveModels(c *gin.Context, visitor hydra.Visitor) {
 	//创建时新增参数groupName ，需要进行校验
 	//请求体以及数据库表中重复名称校验需要groupName 和modelName
 	//需要通过groupName更新groupID才能创建
@@ -228,7 +230,7 @@ func (r *restHandler) ListObjectiveModelsByIn(c *gin.Context) {
 	logger.Debug("Handler ListObjectiveModelsByIn Start")
 	// 内部接口 user_id从header中取，跳过用户有效认证，后面在权限校验时就会校验这个用户是否有权限，无效用户无权限
 	// 自行构建一个visitor
-	visitor := GenerateVisitor(c)
+	visitor := visitor.GenerateVisitor(c)
 	r.ListObjectiveModels(c, visitor)
 }
 
@@ -248,7 +250,7 @@ func (r *restHandler) ListObjectiveModelsByEx(c *gin.Context) {
 }
 
 // 分页获取模型列表
-func (r *restHandler) ListObjectiveModels(c *gin.Context, visitor rest.Visitor) {
+func (r *restHandler) ListObjectiveModels(c *gin.Context, visitor hydra.Visitor) {
 	logger.Debug("ListObjectiveModels Start")
 	ctx, span := ar_trace.Tracer.Start(rest.GetLanguageCtx(c),
 		"分页获取目标模型列表", trace.WithSpanKind(trace.SpanKindServer))
@@ -351,7 +353,7 @@ func (r *restHandler) GetObjectiveModelsByIn(c *gin.Context) {
 	logger.Debug("Handler GetObjectiveModelsByIn Start")
 	// 内部接口 user_id从header中取，跳过用户有效认证，后面在权限校验时就会校验这个用户是否有权限，无效用户无权限
 	// 自行构建一个visitor
-	visitor := GenerateVisitor(c)
+	visitor := visitor.GenerateVisitor(c)
 	r.GetObjectiveModels(c, visitor)
 }
 
@@ -371,7 +373,7 @@ func (r *restHandler) GetObjectiveModelsByEx(c *gin.Context) {
 }
 
 // 按 id 获取目标模型对象信息
-func (r *restHandler) GetObjectiveModels(c *gin.Context, visitor rest.Visitor) {
+func (r *restHandler) GetObjectiveModels(c *gin.Context, visitor hydra.Visitor) {
 	logger.Debug("Handler GetObjectiveModels Start")
 	ctx, span := ar_trace.Tracer.Start(rest.GetLanguageCtx(c),
 		"按id获取目标模型信息", trace.WithSpanKind(trace.SpanKindServer))
@@ -415,7 +417,7 @@ func (r *restHandler) UpdateObjectiveModelByIn(c *gin.Context) {
 	logger.Debug("Handler UpdateObjectiveModelByIn Start")
 	// 内部接口 user_id从header中取，跳过用户有效认证，后面在权限校验时就会校验这个用户是否有权限，无效用户无权限
 	// 自行构建一个visitor
-	visitor := GenerateVisitor(c)
+	visitor := visitor.GenerateVisitor(c)
 	r.UpdateObjectiveModel(c, visitor)
 }
 
@@ -435,7 +437,7 @@ func (r *restHandler) UpdateObjectiveModelByEx(c *gin.Context) {
 }
 
 // 修改目标模型
-func (r *restHandler) UpdateObjectiveModel(c *gin.Context, visitor rest.Visitor) {
+func (r *restHandler) UpdateObjectiveModel(c *gin.Context, visitor hydra.Visitor) {
 	logger.Debug("Handler UpdateObjectiveModel Start")
 	ctx, span := ar_trace.Tracer.Start(rest.GetLanguageCtx(c),
 		"修改目标模型", trace.WithSpanKind(trace.SpanKindServer))

@@ -7,11 +7,13 @@ package common
 
 import (
 	"fmt"
+	"os"
 	"sync"
 	"time"
 
 	"github.com/bytedance/sonic"
 	"github.com/fsnotify/fsnotify"
+	"github.com/kweaver-ai/kweaver-go-lib/hydra"
 	"github.com/kweaver-ai/kweaver-go-lib/logger"
 	o11y "github.com/kweaver-ai/kweaver-go-lib/observability"
 	"github.com/kweaver-ai/kweaver-go-lib/rest"
@@ -39,7 +41,7 @@ type AppSetting struct {
 	DepServices          map[string]map[string]any `mapstructure:"depServices"`
 
 	OpenSearchSetting rest.OpenSearchClientConfig
-	HydraAdminSetting rest.HydraAdminSetting
+	HydraAdminSetting hydra.HydraAdminSetting
 
 	BKNBackendUrl string
 	UniQueryUrl   string
@@ -163,12 +165,24 @@ func SetOpenSearchSetting() {
 	}
 }
 
+// GetAuthEnabled 获取认证开关状态
+// 通过环境变量 AUTH_ENABLED 控制，默认 true（安全优先）
+func GetAuthEnabled() bool {
+	envVal := os.Getenv("AUTH_ENABLED")
+	// 仅当显式设置为 false 或 0 时禁用认证
+	return envVal != "false" && envVal != "0"
+}
+
 func SetHydraAdminSetting() {
+	if !GetAuthEnabled() {
+		logger.Info("ISF authentication disabled via AUTH_ENABLED env, skipping hydra-admin configuration")
+		return
+	}
 	setting, ok := appSetting.DepServices[hydraAdminServiceName]
 	if !ok {
 		logger.Fatalf("service %s not found in depServices", hydraAdminServiceName)
 	}
-	appSetting.HydraAdminSetting = rest.HydraAdminSetting{
+	appSetting.HydraAdminSetting = hydra.HydraAdminSetting{
 		HydraAdminProcotol: setting["protocol"].(string),
 		HydraAdminHost:     setting["host"].(string),
 		HydraAdminPort:     setting["port"].(int),

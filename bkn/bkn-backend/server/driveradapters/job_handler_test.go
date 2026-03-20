@@ -13,10 +13,10 @@ import (
 
 	"github.com/bytedance/sonic"
 	"github.com/gin-gonic/gin"
-	"go.uber.org/mock/gomock"
 	"github.com/kweaver-ai/kweaver-go-lib/hydra"
 	"github.com/kweaver-ai/kweaver-go-lib/rest"
 	. "github.com/smartystreets/goconvey/convey"
+	"go.uber.org/mock/gomock"
 
 	"bkn-backend/common"
 	berrors "bkn-backend/errors"
@@ -25,13 +25,13 @@ import (
 )
 
 func MockNewJobRestHandler(appSetting *common.AppSetting,
-	hydra hydra.Hydra,
+	as interfaces.AuthService,
 	js interfaces.JobService,
 	kns interfaces.KNService) (r *restHandler) {
 
 	r = &restHandler{
 		appSetting: appSetting,
-		hydra:      hydra,
+		as:         as,
 		js:         js,
 		kns:        kns,
 	}
@@ -50,14 +50,14 @@ func Test_JobRestHandler_CreateJob(t *testing.T) {
 		defer mockCtrl.Finish()
 
 		appSetting := &common.AppSetting{}
-		hydraMock := bmock.NewMockHydra(mockCtrl)
+		as := bmock.NewMockAuthService(mockCtrl)
 		js := bmock.NewMockJobService(mockCtrl)
 		kns := bmock.NewMockKNService(mockCtrl)
 
-		handler := MockNewJobRestHandler(appSetting, hydraMock, js, kns)
+		handler := MockNewJobRestHandler(appSetting, as, js, kns)
 		handler.RegisterPublic(engine)
 
-		hydraMock.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(hydra.Visitor{}, nil)
+		as.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(hydra.Visitor{}, nil)
 
 		knID := "kn1"
 		url := "/api/bkn-backend/v1/knowledge-networks/" + knID + "/jobs"
@@ -171,14 +171,14 @@ func Test_JobRestHandler_DeleteJobs(t *testing.T) {
 		defer mockCtrl.Finish()
 
 		appSetting := &common.AppSetting{}
-		hydraMock := bmock.NewMockHydra(mockCtrl)
+		as := bmock.NewMockAuthService(mockCtrl)
 		js := bmock.NewMockJobService(mockCtrl)
 		kns := bmock.NewMockKNService(mockCtrl)
 
-		handler := MockNewJobRestHandler(appSetting, hydraMock, js, kns)
+		handler := MockNewJobRestHandler(appSetting, as, js, kns)
 		handler.RegisterPublic(engine)
 
-		hydraMock.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(hydra.Visitor{}, nil)
+		as.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(hydra.Visitor{}, nil)
 
 		knID := "kn1"
 		jobIDs := "job1,job2"
@@ -236,14 +236,14 @@ func Test_JobRestHandler_ListJobs(t *testing.T) {
 		defer mockCtrl.Finish()
 
 		appSetting := &common.AppSetting{}
-		hydraMock := bmock.NewMockHydra(mockCtrl)
+		as := bmock.NewMockAuthService(mockCtrl)
 		js := bmock.NewMockJobService(mockCtrl)
 		kns := bmock.NewMockKNService(mockCtrl)
 
-		handler := MockNewJobRestHandler(appSetting, hydraMock, js, kns)
+		handler := MockNewJobRestHandler(appSetting, as, js, kns)
 		handler.RegisterPublic(engine)
 
-		hydraMock.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(hydra.Visitor{}, nil)
+		as.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(hydra.Visitor{}, nil)
 
 		knID := "kn1"
 		url := "/api/bkn-backend/v1/knowledge-networks/" + knID + "/jobs"
@@ -331,14 +331,14 @@ func Test_JobRestHandler_ListTasks(t *testing.T) {
 		defer mockCtrl.Finish()
 
 		appSetting := &common.AppSetting{}
-		hydraMock := bmock.NewMockHydra(mockCtrl)
+		as := bmock.NewMockAuthService(mockCtrl)
 		js := bmock.NewMockJobService(mockCtrl)
 		kns := bmock.NewMockKNService(mockCtrl)
 
-		handler := MockNewJobRestHandler(appSetting, hydraMock, js, kns)
+		handler := MockNewJobRestHandler(appSetting, as, js, kns)
 		handler.RegisterPublic(engine)
 
-		hydraMock.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(hydra.Visitor{}, nil)
+		as.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(hydra.Visitor{}, nil)
 
 		knID := "kn1"
 		jobID := "job1"

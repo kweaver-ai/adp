@@ -16,8 +16,8 @@ import (
 	"github.com/bytedance/sonic"
 	"github.com/gin-gonic/gin"
 	"github.com/golang/mock/gomock"
+	"github.com/kweaver-ai/kweaver-go-lib/hydra"
 	"github.com/kweaver-ai/kweaver-go-lib/rest"
-	rmock "github.com/kweaver-ai/kweaver-go-lib/rest/mock"
 	. "github.com/smartystreets/goconvey/convey"
 
 	"data-model/common"
@@ -27,11 +27,11 @@ import (
 )
 
 func MockNewDataViewRestHandler(appSetting *common.AppSetting,
-	hydra rest.Hydra, dvs interfaces.DataViewService) (r *restHandler) {
+	as interfaces.AuthService, dvs interfaces.DataViewService) (r *restHandler) {
 
 	r = &restHandler{
 		appSetting: appSetting,
-		hydra:      hydra,
+		as:         as,
 		dvs:        dvs,
 	}
 	return r
@@ -49,13 +49,13 @@ func Test_DataViewRestHandler_HandlePostOverride(t *testing.T) {
 		defer mockCtrl.Finish()
 
 		appSetting := &common.AppSetting{}
-		hydra := rmock.NewMockHydra(mockCtrl)
+		as := dmock.NewMockAuthService(mockCtrl)
 		dvs := dmock.NewMockDataViewService(mockCtrl)
 
-		handler := MockNewDataViewRestHandler(appSetting, hydra, dvs)
+		handler := MockNewDataViewRestHandler(appSetting, as, dvs)
 		handler.RegisterPublic(engine)
 
-		hydra.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(rest.Visitor{}, nil)
+		as.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(hydra.Visitor{}, nil)
 
 		url := "/api/mdl-data-model/v1/data-views"
 
@@ -84,13 +84,13 @@ func Test_DataViewRestHandler_HandlePostOverride(t *testing.T) {
 // 		defer mockCtrl.Finish()
 
 // 		appSetting := &common.AppSetting{}
-// 		hydra := rmock.NewMockHydra(mockCtrl)
+// 		as := dmock.NewMockAuthService(mockCtrl)
 // 		dvs := dmock.NewMockDataViewService(mockCtrl)
 
-// 		handler := MockNewDataViewRestHandler(appSetting, hydra, dvs)
+// 		handler := MockNewDataViewRestHandler(appSetting, as, dvs)
 // 		handler.RegisterPublic(engine)
 
-// 		hydra.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(rest.Visitor{}, nil)
+// 		as.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(hydra.Visitor{}, nil)
 
 // 		url := "/api/mdl-data-model/v1/data-views"
 
@@ -279,13 +279,13 @@ func Test_DataViewRestHandler_DeleteDataViews(t *testing.T) {
 		defer mockCtrl.Finish()
 
 		appSetting := &common.AppSetting{}
-		hydra := rmock.NewMockHydra(mockCtrl)
+		as := dmock.NewMockAuthService(mockCtrl)
 		dvs := dmock.NewMockDataViewService(mockCtrl)
 
-		handler := MockNewDataViewRestHandler(appSetting, hydra, dvs)
+		handler := MockNewDataViewRestHandler(appSetting, as, dvs)
 		handler.RegisterPublic(engine)
 
-		hydra.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(rest.Visitor{}, nil)
+		as.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(hydra.Visitor{}, nil)
 
 		url := "/api/mdl-data-model/v1/data-views"
 
@@ -368,13 +368,13 @@ func Test_DataViewRestHandler_DeleteDataViews(t *testing.T) {
 // 		defer mockCtrl.Finish()
 
 // 		appSetting := &common.AppSetting{}
-// 		hydra := rmock.NewMockHydra(mockCtrl)
+// 		as := dmock.NewMockAuthService(mockCtrl)
 // 		dvs := dmock.NewMockDataViewService(mockCtrl)
 
-// 		handler := MockNewDataViewRestHandler(appSetting, hydra, dvs)
+// 		handler := MockNewDataViewRestHandler(appSetting, as, dvs)
 // 		handler.RegisterPublic(engine)
 
-// 		hydra.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(rest.Visitor{}, nil)
+// 		as.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(hydra.Visitor{}, nil)
 
 // 		url := "/api/mdl-data-model/v1/data-views/1"
 
@@ -459,13 +459,13 @@ func Test_DataViewRestHandler_GetDataViews(t *testing.T) {
 		defer mockCtrl.Finish()
 
 		appSetting := &common.AppSetting{}
-		hydra := rmock.NewMockHydra(mockCtrl)
+		as := dmock.NewMockAuthService(mockCtrl)
 		dvs := dmock.NewMockDataViewService(mockCtrl)
 
-		handler := MockNewDataViewRestHandler(appSetting, hydra, dvs)
+		handler := MockNewDataViewRestHandler(appSetting, as, dvs)
 		handler.RegisterPublic(engine)
 
-		hydra.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(rest.Visitor{}, nil)
+		as.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(hydra.Visitor{}, nil)
 
 		url := "/api/mdl-data-model/v1/data-views"
 
@@ -528,13 +528,13 @@ func Test_DataViewRestHandler_GetDataViews(t *testing.T) {
 // 		defer mockCtrl.Finish()
 
 // 		appSetting := &common.AppSetting{}
-// 		hydra := rmock.NewMockHydra(mockCtrl)
+// 		as := dmock.NewMockAuthService(mockCtrl)
 // 		dvs := dmock.NewMockDataViewService(mockCtrl)
 
-// 		handler := MockNewDataViewRestHandler(appSetting, hydra, dvs)
+// 		handler := MockNewDataViewRestHandler(appSetting, as, dvs)
 // 		handler.RegisterPublic(engine)
 
-// 		hydra.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(rest.Visitor{}, nil)
+// 		as.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(hydra.Visitor{}, nil)
 
 // 		url := "/api/mdl-data-model/v1/data-views"
 

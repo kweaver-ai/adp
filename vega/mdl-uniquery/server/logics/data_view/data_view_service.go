@@ -2627,7 +2627,7 @@ func (dvs *dataViewService) FilterRowColumnRules(ctx context.Context, rules []*i
 		ruleIDs = append(ruleIDs, v.RuleID)
 	}
 	matchResouces, err := dvs.ps.FilterResources(ctx, interfaces.RESOURCE_TYPE_DATA_VIEW_ROW_COLUMN_RULE,
-		ruleIDs, []string{interfaces.OPERATION_TYPE_RULE_APPLY}, true)
+		ruleIDs, []string{interfaces.OPERATION_TYPE_RULE_APPLY}, true, interfaces.FULL_OPERATIONS)
 	if err != nil {
 		return nil, err
 	}

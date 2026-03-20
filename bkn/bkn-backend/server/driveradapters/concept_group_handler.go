@@ -23,6 +23,7 @@ import (
 	"go.opentelemetry.io/otel/trace"
 
 	"bkn-backend/common"
+	"bkn-backend/common/visitor"
 	berrors "bkn-backend/errors"
 	"bkn-backend/interfaces"
 )
@@ -31,7 +32,7 @@ import (
 func (r *restHandler) CreateConceptGroupByIn(c *gin.Context) {
 	logger.Debug("Handler CreateConceptGroupByIn Start")
 	// 内部接口 user_id从header中取
-	visitor := GenerateVisitor(c)
+	visitor := visitor.GenerateVisitor(c)
 	r.CreateConceptGroup(c, visitor)
 }
 
@@ -212,7 +213,7 @@ func (r *restHandler) CreateConceptGroup(c *gin.Context, visitor hydra.Visitor) 
 func (r *restHandler) UpdateConceptGroupByIn(c *gin.Context) {
 	logger.Debug("Handler UpdateConceptGroupByIn Start")
 	// 内部接口 user_id从header中取
-	visitor := GenerateVisitor(c)
+	visitor := visitor.GenerateVisitor(c)
 	r.UpdateConceptGroup(c, visitor)
 }
 
@@ -481,7 +482,7 @@ func (r *restHandler) ListConceptGroupsByIn(c *gin.Context) {
 	logger.Debug("Handler ListConceptGroupsByIn Start")
 	// 内部接口 user_id从header中取，跳过用户有效认证，后面在权限校验时就会校验这个用户是否有权限，无效用户无权限
 	// 自行构建一个visitor
-	visitor := GenerateVisitor(c)
+	visitor := visitor.GenerateVisitor(c)
 	r.ListConceptGroups(c, visitor)
 }
 
@@ -610,7 +611,7 @@ func (r *restHandler) GetConceptGroupByIn(c *gin.Context) {
 	logger.Debug("Handler GetKNByIn Start")
 	// 内部接口 user_id从header中取，跳过用户有效认证，后面在权限校验时就会校验这个用户是否有权限，无效用户无权限
 	// 自行构建一个visitor
-	visitor := GenerateVisitor(c)
+	visitor := visitor.GenerateVisitor(c)
 	r.GetConceptGroup(c, visitor)
 }
 
@@ -738,7 +739,7 @@ func (r *restHandler) GetConceptGroup(c *gin.Context, visitor hydra.Visitor) {
 func (r *restHandler) AddObjectTypesToConceptGroupByIn(c *gin.Context) {
 	logger.Debug("Handler AddObjectTypesToConceptGroupByIn Start")
 	// 内部接口 user_id从header中取
-	visitor := GenerateVisitor(c)
+	visitor := visitor.GenerateVisitor(c)
 	r.AddObjectTypesToConceptGroup(c, visitor)
 }
 
@@ -870,7 +871,7 @@ func (r *restHandler) AddObjectTypesToConceptGroup(c *gin.Context, visitor hydra
 func (r *restHandler) DeleteObjectTypesFromGroupByIn(c *gin.Context) {
 	logger.Debug("Handler DeleteObjectTypesFromGroupByIn Start")
 	// 内部接口 user_id从header中取
-	visitor := GenerateVisitor(c)
+	visitor := visitor.GenerateVisitor(c)
 	r.DeleteObjectTypesFromGroup(c, visitor)
 }
 

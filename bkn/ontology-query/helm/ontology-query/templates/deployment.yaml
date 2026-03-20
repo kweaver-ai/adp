@@ -95,6 +95,8 @@ spec:
             value: /opt/ontology-query/config
           - name: ACTION_EXECUTION_MAX_OBJECTS
             value: "{{ .Values.env.actionExecutionMaxObjects }}"
+          - name: AUTH_ENABLED
+            value: {{ .Values.auth.enabled | quote }}
         resources: {{- toYaml .Values.resources | nindent 10 }}
         volumeMounts:
           - name: {{ .Values.moduleName }}-cm

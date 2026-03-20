@@ -23,6 +23,7 @@ import (
 	"go.opentelemetry.io/otel/trace"
 
 	"bkn-backend/common"
+	"bkn-backend/common/visitor"
 	berrors "bkn-backend/errors"
 	"bkn-backend/interfaces"
 )
@@ -58,7 +59,7 @@ func (r *restHandler) CreateObjectTypesByIn(c *gin.Context) {
 	logger.Debug("Handler CreateObjectTypesByIn Start")
 	// 内部接口 user_id从header中取，跳过用户有效认证，后面在权限校验时就会校验这个用户是否有权限，无效用户无权限
 	// 自行构建一个visitor
-	visitor := GenerateVisitor(c)
+	visitor := visitor.GenerateVisitor(c)
 	r.CreateObjectTypes(c, visitor)
 }
 
@@ -204,7 +205,7 @@ func (r *restHandler) UpdateObjectTypeByIn(c *gin.Context) {
 	logger.Debug("Handler UpdateObjectTypeByIn Start")
 	// 内部接口 user_id从header中取，跳过用户有效认证，后面在权限校验时就会校验这个用户是否有权限，无效用户无权限
 	// 自行构建一个visitor
-	visitor := GenerateVisitor(c)
+	visitor := visitor.GenerateVisitor(c)
 	r.UpdateObjectType(c, visitor)
 }
 
@@ -683,7 +684,7 @@ func (r *restHandler) ListObjectTypesByIn(c *gin.Context) {
 	logger.Debug("Handler ListObjectTypesByIn Start")
 	// 内部接口 user_id从header中取，跳过用户有效认证，后面在权限校验时就会校验这个用户是否有权限，无效用户无权限
 	// 自行构建一个visitor
-	visitor := GenerateVisitor(c)
+	visitor := visitor.GenerateVisitor(c)
 	r.ListObjectTypes(c, visitor)
 }
 
@@ -817,7 +818,7 @@ func (r *restHandler) GetObjectTypesByIn(c *gin.Context) {
 	logger.Debug("Handler GetObjectTypesByIn Start")
 	// 内部接口 user_id从header中取，跳过用户有效认证，后面在权限校验时就会校验这个用户是否有权限，无效用户无权限
 	// 自行构建一个visitor
-	visitor := GenerateVisitor(c)
+	visitor := visitor.GenerateVisitor(c)
 	r.GetObjectTypes(c, visitor)
 }
 
@@ -909,7 +910,7 @@ func (r *restHandler) SearchObjectTypesByIn(c *gin.Context) {
 	logger.Debug("Handler SearchObjectTypesByIn Start")
 	// 内部接口 user_id从header中取，跳过用户有效认证，后面在权限校验时就会校验这个用户是否有权限，无效用户无权限
 	// 自行构建一个visitor
-	visitor := GenerateVisitor(c)
+	visitor := visitor.GenerateVisitor(c)
 	r.SearchObjectTypes(c, visitor)
 }
 

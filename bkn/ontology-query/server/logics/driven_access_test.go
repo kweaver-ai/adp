@@ -8,7 +8,7 @@ package logics
 import (
 	"testing"
 
-	dmock "ontology-query/interfaces/mock"
+	omock "ontology-query/interfaces/mock"
 
 	"go.uber.org/mock/gomock"
 	. "github.com/smartystreets/goconvey/convey"
@@ -19,7 +19,7 @@ func Test_SetAgentOperatorAccess(t *testing.T) {
 		mockCtrl := gomock.NewController(t)
 		defer mockCtrl.Finish()
 
-		aoa := dmock.NewMockAgentOperatorAccess(mockCtrl)
+		aoa := omock.NewMockAgentOperatorAccess(mockCtrl)
 
 		SetAgentOperatorAccess(aoa)
 		So(AOA, ShouldEqual, aoa)
@@ -31,7 +31,7 @@ func Test_SetModelFactoryAccess(t *testing.T) {
 		mockCtrl := gomock.NewController(t)
 		defer mockCtrl.Finish()
 
-		mfa := dmock.NewMockModelFactoryAccess(mockCtrl)
+		mfa := omock.NewMockModelFactoryAccess(mockCtrl)
 
 		SetModelFactoryAccess(mfa)
 		So(MFA, ShouldEqual, mfa)
@@ -43,7 +43,7 @@ func Test_SetOntologyManagerAccess(t *testing.T) {
 		mockCtrl := gomock.NewController(t)
 		defer mockCtrl.Finish()
 
-		oma := dmock.NewMockOntologyManagerAccess(mockCtrl)
+		oma := omock.NewMockOntologyManagerAccess(mockCtrl)
 
 		SetOntologyManagerAccess(oma)
 		So(OMA, ShouldEqual, oma)
@@ -55,7 +55,7 @@ func Test_SetOpenSearchAccess(t *testing.T) {
 		mockCtrl := gomock.NewController(t)
 		defer mockCtrl.Finish()
 
-		osa := dmock.NewMockOpenSearchAccess(mockCtrl)
+		osa := omock.NewMockOpenSearchAccess(mockCtrl)
 
 		SetOpenSearchAccess(osa)
 		So(OSA, ShouldEqual, osa)
@@ -67,7 +67,7 @@ func Test_SetUniqueryAccess(t *testing.T) {
 		mockCtrl := gomock.NewController(t)
 		defer mockCtrl.Finish()
 
-		ua := dmock.NewMockUniqueryAccess(mockCtrl)
+		ua := omock.NewMockUniqueryAccess(mockCtrl)
 
 		SetUniqueryAccess(ua)
 		So(UA, ShouldEqual, ua)
@@ -80,11 +80,11 @@ func Test_GlobalVariables(t *testing.T) {
 		defer mockCtrl.Finish()
 
 		Convey("成功 - 设置所有全局变量", func() {
-			aoa := dmock.NewMockAgentOperatorAccess(mockCtrl)
-			mfa := dmock.NewMockModelFactoryAccess(mockCtrl)
-			oma := dmock.NewMockOntologyManagerAccess(mockCtrl)
-			osa := dmock.NewMockOpenSearchAccess(mockCtrl)
-			ua := dmock.NewMockUniqueryAccess(mockCtrl)
+			aoa := omock.NewMockAgentOperatorAccess(mockCtrl)
+			mfa := omock.NewMockModelFactoryAccess(mockCtrl)
+			oma := omock.NewMockOntologyManagerAccess(mockCtrl)
+			osa := omock.NewMockOpenSearchAccess(mockCtrl)
+			ua := omock.NewMockUniqueryAccess(mockCtrl)
 
 			SetAgentOperatorAccess(aoa)
 			SetModelFactoryAccess(mfa)
@@ -100,8 +100,8 @@ func Test_GlobalVariables(t *testing.T) {
 		})
 
 		Convey("成功 - 多次设置同一变量", func() {
-			aoa1 := dmock.NewMockAgentOperatorAccess(mockCtrl)
-			aoa2 := dmock.NewMockAgentOperatorAccess(mockCtrl)
+			aoa1 := omock.NewMockAgentOperatorAccess(mockCtrl)
+			aoa2 := omock.NewMockAgentOperatorAccess(mockCtrl)
 
 			SetAgentOperatorAccess(aoa1)
 			So(AOA, ShouldEqual, aoa1)

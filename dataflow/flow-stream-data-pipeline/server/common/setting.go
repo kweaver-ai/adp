@@ -9,6 +9,7 @@ import (
 	"github.com/bytedance/sonic"
 	"github.com/fsnotify/fsnotify"
 	libdb "github.com/kweaver-ai/kweaver-go-lib/db"
+	"github.com/kweaver-ai/kweaver-go-lib/hydra"
 	"github.com/kweaver-ai/kweaver-go-lib/logger"
 	libmq "github.com/kweaver-ai/kweaver-go-lib/mq"
 	o11y "github.com/kweaver-ai/kweaver-go-lib/observability"
@@ -65,7 +66,7 @@ type AppSetting struct {
 	DBSetting         libdb.DBSetting
 	MQSetting         libmq.MQSetting
 	OpenSearchSetting rest.OpenSearchClientConfig
-	HydraAdminSetting rest.HydraAdminSetting
+	HydraAdminSetting hydra.HydraAdminSetting
 
 	PipelineMgmtUrl string
 	IndexBaseUrl    string
@@ -227,7 +228,7 @@ func SetHydraAdminSetting() {
 	if !ok {
 		logger.Fatalf("service %s not found in depServices", hydraAdminServiceName)
 	}
-	appSetting.HydraAdminSetting = rest.HydraAdminSetting{
+	appSetting.HydraAdminSetting = hydra.HydraAdminSetting{
 		HydraAdminProcotol: setting["protocol"].(string),
 		HydraAdminHost:     setting["host"].(string),
 		HydraAdminPort:     setting["port"].(int),
@@ -275,4 +276,9 @@ func SetPermissionSetting() {
 
 func GetMQType() string {
 	return os.Getenv("MQ_TYPE")
+}
+
+func GetAuthEnabled() bool {
+	envVal := os.Getenv("AUTH_ENABLED")
+	return envVal != "false" && envVal != "0"
 }

@@ -66,7 +66,7 @@ func (dvrcrs *dataViewRowColumnRuleService) CreateDataViewRowColumnRules(ctx con
 
 	// 判断userid对于当前viewID是否有行列规则管理的权限（策略决策）
 	matchResouces, err := dvrcrs.ps.FilterResources(ctx, interfaces.RESOURCE_TYPE_DATA_VIEW, viewIDs,
-		[]string{interfaces.OPERATION_TYPE_VIEW_DETAIL, interfaces.OPERATION_TYPE_RULE_MANAGE}, false)
+		[]string{interfaces.OPERATION_TYPE_VIEW_DETAIL, interfaces.OPERATION_TYPE_RULE_MANAGE}, false, interfaces.FULL_OPERATIONS)
 	if err != nil {
 		return nil, err
 	}
@@ -147,7 +147,7 @@ func (dvrcrs *dataViewRowColumnRuleService) DeleteDataViewRowColumnRules(ctx con
 
 	// 判断userid对于当前viewID是否有行列规则管理的权限（策略决策）
 	matchResouces, err := dvrcrs.ps.FilterResources(ctx, interfaces.RESOURCE_TYPE_DATA_VIEW, viewIDs,
-		[]string{interfaces.OPERATION_TYPE_RULE_MANAGE}, false)
+		[]string{interfaces.OPERATION_TYPE_RULE_MANAGE}, false, interfaces.FULL_OPERATIONS)
 	if err != nil {
 		return err
 	}
@@ -341,7 +341,7 @@ func (dvrcrs *dataViewRowColumnRuleService) ListDataViewRowColumnRules(ctx conte
 	}
 
 	// matchResouces, err := dvrcrs.ps.FilterResources(ctx, interfaces.RESOURCE_TYPE_DATA_VIEW,
-	// 	viewIDs, []string{interfaces.OPERATION_TYPE_RULE_MANAGE}, true)
+	// 	viewIDs, []string{interfaces.OPERATION_TYPE_RULE_MANAGE}, true, interfaces.FULL_OPERATIONS)
 	// if err != nil {
 	// 	return nil, 0, err
 	// }
@@ -460,7 +460,7 @@ func (dvrcrs *dataViewRowColumnRuleService) ListDataViewRowColumnRuleSrcs(ctx co
 	}
 	// 校验权限管理的操作权限
 	matchResouces, err := dvrcrs.ps.FilterResources(ctx, interfaces.RESOURCE_TYPE_DATA_VIEW, ruleIDs,
-		[]string{interfaces.OPERATION_TYPE_RULE_MANAGE}, false)
+		[]string{interfaces.OPERATION_TYPE_RULE_MANAGE}, false, interfaces.FULL_OPERATIONS)
 	if err != nil {
 		return nil, 0, err
 	}
@@ -551,7 +551,7 @@ func (dvrcrs *dataViewRowColumnRuleService) GetDataViewRowColumnRules(ctx contex
 
 	// 先获取资源序列
 	matchResouces, err := dvrcrs.ps.FilterResources(ctx, interfaces.RESOURCE_TYPE_DATA_VIEW, ruleIDs,
-		[]string{interfaces.OPERATION_TYPE_VIEW_DETAIL}, true)
+		[]string{interfaces.OPERATION_TYPE_VIEW_DETAIL}, true, interfaces.FULL_OPERATIONS)
 	if err != nil {
 		return nil, err
 	}

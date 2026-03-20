@@ -1138,7 +1138,7 @@ func Test_MetricModelService_DeleteMetricModels(t *testing.T) {
 			},
 		}
 		Convey("DeleteMetricModels failed", func() {
-			ps.EXPECT().FilterResources(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+			ps.EXPECT().FilterResources(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
 				Return(resrc, nil)
 			mmts.EXPECT().GetMetricTaskIDsByModelIDs(gomock.Any(), gomock.Any()).Return([]string{"1"}, nil)
 			dmja.EXPECT().StopJobs(gomock.Any(), gomock.Any()).Return(nil)
@@ -1154,7 +1154,7 @@ func Test_MetricModelService_DeleteMetricModels(t *testing.T) {
 		})
 
 		Convey("DeleteMetricModels success && effect rows != len(modelIDs)", func() {
-			ps.EXPECT().FilterResources(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+			ps.EXPECT().FilterResources(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
 				Return(resrc, nil)
 			ps.EXPECT().DeleteResources(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
 			mmts.EXPECT().GetMetricTaskIDsByModelIDs(gomock.Any(), gomock.Any()).Return([]string{"1"}, nil)
@@ -1170,7 +1170,7 @@ func Test_MetricModelService_DeleteMetricModels(t *testing.T) {
 		})
 
 		Convey("DeleteMetricModels success && effect rows == len(modelIDs)", func() {
-			ps.EXPECT().FilterResources(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+			ps.EXPECT().FilterResources(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
 				Return(resrc, nil)
 			ps.EXPECT().DeleteResources(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
 			mmts.EXPECT().GetMetricTaskIDsByModelIDs(gomock.Any(), gomock.Any()).Return([]string{"1"}, nil)
@@ -1186,7 +1186,7 @@ func Test_MetricModelService_DeleteMetricModels(t *testing.T) {
 		})
 
 		Convey("Transaction begin failed \n", func() {
-			ps.EXPECT().FilterResources(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+			ps.EXPECT().FilterResources(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
 				Return(resrc, nil)
 			mmts.EXPECT().GetMetricTaskIDsByModelIDs(gomock.Any(), gomock.Any()).Return([]string{"1"}, nil)
 			dmja.EXPECT().StopJobs(gomock.Any(), gomock.Any()).Return(nil)
@@ -1199,7 +1199,7 @@ func Test_MetricModelService_DeleteMetricModels(t *testing.T) {
 		})
 
 		Convey("Transaction commit failed \n", func() {
-			ps.EXPECT().FilterResources(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+			ps.EXPECT().FilterResources(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
 				Return(resrc, nil)
 			ps.EXPECT().DeleteResources(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
 			mmts.EXPECT().GetMetricTaskIDsByModelIDs(gomock.Any(), gomock.Any()).Return(nil, nil)
@@ -1215,7 +1215,7 @@ func Test_MetricModelService_DeleteMetricModels(t *testing.T) {
 		})
 
 		Convey("DeleteMetricTaskByTaskIDs failed \n", func() {
-			ps.EXPECT().FilterResources(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+			ps.EXPECT().FilterResources(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
 				Return(resrc, nil)
 			mmts.EXPECT().GetMetricTaskIDsByModelIDs(gomock.Any(), gomock.Any()).Return(nil, nil)
 
@@ -1290,7 +1290,7 @@ func Test_MetricModelService_ListSimpleMetricModels(t *testing.T) {
 		// })
 
 		Convey("ListSimpleMetricModels success", func() {
-			ps.EXPECT().FilterResources(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+			ps.EXPECT().FilterResources(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
 				Return(resrc, nil)
 			mma.EXPECT().ListSimpleMetricModels(gomock.Any(), gomock.Any()).Return([]interfaces.SimpleMetricModel{simpleMetricModel}, nil)
 			// mma.EXPECT().GetMetricModelsTotal(gomock.Any(), gomock.Any()).Return(1, nil)
@@ -1366,7 +1366,7 @@ func Test_MetricModelService_GetMetricModelContainFilters(t *testing.T) {
 
 		Convey("GetMetricTasksByModelIDs Failed", func() {
 			err := errors.New("GetMetricTasksByModelIDs Failed")
-			ps.EXPECT().FilterResources(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+			ps.EXPECT().FilterResources(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
 				Return(resrc, nil)
 			mma.EXPECT().GetMetricModelsByModelIDs(gomock.Any(), gomock.Any()).Return([]interfaces.MetricModel{metricModel}, nil)
 			mmts.EXPECT().GetMetricTasksByModelIDs(gomock.Any(), gomock.Any()).Return(nil, err)
@@ -1379,7 +1379,7 @@ func Test_MetricModelService_GetMetricModelContainFilters(t *testing.T) {
 
 		Convey("GetDataView Failed", func() {
 			err := errors.New("GetDataView Failed")
-			ps.EXPECT().FilterResources(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+			ps.EXPECT().FilterResources(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
 				Return(resrc, nil)
 			mma.EXPECT().GetMetricModelsByModelIDs(gomock.Any(), gomock.Any()).Return([]interfaces.MetricModel{metricModel}, nil)
 			mmts.EXPECT().GetMetricTasksByModelIDs(gomock.Any(), gomock.Any()).Return(nil, nil)
@@ -1393,7 +1393,7 @@ func Test_MetricModelService_GetMetricModelContainFilters(t *testing.T) {
 
 		Convey("GetDataViewNameByID Failed", func() {
 			err := errors.New("GetDataViewNameByID Failed")
-			ps.EXPECT().FilterResources(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+			ps.EXPECT().FilterResources(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
 				Return(resrc, nil)
 			mma.EXPECT().GetMetricModelsByModelIDs(gomock.Any(), gomock.Any()).Return([]interfaces.MetricModel{metricModel}, nil)
 			mmts.EXPECT().GetMetricTasksByModelIDs(gomock.Any(), gomock.Any()).Return(nil, nil)
@@ -1425,7 +1425,7 @@ func Test_MetricModelService_GetMetricModelContainFilters(t *testing.T) {
 		// })
 
 		Convey("GetSimpleIndexBasesByTypes failed", func() {
-			ps.EXPECT().FilterResources(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+			ps.EXPECT().FilterResources(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
 				Return(resrc, nil)
 			mma.EXPECT().GetMetricModelsByModelIDs(gomock.Any(), gomock.Any()).Return([]interfaces.MetricModel{metricModel}, nil)
 			mmts.EXPECT().GetMetricTasksByModelIDs(gomock.Any(), gomock.Any()).Return(modelTaskMap, nil)
@@ -1446,7 +1446,7 @@ func Test_MetricModelService_GetMetricModelContainFilters(t *testing.T) {
 
 		Convey("GetMetricModelContainFilters success", func() {
 			dataView := &interfaces.DataView{SimpleDataView: interfaces.SimpleDataView{ViewName: "数据视图1"}}
-			ps.EXPECT().FilterResources(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+			ps.EXPECT().FilterResources(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
 				Return(resrc, nil)
 			mma.EXPECT().GetMetricModelsByModelIDs(gomock.Any(), gomock.Any()).Return([]interfaces.MetricModel{metricModel}, nil)
 			iba.EXPECT().GetSimpleIndexBasesByTypes(gomock.Any(), gomock.Any()).Return([]interfaces.SimpleIndexBase{{BaseType: "1", Name: "1"}}, nil)
@@ -1653,7 +1653,7 @@ func Test_MetricModelService_GetMetricModelSimpleInfosByIDs(t *testing.T) {
 		}
 		Convey("Get succeed", func() {
 			expectedModelMap := map[string]interfaces.SimpleMetricModel{"1": {}}
-			ps.EXPECT().FilterResources(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+			ps.EXPECT().FilterResources(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
 				Return(resrc, nil)
 			mma.EXPECT().GetMetricModelSimpleInfosByIDs(gomock.Any(), gomock.Any()).Return(expectedModelMap, nil)
 

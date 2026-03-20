@@ -7,6 +7,7 @@ package common
 
 import (
 	"fmt"
+	"os"
 	"sync"
 	"time"
 
@@ -247,7 +248,19 @@ func SetOpenSearchSetting() {
 	}
 }
 
+// GetAuthEnabled 获取认证开关状态
+// 通过环境变量 AUTH_ENABLED 控制，默认 true（安全优先）
+func GetAuthEnabled() bool {
+	envVal := os.Getenv("AUTH_ENABLED")
+	// 仅当显式设置为 false 或 0 时禁用认证
+	return envVal != "false" && envVal != "0"
+}
+
 func SetHydraAdminSetting() {
+	if !GetAuthEnabled() {
+		logger.Info("ISF authentication disabled via AUTH_ENABLED env, skipping hydra-admin configuration")
+		return
+	}
 	setting, ok := appSetting.DepServices[hydraAdminServiceName]
 	if !ok {
 		logger.Fatalf("service %s not found in depServices", hydraAdminServiceName)
@@ -299,6 +312,10 @@ func SetUniQuerySetting() {
 }
 
 func SetPermissionSetting() {
+	if !GetAuthEnabled() {
+		logger.Info("ISF authentication disabled via AUTH_ENABLED env, skipping authorization configuration")
+		return
+	}
 	setting, ok := appSetting.DepServices[permissionServiceName]
 	if !ok {
 		logger.Fatalf("service %s not found in depServices", permissionServiceName)
@@ -312,6 +329,10 @@ func SetPermissionSetting() {
 }
 
 func SetUserMgmtSetting() {
+	if !GetAuthEnabled() {
+		logger.Info("ISF authentication disabled via AUTH_ENABLED env, skipping user-management configuration")
+		return
+	}
 	setting, ok := appSetting.DepServices[userMgmtServiceName]
 	if !ok {
 		logger.Fatalf("service %s not found in depServices", userMgmtServiceName)

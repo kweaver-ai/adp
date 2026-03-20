@@ -22,6 +22,7 @@ import (
 	attr "go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/trace"
 
+	"bkn-backend/common/visitor"
 	berrors "bkn-backend/errors"
 	"bkn-backend/interfaces"
 )
@@ -30,7 +31,7 @@ import (
 func (r *restHandler) CreateKNByIn(c *gin.Context) {
 	logger.Debug("Handler CreateKNByIn Start")
 	// 内部接口 user_id从header中取
-	visitor := GenerateVisitor(c)
+	visitor := visitor.GenerateVisitor(c)
 	r.CreateKN(c, visitor)
 }
 
@@ -207,7 +208,7 @@ func (r *restHandler) CreateKN(c *gin.Context, visitor hydra.Visitor) {
 func (r *restHandler) UpdateKNByIn(c *gin.Context) {
 	logger.Debug("Handler UpdateKNByIn Start")
 	// 内部接口 user_id从header中取
-	visitor := GenerateVisitor(c)
+	visitor := visitor.GenerateVisitor(c)
 	r.UpdateKN(c, visitor)
 }
 
@@ -429,7 +430,7 @@ func (r *restHandler) ListKNsByIn(c *gin.Context) {
 	logger.Debug("Handler ListKNsByIn Start")
 	// 内部接口 user_id从header中取，跳过用户有效认证，后面在权限校验时就会校验这个用户是否有权限，无效用户无权限
 	// 自行构建一个visitor
-	visitor := GenerateVisitor(c)
+	visitor := visitor.GenerateVisitor(c)
 	r.ListKNs(c, visitor)
 }
 
@@ -544,7 +545,7 @@ func (r *restHandler) GetKNByIn(c *gin.Context) {
 	logger.Debug("Handler GetKNByIn Start")
 	// 内部接口 user_id从header中取，跳过用户有效认证，后面在权限校验时就会校验这个用户是否有权限，无效用户无权限
 	// 自行构建一个visitor
-	visitor := GenerateVisitor(c)
+	visitor := visitor.GenerateVisitor(c)
 	r.GetKN(c, visitor)
 }
 
@@ -651,7 +652,7 @@ func (r *restHandler) GetRelationTypePathsByIn(c *gin.Context) {
 	logger.Debug("Handler GetRelationTypePathsByIn Start")
 	// 内部接口 user_id从header中取，跳过用户有效认证，后面在权限校验时就会校验这个用户是否有权限，无效用户无权限
 	// 自行构建一个visitor
-	visitor := GenerateVisitor(c)
+	visitor := visitor.GenerateVisitor(c)
 	r.GetRelationTypePaths(c, visitor)
 }
 

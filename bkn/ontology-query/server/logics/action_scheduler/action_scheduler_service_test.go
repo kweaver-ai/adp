@@ -11,16 +11,16 @@ import (
 	"net/http"
 	"testing"
 
-	"go.uber.org/mock/gomock"
 	"github.com/kweaver-ai/kweaver-go-lib/logger"
 	"github.com/kweaver-ai/kweaver-go-lib/rest"
 	. "github.com/smartystreets/goconvey/convey"
+	"go.uber.org/mock/gomock"
 
 	"ontology-query/common"
 	cond "ontology-query/common/condition"
 	oerrors "ontology-query/errors"
 	"ontology-query/interfaces"
-	dmock "ontology-query/interfaces/mock"
+	omock "ontology-query/interfaces/mock"
 	"ontology-query/logics"
 	"ontology-query/logics/action_logs"
 )
@@ -505,9 +505,9 @@ func Test_ExecuteAction_ScanMode(t *testing.T) {
 		defer mockCtrl.Finish()
 
 		appSetting := &common.AppSetting{}
-		omAccess := dmock.NewMockOntologyManagerAccess(mockCtrl)
-		aoAccess := dmock.NewMockAgentOperatorAccess(mockCtrl)
-		ots := dmock.NewMockObjectTypeService(mockCtrl)
+		omAccess := omock.NewMockOntologyManagerAccess(mockCtrl)
+		aoAccess := omock.NewMockAgentOperatorAccess(mockCtrl)
+		ots := omock.NewMockObjectTypeService(mockCtrl)
 		logsService := action_logs.NewActionLogsService(appSetting)
 
 		// Set global variables
@@ -718,9 +718,9 @@ func Test_ExecuteAction_UnboundObjectType(t *testing.T) {
 		defer mockCtrl.Finish()
 
 		appSetting := &common.AppSetting{}
-		omAccess := dmock.NewMockOntologyManagerAccess(mockCtrl)
-		aoAccess := dmock.NewMockAgentOperatorAccess(mockCtrl)
-		ots := dmock.NewMockObjectTypeService(mockCtrl)
+		omAccess := omock.NewMockOntologyManagerAccess(mockCtrl)
+		aoAccess := omock.NewMockAgentOperatorAccess(mockCtrl)
+		ots := omock.NewMockObjectTypeService(mockCtrl)
 		logsService := action_logs.NewActionLogsService(appSetting)
 
 		// Set global variables
@@ -832,9 +832,9 @@ func Test_ExecuteAction_AddActionType(t *testing.T) {
 		defer mockCtrl.Finish()
 
 		appSetting := &common.AppSetting{}
-		omAccess := dmock.NewMockOntologyManagerAccess(mockCtrl)
-		aoAccess := dmock.NewMockAgentOperatorAccess(mockCtrl)
-		ots := dmock.NewMockObjectTypeService(mockCtrl)
+		omAccess := omock.NewMockOntologyManagerAccess(mockCtrl)
+		aoAccess := omock.NewMockAgentOperatorAccess(mockCtrl)
+		ots := omock.NewMockObjectTypeService(mockCtrl)
 		logsService := action_logs.NewActionLogsService(appSetting)
 
 		// Set global variables

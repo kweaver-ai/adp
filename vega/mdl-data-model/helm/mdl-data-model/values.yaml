@@ -6,6 +6,10 @@ env:
   timezone: Asia/Shanghai
   language: en_US.UTF-8
 
+# 认证开关配置
+auth:
+  enabled: true
+
 replicaCount: 1
 
 # 节点选择器

@@ -18,20 +18,23 @@ import (
 	. "github.com/agiledragon/gomonkey/v2"
 	"github.com/gin-gonic/gin"
 	"github.com/golang/mock/gomock"
+	"github.com/kweaver-ai/kweaver-go-lib/hydra"
 	"github.com/kweaver-ai/kweaver-go-lib/rest"
-	rmock "github.com/kweaver-ai/kweaver-go-lib/rest/mock"
 	. "github.com/smartystreets/goconvey/convey"
 
+	"uniquery/common"
 	"uniquery/common/convert"
 	uerrors "uniquery/errors"
 	"uniquery/interfaces"
 	umock "uniquery/interfaces/mock"
 )
 
-func mockNewTraceModelRestHandler(hydra rest.Hydra, tmService interfaces.TraceModelService) (r *restHandler) {
+func mockNewTraceModelRestHandler(appSetting *common.AppSetting,
+	authService interfaces.AuthService, tmService interfaces.TraceModelService) (r *restHandler) {
 	r = &restHandler{
-		hydra:     hydra,
-		tmService: tmService,
+		appSetting: appSetting,
+		as:         authService,
+		tmService:  tmService,
 	}
 	r.InitMetric()
 	return r
@@ -48,12 +51,13 @@ func TestPreviewSpanList(t *testing.T) {
 		mockCtrl := gomock.NewController(t)
 		defer mockCtrl.Finish()
 
-		hydraMock := rmock.NewMockHydra(mockCtrl)
+		appSetting := &common.AppSetting{}
+		authMock := umock.NewMockAuthService(mockCtrl)
 		tmServiceMock := umock.NewMockTraceModelService(mockCtrl)
-		handler := mockNewTraceModelRestHandler(hydraMock, tmServiceMock)
+		handler := mockNewTraceModelRestHandler(appSetting, authMock, tmServiceMock)
 		handler.RegisterPublic(engine)
 
-		hydraMock.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(rest.Visitor{}, nil)
+		authMock.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(hydra.Visitor{}, nil)
 
 		url := "/api/mdl-uniquery/v1/simulate-traces/1/spans"
 
@@ -250,12 +254,13 @@ func TestGetSpanList(t *testing.T) {
 		mockCtrl := gomock.NewController(t)
 		defer mockCtrl.Finish()
 
-		hydraMock := rmock.NewMockHydra(mockCtrl)
+		appSetting := &common.AppSetting{}
+		authMock := umock.NewMockAuthService(mockCtrl)
 		tmServiceMock := umock.NewMockTraceModelService(mockCtrl)
-		handler := mockNewTraceModelRestHandler(hydraMock, tmServiceMock)
+		handler := mockNewTraceModelRestHandler(appSetting, authMock, tmServiceMock)
 		handler.RegisterPublic(engine)
 
-		hydraMock.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(rest.Visitor{}, nil)
+		authMock.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(hydra.Visitor{}, nil)
 
 		url := "/api/mdl-uniquery/v1/trace-models/1/traces/1/spans"
 
@@ -412,12 +417,13 @@ func TestPreviewTrace(t *testing.T) {
 		mockCtrl := gomock.NewController(t)
 		defer mockCtrl.Finish()
 
-		hydraMock := rmock.NewMockHydra(mockCtrl)
+		appSetting := &common.AppSetting{}
+		authMock := umock.NewMockAuthService(mockCtrl)
 		tmServiceMock := umock.NewMockTraceModelService(mockCtrl)
-		handler := mockNewTraceModelRestHandler(hydraMock, tmServiceMock)
+		handler := mockNewTraceModelRestHandler(appSetting, authMock, tmServiceMock)
 		handler.RegisterPublic(engine)
 
-		hydraMock.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(rest.Visitor{}, nil)
+		authMock.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(hydra.Visitor{}, nil)
 
 		url := "/api/mdl-uniquery/v1/simulate-traces/1"
 
@@ -581,12 +587,13 @@ func TestGetTrace(t *testing.T) {
 		mockCtrl := gomock.NewController(t)
 		defer mockCtrl.Finish()
 
-		hydraMock := rmock.NewMockHydra(mockCtrl)
+		appSetting := &common.AppSetting{}
+		authMock := umock.NewMockAuthService(mockCtrl)
 		tmServiceMock := umock.NewMockTraceModelService(mockCtrl)
-		handler := mockNewTraceModelRestHandler(hydraMock, tmServiceMock)
+		handler := mockNewTraceModelRestHandler(appSetting, authMock, tmServiceMock)
 		handler.RegisterPublic(engine)
 
-		hydraMock.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(rest.Visitor{}, nil)
+		authMock.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(hydra.Visitor{}, nil)
 
 		url := "/api/mdl-uniquery/v1/trace-models/1/traces/1"
 
@@ -704,12 +711,13 @@ func TestPreviewSpan(t *testing.T) {
 		mockCtrl := gomock.NewController(t)
 		defer mockCtrl.Finish()
 
-		hydraMock := rmock.NewMockHydra(mockCtrl)
+		appSetting := &common.AppSetting{}
+		authMock := umock.NewMockAuthService(mockCtrl)
 		tmServiceMock := umock.NewMockTraceModelService(mockCtrl)
-		handler := mockNewTraceModelRestHandler(hydraMock, tmServiceMock)
+		handler := mockNewTraceModelRestHandler(appSetting, authMock, tmServiceMock)
 		handler.RegisterPublic(engine)
 
-		hydraMock.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(rest.Visitor{}, nil)
+		authMock.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(hydra.Visitor{}, nil)
 
 		url := "/api/mdl-uniquery/v1/simulate-traces/1/spans/1"
 
@@ -867,12 +875,13 @@ func TestGetSpan(t *testing.T) {
 		mockCtrl := gomock.NewController(t)
 		defer mockCtrl.Finish()
 
-		hydraMock := rmock.NewMockHydra(mockCtrl)
+		appSetting := &common.AppSetting{}
+		authMock := umock.NewMockAuthService(mockCtrl)
 		tmServiceMock := umock.NewMockTraceModelService(mockCtrl)
-		handler := mockNewTraceModelRestHandler(hydraMock, tmServiceMock)
+		handler := mockNewTraceModelRestHandler(appSetting, authMock, tmServiceMock)
 		handler.RegisterPublic(engine)
 
-		hydraMock.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(rest.Visitor{}, nil)
+		authMock.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(hydra.Visitor{}, nil)
 
 		url := "/api/mdl-uniquery/v1/trace-models/1/traces/1/spans/1"
 
@@ -932,12 +941,13 @@ func TestPreviewSpanRelatedLogList(t *testing.T) {
 		mockCtrl := gomock.NewController(t)
 		defer mockCtrl.Finish()
 
-		hydraMock := rmock.NewMockHydra(mockCtrl)
+		appSetting := &common.AppSetting{}
+		authMock := umock.NewMockAuthService(mockCtrl)
 		tmServiceMock := umock.NewMockTraceModelService(mockCtrl)
-		handler := mockNewTraceModelRestHandler(hydraMock, tmServiceMock)
+		handler := mockNewTraceModelRestHandler(appSetting, authMock, tmServiceMock)
 		handler.RegisterPublic(engine)
 
-		hydraMock.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(rest.Visitor{}, nil)
+		authMock.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(hydra.Visitor{}, nil)
 
 		url := "/api/mdl-uniquery/v1/simulate-traces/1/spans/1/related-logs"
 
@@ -1134,12 +1144,13 @@ func TestGetSpanRelatedLogList(t *testing.T) {
 		mockCtrl := gomock.NewController(t)
 		defer mockCtrl.Finish()
 
-		hydraMock := rmock.NewMockHydra(mockCtrl)
+		appSetting := &common.AppSetting{}
+		authMock := umock.NewMockAuthService(mockCtrl)
 		tmServiceMock := umock.NewMockTraceModelService(mockCtrl)
-		handler := mockNewTraceModelRestHandler(hydraMock, tmServiceMock)
+		handler := mockNewTraceModelRestHandler(appSetting, authMock, tmServiceMock)
 		handler.RegisterPublic(engine)
 
-		hydraMock.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(rest.Visitor{}, nil)
+		authMock.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(hydra.Visitor{}, nil)
 
 		url := "/api/mdl-uniquery/v1/trace-models/1/traces/1/spans/1/related-logs"
 

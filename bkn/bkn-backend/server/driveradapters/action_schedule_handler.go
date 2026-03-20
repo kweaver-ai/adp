@@ -21,6 +21,7 @@ import (
 	"go.opentelemetry.io/otel/trace"
 
 	"bkn-backend/common"
+	"bkn-backend/common/visitor"
 	berrors "bkn-backend/errors"
 	"bkn-backend/interfaces"
 )
@@ -28,7 +29,7 @@ import (
 // CreateActionScheduleByIn creates a new action schedule (internal)
 func (r *restHandler) CreateActionScheduleByIn(c *gin.Context) {
 	logger.Debug("Handler CreateActionScheduleByIn Start")
-	visitor := GenerateVisitor(c)
+	visitor := visitor.GenerateVisitor(c)
 	r.CreateActionSchedule(c, visitor)
 }
 
@@ -134,7 +135,7 @@ func (r *restHandler) CreateActionSchedule(c *gin.Context, visitor hydra.Visitor
 // UpdateActionScheduleByIn updates an existing action schedule (internal)
 func (r *restHandler) UpdateActionScheduleByIn(c *gin.Context) {
 	logger.Debug("Handler UpdateActionScheduleByIn Start")
-	visitor := GenerateVisitor(c)
+	visitor := visitor.GenerateVisitor(c)
 	r.UpdateActionSchedule(c, visitor)
 }
 
@@ -226,7 +227,7 @@ func (r *restHandler) UpdateActionSchedule(c *gin.Context, visitor hydra.Visitor
 // UpdateActionScheduleStatusByIn updates the status of an action schedule (internal)
 func (r *restHandler) UpdateActionScheduleStatusByIn(c *gin.Context) {
 	logger.Debug("Handler UpdateActionScheduleStatusByIn Start")
-	visitor := GenerateVisitor(c)
+	visitor := visitor.GenerateVisitor(c)
 	r.UpdateActionScheduleStatus(c, visitor)
 }
 
@@ -308,7 +309,7 @@ func (r *restHandler) UpdateActionScheduleStatus(c *gin.Context, visitor hydra.V
 // DeleteActionSchedulesByIn deletes action schedules (internal)
 func (r *restHandler) DeleteActionSchedulesByIn(c *gin.Context) {
 	logger.Debug("Handler DeleteActionSchedulesByIn Start")
-	visitor := GenerateVisitor(c)
+	visitor := visitor.GenerateVisitor(c)
 	r.DeleteActionSchedules(c, visitor)
 }
 
@@ -378,7 +379,7 @@ func (r *restHandler) DeleteActionSchedules(c *gin.Context, visitor hydra.Visito
 // ListActionSchedulesByIn lists action schedules (internal)
 func (r *restHandler) ListActionSchedulesByIn(c *gin.Context) {
 	logger.Debug("Handler ListActionSchedulesByIn Start")
-	visitor := GenerateVisitor(c)
+	visitor := visitor.GenerateVisitor(c)
 	r.ListActionSchedules(c, visitor)
 }
 
@@ -489,7 +490,7 @@ func (r *restHandler) ListActionSchedules(c *gin.Context, visitor hydra.Visitor)
 // GetActionScheduleByIn gets a single action schedule (internal)
 func (r *restHandler) GetActionScheduleByIn(c *gin.Context) {
 	logger.Debug("Handler GetActionScheduleByIn Start")
-	visitor := GenerateVisitor(c)
+	visitor := visitor.GenerateVisitor(c)
 	r.GetActionSchedule(c, visitor)
 }
 

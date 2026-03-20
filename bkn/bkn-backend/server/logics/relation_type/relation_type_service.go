@@ -32,6 +32,7 @@ import (
 	"bkn-backend/logics"
 	"bkn-backend/logics/object_type"
 	"bkn-backend/logics/permission"
+	"bkn-backend/logics/user_mgmt"
 )
 
 var (
@@ -48,7 +49,7 @@ type relationTypeService struct {
 	ots        interfaces.ObjectTypeService
 	ps         interfaces.PermissionService
 	rta        interfaces.RelationTypeAccess
-	uma        interfaces.UserMgmtAccess
+	ums        interfaces.UserMgmtService
 	vba        interfaces.VegaBackendAccess
 }
 
@@ -63,7 +64,7 @@ func NewRelationTypeService(appSetting *common.AppSetting) interfaces.RelationTy
 			ots:        object_type.NewObjectTypeService(appSetting),
 			ps:         permission.NewPermissionService(appSetting),
 			rta:        logics.RTA,
-			uma:        logics.UMA,
+			ums:        user_mgmt.NewUserMgmtService(appSetting),
 			vba:        logics.VBA,
 		}
 	})
@@ -310,7 +311,7 @@ func (rts *relationTypeService) ListRelationTypes(ctx context.Context,
 		accountInfos = append(accountInfos, &relationType.Creator, &relationType.Updater)
 	}
 
-	err = rts.uma.GetAccountNames(ctx, accountInfos)
+	err = rts.ums.GetAccountNames(ctx, accountInfos)
 	if err != nil {
 		span.SetStatus(codes.Error, "GetAccountNames error")
 

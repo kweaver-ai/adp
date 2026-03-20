@@ -14,6 +14,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/kweaver-ai/TelemetrySDK-Go/exporter/v2/ar_trace"
 	"github.com/kweaver-ai/kweaver-go-lib/audit"
+	"github.com/kweaver-ai/kweaver-go-lib/hydra"
 	"github.com/kweaver-ai/kweaver-go-lib/logger"
 	o11y "github.com/kweaver-ai/kweaver-go-lib/observability"
 	"github.com/kweaver-ai/kweaver-go-lib/rest"
@@ -21,6 +22,7 @@ import (
 	"go.opentelemetry.io/otel/trace"
 
 	"data-model/common"
+	"data-model/common/visitor"
 	derrors "data-model/errors"
 	"data-model/interfaces"
 )
@@ -43,12 +45,12 @@ func (r *restHandler) CreateDataViewRowColumnRulesByEx(c *gin.Context) {
 // 创建数据视图行列权限(内部)
 func (r *restHandler) CreateDataViewRowColumnRulesByIn(c *gin.Context) {
 	logger.Debug("Handler CreateDataViewRowColumnRulesByIn Start")
-	visitor := GenerateVisitor(c)
+	visitor := visitor.GenerateVisitor(c)
 	r.CreateDataViewRowColumnRules(c, visitor)
 }
 
 // 创建数据视图行列权限
-func (r *restHandler) CreateDataViewRowColumnRules(c *gin.Context, visitor rest.Visitor) {
+func (r *restHandler) CreateDataViewRowColumnRules(c *gin.Context, visitor hydra.Visitor) {
 	logger.Debug("Handler CreateDataViewRowColumnRules Start")
 	ctx, span := ar_trace.Tracer.Start(rest.GetLanguageCtx(c),
 		"driver layer: Create data view row column rules", trace.WithSpanKind(trace.SpanKindServer))
@@ -213,12 +215,12 @@ func (r *restHandler) DeleteDataViewRowColumnRulesByEx(c *gin.Context) {
 func (r *restHandler) DeleteDataViewRowColumnRulesByIn(c *gin.Context) {
 	logger.Debug("Handler DeleteDataViewRowColumnRulesByIn Start")
 
-	visitor := GenerateVisitor(c)
+	visitor := visitor.GenerateVisitor(c)
 	r.DeleteDataViewRowColumnRules(c, visitor)
 }
 
 // 删除数据视图行列权限，支持批量删除
-func (r *restHandler) DeleteDataViewRowColumnRules(c *gin.Context, visitor rest.Visitor) {
+func (r *restHandler) DeleteDataViewRowColumnRules(c *gin.Context, visitor hydra.Visitor) {
 	logger.Debug("Handler DeleteDataViewRowColumnRules Start")
 	ctx, span := ar_trace.Tracer.Start(rest.GetLanguageCtx(c),
 		"driver layer: Delete data view row column rules", trace.WithSpanKind(trace.SpanKindServer))
@@ -313,12 +315,12 @@ func (r *restHandler) UpdateDataViewRowColumnRuleByEx(c *gin.Context) {
 func (r *restHandler) UpdateDataViewRowColumnRuleByIn(c *gin.Context) {
 	logger.Debug("Handler UpdateDataViewRowColumnRuleByIn Start")
 
-	visitor := GenerateVisitor(c)
+	visitor := visitor.GenerateVisitor(c)
 	r.UpdateDataViewRowColumnRule(c, visitor)
 }
 
 // 更新数据视图行列权限
-func (r *restHandler) UpdateDataViewRowColumnRule(c *gin.Context, visitor rest.Visitor) {
+func (r *restHandler) UpdateDataViewRowColumnRule(c *gin.Context, visitor hydra.Visitor) {
 	logger.Debug("Handler UpdateDataViewRowColumnRule Start")
 	ctx, span := ar_trace.Tracer.Start(rest.GetLanguageCtx(c),
 		"driver layer: Update a data view row column rules", trace.WithSpanKind(trace.SpanKindServer))
@@ -419,12 +421,12 @@ func (r *restHandler) GetDataViewRowColumnRulesByEx(c *gin.Context) {
 func (r *restHandler) GetDataViewRowColumnRulesByIn(c *gin.Context) {
 	logger.Debug("Handler GetDataViewRowColumnRulesByIn Start")
 
-	visitor := GenerateVisitor(c)
+	visitor := visitor.GenerateVisitor(c)
 	r.GetDataViewRowColumnRules(c, visitor)
 }
 
 // 获取数据视图行列权限详情
-func (r *restHandler) GetDataViewRowColumnRules(c *gin.Context, visitor rest.Visitor) {
+func (r *restHandler) GetDataViewRowColumnRules(c *gin.Context, visitor hydra.Visitor) {
 	logger.Debug("Handler GetDataViewRowColumnRules Start")
 	ctx, span := ar_trace.Tracer.Start(rest.GetLanguageCtx(c),
 		"driver layer: Get data view row column rules", trace.WithSpanKind(trace.SpanKindServer))
@@ -486,12 +488,12 @@ func (r *restHandler) ListDataViewRowColumnRulesByEx(c *gin.Context) {
 func (r *restHandler) ListDataViewRowColumnRulesByIn(c *gin.Context) {
 	logger.Debug("Handler ListDataViewRowColumnRulesByIn Start")
 
-	visitor := GenerateVisitor(c)
+	visitor := visitor.GenerateVisitor(c)
 	r.ListDataViewRowColumnRules(c, visitor, true)
 }
 
 // 获取数据视图行列权限列表
-func (r *restHandler) ListDataViewRowColumnRules(c *gin.Context, visitor rest.Visitor, isInnerRequest bool) {
+func (r *restHandler) ListDataViewRowColumnRules(c *gin.Context, visitor hydra.Visitor, isInnerRequest bool) {
 	logger.Debug("Handler ListDataViewRowColumnRules Start")
 	ctx, span := ar_trace.Tracer.Start(rest.GetLanguageCtx(c),
 		"driver layer: List data view row column rules", trace.WithSpanKind(trace.SpanKindServer))

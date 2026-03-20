@@ -6,9 +6,6 @@
 package driveradapters
 
 import (
-	"bkn-backend/common"
-	berrors "bkn-backend/errors"
-	"bkn-backend/interfaces"
 	"context"
 	"fmt"
 	"net/http"
@@ -22,6 +19,11 @@ import (
 	"github.com/kweaver-ai/kweaver-go-lib/rest"
 	attr "go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/trace"
+
+	"bkn-backend/common"
+	"bkn-backend/common/visitor"
+	berrors "bkn-backend/errors"
+	"bkn-backend/interfaces"
 )
 
 // CreateJobByEx 创建 job
@@ -48,7 +50,7 @@ func (r *restHandler) CreateJobByIn(c *gin.Context) {
 
 	// 内部接口 account_id从header中取，跳过用户有效认证，后面在权限校验时就会校验这个用户是否有权限，无效用户无权限
 	// 自行构建一个visitor
-	visitor := GenerateVisitor(c)
+	visitor := visitor.GenerateVisitor(c)
 	r.CreateJob(c, visitor)
 }
 
@@ -178,7 +180,7 @@ func (r *restHandler) DeleteJobsByIn(c *gin.Context) {
 
 	// 内部接口 account_id从header中取，跳过用户有效认证，后面在权限校验时就会校验这个用户是否有权限，无效用户无权限
 	// 自行构建一个visitor
-	visitor := GenerateVisitor(c)
+	visitor := visitor.GenerateVisitor(c)
 	r.DeleteJobs(c, visitor)
 }
 
@@ -322,7 +324,7 @@ func (r *restHandler) ListJobsByIn(c *gin.Context) {
 
 	// 内部接口 account_id从header中取，跳过用户有效认证，后面在权限校验时就会校验这个用户是否有权限，无效用户无权限
 	// 自行构建一个visitor
-	visitor := GenerateVisitor(c)
+	visitor := visitor.GenerateVisitor(c)
 	r.ListJobs(c, visitor)
 }
 
@@ -478,7 +480,7 @@ func (r *restHandler) ListTasksByIn(c *gin.Context) {
 
 	// 内部接口 account_id从header中取，跳过用户有效认证，后面在权限校验时就会校验这个用户是否有权限，无效用户无权限
 	// 自行构建一个visitor
-	visitor := GenerateVisitor(c)
+	visitor := visitor.GenerateVisitor(c)
 	r.ListTasks(c, visitor)
 }
 

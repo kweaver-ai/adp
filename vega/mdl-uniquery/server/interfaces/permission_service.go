@@ -12,6 +12,6 @@ type PermissionService interface {
 	CheckPermission(ctx context.Context, resource Resource, ops []string) error
 	CheckPermissionWithResult(ctx context.Context, resource Resource, ops []string) (bool, error)
 	FilterResources(ctx context.Context, resourceType string, ids []string,
-		ops []string, allowOperation bool) (map[string]ResourceOps, error)
+		ops []string, allowOperation bool, fullOps []string) (map[string]ResourceOps, error)
 	GetResourcesOperations(ctx context.Context, resourceType string, ids []string) ([]ResourceOps, error)
 }

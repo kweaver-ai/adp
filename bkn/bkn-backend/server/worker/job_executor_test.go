@@ -13,8 +13,8 @@ import (
 
 	"github.com/DATA-DOG/go-sqlmock"
 	llq "github.com/emirpasic/gods/queues/linkedlistqueue"
-	"go.uber.org/mock/gomock"
 	. "github.com/smartystreets/goconvey/convey"
+	"go.uber.org/mock/gomock"
 
 	"bkn-backend/common"
 	"bkn-backend/interfaces"

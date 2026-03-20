@@ -115,7 +115,7 @@ func (dvgs *dataViewGroupService) DeleteDataViewGroup(ctx context.Context, group
 	// 组内包含视图，校验视图是否具有删除权限，如果没有，分组不允许删除
 	if len(viewIDs) != 0 {
 		matchResouces, err := dvgs.ps.FilterResources(ctx, interfaces.RESOURCE_TYPE_DATA_VIEW, viewIDs,
-			[]string{interfaces.OPERATION_TYPE_DELETE}, false)
+			[]string{interfaces.OPERATION_TYPE_DELETE}, false, interfaces.FULL_OPERATIONS)
 		if err != nil {
 			return nil, err
 		}

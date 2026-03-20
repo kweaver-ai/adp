@@ -143,7 +143,7 @@ func Test_DataViewGroupService_DeleteDataViewGroup(t *testing.T) {
 		})
 
 		Convey("Delete succeed, there are data views in the group and includeDataViews is true", func() {
-			psMock.EXPECT().FilterResources(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(resrcs, nil)
+			psMock.EXPECT().FilterResources(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(resrcs, nil)
 			dva.EXPECT().GetSimpleDataViewsByGroupID(gomock.Any(), gomock.Any(), gomock.Any()).Return(dataViews, nil)
 
 			smock.ExpectBegin()

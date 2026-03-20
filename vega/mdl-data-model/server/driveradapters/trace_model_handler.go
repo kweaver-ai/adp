@@ -15,6 +15,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/kweaver-ai/TelemetrySDK-Go/exporter/v2/ar_trace"
 	"github.com/kweaver-ai/kweaver-go-lib/audit"
+	"github.com/kweaver-ai/kweaver-go-lib/hydra"
 	"github.com/kweaver-ai/kweaver-go-lib/logger"
 	o11y "github.com/kweaver-ai/kweaver-go-lib/observability"
 	"github.com/kweaver-ai/kweaver-go-lib/rest"
@@ -22,6 +23,7 @@ import (
 	"go.opentelemetry.io/otel/trace"
 
 	"data-model/common"
+	"data-model/common/visitor"
 	derrors "data-model/errors"
 	"data-model/interfaces"
 )
@@ -45,12 +47,12 @@ func (r *restHandler) CreateTraceModelsByEx(c *gin.Context) {
 func (r *restHandler) CreateTraceModelsByIn(c *gin.Context) {
 	logger.Debug("Handler CreateTraceModelsByIn Start")
 
-	visitor := GenerateVisitor(c)
+	visitor := visitor.GenerateVisitor(c)
 	r.CreateTraceModels(c, visitor)
 }
 
 // 批量创建/导入链路模型
-func (r *restHandler) CreateTraceModels(c *gin.Context, visitor rest.Visitor) {
+func (r *restHandler) CreateTraceModels(c *gin.Context, visitor hydra.Visitor) {
 	logger.Debug("Handler CreateTraceModels Start")
 	ctx, span := ar_trace.Tracer.Start(rest.GetLanguageCtx(c),
 		"driver层: 批量创建链路模型", trace.WithSpanKind(trace.SpanKindServer))
@@ -176,12 +178,12 @@ func (r *restHandler) SimulateCreateTraceModelByEx(c *gin.Context) {
 func (r *restHandler) SimulateCreateTraceModelByIn(c *gin.Context) {
 	logger.Debug("Handler SimulateCreateTraceModelByIn Start")
 
-	visitor := GenerateVisitor(c)
+	visitor := visitor.GenerateVisitor(c)
 	r.SimulateCreateTraceModel(c, visitor)
 }
 
 // 模拟创建链路模型
-func (r *restHandler) SimulateCreateTraceModel(c *gin.Context, visitor rest.Visitor) {
+func (r *restHandler) SimulateCreateTraceModel(c *gin.Context, visitor hydra.Visitor) {
 	logger.Debug("Handler SimulateCreateTraceModel Start")
 	ctx, span := ar_trace.Tracer.Start(rest.GetLanguageCtx(c),
 		"driver层: 模拟创建链路模型", trace.WithSpanKind(trace.SpanKindServer))
@@ -264,12 +266,12 @@ func (r *restHandler) DeleteTraceModelsByEx(c *gin.Context) {
 func (r *restHandler) DeleteTraceModelsByIn(c *gin.Context) {
 	logger.Debug("Handler DeleteTraceModelsByIn Start")
 
-	visitor := GenerateVisitor(c)
+	visitor := visitor.GenerateVisitor(c)
 	r.DeleteTraceModels(c, visitor)
 }
 
 // 批量删除链路模型
-func (r *restHandler) DeleteTraceModels(c *gin.Context, visitor rest.Visitor) {
+func (r *restHandler) DeleteTraceModels(c *gin.Context, visitor hydra.Visitor) {
 	logger.Debug("Handler DeleteTraceModels Start")
 	ctx, span := ar_trace.Tracer.Start(rest.GetLanguageCtx(c),
 		"driver层: 批量删除链路模型", trace.WithSpanKind(trace.SpanKindServer))
@@ -382,12 +384,12 @@ func (r *restHandler) UpdateTraceModelByEx(c *gin.Context) {
 func (r *restHandler) UpdateTraceModelByIn(c *gin.Context) {
 	logger.Debug("Handler UpdateTraceModelByIn Start")
 
-	visitor := GenerateVisitor(c)
+	visitor := visitor.GenerateVisitor(c)
 	r.UpdateTraceModel(c, visitor)
 }
 
 // 修改链路模型
-func (r *restHandler) UpdateTraceModel(c *gin.Context, visitor rest.Visitor) {
+func (r *restHandler) UpdateTraceModel(c *gin.Context, visitor hydra.Visitor) {
 	logger.Debug("Handler UpdateTraceModel Start")
 	ctx, span := ar_trace.Tracer.Start(rest.GetLanguageCtx(c),
 		"driver层: 修改链路模型", trace.WithSpanKind(trace.SpanKindServer))
@@ -537,12 +539,12 @@ func (r *restHandler) SimulateUpdateTraceModelByEx(c *gin.Context) {
 func (r *restHandler) SimulateUpdateTraceModelByIn(c *gin.Context) {
 	logger.Debug("Handler SimulateUpdateTraceModelByIn Start")
 
-	visitor := GenerateVisitor(c)
+	visitor := visitor.GenerateVisitor(c)
 	r.SimulateUpdateTraceModel(c, visitor)
 }
 
 // 模拟修改链路模型
-func (r *restHandler) SimulateUpdateTraceModel(c *gin.Context, visitor rest.Visitor) {
+func (r *restHandler) SimulateUpdateTraceModel(c *gin.Context, visitor hydra.Visitor) {
 	logger.Debug("Handler SimulateUpdateTraceModel Start")
 	ctx, span := ar_trace.Tracer.Start(rest.GetLanguageCtx(c),
 		"driver层: 模拟修改链路模型", trace.WithSpanKind(trace.SpanKindServer))
@@ -663,12 +665,12 @@ func (r *restHandler) GetTraceModelsByEx(c *gin.Context) {
 func (r *restHandler) GetTraceModelsByIn(c *gin.Context) {
 	logger.Debug("Handler GetTraceModelsByIn Start")
 
-	visitor := GenerateVisitor(c)
+	visitor := visitor.GenerateVisitor(c)
 	r.GetTraceModels(c, visitor)
 }
 
 // 批量查询/导出链路模型
-func (r *restHandler) GetTraceModels(c *gin.Context, visitor rest.Visitor) {
+func (r *restHandler) GetTraceModels(c *gin.Context, visitor hydra.Visitor) {
 	logger.Debug("Handler GetTraceModels Start")
 	ctx, span := ar_trace.Tracer.Start(rest.GetLanguageCtx(c),
 		"driver层: 批量查询链路模型", trace.WithSpanKind(trace.SpanKindServer))
@@ -728,12 +730,12 @@ func (r *restHandler) ListTraceModelsByEx(c *gin.Context) {
 func (r *restHandler) ListTraceModelsByIn(c *gin.Context) {
 	logger.Debug("Handler ListTraceModelsByIn Start")
 
-	visitor := GenerateVisitor(c)
+	visitor := visitor.GenerateVisitor(c)
 	r.ListTraceModels(c, visitor)
 }
 
 // 查询链路模型列表, 支持按链路模型名称模糊/精准查询
-func (r *restHandler) ListTraceModels(c *gin.Context, visitor rest.Visitor) {
+func (r *restHandler) ListTraceModels(c *gin.Context, visitor hydra.Visitor) {
 	logger.Debug("Handler ListTraceModels Start")
 	ctx, span := ar_trace.Tracer.Start(rest.GetLanguageCtx(c),
 		"driver层: 查询链路模型列表与总数", trace.WithSpanKind(trace.SpanKindServer))
@@ -854,12 +856,12 @@ func (r *restHandler) GetTraceModelFieldInfoByEx(c *gin.Context) {
 func (r *restHandler) GetTraceModelFieldInfoByIn(c *gin.Context) {
 	logger.Debug("Handler GetTraceModelFieldInfoByIn Start")
 
-	visitor := GenerateVisitor(c)
+	visitor := visitor.GenerateVisitor(c)
 	r.GetTraceModelFieldInfo(c, visitor)
 }
 
 // 查询链路模型字段信息
-func (r *restHandler) GetTraceModelFieldInfo(c *gin.Context, visitor rest.Visitor) {
+func (r *restHandler) GetTraceModelFieldInfo(c *gin.Context, visitor hydra.Visitor) {
 	logger.Debug("Handler GetTraceModelFieldInfo Start")
 	ctx, span := ar_trace.Tracer.Start(rest.GetLanguageCtx(c),
 		"driver层: 查询链路模型字段信息", trace.WithSpanKind(trace.SpanKindServer))

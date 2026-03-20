@@ -13,10 +13,10 @@ import (
 
 	"github.com/bytedance/sonic"
 	"github.com/gin-gonic/gin"
-	"go.uber.org/mock/gomock"
 	"github.com/kweaver-ai/kweaver-go-lib/hydra"
 	"github.com/kweaver-ai/kweaver-go-lib/rest"
 	. "github.com/smartystreets/goconvey/convey"
+	"go.uber.org/mock/gomock"
 
 	"bkn-backend/common"
 	berrors "bkn-backend/errors"
@@ -25,7 +25,7 @@ import (
 )
 
 func MockNewObjectTypeRestHandler(appSetting *common.AppSetting,
-	hydra hydra.Hydra,
+	as interfaces.AuthService,
 	ots interfaces.ObjectTypeService,
 	rts interfaces.RelationTypeService,
 	ats interfaces.ActionTypeService,
@@ -33,7 +33,7 @@ func MockNewObjectTypeRestHandler(appSetting *common.AppSetting,
 
 	r = &restHandler{
 		appSetting: appSetting,
-		hydra:      hydra,
+		as:         as,
 		ots:        ots,
 		rts:        rts,
 		ats:        ats,
@@ -54,16 +54,16 @@ func Test_ObjectTypeRestHandler_CreateObjectTypes(t *testing.T) {
 		defer mockCtrl.Finish()
 
 		appSetting := &common.AppSetting{}
-		hydraMock := bmock.NewMockHydra(mockCtrl)
+		as := bmock.NewMockAuthService(mockCtrl)
 		ots := bmock.NewMockObjectTypeService(mockCtrl)
 		rts := bmock.NewMockRelationTypeService(mockCtrl)
 		ats := bmock.NewMockActionTypeService(mockCtrl)
 		kns := bmock.NewMockKNService(mockCtrl)
 
-		handler := MockNewObjectTypeRestHandler(appSetting, hydraMock, ots, rts, ats, kns)
+		handler := MockNewObjectTypeRestHandler(appSetting, as, ots, rts, ats, kns)
 		handler.RegisterPublic(engine)
 
-		hydraMock.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(hydra.Visitor{}, nil)
+		as.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(hydra.Visitor{}, nil)
 
 		knID := "kn1"
 		url := "/api/bkn-backend/v1/knowledge-networks/" + knID + "/object-types"
@@ -212,16 +212,16 @@ func Test_ObjectTypeRestHandler_UpdateObjectType(t *testing.T) {
 		defer mockCtrl.Finish()
 
 		appSetting := &common.AppSetting{}
-		hydraMock := bmock.NewMockHydra(mockCtrl)
+		as := bmock.NewMockAuthService(mockCtrl)
 		ots := bmock.NewMockObjectTypeService(mockCtrl)
 		rts := bmock.NewMockRelationTypeService(mockCtrl)
 		ats := bmock.NewMockActionTypeService(mockCtrl)
 		kns := bmock.NewMockKNService(mockCtrl)
 
-		handler := MockNewObjectTypeRestHandler(appSetting, hydraMock, ots, rts, ats, kns)
+		handler := MockNewObjectTypeRestHandler(appSetting, as, ots, rts, ats, kns)
 		handler.RegisterPublic(engine)
 
-		hydraMock.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(hydra.Visitor{}, nil)
+		as.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(hydra.Visitor{}, nil)
 
 		knID := "kn1"
 		otID := "ot1"
@@ -344,15 +344,16 @@ func Test_ObjectTypeRestHandler_DeleteObjectTypes(t *testing.T) {
 		defer mockCtrl.Finish()
 
 		appSetting := &common.AppSetting{}
-		hydraMock := bmock.NewMockHydra(mockCtrl)
-		ats := bmock.NewMockActionTypeService(mockCtrl)
+		as := bmock.NewMockAuthService(mockCtrl)
 		ots := bmock.NewMockObjectTypeService(mockCtrl)
 		rts := bmock.NewMockRelationTypeService(mockCtrl)
+		ats := bmock.NewMockActionTypeService(mockCtrl)
 		kns := bmock.NewMockKNService(mockCtrl)
-		handler := MockNewObjectTypeRestHandler(appSetting, hydraMock, ots, rts, ats, kns)
+
+		handler := MockNewObjectTypeRestHandler(appSetting, as, ots, rts, ats, kns)
 		handler.RegisterPublic(engine)
 
-		hydraMock.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(hydra.Visitor{}, nil)
+		as.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(hydra.Visitor{}, nil)
 
 		knID := "kn1"
 		otIDs := "ot1,ot2"
@@ -431,16 +432,16 @@ func Test_ObjectTypeRestHandler_UpdateDataProperties(t *testing.T) {
 		defer mockCtrl.Finish()
 
 		appSetting := &common.AppSetting{}
-		hydraMock := bmock.NewMockHydra(mockCtrl)
+		as := bmock.NewMockAuthService(mockCtrl)
 		ots := bmock.NewMockObjectTypeService(mockCtrl)
 		rts := bmock.NewMockRelationTypeService(mockCtrl)
 		ats := bmock.NewMockActionTypeService(mockCtrl)
 		kns := bmock.NewMockKNService(mockCtrl)
 
-		handler := MockNewObjectTypeRestHandler(appSetting, hydraMock, ots, rts, ats, kns)
+		handler := MockNewObjectTypeRestHandler(appSetting, as, ots, rts, ats, kns)
 		handler.RegisterPublic(engine)
 
-		hydraMock.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(hydra.Visitor{}, nil)
+		as.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(hydra.Visitor{}, nil)
 
 		knID := "kn1"
 		otID := "ot1"
@@ -523,16 +524,16 @@ func Test_ObjectTypeRestHandler_ListObjectTypes(t *testing.T) {
 		defer mockCtrl.Finish()
 
 		appSetting := &common.AppSetting{}
-		hydraMock := bmock.NewMockHydra(mockCtrl)
+		as := bmock.NewMockAuthService(mockCtrl)
 		ots := bmock.NewMockObjectTypeService(mockCtrl)
 		rts := bmock.NewMockRelationTypeService(mockCtrl)
 		ats := bmock.NewMockActionTypeService(mockCtrl)
 		kns := bmock.NewMockKNService(mockCtrl)
 
-		handler := MockNewObjectTypeRestHandler(appSetting, hydraMock, ots, rts, ats, kns)
+		handler := MockNewObjectTypeRestHandler(appSetting, as, ots, rts, ats, kns)
 		handler.RegisterPublic(engine)
 
-		hydraMock.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(hydra.Visitor{}, nil)
+		as.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(hydra.Visitor{}, nil)
 
 		knID := "kn1"
 		url := "/api/bkn-backend/v1/knowledge-networks/" + knID + "/object-types"
@@ -604,16 +605,16 @@ func Test_ObjectTypeRestHandler_GetObjectTypes(t *testing.T) {
 		defer mockCtrl.Finish()
 
 		appSetting := &common.AppSetting{}
-		hydraMock := bmock.NewMockHydra(mockCtrl)
+		as := bmock.NewMockAuthService(mockCtrl)
 		ots := bmock.NewMockObjectTypeService(mockCtrl)
 		rts := bmock.NewMockRelationTypeService(mockCtrl)
 		ats := bmock.NewMockActionTypeService(mockCtrl)
 		kns := bmock.NewMockKNService(mockCtrl)
 
-		handler := MockNewObjectTypeRestHandler(appSetting, hydraMock, ots, rts, ats, kns)
+		handler := MockNewObjectTypeRestHandler(appSetting, as, ots, rts, ats, kns)
 		handler.RegisterPublic(engine)
 
-		hydraMock.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(hydra.Visitor{}, nil)
+		as.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(hydra.Visitor{}, nil)
 
 		knID := "kn1"
 		otIDs := "ot1,ot2"
@@ -700,16 +701,16 @@ func Test_ObjectTypeRestHandler_SearchObjectTypes(t *testing.T) {
 		defer mockCtrl.Finish()
 
 		appSetting := &common.AppSetting{}
-		hydraMock := bmock.NewMockHydra(mockCtrl)
+		as := bmock.NewMockAuthService(mockCtrl)
 		ots := bmock.NewMockObjectTypeService(mockCtrl)
 		rts := bmock.NewMockRelationTypeService(mockCtrl)
 		ats := bmock.NewMockActionTypeService(mockCtrl)
 		kns := bmock.NewMockKNService(mockCtrl)
 
-		handler := MockNewObjectTypeRestHandler(appSetting, hydraMock, ots, rts, ats, kns)
+		handler := MockNewObjectTypeRestHandler(appSetting, as, ots, rts, ats, kns)
 		handler.RegisterPublic(engine)
 
-		hydraMock.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(hydra.Visitor{}, nil)
+		as.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(hydra.Visitor{}, nil)
 
 		knID := "kn1"
 		url := "/api/bkn-backend/v1/knowledge-networks/" + knID + "/object-types"

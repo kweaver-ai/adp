@@ -101,6 +101,8 @@ spec:
           {{- end }}
           - name: AES_KEY
             value: {{ .Values.config.aesKey | quote }}
+          - name: AUTH_ENABLED
+            value: {{ .Values.auth.enabled | quote }}
           - name: DM_SVC_PATH
             value: /opt/data-model/config
         resources: {{- toYaml .Values.resources | nindent 10 }}

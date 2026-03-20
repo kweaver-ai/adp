@@ -31,6 +31,7 @@ import (
 	"bkn-backend/interfaces"
 	"bkn-backend/logics"
 	"bkn-backend/logics/permission"
+	"bkn-backend/logics/user_mgmt"
 )
 
 var (
@@ -46,8 +47,8 @@ type objectTypeService struct {
 	dva        interfaces.DataViewAccess
 	mfa        interfaces.ModelFactoryAccess
 	ota        interfaces.ObjectTypeAccess
-	uma        interfaces.UserMgmtAccess
 	ps         interfaces.PermissionService
+	ums        interfaces.UserMgmtService
 	vba        interfaces.VegaBackendAccess
 }
 
@@ -61,8 +62,8 @@ func NewObjectTypeService(appSetting *common.AppSetting) interfaces.ObjectTypeSe
 			dva:        logics.DVA,
 			mfa:        logics.MFA,
 			ota:        logics.OTA,
-			uma:        logics.UMA,
 			ps:         permission.NewPermissionService(appSetting),
+			ums:        user_mgmt.NewUserMgmtService(appSetting),
 			vba:        logics.VBA,
 		}
 	})
@@ -353,7 +354,7 @@ func (ots *objectTypeService) ListObjectTypes(ctx context.Context, tx *sql.Tx,
 		accountInfos = append(accountInfos, &objectType.Creator, &objectType.Updater)
 	}
 
-	err = ots.uma.GetAccountNames(ctx, accountInfos)
+	err = ots.ums.GetAccountNames(ctx, accountInfos)
 	if err != nil {
 		span.SetStatus(codes.Error, "GetAccountNames error")
 

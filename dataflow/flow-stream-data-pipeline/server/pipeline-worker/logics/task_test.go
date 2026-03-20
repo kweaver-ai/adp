@@ -19,7 +19,7 @@ import (
 	"flow-stream-data-pipeline/common"
 	access "flow-stream-data-pipeline/pipeline-worker/drivenadapters"
 	"flow-stream-data-pipeline/pipeline-worker/interfaces"
-	dmock "flow-stream-data-pipeline/pipeline-worker/interfaces/mock"
+	fmock "flow-stream-data-pipeline/pipeline-worker/interfaces/mock"
 )
 
 func NewTestTask(mockCtl *gomock.Controller, mqMock interfaces.MQAccess,
@@ -58,8 +58,8 @@ func TestTask_Run(t *testing.T) {
 		mockCtl := gomock.NewController(t)
 		defer mockCtl.Finish()
 
-		mqMock := dmock.NewMockMQAccess(mockCtl)
-		osaMock := dmock.NewMockOpenSearchAccess(mockCtl)
+		mqMock := fmock.NewMockMQAccess(mockCtl)
+		osaMock := fmock.NewMockOpenSearchAccess(mockCtl)
 		taskTest := NewTestTask(mockCtl, mqMock, osaMock)
 
 		Convey("Execute failed", func() {
@@ -85,8 +85,8 @@ func TestTask_Stop(t *testing.T) {
 		mockCtl := gomock.NewController(t)
 		defer mockCtl.Finish()
 
-		mqMock := dmock.NewMockMQAccess(mockCtl)
-		osaMock := dmock.NewMockOpenSearchAccess(mockCtl)
+		mqMock := fmock.NewMockMQAccess(mockCtl)
+		osaMock := fmock.NewMockOpenSearchAccess(mockCtl)
 		taskTest := NewTestTask(mockCtl, mqMock, osaMock)
 
 		Convey("task is stopped", func() {
@@ -118,8 +118,8 @@ func TestTask_Execute(t *testing.T) {
 		mockCtl := gomock.NewController(t)
 		defer mockCtl.Finish()
 
-		mqMock := dmock.NewMockMQAccess(mockCtl)
-		osaMock := dmock.NewMockOpenSearchAccess(mockCtl)
+		mqMock := fmock.NewMockMQAccess(mockCtl)
+		osaMock := fmock.NewMockOpenSearchAccess(mockCtl)
 		taskTest := NewTestTask(mockCtl, mqMock, osaMock)
 
 		c, _ := kafka.NewConsumer(&kafka.ConfigMap{})
@@ -355,8 +355,8 @@ func TestTask_PackagingMessages(t *testing.T) {
 		mockCtl := gomock.NewController(t)
 		defer mockCtl.Finish()
 
-		mqMock := dmock.NewMockMQAccess(mockCtl)
-		osaMock := dmock.NewMockOpenSearchAccess(mockCtl)
+		mqMock := fmock.NewMockMQAccess(mockCtl)
+		osaMock := fmock.NewMockOpenSearchAccess(mockCtl)
 		taskTest := NewTestTask(mockCtl, mqMock, osaMock)
 
 		indexer := &access.BulkIndexer{
@@ -457,8 +457,8 @@ func TestTask_PackagingOSMessage(t *testing.T) {
 		mockCtl := gomock.NewController(t)
 		defer mockCtl.Finish()
 
-		mqMock := dmock.NewMockMQAccess(mockCtl)
-		osaMock := dmock.NewMockOpenSearchAccess(mockCtl)
+		mqMock := fmock.NewMockMQAccess(mockCtl)
+		osaMock := fmock.NewMockOpenSearchAccess(mockCtl)
 		taskTest := NewTestTask(mockCtl, mqMock, osaMock)
 
 		Convey("json format error", func() {
@@ -512,8 +512,8 @@ func TestTask_ProcessMetricMessageRouting(t *testing.T) {
 		mockCtl := gomock.NewController(t)
 		defer mockCtl.Finish()
 
-		mqMock := dmock.NewMockMQAccess(mockCtl)
-		osaMock := dmock.NewMockOpenSearchAccess(mockCtl)
+		mqMock := fmock.NewMockMQAccess(mockCtl)
+		osaMock := fmock.NewMockOpenSearchAccess(mockCtl)
 		taskTest := NewTestTask(mockCtl, mqMock, osaMock)
 
 		Convey("@timestamp format error", func() {
@@ -557,8 +557,8 @@ func TestTask_ProcessMetricMessageLabelsStr(t *testing.T) {
 		mockCtl := gomock.NewController(t)
 		defer mockCtl.Finish()
 
-		mqMock := dmock.NewMockMQAccess(mockCtl)
-		osaMock := dmock.NewMockOpenSearchAccess(mockCtl)
+		mqMock := fmock.NewMockMQAccess(mockCtl)
+		osaMock := fmock.NewMockOpenSearchAccess(mockCtl)
 		taskTest := NewTestTask(mockCtl, mqMock, osaMock)
 
 		Convey("labels does not exist and prometheus does not exist", func() {
@@ -677,8 +677,8 @@ func TestTask_ProcessMetricMessage(t *testing.T) {
 		mockCtl := gomock.NewController(t)
 		defer mockCtl.Finish()
 
-		mqMock := dmock.NewMockMQAccess(mockCtl)
-		osaMock := dmock.NewMockOpenSearchAccess(mockCtl)
+		mqMock := fmock.NewMockMQAccess(mockCtl)
+		osaMock := fmock.NewMockOpenSearchAccess(mockCtl)
 		taskTest := NewTestTask(mockCtl, mqMock, osaMock)
 
 		Convey("success", func() {
@@ -712,8 +712,8 @@ func TestTask_PackagingItem(t *testing.T) {
 		mockCtl := gomock.NewController(t)
 		defer mockCtl.Finish()
 
-		mqMock := dmock.NewMockMQAccess(mockCtl)
-		osaMock := dmock.NewMockOpenSearchAccess(mockCtl)
+		mqMock := fmock.NewMockMQAccess(mockCtl)
+		osaMock := fmock.NewMockOpenSearchAccess(mockCtl)
 		taskTest := NewTestTask(mockCtl, mqMock, osaMock)
 
 		indexer := &access.BulkIndexer{
@@ -748,8 +748,8 @@ func TestTask_FlushMessages(t *testing.T) {
 		mockCtl := gomock.NewController(t)
 		defer mockCtl.Finish()
 
-		mqMock := dmock.NewMockMQAccess(mockCtl)
-		osaMock := dmock.NewMockOpenSearchAccess(mockCtl)
+		mqMock := fmock.NewMockMQAccess(mockCtl)
+		osaMock := fmock.NewMockOpenSearchAccess(mockCtl)
 		taskTest := NewTestTask(mockCtl, mqMock, osaMock)
 
 		kp := &interfaces.KafkaProducer{}

@@ -14,15 +14,15 @@ import (
 
 	"github.com/bytedance/sonic"
 	"github.com/gin-gonic/gin"
-	"go.uber.org/mock/gomock"
+	"github.com/kweaver-ai/kweaver-go-lib/hydra"
 	"github.com/kweaver-ai/kweaver-go-lib/rest"
-	rmock "ontology-query/interfaces/mock"
 	. "github.com/smartystreets/goconvey/convey"
+	"go.uber.org/mock/gomock"
 
 	"ontology-query/common"
 	oerrors "ontology-query/errors"
 	"ontology-query/interfaces"
-	dmock "ontology-query/interfaces/mock"
+	omock "ontology-query/interfaces/mock"
 )
 
 func Test_RestHandler_GetObjectsSubgraphByIn(t *testing.T) {
@@ -37,12 +37,12 @@ func Test_RestHandler_GetObjectsSubgraphByIn(t *testing.T) {
 		defer mockCtrl.Finish()
 
 		appSetting := &common.AppSetting{}
-		hydra := rmock.NewMockHydra(mockCtrl)
-		ats := dmock.NewMockActionTypeService(mockCtrl)
-		kns := dmock.NewMockKnowledgeNetworkService(mockCtrl)
-		ots := dmock.NewMockObjectTypeService(mockCtrl)
+		as := omock.NewMockAuthService(mockCtrl)
+		ats := omock.NewMockActionTypeService(mockCtrl)
+		kns := omock.NewMockKnowledgeNetworkService(mockCtrl)
+		ots := omock.NewMockObjectTypeService(mockCtrl)
 
-		handler := MockNewRestHandler(appSetting, hydra, ats, kns, ots)
+		handler := MockNewRestHandler(appSetting, as, ats, kns, ots)
 		handler.RegisterPublic(engine)
 
 		knID := "kn1"
@@ -135,12 +135,12 @@ func Test_RestHandler_GetObjectsSubgraphByEx(t *testing.T) {
 		defer mockCtrl.Finish()
 
 		appSetting := &common.AppSetting{}
-		hydra := rmock.NewMockHydra(mockCtrl)
-		ats := dmock.NewMockActionTypeService(mockCtrl)
-		kns := dmock.NewMockKnowledgeNetworkService(mockCtrl)
-		ots := dmock.NewMockObjectTypeService(mockCtrl)
+		as := omock.NewMockAuthService(mockCtrl)
+		ats := omock.NewMockActionTypeService(mockCtrl)
+		kns := omock.NewMockKnowledgeNetworkService(mockCtrl)
+		ots := omock.NewMockObjectTypeService(mockCtrl)
 
-		handler := MockNewRestHandler(appSetting, hydra, ats, kns, ots)
+		handler := MockNewRestHandler(appSetting, as, ats, kns, ots)
 		handler.RegisterPublic(engine)
 
 		knID := "kn1"
@@ -156,11 +156,11 @@ func Test_RestHandler_GetObjectsSubgraphByEx(t *testing.T) {
 		}
 
 		Convey("成功 - Token验证通过，获取子图", func() {
-			visitor := rest.Visitor{
+			visitor := hydra.Visitor{
 				ID:   "user1",
-				Type: rest.VisitorType_User,
+				Type: hydra.VisitorType_User,
 			}
-			hydra.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).Return(visitor, nil)
+			as.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).Return(visitor, nil)
 			kns.EXPECT().SearchSubgraph(gomock.Any(), gomock.Any()).Return(interfaces.ObjectSubGraph{
 				Objects:    map[string]interfaces.ObjectInfoInSubgraph{},
 				TotalCount: 0,
@@ -177,7 +177,7 @@ func Test_RestHandler_GetObjectsSubgraphByEx(t *testing.T) {
 		})
 
 		Convey("失败 - Token验证失败", func() {
-			hydra.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).Return(rest.Visitor{}, rest.NewHTTPError(context.TODO(), http.StatusUnauthorized, rest.PublicError_Unauthorized))
+			as.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).Return(hydra.Visitor{}, rest.NewHTTPError(context.TODO(), http.StatusUnauthorized, rest.PublicError_Unauthorized))
 
 			reqParamByte, _ := sonic.Marshal(subgraphQuery)
 			req := httptest.NewRequest(http.MethodPost, url, bytes.NewReader(reqParamByte))
@@ -202,12 +202,12 @@ func Test_RestHandler_GetObjectsSubgraph(t *testing.T) {
 		defer mockCtrl.Finish()
 
 		appSetting := &common.AppSetting{}
-		hydra := rmock.NewMockHydra(mockCtrl)
-		ats := dmock.NewMockActionTypeService(mockCtrl)
-		kns := dmock.NewMockKnowledgeNetworkService(mockCtrl)
-		ots := dmock.NewMockObjectTypeService(mockCtrl)
+		as := omock.NewMockAuthService(mockCtrl)
+		ats := omock.NewMockActionTypeService(mockCtrl)
+		kns := omock.NewMockKnowledgeNetworkService(mockCtrl)
+		ots := omock.NewMockObjectTypeService(mockCtrl)
 
-		handler := MockNewRestHandler(appSetting, hydra, ats, kns, ots)
+		handler := MockNewRestHandler(appSetting, as, ats, kns, ots)
 
 		knID := "kn1"
 		url := "/api/ontology-query/v1/knowledge-networks/" + knID + "/subgraph"
@@ -238,9 +238,9 @@ func Test_RestHandler_GetObjectsSubgraph(t *testing.T) {
 				{Key: "kn_id", Value: knID},
 			}
 
-			visitor := rest.Visitor{
+			visitor := hydra.Visitor{
 				ID:   "user1",
-				Type: rest.VisitorType_User,
+				Type: hydra.VisitorType_User,
 			}
 			handler.GetObjectsSubgraph(c, visitor)
 
@@ -258,9 +258,9 @@ func Test_RestHandler_GetObjectsSubgraph(t *testing.T) {
 				{Key: "kn_id", Value: knID},
 			}
 
-			visitor := rest.Visitor{
+			visitor := hydra.Visitor{
 				ID:   "user1",
-				Type: rest.VisitorType_User,
+				Type: hydra.VisitorType_User,
 			}
 			handler.GetObjectsSubgraph(c, visitor)
 
@@ -284,9 +284,9 @@ func Test_RestHandler_GetObjectsSubgraph(t *testing.T) {
 				{Key: "kn_id", Value: knID},
 			}
 
-			visitor := rest.Visitor{
+			visitor := hydra.Visitor{
 				ID:   "user1",
-				Type: rest.VisitorType_User,
+				Type: hydra.VisitorType_User,
 			}
 			handler.GetObjectsSubgraph(c, visitor)
 
@@ -307,9 +307,9 @@ func Test_RestHandler_GetObjectsSubgraph(t *testing.T) {
 				{Key: "kn_id", Value: knID},
 			}
 
-			visitor := rest.Visitor{
+			visitor := hydra.Visitor{
 				ID:   "user1",
-				Type: rest.VisitorType_User,
+				Type: hydra.VisitorType_User,
 			}
 			handler.GetObjectsSubgraph(c, visitor)
 
@@ -330,12 +330,12 @@ func Test_RestHandler_GetObjectsSubgraphByTypePath(t *testing.T) {
 		defer mockCtrl.Finish()
 
 		appSetting := &common.AppSetting{}
-		hydra := rmock.NewMockHydra(mockCtrl)
-		ats := dmock.NewMockActionTypeService(mockCtrl)
-		kns := dmock.NewMockKnowledgeNetworkService(mockCtrl)
-		ots := dmock.NewMockObjectTypeService(mockCtrl)
+		as := omock.NewMockAuthService(mockCtrl)
+		ats := omock.NewMockActionTypeService(mockCtrl)
+		kns := omock.NewMockKnowledgeNetworkService(mockCtrl)
+		ots := omock.NewMockObjectTypeService(mockCtrl)
 
-		handler := MockNewRestHandler(appSetting, hydra, ats, kns, ots)
+		handler := MockNewRestHandler(appSetting, as, ats, kns, ots)
 
 		knID := "kn1"
 		url := "/api/ontology-query/v1/knowledge-networks/" + knID + "/subgraph"
@@ -374,9 +374,9 @@ func Test_RestHandler_GetObjectsSubgraphByTypePath(t *testing.T) {
 				{Key: "kn_id", Value: knID},
 			}
 
-			visitor := rest.Visitor{
+			visitor := hydra.Visitor{
 				ID:   "user1",
-				Type: rest.VisitorType_User,
+				Type: hydra.VisitorType_User,
 			}
 			handler.GetObjectsSubgraphByTypePath(c, visitor)
 
@@ -409,9 +409,9 @@ func Test_RestHandler_GetObjectsSubgraphByTypePath(t *testing.T) {
 				{Key: "kn_id", Value: knID},
 			}
 
-			visitor := rest.Visitor{
+			visitor := hydra.Visitor{
 				ID:   "user1",
-				Type: rest.VisitorType_User,
+				Type: hydra.VisitorType_User,
 			}
 			handler.GetObjectsSubgraphByTypePath(c, visitor)
 
@@ -432,9 +432,9 @@ func Test_RestHandler_GetObjectsSubgraphByTypePath(t *testing.T) {
 				{Key: "kn_id", Value: knID},
 			}
 
-			visitor := rest.Visitor{
+			visitor := hydra.Visitor{
 				ID:   "user1",
-				Type: rest.VisitorType_User,
+				Type: hydra.VisitorType_User,
 			}
 			handler.GetObjectsSubgraphByTypePath(c, visitor)
 

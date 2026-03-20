@@ -22,6 +22,7 @@ import (
 	"go.opentelemetry.io/otel/trace"
 
 	"bkn-backend/common"
+	"bkn-backend/common/visitor"
 	berrors "bkn-backend/errors"
 	"bkn-backend/interfaces"
 )
@@ -57,7 +58,7 @@ func (r *restHandler) CreateRelationTypesByIn(c *gin.Context) {
 	logger.Debug("Handler CreateRelationTypesByIn Start")
 	// 内部接口 user_id从header中取，跳过用户有效认证，后面在权限校验时就会校验这个用户是否有权限，无效用户无权限
 	// 自行构建一个visitor
-	visitor := GenerateVisitor(c)
+	visitor := visitor.GenerateVisitor(c)
 	r.CreateRelationTypes(c, visitor)
 }
 
@@ -203,7 +204,7 @@ func (r *restHandler) UpdateRelationTypeByIn(c *gin.Context) {
 	logger.Debug("Handler UpdateRelationTypeByIn Start")
 	// 内部接口 user_id从header中取，跳过用户有效认证，后面在权限校验时就会校验这个用户是否有权限，无效用户无权限
 	// 自行构建一个visitor
-	visitor := GenerateVisitor(c)
+	visitor := visitor.GenerateVisitor(c)
 	r.UpdateRelationType(c, visitor)
 }
 
@@ -481,7 +482,7 @@ func (r *restHandler) ListRelationTypesByIn(c *gin.Context) {
 	logger.Debug("Handler ListRelationTypesByIn Start")
 	// 内部接口 user_id从header中取，跳过用户有效认证，后面在权限校验时就会校验这个用户是否有权限，无效用户无权限
 	// 自行构建一个visitor
-	visitor := GenerateVisitor(c)
+	visitor := visitor.GenerateVisitor(c)
 	r.ListRelationTypes(c, visitor)
 }
 
@@ -631,7 +632,7 @@ func (r *restHandler) GetRelationTypesByIn(c *gin.Context) {
 	logger.Debug("Handler GetRelationTypesByIn Start")
 	// 内部接口 user_id从header中取，跳过用户有效认证，后面在权限校验时就会校验这个用户是否有权限，无效用户无权限
 	// 自行构建一个visitor
-	visitor := GenerateVisitor(c)
+	visitor := visitor.GenerateVisitor(c)
 	r.GetRelationTypes(c, visitor)
 }
 
@@ -723,7 +724,7 @@ func (r *restHandler) SearchRelationTypesByIn(c *gin.Context) {
 	logger.Debug("Handler SearchRelationTypesByIn Start")
 	// 内部接口 user_id从header中取，跳过用户有效认证，后面在权限校验时就会校验这个用户是否有权限，无效用户无权限
 	// 自行构建一个visitor
-	visitor := GenerateVisitor(c)
+	visitor := visitor.GenerateVisitor(c)
 	r.SearchRelationTypes(c, visitor)
 }
 

@@ -12,9 +12,9 @@ import (
 	"testing"
 
 	"github.com/DATA-DOG/go-sqlmock"
-	"go.uber.org/mock/gomock"
 	"github.com/kweaver-ai/kweaver-go-lib/rest"
 	. "github.com/smartystreets/goconvey/convey"
+	"go.uber.org/mock/gomock"
 
 	"bkn-backend/common"
 	berrors "bkn-backend/errors"
@@ -33,7 +33,7 @@ func Test_jobService_CreateJob(t *testing.T) {
 		je := bmock.NewMockJobExecutor(mockCtrl)
 		ps := bmock.NewMockPermissionService(mockCtrl)
 		ots := bmock.NewMockObjectTypeService(mockCtrl)
-		uma := bmock.NewMockUserMgmtAccess(mockCtrl)
+		ums := bmock.NewMockUserMgmtService(mockCtrl)
 		db, smock, _ := sqlmock.New(sqlmock.QueryMatcherOption(sqlmock.QueryMatcherEqual))
 
 		service := &jobService{
@@ -43,7 +43,7 @@ func Test_jobService_CreateJob(t *testing.T) {
 			je:         je,
 			ps:         ps,
 			ots:        ots,
-			uma:        uma,
+			ums:        ums,
 		}
 
 		Convey("Success creating job without JobConceptConfig, auto-generate from object types\n", func() {
@@ -522,7 +522,7 @@ func Test_jobService_ListJobs(t *testing.T) {
 		appSetting := &common.AppSetting{}
 		ja := bmock.NewMockJobAccess(mockCtrl)
 		ps := bmock.NewMockPermissionService(mockCtrl)
-		uma := bmock.NewMockUserMgmtAccess(mockCtrl)
+		ums := bmock.NewMockUserMgmtService(mockCtrl)
 		db, _, _ := sqlmock.New(sqlmock.QueryMatcherOption(sqlmock.QueryMatcherEqual))
 
 		service := &jobService{
@@ -530,7 +530,7 @@ func Test_jobService_ListJobs(t *testing.T) {
 			db:         db,
 			ja:         ja,
 			ps:         ps,
-			uma:        uma,
+			ums:        ums,
 		}
 
 		Convey("Success listing jobs\n", func() {
@@ -558,7 +558,7 @@ func Test_jobService_ListJobs(t *testing.T) {
 			ps.EXPECT().CheckPermission(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
 			ja.EXPECT().ListJobs(gomock.Any(), gomock.Any()).Return(jobs, nil)
 			ja.EXPECT().GetJobsTotal(gomock.Any(), gomock.Any()).Return(total, nil)
-			uma.EXPECT().GetAccountNames(gomock.Any(), accountInfos).Return(nil)
+			ums.EXPECT().GetAccountNames(gomock.Any(), accountInfos).Return(nil)
 
 			result, resultTotal, err := service.ListJobs(ctx, queryParams)
 			So(err, ShouldBeNil)
@@ -641,7 +641,7 @@ func Test_jobService_ListJobs(t *testing.T) {
 			ps.EXPECT().CheckPermission(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
 			ja.EXPECT().ListJobs(gomock.Any(), gomock.Any()).Return(jobs, nil)
 			ja.EXPECT().GetJobsTotal(gomock.Any(), gomock.Any()).Return(total, nil)
-			uma.EXPECT().GetAccountNames(gomock.Any(), accountInfos).Return(errors.New("get account names error"))
+			ums.EXPECT().GetAccountNames(gomock.Any(), accountInfos).Return(errors.New("get account names error"))
 
 			result, resultTotal, err := service.ListJobs(ctx, queryParams)
 			So(err, ShouldNotBeNil)

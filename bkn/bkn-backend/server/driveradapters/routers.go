@@ -24,12 +24,14 @@ import (
 	"bkn-backend/interfaces"
 	"bkn-backend/logics/action_schedule"
 	"bkn-backend/logics/action_type"
+	"bkn-backend/logics/auth"
 	"bkn-backend/logics/bkn"
 	"bkn-backend/logics/concept_group"
 	"bkn-backend/logics/job"
 	"bkn-backend/logics/knowledge_network"
 	"bkn-backend/logics/object_type"
 	"bkn-backend/logics/relation_type"
+
 	"bkn-backend/version"
 )
 
@@ -39,7 +41,7 @@ type RestHandler interface {
 
 type restHandler struct {
 	appSetting *common.AppSetting
-	hydra      hydra.Hydra
+	as         interfaces.AuthService
 	ass        interfaces.ActionScheduleService
 	ats        interfaces.ActionTypeService
 	cgs        interfaces.ConceptGroupService
@@ -53,7 +55,7 @@ type restHandler struct {
 func NewRestHandler(appSetting *common.AppSetting) RestHandler {
 	r := &restHandler{
 		appSetting: appSetting,
-		hydra:      hydra.NewHydra(appSetting.HydraAdminSetting),
+		as:         auth.NewAuthService(appSetting),
 		ass:        action_schedule.NewActionScheduleService(appSetting),
 		ats:        action_type.NewActionTypeService(appSetting),
 		cgs:        concept_group.NewConceptGroupService(appSetting),
@@ -243,7 +245,7 @@ func (r *restHandler) AccessLog() gin.HandlerFunc {
 
 // 校验oauth
 func (r *restHandler) verifyOAuth(ctx context.Context, c *gin.Context) (hydra.Visitor, error) {
-	visitor, err := r.hydra.VerifyToken(ctx, c)
+	visitor, err := r.as.VerifyToken(ctx, c)
 	if err != nil {
 		httpErr := rest.NewHTTPError(ctx, http.StatusUnauthorized, rest.PublicError_Unauthorized).
 			WithErrorDetails(err.Error())
@@ -252,23 +254,4 @@ func (r *restHandler) verifyOAuth(ctx context.Context, c *gin.Context) (hydra.Vi
 	}
 
 	return visitor, nil
-}
-
-func GenerateVisitor(c *gin.Context) hydra.Visitor {
-
-	accountInfo := interfaces.AccountInfo{
-		ID:   c.GetHeader(interfaces.HTTP_HEADER_ACCOUNT_ID),
-		Type: c.GetHeader(interfaces.HTTP_HEADER_ACCOUNT_TYPE),
-	}
-
-	visitor := hydra.Visitor{
-		ID:         accountInfo.ID,
-		Type:       hydra.VisitorType(accountInfo.Type),
-		TokenID:    "", // 无token
-		IP:         c.ClientIP(),
-		Mac:        c.GetHeader("X-Request-MAC"),
-		UserAgent:  c.GetHeader("User-Agent"),
-		ClientType: hydra.ClientType_Linux,
-	}
-	return visitor
 }

@@ -13,6 +13,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/kweaver-ai/TelemetrySDK-Go/exporter/v2/ar_trace"
+	"github.com/kweaver-ai/kweaver-go-lib/hydra"
 	"github.com/kweaver-ai/kweaver-go-lib/logger"
 	o11y "github.com/kweaver-ai/kweaver-go-lib/observability"
 	"github.com/kweaver-ai/kweaver-go-lib/rest"
@@ -20,6 +21,7 @@ import (
 	"go.opentelemetry.io/otel/metric"
 	"go.opentelemetry.io/otel/trace"
 
+	"uniquery/common/visitor"
 	uerrors "uniquery/errors"
 	"uniquery/interfaces"
 )
@@ -30,7 +32,7 @@ func (r *restHandler) ObjectiveSimulateByIn(c *gin.Context) {
 	// 内部接口 user_id从header中取，跳过用户有效认证，后面在权限校验时就会校验这个用户是否有权限，无效用户无权限
 	// 自行构建一个visitor
 
-	visitor := GenerateVisitor(c)
+	visitor := visitor.GenerateVisitor(c)
 	r.ObjectiveSimulate(c, visitor)
 }
 
@@ -50,7 +52,7 @@ func (r *restHandler) ObjectiveSimulateByEx(c *gin.Context) {
 }
 
 // 基于目标模型的指标数据预览，默认查询最近半小时的数据，步长5分钟
-func (r *restHandler) ObjectiveSimulate(c *gin.Context, visitor rest.Visitor) {
+func (r *restHandler) ObjectiveSimulate(c *gin.Context, visitor hydra.Visitor) {
 	logger.Debug("Handler ObjectiveModel Start")
 	startTime := time.Now()
 
@@ -156,7 +158,7 @@ func (r *restHandler) GetObjectiveModelDataByIn(c *gin.Context) {
 	// 内部接口 user_id从header中取，跳过用户有效认证，后面在权限校验时就会校验这个用户是否有权限，无效用户无权限
 	// 自行构建一个visitor
 
-	visitor := GenerateVisitor(c)
+	visitor := visitor.GenerateVisitor(c)
 	r.GetObjectiveModelData(c, visitor)
 }
 
@@ -176,7 +178,7 @@ func (r *restHandler) GetObjectiveModelDataByEx(c *gin.Context) {
 }
 
 // 基于目标模型的指标数据查询
-func (r *restHandler) GetObjectiveModelData(c *gin.Context, visitor rest.Visitor) {
+func (r *restHandler) GetObjectiveModelData(c *gin.Context, visitor hydra.Visitor) {
 	logger.Debug("Handler GetObjectiveModelData Start")
 	startTime := time.Now()
 

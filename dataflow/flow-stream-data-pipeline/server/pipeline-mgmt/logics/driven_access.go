@@ -7,6 +7,7 @@ var (
 	MQAccess interfaces.MQAccess
 	PMAccess interfaces.PipelineMgmtAccess
 	PA       interfaces.PermissionAccess
+	AA       interfaces.AuthAccess
 )
 
 func SetIndexBaseAccess(ibAccess interfaces.IndexBaseAccess) {
@@ -23,4 +24,8 @@ func SetPipelineMgmtAccess(pmAccess interfaces.PipelineMgmtAccess) {
 
 func SetPermissionAccess(pa interfaces.PermissionAccess) {
 	PA = pa
+}
+
+func SetAuthAccess(aa interfaces.AuthAccess) {
+	AA = aa
 }

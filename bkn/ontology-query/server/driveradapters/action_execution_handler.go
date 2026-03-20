@@ -14,12 +14,14 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/kweaver-ai/TelemetrySDK-Go/exporter/v2/ar_trace"
+	"github.com/kweaver-ai/kweaver-go-lib/hydra"
 	"github.com/kweaver-ai/kweaver-go-lib/logger"
 	o11y "github.com/kweaver-ai/kweaver-go-lib/observability"
 	"github.com/kweaver-ai/kweaver-go-lib/rest"
 	attr "go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/trace"
 
+	"ontology-query/common/visitor"
 	oerrors "ontology-query/errors"
 	"ontology-query/interfaces"
 )
@@ -27,7 +29,7 @@ import (
 // ExecuteActionByIn handles action execution request (internal)
 func (r *restHandler) ExecuteActionByIn(c *gin.Context) {
 	logger.Debug("Handler ExecuteActionByIn Start")
-	visitor := GenerateVisitor(c)
+	visitor := visitor.GenerateVisitor(c)
 	r.ExecuteAction(c, visitor)
 }
 
@@ -46,7 +48,7 @@ func (r *restHandler) ExecuteActionByEx(c *gin.Context) {
 }
 
 // ExecuteAction handles the action execution request
-func (r *restHandler) ExecuteAction(c *gin.Context, visitor rest.Visitor) {
+func (r *restHandler) ExecuteAction(c *gin.Context, visitor hydra.Visitor) {
 	logger.Debug("Handler ExecuteAction Start")
 	startTime := time.Now()
 
@@ -119,7 +121,7 @@ func (r *restHandler) ExecuteAction(c *gin.Context, visitor rest.Visitor) {
 // GetActionExecutionByIn handles get execution status request (internal)
 func (r *restHandler) GetActionExecutionByIn(c *gin.Context) {
 	logger.Debug("Handler GetActionExecutionByIn Start")
-	visitor := GenerateVisitor(c)
+	visitor := visitor.GenerateVisitor(c)
 	r.GetActionExecution(c, visitor)
 }
 
@@ -138,7 +140,7 @@ func (r *restHandler) GetActionExecutionByEx(c *gin.Context) {
 }
 
 // GetActionExecution handles the get execution status request
-func (r *restHandler) GetActionExecution(c *gin.Context, visitor rest.Visitor) {
+func (r *restHandler) GetActionExecution(c *gin.Context, visitor hydra.Visitor) {
 	logger.Debug("Handler GetActionExecution Start")
 	startTime := time.Now()
 
@@ -185,7 +187,7 @@ func (r *restHandler) GetActionExecution(c *gin.Context, visitor rest.Visitor) {
 // QueryActionLogsByIn handles query action logs request (internal)
 func (r *restHandler) QueryActionLogsByIn(c *gin.Context) {
 	logger.Debug("Handler QueryActionLogsByIn Start")
-	visitor := GenerateVisitor(c)
+	visitor := visitor.GenerateVisitor(c)
 	r.QueryActionLogs(c, visitor)
 }
 
@@ -204,7 +206,7 @@ func (r *restHandler) QueryActionLogsByEx(c *gin.Context) {
 }
 
 // QueryActionLogs handles the query action logs request (GET with query parameters)
-func (r *restHandler) QueryActionLogs(c *gin.Context, visitor rest.Visitor) {
+func (r *restHandler) QueryActionLogs(c *gin.Context, visitor hydra.Visitor) {
 	logger.Debug("Handler QueryActionLogs Start")
 	startTime := time.Now()
 
@@ -284,7 +286,7 @@ func (r *restHandler) QueryActionLogs(c *gin.Context, visitor rest.Visitor) {
 // GetActionLogByIn handles get single action log request (internal)
 func (r *restHandler) GetActionLogByIn(c *gin.Context) {
 	logger.Debug("Handler GetActionLogByIn Start")
-	visitor := GenerateVisitor(c)
+	visitor := visitor.GenerateVisitor(c)
 	r.GetActionLog(c, visitor)
 }
 
@@ -303,7 +305,7 @@ func (r *restHandler) GetActionLogByEx(c *gin.Context) {
 }
 
 // GetActionLog handles the get single action log request
-func (r *restHandler) GetActionLog(c *gin.Context, visitor rest.Visitor) {
+func (r *restHandler) GetActionLog(c *gin.Context, visitor hydra.Visitor) {
 	logger.Debug("Handler GetActionLog Start")
 	startTime := time.Now()
 
@@ -376,7 +378,7 @@ func (r *restHandler) GetActionLog(c *gin.Context, visitor rest.Visitor) {
 // CancelActionLogByIn handles cancel action execution request (internal)
 func (r *restHandler) CancelActionLogByIn(c *gin.Context) {
 	logger.Debug("Handler CancelActionLogByIn Start")
-	visitor := GenerateVisitor(c)
+	visitor := visitor.GenerateVisitor(c)
 	r.CancelActionLog(c, visitor)
 }
 
@@ -395,7 +397,7 @@ func (r *restHandler) CancelActionLogByEx(c *gin.Context) {
 }
 
 // CancelActionLog handles the cancel action execution request
-func (r *restHandler) CancelActionLog(c *gin.Context, visitor rest.Visitor) {
+func (r *restHandler) CancelActionLog(c *gin.Context, visitor hydra.Visitor) {
 	logger.Debug("Handler CancelActionLog Start")
 	startTime := time.Now()
 

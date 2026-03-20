@@ -20,7 +20,7 @@ import (
 	cond "ontology-query/common/condition"
 	oerrors "ontology-query/errors"
 	"ontology-query/interfaces"
-	dmock "ontology-query/interfaces/mock"
+	omock "ontology-query/interfaces/mock"
 	"ontology-query/logics"
 )
 
@@ -47,9 +47,9 @@ func Test_knowledgeNetworkService_SearchSubgraph(t *testing.T) {
 		defer mockCtrl.Finish()
 
 		appSetting := &common.AppSetting{}
-		omAccess := dmock.NewMockOntologyManagerAccess(mockCtrl)
-		ots := dmock.NewMockObjectTypeService(mockCtrl)
-		uAccess := dmock.NewMockUniqueryAccess(mockCtrl)
+		omAccess := omock.NewMockOntologyManagerAccess(mockCtrl)
+		ots := omock.NewMockObjectTypeService(mockCtrl)
+		uAccess := omock.NewMockUniqueryAccess(mockCtrl)
 
 		logics.OMA = omAccess
 		logics.UA = uAccess
@@ -290,9 +290,9 @@ func Test_knowledgeNetworkService_SearchSubgraphByTypePath(t *testing.T) {
 		defer mockCtrl.Finish()
 
 		appSetting := &common.AppSetting{}
-		omAccess := dmock.NewMockOntologyManagerAccess(mockCtrl)
-		ots := dmock.NewMockObjectTypeService(mockCtrl)
-		uAccess := dmock.NewMockUniqueryAccess(mockCtrl)
+		omAccess := omock.NewMockOntologyManagerAccess(mockCtrl)
+		ots := omock.NewMockObjectTypeService(mockCtrl)
+		uAccess := omock.NewMockUniqueryAccess(mockCtrl)
 
 		logics.OMA = omAccess
 		logics.UA = uAccess
@@ -790,7 +790,7 @@ func Test_knowledgeNetworkService_buildObjectSubgraph(t *testing.T) {
 		defer mockCtrl.Finish()
 
 		appSetting := &common.AppSetting{}
-		ots := dmock.NewMockObjectTypeService(mockCtrl)
+		ots := omock.NewMockObjectTypeService(mockCtrl)
 
 		service := &knowledgeNetworkService{
 			appSetting: appSetting,
@@ -962,7 +962,7 @@ func Test_knowledgeNetworkService_expandObjectPathsBatch(t *testing.T) {
 		defer mockCtrl.Finish()
 
 		appSetting := &common.AppSetting{}
-		ots := dmock.NewMockObjectTypeService(mockCtrl)
+		ots := omock.NewMockObjectTypeService(mockCtrl)
 
 		service := &knowledgeNetworkService{
 			appSetting: appSetting,
@@ -1153,7 +1153,7 @@ func Test_knowledgeNetworkService_getNextObjectsBatchByRelation(t *testing.T) {
 		defer mockCtrl.Finish()
 
 		appSetting := &common.AppSetting{}
-		ots := dmock.NewMockObjectTypeService(mockCtrl)
+		ots := omock.NewMockObjectTypeService(mockCtrl)
 
 		service := &knowledgeNetworkService{
 			appSetting: appSetting,
@@ -1501,7 +1501,7 @@ func Test_knowledgeNetworkService_buildBatchConditions(t *testing.T) {
 		defer mockCtrl.Finish()
 
 		appSetting := &common.AppSetting{}
-		uAccess := dmock.NewMockUniqueryAccess(mockCtrl)
+		uAccess := omock.NewMockUniqueryAccess(mockCtrl)
 
 		logics.UA = uAccess
 
@@ -1643,7 +1643,7 @@ func Test_knowledgeNetworkService_buildIndirectBatchConditions(t *testing.T) {
 		defer mockCtrl.Finish()
 
 		appSetting := &common.AppSetting{}
-		uAccess := dmock.NewMockUniqueryAccess(mockCtrl)
+		uAccess := omock.NewMockUniqueryAccess(mockCtrl)
 
 		logics.UA = uAccess
 
@@ -1968,7 +1968,7 @@ func Test_knowledgeNetworkService_batchGetViewData(t *testing.T) {
 		defer mockCtrl.Finish()
 
 		appSetting := &common.AppSetting{}
-		uAccess := dmock.NewMockUniqueryAccess(mockCtrl)
+		uAccess := omock.NewMockUniqueryAccess(mockCtrl)
 
 		logics.UA = uAccess
 

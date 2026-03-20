@@ -64,7 +64,9 @@ func TestNewFastRegexMatcherError(t *testing.T) {
 				value    string
 				expected bool
 			}{
-				regex: "[{", value: "{", expected: true,
+				regex:    "[{",
+				value:    "{",
+				expected: true,
 			}
 			m, err := NewFastRegexMatcher(errRegex.regex)
 			So(err, ShouldNotBeNil)
@@ -91,7 +93,9 @@ func TestNewFastRegexMatcherError(t *testing.T) {
 				value    string
 				expected bool
 			}{
-				regex: ".*", value: "", expected: true,
+				regex:    ".*",
+				value:    "",
+				expected: true,
 			}
 			m, err := NewFastRegexMatcher(errRegex.regex)
 			So(err, ShouldNotBeNil)

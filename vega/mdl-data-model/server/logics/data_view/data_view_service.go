@@ -254,7 +254,7 @@ func (dvs *dataViewService) DeleteDataViews(ctx context.Context, viewIDs []strin
 
 	// 先获取资源序列
 	matchResouces, err := dvs.ps.FilterResources(ctx, interfaces.RESOURCE_TYPE_DATA_VIEW, viewIDs,
-		[]string{interfaces.OPERATION_TYPE_DELETE}, false)
+		[]string{interfaces.OPERATION_TYPE_DELETE}, false, interfaces.FULL_OPERATIONS)
 	if err != nil {
 		return err
 	}
@@ -705,7 +705,7 @@ func (dvs *dataViewService) GetDataViews(ctx context.Context, viewIDs []string, 
 
 	// 先获取资源序列
 	matchResouces, err := dvs.ps.FilterResources(ctx, interfaces.RESOURCE_TYPE_DATA_VIEW, viewIDs,
-		[]string{interfaces.OPERATION_TYPE_VIEW_DETAIL}, true)
+		[]string{interfaces.OPERATION_TYPE_VIEW_DETAIL}, true, interfaces.FULL_OPERATIONS)
 	if err != nil {
 		return nil, err
 	}
@@ -897,7 +897,7 @@ func (dvs *dataViewService) GetDataViewsByGroupID(ctx context.Context, groupID s
 
 	// 先获取资源序列
 	matchResouces, err := dvs.ps.FilterResources(ctx, interfaces.RESOURCE_TYPE_DATA_VIEW, viewIDs,
-		[]string{interfaces.OPERATION_TYPE_VIEW_DETAIL}, true)
+		[]string{interfaces.OPERATION_TYPE_VIEW_DETAIL}, true, interfaces.FULL_OPERATIONS)
 	if err != nil {
 		return nil, err
 	}
@@ -1099,13 +1099,13 @@ func (dvs *dataViewService) ListDataViews(ctx context.Context, param *interfaces
 		var batchMatchResources map[string]interfaces.ResourceOps
 		if len(param.Operations) > 0 {
 			batchMatchResources, err = dvs.ps.FilterResources(ctx, interfaces.RESOURCE_TYPE_DATA_VIEW,
-				batchResMids, param.Operations, true)
+				batchResMids, param.Operations, true, interfaces.FULL_OPERATIONS)
 			if err != nil {
 				return nil, 0, err
 			}
 		} else {
 			batchMatchResources, err = dvs.ps.FilterResources(ctx, interfaces.RESOURCE_TYPE_DATA_VIEW,
-				batchResMids, []string{interfaces.OPERATION_TYPE_VIEW_DETAIL}, true)
+				batchResMids, []string{interfaces.OPERATION_TYPE_VIEW_DETAIL}, true, interfaces.FULL_OPERATIONS)
 			if err != nil {
 				return nil, 0, err
 			}
@@ -1223,7 +1223,7 @@ func (dvs *dataViewService) GetSimpleDataViewsByIDs(ctx context.Context, viewIDs
 
 	// 校验查看权限
 	matchResouces, err := dvs.ps.FilterResources(ctx, interfaces.RESOURCE_TYPE_DATA_VIEW, viewIDs,
-		[]string{interfaces.OPERATION_TYPE_VIEW_DETAIL}, false)
+		[]string{interfaces.OPERATION_TYPE_VIEW_DETAIL}, false, interfaces.FULL_OPERATIONS)
 	if err != nil {
 		return nil, err
 	}
@@ -1369,7 +1369,7 @@ func (dvs *dataViewService) UpdateDataViewsGroup(ctx context.Context, viewsMap m
 	}
 
 	matchResouces, err := dvs.ps.FilterResources(ctx, interfaces.RESOURCE_TYPE_DATA_VIEW,
-		vIDs, []string{interfaces.OPERATION_TYPE_MODIFY}, false)
+		vIDs, []string{interfaces.OPERATION_TYPE_MODIFY}, false, interfaces.FULL_OPERATIONS)
 	if err != nil {
 		span.SetStatus(codes.Error, "Filter resources failed")
 		return err
@@ -1897,7 +1897,7 @@ func (dvs *dataViewService) ListDataViewSrcs(ctx context.Context, params *interf
 		var batchMatchResources map[string]interfaces.ResourceOps
 		// 校验权限管理的操作权限
 		batchMatchResources, err = dvs.ps.FilterResources(ctx, interfaces.RESOURCE_TYPE_DATA_VIEW,
-			batchResMids, []string{interfaces.OPERATION_TYPE_VIEW_DETAIL}, false)
+			batchResMids, []string{interfaces.OPERATION_TYPE_VIEW_DETAIL}, false, interfaces.FULL_OPERATIONS)
 		if err != nil {
 			return nil, 0, err
 		}

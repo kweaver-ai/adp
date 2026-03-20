@@ -124,37 +124,41 @@ func Compose(ctx context.Context, em interfaces.EventModel, f interfaces.Formula
 
 	if f.Level == interfaces.EVENT_MODEL_LEVEL_CLEARED {
 		if labels == "" {
-			if em.DataSourceType == "metric_model" {
+			switch em.DataSourceType {
+			case "metric_model":
 				zhMessage = fmt.Sprintf("监控对象(未知)的监控项(%s)已经恢复正常(%s)", DataSourceName, fieldMapStr)
 				enMessage = fmt.Sprintf("The monitored object (unknown) monitoring item(%s) has returned to normal(%s)", DataSourceName, fieldMapStr)
-			} else if em.DataSourceType == "data_view" {
+			case "data_view":
 				zhMessage = fmt.Sprintf("监控对象(未知)的监控项(%s)已经恢复正常(%s)", keysStr, fieldMapStr)
 				enMessage = fmt.Sprintf("The monitored object (unknown) monitoring item(%s) has returned to normal(%s)", keysStr, fieldMapStr)
 			}
 		} else {
-			if em.DataSourceType == "metric_model" {
+			switch em.DataSourceType {
+			case "metric_model":
 				zhMessage = fmt.Sprintf("监控对象(%s)的监控项(%s)已经恢复正常(%s)", labels, DataSourceName, fieldMapStr)
 				enMessage = fmt.Sprintf("The monitored object (%s) monitoring item(%s) has returned to normal(%s)", labels, DataSourceName, fieldMapStr)
-			} else if em.DataSourceType == "data_view" {
+			case "data_view":
 				zhMessage = fmt.Sprintf("监控对象(%s)的监控项(%s)已经恢复正常(%s)", labels, keysStr, fieldMapStr)
 				enMessage = fmt.Sprintf("The monitored object (%s) monitoring item(%s) has returned to normal(%s)", labels, keysStr, fieldMapStr)
 			}
 		}
 	} else {
 		if labels == "" {
-			if em.DataSourceType == "metric_model" {
+			switch em.DataSourceType {
+			case "metric_model":
 				zhMessage = fmt.Sprintf("监控对象(未知)的监控项(%s)产生了异常(%s)", DataSourceName, fieldMapStr)
 				enMessage = fmt.Sprintf("The monitored object (unknown) monitoring item(%s) is abnormal(%s)", DataSourceName, fieldMapStr)
-			} else if em.DataSourceType == "data_view" {
+			case "data_view":
 				zhMessage = fmt.Sprintf("监控对象(未知)的监控项(%s)产生了异常(%s)", keysStr, fieldMapStr)
 				enMessage = fmt.Sprintf("The monitored object (unknown) monitoring item(%s) is abnormal(%s)", keysStr, fieldMapStr)
 			}
 
 		} else {
-			if em.DataSourceType == "metric_model" {
+			switch em.DataSourceType {
+			case "metric_model":
 				zhMessage = fmt.Sprintf("监控对象(%s)的监控项(%s)产生了异常(%s)", labels, DataSourceName, fieldMapStr)
 				enMessage = fmt.Sprintf("The monitored object (%s) monitoring item(%s) is abnormal(%s)", labels, DataSourceName, fieldMapStr)
-			} else if em.DataSourceType == "data_view" {
+			case "data_view":
 				zhMessage = fmt.Sprintf("监控对象(%s)的监控项(%s)产生了异常(%s)", labels, keysStr, fieldMapStr)
 				enMessage = fmt.Sprintf("The monitored object (%s) monitoring item(%s) is abnormal(%s)", labels, keysStr, fieldMapStr)
 			}

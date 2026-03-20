@@ -19,7 +19,7 @@ import (
 
 	"uniquery/common"
 	"uniquery/interfaces"
-	imock "uniquery/interfaces/mock"
+	umock "uniquery/interfaces/mock"
 )
 
 type ViewField struct {
@@ -126,10 +126,10 @@ func Test_eventSubService_Invoke(t *testing.T) {
 	Convey("Test Flatten", t, func() {
 		mockCtrl := gomock.NewController(t)
 		defer mockCtrl.Finish()
-		engine := imock.NewMockEventEngine(mockCtrl)
+		engine := umock.NewMockEventEngine(mockCtrl)
 		topics := []string{"default.mdl.view"}
-		emAccess := imock.NewMockEventModelAccess(mockCtrl)
-		kafkaAccess := imock.NewMockKafkaAccess(mockCtrl)
+		emAccess := umock.NewMockEventModelAccess(mockCtrl)
+		kafkaAccess := umock.NewMockKafkaAccess(mockCtrl)
 		_cache := cache.New(interfaces.EXPIRATION_TIME, interfaces.DELETE_TIME)
 		records := kafka.Message{
 			Value:   []byte(`{"a": {"b": {"c": "wahaha"}}}`),
@@ -163,12 +163,12 @@ func Test_eventSubService_Invoke(t *testing.T) {
 
 // 	field := fields{
 // 		appSetting:  &common.AppSetting{},
-// 		emAccess:    imock.NewMockEventModelAccess(mockCtrl),
-// 		kafkaAccess: imock.NewMockKafkaAccess(mockCtrl),
+// 		emAccess:    umock.NewMockEventModelAccess(mockCtrl),
+// 		kafkaAccess: umock.NewMockKafkaAccess(mockCtrl),
 // 		topics:      []string{"default.mdl.view"},
-// 		engine:      imock.NewMockEventEngine(mockCtrl),
+// 		engine:      umock.NewMockEventEngine(mockCtrl),
 
-// 		// eventModelService:  imock.NewMockEventModelService(mockCtrl),
+// 		// eventModelService:  umock.NewMockEventModelService(mockCtrl),
 // 	}
 
 // 	tests := []struct {
@@ -186,9 +186,9 @@ func Test_eventSubService_Invoke(t *testing.T) {
 // 		Headers: []kafka.Header{{Key: "__view_id", Value: []byte("1")}},
 // 	}
 // 	// field.metricModelService.EXPECT().GetMetricModelSimpleInfosByIDs(gomock.Any(), gomock.Any()).AnyTimes().Return(nil, nil)
-// 	emAccess := imock.NewMockEventModelAccess(mockCtrl)
-// 	kafkaAccess := imock.NewMockKafkaAccess(mockCtrl)
-// 	engine := imock.NewMockEventEngine(mockCtrl)
+// 	emAccess := umock.NewMockEventModelAccess(mockCtrl)
+// 	kafkaAccess := umock.NewMockKafkaAccess(mockCtrl)
+// 	engine := umock.NewMockEventEngine(mockCtrl)
 // 	topics := []string{"default.mdl.view"}
 // 	// groupID := "default.mdl.event_subscribe"
 // 	// kafkaProtocol := "sasl_ssl"
@@ -260,9 +260,9 @@ func Test_eventSubService_getInitTopics(t *testing.T) {
 		defer mockCtrl.Finish()
 
 		// field.metricModelService.EXPECT().GetMetricModelSimpleInfosByIDs(gomock.Any(), gomock.Any()).AnyTimes().Return(nil, nil)
-		emAccess := imock.NewMockEventModelAccess(mockCtrl)
-		kafkaAccess := imock.NewMockKafkaAccess(mockCtrl)
-		engine := imock.NewMockEventEngine(mockCtrl)
+		emAccess := umock.NewMockEventModelAccess(mockCtrl)
+		kafkaAccess := umock.NewMockKafkaAccess(mockCtrl)
+		engine := umock.NewMockEventEngine(mockCtrl)
 		topics := []string{"default.mdl.view"}
 		// consumer, _ := kafka.NewConsumer(&kafka.ConfigMap{"bootstrap.servers": "localhost"})
 		admin, _ := kafka.NewAdminClient(&kafka.ConfigMap{"bootstrap.servers": "localhost"})
@@ -344,9 +344,9 @@ func TestEventSubServiceFlushAtomicEvent(t *testing.T) {
 		mockCtrl := gomock.NewController(t)
 		defer mockCtrl.Finish()
 
-		emAccess := imock.NewMockEventModelAccess(mockCtrl)
-		kafkaAccess := imock.NewMockKafkaAccess(mockCtrl)
-		engine := imock.NewMockEventEngine(mockCtrl)
+		emAccess := umock.NewMockEventModelAccess(mockCtrl)
+		kafkaAccess := umock.NewMockKafkaAccess(mockCtrl)
+		engine := umock.NewMockEventEngine(mockCtrl)
 		topics := []string{"default.mdl.view"}
 		consumer, _ := kafka.NewConsumer(&kafka.ConfigMap{"bootstrap.servers": "localhost"})
 		producer, _ := kafka.NewProducer(&kafka.ConfigMap{"bootstrap.servers": "localhost"})
@@ -402,9 +402,9 @@ func TestEventSubServiceDivideRecordBySourceId(t *testing.T) {
 	Convey("Test DivideRecordBySourceId", t, func() {
 		mockCtrl := gomock.NewController(t)
 		defer mockCtrl.Finish()
-		emAccess := imock.NewMockEventModelAccess(mockCtrl)
-		kafkaAccess := imock.NewMockKafkaAccess(mockCtrl)
-		engine := imock.NewMockEventEngine(mockCtrl)
+		emAccess := umock.NewMockEventModelAccess(mockCtrl)
+		kafkaAccess := umock.NewMockKafkaAccess(mockCtrl)
+		engine := umock.NewMockEventEngine(mockCtrl)
 		topics := []string{"default.mdl.view"}
 		essMock := MockNewEventSubService(&common.AppSetting{}, engine, emAccess, kafkaAccess, topics)
 
@@ -456,9 +456,9 @@ func TestEventSubServiceDivideRecordBySourceId(t *testing.T) {
 // 		defer mockCtrl.Finish()
 
 // 		// field.metricModelService.EXPECT().GetMetricModelSimpleInfosByIDs(gomock.Any(), gomock.Any()).AnyTimes().Return(nil, nil)
-// 		emAccess := dmock.NewMockEventModelAccess(mockCtrl)
-// 		kafkaAccess := dmock.NewMockKafkaAccess(mockCtrl)
-// 		engine := dmock.NewMockEventEngine(mockCtrl)
+// 		emAccess := umock.NewMockEventModelAccess(mockCtrl)
+// 		kafkaAccess := umock.NewMockKafkaAccess(mockCtrl)
+// 		engine := umock.NewMockEventEngine(mockCtrl)
 // 		topics := []string{"default.mdl.view"}
 // 		consumer, _ := kafka.NewConsumer(&kafka.ConfigMap{"bootstrap.servers": "localhost"})
 // 		producer, _ := kafka.NewProducer(&kafka.ConfigMap{"bootstrap.servers": "localhost"})
@@ -506,9 +506,9 @@ func TestEventSubServiceGetEventModelByDownstreamDependent(t *testing.T) {
 		mockCtrl := gomock.NewController(t)
 		defer mockCtrl.Finish()
 
-		emAccess := imock.NewMockEventModelAccess(mockCtrl)
-		kafkaAccess := imock.NewMockKafkaAccess(mockCtrl)
-		engine := imock.NewMockEventEngine(mockCtrl)
+		emAccess := umock.NewMockEventModelAccess(mockCtrl)
+		kafkaAccess := umock.NewMockKafkaAccess(mockCtrl)
+		engine := umock.NewMockEventEngine(mockCtrl)
 		topics := []string{"default.mdl.view"}
 
 		essMock := MockNewEventSubService(&common.AppSetting{}, engine, emAccess, kafkaAccess, topics)
@@ -534,9 +534,9 @@ func TestEventSubServiceQueryEventModelByDownstreamDependent(t *testing.T) {
 		mockCtrl := gomock.NewController(t)
 		defer mockCtrl.Finish()
 
-		emAccess := imock.NewMockEventModelAccess(mockCtrl)
-		kafkaAccess := imock.NewMockKafkaAccess(mockCtrl)
-		engine := imock.NewMockEventEngine(mockCtrl)
+		emAccess := umock.NewMockEventModelAccess(mockCtrl)
+		kafkaAccess := umock.NewMockKafkaAccess(mockCtrl)
+		engine := umock.NewMockEventEngine(mockCtrl)
 		topics := []string{"default.mdl.view"}
 
 		essMock := MockNewEventSubService(&common.AppSetting{}, engine, emAccess, kafkaAccess, topics)

@@ -10,9 +10,9 @@ import (
 	"testing"
 
 	"github.com/DATA-DOG/go-sqlmock"
-	"go.uber.org/mock/gomock"
 	"github.com/kweaver-ai/kweaver-go-lib/rest"
 	. "github.com/smartystreets/goconvey/convey"
+	"go.uber.org/mock/gomock"
 
 	"bkn-backend/common"
 	cond "bkn-backend/common/condition"
@@ -290,13 +290,13 @@ func Test_knowledgeNetworkService_ListKNs(t *testing.T) {
 		appSetting := &common.AppSetting{}
 		kna := bmock.NewMockKNAccess(mockCtrl)
 		ps := bmock.NewMockPermissionService(mockCtrl)
-		uma := bmock.NewMockUserMgmtAccess(mockCtrl)
+		ums := bmock.NewMockUserMgmtService(mockCtrl)
 
 		service := &knowledgeNetworkService{
 			appSetting: appSetting,
 			kna:        kna,
 			ps:         ps,
-			uma:        uma,
+			ums:        ums,
 		}
 
 		Convey("Success listing KNs\n", func() {
@@ -314,13 +314,13 @@ func Test_knowledgeNetworkService_ListKNs(t *testing.T) {
 			}
 
 			kna.EXPECT().ListKNs(gomock.Any(), gomock.Any()).Return(knArr, nil)
-			ps.EXPECT().FilterResources(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+			ps.EXPECT().FilterResources(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
 				Return(map[string]interfaces.ResourceOps{
 					"kn1": {
 						Operations: []string{interfaces.OPERATION_TYPE_VIEW_DETAIL},
 					},
 				}, nil)
-			uma.EXPECT().GetAccountNames(gomock.Any(), gomock.Any()).Return(nil)
+			ums.EXPECT().GetAccountNames(gomock.Any(), gomock.Any()).Return(nil)
 
 			kns, total, err := service.ListKNs(ctx, parameter)
 			So(err, ShouldBeNil)
@@ -375,7 +375,8 @@ func Test_knowledgeNetworkService_ListKNs(t *testing.T) {
 			}
 
 			kna.EXPECT().ListKNs(gomock.Any(), gomock.Any()).Return(knArr, nil)
-			ps.EXPECT().FilterResources(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+			ps.EXPECT().FilterResources(gomock.Any(), gomock.Any(), gomock.Any(),
+				gomock.Any(), gomock.Any(), gomock.Any()).
 				Return(nil, rest.NewHTTPError(ctx, 500, berrors.BknBackend_KnowledgeNetwork_InternalError))
 
 			kns, total, err := service.ListKNs(ctx, parameter)
@@ -399,13 +400,13 @@ func Test_knowledgeNetworkService_ListKNs(t *testing.T) {
 			}
 
 			kna.EXPECT().ListKNs(gomock.Any(), gomock.Any()).Return(knArr, nil)
-			ps.EXPECT().FilterResources(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+			ps.EXPECT().FilterResources(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
 				Return(map[string]interfaces.ResourceOps{
 					"kn1": {
 						Operations: []string{interfaces.OPERATION_TYPE_VIEW_DETAIL},
 					},
 				}, nil)
-			uma.EXPECT().GetAccountNames(gomock.Any(), gomock.Any()).Return(rest.NewHTTPError(ctx, 500, berrors.BknBackend_KnowledgeNetwork_InternalError))
+			ums.EXPECT().GetAccountNames(gomock.Any(), gomock.Any()).Return(rest.NewHTTPError(ctx, 500, berrors.BknBackend_KnowledgeNetwork_InternalError))
 
 			kns, total, err := service.ListKNs(ctx, parameter)
 			So(err, ShouldNotBeNil)
@@ -428,13 +429,13 @@ func Test_knowledgeNetworkService_ListKNs(t *testing.T) {
 			}
 
 			kna.EXPECT().ListKNs(gomock.Any(), gomock.Any()).Return(knArr, nil)
-			ps.EXPECT().FilterResources(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+			ps.EXPECT().FilterResources(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
 				Return(map[string]interfaces.ResourceOps{
 					"kn1": {
 						Operations: []string{interfaces.OPERATION_TYPE_VIEW_DETAIL},
 					},
 				}, nil)
-			uma.EXPECT().GetAccountNames(gomock.Any(), gomock.Any()).Return(nil)
+			ums.EXPECT().GetAccountNames(gomock.Any(), gomock.Any()).Return(nil)
 
 			kns, total, err := service.ListKNs(ctx, parameter)
 			So(err, ShouldBeNil)
@@ -457,7 +458,7 @@ func Test_knowledgeNetworkService_ListKNs(t *testing.T) {
 			}
 
 			kna.EXPECT().ListKNs(gomock.Any(), gomock.Any()).Return(knArr, nil)
-			ps.EXPECT().FilterResources(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+			ps.EXPECT().FilterResources(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
 				Return(map[string]interfaces.ResourceOps{
 					"kn1": {
 						Operations: []string{interfaces.OPERATION_TYPE_VIEW_DETAIL},
@@ -493,13 +494,13 @@ func Test_knowledgeNetworkService_ListKNs(t *testing.T) {
 			}
 
 			kna.EXPECT().ListKNs(gomock.Any(), gomock.Any()).Return(knArr, nil)
-			ps.EXPECT().FilterResources(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+			ps.EXPECT().FilterResources(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
 				Return(map[string]interfaces.ResourceOps{
 					"kn1": {Operations: []string{interfaces.OPERATION_TYPE_VIEW_DETAIL}},
 					"kn2": {Operations: []string{interfaces.OPERATION_TYPE_VIEW_DETAIL}},
 					"kn3": {Operations: []string{interfaces.OPERATION_TYPE_VIEW_DETAIL}},
 				}, nil)
-			uma.EXPECT().GetAccountNames(gomock.Any(), gomock.Any()).Return(nil)
+			ums.EXPECT().GetAccountNames(gomock.Any(), gomock.Any()).Return(nil)
 
 			kns, total, err := service.ListKNs(ctx, parameter)
 			So(err, ShouldBeNil)
@@ -519,13 +520,13 @@ func Test_knowledgeNetworkService_GetKNByID(t *testing.T) {
 		appSetting := &common.AppSetting{}
 		kna := bmock.NewMockKNAccess(mockCtrl)
 		ps := bmock.NewMockPermissionService(mockCtrl)
-		uma := bmock.NewMockUserMgmtAccess(mockCtrl)
+		ums := bmock.NewMockUserMgmtService(mockCtrl)
 
 		service := &knowledgeNetworkService{
 			appSetting: appSetting,
 			kna:        kna,
 			ps:         ps,
-			uma:        uma,
+			ums:        ums,
 		}
 
 		Convey("Success getting KN by ID\n", func() {
@@ -538,13 +539,13 @@ func Test_knowledgeNetworkService_GetKNByID(t *testing.T) {
 			}
 
 			kna.EXPECT().GetKNByID(gomock.Any(), gomock.Any(), gomock.Any()).Return(kn, nil)
-			ps.EXPECT().FilterResources(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+			ps.EXPECT().FilterResources(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
 				Return(map[string]interfaces.ResourceOps{
 					"kn1": {
 						Operations: []string{interfaces.OPERATION_TYPE_VIEW_DETAIL},
 					},
 				}, nil)
-			uma.EXPECT().GetAccountNames(gomock.Any(), gomock.Any()).Return(nil)
+			ums.EXPECT().GetAccountNames(gomock.Any(), gomock.Any()).Return(nil)
 
 			result, err := service.GetKNByID(ctx, knID, branch, mode)
 			So(err, ShouldBeNil)
@@ -590,7 +591,8 @@ func Test_knowledgeNetworkService_GetKNByID(t *testing.T) {
 			}
 
 			kna.EXPECT().GetKNByID(gomock.Any(), gomock.Any(), gomock.Any()).Return(kn, nil)
-			ps.EXPECT().FilterResources(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+			ps.EXPECT().FilterResources(gomock.Any(), gomock.Any(), gomock.Any(),
+				gomock.Any(), gomock.Any(), gomock.Any()).
 				Return(nil, rest.NewHTTPError(ctx, 500, berrors.BknBackend_KnowledgeNetwork_InternalError))
 
 			result, err := service.GetKNByID(ctx, knID, branch, mode)
@@ -608,7 +610,7 @@ func Test_knowledgeNetworkService_GetKNByID(t *testing.T) {
 			}
 
 			kna.EXPECT().GetKNByID(gomock.Any(), gomock.Any(), gomock.Any()).Return(kn, nil)
-			ps.EXPECT().FilterResources(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+			ps.EXPECT().FilterResources(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
 				Return(map[string]interfaces.ResourceOps{}, nil)
 
 			result, err := service.GetKNByID(ctx, knID, branch, mode)
@@ -628,13 +630,13 @@ func Test_knowledgeNetworkService_GetKNByID(t *testing.T) {
 			}
 
 			kna.EXPECT().GetKNByID(gomock.Any(), gomock.Any(), gomock.Any()).Return(kn, nil)
-			ps.EXPECT().FilterResources(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+			ps.EXPECT().FilterResources(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
 				Return(map[string]interfaces.ResourceOps{
 					"kn1": {
 						Operations: []string{interfaces.OPERATION_TYPE_VIEW_DETAIL},
 					},
 				}, nil)
-			uma.EXPECT().GetAccountNames(gomock.Any(), gomock.Any()).Return(rest.NewHTTPError(ctx, 500, berrors.BknBackend_KnowledgeNetwork_InternalError))
+			ums.EXPECT().GetAccountNames(gomock.Any(), gomock.Any()).Return(rest.NewHTTPError(ctx, 500, berrors.BknBackend_KnowledgeNetwork_InternalError))
 
 			result, err := service.GetKNByID(ctx, knID, branch, mode)
 			So(err, ShouldNotBeNil)
@@ -659,7 +661,7 @@ func Test_knowledgeNetworkService_GetKNByID(t *testing.T) {
 				appSetting: appSetting,
 				kna:        kna,
 				ps:         ps,
-				uma:        uma,
+				ums:        ums,
 				cgs:        cgs,
 				ots:        ots,
 				rts:        rts,
@@ -667,13 +669,13 @@ func Test_knowledgeNetworkService_GetKNByID(t *testing.T) {
 			}
 
 			kna.EXPECT().GetKNByID(gomock.Any(), gomock.Any(), gomock.Any()).Return(kn, nil)
-			ps.EXPECT().FilterResources(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+			ps.EXPECT().FilterResources(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
 				Return(map[string]interfaces.ResourceOps{
 					"kn1": {
 						Operations: []string{interfaces.OPERATION_TYPE_VIEW_DETAIL},
 					},
 				}, nil)
-			uma.EXPECT().GetAccountNames(gomock.Any(), gomock.Any()).Return(nil)
+			ums.EXPECT().GetAccountNames(gomock.Any(), gomock.Any()).Return(nil)
 			cgs.EXPECT().ListConceptGroups(gomock.Any(), gomock.Any()).Return([]*interfaces.ConceptGroup{}, 0, nil)
 			ots.EXPECT().ListObjectTypes(gomock.Any(), gomock.Any(), gomock.Any()).Return([]*interfaces.ObjectType{}, 0, nil)
 			rts.EXPECT().ListRelationTypes(gomock.Any(), gomock.Any()).Return([]*interfaces.RelationType{}, 0, nil)
@@ -1288,7 +1290,7 @@ func Test_knowledgeNetworkService_ListKnSrcs(t *testing.T) {
 			}
 
 			kna.EXPECT().ListKnSrcs(gomock.Any(), gomock.Any()).Return(knList, nil)
-			ps.EXPECT().FilterResources(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+			ps.EXPECT().FilterResources(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
 				Return(map[string]interfaces.ResourceOps{
 					"kn1": {
 						Operations: []string{interfaces.OPERATION_TYPE_VIEW_DETAIL},
@@ -1348,7 +1350,8 @@ func Test_knowledgeNetworkService_ListKnSrcs(t *testing.T) {
 			}
 
 			kna.EXPECT().ListKnSrcs(gomock.Any(), gomock.Any()).Return(knList, nil)
-			ps.EXPECT().FilterResources(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+			ps.EXPECT().FilterResources(gomock.Any(), gomock.Any(),
+				gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
 				Return(nil, rest.NewHTTPError(ctx, 500, berrors.BknBackend_KnowledgeNetwork_InternalError))
 
 			resources, total, err := service.ListKnSrcs(ctx, parameter)
@@ -1372,7 +1375,7 @@ func Test_knowledgeNetworkService_ListKnSrcs(t *testing.T) {
 			}
 
 			kna.EXPECT().ListKnSrcs(gomock.Any(), gomock.Any()).Return(knList, nil)
-			ps.EXPECT().FilterResources(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+			ps.EXPECT().FilterResources(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
 				Return(map[string]interfaces.ResourceOps{
 					"kn1": {
 						Operations: []string{interfaces.OPERATION_TYPE_VIEW_DETAIL},
@@ -1400,7 +1403,7 @@ func Test_knowledgeNetworkService_ListKnSrcs(t *testing.T) {
 			}
 
 			kna.EXPECT().ListKnSrcs(gomock.Any(), gomock.Any()).Return(knList, nil)
-			ps.EXPECT().FilterResources(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+			ps.EXPECT().FilterResources(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
 				Return(map[string]interfaces.ResourceOps{
 					"kn1": {
 						Operations: []string{interfaces.OPERATION_TYPE_VIEW_DETAIL},
@@ -1427,7 +1430,7 @@ func Test_knowledgeNetworkService_ListKnSrcs(t *testing.T) {
 			}
 
 			kna.EXPECT().ListKnSrcs(gomock.Any(), gomock.Any()).Return(knList, nil)
-			ps.EXPECT().FilterResources(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+			ps.EXPECT().FilterResources(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
 				Return(map[string]interfaces.ResourceOps{
 					"kn1": {Operations: []string{interfaces.OPERATION_TYPE_VIEW_DETAIL}},
 					"kn2": {Operations: []string{interfaces.OPERATION_TYPE_VIEW_DETAIL}},

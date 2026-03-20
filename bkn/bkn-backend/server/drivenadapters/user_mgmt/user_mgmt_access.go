@@ -43,14 +43,13 @@ func NewUserMgmtAccess(appSetting *common.AppSetting) interfaces.UserMgmtAccess 
 	return umAccess
 }
 
-func (u *userMgmtAccess) GetAccountNames(ctx context.Context, accountInfos []*interfaces.AccountInfo) error {
-
+func (uma *userMgmtAccess) GetAccountNames(ctx context.Context, accountInfos []*interfaces.AccountInfo) error {
 	if len(accountInfos) == 0 {
 		return nil
 	}
 
 	// 构建请求URL
-	httpUrl := fmt.Sprintf("%s/api/user-management/v2/names", u.userMgmtUrl)
+	httpUrl := fmt.Sprintf("%s/api/user-management/v2/names", uma.userMgmtUrl)
 
 	userIDMap := map[string]string{}
 	appIDMap := map[string]string{}
@@ -85,7 +84,7 @@ func (u *userMgmtAccess) GetAccountNames(ctx context.Context, accountInfos []*in
 	}
 
 	// 发送POST请求获取用户信息
-	respCode, result, err := u.httpClient.PostNoUnmarshal(ctx, httpUrl, headers, requestBody)
+	respCode, result, err := uma.httpClient.PostNoUnmarshal(ctx, httpUrl, headers, requestBody)
 	logger.Debugf("post [%s] finished, response code is [%d], result is [%s], error is [%v]", httpUrl, respCode, result, err)
 
 	if err != nil {

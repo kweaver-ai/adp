@@ -33,6 +33,7 @@ import (
 	"bkn-backend/logics/object_type"
 	"bkn-backend/logics/permission"
 	"bkn-backend/logics/relation_type"
+	"bkn-backend/logics/user_mgmt"
 )
 
 var (
@@ -56,7 +57,7 @@ type knowledgeNetworkService struct {
 	rta        interfaces.RelationTypeAccess
 	ps         interfaces.PermissionService
 	rts        interfaces.RelationTypeService
-	uma        interfaces.UserMgmtAccess
+	ums        interfaces.UserMgmtService
 	vba        interfaces.VegaBackendAccess
 }
 
@@ -78,7 +79,7 @@ func NewKNService(appSetting *common.AppSetting) interfaces.KNService {
 			ps:         permission.NewPermissionService(appSetting),
 			rta:        logics.RTA,
 			rts:        relation_type.NewRelationTypeService(appSetting),
-			uma:        logics.UMA,
+			ums:        user_mgmt.NewUserMgmtService(appSetting),
 			vba:        logics.VBA,
 		}
 	})
@@ -401,7 +402,7 @@ func (kns *knowledgeNetworkService) ListKNs(ctx context.Context,
 
 	// 根据权限过滤有查看权限的对象，过滤后的数组的总长度就是总数，无需再请求总数
 	matchResoucesMap, err := kns.ps.FilterResources(ctx, interfaces.RESOURCE_TYPE_KN, KNIDs,
-		[]string{interfaces.OPERATION_TYPE_VIEW_DETAIL}, true)
+		[]string{interfaces.OPERATION_TYPE_VIEW_DETAIL}, true, interfaces.COMMON_OPERATIONS)
 	if err != nil {
 		span.SetStatus(codes.Error, "Filter resources error")
 		return []*interfaces.KN{}, 0, err
@@ -439,7 +440,7 @@ func (kns *knowledgeNetworkService) ListKNs(ctx context.Context,
 		accountInfos = append(accountInfos, &kn.Creator, &kn.Updater)
 	}
 
-	err = kns.uma.GetAccountNames(ctx, accountInfos)
+	err = kns.ums.GetAccountNames(ctx, accountInfos)
 	if err != nil {
 		span.SetStatus(codes.Error, "GetAccountNames error")
 
@@ -481,7 +482,7 @@ func (kns *knowledgeNetworkService) GetKNByID(ctx context.Context, knID string, 
 
 	// 根据权限过滤有查看权限的对象，过滤后的数组的总长度就是总数，无需再请求总数
 	matchResoucesMap, err := kns.ps.FilterResources(ctx, interfaces.RESOURCE_TYPE_KN, []string{kn.KNID},
-		[]string{interfaces.OPERATION_TYPE_VIEW_DETAIL}, true)
+		[]string{interfaces.OPERATION_TYPE_VIEW_DETAIL}, true, interfaces.COMMON_OPERATIONS)
 	if err != nil {
 		span.SetStatus(codes.Error, "Filter resources error")
 		return nil, err
@@ -495,7 +496,7 @@ func (kns *knowledgeNetworkService) GetKNByID(ctx context.Context, knID string, 
 	}
 
 	accountInfos := []*interfaces.AccountInfo{&kn.Creator, &kn.Updater}
-	err = kns.uma.GetAccountNames(ctx, accountInfos)
+	err = kns.ums.GetAccountNames(ctx, accountInfos)
 	if err != nil {
 		span.SetStatus(codes.Error, "GetAccountNames error")
 
@@ -1295,7 +1296,7 @@ func (kns *knowledgeNetworkService) ListKnSrcs(ctx context.Context,
 	}
 	// 校验权限管理的操作权限
 	matchResoucesMap, err := kns.ps.FilterResources(ctx, interfaces.RESOURCE_TYPE_KN, resMids,
-		[]string{interfaces.OPERATION_TYPE_VIEW_DETAIL}, false)
+		[]string{interfaces.OPERATION_TYPE_VIEW_DETAIL}, false, interfaces.COMMON_OPERATIONS)
 	if err != nil {
 		return emptyResources, 0, err
 	}

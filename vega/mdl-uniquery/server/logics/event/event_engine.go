@@ -70,10 +70,11 @@ func (eventEngine *EventEngine) Apply(ctx context.Context, query interfaces.Even
 	var entities interfaces.Records
 	var total int
 
-	if query.QueryType == "instant_query" {
+	switch query.QueryType {
+	case "instant_query":
 		// 实时查询，查事件模型绑定的数据源的数据，再根据检测生成事件数据
 		_events, entities, total = eventEngine.InstantQuery(ctx, query, em)
-	} else if query.QueryType == "range_query" {
+	case "range_query":
 		// 即持久化查询，查事件模型持久化后的数据
 		_events, entities, total = eventEngine.RangeQuery(ctx, query, em)
 	}
@@ -675,10 +676,10 @@ func (rd *EventEngine) Judge(ctx context.Context, sr interfaces.SourceRecords, e
 	} else if em.EventModelType == "aggregate" && em.AggregateRule.Type == "group_aggregation" {
 		var groupRecords map[string]interfaces.Records
 
-		if em.AggregateRule.AggregateAlgo == "EventDataGroupAggregation" {
+		switch em.AggregateRule.AggregateAlgo {
+		case "EventDataGroupAggregation":
 			groupRecords = operatation.EventDataGroupAggregation(sr.Records, em.AggregateRule.GroupFields)
-
-		} else if em.AggregateRule.AggregateAlgo == "SourceDataGroupAggregation" {
+		case "SourceDataGroupAggregation":
 			groupRecords = operatation.SourceDataGroupAggregation(sr.Records, em.AggregateRule.GroupFields)
 		}
 		if len(groupRecords) == 0 {

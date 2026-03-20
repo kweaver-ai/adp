@@ -13,8 +13,8 @@ import (
 
 	. "github.com/agiledragon/gomonkey/v2"
 	"github.com/golang/mock/gomock"
+	"github.com/kweaver-ai/kweaver-go-lib/hydra"
 	"github.com/kweaver-ai/kweaver-go-lib/rest"
-	rmock "github.com/kweaver-ai/kweaver-go-lib/rest/mock"
 	. "github.com/smartystreets/goconvey/convey"
 
 	"data-model/common"
@@ -31,11 +31,11 @@ func Test_ValidateTraceModel_ValidateTraceModelsWhenCreate(t *testing.T) {
 
 		appSetting := &common.AppSetting{}
 		tms := dmock.NewMockTraceModelService(mockCtrl)
-		hydra := rmock.NewMockHydra(mockCtrl)
+		as := dmock.NewMockAuthService(mockCtrl)
 
-		handler := MockNewTraceModelRestHandler(appSetting, hydra, tms)
+		handler := MockNewTraceModelRestHandler(appSetting, as, tms)
 
-		hydra.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(rest.Visitor{}, nil)
+		as.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(hydra.Visitor{}, nil)
 
 		Convey("Invalid models, caused by the error from func `validateTraceModelsWithName`", func() {
 			expectedErr := errors.New("some errors")
@@ -80,11 +80,11 @@ func Test_ValidateTraceModel_ValidateTraceModelWhenUpdate(t *testing.T) {
 
 		appSetting := &common.AppSetting{}
 		tms := dmock.NewMockTraceModelService(mockCtrl)
-		hydra := rmock.NewMockHydra(mockCtrl)
+		as := dmock.NewMockAuthService(mockCtrl)
 
-		handler := MockNewTraceModelRestHandler(appSetting, hydra, tms)
+		handler := MockNewTraceModelRestHandler(appSetting, as, tms)
 
-		hydra.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(rest.Visitor{}, nil)
+		as.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(hydra.Visitor{}, nil)
 
 		Convey("Invalid model, caused by the error from func `validateTraceModelsWithName`", func() {
 			expectedErr := errors.New("some errors")
@@ -129,11 +129,11 @@ func Test_ValidateTraceModel_ValidateTraceModelsWithName(t *testing.T) {
 
 		appSetting := &common.AppSetting{}
 		tms := dmock.NewMockTraceModelService(mockCtrl)
-		hydra := rmock.NewMockHydra(mockCtrl)
+		as := dmock.NewMockAuthService(mockCtrl)
 
-		handler := MockNewTraceModelRestHandler(appSetting, hydra, tms)
+		handler := MockNewTraceModelRestHandler(appSetting, as, tms)
 
-		hydra.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(rest.Visitor{}, nil)
+		as.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(hydra.Visitor{}, nil)
 
 		Convey("Invalid models, caused by the error from func `validateObjectName`", func() {
 			expectedErr := errors.New("some errors")

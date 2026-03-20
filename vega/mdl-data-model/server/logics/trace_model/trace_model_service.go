@@ -198,7 +198,7 @@ func (tms *traceModelService) DeleteTraceModels(ctx context.Context, modelIDs []
 	}()
 
 	matchResouces, err := tms.ps.FilterResources(ctx, interfaces.RESOURCE_TYPE_TRACE_MODEL, modelIDs,
-		[]string{interfaces.OPERATION_TYPE_DELETE}, false)
+		[]string{interfaces.OPERATION_TYPE_DELETE}, false, interfaces.FULL_OPERATIONS)
 	if err != nil {
 		return err
 	}
@@ -356,7 +356,7 @@ func (tms *traceModelService) GetTraceModels(ctx context.Context, modelIDs []str
 
 	// 先获取资源序列
 	matchResouces, err := tms.ps.FilterResources(ctx, interfaces.RESOURCE_TYPE_TRACE_MODEL, modelIDs,
-		[]string{interfaces.OPERATION_TYPE_VIEW_DETAIL}, true)
+		[]string{interfaces.OPERATION_TYPE_VIEW_DETAIL}, true, interfaces.FULL_OPERATIONS)
 	if err != nil {
 		return nil, err
 	}
@@ -447,7 +447,7 @@ func (tms *traceModelService) ListTraceModels(ctx context.Context,
 		resMids = append(resMids, m.ModelID)
 	}
 	matchResoucesMap, err := tms.ps.FilterResources(ctx, interfaces.RESOURCE_TYPE_TRACE_MODEL, resMids,
-		[]string{interfaces.OPERATION_TYPE_VIEW_DETAIL}, true)
+		[]string{interfaces.OPERATION_TYPE_VIEW_DETAIL}, true, interfaces.FULL_OPERATIONS)
 	if err != nil {
 		return entries, 0, err
 	}
@@ -504,7 +504,7 @@ func (tms *traceModelService) GetTraceModelFieldInfo(ctx context.Context, modelI
 
 	// 先获取资源序列
 	matchResouces, err := tms.ps.FilterResources(ctx, interfaces.RESOURCE_TYPE_TRACE_MODEL, []string{modelID},
-		[]string{interfaces.OPERATION_TYPE_VIEW_DETAIL}, true)
+		[]string{interfaces.OPERATION_TYPE_VIEW_DETAIL}, true, interfaces.FULL_OPERATIONS)
 	if err != nil {
 		return interfaces.TraceModelFieldInfo{}, err
 	}
@@ -603,7 +603,7 @@ func (tms *traceModelService) ListTraceModelSrcs(ctx context.Context, param inte
 	}
 	// 校验权限管理的操作权限
 	matchResoucesMap, err := tms.ps.FilterResources(ctx, interfaces.RESOURCE_TYPE_TRACE_MODEL, resMids,
-		[]string{interfaces.OPERATION_TYPE_VIEW_DETAIL}, false)
+		[]string{interfaces.OPERATION_TYPE_VIEW_DETAIL}, false, interfaces.FULL_OPERATIONS)
 	if err != nil {
 		return emptyResources, 0, err
 	}

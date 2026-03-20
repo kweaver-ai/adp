@@ -1070,7 +1070,7 @@ func (ems *eventModelService) DeleteEventModels(ctx context.Context, modelIDs []
 
 	// 先获取资源序列 fmt.Sprintf("%s%s", interfaces.METRIC_MODEL_RESOURCE_ID_PREFIX, metricModel.ModelID),
 	matchResouces, err := ems.ps.FilterResources(ctx, interfaces.RESOURCE_TYPE_EVENT_MODEL, modelIDs,
-		[]string{interfaces.OPERATION_TYPE_DELETE}, false)
+		[]string{interfaces.OPERATION_TYPE_DELETE}, false, interfaces.FULL_OPERATIONS)
 	if err != nil {
 		return nil, err
 	}
@@ -1214,7 +1214,7 @@ func (ems *eventModelService) QueryEventModels(ctx context.Context, params inter
 		resMids = append(resMids, m.EventModelID)
 	}
 	matchResoucesMap, err := ems.ps.FilterResources(ctx, interfaces.RESOURCE_TYPE_EVENT_MODEL, resMids,
-		[]string{interfaces.OPERATION_TYPE_VIEW_DETAIL}, true)
+		[]string{interfaces.OPERATION_TYPE_VIEW_DETAIL}, true, interfaces.FULL_OPERATIONS)
 	if err != nil {
 		return []interfaces.EventModel{}, 0, nil
 	}
@@ -1388,7 +1388,7 @@ func (ems *eventModelService) ListEventModelSrcs(ctx context.Context,
 		resMids = append(resMids, m.EventModelID)
 	}
 	matchResoucesMap, err := ems.ps.FilterResources(ctx, interfaces.RESOURCE_TYPE_EVENT_MODEL, resMids,
-		[]string{interfaces.OPERATION_TYPE_VIEW_DETAIL}, false)
+		[]string{interfaces.OPERATION_TYPE_VIEW_DETAIL}, false, interfaces.FULL_OPERATIONS)
 	if err != nil {
 		return emptyResources, 0, err
 	}

@@ -6,12 +6,11 @@ import (
 	"testing"
 
 	"github.com/golang/mock/gomock"
-	rmock "github.com/kweaver-ai/kweaver-go-lib/rest/mock"
 	. "github.com/smartystreets/goconvey/convey"
 
 	"flow-stream-data-pipeline/common"
 	"flow-stream-data-pipeline/pipeline-mgmt/interfaces"
-	dmock "flow-stream-data-pipeline/pipeline-mgmt/interfaces/mock"
+	fmock "flow-stream-data-pipeline/pipeline-mgmt/interfaces/mock"
 )
 
 func Test_Validate_ValidatePipeline(t *testing.T) {
@@ -27,9 +26,9 @@ func Test_Validate_ValidatePipeline(t *testing.T) {
 			},
 		}
 
-		hydraMock := rmock.NewMockHydra(mockCtrl)
-		pmService := dmock.NewMockPipelineMgmtService(mockCtrl)
-		handler := mockNewPipelineMgmtRestHandler(appSetting, hydraMock, pmService)
+		asMock := fmock.NewMockAuthService(mockCtrl)
+		pmService := fmock.NewMockPipelineMgmtService(mockCtrl)
+		handler := mockNewPipelineMgmtRestHandler(appSetting, asMock, pmService)
 		ctx := context.Background()
 
 		Convey("validate pipeline id failed", func() {

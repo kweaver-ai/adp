@@ -677,7 +677,7 @@ func (mms *metricModelService) DeleteMetricModels(ctx context.Context, tx *sql.T
 
 	// 先获取资源序列 fmt.Sprintf("%s%s", interfaces.METRIC_MODEL_RESOURCE_ID_PREFIX, metricModel.ModelID),
 	matchResouces, err := mms.ps.FilterResources(ctx, interfaces.RESOURCE_TYPE_METRIC_MODEL, modelIDs,
-		[]string{interfaces.OPERATION_TYPE_DELETE}, false)
+		[]string{interfaces.OPERATION_TYPE_DELETE}, false, interfaces.FULL_OPERATIONS)
 	if err != nil {
 		return 0, err
 	}
@@ -902,7 +902,7 @@ func (mms *metricModelService) ListSimpleMetricModels(ctx context.Context, param
 		resMids = append(resMids, m.ModelID)
 	}
 	matchResoucesMap, err := mms.ps.FilterResources(ctx, interfaces.RESOURCE_TYPE_METRIC_MODEL, resMids,
-		[]string{interfaces.OPERATION_TYPE_VIEW_DETAIL}, true)
+		[]string{interfaces.OPERATION_TYPE_VIEW_DETAIL}, true, interfaces.FULL_OPERATIONS)
 	if err != nil {
 		return emptySimpleMetricModels, 0, err
 	}
@@ -970,7 +970,7 @@ func (mms *metricModelService) GetMetricModels(ctx context.Context, modelIDs []s
 
 	// 先获取资源序列  todo:
 	matchResouces, err := mms.ps.FilterResources(ctx, interfaces.RESOURCE_TYPE_METRIC_MODEL, mIDs,
-		[]string{interfaces.OPERATION_TYPE_VIEW_DETAIL}, true)
+		[]string{interfaces.OPERATION_TYPE_VIEW_DETAIL}, true, interfaces.FULL_OPERATIONS)
 	if err != nil {
 		return mmfilters, err
 	}
@@ -1414,7 +1414,7 @@ func (mms *metricModelService) GetMetricModelSimpleInfosByIDs(ctx context.Contex
 	// 校验查看权限
 	// 先获取资源序列
 	matchResoucesMap, err := mms.ps.FilterResources(ctx, interfaces.RESOURCE_TYPE_METRIC_MODEL, mIDs,
-		[]string{interfaces.OPERATION_TYPE_VIEW_DETAIL}, false)
+		[]string{interfaces.OPERATION_TYPE_VIEW_DETAIL}, false, interfaces.FULL_OPERATIONS)
 	if err != nil {
 		return nil, err
 	}
@@ -1616,7 +1616,7 @@ func (mms *metricModelService) UpdateMetricModelsGroup(ctx context.Context,
 	// id去重后再查
 	mIDs := common.DuplicateSlice(modelIDs)
 	matchResouces, err := mms.ps.FilterResources(ctx, interfaces.RESOURCE_TYPE_METRIC_MODEL, mIDs,
-		[]string{interfaces.OPERATION_TYPE_MODIFY}, false)
+		[]string{interfaces.OPERATION_TYPE_MODIFY}, false, interfaces.FULL_OPERATIONS)
 	if err != nil {
 		return 0, err
 	}
@@ -1822,7 +1822,7 @@ func (mms *metricModelService) GetMetricModelsDetailByGroupID(ctx context.Contex
 
 	// 校验组下的模型有查看权限
 	matchResouces, err := mms.ps.FilterResources(ctx, interfaces.RESOURCE_TYPE_METRIC_MODEL, modelIDs,
-		[]string{interfaces.OPERATION_TYPE_VIEW_DETAIL}, false)
+		[]string{interfaces.OPERATION_TYPE_VIEW_DETAIL}, false, interfaces.FULL_OPERATIONS)
 	if err != nil {
 		return nil, err
 	}
@@ -2187,7 +2187,7 @@ func (mms *metricModelService) ListMetricModelSrcs(ctx context.Context, paramete
 	}
 	// 校验权限管理的操作权限
 	matchResoucesMap, err := mms.ps.FilterResources(ctx, interfaces.RESOURCE_TYPE_METRIC_MODEL, resMids,
-		[]string{interfaces.OPERATION_TYPE_VIEW_DETAIL}, false)
+		[]string{interfaces.OPERATION_TYPE_VIEW_DETAIL}, false, interfaces.FULL_OPERATIONS)
 	if err != nil {
 		return emptyResources, 0, err
 	}
@@ -2698,7 +2698,7 @@ func (mms *metricModelService) GetMetricModelOrderByFields(ctx context.Context, 
 
 	// 先获取资源序列  todo:
 	matchResouces, err := mms.ps.FilterResources(ctx, interfaces.RESOURCE_TYPE_METRIC_MODEL, mIDs,
-		[]string{interfaces.OPERATION_TYPE_VIEW_DETAIL}, true)
+		[]string{interfaces.OPERATION_TYPE_VIEW_DETAIL}, true, interfaces.FULL_OPERATIONS)
 	if err != nil {
 		return allFields, err
 	}

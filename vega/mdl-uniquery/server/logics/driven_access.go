@@ -10,6 +10,7 @@ import (
 )
 
 var (
+	AA          interfaces.AuthAccess
 	DCAccess    interfaces.DataConnectionAccess
 	DDAccess    interfaces.DataDictAccess
 	DDService   interfaces.DataDictService
@@ -31,6 +32,10 @@ var (
 	VGAccess    interfaces.VegaGatewayAccess
 	VVA         interfaces.VegaAccess
 )
+
+func SetAuthAccess(aa interfaces.AuthAccess) {
+	AA = aa
+}
 
 func SetDataConnectionAccess(dca interfaces.DataConnectionAccess) {
 	DCAccess = dca

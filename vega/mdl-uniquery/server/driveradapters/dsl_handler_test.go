@@ -15,8 +15,7 @@ import (
 	"github.com/bytedance/sonic"
 	"github.com/gin-gonic/gin"
 	"github.com/golang/mock/gomock"
-	"github.com/kweaver-ai/kweaver-go-lib/rest"
-	rmock "github.com/kweaver-ai/kweaver-go-lib/rest/mock"
+	"github.com/kweaver-ai/kweaver-go-lib/hydra"
 	. "github.com/smartystreets/goconvey/convey"
 
 	"uniquery/common"
@@ -63,10 +62,10 @@ var (
 )
 
 func mockNewDSLRestHandler(appSetting *common.AppSetting,
-	hydra rest.Hydra, dslService interfaces.DslService) (r *restHandler) {
+	authService interfaces.AuthService, dslService interfaces.DslService) (r *restHandler) {
 	r = &restHandler{
 		appSetting: appSetting,
-		hydra:      hydra,
+		as:         authService,
 		dslService: dslService,
 	}
 	r.InitMetric()
@@ -85,12 +84,12 @@ func TestDslGetResult(t *testing.T) {
 		defer mockCtrl.Finish()
 
 		appSetting := &common.AppSetting{}
-		hydraMock := rmock.NewMockHydra(mockCtrl)
+		authMock := umock.NewMockAuthService(mockCtrl)
 		dslService := umock.NewMockDslService(mockCtrl)
-		handler := mockNewDSLRestHandler(appSetting, hydraMock, dslService)
+		handler := mockNewDSLRestHandler(appSetting, authMock, dslService)
 		handler.RegisterPublic(engine)
 
-		hydraMock.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(rest.Visitor{}, nil)
+		authMock.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(hydra.Visitor{}, nil)
 
 		Convey("illegal scroll", func() {
 			searchBody := map[string]interface{}{}
@@ -175,12 +174,12 @@ func TestDslScroll(t *testing.T) {
 		defer mockCtrl.Finish()
 
 		appSetting := &common.AppSetting{}
-		hydraMock := rmock.NewMockHydra(mockCtrl)
+		authMock := umock.NewMockAuthService(mockCtrl)
 		dslService := umock.NewMockDslService(mockCtrl)
-		handler := mockNewDSLRestHandler(appSetting, hydraMock, dslService)
+		handler := mockNewDSLRestHandler(appSetting, authMock, dslService)
 		handler.RegisterPublic(engine)
 
-		hydraMock.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(rest.Visitor{}, nil)
+		authMock.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(hydra.Visitor{}, nil)
 
 		url := "/api/mdl-uniquery/v1/dsl/_search/scroll"
 
@@ -282,12 +281,12 @@ func TestDslGetCount(t *testing.T) {
 		defer mockCtrl.Finish()
 
 		appSetting := &common.AppSetting{}
-		hydraMock := rmock.NewMockHydra(mockCtrl)
+		authMock := umock.NewMockAuthService(mockCtrl)
 		dslService := umock.NewMockDslService(mockCtrl)
-		handler := mockNewDSLRestHandler(appSetting, hydraMock, dslService)
+		handler := mockNewDSLRestHandler(appSetting, authMock, dslService)
 		handler.RegisterPublic(engine)
 
-		hydraMock.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(rest.Visitor{}, nil)
+		authMock.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(hydra.Visitor{}, nil)
 
 		Convey("body invalid", func() {
 			url := "/api/mdl-uniquery/v1/dsl/_count"
@@ -389,12 +388,12 @@ func TestDslDeleteScroll(t *testing.T) {
 		defer mockCtrl.Finish()
 
 		appSetting := &common.AppSetting{}
-		hydraMock := rmock.NewMockHydra(mockCtrl)
+		authMock := umock.NewMockAuthService(mockCtrl)
 		dslService := umock.NewMockDslService(mockCtrl)
-		handler := mockNewDSLRestHandler(appSetting, hydraMock, dslService)
+		handler := mockNewDSLRestHandler(appSetting, authMock, dslService)
 		handler.RegisterPublic(engine)
 
-		hydraMock.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(rest.Visitor{}, nil)
+		authMock.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(hydra.Visitor{}, nil)
 
 		Convey("delete scroll success", func() {
 			resTemp, _ := sonic.Marshal(dslDeleteAllScrollResult)
@@ -521,12 +520,12 @@ func TestDslDeleteAllScroll(t *testing.T) {
 		defer mockCtrl.Finish()
 
 		appSetting := &common.AppSetting{}
-		hydraMock := rmock.NewMockHydra(mockCtrl)
+		authMock := umock.NewMockAuthService(mockCtrl)
 		dslService := umock.NewMockDslService(mockCtrl)
-		handler := mockNewDSLRestHandler(appSetting, hydraMock, dslService)
+		handler := mockNewDSLRestHandler(appSetting, authMock, dslService)
 		handler.RegisterPublic(engine)
 
-		hydraMock.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(rest.Visitor{}, nil)
+		authMock.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(hydra.Visitor{}, nil)
 
 		Convey("delete all scroll success", func() {
 			resTemp, _ := sonic.Marshal(dslDeleteAllScrollResult)

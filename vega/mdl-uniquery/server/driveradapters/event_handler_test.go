@@ -14,21 +14,21 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/golang/mock/gomock"
+	"github.com/kweaver-ai/kweaver-go-lib/hydra"
 	"github.com/kweaver-ai/kweaver-go-lib/rest"
-	rmock "github.com/kweaver-ai/kweaver-go-lib/rest/mock"
 	. "github.com/smartystreets/goconvey/convey"
 
 	"uniquery/common"
 	ierrors "uniquery/errors"
 	"uniquery/interfaces"
-	imock "uniquery/interfaces/mock"
+	umock "uniquery/interfaces/mock"
 )
 
 func mockNewMEventHandler(appSetting *common.AppSetting,
-	hydra rest.Hydra, eService interfaces.EventService) (r *restHandler) {
+	authService interfaces.AuthService, eService interfaces.EventService) (r *restHandler) {
 	r = &restHandler{
 		appSetting: appSetting,
-		hydra:      hydra,
+		as:         authService,
 		eService:   eService,
 	}
 	r.InitMetric()
@@ -47,12 +47,12 @@ func TestQuery(t *testing.T) {
 		defer mockCtrl.Finish()
 
 		appSetting := &common.AppSetting{}
-		hydraMock := rmock.NewMockHydra(mockCtrl)
-		esMock := imock.NewMockEventService(mockCtrl)
-		handler := mockNewMEventHandler(appSetting, hydraMock, esMock)
+		authMock := umock.NewMockAuthService(mockCtrl)
+		esMock := umock.NewMockEventService(mockCtrl)
+		handler := mockNewMEventHandler(appSetting, authMock, esMock)
 		handler.RegisterPublic(engine)
 
-		hydraMock.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(rest.Visitor{}, nil)
+		authMock.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(hydra.Visitor{}, nil)
 
 		url := "/api/mdl-uniquery/v1/events"
 
@@ -123,12 +123,12 @@ func TestQuerySingleEventByEventId(t *testing.T) {
 		defer mockCtrl.Finish()
 
 		appSetting := &common.AppSetting{}
-		hydraMock := rmock.NewMockHydra(mockCtrl)
-		esMock := imock.NewMockEventService(mockCtrl)
-		handler := mockNewMEventHandler(appSetting, hydraMock, esMock)
+		authMock := umock.NewMockAuthService(mockCtrl)
+		esMock := umock.NewMockEventService(mockCtrl)
+		handler := mockNewMEventHandler(appSetting, authMock, esMock)
 		handler.RegisterPublic(engine)
 
-		hydraMock.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(rest.Visitor{}, nil)
+		authMock.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(hydra.Visitor{}, nil)
 
 		url := "/api/mdl-uniquery/v1/event-models/498386860318393092/events/498406277530001114?start=1706600535000&end=1706603000000"
 

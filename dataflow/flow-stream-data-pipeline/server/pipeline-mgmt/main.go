@@ -20,6 +20,7 @@ import (
 
 	"flow-stream-data-pipeline/common"
 	access "flow-stream-data-pipeline/pipeline-mgmt/drivenadapters"
+	authAccess "flow-stream-data-pipeline/pipeline-mgmt/drivenadapters/auth"
 	"flow-stream-data-pipeline/pipeline-mgmt/driveradapters"
 	"flow-stream-data-pipeline/pipeline-mgmt/logics"
 )
@@ -109,6 +110,9 @@ func main() {
 	audit.Init(&appSetting.MQSetting)
 
 	// Set顺序按字母升序排序
+	if common.GetAuthEnabled() {
+		logics.SetAuthAccess(authAccess.NewHydraAuthAccess(appSetting))
+	}
 	logics.SetIndexBaseAccess(access.NewIndexBaseAccess(appSetting))
 	logics.SetMQAccess(access.NewMQAccess(appSetting))
 	logics.SetPermissionAccess(access.NewPermissionAccess(appSetting))

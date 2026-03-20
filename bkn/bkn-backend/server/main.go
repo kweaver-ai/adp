@@ -28,6 +28,7 @@ import (
 	"bkn-backend/common"
 	"bkn-backend/drivenadapters/action_schedule"
 	"bkn-backend/drivenadapters/action_type"
+	"bkn-backend/drivenadapters/auth"
 	"bkn-backend/drivenadapters/business_system"
 	"bkn-backend/drivenadapters/concept_group"
 	"bkn-backend/drivenadapters/data_model"
@@ -140,6 +141,11 @@ func main() {
 	audit.Init(&appSetting.MQSetting)
 
 	// Set顺序按字母升序排序
+	if common.GetAuthEnabled() {
+		logics.SetAuthAccess(auth.NewHydraAuthAccess(appSetting))
+		logics.SetPermissionAccess(permission.NewPermissionAccess(appSetting))
+		logics.SetUserMgmtAccess(user_mgmt.NewUserMgmtAccess(appSetting))
+	}
 	logics.SetActionScheduleAccess(action_schedule.NewActionScheduleAccess(appSetting))
 	logics.SetActionTypeAccess(action_type.NewActionTypeAccess(appSetting))
 	logics.SetBusinessSystemAccess(business_system.NewBusinessSystemAccess(appSetting))
@@ -149,11 +155,9 @@ func main() {
 	logics.SetJobAccess(job.NewJobAccess(appSetting))
 	logics.SetKNAccess(knowledge_network.NewKNAccess(appSetting))
 	logics.SetModelFactoryAccess(model_factory.NewModelFactoryAccess(appSetting))
-	logics.SetObjectTypeAccess(object_type.NewObjectTypeAccess(appSetting))
 	logics.SetOpenSearchAccess(opensearch.NewOpenSearchAccess(appSetting))
-	logics.SetPermissionAccess(permission.NewPermissionAccess(appSetting))
+	logics.SetObjectTypeAccess(object_type.NewObjectTypeAccess(appSetting))
 	logics.SetRelationTypeAccess(relation_type.NewRelationTypeAccess(appSetting))
-	logics.SetUserMgmtAccess(user_mgmt.NewUserMgmtAccess(appSetting))
 	logics.SetVegaBackendAccess(vega_backend.NewVegaBackendAccess(appSetting))
 
 	server := &mgrService{

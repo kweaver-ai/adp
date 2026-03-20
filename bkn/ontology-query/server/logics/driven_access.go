@@ -10,12 +10,17 @@ import (
 )
 
 var (
+	AA  interfaces.AuthAccess
 	AOA interfaces.AgentOperatorAccess
 	MFA interfaces.ModelFactoryAccess
 	OMA interfaces.OntologyManagerAccess
 	OSA interfaces.OpenSearchAccess
 	UA  interfaces.UniqueryAccess
 )
+
+func SetAuthAccess(aa interfaces.AuthAccess) {
+	AA = aa
+}
 
 func SetAgentOperatorAccess(aoa interfaces.AgentOperatorAccess) {
 	AOA = aoa

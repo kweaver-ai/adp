@@ -418,7 +418,7 @@ func (oms *objectiveModelService) ListObjectiveModels(ctx context.Context, param
 
 	// 根据权限过滤有查看权限的对象，过滤后的数组的总长度就是总数，无需再请求总数
 	matchResoucesMap, err := oms.ps.FilterResources(ctx, interfaces.RESOURCE_TYPE_OBJECTIVE_MODEL, modelIDs,
-		[]string{interfaces.OPERATION_TYPE_VIEW_DETAIL}, true)
+		[]string{interfaces.OPERATION_TYPE_VIEW_DETAIL}, true, interfaces.FULL_OPERATIONS)
 	if err != nil {
 		return emptyObjectiveModels, 0, err
 	}
@@ -584,7 +584,7 @@ func (oms *objectiveModelService) GetObjectiveModels(ctx context.Context, modelI
 
 	// 先获取资源序列
 	matchResouces, err := oms.ps.FilterResources(ctx, interfaces.RESOURCE_TYPE_OBJECTIVE_MODEL, modelIDs,
-		[]string{interfaces.OPERATION_TYPE_VIEW_DETAIL}, true)
+		[]string{interfaces.OPERATION_TYPE_VIEW_DETAIL}, true, interfaces.FULL_OPERATIONS)
 	if err != nil {
 		return nil, err
 	}
@@ -871,7 +871,7 @@ func (oms *objectiveModelService) DeleteObjectiveModels(ctx context.Context, mod
 
 	// 先获取资源序列 fmt.Sprintf("%s%s", interfaces.METRIC_MODEL_RESOURCE_ID_PREFIX, metricModel.ModelID),
 	matchResouces, err := oms.ps.FilterResources(ctx, interfaces.RESOURCE_TYPE_OBJECTIVE_MODEL, modelIDs,
-		[]string{interfaces.OPERATION_TYPE_DELETE}, false)
+		[]string{interfaces.OPERATION_TYPE_DELETE}, false, interfaces.FULL_OPERATIONS)
 	if err != nil {
 		return 0, err
 	}
@@ -1228,7 +1228,7 @@ func (oms *objectiveModelService) ListObjectiveModelSrcs(ctx context.Context, pa
 	}
 	// 根据权限过滤有查看权限的对象，过滤后的数组的总长度就是总数，无需再请求总数
 	matchResoucesMap, err := oms.ps.FilterResources(ctx, interfaces.RESOURCE_TYPE_OBJECTIVE_MODEL, modelIDs,
-		[]string{interfaces.OPERATION_TYPE_VIEW_DETAIL}, true)
+		[]string{interfaces.OPERATION_TYPE_VIEW_DETAIL}, true, interfaces.FULL_OPERATIONS)
 	if err != nil {
 		return empty, 0, err
 	}

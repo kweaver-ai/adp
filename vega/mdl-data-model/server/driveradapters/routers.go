@@ -13,6 +13,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	libCommon "github.com/kweaver-ai/kweaver-go-lib/common"
+	"github.com/kweaver-ai/kweaver-go-lib/hydra"
 	"github.com/kweaver-ai/kweaver-go-lib/logger"
 	"github.com/kweaver-ai/kweaver-go-lib/middleware"
 	o11y "github.com/kweaver-ai/kweaver-go-lib/observability"
@@ -21,6 +22,7 @@ import (
 	"data-model/common"
 	derrors "data-model/errors"
 	"data-model/interfaces"
+	"data-model/logics/auth"
 	"data-model/logics/data_connection"
 	"data-model/logics/data_dict"
 	"data-model/logics/data_view"
@@ -38,7 +40,7 @@ type RestHandler interface {
 
 type restHandler struct {
 	appSetting *common.AppSetting
-	hydra      rest.Hydra
+	as         interfaces.AuthService
 	dcs        interfaces.DataConnectionService
 	dds        interfaces.DataDictService
 	ddis       interfaces.DataDictItemsService
@@ -57,7 +59,7 @@ type restHandler struct {
 func NewRestHandler(appSetting *common.AppSetting) RestHandler {
 	return &restHandler{
 		appSetting: appSetting,
-		hydra:      rest.NewHydra(appSetting.HydraAdminSetting),
+		as:         auth.NewAuthService(appSetting),
 		dcs:        data_connection.NewDataConnectionService(appSetting),
 		dds:        data_dict.NewDataDictService(appSetting),
 		ddis:       data_dict.NewDataDictItemService(appSetting),
@@ -266,8 +268,8 @@ func (r *restHandler) HealthCheck(c *gin.Context) {
 }
 
 // 校验oauth
-func (r *restHandler) verifyOAuth(ctx context.Context, c *gin.Context) (rest.Visitor, error) {
-	visitor, err := r.hydra.VerifyToken(ctx, c)
+func (r *restHandler) verifyOAuth(ctx context.Context, c *gin.Context) (hydra.Visitor, error) {
+	visitor, err := r.as.VerifyToken(ctx, c)
 	if err != nil {
 		httpErr := rest.NewHTTPError(ctx, http.StatusUnauthorized, rest.PublicError_Unauthorized).
 			WithErrorDetails(err.Error())
@@ -312,21 +314,4 @@ func (r *restHandler) AccessLog() gin.HandlerFunc {
 			durTime,
 		)
 	}
-}
-
-func GenerateVisitor(c *gin.Context) rest.Visitor {
-	accountInfo := interfaces.AccountInfo{
-		ID:   c.GetHeader(interfaces.HTTP_HEADER_ACCOUNT_ID),
-		Type: c.GetHeader(interfaces.HTTP_HEADER_ACCOUNT_TYPE),
-	}
-	visitor := rest.Visitor{
-		ID:         accountInfo.ID,
-		Type:       rest.VisitorType(accountInfo.Type),
-		TokenID:    "", // 无token
-		IP:         c.ClientIP(),
-		Mac:        c.GetHeader("X-Request-MAC"),
-		UserAgent:  c.GetHeader("User-Agent"),
-		ClientType: rest.ClientType_Linux,
-	}
-	return visitor
 }

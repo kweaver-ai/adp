@@ -18,8 +18,7 @@ import (
 	"github.com/bytedance/sonic"
 	"github.com/gin-gonic/gin"
 	"github.com/golang/mock/gomock"
-	"github.com/kweaver-ai/kweaver-go-lib/rest"
-	rmock "github.com/kweaver-ai/kweaver-go-lib/rest/mock"
+	"github.com/kweaver-ai/kweaver-go-lib/hydra"
 	. "github.com/smartystreets/goconvey/convey"
 
 	"uniquery/common"
@@ -479,11 +478,11 @@ var (
 )
 
 func mockNewPromQLRestHandler(
-	appSetting *common.AppSetting, hydra rest.Hydra,
+	appSetting *common.AppSetting, authService interfaces.AuthService,
 	promqlService interfaces.PromQLService) (r *restHandler) {
 	r = &restHandler{
 		appSetting:    appSetting,
-		hydra:         hydra,
+		as:            authService,
 		promqlService: promqlService,
 	}
 	r.InitMetric()
@@ -547,11 +546,11 @@ func TestTimeSeriesSelector(t *testing.T) {
 		mmsMock := umock.NewMockMetricModelService(mockCtrl)
 		ps := promql.NewPromQLServiceRaw(appSetting, ln, mmsMock)
 
-		hydraMock := rmock.NewMockHydra(mockCtrl)
-		handler := mockNewPromQLRestHandler(appSetting, hydraMock, ps)
+		authMock := umock.NewMockAuthService(mockCtrl)
+		handler := mockNewPromQLRestHandler(appSetting, authMock, ps)
 		handler.RegisterPublic(engine)
 
-		hydraMock.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(rest.Visitor{}, nil)
+		authMock.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(hydra.Visitor{}, nil)
 
 		url := "/api/mdl-uniquery/v1/promql/query_range"
 
@@ -928,11 +927,11 @@ func TestArithmeticBinaryOperatorsInQueryRange(t *testing.T) {
 		mmsMock := umock.NewMockMetricModelService(mockCtrl)
 		ps := promql.NewPromQLServiceRaw(appSetting, ln, mmsMock)
 
-		hydraMock := rmock.NewMockHydra(mockCtrl)
-		handler := mockNewPromQLRestHandler(appSetting, hydraMock, ps)
+		authMock := umock.NewMockAuthService(mockCtrl)
+		handler := mockNewPromQLRestHandler(appSetting, authMock, ps)
 		handler.RegisterPublic(engine)
 
-		hydraMock.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(rest.Visitor{}, nil)
+		authMock.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(hydra.Visitor{}, nil)
 
 		url := "/api/mdl-uniquery/v1/promql/query_range"
 
@@ -3236,11 +3235,11 @@ func TestArithmeticBinaryOperatorsInQuery(t *testing.T) {
 		mmsMock := umock.NewMockMetricModelService(mockCtrl)
 		ps := promql.NewPromQLServiceRaw(appSetting, ln, mmsMock)
 
-		hydraMock := rmock.NewMockHydra(mockCtrl)
-		handler := mockNewPromQLRestHandler(appSetting, hydraMock, ps)
+		authMock := umock.NewMockAuthService(mockCtrl)
+		handler := mockNewPromQLRestHandler(appSetting, authMock, ps)
 		handler.RegisterPublic(engine)
 
-		hydraMock.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(rest.Visitor{}, nil)
+		authMock.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(hydra.Visitor{}, nil)
 
 		url := "/api/mdl-uniquery/v1/promql/query"
 
@@ -4958,11 +4957,11 @@ func TestSumAggregationsInQueryRange(t *testing.T) {
 		mmsMock := umock.NewMockMetricModelService(mockCtrl)
 		ps := promql.NewPromQLServiceRaw(appSetting, ln, mmsMock)
 
-		hydraMock := rmock.NewMockHydra(mockCtrl)
-		handler := mockNewPromQLRestHandler(appSetting, hydraMock, ps)
+		authMock := umock.NewMockAuthService(mockCtrl)
+		handler := mockNewPromQLRestHandler(appSetting, authMock, ps)
 		handler.RegisterPublic(engine)
 
-		hydraMock.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(rest.Visitor{}, nil)
+		authMock.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(hydra.Visitor{}, nil)
 
 		url := "/api/mdl-uniquery/v1/promql/query_range"
 
@@ -5491,11 +5490,11 @@ func TestSumAggregationsInQuery(t *testing.T) {
 		mmsMock := umock.NewMockMetricModelService(mockCtrl)
 		ps := promql.NewPromQLServiceRaw(appSetting, ln, mmsMock)
 
-		hydraMock := rmock.NewMockHydra(mockCtrl)
-		handler := mockNewPromQLRestHandler(appSetting, hydraMock, ps)
+		authMock := umock.NewMockAuthService(mockCtrl)
+		handler := mockNewPromQLRestHandler(appSetting, authMock, ps)
 		handler.RegisterPublic(engine)
 
-		hydraMock.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(rest.Visitor{}, nil)
+		authMock.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(hydra.Visitor{}, nil)
 
 		url := "/api/mdl-uniquery/v1/promql/query"
 
@@ -5895,11 +5894,11 @@ func TestMaxOperatorInQueryRange(t *testing.T) {
 		mmsMock := umock.NewMockMetricModelService(mockCtrl)
 		ps := promql.NewPromQLServiceRaw(appSetting, ln, mmsMock)
 
-		hydraMock := rmock.NewMockHydra(mockCtrl)
-		handler := mockNewPromQLRestHandler(appSetting, hydraMock, ps)
+		authMock := umock.NewMockAuthService(mockCtrl)
+		handler := mockNewPromQLRestHandler(appSetting, authMock, ps)
 		handler.RegisterPublic(engine)
 
-		hydraMock.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(rest.Visitor{}, nil)
+		authMock.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(hydra.Visitor{}, nil)
 
 		url := "/api/mdl-uniquery/v1/promql/query_range"
 
@@ -6220,11 +6219,11 @@ func TestMaxOperatorInQuery(t *testing.T) {
 		mmsMock := umock.NewMockMetricModelService(mockCtrl)
 		ps := promql.NewPromQLServiceRaw(appSetting, ln, mmsMock)
 
-		hydraMock := rmock.NewMockHydra(mockCtrl)
-		handler := mockNewPromQLRestHandler(appSetting, hydraMock, ps)
+		authMock := umock.NewMockAuthService(mockCtrl)
+		handler := mockNewPromQLRestHandler(appSetting, authMock, ps)
 		handler.RegisterPublic(engine)
 
-		hydraMock.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(rest.Visitor{}, nil)
+		authMock.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(hydra.Visitor{}, nil)
 
 		url := "/api/mdl-uniquery/v1/promql/query"
 
@@ -6454,11 +6453,11 @@ func TestSortFunctionInQueryRange(t *testing.T) {
 		mmsMock := umock.NewMockMetricModelService(mockCtrl)
 		ps := promql.NewPromQLServiceRaw(appSetting, ln, mmsMock)
 
-		hydraMock := rmock.NewMockHydra(mockCtrl)
-		handler := mockNewPromQLRestHandler(appSetting, hydraMock, ps)
+		authMock := umock.NewMockAuthService(mockCtrl)
+		handler := mockNewPromQLRestHandler(appSetting, authMock, ps)
 		handler.RegisterPublic(engine)
 
-		hydraMock.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(rest.Visitor{}, nil)
+		authMock.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(hydra.Visitor{}, nil)
 
 		url := "/api/mdl-uniquery/v1/promql/query_range"
 
@@ -6538,11 +6537,11 @@ func TestSortDescFunctionInQueryRange(t *testing.T) {
 		mmsMock := umock.NewMockMetricModelService(mockCtrl)
 		ps := promql.NewPromQLServiceRaw(appSetting, ln, mmsMock)
 
-		hydraMock := rmock.NewMockHydra(mockCtrl)
-		handler := mockNewPromQLRestHandler(appSetting, hydraMock, ps)
+		authMock := umock.NewMockAuthService(mockCtrl)
+		handler := mockNewPromQLRestHandler(appSetting, authMock, ps)
 		handler.RegisterPublic(engine)
 
-		hydraMock.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(rest.Visitor{}, nil)
+		authMock.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(hydra.Visitor{}, nil)
 
 		url := "/api/mdl-uniquery/v1/promql/query_range"
 
@@ -6622,11 +6621,11 @@ func TestSortFunctionInQuery(t *testing.T) {
 		mmsMock := umock.NewMockMetricModelService(mockCtrl)
 		ps := promql.NewPromQLServiceRaw(appSetting, ln, mmsMock)
 
-		hydraMock := rmock.NewMockHydra(mockCtrl)
-		handler := mockNewPromQLRestHandler(appSetting, hydraMock, ps)
+		authMock := umock.NewMockAuthService(mockCtrl)
+		handler := mockNewPromQLRestHandler(appSetting, authMock, ps)
 		handler.RegisterPublic(engine)
 
-		hydraMock.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(rest.Visitor{}, nil)
+		authMock.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(hydra.Visitor{}, nil)
 
 		url := "/api/mdl-uniquery/v1/promql/query"
 
@@ -6756,11 +6755,11 @@ func TestSortDescFunctionInQuery(t *testing.T) {
 		mmsMock := umock.NewMockMetricModelService(mockCtrl)
 		ps := promql.NewPromQLServiceRaw(appSetting, ln, mmsMock)
 
-		hydraMock := rmock.NewMockHydra(mockCtrl)
-		handler := mockNewPromQLRestHandler(appSetting, hydraMock, ps)
+		authMock := umock.NewMockAuthService(mockCtrl)
+		handler := mockNewPromQLRestHandler(appSetting, authMock, ps)
 		handler.RegisterPublic(engine)
 
-		hydraMock.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(rest.Visitor{}, nil)
+		authMock.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(hydra.Visitor{}, nil)
 
 		url := "/api/mdl-uniquery/v1/promql/query"
 
@@ -6890,11 +6889,11 @@ func TestMinOperatorInQuery(t *testing.T) {
 		mmsMock := umock.NewMockMetricModelService(mockCtrl)
 		ps := promql.NewPromQLServiceRaw(appSetting, ln, mmsMock)
 
-		hydraMock := rmock.NewMockHydra(mockCtrl)
-		handler := mockNewPromQLRestHandler(appSetting, hydraMock, ps)
+		authMock := umock.NewMockAuthService(mockCtrl)
+		handler := mockNewPromQLRestHandler(appSetting, authMock, ps)
 		handler.RegisterPublic(engine)
 
-		hydraMock.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(rest.Visitor{}, nil)
+		authMock.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(hydra.Visitor{}, nil)
 
 		url := "/api/mdl-uniquery/v1/promql/query"
 
@@ -7128,11 +7127,11 @@ func TestFuncRate(t *testing.T) {
 		mmsMock := umock.NewMockMetricModelService(mockCtrl)
 		ps := promql.NewPromQLServiceRaw(appSetting, ln, mmsMock)
 
-		hydraMock := rmock.NewMockHydra(mockCtrl)
-		handler := mockNewPromQLRestHandler(appSetting, hydraMock, ps)
+		authMock := umock.NewMockAuthService(mockCtrl)
+		handler := mockNewPromQLRestHandler(appSetting, authMock, ps)
 		handler.RegisterPublic(engine)
 
-		hydraMock.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(rest.Visitor{}, nil)
+		authMock.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(hydra.Visitor{}, nil)
 
 		rateDslResult0 := map[string]interface{}{
 			"aggregations": map[string]interface{}{
@@ -8222,11 +8221,11 @@ func TestFuncHistogramQuantile(t *testing.T) {
 		mmsMock := umock.NewMockMetricModelService(mockCtrl)
 		ps := promql.NewPromQLServiceRaw(appSetting, ln, mmsMock)
 
-		hydraMock := rmock.NewMockHydra(mockCtrl)
-		handler := mockNewPromQLRestHandler(appSetting, hydraMock, ps)
+		authMock := umock.NewMockAuthService(mockCtrl)
+		handler := mockNewPromQLRestHandler(appSetting, authMock, ps)
 		handler.RegisterPublic(engine)
 
-		hydraMock.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(rest.Visitor{}, nil)
+		authMock.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(hydra.Visitor{}, nil)
 
 		url := "/api/mdl-uniquery/v1/promql/query"
 
@@ -8381,11 +8380,11 @@ func TestFuncIncrease(t *testing.T) {
 		mmsMock := umock.NewMockMetricModelService(mockCtrl)
 		ps := promql.NewPromQLServiceRaw(appSetting, ln, mmsMock)
 
-		hydraMock := rmock.NewMockHydra(mockCtrl)
-		handler := mockNewPromQLRestHandler(appSetting, hydraMock, ps)
+		authMock := umock.NewMockAuthService(mockCtrl)
+		handler := mockNewPromQLRestHandler(appSetting, authMock, ps)
 		handler.RegisterPublic(engine)
 
-		hydraMock.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(rest.Visitor{}, nil)
+		authMock.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(hydra.Visitor{}, nil)
 
 		rateDslResult0 := map[string]interface{}{
 			"aggregations": map[string]interface{}{
@@ -8937,11 +8936,11 @@ func TestFuncChanges(t *testing.T) {
 		mmsMock := umock.NewMockMetricModelService(mockCtrl)
 		ps := promql.NewPromQLServiceRaw(appSetting, ln, mmsMock)
 
-		hydraMock := rmock.NewMockHydra(mockCtrl)
-		handler := mockNewPromQLRestHandler(appSetting, hydraMock, ps)
+		authMock := umock.NewMockAuthService(mockCtrl)
+		handler := mockNewPromQLRestHandler(appSetting, authMock, ps)
 		handler.RegisterPublic(engine)
 
-		hydraMock.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(rest.Visitor{}, nil)
+		authMock.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(hydra.Visitor{}, nil)
 
 		rateDslResult0 := map[string]interface{}{
 			"aggregations": map[string]interface{}{
@@ -9495,11 +9494,11 @@ func TestFuncMath(t *testing.T) {
 		mmsMock := umock.NewMockMetricModelService(mockCtrl)
 		ps := promql.NewPromQLServiceRaw(appSetting, ln, mmsMock)
 
-		hydraMock := rmock.NewMockHydra(mockCtrl)
-		handler := mockNewPromQLRestHandler(appSetting, hydraMock, ps)
+		authMock := umock.NewMockAuthService(mockCtrl)
+		handler := mockNewPromQLRestHandler(appSetting, authMock, ps)
 		handler.RegisterPublic(engine)
 
-		hydraMock.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(rest.Visitor{}, nil)
+		authMock.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(hydra.Visitor{}, nil)
 
 		url := "/api/mdl-uniquery/v1/promql/query"
 
@@ -9781,11 +9780,11 @@ func TestFuncLogic(t *testing.T) {
 		mmsMock := umock.NewMockMetricModelService(mockCtrl)
 		ps := promql.NewPromQLServiceRaw(appSetting, ln, mmsMock)
 
-		hydraMock := rmock.NewMockHydra(mockCtrl)
-		handler := mockNewPromQLRestHandler(appSetting, hydraMock, ps)
+		authMock := umock.NewMockAuthService(mockCtrl)
+		handler := mockNewPromQLRestHandler(appSetting, authMock, ps)
 		handler.RegisterPublic(engine)
 
-		hydraMock.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(rest.Visitor{}, nil)
+		authMock.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(hydra.Visitor{}, nil)
 
 		url := "/api/mdl-uniquery/v1/promql/query"
 

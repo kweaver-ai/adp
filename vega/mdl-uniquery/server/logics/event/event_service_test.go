@@ -12,9 +12,6 @@ import (
 	"reflect"
 	"testing"
 	"time"
-	"uniquery/common"
-	"uniquery/interfaces"
-	imock "uniquery/interfaces/mock"
 
 	. "github.com/agiledragon/gomonkey/v2"
 	"github.com/confluentinc/confluent-kafka-go/v2/kafka"
@@ -22,6 +19,10 @@ import (
 	did "github.com/kweaver-ai/kweaver-go-lib/did"
 	"github.com/kweaver-ai/kweaver-go-lib/rest"
 	. "github.com/smartystreets/goconvey/convey"
+
+	"uniquery/common"
+	"uniquery/interfaces"
+	umock "uniquery/interfaces/mock"
 )
 
 var (
@@ -242,11 +243,11 @@ func TestCall(t *testing.T) {
 		defer mockCtrl.Finish()
 
 		appSetting := &common.AppSetting{}
-		// uaMock := imock.NewMockUniqueryAccess(mockCtrl)
-		dvaMock := imock.NewMockDataViewAccess(mockCtrl)
+		// uaMock := umock.NewMockUniqueryAccess(mockCtrl)
+		dvaMock := umock.NewMockDataViewAccess(mockCtrl)
 		dataSource := []string{"1"}
 		dataSourceType := "metric_model"
-		kAcess := imock.NewMockKafkaAccess(mockCtrl)
+		kAcess := umock.NewMockKafkaAccess(mockCtrl)
 
 		engine := MockNewEventEngine(eventModel, dataSource, dataSourceType, dvaMock, kAcess, appSetting)
 		Convey("Success", func() {
@@ -262,11 +263,11 @@ func TestTraversal(t *testing.T) {
 		mockCtrl := gomock.NewController(t)
 		defer mockCtrl.Finish()
 		appSetting := &common.AppSetting{}
-		// uaMock := imock.NewMockUniqueryAccess(mockCtrl)
-		dvaMock := imock.NewMockDataViewAccess(mockCtrl)
+		// uaMock := umock.NewMockUniqueryAccess(mockCtrl)
+		dvaMock := umock.NewMockDataViewAccess(mockCtrl)
 		dataSource := []string{"1"}
 		dataSourceType := "metric_model"
-		kAcess := imock.NewMockKafkaAccess(mockCtrl)
+		kAcess := umock.NewMockKafkaAccess(mockCtrl)
 		engine := MockNewEventEngine(eventModel, dataSource, dataSourceType, dvaMock, kAcess, appSetting)
 		Convey("children is nil", func() {
 
@@ -292,11 +293,11 @@ func TestGenerationAtomicEvent(t *testing.T) {
 		defer mockCtrl.Finish()
 
 		appSetting := &common.AppSetting{}
-		// uaMock := imock.NewMockUniqueryAccess(mockCtrl)
-		dvaMock := imock.NewMockDataViewAccess(mockCtrl)
+		// uaMock := umock.NewMockUniqueryAccess(mockCtrl)
+		dvaMock := umock.NewMockDataViewAccess(mockCtrl)
 		dataSource := []string{"1"}
 		dataSourceType := "metric_model"
-		kAcess := imock.NewMockKafkaAccess(mockCtrl)
+		kAcess := umock.NewMockKafkaAccess(mockCtrl)
 		engine := MockNewEventEngine(eventModel, dataSource, dataSourceType, dvaMock, kAcess, appSetting)
 
 		Convey("success", func() {
@@ -341,11 +342,11 @@ func TestGenerationAggregateEvent(t *testing.T) {
 		defer mockCtrl.Finish()
 
 		appSetting := &common.AppSetting{}
-		// uaMock := imock.NewMockUniqueryAccess(mockCtrl)
-		dvaMock := imock.NewMockDataViewAccess(mockCtrl)
+		// uaMock := umock.NewMockUniqueryAccess(mockCtrl)
+		dvaMock := umock.NewMockDataViewAccess(mockCtrl)
 		dataSource := []string{"1"}
 		dataSourceType := "metric_model"
-		kAcess := imock.NewMockKafkaAccess(mockCtrl)
+		kAcess := umock.NewMockKafkaAccess(mockCtrl)
 		engine := MockNewEventEngine(eventModel, dataSource, dataSourceType, dvaMock, kAcess, appSetting)
 
 		Convey("success", func() {
@@ -424,11 +425,11 @@ func TestEventEngine_Judge(t *testing.T) {
 		defer mockCtrl.Finish()
 
 		appSetting := &common.AppSetting{}
-		// uaMock := imock.NewMockUniqueryAccess(mockCtrl)
-		dvaMock := imock.NewMockDataViewAccess(mockCtrl)
+		// uaMock := umock.NewMockUniqueryAccess(mockCtrl)
+		dvaMock := umock.NewMockDataViewAccess(mockCtrl)
 		dataSource := []string{"1"}
 		dataSourceType := "metric_model"
-		kAcess := imock.NewMockKafkaAccess(mockCtrl)
+		kAcess := umock.NewMockKafkaAccess(mockCtrl)
 		engine := MockNewEventEngine(eventModel, dataSource, dataSourceType, dvaMock, kAcess, appSetting)
 		sr := interfaces.SourceRecords{
 			Records: interfaces.Records{
@@ -462,12 +463,12 @@ func Test_eventService_QuerySingleEventByEventId(t *testing.T) {
 			PoolSetting: common.PoolSetting{
 				ViewPoolSize: 10,
 			}}
-		engine := imock.NewMockEventEngine(mockCtrl)
-		emAccess := imock.NewMockEventModelAccess(mockCtrl)
-		dvAccess := imock.NewMockDataViewAccess(mockCtrl)
-		// uAcess := imock.NewMockUniqueryAccess(mockCtrl)
-		ibaMock := imock.NewMockIndexBaseAccess(mockCtrl)
-		psMock := imock.NewMockPermissionService(mockCtrl)
+		engine := umock.NewMockEventEngine(mockCtrl)
+		emAccess := umock.NewMockEventModelAccess(mockCtrl)
+		dvAccess := umock.NewMockDataViewAccess(mockCtrl)
+		// uAcess := umock.NewMockUniqueryAccess(mockCtrl)
+		ibaMock := umock.NewMockIndexBaseAccess(mockCtrl)
+		psMock := umock.NewMockPermissionService(mockCtrl)
 		es := MockNewEventService(appSetting, engine, emAccess, dvAccess, ibaMock, psMock)
 
 		query := interfaces.EventDetailsQueryReq{
@@ -600,17 +601,17 @@ func Test_eventService_Query(t *testing.T) {
 		mockCtrl := gomock.NewController(t)
 		defer mockCtrl.Finish()
 
-		// emAccess:    dmock.NewMockEventModelAccess(mockCtrl),
-		// kafkaAccess: dmock.NewMockKafkaAccess(mockCtrl),
+		// emAccess:    umock.NewMockEventModelAccess(mockCtrl),
+		// kafkaAccess: umock.NewMockKafkaAccess(mockCtrl),
 		// topics:      []string{"default.mdl.view"},
-		// engine:      dmock.NewMockEventEngine(mockCtrl),
+		// engine:      umock.NewMockEventEngine(mockCtrl),
 
-		engine := imock.NewMockEventEngine(mockCtrl)
-		emAccess := imock.NewMockEventModelAccess(mockCtrl)
-		dvAccess := imock.NewMockDataViewAccess(mockCtrl)
-		// uAcess := imock.NewMockUniqueryAccess(mockCtrl)
-		ibaMock := imock.NewMockIndexBaseAccess(mockCtrl)
-		psMock := imock.NewMockPermissionService(mockCtrl)
+		engine := umock.NewMockEventEngine(mockCtrl)
+		emAccess := umock.NewMockEventModelAccess(mockCtrl)
+		dvAccess := umock.NewMockDataViewAccess(mockCtrl)
+		// uAcess := umock.NewMockUniqueryAccess(mockCtrl)
+		ibaMock := umock.NewMockIndexBaseAccess(mockCtrl)
+		psMock := umock.NewMockPermissionService(mockCtrl)
 		es := MockNewEventService(&common.AppSetting{}, engine, emAccess, dvAccess, ibaMock, psMock)
 		// es.engine = engine
 		query := interfaces.EventQueryReq{
@@ -650,10 +651,10 @@ func Test_eventService_Query(t *testing.T) {
 // 		defer mockCtrl.Finish()
 
 // 		appSetting := &common.AppSetting{}
-// 		dvaMock := imock.NewMockDataViewAccess(mockCtrl)
+// 		dvaMock := umock.NewMockDataViewAccess(mockCtrl)
 // 		dataSource := []string{"1"}
 // 		dataSourceType := "metric_model"
-// 		kAcess := imock.NewMockKafkaAccess(mockCtrl)
+// 		kAcess := umock.NewMockKafkaAccess(mockCtrl)
 // 		engine := MockNewEventEngine(eventModel, dataSource, dataSourceType, dvaMock, kAcess, uaMock, appSetting)
 
 // 		// producer, _ := kafka.NewProducer(&kafka.ConfigMap{"bootstrap.servers": "localhost"})
@@ -711,11 +712,11 @@ func TestEventEngine_mit(t *testing.T) {
 		defer mockCtrl.Finish()
 
 		appSetting := &common.AppSetting{}
-		// uaMock := imock.NewMockUniqueryAccess(mockCtrl)
-		dvaMock := imock.NewMockDataViewAccess(mockCtrl)
+		// uaMock := umock.NewMockUniqueryAccess(mockCtrl)
+		dvaMock := umock.NewMockDataViewAccess(mockCtrl)
 		dataSource := []string{"1"}
 		dataSourceType := "metric_model"
-		kAcess := imock.NewMockKafkaAccess(mockCtrl)
+		kAcess := umock.NewMockKafkaAccess(mockCtrl)
 		engine := MockNewEventEngine(eventModel, dataSource, dataSourceType, dvaMock, kAcess, appSetting)
 		events := interfaces.AtomicEvent{
 			BaseEvent: interfaces.BaseEvent{
@@ -943,10 +944,10 @@ func TestEventEginePersistQuery(t *testing.T) {
 			PoolSetting: common.PoolSetting{
 				ViewPoolSize: 10,
 			}}
-		dvaMock := imock.NewMockDataViewAccess(mockCtrl)
+		dvaMock := umock.NewMockDataViewAccess(mockCtrl)
 		dataSource := []string{"1"}
 		dataSourceType := "metric_model"
-		kAcess := imock.NewMockKafkaAccess(mockCtrl)
+		kAcess := umock.NewMockKafkaAccess(mockCtrl)
 		engine := MockNewEventEngine(eventModel, dataSource, dataSourceType, dvaMock, kAcess, appSetting)
 		// Convey("PersistQuery failed: GetDataViewIDByName failed", func() {
 		// 	event_query := interfaces.EventQuery{
@@ -1247,11 +1248,11 @@ func TestEventEgineGetLastEventLevel(t *testing.T) {
 		defer mockCtrl.Finish()
 
 		appSetting := &common.AppSetting{}
-		// uaMock := imock.NewMockUniqueryAccess(mockCtrl)
-		dvaMock := imock.NewMockDataViewAccess(mockCtrl)
+		// uaMock := umock.NewMockUniqueryAccess(mockCtrl)
+		dvaMock := umock.NewMockDataViewAccess(mockCtrl)
 		dataSource := []string{"1"}
 		dataSourceType := "metric_model"
-		kAcess := imock.NewMockKafkaAccess(mockCtrl)
+		kAcess := umock.NewMockKafkaAccess(mockCtrl)
 		engine := MockNewEventEngine(eventModel, dataSource, dataSourceType, dvaMock, kAcess, appSetting)
 		key := "labelkey"
 		Convey("success, len(events) == 0", func() {
@@ -1309,11 +1310,11 @@ func TestEventEgineQuery(t *testing.T) {
 		defer mockCtrl.Finish()
 
 		appSetting := &common.AppSetting{}
-		// uaMock := imock.NewMockUniqueryAccess(mockCtrl)
-		dvaMock := imock.NewMockDataViewAccess(mockCtrl)
+		// uaMock := umock.NewMockUniqueryAccess(mockCtrl)
+		dvaMock := umock.NewMockDataViewAccess(mockCtrl)
 		dataSource := []string{"1"}
 		dataSourceType := "metric_model"
-		kAcess := imock.NewMockKafkaAccess(mockCtrl)
+		kAcess := umock.NewMockKafkaAccess(mockCtrl)
 		engine := MockNewEventEngine(eventModel, dataSource, dataSourceType, dvaMock, kAcess, appSetting)
 		event_query := interfaces.EventQuery{
 			QueryType: "range_query",

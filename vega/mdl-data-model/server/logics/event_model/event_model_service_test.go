@@ -1033,7 +1033,7 @@ func Test_EventModelService_DeleteEventModels(t *testing.T) {
 			},
 		}
 		Convey("DeleteEventModels failed,caused by GetEventModelByID failed ", func() {
-			ps.EXPECT().FilterResources(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+			ps.EXPECT().FilterResources(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
 				Return(resrc, nil)
 			ema.EXPECT().GetEventTaskIDByModelIDs(gomock.Any(), gomock.Any()).Return(nil, nil)
 			ema.EXPECT().GetEventModelByID(gomock.Any()).Return(oldEventModel, errors.New("error"))
@@ -1043,7 +1043,7 @@ func Test_EventModelService_DeleteEventModels(t *testing.T) {
 			So(httpErr.BaseError.ErrorCode, ShouldEqual, derrors.EventModel_InternalError)
 		})
 		Convey("DeleteEventModels failed,caused by GetEventTaskByModelID failed ", func() {
-			ps.EXPECT().FilterResources(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+			ps.EXPECT().FilterResources(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
 				Return(resrc, nil)
 			ps.EXPECT().CheckPermission(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
 			ema.EXPECT().GetEventTaskIDByModelIDs(gomock.Any(), gomock.Any()).Return(nil, nil)
@@ -1061,7 +1061,7 @@ func Test_EventModelService_DeleteEventModels(t *testing.T) {
 			So(httpErr.BaseError.ErrorCode, ShouldEqual, derrors.EventModel_InternalError)
 		})
 		Convey("DeleteEventModels failed,caused by GetEventModelRefsByID failed ", func() {
-			ps.EXPECT().FilterResources(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+			ps.EXPECT().FilterResources(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
 				Return(resrc, nil)
 			ps.EXPECT().CheckPermission(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
 			ema.EXPECT().GetEventTaskIDByModelIDs(gomock.Any(), gomock.Any()).Return(nil, nil)
@@ -1082,7 +1082,7 @@ func Test_EventModelService_DeleteEventModels(t *testing.T) {
 			So(httpErr.BaseError.ErrorCode, ShouldEqual, derrors.EventModel_InternalError)
 		})
 		Convey("DeleteEventModels failed,caused by transaction begin failed ", func() {
-			ps.EXPECT().FilterResources(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+			ps.EXPECT().FilterResources(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
 				Return(resrc, nil)
 			ps.EXPECT().CheckPermission(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
 			ema.EXPECT().GetEventTaskIDByModelIDs(gomock.Any(), gomock.Any()).Return(nil, nil)
@@ -1104,7 +1104,7 @@ func Test_EventModelService_DeleteEventModels(t *testing.T) {
 			So(httpErr.BaseError.ErrorCode, ShouldEqual, derrors.DataModel_EventModel_InternalError_BeginTransactionFailed)
 		})
 		Convey("DeleteEventModels failed,caused by DeleteEventModels failed ", func() {
-			ps.EXPECT().FilterResources(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+			ps.EXPECT().FilterResources(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
 				Return(resrc, nil)
 			ps.EXPECT().CheckPermission(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
 			ema.EXPECT().GetEventTaskIDByModelIDs(gomock.Any(), gomock.Any()).Return(nil, nil)
@@ -1128,7 +1128,7 @@ func Test_EventModelService_DeleteEventModels(t *testing.T) {
 		})
 
 		Convey("DeleteEventModels failed,caused by GetEventTaskIDByModelIDs failed ", func() {
-			ps.EXPECT().FilterResources(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+			ps.EXPECT().FilterResources(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
 				Return(resrc, nil)
 			ema.EXPECT().GetEventTaskIDByModelIDs(gomock.Any(), gomock.Any()).AnyTimes().Return([]string{"1"}, errors.New("error"))
 
@@ -1138,7 +1138,7 @@ func Test_EventModelService_DeleteEventModels(t *testing.T) {
 			So(httpErr.BaseError.ErrorCode, ShouldEqual, derrors.EventModel_InternalError)
 		})
 		Convey("DeleteEventModels failed,caused by DeleteEventTaskByTaskIDs failed ", func() {
-			ps.EXPECT().FilterResources(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+			ps.EXPECT().FilterResources(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
 				Return(resrc, nil)
 			ps.EXPECT().CheckPermission(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
 			ema.EXPECT().GetEventModelByID(gomock.Any()).Return(oldEventModel, nil)
@@ -1163,7 +1163,7 @@ func Test_EventModelService_DeleteEventModels(t *testing.T) {
 			So(httpErr.BaseError.ErrorCode, ShouldEqual, derrors.EventModel_InternalError)
 		})
 		Convey("DeleteEventModels succeed", func() {
-			ps.EXPECT().FilterResources(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+			ps.EXPECT().FilterResources(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
 				Return(resrc, nil)
 			ps.EXPECT().CheckPermission(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
 			ps.EXPECT().DeleteResources(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)

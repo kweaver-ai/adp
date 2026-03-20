@@ -3,7 +3,7 @@
 // Licensed under the Apache License, Version 2.0.
 // See the LICENSE file in the project root for details.
 
-package drivenadapters
+package agent_operator
 
 import (
 	"context"
@@ -217,8 +217,9 @@ func (aoa *agentOperatorAccess) ExecuteTool(ctx context.Context, boxID string,
 	}
 
 	headers := map[string]string{
-		interfaces.CONTENT_TYPE_NAME: interfaces.CONTENT_TYPE_JSON,
-		"user_id":                    accountInfo.ID, // API requires user_id header
+		interfaces.CONTENT_TYPE_NAME:        interfaces.CONTENT_TYPE_JSON,
+		interfaces.HTTP_HEADER_ACCOUNT_ID:   accountInfo.ID,
+		interfaces.HTTP_HEADER_ACCOUNT_TYPE: accountInfo.Type,
 	}
 
 	// http://{host}:{port}/api/agent-operator-integration/internal-v1/tool-box/{box_id}/proxy/{tool_id}
@@ -301,7 +302,8 @@ func (aoa *agentOperatorAccess) ExecuteMCP(ctx context.Context, mcpID string,
 	headers := map[string]string{
 		interfaces.CONTENT_TYPE_NAME:           interfaces.CONTENT_TYPE_JSON,
 		interfaces.HTTP_HEADER_BUSINESS_DOMAIN: businessDomain,
-		"user_id":                              accountInfo.ID,
+		interfaces.HTTP_HEADER_ACCOUNT_ID:      accountInfo.ID,
+		interfaces.HTTP_HEADER_ACCOUNT_TYPE:    accountInfo.Type,
 	}
 
 	// http://{host}:{port}/api/agent-operator-integration/internal-v1/mcp/proxy/{mcp_id}/tool/call

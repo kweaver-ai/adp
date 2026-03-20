@@ -17,7 +17,7 @@ import (
 	"uniquery/common"
 	cond "uniquery/common/condition"
 	"uniquery/interfaces"
-	dmock "uniquery/interfaces/mock"
+	umock "uniquery/interfaces/mock"
 )
 
 var (
@@ -38,7 +38,7 @@ func Test_VegaService_GetVegaViewFieldsByID(t *testing.T) {
 		defer mockCtrl.Finish()
 
 		appSetting := &common.AppSetting{}
-		vva := dmock.NewMockVegaAccess(mockCtrl)
+		vva := umock.NewMockVegaAccess(mockCtrl)
 		vvs := MockNewVegaService(appSetting, vva)
 
 		Convey("When GetVegaViewFieldsByID error", func() {
@@ -98,7 +98,7 @@ func Test_VegaService_FetchDatasFromVega(t *testing.T) {
 		defer mockCtrl.Finish()
 
 		appSetting := &common.AppSetting{}
-		vva := dmock.NewMockVegaAccess(mockCtrl)
+		vva := umock.NewMockVegaAccess(mockCtrl)
 		vvs := MockNewVegaService(appSetting, vva)
 
 		Convey("When GetVegaViewFFetchDatasFromVegaieldsByID error", func() {
