@@ -40,6 +40,7 @@
     { "name": "order_price", "from": "node_source_B.price" }
   ]
 }
+```
 
 ### 场景 B：数据合并 (Union)
 通过 `sources` 数组实现多源字段的索引位对齐。
