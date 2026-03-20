@@ -10,7 +10,7 @@ require (
 	github.com/go-sql-driver/mysql v1.9.3
 	github.com/hibiken/asynq v0.26.0
 	github.com/kweaver-ai/TelemetrySDK-Go/exporter/v2 v2.10.3
-	github.com/kweaver-ai/kweaver-go-lib v1.0.3
+	github.com/kweaver-ai/kweaver-go-lib v1.0.4
 	github.com/kweaver-ai/proton-mq-sdk-go v1.9.1
 	github.com/mitchellh/mapstructure v1.5.0
 	github.com/opensearch-project/opensearch-go/v2 v2.3.0
