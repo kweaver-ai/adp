@@ -1696,7 +1696,7 @@ components:
           type: array
           description: "函数列表，当 metadata_type 为 function 时必填"
           items:
-            $ref: "#/components/schemas/FunctionInput"
+            $ref: "#/components/schemas/InternalFunctionInput"
         source:
           type: string
           description: "工具来源"
@@ -1714,6 +1714,15 @@ components:
         protected_flag:
           type: boolean
           description: 手动配置保护锁, 当前版本周期能，如果开启锁保护，禁止自动更新操作
+    InternalFunctionInput:
+      type: object
+      description: "内置函数输入参数"
+      allOf:
+        - $ref: "#/components/schemas/FunctionInput"
+        - properties:
+            tool_id:
+              type: string
+              description: "工具ID; 如果为空默认自动自动生成"
     CreateInternalToolBoxResp:
       type: object
       description: "内置工具、工具箱更新返回结果"
