@@ -12,10 +12,10 @@ import (
 	"testing"
 
 	"github.com/bytedance/sonic"
-	"go.uber.org/mock/gomock"
 	"github.com/kweaver-ai/kweaver-go-lib/rest"
-	rmock "bkn-backend/interfaces/mock"
+	rmock "github.com/kweaver-ai/kweaver-go-lib/rest/mock"
 	. "github.com/smartystreets/goconvey/convey"
+	"go.uber.org/mock/gomock"
 
 	"bkn-backend/common"
 	cond "bkn-backend/common/condition"
