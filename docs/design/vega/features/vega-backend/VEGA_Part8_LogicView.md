@@ -1,4 +1,4 @@
-# Vega Data Scope 逻辑设计与接口交互规范
+# Vega Logic View logic_definition 设计
 
 ## 1. 设计背景
 在低代码数据建模场景中，需要一套 DSL（领域特定语言）来描述数据从源表到最终输出的流转逻辑。Vega 采用“**配置极简化，运行时标准化**”的设计哲学，支持 Join、Union、SQL、View 等多种算子。
@@ -123,7 +123,7 @@ type Property struct {
 
 ---
 
-## 7. other
+## 7. Other
 
 <details>
 <summary>完整 logic_defintition 示例</summary>
