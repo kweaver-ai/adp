@@ -40,12 +40,12 @@ VEGA-SQL查询模式和方言查询模式流程基本相同，处理流程如下
 
 ## 请求信息
 
-| 项目     | 内容                                              |
-|--------|-------------------------------------------------|
-| 请求方法   | POST                                            |
-| 外部请求路径 | `/api/vega-backend/v1/resources/query`          |
-| 内部请求路径 | `/api/internal/vega-backend/v1/resources/query` |
-| 内容类型   | `application/json`                              |
+| 项目     | 内容                                        |
+|--------|-------------------------------------------|
+| 请求方法   | POST                                      |
+| 外部请求路径 | `/api/vega-backend/v1/resources/query`    |
+| 内部请求路径 | `/api/vega-backend/in/v1/resources/query` |
+| 内容类型   | `application/json`                        |
 
 ### 请求头
 
