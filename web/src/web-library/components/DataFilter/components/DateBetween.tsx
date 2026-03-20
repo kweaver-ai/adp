@@ -6,7 +6,7 @@ const DateBetween = (props: any) => {
   const { value, onChange } = props;
 
   useEffect(() => {
-    if (!value) onChange([dayjs().format('YYYY-MM-DD HH:mm:ss.SSS'), dayjs().format('YYYY-MM-DD HH:mm:ss.SSS')]);
+    if (!value || value.length === 0) onChange([dayjs().format('YYYY-MM-DD HH:mm:ss.SSS'), dayjs().format('YYYY-MM-DD HH:mm:ss.SSS')]);
   }, []);
 
   return (

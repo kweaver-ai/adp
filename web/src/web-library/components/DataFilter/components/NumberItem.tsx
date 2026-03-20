@@ -48,7 +48,7 @@ const NumberItem = memo(
 
     return (
       <>
-        {value?.operation === 'range' || value?.operation === 'out_range' ? (
+        {value?.operation === 'range' || value?.operation === 'out_range' || value?.operation === 'between' ? (
           <div className={styles['range-wrapper']}>
             <InputNumber value={value?.value?.[0]} onChange={handleFromChange} disabled={disabled} placeholder={intl.get('DataFilter.pleaseInputValue')} />
             <span className={styles['split-space']}>-</span>

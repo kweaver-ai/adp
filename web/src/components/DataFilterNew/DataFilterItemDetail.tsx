@@ -41,7 +41,7 @@ const DataFilterItemDetail = ({ fieldList, value, onChange, transformType, typeO
   }, []);
 
   const fieldListFilter = (val: any): FieldList => {
-    return fieldList?.filter((i) => (i.displayName && i.displayName === val) || i.name === val)[0];
+    return fieldList?.filter((i) => (i.display_name && i.display_name === val) || i.name === val)[0];
   };
   const [fieldType, setFieldType] = useState(fieldListFilter(value.field)?.type);
 
@@ -70,7 +70,14 @@ const DataFilterItemDetail = ({ fieldList, value, onChange, transformType, typeO
   const renderItem = (formatType: any, val: any): JSX.Element => {
     const { operation } = val;
 
-    if (operation === 'exist' || operation === 'not_exist' || operation === 'not_empty' || operation === 'empty') {
+    if (
+      operation === 'exist' ||
+      operation === 'not_exist' ||
+      operation === 'not_empty' ||
+      operation === 'empty' ||
+      operation === 'null' ||
+      operation === 'not_null'
+    ) {
       return <></>;
     }
     let curVal = val.value;
@@ -118,9 +125,12 @@ const DataFilterItemDetail = ({ fieldList, value, onChange, transformType, typeO
         {value?.field}
       </div>
       <div className={cs('operation-col', 'detail-col')}>{value?.operation ? intl.get(`DataFilterNew.${value?.operation}`) : ''}</div>
-      {value?.operation !== 'exist' && value?.operation !== 'not_exist' && value.operation !== 'not_empty' && value.operation !== 'empty' && (
-        <div className={cs('operation-col', 'detail-col')}>{intl.get(`DataFilterNew.${valueFroms[0]}`)}</div>
-      )}
+      {value?.operation !== 'exist' &&
+        value?.operation !== 'not_exist' &&
+        value.operation !== 'not_empty' &&
+        value.operation !== 'empty' &&
+        value.operation !== 'null' &&
+        value.operation !== 'not_null' && <div className={cs('operation-col', 'detail-col')}>{intl.get(`DataFilterNew.${valueFroms[0]}`)}</div>}
       <div className={cs('value-col')}>{renderItem(formatType, value)}</div>
     </div>
   );

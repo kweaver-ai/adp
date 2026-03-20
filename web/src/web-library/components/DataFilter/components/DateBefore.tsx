@@ -14,29 +14,49 @@ const DateBefore = (props: any) => {
     setI18nLoaded(true);
   }, []);
 
+  // 确保 value 结构正确
+  const currentValue = {
+    value: value?.value || 1,
+    unit: value?.unit || 'minute',
+  };
+
   useEffect(() => {
-    if (!value) onChange([1, 'millisecond']);
+    if (!value?.value) onChange(currentValue);
   }, []);
+
+  const handleValueChange = (value: any) => {
+    onChange({
+      ...currentValue,
+      value,
+    });
+  };
+
+  const handleUnitChange = (unit: any) => {
+    onChange({
+      ...currentValue,
+      unit,
+    });
+  };
 
   // 国际化未加载完成时返回空数组，避免选项显示空白
   const options = i18nLoaded
     ? [
-        { value: 'millisecond', label: intl.get('DataFilter.millisecond') },
-        { value: 'second', label: intl.get('DataFilter.second') },
+        // { value: 'millisecond', label: intl.get('DataFilter.millisecond') },
+        // { value: 'second', label: intl.get('DataFilter.second') },
         { value: 'minute', label: intl.get('DataFilter.minute') },
         { value: 'hour', label: intl.get('DataFilter.hour') },
         { value: 'day', label: intl.get('DataFilter.day') },
         { value: 'week', label: intl.get('DataFilter.week') },
         { value: 'month', label: intl.get('DataFilter.month') },
-        { value: 'quarter', label: intl.get('DataFilter.quarter') },
+        // { value: 'quarter', label: intl.get('DataFilter.quarter') },
         { value: 'year', label: intl.get('DataFilter.year') },
       ]
     : [];
 
   return (
     <Space.Compact>
-      <InputNumber placeholder={intl.get('DataFilter.pleaseInput')} min={0} value={value?.[0]} onChange={(data) => onChange([data, value?.[1]])} />
-      <Select defaultValue="millisecond" options={options} value={value?.[1]} onChange={(data) => onChange([value?.[0], data])} />
+      <InputNumber placeholder={intl.get('DataFilter.pleaseInput')} min={0} value={currentValue.value} onChange={handleValueChange} />
+      <Select defaultValue="minute" options={options} value={currentValue.unit} onChange={handleUnitChange} />
     </Space.Compact>
   );
 };

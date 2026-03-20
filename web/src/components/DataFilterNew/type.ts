@@ -1,10 +1,10 @@
 export type FieldType = 'date' | 'number' | 'boolean' | 'string';
 
 export interface FieldList {
-  originalName?: string;
+  original_name?: string;
   name: string;
   type: string;
-  displayName?: string;
+  display_name?: string;
 }
 
 export interface PrimaryFilterItem {
@@ -12,8 +12,9 @@ export interface PrimaryFilterItem {
   field?: string;
   value?: any;
   operation?: string;
-  valueFrom?: string;
+  value_from?: string;
   sub_conditions?: PrimaryFilterItem[];
+  object_type_id?: string;
 }
 
 export type PrimaryFilterValue = { sub_conditions: PrimaryFilterItem[]; operation?: LogicOperatorType };
@@ -55,13 +56,14 @@ export type DataFilterProps = {
 } & FilterProps<PrimaryFilterItem>;
 
 export interface Item {
-  object_type_id: string;
+  object_type_id?: string;
   field: string;
   operation: string;
-  valueFrom: string;
+  value_from: string;
   value: any;
   match_type?: string;
   limit_value?: number;
   limit_key?: string;
   fields?: string[];
+  unit?: string;
 }

@@ -1,30 +1,62 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
+import intl from 'react-intl-universal';
 import { Space, InputNumber } from 'antd';
-import { Select } from '@/web-library/common';
+import { Select } from '../../../web-library/common';
+import locales from '../locales';
 
 const DateBefore = (props: any) => {
   const { value, onChange } = props;
+  const [i18nLoaded, setI18nLoaded] = useState(false);
 
   useEffect(() => {
-    if (!value) onChange([1, 'millisecond']);
+    // 加载国际化文件，完成后更新状态触发重新渲染
+    intl.load(locales);
+    setI18nLoaded(true);
   }, []);
 
-  const options = [
-    { value: 'millisecond', label: '毫秒' },
-    { value: 'second', label: '秒' },
-    { value: 'minute', label: '分钟' },
-    { value: 'hour', label: '小时' },
-    { value: 'day', label: '天' },
-    { value: 'week', label: '周' },
-    { value: 'month', label: '月' },
-    { value: 'quarter', label: '季度' },
-    { value: 'year', label: '年' },
-  ];
+  // 确保 value 结构正确
+  const currentValue = {
+    value: value?.value || 1,
+    unit: value?.unit || 'minute',
+  };
+
+  useEffect(() => {
+    if (!value?.value) onChange(currentValue);
+  }, []);
+
+  const handleValueChange = (value: any) => {
+    onChange({
+      ...currentValue,
+      value,
+    });
+  };
+
+  const handleUnitChange = (unit: any) => {
+    onChange({
+      ...currentValue,
+      unit,
+    });
+  };
+
+  // 国际化未加载完成时返回空数组，避免选项显示空白
+  const options = i18nLoaded
+    ? [
+        // { value: 'millisecond', label: intl.get('DataFilter.millisecond') },
+        // { value: 'second', label: intl.get('DataFilter.second') },
+        { value: 'minute', label: intl.get('DataFilter.minute') },
+        { value: 'hour', label: intl.get('DataFilter.hour') },
+        { value: 'day', label: intl.get('DataFilter.day') },
+        { value: 'week', label: intl.get('DataFilter.week') },
+        { value: 'month', label: intl.get('DataFilter.month') },
+        // { value: 'quarter', label: intl.get('DataFilter.quarter') },
+        { value: 'year', label: intl.get('DataFilter.year') },
+      ]
+    : [];
 
   return (
     <Space.Compact>
-      <InputNumber placeholder="请填写" min={0} value={value?.[0]} onChange={(data) => onChange([data, value?.[1]])} />
-      <Select defaultValue="millisecond" options={options} value={value?.[1]} onChange={(data) => onChange([value?.[0], data])} />
+      <InputNumber placeholder={intl.get('DataFilter.pleaseInput')} min={0} value={currentValue.value} onChange={handleValueChange} />
+      <Select defaultValue="minute" options={options} value={currentValue.unit} onChange={handleUnitChange} />
     </Space.Compact>
   );
 };

@@ -1,8 +1,8 @@
 /** @Description: 多级过滤器 */
 
-import React, { useEffect, useImperativeHandle, forwardRef, useRef } from 'react';
+import React, { useEffect, useImperativeHandle, forwardRef, useRef, useState } from 'react';
 import intl from 'react-intl-universal';
-import { useDynamicList } from 'ahooks';
+import { useDynamicList, useUpdateEffect } from 'ahooks';
 import classNames from 'classnames';
 import { debounce, map } from 'lodash-es';
 import { Button, IconFont } from '@/web-library/common';
@@ -28,9 +28,10 @@ const MultistageFilter = forwardRef((props: DataFilterProps, ref) => {
     required,
     isHidden = false,
     isFirst = false,
+    onDelete,
   } = props;
 
-  const [i18nLoaded, setI18nLoaded] = React.useState(false);
+  const [i18nLoaded, setI18nLoaded] = useState(false);
 
   const getValue = (value: any): PrimaryFilterItem[] => (value as PrimaryFilterValue)?.sub_conditions || [value || defaultValue];
 
@@ -73,7 +74,7 @@ const MultistageFilter = forwardRef((props: DataFilterProps, ref) => {
   }, [list.length]);
 
   const RowItem = (item: any, index: any, count: number): React.ReactNode => {
-    // const hiddenDeleteButton = !isHidden && list.length === 1 && isFirst;
+    const hiddenDeleteButton = !isHidden && list.length === 1 && isFirst;
     const hiddenAddButton = (level <= 1 && !isFirst) || (isFirst && level === 1 && list.length > 1) || level === 0;
     return (
       <React.Fragment key={`${getKey(index)}${level}`}>
@@ -88,24 +89,19 @@ const MultistageFilter = forwardRef((props: DataFilterProps, ref) => {
               disabled={disabled}
               typeOption={typeOption}
               transformType={transformType || defaultTransformType}
+              required
               onChange={(val) => replace(index, { ...item, ...val })}
             />
             {!disabled && (
               <div>
                 <Button.Icon
-                  className={classNames(
-                    'g-ml-1'
-                    // { 'g-display-none': hiddenDeleteButton }
-                  )}
+                  className={classNames('g-ml-1', { 'g-display-none': hiddenDeleteButton })}
                   title={count === 1 ? '清空' : '删除'}
                   icon={<IconFont type="icon-delete1" style={{ fontSize: 16 }} />}
-                  onClick={() => (list.length > 1 ? remove(index) : isHidden ? resetList([]) : replace(index, defaultValue))}
+                  onClick={() => (list.length > 1 ? remove(index) : isHidden ? resetList([]) : onDelete && onDelete())}
                 />
                 <Button.Icon
-                  className={classNames({
-                    // 'g-ml-1': hiddenDeleteButton,
-                    'g-display-none': hiddenAddButton,
-                  })}
+                  className={classNames({ 'g-ml-1': hiddenDeleteButton, 'g-display-none': hiddenAddButton })}
                   title="添加"
                   icon={<IconFont type="icon-add" style={{ fontSize: 16 }} />}
                   onClick={() => replace(index, { operation: 'and', sub_conditions: [item, defaultValue] })}

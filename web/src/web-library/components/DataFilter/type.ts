@@ -61,4 +61,5 @@ export interface Item {
   limit_value?: number;
   limit_key?: string;
   fields?: string[];
+  unit?: string;
 }

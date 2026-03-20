@@ -96,7 +96,7 @@ const MultistageFilter = forwardRef((props: DataFilterProps, ref) => {
               typeOption={typeOption}
               transformType={transformType || defaultTransformType}
               required
-              onChange={(val) => replace(index, { ...item, ...val })}
+              onChange={(val) => replace(index, val)}
             />
             {!disabled && (
               <div>

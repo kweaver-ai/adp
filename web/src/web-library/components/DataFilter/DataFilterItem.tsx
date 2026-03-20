@@ -1,7 +1,7 @@
 import { forwardRef, useImperativeHandle, useMemo, useEffect, useState } from 'react';
 import intl from 'react-intl-universal';
 import { useUpdateEffect } from 'ahooks';
-import { Input, Select } from 'antd';
+import { DatePicker, Input, Select } from 'antd';
 import classNames from 'classnames';
 import { map, filter, groupBy } from 'lodash-es';
 import DateBefore from './components/DateBefore';
@@ -14,6 +14,7 @@ import styles from './index.module.less';
 import locales from './locales';
 import { FieldList, Item } from './type';
 import { defaultTypeOption } from './utils';
+import moment from 'dayjs';
 
 // 右侧值为数组的操作符
 const aryOperation = ['in', 'not_in', 'contain', 'not_contain'];
@@ -85,7 +86,14 @@ const DataFilterItem = forwardRef(
       const valueError = validateValue(value.value, required);
 
       // 存在和不存在, 值空, 值非空 没有 value 字段
-      if (value.operation === 'exist' || value.operation === 'not_exist' || value.operation === 'not_empty' || value.operation === 'empty') {
+      if (
+        value.operation === 'exist' ||
+        value.operation === 'not_exist' ||
+        value.operation === 'not_empty' ||
+        value.operation === 'empty' ||
+        value.operation === 'null' ||
+        value.operation === 'not_null'
+      ) {
         setErrors({ name: fieldError.name || '', value: '' });
         return !!fieldError?.name;
       }
@@ -125,6 +133,7 @@ const DataFilterItem = forwardRef(
       onChange({
         operation: typeOption[formatType].includes(value?.operation) ? value.operation : typeOption[formatType][0],
         field: value?.field,
+        value_from: 'const',
         value: type === fieldType || !fieldType ? value?.value : undefined,
       });
 
@@ -140,6 +149,7 @@ const DataFilterItem = forwardRef(
         ...value,
         operation: typeOption[formatType].includes(value?.operation) ? value.operation : typeOption[formatType][0],
         field: val,
+        value_from: 'const',
         value: type !== fieldType ? undefined : value?.value,
       });
 
@@ -147,11 +157,14 @@ const DataFilterItem = forwardRef(
     };
 
     const handleChangeOperation = (val: any): void => {
-      const newData: any = { ...value, operation: val, value: undefined };
+      // 创建新对象，只保留必要字段，清除多余字段
+      const { field, ...rest } = value;
+      const newData: any = { field, operation: val, value_from: 'const', value: undefined };
+      console.log('newData', newData);
       if (val === 'true') newData.value = true;
       if (val === 'false') newData.value = false;
       onChange(newData);
-      if (val === 'exist' || val === 'not_exist' || val === 'not_empty' || val === 'empty') {
+      if (val === 'exist' || val === 'not_exist' || val === 'not_empty' || val === 'empty' || val === 'null' || val === 'not_null') {
         setErrors((item) => ({ ...item, value: '' }));
       }
     };
@@ -162,7 +175,7 @@ const DataFilterItem = forwardRef(
 
     const handleValueChange = (val: any): void => {
       setErrors({ ...errors, ...validateValue(val) });
-      if (value.operation === 'multi_match' || value.operation === 'knn') {
+      if (value.operation === 'multi_match' || value.operation === 'knn' || value.operation === 'before') {
         onChange({ ...value, ...(val || {}) });
       } else {
         onChange({ ...value, value: val });
@@ -181,7 +194,14 @@ const DataFilterItem = forwardRef(
       if (formatType === 'boolean') {
         return <></>;
       }
-      if (operation === 'exist' || operation === 'not_exist' || operation === 'not_empty' || operation === 'empty') {
+      if (
+        operation === 'exist' ||
+        operation === 'not_exist' ||
+        operation === 'not_empty' ||
+        operation === 'empty' ||
+        operation === 'null' ||
+        operation === 'not_null'
+      ) {
         return <></>;
       }
 
@@ -213,13 +233,28 @@ const DataFilterItem = forwardRef(
       }
 
       if (formatType === 'date' && operation === 'before') {
-        return <DateBefore value={value.value ?? undefined} onChange={handleValueChange} />;
+        const { value: dateValue, unit } = value || {};
+        return <DateBefore value={{ value: dateValue, unit }} onChange={handleValueChange} />;
       }
       if (formatType === 'date' && operation === 'current') {
         return <DateCurrent value={value.value ?? undefined} onChange={handleValueChange} />;
       }
       if (formatType === 'date' && (operation === 'between' || operation === 'out_range' || operation === 'range')) {
         return <DateBetween value={value.value ?? undefined} onChange={handleValueChange} />;
+      }
+      if (formatType === 'date') {
+        return (
+          <DatePicker
+            showTime
+            value={value?.value ? moment(value?.value) : undefined}
+            onChange={(value) => {
+              handleValueChange(moment(value).format('YYYY-MM-DD HH:mm:ss'));
+            }}
+            onOk={(value) => {
+              handleValueChange(moment(value).format('YYYY-MM-DD HH:mm:ss'));
+            }}
+          />
+        );
       }
 
       if (operation === 'multi_match') {
@@ -235,7 +270,13 @@ const DataFilterItem = forwardRef(
       return <Input value={value?.value} disabled={disabled} onChange={handleStringValueChange} placeholder={intl.get('DataFilter.pleaseInputValue')} />;
     };
 
-    const hasValue = value.operation !== 'exist' && value.operation !== 'not_exist' && value.operation !== 'not_empty' && value.operation !== 'empty';
+    const hasValue =
+      value.operation !== 'exist' &&
+      value.operation !== 'not_exist' &&
+      value.operation !== 'not_empty' &&
+      value.operation !== 'empty' &&
+      value.operation !== 'null' &&
+      value.operation !== 'not_null';
 
     return (
       <div className={classNames(styles['filter-item'])}>
