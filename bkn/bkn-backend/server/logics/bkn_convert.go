@@ -365,9 +365,17 @@ func ToADPActionType(knID string, branch string, bknAction *bknsdk.BknActionType
 		Branch: branch,
 	}
 
+	// 转换 Affect
+	if bknAction.AffectObject != nil {
+		adpAction.Affect = &interfaces.ActionAffect{
+			ObjectTypeID: bknAction.AffectObject.ObjectType,
+			Comment:      bknAction.AffectObject.Description,
+		}
+	}
+
 	// 转换 Condition
-	if bknAction.Condition != nil {
-		adpAction.Condition = toADPCondCfg(bknAction.Condition)
+	if bknAction.TriggerCondition != nil {
+		adpAction.Condition = toADPCondCfg(bknAction.TriggerCondition)
 	}
 
 	// 转换 ActionSource
@@ -403,13 +411,6 @@ func ToADPActionType(knID string, branch string, bknAction *bknsdk.BknActionType
 		}
 	}
 
-	// 转换 Affect
-	if bknAction.AffectObject != "" {
-		adpAction.Affect = &interfaces.ActionAffect{
-			ObjectTypeID: bknAction.AffectObject,
-		}
-	}
-
 	return adpAction
 }
 
@@ -428,11 +429,14 @@ func ToBKNActionType(adpAction *interfaces.ActionType) *bknsdk.BknActionType {
 	}
 
 	if adpAction.Affect != nil {
-		bknAction.AffectObject = adpAction.Affect.ObjectTypeID
+		bknAction.AffectObject = &bknsdk.ActionAffect{
+			ObjectType:  adpAction.Affect.ObjectTypeID,
+			Description: adpAction.Affect.Comment,
+		}
 	}
 	// 转换 Condition
 	if adpAction.Condition != nil {
-		bknAction.Condition = toBKNCondCfg(adpAction.Condition)
+		bknAction.TriggerCondition = toBKNCondCfg(adpAction.Condition)
 	}
 
 	// 转换 ActionSource
