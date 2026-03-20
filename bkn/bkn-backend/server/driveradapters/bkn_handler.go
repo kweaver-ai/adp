@@ -215,10 +215,17 @@ func (r *restHandler) DownloadBKN(c *gin.Context) {
 	defer span.End()
 
 	// 校验token
-	_, err := r.verifyOAuth(ctx, c)
+	visitor, err := r.verifyOAuth(ctx, c)
 	if err != nil {
 		return
 	}
+
+	accountInfo := interfaces.AccountInfo{
+		ID:   visitor.ID,
+		Type: string(visitor.Type),
+	}
+	// accountID 存入 context 中
+	ctx = context.WithValue(ctx, interfaces.ACCOUNT_INFO_KEY, accountInfo)
 
 	o11y.AddHttpAttrs4API(span, o11y.GetAttrsByGinCtx(c))
 
