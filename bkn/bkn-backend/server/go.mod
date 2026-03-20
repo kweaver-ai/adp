@@ -12,7 +12,7 @@ require (
 	github.com/gin-gonic/gin v1.11.0
 	github.com/golang/mock v1.6.0
 	github.com/kweaver-ai/TelemetrySDK-Go/exporter/v2 v2.10.3
-	github.com/kweaver-ai/bkn-specification/sdk/golang v0.0.2
+	github.com/kweaver-ai/bkn-specification/sdk/golang v0.0.3
 	github.com/kweaver-ai/kweaver-go-lib v1.0.3
 	github.com/kweaver-ai/proton-mq-sdk-go v1.9.1
 	github.com/mitchellh/mapstructure v1.5.0
