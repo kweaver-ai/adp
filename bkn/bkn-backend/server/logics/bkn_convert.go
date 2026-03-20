@@ -422,9 +422,9 @@ func ToBKNActionType(adpAction *interfaces.ActionType) *bknsdk.BknActionType {
 			Name:        adpAction.ATName,
 			Tags:        adpAction.Tags,
 			Description: adpAction.Comment,
+			ActionType:  adpAction.ActionType,
 		},
 		BoundObject: adpAction.ObjectTypeID,
-		ActionType:  adpAction.ActionType,
 	}
 
 	if adpAction.Affect != nil {
