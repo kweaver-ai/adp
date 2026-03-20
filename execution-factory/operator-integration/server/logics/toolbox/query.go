@@ -137,9 +137,9 @@ func (s *ToolServiceImpl) getToolBoxList(ctx context.Context, toolBoxDBList []*m
 	for i, toolBox := range toolBoxInfoList {
 		toolBoxInfoList[i].BusinessDomainID = resourceToBdMap[toolBox.BoxID]
 		toolBoxInfoList[i].Tools = toolNameMap[toolBox.BoxID]
-		toolBoxInfoList[i].CreateUser = userMap[toolBox.CreateUser]
-		toolBoxInfoList[i].UpdateUser = userMap[toolBox.UpdateUser]
-		toolBoxInfoList[i].ReleaseUser = userMap[toolBox.ReleaseUser]
+		toolBoxInfoList[i].CreateUser = utils.GetValueOrDefault(userMap, toolBox.CreateUser, interfaces.UnknownUser)
+		toolBoxInfoList[i].UpdateUser = utils.GetValueOrDefault(userMap, toolBox.UpdateUser, interfaces.UnknownUser)
+		toolBoxInfoList[i].ReleaseUser = utils.GetValueOrDefault(userMap, toolBox.ReleaseUser, interfaces.UnknownUser)
 	}
 	return
 }

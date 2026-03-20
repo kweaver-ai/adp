@@ -96,6 +96,12 @@ const (
 	ErrExtCategoryNameExist ErrorCode = "CategoryNameExist" // 算子分类名称已存在
 )
 
+// Skill拓展错误码定义
+const (
+	// 当前Agent Skill不允许删除
+	ErrExtSkillUnSupportDelete ErrorCode = "SkillUnSupportDelete" // 当前Agent Skill不允许删除
+)
+
 // 代理模块错误码定义
 const (
 	// 请求转发失败，请检查是否可用，或稍后重试

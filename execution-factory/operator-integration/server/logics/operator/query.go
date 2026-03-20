@@ -7,7 +7,6 @@ import (
 	"strings"
 
 	jsoniter "github.com/json-iterator/go"
-	o11y "github.com/kweaver-ai/kweaver-go-lib/observability"
 	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/infra/common"
 	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/infra/common/ormhelper"
 	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/infra/errors"
@@ -16,6 +15,7 @@ import (
 	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/logics/auth"
 	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/logics/metadata"
 	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/utils"
+	o11y "github.com/kweaver-ai/kweaver-go-lib/observability"
 )
 
 // GetOperatorInfoByOperatorID 根据算子ID或版本获取算子(外部接口) -- 查询算子详情
