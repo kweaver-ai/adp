@@ -5,21 +5,21 @@ import (
 	"mime/multipart"
 	"net/http"
 
-	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/infra/errors"
-	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/infra/rest"
-	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/interfaces"
-	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/utils"
 	"github.com/creasty/defaults"
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
 	"github.com/go-playground/validator/v10"
+	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/infra/errors"
+	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/infra/rest"
+	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/interfaces"
+	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/utils"
 )
 
-// CreateInternalToolBox 添加内置工具
+// CreateInternalToolBox 添加内置工具工具箱
 func (h *toolBoxHandler) CreateInternalToolBox(c *gin.Context) {
 	req := &interfaces.CreateInternalToolBoxReq{
 		OpenAPIInput: &interfaces.OpenAPIInput{},
-		Functions:    []*interfaces.FunctionInput{},
+		Functions:    []*interfaces.InternalFunctionInput{},
 	}
 	ctx := c.Request.Context()
 	err := c.ShouldBindHeader(req)

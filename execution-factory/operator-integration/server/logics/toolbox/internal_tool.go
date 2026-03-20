@@ -34,6 +34,7 @@ func (s *ToolServiceImpl) CreateInternalToolBox(ctx context.Context, req *interf
 		req.UserID = interfaces.SystemUser
 	}
 	// 解析元数据
+	toolNameToIDMap := map[string]string{}
 	var metadataList []interfaces.IMetadataDB
 	switch req.MetadataType {
 	case interfaces.MetadataTypeAPI:
@@ -45,10 +46,13 @@ func (s *ToolServiceImpl) CreateInternalToolBox(ctx context.Context, req *interf
 	case interfaces.MetadataTypeFunc:
 		var metadatas []interfaces.IMetadataDB
 		for _, funcInput := range req.Functions {
-			metadatas, err = s.MetadataService.ParseMetadata(ctx, req.MetadataType, funcInput)
+			metadatas, err = s.MetadataService.ParseMetadata(ctx, req.MetadataType, &funcInput.FunctionInput)
 			if err != nil {
 				s.Logger.WithContext(ctx).Errorf("parse metadata failed, err: %v", err)
 				return
+			}
+			if funcInput.ToolID != "" {
+				toolNameToIDMap[funcInput.Name] = funcInput.ToolID
 			}
 			metadataList = append(metadataList, metadatas...)
 		}
@@ -71,6 +75,9 @@ func (s *ToolServiceImpl) CreateInternalToolBox(ctx context.Context, req *interf
 	// 启用工具箱内的工具
 	for _, tool := range toolList {
 		tool.Status = interfaces.ToolStatusTypeEnabled.String()
+		if toolID, ok := toolNameToIDMap[tool.Name]; ok && toolID != "" {
+			tool.ToolID = toolID
+		}
 	}
 	checkConfig := &interfaces.IntCompConfig{
 		ComponentType: interfaces.ComponentTypeToolBox,

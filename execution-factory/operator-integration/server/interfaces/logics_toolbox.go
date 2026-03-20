@@ -451,7 +451,13 @@ type CreateInternalToolBoxReq struct {
 	// 数据源
 	MetadataType  MetadataType `json:"metadata_type" form:"metadata_type" validate:"required,oneof=openapi function"` // 元数据类型
 	*OpenAPIInput `json:",inline"`
-	Functions     []*FunctionInput `json:"functions,omitempty"` // 函数列表
+	Functions     []*InternalFunctionInput `json:"functions,omitempty"` // 函数列表
+}
+
+// InternalFunctionInput 内部函数输入
+type InternalFunctionInput struct {
+	ToolID        string `json:"tool_id" form:"tool_id"` // 工具ID
+	FunctionInput `json:",inline"`
 }
 
 // CreateInternalToolBoxResp 创建内部工具箱返回
