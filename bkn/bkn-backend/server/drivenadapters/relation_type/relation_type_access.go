@@ -326,13 +326,29 @@ func (rta *relationTypeAccess) ListRelationTypes(ctx context.Context, query inte
 		relationType.Tags = libCommon.TagString2TagSlice(tagsStr)
 
 		// 2.0 反序列化dMappingRules
-		err = sonic.Unmarshal(mappingRulesBytes, &relationType.MappingRules)
-		if err != nil {
-			logger.Errorf("Failed to unmarshal mappingRules after getting relation type, err: %v", err.Error())
-			o11y.Error(ctx, fmt.Sprintf("Failed to unmarshal mappingRules after getting relation type, err: %v", err.Error()))
-			span.SetStatus(codes.Error, "Unmarshal mappingRules error")
-			return []*interfaces.RelationType{}, err
+		if relationType.Type == interfaces.RELATION_TYPE_DIRECT {
+			var mappings []interfaces.Mapping
+			err = sonic.Unmarshal(mappingRulesBytes, &mappings)
+			if err != nil {
+				logger.Errorf("Failed to unmarshal mappingRules after getting relation type, err: %v", err.Error())
+				o11y.Error(ctx, fmt.Sprintf("Failed to unmarshal mappingRules after getting relation type, err: %v", err.Error()))
+				span.SetStatus(codes.Error, "Failed to unmarshal mappingRules after getting relation type")
+				return []*interfaces.RelationType{}, err
+			}
+			relationType.MappingRules = mappings
 		}
+		if relationType.Type == interfaces.RELATION_TYPE_DATA_VIEW {
+			var mappings interfaces.InDirectMapping
+			err = sonic.Unmarshal(mappingRulesBytes, &mappings)
+			if err != nil {
+				logger.Errorf("Failed to unmarshal mappingRules after getting relation type, err: %v", err.Error())
+				o11y.Error(ctx, fmt.Sprintf("Failed to unmarshal mappingRules after getting relation type, err: %v", err.Error()))
+				span.SetStatus(codes.Error, "Failed to unmarshal mappingRules after getting relation type")
+				return []*interfaces.RelationType{}, err
+			}
+			relationType.MappingRules = mappings
+		}
+
 		relationTypes = append(relationTypes, &relationType)
 	}
 
@@ -974,13 +990,29 @@ func (rta *relationTypeAccess) GetAllRelationTypesByKnID(ctx context.Context, kn
 		relationType.Tags = libCommon.TagString2TagSlice(tagsStr)
 
 		// 2.0 反序列化dMappingRules
-		err = sonic.Unmarshal(mappingRulesBytes, &relationType.MappingRules)
-		if err != nil {
-			logger.Errorf("Failed to unmarshal mappingRules after getting relation type, err: %v", err.Error())
-			o11y.Error(ctx, fmt.Sprintf("Failed to unmarshal mappingRules after getting relation type, err: %v", err.Error()))
-			span.SetStatus(codes.Error, "Unmarshal mappingRules error")
-			return map[string]*interfaces.RelationType{}, err
+		if relationType.Type == interfaces.RELATION_TYPE_DIRECT {
+			var mappings []interfaces.Mapping
+			err = sonic.Unmarshal(mappingRulesBytes, &mappings)
+			if err != nil {
+				logger.Errorf("Failed to unmarshal mappingRules after getting relation type, err: %v", err.Error())
+				o11y.Error(ctx, fmt.Sprintf("Failed to unmarshal mappingRules after getting relation type, err: %v", err.Error()))
+				span.SetStatus(codes.Error, "Failed to unmarshal mappingRules after getting relation type")
+				return map[string]*interfaces.RelationType{}, err
+			}
+			relationType.MappingRules = mappings
 		}
+		if relationType.Type == interfaces.RELATION_TYPE_DATA_VIEW {
+			var mappings interfaces.InDirectMapping
+			err = sonic.Unmarshal(mappingRulesBytes, &mappings)
+			if err != nil {
+				logger.Errorf("Failed to unmarshal mappingRules after getting relation type, err: %v", err.Error())
+				o11y.Error(ctx, fmt.Sprintf("Failed to unmarshal mappingRules after getting relation type, err: %v", err.Error()))
+				span.SetStatus(codes.Error, "Failed to unmarshal mappingRules after getting relation type")
+				return map[string]*interfaces.RelationType{}, err
+			}
+			relationType.MappingRules = mappings
+		}
+
 		relationTypes[relationType.RTID] = &relationType
 	}
 
