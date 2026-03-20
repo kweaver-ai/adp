@@ -106,7 +106,7 @@ type Property struct {
 - `display_name`: 前端显示的标签。
 - `type`: 数据类型（string, decimal, integer, etc.）。
 - `description`: 业务说明。
-- `features`: 字段特征（如是否可索引、是否是度量）。
+- `features`: 字段特征（如精确匹配、全文检索、向量特征）。
 
 ### 5.3 前端交互建议
 - **View/Output 节点**：提供 Checkbox 列表，用户操作产生 `["a", "b"]`。
