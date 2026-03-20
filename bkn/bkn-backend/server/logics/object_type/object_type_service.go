@@ -644,6 +644,11 @@ func (ots *objectTypeService) UpdateObjectType(ctx context.Context, tx *sql.Tx, 
 	// 校验数据属性
 	for _, prop := range objectType.DataProperties {
 		if prop.IndexConfig != nil && prop.IndexConfig.VectorConfig.Enabled {
+			if !ots.appSetting.ServerSetting.DefaultSmallModelEnabled {
+				return rest.NewHTTPError(ctx, http.StatusBadRequest,
+					berrors.BknBackend_ObjectType_InvalidParameter_SmallModel).
+					WithErrorDetails(fmt.Sprintf("属性[%s]配置了向量索引，但小模型功能未开启(defaultSmallModelEnabled=false)", prop.Name))
+			}
 			model, err := ots.mfa.GetModelByID(ctx, prop.IndexConfig.VectorConfig.ModelID)
 			if err != nil {
 				return rest.NewHTTPError(ctx, http.StatusInternalServerError,
@@ -797,6 +802,11 @@ func (ots *objectTypeService) UpdateDataProperties(ctx context.Context,
 	// 校验数据属性
 	for _, prop := range dataProperties {
 		if prop.IndexConfig != nil && prop.IndexConfig.VectorConfig.Enabled {
+			if !ots.appSetting.ServerSetting.DefaultSmallModelEnabled {
+				return rest.NewHTTPError(ctx, http.StatusBadRequest,
+					berrors.BknBackend_ObjectType_InvalidParameter_SmallModel).
+					WithErrorDetails(fmt.Sprintf("属性[%s]配置了向量索引，但小模型功能未开启(defaultSmallModelEnabled=false)", prop.Name))
+			}
 			model, err := ots.mfa.GetModelByID(ctx, prop.IndexConfig.VectorConfig.ModelID)
 			if err != nil {
 				return rest.NewHTTPError(ctx, http.StatusInternalServerError,
