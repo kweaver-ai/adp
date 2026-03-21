@@ -437,3 +437,41 @@ func ValidateVectorConfig(ctx context.Context, vectorConfig interfaces.VectorCon
 	}
 	return nil
 }
+
+// ValidateVectorModelRefs 校验所有对象类中向量配置引用的模型是否在目标环境中存在且有效。
+// 用于导入时 fail-fast，避免脏数据进入系统。
+func ValidateVectorModelRefs(ctx context.Context, objectTypes []*interfaces.ObjectType, mfa interfaces.ModelFactoryAccess) error {
+	for _, ot := range objectTypes {
+		for _, prop := range ot.DataProperties {
+			if prop.IndexConfig == nil || !prop.IndexConfig.VectorConfig.Enabled {
+				continue
+			}
+			modelID := prop.IndexConfig.VectorConfig.ModelID
+			if modelID == "" {
+				continue
+			}
+			model, err := mfa.GetModelByID(ctx, modelID)
+			if err != nil {
+				return rest.NewHTTPError(ctx, http.StatusInternalServerError,
+					berrors.BknBackend_ObjectType_InternalError_GetSmallModelByIDFailed).
+					WithErrorDetails(fmt.Sprintf("对象类[%s]属性[%s]: %s", ot.OTName, prop.Name, err.Error()))
+			}
+			if model == nil {
+				return rest.NewHTTPError(ctx, http.StatusBadRequest,
+					berrors.BknBackend_ObjectType_SmallModelNotFound).
+					WithErrorDetails(fmt.Sprintf("对象类[%s]属性[%s]引用的模型[%s]在目标环境中不存在", ot.OTName, prop.Name, modelID))
+			}
+			if model.ModelType != interfaces.SMALL_MODEL_TYPE_EMBEDDING {
+				return rest.NewHTTPError(ctx, http.StatusBadRequest,
+					berrors.BknBackend_ObjectType_InvalidParameter_SmallModel).
+					WithErrorDetails(fmt.Sprintf("对象类[%s]属性[%s]引用的模型[%s]类型为[%s]，不是embedding模型", ot.OTName, prop.Name, modelID, model.ModelType))
+			}
+			if model.EmbeddingDim == 0 || model.BatchSize == 0 || model.MaxTokens == 0 {
+				return rest.NewHTTPError(ctx, http.StatusBadRequest,
+					berrors.BknBackend_ObjectType_InvalidParameter_SmallModel).
+					WithErrorDetails(fmt.Sprintf("对象类[%s]属性[%s]引用的模型[%s]参数无效(embedding_dim/batch_size/max_tokens)", ot.OTName, prop.Name, modelID))
+			}
+		}
+	}
+	return nil
+}
