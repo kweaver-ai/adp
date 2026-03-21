@@ -7,13 +7,16 @@ package driveradapters
 
 import (
 	"context"
+	"errors"
 	"testing"
 
 	"github.com/kweaver-ai/kweaver-go-lib/rest"
 	. "github.com/smartystreets/goconvey/convey"
+	"go.uber.org/mock/gomock"
 
 	berrors "bkn-backend/errors"
 	"bkn-backend/interfaces"
+	mockInterfaces "bkn-backend/interfaces/mock"
 )
 
 func Test_ValidateObjectType(t *testing.T) {
@@ -697,6 +700,176 @@ func Test_ValidateVectorConfig(t *testing.T) {
 			}
 			err := ValidateVectorConfig(ctx, config)
 			So(err, ShouldNotBeNil)
+		})
+	})
+}
+
+func Test_ValidateVectorModelRefs(t *testing.T) {
+	Convey("Test ValidateVectorModelRefs\n", t, func() {
+		ctrl := gomock.NewController(t)
+		defer ctrl.Finish()
+		ctx := context.Background()
+		mockMFA := mockInterfaces.NewMockModelFactoryAccess(ctrl)
+
+		Convey("Success with no vector config enabled\n", func() {
+			objectTypes := []*interfaces.ObjectType{
+				{
+					ObjectTypeWithKeyField: interfaces.ObjectTypeWithKeyField{
+						OTName: "ot1",
+						DataProperties: []*interfaces.DataProperty{
+							{Name: "prop1", Type: "string"},
+						},
+					},
+				},
+			}
+			err := ValidateVectorModelRefs(ctx, objectTypes, mockMFA)
+			So(err, ShouldBeNil)
+		})
+
+		Convey("Success with valid model reference\n", func() {
+			objectTypes := []*interfaces.ObjectType{
+				{
+					ObjectTypeWithKeyField: interfaces.ObjectTypeWithKeyField{
+						OTName: "ot1",
+						DataProperties: []*interfaces.DataProperty{
+							{
+								Name: "prop1",
+								IndexConfig: &interfaces.IndexConfig{
+									VectorConfig: interfaces.VectorConfig{
+										Enabled: true,
+										ModelID: "model1",
+									},
+								},
+							},
+						},
+					},
+				},
+			}
+			mockMFA.EXPECT().GetModelByID(gomock.Any(), "model1").Return(&interfaces.SmallModel{
+				ModelID:      "model1",
+				ModelType:    interfaces.SMALL_MODEL_TYPE_EMBEDDING,
+				EmbeddingDim: 768,
+				BatchSize:    32,
+				MaxTokens:    512,
+			}, nil)
+			err := ValidateVectorModelRefs(ctx, objectTypes, mockMFA)
+			So(err, ShouldBeNil)
+		})
+
+		Convey("Failed when GetModelByID returns error\n", func() {
+			objectTypes := []*interfaces.ObjectType{
+				{
+					ObjectTypeWithKeyField: interfaces.ObjectTypeWithKeyField{
+						OTName: "ot1",
+						DataProperties: []*interfaces.DataProperty{
+							{
+								Name: "prop1",
+								IndexConfig: &interfaces.IndexConfig{
+									VectorConfig: interfaces.VectorConfig{
+										Enabled: true,
+										ModelID: "model1",
+									},
+								},
+							},
+						},
+					},
+				},
+			}
+			mockMFA.EXPECT().GetModelByID(gomock.Any(), "model1").Return(nil, errors.New("connection refused"))
+			err := ValidateVectorModelRefs(ctx, objectTypes, mockMFA)
+			So(err, ShouldNotBeNil)
+			httpErr := err.(*rest.HTTPError)
+			So(httpErr.BaseError.ErrorCode, ShouldEqual, berrors.BknBackend_ObjectType_InternalError_GetSmallModelByIDFailed)
+		})
+
+		Convey("Failed with non-existent model\n", func() {
+			objectTypes := []*interfaces.ObjectType{
+				{
+					ObjectTypeWithKeyField: interfaces.ObjectTypeWithKeyField{
+						OTName: "ot1",
+						DataProperties: []*interfaces.DataProperty{
+							{
+								Name: "prop1",
+								IndexConfig: &interfaces.IndexConfig{
+									VectorConfig: interfaces.VectorConfig{
+										Enabled: true,
+										ModelID: "missing-model",
+									},
+								},
+							},
+						},
+					},
+				},
+			}
+			mockMFA.EXPECT().GetModelByID(gomock.Any(), "missing-model").Return(nil, nil)
+			err := ValidateVectorModelRefs(ctx, objectTypes, mockMFA)
+			So(err, ShouldNotBeNil)
+			httpErr := err.(*rest.HTTPError)
+			So(httpErr.BaseError.ErrorCode, ShouldEqual, berrors.BknBackend_ObjectType_SmallModelNotFound)
+		})
+
+		Convey("Failed with wrong model type\n", func() {
+			objectTypes := []*interfaces.ObjectType{
+				{
+					ObjectTypeWithKeyField: interfaces.ObjectTypeWithKeyField{
+						OTName: "ot1",
+						DataProperties: []*interfaces.DataProperty{
+							{
+								Name: "prop1",
+								IndexConfig: &interfaces.IndexConfig{
+									VectorConfig: interfaces.VectorConfig{
+										Enabled: true,
+										ModelID: "model-llm",
+									},
+								},
+							},
+						},
+					},
+				},
+			}
+			mockMFA.EXPECT().GetModelByID(gomock.Any(), "model-llm").Return(&interfaces.SmallModel{
+				ModelID:      "model-llm",
+				ModelType:    "llm",
+				EmbeddingDim: 768,
+				BatchSize:    32,
+				MaxTokens:    512,
+			}, nil)
+			err := ValidateVectorModelRefs(ctx, objectTypes, mockMFA)
+			So(err, ShouldNotBeNil)
+			httpErr := err.(*rest.HTTPError)
+			So(httpErr.BaseError.ErrorCode, ShouldEqual, berrors.BknBackend_ObjectType_InvalidParameter_SmallModel)
+		})
+
+		Convey("Failed with invalid model params\n", func() {
+			objectTypes := []*interfaces.ObjectType{
+				{
+					ObjectTypeWithKeyField: interfaces.ObjectTypeWithKeyField{
+						OTName: "ot1",
+						DataProperties: []*interfaces.DataProperty{
+							{
+								Name: "prop1",
+								IndexConfig: &interfaces.IndexConfig{
+									VectorConfig: interfaces.VectorConfig{
+										Enabled: true,
+										ModelID: "model-bad",
+									},
+								},
+							},
+						},
+					},
+				},
+			}
+			mockMFA.EXPECT().GetModelByID(gomock.Any(), "model-bad").Return(&interfaces.SmallModel{
+				ModelID:      "model-bad",
+				ModelType:    interfaces.SMALL_MODEL_TYPE_EMBEDDING,
+				EmbeddingDim: 0,
+				BatchSize:    0,
+				MaxTokens:    0,
+			}, nil)
+			err := ValidateVectorModelRefs(ctx, objectTypes, mockMFA)
+			So(err, ShouldNotBeNil)
+			httpErr := err.(*rest.HTTPError)
+			So(httpErr.BaseError.ErrorCode, ShouldEqual, berrors.BknBackend_ObjectType_InvalidParameter_SmallModel)
 		})
 	})
 }
