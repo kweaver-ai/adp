@@ -22,6 +22,7 @@ import (
 	"bkn-backend/common"
 	berrors "bkn-backend/errors"
 	"bkn-backend/interfaces"
+	"bkn-backend/logics"
 	"bkn-backend/logics/action_schedule"
 	"bkn-backend/logics/action_type"
 	"bkn-backend/logics/bkn"
@@ -45,6 +46,7 @@ type restHandler struct {
 	cgs        interfaces.ConceptGroupService
 	js         interfaces.JobService
 	kns        interfaces.KNService
+	mfa        interfaces.ModelFactoryAccess
 	ots        interfaces.ObjectTypeService
 	rts        interfaces.RelationTypeService
 	bs         interfaces.BKNService
@@ -59,6 +61,7 @@ func NewRestHandler(appSetting *common.AppSetting) RestHandler {
 		cgs:        concept_group.NewConceptGroupService(appSetting),
 		js:         job.NewJobService(appSetting),
 		kns:        knowledge_network.NewKNService(appSetting),
+		mfa:        logics.MFA,
 		ots:        object_type.NewObjectTypeService(appSetting),
 		rts:        relation_type.NewRelationTypeService(appSetting),
 		bs:         bkn.NewBKNService(appSetting),

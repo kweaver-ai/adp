@@ -157,6 +157,16 @@ func (r *restHandler) UploadBKN(c *gin.Context) {
 			return
 		}
 	}
+	// 校验向量配置引用的模型在目标环境中是否存在
+	if len(kn.ObjectTypes) > 0 {
+		err = ValidateVectorModelRefs(ctx, kn.ObjectTypes, r.mfa)
+		if err != nil {
+			httpErr := err.(*rest.HTTPError)
+			o11y.AddHttpAttrs4HttpError(span, httpErr)
+			rest.ReplyError(c, httpErr)
+			return
+		}
+	}
 	if len(kn.RelationTypes) > 0 {
 		err = ValidateRelationTypes(ctx, kn.KNID, kn.RelationTypes)
 		if err != nil {
