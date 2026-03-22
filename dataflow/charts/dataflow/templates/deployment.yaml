@@ -1,12 +1,18 @@
+{{- $global := .Values.global | default dict -}}
+{{- $imagePullSecrets := default .Values.imagePullSecrets $global.imagePullSecrets -}}
+{{- $env := include "mergedGlobalValues.env" . | fromYaml -}}
+{{- $depServices := include "mergedGlobalValues.depServices" . | fromYaml -}}
+{{- $flowAutomation := include "mergedGlobalValues.flowAutomation" . | fromYaml -}}
+{{- $replicaCount := include "mergedGlobalValues.replicaCount" . -}}
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: {{ include "dataflow.fullname" . }}
-  namespace: {{ .Values.namespace }}
+  namespace: {{ .Release.Namespace }}
   labels:
     {{- include "dataflow.labels" . | nindent 4 }}
 spec:
-  replicas: {{ .Values.replicaCount | default 1 }}
+  replicas: {{ $replicaCount | default 1 }}
   strategy:
     {{- toYaml .Values.strategy | nindent 4 }}
   selector:
@@ -23,7 +29,7 @@ spec:
         checksum/configmap-flow-automation: {{ include (print $.Template.BasePath "/flow-automation/configmap.yaml") . | sha256sum }}
         checksum/configmap-stream-data-pipeline: {{ include (print $.Template.BasePath "/stream-data-pipeline/configmap.yaml") . | sha256sum }}
     spec:
-      {{- with .Values.imagePullSecrets }}
+      {{- with $imagePullSecrets }}
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}
       {{- end }}
@@ -70,7 +76,7 @@ spec:
 
       initContainers:
         - name: prepare-image
-          image: "{{ .Values.image.registry }}/{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          image: "{{ include "mergedGlobalValues.image" . }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           command: ["/bin/bash", "-c"]
           args: 
@@ -83,18 +89,18 @@ spec:
         {{- if .Values.components.flowAutomation.enabled }}
         - name: flow-automation
           securityContext:
-            {{- toYaml .Values.flowAutomation.securityContext | nindent 12 }}
-          image: "{{ .Values.image.registry }}/{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+            {{- toYaml $flowAutomation.securityContext | nindent 12 }}
+          image: "{{ include "mergedGlobalValues.image" . }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           command: ["/bin/bash", "-c"]
           args: 
             - "cd /opt/flow-automation && ./flow-automation"
           ports:
             - name: dataflow-pub
-              containerPort: {{ .Values.flowAutomation.service.port }}
+              containerPort: {{ $flowAutomation.service.port }}
               protocol: TCP
             - name: dataflow-priv
-              containerPort: {{ add 2 .Values.flowAutomation.service.port }}
+              containerPort: {{ add 2 $flowAutomation.service.port }}
               protocol: TCP
             - name: ecron-mgt-pub
               containerPort: {{ .Values.ecronManagement.service.ecronMgntPort }}
@@ -102,14 +108,14 @@ spec:
               containerPort: {{ .Values.ecronManagement.service.ecronAnlysPort }}
           readinessProbe:
             httpGet:
-              path: {{ .Values.flowAutomation.service.prefix }}/health/ready
+              path: {{ $flowAutomation.service.prefix }}/health/ready
               port: dataflow-pub
-            {{- toYaml .Values.flowAutomation.service.readinessProbe | nindent 12 }}
+            {{- toYaml $flowAutomation.service.readinessProbe | nindent 12 }}
           livenessProbe:
             httpGet:
-              path: {{ .Values.flowAutomation.service.prefix }}/health/alive
+              path: {{ $flowAutomation.service.prefix }}/health/alive
               port: dataflow-pub
-            {{- toYaml .Values.flowAutomation.service.livenessProbe | nindent 12 }}
+            {{- toYaml $flowAutomation.service.livenessProbe | nindent 12 }}
           volumeMounts:
             - name: flow-automation-ca
               mountPath: /opt/flow-automation/ssl
@@ -120,7 +126,7 @@ spec:
             - mountPath: /conf/flow_o11y_data.yaml
               name: flow-o11y-data-yaml
               subPath: flow_o11y_data.yaml
-            - mountPath: {{ .Values.flowAutomation.actionConfigYaml }}
+            - mountPath: {{ $flowAutomation.actionConfigYaml }}
               name: action-config-yaml
               subPath: action_config.yaml
             - name: s3-yaml
@@ -137,7 +143,7 @@ spec:
             {{- merge $res .Values.resources | toYaml | nindent 12 }}
           env:
             - name: LOGOUT
-              value: {{ .Values.flowAutomation.service.logger }}
+              value: {{ $flowAutomation.service.logger }}
             - name: POD_IP
               valueFrom:
                 fieldRef:
@@ -156,8 +162,8 @@ spec:
         {{- if .Values.components.streamDataPipeline.enabled }}
         - name: flow-stream-data-pipeline
           securityContext:
-            {{- toYaml .Values.flowAutomation.securityContext | nindent 12 }}
-          image: "{{ .Values.image.registry }}/{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+            {{- toYaml $flowAutomation.securityContext | nindent 12 }}
+          image: "{{ include "mergedGlobalValues.image" . }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           command: ["/bin/bash", "-c"]
           args: 
@@ -181,9 +187,9 @@ spec:
             failureThreshold: 3
           env:
             - name: TZ
-              value: {{ .Values.env.timezone }}
+              value: {{ $env.timezone }}
             - name: LANG
-              value: {{ .Values.env.language }}
+              value: {{ $env.language }}
             - name: POD_IP
               valueFrom:
                 fieldRef:
@@ -193,13 +199,13 @@ spec:
                 fieldRef:
                   fieldPath: metadata.name
             - name: SDP_PIPELINE_IMAGE
-              value: "{{ .Values.image.registry }}/{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+              value: "{{ include "mergedGlobalValues.image" . }}"
             - name: SDP_PIPELINE_NAMESPACE
-              value: {{ .Values.namespace }}
+              value: {{ .Release.Namespace }}
             - name: DB_TYPE
-              value: {{ .Values.depServices.rds.type }}
+              value: {{ $depServices.rds.type }}
             - name: MQ_TYPE
-              value: {{ .Values.depServices.mq.mqType | quote }}
+              value: {{ $depServices.mq.mqType | quote }}
             - name: DM_SVC_PATH
               value: /opt/pipeline/config
 

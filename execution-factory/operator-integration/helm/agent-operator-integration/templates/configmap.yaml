@@ -1,8 +1,12 @@
+{{- $env := include "mergedGlobalValues.env" . | fromYaml -}}
+{{- $depServices := include "mergedGlobalValues.depServices" . | fromYaml -}}
+{{- $accessAddress := include "mergedGlobalValues.accessAddress" . | fromYaml -}}
+{{- $depServices := include "mergedGlobalValues.depServices" . | fromYaml -}}
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: {{ .Release.Name }}
-  namespace: {{ .Values.namespace }}
+  name: {{ .Values.moduleName }}
+  namespace: {{ .Release.Namespace }}
 data:
   agent-operator-integration.yaml: |
     project:
@@ -31,78 +35,78 @@ data:
       max_clients: {{ .Values.service.proxyModule.maxClients }}
       client_lifetime: {{ .Values.service.proxyModule.clientLifetime }}
     oauth:
-      public_host: {{ .Values.depServices.hydra.publicHost | quote }}
-      public_port: {{ .Values.depServices.hydra.publicPort }}
-      public_protocol: {{ .Values.depServices.hydra.publicProtocol | quote }}
-      admin_host: {{ .Values.depServices.hydra.administrativeHost | quote }}
-      admin_port: {{ .Values.depServices.hydra.administrativePort }}
-      admin_protocol: {{ .Values.depServices.hydra.administrativeProtocol | quote }}
-      admin_prefix: {{ .Values.depServices.hydra.administrativePrefix | quote }}
+      public_host: {{ $depServices.hydra.publicHost | quote }}
+      public_port: {{ $depServices.hydra.publicPort }}
+      public_protocol: {{ $depServices.hydra.publicProtocol | quote }}
+      admin_host: {{ $depServices.hydra.administrativeHost | quote }}
+      admin_port: {{ $depServices.hydra.administrativePort }}
+      admin_protocol: {{ $depServices.hydra.administrativeProtocol | quote }}
+      admin_prefix: {{ $depServices.hydra.administrativePrefix | quote }}
     user_management:
-      private_protocol: {{ index .Values "depServices" "user-management" "privateProtocol" | quote }}
-      private_host: {{ index .Values "depServices" "user-management" "privateHost" | quote }}
-      private_port: {{ index .Values "depServices" "user-management" "privatePort" }}
+      private_protocol: {{ index $depServices "user-management" "privateProtocol" | quote }}
+      private_host: {{ index $depServices "user-management" "privateHost" | quote }}
+      private_port: {{ index $depServices "user-management" "privatePort" }}
     authorization:
-      private_protocol: {{ .Values.depServices.authorization.privateProtocol | quote }}
-      private_host: {{ .Values.depServices.authorization.privateHost | quote }}
-      private_port: {{ .Values.depServices.authorization.privatePort }}
+      private_protocol: {{ $depServices.authorization.privateProtocol | quote }}
+      private_host: {{ $depServices.authorization.privateHost | quote }}
+      private_port: {{ $depServices.authorization.privatePort }}
     business-system-service:
-      private_protocol: {{ index .Values "depServices" "business-system-service" "privateProtocol" | quote }}
-      private_host: {{ index .Values "depServices" "business-system-service" "privateHost" | quote }}
-      private_port: {{ index .Values "depServices" "business-system-service" "privatePort" }}
+      private_protocol: {{ index $depServices "business-system-service" "privateProtocol" | quote }}
+      private_host: {{ index $depServices "business-system-service" "privateHost" | quote }}
+      private_port: {{ index $depServices "business-system-service" "privatePort" }}
     db:
-      conn_timeout: {{ .Values.depServices.rds.connTimeout }}
-      read_timeout: {{ .Values.depServices.rds.readTimeout }}
-      write_timeout: {{ .Values.depServices.rds.writeTimeout }}
-      max_open_conns: {{ .Values.depServices.rds.maxConnections }}
-      system_id: {{ .Values.depServices.rds.system_id | quote }}
+      conn_timeout: {{ $depServices.rds.connTimeout }}
+      read_timeout: {{ $depServices.rds.readTimeout }}
+      write_timeout: {{ $depServices.rds.writeTimeout }}
+      max_open_conns: {{ $depServices.rds.maxConnections }}
+      system_id: {{ $depServices.rds.system_id | quote }}
     redis:
-      connectType: {{ .Values.depServices.redis.connectType | quote }}
-      enableSSL: {{ .Values.depServices.redis.enableSSL }}
-      secretName: {{ .Values.depServices.redis.secretName | quote }}
-      caName: {{ .Values.depServices.redis.caName | quote }}
-      certName: {{ .Values.depServices.redis.certName | quote }}
-      keyName: {{ .Values.depServices.redis.keyName | quote }}
-      poolSize: {{ .Values.depServices.redis.connectInfo.poolSize }}
+      connectType: {{ $depServices.redis.connectType | quote }}
+      enableSSL: {{ $depServices.redis.enableSSL }}
+      secretName: {{ $depServices.redis.secretName | quote }}
+      caName: {{ $depServices.redis.caName | quote }}
+      certName: {{ $depServices.redis.certName | quote }}
+      keyName: {{ $depServices.redis.keyName | quote }}
+      poolSize: {{ $depServices.redis.connectInfo.poolSize }}
     flow-automation:
-      private_protocol: {{ index .Values "depServices" "flow-automation" "privateProtocol" | quote }}
-      private_host: {{ index .Values "depServices" "flow-automation" "privateHost" | quote }}
-      private_port: {{ index .Values "depServices" "flow-automation" "privatePort" }}
+      private_protocol: {{ index $depServices "flow-automation" "privateProtocol" | quote }}
+      private_host: {{ index $depServices "flow-automation" "privateHost" | quote }}
+      private_port: {{ index $depServices "flow-automation" "privatePort" }}
     sandbox-control-plane:
-      private_protocol: {{ index .Values "depServices" "sandbox-control-plane" "privateProtocol" | quote }}
-      private_host: {{ index .Values "depServices" "sandbox-control-plane" "privateHost" | quote }}
-      private_port: {{ index .Values "depServices" "sandbox-control-plane" "privatePort" }}
-      template_id: {{ index .Values "depServices" "sandbox-control-plane" "templateID" | quote }}
+      private_protocol: {{ index $depServices "sandbox-control-plane" "privateProtocol" | quote }}
+      private_host: {{ index $depServices "sandbox-control-plane" "privateHost" | quote }}
+      private_port: {{ index $depServices "sandbox-control-plane" "privatePort" }}
+      template_id: {{ index $depServices "sandbox-control-plane" "templateID" | quote }}
       session_resources:
-        cpu: {{ index .Values "depServices" "sandbox-control-plane" "sessionResources" "cpu" | quote }}
-        memory: {{ index .Values "depServices" "sandbox-control-plane" "sessionResources" "memory" | quote }}
-        disk: {{ index .Values "depServices" "sandbox-control-plane" "sessionResources" "disk" | quote }}
-        timeout: {{ index .Values "depServices" "sandbox-control-plane" "sessionResources" "timeout" }}
-      max_sessions: {{ index .Values "depServices" "sandbox-control-plane" "maxSessions" }}
-      active_sessions: {{ index .Values "depServices" "sandbox-control-plane" "activeSessions" }}
-      max_concurrent_tasks: {{ index .Values "depServices" "sandbox-control-plane" "maxConcurrentTasks" }}
+        cpu: {{ index $depServices "sandbox-control-plane" "sessionResources" "cpu" | quote }}
+        memory: {{ index $depServices "sandbox-control-plane" "sessionResources" "memory" | quote }}
+        disk: {{ index $depServices "sandbox-control-plane" "sessionResources" "disk" | quote }}
+        timeout: {{ index $depServices "sandbox-control-plane" "sessionResources" "timeout" }}
+      max_sessions: {{ index $depServices "sandbox-control-plane" "maxSessions" }}
+      active_sessions: {{ index $depServices "sandbox-control-plane" "activeSessions" }}
+      max_concurrent_tasks: {{ index $depServices "sandbox-control-plane" "maxConcurrentTasks" }}
     mf-model-api:
-      private_protocol: {{ index .Values "depServices" "mf-model-api" "privateProtocol" | quote }}
-      private_host: {{ index .Values "depServices" "mf-model-api" "privateHost" | quote }}
-      private_port: {{ index .Values "depServices" "mf-model-api" "privatePort" }}
+      private_protocol: {{ index $depServices "mf-model-api" "privateProtocol" | quote }}
+      private_host: {{ index $depServices "mf-model-api" "privateHost" | quote }}
+      private_port: {{ index $depServices "mf-model-api" "privatePort" }}
     mf-model-manager:
-      private_protocol: {{ index .Values "depServices" "mf-model-manager" "privateProtocol" | quote }}
-      private_host: {{ index .Values "depServices" "mf-model-manager" "privateHost" | quote }}
-      private_port: {{ index .Values "depServices" "mf-model-manager" "privatePort" }}
+      private_protocol: {{ index $depServices "mf-model-manager" "privateProtocol" | quote }}
+      private_host: {{ index $depServices "mf-model-manager" "privateHost" | quote }}
+      private_port: {{ index $depServices "mf-model-manager" "privatePort" }}
     ai_generation_config:
-      python_function_generator_prompt_id: {{ .Values.depServices.aiGenerationConfig.pythonFunctionGeneratorPromptID | quote }}
-      metadata_param_generator_prompt_id: {{ .Values.depServices.aiGenerationConfig.metadataParamGeneratorPromptID | quote }}
+      python_function_generator_prompt_id: {{ $depServices.aiGenerationConfig.pythonFunctionGeneratorPromptID | quote }}
+      metadata_param_generator_prompt_id: {{ $depServices.aiGenerationConfig.metadataParamGeneratorPromptID | quote }}
       llm:
-        model: {{ .Values.depServices.aiGenerationConfig.llm.model | quote }}
-        max_tokens: {{ .Values.depServices.aiGenerationConfig.llm.maxTokens }}
-        temperature: {{ .Values.depServices.aiGenerationConfig.llm.temperature }}
-        top_k: {{ .Values.depServices.aiGenerationConfig.llm.topK }}
-        top_p: {{ .Values.depServices.aiGenerationConfig.llm.topP }}
-        frequency_penalty: {{ .Values.depServices.aiGenerationConfig.llm.frequencyPenalty }}
-        presence_penalty: {{ .Values.depServices.aiGenerationConfig.llm.presencePenalty }}
+        model: {{ $depServices.aiGenerationConfig.llm.model | quote }}
+        max_tokens: {{ $depServices.aiGenerationConfig.llm.maxTokens }}
+        temperature: {{ $depServices.aiGenerationConfig.llm.temperature }}
+        top_k: {{ $depServices.aiGenerationConfig.llm.topK }}
+        top_p: {{ $depServices.aiGenerationConfig.llm.topP }}
+        frequency_penalty: {{ $depServices.aiGenerationConfig.llm.frequencyPenalty }}
+        presence_penalty: {{ $depServices.aiGenerationConfig.llm.presencePenalty }}
 
   mq_config.yaml: |
-    {{- toYaml .Values.depServices.mq | nindent 4 }}
+    {{- toYaml $depServices.mq | nindent 4 }}
 
   observability.yaml: |
     # 可观测相关配置

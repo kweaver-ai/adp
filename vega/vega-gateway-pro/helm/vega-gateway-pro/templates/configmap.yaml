@@ -1,8 +1,12 @@
+{{- $env := include "mergedGlobalValues.env" . | fromYaml -}}
+{{- $depServices := include "mergedGlobalValues.depServices" . | fromYaml -}}
+{{- $accessAddress := include "mergedGlobalValues.accessAddress" . | fromYaml -}}
+{{- $depServices := include "mergedGlobalValues.depServices" . | fromYaml -}}
 apiVersion: v1
 kind: ConfigMap
 metadata:
   name: {{ .Values.moduleName }}-cm
-  namespace: {{ .Values.namespace }}
+  namespace: {{ .Release.Namespace }}
 data:
   vega-gateway-pro-config.yaml: |
     server:
@@ -24,6 +28,6 @@ data:
     observability:
       {{- toYaml .Values.config.observability | nindent 6 }}
     depServices: 
-      {{- toYaml .Values.depServices | nindent 6 }}
+      {{- toYaml $depServices | nindent 6 }}
     rsa:
       {{- toYaml .Values.config.rsa | nindent 6 }}

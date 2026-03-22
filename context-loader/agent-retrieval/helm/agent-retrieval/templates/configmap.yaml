@@ -1,8 +1,12 @@
+{{- $env := include "mergedGlobalValues.env" . | fromYaml -}}
+{{- $depServices := include "mergedGlobalValues.depServices" . | fromYaml -}}
+{{- $accessAddress := include "mergedGlobalValues.accessAddress" . | fromYaml -}}
+{{- $depServices := include "mergedGlobalValues.depServices" . | fromYaml -}}
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: {{ .Release.Name }}
-  namespace: {{ .Values.namespace }}
+  name: {{ .Values.moduleName }}
+  namespace: {{ .Release.Namespace }}
 data:
   agent-retrieval.yaml: |
     # 配置文件路径/sysvol/conf/agent-retrieval.yaml
@@ -24,49 +28,49 @@ data:
       metric_dynamic_params_generator_key: {{ .Values.service.deploy_agent.metric_dynamic_params_generator_key }}
       operator_dynamic_params_generator_key: {{ .Values.service.deploy_agent.operator_dynamic_params_generator_key }}
     oauth:
-      public_host: {{ .Values.depServices.hydra.publicHost | quote }}
-      public_port: {{ .Values.depServices.hydra.publicPort }}
-      public_protocol: {{ .Values.depServices.hydra.publicProtocol | quote }}
-      admin_host: {{ .Values.depServices.hydra.administrativeHost | quote }}
-      admin_port: {{ .Values.depServices.hydra.administrativePort }}
-      admin_protocol: {{ .Values.depServices.hydra.administrativeProtocol | quote }}
-      admin_prefix: {{ .Values.depServices.hydra.administrativePrefix | quote }}
+      public_host: {{ $depServices.hydra.publicHost | quote }}
+      public_port: {{ $depServices.hydra.publicPort }}
+      public_protocol: {{ $depServices.hydra.publicProtocol | quote }}
+      admin_host: {{ $depServices.hydra.administrativeHost | quote }}
+      admin_port: {{ $depServices.hydra.administrativePort }}
+      admin_protocol: {{ $depServices.hydra.administrativeProtocol | quote }}
+      admin_prefix: {{ $depServices.hydra.administrativePrefix | quote }}
     user_management:
-      private_protocol: {{ index .Values "depServices" "user-management" "privateProtocol" | quote }}
-      private_host: {{ index .Values "depServices" "user-management" "privateHost" | quote }}
-      private_port: {{ index .Values "depServices" "user-management" "privatePort" }}
+      private_protocol: {{ index $depServices "user-management" "privateProtocol" | quote }}
+      private_host: {{ index $depServices "user-management" "privateHost" | quote }}
+      private_port: {{ index $depServices "user-management" "privatePort" }}
     agent_app:
-      private_protocol: {{ index .Values "depServices" "agent-app" "privateProtocol" | quote }}
-      private_host: {{ index .Values "depServices" "agent-app" "privateHost" | quote }}
-      private_port: {{ index .Values "depServices" "agent-app" "privatePort" }}
-    bkn_backend:
-      private_protocol: {{ index .Values "depServices" "bkn-backend" "privateProtocol" | quote }}
-      private_host: {{ index .Values "depServices" "bkn-backend" "privateHost" | quote }}
-      private_port: {{ index .Values "depServices" "bkn-backend" "privatePort" }}
+      private_protocol: {{ index $depServices "agent-app" "privateProtocol" | quote }}
+      private_host: {{ index $depServices "agent-app" "privateHost" | quote }}
+      private_port: {{ index $depServices "agent-app" "privatePort" }}
+    ontology_manager:
+      private_protocol: {{ index $depServices "ontology-manager" "privateProtocol" | quote }}
+      private_host: {{ index $depServices "ontology-manager" "privateHost" | quote }}
+      private_port: {{ index $depServices "ontology-manager" "privatePort" }}
     ontology_query:
-      private_protocol: {{ index .Values "depServices" "ontology-query" "privateProtocol" | quote }}
-      private_host: {{ index .Values "depServices" "ontology-query" "privateHost" | quote }}
-      private_port: {{ index .Values "depServices" "ontology-query" "privatePort" }}
+      private_protocol: {{ index $depServices "ontology-query" "privateProtocol" | quote }}
+      private_host: {{ index $depServices "ontology-query" "privateHost" | quote }}
+      private_port: {{ index $depServices "ontology-query" "privatePort" }}
     operator_integration:
-      private_protocol: {{ index .Values "depServices" "agent-operator-integration" "privateProtocol" | quote }}
-      private_host: {{ index .Values "depServices" "agent-operator-integration" "privateHost" | quote }}
-      private_port: {{ index .Values "depServices" "agent-operator-integration" "privatePort" }}
+      private_protocol: {{ index $depServices "agent-operator-integration" "privateProtocol" | quote }}
+      private_host: {{ index $depServices "agent-operator-integration" "privateHost" | quote }}
+      private_port: {{ index $depServices "agent-operator-integration" "privatePort" }}
     data_retrieval:
-      private_protocol: {{ index .Values "depServices" "data-retrieval" "privateProtocol" | quote }}
-      private_host: {{ index .Values "depServices" "data-retrieval" "privateHost" | quote }}
-      private_port: {{ index .Values "depServices" "data-retrieval" "privatePort" }}
+      private_protocol: {{ index $depServices "data-retrieval" "privateProtocol" | quote }}
+      private_host: {{ index $depServices "data-retrieval" "privateHost" | quote }}
+      private_port: {{ index $depServices "data-retrieval" "privatePort" }}
     redis:
-      connectType: {{ .Values.depServices.redis.connectType | quote }}
-      enableSSL: {{ .Values.depServices.redis.enableSSL }}
-      secretName: {{ .Values.depServices.redis.secretName | quote }}
-      caName: {{ .Values.depServices.redis.caName | quote }}
-      certName: {{ .Values.depServices.redis.certName | quote }}
-      keyName: {{ .Values.depServices.redis.keyName | quote }}
-      poolSize: {{ .Values.depServices.redis.connectInfo.poolSize }}
+      connectType: {{ $depServices.redis.connectType | quote }}
+      enableSSL: {{ $depServices.redis.enableSSL }}
+      secretName: {{ $depServices.redis.secretName | quote }}
+      caName: {{ $depServices.redis.caName | quote }}
+      certName: {{ $depServices.redis.certName | quote }}
+      keyName: {{ $depServices.redis.keyName | quote }}
+      poolSize: {{ $depServices.redis.connectInfo.poolSize }}
     mf_model_api:
-      private_protocol: {{ index .Values "depServices" "mf-model-api" "privateProtocol" | quote }}
-      private_host: {{ index .Values "depServices" "mf-model-api" "privateHost" | quote }}
-      private_port: {{ index .Values "depServices" "mf-model-api" "privatePort" }}
+      private_protocol: {{ index $depServices "mf-model-api" "privateProtocol" | quote }}
+      private_host: {{ index $depServices "mf-model-api" "privateHost" | quote }}
+      private_port: {{ index $depServices "mf-model-api" "privatePort" }}
     rerank_llm:
       model: {{ .Values.service.rerank_llm.model | quote }}
       temperature: {{ default 0 .Values.service.rerank_llm.temperature }}

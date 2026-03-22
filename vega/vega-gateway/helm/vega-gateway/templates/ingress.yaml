@@ -1,8 +1,9 @@
+{{- $depServices := include "mergedGlobalValues.depServices" . | fromYaml -}}
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: {{ .Chart.Name}}
-  namespace: {{ .Values.namespace}}
+  namespace: {{ .Release.Namespace}}
   annotations:
     nginx.ingress.kubernetes.io/enable-cors: "true"
     nginx.ingress.kubernetes.io/cors-allow-origin: "*"
@@ -10,55 +11,55 @@ metadata:
     nginx.ingress.kubernetes.io/cors-allow-headers: DNT,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Authorization,Location,pragma,X-Language,X-Presto-User
     nginx.ingress.kubernetes.io/cors-allow-methods: GET,PUT,POST,DELETE,HEAD,OPTIONS
 spec:
-  ingressClassName: {{ index .Values.depServices "class-443" "ingressClass" }}
+  ingressClassName: {{ index $depServices "class-443" "ingressClass" }}
   rules:
     - http:
         paths:
           - backend:
               service:
-                name: {{ .Release.Name }}
+                name: {{ .Values.service.name }}
                 port:
                   number: 8099
             path: /api/virtual_engine_service
             pathType: ImplementationSpecific
           - backend:
               service:
-                name: {{ .Release.Name }}
+                name: {{ .Values.service.name }}
                 port:
                   number: 8099
             path: /swagger/virtual_engine_service
             pathType: ImplementationSpecific
           - backend:
               service:
-                name: {{ .Release.Name }}
+                name: {{ .Values.service.name }}
                 port:
                   number: 8099
             path: /api/vega-gateway/v1
             pathType: ImplementationSpecific
           - backend:
               service:
-                name: {{ .Release.Name }}
+                name: {{ .Values.service.name }}
                 port:
                   number: 8099
             path: /api/vega-data-source
             pathType: ImplementationSpecific
           - backend:
               service:
-                name: {{ .Release.Name }}
+                name: {{ .Values.service.name }}
                 port:
                   number: 8099
             path: /v1/statement
             pathType: ImplementationSpecific
           - backend:
               service:
-                name: {{ .Release.Name }}
+                name: {{ .Values.service.name }}
                 port:
                   number: 8099
             path: /ui/query.html
             pathType: ImplementationSpecific
           - backend:
               service:
-                name: {{ .Release.Name }}
+                name: {{ .Values.service.name }}
                 port:
                   number: 8099
             path: /v1/info

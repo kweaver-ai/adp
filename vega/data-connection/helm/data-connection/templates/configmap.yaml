@@ -1,8 +1,12 @@
+{{- $env := include "mergedGlobalValues.env" . | fromYaml -}}
+{{- $depServices := include "mergedGlobalValues.depServices" . | fromYaml -}}
+{{- $accessAddress := include "mergedGlobalValues.accessAddress" . | fromYaml -}}
+{{- $depServices := include "mergedGlobalValues.depServices" . | fromYaml -}}
 apiVersion: v1
 kind: ConfigMap
 metadata:
   name: {{ .Values.name }}
-  namespace: {{ .Values.namespace }}
+  namespace: {{ .Release.Namespace }}
 data:
   application.yml: |-
     server:
@@ -15,7 +19,7 @@ data:
         name: data-connection
         version: 1.0.0
         queryName: vega-calculate-coordinator
-        dbType: {{ .Values.depServices.rds.type }}
+        dbType: {{ $depServices.rds.type }}
       mvc:
         throw-exception-if-no-handler-found: true
         pathmatch:
@@ -31,15 +35,15 @@ data:
           lazy: true
           datasource:
             default:
-              {{- if eq .Values.depServices.rds.type "DM8" }}
+              {{- if eq $depServices.rds.type "DM8" }}
               driver-class-name: dm.jdbc.driver.DmDriver
-              url: jdbc:dm://{{ .Values.depServices.rds.host }}:{{ .Values.depServices.rds.port }}?schema=adp
+              url: jdbc:dm://{{ $depServices.rds.host }}:{{ $depServices.rds.port }}?schema=adp
               {{- else }}
               driver-class-name: org.mariadb.jdbc.Driver
-              url: jdbc:mariadb://{{ .Values.depServices.rds.host }}:{{ .Values.depServices.rds.port }}/adp?maxAllowedPacket=134217728&socketTimeout=300000&autoReconnect=true&useUnicode=true&useSSL=false&characterEncoding=utf8mb4&serverTimezone=GMT%2B8
+              url: jdbc:mariadb://{{ $depServices.rds.host }}:{{ $depServices.rds.port }}/adp?maxAllowedPacket=134217728&socketTimeout=300000&autoReconnect=true&useUnicode=true&useSSL=false&characterEncoding=utf8mb4&serverTimezone=GMT%2B8
               {{- end }}
-              username: {{ .Values.depServices.rds.user }}
-              password: {{ .Values.depServices.rds.password }}
+              username: {{ $depServices.rds.user }}
+              password: {{ $depServices.rds.password }}
               type: com.alibaba.druid.pool.DruidDataSource
               druid:
                 initial-size: 5
@@ -70,13 +74,13 @@ data:
 
     services:
       is-local: false
-      vega-calculate-coordinator: {{ .Values.depServices.vegaCalculateCoordinator.protocol }}://{{ .Values.depServices.vegaCalculateCoordinator.host }}:{{ .Values.depServices.vegaCalculateCoordinator.port }}
-      hydra-admin: {{ .Values.depServices.hydra.administrativeProtocol }}://{{ .Values.depServices.hydra.administrativeHost }}:{{ .Values.depServices.hydra.administrativePort }}
-      user-management-private: {{ .Values.depServices.userManagement.privateProtocol }}://{{ .Values.depServices.userManagement.privateHost }}:{{ .Values.depServices.userManagement.privatePort }}
-      authorization-private: {{ .Values.depServices.authorization.privateProtocol }}://{{ .Values.depServices.authorization.privateHost }}:{{ .Values.depServices.authorization.privatePort }}
-      efast-private: {{ .Values.depServices.efast.privateProtocol }}://{{ .Values.depServices.efast.privateHost }}:{{ .Values.depServices.efast.privatePort }}
-      efast-public: {{ .Values.depServices.efast.publicProtocol }}://{{ .Values.depServices.efast.publicHost }}:{{ .Values.depServices.efast.publicPort }}
-      vega-gateway: {{ .Values.depServices.vegaGateWay.protocol }}://{{ .Values.depServices.vegaGateWay.host }}:{{ .Values.depServices.vegaGateWay.port }}
+      vega-calculate-coordinator: {{ $depServices.vegaCalculateCoordinator.protocol }}://{{ $depServices.vegaCalculateCoordinator.host }}:{{ $depServices.vegaCalculateCoordinator.port }}
+      hydra-admin: {{ $depServices.hydra.administrativeProtocol }}://{{ $depServices.hydra.administrativeHost }}:{{ $depServices.hydra.administrativePort }}
+      user-management-private: {{ $depServices.userManagement.privateProtocol }}://{{ $depServices.userManagement.privateHost }}:{{ $depServices.userManagement.privatePort }}
+      authorization-private: {{ $depServices.authorization.privateProtocol }}://{{ $depServices.authorization.privateHost }}:{{ $depServices.authorization.privatePort }}
+      efast-private: {{ $depServices.efast.privateProtocol }}://{{ $depServices.efast.privateHost }}:{{ $depServices.efast.privatePort }}
+      efast-public: {{ $depServices.efast.publicProtocol }}://{{ $depServices.efast.publicHost }}:{{ $depServices.efast.publicPort }}
+      vega-gateway: {{ $depServices.vegaGateWay.protocol }}://{{ $depServices.vegaGateWay.host }}:{{ $depServices.vegaGateWay.port }}
     anyrobot:
       log:
         enabled: {{ .Values.service.telemetry.log.enabled }}
@@ -91,15 +95,15 @@ data:
     collector-data-source: {{ .Values.collectorDataSource }} #扫描用数据源，列表过滤时使用
 
     mq:
-      mqHost: {{ .Values.depServices.mq.mqHost }}
-      mqPort: {{ .Values.depServices.mq.mqPort }}
-      mqLookupdHost: {{ .Values.depServices.mq.mqLookupdHost }}
-      mqLookupdPort: {{ .Values.depServices.mq.mqLookupdPort }}
-      mqType: {{ .Values.depServices.mq.mqType }}
+      mqHost: {{ $depServices.mq.mqHost }}
+      mqPort: {{ $depServices.mq.mqPort }}
+      mqLookupdHost: {{ $depServices.mq.mqLookupdHost }}
+      mqLookupdPort: {{ $depServices.mq.mqLookupdPort }}
+      mqType: {{ $depServices.mq.mqType }}
       auth:
-        username: {{ .Values.depServices.mq.auth.username }}
-        password: {{ .Values.depServices.mq.auth.password }}
-        mechanism: {{ .Values.depServices.mq.auth.mechanism }}
+        username: {{ $depServices.mq.auth.username }}
+        password: {{ $depServices.mq.auth.password }}
+        mechanism: {{ $depServices.mq.auth.mechanism }}
 
     http:
       client:
@@ -107,7 +111,7 @@ data:
         read-timeout: 60000      # 读超时时间（毫秒）
 
     metadata:
-      scanUrl: {{ .Values.depServices.metadata.protocol }}://{{ .Values.depServices.metadata.host }}/api/metadata-manage/v1/task/fillMetaDataByVirtual/%s
+      scanUrl: {{ $depServices.metadata.protocol }}://{{ $depServices.metadata.host }}/api/metadata-manage/v1/task/fillMetaDataByVirtual/%s
     scan:
       numThread: 5
 

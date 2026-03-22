@@ -1,8 +1,12 @@
+{{- $env := include "mergedGlobalValues.env" . | fromYaml -}}
+{{- $depServices := include "mergedGlobalValues.depServices" . | fromYaml -}}
+{{- $accessAddress := include "mergedGlobalValues.accessAddress" . | fromYaml -}}
+{{- $depServices := include "mergedGlobalValues.depServices" . | fromYaml -}}
 apiVersion: v1
 kind: ConfigMap
 metadata:
   name: {{ .Values.name }}-cm
-  namespace: {{ .Values.namespace }}
+  namespace: {{ .Release.Namespace }}
 data:
   application.yml: |-
     server:
@@ -30,15 +34,15 @@ data:
           lazy: true
           datasource:
             default:
-              {{- if eq .Values.depServices.rds.type "DM8" }}
+              {{- if eq $depServices.rds.type "DM8" }}
               driver-class-name: dm.jdbc.driver.DmDriver
-              url: jdbc:dm://{{ .Values.depServices.rds.host }}:{{ .Values.depServices.rds.port }}?schema=adp
+              url: jdbc:dm://{{ $depServices.rds.host }}:{{ $depServices.rds.port }}?schema=adp
               {{- else }}
               driver-class-name: org.mariadb.jdbc.Driver
-              url: jdbc:mariadb://{{ .Values.depServices.rds.host }}:{{ .Values.depServices.rds.port }}/adp?useUnicode=true&useSSL=false&characterEncoding=utf8mb4&serverTimezone=GMT%2B8
+              url: jdbc:mariadb://{{ $depServices.rds.host }}:{{ $depServices.rds.port }}/adp?useUnicode=true&useSSL=false&characterEncoding=utf8mb4&serverTimezone=GMT%2B8
               {{- end }}
-              username: {{ .Values.depServices.rds.user }}
-              password: {{ .Values.depServices.rds.password }}
+              username: {{ $depServices.rds.user }}
+              password: {{ $depServices.rds.password }}
               type: com.alibaba.druid.pool.DruidDataSource
               druid:
                 initial-size: 5
@@ -61,8 +65,8 @@ data:
       configuration:
         log-impl: org.apache.ibatis.logging.slf4j.Slf4jImpl
     openlookeng:
-      url: {{ .Values.depServices.vega_calculate.protocol }}://{{ .Values.depServices.vega_calculate.service }}:{{ .Values.depServices.vega_calculate.port }}
-      connect-timeout: {{ .Values.depServices.vega_calculate.timeout }}
+      url: {{ $depServices.vega_calculate.protocol }}://{{ $depServices.vega_calculate.service }}:{{ $depServices.vega_calculate.port }}
+      connect-timeout: {{ $depServices.vega_calculate.timeout }}
       jdbc:
         pushdown-module: FULL_PUSHDOWN
     olk:
@@ -75,10 +79,10 @@ data:
 
     af-auth:
       is-open: true
-      register-clientid-url: {{ .Values.depServices.hydra.administrativeProtocol }}://{{ .Values.depServices.hydra.administrativeHost }}:{{ .Values.depServices.hydra.administrativePort }}/admin/clients
-      clientid-token: {{ .Values.depServices.hydra.publicProtocol }}://{{ .Values.depServices.hydra.publicHost }}:{{ .Values.depServices.hydra.publicPort }}/oauth2/token
-      token-introspect: {{ .Values.depServices.hydra.administrativeProtocol }}://{{ .Values.depServices.hydra.administrativeHost }}:{{ .Values.depServices.hydra.administrativePort }}/admin/oauth2/introspect
-      row-column-rule: {{ .Values.depServices.authService.protocol }}://{{ .Values.depServices.authService.host }}:{{ .Values.depServices.authService.port }}/api/auth-service/v1/sub-views
+      register-clientid-url: {{ $depServices.hydra.administrativeProtocol }}://{{ $depServices.hydra.administrativeHost }}:{{ $depServices.hydra.administrativePort }}/admin/clients
+      clientid-token: {{ $depServices.hydra.publicProtocol }}://{{ $depServices.hydra.publicHost }}:{{ $depServices.hydra.publicPort }}/oauth2/token
+      token-introspect: {{ $depServices.hydra.administrativeProtocol }}://{{ $depServices.hydra.administrativeHost }}:{{ $depServices.hydra.administrativePort }}/admin/oauth2/introspect
+      row-column-rule: {{ $depServices.authService.protocol }}://{{ $depServices.authService.host }}:{{ $depServices.authService.port }}/api/auth-service/v1/sub-views
 
     anyrobot:
       log:
@@ -94,4 +98,4 @@ data:
     collector-data-source: {{ .Values.collectorDataSource }} #扫描用数据源，列表过滤时使用
 
     services:
-      efast-public: {{ .Values.depServices.efast.publicProtocol }}://{{ .Values.depServices.efast.publicHost }}:{{ .Values.depServices.efast.publicPort }}
+      efast-public: {{ $depServices.efast.publicProtocol }}://{{ $depServices.efast.publicHost }}:{{ $depServices.efast.publicPort }}

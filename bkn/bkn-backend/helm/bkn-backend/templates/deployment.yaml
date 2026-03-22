@@ -1,12 +1,14 @@
+{{- $env := include "mergedGlobalValues.env" . | fromYaml -}}
+{{- $depServices := include "mergedGlobalValues.depServices" . | fromYaml -}}
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: {{ .Values.moduleName }}
-  namespace: {{ .Values.namespace }}
+  namespace: {{ .Release.Namespace }}
   labels:
     module: {{ .Values.moduleName }}
 spec:
-  replicas: {{ .Values.replicaCount }}
+  replicas: {{ include "mergedGlobalValues.replicaCount" . }}
   strategy:
     type: RollingUpdate
     rollingUpdate:
@@ -58,31 +60,31 @@ spec:
         {{- end }}
       {{- end }}
       containers:
-      - name: bkn-backend
-        image: {{ template "bkn-backend.image" . }}
+      - name: ontology-manager
+        image: {{ template "ontology-manager.image" . }}
         imagePullPolicy: {{ .Values.image.pullPolicy }}
         ports:
-          - name: backend
-            containerPort: {{ .Values.service.bknBackend.port }}
+          - name: manager
+            containerPort: {{ .Values.service.ontologyManager.port }}
         livenessProbe:
           tcpSocket:
-            port: {{ .Values.service.bknBackend.port }}
+            port: {{ .Values.service.ontologyManager.port }}
           initialDelaySeconds: 10
           periodSeconds: 10
           timeoutSeconds: 30
           failureThreshold: 3
         readinessProbe:
           tcpSocket:
-            port: {{ .Values.service.bknBackend.port }}
+            port: {{ .Values.service.ontologyManager.port }}
           initialDelaySeconds: 10
           periodSeconds: 10
           timeoutSeconds: 30
           failureThreshold: 3
         env:
           - name: TZ
-            value: {{ .Values.env.timezone }}
+            value: {{ $env.timezone }}
           - name: LANG
-            value: {{ .Values.env.language }}
+            value: {{ $env.language }}
           - name: POD_IP
             valueFrom:
               fieldRef:
@@ -91,20 +93,20 @@ spec:
             valueFrom:
               fieldRef:
                 fieldPath: metadata.name
-          {{- if .Values.depServices.rds.type }}
+          {{- if $depServices.rds.type }}
           - name: DB_TYPE
-            value: {{ .Values.depServices.rds.type | quote }}
+            value: {{ $depServices.rds.type | quote }}
           {{- end }}
-          {{- if .Values.depServices.mq.mqType }}
+          {{- if $depServices.mq.mqType }}
           - name: MQ_TYPE
-            value: {{ .Values.depServices.mq.mqType | quote }}
+            value: {{ $depServices.mq.mqType | quote }}
           {{- end }}
           - name: DM_SVC_PATH
-            value: /opt/bkn-backend/config
+            value: /opt/ontology-manager/config
         resources: {{- toYaml .Values.resources | nindent 10 }}
         volumeMounts:
           - name: {{ .Values.moduleName }}-cm
-            mountPath: /opt/bkn-backend/config
+            mountPath: /opt/ontology-manager/config
       restartPolicy: Always
       volumes:
       - name: {{ .Values.moduleName }}-cm

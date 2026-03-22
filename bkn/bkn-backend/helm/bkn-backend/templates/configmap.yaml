@@ -1,10 +1,14 @@
+{{- $env := include "mergedGlobalValues.env" . | fromYaml -}}
+{{- $depServices := include "mergedGlobalValues.depServices" . | fromYaml -}}
+{{- $accessAddress := include "mergedGlobalValues.accessAddress" . | fromYaml -}}
+{{- $depServices := include "mergedGlobalValues.depServices" . | fromYaml -}}
 apiVersion: v1
 kind: ConfigMap
 metadata:
   name: {{ .Values.moduleName }}-cm
-  namespace: {{ .Values.namespace }}
+  namespace: {{ .Release.Namespace }}
 data:
-  bkn-backend-config.yaml: |
+  ontology-manager-config.yaml: |
     server:
       {{- toYaml .Values.config.server | nindent 6 }}
     log:
@@ -12,11 +16,11 @@ data:
     observability:
       {{- toYaml .Values.config.observability | nindent 6 }}
     depServices: 
-      {{- toYaml .Values.depServices | nindent 6 }}
+      {{- toYaml $depServices | nindent 6 }}
 
   dm_svc.conf: |
     TIME_ZON=(480)
     LANGUAGE=(cn)
-    DM=({{ .Values.depServices.rds.host }})
+    DM=({{ $depServices.rds.host }})
     [DM]
     LOGIN_MODE=(1)

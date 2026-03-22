@@ -1,3 +1,6 @@
+{{- $env := include "mergedGlobalValues.env" . | fromYaml -}}
+{{- $depServices := include "mergedGlobalValues.depServices" . | fromYaml -}}
+{{- $imageRegistry := include "mergedGlobalValues.imageRegistry" . -}}
 {{- if semverCompare ">=1.16-0" .Capabilities.KubeVersion.GitVersion -}}
 apiVersion: apps/v1
 {{- else -}}
@@ -5,13 +8,13 @@ apiVersion: extensions/v1beta1
 {{- end }}
 kind: Deployment
 metadata:
-  name: {{ .Release.Name }}
-  namespace: {{ .Values.namespace }}
+  name: {{ .Values.moduleName }}
+  namespace: {{ .Release.Namespace }}
 spec:
   selector:
     matchLabels:
-      app: {{ .Release.Name }}
-  replicas: {{ .Values.replicaCount }}
+      app: {{ .Values.moduleName }}
+  replicas: {{ include "mergedGlobalValues.replicaCount" . }}
   strategy:
     rollingUpdate:
       maxSurge: 0
@@ -23,7 +26,7 @@ spec:
         checksum/configmap: {{ include (print $.Template.BasePath "/configmap.yaml") . | sha256sum }}
         checksum/secret: {{ include (print $.Template.BasePath "/secret.yaml") . | sha256sum }}
       labels:
-        app: {{ .Release.Name }}
+        app: {{ .Values.moduleName }}
     spec:
       {{- with .Values.nodeSelector }}
       nodeSelector:
@@ -37,7 +40,7 @@ spec:
               - key: app
                 operator: In
                 values:
-                - {{ .Release.Name }}
+                - {{ .Values.moduleName }}
             topologyKey: "kubernetes.io/hostname"
       {{- if ne .Values.runMode "dev" }}
       {{- if eq .Values.enableSecurityContext true }}
@@ -48,9 +51,9 @@ spec:
       {{- end }}
       {{- end }}
       containers:
-        - name: {{ .Release.Name }}
+        - name: {{ .Values.moduleName }}
           {{- if ne .Values.runMode "dev" }}
-          image: "{{ .Values.image.registry }}/{{ .Values.image.service.repository }}:{{ .Values.image.service.tag }}"
+          image: "{{ $imageRegistry }}/{{ .Values.image.service.repository }}:{{ .Values.image.service.tag }}"
           imagePullPolicy: {{ .Values.image.service.pullPolicy }}
           {{- else}}
           image: "acr.aishu.cn/client/godevenv:1.16.2"
@@ -61,19 +64,19 @@ spec:
               - name: LOGOUT
                 value: {{ .Values.service.loggerOutput }}
             {{- end}}
-            {{- if .Values.env.language}}
+            {{- if $env.language}}
               - name: LANG
-                value: {{ .Values.env.language }}
+                value: {{ $env.language }}
               - name: LC_ALL
-                value: {{ .Values.env.language }}
+                value: {{ $env.language }}
             {{- end}}
-            {{- if .Values.env.timezone}}
+            {{- if $env.timezone}}
               - name: TZ
-                value: {{ .Values.env.timezone }}
+                value: {{ $env.timezone }}
             {{- end}}
-            {{- if .Values.depServices.rds.type}}
+            {{- if $depServices.rds.type}}
               - name: DB_TYPE
-                value: {{ .Values.depServices.rds.type | quote }}
+                value: {{ $depServices.rds.type | quote }}
             {{- end}}
 
           ports:
@@ -106,9 +109,9 @@ spec:
             failureThreshold: {{ .Values.service.startupProbe.failureThreshold }}
           {{- end}}
           volumeMounts:
-            - name: {{ .Release.Name }}-config
+            - name: {{ .Values.moduleName }}-config
               mountPath: /sysvol/config/
-            - name: {{ .Release.Name }}-secret
+            - name: {{ .Values.moduleName }}-secret
               mountPath: /sysvol/secret/
             {{- if eq .Values.runMode "dev" }}
             - name: home-path
@@ -124,12 +127,12 @@ spec:
               memory: {{ .Values.resources.limits.memory }}
           {{ end }}
       volumes:
-        - name: {{ .Release.Name }}-config
+        - name: {{ .Values.moduleName }}-config
           configMap:
-            name: {{ .Release.Name }}
-        - name: {{ .Release.Name }}-secret
+            name: {{ .Values.moduleName }}
+        - name: {{ .Values.moduleName }}-secret
           secret:
-            secretName: {{ .Release.Name }}
+            secretName: {{ .Values.moduleName }}
         {{ if eq .Values.runMode "dev" }}
         - name: home-path
           hostPath:

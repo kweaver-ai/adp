@@ -18,6 +18,16 @@ image:
   pullPolicy: IfNotPresent
 
 service:
+  ontologyManager:
+    type: ClusterIP
+    port: 13014
+    nodePort: 31014
+    ingress:
+      enabled: true
+      interface:
+        path:
+          - /api/bkn-backend/v1
+          - /api/ontology-manager/v1
   bknBackend:
     type: ClusterIP
     port: 13014

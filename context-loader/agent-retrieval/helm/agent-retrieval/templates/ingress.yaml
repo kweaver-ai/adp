@@ -1,16 +1,17 @@
 {{- if .Values.service.agentRetrieval.ingress.enabled -}}
 {{ if .Values.service.agentRetrieval.ingress.interface }}
+{{- $depServices := include "mergedGlobalValues.depServices" . | fromYaml -}}
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: {{ .Values.moduleName }}-ingress
-  namespace: {{ .Values.namespace }}
+  namespace: {{ .Release.Namespace }}
   annotations:
     nginx.ingress.kubernetes.io/proxy-body-size: "500M"
     nginx.ingress.kubernetes.io/ssl-redirect: "false"
 spec:
-{{- if index .Values.depServices "class-443" "ingressClass" }}
-  ingressClassName: {{ index .Values.depServices "class-443" "ingressClass" }}
+{{- if index $depServices "class-443" "ingressClass" }}
+  ingressClassName: {{ index $depServices "class-443" "ingressClass" }}
 {{- end }}
   rules:
   - http:

@@ -106,6 +106,10 @@ depServices:
     privateHost: bkn-backend-svc
     privatePort: 13014
     privateProtocol: http
+  ontology-manager:
+    privateHost: bkn-backend-svc
+    privatePort: 13014
+    privateProtocol: http
   ontology-query:
     privateHost: ontology-query-svc
     privatePort: 13018

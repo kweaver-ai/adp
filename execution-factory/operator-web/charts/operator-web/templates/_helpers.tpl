@@ -1,21 +1,5 @@
 {{/* vim: set filetype=mustache: */}}
-{{/* Expand the name of the chart. */}}
 
-{{- define "data-model-job.name" -}}
-{{- printf "%s-%s" .Release.Name .Chart.Name | trunc 63 | trimSuffix "-" }}
-{{- end -}}
-
-
-{{/* Generate data-model-job image */}}
-{{- define "data-model-job.image" -}}
-{{- $globalImage := (.Values.global | default dict).image | default dict -}}
-{{- $imageRegistry := coalesce $globalImage.registry .Values.image.registry -}}
-{{- if $imageRegistry }}
-{{- printf "%s/%s:%s" $imageRegistry .Values.image.repository .Values.image.tag -}}
-{{- else -}}
-{{- printf "%s:%s" .Values.image.repository .Values.image.tag -}}
-{{- end -}}
-{{- end -}}
 
 {{/* ========== Universal Global Values Merge Helpers ========== */}}
 {{/* All charts use these same helper function names for consistency */}}

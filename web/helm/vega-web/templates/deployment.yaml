@@ -1,12 +1,14 @@
+{{- $env := include "mergedGlobalValues.env" . | fromYaml -}}
+{{- $depServices := include "mergedGlobalValues.depServices" . | fromYaml -}}
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: {{ .Values.moduleName }}
-  namespace: {{ .Values.namespace }}
+  namespace: {{ .Release.Namespace }}
   labels:
     module: {{ .Values.moduleName }}
 spec:
-  replicas: {{ .Values.replicaCount }}
+  replicas: {{ include "mergedGlobalValues.replicaCount" . }}
   strategy:
     type: RollingUpdate
     rollingUpdate:
@@ -81,8 +83,8 @@ spec:
           successThreshold: 1
         env:
           - name: TZ
-            value: {{ .Values.env.timezone }}
+            value: {{ $env.timezone }}
           - name: LANG
-            value: {{ .Values.env.language }}
+            value: {{ $env.language }}
         resources: {{- toYaml .Values.resources | nindent 10 }}
       restartPolicy: Always

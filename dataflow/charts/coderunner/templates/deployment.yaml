@@ -1,13 +1,18 @@
+{{- $global := .Values.global | default dict -}}
+{{- $imagePullSecrets := default .Values.imagePullSecrets $global.imagePullSecrets -}}
+{{- $env := include "mergedGlobalValues.env" . | fromYaml -}}
+{{- $depServices := include "mergedGlobalValues.depServices" . | fromYaml -}}
+{{- $imageRegistry := include "mergedGlobalValues.imageRegistry" . -}}
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: {{ include "coderunner.fullname" . }}
-  namespace: {{ .Values.namespace }}
+  namespace: {{ .Release.Namespace }}
   labels:
     app.kubernetes.io/name: {{ include "coderunner.fullname" . }}
 {{ include "coderunner.labels" . | indent 4 }}
 spec:
-  replicas: {{ .Values.replicaCount }}
+  replicas: {{ include "mergedGlobalValues.replicaCount" . }}
   selector:
     matchLabels:
       app.kubernetes.io/name: {{ include "coderunner.fullname" . }}
@@ -20,7 +25,7 @@ spec:
       annotations:
         checksum/configmap: {{ include (print $.Template.BasePath "/configmap.yaml") . | sha256sum }}
     spec:
-    {{- with .Values.imagePullSecrets }}
+    {{- with $imagePullSecrets }}
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}
     {{- end }}
@@ -34,7 +39,7 @@ spec:
         - name: coderunner
           securityContext:
             {{- toYaml .Values.securityContext | nindent 12 }}
-          image: "{{ .Values.image.registry }}/{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          image: "{{ include "mergedGlobalValues.image" . }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           command: ["/bin/bash", "-c"]
           args: 
@@ -69,7 +74,7 @@ spec:
         - name: dataflowtools
           securityContext:
             {{- toYaml .Values.securityContext | nindent 12 }}
-          image: "{{ .Values.image.registry }}/{{ .Values.image.dataflowtools.repository }}:{{ .Values.image.dataflowtools.tag }}"
+          image: "{{ $imageRegistry }}/{{ .Values.image.dataflowtools.repository }}:{{ .Values.image.dataflowtools.tag }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           ports:
             - name: dft-private

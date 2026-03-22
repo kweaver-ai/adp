@@ -1,7 +1,7 @@
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: {{ .Release.Name }}-post-install-job
+  name: {{ .Values.moduleName }}-post-install-job
   labels:
     release: {{ .Release.Name }}
     chart: {{ .Chart.Name }}
@@ -14,7 +14,7 @@ metadata:
 spec:
   template:
     metadata:
-      name: {{ .Release.Name }}
+      name: {{ .Values.moduleName }}-post-install
       labels:
         release: {{ .Release.Name }}
         chart: {{ .Chart.Name }}

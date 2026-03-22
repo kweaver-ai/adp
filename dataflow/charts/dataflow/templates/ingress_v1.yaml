@@ -1,11 +1,13 @@
+{{- $depServices := include "mergedGlobalValues.depServices" . | fromYaml -}}
+{{- $flowAutomation := include "mergedGlobalValues.flowAutomation" . | fromYaml -}}
 {{- if semverCompare ">=1.19-0" .Capabilities.KubeVersion.GitVersion }}
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: {{ include "dataflow.name" . }}
-  namespace: {{ .Values.namespace }}
+  namespace: {{ .Release.Namespace }}
 spec:
-  ingressClassName: {{ index .Values.depServices "class-443" "ingressClass" }}
+  ingressClassName: {{ index $depServices "class-443" "ingressClass" }}
   rules:
   - http:
       paths:
@@ -13,7 +15,7 @@ spec:
           service:
             name: {{ include "dataflow.flowAutomation.fullname" . }}
             port:
-              number: {{ .Values.flowAutomation.service.port }}
+              number: {{ $flowAutomation.service.port }}
         path: /api/automation
         pathType: Prefix
       - backend:
