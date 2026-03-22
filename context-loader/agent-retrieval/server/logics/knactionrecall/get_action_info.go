@@ -17,8 +17,11 @@ import (
 
 // GetActionInfo 获取行动信息（行动召回）
 func (s *knActionRecallServiceImpl) GetActionInfo(ctx context.Context, req *interfaces.KnActionRecallRequest) (*interfaces.KnActionRecallResponse, error) {
-	// 1. 参数转换：_instance_identity -> _instance_identity (数组)
-	instanceIdentities := []map[string]any{req.InstanceIdentity}
+	// 1. 参数转换：_instance_identity -> _instance_identities（数组，支持可选）
+	instanceIdentities := make([]map[string]any, 0)
+	if len(req.InstanceIdentity) > 0 {
+		instanceIdentities = append(instanceIdentities, req.InstanceIdentity)
+	}
 
 	// 2. 调用行动查询接口
 	actionsReq := &interfaces.QueryActionsRequest{

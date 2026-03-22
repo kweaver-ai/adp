@@ -16,6 +16,7 @@ import (
 
 	"github.com/kweaver-ai/adp/context-loader/agent-retrieval/server/infra/common"
 	"github.com/kweaver-ai/adp/context-loader/agent-retrieval/server/infra/errors"
+	"github.com/kweaver-ai/adp/context-loader/agent-retrieval/server/infra/rest"
 	"github.com/kweaver-ai/adp/context-loader/agent-retrieval/server/interfaces"
 	logicsKqs "github.com/kweaver-ai/adp/context-loader/agent-retrieval/server/logics/knquerysubgraph"
 	"github.com/kweaver-ai/adp/context-loader/agent-retrieval/server/logics/knsearch"
@@ -274,11 +275,7 @@ func handleGetActionInfo(service interfaces.IKnActionRecallService) func(ctx con
 		if !ok {
 			return mcp.NewToolResultError("authentication required"), nil
 		}
-
-		format, err := GetResponseFormatFromRequest(req)
-		if err != nil {
-			return mcp.NewToolResultError(err.Error()), nil
-		}
+		format := rest.FormatJSON
 
 		actionReq := &interfaces.KnActionRecallRequest{}
 		if err := bindArguments(req, actionReq); err != nil {

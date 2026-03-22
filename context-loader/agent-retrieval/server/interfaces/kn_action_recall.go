@@ -32,7 +32,7 @@ type KnActionRecallRequest struct {
 	AtID string `json:"at_id" validate:"required"` // Action Type ID
 
 	// Request Body
-	InstanceIdentity map[string]any `json:"_instance_identity" validate:"required,min=1"` // Object Instance Identity
+	InstanceIdentity map[string]any `json:"_instance_identity" validate:"omitempty,min=1"` // Object Instance Identity
 
 	// Header Fields
 	AccountID   string `json:"-" header:"x-account-id" validate:"required"`

@@ -60,10 +60,17 @@ func TestObjectMD5Hash(t *testing.T) {
 		})
 
 		convey.Convey("相同对象产生相同哈希", func() {
-			obj1 := map[string]int{"a": 1, "b": 2}
-			obj2 := map[string]int{"a": 1, "b": 2}
-			result1, _ := ObjectMD5Hash(obj1)
-			result2, _ := ObjectMD5Hash(obj2)
+			// 使用 struct 保证 JSON 序列化顺序稳定；map 两次 Marshal 可能因迭代顺序不同得到不同哈希
+			type kv struct {
+				A int `json:"a"`
+				B int `json:"b"`
+			}
+			obj1 := kv{A: 1, B: 2}
+			obj2 := kv{A: 1, B: 2}
+			result1, err1 := ObjectMD5Hash(obj1)
+			result2, err2 := ObjectMD5Hash(obj2)
+			convey.So(err1, convey.ShouldBeNil)
+			convey.So(err2, convey.ShouldBeNil)
 			convey.So(result1, convey.ShouldEqual, result2)
 		})
 

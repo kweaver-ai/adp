@@ -2,23 +2,17 @@
   "input_schema": {
     "type": "object",
     "properties": {
-      "response_format": {
-        "type": "string",
-        "enum": ["json", "toon"],
-        "default": "toon",
-        "description": "文本格式：json 或 toon，默认 toon"
-      },
       "at_id": {
         "type": "string",
         "description": "行动类型ID"
       },
       "_instance_identity": {
         "type": "object",
-        "description": "对象实例标识。必须从 query_object_instance 或 query_instance_subgraph 的 _instance_identity 字段提取，不可臆造。",
+        "description": "对象实例标识（可选）。如传入，必须从 query_object_instance 或 query_instance_subgraph 的 _instance_identity 字段提取，不可臆造。",
         "additionalProperties": true
       }
     },
-    "required": ["at_id", "_instance_identity"]
+    "required": ["at_id"]
   },
   "output_schema": {
     "type": "object",

@@ -290,6 +290,85 @@ func TestGetActionInfo_ToolType_Success(t *testing.T) {
 	})
 }
 
+// TestGetActionInfo_WithoutInstanceIdentity_Success 测试 _instance_identity 非必传时的成功路径
+func TestGetActionInfo_WithoutInstanceIdentity_Success(t *testing.T) {
+	convey.Convey("TestGetActionInfo_WithoutInstanceIdentity_Success", t, func() {
+		ctrl := gomock.NewController(t)
+		defer ctrl.Finish()
+
+		mockLogger := mocks.NewMockLogger(ctrl)
+		mockOntologyQuery := mocks.NewMockDrivenOntologyQuery(ctrl)
+		mockOperatorIntegration := mocks.NewMockDrivenOperatorIntegration(ctrl)
+
+		mockLogger.EXPECT().WithContext(gomock.Any()).Return(mockLogger).AnyTimes()
+
+		cfg := &config.Config{
+			OntologyQuery: config.PrivateBaseConfig{
+				PrivateProtocol: "http",
+				PrivateHost:     "ontology-query",
+				PrivatePort:     13018,
+			},
+		}
+
+		service := &knActionRecallServiceImpl{
+			logger:              mockLogger,
+			config:              cfg,
+			ontologyQuery:       mockOntologyQuery,
+			operatorIntegration: mockOperatorIntegration,
+		}
+
+		ctx := context.Background()
+		req := &interfaces.KnActionRecallRequest{
+			KnID: "kn-001",
+			AtID: "at-001",
+		}
+
+		mockOntologyQuery.EXPECT().QueryActions(gomock.Any(), gomock.Any()).
+			DoAndReturn(func(_ context.Context, actionsReq *interfaces.QueryActionsRequest) (*interfaces.QueryActionsResponse, error) {
+				convey.So(actionsReq.InstanceIdentities, convey.ShouldNotBeNil)
+				convey.So(len(actionsReq.InstanceIdentities), convey.ShouldEqual, 0)
+				return &interfaces.QueryActionsResponse{
+					ActionSource: &interfaces.ActionSource{
+						Type:   interfaces.ActionSourceTypeTool,
+						BoxID:  "box-001",
+						ToolID: "tool-001",
+					},
+					Actions: []interfaces.ActionParams{
+						{Parameters: map[string]interface{}{"param1": "value1"}},
+					},
+				}, nil
+			})
+
+		mockOperatorIntegration.EXPECT().GetToolDetail(gomock.Any(), gomock.Any()).
+			Return(&interfaces.GetToolDetailResponse{
+				Name:        "TestTool",
+				Description: "Test tool description",
+				Metadata: interfaces.ToolMetadata{
+					APISpec: map[string]interface{}{
+						"parameters": []interface{}{
+							map[string]interface{}{
+								"name":     "pod_name",
+								"in":       "query",
+								"required": true,
+								"schema":   map[string]interface{}{"type": "string"},
+							},
+						},
+					},
+				},
+			}, nil)
+
+		resp, err := service.GetActionInfo(ctx, req)
+		convey.So(err, convey.ShouldBeNil)
+		convey.So(resp, convey.ShouldNotBeNil)
+		convey.So(len(resp.DynamicTools), convey.ShouldEqual, 1)
+
+		fixedParams, ok := resp.DynamicTools[0].FixedParams.(interfaces.ActionDriverFixedParams)
+		convey.So(ok, convey.ShouldBeTrue)
+		convey.So(fixedParams.DynamicParams["param1"], convey.ShouldEqual, "value1")
+		convey.So(len(fixedParams.InstanceIdentities), convey.ShouldEqual, 0)
+	})
+}
+
 // TestGetActionInfo_MCPType_Success 测试 MCP 类型成功路径
 func TestGetActionInfo_MCPType_Success(t *testing.T) {
 	convey.Convey("TestGetActionInfo_MCPType_Success", t, func() {

@@ -54,20 +54,6 @@
                       ],
                       "type": "string"
                     }
-                  },
-                  {
-                    "name": "response_format",
-                    "in": "query",
-                    "description": "响应格式：json 或 toon，默认 json",
-                    "required": false,
-                    "schema": {
-                      "default": "json",
-                      "enum": [
-                        "json",
-                        "toon"
-                      ],
-                      "type": "string"
-                    }
                   }
                 ],
                 "request_body": {
@@ -1078,20 +1064,6 @@
                       ],
                       "type": "string"
                     }
-                  },
-                  {
-                    "name": "response_format",
-                    "in": "query",
-                    "description": "响应格式：json 或 toon，默认 json",
-                    "required": false,
-                    "schema": {
-                      "default": "json",
-                      "enum": [
-                        "json",
-                        "toon"
-                      ],
-                      "type": "string"
-                    }
                   }
                 ],
                 "request_body": {
@@ -1388,20 +1360,6 @@
                         "user",
                         "app",
                         "anonymous"
-                      ],
-                      "type": "string"
-                    }
-                  },
-                  {
-                    "name": "response_format",
-                    "in": "query",
-                    "description": "响应格式：json 或 toon，默认 json",
-                    "required": false,
-                    "schema": {
-                      "default": "json",
-                      "enum": [
-                        "json",
-                        "toon"
                       ],
                       "type": "string"
                     }
@@ -1806,20 +1764,6 @@
                       ],
                       "type": "string"
                     }
-                  },
-                  {
-                    "name": "response_format",
-                    "in": "query",
-                    "description": "响应格式：json 或 toon，默认 json",
-                    "required": false,
-                    "schema": {
-                      "default": "json",
-                      "enum": [
-                        "json",
-                        "toon"
-                      ],
-                      "type": "string"
-                    }
                   }
                 ],
                 "request_body": {
@@ -1951,13 +1895,12 @@
                       "type": "object",
                       "required": [
                         "kn_id",
-                        "at_id",
-                        "_instance_identity"
+                        "at_id"
                       ],
                       "properties": {
                         "_instance_identity": {
                           "type": "object",
-                          "description": "对象实例标识（主键键值对）。**必须从 query_object_instance 或 query_instance_subgraph 返回的 _instance_identity 字段提取，不可臆造。** 当前仅支持单个对象。"
+                          "description": "对象实例标识（主键键值对，可选）。如传入，必须从 query_object_instance 或 query_instance_subgraph 返回的 _instance_identity 字段提取，不可臆造。当前仅支持单个对象。"
                         },
                         "at_id": {
                           "description": "行动类ID（从 Schema 获取）",
