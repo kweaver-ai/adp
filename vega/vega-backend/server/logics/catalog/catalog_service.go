@@ -25,6 +25,7 @@ import (
 
 	"vega-backend/common"
 	catalogAccess "vega-backend/drivenadapters/catalog"
+	resourceAccess "vega-backend/drivenadapters/resource"
 	verrors "vega-backend/errors"
 	"vega-backend/interfaces"
 	"vega-backend/logics/connectors/factory"
@@ -46,6 +47,7 @@ type catalogService struct {
 	appSetting *common.AppSetting
 	cipher     kwcrypto.Cipher
 	ca         interfaces.CatalogAccess
+	ra         interfaces.ResourceAccess
 	ps         interfaces.PermissionService
 	ums        interfaces.UserMgmtService
 }
@@ -65,6 +67,7 @@ func NewCatalogService(appSetting *common.AppSetting) interfaces.CatalogService 
 			appSetting: appSetting,
 			cipher:     cipher,
 			ca:         catalogAccess.NewCatalogAccess(appSetting),
+			ra:         resourceAccess.NewResourceAccess(appSetting),
 			ps:         permission.NewPermissionService(appSetting),
 			ums:        user_mgmt.NewUserMgmtService(appSetting),
 		}
@@ -389,10 +392,7 @@ func (cs *catalogService) Update(ctx context.Context, id string, req *interfaces
 	catalog.Tags = req.Tags
 	catalog.Description = req.Description
 
-	if catalog.ConnectorType != req.ConnectorType {
-		span.SetStatus(codes.Error, "can not change connector type")
-		return rest.NewHTTPError(ctx, http.StatusBadRequest, verrors.VegaBackend_Catalog_InvalidParameter_ConnectorType)
-	} else if req.ConnectorType != "" {
+	if req.ConnectorType != "" {
 		// 验证敏感字段是否为合法 RSA 密文，获取明文用于连接测试
 		sensitiveFields := factory.GetFactory().GetSensitiveFields(req.ConnectorType)
 		decryptedConfig, err := cs.validateAndDecryptSensitiveFields(sensitiveFields, req.ConnectorCfg)
@@ -497,6 +497,13 @@ func (cs *catalogService) DeleteByIDs(ctx context.Context, ids []string) error {
 	if err := cs.ca.DeleteByIDs(ctx, ids); err != nil {
 		span.SetStatus(codes.Error, "Delete catalogs failed")
 		return rest.NewHTTPError(ctx, http.StatusInternalServerError, verrors.VegaBackend_Catalog_InternalError_DeleteFailed).
+			WithErrorDetails(err.Error())
+	}
+
+	// 清理关联resource数据
+	if err := cs.ra.DeleteByCatalogIDs(ctx, ids); err != nil {
+		span.SetStatus(codes.Error, "Delete resources failed")
+		return rest.NewHTTPError(ctx, http.StatusInternalServerError, verrors.VegaBackend_Resource_InternalError_DeleteFailed).
 			WithErrorDetails(err.Error())
 	}
 
@@ -653,4 +660,78 @@ func (cs *catalogService) UpdateMetadata(ctx context.Context, id string, metadat
 	}
 
 	return nil
+}
+
+// ListCatalogSrcs lists Catalog Sources with filters.
+func (cs *catalogService) ListCatalogSrcs(ctx context.Context, params interfaces.ListCatalogsQueryParams) ([]*interfaces.ListCatalogEntry, int64, error) {
+	ctx, span := ar_trace.Tracer.Start(ctx, "ListCatalogSrcs catalogs")
+	defer span.End()
+
+	// 使用ca.ListCatalogSrcs函数查询catalogs
+	entries, total, err := cs.ca.ListCatalogSrcs(ctx, params)
+	if err != nil {
+		span.SetStatus(codes.Error, "ListCatalogSrcs catalogs failed")
+		return []*interfaces.ListCatalogEntry{}, 0, rest.NewHTTPError(ctx, http.StatusInternalServerError, verrors.VegaBackend_Catalog_InternalError_GetFailed).
+			WithErrorDetails(err.Error())
+	}
+
+	if total == 0 {
+		return []*interfaces.ListCatalogEntry{}, 0, nil
+	}
+
+	// 根据权限过滤有显示权限的对象，过滤后的数组的总长度就是总数，无需再请求总数
+	// 处理资源id
+	ids := make([]string, 0)
+	for _, entry := range entries {
+		ids = append(ids, entry.ID)
+	}
+
+	// 分批处理，每批1万个ids, fix权限接口报错prepared statement contains too many placeholders
+	batchSize := 10000
+	// 所有有权限的catalog id
+	matchResourceIDMap := make(map[string]bool)
+
+	for i := 0; i < int(total); i += batchSize {
+		end := i + batchSize
+		if end > int(total) {
+			end = int(total)
+		}
+		batchIDs := ids[i:end]
+
+		var batchMatchResources map[string]interfaces.PermissionResourceOps
+		// 校验权限管理的操作权限
+		batchMatchResources, err = cs.ps.FilterResources(ctx, interfaces.RESOURCE_TYPE_CATALOG,
+			batchIDs, []string{interfaces.OPERATION_TYPE_VIEW_DETAIL}, false)
+		if err != nil {
+			return nil, 0, err
+		}
+
+		// 合并结果
+		for _, resourceOps := range batchMatchResources {
+			matchResourceIDMap[resourceOps.ResourceID] = true
+		}
+	}
+
+	// 遍历对象
+	results := make([]*interfaces.ListCatalogEntry, 0)
+	for _, entry := range entries {
+		if matchResourceIDMap[entry.ID] {
+			results = append(results, entry)
+		}
+	}
+
+	resTotal := len(results)
+	// 分页
+	// 检查起始位置是否越界
+	if params.Offset < 0 || params.Offset >= resTotal {
+		return []*interfaces.ListCatalogEntry{}, 0, nil
+	}
+	// 计算结束位置
+	end := params.Offset + params.Limit
+	if end > resTotal {
+		end = resTotal
+	}
+
+	span.SetStatus(codes.Ok, "")
+	return results[params.Offset:end], int64(resTotal), nil
 }

@@ -95,6 +95,7 @@ func (r *restHandler) RegisterPublic(engine *gin.Engine) {
 		resources := apiV1.Group("/resources")
 		{
 			resources.GET("", r.ListResourcesByEx)
+			resources.GET("/list", r.ListResources)
 			resources.POST("", r.verifyJsonContentType(), r.CreateResourceByEx)
 			resources.GET("/:ids", r.GetResourcesByEx)
 			resources.PUT("/:id", r.verifyJsonContentType(), r.UpdateResourceByEx)

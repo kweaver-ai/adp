@@ -12,6 +12,7 @@ require (
 	github.com/kweaver-ai/TelemetrySDK-Go/exporter/v2 v2.10.3
 	github.com/kweaver-ai/kweaver-go-lib v1.0.4
 	github.com/kweaver-ai/proton-mq-sdk-go v1.9.1
+	github.com/lib/pq v1.10.9
 	github.com/mitchellh/mapstructure v1.5.0
 	github.com/opensearch-project/opensearch-go/v2 v2.3.0
 	github.com/rs/xid v1.6.0
@@ -24,6 +25,8 @@ require (
 )
 
 require go.uber.org/mock v0.6.0
+
+require github.com/golang/mock v1.6.0 // indirect
 
 require (
 	filippo.io/edwards25519 v1.1.0 // indirect

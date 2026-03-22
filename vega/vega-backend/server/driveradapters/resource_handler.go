@@ -11,6 +11,7 @@ import (
 	"fmt"
 	"net/http"
 	"strings"
+	"vega-backend/common"
 
 	"github.com/gin-gonic/gin"
 	"github.com/kweaver-ai/TelemetrySDK-Go/exporter/v2/ar_trace"
@@ -67,14 +68,14 @@ func (r *restHandler) listResources(c *gin.Context, ctx context.Context, span tr
 	category := c.Query("category")
 	status := c.Query("status")
 	database := c.Query("database")
-	offset := c.DefaultQuery("offset", interfaces.DEFAULT_OFFSET)
-	limit := c.DefaultQuery("limit", interfaces.DEFAULT_LIMIT)
-	sort := c.DefaultQuery("sort", "update_time")
-	direction := c.DefaultQuery("direction", interfaces.DESC_DIRECTION)
+	offset := common.GetQueryOrDefault(c, "offset", interfaces.DEFAULT_OFFSET)
+	limit := common.GetQueryOrDefault(c, "limit", interfaces.DEFAULT_LIMIT)
+	sort := common.GetQueryOrDefault(c, "sort", "update_time")
+	direction := common.GetQueryOrDefault(c, "direction", interfaces.DESC_DIRECTION)
 
 	// 校验分页查询参数
 	pageParam, err := validatePaginationQueryParams(ctx,
-		offset, limit, sort, direction, interfaces.CATALOG_SORT)
+		offset, limit, sort, direction, interfaces.RESOURCE_SORT)
 	if err != nil {
 		httpErr := err.(*rest.HTTPError)
 		o11y.Error(ctx, fmt.Sprintf("%s. %v", httpErr.BaseError.Description,
@@ -461,4 +462,96 @@ func (r *restHandler) deleteResources(c *gin.Context, ctx context.Context, span 
 	logger.Debug("Handler DeleteResource Success")
 	o11y.AddHttpAttrs4Ok(span, http.StatusNoContent)
 	rest.ReplyOK(c, http.StatusNoContent, nil)
+}
+
+// ========== ListResourceSrcs ==========
+
+// ListResourceSrcsByEx resource source list (External)
+func (r *restHandler) ListResourceSrcsByEx(c *gin.Context) {
+	ctx, span := ar_trace.Tracer.Start(rest.GetLanguageCtx(c),
+		"ListResourceSrcsByEx", trace.WithSpanKind(trace.SpanKindServer))
+	defer span.End()
+
+	// 外网接口：校验token
+	visitor, err := r.verifyOAuth(ctx, c)
+	if err != nil {
+		return
+	}
+	r.listResourceSrcs(c, ctx, span, visitor)
+}
+
+// listResourceSrcs is the shared implementation
+func (r *restHandler) listResourceSrcs(c *gin.Context, ctx context.Context, span trace.Span, visitor hydra.Visitor) {
+	accountInfo := interfaces.AccountInfo{
+		ID:   visitor.ID,
+		Type: string(visitor.Type),
+	}
+	ctx = context.WithValue(ctx, interfaces.ACCOUNT_INFO_KEY, accountInfo)
+
+	o11y.AddHttpAttrs4API(span, o11y.GetAttrsByGinCtx(c))
+
+	// 获取查询参数
+	id := c.Query("id")
+	keyword := strings.TrimSpace(c.Query("keyword"))
+	offset := common.GetQueryOrDefault(c, "offset", interfaces.DEFAULT_OFFSET)
+	limit := common.GetQueryOrDefault(c, "limit", "50")
+	sort := common.GetQueryOrDefault(c, "sort", "update_time")
+	direction := common.GetQueryOrDefault(c, "direction", interfaces.DESC_DIRECTION)
+
+	// 校验分页查询参数
+	pageParam, err := validatePaginationQueryParams(ctx,
+		offset, limit, sort, direction, interfaces.RESOURCE_SORT)
+	if err != nil {
+		httpErr := err.(*rest.HTTPError)
+		o11y.Error(ctx, fmt.Sprintf("%s. %v", httpErr.BaseError.Description,
+			httpErr.BaseError.ErrorDetails))
+		o11y.AddHttpAttrs4HttpError(span, httpErr)
+		rest.ReplyError(c, httpErr)
+		return
+	}
+
+	params := interfaces.ListResourcesQueryParams{
+		PaginationQueryParams: pageParam,
+		ID:                    id,
+		Keyword:               keyword,
+	}
+
+	entries, total, err := r.rs.ListResourceSrcs(ctx, params)
+	if err != nil {
+		httpErr := err.(*rest.HTTPError)
+		o11y.AddHttpAttrs4HttpError(span, httpErr)
+		rest.ReplyError(c, httpErr)
+		return
+	}
+
+	result := map[string]any{
+		"entries":     entries,
+		"total_count": total,
+	}
+
+	logger.Debug("Handler ListResourceSrcs Success")
+	o11y.AddHttpAttrs4Ok(span, http.StatusOK)
+	rest.ReplyOK(c, http.StatusOK, result)
+}
+
+// 分页获取资源列表
+func (r *restHandler) ListResources(c *gin.Context) {
+	logger.Debug("ListResources Start")
+
+	// 获取分页参数
+	resourceType := c.Query("resource_type")
+	switch resourceType {
+	case interfaces.RESOURCE_TYPE_CATALOG:
+		r.ListCatalogSrcsByEx(c)
+	case interfaces.RESOURCE_TYPE_RESOURCE:
+		// 目标模型的资源实例列表
+		r.ListResourceSrcsByEx(c)
+	default:
+		httpErr := rest.NewHTTPError(rest.GetLanguageCtx(c), http.StatusNotFound,
+			verrors.VegaBackend_Resource_NotFound)
+
+		// 设置 trace 的错误信息的 attributes
+		rest.ReplyError(c, httpErr)
+	}
+
 }

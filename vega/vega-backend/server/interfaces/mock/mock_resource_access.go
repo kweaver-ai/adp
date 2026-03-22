@@ -55,6 +55,20 @@ func (mr *MockResourceAccessMockRecorder) Create(ctx, resource any) *gomock.Call
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Create", reflect.TypeOf((*MockResourceAccess)(nil).Create), ctx, resource)
 }
 
+// DeleteByCatalogIDs mocks base method.
+func (m *MockResourceAccess) DeleteByCatalogIDs(ctx context.Context, catalogIDs []string) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DeleteByCatalogIDs", ctx, catalogIDs)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// DeleteByCatalogIDs indicates an expected call of DeleteByCatalogIDs.
+func (mr *MockResourceAccessMockRecorder) DeleteByCatalogIDs(ctx, catalogIDs any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteByCatalogIDs", reflect.TypeOf((*MockResourceAccess)(nil).DeleteByCatalogIDs), ctx, catalogIDs)
+}
+
 // DeleteByIDs mocks base method.
 func (m *MockResourceAccess) DeleteByIDs(ctx context.Context, ids []string) error {
 	m.ctrl.T.Helper()
@@ -82,6 +96,21 @@ func (m *MockResourceAccess) GetByCatalogID(ctx context.Context, catalogID strin
 func (mr *MockResourceAccessMockRecorder) GetByCatalogID(ctx, catalogID any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetByCatalogID", reflect.TypeOf((*MockResourceAccess)(nil).GetByCatalogID), ctx, catalogID)
+}
+
+// GetByCategorys mocks base method.
+func (m *MockResourceAccess) GetByCategorys(ctx context.Context, catalogID string, category []string) ([]*interfaces.Resource, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetByCategorys", ctx, catalogID, category)
+	ret0, _ := ret[0].([]*interfaces.Resource)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetByCategorys indicates an expected call of GetByCategorys.
+func (mr *MockResourceAccessMockRecorder) GetByCategorys(ctx, catalogID, category any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetByCategorys", reflect.TypeOf((*MockResourceAccess)(nil).GetByCategorys), ctx, catalogID, category)
 }
 
 // GetByID mocks base method.
@@ -143,6 +172,22 @@ func (m *MockResourceAccess) List(ctx context.Context, params interfaces.Resourc
 func (mr *MockResourceAccessMockRecorder) List(ctx, params any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "List", reflect.TypeOf((*MockResourceAccess)(nil).List), ctx, params)
+}
+
+// ListResourceSrcs mocks base method.
+func (m *MockResourceAccess) ListResourceSrcs(ctx context.Context, params interfaces.ListResourcesQueryParams) ([]*interfaces.ListResourceEntry, int64, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ListResourceSrcs", ctx, params)
+	ret0, _ := ret[0].([]*interfaces.ListResourceEntry)
+	ret1, _ := ret[1].(int64)
+	ret2, _ := ret[2].(error)
+	return ret0, ret1, ret2
+}
+
+// ListResourceSrcs indicates an expected call of ListResourceSrcs.
+func (mr *MockResourceAccessMockRecorder) ListResourceSrcs(ctx, params any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListResourceSrcs", reflect.TypeOf((*MockResourceAccess)(nil).ListResourceSrcs), ctx, params)
 }
 
 // Update mocks base method.

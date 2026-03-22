@@ -34,7 +34,7 @@ type FilterCondCfg struct {
 	RemainCfg map[string]any `mapstructure:",remain"`
 }
 
-//go:generate mockgen -source ../filter_condition.go -destination ../mock/mock_filter_condition.go
+//go:generate mockgen -source ../interfaces/condition.go -destination ../interfaces/mock/mock_condition.go
 type FilterCondition interface {
 	GetOperation() string
 

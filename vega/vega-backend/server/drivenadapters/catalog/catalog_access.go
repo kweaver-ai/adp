@@ -474,6 +474,12 @@ func (ca *catalogAccess) List(ctx context.Context, params interfaces.CatalogsQue
 
 	countBuilder := sq.Select("COUNT(*)").From(CATALOG_TABLE_NAME)
 
+	if params.Tag != "" {
+		tag := "%" + params.Tag + "%"
+		builder = builder.Where(sq.Like{"f_tags": tag})
+		countBuilder = countBuilder.Where(sq.Like{"f_tags": tag})
+	}
+
 	if params.Type != "" {
 		builder = builder.Where(sq.Eq{"f_type": params.Type})
 		countBuilder = countBuilder.Where(sq.Eq{"f_type": params.Type})
@@ -572,6 +578,80 @@ func (ca *catalogAccess) List(ctx context.Context, params interfaces.CatalogsQue
 
 	span.SetStatus(codes.Ok, "")
 	return catalogs, total, nil
+}
+
+// ListCatalogSrcs lists Catalog Sources with filters.
+func (ca *catalogAccess) ListCatalogSrcs(ctx context.Context, params interfaces.ListCatalogsQueryParams) ([]*interfaces.ListCatalogEntry, int64, error) {
+	ctx, span := ar_trace.Tracer.Start(ctx, "ListCatalogSrcs catalogs",
+		trace.WithSpanKind(trace.SpanKindClient))
+	defer span.End()
+
+	builder := sq.Select(
+		"f_id",
+		"f_name",
+	).From(CATALOG_TABLE_NAME)
+
+	countBuilder := sq.Select("COUNT(*)").From(CATALOG_TABLE_NAME)
+
+	if params.ID != "" {
+		builder = builder.Where(sq.Eq{"f_id": params.ID})
+		countBuilder = countBuilder.Where(sq.Eq{"f_id": params.ID})
+	}
+
+	if params.Keyword != "" {
+		keyword := "%" + params.Keyword + "%"
+		builder = builder.Where(sq.Like{"f_name": keyword})
+		countBuilder = countBuilder.Where(sq.Like{"f_name": keyword})
+	}
+
+	countSql, countVals, _ := countBuilder.ToSql()
+	var total int64
+	err := ca.db.QueryRowContext(ctx, countSql, countVals...).Scan(&total)
+	if err != nil {
+		logger.Errorf("Failed to count catalog sources: %v", err)
+		span.SetStatus(codes.Error, "Count failed")
+		return nil, 0, err
+	}
+
+	// 排序
+	if params.Sort != "" {
+		builder = builder.OrderBy(fmt.Sprintf("%s %s", params.Sort, params.Direction))
+	} else {
+		builder = builder.OrderBy("f_update_time DESC")
+	}
+
+	sqlStr, vals, err := builder.ToSql()
+	if err != nil {
+		span.SetStatus(codes.Error, "Build sql failed")
+		return nil, 0, err
+	}
+
+	rows, err := ca.db.QueryContext(ctx, sqlStr, vals...)
+	if err != nil {
+		span.SetStatus(codes.Error, "Query failed")
+		return nil, 0, err
+	}
+	defer rows.Close()
+
+	entries := make([]*interfaces.ListCatalogEntry, 0)
+	for rows.Next() {
+		entry := &interfaces.ListCatalogEntry{}
+
+		err := rows.Scan(
+			&entry.ID,
+			&entry.Name,
+		)
+		if err != nil {
+			span.SetStatus(codes.Error, "Scan row failed")
+			return nil, 0, err
+		}
+
+		entry.Type = interfaces.RESOURCE_TYPE_CATALOG
+		entries = append(entries, entry)
+	}
+
+	span.SetStatus(codes.Ok, "")
+	return entries, total, nil
 }
 
 // Update updates ca Catalog.

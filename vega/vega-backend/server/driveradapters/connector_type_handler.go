@@ -12,6 +12,7 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	"vega-backend/common"
 
 	"github.com/gin-gonic/gin"
 	"github.com/kweaver-ai/TelemetrySDK-Go/exporter/v2/ar_trace"
@@ -56,10 +57,10 @@ func (r *restHandler) ListConnectorTypes(c *gin.Context) {
 	}
 	mode := c.Query("mode")
 	category := c.Query("category")
-	offset := c.DefaultQuery("offset", interfaces.DEFAULT_OFFSET)
-	limit := c.DefaultQuery("limit", interfaces.DEFAULT_LIMIT)
-	sort := c.DefaultQuery("sort", "update_time")
-	direction := c.DefaultQuery("direction", interfaces.DESC_DIRECTION)
+	offset := common.GetQueryOrDefault(c, "offset", interfaces.DEFAULT_OFFSET)
+	limit := common.GetQueryOrDefault(c, "limit", interfaces.DEFAULT_LIMIT)
+	sort := common.GetQueryOrDefault(c, "sort", "name")
+	direction := common.GetQueryOrDefault(c, "direction", interfaces.DESC_DIRECTION)
 
 	// 校验分页查询参数
 	pageParam, err := validatePaginationQueryParams(ctx,

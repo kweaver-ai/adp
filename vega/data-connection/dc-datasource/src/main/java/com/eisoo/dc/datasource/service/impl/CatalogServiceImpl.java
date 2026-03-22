@@ -706,7 +706,7 @@ public class CatalogServiceImpl implements CatalogService {
         //获取数据源列表
         if (authEnabled) {
             //获取分页前的未认证的资源id列表
-            List<DataSourceEntity> dsList = dataSourceMapper.selectDataSources(null, keyword, null);
+            List<DataSourceEntity> dsList = dataSourceMapper.selectDataSources(id, keyword, null);
             if (dsList.isEmpty()) {
                 response.set("entries", entries);
                 response.set("total_count", 0);

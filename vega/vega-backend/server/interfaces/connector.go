@@ -13,6 +13,7 @@ type TableMeta struct {
 	Name        string           `json:"name"`
 	Description string           `json:"description"`
 	Database    string           `json:"database"`   // 所属数据库名称（实例级连接时使用）
+	Schema      string           `json:"schema"`     // 所属schema名称（实例级连接时使用）
 	TableType   string           `json:"table_type"` // table | view | materialized_view
 	Properties  map[string]any   `json:"properties"` // 扩展属性：charset, collation, engine, row_count 等
 	Columns     []ColumnMeta     `json:"columns"`

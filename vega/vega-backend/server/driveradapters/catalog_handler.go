@@ -10,7 +10,9 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"reflect"
 	"strings"
+	"vega-backend/common"
 
 	"github.com/gin-gonic/gin"
 	"github.com/kweaver-ai/TelemetrySDK-Go/exporter/v2/ar_trace"
@@ -67,10 +69,10 @@ func (r *restHandler) listCatalogs(c *gin.Context, ctx context.Context, span tra
 	tag := strings.TrimSpace(c.Query("tag"))
 	typ := c.Query("type")
 	healthCheckStatus := c.Query("health_check_status")
-	offset := c.DefaultQuery("offset", interfaces.DEFAULT_OFFSET)
-	limit := c.DefaultQuery("limit", interfaces.DEFAULT_LIMIT)
-	sort := c.DefaultQuery("sort", "update_time")
-	direction := c.DefaultQuery("direction", interfaces.DESC_DIRECTION)
+	offset := common.GetQueryOrDefault(c, "offset", interfaces.DEFAULT_OFFSET)
+	limit := common.GetQueryOrDefault(c, "limit", interfaces.DEFAULT_LIMIT)
+	sort := common.GetQueryOrDefault(c, "sort", "update_time")
+	direction := common.GetQueryOrDefault(c, "direction", interfaces.DESC_DIRECTION)
 
 	// 校验分页查询参数
 	pageParam, err := validatePaginationQueryParams(ctx,
@@ -354,6 +356,58 @@ func (r *restHandler) updateCatalog(c *gin.Context, ctx context.Context, span tr
 	}
 	req.OriginCatalog = catalog
 
+	// Validate immutable fields
+	// connector_type cannot be modified
+	if req.ConnectorType != catalog.ConnectorType {
+		span.SetStatus(codes.Error, "Connector type cannot be modified")
+		httpErr := rest.NewHTTPError(ctx, http.StatusBadRequest, verrors.VegaBackend_Catalog_InvalidParameter_ConnectorType).
+			WithErrorDetails("connector_type cannot be modified")
+		o11y.AddHttpAttrs4HttpError(span, httpErr)
+		rest.ReplyError(c, httpErr)
+		return
+	}
+
+	// connector_config immutable fields: host, port, database, databases, schemas
+	// These fields cannot be modified or removed if they exist in the original catalog
+	immutableFields := []string{"host", "port", "database", "databases", "schemas"}
+	for _, field := range immutableFields {
+		if _, existsInCatalog := catalog.ConnectorCfg[field]; existsInCatalog {
+			if _, existsInReq := req.ConnectorCfg[field]; existsInReq {
+				// Field exists in both, check if it's being modified
+				// Handle different types: string, number, array
+				catalogValue := catalog.ConnectorCfg[field]
+				reqValue := req.ConnectorCfg[field]
+
+				var isModified bool
+				switch v := catalogValue.(type) {
+				case []interface{}:
+					// Compare arrays using reflect.DeepEqual
+					isModified = !reflect.DeepEqual(v, reqValue)
+				default:
+					// Compare other types (string, number, etc.)
+					isModified = (reqValue != catalogValue)
+				}
+
+				if isModified {
+					span.SetStatus(codes.Error, fmt.Sprintf("Connector config field %s cannot be modified", field))
+					httpErr := rest.NewHTTPError(ctx, http.StatusBadRequest, verrors.VegaBackend_Catalog_InvalidParameter_ConnectorConfig).
+						WithErrorDetails(fmt.Sprintf("connector_config.%s cannot be modified", field))
+					o11y.AddHttpAttrs4HttpError(span, httpErr)
+					rest.ReplyError(c, httpErr)
+					return
+				}
+			} else {
+				// Field exists in catalog but not in request - cannot remove immutable fields
+				span.SetStatus(codes.Error, fmt.Sprintf("Connector config field %s cannot be removed", field))
+				httpErr := rest.NewHTTPError(ctx, http.StatusBadRequest, verrors.VegaBackend_Catalog_InvalidParameter_ConnectorConfig).
+					WithErrorDetails(fmt.Sprintf("connector_config.%s cannot be removed", field))
+				o11y.AddHttpAttrs4HttpError(span, httpErr)
+				rest.ReplyError(c, httpErr)
+				return
+			}
+		}
+	}
+
 	// Apply updates
 	if req.Name != catalog.Name {
 		exists, err := r.cs.CheckExistByName(ctx, req.Name)
@@ -439,6 +493,22 @@ func (r *restHandler) deleteCatalogs(c *gin.Context, ctx context.Context, span t
 		if !exists {
 			httpErr := rest.NewHTTPError(ctx, http.StatusNotFound, verrors.VegaBackend_Catalog_NotFound).
 				WithErrorDetails(fmt.Sprintf("id %s not found", id))
+			o11y.AddHttpAttrs4HttpError(span, httpErr)
+			rest.ReplyError(c, httpErr)
+			return
+		}
+
+		// check if catalog resources exists
+		exists, err = r.rs.CheckExistByCategorys(ctx, id, []string{interfaces.ResourceCategoryDataset, interfaces.ResourceCategoryLogicView})
+		if err != nil {
+			httpErr := err.(*rest.HTTPError)
+			o11y.AddHttpAttrs4HttpError(span, httpErr)
+			rest.ReplyError(c, httpErr)
+			return
+		}
+		if exists {
+			httpErr := rest.NewHTTPError(ctx, http.StatusBadRequest, verrors.VegaBackend_Catalog_InvalidParameter).
+				WithErrorDetails(fmt.Sprintf("catalog %s contains data from dataset or logicview class resources and cannot be deleted.", id))
 			o11y.AddHttpAttrs4HttpError(span, httpErr)
 			rest.ReplyError(c, httpErr)
 			return
@@ -714,10 +784,10 @@ func (r *restHandler) listCatalogResources(c *gin.Context, ctx context.Context, 
 	category := c.Query("category")
 	status := c.Query("status")
 	database := c.Query("database")
-	offset := c.DefaultQuery("offset", interfaces.DEFAULT_OFFSET)
-	limit := c.DefaultQuery("limit", interfaces.DEFAULT_LIMIT)
-	sort := c.DefaultQuery("sort", "update_time")
-	direction := c.DefaultQuery("direction", interfaces.DESC_DIRECTION)
+	offset := common.GetQueryOrDefault(c, "offset", interfaces.DEFAULT_OFFSET)
+	limit := common.GetQueryOrDefault(c, "limit", interfaces.DEFAULT_LIMIT)
+	sort := common.GetQueryOrDefault(c, "sort", "update_time")
+	direction := common.GetQueryOrDefault(c, "direction", interfaces.DESC_DIRECTION)
 
 	// 校验分页查询参数
 	pageParam, err := validatePaginationQueryParams(ctx,
@@ -753,6 +823,76 @@ func (r *restHandler) listCatalogResources(c *gin.Context, ctx context.Context, 
 	}
 
 	logger.Debug("Handler ListCatalogResources Success")
+	o11y.AddHttpAttrs4Ok(span, http.StatusOK)
+	rest.ReplyOK(c, http.StatusOK, result)
+}
+
+// ========== ListCatalogSrcs ==========
+
+// ListCatalogSrcsByEx catalog resource list (External)
+func (r *restHandler) ListCatalogSrcsByEx(c *gin.Context) {
+	ctx, span := ar_trace.Tracer.Start(rest.GetLanguageCtx(c),
+		"ListCatalogSrcsByEx", trace.WithSpanKind(trace.SpanKindServer))
+	defer span.End()
+
+	// 外网接口：校验token
+	visitor, err := r.verifyOAuth(ctx, c)
+	if err != nil {
+		return
+	}
+	r.listCatalogSrcs(c, ctx, span, visitor)
+}
+
+// listCatalogSrcs is the shared implementation
+func (r *restHandler) listCatalogSrcs(c *gin.Context, ctx context.Context, span trace.Span, visitor hydra.Visitor) {
+	accountInfo := interfaces.AccountInfo{
+		ID:   visitor.ID,
+		Type: string(visitor.Type),
+	}
+	ctx = context.WithValue(ctx, interfaces.ACCOUNT_INFO_KEY, accountInfo)
+
+	o11y.AddHttpAttrs4API(span, o11y.GetAttrsByGinCtx(c))
+
+	// 获取查询参数
+	id := c.Query("id")
+	keyword := strings.TrimSpace(c.Query("keyword"))
+	offset := common.GetQueryOrDefault(c, "offset", interfaces.DEFAULT_OFFSET)
+	limit := common.GetQueryOrDefault(c, "limit", "50")
+	sort := common.GetQueryOrDefault(c, "sort", "update_time")
+	direction := common.GetQueryOrDefault(c, "direction", interfaces.DESC_DIRECTION)
+
+	// 校验分页查询参数
+	pageParam, err := validatePaginationQueryParams(ctx,
+		offset, limit, sort, direction, interfaces.CATALOG_SORT)
+	if err != nil {
+		httpErr := err.(*rest.HTTPError)
+		o11y.Error(ctx, fmt.Sprintf("%s. %v", httpErr.BaseError.Description,
+			httpErr.BaseError.ErrorDetails))
+		o11y.AddHttpAttrs4HttpError(span, httpErr)
+		rest.ReplyError(c, httpErr)
+		return
+	}
+
+	params := interfaces.ListCatalogsQueryParams{
+		PaginationQueryParams: pageParam,
+		ID:                    id,
+		Keyword:               keyword,
+	}
+
+	entries, total, err := r.cs.ListCatalogSrcs(ctx, params)
+	if err != nil {
+		httpErr := err.(*rest.HTTPError)
+		o11y.AddHttpAttrs4HttpError(span, httpErr)
+		rest.ReplyError(c, httpErr)
+		return
+	}
+
+	result := map[string]any{
+		"entries":     entries,
+		"total_count": total,
+	}
+
+	logger.Debug("Handler ListCatalogSrcs Success")
 	o11y.AddHttpAttrs4Ok(span, http.StatusOK)
 	rest.ReplyOK(c, http.StatusOK, result)
 }

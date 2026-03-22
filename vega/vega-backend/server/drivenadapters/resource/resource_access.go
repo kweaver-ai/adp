@@ -756,3 +756,194 @@ func (ra *resourceAccess) DeleteByIDs(ctx context.Context, ids []string) error {
 	span.SetStatus(codes.Ok, "")
 	return nil
 }
+
+// ListResourceSrcs lists Resource Sources with filters.
+func (ra *resourceAccess) ListResourceSrcs(ctx context.Context, params interfaces.ListResourcesQueryParams) ([]*interfaces.ListResourceEntry, int64, error) {
+	ctx, span := ar_trace.Tracer.Start(ctx, "ListResourceSrcs resources",
+		trace.WithSpanKind(trace.SpanKindClient))
+	defer span.End()
+
+	builder := sq.Select(
+		"f_id",
+		"f_name",
+	).From(RESOURCE_TABLE_NAME)
+
+	countBuilder := sq.Select("COUNT(*)").From(RESOURCE_TABLE_NAME)
+
+	if params.ID != "" {
+		builder = builder.Where(sq.Eq{"f_id": params.ID})
+		countBuilder = countBuilder.Where(sq.Eq{"f_id": params.ID})
+	}
+
+	if params.Keyword != "" {
+		keyword := "%" + params.Keyword + "%"
+		builder = builder.Where(sq.Like{"f_name": keyword})
+		countBuilder = countBuilder.Where(sq.Like{"f_name": keyword})
+	}
+
+	countSql, countVals, _ := countBuilder.ToSql()
+	var total int64
+	err := ra.db.QueryRowContext(ctx, countSql, countVals...).Scan(&total)
+	if err != nil {
+		logger.Errorf("Failed to count resource sources: %v", err)
+		span.SetStatus(codes.Error, "Count failed")
+		return nil, 0, err
+	}
+
+	// 排序
+	if params.Sort != "" {
+		builder = builder.OrderBy(fmt.Sprintf("%s %s", params.Sort, params.Direction))
+	} else {
+		builder = builder.OrderBy("f_update_time DESC")
+	}
+
+	sqlStr, vals, err := builder.ToSql()
+	if err != nil {
+		span.SetStatus(codes.Error, "Build sql failed")
+		return nil, 0, err
+	}
+
+	rows, err := ra.db.QueryContext(ctx, sqlStr, vals...)
+	if err != nil {
+		span.SetStatus(codes.Error, "Query failed")
+		return nil, 0, err
+	}
+	defer rows.Close()
+
+	entries := make([]*interfaces.ListResourceEntry, 0)
+	for rows.Next() {
+		entry := &interfaces.ListResourceEntry{}
+
+		err := rows.Scan(
+			&entry.ID,
+			&entry.Name,
+		)
+		if err != nil {
+			span.SetStatus(codes.Error, "Scan row failed")
+			return nil, 0, err
+		}
+		entry.Type = interfaces.RESOURCE_TYPE_RESOURCE
+		entries = append(entries, entry)
+	}
+
+	span.SetStatus(codes.Ok, "")
+	return entries, total, nil
+}
+
+func (ra *resourceAccess) GetByCategorys(ctx context.Context, catalogID string, categorys []string) ([]*interfaces.Resource, error) {
+	ctx, span := ar_trace.Tracer.Start(ctx, "Query resources by catalog ID and categorys",
+		trace.WithSpanKind(trace.SpanKindClient))
+	defer span.End()
+
+	span.SetAttributes(attr.Key("catalog_id").String(catalogID))
+
+	sqlStr, vals, err := sq.Select(
+		"f_id",
+		"f_catalog_id",
+		"f_name",
+		"f_tags",
+		"f_description",
+		"f_category",
+		"f_status",
+		"f_status_message",
+		"f_database",
+		"f_source_identifier",
+		"f_source_metadata",
+		"f_schema_definition",
+		"f_creator",
+		"f_creator_type",
+		"f_create_time",
+		"f_updater",
+		"f_updater_type",
+		"f_update_time",
+	).From(RESOURCE_TABLE_NAME).
+		Where(sq.Eq{"f_catalog_id": catalogID}).
+		Where(sq.Eq{"f_category": categorys}).
+		ToSql()
+	if err != nil {
+		logger.Errorf("Failed to build query resources sql: %v", err)
+		span.SetStatus(codes.Error, "Build sql failed")
+		return nil, err
+	}
+
+	rows, err := ra.db.QueryContext(ctx, sqlStr, vals...)
+	if err != nil {
+		logger.Errorf("Query resources failed: %v", err)
+		span.SetStatus(codes.Error, "Query failed")
+		return nil, err
+	}
+	defer rows.Close()
+
+	resources := make([]*interfaces.Resource, 0)
+	for rows.Next() {
+		resource := &interfaces.Resource{}
+		var tagsStr string
+		var database, sourceIdentifier, sourceMetadata, schemaDefinition sql.NullString
+
+		err := rows.Scan(
+			&resource.ID,
+			&resource.CatalogID,
+			&resource.Name,
+			&tagsStr,
+			&resource.Description,
+			&resource.Category,
+			&resource.Status,
+			&resource.StatusMessage,
+			&database,
+			&sourceIdentifier,
+			&sourceMetadata,
+			&schemaDefinition,
+			&resource.Creator.ID,
+			&resource.Creator.Type,
+			&resource.CreateTime,
+			&resource.Updater.ID,
+			&resource.Updater.Type,
+			&resource.UpdateTime,
+		)
+		if err != nil {
+			logger.Errorf("Scan resource row failed: %v", err)
+			span.SetStatus(codes.Error, "Scan row failed")
+			return nil, err
+		}
+
+		resource.Tags = libCommon.TagString2TagSlice(tagsStr)
+		resource.Database = database.String
+		resource.SourceIdentifier = sourceIdentifier.String
+		if sourceMetadata.Valid && sourceMetadata.String != "" {
+			_ = json.Unmarshal([]byte(sourceMetadata.String), &resource.SourceMetadata)
+		}
+		if schemaDefinition.Valid && schemaDefinition.String != "" {
+			_ = json.Unmarshal([]byte(schemaDefinition.String), &resource.SchemaDefinition)
+		}
+
+		resources = append(resources, resource)
+	}
+
+	span.SetStatus(codes.Ok, "")
+	return resources, nil
+}
+
+func (ra *resourceAccess) DeleteByCatalogIDs(ctx context.Context, catalogIDs []string) error {
+	ctx, span := ar_trace.Tracer.Start(ctx, "Delete resources by catalog IDs",
+		trace.WithSpanKind(trace.SpanKindClient))
+	defer span.End()
+
+	span.SetAttributes(attr.Key("catalog_ids").StringSlice(catalogIDs))
+
+	if len(catalogIDs) == 0 {
+		return nil
+	}
+
+	sqlStr, vals, _ := sq.Delete(RESOURCE_TABLE_NAME).
+		Where(sq.Eq{"f_catalog_id": catalogIDs}).
+		ToSql()
+
+	_, err := ra.db.ExecContext(ctx, sqlStr, vals...)
+	if err != nil {
+		span.SetStatus(codes.Error, "Delete failed")
+		return err
+	}
+
+	span.SetStatus(codes.Ok, "")
+	return nil
+}

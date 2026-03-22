@@ -35,7 +35,7 @@ antiAffinity:
 
 # 认证开关
 auth:
-  enabled: false
+  enabled: true
 
 # 微服务通信依赖配置
 depServices:

@@ -481,3 +481,93 @@ func (rs *resourceService) UpdateResource(ctx context.Context, resource *interfa
 	span.SetStatus(codes.Ok, "")
 	return nil
 }
+
+// ListResourceSrcs lists Resource Sources with filters.
+func (rs *resourceService) ListResourceSrcs(ctx context.Context, params interfaces.ListResourcesQueryParams) ([]*interfaces.ListResourceEntry, int64, error) {
+	ctx, span := ar_trace.Tracer.Start(ctx, "ListResourceSrcs resources")
+	defer span.End()
+
+	// 使用ra.ListResourceSrcs函数查询resources
+	entries, total, err := rs.ra.ListResourceSrcs(ctx, params)
+	if err != nil {
+		span.SetStatus(codes.Error, "ListResourceSrcs resources failed")
+		return []*interfaces.ListResourceEntry{}, 0, rest.NewHTTPError(ctx, http.StatusInternalServerError, verrors.VegaBackend_Resource_InternalError_GetFailed).
+			WithErrorDetails(err.Error())
+	}
+
+	if total == 0 {
+		return []*interfaces.ListResourceEntry{}, 0, nil
+	}
+
+	// 根据权限过滤有显示权限的对象，过滤后的数组的总长度就是总数，无需再请求总数
+	// 处理资源id
+	ids := make([]string, 0)
+	for _, entry := range entries {
+		ids = append(ids, entry.ID)
+	}
+
+	// 分批处理，每批1万个ids, fix权限接口报错prepared statement contains too many placeholders
+	batchSize := 10000
+	// 所有有权限的resource id
+	matchResourceIDMap := make(map[string]bool)
+
+	for i := 0; i < int(total); i += batchSize {
+		end := i + batchSize
+		if end > int(total) {
+			end = int(total)
+		}
+		batchIDs := ids[i:end]
+
+		var batchMatchResources map[string]interfaces.PermissionResourceOps
+		// 校验权限管理的操作权限
+		batchMatchResources, err = rs.ps.FilterResources(ctx, interfaces.RESOURCE_TYPE_RESOURCE,
+			batchIDs, []string{interfaces.OPERATION_TYPE_VIEW_DETAIL}, false)
+		if err != nil {
+			return nil, 0, err
+		}
+
+		// 合并结果
+		for _, resourceOps := range batchMatchResources {
+			matchResourceIDMap[resourceOps.ResourceID] = true
+		}
+	}
+
+	// 遍历对象
+	results := make([]*interfaces.ListResourceEntry, 0)
+	for _, entry := range entries {
+		if matchResourceIDMap[entry.ID] {
+			results = append(results, entry)
+		}
+	}
+
+	resTotal := len(results)
+	// 分页
+	// 检查起始位置是否越界
+	if params.Offset < 0 || params.Offset >= resTotal {
+		return []*interfaces.ListResourceEntry{}, 0, nil
+	}
+	// 计算结束位置
+	end := params.Offset + params.Limit
+	if end > resTotal {
+		end = resTotal
+	}
+
+	span.SetStatus(codes.Ok, "")
+	return results[params.Offset:end], int64(resTotal), nil
+}
+
+// CheckExistByCategorys checks if Resources exists by catalog ID and categorys.
+func (rs *resourceService) CheckExistByCategorys(ctx context.Context, catalogID string, categorys []string) (bool, error) {
+	ctx, span := ar_trace.Tracer.Start(ctx, "Check resource exist by catalog ID and categorys")
+	defer span.End()
+
+	resources, err := rs.ra.GetByCategorys(ctx, catalogID, categorys)
+	if err != nil {
+		span.SetStatus(codes.Error, "Get resources failed")
+		return false, rest.NewHTTPError(ctx, http.StatusInternalServerError, verrors.VegaBackend_Resource_InternalError_GetFailed).
+			WithErrorDetails(err.Error())
+	}
+
+	span.SetStatus(codes.Ok, "")
+	return len(resources) > 0, nil
+}

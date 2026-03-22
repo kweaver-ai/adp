@@ -209,7 +209,9 @@ func (dw *discoverWorker) reconcileTableResources(ctx context.Context,
 
 // buildSourceIdentifier builds the source identifier for a table.
 func (dw *discoverWorker) buildSourceIdentifier(table *interfaces.TableMeta) string {
-	if table.Database != "" {
+	if table.Schema != "" {
+		return fmt.Sprintf("%s.%s", table.Schema, table.Name)
+	} else if table.Database != "" {
 		return fmt.Sprintf("%s.%s", table.Database, table.Name)
 	}
 	return table.Name

@@ -121,6 +121,15 @@ definitions:
       - password (string, required): 数据库密码
       - databases (array, optional): 数据库名称列表，每个数据库名最大64字符。如果为空，则连接到实例级别
       - options (object, optional): 连接参数，如charset、timeout等
+      
+      **PostgreSQL:**
+      - host (string, required): PostgreSQL服务器主机地址
+      - port (integer, required): PostgreSQL服务器端口，范围1-65535
+      - username (string, required): 数据库用户名
+      - password (string, required): 数据库密码
+      - database (string, required): 要连接的数据库名称，数据库名最大63字符
+      - schemas (array, optional): 模式名称列表，每个模式名最大63字符。如果为空，则连接到实例级别
+      - options (object, optional): 连接参数，如sslmode、connect_timeout、applicati
 
       **OpenSearch:**
       - host (string, required): OpenSearch服务器主机地址
@@ -1060,6 +1069,111 @@ paths:
           schema:
             type: object
       summary: Create resource
+      tags:
+        - resources
+  /resources/list:
+    get:
+      consumes:
+        - application/json
+      description: List resources by type (catalog or resource)
+      parameters:
+        - description: Resource type filter
+          enum: [catalog, resource]
+          in: query
+          name: resource_type
+          required: true
+          type: string
+        - description: Resource ID filter (only for resource type)
+          in: query
+          name: id
+          type: string
+        - description: Keyword filter for search (only for resource type)
+          in: query
+          name: keyword
+          type: string
+        - description: Offset for pagination
+          in: query
+          minimum: 0
+          name: offset
+          type: integer
+          default: 0
+        - description: Limit for pagination
+          in: query
+          maximum: 1000
+          minimum: 1
+          name: limit
+          type: integer
+          default: 50
+        - description: Sort field
+          enum: [name, update_time]
+          in: query
+          name: sort
+          type: string
+          default: update_time
+        - description: Sort direction
+          enum: [asc, desc]
+          in: query
+          name: direction
+          type: string
+          default: desc
+      produces:
+        - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            properties:
+              entries:
+                description: List of resources
+                items:
+                  properties:
+                    id:
+                      description: Resource ID
+                      type: string
+                    type:
+                      description: Resource type (catalog or resource)
+                      type: string
+                    name:
+                      description: Resource name
+                      type: string
+                  type: object
+                type: array
+              total_count:
+                description: Total number of resources
+                type: integer
+            type: object
+          example:
+            entries:
+              - id: "d6iiqvm0r29s7n7udqg0"
+                type: "catalog"
+                name: "mysql_172_17_200_241"
+              - id: "d70up3m0r29lf36jl8ug"
+                type: "catalog"
+                name: "postgresql_172_17_200_241"
+              - id: "d6l8krm0r29m570j6mj0"
+                type: "catalog"
+                name: "opensearch_172_17_200_241"
+              - id: "d6l3mtu0r29tps46mleg"
+                type: "catalog"
+                name: "mariadb_172_17_200_241"
+            total_count: 4
+        "400":
+          description: Bad Request
+          schema:
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            type: object
+      summary: List resources by type
       tags:
         - resources
   /resources/{id}:

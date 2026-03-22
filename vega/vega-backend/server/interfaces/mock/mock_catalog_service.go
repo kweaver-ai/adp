@@ -146,6 +146,22 @@ func (mr *MockCatalogServiceMockRecorder) List(ctx, params any) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "List", reflect.TypeOf((*MockCatalogService)(nil).List), ctx, params)
 }
 
+// ListCatalogSrcs mocks base method.
+func (m *MockCatalogService) ListCatalogSrcs(ctx context.Context, params interfaces.ListCatalogsQueryParams) ([]*interfaces.ListCatalogEntry, int64, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ListCatalogSrcs", ctx, params)
+	ret0, _ := ret[0].([]*interfaces.ListCatalogEntry)
+	ret1, _ := ret[1].(int64)
+	ret2, _ := ret[2].(error)
+	return ret0, ret1, ret2
+}
+
+// ListCatalogSrcs indicates an expected call of ListCatalogSrcs.
+func (mr *MockCatalogServiceMockRecorder) ListCatalogSrcs(ctx, params any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListCatalogSrcs", reflect.TypeOf((*MockCatalogService)(nil).ListCatalogSrcs), ctx, params)
+}
+
 // TestConnection mocks base method.
 func (m *MockCatalogService) TestConnection(ctx context.Context, catalog *interfaces.Catalog) (*interfaces.CatalogHealthCheckStatus, error) {
 	m.ctrl.T.Helper()

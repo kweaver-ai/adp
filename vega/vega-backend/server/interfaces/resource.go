@@ -27,6 +27,7 @@ const (
 var (
 	RESOURCE_SORT = map[string]string{
 		"name":        "f_name",
+		"create_time": "f_create_time",
 		"update_time": "f_update_time",
 	}
 )
@@ -105,4 +106,16 @@ type ResourceRequest struct {
 
 	IfNameModify   bool      `json:"-"`
 	OriginResource *Resource `json:"-"`
+}
+
+type ListResourcesQueryParams struct {
+	PaginationQueryParams
+	ID      string
+	Keyword string
+}
+
+type ListResourceEntry struct {
+	ID   string `json:"id"`
+	Type string `json:"type"`
+	Name string `json:"name"`
 }

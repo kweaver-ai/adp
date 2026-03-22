@@ -56,7 +56,7 @@ var TypeMapping = map[string]string{
 	// Date/Time types
 	"date":      interfaces.DataType_Date,
 	"datetime":  interfaces.DataType_Datetime,
-	"timestamp": interfaces.DataType_Datetime,
+	"timestamp": interfaces.DataType_Timestamp,
 	"time":      interfaces.DataType_Time,
 
 	// Boolean

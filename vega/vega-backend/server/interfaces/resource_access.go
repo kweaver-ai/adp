@@ -29,4 +29,13 @@ type ResourceAccess interface {
 	UpdateStatus(ctx context.Context, id string, status string, statusMessage string) error
 	// DeleteByIDs deletes Resources by IDs.
 	DeleteByIDs(ctx context.Context, ids []string) error
+
+	// ListResourceSrcs lists Resource Sources with filters.
+	ListResourceSrcs(ctx context.Context, params ListResourcesQueryParams) ([]*ListResourceEntry, int64, error)
+
+	// GetByCategorys  lists Resource by catalog and categorys.
+	GetByCategorys(ctx context.Context, catalogID string, category []string) ([]*Resource, error)
+
+	// DeleteByCatalogIDs deletes Resources by catalog IDs.
+	DeleteByCatalogIDs(ctx context.Context, catalogIDs []string) error
 }

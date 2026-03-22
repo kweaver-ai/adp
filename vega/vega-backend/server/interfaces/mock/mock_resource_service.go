@@ -41,6 +41,21 @@ func (m *MockResourceService) EXPECT() *MockResourceServiceMockRecorder {
 	return m.recorder
 }
 
+// CheckExistByCategorys mocks base method.
+func (m *MockResourceService) CheckExistByCategorys(ctx context.Context, catalogID string, categorys []string) (bool, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CheckExistByCategorys", ctx, catalogID, categorys)
+	ret0, _ := ret[0].(bool)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// CheckExistByCategorys indicates an expected call of CheckExistByCategorys.
+func (mr *MockResourceServiceMockRecorder) CheckExistByCategorys(ctx, catalogID, categorys any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CheckExistByCategorys", reflect.TypeOf((*MockResourceService)(nil).CheckExistByCategorys), ctx, catalogID, categorys)
+}
+
 // CheckExistByID mocks base method.
 func (m *MockResourceService) CheckExistByID(ctx context.Context, id string) (bool, error) {
 	m.ctrl.T.Helper()
@@ -174,6 +189,22 @@ func (m *MockResourceService) List(ctx context.Context, params interfaces.Resour
 func (mr *MockResourceServiceMockRecorder) List(ctx, params any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "List", reflect.TypeOf((*MockResourceService)(nil).List), ctx, params)
+}
+
+// ListResourceSrcs mocks base method.
+func (m *MockResourceService) ListResourceSrcs(ctx context.Context, params interfaces.ListResourcesQueryParams) ([]*interfaces.ListResourceEntry, int64, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ListResourceSrcs", ctx, params)
+	ret0, _ := ret[0].([]*interfaces.ListResourceEntry)
+	ret1, _ := ret[1].(int64)
+	ret2, _ := ret[2].(error)
+	return ret0, ret1, ret2
+}
+
+// ListResourceSrcs indicates an expected call of ListResourceSrcs.
+func (mr *MockResourceServiceMockRecorder) ListResourceSrcs(ctx, params any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListResourceSrcs", reflect.TypeOf((*MockResourceService)(nil).ListResourceSrcs), ctx, params)
 }
 
 // Update mocks base method.

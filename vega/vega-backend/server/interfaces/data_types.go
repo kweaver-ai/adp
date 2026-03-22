@@ -21,9 +21,10 @@ const (
 	DataType_Text   = "text"
 
 	// 时间型
-	DataType_Date     = "date"
-	DataType_Time     = "time"
-	DataType_Datetime = "datetime"
+	DataType_Date      = "date"
+	DataType_Time      = "time"
+	DataType_Datetime  = "datetime"
+	DataType_Timestamp = "timestamp"
 
 	// ip类型
 	DataType_Ip = "ip"
@@ -62,9 +63,10 @@ var (
 	}
 
 	DATE_TYPES = map[string]struct{}{
-		DataType_Date:     {},
-		DataType_Time:     {},
-		DataType_Datetime: {},
+		DataType_Date:      {},
+		DataType_Time:      {},
+		DataType_Datetime:  {},
+		DataType_Timestamp: {},
 	}
 )
 
