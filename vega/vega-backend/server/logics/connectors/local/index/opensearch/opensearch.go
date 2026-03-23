@@ -37,6 +37,104 @@ type OpenSearchConnector struct {
 	client  *opensearch.Client
 }
 
+func (c *OpenSearchConnector) ExecuteQueryWithDsl(ctx context.Context, resourceName string, dsl string) (*interfaces.QueryResult, error) {
+	// Ensure the connector is enabled
+	if !c.enabled {
+		return nil, fmt.Errorf("OpenSearch connector is not enabled")
+	}
+	// Ensure we have a connection
+	if err := c.Connect(ctx); err != nil {
+		return nil, fmt.Errorf("failed to connect to OpenSearch: %w", err)
+	}
+	// Validate DSL
+	if dsl == "" {
+		return nil, fmt.Errorf("DSL query is empty")
+	}
+	// Parse the DSL to ensure it's valid JSON
+	var dslMap map[string]any
+	if err := json.Unmarshal([]byte(dsl), &dslMap); err != nil {
+		return nil, fmt.Errorf("invalid DSL JSON: %w", err)
+	}
+	// Log the DSL query for debugging
+	fmt.Printf("[OpenSearch DSL Query]:\n%s\n", dsl)
+
+	// Execute search request with the provided DSL
+	// resourceId is used as the index name
+	req := opensearchapi.SearchRequest{
+		Index: []string{resourceName},
+		Body:  strings.NewReader(dsl),
+	}
+
+	resp, err := req.Do(ctx, c.client)
+	if err != nil {
+		return nil, fmt.Errorf("failed to execute search: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.IsError() {
+		return nil, fmt.Errorf("search failed: %s", resp.String())
+	}
+
+	// Parse response
+	var result map[string]any
+	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+		return nil, fmt.Errorf("failed to decode search result: %w", err)
+	}
+
+	hits, ok := result["hits"].(map[string]any)
+	if !ok {
+		return nil, fmt.Errorf("invalid search result format: missing hits")
+	}
+
+	// Extract total count
+	var total int64
+	if totalMap, ok := hits["total"].(map[string]any); ok {
+		if value, ok := totalMap["value"].(float64); ok {
+			total = int64(value)
+		} else if value, ok := totalMap["value"].(int64); ok {
+			total = value
+		}
+	}
+
+	hitsArray, ok := hits["hits"].([]any)
+	if !ok {
+		return &interfaces.QueryResult{
+			Rows:  []map[string]any{},
+			Total: total,
+		}, nil
+	}
+
+	// Extract documents from hits
+	documents := make([]map[string]any, 0, len(hitsArray))
+	for _, hit := range hitsArray {
+		hitMap, ok := hit.(map[string]any)
+		if !ok {
+			continue
+		}
+
+		source, ok := hitMap["_source"].(map[string]any)
+		if !ok {
+			// If _source is not present, create an empty map
+			source = make(map[string]any)
+		}
+
+		// Add _id to the source
+		source["_id"] = hitMap["_id"]
+
+		// Add _score field if present
+		if score, ok := hitMap["_score"].(float64); ok {
+			source["_score"] = score
+		}
+
+		documents = append(documents, source)
+	}
+
+	return &interfaces.QueryResult{
+		Rows:  documents,
+		Total: total,
+	}, nil
+}
+
 // NewOpenSearchConnector 创建 OpenSearch connector 构建器
 func NewOpenSearchConnector() connectors.IndexConnector {
 	return &OpenSearchConnector{}

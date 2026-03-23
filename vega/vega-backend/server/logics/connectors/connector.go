@@ -91,9 +91,8 @@ type IndexConnector interface {
 	GetIndexMeta(ctx context.Context, index *interfaces.IndexMeta) error
 
 	// ExecuteQuery executes a query on the index
-	ExecuteQuery(ctx context.Context, resource *interfaces.Resource,
-		params *interfaces.ResourceDataQueryParams) (*interfaces.QueryResult, error)
-
+	ExecuteQuery(ctx context.Context, resource *interfaces.Resource, params *interfaces.ResourceDataQueryParams) (*interfaces.QueryResult, error)
+	ExecuteQueryWithDsl(ctx context.Context, resourceName string, dsl string) (*interfaces.QueryResult, error)
 	// for dataset
 	Create(ctx context.Context, name string, schemaDefinition []*interfaces.Property) error
 	Update(ctx context.Context, name string, schemaDefinition []*interfaces.Property) error
