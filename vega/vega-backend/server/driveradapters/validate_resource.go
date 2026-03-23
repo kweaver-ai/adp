@@ -69,12 +69,12 @@ func validateLogicDefinition(ctx context.Context, nodes []*interfaces.DataScopeN
 
 	for _, node := range nodes {
 		// 检测 nodeType
-		if _, ok := interfaces.DataScopeNodeTypeMap[node.Type]; !ok {
+		if _, ok := interfaces.LogicDefinitionNodeTypeMap[node.Type]; !ok {
 			return nil, rest.NewHTTPError(ctx, http.StatusBadRequest, verrors.VegaBackend_LogicView_InvalidParameter_LogicDefinition).
 				WithErrorDetails("The data scope node type is invalid")
 		}
 
-		if node.Type == interfaces.DataScopeNodeType_Output {
+		if node.Type == interfaces.LogicDefinitionNodeType_Output {
 			outputFields = node.OutputFields
 		}
 	}
@@ -99,8 +99,8 @@ func validateViewFields(ctx context.Context, viewFields []*interfaces.ViewProper
 		}
 
 		// 校验字段名称长度, 长度限制255
-		if utf8.RuneCountInString(field.Name) > interfaces.MaxLength_ViewFieldName {
-			errDetails := fmt.Sprintf("The length of the field name %s exceeds %d", field.Name, interfaces.MaxLength_ViewFieldName)
+		if utf8.RuneCountInString(field.Name) > interfaces.MaxLength_ViewPropertyName {
+			errDetails := fmt.Sprintf("The length of the field name %s exceeds %d", field.Name, interfaces.MaxLength_ViewPropertyName)
 			return rest.NewHTTPError(ctx, http.StatusBadRequest, verrors.VegaBackend_LogicView_LengthExceeded_FieldName).
 				WithErrorDetails(errDetails)
 		}
@@ -111,15 +111,15 @@ func validateViewFields(ctx context.Context, viewFields []*interfaces.ViewProper
 		}
 
 		// 校验字段显示名长度, 长度限制255
-		if utf8.RuneCountInString(field.DisplayName) > interfaces.MaxLength_ViewFieldDisplayName {
-			errDetails := fmt.Sprintf("The length of the field display name %s exceeds %d", field.DisplayName, interfaces.MaxLength_ViewFieldDisplayName)
+		if utf8.RuneCountInString(field.DisplayName) > interfaces.MaxLength_ViewPropertyDisplayName {
+			errDetails := fmt.Sprintf("The length of the field display name %s exceeds %d", field.DisplayName, interfaces.MaxLength_ViewPropertyDisplayName)
 			return rest.NewHTTPError(ctx, http.StatusBadRequest, verrors.VegaBackend_LogicView_LengthExceeded_FieldDisplayName).
 				WithErrorDetails(errDetails)
 		}
 
 		// 校验字段备注长度，长度限制1000
-		if utf8.RuneCountInString(field.Description) > interfaces.MaxLength_ViewFieldComment {
-			errDetails := fmt.Sprintf("The length of the field comment %s exceeds %d", field.Description, interfaces.MaxLength_ViewFieldComment)
+		if utf8.RuneCountInString(field.Description) > interfaces.MaxLength_ViewPropertyDescription {
+			errDetails := fmt.Sprintf("The length of the field comment %s exceeds %d", field.Description, interfaces.MaxLength_ViewPropertyDescription)
 			return rest.NewHTTPError(ctx, http.StatusBadRequest, verrors.VegaBackend_LogicView_LengthExceeded_FieldComment).
 				WithErrorDetails(errDetails)
 		}
@@ -164,8 +164,8 @@ func validateFeatures(ctx context.Context, fieldsMap map[string]*interfaces.View
 		}
 
 		// 校验特征名称长度, 长度限制255
-		if utf8.RuneCountInString(f.FeatureName) > interfaces.MaxLength_ViewFieldFeatureName {
-			errDetails := fmt.Sprintf("The length of the field feature name %s exceeds %d", f.FeatureName, interfaces.MaxLength_ViewFieldFeatureName)
+		if utf8.RuneCountInString(f.FeatureName) > interfaces.MaxLength_ViewPropertyFeatureName {
+			errDetails := fmt.Sprintf("The length of the field feature name %s exceeds %d", f.FeatureName, interfaces.MaxLength_ViewPropertyFeatureName)
 			return rest.NewHTTPError(ctx, http.StatusBadRequest, verrors.VegaBackend_LogicView_LengthExceeded_FieldFeatureName).
 				WithErrorDetails(errDetails)
 		}
@@ -181,15 +181,15 @@ func validateFeatures(ctx context.Context, fieldsMap map[string]*interfaces.View
 		}
 
 		// feature type
-		if _, ok := interfaces.FieldFeatureTypeMap[f.FeatureType]; !ok {
+		if _, ok := interfaces.PropertyFeatureTypeMap[f.FeatureType]; !ok {
 			return rest.NewHTTPError(ctx, http.StatusBadRequest, rest.PublicError_BadRequest).
 				WithErrorDetails("The field feature type is invalid")
 		}
 
 		// 校验特征备注，长度限制1000
-		if utf8.RuneCountInString(f.Description) > interfaces.MaxLength_ViewFieldFeatureComment {
+		if utf8.RuneCountInString(f.Description) > interfaces.MaxLength_ViewPropertyFeatureDescription {
 			return rest.NewHTTPError(ctx, http.StatusBadRequest, verrors.VegaBackend_LogicView_LengthExceeded_FieldFeatureComment).
-				WithErrorDetails(fmt.Sprintf("The length of the field feature comment %s exceeds %d", f.Description, interfaces.MaxLength_ViewFieldFeatureComment))
+				WithErrorDetails(fmt.Sprintf("The length of the field feature comment %s exceeds %d", f.Description, interfaces.MaxLength_ViewPropertyFeatureDescription))
 		}
 
 		if f.RefProperty == "" {
@@ -228,11 +228,11 @@ func validateFeatures(ctx context.Context, fieldsMap map[string]*interfaces.View
 
 func IsFeatureSupported(fieldType string, featureType string) bool {
 	switch featureType {
-	case interfaces.FieldFeatureType_Fulltext:
+	case interfaces.PropertyFeatureType_Fulltext:
 		return fieldType == interfaces.DataType_Text
-	case interfaces.FieldFeatureType_Keyword:
+	case interfaces.PropertyFeatureType_Keyword:
 		return fieldType == interfaces.DataType_String
-	case interfaces.FieldFeatureType_Vector:
+	case interfaces.PropertyFeatureType_Vector:
 		return fieldType == interfaces.DataType_Vector
 	default:
 		return false

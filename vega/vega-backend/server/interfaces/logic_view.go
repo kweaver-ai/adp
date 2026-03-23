@@ -5,25 +5,22 @@
 
 package interfaces
 
-import "fmt"
+import (
+	"encoding/json"
+	"fmt"
+)
 
 const (
 	//特征的配置项
-	FieldFeatureType_Keyword  = "keyword"
-	FieldFeatureType_Fulltext = "fulltext"
-	FieldFeatureType_Vector   = "vector"
+	PropertyFeatureType_Keyword  = "keyword"
+	PropertyFeatureType_Fulltext = "fulltext"
+	PropertyFeatureType_Vector   = "vector"
 
-	FieldProperty_Type        = "type"
-	FieldProperty_IgnoreAbove = "ignore_above"
-	FieldProperty_Analyzer    = "analyzer"
-	FieldProperty_Fields      = "fields"
-	FieldProperty_Dimension   = "dimension"
-
-	DataScopeNodeType_Resource = "resource"
-	DataScopeNodeType_Join     = "join"
-	DataScopeNodeType_Union    = "union"
-	DataScopeNodeType_Sql      = "sql"
-	DataScopeNodeType_Output   = "output"
+	LogicDefinitionNodeType_Resource = "resource"
+	LogicDefinitionNodeType_Join     = "join"
+	LogicDefinitionNodeType_Union    = "union"
+	LogicDefinitionNodeType_Sql      = "sql"
+	LogicDefinitionNodeType_Output   = "output"
 
 	// join的类型
 	JoinType_Inner     = "inner"
@@ -38,22 +35,22 @@ const (
 
 const (
 	// 视图字段名称、字段显示名、字段备注、字段特征备注的最大长度
-	MaxLength_ViewFieldName           = 255
-	MaxLength_ViewFieldDisplayName    = 255
-	MaxLength_ViewFieldFeatureName    = 255
-	MaxLength_ViewFieldComment        = 1000
-	MaxLength_ViewFieldFeatureComment = 1000
+	MaxLength_ViewPropertyName               = 255
+	MaxLength_ViewPropertyDisplayName        = 255
+	MaxLength_ViewPropertyFeatureName        = 255
+	MaxLength_ViewPropertyDescription        = 1000
+	MaxLength_ViewPropertyFeatureDescription = 1000
 
 	RegexPattern_NonBuiltin_ViewID = "^[a-z0-9][a-z0-9_-]{0,39}$"
 )
 
 var (
-	DataScopeNodeTypeMap = map[string]struct{}{
-		DataScopeNodeType_Resource: {},
-		DataScopeNodeType_Join:     {},
-		DataScopeNodeType_Union:    {},
-		DataScopeNodeType_Sql:      {},
-		DataScopeNodeType_Output:   {},
+	LogicDefinitionNodeTypeMap = map[string]struct{}{
+		LogicDefinitionNodeType_Resource: {},
+		LogicDefinitionNodeType_Join:     {},
+		LogicDefinitionNodeType_Union:    {},
+		LogicDefinitionNodeType_Sql:      {},
+		LogicDefinitionNodeType_Output:   {},
 	}
 
 	JoinTypeMap = map[string]struct{}{
@@ -68,10 +65,10 @@ var (
 		UnionType_Distinct: {},
 	}
 
-	FieldFeatureTypeMap = map[string]struct{}{
-		FieldFeatureType_Keyword:  {},
-		FieldFeatureType_Fulltext: {},
-		FieldFeatureType_Vector:   {},
+	PropertyFeatureTypeMap = map[string]struct{}{
+		PropertyFeatureType_Keyword:  {},
+		PropertyFeatureType_Fulltext: {},
+		PropertyFeatureType_Vector:   {},
 	}
 )
 
@@ -83,14 +80,14 @@ type LogicView struct {
 // DataScopeNode 表示图中的节点
 type DataScopeNode struct {
 	ID           string          `json:"id"`
-	Title        string          `json:"title"`
+	Name         string          `json:"name"`
 	Type         string          `json:"type"`
-	InputNodes   []string        `json:"input_nodes"`
+	Inputs       []string        `json:"inputs"`
 	Config       map[string]any  `json:"config"`
 	OutputFields []*ViewProperty `json:"output_fields"`
 }
 
-// 节点类型为view的节点配置
+// 节点类型为resource的节点配置
 type ResourceNodeCfg struct {
 	ResourceID string         `json:"resource_id" mapstructure:"resource_id"`
 	Filters    *FilterCondCfg `json:"filters,omitempty" mapstructure:"filters"`
@@ -120,25 +117,78 @@ type JoinOn struct {
 
 // 节点类型为union的节点配置
 type UnionNodeCfg struct {
-	UnionType   string         `json:"union_type" mapstructure:"union_type"`
-	UnionFields [][]UnionField `json:"union_fields" mapstructure:"union_fields"`
-	Filters     *FilterCondCfg `json:"filters,omitempty" mapstructure:"filters"`
-}
-
-type UnionField struct {
-	Field     string `json:"field" mapstructure:"field"`
-	ValueFrom string `json:"value_from" mapstructure:"value_from"` // "field" 或 "const"
+	UnionType string         `json:"union_type" mapstructure:"union_type"`
+	Filters   *FilterCondCfg `json:"filters,omitempty" mapstructure:"filters"`
 }
 
 type SQLNodeCfg struct {
-	SQLExpression string `json:"sql_expression" mapstructure:"sql_expression"`
+	SQL string `json:"sql" mapstructure:"sql"`
+}
+
+// OutputFieldRef 表示 Union 对齐模式中 from 数组的元素
+type OutputFieldRef struct {
+	From     string `json:"from"`
+	FromNode string `json:"from_node"`
 }
 
 // 逻辑视图字段
 type ViewProperty struct {
 	Property
-	SrcNodeID   string `json:"src_node_id,omitempty"`
-	SrcNodeName string `json:"src_node_name,omitempty"`
+	From     string            `json:"from,omitempty"`      // Join 映射模式：源字段名
+	FromNode string            `json:"from_node,omitempty"` // Join 映射模式：源节点ID
+	FromList []*OutputFieldRef `json:"from_list,omitempty"` // Union 对齐模式：多源对齐数组
+}
+
+// UnmarshalJSON 自定义反序列化，处理 from 字段的多态
+// JSON 中 "from" 可以是 string (Join) 或 array (Union)
+func (v *ViewProperty) UnmarshalJSON(data []byte) error {
+	// 先用一个临时的 map 来探测 from 字段的类型
+	var raw map[string]json.RawMessage
+	if err := json.Unmarshal(data, &raw); err != nil {
+		// 如果不是对象，可能是纯字符串（投影模式 / 通配符模式）
+		var s string
+		if err2 := json.Unmarshal(data, &s); err2 == nil {
+			v.Name = s
+			return nil
+		}
+		return err
+	}
+
+	// 解码 Property 的字段
+	type PropertyAlias Property
+	var propAlias PropertyAlias
+	if err := json.Unmarshal(data, &propAlias); err != nil {
+		return err
+	}
+	v.Property = Property(propAlias)
+
+	// 解码 from_node
+	if rawFromNode, ok := raw["from_node"]; ok {
+		if err := json.Unmarshal(rawFromNode, &v.FromNode); err != nil {
+			return fmt.Errorf("failed to unmarshal from_node: %w", err)
+		}
+	}
+
+	// 解码 from: 可能是 string 或 array
+	if rawFrom, ok := raw["from"]; ok {
+		// 尝试 string
+		var fromStr string
+		if err := json.Unmarshal(rawFrom, &fromStr); err == nil {
+			v.From = fromStr
+			return nil
+		}
+
+		// 尝试 array (Union 对齐模式)
+		var fromList []*OutputFieldRef
+		if err := json.Unmarshal(rawFrom, &fromList); err == nil {
+			v.FromList = fromList
+			return nil
+		}
+
+		return fmt.Errorf("failed to unmarshal 'from' field: expected string or array")
+	}
+
+	return nil
 }
 
 func (v *ViewProperty) String() string {

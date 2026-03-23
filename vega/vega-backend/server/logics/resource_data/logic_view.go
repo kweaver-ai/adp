@@ -27,7 +27,7 @@ func (rds *resourceDataService) QueryLogicView(ctx context.Context, resource *in
 	// 递归解析所有资源节点，并从第一个资源节点获取 CatalogID
 	var firstCatalogID string
 	for _, node := range resource.LogicDefinition {
-		if node.Type != interfaces.DataScopeNodeType_Resource {
+		if node.Type != interfaces.LogicDefinitionNodeType_Resource {
 			continue
 		}
 

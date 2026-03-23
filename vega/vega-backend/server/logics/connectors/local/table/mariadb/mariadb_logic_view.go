@@ -9,6 +9,7 @@ import (
 	"context"
 	"fmt"
 	"strings"
+	"text/template"
 
 	sq "github.com/Masterminds/squirrel"
 	"github.com/mitchellh/mapstructure"
@@ -39,7 +40,7 @@ func (c *MariaDBConnector) buildLogicViewSQLWithDepth(ctx context.Context, resou
 	var outputNode *interfaces.DataScopeNode
 	for _, node := range resource.LogicDefinition {
 		nodes[node.ID] = node
-		if node.Type == interfaces.DataScopeNodeType_Output {
+		if node.Type == interfaces.LogicDefinitionNodeType_Output {
 			outputNode = node
 		}
 	}
@@ -49,11 +50,11 @@ func (c *MariaDBConnector) buildLogicViewSQLWithDepth(ctx context.Context, resou
 	}
 
 	// 2. 从输出节点开始递归构建
-	if len(outputNode.InputNodes) == 0 {
+	if len(outputNode.Inputs) == 0 {
 		return "", nil, fmt.Errorf("output node has no input")
 	}
 
-	return c.buildNodeSQL(ctx, outputNode.InputNodes[0], nodes, depth)
+	return c.buildNodeSQL(ctx, outputNode.Inputs[0], nodes, depth)
 }
 
 func (c *MariaDBConnector) buildNodeSQL(ctx context.Context, nodeID string,
@@ -64,13 +65,13 @@ func (c *MariaDBConnector) buildNodeSQL(ctx context.Context, nodeID string,
 	}
 
 	switch node.Type {
-	case interfaces.DataScopeNodeType_Resource:
+	case interfaces.LogicDefinitionNodeType_Resource:
 		return c.buildResourceNodeSQL(ctx, node, depth)
-	case interfaces.DataScopeNodeType_Join:
+	case interfaces.LogicDefinitionNodeType_Join:
 		return c.buildJoinNodeSQL(ctx, node, nodes, depth)
-	case interfaces.DataScopeNodeType_Union:
+	case interfaces.LogicDefinitionNodeType_Union:
 		return c.buildUnionNodeSQL(ctx, node, nodes, depth)
-	case interfaces.DataScopeNodeType_Sql:
+	case interfaces.LogicDefinitionNodeType_Sql:
 		return c.buildSqlNodeSQL(ctx, node, nodes, depth)
 	default:
 		return "", nil, fmt.Errorf("unsupported node type: %s", node.Type)
@@ -180,8 +181,8 @@ func (c *MariaDBConnector) buildJoinNodeSQL(ctx context.Context, node *interface
 		return "", nil, fmt.Errorf("failed to decode join node config: %w", err)
 	}
 
-	if len(node.InputNodes) != 2 {
-		return "", nil, fmt.Errorf("join node must have exactly 2 inputs, got %d", len(node.InputNodes))
+	if len(node.Inputs) != 2 {
+		return "", nil, fmt.Errorf("join node must have exactly 2 inputs, got %d", len(node.Inputs))
 	}
 
 	// MariaDB 不支持 FULL OUTER JOIN
@@ -189,8 +190,8 @@ func (c *MariaDBConnector) buildJoinNodeSQL(ctx context.Context, node *interface
 		return "", nil, fmt.Errorf("MariaDB does not support FULL OUTER JOIN, please use LEFT JOIN + UNION instead")
 	}
 
-	leftID := node.InputNodes[0]
-	rightID := node.InputNodes[1]
+	leftID := node.Inputs[0]
+	rightID := node.Inputs[1]
 
 	leftSQL, leftArgs, err := c.buildNodeSQL(ctx, leftID, nodes, depth)
 	if err != nil {
@@ -201,15 +202,19 @@ func (c *MariaDBConnector) buildJoinNodeSQL(ctx context.Context, node *interface
 		return "", nil, fmt.Errorf("failed to build right input for join: %w", err)
 	}
 
-	// 构建 SELECT 字段列表
+	// 构建 SELECT 字段列表，使用 from/from_node 确定来源
 	fields := make([]string, 0, len(node.OutputFields))
 	for _, f := range node.OutputFields {
-		// SrcNodeID 指向来源的输入节点
 		alias := "l"
-		if f.SrcNodeID == rightID {
+		if f.FromNode == rightID {
 			alias = "r"
 		}
-		fields = append(fields, fmt.Sprintf("%s.`%s` AS `%s`", alias, f.OriginalName, f.Name))
+		// from 是源字段名, name 是输出字段名
+		srcField := f.From
+		if srcField == "" {
+			srcField = f.Name
+		}
+		fields = append(fields, fmt.Sprintf("%s.`%s` AS `%s`", alias, srcField, f.Name))
 	}
 
 	// 构建 JOIN ON 条件
@@ -240,7 +245,7 @@ func (c *MariaDBConnector) buildJoinNodeSQL(ctx context.Context, node *interface
 			joinFieldMap[f.Name] = &interfaces.Property{
 				Name:         f.Name,
 				Type:         f.Type,
-				OriginalName: f.OriginalName,
+				OriginalName: f.From,
 			}
 		}
 
@@ -270,41 +275,46 @@ func (c *MariaDBConnector) buildUnionNodeSQL(ctx context.Context, node *interfac
 		return "", nil, fmt.Errorf("failed to decode union node config: %w", err)
 	}
 
-	unionParts := make([]string, 0, len(node.InputNodes))
+	// 构建输入节点 ID 到索引的映射
+	inputIndexMap := make(map[string]int)
+	for i, inputID := range node.Inputs {
+		inputIndexMap[inputID] = i
+	}
+
+	unionParts := make([]string, 0, len(node.Inputs))
 	var allArgs []any
 
-	for i, inputID := range node.InputNodes {
+	for i, inputID := range node.Inputs {
 		subSQL, subArgs, err := c.buildNodeSQL(ctx, inputID, nodes, depth)
 		if err != nil {
 			return "", nil, fmt.Errorf("failed to build union input %d: %w", i, err)
 		}
 
-		// Union 节点需要对齐字段
-		if len(cfg.UnionFields) > i && len(cfg.UnionFields[i]) > 0 {
-			// 按照 UnionFields 配置选择和重命名字段
-			var selectArgs []any
+		// 从 output_fields 的 FromList 构建字段对齐
+		hasFieldMapping := false
+		for _, outField := range node.OutputFields {
+			if len(outField.FromList) > 0 {
+				hasFieldMapping = true
+				break
+			}
+		}
+
+		if hasFieldMapping {
 			fields := make([]string, 0, len(node.OutputFields))
-			for j, outField := range node.OutputFields {
-				if j >= len(cfg.UnionFields[i]) {
-					break
-				}
-				uField := cfg.UnionFields[i][j]
-				if uField.ValueFrom == "field" {
-					fields = append(fields, fmt.Sprintf("`%s` AS `%s`", uField.Field, outField.Name))
+			for _, outField := range node.OutputFields {
+				if i < len(outField.FromList) {
+					ref := outField.FromList[i]
+					fields = append(fields, fmt.Sprintf("`%s` AS `%s`", ref.From, outField.Name))
 				} else {
-					// 常量值
-					fields = append(fields, fmt.Sprintf("? AS `%s`", outField.Name))
-					selectArgs = append(selectArgs, uField.Field)
+					fields = append(fields, fmt.Sprintf("`%s`", outField.Name))
 				}
 			}
 
-			// 参数顺序：SELECT 子句中的 ? 在 FROM 子查询的 ? 之前
-			allArgs = append(allArgs, selectArgs...)
 			allArgs = append(allArgs, subArgs...)
 			unionParts = append(unionParts, fmt.Sprintf("SELECT %s FROM (%s) AS u%d",
 				strings.Join(fields, ", "), subSQL, i))
 		} else {
-			// 没有 UnionFields 配置时直接使用子查询
+			// 没有字段映射配置时直接使用子查询
 			allArgs = append(allArgs, subArgs...)
 			unionParts = append(unionParts, fmt.Sprintf("(%s)", subSQL))
 		}
@@ -329,24 +339,34 @@ func (c *MariaDBConnector) buildSqlNodeSQL(ctx context.Context, node *interfaces
 	}
 
 	// 安全检查：SQL 表达式只允许 SELECT 语句
-	trimmedSQL := strings.TrimSpace(strings.ToUpper(cfg.SQLExpression))
+	trimmedSQL := strings.TrimSpace(strings.ToUpper(cfg.SQL))
 	if !strings.HasPrefix(trimmedSQL, "SELECT") {
-		return "", nil, fmt.Errorf("sql node only allows SELECT statements, got: %.50s", cfg.SQLExpression)
+		return "", nil, fmt.Errorf("sql node only allows SELECT statements, got: %.50s", cfg.SQL)
 	}
 
-	// 将 SQL 中的 ${node_id} 占位符替换为子查询
-	finalSQL := cfg.SQLExpression
+	// 使用 Go template 替换 {{.node_id}} 占位符为子查询
+	nodeSQLs := make(map[string]string)
 	var allArgs []any
 
-	for _, inputID := range node.InputNodes {
+	for _, inputID := range node.Inputs {
 		subSQL, subArgs, err := c.buildNodeSQL(ctx, inputID, nodes, depth)
 		if err != nil {
 			return "", nil, fmt.Errorf("failed to build sql node input %s: %w", inputID, err)
 		}
-		placeholder := fmt.Sprintf("${%s}", inputID)
-		finalSQL = strings.ReplaceAll(finalSQL, placeholder, "("+subSQL+")")
+		nodeSQLs[inputID] = "(" + subSQL + ")"
 		allArgs = append(allArgs, subArgs...)
 	}
 
-	return finalSQL, allArgs, nil
+	// 使用 text/template 解析并执行模板
+	tmpl, err := template.New("sql").Parse(cfg.SQL)
+	if err != nil {
+		return "", nil, fmt.Errorf("failed to parse SQL template for node %s: %w", node.ID, err)
+	}
+
+	var result strings.Builder
+	if err := tmpl.Execute(&result, nodeSQLs); err != nil {
+		return "", nil, fmt.Errorf("failed to execute SQL template for node %s: %w", node.ID, err)
+	}
+
+	return result.String(), allArgs, nil
 }

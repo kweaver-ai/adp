@@ -2,11 +2,11 @@
     "logic_definition": [
         {
             "id": "node_UgVju",
-            "title": "erp_real_time_inventory",
-            "type": "view",
+            "name": "erp_real_time_inventory",
+            "type": "resource",
             "inputs": [],
             "config": {
-                "view_id": "2017573348090867713",
+                "resource_id": "2017573348090867713",
                 "filters": {},
                 "distinct": false
             },
@@ -50,11 +50,11 @@
         },
         {
             "id": "node_CRfXL",
-            "title": "erp_material",
-            "type": "view",
+            "name": "erp_material",
+            "type": "resource",
             "inputs": [],
             "config": {
-                "view_id": "2017573348468355073",
+                "resource_id": "2017573348468355073",
                 "filters": {
                     "value": "库存商品-产成品",
                     "operation": "!=",
@@ -83,7 +83,7 @@
         },
         {
             "id": "node_DQTew",
-            "title": "SQL",
+            "name": "SQL",
             "type": "sql",
             "inputs": [
                 "node_UgVju",
@@ -98,7 +98,7 @@
         },
         {
             "id": "node-output",
-            "title": "输出视图",
+            "name": "输出视图",
             "type": "output",
             "inputs": [
                 "node_DQTew"

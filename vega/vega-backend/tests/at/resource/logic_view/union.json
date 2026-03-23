@@ -3,7 +3,7 @@
     {
       "id": "node-output",
       "type": "output",
-      "title": "输出视图",
+      "name": "输出视图",
       "inputs": [
         "node_C4m1N"
       ],
@@ -17,11 +17,11 @@
     },
     {
       "id": "node_n6KLl",
-      "type": "view",
-      "title": "t_sales",
+      "type": "resource",
+      "name": "t_sales",
       "inputs": [],
       "config": {
-        "view_id": "0d4bb3f9-e9cc-4d61-b559-3d3cfa76cd43",
+        "resource_id": "0d4bb3f9-e9cc-4d61-b559-3d3cfa76cd43",
         "filters": {},
         "distinct": false
       },
@@ -44,11 +44,11 @@
     },
     {
       "id": "node_RSUgo",
-      "type": "view",
-      "title": "t_sales_2025",
+      "type": "resource",
+      "name": "t_sales_2025",
       "inputs": [],
       "config": {
-        "view_id": "3449ddcc-8cca-4d1b-84ad-29047d5513d6",
+        "resource_id": "3449ddcc-8cca-4d1b-84ad-29047d5513d6",
         "filters": {},
         "distinct": false
       },
@@ -74,7 +74,7 @@
     {
       "id": "node_C4m1N",
       "type": "union",
-      "title": "数据合并",
+      "name": "数据合并",
       "inputs": [
         "node_n6KLl",
         "node_RSUgo"
@@ -85,79 +85,145 @@
       "output_fields": [
         {
           "name": "l3_series",
-          "sources": [
-            "l3_series",
-            "l3_series_other"
+          "from": [
+            {
+              "from": "l3_series",
+              "from_node": "node_n6KLl"
+            },
+            {
+              "from": "l3_series",
+              "from_node": "node_RSUgo"
+            }
           ]
         },
         {
           "name": "sales_std",
-          "sources": [
-            "sales_std",
-            "sales_std"
+          "from": [
+            {
+              "from": "sales_std",
+              "from_node": "node_n6KLl"
+            },
+            {
+              "from": "sales_std",
+              "from_node": "node_RSUgo"
+            }
           ]
         },
         {
           "name": "area_1_region",
-          "sources": [
-            "area_1_region",
-            "area_1_region"
+          "from": [
+            {
+              "from": "area_1_region",
+              "from_node": "node_n6KLl"
+            },
+            {
+              "from": "area_1_region",
+              "from_node": "node_RSUgo"
+            }
           ]
         },
         {
           "name": "operation_dim",
-          "sources": [
-            "operation_dim",
-            "operation_dim"
+          "from": [
+            {
+              "from": "operation_dim",
+              "from_node": "node_n6KLl"
+            },
+            {
+              "from": "operation_dim",
+              "from_node": "node_RSUgo"
+            }
           ]
         },
         {
           "name": "brand",
-          "sources": [
-            "brand",
-            "brand"
+          "from": [
+            {
+              "from": "brand",
+              "from_node": "node_n6KLl"
+            },
+            {
+              "from": "brand",
+              "from_node": "node_RSUgo"
+            }
           ]
         },
         {
           "name": "area_3_district",
-          "sources": [
-            "area_3_district",
-            "area_3_district"
+          "from": [
+            {
+              "from": "area_3_district",
+              "from_node": "node_n6KLl"
+            },
+            {
+              "from": "area_3_district",
+              "from_node": "node_RSUgo"
+            }
           ]
         },
         {
           "name": "area_2_province",
-          "sources": [
-            "area_2_province",
-            "area_2_province"
+          "from": [
+            {
+              "from": "area_2_province",
+              "from_node": "node_n6KLl"
+            },
+            {
+              "from": "area_2_province",
+              "from_node": "node_RSUgo"
+            }
           ]
         },
         {
           "name": "l2_category",
-          "sources": [
-            "l2_category",
-            "l2_category"
+          "from": [
+            {
+              "from": "l2_category",
+              "from_node": "node_n6KLl"
+            },
+            {
+              "from": "l2_category",
+              "from_node": "node_RSUgo"
+            }
           ]
         },
         {
           "name": "target_channel",
-          "sources": [
-            "target_channel",
-            "target_channel"
+          "from": [
+            {
+              "from": "target_channel",
+              "from_node": "node_n6KLl"
+            },
+            {
+              "from": "target_channel",
+              "from_node": "node_RSUgo"
+            }
           ]
         },
         {
           "name": "target_std",
-          "sources": [
-            "target_std",
-            "target_std"
+          "from": [
+            {
+              "from": "target_std",
+              "from_node": "node_n6KLl"
+            },
+            {
+              "from": "target_std",
+              "from_node": "node_RSUgo"
+            }
           ]
         },
         {
           "name": "l1_bu",
-          "sources": [
-            "l1_bu",
-            "l1_bu"
+          "from": [
+            {
+              "from": "l1_bu",
+              "from_node": "node_n6KLl"
+            },
+            {
+              "from": "l1_bu",
+              "from_node": "node_RSUgo"
+            }
           ]
         }
       ]

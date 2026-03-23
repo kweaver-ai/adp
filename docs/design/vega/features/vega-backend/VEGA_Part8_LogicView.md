@@ -1,7 +1,7 @@
 # Vega Logic View logic_definition 设计
 
 ## 1. 设计背景
-在低代码数据建模场景中，需要一套 DSL（领域特定语言）来描述数据从源表到最终输出的流转逻辑。Vega 采用“**配置极简化，运行时标准化**”的设计哲学，支持 Join、Union、SQL、View 等多种算子。
+在低代码数据建模场景中，需要一套 DSL（领域特定语言）来描述数据从源表到最终输出的流转逻辑。Vega 采用“**配置极简化，运行时标准化**”的设计哲学，支持 Join、Union、SQL、Resource 等多种算子。
 
 ## 2. 核心架构设计
 
@@ -115,7 +115,7 @@ type Property struct {
 - `features`: 字段特征（如精确匹配、全文检索、向量特征）。
 
 ### 5.3 前端交互建议
-- **View/Output 节点**：提供 Checkbox 列表，用户操作产生 `["a", "b"]`。
+- **Resource/Output 节点**：提供 Checkbox 列表，用户操作产生 `["a", "b"]`。
 - **Join/Union 节点**：提供 Mapping 表格，用户操作产生 `from` 对象（单一映射或对齐数组）。
 - **SQL 节点**：点击“解析”按钮，后端回写 `runtime_output_fields`，前端同步更新预览。
 
@@ -205,7 +205,7 @@ type Property struct {
             "type": "resource",
             "inputs": [],
             "config": {
-                "view_id": "2017573348875202561",
+                "resource_id": "2017573348875202561",
                 "filters": {},
                 "distinct": false
             },
@@ -223,7 +223,7 @@ type Property struct {
             "type": "resource",
             "inputs": [],
             "config": {
-                "view_id": "2017573348875202562",
+                "resource_id": "2017573348875202562",
                 "filters": {},
                 "distinct": true
             },
@@ -258,7 +258,7 @@ type Property struct {
             "type": "resource",
             "inputs": [],
             "config": {
-                "view_id": "2017573348090867713",
+                "resource_id": "2017573348090867713",
                 "filters": {},
                 "distinct": false
             },
@@ -306,7 +306,7 @@ type Property struct {
             "type": "resource",
             "inputs": [],
             "config": {
-                "view_id": "2017573348468355073",
+                "resource_id": "2017573348468355073",
                 "filters": {
                     "value": "库存商品-产成品",
                     "operation": "!=",
@@ -374,7 +374,7 @@ type Property struct {
             "type": "resource",
             "inputs": [],
             "config": {
-                "view_id": "2017573348090867713",
+                "resource_id": "2017573348090867713",
                 "filters": {},
                 "distinct": false
             },
@@ -422,7 +422,7 @@ type Property struct {
             "type": "resource",
             "inputs": [],
             "config": {
-                "view_id": "2017573348468355073",
+                "resource_id": "2017573348468355073",
                 "filters": {
                     "value": "库存商品-产成品",
                     "operation": "!=",
