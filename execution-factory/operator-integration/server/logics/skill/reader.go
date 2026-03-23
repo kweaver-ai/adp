@@ -78,7 +78,7 @@ func (r *skillReader) GetSkillContent(ctx context.Context, req *interfaces.GetSk
 		return nil, err
 	}
 	// 查询对应的"SKILL.md文件
-	skillFile, err := r.fileRepo.SelectSkillFileByPath(ctx, nil, skill.SkillID, SkillMD)
+	skillFile, err := r.fileRepo.SelectSkillFileByPath(ctx, nil, skill.SkillID, skill.Version, SkillMD)
 	if err != nil {
 		r.Logger.WithContext(ctx).Errorf("select skill file failed: %v", err)
 		err = errors.DefaultHTTPError(ctx, http.StatusInternalServerError, err.Error())
@@ -146,7 +146,7 @@ func (r *skillReader) ReadSkillFile(ctx context.Context, req *interfaces.ReadSki
 	if err != nil {
 		return nil, err
 	}
-	file, err := r.fileRepo.SelectSkillFileByPath(ctx, nil, req.SkillID, relPath)
+	file, err := r.fileRepo.SelectSkillFileByPath(ctx, nil, req.SkillID, skill.Version, relPath)
 	if err != nil {
 		r.Logger.WithContext(ctx).Errorf("read skill file failed: %v", err)
 		return nil, err

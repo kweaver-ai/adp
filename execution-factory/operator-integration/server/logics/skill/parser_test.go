@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"testing"
 
+	"github.com/google/uuid"
 	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/interfaces"
 	. "github.com/smartystreets/goconvey/convey"
 )
@@ -31,7 +32,9 @@ Use this skill carefully.`),
 		skill, files, assets, err := parser.parseRegisterReq(req)
 		So(err, ShouldBeNil)
 		So(skill.Name, ShouldEqual, "demo-skill")
-		So(skill.Version, ShouldEqual, "1.2.3")
+		So(skill.Version, ShouldNotEqual, "1.2.3")
+		_, parseErr := uuid.Parse(skill.Version)
+		So(parseErr, ShouldBeNil)
 		So(skill.SkillContent, ShouldEqual, "Use this skill carefully.")
 		So(len(files), ShouldEqual, 0)
 		So(len(assets), ShouldEqual, 0)

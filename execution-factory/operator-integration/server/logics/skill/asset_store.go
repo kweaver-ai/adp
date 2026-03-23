@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/sha256"
 	"encoding/hex"
+	"fmt"
 	"net/http"
 	"path/filepath"
 
@@ -15,7 +16,7 @@ import (
 //go:generate mockgen -source=asset_store.go -destination=../../mocks/skill_asset_store.go -package=mocks
 
 type skillAssetStore interface {
-	Upload(ctx context.Context, skillID, relPath string, content []byte) (object *interfaces.OssObject, checksum string, err error)
+	Upload(ctx context.Context, skillID, version, relPath string, content []byte) (object *interfaces.OssObject, checksum string, err error)
 	Download(ctx context.Context, object *interfaces.OssObject) ([]byte, error)
 	Delete(ctx context.Context, object *interfaces.OssObject) error
 	GetDownloadURL(ctx context.Context, object *interfaces.OssObject) (string, error)
@@ -23,22 +24,25 @@ type skillAssetStore interface {
 
 type ossGatewaySkillAssetStore struct {
 	client interfaces.OSSGatewayBackendClient
+	// 存储前缀
+	SkillPrefix string
 }
 
-const skillAssetObjectPrefix = "aoi_skill_assets"
-
 func newOSSGatewaySkillAssetStore() skillAssetStore {
-	return &ossGatewaySkillAssetStore{client: drivenadapters.NewOSSGatewayBackendClient()}
+	return &ossGatewaySkillAssetStore{
+		SkillPrefix: fmt.Sprintf("%s/skill/", interfaces.OSSGatewayPrefix),
+		client:      drivenadapters.NewOSSGatewayBackendClient(),
+	}
 }
 
 // Upload 上传技能资产到 OSS 网关后端
-func (s *ossGatewaySkillAssetStore) Upload(ctx context.Context, skillID, relPath string, content []byte) (object *interfaces.OssObject, checksum string, err error) {
+func (s *ossGatewaySkillAssetStore) Upload(ctx context.Context, skillID, version, relPath string, content []byte) (object *interfaces.OssObject, checksum string, err error) {
 	// 检查服务是否ready，否则返回报错
 	if !s.client.IsReady() {
 		err = errors.DefaultHTTPError(ctx, http.StatusInternalServerError, "oss gateway backend is not ready")
 		return
 	}
-	key := buildObjectKey(skillID, relPath)
+	key := s.buildObjectKey(skillID, version, relPath)
 	storageID, err := s.client.CurrentStorageID(ctx)
 	if err != nil {
 		return
@@ -77,11 +81,11 @@ func (s *ossGatewaySkillAssetStore) GetDownloadURL(ctx context.Context, object *
 	return s.client.GetDownloadURL(ctx, object)
 }
 
-func buildObjectKey(skillID, relPath string) string {
+func (s *ossGatewaySkillAssetStore) buildObjectKey(skillID, version, relPath string) string {
 	if relPath == "" {
-		return filepath.ToSlash(filepath.Join(skillAssetObjectPrefix, skillID))
+		return filepath.ToSlash(filepath.Join(s.SkillPrefix, skillID, version))
 	}
-	return filepath.ToSlash(filepath.Join(skillAssetObjectPrefix, skillID, relPath))
+	return filepath.ToSlash(filepath.Join(s.SkillPrefix, skillID, version, relPath))
 }
 
 func checksumSHA256(content []byte) string {
