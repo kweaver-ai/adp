@@ -49,7 +49,7 @@
 | 管理接口 | 面向 Skill 提供方和资源维护方的接口 |
 | 市场接口 | 面向 Skill 发现与选择场景的接口 |
 | 读取接口 | 面向 `skill_content` 与文件渐进式读取的接口 |
-| `deleting` | 删除补偿中间态，属于内部状态，不算业务状态，对外统一视为不存在 |
+| `f_is_deleted=1` | 删除补偿中间态，属于内部删除流程标记，对外统一视为不存在 |
 | AuthService | 平台统一权限服务 |
 | BusinessDomainService | 平台统一业务域资源治理服务 |
 
@@ -80,10 +80,10 @@
 
 | 容器 | 技术栈 | 职责 |
 |------|--------|------|
-| API Service | Go + Gin | 暴露 Skill 管理接口与读取接口；市场接口尚未公开暴露 |
+| API Service | Go + Gin | 暴露 Skill 管理接口、读取接口与市场接口 |
 | Core Service | Go | 实现注册、查询、删除、下载、内容读取、文件读取、市场逻辑 |
 | Parser | Go | 解析 `SKILL.md` frontmatter、正文和 ZIP 内容 |
-| Asset Store | Go + S3 SDK / 本地文件 | 管理 Skill 附件对象写入、读取、删除 |
+| Asset Store | Go + oss_gateway / 本地文件 | 管理 Skill 附件对象写入、读取、删除 |
 | Storage | MariaDB + Object Storage | 保存 Skill 主记录、文件索引和文件内容 |
 
 ---
@@ -106,7 +106,7 @@
 | SkillRegistry | 注册、删除、下载、管理列表、管理详情、市场列表、市场详情 |
 | SkillReader | `skill_content` 读取、单文件读取 |
 | SkillParser | `content` / `zip` 注册内容解析 |
-| SkillAssetStore | 附件内容写入、读取、删除；支持正式 S3 配置和本地回退 |
+| SkillAssetStore | 附件内容写入、读取、删除；支持 `oss_gateway` 正式配置和本地回退 |
 | SkillRepository(DB) | Skill 主表访问 |
 | SkillFileIndex(DB) | Skill 文件索引访问 |
 | Governance Integration | 在 `skillRegistry` 中直接复用 `AuthService` 与 `BusinessDomainService` |
@@ -121,7 +121,7 @@
 
 ### 子流程（可选）
 
-    删除请求 → CheckDeletePermission → 状态置为 deleting → 删除对象 → 删除索引 → 删除主记录 → 解绑业务域 → 删除权限策略
+    删除请求 → CheckDeletePermission → 主记录置 f_is_deleted=1 → 同步删除对象 / 索引 / 主记录 → 解绑业务域 → 删除权限策略
 
 ---
 
@@ -133,7 +133,9 @@
 | 管理 / 市场 / 读取三层分离 | 列表、详情、市场、内容读取、文件读取的调用方和返回负载不同，必须分层 |
 | `skill_content` 单独读取 | 管理列表与详情不返回正文，内容通过 `/content` 独立获取 |
 | 主表保存正文，附件入对象存储 | `SKILL.md` 读取频繁且大小可控；附件文件体量和类型不稳定，放对象存储更合理 |
-| 删除成功后物理删除主记录 | 首版不保留 `deleted` 终态，使用 `deleting` 作为中间补偿态 |
+| 业务状态与删除流程状态分离 | `status` 仅表达 `unpublish/published/offline`，删除流程通过 `f_is_deleted` 表达 |
+| 删除成功后物理删除主记录 | 首版不保留 `deleted` 终态，`f_is_deleted=1` 仅表示待删除/删除中 |
+| 对外状态类型统一为 `BizStatus` | 接口契约统一使用 `interfaces.BizStatus`；持久化模型当前以字符串承载同语义状态值，避免包循环依赖 |
 | 权限和业务域沿用平台模式接入 | 不为 Skill 单独发明治理层，直接在 `skillRegistry` 上复用统一服务 |
 | 下载复用已登记文件索引重建 ZIP | 首版下载按“主记录 + 文件索引 + 对象存储”重建包，不保留原始 ZIP 原封不动回传 |
 | 文件读取不做文件级 ACL | Skill 附件可读性仅由 `execute` 权限决定，文件索引只承担定位职责 |
@@ -157,15 +159,15 @@
 - 文件读取按 `(skill_id, rel_path)` 精确命中索引
 
 ### 可用性
-- 删除使用 `deleting` 作为补偿态
-- `deleting` 对管理、市场、读取接口均不可见
+- 删除通过 `f_is_deleted=1` 作为补偿标记
+- `f_is_deleted=1` 对管理、市场、读取接口均不可见
 - 对象存储不可用时，当前支持本地存储回退，仅用于非正式对象存储场景
 
 ### 安全
 - 注册、管理查询、删除、市场查询已接入统一权限/业务域骨架
 - 文件路径标准化，禁止路径穿越
 - 文件读取校验路径合法性与 `content_sha256`
-- 当前读取接口尚未完整接入权限与业务域校验，属于首版未收口项
+- 当前读取接口已接入权限校验；业务域可见性在设计上要求统一接入，后续如需进一步收紧可在读取链继续补强
 
 ### 可观测性
 - 设计要求：应记录注册失败、删除补偿、下载失败、文件校验失败
@@ -403,7 +405,7 @@
 | description | string | Skill 描述 |
 | skill_content | text | `SKILL.md` 正文 |
 | version | string | 版本号 |
-| status | enum | `unpublish/published/offline`，`deleting` 仅作为内部补偿态 |
+| status | enum | `unpublish/published/offline` |
 | source | string | 来源 |
 | extend_info | json string | 扩展元数据 |
 | dependencies | json string | 依赖声明 |
@@ -464,7 +466,7 @@
 实现状态：
 - 主表字段和索引：已实现
 - 文件索引表：已实现
-- 正式 S3 配置接入：已实现
+- `oss_gateway` 正式配置接入：已实现
 - 流式大文件下载：未实现，当前下载为内存组包
 
 ---
@@ -495,29 +497,29 @@
 ### Skill 删除流程
 
 1. 查询 Skill 主记录。
-2. 校验状态可删除。
+2. 校验业务状态可删除。
 3. 调用 `GetAccessor` 和 `CheckDeletePermission`。
-4. 开启 DB 事务并将状态更新为 `deleting`。
-5. 查询该 Skill 的文件索引。
-6. 删除对象存储单文件。
-7. 删除对象存储目录前缀。
-8. 删除文件索引记录。
-9. 删除主表记录。
-10. 调用 `BatchDisassociateResource` 解绑业务域。
-11. 调用 `DeletePolicy` 删除权限策略。
+4. 开启 DB 事务并将 `f_is_deleted` 置为 `1`。
+   对应仓储接口：`UpdateSkillDeleted(...)`
+5. 在当前请求内同步查询该 Skill 的文件索引。
+6. 逐个删除对象存储单文件。
+7. 删除文件索引记录。
+8. 删除主表记录。
+9. 调用 `DisassociateResource` 解绑业务域。
+10. 调用 `DeletePolicy` 删除权限策略。
 
 异常流：
-- 任意对象删除失败时，主表保留 `deleting`。
+- 任意对象删除失败时，主表保留 `f_is_deleted=1`，后续需由独立补偿任务继续重试。
 - 成功后主表物理删除，不保留 `deleted` 终态。
 
-实现状态：已实现。
+实现状态：部分实现。
 未实现项：独立补偿任务未实现；审计日志未实现。
 
 ### Skill 管理查询流程
 
 1. 列表查询先 `GetAccessor`。
 2. DB 侧按名称、来源、状态、创建人等条件查询。
-3. 逻辑层剔除 `deleting`，并仅对外暴露符合当前接口语义的业务状态。
+3. 逻辑层剔除 `f_is_deleted=1` 的记录，并仅对外暴露符合当前接口语义的业务状态。
 4. 调用 `ResourceFilterIDs(..., view)` 过滤可见 Skill。
 5. 返回 `SkillSummary`。
 6. 详情查询先查单条记录，再做 `CheckViewPermission`。
@@ -531,24 +533,24 @@
 2. 调用 `ResourceListIDs(..., public_access)`。
 3. 调用 `BusinessDomainService.BatchResourceList` 获取业务域资源映射。
 4. 查询候选 Skill 列表。
-5. 逻辑层过滤掉 `deleting`、无公共访问权限、无业务域映射、非 `published` 的 Skill。
-6. 市场详情通过 `CheckPublicAccessPermission` 和业务域映射校验后返回。
+5. 逻辑层过滤掉 `f_is_deleted=1`、无公共访问权限、无业务域映射、非 `published` 的 Skill。
+6. 市场详情通过 `CheckPublicAccessPermission` 且状态为 `published` 后返回。
 
-实现状态：部分实现。
-说明：逻辑层已实现并有单测，公开 HTTP 层未实现。
+实现状态：已实现。
+说明：逻辑层、公开 HTTP 层和 API 文档均已补齐。
 
 ### Skill 内容读取流程
 
 1. `GetSkillContent` 查询主记录。
-2. 若不存在或为 `deleting`，返回未找到。
+2. 若不存在或 `f_is_deleted=1`，返回未找到。
 3. 直接从主记录返回 `skill_content` 和 `file_manifest`。
 
 实现状态：已实现。
-说明：当前已接入 `GetAccessor + CheckViewPermission + BatchResourceList`。
+说明：当前已接入 `GetAccessor + OperationCheckAny(execute/public_access/view)`，并在 `f_is_deleted=1` 时统一返回未找到。
 
 ### Skill 文件读取流程
 
-1. 查询主记录，要求状态可被运行时消费；附件读取权限由 `execute` 决定。
+1. 查询主记录，要求 `f_is_deleted=0`；附件读取权限当前通过 `OperationCheckAny(execute/public_access/view)` 判定。
 2. 标准化 `rel_path`。
 3. 按 `(skill_id, rel_path)` 查询文件索引。
 4. 不再依赖文件级访问控制字段，附件读取权限直接由 Skill `execute` 权限决定。
@@ -557,11 +559,11 @@
 7. 返回文件正文和元数据。
 
 实现状态：已实现。
-说明：当前已接入 `GetAccessor + CheckExecutePermission + BatchResourceList`，并保留路径校验、索引校验和 SHA-256 校验。
+说明：当前已接入 `GetAccessor + OperationCheckAny(execute/public_access/view)`，并保留路径校验、索引校验和 SHA-256 校验。
 
 ### Skill ZIP 下载流程
 
-1. 查询主记录，`deleting` 不可下载。
+1. 查询主记录，`f_is_deleted=1` 不可下载。
 2. 调用 `GetAccessor` 和 `CheckViewPermission`。
 3. 查询文件索引列表。
 4. 在内存中创建 ZIP。
@@ -600,17 +602,17 @@
 - `unpublish`：资源已存在但未进入发布态
 - `published`：可进入市场并可被正常发现
 - `offline`：资源下线，不进入市场
-- `deleting`：删除补偿中间态，对外不可见
+- `f_is_deleted=1`：删除补偿中间态，对外不可见
 
 ### 权限与业务域治理逻辑
 - 资源类型固定为 `AuthResourceTypeSkill`
 - 注册：`CheckCreatePermission + AssociateResource`
 - 管理查询：`ResourceFilterIDs(..., view)`
-- 管理详情 / 内容读取：`CheckViewPermission`
-- 附件读取：`CheckExecutePermission`
-- 删除：`CheckDeletePermission + BatchDisassociateResource + DeletePolicy`
-- 市场列表：`ResourceListIDs(..., public_access) + BatchResourceList`，且仅返回 `published`
-- 市场详情：`CheckPublicAccessPermission + BatchResourceList`，且仅返回 `published`
+- 管理详情：`CheckViewPermission`
+- 内容读取 / 附件读取：`OperationCheckAny(execute/public_access/view)`
+- 删除：`CheckDeletePermission + DisassociateResource + DeletePolicy`
+- 市场列表：当前实现经 `querySkillListPage` 走 `ResourceListIDs(..., public_access) + BatchResourceList`，仅返回 `published`
+- 市场详情：`CheckPublicAccessPermission`，且仅返回 `published`
 
 当前实现缺口：
 - 下载接口当前复用 `view` 权限，未定义独立 `download` 操作
@@ -633,7 +635,7 @@
   - 删除过程中对象残留
 
 处理策略：
-- `deleting` 统一对外视为不存在
+- `f_is_deleted=1` 统一对外视为不存在
 - 下载和文件读取遇到对象缺失时整体失败，不返回部分内容
 - 当前未实现统一错误码枚举和独立补偿任务，需要后续补足
 
@@ -684,8 +686,8 @@
 | `skill_content` 读取 | 已实现 | 已公开暴露，走 `view` + 业务域校验 |
 | 文件读取 | 已实现 | 已切换到 `execute` + 业务域校验 |
 | ZIP 下载 | 已实现 | 管理侧路由已暴露 |
-| 删除补偿态 | 已实现 | `deleting` 为内部态，对外不可见 |
-| 市场列表 / 市场详情逻辑 | 部分实现 | 逻辑层已实现，未暴露 handler/route/doc |
+| 删除补偿态 | 部分实现 | 删除入口已切换为 `f_is_deleted`，当前仍为同步删除，独立补偿任务未实现 |
+| 市场列表 / 市场详情逻辑 | 已实现 | 逻辑层、handler、route、API 文档均已暴露 |
 | 权限治理骨架 | 已实现 | 已复用 `AuthService` |
 | 业务域治理骨架 | 已实现 | 已复用 `BusinessDomainService` |
 | 运行时绑定接口 | 未实现 | 仅有接口，无实现代码 |

@@ -59,6 +59,11 @@ var editStatusTrans = map[interfaces.BizStatus]interfaces.BizStatus{
 	interfaces.BizStatusOffline:   interfaces.BizStatusUnpublish,
 }
 
+var deletableStatus = map[interfaces.BizStatus]bool{
+	interfaces.BizStatusUnpublish: true,
+	interfaces.BizStatusOffline:   true,
+}
+
 // GetEditStatusTrans 获取编辑操作下允许的状态转换
 func GetEditStatusTrans(ctx context.Context, fromState interfaces.BizStatus) (interfaces.BizStatus, error) {
 	targetState, exists := editStatusTrans[fromState]
@@ -66,4 +71,9 @@ func GetEditStatusTrans(ctx context.Context, fromState interfaces.BizStatus) (in
 		return "", errors.NewHTTPError(ctx, http.StatusBadRequest, errors.ErrExtMCPUnSupportEdit, "current mcp does not support editing")
 	}
 	return targetState, nil
+}
+
+// CanDelete 判断当前业务状态是否允许进入删除流程
+func CanDelete(fromState interfaces.BizStatus) bool {
+	return deletableStatus[fromState]
 }

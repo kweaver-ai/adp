@@ -50,18 +50,15 @@ type Config struct {
 	MFModelAPI               PrivateBaseConfig         `yaml:"mf-model-api"`
 	MFModelManager           PrivateBaseConfig         `yaml:"mf-model-manager"`
 	AIGenerationConfig       AIGenerationConfig        `yaml:"ai_generation_config"`
-	S3Config                 S3Config                  `yaml:"s3"`
+	OSSGatewayConfig         OSSGatewayConfig          `yaml:"oss_gateway"`
 }
 
-// S3Config Skill 资产对象存储配置
-type S3Config struct {
-	Endpoint        string `yaml:"endpoint" env:"SKILL_S3_ENDPOINT"`
-	AccessID        string `yaml:"access_id" env:"SKILL_S3_ACCESS_ID"`
-	AccessSecretKey string `yaml:"access_secret_key" env:"SKILL_S3_ACCESS_SECRET_KEY"`
-	Bucket          string `yaml:"bucket" env:"SKILL_S3_BUCKET"`
-	Region          string `yaml:"region" default:"us-east-1" env:"SKILL_S3_REGION"`
-	UseSSL          bool   `yaml:"use_ssl" default:"false" env:"SKILL_S3_USE_SSL"`
-	StoragePrefix   string `yaml:"storage_prefix" default:"aoi_skill_assets" env:"SKILL_S3_PREFIX"`
+// OSSGatewayConfig Skill 资产 OSS 网关配置
+type OSSGatewayConfig struct {
+	BaseURL         string `yaml:"base_url" env:"SKILL_OSS_GATEWAY_BASE_URL"`
+	StorageID       string `yaml:"storage_id" env:"SKILL_OSS_GATEWAY_STORAGE_ID"`
+	InternalRequest bool   `yaml:"internal_request" default:"false" env:"SKILL_OSS_GATEWAY_INTERNAL_REQUEST"`
+	Expires         int64  `yaml:"expires" default:"3600" env:"SKILL_OSS_GATEWAY_EXPIRES"`
 }
 
 // SandboxControlPlaneConfig 沙箱控制服务配置

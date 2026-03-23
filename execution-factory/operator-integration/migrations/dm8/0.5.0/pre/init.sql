@@ -379,12 +379,13 @@ CREATE TABLE IF NOT EXISTS "t_skill_repository" (
     "f_update_time" BIGINT NOT NULL,
     "f_delete_user" VARCHAR(50 CHAR) NOT NULL DEFAULT '',
     "f_delete_time" BIGINT NOT NULL DEFAULT 0,
+    "f_category" VARCHAR(50 CHAR) DEFAULT 0,
     CLUSTER PRIMARY KEY ("f_id")
 );
 
 CREATE UNIQUE INDEX IF NOT EXISTS t_skill_repository_uk_skill_id ON t_skill_repository(f_skill_id);
 CREATE INDEX IF NOT EXISTS t_skill_repository_idx_status_update_time ON t_skill_repository(f_status, f_update_time);
-CREATE INDEX IF NOT EXISTS t_skill_repository_idx_source_update_time ON t_skill_repository(f_source, f_update_time);
+CREATE INDEX IF NOT EXISTS t_skill_repository_idx_category_update_time ON t_skill_repository(f_category, f_update_time);
 CREATE INDEX IF NOT EXISTS t_skill_repository_idx_create_user_update_time ON t_skill_repository(f_create_user, f_update_time);
 
 CREATE TABLE IF NOT EXISTS "t_skill_file_index" (

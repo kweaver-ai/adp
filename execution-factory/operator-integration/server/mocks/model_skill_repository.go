@@ -102,6 +102,22 @@ func (mr *MockISkillRepositoryMockRecorder) SelectSkillByID(ctx, tx, skillID any
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SelectSkillByID", reflect.TypeOf((*MockISkillRepository)(nil).SelectSkillByID), ctx, tx, skillID)
 }
 
+// SelectSkillByName mocks base method.
+func (m *MockISkillRepository) SelectSkillByName(ctx context.Context, tx *sql.Tx, name string, status []string) (bool, *model.SkillRepositoryDB, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "SelectSkillByName", ctx, tx, name, status)
+	ret0, _ := ret[0].(bool)
+	ret1, _ := ret[1].(*model.SkillRepositoryDB)
+	ret2, _ := ret[2].(error)
+	return ret0, ret1, ret2
+}
+
+// SelectSkillByName indicates an expected call of SelectSkillByName.
+func (mr *MockISkillRepositoryMockRecorder) SelectSkillByName(ctx, tx, name, status any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SelectSkillByName", reflect.TypeOf((*MockISkillRepository)(nil).SelectSkillByName), ctx, tx, name, status)
+}
+
 // SelectSkillListPage mocks base method.
 func (m *MockISkillRepository) SelectSkillListPage(ctx context.Context, tx *sql.Tx, filter map[string]any, sort *ormhelper.SortParams, cursor *ormhelper.CursorParams) ([]*model.SkillRepositoryDB, error) {
 	m.ctrl.T.Helper()
@@ -131,8 +147,22 @@ func (mr *MockISkillRepositoryMockRecorder) UpdateSkill(ctx, tx, skill any) *gom
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateSkill", reflect.TypeOf((*MockISkillRepository)(nil).UpdateSkill), ctx, tx, skill)
 }
 
+// UpdateSkillDeleted mocks base method.
+func (m *MockISkillRepository) UpdateSkillDeleted(ctx context.Context, tx *sql.Tx, skillID string, isDeleted bool, updateUser string) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UpdateSkillDeleted", ctx, tx, skillID, isDeleted, updateUser)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// UpdateSkillDeleted indicates an expected call of UpdateSkillDeleted.
+func (mr *MockISkillRepositoryMockRecorder) UpdateSkillDeleted(ctx, tx, skillID, isDeleted, updateUser any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateSkillDeleted", reflect.TypeOf((*MockISkillRepository)(nil).UpdateSkillDeleted), ctx, tx, skillID, isDeleted, updateUser)
+}
+
 // UpdateSkillStatus mocks base method.
-func (m *MockISkillRepository) UpdateSkillStatus(ctx context.Context, tx *sql.Tx, skillID string, status model.SkillStatus, updateUser string) error {
+func (m *MockISkillRepository) UpdateSkillStatus(ctx context.Context, tx *sql.Tx, skillID, status, updateUser string) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "UpdateSkillStatus", ctx, tx, skillID, status, updateUser)
 	ret0, _ := ret[0].(error)

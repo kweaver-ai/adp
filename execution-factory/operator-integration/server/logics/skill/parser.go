@@ -84,7 +84,7 @@ func (p *skillParser) parseSkillContent(content string, req *interfaces.Register
 		Description:  fm.Description,
 		SkillContent: strings.TrimSpace(parts[2]),
 		Version:      fm.Version,
-		Status:       model.SkillStatusUnpublish,
+		Status:       interfaces.BizStatusUnpublish.String(),
 		Source:       req.Source,
 		Dependencies: utils.ObjectToJSON(fm.Dependencies),
 		ExtendInfo:   utils.ObjectToJSON(fm.Metadata),

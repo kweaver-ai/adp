@@ -100,6 +100,12 @@ const (
 const (
 	// 当前Agent Skill不允许删除
 	ErrExtSkillUnSupportDelete ErrorCode = "SkillUnSupportDelete" // 当前Agent Skill不允许删除
+	// 技能状态无效
+	ErrExtSkillStatusInvalid ErrorCode = "SkillStatusInvalid" // 技能状态无效
+	// 技能名称重复
+	ErrExtSkillNameDuplicate ErrorCode = "SkillNameDuplicate" // 技能名称重复
+	// 技能分类不存在
+	ErrExtSkillCategoryNotFound ErrorCode = "SkillCategoryNotFound" // 技能分类不存在
 )
 
 // 代理模块错误码定义

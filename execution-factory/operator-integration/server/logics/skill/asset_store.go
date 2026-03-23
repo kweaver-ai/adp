@@ -1,21 +1,21 @@
 package skill
 
 import (
+	"bytes"
 	"context"
 	"crypto/sha256"
 	"encoding/hex"
+	"encoding/json"
 	"fmt"
 	"io"
+	"net/http"
+	"net/url"
 	"os"
 	"path/filepath"
-	"strconv"
 	"strings"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/credentials"
-	"github.com/aws/aws-sdk-go/aws/session"
-	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/infra/config"
+	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/infra/errors"
 	restinfra "github.com/kweaver-ai/adp/execution-factory/operator-integration/server/infra/rest"
 )
 
@@ -28,26 +28,27 @@ type skillAssetStore interface {
 	DeleteSkill(ctx context.Context, skillID string) error
 }
 
-type s3SkillAssetStore struct {
-	client *s3.S3
-	bucket string
-	prefix string
+type ossGatewaySkillAssetStore struct {
+	client          *http.Client
+	baseURL         string
+	storageID       string
+	internalRequest bool
+	expires         int64
 }
 
 type localSkillAssetStore struct{}
 
-var loadFormalSkillAssetStoreConfig = func() (config.S3Config, bool) {
+const skillAssetObjectPrefix = "aoi_skill_assets"
+
+var loadFormalSkillAssetStoreConfig = func() (config.OSSGatewayConfig, bool) {
 	if !formalConfigFilesExist() {
-		return config.S3Config{}, false
+		return config.OSSGatewayConfig{}, false
 	}
-	return config.NewConfigLoader().S3Config, true
+	return config.NewConfigLoader().OSSGatewayConfig, true
 }
 
 func newSkillAssetStore() skillAssetStore {
 	if store, err := newSkillAssetStoreFromFormalConfig(); err == nil && store != nil {
-		return store
-	}
-	if store, err := newS3SkillAssetStoreFromEnv(); err == nil && store != nil {
 		return store
 	}
 	return &localSkillAssetStore{}
@@ -74,32 +75,19 @@ func formalConfigFilesExist() bool {
 	return true
 }
 
-func newSkillAssetStoreWithConfig(cfg config.S3Config) (skillAssetStore, error) {
-	if cfg.Endpoint == "" || cfg.AccessID == "" || cfg.AccessSecretKey == "" || cfg.Bucket == "" {
+func newSkillAssetStoreWithConfig(cfg config.OSSGatewayConfig) (skillAssetStore, error) {
+	if cfg.BaseURL == "" || cfg.StorageID == "" {
 		return nil, nil
 	}
-	if cfg.Region == "" {
-		cfg.Region = "us-east-1"
+	if cfg.Expires <= 0 {
+		cfg.Expires = 3600
 	}
-	if cfg.StoragePrefix == "" {
-		cfg.StoragePrefix = "aoi_skill_assets"
-	}
-
-	sess, err := session.NewSession(&aws.Config{
-		Credentials:      credentials.NewStaticCredentials(cfg.AccessID, cfg.AccessSecretKey, ""),
-		Endpoint:         aws.String(cfg.Endpoint),
-		Region:           aws.String(cfg.Region),
-		DisableSSL:       aws.Bool(!cfg.UseSSL),
-		S3ForcePathStyle: aws.Bool(true),
-		HTTPClient:       restinfra.NewRawHTTPClient(),
-	})
-	if err != nil {
-		return nil, err
-	}
-	return &s3SkillAssetStore{
-		client: s3.New(sess),
-		bucket: cfg.Bucket,
-		prefix: cfg.StoragePrefix,
+	return &ossGatewaySkillAssetStore{
+		client:          restinfra.NewRawHTTPClient(),
+		baseURL:         strings.TrimRight(cfg.BaseURL, "/"),
+		storageID:       cfg.StorageID,
+		internalRequest: cfg.InternalRequest,
+		expires:         cfg.Expires,
 	}, nil
 }
 
@@ -132,68 +120,31 @@ func (s *localSkillAssetStore) DeleteSkill(_ context.Context, skillID string) er
 	return os.RemoveAll(root)
 }
 
-func newS3SkillAssetStoreFromEnv() (*s3SkillAssetStore, error) {
-	if stringsEqualFold(os.Getenv("SKILL_ASSET_BACKEND"), "local") {
-		return nil, nil
-	}
-
-	endpoint := os.Getenv("SKILL_S3_ENDPOINT")
-	accessID := os.Getenv("SKILL_S3_ACCESS_ID")
-	accessSecretKey := os.Getenv("SKILL_S3_ACCESS_SECRET_KEY")
-	bucket := os.Getenv("SKILL_S3_BUCKET")
-	if endpoint == "" || accessID == "" || accessSecretKey == "" || bucket == "" {
-		return nil, nil
-	}
-
-	useSSL := false
-	if raw := os.Getenv("SKILL_S3_USE_SSL"); raw != "" {
-		parsed, err := strconv.ParseBool(raw)
-		if err != nil {
-			return nil, fmt.Errorf("parse SKILL_S3_USE_SSL failed: %w", err)
-		}
-		useSSL = parsed
-	}
-	region := os.Getenv("SKILL_S3_REGION")
-	if region == "" {
-		region = "us-east-1"
-	}
-	prefix := os.Getenv("SKILL_S3_PREFIX")
-	if prefix == "" {
-		prefix = "aoi_skill_assets"
-	}
-	store, err := newSkillAssetStoreWithConfig(config.S3Config{
-		Endpoint:        endpoint,
-		AccessID:        accessID,
-		AccessSecretKey: accessSecretKey,
-		Bucket:          bucket,
-		Region:          region,
-		UseSSL:          useSSL,
-		StoragePrefix:   prefix,
-	})
-	if err != nil || store == nil {
-		return nil, err
-	}
-	return store.(*s3SkillAssetStore), nil
-}
-
-func (s *s3SkillAssetStore) Write(ctx context.Context, skillID, relPath string, content []byte) (string, string, error) {
+func (s *ossGatewaySkillAssetStore) Write(ctx context.Context, skillID, relPath string, content []byte) (string, string, error) {
 	key := s.buildObjectKey(skillID, relPath)
-	_, err := s.client.PutObjectWithContext(ctx, &s3.PutObjectInput{
-		Bucket: aws.String(s.bucket),
-		Key:    aws.String(key),
-		Body:   aws.ReadSeekCloser(strings.NewReader(string(content))),
-	})
+	authReq, err := s.requestPresigned(ctx, http.MethodGet, s.objectActionURL("upload", key, url.Values{
+		"request_method":   []string{http.MethodPut},
+		"expires":          []string{fmt.Sprintf("%d", s.expires)},
+		"internal_request": []string{fmt.Sprintf("%t", s.internalRequest)},
+	}))
 	if err != nil {
+		return "", "", err
+	}
+	if err = s.doSignedRequest(ctx, authReq.Method, authReq.URL, authReq.Headers, bytes.NewReader(content)); err != nil {
 		return "", "", err
 	}
 	return key, checksumSHA256(content), nil
 }
 
-func (s *s3SkillAssetStore) Read(ctx context.Context, storageKey string) ([]byte, error) {
-	resp, err := s.client.GetObjectWithContext(ctx, &s3.GetObjectInput{
-		Bucket: aws.String(s.bucket),
-		Key:    aws.String(storageKey),
-	})
+func (s *ossGatewaySkillAssetStore) Read(ctx context.Context, storageKey string) ([]byte, error) {
+	authReq, err := s.requestPresigned(ctx, http.MethodGet, s.objectActionURL("download", storageKey, url.Values{
+		"expires":          []string{fmt.Sprintf("%d", s.expires)},
+		"internal_request": []string{fmt.Sprintf("%t", s.internalRequest)},
+	}))
+	if err != nil {
+		return nil, err
+	}
+	resp, err := s.doSignedRequestRaw(ctx, authReq.Method, authReq.URL, authReq.Headers, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -201,42 +152,102 @@ func (s *s3SkillAssetStore) Read(ctx context.Context, storageKey string) ([]byte
 	return io.ReadAll(resp.Body)
 }
 
-func (s *s3SkillAssetStore) DeleteFile(ctx context.Context, storageKey string) error {
-	_, err := s.client.DeleteObjectWithContext(ctx, &s3.DeleteObjectInput{
-		Bucket: aws.String(s.bucket),
-		Key:    aws.String(storageKey),
-	})
-	return err
-}
-
-func (s *s3SkillAssetStore) DeleteSkill(ctx context.Context, skillID string) error {
-	prefix := s.buildObjectKey(skillID, "")
-	resp, err := s.client.ListObjectsV2WithContext(ctx, &s3.ListObjectsV2Input{
-		Bucket: aws.String(s.bucket),
-		Prefix: aws.String(prefix),
-	})
+func (s *ossGatewaySkillAssetStore) DeleteFile(ctx context.Context, storageKey string) error {
+	authReq, err := s.requestPresigned(ctx, http.MethodGet, s.objectActionURL("delete", storageKey, url.Values{
+		"expires":          []string{fmt.Sprintf("%d", s.expires)},
+		"internal_request": []string{fmt.Sprintf("%t", s.internalRequest)},
+	}))
 	if err != nil {
 		return err
 	}
-	if len(resp.Contents) == 0 {
-		return nil
-	}
-	objects := make([]*s3.ObjectIdentifier, 0, len(resp.Contents))
-	for _, obj := range resp.Contents {
-		objects = append(objects, &s3.ObjectIdentifier{Key: obj.Key})
-	}
-	_, err = s.client.DeleteObjectsWithContext(ctx, &s3.DeleteObjectsInput{
-		Bucket: aws.String(s.bucket),
-		Delete: &s3.Delete{Objects: objects, Quiet: aws.Bool(true)},
-	})
-	return err
+	return s.doSignedRequest(ctx, authReq.Method, authReq.URL, authReq.Headers, nil)
 }
 
-func (s *s3SkillAssetStore) buildObjectKey(skillID, relPath string) string {
+func (s *ossGatewaySkillAssetStore) DeleteSkill(_ context.Context, _ string) error {
+	// Gateway API only provides single-object delete. DeleteSkill is kept as a
+	// no-op because registry already deletes indexed files one by one before
+	// calling this method. The registry cleanup path will be simplified later.
+	return nil
+}
+
+func (s *ossGatewaySkillAssetStore) buildObjectKey(skillID, relPath string) string {
 	if relPath == "" {
-		return filepath.ToSlash(filepath.Join(s.prefix, skillID))
+		return filepath.ToSlash(filepath.Join(skillAssetObjectPrefix, skillID))
 	}
-	return filepath.ToSlash(filepath.Join(s.prefix, skillID, relPath))
+	return filepath.ToSlash(filepath.Join(skillAssetObjectPrefix, skillID, relPath))
+}
+
+type gatewayAuthResponse struct {
+	Code    int                `json:"code"`
+	Message string             `json:"message"`
+	Data    gatewayAuthRequest `json:"data"`
+}
+
+type gatewayAuthRequest struct {
+	Method  string            `json:"method"`
+	URL     string            `json:"url"`
+	Headers map[string]string `json:"headers"`
+}
+
+func (s *ossGatewaySkillAssetStore) objectActionURL(action, key string, query url.Values) string {
+	if query == nil {
+		query = url.Values{}
+	}
+	encodedKey := url.PathEscape(key)
+	return fmt.Sprintf("%s/api/v1/%s/%s/%s?%s", s.baseURL, action, s.storageID, encodedKey, query.Encode())
+}
+
+func (s *ossGatewaySkillAssetStore) requestPresigned(ctx context.Context, method, reqURL string) (*gatewayAuthRequest, error) {
+	req, err := http.NewRequestWithContext(ctx, method, reqURL, nil)
+	if err != nil {
+		return nil, err
+	}
+	resp, err := s.client.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer func() { _ = resp.Body.Close() }()
+	if resp.StatusCode != http.StatusOK {
+		body, _ := io.ReadAll(resp.Body)
+		return nil, errors.DefaultHTTPError(ctx, http.StatusInternalServerError, fmt.Sprintf("request oss gateway failed: %s", strings.TrimSpace(string(body))))
+	}
+	var payload gatewayAuthResponse
+	if err = json.NewDecoder(resp.Body).Decode(&payload); err != nil {
+		return nil, err
+	}
+	if payload.Code != 0 || payload.Data.URL == "" || payload.Data.Method == "" {
+		return nil, errors.DefaultHTTPError(ctx, http.StatusInternalServerError, fmt.Sprintf("invalid oss gateway response: code=%d message=%s", payload.Code, payload.Message))
+	}
+	return &payload.Data, nil
+}
+
+func (s *ossGatewaySkillAssetStore) doSignedRequest(ctx context.Context, method, reqURL string, headers map[string]string, body io.Reader) error {
+	resp, err := s.doSignedRequestRaw(ctx, method, reqURL, headers, body)
+	if err != nil {
+		return err
+	}
+	defer func() { _ = resp.Body.Close() }()
+	return nil
+}
+
+func (s *ossGatewaySkillAssetStore) doSignedRequestRaw(ctx context.Context, method, reqURL string, headers map[string]string, body io.Reader) (*http.Response, error) {
+	req, err := http.NewRequestWithContext(ctx, method, reqURL, body)
+	if err != nil {
+		return nil, err
+	}
+	for k, v := range headers {
+		req.Header.Set(k, v)
+	}
+	resp, err := s.client.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	if resp.StatusCode < http.StatusOK || resp.StatusCode >= http.StatusMultipleChoices {
+		defer func() { _ = resp.Body.Close() }()
+		bodyBytes, _ := io.ReadAll(resp.Body)
+		return nil, errors.DefaultHTTPError(ctx, http.StatusInternalServerError, fmt.Sprintf("request object storage failed: status=%d body=%s", resp.StatusCode, strings.TrimSpace(string(bodyBytes))))
+	}
+	return resp, nil
 }
 
 func checksumSHA256(content []byte) string {
