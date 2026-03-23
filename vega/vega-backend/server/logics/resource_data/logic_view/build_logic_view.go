@@ -3,7 +3,7 @@
 // Licensed under the Apache License, Version 2.0.
 // See the LICENSE file in the project root for details.
 
-package mariadb
+package logic_view
 
 import (
 	"context"
@@ -36,8 +36,8 @@ func (c *MariaDBConnector) buildLogicViewSQLWithDepth(ctx context.Context, resou
 	}
 
 	// 1. 将节点索引化
-	nodes := make(map[string]*interfaces.DataScopeNode)
-	var outputNode *interfaces.DataScopeNode
+	nodes := make(map[string]*interfaces.LogicDefinitionNode)
+	var outputNode *interfaces.LogicDefinitionNode
 	for _, node := range resource.LogicDefinition {
 		nodes[node.ID] = node
 		if node.Type == interfaces.LogicDefinitionNodeType_Output {
@@ -58,7 +58,7 @@ func (c *MariaDBConnector) buildLogicViewSQLWithDepth(ctx context.Context, resou
 }
 
 func (c *MariaDBConnector) buildNodeSQL(ctx context.Context, nodeID string,
-	nodes map[string]*interfaces.DataScopeNode, depth int) (string, []any, error) {
+	nodes map[string]*interfaces.LogicDefinitionNode, depth int) (string, []any, error) {
 	node, ok := nodes[nodeID]
 	if !ok {
 		return "", nil, fmt.Errorf("node %s not found", nodeID)
@@ -80,7 +80,7 @@ func (c *MariaDBConnector) buildNodeSQL(ctx context.Context, nodeID string,
 
 // buildResourceNodeSQL 构建资源节点的 SQL
 func (c *MariaDBConnector) buildResourceNodeSQL(ctx context.Context,
-	node *interfaces.DataScopeNode, depth int) (string, []any, error) {
+	node *interfaces.LogicDefinitionNode, depth int) (string, []any, error) {
 
 	var cfg interfaces.ResourceNodeCfg
 	if err := mapstructure.Decode(node.Config, &cfg); err != nil {
@@ -173,8 +173,8 @@ func (c *MariaDBConnector) buildFilterSQL(ctx context.Context, filters *interfac
 }
 
 // buildJoinNodeSQL 构建 JOIN 节点的 SQL
-func (c *MariaDBConnector) buildJoinNodeSQL(ctx context.Context, node *interfaces.DataScopeNode,
-	nodes map[string]*interfaces.DataScopeNode, depth int) (string, []any, error) {
+func (c *MariaDBConnector) buildJoinNodeSQL(ctx context.Context, node *interfaces.LogicDefinitionNode,
+	nodes map[string]*interfaces.LogicDefinitionNode, depth int) (string, []any, error) {
 
 	var cfg interfaces.JoinNodeCfg
 	if err := mapstructure.Decode(node.Config, &cfg); err != nil {
@@ -267,8 +267,8 @@ func (c *MariaDBConnector) buildJoinNodeSQL(ctx context.Context, node *interface
 }
 
 // buildUnionNodeSQL 构建 UNION 节点的 SQL
-func (c *MariaDBConnector) buildUnionNodeSQL(ctx context.Context, node *interfaces.DataScopeNode,
-	nodes map[string]*interfaces.DataScopeNode, depth int) (string, []any, error) {
+func (c *MariaDBConnector) buildUnionNodeSQL(ctx context.Context, node *interfaces.LogicDefinitionNode,
+	nodes map[string]*interfaces.LogicDefinitionNode, depth int) (string, []any, error) {
 
 	var cfg interfaces.UnionNodeCfg
 	if err := mapstructure.Decode(node.Config, &cfg); err != nil {
@@ -330,8 +330,8 @@ func (c *MariaDBConnector) buildUnionNodeSQL(ctx context.Context, node *interfac
 }
 
 // buildSqlNodeSQL 构建自定义 SQL 节点
-func (c *MariaDBConnector) buildSqlNodeSQL(ctx context.Context, node *interfaces.DataScopeNode,
-	nodes map[string]*interfaces.DataScopeNode, depth int) (string, []any, error) {
+func (c *MariaDBConnector) buildSqlNodeSQL(ctx context.Context, node *interfaces.LogicDefinitionNode,
+	nodes map[string]*interfaces.LogicDefinitionNode, depth int) (string, []any, error) {
 
 	var cfg interfaces.SQLNodeCfg
 	if err := mapstructure.Decode(node.Config, &cfg); err != nil {

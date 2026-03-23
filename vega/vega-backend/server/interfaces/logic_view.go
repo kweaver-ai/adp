@@ -77,8 +77,8 @@ type LogicView struct {
 	FieldsMap map[string]*ViewProperty `json:"fields_map,omitempty" mapstructure:"-"`
 }
 
-// DataScopeNode 表示图中的节点
-type DataScopeNode struct {
+// LogicDefinitionNode 表示图中的节点
+type LogicDefinitionNode struct {
 	ID           string          `json:"id"`
 	Name         string          `json:"name"`
 	Type         string          `json:"type"`

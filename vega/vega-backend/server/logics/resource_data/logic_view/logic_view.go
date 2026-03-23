@@ -1,4 +1,4 @@
-package resource_data
+package logic_view
 
 import (
 	"context"
@@ -15,7 +15,7 @@ import (
 	"vega-backend/interfaces"
 )
 
-func (rds *resourceDataService) QueryLogicView(ctx context.Context, resource *interfaces.Resource,
+func QueryLogicView(ctx context.Context, resource *interfaces.Resource,
 	params *interfaces.ResourceDataQueryParams) ([]map[string]any, int64, []any, error) {
 
 	ctx, span := ar_trace.Tracer.Start(ctx, "Query logic view")

@@ -52,7 +52,7 @@ type Resource struct {
 	SchemaDefinition []*Property    `json:"schema_definition,omitempty"` // Schema定义
 
 	// 逻辑视图特有的字段
-	LogicDefinition []*DataScopeNode `json:"logic_definition,omitempty"` // 逻辑定义
+	LogicDefinition []*LogicDefinitionNode `json:"logic_definition,omitempty"` // 逻辑定义
 
 	Creator    AccountInfo `json:"creator"`
 	CreateTime int64       `json:"create_time"`
@@ -104,10 +104,10 @@ type ResourceRequest struct {
 
 	Status string `json:"status"`
 
-	Database         string           `json:"database,omitempty"`          // 所属数据库（实例级 Catalog 时填充）
-	SourceIdentifier string           `json:"source_identifier"`           // 源端标识（原始表名/路径）
-	SchemaDefinition []*Property      `json:"schema_definition,omitempty"` // Schema定义
-	LogicDefinition  []*DataScopeNode `json:"logic_definition,omitempty"`  // 逻辑定义
+	Database         string                 `json:"database,omitempty"`          // 所属数据库（实例级 Catalog 时填充）
+	SourceIdentifier string                 `json:"source_identifier"`           // 源端标识（原始表名/路径）
+	SchemaDefinition []*Property            `json:"schema_definition,omitempty"` // Schema定义
+	LogicDefinition  []*LogicDefinitionNode `json:"logic_definition,omitempty"`  // 逻辑定义
 
 	IfNameModify   bool      `json:"-"`
 	OriginResource *Resource `json:"-"`

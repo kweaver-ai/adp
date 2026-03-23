@@ -56,22 +56,22 @@ func validateLogicViewRequest(ctx context.Context, req *interfaces.ResourceReque
 
 }
 
-// 校验自定义视图配置
-func validateLogicDefinition(ctx context.Context, nodes []*interfaces.DataScopeNode) (outputFields []*interfaces.ViewProperty, err error) {
+// 校验逻辑视图定义
+func validateLogicDefinition(ctx context.Context, nodes []*interfaces.LogicDefinitionNode) (outputFields []*interfaces.ViewProperty, err error) {
 	if nodes == nil {
 		return nil, nil
 	}
 
 	if len(nodes) > 20 {
 		return nil, rest.NewHTTPError(ctx, http.StatusBadRequest, verrors.VegaBackend_LogicView_InvalidParameter_LogicDefinition).
-			WithErrorDetails("The data scope nodes cannot be more than 20")
+			WithErrorDetails("The logic definition nodes cannot be more than 20")
 	}
 
 	for _, node := range nodes {
 		// 检测 nodeType
 		if _, ok := interfaces.LogicDefinitionNodeTypeMap[node.Type]; !ok {
 			return nil, rest.NewHTTPError(ctx, http.StatusBadRequest, verrors.VegaBackend_LogicView_InvalidParameter_LogicDefinition).
-				WithErrorDetails("The data scope node type is invalid")
+				WithErrorDetails("The logic definition node type is invalid")
 		}
 
 		if node.Type == interfaces.LogicDefinitionNodeType_Output {

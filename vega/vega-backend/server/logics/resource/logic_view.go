@@ -100,7 +100,7 @@ func (rs *resourceService) validateLogicDefinition(ctx context.Context, view *in
 	return nil
 }
 
-func validateResourceNode(ctx context.Context, dvs *resourceService, node *interfaces.DataScopeNode,
+func validateResourceNode(ctx context.Context, dvs *resourceService, node *interfaces.LogicDefinitionNode,
 	dataScopeView map[string]*interfaces.Resource) error {
 	// 资源节点输入节点必须为空
 	if len(node.Inputs) != 0 {
@@ -177,7 +177,7 @@ func validateResourceNode(ctx context.Context, dvs *resourceService, node *inter
 	return nil
 }
 
-func validateJoinNode(ctx context.Context, node *interfaces.DataScopeNode, nodeMap map[string]struct{}) error {
+func validateJoinNode(ctx context.Context, node *interfaces.LogicDefinitionNode, nodeMap map[string]struct{}) error {
 	// 仅支持两个视图join
 	if len(node.Inputs) != 2 {
 		return rest.NewHTTPError(ctx, http.StatusBadRequest, verrors.VegaBackend_LogicView_InvalidParameter_LogicDefinition).
@@ -239,7 +239,7 @@ func validateJoinNode(ctx context.Context, node *interfaces.DataScopeNode, nodeM
 	return nil
 }
 
-func validateUnionNode(ctx context.Context, category string, node *interfaces.DataScopeNode, nodeMap map[string]struct{}) error {
+func validateUnionNode(ctx context.Context, category string, node *interfaces.LogicDefinitionNode, nodeMap map[string]struct{}) error {
 	// 当前仅支持两个视图union
 	if len(node.Inputs) < 2 {
 		return rest.NewHTTPError(ctx, http.StatusBadRequest, verrors.VegaBackend_LogicView_InvalidParameter_LogicDefinition).
@@ -299,7 +299,7 @@ func validateUnionNode(ctx context.Context, category string, node *interfaces.Da
 	return nil
 }
 
-func validateSqlNode(ctx context.Context, node *interfaces.DataScopeNode, nodeMap map[string]struct{}) error {
+func validateSqlNode(ctx context.Context, node *interfaces.LogicDefinitionNode, nodeMap map[string]struct{}) error {
 	// 输入节点不能为空
 	if len(node.Inputs) == 0 {
 		return rest.NewHTTPError(ctx, http.StatusBadRequest, verrors.VegaBackend_LogicView_InvalidParameter_LogicDefinition).
@@ -341,7 +341,7 @@ func validateSqlNode(ctx context.Context, node *interfaces.DataScopeNode, nodeMa
 	return nil
 }
 
-func validateOutputNode(ctx context.Context, node *interfaces.DataScopeNode, nodeMap map[string]struct{}) error {
+func validateOutputNode(ctx context.Context, node *interfaces.LogicDefinitionNode, nodeMap map[string]struct{}) error {
 	// 输入节点只能有一个
 	if len(node.Inputs) != 1 {
 		return rest.NewHTTPError(ctx, http.StatusBadRequest, verrors.VegaBackend_LogicView_InvalidParameter_LogicDefinition).
@@ -389,7 +389,6 @@ func validateOutputNode(ctx context.Context, node *interfaces.DataScopeNode, nod
 }
 
 // 相比handler层的校验，补充对过滤条件字段类型的校验
-// 后续扩充对字段类型和输入字段值是否匹配的校验
 func validateCond(ctx context.Context, cfg *interfaces.FilterCondCfg, fieldsMap map[string]*interfaces.Property) error {
 	if cfg == nil {
 		return nil
@@ -556,50 +555,3 @@ func validateCond(ctx context.Context, cfg *interfaces.FilterCondCfg, fieldsMap 
 
 	return nil
 }
-
-// func (rs *resourceService) getLogicViewSource(ctx context.Context, resource *interfaces.Resource) (*interfaces.Resource, error) {
-// 	// 给每个原子视图添加对应的技术名称（DSL类视图技术名称对应的是来源索引库），uniquery查询数据时需要
-// 	for _, node := range resource.LogicDefinition {
-// 		if node.Type != interfaces.DataScopeNodeType_Resource {
-// 			continue
-// 		}
-
-// 		var viewID string
-// 		var ok bool
-// 		if viewID, ok = node.Config["resource_id"].(string); !ok {
-// 			return nil, rest.NewHTTPError(ctx, http.StatusInternalServerError, rest.PublicError_InternalServerError).
-// 				WithErrorDetails("resource_id is not string")
-// 		}
-
-// 		// if includeDataScopeViews {
-
-// 		// 获取原子视图的信息
-// 		resource, err := rs.GetByID(ctx, viewID)
-// 		if err != nil {
-// 			return nil, err
-// 		}
-
-// 		// fieldsMap := make(map[string]*interfaces.ViewProperty)
-// 		// for _, vf := range resource.SchemaDefinition {
-// 		// 	fieldsMap[vf.Name] = &interfaces.ViewProperty{
-// 		// 		Property:    *vf,
-// 		// 		SrcNodeID:   node.ID,
-// 		// 		SrcNodeName: node.Title,
-// 		// 	}
-// 		// }
-// 		// resource.FieldsMap = fieldsMap
-
-// 		node.Config["resource"] = resource
-// 		// }
-// 	}
-
-// 	// fieldsMap := make(map[string]*interfaces.ViewProperty)
-// 	// for _, vf := range resource.SchemaDefinition {
-// 	// 	// name 作为 key
-// 	// 	fieldsMap[vf.Name] = vf
-// 	// }
-
-// 	// resource.FieldsMap = fieldsMap
-
-// 	return resource, nil
-// }
