@@ -84,11 +84,13 @@ func NewOSSGatewayBackendClient() interfaces.OSSGatewayBackendClient {
 			stopCh:          make(chan struct{}),
 			logger:          config.NewConfigLoader().GetLogger(),
 		}
-		if err := client.initStorageID(context.Background()); err != nil {
-			return
+		if err := client.initStorageID(context.Background()); err == nil {
+			client.startStorageRefresh()
+			client.isReady = true
+		} else {
+			client.isReady = false
+			client.logger.Errorf("init storage id failed, baseURL: %s, err: %v", client.baseURL, err)
 		}
-		client.startStorageRefresh()
-		client.isReady = true
 		ossClient = client
 	})
 	return ossClient

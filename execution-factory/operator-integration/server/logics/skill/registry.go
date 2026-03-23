@@ -102,14 +102,11 @@ func (r *skillRegistry) RegisterSkill(ctx context.Context, req *interfaces.Regis
 		return nil, fmt.Errorf("get tx failed: %w", err)
 	}
 	defer func() {
-		if tx == nil {
-			return
-		}
 		if err != nil {
 			_ = tx.Rollback()
-			return
+		} else {
+			_ = tx.Commit()
 		}
-		_ = tx.Commit()
 	}()
 	// 插入技能
 	skillID, err := r.skillRepo.InsertSkill(ctx, tx, skill)
@@ -117,9 +114,9 @@ func (r *skillRegistry) RegisterSkill(ctx context.Context, req *interfaces.Regis
 		return nil, err
 	}
 	if len(assets) > 0 {
-		fileIndices, buildErr := r.persistSkillAssets(ctx, skillID, assets)
-		if buildErr != nil {
-			err = buildErr
+		var fileIndices []*model.SkillFileIndexDB
+		fileIndices, err = r.persistSkillAssets(ctx, skillID, assets)
+		if err != nil {
 			return nil, err
 		}
 		if err = r.fileRepo.BatchInsertSkillFiles(ctx, tx, fileIndices); err != nil {
@@ -197,14 +194,11 @@ func (r *skillRegistry) DeleteSkill(ctx context.Context, req *interfaces.DeleteS
 		return fmt.Errorf("get tx failed: %w", err)
 	}
 	defer func() {
-		if tx == nil {
-			return
-		}
 		if err != nil {
 			_ = tx.Rollback()
-			return
+		} else {
+			_ = tx.Commit()
 		}
-		_ = tx.Commit()
 	}()
 
 	// 将技能标记为删除中，TODO：需要设计一个单独的协程用于处理删除中断的兜底策略
@@ -218,12 +212,12 @@ func (r *skillRegistry) DeleteSkill(ctx context.Context, req *interfaces.DeleteS
 	}
 	// 先删除对象存储中的记录，再删除数据库中的记录
 	for _, file := range files {
-		if removeErr := r.assetStore.Delete(ctx, &interfaces.OssObject{
+		if err = r.assetStore.Delete(ctx, &interfaces.OssObject{
 			StorageID:  file.StorageID,
 			StorageKey: file.StorageKey,
-		}); removeErr != nil {
-			r.Logger.WithContext(ctx).Warnf("delete file failed, err:%s", removeErr.Error())
-			return removeErr
+		}); err != nil {
+			r.Logger.WithContext(ctx).Warnf("delete file failed, err:%s", err.Error())
+			return err
 		}
 	}
 	if err = r.fileRepo.DeleteSkillFileBySkillID(ctx, tx, req.SkillID); err != nil {
@@ -449,7 +443,7 @@ func (r *skillRegistry) assembleSkillSummaryList(ctx context.Context, skillDBs [
 	var userIDs, skillIDs []string
 	skillSummaries = []*interfaces.SkillSummary{}
 	for _, skill := range skillDBs {
-		skillSummaries = append(skillSummaries, convertSkillSummary(skill))
+		skillSummaries = append(skillSummaries, r.convertSkillSummary(skill))
 		userIDs = append(userIDs, skill.CreateUser, skill.UpdateUser)
 		skillIDs = append(skillIDs, skill.SkillID)
 	}
@@ -461,6 +455,8 @@ func (r *skillRegistry) assembleSkillSummaryList(ctx context.Context, skillDBs [
 	for _, skill := range skillSummaries {
 		skill.CreateUser = utils.GetValueOrDefault(userMap, skill.UpdateUser, interfaces.UnknownUser)
 		skill.UpdateUser = utils.GetValueOrDefault(userMap, skill.UpdateUser, interfaces.UnknownUser)
+		skill.BusinessDomainID = resourceToBdMap[skill.SkillID]
+		skill.CategoryName = r.CategoryManager.GetCategoryName(ctx, skill.Category)
 	}
 	return
 }
@@ -523,7 +519,7 @@ func (r *skillRegistry) querySkillListPage(ctx context.Context, filter map[strin
 	}
 	businessDomainStr, _ := infracommon.GetBusinessDomainFromCtx(ctx)
 	businessDomainIDs := strings.Split(businessDomainStr, ",")
-	resourceToBdMap, err = r.BusinessDomainService.BatchResourceList(ctx, businessDomainIDs, interfaces.AuthResourceTypeOperator)
+	resourceToBdMap, err = r.BusinessDomainService.BatchResourceList(ctx, businessDomainIDs, interfaces.AuthResourceTypeSkill)
 	if err != nil {
 		return
 	}
@@ -704,7 +700,7 @@ func convertSkillDetail(skill *model.SkillRepositoryDB) *interfaces.SkillInfo {
 	}
 }
 
-func convertSkillSummary(skill *model.SkillRepositoryDB) *interfaces.SkillSummary {
+func (r *skillRegistry) convertSkillSummary(skill *model.SkillRepositoryDB) *interfaces.SkillSummary {
 	return &interfaces.SkillSummary{
 		SkillID:     skill.SkillID,
 		Name:        skill.Name,
@@ -716,6 +712,7 @@ func convertSkillSummary(skill *model.SkillRepositoryDB) *interfaces.SkillSummar
 		CreateTime:  skill.CreateTime,
 		UpdateUser:  skill.UpdateUser,
 		UpdateTime:  skill.UpdateTime,
+		Category:    interfaces.BizCategory(skill.Category),
 	}
 }
 
