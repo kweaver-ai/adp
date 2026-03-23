@@ -1516,18 +1516,18 @@ func validateCond(ctx context.Context, cfg *cond.CondCfg) error {
 			return rest.NewHTTPError(ctx, http.StatusBadRequest, uerrors.Uniquery_InvalidParameter_FilterValue).
 				WithErrorDetails("[in not_in] operation's value should contains at least 1 value")
 		}
-	case cond.OperationRange, cond.OperationOutRange, cond.OperationBefore, cond.OperationBetween:
+	case cond.OperationRange, cond.OperationOutRange, cond.OperationBetween:
 		// 当 operation 是 range 时，value 是个由范围的下边界和上边界组成的长度为 2 的数值型数组
 		// 当 operation 是 out_range 时，value 是个长度为 2 的数值类型的数组，查询的数据范围为 (-inf, value[0]) || [value[1], +inf)
 		v, ok := cfg.Value.([]interface{})
 		if !ok {
 			return rest.NewHTTPError(ctx, http.StatusBadRequest, uerrors.Uniquery_InvalidParameter_FilterValue).
-				WithErrorDetails("[range, out_range] operation's value must be an array")
+				WithErrorDetails("[range, out_range, between] operation's value must be an array")
 		}
 
 		if len(v) != 2 {
 			return rest.NewHTTPError(ctx, http.StatusBadRequest, uerrors.Uniquery_InvalidParameter_FilterValue).
-				WithErrorDetails("[range, out_range] operation's value must contain 2 values")
+				WithErrorDetails("[range, out_range, between] operation's value must contain 2 values")
 		}
 
 	}
