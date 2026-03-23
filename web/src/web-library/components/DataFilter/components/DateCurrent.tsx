@@ -14,22 +14,22 @@ const DateCurrent = (props: any) => {
   }, []);
 
   useEffect(() => {
-    if (!value) onChange('%Y-%m-%d');
+    if (!value) onChange('day');
   }, []);
 
   // 国际化未加载完成时返回空数组，避免选项显示空白
   const options = i18nLoaded
     ? [
-        { value: '%Y', label: intl.get('DataFilter.year') },
-        { value: '%Y-%m', label: intl.get('DataFilter.month') },
-        { value: '%x-%v', label: intl.get('DataFilter.week') },
-        { value: '%Y-%m-%d', label: intl.get('DataFilter.day') },
-        { value: '%Y-%m-%d %H', label: intl.get('DataFilter.hour') },
-        { value: '%Y-%m-%d %H:%i', label: intl.get('DataFilter.minute') },
+        { value: 'year', label: intl.get('DataFilter.year') },
+        { value: 'month', label: intl.get('DataFilter.month') },
+        { value: 'week', label: intl.get('DataFilter.week') },
+        { value: 'day', label: intl.get('DataFilter.day') },
+        { value: 'hour', label: intl.get('DataFilter.hour') },
+        { value: 'minute', label: intl.get('DataFilter.minute') },
       ]
     : [];
 
-  return <Select defaultValue="%Y-%m-%d" options={options} value={value} onChange={onChange} />;
+  return <Select defaultValue="day" options={options} value={value} onChange={onChange} />;
 };
 
 export default DateCurrent;
