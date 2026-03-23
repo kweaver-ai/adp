@@ -11,6 +11,7 @@ import (
 type SkillFileIndexDB struct {
 	ID            int64  `json:"id" db:"f_id"`
 	SkillID       string `json:"skill_id" db:"f_skill_id"`
+	SkillVersion  string `json:"skill_version" db:"f_skill_version"`
 	RelPath       string `json:"rel_path" db:"f_rel_path"`
 	PathHash      string `json:"path_hash" db:"f_path_hash"`
 	StorageID     string `json:"storage_id" db:"f_storage_id"`
@@ -31,9 +32,9 @@ type ISkillFileIndex interface {
 	InsertSkillFile(ctx context.Context, tx *sql.Tx, file *SkillFileIndexDB) error
 	BatchInsertSkillFiles(ctx context.Context, tx *sql.Tx, files []*SkillFileIndexDB) error
 	UpdateSkillFile(ctx context.Context, tx *sql.Tx, file *SkillFileIndexDB) error
-	SelectSkillFileBySkillID(ctx context.Context, tx *sql.Tx, skillID string) (files []*SkillFileIndexDB, err error)
-	SelectSkillFileByPath(ctx context.Context, tx *sql.Tx, skillID, relPath string) (file *SkillFileIndexDB, err error)
-	SelectSkillFileByPathHash(ctx context.Context, tx *sql.Tx, skillID, pathHash string) (file *SkillFileIndexDB, err error)
-	DeleteSkillFileBySkillID(ctx context.Context, tx *sql.Tx, skillID string) error
-	DeleteSkillFileByPath(ctx context.Context, tx *sql.Tx, skillID, relPath string) error
+	SelectSkillFileBySkillID(ctx context.Context, tx *sql.Tx, skillID, version string) (files []*SkillFileIndexDB, err error)
+	SelectSkillFileByPath(ctx context.Context, tx *sql.Tx, skillID, version, relPath string) (file *SkillFileIndexDB, err error)
+	SelectSkillFileByPathHash(ctx context.Context, tx *sql.Tx, skillID, version, pathHash string) (file *SkillFileIndexDB, err error)
+	DeleteSkillFileBySkillID(ctx context.Context, tx *sql.Tx, skillID, version string) error
+	DeleteSkillFileByPath(ctx context.Context, tx *sql.Tx, skillID, version, relPath string) error
 }

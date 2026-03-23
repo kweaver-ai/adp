@@ -13,6 +13,9 @@ const (
 	DefaultPage = 1
 	// MaxPageSize 最大每页大小
 	MaxPageSize = 1000
+
+	// OSSGatewayPrefix OSS 网关技能资产前缀
+	OSSGatewayPrefix = "execution-factory"
 )
 
 var (

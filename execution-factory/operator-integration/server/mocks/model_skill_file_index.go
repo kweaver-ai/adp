@@ -57,31 +57,31 @@ func (mr *MockISkillFileIndexMockRecorder) BatchInsertSkillFiles(ctx, tx, files 
 }
 
 // DeleteSkillFileByPath mocks base method.
-func (m *MockISkillFileIndex) DeleteSkillFileByPath(ctx context.Context, tx *sql.Tx, skillID, relPath string) error {
+func (m *MockISkillFileIndex) DeleteSkillFileByPath(ctx context.Context, tx *sql.Tx, skillID, version, relPath string) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "DeleteSkillFileByPath", ctx, tx, skillID, relPath)
+	ret := m.ctrl.Call(m, "DeleteSkillFileByPath", ctx, tx, skillID, version, relPath)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // DeleteSkillFileByPath indicates an expected call of DeleteSkillFileByPath.
-func (mr *MockISkillFileIndexMockRecorder) DeleteSkillFileByPath(ctx, tx, skillID, relPath any) *gomock.Call {
+func (mr *MockISkillFileIndexMockRecorder) DeleteSkillFileByPath(ctx, tx, skillID, version, relPath any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteSkillFileByPath", reflect.TypeOf((*MockISkillFileIndex)(nil).DeleteSkillFileByPath), ctx, tx, skillID, relPath)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteSkillFileByPath", reflect.TypeOf((*MockISkillFileIndex)(nil).DeleteSkillFileByPath), ctx, tx, skillID, version, relPath)
 }
 
 // DeleteSkillFileBySkillID mocks base method.
-func (m *MockISkillFileIndex) DeleteSkillFileBySkillID(ctx context.Context, tx *sql.Tx, skillID string) error {
+func (m *MockISkillFileIndex) DeleteSkillFileBySkillID(ctx context.Context, tx *sql.Tx, skillID, version string) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "DeleteSkillFileBySkillID", ctx, tx, skillID)
+	ret := m.ctrl.Call(m, "DeleteSkillFileBySkillID", ctx, tx, skillID, version)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // DeleteSkillFileBySkillID indicates an expected call of DeleteSkillFileBySkillID.
-func (mr *MockISkillFileIndexMockRecorder) DeleteSkillFileBySkillID(ctx, tx, skillID any) *gomock.Call {
+func (mr *MockISkillFileIndexMockRecorder) DeleteSkillFileBySkillID(ctx, tx, skillID, version any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteSkillFileBySkillID", reflect.TypeOf((*MockISkillFileIndex)(nil).DeleteSkillFileBySkillID), ctx, tx, skillID)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteSkillFileBySkillID", reflect.TypeOf((*MockISkillFileIndex)(nil).DeleteSkillFileBySkillID), ctx, tx, skillID, version)
 }
 
 // InsertSkillFile mocks base method.
@@ -99,48 +99,48 @@ func (mr *MockISkillFileIndexMockRecorder) InsertSkillFile(ctx, tx, file any) *g
 }
 
 // SelectSkillFileByPath mocks base method.
-func (m *MockISkillFileIndex) SelectSkillFileByPath(ctx context.Context, tx *sql.Tx, skillID, relPath string) (*model.SkillFileIndexDB, error) {
+func (m *MockISkillFileIndex) SelectSkillFileByPath(ctx context.Context, tx *sql.Tx, skillID, version, relPath string) (*model.SkillFileIndexDB, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "SelectSkillFileByPath", ctx, tx, skillID, relPath)
+	ret := m.ctrl.Call(m, "SelectSkillFileByPath", ctx, tx, skillID, version, relPath)
 	ret0, _ := ret[0].(*model.SkillFileIndexDB)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // SelectSkillFileByPath indicates an expected call of SelectSkillFileByPath.
-func (mr *MockISkillFileIndexMockRecorder) SelectSkillFileByPath(ctx, tx, skillID, relPath any) *gomock.Call {
+func (mr *MockISkillFileIndexMockRecorder) SelectSkillFileByPath(ctx, tx, skillID, version, relPath any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SelectSkillFileByPath", reflect.TypeOf((*MockISkillFileIndex)(nil).SelectSkillFileByPath), ctx, tx, skillID, relPath)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SelectSkillFileByPath", reflect.TypeOf((*MockISkillFileIndex)(nil).SelectSkillFileByPath), ctx, tx, skillID, version, relPath)
 }
 
 // SelectSkillFileByPathHash mocks base method.
-func (m *MockISkillFileIndex) SelectSkillFileByPathHash(ctx context.Context, tx *sql.Tx, skillID, pathHash string) (*model.SkillFileIndexDB, error) {
+func (m *MockISkillFileIndex) SelectSkillFileByPathHash(ctx context.Context, tx *sql.Tx, skillID, version, pathHash string) (*model.SkillFileIndexDB, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "SelectSkillFileByPathHash", ctx, tx, skillID, pathHash)
+	ret := m.ctrl.Call(m, "SelectSkillFileByPathHash", ctx, tx, skillID, version, pathHash)
 	ret0, _ := ret[0].(*model.SkillFileIndexDB)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // SelectSkillFileByPathHash indicates an expected call of SelectSkillFileByPathHash.
-func (mr *MockISkillFileIndexMockRecorder) SelectSkillFileByPathHash(ctx, tx, skillID, pathHash any) *gomock.Call {
+func (mr *MockISkillFileIndexMockRecorder) SelectSkillFileByPathHash(ctx, tx, skillID, version, pathHash any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SelectSkillFileByPathHash", reflect.TypeOf((*MockISkillFileIndex)(nil).SelectSkillFileByPathHash), ctx, tx, skillID, pathHash)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SelectSkillFileByPathHash", reflect.TypeOf((*MockISkillFileIndex)(nil).SelectSkillFileByPathHash), ctx, tx, skillID, version, pathHash)
 }
 
 // SelectSkillFileBySkillID mocks base method.
-func (m *MockISkillFileIndex) SelectSkillFileBySkillID(ctx context.Context, tx *sql.Tx, skillID string) ([]*model.SkillFileIndexDB, error) {
+func (m *MockISkillFileIndex) SelectSkillFileBySkillID(ctx context.Context, tx *sql.Tx, skillID, version string) ([]*model.SkillFileIndexDB, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "SelectSkillFileBySkillID", ctx, tx, skillID)
+	ret := m.ctrl.Call(m, "SelectSkillFileBySkillID", ctx, tx, skillID, version)
 	ret0, _ := ret[0].([]*model.SkillFileIndexDB)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // SelectSkillFileBySkillID indicates an expected call of SelectSkillFileBySkillID.
-func (mr *MockISkillFileIndexMockRecorder) SelectSkillFileBySkillID(ctx, tx, skillID any) *gomock.Call {
+func (mr *MockISkillFileIndexMockRecorder) SelectSkillFileBySkillID(ctx, tx, skillID, version any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SelectSkillFileBySkillID", reflect.TypeOf((*MockISkillFileIndex)(nil).SelectSkillFileBySkillID), ctx, tx, skillID)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SelectSkillFileBySkillID", reflect.TypeOf((*MockISkillFileIndex)(nil).SelectSkillFileBySkillID), ctx, tx, skillID, version)
 }
 
 // UpdateSkillFile mocks base method.

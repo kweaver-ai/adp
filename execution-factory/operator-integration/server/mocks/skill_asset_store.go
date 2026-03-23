@@ -86,9 +86,9 @@ func (mr *MockskillAssetStoreMockRecorder) GetDownloadURL(ctx, object any) *gomo
 }
 
 // Upload mocks base method.
-func (m *MockskillAssetStore) Upload(ctx context.Context, skillID, relPath string, content []byte) (*interfaces.OssObject, string, error) {
+func (m *MockskillAssetStore) Upload(ctx context.Context, skillID, version, relPath string, content []byte) (*interfaces.OssObject, string, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Upload", ctx, skillID, relPath, content)
+	ret := m.ctrl.Call(m, "Upload", ctx, skillID, version, relPath, content)
 	ret0, _ := ret[0].(*interfaces.OssObject)
 	ret1, _ := ret[1].(string)
 	ret2, _ := ret[2].(error)
@@ -96,7 +96,7 @@ func (m *MockskillAssetStore) Upload(ctx context.Context, skillID, relPath strin
 }
 
 // Upload indicates an expected call of Upload.
-func (mr *MockskillAssetStoreMockRecorder) Upload(ctx, skillID, relPath, content any) *gomock.Call {
+func (mr *MockskillAssetStoreMockRecorder) Upload(ctx, skillID, version, relPath, content any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Upload", reflect.TypeOf((*MockskillAssetStore)(nil).Upload), ctx, skillID, relPath, content)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Upload", reflect.TypeOf((*MockskillAssetStore)(nil).Upload), ctx, skillID, version, relPath, content)
 }

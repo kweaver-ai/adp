@@ -51,6 +51,7 @@ func (s *skillFileIndexDB) InsertSkillFile(ctx context.Context, tx *sql.Tx, file
 	file.UpdateTime = now
 	_, err := orm.Insert().Into(tbSkillFileIndex).Values(map[string]interface{}{
 		"f_skill_id":       file.SkillID,
+		"f_skill_version":  file.SkillVersion,
 		"f_rel_path":       file.RelPath,
 		"f_path_hash":      file.PathHash,
 		"f_storage_id":     file.StorageID,
@@ -88,27 +89,27 @@ func (s *skillFileIndexDB) UpdateSkillFile(ctx context.Context, tx *sql.Tx, file
 		"f_mime_type":      file.MimeType,
 		"f_size":           file.Size,
 		"f_update_time":    file.UpdateTime,
-	}).WhereEq("f_skill_id", file.SkillID).WhereEq("f_rel_path", file.RelPath).Execute(ctx)
+	}).WhereEq("f_skill_id", file.SkillID).WhereEq("f_skill_version", file.SkillVersion).WhereEq("f_rel_path", file.RelPath).Execute(ctx)
 	return err
 }
 
-func (s *skillFileIndexDB) SelectSkillFileBySkillID(ctx context.Context, tx *sql.Tx, skillID string) (files []*model.SkillFileIndexDB, err error) {
+func (s *skillFileIndexDB) SelectSkillFileBySkillID(ctx context.Context, tx *sql.Tx, skillID, version string) (files []*model.SkillFileIndexDB, err error) {
 	orm := s.orm
 	if tx != nil {
 		orm = s.orm.WithTx(tx)
 	}
 	files = []*model.SkillFileIndexDB{}
-	err = orm.Select().From(tbSkillFileIndex).WhereEq("f_skill_id", skillID).Get(ctx, &files)
+	err = orm.Select().From(tbSkillFileIndex).WhereEq("f_skill_id", skillID).WhereEq("f_skill_version", version).Get(ctx, &files)
 	return files, err
 }
 
-func (s *skillFileIndexDB) SelectSkillFileByPath(ctx context.Context, tx *sql.Tx, skillID, relPath string) (file *model.SkillFileIndexDB, err error) {
+func (s *skillFileIndexDB) SelectSkillFileByPath(ctx context.Context, tx *sql.Tx, skillID, version, relPath string) (file *model.SkillFileIndexDB, err error) {
 	orm := s.orm
 	if tx != nil {
 		orm = s.orm.WithTx(tx)
 	}
 	file = &model.SkillFileIndexDB{}
-	err = orm.Select().From(tbSkillFileIndex).WhereEq("f_skill_id", skillID).WhereEq("f_rel_path", relPath).First(ctx, file)
+	err = orm.Select().From(tbSkillFileIndex).WhereEq("f_skill_id", skillID).WhereEq("f_skill_version", version).WhereEq("f_rel_path", relPath).First(ctx, file)
 	if err == sql.ErrNoRows {
 		return nil, nil
 	}
@@ -118,13 +119,13 @@ func (s *skillFileIndexDB) SelectSkillFileByPath(ctx context.Context, tx *sql.Tx
 	return file, nil
 }
 
-func (s *skillFileIndexDB) SelectSkillFileByPathHash(ctx context.Context, tx *sql.Tx, skillID, pathHash string) (file *model.SkillFileIndexDB, err error) {
+func (s *skillFileIndexDB) SelectSkillFileByPathHash(ctx context.Context, tx *sql.Tx, skillID, version, pathHash string) (file *model.SkillFileIndexDB, err error) {
 	orm := s.orm
 	if tx != nil {
 		orm = s.orm.WithTx(tx)
 	}
 	file = &model.SkillFileIndexDB{}
-	err = orm.Select().From(tbSkillFileIndex).WhereEq("f_skill_id", skillID).WhereEq("f_path_hash", pathHash).First(ctx, file)
+	err = orm.Select().From(tbSkillFileIndex).WhereEq("f_skill_id", skillID).WhereEq("f_skill_version", version).WhereEq("f_path_hash", pathHash).First(ctx, file)
 	if err == sql.ErrNoRows {
 		return nil, nil
 	}
@@ -134,20 +135,20 @@ func (s *skillFileIndexDB) SelectSkillFileByPathHash(ctx context.Context, tx *sq
 	return file, nil
 }
 
-func (s *skillFileIndexDB) DeleteSkillFileBySkillID(ctx context.Context, tx *sql.Tx, skillID string) error {
+func (s *skillFileIndexDB) DeleteSkillFileBySkillID(ctx context.Context, tx *sql.Tx, skillID string, version string) error {
 	orm := s.orm
 	if tx != nil {
 		orm = s.orm.WithTx(tx)
 	}
-	_, err := orm.Delete().From(tbSkillFileIndex).WhereEq("f_skill_id", skillID).Execute(ctx)
+	_, err := orm.Delete().From(tbSkillFileIndex).WhereEq("f_skill_id", skillID).WhereEq("f_skill_version", version).Execute(ctx)
 	return err
 }
 
-func (s *skillFileIndexDB) DeleteSkillFileByPath(ctx context.Context, tx *sql.Tx, skillID, relPath string) error {
+func (s *skillFileIndexDB) DeleteSkillFileByPath(ctx context.Context, tx *sql.Tx, skillID, version, relPath string) error {
 	orm := s.orm
 	if tx != nil {
 		orm = s.orm.WithTx(tx)
 	}
-	_, err := orm.Delete().From(tbSkillFileIndex).WhereEq("f_skill_id", skillID).WhereEq("f_rel_path", relPath).Execute(ctx)
+	_, err := orm.Delete().From(tbSkillFileIndex).WhereEq("f_skill_id", skillID).WhereEq("f_skill_version", version).WhereEq("f_rel_path", relPath).Execute(ctx)
 	return err
 }

@@ -115,7 +115,7 @@ func (r *skillRegistry) RegisterSkill(ctx context.Context, req *interfaces.Regis
 	}
 	if len(assets) > 0 {
 		var fileIndices []*model.SkillFileIndexDB
-		fileIndices, err = r.persistSkillAssets(ctx, skillID, assets)
+		fileIndices, err = r.persistSkillAssets(ctx, skillID, skill.Version, assets)
 		if err != nil {
 			return nil, err
 		}
@@ -206,7 +206,7 @@ func (r *skillRegistry) DeleteSkill(ctx context.Context, req *interfaces.DeleteS
 		return err
 	}
 	// 查找索引文件
-	files, err := r.fileRepo.SelectSkillFileBySkillID(ctx, tx, req.SkillID)
+	files, err := r.fileRepo.SelectSkillFileBySkillID(ctx, tx, req.SkillID, skill.Version)
 	if err != nil {
 		return err
 	}
@@ -220,7 +220,7 @@ func (r *skillRegistry) DeleteSkill(ctx context.Context, req *interfaces.DeleteS
 			return err
 		}
 	}
-	if err = r.fileRepo.DeleteSkillFileBySkillID(ctx, tx, req.SkillID); err != nil {
+	if err = r.fileRepo.DeleteSkillFileBySkillID(ctx, tx, req.SkillID, skill.Version); err != nil {
 		return err
 	}
 	if err = r.skillRepo.DeleteSkillByID(ctx, tx, req.SkillID); err != nil {
@@ -342,7 +342,7 @@ func (r *skillRegistry) DownloadSkill(ctx context.Context, req *interfaces.Downl
 	if skill == nil || skill.IsDeleted {
 		return nil, fmt.Errorf("skill not found: %s", req.SkillID)
 	}
-	files, err := r.fileRepo.SelectSkillFileBySkillID(ctx, nil, req.SkillID)
+	files, err := r.fileRepo.SelectSkillFileBySkillID(ctx, nil, req.SkillID, skill.Version)
 	if err != nil {
 		return nil, err
 	}
@@ -440,12 +440,11 @@ func (r *skillRegistry) QuerySkillList(ctx context.Context, req *interfaces.Quer
 
 // 组装技能返回信息列表
 func (r *skillRegistry) assembleSkillSummaryList(ctx context.Context, skillDBs []*model.SkillRepositoryDB, resourceToBdMap map[string]string) (skillSummaries []*interfaces.SkillSummary, err error) {
-	var userIDs, skillIDs []string
+	var userIDs []string
 	skillSummaries = []*interfaces.SkillSummary{}
 	for _, skill := range skillDBs {
 		skillSummaries = append(skillSummaries, r.convertSkillSummary(skill))
 		userIDs = append(userIDs, skill.CreateUser, skill.UpdateUser)
-		skillIDs = append(skillIDs, skill.SkillID)
 	}
 	// 获取用户名称
 	userMap, err := r.UserMgnt.GetUsersName(ctx, userIDs)
@@ -716,15 +715,16 @@ func (r *skillRegistry) convertSkillSummary(skill *model.SkillRepositoryDB) *int
 	}
 }
 
-func (r *skillRegistry) persistSkillAssets(ctx context.Context, skillID string, assets []*skillAsset) ([]*model.SkillFileIndexDB, error) {
+func (r *skillRegistry) persistSkillAssets(ctx context.Context, skillID, version string, assets []*skillAsset) ([]*model.SkillFileIndexDB, error) {
 	indices := make([]*model.SkillFileIndexDB, 0, len(assets))
 	for _, asset := range assets {
-		object, checksum, err := r.assetStore.Upload(ctx, skillID, asset.RelPath, asset.Content)
+		object, checksum, err := r.assetStore.Upload(ctx, skillID, version, asset.RelPath, asset.Content)
 		if err != nil {
 			return nil, err
 		}
 		indices = append(indices, &model.SkillFileIndexDB{
 			SkillID:       skillID,
+			SkillVersion:  version,
 			RelPath:       asset.RelPath,
 			PathHash:      utils.MD5(asset.RelPath),
 			StorageID:     object.StorageID,

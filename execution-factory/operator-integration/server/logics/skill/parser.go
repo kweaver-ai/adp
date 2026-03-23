@@ -10,6 +10,7 @@ import (
 	"strings"
 
 	"github.com/go-playground/validator/v10"
+	"github.com/google/uuid"
 	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/interfaces"
 	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/interfaces/model"
 	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/utils"
@@ -21,7 +22,6 @@ type skillParser struct{}
 type skillFrontmatter struct {
 	Name         string                 `yaml:"name" validate:"required"`
 	Description  string                 `yaml:"description" validate:"required"`
-	Version      string                 `yaml:"version"`
 	Dependencies map[string]interface{} `yaml:"dependencies"`
 	Metadata     map[string]interface{} `yaml:"metadata"`
 }
@@ -87,16 +87,13 @@ func (p *skillParser) parseSkillContent(content string, req *interfaces.Register
 		Name:         fm.Name,
 		Description:  fm.Description,
 		SkillContent: strings.TrimSpace(parts[2]),
-		Version:      fm.Version,
+		Version:      uuid.New().String(),
 		Status:       interfaces.BizStatusUnpublish.String(),
 		Source:       req.Source,
 		Dependencies: utils.ObjectToJSON(fm.Dependencies),
 		ExtendInfo:   utils.ObjectToJSON(fm.Metadata),
 		CreateUser:   req.UserID,
 		UpdateUser:   req.UserID,
-	}
-	if skill.Version == "" {
-		skill.Version = "1.0.0"
 	}
 	return skill, nil
 }
