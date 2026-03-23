@@ -76,6 +76,7 @@ func (s *skillRepositoryDB) InsertSkill(ctx context.Context, tx *sql.Tx, skill *
 		"f_delete_time":   skill.DeleteTime,
 		"f_delete_user":   skill.DeleteUser,
 		"f_category":      skill.Category,
+		"f_is_deleted":    skill.IsDeleted,
 	}).Execute(ctx)
 	if err != nil {
 		return "", err
@@ -111,6 +112,7 @@ func (s *skillRepositoryDB) UpdateSkill(ctx context.Context, tx *sql.Tx, skill *
 		"f_delete_time":   skill.DeleteTime,
 		"f_delete_user":   skill.DeleteUser,
 		"f_category":      skill.Category,
+		"f_is_deleted":    skill.IsDeleted,
 	}).WhereEq("f_skill_id", skill.SkillID).Execute(ctx)
 	return err
 }

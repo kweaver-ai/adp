@@ -11,12 +11,12 @@ import (
 	"strings"
 	"time"
 
+	"github.com/kweaver-ai/TelemetrySDK-Go/span/v2/field"
 	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/infra/common"
 	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/infra/errors"
 	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/infra/rest"
 	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/interfaces"
 	o11y "github.com/kweaver-ai/kweaver-go-lib/observability"
-	"github.com/kweaver-ai/TelemetrySDK-Go/span/v2/field"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/trace"
@@ -129,11 +129,15 @@ func middlewareRequestLog(logger interfaces.Logger) gin.HandlerFunc {
 		}
 		c.Request.Body = io.NopCloser(bytes.NewBuffer(req))
 		c.Next()
+		var requestBody interface{}
+		if c.Request.Header.Get("Content-Type") == "application/json" {
+			requestBody = byteToInterface(req)
+		}
 		logger.WithContext(c.Request.Context()).Infof("HTTP API Log : %v", field.MallocJsonField(apiLogModel{
 			URI:          c.Request.RequestURI,
 			Method:       c.Request.Method,
 			RemoteAddr:   c.Request.RemoteAddr,
-			RequestBody:  byteToInterface(req),
+			RequestBody:  requestBody,
 			ResponseCode: c.Writer.Status(),
 			Latency:      float64(time.Since(now).Nanoseconds()) / 1e6, //nolint:mnd
 		}).Data)

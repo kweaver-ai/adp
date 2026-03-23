@@ -337,7 +337,8 @@ CREATE TABLE IF NOT EXISTS `t_skill_repository` (
     `f_update_time` bigint(20) NOT NULL COMMENT '编辑时间',
     `f_delete_user` varchar(50) NOT NULL DEFAULT '' COMMENT '删除者',
     `f_delete_time` bigint(20) NOT NULL DEFAULT 0 COMMENT '删除时间',
-    `f_category` varchar(50) DEFAULT 0 COMMENT '工具箱分类, 数据处理/算法模型',
+    `f_category` varchar(50) DEFAULT '' COMMENT '工具箱分类, 数据处理/算法模型',
+    `f_is_deleted` boolean DEFAULT 0 COMMENT '是否删除', -- 0: 未删除, 1: 待删除
     PRIMARY KEY (`f_id`),
     UNIQUE KEY `uk_skill_id` (`f_skill_id`) USING BTREE,
     KEY `idx_status_update_time` (`f_status`, `f_update_time`) USING BTREE,
@@ -348,6 +349,7 @@ CREATE TABLE IF NOT EXISTS `t_skill_repository` (
 CREATE TABLE IF NOT EXISTS `t_skill_file_index` (
     `f_id` bigint AUTO_INCREMENT NOT NULL COMMENT '自增主键',
     `f_skill_id` varchar(40) NOT NULL COMMENT 'Skill ID',
+    `f_skill_version` varchar(40) NOT NULL COMMENT 'Skill 版本',
     `f_rel_path` varchar(512) NOT NULL COMMENT '文件相对路径',
     `f_path_hash` varchar(32) NOT NULL COMMENT '相对路径哈希',
     `f_storage_id` varchar(50) NOT NULL COMMENT '对象存储ID',
@@ -359,7 +361,6 @@ CREATE TABLE IF NOT EXISTS `t_skill_file_index` (
     `f_create_time` bigint(20) NOT NULL COMMENT '创建时间',
     `f_update_time` bigint(20) NOT NULL COMMENT '编辑时间',
     PRIMARY KEY (`f_id`),
-    UNIQUE KEY `uk_skill_rel_path` (`f_skill_id`, `f_rel_path`) USING BTREE,
-    UNIQUE KEY `uk_skill_path_hash` (`f_skill_id`, `f_path_hash`) USING BTREE,
-    KEY `idx_skill_id_update_time` (`f_skill_id`, `f_update_time`) USING BTREE
+    UNIQUE KEY `uk_skill_version_rel_path` (`f_skill_id`, `f_skill_version`, `f_rel_path`) USING BTREE,
+    UNIQUE KEY `uk_skill_version_path_hash` (`f_skill_id`, `f_skill_version`, `f_path_hash`) USING BTREE,
 ) ENGINE = InnoDB COMMENT = 'Skill 文件索引表';

@@ -377,6 +377,55 @@ paths:
               schema:
                 $ref: "#/components/schemas/Error"
 
+  /skills/{skill_id}/status:
+    put:
+      summary: "更新 Skill 状态"
+      description: "根据 Skill ID 更新业务状态，当前仅支持 `unpublish`、`published`、`offline`。"
+      tags:
+        - "Skill 管理"
+      parameters:
+        - $ref: "#/components/parameters/Authorization"
+        - $ref: "#/components/parameters/BusinessDomain"
+        - $ref: "#/components/parameters/UserID"
+        - $ref: "#/components/parameters/SkillID"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateSkillStatusReq"
+      responses:
+        "200":
+          description: "成功"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UpdateSkillStatusResp"
+        "400":
+          description: "参数错误"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "403":
+          description: "无权限"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "404":
+          description: "Skill 不存在"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "500":
+          description: "内部错误"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
   /skills/{skill_id}/content:
     get:
       summary: "获取 Skill 内容"
@@ -611,6 +660,31 @@ components:
               type: string
             deleted:
               type: boolean
+
+    UpdateSkillStatusReq:
+      type: object
+      required:
+        - status
+      properties:
+        status:
+          type: string
+          enum: ["unpublish", "published", "offline"]
+
+    UpdateSkillStatusResp:
+      type: object
+      properties:
+        code:
+          type: integer
+        msg:
+          type: string
+        data:
+          type: object
+          properties:
+            skill_id:
+              type: string
+            status:
+              type: string
+              enum: ["unpublish", "published", "offline"]
 
     QuerySkillListResp:
       type: object
