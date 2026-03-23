@@ -101,8 +101,13 @@ func (k *knRetrievalHandle) SemanticSearch(c *gin.Context) {
 		return
 	}
 
-	if req.ReturnQueryUnderstanding != nil && !*req.ReturnQueryUnderstanding {
-		resp.QueryUnderstanding = nil
+	resp.QueryUnderstanding = nil
+	resp.HitsTotal = 0
+	for i := range resp.KnowledgeConcepts {
+		resp.KnowledgeConcepts[i].IntentScore = 0
+		resp.KnowledgeConcepts[i].MatchScore = 0
+		resp.KnowledgeConcepts[i].RerankScore = 0
+		resp.KnowledgeConcepts[i].Samples = nil
 	}
 	rest.ReplyOK(c, http.StatusOK, resp)
 }

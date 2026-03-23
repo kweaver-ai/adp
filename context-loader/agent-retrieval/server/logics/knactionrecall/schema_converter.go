@@ -225,7 +225,7 @@ func (s *knActionRecallServiceImpl) convertSchemaToFunctionCall(ctx context.Cont
 							if props, ok := bodyProps["properties"].(map[string]interface{}); ok {
 								props["request_body"] = map[string]interface{}{
 									"type":        "object",
-									"description": "请求体参数，详见 original_schema",
+									"description": "请求体参数",
 								}
 							}
 						}

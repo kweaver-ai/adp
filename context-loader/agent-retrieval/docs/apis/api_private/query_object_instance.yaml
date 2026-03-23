@@ -39,11 +39,6 @@ paths:
             type: string
           in: query
           required: true
-        - name: include_type_info
-          description: "是否包含对象类信息, 默认false，不包含"
-          schema:
-            type: boolean
-          in: query
         - name: include_logic_params
           description: 包含逻辑属性的计算参数，默认false，返回结果不包含逻辑属性的字段和值
           schema:
@@ -188,8 +183,6 @@ components:
           type: boolean
     FirstQueryWithSearchAfter:
       description: 分页查询的第一次查询请求
-      required:
-      - limit
       type: object
       properties:
         condition:
@@ -203,6 +196,7 @@ components:
         limit:
           description: 返回的数量，默认值 10。范围 1-100
           type: integer
+          default: 10
         need_total:
           description: 是否需要总数，默认false
           type: boolean

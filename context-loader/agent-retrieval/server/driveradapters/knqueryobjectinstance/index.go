@@ -80,6 +80,7 @@ func (h *knQueryObjectInstanceHandler) QueryObjectInstance(c *gin.Context) {
 		rest.ReplyError(c, err)
 		return
 	}
+	req.IncludeTypeInfo = false
 
 	// 参数校验
 	err = validator.New().Struct(req)

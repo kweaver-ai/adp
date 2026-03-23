@@ -2,12 +2,6 @@
   "input_schema": {
     "type": "object",
     "properties": {
-      "response_format": {
-        "type": "string",
-        "enum": ["json", "toon"],
-        "default": "toon",
-        "description": "文本格式：json 或 toon，默认 toon"
-      },
       "ot_id": {
         "type": "string",
         "description": "对象类型ID"
@@ -32,14 +26,6 @@
       "additional_context": {
         "type": "string",
         "description": "可选。补充 timezone、instant、step 等上下文"
-      },
-      "options": {
-        "type": "object",
-        "properties": {
-          "return_debug": { "type": "boolean" },
-          "max_repair_rounds": { "type": "integer" },
-          "max_concurrency": { "type": "integer" }
-        }
       }
     },
     "required": ["ot_id", "query", "_instance_identities", "properties"]
@@ -54,11 +40,6 @@
           "type": "object",
           "additionalProperties": true
         }
-      },
-      "debug": {
-        "type": "object",
-        "description": "调试信息（return_debug=true 时返回）",
-        "additionalProperties": true
       }
     }
   }

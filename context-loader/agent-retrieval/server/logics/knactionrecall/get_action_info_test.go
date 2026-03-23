@@ -260,6 +260,7 @@ func TestGetActionInfo_ToolType_Success(t *testing.T) {
 		convey.So(len(resp.DynamicTools), convey.ShouldEqual, 1)
 		convey.So(resp.DynamicTools[0].Name, convey.ShouldEqual, "TestTool")
 		convey.So(resp.DynamicTools[0].APICallStrategy, convey.ShouldEqual, interfaces.ResultProcessStrategyKnActionRecall)
+		convey.So(resp.DynamicTools[0].OriginalSchema, convey.ShouldBeNil)
 	})
 }
 
@@ -328,6 +329,7 @@ func TestGetActionInfo_MCPType_Success(t *testing.T) {
 		convey.So(len(resp.DynamicTools), convey.ShouldEqual, 1)
 		convey.So(resp.DynamicTools[0].Name, convey.ShouldEqual, "TestMCPTool")
 		convey.So(resp.DynamicTools[0].APICallStrategy, convey.ShouldEqual, interfaces.ResultProcessStrategyKnActionRecall)
+		convey.So(resp.DynamicTools[0].OriginalSchema, convey.ShouldBeNil)
 	})
 }
 

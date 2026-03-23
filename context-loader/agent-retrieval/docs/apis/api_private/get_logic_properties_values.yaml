@@ -125,12 +125,6 @@ components:
         return_debug:
           type: boolean
           description: 是否返回 debug（dynamic_params、warnings 等）。默认 false
-        max_repair_rounds:
-          type: integer
-          description: Agent JSON 非法时的修复轮次。默认 1
-        max_concurrency:
-          type: integer
-          description: 多 property 时的 Agent 并发数。默认 4
     ResolveLogicPropertiesResponse:
       description: 成功返回 datas；缺参时返回 error_code、missing（含 hint）
       oneOf:
