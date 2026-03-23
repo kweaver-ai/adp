@@ -44,7 +44,7 @@
 | 术语 | 说明 |
 |------|------|
 | Skill | Agent 可消费的能力包，包含 `SKILL.md` 与附属文件 |
-| Skill Content | `SKILL.md` 正文，对外字段名为 `skill_content` |
+| Skill Content | `SKILL.md` 内容对象，对外通过下载地址暴露 |
 | Skill 文件 | Skill 内部模板、脚本、参考资料、配置等附属文件 |
 | 管理接口 | 面向 Skill 提供方和资源维护方的接口 |
 | 市场接口 | 面向 Skill 发现与选择场景的接口 |
@@ -66,7 +66,7 @@
 ### 参与者
 - 用户：Skill 提供方、Agent 配置方、执行工厂运行链路
 - 外部系统：统一权限服务、业务域服务、对象存储、MariaDB
-- 第三方服务：新增S3对象存储
+- 第三方服务：`oss-gateway-backend`
 
 ### 系统关系
 
@@ -83,7 +83,7 @@
 | API Service | Go + Gin | 暴露 Skill 管理接口、读取接口与市场接口 |
 | Core Service | Go | 实现注册、查询、删除、下载、内容读取、文件读取、市场逻辑 |
 | Parser | Go | 解析 `SKILL.md` frontmatter、正文和 ZIP 内容 |
-| Asset Store | Go + oss_gateway / 本地文件 | 管理 Skill 附件对象写入、读取、删除 |
+| Asset Store | Go + `oss-gateway-backend` | 管理 Skill 对象上传、下载、删除与下载地址获取 |
 | Storage | MariaDB + Object Storage | 保存 Skill 主记录、文件索引和文件内容 |
 
 ---
@@ -104,9 +104,9 @@
 | 组件 | 职责 |
 |------|------|
 | SkillRegistry | 注册、删除、下载、管理列表、管理详情、市场列表、市场详情 |
-| SkillReader | `skill_content` 读取、单文件读取 |
+| SkillReader | `SKILL.md` 下载地址获取、单文件下载地址获取 |
 | SkillParser | `content` / `zip` 注册内容解析 |
-| SkillAssetStore | 附件内容写入、读取、删除；支持 `oss_gateway` 正式配置和本地回退 |
+| SkillAssetStore | 对象上传、下载、删除、下载地址获取 |
 | SkillRepository(DB) | Skill 主表访问 |
 | SkillFileIndex(DB) | Skill 文件索引访问 |
 | Governance Integration | 在 `skillRegistry` 中直接复用 `AuthService` 与 `BusinessDomainService` |
@@ -131,8 +131,8 @@
 |------|------|
 | Skill 独立为正式资源类型 | 已新增 `AuthResourceTypeSkill`，避免复用或伪装成其他资源类型 |
 | 管理 / 市场 / 读取三层分离 | 列表、详情、市场、内容读取、文件读取的调用方和返回负载不同，必须分层 |
-| `skill_content` 单独读取 | 管理列表与详情不返回正文，内容通过 `/content` 独立获取 |
-| 主表保存正文，附件入对象存储 | `SKILL.md` 读取频繁且大小可控；附件文件体量和类型不稳定，放对象存储更合理 |
+| 内容与文件统一为下载地址 | `/content` 与 `/files/read` 均返回下载地址，统一读取接口形式 |
+| 文件索引持久化对象引用 | 文件索引通过 `storage_id + storage_key` 精确定位对象，避免默认存储切换后历史对象漂移 |
 | 业务状态与删除流程状态分离 | `status` 仅表达 `unpublish/published/offline`，删除流程通过 `f_is_deleted` 表达 |
 | 删除成功后物理删除主记录 | 首版不保留 `deleted` 终态，`f_is_deleted=1` 仅表示待删除/删除中 |
 | 对外状态类型统一为 `BizStatus` | 接口契约统一使用 `interfaces.BizStatus`；持久化模型当前以字符串承载同语义状态值，避免包循环依赖 |
@@ -146,7 +146,7 @@
 
 - 部署环境：K8s
 - 拓扑结构：Skill 作为执行工厂服务内的一个资源域实现，不单独拆服务
-- 扩展策略：服务实例水平扩展；MariaDB 储复用平台现有部署能力,对象存储需要单独配置，不支持默认存储；
+- 扩展策略：服务实例水平扩展；MariaDB 复用平台现有部署能力；对象存储通过 `oss-gateway-backend` 接入，优先使用显式 `storage_id`，为空时自动解析默认存储。
 
 ---
 
@@ -155,13 +155,13 @@
 ### 性能
 - 管理列表和详情仅返回轻量元数据，不返回 `skill_content` 与文件清单
 - 市场列表同样只返回轻量摘要，且仅允许 `published` 进入市场结果
-- `skill_content` 读取直接命中主表
-- 文件读取按 `(skill_id, rel_path)` 精确命中索引
+- `skill_content` 与文件读取均先命中对象引用，再返回下载地址
+- 文件读取按 `(skill_id, rel_path)` 精确命中索引，并使用 `storage_id + storage_key` 生成下载地址
 
 ### 可用性
 - 删除通过 `f_is_deleted=1` 作为补偿标记
 - `f_is_deleted=1` 对管理、市场、读取接口均不可见
-- 对象存储不可用时，当前支持本地存储回退，仅用于非正式对象存储场景
+- 当前不再保留本地存储回退，`oss-gateway-backend` 初始化失败将直接暴露
 
 ### 安全
 - 注册、管理查询、删除、市场查询已接入统一权限/业务域骨架
@@ -300,7 +300,7 @@
 ```json
 {
   "skill_id": "skill-xxx",
-  "skill_content": "# Role\n...",
+  "url": "https://oss-gateway/download/skill-xxx/SKILL.md",
   "status": "published",
   "files": [
     {
@@ -310,7 +310,7 @@
 }
 ```
 
-实现状态：已实现。
+实现状态：已实现，当前返回下载地址而非正文。
 
 ### Skill 文件读取接口
 
@@ -330,12 +330,12 @@
 {
   "skill_id": "skill-xxx",
   "rel_path": "templates/reply.md",
-  "content": "file body",
+  "url": "https://oss-gateway/download/templates/reply.md",
   "mime_type": "text/markdown"
 }
 ```
 
-实现状态：已实现。
+实现状态：已实现，当前返回下载地址而非文件正文。
 
 ### Skill 下载接口
 
@@ -390,7 +390,7 @@
 ```
 
 实现状态：部分实现。
-说明：逻辑层接口 `QuerySkillMarketList` / `GetSkillMarketDetail` 已实现并有单测，但当前未接入公开 handler、路由和 API 文档。
+说明：逻辑层、公开 HTTP 层和 API 文档均已补齐。
 
 ---
 
@@ -426,6 +426,7 @@
 | skill_id | string | Skill 主键 |
 | rel_path | string | 标准化相对路径 |
 | path_hash | string | 相对路径 MD5 |
+| storage_id | string | 对象所属存储 ID |
 | storage_key | string | 对象存储 key |
 | file_type | string | 文件分类 |
 | content_sha256 | string | 文件内容 SHA-256 |
@@ -455,8 +456,8 @@
 - 存储类型：MariaDB + 对象存储
 - 数据分布：
   - `t_skill_repository` 保存 Skill 主记录和 `skill_content`
-  - `t_skill_file_index` 保存附件索引
-  - 对象存储保存附件正文
+  - `t_skill_file_index` 保存附件索引和对象引用
+  - `oss-gateway-backend` 管理对象访问，执行工厂仅持久化 `storage_id + storage_key`
 - 索引设计：
   - `t_skill_repository` 通过 `f_skill_id` 精确查询
   - 列表查询按 `name/source/create_user/status` 过滤
@@ -466,7 +467,7 @@
 实现状态：
 - 主表字段和索引：已实现
 - 文件索引表：已实现
-- `oss_gateway` 正式配置接入：已实现
+- `oss-gateway-backend` 正式接入：已实现
 - 流式大文件下载：未实现，当前下载为内存组包
 
 ---
@@ -483,7 +484,7 @@
 6. 若为 ZIP，解析 `SKILL.md` 之外的文件，生成 `SkillFileSummary` 与 `skillAsset`。
 7. 开启 DB 事务，写入主表。
 8. 状态保持为 `unpublish`。
-9. 将附件内容写入对象存储 / 本地存储，并写入文件索引表。
+9. 将附件内容上传到 `oss-gateway-backend` 所在对象存储，并写入 `storage_id + storage_key` 文件索引。
 10. 调用 `BusinessDomainService.AssociateResource` 绑定业务域。
 11. 返回注册响应。
 
@@ -543,7 +544,7 @@
 
 1. `GetSkillContent` 查询主记录。
 2. 若不存在或 `f_is_deleted=1`，返回未找到。
-3. 直接从主记录返回 `skill_content` 和 `file_manifest`。
+3. 基于 `SKILL.md` 对象引用返回下载地址和 `file_manifest`。
 
 实现状态：已实现。
 说明：当前已接入 `GetAccessor + OperationCheckAny(execute/public_access/view)`，并在 `f_is_deleted=1` 时统一返回未找到。
@@ -553,10 +554,9 @@
 1. 查询主记录，要求 `f_is_deleted=0`；附件读取权限当前通过 `OperationCheckAny(execute/public_access/view)` 判定。
 2. 标准化 `rel_path`。
 3. 按 `(skill_id, rel_path)` 查询文件索引。
-4. 不再依赖文件级访问控制字段，附件读取权限直接由 Skill `execute` 权限决定。
-5. 从对象存储读取正文。
-6. 校验 `content_sha256`。
-7. 返回文件正文和元数据。
+4. 不再依赖文件级访问控制字段，附件读取权限当前通过 `OperationCheckAny(execute/public_access/view)` 判定。
+5. 根据索引中的 `storage_id + storage_key` 生成下载地址。
+6. 返回下载地址和元数据。
 
 实现状态：已实现。
 说明：当前已接入 `GetAccessor + OperationCheckAny(execute/public_access/view)`，并保留路径校验、索引校验和 SHA-256 校验。
@@ -607,7 +607,7 @@
 ### 权限与业务域治理逻辑
 - 资源类型固定为 `AuthResourceTypeSkill`
 - 注册：`CheckCreatePermission + AssociateResource`
-- 管理查询：`ResourceFilterIDs(..., view)`
+- 管理查询：`ResourceListIDs(..., view)`
 - 管理详情：`CheckViewPermission`
 - 内容读取 / 附件读取：`OperationCheckAny(execute/public_access/view)`
 - 删除：`CheckDeletePermission + DisassociateResource + DeletePolicy`
@@ -615,7 +615,7 @@
 - 市场详情：`CheckPublicAccessPermission`，且仅返回 `published`
 
 当前实现缺口：
-- 下载接口当前复用 `view` 权限，未定义独立 `download` 操作
+- 下载接口当前满足 `execute/public_access/view` 任一权限即可访问，未定义独立 `download` 操作
 
 ---
 
@@ -645,18 +645,14 @@
 
 | 配置项 | 默认值 | 说明 |
 |--------|--------|------|
-| `s3.endpoint` | 无 | 对象存储地址 |
-| `s3.access_id` | 无 | 对象存储访问 key |
-| `s3.access_secret_key` | 无 | 对象存储 secret |
-| `s3.bucket` | 无 | 对象存储 bucket |
-| `s3.region` | `us-east-1` | 区域 |
-| `s3.use_ssl` | `false` | 是否启用 SSL |
-| `s3.storage_prefix` | `aoi_skill_assets` | Skill 对象存储前缀 |
+| `oss_gateway.private_base.base_url` | 无 | `oss-gateway-backend` 私网地址 |
+| `oss_gateway.storage_id` | 无 | 显式指定的存储 ID，优先使用 |
+| `oss_gateway.refresh_interval` | `5m` | 默认存储刷新周期 |
 
 实现状态：
 - 正式配置结构：已实现
-- 环境变量兼容回退：已实现
-- 本地文件存储回退：已实现
+- 默认存储自动发现：已实现
+- 本地文件存储回退：未实现
 
 ---
 
@@ -683,8 +679,8 @@
 |------|------|------|
 | Skill 注册 | 已实现 | 支持 `zip` / `content` |
 | 管理列表 / 管理详情 | 已实现 | 已接入管理侧权限过滤 |
-| `skill_content` 读取 | 已实现 | 已公开暴露，走 `view` + 业务域校验 |
-| 文件读取 | 已实现 | 已切换到 `execute` + 业务域校验 |
+| `skill_content` 读取 | 已实现 | 已公开暴露，当前返回下载地址，权限为 `execute/public_access/view` 任一满足 |
+| 文件读取 | 已实现 | 已返回下载地址，权限为 `execute/public_access/view` 任一满足 |
 | ZIP 下载 | 已实现 | 管理侧路由已暴露 |
 | 删除补偿态 | 部分实现 | 删除入口已切换为 `f_is_deleted`，当前仍为同步删除，独立补偿任务未实现 |
 | 市场列表 / 市场详情逻辑 | 已实现 | 逻辑层、handler、route、API 文档均已暴露 |

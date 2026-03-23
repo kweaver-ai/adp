@@ -39,7 +39,7 @@ func NewSkillReader() interfaces.SkillReader {
 		readerInst = &skillReader{
 			skillRepo:             dbaccess.NewSkillRepositoryDB(),
 			fileRepo:              dbaccess.NewSkillFileIndexDB(),
-			assetStore:            newSkillAssetStore(),
+			assetStore:            newOSSGatewaySkillAssetStore(),
 			AuthService:           auth.NewAuthServiceImpl(),
 			BusinessDomainService: business_domain.NewBusinessDomainService(),
 			Logger:                conf.GetLogger(),
@@ -77,12 +77,31 @@ func (r *skillReader) GetSkillContent(ctx context.Context, req *interfaces.GetSk
 		err = errors.NewHTTPError(ctx, http.StatusForbidden, errors.ErrExtCommonOperationForbidden, fmt.Sprintf("user %s has no permission to execute、view、public access skill %s", req.UserID, req.SkillID))
 		return nil, err
 	}
+	// 查询对应的"SKILL.md文件
+	skillFile, err := r.fileRepo.SelectSkillFileByPath(ctx, nil, skill.SkillID, SkillMD)
+	if err != nil {
+		r.Logger.WithContext(ctx).Errorf("select skill file failed: %v", err)
+		err = errors.DefaultHTTPError(ctx, http.StatusInternalServerError, err.Error())
+		return nil, err
+	}
+	if skillFile == nil {
+		err = errors.DefaultHTTPError(ctx, http.StatusNotFound, fmt.Sprintf("skill file not found: %s", SkillMD))
+		return nil, err
+	}
+	contentObject := &interfaces.OssObject{
+		StorageID:  skillFile.StorageID,
+		StorageKey: skillFile.StorageKey,
+	}
+	downloadURL, err := r.assetStore.GetDownloadURL(ctx, contentObject)
+	if err != nil {
+		return nil, err
+	}
 	// TODO: 待接入审计日志
 	return &interfaces.GetSkillContentResp{
-		SkillID:      skill.SkillID,
-		SkillContent: skill.SkillContent,
-		Files:        utils.JSONToObject[[]*interfaces.SkillFileSummary](skill.FileManifest),
-		Status:       interfaces.BizStatus(skill.Status),
+		SkillID: skill.SkillID,
+		URL:     downloadURL,
+		Files:   utils.JSONToObject[[]*interfaces.SkillFileSummary](skill.FileManifest),
+		Status:  interfaces.BizStatus(skill.Status),
 	}, nil
 }
 
@@ -137,21 +156,19 @@ func (r *skillReader) ReadSkillFile(ctx context.Context, req *interfaces.ReadSki
 		err = errors.DefaultHTTPError(ctx, http.StatusNotFound, fmt.Sprintf("skill file not found: %s", relPath))
 		return nil, err
 	}
-	// 从存储中读取文件
-	content, err := r.assetStore.Read(ctx, file.StorageKey)
+	downloadURL, err := r.assetStore.GetDownloadURL(ctx, &interfaces.OssObject{
+		StorageID:  file.StorageID,
+		StorageKey: file.StorageKey,
+	})
 	if err != nil {
 		r.Logger.WithContext(ctx).Errorf("read skill file failed: %v", err)
 		return nil, err
-	}
-	if checksumSHA256(content) != file.ContentSHA256 {
-		r.Logger.WithContext(ctx).Errorf("skill file checksum mismatch: %s", relPath)
-		return nil, fmt.Errorf("skill file checksum mismatch: %s", relPath)
 	}
 
 	return &interfaces.ReadSkillFileResp{
 		SkillID:  req.SkillID,
 		RelPath:  relPath,
-		Content:  string(content),
+		URL:      downloadURL,
 		MimeType: file.MimeType,
 		FileType: file.FileType,
 	}, nil

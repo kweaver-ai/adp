@@ -105,8 +105,10 @@ ai_generation_config:
     frequency_penalty: 0.1
     presence_penalty: 0.1
 
-oss_gateway:
-  base_url: ""
+oss-gateway-backend:
+  private_host: "oss-gateway-backend.anyshare"
+  private_port: 8080
+  private_protocol: "http"
   storage_id: ""
   internal_request: false
   expires: 3600

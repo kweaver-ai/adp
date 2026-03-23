@@ -149,10 +149,10 @@ type GetSkillContentReq struct {
 
 // GetSkillContentResp Skill 内容响应
 type GetSkillContentResp struct {
-	SkillID      string              `json:"skill_id"`
-	SkillContent string              `json:"skill_content"`
-	Files        []*SkillFileSummary `json:"files"`
-	Status       BizStatus           `json:"status"`
+	SkillID string              `json:"skill_id"`
+	URL     string              `json:"url"`
+	Files   []*SkillFileSummary `json:"files"`
+	Status  BizStatus           `json:"status"`
 }
 
 // ReadSkillFileReq 读取 Skill 文件请求
@@ -167,7 +167,7 @@ type ReadSkillFileReq struct {
 type ReadSkillFileResp struct {
 	SkillID  string `json:"skill_id"`
 	RelPath  string `json:"rel_path"`
-	Content  string `json:"content"`
+	URL      string `json:"url"`
 	MimeType string `json:"mime_type"`
 	FileType string `json:"file_type"`
 }

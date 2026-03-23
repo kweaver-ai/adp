@@ -17,6 +17,7 @@ type restPrivateHandler struct {
 	UpgradeHandler      common.UpgradeHandler
 	UnifiedProxyHandler common.UnifiedProxyHandler
 	Logger              interfaces.Logger
+	SkillRestHandler    SkillRestHandler
 }
 
 // NewRestPrivateHandler 创建restHandler实例
@@ -28,6 +29,7 @@ func NewRestPrivateHandler() interfaces.HTTPRouterInterface {
 		UpgradeHandler:      common.NewUpgradeHandler(),
 		UnifiedProxyHandler: common.NewUnifiedProxyHandler(),
 		Logger:              config.NewConfigLoader().GetLogger(),
+		SkillRestHandler:    NewSkillRestHandler(),
 	}
 }
 
@@ -42,6 +44,8 @@ func (r *restPrivateHandler) RegisterRouter(engine *gin.RouterGroup) {
 	r.ToolBoxRestHandler.RegisterPrivate(engine)
 	// MCP 相关接口
 	r.MCPRestHandler.RegisterPrivate(engine)
+	// 技能接口
+	r.SkillRestHandler.RegisterPrivate(engine)
 
 	// 临时升级接口 - 仅在从旧版本升级到5.0.0.3时使用
 	engine.GET("/upgrade/v5003/migrate-history", r.UpgradeHandler.MigrateHistoryData)

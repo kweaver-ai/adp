@@ -53,6 +53,7 @@ func (s *skillFileIndexDB) InsertSkillFile(ctx context.Context, tx *sql.Tx, file
 		"f_skill_id":       file.SkillID,
 		"f_rel_path":       file.RelPath,
 		"f_path_hash":      file.PathHash,
+		"f_storage_id":     file.StorageID,
 		"f_storage_key":    file.StorageKey,
 		"f_file_type":      file.FileType,
 		"f_content_sha256": file.ContentSHA256,
@@ -80,6 +81,7 @@ func (s *skillFileIndexDB) UpdateSkillFile(ctx context.Context, tx *sql.Tx, file
 	}
 	file.UpdateTime = time.Now().UnixNano()
 	_, err := orm.Update(tbSkillFileIndex).SetData(map[string]interface{}{
+		"f_storage_id":     file.StorageID,
 		"f_storage_key":    file.StorageKey,
 		"f_file_type":      file.FileType,
 		"f_content_sha256": file.ContentSHA256,

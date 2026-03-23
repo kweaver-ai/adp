@@ -26,6 +26,10 @@ type skillFrontmatter struct {
 	Metadata     map[string]interface{} `yaml:"metadata"`
 }
 
+// 设置SKILL.md统一命名
+
+const SkillMD = "SKILL.md"
+
 // skillAsset 技能资产
 type skillAsset struct {
 	RelPath  string
@@ -125,9 +129,10 @@ func (p *skillParser) parseSkillZip(req *interfaces.RegisterSkillReq) (string, [
 			return "", nil, nil, readErr
 		}
 
-		if strings.EqualFold(relPath, "SKILL.md") {
+		if strings.EqualFold(relPath, SkillMD) {
 			skillContent = string(content)
-			continue
+			// 如果refpath为SKILL.md，转换为大写
+			relPath = SkillMD
 		}
 
 		files = append(files, &interfaces.SkillFileSummary{

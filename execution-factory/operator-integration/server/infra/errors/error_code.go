@@ -214,6 +214,10 @@ const (
 	ErrExtPypiRepoUnavailable ErrorCode = "PypiRepoUnavailable" // PyPI仓库不可用，请检查网络连接或稍后重试
 	// Pypi源解析器错误
 	ErrExtPypiParserFailed ErrorCode = "PypiParserFailed" // 版本联想功能需镜像源支持 JSON API (如 PyPI 官方、清华源等)，请检查镜像源配置是否正确
+	// 请求OSS网关失败
+	ErrExtOSSGatewayFailed ErrorCode = "OSSGatewayFailed" // 请求OSS网关失败，请检查网关配置是否正确
+	// 默认OSS网关存储不存在
+	ErrExtOSSGatewayDefaultStorageNotFound ErrorCode = "OSSGatewayDefaultStorageNotFound" // 默认OSS网关存储不存在，请检查网关配置是否正确
 )
 
 const (

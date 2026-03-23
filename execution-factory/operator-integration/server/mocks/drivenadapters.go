@@ -667,3 +667,128 @@ func (mr *MockMFModelManagerMockRecorder) GetPromptByPromptID(ctx, promptID any)
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPromptByPromptID", reflect.TypeOf((*MockMFModelManager)(nil).GetPromptByPromptID), ctx, promptID)
 }
+
+// MockOSSGatewayBackendClient is a mock of OSSGatewayBackendClient interface.
+type MockOSSGatewayBackendClient struct {
+	ctrl     *gomock.Controller
+	recorder *MockOSSGatewayBackendClientMockRecorder
+	isgomock struct{}
+}
+
+// MockOSSGatewayBackendClientMockRecorder is the mock recorder for MockOSSGatewayBackendClient.
+type MockOSSGatewayBackendClientMockRecorder struct {
+	mock *MockOSSGatewayBackendClient
+}
+
+// NewMockOSSGatewayBackendClient creates a new mock instance.
+func NewMockOSSGatewayBackendClient(ctrl *gomock.Controller) *MockOSSGatewayBackendClient {
+	mock := &MockOSSGatewayBackendClient{ctrl: ctrl}
+	mock.recorder = &MockOSSGatewayBackendClientMockRecorder{mock}
+	return mock
+}
+
+// EXPECT returns an object that allows the caller to indicate expected use.
+func (m *MockOSSGatewayBackendClient) EXPECT() *MockOSSGatewayBackendClientMockRecorder {
+	return m.recorder
+}
+
+// Close mocks base method.
+func (m *MockOSSGatewayBackendClient) Close() error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Close")
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// Close indicates an expected call of Close.
+func (mr *MockOSSGatewayBackendClientMockRecorder) Close() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Close", reflect.TypeOf((*MockOSSGatewayBackendClient)(nil).Close))
+}
+
+// CurrentStorageID mocks base method.
+func (m *MockOSSGatewayBackendClient) CurrentStorageID(ctx context.Context) (string, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CurrentStorageID", ctx)
+	ret0, _ := ret[0].(string)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// CurrentStorageID indicates an expected call of CurrentStorageID.
+func (mr *MockOSSGatewayBackendClientMockRecorder) CurrentStorageID(ctx any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CurrentStorageID", reflect.TypeOf((*MockOSSGatewayBackendClient)(nil).CurrentStorageID), ctx)
+}
+
+// DeleteFile mocks base method.
+func (m *MockOSSGatewayBackendClient) DeleteFile(ctx context.Context, object *interfaces.OssObject) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DeleteFile", ctx, object)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// DeleteFile indicates an expected call of DeleteFile.
+func (mr *MockOSSGatewayBackendClientMockRecorder) DeleteFile(ctx, object any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteFile", reflect.TypeOf((*MockOSSGatewayBackendClient)(nil).DeleteFile), ctx, object)
+}
+
+// DownloadFile mocks base method.
+func (m *MockOSSGatewayBackendClient) DownloadFile(ctx context.Context, object *interfaces.OssObject) ([]byte, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DownloadFile", ctx, object)
+	ret0, _ := ret[0].([]byte)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// DownloadFile indicates an expected call of DownloadFile.
+func (mr *MockOSSGatewayBackendClientMockRecorder) DownloadFile(ctx, object any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DownloadFile", reflect.TypeOf((*MockOSSGatewayBackendClient)(nil).DownloadFile), ctx, object)
+}
+
+// GetDownloadURL mocks base method.
+func (m *MockOSSGatewayBackendClient) GetDownloadURL(ctx context.Context, object *interfaces.OssObject) (string, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetDownloadURL", ctx, object)
+	ret0, _ := ret[0].(string)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetDownloadURL indicates an expected call of GetDownloadURL.
+func (mr *MockOSSGatewayBackendClientMockRecorder) GetDownloadURL(ctx, object any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetDownloadURL", reflect.TypeOf((*MockOSSGatewayBackendClient)(nil).GetDownloadURL), ctx, object)
+}
+
+// IsReady mocks base method.
+func (m *MockOSSGatewayBackendClient) IsReady() bool {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "IsReady")
+	ret0, _ := ret[0].(bool)
+	return ret0
+}
+
+// IsReady indicates an expected call of IsReady.
+func (mr *MockOSSGatewayBackendClientMockRecorder) IsReady() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "IsReady", reflect.TypeOf((*MockOSSGatewayBackendClient)(nil).IsReady))
+}
+
+// UploadFile mocks base method.
+func (m *MockOSSGatewayBackendClient) UploadFile(ctx context.Context, object *interfaces.OssObject, content []byte) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UploadFile", ctx, object, content)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// UploadFile indicates an expected call of UploadFile.
+func (mr *MockOSSGatewayBackendClientMockRecorder) UploadFile(ctx, object, content any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UploadFile", reflect.TypeOf((*MockOSSGatewayBackendClient)(nil).UploadFile), ctx, object, content)
+}
