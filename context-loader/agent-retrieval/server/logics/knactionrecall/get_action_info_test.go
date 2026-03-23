@@ -263,6 +263,7 @@ func TestGetActionInfo_ToolType_Success(t *testing.T) {
 		tool := resp.DynamicTools[0]
 		convey.So(tool.Name, convey.ShouldEqual, "TestTool")
 		convey.So(tool.APICallStrategy, convey.ShouldEqual, interfaces.ResultProcessStrategyKnActionRecall)
+		convey.So(tool.OriginalSchema, convey.ShouldBeNil)
 
 		// 验证 api_url 指向行动驱动执行接口
 		convey.So(tool.APIURL, convey.ShouldEqual,
@@ -438,6 +439,7 @@ func TestGetActionInfo_MCPType_Success(t *testing.T) {
 		tool := resp.DynamicTools[0]
 		convey.So(tool.Name, convey.ShouldEqual, "TestMCPTool")
 		convey.So(tool.APICallStrategy, convey.ShouldEqual, interfaces.ResultProcessStrategyKnActionRecall)
+		convey.So(tool.OriginalSchema, convey.ShouldBeNil)
 
 		// 验证 api_url 指向行动驱动执行接口
 		convey.So(tool.APIURL, convey.ShouldEqual,

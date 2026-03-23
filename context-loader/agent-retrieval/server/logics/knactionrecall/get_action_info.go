@@ -101,7 +101,6 @@ func (s *knActionRecallServiceImpl) GetActionInfo(ctx context.Context, req *inte
 			Description:     toolDetail.Description,
 			Parameters:      parameters,
 			APIURL:          apiURL,
-			OriginalSchema:  toolDetail.Metadata.APISpec,
 			FixedParams:     fixedParams,
 			APICallStrategy: interfaces.ResultProcessStrategyKnActionRecall,
 		}
@@ -132,7 +131,6 @@ func (s *knActionRecallServiceImpl) GetActionInfo(ctx context.Context, req *inte
 			Description:     toolDetail.Description,
 			Parameters:      parameters,
 			APIURL:          apiURL,
-			OriginalSchema:  toolDetail.InputSchema,
 			FixedParams:     fixedParams,
 			APICallStrategy: interfaces.ResultProcessStrategyKnActionRecall,
 		}

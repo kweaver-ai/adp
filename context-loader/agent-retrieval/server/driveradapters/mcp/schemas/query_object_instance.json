@@ -12,10 +12,6 @@
         "type": "string",
         "description": "对象类型ID"
       },
-      "include_type_info": {
-        "type": "boolean",
-        "description": "是否返回对象类型信息"
-      },
       "include_logic_params": {
         "type": "boolean",
         "description": "是否返回逻辑属性计算参数"
@@ -27,7 +23,7 @@
       },
       "limit": {
         "type": "integer",
-        "description": "返回数量限制"
+        "description": "返回数量限制，默认 10，范围 1-100"
       },
       "properties": {
         "type": "array",
@@ -37,7 +33,7 @@
         "description": "指定返回的对象属性字段列表，默认返回所有属性"
       }
     },
-    "required": ["ot_id", "limit"]
+    "required": ["ot_id"]
   },
   "output_schema": {
     "type": "object",
@@ -49,11 +45,6 @@
           "type": "object",
           "additionalProperties": true
         }
-      },
-      "object_type": {
-        "type": "object",
-        "description": "对象类型定义（可选）",
-        "additionalProperties": true
       }
     }
   }
