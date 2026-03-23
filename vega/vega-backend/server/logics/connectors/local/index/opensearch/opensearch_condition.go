@@ -494,7 +494,7 @@ func (c *OpenSearchConnector) ConvertFilterConditionContain(condition interfaces
 	should := make([]map[string]any, len(values))
 	for i, v := range values {
 		should[i] = map[string]any{
-			"match": map[string]any{
+			"term": map[string]any{
 				cond.Lfield.OriginalName: v,
 			},
 		}
