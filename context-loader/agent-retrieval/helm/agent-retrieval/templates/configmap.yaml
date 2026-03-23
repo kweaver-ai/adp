@@ -31,10 +31,6 @@ data:
       admin_port: {{ .Values.depServices.hydra.administrativePort }}
       admin_protocol: {{ .Values.depServices.hydra.administrativeProtocol | quote }}
       admin_prefix: {{ .Values.depServices.hydra.administrativePrefix | quote }}
-    user_management:
-      private_protocol: {{ index .Values "depServices" "user-management" "privateProtocol" | quote }}
-      private_host: {{ index .Values "depServices" "user-management" "privateHost" | quote }}
-      private_port: {{ index .Values "depServices" "user-management" "privatePort" }}
     agent_app:
       private_protocol: {{ index .Values "depServices" "agent-app" "privateProtocol" | quote }}
       private_host: {{ index .Values "depServices" "agent-app" "privateHost" | quote }}

@@ -54,14 +54,29 @@ type IntrospectInfo struct {
 
 const introspectURI = "/oauth2/introspect"
 
-// NewHydra 创建授权服务对象
+type noopHydra struct{}
+
+func (n *noopHydra) Introspect(_ context.Context, _ string) (*interfaces.TokenInfo, error) {
+	return &interfaces.TokenInfo{
+		Active:     true,
+		VisitorTyp: interfaces.Anonymous,
+	}, nil
+}
+
+// NewHydra creates an authorization service instance.
+// When AUTH_ENABLED=false, returns a noop implementation that skips token verification.
 func NewHydra() interfaces.Hydra {
 	once.Do(func() {
-		config := config.NewConfigLoader()
-		h = &hydra{
-			adminAddress: config.OAuth.BuildAdminURL(),
-			logger:       config.GetLogger(),
-			httpClient:   rest.NewHTTPClient(),
+		conf := config.NewConfigLoader()
+		if !config.GetAuthEnabled() {
+			conf.GetLogger().Warn("ISF authentication disabled via AUTH_ENABLED env, using noop hydra")
+			h = &noopHydra{}
+		} else {
+			h = &hydra{
+				adminAddress: conf.OAuth.BuildAdminURL(),
+				logger:       conf.GetLogger(),
+				httpClient:   rest.NewHTTPClient(),
+			}
 		}
 	})
 	return h

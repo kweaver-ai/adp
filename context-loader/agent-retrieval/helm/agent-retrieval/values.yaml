@@ -71,6 +71,10 @@ service:
     frequency_penalty: 0.5
     presence_penalty: 0.5
     max_tokens: 5000
+# 认证开关
+auth:
+  enabled: true
+
 depServices:
   rds:
     type: mysql
@@ -94,10 +98,6 @@ depServices:
     administrativePort: 4445
     administrativeProtocol: http
     administrativePrefix: /admin
-  user-management:
-    privateHost: user-management-private
-    privatePort: 30980
-    privateProtocol: http
   agent-app:
     privateHost: agent-factory
     privatePort: 13020
