@@ -7,7 +7,9 @@ import (
 	"sync"
 
 	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/dbaccess"
+	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/infra/config"
 	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/infra/errors"
+	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/infra/telemetry"
 	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/interfaces"
 	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/interfaces/model"
 	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/logics/auth"
@@ -22,6 +24,7 @@ type skillReader struct {
 	assetStore            skillAssetStore
 	AuthService           interfaces.IAuthorizationService
 	BusinessDomainService interfaces.IBusinessDomainService
+	Logger                interfaces.Logger
 }
 
 var (
@@ -32,29 +35,18 @@ var (
 // NewSkillReader 创建技能读取服务对象
 func NewSkillReader() interfaces.SkillReader {
 	readerOnce.Do(func() {
+		conf := config.NewConfigLoader()
 		readerInst = &skillReader{
 			skillRepo:             dbaccess.NewSkillRepositoryDB(),
 			fileRepo:              dbaccess.NewSkillFileIndexDB(),
 			assetStore:            newSkillAssetStore(),
 			AuthService:           auth.NewAuthServiceImpl(),
 			BusinessDomainService: business_domain.NewBusinessDomainService(),
+			Logger:                conf.GetLogger(),
 		}
 	})
 	return readerInst
 }
-
-// ensureBusinessDomainVisible 确保技能在业务域中可见
-// func (r *skillReader) ensureBusinessDomainVisible(ctx context.Context, businessDomainID, skillID string) error {
-// 	resourceToBdMap, err := r.BusinessDomainService.BatchResourceList(ctx, strings.Split(businessDomainID, ","), interfaces.AuthResourceTypeSkill)
-// 	if err != nil {
-// 		return err
-// 	}
-// 	if _, ok := resourceToBdMap[skillID]; !ok {
-// 		err = errors.DefaultHTTPError(ctx, http.StatusNotFound, fmt.Sprintf("skill not found: %s", skillID))
-// 		return err
-// 	}
-// 	return nil
-// }
 
 // GetSkillContent 获取技能内容
 func (r *skillReader) GetSkillContent(ctx context.Context, req *interfaces.GetSkillContentReq) (resp *interfaces.GetSkillContentResp, err error) {
@@ -66,66 +58,93 @@ func (r *skillReader) GetSkillContent(ctx context.Context, req *interfaces.GetSk
 		err = errors.DefaultHTTPError(ctx, http.StatusInternalServerError, err.Error())
 		return
 	}
-	if skill == nil || skill.Status == model.SkillStatusDeleting {
+	if skill == nil || skill.IsDeleted {
 		err = errors.DefaultHTTPError(ctx, http.StatusNotFound, fmt.Sprintf("skill not found: %s", req.SkillID))
 		return
 	}
+	// 有执行、查看、公开访问权限
 	accessor, err := r.AuthService.GetAccessor(ctx, req.UserID)
 	if err != nil {
-		return
+		return nil, err
 	}
-	if err = r.AuthService.CheckViewPermission(ctx, accessor, req.SkillID, interfaces.AuthResourceTypeSkill); err != nil {
-		return
+	authorized, err := r.AuthService.OperationCheckAny(ctx, accessor, req.SkillID, interfaces.AuthResourceTypeSkill,
+		interfaces.AuthOperationTypeExecute, interfaces.AuthOperationTypePublicAccess, interfaces.AuthOperationTypeView)
+	if err != nil {
+		return nil, err
 	}
-	// if err = r.ensureBusinessDomainVisible(ctx, req.BusinessDomainID, req.SkillID); err != nil {
-	// 	return nil, err
-	// }
+	if !authorized {
+		r.Logger.WithContext(ctx).Errorf("user %s has no permission to execute、view、public access skill %s", req.UserID, req.SkillID)
+		err = errors.NewHTTPError(ctx, http.StatusForbidden, errors.ErrExtCommonOperationForbidden, fmt.Sprintf("user %s has no permission to execute、view、public access skill %s", req.UserID, req.SkillID))
+		return nil, err
+	}
 	// TODO: 待接入审计日志
 	return &interfaces.GetSkillContentResp{
 		SkillID:      skill.SkillID,
 		SkillContent: skill.SkillContent,
 		Files:        utils.JSONToObject[[]*interfaces.SkillFileSummary](skill.FileManifest),
-		Status:       skill.Status,
+		Status:       interfaces.BizStatus(skill.Status),
 	}, nil
 }
 
 // ReadSkillFile 读取技能文件内容
-func (r *skillReader) ReadSkillFile(ctx context.Context, req *interfaces.ReadSkillFileReq) (*interfaces.ReadSkillFileResp, error) {
+func (r *skillReader) ReadSkillFile(ctx context.Context, req *interfaces.ReadSkillFileReq) (resp *interfaces.ReadSkillFileResp, err error) {
+	// 记录可观测
+	ctx, _ = o11y.StartInternalSpan(ctx)
+	defer o11y.EndSpan(ctx, err)
+	telemetry.SetSpanAttributes(ctx, map[string]interface{}{
+		"user_id":  req.UserID,
+		"bd_id":    req.BusinessDomainID,
+		"skill_id": req.SkillID,
+		"rel_path": req.RelPath,
+	})
 	skill, err := r.skillRepo.SelectSkillByID(ctx, nil, req.SkillID)
 	if err != nil {
+		r.Logger.WithContext(ctx).Errorf("read skill file failed: %v", err)
+		err = errors.DefaultHTTPError(ctx, http.StatusInternalServerError, err.Error())
 		return nil, err
 	}
-	if skill == nil || skill.Status != model.SkillStatusPublished {
-		return nil, fmt.Errorf("skill not found: %s", req.SkillID)
+	if skill == nil || skill.IsDeleted {
+		r.Logger.WithContext(ctx).Errorf("skill not found: %s", req.SkillID)
+		err = errors.DefaultHTTPError(ctx, http.StatusNotFound, fmt.Sprintf("skill not found: %s", req.SkillID))
+		return nil, err
 	}
+	// 有执行、查看、公开访问权限
 	accessor, err := r.AuthService.GetAccessor(ctx, req.UserID)
 	if err != nil {
 		return nil, err
 	}
-	if err = r.AuthService.CheckExecutePermission(ctx, accessor, req.SkillID, interfaces.AuthResourceTypeSkill); err != nil {
+	authorized, err := r.AuthService.OperationCheckAny(ctx, accessor, req.SkillID, interfaces.AuthResourceTypeSkill,
+		interfaces.AuthOperationTypeExecute, interfaces.AuthOperationTypePublicAccess, interfaces.AuthOperationTypeView)
+	if err != nil {
 		return nil, err
 	}
-	// if err = r.ensureBusinessDomainVisible(ctx, req.BusinessDomainID, req.SkillID); err != nil {
-	// 	return nil, err
-	// }
-
+	if !authorized {
+		r.Logger.WithContext(ctx).Errorf("user %s has no permission to execute skill %s", req.UserID, req.SkillID)
+		err = errors.NewHTTPError(ctx, http.StatusForbidden, errors.ErrExtCommonOperationForbidden, fmt.Sprintf("user %s has no permission to execute skill %s", req.UserID, req.SkillID))
+		return nil, err
+	}
 	relPath, err := normalizeZipPath(req.RelPath)
 	if err != nil {
 		return nil, err
 	}
 	file, err := r.fileRepo.SelectSkillFileByPath(ctx, nil, req.SkillID, relPath)
 	if err != nil {
+		r.Logger.WithContext(ctx).Errorf("read skill file failed: %v", err)
 		return nil, err
 	}
 	if file == nil {
-		return nil, fmt.Errorf("skill file not found: %s", relPath)
+		r.Logger.WithContext(ctx).Warnf("skill file not found: %s", relPath)
+		err = errors.DefaultHTTPError(ctx, http.StatusNotFound, fmt.Sprintf("skill file not found: %s", relPath))
+		return nil, err
 	}
-
+	// 从存储中读取文件
 	content, err := r.assetStore.Read(ctx, file.StorageKey)
 	if err != nil {
+		r.Logger.WithContext(ctx).Errorf("read skill file failed: %v", err)
 		return nil, err
 	}
 	if checksumSHA256(content) != file.ContentSHA256 {
+		r.Logger.WithContext(ctx).Errorf("skill file checksum mismatch: %s", relPath)
 		return nil, fmt.Errorf("skill file checksum mismatch: %s", relPath)
 	}
 
@@ -137,8 +156,3 @@ func (r *skillReader) ReadSkillFile(ctx context.Context, req *interfaces.ReadSki
 		FileType: file.FileType,
 	}, nil
 }
-
-// func isSkillDeletable(status model.SkillStatus) bool {
-// 	// 只有未发布、已发布、已下线的技能才可以删除
-// 	return status == model.SkillStatusUnpublish || status == model.SkillStatusPublished || status == model.SkillStatusOffline
-// }

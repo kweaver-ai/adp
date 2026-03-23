@@ -337,10 +337,11 @@ CREATE TABLE IF NOT EXISTS `t_skill_repository` (
     `f_update_time` bigint(20) NOT NULL COMMENT '编辑时间',
     `f_delete_user` varchar(50) NOT NULL DEFAULT '' COMMENT '删除者',
     `f_delete_time` bigint(20) NOT NULL DEFAULT 0 COMMENT '删除时间',
+    `f_category` varchar(50) DEFAULT 0 COMMENT '工具箱分类, 数据处理/算法模型',
     PRIMARY KEY (`f_id`),
     UNIQUE KEY `uk_skill_id` (`f_skill_id`) USING BTREE,
     KEY `idx_status_update_time` (`f_status`, `f_update_time`) USING BTREE,
-    KEY `idx_source_update_time` (`f_source`, `f_update_time`) USING BTREE,
+    KEY `idx_category_update_time` (`f_category`, `f_update_time`) USING BTREE,
     KEY `idx_create_user_update_time` (`f_create_user`, `f_update_time`) USING BTREE
 ) ENGINE = InnoDB COMMENT = 'Skill 主表';
 

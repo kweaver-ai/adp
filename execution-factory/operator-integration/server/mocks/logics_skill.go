@@ -115,6 +115,21 @@ func (mr *MockSkillRegistryMockRecorder) RegisterSkill(ctx, req any) *gomock.Cal
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RegisterSkill", reflect.TypeOf((*MockSkillRegistry)(nil).RegisterSkill), ctx, req)
 }
 
+// UpdateSkillStatus mocks base method.
+func (m *MockSkillRegistry) UpdateSkillStatus(ctx context.Context, req *interfaces.UpdateSkillStatusReq) (*interfaces.UpdateSkillStatusResp, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UpdateSkillStatus", ctx, req)
+	ret0, _ := ret[0].(*interfaces.UpdateSkillStatusResp)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// UpdateSkillStatus indicates an expected call of UpdateSkillStatus.
+func (mr *MockSkillRegistryMockRecorder) UpdateSkillStatus(ctx, req any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateSkillStatus", reflect.TypeOf((*MockSkillRegistry)(nil).UpdateSkillStatus), ctx, req)
+}
+
 // MockSkillMarket is a mock of SkillMarket interface.
 type MockSkillMarket struct {
 	ctrl     *gomock.Controller
@@ -221,43 +236,4 @@ func (m *MockSkillReader) ReadSkillFile(ctx context.Context, req *interfaces.Rea
 func (mr *MockSkillReaderMockRecorder) ReadSkillFile(ctx, req any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ReadSkillFile", reflect.TypeOf((*MockSkillReader)(nil).ReadSkillFile), ctx, req)
-}
-
-// MockSkillRuntimeBinder is a mock of SkillRuntimeBinder interface.
-type MockSkillRuntimeBinder struct {
-	ctrl     *gomock.Controller
-	recorder *MockSkillRuntimeBinderMockRecorder
-	isgomock struct{}
-}
-
-// MockSkillRuntimeBinderMockRecorder is the mock recorder for MockSkillRuntimeBinder.
-type MockSkillRuntimeBinderMockRecorder struct {
-	mock *MockSkillRuntimeBinder
-}
-
-// NewMockSkillRuntimeBinder creates a new mock instance.
-func NewMockSkillRuntimeBinder(ctrl *gomock.Controller) *MockSkillRuntimeBinder {
-	mock := &MockSkillRuntimeBinder{ctrl: ctrl}
-	mock.recorder = &MockSkillRuntimeBinderMockRecorder{mock}
-	return mock
-}
-
-// EXPECT returns an object that allows the caller to indicate expected use.
-func (m *MockSkillRuntimeBinder) EXPECT() *MockSkillRuntimeBinderMockRecorder {
-	return m.recorder
-}
-
-// ListAgentSkills mocks base method.
-func (m *MockSkillRuntimeBinder) ListAgentSkills(ctx context.Context, req *interfaces.AgentSkillBindingReq) (*interfaces.AgentSkillBindingResp, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "ListAgentSkills", ctx, req)
-	ret0, _ := ret[0].(*interfaces.AgentSkillBindingResp)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// ListAgentSkills indicates an expected call of ListAgentSkills.
-func (mr *MockSkillRuntimeBinderMockRecorder) ListAgentSkills(ctx, req any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListAgentSkills", reflect.TypeOf((*MockSkillRuntimeBinder)(nil).ListAgentSkills), ctx, req)
 }

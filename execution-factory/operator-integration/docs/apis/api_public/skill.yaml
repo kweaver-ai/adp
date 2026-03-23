@@ -343,7 +343,7 @@ paths:
                 $ref: "#/components/schemas/Error"
     delete:
       summary: "删除 Skill"
-      description: "物理删除指定 Skill。删除流程会先进入 deleting 中间态，完成对象存储与文件索引清理后再物理删除主记录；deleting 为内部补偿态，对外视为不存在。"
+      description: "物理删除指定 Skill。当前实现会先将 `f_is_deleted` 置为 1，再在同一请求内同步完成对象存储、文件索引和主记录清理；`f_is_deleted=1` 对外视为不存在。"
       tags:
         - "Skill 管理"
       parameters:
@@ -380,7 +380,7 @@ paths:
   /skills/{skill_id}/content:
     get:
       summary: "获取 Skill 内容"
-      description: "获取 Skill 的正文内容与文件摘要。处于 deleting 中间态的 Skill 对外视为不存在。"
+      description: "获取 Skill 的正文内容与文件摘要。`f_is_deleted=1` 的 Skill 对外视为不存在；当前实现满足 execute / public_access / view 任一权限即可读取。"
       tags:
         - "Skill 读取"
       parameters:
@@ -417,7 +417,7 @@ paths:
   /skills/{skill_id}/download:
     get:
       summary: "下载 Skill ZIP"
-      description: "下载指定 Skill 的 ZIP 包。返回内容包含 SKILL.md 与已登记的内部文件。处于 deleting 中间态的 Skill 对外视为不存在。"
+      description: "下载指定 Skill 的 ZIP 包。返回内容包含 SKILL.md 与已登记的内部文件。`f_is_deleted=1` 的 Skill 对外视为不存在；当前实现满足 execute / public_access / view 任一权限即可下载。"
       tags:
         - "Skill 管理"
       parameters:
@@ -466,7 +466,7 @@ paths:
   /skills/{skill_id}/files/read:
     post:
       summary: "读取 Skill 文件"
-      description: "按相对路径读取 Skill 内部文件。处于 deleting 中间态的 Skill 对外视为不存在。附件读取权限以 Skill execute 权限为准。"
+      description: "按相对路径读取 Skill 内部文件。`f_is_deleted=1` 的 Skill 对外视为不存在；当前实现满足 execute / public_access / view 任一权限即可读取。"
       tags:
         - "Skill 读取"
       parameters:

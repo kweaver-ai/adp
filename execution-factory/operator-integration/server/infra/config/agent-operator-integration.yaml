@@ -105,12 +105,11 @@ ai_generation_config:
     frequency_penalty: 0.1
     presence_penalty: 0.1
 
-s3:
-  endpoint: ""
-  bucket: ""
-  region: "us-east-1"
-  use_ssl: false
-  storage_prefix: "aoi_skill_assets"
+oss_gateway:
+  base_url: ""
+  storage_id: ""
+  internal_request: false
+  expires: 3600
 
 trace:
   enabled: false

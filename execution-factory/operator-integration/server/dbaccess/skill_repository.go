@@ -10,6 +10,7 @@ import (
 	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/infra/common/ormhelper"
 	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/infra/config"
 	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/infra/db"
+	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/interfaces"
 	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/interfaces/model"
 	"github.com/kweaver-ai/proton-rds-sdk-go/sqlx"
 )
@@ -55,7 +56,7 @@ func (s *skillRepositoryDB) InsertSkill(ctx context.Context, tx *sql.Tx, skill *
 	skill.CreateTime = now
 	skill.UpdateTime = now
 	if skill.Status == "" {
-		skill.Status = model.SkillStatusUnpublish
+		skill.Status = string(interfaces.BizStatusUnpublish)
 	}
 	row, err := orm.Insert().Into(tbSkillRepository).Values(map[string]interface{}{
 		"f_skill_id":      skill.SkillID,
@@ -74,6 +75,7 @@ func (s *skillRepositoryDB) InsertSkill(ctx context.Context, tx *sql.Tx, skill *
 		"f_update_user":   skill.UpdateUser,
 		"f_delete_time":   skill.DeleteTime,
 		"f_delete_user":   skill.DeleteUser,
+		"f_category":      skill.Category,
 	}).Execute(ctx)
 	if err != nil {
 		return "", err
@@ -108,17 +110,32 @@ func (s *skillRepositoryDB) UpdateSkill(ctx context.Context, tx *sql.Tx, skill *
 		"f_update_user":   skill.UpdateUser,
 		"f_delete_time":   skill.DeleteTime,
 		"f_delete_user":   skill.DeleteUser,
+		"f_category":      skill.Category,
 	}).WhereEq("f_skill_id", skill.SkillID).Execute(ctx)
 	return err
 }
 
-func (s *skillRepositoryDB) UpdateSkillStatus(ctx context.Context, tx *sql.Tx, skillID string, status model.SkillStatus, updateUser string) error {
+func (s *skillRepositoryDB) UpdateSkillStatus(ctx context.Context, tx *sql.Tx, skillID string, status string, updateUser string) error {
 	orm := s.orm
 	if tx != nil {
 		orm = s.orm.WithTx(tx)
 	}
 	updateData := map[string]interface{}{
 		"f_status":      status,
+		"f_update_time": time.Now().UnixNano(),
+		"f_update_user": updateUser,
+	}
+	_, err := orm.Update(tbSkillRepository).SetData(updateData).WhereEq("f_skill_id", skillID).Execute(ctx)
+	return err
+}
+
+func (s *skillRepositoryDB) UpdateSkillDeleted(ctx context.Context, tx *sql.Tx, skillID string, isDeleted bool, updateUser string) error {
+	orm := s.orm
+	if tx != nil {
+		orm = s.orm.WithTx(tx)
+	}
+	updateData := map[string]interface{}{
+		"f_is_deleted":  isDeleted,
 		"f_update_time": time.Now().UnixNano(),
 		"f_update_user": updateUser,
 	}
@@ -188,9 +205,6 @@ func (s *skillRepositoryDB) DeleteSkillByID(ctx context.Context, tx *sql.Tx, ski
 }
 
 func (s *skillRepositoryDB) applyFilterConditions(query *ormhelper.SelectBuilder, filter map[string]interface{}) *ormhelper.SelectBuilder {
-	if len(filter) == 0 {
-		return query
-	}
 	if name, ok := filter["name"].(string); ok && name != "" {
 		query = query.WhereLike("f_name", "%"+name+"%")
 	}
@@ -202,6 +216,9 @@ func (s *skillRepositoryDB) applyFilterConditions(query *ormhelper.SelectBuilder
 	}
 	if status, ok := filter["status"].(string); ok && status != "" {
 		query = query.WhereEq("f_status", status)
+	}
+	if category, ok := filter["category"].(string); ok && category != "" {
+		query = query.WhereEq("f_category", category)
 	}
 	if filter["in"] != nil {
 		skillIDs := filter["in"].([]string)
@@ -218,5 +235,22 @@ func (s *skillRepositoryDB) applyFilterConditions(query *ormhelper.SelectBuilder
 			query = query.WhereIn("f_skill_id", arr...)
 		}
 	}
+	// 获取未删除的
+	query = query.WhereEq("f_is_deleted", false)
 	return query
+}
+
+func (s *skillRepositoryDB) SelectSkillByName(ctx context.Context, tx *sql.Tx, name string, status []string) (exists bool, skillDB *model.SkillRepositoryDB, err error) {
+	orm := s.orm
+	if tx != nil {
+		orm = s.orm.WithTx(tx)
+	}
+	skillDB = &model.SkillRepositoryDB{}
+	args := []interface{}{}
+	for _, s := range status {
+		args = append(args, s)
+	}
+	err = orm.Select().From(tbSkillRepository).WhereEq("f_name", name).WhereIn("f_status", args...).First(ctx, skillDB)
+	exist, err := checkHasQueryErr(err)
+	return exist, skillDB, err
 }

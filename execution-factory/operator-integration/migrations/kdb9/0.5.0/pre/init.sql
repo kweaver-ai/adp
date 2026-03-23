@@ -379,12 +379,13 @@ CREATE TABLE IF NOT EXISTS `t_skill_repository` (
   `f_update_time` BIGINT(20) NOT NULL COMMENT '编辑时间',
   `f_delete_user` VARCHAR(50) NOT NULL DEFAULT '' COMMENT '删除者',
   `f_delete_time` BIGINT(20) NOT NULL DEFAULT 0 COMMENT '删除时间',
+  "f_category" VARCHAR(50 CHAR) DEFAULT 0,
   PRIMARY KEY (`f_id`),
   UNIQUE KEY `idx_t_skill_repository_uk_skill_id` (f_skill_id)
 );
 
 CREATE INDEX IF NOT EXISTS `idx_t_skill_repository_idx_status_update_time` ON `t_skill_repository` (f_status, f_update_time);
-CREATE INDEX IF NOT EXISTS `idx_t_skill_repository_idx_source_update_time` ON `t_skill_repository` (f_source, f_update_time);
+CREATE INDEX IF NOT EXISTS `idx_t_skill_repository_idx_category_update_time` ON `t_skill_repository` (f_category, f_update_time);
 CREATE INDEX IF NOT EXISTS `idx_t_skill_repository_idx_create_user_update_time` ON `t_skill_repository` (f_create_user, f_update_time);
 
 
