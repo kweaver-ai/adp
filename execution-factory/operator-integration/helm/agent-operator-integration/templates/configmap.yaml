@@ -1,8 +1,8 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: {{ .Release.Name }}
-  namespace: {{ .Values.namespace }}
+  name: { { .Release.Name } }
+  namespace: { { .Values.namespace } }
 data:
   agent-operator-integration.yaml: |
     project:
@@ -100,6 +100,13 @@ data:
         top_p: {{ .Values.depServices.aiGenerationConfig.llm.topP }}
         frequency_penalty: {{ .Values.depServices.aiGenerationConfig.llm.frequencyPenalty }}
         presence_penalty: {{ .Values.depServices.aiGenerationConfig.llm.presencePenalty }}
+    oss-gateway-backend:
+      private_protocol: {{ index .Values "depServices" "oss-gateway-backend" "privateProtocol" | quote }}
+      private_host: {{ index .Values "depServices" "oss-gateway-backend" "privateHost" | quote }}
+      private_port: {{ index .Values "depServices" "oss-gateway-backend" "privatePort" }}
+      storage_id: {{ index .Values "depServices" "oss-gateway-backend" "storageID" | quote }}
+      internal_request: {{ index .Values "depServices" "oss-gateway-backend" "internalRequest" }}
+      expires: {{ index .Values "depServices" "oss-gateway-backend" "expires" }}
 
   mq_config.yaml: |
     {{- toYaml .Values.depServices.mq | nindent 4 }}

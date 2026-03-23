@@ -13,6 +13,7 @@ type SkillFileIndexDB struct {
 	SkillID       string `json:"skill_id" db:"f_skill_id"`
 	RelPath       string `json:"rel_path" db:"f_rel_path"`
 	PathHash      string `json:"path_hash" db:"f_path_hash"`
+	StorageID     string `json:"storage_id" db:"f_storage_id"`
 	StorageKey    string `json:"storage_key" db:"f_storage_key"`
 	FileType      string `json:"file_type" db:"f_file_type"`
 	ContentSHA256 string `json:"content_sha256" db:"f_content_sha256"`

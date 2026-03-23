@@ -3,7 +3,6 @@ package skill
 import (
 	"archive/zip"
 	"bytes"
-	"context"
 	"encoding/json"
 	"testing"
 
@@ -130,13 +129,4 @@ name: demo-skill
 description: demo desc
 ---
 Use this skill carefully.`
-}
-
-func TestLocalSkillAssetStoreContextIgnored(t *testing.T) {
-	Convey("LocalSkillAssetStore Write ignores context cancellation state", t, func() {
-		t.Setenv("TMPDIR", t.TempDir())
-		store := newSkillAssetStore()
-		_, _, err := store.Write(context.Background(), "skill-3", "ref.txt", []byte("ok"))
-		So(err, ShouldBeNil)
-	})
 }

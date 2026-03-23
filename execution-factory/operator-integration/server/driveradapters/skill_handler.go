@@ -8,6 +8,9 @@ import (
 )
 
 type SkillRestHandler interface {
+	// RegisterPrivate 注册内部API
+	RegisterPrivate(engine *gin.RouterGroup)
+	// RegisterPublic 注册公开API
 	RegisterPublic(engine *gin.RouterGroup)
 }
 
@@ -27,6 +30,18 @@ func NewSkillRestHandler() SkillRestHandler {
 		}
 	})
 	return sHandler
+}
+func (r *skillRestHandler) RegisterPrivate(engine *gin.RouterGroup) {
+	/*市场接口*/
+	// 查询技能市场列表
+	engine.GET("/skills/market", middlewareBusinessDomain(true, false), r.SkillHandler.QuerySkillMarketList)
+	// 查询技能市场详情
+	engine.GET("/skills/market/:skill_id", middlewareBusinessDomain(true, false), r.SkillHandler.GetSkillMarketDetail)
+	/*读取接口*/
+	// 查询技能内容
+	engine.GET("/skills/:skill_id/content", middlewareBusinessDomain(true, false), r.SkillHandler.GetSkillContent)
+	// 读取技能文件
+	engine.POST("/skills/:skill_id/files/read", middlewareBusinessDomain(true, false), r.SkillHandler.ReadSkillFile)
 }
 
 func (r *skillRestHandler) RegisterPublic(engine *gin.RouterGroup) {

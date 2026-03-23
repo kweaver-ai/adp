@@ -380,7 +380,7 @@ paths:
   /skills/{skill_id}/content:
     get:
       summary: "获取 Skill 内容"
-      description: "获取 Skill 的正文内容与文件摘要。`f_is_deleted=1` 的 Skill 对外视为不存在；当前实现满足 execute / public_access / view 任一权限即可读取。"
+      description: "获取 Skill 内容下载地址与文件摘要。`f_is_deleted=1` 的 Skill 对外视为不存在；当前实现满足 execute / public_access / view 任一权限即可读取。"
       tags:
         - "Skill 读取"
       parameters:
@@ -466,7 +466,7 @@ paths:
   /skills/{skill_id}/files/read:
     post:
       summary: "读取 Skill 文件"
-      description: "按相对路径读取 Skill 内部文件。`f_is_deleted=1` 的 Skill 对外视为不存在；当前实现满足 execute / public_access / view 任一权限即可读取。"
+      description: "按相对路径获取 Skill 内部文件下载地址。`f_is_deleted=1` 的 Skill 对外视为不存在；当前实现满足 execute / public_access / view 任一权限即可读取。"
       tags:
         - "Skill 读取"
       parameters:
@@ -734,8 +734,9 @@ components:
           properties:
             skill_id:
               type: string
-            skill_content:
+            url:
               type: string
+              description: "SKILL.md 下载地址"
             files:
               type: array
               items:
@@ -767,8 +768,9 @@ components:
               type: string
             rel_path:
               type: string
-            content:
+            url:
               type: string
+              description: "文件下载地址"
             mime_type:
               type: string
             file_type:

@@ -79,7 +79,7 @@ func TestSkillHandler(t *testing.T) {
 				func(_ any, req *interfaces.GetSkillContentReq) (*interfaces.GetSkillContentResp, error) {
 					So(req.BusinessDomainID, ShouldEqual, "bd-test")
 					So(req.SkillID, ShouldEqual, "skill-2")
-					return &interfaces.GetSkillContentResp{SkillID: "skill-2", SkillContent: "guide"}, nil
+					return &interfaces.GetSkillContentResp{SkillID: "skill-2", URL: "https://download/skill-2/SKILL.md"}, nil
 				},
 			)
 
@@ -105,7 +105,7 @@ func TestSkillHandler(t *testing.T) {
 					So(req.BusinessDomainID, ShouldEqual, "bd-test")
 					So(req.SkillID, ShouldEqual, "skill-3")
 					So(req.RelPath, ShouldEqual, "refs/guide.md")
-					return &interfaces.ReadSkillFileResp{SkillID: "skill-3", RelPath: "refs/guide.md", Content: "body"}, nil
+					return &interfaces.ReadSkillFileResp{SkillID: "skill-3", RelPath: "refs/guide.md", URL: "https://download/skill-3/refs/guide.md"}, nil
 				},
 			)
 

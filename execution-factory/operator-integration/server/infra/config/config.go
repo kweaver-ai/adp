@@ -50,15 +50,15 @@ type Config struct {
 	MFModelAPI               PrivateBaseConfig         `yaml:"mf-model-api"`
 	MFModelManager           PrivateBaseConfig         `yaml:"mf-model-manager"`
 	AIGenerationConfig       AIGenerationConfig        `yaml:"ai_generation_config"`
-	OSSGatewayConfig         OSSGatewayConfig          `yaml:"oss_gateway"`
+	OSSGatewayBackendConfig  OSSGatewayBackendConfig   `yaml:"oss-gateway-backend"`
 }
 
-// OSSGatewayConfig Skill 资产 OSS 网关配置
-type OSSGatewayConfig struct {
-	BaseURL         string `yaml:"base_url" env:"SKILL_OSS_GATEWAY_BASE_URL"`
-	StorageID       string `yaml:"storage_id" env:"SKILL_OSS_GATEWAY_STORAGE_ID"`
-	InternalRequest bool   `yaml:"internal_request" default:"false" env:"SKILL_OSS_GATEWAY_INTERNAL_REQUEST"`
-	Expires         int64  `yaml:"expires" default:"3600" env:"SKILL_OSS_GATEWAY_EXPIRES"`
+// OSSGatewayBackendConfig OSS 网关后端配置
+type OSSGatewayBackendConfig struct {
+	PrivateBaseConfig `yaml:",inline"`
+	StorageID         string `yaml:"storage_id"`
+	InternalRequest   bool   `yaml:"internal_request" default:"false"`
+	Expires           int64  `yaml:"expires" default:"3600"` // 单位（秒）
 }
 
 // SandboxControlPlaneConfig 沙箱控制服务配置

@@ -54,7 +54,7 @@ func NewSkillRegistry() interfaces.SkillRegistry {
 			parser:                newSkillParser(),
 			skillRepo:             dbaccess.NewSkillRepositoryDB(),
 			fileRepo:              dbaccess.NewSkillFileIndexDB(),
-			assetStore:            newSkillAssetStore(),
+			assetStore:            newOSSGatewaySkillAssetStore(),
 			dbTx:                  dbaccess.NewBaseTx(),
 			AuthService:           auth.NewAuthServiceImpl(),
 			BusinessDomainService: business_domain.NewBusinessDomainService(),
@@ -218,7 +218,10 @@ func (r *skillRegistry) DeleteSkill(ctx context.Context, req *interfaces.DeleteS
 	}
 	// 先删除对象存储中的记录，再删除数据库中的记录
 	for _, file := range files {
-		if removeErr := r.assetStore.DeleteFile(ctx, file.StorageKey); removeErr != nil {
+		if removeErr := r.assetStore.Delete(ctx, &interfaces.OssObject{
+			StorageID:  file.StorageID,
+			StorageKey: file.StorageKey,
+		}); removeErr != nil {
 			r.Logger.WithContext(ctx).Warnf("delete file failed, err:%s", removeErr.Error())
 			return removeErr
 		}
@@ -368,7 +371,10 @@ func (r *skillRegistry) DownloadSkill(ctx context.Context, req *interfaces.Downl
 		return nil, err
 	}
 	for _, file := range files {
-		content, readErr := r.assetStore.Read(ctx, file.StorageKey)
+		content, readErr := r.assetStore.Download(ctx, &interfaces.OssObject{
+			StorageID:  file.StorageID,
+			StorageKey: file.StorageKey,
+		})
 		if readErr != nil {
 			_ = zw.Close()
 			return nil, readErr
@@ -716,7 +722,7 @@ func convertSkillSummary(skill *model.SkillRepositoryDB) *interfaces.SkillSummar
 func (r *skillRegistry) persistSkillAssets(ctx context.Context, skillID string, assets []*skillAsset) ([]*model.SkillFileIndexDB, error) {
 	indices := make([]*model.SkillFileIndexDB, 0, len(assets))
 	for _, asset := range assets {
-		storageKey, checksum, err := r.assetStore.Write(ctx, skillID, asset.RelPath, asset.Content)
+		object, checksum, err := r.assetStore.Upload(ctx, skillID, asset.RelPath, asset.Content)
 		if err != nil {
 			return nil, err
 		}
@@ -724,7 +730,8 @@ func (r *skillRegistry) persistSkillAssets(ctx context.Context, skillID string, 
 			SkillID:       skillID,
 			RelPath:       asset.RelPath,
 			PathHash:      utils.MD5(asset.RelPath),
-			StorageKey:    storageKey,
+			StorageID:     object.StorageID,
+			StorageKey:    object.StorageKey,
 			FileType:      asset.FileType,
 			ContentSHA256: checksum,
 			MimeType:      asset.MimeType,

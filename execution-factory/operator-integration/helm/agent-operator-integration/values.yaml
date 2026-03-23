@@ -168,6 +168,13 @@ depServices:
     maxSessions: 3
     activeSessions: 1
     maxConcurrentTasks: 100
+  oss-gateway-backend:
+    privateHost: "oss-gateway-backend"
+    privatePort: 8080
+    privateProtocol: "http"
+    storageID: ""
+    internalRequest: false
+    expires: 3600
 
 env:
   language: en_US.UTF-8

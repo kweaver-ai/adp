@@ -13,6 +13,7 @@ import (
 	context "context"
 	reflect "reflect"
 
+	interfaces "github.com/kweaver-ai/adp/execution-factory/operator-integration/server/interfaces"
 	gomock "go.uber.org/mock/gomock"
 )
 
@@ -40,61 +41,62 @@ func (m *MockskillAssetStore) EXPECT() *MockskillAssetStoreMockRecorder {
 	return m.recorder
 }
 
-// DeleteFile mocks base method.
-func (m *MockskillAssetStore) DeleteFile(ctx context.Context, storageKey string) error {
+// Delete mocks base method.
+func (m *MockskillAssetStore) Delete(ctx context.Context, object *interfaces.OssObject) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "DeleteFile", ctx, storageKey)
+	ret := m.ctrl.Call(m, "Delete", ctx, object)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
-// DeleteFile indicates an expected call of DeleteFile.
-func (mr *MockskillAssetStoreMockRecorder) DeleteFile(ctx, storageKey any) *gomock.Call {
+// Delete indicates an expected call of Delete.
+func (mr *MockskillAssetStoreMockRecorder) Delete(ctx, object any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteFile", reflect.TypeOf((*MockskillAssetStore)(nil).DeleteFile), ctx, storageKey)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Delete", reflect.TypeOf((*MockskillAssetStore)(nil).Delete), ctx, object)
 }
 
-// DeleteSkill mocks base method.
-func (m *MockskillAssetStore) DeleteSkill(ctx context.Context, skillID string) error {
+// Download mocks base method.
+func (m *MockskillAssetStore) Download(ctx context.Context, object *interfaces.OssObject) ([]byte, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "DeleteSkill", ctx, skillID)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// DeleteSkill indicates an expected call of DeleteSkill.
-func (mr *MockskillAssetStoreMockRecorder) DeleteSkill(ctx, skillID any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteSkill", reflect.TypeOf((*MockskillAssetStore)(nil).DeleteSkill), ctx, skillID)
-}
-
-// Read mocks base method.
-func (m *MockskillAssetStore) Read(ctx context.Context, storageKey string) ([]byte, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Read", ctx, storageKey)
+	ret := m.ctrl.Call(m, "Download", ctx, object)
 	ret0, _ := ret[0].([]byte)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// Read indicates an expected call of Read.
-func (mr *MockskillAssetStoreMockRecorder) Read(ctx, storageKey any) *gomock.Call {
+// Download indicates an expected call of Download.
+func (mr *MockskillAssetStoreMockRecorder) Download(ctx, object any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Read", reflect.TypeOf((*MockskillAssetStore)(nil).Read), ctx, storageKey)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Download", reflect.TypeOf((*MockskillAssetStore)(nil).Download), ctx, object)
 }
 
-// Write mocks base method.
-func (m *MockskillAssetStore) Write(ctx context.Context, skillID, relPath string, content []byte) (string, string, error) {
+// GetDownloadURL mocks base method.
+func (m *MockskillAssetStore) GetDownloadURL(ctx context.Context, object *interfaces.OssObject) (string, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Write", ctx, skillID, relPath, content)
+	ret := m.ctrl.Call(m, "GetDownloadURL", ctx, object)
 	ret0, _ := ret[0].(string)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetDownloadURL indicates an expected call of GetDownloadURL.
+func (mr *MockskillAssetStoreMockRecorder) GetDownloadURL(ctx, object any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetDownloadURL", reflect.TypeOf((*MockskillAssetStore)(nil).GetDownloadURL), ctx, object)
+}
+
+// Upload mocks base method.
+func (m *MockskillAssetStore) Upload(ctx context.Context, skillID, relPath string, content []byte) (*interfaces.OssObject, string, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Upload", ctx, skillID, relPath, content)
+	ret0, _ := ret[0].(*interfaces.OssObject)
 	ret1, _ := ret[1].(string)
 	ret2, _ := ret[2].(error)
 	return ret0, ret1, ret2
 }
 
-// Write indicates an expected call of Write.
-func (mr *MockskillAssetStoreMockRecorder) Write(ctx, skillID, relPath, content any) *gomock.Call {
+// Upload indicates an expected call of Upload.
+func (mr *MockskillAssetStoreMockRecorder) Upload(ctx, skillID, relPath, content any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Write", reflect.TypeOf((*MockskillAssetStore)(nil).Write), ctx, skillID, relPath, content)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Upload", reflect.TypeOf((*MockskillAssetStore)(nil).Upload), ctx, skillID, relPath, content)
 }

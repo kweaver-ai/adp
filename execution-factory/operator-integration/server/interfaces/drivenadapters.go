@@ -762,3 +762,20 @@ type MFModelManager interface {
 	// 获取提示词
 	GetPromptByPromptID(ctx context.Context, promptID string) (resp *GetPromptResp, err error)
 }
+
+// OssObject OSS 对象结构体
+type OssObject struct {
+	StorageID  string
+	StorageKey string
+}
+
+// OSSGatewayBackendClient OSS 网关后端客户端接口
+type OSSGatewayBackendClient interface {
+	UploadFile(ctx context.Context, object *OssObject, content []byte) error
+	GetDownloadURL(ctx context.Context, object *OssObject) (string, error)
+	DownloadFile(ctx context.Context, object *OssObject) (data []byte, err error)
+	DeleteFile(ctx context.Context, object *OssObject) error
+	CurrentStorageID(ctx context.Context) (string, error)
+	Close() error
+	IsReady() bool
+}

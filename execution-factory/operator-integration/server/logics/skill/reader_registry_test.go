@@ -23,7 +23,7 @@ func TestSkillReaderAndRegistry(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 
-		Convey("GetSkillContent returns skill content and manifest", func() {
+		Convey("GetSkillContent returns skill download url and manifest", func() {
 			mockSkillRepo := mocks.NewMockISkillRepository(ctrl)
 			mockFileRepo := mocks.NewMockISkillFileIndex(ctrl)
 			mockAssetStore := mocks.NewMockskillAssetStore(ctrl)
@@ -46,6 +46,9 @@ func TestSkillReaderAndRegistry(t *testing.T) {
 			mockAuthService.EXPECT().GetAccessor(gomock.Any(), "").Return(&interfaces.AuthAccessor{ID: "viewer"}, nil)
 			mockAuthService.EXPECT().OperationCheckAny(gomock.Any(), gomock.Any(), "skill-1", interfaces.AuthResourceTypeSkill,
 				interfaces.AuthOperationTypeExecute, interfaces.AuthOperationTypePublicAccess, interfaces.AuthOperationTypeView).Return(true, nil)
+			mockAssetStore.EXPECT().GetDownloadURL(gomock.Any(), &interfaces.OssObject{
+				StorageKey: buildObjectKey("skill-1", SkillMD),
+			}).Return("https://download/skill-1/SKILL.md", nil)
 
 			resp, err := reader.GetSkillContent(context.Background(), &interfaces.GetSkillContentReq{
 				BusinessDomainID: "bd-1",
@@ -54,7 +57,7 @@ func TestSkillReaderAndRegistry(t *testing.T) {
 
 			So(err, ShouldBeNil)
 			So(resp, ShouldNotBeNil)
-			So(resp.SkillContent, ShouldEqual, "demo guide")
+			So(resp.URL, ShouldEqual, "https://download/skill-1/SKILL.md")
 			So(len(resp.Files), ShouldEqual, 1)
 			So(resp.Files[0].RelPath, ShouldEqual, "refs/guide.md")
 			So(resp.Files[0].MimeType, ShouldEqual, "text/markdown")
@@ -92,7 +95,7 @@ func TestSkillReaderAndRegistry(t *testing.T) {
 			So(err.Error(), ShouldContainSubstring, "execute forbidden")
 		})
 
-		Convey("ReadSkillFile validates checksum", func() {
+		Convey("ReadSkillFile returns file download url", func() {
 			mockSkillRepo := mocks.NewMockISkillRepository(ctrl)
 			mockFileRepo := mocks.NewMockISkillFileIndex(ctrl)
 			mockAssetStore := mocks.NewMockskillAssetStore(ctrl)
@@ -115,10 +118,14 @@ func TestSkillReaderAndRegistry(t *testing.T) {
 			mockFileRepo.EXPECT().SelectSkillFileByPath(gomock.Any(), gomock.Nil(), "skill-3", "refs/guide.md").Return(&model.SkillFileIndexDB{
 				SkillID:       "skill-3",
 				RelPath:       "refs/guide.md",
+				StorageID:     "storage-1",
 				StorageKey:    "/tmp/f1",
 				ContentSHA256: checksumSHA256([]byte("original")),
 			}, nil)
-			mockAssetStore.EXPECT().Read(gomock.Any(), "/tmp/f1").Return([]byte("tampered"), nil)
+			mockAssetStore.EXPECT().GetDownloadURL(gomock.Any(), &interfaces.OssObject{
+				StorageID:  "storage-1",
+				StorageKey: "/tmp/f1",
+			}).Return("https://download/f1", nil)
 
 			resp, err := reader.ReadSkillFile(context.Background(), &interfaces.ReadSkillFileReq{
 				BusinessDomainID: "bd-1",
@@ -126,9 +133,9 @@ func TestSkillReaderAndRegistry(t *testing.T) {
 				RelPath:          "refs/guide.md",
 			})
 
-			So(resp, ShouldBeNil)
-			So(err, ShouldNotBeNil)
-			So(err.Error(), ShouldContainSubstring, "checksum mismatch")
+			So(err, ShouldBeNil)
+			So(resp, ShouldNotBeNil)
+			So(resp.URL, ShouldEqual, "https://download/f1")
 		})
 
 		Convey("DeleteSkill rejects invalid status", func() {
@@ -250,7 +257,7 @@ func TestSkillReaderAndRegistry(t *testing.T) {
 			So(err, ShouldBeNil)
 			So(resp, ShouldNotBeNil)
 			So(resp.SkillID, ShouldEqual, "skill-registered")
-			So(resp.Status, ShouldEqual, interfaces.BizStatusUnpublish.String())
+			So(resp.Status, ShouldEqual, interfaces.BizStatusUnpublish)
 		})
 
 		Convey("UpdateSkillStatus publishes skill after permission and duplicate-name checks", func() {
@@ -553,9 +560,11 @@ func TestSkillReaderAndRegistry(t *testing.T) {
 
 		Convey("GetSkillContent ignores owner and business domain direct comparison", func() {
 			mockSkillRepo := mocks.NewMockISkillRepository(ctrl)
+			mockAssetStore := mocks.NewMockskillAssetStore(ctrl)
 			mockAuthService := mocks.NewMockIAuthorizationService(ctrl)
 			reader := &skillReader{
 				skillRepo:   mockSkillRepo,
+				assetStore:  mockAssetStore,
 				AuthService: mockAuthService,
 				Logger:      logger.DefaultLogger(),
 			}
@@ -572,6 +581,9 @@ func TestSkillReaderAndRegistry(t *testing.T) {
 				interfaces.AuthOperationTypePublicAccess,
 				interfaces.AuthOperationTypeView,
 			).Return(true, nil)
+			mockAssetStore.EXPECT().GetDownloadURL(gomock.Any(), &interfaces.OssObject{
+				StorageKey: buildObjectKey("skill-13b", SkillMD),
+			}).Return("https://download/skill-13b/SKILL.md", nil)
 
 			resp, err := reader.GetSkillContent(context.Background(), &interfaces.GetSkillContentReq{
 				BusinessDomainID: "bd-1",
@@ -581,6 +593,7 @@ func TestSkillReaderAndRegistry(t *testing.T) {
 			So(err, ShouldBeNil)
 			So(resp, ShouldNotBeNil)
 			So(resp.SkillID, ShouldEqual, "skill-13b")
+			So(resp.URL, ShouldEqual, "https://download/skill-13b/SKILL.md")
 		})
 
 		Convey("ReadSkillFile hides deleting skills", func() {
@@ -627,9 +640,12 @@ func TestSkillReaderAndRegistry(t *testing.T) {
 				interfaces.AuthOperationTypeView,
 			).Return(true, nil)
 			mockFileRepo.EXPECT().SelectSkillFileByPath(gomock.Any(), gomock.Nil(), "skill-14b", "refs/guide.md").Return(&model.SkillFileIndexDB{
-				SkillID: "skill-14b", RelPath: "refs/guide.md", StorageKey: "/tmp/f14b", ContentSHA256: checksumSHA256([]byte("ok")),
+				SkillID: "skill-14b", RelPath: "refs/guide.md", StorageID: "storage-14b", StorageKey: "/tmp/f14b", ContentSHA256: checksumSHA256([]byte("ok")),
 			}, nil)
-			mockAssetStore.EXPECT().Read(gomock.Any(), "/tmp/f14b").Return([]byte("ok"), nil)
+			mockAssetStore.EXPECT().GetDownloadURL(gomock.Any(), &interfaces.OssObject{
+				StorageID:  "storage-14b",
+				StorageKey: "/tmp/f14b",
+			}).Return("https://download/f14b", nil)
 
 			resp, err := reader.ReadSkillFile(context.Background(), &interfaces.ReadSkillFileReq{
 				BusinessDomainID: "bd-1",
@@ -640,6 +656,7 @@ func TestSkillReaderAndRegistry(t *testing.T) {
 			So(err, ShouldBeNil)
 			So(resp, ShouldNotBeNil)
 			So(resp.SkillID, ShouldEqual, "skill-14b")
+			So(resp.URL, ShouldEqual, "https://download/f14b")
 			raw, marshalErr := json.Marshal(resp)
 			So(marshalErr, ShouldBeNil)
 			So(string(raw), ShouldNotContainSubstring, "access_level")
@@ -797,7 +814,7 @@ func TestSkillReaderAndRegistry(t *testing.T) {
 			mockFileRepo.EXPECT().SelectSkillFileBySkillID(gomock.Any(), gomock.Nil(), "skill-8").Return([]*model.SkillFileIndexDB{
 				{SkillID: "skill-8", StorageKey: "/tmp/object-1"},
 			}, nil)
-			mockAssetStore.EXPECT().DeleteFile(gomock.Any(), "/tmp/object-1").Return(nil)
+			mockAssetStore.EXPECT().Delete(gomock.Any(), &interfaces.OssObject{StorageKey: "/tmp/object-1"}).Return(nil)
 			mockFileRepo.EXPECT().DeleteSkillFileBySkillID(gomock.Any(), gomock.Nil(), "skill-8").Return(nil)
 			mockSkillRepo.EXPECT().DeleteSkillByID(gomock.Any(), gomock.Nil(), "skill-8").Return(nil)
 			mockBusinessDomainService.EXPECT().BatchDisassociateResource(gomock.Any(), "bd-1", []string{"skill-8"}, interfaces.AuthResourceTypeSkill).Return(nil)
@@ -839,7 +856,7 @@ func TestSkillReaderAndRegistry(t *testing.T) {
 			mockFileRepo.EXPECT().SelectSkillFileBySkillID(gomock.Any(), gomock.Nil(), "skill-9").Return([]*model.SkillFileIndexDB{
 				{SkillID: "skill-9", StorageKey: "/tmp/object-2"},
 			}, nil)
-			mockAssetStore.EXPECT().DeleteFile(gomock.Any(), "/tmp/object-2").Return(errors.New("delete failed"))
+			mockAssetStore.EXPECT().Delete(gomock.Any(), &interfaces.OssObject{StorageKey: "/tmp/object-2"}).Return(errors.New("delete failed"))
 
 			err := registry.DeleteSkill(context.Background(), &interfaces.DeleteSkillReq{
 				BusinessDomainID: "bd-1",
@@ -925,7 +942,7 @@ func TestSkillReaderAndRegistry(t *testing.T) {
 			mockFileRepo.EXPECT().SelectSkillFileBySkillID(gomock.Any(), gomock.Nil(), "skill-zip-1").Return([]*model.SkillFileIndexDB{
 				{SkillID: "skill-zip-1", RelPath: "refs/guide.md", StorageKey: "obj-1"},
 			}, nil)
-			mockAssetStore.EXPECT().Read(gomock.Any(), "obj-1").Return([]byte("guide body"), nil)
+			mockAssetStore.EXPECT().Download(gomock.Any(), &interfaces.OssObject{StorageKey: "obj-1"}).Return([]byte("guide body"), nil)
 
 			resp, err := registry.DownloadSkill(context.Background(), &interfaces.DownloadSkillReq{
 				BusinessDomainID: "bd-1",
