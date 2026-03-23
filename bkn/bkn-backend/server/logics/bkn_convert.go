@@ -7,6 +7,7 @@ package logics
 
 import (
 	bknsdk "github.com/kweaver-ai/bkn-specification/sdk/golang/bkn"
+	"github.com/kweaver-ai/kweaver-go-lib/logger"
 
 	"bkn-backend/interfaces"
 )
@@ -255,6 +256,7 @@ func ToADPRelationType(knID string, branch string, bknRel *bknsdk.BknRelationTyp
 				})
 			}
 			relType.MappingRules = mappings
+
 		case *bknsdk.InDirectMappingRule:
 			relType.MappingRules = interfaces.InDirectMapping{
 				BackingDataSource: &interfaces.ResourceInfo{
@@ -277,6 +279,9 @@ func ToADPRelationType(knID string, branch string, bknRel *bknsdk.BknRelationTyp
 					})
 				}
 			}
+
+		default:
+			logger.Errorf("Unknown mappingRules type: %T", rules)
 		}
 	}
 
@@ -312,6 +317,7 @@ func ToBKNRelationType(adpRel *interfaces.RelationType) *bknsdk.BknRelationType 
 				})
 			}
 			bknRel.MappingRules = mappingRules
+
 		case interfaces.InDirectMapping:
 			indirectRules := &bknsdk.InDirectMappingRule{
 				BackingDataSource: &bknsdk.ResourceInfo{
@@ -333,6 +339,9 @@ func ToBKNRelationType(adpRel *interfaces.RelationType) *bknsdk.BknRelationType 
 				})
 			}
 			bknRel.MappingRules = indirectRules
+
+		default:
+			logger.Errorf("Unknown mappingRules type: %T", rules)
 		}
 	}
 
@@ -356,19 +365,27 @@ func ToADPActionType(knID string, branch string, bknAction *bknsdk.BknActionType
 		Branch: branch,
 	}
 
+	// 转换 Affect
+	if bknAction.AffectObject != nil {
+		adpAction.Affect = &interfaces.ActionAffect{
+			ObjectTypeID: bknAction.AffectObject.ObjectType,
+			Comment:      bknAction.AffectObject.Description,
+		}
+	}
+
 	// 转换 Condition
-	if bknAction.Condition != nil {
-		adpAction.Condition = toADPCondCfg(bknAction.Condition)
+	if bknAction.TriggerCondition != nil {
+		adpAction.Condition = toADPCondCfg(bknAction.TriggerCondition)
 	}
 
 	// 转换 ActionSource
-	if bknAction.ToolConfig != nil {
+	if bknAction.ActionSource != nil {
 		adpAction.ActionSource = interfaces.ActionSource{
-			Type:     bknAction.ToolConfig.Type,
-			BoxID:    bknAction.ToolConfig.BoxID,
-			ToolID:   bknAction.ToolConfig.ToolID,
-			McpID:    bknAction.ToolConfig.McpID,
-			ToolName: bknAction.ToolConfig.ToolName,
+			Type:     bknAction.ActionSource.Type,
+			BoxID:    bknAction.ActionSource.BoxID,
+			ToolID:   bknAction.ActionSource.ToolID,
+			McpID:    bknAction.ActionSource.McpID,
+			ToolName: bknAction.ActionSource.ToolName,
 		}
 	}
 
@@ -394,13 +411,6 @@ func ToADPActionType(knID string, branch string, bknAction *bknsdk.BknActionType
 		}
 	}
 
-	// 转换 Affect
-	if bknAction.AffectObject != "" {
-		adpAction.Affect = &interfaces.ActionAffect{
-			ObjectTypeID: bknAction.AffectObject,
-		}
-	}
-
 	return adpAction
 }
 
@@ -413,22 +423,25 @@ func ToBKNActionType(adpAction *interfaces.ActionType) *bknsdk.BknActionType {
 			Name:        adpAction.ATName,
 			Tags:        adpAction.Tags,
 			Description: adpAction.Comment,
+			ActionType:  adpAction.ActionType,
 		},
 		BoundObject: adpAction.ObjectTypeID,
-		ActionType:  adpAction.ActionType,
 	}
 
 	if adpAction.Affect != nil {
-		bknAction.AffectObject = adpAction.Affect.ObjectTypeID
+		bknAction.AffectObject = &bknsdk.ActionAffect{
+			ObjectType:  adpAction.Affect.ObjectTypeID,
+			Description: adpAction.Affect.Comment,
+		}
 	}
 	// 转换 Condition
 	if adpAction.Condition != nil {
-		bknAction.Condition = toBKNCondCfg(adpAction.Condition)
+		bknAction.TriggerCondition = toBKNCondCfg(adpAction.Condition)
 	}
 
 	// 转换 ActionSource
 	if adpAction.ActionSource.Type != "" {
-		bknAction.ToolConfig = &bknsdk.ToolConfiguration{
+		bknAction.ActionSource = &bknsdk.ActionSource{
 			Type:     adpAction.ActionSource.Type,
 			BoxID:    adpAction.ActionSource.BoxID,
 			ToolID:   adpAction.ActionSource.ToolID,
