@@ -570,7 +570,192 @@ func validateCond(ctx context.Context, cfg *interfaces.FilterCondCfg, fieldsMap 
 }
 
 // 解析 logicDefinition，生成 schemaDefinition
-func (rs *resourceService) parseLogicDefinition(ctx context.Context, 
+func (rs *resourceService) parseLogicDefinition(ctx context.Context,
 	logicDefinition []*interfaces.LogicDefinitionNode) ([]*interfaces.Property, error) {
 
+	// 1. 构建节点映射表
+	nodes := make(map[string]*interfaces.LogicDefinitionNode)
+	for _, node := range logicDefinition {
+		nodes[node.ID] = node
+	}
+
+	// 2. 找到终端输出节点 (output 节点)
+	var outputNode *interfaces.LogicDefinitionNode
+	for _, node := range logicDefinition {
+		if node.Type == interfaces.LogicDefinitionNodeType_Output {
+			outputNode = node
+			break
+		}
+	}
+
+	if outputNode == nil {
+		// 如果没显式定义 output 节点，兜底取最后一个节点
+		if len(logicDefinition) > 0 {
+			outputNode = logicDefinition[len(logicDefinition)-1]
+		} else {
+			return nil, fmt.Errorf("logic definition is empty")
+		}
+	}
+
+	// 3. 递归解析字段元数据 (带缓存避免重复计算)
+	memo := make(map[string][]*interfaces.Property)
+	var resolve func(nodeID string) ([]*interfaces.Property, error)
+	resolve = func(nodeID string) ([]*interfaces.Property, error) {
+		if cached, ok := memo[nodeID]; ok {
+			return cached, nil
+		}
+
+		node, ok := nodes[nodeID]
+		if !ok {
+			return nil, fmt.Errorf("node %s not found in logic definition", nodeID)
+		}
+
+		var result []*interfaces.Property
+		var inputFieldsMap = make(map[string][]*interfaces.Property)
+		var sourceResourceFields []*interfaces.Property
+
+		// 处理叶子节点：Resource 节点
+		if node.Type == interfaces.LogicDefinitionNodeType_Resource {
+			var cfg interfaces.ResourceNodeCfg
+			if err := mapstructure.Decode(node.Config, &cfg); err != nil {
+				return nil, fmt.Errorf("decode resource node config failed: %w", err)
+			}
+			res, err := rs.GetByID(ctx, cfg.ResourceID)
+			if err != nil {
+				return nil, fmt.Errorf("get resource %s failed: %w", cfg.ResourceID, err)
+			}
+			sourceResourceFields = res.SchemaDefinition
+		} else {
+			// 解析所有输入节点的输出字段
+			for _, inputID := range node.Inputs {
+				fields, err := resolve(inputID)
+				if err != nil {
+					return nil, err
+				}
+				inputFieldsMap[inputID] = fields
+			}
+		}
+
+		// 处理当前节点的 output_fields
+		for _, vProp := range node.OutputFields {
+			if vProp.Name == "*" {
+				// 通配符模式：全量透传上游字段
+				if node.Type == interfaces.LogicDefinitionNodeType_Resource {
+					for _, f := range sourceResourceFields {
+						result = append(result, copyProperty(f))
+					}
+				} else {
+					for _, inputID := range node.Inputs {
+						for _, f := range inputFieldsMap[inputID] {
+							result = append(result, copyProperty(f))
+						}
+					}
+				}
+				continue
+			}
+
+			// 投影/映射/对齐/定义模式：构造 Property
+			prop := &interfaces.Property{
+				Name:         vProp.Name,
+				Type:         vProp.Type,
+				DisplayName:  vProp.DisplayName,
+				OriginalName: vProp.OriginalName,
+				Description:  vProp.Description,
+				Features:     vProp.Features,
+			}
+
+			// 递归溯源补全元数据 (Type, DisplayName, Description, OriginalName, Features)
+			var sourceProp *interfaces.Property
+			if node.Type == interfaces.LogicDefinitionNodeType_Resource {
+				// Resource 节点从物理 Schema 中找
+				for _, f := range sourceResourceFields {
+					if f.Name == vProp.Name {
+						sourceProp = f
+						break
+					}
+				}
+			} else if vProp.From != "" && vProp.FromNode != "" {
+				// 映射模式 (Join)：明确指定了来源节点和字段
+				if sFields, ok := inputFieldsMap[vProp.FromNode]; ok {
+					for _, f := range sFields {
+						if f.Name == vProp.From {
+							sourceProp = f
+							break
+						}
+					}
+				}
+			} else if len(vProp.FromList) > 0 {
+				// 对齐模式 (Union)：从匹配的第一个来源节点取元数据
+				for _, ref := range vProp.FromList {
+					if sFields, ok := inputFieldsMap[ref.FromNode]; ok {
+						for _, f := range sFields {
+							if f.Name == ref.From {
+								sourceProp = f
+								break
+							}
+						}
+					}
+					if sourceProp != nil {
+						break
+					}
+				}
+			} else {
+				// 投影模式/SQL定义：按名称在上游输入中查找
+				for _, inputID := range node.Inputs {
+					if sFields, ok := inputFieldsMap[inputID]; ok {
+						for _, f := range sFields {
+							if f.Name == vProp.Name {
+								sourceProp = f
+								break
+							}
+						}
+					}
+					if sourceProp != nil {
+						break
+					}
+				}
+			}
+
+			// 如果找到了源字段，则补全缺失的信息
+			if sourceProp != nil {
+				fillMissingMetadata(prop, sourceProp)
+			}
+			result = append(result, prop)
+		}
+
+		memo[nodeID] = result
+		return result, nil
+	}
+
+	return resolve(outputNode.ID)
+}
+
+func copyProperty(p *interfaces.Property) *interfaces.Property {
+	if p == nil {
+		return nil
+	}
+	cp := *p
+	if len(p.Features) > 0 {
+		cp.Features = make([]interfaces.PropertyFeature, len(p.Features))
+		copy(cp.Features, p.Features)
+	}
+	return &cp
+}
+
+func fillMissingMetadata(target, source *interfaces.Property) {
+	if target.Type == "" {
+		target.Type = source.Type
+	}
+	if target.DisplayName == "" {
+		target.DisplayName = source.DisplayName
+	}
+	if target.Description == "" {
+		target.Description = source.Description
+	}
+	if target.OriginalName == "" {
+		target.OriginalName = source.OriginalName
+	}
+	if len(target.Features) == 0 {
+		target.Features = source.Features
+	}
 }

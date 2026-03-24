@@ -19,7 +19,7 @@ import (
 
 	uerrors "vega-backend/errors"
 	"vega-backend/interfaces"
-	cond "vega-backend/logics/filter-condition"
+	cond "vega-backend/logics/filter_condition"
 )
 
 // 三种情况需要拼接 dsl
