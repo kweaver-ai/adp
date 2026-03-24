@@ -7,6 +7,7 @@ package relation_type
 
 import (
 	"context"
+	"database/sql"
 	"net/http"
 	"testing"
 
@@ -1970,6 +1971,38 @@ func Test_relationTypeService_validateDependency(t *testing.T) {
 			So(err, ShouldNotBeNil)
 			httpErr := err.(*rest.HTTPError)
 			So(httpErr.BaseError.ErrorCode, ShouldEqual, berrors.BknBackend_RelationType_InvalidParameter)
+		})
+	})
+}
+
+func Test_relationTypeService_DeleteRelationTypesByKnID(t *testing.T) {
+	Convey("Test DeleteRelationTypesByKnID\n", t, func() {
+		ctx := context.Background()
+		mockCtrl := gomock.NewController(t)
+		defer mockCtrl.Finish()
+
+		rta := bmock.NewMockRelationTypeAccess(mockCtrl)
+		service := &relationTypeService{appSetting: &common.AppSetting{}, rta: rta}
+
+		Convey("Failed when tx is nil\n", func() {
+			err := service.DeleteRelationTypesByKnID(ctx, nil, "kn1", interfaces.MAIN_BRANCH)
+			So(err, ShouldNotBeNil)
+		})
+
+		Convey("Failed when access layer returns error\n", func() {
+			tx := new(sql.Tx)
+			rta.EXPECT().DeleteRelationTypesByKnID(gomock.Any(), tx, "kn1", interfaces.MAIN_BRANCH).
+				Return(int64(0), rest.NewHTTPError(ctx, 500, berrors.BknBackend_RelationType_InternalError))
+			err := service.DeleteRelationTypesByKnID(ctx, tx, "kn1", interfaces.MAIN_BRANCH)
+			So(err, ShouldNotBeNil)
+		})
+
+		Convey("Success\n", func() {
+			tx := new(sql.Tx)
+			rta.EXPECT().DeleteRelationTypesByKnID(gomock.Any(), tx, "kn1", interfaces.MAIN_BRANCH).
+				Return(int64(3), nil)
+			err := service.DeleteRelationTypesByKnID(ctx, tx, "kn1", interfaces.MAIN_BRANCH)
+			So(err, ShouldBeNil)
 		})
 	})
 }

@@ -859,3 +859,55 @@ func Test_jobService_GetJobByID(t *testing.T) {
 		})
 	})
 }
+
+func Test_jobService_DeleteJobsByKnID(t *testing.T) {
+	Convey("Test DeleteJobsByKnID\n", t, func() {
+		mockCtrl := gomock.NewController(t)
+		defer mockCtrl.Finish()
+
+		ja := bmock.NewMockJobAccess(mockCtrl)
+		service := &jobService{appSetting: &common.AppSetting{}, ja: ja}
+
+		knID := "kn1"
+		branch := interfaces.MAIN_BRANCH
+		jobIDs := []string{"job1", "job2"}
+
+		Convey("Failed when tx is nil\n", func() {
+			err := service.DeleteJobsByKnID(context.Background(), nil, knID, branch)
+			So(err, ShouldNotBeNil)
+		})
+
+		Convey("Failed when GetJobIDsByKnID access returns error\n", func() {
+			tx := new(sql.Tx)
+			ja.EXPECT().GetJobIDsByKnID(gomock.Any(), tx, knID, branch).Return(nil, errors.New("get ids error"))
+			err := service.DeleteJobsByKnID(context.Background(), tx, knID, branch)
+			So(err, ShouldNotBeNil)
+		})
+
+		Convey("Failed when DeleteJobsByIDs access returns error\n", func() {
+			tx := new(sql.Tx)
+			ja.EXPECT().GetJobIDsByKnID(gomock.Any(), tx, knID, branch).Return(jobIDs, nil)
+			ja.EXPECT().DeleteJobsByIDs(gomock.Any(), tx, jobIDs).Return(int64(0), errors.New("delete jobs error"))
+			err := service.DeleteJobsByKnID(context.Background(), tx, knID, branch)
+			So(err, ShouldNotBeNil)
+		})
+
+		Convey("Failed when DeleteTasksByJobIDs access returns error\n", func() {
+			tx := new(sql.Tx)
+			ja.EXPECT().GetJobIDsByKnID(gomock.Any(), tx, knID, branch).Return(jobIDs, nil)
+			ja.EXPECT().DeleteJobsByIDs(gomock.Any(), tx, jobIDs).Return(int64(2), nil)
+			ja.EXPECT().DeleteTasksByJobIDs(gomock.Any(), tx, jobIDs).Return(int64(0), errors.New("delete tasks error"))
+			err := service.DeleteJobsByKnID(context.Background(), tx, knID, branch)
+			So(err, ShouldNotBeNil)
+		})
+
+		Convey("Success\n", func() {
+			tx := new(sql.Tx)
+			ja.EXPECT().GetJobIDsByKnID(gomock.Any(), tx, knID, branch).Return(jobIDs, nil)
+			ja.EXPECT().DeleteJobsByIDs(gomock.Any(), tx, jobIDs).Return(int64(2), nil)
+			ja.EXPECT().DeleteTasksByJobIDs(gomock.Any(), tx, jobIDs).Return(int64(5), nil)
+			err := service.DeleteJobsByKnID(context.Background(), tx, knID, branch)
+			So(err, ShouldBeNil)
+		})
+	})
+}

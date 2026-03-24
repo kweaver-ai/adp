@@ -7,6 +7,7 @@ package concept_group
 
 import (
 	"context"
+	"database/sql"
 	"testing"
 
 	"github.com/DATA-DOG/go-sqlmock"
@@ -2134,6 +2135,47 @@ func Test_conceptGroupService_AddObjectTypesToConceptGroup(t *testing.T) {
 			cgrIDs, err := service.AddObjectTypesToConceptGroup(ctx, nil, knID, branch, cgID, otIDs, importMode)
 			So(err, ShouldBeNil)
 			So(len(cgrIDs), ShouldEqual, 1)
+		})
+	})
+}
+
+func Test_conceptGroupService_DeleteConceptGroupsByKnID(t *testing.T) {
+	Convey("Test DeleteConceptGroupsByKnID\n", t, func() {
+		mockCtrl := gomock.NewController(t)
+		defer mockCtrl.Finish()
+
+		cga := bmock.NewMockConceptGroupAccess(mockCtrl)
+		service := &conceptGroupService{appSetting: &common.AppSetting{}, cga: cga}
+
+		knID := "kn1"
+		branch := interfaces.MAIN_BRANCH
+
+		Convey("Failed when tx is nil\n", func() {
+			err := service.DeleteConceptGroupsByKnID(context.Background(), nil, knID, branch)
+			So(err, ShouldNotBeNil)
+		})
+
+		Convey("Failed when DeleteConceptGroupsByKnID access returns error\n", func() {
+			tx := new(sql.Tx)
+			cga.EXPECT().DeleteConceptGroupsByKnID(gomock.Any(), tx, knID, branch).Return(int64(0), rest.NewHTTPError(context.Background(), 500, berrors.BknBackend_ConceptGroup_InternalError))
+			err := service.DeleteConceptGroupsByKnID(context.Background(), tx, knID, branch)
+			So(err, ShouldNotBeNil)
+		})
+
+		Convey("Failed when DeleteConceptGroupRelationsByKnID access returns error\n", func() {
+			tx := new(sql.Tx)
+			cga.EXPECT().DeleteConceptGroupsByKnID(gomock.Any(), tx, knID, branch).Return(int64(1), nil)
+			cga.EXPECT().DeleteConceptGroupRelationsByKnID(gomock.Any(), tx, knID, branch).Return(int64(0), rest.NewHTTPError(context.Background(), 500, berrors.BknBackend_ConceptGroup_InternalError))
+			err := service.DeleteConceptGroupsByKnID(context.Background(), tx, knID, branch)
+			So(err, ShouldNotBeNil)
+		})
+
+		Convey("Success\n", func() {
+			tx := new(sql.Tx)
+			cga.EXPECT().DeleteConceptGroupsByKnID(gomock.Any(), tx, knID, branch).Return(int64(2), nil)
+			cga.EXPECT().DeleteConceptGroupRelationsByKnID(gomock.Any(), tx, knID, branch).Return(int64(5), nil)
+			err := service.DeleteConceptGroupsByKnID(context.Background(), tx, knID, branch)
+			So(err, ShouldBeNil)
 		})
 	})
 }

@@ -7,6 +7,7 @@ package object_type
 
 import (
 	"context"
+	"database/sql"
 	"testing"
 
 	"github.com/DATA-DOG/go-sqlmock"
@@ -3154,6 +3155,47 @@ func Test_objectTypeService_syncObjectGroups(t *testing.T) {
 			cga.EXPECT().GetConceptGroupsByOTIDs(gomock.Any(), gomock.Any(), gomock.Any()).Return(existingRelation, nil)
 
 			err := service.syncObjectGroups(ctx, tx, objectType2, currentTime)
+			So(err, ShouldBeNil)
+		})
+	})
+}
+
+func Test_objectTypeService_DeleteObjectTypesByKnID(t *testing.T) {
+	Convey("Test DeleteObjectTypesByKnID\n", t, func() {
+		mockCtrl := gomock.NewController(t)
+		defer mockCtrl.Finish()
+
+		ota := bmock.NewMockObjectTypeAccess(mockCtrl)
+		service := &objectTypeService{appSetting: &common.AppSetting{}, ota: ota}
+
+		knID := "kn1"
+		branch := interfaces.MAIN_BRANCH
+
+		Convey("Failed when tx is nil\n", func() {
+			err := service.DeleteObjectTypesByKnID(context.Background(), nil, knID, branch)
+			So(err, ShouldNotBeNil)
+		})
+
+		Convey("Failed when DeleteObjectTypesByKnID access returns error\n", func() {
+			tx := new(sql.Tx)
+			ota.EXPECT().DeleteObjectTypesByKnID(gomock.Any(), tx, knID, branch).Return(int64(0), rest.NewHTTPError(context.Background(), 500, berrors.BknBackend_ObjectType_InternalError))
+			err := service.DeleteObjectTypesByKnID(context.Background(), tx, knID, branch)
+			So(err, ShouldNotBeNil)
+		})
+
+		Convey("Failed when DeleteObjectTypeStatusByKnID access returns error\n", func() {
+			tx := new(sql.Tx)
+			ota.EXPECT().DeleteObjectTypesByKnID(gomock.Any(), tx, knID, branch).Return(int64(1), nil)
+			ota.EXPECT().DeleteObjectTypeStatusByKnID(gomock.Any(), tx, knID, branch).Return(int64(0), rest.NewHTTPError(context.Background(), 500, berrors.BknBackend_ObjectType_InternalError))
+			err := service.DeleteObjectTypesByKnID(context.Background(), tx, knID, branch)
+			So(err, ShouldNotBeNil)
+		})
+
+		Convey("Success\n", func() {
+			tx := new(sql.Tx)
+			ota.EXPECT().DeleteObjectTypesByKnID(gomock.Any(), tx, knID, branch).Return(int64(3), nil)
+			ota.EXPECT().DeleteObjectTypeStatusByKnID(gomock.Any(), tx, knID, branch).Return(int64(3), nil)
+			err := service.DeleteObjectTypesByKnID(context.Background(), tx, knID, branch)
 			So(err, ShouldBeNil)
 		})
 	})

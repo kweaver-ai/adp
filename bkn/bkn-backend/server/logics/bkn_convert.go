@@ -258,27 +258,26 @@ func ToADPRelationType(knID string, branch string, bknRel *bknsdk.BknRelationTyp
 			relType.MappingRules = mappings
 
 		case *bknsdk.InDirectMappingRule:
-			relType.MappingRules = interfaces.InDirectMapping{
+			indirect := interfaces.InDirectMapping{
 				BackingDataSource: &interfaces.ResourceInfo{
 					Type: rules.BackingDataSource.Type,
 					ID:   rules.BackingDataSource.ID,
 					Name: rules.BackingDataSource.Name,
 				},
 			}
-			if srcRules, ok := relType.MappingRules.(interfaces.InDirectMapping); ok {
-				for _, rule := range rules.SourceMappingRules {
-					srcRules.SourceMappingRules = append(srcRules.SourceMappingRules, interfaces.Mapping{
-						SourceProp: interfaces.SimpleProperty{Name: rule.SourceProperty},
-						TargetProp: interfaces.SimpleProperty{Name: rule.TargetProperty},
-					})
-				}
-				for _, rule := range rules.TargetMappingRules {
-					srcRules.TargetMappingRules = append(srcRules.TargetMappingRules, interfaces.Mapping{
-						SourceProp: interfaces.SimpleProperty{Name: rule.SourceProperty},
-						TargetProp: interfaces.SimpleProperty{Name: rule.TargetProperty},
-					})
-				}
+			for _, rule := range rules.SourceMappingRules {
+				indirect.SourceMappingRules = append(indirect.SourceMappingRules, interfaces.Mapping{
+					SourceProp: interfaces.SimpleProperty{Name: rule.SourceProperty},
+					TargetProp: interfaces.SimpleProperty{Name: rule.TargetProperty},
+				})
 			}
+			for _, rule := range rules.TargetMappingRules {
+				indirect.TargetMappingRules = append(indirect.TargetMappingRules, interfaces.Mapping{
+					SourceProp: interfaces.SimpleProperty{Name: rule.SourceProperty},
+					TargetProp: interfaces.SimpleProperty{Name: rule.TargetProperty},
+				})
+			}
+			relType.MappingRules = indirect
 
 		default:
 			logger.Errorf("Unknown mappingRules type: %T", rules)

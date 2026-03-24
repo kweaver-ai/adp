@@ -7,6 +7,7 @@ package action_type
 
 import (
 	"context"
+	"database/sql"
 	"testing"
 
 	"github.com/DATA-DOG/go-sqlmock"
@@ -1494,6 +1495,38 @@ func Test_actionTypeService_SearchActionTypes(t *testing.T) {
 			result, err := service.SearchActionTypes(ctx, query)
 			So(err, ShouldNotBeNil)
 			So(len(result.Entries), ShouldEqual, 0)
+		})
+	})
+}
+
+func Test_actionTypeService_DeleteActionTypesByKnID(t *testing.T) {
+	Convey("Test DeleteActionTypesByKnID\n", t, func() {
+		ctx := context.Background()
+		mockCtrl := gomock.NewController(t)
+		defer mockCtrl.Finish()
+
+		ata := bmock.NewMockActionTypeAccess(mockCtrl)
+		service := &actionTypeService{appSetting: &common.AppSetting{}, ata: ata}
+
+		Convey("Failed when tx is nil\n", func() {
+			err := service.DeleteActionTypesByKnID(ctx, nil, "kn1", interfaces.MAIN_BRANCH)
+			So(err, ShouldNotBeNil)
+		})
+
+		Convey("Failed when access layer returns error\n", func() {
+			tx := new(sql.Tx)
+			ata.EXPECT().DeleteActionTypesByKnID(gomock.Any(), tx, "kn1", interfaces.MAIN_BRANCH).
+				Return(int64(0), rest.NewHTTPError(ctx, 500, berrors.BknBackend_ActionType_InternalError))
+			err := service.DeleteActionTypesByKnID(ctx, tx, "kn1", interfaces.MAIN_BRANCH)
+			So(err, ShouldNotBeNil)
+		})
+
+		Convey("Success\n", func() {
+			tx := new(sql.Tx)
+			ata.EXPECT().DeleteActionTypesByKnID(gomock.Any(), tx, "kn1", interfaces.MAIN_BRANCH).
+				Return(int64(3), nil)
+			err := service.DeleteActionTypesByKnID(ctx, tx, "kn1", interfaces.MAIN_BRANCH)
+			So(err, ShouldBeNil)
 		})
 	})
 }
