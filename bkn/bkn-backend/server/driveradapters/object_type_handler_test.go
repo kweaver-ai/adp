@@ -900,3 +900,168 @@ func Test_ObjectTypeRestHandler_SearchObjectTypesByIn(t *testing.T) {
 		})
 	})
 }
+
+func Test_ObjectTypeRestHandler_HandleObjectTypeGetOverride_default(t *testing.T) {
+	Convey("Test HandleObjectTypeGetOverride default method branch\n", t, func() {
+		test := setGinMode()
+		defer test()
+
+		engine := gin.New()
+		engine.Use(gin.Recovery())
+
+		mockCtrl := gomock.NewController(t)
+		defer mockCtrl.Finish()
+
+		appSetting := &common.AppSetting{}
+		as := bmock.NewMockAuthService(mockCtrl)
+		ots := bmock.NewMockObjectTypeService(mockCtrl)
+		rts := bmock.NewMockRelationTypeService(mockCtrl)
+		ats := bmock.NewMockActionTypeService(mockCtrl)
+		kns := bmock.NewMockKNService(mockCtrl)
+
+		handler := MockNewObjectTypeRestHandler(appSetting, as, ots, rts, ats, kns)
+		handler.RegisterPublic(engine)
+
+		knID := "kn1"
+
+		Convey("HandleObjectTypeGetOverrideByIn returns 400 for invalid method override\n", func() {
+			url := "/api/bkn-backend/in/v1/knowledge-networks/" + knID + "/object-types"
+			req := httptest.NewRequest(http.MethodPost, url, nil)
+			req.Header.Set(interfaces.HTTP_HEADER_METHOD_OVERRIDE, http.MethodPut)
+			req.Header.Set(interfaces.CONTENT_TYPE_NAME, interfaces.CONTENT_TYPE_JSON)
+			w := httptest.NewRecorder()
+			engine.ServeHTTP(w, req)
+			So(w.Result().StatusCode, ShouldEqual, http.StatusBadRequest)
+		})
+
+		Convey("HandleObjectTypeGetOverrideByEx returns 400 for invalid method override\n", func() {
+			url := "/api/bkn-backend/v1/knowledge-networks/" + knID + "/object-types"
+			req := httptest.NewRequest(http.MethodPost, url, nil)
+			req.Header.Set(interfaces.HTTP_HEADER_METHOD_OVERRIDE, http.MethodPut)
+			req.Header.Set(interfaces.CONTENT_TYPE_NAME, interfaces.CONTENT_TYPE_JSON)
+			w := httptest.NewRecorder()
+			engine.ServeHTTP(w, req)
+			So(w.Result().StatusCode, ShouldEqual, http.StatusBadRequest)
+		})
+	})
+}
+
+func Test_ObjectTypeRestHandler_DeleteObjectTypes_extraCases(t *testing.T) {
+	Convey("Test ObjectTypeHandler DeleteObjectTypes extra cases\n", t, func() {
+		test := setGinMode()
+		defer test()
+
+		engine := gin.New()
+		engine.Use(gin.Recovery())
+
+		mockCtrl := gomock.NewController(t)
+		defer mockCtrl.Finish()
+
+		appSetting := &common.AppSetting{}
+		as := bmock.NewMockAuthService(mockCtrl)
+		ots := bmock.NewMockObjectTypeService(mockCtrl)
+		rts := bmock.NewMockRelationTypeService(mockCtrl)
+		ats := bmock.NewMockActionTypeService(mockCtrl)
+		kns := bmock.NewMockKNService(mockCtrl)
+
+		handler := MockNewObjectTypeRestHandler(appSetting, as, ots, rts, ats, kns)
+		handler.RegisterPublic(engine)
+
+		as.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(hydra.Visitor{}, nil)
+
+		knID := "kn1"
+		otIDs := "ot1"
+		baseURL := "/api/bkn-backend/v1/knowledge-networks/" + knID + "/object-types/" + otIDs
+
+		Convey("Failed when CheckKNExistByID returns error\n", func() {
+			httpErr := &rest.HTTPError{
+				HTTPCode: http.StatusInternalServerError,
+				Language: rest.DefaultLanguage,
+				BaseError: rest.BaseError{ErrorCode: berrors.BknBackend_KnowledgeNetwork_InternalError},
+			}
+			kns.EXPECT().CheckKNExistByID(gomock.Any(), knID, gomock.Any()).Return("", false, httpErr)
+			req := httptest.NewRequest(http.MethodDelete, baseURL, nil)
+			w := httptest.NewRecorder()
+			engine.ServeHTTP(w, req)
+			So(w.Result().StatusCode, ShouldEqual, http.StatusInternalServerError)
+		})
+
+		Convey("Failed when force_delete has invalid value\n", func() {
+			kns.EXPECT().CheckKNExistByID(gomock.Any(), knID, gomock.Any()).Return(knID, true, nil)
+			req := httptest.NewRequest(http.MethodDelete, baseURL+"?force_delete=notbool", nil)
+			w := httptest.NewRecorder()
+			engine.ServeHTTP(w, req)
+			So(w.Result().StatusCode, ShouldEqual, http.StatusBadRequest)
+		})
+
+		Convey("Failed when CheckObjectTypeExistByID returns error\n", func() {
+			httpErr := &rest.HTTPError{
+				HTTPCode: http.StatusInternalServerError,
+				Language: rest.DefaultLanguage,
+				BaseError: rest.BaseError{ErrorCode: berrors.BknBackend_ObjectType_InternalError},
+			}
+			kns.EXPECT().CheckKNExistByID(gomock.Any(), knID, gomock.Any()).Return(knID, true, nil)
+			ots.EXPECT().CheckObjectTypeExistByID(gomock.Any(), knID, gomock.Any(), "ot1").Return("", false, httpErr)
+			req := httptest.NewRequest(http.MethodDelete, baseURL, nil)
+			w := httptest.NewRecorder()
+			engine.ServeHTTP(w, req)
+			So(w.Result().StatusCode, ShouldEqual, http.StatusInternalServerError)
+		})
+
+		Convey("Failed when ListRelationTypes returns error\n", func() {
+			httpErr := &rest.HTTPError{
+				HTTPCode: http.StatusInternalServerError,
+				Language: rest.DefaultLanguage,
+				BaseError: rest.BaseError{ErrorCode: berrors.BknBackend_ObjectType_InternalError},
+			}
+			kns.EXPECT().CheckKNExistByID(gomock.Any(), knID, gomock.Any()).Return(knID, true, nil)
+			ots.EXPECT().CheckObjectTypeExistByID(gomock.Any(), knID, gomock.Any(), "ot1").Return("ot1", true, nil)
+			rts.EXPECT().ListRelationTypes(gomock.Any(), gomock.Any()).Return(nil, 0, httpErr)
+			req := httptest.NewRequest(http.MethodDelete, baseURL, nil)
+			w := httptest.NewRecorder()
+			engine.ServeHTTP(w, req)
+			So(w.Result().StatusCode, ShouldEqual, http.StatusInternalServerError)
+		})
+
+		Convey("Failed when object type is bound by relation type\n", func() {
+			kns.EXPECT().CheckKNExistByID(gomock.Any(), knID, gomock.Any()).Return(knID, true, nil)
+			ots.EXPECT().CheckObjectTypeExistByID(gomock.Any(), knID, gomock.Any(), "ot1").Return("ot1", true, nil)
+			rts.EXPECT().ListRelationTypes(gomock.Any(), gomock.Any()).Return([]*interfaces.RelationType{
+				{RelationTypeWithKeyField: interfaces.RelationTypeWithKeyField{RTName: "rt1"}},
+			}, 1, nil)
+			req := httptest.NewRequest(http.MethodDelete, baseURL, nil)
+			w := httptest.NewRecorder()
+			engine.ServeHTTP(w, req)
+			So(w.Result().StatusCode, ShouldEqual, http.StatusBadRequest)
+		})
+
+		Convey("Failed when ListActionTypes returns error\n", func() {
+			httpErr := &rest.HTTPError{
+				HTTPCode: http.StatusInternalServerError,
+				Language: rest.DefaultLanguage,
+				BaseError: rest.BaseError{ErrorCode: berrors.BknBackend_ObjectType_InternalError},
+			}
+			kns.EXPECT().CheckKNExistByID(gomock.Any(), knID, gomock.Any()).Return(knID, true, nil)
+			ots.EXPECT().CheckObjectTypeExistByID(gomock.Any(), knID, gomock.Any(), "ot1").Return("ot1", true, nil)
+			rts.EXPECT().ListRelationTypes(gomock.Any(), gomock.Any()).Return([]*interfaces.RelationType{}, 0, nil)
+			ats.EXPECT().ListActionTypes(gomock.Any(), gomock.Any()).Return(nil, 0, httpErr)
+			req := httptest.NewRequest(http.MethodDelete, baseURL, nil)
+			w := httptest.NewRecorder()
+			engine.ServeHTTP(w, req)
+			So(w.Result().StatusCode, ShouldEqual, http.StatusInternalServerError)
+		})
+
+		Convey("Failed when object type is bound by action type\n", func() {
+			kns.EXPECT().CheckKNExistByID(gomock.Any(), knID, gomock.Any()).Return(knID, true, nil)
+			ots.EXPECT().CheckObjectTypeExistByID(gomock.Any(), knID, gomock.Any(), "ot1").Return("ot1", true, nil)
+			rts.EXPECT().ListRelationTypes(gomock.Any(), gomock.Any()).Return([]*interfaces.RelationType{}, 0, nil)
+			ats.EXPECT().ListActionTypes(gomock.Any(), gomock.Any()).Return([]*interfaces.ActionType{
+				{ActionTypeWithKeyField: interfaces.ActionTypeWithKeyField{ATName: "at1"}},
+			}, 1, nil)
+			req := httptest.NewRequest(http.MethodDelete, baseURL, nil)
+			w := httptest.NewRecorder()
+			engine.ServeHTTP(w, req)
+			So(w.Result().StatusCode, ShouldEqual, http.StatusBadRequest)
+		})
+	})
+}

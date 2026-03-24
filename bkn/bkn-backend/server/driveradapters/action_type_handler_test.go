@@ -7,6 +7,7 @@ package driveradapters
 
 import (
 	"bytes"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -853,6 +854,226 @@ func Test_ActionTypeRestHandler_HandleActionTypeGetOverrideByIn(t *testing.T) {
 			engine.ServeHTTP(w, req)
 
 			So(w.Result().StatusCode, ShouldEqual, http.StatusBadRequest)
+		})
+	})
+}
+
+func Test_ActionTypeRestHandler_UpdateActionType_extraCases(t *testing.T) {
+	Convey("Test ActionTypeHandler UpdateActionType extra cases\n", t, func() {
+		test := setGinMode()
+		defer test()
+
+		engine := gin.New()
+		engine.Use(gin.Recovery())
+
+		mockCtrl := gomock.NewController(t)
+		defer mockCtrl.Finish()
+
+		appSetting := &common.AppSetting{}
+		as := bmock.NewMockAuthService(mockCtrl)
+		ats := bmock.NewMockActionTypeService(mockCtrl)
+		kns := bmock.NewMockKNService(mockCtrl)
+
+		handler := MockNewActionTypeRestHandler(appSetting, as, ats, kns)
+		handler.RegisterPublic(engine)
+
+		as.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(hydra.Visitor{}, nil)
+
+		knID := "kn1"
+		atID := "at1"
+		url := "/api/bkn-backend/v1/knowledge-networks/" + knID + "/action-types/" + atID
+
+		actionType := interfaces.ActionType{
+			ActionTypeWithKeyField: interfaces.ActionTypeWithKeyField{
+				ATID:         atID,
+				ATName:       "action1",
+				ObjectTypeID: "ot1",
+				ActionType:   interfaces.ACTION_TYPE_MODIFY,
+			},
+		}
+
+		Convey("Failed when CheckKNExistByID returns error\n", func() {
+			httpErr := &rest.HTTPError{
+				HTTPCode: http.StatusInternalServerError,
+				Language: rest.DefaultLanguage,
+				BaseError: rest.BaseError{ErrorCode: berrors.BknBackend_ActionType_InternalError},
+			}
+			kns.EXPECT().CheckKNExistByID(gomock.Any(), knID, gomock.Any()).Return("", false, httpErr)
+
+			reqParamByte, _ := sonic.Marshal(actionType)
+			req := httptest.NewRequest(http.MethodPut, url, bytes.NewReader(reqParamByte))
+			req.Header.Set(interfaces.CONTENT_TYPE_NAME, interfaces.CONTENT_TYPE_JSON)
+			w := httptest.NewRecorder()
+			engine.ServeHTTP(w, req)
+			So(w.Result().StatusCode, ShouldEqual, http.StatusInternalServerError)
+		})
+
+		Convey("Failed when CheckActionTypeExistByID returns error\n", func() {
+			httpErr := &rest.HTTPError{
+				HTTPCode: http.StatusInternalServerError,
+				Language: rest.DefaultLanguage,
+				BaseError: rest.BaseError{ErrorCode: berrors.BknBackend_ActionType_InternalError},
+			}
+			kns.EXPECT().CheckKNExistByID(gomock.Any(), knID, gomock.Any()).Return(knID, true, nil)
+			ats.EXPECT().CheckActionTypeExistByID(gomock.Any(), knID, gomock.Any(), atID).Return("", false, httpErr)
+
+			reqParamByte, _ := sonic.Marshal(actionType)
+			req := httptest.NewRequest(http.MethodPut, url, bytes.NewReader(reqParamByte))
+			req.Header.Set(interfaces.CONTENT_TYPE_NAME, interfaces.CONTENT_TYPE_JSON)
+			w := httptest.NewRecorder()
+			engine.ServeHTTP(w, req)
+			So(w.Result().StatusCode, ShouldEqual, http.StatusInternalServerError)
+		})
+
+		Convey("Failed ValidateActionType with empty ATName\n", func() {
+			atNoName := interfaces.ActionType{
+				ActionTypeWithKeyField: interfaces.ActionTypeWithKeyField{
+					ATID:         atID,
+					ObjectTypeID: "ot1",
+					ActionType:   interfaces.ACTION_TYPE_MODIFY,
+				},
+			}
+			kns.EXPECT().CheckKNExistByID(gomock.Any(), knID, gomock.Any()).Return(knID, true, nil)
+			ats.EXPECT().CheckActionTypeExistByID(gomock.Any(), knID, gomock.Any(), atID).Return("old_action1", true, nil)
+
+			reqParamByte, _ := sonic.Marshal(atNoName)
+			req := httptest.NewRequest(http.MethodPut, url, bytes.NewReader(reqParamByte))
+			req.Header.Set(interfaces.CONTENT_TYPE_NAME, interfaces.CONTENT_TYPE_JSON)
+			w := httptest.NewRecorder()
+			engine.ServeHTTP(w, req)
+			So(w.Result().StatusCode, ShouldEqual, http.StatusBadRequest)
+		})
+
+		Convey("Failed when CheckActionTypeExistByName returns error\n", func() {
+			httpErr := &rest.HTTPError{
+				HTTPCode: http.StatusInternalServerError,
+				Language: rest.DefaultLanguage,
+				BaseError: rest.BaseError{ErrorCode: berrors.BknBackend_ActionType_InternalError},
+			}
+			kns.EXPECT().CheckKNExistByID(gomock.Any(), knID, gomock.Any()).Return(knID, true, nil)
+			ats.EXPECT().CheckActionTypeExistByID(gomock.Any(), knID, gomock.Any(), atID).Return("old_name", true, nil)
+			ats.EXPECT().CheckActionTypeExistByName(gomock.Any(), knID, gomock.Any(), actionType.ATName).Return("", false, httpErr)
+
+			reqParamByte, _ := sonic.Marshal(actionType)
+			req := httptest.NewRequest(http.MethodPut, url, bytes.NewReader(reqParamByte))
+			req.Header.Set(interfaces.CONTENT_TYPE_NAME, interfaces.CONTENT_TYPE_JSON)
+			w := httptest.NewRecorder()
+			engine.ServeHTTP(w, req)
+			So(w.Result().StatusCode, ShouldEqual, http.StatusInternalServerError)
+		})
+
+		Convey("Failed when action type name already exists\n", func() {
+			kns.EXPECT().CheckKNExistByID(gomock.Any(), knID, gomock.Any()).Return(knID, true, nil)
+			ats.EXPECT().CheckActionTypeExistByID(gomock.Any(), knID, gomock.Any(), atID).Return("old_name", true, nil)
+			ats.EXPECT().CheckActionTypeExistByName(gomock.Any(), knID, gomock.Any(), actionType.ATName).Return(atID, true, nil)
+
+			reqParamByte, _ := sonic.Marshal(actionType)
+			req := httptest.NewRequest(http.MethodPut, url, bytes.NewReader(reqParamByte))
+			req.Header.Set(interfaces.CONTENT_TYPE_NAME, interfaces.CONTENT_TYPE_JSON)
+			w := httptest.NewRecorder()
+			engine.ServeHTTP(w, req)
+			So(w.Result().StatusCode, ShouldEqual, http.StatusForbidden)
+		})
+
+		Convey("Failed when UpdateActionType service returns error\n", func() {
+			httpErr := &rest.HTTPError{
+				HTTPCode: http.StatusInternalServerError,
+				Language: rest.DefaultLanguage,
+				BaseError: rest.BaseError{ErrorCode: berrors.BknBackend_ActionType_InternalError},
+			}
+			kns.EXPECT().CheckKNExistByID(gomock.Any(), knID, gomock.Any()).Return(knID, true, nil)
+			ats.EXPECT().CheckActionTypeExistByID(gomock.Any(), knID, gomock.Any(), atID).Return("old_name", true, nil)
+			ats.EXPECT().CheckActionTypeExistByName(gomock.Any(), knID, gomock.Any(), actionType.ATName).Return("", false, nil)
+			ats.EXPECT().UpdateActionType(gomock.Any(), gomock.Any(), gomock.Any()).Return(httpErr)
+
+			reqParamByte, _ := sonic.Marshal(actionType)
+			req := httptest.NewRequest(http.MethodPut, url, bytes.NewReader(reqParamByte))
+			req.Header.Set(interfaces.CONTENT_TYPE_NAME, interfaces.CONTENT_TYPE_JSON)
+			w := httptest.NewRecorder()
+			engine.ServeHTTP(w, req)
+			So(w.Result().StatusCode, ShouldEqual, http.StatusInternalServerError)
+		})
+	})
+}
+
+func Test_ActionTypeRestHandler_DeleteActionTypes_extraCases(t *testing.T) {
+	Convey("Test ActionTypeHandler DeleteActionTypes extra cases\n", t, func() {
+		test := setGinMode()
+		defer test()
+
+		engine := gin.New()
+		engine.Use(gin.Recovery())
+
+		mockCtrl := gomock.NewController(t)
+		defer mockCtrl.Finish()
+
+		appSetting := &common.AppSetting{}
+		as := bmock.NewMockAuthService(mockCtrl)
+		ats := bmock.NewMockActionTypeService(mockCtrl)
+		kns := bmock.NewMockKNService(mockCtrl)
+
+		handler := MockNewActionTypeRestHandler(appSetting, as, ats, kns)
+		handler.RegisterPublic(engine)
+
+		knID := "kn1"
+		atIDs := "at1"
+		url := "/api/bkn-backend/v1/knowledge-networks/" + knID + "/action-types/" + atIDs
+
+		Convey("Failed when VerifyToken returns error\n", func() {
+			as.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).Return(hydra.Visitor{}, fmt.Errorf("token invalid"))
+
+			req := httptest.NewRequest(http.MethodDelete, url, nil)
+			w := httptest.NewRecorder()
+			engine.ServeHTTP(w, req)
+			So(w.Result().StatusCode, ShouldEqual, http.StatusUnauthorized)
+		})
+
+		Convey("Failed when CheckKNExistByID returns error\n", func() {
+			httpErr := &rest.HTTPError{
+				HTTPCode: http.StatusInternalServerError,
+				Language: rest.DefaultLanguage,
+				BaseError: rest.BaseError{ErrorCode: berrors.BknBackend_ActionType_InternalError},
+			}
+			as.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).Return(hydra.Visitor{}, nil)
+			kns.EXPECT().CheckKNExistByID(gomock.Any(), knID, gomock.Any()).Return("", false, httpErr)
+
+			req := httptest.NewRequest(http.MethodDelete, url, nil)
+			w := httptest.NewRecorder()
+			engine.ServeHTTP(w, req)
+			So(w.Result().StatusCode, ShouldEqual, http.StatusInternalServerError)
+		})
+
+		Convey("Failed when CheckActionTypeExistByID returns error\n", func() {
+			httpErr := &rest.HTTPError{
+				HTTPCode: http.StatusInternalServerError,
+				Language: rest.DefaultLanguage,
+				BaseError: rest.BaseError{ErrorCode: berrors.BknBackend_ActionType_InternalError},
+			}
+			as.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).Return(hydra.Visitor{}, nil)
+			kns.EXPECT().CheckKNExistByID(gomock.Any(), knID, gomock.Any()).Return(knID, true, nil)
+			ats.EXPECT().CheckActionTypeExistByID(gomock.Any(), knID, gomock.Any(), "at1").Return("", false, httpErr)
+
+			req := httptest.NewRequest(http.MethodDelete, url, nil)
+			w := httptest.NewRecorder()
+			engine.ServeHTTP(w, req)
+			So(w.Result().StatusCode, ShouldEqual, http.StatusInternalServerError)
+		})
+
+		Convey("Failed when DeleteActionTypesByIDs service returns error\n", func() {
+			httpErr := &rest.HTTPError{
+				HTTPCode: http.StatusInternalServerError,
+				Language: rest.DefaultLanguage,
+				BaseError: rest.BaseError{ErrorCode: berrors.BknBackend_ActionType_InternalError},
+			}
+			as.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).Return(hydra.Visitor{}, nil)
+			kns.EXPECT().CheckKNExistByID(gomock.Any(), knID, gomock.Any()).Return(knID, true, nil)
+			ats.EXPECT().CheckActionTypeExistByID(gomock.Any(), knID, gomock.Any(), "at1").Return("action1", true, nil)
+			ats.EXPECT().DeleteActionTypesByIDs(gomock.Any(), gomock.Any(), knID, gomock.Any(), gomock.Any()).Return(httpErr)
+
+			req := httptest.NewRequest(http.MethodDelete, url, nil)
+			w := httptest.NewRecorder()
+			engine.ServeHTTP(w, req)
+			So(w.Result().StatusCode, ShouldEqual, http.StatusInternalServerError)
 		})
 	})
 }
