@@ -2,7 +2,7 @@ openapi: 3.0.2
 info:
   title: 行动召回接口
   version: 1.0.0
-  description: 根据对象实例标识召回关联行动，返回符合 Function Call 规范的工具定义。当前仅支持单个对象、type=tool。
+  description: 根据对象实例标识召回关联行动，返回符合 Function Call 规范的工具定义。支持多个对象实例标识。
 
 servers:
   - url: http://agent-retrieval:30779
@@ -45,13 +45,21 @@ paths:
             schema:
               $ref: '#/components/schemas/ActionRecallRequest'
             examples:
-              disease_example:
-                summary: 疾病对象示例
+              multi_instance_example:
+                summary: 多对象实例示例
                 value:
                   kn_id: kn_medical
                   at_id: generate_treatment_plan
-                  _instance_identity:
-                    disease_id: disease_000001
+                  _instance_identities:
+                    - disease_id: disease_000001
+                    - disease_id: disease_000002
+              single_instance_example:
+                summary: 单对象实例示例
+                value:
+                  kn_id: kn_medical
+                  at_id: generate_treatment_plan
+                  _instance_identities:
+                    - disease_id: disease_000001
       responses:
         '200':
           description: 成功返回动态工具列表
@@ -69,7 +77,7 @@ paths:
                 invalid_request:
                   value:
                     code: INVALID_REQUEST
-                    description: _instance_identity 格式错误
+                    description: _instance_identities 格式错误
         '500':
           description: 服务器内部错误
           content:
@@ -97,18 +105,20 @@ components:
         at_id:
           type: string
           description: 行动类ID（从 Schema 获取）
-        _instance_identity:
-          type: object
-          description: 对象实例标识（主键键值对，可选）。如传入，必须从 query_object_instance 或 query_instance_subgraph 返回的 _instance_identity 字段提取，不可臆造。当前仅支持单个对象。
-          additionalProperties:
-            oneOf:
-              - type: string
-              - type: number
-              - type: boolean
-              - type: integer
+        _instance_identities:
+          type: array
+          description: 对象实例标识列表（可选）。每个元素为主键键值对，必须从 query_object_instance 或 query_instance_subgraph 返回的 _instance_identity 字段提取，不可臆造。
+          items:
+            type: object
+            additionalProperties:
+              oneOf:
+                - type: string
+                - type: number
+                - type: boolean
+                - type: integer
           example:
-            disease_id: disease_000001
-          minProperties: 1
+            - disease_id: disease_000001
+            - disease_id: disease_000002
 
     ActionRecallResponse:
       type: object

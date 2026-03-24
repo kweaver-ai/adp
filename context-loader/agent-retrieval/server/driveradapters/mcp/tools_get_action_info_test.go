@@ -30,10 +30,10 @@ func TestHandleGetActionInfo_IgnoresResponseFormatParam(t *testing.T) {
 		handler := handleGetActionInfo(svc)
 
 		req := newCallToolRequest(map[string]any{
-			"kn_id":            "kn-001",
-			"at_id":            "at-001",
-			"response_format":  "xml",
-			"_instance_identity": map[string]any{"id": "obj-001"},
+			"kn_id":               "kn-001",
+			"at_id":               "at-001",
+			"response_format":     "xml",
+			"_instance_identities": []any{map[string]any{"id": "obj-001"}},
 		})
 
 		ctx := common.SetAccountAuthContextToCtx(context.Background(), &interfaces.AccountAuthContext{

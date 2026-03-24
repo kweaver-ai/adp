@@ -17,9 +17,15 @@ import (
 
 // GetActionInfo 获取行动信息（行动召回）
 func (s *knActionRecallServiceImpl) GetActionInfo(ctx context.Context, req *interfaces.KnActionRecallRequest) (*interfaces.KnActionRecallResponse, error) {
-	// 1. 参数转换：_instance_identity -> _instance_identities（数组，支持可选）
+	// 1. 参数合并：_instance_identities 优先，回退到 _instance_identity 包装为数组
 	instanceIdentities := make([]map[string]any, 0)
-	if len(req.InstanceIdentity) > 0 {
+	if len(req.InstanceIdentities) > 0 {
+		for _, id := range req.InstanceIdentities {
+			if len(id) > 0 {
+				instanceIdentities = append(instanceIdentities, id)
+			}
+		}
+	} else if len(req.InstanceIdentity) > 0 {
 		instanceIdentities = append(instanceIdentities, req.InstanceIdentity)
 	}
 
