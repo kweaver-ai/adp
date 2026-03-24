@@ -1,9 +1,9 @@
 {
   "agents": [
     {
-      "id": "01KH5WSVQFPX5APHGY43SJ1M4Z",
+      "id": "01KCG0MEPBNHHZHCSM5NTXRFSG",
       "name": "generate_metric_logic_dynamic_params",
-      "key": "01KCG0MEPD1JMP14T2EWSPC0FT",
+      "key": "01KCG0MEPBNHHZHCSM5NTXRFSG",
       "profile": "用于生成指标类型逻辑属性请求参数",
       "product_key": "chatbi",
       "avatar_type": 1,
@@ -22,9 +22,9 @@
       "create_from": "dip"
     },
     {
-      "id": "01KH5WSVQFPX5APHGY47RNXMT3",
+      "id": "01KCJJ7PAK3ATSC02F48QJXFH8",
       "name": "generate_operator_logic_dynamic_params",
-      "key": "01KCJJ7PAK3ATSC02F49BS7PYW",
+      "key": "01KCJJ7PAK3ATSC02F48QJXFH8",
       "profile": "生成算子类型逻辑属性参数值\n参数描述：\n1. query：用户问题\n2. operator_id：算子ID",
       "product_key": "chatbi",
       "avatar_type": 1,
