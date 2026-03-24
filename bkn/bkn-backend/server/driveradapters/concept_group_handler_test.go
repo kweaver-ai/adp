@@ -760,10 +760,10 @@ func newConceptGroupTestHandler(t *testing.T) (*restHandler, *gomock.Controller,
 	engine := gin.New()
 	engine.Use(gin.Recovery())
 	appSetting := &common.AppSetting{}
-	hydraMock := bmock.NewMockHydra(mockCtrl)
+	as := bmock.NewMockAuthService(mockCtrl)
 	cgs := bmock.NewMockConceptGroupService(mockCtrl)
 	kns := bmock.NewMockKNService(mockCtrl)
-	handler := MockNewConceptGroupRestHandler(appSetting, hydraMock, cgs, kns)
+	handler := MockNewConceptGroupRestHandler(appSetting, as, cgs, kns)
 	handler.RegisterPublic(engine)
 	return handler, mockCtrl, engine, cgs, kns
 }

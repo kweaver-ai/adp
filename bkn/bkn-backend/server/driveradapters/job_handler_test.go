@@ -475,10 +475,10 @@ func newJobTestHandler(t *testing.T) (*restHandler, *gomock.Controller, *gin.Eng
 	engine := gin.New()
 	engine.Use(gin.Recovery())
 	appSetting := &common.AppSetting{}
-	hydraMock := bmock.NewMockHydra(mockCtrl)
+	as := bmock.NewMockAuthService(mockCtrl)
 	js := bmock.NewMockJobService(mockCtrl)
 	kns := bmock.NewMockKNService(mockCtrl)
-	handler := MockNewJobRestHandler(appSetting, hydraMock, js, kns)
+	handler := MockNewJobRestHandler(appSetting, as, js, kns)
 	handler.RegisterPublic(engine)
 	return handler, mockCtrl, engine, js, kns
 }

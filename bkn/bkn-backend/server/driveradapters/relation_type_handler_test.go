@@ -734,10 +734,10 @@ func newRelationTypeTestHandler(t *testing.T) (*restHandler, *gomock.Controller,
 	engine := gin.New()
 	engine.Use(gin.Recovery())
 	appSetting := &common.AppSetting{}
-	hydraMock := bmock.NewMockHydra(mockCtrl)
+	as := bmock.NewMockAuthService(mockCtrl)
 	rts := bmock.NewMockRelationTypeService(mockCtrl)
 	kns := bmock.NewMockKNService(mockCtrl)
-	handler := MockNewRelationTypeRestHandler(appSetting, hydraMock, rts, kns)
+	handler := MockNewRelationTypeRestHandler(appSetting, as, rts, kns)
 	handler.RegisterPublic(engine)
 	return handler, mockCtrl, engine, rts, kns
 }

@@ -7,9 +7,12 @@ package driveradapters
 
 import (
 	"bytes"
+	"errors"
+	"fmt"
 	"mime/multipart"
 	"net/http"
 	"net/http/httptest"
+	"net/textproto"
 	"testing"
 
 	"github.com/gin-gonic/gin"
@@ -27,13 +30,13 @@ import (
 
 func MockNewBKNRestHandler(
 	appSetting *common.AppSetting,
-	hydra hydra.Hydra,
+	as interfaces.AuthService,
 	kns interfaces.KNService,
 	bs interfaces.BKNService,
 ) *restHandler {
 	return &restHandler{
 		appSetting: appSetting,
-		hydra:      hydra,
+		as:         as,
 		kns:        kns,
 		bs:         bs,
 	}
@@ -54,6 +57,25 @@ func newValidBKNTar(t *testing.T) []byte {
 		t.Fatalf("failed to create test BKN tar: %v", err)
 	}
 	return buf.Bytes()
+}
+
+// newMultipartRequestWithContentType 构造指定 Content-Type 的文件上传请求（用于测试扩展名校验分支）
+func newMultipartRequestWithContentType(t *testing.T, url, filename, contentType string, content []byte) *http.Request {
+	t.Helper()
+	var body bytes.Buffer
+	mw := multipart.NewWriter(&body)
+	h := make(textproto.MIMEHeader)
+	h.Set("Content-Disposition", fmt.Sprintf(`form-data; name="file"; filename="%s"`, filename))
+	h.Set("Content-Type", contentType)
+	fw, err := mw.CreatePart(h)
+	if err != nil {
+		t.Fatalf("failed to create form part: %v", err)
+	}
+	fw.Write(content)
+	mw.Close()
+	req := httptest.NewRequest(http.MethodPost, url, &body)
+	req.Header.Set("Content-Type", mw.FormDataContentType())
+	return req
 }
 
 // newMultipartRequest 构造一个包含文件的 multipart/form-data 请求
@@ -84,14 +106,14 @@ func Test_BKNRestHandler_UploadBKN(t *testing.T) {
 		defer mockCtrl.Finish()
 
 		appSetting := &common.AppSetting{}
-		hydraMock := bmock.NewMockHydra(mockCtrl)
+		as := bmock.NewMockAuthService(mockCtrl)
 		kns := bmock.NewMockKNService(mockCtrl)
 		bs := bmock.NewMockBKNService(mockCtrl)
 
-		handler := MockNewBKNRestHandler(appSetting, hydraMock, kns, bs)
+		handler := MockNewBKNRestHandler(appSetting, as, kns, bs)
 		handler.RegisterPublic(engine)
 
-		hydraMock.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(hydra.Visitor{}, nil)
+		as.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(hydra.Visitor{}, nil)
 
 		url := "/api/bkn-backend/v1/bkns"
 
@@ -179,14 +201,14 @@ func Test_BKNRestHandler_DownloadBKN(t *testing.T) {
 		defer mockCtrl.Finish()
 
 		appSetting := &common.AppSetting{}
-		hydraMock := bmock.NewMockHydra(mockCtrl)
+		as := bmock.NewMockAuthService(mockCtrl)
 		kns := bmock.NewMockKNService(mockCtrl)
 		bs := bmock.NewMockBKNService(mockCtrl)
 
-		handler := MockNewBKNRestHandler(appSetting, hydraMock, kns, bs)
+		handler := MockNewBKNRestHandler(appSetting, as, kns, bs)
 		handler.RegisterPublic(engine)
 
-		hydraMock.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(hydra.Visitor{}, nil)
+		as.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(hydra.Visitor{}, nil)
 
 		Convey("Success downloading BKN tar\n", func() {
 			bs.EXPECT().ExportToTar(gomock.Any(), "kn1", interfaces.MAIN_BRANCH).Return([]byte("tar-content"), nil)
@@ -213,6 +235,71 @@ func Test_BKNRestHandler_DownloadBKN(t *testing.T) {
 			engine.ServeHTTP(w, req)
 
 			So(w.Result().StatusCode, ShouldEqual, http.StatusInternalServerError)
+		})
+	})
+}
+
+func Test_BKNRestHandler_UploadBKN_AuthFail(t *testing.T) {
+	Convey("Test BKNHandler UploadBKN returns 401 when auth fails\n", t, func() {
+		test := setGinMode()
+		defer test()
+
+		mockCtrl := gomock.NewController(t)
+		defer mockCtrl.Finish()
+
+		engine := gin.New()
+		engine.Use(gin.Recovery())
+
+		as := bmock.NewMockAuthService(mockCtrl)
+		handler := MockNewBKNRestHandler(&common.AppSetting{}, as, nil, nil)
+		handler.RegisterPublic(engine)
+
+		as.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).Return(hydra.Visitor{}, errors.New("invalid token"))
+
+		req := newMultipartRequest(t, "/api/bkn-backend/v1/bkns", "test.tar", newValidBKNTar(t))
+		w := httptest.NewRecorder()
+		engine.ServeHTTP(w, req)
+
+		So(w.Result().StatusCode, ShouldEqual, http.StatusUnauthorized)
+	})
+}
+
+func Test_BKNRestHandler_UploadBKN_ExtensionCheck(t *testing.T) {
+	Convey("Test BKNHandler UploadBKN extension validation (non-octet-stream content type)\n", t, func() {
+		test := setGinMode()
+		defer test()
+
+		mockCtrl := gomock.NewController(t)
+		defer mockCtrl.Finish()
+
+		engine := gin.New()
+		engine.Use(gin.Recovery())
+
+		as := bmock.NewMockAuthService(mockCtrl)
+		kns := bmock.NewMockKNService(mockCtrl)
+		handler := MockNewBKNRestHandler(&common.AppSetting{}, as, kns, nil)
+		handler.RegisterPublic(engine)
+
+		as.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(hydra.Visitor{}, nil)
+
+		url := "/api/bkn-backend/v1/bkns"
+
+		Convey("Failed when invalid extension with non-octet-stream content type\n", func() {
+			req := newMultipartRequestWithContentType(t, url, "test.json", "application/json", []byte("content"))
+			w := httptest.NewRecorder()
+			engine.ServeHTTP(w, req)
+
+			So(w.Result().StatusCode, ShouldEqual, http.StatusBadRequest)
+		})
+
+		Convey("Success when .tgz extension with non-octet-stream content type\n", func() {
+			kns.EXPECT().CreateKN(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return("kn1", nil)
+
+			req := newMultipartRequestWithContentType(t, url, "test.tgz", "application/gzip", newValidBKNTar(t))
+			w := httptest.NewRecorder()
+			engine.ServeHTTP(w, req)
+
+			So(w.Result().StatusCode, ShouldEqual, http.StatusOK)
 		})
 	})
 }

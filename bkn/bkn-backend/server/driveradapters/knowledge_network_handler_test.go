@@ -427,9 +427,9 @@ func newKNTestHandler(t *testing.T) (*restHandler, *gomock.Controller, *gin.Engi
 	engine := gin.New()
 	engine.Use(gin.Recovery())
 	appSetting := &common.AppSetting{}
-	hydraMock := bmock.NewMockHydra(mockCtrl)
+	as := bmock.NewMockAuthService(mockCtrl)
 	kns := bmock.NewMockKNService(mockCtrl)
-	handler := MockNewKnowledgeNetworkRestHandler(appSetting, hydraMock, kns)
+	handler := MockNewKnowledgeNetworkRestHandler(appSetting, as, kns)
 	handler.RegisterPublic(engine)
 	return handler, mockCtrl, engine, kns
 }

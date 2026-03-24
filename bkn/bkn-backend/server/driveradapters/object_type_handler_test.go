@@ -736,12 +736,12 @@ func newObjectTypeTestHandler(t *testing.T) (*restHandler, *gomock.Controller, *
 	engine := gin.New()
 	engine.Use(gin.Recovery())
 	appSetting := &common.AppSetting{}
-	hydraMock := bmock.NewMockHydra(mockCtrl)
+	as := bmock.NewMockAuthService(mockCtrl)
 	ots := bmock.NewMockObjectTypeService(mockCtrl)
 	rts := bmock.NewMockRelationTypeService(mockCtrl)
 	ats := bmock.NewMockActionTypeService(mockCtrl)
 	kns := bmock.NewMockKNService(mockCtrl)
-	handler := MockNewObjectTypeRestHandler(appSetting, hydraMock, ots, rts, ats, kns)
+	handler := MockNewObjectTypeRestHandler(appSetting, as, ots, rts, ats, kns)
 	handler.RegisterPublic(engine)
 	return handler, mockCtrl, engine, ots, rts, ats, kns
 }

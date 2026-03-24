@@ -631,10 +631,10 @@ func newActionTypeTestHandler(t *testing.T) (*restHandler, *gomock.Controller, *
 	engine := gin.New()
 	engine.Use(gin.Recovery())
 	appSetting := &common.AppSetting{}
-	hydraMock := bmock.NewMockHydra(mockCtrl)
+	as := bmock.NewMockAuthService(mockCtrl)
 	ats := bmock.NewMockActionTypeService(mockCtrl)
 	kns := bmock.NewMockKNService(mockCtrl)
-	handler := MockNewActionTypeRestHandler(appSetting, hydraMock, ats, kns)
+	handler := MockNewActionTypeRestHandler(appSetting, as, ats, kns)
 	handler.RegisterPublic(engine)
 	return handler, mockCtrl, engine, ats, kns
 }

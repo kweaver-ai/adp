@@ -26,13 +26,13 @@ import (
 
 func MockNewActionScheduleRestHandler(
 	appSetting *common.AppSetting,
-	hydra hydra.Hydra,
+	as interfaces.AuthService,
 	kns interfaces.KNService,
 	ass interfaces.ActionScheduleService,
 ) *restHandler {
 	return &restHandler{
 		appSetting: appSetting,
-		hydra:      hydra,
+		as:         as,
 		kns:        kns,
 		ass:        ass,
 	}
@@ -50,14 +50,14 @@ func Test_ActionScheduleRestHandler_CreateActionSchedule(t *testing.T) {
 		defer mockCtrl.Finish()
 
 		appSetting := &common.AppSetting{}
-		hydraMock := bmock.NewMockHydra(mockCtrl)
+		as := bmock.NewMockAuthService(mockCtrl)
 		kns := bmock.NewMockKNService(mockCtrl)
 		ass := bmock.NewMockActionScheduleService(mockCtrl)
 
-		handler := MockNewActionScheduleRestHandler(appSetting, hydraMock, kns, ass)
+		handler := MockNewActionScheduleRestHandler(appSetting, as, kns, ass)
 		handler.RegisterPublic(engine)
 
-		hydraMock.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(hydra.Visitor{}, nil)
+		as.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(hydra.Visitor{}, nil)
 
 		url := "/api/bkn-backend/v1/knowledge-networks/kn1/action-schedules"
 
@@ -152,14 +152,14 @@ func Test_ActionScheduleRestHandler_UpdateActionSchedule(t *testing.T) {
 		defer mockCtrl.Finish()
 
 		appSetting := &common.AppSetting{}
-		hydraMock := bmock.NewMockHydra(mockCtrl)
+		as := bmock.NewMockAuthService(mockCtrl)
 		kns := bmock.NewMockKNService(mockCtrl)
 		ass := bmock.NewMockActionScheduleService(mockCtrl)
 
-		handler := MockNewActionScheduleRestHandler(appSetting, hydraMock, kns, ass)
+		handler := MockNewActionScheduleRestHandler(appSetting, as, kns, ass)
 		handler.RegisterPublic(engine)
 
-		hydraMock.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(hydra.Visitor{}, nil)
+		as.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(hydra.Visitor{}, nil)
 
 		url := "/api/bkn-backend/v1/knowledge-networks/kn1/action-schedules/sched1"
 
@@ -249,14 +249,14 @@ func Test_ActionScheduleRestHandler_UpdateActionScheduleStatus(t *testing.T) {
 		defer mockCtrl.Finish()
 
 		appSetting := &common.AppSetting{}
-		hydraMock := bmock.NewMockHydra(mockCtrl)
+		as := bmock.NewMockAuthService(mockCtrl)
 		kns := bmock.NewMockKNService(mockCtrl)
 		ass := bmock.NewMockActionScheduleService(mockCtrl)
 
-		handler := MockNewActionScheduleRestHandler(appSetting, hydraMock, kns, ass)
+		handler := MockNewActionScheduleRestHandler(appSetting, as, kns, ass)
 		handler.RegisterPublic(engine)
 
-		hydraMock.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(hydra.Visitor{}, nil)
+		as.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(hydra.Visitor{}, nil)
 
 		url := "/api/bkn-backend/v1/knowledge-networks/kn1/action-schedules/sched1/status"
 
@@ -322,14 +322,14 @@ func Test_ActionScheduleRestHandler_DeleteActionSchedules(t *testing.T) {
 		defer mockCtrl.Finish()
 
 		appSetting := &common.AppSetting{}
-		hydraMock := bmock.NewMockHydra(mockCtrl)
+		as := bmock.NewMockAuthService(mockCtrl)
 		kns := bmock.NewMockKNService(mockCtrl)
 		ass := bmock.NewMockActionScheduleService(mockCtrl)
 
-		handler := MockNewActionScheduleRestHandler(appSetting, hydraMock, kns, ass)
+		handler := MockNewActionScheduleRestHandler(appSetting, as, kns, ass)
 		handler.RegisterPublic(engine)
 
-		hydraMock.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(hydra.Visitor{}, nil)
+		as.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(hydra.Visitor{}, nil)
 
 		url := "/api/bkn-backend/v1/knowledge-networks/kn1/action-schedules/sched1"
 
@@ -389,14 +389,14 @@ func Test_ActionScheduleRestHandler_ListActionSchedules(t *testing.T) {
 		defer mockCtrl.Finish()
 
 		appSetting := &common.AppSetting{}
-		hydraMock := bmock.NewMockHydra(mockCtrl)
+		as := bmock.NewMockAuthService(mockCtrl)
 		kns := bmock.NewMockKNService(mockCtrl)
 		ass := bmock.NewMockActionScheduleService(mockCtrl)
 
-		handler := MockNewActionScheduleRestHandler(appSetting, hydraMock, kns, ass)
+		handler := MockNewActionScheduleRestHandler(appSetting, as, kns, ass)
 		handler.RegisterPublic(engine)
 
-		hydraMock.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(hydra.Visitor{}, nil)
+		as.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(hydra.Visitor{}, nil)
 
 		url := "/api/bkn-backend/v1/knowledge-networks/kn1/action-schedules"
 
@@ -460,14 +460,14 @@ func Test_ActionScheduleRestHandler_GetActionSchedule(t *testing.T) {
 		defer mockCtrl.Finish()
 
 		appSetting := &common.AppSetting{}
-		hydraMock := bmock.NewMockHydra(mockCtrl)
+		as := bmock.NewMockAuthService(mockCtrl)
 		kns := bmock.NewMockKNService(mockCtrl)
 		ass := bmock.NewMockActionScheduleService(mockCtrl)
 
-		handler := MockNewActionScheduleRestHandler(appSetting, hydraMock, kns, ass)
+		handler := MockNewActionScheduleRestHandler(appSetting, as, kns, ass)
 		handler.RegisterPublic(engine)
 
-		hydraMock.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(hydra.Visitor{}, nil)
+		as.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).AnyTimes().Return(hydra.Visitor{}, nil)
 
 		url := "/api/bkn-backend/v1/knowledge-networks/kn1/action-schedules/sched1"
 
@@ -517,10 +517,10 @@ func newActionScheduleTestHandler(t *testing.T) (*restHandler, *gomock.Controlle
 	engine := gin.New()
 	engine.Use(gin.Recovery())
 	appSetting := &common.AppSetting{}
-	hydraMock := bmock.NewMockHydra(mockCtrl)
+	as := bmock.NewMockAuthService(mockCtrl)
 	kns := bmock.NewMockKNService(mockCtrl)
 	ass := bmock.NewMockActionScheduleService(mockCtrl)
-	handler := MockNewActionScheduleRestHandler(appSetting, hydraMock, kns, ass)
+	handler := MockNewActionScheduleRestHandler(appSetting, as, kns, ass)
 	handler.RegisterPublic(engine)
 	return handler, mockCtrl, engine, kns, ass
 }
