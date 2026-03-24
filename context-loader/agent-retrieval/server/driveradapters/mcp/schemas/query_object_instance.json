@@ -23,7 +23,7 @@
       },
       "limit": {
         "type": "integer",
-        "description": "返回数量限制，默认 10，范围 1-100"
+        "description": "返回数量限制，默认 10，范围 1-10000"
       },
       "properties": {
         "type": "array",
