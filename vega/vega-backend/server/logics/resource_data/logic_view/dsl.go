@@ -17,9 +17,9 @@ import (
 	"github.com/kweaver-ai/kweaver-go-lib/rest"
 	"github.com/mitchellh/mapstructure"
 
-	cond "vega-backend/logics/filter-condition"
 	uerrors "vega-backend/errors"
 	"vega-backend/interfaces"
+	cond "vega-backend/logics/filter-condition"
 )
 
 // 三种情况需要拼接 dsl
@@ -68,17 +68,15 @@ func marshalDSL(dsl interfaces.DSLCfg) (bytes.Buffer, error) {
 }
 
 // DSL生成器
-func buildDSL(ctx context.Context, query interfaces.ViewQueryInterface, view *interfaces.DataView,
+func buildDSL(ctx context.Context, query interfaces.ResourceDataQueryParams, view *interfaces.LogicView,
 	viewIndicesMap map[string][]string) (interfaces.DSLCfg, error) {
-	queryParams := query.GetCommonParams()
-	sortParams := query.GetSortParams()
-	sortParams = completeDSLSortParams(sortParams, queryParams.UseSearchAfter, view.QueryType)
+	sortParams := completeDSLSortParams(query.Sort, query.UseSearchAfter)
 
 	var dsl interfaces.DSLCfg
 	// 设置分页参数和track_total_hits
-	dsl.From = queryParams.Offset
-	dsl.Size = queryParams.Limit
-	if view.QueryType == interfaces.QueryType_DSL && queryParams.NeedTotal {
+	dsl.From = query.Offset
+	dsl.Size = query.Limit
+	if query.NeedTotal {
 		dsl.TrackTotalHits = true
 	}
 
@@ -87,7 +85,7 @@ func buildDSL(ctx context.Context, query interfaces.ViewQueryInterface, view *in
 		for _, sp := range sortParams {
 			if sp.Field == "" || sp.Direction == "" {
 				return dsl, rest.NewHTTPError(ctx, http.StatusBadRequest,
-					uerrors.Uniquery_DataView_InvalidParameter_Sort).
+					uerrors.VegaBackend_LogicView_InvalidParameter_Sort).
 					WithErrorDetails("The sort field and direction cannot be empty")
 			}
 
@@ -96,14 +94,14 @@ func buildDSL(ctx context.Context, query interfaces.ViewQueryInterface, view *in
 			// 不校验排序字段是否在视图字段列表里，为_score字段排序开绿灯
 			// if !ok {
 			// 	return bytes.Buffer{}, rest.NewHTTPError(ctx, http.StatusForbidden,
-			// 		uerrors.Uniquery_DataView_InvalidFieldPermission_Sort).
+			// 		uerrors.VegaBackend_LogicView_InvalidFieldPermission_Sort).
 			// 		WithErrorDetails(fmt.Sprintf("The sort field '%s' is not in the view fields list", sp.Field))
 			// }
 
 			if ok {
-				if sortField.Type == dtype.DataType_Binary {
+				if sortField.Type == interfaces.DataType_Binary {
 					return dsl, rest.NewHTTPError(ctx, http.StatusBadRequest,
-						uerrors.Uniquery_DataView_BinaryFieldSortNotSupported).
+						uerrors.VegaBackend_LogicView_BinaryFieldSortNotSupported).
 						WithErrorDetails(fmt.Sprintf("The sort field '%s' is binary type, do not support sorting", sp.Field))
 				}
 
@@ -111,7 +109,7 @@ func buildDSL(ctx context.Context, query interfaces.ViewQueryInterface, view *in
 				// string类型的字段直接支持排序，若其有全文索引，则在字段的 keyword 下有 text
 				if cond.IsTextType(sortField) {
 					if cond.HasFeature(sortField, cond.FieldFeatureType_Keyword) {
-						sortFieldName = sortFieldName + "." + dtype.KEYWORD_SUFFIX
+						sortFieldName = sortFieldName + ".keyword"
 					} else {
 						continue
 					}
@@ -140,7 +138,7 @@ func buildDSL(ctx context.Context, query interfaces.ViewQueryInterface, view *in
 	searchAfterDSL, err := getSearchAfterDSL(query.GetSearchAfterParams())
 	if err != nil {
 		return dsl, rest.NewHTTPError(ctx, http.StatusInternalServerError,
-			uerrors.Uniquery_DataView_InternalError_ConvertSearchAfterToDSLFailed).
+			uerrors.VegaBackend_LogicView_InternalError_ConvertSearchAfterToDSLFailed).
 			WithErrorDetails(fmt.Sprintf("failed to get search after dsl, %s", err.Error()))
 	}
 
@@ -159,48 +157,13 @@ func buildDSL(ctx context.Context, query interfaces.ViewQueryInterface, view *in
 	// 合并查询条件到主DSL结构体
 	dsl.Query = queryDSL.Query
 
-	// 添加时间范围过滤条件
-	timeRangeFilter := map[string]any{
-		"range": map[string]any{
-			"@timestamp": map[string]int64{},
-		},
-	}
-
-	timeRangeMap := timeRangeFilter["range"].(map[string]any)["@timestamp"].(map[string]int64)
-	if queryParams.Start != 0 {
-		timeRangeMap["gte"] = queryParams.Start
-	}
-	if queryParams.End != 0 {
-		timeRangeMap["lte"] = queryParams.End
-	}
-
-	// 只有当有时间范围条件时才添加
-	if len(timeRangeMap) > 0 {
-		dsl.Query.Bool.Filter = append(dsl.Query.Bool.Filter, timeRangeFilter)
-	}
-
 	// 添加全局过滤条件，全局过滤条件的字段应该在视图字段列表里
-	dsl, err = addGlobalFiltersToDSL(ctx, dsl, query.GetGlobalFilters(), view.FieldsMap, view.Type)
+	dsl, err = addGlobalFiltersToDSL(ctx, dsl, query.FilterCondition, view.FieldsMap)
 	if err != nil {
 		return dsl, rest.NewHTTPError(ctx, http.StatusInternalServerError,
 			rest.PublicError_InternalServerError).
 			WithErrorDetails(fmt.Sprintf("failed to add global filters to dsl, %s", err.Error()))
 	}
-
-	// 添加行列规则，多个行列规则的应用之间是or的关系
-	// 在这里添加，不会应用在指标模型上，因为指标模型只需用到DSL Query 部分
-	dsl, newFields, newFieldsMap, err := addRowColumnRulesToDSL(ctx, dsl, query.GetRowColumnRules(), view)
-	if err != nil {
-		return dsl, rest.NewHTTPError(ctx, http.StatusInternalServerError,
-			rest.PublicError_InternalServerError).
-			WithErrorDetails(fmt.Sprintf("failed to add row column rules to dsl, %s", err.Error()))
-	}
-
-	// 更新视图字段列表为行列规则限制后的字段列表
-	defer func() {
-		view.Fields = newFields
-		view.FieldsMap = newFieldsMap
-	}()
 
 	logger.Infof("view_indices_map is %v", viewIndicesMap)
 
@@ -208,20 +171,20 @@ func buildDSL(ctx context.Context, query interfaces.ViewQueryInterface, view *in
 }
 
 // 生成视图节点的查询条件, 返回查询条件DSL, 是否需要计算分数, 错误信息
-func buildViewQuery(ctx context.Context, node *interfaces.DataScopeNode, viewIndicesMap map[string][]string) (any, bool, error) {
-	var cfg interfaces.ViewNodeCfg
+func buildViewQuery(ctx context.Context, node *interfaces.LogicDefinitionNode, viewIndicesMap map[string][]string) (any, bool, error) {
+	var cfg interfaces.ResourceNodeCfg
 	err := mapstructure.Decode(node.Config, &cfg)
 	if err != nil {
 		return "", false, fmt.Errorf("failed to decode view node config, %s", err.Error())
 	}
 
-	if cfg.View == nil {
-		return "", false, fmt.Errorf("view is nil")
+	if cfg.ResourceID == "" {
+		return "", false, fmt.Errorf("resource id is empty")
 	}
 
-	indices, exists := viewIndicesMap[cfg.ViewID]
+	indices, exists := viewIndicesMap[cfg.ResourceID]
 	if !exists {
-		return "", false, fmt.Errorf("no indices found for view ID: %s", cfg.ViewID)
+		return "", false, fmt.Errorf("no indices found for resource ID: %s", cfg.ResourceID)
 	}
 
 	indexConditions := map[string]any{
@@ -232,7 +195,7 @@ func buildViewQuery(ctx context.Context, node *interfaces.DataScopeNode, viewInd
 
 	var filterCondition map[string]any
 	// 使用原子视图的fieldsMap，包含索引库的全部字段
-	filterConditionStr, needScore, err := buildDSLCondition(ctx, cfg.Filters, interfaces.ViewType_Custom, cfg.View.FieldsMap)
+	filterConditionStr, needScore, err := buildDSLCondition(ctx, cfg.Filters, cfg.Resource.FieldsMap)
 	if err != nil {
 		return "", false, err
 	}
@@ -263,8 +226,8 @@ func buildViewQuery(ctx context.Context, node *interfaces.DataScopeNode, viewInd
 }
 
 // 添加全局过滤条件到DSL
-func addGlobalFiltersToDSL(ctx context.Context, dsl interfaces.DSLCfg, filters *cond.CondCfg, fieldsMap map[string]*cond.ViewField, viewType string) (interfaces.DSLCfg, error) {
-	condStr, needScore, err := buildDSLCondition(ctx, filters, viewType, fieldsMap)
+func addGlobalFiltersToDSL(ctx context.Context, dsl interfaces.DSLCfg, filters *cond.CondCfg, fieldsMap map[string]*cond.ViewField) (interfaces.DSLCfg, error) {
+	condStr, needScore, err := buildDSLCondition(ctx, filters, fieldsMap)
 	if err != nil {
 		return dsl, err
 	}
@@ -287,95 +250,19 @@ func addGlobalFiltersToDSL(ctx context.Context, dsl interfaces.DSLCfg, filters *
 	return dsl, nil
 }
 
-func addRowColumnRulesToDSL(ctx context.Context, dsl interfaces.DSLCfg, rules []*interfaces.DataViewRowColumnRule,
-	view *interfaces.DataView) (interfaces.DSLCfg, []*cond.ViewField, map[string]*cond.ViewField, error) {
-
-	// 行列规则长度为0， 可能查的是全量数据
-	if len(rules) == 0 {
-		return dsl, view.Fields, view.FieldsMap, nil
-	}
-
-	mergedFields := make([]*cond.ViewField, 0)
-	mergedFieldsMap := map[string]*cond.ViewField{}
-	for _, rule := range rules {
-		// 判断列是否在视图字段列表里
-		for _, field := range rule.Fields {
-			if _, exists := view.FieldsMap[field]; !exists {
-				return dsl, mergedFields, mergedFieldsMap, fmt.Errorf("field %s not found in view fields map", field)
-			}
-
-			vf := view.FieldsMap[field]
-			mergedFields = append(mergedFields, vf)
-			mergedFieldsMap[field] = vf
-		}
-	}
-
-	mergedRowFilters := make([]*cond.CondCfg, 0)
-	for _, rule := range rules {
-		// 合并行规则
-		if isValidFilters(rule.RowFilters) {
-			mergedRowFilters = append(mergedRowFilters, rule.RowFilters)
-		}
-	}
-
-	var finalCond *cond.CondCfg
-	if len(mergedRowFilters) == 0 {
-		finalCond = nil
-	} else if len(mergedRowFilters) == 1 {
-		finalCond = mergedRowFilters[0]
-	} else {
-		// 行列规则之间是 or 关系
-		finalCond = &cond.CondCfg{
-			Operation: cond.OperationOr,
-			SubConds:  mergedRowFilters,
-		}
-	}
-
-	// 构建行规则的DSL条件
-	condStr, needScore, err := buildDSLCondition(ctx, finalCond, view.Type, view.FieldsMap)
-	if err != nil {
-		return dsl, mergedFields, mergedFieldsMap, err
-	}
-
-	if condStr != "" {
-		var rowFilterCondition map[string]any
-		if err := sonic.Unmarshal([]byte(condStr), &rowFilterCondition); err != nil {
-			return dsl, mergedFields, mergedFieldsMap, fmt.Errorf("failed to unmarshal filter condition, %s", err.Error())
-		}
-
-		// 如果需要打分，使用must查询
-		if needScore {
-			dsl.TrackScores = true
-			dsl.Query.Bool.Must = append(dsl.Query.Bool.Must, rowFilterCondition)
-		} else {
-			dsl.Query.Bool.Filter = append(dsl.Query.Bool.Filter, rowFilterCondition)
-		}
-	}
-
-	return dsl, mergedFields, mergedFieldsMap, nil
-}
-
-func buildDSLQuery(ctx context.Context, view *interfaces.DataView, viewIndicesMap map[string][]string) (interfaces.DSLCfg, error) {
-	// globalFilters := query.GetGlobalFilters()
-
-	// 原子视图的时候查询只有全局过滤条件
-	if view.Type == interfaces.ViewType_Atomic {
-		return interfaces.DSLCfg{}, nil
-		// return buildAtomicViewQuery(view, globalFilters)
-	}
-
-	// 自定义视图data scope不能为null
-	if view.DataScope == nil {
-		return interfaces.DSLCfg{}, fmt.Errorf("data scope is nil")
+func buildDSLQuery(ctx context.Context, view *interfaces.LogicView, viewIndicesMap map[string][]string) (interfaces.DSLCfg, error) {
+	// 自定义视图logic definition不能为null
+	if view.LogicDefinition == nil {
+		return interfaces.DSLCfg{}, fmt.Errorf("logic definition is nil")
 	}
 
 	// 提取所有视图节点
-	var viewNodes []*interfaces.DataScopeNode
-	for _, node := range view.DataScope {
+	var viewNodes []*interfaces.LogicDefinitionNode
+	for _, node := range view.LogicDefinition {
 		switch node.Type {
-		case interfaces.DataScopeNodeType_View:
+		case interfaces.LogicDefinitionNodeType_Resource:
 			viewNodes = append(viewNodes, node)
-		case interfaces.DataScopeNodeType_Union:
+		case interfaces.LogicDefinitionNodeType_Union:
 			var unionCfg *interfaces.UnionNodeCfg
 			err := mapstructure.Decode(node.Config, &unionCfg)
 			if err != nil {
@@ -386,7 +273,7 @@ func buildDSLQuery(ctx context.Context, view *interfaces.DataView, viewIndicesMa
 			if unionCfg.UnionType != interfaces.UnionType_All {
 				return interfaces.DSLCfg{}, fmt.Errorf("unsupported union type: %s", unionCfg.UnionType)
 			}
-		case interfaces.DataScopeNodeType_Output:
+		case interfaces.LogicDefinitionNodeType_Output:
 		default:
 			return interfaces.DSLCfg{}, fmt.Errorf("unsupported node type: %s", node.Type)
 		}
@@ -429,51 +316,13 @@ func buildDSLQuery(ctx context.Context, view *interfaces.DataView, viewIndicesMa
 	return dsl, nil
 }
 
-// // 构造原子视图查询
-// func buildAtomicViewQuery(view *interfaces.DataView, globalFilters *cond.CondCfg) (interfaces.DSLCfg, error) {
-// 	var dsl interfaces.DSLCfg
-// 	if globalFilters != nil {
-// 		cfg := globalFilters
-
-// 		// 将过滤条件拼接到 dsl 的 query 中, 原子视图对应的是所属索引库的全部字段
-// 		CondCfg, needScore, err := cond.NewCondition(cfg, interfaces.ViewType_Atomic, view.FieldsMap)
-// 		if err != nil {
-// 			return dsl, fmt.Errorf("failed to new condition, %s", err.Error())
-// 		}
-
-// 		if CondCfg != nil {
-// 			condStr, err := CondCfg.Convert()
-// 			if err != nil {
-// 				return dsl, fmt.Errorf("failed to convert condition to dsl, %s", err.Error())
-// 			}
-
-// 			// 将条件字符串解析为map
-// 			var conditionMap map[string]any
-// 			if err := sonic.Unmarshal([]byte(condStr), &conditionMap); err != nil {
-// 				return dsl, fmt.Errorf("failed to unmarshal condition: %s", err.Error())
-// 			}
-
-// 			// 如果需要打分，使用must查询
-// 			if needScore {
-// 				dsl.Query.Bool.Must = append(dsl.Query.Bool.Must, conditionMap)
-// 			} else {
-// 				dsl.Query.Bool.Filter = append(dsl.Query.Bool.Filter, conditionMap)
-// 			}
-
-// 		}
-// 	}
-
-// 	return dsl, nil
-
-// }
-
 // 构造过滤条件
-func buildDSLCondition(ctx context.Context, cfg *cond.CondCfg, vType string, fieldsMap map[string]*cond.ViewField) (string, bool, error) {
+func buildDSLCondition(ctx context.Context, cfg *cond.CondCfg, fieldsMap map[string]*cond.ViewField) (string, bool, error) {
 	var dslStr string
 	// 将过滤条件拼接到 dsl 的 query 中
 	// 创建一个包含查询类型的上下文
 	ctx = context.WithValue(ctx, cond.CtxKey_QueryType, interfaces.QueryType_DSL)
-	CondCfg, needScore, err := cond.NewCondition(ctx, cfg, vType, fieldsMap)
+	CondCfg, needScore, err := cond.NewCondition(ctx, cfg, fieldsMap)
 	if err != nil {
 		return "", needScore, fmt.Errorf("failed to new condition, %s", err.Error())
 	}
@@ -487,21 +336,6 @@ func buildDSLCondition(ctx context.Context, cfg *cond.CondCfg, vType string, fie
 
 	return dslStr, needScore, nil
 }
-
-// 多个视图
-// // 构建最终的查询
-// finalQuery := map[string]any{
-// 	"bool": map[string]any{
-// 		"should":               shouldClauses,
-// 		"minimum_should_match": 1,
-// 	},
-// }
-
-// // 将map序列化为JSON字符串
-// resultJSON, err := sonic.Marshal(finalQuery)
-// if err != nil {
-// 	return "", fmt.Errorf("failed to marshal query to JSON: %w", err)
-// }
 
 // 获取原子视图和索引列表的映射
 func getViewIndicesMap(indices []string, baseTypeViewMap map[string]string) (map[string][]string, error) {
@@ -534,35 +368,16 @@ func getViewIndicesMap(indices []string, baseTypeViewMap map[string]string) (map
 }
 
 // 补充 sort 字段
-func completeDSLSortParams(sort []*interfaces.SortParamsV2, useSearchAfter bool, queryType string) []*interfaces.SortParamsV2 {
-	var defaultSort []*interfaces.SortParamsV2
-	switch queryType {
-	case interfaces.QueryType_IndexBase:
-		// 如果使用 search_after 分页, 补全 tiebreaker 字段排序
-		if useSearchAfter {
-			defaultSort = []*interfaces.SortParamsV2{
-				{Field: interfaces.MetaField_Timestamp, Direction: interfaces.DESC_DIRECTION},
-				{Field: interfaces.MetaField_ID, Direction: interfaces.DESC_DIRECTION},
-			}
-		} else {
-			defaultSort = []*interfaces.SortParamsV2{
-				{Field: interfaces.MetaField_Timestamp, Direction: interfaces.DESC_DIRECTION},
-			}
+func completeDSLSortParams(sort []*interfaces.SortField, useSearchAfter bool) []*interfaces.SortField {
+	defaultSort := []*interfaces.SortField{}
+	if useSearchAfter {
+		defaultSort = []*interfaces.SortField{
+			{Field: "_id", Direction: interfaces.DESC_DIRECTION},
 		}
-	case interfaces.QueryType_DSL:
-		if useSearchAfter {
-			defaultSort = []*interfaces.SortParamsV2{
-				{Field: "_id", Direction: interfaces.DESC_DIRECTION},
-			}
-		} else {
-			defaultSort = []*interfaces.SortParamsV2{}
-		}
-	default:
-		defaultSort = []*interfaces.SortParamsV2{}
 	}
 
 	sort = append(sort, defaultSort...)
-	newSort := []*interfaces.SortParamsV2{}
+	newSort := []*interfaces.SortField{}
 	// 去重
 	sortFieldSet := map[string]struct{}{}
 	for _, sortParam := range sort {
@@ -574,173 +389,3 @@ func completeDSLSortParams(sort []*interfaces.SortParamsV2, useSearchAfter bool,
 
 	return newSort
 }
-
-// // 将查询条件转成dsl，过滤条件、时间范围、分页、排序
-// func toDSL(ctx context.Context, query interfaces.ViewQueryInterface, view *interfaces.DataView, indices []string) (bytes.Buffer, error) {
-// 	queryParams := query.GetCommonParams()
-// 	globalFilters := query.GetGlobalFilters()
-// 	sortParams := query.GetSortParams()
-
-// 	searchAfterDSL, err := getSearchAfterDSL(query.GetSearchAfterParams())
-// 	if err != nil {
-// 		return bytes.Buffer{}, rest.NewHTTPError(ctx, http.StatusInternalServerError,
-// 			uerrors.Uniquery_DataView_InternalError_ConvertSearchAfterToDSLFailed).
-// 			WithErrorDetails(fmt.Sprintf("failed to get search after dsl, %s", err.Error()))
-// 	}
-
-// 	var queryBuffer bytes.Buffer
-// 	var queryStr string
-
-// 	if len(sortParams) > 0 {
-// 		sort := []map[string]any{}
-// 		for _, sp := range sortParams {
-// 			if sp.Field == "" || sp.Direction == "" {
-// 				return bytes.Buffer{}, rest.NewHTTPError(ctx, http.StatusBadRequest,
-// 					uerrors.Uniquery_DataView_InvalidParameter_Sort).
-// 					WithErrorDetails("The sort field and direction cannot be empty")
-// 			}
-
-// 			sortField, ok := view.FieldsMap[sp.Field]
-// 			if !ok {
-// 				return bytes.Buffer{}, rest.NewHTTPError(ctx, http.StatusForbidden,
-// 					uerrors.Uniquery_DataView_InvalidFieldPermission_Sort).
-// 					WithErrorDetails(fmt.Sprintf("The sort field '%s' is not in the view fields list", sp.Field))
-// 			}
-
-// 			if sortField.Type == dtype.DATATYPE_BINARY {
-// 				return bytes.Buffer{}, rest.NewHTTPError(ctx, http.StatusBadRequest,
-// 					uerrors.Uniquery_DataView_BinaryFieldSortNotSupported).
-// 					WithErrorDetails(fmt.Sprintf("The sort field '%s' is binary type, do not support sorting", sp.Field))
-// 			}
-
-// 			sortFieldName := sp.Field
-// 			// 不需要将视图字段__id转为opensearch内置字段_id, 因为新的管道数据里已经存了  __id
-// 			// if sortFieldName == "__id" {
-// 			// 	sortFieldName = "_id"
-// 			// }
-// 			if sortField.Type == dtype.DATATYPE_TEXT {
-// 				sortFieldName = sortFieldName + "." + dtype.KEYWORD_SUFFIX
-// 			}
-
-// 			sort = append(sort, map[string]any{
-// 				sortFieldName: sp.Direction,
-// 			})
-// 		}
-
-// 		sortStr, err := sonic.Marshal(sort)
-// 		if err != nil {
-// 			return bytes.Buffer{}, rest.NewHTTPError(ctx, http.StatusInternalServerError,
-// 				uerrors.Uniquery_DataView_InternalError_MarshalFailed).
-// 				WithErrorDetails(fmt.Errorf("data view marshal sort error: %s", err.Error()))
-// 		}
-
-// 		queryStr = fmt.Sprintf(`{%s
-// 		"from": %d,
-// 		"size": %d,
-// 		"sort": %s,
-// 		"query": {
-// 			"bool": {
-// 				"filter": [`, searchAfterDSL, queryParams.Offset, queryParams.Limit, string(sortStr))
-// 	} else {
-// 		queryStr = fmt.Sprintf(`{%s
-// 			"from": %d,
-// 			"size": %d,
-// 			"query": {
-// 				"bool": {
-// 					"filter": [`, searchAfterDSL, queryParams.Offset, queryParams.Limit)
-// 	}
-// 	queryBuffer.WriteString(queryStr)
-
-// 	// 视图数据查询接口视图的过滤条件和全局过滤条件合一起
-// 	var dslStr string
-// 	// if globalFilters != nil || view.Condition != nil {
-// 	if globalFilters != nil {
-// 		// var cfg *cond.CondCfg
-// 		// if globalFilters == nil {
-// 		// 	cfg = view.Condition
-// 		// } else if view.Condition == nil {
-// 		// 	cfg = globalFilters
-// 		// } else {
-// 		// 	cfg = &cond.CondCfg{
-// 		// 		Operation: cond.OperationAnd,
-// 		// 		SubConds: []*cond.CondCfg{
-// 		// 			globalFilters,
-// 		// 			view.Condition,
-// 		// 		},
-// 		// 	}
-// 		// }
-
-// 		cfg := globalFilters
-
-// 		// 将过滤条件拼接到 dsl 的 query 中
-// 		CondCfg, err := cond.NewCondition(cfg, view.Type, view.FieldsMap)
-// 		if err != nil {
-// 			return bytes.Buffer{}, rest.NewHTTPError(ctx, http.StatusBadRequest,
-// 				uerrors.Uniquery_DataView_InvalidParameter_Filters).
-// 				WithErrorDetails(fmt.Sprintf("failed to new condition, %s", err.Error()))
-// 		}
-
-// 		if CondCfg != nil {
-// 			dslStr, err = CondCfg.Convert()
-// 			if err != nil {
-// 				return bytes.Buffer{}, rest.NewHTTPError(ctx, http.StatusBadRequest,
-// 					uerrors.Uniquery_DataView_InvalidParameter_Filters).
-// 					WithErrorDetails(fmt.Sprintf("failed to convert condition to dsl, %s", err.Error()))
-// 			}
-// 		}
-// 	}
-
-// 	mustFilters := []map[string]map[string]any{}
-// 	// if view.LogGroupFilters != "" {
-// 	// 	mustFilters = []map[string]map[string]any{
-// 	// 		{
-// 	// 			"query_string": {
-// 	// 				"query":            view.LogGroupFilters,
-// 	// 				"analyze_wildcard": true,
-// 	// 			},
-// 	// 		},
-// 	// 	}
-// 	// }
-
-// 	mustStr, err := sonic.Marshal(mustFilters)
-// 	if err != nil {
-// 		return bytes.Buffer{}, rest.NewHTTPError(ctx, http.StatusInternalServerError, uerrors.Uniquery_DataView_InternalError_MarshalFailed).
-// 			WithErrorDetails(fmt.Errorf("data view marshal must_filters error: %s", err.Error()))
-// 	}
-
-// 	if dslStr != "" {
-// 		dslStr += ","
-// 	}
-
-// 	timeRangeStr := fmt.Sprintf(`%s
-// 					{
-// 						"range": {
-// 							"@timestamp": {
-// 								%s
-// 							}
-// 						}
-// 					}
-// 				],
-// 				"must": %s
-// 			}
-// 		}
-// 	}`, dslStr, func() string {
-// 		switch {
-// 		case queryParams.Start == 0 && queryParams.End == 0:
-// 			return ""
-// 		case queryParams.Start == 0:
-// 			return fmt.Sprintf(`"lte": %d`, queryParams.End)
-// 		case queryParams.End == 0:
-// 			return fmt.Sprintf(`"gte": %d`, queryParams.Start)
-// 		default:
-// 			return fmt.Sprintf(`"gte": %d, "lte": %d`, queryParams.Start, queryParams.End)
-// 		}
-// 	}(), string(mustStr))
-
-// 	queryBuffer.WriteString(timeRangeStr)
-
-// 	logger.Debug(queryBuffer.String())
-// 	// fmt.Println(queryBuffer.String())
-
-// 	return queryBuffer, nil
-// }

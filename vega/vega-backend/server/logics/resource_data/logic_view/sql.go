@@ -14,21 +14,7 @@ import (
 	"text/template"
 
 	"github.com/mitchellh/mapstructure"
-
-	"vega-backend/common"
-	cond "vega-backend/logics/filter-condition"
-	"vega-backend/interfaces"
-)
-
-
-import (
-	"context"
-	"fmt"
-	"strings"
-	"text/template"
-
 	sq "github.com/Masterminds/squirrel"
-	"github.com/mitchellh/mapstructure"
 
 	"vega-backend/interfaces"
 	"vega-backend/logics/filter_condition"
@@ -386,7 +372,6 @@ func (c *MariaDBConnector) buildSqlNodeSQL(ctx context.Context, node *interfaces
 
 	return result.String(), allArgs, nil
 }
-
 
 func buildCountSql(fromTableStr string) string {
 	return fmt.Sprintf(`SELECT count(*) FROM (%s)t`, fromTableStr)

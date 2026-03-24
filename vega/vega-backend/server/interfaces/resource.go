@@ -52,6 +52,7 @@ type Resource struct {
 	SchemaDefinition []*Property    `json:"schema_definition,omitempty"` // Schema定义
 
 	// 逻辑视图特有的字段
+	LogicType       string                 `json:"logic_type,omitempty"`       // 逻辑类型: derived(衍生), composite(复合)
 	LogicDefinition []*LogicDefinitionNode `json:"logic_definition,omitempty"` // 逻辑定义
 
 	Creator    AccountInfo `json:"creator"`

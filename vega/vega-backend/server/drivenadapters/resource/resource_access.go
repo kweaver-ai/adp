@@ -94,7 +94,7 @@ func (ra *resourceAccess) Create(ctx context.Context, resource *interfaces.Resou
 			"f_source_metadata",
 			"f_schema_definition",
 
-			// "f_logic_type",
+			"f_logic_type",
 			"f_logic_definition",
 			// "f_logic_definition_type",
 
@@ -130,7 +130,7 @@ func (ra *resourceAccess) Create(ctx context.Context, resource *interfaces.Resou
 			string(sourceMetadataBytes),
 			string(schemaDefinitionBytes),
 
-			// "",
+			resource.LogicType,
 			string(logicDefinitionBytes),
 			// "",
 
@@ -194,6 +194,7 @@ func (ra *resourceAccess) GetByID(ctx context.Context, id string) (*interfaces.R
 		"f_source_identifier",
 		"f_source_metadata",
 		"f_schema_definition",
+		"f_logic_type",
 		"f_logic_definition",
 		"f_creator",
 		"f_creator_type",
@@ -228,6 +229,7 @@ func (ra *resourceAccess) GetByID(ctx context.Context, id string) (*interfaces.R
 		&sourceIdentifier,
 		&sourceMetadata,
 		&schemaDefinition,
+		&resource.LogicType,
 		&logicDefinition,
 		&resource.Creator.ID,
 		&resource.Creator.Type,
@@ -285,6 +287,7 @@ func (ra *resourceAccess) GetByIDs(ctx context.Context, ids []string) ([]*interf
 		"f_source_identifier",
 		"f_source_metadata",
 		"f_schema_definition",
+		"f_logic_type",
 		"f_logic_definition",
 		"f_creator",
 		"f_creator_type",
@@ -328,6 +331,7 @@ func (ra *resourceAccess) GetByIDs(ctx context.Context, ids []string) ([]*interf
 			&sourceIdentifier,
 			&sourceMetadata,
 			&schemaDefinition,
+			&resource.LogicType,
 			&logicDefinition,
 			&resource.Creator.ID,
 			&resource.Creator.Type,
@@ -607,6 +611,7 @@ func (ra *resourceAccess) Update(ctx context.Context, resource *interfaces.Resou
 		Set("f_description", resource.Description).
 		Set("f_source_metadata", string(sourceMetadataBytes)).
 		Set("f_schema_definition", string(schemaDefinitionBytes)).
+		Set("f_logic_type", resource.LogicType).
 		Set("f_logic_definition", string(logicDefinitionBytes)).
 		Set("f_updater", resource.Updater.ID).
 		Set("f_updater_type", resource.Updater.Type).

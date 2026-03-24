@@ -79,12 +79,14 @@ func (rs *resourceService) Create(ctx context.Context, req *interfaces.ResourceR
 		accountInfo = v.(interfaces.AccountInfo)
 	}
 
+	var logicType string
 	switch req.Category {
 	case interfaces.ResourceCategoryLogicView:
-		err = rs.validateLogicDefinition(ctx, req)
+		logicType, err = rs.validateLogicDefinition(ctx, req)
 		if err != nil {
 			return "", err
 		}
+		// 
 	}
 
 	// 检查catalog是否存在
@@ -116,6 +118,7 @@ func (rs *resourceService) Create(ctx context.Context, req *interfaces.ResourceR
 		Database:         req.Database,
 		SourceIdentifier: req.SourceIdentifier,
 		SchemaDefinition: req.SchemaDefinition,
+		LogicType:        logicType,
 		LogicDefinition:  req.LogicDefinition,
 		Creator:          accountInfo,
 		CreateTime:       now,
@@ -381,10 +384,14 @@ func (rs *resourceService) Update(ctx context.Context, id string, req *interface
 
 	switch req.Category {
 	case interfaces.ResourceCategoryLogicView:
-		err = rs.validateLogicDefinition(ctx, req)
+		logicType, err := rs.validateLogicDefinition(ctx, req)
 		if err != nil {
 			return err
 		}
+
+		// 逻辑视图更新逻辑类型和逻辑定义
+		resource.LogicType = logicType
+		resource.LogicDefinition = req.LogicDefinition
 	}
 
 	// 检查catalog是否存在
@@ -400,7 +407,6 @@ func (rs *resourceService) Update(ctx context.Context, id string, req *interface
 	resource.Name = req.Name
 	resource.Tags = req.Tags
 	resource.Description = req.Description
-	resource.LogicDefinition = req.LogicDefinition
 
 	// Get account info
 	accountInfo := interfaces.AccountInfo{}

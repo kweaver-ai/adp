@@ -6,6 +6,7 @@
 package interfaces
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 
@@ -13,6 +14,9 @@ import (
 )
 
 const (
+	LogicType_Derived   = "derived"
+	LogicType_Composite = "composite"
+
 	//特征的配置项
 	PropertyFeatureType_Keyword  = "keyword"
 	PropertyFeatureType_Fulltext = "fulltext"
@@ -228,4 +232,10 @@ type SearchAfterParams struct {
 	SearchAfter  []any  `json:"search_after"`
 	PitID        string `json:"pit_id"`
 	PitKeepAlive string `json:"pit_keep_alive"`
+}
+
+//go:generate mockgen -source ../interfaces/logic_view_service.go -destination ../interfaces/mock/mock_logic_view_service.go
+type LogicViewService interface {
+	// Query queries Resource data.
+	Query(ctx context.Context, resource *Resource, params *ResourceDataQueryParams) ([]map[string]any, int64, error)
 }
