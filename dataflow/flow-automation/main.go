@@ -16,6 +16,7 @@ import (
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/driveradapters/alarm"
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/driveradapters/anydata"
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/driveradapters/auth"
+	"github.com/kweaver-ai/adp/autoflow/flow-automation/driveradapters/callback"
 	cognitiveassistant "github.com/kweaver-ai/adp/autoflow/flow-automation/driveradapters/cognitive_assistant"
 	cconfig "github.com/kweaver-ai/adp/autoflow/flow-automation/driveradapters/config"
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/driveradapters/database_con"
@@ -53,6 +54,7 @@ type app struct {
 	hRESTHandler        health.RESTHandler
 	mRESTHandler        mgnt.RESTHandler
 	aRESTHandler        auth.RESTHandler
+	cbRESTHandler       callback.RESTHandler
 	pRESTHandler        policy.RESTHandler
 	tRESTHandler        trigger.RESTHandler
 	tMQHandler          trigger.MQHandler
@@ -148,6 +150,7 @@ func (a *app) Start() {
 		group := engine.Group(prefix)
 
 		// 注册API
+		a.cbRESTHandler.RegisterPrivateAPI(group)
 		a.tRESTHandler.RegisterPrivateAPI(group)
 		a.cfRESTHandler.RegisterPrivateAPI(group)
 		a.mRESTHandler.RegisterPrivateAPI(group)
@@ -214,6 +217,7 @@ func StartDataFlow() {
 		hRESTHandler:        health.NewRESTHandler(),
 		mRESTHandler:        mgnt.NewRESTHandler(),
 		aRESTHandler:        auth.NewRESTHandler(),
+		cbRESTHandler:       callback.NewRESTHandler(),
 		pRESTHandler:        policy.NewRESTHandler(),
 		tRESTHandler:        trigger.NewRESTHandler(),
 		tMQHandler:          trigger.NewMQHandler(),
@@ -265,8 +269,8 @@ func Release() {
 }
 
 func main() {
-	// go StartEcronManagement()
-	// go StartEcronAnalysis()
+	go StartEcronManagement()
+	go StartEcronAnalysis()
 	go StartDataFlow()
 
 	c := make(chan os.Signal, 1)

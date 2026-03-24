@@ -81,6 +81,9 @@ data:
   USERMANAGEMENT_PRIVATE_PORT: {{ index .Values "depServices" "user-management" "privatePort" | quote }}
   TIKA_HOST: {{ index .Values "depServices" "aladdin-tika" "host" | quote }}
   TIKA_PORT: {{ index .Values "depServices" "aladdin-tika" "port" | quote }}
+  DOC_CONVERT_HOST: {{ index .Values "depServices" "doc-convert" "host" | quote }}
+  DOC_CONVERT_TIKA_PORT: {{ index .Values "depServices" "doc-convert" "tikaPort" | quote }}
+  DOC_CONVERT_GOTENBERG_PORT: {{ index .Values "depServices" "doc-convert" "gotenbergPort" | quote }}
   FASTTEXTANALYSIS_HOST: {{ index .Values "depServices" "fast-text-analysis" "host" | quote }}
   FASTTEXTANALYSIS_PORT: {{ index .Values "depServices" "fast-text-analysis" "port" | quote }}
   DOCUMENT_PUBLIC_HOST: {{ .Values.depServices.document.publicHost | quote }}

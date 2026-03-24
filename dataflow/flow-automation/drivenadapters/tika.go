@@ -1,3 +1,4 @@
+// package drivenadapters 旧版纯文本提取器，依赖tika、fasttext
 package drivenadapters
 
 import (
