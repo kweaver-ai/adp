@@ -131,7 +131,7 @@ func (vga *vegaGatewayAccess) executeInitialSQLRequest(ctx context.Context, span
 	vga.setSpanAttributes(span, urlStr, http.MethodPost)
 
 	respCode, result, err := vga.httpClient.PostNoUnmarshal(ctx, urlStr, headers, body)
-	logger.Debugf("post [%s] finished, request sql is [%s], request body is %v, response code is [%d], error is [%v]",
+	logger.Infof("post [%s] finished, request sql is [%s], request body is %v, response code is [%d], error is [%v]",
 		urlStr, params.SqlStr, body, respCode, err)
 
 	return respCode, result, err
@@ -145,7 +145,7 @@ func (vga *vegaGatewayAccess) executeNextBatchRequest(ctx context.Context, span 
 	vga.setSpanAttributes(span, httpUrl, http.MethodGet)
 
 	respCode, result, err := vga.httpClient.GetNoUnmarshal(ctx, httpUrl, nil, headers)
-	logger.Debugf("get [%s] finished, response code is [%d], error is [%v]",
+	logger.Infof("get [%s] finished, response code is [%d], error is [%v]",
 		httpUrl, respCode, err)
 
 	return respCode, result, err

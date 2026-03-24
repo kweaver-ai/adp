@@ -1050,10 +1050,9 @@ func (dvs *dataViewService) queryBySQL(ctx context.Context, query interfaces.Vie
 	// 如果不翻页查询，并且传递了limit参数，并且sql语句里没有limit, sql里拼接上limit
 	if !commonParams.UseSearchAfter && commonParams.Limit > 0 {
 		finalSql = AddLimitIfMissing(finalSql, commonParams.Limit)
-		// finalSql = fmt.Sprintf("%s LIMIT %d", finalSql, commonParams.Limit)
 	}
 
-	logger.Infof("fetch data sqlStr is [%s]", finalSql)
+	// logger.Debugf("fetch data sqlStr is [%s]", finalSql)
 
 	timeout := query.GetQueryParams()[interfaces.QueryParam_Timeout].(time.Duration)
 	timeoutSecond := int64(timeout.Seconds())
