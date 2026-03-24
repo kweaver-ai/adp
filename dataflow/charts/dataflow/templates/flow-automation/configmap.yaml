@@ -79,6 +79,9 @@ data:
   USERMANAGEMENT_PRIVATE_PORT: {{ index .Values "depServices" "user-management" "privatePort" | quote }}
   TIKA_HOST: {{ index .Values "depServices" "aladdin-tika" "host" | quote }}
   TIKA_PORT: {{ index .Values "depServices" "aladdin-tika" "port" | quote }}
+  DOC_CONVERT_HOST: {{ index .Values "depServices" "doc-convert" "host" | quote }}
+  DOC_CONVERT_TIKA_PORT: {{ index .Values "depServices" "doc-convert" "tikaPort" | quote }}
+  DOC_CONVERT_GOTENBERG_PORT: {{ index .Values "depServices" "doc-convert" "gotenbergPort" | quote }}
   FASTTEXTANALYSIS_HOST: {{ index .Values "depServices" "fast-text-analysis" "host" | quote }}
   FASTTEXTANALYSIS_PORT: {{ index .Values "depServices" "fast-text-analysis" "port" | quote }}
   DOCUMENT_PUBLIC_HOST: {{ .Values.depServices.document.publicHost | quote }}
@@ -122,7 +125,7 @@ data:
   CONTENTAUTOMATION_PUBLIC_HOST: {{ index .Values "depServices" "content-automation" "publicHost" | quote }}
   CONTENTAUTOMATION_PUBLIC_PORT: {{ index .Values "depServices" "content-automation" "publicPort" | quote }}
   KCMC_HOST: {{ index .Values "depServices" "kc-mc" "host" | quote }}
-  KCMC_PORT: {{ index .Values "depServices" "kc-mc" "port" | quote }}  
+  KCMC_PORT: {{ index .Values "depServices" "kc-mc" "port" | quote }}
   KCMC_PRIVATE_HOST: {{ index .Values "depServices" "kc-mc" "privateHost" | quote }}
   KCMC_PRIVATE_PORT: {{ index .Values "depServices" "kc-mc" "privatePort" | quote }}
   OSSGATEWAY_PRIVATE_HOST: {{ .Values.depServices.ossgatewaymanager.privateHost | quote }}

@@ -122,6 +122,10 @@ depServices:
   aladdin-tika:
     host: aladdin-tika
     port: "9998"
+  doc-convert:
+    host: doc-convert-private
+    gotenbergPort: "3000"
+    tikaPort: "9998"
   authentication:
     privateHost: authentication-private
     privatePort: "30110"

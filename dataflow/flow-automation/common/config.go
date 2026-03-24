@@ -34,6 +34,7 @@ type Config struct {
 	Kafka                    Kafka                    `mapstructure:"kafka"`
 	MongoDB                  MongoDBConfig            `mapstructure:"mongodb"`
 	Tika                     Tika                     `mapstructure:"tika"`
+	DocConvert               DocConvert               `mapstructure:"doc_convert"`
 	FastTextAnalysis         FastTextAnalysis         `mapstructure:"fasttextanalysis"`
 	Document                 Document                 `mapstructure:"document"`
 	T4th                     T4th                     `mapstructure:"t4th"`
@@ -222,6 +223,12 @@ type Metadata struct {
 type Tika struct {
 	Host string `mapstructure:"host"`
 	Port int    `mapstructure:"port"`
+}
+
+type DocConvert struct {
+	Host          string `mapstructure:"host"`
+	GotenbergPort int    `mapstructure:"gotenberg_port"`
+	TikaPort      int    `mapstructure:"tika_port"`
 }
 
 // FastTextAnalysis 配置
