@@ -1,6 +1,6 @@
 # bkn-backend 业务域（business-domain）解耦技术设计文档
 
-> **状态**：草案
+> **状态**：已完成
 > **负责人**：@
 > **日期**：2026-03-24
 > **相关 Ticket**：[#177](https://github.com/kweaver-ai/adp/issues/177)
@@ -305,37 +305,37 @@ sequenceDiagram
 ## 5. 任务拆分 (Milestones)
 
 **Step 1 — 配置层**
-- [ ] `common/setting.go`：新增 `GetBusinessDomainEnabled()`
-- [ ] `common/setting.go`：`SetBusinessSystemSetting()` 增加 `BUSINESS_DOMAIN_ENABLED` 短路
+- [x] `common/setting.go`：新增 `GetBusinessDomainEnabled()`
+- [x] `common/setting.go`：`SetBusinessSystemSetting()` 增加 `BUSINESS_DOMAIN_ENABLED` 短路
 
 **Step 2 — 接口层**
-- [ ] 新增 `interfaces/business_system_service.go`：定义 `BusinessSystemService` 接口及 `go:generate` 指令
+- [x] 新增 `interfaces/business_system_service.go`：定义 `BusinessSystemService` 接口及 `go:generate` 指令
 
 **Step 3 — 逻辑层**
-- [ ] 新增 `logics/business_system/noop_business_system_service.go`
-- [ ] 新增 `logics/business_system/business_system_service_impl.go`
-- [ ] 新增 `logics/business_system/business_system_service.go`：工厂方法
+- [x] 新增 `logics/business_system/noop_business_system_service.go`
+- [x] 新增 `logics/business_system/business_system_service_impl.go`
+- [x] 新增 `logics/business_system/business_system_service.go`：工厂方法
 
 **Step 4 — Mock 生成**
-- [ ] 运行 `go generate ./interfaces/...`，生成 `interfaces/mock/mock_business_system_service.go`
+- [x] 运行 `go generate ./interfaces/...`，生成 `interfaces/mock/mock_business_system_service.go`
 
 **Step 5 — 注入层**
-- [ ] `logics/driven_access.go`：新增 `BS BusinessSystemService` 及 `SetBusinessSystemService()`
-- [ ] `main.go`：`SetBusinessSystemAccess` 移入 `if GetBusinessDomainEnabled()` 块；新增 `SetBusinessSystemService`
+- [x] `logics/driven_access.go`：新增 `BS BusinessSystemService` 及 `SetBusinessSystemService()`
+- [x] `main.go`：`SetBusinessSystemAccess` 移入 `if GetBusinessDomainEnabled()` 块；新增 `SetBusinessSystemService`
 
 **Step 6 — Service 层改造**
-- [ ] `logics/knowledge_network/knowledge_network_service.go`：`bsa BusinessSystemAccess` → `bs BusinessSystemService`
+- [x] `logics/knowledge_network/knowledge_network_service.go`：`bsa BusinessSystemAccess` → `bs BusinessSystemService`
 
 **Step 7 — Handler 层**
-- [ ] `driveradapters/knowledge_network_handler.go`：`CreateKN` / `ListKNsByEx` 移除 `x-business-domain` 必填校验
-- [ ] `driveradapters/bkn_handler.go`：`UploadBKN` 移除 `x-business-domain` 必填校验
+- [x] `driveradapters/knowledge_network_handler.go`：`CreateKN` / `ListKNsByEx` 移除 `x-business-domain` 必填校验
+- [x] `driveradapters/bkn_handler.go`：`UploadBKN` 移除 `x-business-domain` 必填校验
 
 **Step 8 — Helm**
-- [ ] `helm/bkn-backend/values.yaml`：新增 `businessDomain.enabled: true`
-- [ ] `helm/bkn-backend/templates/deployment.yaml`：注入 `BUSINESS_DOMAIN_ENABLED` 环境变量
+- [x] `helm/bkn-backend/values.yaml`：新增 `businessDomain.enabled: true`
+- [x] `helm/bkn-backend/templates/deployment.yaml`：注入 `BUSINESS_DOMAIN_ENABLED` 环境变量
 
 **Step 9 — 测试**
-- [ ] 新增 `logics/business_system/` 下 Noop 和 Impl 的单元测试
-- [ ] 更新 `driveradapters/knowledge_network_handler_test.go`：mock 由 `BusinessSystemAccess` 改为 `BusinessSystemService`，移除必填 Header 断言
-- [ ] 更新 `driveradapters/bkn_handler_test.go`：同上
-- [ ] 更新 `logics/knowledge_network/knowledge_network_service_test.go`：注入字段由 `bsa` 改为 `bs`
+- [x] 新增 `logics/business_system/` 下 Noop 和 Impl 的单元测试
+- [x] 更新 `driveradapters/knowledge_network_handler_test.go`：mock 由 `BusinessSystemAccess` 改为 `BusinessSystemService`，移除必填 Header 断言
+- [x] 更新 `driveradapters/bkn_handler_test.go`：同上
+- [x] 更新 `logics/knowledge_network/knowledge_network_service_test.go`：注入字段由 `bsa` 改为 `bss`
