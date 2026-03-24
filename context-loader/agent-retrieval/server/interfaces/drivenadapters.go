@@ -23,13 +23,6 @@ type AccountAuthContext struct {
 	TokenInfo *TokenInfo `json:"token_info"`
 }
 
-const (
-	// SystemUser System
-	SystemUser = "system"
-	// UnknownUser Unknown
-	UnknownUser = "unknown"
-)
-
 // VisitorType Visitor Type
 type VisitorType string
 
@@ -194,42 +187,6 @@ type TokenInfo struct {
 // Hydra Authorization service interface
 type Hydra interface {
 	Introspect(ctx context.Context, token string) (tokenInfo *TokenInfo, err error)
-}
-
-const (
-	// DisplayName User display name
-	DisplayName = "name"
-)
-
-// UserInfo User information
-type UserInfo struct {
-	UserID      string   `json:"id"`    // User ID
-	DisplayName string   `json:"name"`  // User display name
-	Roles       []string `json:"roles"` // Roles
-	Account     string   `json:"account"`
-}
-
-// AppInfo App account information
-type AppInfo struct {
-	ID   string `json:"id"`
-	Name string `json:"name"`
-}
-
-// ErrorResponse Error response
-type ErrorResponse struct {
-	Code    int    `json:"code"`
-	Message string `json:"message"`
-	Detail  struct {
-		IDs []string `json:"ids"`
-	} `json:"detail"`
-}
-
-// UserManagement User management interface
-type UserManagement interface {
-	GetAppInfo(ctx context.Context, appID string) (appInfo *AppInfo, err error)
-	GetUserInfo(ctx context.Context, userID string, fields ...string) (info *UserInfo, err error)
-	GetUsersInfo(ctx context.Context, userIDs []string, fields []string) (infos []*UserInfo, err error)
-	GetUsersName(ctx context.Context, userIDs []string) (userMap map[string]string, err error)
 }
 
 // KnowledgeRerankActionType Result set rerank type based on business knowledge network
