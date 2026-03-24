@@ -3,13 +3,13 @@
 // Licensed under the Apache License, Version 2.0.
 // See the LICENSE file in the project root for details.
 
-package data_view
+package logic_view
 
 import (
 	"fmt"
 	"strings"
 
-	"uniquery/logics/data_view/parsing" // 导入生成的解析器
+	"vega-backend/logics/resource_data/logic_view/parsing" // 导入生成的解析器
 
 	"github.com/antlr4-go/antlr/v4"
 	"github.com/bytedance/sonic"

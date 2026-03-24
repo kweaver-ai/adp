@@ -8,6 +8,8 @@ package interfaces
 import (
 	"encoding/json"
 	"fmt"
+
+	"github.com/bytedance/sonic"
 )
 
 const (
@@ -194,4 +196,36 @@ func (v *ViewProperty) UnmarshalJSON(data []byte) error {
 func (v *ViewProperty) String() string {
 	return fmt.Sprintf("ViewProperty{name: %s, type: %s, description: %s, display_name: %s, original_name: %s}",
 		v.Name, v.Type, v.Description, v.DisplayName, v.OriginalName)
+}
+
+type DSLCfg struct {
+	From           int              `json:"from"`
+	Size           int              `json:"size"`
+	Sort           []map[string]any `json:"sort,omitempty"`
+	TrackScores    bool             `json:"track_scores,omitempty"`
+	TrackTotalHits bool             `json:"track_total_hits,omitempty"`
+	SearchAfter    []any            `json:"search_after,omitempty"`
+	Query          struct {
+		Bool struct {
+			Should         []any `json:"should,omitempty"`
+			Filter         []any `json:"filter,omitempty"`
+			Must           []any `json:"must,omitempty"`
+			MinShouldMatch int   `json:"minimum_should_match,omitempty"`
+		} `json:"bool"`
+	} `json:"query"`
+	Pit *struct {
+		ID        string `json:"id,omitempty"`
+		KeepAlive string `json:"keep_alive,omitempty"`
+	} `json:"pit,omitempty"`
+}
+
+func (dsl DSLCfg) String() string {
+	bytes, _ := sonic.MarshalIndent(dsl, "", "  ")
+	return string(bytes)
+}
+
+type SearchAfterParams struct {
+	SearchAfter  []any  `json:"search_after"`
+	PitID        string `json:"pit_id"`
+	PitKeepAlive string `json:"pit_keep_alive"`
 }

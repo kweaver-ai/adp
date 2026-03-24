@@ -3,9 +3,9 @@ module vega-backend
 go 1.24.0
 
 require (
-	github.com/DATA-DOG/go-sqlmock v1.5.2
 	github.com/Masterminds/squirrel v1.5.4
 	github.com/agiledragon/gomonkey/v2 v2.14.0
+	github.com/antlr4-go/antlr/v4 v4.13.1
 	github.com/bytedance/sonic v1.15.0
 	github.com/fsnotify/fsnotify v1.9.0
 	github.com/gin-gonic/gin v1.11.0
@@ -17,14 +17,23 @@ require (
 	github.com/lib/pq v1.10.9
 	github.com/mitchellh/mapstructure v1.5.0
 	github.com/opensearch-project/opensearch-go/v2 v2.3.0
+	github.com/panjf2000/ants/v2 v2.12.0
 	github.com/rs/xid v1.6.0
 	github.com/segmentio/kafka-go v0.4.49
 	github.com/sijms/go-ora/v2 v2.8.24
 	github.com/smartystreets/goconvey v1.8.1
 	github.com/spf13/viper v1.21.0
+	github.com/tidwall/gjson v1.18.0
 	go.opentelemetry.io/otel v1.29.0
 	go.opentelemetry.io/otel/trace v1.29.0
 	go.uber.org/automaxprocs v1.6.0
+	golang.org/x/sync v0.19.0
+)
+
+require (
+	github.com/tidwall/match v1.1.1 // indirect
+	github.com/tidwall/pretty v1.2.0 // indirect
+	golang.org/x/exp v0.0.0-20240506185415-9bf2ced13842 // indirect
 )
 
 require go.uber.org/mock v0.6.0
@@ -70,7 +79,7 @@ require (
 	github.com/golang/snappy v1.0.0 // indirect
 	github.com/google/gnostic-models v0.6.8 // indirect
 	github.com/google/gofuzz v1.2.0 // indirect
-	github.com/google/uuid v1.6.0
+	github.com/google/uuid v1.6.0 // indirect
 	github.com/gopherjs/gopherjs v1.17.2 // indirect
 	github.com/grpc-ecosystem/grpc-gateway/v2 v2.22.0 // indirect
 	github.com/hashicorp/go-uuid v1.0.3 // indirect

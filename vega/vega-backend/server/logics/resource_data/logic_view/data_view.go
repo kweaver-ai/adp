@@ -3,7 +3,7 @@
 // Licensed under the Apache License, Version 2.0.
 // See the LICENSE file in the project root for details.
 
-package data_view
+package logic_view
 
 import (
 	"context"
@@ -17,13 +17,9 @@ import (
 	"github.com/kweaver-ai/kweaver-go-lib/rest"
 	"github.com/mitchellh/mapstructure"
 
-	"uniquery/common"
-	cond "uniquery/common/condition"
-	conv "uniquery/common/convert"
-	vopt "uniquery/common/value_opt"
-	uerrors "uniquery/errors"
-	"uniquery/interfaces"
-	dtype "uniquery/interfaces/data_type"
+	cond "vega-backend/logics/filter-condition"
+	uerrors "vega-backend/errors"
+	"vega-backend/interfaces"
 )
 
 // 判断视图的数据源是否来自同一个数据源
@@ -52,73 +48,6 @@ func getQueryDataSourceID(view *interfaces.DataView) string {
 	return ""
 }
 
-func GetBaseTypes(view *interfaces.DataView) ([]string, map[string]string, error) {
-	baseTypes := []string{}
-	// 索引库和视图 id 的映射
-	baseTypeViewMap := make(map[string]string)
-
-	switch view.Type {
-	case interfaces.ViewType_Atomic:
-		baseTypes = append(baseTypes, view.TechnicalName)
-		baseTypeViewMap[view.TechnicalName] = view.ViewID
-	case interfaces.ViewType_Custom:
-		for _, node := range view.DataScope {
-			// 自定义视图的索引库列表
-			if node.Type == interfaces.DataScopeNodeType_View {
-				var viewNodeConfig interfaces.ViewNodeCfg
-				err := mapstructure.Decode(node.Config, &viewNodeConfig)
-				if err != nil {
-					logger.Errorf("Decode view node config failed, err: %v", err)
-					return nil, nil, err
-				}
-
-				if viewNodeConfig.View == nil {
-					logger.Errorf("View node config view is nil")
-					return nil, nil, fmt.Errorf("view node config view is nil")
-				}
-
-				baseTypes = append(baseTypes, viewNodeConfig.View.TechnicalName)
-				baseTypeViewMap[viewNodeConfig.View.TechnicalName] = viewNodeConfig.ViewID
-			}
-		}
-	}
-
-	return baseTypes, baseTypeViewMap, nil
-
-}
-
-// 将索引库字段转为视图字段
-func convertIndexBaseFieldsToViewFields(baseInfos []interfaces.IndexBase) ([]*cond.ViewField, map[string]*cond.ViewField) {
-	viewFields := make([]*cond.ViewField, 0)
-	viewFieldsMap := make(map[string]*cond.ViewField)
-	// 获取日志库字段转成视图字段格式
-	for _, base := range baseInfos {
-		allBaseFields := mergeIndexBaseFields(base.Mappings)
-		for _, field := range allBaseFields {
-			displayName := field.DisplayName
-			if displayName == "" {
-				displayName = field.Field
-			}
-
-			fieldType, ok := dtype.IndexBase_DataType_Map[field.Type]
-			if !ok {
-				fieldType = field.Type
-			}
-
-			f := &cond.ViewField{
-				Name:         field.Field,
-				Type:         fieldType,
-				DisplayName:  displayName,
-				OriginalName: field.Field,
-			}
-
-			viewFields = append(viewFields, f)
-			viewFieldsMap[field.Field] = f
-		}
-	}
-
-	return viewFields, viewFieldsMap
-}
 
 // 校验自定义视图配置
 func validateDataScope(ctx context.Context, dvs *dataViewService, view *interfaces.DataView) ([]string, map[string]string, error) {
@@ -949,24 +878,3 @@ func flatten(top bool, prefix string, src any, dest map[string]any) error {
 
 	return nil
 }
-
-// // 修正 columns 和视图字段列表对齐，解决字段重复问题
-// func fixColumns(view *interfaces.DataView, columns []ast.Node) ([]ast.Node, error){
-// 	if len(view.Fields) == 0  || len(view.FieldsMap) ==  0 {
-// 		return columns, fmt.Errorf("")
-// 	}
-
-// 	for _, col := range columns {
-// 		fieldName, _ := col.Get("name").String()
-// 		fieldType, _ := col.Get("type").String()
-
-// 		f := &cond.ViewField{
-// 			Name:         fieldName,
-// 			DisplayName:  fieldName,
-// 			OriginalName: fieldName,
-// 			Type:         fieldType,
-// 		}
-// 		view.FieldsMap[fieldName] = f
-// 		view.Fields = append(view.Fields, f)
-// 	}
-// }

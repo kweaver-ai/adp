@@ -3,7 +3,7 @@
 // Licensed under the Apache License, Version 2.0.
 // See the LICENSE file in the project root for details.
 
-package data_view
+package logic_view
 
 import (
 	"bytes"
@@ -17,10 +17,9 @@ import (
 	"github.com/kweaver-ai/kweaver-go-lib/rest"
 	"github.com/mitchellh/mapstructure"
 
-	cond "uniquery/common/condition"
-	uerrors "uniquery/errors"
-	"uniquery/interfaces"
-	dtype "uniquery/interfaces/data_type"
+	cond "vega-backend/logics/filter-condition"
+	uerrors "vega-backend/errors"
+	"vega-backend/interfaces"
 )
 
 // 三种情况需要拼接 dsl
