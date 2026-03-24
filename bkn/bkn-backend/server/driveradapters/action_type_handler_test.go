@@ -169,21 +169,6 @@ func Test_ActionTypeRestHandler_CreateActionTypes(t *testing.T) {
 
 			So(w.Result().StatusCode, ShouldEqual, http.StatusInternalServerError)
 		})
-
-		Convey("CreateActionTypesByIn - Success\n", func() {
-			kns.EXPECT().CheckKNExistByID(gomock.Any(), knID, gomock.Any()).Return(knID, true, nil)
-			ats.EXPECT().CreateActionTypes(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return([]string{"at1"}, nil)
-
-			urlIn := "/api/bkn-backend/in/v1/knowledge-networks/" + knID + "/action-types"
-			reqParamByte, _ := sonic.Marshal(requestData)
-			req := httptest.NewRequest(http.MethodPost, urlIn, bytes.NewReader(reqParamByte))
-			req.Header.Set(interfaces.CONTENT_TYPE_NAME, interfaces.CONTENT_TYPE_JSON)
-			req.Header.Set(interfaces.HTTP_HEADER_ACCOUNT_ID, "user1")
-			w := httptest.NewRecorder()
-			engine.ServeHTTP(w, req)
-
-			So(w.Result().StatusCode, ShouldEqual, http.StatusCreated)
-		})
 	})
 }
 
@@ -270,23 +255,6 @@ func Test_ActionTypeRestHandler_UpdateActionType(t *testing.T) {
 			engine.ServeHTTP(w, req)
 
 			So(w.Result().StatusCode, ShouldEqual, http.StatusForbidden)
-		})
-
-		Convey("UpdateActionTypeByIn - Success\n", func() {
-			kns.EXPECT().CheckKNExistByID(gomock.Any(), knID, gomock.Any()).Return(knID, true, nil)
-			ats.EXPECT().CheckActionTypeExistByID(gomock.Any(), knID, gomock.Any(), atID).Return("old_action1", true, nil)
-			ats.EXPECT().CheckActionTypeExistByName(gomock.Any(), knID, gomock.Any(), actionType.ATName).Return("", false, nil)
-			ats.EXPECT().UpdateActionType(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
-
-			urlIn := "/api/bkn-backend/in/v1/knowledge-networks/" + knID + "/action-types/" + atID
-			reqParamByte, _ := sonic.Marshal(actionType)
-			req := httptest.NewRequest(http.MethodPut, urlIn, bytes.NewReader(reqParamByte))
-			req.Header.Set(interfaces.CONTENT_TYPE_NAME, interfaces.CONTENT_TYPE_JSON)
-			req.Header.Set(interfaces.HTTP_HEADER_ACCOUNT_ID, "user1")
-			w := httptest.NewRecorder()
-			engine.ServeHTTP(w, req)
-
-			So(w.Result().StatusCode, ShouldEqual, http.StatusNoContent)
 		})
 	})
 }
@@ -398,18 +366,6 @@ func Test_ActionTypeRestHandler_ListActionTypes(t *testing.T) {
 			So(w.Result().StatusCode, ShouldEqual, http.StatusForbidden)
 		})
 
-		Convey("ListActionTypesByIn - Success\n", func() {
-			kns.EXPECT().CheckKNExistByID(gomock.Any(), knID, gomock.Any()).Return(knID, true, nil)
-			ats.EXPECT().ListActionTypes(gomock.Any(), gomock.Any()).Return([]*interfaces.ActionType{}, 0, nil)
-
-			urlIn := "/api/bkn-backend/in/v1/knowledge-networks/" + knID + "/action-types"
-			req := httptest.NewRequest(http.MethodGet, urlIn, nil)
-			req.Header.Set(interfaces.HTTP_HEADER_ACCOUNT_ID, "user1")
-			w := httptest.NewRecorder()
-			engine.ServeHTTP(w, req)
-
-			So(w.Result().StatusCode, ShouldEqual, http.StatusOK)
-		})
 	})
 }
 
@@ -493,33 +449,6 @@ func Test_ActionTypeRestHandler_GetActionTypes(t *testing.T) {
 			So(w.Result().StatusCode, ShouldEqual, http.StatusInternalServerError)
 		})
 
-		Convey("GetActionTypesByIn - Success\n", func() {
-			kns.EXPECT().CheckKNExistByID(gomock.Any(), knID, gomock.Any()).Return(knID, true, nil)
-			ats.EXPECT().GetActionTypesByIDs(gomock.Any(), knID, gomock.Any(), gomock.Any()).Return([]*interfaces.ActionType{
-				{
-					ActionTypeWithKeyField: interfaces.ActionTypeWithKeyField{
-						ATID:       "at1",
-						ATName:     "action1",
-						ActionType: interfaces.ACTION_TYPE_ADD,
-					},
-				},
-				{
-					ActionTypeWithKeyField: interfaces.ActionTypeWithKeyField{
-						ATID:       "at2",
-						ATName:     "action2",
-						ActionType: interfaces.ACTION_TYPE_ADD,
-					},
-				},
-			}, nil)
-
-			urlIn := "/api/bkn-backend/in/v1/knowledge-networks/" + knID + "/action-types/" + atIDs
-			req := httptest.NewRequest(http.MethodGet, urlIn, nil)
-			req.Header.Set(interfaces.HTTP_HEADER_ACCOUNT_ID, "user1")
-			w := httptest.NewRecorder()
-			engine.ServeHTTP(w, req)
-
-			So(w.Result().StatusCode, ShouldEqual, http.StatusOK)
-		})
 	})
 }
 
@@ -612,26 +541,11 @@ func Test_ActionTypeRestHandler_SearchActionTypes(t *testing.T) {
 			So(w.Result().StatusCode, ShouldEqual, http.StatusInternalServerError)
 		})
 
-		Convey("SearchActionTypesByIn - Success\n", func() {
-			kns.EXPECT().CheckKNExistByID(gomock.Any(), knID, gomock.Any()).Return(knID, true, nil)
-			ats.EXPECT().SearchActionTypes(gomock.Any(), gomock.Any()).Return(interfaces.ActionTypes{}, nil)
-
-			urlIn := "/api/bkn-backend/in/v1/knowledge-networks/" + knID + "/action-types"
-			reqParamByte, _ := sonic.Marshal(query)
-			req := httptest.NewRequest(http.MethodPost, urlIn, bytes.NewReader(reqParamByte))
-			req.Header.Set(interfaces.HTTP_HEADER_METHOD_OVERRIDE, http.MethodGet)
-			req.Header.Set(interfaces.CONTENT_TYPE_NAME, interfaces.CONTENT_TYPE_JSON)
-			req.Header.Set(interfaces.HTTP_HEADER_ACCOUNT_ID, "user1")
-			w := httptest.NewRecorder()
-			engine.ServeHTTP(w, req)
-
-			So(w.Result().StatusCode, ShouldEqual, http.StatusOK)
-		})
 	})
 }
 
 func Test_ActionTypeRestHandler_HandleActionTypeGetOverride(t *testing.T) {
-	Convey("Test ActionTypeHandler HandleActionTypeGetOverrideByEx and HandleActionTypeGetOverrideByIn\n", t, func() {
+	Convey("Test ActionTypeHandler HandleActionTypeGetOverrideByEx\n", t, func() {
 		test := setGinMode()
 		defer test()
 
@@ -653,7 +567,6 @@ func Test_ActionTypeRestHandler_HandleActionTypeGetOverride(t *testing.T) {
 
 		knID := "kn1"
 		urlEx := "/api/bkn-backend/v1/knowledge-networks/" + knID + "/action-types"
-		urlIn := "/api/bkn-backend/in/v1/knowledge-networks/" + knID + "/action-types"
 
 		actionType := &interfaces.ActionType{
 			ActionTypeWithKeyField: interfaces.ActionTypeWithKeyField{
@@ -709,6 +622,194 @@ func Test_ActionTypeRestHandler_HandleActionTypeGetOverride(t *testing.T) {
 
 			So(w.Result().StatusCode, ShouldEqual, http.StatusBadRequest)
 		})
+	})
+}
+
+func newActionTypeTestHandler(t *testing.T) (*restHandler, *gomock.Controller, *gin.Engine, *bmock.MockActionTypeService, *bmock.MockKNService) {
+	t.Helper()
+	mockCtrl := gomock.NewController(t)
+	engine := gin.New()
+	engine.Use(gin.Recovery())
+	appSetting := &common.AppSetting{}
+	hydraMock := bmock.NewMockHydra(mockCtrl)
+	ats := bmock.NewMockActionTypeService(mockCtrl)
+	kns := bmock.NewMockKNService(mockCtrl)
+	handler := MockNewActionTypeRestHandler(appSetting, hydraMock, ats, kns)
+	handler.RegisterPublic(engine)
+	return handler, mockCtrl, engine, ats, kns
+}
+
+func Test_ActionTypeRestHandler_CreateActionTypesByIn(t *testing.T) {
+	Convey("Test ActionTypeHandler CreateActionTypesByIn\n", t, func() {
+		test := setGinMode()
+		defer test()
+		_, mockCtrl, engine, ats, kns := newActionTypeTestHandler(t)
+		defer mockCtrl.Finish()
+
+		knID := "kn1"
+
+		Convey("Success\n", func() {
+			kns.EXPECT().CheckKNExistByID(gomock.Any(), knID, gomock.Any()).Return(knID, true, nil)
+			ats.EXPECT().CreateActionTypes(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return([]string{"at1"}, nil)
+
+			actionType := &interfaces.ActionType{
+				ActionTypeWithKeyField: interfaces.ActionTypeWithKeyField{
+					ATID:         "at1",
+					ATName:       "action1",
+					ObjectTypeID: "ot1",
+					ActionType:   interfaces.ACTION_TYPE_ADD,
+				},
+			}
+			requestData := struct {
+				Entries []*interfaces.ActionType `json:"entries"`
+			}{
+				Entries: []*interfaces.ActionType{actionType},
+			}
+			reqParamByte, _ := sonic.Marshal(requestData)
+			req := httptest.NewRequest(http.MethodPost, "/api/bkn-backend/in/v1/knowledge-networks/"+knID+"/action-types", bytes.NewReader(reqParamByte))
+			req.Header.Set(interfaces.CONTENT_TYPE_NAME, interfaces.CONTENT_TYPE_JSON)
+			req.Header.Set(interfaces.HTTP_HEADER_ACCOUNT_ID, "user1")
+			w := httptest.NewRecorder()
+			engine.ServeHTTP(w, req)
+
+			So(w.Result().StatusCode, ShouldEqual, http.StatusCreated)
+		})
+	})
+}
+
+func Test_ActionTypeRestHandler_UpdateActionTypeByIn(t *testing.T) {
+	Convey("Test ActionTypeHandler UpdateActionTypeByIn\n", t, func() {
+		test := setGinMode()
+		defer test()
+		_, mockCtrl, engine, ats, kns := newActionTypeTestHandler(t)
+		defer mockCtrl.Finish()
+
+		knID := "kn1"
+		atID := "at1"
+
+		Convey("Success\n", func() {
+			actionType := interfaces.ActionType{
+				ActionTypeWithKeyField: interfaces.ActionTypeWithKeyField{
+					ATID:         atID,
+					ATName:       "action1",
+					ObjectTypeID: "ot1",
+					ActionType:   interfaces.ACTION_TYPE_MODIFY,
+				},
+			}
+			kns.EXPECT().CheckKNExistByID(gomock.Any(), knID, gomock.Any()).Return(knID, true, nil)
+			ats.EXPECT().CheckActionTypeExistByID(gomock.Any(), knID, gomock.Any(), atID).Return("old_action1", true, nil)
+			ats.EXPECT().CheckActionTypeExistByName(gomock.Any(), knID, gomock.Any(), actionType.ATName).Return("", false, nil)
+			ats.EXPECT().UpdateActionType(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
+
+			reqParamByte, _ := sonic.Marshal(actionType)
+			req := httptest.NewRequest(http.MethodPut, "/api/bkn-backend/in/v1/knowledge-networks/"+knID+"/action-types/"+atID, bytes.NewReader(reqParamByte))
+			req.Header.Set(interfaces.CONTENT_TYPE_NAME, interfaces.CONTENT_TYPE_JSON)
+			req.Header.Set(interfaces.HTTP_HEADER_ACCOUNT_ID, "user1")
+			w := httptest.NewRecorder()
+			engine.ServeHTTP(w, req)
+
+			So(w.Result().StatusCode, ShouldEqual, http.StatusNoContent)
+		})
+	})
+}
+
+func Test_ActionTypeRestHandler_ListActionTypesByIn(t *testing.T) {
+	Convey("Test ActionTypeHandler ListActionTypesByIn\n", t, func() {
+		test := setGinMode()
+		defer test()
+		_, mockCtrl, engine, ats, kns := newActionTypeTestHandler(t)
+		defer mockCtrl.Finish()
+
+		knID := "kn1"
+
+		Convey("Success\n", func() {
+			kns.EXPECT().CheckKNExistByID(gomock.Any(), knID, gomock.Any()).Return(knID, true, nil)
+			ats.EXPECT().ListActionTypes(gomock.Any(), gomock.Any()).Return([]*interfaces.ActionType{}, 0, nil)
+
+			req := httptest.NewRequest(http.MethodGet, "/api/bkn-backend/in/v1/knowledge-networks/"+knID+"/action-types", nil)
+			req.Header.Set(interfaces.HTTP_HEADER_ACCOUNT_ID, "user1")
+			w := httptest.NewRecorder()
+			engine.ServeHTTP(w, req)
+
+			So(w.Result().StatusCode, ShouldEqual, http.StatusOK)
+		})
+	})
+}
+
+func Test_ActionTypeRestHandler_GetActionTypesByIn(t *testing.T) {
+	Convey("Test ActionTypeHandler GetActionTypesByIn\n", t, func() {
+		test := setGinMode()
+		defer test()
+		_, mockCtrl, engine, ats, kns := newActionTypeTestHandler(t)
+		defer mockCtrl.Finish()
+
+		knID := "kn1"
+		atIDs := "at1,at2"
+
+		Convey("Success\n", func() {
+			kns.EXPECT().CheckKNExistByID(gomock.Any(), knID, gomock.Any()).Return(knID, true, nil)
+			ats.EXPECT().GetActionTypesByIDs(gomock.Any(), knID, gomock.Any(), gomock.Any()).Return([]*interfaces.ActionType{}, nil)
+
+			req := httptest.NewRequest(http.MethodGet, "/api/bkn-backend/in/v1/knowledge-networks/"+knID+"/action-types/"+atIDs, nil)
+			req.Header.Set(interfaces.HTTP_HEADER_ACCOUNT_ID, "user1")
+			w := httptest.NewRecorder()
+			engine.ServeHTTP(w, req)
+
+			So(w.Result().StatusCode, ShouldEqual, http.StatusOK)
+		})
+	})
+}
+
+func Test_ActionTypeRestHandler_SearchActionTypesByIn(t *testing.T) {
+	Convey("Test ActionTypeHandler SearchActionTypesByIn\n", t, func() {
+		test := setGinMode()
+		defer test()
+		_, mockCtrl, engine, ats, kns := newActionTypeTestHandler(t)
+		defer mockCtrl.Finish()
+
+		knID := "kn1"
+
+		Convey("Success\n", func() {
+			kns.EXPECT().CheckKNExistByID(gomock.Any(), knID, gomock.Any()).Return(knID, true, nil)
+			ats.EXPECT().SearchActionTypes(gomock.Any(), gomock.Any()).Return(interfaces.ActionTypes{}, nil)
+
+			query := interfaces.ConceptsQuery{Limit: 10}
+			reqParamByte, _ := sonic.Marshal(query)
+			req := httptest.NewRequest(http.MethodPost, "/api/bkn-backend/in/v1/knowledge-networks/"+knID+"/action-types", bytes.NewReader(reqParamByte))
+			req.Header.Set(interfaces.HTTP_HEADER_METHOD_OVERRIDE, http.MethodGet)
+			req.Header.Set(interfaces.CONTENT_TYPE_NAME, interfaces.CONTENT_TYPE_JSON)
+			req.Header.Set(interfaces.HTTP_HEADER_ACCOUNT_ID, "user1")
+			w := httptest.NewRecorder()
+			engine.ServeHTTP(w, req)
+
+			So(w.Result().StatusCode, ShouldEqual, http.StatusOK)
+		})
+	})
+}
+
+func Test_ActionTypeRestHandler_HandleActionTypeGetOverrideByIn(t *testing.T) {
+	Convey("Test ActionTypeHandler HandleActionTypeGetOverrideByIn\n", t, func() {
+		test := setGinMode()
+		defer test()
+		_, mockCtrl, engine, ats, kns := newActionTypeTestHandler(t)
+		defer mockCtrl.Finish()
+
+		knID := "kn1"
+		urlIn := "/api/bkn-backend/in/v1/knowledge-networks/" + knID + "/action-types"
+
+		actionType := &interfaces.ActionType{
+			ActionTypeWithKeyField: interfaces.ActionTypeWithKeyField{
+				ATID:         "at1",
+				ATName:       "action1",
+				ObjectTypeID: "ot1",
+				ActionType:   interfaces.ACTION_TYPE_ADD,
+			},
+		}
+		requestData := struct {
+			Entries []*interfaces.ActionType `json:"entries"`
+		}{
+			Entries: []*interfaces.ActionType{actionType},
+		}
 
 		Convey("HandleActionTypeGetOverrideByIn - Success with POST method (default)\n", func() {
 			kns.EXPECT().CheckKNExistByID(gomock.Any(), knID, gomock.Any()).Return(knID, true, nil)

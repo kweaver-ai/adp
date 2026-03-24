@@ -183,20 +183,6 @@ func Test_ObjectTypeRestHandler_CreateObjectTypes(t *testing.T) {
 			So(w.Result().StatusCode, ShouldEqual, http.StatusInternalServerError)
 		})
 
-		Convey("CreateObjectTypesByIn - Success\n", func() {
-			kns.EXPECT().CheckKNExistByID(gomock.Any(), knID, gomock.Any()).Return(knID, true, nil)
-			ots.EXPECT().CreateObjectTypes(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return([]string{"ot1"}, nil)
-
-			urlIn := "/api/bkn-backend/in/v1/knowledge-networks/" + knID + "/object-types"
-			reqParamByte, _ := sonic.Marshal(requestData)
-			req := httptest.NewRequest(http.MethodPost, urlIn, bytes.NewReader(reqParamByte))
-			req.Header.Set(interfaces.CONTENT_TYPE_NAME, interfaces.CONTENT_TYPE_JSON)
-			req.Header.Set(interfaces.HTTP_HEADER_ACCOUNT_ID, "user1")
-			w := httptest.NewRecorder()
-			engine.ServeHTTP(w, req)
-
-			So(w.Result().StatusCode, ShouldEqual, http.StatusCreated)
-		})
 	})
 }
 
@@ -578,18 +564,6 @@ func Test_ObjectTypeRestHandler_ListObjectTypes(t *testing.T) {
 			So(w.Result().StatusCode, ShouldEqual, http.StatusInternalServerError)
 		})
 
-		Convey("ListObjectTypesByIn - Success\n", func() {
-			kns.EXPECT().CheckKNExistByID(gomock.Any(), knID, gomock.Any()).Return(knID, true, nil)
-			ots.EXPECT().ListObjectTypes(gomock.Any(), gomock.Any(), gomock.Any()).Return([]*interfaces.ObjectType{}, 0, nil)
-
-			urlIn := "/api/bkn-backend/in/v1/knowledge-networks/" + knID + "/object-types"
-			req := httptest.NewRequest(http.MethodGet, urlIn, nil)
-			req.Header.Set(interfaces.HTTP_HEADER_ACCOUNT_ID, "user1")
-			w := httptest.NewRecorder()
-			engine.ServeHTTP(w, req)
-
-			So(w.Result().StatusCode, ShouldEqual, http.StatusOK)
-		})
 	})
 }
 
@@ -660,32 +634,6 @@ func Test_ObjectTypeRestHandler_GetObjectTypes(t *testing.T) {
 			So(w.Result().StatusCode, ShouldEqual, http.StatusInternalServerError)
 		})
 
-		Convey("GetObjectTypesByIn - Success\n", func() {
-			otIDs := "ot1,ot2"
-			kns.EXPECT().CheckKNExistByID(gomock.Any(), knID, gomock.Any()).Return(knID, true, nil)
-			ots.EXPECT().GetObjectTypesByIDs(gomock.Any(), gomock.Any(), knID, gomock.Any(), gomock.Any()).Return([]*interfaces.ObjectType{
-				{
-					ObjectTypeWithKeyField: interfaces.ObjectTypeWithKeyField{
-						OTID:   "ot1",
-						OTName: "object1",
-					},
-				},
-				{
-					ObjectTypeWithKeyField: interfaces.ObjectTypeWithKeyField{
-						OTID:   "ot2",
-						OTName: "object2",
-					},
-				},
-			}, nil)
-
-			urlIn := "/api/bkn-backend/in/v1/knowledge-networks/" + knID + "/object-types/" + otIDs
-			req := httptest.NewRequest(http.MethodGet, urlIn, nil)
-			req.Header.Set(interfaces.HTTP_HEADER_ACCOUNT_ID, "user1")
-			w := httptest.NewRecorder()
-			engine.ServeHTTP(w, req)
-
-			So(w.Result().StatusCode, ShouldEqual, http.StatusOK)
-		})
 	})
 }
 
@@ -778,6 +726,177 @@ func Test_ObjectTypeRestHandler_SearchObjectTypes(t *testing.T) {
 			engine.ServeHTTP(w, req)
 
 			So(w.Result().StatusCode, ShouldEqual, http.StatusInternalServerError)
+		})
+	})
+}
+
+func newObjectTypeTestHandler(t *testing.T) (*restHandler, *gomock.Controller, *gin.Engine, *bmock.MockObjectTypeService, *bmock.MockRelationTypeService, *bmock.MockActionTypeService, *bmock.MockKNService) {
+	t.Helper()
+	mockCtrl := gomock.NewController(t)
+	engine := gin.New()
+	engine.Use(gin.Recovery())
+	appSetting := &common.AppSetting{}
+	hydraMock := bmock.NewMockHydra(mockCtrl)
+	ots := bmock.NewMockObjectTypeService(mockCtrl)
+	rts := bmock.NewMockRelationTypeService(mockCtrl)
+	ats := bmock.NewMockActionTypeService(mockCtrl)
+	kns := bmock.NewMockKNService(mockCtrl)
+	handler := MockNewObjectTypeRestHandler(appSetting, hydraMock, ots, rts, ats, kns)
+	handler.RegisterPublic(engine)
+	return handler, mockCtrl, engine, ots, rts, ats, kns
+}
+
+func Test_ObjectTypeRestHandler_CreateObjectTypesByIn(t *testing.T) {
+	Convey("Test ObjectTypeHandler CreateObjectTypesByIn\n", t, func() {
+		test := setGinMode()
+		defer test()
+		_, mockCtrl, engine, ots, _, _, kns := newObjectTypeTestHandler(t)
+		defer mockCtrl.Finish()
+
+		knID := "kn1"
+		requestData := struct {
+			Entries []*interfaces.ObjectType `json:"entries"`
+		}{
+			Entries: []*interfaces.ObjectType{
+				{
+					ObjectTypeWithKeyField: interfaces.ObjectTypeWithKeyField{
+						OTID:   "ot1",
+						OTName: "object1",
+						DataProperties: []*interfaces.DataProperty{
+							{Name: "prop1", Type: "string", DisplayName: "prop1"},
+						},
+						PrimaryKeys: []string{"prop1"},
+						DisplayKey:  "prop1",
+					},
+				},
+			},
+		}
+
+		Convey("Success\n", func() {
+			kns.EXPECT().CheckKNExistByID(gomock.Any(), knID, gomock.Any()).Return(knID, true, nil)
+			ots.EXPECT().CreateObjectTypes(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return([]string{"ot1"}, nil)
+
+			reqParamByte, _ := sonic.Marshal(requestData)
+			req := httptest.NewRequest(http.MethodPost, "/api/bkn-backend/in/v1/knowledge-networks/"+knID+"/object-types", bytes.NewReader(reqParamByte))
+			req.Header.Set(interfaces.CONTENT_TYPE_NAME, interfaces.CONTENT_TYPE_JSON)
+			req.Header.Set(interfaces.HTTP_HEADER_ACCOUNT_ID, "user1")
+			w := httptest.NewRecorder()
+			engine.ServeHTTP(w, req)
+
+			So(w.Result().StatusCode, ShouldEqual, http.StatusCreated)
+		})
+	})
+}
+
+func Test_ObjectTypeRestHandler_UpdateObjectTypeByIn(t *testing.T) {
+	Convey("Test ObjectTypeHandler UpdateObjectTypeByIn\n", t, func() {
+		test := setGinMode()
+		defer test()
+		_, mockCtrl, engine, ots, _, _, kns := newObjectTypeTestHandler(t)
+		defer mockCtrl.Finish()
+
+		knID := "kn1"
+		otID := "ot1"
+		objectType := &interfaces.ObjectType{
+			ObjectTypeWithKeyField: interfaces.ObjectTypeWithKeyField{
+				OTID:   otID,
+				OTName: "object1",
+				DataProperties: []*interfaces.DataProperty{
+					{Name: "prop1", Type: "string", DisplayName: "prop1"},
+				},
+				PrimaryKeys: []string{"prop1"},
+				DisplayKey:  "prop1",
+			},
+		}
+
+		Convey("Success\n", func() {
+			kns.EXPECT().CheckKNExistByID(gomock.Any(), knID, gomock.Any()).Return(knID, true, nil)
+			ots.EXPECT().CheckObjectTypeExistByID(gomock.Any(), knID, gomock.Any(), otID).Return("object2", true, nil)
+			ots.EXPECT().CheckObjectTypeExistByName(gomock.Any(), knID, gomock.Any(), objectType.OTName).Return("", false, nil)
+			ots.EXPECT().UpdateObjectType(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
+
+			reqParamByte, _ := sonic.Marshal(objectType)
+			req := httptest.NewRequest(http.MethodPut, "/api/bkn-backend/in/v1/knowledge-networks/"+knID+"/object-types/"+otID, bytes.NewReader(reqParamByte))
+			req.Header.Set(interfaces.CONTENT_TYPE_NAME, interfaces.CONTENT_TYPE_JSON)
+			req.Header.Set(interfaces.HTTP_HEADER_ACCOUNT_ID, "user1")
+			w := httptest.NewRecorder()
+			engine.ServeHTTP(w, req)
+
+			So(w.Result().StatusCode, ShouldEqual, http.StatusNoContent)
+		})
+	})
+}
+
+func Test_ObjectTypeRestHandler_ListObjectTypesByIn(t *testing.T) {
+	Convey("Test ObjectTypeHandler ListObjectTypesByIn\n", t, func() {
+		test := setGinMode()
+		defer test()
+		_, mockCtrl, engine, ots, _, _, kns := newObjectTypeTestHandler(t)
+		defer mockCtrl.Finish()
+
+		knID := "kn1"
+
+		Convey("Success\n", func() {
+			kns.EXPECT().CheckKNExistByID(gomock.Any(), knID, gomock.Any()).Return(knID, true, nil)
+			ots.EXPECT().ListObjectTypes(gomock.Any(), gomock.Any(), gomock.Any()).Return([]*interfaces.ObjectType{}, 0, nil)
+
+			req := httptest.NewRequest(http.MethodGet, "/api/bkn-backend/in/v1/knowledge-networks/"+knID+"/object-types", nil)
+			req.Header.Set(interfaces.HTTP_HEADER_ACCOUNT_ID, "user1")
+			w := httptest.NewRecorder()
+			engine.ServeHTTP(w, req)
+
+			So(w.Result().StatusCode, ShouldEqual, http.StatusOK)
+		})
+	})
+}
+
+func Test_ObjectTypeRestHandler_GetObjectTypesByIn(t *testing.T) {
+	Convey("Test ObjectTypeHandler GetObjectTypesByIn\n", t, func() {
+		test := setGinMode()
+		defer test()
+		_, mockCtrl, engine, ots, _, _, kns := newObjectTypeTestHandler(t)
+		defer mockCtrl.Finish()
+
+		knID := "kn1"
+		otIDs := "ot1,ot2"
+
+		Convey("Success\n", func() {
+			kns.EXPECT().CheckKNExistByID(gomock.Any(), knID, gomock.Any()).Return(knID, true, nil)
+			ots.EXPECT().GetObjectTypesByIDs(gomock.Any(), gomock.Any(), knID, gomock.Any(), gomock.Any()).Return([]*interfaces.ObjectType{}, nil)
+
+			req := httptest.NewRequest(http.MethodGet, "/api/bkn-backend/in/v1/knowledge-networks/"+knID+"/object-types/"+otIDs, nil)
+			req.Header.Set(interfaces.HTTP_HEADER_ACCOUNT_ID, "user1")
+			w := httptest.NewRecorder()
+			engine.ServeHTTP(w, req)
+
+			So(w.Result().StatusCode, ShouldEqual, http.StatusOK)
+		})
+	})
+}
+
+func Test_ObjectTypeRestHandler_SearchObjectTypesByIn(t *testing.T) {
+	Convey("Test ObjectTypeHandler SearchObjectTypesByIn\n", t, func() {
+		test := setGinMode()
+		defer test()
+		_, mockCtrl, engine, ots, _, _, kns := newObjectTypeTestHandler(t)
+		defer mockCtrl.Finish()
+
+		knID := "kn1"
+		query := interfaces.ConceptsQuery{Limit: 10}
+
+		Convey("Success\n", func() {
+			kns.EXPECT().CheckKNExistByID(gomock.Any(), knID, gomock.Any()).Return(knID, true, nil)
+			ots.EXPECT().SearchObjectTypes(gomock.Any(), gomock.Any()).Return(interfaces.ObjectTypes{}, nil)
+
+			reqParamByte, _ := sonic.Marshal(query)
+			req := httptest.NewRequest(http.MethodPost, "/api/bkn-backend/in/v1/knowledge-networks/"+knID+"/object-types", bytes.NewReader(reqParamByte))
+			req.Header.Set(interfaces.HTTP_HEADER_METHOD_OVERRIDE, http.MethodGet)
+			req.Header.Set(interfaces.CONTENT_TYPE_NAME, interfaces.CONTENT_TYPE_JSON)
+			req.Header.Set(interfaces.HTTP_HEADER_ACCOUNT_ID, "user1")
+			w := httptest.NewRecorder()
+			engine.ServeHTTP(w, req)
+
+			So(w.Result().StatusCode, ShouldEqual, http.StatusOK)
 		})
 	})
 }

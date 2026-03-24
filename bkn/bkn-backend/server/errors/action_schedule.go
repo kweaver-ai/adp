@@ -16,6 +16,7 @@ const (
 	BknBackend_ActionSchedule_NotFound = "BknBackend.ActionSchedule.NotFound"
 
 	// 500 Internal Server Error
+	BknBackend_ActionSchedule_InternalError       = "BknBackend.ActionSchedule.InternalError"
 	BknBackend_ActionSchedule_CreateFailed        = "BknBackend.ActionSchedule.CreateFailed"
 	BknBackend_ActionSchedule_UpdateFailed        = "BknBackend.ActionSchedule.UpdateFailed"
 	BknBackend_ActionSchedule_DeleteFailed        = "BknBackend.ActionSchedule.DeleteFailed"
@@ -30,6 +31,7 @@ var (
 		BknBackend_ActionSchedule_InvalidStatus,
 		BknBackend_ActionSchedule_ActionTypeNotFound,
 		BknBackend_ActionSchedule_NotFound,
+		BknBackend_ActionSchedule_InternalError,
 		BknBackend_ActionSchedule_CreateFailed,
 		BknBackend_ActionSchedule_UpdateFailed,
 		BknBackend_ActionSchedule_DeleteFailed,

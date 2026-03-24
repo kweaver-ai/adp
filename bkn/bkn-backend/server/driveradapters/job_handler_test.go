@@ -468,3 +468,121 @@ func Test_JobRestHandler_ListTasks(t *testing.T) {
 		})
 	})
 }
+
+func newJobTestHandler(t *testing.T) (*restHandler, *gomock.Controller, *gin.Engine, *bmock.MockJobService, *bmock.MockKNService) {
+	t.Helper()
+	mockCtrl := gomock.NewController(t)
+	engine := gin.New()
+	engine.Use(gin.Recovery())
+	appSetting := &common.AppSetting{}
+	hydraMock := bmock.NewMockHydra(mockCtrl)
+	js := bmock.NewMockJobService(mockCtrl)
+	kns := bmock.NewMockKNService(mockCtrl)
+	handler := MockNewJobRestHandler(appSetting, hydraMock, js, kns)
+	handler.RegisterPublic(engine)
+	return handler, mockCtrl, engine, js, kns
+}
+
+func Test_JobRestHandler_CreateJobByIn(t *testing.T) {
+	Convey("Test JobHandler CreateJobByIn\n", t, func() {
+		test := setGinMode()
+		defer test()
+		_, mockCtrl, engine, js, kns := newJobTestHandler(t)
+		defer mockCtrl.Finish()
+
+		knID := "kn1"
+
+		Convey("Success\n", func() {
+			kns.EXPECT().CheckKNExistByID(gomock.Any(), knID, gomock.Any()).Return(knID, true, nil)
+			js.EXPECT().CreateJob(gomock.Any(), gomock.Any()).Return("job1", nil)
+
+			jobInfo := interfaces.JobInfo{Name: "job1", Branch: interfaces.MAIN_BRANCH, JobType: interfaces.JobTypeFull}
+			reqParamByte, _ := sonic.Marshal(jobInfo)
+			req := httptest.NewRequest(http.MethodPost, "/api/bkn-backend/in/v1/knowledge-networks/"+knID+"/jobs", bytes.NewReader(reqParamByte))
+			req.Header.Set(interfaces.CONTENT_TYPE_NAME, interfaces.CONTENT_TYPE_JSON)
+			req.Header.Set(interfaces.HTTP_HEADER_ACCOUNT_ID, "user1")
+			w := httptest.NewRecorder()
+			engine.ServeHTTP(w, req)
+
+			So(w.Result().StatusCode, ShouldEqual, http.StatusCreated)
+		})
+	})
+}
+
+func Test_JobRestHandler_DeleteJobsByIn(t *testing.T) {
+	Convey("Test JobHandler DeleteJobsByIn\n", t, func() {
+		test := setGinMode()
+		defer test()
+		_, mockCtrl, engine, js, kns := newJobTestHandler(t)
+		defer mockCtrl.Finish()
+
+		knID := "kn1"
+		jobIDs := "job1,job2"
+
+		Convey("Success\n", func() {
+			kns.EXPECT().CheckKNExistByID(gomock.Any(), knID, gomock.Any()).Return(knID, true, nil)
+			js.EXPECT().GetJobsByIDs(gomock.Any(), gomock.Any()).Return(map[string]*interfaces.JobInfo{
+				"job1": {ID: "job1", Name: "job1", KNID: knID, Branch: interfaces.MAIN_BRANCH},
+				"job2": {ID: "job2", Name: "job2", KNID: knID, Branch: interfaces.MAIN_BRANCH},
+			}, nil)
+			js.EXPECT().DeleteJobsByIDs(gomock.Any(), knID, gomock.Any(), gomock.Any()).Return(nil)
+
+			req := httptest.NewRequest(http.MethodDelete, "/api/bkn-backend/in/v1/knowledge-networks/"+knID+"/jobs/"+jobIDs, nil)
+			req.Header.Set(interfaces.HTTP_HEADER_ACCOUNT_ID, "user1")
+			w := httptest.NewRecorder()
+			engine.ServeHTTP(w, req)
+
+			So(w.Result().StatusCode, ShouldEqual, http.StatusNoContent)
+		})
+	})
+}
+
+func Test_JobRestHandler_ListJobsByIn(t *testing.T) {
+	Convey("Test JobHandler ListJobsByIn\n", t, func() {
+		test := setGinMode()
+		defer test()
+		_, mockCtrl, engine, js, kns := newJobTestHandler(t)
+		defer mockCtrl.Finish()
+
+		knID := "kn1"
+
+		Convey("Success\n", func() {
+			kns.EXPECT().CheckKNExistByID(gomock.Any(), knID, gomock.Any()).Return(knID, true, nil)
+			js.EXPECT().ListJobs(gomock.Any(), gomock.Any()).Return([]*interfaces.JobInfo{}, int64(0), nil)
+
+			req := httptest.NewRequest(http.MethodGet, "/api/bkn-backend/in/v1/knowledge-networks/"+knID+"/jobs", nil)
+			req.Header.Set(interfaces.HTTP_HEADER_ACCOUNT_ID, "user1")
+			w := httptest.NewRecorder()
+			engine.ServeHTTP(w, req)
+
+			So(w.Result().StatusCode, ShouldEqual, http.StatusOK)
+		})
+	})
+}
+
+func Test_JobRestHandler_ListTasksByIn(t *testing.T) {
+	Convey("Test JobHandler ListTasksByIn\n", t, func() {
+		test := setGinMode()
+		defer test()
+		_, mockCtrl, engine, js, kns := newJobTestHandler(t)
+		defer mockCtrl.Finish()
+
+		knID := "kn1"
+		jobID := "job1"
+
+		Convey("Success\n", func() {
+			kns.EXPECT().CheckKNExistByID(gomock.Any(), knID, gomock.Any()).Return(knID, true, nil)
+			js.EXPECT().GetJobByID(gomock.Any(), jobID).Return(&interfaces.JobInfo{
+				ID: jobID, KNID: knID, Branch: interfaces.MAIN_BRANCH,
+			}, nil)
+			js.EXPECT().ListTasks(gomock.Any(), gomock.Any()).Return([]*interfaces.TaskInfo{}, int64(0), nil)
+
+			req := httptest.NewRequest(http.MethodGet, "/api/bkn-backend/in/v1/knowledge-networks/"+knID+"/jobs/"+jobID+"/tasks", nil)
+			req.Header.Set(interfaces.HTTP_HEADER_ACCOUNT_ID, "user1")
+			w := httptest.NewRecorder()
+			engine.ServeHTTP(w, req)
+
+			So(w.Result().StatusCode, ShouldEqual, http.StatusOK)
+		})
+	})
+}

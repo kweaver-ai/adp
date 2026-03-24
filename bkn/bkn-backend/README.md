@@ -224,6 +224,28 @@ log:
 3. 性能测试验证系统性能
 4. 安全测试确保系统安全
 
+### 运行单元测试
+
+单元测试依赖 `I18N_MODE_UT=true` 环境变量，使测试跳过 locale 文件加载：
+
+```bash
+cd server
+I18N_MODE_UT=true go test ./...
+```
+
+单个包：
+
+```bash
+I18N_MODE_UT=true go test ./logics/knowledge_network/... -v
+```
+
+带覆盖率：
+
+```bash
+I18N_MODE_UT=true go test ./... -coverprofile=coverage.out
+go tool cover -html=coverage.out
+```
+
 ### 提交规范
 1. 使用语义化提交信息
 2. 每个提交对应一个功能点

@@ -181,21 +181,6 @@ func Test_RelationTypeRestHandler_CreateRelationTypes(t *testing.T) {
 
 			So(w.Result().StatusCode, ShouldEqual, http.StatusInternalServerError)
 		})
-
-		Convey("CreateRelationTypesByIn - Success\n", func() {
-			kns.EXPECT().CheckKNExistByID(gomock.Any(), knID, gomock.Any()).Return(knID, true, nil)
-			rts.EXPECT().CreateRelationTypes(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return([]string{"rt1"}, nil)
-
-			urlIn := "/api/bkn-backend/in/v1/knowledge-networks/" + knID + "/relation-types"
-			reqParamByte, _ := sonic.Marshal(requestData)
-			req := httptest.NewRequest(http.MethodPost, urlIn, bytes.NewReader(reqParamByte))
-			req.Header.Set(interfaces.CONTENT_TYPE_NAME, interfaces.CONTENT_TYPE_JSON)
-			req.Header.Set(interfaces.HTTP_HEADER_ACCOUNT_ID, "user1")
-			w := httptest.NewRecorder()
-			engine.ServeHTTP(w, req)
-
-			So(w.Result().StatusCode, ShouldEqual, http.StatusCreated)
-		})
 	})
 }
 
@@ -333,23 +318,6 @@ func Test_RelationTypeRestHandler_UpdateRelationType(t *testing.T) {
 			engine.ServeHTTP(w, req)
 
 			So(w.Result().StatusCode, ShouldEqual, http.StatusInternalServerError)
-		})
-
-		Convey("UpdateRelationTypeByIn - Success\n", func() {
-			kns.EXPECT().CheckKNExistByID(gomock.Any(), knID, gomock.Any()).Return(knID, true, nil)
-			rts.EXPECT().CheckRelationTypeExistByID(gomock.Any(), knID, gomock.Any(), rtID).Return("old_relation1", true, nil)
-			rts.EXPECT().CheckRelationTypeExistByName(gomock.Any(), knID, gomock.Any(), relationType.RTName).Return("", false, nil)
-			rts.EXPECT().UpdateRelationType(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
-
-			urlIn := "/api/bkn-backend/in/v1/knowledge-networks/" + knID + "/relation-types/" + rtID
-			reqParamByte, _ := sonic.Marshal(relationType)
-			req := httptest.NewRequest(http.MethodPut, urlIn, bytes.NewReader(reqParamByte))
-			req.Header.Set(interfaces.CONTENT_TYPE_NAME, interfaces.CONTENT_TYPE_JSON)
-			req.Header.Set(interfaces.HTTP_HEADER_ACCOUNT_ID, "user1")
-			w := httptest.NewRecorder()
-			engine.ServeHTTP(w, req)
-
-			So(w.Result().StatusCode, ShouldEqual, http.StatusNoContent)
 		})
 	})
 }
@@ -499,19 +467,6 @@ func Test_RelationTypeRestHandler_ListRelationTypes(t *testing.T) {
 
 			So(w.Result().StatusCode, ShouldEqual, http.StatusInternalServerError)
 		})
-
-		Convey("ListRelationTypesByIn - Success\n", func() {
-			kns.EXPECT().CheckKNExistByID(gomock.Any(), knID, gomock.Any()).Return(knID, true, nil)
-			rts.EXPECT().ListRelationTypes(gomock.Any(), gomock.Any()).Return([]*interfaces.RelationType{}, 0, nil)
-
-			urlIn := "/api/bkn-backend/in/v1/knowledge-networks/" + knID + "/relation-types"
-			req := httptest.NewRequest(http.MethodGet, urlIn, nil)
-			req.Header.Set(interfaces.HTTP_HEADER_ACCOUNT_ID, "user1")
-			w := httptest.NewRecorder()
-			engine.ServeHTTP(w, req)
-
-			So(w.Result().StatusCode, ShouldEqual, http.StatusOK)
-		})
 	})
 }
 
@@ -578,19 +533,6 @@ func Test_RelationTypeRestHandler_GetRelationTypes(t *testing.T) {
 			engine.ServeHTTP(w, req)
 
 			So(w.Result().StatusCode, ShouldEqual, http.StatusInternalServerError)
-		})
-
-		Convey("GetRelationTypesByIn - Success\n", func() {
-			kns.EXPECT().CheckKNExistByID(gomock.Any(), knID, gomock.Any()).Return(knID, true, nil)
-			rts.EXPECT().GetRelationTypesByIDs(gomock.Any(), knID, gomock.Any(), gomock.Any()).Return([]*interfaces.RelationType{}, nil)
-
-			urlIn := "/api/bkn-backend/in/v1/knowledge-networks/" + knID + "/relation-types/" + rtIDs
-			req := httptest.NewRequest(http.MethodGet, urlIn, nil)
-			req.Header.Set(interfaces.HTTP_HEADER_ACCOUNT_ID, "user1")
-			w := httptest.NewRecorder()
-			engine.ServeHTTP(w, req)
-
-			So(w.Result().StatusCode, ShouldEqual, http.StatusOK)
 		})
 	})
 }
@@ -687,27 +629,11 @@ func Test_RelationTypeRestHandler_SearchRelationTypes(t *testing.T) {
 
 			So(w.Result().StatusCode, ShouldEqual, http.StatusInternalServerError)
 		})
-
-		Convey("SearchRelationTypesByIn - Success\n", func() {
-			kns.EXPECT().CheckKNExistByID(gomock.Any(), knID, gomock.Any()).Return(knID, true, nil)
-			rts.EXPECT().SearchRelationTypes(gomock.Any(), gomock.Any()).Return(interfaces.RelationTypes{}, nil)
-
-			urlIn := "/api/bkn-backend/in/v1/knowledge-networks/" + knID + "/relation-types"
-			reqParamByte, _ := sonic.Marshal(query)
-			req := httptest.NewRequest(http.MethodPost, urlIn, bytes.NewReader(reqParamByte))
-			req.Header.Set(interfaces.HTTP_HEADER_METHOD_OVERRIDE, http.MethodGet)
-			req.Header.Set(interfaces.CONTENT_TYPE_NAME, interfaces.CONTENT_TYPE_JSON)
-			req.Header.Set(interfaces.HTTP_HEADER_ACCOUNT_ID, "user1")
-			w := httptest.NewRecorder()
-			engine.ServeHTTP(w, req)
-
-			So(w.Result().StatusCode, ShouldEqual, http.StatusOK)
-		})
 	})
 }
 
 func Test_RelationTypeRestHandler_HandleRelationTypeGetOverride(t *testing.T) {
-	Convey("Test RelationTypeHandler HandleRelationTypeGetOverrideByEx and HandleRelationTypeGetOverrideByIn\n", t, func() {
+	Convey("Test RelationTypeHandler HandleRelationTypeGetOverrideByEx\n", t, func() {
 		test := setGinMode()
 		defer test()
 
@@ -729,7 +655,6 @@ func Test_RelationTypeRestHandler_HandleRelationTypeGetOverride(t *testing.T) {
 
 		knID := "kn1"
 		urlEx := "/api/bkn-backend/v1/knowledge-networks/" + knID + "/relation-types"
-		urlIn := "/api/bkn-backend/in/v1/knowledge-networks/" + knID + "/relation-types"
 
 		relationType := &interfaces.RelationType{
 			RelationTypeWithKeyField: interfaces.RelationTypeWithKeyField{
@@ -799,6 +724,246 @@ func Test_RelationTypeRestHandler_HandleRelationTypeGetOverride(t *testing.T) {
 
 			So(w.Result().StatusCode, ShouldEqual, http.StatusBadRequest)
 		})
+
+	})
+}
+
+func newRelationTypeTestHandler(t *testing.T) (*restHandler, *gomock.Controller, *gin.Engine, *bmock.MockRelationTypeService, *bmock.MockKNService) {
+	t.Helper()
+	mockCtrl := gomock.NewController(t)
+	engine := gin.New()
+	engine.Use(gin.Recovery())
+	appSetting := &common.AppSetting{}
+	hydraMock := bmock.NewMockHydra(mockCtrl)
+	rts := bmock.NewMockRelationTypeService(mockCtrl)
+	kns := bmock.NewMockKNService(mockCtrl)
+	handler := MockNewRelationTypeRestHandler(appSetting, hydraMock, rts, kns)
+	handler.RegisterPublic(engine)
+	return handler, mockCtrl, engine, rts, kns
+}
+
+func Test_RelationTypeRestHandler_CreateRelationTypesByIn(t *testing.T) {
+	Convey("Test RelationTypeHandler CreateRelationTypesByIn\n", t, func() {
+		test := setGinMode()
+		defer test()
+		_, mockCtrl, engine, rts, kns := newRelationTypeTestHandler(t)
+		defer mockCtrl.Finish()
+
+		knID := "kn1"
+
+		relationType := &interfaces.RelationType{
+			RelationTypeWithKeyField: interfaces.RelationTypeWithKeyField{
+				RTID:               "rt1",
+				RTName:             "relation1",
+				SourceObjectTypeID: "ot1",
+				TargetObjectTypeID: "ot2",
+				Type:               interfaces.RELATION_TYPE_DIRECT,
+				MappingRules: []interfaces.Mapping{
+					{
+						SourceProp: interfaces.SimpleProperty{Name: "prop1"},
+						TargetProp: interfaces.SimpleProperty{Name: "prop2"},
+					},
+				},
+			},
+			CommonInfo: interfaces.CommonInfo{
+				Tags:          []string{"tag1", "tag2", "tag3"},
+				Comment:       "test comment",
+				Icon:          "icon1",
+				Color:         "color1",
+				BKNRawContent: "bkn1",
+			},
+		}
+		requestData := struct {
+			Entries []*interfaces.RelationType `json:"entries"`
+		}{
+			Entries: []*interfaces.RelationType{relationType},
+		}
+
+		Convey("Success\n", func() {
+			kns.EXPECT().CheckKNExistByID(gomock.Any(), knID, gomock.Any()).Return(knID, true, nil)
+			rts.EXPECT().CreateRelationTypes(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return([]string{"rt1"}, nil)
+
+			urlIn := "/api/bkn-backend/in/v1/knowledge-networks/" + knID + "/relation-types"
+			reqParamByte, _ := sonic.Marshal(requestData)
+			req := httptest.NewRequest(http.MethodPost, urlIn, bytes.NewReader(reqParamByte))
+			req.Header.Set(interfaces.CONTENT_TYPE_NAME, interfaces.CONTENT_TYPE_JSON)
+			req.Header.Set(interfaces.HTTP_HEADER_ACCOUNT_ID, "user1")
+			w := httptest.NewRecorder()
+			engine.ServeHTTP(w, req)
+
+			So(w.Result().StatusCode, ShouldEqual, http.StatusCreated)
+		})
+	})
+}
+
+func Test_RelationTypeRestHandler_UpdateRelationTypeByIn(t *testing.T) {
+	Convey("Test RelationTypeHandler UpdateRelationTypeByIn\n", t, func() {
+		test := setGinMode()
+		defer test()
+		_, mockCtrl, engine, rts, kns := newRelationTypeTestHandler(t)
+		defer mockCtrl.Finish()
+
+		knID := "kn1"
+		rtID := "rt1"
+
+		relationType := &interfaces.RelationType{
+			RelationTypeWithKeyField: interfaces.RelationTypeWithKeyField{
+				RTID:               rtID,
+				RTName:             "relation1",
+				SourceObjectTypeID: "ot1",
+				TargetObjectTypeID: "ot2",
+				Type:               interfaces.RELATION_TYPE_DIRECT,
+				MappingRules: []interfaces.Mapping{
+					{
+						SourceProp: interfaces.SimpleProperty{Name: "prop1"},
+						TargetProp: interfaces.SimpleProperty{Name: "prop2"},
+					},
+				},
+			},
+			CommonInfo: interfaces.CommonInfo{
+				Tags:          []string{"tag1", "tag2", "tag3"},
+				Comment:       "test comment",
+				Icon:          "icon1",
+				Color:         "color1",
+				BKNRawContent: "bkn1",
+			},
+		}
+
+		Convey("Success\n", func() {
+			kns.EXPECT().CheckKNExistByID(gomock.Any(), knID, gomock.Any()).Return(knID, true, nil)
+			rts.EXPECT().CheckRelationTypeExistByID(gomock.Any(), knID, gomock.Any(), rtID).Return("old_relation1", true, nil)
+			rts.EXPECT().CheckRelationTypeExistByName(gomock.Any(), knID, gomock.Any(), relationType.RTName).Return("", false, nil)
+			rts.EXPECT().UpdateRelationType(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
+
+			urlIn := "/api/bkn-backend/in/v1/knowledge-networks/" + knID + "/relation-types/" + rtID
+			reqParamByte, _ := sonic.Marshal(relationType)
+			req := httptest.NewRequest(http.MethodPut, urlIn, bytes.NewReader(reqParamByte))
+			req.Header.Set(interfaces.CONTENT_TYPE_NAME, interfaces.CONTENT_TYPE_JSON)
+			req.Header.Set(interfaces.HTTP_HEADER_ACCOUNT_ID, "user1")
+			w := httptest.NewRecorder()
+			engine.ServeHTTP(w, req)
+
+			So(w.Result().StatusCode, ShouldEqual, http.StatusNoContent)
+		})
+	})
+}
+
+func Test_RelationTypeRestHandler_ListRelationTypesByIn(t *testing.T) {
+	Convey("Test RelationTypeHandler ListRelationTypesByIn\n", t, func() {
+		test := setGinMode()
+		defer test()
+		_, mockCtrl, engine, rts, kns := newRelationTypeTestHandler(t)
+		defer mockCtrl.Finish()
+
+		knID := "kn1"
+
+		Convey("Success\n", func() {
+			kns.EXPECT().CheckKNExistByID(gomock.Any(), knID, gomock.Any()).Return(knID, true, nil)
+			rts.EXPECT().ListRelationTypes(gomock.Any(), gomock.Any()).Return([]*interfaces.RelationType{}, 0, nil)
+
+			urlIn := "/api/bkn-backend/in/v1/knowledge-networks/" + knID + "/relation-types"
+			req := httptest.NewRequest(http.MethodGet, urlIn, nil)
+			req.Header.Set(interfaces.HTTP_HEADER_ACCOUNT_ID, "user1")
+			w := httptest.NewRecorder()
+			engine.ServeHTTP(w, req)
+
+			So(w.Result().StatusCode, ShouldEqual, http.StatusOK)
+		})
+	})
+}
+
+func Test_RelationTypeRestHandler_GetRelationTypesByIn(t *testing.T) {
+	Convey("Test RelationTypeHandler GetRelationTypesByIn\n", t, func() {
+		test := setGinMode()
+		defer test()
+		_, mockCtrl, engine, rts, kns := newRelationTypeTestHandler(t)
+		defer mockCtrl.Finish()
+
+		knID := "kn1"
+		rtIDs := "rt1,rt2"
+
+		Convey("Success\n", func() {
+			kns.EXPECT().CheckKNExistByID(gomock.Any(), knID, gomock.Any()).Return(knID, true, nil)
+			rts.EXPECT().GetRelationTypesByIDs(gomock.Any(), knID, gomock.Any(), gomock.Any()).Return([]*interfaces.RelationType{}, nil)
+
+			urlIn := "/api/bkn-backend/in/v1/knowledge-networks/" + knID + "/relation-types/" + rtIDs
+			req := httptest.NewRequest(http.MethodGet, urlIn, nil)
+			req.Header.Set(interfaces.HTTP_HEADER_ACCOUNT_ID, "user1")
+			w := httptest.NewRecorder()
+			engine.ServeHTTP(w, req)
+
+			So(w.Result().StatusCode, ShouldEqual, http.StatusOK)
+		})
+	})
+}
+
+func Test_RelationTypeRestHandler_SearchRelationTypesByIn(t *testing.T) {
+	Convey("Test RelationTypeHandler SearchRelationTypesByIn\n", t, func() {
+		test := setGinMode()
+		defer test()
+		_, mockCtrl, engine, rts, kns := newRelationTypeTestHandler(t)
+		defer mockCtrl.Finish()
+
+		knID := "kn1"
+
+		Convey("Success\n", func() {
+			kns.EXPECT().CheckKNExistByID(gomock.Any(), knID, gomock.Any()).Return(knID, true, nil)
+			rts.EXPECT().SearchRelationTypes(gomock.Any(), gomock.Any()).Return(interfaces.RelationTypes{}, nil)
+
+			query := interfaces.ConceptsQuery{
+				Limit: 10,
+			}
+			urlIn := "/api/bkn-backend/in/v1/knowledge-networks/" + knID + "/relation-types"
+			reqParamByte, _ := sonic.Marshal(query)
+			req := httptest.NewRequest(http.MethodPost, urlIn, bytes.NewReader(reqParamByte))
+			req.Header.Set(interfaces.HTTP_HEADER_METHOD_OVERRIDE, http.MethodGet)
+			req.Header.Set(interfaces.CONTENT_TYPE_NAME, interfaces.CONTENT_TYPE_JSON)
+			req.Header.Set(interfaces.HTTP_HEADER_ACCOUNT_ID, "user1")
+			w := httptest.NewRecorder()
+			engine.ServeHTTP(w, req)
+
+			So(w.Result().StatusCode, ShouldEqual, http.StatusOK)
+		})
+	})
+}
+
+func Test_RelationTypeRestHandler_HandleRelationTypeGetOverrideByIn(t *testing.T) {
+	Convey("Test RelationTypeHandler HandleRelationTypeGetOverrideByIn\n", t, func() {
+		test := setGinMode()
+		defer test()
+		_, mockCtrl, engine, rts, kns := newRelationTypeTestHandler(t)
+		defer mockCtrl.Finish()
+
+		knID := "kn1"
+		urlIn := "/api/bkn-backend/in/v1/knowledge-networks/" + knID + "/relation-types"
+
+		relationType := &interfaces.RelationType{
+			RelationTypeWithKeyField: interfaces.RelationTypeWithKeyField{
+				RTID:               "rt1",
+				RTName:             "relation1",
+				SourceObjectTypeID: "ot1",
+				TargetObjectTypeID: "ot2",
+				Type:               interfaces.RELATION_TYPE_DIRECT,
+				MappingRules: []interfaces.Mapping{
+					{
+						SourceProp: interfaces.SimpleProperty{Name: "prop1"},
+						TargetProp: interfaces.SimpleProperty{Name: "prop2"},
+					},
+				},
+			},
+			CommonInfo: interfaces.CommonInfo{
+				Tags:          []string{"tag1", "tag2", "tag3"},
+				Comment:       "test comment",
+				Icon:          "icon1",
+				Color:         "color1",
+				BKNRawContent: "bkn1",
+			},
+		}
+		requestData := struct {
+			Entries []*interfaces.RelationType `json:"entries"`
+		}{
+			Entries: []*interfaces.RelationType{relationType},
+		}
 
 		Convey("HandleRelationTypeGetOverrideByIn - Success with POST method (default)\n", func() {
 			kns.EXPECT().CheckKNExistByID(gomock.Any(), knID, gomock.Any()).Return(knID, true, nil)

@@ -99,14 +99,16 @@ func Test_KnowledgeNetworkRestHandler_CreateKN(t *testing.T) {
 			So(w.Result().StatusCode, ShouldEqual, http.StatusBadRequest)
 		})
 
-		Convey("Business domain is empty\n", func() {
+		Convey("Business domain is empty, proceeds with empty domain\n", func() {
+			kns.EXPECT().CreateKN(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return("kn1", nil)
+
 			reqParamByte, _ := sonic.Marshal(kn)
 			req := httptest.NewRequest(http.MethodPost, url, bytes.NewReader(reqParamByte))
 			req.Header.Set(interfaces.CONTENT_TYPE_NAME, interfaces.CONTENT_TYPE_JSON)
 			w := httptest.NewRecorder()
 			engine.ServeHTTP(w, req)
 
-			So(w.Result().StatusCode, ShouldEqual, http.StatusBadRequest)
+			So(w.Result().StatusCode, ShouldEqual, http.StatusCreated)
 		})
 
 		Convey("CreateKN failed\n", func() {
@@ -129,6 +131,7 @@ func Test_KnowledgeNetworkRestHandler_CreateKN(t *testing.T) {
 
 			So(w.Result().StatusCode, ShouldEqual, http.StatusInternalServerError)
 		})
+
 	})
 }
 
@@ -280,12 +283,14 @@ func Test_KnowledgeNetworkRestHandler_ListKNs(t *testing.T) {
 			So(w.Result().StatusCode, ShouldEqual, http.StatusOK)
 		})
 
-		Convey("Failed with empty business domain\n", func() {
+		Convey("Business domain is empty, proceeds with empty domain\n", func() {
+			kns.EXPECT().ListKNs(gomock.Any(), gomock.Any()).Return([]*interfaces.KN{}, 0, nil)
+
 			req := httptest.NewRequest(http.MethodGet, url, nil)
 			w := httptest.NewRecorder()
 			engine.ServeHTTP(w, req)
 
-			So(w.Result().StatusCode, ShouldEqual, http.StatusBadRequest)
+			So(w.Result().StatusCode, ShouldEqual, http.StatusOK)
 		})
 	})
 }
@@ -412,6 +417,143 @@ func Test_KnowledgeNetworkRestHandler_GetRelationTypePaths(t *testing.T) {
 			engine.ServeHTTP(w, req)
 
 			So(w.Result().StatusCode, ShouldEqual, http.StatusNotFound)
+		})
+	})
+}
+
+func newKNTestHandler(t *testing.T) (*restHandler, *gomock.Controller, *gin.Engine, *bmock.MockKNService) {
+	t.Helper()
+	mockCtrl := gomock.NewController(t)
+	engine := gin.New()
+	engine.Use(gin.Recovery())
+	appSetting := &common.AppSetting{}
+	hydraMock := bmock.NewMockHydra(mockCtrl)
+	kns := bmock.NewMockKNService(mockCtrl)
+	handler := MockNewKnowledgeNetworkRestHandler(appSetting, hydraMock, kns)
+	handler.RegisterPublic(engine)
+	return handler, mockCtrl, engine, kns
+}
+
+func Test_KnowledgeNetworkRestHandler_CreateKNByIn(t *testing.T) {
+	Convey("Test KnowledgeNetworkHandler CreateKNByIn\n", t, func() {
+		test := setGinMode()
+		defer test()
+		_, mockCtrl, engine, kns := newKNTestHandler(t)
+		defer mockCtrl.Finish()
+
+		Convey("Success\n", func() {
+			kns.EXPECT().CreateKN(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return("kn1", nil)
+
+			kn := interfaces.KN{KNName: "kn1", Comment: "test comment", Branch: "main"}
+			reqParamByte, _ := sonic.Marshal(kn)
+			req := httptest.NewRequest(http.MethodPost, "/api/bkn-backend/in/v1/knowledge-networks", bytes.NewReader(reqParamByte))
+			req.Header.Set(interfaces.CONTENT_TYPE_NAME, interfaces.CONTENT_TYPE_JSON)
+			req.Header.Set(interfaces.HTTP_HEADER_ACCOUNT_ID, "user1")
+			w := httptest.NewRecorder()
+			engine.ServeHTTP(w, req)
+
+			So(w.Result().StatusCode, ShouldEqual, http.StatusCreated)
+		})
+	})
+}
+
+func Test_KnowledgeNetworkRestHandler_UpdateKNByIn(t *testing.T) {
+	Convey("Test KnowledgeNetworkHandler UpdateKNByIn\n", t, func() {
+		test := setGinMode()
+		defer test()
+		_, mockCtrl, engine, kns := newKNTestHandler(t)
+		defer mockCtrl.Finish()
+
+		knID := "kn1"
+
+		Convey("Success\n", func() {
+			kns.EXPECT().CheckKNExistByID(gomock.Any(), knID, gomock.Any()).Return("kn2", true, nil)
+			kns.EXPECT().CheckKNExistByName(gomock.Any(), "kn1", gomock.Any()).Return("", false, nil)
+			kns.EXPECT().UpdateKN(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
+
+			reqParamByte, _ := sonic.Marshal(interfaces.KN{KNID: knID, KNName: "kn1", Branch: interfaces.MAIN_BRANCH})
+			req := httptest.NewRequest(http.MethodPut, "/api/bkn-backend/in/v1/knowledge-networks/"+knID, bytes.NewReader(reqParamByte))
+			req.Header.Set(interfaces.CONTENT_TYPE_NAME, interfaces.CONTENT_TYPE_JSON)
+			req.Header.Set(interfaces.HTTP_HEADER_ACCOUNT_ID, "user1")
+			w := httptest.NewRecorder()
+			engine.ServeHTTP(w, req)
+
+			So(w.Result().StatusCode, ShouldEqual, http.StatusNoContent)
+		})
+	})
+}
+
+func Test_KnowledgeNetworkRestHandler_ListKNsByIn(t *testing.T) {
+	Convey("Test KnowledgeNetworkHandler ListKNsByIn\n", t, func() {
+		test := setGinMode()
+		defer test()
+		_, mockCtrl, engine, kns := newKNTestHandler(t)
+		defer mockCtrl.Finish()
+
+		Convey("Success\n", func() {
+			kns.EXPECT().ListKNs(gomock.Any(), gomock.Any()).Return([]*interfaces.KN{}, 0, nil)
+
+			req := httptest.NewRequest(http.MethodGet, "/api/bkn-backend/in/v1/knowledge-networks", nil)
+			req.Header.Set(interfaces.HTTP_HEADER_ACCOUNT_ID, "user1")
+			w := httptest.NewRecorder()
+			engine.ServeHTTP(w, req)
+
+			So(w.Result().StatusCode, ShouldEqual, http.StatusOK)
+		})
+	})
+}
+
+func Test_KnowledgeNetworkRestHandler_GetKNByIn(t *testing.T) {
+	Convey("Test KnowledgeNetworkHandler GetKNByIn\n", t, func() {
+		test := setGinMode()
+		defer test()
+		_, mockCtrl, engine, kns := newKNTestHandler(t)
+		defer mockCtrl.Finish()
+
+		knID := "kn1"
+
+		Convey("Success\n", func() {
+			kns.EXPECT().GetKNByID(gomock.Any(), knID, gomock.Any(), gomock.Any()).Return(&interfaces.KN{}, nil)
+
+			req := httptest.NewRequest(http.MethodGet, "/api/bkn-backend/in/v1/knowledge-networks/"+knID, nil)
+			req.Header.Set(interfaces.HTTP_HEADER_ACCOUNT_ID, "user1")
+			w := httptest.NewRecorder()
+			engine.ServeHTTP(w, req)
+
+			So(w.Result().StatusCode, ShouldEqual, http.StatusOK)
+		})
+	})
+}
+
+func Test_KnowledgeNetworkRestHandler_GetRelationTypePathsByIn(t *testing.T) {
+	Convey("Test KnowledgeNetworkHandler GetRelationTypePathsByIn\n", t, func() {
+		test := setGinMode()
+		defer test()
+		_, mockCtrl, engine, kns := newKNTestHandler(t)
+		defer mockCtrl.Finish()
+
+		knID := "kn1"
+		query := interfaces.RelationTypePathsBaseOnSource{
+			SourceObjecTypeId: "ot1",
+			Direction:         interfaces.DIRECTION_FORWARD,
+			PathLength:        2,
+		}
+
+		Convey("Success\n", func() {
+			kns.EXPECT().GetKNByID(gomock.Any(), knID, gomock.Any(), gomock.Any()).Return(&interfaces.KN{
+				KNID: knID, KNName: "kn1", Branch: interfaces.MAIN_BRANCH,
+			}, nil)
+			kns.EXPECT().GetRelationTypePaths(gomock.Any(), gomock.Any()).Return([]interfaces.RelationTypePath{}, nil)
+
+			reqParamByte, _ := sonic.Marshal(query)
+			req := httptest.NewRequest(http.MethodPost, "/api/bkn-backend/in/v1/knowledge-networks/"+knID+"/relation-type-paths", bytes.NewReader(reqParamByte))
+			req.Header.Set(interfaces.CONTENT_TYPE_NAME, interfaces.CONTENT_TYPE_JSON)
+			req.Header.Set(interfaces.HTTP_HEADER_METHOD_OVERRIDE, http.MethodGet)
+			req.Header.Set(interfaces.HTTP_HEADER_ACCOUNT_ID, "user1")
+			w := httptest.NewRecorder()
+			engine.ServeHTTP(w, req)
+
+			So(w.Result().StatusCode, ShouldEqual, http.StatusOK)
 		})
 	})
 }
