@@ -3200,3 +3200,81 @@ func Test_objectTypeService_DeleteObjectTypesByKnID(t *testing.T) {
 		})
 	})
 }
+
+func Test_compareIndexConfig(t *testing.T) {
+	Convey("Test compareIndexConfig\n", t, func() {
+		Convey("Both nil returns true\n", func() {
+			So(compareIndexConfig(nil, nil), ShouldBeTrue)
+		})
+
+		Convey("Old nil, new non-nil returns false\n", func() {
+			newCfg := &interfaces.IndexConfig{
+				KeywordConfig: interfaces.KeywordConfig{Enabled: true},
+			}
+			So(compareIndexConfig(nil, newCfg), ShouldBeFalse)
+		})
+
+		Convey("Old non-nil, new nil returns false\n", func() {
+			oldCfg := &interfaces.IndexConfig{
+				KeywordConfig: interfaces.KeywordConfig{Enabled: true},
+			}
+			So(compareIndexConfig(oldCfg, nil), ShouldBeFalse)
+		})
+
+		Convey("Both equal returns true\n", func() {
+			cfg := &interfaces.IndexConfig{
+				KeywordConfig: interfaces.KeywordConfig{Enabled: true, IgnoreAboveLen: 256},
+			}
+			cfg2 := &interfaces.IndexConfig{
+				KeywordConfig: interfaces.KeywordConfig{Enabled: true, IgnoreAboveLen: 256},
+			}
+			So(compareIndexConfig(cfg, cfg2), ShouldBeTrue)
+		})
+
+		Convey("Different config returns false\n", func() {
+			oldCfg := &interfaces.IndexConfig{
+				KeywordConfig: interfaces.KeywordConfig{Enabled: true, IgnoreAboveLen: 256},
+			}
+			newCfg := &interfaces.IndexConfig{
+				KeywordConfig: interfaces.KeywordConfig{Enabled: false, IgnoreAboveLen: 256},
+			}
+			So(compareIndexConfig(oldCfg, newCfg), ShouldBeFalse)
+		})
+	})
+}
+
+func Test_compareMappedField(t *testing.T) {
+	Convey("Test compareMappedField\n", t, func() {
+		Convey("Both nil returns true\n", func() {
+			So(compareMappedField(nil, nil), ShouldBeTrue)
+		})
+
+		Convey("Old nil, new non-nil returns false\n", func() {
+			newField := &interfaces.Field{Name: "id", Type: "keyword"}
+			So(compareMappedField(nil, newField), ShouldBeFalse)
+		})
+
+		Convey("Old non-nil, new nil returns false\n", func() {
+			oldField := &interfaces.Field{Name: "id", Type: "keyword"}
+			So(compareMappedField(oldField, nil), ShouldBeFalse)
+		})
+
+		Convey("Different Name returns false\n", func() {
+			oldField := &interfaces.Field{Name: "id", Type: "keyword"}
+			newField := &interfaces.Field{Name: "pk", Type: "keyword"}
+			So(compareMappedField(oldField, newField), ShouldBeFalse)
+		})
+
+		Convey("Different Type returns false\n", func() {
+			oldField := &interfaces.Field{Name: "id", Type: "keyword"}
+			newField := &interfaces.Field{Name: "id", Type: "text"}
+			So(compareMappedField(oldField, newField), ShouldBeFalse)
+		})
+
+		Convey("Both equal returns true\n", func() {
+			oldField := &interfaces.Field{Name: "id", Type: "keyword"}
+			newField := &interfaces.Field{Name: "id", Type: "keyword"}
+			So(compareMappedField(oldField, newField), ShouldBeTrue)
+		})
+	})
+}

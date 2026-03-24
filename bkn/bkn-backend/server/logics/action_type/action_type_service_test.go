@@ -1530,3 +1530,96 @@ func Test_actionTypeService_DeleteActionTypesByKnID(t *testing.T) {
 		})
 	})
 }
+
+func Test_actionTypeService_SearchActionTypes_extraCases(t *testing.T) {
+	Convey("Test SearchActionTypes extra cases\n", t, func() {
+		ctx := context.Background()
+		mockCtrl := gomock.NewController(t)
+		defer mockCtrl.Finish()
+
+		appSetting := &common.AppSetting{
+			ServerSetting: common.ServerSetting{
+				DefaultSmallModelEnabled: false,
+			},
+		}
+		vba := bmock.NewMockVegaBackendAccess(mockCtrl)
+		cga := bmock.NewMockConceptGroupAccess(mockCtrl)
+		ps := bmock.NewMockPermissionService(mockCtrl)
+
+		service := &actionTypeService{
+			appSetting: appSetting,
+			vba:        vba,
+			cga:        cga,
+			ps:         ps,
+		}
+
+		Convey("Failed when CheckPermission returns error\n", func() {
+			query := &interfaces.ConceptsQuery{KNID: "kn1", Branch: interfaces.MAIN_BRANCH, Limit: 10}
+			ps.EXPECT().CheckPermission(gomock.Any(), gomock.Any(), gomock.Any()).Return(rest.NewHTTPError(ctx, 403, berrors.BknBackend_ActionType_InternalError))
+			result, err := service.SearchActionTypes(ctx, query)
+			So(err, ShouldNotBeNil)
+			So(len(result.Entries), ShouldEqual, 0)
+		})
+
+		Convey("Failed when QueryDatasetData returns error\n", func() {
+			query := &interfaces.ConceptsQuery{KNID: "kn1", Branch: interfaces.MAIN_BRANCH, Limit: 10}
+			ps.EXPECT().CheckPermission(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
+			vba.EXPECT().QueryDatasetData(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil, rest.NewHTTPError(ctx, 500, berrors.BknBackend_ActionType_InternalError))
+			result, err := service.SearchActionTypes(ctx, query)
+			So(err, ShouldNotBeNil)
+			So(len(result.Entries), ShouldEqual, 0)
+		})
+
+		Convey("Success when GetActionTypeIDsFromConceptGroupRelation returns empty list\n", func() {
+			query := &interfaces.ConceptsQuery{
+				KNID:          "kn1",
+				Branch:        interfaces.MAIN_BRANCH,
+				Limit:         10,
+				ConceptGroups: []string{"cg1"},
+			}
+			ps.EXPECT().CheckPermission(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
+			cga.EXPECT().GetConceptGroupsTotal(gomock.Any(), gomock.Any()).Return(1, nil)
+			cga.EXPECT().GetActionTypeIDsFromConceptGroupRelation(gomock.Any(), gomock.Any()).Return([]string{}, nil)
+			result, err := service.SearchActionTypes(ctx, query)
+			So(err, ShouldBeNil)
+			So(len(result.Entries), ShouldEqual, 0)
+		})
+
+		Convey("Success with NeedTotal and no concept groups\n", func() {
+			query := &interfaces.ConceptsQuery{
+				KNID:      "kn1",
+				Branch:    interfaces.MAIN_BRANCH,
+				Limit:     10,
+				NeedTotal: true,
+			}
+			ps.EXPECT().CheckPermission(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
+			// NeedTotal block: QueryDatasetData with Limit=1
+			vba.EXPECT().QueryDatasetData(gomock.Any(), gomock.Any(), gomock.Any()).Return(&interfaces.DatasetQueryResponse{
+				Entries: []map[string]any{}, TotalCount: 3,
+			}, nil)
+			// Main loop: empty response → break
+			vba.EXPECT().QueryDatasetData(gomock.Any(), gomock.Any(), gomock.Any()).Return(&interfaces.DatasetQueryResponse{
+				Entries: []map[string]any{},
+			}, nil)
+			result, err := service.SearchActionTypes(ctx, query)
+			So(err, ShouldBeNil)
+			So(result.TotalCount, ShouldEqual, 3)
+		})
+
+		Convey("Success returning actual action type entries\n", func() {
+			query := &interfaces.ConceptsQuery{KNID: "kn1", Branch: interfaces.MAIN_BRANCH, Limit: 10}
+			entry := map[string]any{
+				"at_id":   "at1",
+				"at_name": "action1",
+				"_score":  float64(0.9),
+			}
+			ps.EXPECT().CheckPermission(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
+			vba.EXPECT().QueryDatasetData(gomock.Any(), gomock.Any(), gomock.Any()).Return(&interfaces.DatasetQueryResponse{
+				Entries: []map[string]any{entry},
+			}, nil)
+			result, err := service.SearchActionTypes(ctx, query)
+			So(err, ShouldBeNil)
+			So(len(result.Entries), ShouldEqual, 1)
+		})
+	})
+}
