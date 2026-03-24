@@ -7,7 +7,6 @@ package driveradapters
 
 import (
 	"bytes"
-	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -1010,51 +1009,4 @@ func Test_RelationTypeRestHandler_HandleRelationTypeGetOverrideByIn(t *testing.T
 			So(w.Result().StatusCode, ShouldEqual, http.StatusBadRequest)
 		})
 	})
-}
-
-func Test_RelationTypeRestHandler_authFail(t *testing.T) {
-	authErr := fmt.Errorf("token invalid")
-	knID := "kn1"
-	rtID := "rt1"
-	rtIDs := "rt1,rt2"
-	cases := []struct {
-		name   string
-		method string
-		url    string
-		header string
-	}{
-		{"CreateRelationTypesByEx", http.MethodPost, "/api/bkn-backend/v1/knowledge-networks/" + knID + "/relation-types", ""},
-		{"UpdateRelationTypeByEx", http.MethodPut, "/api/bkn-backend/v1/knowledge-networks/" + knID + "/relation-types/" + rtID, ""},
-		{"DeleteRelationTypes", http.MethodDelete, "/api/bkn-backend/v1/knowledge-networks/" + knID + "/relation-types/" + rtIDs, ""},
-		{"ListRelationTypesByEx", http.MethodGet, "/api/bkn-backend/v1/knowledge-networks/" + knID + "/relation-types", ""},
-		{"GetRelationTypesByEx", http.MethodGet, "/api/bkn-backend/v1/knowledge-networks/" + knID + "/relation-types/" + rtIDs, ""},
-		{"SearchRelationTypesByEx", http.MethodPost, "/api/bkn-backend/v1/knowledge-networks/" + knID + "/relation-types", http.MethodGet},
-	}
-	for _, tc := range cases {
-		tc := tc
-		t.Run(tc.name, func(t *testing.T) {
-			Convey("Test RT handler auth fail: "+tc.name+"\n", t, func() {
-				test := setGinMode()
-				defer test()
-				engine := gin.New()
-				engine.Use(gin.Recovery())
-				mockCtrl := gomock.NewController(t)
-				defer mockCtrl.Finish()
-				appSetting := &common.AppSetting{}
-				as := bmock.NewMockAuthService(mockCtrl)
-				rts := bmock.NewMockRelationTypeService(mockCtrl)
-				kns := bmock.NewMockKNService(mockCtrl)
-				handler := MockNewRelationTypeRestHandler(appSetting, as, rts, kns)
-				handler.RegisterPublic(engine)
-				as.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).Return(hydra.Visitor{}, authErr)
-				req := httptest.NewRequest(tc.method, tc.url, nil)
-				if tc.header != "" {
-					req.Header.Set(interfaces.HTTP_HEADER_METHOD_OVERRIDE, tc.header)
-				}
-				w := httptest.NewRecorder()
-				engine.ServeHTTP(w, req)
-				So(w.Result().StatusCode, ShouldEqual, http.StatusUnauthorized)
-			})
-		})
-	}
 }

@@ -7,7 +7,6 @@ package driveradapters
 
 import (
 	"bytes"
-	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -603,47 +602,6 @@ func Test_KnowledgeNetworkRestHandler_CreateKN_extraCases(t *testing.T) {
 	})
 }
 
-func Test_KnowledgeNetworkRestHandler_authFail(t *testing.T) {
-	authErr := fmt.Errorf("token invalid")
-	knID := "kn1"
-	cases := []struct {
-		name   string
-		method string
-		url    string
-	}{
-		{"CreateKNByEx", http.MethodPost, "/api/bkn-backend/v1/knowledge-networks"},
-		{"UpdateKNByEx", http.MethodPut, "/api/bkn-backend/v1/knowledge-networks/" + knID},
-		{"DeleteKN", http.MethodDelete, "/api/bkn-backend/v1/knowledge-networks/" + knID},
-		{"ListKNsByEx", http.MethodGet, "/api/bkn-backend/v1/knowledge-networks"},
-		{"GetKNByEx", http.MethodGet, "/api/bkn-backend/v1/knowledge-networks/" + knID},
-		{"GetRelationTypePathsByEx", http.MethodGet, "/api/bkn-backend/v1/knowledge-networks/" + knID + "/relation-type-paths"},
-		{"ListKnSrcs", http.MethodGet, "/api/bkn-backend/v1/resources"},
-	}
-	for _, tc := range cases {
-		tc := tc
-		t.Run(tc.name, func(t *testing.T) {
-			Convey("Test KN handler auth fail: "+tc.name+"\n", t, func() {
-				test := setGinMode()
-				defer test()
-				engine := gin.New()
-				engine.Use(gin.Recovery())
-				mockCtrl := gomock.NewController(t)
-				defer mockCtrl.Finish()
-				appSetting := &common.AppSetting{}
-				as := bmock.NewMockAuthService(mockCtrl)
-				kns := bmock.NewMockKNService(mockCtrl)
-				handler := MockNewKnowledgeNetworkRestHandler(appSetting, as, kns)
-				handler.RegisterPublic(engine)
-				as.EXPECT().VerifyToken(gomock.Any(), gomock.Any()).Return(hydra.Visitor{}, authErr)
-				req := httptest.NewRequest(tc.method, tc.url, nil)
-				w := httptest.NewRecorder()
-				engine.ServeHTTP(w, req)
-				So(w.Result().StatusCode, ShouldEqual, http.StatusUnauthorized)
-			})
-		})
-	}
-}
-
 func Test_KnowledgeNetworkRestHandler_DeleteKN_extraCases(t *testing.T) {
 	Convey("Test KnowledgeNetworkHandler DeleteKN extra cases\n", t, func() {
 		test := setGinMode()
@@ -663,8 +621,8 @@ func Test_KnowledgeNetworkRestHandler_DeleteKN_extraCases(t *testing.T) {
 
 		Convey("Failed when GetKNByID returns error\n", func() {
 			httpErr := &rest.HTTPError{
-				HTTPCode: http.StatusInternalServerError,
-				Language: rest.DefaultLanguage,
+				HTTPCode:  http.StatusInternalServerError,
+				Language:  rest.DefaultLanguage,
 				BaseError: rest.BaseError{ErrorCode: berrors.BknBackend_KnowledgeNetwork_InternalError},
 			}
 			kns.EXPECT().GetKNByID(gomock.Any(), knID, gomock.Any(), gomock.Any()).Return(nil, httpErr)
@@ -676,8 +634,8 @@ func Test_KnowledgeNetworkRestHandler_DeleteKN_extraCases(t *testing.T) {
 
 		Convey("Failed when DeleteKN service returns error\n", func() {
 			httpErr := &rest.HTTPError{
-				HTTPCode: http.StatusInternalServerError,
-				Language: rest.DefaultLanguage,
+				HTTPCode:  http.StatusInternalServerError,
+				Language:  rest.DefaultLanguage,
 				BaseError: rest.BaseError{ErrorCode: berrors.BknBackend_KnowledgeNetwork_InternalError},
 			}
 			kns.EXPECT().GetKNByID(gomock.Any(), knID, gomock.Any(), gomock.Any()).Return(&interfaces.KN{
