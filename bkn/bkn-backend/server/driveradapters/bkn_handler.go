@@ -76,6 +76,9 @@ func (r *restHandler) UploadBKN(c *gin.Context) {
 	// 获取表单参数
 	branch := c.DefaultQuery("branch", interfaces.MAIN_BRANCH)
 
+	// 从header中获取业务域（可选）
+	businessDomain := c.GetHeader(interfaces.HTTP_HEADER_BUSINESS_DOMAIN)
+
 	logger.Debugf("Upload BKN: branch=%s, filename=%s, size=%d",
 		branch, header.Filename, header.Size)
 
@@ -85,17 +88,6 @@ func (r *restHandler) UploadBKN(c *gin.Context) {
 		logger.Errorf("Failed to load network from tar: %s", err.Error())
 		httpErr := rest.NewHTTPError(ctx, http.StatusBadRequest, berrors.BknBackend_KnowledgeNetwork_InvalidParameter).
 			WithErrorDetails("Failed to load network from tar: " + err.Error())
-		o11y.AddHttpAttrs4HttpError(span, httpErr)
-		rest.ReplyError(c, httpErr)
-		return
-	}
-
-	// 从header中获取业务域
-	businessDomain := c.GetHeader(interfaces.HTTP_HEADER_BUSINESS_DOMAIN)
-	if businessDomain == "" {
-		httpErr := rest.NewHTTPError(ctx, http.StatusBadRequest, berrors.BknBackend_KnowledgeNetwork_InvalidParameter_BusinessDomain).
-			WithErrorDetails("Business Domain is empty")
-
 		o11y.AddHttpAttrs4HttpError(span, httpErr)
 		rest.ReplyError(c, httpErr)
 		return

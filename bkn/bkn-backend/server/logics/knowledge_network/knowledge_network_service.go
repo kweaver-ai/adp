@@ -28,6 +28,7 @@ import (
 	"bkn-backend/interfaces"
 	"bkn-backend/logics"
 	"bkn-backend/logics/action_type"
+	"bkn-backend/logics/business_system"
 	"bkn-backend/logics/concept_group"
 	"bkn-backend/logics/job"
 	"bkn-backend/logics/object_type"
@@ -46,7 +47,7 @@ type knowledgeNetworkService struct {
 	db         *sql.DB
 	ata        interfaces.ActionTypeAccess
 	ats        interfaces.ActionTypeService
-	bsa        interfaces.BusinessSystemAccess
+	bss        interfaces.BusinessSystemService
 	cga        interfaces.ConceptGroupAccess
 	cgs        interfaces.ConceptGroupService
 	js         interfaces.JobService
@@ -67,7 +68,7 @@ func NewKNService(appSetting *common.AppSetting) interfaces.KNService {
 			appSetting: appSetting,
 			ata:        logics.ATA,
 			ats:        action_type.NewActionTypeService(appSetting),
-			bsa:        logics.BSA,
+			bss:        business_system.NewBusinessSystemService(appSetting),
 			cga:        logics.CGA,
 			cgs:        concept_group.NewConceptGroupService(appSetting),
 			db:         logics.DB,
@@ -360,7 +361,7 @@ func (kns *knowledgeNetworkService) CreateKN(ctx context.Context, kn *interfaces
 		}
 
 		// 绑定业务域
-		err = kns.bsa.BindResource(ctx, kn.BusinessDomain, kn.KNID, interfaces.MODULE_TYPE_KN)
+		err = kns.bss.BindResource(ctx, kn.BusinessDomain, kn.KNID, interfaces.MODULE_TYPE_KN)
 		if err != nil {
 			logger.Errorf("BindResource error: %s", err.Error())
 			span.SetStatus(codes.Error, "绑定业务知识网络业务系统失败")
@@ -895,7 +896,7 @@ func (kns *knowledgeNetworkService) DeleteKN(ctx context.Context, kn *interfaces
 		return err
 	}
 	// 最后再解绑业务域
-	err = kns.bsa.UnbindResource(ctx, kn.BusinessDomain, kn.KNID, interfaces.RESOURCE_TYPE_KN)
+	err = kns.bss.UnbindResource(ctx, kn.BusinessDomain, kn.KNID, interfaces.RESOURCE_TYPE_KN)
 	if err != nil {
 		logger.Errorf("UnbindResource error: %s", err.Error())
 		span.SetStatus(codes.Error, "解绑业务知识网络业务域失败")

@@ -371,7 +371,18 @@ func SetModelFactoryAPISetting() {
 	appSetting.ModelFactoryAPIUrl = fmt.Sprintf("%s://%s:%d/api/private/mf-model-api/v1", protocol, host, port)
 }
 
+// GetBusinessDomainEnabled 获取业务域开关状态
+// 通过环境变量 BUSINESS_DOMAIN_ENABLED 控制，默认 true（安全优先）
+func GetBusinessDomainEnabled() bool {
+	envVal := os.Getenv("BUSINESS_DOMAIN_ENABLED")
+	return envVal != "false" && envVal != "0"
+}
+
 func SetBusinessSystemSetting() {
+	if !GetBusinessDomainEnabled() {
+		logger.Info("Business domain disabled via BUSINESS_DOMAIN_ENABLED env, skipping business-system configuration")
+		return
+	}
 	setting, ok := appSetting.DepServices[businessSystemServiceName]
 	if !ok {
 		logger.Fatalf("service %s not found in depServices", businessSystemServiceName)

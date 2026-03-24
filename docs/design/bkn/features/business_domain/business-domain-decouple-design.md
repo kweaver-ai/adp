@@ -222,7 +222,13 @@ kns.bs.UnbindResource(ctx, kn.BusinessDomain, kn.KNID, interfaces.RESOURCE_TYPE_
 
 #### 改造：Handler 中移除 Header 强制校验
 
-`x-business-domain` 改为可选字段，Handler 直接读取后传入 Service 层，不做非空校验。Service 层根据 `BUSINESS_DOMAIN_ENABLED` 决定是否实际使用该值。
+`x-business-domain` 改为可选字段。Service 层根据 `BUSINESS_DOMAIN_ENABLED` 决定是否实际使用该值。
+
+Handler 读取逻辑：
+
+```go
+businessDomain := c.GetHeader(interfaces.HTTP_HEADER_BUSINESS_DOMAIN)
+```
 
 ```mermaid
 sequenceDiagram
@@ -254,7 +260,7 @@ sequenceDiagram
 
 不涉及数据库 Schema 变更。
 
-`x-business-domain` 改为可选后，`f_business_domain` 字段可能存储空字符串，数据库列已允许为空，无需 migration。`ListKNsByEx` 已有 `if query.BusinessDomain != ""` 短路判断，无需额外处理。
+`x-business-domain` 改为可选后，`f_business_domain` 字段可能存储空字符串，数据库列已允许为空，无需 migration。`ListKNsByEx` 已有 `if query.BusinessDomain != ""` 短路判断，Header 未传时自动跳过业务域过滤条件。
 
 ### 3.3 接口定义 (Interface Definition)
 
@@ -273,11 +279,11 @@ sequenceDiagram
 | 文件 | 改动 |
 |------|------|
 | `logics/driven_access.go` | 新增 `BS BusinessSystemService` 及 `SetBusinessSystemService()` |
-| `main.go` | `SetBusinessSystemAccess` 移入 `if GetAuthEnabled()` 块；新增 `SetBusinessSystemService` |
+| `main.go` | `SetBusinessSystemAccess` 移入 `if GetBusinessDomainEnabled()` 块；新增 `SetBusinessSystemService` |
 | `common/setting.go` | 新增 `GetBusinessDomainEnabled()`；`SetBusinessSystemSetting()` 增加短路 |
 | `logics/knowledge_network/knowledge_network_service.go` | `bsa BusinessSystemAccess` → `bs BusinessSystemService` |
-| `driveradapters/knowledge_network_handler.go` | `CreateKN` / `ListKNsByEx` Header 校验条件化 |
-| `driveradapters/bkn_handler.go` | `UploadBKN` Header 校验条件化 |
+| `driveradapters/knowledge_network_handler.go` | `CreateKN` / `ListKNsByEx` 移除 `x-business-domain` 必填校验 |
+| `driveradapters/bkn_handler.go` | `UploadBKN` 移除 `x-business-domain` 必填校验 |
 | `helm/bkn-backend/values.yaml` | 新增 `businessDomain.enabled` 配置项 |
 | `helm/bkn-backend/templates/deployment.yaml` | 注入 `BUSINESS_DOMAIN_ENABLED` 环境变量 |
 
@@ -321,8 +327,8 @@ sequenceDiagram
 - [ ] `logics/knowledge_network/knowledge_network_service.go`：`bsa BusinessSystemAccess` → `bs BusinessSystemService`
 
 **Step 7 — Handler 层**
-- [ ] `driveradapters/knowledge_network_handler.go`：移除 `CreateKN` / `ListKNsByEx` 中 `x-business-domain` 必填校验
-- [ ] `driveradapters/bkn_handler.go`：移除 `UploadBKN` 中 `x-business-domain` 必填校验
+- [ ] `driveradapters/knowledge_network_handler.go`：`CreateKN` / `ListKNsByEx` 移除 `x-business-domain` 必填校验
+- [ ] `driveradapters/bkn_handler.go`：`UploadBKN` 移除 `x-business-domain` 必填校验
 
 **Step 8 — Helm**
 - [ ] `helm/bkn-backend/values.yaml`：新增 `businessDomain.enabled: true`

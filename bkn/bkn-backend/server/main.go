@@ -148,7 +148,9 @@ func main() {
 	}
 	logics.SetActionScheduleAccess(action_schedule.NewActionScheduleAccess(appSetting))
 	logics.SetActionTypeAccess(action_type.NewActionTypeAccess(appSetting))
-	logics.SetBusinessSystemAccess(business_system.NewBusinessSystemAccess(appSetting))
+	if common.GetBusinessDomainEnabled() {
+		logics.SetBusinessSystemAccess(business_system.NewBusinessSystemAccess(appSetting))
+	}
 	logics.SetConceptGroupAccess(concept_group.NewConceptGroupAccess(appSetting))
 	logics.SetDataModelAccess(data_model.NewDataModelAccess(appSetting))
 	logics.SetDataViewAccess(data_view.NewDataViewAccess(appSetting))

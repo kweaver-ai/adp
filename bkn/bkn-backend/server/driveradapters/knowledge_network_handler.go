@@ -67,6 +67,9 @@ func (r *restHandler) CreateKN(c *gin.Context, visitor hydra.Visitor) {
 	// 设置 trace 的相关 api 的属性
 	o11y.AddHttpAttrs4API(span, o11y.GetAttrsByGinCtx(c))
 
+	// 从header中获取业务域（可选）
+	businessDomain := c.GetHeader(interfaces.HTTP_HEADER_BUSINESS_DOMAIN)
+
 	// 导入模式
 	mode := c.DefaultQuery(interfaces.QueryParam_ImportMode, interfaces.ImportMode_Normal)
 	httpErr := validateImportMode(ctx, mode)
@@ -116,16 +119,6 @@ func (r *restHandler) CreateKN(c *gin.Context, visitor hydra.Visitor) {
 		return
 	}
 
-	// 从header中获取业务域
-	businessDomain := c.GetHeader(interfaces.HTTP_HEADER_BUSINESS_DOMAIN)
-	if businessDomain == "" {
-		httpErr := rest.NewHTTPError(ctx, http.StatusBadRequest, berrors.BknBackend_KnowledgeNetwork_InvalidParameter_BusinessDomain).
-			WithErrorDetails("Business Domain is empty")
-
-		o11y.AddHttpAttrs4HttpError(span, httpErr)
-		rest.ReplyError(c, httpErr)
-		return
-	}
 	kn.BusinessDomain = businessDomain
 
 	// 1. 校验 业务知识网络必要创建参数的合法性, 非空、长度、是枚举值
@@ -469,16 +462,8 @@ func (r *restHandler) ListKNs(c *gin.Context, visitor hydra.Visitor) {
 	// 记录接口调用参数： c.Request.RequestURI, body
 	o11y.Info(ctx, fmt.Sprintf("分页获取业务知识网络列表请求参数: [%s]", c.Request.RequestURI))
 
-	// 从header中获取业务域
+	// 从header中获取业务域（可选）
 	businessDomain := c.GetHeader(interfaces.HTTP_HEADER_BUSINESS_DOMAIN)
-	if businessDomain == "" {
-		httpErr := rest.NewHTTPError(ctx, http.StatusBadRequest, berrors.BknBackend_KnowledgeNetwork_InvalidParameter_BusinessDomain).
-			WithErrorDetails("Business Domain is empty")
-
-		o11y.AddHttpAttrs4HttpError(span, httpErr)
-		rest.ReplyError(c, httpErr)
-		return
-	}
 
 	// 获取分页参数
 	namePattern := c.Query("name_pattern")
