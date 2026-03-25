@@ -71,8 +71,9 @@ func newMultipartRequestWithContentType(t *testing.T, url, filename, contentType
 	if err != nil {
 		t.Fatalf("failed to create form part: %v", err)
 	}
-	fw.Write(content)
+	_, _ = fw.Write(content)
 	mw.Close()
+
 	req := httptest.NewRequest(http.MethodPost, url, &body)
 	req.Header.Set("Content-Type", mw.FormDataContentType())
 	return req
@@ -81,16 +82,16 @@ func newMultipartRequestWithContentType(t *testing.T, url, filename, contentType
 // newMultipartRequest 构造一个包含文件的 multipart/form-data 请求
 func newMultipartRequest(t *testing.T, url, filename string, content []byte) *http.Request {
 	var body bytes.Buffer
-	w := multipart.NewWriter(&body)
-	fw, err := w.CreateFormFile("file", filename)
+	mw := multipart.NewWriter(&body)
+	fw, err := mw.CreateFormFile("file", filename)
 	if err != nil {
 		t.Fatalf("failed to create form file: %v", err)
 	}
-	fw.Write(content)
-	w.Close()
+	_, _ = fw.Write(content)
+	mw.Close()
 
 	req := httptest.NewRequest(http.MethodPost, url, &body)
-	req.Header.Set("Content-Type", w.FormDataContentType())
+	req.Header.Set("Content-Type", mw.FormDataContentType())
 	return req
 }
 
@@ -150,7 +151,7 @@ func Test_BKNRestHandler_UploadBKN(t *testing.T) {
 			var body bytes.Buffer
 			mw := multipart.NewWriter(&body)
 			fw, _ := mw.CreateFormFile("file", "test.json")
-			fw.Write([]byte(`{"invalid": "content"}`))
+			_, _ = fw.Write([]byte(`{"invalid": "content"}`))
 			mw.Close()
 
 			req := httptest.NewRequest(http.MethodPost, url, &body)
