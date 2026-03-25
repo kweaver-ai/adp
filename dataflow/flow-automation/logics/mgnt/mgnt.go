@@ -405,7 +405,7 @@ type mgnt struct {
 	memoryCache       cstore.LocalCache
 	pool              *threadPool.PoolManager
 	bizDomain         drivenadapters.BusinessDomain
-	s3Adapter         drivenadapters.S3Adapter // S3适配器
+	s3Adapter         drivenadapters.S3Adapter  // S3适配器
 	ossGateway        drivenadapters.OssGateWay // OssGateway文件存储
 }
 
@@ -455,7 +455,7 @@ func NewMgnt() MgntHandler {
 		}
 
 		// Initialize OssGateway for Dataflow file subsystem
-		mIns.ossGateway = drivenadapters.NewOssGatewayS3()
+		mIns.ossGateway = drivenadapters.NewOssGateWay()
 
 		// Initialize S3 adapter if configured
 		s3Conn := s3.NewS3().GetDefaultConnection()

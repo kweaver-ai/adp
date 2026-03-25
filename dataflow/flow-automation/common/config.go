@@ -45,6 +45,7 @@ type Config struct {
 	EcoTag                   EcoTag                   `mapstructure:"ecotag"`
 	ContentAutomation        ContentAutomation        `mapstructure:"contentautomation"`
 	OssGateWay               OSSGateWay               `mapstructure:"ossgateway"`
+	OssGatewayBackend        OssGatewayBackend        `mapstructure:"ossgatewaybackend"`
 	DumpLog                  DumpLog                  `mapstructure:"dumplog"`
 	Redis                    RedisConfiguration       `mapstructure:"redis"`
 	Kcmc                     Kcmc                     `mapstructure:"kcmc"`
@@ -93,6 +94,14 @@ const (
 	EditionCommercial Edition = "commercial"
 )
 
+type StorageBackend string
+
+const (
+	StorageBackendOssGateway        StorageBackend = "ossgateway"
+	StorageBackendS3                StorageBackend = "s3"
+	StorageBackendOssGatewayBackend StorageBackend = "ossgatewaybackend"
+)
+
 // Server 服务基础配置
 type Server struct {
 	LowestExecutorCount           int                           `mapstructure:"lowest_executor_count"`
@@ -113,6 +122,7 @@ type Server struct {
 	DagInstanceEventArchivePolicy DagInstanceEventArchivePolicy `mapstructure:"dag_instance_event_archive_policy"`
 	Edition                       Edition                       `mapstructure:"edition"`
 	DBType                        string                        `mapstructure:"db_type"`
+	StorageBackend                StorageBackend                `mapstructure:"storage_backend"`
 }
 
 // DB database config
@@ -331,6 +341,12 @@ type MongoDBConfig struct {
 type OSSGateWay struct {
 	PrivateHost string `mapstructure:"private_host"`
 	PrivatePort string `mapstructure:"private_port"`
+}
+
+// OssGatewayBackend 新版 OssGateway Backend 服务配置
+type OssGatewayBackend struct {
+	Host string `mapstructure:"host"`
+	Port int    `mapstructure:"port"`
 }
 
 // DumpLog 日志转储阈值设置

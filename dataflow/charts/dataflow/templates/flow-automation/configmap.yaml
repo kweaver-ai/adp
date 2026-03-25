@@ -35,6 +35,7 @@ data:
   SERVER_STORAGE_PREFIX: {{ .Values.flowAutomation.service.storagePrefix | quote }}
   SERVER_EDITION: {{ .Values.flowAutomation.service.edition | quote }}
   SERVER_DB_TYPE: {{ .Values.flowAutomation.service.dbType | quote }}
+  SERVER_STORAGE_BACKEND: {{ .Values.flowAutomation.service.storageBackend | quote }}
   SERVER_FLOW_FILE_DOWNLOAD_WORKER_COUNT: {{ .Values.flowAutomation.flowFileDownload.workerCount | quote }}
   SERVER_FLOW_FILE_DOWNLOAD_POLL_INTERVAL: {{ .Values.flowAutomation.flowFileDownload.pollInterval | quote }}
   SERVER_FLOW_FILE_DOWNLOAD_BATCH_SIZE: {{ .Values.flowAutomation.flowFileDownload.batchSize | quote }}
@@ -245,6 +246,9 @@ data:
 
   OCR_PRIVATE_HOST: {{ .Values.depServices.ocr.privateHost | quote }}
   OCR_PRIVATE_PORT: {{ .Values.depServices.ocr.privatePort | quote }}
+
+  OSSGATEWAYBACKEND_HOST: {{ index .Values "depServices" "oss-gateway-backend" "host" | quote }}
+  OSSGATEWAYBACKEND_PORT: {{ index .Values "depServices" "oss-gateway-backend" "port" | quote }}
 
   MFMODELAPI_HOST: {{ .Values.depServices.mfmodelapi.host | quote }}
   MFMODELAPI_PORT: {{ .Values.depServices.mfmodelapi.port | quote }}
