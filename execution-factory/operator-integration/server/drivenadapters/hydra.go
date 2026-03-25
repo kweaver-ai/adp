@@ -4,24 +4,27 @@
 package drivenadapters
 
 import (
-	"context"
 	"fmt"
 	"net/http"
+	"strings"
 	"sync"
 
+	"github.com/gin-gonic/gin"
+	jsoniter "github.com/json-iterator/go"
 	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/infra/config"
 	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/infra/errors"
 	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/infra/rest"
 	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/interfaces"
 	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/utils"
-	jsoniter "github.com/json-iterator/go"
 )
 
-type hydra struct {
+type hydraService struct {
 	adminAddress string
 	logger       interfaces.Logger
 	httpClient   interfaces.HTTPClient
 }
+
+type noopHydra struct{}
 
 var (
 	once sync.Once
@@ -53,9 +56,12 @@ const introspectURI = "/oauth2/introspect"
 
 // NewHydra 创建授权服务对象
 func NewHydra() interfaces.Hydra {
+	if !config.GetAuthEnabled() {
+		return &noopHydra{}
+	}
 	once.Do(func() {
 		config := config.NewConfigLoader()
-		h = &hydra{
+		h = &hydraService{
 			adminAddress: fmt.Sprintf("http://%s:%d%s", config.OAuth.AdminHost, config.OAuth.AdminPort, config.OAuth.AdminPrefix),
 			logger:       config.GetLogger(),
 			httpClient:   rest.NewHTTPClient(),
@@ -64,8 +70,53 @@ func NewHydra() interfaces.Hydra {
 	return h
 }
 
+// 获取通用的认证信息
+// 从Header中获取X-Account-Type和X-Account-ID，构建TokenInfo对象
+// 如果X-Account-Type为空，默认设置为AccessorTypeAnonymous
+// 如果X-Account-ID为空，默认设置为空字符串
+
+func (n *noopHydra) GenerateVisitor(c *gin.Context) (info *interfaces.TokenInfo, err error) {
+	xAccountType := c.GetHeader(string(interfaces.HeaderXAccountType))
+	xAccountID := c.GetHeader(string(interfaces.HeaderXAccountID))
+	info = &interfaces.TokenInfo{
+		Active:     true,
+		VisitorID:  xAccountID,
+		VisitorTyp: interfaces.AccessorType(xAccountType).ToVisitorType(),
+		LoginIP:    c.ClientIP(),
+		MAC:        c.GetHeader("X-Request-MAC"),
+		UserAgent:  c.GetHeader("User-Agent"),
+	}
+	if info.VisitorID == "" {
+		// 如果用户未登录，默认设置为匿名用户
+		info.VisitorID = interfaces.UnknownUser
+		info.VisitorTyp = interfaces.Anonymous
+	}
+	return info, nil
+}
+
+func (n *noopHydra) Introspect(c *gin.Context) (info *interfaces.TokenInfo, err error) {
+	info, err = n.GenerateVisitor(c)
+	return
+}
+
+func (h *hydraService) GenerateVisitor(c *gin.Context) (info *interfaces.TokenInfo, err error) {
+	xAccountType := c.GetHeader(string(interfaces.HeaderXAccountType))
+	xAccountID := c.GetHeader(string(interfaces.HeaderXAccountID))
+	info = &interfaces.TokenInfo{
+		Active:     true,
+		VisitorID:  xAccountID,
+		VisitorTyp: interfaces.AccessorType(xAccountType).ToVisitorType(),
+		LoginIP:    c.ClientIP(),
+		MAC:        c.GetHeader("X-Request-MAC"),
+		UserAgent:  c.GetHeader("User-Agent"),
+	}
+	return info, nil
+}
+
 // Introspect token内省
-func (h *hydra) Introspect(ctx context.Context, token string) (info *interfaces.TokenInfo, err error) {
+func (h *hydraService) Introspect(c *gin.Context) (info *interfaces.TokenInfo, err error) {
+	ctx := c.Request.Context()
+	token := getToken(c)
 	target := fmt.Sprintf("%s%s", h.adminAddress, introspectURI)
 	header := map[string]string{"Content-Type": "application/x-www-form-urlencoded"}
 	_, resp, err := h.httpClient.Post(ctx, target, header, []byte(fmt.Sprintf("token=%v", token)))
@@ -121,5 +172,24 @@ func (h *hydra) Introspect(ctx context.Context, token string) (info *interfaces.
 		// 设备类型
 		info.ClientTyp = interfaces.ReverseClientTypeMap[introspectInfo.Ext.ClientType]
 	}
+	if info.LoginIP == "" {
+		// 若返回IP为空则使用clientIP
+		info.LoginIP = c.ClientIP()
+	}
+	info.MAC = c.GetHeader("X-Request-MAC")
+	info.UserAgent = c.GetHeader("User-Agent")
 	return
+}
+
+func getToken(c *gin.Context) (token string) {
+	tokenID := c.GetHeader("Authorization")
+	if tokenID == "" {
+		tokenID = c.GetHeader("X-Authorization")
+	}
+	if tokenID == "" {
+		token, _ = c.GetQuery("token")
+	} else {
+		token = strings.TrimPrefix(tokenID, "Bearer ")
+	}
+	return token
 }

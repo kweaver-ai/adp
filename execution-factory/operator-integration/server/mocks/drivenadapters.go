@@ -13,6 +13,7 @@ import (
 	context "context"
 	reflect "reflect"
 
+	gin "github.com/gin-gonic/gin"
 	interfaces "github.com/kweaver-ai/adp/execution-factory/operator-integration/server/interfaces"
 	mcp "github.com/mark3labs/mcp-go/mcp"
 	gomock "go.uber.org/mock/gomock"
@@ -42,19 +43,34 @@ func (m *MockHydra) EXPECT() *MockHydraMockRecorder {
 	return m.recorder
 }
 
-// Introspect mocks base method.
-func (m *MockHydra) Introspect(ctx context.Context, token string) (*interfaces.TokenInfo, error) {
+// GenerateVisitor mocks base method.
+func (m *MockHydra) GenerateVisitor(c *gin.Context) (*interfaces.TokenInfo, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Introspect", ctx, token)
+	ret := m.ctrl.Call(m, "GenerateVisitor", c)
+	ret0, _ := ret[0].(*interfaces.TokenInfo)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GenerateVisitor indicates an expected call of GenerateVisitor.
+func (mr *MockHydraMockRecorder) GenerateVisitor(c any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GenerateVisitor", reflect.TypeOf((*MockHydra)(nil).GenerateVisitor), c)
+}
+
+// Introspect mocks base method.
+func (m *MockHydra) Introspect(c *gin.Context) (*interfaces.TokenInfo, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Introspect", c)
 	ret0, _ := ret[0].(*interfaces.TokenInfo)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // Introspect indicates an expected call of Introspect.
-func (mr *MockHydraMockRecorder) Introspect(ctx, token any) *gomock.Call {
+func (mr *MockHydraMockRecorder) Introspect(c any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Introspect", reflect.TypeOf((*MockHydra)(nil).Introspect), ctx, token)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Introspect", reflect.TypeOf((*MockHydra)(nil).Introspect), c)
 }
 
 // MockFlowAutomation is a mock of FlowAutomation interface.

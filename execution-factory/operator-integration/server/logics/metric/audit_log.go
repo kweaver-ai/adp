@@ -8,12 +8,12 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/infra/config"
 	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/infra/localize"
 	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/interfaces"
 	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/logics/common"
 	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/utils"
-	"github.com/google/uuid"
 )
 
 // 常量定义
@@ -347,6 +347,9 @@ func (b *AuditLogBuilder) build(p *AuditLogBuilderParams) (interface{}, error) {
 
 // Logger 记录审计日志
 func (b *AuditLogBuilder) Logger(ctx context.Context, p *AuditLogBuilderParams) {
+	if !config.GetAuthEnabled() {
+		return
+	}
 	if ctx == nil {
 		ctx = context.Background()
 	}

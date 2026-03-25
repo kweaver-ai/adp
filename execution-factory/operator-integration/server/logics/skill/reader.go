@@ -7,6 +7,7 @@ import (
 	"sync"
 
 	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/dbaccess"
+	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/infra/common"
 	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/infra/config"
 	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/infra/errors"
 	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/infra/telemetry"
@@ -53,6 +54,10 @@ func (r *skillReader) GetSkillContent(ctx context.Context, req *interfaces.GetSk
 	// 记录可观测
 	ctx, _ = o11y.StartInternalSpan(ctx)
 	defer o11y.EndSpan(ctx, err)
+	telemetry.SetSpanAttributes(ctx, map[string]interface{}{
+		"skill_id": req.SkillID,
+	})
+
 	skill, err := r.skillRepo.SelectSkillByID(ctx, nil, req.SkillID)
 	if err != nil {
 		err = errors.DefaultHTTPError(ctx, http.StatusInternalServerError, err.Error())
@@ -62,20 +67,23 @@ func (r *skillReader) GetSkillContent(ctx context.Context, req *interfaces.GetSk
 		err = errors.DefaultHTTPError(ctx, http.StatusNotFound, fmt.Sprintf("skill not found: %s", req.SkillID))
 		return
 	}
-	// 有执行、查看、公开访问权限
-	accessor, err := r.AuthService.GetAccessor(ctx, req.UserID)
-	if err != nil {
-		return nil, err
-	}
-	authorized, err := r.AuthService.OperationCheckAny(ctx, accessor, req.SkillID, interfaces.AuthResourceTypeSkill,
-		interfaces.AuthOperationTypeExecute, interfaces.AuthOperationTypePublicAccess, interfaces.AuthOperationTypeView)
-	if err != nil {
-		return nil, err
-	}
-	if !authorized {
-		r.Logger.WithContext(ctx).Errorf("user %s has no permission to execute、view、public access skill %s", req.UserID, req.SkillID)
-		err = errors.NewHTTPError(ctx, http.StatusForbidden, errors.ErrExtCommonOperationForbidden, fmt.Sprintf("user %s has no permission to execute、view、public access skill %s", req.UserID, req.SkillID))
-		return nil, err
+	// 如果是外部接口
+	if common.IsPublicAPIFromCtx(ctx) {
+		// 有执行、查看、公开访问权限
+		accessor, err := r.AuthService.GetAccessor(ctx, req.UserID)
+		if err != nil {
+			return nil, err
+		}
+		authorized, err := r.AuthService.OperationCheckAny(ctx, accessor, req.SkillID, interfaces.AuthResourceTypeSkill,
+			interfaces.AuthOperationTypeExecute, interfaces.AuthOperationTypePublicAccess, interfaces.AuthOperationTypeView)
+		if err != nil {
+			return nil, err
+		}
+		if !authorized {
+			r.Logger.WithContext(ctx).Errorf("user has no permission to execute、view、public access skill %s", req.SkillID)
+			err = errors.NewHTTPError(ctx, http.StatusForbidden, errors.ErrExtCommonOperationForbidden, fmt.Sprintf("user has no permission to execute、view、public access skill %s", req.SkillID))
+			return nil, err
+		}
 	}
 	// 查询对应的"SKILL.md文件
 	skillFile, err := r.fileRepo.SelectSkillFileByPath(ctx, nil, skill.SkillID, skill.Version, SkillMD)
@@ -127,20 +135,22 @@ func (r *skillReader) ReadSkillFile(ctx context.Context, req *interfaces.ReadSki
 		err = errors.DefaultHTTPError(ctx, http.StatusNotFound, fmt.Sprintf("skill not found: %s", req.SkillID))
 		return nil, err
 	}
-	// 有执行、查看、公开访问权限
-	accessor, err := r.AuthService.GetAccessor(ctx, req.UserID)
-	if err != nil {
-		return nil, err
-	}
-	authorized, err := r.AuthService.OperationCheckAny(ctx, accessor, req.SkillID, interfaces.AuthResourceTypeSkill,
-		interfaces.AuthOperationTypeExecute, interfaces.AuthOperationTypePublicAccess, interfaces.AuthOperationTypeView)
-	if err != nil {
-		return nil, err
-	}
-	if !authorized {
-		r.Logger.WithContext(ctx).Errorf("user %s has no permission to execute skill %s", req.UserID, req.SkillID)
-		err = errors.NewHTTPError(ctx, http.StatusForbidden, errors.ErrExtCommonOperationForbidden, fmt.Sprintf("user %s has no permission to execute skill %s", req.UserID, req.SkillID))
-		return nil, err
+	if common.IsPublicAPIFromCtx(ctx) {
+		// 有执行、查看、公开访问权限
+		accessor, err := r.AuthService.GetAccessor(ctx, req.UserID)
+		if err != nil {
+			return nil, err
+		}
+		authorized, err := r.AuthService.OperationCheckAny(ctx, accessor, req.SkillID, interfaces.AuthResourceTypeSkill,
+			interfaces.AuthOperationTypeExecute, interfaces.AuthOperationTypePublicAccess, interfaces.AuthOperationTypeView)
+		if err != nil {
+			return nil, err
+		}
+		if !authorized {
+			r.Logger.WithContext(ctx).Errorf("user %s has no permission to execute skill %s", req.UserID, req.SkillID)
+			err = errors.NewHTTPError(ctx, http.StatusForbidden, errors.ErrExtCommonOperationForbidden, fmt.Sprintf("user %s has no permission to execute skill %s", req.UserID, req.SkillID))
+			return nil, err
+		}
 	}
 	relPath, err := normalizeZipPath(req.RelPath)
 	if err != nil {

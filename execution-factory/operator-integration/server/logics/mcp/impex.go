@@ -76,9 +76,13 @@ func (s *mcpServiceImpl) importPostProcess(ctx context.Context, createMCPMap, up
 		}
 		// 记录设计日志及后续通知
 		go func() {
-			tokenInfo, _ := icommon.GetTokenInfoFromCtx(ctx)
+			accountAuthContext, ok := icommon.GetAccountAuthContextFromCtx(ctx)
+			if !ok {
+				s.logger.WithContext(ctx).Errorf("get account auth context from ctx error")
+				return
+			}
 			s.AuditLog.Logger(ctx, &metric.AuditLogBuilderParams{
-				TokenInfo: tokenInfo,
+				TokenInfo: accountAuthContext.TokenInfo,
 				Accessor:  accessor,
 				Operation: metric.AuditLogOperationCreate,
 				Object: &metric.AuditLogObject{
@@ -103,9 +107,13 @@ func (s *mcpServiceImpl) importPostProcess(ctx context.Context, createMCPMap, up
 		}
 		// 记录设计日志及后续通知
 		go func() {
-			tokenInfo, _ := icommon.GetTokenInfoFromCtx(ctx)
+			accountAuthContext, ok := icommon.GetAccountAuthContextFromCtx(ctx)
+			if !ok {
+				s.logger.WithContext(ctx).Errorf("get account auth context from ctx error")
+				return
+			}
 			s.AuditLog.Logger(ctx, &metric.AuditLogBuilderParams{
-				TokenInfo: tokenInfo,
+				TokenInfo: accountAuthContext.TokenInfo,
 				Accessor:  accessor,
 				Operation: metric.AuditLogOperationEdit,
 				Object: &metric.AuditLogObject{

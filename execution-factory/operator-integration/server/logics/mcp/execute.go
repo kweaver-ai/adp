@@ -48,9 +48,9 @@ func (s *mcpServiceImpl) GetMCPTools(ctx context.Context, req *interfaces.MCPPro
 		"user_id": req.UserID,
 	})
 	// 如果是公开接口，检查公开访问或者查看权限，内部接口暂时不校验
-	if req.IsPublic {
+	if common.IsPublicAPIFromCtx(ctx) {
 		var accessor *interfaces.AuthAccessor
-		accessor, err = s.AuthService.GetAccessor(ctx, req.UserID)
+		accessor, err = s.AuthService.GetAccessor(ctx, "")
 		if err != nil {
 			return
 		}
@@ -151,9 +151,13 @@ func (s *mcpServiceImpl) CallMCPTool(ctx context.Context, req *interfaces.MCPPro
 	}
 	// 异步记录审计日志
 	go func() {
-		tokenInfo, _ := common.GetTokenInfoFromCtx(ctx)
+		accountAuthContext, ok := common.GetAccountAuthContextFromCtx(ctx)
+		if !ok {
+			s.logger.WithContext(ctx).Errorf("get account auth context from ctx error")
+			return
+		}
 		s.AuditLog.Logger(ctx, &metric.AuditLogBuilderParams{
-			TokenInfo: tokenInfo,
+			TokenInfo: accountAuthContext.TokenInfo,
 			Accessor:  accessor,
 			Operation: metric.AuditLogOperationExecute,
 			Object: &metric.AuditLogObject{

@@ -7,13 +7,13 @@ import (
 	"fmt"
 	"net/http"
 
-	o11y "github.com/kweaver-ai/kweaver-go-lib/observability"
 	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/infra/common"
 	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/infra/errors"
 	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/interfaces"
 	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/interfaces/model"
 	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/logics/metric"
 	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/utils"
+	o11y "github.com/kweaver-ai/kweaver-go-lib/observability"
 )
 
 // DeleteOperator 删除算子
@@ -145,9 +145,13 @@ func (m *operatorManager) deleteOperator(ctx context.Context, tx *sql.Tx, item *
 	}
 	go func(operator *model.OperatorRegisterDB) {
 		// 发送删除算子审计日志
-		tokenInfo, _ := common.GetTokenInfoFromCtx(ctx)
+		accountAuth, ok := common.GetAccountAuthContextFromCtx(ctx)
+		if !ok {
+			m.Logger.WithContext(ctx).Errorf("get account auth context from ctx failed")
+			return
+		}
 		m.AuditLog.Logger(ctx, &metric.AuditLogBuilderParams{
-			TokenInfo: tokenInfo,
+			TokenInfo: accountAuth.TokenInfo,
 			Accessor:  accessor,
 			Operation: metric.AuditLogOperationDelete,
 			Object: &metric.AuditLogObject{

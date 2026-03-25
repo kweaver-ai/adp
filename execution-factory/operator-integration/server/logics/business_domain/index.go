@@ -2,9 +2,12 @@ package business_domain
 
 import (
 	"context"
+	"net/http"
 
 	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/drivenadapters"
+	infracommon "github.com/kweaver-ai/adp/execution-factory/operator-integration/server/infra/common"
 	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/infra/config"
+	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/infra/errors"
 	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/interfaces"
 )
 
@@ -15,10 +18,23 @@ type businessDomainServiceImpl struct {
 
 // NewBusinessDomainService 创建业务域服务实例
 func NewBusinessDomainService() interfaces.IBusinessDomainService {
+	if !config.GetBusinessDomainEnabled() {
+		return &noopBusinessDomainService{}
+	}
 	return &businessDomainServiceImpl{
 		logger:       config.NewConfigLoader().GetLogger(),
 		bdManagement: drivenadapters.NewBusinessDomainManagementClient(),
 	}
+}
+
+// 要求业务域ID必传递
+func (s *businessDomainServiceImpl) ValidateBusinessDomain(ctx context.Context) (err error) {
+	_, ok := infracommon.GetBusinessDomainFromCtx(ctx)
+	if !ok {
+		err = errors.NewHTTPError(ctx, http.StatusBadRequest, errors.ErrExtBusinessDomainIDRequired, "x-business-domain-id is required")
+		return err
+	}
+	return nil
 }
 
 // AssociateResource 关联资源到业务域

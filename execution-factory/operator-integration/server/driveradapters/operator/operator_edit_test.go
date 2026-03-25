@@ -118,14 +118,14 @@ func TestOperatorDelete(t *testing.T) {
 			So(recorder.Code, ShouldEqual, http.StatusBadRequest)
 		})
 		Convey("用户信息获取失败", func() {
-			mockHydra.EXPECT().Introspect(gomock.Any(), gomock.Any()).Return(nil, errors.New("mock error"))
+			mockHydra.EXPECT().Introspect(gomock.Any()).Return(nil, errors.New("mock error"))
 			recorder := mockPostRequest(path, applicationJSON,
 				bytes.NewBufferString(`[{"operator_id": "b2d8baf0-e31f-4cac-851d-30ad8c2e4722","version": "416278e0-2816-4537-a974-fbe46a3a7720"}]`), handler.OperatorDelete)
 			fmt.Println(recorder.Body.String())
 		})
 		Convey("删除失败", func() {
 			mockOperatorManager.EXPECT().DeleteOperator(gomock.Any(), gomock.Any(), gomock.Any()).Return(errors.New("mock error"))
-			mockHydra.EXPECT().Introspect(gomock.Any(), gomock.Any()).Return(&interfaces.TokenInfo{}, nil).Times(1)
+			mockHydra.EXPECT().Introspect(gomock.Any()).Return(&interfaces.TokenInfo{}, nil).Times(1)
 			recorder := mockPostRequest(path, applicationJSON,
 				bytes.NewBufferString(`[{"operator_id": "b2d8baf0-e31f-4cac-851d-30ad8c2e4722","version": "416278e0-2816-4537-a974-fbe46a3a7720"}]`),
 				func(c *gin.Context) {
@@ -138,7 +138,7 @@ func TestOperatorDelete(t *testing.T) {
 		})
 		Convey("删除成功", func() {
 			mockOperatorManager.EXPECT().DeleteOperator(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
-			mockHydra.EXPECT().Introspect(gomock.Any(), gomock.Any()).Return(&interfaces.TokenInfo{}, nil).Times(1)
+			mockHydra.EXPECT().Introspect(gomock.Any()).Return(&interfaces.TokenInfo{}, nil).Times(1)
 			recorder := mockPostRequest(path, applicationJSON,
 				bytes.NewBufferString(`[{"operator_id": "b2d8baf0-e31f-4cac-851d-30ad8c2e4722","version": "416278e0-2816-4537-a974-fbe46a3a7720"}]`),
 				func(c *gin.Context) {

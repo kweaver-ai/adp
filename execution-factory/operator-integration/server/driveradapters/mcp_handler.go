@@ -4,10 +4,9 @@ import (
 	"sync"
 
 	"github.com/gin-gonic/gin"
-	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/drivenadapters"
 	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/driveradapters/mcp"
-	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/infra/config"
 	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/interfaces"
+	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/logics/business_domain"
 )
 
 type MCPRestHandler interface {
@@ -19,10 +18,9 @@ type MCPRestHandler interface {
 }
 
 type mcpRestHandler struct {
-	Hydra             interfaces.Hydra
-	Logger            interfaces.Logger
-	MCPPublicHandler  mcp.MCPPublicHandler
-	MCPPrivateHandler mcp.MCPPrivateHandler
+	MCPPublicHandler      mcp.MCPPublicHandler
+	MCPPrivateHandler     mcp.MCPPrivateHandler
+	businessDomainService interfaces.IBusinessDomainService
 }
 
 var (
@@ -32,12 +30,10 @@ var (
 
 func NewMCPRestHandler() MCPRestHandler {
 	mcpRestHandlerOnce.Do(func() {
-		confLoader := config.NewConfigLoader()
 		mHandler = &mcpRestHandler{
-			Hydra:             drivenadapters.NewHydra(),
-			Logger:            confLoader.GetLogger(),
-			MCPPublicHandler:  mcp.NewMCPHandler(),
-			MCPPrivateHandler: mcp.NewMCPHandler(),
+			MCPPublicHandler:      mcp.NewMCPHandler(),
+			MCPPrivateHandler:     mcp.NewMCPHandler(),
+			businessDomainService: business_domain.NewBusinessDomainService(),
 		}
 	})
 	return mHandler
@@ -54,8 +50,8 @@ func (r *mcpRestHandler) RegisterPrivate(engine *gin.RouterGroup) {
 	mcpProxyGroup.POST("/:mcp_id/tool/call", r.MCPPrivateHandler.CallMCPTool)
 
 	// MCP 内置相关接口
-	mcpGroup.POST("/intcomp/register", middlewareBusinessDomain(true, true), r.MCPPrivateHandler.RegisterBuiltinMCPServerPrivate)
-	mcpGroup.POST("/intcomp/unregister/:mcp_id", middlewareBusinessDomain(true, true), r.MCPPrivateHandler.UnregisterBuiltinMCPServerPrivate)
+	mcpGroup.POST("/intcomp/register", middlewareBusinessDomain(true, true, r.businessDomainService), r.MCPPrivateHandler.RegisterBuiltinMCPServerPrivate)
+	mcpGroup.POST("/intcomp/unregister/:mcp_id", middlewareBusinessDomain(true, true, r.businessDomainService), r.MCPPrivateHandler.UnregisterBuiltinMCPServerPrivate)
 }
 
 func (r *mcpRestHandler) RegisterPublic(engine *gin.RouterGroup) {
@@ -66,11 +62,11 @@ func (r *mcpRestHandler) RegisterPublic(engine *gin.RouterGroup) {
 	// MCP服务解析 POST /api/agent-operator-integration/v1/mcp/parse/sse
 	mcpGroup.POST("/parse/sse", r.MCPPublicHandler.ParseSSE)
 	// 添加MCP Server配置 POST /api/agent-operator-integration/v1/mcp
-	mcpGroup.POST("/", middlewareBusinessDomain(true, false), r.MCPPublicHandler.AddMCPServer)
+	mcpGroup.POST("/", middlewareBusinessDomain(true, false, r.businessDomainService), r.MCPPublicHandler.AddMCPServer)
 	// 删除MCP Server配置 POST /api/agent-operator-integration/v1/mcp/delete
-	mcpGroup.DELETE("/:mcp_id", middlewareBusinessDomain(true, false), r.MCPPublicHandler.DeleteMCPServer)
+	mcpGroup.DELETE("/:mcp_id", middlewareBusinessDomain(true, false, r.businessDomainService), r.MCPPublicHandler.DeleteMCPServer)
 	// 获取MCP Server配置列表 GET /api/agent-operator-integration/v1/mcp/list
-	mcpGroup.GET("/list", middlewareBusinessDomain(true, false), r.MCPPublicHandler.QueryMCPServerPage)
+	mcpGroup.GET("/list", middlewareBusinessDomain(true, false, r.businessDomainService), r.MCPPublicHandler.QueryMCPServerPage)
 	// 获取MCP Server配置详情 GET /api/agent-operator-integration/v1/mcp/{mcp_id}
 	mcpGroup.GET("/:mcp_id", r.MCPPublicHandler.QueryMCPServerDetail)
 	// 编辑MCP Server配置 POST /api/agent-operator-integration/v1/mcp/{mcp_id}
@@ -81,9 +77,9 @@ func (r *mcpRestHandler) RegisterPublic(engine *gin.RouterGroup) {
 	mcpGroup.POST("/:mcp_id/tool/:tool_name/debug", r.MCPPublicHandler.DebugTool)
 
 	// MCP服务市场相关接口
-	mcpGroup.GET("/market/list", middlewareBusinessDomain(true, false), r.MCPPublicHandler.QueryMCPServerMarketList)
+	mcpGroup.GET("/market/list", middlewareBusinessDomain(true, false, r.businessDomainService), r.MCPPublicHandler.QueryMCPServerMarketList)
 	// 批量查询MCP服务市场详情 GET /api/agent-operator-integration/v1/mcp/market/{mcp_ids}/{fields}
-	mcpGroup.GET("/market/batch/:mcp_ids/:fields", middlewareBusinessDomain(true, false), r.MCPPublicHandler.QueryMCPServerMarketBatch)
+	mcpGroup.GET("/market/batch/:mcp_ids/:fields", middlewareBusinessDomain(true, false, r.businessDomainService), r.MCPPublicHandler.QueryMCPServerMarketBatch)
 	mcpGroup.GET("/market/:mcp_id", r.MCPPublicHandler.QueryMCPServerMarketDetail)
 
 	// MCP 代理相关接口

@@ -2,6 +2,7 @@ package operator
 
 import (
 	"bytes"
+	"fmt"
 	"mime/multipart"
 	"net/http"
 
@@ -163,12 +164,13 @@ func (op *operatorHandle) parseCommonParams(c *gin.Context, req interface{}) (da
 func (op *operatorHandle) getUserID(c *gin.Context, userToken string) (userID string, err error) {
 	var tokenInfo *interfaces.TokenInfo
 	ctx := c.Request.Context()
-	tokenInfo, ok := common.GetTokenInfoFromCtx(ctx)
+	accountAuth, ok := common.GetAccountAuthContextFromCtx(ctx)
 	if ok {
-		userID = tokenInfo.VisitorID
+		userID = accountAuth.AccountID
 		return
 	}
-	tokenInfo, err = op.Hydra.Introspect(ctx, userToken)
+	c.Request.Header.Set("Authorization", fmt.Sprintf("Bearer %s", userToken))
+	tokenInfo, err = op.Hydra.Introspect(c)
 	if err != nil {
 		op.Logger.WithContext(ctx).Warnf("get user id failed, err: %v", err)
 		return

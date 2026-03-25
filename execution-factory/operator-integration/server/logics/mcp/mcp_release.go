@@ -147,10 +147,10 @@ func (s *mcpServiceImpl) QueryRelease(ctx context.Context, req *interfaces.MCPSe
 		return
 	}
 	for _, config := range data {
-		config.BusinessDomainID = resourceToBdMap[config.MCPID]
-		config.CreateUser = userMap[config.CreateUser]
-		config.UpdateUser = userMap[config.UpdateUser]
-		config.ReleaseUser = userMap[config.ReleaseUser]
+		config.BusinessDomainID = utils.GetValueOrDefault(resourceToBdMap, config.MCPID, req.BusinessDomainID)
+		config.CreateUser = utils.GetValueOrDefault(userMap, config.CreateUser, interfaces.UnknownUser)
+		config.UpdateUser = utils.GetValueOrDefault(userMap, config.UpdateUser, interfaces.UnknownUser)
+		config.ReleaseUser = utils.GetValueOrDefault(userMap, config.ReleaseUser, interfaces.UnknownUser)
 	}
 
 	queryResult := &ormhelper.QueryResult{
@@ -206,9 +206,9 @@ func (s *mcpServiceImpl) GetReleaseDetail(ctx context.Context, req *interfaces.M
 	if err != nil {
 		return
 	}
-	releaseInfo.CreateUser = userMap[release.CreateUser]
-	releaseInfo.UpdateUser = userMap[release.UpdateUser]
-	releaseInfo.ReleaseUser = userMap[release.ReleaseUser]
+	releaseInfo.CreateUser = utils.GetValueOrDefault(userMap, release.CreateUser, interfaces.UnknownUser)
+	releaseInfo.UpdateUser = utils.GetValueOrDefault(userMap, release.UpdateUser, interfaces.UnknownUser)
+	releaseInfo.ReleaseUser = utils.GetValueOrDefault(userMap, release.ReleaseUser, interfaces.UnknownUser)
 
 	// 生成MCP Server连接信息
 	connectionInfo := s.generateExternalConnectionInfo(release.MCPID, interfaces.MCPMode(release.Mode), interfaces.MCPCreationType(release.CreationType))
@@ -279,9 +279,9 @@ func (s *mcpServiceImpl) QueryReleaseBatch(ctx context.Context, req *interfaces.
 		return
 	}
 	for _, config := range data {
-		config.CreateUser = userMap[config.CreateUser]
-		config.UpdateUser = userMap[config.UpdateUser]
-		config.ReleaseUser = userMap[config.ReleaseUser]
+		config.CreateUser = utils.GetValueOrDefault(userMap, config.CreateUser, interfaces.UnknownUser)
+		config.UpdateUser = utils.GetValueOrDefault(userMap, config.UpdateUser, interfaces.UnknownUser)
+		config.ReleaseUser = utils.GetValueOrDefault(userMap, config.ReleaseUser, interfaces.UnknownUser)
 	}
 
 	fields = append(fields, "mcp_id")

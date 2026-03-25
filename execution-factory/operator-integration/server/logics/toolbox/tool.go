@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"net/http"
 
-	infracommon "github.com/kweaver-ai/adp/execution-factory/operator-integration/server/infra/common"
+	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/infra/common"
 	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/infra/errors"
 	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/infra/telemetry"
 	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/interfaces"
@@ -108,9 +108,13 @@ func (s *ToolServiceImpl) CreateTool(ctx context.Context, req *interfaces.Create
 	}
 	// 记录审计日志
 	go func() {
-		tokenInfo, _ := infracommon.GetTokenInfoFromCtx(ctx)
+		accountAuthContext, ok := common.GetAccountAuthContextFromCtx(ctx)
+		if !ok {
+			s.Logger.WithContext(ctx).Warnf("[CreateTool] GetAccountAuthContextFromCtx err :%v", err)
+			return
+		}
 		s.AuditLog.Logger(ctx, &metric.AuditLogBuilderParams{
-			TokenInfo: tokenInfo,
+			TokenInfo: accountAuthContext.TokenInfo,
 			Accessor:  accessor,
 			Operation: metric.AuditLogOperationEdit,
 			Object: &metric.AuditLogObject{

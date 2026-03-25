@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"sync"
 	"testing"
 
 	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/infra/logger"
@@ -80,6 +81,29 @@ func TestGetUsersInfo(t *testing.T) {
 			_, err := mockClient.GetUsersInfo(context.Background(), []string{"test"}, []string{"name"})
 			So(err, ShouldBeNil)
 		})
+	})
+}
+
+func TestNewUserManagementClient_WhenAuthDisabled_ReturnsNoop(t *testing.T) {
+	Convey("NewUserManagementClient auth disabled returns noop implementation", t, func() {
+		t.Setenv("AUTH_ENABLED", "false")
+		syncOnce = sync.Once{}
+		um = nil
+		defer func() {
+			syncOnce = sync.Once{}
+			um = nil
+		}()
+
+		client := NewUserManagementClient()
+		userMap, err := client.GetUsersName(context.Background(), []string{interfaces.SystemUser, "user1"})
+
+		So(err, ShouldBeNil)
+		So(userMap[interfaces.SystemUser], ShouldEqual, interfaces.SystemUser)
+		So(userMap["user1"], ShouldEqual, "user1")
+
+		userMap, err = client.GetUsersName(context.Background(), []string{""})
+		So(err, ShouldBeNil)
+		So(userMap[""], ShouldEqual, interfaces.UnknownUser)
 	})
 }
 

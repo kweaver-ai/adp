@@ -40,16 +40,16 @@ func GetAccountAuthContextFromCtx(ctx context.Context) (*interfaces.AccountAuthC
 }
 
 // GetTokenInfoFromCtx 从context中获取token信息
-func GetTokenInfoFromCtx(ctx context.Context) (*interfaces.TokenInfo, bool) {
-	authContext, ok := GetAccountAuthContextFromCtx(ctx)
-	if !ok {
-		return nil, false
-	}
-	if authContext.TokenInfo == nil {
-		return nil, false
-	}
-	return authContext.TokenInfo, true
-}
+// func GetTokenInfoFromCtx(ctx context.Context) (*interfaces.TokenInfo, bool) {
+// 	authContext, ok := GetAccountAuthContextFromCtx(ctx)
+// 	if !ok {
+// 		return nil, false
+// 	}
+// 	if authContext.TokenInfo == nil {
+// 		return nil, false
+// 	}
+// 	return authContext.TokenInfo, true
+// }
 
 // SetExecutionModeToCtx 设置执行模式到context
 func SetExecutionModeToCtx(ctx context.Context, executionMode interfaces.ExecutionMode) context.Context {

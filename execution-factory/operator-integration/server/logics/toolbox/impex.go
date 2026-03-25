@@ -9,6 +9,7 @@ import (
 
 	"github.com/creasty/defaults"
 	"github.com/google/uuid"
+	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/infra/common"
 	icommon "github.com/kweaver-ai/adp/execution-factory/operator-integration/server/infra/common"
 	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/infra/errors"
 	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/interfaces"
@@ -82,9 +83,13 @@ func (s *ToolServiceImpl) importPostProcess(ctx context.Context, createBoxMap, u
 		}
 		// 记录设计日志及后续通知
 		go func() {
-			tokenInfo, _ := icommon.GetTokenInfoFromCtx(ctx)
+			accountAuthContext, ok := common.GetAccountAuthContextFromCtx(ctx)
+			if !ok {
+				s.Logger.WithContext(ctx).Warnf("[importPostProcess] GetAccountAuthContextFromCtx err :%v", err)
+				return
+			}
 			s.AuditLog.Logger(ctx, &metric.AuditLogBuilderParams{
-				TokenInfo: tokenInfo,
+				TokenInfo: accountAuthContext.TokenInfo,
 				Accessor:  accessor,
 				Operation: metric.AuditLogOperationCreate,
 				Object: &metric.AuditLogObject{
@@ -109,9 +114,13 @@ func (s *ToolServiceImpl) importPostProcess(ctx context.Context, createBoxMap, u
 		}
 		// 记录设计日志及后续通知
 		go func() {
-			tokenInfo, _ := icommon.GetTokenInfoFromCtx(ctx)
+			accountAuthContext, ok := common.GetAccountAuthContextFromCtx(ctx)
+			if !ok {
+				s.Logger.WithContext(ctx).Warnf("[importPostProcess] GetAccountAuthContextFromCtx err :%v", err)
+				return
+			}
 			s.AuditLog.Logger(ctx, &metric.AuditLogBuilderParams{
-				TokenInfo: tokenInfo,
+				TokenInfo: accountAuthContext.TokenInfo,
 				Accessor:  accessor,
 				Operation: metric.AuditLogOperationEdit,
 				Object: &metric.AuditLogObject{

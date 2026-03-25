@@ -143,17 +143,11 @@ func (m *operatorManager) GetOperatorQueryPage(ctx context.Context, req *interfa
 			err = errors.DefaultHTTPError(ctx, http.StatusInternalServerError, err.Error())
 			return
 		}
-		operatorInfo.BusinessDomainID = resourceToBdMap[operator.OperatorID]
-		operatorInfo.CreateUser = utils.GetValueOrDefault(userMap, operatorInfo.CreateUser, "")
-		operatorInfo.UpdateUser = utils.GetValueOrDefault(userMap, operatorInfo.UpdateUser, "")
+		operatorInfo.BusinessDomainID = utils.GetValueOrDefault(resourceToBdMap, operator.OperatorID, req.BusinessDomainID)
+		operatorInfo.CreateUser = utils.GetValueOrDefault(userMap, operatorInfo.CreateUser, interfaces.UnknownUser)
+		operatorInfo.UpdateUser = utils.GetValueOrDefault(userMap, operatorInfo.UpdateUser, interfaces.UnknownUser)
 		result.Data = append(result.Data, operatorInfo)
-		// userList = append(userList, userIDs...)
 	}
-
-	// for i := range result.Data {
-	// 	result.Data[i].CreateUser = utils.GetValueOrDefault(userMap, result.Data[i].CreateUser, "")
-	// 	result.Data[i].UpdateUser = utils.GetValueOrDefault(userMap, result.Data[i].UpdateUser, "")
-	// }
 	return
 }
 

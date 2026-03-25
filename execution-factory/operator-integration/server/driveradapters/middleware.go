@@ -8,7 +8,6 @@ import (
 	"context"
 	"io"
 	"net/http"
-	"strings"
 	"time"
 
 	"github.com/kweaver-ai/TelemetrySDK-Go/span/v2/field"
@@ -35,41 +34,44 @@ type apiLogModel struct {
 	Latency      float64     `json:"latency"` // 单位(ms)
 }
 
-func getToken(c *gin.Context) (token string) {
-	tokenID := c.GetHeader("Authorization")
-	if tokenID == "" {
-		tokenID = c.GetHeader("X-Authorization")
-	}
-	if tokenID == "" {
-		token, _ = c.GetQuery("token")
-	} else {
-		token = strings.TrimPrefix(tokenID, "Bearer ")
-	}
-	return token
-}
-
-// middlewareIntrospect 令牌内省中间件
+// middlewareIntrospectVerify 令牌内省中间件
+// 若未开启认证，则从header中获取accountID和accountType，生成匿名tokenInfo
+// 若开启认证，则从header中获取token，调用hydra.Introspect验证token，若验证失败则返回错误
 func middlewareIntrospectVerify(hydra interfaces.Hydra) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		ctx := c.Request.Context()
-		// 设置language信息到context
-		ctx = common.SetLanguageToCtx(ctx, common.GetLanguageInfo(c))
-
-		tokenInfo, err := hydra.Introspect(ctx, getToken(c))
+		tokenInfo, err := hydra.Introspect(c)
 		if err != nil {
 			rest.ReplyError(c, err)
 			c.Abort()
 			return
 		}
-		if tokenInfo.LoginIP == "" {
-			// 若返回IP为空则使用clientIP
-			tokenInfo.LoginIP = c.ClientIP()
+		// 设置认证上下文到context
+		authContext := &interfaces.AccountAuthContext{
+			AccountID:   tokenInfo.VisitorID,
+			AccountType: tokenInfo.VisitorTyp.ToAccessorType(),
+			TokenInfo:   tokenInfo,
 		}
-		tokenInfo.MAC = c.GetHeader("X-Request-MAC")
-		tokenInfo.UserAgent = c.GetHeader("User-Agent")
+		ctx = common.SetAccountAuthContextToCtx(ctx, authContext)
+		ctx = common.SetLanguageToCtx(ctx, common.GetLanguageInfo(c)) // 设置language信息到context
+		ctx = common.SetPublicAPIToCtx(ctx, true)                     // 设置是否为公共API到context
+		c.Request = c.Request.WithContext(ctx)
+		c.Request.Header.Set(string(interfaces.HeaderUserID), tokenInfo.VisitorID)
+		c.Request.Header.Set(string(interfaces.IsPublic), "true")
+		c.Next()
+	}
+}
 
-		// 设置tokenInfo到context
-		ctx = common.SetPublicAPIToCtx(ctx, true)
+// 内部接口Header认证账户信息处理中间件
+func middlewareHeaderAuthContext(hydra interfaces.Hydra) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		ctx := c.Request.Context()
+		tokenInfo, err := hydra.GenerateVisitor(c)
+		if err != nil {
+			rest.ReplyError(c, err)
+			c.Abort()
+			return
+		}
 		// 设置认证上下文到context
 		authContext := &interfaces.AccountAuthContext{
 			AccountID:   tokenInfo.VisitorID,
@@ -79,40 +81,6 @@ func middlewareIntrospectVerify(hydra interfaces.Hydra) gin.HandlerFunc {
 		ctx = common.SetAccountAuthContextToCtx(ctx, authContext)
 		c.Request = c.Request.WithContext(ctx)
 		c.Request.Header.Set(string(interfaces.HeaderUserID), tokenInfo.VisitorID)
-		c.Request.Header.Set(string(interfaces.IsPublic), "true")
-		c.Next()
-	}
-}
-
-// 内部接口Header认证账户信息处理中间件
-func middlewareHeaderAuthContext() gin.HandlerFunc {
-	return func(c *gin.Context) {
-		ctx := c.Request.Context()
-		// 获取Header中xAccountType账户类型
-		xAccountType := c.GetHeader(string(interfaces.HeaderXAccountType))
-		if xAccountType == "" {
-			xAccountType = string(interfaces.AccessorTypeUser)
-		}
-		// 兼容user_id传参，当user_id为空时，使用xAccountID
-		xAccountID := c.GetHeader(string(interfaces.HeaderUserID))
-		if xAccountID == "" {
-			xAccountID = c.GetHeader(string(interfaces.HeaderXAccountID))
-		}
-		// 将user_id设置到Header中,TODO:是否需要检查必填？
-		if xAccountID != "" {
-			c.Request.Header.Set(string(interfaces.HeaderUserID), xAccountID)
-			// 设置认证上下文到context
-			authContext := &interfaces.AccountAuthContext{
-				AccountID:   xAccountID,
-				AccountType: interfaces.AccessorType(xAccountType),
-				TokenInfo: &interfaces.TokenInfo{
-					VisitorID:  xAccountID,
-					VisitorTyp: interfaces.AccessorType(xAccountType).ToVisitorType(),
-				},
-			}
-			ctx = common.SetAccountAuthContextToCtx(ctx, authContext)
-			c.Request = c.Request.WithContext(ctx)
-		}
 		c.Next()
 	}
 }
@@ -179,11 +147,11 @@ func byteToInterface(byt []byte) interface{} {
 }
 
 // middlewareBusinessDomain 处理x-business-domain逻辑
-func middlewareBusinessDomain(isPublic, isBuiltin bool) gin.HandlerFunc {
+func middlewareBusinessDomain(isPublic, isBuiltin bool, businessDomainService interfaces.IBusinessDomainService) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		ctx := c.Request.Context()
 		businessDomain := c.GetHeader(string(interfaces.HeaderXBusinessDomain))
-
+		// 初始化默认值
 		// 1. 外部接口：如果不传递，默认bd_public
 		if isPublic {
 			if businessDomain == "" {
@@ -197,20 +165,18 @@ func middlewareBusinessDomain(isPublic, isBuiltin bool) gin.HandlerFunc {
 					businessDomain = interfaces.DefaultBusinessDomain
 					c.Request.Header.Set(string(interfaces.HeaderXBusinessDomain), businessDomain)
 				}
-			} else {
-				if businessDomain == "" {
-					err := errors.NewHTTPError(ctx, http.StatusBadRequest, errors.ErrExtBusinessDomainIDRequired, nil)
-					rest.ReplyError(c, err)
-					c.Abort()
-					return
-				}
 			}
 		}
-
 		// 设置到context中供后续使用
 		ctx = common.SetBusinessDomainToCtx(ctx, businessDomain)
 		c.Request = c.Request.WithContext(ctx)
-
+		// 3. 校验业务域是否存在
+		err := businessDomainService.ValidateBusinessDomain(ctx)
+		if err != nil {
+			rest.ReplyError(c, err)
+			c.Abort()
+			return
+		}
 		c.Next()
 	}
 }
@@ -226,19 +192,6 @@ func middlewareProxyRequest() gin.HandlerFunc {
 		}
 		executionMode := interfaces.ExecutionModeStream
 		streamingMode := detectStreamingMode(c)
-		// 流式响应模式下，设置响应码为200
-		// c.Status(http.StatusOK)
-		// 先设置响应码和响应头
-		// switch streamingMode {
-		// case interfaces.StreamingModeSSE:
-		// 	c.Writer.Header().Set("Content-Type", "text/event-stream")
-		// 	c.Writer.Header().Set("Cache-Control", "no-cache")
-		// 	c.Writer.Header().Set("Connection", "keep-alive")
-		// case interfaces.StreamingModeHTTP:
-		// 	c.Writer.Header().Set("Content-Type", "application/stream+json")
-		// 	c.Writer.Header().Set("Transfer-Encoding", "chunked")
-		// 	c.Writer.Header().Set("X-Content-Type-Options", "nosniff")
-		// }
 		// 然后设置上下文和请求头
 		ctx := c.Request.Context()
 		ctx = common.SetResponseWriterToCtx(ctx, c.Writer)

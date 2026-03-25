@@ -10,19 +10,21 @@ import (
 	"strings"
 	"sync"
 
+	jsoniter "github.com/json-iterator/go"
 	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/infra/common"
 	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/infra/config"
 	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/infra/errors"
 	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/infra/rest"
 	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/interfaces"
 	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/utils"
-	jsoniter "github.com/json-iterator/go"
 )
 
 var (
 	syncOnce sync.Once
 	um       interfaces.UserManagement
 )
+
+type noopUserManagementClient struct{}
 
 type userManagementClient struct {
 	baseURL    string
@@ -32,6 +34,9 @@ type userManagementClient struct {
 
 // NewUserManagementClient 创建用户管理服务对象
 func NewUserManagementClient() interfaces.UserManagement {
+	if !config.GetAuthEnabled() {
+		return &noopUserManagementClient{}
+	}
 	syncOnce.Do(func() {
 		conf := config.NewConfigLoader()
 		um = &userManagementClient{
@@ -42,6 +47,57 @@ func NewUserManagementClient() interfaces.UserManagement {
 		}
 	})
 	return um
+}
+
+func (n *noopUserManagementClient) GetAppInfo(ctx context.Context, appID string) (appInfo *interfaces.AppInfo, err error) {
+	return &interfaces.AppInfo{
+		ID:   appID,
+		Name: appID,
+	}, nil
+}
+
+func (n *noopUserManagementClient) GetUserInfo(ctx context.Context, userID string, fields ...string) (info *interfaces.UserInfo, err error) {
+	displayName := interfaces.UnknownUser
+	if userID != "" {
+		displayName = userID
+	}
+	return &interfaces.UserInfo{
+		UserID:      userID,
+		DisplayName: displayName,
+	}, nil
+}
+
+func (n *noopUserManagementClient) GetUsersInfo(ctx context.Context, userIDs, fields []string) (infos []*interfaces.UserInfo, err error) {
+	infos = make([]*interfaces.UserInfo, 0, len(userIDs))
+	for _, userID := range utils.UniqueStrings(userIDs) {
+		displayName := interfaces.UnknownUser
+		if userID == interfaces.SystemUser {
+			displayName = interfaces.SystemUser
+		} else if userID != "" {
+			displayName = userID
+		}
+		infos = append(infos, &interfaces.UserInfo{
+			UserID:      userID,
+			DisplayName: displayName,
+		})
+	}
+	return infos, nil
+}
+
+func (n *noopUserManagementClient) GetUsersName(ctx context.Context, userIDs []string) (userMap map[string]string, err error) {
+	userMap = make(map[string]string, len(userIDs))
+	for _, userID := range utils.UniqueStrings(userIDs) {
+		if userID == interfaces.SystemUser {
+			userMap[userID] = interfaces.SystemUser
+			continue
+		}
+		if userID != "" {
+			userMap[userID] = userID
+			continue
+		}
+		userMap[userID] = interfaces.UnknownUser
+	}
+	return userMap, nil
 }
 
 // GetAppInfo 获取应用信息

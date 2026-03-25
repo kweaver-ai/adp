@@ -391,3 +391,17 @@ func (conf *Config) initO11yAndLog() {
 	}
 	configLoader.Logger = logger.NewLogger(level, logger.DefaultCalldepth)
 }
+
+// GetAuthEnabled returns whether ISF auth dependencies are enabled.
+// Only explicit false/0 disables the feature; default is enabled.
+func GetAuthEnabled() bool {
+	envVal := os.Getenv("AUTH_ENABLED")
+	return envVal != "false" && envVal != "0"
+}
+
+// GetBusinessDomainEnabled returns whether business-domain integration is enabled.
+// Only explicit false/0 disables the feature; default is enabled.
+func GetBusinessDomainEnabled() bool {
+	envVal := os.Getenv("BUSINESS_DOMAIN_ENABLED")
+	return envVal != "false" && envVal != "0"
+}
