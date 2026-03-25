@@ -430,7 +430,7 @@ func (c *OpenSearchConnector) fetchMappings(ctx context.Context, index *interfac
 		// value: {"ignore_above":256,"type":"keyword"}
 		fieldType, ok := value["type"].(string)
 		if !ok {
-			return fmt.Errorf("failed to read fieldType: %w", err)
+			return fmt.Errorf("failed to read fieldType: indexName:%s,%w", index.Name, err)
 		}
 		fieldMap[fieldName] = interfaces.FieldMeta{
 			Name:       fieldName,
@@ -1296,13 +1296,16 @@ func parseProperties(parentPath string, props map[string]Property, result map[st
 		}
 		// 如果不是 object 类型，输出完整字段属性
 		if prop.Type != "object" {
-			result[currentPath] = prop.Attributes
-
+			if len(prop.Attributes) > 0 {
+				result[currentPath] = prop.Attributes
+			}
 		}
 		// 解析 fields 子字段（title.keyword）
 		if len(prop.Fields) > 0 {
 			for fieldName, fieldProp := range prop.Fields {
-				result[currentPath+"."+fieldName] = fieldProp.Attributes
+				if len(fieldProp.Attributes) > 0 {
+					result[currentPath+"."+fieldName] = fieldProp.Attributes
+				}
 			}
 		}
 		// 递归解析 object 嵌套字段
