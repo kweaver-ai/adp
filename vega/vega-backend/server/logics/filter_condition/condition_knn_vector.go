@@ -33,11 +33,11 @@ func (c *KnnVectorCond) New(ctx context.Context, cfg *interfaces.FilterCondCfg,
 	fieldsMap map[string]*interfaces.Property) (interfaces.FilterCondition, error) {
 
 	if cfg.Name == "" {
-		return nil, fmt.Errorf("condition [in] left field is empty")
+		return nil, fmt.Errorf("condition [knn_vector] left field is empty")
 	}
 	field, ok := fieldsMap[cfg.Name]
 	if !ok {
-		return nil, fmt.Errorf("condition [in] left field '%s' not found", cfg.Name)
+		return nil, fmt.Errorf("condition [knn_vector] left field '%s' not found", cfg.Name)
 	}
 	if field.Type != interfaces.DataType_Vector {
 		return nil, fmt.Errorf("condition [knn_vector] left field '%s' type must be vector", cfg.Name)

@@ -158,7 +158,7 @@ func (rds *resourceDataService) QueryData(ctx context.Context, resource *interfa
 				WithErrorDetails(fmt.Sprintf("connector %s does not support index operations", catalog.ConnectorType))
 		}
 
-		result, err := indexConnector.ExecuteQuery(ctx, resource, params)
+		result, err := indexConnector.ExecuteQuery(ctx, resource.Name, resource, params)
 		if err != nil {
 			span.SetStatus(codes.Error, "Execute query failed")
 			return nil, 0, rest.NewHTTPError(ctx, http.StatusInternalServerError, verrors.VegaBackend_Resource_InternalError).
