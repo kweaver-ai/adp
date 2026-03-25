@@ -20,11 +20,6 @@ func (h *skillHandler) RegisterSkill(c *gin.Context) {
 		return
 	}
 	switch c.ContentType() {
-	case "application/json":
-		if err := utils.GetBindJSONRaw(c, req); err != nil {
-			rest.ReplyError(c, err)
-			return
-		}
 	case "application/x-www-form-urlencoded":
 		if err := utils.GetBindFormRaw(c, req); err != nil {
 			rest.ReplyError(c, err)
