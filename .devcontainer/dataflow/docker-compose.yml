@@ -27,7 +27,7 @@ services:
       - mariadb
       - redis
       - kafka
-      - rustfs
+      - oss-gateway-backend
 
   # mongodb:
   #   image: mongo:7
@@ -100,46 +100,65 @@ services:
       - ./kafka_server_jaas.conf:/etc/kafka/secrets/kafka_server_jaas.conf:ro
 
 
-  # RustFS main service
-  rustfs:
-    image: rustfs/rustfs:latest
-    container_name: rustfs-server
-    user: "${USER_UID:-1000}:${USER_GID:-1000}"
-    cap_add:
-      - FOWNER
-      - CHOWN
-    # security_opt:
-    #   - "no-new-privileges:true"
-    ports:
-      - "9000:9000" # S3 API port
-      - "9001:9001" # Console port
-    environment:
-      - RUSTFS_VOLUMES=/data/rustfs0
-      - RUSTFS_ADDRESS=0.0.0.0:9000
-      - RUSTFS_CONSOLE_ADDRESS=0.0.0.0:9001
-      - RUSTFS_CONSOLE_ENABLE=true
-      - RUSTFS_CORS_ALLOWED_ORIGINS=*
-      - RUSTFS_CONSOLE_CORS_ALLOWED_ORIGINS=*
-      - RUSTFS_ACCESS_KEY=rustfsadmin # CHANGEME
-      - RUSTFS_SECRET_KEY=rustfsadmin # CHANGEME
-      - RUSTFS_OBS_LOGGER_LEVEL=info
-      - RUSTFS_TLS_PATH=/opt/tls
-      # Object Cache
-      - RUSTFS_OBJECT_CACHE_ENABLE=true
-      - RUSTFS_OBJECT_CACHE_TTL_SECS=300
+  # # RustFS main service
+  # rustfs:
+  #   image: rustfs/rustfs:latest
+  #   container_name: rustfs-server
+  #   user: "${USER_UID:-1000}:${USER_GID:-1000}"
+  #   cap_add:
+  #     - FOWNER
+  #     - CHOWN
+  #   # security_opt:
+  #   #   - "no-new-privileges:true"
+  #   ports:
+  #     - "9000:9000" # S3 API port
+  #     - "9001:9001" # Console port
+  #   environment:
+  #     - RUSTFS_VOLUMES=/data/rustfs0
+  #     - RUSTFS_ADDRESS=0.0.0.0:9000
+  #     - RUSTFS_CONSOLE_ADDRESS=0.0.0.0:9001
+  #     - RUSTFS_CONSOLE_ENABLE=true
+  #     - RUSTFS_CORS_ALLOWED_ORIGINS=*
+  #     - RUSTFS_CONSOLE_CORS_ALLOWED_ORIGINS=*
+  #     - RUSTFS_ACCESS_KEY=rustfsadmin # CHANGEME
+  #     - RUSTFS_SECRET_KEY=rustfsadmin # CHANGEME
+  #     - RUSTFS_OBS_LOGGER_LEVEL=info
+  #     - RUSTFS_TLS_PATH=/opt/tls
+  #     # Object Cache
+  #     - RUSTFS_OBJECT_CACHE_ENABLE=true
+  #     - RUSTFS_OBJECT_CACHE_TTL_SECS=300
 
-    volumes:
-      - ./data/rustfs/data:/data
-      - ./data/rustfs/logs:/logs
-    restart: unless-stopped
-    healthcheck:
-      test:
-        [
-          "CMD",
-          "sh", "-c",
-          "curl -f http://127.0.0.1:9000/health && curl -f http://127.0.0.1:9001/rustfs/console/health"
-        ]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 40s
+  #   volumes:
+  #     - ./data/rustfs/data:/data
+  #     - ./data/rustfs/logs:/logs
+  #   restart: unless-stopped
+  #   healthcheck:
+  #     test:
+  #       [
+  #         "CMD",
+  #         "sh", "-c",
+  #         "curl -f http://127.0.0.1:9000/health && curl -f http://127.0.0.1:9001/rustfs/console/health"
+  #       ]
+  #     interval: 30s
+  #     timeout: 10s
+  #     retries: 3
+  #     start_period: 40s
+
+  oss-gateway-backend:
+    image: oss-gateway-backend:latest
+    container_name: oss-gateway-backend
+    ports:
+      - "9200:8080"
+    environment:
+      - RDSHOST=mariadb
+      - RDSPORT=3306
+      - RDSUSER=root
+      - RDSPASS=root123
+      - RDSDBNAME=adp
+      - DB_TYPE=MYSQL
+      - REDISCLUSTERMODE=standalone
+      - REDISHOST=redis
+      - REDISPORT=6379
+      - REDISUSER=
+      - REDISPASS=
+      - REDIS_DB=2

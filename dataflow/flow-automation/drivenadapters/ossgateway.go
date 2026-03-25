@@ -97,13 +97,16 @@ func NewOssGateWay() OssGateWay {
 	OgOnce.Do(func() {
 		config := common.NewConfig()
 
-		if config.Server.Edition == common.EditionCommunity {
+		switch config.Server.StorageBackend {
+		case common.StorageBackendS3:
 			og = NewOssGatewayS3()
-		} else {
+		case common.StorageBackendOssGateway:
 			og = &ossGatetway{
-				address: fmt.Sprintf("http://%s:%v", config.OssGateWay.PrivateHost, config.OssGateWay.PrivatePort),
+				address: fmt.Sprintf("http://%s:%s", config.OssGateWay.PrivateHost, config.OssGateWay.PrivatePort),
 				client:  NewOtelHTTPClient(),
 			}
+		default: // StorageBackendOssGatewayBackend 或空（默认）
+			og = NewOssGatewayBackend()
 		}
 	})
 	return og

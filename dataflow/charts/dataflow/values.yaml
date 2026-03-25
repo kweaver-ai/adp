@@ -291,6 +291,9 @@ depServices:
   ocr:
     privateHost: 192.168.152.11
     privatePort: 12349
+  oss-gateway-backend:
+    host: oss-gateway-backend
+    port: 8080
   business-system-service:
     host: business-system-service
     port: 80
@@ -428,6 +431,8 @@ flowAutomation:
     edition: "community"
     # 用于控制使用哪种数据库
     dbType: "mysql"
+    # 存储后端类型: ossgatewaybackend(默认), s3, ossgateway
+    storageBackend: "ossgatewaybackend"
 
   # 文件下载线程池配置
   flowFileDownload:
