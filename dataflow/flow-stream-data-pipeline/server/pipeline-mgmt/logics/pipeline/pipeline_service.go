@@ -1,4 +1,4 @@
-package logics
+package pipeline
 
 import (
 	"context"
@@ -21,6 +21,9 @@ import (
 	"flow-stream-data-pipeline/common"
 	serrors "flow-stream-data-pipeline/errors"
 	"flow-stream-data-pipeline/pipeline-mgmt/interfaces"
+	"flow-stream-data-pipeline/pipeline-mgmt/logics"
+	"flow-stream-data-pipeline/pipeline-mgmt/logics/deploy_dispatcher"
+	"flow-stream-data-pipeline/pipeline-mgmt/logics/permission"
 )
 
 var (
@@ -47,18 +50,18 @@ type pipelineMgmtService struct {
 
 func NewPipelineMgmtService(appSetting *common.AppSetting) interfaces.PipelineMgmtService {
 	psOnce.Do(func() {
-		dp, err := NewDeployDispatcherService(os.Getenv(interfaces.EnvPipelineNamespace))
+		dp, err := deploy_dispatcher.NewDeployDispatcherService(os.Getenv(interfaces.EnvPipelineNamespace))
 		if err != nil {
 			logger.Errorf("failed to new dispatcher, error: %s", err.Error())
 		}
 
 		ps = &pipelineMgmtService{
 			appSetting:       appSetting,
-			pmAccess:         PMAccess,
-			mqAccess:         MQAccess,
-			ibAccess:         IBAccess,
+			pmAccess:         logics.PMAccess,
+			mqAccess:         logics.MQAccess,
+			ibAccess:         logics.IBAccess,
 			deployDispatcher: dp,
-			ps:               NewPermissionService(appSetting),
+			ps:               permission.NewPermissionService(appSetting),
 			pipelineUpdateCh: make(map[string]chan struct{}),
 		}
 
@@ -174,7 +177,8 @@ func (pmService *pipelineMgmtService) DeletePipeline(ctx context.Context, pipeli
 
 	// 先获取资源序列
 	matchResouces, err := pmService.ps.FilterResources(ctx, interfaces.RESOURCE_TYPE_PIPELINE,
-		[]string{pipelineID}, []string{interfaces.OPERATION_TYPE_DELETE}, false)
+		[]string{pipelineID}, []string{interfaces.OPERATION_TYPE_DELETE},
+		false, interfaces.COMMON_OPERATIONS)
 	if err != nil {
 		return err
 	}
@@ -379,7 +383,7 @@ func (pmService *pipelineMgmtService) ListPipelines(ctx context.Context, param *
 		resMids = append(resMids, pl.PipelineID)
 	}
 	matchResoucesMap, err := pmService.ps.FilterResources(ctx, interfaces.RESOURCE_TYPE_PIPELINE, resMids,
-		[]string{interfaces.OPERATION_TYPE_VIEW_DETAIL}, true)
+		[]string{interfaces.OPERATION_TYPE_VIEW_DETAIL}, true, interfaces.COMMON_OPERATIONS)
 	if err != nil {
 		return pipelineList, 0, err
 	}
@@ -475,7 +479,7 @@ func (pmService *pipelineMgmtService) getPipelineByPipelineID(ctx context.Contex
 
 	// 先获取资源序列
 	matchResouces, err := pmService.ps.FilterResources(ctx, interfaces.RESOURCE_TYPE_PIPELINE, []string{pipelineID},
-		[]string{interfaces.OPERATION_TYPE_VIEW_DETAIL}, true)
+		[]string{interfaces.OPERATION_TYPE_VIEW_DETAIL}, true, interfaces.COMMON_OPERATIONS)
 	if err != nil {
 		return nil, false, err
 	}
@@ -797,7 +801,7 @@ func (pmService *pipelineMgmtService) ListPipelineResources(ctx context.Context,
 	}
 	// 校验权限管理的操作权限
 	matchResoucesMap, err := pmService.ps.FilterResources(ctx, interfaces.RESOURCE_TYPE_PIPELINE, resMids,
-		[]string{interfaces.OPERATION_TYPE_VIEW_DETAIL}, false)
+		[]string{interfaces.OPERATION_TYPE_VIEW_DETAIL}, false, interfaces.COMMON_OPERATIONS)
 	if err != nil {
 		return nil, 0, err
 	}

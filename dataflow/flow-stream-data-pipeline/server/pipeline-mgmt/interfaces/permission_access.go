@@ -1,3 +1,8 @@
+// Copyright The kweaver.ai Authors.
+//
+// Licensed under the Apache License, Version 2.0.
+// See the LICENSE file in the project root for details.
+
 package interfaces
 
 import (
@@ -104,10 +109,17 @@ type ResourceOps struct {
 	Operations []string `json:"allow_operation,omitempty"`
 }
 
+type GetResourceOpsResponse struct {
+	ResourceID string   `json:"id"`
+	Operations []string `json:"operation,omitempty"`
+}
+
 //go:generate mockgen -source ../interfaces/permission_access.go -destination ../interfaces/mock/mock_permission_access.go
 type PermissionAccess interface {
 	CheckPermission(ctx context.Context, check PermissionCheck) (bool, error)
 	CreateResources(ctx context.Context, policies []PermissionPolicy) error
 	DeleteResources(ctx context.Context, resources []Resource) error
 	FilterResources(ctx context.Context, filter ResourcesFilter) ([]ResourceOps, error)
+	// 获取资源操作
+	GetResourceOps(ctx context.Context, filter ResourcesFilter) ([]GetResourceOpsResponse, error)
 }

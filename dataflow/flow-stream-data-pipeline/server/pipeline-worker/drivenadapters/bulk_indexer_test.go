@@ -11,11 +11,11 @@ import (
 
 	. "github.com/agiledragon/gomonkey/v2"
 	"github.com/bytedance/sonic"
-	"github.com/golang/mock/gomock"
 	opensearch "github.com/opensearch-project/opensearch-go/v2"
 	osapi "github.com/opensearch-project/opensearch-go/v2/opensearchapi"
 	osutil "github.com/opensearch-project/opensearch-go/v2/opensearchutil"
 	. "github.com/smartystreets/goconvey/convey"
+	"go.uber.org/mock/gomock"
 )
 
 func TestBulkIndexer_Add(t *testing.T) {

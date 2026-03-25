@@ -11,11 +11,10 @@ require (
 	github.com/dlclark/regexp2 v1.11.5
 	github.com/fsnotify/fsnotify v1.9.0
 	github.com/gin-gonic/gin v1.11.0
-	github.com/golang/mock v1.6.0
 	github.com/kweaver-ai/TelemetrySDK-Go/event/v2 v2.10.3 // indirect
 	github.com/kweaver-ai/TelemetrySDK-Go/exporter/v2 v2.10.3
 	github.com/kweaver-ai/TelemetrySDK-Go/span/v2 v2.10.3 // indirect
-	github.com/kweaver-ai/kweaver-go-lib v1.0.3
+	github.com/kweaver-ai/kweaver-go-lib v1.0.4
 	github.com/kweaver-ai/proton-mq-sdk-go v1.9.1
 	github.com/kweaver-ai/proton-rds-sdk-go v1.5.0 // indirect
 	github.com/opensearch-project/opensearch-go/v2 v2.3.0
@@ -27,6 +26,7 @@ require (
 	go.opentelemetry.io/otel v1.29.0
 	go.opentelemetry.io/otel/trace v1.29.0
 	go.uber.org/automaxprocs v1.6.0
+	go.uber.org/mock v0.6.0
 	k8s.io/api v0.29.1
 	k8s.io/apimachinery v0.29.1
 )

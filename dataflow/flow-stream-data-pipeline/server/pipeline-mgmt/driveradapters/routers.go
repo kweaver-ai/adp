@@ -15,8 +15,8 @@ import (
 
 	"flow-stream-data-pipeline/common"
 	"flow-stream-data-pipeline/pipeline-mgmt/interfaces"
-	"flow-stream-data-pipeline/pipeline-mgmt/logics"
 	"flow-stream-data-pipeline/pipeline-mgmt/logics/auth"
+	"flow-stream-data-pipeline/pipeline-mgmt/logics/pipeline"
 	"flow-stream-data-pipeline/version"
 )
 
@@ -34,7 +34,7 @@ func NewRestHandler(appSetting *common.AppSetting) RestHandler {
 	return &restHandler{
 		appSetting:          appSetting,
 		as:                  auth.NewAuthService(appSetting),
-		pipelineMgmtService: logics.NewPipelineMgmtService(appSetting),
+		pipelineMgmtService: pipeline.NewPipelineMgmtService(appSetting),
 	}
 }
 

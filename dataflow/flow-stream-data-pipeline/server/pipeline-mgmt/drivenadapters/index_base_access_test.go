@@ -8,9 +8,9 @@ import (
 
 	. "github.com/agiledragon/gomonkey/v2"
 	"github.com/bytedance/sonic"
-	"github.com/golang/mock/gomock"
 	rmock "github.com/kweaver-ai/kweaver-go-lib/rest/mock"
 	. "github.com/smartystreets/goconvey/convey"
+	"go.uber.org/mock/gomock"
 
 	"flow-stream-data-pipeline/common"
 	"flow-stream-data-pipeline/pipeline-mgmt/interfaces"

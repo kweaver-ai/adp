@@ -1,10 +1,15 @@
+// Copyright The kweaver.ai Authors.
+//
+// Licensed under the Apache License, Version 2.0.
+// See the LICENSE file in the project root for details.
+
 package main
 
 import (
-	// _ "net/http/pprof"
-
 	"context"
 	"net/http"
+
+	// _ "net/http/pprof"
 	"os/signal"
 	"strconv"
 	"syscall"
@@ -20,9 +25,11 @@ import (
 
 	"flow-stream-data-pipeline/common"
 	access "flow-stream-data-pipeline/pipeline-mgmt/drivenadapters"
-	authAccess "flow-stream-data-pipeline/pipeline-mgmt/drivenadapters/auth"
+	auth "flow-stream-data-pipeline/pipeline-mgmt/drivenadapters/auth"
+	"flow-stream-data-pipeline/pipeline-mgmt/drivenadapters/permission"
 	"flow-stream-data-pipeline/pipeline-mgmt/driveradapters"
 	"flow-stream-data-pipeline/pipeline-mgmt/logics"
+	"flow-stream-data-pipeline/pipeline-mgmt/logics/pipeline"
 )
 
 type mgrService struct {
@@ -34,7 +41,7 @@ func (server *mgrService) start() {
 	logger.Info("Server Starting")
 
 	// 初始化内置管道
-	init := logics.NewPipelineInit(server.appSetting)
+	init := pipeline.NewPipelineInit(server.appSetting)
 	init.Init()
 	logger.Info("Server Init Internal Pipeline Success")
 
@@ -67,8 +74,6 @@ func (server *mgrService) start() {
 	}()
 
 	<-ctx.Done()
-	// 重置系统中断信号处理
-	// stop()
 
 	// 设置系统最后处理时间
 	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
@@ -85,7 +90,7 @@ func (server *mgrService) start() {
 func main() {
 	// 开启 pprof
 	// go func() {
-	//     logger.Info(http.ListenAndServe(":9999", nil))
+	// 	http.ListenAndServe("0.0.0.0:6060", nil)
 	// }()
 
 	logger.Info("Server Starting")
@@ -111,11 +116,11 @@ func main() {
 
 	// Set顺序按字母升序排序
 	if common.GetAuthEnabled() {
-		logics.SetAuthAccess(authAccess.NewHydraAuthAccess(appSetting))
+		logics.SetAuthAccess(auth.NewHydraAuthAccess(appSetting))
 	}
 	logics.SetIndexBaseAccess(access.NewIndexBaseAccess(appSetting))
 	logics.SetMQAccess(access.NewMQAccess(appSetting))
-	logics.SetPermissionAccess(access.NewPermissionAccess(appSetting))
+	logics.SetPermissionAccess(permission.NewPermissionAccess(appSetting))
 	logics.SetPipelineMgmtAccess(access.NewPipelineMgmtAccess(appSetting))
 
 	server := &mgrService{

@@ -11,10 +11,10 @@ import (
 	"github.com/bytedance/sonic"
 	"github.com/bytedance/sonic/ast"
 	"github.com/confluentinc/confluent-kafka-go/v2/kafka"
-	"github.com/golang/mock/gomock"
 	libmq "github.com/kweaver-ai/kweaver-go-lib/mq"
 	osutil "github.com/opensearch-project/opensearch-go/v2/opensearchutil"
 	. "github.com/smartystreets/goconvey/convey"
+	"go.uber.org/mock/gomock"
 
 	"flow-stream-data-pipeline/common"
 	access "flow-stream-data-pipeline/pipeline-worker/drivenadapters"

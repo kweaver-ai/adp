@@ -1,4 +1,4 @@
-package logics
+package deploy_dispatcher
 
 import (
 	"context"

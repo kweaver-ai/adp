@@ -1,10 +1,14 @@
-package logics
+// Copyright The kweaver.ai Authors.
+//
+// Licensed under the Apache License, Version 2.0.
+// See the LICENSE file in the project root for details.
+
+package permission
 
 import (
 	"context"
 	"fmt"
 	"net/http"
-	"sync"
 
 	"github.com/bytedance/sonic"
 	"github.com/kweaver-ai/kweaver-go-lib/logger"
@@ -12,41 +16,35 @@ import (
 	mqclient "github.com/kweaver-ai/proton-mq-sdk-go"
 
 	"flow-stream-data-pipeline/common"
-	serrors "flow-stream-data-pipeline/errors"
+	ferrors "flow-stream-data-pipeline/errors"
 	"flow-stream-data-pipeline/pipeline-mgmt/interfaces"
+	"flow-stream-data-pipeline/pipeline-mgmt/logics"
 )
 
-var (
-	pServiceOnce sync.Once
-	pService     interfaces.PermissionService
-)
-
-type permissionService struct {
+type PermissionServiceImpl struct {
 	appSetting *common.AppSetting
 	mqClient   mqclient.ProtonMQClient
 	pa         interfaces.PermissionAccess
 }
 
-func NewPermissionService(appSetting *common.AppSetting) interfaces.PermissionService {
-	pServiceOnce.Do(func() {
-		client, err := mqclient.NewProtonMQClient(appSetting.MQSetting.MQHost, appSetting.MQSetting.MQPort,
-			appSetting.MQSetting.MQHost, appSetting.MQSetting.MQPort, appSetting.MQSetting.MQType,
-			mqclient.UserInfo(appSetting.MQSetting.Auth.Username, appSetting.MQSetting.Auth.Password),
-			mqclient.AuthMechanism(appSetting.MQSetting.Auth.Mechanism),
-		)
-		if err != nil {
-			logger.Fatal("failed to create a proton mq client:", err)
-		}
-		pService = &permissionService{
-			appSetting: appSetting,
-			mqClient:   client,
-			pa:         PA,
-		}
-	})
-	return pService
+func NewPermissionServiceImpl(appSetting *common.AppSetting) interfaces.PermissionService {
+	mqSetting := appSetting.MQSetting
+	client, err := mqclient.NewProtonMQClient(mqSetting.MQHost, mqSetting.MQPort,
+		mqSetting.MQHost, mqSetting.MQPort, mqSetting.MQType,
+		mqclient.UserInfo(mqSetting.Auth.Username, mqSetting.Auth.Password),
+		mqclient.AuthMechanism(mqSetting.Auth.Mechanism),
+	)
+	if err != nil {
+		logger.Fatal("failed to create a proton mq client:", err)
+	}
+	return &PermissionServiceImpl{
+		appSetting: appSetting,
+		mqClient:   client,
+		pa:         logics.PA,
+	}
 }
 
-func (ps *permissionService) CheckPermission(ctx context.Context, resource interfaces.Resource, ops []string) error {
+func (ps *PermissionServiceImpl) CheckPermission(ctx context.Context, resource interfaces.Resource, ops []string) error {
 	accountInfo := interfaces.AccountInfo{}
 	if ctx.Value(interfaces.ACCOUNT_INFO_KEY) != nil {
 		accountInfo = ctx.Value(interfaces.ACCOUNT_INFO_KEY).(interfaces.AccountInfo)
@@ -64,12 +62,10 @@ func (ps *permissionService) CheckPermission(ctx context.Context, resource inter
 		Resource:   resource,
 		Operations: ops,
 	})
-
 	if err != nil {
 		return rest.NewHTTPError(ctx, http.StatusInternalServerError,
-			serrors.StreamDataPipeline_InternalError_CheckPermissionFailed).WithErrorDetails(err)
+			ferrors.StreamDataPipeline_InternalError_CheckPermissionFailed).WithErrorDetails(err)
 	}
-
 	if !ok {
 		return rest.NewHTTPError(ctx, http.StatusForbidden, rest.PublicError_Forbidden).
 			WithErrorDetails(fmt.Sprintf("Access denied: insufficient permissions for[%v]", ops))
@@ -78,7 +74,11 @@ func (ps *permissionService) CheckPermission(ctx context.Context, resource inter
 }
 
 // 添加资源权限（新建决策）
-func (ps *permissionService) CreateResources(ctx context.Context, resources []interfaces.Resource, ops []string) error {
+func (ps *PermissionServiceImpl) CreateResources(ctx context.Context, resources []interfaces.Resource, ops []string) error {
+	if len(resources) == 0 {
+		return nil
+	}
+
 	accountInfo := interfaces.AccountInfo{}
 	if ctx.Value(interfaces.ACCOUNT_INFO_KEY) != nil {
 		accountInfo = ctx.Value(interfaces.ACCOUNT_INFO_KEY).(interfaces.AccountInfo)
@@ -113,13 +113,17 @@ func (ps *permissionService) CreateResources(ctx context.Context, resources []in
 	err := ps.pa.CreateResources(ctx, policies)
 	if err != nil {
 		return rest.NewHTTPError(ctx, http.StatusInternalServerError,
-			serrors.StreamDataPipeline_InternalError_CreateResourcesFailed).WithErrorDetails(err)
+			ferrors.StreamDataPipeline_InternalError_CreateResourcesFailed).WithErrorDetails(err.Error())
 	}
 	return nil
 }
 
 // 删除策略
-func (ps *permissionService) DeleteResources(ctx context.Context, resourceType string, ids []string) error {
+func (ps *PermissionServiceImpl) DeleteResources(ctx context.Context, resourceType string, ids []string) error {
+	if len(ids) == 0 {
+		return nil
+	}
+
 	// 清除资源策略
 	resources := []interfaces.Resource{}
 	for _, id := range ids {
@@ -132,14 +136,18 @@ func (ps *permissionService) DeleteResources(ctx context.Context, resourceType s
 	err := ps.pa.DeleteResources(ctx, resources)
 	if err != nil {
 		return rest.NewHTTPError(ctx, http.StatusInternalServerError,
-			serrors.StreamDataPipeline_InternalError_DeleteResourcesFailed).WithErrorDetails(err)
+			ferrors.StreamDataPipeline_InternalError_DeleteResourcesFailed).WithErrorDetails(err)
 	}
 	return nil
 }
 
 // 过滤资源列表
-func (ps *permissionService) FilterResources(ctx context.Context, resourceType string, ids []string,
-	ops []string, allowOperation bool) (map[string]interfaces.ResourceOps, error) {
+func (ps *PermissionServiceImpl) FilterResources(ctx context.Context, resourceType string, ids []string,
+	ops []string, allowOperation bool, fullOps []string) (map[string]interfaces.ResourceOps, error) {
+
+	if len(ids) == 0 {
+		return map[string]interfaces.ResourceOps{}, nil
+	}
 
 	accountInfo := interfaces.AccountInfo{}
 	if ctx.Value(interfaces.ACCOUNT_INFO_KEY) != nil {
@@ -168,12 +176,11 @@ func (ps *permissionService) FilterResources(ctx context.Context, resourceType s
 		AllowOperation: allowOperation,
 	})
 	if err != nil {
-		return nil, rest.NewHTTPError(ctx, http.StatusInternalServerError,
-			serrors.StreamDataPipeline_InternalError_FilterResourcesFailed).WithErrorDetails(err)
+		return map[string]interfaces.ResourceOps{}, rest.NewHTTPError(ctx, http.StatusInternalServerError,
+			ferrors.StreamDataPipeline_InternalError_FilterResourcesFailed).WithErrorDetails(err)
 	}
 
-	// id转map
-	idMap := make(map[string]interfaces.ResourceOps)
+	idMap := map[string]interfaces.ResourceOps{}
 	for _, resourceOps := range matchResouces {
 		idMap[resourceOps.ResourceID] = resourceOps
 	}
@@ -182,18 +189,61 @@ func (ps *permissionService) FilterResources(ctx context.Context, resourceType s
 }
 
 // 更新资源名称
-func (ps *permissionService) UpdateResource(ctx context.Context, resource interfaces.Resource) error {
+func (ps *PermissionServiceImpl) UpdateResource(ctx context.Context, resource interfaces.Resource) error {
 	bytes, err := sonic.Marshal(resource)
 	if err != nil {
 		return rest.NewHTTPError(ctx, http.StatusInternalServerError,
-			serrors.StreamDataPipeline_InternalError_UpdateResourceFailed).WithErrorDetails(err)
+			ferrors.StreamDataPipeline_InternalError_UpdateResourceFailed).WithErrorDetails(err)
 	}
 
 	err = ps.mqClient.Pub(interfaces.AUTHORIZATION_RESOURCE_NAME_MODIFY, bytes)
 	if err != nil {
 		return rest.NewHTTPError(ctx, http.StatusInternalServerError,
-			serrors.StreamDataPipeline_InternalError_UpdateResourceFailed).WithErrorDetails(err)
+			ferrors.StreamDataPipeline_InternalError_UpdateResourceFailed).WithErrorDetails(err)
 	}
 
 	return nil
+}
+
+// 获取资源操作
+func (ps *PermissionServiceImpl) GetResourceOps(ctx context.Context, resourceType string, ids []string) (map[string]interfaces.ResourceOps, error) {
+	if len(ids) == 0 {
+		return map[string]interfaces.ResourceOps{}, nil
+	}
+
+	accountInfo := interfaces.AccountInfo{}
+	if ctx.Value(interfaces.ACCOUNT_INFO_KEY) != nil {
+		accountInfo = ctx.Value(interfaces.ACCOUNT_INFO_KEY).(interfaces.AccountInfo)
+	}
+	if accountInfo.ID == "" || accountInfo.Type == "" {
+		return nil, rest.NewHTTPError(ctx, http.StatusForbidden, rest.PublicError_Forbidden).
+			WithErrorDetails("Access denied: missing account ID or type")
+	}
+
+	resources := []interfaces.Resource{}
+	for _, id := range ids {
+		resources = append(resources, interfaces.Resource{
+			ID:   id,
+			Type: resourceType,
+		})
+	}
+
+	matchResouces, err := ps.pa.GetResourceOps(ctx, interfaces.ResourcesFilter{
+		Accessor: interfaces.Accessor{
+			ID:   accountInfo.ID,
+			Type: accountInfo.Type,
+		},
+		Resources: resources,
+	})
+	if err != nil {
+		return map[string]interfaces.ResourceOps{}, rest.NewHTTPError(ctx, http.StatusInternalServerError,
+			rest.PublicError_InternalServerError).WithErrorDetails(err)
+	}
+
+	idMap := map[string]interfaces.ResourceOps{}
+	for _, resourceOps := range matchResouces {
+		idMap[resourceOps.ResourceID] = interfaces.ResourceOps(resourceOps)
+	}
+
+	return idMap, nil
 }

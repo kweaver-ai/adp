@@ -1,4 +1,4 @@
-package logics
+package pipeline
 
 import (
 	"context"
