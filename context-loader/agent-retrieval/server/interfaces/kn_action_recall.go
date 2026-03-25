@@ -36,8 +36,8 @@ type KnActionRecallRequest struct {
 	InstanceIdentities []map[string]any `json:"_instance_identities" validate:"omitempty"` // Multiple instance identities; takes priority over InstanceIdentity
 
 	// Header Fields
-	AccountID   string `json:"-" header:"x-account-id" validate:"required"`
-	AccountType string `json:"-" header:"x-account-type" validate:"required"`
+	AccountID   string `json:"-" header:"x-account-id"`
+	AccountType string `json:"-" header:"x-account-type"`
 }
 
 // KnActionRecallResponse Knowledge Network Action Recall Response

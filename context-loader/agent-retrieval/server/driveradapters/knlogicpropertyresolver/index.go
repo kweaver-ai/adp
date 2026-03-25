@@ -56,8 +56,8 @@ func NewKnLogicPropertyResolverHandler() KnLogicPropertyResolverHandler {
 // @Tags kn-context-loader
 // @Accept json
 // @Produce json
-// @Param x-account-id header string true "账户ID"
-// @Param x-account-type header string true "账户类型"
+// @Param x-account-id header string false "账户ID"
+// @Param x-account-type header string false "账户类型"
 // @Param x-kn-id header string true "知识网络ID"
 // @Param body body interfaces.ResolveLogicPropertiesRequest true "请求参数"
 // @Success 200 {object} interfaces.ResolveLogicPropertiesResponse "成功响应"

@@ -10,6 +10,7 @@ import (
 
 	"github.com/kweaver-ai/adp/context-loader/agent-retrieval/server/infra/common"
 	"github.com/kweaver-ai/adp/context-loader/agent-retrieval/server/infra/rest"
+	"github.com/kweaver-ai/adp/context-loader/agent-retrieval/server/interfaces"
 )
 
 func TestMiddlewareResponseFormat_DefaultAndValid(t *testing.T) {
@@ -71,5 +72,31 @@ func TestMiddlewareResponseFormat_Invalid(t *testing.T) {
 
 		convey.So(w.Code, convey.ShouldEqual, http.StatusBadRequest)
 		convey.So(w.Body.String(), convey.ShouldContainSubstring, "invalid response_format")
+	})
+}
+
+func TestMiddlewareHeaderAuthContext_LeavesMissingAccountHeadersEmpty(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
+	convey.Convey("middlewareHeaderAuthContext keeps missing account headers empty", t, func() {
+		w := httptest.NewRecorder()
+		c, _ := gin.CreateTestContext(w)
+		c.Request = httptest.NewRequest(http.MethodGet, "/test", http.NoBody)
+
+		mw := middlewareHeaderAuthContext()
+		mw(c)
+
+		authCtx, ok := common.GetAccountAuthContextFromCtx(c.Request.Context())
+		convey.So(ok, convey.ShouldBeTrue)
+		convey.So(authCtx, convey.ShouldNotBeNil)
+		convey.So(authCtx.AccountID, convey.ShouldEqual, "")
+		convey.So(authCtx.AccountType, convey.ShouldEqual, interfaces.AccessorType(""))
+		convey.So(authCtx.TokenInfo, convey.ShouldNotBeNil)
+		convey.So(authCtx.TokenInfo.VisitorID, convey.ShouldEqual, "")
+		convey.So(authCtx.TokenInfo.VisitorTyp, convey.ShouldEqual, interfaces.VisitorType(""))
+
+		header := common.GetHeaderFromCtx(c.Request.Context())
+		convey.So(header[string(interfaces.HeaderXAccountID)], convey.ShouldEqual, "")
+		convey.So(header[string(interfaces.HeaderXAccountType)], convey.ShouldEqual, "")
 	})
 }

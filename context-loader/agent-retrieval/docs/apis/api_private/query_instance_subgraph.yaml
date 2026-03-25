@@ -15,20 +15,19 @@ paths:
       parameters:
         - name: x-account-id
           in: header
-          required: true
+          required: false
           schema:
             type: string
           description: 账户ID，用于内部服务调用时传递账户信息
         - name: x-account-type
           in: header
-          required: true
+          required: false
           schema:
             type: string
             enum:
               - user
               - app
               - anonymous
-            default: user
           description: 账户类型：user(用户), app(应用), anonymous(匿名)
         - name: kn_id
           description: 业务知识网络ID

@@ -35,7 +35,7 @@
                     "name": "x-account-id",
                     "in": "header",
                     "description": "账户ID，用于内部服务调用时传递账户信息",
-                    "required": true,
+                    "required": false,
                     "schema": {
                       "type": "string"
                     }
@@ -44,9 +44,8 @@
                     "name": "x-account-type",
                     "in": "header",
                     "description": "账户类型：user(用户), app(应用), anonymous(匿名)",
-                    "required": true,
+                    "required": false,
                     "schema": {
-                      "default": "user",
                       "enum": [
                         "user",
                         "app",
@@ -657,7 +656,7 @@
                     "name": "x-account-id",
                     "in": "header",
                     "description": "账户ID，用于内部服务调用时传递账户信息",
-                    "required": true,
+                    "required": false,
                     "schema": {
                       "type": "string"
                     }
@@ -666,9 +665,8 @@
                     "name": "x-account-type",
                     "in": "header",
                     "description": "账户类型：user(用户), app(应用), anonymous(匿名)",
-                    "required": true,
+                    "required": false,
                     "schema": {
-                      "default": "user",
                       "enum": [
                         "user",
                         "app",
@@ -861,7 +859,6 @@
                     "description": "账户类型：user(用户), app(应用), anonymous(匿名)",
                     "required": false,
                     "schema": {
-                      "default": "user",
                       "enum": [
                         "user",
                         "app",
@@ -1045,7 +1042,7 @@
                     "name": "x-account-id",
                     "in": "header",
                     "description": "账户ID，用于内部服务调用时传递账户信息",
-                    "required": true,
+                    "required": false,
                     "schema": {
                       "type": "string"
                     }
@@ -1054,9 +1051,8 @@
                     "name": "x-account-type",
                     "in": "header",
                     "description": "账户类型：user(用户), app(应用), anonymous(匿名)",
-                    "required": true,
+                    "required": false,
                     "schema": {
-                      "default": "user",
                       "enum": [
                         "user",
                         "app",
@@ -1344,7 +1340,7 @@
                     "name": "x-account-id",
                     "in": "header",
                     "description": "账户ID，用于内部服务调用时传递账户信息",
-                    "required": true,
+                    "required": false,
                     "schema": {
                       "type": "string"
                     }
@@ -1353,9 +1349,8 @@
                     "name": "x-account-type",
                     "in": "header",
                     "description": "账户类型：user(用户), app(应用), anonymous(匿名)",
-                    "required": true,
+                    "required": false,
                     "schema": {
-                      "default": "user",
                       "enum": [
                         "user",
                         "app",
@@ -1745,7 +1740,7 @@
                     "name": "x-account-id",
                     "in": "header",
                     "description": "账户ID，用于内部服务调用时传递账户信息",
-                    "required": true,
+                    "required": false,
                     "schema": {
                       "type": "string"
                     }
@@ -1754,9 +1749,8 @@
                     "name": "x-account-type",
                     "in": "header",
                     "description": "账户类型：user(用户), app(应用), anonymous(匿名)",
-                    "required": true,
+                    "required": false,
                     "schema": {
-                      "default": "user",
                       "enum": [
                         "user",
                         "app",
@@ -1967,7 +1961,7 @@
                     "name": "x-account-id",
                     "in": "header",
                     "description": "账户ID，用于内部服务调用时传递账户信息",
-                    "required": true,
+                    "required": false,
                     "schema": {
                       "type": "string"
                     }
@@ -1976,9 +1970,8 @@
                     "name": "x-account-type",
                     "in": "header",
                     "description": "账户类型：user(用户), app(应用), anonymous(匿名)",
-                    "required": true,
+                    "required": false,
                     "schema": {
-                      "default": "user",
                       "enum": [
                         "user",
                         "app",
@@ -2657,7 +2650,7 @@
                     "name": "x-account-id",
                     "in": "header",
                     "description": "账户ID，用于内部服务调用时传递账户信息",
-                    "required": true,
+                    "required": false,
                     "schema": {
                       "type": "string"
                     }
@@ -2666,9 +2659,8 @@
                     "name": "x-account-type",
                     "in": "header",
                     "description": "账户类型：user(用户), app(应用), anonymous(匿名)",
-                    "required": true,
+                    "required": false,
                     "schema": {
-                      "default": "user",
                       "enum": [
                         "user",
                         "app",
