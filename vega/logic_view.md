@@ -234,7 +234,6 @@ type Property struct {
         {
             "id": "node-output",
             "type": "output",
-            "label": "",
             "name": "输出视图",
             "inputs": [
                 "node_Jdopj"

@@ -109,7 +109,7 @@ func (r *restHandler) queryResourceData(c *gin.Context, ctx context.Context, spa
 		return
 	}
 
-	entries, total, searchAfter, err := r.rds.Query(ctx, resource, &params)
+	entries, total, err := r.rds.Query(ctx, resource, &params)
 	if err != nil {
 		httpErr := err.(*rest.HTTPError)
 		o11y.AddHttpAttrs4HttpError(span, httpErr)
@@ -118,12 +118,11 @@ func (r *restHandler) queryResourceData(c *gin.Context, ctx context.Context, spa
 	}
 
 	resultData := map[string]any{
-		"entries":      entries,
-		"total_count":  total,
-		"search_after": searchAfter,
+		"entries":     entries,
+		"total_count": total,
 	}
 
-	logger.Debug("Handler ListDatasetDocuments Success")
+	logger.Debug("Handler QueryResourceData Success")
 	o11y.AddHttpAttrs4Ok(span, http.StatusOK)
 	rest.ReplyOK(c, http.StatusOK, resultData)
 }

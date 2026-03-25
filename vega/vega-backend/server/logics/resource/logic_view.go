@@ -164,23 +164,18 @@ func validateResourceNode(ctx context.Context, dvs *resourceService, node *inter
 	}
 
 	// 校验去重配置, 只有 table 去重配置
-	if cfg.Distinct.Enable {
+	if cfg.Distinct {
 		if atomicView.Category != interfaces.ResourceCategoryTable {
 			return rest.NewHTTPError(ctx, http.StatusBadRequest, verrors.VegaBackend_LogicView_InvalidParameter_LogicDefinition).
 				WithErrorDetails("The logic definition view category is not table, distinct config is not supported")
-		}
-
-		// 校验去重字段是否在视图字段列表里，去重字段接口传递的是name
-		for _, field := range cfg.Distinct.Fields {
-			if _, ok := fieldsMap[field]; !ok {
-				return rest.NewHTTPError(ctx, http.StatusBadRequest, rest.PublicError_BadRequest).
-					WithErrorDetails(fmt.Sprintf("The field '%s' is not in the view '%s' field list", field, atomicView.Name))
-			}
 		}
 	}
 
 	// 校验输出字段是否在视图字段列表里
 	for _, field := range node.OutputFields {
+		if field.Name == "*" {
+			continue
+		}
 		if _, ok := fieldsMap[field.Name]; !ok {
 			return rest.NewHTTPError(ctx, http.StatusBadRequest, rest.PublicError_BadRequest).
 				WithErrorDetails(fmt.Sprintf("The field '%s' is not in the view '%s' field list", field.Name, atomicView.Name))

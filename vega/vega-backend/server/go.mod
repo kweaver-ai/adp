@@ -4,7 +4,6 @@ go 1.24.0
 
 require (
 	github.com/Masterminds/squirrel v1.5.4
-	github.com/agiledragon/gomonkey/v2 v2.14.0
 	github.com/antlr4-go/antlr/v4 v4.13.1
 	github.com/bytedance/sonic v1.15.0
 	github.com/fsnotify/fsnotify v1.9.0
@@ -17,24 +16,16 @@ require (
 	github.com/lib/pq v1.10.9
 	github.com/mitchellh/mapstructure v1.5.0
 	github.com/opensearch-project/opensearch-go/v2 v2.3.0
-	github.com/panjf2000/ants/v2 v2.12.0
 	github.com/rs/xid v1.6.0
 	github.com/segmentio/kafka-go v0.4.49
 	github.com/sijms/go-ora/v2 v2.8.24
-	github.com/smartystreets/goconvey v1.8.1
 	github.com/spf13/viper v1.21.0
-	github.com/tidwall/gjson v1.18.0
 	go.opentelemetry.io/otel v1.29.0
 	go.opentelemetry.io/otel/trace v1.29.0
 	go.uber.org/automaxprocs v1.6.0
-	golang.org/x/sync v0.19.0
 )
 
-require (
-	github.com/tidwall/match v1.1.1 // indirect
-	github.com/tidwall/pretty v1.2.0 // indirect
-	golang.org/x/exp v0.0.0-20240506185415-9bf2ced13842 // indirect
-)
+require golang.org/x/exp v0.0.0-20240506185415-9bf2ced13842 // indirect
 
 require go.uber.org/mock v0.6.0
 
@@ -80,7 +71,6 @@ require (
 	github.com/google/gnostic-models v0.6.8 // indirect
 	github.com/google/gofuzz v1.2.0 // indirect
 	github.com/google/uuid v1.6.0 // indirect
-	github.com/gopherjs/gopherjs v1.17.2 // indirect
 	github.com/grpc-ecosystem/grpc-gateway/v2 v2.22.0 // indirect
 	github.com/hashicorp/go-uuid v1.0.3 // indirect
 	github.com/imdario/mergo v0.3.16 // indirect
@@ -91,7 +81,6 @@ require (
 	github.com/jcmturner/rpc/v2 v2.0.3 // indirect
 	github.com/josharian/intern v1.0.0 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
-	github.com/jtolds/gls v4.20.0+incompatible // indirect
 	github.com/klauspost/compress v1.18.4 // indirect
 	github.com/klauspost/cpuid/v2 v2.3.0 // indirect
 	github.com/kweaver-ai/TelemetrySDK-Go/event/v2 v2.10.3 // indirect
@@ -121,7 +110,6 @@ require (
 	github.com/shirou/gopsutil/v3 v3.24.5 // indirect
 	github.com/shoenig/go-m1cpu v0.1.6 // indirect
 	github.com/shopspring/decimal v1.4.0 // indirect
-	github.com/smarty/assertions v1.16.0 // indirect
 	github.com/sourcegraph/conc v0.3.1-0.20240121214520-5f936abd7ae8 // indirect
 	github.com/spf13/afero v1.15.0 // indirect
 	github.com/spf13/cast v1.10.0 // indirect

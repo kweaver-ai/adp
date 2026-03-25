@@ -80,7 +80,8 @@ var (
 
 type LogicView struct {
 	Resource
-	FieldsMap map[string]*ViewProperty `json:"fields_map,omitempty" mapstructure:"-"`
+	FieldsMap      map[string]*ViewProperty `json:"fields_map,omitempty" mapstructure:"-"`
+	IsSingleSource bool                     `json:"is_single_source,omitempty" mapstructure:"-"`
 }
 
 // LogicDefinitionNode 表示图中的节点
@@ -97,13 +98,8 @@ type LogicDefinitionNode struct {
 type ResourceNodeCfg struct {
 	ResourceID string         `json:"resource_id" mapstructure:"resource_id"`
 	Filters    *FilterCondCfg `json:"filters,omitempty" mapstructure:"filters"`
-	Distinct   Distinct       `json:"distinct" mapstructure:"distinct"`
+	Distinct   bool           `json:"distinct" mapstructure:"distinct"`
 	Resource   *Resource      `json:"resource,omitempty" mapstructure:"resource"`
-}
-
-type Distinct struct {
-	Enable bool     `json:"enable" mapstructure:"enable"`
-	Fields []string `json:"fields,omitempty" mapstructure:"fields"`
 }
 
 // 节点类型为join的节点配置
@@ -111,7 +107,6 @@ type JoinNodeCfg struct {
 	JoinType string         `json:"join_type" mapstructure:"join_type"`
 	JoinOn   []*JoinOn      `json:"join_on" mapstructure:"join_on"`
 	Filters  *FilterCondCfg `json:"filters,omitempty" mapstructure:"filters"`
-	Distinct Distinct       `json:"distinct,omitempty" mapstructure:"distinct"`
 }
 
 // join on 配置
@@ -140,27 +135,27 @@ type OutputFieldRef struct {
 // 逻辑视图字段
 type ViewProperty struct {
 	Property
-	From     string            `json:"from,omitempty"`      // Join 映射模式：源字段名
+	From     string            `json:"from,omitempty"`      // Join 映射模式：源字段名 (当 from 为 string 时)
 	FromNode string            `json:"from_node,omitempty"` // Join 映射模式：源节点ID
-	FromList []*OutputFieldRef `json:"from_list,omitempty"` // Union 对齐模式：多源对齐数组
+	FromList []*OutputFieldRef `json:"-"`                   // Union 对齐模式：多源对齐数组 (当 from 为 array 时)
 }
 
-// UnmarshalJSON 自定义反序列化，处理 from 字段的多态
-// JSON 中 "from" 可以是 string (Join) 或 array (Union)
+// UnmarshalJSON 自定义反序列化，处理 output_fields 的 5 种形态
 func (v *ViewProperty) UnmarshalJSON(data []byte) error {
-	// 先用一个临时的 map 来探测 from 字段的类型
+	// 1. 探测是否为纯字符串（通配符模式 "*" 或 投影模式 "field_a"）
+	var s string
+	if err := json.Unmarshal(data, &s); err == nil {
+		v.Name = s
+		return nil
+	}
+
+	// 2. 探测是否为对象
 	var raw map[string]json.RawMessage
 	if err := json.Unmarshal(data, &raw); err != nil {
-		// 如果不是对象，可能是纯字符串（投影模式 / 通配符模式）
-		var s string
-		if err2 := json.Unmarshal(data, &s); err2 == nil {
-			v.Name = s
-			return nil
-		}
 		return err
 	}
 
-	// 解码 Property 的字段
+	// 解码基类 Property 的字段 (Name, Type, DisplayName, OriginalName, Description, Features)
 	type PropertyAlias Property
 	var propAlias PropertyAlias
 	if err := json.Unmarshal(data, &propAlias); err != nil {
@@ -170,36 +165,59 @@ func (v *ViewProperty) UnmarshalJSON(data []byte) error {
 
 	// 解码 from_node
 	if rawFromNode, ok := raw["from_node"]; ok {
-		if err := json.Unmarshal(rawFromNode, &v.FromNode); err != nil {
-			return fmt.Errorf("failed to unmarshal from_node: %w", err)
-		}
+		_ = json.Unmarshal(rawFromNode, &v.FromNode)
 	}
 
-	// 解码 from: 可能是 string 或 array
+	// 解码 from: 可能是 string (映射模式) 或 array (对齐模式)
 	if rawFrom, ok := raw["from"]; ok {
 		// 尝试 string
 		var fromStr string
 		if err := json.Unmarshal(rawFrom, &fromStr); err == nil {
 			v.From = fromStr
-			return nil
+		} else {
+			// 尝试 array
+			var fromList []*OutputFieldRef
+			if err := json.Unmarshal(rawFrom, &fromList); err == nil {
+				v.FromList = fromList
+			}
 		}
-
-		// 尝试 array (Union 对齐模式)
-		var fromList []*OutputFieldRef
-		if err := json.Unmarshal(rawFrom, &fromList); err == nil {
-			v.FromList = fromList
-			return nil
-		}
-
-		return fmt.Errorf("failed to unmarshal 'from' field: expected string or array")
 	}
 
 	return nil
 }
 
+// MarshalJSON 自定义序列化，为了精简输出并符合 5 种形态
+func (v *ViewProperty) MarshalJSON() ([]byte, error) {
+	// 如果只有 Name 且没有其他元数据或映射信息，序列化为纯字符串 (形态 1 & 2)
+	// 判断条件：Name 非空，且 Type, From, FromNode, FromList, DisplayName 等其他关键字段均为空
+	if v.Name != "" && v.Type == "" && v.From == "" && v.FromNode == "" &&
+		len(v.FromList) == 0 && v.DisplayName == "" && v.OriginalName == "" &&
+		v.Description == "" && len(v.Features) == 0 {
+		return json.Marshal(v.Name)
+	}
+
+	// 否则序列化为对象 (形态 3, 4, 5)
+	type Alias ViewProperty
+	// 使用辅助结构体处理 from 字段的多态输出
+	tmp := struct {
+		*Alias
+		From any `json:"from,omitempty"`
+	}{
+		Alias: (*Alias)(v),
+	}
+
+	if len(v.FromList) > 0 {
+		tmp.From = v.FromList
+	} else if v.From != "" {
+		tmp.From = v.From
+	}
+
+	return json.Marshal(tmp)
+}
+
 func (v *ViewProperty) String() string {
-	return fmt.Sprintf("ViewProperty{name: %s, type: %s, description: %s, display_name: %s, original_name: %s}",
-		v.Name, v.Type, v.Description, v.DisplayName, v.OriginalName)
+	return fmt.Sprintf("ViewProperty{name: %s, type: %s, from: %s, from_node: %s, from_list_len: %d}",
+		v.Name, v.Type, v.From, v.FromNode, len(v.FromList))
 }
 
 type DSLCfg struct {

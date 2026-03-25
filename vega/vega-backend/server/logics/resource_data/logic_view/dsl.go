@@ -17,9 +17,7 @@ import (
 	"github.com/kweaver-ai/kweaver-go-lib/rest"
 	"github.com/mitchellh/mapstructure"
 
-	uerrors "vega-backend/errors"
 	"vega-backend/interfaces"
-	cond "vega-backend/logics/filter_condition"
 )
 
 // 三种情况需要拼接 dsl
@@ -85,7 +83,7 @@ func buildDSL(ctx context.Context, query interfaces.ResourceDataQueryParams, vie
 		for _, sp := range sortParams {
 			if sp.Field == "" || sp.Direction == "" {
 				return dsl, rest.NewHTTPError(ctx, http.StatusBadRequest,
-					uerrors.VegaBackend_LogicView_InvalidParameter_Sort).
+					rest.PublicError_BadRequest).
 					WithErrorDetails("The sort field and direction cannot be empty")
 			}
 
@@ -101,25 +99,20 @@ func buildDSL(ctx context.Context, query interfaces.ResourceDataQueryParams, vie
 			if ok {
 				if sortField.Type == interfaces.DataType_Binary {
 					return dsl, rest.NewHTTPError(ctx, http.StatusBadRequest,
-						uerrors.VegaBackend_LogicView_BinaryFieldSortNotSupported).
+						rest.PublicError_BadRequest).
 						WithErrorDetails(fmt.Sprintf("The sort field '%s' is binary type, do not support sorting", sp.Field))
 				}
 
 				// text类型的字段需要看其下有没有配置keyword索引，配了就用 xxx.keyword 进行排序。否则不纳入排序
 				// string类型的字段直接支持排序，若其有全文索引，则在字段的 keyword 下有 text
-				if cond.IsTextType(sortField) {
-					if cond.HasFeature(sortField, cond.FieldFeatureType_Keyword) {
+				if IsTextType(sortField) {
+					if HasFeature(sortField, interfaces.PropertyFeatureType_Keyword) {
 						sortFieldName = sortFieldName + ".keyword"
 					} else {
 						continue
 					}
 				}
 			}
-
-			// 不需要将视图字段__id转为opensearch内置字段_id, 因为新的管道数据里已经存了 __id
-			// if sortFieldName == "__id" {
-			// 	sortFieldName = "_id"
-			// }
 
 			// 需要将视图字段__score转为opensearch内置字段_score, 暂时不修改，兼容处理
 			if sortFieldName == "__score" {
@@ -135,10 +128,10 @@ func buildDSL(ctx context.Context, query interfaces.ResourceDataQueryParams, vie
 	}
 
 	// 获取searchAfter参数
-	searchAfterDSL, err := getSearchAfterDSL(query.GetSearchAfterParams())
+	searchAfterDSL, err := getSearchAfterDSL(nil)
 	if err != nil {
 		return dsl, rest.NewHTTPError(ctx, http.StatusInternalServerError,
-			uerrors.VegaBackend_LogicView_InternalError_ConvertSearchAfterToDSLFailed).
+			rest.PublicError_InternalServerError).
 			WithErrorDetails(fmt.Sprintf("failed to get search after dsl, %s", err.Error()))
 	}
 
@@ -158,7 +151,7 @@ func buildDSL(ctx context.Context, query interfaces.ResourceDataQueryParams, vie
 	dsl.Query = queryDSL.Query
 
 	// 添加全局过滤条件，全局过滤条件的字段应该在视图字段列表里
-	dsl, err = addGlobalFiltersToDSL(ctx, dsl, query.FilterCondition, view.FieldsMap)
+	dsl, err = addGlobalFiltersToDSL(ctx, dsl, query.FilterCondCfg, view.FieldsMap)
 	if err != nil {
 		return dsl, rest.NewHTTPError(ctx, http.StatusInternalServerError,
 			rest.PublicError_InternalServerError).
@@ -170,8 +163,8 @@ func buildDSL(ctx context.Context, query interfaces.ResourceDataQueryParams, vie
 	return dsl, nil
 }
 
-// 生成视图节点的查询条件, 返回查询条件DSL, 是否需要计算分数, 错误信息
-func buildViewQuery(ctx context.Context, node *interfaces.LogicDefinitionNode, viewIndicesMap map[string][]string) (any, bool, error) {
+// 生成Resource节点的查询条件, 返回查询条件DSL, 是否需要计算分数, 错误信息
+func buildResourceQuery(ctx context.Context, node *interfaces.LogicDefinitionNode, viewIndicesMap map[string][]string) (any, bool, error) {
 	var cfg interfaces.ResourceNodeCfg
 	err := mapstructure.Decode(node.Config, &cfg)
 	if err != nil {
@@ -195,7 +188,9 @@ func buildViewQuery(ctx context.Context, node *interfaces.LogicDefinitionNode, v
 
 	var filterCondition map[string]any
 	// 使用原子视图的fieldsMap，包含索引库的全部字段
-	filterConditionStr, needScore, err := buildDSLCondition(ctx, cfg.Filters, cfg.Resource.FieldsMap)
+	// filterConditionStr, needScore, err := buildDSLCondition(ctx, cfg.Filters, cfg.Resource.FieldsMap)
+	filterConditionStr, needScore, err := buildDSLCondition(ctx, cfg.Filters, nil)
+
 	if err != nil {
 		return "", false, err
 	}
@@ -226,27 +221,29 @@ func buildViewQuery(ctx context.Context, node *interfaces.LogicDefinitionNode, v
 }
 
 // 添加全局过滤条件到DSL
-func addGlobalFiltersToDSL(ctx context.Context, dsl interfaces.DSLCfg, filters *cond.CondCfg, fieldsMap map[string]*cond.ViewField) (interfaces.DSLCfg, error) {
-	condStr, needScore, err := buildDSLCondition(ctx, filters, fieldsMap)
-	if err != nil {
-		return dsl, err
-	}
+func addGlobalFiltersToDSL(ctx context.Context, dsl interfaces.DSLCfg, filters *interfaces.FilterCondCfg,
+	fieldsMap map[string]*interfaces.ViewProperty) (interfaces.DSLCfg, error) {
+	// condStr, needScore, err := buildDSLCondition(ctx, filters, fieldsMap)
+	// if err != nil {
+	// 	return dsl, err
+	// }
 
-	if condStr != "" {
-		var filterCondition map[string]any
-		if err := sonic.Unmarshal([]byte(condStr), &filterCondition); err != nil {
-			return dsl, fmt.Errorf("failed to unmarshal filter condition, %s", err.Error())
-		}
+	// if condStr != "" {
+	// 	var filterCondition map[string]any
+	// 	if err := sonic.Unmarshal([]byte(condStr), &filterCondition); err != nil {
+	// 		return dsl, fmt.Errorf("failed to unmarshal filter condition, %s", err.Error())
+	// 	}
 
-		// 如果需要打分，使用must查询
-		if needScore {
-			dsl.TrackScores = true
-			dsl.Query.Bool.Must = append(dsl.Query.Bool.Must, filterCondition)
-		} else {
-			dsl.Query.Bool.Filter = append(dsl.Query.Bool.Filter, filterCondition)
-		}
-	}
+	// 	// 如果需要打分，使用must查询
+	// 	if needScore {
+	// 		dsl.TrackScores = true
+	// 		dsl.Query.Bool.Must = append(dsl.Query.Bool.Must, filterCondition)
+	// 	} else {
+	// 		dsl.Query.Bool.Filter = append(dsl.Query.Bool.Filter, filterCondition)
+	// 	}
+	// }
 
+	// return dsl, nil
 	return dsl, nil
 }
 
@@ -283,7 +280,7 @@ func buildDSLQuery(ctx context.Context, view *interfaces.LogicView, viewIndicesM
 	// 根据视图节点数量决定查询结构
 	if len(viewNodes) == 1 {
 		// 单视图节点，直接使用filter，不用should
-		query, trackScores, err := buildViewQuery(ctx, viewNodes[0], viewIndicesMap)
+		query, trackScores, err := buildResourceQuery(ctx, viewNodes[0], viewIndicesMap)
 		if err != nil {
 			return interfaces.DSLCfg{}, err
 		}
@@ -296,7 +293,7 @@ func buildDSLQuery(ctx context.Context, view *interfaces.LogicView, viewIndicesM
 		trackScores := false
 		shouldQueries := make([]any, 0, len(viewNodes))
 		for _, node := range viewNodes {
-			query, tScore, err := buildViewQuery(ctx, node, viewIndicesMap)
+			query, tScore, err := buildResourceQuery(ctx, node, viewIndicesMap)
 			if err != nil {
 				return interfaces.DSLCfg{}, err
 			}
@@ -317,24 +314,25 @@ func buildDSLQuery(ctx context.Context, view *interfaces.LogicView, viewIndicesM
 }
 
 // 构造过滤条件
-func buildDSLCondition(ctx context.Context, cfg *cond.CondCfg, fieldsMap map[string]*cond.ViewField) (string, bool, error) {
-	var dslStr string
-	// 将过滤条件拼接到 dsl 的 query 中
-	// 创建一个包含查询类型的上下文
-	ctx = context.WithValue(ctx, cond.CtxKey_QueryType, interfaces.QueryType_DSL)
-	CondCfg, needScore, err := cond.NewCondition(ctx, cfg, fieldsMap)
-	if err != nil {
-		return "", needScore, fmt.Errorf("failed to new condition, %s", err.Error())
-	}
+func buildDSLCondition(ctx context.Context, cfg *interfaces.FilterCondCfg, fieldsMap map[string]*interfaces.ViewProperty) (string, bool, error) {
+	// var dslStr string
+	// // 将过滤条件拼接到 dsl 的 query 中
+	// // 创建一个包含查询类型的上下文
+	// ctx = context.WithValue(ctx, cond.CtxKey_QueryType, interfaces.QueryType_DSL)
+	// CondCfg, needScore, err := cond.NewCondition(ctx, cfg, fieldsMap)
+	// if err != nil {
+	// 	return "", needScore, fmt.Errorf("failed to new condition, %s", err.Error())
+	// }
 
-	if CondCfg != nil {
-		dslStr, err = CondCfg.Convert(ctx)
-		if err != nil {
-			return "", needScore, fmt.Errorf("failed to convert condition to dsl, %s", err.Error())
-		}
-	}
+	// if CondCfg != nil {
+	// 	dslStr, err = CondCfg.Convert(ctx)
+	// 	if err != nil {
+	// 		return "", needScore, fmt.Errorf("failed to convert condition to dsl, %s", err.Error())
+	// 	}
+	// }
 
-	return dslStr, needScore, nil
+	// return dslStr, needScore, nil
+	return "", false, nil
 }
 
 // 获取原子视图和索引列表的映射
@@ -388,4 +386,19 @@ func completeDSLSortParams(sort []*interfaces.SortField, useSearchAfter bool) []
 	}
 
 	return newSort
+}
+
+// 检查字段是否为 text 类型
+func IsTextType(fieldInfo *interfaces.ViewProperty) bool {
+	return fieldInfo != nil && fieldInfo.Type == interfaces.DataType_Text
+}
+
+// 检查字段特征是否包含指定特征
+func HasFeature(fieldInfo *interfaces.ViewProperty, feature string) bool {
+	for _, f := range fieldInfo.Features {
+		if f.FeatureType == feature {
+			return true
+		}
+	}
+	return false
 }

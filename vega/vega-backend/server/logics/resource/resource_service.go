@@ -86,7 +86,11 @@ func (rs *resourceService) Create(ctx context.Context, req *interfaces.ResourceR
 		if err != nil {
 			return "", err
 		}
-		// 
+		viewFields, err := rs.parseLogicDefinition(ctx, req.LogicDefinition)
+		if err != nil {
+			return "", err
+		}
+		req.SchemaDefinition = viewFields
 	}
 
 	// 检查catalog是否存在
@@ -96,10 +100,6 @@ func (rs *resourceService) Create(ctx context.Context, req *interfaces.ResourceR
 	}
 	if !exists {
 		return "", rest.NewHTTPError(ctx, http.StatusNotFound, verrors.VegaBackend_Catalog_NotFound)
-	}
-
-	if req.ResourceID == "" {
-		req.ResourceID = xid.New().String()
 	}
 
 	now := time.Now().UnixMilli()
@@ -388,8 +388,11 @@ func (rs *resourceService) Update(ctx context.Context, id string, req *interface
 		if err != nil {
 			return err
 		}
-
-		// 逻辑视图更新逻辑类型和逻辑定义
+		viewFields, err := rs.parseLogicDefinition(ctx, req.LogicDefinition)
+		if err != nil {
+			return err
+		}
+		resource.SchemaDefinition = viewFields
 		resource.LogicType = logicType
 		resource.LogicDefinition = req.LogicDefinition
 	}

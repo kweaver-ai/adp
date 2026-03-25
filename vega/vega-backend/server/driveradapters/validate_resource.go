@@ -18,7 +18,7 @@ import (
 )
 
 func ValidateResourceRequest(ctx context.Context, req *interfaces.ResourceRequest) error {
-	if err := validateID(ctx, req.ResourceID); err != nil {
+	if err := validateID(ctx, req.ID); err != nil {
 		return err
 	}
 

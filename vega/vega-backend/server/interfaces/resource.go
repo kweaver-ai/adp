@@ -96,7 +96,6 @@ type ResourcesQueryParams struct {
 type ResourceRequest struct {
 	ID          string   `json:"id,omitempty"`
 	CatalogID   string   `json:"catalog_id"`
-	ResourceID  string   `json:"resource_id"`
 	Name        string   `json:"name"`
 	Tags        []string `json:"tags"`
 	Description string   `json:"description"`
