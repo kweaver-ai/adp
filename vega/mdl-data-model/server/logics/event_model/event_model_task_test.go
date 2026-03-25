@@ -12,7 +12,7 @@ package event_model
 
 // 	"devops.aishu.cn/AISHUDevOps/DIP/_git/mdl-XxlJobSDK-Go.git/sdk/vo"
 // 	. "github.com/agiledragon/gomonkey/v2"
-// 	"github.com/golang/mock/gomock"
+// 	"go.uber.org/mock/gomock"
 // 	. "github.com/smartystreets/goconvey/convey"
 
 // 	"data-model/common"
