@@ -143,7 +143,7 @@ func (rds *resourceDataService) QueryData(ctx context.Context, resource *interfa
 	defer connector.Close(ctx)
 
 	switch resource.Category {
-	case interfaces.ResourceCategoryTable, interfaces.ResourceCategoryLogicView:
+	case interfaces.ResourceCategoryTable:
 		tableConnector, ok := connector.(connectors.TableConnector)
 		if !ok {
 			span.SetStatus(codes.Error, "Connector does not support table operations")
