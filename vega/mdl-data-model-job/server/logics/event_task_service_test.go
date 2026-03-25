@@ -13,8 +13,8 @@ import (
 
 	. "github.com/agiledragon/gomonkey/v2"
 	"github.com/confluentinc/confluent-kafka-go/v2/kafka"
-	"github.com/golang/mock/gomock"
 	. "github.com/smartystreets/goconvey/convey"
+	"go.uber.org/mock/gomock"
 
 	"data-model-job/common"
 	"data-model-job/interfaces"

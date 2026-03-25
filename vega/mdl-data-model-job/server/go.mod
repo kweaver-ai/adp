@@ -11,13 +11,13 @@ require (
 	github.com/dlclark/regexp2 v1.11.5
 	github.com/fsnotify/fsnotify v1.9.0
 	github.com/gin-gonic/gin v1.11.0
-	github.com/golang/mock v1.6.0
-	github.com/kweaver-ai/kweaver-go-lib v1.0.3
+	github.com/kweaver-ai/kweaver-go-lib v1.0.4
 	github.com/mitchellh/mapstructure v1.5.0
 	github.com/panjf2000/ants/v2 v2.11.5
 	github.com/robfig/cron/v3 v3.0.1
 	github.com/smartystreets/goconvey v1.8.1
 	github.com/spf13/viper v1.21.0
+	go.uber.org/mock v0.6.0
 )
 
 require (

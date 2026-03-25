@@ -12,11 +12,11 @@ import (
 	"net/http"
 	"testing"
 
+	. "github.com/agiledragon/gomonkey/v2"
 	"github.com/kweaver-ai/kweaver-go-lib/rest"
 	rmock "github.com/kweaver-ai/kweaver-go-lib/rest/mock"
-	. "github.com/agiledragon/gomonkey/v2"
-	"github.com/golang/mock/gomock"
 	. "github.com/smartystreets/goconvey/convey"
+	"go.uber.org/mock/gomock"
 
 	"data-model-job/interfaces"
 )

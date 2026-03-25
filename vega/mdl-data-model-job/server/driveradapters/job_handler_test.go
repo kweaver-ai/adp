@@ -13,12 +13,12 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/kweaver-ai/kweaver-go-lib/rest"
 	. "github.com/agiledragon/gomonkey/v2"
 	"github.com/bytedance/sonic"
 	"github.com/gin-gonic/gin"
-	"github.com/golang/mock/gomock"
+	"github.com/kweaver-ai/kweaver-go-lib/rest"
 	. "github.com/smartystreets/goconvey/convey"
+	"go.uber.org/mock/gomock"
 
 	"data-model-job/common"
 	derrors "data-model-job/errors"

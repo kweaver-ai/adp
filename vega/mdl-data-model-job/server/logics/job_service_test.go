@@ -12,11 +12,11 @@ import (
 	"testing"
 	"time"
 
+	. "github.com/agiledragon/gomonkey/v2"
 	libmq "github.com/kweaver-ai/kweaver-go-lib/mq"
 	"github.com/kweaver-ai/kweaver-go-lib/rest"
-	. "github.com/agiledragon/gomonkey/v2"
-	"github.com/golang/mock/gomock"
 	. "github.com/smartystreets/goconvey/convey"
+	"go.uber.org/mock/gomock"
 
 	"data-model-job/common"
 	cond "data-model-job/common/condition"
