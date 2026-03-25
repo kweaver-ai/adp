@@ -82,8 +82,6 @@ depServices:
   metadata:
     protocol: http
     host: vega-metadata:80
-  auth:
-    enabled: true
 resources:
   requests:
     cpu: 100m
@@ -115,3 +113,7 @@ probe:
 collectorDataSource: mymaria_fast2 #扫描用数据源，列表过滤时使用
 
 javaOpts: "-XX:+UseContainerSupport -XX:InitialRAMPercentage=70.0 -XX:MaxRAMPercentage=70.0 -XX:MaxMetaspaceSize=512M -XX:MetaspaceSize=128M -XX:+UseG1GC -XX:InitiatingHeapOccupancyPercent=30 -XX:ParallelGCThreads=8 -XX:+ExitOnOutOfMemoryError"
+
+# 认证开关
+auth:
+  enabled: true

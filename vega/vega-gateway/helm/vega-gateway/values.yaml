@@ -62,8 +62,6 @@ depServices:
     publicHost: efast-public
     publicPort: 9123
     publicProtocol: http
-  auth:
-    enabled: true
 resources:
   requests:
     cpu: 200m
@@ -93,3 +91,7 @@ probe:
     failureThreshold: 3
 
 collectorDataSource: mymaria_fast2 #扫描用数据源，列表过滤时使用
+
+# 认证开关
+auth:
+  enabled: true
