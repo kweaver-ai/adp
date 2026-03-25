@@ -4,9 +4,9 @@ import (
 	"context"
 	"fmt"
 
-	o11y "github.com/kweaver-ai/kweaver-go-lib/observability"
 	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/interfaces"
 	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/utils"
+	o11y "github.com/kweaver-ai/kweaver-go-lib/observability"
 )
 
 // QueryBuilder 查询构建器 - 提供更简洁的API来使用SelectListWithAuthBatch
@@ -140,9 +140,10 @@ func (b *QueryBuilder[T, PT]) getFilteredResourceIDs(ctx context.Context) ([]str
 	defer o11y.EndSpan(ctx, nil)
 
 	var (
-		businessDomainIDs []string
-		authorizedIDs     []string
-		hasFullAccess     bool
+		businessDomainIDs      []string
+		authorizedIDs          []string
+		hasFullAccess          bool
+		businessDomainBypassed bool
 	)
 
 	// 串行调用业务域资源列表函数
@@ -152,11 +153,17 @@ func (b *QueryBuilder[T, PT]) getFilteredResourceIDs(ctx context.Context) ([]str
 			return nil, false, err
 		}
 		businessDomainIDs = ids
+		for _, id := range ids {
+			if id == interfaces.ResourceIDAll {
+				businessDomainBypassed = true
+				break
+			}
+		}
 	}
 
 	// 早期终止策略：如果业务域没有返回任何资源ID，直接返回空列表
 	// 这是第一层过滤的核心体现，无论权限如何，业务域为空时直接返回空
-	if len(businessDomainIDs) == 0 && b.businessDomainResourceListFunc != nil {
+	if len(businessDomainIDs) == 0 && b.businessDomainResourceListFunc != nil && !businessDomainBypassed {
 		return []string{}, false, nil
 	}
 
@@ -185,11 +192,18 @@ func (b *QueryBuilder[T, PT]) getFilteredResourceIDs(ctx context.Context) ([]str
 	if hasFullAccess {
 		// 如果有权限访问所有资源，则只应用业务域过滤
 		// 业务域作为第一层过滤，即使有权限，也只能访问业务域内的资源
+		if businessDomainBypassed {
+			return nil, true, nil
+		}
 		filteredIDs = businessDomainIDs
 	} else {
 		// 有限权限情况下，计算业务域和权限的交集
 		// utils.CalculateIntersection函数内部会处理空列表的情况
-		filteredIDs = utils.CalculateIntersection(businessDomainIDs, authorizedIDs)
+		if businessDomainBypassed {
+			filteredIDs = authorizedIDs
+		} else {
+			filteredIDs = utils.CalculateIntersection(businessDomainIDs, authorizedIDs)
+		}
 	}
 
 	return filteredIDs, false, nil

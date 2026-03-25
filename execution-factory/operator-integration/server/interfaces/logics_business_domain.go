@@ -8,6 +8,7 @@ import (
 
 // IBusinessDomainService 业务域服务接口
 type IBusinessDomainService interface {
+	ValidateBusinessDomain(ctx context.Context) (err error)
 	// AssociateResource 关联资源到业务域
 	AssociateResource(ctx context.Context, bdID, resourceID string, resourceType AuthResourceType) (err error)
 

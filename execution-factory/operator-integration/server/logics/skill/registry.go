@@ -451,10 +451,11 @@ func (r *skillRegistry) assembleSkillSummaryList(ctx context.Context, skillDBs [
 	if err != nil {
 		return
 	}
+	businessDomainIDStr, _ := infracommon.GetBusinessDomainFromCtx(ctx)
 	for _, skill := range skillSummaries {
-		skill.CreateUser = utils.GetValueOrDefault(userMap, skill.UpdateUser, interfaces.UnknownUser)
+		skill.CreateUser = utils.GetValueOrDefault(userMap, skill.CreateUser, interfaces.UnknownUser)
 		skill.UpdateUser = utils.GetValueOrDefault(userMap, skill.UpdateUser, interfaces.UnknownUser)
-		skill.BusinessDomainID = resourceToBdMap[skill.SkillID]
+		skill.BusinessDomainID = utils.GetValueOrDefault(resourceToBdMap, skill.SkillID, businessDomainIDStr)
 		skill.CategoryName = r.CategoryManager.GetCategoryName(ctx, skill.Category)
 	}
 	return

@@ -285,9 +285,8 @@ type MCPToolDebugResponse struct {
 }
 
 type MCPProxyToolListRequest struct {
-	UserID   string `header:"user_id"`                 // 用户ID，内部使用
-	IsPublic bool   `header:"is_public"`               // 是否为公开
-	MCPID    string `uri:"mcp_id" validate:"required"` // MCP Server ID
+	UserID string `header:"user_id"`                 // 用户ID，内部使用
+	MCPID  string `uri:"mcp_id" validate:"required"` // MCP Server ID
 }
 
 type MCPProxyToolListResponse struct {

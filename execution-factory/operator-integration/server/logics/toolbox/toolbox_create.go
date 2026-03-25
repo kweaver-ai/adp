@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	infracommon "github.com/kweaver-ai/adp/execution-factory/operator-integration/server/infra/common"
+	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/infra/common"
 	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/infra/errors"
 	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/interfaces"
 	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/interfaces/model"
@@ -120,9 +120,13 @@ func (s *ToolServiceImpl) CreateToolBox(ctx context.Context, req *interfaces.Cre
 	}
 	// 记录审计日志
 	go func() {
-		tokenInfo, _ := infracommon.GetTokenInfoFromCtx(ctx)
+		accountAuthContext, ok := common.GetAccountAuthContextFromCtx(ctx)
+		if !ok {
+			s.Logger.WithContext(ctx).Warnf("[CreateToolBox] GetAccountAuthContextFromCtx err :%v", err)
+			return
+		}
 		s.AuditLog.Logger(ctx, &metric.AuditLogBuilderParams{
-			TokenInfo: tokenInfo,
+			TokenInfo: accountAuthContext.TokenInfo,
 			Accessor:  accessor,
 			Operation: metric.AuditLogOperationCreate,
 			Object: &metric.AuditLogObject{

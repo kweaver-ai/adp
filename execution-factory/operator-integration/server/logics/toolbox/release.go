@@ -6,7 +6,6 @@ import (
 	"net/http"
 	"strings"
 
-	o11y "github.com/kweaver-ai/kweaver-go-lib/observability"
 	infracommon "github.com/kweaver-ai/adp/execution-factory/operator-integration/server/infra/common"
 	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/infra/common/ormhelper"
 	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/infra/errors"
@@ -15,6 +14,7 @@ import (
 	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/logics/auth"
 	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/logics/metadata"
 	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/utils"
+	o11y "github.com/kweaver-ai/kweaver-go-lib/observability"
 )
 
 // 排序字段与数据库字段映射
@@ -105,32 +105,12 @@ func (s *ToolServiceImpl) GetMarketToolList(ctx context.Context, req *interfaces
 		}
 		return boxList, nil
 	}, func() ([]string, error) {
-		resourceIDs := make([]string, 0, len(resourceToBdMap))
-		for resourceID := range resourceToBdMap {
-			resourceIDs = append(resourceIDs, resourceID)
-		}
-		if len(resourceIDs) == 0 {
-			return []string{}, nil
-		}
-
 		var authResourceIds []string
 		authResourceIds, err = s.AuthService.ResourceListIDs(ctx, accessor, interfaces.AuthResourceTypeToolBox, interfaces.AuthOperationTypePublicAccess)
 		if err != nil {
 			return nil, err
 		}
-
-		var hasFullAccess bool
-		for _, authResourceId := range authResourceIds {
-			if authResourceId == interfaces.ResourceIDAll {
-				hasFullAccess = true
-				break
-			}
-		}
-		if hasFullAccess {
-			return resourceIDs, nil
-		}
-
-		return utils.CalculateIntersection(resourceIDs, authResourceIds), nil
+		return filterToolboxResourceIDs(resourceToBdMap, authResourceIds), nil
 	})
 	if err != nil {
 		return
@@ -148,7 +128,7 @@ func (s *ToolServiceImpl) GetMarketToolList(ctx context.Context, req *interfaces
 	sourceMap := map[model.SourceType][]string{}
 	for _, toolBox := range toolboxDBs {
 		toolBoxInfo := s.toolBoxDBToToolBoxToolInfo(ctx, toolBox)
-		toolBoxInfo.BusinessDomainID = resourceToBdMap[toolBox.BoxID]
+		toolBoxInfo.BusinessDomainID = utils.GetValueOrDefault(resourceToBdMap, toolBox.BoxID, "")
 		userIDs = append(userIDs, toolBox.CreateUser, toolBox.UpdateUser, toolBox.ReleaseUser)
 		var toolInfos []*interfaces.ToolInfo
 		// 收集当前工具箱下工具的信息
@@ -175,12 +155,12 @@ func (s *ToolServiceImpl) GetMarketToolList(ctx context.Context, req *interfaces
 		return
 	}
 	for _, toolBox := range resp.Data {
-		toolBox.CreateUser = utils.GetValueOrDefault(userMap, toolBox.CreateUser, "")
-		toolBox.UpdateUser = utils.GetValueOrDefault(userMap, toolBox.UpdateUser, "")
-		toolBox.ReleaseUser = utils.GetValueOrDefault(userMap, toolBox.ReleaseUser, "")
+		toolBox.CreateUser = utils.GetValueOrDefault(userMap, toolBox.CreateUser, interfaces.UnknownUser)
+		toolBox.UpdateUser = utils.GetValueOrDefault(userMap, toolBox.UpdateUser, interfaces.UnknownUser)
+		toolBox.ReleaseUser = utils.GetValueOrDefault(userMap, toolBox.ReleaseUser, interfaces.UnknownUser)
 		for _, toolInfo := range toolBox.Tools {
-			toolInfo.CreateUser = utils.GetValueOrDefault(userMap, toolInfo.CreateUser, "")
-			toolInfo.UpdateUser = utils.GetValueOrDefault(userMap, toolInfo.UpdateUser, "")
+			toolInfo.CreateUser = utils.GetValueOrDefault(userMap, toolInfo.CreateUser, interfaces.UnknownUser)
+			toolInfo.UpdateUser = utils.GetValueOrDefault(userMap, toolInfo.UpdateUser, interfaces.UnknownUser)
 			metadataDB, ok := sourceIDToMetadataMap[toolIDSourceMap[toolInfo.ToolID]]
 			if !ok {
 				s.Logger.WithContext(ctx).Errorf("metadata not found, toolID: %s", toolInfo.ToolID)
@@ -197,6 +177,38 @@ func (s *ToolServiceImpl) GetMarketToolList(ctx context.Context, req *interfaces
 		}
 	}
 	return
+}
+
+func filterToolboxResourceIDs(resourceToBdMap map[string]string, authResourceIDs []string) []string {
+	resourceIDs := make([]string, 0, len(resourceToBdMap))
+	hasBusinessDomainBypass := false
+	for resourceID := range resourceToBdMap {
+		resourceIDs = append(resourceIDs, resourceID)
+		if resourceID == interfaces.ResourceIDAll {
+			hasBusinessDomainBypass = true
+		}
+	}
+	if len(resourceIDs) == 0 {
+		return []string{}
+	}
+
+	hasFullAccess := false
+	for _, authResourceID := range authResourceIDs {
+		if authResourceID == interfaces.ResourceIDAll {
+			hasFullAccess = true
+			break
+		}
+	}
+	if hasBusinessDomainBypass {
+		if hasFullAccess {
+			return []string{interfaces.ResourceIDAll}
+		}
+		return authResourceIDs
+	}
+	if hasFullAccess {
+		return resourceIDs
+	}
+	return utils.CalculateIntersection(resourceIDs, authResourceIDs)
 }
 
 // GetReleaseToolBoxInfo 获取发布工具信息
@@ -310,9 +322,9 @@ func (s *ToolServiceImpl) GetReleaseToolBoxInfo(ctx context.Context, req *interf
 		return
 	}
 	for _, info := range resp {
-		info.CreateUser = utils.GetValueOrDefault(userMap, info.CreateUser, "")
-		info.UpdateUser = utils.GetValueOrDefault(userMap, info.UpdateUser, "")
-		info.ReleaseUser = utils.GetValueOrDefault(userMap, info.ReleaseUser, "")
+		info.CreateUser = utils.GetValueOrDefault(userMap, info.CreateUser, interfaces.UnknownUser)
+		info.UpdateUser = utils.GetValueOrDefault(userMap, info.UpdateUser, interfaces.UnknownUser)
+		info.ReleaseUser = utils.GetValueOrDefault(userMap, info.ReleaseUser, interfaces.UnknownUser)
 	}
 	return
 }

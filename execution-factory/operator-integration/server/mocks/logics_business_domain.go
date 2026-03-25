@@ -112,3 +112,17 @@ func (mr *MockIBusinessDomainServiceMockRecorder) ResourceList(ctx, bdID, resour
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ResourceList", reflect.TypeOf((*MockIBusinessDomainService)(nil).ResourceList), ctx, bdID, resourceType)
 }
+
+// ValidateBusinessDomain mocks base method.
+func (m *MockIBusinessDomainService) ValidateBusinessDomain(ctx context.Context) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ValidateBusinessDomain", ctx)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// ValidateBusinessDomain indicates an expected call of ValidateBusinessDomain.
+func (mr *MockIBusinessDomainServiceMockRecorder) ValidateBusinessDomain(ctx any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ValidateBusinessDomain", reflect.TypeOf((*MockIBusinessDomainService)(nil).ValidateBusinessDomain), ctx)
+}

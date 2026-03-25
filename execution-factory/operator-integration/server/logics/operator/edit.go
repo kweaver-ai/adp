@@ -49,9 +49,13 @@ func (m *operatorManager) EditOperator(ctx context.Context, req *interfaces.Oper
 	}
 	// 异步记录审计日志
 	go func() {
-		tokenInfo, _ := icommon.GetTokenInfoFromCtx(ctx)
+		accountAuthCtx, ok := icommon.GetAccountAuthContextFromCtx(ctx)
+		if !ok {
+			m.Logger.WithContext(ctx).Errorf("account auth context not found")
+			return
+		}
 		m.AuditLog.Logger(ctx, &metric.AuditLogBuilderParams{
-			TokenInfo: tokenInfo,
+			TokenInfo: accountAuthCtx.TokenInfo,
 			Accessor:  accessor,
 			Operation: metric.AuditLogOperationEdit,
 			Object: &metric.AuditLogObject{
@@ -257,9 +261,13 @@ func (m *operatorManager) updateSinglOperatorStatus(ctx context.Context, tx *sql
 	}
 	// 异步记录审计日志
 	go func() {
-		tokenInfo, _ := icommon.GetTokenInfoFromCtx(ctx)
+		accountAuthContext, ok := icommon.GetAccountAuthContextFromCtx(ctx)
+		if !ok {
+			m.Logger.WithContext(ctx).Errorf("get account auth context failed")
+			return
+		}
 		m.AuditLog.Logger(ctx, &metric.AuditLogBuilderParams{
-			TokenInfo: tokenInfo,
+			TokenInfo: accountAuthContext.TokenInfo,
 			Accessor:  accessor,
 			Operation: operation,
 			Object: &metric.AuditLogObject{

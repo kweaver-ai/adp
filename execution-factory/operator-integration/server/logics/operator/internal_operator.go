@@ -9,6 +9,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/infra/common"
+	icommon "github.com/kweaver-ai/adp/execution-factory/operator-integration/server/infra/common"
 	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/infra/errors"
 	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/interfaces"
 	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/interfaces/model"
@@ -176,9 +177,13 @@ func (m *operatorManager) createInternalOperator(ctx context.Context, tx *sql.Tx
 				})
 				// 记录审计日志
 				go func() {
-					tokenInfo, _ := common.GetTokenInfoFromCtx(ctx)
+					accountAuthContext, ok := icommon.GetAccountAuthContextFromCtx(ctx)
+					if !ok {
+						m.Logger.WithContext(ctx).Warnf("[createInternalOperator] GetAccountAuthContextFromCtx err :%v", err)
+						return
+					}
 					m.AuditLog.Logger(ctx, &metric.AuditLogBuilderParams{
-						TokenInfo: tokenInfo,
+						TokenInfo: accountAuthContext.TokenInfo,
 						Accessor:  accessor,
 						Operation: metric.AuditLogOperationCreate,
 						Object: &metric.AuditLogObject{
@@ -269,9 +274,13 @@ func (m *operatorManager) upgradeInternalOperator(ctx context.Context, tx *sql.T
 			}
 			// 记录审计日志
 			go func() {
-				tokenInfo, _ := common.GetTokenInfoFromCtx(ctx)
+				accountAuthContext, ok := icommon.GetAccountAuthContextFromCtx(ctx)
+				if !ok {
+					m.Logger.WithContext(ctx).Warnf("[upgradeInternalOperator] GetAccountAuthContextFromCtx err :%v", err)
+					return
+				}
 				m.AuditLog.Logger(ctx, &metric.AuditLogBuilderParams{
-					TokenInfo: tokenInfo,
+					TokenInfo: accountAuthContext.TokenInfo,
 					Accessor:  accessor,
 					Operation: metric.AuditLogOperationEdit,
 					Object: &metric.AuditLogObject{

@@ -8,13 +8,13 @@ import (
 	"fmt"
 	"net/http"
 
-	o11y "github.com/kweaver-ai/kweaver-go-lib/observability"
 	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/infra/common"
 	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/infra/errors"
 	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/interfaces"
 	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/interfaces/model"
 	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/logics/metric"
 	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/utils"
+	o11y "github.com/kweaver-ai/kweaver-go-lib/observability"
 )
 
 // ConvertOperatorToTool 算子转换成工具
@@ -98,9 +98,13 @@ func (s *ToolServiceImpl) ConvertOperatorToTool(ctx context.Context, req *interf
 	}
 	// 记录审计日志
 	go func() {
-		tokenInfo, _ := common.GetTokenInfoFromCtx(ctx)
+		accountAuthContext, ok := common.GetAccountAuthContextFromCtx(ctx)
+		if !ok {
+			s.Logger.WithContext(ctx).Warnf("[ConvertOperatorToTool] GetAccountAuthContextFromCtx err :%v", err)
+			return
+		}
 		s.AuditLog.Logger(ctx, &metric.AuditLogBuilderParams{
-			TokenInfo: tokenInfo,
+			TokenInfo: accountAuthContext.TokenInfo,
 			Accessor:  accessor,
 			Operation: metric.AuditLogOperationEdit,
 			Object: &metric.AuditLogObject{

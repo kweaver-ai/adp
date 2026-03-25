@@ -85,9 +85,13 @@ func (m *operatorManager) DebugOperator(ctx context.Context, req *interfaces.Deb
 	}
 	// 记录日志
 	go func() {
-		tokenInfo, _ := common.GetTokenInfoFromCtx(ctx)
+		accountAuth, ok := common.GetAccountAuthContextFromCtx(ctx)
+		if !ok {
+			m.Logger.WithContext(ctx).Errorf("get account auth context from ctx failed")
+			return
+		}
 		m.AuditLog.Logger(ctx, &metric.AuditLogBuilderParams{
-			TokenInfo: tokenInfo,
+			TokenInfo: accountAuth.TokenInfo,
 			Accessor:  accessor,
 			Operation: metric.AuditLogOperationExecute,
 			Object: &metric.AuditLogObject{
@@ -145,12 +149,13 @@ func (m *operatorManager) ExecuteOperator(ctx context.Context, req *interfaces.E
 	}
 	// 记录日志
 	go func() {
-		tokenInfo, ok := common.GetTokenInfoFromCtx(ctx)
+		accountAuth, ok := common.GetAccountAuthContextFromCtx(ctx)
 		if !ok {
+			m.Logger.WithContext(ctx).Errorf("get account auth context from ctx failed")
 			return
 		}
 		m.AuditLog.Logger(ctx, &metric.AuditLogBuilderParams{
-			TokenInfo: tokenInfo,
+			TokenInfo: accountAuth.TokenInfo,
 			Accessor:  accessor,
 			Operation: metric.AuditLogOperationExecute,
 			Object: &metric.AuditLogObject{

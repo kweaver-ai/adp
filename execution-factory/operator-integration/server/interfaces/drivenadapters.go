@@ -8,6 +8,7 @@ import (
 	"context"
 	"encoding/json"
 
+	"github.com/gin-gonic/gin"
 	"github.com/mark3labs/mcp-go/mcp"
 )
 
@@ -153,7 +154,8 @@ type TokenInfo struct {
 
 // Hydra 授权服务接口
 type Hydra interface {
-	Introspect(ctx context.Context, token string) (tokenInfo *TokenInfo, err error)
+	Introspect(c *gin.Context) (tokenInfo *TokenInfo, err error)
+	GenerateVisitor(c *gin.Context) (info *TokenInfo, err error)
 }
 
 const (

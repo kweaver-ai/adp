@@ -131,7 +131,7 @@ func (m *operatorManager) QueryOperatorMarketList(ctx context.Context, req *inte
 			m.Logger.WithContext(ctx).Errorf("assemble release result failed, err: %v", err)
 			continue
 		}
-		info.BusinessDomainID = resourceToBdMap[info.OperatorID]
+		info.BusinessDomainID = utils.GetValueOrDefault(resourceToBdMap, info.OperatorID, req.BusinessDomainID)
 		result.Data = append(result.Data, info)
 		userList = append(userList, userIDs...)
 	}
@@ -140,9 +140,9 @@ func (m *operatorManager) QueryOperatorMarketList(ctx context.Context, req *inte
 		return
 	}
 	for i := range result.Data {
-		result.Data[i].CreateUser = utils.GetValueOrDefault(userMap, result.Data[i].CreateUser, "")
-		result.Data[i].UpdateUser = utils.GetValueOrDefault(userMap, result.Data[i].UpdateUser, "")
-		result.Data[i].ReleaseUser = utils.GetValueOrDefault(userMap, result.Data[i].ReleaseUser, "")
+		result.Data[i].CreateUser = utils.GetValueOrDefault(userMap, result.Data[i].CreateUser, interfaces.UnknownUser)
+		result.Data[i].UpdateUser = utils.GetValueOrDefault(userMap, result.Data[i].UpdateUser, interfaces.UnknownUser)
+		result.Data[i].ReleaseUser = utils.GetValueOrDefault(userMap, result.Data[i].ReleaseUser, interfaces.UnknownUser)
 	}
 	return
 }

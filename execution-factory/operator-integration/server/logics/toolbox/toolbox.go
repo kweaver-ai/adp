@@ -145,9 +145,13 @@ func (s *ToolServiceImpl) DeleteBoxByID(ctx context.Context, req *interfaces.Del
 
 	// 记录审计日志
 	go func() {
-		tokenInfo, _ := infracommon.GetTokenInfoFromCtx(ctx)
+		accountAuthContext, ok := infracommon.GetAccountAuthContextFromCtx(ctx)
+		if !ok {
+			s.Logger.WithContext(ctx).Warnf("[DeleteToolBox] GetAccountAuthContextFromCtx err :%v", err)
+			return
+		}
 		s.AuditLog.Logger(ctx, &metric.AuditLogBuilderParams{
-			TokenInfo: tokenInfo,
+			TokenInfo: accountAuthContext.TokenInfo,
 			Accessor:  accessor,
 			Operation: metric.AuditLogOperationDelete,
 			Object: &metric.AuditLogObject{
@@ -275,9 +279,13 @@ func (s *ToolServiceImpl) UpdateToolBoxStatus(ctx context.Context, req *interfac
 	// 记录审计日志
 	if operation != "" {
 		go func() {
-			tokenInfo, _ := infracommon.GetTokenInfoFromCtx(ctx)
+			accountAuthContext, ok := infracommon.GetAccountAuthContextFromCtx(ctx)
+			if !ok {
+				s.Logger.WithContext(ctx).Warnf("[UpdateToolBoxStatus] GetAccountAuthContextFromCtx err :%v", err)
+				return
+			}
 			s.AuditLog.Logger(ctx, &metric.AuditLogBuilderParams{
-				TokenInfo: tokenInfo,
+				TokenInfo: accountAuthContext.TokenInfo,
 				Accessor:  accessor,
 				Operation: operation,
 				Object: &metric.AuditLogObject{
@@ -421,9 +429,13 @@ func (s *ToolServiceImpl) DeleteBoxTool(ctx context.Context, req *interfaces.Bat
 				ToolName: tool.Name,
 			})
 		}
-		tokenInfo, _ := infracommon.GetTokenInfoFromCtx(ctx)
+		accountAuthContext, ok := infracommon.GetAccountAuthContextFromCtx(ctx)
+		if !ok {
+			s.Logger.WithContext(ctx).Warnf("[DeleteBoxTool] GetAccountAuthContextFromCtx err :%v", err)
+			return
+		}
 		s.AuditLog.Logger(ctx, &metric.AuditLogBuilderParams{
-			TokenInfo: tokenInfo,
+			TokenInfo: accountAuthContext.TokenInfo,
 			Accessor:  accessor,
 			Operation: metric.AuditLogOperationEdit,
 			Object: &metric.AuditLogObject{
@@ -652,9 +664,13 @@ func (s *ToolServiceImpl) UpdateToolStatus(ctx context.Context, req *interfaces.
 				ToolName: tool.Name,
 			})
 		}
-		tokenInfo, _ := infracommon.GetTokenInfoFromCtx(ctx)
+		accountAuthContext, ok := infracommon.GetAccountAuthContextFromCtx(ctx)
+		if !ok {
+			s.Logger.WithContext(ctx).Warnf("[UpdateToolStatus] GetAccountAuthContextFromCtx err :%v", err)
+			return
+		}
 		s.AuditLog.Logger(ctx, &metric.AuditLogBuilderParams{
-			TokenInfo: tokenInfo,
+			TokenInfo: accountAuthContext.TokenInfo,
 			Accessor:  accessor,
 			Operation: metric.AuditLogOperationEdit,
 			Object: &metric.AuditLogObject{

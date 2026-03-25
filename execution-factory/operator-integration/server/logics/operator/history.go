@@ -173,9 +173,9 @@ func (m *operatorManager) QueryOperatorHistoryList(ctx context.Context, req *int
 		return
 	}
 	for i := range result {
-		result[i].CreateUser = utils.GetValueOrDefault(userMap, result[i].CreateUser, "")
-		result[i].UpdateUser = utils.GetValueOrDefault(userMap, result[i].UpdateUser, "")
-		result[i].ReleaseUser = utils.GetValueOrDefault(userMap, result[i].ReleaseUser, "")
+		result[i].CreateUser = utils.GetValueOrDefault(userMap, result[i].CreateUser, interfaces.UnknownUser)
+		result[i].UpdateUser = utils.GetValueOrDefault(userMap, result[i].UpdateUser, interfaces.UnknownUser)
+		result[i].ReleaseUser = utils.GetValueOrDefault(userMap, result[i].ReleaseUser, interfaces.UnknownUser)
 	}
 	return
 }

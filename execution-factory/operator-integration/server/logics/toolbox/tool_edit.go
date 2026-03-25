@@ -93,9 +93,13 @@ func (s *ToolServiceImpl) UpdateTool(ctx context.Context, req *interfaces.Update
 	}
 	// 记录审计日志
 	go func() {
-		tokenInfo, _ := common.GetTokenInfoFromCtx(ctx)
+		accountAuthContext, ok := common.GetAccountAuthContextFromCtx(ctx)
+		if !ok {
+			s.Logger.WithContext(ctx).Warnf("[UpdateTool] GetAccountAuthContextFromCtx err :%v", err)
+			return
+		}
 		s.AuditLog.Logger(ctx, &metric.AuditLogBuilderParams{
-			TokenInfo: tokenInfo,
+			TokenInfo: accountAuthContext.TokenInfo,
 			Accessor:  accessor,
 			Operation: metric.AuditLogOperationEdit,
 			Object:    metric.NewAuditLogObject(metric.AuditLogObjectTool, toolBox.Name, toolBox.BoxID),

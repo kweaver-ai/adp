@@ -11,6 +11,7 @@ import (
 
 	"github.com/google/uuid"
 	icommon "github.com/kweaver-ai/adp/execution-factory/operator-integration/server/infra/common"
+	infracommon "github.com/kweaver-ai/adp/execution-factory/operator-integration/server/infra/common"
 	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/infra/common/ormhelper"
 	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/infra/errors"
 	infraerrors "github.com/kweaver-ai/adp/execution-factory/operator-integration/server/infra/errors"
@@ -67,6 +68,9 @@ func (s *mcpServiceImpl) AddMCPServer(ctx context.Context, req *interfaces.MCPSe
 	// 记录可观测
 	ctx, _ = o11y.StartInternalSpan(ctx)
 	defer o11y.EndSpan(ctx, err)
+	telemetry.SetSpanAttributes(ctx, map[string]interface{}{
+		"user_id": req.UserID,
+	})
 	// 检查是否有新建权限
 	accessor, err := s.AuthService.GetAccessor(ctx, req.UserID)
 	if err != nil {
@@ -126,9 +130,13 @@ func (s *mcpServiceImpl) AddMCPServer(ctx context.Context, req *interfaces.MCPSe
 	}
 	// 记录审计日志
 	go func() {
-		tokenInfo, _ := icommon.GetTokenInfoFromCtx(ctx)
+		accountAuthContext, ok := icommon.GetAccountAuthContextFromCtx(ctx)
+		if !ok {
+			s.logger.WithContext(ctx).Errorf("get account auth context from ctx error")
+			return
+		}
 		s.AuditLog.Logger(ctx, &metric.AuditLogBuilderParams{
-			TokenInfo: tokenInfo,
+			TokenInfo: accountAuthContext.TokenInfo,
 			Accessor:  accessor,
 			Operation: metric.AuditLogOperationCreate,
 			Object: &metric.AuditLogObject{
@@ -315,9 +323,13 @@ func (s *mcpServiceImpl) DeleteMCPServer(ctx context.Context, req *interfaces.MC
 	}
 	// 记录审计日志
 	go func() {
-		tokenInfo, _ := icommon.GetTokenInfoFromCtx(ctx)
+		accountAuthContext, ok := icommon.GetAccountAuthContextFromCtx(ctx)
+		if !ok {
+			s.logger.WithContext(ctx).Errorf("get account auth context from ctx error")
+			return
+		}
 		s.AuditLog.Logger(ctx, &metric.AuditLogBuilderParams{
-			TokenInfo: tokenInfo,
+			TokenInfo: accountAuthContext.TokenInfo,
 			Accessor:  accessor,
 			Operation: metric.AuditLogOperationDelete,
 			Object: &metric.AuditLogObject{
@@ -505,9 +517,9 @@ func (s *mcpServiceImpl) QueryPage(ctx context.Context, req *interfaces.MCPServe
 		return
 	}
 	for _, config := range data {
-		config.BusinessDomainID = resourceToBdMap[config.MCPID]
-		config.CreateUser = userMap[config.CreateUser]
-		config.UpdateUser = userMap[config.UpdateUser]
+		config.BusinessDomainID = utils.GetValueOrDefault(resourceToBdMap, config.MCPID, req.BusinessDomainID)
+		config.CreateUser = utils.GetValueOrDefault(userMap, config.CreateUser, interfaces.UnknownUser)
+		config.UpdateUser = utils.GetValueOrDefault(userMap, config.UpdateUser, interfaces.UnknownUser)
 		config.ToolConfigs = toolConfigMap[s.genToolConfigMapKey(config.MCPID, config.Version)]
 	}
 
@@ -561,8 +573,8 @@ func (s *mcpServiceImpl) GetDetail(ctx context.Context, req *interfaces.MCPServe
 	if err != nil {
 		return
 	}
-	mcpConfig.CreateUser = userMap[mcpConfigDB.CreateUser]
-	mcpConfig.UpdateUser = userMap[mcpConfigDB.UpdateUser]
+	mcpConfig.CreateUser = utils.GetValueOrDefault(userMap, mcpConfigDB.CreateUser, interfaces.UnknownUser)
+	mcpConfig.UpdateUser = utils.GetValueOrDefault(userMap, mcpConfigDB.UpdateUser, interfaces.UnknownUser)
 
 	// 组装响应结果
 	response := &interfaces.MCPServerDetailResponse{
@@ -641,9 +653,13 @@ func (s *mcpServiceImpl) UpdateMCPServer(ctx context.Context, req *interfaces.MC
 
 	// 记录审计日志
 	go func() {
-		tokenInfo, _ := icommon.GetTokenInfoFromCtx(ctx)
+		accountAuthContext, ok := infracommon.GetAccountAuthContextFromCtx(ctx)
+		if !ok {
+			s.logger.WithContext(ctx).Errorf("get account auth context from ctx failed")
+			return
+		}
 		s.AuditLog.Logger(ctx, &metric.AuditLogBuilderParams{
-			TokenInfo: tokenInfo,
+			TokenInfo: accountAuthContext.TokenInfo,
 			Accessor:  accessor,
 			Operation: metric.AuditLogOperationEdit,
 			Object: &metric.AuditLogObject{
@@ -804,9 +820,13 @@ func (s *mcpServiceImpl) UpdateMCPStatus(ctx context.Context, req *interfaces.Up
 	}
 	// 记录审计日志
 	go func() {
-		tokenInfo, _ := icommon.GetTokenInfoFromCtx(ctx)
+		accountAuthContext, ok := infracommon.GetAccountAuthContextFromCtx(ctx)
+		if !ok {
+			s.logger.WithContext(ctx).Errorf("get account auth context from ctx error")
+			return
+		}
 		s.AuditLog.Logger(ctx, &metric.AuditLogBuilderParams{
-			TokenInfo: tokenInfo,
+			TokenInfo: accountAuthContext.TokenInfo,
 			Accessor:  accessor,
 			Operation: operation,
 			Object: &metric.AuditLogObject{
@@ -947,9 +967,14 @@ func (s *mcpServiceImpl) DebugTool(ctx context.Context, req *interfaces.MCPToolD
 
 	// 记录审计日志
 	go func() {
-		tokenInfo, _ := icommon.GetTokenInfoFromCtx(ctx)
+		accountAuthContext, ok := infracommon.GetAccountAuthContextFromCtx(ctx)
+		if !ok {
+			s.logger.WithContext(ctx).Errorf("get account auth context from ctx error")
+			return
+		}
+
 		s.AuditLog.Logger(ctx, &metric.AuditLogBuilderParams{
-			TokenInfo: tokenInfo,
+			TokenInfo: accountAuthContext.TokenInfo,
 			Accessor:  accessor,
 			Operation: metric.AuditLogOperationExecute,
 			Object: &metric.AuditLogObject{

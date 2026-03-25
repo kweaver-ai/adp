@@ -134,7 +134,7 @@ func TestRegisterOperator(t *testing.T) {
 		})
 		Convey("传参格式为：multipart/form-data；认证失败", func() {
 			mockValidator.EXPECT().ValidatorStruct(gomock.Any(), gomock.Any()).Return(nil).Times(1)
-			mockHydra.EXPECT().Introspect(gomock.Any(), gomock.Any()).Return(nil, errors.New("mock"))
+			mockHydra.EXPECT().Introspect(gomock.Any()).Return(nil, errors.New("mock"))
 			body := &bytes.Buffer{}
 			writer := multipart.NewWriter(body)
 			// 添加必填字段
@@ -189,7 +189,7 @@ func TestRegisterOperator(t *testing.T) {
 		Convey("合法注册请求", func() {
 			tokenInfo := &interfaces.TokenInfo{VisitorID: "user123"}
 			mockValidator.EXPECT().ValidatorStruct(gomock.Any(), gomock.Any()).Return(nil).Times(1)
-			mockHydra.EXPECT().Introspect(gomock.Any(), gomock.Any()).Return(tokenInfo, nil).Times(1)
+			mockHydra.EXPECT().Introspect(gomock.Any()).Return(tokenInfo, nil).Times(1)
 			mockOperatorManager.EXPECT().RegisterOperatorByOpenAPI(gomock.Any(), gomock.Any(), gomock.Any()).Return([]*interfaces.OperatorRegisterResp{}, nil).Times(1)
 			recorder := mockPostRequest(path, applicationJSON, bytes.NewBufferString(`{
 				"user_token": "valid_token",
@@ -242,7 +242,7 @@ func TestOperatorUpdateByOpenAPI(t *testing.T) {
 		})
 		Convey("传参格式为：multipart/form-json，MetadataType为空", func() {
 			mockValidator.EXPECT().ValidatorStruct(gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
-			mockHydra.EXPECT().Introspect(gomock.Any(), gomock.Any()).Return(&interfaces.TokenInfo{}, nil).AnyTimes()
+			mockHydra.EXPECT().Introspect(gomock.Any()).Return(&interfaces.TokenInfo{}, nil).AnyTimes()
 			mockOperatorManager.EXPECT().UpdateOperatorByOpenAPI(gomock.Any(), gomock.Any(), gomock.Any()).Return([]*interfaces.OperatorRegisterResp{}, nil).AnyTimes()
 			body := &bytes.Buffer{}
 			writer := multipart.NewWriter(body)
@@ -259,7 +259,7 @@ func TestOperatorUpdateByOpenAPI(t *testing.T) {
 		})
 		Convey("传参格式为：multipart/form-data: 认证未通过", func() {
 			mockValidator.EXPECT().ValidatorStruct(gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
-			mockHydra.EXPECT().Introspect(gomock.Any(), gomock.Any()).Return(nil, errors.New("mock")).AnyTimes()
+			mockHydra.EXPECT().Introspect(gomock.Any()).Return(nil, errors.New("mock")).AnyTimes()
 			body := &bytes.Buffer{}
 			writer := multipart.NewWriter(body)
 			// 添加必填字段
@@ -283,7 +283,7 @@ func TestOperatorUpdateByOpenAPI(t *testing.T) {
 		})
 		Convey("传参格式为：multipart/form-data: 认证通过", func() {
 			mockValidator.EXPECT().ValidatorStruct(gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
-			mockHydra.EXPECT().Introspect(gomock.Any(), gomock.Any()).Return(&interfaces.TokenInfo{}, nil).AnyTimes()
+			mockHydra.EXPECT().Introspect(gomock.Any()).Return(&interfaces.TokenInfo{}, nil).AnyTimes()
 			mockOperatorManager.EXPECT().UpdateOperatorByOpenAPI(gomock.Any(), gomock.Any(), gomock.Any()).Return(
 				[]*interfaces.OperatorRegisterResp{}, nil).AnyTimes()
 			recorder := mockPostRequest(path, applicationJSON, bytes.NewBufferString(utils.ObjectToJSON(&interfaces.OperatorUpdateReq{
@@ -432,7 +432,7 @@ func TestOperatorStatusUpdate(t *testing.T) {
 		path := "/operator/status"
 		applicationJSON := "application/json"
 		Convey("更新成功", func() {
-			mockHydra.EXPECT().Introspect(gomock.Any(), gomock.Any()).Return(&interfaces.TokenInfo{}, nil)
+			mockHydra.EXPECT().Introspect(gomock.Any()).Return(&interfaces.TokenInfo{}, nil)
 			mockOperatorManager.EXPECT().UpdateOperatorStatus(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
 			reqStr := `[{ "status": "published","operator_id": "11176d4f-bd5c-471d-9e80-93c5830b78f8","version": "71a889c5-b425-4d9e-93b6-d6b3230eb14b"}]`
 			recorder := mockPostRequest(path, applicationJSON, bytes.NewBufferString(reqStr), func(c *gin.Context) {

@@ -7,13 +7,13 @@ import (
 	"net/http"
 	"time"
 
-	o11y "github.com/kweaver-ai/kweaver-go-lib/observability"
 	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/infra/common"
 	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/infra/errors"
 	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/infra/telemetry"
 	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/interfaces"
 	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/interfaces/model"
 	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/logics/metric"
+	o11y "github.com/kweaver-ai/kweaver-go-lib/observability"
 )
 
 // UpdateToolBox 更新工具箱
@@ -121,9 +121,13 @@ func (s *ToolServiceImpl) UpdateToolBox(ctx context.Context, req *interfaces.Upd
 	}
 	// 记录审计日志
 	go func() {
-		tokenInfo, _ := common.GetTokenInfoFromCtx(ctx)
+		accountAuthContext, ok := common.GetAccountAuthContextFromCtx(ctx)
+		if !ok {
+			s.Logger.WithContext(ctx).Warnf("[UpdateToolBox] GetAccountAuthContextFromCtx err :%v", err)
+			return
+		}
 		s.AuditLog.Logger(ctx, &metric.AuditLogBuilderParams{
-			TokenInfo: tokenInfo,
+			TokenInfo: accountAuthContext.TokenInfo,
 			Accessor:  accessor,
 			Operation: metric.AuditLogOperationEdit,
 			Object: &metric.AuditLogObject{

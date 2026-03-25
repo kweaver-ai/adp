@@ -97,9 +97,13 @@ func (m *operatorManager) importPostProcess(ctx context.Context, createMap, upda
 		}
 		// 记录设计日志及后续通知
 		go func() {
-			tokenInfo, _ := icommon.GetTokenInfoFromCtx(ctx)
+			accountAuthContext, ok := icommon.GetAccountAuthContextFromCtx(ctx)
+			if !ok {
+				m.Logger.WithContext(ctx).Warnf("[importPostProcess] GetAccountAuthContextFromCtx err :%v", err)
+				return
+			}
 			m.AuditLog.Logger(ctx, &metric.AuditLogBuilderParams{
-				TokenInfo: tokenInfo,
+				TokenInfo: accountAuthContext.TokenInfo,
 				Accessor:  accessor,
 				Operation: metric.AuditLogOperationCreate,
 				Object: &metric.AuditLogObject{
@@ -124,9 +128,13 @@ func (m *operatorManager) importPostProcess(ctx context.Context, createMap, upda
 		}
 		// 记录设计日志及后续通知
 		go func() {
-			tokenInfo, _ := icommon.GetTokenInfoFromCtx(ctx)
+			accountAuthContext, ok := icommon.GetAccountAuthContextFromCtx(ctx)
+			if !ok {
+				m.Logger.WithContext(ctx).Warnf("[importPostProcess] GetAccountAuthContextFromCtx err :%v", err)
+				return
+			}
 			m.AuditLog.Logger(ctx, &metric.AuditLogBuilderParams{
-				TokenInfo: tokenInfo,
+				TokenInfo: accountAuthContext.TokenInfo,
 				Accessor:  accessor,
 				Operation: metric.AuditLogOperationEdit,
 				Object: &metric.AuditLogObject{
