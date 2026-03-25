@@ -12,9 +12,9 @@ import (
 	"uniquery/common"
 	"uniquery/interfaces"
 
-	"github.com/golang/mock/gomock"
 	rmock "github.com/kweaver-ai/kweaver-go-lib/rest/mock"
 	. "github.com/smartystreets/goconvey/convey"
+	"go.uber.org/mock/gomock"
 )
 
 func TestGetObjectiveModel(t *testing.T) {

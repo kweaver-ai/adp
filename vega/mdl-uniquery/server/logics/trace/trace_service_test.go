@@ -15,10 +15,10 @@ import (
 	"testing"
 
 	. "github.com/agiledragon/gomonkey/v2"
-	"github.com/golang/mock/gomock"
 	jsoniter "github.com/json-iterator/go"
 	rest "github.com/kweaver-ai/kweaver-go-lib/rest"
 	. "github.com/smartystreets/goconvey/convey"
+	"go.uber.org/mock/gomock"
 
 	"uniquery/common"
 	"uniquery/common/convert"

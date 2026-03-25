@@ -85,14 +85,19 @@ func (oms *objectiveModelService) Simulate(ctx context.Context,
 	if len(ops) != 1 {
 		// 无权限
 		return interfaces.ObjectiveModelUniResponse{}, rest.NewHTTPError(ctx, http.StatusForbidden, rest.PublicError_Forbidden).
-			WithErrorDetails("Access denied: insufficient permissions for objective model's create or modify operation.")
+			WithErrorDetails("Access denied: insufficient permissions for objective model's operations.")
 	}
 	// 从 ops 里找新建或编辑的权限
+	found := false
 	for _, op := range ops[0].Operations {
-		if op != interfaces.OPERATION_TYPE_CREATE && op != interfaces.OPERATION_TYPE_DELETE {
-			return interfaces.ObjectiveModelUniResponse{}, rest.NewHTTPError(ctx, http.StatusForbidden, rest.PublicError_Forbidden).
-				WithErrorDetails("Access denied: insufficient permissions for objective model's create or modify operation.")
+		if op == interfaces.OPERATION_TYPE_CREATE || op == interfaces.OPERATION_TYPE_MODIFY {
+			found = true
+			break
 		}
+	}
+	if !found {
+		return interfaces.ObjectiveModelUniResponse{}, rest.NewHTTPError(ctx, http.StatusForbidden, rest.PublicError_Forbidden).
+			WithErrorDetails("Access denied: insufficient permissions for objective model's create or modify operation.")
 	}
 
 	resp, err := oms.eval(ctx, query)

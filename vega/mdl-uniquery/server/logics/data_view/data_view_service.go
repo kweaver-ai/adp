@@ -115,14 +115,19 @@ func (dvs *dataViewService) Simulate(ctx context.Context, query *interfaces.Data
 	if len(ops) != 1 {
 		// 无权限
 		return nil, rest.NewHTTPError(ctx, http.StatusForbidden, rest.PublicError_Forbidden).
-			WithErrorDetails("Access denied: insufficient permissions for data view's create or modify operation")
+			WithErrorDetails("Access denied: insufficient permissions for data view's operations.")
 	}
 	// 从 ops 里找新建或编辑的权限
+	found := false
 	for _, op := range ops[0].Operations {
-		if op != interfaces.OPERATION_TYPE_CREATE && op != interfaces.OPERATION_TYPE_MODIFY {
-			return nil, rest.NewHTTPError(ctx, http.StatusForbidden, rest.PublicError_Forbidden).
-				WithErrorDetails("Access denied: insufficient permissions for data view's create or modify operation")
+		if op == interfaces.OPERATION_TYPE_CREATE || op == interfaces.OPERATION_TYPE_MODIFY {
+			found = true
+			break
 		}
+	}
+	if !found {
+		return nil, rest.NewHTTPError(ctx, http.StatusForbidden, rest.PublicError_Forbidden).
+			WithErrorDetails("Access denied: insufficient permissions for data view's create or modify operation")
 	}
 
 	view := &interfaces.DataView{

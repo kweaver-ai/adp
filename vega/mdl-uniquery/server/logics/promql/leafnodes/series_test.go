@@ -12,8 +12,8 @@ import (
 
 	. "github.com/agiledragon/gomonkey/v2"
 	"github.com/bytedance/sonic"
-	"github.com/golang/mock/gomock"
 	. "github.com/smartystreets/goconvey/convey"
+	"go.uber.org/mock/gomock"
 
 	"uniquery/common"
 	"uniquery/common/convert"

@@ -17,10 +17,10 @@ import (
 	. "github.com/agiledragon/gomonkey/v2"
 	"github.com/bytedance/sonic"
 	"github.com/bytedance/sonic/ast"
-	"github.com/golang/mock/gomock"
 	rest "github.com/kweaver-ai/kweaver-go-lib/rest"
 	rmock "github.com/kweaver-ai/kweaver-go-lib/rest/mock"
 	. "github.com/smartystreets/goconvey/convey"
+	"go.uber.org/mock/gomock"
 
 	"uniquery/common"
 	cond "uniquery/common/condition"

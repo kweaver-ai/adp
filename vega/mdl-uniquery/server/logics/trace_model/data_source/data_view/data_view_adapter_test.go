@@ -17,9 +17,9 @@ import (
 	. "github.com/agiledragon/gomonkey/v2"
 	"github.com/bytedance/sonic"
 	"github.com/bytedance/sonic/ast"
-	"github.com/golang/mock/gomock"
 	"github.com/kweaver-ai/kweaver-go-lib/rest"
 	. "github.com/smartystreets/goconvey/convey"
+	"go.uber.org/mock/gomock"
 
 	cond "uniquery/common/condition"
 	vopt "uniquery/common/value_opt"

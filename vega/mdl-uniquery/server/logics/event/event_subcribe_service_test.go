@@ -12,10 +12,10 @@ import (
 
 	. "github.com/agiledragon/gomonkey/v2"
 	"github.com/confluentinc/confluent-kafka-go/v2/kafka"
-	"github.com/golang/mock/gomock"
 	libmq "github.com/kweaver-ai/kweaver-go-lib/mq"
 	"github.com/patrickmn/go-cache"
 	. "github.com/smartystreets/goconvey/convey"
+	"go.uber.org/mock/gomock"
 
 	"uniquery/common"
 	"uniquery/interfaces"

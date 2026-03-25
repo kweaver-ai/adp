@@ -12,10 +12,10 @@ import (
 	"time"
 
 	"github.com/bytedance/sonic"
-	"github.com/golang/mock/gomock"
 	"github.com/kweaver-ai/kweaver-go-lib/rest"
 	rmock "github.com/kweaver-ai/kweaver-go-lib/rest/mock"
 	. "github.com/smartystreets/goconvey/convey"
+	"go.uber.org/mock/gomock"
 
 	"uniquery/interfaces"
 )
