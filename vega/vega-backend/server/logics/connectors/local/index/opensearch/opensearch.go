@@ -497,7 +497,7 @@ func (c *OpenSearchConnector) fetchSettings(ctx context.Context, index *interfac
 // 返回值:
 //   - *interfaces.QueryResult: 查询结果，包含行数据和总数
 //   - error: 错误信息
-func (c *OpenSearchConnector) ExecuteQuery(ctx context.Context, resource *interfaces.Resource,
+func (c *OpenSearchConnector) ExecuteQuery(ctx context.Context, indexName string, resource *interfaces.Resource,
 	params *interfaces.ResourceDataQueryParams) (*interfaces.QueryResult, error) {
 
 	// Ensure we have a connection
@@ -505,8 +505,6 @@ func (c *OpenSearchConnector) ExecuteQuery(ctx context.Context, resource *interf
 		return nil, fmt.Errorf("failed to connect to OpenSearch: %w", err)
 	}
 
-	// Get the index name from the resource
-	indexName := resource.Name
 	if indexName == "" {
 		return nil, fmt.Errorf("index name is empty in resource")
 	}

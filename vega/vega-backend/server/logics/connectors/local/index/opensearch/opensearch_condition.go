@@ -1129,16 +1129,12 @@ func (c *OpenSearchConnector) replaceLikeWildcards(input string) string {
 func (c *OpenSearchConnector) getKeywordSuffix(fieldName string, schemaDefinition []*interfaces.Property) (string, error) {
 	for _, prop := range schemaDefinition {
 		if prop.OriginalName == fieldName && prop.Type == "text" {
-			hasKeywordFeature := false
 			for _, feature := range prop.Features {
 				if feature.FeatureType == "keyword" {
-					hasKeywordFeature = true
 					return "." + feature.FeatureName, nil
 				}
 			}
-			if !hasKeywordFeature {
-				return "", fmt.Errorf("text field %s has no keyword feature, cannot be used for comparison", fieldName)
-			}
+			return "", fmt.Errorf("text field %s has no keyword feature, cannot be used for comparison", fieldName)
 		}
 	}
 	return "", nil

@@ -14,11 +14,11 @@ import (
 	"go.opentelemetry.io/otel/codes"
 
 	"vega-backend/common"
+	verrors "vega-backend/errors"
 	"vega-backend/interfaces"
 	"vega-backend/logics/connectors"
 	opensearchConnector "vega-backend/logics/connectors/local/index/opensearch"
 	"vega-backend/logics/filter_condition"
-	verrors "vega-backend/errors"
 )
 
 var (
@@ -28,7 +28,7 @@ var (
 
 type datasetService struct {
 	appSetting *common.AppSetting
-	c connectors.IndexConnector
+	c          connectors.IndexConnector
 }
 
 // NewDatasetService creates a new DatasetService.
@@ -39,7 +39,7 @@ func NewDatasetService(appSetting *common.AppSetting) interfaces.DatasetService 
 		if !ok {
 			panic("opensearch service not found in depServices")
 		}
-		
+
 		// Create connector config
 		cfg := interfaces.ConnectorConfig{
 			"host":          opensearchSetting["host"],
@@ -48,16 +48,16 @@ func NewDatasetService(appSetting *common.AppSetting) interfaces.DatasetService 
 			"password":      opensearchSetting["password"],
 			"index_pattern": opensearchSetting["index_pattern"],
 		}
-		
+
 		// Create OpenSearch connector
 		connector, err := opensearchConnector.NewOpenSearchConnector().New(cfg)
 		if err != nil {
 			panic(fmt.Sprintf("failed to create OpenSearch connector: %v", err))
 		}
-		
+
 		dsService = &datasetService{
 			appSetting: appSetting,
-			c: connector.(connectors.IndexConnector),
+			c:          connector.(connectors.IndexConnector),
 		}
 	})
 	return dsService
@@ -129,7 +129,7 @@ func (ds *datasetService) ListDocuments(ctx context.Context, res *interfaces.Res
 	defer span.End()
 
 	// 调用 dataset access 列出文档
-	queryResult, err := ds.c.ExecuteQuery(ctx, res, params)
+	queryResult, err := ds.c.ExecuteQuery(ctx, res.ID, res, params)
 	if err != nil {
 		span.SetStatus(codes.Error, "List dataset documents failed")
 		return nil, 0, rest.NewHTTPError(ctx, http.StatusInternalServerError, verrors.VegaBackend_Resource_InternalError).
