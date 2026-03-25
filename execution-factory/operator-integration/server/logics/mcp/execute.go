@@ -11,6 +11,7 @@ import (
 	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/infra/telemetry"
 	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/interfaces"
 	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/logics/metric"
+	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/utils"
 	o11y "github.com/kweaver-ai/kweaver-go-lib/observability"
 	"github.com/mark3labs/mcp-go/mcp"
 )
@@ -84,7 +85,7 @@ func (s *mcpServiceImpl) GetMCPTools(ctx context.Context, req *interfaces.MCPPro
 		MCPCoreInfo: &interfaces.MCPCoreConfigInfo{
 			Mode:    interfaces.MCPMode(serverConfig.Mode),
 			URL:     serverConfig.URL,
-			Headers: nil,
+			Headers: utils.JSONToObject[map[string]string](serverConfig.Headers),
 		},
 	}
 
@@ -137,7 +138,7 @@ func (s *mcpServiceImpl) CallMCPTool(ctx context.Context, req *interfaces.MCPPro
 			MCPCoreInfo: &interfaces.MCPCoreConfigInfo{
 				Mode:    interfaces.MCPMode(serverConfig.Mode),
 				URL:     serverConfig.URL,
-				Headers: nil,
+				Headers: utils.JSONToObject[map[string]string](serverConfig.Headers),
 			},
 		},
 		ToolName: req.ToolName,
