@@ -186,6 +186,10 @@ definitions:
         type: string
       display_name:
         type: string
+      features:
+        items:
+          $ref: '#/definitions/interfaces.PropertyFeature'
+        type: array
       name:
         type: string
       original_name:
@@ -253,6 +257,11 @@ definitions:
         maxItems: 5
         description: 标签列表，JSON数组格式，用于分类和检索，最多5个，每个标签最大40字符
         type: array
+      logic_definition:
+        description: 逻辑定义（JSON数组格式，仅在category为logicview时使用）
+        items:
+          $ref: '#/definitions/interfaces.LogicDefinitionNode'
+        type: array
     required:
       - catalog_id
       - name
@@ -318,6 +327,15 @@ definitions:
         description: 可执行的操作列表，如["read", "write", "delete"]
         items:
           type: string
+        type: array
+      logic_type:
+        description: 逻辑类型，derived表示衍生，composite表示复合
+        enum: [derived, composite]
+        type: string
+      logic_definition:
+        description: 逻辑定义
+        items:
+          $ref: '#/definitions/interfaces.LogicDefinitionNode'
         type: array
     type: object
   interfaces.ConnectorTypeReq:
@@ -472,6 +490,148 @@ definitions:
         type: string
       field:
         type: string
+    type: object
+  interfaces.LogicDefinitionNode:
+    properties:
+      id:
+        type: string
+      name:
+        type: string
+      type:
+        type: string
+        enum: [resource, join, union, sql, output]
+      inputs:
+        items:
+          type: string
+        type: array
+        description: 输入节点ID列表
+      config:
+        type: object
+        description: |
+          节点配置。根据type不同分别对应:
+          - resource: interfaces.ResourceNodeCfg
+          - join: interfaces.JoinNodeCfg
+          - union: interfaces.UnionNodeCfg
+          - sql: interfaces.SQLNodeCfg
+      output_fields:
+        items:
+          $ref: '#/definitions/interfaces.ViewProperty'
+        type: array
+    type: object
+  interfaces.ViewProperty:
+    properties:
+      description:
+        type: string
+      display_name:
+        type: string
+      features:
+        items:
+          $ref: '#/definitions/interfaces.PropertyFeature'
+        type: array
+      name:
+        type: string
+        description: 字段名。如果是 "*" 则表示通配符，透传上游所有字段。
+      original_name:
+        type: string
+      type:
+        type: string
+      from:
+        type: object
+        description: |
+          映射配置。
+          - Join映射模式：字符串（源字段名）
+          - Union对齐模式：对象数组 interfaces.OutputFieldRef
+      from_node:
+        type: string
+        description: 源节点ID
+    type: object
+  interfaces.PropertyFeature:
+    properties:
+      config:
+        type: object
+      description:
+        type: string
+      display_name:
+        type: string
+      feature_type:
+        type: string
+        description: 特性类型：keyword, fulltext, vector
+      is_default:
+        type: boolean
+      is_native:
+        type: boolean
+      name:
+        type: string
+      ref_property:
+        type: string
+    type: object
+  interfaces.OutputFieldRef:
+    properties:
+      from:
+        type: string
+      from_node:
+        type: string
+    type: object
+  interfaces.ResourceNodeCfg:
+    properties:
+      resource_id:
+        type: string
+      filters:
+        $ref: '#/definitions/interfaces.FilterCondCfg'
+      distinct:
+        type: boolean
+    type: object
+  interfaces.JoinNodeCfg:
+    properties:
+      join_type:
+        type: string
+        enum: [inner, left, right, "full outer"]
+      join_on:
+        items:
+          $ref: '#/definitions/interfaces.JoinOn'
+        type: array
+      filters:
+        $ref: '#/definitions/interfaces.FilterCondCfg'
+    type: object
+  interfaces.JoinOn:
+    properties:
+      left_field:
+        type: string
+      right_field:
+        type: string
+      operator:
+        type: string
+    type: object
+  interfaces.UnionNodeCfg:
+    properties:
+      union_type:
+        type: string
+        enum: [all, distinct]
+      filters:
+        $ref: '#/definitions/interfaces.FilterCondCfg'
+    type: object
+  interfaces.SQLNodeCfg:
+    properties:
+      sql:
+        type: string
+    type: object
+  interfaces.FilterCondCfg:
+    properties:
+      field:
+        type: string
+      operation:
+        type: string
+      sub_conditions:
+        items:
+          $ref: '#/definitions/interfaces.FilterCondCfg'
+        type: array
+      value_from:
+        type: string
+        enum: [const, field, user]
+      value:
+        type: object
+      real_value:
+        type: object
     type: object
 info:
   contact:
