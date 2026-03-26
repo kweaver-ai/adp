@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<properties>
+
+    <parsers>
+        <!-- 默认解析器：排除不需要的 -->
+        <parser class="org.apache.tika.parser.DefaultParser">
+            <parser-exclude class="org.apache.tika.parser.ocr.TesseractOCRParser"/>
+            <parser-exclude class="org.apache.tika.parser.executable.ExecutableParser"/>
+            <parser-exclude class="org.apache.tika.parser.font.AdobeFontMetricParser"/>
+            <parser-exclude class="org.apache.tika.parser.font.TrueTypeParser"/>
+        </parser>
+
+        <!-- PDF 解析器 -->
+        <parser class="org.apache.tika.parser.pdf.PDFParser">
+            <params>
+                <param name="ocrStrategy" type="string">no_ocr</param>
+                <param name="sortByPosition" type="bool">true</param>
+                <param name="extractAnnotationText" type="bool">true</param>
+                <param name="extractBookmarksText" type="bool">true</param>
+                <param name="extractInlineImages" type="bool">false</param>
+                <param name="extractActions" type="bool">false</param>
+                <param name="maxMainMemoryBytes" type="long">104857600</param>
+                <param name="setKCMS" type="bool">true</param>
+            </params>
+        </parser>
+    </parsers>
+
+    <detectors>
+        <detector class="org.apache.tika.detect.DefaultDetector"/>
+    </detectors>
+
+    <resource-limits>
+        <max-recursion-depth>10</max-recursion-depth>
+        <max-string-length>-1</max-string-length>
+        <max-memory-in-bytes>2147483648</max-memory-in-bytes>
+    </resource-limits>
+
+    <service-loader dynamic="true" loadErrorHandler="WARN"/>
+
+</properties>

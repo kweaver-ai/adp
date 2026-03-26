@@ -1,0 +1,13 @@
+ARG BASE_IMAGE=acr.aishu.cn/dip/gotenberg:8-20260325-1
+FROM ${BASE_IMAGE}
+
+ENV API_TIMEOUT=300s
+ENV API_BODY_LIMIT=1GB
+ENV LIBREOFFICE_START_TIMEOUT=30s
+ENV LIBREOFFICE_RESTART_AFTER=30
+
+# 恢复默认的使用用户权限
+USER gotenberg
+
+# 显式声明服务的启动命令
+CMD ["gotenberg"]
