@@ -88,7 +88,7 @@ func (r *riskTypeService) Evaluate(ctx context.Context, actionType *interfaces.A
 		logger.Errorf("GetRiskTypesByIDs failed: %v", err)
 		span.SetStatus(codes.Error, "GetRiskTypesByIDs failed")
 		return nil, rest.NewHTTPError(ctx, http.StatusInternalServerError,
-			oerrors.OntologyQuery_InternalError_UnMarshalDataFailed).
+			oerrors.OntologyQuery_RiskType_InternalError_GetRiskTypesByIDsFailed).
 			WithErrorDetails(fmt.Sprintf("get risk types by ids %v failed: %v", riskTypeIDs, err))
 	}
 
@@ -104,7 +104,7 @@ func (r *riskTypeService) Evaluate(ctx context.Context, actionType *interfaces.A
 			return &interfaces.RiskTypeEvalResult{
 					Allow:   false,
 					Message: fmt.Sprintf("risk_type_id '%s' not found", cfg.RiskTypeID),
-				}, rest.NewHTTPError(ctx, http.StatusBadRequest, oerrors.OntologyQuery_InternalError_UnMarshalDataFailed).
+				}, rest.NewHTTPError(ctx, http.StatusNotFound, oerrors.OntologyQuery_RiskType_RiskTypeNotFound).
 					WithErrorDetails(fmt.Sprintf("risk_type_id '%s' does not exist", cfg.RiskTypeID))
 		}
 	}
@@ -134,7 +134,7 @@ func (r *riskTypeService) Evaluate(ctx context.Context, actionType *interfaces.A
 			logger.Errorf("executeRiskAssessmentTool failed for risk_type %s: %v", rt.RTID, err)
 			span.SetStatus(codes.Error, "risk assessment tool execution failed")
 			return nil, rest.NewHTTPError(ctx, http.StatusInternalServerError,
-				oerrors.OntologyQuery_InternalError_UnMarshalDataFailed).
+				oerrors.OntologyQuery_RiskType_InternalError_ExecuteRiskAssessmentToolFailed).
 				WithErrorDetails(err.Error())
 		}
 		maxAcceptable := rt.MaxAcceptableLevel
@@ -146,7 +146,7 @@ func (r *riskTypeService) Evaluate(ctx context.Context, actionType *interfaces.A
 			return &interfaces.RiskTypeEvalResult{
 					Allow:   false,
 					Message: fmt.Sprintf("risk evaluation failed: level %s exceeds max_acceptable_level %s for risk_type %s", level, maxAcceptable, rt.RTID),
-				}, rest.NewHTTPError(ctx, http.StatusForbidden, oerrors.OntologyQuery_InternalError_UnMarshalDataFailed).
+				}, rest.NewHTTPError(ctx, http.StatusForbidden, oerrors.OntologyQuery_RiskType_RiskLevelExceedsMaxAcceptable).
 					WithErrorDetails(fmt.Sprintf("risk level %s exceeds max_acceptable_level %s", level, maxAcceptable))
 		}
 	}
@@ -332,7 +332,7 @@ func (r *riskTypeService) MustAllow(ctx context.Context, actionType *interfaces.
 		return err
 	}
 	if !result.Allow {
-		return rest.NewHTTPError(ctx, http.StatusForbidden, oerrors.OntologyQuery_InternalError_UnMarshalDataFailed).
+		return rest.NewHTTPError(ctx, http.StatusForbidden, oerrors.OntologyQuery_RiskType_RiskLevelExceedsMaxAcceptable).
 			WithErrorDetails(result.Message)
 	}
 	return nil
