@@ -1,6 +1,7 @@
 package driveradapters
 
 import (
+	"context"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -9,6 +10,7 @@ import (
 	"github.com/smartystreets/goconvey/convey"
 
 	"github.com/kweaver-ai/adp/context-loader/agent-retrieval/server/infra/common"
+	"github.com/kweaver-ai/adp/context-loader/agent-retrieval/server/infra/logger"
 	"github.com/kweaver-ai/adp/context-loader/agent-retrieval/server/infra/rest"
 	"github.com/kweaver-ai/adp/context-loader/agent-retrieval/server/interfaces"
 )
@@ -98,5 +100,89 @@ func TestMiddlewareHeaderAuthContext_LeavesMissingAccountHeadersEmpty(t *testing
 		header := common.GetHeaderFromCtx(c.Request.Context())
 		convey.So(header[string(interfaces.HeaderXAccountID)], convey.ShouldEqual, "")
 		convey.So(header[string(interfaces.HeaderXAccountType)], convey.ShouldEqual, "")
+	})
+}
+
+type stubPublicHydra struct{}
+
+func (stubPublicHydra) Introspect(_ context.Context, _ string) (*interfaces.TokenInfo, error) {
+	return &interfaces.TokenInfo{
+		VisitorID:  "user-1",
+		VisitorTyp: interfaces.RealName,
+	}, nil
+}
+
+type stubSemanticSearchHandler struct{}
+
+func (stubSemanticSearchHandler) SemanticSearch(c *gin.Context) {
+	formatVal, ok := common.GetResponseFormatFromCtx(c.Request.Context())
+	if !ok {
+		c.String(http.StatusInternalServerError, "response_format missing")
+		return
+	}
+	if formatVal != rest.FormatTOON {
+		c.String(http.StatusInternalServerError, "unexpected response_format")
+		return
+	}
+	c.String(http.StatusOK, "ok")
+}
+
+type stubLogicPropertyResolverHandler struct{}
+
+func (stubLogicPropertyResolverHandler) ResolveLogicProperties(c *gin.Context) {
+	c.Status(http.StatusOK)
+}
+
+type stubActionRecallHandler struct{}
+
+func (stubActionRecallHandler) GetActionInfo(c *gin.Context) {
+	c.Status(http.StatusOK)
+}
+
+type stubQueryObjectInstanceHandler struct{}
+
+func (stubQueryObjectInstanceHandler) QueryObjectInstance(c *gin.Context) {
+	c.Status(http.StatusOK)
+}
+
+type stubQuerySubgraphHandler struct{}
+
+func (stubQuerySubgraphHandler) QueryInstanceSubgraph(c *gin.Context) {
+	c.Status(http.StatusOK)
+}
+
+type stubKnSearchHandler struct{}
+
+func (stubKnSearchHandler) KnSearch(c *gin.Context) {
+	c.Status(http.StatusOK)
+}
+
+func TestRestPublicHandler_AppliesResponseFormatMiddleware(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
+	convey.Convey("restPublicHandler applies response_format middleware to public routes", t, func() {
+		engine := gin.New()
+		routerGroup := engine.Group("/api/agent-retrieval/v1")
+
+		handler := &restPublicHandler{
+			Hydra:                          stubPublicHydra{},
+			KnRetrievalHandler:             stubSemanticSearchHandler{},
+			KnLogicPropertyResolverHandler: stubLogicPropertyResolverHandler{},
+			KnActionRecallHandler:          stubActionRecallHandler{},
+			KnQueryObjectInstanceHandler:   stubQueryObjectInstanceHandler{},
+			KnQuerySubgraphHandler:         stubQuerySubgraphHandler{},
+			KnSearchHandler:                stubKnSearchHandler{},
+			Logger:                         logger.DefaultLogger(),
+		}
+		handler.RegisterRouter(routerGroup)
+
+		req := httptest.NewRequest(http.MethodPost, "/api/agent-retrieval/v1/kn/semantic-search?response_format=toon", http.NoBody)
+		req.Header.Set("Authorization", "Bearer token")
+		w := httptest.NewRecorder()
+
+		engine.ServeHTTP(w, req)
+
+		convey.So(w.Code, convey.ShouldEqual, http.StatusOK)
+		convey.So(w.Body.String(), convey.ShouldEqual, "ok")
 	})
 }

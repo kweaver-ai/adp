@@ -1,4 +1,4 @@
-# context-loader 工具使用指南（v5.0.4）
+# context-loader 工具使用指南
 
 面向开发人员的 context-loader 工具集说明文档，用于理解 context-loader 的定位、能力边界，以及在 Agent/服务中如何调用这些接口。
 
@@ -6,13 +6,14 @@
 
 | 字段 | 值 |
 | :--- | :--- |
-| 文档版本 | v1.0 |
+| 文档版本 | v1.1 |
 | 适用版本 | context-loader v5.0.4（internal 5004） |
 | 发布日期 | 2026-01-04 |
 | 状态 | 正式发布 |
 
 | 修订日期 | 修订说明 |
 | :--- | :--- |
+| 2026-03-26 | 根据 `docs/apis/api_private` OpenAPI 更新 6 个工具的依赖说明与参数配置 |
 | 2026-01-04 | 首次发布 |
 
 ## 1. 什么是 context-loader
@@ -117,8 +118,8 @@ curl -X POST "http://agent-retrieval:30779/api/agent-retrieval/in/v1/kn/query_ob
   - 结构化查询需要 `ot_id`（对象类 ID）与 Schema 信息（字段/主键/关系方向/动作绑定对象类）
   - `ot_id` 与 Schema 通常来自 `kn_schema_search` 或 `kn_search` 的返回（object_types / relation_types / action_types）
 - 逻辑属性与行动召回依赖 Schema + 精确查询数据：
-  - `get_logic_properties_values` 需要 `ot_id` + `unique_identities`（来自 `query_object_instance`/`query_instance_subgraph` 的实例结果），以及逻辑属性定义（来自 Schema）
-  - `get_action_info` 需要 `at_id`（来自 Schema）+ `unique_identity`（来自精确查询的实例主键/唯一标识）
+  - `get_logic_properties_values` 需要 `ot_id` + `_instance_identities`，其中数组元素应来自 `query_object_instance` 或 `query_instance_subgraph` 返回结果中的 `_instance_identity` 字段，以及逻辑属性定义（来自 Schema）
+  - `get_action_info` 需要 `at_id`（来自 Schema）+ `_instance_identities`，其中数组元素应来自精确查询结果中的 `_instance_identity` 字段
 
 ## 5. 实现原理概览
 
@@ -138,7 +139,7 @@ curl -X POST "http://agent-retrieval:30779/api/agent-retrieval/in/v1/kn/query_ob
 
 ### 6.1 kn_schema_search（语义检索 / 概念召回，v1）
 
-> 接口定义：[toolset/openapi/kn_schema_search.yaml](./toolset/openapi/kn_schema_search.yaml)
+> 接口定义：[docs/apis/api_private/kn_schema_search.yaml](../apis/api_private/kn_schema_search.yaml)
 
 - API：`POST /api/agent-retrieval/in/v1/kn/semantic-search`
 - 作用：根据 query 返回与之相关的概念信息（Schema）
@@ -152,12 +153,10 @@ curl -X POST "http://agent-retrieval:30779/api/agent-retrieval/in/v1/kn/query_ob
 | `search_scope` | 否 | 限定概念分组、是否包含对象类/关系类/行动类 |
 | `max_concepts` | 否 | 最大概念数量（默认 10） |
 | `rerank_action` | 否 | 重排策略（default/vector/llm） |
-| `return_query_understanding` | 否 | 是否返回 query_understanding |
 
 返回要点：
 
 - `concepts`：相关概念列表
-- `query_understanding`：可选，包含意图拆解与策略信息
 
 Data Agent 配置（建议）：
 
@@ -167,15 +166,13 @@ Data Agent 配置（建议）：
 | `x-account-type` | 固定值/应用变量 | Header 参数 | `user` 或 `header.x-account-type` |
 | `kn_id` | 固定值/应用变量 | 知识网络 ID | `"kn_medical"` 或 `self_config.data_source.knowledge_network[0].knowledge_network_id` |
 | `query` | 模型生成 | 用户问题/关键词 | `模型生成` |
-| `previous_queries` | 模型生成 | 请求体参数（可选） | `模型生成` |
 | `search_scope` | 模型生成 | 请求体参数（可选） | `模型生成` |
 | `max_concepts` | 固定值 | 最大概念数 | `10` |
 | `rerank_action` | 固定值/模型生成 | 请求体参数（可选） | `default` |
-| `return_query_understanding` | 固定值 | 请求体参数（可选） | `false` |
 
 ### 6.2 kn_search（知识网络检索 / 概念召回，v2）
 
-> 接口定义：[toolset/openapi/kn_search.yaml](./toolset/openapi/kn_search.yaml)
+> 接口定义：[docs/apis/api_private/kn_search.yaml](../apis/api_private/kn_search.yaml)
 
 - API：`POST /api/agent-retrieval/in/v1/kn/kn_search`
 - 作用：返回 Schema（object_types / relation_types / action_types）
@@ -188,9 +185,7 @@ Data Agent 配置（建议）：
 | `kn_id` | 是 | 业务知识网络 ID |
 | `query` | 是 | 问题或关键词（多关键词用空格分隔） |
 | `only_schema` | 否 | 建议设置为 true（仅概念召回） |
-| `session_id` | 否 | 多轮会话 ID（用于维护历史召回） |
-| `additional_context` | 否 | 二次检索补充上下文 |
-| `retrieval_config` | 否 | 召回配置（概念召回精简、并集策略等） |
+| `retrieval_config` | 否 | 召回配置；当前主要包含 `concept_retrieval.top_k`、`concept_retrieval.schema_brief`、`concept_retrieval.include_sample_data` |
 | `enable_rerank` | 否 | 是否启用重排序（默认 true） |
 
 返回要点：
@@ -201,26 +196,24 @@ Data Agent 配置（建议）：
 
 | 配置项 | 推荐类型 | 说明 | 示例 |
 | :--- | :--- | :--- | :--- |
-| `session_id` | 应用变量 | 会话 ID（多轮时用于历史召回） | `self_config.conversation_id` |
 | `x-account-id` | 应用变量 | Header 参数（接口定义为可选） | `header.x-account-id` |
 | `x-account-type` | 固定值/应用变量 | Header 参数（接口定义为可选） | `user` 或 `header.x-account-type` |
 | `kn_id` | 固定值/应用变量 | 知识网络 ID | `"kn_medical"` 或 `self_config.data_source.knowledge_network[0].knowledge_network_id` |
 | `query` | 模型生成 | 用户问题/关键词 | `模型生成` |
 | `only_schema` | 固定值 | 仅概念召回 | `true` |
+| `retrieval_config.concept_retrieval.top_k` | 固定值 | 概念召回数量 | `10` |
 | `retrieval_config.concept_retrieval.schema_brief` | 固定值 | 精简 Schema | `true` |
-| `retrieval_config.concept_retrieval.return_union` | 固定值 | 请求体参数（可选） | `false` |
-| `additional_context` | 模型生成 | 请求体参数（可选） | `模型生成` |
+| `retrieval_config.concept_retrieval.include_sample_data` | 固定值 | 是否返回样例数据 | `false` |
 | `enable_rerank` | 固定值 | 请求体参数（可选） | `true` |
 
 ### 6.3 query_object_instance（对象实例查询）
 
-> 接口定义：[toolset/openapi/query_object_instance.yaml](./toolset/openapi/query_object_instance.yaml)
+> 接口定义：[docs/apis/api_private/query_object_instance.yaml](../apis/api_private/query_object_instance.yaml)
 
 - API：`POST /api/agent-retrieval/in/v1/kn/query_object_instance`
 - Query 参数：
   - `kn_id`（必填）：业务知识网络 ID
   - `ot_id`（必填）：对象类 ID
-  - `include_type_info`（可选）：是否包含对象类信息（默认 false）
   - `include_logic_params`（可选）：是否返回逻辑属性计算参数（默认 false）
 - 作用：在指定对象类内，按过滤条件查询实例列表（支持分页）
 
@@ -228,7 +221,7 @@ Data Agent 配置（建议）：
 
 | 字段 | 必填 | 说明 |
 | :--- | :--- | :--- |
-| `limit` | 是 | 返回数量（默认 10，范围以接口定义为准） |
+| `limit` | 否 | 返回数量（默认 10，范围 1-100） |
 | `condition` | 否 | 过滤条件（支持 and/or/比较/集合/like/match 等） |
 | `sort` | 否 | 排序字段列表 |
 | `need_total` | 否 | 是否返回总数 |
@@ -265,7 +258,6 @@ Data Agent 配置（建议）：
 | `x-account-type` | 固定值/应用变量 | Header 参数 | `user` 或 `header.x-account-type` |
 | `kn_id` | 固定值/应用变量 | Query 参数 | `"kn_medical"` 或 `self_config.data_source.knowledge_network[0].knowledge_network_id` |
 | `ot_id` | 模型生成 | Query 参数（对象类 ID） | `模型生成` |
-| `include_type_info` | 固定值 | Query 参数（可选） | `false` |
 | `include_logic_params` | 固定值 | Query 参数（可选） | `false` |
 | `limit` | 固定值 | 请求体参数 | `10` |
 | `condition` | 模型生成 | 请求体参数（可选） | `模型生成` |
@@ -275,7 +267,7 @@ Data Agent 配置（建议）：
 
 ### 6.4 query_instance_subgraph（实例子图查询）
 
-> 接口定义：[toolset/openapi/query_instance_subgraph.yaml](./toolset/openapi/query_instance_subgraph.yaml)
+> 接口定义：[docs/apis/api_private/query_instance_subgraph.yaml](../apis/api_private/query_instance_subgraph.yaml)
 
 - API：`POST /api/agent-retrieval/in/v1/kn/query_instance_subgraph`
 - Query 参数：
@@ -286,8 +278,9 @@ Data Agent 配置（建议）：
 使用要点：
 
 - 请求体必须提供 `relation_type_paths`（以接口定义为准），用于描述关系路径模板
-- `relation_type_paths[].object_types` 与 `relation_type_paths[].relation_types` 的数组顺序必须严格对应
-- Condition 结构与 query_object_instance 一致（同样需要 value_from + value 配对）
+- `relation_type_paths[].object_types` 与 `relation_type_paths[].relation_types` 的数组顺序必须严格对应；若为 n 跳路径，则 `object_types` 长度应为 n+1、`relation_types` 长度应为 n
+- `relation_type_paths[].object_types[].condition` 为可选，但如传入则 `condition.operation` 必填
+- Condition 结构与 query_object_instance 一致（同样需要 `value_from` + `value` 配对，且 `value_from` 当前仅支持 `const`）
 
 Data Agent 配置（建议）：
 
@@ -301,6 +294,8 @@ Data Agent 配置（建议）：
 
 ### 6.5 get_logic_properties_values（逻辑属性解析）
 
+> 接口定义：[docs/apis/api_private/get_logic_properties_values.yaml](../apis/api_private/get_logic_properties_values.yaml)
+
 - API：`POST /api/agent-retrieval/in/v1/kn/logic-property-resolver`
 - 作用：针对某对象类的一个或多个实例，批量计算/查询逻辑属性（metric/operator）
 
@@ -311,10 +306,10 @@ Data Agent 配置（建议）：
 | `kn_id` | 是 | 业务知识网络 ID |
 | `ot_id` | 是 | 对象类 ID |
 | `query` | 是 | 用户原始问题（用于生成 dynamic_params） |
-| `unique_identities` | 是 | 实例主键数组（支持批量） |
+| `_instance_identities` | 是 | 实例标识数组（支持批量）；应从上游实例结果的 `_instance_identity` 字段提取后按顺序组装 |
 | `properties` | 是 | 逻辑属性名列表（metric/operator） |
 | `additional_context` | 否 | 推荐传结构化 JSON 字符串，补充时间/对象上下文等 |
-| `options` | 否 | 高级选项（如 return_debug、max_concurrency） |
+| `options` | 否 | 高级选项；当前主要支持 `return_debug` |
 
 返回形态：
 
@@ -331,7 +326,7 @@ Data Agent 配置（建议）：
     {
       "property": "approved_drug_count",
       "params": [
-        { "name": "start", "type": "INTEGER", "hint": "在 additional_context 中补充时间范围，或在 query 中明确时间信息" }
+        { "name": "start", "hint": "在 additional_context 中补充时间范围，或在 query 中明确时间信息" }
       ]
     }
   ],
@@ -348,12 +343,14 @@ Data Agent 配置（建议）：
 | `kn_id` | 固定值/应用变量 | 请求体参数 | `"kn_medical"` 或 `self_config.data_source.knowledge_network[0].knowledge_network_id` |
 | `ot_id` | 模型生成 | 请求体参数 | `模型生成` |
 | `query` | 模型生成 | 请求体参数 | `模型生成` |
-| `unique_identities` | 模型生成 | 请求体参数 | `模型生成` |
+| `_instance_identities` | 模型生成 | 请求体参数 | `模型生成` |
 | `properties` | 模型生成 | 请求体参数 | `模型生成` |
 | `additional_context` | 模型生成 | 请求体参数（可选） | `模型生成` |
-| `options` | 模型生成 | 请求体参数（可选） | `模型生成` |
+| `options.return_debug` | 固定值/模型生成 | 请求体参数（可选） | `false` |
 
 ### 6.6 get_action_info（行动信息召回 / 动态工具发现）
+
+> 接口定义：[docs/apis/api_private/get_action_info.yaml](../apis/api_private/get_action_info.yaml)
 
 - API：`POST /api/agent-retrieval/in/v1/kn/get_action_info`
 - 作用：针对对象实例，召回可执行行动，并转换为 OpenAI Function Call 规范的工具定义列表
@@ -364,7 +361,7 @@ Data Agent 配置（建议）：
 | :--- | :--- | :--- |
 | `kn_id` | 是 | 业务知识网络 ID |
 | `at_id` | 是 | 行动类型 ID |
-| `unique_identity` | 是 | 对象唯一标识（键值对，至少一个字段） |
+| `_instance_identities` | 否 | 对象实例标识列表；每个元素为主键键值对，应从上游实例结果的 `_instance_identity` 字段提取，不可臆造 |
 
 返回要点：
 
@@ -384,7 +381,7 @@ Data Agent 配置（建议）：
 | `x-account-type` | 固定值/应用变量 | Header 参数 | `user` 或 `header.x-account-type` |
 | `kn_id` | 固定值/应用变量 | 请求体参数 | `"kn_medical"` 或 `self_config.data_source.knowledge_network[0].knowledge_network_id` |
 | `at_id` | 模型生成 | 请求体参数 | `模型生成` |
-| `unique_identity` | 模型生成 | 请求体参数 | `模型生成` |
+| `_instance_identities` | 模型生成 | 请求体参数（可选） | `模型生成` |
 
 ## 7. 集成场景与最佳实践
 

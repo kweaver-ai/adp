@@ -177,9 +177,6 @@ components:
         limit:
           description: 返回的数量，默认值 10。范围 1-10000
           type: integer
-        need_total:
-          description: 是否需要总数，默认false
-          type: boolean
     FirstQueryWithSearchAfter:
       description: 分页查询的第一次查询请求
       type: object
@@ -193,7 +190,7 @@ components:
             $ref: '#/components/schemas/Sort'
           description: 排序字段，默认使用 @timestamp排序，排序方向为 desc
         limit:
-          description: 返回的数量，默认值 10。范围 1-100
+          description: 返回的数量，默认值 10。范围 1-10000
           type: integer
           default: 10
         need_total:
