@@ -30,6 +30,7 @@ import (
 	berrors "bkn-backend/errors"
 	"bkn-backend/interfaces"
 	"bkn-backend/logics"
+	"bkn-backend/logics/batchindex"
 	"bkn-backend/logics/object_type"
 	"bkn-backend/logics/permission"
 	"bkn-backend/logics/user_mgmt"
@@ -44,6 +45,7 @@ type actionTypeService struct {
 	appSetting *common.AppSetting
 	db         *sql.DB
 	ata        interfaces.ActionTypeAccess
+	aoa        interfaces.AgentOperatorAccess
 	cga        interfaces.ConceptGroupAccess
 	mfa        interfaces.ModelFactoryAccess
 	ots        interfaces.ObjectTypeService
@@ -58,6 +60,7 @@ func NewActionTypeService(appSetting *common.AppSetting) interfaces.ActionTypeSe
 			appSetting: appSetting,
 			db:         logics.DB,
 			ata:        logics.ATA,
+			aoa:        logics.AOA,
 			cga:        logics.CGA,
 			mfa:        logics.MFA,
 			ots:        object_type.NewObjectTypeService(appSetting),
@@ -105,7 +108,36 @@ func (ats *actionTypeService) CheckActionTypeExistByName(ctx context.Context, kn
 	return actionTypeID, exist, nil
 }
 
-func (ats *actionTypeService) CreateActionTypes(ctx context.Context, tx *sql.Tx, actionTypes []*interfaces.ActionType, mode string) ([]string, error) {
+// validateActionSourceStrict checks tool-box / MCP tool existence when strict_mode applies (via agent-operator-integration internal APIs).
+func (ats *actionTypeService) validateActionSourceStrict(ctx context.Context, at *interfaces.ActionType) error {
+	if at == nil {
+		return nil
+	}
+	src := at.ActionSource
+	switch src.Type {
+	case interfaces.ACTION_SOURCE_TYPE_TOOL:
+		if src.BoxID == "" || src.ToolID == "" {
+			return nil
+		}
+		if err := ats.aoa.GetToolByID(ctx, src.BoxID, src.ToolID); err != nil {
+			return rest.NewHTTPError(ctx, http.StatusBadRequest, berrors.BknBackend_ActionType_InvalidParameter).
+				WithErrorDetails(fmt.Sprintf("Action type [%s] tool binding is missing or invalid: box_id=%s tool_id=%s (%v)",
+					at.ATName, src.BoxID, src.ToolID, err))
+		}
+	case interfaces.ACTION_SOURCE_TYPE_MCP:
+		if src.McpID == "" || src.ToolName == "" {
+			return nil
+		}
+		if err := ats.aoa.GetMcpToolByName(ctx, src.McpID, src.ToolName); err != nil {
+			return rest.NewHTTPError(ctx, http.StatusBadRequest, berrors.BknBackend_ActionType_InvalidParameter).
+				WithErrorDetails(fmt.Sprintf("Action type [%s] MCP tool binding is missing or invalid: mcp_id=%s tool_name=%s (%v)",
+					at.ATName, src.McpID, src.ToolName, err))
+		}
+	}
+	return nil
+}
+
+func (ats *actionTypeService) CreateActionTypes(ctx context.Context, tx *sql.Tx, actionTypes []*interfaces.ActionType, mode string, strictMode bool) ([]string, error) {
 	ctx, span := ar_trace.Tracer.Start(ctx, "CreateActionTypes")
 	defer span.End()
 
@@ -136,10 +168,21 @@ func (ats *actionTypeService) CreateActionTypes(ctx context.Context, tx *sql.Tx,
 		actionType.CreateTime = currentTime
 		actionType.UpdateTime = currentTime
 
-		// 绑定的对象类非空时，需校验对象类存在性
-		if actionType.ObjectTypeID != "" {
-			// 导入时未提交，在一个事务中get
-			_, err = ats.ots.GetObjectTypeByID(ctx, tx, actionType.KNID, actionType.Branch, actionType.ObjectTypeID)
+		// When strictMode is true, validate bound object type and affect object types exist
+		if strictMode {
+			if actionType.ObjectTypeID != "" {
+				_, err = ats.ots.GetObjectTypeByID(ctx, tx, actionType.KNID, actionType.Branch, actionType.ObjectTypeID)
+				if err != nil {
+					return []string{}, err
+				}
+			}
+			if actionType.Affect != nil && actionType.Affect.ObjectTypeID != "" {
+				_, err = ats.ots.GetObjectTypeByID(ctx, tx, actionType.KNID, actionType.Branch, actionType.Affect.ObjectTypeID)
+				if err != nil {
+					return []string{}, err
+				}
+			}
+			err = ats.validateActionSourceStrict(ctx, actionType)
 			if err != nil {
 				return []string{}, err
 			}
@@ -207,7 +250,7 @@ func (ats *actionTypeService) CreateActionTypes(ctx context.Context, tx *sql.Tx,
 	// 更新
 	for _, actionType := range updateActionTypes {
 		// 提交的已存在，需要更新
-		err = ats.UpdateActionType(ctx, tx, actionType)
+		err = ats.UpdateActionType(ctx, tx, actionType, strictMode)
 		if err != nil {
 			return []string{}, err
 		}
@@ -226,6 +269,61 @@ func (ats *actionTypeService) CreateActionTypes(ctx context.Context, tx *sql.Tx,
 
 	span.SetStatus(codes.Ok, "")
 	return atIDs, nil
+}
+
+// ValidateActionTypes checks dependency existence only; does not write to the database.
+func (ats *actionTypeService) ValidateActionTypes(ctx context.Context, knID string, branch string,
+	actionTypes []*interfaces.ActionType, strictMode bool, batch *interfaces.BatchIDIndex, mode string) error {
+
+	ctx, span := ar_trace.Tracer.Start(ctx, "ValidateActionTypes")
+	defer span.End()
+
+	if len(actionTypes) == 0 {
+		span.SetStatus(codes.Ok, "")
+		return nil
+	}
+
+	err := ats.ps.CheckPermission(ctx, interfaces.PermissionResource{
+		Type: interfaces.RESOURCE_TYPE_KN,
+		ID:   knID,
+	}, []string{interfaces.OPERATION_TYPE_MODIFY})
+	if err != nil {
+		return err
+	}
+	_, _, err = ats.handleActionTypeImportMode(ctx, mode, actionTypes)
+	if err != nil {
+		return err
+	}
+
+	for _, actionType := range actionTypes {
+		actionType.KNID = knID
+		actionType.Branch = branch
+		if strictMode {
+			if actionType.ObjectTypeID != "" {
+				if batch == nil || !batchindex.HasObjectTypeID(actionType.ObjectTypeID, batch) {
+					_, err = ats.ots.GetObjectTypeByID(ctx, nil, knID, branch, actionType.ObjectTypeID)
+					if err != nil {
+						return err
+					}
+				}
+			}
+			if actionType.Affect != nil && actionType.Affect.ObjectTypeID != "" {
+				if batch == nil || !batchindex.HasObjectTypeID(actionType.Affect.ObjectTypeID, batch) {
+					_, err = ats.ots.GetObjectTypeByID(ctx, nil, knID, branch, actionType.Affect.ObjectTypeID)
+					if err != nil {
+						return err
+					}
+				}
+			}
+			err = ats.validateActionSourceStrict(ctx, actionType)
+			if err != nil {
+				return err
+			}
+		}
+	}
+
+	span.SetStatus(codes.Ok, "")
+	return nil
 }
 
 func (ats *actionTypeService) ListActionTypes(ctx context.Context, query interfaces.ActionTypesQueryParams) ([]*interfaces.ActionType, int, error) {
@@ -379,7 +477,7 @@ func (ats *actionTypeService) GetActionTypesByIDs(ctx context.Context, knID stri
 }
 
 // 更新行动类
-func (ats *actionTypeService) UpdateActionType(ctx context.Context, tx *sql.Tx, actionType *interfaces.ActionType) error {
+func (ats *actionTypeService) UpdateActionType(ctx context.Context, tx *sql.Tx, actionType *interfaces.ActionType, strictMode bool) error {
 	ctx, span := ar_trace.Tracer.Start(ctx, "UpdateActionType")
 	defer span.End()
 
@@ -390,6 +488,25 @@ func (ats *actionTypeService) UpdateActionType(ctx context.Context, tx *sql.Tx, 
 	}, []string{interfaces.OPERATION_TYPE_MODIFY})
 	if err != nil {
 		return err
+	}
+
+	if strictMode {
+		if actionType.ObjectTypeID != "" {
+			_, err = ats.ots.GetObjectTypeByID(ctx, tx, actionType.KNID, actionType.Branch, actionType.ObjectTypeID)
+			if err != nil {
+				return err
+			}
+		}
+		if actionType.Affect != nil && actionType.Affect.ObjectTypeID != "" {
+			_, err = ats.ots.GetObjectTypeByID(ctx, tx, actionType.KNID, actionType.Branch, actionType.Affect.ObjectTypeID)
+			if err != nil {
+				return err
+			}
+		}
+		err = ats.validateActionSourceStrict(ctx, actionType)
+		if err != nil {
+			return err
+		}
 	}
 
 	accountInfo := interfaces.AccountInfo{}

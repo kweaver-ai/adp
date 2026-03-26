@@ -561,7 +561,7 @@ func (ots *objectTypeService) handlerVector(ctx context.Context, property *cond.
 	if model == nil {
 		return nil, rest.NewHTTPError(ctx, http.StatusNotFound,
 			oerrors.OntologyQuery_ObjectType_SmallModelNotFound).
-			WithErrorDetails(fmt.Sprintf("model %s not found", property.IndexConfig.VectorConfig.ModelID))
+			WithErrorDetails(fmt.Sprintf("小模型[%s]不存在", property.IndexConfig.VectorConfig.ModelID))
 	}
 	if model.EmbeddingDim == 0 || model.BatchSize == 0 || model.MaxTokens == 0 {
 		return nil, rest.NewHTTPError(ctx, http.StatusBadRequest,
