@@ -123,60 +123,6 @@ func Test_relationTypeAccess_CheckRelationTypeExistByID(t *testing.T) {
 	})
 }
 
-func Test_relationTypeAccess_CheckRelationTypeExistByName(t *testing.T) {
-	Convey("test CheckRelationTypeExistByName\n", t, func() {
-		appSetting := &common.AppSetting{}
-		rta, smock := MockNewRelationTypeAccess(appSetting)
-
-		sqlStr := "SELECT f_id FROM t_relation_type WHERE f_kn_id = ? AND f_branch = ? AND f_name = ?"
-
-		knID := "kn1"
-		branch := "main"
-		rtName := "Relation Type 1"
-
-		Convey("CheckRelationTypeExistByName Success \n", func() {
-			rows := sqlmock.NewRows([]string{"f_id"}).AddRow("rt1")
-			smock.ExpectQuery(sqlStr).WithArgs(knID, branch, rtName).WillReturnRows(rows)
-
-			rtID, exists, err := rta.CheckRelationTypeExistByName(testCtx, knID, branch, rtName)
-			So(err, ShouldBeNil)
-			So(exists, ShouldBeTrue)
-			So(rtID, ShouldEqual, "rt1")
-
-			if err := smock.ExpectationsWereMet(); err != nil {
-				t.Errorf("there were unfulfilled expectations: %s", err)
-			}
-		})
-
-		Convey("CheckRelationTypeExistByName Success no row \n", func() {
-			smock.ExpectQuery(sqlStr).WithArgs(knID, branch, rtName).WillReturnError(sql.ErrNoRows)
-
-			rtID, exists, err := rta.CheckRelationTypeExistByName(testCtx, knID, branch, rtName)
-			So(rtID, ShouldEqual, "")
-			So(exists, ShouldBeFalse)
-			So(err, ShouldBeNil)
-
-			if err := smock.ExpectationsWereMet(); err != nil {
-				t.Errorf("there were unfulfilled expectations: %s", err)
-			}
-		})
-
-		Convey("CheckRelationTypeExistByName Failed \n", func() {
-			expectedErr := errors.New("some error")
-			smock.ExpectQuery(sqlStr).WithArgs(knID, branch, rtName).WillReturnError(expectedErr)
-
-			rtID, exists, err := rta.CheckRelationTypeExistByName(testCtx, knID, branch, rtName)
-			So(rtID, ShouldEqual, "")
-			So(exists, ShouldBeFalse)
-			So(err, ShouldResemble, expectedErr)
-
-			if err := smock.ExpectationsWereMet(); err != nil {
-				t.Errorf("there were unfulfilled expectations: %s", err)
-			}
-		})
-	})
-}
-
 func Test_relationTypeAccess_CreateRelationType(t *testing.T) {
 	Convey("test CreateRelationType\n", t, func() {
 		appSetting := &common.AppSetting{}

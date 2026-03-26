@@ -9,11 +9,9 @@ package errors
 const (
 	// 400
 	BknBackend_RelationType_Duplicated_IDInFile               = "BknBackend.RelationType.Duplicated.IDInFile"
-	BknBackend_RelationType_Duplicated_Name                   = "BknBackend.RelationType.Duplicated.Name"
 	BknBackend_RelationType_InvalidParameter                  = "BknBackend.RelationType.InvalidParameter"
 	BknBackend_RelationType_InvalidParameter_ConceptCondition = "BknBackend.RelationType.InvalidParameter.ConceptCondition"
 	BknBackend_RelationType_RelationTypeIDExisted             = "BknBackend.RelationType.RelationTypeIDExisted"
-	BknBackend_RelationType_RelationTypeNameExisted           = "BknBackend.RelationType.RelationTypeNameExisted"
 	BknBackend_RelationType_LengthExceeded_Name               = "BknBackend.RelationType.LengthExceeded.Name"
 	BknBackend_RelationType_NullParameter_Name                = "BknBackend.RelationType.NullParameter.Name"
 
@@ -32,11 +30,9 @@ var (
 	RelationTypeErrCodeList = []string{
 		// 400
 		BknBackend_RelationType_Duplicated_IDInFile,
-		BknBackend_RelationType_Duplicated_Name,
 		BknBackend_RelationType_InvalidParameter,
 		BknBackend_RelationType_InvalidParameter_ConceptCondition,
 		BknBackend_RelationType_RelationTypeIDExisted,
-		BknBackend_RelationType_RelationTypeNameExisted,
 		BknBackend_RelationType_LengthExceeded_Name,
 		BknBackend_RelationType_NullParameter_Name,
 

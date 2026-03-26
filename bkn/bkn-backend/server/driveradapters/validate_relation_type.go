@@ -20,7 +20,6 @@ import (
 )
 
 func ValidateRelationTypes(ctx context.Context, knID string, relationTypes []*interfaces.RelationType) error {
-	tmpNameMap := make(map[string]any)
 	idMap := make(map[string]any)
 	for i := 0; i < len(relationTypes); i++ {
 		// 校验导入模型时模块是否是关系类
@@ -46,12 +45,6 @@ func ValidateRelationTypes(ctx context.Context, knID string, relationTypes []*in
 			return err
 		}
 
-		// 3. 校验 请求体中关系类名称重复性
-		if _, ok := tmpNameMap[relationTypes[i].RTName]; !ok {
-			tmpNameMap[relationTypes[i].RTName] = nil
-		} else {
-			return rest.NewHTTPError(ctx, http.StatusBadRequest, berrors.BknBackend_RelationType_Duplicated_Name)
-		}
 		relationTypes[i].KNID = knID
 	}
 	return nil

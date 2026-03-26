@@ -13,7 +13,6 @@ import (
 //go:generate mockgen -source ../interfaces/relation_type_service.go -destination ../interfaces/mock/mock_relation_type_service.go
 type RelationTypeService interface {
 	CheckRelationTypeExistByID(ctx context.Context, knID string, branch string, rtID string) (string, bool, error)
-	CheckRelationTypeExistByName(ctx context.Context, knID string, branch string, rtName string) (string, bool, error)
 	CreateRelationTypes(ctx context.Context, tx *sql.Tx, relationTypes []*RelationType, mode string, validateDependency bool) ([]string, error)
 	ListRelationTypes(ctx context.Context, query RelationTypesQueryParams) ([]*RelationType, int, error)
 	GetRelationTypesByIDs(ctx context.Context, knID string, branch string, rtIDs []string) ([]*RelationType, error)

@@ -250,7 +250,6 @@ func Test_RelationTypeRestHandler_UpdateRelationType(t *testing.T) {
 		Convey("Success UpdateRelationType\n", func() {
 			kns.EXPECT().CheckKNExistByID(gomock.Any(), knID, gomock.Any()).Return(knID, true, nil)
 			rts.EXPECT().CheckRelationTypeExistByID(gomock.Any(), knID, gomock.Any(), rtID).Return("relation2", true, nil)
-			rts.EXPECT().CheckRelationTypeExistByName(gomock.Any(), knID, gomock.Any(), relationType.RTName).Return("", false, nil)
 			rts.EXPECT().UpdateRelationType(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
 
 			reqParamByte, _ := sonic.Marshal(relationType)
@@ -298,10 +297,10 @@ func Test_RelationTypeRestHandler_UpdateRelationType(t *testing.T) {
 			So(w.Result().StatusCode, ShouldEqual, http.StatusForbidden)
 		})
 
-		Convey("RelationType name already exists\n", func() {
+		Convey("Update to existing name succeeds (no name uniqueness check)\n", func() {
 			kns.EXPECT().CheckKNExistByID(gomock.Any(), knID, gomock.Any()).Return(knID, true, nil)
 			rts.EXPECT().CheckRelationTypeExistByID(gomock.Any(), knID, gomock.Any(), rtID).Return("oldname", true, nil)
-			rts.EXPECT().CheckRelationTypeExistByName(gomock.Any(), knID, gomock.Any(), relationType.RTName).Return("relation1", true, nil)
+			rts.EXPECT().UpdateRelationType(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
 
 			reqParamByte, _ := sonic.Marshal(relationType)
 			req := httptest.NewRequest(http.MethodPut, url, bytes.NewReader(reqParamByte))
@@ -309,7 +308,7 @@ func Test_RelationTypeRestHandler_UpdateRelationType(t *testing.T) {
 			w := httptest.NewRecorder()
 			engine.ServeHTTP(w, req)
 
-			So(w.Result().StatusCode, ShouldEqual, http.StatusForbidden)
+			So(w.Result().StatusCode, ShouldEqual, http.StatusNoContent)
 		})
 
 		Convey("UpdateRelationType failed\n", func() {
@@ -323,7 +322,6 @@ func Test_RelationTypeRestHandler_UpdateRelationType(t *testing.T) {
 
 			kns.EXPECT().CheckKNExistByID(gomock.Any(), knID, gomock.Any()).Return(knID, true, nil)
 			rts.EXPECT().CheckRelationTypeExistByID(gomock.Any(), knID, gomock.Any(), rtID).Return("relation2", true, nil)
-			rts.EXPECT().CheckRelationTypeExistByName(gomock.Any(), knID, gomock.Any(), relationType.RTName).Return("", false, nil)
 			rts.EXPECT().UpdateRelationType(gomock.Any(), gomock.Any(), gomock.Any()).Return(err)
 
 			reqParamByte, _ := sonic.Marshal(relationType)
@@ -338,7 +336,6 @@ func Test_RelationTypeRestHandler_UpdateRelationType(t *testing.T) {
 		Convey("UpdateRelationTypeByIn - Success\n", func() {
 			kns.EXPECT().CheckKNExistByID(gomock.Any(), knID, gomock.Any()).Return(knID, true, nil)
 			rts.EXPECT().CheckRelationTypeExistByID(gomock.Any(), knID, gomock.Any(), rtID).Return("old_relation1", true, nil)
-			rts.EXPECT().CheckRelationTypeExistByName(gomock.Any(), knID, gomock.Any(), relationType.RTName).Return("", false, nil)
 			rts.EXPECT().UpdateRelationType(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
 
 			urlIn := "/api/bkn-backend/in/v1/knowledge-networks/" + knID + "/relation-types/" + rtID

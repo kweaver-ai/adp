@@ -291,7 +291,7 @@ func (r *restHandler) UpdateRelationType(c *gin.Context, visitor hydra.Visitor) 
 	o11y.Info(ctx, fmt.Sprintf("修改关系类请求参数: [%s, %v]", c.Request.RequestURI, relationType))
 
 	// 先按id获取原对象
-	oldRTName, exist, err := r.rts.CheckRelationTypeExistByID(ctx, knID, branch, rtID)
+	_, exist, err = r.rts.CheckRelationTypeExistByID(ctx, knID, branch, rtID)
 	if err != nil {
 		httpErr := err.(*rest.HTTPError)
 
@@ -327,30 +327,6 @@ func (r *restHandler) UpdateRelationType(c *gin.Context, visitor hydra.Visitor) 
 		return
 	}
 
-	// 名称或分组不同，校验新名称是否已存在
-	ifNameModify := false
-	if oldRTName != relationType.RTName {
-		ifNameModify = true
-		_, exist, err = r.rts.CheckRelationTypeExistByName(ctx, knID, branch, relationType.RTName)
-		if err != nil {
-			httpErr := err.(*rest.HTTPError)
-
-			// 设置 trace 的错误信息的 attributes
-			o11y.AddHttpAttrs4HttpError(span, httpErr)
-			rest.ReplyError(c, httpErr)
-			return
-		}
-		if exist {
-			httpErr := rest.NewHTTPError(ctx, http.StatusForbidden,
-				berrors.BknBackend_RelationType_RelationTypeNameExisted)
-
-			// 设置 trace 的错误信息的 attributes
-			o11y.AddHttpAttrs4HttpError(span, httpErr)
-			rest.ReplyError(c, httpErr)
-			return
-		}
-	}
-	relationType.IfNameModify = ifNameModify
 	relationType.KNID = knID
 
 	//根据id修改信息
