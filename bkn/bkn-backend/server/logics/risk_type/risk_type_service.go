@@ -284,8 +284,8 @@ func (rts *riskTypeService) ensureCustomRiskToolExists(ctx context.Context, rt *
 			berrors.BknBackend_RiskType_InternalError).
 			WithErrorDetails("agent-operator-integration is not configured, cannot verify risk_function tool")
 	}
-	if err := rts.aoia.ProbeToolBoxTool(ctx, box, tool); err != nil {
-		logger.Errorf("ProbeToolBoxTool error: %s", err.Error())
+	if err := rts.aoia.GetToolBoxToolByID(ctx, box, tool); err != nil {
+		logger.Errorf("GetToolBoxToolByID error: %s", err.Error())
 		return rest.NewHTTPError(ctx, http.StatusBadRequest,
 			berrors.BknBackend_RiskType_RiskFunctionToolNotFound).
 			WithErrorDetails(fmt.Sprintf("risk_function tool not reachable: box_id=%s tool_id=%s: %v", box, tool, err))

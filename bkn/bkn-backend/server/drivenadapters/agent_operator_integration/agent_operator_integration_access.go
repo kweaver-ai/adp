@@ -97,8 +97,8 @@ func (a *agentOperatorIntegrationAccess) RegisterInternalTool(ctx context.Contex
 	return nil
 }
 
-// ProbeToolBoxTool sends a minimal POST to tool-box proxy to verify the tool exists (HTTP layer / gateway).
-func (a *agentOperatorIntegrationAccess) ProbeToolBoxTool(ctx context.Context, boxID, toolID string) error {
+// GetToolBoxToolByID sends a minimal GET to tool-box to verify the tool exists (HTTP layer / gateway).
+func (a *agentOperatorIntegrationAccess) GetToolBoxToolByID(ctx context.Context, boxID string, toolID string) error {
 	if a.operatorURL == "" {
 		return fmt.Errorf("AgentOperatorIntegrationUrl not configured")
 	}
@@ -121,8 +121,7 @@ func (a *agentOperatorIntegrationAccess) ProbeToolBoxTool(ctx context.Context, b
 	}
 
 	// Short timeout payload; endpoint returns 200 when the proxy accepts the call.
-	body := []byte(`{"timeout":3}`)
-	respCode, respData, err := a.httpClient.PostNoUnmarshal(ctx, httpURL, headers, body)
+	respCode, respData, err := a.httpClient.GetNoUnmarshal(ctx, httpURL, nil, headers)
 	logger.Debugf("ProbeToolBoxTool [%s] response code=%d err=%v", httpURL, respCode, err)
 
 	if err != nil {
