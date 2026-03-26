@@ -455,3 +455,60 @@ func Test_ValidateRelationType(t *testing.T) {
 		})
 	})
 }
+
+func Test_ValidateRelationTypes(t *testing.T) {
+	Convey("Test ValidateRelationTypes\n", t, func() {
+		ctx := context.Background()
+		knID := "kn1"
+
+		makeRT := func(id, name string) *interfaces.RelationType {
+			return &interfaces.RelationType{
+				RelationTypeWithKeyField: interfaces.RelationTypeWithKeyField{
+					RTID:               id,
+					RTName:             name,
+					SourceObjectTypeID: "ot1",
+					TargetObjectTypeID: "ot2",
+					Type:               interfaces.RELATION_TYPE_DIRECT,
+					MappingRules: []interfaces.Mapping{
+						{
+							SourceProp: interfaces.SimpleProperty{Name: "prop1"},
+							TargetProp: interfaces.SimpleProperty{Name: "prop2"},
+						},
+					},
+				},
+			}
+		}
+
+		Convey("Success with two relation types having the same name\n", func() {
+			relationTypes := []*interfaces.RelationType{
+				makeRT("rt1", "same_name"),
+				makeRT("rt2", "same_name"),
+			}
+			err := ValidateRelationTypes(ctx, knID, relationTypes)
+			So(err, ShouldBeNil)
+			So(relationTypes[0].KNID, ShouldEqual, knID)
+			So(relationTypes[1].KNID, ShouldEqual, knID)
+		})
+
+		Convey("Failed when two relation types have the same ID\n", func() {
+			relationTypes := []*interfaces.RelationType{
+				makeRT("rt1", "name1"),
+				makeRT("rt1", "name2"),
+			}
+			err := ValidateRelationTypes(ctx, knID, relationTypes)
+			So(err, ShouldNotBeNil)
+			httpErr := err.(*rest.HTTPError)
+			So(httpErr.BaseError.ErrorCode, ShouldEqual, berrors.BknBackend_RelationType_Duplicated_IDInFile)
+		})
+
+		Convey("Success with multiple distinct relation types\n", func() {
+			relationTypes := []*interfaces.RelationType{
+				makeRT("rt1", "name1"),
+				makeRT("rt2", "name2"),
+				makeRT("rt3", "name1"),
+			}
+			err := ValidateRelationTypes(ctx, knID, relationTypes)
+			So(err, ShouldBeNil)
+		})
+	})
+}

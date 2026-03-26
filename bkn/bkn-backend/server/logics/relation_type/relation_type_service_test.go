@@ -81,64 +81,6 @@ func Test_relationTypeService_CheckRelationTypeExistByID(t *testing.T) {
 	})
 }
 
-func Test_relationTypeService_CheckRelationTypeExistByName(t *testing.T) {
-	Convey("Test CheckRelationTypeExistByName\n", t, func() {
-		ctx := context.Background()
-		mockCtrl := gomock.NewController(t)
-		defer mockCtrl.Finish()
-
-		appSetting := &common.AppSetting{}
-		rta := bmock.NewMockRelationTypeAccess(mockCtrl)
-
-		service := &relationTypeService{
-			appSetting: appSetting,
-			rta:        rta,
-		}
-
-		Convey("Success when relation type exists\n", func() {
-			knID := "kn1"
-			branch := interfaces.MAIN_BRANCH
-			rtName := "relation_type1"
-			rtID := "rt1"
-
-			rta.EXPECT().CheckRelationTypeExistByName(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(rtID, true, nil)
-
-			id, exist, err := service.CheckRelationTypeExistByName(ctx, knID, branch, rtName)
-			So(err, ShouldBeNil)
-			So(exist, ShouldBeTrue)
-			So(id, ShouldEqual, rtID)
-		})
-
-		Convey("Success when relation type does not exist\n", func() {
-			knID := "kn1"
-			branch := interfaces.MAIN_BRANCH
-			rtName := "relation_type1"
-
-			rta.EXPECT().CheckRelationTypeExistByName(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return("", false, nil)
-
-			id, exist, err := service.CheckRelationTypeExistByName(ctx, knID, branch, rtName)
-			So(err, ShouldBeNil)
-			So(exist, ShouldBeFalse)
-			So(id, ShouldEqual, "")
-		})
-
-		Convey("Failed when access layer returns error\n", func() {
-			knID := "kn1"
-			branch := interfaces.MAIN_BRANCH
-			rtName := "relation_type1"
-
-			rta.EXPECT().CheckRelationTypeExistByName(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return("", false, rest.NewHTTPError(ctx, 500, berrors.BknBackend_RelationType_InternalError))
-
-			id, exist, err := service.CheckRelationTypeExistByName(ctx, knID, branch, rtName)
-			So(err, ShouldNotBeNil)
-			So(exist, ShouldBeFalse)
-			So(id, ShouldEqual, "")
-			httpErr := err.(*rest.HTTPError)
-			So(httpErr.BaseError.ErrorCode, ShouldEqual, berrors.BknBackend_RelationType_InternalError_CheckRelationTypeIfExistFailed)
-		})
-	})
-}
-
 func Test_relationTypeService_GetRelationTypeIDsByKnID(t *testing.T) {
 	Convey("Test GetRelationTypeIDsByKnID\n", t, func() {
 		ctx := context.Background()
@@ -832,7 +774,6 @@ func Test_relationTypeService_CreateRelationTypes(t *testing.T) {
 				Return(&interfaces.ObjectType{ObjectTypeWithKeyField: interfaces.ObjectTypeWithKeyField{OTID: "ot1"}}, nil).AnyTimes()
 			ots.EXPECT().CheckObjectTypeExistByID(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return("", true, nil).AnyTimes()
 			rta.EXPECT().CheckRelationTypeExistByID(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return("", false, nil).AnyTimes()
-			rta.EXPECT().CheckRelationTypeExistByName(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return("", false, nil).AnyTimes()
 			rta.EXPECT().CreateRelationType(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
 			vba.EXPECT().WriteDatasetDocuments(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
 			smock.ExpectCommit()
@@ -877,7 +818,6 @@ func Test_relationTypeService_CreateRelationTypes(t *testing.T) {
 			smock.ExpectBegin()
 			ps.EXPECT().CheckPermission(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
 			rta.EXPECT().CheckRelationTypeExistByID(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return("rt1", true, nil)
-			rta.EXPECT().CheckRelationTypeExistByName(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return("", false, nil)
 			smock.ExpectRollback()
 
 			result, err := service.CreateRelationTypes(ctx, nil, relationTypes, interfaces.ImportMode_Normal, true)
@@ -887,7 +827,7 @@ func Test_relationTypeService_CreateRelationTypes(t *testing.T) {
 			So(httpErr.BaseError.ErrorCode, ShouldEqual, berrors.BknBackend_RelationType_RelationTypeIDExisted)
 		})
 
-		Convey("Success with ignore mode when relation type exists\n", func() {
+		Convey("Success with ignore mode when relation type ID exists\n", func() {
 			relationTypes := []*interfaces.RelationType{
 				{
 					RelationTypeWithKeyField: interfaces.RelationTypeWithKeyField{
@@ -902,12 +842,39 @@ func Test_relationTypeService_CreateRelationTypes(t *testing.T) {
 			smock.ExpectBegin()
 			ps.EXPECT().CheckPermission(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
 			rta.EXPECT().CheckRelationTypeExistByID(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return("rt1", true, nil)
-			rta.EXPECT().CheckRelationTypeExistByName(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return("rt1", true, nil)
 			smock.ExpectCommit()
 
 			result, err := service.CreateRelationTypes(ctx, nil, relationTypes, interfaces.ImportMode_Ignore, true)
 			So(err, ShouldBeNil)
 			So(len(result), ShouldEqual, 0)
+		})
+
+		Convey("Success with ignore mode when same name but different ID exists\n", func() {
+			relationTypes := []*interfaces.RelationType{
+				{
+					RelationTypeWithKeyField: interfaces.RelationTypeWithKeyField{
+						RTID:               "rt2",
+						RTName:             "relation_type1",
+						SourceObjectTypeID: "ot1",
+						TargetObjectTypeID: "ot2",
+					},
+					KNID:   "kn1",
+					Branch: interfaces.MAIN_BRANCH,
+				},
+			}
+
+			smock.ExpectBegin()
+			ps.EXPECT().CheckPermission(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
+			rta.EXPECT().CheckRelationTypeExistByID(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return("", false, nil)
+			ots.EXPECT().GetObjectTypeByID(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+				Return(&interfaces.ObjectType{}, nil).AnyTimes()
+			rta.EXPECT().CreateRelationType(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
+			vba.EXPECT().WriteDatasetDocuments(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
+			smock.ExpectCommit()
+
+			result, err := service.CreateRelationTypes(ctx, nil, relationTypes, interfaces.ImportMode_Ignore, true)
+			So(err, ShouldBeNil)
+			So(len(result), ShouldEqual, 1)
 		})
 
 		Convey("Success with Overwrite mode when ID exists\n", func() {
@@ -925,7 +892,6 @@ func Test_relationTypeService_CreateRelationTypes(t *testing.T) {
 			smock.ExpectBegin()
 			ps.EXPECT().CheckPermission(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
 			rta.EXPECT().CheckRelationTypeExistByID(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return("rt1", true, nil)
-			rta.EXPECT().CheckRelationTypeExistByName(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return("rt1", true, nil)
 			ots.EXPECT().GetObjectTypeByID(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
 				Return(&interfaces.ObjectType{}, nil).AnyTimes()
 			rta.EXPECT().UpdateRelationType(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
@@ -935,6 +901,34 @@ func Test_relationTypeService_CreateRelationTypes(t *testing.T) {
 			result, err := service.CreateRelationTypes(ctx, nil, relationTypes, interfaces.ImportMode_Overwrite, true)
 			So(err, ShouldBeNil)
 			So(len(result), ShouldEqual, 0)
+		})
+
+		Convey("Success with Overwrite mode when same name but different ID - creates new record\n", func() {
+			relationTypes := []*interfaces.RelationType{
+				{
+					RelationTypeWithKeyField: interfaces.RelationTypeWithKeyField{
+						RTID:               "rt2",
+						RTName:             "relation_type1",
+						SourceObjectTypeID: "ot1",
+						TargetObjectTypeID: "ot2",
+					},
+					KNID:   "kn1",
+					Branch: interfaces.MAIN_BRANCH,
+				},
+			}
+
+			smock.ExpectBegin()
+			ps.EXPECT().CheckPermission(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
+			rta.EXPECT().CheckRelationTypeExistByID(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return("", false, nil)
+			ots.EXPECT().GetObjectTypeByID(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+				Return(&interfaces.ObjectType{}, nil).AnyTimes()
+			rta.EXPECT().CreateRelationType(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
+			vba.EXPECT().WriteDatasetDocuments(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
+			smock.ExpectCommit()
+
+			result, err := service.CreateRelationTypes(ctx, nil, relationTypes, interfaces.ImportMode_Overwrite, true)
+			So(err, ShouldBeNil)
+			So(len(result), ShouldEqual, 1)
 		})
 
 		Convey("Success with empty RTID generates new ID\n", func() {
@@ -954,7 +948,6 @@ func Test_relationTypeService_CreateRelationTypes(t *testing.T) {
 			rta.EXPECT().CheckRelationTypeExistByID(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Do(func(ctx, knID, branch, rtID interface{}) {
 				So(rtID, ShouldNotBeEmpty)
 			}).Return("", false, nil)
-			rta.EXPECT().CheckRelationTypeExistByName(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return("", false, nil)
 			ots.EXPECT().GetObjectTypeByID(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
 				Return(&interfaces.ObjectType{}, nil).AnyTimes()
 			rta.EXPECT().CreateRelationType(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
@@ -1008,7 +1001,6 @@ func Test_relationTypeService_CreateRelationTypes(t *testing.T) {
 			ps.EXPECT().CheckPermission(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
 			ots.EXPECT().GetObjectTypeByID(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(&interfaces.ObjectType{}, nil).AnyTimes()
 			rta.EXPECT().CheckRelationTypeExistByID(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return("", false, nil)
-			rta.EXPECT().CheckRelationTypeExistByName(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return("", false, nil)
 			rta.EXPECT().CreateRelationType(gomock.Any(), gomock.Any(), gomock.Any()).Return(rest.NewHTTPError(ctx, 500, berrors.BknBackend_RelationType_InternalError))
 			smock.ExpectRollback()
 
@@ -1033,7 +1025,6 @@ func Test_relationTypeService_CreateRelationTypes(t *testing.T) {
 			ps.EXPECT().CheckPermission(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
 			ots.EXPECT().GetObjectTypeByID(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(&interfaces.ObjectType{}, nil).AnyTimes()
 			rta.EXPECT().CheckRelationTypeExistByID(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return("", false, nil)
-			rta.EXPECT().CheckRelationTypeExistByName(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return("", false, nil)
 			rta.EXPECT().CreateRelationType(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
 			vba.EXPECT().WriteDatasetDocuments(gomock.Any(), gomock.Any(), gomock.Any()).Return(rest.NewHTTPError(ctx, 500, berrors.BknBackend_RelationType_InternalError))
 			smock.ExpectRollback()

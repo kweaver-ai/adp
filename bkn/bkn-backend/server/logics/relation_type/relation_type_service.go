@@ -90,25 +90,6 @@ func (rts *relationTypeService) CheckRelationTypeExistByID(ctx context.Context, 
 	return rtName, exist, nil
 }
 
-func (rts *relationTypeService) CheckRelationTypeExistByName(ctx context.Context, knID string, branch string, rtName string) (string, bool, error) {
-
-	ctx, span := ar_trace.Tracer.Start(ctx, fmt.Sprintf("校验关系类[%s]的存在性", rtName))
-	defer span.End()
-
-	rtID, exist, err := rts.rta.CheckRelationTypeExistByName(ctx, knID, branch, rtName)
-	if err != nil {
-		logger.Errorf("CheckRelationTypeExistByName error: %s", err.Error())
-		// 记录处理的 sql 字符串
-		o11y.Error(ctx, fmt.Sprintf("按名称[%v]获取关系类失败: %v", rtName, err))
-		span.SetStatus(codes.Error, fmt.Sprintf("按名称[%s]获取关系类失败", rtName))
-		return rtID, exist, rest.NewHTTPError(ctx, http.StatusInternalServerError,
-			berrors.BknBackend_RelationType_InternalError_CheckRelationTypeIfExistFailed).WithErrorDetails(err.Error())
-	}
-
-	span.SetStatus(codes.Ok, "")
-	return rtID, exist, nil
-}
-
 func (rts *relationTypeService) CreateRelationTypes(ctx context.Context, tx *sql.Tx,
 	relationTypes []*interfaces.RelationType, mode string, validateDependency bool) ([]string, error) {
 
@@ -684,84 +665,30 @@ func (rts *relationTypeService) handleRelationTypeImportMode(ctx context.Context
 	// 3. 校验 若模型的id不为空，则用请求体的id与现有模型ID的重复性
 	for _, relationType := range relationTypes {
 		creates = append(creates, relationType)
-		idExist := false
 		_, idExist, err := rts.CheckRelationTypeExistByID(ctx, relationType.KNID, relationType.Branch, relationType.RTID)
 		if err != nil {
 			return creates, updates, err
 		}
 
-		// 校验 请求体与现有模型名称的重复性
-		existID, nameExist, err := rts.CheckRelationTypeExistByName(ctx, relationType.KNID, relationType.Branch, relationType.RTName)
-		if err != nil {
-			return creates, updates, err
-		}
-
 		// 根据mode来区别，若是ignore，就从结果集中忽略，若是overwrite，就调用update，若是normal就报错。
-		if idExist || nameExist {
+		if idExist {
 			switch mode {
 			case interfaces.ImportMode_Normal:
-				if idExist {
-					errDetails := fmt.Sprintf("The relation type with id [%s] already exists!", relationType.RTID)
-					logger.Error(errDetails)
-					span.SetStatus(codes.Error, errDetails)
-					return creates, updates, rest.NewHTTPError(ctx, http.StatusBadRequest,
-						berrors.BknBackend_RelationType_RelationTypeIDExisted).
-						WithErrorDetails(errDetails)
-				}
-
-				if nameExist {
-					errDetails := fmt.Sprintf("relation type name '%s' already exists", relationType.RTName)
-					logger.Error(errDetails)
-					span.SetStatus(codes.Error, errDetails)
-					return creates, updates, rest.NewHTTPError(ctx, http.StatusForbidden,
-						berrors.BknBackend_RelationType_RelationTypeNameExisted).
-						WithDescription(map[string]any{"name": relationType.RTName}).
-						WithErrorDetails(errDetails)
-				}
+				errDetails := fmt.Sprintf("The relation type with id [%s] already exists!", relationType.RTID)
+				logger.Error(errDetails)
+				span.SetStatus(codes.Error, errDetails)
+				return creates, updates, rest.NewHTTPError(ctx, http.StatusBadRequest,
+					berrors.BknBackend_RelationType_RelationTypeIDExisted).
+					WithErrorDetails(errDetails)
 
 			case interfaces.ImportMode_Ignore:
-				// 存在重复的就跳过
-				// 从create数组中删除
+				// ID 已存在则跳过，从create数组中删除
 				creates = creates[:len(creates)-1]
+
 			case interfaces.ImportMode_Overwrite:
-				if idExist && nameExist {
-					// 如果 id 和名称都存在，但是存在的名称对应的视图 id 和当前视图 id 不一样，则报错
-					if existID != relationType.RTID {
-						errDetails := fmt.Sprintf("RelationType ID '%s' and name '%s' already exist, but the exist relation type id is '%s'",
-							relationType.RTID, relationType.RTName, existID)
-						logger.Error(errDetails)
-						span.SetStatus(codes.Error, errDetails)
-						return creates, updates, rest.NewHTTPError(ctx, http.StatusForbidden,
-							berrors.BknBackend_RelationType_RelationTypeNameExisted).
-							WithErrorDetails(errDetails)
-					} else {
-						// 如果 id 和名称、度量名称都存在，存在的名称对应的模型 id 和当前模型 id 一样，则覆盖更新
-						// 从create数组中删除, 放到更新数组中
-						creates = creates[:len(creates)-1]
-						updates = append(updates, relationType)
-					}
-				}
-
-				// id 已存在，且名称不存在，覆盖更新
-				if idExist && !nameExist {
-					// 从create数组中删除, 放到更新数组中
-					creates = creates[:len(creates)-1]
-					updates = append(updates, relationType)
-				}
-
-				// 如果 id 不存在，name 存在，报错
-				if !idExist && nameExist {
-					errDetails := fmt.Sprintf("RelationType ID '%s' does not exist, but name '%s' already exists",
-						relationType.RTID, relationType.RTName)
-					logger.Error(errDetails)
-					span.SetStatus(codes.Error, errDetails)
-					return creates, updates, rest.NewHTTPError(ctx, http.StatusForbidden,
-						berrors.BknBackend_RelationType_RelationTypeNameExisted).
-						WithErrorDetails(errDetails)
-				}
-
-				// 如果 id 不存在，name不存在，度量名称不存在，不需要做什么，创建
-				// if !idExist && !nameExist {}
+				// ID 已存在则覆盖更新，从create数组中删除, 放到更新数组中
+				creates = creates[:len(creates)-1]
+				updates = append(updates, relationType)
 			}
 		}
 	}

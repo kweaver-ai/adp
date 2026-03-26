@@ -4,11 +4,6 @@ Description = "存在重复的关系类ID"
 Solution = "请检查参数是否正确。"
 ErrorLink = "暂无"
 
-[BknBackend.RelationType.Duplicated.Name]
-Description = "存在重复的关系类名称"
-Solution = "请检查参数是否正确。"
-ErrorLink = "暂无"
-
 [BknBackend.RelationType.InvalidParameter]
 Description = "请求参数不合法"
 Solution = "请检查参数是否正确。"
@@ -21,11 +16,6 @@ ErrorLink = "暂无"
 
 [BknBackend.RelationType.RelationTypeIDExisted]
 Description = "关系类ID已经存在"
-Solution = "请检查参数是否正确。"
-ErrorLink = "暂无"
-
-[BknBackend.RelationType.RelationTypeNameExisted]
-Description = "关系类名称已经存在"
 Solution = "请检查参数是否正确。"
 ErrorLink = "暂无"
 

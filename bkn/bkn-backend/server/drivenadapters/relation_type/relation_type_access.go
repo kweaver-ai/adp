@@ -95,53 +95,6 @@ func (rta *relationTypeAccess) CheckRelationTypeExistByID(ctx context.Context, k
 	return name, true, nil
 }
 
-// 根据名称获取关系类存在性
-func (rta *relationTypeAccess) CheckRelationTypeExistByName(ctx context.Context, knID string, branch string, rtName string) (string, bool, error) {
-	ctx, span := ar_trace.Tracer.Start(ctx, "CheckRelationTypeExistByName", trace.WithSpanKind(trace.SpanKindClient))
-	defer span.End()
-
-	span.SetAttributes(
-		attr.Key("db_url").String(libdb.GetDBUrl()),
-		attr.Key("db_type").String(libdb.GetDBType()),
-	)
-
-	//查询
-	sqlStr, vals, err := sq.Select(
-		"f_id").
-		From(RT_TABLE_NAME).
-		Where(sq.Eq{"f_kn_id": knID}).
-		Where(sq.Eq{"f_branch": branch}).
-		Where(sq.Eq{"f_name": rtName}).
-		ToSql()
-	if err != nil {
-		logger.Errorf("Failed to build the sql of get id by name, error: %s", err.Error())
-		o11y.Error(ctx, fmt.Sprintf("Failed to build the sql of get id by name, error: %s", err.Error()))
-		span.SetStatus(codes.Error, "Build sql failed ")
-		return "", false, err
-	}
-
-	// 记录处理的 sql 字符串
-	o11y.Info(ctx, fmt.Sprintf("获取关系类信息的 sql 语句: %s", sqlStr))
-
-	var rtID string
-	err = rta.db.QueryRow(sqlStr, vals...).Scan(
-		&rtID,
-	)
-	if err == sql.ErrNoRows {
-		span.SetAttributes(attr.Key("no_rows").Bool(true))
-		span.SetStatus(codes.Ok, "")
-		return "", false, nil
-	} else if err != nil {
-		logger.Errorf("row scan failed, err: %v\n", err)
-		o11y.Error(ctx, fmt.Sprintf("Row scan failed, err: %v", err))
-		span.SetStatus(codes.Error, "Row scan failed ")
-		return "", false, err
-	}
-
-	span.SetStatus(codes.Ok, "")
-	return rtID, true, nil
-}
-
 // 创建关系类
 func (rta *relationTypeAccess) CreateRelationType(ctx context.Context, tx *sql.Tx, relationType *interfaces.RelationType) error {
 	ctx, span := ar_trace.Tracer.Start(ctx, "CreateRelationType", trace.WithSpanKind(trace.SpanKindClient))

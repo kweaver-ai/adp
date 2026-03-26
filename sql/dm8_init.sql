@@ -1,4 +1,4 @@
--- Source: bkn/bkn-backend/migrations/dm8/0.4.0/pre/init.sql
+-- Source: bkn/bkn-backend/migrations/dm8/0.5.0/pre/init.sql
 -- Copyright The kweaver.ai Authors.
 --
 -- Licensed under the Apache License, Version 2.0.
@@ -94,8 +94,6 @@ CREATE TABLE IF NOT EXISTS t_relation_type (
   f_update_time BIGINT NOT NULL DEFAULT 0,
   CLUSTER PRIMARY KEY (f_kn_id,f_branch,f_id)
 );
-
-CREATE UNIQUE INDEX IF NOT EXISTS uk_t_relation_type_rt_name ON t_relation_type(f_kn_id,f_branch,f_name);
 
 
 CREATE TABLE IF NOT EXISTS t_action_type (

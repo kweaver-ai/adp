@@ -4,11 +4,6 @@ Description = "Same Relation Type ID Existed"
 Solution = "Please check whether the parameter is correct."
 ErrorLink = "None"
 
-[BknBackend.RelationType.Duplicated.Name]
-Description = "Same Relation Type Name Existed"
-Solution = "Please check whether the parameter is correct."
-ErrorLink = "None"
-
 [BknBackend.RelationType.InvalidParameter]
 Description = "Invalid Request Paramter"
 Solution = "Please check whether the parameter is correct."
@@ -21,11 +16,6 @@ ErrorLink = "None"
 
 [BknBackend.RelationType.RelationTypeIDExisted]
 Description = "Same ID Existed"
-Solution = "Please check whether the parameter is correct."
-ErrorLink = "None"
-
-[BknBackend.RelationType.RelationTypeNameExisted]
-Description = "Same Relation Type Name Existed"
 Solution = "Please check whether the parameter is correct."
 ErrorLink = "None"
 

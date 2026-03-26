@@ -1,4 +1,4 @@
--- Source: bkn/bkn-backend/migrations/mariadb/0.4.0/pre/init.sql
+-- Source: bkn/bkn-backend/migrations/mariadb/0.5.0/pre/init.sql
 -- Copyright The kweaver.ai Authors.
 --
 -- Licensed under the Apache License, Version 2.0.
@@ -90,8 +90,7 @@ CREATE TABLE IF NOT EXISTS t_relation_type (
   f_updater VARCHAR(40) NOT NULL DEFAULT '' COMMENT '更新者id',
   f_updater_type VARCHAR(20) NOT NULL DEFAULT '' COMMENT '更新者类型',
   f_update_time BIGINT(20) NOT NULL DEFAULT 0 COMMENT '更新时间',
-  PRIMARY KEY (f_kn_id,f_branch,f_id),
-  UNIQUE KEY uk_relation_type_name (f_kn_id,f_branch,f_name)
+  PRIMARY KEY (f_kn_id,f_branch,f_id)
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_bin COMMENT = '关系类';
 
 -- 行动类
