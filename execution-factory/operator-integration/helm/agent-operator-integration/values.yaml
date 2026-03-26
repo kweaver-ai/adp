@@ -72,6 +72,14 @@ service:
     maxClients: 50 # 单位秒
     clientLifetime: 600 # 单位秒
 
+# 认证开关
+auth:
+  enabled: true
+
+# 业务域开关
+businessDomain:
+  enabled: true
+
 depServices:
   class-443:
     ingressClass: class-443

@@ -53,6 +53,12 @@ do
         echo "覆盖observability.yaml到 $config_dir"
         cp -f ./server/infra/config/observability.yaml "$config_dir/" || exit 1
 
+        echo "$AUTH_ENABLED"
+        echo "$BUSINESS_DOMAIN_ENABLED"
+
+        export AUTH_ENABLED=true
+        export BUSINESS_DOMAIN_ENABLED=true
+
         go run ./server/main.go;;
     "h")
         echo "-p build and preview api docs";
