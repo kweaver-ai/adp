@@ -50,6 +50,8 @@ type Repo interface {
 	ConvertToPDF(ctx context.Context, taskID, docID string) error
 	// HandleGotenbergCallback 处理Gotenberg回调
 	HandleGotenbergCallback(ctx context.Context, req *GotenbergCallbackRequest) (map[string]any, error)
+
+	DocumentConverter() DocumentConverter
 }
 
 // repo 委托对象
@@ -171,4 +173,8 @@ func (r *repo) ConvertToPDF(ctx context.Context, taskID, docID string) error {
 // HandleGotenbergCallback 处理gotenberg回调
 func (r *repo) HandleGotenbergCallback(ctx context.Context, req *GotenbergCallbackRequest) (map[string]any, error) {
 	return r.documentConverter.HandleGotenbergCallback(ctx, req)
+}
+
+func (r *repo) DocumentConverter() DocumentConverter {
+	return r.documentConverter
 }

@@ -268,7 +268,7 @@ func triggerManual(ctx entity.ExecuteContext, params interface{}, token *entity.
 		tagID := idStr
 		data["id"] = tagID
 		data["_type"] = "tag"
-		tagInfos, err := ecotagAdapter.GetTags(ctx.Context(), map[string][]string{"id": []string{tagID}})
+		tagInfos, err := ecotagAdapter.GetTags(ctx.Context(), map[string][]string{"id": {tagID}})
 		if err == nil && len(tagInfos) > 0 {
 			tagInfo := tagInfos[0]
 			data["id"] = tagInfo.ID
@@ -277,7 +277,7 @@ func triggerManual(ctx entity.ExecuteContext, params interface{}, token *entity.
 			data["name"] = tagInfo.Name
 			if strings.Contains(tagInfo.Path, "/") {
 				parentPath := strings.TrimSuffix(tagInfo.Path, "/"+tagInfo.Name)
-				parentTagInfos, err := ecotagAdapter.GetTags(ctx.Context(), map[string][]string{"path": []string{parentPath}})
+				parentTagInfos, err := ecotagAdapter.GetTags(ctx.Context(), map[string][]string{"path": {parentPath}})
 				if err != nil {
 					traceLog.WithContext(ctx.Context()).Warnln(err)
 					return data, nil

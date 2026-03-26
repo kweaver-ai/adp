@@ -41,6 +41,7 @@ type DocumentConverter interface {
 	ExtractFullText(ctx context.Context, docID string) (map[string]any, error)
 	ConvertToPDF(ctx context.Context, taskID, docID string) error
 	HandleGotenbergCallback(ctx context.Context, req *GotenbergCallbackRequest) (map[string]any, error)
+	ResolveFlowFile(ctx context.Context, docID string) (*ResolvedFlowFile, error)
 }
 
 type documentObjectStorage interface {
@@ -60,9 +61,9 @@ type documentConverter struct {
 	gtbgcallbackErrorURL string
 }
 
-type resolvedFlowFile struct {
-	file    *rds.FlowFile
-	storage *rds.FlowStorage
+type ResolvedFlowFile struct {
+	File    *rds.FlowFile
+	Storage *rds.FlowStorage
 }
 
 var nextDocumentIDFunc = store.NextID
@@ -93,7 +94,7 @@ func NewDocumentConverter() DocumentConverter {
 }
 
 func (c *documentConverter) ExtractFullText(ctx context.Context, docID string) (map[string]any, error) {
-	source, err := c.resolveFlowFile(ctx, docID)
+	source, err := c.ResolveFlowFile(ctx, docID)
 	if err != nil {
 		return nil, err
 	}
@@ -104,7 +105,7 @@ func (c *documentConverter) ExtractFullText(ctx context.Context, docID string) (
 	}
 	defer reader.Close()
 
-	text, err := c.textExtractor.ExtractPlainText(ctx, source.file.Name, reader)
+	text, err := c.textExtractor.ExtractPlainText(ctx, source.File.Name, reader)
 	if err != nil {
 		return nil, err
 	}
@@ -112,7 +113,7 @@ func (c *documentConverter) ExtractFullText(ctx context.Context, docID string) (
 	fileID, err := c.persistDerivedFile(
 		ctx,
 		source,
-		replaceFileExt(source.file.Name, ".txt"),
+		replaceFileExt(source.File.Name, ".txt"),
 		"text/plain; charset=utf-8",
 		bytes.NewReader([]byte(text)),
 		int64(len(text)),
@@ -128,7 +129,7 @@ func (c *documentConverter) ExtractFullText(ctx context.Context, docID string) (
 }
 
 func (c *documentConverter) ConvertToPDF(ctx context.Context, taskID, docID string) error {
-	source, err := c.resolveFlowFile(ctx, docID)
+	source, err := c.ResolveFlowFile(ctx, docID)
 	if err != nil {
 		return err
 	}
@@ -140,7 +141,7 @@ func (c *documentConverter) ConvertToPDF(ctx context.Context, taskID, docID stri
 	defer reader.Close()
 
 	return c.pdfConverter.ConvertToPDF(ctx, &drivenadapters.GotenbergConvertRequest{
-		FileName:        source.file.Name,
+		FileName:        source.File.Name,
 		File:            reader,
 		WebhookURL:      c.gtbgcallbackURL,
 		WebhookErrorURL: c.gtbgcallbackErrorURL,
@@ -165,14 +166,14 @@ func (c *documentConverter) HandleGotenbergCallback(ctx context.Context, req *Go
 		return nil, fmt.Errorf("gotenberg callback content-type %q is not supported", req.ContentType)
 	}
 
-	source, err := c.resolveFlowFile(ctx, req.DocID)
+	source, err := c.ResolveFlowFile(ctx, req.DocID)
 	if err != nil {
 		return nil, err
 	}
 
 	fileName := req.FileName
 	if fileName == "" {
-		fileName = replaceFileExt(source.file.Name, ".pdf")
+		fileName = replaceFileExt(source.File.Name, ".pdf")
 	}
 
 	fileID, err := c.persistDerivedFile(ctx, source, fileName, "application/pdf", req.Body, -1)
@@ -183,7 +184,7 @@ func (c *documentConverter) HandleGotenbergCallback(ctx context.Context, req *Go
 	return map[string]any{"file_id": fileID}, nil
 }
 
-func (c *documentConverter) resolveFlowFile(ctx context.Context, docID string) (*resolvedFlowFile, error) {
+func (c *documentConverter) ResolveFlowFile(ctx context.Context, docID string) (*ResolvedFlowFile, error) {
 	fileID, err := parseDFSDocID(docID)
 	if err != nil {
 		return nil, err
@@ -199,11 +200,11 @@ func (c *documentConverter) resolveFlowFile(ctx context.Context, docID string) (
 		return nil, ierrors.NewIError(ierrors.FileNotFound, "", map[string]any{"docid": docID, "storageid": file.StorageID})
 	}
 
-	return &resolvedFlowFile{file: file, storage: storage}, nil
+	return &ResolvedFlowFile{File: file, Storage: storage}, nil
 }
 
-func (c *documentConverter) openSourceReader(ctx context.Context, source *resolvedFlowFile) (io.ReadCloser, int64, error) {
-	downloadURL, err := c.objectStorage.GetDownloadURL(ctx, source.storage.OssID, source.storage.ObjectKey, 0, true)
+func (c *documentConverter) openSourceReader(ctx context.Context, source *ResolvedFlowFile) (io.ReadCloser, int64, error) {
+	downloadURL, err := c.objectStorage.GetDownloadURL(ctx, source.Storage.OssID, source.Storage.ObjectKey, 0, true)
 	if err != nil {
 		return nil, 0, err
 	}
@@ -229,7 +230,7 @@ func (c *documentConverter) openSourceReader(ctx context.Context, source *resolv
 
 func (c *documentConverter) persistDerivedFile(
 	ctx context.Context,
-	source *resolvedFlowFile,
+	source *ResolvedFlowFile,
 	fileName string,
 	contentType string,
 	body io.Reader,
@@ -283,12 +284,12 @@ func (c *documentConverter) persistDerivedFile(
 
 	if err = c.flowFileDao.Insert(ctx, &rds.FlowFile{
 		ID:            fileID,
-		DagID:         source.file.DagID,
-		DagInstanceID: source.file.DagInstanceID,
+		DagID:         source.File.DagID,
+		DagInstanceID: source.File.DagInstanceID,
 		StorageID:     storageID,
 		Status:        rds.FlowFileStatusReady,
 		Name:          fileName,
-		ExpiresAt:     source.file.ExpiresAt,
+		ExpiresAt:     source.File.ExpiresAt,
 		CreatedAt:     now,
 		UpdatedAt:     now,
 	}); err != nil {
