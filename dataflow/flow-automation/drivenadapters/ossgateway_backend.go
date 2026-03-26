@@ -176,7 +176,7 @@ func (og *ossGatewayBackend) parseListResponse(ctx context.Context, respParam in
 
 // GetAvaildOSS 获取可用对象存储ID
 func (og *ossGatewayBackend) GetAvaildOSS(ctx context.Context) (string, error) {
-	target := fmt.Sprintf("%s/api/v1/storages?is_default=true&enabled=true", og.address)
+	target := fmt.Sprintf("%s/api/v1/storages?enabled=true", og.address)
 
 	_, respParam, err := og.client.Get(ctx, target, nil)
 	if err != nil {

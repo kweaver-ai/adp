@@ -12,7 +12,7 @@ const (
 	// DFSURIPrefix dfs:// 协议前缀
 	DFSURIPrefix = "dfs://"
 	// FlowFileObjectPrefix Dataflow 文件对象存储路径前缀
-	FlowFileObjectPrefix = "dataflow/files"
+	FlowFileObjectPrefix = "dataflow_files"
 )
 
 var (
@@ -87,44 +87,26 @@ func NormalizeFileID(input string) (uint64, error) {
 // ============================================================
 
 // BuildFlowFileObjectKey 生成 Dataflow 文件对象的 OSS 存储路径
-// 格式: dataflow/files/<file_id>/<filename>
 // fileID: flow_file 表的主键 ID
 // filename: 原始文件名
 func BuildFlowFileObjectKey(fileID uint64, filename string) (string, error) {
+
 	if filename == "" {
 		return "", ErrInvalidFileName
 	}
+
 	// 清理文件名，防止路径穿越
 	cleanName := path.Base(filename)
 	if cleanName == "." || cleanName == ".." {
 		return "", ErrInvalidFileName
 	}
+
+	config := NewConfig()
+	prefix := strings.Trim(config.Server.StoragePrefix, "/")
+
+	if prefix != "" {
+		return fmt.Sprintf("%s/%s/%d/%s", prefix, FlowFileObjectPrefix, fileID, cleanName), nil
+	}
+
 	return fmt.Sprintf("%s/%d/%s", FlowFileObjectPrefix, fileID, cleanName), nil
-}
-
-// ParseFlowFileObjectKey 解析 Dataflow 文件对象的 OSS 存储路径
-// 返回 fileID 和 filename
-func ParseFlowFileObjectKey(objectKey string) (fileID uint64, filename string, err error) {
-	if objectKey == "" {
-		return 0, "", ErrInvalidFileID
-	}
-
-	prefix := FlowFileObjectPrefix + "/"
-	if !strings.HasPrefix(objectKey, prefix) {
-		return 0, "", ErrInvalidFileID
-	}
-
-	rest := strings.TrimPrefix(objectKey, prefix)
-	parts := strings.SplitN(rest, "/", 2)
-	if len(parts) < 2 {
-		return 0, "", ErrInvalidFileID
-	}
-
-	fileID, err = strconv.ParseUint(parts[0], 10, 64)
-	if err != nil {
-		return 0, "", ErrInvalidFileID
-	}
-
-	filename = parts[1]
-	return fileID, filename, nil
 }
