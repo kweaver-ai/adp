@@ -78,9 +78,9 @@ func (s *ToolServiceImpl) GetToolBox(ctx context.Context, req *interfaces.GetToo
 		return
 	}
 	resp.Tools = append(resp.Tools, toolInfos...)
-	resp.CreateUser = userMap[toolBox.CreateUser]
-	resp.UpdateUser = userMap[toolBox.UpdateUser]
-	resp.ReleaseUser = userMap[toolBox.ReleaseUser]
+	resp.CreateUser = utils.GetValueOrDefault(userMap, toolBox.CreateUser, interfaces.UnknownUser)
+	resp.UpdateUser = utils.GetValueOrDefault(userMap, toolBox.UpdateUser, interfaces.UnknownUser)
+	resp.ReleaseUser = utils.GetValueOrDefault(userMap, toolBox.ReleaseUser, interfaces.UnknownUser)
 	return
 }
 
@@ -744,8 +744,8 @@ func (s *ToolServiceImpl) batchGetToolInfoAndUserInfo(ctx context.Context, tools
 	}
 	// 填充元数据信息
 	for _, toolInfo := range toolInfos {
-		toolInfo.CreateUser = userMap[toolInfo.CreateUser]
-		toolInfo.UpdateUser = userMap[toolInfo.UpdateUser]
+		toolInfo.CreateUser = utils.GetValueOrDefault(userMap, toolInfo.CreateUser, interfaces.UnknownUser)
+		toolInfo.UpdateUser = utils.GetValueOrDefault(userMap, toolInfo.UpdateUser, interfaces.UnknownUser)
 		metadataDB, ok := sourceIDToMetadataMap[toolIDSourceMap[toolInfo.ToolID]]
 		if !ok {
 			s.Logger.WithContext(ctx).Errorf("metadata not found, toolID: %s", toolInfo.ToolID)
