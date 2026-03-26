@@ -26,6 +26,7 @@ export const typeOperationMapping = {
     'not_exist',
     'null',
     'not_null',
+    'knn',
   ],
 
   // 文本类型 (text)
@@ -48,6 +49,7 @@ export const typeOperationMapping = {
     'not_exist',
     'null',
     'not_null',
+    'knn',
   ],
 
   // 数字大类 (包含 integer, unsigned integer, float, decimal)
