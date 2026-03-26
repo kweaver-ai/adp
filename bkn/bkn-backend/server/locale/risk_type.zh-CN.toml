@@ -1,4 +1,14 @@
 # RiskType
+[BknBackend.RiskType.Duplicated.IDInFile]
+Description = "存在重复的风险类ID"
+Solution = "请检查参数是否正确。"
+ErrorLink = "暂无"
+
+[BknBackend.RiskType.Duplicated.Name]
+Description = "存在重复的风险类名称"
+Solution = "请检查参数是否正确。"
+ErrorLink = "暂无"
+
 [BknBackend.RiskType.InvalidParameter]
 Description = "请求参数无效"
 Solution = "请检查参数是否正确。"
@@ -12,6 +22,11 @@ ErrorLink = "None"
 [BknBackend.RiskType.RiskTypeNameExisted]
 Description = "风险类名称已存在"
 Solution = "请检查参数是否正确。"
+ErrorLink = "None"
+
+[BknBackend.RiskType.RiskFunctionToolNotFound]
+Description = "风险评估工具不存在或不可达"
+Solution = "请确认 box_id 与 tool_id 已在 agent-operator-integration 中注册并可访问。"
 ErrorLink = "None"
 
 [BknBackend.RiskType.InvalidMaxAcceptableLevel]

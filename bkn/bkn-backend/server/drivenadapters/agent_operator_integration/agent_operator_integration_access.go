@@ -9,6 +9,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"net/url"
 	"sync"
 
 	"github.com/kweaver-ai/TelemetrySDK-Go/exporter/v2/ar_trace"
@@ -93,5 +94,42 @@ func (a *agentOperatorIntegrationAccess) RegisterInternalTool(ctx context.Contex
 		return fmt.Errorf("RegisterInternalTool failed: %s", errDetails)
 	}
 
+	return nil
+}
+
+// ProbeToolBoxTool sends a minimal POST to tool-box proxy to verify the tool exists (HTTP layer / gateway).
+func (a *agentOperatorIntegrationAccess) ProbeToolBoxTool(ctx context.Context, boxID, toolID string) error {
+	if a.operatorURL == "" {
+		return fmt.Errorf("AgentOperatorIntegrationUrl not configured")
+	}
+	if boxID == "" || toolID == "" {
+		return fmt.Errorf("box_id and tool_id must be non-empty")
+	}
+
+	httpURL := fmt.Sprintf("%s/tool-box/%s/tool/%s",
+		a.operatorURL, url.PathEscape(boxID), url.PathEscape(toolID))
+
+	accountInfo := interfaces.AccountInfo{}
+	if ctx.Value(interfaces.ACCOUNT_INFO_KEY) != nil {
+		accountInfo = ctx.Value(interfaces.ACCOUNT_INFO_KEY).(interfaces.AccountInfo)
+	}
+
+	headers := map[string]string{
+		interfaces.CONTENT_TYPE_NAME:        interfaces.CONTENT_TYPE_JSON,
+		interfaces.HTTP_HEADER_ACCOUNT_ID:   accountInfo.ID,
+		interfaces.HTTP_HEADER_ACCOUNT_TYPE: accountInfo.Type,
+	}
+
+	// Short timeout payload; endpoint returns 200 when the proxy accepts the call.
+	body := []byte(`{"timeout":3}`)
+	respCode, respData, err := a.httpClient.PostNoUnmarshal(ctx, httpURL, headers, body)
+	logger.Debugf("ProbeToolBoxTool [%s] response code=%d err=%v", httpURL, respCode, err)
+
+	if err != nil {
+		return fmt.Errorf("ProbeToolBoxTool request failed: %w", err)
+	}
+	if respCode != http.StatusOK {
+		return fmt.Errorf("ProbeToolBoxTool failed: status=%d body=%s", respCode, respData)
+	}
 	return nil
 }

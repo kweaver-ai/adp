@@ -208,7 +208,10 @@ func (r *restHandler) UpdateRiskType(c *gin.Context, visitor hydra.Visitor) {
 			return
 		}
 		if exist {
-			rest.ReplyError(c, rest.NewHTTPError(ctx, http.StatusForbidden, berrors.BknBackend_RiskType_RiskTypeNameExisted))
+			errDetails := fmt.Sprintf("risk type name '%s' already exists", riskType.RTName)
+			rest.ReplyError(c, rest.NewHTTPError(ctx, http.StatusBadRequest, berrors.BknBackend_RiskType_RiskTypeNameExisted).
+				WithDescription(map[string]any{"name": riskType.RTName}).
+				WithErrorDetails(errDetails))
 			return
 		}
 	}

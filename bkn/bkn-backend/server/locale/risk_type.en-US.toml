@@ -1,4 +1,14 @@
 # RiskType
+[BknBackend.RiskType.Duplicated.IDInFile]
+Description = "Same Risk Type ID Existed"
+Solution = "Please check whether the parameter is correct."
+ErrorLink = "None"
+
+[BknBackend.RiskType.Duplicated.Name]
+Description = "Same Risk Type Name Existed"
+Solution = "Please check whether the parameter is correct."
+ErrorLink = "None"
+
 [BknBackend.RiskType.InvalidParameter]
 Description = "Invalid Request Parameter"
 Solution = "Please check whether the parameter is correct."
@@ -12,6 +22,11 @@ ErrorLink = "None"
 [BknBackend.RiskType.RiskTypeNameExisted]
 Description = "Same Risk Type Name Existed"
 Solution = "Please check whether the parameter is correct."
+ErrorLink = "None"
+
+[BknBackend.RiskType.RiskFunctionToolNotFound]
+Description = "Risk assessment tool not found or unreachable"
+Solution = "Verify box_id and tool_id are registered with agent-operator-integration and reachable."
 ErrorLink = "None"
 
 [BknBackend.RiskType.InvalidMaxAcceptableLevel]

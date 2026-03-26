@@ -45,6 +45,7 @@ type riskTypeService struct {
 	uma        interfaces.UserMgmtAccess
 	vba        interfaces.VegaBackendAccess
 	mfa        interfaces.ModelFactoryAccess
+	aoia       interfaces.AgentOperatorIntegrationAccess
 }
 
 func NewRiskTypeService(appSetting *common.AppSetting) interfaces.RiskTypeService {
@@ -57,6 +58,7 @@ func NewRiskTypeService(appSetting *common.AppSetting) interfaces.RiskTypeServic
 			uma:        logics.UMA,
 			vba:        logics.VBA,
 			mfa:        logics.MFA,
+			aoia:       logics.AOIA,
 		}
 	})
 	return rts
@@ -122,6 +124,12 @@ func (rts *riskTypeService) CreateRiskTypes(ctx context.Context, tx *sql.Tx, ris
 		rt.ModuleType = interfaces.MODULE_TYPE_RISK_TYPE
 	}
 
+	for _, rt := range riskTypes {
+		if err = rts.ensureCustomRiskToolExists(ctx, rt); err != nil {
+			return nil, err
+		}
+	}
+
 	if tx == nil {
 		tx, err = rts.db.Begin()
 		if err != nil {
@@ -177,50 +185,112 @@ func (rts *riskTypeService) CreateRiskTypes(ctx context.Context, tx *sql.Tx, ris
 }
 
 func (rts *riskTypeService) handleImportMode(ctx context.Context, mode string, riskTypes []*interfaces.RiskType) (createList, updateList []*interfaces.RiskType, err error) {
-	switch mode {
-	case interfaces.ImportMode_Normal:
-		for _, rt := range riskTypes {
-			_, exist, e := rts.rta.CheckRiskTypeExistByID(ctx, rt.KNID, rt.Branch, rt.RTID)
-			if e != nil {
-				return nil, nil, rest.NewHTTPError(ctx, http.StatusInternalServerError,
-					berrors.BknBackend_RiskType_InternalError_CheckRiskTypeIfExistFailed).WithErrorDetails(e.Error())
-			}
-			if exist {
-				return nil, nil, rest.NewHTTPError(ctx, http.StatusBadRequest,
-					berrors.BknBackend_RiskType_RiskTypeIDExisted).
-					WithErrorDetails(fmt.Sprintf("RiskType ID '%s' already exists", rt.RTID))
-			}
-			createList = append(createList, rt)
-		}
-	case interfaces.ImportMode_Ignore:
-		for _, rt := range riskTypes {
-			_, exist, e := rts.rta.CheckRiskTypeExistByID(ctx, rt.KNID, rt.Branch, rt.RTID)
-			if e != nil {
-				return nil, nil, rest.NewHTTPError(ctx, http.StatusInternalServerError,
-					berrors.BknBackend_RiskType_InternalError_CheckRiskTypeIfExistFailed).WithErrorDetails(e.Error())
-			}
-			if !exist {
-				createList = append(createList, rt)
-			}
-		}
-	case interfaces.ImportMode_Overwrite:
-		for _, rt := range riskTypes {
-			_, exist, e := rts.rta.CheckRiskTypeExistByID(ctx, rt.KNID, rt.Branch, rt.RTID)
-			if e != nil {
-				return nil, nil, rest.NewHTTPError(ctx, http.StatusInternalServerError,
-					berrors.BknBackend_RiskType_InternalError_CheckRiskTypeIfExistFailed).WithErrorDetails(e.Error())
-			}
-			if exist {
-				updateList = append(updateList, rt)
-			} else {
-				createList = append(createList, rt)
-			}
-		}
-	default:
+	if mode != interfaces.ImportMode_Normal && mode != interfaces.ImportMode_Ignore && mode != interfaces.ImportMode_Overwrite {
 		return nil, nil, rest.NewHTTPError(ctx, http.StatusBadRequest,
 			berrors.BknBackend_InvalidParameter_ImportMode).WithErrorDetails("invalid import_mode")
 	}
-	return createList, updateList, nil
+
+	ctx, span := ar_trace.Tracer.Start(ctx, "handleRiskTypeImportMode")
+	defer span.End()
+
+	creates := []*interfaces.RiskType{}
+	updates := []*interfaces.RiskType{}
+
+	for _, rt := range riskTypes {
+		creates = append(creates, rt)
+
+		_, idExist, e := rts.rta.CheckRiskTypeExistByID(ctx, rt.KNID, rt.Branch, rt.RTID)
+		if e != nil {
+			return nil, nil, rest.NewHTTPError(ctx, http.StatusInternalServerError,
+				berrors.BknBackend_RiskType_InternalError_CheckRiskTypeIfExistFailed).WithErrorDetails(e.Error())
+		}
+
+		existID, nameExist, e := rts.rta.CheckRiskTypeExistByName(ctx, rt.KNID, rt.Branch, rt.RTName)
+		if e != nil {
+			return nil, nil, rest.NewHTTPError(ctx, http.StatusInternalServerError,
+				berrors.BknBackend_RiskType_InternalError_CheckRiskTypeIfExistFailed).WithErrorDetails(e.Error())
+		}
+
+		if idExist || nameExist {
+			switch mode {
+			case interfaces.ImportMode_Normal:
+				if idExist {
+					return nil, nil, rest.NewHTTPError(ctx, http.StatusBadRequest,
+						berrors.BknBackend_RiskType_RiskTypeIDExisted).
+						WithErrorDetails(fmt.Sprintf("RiskType ID '%s' already exists", rt.RTID))
+				}
+				if nameExist {
+					errDetails := fmt.Sprintf("risk type name '%s' already exists", rt.RTName)
+					logger.Error(errDetails)
+					span.SetStatus(codes.Error, errDetails)
+					return nil, nil, rest.NewHTTPError(ctx, http.StatusBadRequest,
+						berrors.BknBackend_RiskType_RiskTypeNameExisted).
+						WithDescription(map[string]any{"name": rt.RTName}).
+						WithErrorDetails(errDetails)
+				}
+
+			case interfaces.ImportMode_Ignore:
+				creates = creates[:len(creates)-1]
+
+			case interfaces.ImportMode_Overwrite:
+				if idExist && nameExist {
+					if existID != rt.RTID {
+						errDetails := fmt.Sprintf("RiskType ID '%s' and name '%s' already exist, but the exist risk type id is '%s'",
+							rt.RTID, rt.RTName, existID)
+						logger.Error(errDetails)
+						span.SetStatus(codes.Error, errDetails)
+						return nil, nil, rest.NewHTTPError(ctx, http.StatusBadRequest,
+							berrors.BknBackend_RiskType_RiskTypeNameExisted).
+							WithErrorDetails(errDetails)
+					}
+					creates = creates[:len(creates)-1]
+					updates = append(updates, rt)
+				}
+				if idExist && !nameExist {
+					creates = creates[:len(creates)-1]
+					updates = append(updates, rt)
+				}
+				if !idExist && nameExist {
+					errDetails := fmt.Sprintf("RiskType ID '%s' does not exist, but name '%s' already exists",
+						rt.RTID, rt.RTName)
+					logger.Error(errDetails)
+					span.SetStatus(codes.Error, errDetails)
+					return nil, nil, rest.NewHTTPError(ctx, http.StatusBadRequest,
+						berrors.BknBackend_RiskType_RiskTypeNameExisted).
+						WithErrorDetails(errDetails)
+				}
+			}
+		}
+	}
+
+	return creates, updates, nil
+}
+
+// ensureCustomRiskToolExists probes agent-operator for non-builtin risk_function tool references.
+func (rts *riskTypeService) ensureCustomRiskToolExists(ctx context.Context, rt *interfaces.RiskType) error {
+	if rt.RiskFunction == nil {
+		return nil
+	}
+	if rt.RiskFunction.Type != "" && rt.RiskFunction.Type != "tool" {
+		return nil
+	}
+	box := rt.RiskFunction.BoxID
+	tool := rt.RiskFunction.ToolID
+	if box == interfaces.BuiltinToolBoxID && tool == interfaces.BuiltinToolToolID {
+		return nil
+	}
+	if rts.aoia == nil {
+		return rest.NewHTTPError(ctx, http.StatusServiceUnavailable,
+			berrors.BknBackend_RiskType_InternalError).
+			WithErrorDetails("agent-operator-integration is not configured, cannot verify risk_function tool")
+	}
+	if err := rts.aoia.ProbeToolBoxTool(ctx, box, tool); err != nil {
+		logger.Errorf("ProbeToolBoxTool error: %s", err.Error())
+		return rest.NewHTTPError(ctx, http.StatusBadRequest,
+			berrors.BknBackend_RiskType_RiskFunctionToolNotFound).
+			WithErrorDetails(fmt.Sprintf("risk_function tool not reachable: box_id=%s tool_id=%s: %v", box, tool, err))
+	}
+	return nil
 }
 
 func (rts *riskTypeService) ListRiskTypes(ctx context.Context, query interfaces.RiskTypesQueryParams) ([]*interfaces.RiskType, int, error) {
@@ -298,6 +368,10 @@ func (rts *riskTypeService) UpdateRiskType(ctx context.Context, tx *sql.Tx, risk
 		ID:   riskType.KNID,
 	}, []string{interfaces.OPERATION_TYPE_MODIFY})
 	if err != nil {
+		return err
+	}
+
+	if err = rts.ensureCustomRiskToolExists(ctx, riskType); err != nil {
 		return err
 	}
 

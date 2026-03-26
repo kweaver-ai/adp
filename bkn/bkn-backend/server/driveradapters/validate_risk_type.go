@@ -33,7 +33,7 @@ func ValidateRiskTypes(ctx context.Context, knID string, riskTypes []*interfaces
 		if _, ok := idMap[rtID]; !ok || rtID == "" {
 			idMap[rtID] = nil
 		} else {
-			return rest.NewHTTPError(ctx, http.StatusBadRequest, berrors.BknBackend_RiskType_RiskTypeIDExisted).
+			return rest.NewHTTPError(ctx, http.StatusBadRequest, berrors.BknBackend_RiskType_Duplicated_IDInFile).
 				WithDescription(map[string]any{"riskTypeID": rtID}).
 				WithErrorDetails(fmt.Sprintf("RiskType ID '%s' already exists in the request body", rtID))
 		}
@@ -46,7 +46,9 @@ func ValidateRiskTypes(ctx context.Context, knID string, riskTypes []*interfaces
 		if _, ok := tmpNameMap[riskType.RTName]; !ok {
 			tmpNameMap[riskType.RTName] = nil
 		} else {
-			return rest.NewHTTPError(ctx, http.StatusBadRequest, berrors.BknBackend_RiskType_RiskTypeNameExisted)
+			return rest.NewHTTPError(ctx, http.StatusBadRequest, berrors.BknBackend_RiskType_Duplicated_Name).
+				WithDescription(map[string]any{"riskTypeName": riskType.RTName}).
+				WithErrorDetails(fmt.Sprintf("RiskType name '%s' already exists in the request body", riskType.RTName))
 		}
 
 		riskType.KNID = knID
@@ -72,17 +74,29 @@ func ValidateRiskType(ctx context.Context, riskType *interfaces.RiskType) error 
 	}
 	riskType.Tags = libCommon.TagSliceTransform(riskType.Tags)
 
-	// 若 risk function 未绑定，则绑定内置风险评估工具，使用内置风险评估工具无需绑定参数，由系统处理,在risk type上定义的参数都会把实参传给工具
+	// risk_function: both box_id and tool_id empty -> built-in tool; both set -> keep; only one set -> invalid
 	if riskType.RiskFunction == nil {
 		riskType.RiskFunction = &interfaces.RiskFunction{
 			Type:   "tool",
 			BoxID:  interfaces.BuiltinToolBoxID,
 			ToolID: interfaces.BuiltinToolToolID,
 		}
-	}
-	if riskType.RiskFunction.BoxID == "" || riskType.RiskFunction.ToolID == "" {
-		riskType.RiskFunction.BoxID = interfaces.BuiltinToolBoxID
-		riskType.RiskFunction.ToolID = interfaces.BuiltinToolToolID
+	} else {
+		box := strings.TrimSpace(riskType.RiskFunction.BoxID)
+		tool := strings.TrimSpace(riskType.RiskFunction.ToolID)
+		if box == "" && tool == "" {
+			riskType.RiskFunction.BoxID = interfaces.BuiltinToolBoxID
+			riskType.RiskFunction.ToolID = interfaces.BuiltinToolToolID
+		} else if box == "" || tool == "" {
+			return rest.NewHTTPError(ctx, http.StatusBadRequest, berrors.BknBackend_RiskType_InvalidParameter).
+				WithErrorDetails("risk_function requires both box_id and tool_id, or leave both empty to use the built-in risk assessment tool")
+		} else {
+			riskType.RiskFunction.BoxID = box
+			riskType.RiskFunction.ToolID = tool
+		}
+		if riskType.RiskFunction.Type == "" {
+			riskType.RiskFunction.Type = "tool"
+		}
 	}
 
 	if err = validateObjectComment(ctx, riskType.Comment); err != nil {
