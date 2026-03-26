@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"os"
 	"path"
 	"strconv"
 	"strings"
@@ -241,7 +240,7 @@ func (c *documentConverter) persistDerivedFile(
 	var uploadCloser io.Closer
 
 	if size <= 0 {
-		reader, bufferedSize, err := bufferToTempFile(body)
+		reader, bufferedSize, err := utils.BufferToTempFile(body, "doc-converter")
 		if err != nil {
 			return "", err
 		}
@@ -322,39 +321,6 @@ func readAtMost(r io.Reader, buf []byte) (int, error) {
 		}
 	}
 	return total, nil
-}
-
-type autoCleanTempFile struct {
-	*os.File
-}
-
-func (f *autoCleanTempFile) Close() error {
-	name := f.Name()
-	err := f.File.Close()
-	_ = os.Remove(name)
-	return err
-}
-
-func bufferToTempFile(r io.Reader) (io.ReadCloser, int64, error) {
-	tmp, err := os.CreateTemp("", "doc-converter-*")
-	if err != nil {
-		return nil, 0, err
-	}
-
-	written, err := io.Copy(tmp, r)
-	if err != nil {
-		_ = tmp.Close()
-		_ = os.Remove(tmp.Name())
-		return nil, 0, err
-	}
-
-	if _, err = tmp.Seek(0, io.SeekStart); err != nil {
-		_ = tmp.Close()
-		_ = os.Remove(tmp.Name())
-		return nil, 0, err
-	}
-
-	return &autoCleanTempFile{File: tmp}, written, nil
 }
 
 func sanitizeFileName(fileName string) string {

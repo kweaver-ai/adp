@@ -4,7 +4,6 @@ package dataflow_doc
 import (
 	"encoding/json"
 	"io"
-	"mime/multipart"
 	"net/http"
 	"sync"
 
@@ -14,6 +13,7 @@ import (
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/driveradapters/middleware"
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/errors"
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/logics/mgnt"
+	"github.com/kweaver-ai/adp/autoflow/flow-automation/utils"
 )
 
 // RESTHandler defines the interface for dataflow-doc REST APIs
@@ -184,6 +184,13 @@ func (h *restHandler) parseMultipartTrigger(c *gin.Context, dagID string, userIn
 		}
 	}
 
+	// 立即将文件缓存到临时文件，避免 multipart.File 在 defer 后被关闭
+	tempFile, _, err := utils.BufferToTempFile(file, "dataflow-upload")
+	if err != nil {
+		return nil, errors.NewIError(errors.InternalError, "", []interface{}{"failed to cache uploaded file"})
+	}
+	// 注意：tempFile 由调用者（mgnt层）在使用完毕后关闭
+
 	return &mgnt.TriggerDataflowDocParams{
 		DagID:       dagID,
 		SourceFrom:  string(TriggerModeForm),
@@ -191,8 +198,7 @@ func (h *restHandler) parseMultipartTrigger(c *gin.Context, dagID string, userIn
 		Size:        fileHeader.Size,
 		ContentType: fileHeader.Header.Get("Content-Type"),
 		Data:        data,
-		File:        file,
-		FileHeader:  fileHeader,
+		File:        tempFile,
 	}, nil
 }
 
@@ -265,21 +271,4 @@ func (h *restHandler) complete(c *gin.Context) {
 		Status:    result.Status,
 		Continued: result.Continued,
 	})
-}
-
-// MultipartFileReader wraps multipart.File to implement io.Reader
-type MultipartFileReader struct {
-	file multipart.File
-}
-
-func NewMultipartFileReader(f multipart.File) *MultipartFileReader {
-	return &MultipartFileReader{file: f}
-}
-
-func (r *MultipartFileReader) Read(p []byte) (n int, err error) {
-	return r.file.Read(p)
-}
-
-func (r *MultipartFileReader) Close() error {
-	return r.file.Close()
 }

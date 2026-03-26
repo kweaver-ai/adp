@@ -4,7 +4,7 @@ package mgnt
 import (
 	"context"
 	"fmt"
-	"mime/multipart"
+	"io"
 	"time"
 
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/common"
@@ -28,8 +28,7 @@ type TriggerDataflowDocParams struct {
 	ContentType string                 `json:"content_type"` // MIME类型
 	URL         string                 `json:"url"`          // 源文件URL(仅remote模式)
 	Data        map[string]interface{} `json:"data"`         // 触发器扩展字段
-	File        multipart.File         `json:"-"`            // 上传的文件(仅form模式)
-	FileHeader  *multipart.FileHeader  `json:"-"`            // 文件头信息(仅form模式)
+	File        io.ReadCloser          `json:"-"`            // 上传的文件(仅form模式)，调用者负责关闭
 }
 
 // TriggerDataflowDocResult 触发Dataflow文档处理的结果

@@ -46,11 +46,12 @@ type StorageInfo struct {
 
 // PresignedRequest 预签名请求信息
 type PresignedRequest struct {
-	Method    string            `json:"method"`
-	URL       string            `json:"url"`
-	Headers   map[string]string `json:"headers"`
-	FormField map[string]string `json:"form_field,omitempty"`
-	Body      string            `json:"body,omitempty"`
+	Method      string            `json:"method"`
+	URL         string            `json:"url"`
+	Headers     map[string]string `json:"headers"`
+	FormField   map[string]string `json:"form_field,omitempty"`
+	Body        string            `json:"body,omitempty"`
+	RequestBody string            `json:"request_body,omitempty"` // 完成分片上传时返回的 XML body
 }
 
 // InitMultiUploadResponse 分片上传初始化响应
@@ -375,9 +376,16 @@ func (og *ossGatewayBackend) uploadPart(ctx context.Context, ossID, key, uploadI
 		return "", err
 	}
 
-	// 获取ETag
+	// 获取ETag (保留双引号，OSS完成分片上传需要)
 	eTag := respHeaders.Get("Etag")
-	return strings.Trim(eTag, "\""), nil
+	if eTag == "" {
+		return "", fmt.Errorf("missing ETag in response")
+	}
+	// 确保ETag包含双引号
+	if !strings.HasPrefix(eTag, "\"") {
+		eTag = "\"" + eTag + "\""
+	}
+	return eTag, nil
 }
 
 // completeMultiUpload 完成分片上传
@@ -397,7 +405,12 @@ func (og *ossGatewayBackend) completeMultiUpload(ctx context.Context, ossID, key
 	}
 
 	// 执行完成上传请求
-	bodyByte := []byte(resp.Data.Body)
+	// 优先使用 request_body (完成分片上传返回)，否则使用 body
+	requestBody := resp.Data.RequestBody
+	if requestBody == "" {
+		requestBody = resp.Data.Body
+	}
+	bodyByte := []byte(requestBody)
 	_, _, err = og.client.OSSClient(ctx, resp.Data.URL, resp.Data.Method, resp.Data.Headers, &bodyByte)
 	if err != nil {
 		traceLog.WithContext(ctx).Warnf("[completeMultiUpload] complete upload failed: %s", err.Error())
