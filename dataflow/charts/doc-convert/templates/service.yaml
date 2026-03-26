@@ -6,7 +6,6 @@ metadata:
   namespace: {{ .Values.namespace }}
   labels:
     {{- include "doc-convert.labels" . | nindent 4 }}
-    app.kubernetes.io/name: doc-convert
 spec:
   {{- if .Values.enableDualStack }}
   ipFamilies:
