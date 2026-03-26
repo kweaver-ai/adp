@@ -437,7 +437,7 @@ func (a *ContentFileParse) Validate(ctx entity.ExecuteContext) error {
 			return fmt.Errorf("docid is required")
 		}
 
-		downloadInfo, err := GetFileDownloadInfo(ctx, a.DocID, a.Version)
+		downloadInfo, err := GetFileDownloadInfo(ctx.Context(), ctx, a.DocID, a.Version)
 		if err != nil {
 			return err
 		}

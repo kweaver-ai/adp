@@ -97,7 +97,7 @@ func (a *LLMChatCompletion) Run(ctx entity.ExecuteContext, input interface{}, to
 				if item.DocID == "" {
 					continue
 				}
-				downloadInfo, err := GetFileDownloadInfo(ctx, item.DocID, item.Version)
+				downloadInfo, err := GetFileDownloadInfo(ctx.Context(), ctx, item.DocID, item.Version)
 				if err != nil {
 					log.Warnf("[LLMChatCompletion] get file download info err %s, docid %s, version %s", err.Error(), item.DocID, item.Version)
 					return nil, err

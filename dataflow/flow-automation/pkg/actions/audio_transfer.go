@@ -85,7 +85,7 @@ func (e *audioTransferExecutor) GetResultFileExt() string {
 func (e *audioTransferExecutor) Execute(ctx context.Context) (map[string]any, error) {
 	log := traceLog.WithContext(ctx)
 
-	downloadInfo, err := GetFileDownloadInfoWithDocAttr(e.context, e.input.DocID, e.input.Version)
+	downloadInfo, err := GetFileDownloadInfoWithDocAttr(ctx, e.context, e.input.DocID, e.input.Version)
 	if err != nil {
 		log.Warnf("[audioTransferExecutor] GetFileDownloadInfoWithDocAttr failed, detail: %s", err.Error())
 		return nil, err

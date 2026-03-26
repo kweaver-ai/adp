@@ -986,34 +986,31 @@ type FileDownloadInfo struct {
 }
 
 // GetFileDownloadInfo 获取文件下载信息
-// 根据文档ID自动判断是DFSURI还是普通文档ID，返回对应的下载URL和文件名
-func GetFileDownloadInfo(ctx entity.ExecuteContext, docID, version string) (*FileDownloadInfo, error) {
+func GetFileDownloadInfo(ctx context.Context, execCtx entity.ExecuteContext, docID, version string) (*FileDownloadInfo, error) {
 	if common.IsDFSURI(docID) {
-		return getDFSFileDownloadInfo(ctx, docID)
+		return getDFSFileDownloadInfo(ctx, execCtx, docID)
 	}
-	return getEfastFileDownloadInfo(ctx.Context(), docID, version)
+	return getEfastFileDownloadInfo(ctx, docID, version)
 }
 
 // GetFileDownloadInfoWithDocAttr 获取文件下载信息和文件属性
-// 对于DFSURI，DocAttr从ResolveFlowFile结果构建
-// 对于普通文档ID，DocAttr需要通过asdoc.GetDocMsg获取
-func GetFileDownloadInfoWithDocAttr(ctx entity.ExecuteContext, docID, version string) (*FileDownloadInfo, error) {
+func GetFileDownloadInfoWithDocAttr(ctx context.Context, execCtx entity.ExecuteContext, docID, version string) (*FileDownloadInfo, error) {
 	if common.IsDFSURI(docID) {
-		return getDFSFileDownloadInfoWithDocAttr(ctx, docID)
+		return getDFSFileDownloadInfoWithDocAttr(ctx, execCtx, docID)
 	}
-	return getEfastFileDownloadInfoWithDocAttr(ctx.Context(), docID, version, ctx.NewASDoc())
+	return getEfastFileDownloadInfoWithDocAttr(ctx, docID, version, execCtx.NewASDoc())
 }
 
 // getDFSFileDownloadInfo 获取DFS URI文件的下载信息
-func getDFSFileDownloadInfo(ctx entity.ExecuteContext, docID string) (*FileDownloadInfo, error) {
-	dc := ctx.NewRepo().DocumentConverter()
-	f, err := dc.ResolveFlowFile(ctx.Context(), docID)
+func getDFSFileDownloadInfo(ctx context.Context, execCtx entity.ExecuteContext, docID string) (*FileDownloadInfo, error) {
+	dc := execCtx.NewRepo().DocumentConverter()
+	f, err := dc.ResolveFlowFile(ctx, docID)
 	if err != nil {
 		return nil, err
 	}
 
 	og := drivenadapters.NewOssGatewayBackend()
-	url, err := og.GetDownloadURL(ctx.Context(), f.Storage.OssID, f.Storage.ObjectKey, 3600, true)
+	url, err := og.GetDownloadURL(ctx, f.Storage.OssID, f.Storage.ObjectKey, 3600, true)
 	if err != nil {
 		return nil, err
 	}
@@ -1026,15 +1023,15 @@ func getDFSFileDownloadInfo(ctx entity.ExecuteContext, docID string) (*FileDownl
 }
 
 // getDFSFileDownloadInfoWithDocAttr 获取DFS URI文件的下载信息和属性
-func getDFSFileDownloadInfoWithDocAttr(ctx entity.ExecuteContext, docID string) (*FileDownloadInfo, error) {
-	dc := ctx.NewRepo().DocumentConverter()
-	f, err := dc.ResolveFlowFile(ctx.Context(), docID)
+func getDFSFileDownloadInfoWithDocAttr(ctx context.Context, execCtx entity.ExecuteContext, docID string) (*FileDownloadInfo, error) {
+	dc := execCtx.NewRepo().DocumentConverter()
+	f, err := dc.ResolveFlowFile(ctx, docID)
 	if err != nil {
 		return nil, err
 	}
 
 	og := drivenadapters.NewOssGatewayBackend()
-	url, err := og.GetDownloadURL(ctx.Context(), f.Storage.OssID, f.Storage.ObjectKey, 3600, true)
+	url, err := og.GetDownloadURL(ctx, f.Storage.OssID, f.Storage.ObjectKey, 3600, true)
 	if err != nil {
 		return nil, err
 	}

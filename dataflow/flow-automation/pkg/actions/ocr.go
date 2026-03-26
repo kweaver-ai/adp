@@ -222,7 +222,7 @@ func (e *ocrNewExecutor) GetResultFileExt() string {
 func (e *ocrNewExecutor) Execute(ctx context.Context) (map[string]any, error) {
 	log := traceLog.WithContext(ctx)
 
-	downloadInfo, err := GetFileDownloadInfo(e.context, e.input.DocID, e.input.Version)
+	downloadInfo, err := GetFileDownloadInfo(ctx, e.context, e.input.DocID, e.input.Version)
 	if err != nil {
 		log.Warnf("[ocrNewExecutor] GetFileDownloadInfo err %s, docid %s, version %s", err.Error(), e.input.DocID, e.input.Version)
 		return nil, err
