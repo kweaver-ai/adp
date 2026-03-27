@@ -10,17 +10,14 @@ echo "工作目录: $ADP_DIR"
 
 # 来源目录列表
 SRC_DIRS=(
-    "autoflow/coderunner/migrations"
-    "autoflow/ecron/migrations"
-    "autoflow/flow-automation/migrations"
-    "autoflow/flow-stream-data-pipeline/migrations"
-    "autoflow/workflow/migrations"
+    "dataflow/coderunner/migrations"
+    "dataflow/flow-automation/migrations"
+    "dataflow/flow-stream-data-pipeline/migrations"
     "bkn/bkn-backend/migrations"
     "vega/vega-backend/migrations"
     "vega/data-connection/migrations"
     "vega/mdl-data-model/migrations"
     "vega/vega-gateway/migrations"
-    "vega/vega-metadata/migrations"
 )
 
 # 数据库类型列表
@@ -78,11 +75,11 @@ for dir in "${SRC_DIRS[@]}"; do
         LATEST=$(basename "$VERSION_DIRS")
         echo "  找到最新版本: $LATEST"
         
-        # 检查 init.sql 是否在 pre/ 子目录中
-        INIT_SQL="$VERSION_DIRS/pre/init.sql"
+        # 检查 init.sql 是否在版本目录中
+        INIT_SQL="$VERSION_DIRS/init.sql"
         
         if [ ! -f "$INIT_SQL" ]; then
-            echo "  错误: 在 $VERSION_DIRS/pre/init.sql 中未找到 init.sql 文件"
+            echo "  错误: 在 $VERSION_DIRS/init.sql 中未找到 init.sql 文件"
             exit 1
         fi
         
