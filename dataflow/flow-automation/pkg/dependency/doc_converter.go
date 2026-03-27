@@ -120,7 +120,7 @@ func (c *documentConverter) ExtractFullText(ctx context.Context, docID string) (
 	}
 
 	return map[string]any{
-		"doc_id": result.DocID,
+		"docid": result.DocID,
 		"url":    result.DownloadURL,
 		"text":   text,
 	}, nil
@@ -180,7 +180,7 @@ func (c *documentConverter) HandleGotenbergCallback(ctx context.Context, req *Go
 	}
 
 	return map[string]any{
-		"doc_id": result.DocID,
+		"docid": result.DocID,
 		"url":    result.DownloadURL,
 	}, nil
 }
