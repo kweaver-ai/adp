@@ -17,26 +17,29 @@ import (
 )
 
 // newTestService 使用 mockgen 生成的 mock 构建 resourceService
-func newTestService(t *testing.T) (*resourceService, *mock_interfaces.MockResourceAccess, *mock_interfaces.MockPermissionService, *mock_interfaces.MockDatasetService, *mock_interfaces.MockUserMgmtService) {
+func newTestService(t *testing.T) (*resourceService, *mock_interfaces.MockResourceAccess, *mock_interfaces.MockPermissionService,
+	*mock_interfaces.MockDatasetService, *mock_interfaces.MockUserMgmtService, *mock_interfaces.MockCatalogService) {
 	ctrl := gomock.NewController(t)
 	mockRA := mock_interfaces.NewMockResourceAccess(ctrl)
 	mockPS := mock_interfaces.NewMockPermissionService(ctrl)
 	mockDS := mock_interfaces.NewMockDatasetService(ctrl)
 	mockUMS := mock_interfaces.NewMockUserMgmtService(ctrl)
+	mockCS := mock_interfaces.NewMockCatalogService(ctrl)
 
 	rs := &resourceService{
 		ra:  mockRA,
 		ps:  mockPS,
 		ds:  mockDS,
 		ums: mockUMS,
+		cs:  mockCS,
 	}
-	return rs, mockRA, mockPS, mockDS, mockUMS
+	return rs, mockRA, mockPS, mockDS, mockUMS, mockCS
 }
 
 // ===== CheckExistByID =====
 
 func TestCheckExistByID_Found(t *testing.T) {
-	rs, mockRA, _, _, _ := newTestService(t)
+	rs, mockRA, _, _, _, _ := newTestService(t)
 	mockRA.EXPECT().GetByID(gomock.Any(), "r1").
 		Return(&interfaces.Resource{ID: "r1"}, nil)
 
@@ -50,7 +53,7 @@ func TestCheckExistByID_Found(t *testing.T) {
 }
 
 func TestCheckExistByID_NotFound(t *testing.T) {
-	rs, mockRA, _, _, _ := newTestService(t)
+	rs, mockRA, _, _, _, _ := newTestService(t)
 	mockRA.EXPECT().GetByID(gomock.Any(), "missing").
 		Return(nil, nil)
 
@@ -64,7 +67,7 @@ func TestCheckExistByID_NotFound(t *testing.T) {
 }
 
 func TestCheckExistByID_Error(t *testing.T) {
-	rs, mockRA, _, _, _ := newTestService(t)
+	rs, mockRA, _, _, _, _ := newTestService(t)
 	mockRA.EXPECT().GetByID(gomock.Any(), "r1").
 		Return(nil, fmt.Errorf("db error"))
 
@@ -77,7 +80,7 @@ func TestCheckExistByID_Error(t *testing.T) {
 // ===== CheckExistByName =====
 
 func TestCheckExistByName_Found(t *testing.T) {
-	rs, mockRA, _, _, _ := newTestService(t)
+	rs, mockRA, _, _, _, _ := newTestService(t)
 	mockRA.EXPECT().GetByName(gomock.Any(), "cat1", "test").
 		Return(&interfaces.Resource{Name: "test"}, nil)
 
@@ -91,7 +94,7 @@ func TestCheckExistByName_Found(t *testing.T) {
 }
 
 func TestCheckExistByName_NotFound(t *testing.T) {
-	rs, mockRA, _, _, _ := newTestService(t)
+	rs, mockRA, _, _, _, _ := newTestService(t)
 	mockRA.EXPECT().GetByName(gomock.Any(), "cat1", "missing").
 		Return(nil, nil)
 
@@ -107,7 +110,7 @@ func TestCheckExistByName_NotFound(t *testing.T) {
 // ===== GetByID =====
 
 func TestGetByID_Success(t *testing.T) {
-	rs, mockRA, mockPS, _, mockUMS := newTestService(t)
+	rs, mockRA, mockPS, _, mockUMS, _ := newTestService(t)
 	mockRA.EXPECT().GetByID(gomock.Any(), "r1").
 		Return(&interfaces.Resource{ID: "r1", Name: "test"}, nil)
 	mockPS.EXPECT().FilterResources(gomock.Any(), interfaces.RESOURCE_TYPE_RESOURCE, []string{"r1"}, gomock.Any(), true).
@@ -126,7 +129,7 @@ func TestGetByID_Success(t *testing.T) {
 }
 
 func TestGetByID_NotFound(t *testing.T) {
-	rs, mockRA, _, _, _ := newTestService(t)
+	rs, mockRA, _, _, _, _ := newTestService(t)
 	mockRA.EXPECT().GetByID(gomock.Any(), "missing").
 		Return(nil, nil)
 
@@ -137,7 +140,7 @@ func TestGetByID_NotFound(t *testing.T) {
 }
 
 func TestGetByID_DBError(t *testing.T) {
-	rs, mockRA, _, _, _ := newTestService(t)
+	rs, mockRA, _, _, _, _ := newTestService(t)
 	mockRA.EXPECT().GetByID(gomock.Any(), "r1").
 		Return(nil, fmt.Errorf("db error"))
 
@@ -150,7 +153,7 @@ func TestGetByID_DBError(t *testing.T) {
 // ===== GetByIDs =====
 
 func TestGetByIDs_Success(t *testing.T) {
-	rs, mockRA, mockPS, _, mockUMS := newTestService(t)
+	rs, mockRA, mockPS, _, mockUMS, _ := newTestService(t)
 	mockRA.EXPECT().GetByIDs(gomock.Any(), []string{"r1", "r2"}).
 		Return([]*interfaces.Resource{{ID: "r1"}, {ID: "r2"}}, nil)
 	mockPS.EXPECT().FilterResources(gomock.Any(), interfaces.RESOURCE_TYPE_RESOURCE, []string{"r1", "r2"}, gomock.Any(), true).
@@ -172,7 +175,7 @@ func TestGetByIDs_Success(t *testing.T) {
 // ===== GetByCatalogID =====
 
 func TestGetByCatalogID_Success(t *testing.T) {
-	rs, mockRA, _, _, _ := newTestService(t)
+	rs, mockRA, _, _, _, _ := newTestService(t)
 	mockRA.EXPECT().GetByCatalogID(gomock.Any(), "cat1").
 		Return([]*interfaces.Resource{{ID: "r1", CatalogID: "cat1"}}, nil)
 
@@ -188,7 +191,7 @@ func TestGetByCatalogID_Success(t *testing.T) {
 // ===== List 分页逻辑 =====
 
 func TestList_Pagination(t *testing.T) {
-	rs, mockRA, mockPS, _, mockUMS := newTestService(t)
+	rs, mockRA, mockPS, _, mockUMS, _ := newTestService(t)
 	resources := []*interfaces.Resource{{ID: "r1"}, {ID: "r2"}, {ID: "r3"}, {ID: "r4"}}
 	mockRA.EXPECT().List(gomock.Any(), gomock.Any()).Return(resources, int64(4), nil)
 	mockPS.EXPECT().FilterResources(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), true).
@@ -215,7 +218,7 @@ func TestList_Pagination(t *testing.T) {
 }
 
 func TestList_ReturnAll(t *testing.T) {
-	rs, mockRA, mockPS, _, mockUMS := newTestService(t)
+	rs, mockRA, mockPS, _, mockUMS, _ := newTestService(t)
 	resources := []*interfaces.Resource{{ID: "r1"}, {ID: "r2"}}
 	mockRA.EXPECT().List(gomock.Any(), gomock.Any()).Return(resources, int64(2), nil)
 	mockPS.EXPECT().FilterResources(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), true).
@@ -239,7 +242,7 @@ func TestList_ReturnAll(t *testing.T) {
 }
 
 func TestList_OffsetBeyondTotal(t *testing.T) {
-	rs, mockRA, mockPS, _, _ := newTestService(t)
+	rs, mockRA, mockPS, _, _, _ := newTestService(t)
 	resources := []*interfaces.Resource{{ID: "r1"}}
 	mockRA.EXPECT().List(gomock.Any(), gomock.Any()).Return(resources, int64(1), nil)
 	mockPS.EXPECT().FilterResources(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), true).
@@ -260,8 +263,9 @@ func TestList_OffsetBeyondTotal(t *testing.T) {
 }
 
 func TestCreate_DatasetCategory(t *testing.T) {
-	rs, mockRA, mockPS, mockDS, _ := newTestService(t)
+	rs, mockRA, mockPS, mockDS, _, mockCS := newTestService(t)
 	mockPS.EXPECT().CheckPermission(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
+	mockCS.EXPECT().CheckExistByID(gomock.Any(), gomock.Any()).Return(true, nil)
 	mockRA.EXPECT().Create(gomock.Any(), gomock.Any()).Return(nil)
 	mockDS.EXPECT().Create(gomock.Any(), gomock.Any()).Return(nil)
 	mockPS.EXPECT().CreateResources(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
@@ -281,7 +285,7 @@ func TestCreate_DatasetCategory(t *testing.T) {
 // ===== DeleteByIDs =====
 
 func TestDeleteByIDs_Empty(t *testing.T) {
-	rs, _, _, _, _ := newTestService(t)
+	rs, _, _, _, _, _ := newTestService(t)
 	err := rs.DeleteByIDs(context.Background(), []string{})
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
@@ -289,7 +293,7 @@ func TestDeleteByIDs_Empty(t *testing.T) {
 }
 
 func TestDeleteByIDs_Success(t *testing.T) {
-	rs, mockRA, mockPS, _, _ := newTestService(t)
+	rs, mockRA, mockPS, _, _, _ := newTestService(t)
 	mockPS.EXPECT().FilterResources(gomock.Any(), interfaces.RESOURCE_TYPE_RESOURCE, []string{"r1"}, gomock.Any(), true).
 		Return(map[string]interfaces.PermissionResourceOps{
 			"r1": {ResourceID: "r1"},
@@ -308,8 +312,9 @@ func TestDeleteByIDs_Success(t *testing.T) {
 // ===== Create =====
 
 func TestCreate_Success(t *testing.T) {
-	rs, mockRA, mockPS, _, _ := newTestService(t)
+	rs, mockRA, mockPS, _, _, mockCS := newTestService(t)
 	mockPS.EXPECT().CheckPermission(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
+	mockCS.EXPECT().CheckExistByID(gomock.Any(), gomock.Any()).Return(true, nil)
 	mockRA.EXPECT().Create(gomock.Any(), gomock.Any()).Return(nil)
 	mockPS.EXPECT().CreateResources(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
 
@@ -326,8 +331,9 @@ func TestCreate_Success(t *testing.T) {
 }
 
 func TestCreate_WithExplicitID(t *testing.T) {
-	rs, mockRA, mockPS, _, _ := newTestService(t)
+	rs, mockRA, mockPS, _, _, mockCS := newTestService(t)
 	mockPS.EXPECT().CheckPermission(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
+	mockCS.EXPECT().CheckExistByID(gomock.Any(), gomock.Any()).Return(true, nil)
 	mockRA.EXPECT().Create(gomock.Any(), gomock.Any()).Return(nil)
 	mockPS.EXPECT().CreateResources(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
 
@@ -345,8 +351,9 @@ func TestCreate_WithExplicitID(t *testing.T) {
 }
 
 func TestCreate_DBError(t *testing.T) {
-	rs, mockRA, mockPS, _, _ := newTestService(t)
+	rs, mockRA, mockPS, _, _, mockCS := newTestService(t)
 	mockPS.EXPECT().CheckPermission(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
+	mockCS.EXPECT().CheckExistByID(gomock.Any(), gomock.Any()).Return(true, nil)
 	mockRA.EXPECT().Create(gomock.Any(), gomock.Any()).Return(fmt.Errorf("db error"))
 
 	_, err := rs.Create(context.Background(), &interfaces.ResourceRequest{
@@ -360,7 +367,7 @@ func TestCreate_DBError(t *testing.T) {
 // ===== UpdateStatus =====
 
 func TestUpdateStatus_Success(t *testing.T) {
-	rs, mockRA, _, _, _ := newTestService(t)
+	rs, mockRA, _, _, _, _ := newTestService(t)
 	mockRA.EXPECT().UpdateStatus(gomock.Any(), "r1", "active", "").Return(nil)
 
 	err := rs.UpdateStatus(context.Background(), "r1", "active", "")
@@ -370,7 +377,7 @@ func TestUpdateStatus_Success(t *testing.T) {
 }
 
 func TestUpdateStatus_Error(t *testing.T) {
-	rs, mockRA, _, _, _ := newTestService(t)
+	rs, mockRA, _, _, _, _ := newTestService(t)
 	mockRA.EXPECT().UpdateStatus(gomock.Any(), "r1", "active", "").
 		Return(fmt.Errorf("db error"))
 
@@ -383,7 +390,7 @@ func TestUpdateStatus_Error(t *testing.T) {
 // ===== Update =====
 
 func TestUpdate_NilOrigin(t *testing.T) {
-	rs, _, _, _, _ := newTestService(t)
+	rs, _, _, _, _, _ := newTestService(t)
 	err := rs.Update(context.Background(), "r1", &interfaces.ResourceRequest{
 		OriginResource: nil,
 	})
@@ -393,8 +400,9 @@ func TestUpdate_NilOrigin(t *testing.T) {
 }
 
 func TestUpdate_Success(t *testing.T) {
-	rs, mockRA, mockPS, _, _ := newTestService(t)
+	rs, mockRA, mockPS, _, _, mockCS := newTestService(t)
 	mockPS.EXPECT().CheckPermission(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
+	mockCS.EXPECT().CheckExistByID(gomock.Any(), gomock.Any()).Return(true, nil)
 	mockRA.EXPECT().Update(gomock.Any(), gomock.Any()).Return(nil)
 
 	err := rs.Update(context.Background(), "r1", &interfaces.ResourceRequest{
