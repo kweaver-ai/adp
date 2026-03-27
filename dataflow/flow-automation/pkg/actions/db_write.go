@@ -70,7 +70,7 @@ type DatabaseWrite struct {
 	// 目标表信息
 	TableExist  bool   `json:"table_exist,omitempty"`
 	TableName   string `json:"table_name"`
-	OperateType string `json:"operate_type"` // append 或 truncate_and_write
+	OperateType string `json:"operate_type"` // append
 
 	// 目标端连接信息
 	Conn *DBConn `json:"conn"`

@@ -43,8 +43,8 @@
         },
         "operate_type": {
           "type": "string",
-          "enum": ["insert", "append", "truncate_and_write"],
-          "description": "操作类型：insert/append(插入/追加)、truncate_and_write(清空后写入)",
+          "enum": ["insert", "append"],
+          "description": "操作类型：insert/append(插入/追加)",
           "default": "append"
         },
         "conn": {
