@@ -86,6 +86,16 @@ func (c *MariaDBConnector) ExecuteQuery(ctx context.Context, resource *interface
 		builder = builder.Where(condition)
 	}
 
+	// 排序
+	for _, sort := range params.Sort {
+		builder = builder.OrderBy(fmt.Sprintf("%s %s", sort.Field, sort.Direction))
+	}
+
+	// 分页
+	if params.Limit > 0 {
+		builder = builder.Limit(uint64(params.Limit)).Offset(uint64(params.Offset))
+	}
+
 	query, args, err := builder.ToSql()
 	if err != nil {
 		return nil, fmt.Errorf("failed to build query: %w", err)

@@ -136,12 +136,6 @@ CREATE TABLE IF NOT EXISTS t_catalog (
 )  ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_bin COMMENT='目录表，管理数据源连接和命名空间';
 
 
--- 插入默认 catalog
-INSERT INTO t_catalog (f_id, f_name, f_description, f_type, f_enabled, f_connector_config, f_metadata, f_health_check_result) 
-SELECT 'default', 'default', 'default', '默认逻辑命名空间', TRUE, '{}', '{}', '{}' 
-FROM DUAL WHERE NOT EXISTS (SELECT f_id FROM t_catalog WHERE f_id = 'default');
-
-
 -- ==========================================
 -- 2. t_catalog_discover_policy 发现与变更策略表
 -- ==========================================
@@ -199,8 +193,8 @@ CREATE TABLE IF NOT EXISTS t_resource (
 
     -- LogicView 专属字段
     f_logic_type              VARCHAR(20) NOT NULL DEFAULT '' COMMENT '逻辑类型: derived(衍生), composite(复合), 仅LogicView使用',
-    f_logic_definition        MEDIUMTEXT NOT NULL COMMENT '逻辑定义（JSON格式），仅LogicView使用',
-    -- f_logic_definition_type   VARCHAR(20) NOT NULL DEFAULT '' COMMENT '定义类型: sql, mapping, script',
+    f_logic_definition        MEDIUMTEXT NOT NULL COMMENT '逻辑定义（SQL/声明式映射/脚本），仅LogicView使用',
+    f_logic_definition_type   VARCHAR(20) NOT NULL DEFAULT '' COMMENT '定义类型: sql, mapping, script',
 
     -- Local查询配置（物化）
     f_local_enabled           BOOLEAN NOT NULL DEFAULT FALSE COMMENT '是否启用Local查询（物化）',

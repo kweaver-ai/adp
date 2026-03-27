@@ -101,7 +101,6 @@ func (r *restHandler) RegisterPublic(engine *gin.Engine) {
 			resources.PUT("/:id", r.verifyJsonContentType(), r.UpdateResourceByEx)
 			resources.DELETE("/:ids", r.DeleteResourcesByEx)
 
-			resources.POST("/data", r.verifyJsonContentType(), r.QueryResourceDataByEx)
 			resources.POST("/:id/data", r.verifyJsonContentType(), r.QueryResourceDataByEx)
 
 			resources.POST("/dataset/:id/docs", r.verifyJsonContentType(), r.CreateDatasetDocumentsByEx)

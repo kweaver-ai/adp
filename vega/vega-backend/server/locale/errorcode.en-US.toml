@@ -89,7 +89,7 @@ Solution = "Please check the parameter"
 ErrorLink = "None"
 
 [VegaBackend.UnsupportFilterConditionOperation]
-Description = "Invalid parameter"
+Description = "Unsupported filter condition operation"
 Solution = "Please check the parameter"
 ErrorLink = "None"
 

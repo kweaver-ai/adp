@@ -230,13 +230,6 @@ func (rs *resourceService) GetByIDs(ctx context.Context, ids []string) ([]*inter
 	for _, resource := range resources {
 		if resrc, exist := matchResoucesMap[resource.ID]; exist {
 			resource.Operations = resrc.Operations // 用户当前有权限的操作
-			// switch resource.Category {
-			// case interfaces.ResourceCategoryLogicView:
-			// 	resource, err = rs.getLogicViewSource(ctx, resource)
-			// 	if err != nil {
-			// 		return nil, err
-			// 	}
-			// }
 		} else {
 			return nil, rest.NewHTTPError(ctx, http.StatusForbidden, rest.PublicError_Forbidden).
 				WithErrorDetails(fmt.Sprintf("Access denied: insufficient permissions for[%v]", interfaces.OPERATION_TYPE_VIEW_DETAIL))

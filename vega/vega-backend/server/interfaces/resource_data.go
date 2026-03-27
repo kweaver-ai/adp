@@ -27,15 +27,13 @@ type ResourceDataQueryParams struct {
 	Limit  int          `json:"limit,omitempty"`
 	Sort   []*SortField `json:"sort,omitempty"`
 
-	UseSearchAfter bool  `json:"use_search_after,omitempty"`
-
 	FilterCondition any `json:"filter_condition,omitempty"`
 
 	OutputFields []string `json:"output_fields"` // 指定输出的字段列表
 
 	NeedTotal   bool          `json:"need_total,omitempty"`
 	Format      string        `json:"-"`
-	Timeout     time.Duration `json:"-"` // 超时时间，查询参数
+	Timeout     time.Duration `json:"-"`                      // 超时时间，查询参数
 	SearchAfter []any         `json:"search_after,omitempty"` // OpenSearch search after参数
 
 	FilterCondCfg    *FilterCondCfg  `json:"-"`

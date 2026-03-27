@@ -89,7 +89,7 @@ Solution = "请检查参数"
 ErrorLink = "暂无"
 
 [VegaBackend.UnsupportFilterConditionOperation]
-Description = "无效的参数"
+Description = "不支持的过滤器操作符"
 Solution = "请检查参数"
 ErrorLink = "暂无"
 

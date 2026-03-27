@@ -118,8 +118,10 @@ func (r *restHandler) queryResourceData(c *gin.Context, ctx context.Context, spa
 	}
 
 	resultData := map[string]any{
-		"entries":     entries,
-		"total_count": total,
+		"entries": entries,
+	}
+	if params.NeedTotal {
+		resultData["total_count"] = total
 	}
 
 	logger.Debug("Handler QueryResourceData Success")
