@@ -41,6 +41,10 @@ func (s *stubDocumentConverter) HandleGotenbergCallback(ctx context.Context, req
 	return s.result, s.err
 }
 
+func (s *stubDocumentConverter) ResolveFlowFile(context.Context, string) (*dependency.ResolvedFlowFile, error) {
+	return nil, nil
+}
+
 func setGinMode() func() {
 	old := gin.Mode()
 	gin.SetMode(gin.TestMode)
@@ -73,12 +77,12 @@ func TestGotenbergCallbackSuccess(t *testing.T) {
 
 	mgntHandler := mock_logics.NewMockMgntHandler(ctrl)
 	converter := &stubDocumentConverter{
-		result: map[string]any{"file_id": "pdf-1"},
+		result: map[string]any{"doc_id": "pdf-1"},
 	}
 	engine := newTestEngine(t, mgntHandler, converter)
 
 	mgntHandler.EXPECT().
-		ContinueBlockInstances(gomock.Any(), []string{"task-1"}, map[string]any{"file_id": "pdf-1"}, entity.TaskInstanceStatusSuccess).
+		ContinueBlockInstances(gomock.Any(), []string{"task-1"}, map[string]any{"doc_id": "pdf-1"}, entity.TaskInstanceStatusSuccess).
 		Times(1).
 		Return(nil)
 

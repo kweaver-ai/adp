@@ -16,16 +16,10 @@ import (
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/drivenadapters"
 	ierrors "github.com/kweaver-ai/adp/autoflow/flow-automation/errors"
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/pkg/rds"
-	"github.com/kweaver-ai/adp/autoflow/flow-automation/store"
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/utils"
 )
 
 const dfsDocPrefix = "dfs://"
-
-const (
-	pdfMarker   = "%PDF-"
-	maxPeekSize = 8 * 1024
-)
 
 type GotenbergCallbackRequest struct {
 	TaskID      string
@@ -65,7 +59,10 @@ type ResolvedFlowFile struct {
 	Storage *rds.FlowStorage
 }
 
-var nextDocumentIDFunc = store.NextID
+type persistedDerivedFileResult struct {
+	DocID       string
+	DownloadURL string
+}
 
 var (
 	documentConverterOnce sync.Once
@@ -109,21 +106,23 @@ func (c *documentConverter) ExtractFullText(ctx context.Context, docID string) (
 		return nil, err
 	}
 
-	fileID, err := c.persistDerivedFile(
+	result, err := c.persistDerivedFile(
 		ctx,
 		source,
 		replaceFileExt(source.File.Name, ".txt"),
 		"text/plain; charset=utf-8",
 		bytes.NewReader([]byte(text)),
 		int64(len(text)),
+		true,
 	)
 	if err != nil {
 		return nil, err
 	}
 
 	return map[string]any{
-		"file_id": fileID,
-		"text":    text,
+		"doc_id": result.DocID,
+		"url":    result.DownloadURL,
+		"text":   text,
 	}, nil
 }
 
@@ -175,12 +174,15 @@ func (c *documentConverter) HandleGotenbergCallback(ctx context.Context, req *Go
 		fileName = replaceFileExt(source.File.Name, ".pdf")
 	}
 
-	fileID, err := c.persistDerivedFile(ctx, source, fileName, "application/pdf", req.Body, -1)
+	result, err := c.persistDerivedFile(ctx, source, fileName, "application/pdf", req.Body, -1, true)
 	if err != nil {
 		return nil, err
 	}
 
-	return map[string]any{"file_id": fileID}, nil
+	return map[string]any{
+		"doc_id": result.DocID,
+		"url":    result.DownloadURL,
+	}, nil
 }
 
 func (c *documentConverter) ResolveFlowFile(ctx context.Context, docID string) (*ResolvedFlowFile, error) {
@@ -234,7 +236,8 @@ func (c *documentConverter) persistDerivedFile(
 	contentType string,
 	body io.Reader,
 	size int64,
-) (string, error) {
+	withDownloadURL bool,
+) (*persistedDerivedFileResult, error) {
 	uploadReader := body
 	uploadSize := size
 	var uploadCloser io.Closer
@@ -242,7 +245,7 @@ func (c *documentConverter) persistDerivedFile(
 	if size <= 0 {
 		reader, bufferedSize, err := utils.BufferToTempFile(body, "doc-converter")
 		if err != nil {
-			return "", err
+			return nil, err
 		}
 		uploadReader = reader
 		uploadSize = bufferedSize
@@ -254,7 +257,7 @@ func (c *documentConverter) persistDerivedFile(
 
 	ossID, err := c.objectStorage.GetAvaildOSS(ctx)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
 	now := time.Now().Unix()
@@ -264,7 +267,7 @@ func (c *documentConverter) persistDerivedFile(
 	objectKey := fmt.Sprintf("%s/flow_files/%d/%s", common.NewConfig().Server.StoragePrefix, fileID, fileName)
 
 	if err = c.objectStorage.UploadFile(ctx, ossID, objectKey, true, uploadReader, uploadSize); err != nil {
-		return "", err
+		return nil, err
 	}
 
 	if err = c.flowStorageDao.Insert(ctx, &rds.FlowStorage{
@@ -278,7 +281,7 @@ func (c *documentConverter) persistDerivedFile(
 		CreatedAt:   now,
 		UpdatedAt:   now,
 	}); err != nil {
-		return "", err
+		return nil, err
 	}
 
 	if err = c.flowFileDao.Insert(ctx, &rds.FlowFile{
@@ -292,10 +295,22 @@ func (c *documentConverter) persistDerivedFile(
 		CreatedAt:     now,
 		UpdatedAt:     now,
 	}); err != nil {
-		return "", err
+		return nil, err
 	}
 
-	return fmt.Sprintf("%s%d", dfsDocPrefix, fileID), nil
+	result := &persistedDerivedFileResult{
+		DocID: fmt.Sprintf("%s%v", dfsDocPrefix, fileID),
+	}
+
+	if withDownloadURL {
+		downloadURL, err := c.objectStorage.GetDownloadURL(ctx, ossID, objectKey, 3600, true)
+		if err != nil {
+			return nil, err
+		}
+		result.DownloadURL = downloadURL
+	}
+
+	return result, nil
 }
 
 func parseDFSDocID(docID string) (uint64, error) {
@@ -309,18 +324,6 @@ func parseDFSDocID(docID string) (uint64, error) {
 	}
 
 	return fileID, nil
-}
-
-func readAtMost(r io.Reader, buf []byte) (int, error) {
-	total := 0
-	for total < len(buf) {
-		n, err := r.Read(buf[total:])
-		total += n
-		if err != nil {
-			return total, err
-		}
-	}
-	return total, nil
 }
 
 func sanitizeFileName(fileName string) string {
