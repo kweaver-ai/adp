@@ -55,7 +55,7 @@ spec:
                     "textZHTW": "領域業務知識網絡",
                     "textENUS": "BKN",
                     "pathname": "/vega/ontology",
-                    "icon": "//ip:port/kn-manage/side.svg"
+                    "icon": "//ip:port/vega/icon-domainBKN.svg"
                   },
                   "subapp": {
                     "useEntryByRoute": true,
