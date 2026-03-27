@@ -66,10 +66,12 @@ type Resource struct {
 type Property struct {
 	Name         string            `json:"name"`
 	Type         string            `json:"type"`
+	OrigType     string            `json:"orig_type"`
 	DisplayName  string            `json:"display_name"`
 	OriginalName string            `json:"original_name"`
 	Description  string            `json:"description"`
 	Features     []PropertyFeature `json:"features"`
+	Attributes   map[string]any    `json:"attributes"`
 }
 
 type PropertyFeature struct {
@@ -106,6 +108,7 @@ type ResourceRequest struct {
 
 	Database         string                 `json:"database,omitempty"`          // 所属数据库（实例级 Catalog 时填充）
 	SourceIdentifier string                 `json:"source_identifier"`           // 源端标识（原始表名/路径）
+	SourceMetadata   map[string]any         `json:"source_metadata,omitempty"`   // 源端配置（JSON）
 	SchemaDefinition []*Property            `json:"schema_definition,omitempty"` // Schema定义
 	LogicDefinition  []*LogicDefinitionNode `json:"logic_definition,omitempty"`  // 逻辑定义
 

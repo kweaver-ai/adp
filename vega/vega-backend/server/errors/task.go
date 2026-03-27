@@ -10,10 +10,20 @@ package errors
 const (
 	// 404 Not Found
 	VegaBackend_Task_NotFound = "VegaBackend.Task.NotFound"
+
+	// 400 Bad Request
+	VegaBackend_BuildTask_Exist = "VegaBackend.BuildTask.Exist"
+
+	// 500 Internal Server Error
+	VegaBackend_BuildTask_InternalError_CreateFailed = "VegaBackend.BuildTask.InternalError.CreateFailed"
+	VegaBackend_BuildTask_InternalError_GetFailed    = "VegaBackend.BuildTask.InternalError.GetFailed"
 )
 
 var (
 	TaskErrCodeList = []string{
 		VegaBackend_Task_NotFound,
+		VegaBackend_BuildTask_Exist,
+		VegaBackend_BuildTask_InternalError_CreateFailed,
+		VegaBackend_BuildTask_InternalError_GetFailed,
 	}
 )

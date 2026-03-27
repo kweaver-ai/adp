@@ -118,9 +118,10 @@ func main() {
 	factory.Init(appSetting)
 	logger.Info("VEGA Manager Init Connector Factory Success")
 
-	dw := worker.NewDiscoverWorker(appSetting)
-	dw.Start()
-	logger.Info("VEGA Manager Init Discover Worker Success")
+	// 初始化并启动统一的 TaskWorker，处理所有类型的任务
+	taskWorker := worker.NewTaskWorker(appSetting)
+	taskWorker.Start()
+	logger.Info("VEGA Manager Init Task Worker Success")
 
 	// 创建并启动服务
 	server := &vegaService{

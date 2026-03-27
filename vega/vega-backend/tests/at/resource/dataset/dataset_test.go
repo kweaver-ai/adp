@@ -1519,3 +1519,132 @@ func TestDatasetDocumentsSourceFilter(t *testing.T) {
 		cleanupResources(client, t)
 	})
 }
+
+// TestDatasetBuild 测试dataset构建 - 先创建catalog，再创建dataset，最后构建
+// 测试编号前缀: DS2xx (Dataset Build)
+func TestDatasetBuild(t *testing.T) {
+	Convey("Dataset构建AT测试 - 初始化", t, func() {
+		var err error
+		config, err := setup.LoadTestConfig()
+		So(err, ShouldBeNil)
+		So(config, ShouldNotBeNil)
+
+		client := testutil.NewHTTPClient(config.VegaBackend.BaseURL)
+		err = client.CheckHealth()
+		So(err, ShouldBeNil)
+		t.Logf("✓ AT测试环境就绪，VEGA Manager: %s", config.VegaBackend.BaseURL)
+
+		// 清理现有资源
+		cleanupResources(client, t)
+		// 清理现有catalog
+		cleanupCatalogs(client, t)
+
+		// ========== 构建测试（DS201-DS210） ==========
+
+		Convey("DS201: 先创建mysql catalog，再创建dataset，最后构建", func() {
+			// 1. 创建mysql catalog
+			catalogPayload := map[string]any{
+				"name":           generateUniqueName("test-mysql-catalog"),
+				"description":    "测试mysql catalog",
+				"tags":           []string{"test", "mysql", "catalog"},
+				"connector_type": "mysql",
+				"connector_config": map[string]any{
+					"host":     "localhost",
+					"port":     3330,
+					"username": "username",
+					"password": "password",
+					"database": "test",
+				},
+			}
+			catalogResp := client.POST("/api/vega-backend/v1/catalogs", catalogPayload)
+			So(catalogResp.StatusCode, ShouldEqual, http.StatusCreated)
+			So(catalogResp.Body["id"], ShouldNotBeEmpty)
+			catalogID := catalogResp.Body["id"].(string)
+
+			// 2. 创建dataset资源，使用刚创建的catalog
+			datasetPayload := map[string]any{
+				"catalog_id":        catalogID,
+				"name":              generateUniqueName("test-dataset-build"),
+				"tags":              []string{"test", "dataset"},
+				"description":       "测试数据集构建",
+				"category":          "dataset",
+				"status":            "active",
+				"database":          "test",
+				"source_identifier": "test.users",
+				"source_metadata": map[string]any{
+					"primary_keys": []string{"id"},
+					"indices":      []string{"name"},
+				},
+				"config": map[string]any{
+					"host":     "localhost",
+					"port":     3330,
+					"username": "username",
+					"password": "password",
+					"database": "test",
+				},
+				"schema_definition": []map[string]any{
+					{"name": "id", "type": "keyword", "display_name": "ID", "original_name": "id", "description": "唯一标识符"},
+					{"name": "name", "type": "keyword", "display_name": "名称", "original_name": "name", "description": "用户名称"},
+					{"name": "address", "type": "text", "display_name": "地址", "original_name": "address", "description": "用户地址"},
+					{"name": "hobby", "type": "text", "display_name": "爱好", "original_name": "hobby", "description": "用户爱好"},
+					{"name": "hobby_vector", "type": "vector", "display_name": "爱好_向量", "original_name": "hobby_vector", "description": "用户爱好向量", "features": []map[string]any{
+						{
+							"name":         "hobby_vector",
+							"display_name": "爱好_向量",
+							"feature_type": "vector",
+							"description":  "用户爱好向量",
+							"ref_property": "hobby",
+							"is_default":   true,
+							"is_native":    true,
+							"config": map[string]any{
+								"dimension": 768,
+								"method": map[string]any{
+									"name":   "hnsw",
+									"engine": "lucene",
+									"parameters": map[string]any{
+										"ef_construction": 256,
+									},
+								},
+							},
+						},
+					}},
+				},
+			}
+			datasetResp := client.POST("/api/vega-backend/v1/resources", datasetPayload)
+			So(datasetResp.StatusCode, ShouldEqual, http.StatusCreated)
+			So(datasetResp.Body["id"], ShouldNotBeEmpty)
+			datasetID := datasetResp.Body["id"].(string)
+
+			// 3. 构建dataset
+			buildResp := client.POST("/api/vega-backend/v1/resources/dataset/"+datasetID+"/build", map[string]any{"mode": "full"})
+			So(buildResp.StatusCode, ShouldEqual, http.StatusOK)
+
+			// 验证构建成功
+			So(buildResp.Body, ShouldNotBeNil)
+
+			// 4. 获取构建任务详情
+			buildTaskResp := client.GET("/api/vega-backend/v1/resources/dataset/" + datasetID + "/build/" + buildResp.Body["task_id"].(string))
+			So(buildTaskResp.StatusCode, ShouldEqual, http.StatusOK)
+			So(buildTaskResp.Body, ShouldNotBeNil)
+		})
+	})
+}
+
+// cleanupCatalogs 清理现有catalog
+func cleanupCatalogs(client *testutil.HTTPClient, t *testing.T) {
+	resp := client.GET("/api/vega-backend/v1/catalogs?offset=0&limit=100")
+	if resp.StatusCode == http.StatusOK {
+		if entries, ok := resp.Body["entries"].([]any); ok {
+			for _, entry := range entries {
+				if entryMap, ok := entry.(map[string]any); ok {
+					if id, ok := entryMap["id"].(string); ok {
+						deleteResp := client.DELETE("/api/vega-backend/v1/catalogs/" + id)
+						if deleteResp.StatusCode != http.StatusNoContent {
+							t.Logf("清理catalog失败 %s: %d", id, deleteResp.StatusCode)
+						}
+					}
+				}
+			}
+		}
+	}
+}
