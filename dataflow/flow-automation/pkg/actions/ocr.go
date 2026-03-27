@@ -222,15 +222,14 @@ func (e *ocrNewExecutor) GetResultFileExt() string {
 func (e *ocrNewExecutor) Execute(ctx context.Context) (map[string]any, error) {
 	log := traceLog.WithContext(ctx)
 
-	efast := drivenadapters.NewEfast()
-	downloadInfo, err := efast.InnerOSDownload(ctx, e.input.DocID, e.input.Version)
+	downloadInfo, err := GetFileDownloadInfo(ctx, e.context, e.input.DocID, e.input.Version)
 	if err != nil {
-		log.Warnf("[ocrNewExecutor] InnerOSDownload err %s, docid %s, version %s", err.Error(), e.input.DocID, e.input.Version)
+		log.Warnf("[ocrNewExecutor] GetFileDownloadInfo err %s, docid %s, version %s", err.Error(), e.input.DocID, e.input.Version)
 		return nil, err
 	}
 
 	ocr := drivenadapters.NewOcr()
-	text, err := ocr.RecognizeText(ctx, downloadInfo.URL, downloadInfo.Name)
+	text, err := ocr.RecognizeText(ctx, downloadInfo.URL, downloadInfo.Filename)
 
 	if err != nil {
 		log.Warnf("[ocrNewExecutor] RecognizeText err %s, docid %s, version %s", err.Error(), e.input.DocID, e.input.Version)

@@ -122,6 +122,10 @@ depServices:
   aladdin-tika:
     host: aladdin-tika
     port: "9998"
+  doc-convert:
+    host: doc-convert-private
+    gotenbergPort: "3000"
+    tikaPort: "9998"
   authentication:
     privateHost: authentication-private
     privatePort: "30110"
@@ -291,6 +295,9 @@ depServices:
   ocr:
     privateHost: 192.168.152.11
     privatePort: 12349
+  oss-gateway-backend:
+    host: oss-gateway-backend
+    port: 8080
   business-system-service:
     host: business-system-service
     port: 80
@@ -428,6 +435,16 @@ flowAutomation:
     edition: "community"
     # 用于控制使用哪种数据库
     dbType: "mysql"
+    # 存储后端类型: ossgatewaybackend(默认), s3, ossgateway
+    storageBackend: "ossgatewaybackend"
+
+  # 文件下载线程池配置
+  flowFileDownload:
+    workerCount: 3              # 每实例 worker 数
+    pollInterval: 5             # 轮询间隔(秒)
+    batchSize: 10               # 每次查询任务数
+    downloadTimeout: 300        # 下载超时(秒)
+    maxFileSize: 104857600      # 最大文件大小(100MB)
 
   kafka:
     sessionTimeoutMs: 45000

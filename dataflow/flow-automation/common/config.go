@@ -34,6 +34,7 @@ type Config struct {
 	Kafka                    Kafka                    `mapstructure:"kafka"`
 	MongoDB                  MongoDBConfig            `mapstructure:"mongodb"`
 	Tika                     Tika                     `mapstructure:"tika"`
+	DocConvert               DocConvert               `mapstructure:"doc_convert"`
 	FastTextAnalysis         FastTextAnalysis         `mapstructure:"fasttextanalysis"`
 	Document                 Document                 `mapstructure:"document"`
 	T4th                     T4th                     `mapstructure:"t4th"`
@@ -45,6 +46,7 @@ type Config struct {
 	EcoTag                   EcoTag                   `mapstructure:"ecotag"`
 	ContentAutomation        ContentAutomation        `mapstructure:"contentautomation"`
 	OssGateWay               OSSGateWay               `mapstructure:"ossgateway"`
+	OssGatewayBackend        OssGatewayBackend        `mapstructure:"ossgatewaybackend"`
 	DumpLog                  DumpLog                  `mapstructure:"dumplog"`
 	Redis                    RedisConfiguration       `mapstructure:"redis"`
 	Kcmc                     Kcmc                     `mapstructure:"kcmc"`
@@ -76,6 +78,7 @@ type Config struct {
 	BusinessDomain           BusinessDomain           `mapstructure:"business_domain"`
 	AccessAddress            AccessAddress            `mapstructure:"access_address"`
 	Sandbox                  Sandbox                  `mapstructure:"sandbox"`
+	FlowFileDownload         FlowFileDownload         `mapstructure:"flow_file_download"`
 }
 
 type DagInstanceEventArchivePolicy string
@@ -90,6 +93,14 @@ type Edition string
 const (
 	EditionCommunity  Edition = "community"
 	EditionCommercial Edition = "commercial"
+)
+
+type StorageBackend string
+
+const (
+	StorageBackendOssGateway        StorageBackend = "ossgateway"
+	StorageBackendS3                StorageBackend = "s3"
+	StorageBackendOssGatewayBackend StorageBackend = "ossgatewaybackend"
 )
 
 // Server 服务基础配置
@@ -114,6 +125,7 @@ type Server struct {
 	DBType                        string                        `mapstructure:"db_type"`
 	AuthEnabled                   string                        `mapstructure:"auth_enabled"`
 	BusinessDomainEnabled         string                        `mapstructure:"businessdomain_enabled"`
+	StorageBackend                StorageBackend                `mapstructure:"storage_backend"`
 }
 
 // DB database config
@@ -213,6 +225,12 @@ type Metadata struct {
 type Tika struct {
 	Host string `mapstructure:"host"`
 	Port int    `mapstructure:"port"`
+}
+
+type DocConvert struct {
+	Host          string `mapstructure:"host"`
+	GotenbergPort int    `mapstructure:"gotenberg_port"`
+	TikaPort      int    `mapstructure:"tika_port"`
 }
 
 // FastTextAnalysis 配置
@@ -332,6 +350,12 @@ type MongoDBConfig struct {
 type OSSGateWay struct {
 	PrivateHost string `mapstructure:"private_host"`
 	PrivatePort string `mapstructure:"private_port"`
+}
+
+// OssGatewayBackend 新版 OssGateway Backend 服务配置
+type OssGatewayBackend struct {
+	Host string `mapstructure:"host"`
+	Port int    `mapstructure:"port"`
 }
 
 // DumpLog 日志转储阈值设置
@@ -585,6 +609,15 @@ type Sandbox struct {
 	Memory     string `mapstructure:"memory"`
 	Disk       string `mapstructure:"disk"`
 	Timeout    int    `mapstructure:"timeout"` // 默认超时时间（秒）
+}
+
+// FlowFileDownload 文件下载线程池配置
+type FlowFileDownload struct {
+	WorkerCount     int   `mapstructure:"worker_count"`     // 每实例 worker 数
+	PollInterval    int   `mapstructure:"poll_interval"`    // 轮询间隔(秒)
+	BatchSize       int   `mapstructure:"batch_size"`       // 每次查询任务数
+	DownloadTimeout int   `mapstructure:"download_timeout"` // 下载超时(秒)
+	MaxFileSize     int64 `mapstructure:"max_file_size"`    // 最大文件大小(字节)
 }
 
 // BindEnvs bind envs

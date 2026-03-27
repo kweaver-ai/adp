@@ -425,7 +425,7 @@ func (a *ContentFileParse) ParameterNew() interface{} {
 	return &ContentFileParse{}
 }
 
-func (a *ContentFileParse) Validate(ctx context.Context) error {
+func (a *ContentFileParse) Validate(ctx entity.ExecuteContext) error {
 	switch a.SourceType {
 	case SourceTypeUrl:
 		if a.Filename == "" {
@@ -437,16 +437,13 @@ func (a *ContentFileParse) Validate(ctx context.Context) error {
 			return fmt.Errorf("docid is required")
 		}
 
-		efast := drivenadapters.NewEfast()
-		downloadInfo, err := efast.InnerOSDownload(ctx, a.DocID, a.Version)
-
+		downloadInfo, err := GetFileDownloadInfo(ctx.Context(), ctx, a.DocID, a.Version)
 		if err != nil {
 			return err
 		}
 
 		a.Url = downloadInfo.URL
-		a.Filename = downloadInfo.Name
-
+		a.Filename = downloadInfo.Filename
 		return nil
 	}
 }
@@ -460,7 +457,7 @@ func (a *ContentFileParse) Run(ctx entity.ExecuteContext, params interface{}, to
 
 	input := params.(*ContentFileParse)
 
-	err = input.Validate(ctx.Context())
+	err = input.Validate(ctx)
 	if err != nil {
 		traceLog.WithContext(ctx.Context()).Warnf("[ContentFileParse] validate err: %s", err.Error())
 		return nil, err

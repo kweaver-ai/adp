@@ -361,6 +361,10 @@ type MgntHandler interface { //nolint
 	DeleteS3File(ctx context.Context, dagID, key string, userInfo *drivenadapters.UserInfo) error
 	MoveS3Files(ctx context.Context, sources []string, targetDagID string) ([]string, error)
 	GetS3FileDownloadURL(ctx context.Context, dagID, key string, userInfo *drivenadapters.UserInfo) (string, error)
+
+	// Dataflow 文件子系统接口
+	TriggerDataflowDoc(ctx context.Context, params *TriggerDataflowDocParams, userInfo *drivenadapters.UserInfo) (*TriggerDataflowDocResult, error)
+	CompleteDataflowDocUpload(ctx context.Context, params *CompleteDataflowDocUploadParams, userInfo *drivenadapters.UserInfo) (*CompleteDataflowDocUploadResult, error)
 }
 
 var (
@@ -401,7 +405,8 @@ type mgnt struct {
 	memoryCache       cstore.LocalCache
 	pool              *threadPool.PoolManager
 	bizDomain         drivenadapters.BusinessDomain
-	s3Adapter         drivenadapters.S3Adapter // S3适配器
+	s3Adapter         drivenadapters.S3Adapter  // S3适配器
+	ossGateway        drivenadapters.OssGateWay // OssGateway文件存储
 }
 
 // NewMgnt mgnt instance
@@ -448,6 +453,9 @@ func NewMgnt() MgntHandler {
 			bizDomain: drivenadapters.NewBusinessDomain(),
 			// dagModel:  dagmodel.NewDagRepository(),
 		}
+
+		// Initialize OssGateway for Dataflow file subsystem
+		mIns.ossGateway = drivenadapters.NewOssGateWay()
 
 		// Initialize S3 adapter if configured
 		s3Conn := s3.NewS3().GetDefaultConnection()

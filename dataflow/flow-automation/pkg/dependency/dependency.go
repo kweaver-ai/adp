@@ -44,6 +44,14 @@ type Repo interface {
 	GetModelTypeByID(ctx context.Context, id string) (int, error)
 	// GetDatabaseTableList 获取数据库表列表
 	GetDatabaseTableList(ctx context.Context, dataSourceID, token, ipStr string) ([]TableMetadata, error)
+	// ExtractFullText 提取文本
+	ExtractFullText(ctx context.Context, docID string) (map[string]any, error)
+	// ConvertToPDF 转换为pdf
+	ConvertToPDF(ctx context.Context, taskID, docID string) error
+	// HandleGotenbergCallback 处理Gotenberg回调
+	HandleGotenbergCallback(ctx context.Context, req *GotenbergCallbackRequest) (map[string]any, error)
+
+	DocumentConverter() DocumentConverter
 }
 
 // repo 委托对象
@@ -52,6 +60,7 @@ type repo struct {
 	speechModel          SpeechModel
 	aiModel              AiModelService
 	databaseTableService DatabaseTableService
+	documentConverter    DocumentConverter
 }
 
 // NewDriven driven 被驱动对象
@@ -61,6 +70,7 @@ func NewDriven() Repo {
 		speechModel:          NewSpeechModel(),
 		aiModel:              NewAiModelService(),
 		databaseTableService: NewDatabaseTableService(),
+		documentConverter:    NewDocumentConverter(),
 	}
 	return ur
 }
@@ -148,4 +158,23 @@ func (r *repo) GetModelTypeByID(ctx context.Context, id string) (int, error) {
 // GetDatabaseTableList 获取数据库表列表
 func (r *repo) GetDatabaseTableList(ctx context.Context, dataSourceID, token, ipStr string) ([]TableMetadata, error) {
 	return r.databaseTableService.ListTables(ctx, dataSourceID, token, ipStr)
+}
+
+// ExtractFullText 全文提取
+func (r *repo) ExtractFullText(ctx context.Context, docID string) (map[string]any, error) {
+	return r.documentConverter.ExtractFullText(ctx, docID)
+}
+
+// ConvertToPDF 转换为pdf
+func (r *repo) ConvertToPDF(ctx context.Context, taskID, docID string) error {
+	return r.documentConverter.ConvertToPDF(ctx, taskID, docID)
+}
+
+// HandleGotenbergCallback 处理gotenberg回调
+func (r *repo) HandleGotenbergCallback(ctx context.Context, req *GotenbergCallbackRequest) (map[string]any, error) {
+	return r.documentConverter.HandleGotenbergCallback(ctx, req)
+}
+
+func (r *repo) DocumentConverter() DocumentConverter {
+	return r.documentConverter
 }

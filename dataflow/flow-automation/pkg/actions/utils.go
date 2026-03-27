@@ -976,3 +976,110 @@ func hash(s string) string {
 	hash := md5.Sum(data)
 	return hex.EncodeToString(hash[:])
 }
+
+// FileDownloadInfo 文件下载信息
+type FileDownloadInfo struct {
+	URL      string
+	Filename string
+	Size     int64
+	DocAttr  *drivenadapters.DocAttr // 文件属性信息（可选）
+}
+
+// GetFileDownloadInfo 获取文件下载信息
+func GetFileDownloadInfo(ctx context.Context, execCtx entity.ExecuteContext, docID, version string) (*FileDownloadInfo, error) {
+	if common.IsDFSURI(docID) {
+		return getDFSFileDownloadInfo(ctx, execCtx, docID)
+	}
+	return getEfastFileDownloadInfo(ctx, docID, version)
+}
+
+// GetFileDownloadInfoWithDocAttr 获取文件下载信息和文件属性
+func GetFileDownloadInfoWithDocAttr(ctx context.Context, execCtx entity.ExecuteContext, docID, version string) (*FileDownloadInfo, error) {
+	if common.IsDFSURI(docID) {
+		return getDFSFileDownloadInfoWithDocAttr(ctx, execCtx, docID)
+	}
+	return getEfastFileDownloadInfoWithDocAttr(ctx, docID, version, execCtx.NewASDoc())
+}
+
+// getDFSFileDownloadInfo 获取DFS URI文件的下载信息
+func getDFSFileDownloadInfo(ctx context.Context, execCtx entity.ExecuteContext, docID string) (*FileDownloadInfo, error) {
+	dc := execCtx.NewRepo().DocumentConverter()
+	f, err := dc.ResolveFlowFile(ctx, docID)
+	if err != nil {
+		return nil, err
+	}
+
+	og := drivenadapters.NewOssGatewayBackend()
+	url, err := og.GetDownloadURL(ctx, f.Storage.OssID, f.Storage.ObjectKey, 3600, true)
+	if err != nil {
+		return nil, err
+	}
+
+	return &FileDownloadInfo{
+		URL:      url,
+		Filename: f.File.Name,
+		Size:     int64(f.Storage.Size),
+	}, nil
+}
+
+// getDFSFileDownloadInfoWithDocAttr 获取DFS URI文件的下载信息和属性
+func getDFSFileDownloadInfoWithDocAttr(ctx context.Context, execCtx entity.ExecuteContext, docID string) (*FileDownloadInfo, error) {
+	dc := execCtx.NewRepo().DocumentConverter()
+	f, err := dc.ResolveFlowFile(ctx, docID)
+	if err != nil {
+		return nil, err
+	}
+
+	og := drivenadapters.NewOssGatewayBackend()
+	url, err := og.GetDownloadURL(ctx, f.Storage.OssID, f.Storage.ObjectKey, 3600, true)
+	if err != nil {
+		return nil, err
+	}
+
+	return &FileDownloadInfo{
+		URL:      url,
+		Filename: f.File.Name,
+		Size:     int64(f.Storage.Size),
+		DocAttr: &drivenadapters.DocAttr{
+			DocID: docID,
+			Name:  f.File.Name,
+			Size:  float64(f.Storage.Size),
+		},
+	}, nil
+}
+
+// getEfastFileDownloadInfo 获取普通文档ID的下载信息
+func getEfastFileDownloadInfo(ctx context.Context, docID, version string) (*FileDownloadInfo, error) {
+	efast := drivenadapters.NewEfast()
+	downInfo, err := efast.InnerOSDownload(ctx, docID, version)
+	if err != nil {
+		return nil, err
+	}
+
+	return &FileDownloadInfo{
+		URL:      downInfo.URL,
+		Filename: downInfo.Name,
+		Size:     int64(downInfo.Size),
+	}, nil
+}
+
+// getEfastFileDownloadInfoWithDocAttr 获取普通文档ID的下载信息和属性
+func getEfastFileDownloadInfoWithDocAttr(ctx context.Context, docID, version string, asdoc drivenadapters.Efast) (*FileDownloadInfo, error) {
+	efast := drivenadapters.NewEfast()
+	downInfo, err := efast.InnerOSDownload(ctx, docID, version)
+	if err != nil {
+		return nil, err
+	}
+
+	docAttr, err := asdoc.GetDocMsg(ctx, docID)
+	if err != nil {
+		return nil, err
+	}
+
+	return &FileDownloadInfo{
+		URL:      downInfo.URL,
+		Filename: downInfo.Name,
+		Size:     int64(downInfo.Size),
+		DocAttr:  docAttr,
+	}, nil
+}

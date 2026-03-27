@@ -93,3 +93,61 @@ type TaskCache interface {
 	ListTaskCache(ctx context.Context, opts ListTaskCacheOptions) ([]*TaskCacheItem, error)
 	BatchDeleteByHash(ctx context.Context, hashes []any) error
 }
+
+// ============================================================
+// FlowStorageDao - Dataflow 存储文件 DAO
+// ============================================================
+
+type FlowStorageDao interface {
+	Insert(ctx context.Context, storage *FlowStorage) error
+	GetByID(ctx context.Context, id uint64) (*FlowStorage, error)
+	GetByOssIDAndObjectKey(ctx context.Context, ossID, objectKey string) (*FlowStorage, error)
+	List(ctx context.Context, opts *FlowStorageQueryOptions) ([]*FlowStorage, error)
+	Update(ctx context.Context, storage *FlowStorage) error
+	UpdateStatus(ctx context.Context, id uint64, status FlowStorageStatus) error
+	Delete(ctx context.Context, id uint64) error
+}
+
+// ============================================================
+// FlowFileDao - Dataflow 业务文件 DAO
+// ============================================================
+
+type FlowFileDao interface {
+	Insert(ctx context.Context, file *FlowFile) error
+	GetByID(ctx context.Context, id uint64) (*FlowFile, error)
+	List(ctx context.Context, opts *FlowFileQueryOptions) ([]*FlowFile, error)
+	Update(ctx context.Context, id uint64, params *FlowFileUpdateParams) error
+	UpdateStatus(ctx context.Context, id uint64, status FlowFileStatus) error
+	Delete(ctx context.Context, id uint64) error
+	CountByStorageID(ctx context.Context, storageID uint64) (int64, error)
+}
+
+// ============================================================
+// FlowFileDownloadJobDao - Dataflow 文件下载任务 DAO
+// ============================================================
+
+type FlowFileDownloadJobDao interface {
+	Insert(ctx context.Context, job *FlowFileDownloadJob) error
+	GetByID(ctx context.Context, id uint64) (*FlowFileDownloadJob, error)
+	GetByFileID(ctx context.Context, fileID uint64) (*FlowFileDownloadJob, error)
+	List(ctx context.Context, opts *FlowFileDownloadJobQueryOptions) ([]*FlowFileDownloadJob, error)
+	Update(ctx context.Context, id uint64, params *FlowFileDownloadJobUpdateParams) error
+	// ClaimJob 乐观锁抢占任务，返回是否成功抢占
+	ClaimJob(ctx context.Context, id uint64, startedAt int64) (bool, error)
+	Delete(ctx context.Context, id uint64) error
+	DeleteByFileID(ctx context.Context, fileID uint64) error
+}
+
+// ============================================================
+// FlowTaskResumeDao - Dataflow 阻塞任务恢复 DAO
+// ============================================================
+
+type FlowTaskResumeDao interface {
+	Insert(ctx context.Context, resume *FlowTaskResume) error
+	GetByID(ctx context.Context, id uint64) (*FlowTaskResume, error)
+	GetByTaskInstanceID(ctx context.Context, taskInstanceID string) (*FlowTaskResume, error)
+	List(ctx context.Context, opts *FlowTaskResumeQueryOptions) ([]*FlowTaskResume, error)
+	Delete(ctx context.Context, id uint64) error
+	DeleteByTaskInstanceID(ctx context.Context, taskInstanceID string) error
+	DeleteByResource(ctx context.Context, resourceType string, resourceID uint64) error
+}

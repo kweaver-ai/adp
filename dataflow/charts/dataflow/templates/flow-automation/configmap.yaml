@@ -37,6 +37,12 @@ data:
   SERVER_DB_TYPE: {{ .Values.flowAutomation.service.dbType | quote }}
   SERVER_AUTH_ENABLED: {{ .Values.auth.enabled | quote }}
   SERVER_BUSINESSDOMAIN_ENABLED: {{ .Values.businessDomain.enabled | quote }}
+  SERVER_STORAGE_BACKEND: {{ .Values.flowAutomation.service.storageBackend | quote }}
+  SERVER_FLOW_FILE_DOWNLOAD_WORKER_COUNT: {{ .Values.flowAutomation.flowFileDownload.workerCount | quote }}
+  SERVER_FLOW_FILE_DOWNLOAD_POLL_INTERVAL: {{ .Values.flowAutomation.flowFileDownload.pollInterval | quote }}
+  SERVER_FLOW_FILE_DOWNLOAD_BATCH_SIZE: {{ .Values.flowAutomation.flowFileDownload.batchSize | quote }}
+  SERVER_FLOW_FILE_DOWNLOAD_TIMEOUT: {{ .Values.flowAutomation.flowFileDownload.downloadTimeout | quote }}
+  SERVER_FLOW_FILE_DOWNLOAD_MAX_FILE_SIZE: {{ .Values.flowAutomation.flowFileDownload.maxFileSize | quote }}
   MONGODB_USER: {{ .Values.depServices.mongodb.user | quote }}
   MONGODB_HOST: {{ .Values.depServices.mongodb.host | quote }}
   MONGODB_PORT: {{ .Values.depServices.mongodb.port | quote }}
@@ -75,6 +81,9 @@ data:
   USERMANAGEMENT_PRIVATE_PORT: {{ index .Values "depServices" "user-management" "privatePort" | quote }}
   TIKA_HOST: {{ index .Values "depServices" "aladdin-tika" "host" | quote }}
   TIKA_PORT: {{ index .Values "depServices" "aladdin-tika" "port" | quote }}
+  DOC_CONVERT_HOST: {{ index .Values "depServices" "doc-convert" "host" | quote }}
+  DOC_CONVERT_TIKA_PORT: {{ index .Values "depServices" "doc-convert" "tikaPort" | quote }}
+  DOC_CONVERT_GOTENBERG_PORT: {{ index .Values "depServices" "doc-convert" "gotenbergPort" | quote }}
   FASTTEXTANALYSIS_HOST: {{ index .Values "depServices" "fast-text-analysis" "host" | quote }}
   FASTTEXTANALYSIS_PORT: {{ index .Values "depServices" "fast-text-analysis" "port" | quote }}
   DOCUMENT_PUBLIC_HOST: {{ .Values.depServices.document.publicHost | quote }}
@@ -242,6 +251,9 @@ data:
 
   OCR_PRIVATE_HOST: {{ .Values.depServices.ocr.privateHost | quote }}
   OCR_PRIVATE_PORT: {{ .Values.depServices.ocr.privatePort | quote }}
+
+  OSSGATEWAYBACKEND_HOST: {{ index .Values "depServices" "oss-gateway-backend" "host" | quote }}
+  OSSGATEWAYBACKEND_PORT: {{ index .Values "depServices" "oss-gateway-backend" "port" | quote }}
 
   MFMODELAPI_HOST: {{ .Values.depServices.mfmodelapi.host | quote }}
   MFMODELAPI_PORT: {{ .Values.depServices.mfmodelapi.port | quote }}

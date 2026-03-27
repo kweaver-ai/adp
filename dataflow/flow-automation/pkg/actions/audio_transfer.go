@@ -85,29 +85,21 @@ func (e *audioTransferExecutor) GetResultFileExt() string {
 func (e *audioTransferExecutor) Execute(ctx context.Context) (map[string]any, error) {
 	log := traceLog.WithContext(ctx)
 
-	// 获取文件信息
-	_, docInfo, err := getDocInfo(ctx, e.input.DocID, e.token.Token, e.token.LoginIP, e.token.IsApp, e.context.NewASDoc())
+	downloadInfo, err := GetFileDownloadInfoWithDocAttr(ctx, e.context, e.input.DocID, e.input.Version)
 	if err != nil {
-		log.Warnf("[audioTransferExecutor] getDocInfo failed, detail: %s", err.Error())
-		return nil, err
-	}
-
-	// 获取文件预下载地址
-	res, err := e.context.NewASDoc().InnerOSDownload(ctx, e.input.DocID, e.input.Version)
-	if err != nil {
-		log.Warnf("[audioTransferExecutor] InnerOSDownload failed, detail: %s", err.Error())
+		log.Warnf("[audioTransferExecutor] GetFileDownloadInfoWithDocAttr failed, detail: %s", err.Error())
 		return nil, err
 	}
 
 	// 获取文件二进制内容
-	body, err := getFileStream(res.URL, 15*60*time.Second)
+	body, err := getFileStream(downloadInfo.URL, 15*60*time.Second)
 	if err != nil {
 		log.Warnf("[audioTransferExecutor] getFileStream failed, detail: %s", err.Error())
 		return nil, err
 	}
 
 	var sizeLimit int64 = 500 * 1024 * 1024
-	result, err := e.context.NewRepo().AudioTransfer(ctx, float64(sizeLimit), "", body, docInfo)
+	result, err := e.context.NewRepo().AudioTransfer(ctx, float64(sizeLimit), "", body, downloadInfo.DocAttr)
 	if err != nil {
 		log.Warnf("[audioTransferExecutor] AudioTransfer failed, detail: %s", err.Error())
 		return nil, err
