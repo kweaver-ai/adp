@@ -12,7 +12,7 @@ CREATE TABLE IF NOT EXISTS `t_python_package` (
   PRIMARY KEY (`f_id`),
   UNIQUE KEY `uk_t_python_package_name` (`f_name`)
 ) ENGINE=InnoDB COMMENT='包管理表';
--- Source: dataflow/flow-automation/migrations/mariadb/0.4.0/init.sql
+-- Source: dataflow/flow-automation/migrations/mariadb/0.5.0/init.sql
 USE adp;
 
 
@@ -769,6 +769,74 @@ CREATE TABLE IF NOT EXISTS `t_flow_log` (
   PRIMARY KEY (`f_id`)
 ) ENGINE=InnoDB COMMENT '日志定义表';
 
+CREATE TABLE IF NOT EXISTS `t_flow_storage` (
+  `f_id` BIGINT UNSIGNED NOT NULL COMMENT '主键ID',
+  `f_oss_id` VARCHAR(64) NOT NULL DEFAULT '' COMMENT 'OssGateway存储ID',
+  `f_object_key` VARCHAR(512) NOT NULL DEFAULT '' COMMENT '对象存储key',
+  `f_name` VARCHAR(256) NOT NULL DEFAULT '' COMMENT '原始文件名',
+  `f_content_type` VARCHAR(128) NOT NULL DEFAULT '' COMMENT 'MIME类型',
+  `f_size` BIGINT UNSIGNED NOT NULL DEFAULT 0 COMMENT '文件大小',
+  `f_etag` VARCHAR(128) NOT NULL DEFAULT '' COMMENT '文件etag/hash',
+  `f_status` TINYINT NOT NULL DEFAULT 1 COMMENT '状态 1正常 2待删除 3已删除',
+  `f_created_at` BIGINT NOT NULL DEFAULT 0 COMMENT '创建时间',
+  `f_updated_at` BIGINT NOT NULL DEFAULT 0 COMMENT '更新时间',
+  `f_deleted_at` BIGINT NOT NULL DEFAULT 0 COMMENT '删除时间 0表示未删除',
+  PRIMARY KEY (`f_id`),
+  UNIQUE KEY `uk_flow_storage_oss_id_object_key` (`f_oss_id`, `f_object_key`),
+  KEY `idx_flow_storage_status` (`f_status`),
+  KEY `idx_flow_storage_created_at` (`f_created_at`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='Dataflow存储文件表';
+
+CREATE TABLE IF NOT EXISTS `t_flow_file` (
+  `f_id` BIGINT UNSIGNED NOT NULL COMMENT '主键ID，对应 dfs://<id>',
+  `f_dag_id` VARCHAR(64) NOT NULL DEFAULT '' COMMENT '流程定义ID',
+  `f_dag_instance_id` VARCHAR(64) NOT NULL DEFAULT '' COMMENT '流程实例ID',
+  `f_storage_id` BIGINT UNSIGNED NOT NULL DEFAULT 0 COMMENT '存储文件ID，未落OSS时为0',
+  `f_status` TINYINT NOT NULL DEFAULT 1 COMMENT '业务状态 1待就绪 2就绪 3失效 4已过期',
+  `f_name` VARCHAR(256) NOT NULL DEFAULT '' COMMENT '文件名',
+  `f_expires_at` BIGINT NOT NULL DEFAULT 0 COMMENT '过期时间 0表示不过期',
+  `f_created_at` BIGINT NOT NULL DEFAULT 0 COMMENT '创建时间',
+  `f_updated_at` BIGINT NOT NULL DEFAULT 0 COMMENT '更新时间',
+  PRIMARY KEY (`f_id`),
+  KEY `idx_flow_file_dag_id` (`f_dag_id`),
+  KEY `idx_flow_file_dag_instance_id` (`f_dag_instance_id`),
+  KEY `idx_flow_file_storage_id` (`f_storage_id`),
+  KEY `idx_flow_file_status` (`f_status`),
+  KEY `idx_flow_file_expires_at` (`f_expires_at`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='Dataflow业务文件表';
+
+CREATE TABLE IF NOT EXISTS `t_flow_file_download_job` (
+  `f_id` BIGINT UNSIGNED NOT NULL COMMENT '主键ID',
+  `f_file_id` BIGINT UNSIGNED NOT NULL COMMENT '关联flow_file ID',
+  `f_status` TINYINT NOT NULL DEFAULT 1 COMMENT '任务状态 1待执行 2执行中 3成功 4失败 5取消',
+  `f_retry_count` INT NOT NULL DEFAULT 0 COMMENT '已重试次数',
+  `f_max_retry` INT NOT NULL DEFAULT 3 COMMENT '最大重试次数',
+  `f_next_retry_at` BIGINT NOT NULL DEFAULT 0 COMMENT '下次重试时间',
+  `f_error_code` VARCHAR(64) NOT NULL DEFAULT '' COMMENT '错误码',
+  `f_error_message` VARCHAR(1024) NOT NULL DEFAULT '' COMMENT '错误信息',
+  `f_download_url` VARCHAR(2048) NOT NULL DEFAULT '' COMMENT '源文件URL',
+  `f_started_at` BIGINT NOT NULL DEFAULT 0 COMMENT '开始时间',
+  `f_finished_at` BIGINT NOT NULL DEFAULT 0 COMMENT '结束时间',
+  `f_created_at` BIGINT NOT NULL DEFAULT 0 COMMENT '创建时间',
+  `f_updated_at` BIGINT NOT NULL DEFAULT 0 COMMENT '更新时间',
+  PRIMARY KEY (`f_id`),
+  UNIQUE KEY `uk_flow_file_download_job_file_id` (`f_file_id`),
+  KEY `idx_flow_file_download_job_status_retry` (`f_status`, `f_next_retry_at`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='Dataflow文件下载任务表';
+
+CREATE TABLE IF NOT EXISTS `t_flow_task_resume` (
+  `f_id` BIGINT UNSIGNED NOT NULL COMMENT '主键ID',
+  `f_task_instance_id` VARCHAR(64) NOT NULL DEFAULT '' COMMENT '被阻塞的任务实例ID',
+  `f_dag_instance_id` VARCHAR(64) NOT NULL DEFAULT '' COMMENT '所属流程实例ID',
+  `f_resource_type` VARCHAR(32) NOT NULL DEFAULT 'file' COMMENT '资源类型',
+  `f_resource_id` BIGINT UNSIGNED NOT NULL DEFAULT 0 COMMENT '资源ID，对文件场景即flow_file ID',
+  `f_created_at` BIGINT NOT NULL DEFAULT 0 COMMENT '创建时间',
+  `f_updated_at` BIGINT NOT NULL DEFAULT 0 COMMENT '更新时间',
+  PRIMARY KEY (`f_id`),
+  UNIQUE KEY `uk_flow_task_resume_task_instance_id` (`f_task_instance_id`),
+  KEY `idx_flow_task_resume_resource` (`f_resource_type`, `f_resource_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='Dataflow阻塞任务恢复表';
+
 -- Source: dataflow/flow-stream-data-pipeline/migrations/mariadb/0.1.0/init.sql
 USE adp;
 
@@ -1376,6 +1444,20 @@ SELECT 'opensearch', 'opensearch', 'OpenSearch 搜索引擎连接器', 'local', 
     TRUE
 FROM DUAL WHERE NOT EXISTS ( SELECT f_type FROM t_connector_type WHERE f_type = 'opensearch' );
 
+INSERT INTO t_connector_type (f_type, f_name, f_description, f_mode, f_category, f_field_config, f_enabled)
+SELECT 'postgresql', 'postgresql', 'PostgreSQL 关系型数据库连接器', 'local', 'table',
+       '{
+           "host":      {"name":"主机地址","type":"string","description":"数据库服务器主机地址","required":true,"encrypted":false},
+           "port":      {"name":"端口号","type":"integer","description":"数据库服务器端口","required":true,"encrypted":false},
+           "username":  {"name":"用户名","type":"string","description":"数据库用户名","required":true,"encrypted":false},
+           "password":  {"name":"密码","type":"string","description":"数据库密码","required":true,"encrypted":true},
+           "database":  {"name":"数据库名","type":"string","description":"PostgreSQL 连接目标 database","required":true,"encrypted":false},
+           "schemas":   {"name":"Schema 列表","type":"array","description":"可选；为空则扫描当前库下除系统 schema 外的用户 schema；非空则仅扫描列出的 schema","required":false,"encrypted":false},
+           "options":   {"name":"连接参数","type":"object","description":"连接参数（如 sslmode、connect_timeout 等）","required":false,"encrypted":false}
+       }',
+       TRUE
+FROM DUAL WHERE NOT EXISTS ( SELECT f_type FROM t_connector_type WHERE f_type = 'postgresql' );
+
 -- ==========================================
 -- 7. t_discover_task 发现任务表
 -- ==========================================
@@ -1407,6 +1489,39 @@ CREATE TABLE IF NOT EXISTS t_discover_task (
     INDEX idx_catalog_id (f_catalog_id),
     INDEX idx_status (f_status)
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_bin COMMENT='发现任务表，记录异步资源发现任务的状态和结果';
+
+-- ==========================================
+-- 8. t_build_task 构建任务表
+-- ==========================================
+CREATE TABLE IF NOT EXISTS t_build_task (
+    -- 主键与关联信息
+    f_id                      VARCHAR(40) NOT NULL COMMENT '任务ID',
+    f_resource_id             VARCHAR(40) NOT NULL COMMENT '资源ID',
+
+    -- 任务状态
+    f_status                  VARCHAR(20) NOT NULL COMMENT '任务状态: pending, running, completed, failed',
+    f_mode                    VARCHAR(20) NOT NULL COMMENT '任务模式: full, incremental, realtime',
+    f_total_count             BIGINT NOT NULL DEFAULT 0 COMMENT '总数',
+    f_synced_count            BIGINT NOT NULL DEFAULT 0 COMMENT '已同步数',
+    f_vectorized_count        BIGINT NOT NULL DEFAULT 0 COMMENT '已做向量数',
+    f_synced_mark             VARCHAR(100) DEFAULT NULL COMMENT '同步标记',
+    f_error_msg               TEXT DEFAULT NULL COMMENT '错误信息',
+
+    -- 审计字段
+    f_creator_id              VARCHAR(40) NOT NULL COMMENT '创建人ID',
+    f_creator_type            VARCHAR(20) NOT NULL COMMENT '创建人类型',
+    f_create_time             BIGINT NOT NULL COMMENT '创建时间',
+    f_updater_id              VARCHAR(40) NOT NULL COMMENT '更新人ID',
+    f_updater_type            VARCHAR(20) NOT NULL COMMENT '更新人类型',
+    f_update_time             BIGINT NOT NULL COMMENT '更新时间',
+
+    -- 索引
+    PRIMARY KEY (f_id),
+    INDEX idx_resource_id (f_resource_id),
+    INDEX idx_status (f_status),
+    INDEX idx_create_time (f_create_time)
+) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_bin COMMENT='构建任务表';
+
 -- Source: vega/data-connection/migrations/mariadb/0.2.0/init.sql
 -- Copyright The kweaver.ai Authors.
 --

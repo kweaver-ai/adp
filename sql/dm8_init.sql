@@ -15,7 +15,7 @@ CREATE TABLE IF NOT EXISTS "t_python_package" (
 CREATE UNIQUE INDEX IF NOT EXISTS t_python_package_uk_t_python_package_name ON t_python_package("f_name");
 
 
--- Source: dataflow/flow-automation/migrations/dm8/0.4.0/init.sql
+-- Source: dataflow/flow-automation/migrations/dm8/0.5.0/init.sql
 SET SCHEMA adp;
 
 
@@ -832,6 +832,77 @@ CREATE TABLE IF NOT EXISTS "t_flow_log" (
   CLUSTER PRIMARY KEY ("f_id")
 );
 
+CREATE TABLE IF NOT EXISTS "t_flow_storage" (
+  "f_id" BIGINT NOT NULL,
+  "f_oss_id" VARCHAR(64 CHAR) NOT NULL DEFAULT '',
+  "f_object_key" VARCHAR(512 CHAR) NOT NULL DEFAULT '',
+  "f_name" VARCHAR(256 CHAR) NOT NULL DEFAULT '',
+  "f_content_type" VARCHAR(128 CHAR) NOT NULL DEFAULT '',
+  "f_size" BIGINT NOT NULL DEFAULT 0,
+  "f_etag" VARCHAR(128 CHAR) NOT NULL DEFAULT '',
+  "f_status" TINYINT NOT NULL DEFAULT 1,
+  "f_created_at" BIGINT NOT NULL DEFAULT 0,
+  "f_updated_at" BIGINT NOT NULL DEFAULT 0,
+  "f_deleted_at" BIGINT NOT NULL DEFAULT 0,
+  CLUSTER PRIMARY KEY ("f_id")
+);
+
+CREATE UNIQUE INDEX IF NOT EXISTS "uk_flow_storage_oss_id_object_key" ON "t_flow_storage" ("f_oss_id", "f_object_key");
+CREATE INDEX IF NOT EXISTS "idx_flow_storage_status" ON "t_flow_storage" ("f_status");
+CREATE INDEX IF NOT EXISTS "idx_flow_storage_created_at" ON "t_flow_storage" ("f_created_at");
+
+CREATE TABLE IF NOT EXISTS "t_flow_file" (
+  "f_id" BIGINT NOT NULL,
+  "f_dag_id" VARCHAR(64 CHAR) NOT NULL DEFAULT '',
+  "f_dag_instance_id" VARCHAR(64 CHAR) NOT NULL DEFAULT '',
+  "f_storage_id" BIGINT NOT NULL DEFAULT 0,
+  "f_status" TINYINT NOT NULL DEFAULT 1,
+  "f_name" VARCHAR(256 CHAR) NOT NULL DEFAULT '',
+  "f_expires_at" BIGINT NOT NULL DEFAULT 0,
+  "f_created_at" BIGINT NOT NULL DEFAULT 0,
+  "f_updated_at" BIGINT NOT NULL DEFAULT 0,
+  CLUSTER PRIMARY KEY ("f_id")
+);
+
+CREATE INDEX IF NOT EXISTS "idx_flow_file_dag_id" ON "t_flow_file" ("f_dag_id");
+CREATE INDEX IF NOT EXISTS "idx_flow_file_dag_instance_id" ON "t_flow_file" ("f_dag_instance_id");
+CREATE INDEX IF NOT EXISTS "idx_flow_file_storage_id" ON "t_flow_file" ("f_storage_id");
+CREATE INDEX IF NOT EXISTS "idx_flow_file_status" ON "t_flow_file" ("f_status");
+CREATE INDEX IF NOT EXISTS "idx_flow_file_expires_at" ON "t_flow_file" ("f_expires_at");
+
+CREATE TABLE IF NOT EXISTS "t_flow_file_download_job" (
+  "f_id" BIGINT NOT NULL,
+  "f_file_id" BIGINT NOT NULL,
+  "f_status" TINYINT NOT NULL DEFAULT 1,
+  "f_retry_count" INT NOT NULL DEFAULT 0,
+  "f_max_retry" INT NOT NULL DEFAULT 3,
+  "f_next_retry_at" BIGINT NOT NULL DEFAULT 0,
+  "f_error_code" VARCHAR(64 CHAR) NOT NULL DEFAULT '',
+  "f_error_message" VARCHAR(1024 CHAR) NOT NULL DEFAULT '',
+  "f_download_url" VARCHAR(2048 CHAR) NOT NULL DEFAULT '',
+  "f_started_at" BIGINT NOT NULL DEFAULT 0,
+  "f_finished_at" BIGINT NOT NULL DEFAULT 0,
+  "f_created_at" BIGINT NOT NULL DEFAULT 0,
+  "f_updated_at" BIGINT NOT NULL DEFAULT 0,
+  CLUSTER PRIMARY KEY ("f_id")
+);
+
+CREATE UNIQUE INDEX IF NOT EXISTS "uk_flow_file_download_job_file_id" ON "t_flow_file_download_job" ("f_file_id");
+CREATE INDEX IF NOT EXISTS "idx_flow_file_download_job_status_retry" ON "t_flow_file_download_job" ("f_status", "f_next_retry_at");
+
+CREATE TABLE IF NOT EXISTS "t_flow_task_resume" (
+  "f_id" BIGINT NOT NULL,
+  "f_task_instance_id" VARCHAR(64 CHAR) NOT NULL DEFAULT '',
+  "f_dag_instance_id" VARCHAR(64 CHAR) NOT NULL DEFAULT '',
+  "f_resource_type" VARCHAR(32 CHAR) NOT NULL DEFAULT 'file',
+  "f_resource_id" BIGINT NOT NULL DEFAULT 0,
+  "f_created_at" BIGINT NOT NULL DEFAULT 0,
+  "f_updated_at" BIGINT NOT NULL DEFAULT 0,
+  CLUSTER PRIMARY KEY ("f_id")
+);
+
+CREATE UNIQUE INDEX IF NOT EXISTS "uk_flow_task_resume_task_instance_id" ON "t_flow_task_resume" ("f_task_instance_id");
+CREATE INDEX IF NOT EXISTS "idx_flow_task_resume_resource" ON "t_flow_task_resume" ("f_resource_type", "f_resource_id");
 -- Source: dataflow/flow-stream-data-pipeline/migrations/dm8/0.1.0/init.sql
 SET SCHEMA adp;
 
@@ -1459,6 +1530,20 @@ SELECT 'opensearch', 'opensearch', 'OpenSearch 搜索引擎连接器', 'local', 
     1
 FROM DUAL WHERE NOT EXISTS ( SELECT f_type FROM t_connector_type WHERE f_type = 'opensearch' );
 
+INSERT INTO t_connector_type (f_type, f_name, f_description, f_mode, f_category, f_field_config, f_enabled)
+SELECT 'postgresql', 'postgresql', 'PostgreSQL 关系型数据库连接器', 'local', 'table',
+       '{
+           "host":      {"name":"主机地址","type":"string","description":"数据库服务器主机地址","required":true,"encrypted":false},
+           "port":      {"name":"端口号","type":"integer","description":"数据库服务器端口","required":true,"encrypted":false},
+           "username":  {"name":"用户名","type":"string","description":"数据库用户名","required":true,"encrypted":false},
+           "password":  {"name":"密码","type":"string","description":"数据库密码","required":true,"encrypted":true},
+           "database":  {"name":"数据库名","type":"string","description":"PostgreSQL 连接目标 database","required":true,"encrypted":false},
+           "schemas":   {"name":"Schema 列表","type":"array","description":"可选；为空则扫描当前库下除系统 schema 外的用户 schema；非空则仅扫描列出的 schema","required":false,"encrypted":false},
+           "options":   {"name":"连接参数","type":"object","description":"连接参数（如 sslmode、connect_timeout 等）","required":false,"encrypted":false}
+       }',
+       1
+FROM DUAL WHERE NOT EXISTS ( SELECT f_type FROM t_connector_type WHERE f_type = 'postgresql' );
+
 -- ==========================================
 -- 7. t_discover_task 发现任务表
 -- ==========================================
@@ -1493,6 +1578,38 @@ CREATE INDEX IF NOT EXISTS idx_t_discover_task_catalog_id ON t_discover_task (f_
 
 CREATE INDEX IF NOT EXISTS idx_t_discover_task_status ON t_discover_task (f_status);
 
+-- ==========================================
+-- 8. t_build_task 构建任务表
+-- ==========================================
+CREATE TABLE IF NOT EXISTS t_build_task (
+    -- 主键与关联信息
+    f_id                      VARCHAR(40 CHAR) NOT NULL,
+    f_resource_id             VARCHAR(40 CHAR) NOT NULL,
+
+    -- 任务状态
+    f_status                  VARCHAR(20 CHAR) NOT NULL,
+    f_mode                    VARCHAR(20 CHAR) NOT NULL,
+    f_total_count             BIGINT NOT NULL DEFAULT 0,
+    f_synced_count            BIGINT NOT NULL DEFAULT 0,
+    f_vectorized_count        BIGINT NOT NULL DEFAULT 0,
+    f_synced_mark             VARCHAR(100 CHAR) DEFAULT NULL,
+    f_error_msg               TEXT DEFAULT NULL,
+
+    -- 审计字段
+    f_creator_id              VARCHAR(40 CHAR) NOT NULL,
+    f_creator_type            VARCHAR(20 CHAR) NOT NULL,
+    f_create_time             BIGINT NOT NULL,
+    f_updater_id              VARCHAR(40 CHAR) NOT NULL,
+    f_updater_type            VARCHAR(20 CHAR) NOT NULL,
+    f_update_time             BIGINT NOT NULL,
+
+    -- 索引
+    CLUSTER PRIMARY KEY (f_id)
+);
+
+CREATE UNIQUE INDEX IF NOT EXISTS idx_t_build_task_resource_id ON t_build_task(f_resource_id);
+
+CREATE UNIQUE INDEX IF NOT EXISTS idx_t_build_task_status ON t_build_task(f_status);
 
 
 -- Source: vega/data-connection/migrations/dm8/0.2.0/init.sql
