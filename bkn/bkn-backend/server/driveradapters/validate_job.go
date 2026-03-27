@@ -27,6 +27,11 @@ func ValidateJob(ctx context.Context, jobInfo *interfaces.JobInfo) error {
 		return err
 	}
 
+	// 如果job的branch为空，则赋值 main
+	if jobInfo.Branch == "" {
+		jobInfo.Branch = interfaces.MAIN_BRANCH
+	}
+
 	err = ValidateJobType(ctx, jobInfo.JobType)
 	if err != nil {
 		return err

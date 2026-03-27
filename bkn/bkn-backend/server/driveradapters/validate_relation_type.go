@@ -45,6 +45,11 @@ func ValidateRelationTypes(ctx context.Context, knID string, relationTypes []*in
 			return err
 		}
 
+		// 2. 如果关系类的branch为空，则赋值 main
+		if relationTypes[i].Branch == "" {
+			relationTypes[i].Branch = interfaces.MAIN_BRANCH
+		}
+
 		relationTypes[i].KNID = knID
 	}
 	return nil

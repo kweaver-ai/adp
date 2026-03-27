@@ -141,6 +141,9 @@ func (r *restHandler) CreateConceptGroup(c *gin.Context, visitor hydra.Visitor) 
 		rest.ReplyError(c, httpErr)
 		return
 	}
+	cg.KNID = knID
+	// request来的cg的branch都用url里的branch
+	cg.Branch = branch
 
 	// 1. 校验 概念分组必要创建参数的合法性, 非空、长度、是枚举值
 	err = ValidateConceptGroup(ctx, &cg)
@@ -157,8 +160,6 @@ func (r *restHandler) CreateConceptGroup(c *gin.Context, visitor hydra.Visitor) 
 		rest.ReplyError(c, httpErr)
 		return
 	}
-	cg.KNID = knID
-	cg.Branch = branch // 分组的 branch 从query参数中取
 
 	// 若kn的对象类，关系类，行动类, 概念分组不为空，则应循环调用对象类、关系类、行动类, 概念分组的校验函数
 	if len(cg.ObjectTypes) > 0 {

@@ -5,6 +5,7 @@
 
 USE adp;
 
+
 -- 业务知识网络
 CREATE TABLE IF NOT EXISTS t_knowledge_network (
   f_id VARCHAR(40) NOT NULL DEFAULT '' COMMENT '业务知识网络id',
@@ -25,6 +26,7 @@ CREATE TABLE IF NOT EXISTS t_knowledge_network (
   PRIMARY KEY (f_id,f_branch),
   UNIQUE KEY uk_kn_name (f_name,f_branch)
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_bin COMMENT = '业务知识网络';
+
 
 -- 对象类
 CREATE TABLE IF NOT EXISTS t_object_type (
@@ -53,6 +55,7 @@ CREATE TABLE IF NOT EXISTS t_object_type (
   UNIQUE KEY uk_object_type_name (f_kn_id,f_branch,f_name)
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_bin COMMENT = '对象类';
 
+
 -- 对象类状态
 CREATE TABLE IF NOT EXISTS t_object_type_status (
   f_id VARCHAR(40) NOT NULL DEFAULT '' COMMENT '对象类id',
@@ -67,6 +70,7 @@ CREATE TABLE IF NOT EXISTS t_object_type_status (
   f_update_time BIGINT(20) NOT NULL DEFAULT 0 COMMENT '更新时间',
   PRIMARY KEY (f_kn_id,f_branch,f_id)
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_bin COMMENT = '对象类状态';
+
 
 -- 关系类
 CREATE TABLE IF NOT EXISTS t_relation_type (
@@ -91,6 +95,7 @@ CREATE TABLE IF NOT EXISTS t_relation_type (
   f_update_time BIGINT(20) NOT NULL DEFAULT 0 COMMENT '更新时间',
   PRIMARY KEY (f_kn_id,f_branch,f_id)
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_bin COMMENT = '关系类';
+
 
 -- 行动类
 CREATE TABLE IF NOT EXISTS t_action_type (
@@ -157,6 +162,7 @@ CREATE TABLE IF NOT EXISTS t_kn_task (
   PRIMARY KEY (f_id)
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_bin COMMENT = '子任务';
 
+
 -- 概念分组
 CREATE TABLE IF NOT EXISTS t_concept_group (
   f_id VARCHAR(40) NOT NULL DEFAULT '' COMMENT '概念分组id',
@@ -178,6 +184,7 @@ CREATE TABLE IF NOT EXISTS t_concept_group (
   UNIQUE KEY uk_concept_group_name (f_kn_id,f_branch,f_name)
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_bin COMMENT = '概念分组';
  
+ 
 -- 分组与概念对应表
 CREATE TABLE IF NOT EXISTS t_concept_group_relation (
   f_id VARCHAR(40) NOT NULL DEFAULT '' COMMENT '主键id',
@@ -191,9 +198,9 @@ CREATE TABLE IF NOT EXISTS t_concept_group_relation (
   UNIQUE KEY uk_concept_group_relation (f_kn_id,f_branch,f_group_id,f_concept_type,f_concept_id)
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_bin COMMENT = '分组与概念对应表';
 
+
 -- Action Schedule Management
 -- Supports cron-based scheduled action execution with distributed locking
-
 CREATE TABLE IF NOT EXISTS t_action_schedule (
   f_id VARCHAR(40) NOT NULL DEFAULT '' COMMENT 'Schedule ID',
   f_name VARCHAR(100) NOT NULL DEFAULT '' COMMENT 'Schedule name',
@@ -219,3 +226,24 @@ CREATE TABLE IF NOT EXISTS t_action_schedule (
   KEY idx_status_next_run (f_status, f_next_run_time),
   KEY idx_action_type (f_action_type_id)
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_bin COMMENT = 'Action schedule for cron-based execution';
+
+
+-- Risk Type 
+CREATE TABLE IF NOT EXISTS t_risk_type (
+  f_id VARCHAR(40) NOT NULL DEFAULT '' COMMENT '风险类ID',
+  f_name VARCHAR(40) NOT NULL DEFAULT '' COMMENT '风险类名称',
+  f_comment VARCHAR(1000) NOT NULL DEFAULT '' COMMENT '描述',
+  f_tags VARCHAR(255) DEFAULT NULL COMMENT '标签',
+  f_icon VARCHAR(255) NOT NULL DEFAULT '' COMMENT '图标',
+  f_color VARCHAR(40) NOT NULL DEFAULT '' COMMENT '颜色',
+  f_kn_id VARCHAR(40) NOT NULL DEFAULT '' COMMENT '业务知识网络ID',
+  f_branch VARCHAR(40) NOT NULL DEFAULT '' COMMENT '分支',
+  f_creator VARCHAR(40) NOT NULL DEFAULT '' COMMENT '创建者id',
+  f_creator_type VARCHAR(20) NOT NULL DEFAULT '' COMMENT '创建者类型',
+  f_create_time BIGINT(20) NOT NULL DEFAULT 0 COMMENT '创建时间',
+  f_updater VARCHAR(40) NOT NULL DEFAULT '' COMMENT '更新者id',
+  f_updater_type VARCHAR(20) NOT NULL DEFAULT '' COMMENT '更新者类型',
+  f_update_time BIGINT(20) NOT NULL DEFAULT 0 COMMENT '更新时间',
+  PRIMARY KEY (f_kn_id, f_branch, f_id),
+  UNIQUE KEY uk_risk_type_name (f_kn_id, f_branch, f_name)
+) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_bin COMMENT = '风险类';

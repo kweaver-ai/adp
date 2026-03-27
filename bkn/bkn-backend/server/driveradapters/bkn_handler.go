@@ -178,6 +178,15 @@ func (r *restHandler) UploadBKN(c *gin.Context) {
 			}
 		}
 	}
+	if len(kn.RiskTypes) > 0 {
+		err = ValidateRiskTypes(ctx, kn.KNID, kn.RiskTypes)
+		if err != nil {
+			httpErr := err.(*rest.HTTPError)
+			o11y.AddHttpAttrs4HttpError(span, httpErr)
+			rest.ReplyError(c, httpErr)
+			return
+		}
+	}
 
 	// 调用创建单个知识网络
 	knID, err := r.kns.CreateKN(ctx, kn, interfaces.ImportMode_Overwrite, false)

@@ -54,6 +54,11 @@ var objectNameErrorCode = map[string][]string{
 		berrors.BknBackend_ConceptGroup_NullParameter_Name,
 		berrors.BknBackend_ConceptGroup_LengthExceeded_Name,
 	},
+
+	interfaces.MODULE_TYPE_RISK_TYPE: {
+		berrors.BknBackend_RiskType_NullParameter_Name,
+		berrors.BknBackend_RiskType_LengthExceeded_Name,
+	},
 }
 
 // 校验的导入模式
@@ -212,7 +217,17 @@ func validateConceptsQuery(ctx context.Context, query *interfaces.ConceptsQuery)
 		},
 	}
 
-	// 如果包含了knn，则把kn_id和module_type的过滤条件放在knn的sub condition里
+	// 4. branch的过滤
+	branchFilter := &cond.CondCfg{
+		Name:      "branch",
+		Operation: cond.OperationEq,
+		ValueOptCfg: cond.ValueOptCfg{
+			ValueFrom: cond.ValueFrom_Const,
+			Value:     query.Branch,
+		},
+	}
+
+	// 如果包含了knn，则把kn_id、module_type、branch的过滤条件放在knn的sub condition里
 	err = validateCond(ctx, query.ActualCondition)
 	if err != nil {
 		return err
@@ -220,7 +235,7 @@ func validateConceptsQuery(ctx context.Context, query *interfaces.ConceptsQuery)
 
 	query.ActualCondition = &cond.CondCfg{
 		Operation: cond.OperationAnd,
-		SubConds:  []*cond.CondCfg{query.ActualCondition, knFilter, typeFilter},
+		SubConds:  []*cond.CondCfg{query.ActualCondition, knFilter, typeFilter, branchFilter},
 	}
 
 	return nil

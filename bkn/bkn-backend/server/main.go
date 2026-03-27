@@ -40,6 +40,7 @@ import (
 	"bkn-backend/drivenadapters/opensearch"
 	"bkn-backend/drivenadapters/permission"
 	"bkn-backend/drivenadapters/relation_type"
+	"bkn-backend/drivenadapters/risk_type"
 	"bkn-backend/drivenadapters/user_mgmt"
 	"bkn-backend/drivenadapters/vega_backend"
 	"bkn-backend/driveradapters"
@@ -160,6 +161,7 @@ func main() {
 	logics.SetOpenSearchAccess(opensearch.NewOpenSearchAccess(appSetting))
 	logics.SetObjectTypeAccess(object_type.NewObjectTypeAccess(appSetting))
 	logics.SetRelationTypeAccess(relation_type.NewRelationTypeAccess(appSetting))
+	logics.SetRiskTypeAccess(risk_type.NewRiskTypeAccess(appSetting))
 	logics.SetVegaBackendAccess(vega_backend.NewVegaBackendAccess(appSetting))
 
 	server := &mgrService{

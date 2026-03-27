@@ -37,6 +37,7 @@ type ConceptSyncer struct {
 	vba        interfaces.VegaBackendAccess
 	ota        interfaces.ObjectTypeAccess
 	rta        interfaces.RelationTypeAccess
+	riskTypeA  interfaces.RiskTypeAccess
 }
 
 func NewConceptSyncer(appSetting *common.AppSetting) *ConceptSyncer {
@@ -50,6 +51,7 @@ func NewConceptSyncer(appSetting *common.AppSetting) *ConceptSyncer {
 			vba:        logics.VBA,
 			ota:        logics.OTA,
 			rta:        logics.RTA,
+			riskTypeA:  logics.RiskTypeAccess,
 		}
 	})
 	return cSyncer
@@ -167,7 +169,13 @@ func (cs *ConceptSyncer) handleKnowledgeNetwork(ctx context.Context, kn *interfa
 		return err
 	}
 
-	if !need_update && !ot_need_update && !rt_need_update && !at_need_update && !cg_need_update {
+	riskTypes, rtRisk_need_update, err := cs.handleRiskTypes(ctx, kn.KNID, kn.Branch)
+	if err != nil {
+		logger.Errorf("Failed to handle risk types %s %s: %v", kn.KNID, kn.Branch, err)
+		return err
+	}
+
+	if !need_update && !ot_need_update && !rt_need_update && !at_need_update && !cg_need_update && !rtRisk_need_update {
 		logger.Debugf("Knowledge network %s (%s %s) does not need update", kn.KNName, kn.KNID, kn.Branch)
 		return nil
 	}
@@ -176,6 +184,7 @@ func (cs *ConceptSyncer) handleKnowledgeNetwork(ctx context.Context, kn *interfa
 	kn.RelationTypes = relationTypes
 	kn.ActionTypes = actionTypes
 	kn.ConceptGroups = conceptGroups
+	kn.RiskTypes = riskTypes
 
 	bknNetwork := logics.ToBKNNetWork(kn)
 	kn.BKNRawContent = bknsdk.SerializeBknNetwork(bknNetwork)
@@ -326,6 +335,48 @@ func (cs *ConceptSyncer) handleActionTypes(ctx context.Context, knID string,
 
 	logger.Debugf("Handle action types for knowledge network %s %s done", knID, branch)
 	return arrActionTypes, need_update, nil
+}
+
+// handleRiskTypes 获取知识网络的风险类
+func (cs *ConceptSyncer) handleRiskTypes(ctx context.Context, knID string, branch string) ([]*interfaces.RiskType, bool, error) {
+	if cs.riskTypeA == nil {
+		return []*interfaces.RiskType{}, false, nil
+	}
+	logger.Debugf("Handle risk types for knowledge network %s %s", knID, branch)
+	riskTypesInDB, err := cs.riskTypeA.GetAllRiskTypesByKnID(ctx, knID, branch)
+	if err != nil {
+		return []*interfaces.RiskType{}, false, err
+	}
+
+	riskTypesInDataset, err := cs.getAllRiskTypesFromDatasetByKnID(ctx, knID, branch)
+	if err != nil {
+		return []*interfaces.RiskType{}, false, err
+	}
+
+	need_update := false
+	add_list := []*interfaces.RiskType{}
+	for _, rtInDB := range riskTypesInDB {
+		rtInDataset, exist := riskTypesInDataset[rtInDB.RTID]
+		if !exist {
+			add_list = append(add_list, rtInDB)
+		} else if rtInDB.UpdateTime != rtInDataset.UpdateTime {
+			add_list = append(add_list, rtInDB)
+		}
+	}
+	if len(add_list) > 0 {
+		logger.Debugf("Need add (%d) risk types to dataset", len(add_list))
+		need_update = true
+	}
+
+	err = cs.insertDatasetDataForRiskTypes(ctx, add_list)
+	if err != nil {
+		return []*interfaces.RiskType{}, false, err
+	}
+
+	arrRiskTypes := append([]*interfaces.RiskType{}, riskTypesInDB...)
+
+	logger.Debugf("Handle risk types for knowledge network %s %s done", knID, branch)
+	return arrRiskTypes, need_update, nil
 }
 
 // handleConceptGroups 获取知识网络的概念组
@@ -734,6 +785,75 @@ func (cs *ConceptSyncer) insertDatasetDataForConceptGroups(ctx context.Context, 
 	return nil
 }
 
+func (cs *ConceptSyncer) insertDatasetDataForRiskTypes(ctx context.Context, riskTypes []*interfaces.RiskType) error {
+	if len(riskTypes) == 0 {
+		return nil
+	}
+
+	if cs.appSetting.ServerSetting.DefaultSmallModelEnabled {
+		words := []string{}
+		for _, riskType := range riskTypes {
+			arr := []string{riskType.RTName}
+			arr = append(arr, riskType.Tags...)
+			arr = append(arr, riskType.Comment, riskType.BKNRawContent)
+			word := strings.Join(arr, "\n")
+			words = append(words, word)
+		}
+
+		dftModel, err := cs.mfa.GetDefaultModel(ctx)
+		if err != nil {
+			logger.Errorf("GetDefaultModel error: %s", err.Error())
+			return err
+		}
+		vectors, err := cs.mfa.GetVector(ctx, dftModel, words)
+		if err != nil {
+			logger.Errorf("GetVector error: %s", err.Error())
+			return err
+		}
+
+		if len(vectors) != len(riskTypes) {
+			logger.Errorf("GetVector error: expect vectors num is [%d], actual vectors num is [%d]", len(riskTypes), len(vectors))
+			return fmt.Errorf("GetVector error: expect vectors num is [%d], actual vectors num is [%d]", len(riskTypes), len(vectors))
+		}
+
+		for i, riskType := range riskTypes {
+			riskType.Vector = vectors[i].Vector
+		}
+	}
+
+	documents := make([]map[string]any, 0, len(riskTypes))
+	for _, riskType := range riskTypes {
+		docid := interfaces.GenerateConceptDocuemtnID(riskType.KNID, interfaces.MODULE_TYPE_RISK_TYPE,
+			riskType.RTID, riskType.Branch)
+		riskType.ModuleType = interfaces.MODULE_TYPE_RISK_TYPE
+
+		// Convert to map for dataset
+		docBytes, err := sonic.Marshal(riskType)
+		if err != nil {
+			logger.Errorf("Failed to marshal RiskType: %s", err.Error())
+			return err
+		}
+
+		var doc map[string]any
+		if err := sonic.Unmarshal(docBytes, &doc); err != nil {
+			logger.Errorf("Failed to unmarshal RiskType: %s", err.Error())
+			return err
+		}
+
+		// Set document ID
+		doc["_id"] = docid
+		documents = append(documents, doc)
+	}
+
+	err := cs.vba.WriteDatasetDocuments(ctx, interfaces.BKN_DATASET_ID, documents)
+	if err != nil {
+		logger.Errorf("WriteDatasetDocuments error: %s", err.Error())
+		return err
+	}
+
+	return nil
+}
+
 func (cs *ConceptSyncer) getAllKNsFromDataset(ctx context.Context) (map[string]*interfaces.KN, error) {
 	filterCondition := map[string]any{
 		"field":      "module_type",
@@ -965,6 +1085,58 @@ func (cs *ConceptSyncer) getAllActionTypesFromDatasetByKnID(ctx context.Context,
 	}
 
 	return actionTypes, nil
+}
+
+func (cs *ConceptSyncer) getAllRiskTypesFromDatasetByKnID(ctx context.Context,
+	knID string, branch string) (map[string]*interfaces.RiskType, error) {
+
+	filterCondition := map[string]any{
+		"operation": "and",
+		"sub_conditions": []map[string]any{
+			{
+				"field":      "kn_id",
+				"operation":  "==",
+				"value":      knID,
+				"value_from": "const",
+			},
+			{
+				"field":      "branch",
+				"operation":  "==",
+				"value":      branch,
+				"value_from": "const",
+			},
+			{
+				"field":      "module_type",
+				"operation":  "==",
+				"value":      interfaces.MODULE_TYPE_RISK_TYPE,
+				"value_from": "const",
+			},
+		},
+	}
+
+	params := &interfaces.DatasetQueryParams{
+		FilterCondition: filterCondition,
+		Offset:          0,
+		Limit:           10000,
+		NeedTotal:       false,
+	}
+	response, err := cs.vba.QueryDatasetData(ctx, interfaces.BKN_DATASET_ID, params)
+	if err != nil {
+		return map[string]*interfaces.RiskType{}, err
+	}
+
+	riskTypes := map[string]*interfaces.RiskType{}
+	for _, entry := range response.Entries {
+		riskType := interfaces.RiskType{}
+		err := mapstructure.Decode(entry, &riskType)
+		if err != nil {
+			return map[string]*interfaces.RiskType{}, err
+		}
+
+		riskTypes[riskType.RTID] = &riskType
+	}
+
+	return riskTypes, nil
 }
 
 func (cs *ConceptSyncer) getAllConceptGroupsFromDatasetByKnID(ctx context.Context,

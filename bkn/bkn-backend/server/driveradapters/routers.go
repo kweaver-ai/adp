@@ -31,7 +31,7 @@ import (
 	"bkn-backend/logics/knowledge_network"
 	"bkn-backend/logics/object_type"
 	"bkn-backend/logics/relation_type"
-
+	"bkn-backend/logics/risk_type"
 	"bkn-backend/version"
 )
 
@@ -49,6 +49,7 @@ type restHandler struct {
 	kns        interfaces.KNService
 	ots        interfaces.ObjectTypeService
 	rts        interfaces.RelationTypeService
+	rtsRisk    interfaces.RiskTypeService
 	bs         interfaces.BKNService
 }
 
@@ -63,6 +64,7 @@ func NewRestHandler(appSetting *common.AppSetting) RestHandler {
 		kns:        knowledge_network.NewKNService(appSetting),
 		ots:        object_type.NewObjectTypeService(appSetting),
 		rts:        relation_type.NewRelationTypeService(appSetting),
+		rtsRisk:    risk_type.NewRiskTypeService(appSetting),
 		bs:         bkn.NewBKNService(appSetting),
 	}
 	return r
@@ -116,6 +118,13 @@ func (r *restHandler) RegisterPublic(c *gin.Engine) {
 		apiV1.PUT("/knowledge-networks/:kn_id/action-types/:at_id", r.verifyJsonContentTypeMiddleWare(), r.UpdateActionTypeByEx)
 		apiV1.GET("/knowledge-networks/:kn_id/action-types", r.ListActionTypesByEx)
 		apiV1.GET("/knowledge-networks/:kn_id/action-types/:at_ids", r.GetActionTypesByEx)
+
+		// 风险类
+		apiV1.POST("/knowledge-networks/:kn_id/risk-types", r.verifyJsonContentTypeMiddleWare(), r.HandleRiskTypeGetOverrideByEx)
+		apiV1.DELETE("/knowledge-networks/:kn_id/risk-types/:rt_ids", r.DeleteRiskTypes)
+		apiV1.PUT("/knowledge-networks/:kn_id/risk-types/:rt_id", r.verifyJsonContentTypeMiddleWare(), r.UpdateRiskTypeByEx)
+		apiV1.GET("/knowledge-networks/:kn_id/risk-types", r.ListRiskTypesByEx)
+		apiV1.GET("/knowledge-networks/:kn_id/risk-types/:rt_ids", r.GetRiskTypesByEx)
 
 		// 任务管理
 		apiV1.POST("/knowledge-networks/:kn_id/jobs", r.verifyJsonContentTypeMiddleWare(), r.CreateJobByEx)
@@ -175,6 +184,13 @@ func (r *restHandler) RegisterPublic(c *gin.Engine) {
 		apiInV1.PUT("/knowledge-networks/:kn_id/action-types/:at_id", r.verifyJsonContentTypeMiddleWare(), r.UpdateActionTypeByIn)
 		apiInV1.GET("/knowledge-networks/:kn_id/action-types", r.ListActionTypesByIn)
 		apiInV1.GET("/knowledge-networks/:kn_id/action-types/:at_ids", r.GetActionTypesByIn)
+
+		// 风险类（内部 API：GetRiskTypesByIn 支持 risk_type_ids 查询参数）
+		apiInV1.POST("/knowledge-networks/:kn_id/risk-types", r.verifyJsonContentTypeMiddleWare(), r.HandleRiskTypeGetOverrideByIn)
+		apiInV1.PUT("/knowledge-networks/:kn_id/risk-types/:rt_id", r.verifyJsonContentTypeMiddleWare(), r.UpdateRiskTypeByIn)
+		apiInV1.GET("/knowledge-networks/:kn_id/risk-types", r.GetRiskTypesByIn)
+		apiInV1.GET("/knowledge-networks/:kn_id/risk-types/:rt_ids", r.GetRiskTypesByInWithPath)
+		apiInV1.DELETE("/knowledge-networks/:kn_id/risk-types/:rt_ids", r.DeleteRiskTypes)
 
 		// 行动计划管理
 		apiInV1.POST("/knowledge-networks/:kn_id/action-schedules", r.verifyJsonContentTypeMiddleWare(), r.CreateActionScheduleByIn)

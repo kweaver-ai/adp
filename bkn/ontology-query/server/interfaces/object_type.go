@@ -19,6 +19,7 @@ const (
 	LOGIC_PARAMS_VALUE_FROM_PROP  = "property"
 	LOGIC_PARAMS_VALUE_FROM_INPUT = "input"
 	LOGIC_PARAMS_VALUE_FROM_CONST = "const"
+	LOGIC_PARAMS_VALUE_FROM_PARAM = "param" // RiskFunction 参数：值来自 RiskType 参数，value 为 ParamDef.name
 
 	// USE_SEARCH_AFTER
 	USE_SEARCH_AFTER_TRUE = true
@@ -160,6 +161,8 @@ type Parameter struct {
 	ValueFrom string  `json:"value_from,omitempty" mapstructure:"value_from,omitempty"`
 	Value     any     `json:"value,omitempty" mapstructure:"value,omitempty"`
 	Comment   *string `json:"comment,omitempty" mapstructure:"comment"` // 参数备注，指标实时读取赋值给对象类的指标属性参数赋值
+	Required  bool    `json:"required,omitempty" mapstructure:"required,omitempty"`
+	Default   any     `json:"default,omitempty" mapstructure:"default,omitempty"`
 }
 
 // 指标属性的 dynamic_params 结构

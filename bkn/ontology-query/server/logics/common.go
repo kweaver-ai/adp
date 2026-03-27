@@ -637,6 +637,29 @@ func EvaluateInstanceAgainstCondition(ctx context.Context,
 	return evaluateConditionRecursive(ctx, instanceData, condition, propMap)
 }
 
+// EvaluateDataAgainstCondition 判断 data 是否满足 condition
+// data: 待评估数据，key 为字段名
+// condition: 条件配置
+// paramDefs: 参数定义，用于类型推断（可为 nil，则 fieldType 为空）
+func EvaluateDataAgainstCondition(ctx context.Context,
+	data map[string]any,
+	condition *cond.CondCfg,
+	paramDefs []interfaces.Parameter) (bool, error) {
+
+	if condition == nil {
+		return true, nil
+	}
+
+	propMap := make(map[string]*cond.DataProperty)
+	for i := range paramDefs {
+		propMap[paramDefs[i].Name] = &cond.DataProperty{
+			Name: paramDefs[i].Name,
+			Type: paramDefs[i].Type,
+		}
+	}
+	return evaluateConditionRecursive(ctx, data, condition, propMap)
+}
+
 // evaluateConditionRecursive recursively evaluates condition
 func evaluateConditionRecursive(ctx context.Context,
 	instanceData map[string]any,

@@ -116,6 +116,7 @@ type KN struct {
 	ObjectTypes   []*ObjectType   `json:"object_types,omitempty" mapstructure:"object_types"`
 	RelationTypes []*RelationType `json:"relation_types,omitempty" mapstructure:"relation_types"`
 	ActionTypes   []*ActionType   `json:"action_types,omitempty" mapstructure:"action_types"`
+	RiskTypes     []*RiskType     `json:"risk_types,omitempty" mapstructure:"risk_types"`
 
 	Creator    AccountInfo `json:"creator" mapstructure:"creator"`
 	CreateTime int64       `json:"create_time" mapstructure:"create_time"`
@@ -137,10 +138,11 @@ type KN struct {
 }
 
 type Statistics struct {
-	CgTotal int `json:"concept_groups_total"`
-	OtTotal int `json:"object_types_total"`
-	RtTotal int `json:"relation_types_total"`
-	AtTotal int `json:"action_types_total"`
+	CgTotal       int `json:"concept_groups_total"`
+	OtTotal       int `json:"object_types_total"`
+	RtTotal       int `json:"relation_types_total"`
+	AtTotal       int `json:"action_types_total"`
+	RiskTypeTotal int `json:"risk_types_total"`
 }
 
 // 业务知识网络的分页查询

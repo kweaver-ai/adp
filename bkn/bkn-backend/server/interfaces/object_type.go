@@ -160,13 +160,15 @@ type Field struct {
 
 type Parameter struct {
 	Name        string  `json:"name" mapstructure:"name"`
-	Type        string  `json:"type" mapstructure:"type"`           // 参数类型
-	Source      string  `json:"source" mapstructure:"source"`       // 来源类型
-	Operation   string  `json:"operation" mapstructure:"operation"` // 指标属性的操作符。
-	ValueFrom   string  `json:"value_from" mapstructure:"value_from"`
-	Value       any     `json:"value" mapstructure:"value"`
+	Type        string  `json:"type" mapstructure:"type"`                               // 参数类型
+	Source      string  `json:"source,omitempty" mapstructure:"source,omitempty"`       // 来源类型
+	Operation   string  `json:"operation,omitempty" mapstructure:"operation,omitempty"` // 指标属性的操作符。
+	ValueFrom   string  `json:"value_from,omitempty" mapstructure:"value_from,omitempty"`
+	Value       any     `json:"value,omitempty" mapstructure:"value,omitempty"`
 	IfSystemGen *bool   `json:"if_system_generate,omitempty" mapstructure:"if_system_generate,omitempty"`
-	Comment     *string `json:"comment,omitempty" mapstructure:"comment"` // 参数备注，指标实时读取赋值
+	Comment     *string `json:"comment,omitempty" mapstructure:"comment,omitempty"` // 参数备注，指标实时读取赋值
+	Required    bool    `json:"required,omitempty" mapstructure:"required,omitempty"`
+	Default     any     `json:"default,omitempty" mapstructure:"default,omitempty"`
 }
 
 type IndexConfig struct {

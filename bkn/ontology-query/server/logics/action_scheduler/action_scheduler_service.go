@@ -59,6 +59,7 @@ type actionSchedulerService struct {
 	aoAccess    interfaces.AgentOperatorAccess
 	logsService interfaces.ActionLogsService
 	ots         interfaces.ObjectTypeService
+	riskTypeS   interfaces.RiskTypeService
 
 	// Reserved hooks for future extension
 	duplicateCheckHook  interfaces.DuplicateCheckHook

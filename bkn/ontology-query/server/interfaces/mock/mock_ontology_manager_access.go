@@ -105,6 +105,21 @@ func (mr *MockOntologyManagerAccessMockRecorder) GetRelationTypePathsBaseOnSourc
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetRelationTypePathsBaseOnSource", reflect.TypeOf((*MockOntologyManagerAccess)(nil).GetRelationTypePathsBaseOnSource), ctx, knID, branch, query)
 }
 
+// GetRiskTypesByIDs mocks base method.
+func (m *MockOntologyManagerAccess) GetRiskTypesByIDs(ctx context.Context, knID, branch string, riskTypeIDs []string) ([]interfaces.RiskType, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetRiskTypesByIDs", ctx, knID, branch, riskTypeIDs)
+	ret0, _ := ret[0].([]interfaces.RiskType)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetRiskTypesByIDs indicates an expected call of GetRiskTypesByIDs.
+func (mr *MockOntologyManagerAccessMockRecorder) GetRiskTypesByIDs(ctx, knID, branch, riskTypeIDs interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetRiskTypesByIDs", reflect.TypeOf((*MockOntologyManagerAccess)(nil).GetRiskTypesByIDs), ctx, knID, branch, riskTypeIDs)
+}
+
 // ListRelationTypes mocks base method.
 func (m *MockOntologyManagerAccess) ListRelationTypes(ctx context.Context, knID, branch string, query interfaces.RelationTypesQuery) ([]interfaces.RelationType, error) {
 	m.ctrl.T.Helper()

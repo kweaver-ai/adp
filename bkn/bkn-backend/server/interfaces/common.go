@@ -78,6 +78,7 @@ const (
 	VALUE_FROM_INPUT    = "input"
 	VALUE_FROM_PROPERTY = "property"
 	VALUE_FROM_CONST    = "const"
+	VALUE_FROM_PARAM    = "param" // RiskFunction 参数：值来自 RiskType 参数，value 为 ParamDef.name
 
 	// 属性类型
 	PROPERTY_TYPE_METRIC = "metric"
@@ -116,6 +117,7 @@ const (
 	MODULE_TYPE_CONCEPT_GROUP          = "concept_group"
 	MODULE_TYPE_CONCEPT_GROUP_RELATION = "concept_group_relation"
 	MODULE_TYPE_ACTION_SCHEDULE        = "action_schedule"
+	MODULE_TYPE_RISK_TYPE              = "risk_type"
 )
 
 const (
@@ -311,6 +313,14 @@ func GenerateConceptGroupRelationAuditObject(id string, name string) audit.Audit
 	}
 }
 
+func GenerateRiskTypeAuditObject(id string, name string) audit.AuditObject {
+	return audit.AuditObject{
+		Type: MODULE_TYPE_RISK_TYPE,
+		ID:   id,
+		Name: name,
+	}
+}
+
 type ResourceInfo struct {
 	Type string `json:"type" mapstructure:"type"`
 	ID   string `json:"id" mapstructure:"id"`
@@ -384,7 +394,7 @@ func GetBKNConceptSchemaDefinition(vectorDim int, defaultSmallModelEnabled bool)
 			Type:         data_type.DATATYPE_STRING,
 			DisplayName:  "module_type",
 			OriginalName: "module_type",
-			Description:  "bkn中的概念模块类型：knowledge_network、object_type、relation_type、action_type、concept_group",
+			Description:  "bkn中的概念模块类型：knowledge_network、object_type、relation_type、action_type、concept_group、risk_type",
 			Features: []PropertyFeature{
 				{
 					FeatureName: "keyword_module_type",

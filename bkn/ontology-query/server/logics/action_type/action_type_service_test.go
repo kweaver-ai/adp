@@ -10,9 +10,9 @@ import (
 	"net/http"
 	"testing"
 
-	"go.uber.org/mock/gomock"
 	"github.com/kweaver-ai/kweaver-go-lib/rest"
 	. "github.com/smartystreets/goconvey/convey"
+	"go.uber.org/mock/gomock"
 
 	"ontology-query/common"
 	cond "ontology-query/common/condition"

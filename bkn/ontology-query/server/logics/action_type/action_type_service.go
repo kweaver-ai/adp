@@ -38,6 +38,7 @@ type actionTypeService struct {
 	appSetting *common.AppSetting
 	omAccess   interfaces.OntologyManagerAccess
 	ots        interfaces.ObjectTypeService
+	riskTypeS  interfaces.RiskTypeService
 	uAccess    interfaces.UniqueryAccess
 }
 
@@ -142,6 +143,7 @@ func (ats *actionTypeService) GetActionsByActionTypeID(ctx context.Context,
 					return resps, rest.NewHTTPError(ctx, http.StatusBadRequest, oerrors.OntologyQuery_InternalError_UnMarshalDataFailed).
 						WithErrorDetails(err.Error())
 				}
+
 				actions = append(actions, action)
 			}
 
@@ -212,6 +214,7 @@ func (ats *actionTypeService) GetActionsByActionTypeID(ctx context.Context,
 					return resps, rest.NewHTTPError(ctx, http.StatusBadRequest, oerrors.OntologyQuery_InternalError_UnMarshalDataFailed).
 						WithErrorDetails(err.Error())
 				}
+
 				actions = append(actions, action)
 			}
 

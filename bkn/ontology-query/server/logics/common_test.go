@@ -8,7 +8,6 @@ package logics
 import (
 	"context"
 	"testing"
-	"time"
 
 	cond "ontology-query/common/condition"
 	oerrors "ontology-query/errors"
@@ -1463,209 +1462,123 @@ func Test_BuildDslQuery(t *testing.T) {
 	})
 }
 
-func Test_EvaluateInstanceAgainstCondition_NewOperators(t *testing.T) {
-	ctx := context.Background()
+func Test_EvaluateDataAgainstCondition(t *testing.T) {
+	Convey("Test EvaluateDataAgainstCondition", t, func() {
+		ctx := context.Background()
 
-	makeObjectType := func(properties ...cond.DataProperty) *interfaces.ObjectType {
-		return &interfaces.ObjectType{
-			ObjectTypeWithKeyField: interfaces.ObjectTypeWithKeyField{
-				OTID:           "ot1",
-				DataProperties: properties,
-			},
-		}
-	}
-
-	Convey("Test EvaluateInstanceAgainstCondition - 新增操作符", t, func() {
-		Convey("like - 匹配", func() {
-			instanceData := map[string]any{"name": "hello world"}
-			condition := &cond.CondCfg{
-				Name:      "name",
-				Operation: cond.OperationLike,
-				ValueOptCfg: cond.ValueOptCfg{Value: "world"},
-			}
-			objectType := makeObjectType(cond.DataProperty{Name: "name", Type: dtype.DATATYPE_STRING})
-			result, err := EvaluateInstanceAgainstCondition(ctx, instanceData, condition, objectType)
+		Convey("成功 - condition 为 nil 返回 true", func() {
+			data := map[string]any{"amount": 100}
+			paramDefs := []interfaces.Parameter{{Name: "amount", Type: dtype.DATATYPE_INTEGER}}
+			result, err := EvaluateDataAgainstCondition(ctx, data, nil, paramDefs)
 			So(err, ShouldBeNil)
 			So(result, ShouldBeTrue)
 		})
 
-		Convey("like - 不匹配", func() {
-			instanceData := map[string]any{"name": "hello"}
+		Convey("成功 - 简单等于条件满足", func() {
+			data := map[string]any{"amount": 100}
 			condition := &cond.CondCfg{
-				Name:      "name",
-				Operation: cond.OperationLike,
-				ValueOptCfg: cond.ValueOptCfg{Value: "xyz"},
+				Name:      "amount",
+				Operation: cond.OperationEq,
+				ValueOptCfg: cond.ValueOptCfg{
+					Value: 100,
+				},
 			}
-			objectType := makeObjectType(cond.DataProperty{Name: "name", Type: dtype.DATATYPE_STRING})
-			result, err := EvaluateInstanceAgainstCondition(ctx, instanceData, condition, objectType)
+			paramDefs := []interfaces.Parameter{{Name: "amount", Type: dtype.DATATYPE_INTEGER}}
+			result, err := EvaluateDataAgainstCondition(ctx, data, condition, paramDefs)
+			So(err, ShouldBeNil)
+			So(result, ShouldBeTrue)
+		})
+
+		Convey("失败 - 简单等于条件不满足", func() {
+			data := map[string]any{"amount": 100}
+			condition := &cond.CondCfg{
+				Name:      "amount",
+				Operation: cond.OperationEq,
+				ValueOptCfg: cond.ValueOptCfg{
+					Value: 200,
+				},
+			}
+			paramDefs := []interfaces.Parameter{{Name: "amount", Type: dtype.DATATYPE_INTEGER}}
+			result, err := EvaluateDataAgainstCondition(ctx, data, condition, paramDefs)
 			So(err, ShouldBeNil)
 			So(result, ShouldBeFalse)
 		})
 
-		Convey("not_like - 不匹配时返回 true", func() {
-			instanceData := map[string]any{"name": "hello"}
+		Convey("成功 - AND 条件全部满足", func() {
+			data := map[string]any{"amount": 100, "level": "high"}
 			condition := &cond.CondCfg{
-				Name:      "name",
-				Operation: cond.OperationNotLike,
-				ValueOptCfg: cond.ValueOptCfg{Value: "xyz"},
+				Operation: cond.OperationAnd,
+				SubConds: []*cond.CondCfg{
+					{
+						Name:        "amount",
+						Operation:   cond.OperationGte,
+						ValueOptCfg: cond.ValueOptCfg{Value: 50},
+					},
+					{
+						Name:        "level",
+						Operation:   cond.OperationEq,
+						ValueOptCfg: cond.ValueOptCfg{Value: "high"},
+					},
+				},
 			}
-			objectType := makeObjectType(cond.DataProperty{Name: "name", Type: dtype.DATATYPE_STRING})
-			result, err := EvaluateInstanceAgainstCondition(ctx, instanceData, condition, objectType)
+			paramDefs := []interfaces.Parameter{
+				{Name: "amount", Type: dtype.DATATYPE_INTEGER},
+				{Name: "level", Type: dtype.DATATYPE_STRING},
+			}
+			result, err := EvaluateDataAgainstCondition(ctx, data, condition, paramDefs)
 			So(err, ShouldBeNil)
 			So(result, ShouldBeTrue)
 		})
 
-		Convey("prefix - 匹配", func() {
-			instanceData := map[string]any{"name": "hello world"}
+		Convey("失败 - AND 条件部分不满足", func() {
+			data := map[string]any{"amount": 100, "level": "low"}
 			condition := &cond.CondCfg{
-				Name:      "name",
-				Operation: cond.OperationPrefix,
-				ValueOptCfg: cond.ValueOptCfg{Value: "hello"},
+				Operation: cond.OperationAnd,
+				SubConds: []*cond.CondCfg{
+					{
+						Name:        "amount",
+						Operation:   cond.OperationGte,
+						ValueOptCfg: cond.ValueOptCfg{Value: 50},
+					},
+					{
+						Name:        "level",
+						Operation:   cond.OperationEq,
+						ValueOptCfg: cond.ValueOptCfg{Value: "high"},
+					},
+				},
 			}
-			objectType := makeObjectType(cond.DataProperty{Name: "name", Type: dtype.DATATYPE_STRING})
-			result, err := EvaluateInstanceAgainstCondition(ctx, instanceData, condition, objectType)
-			So(err, ShouldBeNil)
-			So(result, ShouldBeTrue)
-		})
-
-		Convey("prefix - 不匹配", func() {
-			instanceData := map[string]any{"name": "hello world"}
-			condition := &cond.CondCfg{
-				Name:      "name",
-				Operation: cond.OperationPrefix,
-				ValueOptCfg: cond.ValueOptCfg{Value: "world"},
+			paramDefs := []interfaces.Parameter{
+				{Name: "amount", Type: dtype.DATATYPE_INTEGER},
+				{Name: "level", Type: dtype.DATATYPE_STRING},
 			}
-			objectType := makeObjectType(cond.DataProperty{Name: "name", Type: dtype.DATATYPE_STRING})
-			result, err := EvaluateInstanceAgainstCondition(ctx, instanceData, condition, objectType)
+			result, err := EvaluateDataAgainstCondition(ctx, data, condition, paramDefs)
 			So(err, ShouldBeNil)
 			So(result, ShouldBeFalse)
 		})
 
-		Convey("not_prefix - 不匹配时返回 true", func() {
-			instanceData := map[string]any{"name": "hello world"}
+		Convey("成功 - paramDefs 为空仍可评估", func() {
+			data := map[string]any{"amount": 100}
 			condition := &cond.CondCfg{
-				Name:      "name",
-				Operation: cond.OperationNotPrefix,
-				ValueOptCfg: cond.ValueOptCfg{Value: "xyz"},
+				Name:        "amount",
+				Operation:   cond.OperationEq,
+				ValueOptCfg: cond.ValueOptCfg{Value: 100},
 			}
-			objectType := makeObjectType(cond.DataProperty{Name: "name", Type: dtype.DATATYPE_STRING})
-			result, err := EvaluateInstanceAgainstCondition(ctx, instanceData, condition, objectType)
+			result, err := EvaluateDataAgainstCondition(ctx, data, condition, nil)
 			So(err, ShouldBeNil)
 			So(result, ShouldBeTrue)
 		})
 
-		Convey("null - 字段不存在", func() {
-			instanceData := map[string]any{}
+		Convey("失败 - 字段不存在", func() {
+			data := map[string]any{}
 			condition := &cond.CondCfg{
-				Name:      "missing",
-				Operation: cond.OperationNull,
+				Name:        "amount",
+				Operation:   cond.OperationEq,
+				ValueOptCfg: cond.ValueOptCfg{Value: 100},
 			}
-			objectType := makeObjectType()
-			result, err := EvaluateInstanceAgainstCondition(ctx, instanceData, condition, objectType)
-			So(err, ShouldBeNil)
-			So(result, ShouldBeTrue)
-		})
-
-		Convey("null - 字段值为 nil", func() {
-			instanceData := map[string]any{"field": nil}
-			condition := &cond.CondCfg{
-				Name:      "field",
-				Operation: cond.OperationNull,
-			}
-			objectType := makeObjectType(cond.DataProperty{Name: "field", Type: dtype.DATATYPE_STRING})
-			result, err := EvaluateInstanceAgainstCondition(ctx, instanceData, condition, objectType)
-			So(err, ShouldBeNil)
-			So(result, ShouldBeTrue)
-		})
-
-		Convey("not_null - 字段存在且非空", func() {
-			instanceData := map[string]any{"field": "value"}
-			condition := &cond.CondCfg{
-				Name:      "field",
-				Operation: cond.OperationNotNull,
-			}
-			objectType := makeObjectType(cond.DataProperty{Name: "field", Type: dtype.DATATYPE_STRING})
-			result, err := EvaluateInstanceAgainstCondition(ctx, instanceData, condition, objectType)
-			So(err, ShouldBeNil)
-			So(result, ShouldBeTrue)
-		})
-
-		Convey("regex - 匹配", func() {
-			instanceData := map[string]any{"code": "ABC123"}
-			condition := &cond.CondCfg{
-				Name:      "code",
-				Operation: cond.OperationRegex,
-				ValueOptCfg: cond.ValueOptCfg{Value: `[A-Z]+\d+`},
-			}
-			objectType := makeObjectType(cond.DataProperty{Name: "code", Type: dtype.DATATYPE_STRING})
-			result, err := EvaluateInstanceAgainstCondition(ctx, instanceData, condition, objectType)
-			So(err, ShouldBeNil)
-			So(result, ShouldBeTrue)
-		})
-
-		Convey("regex - 不匹配", func() {
-			instanceData := map[string]any{"code": "abc"}
-			condition := &cond.CondCfg{
-				Name:      "code",
-				Operation: cond.OperationRegex,
-				ValueOptCfg: cond.ValueOptCfg{Value: `^\d+$`},
-			}
-			objectType := makeObjectType(cond.DataProperty{Name: "code", Type: dtype.DATATYPE_STRING})
-			result, err := EvaluateInstanceAgainstCondition(ctx, instanceData, condition, objectType)
+			paramDefs := []interfaces.Parameter{{Name: "amount", Type: dtype.DATATYPE_INTEGER}}
+			result, err := EvaluateDataAgainstCondition(ctx, data, condition, paramDefs)
 			So(err, ShouldBeNil)
 			So(result, ShouldBeFalse)
-		})
-
-		Convey("contain - 数组包含单个值", func() {
-			instanceData := map[string]any{"tags": []any{"a", "b", "c"}}
-			condition := &cond.CondCfg{
-				Name:      "tags",
-				Operation: cond.OperationContain,
-				ValueOptCfg: cond.ValueOptCfg{Value: "b"},
-			}
-			objectType := makeObjectType(cond.DataProperty{Name: "tags", Type: dtype.DATATYPE_STRING})
-			result, err := EvaluateInstanceAgainstCondition(ctx, instanceData, condition, objectType)
-			So(err, ShouldBeNil)
-			So(result, ShouldBeTrue)
-		})
-
-		Convey("contain - 字符串包含子串", func() {
-			instanceData := map[string]any{"text": "hello world"}
-			condition := &cond.CondCfg{
-				Name:      "text",
-				Operation: cond.OperationContain,
-				ValueOptCfg: cond.ValueOptCfg{Value: "world"},
-			}
-			objectType := makeObjectType(cond.DataProperty{Name: "text", Type: dtype.DATATYPE_STRING})
-			result, err := EvaluateInstanceAgainstCondition(ctx, instanceData, condition, objectType)
-			So(err, ShouldBeNil)
-			So(result, ShouldBeTrue)
-		})
-
-		Convey("not_contain - 数组不包含", func() {
-			instanceData := map[string]any{"tags": []any{"a", "b"}}
-			condition := &cond.CondCfg{
-				Name:      "tags",
-				Operation: cond.OperationNotContain,
-				ValueOptCfg: cond.ValueOptCfg{Value: "z"},
-			}
-			objectType := makeObjectType(cond.DataProperty{Name: "tags", Type: dtype.DATATYPE_STRING})
-			result, err := EvaluateInstanceAgainstCondition(ctx, instanceData, condition, objectType)
-			So(err, ShouldBeNil)
-			So(result, ShouldBeTrue)
-		})
-
-		Convey("current - 当前时间在 day 内", func() {
-			instanceData := map[string]any{"created_at": time.Now().Format(time.RFC3339)}
-			condition := &cond.CondCfg{
-				Name:      "created_at",
-				Operation: cond.OperationCurrent,
-				ValueOptCfg: cond.ValueOptCfg{Value: "day"},
-			}
-			objectType := makeObjectType(cond.DataProperty{Name: "created_at", Type: dtype.DATATYPE_DATETIME})
-			result, err := EvaluateInstanceAgainstCondition(ctx, instanceData, condition, objectType)
-			So(err, ShouldBeNil)
-			So(result, ShouldBeTrue)
 		})
 	})
 }

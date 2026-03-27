@@ -5,6 +5,8 @@
 
 SET SCHEMA adp;
 
+
+-- 业务知识网络
 CREATE TABLE IF NOT EXISTS t_knowledge_network (
   f_id VARCHAR(40 CHAR) NOT NULL DEFAULT '',
   f_name VARCHAR(40 CHAR) NOT NULL DEFAULT '',
@@ -27,6 +29,7 @@ CREATE TABLE IF NOT EXISTS t_knowledge_network (
 CREATE UNIQUE INDEX IF NOT EXISTS uk_t_knowledge_network_kn_name ON t_knowledge_network(f_name,f_branch);
 
 
+-- 对象类
 CREATE TABLE IF NOT EXISTS t_object_type (
   f_id VARCHAR(40 CHAR) NOT NULL DEFAULT '',
   f_name VARCHAR(40 CHAR) NOT NULL DEFAULT '',
@@ -71,6 +74,7 @@ CREATE TABLE IF NOT EXISTS t_object_type_status (
 );
 
 
+-- 关系类
 CREATE TABLE IF NOT EXISTS t_relation_type (
   f_id VARCHAR(40 CHAR) NOT NULL DEFAULT '',
   f_name VARCHAR(40 CHAR) NOT NULL DEFAULT '',
@@ -95,6 +99,7 @@ CREATE TABLE IF NOT EXISTS t_relation_type (
 );
 
 
+-- 行动类
 CREATE TABLE IF NOT EXISTS t_action_type (
   f_id VARCHAR(40 CHAR) NOT NULL DEFAULT '',
   f_name VARCHAR(40 CHAR) NOT NULL DEFAULT '',
@@ -124,6 +129,7 @@ CREATE TABLE IF NOT EXISTS t_action_type (
 CREATE UNIQUE INDEX IF NOT EXISTS uk_t_action_type_at_name ON t_action_type(f_kn_id,f_branch,f_name);
 
 
+-- 任务管理
 CREATE TABLE IF NOT EXISTS t_kn_job (
   f_id VARCHAR(40 CHAR) NOT NULL DEFAULT '',
   f_name VARCHAR(40 CHAR) NOT NULL DEFAULT '',
@@ -142,6 +148,7 @@ CREATE TABLE IF NOT EXISTS t_kn_job (
 );
 
 
+-- 子任务管理
 CREATE TABLE IF NOT EXISTS t_kn_task (
   f_id VARCHAR(40 CHAR) NOT NULL DEFAULT '',
   f_name VARCHAR(40 CHAR) NOT NULL DEFAULT '',
@@ -159,6 +166,7 @@ CREATE TABLE IF NOT EXISTS t_kn_task (
 );
 
 
+-- 概念分组
 CREATE TABLE IF NOT EXISTS t_concept_group (
   f_id VARCHAR(40 CHAR) NOT NULL DEFAULT '',
   f_name VARCHAR(40 CHAR) NOT NULL DEFAULT '',
@@ -181,6 +189,7 @@ CREATE TABLE IF NOT EXISTS t_concept_group (
 CREATE UNIQUE INDEX IF NOT EXISTS uk_concept_group_name ON t_concept_group(f_kn_id,f_branch,f_name);
 
 
+-- 分组与概念对应表
 CREATE TABLE IF NOT EXISTS t_concept_group_relation (
   f_id VARCHAR(40 CHAR) NOT NULL DEFAULT '',
   f_kn_id VARCHAR(40 CHAR) NOT NULL DEFAULT '',
@@ -197,9 +206,6 @@ CREATE UNIQUE INDEX IF NOT EXISTS uk_concept_group_relation ON t_concept_group_r
 
 -- Action Schedule Management
 -- Supports cron-based scheduled action execution with distributed locking
-
-SET SCHEMA adp;
-
 CREATE TABLE IF NOT EXISTS t_action_schedule (
   f_id VARCHAR(40 CHAR) NOT NULL DEFAULT '',
   f_name VARCHAR(100 CHAR) NOT NULL DEFAULT '',
@@ -226,3 +232,25 @@ CREATE TABLE IF NOT EXISTS t_action_schedule (
 CREATE INDEX IF NOT EXISTS idx_action_schedule_kn_branch ON t_action_schedule(f_kn_id, f_branch);
 CREATE INDEX IF NOT EXISTS idx_action_schedule_status_next_run ON t_action_schedule(f_status, f_next_run_time);
 CREATE INDEX IF NOT EXISTS idx_action_schedule_action_type ON t_action_schedule(f_action_type_id);
+
+
+-- Risk Type
+CREATE TABLE IF NOT EXISTS t_risk_type (
+  f_id VARCHAR(40 CHAR) NOT NULL DEFAULT '',
+  f_name VARCHAR(40 CHAR) NOT NULL DEFAULT '',
+  f_comment VARCHAR(1000 CHAR) NOT NULL DEFAULT '',
+  f_tags VARCHAR(255 CHAR) DEFAULT NULL,
+  f_icon VARCHAR(255 CHAR) NOT NULL DEFAULT '',
+  f_color VARCHAR(40 CHAR) NOT NULL DEFAULT '',
+  f_kn_id VARCHAR(40 CHAR) NOT NULL DEFAULT '',
+  f_branch VARCHAR(40 CHAR) NOT NULL DEFAULT '',
+  f_creator VARCHAR(40 CHAR) NOT NULL DEFAULT '',
+  f_creator_type VARCHAR(20 CHAR) NOT NULL DEFAULT '',
+  f_create_time BIGINT NOT NULL DEFAULT 0,
+  f_updater VARCHAR(40 CHAR) NOT NULL DEFAULT '',
+  f_updater_type VARCHAR(20 CHAR) NOT NULL DEFAULT '',
+  f_update_time BIGINT NOT NULL DEFAULT 0,
+  CLUSTER PRIMARY KEY (f_kn_id, f_branch, f_id)
+);
+
+CREATE UNIQUE INDEX IF NOT EXISTS uk_risk_type_name ON t_risk_type(f_kn_id, f_branch, f_name);

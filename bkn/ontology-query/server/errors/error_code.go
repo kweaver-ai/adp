@@ -71,4 +71,5 @@ func init() {
 	rest.Register(knowledgeNetworkErrCodeList)
 	rest.Register(actionExecutionErrCodeList)
 	rest.Register(actionTypeErrCodeList)
+	rest.Register(riskTypeErrCodeList)
 }
