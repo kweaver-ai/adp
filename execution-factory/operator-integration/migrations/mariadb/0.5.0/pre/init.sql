@@ -362,5 +362,5 @@ CREATE TABLE IF NOT EXISTS `t_skill_file_index` (
     `f_update_time` bigint(20) NOT NULL COMMENT '编辑时间',
     PRIMARY KEY (`f_id`),
     UNIQUE KEY `uk_skill_version_rel_path` (`f_skill_id`, `f_skill_version`, `f_rel_path`) USING BTREE,
-    UNIQUE KEY `uk_skill_version_path_hash` (`f_skill_id`, `f_skill_version`, `f_path_hash`) USING BTREE,
+    UNIQUE KEY `uk_skill_version_path_hash` (`f_skill_id`, `f_skill_version`, `f_path_hash`) USING BTREE
 ) ENGINE = InnoDB COMMENT = 'Skill 文件索引表';
