@@ -151,3 +151,12 @@ func (dts *discoverTaskService) UpdateResult(ctx context.Context, id string, res
 
 	return dts.dta.UpdateResult(ctx, id, result, stime)
 }
+
+// CheckExistByStatuses checks if DiscoverTasks exists by catalog ID and statuses.
+func (dts *discoverTaskService) CheckExistByStatuses(ctx context.Context, catalogID string, statuses []string) (bool, error) {
+	ctx, span := ar_trace.Tracer.Start(ctx, "DiscoverTaskService.CheckExistByStatuses",
+		trace.WithSpanKind(trace.SpanKindServer))
+	defer span.End()
+
+	return dts.dta.CheckExistByStatuses(ctx, catalogID, statuses)
+}

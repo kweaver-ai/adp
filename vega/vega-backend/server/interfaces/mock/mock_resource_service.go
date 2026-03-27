@@ -41,19 +41,19 @@ func (m *MockResourceService) EXPECT() *MockResourceServiceMockRecorder {
 	return m.recorder
 }
 
-// CheckExistByCategorys mocks base method.
-func (m *MockResourceService) CheckExistByCategorys(ctx context.Context, catalogID string, categorys []string) (bool, error) {
+// CheckExistByCategories mocks base method.
+func (m *MockResourceService) CheckExistByCategories(ctx context.Context, catalogID string, categories []string) (bool, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "CheckExistByCategorys", ctx, catalogID, categorys)
+	ret := m.ctrl.Call(m, "CheckExistByCategories", ctx, catalogID, categories)
 	ret0, _ := ret[0].(bool)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// CheckExistByCategorys indicates an expected call of CheckExistByCategorys.
-func (mr *MockResourceServiceMockRecorder) CheckExistByCategorys(ctx, catalogID, categorys any) *gomock.Call {
+// CheckExistByCategories indicates an expected call of CheckExistByCategories.
+func (mr *MockResourceServiceMockRecorder) CheckExistByCategories(ctx, catalogID, categories any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CheckExistByCategorys", reflect.TypeOf((*MockResourceService)(nil).CheckExistByCategorys), ctx, catalogID, categorys)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CheckExistByCategories", reflect.TypeOf((*MockResourceService)(nil).CheckExistByCategories), ctx, catalogID, categories)
 }
 
 // CheckExistByID mocks base method.

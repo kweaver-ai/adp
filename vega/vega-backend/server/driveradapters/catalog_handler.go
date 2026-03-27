@@ -498,8 +498,24 @@ func (r *restHandler) deleteCatalogs(c *gin.Context, ctx context.Context, span t
 			return
 		}
 
+		// check if catalog discover tasks exists
+		exists, err = r.dts.CheckExistByStatuses(ctx, id, []string{interfaces.DiscoverTaskStatusPending, interfaces.DiscoverTaskStatusRunning})
+		if err != nil {
+			httpErr := err.(*rest.HTTPError)
+			o11y.AddHttpAttrs4HttpError(span, httpErr)
+			rest.ReplyError(c, httpErr)
+			return
+		}
+		if exists {
+			httpErr := rest.NewHTTPError(ctx, http.StatusBadRequest, verrors.VegaBackend_Catalog_InvalidParameter).
+				WithErrorDetails(fmt.Sprintf("catalog %s contains tasks in the pending or running statuses and cannot be deleted.", id))
+			o11y.AddHttpAttrs4HttpError(span, httpErr)
+			rest.ReplyError(c, httpErr)
+			return
+		}
+
 		// check if catalog resources exists
-		exists, err = r.rs.CheckExistByCategorys(ctx, id, []string{interfaces.ResourceCategoryDataset, interfaces.ResourceCategoryLogicView})
+		exists, err = r.rs.CheckExistByCategories(ctx, id, []string{interfaces.ResourceCategoryDataset, interfaces.ResourceCategoryLogicView})
 		if err != nil {
 			httpErr := err.(*rest.HTTPError)
 			o11y.AddHttpAttrs4HttpError(span, httpErr)
@@ -513,6 +529,7 @@ func (r *restHandler) deleteCatalogs(c *gin.Context, ctx context.Context, span t
 			rest.ReplyError(c, httpErr)
 			return
 		}
+
 	}
 
 	if err := r.cs.DeleteByIDs(ctx, ids); err != nil {

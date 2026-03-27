@@ -33,8 +33,8 @@ type ResourceAccess interface {
 	// ListResourceSrcs lists Resource Sources with filters.
 	ListResourceSrcs(ctx context.Context, params ListResourcesQueryParams) ([]*ListResourceEntry, int64, error)
 
-	// GetByCategorys  lists Resource by catalog and categorys.
-	GetByCategorys(ctx context.Context, catalogID string, category []string) ([]*Resource, error)
+	// CheckExistByCategories checks if Resources exists by catalog ID and categories.
+	CheckExistByCategories(ctx context.Context, catalogID string, categories []string) (bool, error)
 
 	// DeleteByCatalogIDs deletes Resources by catalog IDs.
 	DeleteByCatalogIDs(ctx context.Context, catalogIDs []string) error

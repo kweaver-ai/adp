@@ -41,6 +41,21 @@ func (m *MockResourceAccess) EXPECT() *MockResourceAccessMockRecorder {
 	return m.recorder
 }
 
+// CheckExistByCategories mocks base method.
+func (m *MockResourceAccess) CheckExistByCategories(ctx context.Context, catalogID string, categories []string) (bool, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CheckExistByCategories", ctx, catalogID, categories)
+	ret0, _ := ret[0].(bool)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// CheckExistByCategories indicates an expected call of CheckExistByCategories.
+func (mr *MockResourceAccessMockRecorder) CheckExistByCategories(ctx, catalogID, categories any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CheckExistByCategories", reflect.TypeOf((*MockResourceAccess)(nil).CheckExistByCategories), ctx, catalogID, categories)
+}
+
 // Create mocks base method.
 func (m *MockResourceAccess) Create(ctx context.Context, resource *interfaces.Resource) error {
 	m.ctrl.T.Helper()
@@ -96,21 +111,6 @@ func (m *MockResourceAccess) GetByCatalogID(ctx context.Context, catalogID strin
 func (mr *MockResourceAccessMockRecorder) GetByCatalogID(ctx, catalogID any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetByCatalogID", reflect.TypeOf((*MockResourceAccess)(nil).GetByCatalogID), ctx, catalogID)
-}
-
-// GetByCategorys mocks base method.
-func (m *MockResourceAccess) GetByCategorys(ctx context.Context, catalogID string, category []string) ([]*interfaces.Resource, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetByCategorys", ctx, catalogID, category)
-	ret0, _ := ret[0].([]*interfaces.Resource)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// GetByCategorys indicates an expected call of GetByCategorys.
-func (mr *MockResourceAccessMockRecorder) GetByCategorys(ctx, catalogID, category any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetByCategorys", reflect.TypeOf((*MockResourceAccess)(nil).GetByCategorys), ctx, catalogID, category)
 }
 
 // GetByID mocks base method.

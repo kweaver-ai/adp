@@ -41,6 +41,21 @@ func (m *MockDiscoverTaskService) EXPECT() *MockDiscoverTaskServiceMockRecorder 
 	return m.recorder
 }
 
+// CheckExistByStatuses mocks base method.
+func (m *MockDiscoverTaskService) CheckExistByStatuses(ctx context.Context, catalogID string, statuses []string) (bool, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CheckExistByStatuses", ctx, catalogID, statuses)
+	ret0, _ := ret[0].(bool)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// CheckExistByStatuses indicates an expected call of CheckExistByStatuses.
+func (mr *MockDiscoverTaskServiceMockRecorder) CheckExistByStatuses(ctx, catalogID, statuses any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CheckExistByStatuses", reflect.TypeOf((*MockDiscoverTaskService)(nil).CheckExistByStatuses), ctx, catalogID, statuses)
+}
+
 // Create mocks base method.
 func (m *MockDiscoverTaskService) Create(ctx context.Context, catalogID string) (string, error) {
 	m.ctrl.T.Helper()

@@ -24,4 +24,7 @@ type DiscoverTaskAccess interface {
 	UpdateProgress(ctx context.Context, id string, progress int) error
 	// UpdateResult updates a DiscoverTask's result and sets status to completed.
 	UpdateResult(ctx context.Context, id string, result *DiscoverResult, stime int64) error
+
+	// CheckExistByStatuses checks if DiscoverTasks exists by catalog ID and statuses.
+	CheckExistByStatuses(ctx context.Context, catalogID string, statuses []string) (bool, error)
 }

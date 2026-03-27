@@ -372,3 +372,31 @@ func (da *discoverTaskAccess) UpdateResult(ctx context.Context, id string, resul
 	span.SetStatus(codes.Ok, "")
 	return nil
 }
+
+// CheckExistByStatuses checks if DiscoverTasks exist by catalog ID and statuses.
+func (da *discoverTaskAccess) CheckExistByStatuses(ctx context.Context, catalogID string, statuses []string) (bool, error) {
+	ctx, span := ar_trace.Tracer.Start(ctx, "Check discover_tasks exist",
+		trace.WithSpanKind(trace.SpanKindClient))
+	defer span.End()
+
+	countBuilder := sq.Select("COUNT(*)").From(DISCOVER_TASK_TABLE_NAME)
+
+	if catalogID != "" {
+		countBuilder = countBuilder.Where(sq.Eq{"f_catalog_id": catalogID})
+	}
+	if len(statuses) > 0 {
+		countBuilder = countBuilder.Where(sq.Eq{"f_status": statuses})
+	}
+
+	countSql, countVals, _ := countBuilder.ToSql()
+	var total int64
+	err := da.db.QueryRowContext(ctx, countSql, countVals...).Scan(&total)
+	if err != nil {
+		logger.Errorf("Failed to count discover_tasks: %v", err)
+		span.SetStatus(codes.Error, "Count failed")
+		return false, err
+	}
+
+	span.SetStatus(codes.Ok, "")
+	return total > 0, nil
+}

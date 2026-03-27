@@ -40,6 +40,6 @@ type ResourceService interface {
 	// ListResourceSrcs lists Resource Sources with filters.
 	ListResourceSrcs(ctx context.Context, params ListResourcesQueryParams) ([]*ListResourceEntry, int64, error)
 
-	// CheckExistByCategorys checks if Resources exists by catalog ID and categorys.
-	CheckExistByCategorys(ctx context.Context, catalogID string, categorys []string) (bool, error)
+	// CheckExistByCategories checks if Resources exists by catalog ID and categories.
+	CheckExistByCategories(ctx context.Context, catalogID string, categories []string) (bool, error)
 }

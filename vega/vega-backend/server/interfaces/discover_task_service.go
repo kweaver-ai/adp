@@ -22,4 +22,7 @@ type DiscoverTaskService interface {
 	UpdateStatus(ctx context.Context, id string, status string, message string, stime int64) error
 	// UpdateResult updates a DiscoverTask's result.
 	UpdateResult(ctx context.Context, id string, result *DiscoverResult, stime int64) error
+
+	// CheckExistByStatuses  checks if DiscoverTasks exists by catalog ID and statuses.
+	CheckExistByStatuses(ctx context.Context, catalogID string, statuses []string) (bool, error)
 }

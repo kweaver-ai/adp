@@ -563,13 +563,13 @@ func (rs *resourceService) UpdateResource(ctx context.Context, resource *interfa
 
 // ListResourceSrcs lists Resource Sources with filters.
 func (rs *resourceService) ListResourceSrcs(ctx context.Context, params interfaces.ListResourcesQueryParams) ([]*interfaces.ListResourceEntry, int64, error) {
-	ctx, span := ar_trace.Tracer.Start(ctx, "ListResourceSrcs resources")
+	ctx, span := ar_trace.Tracer.Start(ctx, "ListResourceSrcs")
 	defer span.End()
 
 	// 使用ra.ListResourceSrcs函数查询resources
 	entries, total, err := rs.ra.ListResourceSrcs(ctx, params)
 	if err != nil {
-		span.SetStatus(codes.Error, "ListResourceSrcs resources failed")
+		span.SetStatus(codes.Error, "ListResourceSrcs failed")
 		return []*interfaces.ListResourceEntry{}, 0, rest.NewHTTPError(ctx, http.StatusInternalServerError, verrors.VegaBackend_Resource_InternalError_GetFailed).
 			WithErrorDetails(err.Error())
 	}
@@ -635,18 +635,10 @@ func (rs *resourceService) ListResourceSrcs(ctx context.Context, params interfac
 	return results[params.Offset:end], int64(resTotal), nil
 }
 
-// CheckExistByCategorys checks if Resources exists by catalog ID and categorys.
-func (rs *resourceService) CheckExistByCategorys(ctx context.Context, catalogID string, categorys []string) (bool, error) {
-	ctx, span := ar_trace.Tracer.Start(ctx, "Check resource exist by catalog ID and categorys")
+// CheckExistByCategories checks if Resources exists by catalog ID and categories.
+func (rs *resourceService) CheckExistByCategories(ctx context.Context, catalogID string, categories []string) (bool, error) {
+	ctx, span := ar_trace.Tracer.Start(ctx, "CheckExistByCategories")
 	defer span.End()
 
-	resources, err := rs.ra.GetByCategorys(ctx, catalogID, categorys)
-	if err != nil {
-		span.SetStatus(codes.Error, "Get resources failed")
-		return false, rest.NewHTTPError(ctx, http.StatusInternalServerError, verrors.VegaBackend_Resource_InternalError_GetFailed).
-			WithErrorDetails(err.Error())
-	}
-
-	span.SetStatus(codes.Ok, "")
-	return len(resources) > 0, nil
+	return rs.ra.CheckExistByCategories(ctx, catalogID, categories)
 }

@@ -782,7 +782,7 @@ func (ra *resourceAccess) DeleteByIDs(ctx context.Context, ids []string) error {
 
 // ListResourceSrcs lists Resource Sources with filters.
 func (ra *resourceAccess) ListResourceSrcs(ctx context.Context, params interfaces.ListResourcesQueryParams) ([]*interfaces.ListResourceEntry, int64, error) {
-	ctx, span := ar_trace.Tracer.Start(ctx, "ListResourceSrcs resources",
+	ctx, span := ar_trace.Tracer.Start(ctx, "ListResourceSrcs",
 		trace.WithSpanKind(trace.SpanKindClient))
 	defer span.End()
 
@@ -853,97 +853,33 @@ func (ra *resourceAccess) ListResourceSrcs(ctx context.Context, params interface
 	return entries, total, nil
 }
 
-func (ra *resourceAccess) GetByCategorys(ctx context.Context, catalogID string, categorys []string) ([]*interfaces.Resource, error) {
-	ctx, span := ar_trace.Tracer.Start(ctx, "Query resources by catalog ID and categorys",
+func (ra *resourceAccess) CheckExistByCategories(ctx context.Context, catalogID string, categories []string) (bool, error) {
+	ctx, span := ar_trace.Tracer.Start(ctx, "Check resources exist",
 		trace.WithSpanKind(trace.SpanKindClient))
 	defer span.End()
 
 	span.SetAttributes(attr.Key("catalog_id").String(catalogID))
 
-	sqlStr, vals, err := sq.Select(
-		"f_id",
-		"f_catalog_id",
-		"f_name",
-		"f_tags",
-		"f_description",
-		"f_category",
-		"f_status",
-		"f_status_message",
-		"f_database",
-		"f_source_identifier",
-		"f_source_metadata",
-		"f_schema_definition",
-		"f_creator",
-		"f_creator_type",
-		"f_create_time",
-		"f_updater",
-		"f_updater_type",
-		"f_update_time",
-	).From(RESOURCE_TABLE_NAME).
-		Where(sq.Eq{"f_catalog_id": catalogID}).
-		Where(sq.Eq{"f_category": categorys}).
-		ToSql()
-	if err != nil {
-		logger.Errorf("Failed to build query resources sql: %v", err)
-		span.SetStatus(codes.Error, "Build sql failed")
-		return nil, err
+	countBuilder := sq.Select("COUNT(*)").From(RESOURCE_TABLE_NAME)
+
+	if catalogID != "" {
+		countBuilder = countBuilder.Where(sq.Eq{"f_catalog_id": catalogID})
+	}
+	if len(categories) > 0 {
+		countBuilder = countBuilder.Where(sq.Eq{"f_category": categories})
 	}
 
-	rows, err := ra.db.QueryContext(ctx, sqlStr, vals...)
+	countSql, countVals, _ := countBuilder.ToSql()
+	var total int64
+	err := ra.db.QueryRowContext(ctx, countSql, countVals...).Scan(&total)
 	if err != nil {
-		logger.Errorf("Query resources failed: %v", err)
-		span.SetStatus(codes.Error, "Query failed")
-		return nil, err
-	}
-	defer rows.Close()
-
-	resources := make([]*interfaces.Resource, 0)
-	for rows.Next() {
-		resource := &interfaces.Resource{}
-		var tagsStr string
-		var database, sourceIdentifier, sourceMetadata, schemaDefinition sql.NullString
-
-		err := rows.Scan(
-			&resource.ID,
-			&resource.CatalogID,
-			&resource.Name,
-			&tagsStr,
-			&resource.Description,
-			&resource.Category,
-			&resource.Status,
-			&resource.StatusMessage,
-			&database,
-			&sourceIdentifier,
-			&sourceMetadata,
-			&schemaDefinition,
-			&resource.Creator.ID,
-			&resource.Creator.Type,
-			&resource.CreateTime,
-			&resource.Updater.ID,
-			&resource.Updater.Type,
-			&resource.UpdateTime,
-		)
-		if err != nil {
-			logger.Errorf("Scan resource row failed: %v", err)
-			span.SetStatus(codes.Error, "Scan row failed")
-			return nil, err
-		}
-
-		resource.Tags = libCommon.TagString2TagSlice(tagsStr)
-		resource.Database = database.String
-		resource.SourceIdentifier = sourceIdentifier.String
-		if sourceMetadata.Valid && sourceMetadata.String != "" {
-			_ = json.Unmarshal([]byte(sourceMetadata.String), &resource.SourceMetadata)
-		}
-		if schemaDefinition.Valid && schemaDefinition.String != "" {
-			_ = json.Unmarshal([]byte(schemaDefinition.String), &resource.SchemaDefinition)
-		}
-
-		resources = append(resources, resource)
+		logger.Errorf("Failed to count resources: %v", err)
+		span.SetStatus(codes.Error, "Count failed")
+		return false, err
 	}
 
 	span.SetStatus(codes.Ok, "")
-	return resources, nil
+	return total > 0, nil
 }
 
 func (ra *resourceAccess) DeleteByCatalogIDs(ctx context.Context, catalogIDs []string) error {
