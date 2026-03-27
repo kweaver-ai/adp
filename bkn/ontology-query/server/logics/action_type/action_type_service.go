@@ -38,7 +38,6 @@ type actionTypeService struct {
 	appSetting *common.AppSetting
 	omAccess   interfaces.OntologyManagerAccess
 	ots        interfaces.ObjectTypeService
-	riskTypeS  interfaces.RiskTypeService
 	uAccess    interfaces.UniqueryAccess
 }
 
