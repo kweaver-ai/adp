@@ -107,6 +107,8 @@ func (r *restHandler) RegisterPublic(engine *gin.Engine) {
 			resources.PUT("/dataset/:id/docs", r.verifyJsonContentType(), r.UpdateDatasetDocumentsByEx)
 			resources.DELETE("/dataset/:id/docs/:ids", r.DeleteDatasetDocumentsByEx)
 			resources.POST("/dataset/:id/docs/query", r.DeleteDatasetDocumentsByQueryByEx)
+			resources.POST("/dataset/:id/build", r.BuildDataByEx)
+			resources.GET("/dataset/:id/build/:taskid", r.GetBuildTaskByEx)
 		}
 
 		// ConnectorType APIs - External
@@ -166,6 +168,8 @@ func (r *restHandler) RegisterPublic(engine *gin.Engine) {
 			resources.PUT("/dataset/:id/docs", r.verifyJsonContentType(), r.UpdateDatasetDocumentsByIn)
 			resources.DELETE("/dataset/:id/docs/:ids", r.DeleteDatasetDocumentsByIn)
 			resources.POST("/dataset/:id/docs/query", r.DeleteDatasetDocumentsByQueryByIn)
+			resources.POST("/dataset/:id/build", r.BuildDataByIn)
+			resources.GET("/dataset/:id/build/:taskid", r.GetBuildTaskByIn)
 		}
 
 		// Query APIs - Internal

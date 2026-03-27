@@ -164,6 +164,23 @@ func (r *restHandler) createResource(c *gin.Context, ctx context.Context, span t
 		return
 	}
 
+	// Check catelog exists
+	csExists, csErr := r.cs.CheckExistByID(ctx, req.CatalogID)
+	if csErr != nil {
+		httpErr := rest.NewHTTPError(ctx, http.StatusInternalServerError,
+			verrors.VegaBackend_Resource_InternalError).WithErrorDetails(csErr.Error())
+		o11y.AddHttpAttrs4HttpError(span, httpErr)
+		rest.ReplyError(c, httpErr)
+		return
+	}
+	if !csExists {
+		httpErr := rest.NewHTTPError(ctx, http.StatusNotFound, verrors.VegaBackend_Resource_CatalogNotFound).
+			WithErrorDetails(fmt.Sprintf("catalog %s not found", req.CatalogID))
+		o11y.AddHttpAttrs4HttpError(span, httpErr)
+		rest.ReplyError(c, httpErr)
+		return
+	}
+
 	// Check if name exists
 	exists, err := r.rs.CheckExistByName(ctx, req.CatalogID, req.Name)
 	if err != nil {

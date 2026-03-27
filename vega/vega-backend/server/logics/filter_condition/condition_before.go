@@ -53,7 +53,7 @@ func (c *BeforeCond) New(ctx context.Context, cfg *interfaces.FilterCondCfg,
 	if len(val) != 2 {
 		return nil, fmt.Errorf("condition [before] right value should be an array of length 2")
 	}
-	if _, ok := val[0].(string); ok {
+	if _, ok := val[0].(int); ok {
 		return nil, fmt.Errorf("condition [before]'s interval value should be an number")
 	}
 	if _, ok = val[1].(string); !ok {
