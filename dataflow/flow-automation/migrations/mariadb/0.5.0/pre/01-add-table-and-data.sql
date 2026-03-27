@@ -1,9 +1,5 @@
 USE adp;
 
--- ============================================================
--- t_flow_storage - Dataflow 存储文件表
--- 仅用于描述已经落到 OssGateway 中的物理对象
--- ============================================================
 CREATE TABLE IF NOT EXISTS `t_flow_storage` (
   `f_id` BIGINT UNSIGNED NOT NULL COMMENT '主键ID',
   `f_oss_id` VARCHAR(64) NOT NULL DEFAULT '' COMMENT 'OssGateway存储ID',
@@ -22,10 +18,6 @@ CREATE TABLE IF NOT EXISTS `t_flow_storage` (
   KEY `idx_flow_storage_created_at` (`f_created_at`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='Dataflow存储文件表';
 
--- ============================================================
--- t_flow_file - Dataflow 业务文件表
--- 描述 Dataflow 内部文件对象，并承载 dfs:// 协议
--- ============================================================
 CREATE TABLE IF NOT EXISTS `t_flow_file` (
   `f_id` BIGINT UNSIGNED NOT NULL COMMENT '主键ID，对应 dfs://<id>',
   `f_dag_id` VARCHAR(64) NOT NULL DEFAULT '' COMMENT '流程定义ID',
@@ -44,10 +36,6 @@ CREATE TABLE IF NOT EXISTS `t_flow_file` (
   KEY `idx_flow_file_expires_at` (`f_expires_at`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='Dataflow业务文件表';
 
--- ============================================================
--- t_flow_file_download_job - Dataflow 文件下载任务表
--- 仅用于管理 URL 文件下载任务
--- ============================================================
 CREATE TABLE IF NOT EXISTS `t_flow_file_download_job` (
   `f_id` BIGINT UNSIGNED NOT NULL COMMENT '主键ID',
   `f_file_id` BIGINT UNSIGNED NOT NULL COMMENT '关联flow_file ID',
@@ -67,10 +55,6 @@ CREATE TABLE IF NOT EXISTS `t_flow_file_download_job` (
   KEY `idx_flow_file_download_job_status_retry` (`f_status`, `f_next_retry_at`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='Dataflow文件下载任务表';
 
--- ============================================================
--- t_flow_task_resume - Dataflow 阻塞任务恢复表
--- 提供服务内部可持久化的 task_instance 恢复机制
--- ============================================================
 CREATE TABLE IF NOT EXISTS `t_flow_task_resume` (
   `f_id` BIGINT UNSIGNED NOT NULL COMMENT '主键ID',
   `f_task_instance_id` VARCHAR(64) NOT NULL DEFAULT '' COMMENT '被阻塞的任务实例ID',
