@@ -96,7 +96,6 @@ func (ra *resourceAccess) Create(ctx context.Context, resource *interfaces.Resou
 
 			"f_logic_type",
 			"f_logic_definition",
-			// "f_logic_definition_type",
 
 			"f_local_enabled",
 			"f_local_storage_engine",
@@ -132,7 +131,6 @@ func (ra *resourceAccess) Create(ctx context.Context, resource *interfaces.Resou
 
 			resource.LogicType,
 			string(logicDefinitionBytes),
-			// "",
 
 			false,
 			"",

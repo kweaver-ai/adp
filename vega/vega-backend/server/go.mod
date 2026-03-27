@@ -4,7 +4,6 @@ go 1.24.0
 
 require (
 	github.com/Masterminds/squirrel v1.5.4
-	github.com/antlr4-go/antlr/v4 v4.13.1
 	github.com/bytedance/sonic v1.15.0
 	github.com/fsnotify/fsnotify v1.9.0
 	github.com/gin-gonic/gin v1.11.0
@@ -24,8 +23,6 @@ require (
 	go.opentelemetry.io/otel/trace v1.29.0
 	go.uber.org/automaxprocs v1.6.0
 )
-
-require golang.org/x/exp v0.0.0-20240506185415-9bf2ced13842 // indirect
 
 require go.uber.org/mock v0.6.0
 
