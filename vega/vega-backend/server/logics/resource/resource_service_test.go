@@ -150,9 +150,15 @@ func TestGetByID_DBError(t *testing.T) {
 // ===== GetByIDs =====
 
 func TestGetByIDs_Success(t *testing.T) {
-	rs, mockRA, _, _, _ := newTestService(t)
+	rs, mockRA, mockPS, _, mockUMS := newTestService(t)
 	mockRA.EXPECT().GetByIDs(gomock.Any(), []string{"r1", "r2"}).
 		Return([]*interfaces.Resource{{ID: "r1"}, {ID: "r2"}}, nil)
+	mockPS.EXPECT().FilterResources(gomock.Any(), interfaces.RESOURCE_TYPE_RESOURCE, []string{"r1", "r2"}, gomock.Any(), true).
+		Return(map[string]interfaces.PermissionResourceOps{
+			"r1": {ResourceID: "r1", Operations: []string{"view_detail"}},
+			"r2": {ResourceID: "r2", Operations: []string{"view_detail"}},
+		}, nil)
+	mockUMS.EXPECT().GetAccountNames(gomock.Any(), gomock.Any()).Return(nil)
 
 	resources, err := rs.GetByIDs(context.Background(), []string{"r1", "r2"})
 	if err != nil {
