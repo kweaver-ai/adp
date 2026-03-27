@@ -42,7 +42,7 @@
                      AUTO = 自动判断是否需要 OCR。
                      一般表示：如果 PDF 本身有可提取文本，就优先直接提取；
                      如果是扫描件/图片型 PDF，则触发 OCR。 -->
-                <param name="ocrStrategy" type="string">AUTO</param>
+                <param name="ocrStrategy" type="string">no_ocr</param>
 
                 <!-- 是否按页面坐标排序文本：
                      true = 尽量按照页面上的视觉位置排序文本，
@@ -82,67 +82,7 @@
             </params>
         </parser>
 
-
-        <!--
-            Tesseract OCR 解析器：
-            用于图片类内容或扫描件 PDF 的文字识别。
-            这里是对 OCR 行为做精细化控制。
-        -->
-        <parser class="org.apache.tika.parser.ocr.TesseractOCRParser">
-            <params>
-
-                <!-- OCR 语言包：
-                     chi_sim = 简体中文
-                     eng = 英文
-                     多语言用 + 连接。
-                     语言越多，识别覆盖更广，但通常会稍微降低速度。 -->
-                <param name="language" type="string">chi_sim+eng</param>
-
-                <!-- OCR 超时时间（秒）：
-                     单次 OCR 最长执行 300 秒，超时则终止，
-                     防止大文件或复杂页面长时间卡住。 -->
-                <param name="timeout" type="int">300</param>
-
-                <!-- 页面分割模式（PSM, Page Segmentation Mode）：
-                     1 = 自动页面分割并带方向/脚本检测
-                     3 = 全自动页面分割（默认常见模式之一）
-                     当前设置为 1，更适合版面不固定的文档。 -->
-                <param name="pageSegMode" type="string">1</param>
-
-                <!-- OCR 输入图像 DPI：
-                     300 DPI 是比较常见且效果较好的 OCR 分辨率，
-                     通常在识别率和处理成本之间比较平衡。 -->
-                <param name="density" type="int">300</param>
-
-                <!-- OCR 预处理颜色空间：
-                     gray = 灰度图
-                     通常能减少颜色噪声，提高 OCR 稳定性，同时降低处理开销。 -->
-                <param name="colorspace" type="string">gray</param>
-
-                <!-- OCR 输入图像位深：
-                     8 = 8位深度
-                     对灰度图来说是常用设置。 -->
-                <param name="depth" type="int">8</param>
-
-                <!-- OCR 预处理滤波器：
-                     triangle = Triangle 滤波/缩放算法
-                     用于图像预处理，可能改善识别前的图像质量。 -->
-                <param name="filter" type="string">triangle</param>
-
-                <!-- 启用 OCR 的最小文件大小（字节）：
-                     0 = 不设最小门槛，所有文件都允许进入 OCR 流程。 -->
-                <param name="minFileSizeToOcr" type="long">0</param>
-
-                <!-- 允许 OCR 的最大文件大小（字节）：
-                     2147483648 = 2GB
-                     超过该大小的文件将不执行 OCR，避免资源消耗过大。 -->
-                <param name="maxFileSizeToOcr" type="long">2147483648</param>
-
-            </params>
-        </parser>
-
     </parsers>
-
 
     <detectors>
 

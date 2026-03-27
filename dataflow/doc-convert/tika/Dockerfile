@@ -2,12 +2,6 @@ ARG BASE_IMAGE=acr.aishu.cn/dip/tika:3.3.0.0-20260325-1
 FROM ${BASE_IMAGE}
 
 USER root
-RUN apt-get update && apt-get install -y \
-    tesseract-ocr \
-    tesseract-ocr-chi-sim \
-    tesseract-ocr-chi-tra \
-    tesseract-ocr-eng \
-    && rm -rf /var/lib/apt/lists/*
 
 # 安装开源字体（覆盖常见 PDF 字体需求）
 RUN apt-get update && \
