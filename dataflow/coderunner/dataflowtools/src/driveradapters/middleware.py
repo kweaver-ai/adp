@@ -1,4 +1,5 @@
 from tornado.web import RequestHandler
+from common.configs import is_auth_enable
 from models.driven_models import UserInfo
 from logics.automation_admin import AutomationAdminService
 from errors.errors import UnauthorizedException, NoPermissionException
@@ -21,7 +22,27 @@ class CheckToken(Middleware):
     hydra = Hydra()
     user_management = UserManagement()
 
+    def build_mock_user_info(self):
+        user_agent = self.handler.request.headers.get("User-Agent", "")
+        payload = {
+            "active": True,
+            "scope": "",
+            "client_id": "mock-client-id",
+            "sub": "mock-user-id",
+            "ext": {"login_ip": "127.0.0.1", "udid": "mock-udid", "client_type": "web"},
+            "user_name": "mock-user",
+            "account_type": "user",
+            "parent_deps": [],
+            "roles": ["admin"],
+            "visitor_type": "authenticated_user",
+            "login_ip": "127.0.0.1",
+            "user_agent": user_agent,
+        }
+        return UserInfo(**payload)
+
     async def check_token(self):
+        if not is_auth_enable():
+            return self.build_mock_user_info()
         header = self.handler.request.headers.get('Authorization', "")
         if header == "":
             raise UnauthorizedException(cause="token empty")
@@ -76,6 +97,8 @@ class CheckAutomationAdmin(Middleware):
     automation_admin_service = AutomationAdminService()
 
     async def check_automation_admin(self):
+        if not is_auth_enable():
+            return True
         user_id = self.handler.user_info.user_id
         res = await self.automation_admin_service.check_automation_admin(user_id)
         if not res:

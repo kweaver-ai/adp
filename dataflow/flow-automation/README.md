@@ -54,6 +54,7 @@ This project follows a Hexagonal Architecture (Ports and Adapters), separating c
 - **Token Authentication**: OAuth2 authentication via Hydra
 - **Permission Verification**: Fine-grained resource access control
 - **Business Domain Isolation**: Multi-tenant business domain isolation
+- **Minimal Dependency Mode**: Supports disabling ISF dependencies through `auth.enabled` / `SERVER_AUTH_ENABLED`; in this mode the service can run without Hydra, Authentication, Authorization, and User Management, but permission and business-domain isolation are bypassed
 
 ### 5. Security Policies
 - **Access Control**: API access security policies
@@ -126,9 +127,16 @@ Key configuration items:
   - `mongodb`: Uses MongoDB to store DAG definitions, execution instances, and other document-style workflow data.
   - `mysql`: Uses the MySQL/MariaDB-based repository implementation for workflow metadata after relational storage deployment or migration.
     If the service previously ran with MongoDB storage, migrate the historical workflow data before switching to `mysql`, for example by running `python3 migrations/mariadb/0.4.0/pre/02-mongodb_to_mysql_migration.py`.
+- `SERVER_AUTH_ENABLED`: Controls whether auth-related ISF dependencies are enabled for `flow-automation`.
+  - `true` (default): Uses real Hydra, Authentication, Authorization, and User Management services.
+  - `false`: Uses built-in mock adapters so the service can run in a minimal-dependency mode without ISF.
+  - In Helm deployments, this is managed by `auth.enabled`.
+  - This mode is intended for local development, demos, or minimal-dependency deployments, and it bypasses the original permission and business-domain isolation behavior.
 - `MONGODB_HOST`: MongoDB address
 - `REDIS_HOST`: Redis address
 - `KAFKA_BROKERS`: Kafka cluster addresses
+
+For detailed design and scope of this change, see [#273 Dataflow decoupling ISF](docs/features/%23273%20Dataflow%E8%A7%A3%E8%80%A6ISF/Dataflow%E8%A7%A3%E8%80%A6ISF.md).
 
 ## Project Structure
 

@@ -3,6 +3,7 @@ package actions
 import (
 	"context"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/common"
@@ -43,21 +44,41 @@ func (a *ContentPipelineFullText) ParameterNew() interface{} {
 }
 
 func (a *ContentPipelineFullText) Run(ctx entity.ExecuteContext, params interface{}, _ *entity.Token) (interface{}, error) {
-
 	var err error
 	newCtx, span := trace.StartInternalSpan(ctx.Context())
 	defer func() { trace.TelemetrySpanEnd(span, err) }()
 	ctx.SetContext(newCtx)
 	ctx.Trace(newCtx, "run start", entity.TraceOpPersistAfterAction)
+	input := params.(*ContentPipelineFullText)
+
+	if strings.HasPrefix(input.DocID, "dfs://") {
+		return a.runDFSFullText(ctx, input)
+	}
+
+	return a.runPipelineFullText(ctx, input)
+}
+
+func (a *ContentPipelineFullText) runDFSFullText(ctx entity.ExecuteContext, input *ContentPipelineFullText) (interface{}, error) {
 	log := traceLog.WithContext(ctx.Context())
 
+	result, err := ctx.NewRepo().ExtractFullText(ctx.Context(), input.DocID)
+	if err != nil {
+		log.Warnf("[ContentPipelineFullText] ExtractFullText err: %s, docid: %s", err.Error(), input.DocID)
+		return nil, err
+	}
+
+	ctx.ShareData().Set(ctx.GetTaskID(), result)
+	return result, nil
+}
+
+func (a *ContentPipelineFullText) runPipelineFullText(ctx entity.ExecuteContext, input *ContentPipelineFullText) (interface{}, error) {
+	log := traceLog.WithContext(ctx.Context())
 	config := common.NewConfig()
 	efast := drivenadapters.NewEfast()
 	og := drivenadapters.NewOssGateWay()
 	pipeline := drivenadapters.NewContentPipeline()
 
 	taskCache := rds.GetTaskCache()
-	input := params.(*ContentPipelineFullText)
 
 	ossInfo, err := efast.GetOssInfo(ctx.Context(), input.DocID, input.Version)
 	if err != nil {
@@ -188,7 +209,7 @@ func (a *ContentPipelineFullText) Run(ctx entity.ExecuteContext, params interfac
 	switch task.Status {
 	case rds.TaskStatusFailed:
 		ctx.ShareData().Set("__status_"+taskIns.ID, entity.TaskInstanceStatusFailed)
-		return nil, fmt.Errorf(task.ErrMsg)
+		return nil, fmt.Errorf("%s", task.ErrMsg)
 	case rds.TaskStatusPending:
 		ctx.ShareData().Set("__status_"+taskIns.ID, entity.TaskInstanceStatusBlocked)
 		return result, nil
@@ -236,15 +257,38 @@ func (a *ContentPipelineDocFormatConvert) Run(ctx entity.ExecuteContext, params 
 	defer func() { trace.TelemetrySpanEnd(span, err) }()
 	ctx.SetContext(newCtx)
 	ctx.Trace(newCtx, "run start", entity.TraceOpPersistAfterAction)
-	log := traceLog.WithContext(ctx.Context())
+	input := params.(*ContentPipelineDocFormatConvert)
 
+	if strings.HasPrefix(input.DocID, "dfs://") {
+		return a.runDFSDocFormatConvert(ctx, input)
+	}
+
+	return a.runPipelineDocFormatConvert(ctx, input)
+}
+
+func (a *ContentPipelineDocFormatConvert) runDFSDocFormatConvert(ctx entity.ExecuteContext, input *ContentPipelineDocFormatConvert) (interface{}, error) {
+	log := traceLog.WithContext(ctx.Context())
+	taskIns := ctx.GetTaskInstance()
+
+	err := ctx.NewRepo().ConvertToPDF(ctx.Context(), taskIns.ID, input.DocID)
+	if err != nil {
+		log.Warnf("[ContentPipelineDocFormatConvert] ConvertToPDF err: %s, docid: %s", err.Error(), input.DocID)
+		return nil, err
+	}
+
+	ctx.ShareData().Set("__status_"+taskIns.ID, entity.TaskInstanceStatusBlocked)
+	return map[string]any{}, nil
+}
+
+func (a *ContentPipelineDocFormatConvert) runPipelineDocFormatConvert(ctx entity.ExecuteContext, input *ContentPipelineDocFormatConvert) (interface{}, error) {
+	log := traceLog.WithContext(ctx.Context())
 	config := common.NewConfig()
 	efast := drivenadapters.NewEfast()
 	og := drivenadapters.NewOssGateWay()
 	pipeline := drivenadapters.NewContentPipeline()
+	taskIns := ctx.GetTaskInstance()
 
 	taskCache := rds.GetTaskCache()
-	input := params.(*ContentPipelineDocFormatConvert)
 
 	ossInfo, err := efast.GetOssInfo(ctx.Context(), input.DocID, input.Version)
 	if err != nil {
@@ -261,7 +305,6 @@ func (a *ContentPipelineDocFormatConvert) Run(ctx entity.ExecuteContext, params 
 
 	ossPath := fmt.Sprintf("%s/%s", ossInfo.OssID, ossInfo.ObjectName)
 
-	taskIns := ctx.GetTaskInstance()
 	taskIns.Hash = hash(fmt.Sprintf("%s:%s", a.Name(), ossPath))
 
 	err = taskIns.Patch(ctx.Context(), &entity.TaskInstance{
@@ -376,7 +419,7 @@ func (a *ContentPipelineDocFormatConvert) Run(ctx entity.ExecuteContext, params 
 	switch task.Status {
 	case rds.TaskStatusFailed:
 		ctx.ShareData().Set("__status_"+taskIns.ID, entity.TaskInstanceStatusFailed)
-		return nil, fmt.Errorf(task.ErrMsg)
+		return nil, fmt.Errorf("%s", task.ErrMsg)
 	case rds.TaskStatusPending:
 		ctx.ShareData().Set("__status_"+taskIns.ID, entity.TaskInstanceStatusBlocked)
 		return result, nil

@@ -143,6 +143,9 @@ var (
 
 	// TopicOperatorDelete 算子删除
 	TopicOperatorDelete = "agent_operator_integration.operator.delete"
+
+	// TopicFlowFileDownloadResult 文件下载完成结果
+	TopicFlowFileDownloadResult = "automation.flow_file.download.result"
 )
 
 // DocMsg doc消息体

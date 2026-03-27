@@ -54,6 +54,7 @@ type ConfigLoader struct {
 	OAuthAdminAddr        string `yaml:"oauth_admin_addr"`
 	OAuthAdminPort        int    `yaml:"oauth_admin_port"`
 	OAuthAdminProtocol    string `yaml:"oauth_admin_protocol"`
+	AuthEnabled           string `yaml:"auth_enabled"`
 	MQConfigPath          string
 }
 

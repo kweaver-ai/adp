@@ -16,6 +16,10 @@ const (
 	EXECUTOR_TABLENAME          = "t_automation_executor"
 	EXECUTOR_ACCESSOR_TABLENAME = "t_automation_executor_accessor"
 	EXECUTOR_ACTION_TABLENAME   = "t_automation_executor_action"
+	FLOW_STORAGE_TABLENAME      = "t_flow_storage"
+	FLOW_FILE_TABLENAME         = "t_flow_file"
+	FLOW_FILE_DOWNLOAD_JOB_TABLENAME = "t_flow_file_download_job"
+	FLOW_TASK_RESUME_TABLENAME  = "t_flow_task_resume"
 )
 
 const (
@@ -335,4 +339,171 @@ func (opt *Options) BuildQuery(baseQuery string) (sqlStr string, searchSqlVal []
 	}
 
 	return
+}
+
+// ============================================================
+// FlowStorage - Dataflow 存储文件表
+// ============================================================
+
+// FlowStorageStatus 存储对象状态
+type FlowStorageStatus int8
+
+const (
+	FlowStorageStatusNormal       FlowStorageStatus = 1 // 正常
+	FlowStorageStatusPendingDelete FlowStorageStatus = 2 // 待删除
+	FlowStorageStatusDeleted      FlowStorageStatus = 3 // 已删除
+)
+
+// FlowStorage 仅用于描述已经落到 OssGateway 中的物理对象
+type FlowStorage struct {
+	ID          uint64            `gorm:"column:f_id;primaryKey;type:bigint unsigned;not null" json:"id"`
+	OssID       string            `gorm:"column:f_oss_id;type:varchar(64);not null;default:''" json:"oss_id"`
+	ObjectKey   string            `gorm:"column:f_object_key;type:varchar(512);not null;default:''" json:"object_key"`
+	Name        string            `gorm:"column:f_name;type:varchar(256);not null;default:''" json:"name"`
+	ContentType string            `gorm:"column:f_content_type;type:varchar(128);not null;default:''" json:"content_type"`
+	Size        uint64            `gorm:"column:f_size;type:bigint unsigned;not null;default:0" json:"size"`
+	Etag        string            `gorm:"column:f_etag;type:varchar(128);not null;default:''" json:"etag"`
+	Status      FlowStorageStatus `gorm:"column:f_status;type:tinyint;not null;default:1" json:"status"`
+	CreatedAt   int64             `gorm:"column:f_created_at;type:bigint;not null;default:0" json:"created_at"`
+	UpdatedAt   int64             `gorm:"column:f_updated_at;type:bigint;not null;default:0" json:"updated_at"`
+	DeletedAt   int64             `gorm:"column:f_deleted_at;type:bigint;not null;default:0" json:"deleted_at"`
+}
+
+// FlowStorageQueryOptions FlowStorage 查询选项
+type FlowStorageQueryOptions struct {
+	IDs       []uint64
+	OssID     string
+	ObjectKey string
+	Status    *FlowStorageStatus
+	Limit     int
+	Offset    int
+}
+
+// ============================================================
+// FlowFile - Dataflow 业务文件表
+// ============================================================
+
+// FlowFileStatus 文件对象状态
+type FlowFileStatus int8
+
+const (
+	FlowFileStatusPending FlowFileStatus = 1 // 待就绪
+	FlowFileStatusReady   FlowFileStatus = 2 // 就绪
+	FlowFileStatusInvalid FlowFileStatus = 3 // 失效
+	FlowFileStatusExpired FlowFileStatus = 4 // 已过期
+)
+
+// FlowFile 描述 Dataflow 内部文件对象，并承载 dfs:// 协议
+type FlowFile struct {
+	ID            uint64         `gorm:"column:f_id;primaryKey;type:bigint unsigned;not null" json:"id"` // 对应 dfs://<id>
+	DagID         string         `gorm:"column:f_dag_id;type:varchar(64);not null;default:''" json:"dag_id"`
+	DagInstanceID string         `gorm:"column:f_dag_instance_id;type:varchar(64);not null;default:''" json:"dag_instance_id"`
+	StorageID     uint64         `gorm:"column:f_storage_id;type:bigint unsigned;not null;default:0" json:"storage_id"` // 存储文件ID，未落OSS时为0
+	Status        FlowFileStatus `gorm:"column:f_status;type:tinyint;not null;default:1" json:"status"`
+	Name          string         `gorm:"column:f_name;type:varchar(256);not null;default:''" json:"name"`
+	ExpiresAt     int64          `gorm:"column:f_expires_at;type:bigint;not null;default:0" json:"expires_at"` // 过期时间 0表示不过期
+	CreatedAt     int64          `gorm:"column:f_created_at;type:bigint;not null;default:0" json:"created_at"`
+	UpdatedAt     int64          `gorm:"column:f_updated_at;type:bigint;not null;default:0" json:"updated_at"`
+}
+
+// FlowFileQueryOptions FlowFile 查询选项
+type FlowFileQueryOptions struct {
+	ID            *uint64
+	IDs           []uint64
+	DagID         string
+	DagInstanceID string
+	StorageID     *uint64
+	Status        *FlowFileStatus
+	Statuses      []FlowFileStatus
+	ExpiresBefore int64 // 过期时间早于此值
+	Limit         int
+	Offset        int
+}
+
+// FlowFileUpdateParams FlowFile 更新参数
+type FlowFileUpdateParams struct {
+	StorageID *uint64
+	Status    *FlowFileStatus
+	Name      *string
+	ExpiresAt *int64
+}
+
+// ============================================================
+// FlowFileDownloadJob - Dataflow 文件下载任务表
+// ============================================================
+
+// FlowFileDownloadJobStatus 下载任务状态
+type FlowFileDownloadJobStatus int8
+
+const (
+	FlowFileDownloadJobStatusPending  FlowFileDownloadJobStatus = 1 // 待执行
+	FlowFileDownloadJobStatusRunning  FlowFileDownloadJobStatus = 2 // 执行中
+	FlowFileDownloadJobStatusSuccess  FlowFileDownloadJobStatus = 3 // 成功
+	FlowFileDownloadJobStatusFailed   FlowFileDownloadJobStatus = 4 // 失败
+	FlowFileDownloadJobStatusCanceled FlowFileDownloadJobStatus = 5 // 取消
+)
+
+// FlowFileDownloadJob 仅用于管理 URL 文件下载任务
+type FlowFileDownloadJob struct {
+	ID           uint64                    `gorm:"column:f_id;primaryKey;type:bigint unsigned;not null" json:"id"`
+	FileID       uint64                    `gorm:"column:f_file_id;type:bigint unsigned;not null" json:"file_id"` // 关联flow_file ID
+	Status       FlowFileDownloadJobStatus `gorm:"column:f_status;type:tinyint;not null;default:1" json:"status"`
+	RetryCount   int                       `gorm:"column:f_retry_count;type:int;not null;default:0" json:"retry_count"`
+	MaxRetry     int                       `gorm:"column:f_max_retry;type:int;not null;default:3" json:"max_retry"`
+	NextRetryAt  int64                     `gorm:"column:f_next_retry_at;type:bigint;not null;default:0" json:"next_retry_at"`
+	ErrorCode    string                    `gorm:"column:f_error_code;type:varchar(64);not null;default:''" json:"error_code"`
+	ErrorMessage string                    `gorm:"column:f_error_message;type:varchar(1024);not null;default:''" json:"error_message"`
+	DownloadURL  string                    `gorm:"column:f_download_url;type:varchar(2048);not null;default:''" json:"download_url"`
+	StartedAt    int64                     `gorm:"column:f_started_at;type:bigint;not null;default:0" json:"started_at"`
+	FinishedAt   int64                     `gorm:"column:f_finished_at;type:bigint;not null;default:0" json:"finished_at"`
+	CreatedAt    int64                     `gorm:"column:f_created_at;type:bigint;not null;default:0" json:"created_at"`
+	UpdatedAt    int64                     `gorm:"column:f_updated_at;type:bigint;not null;default:0" json:"updated_at"`
+}
+
+// FlowFileDownloadJobQueryOptions FlowFileDownloadJob 查询选项
+type FlowFileDownloadJobQueryOptions struct {
+	ID          *uint64
+	FileID      *uint64
+	Status      *FlowFileDownloadJobStatus
+	Statuses    []FlowFileDownloadJobStatus
+	RetryBefore int64 // 下次重试时间早于此值
+	Limit       int
+	Offset      int
+}
+
+// FlowFileDownloadJobUpdateParams FlowFileDownloadJob 更新参数
+type FlowFileDownloadJobUpdateParams struct {
+	Status       *FlowFileDownloadJobStatus
+	RetryCount   *int
+	NextRetryAt  *int64
+	ErrorCode    *string
+	ErrorMessage *string
+	StartedAt    *int64
+	FinishedAt   *int64
+}
+
+// ============================================================
+// FlowTaskResume - Dataflow 阻塞任务恢复表
+// ============================================================
+
+// FlowTaskResume 提供服务内部可持久化的 task_instance 恢复机制
+type FlowTaskResume struct {
+	ID              uint64 `gorm:"column:f_id;primaryKey;type:bigint unsigned;not null" json:"id"`
+	TaskInstanceID  string `gorm:"column:f_task_instance_id;type:varchar(64);not null;default:''" json:"task_instance_id"` // 被阻塞的任务实例ID
+	DagInstanceID   string `gorm:"column:f_dag_instance_id;type:varchar(64);not null;default:''" json:"dag_instance_id"`   // 所属流程实例ID
+	ResourceType    string `gorm:"column:f_resource_type;type:varchar(32);not null;default:'file'" json:"resource_type"`  // 资源类型
+	ResourceID      uint64 `gorm:"column:f_resource_id;type:bigint unsigned;not null;default:0" json:"resource_id"`       // 资源ID，对文件场景即flow_file ID
+	CreatedAt       int64  `gorm:"column:f_created_at;type:bigint;not null;default:0" json:"created_at"`
+	UpdatedAt       int64  `gorm:"column:f_updated_at;type:bigint;not null;default:0" json:"updated_at"`
+}
+
+// FlowTaskResumeQueryOptions FlowTaskResume 查询选项
+type FlowTaskResumeQueryOptions struct {
+	ID             *uint64
+	TaskInstanceID string
+	DagInstanceID  string
+	ResourceType   string
+	ResourceID     *uint64
+	Limit          int
+	Offset         int
 }

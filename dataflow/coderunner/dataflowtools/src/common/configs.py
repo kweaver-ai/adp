@@ -5,11 +5,11 @@ import tempfile
 
 db_configs = {
     "type": os.getenv("DB_TYPE", "MariaDB"),
-    "name": os.getenv("DB_NAME", "adp"), 
-    "host": os.getenv("DB_HOST", "mariadb-mariadb-master.resource"), 
-    "port": os.getenv("DB_PORT", "3330"), 
-    "user": os.getenv("DB_USER", "anyshare"), 
-    "password": os.getenv("DB_PASSWORD", "xxxxxxx"), 
+    "name": os.getenv("DB_NAME", "adp"),
+    "host": os.getenv("DB_HOST", "mariadb-mariadb-master.resource"),
+    "port": os.getenv("DB_PORT", "3330"),
+    "user": os.getenv("DB_USER", "anyshare"),
+    "password": os.getenv("DB_PASSWORD", "xxxxxxx"),
     "charset": os.getenv("DB_CHARSET", "utf8mb4")
 }
 
@@ -64,6 +64,9 @@ redis_configs = {
     "redis_sentinel_password": os.getenv("REDIS_SENTINEL_PASSWORD", "xxxxxx"),
     "redis_master_name": os.getenv("REDIS_MASTER_GROUPNAME", "mymaster"),
 }
+
+def is_auth_enable():
+    return os.getenv("AUTH_ENABLED", "false").lower() == "true"
 
 # RedisMode Redis 连接模式
 class RedisMode(Enum):

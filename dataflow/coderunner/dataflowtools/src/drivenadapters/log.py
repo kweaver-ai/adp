@@ -60,14 +60,14 @@ class BuildAuditLogParams:
         self.log_level = log_level
 
 class Log(BaseLog):
-     
+
     NcTDocOperType_NCT_DOT_AUTOMATION = 28
     NcTLogLevel_NCT_LL_INFO = 1
     NcTLogLevel_NCT_LL_WARN = 2
     ClientTypeUnknown = "unknown"
 
     @classmethod
-    def build_audit_log(cls, params: BuildAuditLogParams):
+    async def build_audit_log(cls, params: BuildAuditLogParams):
         audit_log = AuditLog(
             user_id=params.user_info.user_id,
             user_name=params.user_info.user_name,
@@ -86,12 +86,12 @@ class Log(BaseLog):
         if params.user_info.parent_deps:
             audit_log.dept_paths = cls.parse_depts(params.user_info.parent_deps)
         else:
-            user_info = UserManagement().get_user_info(params.user_info.user_id)
+            user_info = await UserManagement().get_user_info(params.user_info.user_id)
             if not user_info:
                 audit_log.dept_paths = "未分配组"
                 return audit_log
             audit_log.dept_paths = cls.parse_depts(user_info[0].parent_deps)
-    
+
         return audit_log
 
     @classmethod
@@ -100,7 +100,7 @@ class Log(BaseLog):
         topic = None
 
         if isinstance(params, BuildAuditLogParams):
-            log_data = cls.build_audit_log(params)
+            log_data = await cls.build_audit_log(params)
             topic = TopicAuditLog
 
         if log_data:

@@ -7,7 +7,7 @@ metadata:
 data:
   cronsvr.yaml: |
     LC_ALL: {{ .Values.ecronManagement.service.language }}
-    
+
     #配置文件路径/sysvol/conf/cronsvr.yaml
     lang: {{ .Values.ecronManagement.service.language }} #系统语言
     webhook: {{ .Values.ecronManagement.service.webhook }} #任务结果监听地址
@@ -48,6 +48,7 @@ data:
     oauth_admin_addr: {{ .Values.depServices.hydra.administrativeHost }}
     oauth_admin_port: {{ .Values.depServices.hydra.administrativePort }}
     oauth_admin_protocol: {{ .Values.depServices.hydra.administrativeProtocol }}
+    auth_enabled: {{ .Values.auth.enabled | quote }}
 
   mq_config.yaml: |
     {{- toYaml .Values.depServices.mq | nindent 4 }}

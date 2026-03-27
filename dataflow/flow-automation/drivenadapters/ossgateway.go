@@ -52,6 +52,14 @@ type (
 		OSSID   string `json:"id,omitempty"`
 		Name    string `json:"name,omitempty"`
 	}
+
+	// UploadRequest 上传请求信息，用于先触发后上传场景
+	UploadRequest struct {
+		Method  string            `json:"method,omitempty"`  // HTTP 方法，如 PUT
+		URL     string            `json:"url,omitempty"`     // 上传目标 URL
+		Headers map[string]string `json:"headers,omitempty"` // 请求头
+		Expires int64             `json:"expires,omitempty"` // 过期时间（秒）
+	}
 )
 
 type OssOpt struct {
@@ -69,6 +77,9 @@ type OssGateWay interface {
 	GetDownloadURL(ctx context.Context, ossID, key string, expires int64, internalRequest bool, opts ...OssOpt) (string, error)
 	GetObjectMeta(ctx context.Context, ossID, key string, internalRequest bool, opts ...OssOpt) (int64, error)
 	NewReader(ossID string, ossKey string, opts ...OssOpt) *Reader
+	// GetUploadReq 获取上传请求信息，用于先触发后上传场景
+	// 返回可供前端直接上传的目标信息（method, url, headers）
+	GetUploadReq(ctx context.Context, ossID, key string, expires int64, internalRequest bool) (*UploadRequest, error)
 }
 
 type ossGatetway struct {
@@ -86,13 +97,16 @@ func NewOssGateWay() OssGateWay {
 	OgOnce.Do(func() {
 		config := common.NewConfig()
 
-		if config.Server.Edition == common.EditionCommunity {
+		switch config.Server.StorageBackend {
+		case common.StorageBackendS3:
 			og = NewOssGatewayS3()
-		} else {
+		case common.StorageBackendOssGateway:
 			og = &ossGatetway{
-				address: fmt.Sprintf("http://%s:%v", config.OssGateWay.PrivateHost, config.OssGateWay.PrivatePort),
+				address: fmt.Sprintf("http://%s:%s", config.OssGateWay.PrivateHost, config.OssGateWay.PrivatePort),
 				client:  NewOtelHTTPClient(),
 			}
+		default: // StorageBackendOssGatewayBackend 或空（默认）
+			og = NewOssGatewayBackend()
 		}
 	})
 	return og
@@ -529,6 +543,36 @@ func (og *ossGatetway) DeleteFile(ctx context.Context, ossID, key string, intern
 	}
 
 	return nil
+}
+
+// GetUploadReq 获取上传请求信息，用于先触发后上传场景
+func (og *ossGatetway) GetUploadReq(ctx context.Context, ossID, key string, expires int64, internalRequest bool) (*UploadRequest, error) {
+	target := fmt.Sprintf("%s/api/ossgateway/v1/upload/%s/%s?request_method=PUT&internal_request=%t", og.address, ossID, key, internalRequest)
+	if expires > 0 {
+		target += fmt.Sprintf("&Expires=%d", expires)
+	}
+
+	requestBody := &RequestBody{}
+	_, respParam, err := og.client.Get(ctx, target, nil)
+	if err != nil {
+		traceLog.WithContext(ctx).Warnf("[GetUploadReq] get upload request failed, detail: %s %s", target, err.Error())
+		return nil, err
+	}
+
+	utils.ParseInterface(respParam, &requestBody)
+
+	if requestBody.URL == "" {
+		err := fmt.Errorf("invalid response from OSS gateway: missing URL")
+		traceLog.WithContext(ctx).Warnf("[GetUploadReq] %s", err.Error())
+		return nil, err
+	}
+
+	return &UploadRequest{
+		Method:  requestBody.Method,
+		URL:     requestBody.URL,
+		Headers: requestBody.Headers,
+		Expires: expires,
+	}, nil
 }
 
 func (og *ossGatetway) NewReader(ossID string, ossKey string, opts ...OssOpt) *Reader {

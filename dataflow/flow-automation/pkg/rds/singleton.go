@@ -31,6 +31,18 @@ var (
 
 	taskCache     TaskCache
 	taskCacheOnce sync.Once
+
+	flowStorageDao     FlowStorageDao
+	flowStorageDaoOnce sync.Once
+
+	flowFileDao     FlowFileDao
+	flowFileDaoOnce sync.Once
+
+	flowFileDownloadJobDao     FlowFileDownloadJobDao
+	flowFileDownloadJobDaoOnce sync.Once
+
+	flowTaskResumeDao     FlowTaskResumeDao
+	flowTaskResumeDaoOnce sync.Once
 )
 
 func SetConfDao(dao ConfDao) {
@@ -103,4 +115,36 @@ func GetExecutorDao() ExecutorDao {
 
 func GetTaskCache() TaskCache {
 	return taskCache
+}
+
+func SetFlowStorageDao(dao FlowStorageDao) {
+	flowStorageDao = dao
+}
+
+func SetFlowFileDao(dao FlowFileDao) {
+	flowFileDao = dao
+}
+
+func SetFlowFileDownloadJobDao(dao FlowFileDownloadJobDao) {
+	flowFileDownloadJobDao = dao
+}
+
+func SetFlowTaskResumeDao(dao FlowTaskResumeDao) {
+	flowTaskResumeDao = dao
+}
+
+func GetFlowStorageDao() FlowStorageDao {
+	return flowStorageDao
+}
+
+func GetFlowFileDao() FlowFileDao {
+	return flowFileDao
+}
+
+func GetFlowFileDownloadJobDao() FlowFileDownloadJobDao {
+	return flowFileDownloadJobDao
+}
+
+func GetFlowTaskResumeDao() FlowTaskResumeDao {
+	return flowTaskResumeDao
 }

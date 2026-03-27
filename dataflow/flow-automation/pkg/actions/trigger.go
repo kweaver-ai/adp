@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/common"
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/drivenadapters"
@@ -11,6 +12,8 @@ import (
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/libs/go/telemetry/trace"
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/pkg/entity"
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/pkg/log"
+	"github.com/kweaver-ai/adp/autoflow/flow-automation/pkg/rds"
+	"github.com/kweaver-ai/adp/autoflow/flow-automation/store"
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/utils"
 )
 
@@ -265,7 +268,7 @@ func triggerManual(ctx entity.ExecuteContext, params interface{}, token *entity.
 		tagID := idStr
 		data["id"] = tagID
 		data["_type"] = "tag"
-		tagInfos, err := ecotagAdapter.GetTags(ctx.Context(), map[string][]string{"id": []string{tagID}})
+		tagInfos, err := ecotagAdapter.GetTags(ctx.Context(), map[string][]string{"id": {tagID}})
 		if err == nil && len(tagInfos) > 0 {
 			tagInfo := tagInfos[0]
 			data["id"] = tagInfo.ID
@@ -274,7 +277,7 @@ func triggerManual(ctx entity.ExecuteContext, params interface{}, token *entity.
 			data["name"] = tagInfo.Name
 			if strings.Contains(tagInfo.Path, "/") {
 				parentPath := strings.TrimSuffix(tagInfo.Path, "/"+tagInfo.Name)
-				parentTagInfos, err := ecotagAdapter.GetTags(ctx.Context(), map[string][]string{"path": []string{parentPath}})
+				parentTagInfos, err := ecotagAdapter.GetTags(ctx.Context(), map[string][]string{"path": {parentPath}})
 				if err != nil {
 					traceLog.WithContext(ctx.Context()).Warnln(err)
 					return data, nil
@@ -1819,7 +1822,155 @@ func (a *DataFlowDocTrigger) Run(ctx entity.ExecuteContext, params interface{}, 
 		return data, nil
 	}
 
+	// 检查是否为 Dataflow 文件子系统触发 (source_from 为 local、remote、form)
+	if sourceFrom, ok := ctx.GetVar("source_from"); ok {
+		if sourceFromStr, ok := sourceFrom.(string); ok && (sourceFromStr == "local" || sourceFromStr == "remote" || sourceFromStr == "form") {
+			return a.runDataflowFileTrigger(ctx, params, token)
+		}
+	}
+
 	return triggerManual(ctx, params, token, a.Name())
+}
+
+// runDataflowFileTrigger 处理 Dataflow 文件子系统触发
+func (a *DataFlowDocTrigger) runDataflowFileTrigger(ctx entity.ExecuteContext, params interface{}, token *entity.Token) (interface{}, error) {
+	var err error
+	newCtx, span := trace.StartInternalSpan(ctx.Context())
+	defer func() { trace.TelemetrySpanEnd(span, err) }()
+	ctx.SetContext(newCtx)
+
+	log := traceLog.WithContext(ctx.Context())
+	ctx.Trace(ctx.Context(), "run start", entity.TraceOpPersistAfterAction)
+
+	var data = make(map[string]interface{})
+	data["_type"] = "file"
+	data["source_type"] = "doc"
+
+	defer func() {
+		patchDagInstanceSource(ctx, data, a.Name())
+	}()
+
+	// 从上下文变量中获取文件信息
+	id, _ := ctx.GetVar("id")
+	userid, _ := ctx.GetVar("userid")
+	operatorID, _ := ctx.GetVar("operator_id")
+	operatorName, _ := ctx.GetVar("operator_name")
+	operatorType, _ := ctx.GetVar("operator_type")
+	downloadURL, _ := ctx.GetVar("download_url")
+
+	if idStr, ok := id.(string); ok && idStr != "" {
+		data["id"] = idStr
+		data["docid"] = idStr
+		data["doc_id"] = idStr
+	}
+	if useridStr, ok := userid.(string); ok && useridStr != "" {
+		data["userid"] = useridStr
+	}
+	if operatorIDStr, ok := operatorID.(string); ok && operatorIDStr != "" {
+		data["operator_id"] = operatorIDStr
+	}
+	if operatorNameStr, ok := operatorName.(string); ok && operatorNameStr != "" {
+		data["operator_name"] = operatorNameStr
+	}
+	if operatorTypeStr, ok := operatorType.(string); ok && operatorTypeStr != "" {
+		data["operator_type"] = operatorTypeStr
+	}
+	if downloadURLStr, ok := downloadURL.(string); ok && downloadURLStr != "" {
+		data["download_url"] = downloadURLStr
+	}
+
+	// 检查文件状态，决定是否需要阻塞
+	taskIns := ctx.GetTaskInstance()
+	fileIDStr, _ := id.(string)
+	if fileIDStr != "" && common.IsDFSURI(fileIDStr) {
+		fileID, parseErr := common.ParseDFSURI(fileIDStr)
+		if parseErr == nil {
+			// 查询文件状态
+			flowFile, queryErr := rds.GetFlowFileDao().GetByID(ctx.Context(), fileID)
+			if queryErr == nil && flowFile != nil {
+				// 添加文件名
+				if flowFile.Name != "" {
+					data["name"] = flowFile.Name
+				}
+
+				if flowFile.Status == rds.FlowFileStatusPending {
+					// 文件未就绪，需要阻塞等待
+					log.Infof("[DataFlowDocTrigger] File %d is pending, creating task_resume record", fileID)
+
+					// 创建 task_resume 记录
+					now := time.Now().Unix()
+					taskResume := &rds.FlowTaskResume{
+						ID:             store.NextID(),
+						TaskInstanceID: taskIns.ID,
+						DagInstanceID:  taskIns.RelatedDagInstance.ID,
+						ResourceType:   "file",
+						ResourceID:     fileID,
+						CreatedAt:      now,
+						UpdatedAt:      now,
+					}
+
+					if insertErr := rds.GetFlowTaskResumeDao().Insert(ctx.Context(), taskResume); insertErr != nil {
+						log.Warnf("[DataFlowDocTrigger] Insert task_resume err: %s", insertErr.Error())
+					}
+
+					// 设置状态为 Blocked
+					statusKey := fmt.Sprintf("__status_%s", taskIns.ID)
+					ctx.ShareData().Set(statusKey, entity.TaskInstanceStatusBlocked)
+
+					// 设置文件状态信息，供后续恢复使用
+					data["status"] = "pending"
+				} else if flowFile.Status == rds.FlowFileStatusReady {
+					// 文件已就绪
+					data["status"] = "ready"
+
+					// 如果有 storage 信息，补充相关字段
+					if flowFile.StorageID > 0 {
+						storage, storageErr := rds.GetFlowStorageDao().GetByID(ctx.Context(), flowFile.StorageID)
+						if storageErr == nil && storage != nil {
+							data["size"] = storage.Size
+							if storage.ContentType != "" {
+								data["content_type"] = storage.ContentType
+							}
+							if storage.Etag != "" {
+								data["etag"] = storage.Etag
+								data["md5"] = storage.Etag
+							}
+						}
+					}
+				} else if flowFile.Status == rds.FlowFileStatusInvalid {
+					// 文件无效
+					data["status"] = "invalid"
+				}
+			}
+		}
+	}
+
+	// 将数据存储到共享数据中
+	datasourceid, ok := ctx.GetVar("datasourceid")
+	if ok {
+		dsid, dsidOk := datasourceid.(string)
+		if dsidOk {
+			ctx.ShareData().Set(dsid, data)
+		}
+	} else {
+		tid := ctx.GetTaskID()
+		ctx.ShareData().Set(tid, data)
+	}
+
+	ctx.Trace(ctx.Context(), "run end")
+	return data, nil
+}
+
+// RunAfter 执行后检查，决定是否阻塞
+func (a *DataFlowDocTrigger) RunAfter(ctx entity.ExecuteContext, _ interface{}) (entity.TaskInstanceStatus, error) {
+	taskIns := ctx.GetTaskInstance()
+	statusKey := fmt.Sprintf("__status_%s", taskIns.ID)
+	status, ok := ctx.ShareData().Get(statusKey)
+	if ok && status == entity.TaskInstanceStatusBlocked {
+		return entity.TaskInstanceStatusBlocked, nil
+	}
+
+	return entity.TaskInstanceStatusSuccess, nil
 }
 
 // ParameterNew new parameter

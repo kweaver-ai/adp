@@ -68,7 +68,6 @@ func (a *LLMChatCompletion) Run(ctx entity.ExecuteContext, input interface{}, to
 
 	params := input.(*LLMChatCompletion)
 	ad := drivenadapters.NewAnyData()
-	efast := drivenadapters.NewEfast()
 
 	messages := []*drivenadapters.ChatMessage{}
 
@@ -98,12 +97,12 @@ func (a *LLMChatCompletion) Run(ctx entity.ExecuteContext, input interface{}, to
 				if item.DocID == "" {
 					continue
 				}
-				downInfo, err := efast.InnerOSDownload(ctx.Context(), item.DocID, item.Version)
+				downloadInfo, err := GetFileDownloadInfo(ctx.Context(), ctx, item.DocID, item.Version)
 				if err != nil {
-					log.Warnf("[LLMChatCompletion] download attachment err %s, docid %s, version %s", err.Error(), item.DocID, item.Version)
+					log.Warnf("[LLMChatCompletion] get file download info err %s, docid %s, version %s", err.Error(), item.DocID, item.Version)
 					return nil, err
 				}
-				url, err = ToDataURL(downInfo.URL, downInfo.Name)
+				url, err = ToDataURL(downloadInfo.URL, downloadInfo.Filename)
 				if err != nil {
 					log.Warnf("[LLMChatCompletion] convert attachment to data url err %s, docid %s, version", err.Error(), item.DocID, item.Version)
 					return nil, err
