@@ -1,7 +1,7 @@
 {
     "conponentDefineType": "helm/service",
     "name": "bkn-backend",
-    "version": "0.4.0",
+    "version": "0.5.0",
     "configSchema": {
         "title": "bkn-backend",
         "description": "组件配置定义",
