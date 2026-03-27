@@ -1,3 +1,10 @@
+-- Copyright The kweaver.ai Authors.
+--
+-- Licensed under the Apache License, Version 2.0.
+-- See the LICENSE file in the project root for details.
+
+USE adp;
+
 INSERT INTO t_connector_type (f_type, f_name, f_description, f_mode, f_category, f_field_config, f_enabled)
 SELECT 'postgresql', 'postgresql', 'PostgreSQL 关系型数据库连接器', 'local', 'table',
        '{
@@ -9,5 +16,5 @@ SELECT 'postgresql', 'postgresql', 'PostgreSQL 关系型数据库连接器', 'lo
            "schemas":   {"name":"Schema 列表","type":"array","description":"可选；为空则扫描当前库下除系统 schema 外的用户 schema；非空则仅扫描列出的 schema","required":false,"encrypted":false},
            "options":   {"name":"连接参数","type":"object","description":"连接参数（如 sslmode、connect_timeout 等）","required":false,"encrypted":false}
        }',
-       1
+       TRUE
 FROM DUAL WHERE NOT EXISTS ( SELECT f_type FROM t_connector_type WHERE f_type = 'postgresql' );

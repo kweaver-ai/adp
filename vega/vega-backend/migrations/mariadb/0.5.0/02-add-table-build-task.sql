@@ -1,3 +1,10 @@
+-- Copyright The kweaver.ai Authors.
+--
+-- Licensed under the Apache License, Version 2.0.
+-- See the LICENSE file in the project root for details.
+
+USE adp;
+
 CREATE TABLE IF NOT EXISTS t_build_task (
     -- 主键与关联信息
     f_id                      VARCHAR(40) NOT NULL COMMENT '任务ID',
