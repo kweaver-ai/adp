@@ -380,7 +380,7 @@ CREATE TABLE IF NOT EXISTS "t_skill_repository" (
     "f_delete_user" VARCHAR(50 CHAR) NOT NULL DEFAULT '',
     "f_delete_time" BIGINT NOT NULL DEFAULT 0,
     "f_category" VARCHAR(50 CHAR) DEFAULT '' COMMENT '工具箱分类, 数据处理/算法模型',
-    "f_is_deleted" BOOLEAN DEFAULT 0 COMMENT '是否删除', -- 0: 未删除, 1: 待删除
+    "f_is_deleted" TINYINT DEFAULT 0 COMMENT '是否删除', -- 0: 未删除, 1: 待删除
     CLUSTER PRIMARY KEY ("f_id")
 );
 
