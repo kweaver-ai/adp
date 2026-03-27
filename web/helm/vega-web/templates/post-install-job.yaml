@@ -51,8 +51,8 @@ spec:
                   "parent": "ontology",
                   "orderIndex": 1,
                   "app": {
-                    "textZHCN": "业务知识网络",
-                    "textZHTW": "业务知识网络",
+                    "textZHCN": "领域业务知识网络",
+                    "textZHTW": "領域業務知識網絡",
                     "textENUS": "BKN",
                     "pathname": "/vega/ontology",
                     "icon": "//ip:port/kn-manage/side.svg"

@@ -1,15 +1,9 @@
 import { useEffect, useState } from 'react';
 import intl from 'react-intl-universal';
 import { useHistory } from 'react-router-dom';
-import { EllipsisOutlined } from '@ant-design/icons';
-import { Dropdown, Empty, message } from 'antd';
-import { SorterResult } from 'antd/es/table/interface';
-import { TableProps } from 'antd/lib/table';
-import dayjs from 'dayjs';
+import { Empty, Pagination, Spin, message, type MenuProps } from 'antd';
 import ContainerIsVisible, { getTypePermissionOperation, matchPermission, PERMISSION_CODES } from '@/components/ContainerIsVisible';
 import { showDeleteConfirm } from '@/components/DeleteConfirm';
-import ObjectIcon from '@/components/ObjectIcon';
-import Tags from '@/components/Tags';
 import downFile from '@/utils/down-file';
 import api from '@/services/knowledgeNetwork';
 import * as KnowledgeNetworkType from '@/services/knowledgeNetwork/type';
@@ -17,49 +11,63 @@ import { baseConfig } from '@/services/request';
 import createImage from '@/assets/images/common/create.svg';
 import emptyImage from '@/assets/images/common/empty.png';
 import noSearchResultImage from '@/assets/images/common/no_search_result.svg';
-import ENUMS from '@/enums';
 import HOOKS from '@/hooks';
 import { Table, Button, Select, Title } from '@/web-library/common';
 import CreateAndEditForm from './CreateAndEditForm';
 import styles from './index.module.less';
+import KnowledgeNetWorkCard from './KnowledgeNetWorkCard';
 import ImportCom from './Operation/import';
 
+type TableQueryState = Partial<KnowledgeNetworkType.GetNetworkListParams & { page: number }>;
+
+type OperationMenuItem = Required<MenuProps>['items'][number];
+
 const KnowledgeNetwork = () => {
+  const DEFAULT_PAGE_SIZE = 20;
   const history = useHistory();
   const { modal } = HOOKS.useGlobalContext();
-  const { pageState, pagination, onUpdateState } = HOOKS.usePageStateNew(); // 分页信息
-  const [selectedRowKeys, setSelectedRowKeys] = useState<string[]>([]);
-  const [selectedRows, setSelectedRows] = useState<KnowledgeNetworkType.KnowledgeNetwork[]>([]);
+  const { pageState, pagination, onUpdateState } = HOOKS.usePageStateNew({ limit: DEFAULT_PAGE_SIZE }); // 分页信息
   const [tableData, setTableData] = useState<KnowledgeNetworkType.KnowledgeNetwork[]>([]);
+  const [selectedRowKeys, setSelectedRowKeys] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [filterValues, setFilterValues] = useState<Pick<KnowledgeNetworkType.GetNetworkListParams, 'name_pattern' | 'tag'>>({ name_pattern: '', tag: 'all' }); // 筛选条件
   const [checkId, setCheckId] = useState<string>();
   const [open, setOpen] = useState<boolean>(false);
   const { page, limit, direction, sort } = pageState || {};
+  const currentPage = page || 1;
+  const currentLimit = limit || DEFAULT_PAGE_SIZE;
   const { name_pattern, tag } = filterValues || {};
+  const currentSort = (sort as KnowledgeNetworkType.GetNetworkListParams['sort']) || 'update_time';
+  const currentDirection = (direction as KnowledgeNetworkType.GetNetworkListParams['direction']) || 'desc';
 
   // 使用全局 Hook 获取国际化常量
   const { KN_MENU_SORT_ITEMS } = HOOKS.useConstants();
 
   /** 获取列表数据 */
-  const getTableData = async (val?: any): Promise<void> => {
-    const postData = { offset: val?.page ? limit * (val?.page - 1) : limit * (page - 1), limit, direction, sort, name_pattern, tag, ...val };
+  const getTableData = async (val?: TableQueryState): Promise<void> => {
+    const nextPage = val?.page || currentPage;
+    const nextLimit = val?.limit || currentLimit;
+    const postData = {
+      limit: nextLimit,
+      direction: currentDirection,
+      sort: currentSort,
+      name_pattern,
+      tag,
+      offset: typeof val?.offset === 'number' ? val.offset : nextLimit * (nextPage - 1),
+      ...val,
+    };
     if (!postData.tag || postData.tag === 'all') delete postData.tag;
-    const curPage = val?.page || page;
     if (val?.page) delete postData.page;
     setIsLoading(true);
-    // 根据指标模型名称排序，向后端传参为 model_name
     try {
       const res = await api.getNetworkList(postData);
       if (!res) return;
       const { total_count, entries } = res;
 
-      onUpdateState({ ...postData, page: curPage, count: total_count });
+      onUpdateState({ ...postData, page: nextPage, count: total_count });
       setTableData(entries);
-
-      setIsLoading(false);
       setSelectedRowKeys([]);
-      setSelectedRows([]);
+      setIsLoading(false);
     } catch (error) {
       setIsLoading(false);
       console.log('error', error);
@@ -68,7 +76,12 @@ const KnowledgeNetwork = () => {
 
   useEffect(() => {
     baseConfig?.toggleSideBarShow(true);
-    getTableData();
+
+    const timer = window.setTimeout(() => {
+      getTableData();
+    }, 0);
+
+    return () => window.clearTimeout(timer);
   }, []);
 
   /** 筛选条件变更 */
@@ -77,27 +90,18 @@ const KnowledgeNetwork = () => {
     setFilterValues(values);
   };
 
-  /** table Change */
-  const handleTableChange: TableProps['onChange'] = async (pagination, _filters, sorter): Promise<void> => {
-    const { field, order } = sorter as SorterResult;
-    const { current, pageSize } = pagination;
-    const stateOrder = ENUMS.SORT_ENUM[order as keyof typeof ENUMS.SORT_ENUM] || 'desc';
-    const state = { page: current, limit: pageSize, sort: (field as string) || 'update_time', direction: stateOrder };
-    onUpdateState(state);
-    getTableData(state);
-  };
-
   const onCancel = () => {
     setCheckId(undefined);
     setOpen(false);
   };
 
   const changeDel = (row?: KnowledgeNetworkType.KnowledgeNetwork) => {
-    const content = row ? intl.get('Global.deleteConfirm', { name: row.name }) : intl.get('Global.deleteConfirmMultiple', { count: selectedRows.length });
+    const ids = row ? [row.id] : selectedRowKeys;
+    const content = row ? intl.get('Global.deleteConfirm', { name: row.name }) : intl.get('Global.deleteConfirmMultiple', { count: ids.length });
     showDeleteConfirm(modal, {
       content,
       async onOk() {
-        await api.deleteNetwork(row ? [row.id] : selectedRowKeys);
+        await api.deleteNetwork(ids);
         message.success(intl.get('Global.deleteSuccess'));
         getTableData({ offset: 0 });
       },
@@ -124,149 +128,77 @@ const KnowledgeNetwork = () => {
     if (key === 'delete') changeDel(record);
   };
 
-  const columns: any = [
-    {
-      title: intl.get('Global.name'),
-      dataIndex: 'name',
-      fixed: 'left',
-      sorter: true,
-      width: 350,
-      __fixed: true,
-      __selected: true,
-      render: (value: string, record: KnowledgeNetworkType.KnowledgeNetwork) => (
-        <div className="g-flex-align-center" style={{ lineHeight: '22px' }} title={value}>
-          {record.icon && <ObjectIcon icon={record.icon} color={record.color} size={32} iconSize={20} />}
-          <div style={{ flex: 1, marginLeft: 8 }}>
-            <a style={{ fontSize: 14, color: '#000' }} onClick={() => onOperate('view', record)}>
-              {record.name}
-            </a>
-            <p className="g-ellipsis-1" style={{ fontSize: 12, opacity: 0.45 }} title={record.comment}>
-              {record.comment || intl.get('Global.noComment')}
-            </p>
-          </div>
-        </div>
-      ),
-    },
-    {
-      title: intl.get('Global.operation'),
-      dataIndex: 'operation',
-      fixed: 'left',
-      width: 80,
-      __fixed: true,
-      __selected: true,
-      render: (_value: any, record: any) => {
-        const allOperations = [
-          { key: 'view', label: intl.get('Global.view'), visible: matchPermission(PERMISSION_CODES.VIEW, record.operations) },
-          { key: 'edit', label: intl.get('Global.edit'), visible: matchPermission(PERMISSION_CODES.MODIFY, record.operations) },
-          { key: 'export', label: intl.get('Global.export'), visible: matchPermission(PERMISSION_CODES.EXPORT, record.operations) },
-          { key: 'delete', label: intl.get('Global.delete'), visible: matchPermission(PERMISSION_CODES.DELETE, record.operations) },
-        ];
-        const dropdownMenu: any = allOperations.filter((val) => val.visible).map(({ key, label }: any) => ({ key, label }));
-        return (
-          <Dropdown
-            trigger={['click']}
-            menu={{
-              items: dropdownMenu,
-              onClick: (event: any) => {
-                event.domEvent.stopPropagation();
-                onOperate(event?.key, record);
-              },
-            }}
-          >
-            <Button.Icon icon={<EllipsisOutlined style={{ fontSize: 20 }} />} onClick={(event) => event.stopPropagation()} />
-          </Dropdown>
-        );
-      },
-    },
-    {
-      title: intl.get('Global.tag'),
-      dataIndex: 'tags',
-      width: 150,
-      __selected: true,
-      render: (value: string[]) => <Tags value={value} />,
-    },
-    {
-      title: intl.get('Global.modifier'),
-      dataIndex: 'updater',
-      width: 150,
-      __selected: true,
-      render: (value: any, record: any) => record?.updater?.name || '--',
-    },
-    {
-      title: intl.get('Global.updateTime'),
-      dataIndex: 'update_time',
-      width: 200,
-      __selected: true,
-      render: (value: string) => (value ? dayjs(value).format('YYYY/MM/DD HH:mm:ss') : '--'),
-    },
-  ];
+  const getDropdownItems = (record: KnowledgeNetworkType.KnowledgeNetwork): OperationMenuItem[] =>
+    [
+      { key: 'view', label: intl.get('Global.view'), visible: matchPermission(PERMISSION_CODES.VIEW, record.operations) },
+      { key: 'edit', label: intl.get('Global.edit'), visible: matchPermission(PERMISSION_CODES.MODIFY, record.operations) },
+      { key: 'export', label: intl.get('Global.export'), visible: matchPermission(PERMISSION_CODES.EXPORT, record.operations) },
+      { key: 'delete', label: intl.get('Global.delete'), visible: matchPermission(PERMISSION_CODES.DELETE, record.operations) },
+    ]
+      .filter((item) => item.visible)
+      .map(({ key, label }) => ({ key, label }));
 
-  const rowSelection = {
-    selectedRowKeys,
-    onChange: (selectedRowKeys: any, selectedRows: any): void => {
-      setSelectedRowKeys(selectedRowKeys);
-      setSelectedRows(selectedRows);
-    },
-    onSelectAll: (selected: any): void => {
-      const newSelectedRowKeys = selected ? tableData.map((item) => item.id) : [];
-      const newSelectedRows = selected ? tableData : [];
-
-      setSelectedRowKeys(newSelectedRowKeys);
-      setSelectedRows(newSelectedRows);
-    },
-    getCheckboxProps: (row: any): Record<string, any> => ({
-      disabled: row.builtin,
-    }),
+  const onCheckChange = (record: KnowledgeNetworkType.KnowledgeNetwork, checked: boolean) => {
+    setSelectedRowKeys((prev) => {
+      if (checked) return [...new Set([...prev, record.id])];
+      return prev.filter((id) => id !== record.id);
+    });
   };
 
   /** 排序 */
   const handleSortChange = (val: { key: string }) => {
     const state = {
-      sort: val.key,
-      direction: val.key !== sort ? 'desc' : direction === 'desc' ? 'asc' : 'desc',
+      sort: val.key as KnowledgeNetworkType.GetNetworkListParams['sort'],
+      direction: (val.key !== currentSort ? 'desc' : currentDirection === 'desc' ? 'asc' : 'desc') as KnowledgeNetworkType.GetNetworkListParams['direction'],
     };
     getTableData(state);
   };
+
+  const handlePageChange = (current: number, pageSize: number) => {
+    const nextPage = pageSize !== currentLimit ? 1 : current;
+    const state = {
+      page: nextPage,
+      limit: pageSize,
+      offset: pageSize * (nextPage - 1),
+    };
+    onUpdateState(state);
+    getTableData(state);
+  };
+
+  const emptyContent = (() => {
+    if (filterValues.name_pattern || filterValues.tag !== 'all') {
+      return <Empty image={noSearchResultImage} description={intl.get('Global.emptyNoSearchResult')} />;
+    }
+
+    if (matchPermission(PERMISSION_CODES.CREATE, getTypePermissionOperation('knowledge_network'))) {
+      return (
+        <Empty
+          image={createImage}
+          description={
+            <span>
+              {intl.get('Global.click')}
+              <Button type="link" style={{ padding: 0 }} onClick={() => setOpen(true)}>
+                {intl.get('Global.createBtn')}
+              </Button>
+              {intl.get('Global.add')}
+            </span>
+          }
+        />
+      );
+    }
+
+    return <Empty image={emptyImage} description={intl.get('KnowledgeNetwork.emptyDescription')} />;
+  })();
 
   return (
     <div className={styles['box']}>
       <div id="userCom"></div>
       <Title>{intl.get('KnowledgeNetwork.businessKnowledgeNetwork')}</Title>
-      <div style={{ height: 'calc(100% - 30px)' }}>
-        <Table.PageTable
-          name="knowledgeNetwork"
-          rowKey="id"
-          columns={columns}
-          loading={isLoading}
-          dataSource={tableData}
-          // rowSelection={rowSelection}
-          pagination={pagination}
-          onChange={handleTableChange}
-          locale={{
-            emptyText:
-              filterValues.name_pattern || filterValues.tag !== 'all' ? (
-                <Empty image={noSearchResultImage} description={intl.get('Global.emptyNoSearchResult')} />
-              ) : matchPermission(PERMISSION_CODES.CREATE, getTypePermissionOperation('knowledge_network')) ? (
-                <Empty
-                  image={createImage}
-                  description={
-                    <span>
-                      {intl.get('Global.click')}
-                      <Button type="link" style={{ padding: 0 }} onClick={() => setOpen(true)}>
-                        {intl.get('Global.createBtn')}
-                      </Button>
-                      {intl.get('Global.add')}
-                    </span>
-                  }
-                />
-              ) : (
-                <Empty image={emptyImage} description={intl.get('KnowledgeNetwork.emptyDescription')} />
-              ),
-          }}
-        >
+      <div className={styles['content']}>
+        <div className={styles['operation-bar']}>
           <Table.Operation
             nameConfig={{ key: 'name_pattern', placeholder: intl.get('Global.filterByNameOrId') }}
-            sortConfig={{ items: KN_MENU_SORT_ITEMS, order: direction, rule: sort, onChange: handleSortChange }}
+            sortConfig={{ items: KN_MENU_SORT_ITEMS, order: currentDirection, rule: currentSort, onChange: handleSortChange }}
             initialFilter={filterValues}
             onChange={onChangeTableOperation}
             onRefresh={getTableData}
@@ -285,7 +217,46 @@ const KnowledgeNetwork = () => {
               options={[{ value: 'all', label: intl.get('Global.all') }]}
             />
           </Table.Operation>
-        </Table.PageTable>
+        </div>
+
+        <Spin spinning={isLoading} wrapperClassName={styles['loading-wrapper']}>
+          <div className={styles['list-content']}>
+            {tableData.length ? (
+              <div className={styles['card-list']}>
+                {tableData.map((record) => {
+                  const dropdownItems = getDropdownItems(record);
+                  return (
+                    <KnowledgeNetWorkCard
+                      key={record.id}
+                      record={record}
+                      checked={selectedRowKeys.includes(record.id)}
+                      dropdownItems={dropdownItems}
+                      onClick={() => onOperate('view', record)}
+                      onCheckChange={onCheckChange}
+                      onOperate={onOperate}
+                    />
+                  );
+                })}
+              </div>
+            ) : (
+              <div className={styles['empty-content']}>{emptyContent}</div>
+            )}
+          </div>
+        </Spin>
+
+        {!!tableData.length && (
+          <div className={styles['pagination']}>
+            <Pagination
+              {...pagination}
+              current={pagination?.current || currentPage}
+              pageSize={pagination?.pageSize || currentLimit}
+              showSizeChanger
+              pageSizeOptions={['20', '50', '100']}
+              showTotal={(total) => intl.get('Global.total', { total })}
+              onChange={handlePageChange}
+            />
+          </div>
+        )}
         <CreateAndEditForm open={open} onCancel={onCancel} id={checkId} callBack={() => getTableData({ offset: 0 })} />
       </div>
     </div>
@@ -293,3 +264,4 @@ const KnowledgeNetwork = () => {
 };
 
 export default KnowledgeNetwork;
+export { default as KnowledgeNetWorkCard } from './KnowledgeNetWorkCard';

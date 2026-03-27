@@ -1,6 +1,6 @@
 {
   "KnowledgeNetwork": {
-    "businessKnowledgeNetwork": "业务知识网络",
+    "businessKnowledgeNetwork": "领域业务知识网络",
     "create": "新建业务知识网络",
     "overview": "概述",
     "overviewBtn": "概览",
