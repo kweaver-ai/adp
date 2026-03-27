@@ -236,10 +236,14 @@ type AppAccountInfo struct {
 func NewUserManagement() UserManagement {
 	uOnce.Do(func() {
 		config := common.NewConfig()
-		u = &userManagement{
-			adminAddress: fmt.Sprintf("http://%s:%v", config.UserManagement.PrivateHost, config.UserManagement.PrivatePort),
-			log:          commonLog.NewLogger(),
-			httpClient:   NewHTTPClient(),
+		if !config.IsAuthEnabled() {
+			u = &mockUserManagement{}
+		} else {
+			u = &userManagement{
+				adminAddress: fmt.Sprintf("http://%s:%v", config.UserManagement.PrivateHost, config.UserManagement.PrivatePort),
+				log:          commonLog.NewLogger(),
+				httpClient:   NewHTTPClient(),
+			}
 		}
 	})
 	return u

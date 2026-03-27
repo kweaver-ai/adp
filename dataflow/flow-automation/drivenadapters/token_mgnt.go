@@ -5,6 +5,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/kweaver-ai/adp/autoflow/flow-automation/common"
 	"github.com/kweaver-ai/adp/autoflow/flow-automation/errors"
 	commonLog "github.com/kweaver-ai/adp/autoflow/flow-automation/libs/go/log"
 )
@@ -21,6 +22,10 @@ type AppTokenMgnt interface {
 
 // NewAppTokenMgnt  创建 令牌管理器
 func NewAppTokenMgnt(clientID, clientSecret string, useHTTPS bool) AppTokenMgnt {
+	if !common.NewConfig().IsAuthEnabled() {
+		return &mockAppTokenMgnt{}
+	}
+
 	key := fmt.Sprintf("%s:%s", clientID, clientSecret)
 	// 先判断  防止每次 NewHydraPublicWithAddress NewLogger
 	if tokenMgntPtr, ok := tokenMgntMap.Load(key); ok {

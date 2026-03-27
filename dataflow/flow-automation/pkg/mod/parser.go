@@ -790,7 +790,7 @@ func (p *DefParser) cleanupSuccessDagInstance(ctx context.Context, tree *TaskTre
 
 // logDagInstanceCompletion 记录 DAG 实例完成日志
 func (p *DefParser) logDagInstanceCompletion(ctx context.Context, dagIns *entity.DagInstance, taskIns *entity.TaskInstance) {
-	dag, err := GetStore().GetDagWithOptionalVersion(ctx, dagIns.DagID, dagIns.VersionID)
+	dag, err := GetStore().GetDagWithOptionalVersion(context.Background(), dagIns.DagID, dagIns.VersionID)
 	if err != nil {
 		log.Warnf("[parser.logDagInstanceCompletion] GetDagWithOptionalVersion failed: %s", err.Error())
 		return

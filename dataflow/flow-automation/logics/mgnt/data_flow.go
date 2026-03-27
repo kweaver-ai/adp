@@ -619,6 +619,7 @@ func (m *mgnt) UpdateDataFlow(ctx context.Context, dagID string, param *UpdateDa
 	// 处理停止状态下的运行中任务
 	go func(stopRunningTask bool) {
 		if stopRunningTask {
+			gctx := context.Background()
 			var input = &mod.ListDagInstanceInput{
 				DagIDs: []string{dagID},
 				Status: []entity.DagInstanceStatus{
@@ -628,7 +629,7 @@ func (m *mgnt) UpdateDataFlow(ctx context.Context, dagID string, param *UpdateDa
 					entity.DagInstanceStatusBlocked,
 				},
 			}
-			dagInsList, err := m.mongo.ListDagInstance(ctx, input)
+			dagInsList, err := m.mongo.ListDagInstance(gctx, input)
 			if err != nil {
 				log.Warnf("[logic.UpdateDataFlow] ListDagInstance err, detail: %s", err.Error())
 				return
@@ -639,7 +640,7 @@ func (m *mgnt) UpdateDataFlow(ctx context.Context, dagID string, param *UpdateDa
 				_dagIns.Status = entity.DagInstanceStatusCancled
 				dagInsArr = append(dagInsArr, &_dagIns)
 			}
-			if err = m.mongo.BatchUpdateDagIns(ctx, dagInsArr); err != nil {
+			if err = m.mongo.BatchUpdateDagIns(gctx, dagInsArr); err != nil {
 				log.Warnf("[logic.UpdateDataFlow] BatchUpdateDagIns err, detail: %s", err.Error())
 			}
 		}

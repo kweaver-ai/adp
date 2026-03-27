@@ -42,6 +42,7 @@ var (
 	oauthLog     = NewLogger()
 	cacheHandler = common.NewCacheConfig()
 
+	authEnabled    = oauthConfig.Config().AuthEnabled
 	publicAddr     = oauthConfig.Config().OAuthPublicAddr
 	publicPort     = oauthConfig.Config().OAuthPublicPort
 	publicProtocol = oauthConfig.Config().OAuthPublicProtocol
@@ -53,6 +54,13 @@ var (
 // OAuth2 OPEN API
 var (
 	requestTokenPATH = "/oauth2/token"
+)
+
+const (
+	mockHydraAccessToken   = "mock-access-token"
+	mockHydraClientID      = "mock-client-id"
+	mockHydraVisitorName   = "mock-user-id"
+	mockHydraTokenDuration = time.Hour
 )
 
 // NewOAuthClient 创建授权服务客户端
@@ -67,8 +75,16 @@ func NewOAuthClient() OAuthClient {
 	return o
 }
 
+func authDisabled() bool {
+	return strings.EqualFold(strings.TrimSpace(authEnabled), "false")
+}
+
 // 该函数未被使用
 func (o *oauth) RequestToken(id string, secret string, scope []string) (token string, duration time.Duration, err error) {
+	if authDisabled() {
+		return mockHydraAccessToken, mockHydraTokenDuration, nil
+	}
+
 	if nil == o.httpClient {
 		err = errors.New(common.ErrHTTPClientUnavailable)
 		return
@@ -116,6 +132,10 @@ func (o *oauth) RequestToken(id string, secret string, scope []string) (token st
 }
 
 func (o *oauth) VerifyToken(token string) (visitor common.Visitor, ecronErr *common.ECronError) {
+	if authDisabled() {
+		return common.Visitor{Admin: true, ClientID: mockHydraClientID, Name: mockHydraVisitorName}, nil
+	}
+
 	if 0 == len(token) {
 		return common.Visitor{}, NewECronError(common.ErrTokenEmpty, common.InternalError, nil)
 	}
@@ -262,6 +282,10 @@ var (
 )
 
 func (o *oauth) VerifyHydraVersion() (string, bool) {
+	if authDisabled() {
+		return newVerifyTokenPath, true
+	}
+
 	if nil == o.httpClient {
 		return "", false
 	}

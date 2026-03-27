@@ -112,6 +112,8 @@ type Server struct {
 	DagInstanceEventArchivePolicy DagInstanceEventArchivePolicy `mapstructure:"dag_instance_event_archive_policy"`
 	Edition                       Edition                       `mapstructure:"edition"`
 	DBType                        string                        `mapstructure:"db_type"`
+	AuthEnabled                   string                        `mapstructure:"auth_enabled"`
+	BusinessDomainEnabled         string                        `mapstructure:"businessdomain_enabled"`
 }
 
 // DB database config
@@ -636,4 +638,30 @@ func InitConfig() (*Config, error) {
 // NewConfig new config instance
 func NewConfig() *Config {
 	return &config
+}
+
+func (c *Config) IsAuthEnabled() bool {
+	if c == nil {
+		return true
+	}
+
+	switch strings.ToLower(strings.TrimSpace(c.Server.AuthEnabled)) {
+	case "", "true", "1", "yes", "on":
+		return true
+	default:
+		return false
+	}
+}
+
+func (c *Config) IsBusinessDomainEnabled() bool {
+	if c == nil {
+		return true
+	}
+
+	switch strings.ToLower(strings.TrimSpace(c.Server.BusinessDomainEnabled)) {
+	case "", "true", "1", "yes", "on":
+		return true
+	default:
+		return false
+	}
 }

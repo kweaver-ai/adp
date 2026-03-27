@@ -782,6 +782,10 @@ func (d *dag) GetDagByFields(ctx context.Context, params map[string]interface{})
 	db, _, cancel := d.dbWithContext(newCtx)
 	defer cancel()
 
+	if _, ok := params["f_removed"]; !ok {
+		params["f_removed"] = map[string]interface{}{"$lt": 1}
+	}
+
 	result, err := NewConverter(DAG_TABLENAME, WithAutoConvert(true)).Convert(params)
 	if err != nil {
 		return nil, err
@@ -2091,7 +2095,7 @@ func (d *dag) GetDagCount(ctx context.Context, params map[string]interface{}) (i
 	if conds == "" {
 		conds = "1=1"
 	}
-	conds += " AND f_removed <> 1 AND f_is_debug <> 1"
+	conds += " AND f_removed < 1 AND f_is_debug < 1"
 
 	sql := fmt.Sprintf("SELECT COUNT(*) FROM %s WHERE %s", DAG_TABLENAME, conds)
 	query, _ := jsoniter.MarshalToString(result.Params)

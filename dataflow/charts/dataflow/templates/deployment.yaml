@@ -34,7 +34,7 @@ spec:
           - name: use-vc
       securityContext:
         {{- toYaml .Values.podSecurityContext | nindent 8 }}
-      
+
       nodeSelector:
         {{- toYaml .Values.nodeSelector | nindent 8 }}
 
@@ -73,7 +73,7 @@ spec:
           image: "{{ .Values.image.registry }}/{{ .Values.image.repository }}:{{ .Values.image.tag }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           command: ["/bin/bash", "-c"]
-          args: 
+          args:
             - "echo init done"
 
       containers:
@@ -87,7 +87,7 @@ spec:
           image: "{{ .Values.image.registry }}/{{ .Values.image.repository }}:{{ .Values.image.tag }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           command: ["/bin/bash", "-c"]
-          args: 
+          args:
             - "cd /opt/flow-automation && ./flow-automation"
           ports:
             - name: dataflow-pub
@@ -142,7 +142,7 @@ spec:
               valueFrom:
                 fieldRef:
                   fieldPath: status.podIP
-            
+
           envFrom:
             - configMapRef:
                 name: {{ include "dataflow.flowAutomation.fullname" . }}
@@ -160,7 +160,7 @@ spec:
           image: "{{ .Values.image.registry }}/{{ .Values.image.repository }}:{{ .Values.image.tag }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           command: ["/bin/bash", "-c"]
-          args: 
+          args:
             - "cd /opt/pipeline && ./pipeline-mgmt-server"
           ports:
             - name: sdp-pub
@@ -202,6 +202,8 @@ spec:
               value: {{ .Values.depServices.mq.mqType | quote }}
             - name: DM_SVC_PATH
               value: /opt/pipeline/config
+            - name: AUTH_ENABLED
+              value: {{ .Values.auth.enabled | quote }}
 
           resources:
             {{- $res := .Values.resources | default dict -}}

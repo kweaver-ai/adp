@@ -65,10 +65,14 @@ var (
 func NewHydraAdmin() HydraAdmin {
 	hOnce.Do(func() {
 		config := common.NewConfig()
-		h = &hydraAdmin{
-			adminAddress: fmt.Sprintf("http://%s:%v%s", config.OAuth.AdminHost, config.OAuth.AdminPort, config.OAuth.AdminPrefix),
-			client:       NewOtelRawHTTPClient(),
-			httpClient:   NewOtelHTTPClient(),
+		if !config.IsAuthEnabled() {
+			h = &mockHydraAdmin{}
+		} else {
+			h = &hydraAdmin{
+				adminAddress: fmt.Sprintf("http://%s:%v%s", config.OAuth.AdminHost, config.OAuth.AdminPort, config.OAuth.AdminPrefix),
+				client:       NewOtelRawHTTPClient(),
+				httpClient:   NewOtelHTTPClient(),
+			}
 		}
 	})
 
@@ -193,9 +197,13 @@ type hydraPublic struct {
 
 // NewHydraPublic 创建一个本文档域的public授权服务客户端对象
 func NewHydraPublic() (hydraP HydraPublic) {
+	config := common.NewConfig()
+	if !config.IsAuthEnabled() {
+		return &mockHydraPublic{}
+	}
+
 	logger := commonLog.NewLogger()
 	client := NewRawHTTPClient()
-	config := common.NewConfig()
 	publicAddress := fmt.Sprintf("%s:%v", config.OAuth.PublicHost, config.OAuth.PublicPort)
 	authPublicAddress := fmt.Sprintf("%s:%v", config.Authentication.PublicHost, config.Authentication.PublicPort)
 
@@ -218,6 +226,9 @@ func NewHydraPublic() (hydraP HydraPublic) {
 func NewHydraPublicWithAddress(publicAddress string, useHTTPS bool) HydraPublic {
 	logger := commonLog.NewLogger()
 	client := NewRawHTTPClient()
+	if !common.NewConfig().IsAuthEnabled() {
+		return &mockHydraPublic{}
+	}
 
 	o := &hydraPublic{
 		publicAddress:             publicAddress,
