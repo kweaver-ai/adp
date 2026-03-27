@@ -11,18 +11,17 @@ log:
   maxBackups: 20
   maxSize: 100
 crypto:
-  enabled: true
-  privateKeyPath: /opt/vega-backend/secret-config/rsa_private_key_pkcs8.pem
-  publicKeyPath: /opt/vega-backend/secret-config/rsa_public_key.pem
-
+  enabled: false
+  privateKeyPath: ./config/rsa_private_key_pkcs8.pem
+  publicKeyPath: ./config/rsa_public_key.pem
 depServices:
   class-443:
     ingressClass: class-443
   rds:
-    host: mariadb-mariadb-master.resource.svc.cluster.local.
+    host: localhost
     port: 3330
-    user: root
-    password: ""
+    user: username
+    password: password
     type: MariaDB
   mq:
     mqType: kafka
@@ -35,27 +34,27 @@ depServices:
       password: ""
       mechanism: PLAIN
   opensearch:
-    host: opensearch-master.resource.svc.cluster.local.
+    host: 192.168.36.66
     port: 9200
     protocol: http
     user: admin
     password: ""
   redis:
     connectInfo:
-      username: root
-      password: ''
+      username: myuser
+      password: mypass
       sentinelHost: proton-redis-proton-redis-sentinel.resource.svc.cluster.local
       sentinelPort: 26379
       sentinelUsername: root
       sentinelPassword: ''
       masterGroupName: mymaster
-      host: ""
-      port: 0
+      host: 192.168.36.66
+      port: 6379
       masterHost: ""
       masterPort: 0
       slaveHost: ""
       slavePort: 0
-    connectType: sentinel
+    connectType: standalone
   authorization-private:
     host: authorization-private
     port: 30920

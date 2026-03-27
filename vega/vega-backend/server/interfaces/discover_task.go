@@ -17,6 +17,9 @@ const (
 	DiscoverTaskTriggerManual    string = "manual"    // 手动/立即执行
 	DiscoverTaskTriggerScheduled string = "scheduled" // 定时驱动
 
+	// DiscoverTaskType is the task type for discover tasks.
+	DiscoverTaskType = "discover:execute"
+
 	// KafkaTopic is the topic for discover task messages.
 	DiscoverTaskTopic = "adp-vega-discover-task"
 )

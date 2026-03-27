@@ -91,6 +91,7 @@ func (rs *resourceService) Create(ctx context.Context, req *interfaces.ResourceR
 		Status:           req.Status,
 		Database:         req.Database,
 		SourceIdentifier: req.SourceIdentifier,
+		SourceMetadata:   req.SourceMetadata,
 		SchemaDefinition: req.SchemaDefinition,
 		Creator:          accountInfo,
 		CreateTime:       now,

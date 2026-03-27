@@ -12,11 +12,6 @@ import (
 	"github.com/hibiken/asynq"
 )
 
-const (
-	// DiscoverTaskType is the task type for discover tasks.
-	DiscoverTaskType = "discover:execute"
-)
-
 // AsynqAccess defines the interface for creating Asynq client and server.
 //
 //go:generate mockgen -source ../interfaces/asynq_access.go -destination ../interfaces/mock/mock_asynq_access.go

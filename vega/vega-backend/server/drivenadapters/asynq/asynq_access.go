@@ -81,17 +81,6 @@ func (aqa *asynqAccess) getRedisClientOpt() asynq.RedisConnOpt {
 			WriteTimeout:     60 * time.Second, // 写超时（默认 3s，调大）
 			PoolSize:         20,               // 连接池大小（默认 10，根据并发调大）
 		}
-	case "cluster":
-		return asynq.RedisClientOpt{
-			Addr:         fmt.Sprintf("%s:%d", redisSetting.Host, redisSetting.Port),
-			Username:     redisSetting.Username,
-			Password:     redisSetting.Password,
-			DB:           0,
-			DialTimeout:  5 * time.Second,  // 连接超时（默认 5s，调大）
-			ReadTimeout:  60 * time.Second, // 读超时（默认 3s，调大）
-			WriteTimeout: 60 * time.Second, // 写超时（默认 3s，调大）
-			PoolSize:     20,               // 连接池大小（默认 10，根据并发调大）
-		}
 	case "master-slave":
 		// For master-slave, use standalone mode with master address
 		return asynq.RedisClientOpt{
@@ -104,8 +93,8 @@ func (aqa *asynqAccess) getRedisClientOpt() asynq.RedisConnOpt {
 			WriteTimeout: 60 * time.Second, // 写超时（默认 3s，调大）
 			PoolSize:     20,               // 连接池大小（默认 10，根据并发调大）
 		}
-	case "standalone":
-		// Default to standalone mode
+	case "cluster", "standalone":
+		// For cluster and standalone mode, use the same configuration
 		return asynq.RedisClientOpt{
 			Addr:         fmt.Sprintf("%s:%d", redisSetting.Host, redisSetting.Port),
 			Username:     redisSetting.Username,
