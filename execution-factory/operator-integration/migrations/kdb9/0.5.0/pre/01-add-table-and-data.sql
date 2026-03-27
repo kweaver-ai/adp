@@ -1,4 +1,5 @@
-SET SCHEMA adp;
+
+SET SEARCH_PATH TO adp;
 
 
 CREATE TABLE IF NOT EXISTS `t_skill_repository` (
