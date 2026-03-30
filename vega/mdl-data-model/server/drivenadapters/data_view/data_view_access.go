@@ -274,16 +274,6 @@ func (dva *dataViewAccess) UpdateDataView(ctx context.Context, tx *sql.Tx, view 
 	tagsStr := libCommon.TagSlice2TagString(view.Tags)
 	primaryKeysStr := libCommon.TagSlice2TagString(view.PrimaryKeys)
 
-	// dataSourceBytes, err := sonic.Marshal(view.DataSource)
-	// if err != nil {
-	// 	errDetails := fmt.Sprintf("Marshal dataSource failed, %s", err.Error())
-	// 	logger.Error(errDetails)
-	// 	o11y.Error(ctx, errDetails)
-	// 	span.SetStatus(codes.Error, "Marshal dataSource failed")
-
-	// 	return err
-	// }
-
 	excelConfigBytes, err := sonic.Marshal(view.ExcelConfig)
 	if err != nil {
 		errDetails := fmt.Sprintf("Marshal excelConfig failed, %s", err.Error())
@@ -313,16 +303,6 @@ func (dva *dataViewAccess) UpdateDataView(ctx context.Context, tx *sql.Tx, view 
 
 		return err
 	}
-
-	// condBytes, err := sonic.Marshal(view.Condition)
-	// if err != nil {
-	// 	errDetails := fmt.Sprintf("Marshal condition failed, %s", err.Error())
-	// 	logger.Error(errDetails)
-	// 	o11y.Error(ctx, errDetails)
-	// 	span.SetStatus(codes.Error, "Marshal condition failed")
-
-	// 	return err
-	// }
 
 	updateMap := map[string]any{
 		"f_view_name":    view.ViewName,
@@ -370,6 +350,98 @@ func (dva *dataViewAccess) UpdateDataView(ctx context.Context, tx *sql.Tx, view 
 		span.SetStatus(codes.Error, "Update data view failed")
 
 		return err
+	}
+
+	span.SetStatus(codes.Ok, "")
+	return nil
+}
+
+// 批量修改数据视图
+func (dva *dataViewAccess) UpdateDataViews(ctx context.Context, tx *sql.Tx, views []*interfaces.DataView) error {
+	_, span := ar_trace.Tracer.Start(ctx, "driven layer: Update data views from DB", trace.WithSpanKind(trace.SpanKindClient))
+	defer span.End()
+
+	if len(views) == 0 {
+		return nil
+	}
+
+	span.SetAttributes(
+		attr.Key("db_url").String(libdb.GetDBUrl()),
+		attr.Key("db_type").String(libdb.GetDBType()),
+		attr.Key("view_count").Int(len(views)),
+	)
+
+	// 如果没有传入事务，则内部开启事务
+	var internalTx *sql.Tx
+	var err error
+	if tx == nil {
+		internalTx, err = dva.db.Begin()
+		if err != nil {
+			return err
+		}
+		defer func() {
+			if err != nil {
+				if rbErr := internalTx.Rollback(); rbErr != nil {
+					logger.Errorf("failed to rollback update views transaction: %v", rbErr)
+				}
+			} else {
+				if cmErr := internalTx.Commit(); cmErr != nil {
+					logger.Errorf("failed to commit update views transaction: %v", cmErr)
+				}
+			}
+		}()
+		tx = internalTx
+	}
+
+	for _, view := range views {
+		tagsStr := libCommon.TagSlice2TagString(view.Tags)
+		primaryKeysStr := libCommon.TagSlice2TagString(view.PrimaryKeys)
+
+		excelConfigBytes, err := sonic.Marshal(view.ExcelConfig)
+		if err != nil {
+			return fmt.Errorf("marshal excelConfig failed for view %s: %w", view.ViewID, err)
+		}
+
+		dataScopeBytes, err := sonic.Marshal(view.DataScope)
+		if err != nil {
+			return fmt.Errorf("marshal dataScope failed for view %s: %w", view.ViewID, err)
+		}
+
+		fieldsBytes, err := sonic.Marshal(view.Fields)
+		if err != nil {
+			return fmt.Errorf("marshal fields failed for view %s: %w", view.ViewID, err)
+		}
+
+		updateMap := map[string]any{
+			"f_view_name":    view.ViewName,
+			"f_group_id":     view.GroupID,
+			"f_query_type":   view.QueryType,
+			"f_tags":         tagsStr,
+			"f_comment":      view.Comment,
+			"f_file_name":    view.FileName,
+			"f_excel_config": excelConfigBytes,
+			"f_data_scope":   dataScopeBytes,
+			"f_fields":       fieldsBytes,
+			"f_primary_keys": primaryKeysStr,
+			"f_sql":          view.SQLStr,
+			"f_status":       view.Status,
+			"f_update_time":  view.UpdateTime,
+			"f_updater":      view.Updater.ID,
+			"f_updater_type": view.Updater.Type,
+		}
+
+		sqlStr, args, err := sq.Update(DATA_VIEW_TABLE_NAME).
+			SetMap(updateMap).
+			Where(sq.Eq{"f_view_id": view.ViewID}).
+			ToSql()
+		if err != nil {
+			return fmt.Errorf("generate update sql failed for view %s: %w", view.ViewID, err)
+		}
+
+		_, err = tx.Exec(sqlStr, args...)
+		if err != nil {
+			return fmt.Errorf("execute update failed for view %s: %w", view.ViewID, err)
+		}
 	}
 
 	span.SetStatus(codes.Ok, "")
@@ -724,6 +796,61 @@ func (dva *dataViewAccess) ListDataViews(ctx context.Context,
 	return views, nil
 }
 
+// 查询数据视图列表
+func (dva *dataViewAccess) ListDataViewsByDataSource(ctx context.Context, dataSourceID string) ([]*interfaces.ViewDeleteTime, error) {
+	ctx, span := ar_trace.Tracer.Start(ctx, "driven layer: List data views from DB",
+		trace.WithSpanKind(trace.SpanKindClient))
+	defer span.End()
+
+	views := make([]*interfaces.ViewDeleteTime, 0)
+
+	builder := sq.Select("f_view_id", "f_delete_time").From(DATA_VIEW_TABLE_NAME).
+		Where(sq.Eq{"f_data_source_id": dataSourceID})
+
+	sqlStr, args, err := builder.ToSql()
+	if err != nil {
+		errDetails := fmt.Sprintf("Generate 'list view' sql stmt failed, %s", err.Error())
+		logger.Error(errDetails)
+		o11y.Error(ctx, errDetails)
+		span.SetStatus(codes.Error, "Generate sql stmt failed")
+
+		return nil, err
+	}
+
+	sqlStmt := fmt.Sprintf("Sql stmt for listing views is '%s'", sqlStr)
+	logger.Debug(sqlStmt)
+	o11y.Info(ctx, sqlStmt)
+
+	rows, err := dva.db.Query(sqlStr, args...)
+	if err != nil {
+		errDetails := fmt.Sprintf("List data views failed, %s", err.Error())
+		logger.Error(errDetails)
+		o11y.Error(ctx, errDetails)
+		span.SetStatus(codes.Error, "List data views failed")
+
+		return nil, err
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		viewDeleteTime := &interfaces.ViewDeleteTime{}
+		err := rows.Scan(&viewDeleteTime.ViewID, &viewDeleteTime.DeleteTime)
+		if err != nil {
+			errDetails := fmt.Sprintf("Row scan failed, err: %s", err.Error())
+			logger.Error(errDetails)
+			o11y.Error(ctx, errDetails)
+			span.SetStatus(codes.Error, "Row scan failed")
+
+			return nil, err
+		}
+
+		views = append(views, viewDeleteTime)
+	}
+
+	span.SetStatus(codes.Ok, "")
+	return views, nil
+}
+
 // 查询数据视图总数
 func (dva *dataViewAccess) GetDataViewsTotal(ctx context.Context,
 	query *interfaces.ListViewQueryParams) (int, error) {
@@ -866,6 +993,7 @@ func (dva *dataViewAccess) CheckDataViewExistByName(ctx context.Context, tx *sql
 		Where(sq.Eq{
 			"dv.f_view_name":   viewName,
 			"dvg.f_group_name": groupName,
+			"dv.f_delete_time": 0,
 		}).
 		ToSql()
 
@@ -929,6 +1057,7 @@ func (dva *dataViewAccess) CheckDataViewExistByTechnicalName(ctx context.Context
 		Where(sq.Eq{
 			"dv.f_technical_name": viewTechnicalName,
 			"dvg.f_group_name":    groupName,
+			"dv.f_delete_time":    0,
 		}).
 		ToSql()
 
@@ -1839,8 +1968,8 @@ func (dva *dataViewAccess) GetDataViewsByGroupID(ctx context.Context, groupID st
 	return views, nil
 }
 
-func (dva *dataViewAccess) GetDataViewsBySourceID(ctx context.Context, sourceID string) ([]*interfaces.DataView, error) {
-	ctx, span := ar_trace.Tracer.Start(ctx, "Select data views by data_source_id", trace.WithSpanKind(trace.SpanKindClient))
+func (dva *dataViewAccess) GetDataViewsBySourceID(ctx context.Context, sourceID string) ([]string, error) {
+	ctx, span := ar_trace.Tracer.Start(ctx, "Select data view IDs by data_source_id", trace.WithSpanKind(trace.SpanKindClient))
 	defer span.End()
 	span.SetAttributes(
 		attr.Key("db_url").String(libdb.GetDBUrl()),
@@ -1848,39 +1977,9 @@ func (dva *dataViewAccess) GetDataViewsBySourceID(ctx context.Context, sourceID 
 		attr.Key("data_source_id").String(sourceID),
 	)
 
-	sqlStr, args, err := sq.Select(
-		"dv.f_view_id",
-		"dv.f_view_name",
-		"dv.f_technical_name",
-		"dv.f_group_id",
-		"COALESCE(dvg.f_group_name, '')",
-		"dv.f_type",
-		"dv.f_query_type",
-		"dv.f_builtin",
-		"dv.f_tags",
-		"dv.f_comment",
-		"dv.f_data_source_type",
-		"dv.f_data_source_id",
-		"dv.f_file_name",
-		"dv.f_excel_config",
-		"dv.f_data_scope",
-		"dv.f_fields",
-		"dv.f_status",
-		"dv.f_metadata_form_id",
-		"dv.f_primary_keys",
-		"COALESCE(dv.f_sql, '')",
-		"dv.f_meta_table_name",
-		"dv.f_create_time",
-		"dv.f_update_time",
-		"dv.f_delete_time",
-		"dv.f_creator",
-		"dv.f_creator_type",
-		"dv.f_updater",
-		"dv.f_updater_type",
-	).
-		From(fmt.Sprintf("%s as dv", DATA_VIEW_TABLE_NAME)).
-		LeftJoin(fmt.Sprintf("%s as dvg on dv.f_group_id = dvg.f_group_id", DATA_VIEW_GROUP_TABLE_NAME)).
-		Where(sq.Eq{"dv.f_data_source_id": sourceID}).ToSql()
+	sqlStr, args, err := sq.Select("f_view_id").
+		From(DATA_VIEW_TABLE_NAME).
+		Where(sq.Eq{"f_data_source_id": sourceID}).ToSql()
 	if err != nil {
 		errDetails := fmt.Sprintf("Generate 'get views' sql stmt error: %s", err.Error())
 		logger.Error(errDetails)
@@ -1894,7 +1993,7 @@ func (dva *dataViewAccess) GetDataViewsBySourceID(ctx context.Context, sourceID 
 	logger.Debug(sqlStmt)
 	o11y.Info(ctx, sqlStmt)
 
-	views := []*interfaces.DataView{}
+	viewIDs := []string{}
 	rows, err := dva.db.Query(sqlStr, args...)
 	if err != nil {
 		errDetails := fmt.Sprintf("Query data views failed, %s", err.Error())
@@ -1907,41 +2006,9 @@ func (dva *dataViewAccess) GetDataViewsBySourceID(ctx context.Context, sourceID 
 	defer rows.Close()
 
 	for rows.Next() {
-		var tagsStr, primaryKeysStr string
-		var excelConfigBytes, dataScopeBytes, fieldsBytes []byte
-		view := &interfaces.DataView{
-			ModuleType: interfaces.MODULE_TYPE_DATA_VIEW,
-		}
-		err = rows.Scan(
-			&view.ViewID,
-			&view.ViewName,
-			&view.TechnicalName,
-			&view.GroupID,
-			&view.GroupName,
-			&view.Type,
-			&view.QueryType,
-			&view.Builtin,
-			&tagsStr,
-			&view.Comment,
-			&view.DataSourceType,
-			&view.DataSourceID,
-			&view.FileName,
-			&excelConfigBytes,
-			&dataScopeBytes,
-			&fieldsBytes,
-			&view.Status,
-			&view.MetadataFormID,
-			&primaryKeysStr,
-			&view.SQLStr,
-			&view.MetaTableName,
-			&view.CreateTime,
-			&view.UpdateTime,
-			&view.DeleteTime,
-			&view.Creator.ID,
-			&view.Creator.Type,
-			&view.Updater.ID,
-			&view.Updater.Type,
-		)
+
+		var viewID string
+		err = rows.Scan(&viewID)
 		if err != nil {
 			errDetails := fmt.Sprintf("Row scan failed, error: %s", err.Error())
 			logger.Error(errDetails)
@@ -1951,69 +2018,9 @@ func (dva *dataViewAccess) GetDataViewsBySourceID(ctx context.Context, sourceID 
 			return nil, err
 		}
 
-		view.Tags = libCommon.TagString2TagSlice(tagsStr)
-		view.PrimaryKeys = libCommon.TagString2TagSlice(primaryKeysStr)
-
-		// 反序列化
-		// err := sonic.Unmarshal([]byte(dataSourceBytes), &view.DataSource)
-		// if err != nil {
-		// 	errDetails := fmt.Sprintf("Unmarshal dataSource failed, %s", err.Error())
-		// 	logger.Error(errDetails)
-		// 	o11y.Error(ctx, errDetails)
-		// 	span.SetStatus(codes.Error, "Unmarshal dataSource failed")
-
-		// 	return nil, err
-		// }
-
-		if len(excelConfigBytes) != 0 {
-			err := sonic.Unmarshal([]byte(excelConfigBytes), &view.ExcelConfig)
-			if err != nil {
-				errDetails := fmt.Sprintf("Unmarshal dataSource failed, %s", err.Error())
-				logger.Error(errDetails)
-				o11y.Error(ctx, errDetails)
-				span.SetStatus(codes.Error, "Unmarshal dataSource failed")
-
-				return nil, err
-			}
-		}
-
-		if len(dataScopeBytes) != 0 {
-			err = sonic.Unmarshal([]byte(dataScopeBytes), &view.DataScope)
-			if err != nil {
-				errDetails := fmt.Sprintf("Unmarshal dataSource failed, %s", err.Error())
-				logger.Error(errDetails)
-				o11y.Error(ctx, errDetails)
-				span.SetStatus(codes.Error, "Unmarshal dataSource failed")
-
-				return nil, err
-			}
-		}
-
-		if len(fieldsBytes) != 0 {
-			err = sonic.Unmarshal([]byte(fieldsBytes), &view.Fields)
-			if err != nil {
-				errDetails := fmt.Sprintf("Unmarshal fields failed, %s", err.Error())
-				logger.Error(errDetails)
-				o11y.Error(ctx, errDetails)
-				span.SetStatus(codes.Error, "Unmarshal fields failed")
-
-				return nil, err
-			}
-		}
-
-		// err = sonic.Unmarshal([]byte(condBytes), &view.Condition)
-		// if err != nil {
-		// 	errDetails := fmt.Sprintf("Unmarshal condition failed, %s", err.Error())
-		// 	logger.Error(errDetails)
-		// 	o11y.Error(ctx, errDetails)
-		// 	span.SetStatus(codes.Error, "Unmarshal condition failed")
-
-		// 	return nil, err
-		// }
-
-		views = append(views, view)
+		viewIDs = append(viewIDs, viewID)
 	}
 
 	span.SetStatus(codes.Ok, "")
-	return views, nil
+	return viewIDs, nil
 }

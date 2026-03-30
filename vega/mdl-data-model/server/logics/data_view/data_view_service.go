@@ -476,167 +476,149 @@ func (dvs *dataViewService) UpdateDataView(ctx context.Context, tx *sql.Tx, view
 	return nil
 }
 
-// 内部修改单个数据视图，不校验权限, 同步库表为原子视图时使用
-func (dvs *dataViewService) UpdateDataViewInternal(ctx context.Context, view *interfaces.DataView) error {
-	ctx, span := ar_trace.Tracer.Start(ctx, "logic layer: Update a data view internal")
+// UpdateDataViewsInternal 批量修改数据视图内部逻辑
+func (dvs *dataViewService) UpdateDataViewsInternal(ctx context.Context, views []*interfaces.DataView) error {
+	ctx, span := ar_trace.Tracer.Start(ctx, "logic layer: Batch update data views")
 	defer span.End()
 
-	// 从数据库查询旧的视图信息
-	oldViews, err := dvs.dva.GetDataViews(ctx, []string{view.ViewID})
-	if err != nil {
-		logger.Errorf("GetDataViews error: %s", err.Error())
-		span.SetStatus(codes.Error, "GetDataViews failed")
-		return rest.NewHTTPError(ctx, http.StatusInternalServerError,
-			derrors.DataModel_DataView_InternalError_GetDataViewsFailed).WithErrorDetails(err.Error())
-	}
-
-	if len(oldViews) == 0 {
-		// 不报错，如果同步过程中更新视图时，用户手动删除了视图，直接跳过当前视图的更新
-		span.SetStatus(codes.Error, "Data view not found")
-		logger.Warnf("Update data view id '%s' name '%s' not found, skip", view.ViewID, view.ViewName)
+	if len(views) == 0 {
 		return nil
-		// return rest.NewHTTPError(ctx, http.StatusNotFound, derrors.DataModel_DataView_DataViewNotFound).
-		// 	WithErrorDetails(fmt.Sprintf("Data view '%s' does not exist", view.ViewID))
 	}
-	oldView := oldViews[0]
+	span.SetAttributes(attr.Key("view_count").Int(len(views)))
 
-	// 原子视图不支持修改分组名称
-	if oldView.Type == interfaces.ViewType_Atomic {
-		if view.GroupName != oldView.GroupName {
-			span.SetStatus(codes.Error, "Atomic data view cannot change group")
-			return rest.NewHTTPError(ctx, http.StatusNotFound, rest.PublicError_BadRequest).
-				WithErrorDetails(fmt.Sprintf("Atomic data view '%s' cannot change group", view.ViewID))
-		}
+	// 1. 批量获取旧视图
+	viewIDs := make([]string, len(views))
+	for i, v := range views {
+		viewIDs[i] = v.ViewID
 	}
-
-	// 检查索引库是否存在，字段类型是否冲突
-	httpErr := dvs.commonForCreateAndUpdate(ctx, view)
-	if httpErr != nil {
-		span.SetStatus(codes.Error, "Common operation for creating and updating failed")
-		return httpErr
+	oldViews, err := dvs.dva.GetDataViews(ctx, viewIDs)
+	if err != nil {
+		return rest.NewHTTPError(ctx, http.StatusInternalServerError, derrors.DataModel_DataView_InternalError_GetDataViewsFailed).
+			WithErrorDetails(err.Error())
+	}
+	oldViewMap := make(map[string]*interfaces.DataView, len(oldViews))
+	for _, ov := range oldViews {
+		oldViewMap[ov.ViewID] = ov
 	}
 
-	// accountInfo := interfaces.AccountInfo{}
-	// if ctx.Value(interfaces.ACCOUNT_INFO_KEY) != nil {
-	// 	accountInfo = ctx.Value(interfaces.ACCOUNT_INFO_KEY).(interfaces.AccountInfo)
-	// }
-	// 同步库表到原子视图时，如果是更新视图，不改变视图的更新者
-	view.Updater = oldView.Updater
-	view.UpdateTime = time.Now().UnixMilli()
-
-	needRollback := false
-	// 使用数据库事务
+	// 2. 开启事务
 	tx, err := dvs.db.Begin()
 	if err != nil {
-		logger.Errorf("UpdateDataView begin DB transaction failed: %s", err.Error())
-		span.SetStatus(codes.Error, "UpdateDataView begin DB transaction failed")
 		return rest.NewHTTPError(ctx, http.StatusInternalServerError, derrors.DataModel_DataView_InternalError_BeginDbTransactionFailed).
 			WithErrorDetails(err.Error())
 	}
-
+	needRollback := true
 	defer func() {
-		if !needRollback {
-			err = tx.Commit()
-			if err != nil {
-				span.SetStatus(codes.Error, "UpdateDataView commit DB transaction failed")
-				logger.Errorf("UpdateDataView commit DB transaction failed: %s", err.Error())
-			}
-		} else {
-			err = tx.Rollback()
-			if err != nil {
-				span.SetStatus(codes.Error, "UpdateDataView rollback DB transaction failed")
-				logger.Errorf("UpdateDataView rollback DB transaction failed: %s", err.Error())
+		if needRollback {
+			if rbErr := tx.Rollback(); rbErr != nil {
+				logger.Errorf("failed to rollback transaction: %v", rbErr)
 			}
 		}
 	}()
 
-	// 获取分组ID，如果分组不存在，则创建分组
-	groupID, isBuilitinGroup, httpErr := dvs.RetriveGroupIDByGroupName(ctx, tx, initViewGroupReq(view))
-	if httpErr != nil {
-		needRollback = true
-		logger.Errorf(fmt.Sprintf("Retrive group id by group name %s failed", view.GroupName))
-		span.SetStatus(codes.Error, "Retrive group id by group name failed")
-		return httpErr
-	}
+	// 3. 循环处理与单视图校验
+	filteredViews := make([]*interfaces.DataView, 0, len(views))
+	needResetStatusViewIDs := make([]string, 0)
+	now := time.Now().UnixMilli()
 
-	// 内置视图使用内置分组，非内置视图使用非内置分组
-	if oldView.Builtin != isBuilitinGroup {
-		needRollback = true
-		errDetails := "Built-in views must use built-in groups, non-built-in views must use non-built-in groups"
-		logger.Error(errDetails)
-		span.SetStatus(codes.Error, errDetails)
-		return rest.NewHTTPError(ctx, http.StatusForbidden, derrors.DataModel_DataView_InvalidBuiltinGroupMatch).
-			WithErrorDetails(errDetails)
-	}
+	for _, view := range views {
+		oldView, ok := oldViewMap[view.ViewID]
+		if !ok {
+			logger.Warnf("[UpdateDataViewsInternal] view id '%s' not found, skip", view.ViewID)
+			continue
+		}
 
-	// 更新视图的分组ID
-	view.GroupID = groupID
-
-	oldGroupID := oldView.GroupID
-	oldViewName := oldView.ViewName
-	newGroupID := groupID
-	newViewName := view.ViewName
-
-	// 校验视图名称在分组内是否已存在
-	if newGroupID != oldGroupID || newViewName != oldViewName {
-		_, exist, httpErr := dvs.CheckDataViewExistByName(ctx, tx, view.ViewName, view.GroupName)
-		if httpErr != nil {
-			needRollback = true
-			span.SetStatus(codes.Error, "Check data view exist by name failed")
+		// 核心约束校验与填充
+		if httpErr := dvs.prepareAndViewCheck(ctx, tx, view, oldView, now); httpErr != nil {
 			return httpErr
 		}
 
-		if exist {
-			needRollback = true
-			errDetails := fmt.Sprintf("Data view '%s' already exists in group '%s'", view.ViewName, view.GroupName)
-			logger.Errorf(errDetails)
-			span.SetStatus(codes.Error, errDetails)
-			return rest.NewHTTPError(ctx, http.StatusForbidden, derrors.DataModel_DataView_Existed_ViewName).
-				WithDescription(map[string]any{"ViewName": view.ViewName, "GroupName": view.GroupName}).
-				WithErrorDetails(errDetails)
+		// 标记需要恢复状态的视图 (DeleteTime > 0 表示该视图曾被软删除)
+		if oldView.DeleteTime > 0 {
+			needResetStatusViewIDs = append(needResetStatusViewIDs, view.ViewID)
 		}
+		filteredViews = append(filteredViews, view)
 	}
 
-	// 更新数据库的视图信息
-	err = dvs.dva.UpdateDataView(ctx, tx, view)
-	if err != nil {
-		needRollback = true
-		logger.Errorf("Update a data view error: %s", err.Error())
-		span.SetStatus(codes.Error, "Update a data view failed")
-		return rest.NewHTTPError(ctx, http.StatusInternalServerError,
-			derrors.DataModel_DataView_InternalError_UpdateDataViewFailed).WithErrorDetails(err.Error())
+	if len(filteredViews) == 0 {
+		return nil
 	}
 
-	// 对于删了源表又重新创建的视图，需要更新视图的状态为正常
-	if oldView.DeleteTime > 0 {
-		// 更新数据库的视图信息
-		err = dvs.dva.UpdateViewStatus(ctx, tx, []string{view.ViewID}, &interfaces.UpdateViewStatus{
+	// 4. 批量执行数据库更新
+	if err := dvs.dva.UpdateDataViews(ctx, tx, filteredViews); err != nil {
+		return rest.NewHTTPError(ctx, http.StatusInternalServerError, derrors.DataModel_DataView_InternalError_UpdateDataViewFailed).
+			WithErrorDetails(err.Error())
+	}
+
+	if len(needResetStatusViewIDs) > 0 {
+		err := dvs.dva.UpdateViewStatus(ctx, tx, needResetStatusViewIDs, &interfaces.UpdateViewStatus{
 			ViewStatus: interfaces.ViewScanStatus_New,
 			DeleteTime: 0,
 		})
 		if err != nil {
-			needRollback = true
-			logger.Errorf("Update a data view status and delete time error: %s", err.Error())
-			span.SetStatus(codes.Error, "Update a data view status and delete time failed")
-			return rest.NewHTTPError(ctx, http.StatusInternalServerError,
-				derrors.DataModel_DataView_InternalError_UpdateDataViewFailed).WithErrorDetails(err.Error())
+			return rest.NewHTTPError(ctx, http.StatusInternalServerError, derrors.DataModel_DataView_InternalError_UpdateDataViewFailed).
+				WithErrorDetails(err.Error())
 		}
-
-		logger.Infof("Update data view %s status to new success", view.ViewName)
 	}
 
-	// 请求更新资源名称的接口，更新资源的名称
-	err = dvs.ps.UpdateResource(ctx, interfaces.PermissionResource{
-		ID:   view.ViewID,
-		Type: interfaces.RESOURCE_TYPE_DATA_VIEW,
-		Name: common.ProcessUngroupedName(ctx, view.GroupName, view.ViewName),
-	})
-	if err != nil {
-		span.SetStatus(codes.Error, "Update resource name failed")
+	// 5. 提交事务
+	if err := tx.Commit(); err != nil {
 		return err
 	}
+	needRollback = false
 
-	span.SetStatus(codes.Ok, "")
+	// 6. 异步/同步更新外部资源中心 (非事务相关)
+	for _, view := range filteredViews {
+		_ = dvs.ps.UpdateResource(ctx, interfaces.PermissionResource{
+			ID:   view.ViewID,
+			Type: interfaces.RESOURCE_TYPE_DATA_VIEW,
+			Name: common.ProcessUngroupedName(ctx, view.GroupName, view.ViewName),
+		})
+	}
+
+	span.SetStatus(codes.Ok, "Batch sync successful")
+	return nil
+}
+
+// prepareAndViewCheck 执行更新前的校验与元数据补充
+// 假设：view.GroupID 已被外部调用方（如同步逻辑）正确填充
+func (dvs *dataViewService) prepareAndViewCheck(ctx context.Context, tx *sql.Tx, view, oldView *interfaces.DataView, now int64) error {
+	// A. 原子视图分组限制：不支持跨分组移动
+	if oldView.Type == interfaces.ViewType_Atomic && view.GroupName != oldView.GroupName {
+		return rest.NewHTTPError(ctx, http.StatusBadRequest, rest.PublicError_BadRequest).
+			WithErrorDetails(fmt.Sprintf("Atomic view '%s' forbidden group change: from '%s' to '%s'",
+				view.ViewID, oldView.GroupName, view.GroupName))
+	}
+
+	// C. 元数据补充
+	view.Updater = oldView.Updater // 保持原有 Updater 或按具体同步账号设置
+	view.UpdateTime = now
+
+	// 校验 Builtin 一致性 (如果同步后的 GroupID 与原先不同)
+	if view.GroupID == "" {
+		view.GroupID = oldView.GroupID // 兜底使用旧的 GroupID
+	}
+	// 校验内置逻辑
+	if oldView.Builtin && view.GroupID != oldView.GroupID {
+		logger.Warnf("Builtin view '%s' group changing from %s to %s", view.ViewID, oldView.GroupID, view.GroupID)
+	}
+
+	// D. 重命名或恢复时的冲突校验
+	// 仅在 ViewName 变动、GroupID 变动或视图处于恢复（DeleteTime > 0）状态时检查
+	isRestoring := oldView.DeleteTime > 0
+	isRenaming := view.ViewName != oldView.ViewName || view.GroupID != oldView.GroupID
+
+	if isRenaming || isRestoring {
+		existID, exist, err := dvs.CheckDataViewExistByName(ctx, tx, view.ViewName, view.GroupName)
+		if err != nil {
+			return err
+		}
+		if exist && existID != view.ViewID {
+			return rest.NewHTTPError(ctx, http.StatusForbidden, derrors.DataModel_DataView_Existed_ViewName).
+				WithDescription(map[string]any{"ViewName": view.ViewName, "GroupName": view.GroupName})
+		}
+	}
+
 	return nil
 }
 
@@ -873,6 +855,24 @@ func (dvs *dataViewService) GetDataViews(ctx context.Context, viewIDs []string, 
 	return views, nil
 }
 
+// 内部批量获取视图详情
+func (dvs *dataViewService) GetDataViewsInternal(ctx context.Context, viewIDs []string) ([]*interfaces.DataView, error) {
+	ctx, span := ar_trace.Tracer.Start(ctx, "logic layer: Get data views internal")
+	defer span.End()
+
+	views, err := dvs.dva.GetDataViews(ctx, viewIDs)
+	if err != nil {
+		logger.Errorf("Get data views failed, %s", err.Error())
+
+		span.SetStatus(codes.Error, "Get data views failed")
+		return nil, rest.NewHTTPError(ctx, http.StatusInternalServerError,
+			derrors.DataModel_DataView_InternalError_GetDataViewsFailed).WithErrorDetails(err.Error())
+	}
+
+	span.SetStatus(codes.Ok, "")
+	return views, nil
+}
+
 // 按分组导出数据视图
 func (dvs *dataViewService) GetDataViewsByGroupID(ctx context.Context, groupID string) ([]*interfaces.DataView, error) {
 	ctx, span := ar_trace.Tracer.Start(ctx, "logic layer: Get data views by group id")
@@ -1031,11 +1031,11 @@ func (dvs *dataViewService) GetDataViewsByGroupID(ctx context.Context, groupID s
 }
 
 // 按数据源获取数据视图
-func (dvs *dataViewService) GetDataViewsBySourceID(ctx context.Context, sourceID string) ([]*interfaces.DataView, error) {
-	ctx, span := ar_trace.Tracer.Start(ctx, "logic layer: Get data views by data source")
+func (dvs *dataViewService) GetDataViewIDsBySourceID(ctx context.Context, sourceID string) ([]string, error) {
+	ctx, span := ar_trace.Tracer.Start(ctx, "logic layer: Get data view IDs by data source")
 	defer span.End()
 
-	views, err := dvs.dva.GetDataViewsBySourceID(ctx, sourceID)
+	viewIDs, err := dvs.dva.GetDataViewsBySourceID(ctx, sourceID)
 	if err != nil {
 		logger.Errorf("Get data views by data source error: %s", err.Error())
 		span.SetStatus(codes.Error, "Get data views by data source failed")
@@ -1044,7 +1044,7 @@ func (dvs *dataViewService) GetDataViewsBySourceID(ctx context.Context, sourceID
 	}
 
 	span.SetStatus(codes.Ok, "")
-	return views, nil
+	return viewIDs, nil
 }
 
 // 分页查询数据视图
@@ -1149,6 +1149,24 @@ func (dvs *dataViewService) ListDataViews(ctx context.Context, param *interfaces
 
 	span.SetStatus(codes.Ok, "")
 	return results[param.Offset:end], len(results), nil
+}
+
+// 根据数据源获取数据视图ID
+func (dvs *dataViewService) ListDataViewsByDataSource(ctx context.Context, dataSourceID string) ([]*interfaces.ViewDeleteTime, error) {
+	ctx, span := ar_trace.Tracer.Start(ctx, "logic layer: List data views")
+	defer span.End()
+
+	views, err := dvs.dva.ListDataViewsByDataSource(ctx, dataSourceID)
+	if err != nil {
+		logger.Errorf("ListDataViewsByDataSource error: %s", err.Error())
+
+		span.SetStatus(codes.Error, "List data views failed")
+		return nil, rest.NewHTTPError(ctx, http.StatusInternalServerError,
+			derrors.DataModel_DataView_InternalError_ListDataViewsFailed).WithErrorDetails(err.Error())
+	}
+
+	span.SetStatus(codes.Ok, "")
+	return views, nil
 }
 
 // 根据名称检查数据视图是否存在，暴露 exist 参数，方便内部模块调用时根据exist决定后续行为
@@ -1956,5 +1974,84 @@ func (dvs *dataViewService) MarkDataViewsDeleted(ctx context.Context, tx *sql.Tx
 	}
 
 	span.SetStatus(codes.Ok, "mark data view deleted success")
+	return nil
+}
+
+// 批量创建数据视图（同步 monitor 专用，简化版）
+func (dvs *dataViewService) CreateDataViewsInternal(ctx context.Context, views []*interfaces.DataView) error {
+	ctx, span := ar_trace.Tracer.Start(ctx, "logic layer: Create data views internal (batch sync)")
+	defer span.End()
+
+	if len(views) == 0 {
+		return nil
+	}
+
+	span.SetAttributes(attr.Key("view_count").Int(len(views)))
+
+	now := time.Now().UnixMilli()
+	accountInfo := interfaces.AccountInfo{}
+	if ctx.Value(interfaces.ACCOUNT_INFO_KEY) != nil {
+		accountInfo = ctx.Value(interfaces.ACCOUNT_INFO_KEY).(interfaces.AccountInfo)
+	}
+
+	createdViews := make([]*interfaces.DataView, 0, len(views))
+	createSrcs := make([]interfaces.PermissionResource, 0, len(views))
+
+	for _, view := range views {
+		// 同步 monitor 创建的都是原子视图
+		view.Creator = accountInfo
+		view.Updater = accountInfo
+		view.CreateTime = now
+		view.UpdateTime = now
+
+		createdViews = append(createdViews, view)
+		createSrcs = append(createSrcs, interfaces.PermissionResource{
+			ID:   view.ViewID,
+			Type: interfaces.RESOURCE_TYPE_DATA_VIEW,
+			Name: common.ProcessUngroupedName(ctx, view.GroupName, view.ViewName),
+		})
+	}
+
+	// 开始事务进行批量写入
+	tx, err := dvs.db.Begin()
+	if err != nil {
+		return err
+	}
+
+	needRollback := true
+	defer func() {
+		if needRollback {
+			if rbErr := tx.Rollback(); rbErr != nil {
+				logger.Errorf("failed to rollback transaction: %v", rbErr)
+			}
+		} else {
+			if cmErr := tx.Commit(); cmErr != nil {
+				logger.Errorf("failed to commit transaction: %v", cmErr)
+			}
+		}
+	}()
+
+	// 分批插入数据库 [DB Batch]
+	batchSize := 2000
+	for i := 0; i < len(createdViews); i += batchSize {
+		end := i + batchSize
+		if end > len(createdViews) {
+			end = len(createdViews)
+		}
+		viewBatch := createdViews[i:end]
+		if err = dvs.dva.CreateDataViews(ctx, tx, viewBatch); err != nil {
+			logger.Errorf("CreateDataViewsInternal DB error: %s", err.Error())
+			return err
+		}
+	}
+
+	// 注册资源中心权限策略 [Policy Batch]
+	if err = dvs.ps.CreateResources(ctx, createSrcs, interfaces.COMMON_OPERATIONS); err != nil {
+		logger.Errorf("CreateDataViewsInternal Policy error: %s", err.Error())
+		return err
+	}
+
+	needRollback = false
+	span.SetStatus(codes.Ok, "Internal batch create successful")
 	return nil
 }

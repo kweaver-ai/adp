@@ -398,6 +398,7 @@ func validateViewFields(ctx context.Context, viewFields []*interfaces.ViewField)
 func validateFeatures(ctx context.Context, fieldsMap map[string]*interfaces.ViewField, features []interfaces.FieldFeature) error {
 	enabledMap := make(map[interfaces.FieldFeatureType]bool)
 	featureNameMap := make(map[string]struct{})
+	featureFingerprintMap := make(map[string]struct{})
 	for _, f := range features {
 		if f.FeatureName == "" {
 			return rest.NewHTTPError(ctx, http.StatusBadRequest, derrors.DataModel_DataView_InvalidParameter_FieldFeatureName).
@@ -425,6 +426,16 @@ func validateFeatures(ctx context.Context, fieldsMap map[string]*interfaces.View
 		if _, ok := interfaces.FieldFeatureTypeMap[f.FeatureType]; !ok {
 			return rest.NewHTTPError(ctx, http.StatusBadRequest, rest.PublicError_BadRequest).
 				WithErrorDetails("The field feature type is invalid")
+		}
+
+		// 指纹：Type + RefField
+		fingerprint := fmt.Sprintf("%s|%s", f.FeatureType, f.RefField)
+		if _, ok := featureFingerprintMap[fingerprint]; !ok {
+			featureFingerprintMap[fingerprint] = struct{}{}
+		} else {
+			errDetails := fmt.Sprintf("Data view field feature '%s' fingerprint '%s' already exists", f.FeatureName, fingerprint)
+			return rest.NewHTTPError(ctx, http.StatusBadRequest, rest.PublicError_BadRequest).
+				WithErrorDetails(errDetails)
 		}
 
 		// 校验特征备注，长度限制1000

@@ -149,10 +149,10 @@ func (mr *MockDataViewAccessMockRecorder) GetDataViewsByGroupID(ctx, groupID any
 }
 
 // GetDataViewsBySourceID mocks base method.
-func (m *MockDataViewAccess) GetDataViewsBySourceID(ctx context.Context, sourceID string) ([]*interfaces.DataView, error) {
+func (m *MockDataViewAccess) GetDataViewsBySourceID(ctx context.Context, sourceID string) ([]string, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetDataViewsBySourceID", ctx, sourceID)
-	ret0, _ := ret[0].([]*interfaces.DataView)
+	ret0, _ := ret[0].([]string)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -253,6 +253,21 @@ func (mr *MockDataViewAccessMockRecorder) ListDataViews(ctx, viewsQuery any) *go
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListDataViews", reflect.TypeOf((*MockDataViewAccess)(nil).ListDataViews), ctx, viewsQuery)
 }
 
+// ListDataViewsByDataSource mocks base method.
+func (m *MockDataViewAccess) ListDataViewsByDataSource(ctx context.Context, dataSourceID string) ([]*interfaces.ViewDeleteTime, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ListDataViewsByDataSource", ctx, dataSourceID)
+	ret0, _ := ret[0].([]*interfaces.ViewDeleteTime)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ListDataViewsByDataSource indicates an expected call of ListDataViewsByDataSource.
+func (mr *MockDataViewAccessMockRecorder) ListDataViewsByDataSource(ctx, dataSourceID any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListDataViewsByDataSource", reflect.TypeOf((*MockDataViewAccess)(nil).ListDataViewsByDataSource), ctx, dataSourceID)
+}
+
 // MarkDataViewsDeleted mocks base method.
 func (m *MockDataViewAccess) MarkDataViewsDeleted(ctx context.Context, tx *sql.Tx, params *interfaces.MarkViewDeletedParams) error {
 	m.ctrl.T.Helper()
@@ -293,6 +308,20 @@ func (m *MockDataViewAccess) UpdateDataViewRealTimeStreaming(ctx context.Context
 func (mr *MockDataViewAccessMockRecorder) UpdateDataViewRealTimeStreaming(ctx, tx, realTimeStreaming any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateDataViewRealTimeStreaming", reflect.TypeOf((*MockDataViewAccess)(nil).UpdateDataViewRealTimeStreaming), ctx, tx, realTimeStreaming)
+}
+
+// UpdateDataViews mocks base method.
+func (m *MockDataViewAccess) UpdateDataViews(ctx context.Context, tx *sql.Tx, views []*interfaces.DataView) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UpdateDataViews", ctx, tx, views)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// UpdateDataViews indicates an expected call of UpdateDataViews.
+func (mr *MockDataViewAccessMockRecorder) UpdateDataViews(ctx, tx, views any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateDataViews", reflect.TypeOf((*MockDataViewAccess)(nil).UpdateDataViews), ctx, tx, views)
 }
 
 // UpdateDataViewsAttrs mocks base method.

@@ -332,7 +332,7 @@ func (pa *permissionAccess) FilterResources(ctx context.Context,
 
 	filter.Method = http.MethodGet
 	respCode, result, err := pa.httpClient.PostNoUnmarshal(ctx, httpUrl, headers, filter)
-	logger.Debugf("post [%s] finished, response code is [%d], result is [%s], error is [%v]", httpUrl, respCode, result, err)
+	logger.Debugf("post [%s] finished, response code is [%d], error is [%v]", httpUrl, respCode, err)
 
 	if err != nil {
 		logger.Errorf("Post resource-filter request failed: %v", err)

@@ -222,6 +222,7 @@ func (dvga *dataViewGroupAccess) ListDataViewGroups(ctx context.Context, params 
 		"f_group_name",
 		"f_create_time",
 		"f_update_time",
+		"f_delete_time",
 		"f_builtin").
 		From(DATA_VIEW_GROUP_TABLE_NAME)
 		// JoinClause(subquery.Prefix(" LEFT JOIN (").Suffix(") AS dv ON (dvg.f_group_id = dv.f_group_id)"))
@@ -270,6 +271,7 @@ func (dvga *dataViewGroupAccess) ListDataViewGroups(ctx context.Context, params 
 			&dataViewGroup.GroupName,
 			&dataViewGroup.CreateTime,
 			&dataViewGroup.UpdateTime,
+			&dataViewGroup.DeleteTime,
 			&dataViewGroup.Builtin,
 		)
 		if err != nil {
@@ -423,8 +425,9 @@ func (dvga *dataViewGroupAccess) CheckDataViewGroupExistByName(ctx context.Conte
 		"f_builtin").
 		From(DATA_VIEW_GROUP_TABLE_NAME).
 		Where(sq.Eq{
-			"f_group_name": groupName,
-			"f_builtin":    builtin,
+			"f_group_name":  groupName,
+			"f_builtin":     builtin,
+			"f_delete_time": 0,
 		}).
 		ToSql()
 

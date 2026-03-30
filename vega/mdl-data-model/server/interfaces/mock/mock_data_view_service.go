@@ -89,6 +89,20 @@ func (mr *MockDataViewServiceMockRecorder) CreateDataViews(ctx, dataViews, mode,
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateDataViews", reflect.TypeOf((*MockDataViewService)(nil).CreateDataViews), ctx, dataViews, mode, checkPermission)
 }
 
+// CreateDataViewsInternal mocks base method.
+func (m *MockDataViewService) CreateDataViewsInternal(ctx context.Context, views []*interfaces.DataView) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CreateDataViewsInternal", ctx, views)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// CreateDataViewsInternal indicates an expected call of CreateDataViewsInternal.
+func (mr *MockDataViewServiceMockRecorder) CreateDataViewsInternal(ctx, views any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateDataViewsInternal", reflect.TypeOf((*MockDataViewService)(nil).CreateDataViewsInternal), ctx, views)
+}
+
 // DeleteDataViews mocks base method.
 func (m *MockDataViewService) DeleteDataViews(ctx context.Context, viewIDs []string) error {
 	m.ctrl.T.Helper()
@@ -116,6 +130,21 @@ func (m *MockDataViewService) GetDataView(ctx context.Context, viewID string) (*
 func (mr *MockDataViewServiceMockRecorder) GetDataView(ctx, viewID any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetDataView", reflect.TypeOf((*MockDataViewService)(nil).GetDataView), ctx, viewID)
+}
+
+// GetDataViewIDsBySourceID mocks base method.
+func (m *MockDataViewService) GetDataViewIDsBySourceID(ctx context.Context, sourceID string) ([]string, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetDataViewIDsBySourceID", ctx, sourceID)
+	ret0, _ := ret[0].([]string)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetDataViewIDsBySourceID indicates an expected call of GetDataViewIDsBySourceID.
+func (mr *MockDataViewServiceMockRecorder) GetDataViewIDsBySourceID(ctx, sourceID any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetDataViewIDsBySourceID", reflect.TypeOf((*MockDataViewService)(nil).GetDataViewIDsBySourceID), ctx, sourceID)
 }
 
 // GetDataViews mocks base method.
@@ -148,19 +177,19 @@ func (mr *MockDataViewServiceMockRecorder) GetDataViewsByGroupID(ctx, groupID an
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetDataViewsByGroupID", reflect.TypeOf((*MockDataViewService)(nil).GetDataViewsByGroupID), ctx, groupID)
 }
 
-// GetDataViewsBySourceID mocks base method.
-func (m *MockDataViewService) GetDataViewsBySourceID(ctx context.Context, sourceID string) ([]*interfaces.DataView, error) {
+// GetDataViewsInternal mocks base method.
+func (m *MockDataViewService) GetDataViewsInternal(ctx context.Context, viewIDs []string) ([]*interfaces.DataView, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetDataViewsBySourceID", ctx, sourceID)
+	ret := m.ctrl.Call(m, "GetDataViewsInternal", ctx, viewIDs)
 	ret0, _ := ret[0].([]*interfaces.DataView)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// GetDataViewsBySourceID indicates an expected call of GetDataViewsBySourceID.
-func (mr *MockDataViewServiceMockRecorder) GetDataViewsBySourceID(ctx, sourceID any) *gomock.Call {
+// GetDataViewsInternal indicates an expected call of GetDataViewsInternal.
+func (mr *MockDataViewServiceMockRecorder) GetDataViewsInternal(ctx, viewIDs any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetDataViewsBySourceID", reflect.TypeOf((*MockDataViewService)(nil).GetDataViewsBySourceID), ctx, sourceID)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetDataViewsInternal", reflect.TypeOf((*MockDataViewService)(nil).GetDataViewsInternal), ctx, viewIDs)
 }
 
 // GetDetailedDataViewMapByIDs mocks base method.
@@ -225,6 +254,21 @@ func (mr *MockDataViewServiceMockRecorder) ListDataViews(ctx, params any) *gomoc
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListDataViews", reflect.TypeOf((*MockDataViewService)(nil).ListDataViews), ctx, params)
 }
 
+// ListDataViewsByDataSource mocks base method.
+func (m *MockDataViewService) ListDataViewsByDataSource(ctx context.Context, dataSourceID string) ([]*interfaces.ViewDeleteTime, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ListDataViewsByDataSource", ctx, dataSourceID)
+	ret0, _ := ret[0].([]*interfaces.ViewDeleteTime)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ListDataViewsByDataSource indicates an expected call of ListDataViewsByDataSource.
+func (mr *MockDataViewServiceMockRecorder) ListDataViewsByDataSource(ctx, dataSourceID any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListDataViewsByDataSource", reflect.TypeOf((*MockDataViewService)(nil).ListDataViewsByDataSource), ctx, dataSourceID)
+}
+
 // MarkDataViewsDeleted mocks base method.
 func (m *MockDataViewService) MarkDataViewsDeleted(ctx context.Context, tx *sql.Tx, viewIDs []string) error {
 	m.ctrl.T.Helper()
@@ -283,20 +327,6 @@ func (mr *MockDataViewServiceMockRecorder) UpdateDataView(ctx, tx, dataView any)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateDataView", reflect.TypeOf((*MockDataViewService)(nil).UpdateDataView), ctx, tx, dataView)
 }
 
-// UpdateDataViewInternal mocks base method.
-func (m *MockDataViewService) UpdateDataViewInternal(ctx context.Context, view *interfaces.DataView) error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "UpdateDataViewInternal", ctx, view)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// UpdateDataViewInternal indicates an expected call of UpdateDataViewInternal.
-func (mr *MockDataViewServiceMockRecorder) UpdateDataViewInternal(ctx, view any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateDataViewInternal", reflect.TypeOf((*MockDataViewService)(nil).UpdateDataViewInternal), ctx, view)
-}
-
 // UpdateDataViewsGroup mocks base method.
 func (m *MockDataViewService) UpdateDataViewsGroup(ctx context.Context, views map[string]*interfaces.DataView, group *interfaces.ViewGroupReq) error {
 	m.ctrl.T.Helper()
@@ -309,4 +339,18 @@ func (m *MockDataViewService) UpdateDataViewsGroup(ctx context.Context, views ma
 func (mr *MockDataViewServiceMockRecorder) UpdateDataViewsGroup(ctx, views, group any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateDataViewsGroup", reflect.TypeOf((*MockDataViewService)(nil).UpdateDataViewsGroup), ctx, views, group)
+}
+
+// UpdateDataViewsInternal mocks base method.
+func (m *MockDataViewService) UpdateDataViewsInternal(ctx context.Context, views []*interfaces.DataView) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UpdateDataViewsInternal", ctx, views)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// UpdateDataViewsInternal indicates an expected call of UpdateDataViewsInternal.
+func (mr *MockDataViewServiceMockRecorder) UpdateDataViewsInternal(ctx, views any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateDataViewsInternal", reflect.TypeOf((*MockDataViewService)(nil).UpdateDataViewsInternal), ctx, views)
 }

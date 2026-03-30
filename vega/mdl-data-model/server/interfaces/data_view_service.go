@@ -168,6 +168,11 @@ type ViewIDsReq struct {
 	IDs []string `json:"view_ids"`
 }
 
+type ViewDeleteTime struct {
+	ViewID     string
+	DeleteTime int64
+}
+
 //go:generate mockgen -source ../interfaces/data_view_service.go -destination ../interfaces/mock/mock_data_view_service.go
 type DataViewService interface {
 	CreateDataViews(ctx context.Context, dataViews []*DataView, mode string, checkPermission bool) ([]string, error)
@@ -186,16 +191,19 @@ type DataViewService interface {
 	RetriveGroupIDByGroupName(ctx context.Context, tx *sql.Tx, viewGroupReq *ViewGroupReq) (string, bool, error)
 	UpdateDataViewsGroup(ctx context.Context, views map[string]*DataView, group *ViewGroupReq) error
 	UpdateAtomicDataViews(ctx context.Context, attrs *AtomicViewUpdateReq) error
-	// UpdateDataViewRealTimeStreaming(ctx context.Context, realTimeStreaming *RealTimeStreaming) error
 
 	// 导出分组下的视图
 	GetDataViewsByGroupID(ctx context.Context, groupID string) ([]*DataView, error)
-	GetDataViewsBySourceID(ctx context.Context, sourceID string) ([]*DataView, error)
+	GetDataViewIDsBySourceID(ctx context.Context, sourceID string) ([]string, error)
 
 	// 获取数据视图的资源实例列表
 	ListDataViewSrcs(ctx context.Context, params *ListViewQueryParams) ([]PermissionResource, int, error)
 
-	UpdateDataViewInternal(ctx context.Context, view *DataView) error
+	UpdateDataViewsInternal(ctx context.Context, views []*DataView) error
+	CreateDataViewsInternal(ctx context.Context, views []*DataView) error
+	GetDataViewsInternal(ctx context.Context, viewIDs []string) ([]*DataView, error)
+	ListDataViewsByDataSource(ctx context.Context, dataSourceID string) ([]*ViewDeleteTime, error)
+
 	// 批量标记删除视图
 	MarkDataViewsDeleted(ctx context.Context, tx *sql.Tx, viewIDs []string) error
 }

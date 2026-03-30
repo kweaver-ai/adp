@@ -266,6 +266,7 @@ type DataViewAccess interface {
 	CreateDataViews(ctx context.Context, tx *sql.Tx, views []*DataView) error
 	DeleteDataViews(ctx context.Context, tx *sql.Tx, viewIDs []string) error
 	UpdateDataView(ctx context.Context, tx *sql.Tx, view *DataView) error
+	UpdateDataViews(ctx context.Context, tx *sql.Tx, views []*DataView) error
 	GetDataViews(ctx context.Context, viewID []string) ([]*DataView, error)
 	ListDataViews(ctx context.Context, viewsQuery *ListViewQueryParams) ([]*SimpleDataView, error)
 	GetDataViewsTotal(ctx context.Context, viewsQuery *ListViewQueryParams) (int, error)
@@ -293,8 +294,9 @@ type DataViewAccess interface {
 	GetDataViewsByGroupID(ctx context.Context, groupID string) ([]*DataView, error)
 
 	// 根据数据源id获取视图
-	GetDataViewsBySourceID(ctx context.Context, sourceID string) ([]*DataView, error)
+	GetDataViewsBySourceID(ctx context.Context, sourceID string) ([]string, error)
 
 	// 批量标记删除视图
 	MarkDataViewsDeleted(ctx context.Context, tx *sql.Tx, params *MarkViewDeletedParams) error
+	ListDataViewsByDataSource(ctx context.Context, dataSourceID string) ([]*ViewDeleteTime, error)
 }

@@ -25,14 +25,15 @@ import (
 
 // server配置项
 type ServerSetting struct {
-	RunMode               string        `mapstructure:"runMode"`
-	HttpPort              int           `mapstructure:"httpPort"`
-	Language              string        `mapstructure:"language"`
-	ReadTimeOut           time.Duration `mapstructure:"readTimeOut"`
-	WriteTimeout          time.Duration `mapstructure:"writeTimeOut"`
-	PersistSteps          []string      `mapstructure:"persistSteps"`
-	WatchMetadataInterval time.Duration `mapstructure:"watchMetadataInterval"`
-	WatchMetadataEnabled  bool          `mapstructure:"watchMetadataEnabled"`
+	RunMode                string        `mapstructure:"runMode"`
+	HttpPort               int           `mapstructure:"httpPort"`
+	Language               string        `mapstructure:"language"`
+	ReadTimeOut            time.Duration `mapstructure:"readTimeOut"`
+	WriteTimeout           time.Duration `mapstructure:"writeTimeOut"`
+	PersistSteps           []string      `mapstructure:"persistSteps"`
+	WatchMetadataInterval  time.Duration `mapstructure:"watchMetadataInterval"`
+	WatchMetadataEnabled   bool          `mapstructure:"watchMetadataEnabled"`
+	WatchMetadataBatchSize int           `mapstructure:"watchMetadataBatchSize"`
 }
 
 type ThirdParty struct {

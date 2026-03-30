@@ -165,7 +165,7 @@ func (vma *vegaMetadataAccess) GetMetadataTablesByIDs(ctx context.Context, table
 	}
 
 	respCode, respData, err := vma.httpClient.PostNoUnmarshal(ctx, urlStr, headers, requestBody)
-	logger.Debugf("get %s finished, response code is %d, request body is %+v, error is %v", urlStr, respCode, requestBody, err)
+	logger.Debugf("get %s finished, response code is %d, error is %v", urlStr, respCode, err)
 
 	if err != nil {
 		logger.Errorf("DrivenMetadata GetMetadataTablesByIDs request failed: %v", err)

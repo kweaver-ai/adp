@@ -107,6 +107,7 @@ config:
     - 1d
     watchMetadataInterval: 60  # 单位为秒
     watchMetadataEnabled: true
+    watchMetadataBatchSize: 100
   log:
     logLevel: info
     developMode: false
