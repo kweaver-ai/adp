@@ -453,6 +453,58 @@ func (ra *resourceAccess) GetByName(ctx context.Context, catalogID string, name 
 	return resource, nil
 }
 
+// ListIDs lists Resource IDs with filters.
+func (ra *resourceAccess) ListIDs(ctx context.Context, params interfaces.ResourcesQueryParams) ([]string, error) {
+	ctx, span := ar_trace.Tracer.Start(ctx, "List resource IDs",
+		trace.WithSpanKind(trace.SpanKindClient))
+	defer span.End()
+
+	builder := sq.Select("f_id").From(RESOURCE_TABLE_NAME)
+
+	if params.CatalogID != "" {
+		builder = builder.Where(sq.Eq{"f_catalog_id": params.CatalogID})
+	}
+	if params.Category != "" {
+		builder = builder.Where(sq.Eq{"f_category": params.Category})
+	}
+	if params.Status != "" {
+		builder = builder.Where(sq.Eq{"f_status": params.Status})
+	}
+
+	// 排序
+	if params.Sort != "" {
+		builder = builder.OrderBy(fmt.Sprintf("%s %s", params.Sort, params.Direction))
+	} else {
+		builder = builder.OrderBy("f_update_time DESC")
+	}
+
+	sqlStr, vals, err := builder.ToSql()
+	if err != nil {
+		span.SetStatus(codes.Error, "Build sql failed")
+		return nil, err
+	}
+
+	rows, err := ra.db.QueryContext(ctx, sqlStr, vals...)
+	if err != nil {
+		span.SetStatus(codes.Error, "Query failed")
+		return nil, err
+	}
+	defer rows.Close()
+
+	ids := make([]string, 0)
+	for rows.Next() {
+		var id string
+		if err := rows.Scan(&id); err != nil {
+			span.SetStatus(codes.Error, "Scan row failed")
+			return nil, err
+		}
+		ids = append(ids, id)
+	}
+
+	span.SetStatus(codes.Ok, "")
+	return ids, nil
+}
+
 // List lists Resources with filters.
 func (ra *resourceAccess) List(ctx context.Context, params interfaces.ResourcesQueryParams) ([]*interfaces.Resource, int64, error) {
 	ctx, span := ar_trace.Tracer.Start(ctx, "List resources",
@@ -778,6 +830,105 @@ func (ra *resourceAccess) DeleteByIDs(ctx context.Context, ids []string) error {
 
 	span.SetStatus(codes.Ok, "")
 	return nil
+}
+
+// ListResourceSrcsIDs lists Resource Source IDs with filters.
+func (ra *resourceAccess) ListResourceSrcsIDs(ctx context.Context, params interfaces.ListResourcesQueryParams) ([]string, error) {
+	ctx, span := ar_trace.Tracer.Start(ctx, "ListResourceSrcsIDs",
+		trace.WithSpanKind(trace.SpanKindClient))
+	defer span.End()
+
+	builder := sq.Select("f_id").From(RESOURCE_TABLE_NAME)
+
+	if params.ID != "" {
+		builder = builder.Where(sq.Eq{"f_id": params.ID})
+	}
+
+	if params.Keyword != "" {
+		keyword := "%" + params.Keyword + "%"
+		builder = builder.Where(sq.Like{"f_name": keyword})
+	}
+
+	// 排序
+	if params.Sort != "" {
+		builder = builder.OrderBy(fmt.Sprintf("%s %s", params.Sort, params.Direction))
+	} else {
+		builder = builder.OrderBy("f_update_time DESC")
+	}
+
+	sqlStr, vals, err := builder.ToSql()
+	if err != nil {
+		span.SetStatus(codes.Error, "Build sql failed")
+		return nil, err
+	}
+
+	rows, err := ra.db.QueryContext(ctx, sqlStr, vals...)
+	if err != nil {
+		span.SetStatus(codes.Error, "Query failed")
+		return nil, err
+	}
+	defer rows.Close()
+
+	ids := make([]string, 0)
+	for rows.Next() {
+		var id string
+		if err := rows.Scan(&id); err != nil {
+			span.SetStatus(codes.Error, "Scan row failed")
+			return nil, err
+		}
+		ids = append(ids, id)
+	}
+
+	span.SetStatus(codes.Ok, "")
+	return ids, nil
+}
+
+// ListResourceSrcsByIDs lists Resource Sources by IDs.
+func (ra *resourceAccess) ListResourceSrcsByIDs(ctx context.Context, ids []string) ([]*interfaces.ListResourceEntry, error) {
+	ctx, span := ar_trace.Tracer.Start(ctx, "ListResourceSrcsByIDs",
+		trace.WithSpanKind(trace.SpanKindClient))
+	defer span.End()
+
+	if len(ids) == 0 {
+		return []*interfaces.ListResourceEntry{}, nil
+	}
+
+	builder := sq.Select(
+		"f_id",
+		"f_name",
+	).From(RESOURCE_TABLE_NAME).Where(sq.Eq{"f_id": ids})
+
+	sqlStr, vals, err := builder.ToSql()
+	if err != nil {
+		span.SetStatus(codes.Error, "Build sql failed")
+		return nil, err
+	}
+
+	rows, err := ra.db.QueryContext(ctx, sqlStr, vals...)
+	if err != nil {
+		span.SetStatus(codes.Error, "Query failed")
+		return nil, err
+	}
+	defer rows.Close()
+
+	entries := make([]*interfaces.ListResourceEntry, 0)
+	for rows.Next() {
+		entry := &interfaces.ListResourceEntry{}
+
+		err := rows.Scan(
+			&entry.ID,
+			&entry.Name,
+		)
+		if err != nil {
+			span.SetStatus(codes.Error, "Scan row failed")
+			return nil, err
+		}
+		entry.Type = interfaces.RESOURCE_TYPE_RESOURCE
+		entries = append(entries, entry)
+	}
+
+	span.SetStatus(codes.Ok, "")
+	return entries, nil
 }
 
 // ListResourceSrcs lists Resource Sources with filters.
