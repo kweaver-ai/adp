@@ -38,6 +38,7 @@ type knowledgeNetworkService struct {
 	omAccess   interfaces.OntologyManagerAccess
 	ots        interfaces.ObjectTypeService
 	uAccess    interfaces.UniqueryAccess
+	vba        interfaces.VegaBackendAccess
 }
 
 func NewKnowledgeNetworkService(appSetting *common.AppSetting) interfaces.KnowledgeNetworkService {
@@ -47,6 +48,7 @@ func NewKnowledgeNetworkService(appSetting *common.AppSetting) interfaces.Knowle
 			omAccess:   logics.OMA,
 			ots:        object_type.NewObjectTypeService(appSetting),
 			uAccess:    logics.UA,
+			vba:        logics.VBA,
 		}
 	})
 	return knService
@@ -1088,17 +1090,41 @@ func (kns *knowledgeNetworkService) batchGetViewData(ctx context.Context,
 		}
 		viewQuery.Sort = sort
 
-		// 执行视图查询
-		backingViewData, err := kns.uAccess.GetViewDataByID(ctx, mappingRules.BackingDataSource.ID, *viewQuery)
-		if err != nil {
-			return nil, rest.NewHTTPError(ctx, http.StatusInternalServerError,
-				oerrors.OntologyQuery_ObjectType_InternalError_GetViewDataByIDFailed).WithErrorDetails(err.Error())
+		backingType := mappingRules.BackingDataSource.Type
+		if backingType == "" {
+			backingType = interfaces.DATA_SOURCE_TYPE_DATA_VIEW
+		}
+		var backingRows []map[string]any
+		if backingType == interfaces.DATA_SOURCE_TYPE_RESOURCE {
+			params := &interfaces.ResourceDataQueryParams{
+				NeedTotal:       viewQuery.NeedTotal,
+				Limit:           viewQuery.Limit,
+				Sort:            viewQuery.Sort,
+				SearchAfter:     viewQuery.SearchAfter,
+				FilterCondition: logics.CondCfgToFilterMap(viewQuery.Filters),
+			}
+			resp, err := kns.vba.QueryResourceData(ctx, mappingRules.BackingDataSource.ID, params)
+			if err != nil {
+				return nil, rest.NewHTTPError(ctx, http.StatusInternalServerError,
+					oerrors.OntologyQuery_ObjectType_InternalError_GetViewDataByIDFailed).WithErrorDetails(err.Error())
+			}
+			if resp == nil {
+				return nil, rest.NewHTTPError(ctx, http.StatusInternalServerError,
+					oerrors.OntologyQuery_ObjectType_InternalError_GetViewDataByIDFailed).WithErrorDetails("vega resource query returned nil")
+			}
+			backingRows = resp.Entries
+			logger.Debugf("relation [%s] from resource [%s] rows [%d]", edge.RelationType.RTName, mappingRules.BackingDataSource.ID, len(backingRows))
+		} else {
+			backingViewData, err := kns.uAccess.GetViewDataByID(ctx, mappingRules.BackingDataSource.ID, *viewQuery)
+			if err != nil {
+				return nil, rest.NewHTTPError(ctx, http.StatusInternalServerError,
+					oerrors.OntologyQuery_ObjectType_InternalError_GetViewDataByIDFailed).WithErrorDetails(err.Error())
+			}
+			backingRows = backingViewData.Datas
+			logger.Debugf("依据关系[%s]从视图[%s]中获取到的数据条数为[%d]", edge.RelationType.RTName, mappingRules.BackingDataSource.ID, len(backingRows))
 		}
 
-		logger.Debugf("依据关系[%s]从视图[%s]中获取到的数据条数为[%d]", edge.RelationType.RTName, mappingRules.BackingDataSource.ID, len(backingViewData.Datas))
-
-		// 将视图数据映射回各个对象
-		kns.mapViewDataToObjects(backingViewData.Datas, batchConditions, objectMapping, mappingRules, isForward, result)
+		kns.mapViewDataToObjects(backingRows, batchConditions, objectMapping, mappingRules, isForward, result)
 	}
 
 	return result, nil

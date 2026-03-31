@@ -185,6 +185,38 @@ func Test_ValidateRelationType(t *testing.T) {
 			So(err, ShouldNotBeNil)
 		})
 
+		Convey("Success with resource backing_data_source.type\n", func() {
+			rt := &interfaces.RelationType{
+				RelationTypeWithKeyField: interfaces.RelationTypeWithKeyField{
+					RTID:               "rt1",
+					RTName:             "relation1",
+					Type:               interfaces.RELATION_TYPE_DATA_VIEW,
+					SourceObjectTypeID: "ot1",
+					TargetObjectTypeID: "ot2",
+					MappingRules: map[string]any{
+						"backing_data_source": map[string]any{
+							"type": interfaces.DATA_SOURCE_TYPE_RESOURCE,
+							"id":   "res1",
+						},
+						"source_mapping_rules": []map[string]any{
+							{
+								"source_property": map[string]string{"name": "prop1"},
+								"target_property": map[string]string{"name": "bridge1"},
+							},
+						},
+						"target_mapping_rules": []map[string]any{
+							{
+								"source_property": map[string]string{"name": "bridge1"},
+								"target_property": map[string]string{"name": "prop2"},
+							},
+						},
+					},
+				},
+			}
+			err := ValidateRelationType(ctx, rt, true)
+			So(err, ShouldBeNil)
+		})
+
 		Convey("Success with data_view mapping rules\n", func() {
 			rt := &interfaces.RelationType{
 				RelationTypeWithKeyField: interfaces.RelationTypeWithKeyField{

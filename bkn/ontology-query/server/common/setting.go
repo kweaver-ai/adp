@@ -43,8 +43,9 @@ type AppSetting struct {
 	OpenSearchSetting rest.OpenSearchClientConfig
 	HydraAdminSetting hydra.HydraAdminSetting
 
-	BKNBackendUrl string
-	UniQueryUrl   string
+	BKNBackendUrl  string
+	UniQueryUrl    string
+	VegaBackendUrl string
 	// 算子执行 url
 	AgentOperatorUrl string
 	// 工具箱执行 url
@@ -69,6 +70,7 @@ const (
 	modelFactoryAPIServiceName     string = "mf-model-api"
 	bknBackendServiceName          string = "bkn-backend"
 	uniQueryServiceName            string = "uniquery"
+	vegaBackendServiceName         string = "vega-backend"
 	agentOperatorServiceName       string = "agent-operator-integration"
 )
 
@@ -130,6 +132,7 @@ func loadSetting(vp *viper.Viper) {
 	SetModelFactoryAPISetting()
 
 	SetUniQuerySetting()
+	SetVegaBackendSetting()
 
 	SetAgentOperatorSetting()
 
@@ -238,6 +241,17 @@ func SetUniQuerySetting() {
 	port := setting["port"].(int)
 
 	appSetting.UniQueryUrl = fmt.Sprintf("%s://%s:%d/api/mdl-uniquery/in/v1", protocol, host, port)
+}
+
+func SetVegaBackendSetting() {
+	setting, ok := appSetting.DepServices[vegaBackendServiceName]
+	if !ok {
+		logger.Fatalf("service %s not found in depServices", vegaBackendServiceName)
+	}
+	protocol := setting["protocol"].(string)
+	host := setting["host"].(string)
+	port := setting["port"].(int)
+	appSetting.VegaBackendUrl = fmt.Sprintf("%s://%s:%d/api/vega-backend/in/v1", protocol, host, port)
 }
 
 func SetAgentOperatorSetting() {
