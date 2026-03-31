@@ -72,6 +72,10 @@ depServices:
     host: localhost
     port: 13011
     protocol: http
+  vega-backend:
+    host: localhost
+    port: 13014
+    protocol: http
   bkn-backend:
     host: localhost
     port: 13014

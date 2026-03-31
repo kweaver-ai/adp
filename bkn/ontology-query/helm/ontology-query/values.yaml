@@ -72,6 +72,10 @@ depServices:
     host: mf-model-api
     port: 9898
     protocol: http
+  vega-backend:
+    host: localhost
+    port: 13014
+    protocol: http
 
 config:
   server:
