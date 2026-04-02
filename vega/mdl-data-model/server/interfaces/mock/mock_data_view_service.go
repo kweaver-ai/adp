@@ -194,10 +194,10 @@ func (mr *MockDataViewServiceMockRecorder) GetSimpleDataViewsByIDs(ctx, viewIDs,
 }
 
 // ListDataViewSrcs mocks base method.
-func (m *MockDataViewService) ListDataViewSrcs(ctx context.Context, params *interfaces.ListViewQueryParams) ([]*interfaces.Resource, int, error) {
+func (m *MockDataViewService) ListDataViewSrcs(ctx context.Context, params *interfaces.ListViewQueryParams) ([]interfaces.PermissionResource, int, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ListDataViewSrcs", ctx, params)
-	ret0, _ := ret[0].([]*interfaces.Resource)
+	ret0, _ := ret[0].([]interfaces.PermissionResource)
 	ret1, _ := ret[1].(int)
 	ret2, _ := ret[2].(error)
 	return ret0, ret1, ret2

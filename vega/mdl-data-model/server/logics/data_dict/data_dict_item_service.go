@@ -61,7 +61,7 @@ func (ddis *dataDictItemService) GetKVDictItems(ctx context.Context, dictID stri
 	defer span.End()
 
 	// 校验字典的查看权限
-	err := ddis.ps.CheckPermission(ctx, interfaces.Resource{
+	err := ddis.ps.CheckPermission(ctx, interfaces.PermissionResource{
 		Type: interfaces.RESOURCE_TYPE_DATA_DICT,
 		ID:   dictID,
 	}, []string{interfaces.OPERATION_TYPE_VIEW_DETAIL})
@@ -89,7 +89,7 @@ func (ddis *dataDictItemService) GetDimensionDictItems(ctx context.Context, dict
 	defer span.End()
 
 	// 校验字典的查看权限
-	err := ddis.ps.CheckPermission(ctx, interfaces.Resource{
+	err := ddis.ps.CheckPermission(ctx, interfaces.PermissionResource{
 		Type: interfaces.RESOURCE_TYPE_DATA_DICT,
 		ID:   dictID,
 	}, []string{interfaces.OPERATION_TYPE_VIEW_DETAIL})
@@ -164,7 +164,7 @@ func (ddis *dataDictItemService) DeleteDataDictItems(ctx context.Context, dict i
 	defer span.End()
 
 	// 校验字典的编辑权限
-	err := ddis.ps.CheckPermission(ctx, interfaces.Resource{
+	err := ddis.ps.CheckPermission(ctx, interfaces.PermissionResource{
 		Type: interfaces.RESOURCE_TYPE_DATA_DICT,
 		ID:   dict.DictID,
 	}, []string{interfaces.OPERATION_TYPE_MODIFY})
@@ -205,7 +205,7 @@ func (ddis *dataDictItemService) ListDataDictItems(ctx context.Context, dict int
 	defer span.End()
 
 	// 校验字典的查看权限
-	err := ddis.ps.CheckPermission(ctx, interfaces.Resource{
+	err := ddis.ps.CheckPermission(ctx, interfaces.PermissionResource{
 		Type: interfaces.RESOURCE_TYPE_DATA_DICT,
 		ID:   dict.DictID,
 	}, []string{interfaces.OPERATION_TYPE_VIEW_DETAIL})
@@ -246,7 +246,7 @@ func (ddis *dataDictItemService) CreateDataDictItem(ctx context.Context,
 	defer span.End()
 
 	// 校验字典的编辑权限
-	err := ddis.ps.CheckPermission(ctx, interfaces.Resource{
+	err := ddis.ps.CheckPermission(ctx, interfaces.PermissionResource{
 		Type: interfaces.RESOURCE_TYPE_DATA_DICT,
 		ID:   dict.DictID,
 	}, []string{interfaces.OPERATION_TYPE_MODIFY})
@@ -309,7 +309,7 @@ func (ddis *dataDictItemService) UpdateDataDictItem(ctx context.Context,
 	defer span.End()
 
 	// 校验字典的编辑权限
-	err := ddis.ps.CheckPermission(ctx, interfaces.Resource{
+	err := ddis.ps.CheckPermission(ctx, interfaces.PermissionResource{
 		Type: interfaces.RESOURCE_TYPE_DATA_DICT,
 		ID:   dict.DictID,
 	}, []string{interfaces.OPERATION_TYPE_MODIFY})
@@ -399,7 +399,7 @@ func (ddis *dataDictItemService) DeleteDataDictItem(ctx context.Context,
 	defer span.End()
 
 	// 校验字典的编辑权限
-	err := ddis.ps.CheckPermission(ctx, interfaces.Resource{
+	err := ddis.ps.CheckPermission(ctx, interfaces.PermissionResource{
 		Type: interfaces.RESOURCE_TYPE_DATA_DICT,
 		ID:   dict.DictID,
 	}, []string{interfaces.OPERATION_TYPE_MODIFY})
@@ -470,7 +470,7 @@ func (ddis *dataDictItemService) ImportDataDictItems(ctx context.Context,
 	defer span.End()
 
 	// 校验字典的编辑权限
-	err = ddis.ps.CheckPermission(ctx, interfaces.Resource{
+	err = ddis.ps.CheckPermission(ctx, interfaces.PermissionResource{
 		Type: interfaces.RESOURCE_TYPE_DATA_DICT,
 		ID:   dict.DictID,
 	}, []string{interfaces.OPERATION_TYPE_MODIFY})

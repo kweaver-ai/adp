@@ -23,6 +23,6 @@ type DataViewRowColumnRuleService interface {
 	CheckDataViewRowColumnRuleExistByID(ctx context.Context, ruleID string) (string, error)
 
 	// 获取行列规则的资源实例列表
-	ListDataViewRowColumnRuleSrcs(ctx context.Context, params *ListRowColumnRuleQueryParams) ([]*Resource, int, error)
+	ListDataViewRowColumnRuleSrcs(ctx context.Context, params *ListRowColumnRuleQueryParams) ([]PermissionResource, int, error)
 	DeleteRowColumnRulesByViewIDs(ctx context.Context, tx *sql.Tx, viewIDs []string) error
 }

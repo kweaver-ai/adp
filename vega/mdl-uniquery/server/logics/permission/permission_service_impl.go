@@ -18,19 +18,19 @@ import (
 	"uniquery/logics"
 )
 
-type permissionServiceImpl struct {
+type PermissionServiceImpl struct {
 	appSetting *common.AppSetting
 	pa         interfaces.PermissionAccess
 }
 
 func NewPermissionServiceImpl(appSetting *common.AppSetting) interfaces.PermissionService {
-	return &permissionServiceImpl{
+	return &PermissionServiceImpl{
 		appSetting: appSetting,
 		pa:         logics.PA,
 	}
 }
 
-func (ps *permissionServiceImpl) CheckPermission(ctx context.Context, resource interfaces.Resource, ops []string) error {
+func (ps *PermissionServiceImpl) CheckPermission(ctx context.Context, resource interfaces.PermissionResource, ops []string) error {
 	accountInfo := interfaces.AccountInfo{}
 	if ctx.Value(interfaces.ACCOUNT_INFO_KEY) != nil {
 		accountInfo = ctx.Value(interfaces.ACCOUNT_INFO_KEY).(interfaces.AccountInfo)
@@ -41,7 +41,7 @@ func (ps *permissionServiceImpl) CheckPermission(ctx context.Context, resource i
 	}
 
 	ok, err := ps.pa.CheckPermission(ctx, interfaces.PermissionCheck{
-		Accessor: interfaces.Accessor{
+		Accessor: interfaces.PermissionAccessor{
 			ID:   accountInfo.ID,
 			Type: accountInfo.Type,
 		},
@@ -60,7 +60,7 @@ func (ps *permissionServiceImpl) CheckPermission(ctx context.Context, resource i
 }
 
 // CheckPermissionWithResult 返回权限检查的结果（bool值）
-func (ps *permissionServiceImpl) CheckPermissionWithResult(ctx context.Context, resource interfaces.Resource, ops []string) (bool, error) {
+func (ps *PermissionServiceImpl) CheckPermissionWithResult(ctx context.Context, resource interfaces.PermissionResource, ops []string) (bool, error) {
 	accountInfo := interfaces.AccountInfo{}
 	if ctx.Value(interfaces.ACCOUNT_INFO_KEY) != nil {
 		accountInfo = ctx.Value(interfaces.ACCOUNT_INFO_KEY).(interfaces.AccountInfo)
@@ -71,7 +71,7 @@ func (ps *permissionServiceImpl) CheckPermissionWithResult(ctx context.Context, 
 	}
 
 	result, err := ps.pa.CheckPermission(ctx, interfaces.PermissionCheck{
-		Accessor: interfaces.Accessor{
+		Accessor: interfaces.PermissionAccessor{
 			ID:   accountInfo.ID,
 			Type: accountInfo.Type,
 		},
@@ -88,8 +88,12 @@ func (ps *permissionServiceImpl) CheckPermissionWithResult(ctx context.Context, 
 }
 
 // 过滤资源列表
-func (ps *permissionServiceImpl) FilterResources(ctx context.Context, resourceType string, ids []string,
-	ops []string, allowOperation bool, fullOps []string) (map[string]interfaces.ResourceOps, error) {
+func (ps *PermissionServiceImpl) FilterResources(ctx context.Context, resourceType string, ids []string,
+	ops []string, allowOperation bool, fullOps []string) (map[string]interfaces.PermissionResourceOps, error) {
+
+	if len(ids) == 0 {
+		return map[string]interfaces.PermissionResourceOps{}, nil
+	}
 
 	accountInfo := interfaces.AccountInfo{}
 	if ctx.Value(interfaces.ACCOUNT_INFO_KEY) != nil {
@@ -100,16 +104,16 @@ func (ps *permissionServiceImpl) FilterResources(ctx context.Context, resourceTy
 			WithErrorDetails("Access denied: missing account ID or type")
 	}
 
-	resources := []interfaces.Resource{}
+	resources := []interfaces.PermissionResource{}
 	for _, id := range ids {
-		resources = append(resources, interfaces.Resource{
+		resources = append(resources, interfaces.PermissionResource{
 			ID:   id,
 			Type: resourceType,
 		})
 	}
 
-	matchResouces, err := ps.pa.FilterResources(ctx, interfaces.ResourcesFilter{
-		Accessor: interfaces.Accessor{
+	matchResouces, err := ps.pa.FilterResources(ctx, interfaces.PermissionResourcesFilter{
+		Accessor: interfaces.PermissionAccessor{
 			ID:   accountInfo.ID,
 			Type: accountInfo.Type,
 		},
@@ -118,11 +122,11 @@ func (ps *permissionServiceImpl) FilterResources(ctx context.Context, resourceTy
 		AllowOperation: allowOperation,
 	})
 	if err != nil {
-		return nil, rest.NewHTTPError(ctx, http.StatusInternalServerError,
+		return map[string]interfaces.PermissionResourceOps{}, rest.NewHTTPError(ctx, http.StatusInternalServerError,
 			derrors.Uniquery_InternalError_FilterResourcesFailed).WithErrorDetails(err)
 	}
 
-	idMap := map[string]interfaces.ResourceOps{}
+	idMap := map[string]interfaces.PermissionResourceOps{}
 	for _, resourceOps := range matchResouces {
 		idMap[resourceOps.ResourceID] = resourceOps
 	}
@@ -131,37 +135,41 @@ func (ps *permissionServiceImpl) FilterResources(ctx context.Context, resourceTy
 }
 
 // 获取资源操作
-func (ps *permissionServiceImpl) GetResourcesOperations(ctx context.Context,
-	resourceType string, ids []string) ([]interfaces.ResourceOps, error) {
+func (ps *PermissionServiceImpl) GetResourcesOperations(ctx context.Context,
+	resourceType string, ids []string, fullOps []string) (map[string]interfaces.PermissionResourceOps, error) {
+
+	if len(ids) == 0 {
+		return map[string]interfaces.PermissionResourceOps{}, nil
+	}
 
 	accountInfo := interfaces.AccountInfo{}
 	if ctx.Value(interfaces.ACCOUNT_INFO_KEY) != nil {
 		accountInfo = ctx.Value(interfaces.ACCOUNT_INFO_KEY).(interfaces.AccountInfo)
 	}
 	if accountInfo.ID == "" || accountInfo.Type == "" {
-		return nil, rest.NewHTTPError(ctx, http.StatusForbidden, rest.PublicError_Forbidden).
-			WithErrorDetails("Access denied: missing account ID or type")
+		return map[string]interfaces.PermissionResourceOps{}, rest.NewHTTPError(ctx, http.StatusForbidden,
+			rest.PublicError_Forbidden).WithErrorDetails("Access denied: missing account ID or type")
 	}
 
-	resources := []interfaces.Resource{}
+	resources := []interfaces.PermissionResource{}
 	for _, id := range ids {
-		resources = append(resources, interfaces.Resource{
+		resources = append(resources, interfaces.PermissionResource{
 			ID:   id,
 			Type: resourceType,
 		})
 	}
 
-	matchResouces, err := ps.pa.GetResourcesOperations(ctx, interfaces.ResourcesFilter{
-		Accessor: interfaces.Accessor{
+	ops, err := ps.pa.GetResourcesOperations(ctx, interfaces.PermissionResourcesFilter{
+		Accessor: interfaces.PermissionAccessor{
 			ID:   accountInfo.ID,
 			Type: accountInfo.Type,
 		},
 		Resources: resources,
 	})
 	if err != nil {
-		return nil, rest.NewHTTPError(ctx, http.StatusInternalServerError,
+		return map[string]interfaces.PermissionResourceOps{}, rest.NewHTTPError(ctx, http.StatusInternalServerError,
 			derrors.Uniquery_InternalError_GetResourcesOperationsFailed).WithErrorDetails(err)
 	}
 
-	return matchResouces, nil
+	return ops, nil
 }

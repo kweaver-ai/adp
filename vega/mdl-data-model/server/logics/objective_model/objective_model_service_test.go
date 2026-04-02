@@ -506,7 +506,7 @@ func Test_ObjectiveModelService_ListObjectiveModels(t *testing.T) {
 		ps := dmock.NewMockPermissionService(mockCtrl)
 		oms, _ := MockNewObjectiveModelService(appSetting, dmja, mms, oma, mmts, iba, ps)
 
-		resrc := map[string]interfaces.ResourceOps{
+		resrc := map[string]interfaces.PermissionResourceOps{
 			"test-id": {
 				ResourceID: "test-id",
 			},
@@ -678,7 +678,7 @@ func Test_ObjectiveModelService_ListObjectiveModels(t *testing.T) {
 				ModelID:   "test-id",
 				IndexBase: "test-index",
 			}
-			resrctmp := map[string]interfaces.ResourceOps{
+			resrctmp := map[string]interfaces.PermissionResourceOps{
 				"test-id": {
 					ResourceID: "test-id",
 				},
@@ -721,7 +721,7 @@ func Test_ObjectiveModelService_GetObjectiveModels(t *testing.T) {
 		ps := dmock.NewMockPermissionService(mockCtrl)
 		oms, _ := MockNewObjectiveModelService(appSetting, dmja, mms, oma, mmts, iba, ps)
 
-		resrc := map[string]interfaces.ResourceOps{
+		resrc := map[string]interfaces.PermissionResourceOps{
 			"test-id": {
 				ResourceID: "test-id",
 			},
@@ -936,7 +936,7 @@ func Test_ObjectiveModelService_GetObjectiveModels(t *testing.T) {
 				ModelID:   "test-id",
 				IndexBase: "test-index",
 			}
-			resrctmp := map[string]interfaces.ResourceOps{
+			resrctmp := map[string]interfaces.PermissionResourceOps{
 				"test-id": {
 					ResourceID: "test-id",
 				},
@@ -1246,7 +1246,7 @@ func Test_ObjectiveModelService_DeleteObjectiveModels(t *testing.T) {
 		iba := dmock.NewMockIndexBaseAccess(mockCtrl)
 		ps := dmock.NewMockPermissionService(mockCtrl)
 		oms, smock := MockNewObjectiveModelService(appSetting, dmja, mms, oma, mmts, iba, ps)
-		resrc := map[string]interfaces.ResourceOps{
+		resrc := map[string]interfaces.PermissionResourceOps{
 			"test-id": {
 				ResourceID: "test-id",
 			},

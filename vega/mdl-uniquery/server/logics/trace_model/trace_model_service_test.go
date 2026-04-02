@@ -489,8 +489,8 @@ func TestSimulateCreateTraceModel(t *testing.T) {
 		mockCtrl := gomock.NewController(t)
 		defer mockCtrl.Finish()
 
-		ops := []interfaces.ResourceOps{
-			{
+		ops := map[string]interfaces.PermissionResourceOps{
+			interfaces.RESOURCE_ID_ALL: {
 				ResourceID: interfaces.RESOURCE_ID_ALL,
 				Operations: []string{interfaces.OPERATION_TYPE_CREATE},
 			},
@@ -506,7 +506,7 @@ func TestSimulateCreateTraceModel(t *testing.T) {
 		Convey("Simulate failed, caused by the error from method 'SimulateCreateTraceModel'", func() {
 			expectedErr := errors.New("some errors")
 			mockTMAccess.EXPECT().SimulateCreateTraceModel(gomock.Any(), gomock.Any()).Return(interfaces.TraceModel{}, expectedErr)
-			psMock.EXPECT().GetResourcesOperations(gomock.Any(), gomock.Any(), gomock.Any()).Return(ops, nil)
+			psMock.EXPECT().GetResourcesOperations(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(ops, nil)
 
 			_, err := mockTMService.SimulateCreateTraceModel(testCtx, interfaces.TraceModel{})
 			So(err, ShouldResemble, rest.NewHTTPError(testCtx, http.StatusInternalServerError, uerrors.Uniquery_TraceModel_InternalError_SimulateCreateTraceModelFailed).
@@ -515,7 +515,7 @@ func TestSimulateCreateTraceModel(t *testing.T) {
 
 		Convey("Simulate succeed", func() {
 			mockTMAccess.EXPECT().SimulateCreateTraceModel(gomock.Any(), gomock.Any()).Return(interfaces.TraceModel{}, nil)
-			psMock.EXPECT().GetResourcesOperations(gomock.Any(), gomock.Any(), gomock.Any()).Return(ops, nil)
+			psMock.EXPECT().GetResourcesOperations(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(ops, nil)
 
 			_, err := mockTMService.SimulateCreateTraceModel(testCtx, interfaces.TraceModel{})
 			So(err, ShouldBeNil)
@@ -528,8 +528,8 @@ func TestSimulateUpdateTraceModel(t *testing.T) {
 		mockCtrl := gomock.NewController(t)
 		defer mockCtrl.Finish()
 
-		ops := []interfaces.ResourceOps{
-			{
+		ops := map[string]interfaces.PermissionResourceOps{
+			interfaces.RESOURCE_ID_ALL: {
 				ResourceID: interfaces.RESOURCE_ID_ALL,
 				Operations: []string{interfaces.OPERATION_TYPE_CREATE},
 			},
@@ -545,7 +545,7 @@ func TestSimulateUpdateTraceModel(t *testing.T) {
 		Convey("Simulate failed, caused by the error from method 'SimulateUpdateTraceModel'", func() {
 			expectedErr := errors.New("some errors")
 			mockTMAccess.EXPECT().SimulateUpdateTraceModel(gomock.Any(), gomock.Any(), gomock.Any()).Return(interfaces.TraceModel{}, expectedErr)
-			psMock.EXPECT().GetResourcesOperations(gomock.Any(), gomock.Any(), gomock.Any()).Return(ops, nil)
+			psMock.EXPECT().GetResourcesOperations(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(ops, nil)
 
 			_, err := mockTMService.SimulateUpdateTraceModel(testCtx, "1", interfaces.TraceModel{})
 			So(err, ShouldResemble, rest.NewHTTPError(testCtx, http.StatusInternalServerError, uerrors.Uniquery_TraceModel_InternalError_SimulateUpdateTraceModelFailed).
@@ -554,7 +554,7 @@ func TestSimulateUpdateTraceModel(t *testing.T) {
 
 		Convey("Simulate succeed", func() {
 			mockTMAccess.EXPECT().SimulateUpdateTraceModel(gomock.Any(), gomock.Any(), gomock.Any()).Return(interfaces.TraceModel{}, nil)
-			psMock.EXPECT().GetResourcesOperations(gomock.Any(), gomock.Any(), gomock.Any()).Return(ops, nil)
+			psMock.EXPECT().GetResourcesOperations(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(ops, nil)
 
 			_, err := mockTMService.SimulateUpdateTraceModel(testCtx, "1", interfaces.TraceModel{})
 			So(err, ShouldBeNil)

@@ -137,7 +137,7 @@ func (kns *knowledgeNetworkService) CreateKN(ctx context.Context, kn *interfaces
 	defer span.End()
 
 	// 判断userid是否有创建业务知识网络的权限（策略决策）
-	err := kns.ps.CheckPermission(ctx, interfaces.Resource{
+	err := kns.ps.CheckPermission(ctx, interfaces.PermissionResource{
 		Type: interfaces.RESOURCE_TYPE_KN,
 		ID:   interfaces.RESOURCE_ID_ALL,
 	}, []string{interfaces.OPERATION_TYPE_CREATE})
@@ -377,7 +377,7 @@ func (kns *knowledgeNetworkService) CreateKN(ctx context.Context, kn *interfaces
 	// 最后才绑定业务域，创建才绑业务域
 	if isCreate {
 		// 注册资源策略
-		err = kns.ps.CreateResources(ctx, []interfaces.Resource{{
+		err = kns.ps.CreateResources(ctx, []interfaces.PermissionResource{{
 			ID:   kn.KNID,
 			Type: interfaces.RESOURCE_TYPE_KN,
 			Name: kn.KNName,
@@ -687,7 +687,7 @@ func (kns *knowledgeNetworkService) UpdateKN(ctx context.Context, tx *sql.Tx, kn
 	defer span.End()
 
 	// 判断userid是否有创建业务知识网络的权限（策略决策）
-	err := kns.ps.CheckPermission(ctx, interfaces.Resource{
+	err := kns.ps.CheckPermission(ctx, interfaces.PermissionResource{
 		Type: interfaces.RESOURCE_TYPE_KN,
 		ID:   kn.KNID,
 	}, []string{interfaces.OPERATION_TYPE_MODIFY})
@@ -766,7 +766,7 @@ func (kns *knowledgeNetworkService) UpdateKN(ctx context.Context, tx *sql.Tx, kn
 
 	// 请求更新资源名称的接口，更新资源的名称
 	if kn.IfNameModify {
-		err = kns.ps.UpdateResource(ctx, interfaces.Resource{
+		err = kns.ps.UpdateResource(ctx, interfaces.PermissionResource{
 			ID:   kn.KNID,
 			Type: interfaces.RESOURCE_TYPE_KN,
 			Name: kn.KNName,
@@ -785,7 +785,7 @@ func (kns *knowledgeNetworkService) DeleteKN(ctx context.Context, kn *interfaces
 	defer span.End()
 
 	// 判断userid是否有删除业务知识网络的权限
-	err := kns.ps.CheckPermission(ctx, interfaces.Resource{
+	err := kns.ps.CheckPermission(ctx, interfaces.PermissionResource{
 		Type: interfaces.RESOURCE_TYPE_KN,
 		ID:   kn.KNID,
 	}, []string{interfaces.OPERATION_TYPE_DELETE})
@@ -1331,14 +1331,14 @@ func buildPathKey(path interfaces.RelationTypePath, neighborPath interfaces.Rela
 
 // 获取业务知识网络资源列表
 func (kns *knowledgeNetworkService) ListKnSrcs(ctx context.Context,
-	parameter interfaces.KNsQueryParams) ([]interfaces.Resource, int, error) {
+	parameter interfaces.KNsQueryParams) ([]interfaces.PermissionResource, int, error) {
 
 	listCtx, listSpan := ar_trace.Tracer.Start(ctx, "查询业务知识网络实例列表")
 	defer listSpan.End()
 
 	//获取业务知识网络列表（不分页，获取所有的业务知识网络)
 	knList, err := kns.kna.ListKnSrcs(listCtx, parameter)
-	emptyResources := []interfaces.Resource{}
+	emptyResources := []interfaces.PermissionResource{}
 	if err != nil {
 		logger.Errorf("ListSimpleKns error: %s", err.Error())
 		listSpan.SetStatus(codes.Error, "List simple knowledge networks error")
@@ -1364,7 +1364,7 @@ func (kns *knowledgeNetworkService) ListKnSrcs(ctx context.Context,
 	}
 
 	// 遍历对象
-	results := make([]interfaces.Resource, 0)
+	results := make([]interfaces.PermissionResource, 0)
 	for _, knSrc := range knList {
 		if _, exist := matchResoucesMap[knSrc.ID]; exist {
 			results = append(results, knSrc)

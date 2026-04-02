@@ -45,5 +45,5 @@ type MetricModelService interface {
 	CheckFormula(ctx context.Context, metricModel MetricModel) error
 
 	// 获取指标模型的资源实例列表
-	ListMetricModelSrcs(ctx context.Context, parameter MetricModelsQueryParams) ([]Resource, int, error)
+	ListMetricModelSrcs(ctx context.Context, parameter MetricModelsQueryParams) ([]PermissionResource, int, error)
 }

@@ -177,8 +177,8 @@ func TestSimulate(t *testing.T) {
 		psMock := mock.NewMockPermissionService(mockCtrl)
 		ds := MockNewMetricModelService(appSetting, mmaMock, ibaMock, promQLMock, dvsMock, vvsMock, psMock)
 
-		ops := []interfaces.ResourceOps{
-			{
+		ops := map[string]interfaces.PermissionResourceOps{
+			interfaces.RESOURCE_ID_ALL: {
 				ResourceID: interfaces.RESOURCE_ID_ALL,
 				Operations: []string{interfaces.OPERATION_TYPE_CREATE},
 			},
@@ -197,7 +197,7 @@ func TestSimulate(t *testing.T) {
 				},
 			}
 
-			psMock.EXPECT().GetResourcesOperations(gomock.Any(), gomock.Any(), gomock.Any()).Return(ops, nil)
+			psMock.EXPECT().GetResourcesOperations(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(ops, nil)
 			_, httpErr := ds.Simulate(testENCtx, interfaces.MetricModelQuery{
 				DataSource: &interfaces.MetricDataSource{
 					Type: interfaces.SOURCE_TYPE_DATA_VIEW,
@@ -212,7 +212,7 @@ func TestSimulate(t *testing.T) {
 				&interfaces.DataView{}, nil)
 
 			err := errors.New("Simulate promql failed")
-			psMock.EXPECT().GetResourcesOperations(gomock.Any(), gomock.Any(), gomock.Any()).Return(ops, nil)
+			psMock.EXPECT().GetResourcesOperations(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(ops, nil)
 			promQLMock.EXPECT().Exec(gomock.Any(), gomock.Any()).Return(interfaces.PromQLResponse{}, nil, 0, err)
 			dvsMock.EXPECT().BuildViewQuery4MetricModel(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
 				Return(interfaces.ViewQuery4Metric{}, nil)
@@ -245,7 +245,7 @@ func TestSimulate(t *testing.T) {
 		})
 
 		Convey("Simulate failed, because Simulate GetDataViewByID failed", func() {
-			psMock.EXPECT().GetResourcesOperations(gomock.Any(), gomock.Any(), gomock.Any()).Return(ops, nil)
+			psMock.EXPECT().GetResourcesOperations(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(ops, nil)
 			dvsMock.EXPECT().GetDataViewByID(gomock.Any(), gomock.Any(), gomock.Any()).Return(
 				&interfaces.DataView{}, fmt.Errorf("missing ar_dataview parameter or ar_dataview parameter value cannot be empty."))
 
@@ -261,7 +261,7 @@ func TestSimulate(t *testing.T) {
 		})
 
 		Convey("Simulate failed, because Simulate data view not found", func() {
-			psMock.EXPECT().GetResourcesOperations(gomock.Any(), gomock.Any(), gomock.Any()).Return(ops, nil)
+			psMock.EXPECT().GetResourcesOperations(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(ops, nil)
 			dvsMock.EXPECT().GetDataViewByID(gomock.Any(), gomock.Any(), gomock.Any()).Return(
 				&interfaces.DataView{}, fmt.Errorf("data view not found."))
 

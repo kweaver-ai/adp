@@ -209,5 +209,5 @@ type TraceModelService interface {
 	GetSimpleTraceModelMapByIDs(ctx context.Context, modelIDs []string) (map[string]TraceModel, error)
 	GetSimpleTraceModelMapByNames(ctx context.Context, modelNames []string) (map[string]TraceModel, error)
 
-	ListTraceModelSrcs(ctx context.Context, queryParams TraceModelListQueryParams) ([]Resource, int, error)
+	ListTraceModelSrcs(ctx context.Context, queryParams TraceModelListQueryParams) ([]PermissionResource, int, error)
 }

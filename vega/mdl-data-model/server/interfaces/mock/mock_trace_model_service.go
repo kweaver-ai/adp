@@ -131,10 +131,10 @@ func (mr *MockTraceModelServiceMockRecorder) GetTraceModels(ctx, modelIDs any) *
 }
 
 // ListTraceModelSrcs mocks base method.
-func (m *MockTraceModelService) ListTraceModelSrcs(ctx context.Context, queryParams interfaces.TraceModelListQueryParams) ([]interfaces.Resource, int, error) {
+func (m *MockTraceModelService) ListTraceModelSrcs(ctx context.Context, queryParams interfaces.TraceModelListQueryParams) ([]interfaces.PermissionResource, int, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ListTraceModelSrcs", ctx, queryParams)
-	ret0, _ := ret[0].([]interfaces.Resource)
+	ret0, _ := ret[0].([]interfaces.PermissionResource)
 	ret1, _ := ret[1].(int)
 	ret2, _ := ret[2].(error)
 	return ret0, ret1, ret2

@@ -619,15 +619,15 @@ func Test_eventService_Query(t *testing.T) {
 				{QueryType: "instant_query", Id: "1"},
 			},
 		}
-		ops := []interfaces.ResourceOps{
-			{
+		ops := map[string]interfaces.PermissionResourceOps{
+			interfaces.RESOURCE_ID_ALL: {
 				ResourceID: interfaces.RESOURCE_ID_ALL,
 				Operations: []string{interfaces.OPERATION_TYPE_CREATE},
 			},
 		}
 		events := interfaces.IEvents{}
 		entities := interfaces.Records{}
-		psMock.EXPECT().GetResourcesOperations(gomock.Any(), gomock.Any(), gomock.Any()).Return(ops, nil)
+		psMock.EXPECT().GetResourcesOperations(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(ops, nil)
 		emAccess.EXPECT().GetEventModelById(gomock.Any(), gomock.Any()).AnyTimes().Return([]interfaces.EventModel{eventModel}, nil)
 		engine.EXPECT().Apply(gomock.Any(), gomock.Any(), gomock.Any()).AnyTimes().Return(events, entities, 0)
 		patches := ApplyPrivateMethod(es, "InitEngine",

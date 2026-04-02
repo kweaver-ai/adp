@@ -76,7 +76,7 @@ func (ds *eventService) Query(ctx context.Context, queryReq interfaces.EventQuer
 
 	// 决策权限。 预览的时候还没有模型id，此时的预览校验用新建或者编辑，
 	ops, err := ds.ps.GetResourcesOperations(ctx, interfaces.RESOURCE_TYPE_EVENT_MODEL,
-		[]string{interfaces.RESOURCE_ID_ALL})
+		[]string{interfaces.RESOURCE_ID_ALL}, interfaces.COMMON_OPERATIONS)
 	if err != nil {
 		return 0, []interfaces.IEvents{}, []interfaces.Records{}, err
 	}
@@ -87,7 +87,7 @@ func (ds *eventService) Query(ctx context.Context, queryReq interfaces.EventQuer
 	}
 	// 从 ops 里找新建或编辑的权限
 	found := false
-	for _, op := range ops[0].Operations {
+	for _, op := range ops[interfaces.RESOURCE_ID_ALL].Operations {
 		if op == interfaces.OPERATION_TYPE_CREATE || op == interfaces.OPERATION_TYPE_MODIFY {
 			found = true
 			break
@@ -183,7 +183,7 @@ func (ds *eventService) Query(ctx context.Context, queryReq interfaces.EventQuer
 // 根据ID 查询事件详情
 func (ds *eventService) QuerySingleEventByEventId(ctx context.Context, query interfaces.EventDetailsQueryReq) (interfaces.IEvent, error) {
 	// 决策当前模型id的数据查询权限
-	err := ds.ps.CheckPermission(ctx, interfaces.Resource{
+	err := ds.ps.CheckPermission(ctx, interfaces.PermissionResource{
 		ID:   query.EventModelID,
 		Type: interfaces.RESOURCE_TYPE_EVENT_MODEL,
 	}, []string{interfaces.OPERATION_TYPE_DATA_QUERY})

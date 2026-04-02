@@ -1027,7 +1027,7 @@ func Test_EventModelService_DeleteEventModels(t *testing.T) {
 		dvs := dmock.NewMockDataViewService(mockCtrl)
 		ps := dmock.NewMockPermissionService(mockCtrl)
 		ems, smock := MockNewEventModelService(appSetting, dmja, ema, mms, iba, dvs, ps)
-		resrc := map[string]interfaces.ResourceOps{
+		resrc := map[string]interfaces.PermissionResourceOps{
 			"1": {
 				ResourceID: "1",
 			},

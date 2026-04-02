@@ -117,10 +117,10 @@ func (mr *MockDataDictServiceMockRecorder) GetDataDicts(ctx, dictIDs any) *gomoc
 }
 
 // ListDataDictSrcs mocks base method.
-func (m *MockDataDictService) ListDataDictSrcs(ctx context.Context, listDictsQuery interfaces.DataDictQueryParams) ([]interfaces.Resource, int, error) {
+func (m *MockDataDictService) ListDataDictSrcs(ctx context.Context, listDictsQuery interfaces.DataDictQueryParams) ([]interfaces.PermissionResource, int, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ListDataDictSrcs", ctx, listDictsQuery)
-	ret0, _ := ret[0].([]interfaces.Resource)
+	ret0, _ := ret[0].([]interfaces.PermissionResource)
 	ret1, _ := ret[1].(int)
 	ret2, _ := ret[2].(error)
 	return ret0, ret1, ret2

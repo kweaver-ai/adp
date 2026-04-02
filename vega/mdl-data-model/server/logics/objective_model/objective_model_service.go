@@ -263,7 +263,7 @@ func (oms *objectiveModelService) CreateObjectiveModels(ctx context.Context, obj
 	defer span.End()
 
 	// 判断userid是否有创建指标模型的权限（策略决策）
-	err = oms.ps.CheckPermission(ctx, interfaces.Resource{
+	err = oms.ps.CheckPermission(ctx, interfaces.PermissionResource{
 		Type: interfaces.RESOURCE_TYPE_OBJECTIVE_MODEL,
 		ID:   interfaces.RESOURCE_ID_ALL,
 	}, []string{interfaces.OPERATION_TYPE_CREATE})
@@ -330,7 +330,7 @@ func (oms *objectiveModelService) CreateObjectiveModels(ctx context.Context, obj
 		}
 	}
 
-	resrcs := make([]interfaces.Resource, 0)
+	resrcs := make([]interfaces.PermissionResource, 0)
 	// 1. 创建模型
 	for _, objectiveModel := range createModels {
 		modelIDs = append(modelIDs, objectiveModel.ModelID)
@@ -376,7 +376,7 @@ func (oms *objectiveModelService) CreateObjectiveModels(ctx context.Context, obj
 			}
 		}()
 
-		resrcs = append(resrcs, interfaces.Resource{
+		resrcs = append(resrcs, interfaces.PermissionResource{
 			ID:   objectiveModel.ModelID,
 			Type: interfaces.RESOURCE_TYPE_OBJECTIVE_MODEL,
 			Name: objectiveModel.ModelName,
@@ -719,7 +719,7 @@ func (oms *objectiveModelService) UpdateObjectiveModel(ctx context.Context, tx *
 	defer updateSpan.End()
 
 	// 判断userid是否有创建指标模型的权限（策略决策）
-	err = oms.ps.CheckPermission(ctx, interfaces.Resource{
+	err = oms.ps.CheckPermission(ctx, interfaces.PermissionResource{
 		Type: interfaces.RESOURCE_TYPE_OBJECTIVE_MODEL,
 		ID:   objectiveModel.ModelID,
 	}, []string{interfaces.OPERATION_TYPE_MODIFY})
@@ -851,7 +851,7 @@ func (oms *objectiveModelService) UpdateObjectiveModel(ctx context.Context, tx *
 
 	// 请求更新资源名称的接口，更新资源的名称
 	if objectiveModel.IfNameModify {
-		err = oms.ps.UpdateResource(ctx, interfaces.Resource{
+		err = oms.ps.UpdateResource(ctx, interfaces.PermissionResource{
 			ID:   objectiveModel.ModelID,
 			Type: interfaces.RESOURCE_TYPE_OBJECTIVE_MODEL,
 			Name: objectiveModel.ModelName,
@@ -1205,12 +1205,12 @@ func (oms *objectiveModelService) handleObjectiveModelImportMode(ctx context.Con
 	return createModels, updateModels, nil
 }
 
-func (oms *objectiveModelService) ListObjectiveModelSrcs(ctx context.Context, parameter interfaces.ObjectiveModelsQueryParams) ([]interfaces.Resource, int, error) {
+func (oms *objectiveModelService) ListObjectiveModelSrcs(ctx context.Context, parameter interfaces.ObjectiveModelsQueryParams) ([]interfaces.PermissionResource, int, error) {
 	listCtx, listSpan := ar_trace.Tracer.Start(ctx, "查询目标模型实例列表")
 	defer listSpan.End()
 
 	//获取目标模型列表
-	empty := []interfaces.Resource{}
+	empty := []interfaces.PermissionResource{}
 	models, err := oms.oma.ListObjectiveModels(listCtx, parameter)
 	if err != nil {
 		logger.Errorf("ListObjectiveModels error: %s", err.Error())
@@ -1234,10 +1234,10 @@ func (oms *objectiveModelService) ListObjectiveModelSrcs(ctx context.Context, pa
 	}
 
 	// 遍历对象
-	results := make([]interfaces.Resource, 0)
+	results := make([]interfaces.PermissionResource, 0)
 	for _, model := range models {
 		if _, exist := matchResoucesMap[model.ModelID]; exist {
-			results = append(results, interfaces.Resource{
+			results = append(results, interfaces.PermissionResource{
 				ID:   model.ModelID,
 				Type: interfaces.RESOURCE_TYPE_OBJECTIVE_MODEL,
 				Name: model.ModelName,

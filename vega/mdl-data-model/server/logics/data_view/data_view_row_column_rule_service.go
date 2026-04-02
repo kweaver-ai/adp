@@ -230,7 +230,7 @@ func (dvrcrs *dataViewRowColumnRuleService) UpdateDataViewRowColumnRule(ctx cont
 
 	// 判断userid是否有修改数据视图行列权限的权限（策略决策）
 	err := dvrcrs.ps.CheckPermission(ctx,
-		interfaces.Resource{
+		interfaces.PermissionResource{
 			Type: interfaces.RESOURCE_TYPE_DATA_VIEW,
 			ID:   rule.ViewID,
 		},
@@ -347,7 +347,8 @@ func (dvrcrs *dataViewRowColumnRuleService) ListDataViewRowColumnRules(ctx conte
 	// }
 
 	// 获取资源操作
-	viewOpsMap, err := dvrcrs.ps.GetResourceOps(ctx, interfaces.RESOURCE_TYPE_DATA_VIEW, viewIDs)
+	viewOpsMap, err := dvrcrs.ps.GetResourcesOperations(ctx, interfaces.RESOURCE_TYPE_DATA_VIEW,
+		viewIDs, interfaces.FULL_OPERATIONS)
 	if err != nil {
 		return nil, 0, err
 	}
@@ -375,7 +376,7 @@ func (dvrcrs *dataViewRowColumnRuleService) ListDataViewRowColumnRules(ctx conte
 		}
 	}
 
-	viewIDMap := make(map[string]interfaces.ResourceOps)
+	viewIDMap := make(map[string]interfaces.PermissionResourceOps)
 	for _, ops := range viewOpsMap {
 		if checkPermission(ops.Operations, interfaces.OPERATION_TYPE_RULE_MANAGE, interfaces.OPERATION_TYPE_RULE_AUTHORIZE) {
 			viewIDMap[ops.ResourceID] = ops
@@ -434,7 +435,7 @@ func (dvrcrs *dataViewRowColumnRuleService) ListDataViewRowColumnRules(ctx conte
 
 // 获取行列规则的资源实例列表
 func (dvrcrs *dataViewRowColumnRuleService) ListDataViewRowColumnRuleSrcs(ctx context.Context,
-	params *interfaces.ListRowColumnRuleQueryParams) ([]*interfaces.Resource, int, error) {
+	params *interfaces.ListRowColumnRuleQueryParams) ([]interfaces.PermissionResource, int, error) {
 	listCtx, listSpan := ar_trace.Tracer.Start(ctx, "logic layer: List logical view row column rule resources")
 	listSpan.End()
 
@@ -443,11 +444,11 @@ func (dvrcrs *dataViewRowColumnRuleService) ListDataViewRowColumnRuleSrcs(ctx co
 		logger.Errorf("ListDataViewRowColumnRules error: %s", err.Error())
 		listSpan.SetStatus(codes.Error, "List logical view row column rules error")
 		listSpan.End()
-		return nil, 0, rest.NewHTTPError(listCtx, http.StatusInternalServerError,
+		return []interfaces.PermissionResource{}, 0, rest.NewHTTPError(listCtx, http.StatusInternalServerError,
 			rest.PublicError_InternalServerError).WithErrorDetails(err.Error())
 	}
 	if len(rules) == 0 {
-		return []*interfaces.Resource{}, 0, nil
+		return []interfaces.PermissionResource{}, 0, nil
 	}
 
 	// 根据权限过滤有查看权限的对象，过滤后的数组的总长度就是总数，无需再请求总数
@@ -462,7 +463,7 @@ func (dvrcrs *dataViewRowColumnRuleService) ListDataViewRowColumnRuleSrcs(ctx co
 	matchResouces, err := dvrcrs.ps.FilterResources(ctx, interfaces.RESOURCE_TYPE_DATA_VIEW, ruleIDs,
 		[]string{interfaces.OPERATION_TYPE_RULE_MANAGE}, false, interfaces.FULL_OPERATIONS)
 	if err != nil {
-		return nil, 0, err
+		return []interfaces.PermissionResource{}, 0, err
 	}
 
 	// 所有有权限的模型数组
@@ -474,7 +475,7 @@ func (dvrcrs *dataViewRowColumnRuleService) ListDataViewRowColumnRuleSrcs(ctx co
 	// 根据视图id获取视图名称, 如果有一个不存在, 则返回错误
 	viewMap, err := dvrcrs.dva.GetSimpleDataViewMapByIDs(ctx, viewIDs)
 	if err != nil {
-		return nil, 0, rest.NewHTTPError(ctx, http.StatusInternalServerError,
+		return []interfaces.PermissionResource{}, 0, rest.NewHTTPError(ctx, http.StatusInternalServerError,
 			rest.PublicError_InternalServerError).WithErrorDetails(err.Error())
 	}
 
@@ -486,12 +487,12 @@ func (dvrcrs *dataViewRowColumnRuleService) ListDataViewRowColumnRuleSrcs(ctx co
 	}
 
 	// 遍历对象
-	results := make([]*interfaces.Resource, 0)
+	results := make([]interfaces.PermissionResource, 0)
 	for _, rule := range rules {
 		if idMap[rule.RuleID] {
 			rule.ViewName = viewMap[rule.ViewID].ViewName
 
-			results = append(results, &interfaces.Resource{
+			results = append(results, interfaces.PermissionResource{
 				ID:   rule.RuleID,
 				Type: interfaces.RESOURCE_TYPE_DATA_VIEW,
 				Name: common.ProcessUngroupedName(ctx, rule.ViewName, rule.RuleName),
@@ -502,7 +503,7 @@ func (dvrcrs *dataViewRowColumnRuleService) ListDataViewRowColumnRuleSrcs(ctx co
 	// 分页
 	// 检查起始位置是否越界
 	if params.Offset < 0 || params.Offset >= len(results) {
-		return []*interfaces.Resource{}, 0, nil
+		return []interfaces.PermissionResource{}, 0, nil
 	}
 	// 计算结束位置
 	end := params.Offset + params.Limit

@@ -70,7 +70,7 @@ func (tms *traceModelService) CreateTraceModels(ctx context.Context, reqModels [
 	}()
 
 	// 判断userid是否有创建链路模型的权限
-	err = tms.ps.CheckPermission(ctx, interfaces.Resource{
+	err = tms.ps.CheckPermission(ctx, interfaces.PermissionResource{
 		Type: interfaces.RESOURCE_TYPE_TRACE_MODEL,
 		ID:   interfaces.RESOURCE_ID_ALL,
 	}, []string{interfaces.OPERATION_TYPE_CREATE})
@@ -112,13 +112,13 @@ func (tms *traceModelService) CreateTraceModels(ctx context.Context, reqModels [
 			WithErrorDetails(err.Error())
 	}
 
-	resrcs := make([]interfaces.Resource, 0)
+	resrcs := make([]interfaces.PermissionResource, 0)
 	// 6. 初始化链路模型ID数组
 	modelIDs = make([]string, len(reqModels))
 	for i := range reqModels {
 		modelIDs[i] = reqModels[i].ID
 
-		resrcs = append(resrcs, interfaces.Resource{
+		resrcs = append(resrcs, interfaces.PermissionResource{
 			ID:   reqModels[i].ID,
 			Type: interfaces.RESOURCE_TYPE_TRACE_MODEL,
 			Name: reqModels[i].Name,
@@ -147,7 +147,7 @@ func (tms *traceModelService) SimulateCreateTraceModel(ctx context.Context, reqM
 	}()
 
 	// 判断userid是否有创建链路模型的权限
-	err = tms.ps.CheckPermission(ctx, interfaces.Resource{
+	err = tms.ps.CheckPermission(ctx, interfaces.PermissionResource{
 		Type: interfaces.RESOURCE_TYPE_TRACE_MODEL,
 		ID:   interfaces.RESOURCE_ID_ALL,
 	}, []string{interfaces.OPERATION_TYPE_CREATE})
@@ -236,7 +236,7 @@ func (tms *traceModelService) UpdateTraceModel(ctx context.Context, reqModel int
 		span.End()
 	}()
 
-	err = tms.ps.CheckPermission(ctx, interfaces.Resource{
+	err = tms.ps.CheckPermission(ctx, interfaces.PermissionResource{
 		Type: interfaces.RESOURCE_TYPE_TRACE_MODEL,
 		ID:   reqModel.ID,
 	}, []string{interfaces.OPERATION_TYPE_MODIFY})
@@ -280,7 +280,7 @@ func (tms *traceModelService) UpdateTraceModel(ctx context.Context, reqModel int
 	}
 
 	// 请求更新资源名称的接口，更新资源的名称
-	err = tms.ps.UpdateResource(ctx, interfaces.Resource{
+	err = tms.ps.UpdateResource(ctx, interfaces.PermissionResource{
 		ID:   reqModels[0].ID,
 		Type: interfaces.RESOURCE_TYPE_TRACE_MODEL,
 		Name: reqModels[0].Name,
@@ -304,7 +304,7 @@ func (tms *traceModelService) SimulateUpdateTraceModel(ctx context.Context, reqM
 		span.End()
 	}()
 
-	err = tms.ps.CheckPermission(ctx, interfaces.Resource{
+	err = tms.ps.CheckPermission(ctx, interfaces.PermissionResource{
 		Type: interfaces.RESOURCE_TYPE_TRACE_MODEL,
 		ID:   reqModel.ID,
 	}, []string{interfaces.OPERATION_TYPE_MODIFY})
@@ -579,12 +579,12 @@ func (tms *traceModelService) GetTraceModelFieldInfo(ctx context.Context, modelI
 	return tmFieldInfo, nil
 }
 
-func (tms *traceModelService) ListTraceModelSrcs(ctx context.Context, param interfaces.TraceModelListQueryParams) ([]interfaces.Resource, int, error) {
+func (tms *traceModelService) ListTraceModelSrcs(ctx context.Context, param interfaces.TraceModelListQueryParams) ([]interfaces.PermissionResource, int, error) {
 	ctx, span := ar_trace.Tracer.Start(ctx, "查询链路模型实例列表")
 	span.End()
 
 	models, err := tms.tma.ListTraceModels(ctx, param)
-	emptyResources := []interfaces.Resource{}
+	emptyResources := []interfaces.PermissionResource{}
 	if err != nil {
 		logger.Errorf("ListTraceModels error: %s", err.Error())
 		span.SetStatus(codes.Error, "List simple trace models error")
@@ -609,10 +609,10 @@ func (tms *traceModelService) ListTraceModelSrcs(ctx context.Context, param inte
 	}
 
 	// 遍历对象
-	results := make([]interfaces.Resource, 0)
+	results := make([]interfaces.PermissionResource, 0)
 	for _, model := range models {
 		if _, exist := matchResoucesMap[model.ModelID]; exist {
-			results = append(results, interfaces.Resource{
+			results = append(results, interfaces.PermissionResource{
 				ID:   model.ModelID,
 				Type: interfaces.RESOURCE_TYPE_TRACE_MODEL,
 				Name: model.ModelName,

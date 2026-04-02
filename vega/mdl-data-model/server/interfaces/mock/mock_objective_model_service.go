@@ -120,10 +120,10 @@ func (mr *MockObjectiveModelServiceMockRecorder) GetObjectiveModels(ctx, modelID
 }
 
 // ListObjectiveModelSrcs mocks base method.
-func (m *MockObjectiveModelService) ListObjectiveModelSrcs(ctx context.Context, parameter interfaces.ObjectiveModelsQueryParams) ([]interfaces.Resource, int, error) {
+func (m *MockObjectiveModelService) ListObjectiveModelSrcs(ctx context.Context, parameter interfaces.ObjectiveModelsQueryParams) ([]interfaces.PermissionResource, int, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ListObjectiveModelSrcs", ctx, parameter)
-	ret0, _ := ret[0].([]interfaces.Resource)
+	ret0, _ := ret[0].([]interfaces.PermissionResource)
 	ret1, _ := ret[1].(int)
 	ret2, _ := ret[2].(error)
 	return ret0, ret1, ret2

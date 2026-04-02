@@ -21,5 +21,5 @@ type ObjectiveModelService interface {
 	DeleteObjectiveModels(ctx context.Context, modelIDs []string) (int64, error)
 
 	// 获取指标模型的资源实例列表
-	ListObjectiveModelSrcs(ctx context.Context, parameter ObjectiveModelsQueryParams) ([]Resource, int, error)
+	ListObjectiveModelSrcs(ctx context.Context, parameter ObjectiveModelsQueryParams) ([]PermissionResource, int, error)
 }

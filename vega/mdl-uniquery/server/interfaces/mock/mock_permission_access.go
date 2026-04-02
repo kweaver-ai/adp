@@ -57,10 +57,10 @@ func (mr *MockPermissionAccessMockRecorder) CheckPermission(ctx, check any) *gom
 }
 
 // FilterResources mocks base method.
-func (m *MockPermissionAccess) FilterResources(ctx context.Context, filter interfaces.ResourcesFilter) ([]interfaces.ResourceOps, error) {
+func (m *MockPermissionAccess) FilterResources(ctx context.Context, filter interfaces.PermissionResourcesFilter) (map[string]interfaces.PermissionResourceOps, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "FilterResources", ctx, filter)
-	ret0, _ := ret[0].([]interfaces.ResourceOps)
+	ret0, _ := ret[0].(map[string]interfaces.PermissionResourceOps)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -72,10 +72,10 @@ func (mr *MockPermissionAccessMockRecorder) FilterResources(ctx, filter any) *go
 }
 
 // GetResourcesOperations mocks base method.
-func (m *MockPermissionAccess) GetResourcesOperations(ctx context.Context, filter interfaces.ResourcesFilter) ([]interfaces.ResourceOps, error) {
+func (m *MockPermissionAccess) GetResourcesOperations(ctx context.Context, filter interfaces.PermissionResourcesFilter) (map[string]interfaces.PermissionResourceOps, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetResourcesOperations", ctx, filter)
-	ret0, _ := ret[0].([]interfaces.ResourceOps)
+	ret0, _ := ret[0].(map[string]interfaces.PermissionResourceOps)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }

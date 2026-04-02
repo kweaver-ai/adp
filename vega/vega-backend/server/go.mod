@@ -26,8 +26,6 @@ require (
 
 require go.uber.org/mock v0.6.0
 
-require github.com/golang/mock v1.6.0 // indirect
-
 require (
 	filippo.io/edwards25519 v1.1.0 // indirect
 	gitee.com/chunanyong/dm v1.8.22 // indirect

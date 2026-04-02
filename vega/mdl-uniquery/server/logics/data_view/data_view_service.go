@@ -107,7 +107,7 @@ func (dvs *dataViewService) Simulate(ctx context.Context, query *interfaces.Data
 
 	// 决策权限, 预览的时候还没有视图id，此时的预览校验用新建或者编辑
 	ops, err := dvs.ps.GetResourcesOperations(ctx, interfaces.RESOURCE_TYPE_DATA_VIEW,
-		[]string{interfaces.RESOURCE_ID_ALL})
+		[]string{interfaces.RESOURCE_ID_ALL}, interfaces.FULL_OPERATIONS)
 	if err != nil {
 		return nil, err
 	}
@@ -119,7 +119,7 @@ func (dvs *dataViewService) Simulate(ctx context.Context, query *interfaces.Data
 	}
 	// 从 ops 里找新建或编辑的权限
 	found := false
-	for _, op := range ops[0].Operations {
+	for _, op := range ops[interfaces.RESOURCE_ID_ALL].Operations {
 		if op == interfaces.OPERATION_TYPE_CREATE || op == interfaces.OPERATION_TYPE_MODIFY {
 			found = true
 			break
@@ -471,7 +471,7 @@ func (dvs *dataViewService) GetSingleViewData(ctx context.Context, viewID string
 	span.SetAttributes(attr.Key("view_id").String(viewID))
 
 	// 决策当前视图id的数据查询权限
-	hasPermission, err := dvs.ps.CheckPermissionWithResult(ctx, interfaces.Resource{
+	hasPermission, err := dvs.ps.CheckPermissionWithResult(ctx, interfaces.PermissionResource{
 		ID:   viewID,
 		Type: interfaces.RESOURCE_TYPE_DATA_VIEW,
 	}, []string{interfaces.OPERATION_TYPE_DATA_QUERY})
@@ -542,7 +542,7 @@ func (dvs *dataViewService) RetrieveSingleViewData(ctx context.Context, viewID s
 	defer span.End()
 
 	// 决策当前视图id的数据查询权限
-	err := dvs.ps.CheckPermission(ctx, interfaces.Resource{
+	err := dvs.ps.CheckPermission(ctx, interfaces.PermissionResource{
 		ID:   viewID,
 		Type: interfaces.RESOURCE_TYPE_DATA_VIEW,
 	}, []string{interfaces.OPERATION_TYPE_DATA_QUERY})
@@ -2637,7 +2637,7 @@ func (dvs *dataViewService) FilterRowColumnRules(ctx context.Context, rules []*i
 	}
 
 	// 所有有权限的模型数组
-	idMap := make(map[string]interfaces.ResourceOps)
+	idMap := make(map[string]interfaces.PermissionResourceOps)
 	for _, resourceOps := range matchResouces {
 		idMap[resourceOps.ResourceID] = resourceOps
 	}

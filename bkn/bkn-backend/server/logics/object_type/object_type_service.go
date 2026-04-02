@@ -119,7 +119,7 @@ func (ots *objectTypeService) CreateObjectTypes(ctx context.Context, tx *sql.Tx,
 	defer span.End()
 
 	// 判断userid是否有修改业务知识网络的权限
-	err := ots.ps.CheckPermission(ctx, interfaces.Resource{
+	err := ots.ps.CheckPermission(ctx, interfaces.PermissionResource{
 		Type: interfaces.RESOURCE_TYPE_KN,
 		ID:   objectTypes[0].KNID,
 	}, []string{interfaces.OPERATION_TYPE_MODIFY})
@@ -273,7 +273,7 @@ func (ots *objectTypeService) ListObjectTypes(ctx context.Context, tx *sql.Tx,
 	defer span.End()
 
 	// 判断userid是否有查看业务知识网络的权限
-	err := ots.ps.CheckPermission(ctx, interfaces.Resource{
+	err := ots.ps.CheckPermission(ctx, interfaces.PermissionResource{
 		Type: interfaces.RESOURCE_TYPE_KN,
 		ID:   query.KNID,
 	}, []string{interfaces.OPERATION_TYPE_VIEW_DETAIL})
@@ -419,7 +419,7 @@ func (ots *objectTypeService) GetObjectTypesByIDs(ctx context.Context, tx *sql.T
 	defer span.End()
 
 	// 判断userid是否有查看业务知识网络的权限
-	err := ots.ps.CheckPermission(ctx, interfaces.Resource{
+	err := ots.ps.CheckPermission(ctx, interfaces.PermissionResource{
 		Type: interfaces.RESOURCE_TYPE_KN,
 		ID:   knID,
 	}, []string{interfaces.OPERATION_TYPE_VIEW_DETAIL})
@@ -634,7 +634,7 @@ func (ots *objectTypeService) UpdateObjectType(ctx context.Context, tx *sql.Tx, 
 	defer span.End()
 
 	// 判断userid是否有修改业务知识网络的权限
-	err := ots.ps.CheckPermission(ctx, interfaces.Resource{
+	err := ots.ps.CheckPermission(ctx, interfaces.PermissionResource{
 		Type: interfaces.RESOURCE_TYPE_KN,
 		ID:   objectType.KNID,
 	}, []string{interfaces.OPERATION_TYPE_MODIFY})
@@ -787,7 +787,7 @@ func (ots *objectTypeService) UpdateDataProperties(ctx context.Context,
 	defer span.End()
 
 	// 判断userid是否有修改业务知识网络的权限
-	err := ots.ps.CheckPermission(ctx, interfaces.Resource{
+	err := ots.ps.CheckPermission(ctx, interfaces.PermissionResource{
 		Type: interfaces.RESOURCE_TYPE_KN,
 		ID:   objectType.KNID,
 	}, []string{interfaces.OPERATION_TYPE_MODIFY})
@@ -958,7 +958,7 @@ func (ots *objectTypeService) DeleteObjectTypesByIDs(ctx context.Context, tx *sq
 	defer span.End()
 
 	// 判断userid是否有修改业务知识网络的权限
-	err := ots.ps.CheckPermission(ctx, interfaces.Resource{
+	err := ots.ps.CheckPermission(ctx, interfaces.PermissionResource{
 		Type: interfaces.RESOURCE_TYPE_KN,
 		ID:   knID,
 	}, []string{interfaces.OPERATION_TYPE_MODIFY})
@@ -1210,7 +1210,7 @@ func (ots *objectTypeService) GetObjectTypesMapByIDs(ctx context.Context, knID s
 	defer span.End()
 
 	// 判断userid是否有修改业务知识网络的权限
-	err := ots.ps.CheckPermission(ctx, interfaces.Resource{
+	err := ots.ps.CheckPermission(ctx, interfaces.PermissionResource{
 		Type: interfaces.RESOURCE_TYPE_KN,
 		ID:   knID,
 	}, []string{interfaces.OPERATION_TYPE_VIEW_DETAIL})
@@ -1354,7 +1354,7 @@ func (ots *objectTypeService) SearchObjectTypes(ctx context.Context,
 	var err error
 
 	// 判断userid是否有查看业务知识网络的权限
-	err = ots.ps.CheckPermission(ctx, interfaces.Resource{
+	err = ots.ps.CheckPermission(ctx, interfaces.PermissionResource{
 		Type: interfaces.RESOURCE_TYPE_KN,
 		ID:   query.KNID,
 	}, []string{interfaces.OPERATION_TYPE_VIEW_DETAIL})

@@ -42,7 +42,7 @@ func (m *MockPermissionService) EXPECT() *MockPermissionServiceMockRecorder {
 }
 
 // CheckPermission mocks base method.
-func (m *MockPermissionService) CheckPermission(ctx context.Context, resource interfaces.Resource, ops []string) error {
+func (m *MockPermissionService) CheckPermission(ctx context.Context, resource interfaces.PermissionResource, ops []string) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "CheckPermission", ctx, resource, ops)
 	ret0, _ := ret[0].(error)
@@ -56,7 +56,7 @@ func (mr *MockPermissionServiceMockRecorder) CheckPermission(ctx, resource, ops 
 }
 
 // CreateResources mocks base method.
-func (m *MockPermissionService) CreateResources(ctx context.Context, resources []interfaces.Resource, ops []string) error {
+func (m *MockPermissionService) CreateResources(ctx context.Context, resources []interfaces.PermissionResource, ops []string) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "CreateResources", ctx, resources, ops)
 	ret0, _ := ret[0].(error)
@@ -84,10 +84,10 @@ func (mr *MockPermissionServiceMockRecorder) DeleteResources(ctx, resourceType, 
 }
 
 // FilterResources mocks base method.
-func (m *MockPermissionService) FilterResources(ctx context.Context, resourceType string, ids, ops []string, allowOperation bool, fullOps []string) (map[string]interfaces.ResourceOps, error) {
+func (m *MockPermissionService) FilterResources(ctx context.Context, resourceType string, ids, ops []string, allowOperation bool, fullOps []string) (map[string]interfaces.PermissionResourceOps, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "FilterResources", ctx, resourceType, ids, ops, allowOperation, fullOps)
-	ret0, _ := ret[0].(map[string]interfaces.ResourceOps)
+	ret0, _ := ret[0].(map[string]interfaces.PermissionResourceOps)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -99,7 +99,7 @@ func (mr *MockPermissionServiceMockRecorder) FilterResources(ctx, resourceType, 
 }
 
 // UpdateResource mocks base method.
-func (m *MockPermissionService) UpdateResource(ctx context.Context, resource interfaces.Resource) error {
+func (m *MockPermissionService) UpdateResource(ctx context.Context, resource interfaces.PermissionResource) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "UpdateResource", ctx, resource)
 	ret0, _ := ret[0].(error)

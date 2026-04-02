@@ -97,7 +97,7 @@ func (rts *relationTypeService) CreateRelationTypes(ctx context.Context, tx *sql
 	defer span.End()
 
 	// 判断userid是否有修改业务知识网络的权限
-	err := rts.ps.CheckPermission(ctx, interfaces.Resource{
+	err := rts.ps.CheckPermission(ctx, interfaces.PermissionResource{
 		Type: interfaces.RESOURCE_TYPE_KN,
 		ID:   relationTypes[0].KNID,
 	}, []string{interfaces.OPERATION_TYPE_MODIFY})
@@ -217,7 +217,7 @@ func (rts *relationTypeService) ListRelationTypes(ctx context.Context,
 	defer span.End()
 
 	// 判断userid是否有查看业务知识网络的权限
-	err := rts.ps.CheckPermission(ctx, interfaces.Resource{
+	err := rts.ps.CheckPermission(ctx, interfaces.PermissionResource{
 		Type: interfaces.RESOURCE_TYPE_KN,
 		ID:   query.KNID,
 	}, []string{interfaces.OPERATION_TYPE_VIEW_DETAIL})
@@ -310,7 +310,7 @@ func (rts *relationTypeService) GetRelationTypesByIDs(ctx context.Context, knID 
 	defer span.End()
 
 	// 判断userid是否有查看业务知识网络的权限
-	err := rts.ps.CheckPermission(ctx, interfaces.Resource{
+	err := rts.ps.CheckPermission(ctx, interfaces.PermissionResource{
 		Type: interfaces.RESOURCE_TYPE_KN,
 		ID:   knID,
 	}, []string{interfaces.OPERATION_TYPE_VIEW_DETAIL})
@@ -457,7 +457,7 @@ func (rts *relationTypeService) UpdateRelationType(ctx context.Context, tx *sql.
 	defer span.End()
 
 	// 判断userid是否有修改业务知识网络的权限
-	err := rts.ps.CheckPermission(ctx, interfaces.Resource{
+	err := rts.ps.CheckPermission(ctx, interfaces.PermissionResource{
 		Type: interfaces.RESOURCE_TYPE_KN,
 		ID:   relationType.KNID,
 	}, []string{interfaces.OPERATION_TYPE_MODIFY})
@@ -550,7 +550,7 @@ func (rts *relationTypeService) DeleteRelationTypesByIDs(ctx context.Context, tx
 	defer span.End()
 
 	// 判断userid是否有修改业务知识网络的权限
-	err := rts.ps.CheckPermission(ctx, interfaces.Resource{
+	err := rts.ps.CheckPermission(ctx, interfaces.PermissionResource{
 		Type: interfaces.RESOURCE_TYPE_KN,
 		ID:   knID,
 	}, []string{interfaces.OPERATION_TYPE_MODIFY})
@@ -785,7 +785,7 @@ func (rts *relationTypeService) SearchRelationTypes(ctx context.Context,
 	var err error
 
 	// 判断userid是否有查看业务知识网络的权限
-	err = rts.ps.CheckPermission(ctx, interfaces.Resource{
+	err = rts.ps.CheckPermission(ctx, interfaces.PermissionResource{
 		Type: interfaces.RESOURCE_TYPE_KN,
 		ID:   query.KNID,
 	}, []string{interfaces.OPERATION_TYPE_VIEW_DETAIL})

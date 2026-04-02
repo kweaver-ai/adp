@@ -78,7 +78,7 @@ func (oms *objectiveModelService) Simulate(ctx context.Context,
 
 	// 决策权限。 预览的时候还没有模型id，此时的预览校验用新建或者编辑，
 	ops, err := oms.ps.GetResourcesOperations(ctx, interfaces.RESOURCE_TYPE_OBJECTIVE_MODEL,
-		[]string{interfaces.RESOURCE_ID_ALL})
+		[]string{interfaces.RESOURCE_ID_ALL}, interfaces.COMMON_OPERATIONS)
 	if err != nil {
 		return interfaces.ObjectiveModelUniResponse{}, err
 	}
@@ -89,7 +89,7 @@ func (oms *objectiveModelService) Simulate(ctx context.Context,
 	}
 	// 从 ops 里找新建或编辑的权限
 	found := false
-	for _, op := range ops[0].Operations {
+	for _, op := range ops[interfaces.RESOURCE_ID_ALL].Operations {
 		if op == interfaces.OPERATION_TYPE_CREATE || op == interfaces.OPERATION_TYPE_MODIFY {
 			found = true
 			break
@@ -122,7 +122,7 @@ func (ds *objectiveModelService) Exec(ctx context.Context, query interfaces.Obje
 	defer span.End()
 
 	// 决策当前模型id的数据查询权限
-	err := ds.ps.CheckPermission(ctx, interfaces.Resource{
+	err := ds.ps.CheckPermission(ctx, interfaces.PermissionResource{
 		ID:   query.ObjectiveModelID,
 		Type: interfaces.RESOURCE_TYPE_OBJECTIVE_MODEL,
 	}, []string{interfaces.OPERATION_TYPE_DATA_QUERY})

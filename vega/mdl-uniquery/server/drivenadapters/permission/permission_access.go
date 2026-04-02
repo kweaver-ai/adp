@@ -35,10 +35,10 @@ type permissionAccess struct {
 }
 
 type PermissionError struct {
-	Code        string      `json:"code"`        // 错误码
-	Message     string      `json:"message"`     // 错误描述
-	Description string      `json:"description"` // 错误描述
-	Cause       interface{} `json:"cause"`       // 原因
+	Code        string `json:"code"`        // 错误码
+	Message     string `json:"message"`     // 错误描述
+	Description string `json:"description"` // 错误描述
+	Cause       any    `json:"cause"`       // 原因
 }
 
 func NewPermissionAccess(appSetting *common.AppSetting) interfaces.PermissionAccess {
@@ -56,31 +56,30 @@ func NewPermissionAccess(appSetting *common.AppSetting) interfaces.PermissionAcc
 // 策略决策
 func (pa *permissionAccess) CheckPermission(ctx context.Context, check interfaces.PermissionCheck) (bool, error) {
 	ctx, span := ar_trace.Tracer.Start(ctx, "请求策略的决策接口", trace.WithSpanKind(trace.SpanKindClient))
-
-	url := fmt.Sprintf("%s/operation-check", pa.permissionUrl)
-
-	o11y.AddAttrs4InternalHttp(span, o11y.TraceAttrs{
-		HttpUrl:            url,
-		HttpMethod:         http.MethodPost,
-		HttpContentType:    rest.ContentTypeJson,
-		HttpMethodOverride: http.MethodGet,
-	})
+	defer span.End()
 
 	span.SetAttributes(
 		attr.Key("user_id").String(check.Accessor.ID),
 		attr.Key("resource_id").String(check.Resource.ID),
 		attr.Key("Operation").StringSlice(check.Operations),
 	)
-	defer span.End()
+
+	httpUrl := fmt.Sprintf("%s/operation-check", pa.permissionUrl)
+
+	o11y.AddAttrs4InternalHttp(span, o11y.TraceAttrs{
+		HttpUrl:            httpUrl,
+		HttpMethod:         http.MethodPost,
+		HttpContentType:    rest.ContentTypeJson,
+		HttpMethodOverride: http.MethodGet,
+	})
 
 	headers := map[string]string{
 		interfaces.CONTENT_TYPE_NAME: interfaces.CONTENT_TYPE_JSON,
-		// interfaces.HEADER_AUTHORIZATION: ctx.Value(interfaces.USER_TOKEN_KEY).(string),
 	}
 
 	check.Method = http.MethodGet
-	respCode, result, err := pa.httpClient.PostNoUnmarshal(ctx, url, headers, check)
-	logger.Debugf("post [%s] finished, response code is [%d], result is [%s], error is [%v]", url, respCode, result, err)
+	respCode, result, err := pa.httpClient.PostNoUnmarshal(ctx, httpUrl, headers, check)
+	logger.Debugf("post [%s] finished, response code is [%d], result is [%s], error is [%v]", httpUrl, respCode, result, err)
 
 	if err != nil {
 		logger.Errorf("Post operation-check request failed: %v", err)
@@ -110,7 +109,6 @@ func (pa *permissionAccess) CheckPermission(ctx context.Context, check interface
 		if description == "" {
 			description = permissionError.Description
 		}
-
 		httpErr := &rest.HTTPError{
 			HTTPCode: respCode,
 			BaseError: rest.BaseError{
@@ -157,47 +155,46 @@ func (pa *permissionAccess) CheckPermission(ctx context.Context, check interface
 }
 
 // 策略决策
-func (pa *permissionAccess) FilterResources(ctx context.Context, filter interfaces.ResourcesFilter) ([]interfaces.ResourceOps, error) {
+func (pa *permissionAccess) FilterResources(ctx context.Context,
+	filter interfaces.PermissionResourcesFilter) (map[string]interfaces.PermissionResourceOps, error) {
+
 	ctx, span := ar_trace.Tracer.Start(ctx, "请求资源过滤接口", trace.WithSpanKind(trace.SpanKindClient))
-
-	url := fmt.Sprintf("%s/resource-filter", pa.permissionUrl)
-
-	o11y.AddAttrs4InternalHttp(span, o11y.TraceAttrs{
-		HttpUrl:            url,
-		HttpMethod:         http.MethodPost,
-		HttpContentType:    rest.ContentTypeJson,
-		HttpMethodOverride: http.MethodGet,
-	})
+	defer span.End()
 
 	span.SetAttributes(
 		attr.Key("user_id").String(filter.Accessor.ID),
 		attr.Key("Operation").StringSlice(filter.Operations),
 	)
-	defer span.End()
 
-	var ops []interfaces.ResourceOps
+	httpUrl := fmt.Sprintf("%s/resource-filter", pa.permissionUrl)
+
+	o11y.AddAttrs4InternalHttp(span, o11y.TraceAttrs{
+		HttpUrl:            httpUrl,
+		HttpMethod:         http.MethodPost,
+		HttpContentType:    rest.ContentTypeJson,
+		HttpMethodOverride: http.MethodGet,
+	})
 
 	headers := map[string]string{
 		interfaces.CONTENT_TYPE_NAME: interfaces.CONTENT_TYPE_JSON,
 	}
 
 	filter.Method = http.MethodGet
-	respCode, result, err := pa.httpClient.PostNoUnmarshal(ctx, url, headers, filter)
-	logger.Debugf("post [%s] finished, response code is [%d], result is [%s], error is [%v]", url, respCode, result, err)
+	respCode, result, err := pa.httpClient.PostNoUnmarshal(ctx, httpUrl, headers, filter)
+	logger.Debugf("post [%s] finished, response code is [%d], result is [%s], error is [%v]", httpUrl, respCode, result, err)
 
 	if err != nil {
-		logger.Errorf("Post operation-check request failed: %v", err)
+		logger.Errorf("Post resource-filter request failed: %v", err)
 
 		// 添加异常时的 trace 属性
 		o11y.AddHttpAttrs4Error(span, respCode, "InternalError", "Http Post Failed")
 		// 记录异常日志
-		o11y.Error(ctx, fmt.Sprintf("Post operation-check request failed: %v", err))
+		o11y.Error(ctx, fmt.Sprintf("Post resource-filter request failed: %v", err))
 
-		return ops, fmt.Errorf("post operation-check request failed: %v", err)
+		return map[string]interfaces.PermissionResourceOps{}, fmt.Errorf("post resource-filter request failed: %v", err)
 	}
 	if respCode != http.StatusOK {
 		// 转成 baseerror
-
 		var permissionError PermissionError
 		if err := sonic.Unmarshal(result, &permissionError); err != nil {
 			logger.Errorf("unmalshal PermissionError failed: %v\n", err)
@@ -207,14 +204,13 @@ func (pa *permissionAccess) FilterResources(ctx context.Context, filter interfac
 			// 记录异常日志
 			o11y.Error(ctx, fmt.Sprintf("Unmalshal PermissionError failed: %v", err))
 
-			return ops, err
+			return map[string]interfaces.PermissionResourceOps{}, err
 		}
 
 		description := permissionError.Message
 		if description == "" {
 			description = permissionError.Description
 		}
-
 		httpErr := &rest.HTTPError{HTTPCode: respCode,
 			BaseError: rest.BaseError{
 				ErrorCode:    permissionError.Code,
@@ -222,14 +218,14 @@ func (pa *permissionAccess) FilterResources(ctx context.Context, filter interfac
 				ErrorDetails: permissionError.Cause,
 			}}
 
-		logger.Errorf("operation-filter error: %v", httpErr.Error())
+		logger.Errorf("resource-filter error: %v", httpErr.Error())
 
 		// 添加异常时的 trace 属性
 		o11y.AddHttpAttrs4Error(span, respCode, "InternalError", "Http status is not 200")
 		// 记录异常日志
-		o11y.Error(ctx, fmt.Sprintf("Post operation-filter failed: %v", httpErr))
+		o11y.Error(ctx, fmt.Sprintf("Post resource-filter failed: %v", httpErr))
 
-		return ops, httpErr
+		return map[string]interfaces.PermissionResourceOps{}, httpErr
 	}
 
 	if result == nil {
@@ -238,55 +234,64 @@ func (pa *permissionAccess) FilterResources(ctx context.Context, filter interfac
 		// 记录模型不存在的日志
 		o11y.Warn(ctx, "Http response body is null")
 
-		return ops, nil
+		return map[string]interfaces.PermissionResourceOps{}, nil
 	}
 
+	allowOps := []struct {
+		ResourceID string   `json:"id"`
+		Operations []string `json:"allow_operation,omitempty"`
+	}{}
 	// 处理返回结果 result
-	if err := sonic.Unmarshal(result, &ops); err != nil {
-		logger.Errorf("unmalshal operation-check result failed: %v\n", err)
+	if err := sonic.Unmarshal(result, &allowOps); err != nil {
+		logger.Errorf("unmalshal resource-filter result failed: %v\n", err)
 
 		// 添加异常时的 trace 属性
-		o11y.AddHttpAttrs4Error(span, respCode, "InternalError", "Unmalshal operation-filter result failed")
+		o11y.AddHttpAttrs4Error(span, respCode, "InternalError", "Unmalshal resource-filter result failed")
 		// 记录异常日志
-		o11y.Error(ctx, fmt.Sprintf("Unmalshal operation-filter result failed: %v", err))
+		o11y.Error(ctx, fmt.Sprintf("Unmalshal resource-filter result failed: %v", err))
 
-		return ops, err
+		return map[string]interfaces.PermissionResourceOps{}, err
 	}
 
 	// 添加成功时的 trace 属性
 	o11y.AddHttpAttrs4Ok(span, respCode)
 
+	ops := map[string]interfaces.PermissionResourceOps{}
+	for _, op := range allowOps {
+		ops[op.ResourceID] = interfaces.PermissionResourceOps{
+			ResourceID: op.ResourceID,
+			Operations: op.Operations,
+		}
+	}
 	return ops, nil
 }
 
-// 获取资源操作 http://{host}:{port}/api/authorization/v1/resource-operation
-func (pa *permissionAccess) GetResourcesOperations(ctx context.Context, filter interfaces.ResourcesFilter) ([]interfaces.ResourceOps, error) {
-	ctx, span := ar_trace.Tracer.Start(ctx, "请求资源操作接口", trace.WithSpanKind(trace.SpanKindClient))
+// 获取资源操作
+func (pa *permissionAccess) GetResourcesOperations(ctx context.Context,
+	filter interfaces.PermissionResourcesFilter) (map[string]interfaces.PermissionResourceOps, error) {
+	ctx, span := ar_trace.Tracer.Start(ctx, "请求获取资源操作接口", trace.WithSpanKind(trace.SpanKindClient))
+	defer span.End()
 
-	url := fmt.Sprintf("%s/resource-operation", pa.permissionUrl)
+	span.SetAttributes(
+		attr.Key("user_id").String(filter.Accessor.ID),
+	)
+
+	httpUrl := fmt.Sprintf("%s/resource-operation", pa.permissionUrl)
 
 	o11y.AddAttrs4InternalHttp(span, o11y.TraceAttrs{
-		HttpUrl:            url,
+		HttpUrl:            httpUrl,
 		HttpMethod:         http.MethodPost,
 		HttpContentType:    rest.ContentTypeJson,
 		HttpMethodOverride: http.MethodGet,
 	})
-
-	span.SetAttributes(
-		attr.Key("user_id").String(filter.Accessor.ID),
-		attr.Key("Operation").StringSlice(filter.Operations),
-	)
-	defer span.End()
-
-	var ops []interfaces.ResourceOps
 
 	headers := map[string]string{
 		interfaces.CONTENT_TYPE_NAME: interfaces.CONTENT_TYPE_JSON,
 	}
 
 	filter.Method = http.MethodGet
-	respCode, result, err := pa.httpClient.PostNoUnmarshal(ctx, url, headers, filter)
-	logger.Debugf("post [%s] finished, response code is [%d], result is [%s], error is [%v]", url, respCode, result, err)
+	respCode, result, err := pa.httpClient.PostNoUnmarshal(ctx, httpUrl, headers, filter)
+	logger.Debugf("post [%s] finished, response code is [%d], result is [%s], error is [%v]", httpUrl, respCode, result, err)
 
 	if err != nil {
 		logger.Errorf("Post resource-operation request failed: %v", err)
@@ -296,7 +301,7 @@ func (pa *permissionAccess) GetResourcesOperations(ctx context.Context, filter i
 		// 记录异常日志
 		o11y.Error(ctx, fmt.Sprintf("Post resource-operation request failed: %v", err))
 
-		return ops, fmt.Errorf("post resource-operation request failed: %v", err)
+		return map[string]interfaces.PermissionResourceOps{}, fmt.Errorf("post resource-operation request failed: %v", err)
 	}
 	if respCode != http.StatusOK {
 		// 转成 baseerror
@@ -309,8 +314,9 @@ func (pa *permissionAccess) GetResourcesOperations(ctx context.Context, filter i
 			// 记录异常日志
 			o11y.Error(ctx, fmt.Sprintf("Unmalshal PermissionError failed: %v", err))
 
-			return ops, err
+			return map[string]interfaces.PermissionResourceOps{}, err
 		}
+
 		description := permissionError.Message
 		if description == "" {
 			description = permissionError.Description
@@ -322,14 +328,14 @@ func (pa *permissionAccess) GetResourcesOperations(ctx context.Context, filter i
 				ErrorDetails: permissionError.Cause,
 			}}
 
-		logger.Errorf("operation-filter error: %v", httpErr.Error())
+		logger.Errorf("resource-operation error: %v", httpErr.Error())
 
 		// 添加异常时的 trace 属性
 		o11y.AddHttpAttrs4Error(span, respCode, "InternalError", "Http status is not 200")
 		// 记录异常日志
-		o11y.Error(ctx, fmt.Sprintf("Post operation-filter failed: %v", httpErr))
+		o11y.Error(ctx, fmt.Sprintf("Post resource-operation failed: %v", httpErr))
 
-		return ops, httpErr
+		return map[string]interfaces.PermissionResourceOps{}, httpErr
 	}
 
 	if result == nil {
@@ -338,23 +344,32 @@ func (pa *permissionAccess) GetResourcesOperations(ctx context.Context, filter i
 		// 记录模型不存在的日志
 		o11y.Warn(ctx, "Http response body is null")
 
-		return ops, nil
+		return map[string]interfaces.PermissionResourceOps{}, nil
 	}
 
 	// 处理返回结果 result
+	ops := []interfaces.PermissionResourceOps{}
 	if err := sonic.Unmarshal(result, &ops); err != nil {
 		logger.Errorf("unmalshal resource-operation result failed: %v\n", err)
 
 		// 添加异常时的 trace 属性
-		o11y.AddHttpAttrs4Error(span, respCode, "InternalError", "Unmalshal operation-filter result failed")
+		o11y.AddHttpAttrs4Error(span, respCode, "InternalError", "Unmalshal resource-operation result failed")
 		// 记录异常日志
-		o11y.Error(ctx, fmt.Sprintf("Unmalshal operation-filter result failed: %v", err))
+		o11y.Error(ctx, fmt.Sprintf("Unmalshal resource-operation result failed: %v", err))
 
-		return ops, err
+		return map[string]interfaces.PermissionResourceOps{}, err
 	}
 
 	// 添加成功时的 trace 属性
 	o11y.AddHttpAttrs4Ok(span, respCode)
 
-	return ops, nil
+	resOps := map[string]interfaces.PermissionResourceOps{}
+	for _, op := range ops {
+		resOps[op.ResourceID] = interfaces.PermissionResourceOps{
+			ResourceID: op.ResourceID,
+			Operations: op.Operations,
+		}
+	}
+
+	return resOps, nil
 }
