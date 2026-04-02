@@ -100,7 +100,7 @@ SET SCHEMA adp;
 -- ==========================================
 CREATE TABLE IF NOT EXISTS t_catalog (
     -- 主键与基础信息
-    f_id                      VARCHAR(40 CHAR) NOT NULL DEFAULT '',
+                                         f_id                      VARCHAR(40 CHAR) NOT NULL DEFAULT '',
     f_name                    VARCHAR(255 CHAR) NOT NULL DEFAULT '',
     f_tags                    VARCHAR(255 CHAR) NOT NULL DEFAULT '[]',
     f_description             VARCHAR(1000 CHAR) NOT NULL DEFAULT '',
@@ -129,7 +129,7 @@ CREATE TABLE IF NOT EXISTS t_catalog (
 
     -- 索引
     CLUSTER PRIMARY KEY (f_id)
-);
+    );
 
 CREATE UNIQUE INDEX IF NOT EXISTS uk_t_catalog_name ON t_catalog(f_name);
 
@@ -143,7 +143,7 @@ CREATE INDEX IF NOT EXISTS idx_t_catalog_health_check_status ON t_catalog(f_heal
 -- 2. t_catalog_discover_policy 发现与变更策略表
 -- ==========================================
 CREATE TABLE IF NOT EXISTS t_catalog_discover_policy (
-    f_id                      VARCHAR(40 CHAR) NOT NULL DEFAULT '',
+                                                         f_id                      VARCHAR(40 CHAR) NOT NULL DEFAULT '',
 
     -- 状态
     f_enabled                 TINYINT NOT NULL DEFAULT 0,
@@ -164,7 +164,7 @@ CREATE TABLE IF NOT EXISTS t_catalog_discover_policy (
 
     -- 索引
     CLUSTER PRIMARY KEY (f_id)
-);
+    );
 
 CREATE INDEX IF NOT EXISTS idx_t_catalog_discover_policy_discover_mode ON t_catalog_discover_policy(f_discover_mode);
 
@@ -175,7 +175,7 @@ CREATE INDEX IF NOT EXISTS idx_t_catalog_discover_policy_enabled ON t_catalog_di
 -- ==========================================
 CREATE TABLE IF NOT EXISTS t_resource (
     -- 主键与基础信息
-    f_id                      VARCHAR(40 CHAR) NOT NULL DEFAULT '',
+                                          f_id                      VARCHAR(40 CHAR) NOT NULL DEFAULT '',
     f_catalog_id              VARCHAR(40 CHAR) NOT NULL DEFAULT '',
     f_name                    VARCHAR(255 CHAR) NOT NULL DEFAULT '',
     f_tags                    VARCHAR(255 CHAR) NOT NULL DEFAULT '[]',
@@ -198,7 +198,6 @@ CREATE TABLE IF NOT EXISTS t_resource (
     -- LogicView 专属字段
     f_logic_type              VARCHAR(20 CHAR) NOT NULL DEFAULT '',
     f_logic_definition        TEXT NOT NULL,
-    f_logic_definition_type   VARCHAR(20 CHAR) NOT NULL DEFAULT '',
 
     -- Local查询配置（物化）
     f_local_enabled           TINYINT NOT NULL DEFAULT 0,
@@ -223,9 +222,9 @@ CREATE TABLE IF NOT EXISTS t_resource (
 
     -- 索引
     CLUSTER PRIMARY KEY (f_id)
-);
+    );
 
-CREATE UNIQUE INDEX IF NOT EXISTS uk_t_resource_catalog_name ON t_resource(f_catalog_id, f_name);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_t_resource_catalog_name ON t_resource(f_catalog_id, f_name);
 
 CREATE INDEX IF NOT EXISTS idx_t_resource_category ON t_resource(f_category);
 
@@ -235,7 +234,7 @@ CREATE INDEX IF NOT EXISTS idx_t_resource_status ON t_resource(f_status);
 -- 4. t_resource_schema_history Schema历史表
 -- ==========================================
 CREATE TABLE IF NOT EXISTS t_resource_schema_history (
-    f_id                      VARCHAR(40 CHAR) NOT NULL DEFAULT '',
+                                                         f_id                      VARCHAR(40 CHAR) NOT NULL DEFAULT '',
     f_resource_id             VARCHAR(40 CHAR) NOT NULL DEFAULT '',
     f_schema_version          VARCHAR(40 CHAR) NOT NULL DEFAULT '',
     f_schema_definition       TEXT NOT NULL,
@@ -248,7 +247,7 @@ CREATE TABLE IF NOT EXISTS t_resource_schema_history (
 
     -- 索引
     CLUSTER PRIMARY KEY (f_id)
-);
+    );
 
 CREATE INDEX IF NOT EXISTS idx_t_resource_schema_history_resource_id ON t_resource_schema_history(f_resource_id);
 
@@ -257,7 +256,7 @@ CREATE INDEX IF NOT EXISTS idx_t_resource_schema_history_resource_id ON t_resour
 -- ==========================================
 CREATE TABLE IF NOT EXISTS t_connector_type (
     -- 主键与基础信息
-    f_type                    VARCHAR(40 CHAR) NOT NULL DEFAULT '',
+                                                f_type                    VARCHAR(40 CHAR) NOT NULL DEFAULT '',
     f_name                    VARCHAR(255 CHAR) NOT NULL DEFAULT '',
     f_tags                    VARCHAR(255 CHAR) NOT NULL DEFAULT '[]',
     f_description             VARCHAR(1000 CHAR) NOT NULL DEFAULT '',
@@ -277,7 +276,7 @@ CREATE TABLE IF NOT EXISTS t_connector_type (
 
     -- 索引
     CLUSTER PRIMARY KEY (f_type)
-);
+    );
 
 CREATE UNIQUE INDEX IF NOT EXISTS uk_t_connector_type_name ON t_connector_type(f_name);
 
@@ -294,15 +293,15 @@ CREATE INDEX IF NOT EXISTS idx_t_connector_type_enabled ON t_connector_type(f_en
 -- ==========================================
 INSERT INTO t_connector_type (f_type, f_name, f_description, f_mode, f_category, f_field_config, f_enabled)
 SELECT 'mariadb', 'mariadb', 'MariaDB 关系型数据库连接器', 'local', 'table',
-    '{
-        "host":      {"name":"主机地址","type":"string","description":"数据库服务器主机地址","required":true,"encrypted":false},
-        "port":      {"name":"端口号","type":"integer","description":"数据库服务器端口","required":true,"encrypted":false},
-        "username":  {"name":"用户名","type":"string","description":"数据库用户名","required":true,"encrypted":false},
-        "password":  {"name":"密码","type":"string","description":"数据库密码","required":true,"encrypted":true},
-        "databases": {"name":"数据库列表","type":"array","description":"数据库名称列表（可选，为空则连接实例级别）","required":false,"encrypted":false},
-        "options":   {"name":"连接参数","type":"object","description":"连接参数（如 charset, timeout 等）","required":false,"encrypted":false}
-    }',
-    1
+       '{
+           "host":      {"name":"主机地址","type":"string","description":"数据库服务器主机地址","required":true,"encrypted":false},
+           "port":      {"name":"端口号","type":"integer","description":"数据库服务器端口","required":true,"encrypted":false},
+           "username":  {"name":"用户名","type":"string","description":"数据库用户名","required":true,"encrypted":false},
+           "password":  {"name":"密码","type":"string","description":"数据库密码","required":true,"encrypted":true},
+           "databases": {"name":"数据库列表","type":"array","description":"数据库名称列表（可选，为空则连接实例级别）","required":false,"encrypted":false},
+           "options":   {"name":"连接参数","type":"object","description":"连接参数（如 charset, timeout 等）","required":false,"encrypted":false}
+       }',
+       1
 FROM DUAL WHERE NOT EXISTS ( SELECT f_type FROM t_connector_type WHERE f_type = 'mariadb' );
 
 INSERT INTO t_connector_type (f_type, f_name, f_description, f_mode, f_category, f_field_config, f_enabled)
@@ -320,15 +319,29 @@ FROM DUAL WHERE NOT EXISTS ( SELECT f_type FROM t_connector_type WHERE f_type = 
 
 INSERT INTO t_connector_type (f_type, f_name, f_description, f_mode, f_category, f_field_config, f_enabled)
 SELECT 'opensearch', 'opensearch', 'OpenSearch 搜索引擎连接器', 'local', 'index',
-    '{
-        "host":          {"name":"主机地址","type":"string","description":"OpenSearch 服务器主机地址","required":true,"encrypted":false},
-        "port":          {"name":"端口号","type":"integer","description":"OpenSearch 服务器端口","required":true,"encrypted":false},
-        "username":      {"name":"用户名","type":"string","description":"认证用户名","required":false,"encrypted":false},
-        "password":      {"name":"密码","type":"string","description":"认证密码","required":false,"encrypted":true},
-        "index_pattern": {"name":"索引模式","type":"string","description":"索引匹配模式（可选，如 log-*）","required":false,"encrypted":false}
-    }',
-    1
+       '{
+           "host":          {"name":"主机地址","type":"string","description":"OpenSearch 服务器主机地址","required":true,"encrypted":false},
+           "port":          {"name":"端口号","type":"integer","description":"OpenSearch 服务器端口","required":true,"encrypted":false},
+           "username":      {"name":"用户名","type":"string","description":"认证用户名","required":false,"encrypted":false},
+           "password":      {"name":"密码","type":"string","description":"认证密码","required":false,"encrypted":true},
+           "index_pattern": {"name":"索引模式","type":"string","description":"索引匹配模式（可选，如 log-*）","required":false,"encrypted":false}
+       }',
+       1
 FROM DUAL WHERE NOT EXISTS ( SELECT f_type FROM t_connector_type WHERE f_type = 'opensearch' );
+
+INSERT INTO t_connector_type (f_type, f_name, f_description, f_mode, f_category, f_field_config, f_enabled)
+SELECT 'postgresql', 'postgresql', 'PostgreSQL 关系型数据库连接器', 'local', 'table',
+       '{
+           "host":      {"name":"主机地址","type":"string","description":"数据库服务器主机地址","required":true,"encrypted":false},
+           "port":      {"name":"端口号","type":"integer","description":"数据库服务器端口","required":true,"encrypted":false},
+           "username":  {"name":"用户名","type":"string","description":"数据库用户名","required":true,"encrypted":false},
+           "password":  {"name":"密码","type":"string","description":"数据库密码","required":true,"encrypted":true},
+           "database":  {"name":"数据库名","type":"string","description":"PostgreSQL 连接目标 database","required":true,"encrypted":false},
+           "schemas":   {"name":"Schema 列表","type":"array","description":"可选；为空则扫描当前库下除系统 schema 外的用户 schema；非空则仅扫描列出的 schema","required":false,"encrypted":false},
+           "options":   {"name":"连接参数","type":"object","description":"连接参数（如 sslmode、connect_timeout 等）","required":false,"encrypted":false}
+       }',
+       1
+FROM DUAL WHERE NOT EXISTS ( SELECT f_type FROM t_connector_type WHERE f_type = 'postgresql' );
 
 -- ==========================================
 -- 7. t_discover_task 发现任务表
@@ -337,6 +350,8 @@ CREATE TABLE IF NOT EXISTS t_discover_task (
     -- 主键与关联信息
     f_id                      VARCHAR(40 CHAR) NOT NULL DEFAULT '',
     f_catalog_id              VARCHAR(40 CHAR) NOT NULL DEFAULT '',
+    f_scheduled_id            VARCHAR(40 CHAR) NOT NULL DEFAULT '',
+    f_strategies              VARCHAR(100 CHAR) NOT NULL DEFAULT '',
     f_trigger_type            VARCHAR(20 CHAR) NOT NULL DEFAULT 'manual',
 
     -- 任务状态
@@ -358,8 +373,75 @@ CREATE TABLE IF NOT EXISTS t_discover_task (
 
     -- 索引
     CLUSTER PRIMARY KEY (f_id)
-);
+    );
 
 CREATE INDEX IF NOT EXISTS idx_t_discover_task_catalog_id ON t_discover_task (f_catalog_id);
 
 CREATE INDEX IF NOT EXISTS idx_t_discover_task_status ON t_discover_task (f_status);
+
+-- ==========================================
+-- 8. t_build_task 构建任务表
+-- ==========================================
+CREATE TABLE IF NOT EXISTS t_build_task (
+    -- 主键与关联信息
+                                            f_id                      VARCHAR(40 CHAR) NOT NULL,
+    f_resource_id             VARCHAR(40 CHAR) NOT NULL,
+
+    -- 任务状态
+    f_status                  VARCHAR(20 CHAR) NOT NULL,
+    f_mode                    VARCHAR(20 CHAR) NOT NULL,
+    f_total_count             BIGINT NOT NULL DEFAULT 0,
+    f_synced_count            BIGINT NOT NULL DEFAULT 0,
+    f_vectorized_count        BIGINT NOT NULL DEFAULT 0,
+    f_synced_mark             VARCHAR(100 CHAR) DEFAULT NULL,
+    f_error_msg               TEXT DEFAULT NULL,
+
+    -- 审计字段
+    f_creator_id              VARCHAR(40 CHAR) NOT NULL,
+    f_creator_type            VARCHAR(20 CHAR) NOT NULL,
+    f_create_time             BIGINT NOT NULL,
+    f_updater_id              VARCHAR(40 CHAR) NOT NULL,
+    f_updater_type            VARCHAR(20 CHAR) NOT NULL,
+    f_update_time             BIGINT NOT NULL,
+
+    -- 索引
+    CLUSTER PRIMARY KEY (f_id)
+    );
+
+CREATE UNIQUE INDEX IF NOT EXISTS idx_t_build_task_resource_id ON t_build_task(f_resource_id);
+
+CREATE UNIQUE INDEX IF NOT EXISTS idx_t_build_task_status ON t_build_task(f_status);
+-- ==========================================
+-- 9. t_scheduled_discover_task 定时发现任务表
+-- ==========================================
+CREATE TABLE IF NOT EXISTS t_scheduled_discover_task (
+    -- 主键与关联信息
+    f_id                      VARCHAR(40 CHAR) NOT NULL DEFAULT '',
+    f_catalog_id              VARCHAR(40 CHAR) NOT NULL DEFAULT '',
+    f_cron_expr               VARCHAR(100 CHAR) NOT NULL DEFAULT '',
+
+    -- 时间配置
+    f_start_time              BIGINT NOT NULL DEFAULT 0,
+    f_end_time                BIGINT NOT NULL DEFAULT 0,
+
+    -- 任务状态
+    f_enabled                 TINYINT NOT NULL DEFAULT 0,
+    f_last_run                BIGINT NOT NULL DEFAULT 0,
+    f_next_run                BIGINT NOT NULL DEFAULT 0,
+
+    -- 审计字段
+    f_creator_id              VARCHAR(128 CHAR) NOT NULL DEFAULT '',
+    f_creator_type            VARCHAR(20 CHAR) NOT NULL DEFAULT '',
+    f_create_time             BIGINT NOT NULL DEFAULT 0,
+    f_updater_id              VARCHAR(128 CHAR) NOT NULL DEFAULT '',
+    f_updater_type            VARCHAR(20 CHAR) NOT NULL DEFAULT '',
+    f_update_time             BIGINT NOT NULL DEFAULT 0,
+    -- 索引
+    CLUSTER PRIMARY KEY (f_id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_t_scheduled_discover_task_catalog_id ON t_scheduled_discover_task (f_catalog_id);
+CREATE INDEX IF NOT EXISTS idx_t_scheduled_discover_task_enabled ON t_scheduled_discover_task (f_enabled);
+CREATE INDEX IF NOT EXISTS idx_t_scheduled_discover_task_next_run ON t_scheduled_discover_task (f_next_run);
+
+
