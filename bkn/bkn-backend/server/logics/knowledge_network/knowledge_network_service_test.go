@@ -338,7 +338,7 @@ func Test_knowledgeNetworkService_ListKNs(t *testing.T) {
 
 			kna.EXPECT().ListKNs(gomock.Any(), gomock.Any()).Return(knArr, nil)
 			ps.EXPECT().FilterResources(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
-				Return(map[string]interfaces.ResourceOps{
+				Return(map[string]interfaces.PermissionResourceOps{
 					"kn1": {
 						Operations: []string{interfaces.OPERATION_TYPE_VIEW_DETAIL},
 					},
@@ -424,7 +424,7 @@ func Test_knowledgeNetworkService_ListKNs(t *testing.T) {
 
 			kna.EXPECT().ListKNs(gomock.Any(), gomock.Any()).Return(knArr, nil)
 			ps.EXPECT().FilterResources(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
-				Return(map[string]interfaces.ResourceOps{
+				Return(map[string]interfaces.PermissionResourceOps{
 					"kn1": {
 						Operations: []string{interfaces.OPERATION_TYPE_VIEW_DETAIL},
 					},
@@ -453,7 +453,7 @@ func Test_knowledgeNetworkService_ListKNs(t *testing.T) {
 
 			kna.EXPECT().ListKNs(gomock.Any(), gomock.Any()).Return(knArr, nil)
 			ps.EXPECT().FilterResources(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
-				Return(map[string]interfaces.ResourceOps{
+				Return(map[string]interfaces.PermissionResourceOps{
 					"kn1": {
 						Operations: []string{interfaces.OPERATION_TYPE_VIEW_DETAIL},
 					},
@@ -482,7 +482,7 @@ func Test_knowledgeNetworkService_ListKNs(t *testing.T) {
 
 			kna.EXPECT().ListKNs(gomock.Any(), gomock.Any()).Return(knArr, nil)
 			ps.EXPECT().FilterResources(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
-				Return(map[string]interfaces.ResourceOps{
+				Return(map[string]interfaces.PermissionResourceOps{
 					"kn1": {
 						Operations: []string{interfaces.OPERATION_TYPE_VIEW_DETAIL},
 					},
@@ -518,7 +518,7 @@ func Test_knowledgeNetworkService_ListKNs(t *testing.T) {
 
 			kna.EXPECT().ListKNs(gomock.Any(), gomock.Any()).Return(knArr, nil)
 			ps.EXPECT().FilterResources(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
-				Return(map[string]interfaces.ResourceOps{
+				Return(map[string]interfaces.PermissionResourceOps{
 					"kn1": {Operations: []string{interfaces.OPERATION_TYPE_VIEW_DETAIL}},
 					"kn2": {Operations: []string{interfaces.OPERATION_TYPE_VIEW_DETAIL}},
 					"kn3": {Operations: []string{interfaces.OPERATION_TYPE_VIEW_DETAIL}},
@@ -563,7 +563,7 @@ func Test_knowledgeNetworkService_GetKNByID(t *testing.T) {
 
 			kna.EXPECT().GetKNByID(gomock.Any(), gomock.Any(), gomock.Any()).Return(kn, nil)
 			ps.EXPECT().FilterResources(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
-				Return(map[string]interfaces.ResourceOps{
+				Return(map[string]interfaces.PermissionResourceOps{
 					"kn1": {
 						Operations: []string{interfaces.OPERATION_TYPE_VIEW_DETAIL},
 					},
@@ -634,7 +634,7 @@ func Test_knowledgeNetworkService_GetKNByID(t *testing.T) {
 
 			kna.EXPECT().GetKNByID(gomock.Any(), gomock.Any(), gomock.Any()).Return(kn, nil)
 			ps.EXPECT().FilterResources(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
-				Return(map[string]interfaces.ResourceOps{}, nil)
+				Return(map[string]interfaces.PermissionResourceOps{}, nil)
 
 			result, err := service.GetKNByID(ctx, knID, branch, mode)
 			So(err, ShouldNotBeNil)
@@ -654,7 +654,7 @@ func Test_knowledgeNetworkService_GetKNByID(t *testing.T) {
 
 			kna.EXPECT().GetKNByID(gomock.Any(), gomock.Any(), gomock.Any()).Return(kn, nil)
 			ps.EXPECT().FilterResources(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
-				Return(map[string]interfaces.ResourceOps{
+				Return(map[string]interfaces.PermissionResourceOps{
 					"kn1": {
 						Operations: []string{interfaces.OPERATION_TYPE_VIEW_DETAIL},
 					},
@@ -693,7 +693,7 @@ func Test_knowledgeNetworkService_GetKNByID(t *testing.T) {
 
 			kna.EXPECT().GetKNByID(gomock.Any(), gomock.Any(), gomock.Any()).Return(kn, nil)
 			ps.EXPECT().FilterResources(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
-				Return(map[string]interfaces.ResourceOps{
+				Return(map[string]interfaces.PermissionResourceOps{
 					"kn1": {
 						Operations: []string{interfaces.OPERATION_TYPE_VIEW_DETAIL},
 					},
@@ -1335,7 +1335,7 @@ func Test_knowledgeNetworkService_ListKnSrcs(t *testing.T) {
 					Offset: 0,
 				},
 			}
-			knList := []interfaces.Resource{
+			knList := []interfaces.PermissionResource{
 				{
 					ID:   "kn1",
 					Name: "kn1",
@@ -1344,7 +1344,7 @@ func Test_knowledgeNetworkService_ListKnSrcs(t *testing.T) {
 
 			kna.EXPECT().ListKnSrcs(gomock.Any(), gomock.Any()).Return(knList, nil)
 			ps.EXPECT().FilterResources(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
-				Return(map[string]interfaces.ResourceOps{
+				Return(map[string]interfaces.PermissionResourceOps{
 					"kn1": {
 						Operations: []string{interfaces.OPERATION_TYPE_VIEW_DETAIL},
 					},
@@ -1364,7 +1364,7 @@ func Test_knowledgeNetworkService_ListKnSrcs(t *testing.T) {
 				},
 			}
 
-			kna.EXPECT().ListKnSrcs(gomock.Any(), gomock.Any()).Return([]interfaces.Resource{}, nil)
+			kna.EXPECT().ListKnSrcs(gomock.Any(), gomock.Any()).Return([]interfaces.PermissionResource{}, nil)
 
 			resources, total, err := service.ListKnSrcs(ctx, parameter)
 			So(err, ShouldBeNil)
@@ -1395,7 +1395,7 @@ func Test_knowledgeNetworkService_ListKnSrcs(t *testing.T) {
 					Offset: 0,
 				},
 			}
-			knList := []interfaces.Resource{
+			knList := []interfaces.PermissionResource{
 				{
 					ID:   "kn1",
 					Name: "kn1",
@@ -1420,7 +1420,7 @@ func Test_knowledgeNetworkService_ListKnSrcs(t *testing.T) {
 					Offset: 0,
 				},
 			}
-			knList := []interfaces.Resource{
+			knList := []interfaces.PermissionResource{
 				{
 					ID:   "kn1",
 					Name: "kn1",
@@ -1429,7 +1429,7 @@ func Test_knowledgeNetworkService_ListKnSrcs(t *testing.T) {
 
 			kna.EXPECT().ListKnSrcs(gomock.Any(), gomock.Any()).Return(knList, nil)
 			ps.EXPECT().FilterResources(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
-				Return(map[string]interfaces.ResourceOps{
+				Return(map[string]interfaces.PermissionResourceOps{
 					"kn1": {
 						Operations: []string{interfaces.OPERATION_TYPE_VIEW_DETAIL},
 					},
@@ -1448,7 +1448,7 @@ func Test_knowledgeNetworkService_ListKnSrcs(t *testing.T) {
 					Offset: 100,
 				},
 			}
-			knList := []interfaces.Resource{
+			knList := []interfaces.PermissionResource{
 				{
 					ID:   "kn1",
 					Name: "kn1",
@@ -1457,7 +1457,7 @@ func Test_knowledgeNetworkService_ListKnSrcs(t *testing.T) {
 
 			kna.EXPECT().ListKnSrcs(gomock.Any(), gomock.Any()).Return(knList, nil)
 			ps.EXPECT().FilterResources(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
-				Return(map[string]interfaces.ResourceOps{
+				Return(map[string]interfaces.PermissionResourceOps{
 					"kn1": {
 						Operations: []string{interfaces.OPERATION_TYPE_VIEW_DETAIL},
 					},
@@ -1476,7 +1476,7 @@ func Test_knowledgeNetworkService_ListKnSrcs(t *testing.T) {
 					Offset: 1,
 				},
 			}
-			knList := []interfaces.Resource{
+			knList := []interfaces.PermissionResource{
 				{ID: "kn1", Name: "kn1"},
 				{ID: "kn2", Name: "kn2"},
 				{ID: "kn3", Name: "kn3"},
@@ -1484,7 +1484,7 @@ func Test_knowledgeNetworkService_ListKnSrcs(t *testing.T) {
 
 			kna.EXPECT().ListKnSrcs(gomock.Any(), gomock.Any()).Return(knList, nil)
 			ps.EXPECT().FilterResources(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
-				Return(map[string]interfaces.ResourceOps{
+				Return(map[string]interfaces.PermissionResourceOps{
 					"kn1": {Operations: []string{interfaces.OPERATION_TYPE_VIEW_DETAIL}},
 					"kn2": {Operations: []string{interfaces.OPERATION_TYPE_VIEW_DETAIL}},
 					"kn3": {Operations: []string{interfaces.OPERATION_TYPE_VIEW_DETAIL}},

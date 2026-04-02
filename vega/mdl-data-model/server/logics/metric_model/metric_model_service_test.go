@@ -1129,7 +1129,7 @@ func Test_MetricModelService_DeleteMetricModels(t *testing.T) {
 		iba := dmock.NewMockIndexBaseAccess(mockCtrl)
 		ps := dmock.NewMockPermissionService(mockCtrl)
 		mms, smock := MockNewMetricModelService(appSetting, dmja, dvs, mma, mmga, ua, mmts, iba, ps)
-		resrc := map[string]interfaces.ResourceOps{
+		resrc := map[string]interfaces.PermissionResourceOps{
 			"0": {
 				ResourceID: "0",
 			},
@@ -1257,7 +1257,7 @@ func Test_MetricModelService_ListSimpleMetricModels(t *testing.T) {
 			Tags:       []string{"a", "s", "s", "s", "s"},
 		}
 		var emptyModels []interfaces.SimpleMetricModel
-		resrc := map[string]interfaces.ResourceOps{
+		resrc := map[string]interfaces.PermissionResourceOps{
 			"1": {
 				ResourceID: "1",
 			},
@@ -1349,7 +1349,7 @@ func Test_MetricModelService_GetMetricModelContainFilters(t *testing.T) {
 
 		emptyModel := make([]interfaces.MetricModel, 0)
 		emptyModelFilters := make([]interfaces.MetricModelWithFilters, 0)
-		resrc := map[string]interfaces.ResourceOps{
+		resrc := map[string]interfaces.PermissionResourceOps{
 			"0": {
 				ResourceID: "0",
 			},
@@ -1646,7 +1646,7 @@ func Test_MetricModelService_GetMetricModelSimpleInfosByIDs(t *testing.T) {
 		ps := dmock.NewMockPermissionService(mockCtrl)
 		mms, _ := MockNewMetricModelService(appSetting, dmja, dvs, mma, mmga, ua, mmts, iba, ps)
 
-		resrc := map[string]interfaces.ResourceOps{
+		resrc := map[string]interfaces.PermissionResourceOps{
 			"1": {
 				ResourceID: "1",
 			},
@@ -1820,7 +1820,7 @@ func Test_MetricModelService_UpdateMetricModelsGroupID(t *testing.T) {
 	// 		},
 	// 	}
 	// 	// expectedModels := []interfaces.MetricModel{metricModel}
-	// 	// resrc := map[string]interfaces.ResourceOps{
+	// 	// resrc := map[string]interfaces.PermissionResourceOps{
 	// 	// 	"0": {
 	// 	// 		ResourceID: "0",
 	// 	// 	},

@@ -71,7 +71,7 @@ func (mr *MockPermissionAccessMockRecorder) CreateResources(ctx, policies any) *
 }
 
 // DeleteResources mocks base method.
-func (m *MockPermissionAccess) DeleteResources(ctx context.Context, resources []interfaces.Resource) error {
+func (m *MockPermissionAccess) DeleteResources(ctx context.Context, resources []interfaces.PermissionResource) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "DeleteResources", ctx, resources)
 	ret0, _ := ret[0].(error)
@@ -85,10 +85,10 @@ func (mr *MockPermissionAccessMockRecorder) DeleteResources(ctx, resources any) 
 }
 
 // FilterResources mocks base method.
-func (m *MockPermissionAccess) FilterResources(ctx context.Context, filter interfaces.ResourcesFilter) ([]interfaces.ResourceOps, error) {
+func (m *MockPermissionAccess) FilterResources(ctx context.Context, filter interfaces.PermissionResourcesFilter) (map[string]interfaces.PermissionResourceOps, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "FilterResources", ctx, filter)
-	ret0, _ := ret[0].([]interfaces.ResourceOps)
+	ret0, _ := ret[0].(map[string]interfaces.PermissionResourceOps)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }

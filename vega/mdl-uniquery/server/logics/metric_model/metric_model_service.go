@@ -110,7 +110,7 @@ func (mms *metricModelService) Simulate(ctx context.Context,
 
 	// 决策权限。 预览的时候还没有模型id，此时的预览校验用新建或者编辑，
 	ops, err := mms.ps.GetResourcesOperations(ctx, interfaces.RESOURCE_TYPE_METRIC_MODEL,
-		[]string{interfaces.RESOURCE_ID_ALL})
+		[]string{interfaces.RESOURCE_ID_ALL}, interfaces.COMMON_OPERATIONS)
 	if err != nil {
 		return interfaces.MetricModelUniResponse{}, err
 	}
@@ -121,7 +121,7 @@ func (mms *metricModelService) Simulate(ctx context.Context,
 	}
 	// 从 ops 里找新建或编辑的权限
 	found := false
-	for _, op := range ops[0].Operations {
+	for _, op := range ops[interfaces.RESOURCE_ID_ALL].Operations {
 		if op == interfaces.OPERATION_TYPE_CREATE || op == interfaces.OPERATION_TYPE_MODIFY {
 			found = true
 			break
@@ -247,7 +247,7 @@ func (mms *metricModelService) Exec(ctx context.Context, query *interfaces.Metri
 	pointTotal := 0
 
 	// 决策当前模型id的数据查询权限
-	err := mms.ps.CheckPermission(ctx, interfaces.Resource{
+	err := mms.ps.CheckPermission(ctx, interfaces.PermissionResource{
 		ID:   query.MetricModelID,
 		Type: interfaces.RESOURCE_TYPE_METRIC_MODEL,
 	}, []string{interfaces.OPERATION_TYPE_DATA_QUERY})
@@ -1886,7 +1886,7 @@ func (mms *metricModelService) GetMetricModelFields(ctx context.Context, modelID
 	defer span.End()
 
 	// 决策当前模型id的数据查询权限
-	err := mms.ps.CheckPermission(ctx, interfaces.Resource{
+	err := mms.ps.CheckPermission(ctx, interfaces.PermissionResource{
 		ID:   modelID,
 		Type: interfaces.RESOURCE_TYPE_METRIC_MODEL,
 	}, []string{interfaces.OPERATION_TYPE_DATA_QUERY})
@@ -2030,7 +2030,7 @@ func (mms *metricModelService) GetMetricModelFieldValues(ctx context.Context, mo
 	fieldValue := interfaces.FieldValues{}
 
 	// 决策当前模型id的数据查询权限
-	err := mms.ps.CheckPermission(ctx, interfaces.Resource{
+	err := mms.ps.CheckPermission(ctx, interfaces.PermissionResource{
 		ID:   modelID,
 		Type: interfaces.RESOURCE_TYPE_METRIC_MODEL,
 	}, []string{interfaces.OPERATION_TYPE_DATA_QUERY})
@@ -2282,7 +2282,7 @@ func (mms *metricModelService) GetMetricModelLabels(ctx context.Context, modelID
 	defer span.End()
 
 	// 决策当前模型id的数据查询权限
-	err := mms.ps.CheckPermission(ctx, interfaces.Resource{
+	err := mms.ps.CheckPermission(ctx, interfaces.PermissionResource{
 		ID:   modelID,
 		Type: interfaces.RESOURCE_TYPE_METRIC_MODEL,
 	}, []string{interfaces.OPERATION_TYPE_DATA_QUERY})

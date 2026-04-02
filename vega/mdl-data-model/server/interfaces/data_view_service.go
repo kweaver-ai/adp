@@ -193,7 +193,7 @@ type DataViewService interface {
 	GetDataViewsBySourceID(ctx context.Context, sourceID string) ([]*DataView, error)
 
 	// 获取数据视图的资源实例列表
-	ListDataViewSrcs(ctx context.Context, params *ListViewQueryParams) ([]*Resource, int, error)
+	ListDataViewSrcs(ctx context.Context, params *ListViewQueryParams) ([]PermissionResource, int, error)
 
 	UpdateDataViewInternal(ctx context.Context, view *DataView) error
 	// 批量标记删除视图

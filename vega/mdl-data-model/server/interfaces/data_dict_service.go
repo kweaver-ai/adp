@@ -83,5 +83,5 @@ type DataDictService interface {
 	GetDataDictByID(ctx context.Context, dictID string) (DataDict, error)
 	CheckDictExistByName(ctx context.Context, dictName string) (bool, error)
 
-	ListDataDictSrcs(ctx context.Context, listDictsQuery DataDictQueryParams) ([]Resource, int, error)
+	ListDataDictSrcs(ctx context.Context, listDictsQuery DataDictQueryParams) ([]PermissionResource, int, error)
 }

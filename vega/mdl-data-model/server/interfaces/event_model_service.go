@@ -287,5 +287,5 @@ type EventModelService interface {
 	ValidateExecuteParam(ctx context.Context, executeParam map[string]any) (bool, error)
 	UpdateEventTaskAttributes(ctx context.Context, task EventTask) error
 
-	ListEventModelSrcs(ctx context.Context, params EventModelQueryRequest) ([]Resource, int, error)
+	ListEventModelSrcs(ctx context.Context, params EventModelQueryRequest) ([]PermissionResource, int, error)
 }

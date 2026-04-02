@@ -84,14 +84,14 @@ func TestSimulate(t *testing.T) {
 		psMock := mock.NewMockPermissionService(mockCtrl)
 		ds := MockNewObjectiveModelService(appSetting, mmaMock, mmServiceMock, omaMock, psMock)
 
-		ops := []interfaces.ResourceOps{
-			{
+		ops := map[string]interfaces.PermissionResourceOps{
+			interfaces.RESOURCE_ID_ALL: {
 				ResourceID: interfaces.RESOURCE_ID_ALL,
 				Operations: []string{interfaces.OPERATION_TYPE_CREATE},
 			},
 		}
 		Convey("Simulate failed, because validate failed", func() {
-			psMock.EXPECT().GetResourcesOperations(gomock.Any(), gomock.Any(), gomock.Any()).Return(ops, nil)
+			psMock.EXPECT().GetResourcesOperations(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(ops, nil)
 			query := interfaces.ObjectiveModelQuery{}
 			_, err := ds.Simulate(testCtx, query)
 			So(err.(*rest.HTTPError).BaseError.ErrorCode, ShouldEqual, uerrors.Uniquery_ObjectiveModel_UnsupportQuery)
@@ -117,7 +117,7 @@ func TestSimulate(t *testing.T) {
 					End:   &end,
 				},
 			}
-			psMock.EXPECT().GetResourcesOperations(gomock.Any(), gomock.Any(), gomock.Any()).Return(ops, nil)
+			psMock.EXPECT().GetResourcesOperations(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(ops, nil)
 			mmaMock.EXPECT().GetMetricModels(gomock.Any(), gomock.Any()).
 				Return([]interfaces.MetricModel{metricModel1, metricModel2}, nil)
 			mmServiceMock.EXPECT().Exec(gomock.Any(), gomock.Any()).AnyTimes().Return(interfaces.MetricModelUniResponse{}, 0, 0, nil)

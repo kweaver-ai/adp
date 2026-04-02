@@ -116,10 +116,10 @@ func (mr *MockDataViewRowColumnRuleServiceMockRecorder) GetDataViewRowColumnRule
 }
 
 // ListDataViewRowColumnRuleSrcs mocks base method.
-func (m *MockDataViewRowColumnRuleService) ListDataViewRowColumnRuleSrcs(ctx context.Context, params *interfaces.ListRowColumnRuleQueryParams) ([]*interfaces.Resource, int, error) {
+func (m *MockDataViewRowColumnRuleService) ListDataViewRowColumnRuleSrcs(ctx context.Context, params *interfaces.ListRowColumnRuleQueryParams) ([]interfaces.PermissionResource, int, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ListDataViewRowColumnRuleSrcs", ctx, params)
-	ret0, _ := ret[0].([]*interfaces.Resource)
+	ret0, _ := ret[0].([]interfaces.PermissionResource)
 	ret1, _ := ret[1].(int)
 	ret2, _ := ret[2].(error)
 	return ret0, ret1, ret2

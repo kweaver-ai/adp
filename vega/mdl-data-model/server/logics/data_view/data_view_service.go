@@ -75,7 +75,7 @@ func (dvs *dataViewService) CreateDataViews(ctx context.Context, views []*interf
 	// 判断userid是否有创建数据视图的权限（策略决策）
 	if checkPermission {
 		err := dvs.ps.CheckPermission(ctx,
-			interfaces.Resource{
+			interfaces.PermissionResource{
 				Type: interfaces.RESOURCE_TYPE_DATA_VIEW,
 				ID:   interfaces.RESOURCE_ID_ALL,
 			},
@@ -148,7 +148,7 @@ func (dvs *dataViewService) CreateDataViews(ctx context.Context, views []*interf
 	}
 
 	currentTime := time.Now().UnixMilli()
-	createSrcs := make([]interfaces.Resource, 0, len(createdViews))
+	createSrcs := make([]interfaces.PermissionResource, 0, len(createdViews))
 	for i, cView := range createdViews {
 		// 初始化视图分组对象
 		initedGroup := initViewGroupReq(cView)
@@ -184,7 +184,7 @@ func (dvs *dataViewService) CreateDataViews(ctx context.Context, views []*interf
 		// 原子视图也存字段，因为要存储字段的状态信息
 		createdViews[i] = cView
 
-		createSrcs = append(createSrcs, interfaces.Resource{
+		createSrcs = append(createSrcs, interfaces.PermissionResource{
 			ID:   cView.ViewID,
 			Type: interfaces.RESOURCE_TYPE_DATA_VIEW,
 			Name: common.ProcessUngroupedName(ctx, cView.GroupName, cView.ViewName),
@@ -326,7 +326,7 @@ func (dvs *dataViewService) UpdateDataView(ctx context.Context, tx *sql.Tx, view
 
 	// 判断userid是否有修改数据视图的权限（策略决策）
 	err := dvs.ps.CheckPermission(ctx,
-		interfaces.Resource{
+		interfaces.PermissionResource{
 			Type: interfaces.RESOURCE_TYPE_DATA_VIEW,
 			ID:   view.ViewID,
 		},
@@ -462,7 +462,7 @@ func (dvs *dataViewService) UpdateDataView(ctx context.Context, tx *sql.Tx, view
 	}
 
 	// 请求更新资源名称的接口，更新资源的名称
-	err = dvs.ps.UpdateResource(ctx, interfaces.Resource{
+	err = dvs.ps.UpdateResource(ctx, interfaces.PermissionResource{
 		ID:   view.ViewID,
 		Type: interfaces.RESOURCE_TYPE_DATA_VIEW,
 		Name: common.ProcessUngroupedName(ctx, view.GroupName, view.ViewName),
@@ -626,7 +626,7 @@ func (dvs *dataViewService) UpdateDataViewInternal(ctx context.Context, view *in
 	}
 
 	// 请求更新资源名称的接口，更新资源的名称
-	err = dvs.ps.UpdateResource(ctx, interfaces.Resource{
+	err = dvs.ps.UpdateResource(ctx, interfaces.PermissionResource{
 		ID:   view.ViewID,
 		Type: interfaces.RESOURCE_TYPE_DATA_VIEW,
 		Name: common.ProcessUngroupedName(ctx, view.GroupName, view.ViewName),
@@ -1087,7 +1087,7 @@ func (dvs *dataViewService) ListDataViews(ctx context.Context, param *interfaces
 	// 分批处理，每批1万个resmids, fix权限接口报错prepared statement contains too many placeholders
 	batchSize := 10000
 	// 所有有权限的视图id
-	matchResouceIDMap := make(map[string]interfaces.ResourceOps)
+	matchResouceIDMap := make(map[string]interfaces.PermissionResourceOps)
 
 	for i := 0; i < len(resMids); i += batchSize {
 		end := i + batchSize
@@ -1096,7 +1096,7 @@ func (dvs *dataViewService) ListDataViews(ctx context.Context, param *interfaces
 		}
 		batchResMids := resMids[i:end]
 
-		var batchMatchResources map[string]interfaces.ResourceOps
+		var batchMatchResources map[string]interfaces.PermissionResourceOps
 		if len(param.Operations) > 0 {
 			batchMatchResources, err = dvs.ps.FilterResources(ctx, interfaces.RESOURCE_TYPE_DATA_VIEW,
 				batchResMids, param.Operations, true, interfaces.FULL_OPERATIONS)
@@ -1246,7 +1246,7 @@ func (dvs *dataViewService) UpdateAtomicDataViews(ctx context.Context, attrs *in
 
 	// 判断userid是否有修改数据视图的权限（策略决策）
 	err := dvs.ps.CheckPermission(ctx,
-		interfaces.Resource{
+		interfaces.PermissionResource{
 			Type: interfaces.RESOURCE_TYPE_DATA_VIEW,
 			ID:   attrs.ViewID,
 		},
@@ -1309,7 +1309,7 @@ func (dvs *dataViewService) UpdateAtomicDataViews(ctx context.Context, attrs *in
 	}
 
 	// 请求更新资源名称的接口，更新资源的名称
-	err = dvs.ps.UpdateResource(ctx, interfaces.Resource{
+	err = dvs.ps.UpdateResource(ctx, interfaces.PermissionResource{
 		ID:   attrs.ViewID,
 		Type: interfaces.RESOURCE_TYPE_DATA_VIEW,
 		Name: common.ProcessUngroupedName(ctx, oldView.GroupName, attrs.ViewName),
@@ -1859,7 +1859,7 @@ func (dvs *dataViewService) GetDetailedDataViewMapByIDs(ctx context.Context, vie
 	return viewMap, nil
 }
 
-func (dvs *dataViewService) ListDataViewSrcs(ctx context.Context, params *interfaces.ListViewQueryParams) ([]*interfaces.Resource, int, error) {
+func (dvs *dataViewService) ListDataViewSrcs(ctx context.Context, params *interfaces.ListViewQueryParams) ([]interfaces.PermissionResource, int, error) {
 	listCtx, listSpan := ar_trace.Tracer.Start(ctx, "logic layer: List data view resources")
 	listSpan.End()
 
@@ -1868,11 +1868,11 @@ func (dvs *dataViewService) ListDataViewSrcs(ctx context.Context, params *interf
 		logger.Errorf("ListDataViews error: %s", err.Error())
 		listSpan.SetStatus(codes.Error, "List data views error")
 		listSpan.End()
-		return nil, 0, rest.NewHTTPError(listCtx, http.StatusInternalServerError,
+		return []interfaces.PermissionResource{}, 0, rest.NewHTTPError(listCtx, http.StatusInternalServerError,
 			derrors.DataModel_DataView_InternalError_ListDataViewsFailed).WithErrorDetails(err.Error())
 	}
 	if len(views) == 0 {
-		return []*interfaces.Resource{}, 0, nil
+		return []interfaces.PermissionResource{}, 0, nil
 	}
 
 	// 根据权限过滤有查看权限的对象，过滤后的数组的总长度就是总数，无需再请求总数
@@ -1894,12 +1894,12 @@ func (dvs *dataViewService) ListDataViewSrcs(ctx context.Context, params *interf
 		}
 		batchResMids := resMids[i:end]
 
-		var batchMatchResources map[string]interfaces.ResourceOps
+		var batchMatchResources map[string]interfaces.PermissionResourceOps
 		// 校验权限管理的操作权限
 		batchMatchResources, err = dvs.ps.FilterResources(ctx, interfaces.RESOURCE_TYPE_DATA_VIEW,
 			batchResMids, []string{interfaces.OPERATION_TYPE_VIEW_DETAIL}, false, interfaces.FULL_OPERATIONS)
 		if err != nil {
-			return nil, 0, err
+			return []interfaces.PermissionResource{}, 0, err
 		}
 
 		// 合并结果
@@ -1909,10 +1909,10 @@ func (dvs *dataViewService) ListDataViewSrcs(ctx context.Context, params *interf
 	}
 
 	// 遍历对象
-	results := make([]*interfaces.Resource, 0)
+	results := make([]interfaces.PermissionResource, 0)
 	for _, view := range views {
 		if matchResouceIDMap[view.ViewID] {
-			results = append(results, &interfaces.Resource{
+			results = append(results, interfaces.PermissionResource{
 				ID:   view.ViewID,
 				Type: interfaces.RESOURCE_TYPE_DATA_VIEW,
 				Name: common.ProcessUngroupedName(ctx, view.GroupName, view.ViewName),
@@ -1923,7 +1923,7 @@ func (dvs *dataViewService) ListDataViewSrcs(ctx context.Context, params *interf
 	// 分页
 	// 检查起始位置是否越界
 	if params.Offset < 0 || params.Offset >= len(results) {
-		return []*interfaces.Resource{}, 0, nil
+		return []interfaces.PermissionResource{}, 0, nil
 	}
 	// 计算结束位置
 	end := params.Offset + params.Limit

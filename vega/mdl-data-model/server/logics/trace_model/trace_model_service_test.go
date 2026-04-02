@@ -535,7 +535,7 @@ func Test_TraceModelService_DeleteTraceModels(t *testing.T) {
 		dcs := dmock.NewMockDataConnectionService(mockCtrl)
 		ps := dmock.NewMockPermissionService(mockCtrl)
 		tms := MockNewTraceModelService(appSetting, tma, dvs, dcs, ps)
-		resrc := map[string]interfaces.ResourceOps{
+		resrc := map[string]interfaces.PermissionResourceOps{
 			"0": {
 				ResourceID: "0",
 			},
@@ -1049,7 +1049,7 @@ func Test_TraceModelService_GetTraceModels(t *testing.T) {
 		dcs := dmock.NewMockDataConnectionService(mockCtrl)
 		ps := dmock.NewMockPermissionService(mockCtrl)
 		tms := MockNewTraceModelService(appSetting, tma, dvs, dcs, ps)
-		resrc := map[string]interfaces.ResourceOps{
+		resrc := map[string]interfaces.PermissionResourceOps{
 			"1": {
 				ResourceID: "1",
 			},
@@ -1198,7 +1198,7 @@ func Test_TraceModelService_ListTraceModels(t *testing.T) {
 		dcs := dmock.NewMockDataConnectionService(mockCtrl)
 		ps := dmock.NewMockPermissionService(mockCtrl)
 		tms := MockNewTraceModelService(appSetting, tma, dvs, dcs, ps)
-		resrc := map[string]interfaces.ResourceOps{
+		resrc := map[string]interfaces.PermissionResourceOps{
 			"1": {
 				ResourceID: "1",
 			},
@@ -1254,7 +1254,7 @@ func Test_TraceModelService_GetTraceModelFieldInfo(t *testing.T) {
 		ps := dmock.NewMockPermissionService(mockCtrl)
 		tms := MockNewTraceModelService(appSetting, tma, dvs, dcs, ps)
 		tmp := dmock.NewMockTraceModelProcessor(mockCtrl)
-		resrc := map[string]interfaces.ResourceOps{
+		resrc := map[string]interfaces.PermissionResourceOps{
 			"0": {
 				ResourceID: "0",
 			},

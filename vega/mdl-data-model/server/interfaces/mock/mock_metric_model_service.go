@@ -255,10 +255,10 @@ func (mr *MockMetricModelServiceMockRecorder) GetMetricModelsDetailByGroupID(ctx
 }
 
 // ListMetricModelSrcs mocks base method.
-func (m *MockMetricModelService) ListMetricModelSrcs(ctx context.Context, parameter interfaces.MetricModelsQueryParams) ([]interfaces.Resource, int, error) {
+func (m *MockMetricModelService) ListMetricModelSrcs(ctx context.Context, parameter interfaces.MetricModelsQueryParams) ([]interfaces.PermissionResource, int, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ListMetricModelSrcs", ctx, parameter)
-	ret0, _ := ret[0].([]interfaces.Resource)
+	ret0, _ := ret[0].([]interfaces.PermissionResource)
 	ret1, _ := ret[1].(int)
 	ret2, _ := ret[2].(error)
 	return ret0, ret1, ret2

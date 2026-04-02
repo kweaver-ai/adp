@@ -575,7 +575,7 @@ func (ems *eventModelService) EventModelUpdateValidate(ctx context.Context, even
 func (ems *eventModelService) CreateEventModels(ctx context.Context, eventModels []interfaces.EventModel) ([]map[string]any, error) {
 
 	// 判断userid是否有创建指标模型的权限（策略决策）
-	err := ems.ps.CheckPermission(ctx, interfaces.Resource{
+	err := ems.ps.CheckPermission(ctx, interfaces.PermissionResource{
 		Type: interfaces.RESOURCE_TYPE_EVENT_MODEL,
 		ID:   interfaces.RESOURCE_ID_ALL,
 	}, []string{interfaces.OPERATION_TYPE_CREATE})
@@ -616,11 +616,11 @@ func (ems *eventModelService) CreateEventModels(ctx context.Context, eventModels
 	}
 
 	now := time.Now().UnixMilli()
-	resrcs := []interfaces.Resource{}
+	resrcs := []interfaces.PermissionResource{}
 	//2. 创建模型下的任务
 	for _, eventModel := range eventModels {
 		// 添加资源
-		resrcs = append(resrcs, interfaces.Resource{
+		resrcs = append(resrcs, interfaces.PermissionResource{
 			ID:   eventModel.EventModelID,
 			Type: interfaces.RESOURCE_TYPE_EVENT_MODEL,
 			Name: eventModel.EventModelName,
@@ -692,7 +692,7 @@ func (ems *eventModelService) CreateEventModels(ctx context.Context, eventModels
 func (ems *eventModelService) UpdateEventModel(ctx context.Context, emr interfaces.EventModelUpateRequest) error {
 
 	// 判断userid是否有创建指标模型的权限（策略决策）
-	err := ems.ps.CheckPermission(ctx, interfaces.Resource{
+	err := ems.ps.CheckPermission(ctx, interfaces.PermissionResource{
 		Type: interfaces.RESOURCE_TYPE_EVENT_MODEL,
 		ID:   emr.EventModelID,
 	}, []string{interfaces.OPERATION_TYPE_MODIFY})
@@ -995,7 +995,7 @@ func (ems *eventModelService) UpdateEventModel(ctx context.Context, emr interfac
 		}
 	}
 
-	err = ems.ps.UpdateResource(ctx, interfaces.Resource{
+	err = ems.ps.UpdateResource(ctx, interfaces.PermissionResource{
 		ID:   emr.EventModelID,
 		Type: interfaces.RESOURCE_TYPE_EVENT_MODEL,
 		Name: emr.EventModelName,
@@ -1022,7 +1022,7 @@ func (ems *eventModelService) GetEventModelByID(ctx context.Context, modelID str
 	}
 
 	// 判断userid是否有查看模型的权限（策略决策）
-	err = ems.ps.CheckPermission(ctx, interfaces.Resource{
+	err = ems.ps.CheckPermission(ctx, interfaces.PermissionResource{
 		Type: interfaces.RESOURCE_TYPE_EVENT_MODEL,
 		ID:   eventModel.EventModelID,
 	}, []string{interfaces.OPERATION_TYPE_VIEW_DETAIL})
@@ -1370,9 +1370,9 @@ func (eventModelService *eventModelService) ValidateExecuteParam(ctx context.Con
 }
 
 func (ems *eventModelService) ListEventModelSrcs(ctx context.Context,
-	params interfaces.EventModelQueryRequest) ([]interfaces.Resource, int, error) {
+	params interfaces.EventModelQueryRequest) ([]interfaces.PermissionResource, int, error) {
 
-	emptyResources := []interfaces.Resource{}
+	emptyResources := []interfaces.PermissionResource{}
 
 	//NOTE 根据查询条件查询对应的事件模型,带翻页参数
 	eventModels, err := ems.ema.QueryEventModels(ctx, params)
@@ -1394,10 +1394,10 @@ func (ems *eventModelService) ListEventModelSrcs(ctx context.Context,
 	}
 
 	// 遍历对象
-	results := make([]interfaces.Resource, 0)
+	results := make([]interfaces.PermissionResource, 0)
 	for _, model := range eventModels {
 		if _, exist := matchResoucesMap[model.EventModelID]; exist {
-			results = append(results, interfaces.Resource{
+			results = append(results, interfaces.PermissionResource{
 				ID:   model.EventModelID,
 				Type: interfaces.RESOURCE_TYPE_EVENT_MODEL,
 				Name: model.EventModelName,

@@ -71,7 +71,7 @@ func NewMetricModelService(appSetting *common.AppSetting) interfaces.MetricModel
 // 	defer span.End()
 
 // 	// 判断userid是否有创建指标模型的权限（策略决策）
-// 	err = mms.ps.CheckPermission(ctx, interfaces.Resource{
+// 	err = mms.ps.CheckPermission(ctx, interfaces.PermissionResource{
 // 		Type: interfaces.RESOURCE_TYPE_METRIC_MODEL,
 // 		ID:   interfaces.RESOURCE_ID_ALL,
 // 	}, []string{interfaces.OPERATION_TYPE_CREATE})
@@ -274,7 +274,7 @@ func (mms *metricModelService) CreateMetricModels(ctx context.Context, metricMod
 	defer span.End()
 
 	// 判断userid是否有创建指标模型的权限（策略决策）
-	err = mms.ps.CheckPermission(ctx, interfaces.Resource{
+	err = mms.ps.CheckPermission(ctx, interfaces.PermissionResource{
 		Type: interfaces.RESOURCE_TYPE_METRIC_MODEL,
 		ID:   interfaces.RESOURCE_ID_ALL,
 	}, []string{interfaces.OPERATION_TYPE_CREATE})
@@ -342,7 +342,7 @@ func (mms *metricModelService) CreateMetricModels(ctx context.Context, metricMod
 	}
 
 	// 前面已经校验创建权限，可以直接创建
-	createSrcs := []interfaces.Resource{}
+	createSrcs := []interfaces.PermissionResource{}
 	for _, model := range createModels {
 		//创建之前需要先更新一下group_ID
 		metricGroup, err := mms.RetriveGroupIDByGroupName(ctx, tx, model.GroupName)
@@ -406,7 +406,7 @@ func (mms *metricModelService) CreateMetricModels(ctx context.Context, metricMod
 		}
 
 		name := common.ProcessUngroupedName(ctx, model.GroupName, model.ModelName)
-		createSrcs = append(createSrcs, interfaces.Resource{
+		createSrcs = append(createSrcs, interfaces.PermissionResource{
 			ID:   model.ModelID,
 			Type: interfaces.RESOURCE_TYPE_METRIC_MODEL,
 			Name: name,
@@ -429,7 +429,7 @@ func (mms *metricModelService) UpdateMetricModel(ctx context.Context, tx *sql.Tx
 	defer updateSpan.End()
 
 	// 判断userid是否有创建指标模型的权限（策略决策）
-	err = mms.ps.CheckPermission(ctx, interfaces.Resource{
+	err = mms.ps.CheckPermission(ctx, interfaces.PermissionResource{
 		Type: interfaces.RESOURCE_TYPE_METRIC_MODEL,
 		ID:   metricModel.ModelID,
 	}, []string{interfaces.OPERATION_TYPE_MODIFY})
@@ -632,7 +632,7 @@ func (mms *metricModelService) UpdateMetricModel(ctx context.Context, tx *sql.Tx
 
 	// 请求更新资源名称的接口，更新资源的名称
 	if metricModel.IfNameModify {
-		err = mms.ps.UpdateResource(ctx, interfaces.Resource{
+		err = mms.ps.UpdateResource(ctx, interfaces.PermissionResource{
 			ID:   metricModel.ModelID,
 			Type: interfaces.RESOURCE_TYPE_METRIC_MODEL,
 			Name: common.ProcessUngroupedName(ctx, metricModel.GroupName, metricModel.ModelName),
@@ -1765,7 +1765,7 @@ func (mms *metricModelService) GetMetricModelSourceFields(ctx context.Context, m
 	defer span.End()
 
 	// 校验查询权限
-	err := mms.ps.CheckPermission(ctx, interfaces.Resource{
+	err := mms.ps.CheckPermission(ctx, interfaces.PermissionResource{
 		ID:   modelID,
 		Type: interfaces.RESOURCE_TYPE_METRIC_MODEL},
 		[]string{interfaces.OPERATION_TYPE_DATA_QUERY})
@@ -2161,13 +2161,13 @@ func (mms *metricModelService) handleMetricModelImportMode(ctx context.Context, 
 	return createModels, updateModels, nil
 }
 
-func (mms *metricModelService) ListMetricModelSrcs(ctx context.Context, parameter interfaces.MetricModelsQueryParams) ([]interfaces.Resource, int, error) {
+func (mms *metricModelService) ListMetricModelSrcs(ctx context.Context, parameter interfaces.MetricModelsQueryParams) ([]interfaces.PermissionResource, int, error) {
 	listCtx, listSpan := ar_trace.Tracer.Start(ctx, "查询指标模型实例列表")
 	listSpan.End()
 
 	//获取指标模型列表（不分页，获取所有的指标模型)
 	models, err := mms.mma.ListSimpleMetricModels(listCtx, parameter)
-	emptyResources := []interfaces.Resource{}
+	emptyResources := []interfaces.PermissionResource{}
 	if err != nil {
 		logger.Errorf("ListMetricModels error: %s", err.Error())
 		listSpan.SetStatus(codes.Error, "List simple metric models error")
@@ -2193,13 +2193,13 @@ func (mms *metricModelService) ListMetricModelSrcs(ctx context.Context, paramete
 	}
 
 	// 遍历对象
-	results := make([]interfaces.Resource, 0)
+	results := make([]interfaces.PermissionResource, 0)
 	for _, model := range models {
 		if _, exist := matchResoucesMap[model.ModelID]; exist {
 			// 如果是未分组，组名是空，此时需要把其按语言翻译未分组
 			name := common.ProcessUngroupedName(ctx, model.GroupName, model.ModelName)
 
-			results = append(results, interfaces.Resource{
+			results = append(results, interfaces.PermissionResource{
 				ID:   model.ModelID,
 				Type: interfaces.RESOURCE_TYPE_METRIC_MODEL,
 				Name: name,

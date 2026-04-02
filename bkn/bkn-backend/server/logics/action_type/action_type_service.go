@@ -110,7 +110,7 @@ func (ats *actionTypeService) CreateActionTypes(ctx context.Context, tx *sql.Tx,
 	defer span.End()
 
 	// 判断userid是否有修改业务知识网络的权限
-	err := ats.ps.CheckPermission(ctx, interfaces.Resource{
+	err := ats.ps.CheckPermission(ctx, interfaces.PermissionResource{
 		Type: interfaces.RESOURCE_TYPE_KN,
 		ID:   actionTypes[0].KNID,
 	}, []string{interfaces.OPERATION_TYPE_MODIFY})
@@ -233,7 +233,7 @@ func (ats *actionTypeService) ListActionTypes(ctx context.Context, query interfa
 	defer span.End()
 
 	// 判断userid是否有查看业务知识网络的权限
-	err := ats.ps.CheckPermission(ctx, interfaces.Resource{
+	err := ats.ps.CheckPermission(ctx, interfaces.PermissionResource{
 		Type: interfaces.RESOURCE_TYPE_KN,
 		ID:   query.KNID,
 	}, []string{interfaces.OPERATION_TYPE_VIEW_DETAIL})
@@ -312,7 +312,7 @@ func (ats *actionTypeService) GetActionTypesByIDs(ctx context.Context, knID stri
 	defer span.End()
 
 	// 判断userid是否有查看业务知识网络的权限
-	err := ats.ps.CheckPermission(ctx, interfaces.Resource{
+	err := ats.ps.CheckPermission(ctx, interfaces.PermissionResource{
 		Type: interfaces.RESOURCE_TYPE_KN,
 		ID:   knID,
 	}, []string{interfaces.OPERATION_TYPE_VIEW_DETAIL})
@@ -384,7 +384,7 @@ func (ats *actionTypeService) UpdateActionType(ctx context.Context, tx *sql.Tx, 
 	defer span.End()
 
 	// 判断userid是否有修改业务知识网络的权限
-	err := ats.ps.CheckPermission(ctx, interfaces.Resource{
+	err := ats.ps.CheckPermission(ctx, interfaces.PermissionResource{
 		Type: interfaces.RESOURCE_TYPE_KN,
 		ID:   actionType.KNID,
 	}, []string{interfaces.OPERATION_TYPE_MODIFY})
@@ -466,7 +466,7 @@ func (ats *actionTypeService) DeleteActionTypesByIDs(ctx context.Context, tx *sq
 	defer span.End()
 
 	// 判断userid是否有修改业务知识网络的权限
-	err := ats.ps.CheckPermission(ctx, interfaces.Resource{
+	err := ats.ps.CheckPermission(ctx, interfaces.PermissionResource{
 		Type: interfaces.RESOURCE_TYPE_KN,
 		ID:   knID,
 	}, []string{interfaces.OPERATION_TYPE_MODIFY})
@@ -774,7 +774,7 @@ func (ats *actionTypeService) SearchActionTypes(ctx context.Context, query *inte
 	var err error
 
 	// 判断userid是否有查看业务知识网络的权限
-	err = ats.ps.CheckPermission(ctx, interfaces.Resource{
+	err = ats.ps.CheckPermission(ctx, interfaces.PermissionResource{
 		Type: interfaces.RESOURCE_TYPE_KN,
 		ID:   query.KNID,
 	}, []string{interfaces.OPERATION_TYPE_VIEW_DETAIL})

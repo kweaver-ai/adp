@@ -95,7 +95,7 @@ func Test_DataViewGroupService_DeleteDataViewGroup(t *testing.T) {
 			{ViewID: "2b"},
 		}
 
-		resrcs := map[string]interfaces.ResourceOps{
+		resrcs := map[string]interfaces.PermissionResourceOps{
 			"1a": {ResourceID: "1a"},
 			"2b": {ResourceID: "2b"},
 		}

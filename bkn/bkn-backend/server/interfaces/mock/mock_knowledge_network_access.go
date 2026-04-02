@@ -179,10 +179,10 @@ func (mr *MockKNAccessMockRecorder) ListKNs(ctx, query any) *gomock.Call {
 }
 
 // ListKnSrcs mocks base method.
-func (m *MockKNAccess) ListKnSrcs(ctx context.Context, query interfaces.KNsQueryParams) ([]interfaces.Resource, error) {
+func (m *MockKNAccess) ListKnSrcs(ctx context.Context, query interfaces.KNsQueryParams) ([]interfaces.PermissionResource, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ListKnSrcs", ctx, query)
-	ret0, _ := ret[0].([]interfaces.Resource)
+	ret0, _ := ret[0].([]interfaces.PermissionResource)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }

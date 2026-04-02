@@ -126,7 +126,7 @@ func (cgs *conceptGroupService) CreateConceptGroup(ctx context.Context, tx *sql.
 	defer span.End()
 
 	// 判断userid是否有创建概念分组的权限（策略决策）
-	err := cgs.ps.CheckPermission(ctx, interfaces.Resource{
+	err := cgs.ps.CheckPermission(ctx, interfaces.PermissionResource{
 		Type: interfaces.RESOURCE_TYPE_KN,
 		ID:   conceptGroup.KNID,
 	}, []string{interfaces.OPERATION_TYPE_MODIFY})
@@ -347,7 +347,7 @@ func (cgs *conceptGroupService) ListConceptGroups(ctx context.Context,
 	defer span.End()
 
 	// 判断userid是否有查看业务知识网络的权限
-	err := cgs.ps.CheckPermission(ctx, interfaces.Resource{
+	err := cgs.ps.CheckPermission(ctx, interfaces.PermissionResource{
 		Type: interfaces.RESOURCE_TYPE_KN,
 		ID:   query.KNID,
 	}, []string{interfaces.OPERATION_TYPE_VIEW_DETAIL})
@@ -421,7 +421,7 @@ func (cgs *conceptGroupService) GetConceptGroupByID(ctx context.Context, knID st
 	defer span.End()
 
 	// 判断userid是否有查看业务知识网络的权限
-	err := cgs.ps.CheckPermission(ctx, interfaces.Resource{
+	err := cgs.ps.CheckPermission(ctx, interfaces.PermissionResource{
 		Type: interfaces.RESOURCE_TYPE_KN,
 		ID:   knID,
 	}, []string{interfaces.OPERATION_TYPE_VIEW_DETAIL})
@@ -608,7 +608,7 @@ func (cgs *conceptGroupService) UpdateConceptGroup(ctx context.Context, tx *sql.
 	defer span.End()
 
 	// 判断userid是否有创建概念分组的权限（策略决策）
-	err := cgs.ps.CheckPermission(ctx, interfaces.Resource{
+	err := cgs.ps.CheckPermission(ctx, interfaces.PermissionResource{
 		Type: interfaces.RESOURCE_TYPE_KN,
 		ID:   conceptGroup.KNID,
 	}, []string{interfaces.OPERATION_TYPE_MODIFY})
@@ -694,7 +694,7 @@ func (cgs *conceptGroupService) DeleteConceptGroupByID(ctx context.Context, tx *
 	defer span.End()
 
 	// 判断userid是否有删除概念分组的权限
-	err := cgs.ps.CheckPermission(ctx, interfaces.Resource{
+	err := cgs.ps.CheckPermission(ctx, interfaces.PermissionResource{
 		Type: interfaces.RESOURCE_TYPE_KN,
 		ID:   knID,
 	}, []string{interfaces.OPERATION_TYPE_MODIFY})
@@ -1178,7 +1178,7 @@ func (cgs *conceptGroupService) ListConceptGroupRelations(ctx context.Context,
 	defer span.End()
 
 	// 判断userid是否有查看业务知识网络的权限
-	err := cgs.ps.CheckPermission(ctx, interfaces.Resource{
+	err := cgs.ps.CheckPermission(ctx, interfaces.PermissionResource{
 		Type: interfaces.RESOURCE_TYPE_KN,
 		ID:   query.KNID,
 	}, []string{interfaces.OPERATION_TYPE_VIEW_DETAIL})
@@ -1264,7 +1264,7 @@ func (cgs *conceptGroupService) DeleteObjectTypesFromGroup(ctx context.Context, 
 	defer span.End()
 
 	// 判断userid是否有修改业务知识网络的权限
-	err := cgs.ps.CheckPermission(ctx, interfaces.Resource{
+	err := cgs.ps.CheckPermission(ctx, interfaces.PermissionResource{
 		Type: interfaces.RESOURCE_TYPE_KN,
 		ID:   knID,
 	}, []string{interfaces.OPERATION_TYPE_MODIFY})

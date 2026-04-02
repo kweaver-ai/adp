@@ -190,7 +190,7 @@ func (dds *dataDictService) CreateDataDict(ctx context.Context,
 	defer span.End()
 
 	// 判断userid是否有创建指标模型的权限（策略决策）
-	err = dds.ps.CheckPermission(ctx, interfaces.Resource{
+	err = dds.ps.CheckPermission(ctx, interfaces.PermissionResource{
 		Type: interfaces.RESOURCE_TYPE_DATA_DICT,
 		ID:   interfaces.RESOURCE_ID_ALL,
 	}, []string{interfaces.OPERATION_TYPE_CREATE})
@@ -318,7 +318,7 @@ func (dds *dataDictService) CreateDataDict(ctx context.Context,
 	}
 
 	// 注册资源策略
-	err = dds.ps.CreateResources(ctx, []interfaces.Resource{
+	err = dds.ps.CreateResources(ctx, []interfaces.PermissionResource{
 		{
 			ID:   dict.DictID,
 			Type: interfaces.RESOURCE_TYPE_DATA_DICT,
@@ -343,7 +343,7 @@ func (dds *dataDictService) UpdateDataDict(ctx context.Context, dict interfaces.
 	defer span.End()
 
 	// 判断userid是否有创建指标模型的权限（策略决策）
-	err := dds.ps.CheckPermission(ctx, interfaces.Resource{
+	err := dds.ps.CheckPermission(ctx, interfaces.PermissionResource{
 		Type: interfaces.RESOURCE_TYPE_DATA_DICT,
 		ID:   dict.DictID,
 	}, []string{interfaces.OPERATION_TYPE_MODIFY})
@@ -431,7 +431,7 @@ func (dds *dataDictService) UpdateDataDict(ctx context.Context, dict interfaces.
 	}
 
 	// 更新资源通知
-	err = dds.ps.UpdateResource(ctx, interfaces.Resource{
+	err = dds.ps.UpdateResource(ctx, interfaces.PermissionResource{
 		ID:   dict.DictID,
 		Type: interfaces.RESOURCE_TYPE_DATA_DICT,
 		Name: dict.DictName,
@@ -524,7 +524,7 @@ func (dds *dataDictService) GetDataDictByID(ctx context.Context, dictID string) 
 }
 
 func (dds *dataDictService) ListDataDictSrcs(ctx context.Context,
-	listDictsQuery interfaces.DataDictQueryParams) ([]interfaces.Resource, int, error) {
+	listDictsQuery interfaces.DataDictQueryParams) ([]interfaces.PermissionResource, int, error) {
 
 	ctx, span := ar_trace.Tracer.Start(ctx, "查询指标模型实例列表")
 	span.End()
@@ -534,11 +534,11 @@ func (dds *dataDictService) ListDataDictSrcs(ctx context.Context,
 	if err != nil {
 		logger.Errorf("ListDicts error: %s", err.Error())
 		span.SetStatus(codes.Error, "List data dicts error")
-		return []interfaces.Resource{}, 0, rest.NewHTTPError(ctx, http.StatusNotFound, derrors.DataModel_DataDict_DictNotFound).
+		return []interfaces.PermissionResource{}, 0, rest.NewHTTPError(ctx, http.StatusNotFound, derrors.DataModel_DataDict_DictNotFound).
 			WithErrorDetails(err.Error())
 	}
 	if len(dictArr) == 0 {
-		return []interfaces.Resource{}, 0, nil
+		return []interfaces.PermissionResource{}, 0, nil
 	}
 
 	// 根据权限过滤有查看权限的对象，过滤后的数组的总长度就是总数，无需再请求总数
@@ -551,15 +551,15 @@ func (dds *dataDictService) ListDataDictSrcs(ctx context.Context,
 	matchResoucesMap, err := dds.ps.FilterResources(ctx, interfaces.RESOURCE_TYPE_DATA_DICT, resMids,
 		[]string{interfaces.OPERATION_TYPE_VIEW_DETAIL}, false, interfaces.DICT_COMMON_OPERATIONS)
 	if err != nil {
-		return []interfaces.Resource{}, 0, err
+		return []interfaces.PermissionResource{}, 0, err
 	}
 
 	// 遍历对象
-	results := make([]interfaces.Resource, 0)
+	results := make([]interfaces.PermissionResource, 0)
 	for _, model := range dictArr {
 		if _, exist := matchResoucesMap[model.DictID]; exist {
 			// 如果是未分组，组名是空，此时需要把其按语言翻译未分组
-			results = append(results, interfaces.Resource{
+			results = append(results, interfaces.PermissionResource{
 				ID:   model.DictID,
 				Type: interfaces.RESOURCE_TYPE_DATA_DICT,
 				Name: model.DictName,

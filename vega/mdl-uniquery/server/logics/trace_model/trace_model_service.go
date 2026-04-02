@@ -64,7 +64,7 @@ func (tms *traceModelService) GetSpanList(ctx context.Context, model interfaces.
 	}()
 
 	// 决策当前模型id的数据查询权限
-	err = tms.ps.CheckPermission(ctx, interfaces.Resource{
+	err = tms.ps.CheckPermission(ctx, interfaces.PermissionResource{
 		ID:   model.ID,
 		Type: interfaces.RESOURCE_TYPE_TRACE_MODEL,
 	}, []string{interfaces.OPERATION_TYPE_DATA_QUERY})
@@ -104,7 +104,7 @@ func (tms *traceModelService) GetTrace(ctx context.Context, model interfaces.Tra
 	}()
 
 	// 决策当前模型id的数据查询权限
-	err = tms.ps.CheckPermission(ctx, interfaces.Resource{
+	err = tms.ps.CheckPermission(ctx, interfaces.PermissionResource{
 		ID:   model.ID,
 		Type: interfaces.RESOURCE_TYPE_TRACE_MODEL,
 	}, []string{interfaces.OPERATION_TYPE_DATA_QUERY})
@@ -229,7 +229,7 @@ func (tms *traceModelService) GetSpan(ctx context.Context, model interfaces.Trac
 	}()
 
 	// 决策当前模型id的数据查询权限
-	err = tms.ps.CheckPermission(ctx, interfaces.Resource{
+	err = tms.ps.CheckPermission(ctx, interfaces.PermissionResource{
 		ID:   model.ID,
 		Type: interfaces.RESOURCE_TYPE_TRACE_MODEL,
 	}, []string{interfaces.OPERATION_TYPE_DATA_QUERY})
@@ -262,7 +262,7 @@ func (tms *traceModelService) GetSpanRelatedLogList(ctx context.Context, model i
 	}()
 
 	// 决策当前模型id的数据查询权限
-	err = tms.ps.CheckPermission(ctx, interfaces.Resource{
+	err = tms.ps.CheckPermission(ctx, interfaces.PermissionResource{
 		ID:   model.ID,
 		Type: interfaces.RESOURCE_TYPE_TRACE_MODEL,
 	}, []string{interfaces.OPERATION_TYPE_DATA_QUERY})
@@ -328,7 +328,7 @@ func (tms *traceModelService) SimulateCreateTraceModel(ctx context.Context, mode
 
 	// 决策权限。 预览的时候还没有模型id，此时的预览校验用新建或者编辑，
 	ops, err := tms.ps.GetResourcesOperations(ctx, interfaces.RESOURCE_TYPE_TRACE_MODEL,
-		[]string{interfaces.RESOURCE_ID_ALL})
+		[]string{interfaces.RESOURCE_ID_ALL}, interfaces.COMMON_OPERATIONS)
 	if err != nil {
 		return model, err
 	}
@@ -339,7 +339,7 @@ func (tms *traceModelService) SimulateCreateTraceModel(ctx context.Context, mode
 	}
 	// 从 ops 里找新建或编辑的权限
 	found := false
-	for _, op := range ops[0].Operations {
+	for _, op := range ops[interfaces.RESOURCE_ID_ALL].Operations {
 		if op == interfaces.OPERATION_TYPE_CREATE || op == interfaces.OPERATION_TYPE_MODIFY {
 			found = true
 			break
@@ -373,7 +373,7 @@ func (tms *traceModelService) SimulateUpdateTraceModel(ctx context.Context, mode
 
 	// 决策权限。 预览的时候还没有模型id，此时的预览校验用新建或者编辑，
 	ops, err := tms.ps.GetResourcesOperations(ctx, interfaces.RESOURCE_TYPE_TRACE_MODEL,
-		[]string{interfaces.RESOURCE_ID_ALL})
+		[]string{interfaces.RESOURCE_ID_ALL}, interfaces.COMMON_OPERATIONS)
 	if err != nil {
 		return model, err
 	}
@@ -384,7 +384,7 @@ func (tms *traceModelService) SimulateUpdateTraceModel(ctx context.Context, mode
 	}
 	// 从 ops 里找新建或编辑的权限
 	found := false
-	for _, op := range ops[0].Operations {
+	for _, op := range ops[interfaces.RESOURCE_ID_ALL].Operations {
 		if op == interfaces.OPERATION_TYPE_CREATE || op == interfaces.OPERATION_TYPE_MODIFY {
 			found = true
 			break

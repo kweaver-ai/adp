@@ -61,7 +61,7 @@ func Test_DataDictService_ListDataDicts(t *testing.T) {
 				Direction: interfaces.DESC_DIRECTION,
 			},
 		}
-		resrc := map[string]interfaces.ResourceOps{
+		resrc := map[string]interfaces.PermissionResourceOps{
 			"1": {
 				ResourceID: "1",
 			},
@@ -115,7 +115,7 @@ func Test_DataDictService_GetDataDicts(t *testing.T) {
 			DictStore: "t_data_dict_item",
 			Comment:   "",
 		}
-		resrc := map[string]interfaces.ResourceOps{
+		resrc := map[string]interfaces.PermissionResourceOps{
 			"431687149096534788": {
 				ResourceID: "431687149096534788",
 			},
@@ -405,7 +405,7 @@ func Test_DataDictService_DeleteDataDict(t *testing.T) {
 		ps := dmock.NewMockPermissionService(mockCtrl)
 		dds, _ := MockNewDataDictService(appSetting, dda, ddis, ps)
 		errors := errors.New("Error")
-		resrc := map[string]interfaces.ResourceOps{
+		resrc := map[string]interfaces.PermissionResourceOps{
 			"1": {
 				ResourceID: "1",
 			},
