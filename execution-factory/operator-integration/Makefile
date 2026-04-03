@@ -15,23 +15,7 @@ help:
 
 UT_PACKAGES := $(shell go list ./... | \
 	grep -v /server/tests | \
-	grep -v /server/mocks | \
-	grep -v '^github.com/kweaver-ai/adp/execution-factory/operator-integration/server$$' | \
-	grep -v '^github.com/kweaver-ai/adp/execution-factory/operator-integration/server/dbaccess$$' | \
-	grep -v '^github.com/kweaver-ai/adp/execution-factory/operator-integration/server/drivenadapters$$' | \
-	grep -v '^github.com/kweaver-ai/adp/execution-factory/operator-integration/server/driveradapters/operator$$' | \
-	grep -v '^github.com/kweaver-ai/adp/execution-factory/operator-integration/server/driveradapters/skill$$' | \
-	grep -v '^github.com/kweaver-ai/adp/execution-factory/operator-integration/server/driveradapters/toolbox$$' | \
-	grep -v '^github.com/kweaver-ai/adp/execution-factory/operator-integration/server/infra/config$$' | \
-	grep -v '^github.com/kweaver-ai/adp/execution-factory/operator-integration/server/infra/validator$$' | \
-	grep -v '^github.com/kweaver-ai/adp/execution-factory/operator-integration/server/logics/category$$' | \
-	grep -v '^github.com/kweaver-ai/adp/execution-factory/operator-integration/server/logics/mcp$$' | \
-	grep -v '^github.com/kweaver-ai/adp/execution-factory/operator-integration/server/logics/operator$$' | \
-	grep -v '^github.com/kweaver-ai/adp/execution-factory/operator-integration/server/logics/parsers$$' | \
-	grep -v '^github.com/kweaver-ai/adp/execution-factory/operator-integration/server/logics/proxy$$' | \
-	grep -v '^github.com/kweaver-ai/adp/execution-factory/operator-integration/server/logics/sandbox$$' | \
-	grep -v '^github.com/kweaver-ai/adp/execution-factory/operator-integration/server/logics/skill$$' | \
-	grep -v '^github.com/kweaver-ai/adp/execution-factory/operator-integration/server/logics/toolbox$$')
+	grep -v /server/mocks)
 
 generate-mock:
 	go generate ./...

@@ -88,7 +88,8 @@ func TestSkillHandler(t *testing.T) {
 			}, handler.GetSkillContent, "skill-2")
 
 			So(recorder.Code, ShouldEqual, http.StatusOK)
-			So(recorder.Body.String(), ShouldContainSubstring, `"skill_content":"guide"`)
+			So(recorder.Body.String(), ShouldContainSubstring, `"skill_id":"skill-2"`)
+			So(recorder.Body.String(), ShouldContainSubstring, `"url":"https://download/skill-2/SKILL.md"`)
 		})
 
 		Convey("ReadSkillFile binds body and calls reader", func() {
@@ -114,7 +115,9 @@ func TestSkillHandler(t *testing.T) {
 			}, handler.ReadSkillFile, "skill-3")
 
 			So(recorder.Code, ShouldEqual, http.StatusOK)
-			So(recorder.Body.String(), ShouldContainSubstring, `"content":"body"`)
+			So(recorder.Body.String(), ShouldContainSubstring, `"skill_id":"skill-3"`)
+			So(recorder.Body.String(), ShouldContainSubstring, `"rel_path":"refs/guide.md"`)
+			So(recorder.Body.String(), ShouldContainSubstring, `"url":"https://download/skill-3/refs/guide.md"`)
 		})
 
 		Convey("DownloadSkill binds uri and returns zip response", func() {
