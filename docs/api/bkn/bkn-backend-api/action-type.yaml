@@ -1056,7 +1056,6 @@ components:
         - parameters
         - schedule
         - module_type
-        - base_branch
         - branch
         - color
         - icon
@@ -1164,7 +1163,6 @@ components:
         - parameters
         - schedule
         - module_type
-        - base_branch
         - branch
         - color
         - icon

@@ -2044,7 +2044,6 @@ components:
         - tags
         - updator
         - update_time
-        - base_branch
         - branch
         - color
         - detail
@@ -2073,9 +2072,6 @@ components:
           type: string
         branch:
           description: 分支ID
-          type: string
-        base_branch:
-          description: 来源版本
           type: string
         creator:
           description: 创建人ID

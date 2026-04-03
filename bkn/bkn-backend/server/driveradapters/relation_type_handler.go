@@ -397,6 +397,8 @@ func (r *restHandler) UpdateRelationType(c *gin.Context, visitor hydra.Visitor) 
 		return
 	}
 	relationType.RTID = rtID
+	relationType.KNID = knID
+	relationType.Branch = branch
 
 	// 记录接口调用参数： c.Request.RequestURI, body
 	o11y.Info(ctx, fmt.Sprintf("修改关系类请求参数: [%s, %v]", c.Request.RequestURI, relationType))
@@ -437,8 +439,6 @@ func (r *restHandler) UpdateRelationType(c *gin.Context, visitor hydra.Visitor) 
 		rest.ReplyError(c, httpErr)
 		return
 	}
-
-	relationType.KNID = knID
 
 	//根据id修改信息
 	err = r.rts.UpdateRelationType(ctx, nil, &relationType, strictMode)
