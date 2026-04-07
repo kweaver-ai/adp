@@ -408,3 +408,28 @@ CREATE TABLE IF NOT EXISTS "t_skill_file_index" (
 
 CREATE UNIQUE INDEX IF NOT EXISTS t_skill_file_index_uk_skill_version_rel_path ON t_skill_file_index(f_skill_id, f_skill_version, f_rel_path);
 CREATE UNIQUE INDEX IF NOT EXISTS t_skill_file_index_uk_skill_version_path_hash ON t_skill_file_index(f_skill_id, f_skill_version, f_path_hash);
+
+CREATE TABLE IF NOT EXISTS "t_skill_runtime_profile" (
+    "f_id" BIGINT IDENTITY(1, 1) NOT NULL,
+    "f_skill_id" VARCHAR(40 CHAR) NOT NULL,
+    "f_skill_version" VARCHAR(40 CHAR) NOT NULL,
+    "f_entrypoint" VARCHAR(128 CHAR) NOT NULL,
+    "f_name" VARCHAR(255 CHAR) NOT NULL,
+    "f_description" text NOT NULL,
+    "f_runtime_type" VARCHAR(32 CHAR) NOT NULL DEFAULT 'python',
+    "f_work_dir" VARCHAR(512 CHAR) NOT NULL DEFAULT '.',
+    "f_command_template" text NOT NULL,
+    "f_input_schema" text DEFAULT NULL,
+    "f_output_schema" text DEFAULT NULL,
+    "f_timeout" INT NOT NULL DEFAULT 300,
+    "f_status" VARCHAR(32 CHAR) NOT NULL DEFAULT 'published',
+    "f_extend_info" text DEFAULT NULL,
+    "f_create_user" VARCHAR(50 CHAR) NOT NULL,
+    "f_create_time" BIGINT NOT NULL,
+    "f_update_user" VARCHAR(50 CHAR) NOT NULL,
+    "f_update_time" BIGINT NOT NULL,
+    CLUSTER PRIMARY KEY ("f_id")
+);
+
+CREATE UNIQUE INDEX IF NOT EXISTS t_skill_runtime_profile_uk_skill_runtime_profile ON t_skill_runtime_profile(f_skill_id, f_skill_version, f_entrypoint);
+CREATE INDEX IF NOT EXISTS t_skill_runtime_profile_idx_skill_runtime_profile_update ON t_skill_runtime_profile(f_skill_id, f_update_time);

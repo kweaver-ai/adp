@@ -546,23 +546,55 @@ type ExecuteCodeReq struct {
 
 // ExecuteCodeResp 执行代码响应
 type ExecuteCodeResp struct {
-	ID            string `json:"id"`             // 执行ID
-	SessionID     string `json:"session_id"`     // 会话ID
-	Code          string `json:"code"`           // 执行代码
-	Language      string `json:"language"`       // 执行语言
-	Timeout       int    `json:"timeout"`        // 超时时间，单位秒
-	ExitCode      int    `json:"exit_code"`      // 退出码
-	ErrorMessage  string `json:"error_message"`  // 错误信息
-	ExecutionTime int64  `json:"execution_time"` // 执行时间，单位毫秒
-	Artifacts     any    `json:"artifacts"`      // 文件制品响应
-	RetryCount    int    `json:"retry_count"`    // 重试次数
-	Stdout        string `json:"stdout"`         // 标准输出
-	Stderr        string `json:"stderr"`         // 标准错误输出
-	Metrics       any    `json:"metrics"`        // 执行指标
-	CreatedAt     string `json:"created_at"`     // 创建时间，单位毫秒
-	StartedAt     string `json:"started_at"`     // 开始时间，单位毫秒
-	CompletedAt   string `json:"completed_at"`   // 完成时间，单位毫秒
-	ReturnValue   any    `json:"return_value"`   // 执行结果值
+	ID            string  `json:"id"`             // 执行ID
+	SessionID     string  `json:"session_id"`     // 会话ID
+	Code          string  `json:"code"`           // 执行代码
+	Language      string  `json:"language"`       // 执行语言
+	Timeout       int     `json:"timeout"`        // 超时时间，单位秒
+	ExitCode      int     `json:"exit_code"`      // 退出码
+	ErrorMessage  string  `json:"error_message"`  // 错误信息
+	ExecutionTime float64 `json:"execution_time"` // 执行时间，单位秒
+	Artifacts     any     `json:"artifacts"`      // 文件制品响应
+	RetryCount    int     `json:"retry_count"`    // 重试次数
+	Stdout        string  `json:"stdout"`         // 标准输出
+	Stderr        string  `json:"stderr"`         // 标准错误输出
+	Metrics       any     `json:"metrics"`        // 执行指标
+	CreatedAt     string  `json:"created_at"`     // 创建时间，ISO 8601
+	StartedAt     string  `json:"started_at"`     // 开始时间，ISO 8601
+	CompletedAt   string  `json:"completed_at"`   // 完成时间，ISO 8601
+	ReturnValue   any     `json:"return_value"`   // 执行结果值
+}
+
+// SessionFileUploadResp 会话文件上传响应
+type SessionFileUploadResp struct {
+	SessionID string `json:"session_id"`
+	FilePath  string `json:"file_path"`
+	Size      int64  `json:"size"`
+}
+
+// SessionFileInfo 会话文件信息
+type SessionFileInfo struct {
+	Name          string `json:"name"`
+	ContainerPath string `json:"container_path"`
+	Size          int64  `json:"size"`
+	ModifiedTime  string `json:"modified_time"`
+	ETag          string `json:"etag"`
+}
+
+// ListSessionFilesResp 会话文件列表响应
+type ListSessionFilesResp struct {
+	SessionID string             `json:"session_id"`
+	Files     []*SessionFileInfo `json:"files"`
+	Count     int                `json:"count"`
+}
+
+// SessionFileDownloadResp 会话文件下载响应
+type SessionFileDownloadResp struct {
+	SessionID    string `json:"session_id"`
+	FilePath     string `json:"file_path"`
+	Content      []byte `json:"content,omitempty"`
+	Size         int64  `json:"size,omitempty"`
+	PresignedURL string `json:"presigned_url,omitempty"`
 }
 
 // QueryPythonPackagesReq 查询Python第三方库请求
@@ -672,6 +704,41 @@ type InstallDependenciesReq struct {
 	PythonPackageIndexURL string `json:"python_package_index_url,omitempty"` // Python第三方库索引URL
 }
 
+// MaterializePackageReq runtime package 装配请求
+type MaterializePackageReq struct {
+	PackagePath string `json:"package_path"`
+	TargetDir   string `json:"target_dir,omitempty"`
+	PackageHash string `json:"package_hash,omitempty"`
+	Force       bool   `json:"force,omitempty"`
+}
+
+// MaterializePackageResp runtime package 装配响应
+type MaterializePackageResp struct {
+	SessionID   string `json:"session_id"`
+	PackagePath string `json:"package_path"`
+	TargetDir   string `json:"target_dir"`
+	Checksum    string `json:"checksum,omitempty"`
+	Reused      bool   `json:"reused"`
+	FilesCount  int    `json:"files_count"`
+}
+
+// PrepareTaskWorkspaceReq task workspace 准备请求
+type PrepareTaskWorkspaceReq struct {
+	TaskID     string   `json:"task_id"`
+	TaskType   string   `json:"task_type,omitempty"`
+	CreateDirs []string `json:"create_dirs,omitempty"`
+	Reset      bool     `json:"reset,omitempty"`
+}
+
+// PrepareTaskWorkspaceResp task workspace 准备响应
+type PrepareTaskWorkspaceResp struct {
+	SessionID   string            `json:"session_id"`
+	TaskID      string            `json:"task_id"`
+	TaskRoot    string            `json:"task_root"`
+	Directories map[string]string `json:"directories"`
+	Existed     bool              `json:"existed"`
+}
+
 // SandBoxControlPlane 沙箱控制服务接口
 type SandBoxControlPlane interface {
 	// 获取模版详情
@@ -688,6 +755,16 @@ type SandBoxControlPlane interface {
 	ExecuteCodeSync(ctx context.Context, sessionID string, req *ExecuteCodeReq) (*ExecuteCodeResp, error)
 	// 增量安装 Python 依赖
 	InstallPythonDependencies(ctx context.Context, sessionID string, req *InstallDependenciesReq) (detail *SessionDetail, err error)
+	// 上传会话文件
+	UploadSessionFile(ctx context.Context, sessionID string, path string, content []byte, contentType string) (*SessionFileUploadResp, error)
+	// 列出会话文件
+	ListSessionFiles(ctx context.Context, sessionID string, path string, limit int) (*ListSessionFilesResp, error)
+	// 下载会话文件
+	DownloadSessionFile(ctx context.Context, sessionID string, path string) (*SessionFileDownloadResp, error)
+	// 在 executor 内装配 runtime package
+	MaterializePackage(ctx context.Context, sessionID string, req *MaterializePackageReq) (*MaterializePackageResp, error)
+	// 在 executor 内准备 task workspace
+	PrepareTaskWorkspace(ctx context.Context, sessionID string, req *PrepareTaskWorkspaceReq) (*PrepareTaskWorkspaceResp, error)
 }
 
 // ChatCompletionReq 聊天完成请求

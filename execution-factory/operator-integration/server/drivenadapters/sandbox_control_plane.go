@@ -1,10 +1,14 @@
 package drivenadapters
 
 import (
+	"bytes"
 	"context"
 	"fmt"
+	"io"
+	"mime/multipart"
 	"net/http"
 	"net/url"
+	"strings"
 	"sync"
 
 	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/infra/common"
@@ -240,4 +244,198 @@ func (c *sandBoxControlPlaneClient) InstallPythonDependencies(ctx context.Contex
 		return nil, err
 	}
 	return detail, nil
+}
+
+// UploadSessionFile 上传文件到会话工作区
+func (c *sandBoxControlPlaneClient) UploadSessionFile(ctx context.Context, sessionID string, path string, content []byte, contentType string) (*interfaces.SessionFileUploadResp, error) {
+	src := fmt.Sprintf("%s/sessions/%s/files/upload?path=%s", c.baseURL, sessionID, url.QueryEscape(path))
+	body := &bytes.Buffer{}
+	writer := multipart.NewWriter(body)
+	part, err := writer.CreateFormFile("file", "runtime-package.zip")
+	if err != nil {
+		return nil, err
+	}
+	if _, err = part.Write(content); err != nil {
+		return nil, err
+	}
+	if err = writer.Close(); err != nil {
+		return nil, err
+	}
+
+	headers := common.GetHeaderFromCtx(ctx)
+	headers["Content-Type"] = writer.FormDataContentType()
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, src, body)
+	if err != nil {
+		return nil, err
+	}
+	for key, value := range headers {
+		if value != "" {
+			req.Header.Set(key, value)
+		}
+	}
+	resp, err := rest.NewRawHTTPClient().Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer func() {
+		_ = resp.Body.Close()
+	}()
+	respBody, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, err
+	}
+	if resp.StatusCode < http.StatusOK || resp.StatusCode >= http.StatusMultipleChoices {
+		return nil, errors.NewHTTPError(ctx, http.StatusInternalServerError, errors.ErrExtSandboxControlPlaneFailed, map[string]any{
+			"error":      fmt.Sprintf("unexpected status code: %d", resp.StatusCode),
+			"http_code":  resp.StatusCode,
+			"response":   string(respBody),
+			"session_id": sessionID,
+			"path":       path,
+		})
+	}
+	result := &interfaces.SessionFileUploadResp{}
+	if err = utils.StringToObject(string(respBody), result); err != nil {
+		return nil, err
+	}
+	return result, nil
+}
+
+// ListSessionFiles 列出会话工作区文件
+func (c *sandBoxControlPlaneClient) ListSessionFiles(ctx context.Context, sessionID string, path string, limit int) (*interfaces.ListSessionFilesResp, error) {
+	src := fmt.Sprintf("%s/sessions/%s/files", c.baseURL, sessionID)
+	headers := common.GetHeaderFromCtx(ctx)
+	query := url.Values{}
+	if path != "" {
+		query.Add("path", path)
+	}
+	if limit > 0 {
+		query.Add("limit", fmt.Sprintf("%d", limit))
+	}
+	respCode, respData, err := c.httpClient.GetNoUnmarshal(ctx, src, query, headers)
+	if err != nil {
+		return nil, err
+	}
+	if respCode < http.StatusOK || respCode >= http.StatusMultipleChoices {
+		return nil, errors.NewHTTPError(ctx, http.StatusInternalServerError, errors.ErrExtSandboxControlPlaneFailed, map[string]any{
+			"error":      fmt.Sprintf("unexpected status code: %d", respCode),
+			"http_code":  respCode,
+			"response":   string(respData),
+			"session_id": sessionID,
+			"path":       path,
+		})
+	}
+	result := &interfaces.ListSessionFilesResp{}
+	if err = utils.StringToObject(string(respData), result); err != nil {
+		return nil, err
+	}
+	return result, nil
+}
+
+// DownloadSessionFile 下载会话工作区文件
+func (c *sandBoxControlPlaneClient) DownloadSessionFile(ctx context.Context, sessionID string, path string) (*interfaces.SessionFileDownloadResp, error) {
+	src := fmt.Sprintf("%s/sessions/%s/files/%s", c.baseURL, sessionID, path)
+	headers := common.GetHeaderFromCtx(ctx)
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, src, nil)
+	if err != nil {
+		return nil, err
+	}
+	for key, value := range headers {
+		if value != "" {
+			req.Header.Set(key, value)
+		}
+	}
+	resp, err := rest.NewRawHTTPClient().Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer func() {
+		_ = resp.Body.Close()
+	}()
+	respBody, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, err
+	}
+	if resp.StatusCode < http.StatusOK || resp.StatusCode >= http.StatusMultipleChoices {
+		return nil, errors.NewHTTPError(ctx, http.StatusInternalServerError, errors.ErrExtSandboxControlPlaneFailed, map[string]any{
+			"error":      fmt.Sprintf("unexpected status code: %d", resp.StatusCode),
+			"http_code":  resp.StatusCode,
+			"response":   string(respBody),
+			"session_id": sessionID,
+			"path":       path,
+		})
+	}
+	if isJSONResponse(resp.Header.Get("Content-Type"), respBody) {
+		result := &interfaces.SessionFileDownloadResp{}
+		if err = utils.StringToObject(string(respBody), result); err != nil {
+			return nil, err
+		}
+		if result.SessionID == "" {
+			result.SessionID = sessionID
+		}
+		if result.FilePath == "" {
+			result.FilePath = path
+		}
+		return result, nil
+	}
+	return &interfaces.SessionFileDownloadResp{
+		SessionID: sessionID,
+		FilePath:  path,
+		Content:   respBody,
+		Size:      int64(len(respBody)),
+	}, nil
+}
+
+func isJSONResponse(contentType string, body []byte) bool {
+	trimmedContentType := strings.ToLower(strings.TrimSpace(contentType))
+	if strings.Contains(trimmedContentType, "application/json") {
+		return true
+	}
+	trimmedBody := strings.TrimSpace(string(body))
+	return strings.HasPrefix(trimmedBody, "{") && strings.Contains(trimmedBody, "\"presigned_url\"")
+}
+
+// MaterializePackage 在 executor 内装配 runtime package
+func (c *sandBoxControlPlaneClient) MaterializePackage(ctx context.Context, sessionID string, req *interfaces.MaterializePackageReq) (*interfaces.MaterializePackageResp, error) {
+	src := fmt.Sprintf("%s/internal/sessions/%s/packages/materialize", c.baseURL, sessionID)
+	headers := common.GetHeaderFromCtx(ctx)
+	respCode, respData, err := c.httpClient.PostNoUnmarshal(ctx, src, headers, req)
+	if err != nil {
+		return nil, err
+	}
+	if respCode < http.StatusOK || respCode >= http.StatusMultipleChoices {
+		return nil, errors.NewHTTPError(ctx, http.StatusInternalServerError, errors.ErrExtSandboxControlPlaneFailed, map[string]any{
+			"error":      fmt.Sprintf("unexpected status code: %d", respCode),
+			"http_code":  respCode,
+			"response":   string(respData),
+			"session_id": sessionID,
+		})
+	}
+	result := &interfaces.MaterializePackageResp{}
+	if err = utils.StringToObject(string(respData), result); err != nil {
+		return nil, err
+	}
+	return result, nil
+}
+
+// PrepareTaskWorkspace 在 executor 内准备 task workspace
+func (c *sandBoxControlPlaneClient) PrepareTaskWorkspace(ctx context.Context, sessionID string, req *interfaces.PrepareTaskWorkspaceReq) (*interfaces.PrepareTaskWorkspaceResp, error) {
+	src := fmt.Sprintf("%s/internal/sessions/%s/tasks/prepare", c.baseURL, sessionID)
+	headers := common.GetHeaderFromCtx(ctx)
+	respCode, respData, err := c.httpClient.PostNoUnmarshal(ctx, src, headers, req)
+	if err != nil {
+		return nil, err
+	}
+	if respCode < http.StatusOK || respCode >= http.StatusMultipleChoices {
+		return nil, errors.NewHTTPError(ctx, http.StatusInternalServerError, errors.ErrExtSandboxControlPlaneFailed, map[string]any{
+			"error":      fmt.Sprintf("unexpected status code: %d", respCode),
+			"http_code":  respCode,
+			"response":   string(respData),
+			"session_id": sessionID,
+		})
+	}
+	result := &interfaces.PrepareTaskWorkspaceResp{}
+	if err = utils.StringToObject(string(respData), result); err != nil {
+		return nil, err
+	}
+	return result, nil
 }

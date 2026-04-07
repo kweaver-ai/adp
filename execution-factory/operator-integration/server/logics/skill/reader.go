@@ -22,6 +22,7 @@ import (
 type skillReader struct {
 	skillRepo             model.ISkillRepository
 	fileRepo              model.ISkillFileIndex
+	profileRepo           model.ISkillRuntimeProfile
 	assetStore            skillAssetStore
 	AuthService           interfaces.IAuthorizationService
 	BusinessDomainService interfaces.IBusinessDomainService
@@ -40,6 +41,7 @@ func NewSkillReader() interfaces.SkillReader {
 		readerInst = &skillReader{
 			skillRepo:             dbaccess.NewSkillRepositoryDB(),
 			fileRepo:              dbaccess.NewSkillFileIndexDB(),
+			profileRepo:           dbaccess.NewSkillRuntimeProfileDB(),
 			assetStore:            newOSSGatewaySkillAssetStore(),
 			AuthService:           auth.NewAuthServiceImpl(),
 			BusinessDomainService: business_domain.NewBusinessDomainService(),
@@ -104,12 +106,17 @@ func (r *skillReader) GetSkillContent(ctx context.Context, req *interfaces.GetSk
 	if err != nil {
 		return nil, err
 	}
+	runtimeCapabilities, err := r.loadRuntimeCapabilities(ctx, skill.SkillID, skill.Version, common.IsPublicAPIFromCtx(ctx))
+	if err != nil {
+		return nil, err
+	}
 	// TODO: 待接入审计日志
 	return &interfaces.GetSkillContentResp{
-		SkillID: skill.SkillID,
-		URL:     downloadURL,
-		Files:   utils.JSONToObject[[]*interfaces.SkillFileSummary](skill.FileManifest),
-		Status:  interfaces.BizStatus(skill.Status),
+		SkillID:             skill.SkillID,
+		URL:                 downloadURL,
+		Files:               utils.JSONToObject[[]*interfaces.SkillFileSummary](skill.FileManifest),
+		Status:              interfaces.BizStatus(skill.Status),
+		RuntimeCapabilities: runtimeCapabilities,
 	}, nil
 }
 
@@ -182,4 +189,40 @@ func (r *skillReader) ReadSkillFile(ctx context.Context, req *interfaces.ReadSki
 		MimeType: file.MimeType,
 		FileType: file.FileType,
 	}, nil
+}
+
+func (r *skillReader) loadRuntimeCapabilities(ctx context.Context, skillID, version string, publicOnly bool) ([]*interfaces.SkillRuntimeCapability, error) {
+	if r.profileRepo == nil {
+		return nil, nil
+	}
+	profiles, err := r.profileRepo.SelectSkillRuntimeProfilesBySkillID(ctx, nil, skillID, version)
+	if err != nil {
+		return nil, err
+	}
+	if len(profiles) == 0 {
+		return nil, nil
+	}
+	capabilities := make([]*interfaces.SkillRuntimeCapability, 0, len(profiles))
+	for _, profile := range profiles {
+		if profile == nil {
+			continue
+		}
+		if publicOnly && profile.Status != interfaces.BizStatusPublished.String() {
+			continue
+		}
+		if !publicOnly && profile.Status == interfaces.BizStatusOffline.String() {
+			continue
+		}
+		capabilities = append(capabilities, &interfaces.SkillRuntimeCapability{
+			Name:         profile.Entrypoint,
+			Description:  profile.Description,
+			RuntimeType:  profile.RuntimeType,
+			InputSchema:  utils.JSONToObject[map[string]any](profile.InputSchema),
+			OutputSchema: utils.JSONToObject[map[string]any](profile.OutputSchema),
+		})
+	}
+	if len(capabilities) == 0 {
+		return nil, nil
+	}
+	return capabilities, nil
 }

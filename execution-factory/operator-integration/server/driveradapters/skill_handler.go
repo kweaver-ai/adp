@@ -47,6 +47,13 @@ func (r *skillRestHandler) RegisterPrivate(engine *gin.RouterGroup) {
 	engine.GET("/skills/:skill_id/content", r.SkillHandler.GetSkillContent)
 	// 读取技能文件
 	engine.POST("/skills/:skill_id/files/read", r.SkillHandler.ReadSkillFile)
+	/*Skill Runtime Profile*/
+	// 查询技能可执行配置
+	engine.GET("/skills/:skill_id/runtime-profiles/:entrypoint", r.SkillHandler.GetSkillRuntimeProfile)
+	// 新增/更新技能可执行配置
+	engine.POST("/skills/:skill_id/runtime-profiles/:entrypoint", r.SkillHandler.UpsertSkillRuntimeProfile)
+	// 执行技能配置
+	engine.POST("/skills/:skill_id/runtime-profiles/:entrypoint/execute", r.SkillHandler.ExecuteSkill)
 }
 
 func (r *skillRestHandler) RegisterPublic(engine *gin.RouterGroup) {

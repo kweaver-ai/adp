@@ -4,6 +4,7 @@ import (
 	"archive/zip"
 	"bytes"
 	"context"
+	"database/sql"
 	"fmt"
 	"io"
 	"net/http"
@@ -31,6 +32,7 @@ type skillRegistry struct {
 	parser                *skillParser
 	skillRepo             model.ISkillRepository
 	fileRepo              model.ISkillFileIndex
+	profileRepo           model.ISkillRuntimeProfile
 	assetStore            skillAssetStore
 	dbTx                  model.DBTx
 	AuthService           interfaces.IAuthorizationService
@@ -54,6 +56,7 @@ func NewSkillRegistry() interfaces.SkillRegistry {
 			parser:                newSkillParser(),
 			skillRepo:             dbaccess.NewSkillRepositoryDB(),
 			fileRepo:              dbaccess.NewSkillFileIndexDB(),
+			profileRepo:           dbaccess.NewSkillRuntimeProfileDB(),
 			assetStore:            newOSSGatewaySkillAssetStore(),
 			dbTx:                  dbaccess.NewBaseTx(),
 			AuthService:           auth.NewAuthServiceImpl(),
@@ -91,7 +94,7 @@ func (r *skillRegistry) RegisterSkill(ctx context.Context, req *interfaces.Regis
 		}
 	}
 
-	skill, files, assets, err := r.parser.parseRegisterReq(req)
+	skill, files, assets, runtimeProfiles, err := r.parser.parseRegisterReq(req)
 	if err != nil {
 		return nil, err
 	}
@@ -120,6 +123,11 @@ func (r *skillRegistry) RegisterSkill(ctx context.Context, req *interfaces.Regis
 			return nil, err
 		}
 		if err = r.fileRepo.BatchInsertSkillFiles(ctx, tx, fileIndices); err != nil {
+			return nil, err
+		}
+	}
+	if len(runtimeProfiles) > 0 {
+		if err = r.persistRuntimeProfiles(ctx, tx, skillID, skill.Version, req.UserID, runtimeProfiles); err != nil {
 			return nil, err
 		}
 	}
@@ -152,6 +160,47 @@ func (r *skillRegistry) RegisterSkill(ctx context.Context, req *interfaces.Regis
 	}
 	// TODO: 待接入审计日志
 	return resp, nil
+}
+
+func (r *skillRegistry) persistRuntimeProfiles(ctx context.Context, tx *sql.Tx, skillID, version, userID string, runtimeProfiles []*parsedRuntimeProfile) error {
+	for _, runtimeProfile := range runtimeProfiles {
+		if runtimeProfile == nil {
+			continue
+		}
+		profile := &model.SkillRuntimeProfileDB{
+			SkillID:         skillID,
+			SkillVersion:    version,
+			Entrypoint:      runtimeProfile.Entrypoint,
+			Name:            runtimeProfile.Name,
+			Description:     runtimeProfile.Description,
+			RuntimeType:     runtimeProfile.RuntimeType,
+			CommandTemplate: utils.ObjectToJSON(runtimeProfile.CommandTemplate),
+			InputSchema:     utils.ObjectToJSON(runtimeProfile.InputSchema),
+			OutputSchema:    utils.ObjectToJSON(runtimeProfile.OutputSchema),
+			Timeout:         runtimeProfile.Timeout,
+			Status:          defaultRuntimeProfileStatus(runtimeProfile.Status),
+			ExtendInfo:      utils.ObjectToJSON(runtimeProfile.ExtendInfo),
+			CreateUser:      userID,
+			UpdateUser:      userID,
+		}
+		if profile.RuntimeType == "" {
+			profile.RuntimeType = defaultRuntimeType
+		}
+		if err := r.profileRepo.InsertSkillRuntimeProfile(ctx, tx, profile); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func defaultRuntimeProfileStatus(status string) string {
+	status = strings.TrimSpace(status)
+	switch status {
+	case interfaces.BizStatusUnpublish.String(), interfaces.BizStatusPublished.String(), interfaces.BizStatusOffline.String():
+		return status
+	default:
+		return interfaces.BizStatusPublished.String()
+	}
 }
 
 // DeleteSkill 删除技能
@@ -340,9 +389,22 @@ func (r *skillRegistry) DownloadSkill(ctx context.Context, req *interfaces.Downl
 		return nil, err
 	}
 	if skill == nil || skill.IsDeleted {
-		return nil, fmt.Errorf("skill not found: %s", req.SkillID)
+		return nil, errors.DefaultHTTPError(ctx, http.StatusNotFound, fmt.Sprintf("skill not found: %s", req.SkillID))
 	}
-	files, err := r.fileRepo.SelectSkillFileBySkillID(ctx, nil, req.SkillID, skill.Version)
+	content, err := r.buildSkillPackage(ctx, skill)
+	if err != nil {
+		return nil, err
+	}
+
+	return &interfaces.DownloadSkillResp{
+		SkillID:  skill.SkillID,
+		FileName: fmt.Sprintf("%s.zip", skill.Name),
+		Content:  content,
+	}, nil
+}
+
+func (r *skillRegistry) buildSkillPackage(ctx context.Context, skill *model.SkillRepositoryDB) ([]byte, error) {
+	files, err := r.fileRepo.SelectSkillFileBySkillID(ctx, nil, skill.SkillID, skill.Version)
 	if err != nil {
 		return nil, err
 	}
@@ -381,12 +443,7 @@ func (r *skillRegistry) DownloadSkill(ctx context.Context, req *interfaces.Downl
 	if err = zw.Close(); err != nil {
 		return nil, err
 	}
-
-	return &interfaces.DownloadSkillResp{
-		SkillID:  skill.SkillID,
-		FileName: fmt.Sprintf("%s.zip", skill.Name),
-		Content:  buf.Bytes(),
-	}, nil
+	return buf.Bytes(), nil
 }
 
 // QuerySkillList 查询技能列表（管理接口）
@@ -456,7 +513,9 @@ func (r *skillRegistry) assembleSkillSummaryList(ctx context.Context, skillDBs [
 		skill.CreateUser = utils.GetValueOrDefault(userMap, skill.CreateUser, interfaces.UnknownUser)
 		skill.UpdateUser = utils.GetValueOrDefault(userMap, skill.UpdateUser, interfaces.UnknownUser)
 		skill.BusinessDomainID = utils.GetValueOrDefault(resourceToBdMap, skill.SkillID, businessDomainIDStr)
-		skill.CategoryName = r.CategoryManager.GetCategoryName(ctx, skill.Category)
+		if r.CategoryManager != nil {
+			skill.CategoryName = r.CategoryManager.GetCategoryName(ctx, skill.Category)
+		}
 	}
 	return
 }

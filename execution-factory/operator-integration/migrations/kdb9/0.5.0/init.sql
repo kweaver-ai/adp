@@ -389,3 +389,28 @@ CREATE TABLE IF NOT EXISTS `t_skill_file_index` (
   UNIQUE KEY `idx_t_skill_file_index_uk_skill_version_rel_path` (f_skill_id, f_skill_version, f_rel_path),
   UNIQUE KEY `idx_t_skill_file_index_uk_skill_version_path_hash` (f_skill_id, f_skill_version, f_path_hash)
 );
+
+CREATE TABLE IF NOT EXISTS `t_skill_runtime_profile` (
+  `f_id` BIGSERIAL NOT NULL COMMENT '自增主键',
+  `f_skill_id` VARCHAR(40) NOT NULL COMMENT 'Skill ID',
+  `f_skill_version` VARCHAR(40) NOT NULL COMMENT 'Skill 版本',
+  `f_entrypoint` VARCHAR(128) NOT NULL COMMENT '执行入口',
+  `f_name` VARCHAR(255) NOT NULL COMMENT '执行配置名称',
+  `f_description` LONGTEXT NOT NULL COMMENT '执行配置描述',
+  `f_runtime_type` VARCHAR(32) NOT NULL DEFAULT 'python' COMMENT '运行时类型',
+  `f_work_dir` VARCHAR(512) NOT NULL DEFAULT '.' COMMENT '运行目录',
+  `f_command_template` LONGTEXT NOT NULL COMMENT '命令模板(JSON 数组)',
+  `f_input_schema` LONGTEXT DEFAULT NULL COMMENT '输入模式',
+  `f_output_schema` LONGTEXT DEFAULT NULL COMMENT '输出模式',
+  `f_timeout` INT NOT NULL DEFAULT 300 COMMENT '执行超时(秒)',
+  `f_status` VARCHAR(32) NOT NULL DEFAULT 'published' COMMENT '配置状态',
+  `f_extend_info` LONGTEXT DEFAULT NULL COMMENT '扩展信息',
+  `f_create_user` VARCHAR(50) NOT NULL COMMENT '创建者',
+  `f_create_time` BIGINT(20) NOT NULL COMMENT '创建时间',
+  `f_update_user` VARCHAR(50) NOT NULL COMMENT '编辑者',
+  `f_update_time` BIGINT(20) NOT NULL COMMENT '编辑时间',
+  PRIMARY KEY (`f_id`),
+  UNIQUE KEY `idx_t_skill_runtime_profile_uk_skill_runtime_profile` (f_skill_id, f_skill_version, f_entrypoint)
+);
+
+CREATE INDEX IF NOT EXISTS `idx_t_skill_runtime_profile_idx_skill_runtime_profile_update` ON `t_skill_runtime_profile` (f_skill_id, f_update_time);

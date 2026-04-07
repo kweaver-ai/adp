@@ -44,6 +44,8 @@ type SessionPool interface {
 	ExecuteCode(ctx context.Context, req *interfaces.ExecuteCodeReq) (*interfaces.ExecuteCodeResp, error)
 	// 获取依赖库列表
 	GetDependencies(ctx context.Context) (resp *DependenciesInfo, err error)
+	// 借用一个可用 session，由调用方自行完成释放
+	BorrowSession(ctx context.Context) (sessionID string, release func(), err error)
 }
 
 type sessionItem struct {
@@ -141,6 +143,17 @@ func (p *sessionPoolImpl) GetDependencies(ctx context.Context) (resp *Dependenci
 		Dependencies: deps,
 	}
 	return resp, nil
+}
+
+func (p *sessionPoolImpl) BorrowSession(ctx context.Context) (sessionID string, release func(), err error) {
+	sessionID, err = p.acquireSession(ctx, maxRetryCount)
+	if err != nil {
+		return "", nil, err
+	}
+	release = func() {
+		p.releaseSession(sessionID)
+	}
+	return sessionID, release, nil
 }
 
 // ExecuteCode 执行代码

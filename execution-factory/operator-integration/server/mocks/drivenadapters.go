@@ -559,6 +559,81 @@ func (mr *MockSandBoxControlPlaneMockRecorder) InstallPythonDependencies(ctx, se
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "InstallPythonDependencies", reflect.TypeOf((*MockSandBoxControlPlane)(nil).InstallPythonDependencies), ctx, sessionID, req)
 }
 
+// ListSessionFiles mocks base method.
+func (m *MockSandBoxControlPlane) ListSessionFiles(ctx context.Context, sessionID, path string, limit int) (*interfaces.ListSessionFilesResp, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ListSessionFiles", ctx, sessionID, path, limit)
+	ret0, _ := ret[0].(*interfaces.ListSessionFilesResp)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ListSessionFiles indicates an expected call of ListSessionFiles.
+func (mr *MockSandBoxControlPlaneMockRecorder) ListSessionFiles(ctx, sessionID, path, limit any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListSessionFiles", reflect.TypeOf((*MockSandBoxControlPlane)(nil).ListSessionFiles), ctx, sessionID, path, limit)
+}
+
+// DownloadSessionFile mocks base method.
+func (m *MockSandBoxControlPlane) DownloadSessionFile(ctx context.Context, sessionID, path string) (*interfaces.SessionFileDownloadResp, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DownloadSessionFile", ctx, sessionID, path)
+	ret0, _ := ret[0].(*interfaces.SessionFileDownloadResp)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// DownloadSessionFile indicates an expected call of DownloadSessionFile.
+func (mr *MockSandBoxControlPlaneMockRecorder) DownloadSessionFile(ctx, sessionID, path any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DownloadSessionFile", reflect.TypeOf((*MockSandBoxControlPlane)(nil).DownloadSessionFile), ctx, sessionID, path)
+}
+
+// MaterializePackage mocks base method.
+func (m *MockSandBoxControlPlane) MaterializePackage(ctx context.Context, sessionID string, req *interfaces.MaterializePackageReq) (*interfaces.MaterializePackageResp, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "MaterializePackage", ctx, sessionID, req)
+	ret0, _ := ret[0].(*interfaces.MaterializePackageResp)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// MaterializePackage indicates an expected call of MaterializePackage.
+func (mr *MockSandBoxControlPlaneMockRecorder) MaterializePackage(ctx, sessionID, req any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "MaterializePackage", reflect.TypeOf((*MockSandBoxControlPlane)(nil).MaterializePackage), ctx, sessionID, req)
+}
+
+// PrepareTaskWorkspace mocks base method.
+func (m *MockSandBoxControlPlane) PrepareTaskWorkspace(ctx context.Context, sessionID string, req *interfaces.PrepareTaskWorkspaceReq) (*interfaces.PrepareTaskWorkspaceResp, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "PrepareTaskWorkspace", ctx, sessionID, req)
+	ret0, _ := ret[0].(*interfaces.PrepareTaskWorkspaceResp)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// PrepareTaskWorkspace indicates an expected call of PrepareTaskWorkspace.
+func (mr *MockSandBoxControlPlaneMockRecorder) PrepareTaskWorkspace(ctx, sessionID, req any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "PrepareTaskWorkspace", reflect.TypeOf((*MockSandBoxControlPlane)(nil).PrepareTaskWorkspace), ctx, sessionID, req)
+}
+
+// UploadSessionFile mocks base method.
+func (m *MockSandBoxControlPlane) UploadSessionFile(ctx context.Context, sessionID, path string, content []byte, contentType string) (*interfaces.SessionFileUploadResp, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UploadSessionFile", ctx, sessionID, path, content, contentType)
+	ret0, _ := ret[0].(*interfaces.SessionFileUploadResp)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// UploadSessionFile indicates an expected call of UploadSessionFile.
+func (mr *MockSandBoxControlPlaneMockRecorder) UploadSessionFile(ctx, sessionID, path, content, contentType any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UploadSessionFile", reflect.TypeOf((*MockSandBoxControlPlane)(nil).UploadSessionFile), ctx, sessionID, path, content, contentType)
+}
+
 // ListSessions mocks base method.
 func (m *MockSandBoxControlPlane) ListSessions(ctx context.Context, req *interfaces.ListSessionsReq) (*interfaces.ListSessionsResp, error) {
 	m.ctrl.T.Helper()

@@ -149,10 +149,11 @@ type GetSkillContentReq struct {
 
 // GetSkillContentResp Skill 内容响应
 type GetSkillContentResp struct {
-	SkillID string              `json:"skill_id"`
-	URL     string              `json:"url"`
-	Files   []*SkillFileSummary `json:"files"`
-	Status  BizStatus           `json:"status"`
+	SkillID             string                    `json:"skill_id"`
+	URL                 string                    `json:"url"`
+	Files               []*SkillFileSummary       `json:"files"`
+	Status              BizStatus                 `json:"status"`
+	RuntimeCapabilities []*SkillRuntimeCapability `json:"runtime_capabilities,omitempty"`
 }
 
 // ReadSkillFileReq 读取 Skill 文件请求
@@ -170,6 +171,96 @@ type ReadSkillFileResp struct {
 	URL      string `json:"url"`
 	MimeType string `json:"mime_type"`
 	FileType string `json:"file_type"`
+}
+
+// SkillRuntimeProfileInfo Skill 可执行配置
+type SkillRuntimeProfileInfo struct {
+	SkillID         string         `json:"skill_id"`
+	SkillVersion    string         `json:"skill_version"`
+	Entrypoint      string         `json:"entrypoint"`
+	Name            string         `json:"name"`
+	Description     string         `json:"description"`
+	RuntimeType     string         `json:"runtime_type"`
+	CommandTemplate []string       `json:"command_template"`
+	InputSchema     map[string]any `json:"input_schema,omitempty"`
+	OutputSchema    map[string]any `json:"output_schema,omitempty"`
+	Timeout         int            `json:"timeout"`
+	Status          string         `json:"status"`
+	ExtendInfo      map[string]any `json:"extend_info,omitempty"`
+	CreateUser      string         `json:"create_user"`
+	CreateTime      int64          `json:"create_time"`
+	UpdateUser      string         `json:"update_user"`
+	UpdateTime      int64          `json:"update_time"`
+}
+
+// SkillRuntimeCapability 面向模型暴露的可执行能力摘要
+type SkillRuntimeCapability struct {
+	Name         string         `json:"name"`
+	Description  string         `json:"description"`
+	RuntimeType  string         `json:"runtime_type,omitempty"`
+	InputSchema  map[string]any `json:"input_schema,omitempty"`
+	OutputSchema map[string]any `json:"output_schema,omitempty"`
+}
+
+// UpsertSkillRuntimeProfileReq 新增/更新 Skill 执行配置请求
+type UpsertSkillRuntimeProfileReq struct {
+	BusinessDomainID string         `header:"x-business-domain" validate:"required"`
+	UserID           string         `header:"user_id" validate:"required"`
+	SkillID          string         `uri:"skill_id" validate:"required"`
+	Entrypoint       string         `uri:"entrypoint" validate:"required"`
+	Name             string         `json:"name" validate:"required"`
+	Description      string         `json:"description" validate:"required"`
+	RuntimeType      string         `json:"runtime_type" default:"python" validate:"required"`
+	CommandTemplate  []string       `json:"command_template" validate:"required"`
+	InputSchema      map[string]any `json:"input_schema"`
+	OutputSchema     map[string]any `json:"output_schema"`
+	Timeout          int            `json:"timeout"`
+	Status           BizStatus      `json:"status" default:"published" validate:"omitempty,oneof=unpublish published offline"`
+	ExtendInfo       map[string]any `json:"extend_info"`
+}
+
+// UpsertSkillRuntimeProfileResp Skill 执行配置响应
+type UpsertSkillRuntimeProfileResp struct {
+	Profile *SkillRuntimeProfileInfo `json:"profile"`
+}
+
+// GetSkillRuntimeProfileReq 查询 Skill 执行配置请求
+type GetSkillRuntimeProfileReq struct {
+	BusinessDomainID string `header:"x-business-domain" validate:"required"`
+	UserID           string `header:"user_id" validate:"required"`
+	SkillID          string `uri:"skill_id" validate:"required"`
+	Entrypoint       string `uri:"entrypoint" validate:"required"`
+}
+
+// GetSkillRuntimeProfileResp 查询 Skill 执行配置响应
+type GetSkillRuntimeProfileResp struct {
+	Profile *SkillRuntimeProfileInfo `json:"profile"`
+}
+
+// ExecuteSkillReq Skill 执行请求
+type ExecuteSkillReq struct {
+	BusinessDomainID string         `header:"x-business-domain" validate:"required"`
+	UserID           string         `header:"user_id" validate:"required"`
+	SkillID          string         `uri:"skill_id" validate:"required"`
+	Entrypoint       string         `uri:"entrypoint" validate:"required"`
+	Inputs           map[string]any `json:"inputs"`
+	Timeout          int            `json:"timeout"`
+}
+
+// ExecuteSkillResp Skill 执行响应
+type ExecuteSkillResp struct {
+	SkillID       string                   `json:"skill_id"`
+	SkillVersion  string                   `json:"skill_version"`
+	Entrypoint    string                   `json:"entrypoint"`
+	SessionID     string                   `json:"session_id"`
+	RuntimeType   string                   `json:"runtime_type"`
+	ExitCode      int                      `json:"exit_code"`
+	ErrorMessage  string                   `json:"error_message,omitempty"`
+	ExecutionTime float64                  `json:"execution_time"`
+	Stdout        string                   `json:"stdout"`
+	Stderr        string                   `json:"stderr"`
+	ReturnValue   any                      `json:"return_value"`
+	Profile       *SkillRuntimeProfileInfo `json:"profile,omitempty"`
 }
 
 // UpdateSkillStatusReq 更新 Skill 状态请求
@@ -207,4 +298,15 @@ type SkillMarket interface {
 type SkillReader interface {
 	GetSkillContent(ctx context.Context, req *GetSkillContentReq) (*GetSkillContentResp, error)
 	ReadSkillFile(ctx context.Context, req *ReadSkillFileReq) (*ReadSkillFileResp, error)
+}
+
+// SkillRuntimeProfileService Skill 执行配置管理接口
+type SkillRuntimeProfileService interface {
+	UpsertSkillRuntimeProfile(ctx context.Context, req *UpsertSkillRuntimeProfileReq) (*UpsertSkillRuntimeProfileResp, error)
+	GetSkillRuntimeProfile(ctx context.Context, req *GetSkillRuntimeProfileReq) (*GetSkillRuntimeProfileResp, error)
+}
+
+// SkillExecutionService Skill 执行编排接口
+type SkillExecutionService interface {
+	ExecuteSkill(ctx context.Context, req *ExecuteSkillReq) (*ExecuteSkillResp, error)
 }

@@ -20,13 +20,18 @@ type SkillHandler interface {
 	GetSkillDetail(c *gin.Context)
 	GetSkillContent(c *gin.Context)
 	ReadSkillFile(c *gin.Context)
+	UpsertSkillRuntimeProfile(c *gin.Context)
+	GetSkillRuntimeProfile(c *gin.Context)
+	ExecuteSkill(c *gin.Context)
 }
 
 type skillHandler struct {
-	Logger   interfaces.Logger
-	Registry interfaces.SkillRegistry
-	Market   interfaces.SkillMarket
-	Reader   interfaces.SkillReader
+	Logger        interfaces.Logger
+	Registry      interfaces.SkillRegistry
+	Market        interfaces.SkillMarket
+	Reader        interfaces.SkillReader
+	RuntimeProfile interfaces.SkillRuntimeProfileService
+	Executor      interfaces.SkillExecutionService
 }
 
 var (
@@ -37,13 +42,17 @@ var (
 func NewSkillHandler() SkillHandler {
 	once.Do(func() {
 		conf := config.NewConfigLoader()
+		runtimeService := logicsskill.NewSkillRuntimeService()
+		executionService := logicsskill.NewSkillExecutionService()
 		registry := logicsskill.NewSkillRegistry()
 		market, _ := registry.(interfaces.SkillMarket)
 		h = &skillHandler{
-			Logger:   conf.GetLogger(),
-			Registry: registry,
-			Market:   market,
-			Reader:   logicsskill.NewSkillReader(),
+			Logger:        conf.GetLogger(),
+			Registry:      registry,
+			Market:        market,
+			Reader:        logicsskill.NewSkillReader(),
+			RuntimeProfile: runtimeService,
+			Executor:      executionService,
 		}
 	})
 	return h

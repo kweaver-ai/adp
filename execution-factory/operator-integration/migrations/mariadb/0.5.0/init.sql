@@ -364,3 +364,27 @@ CREATE TABLE IF NOT EXISTS `t_skill_file_index` (
     UNIQUE KEY `uk_skill_version_rel_path` (`f_skill_id`, `f_skill_version`, `f_rel_path`) USING BTREE,
     UNIQUE KEY `uk_skill_version_path_hash` (`f_skill_id`, `f_skill_version`, `f_path_hash`) USING BTREE
 ) ENGINE = InnoDB COMMENT = 'Skill 文件索引表';
+
+CREATE TABLE IF NOT EXISTS `t_skill_runtime_profile` (
+    `f_id` bigint AUTO_INCREMENT NOT NULL COMMENT '自增主键',
+    `f_skill_id` varchar(40) NOT NULL COMMENT 'Skill ID',
+    `f_skill_version` varchar(40) NOT NULL COMMENT 'Skill 版本',
+    `f_entrypoint` varchar(128) NOT NULL COMMENT '执行入口',
+    `f_name` varchar(255) NOT NULL COMMENT '执行配置名称',
+    `f_description` longtext NOT NULL COMMENT '执行配置描述',
+    `f_runtime_type` varchar(32) NOT NULL DEFAULT 'python' COMMENT '运行时类型',
+    `f_work_dir` varchar(512) NOT NULL DEFAULT '.' COMMENT '运行目录',
+    `f_command_template` longtext NOT NULL COMMENT '命令模板(JSON 数组)',
+    `f_input_schema` longtext DEFAULT NULL COMMENT '输入模式',
+    `f_output_schema` longtext DEFAULT NULL COMMENT '输出模式',
+    `f_timeout` int(11) NOT NULL DEFAULT 300 COMMENT '执行超时(秒)',
+    `f_status` varchar(32) NOT NULL DEFAULT 'published' COMMENT '配置状态',
+    `f_extend_info` longtext DEFAULT NULL COMMENT '扩展信息',
+    `f_create_user` varchar(50) NOT NULL COMMENT '创建者',
+    `f_create_time` bigint(20) NOT NULL COMMENT '创建时间',
+    `f_update_user` varchar(50) NOT NULL COMMENT '编辑者',
+    `f_update_time` bigint(20) NOT NULL COMMENT '编辑时间',
+    PRIMARY KEY (`f_id`),
+    UNIQUE KEY `uk_skill_runtime_profile` (`f_skill_id`, `f_skill_version`, `f_entrypoint`) USING BTREE,
+    KEY `idx_skill_runtime_profile_update` (`f_skill_id`, `f_update_time`) USING BTREE
+) ENGINE = InnoDB COMMENT = 'Skill 运行配置表';
