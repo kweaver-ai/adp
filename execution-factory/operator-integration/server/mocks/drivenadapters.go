@@ -529,6 +529,21 @@ func (mr *MockSandBoxControlPlaneMockRecorder) ExecuteCodeSync(ctx, sessionID, r
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ExecuteCodeSync", reflect.TypeOf((*MockSandBoxControlPlane)(nil).ExecuteCodeSync), ctx, sessionID, req)
 }
 
+// ExecuteShell mocks base method.
+func (m *MockSandBoxControlPlane) ExecuteShell(ctx context.Context, sessionID string, req *interfaces.ExecuteShellReq) (*interfaces.ExecuteShellResp, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ExecuteShell", ctx, sessionID, req)
+	ret0, _ := ret[0].(*interfaces.ExecuteShellResp)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ExecuteShell indicates an expected call of ExecuteShell.
+func (mr *MockSandBoxControlPlaneMockRecorder) ExecuteShell(ctx, sessionID, req any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ExecuteShell", reflect.TypeOf((*MockSandBoxControlPlane)(nil).ExecuteShell), ctx, sessionID, req)
+}
+
 // GetTemplateDetail mocks base method.
 func (m *MockSandBoxControlPlane) GetTemplateDetail(ctx context.Context, tempID string) (any, error) {
 	m.ctrl.T.Helper()
@@ -588,6 +603,21 @@ func (m *MockSandBoxControlPlane) QuerySession(ctx context.Context, sessionID st
 func (mr *MockSandBoxControlPlaneMockRecorder) QuerySession(ctx, sessionID any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "QuerySession", reflect.TypeOf((*MockSandBoxControlPlane)(nil).QuerySession), ctx, sessionID)
+}
+
+// UploadSkillArchive mocks base method.
+func (m *MockSandBoxControlPlane) UploadSkillArchive(ctx context.Context, sessionID string, req *interfaces.UploadSkillArchiveReq) (*interfaces.UploadSkillArchiveResp, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UploadSkillArchive", ctx, sessionID, req)
+	ret0, _ := ret[0].(*interfaces.UploadSkillArchiveResp)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// UploadSkillArchive indicates an expected call of UploadSkillArchive.
+func (mr *MockSandBoxControlPlaneMockRecorder) UploadSkillArchive(ctx, sessionID, req any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UploadSkillArchive", reflect.TypeOf((*MockSandBoxControlPlane)(nil).UploadSkillArchive), ctx, sessionID, req)
 }
 
 // MockMFModelAPIClient is a mock of MFModelAPIClient interface.

@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"path"
+	"strings"
 	"sync"
 
 	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/infra/common"
@@ -61,6 +63,9 @@ func (c *sandBoxControlPlaneClient) GetTemplateDetail(ctx context.Context, tempI
 
 // CreateSession 创建会话
 func (c *sandBoxControlPlaneClient) CreateSession(ctx context.Context, req *interfaces.CreateSessionReq) (any, error) {
+	if strings.TrimSpace(req.ID) != "" && strings.TrimSpace(req.TemplateID) != "" {
+		return req.ID, nil
+	}
 	src := fmt.Sprintf("%s/sessions", c.baseURL)
 	headers := common.GetHeaderFromCtx(ctx)
 	_, respData, err := c.httpClient.Post(ctx, src, headers, req)
@@ -240,4 +245,46 @@ func (c *sandBoxControlPlaneClient) InstallPythonDependencies(ctx context.Contex
 		return nil, err
 	}
 	return detail, nil
+}
+
+// UploadSkillArchive 上传 Skill 压缩包
+func (c *sandBoxControlPlaneClient) UploadSkillArchive(ctx context.Context, sessionID string, req *interfaces.UploadSkillArchiveReq) (*interfaces.UploadSkillArchiveResp, error) {
+	workDir := strings.TrimSpace(req.WorkDir)
+	fileName := strings.TrimSpace(req.FileName)
+	if fileName == "" || len(req.Content) == 0 {
+		return nil, errors.NewHTTPError(ctx, http.StatusBadRequest, errors.ErrExtSandboxControlPlaneFailed, "invalid upload request")
+	}
+	if workDir == "" {
+		trimmedName := strings.TrimSuffix(fileName, path.Ext(fileName))
+		workDir = path.Join("/workspace/skills", sessionID, trimmedName)
+	}
+	normalizedDir := path.Clean("/" + strings.TrimPrefix(workDir, "/"))
+	return &interfaces.UploadSkillArchiveResp{
+		SessionID:    sessionID,
+		WorkDir:      normalizedDir,
+		FileName:     fileName,
+		UploadedPath: path.Join(normalizedDir, fileName),
+		Size:         int64(len(req.Content)),
+		Mocked:       true,
+	}, nil
+}
+
+// ExecuteShell 执行 shell 命令
+func (c *sandBoxControlPlaneClient) ExecuteShell(ctx context.Context, sessionID string, req *interfaces.ExecuteShellReq) (*interfaces.ExecuteShellResp, error) {
+	workDir := strings.TrimSpace(req.WorkDir)
+	command := strings.TrimSpace(req.Command)
+	if workDir == "" || command == "" {
+		return nil, errors.NewHTTPError(ctx, http.StatusBadRequest, errors.ErrExtSandboxControlPlaneFailed, "invalid shell request")
+	}
+	normalizedDir := path.Clean("/" + strings.TrimPrefix(workDir, "/"))
+	return &interfaces.ExecuteShellResp{
+		SessionID:     sessionID,
+		WorkDir:       normalizedDir,
+		Command:       command,
+		ExitCode:      0,
+		Stdout:        fmt.Sprintf("mock sandbox executed command %q in %s", command, normalizedDir),
+		Stderr:        "",
+		ExecutionTime: 1,
+		Mocked:        true,
+	}, nil
 }

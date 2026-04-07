@@ -70,6 +70,21 @@ func (mr *MockSkillRegistryMockRecorder) DownloadSkill(ctx, req any) *gomock.Cal
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DownloadSkill", reflect.TypeOf((*MockSkillRegistry)(nil).DownloadSkill), ctx, req)
 }
 
+// ExecuteSkill mocks base method.
+func (m *MockSkillRegistry) ExecuteSkill(ctx context.Context, req *interfaces.ExecuteSkillReq) (*interfaces.ExecuteSkillResp, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ExecuteSkill", ctx, req)
+	ret0, _ := ret[0].(*interfaces.ExecuteSkillResp)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ExecuteSkill indicates an expected call of ExecuteSkill.
+func (mr *MockSkillRegistryMockRecorder) ExecuteSkill(ctx, req any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ExecuteSkill", reflect.TypeOf((*MockSkillRegistry)(nil).ExecuteSkill), ctx, req)
+}
+
 // GetSkillDetail mocks base method.
 func (m *MockSkillRegistry) GetSkillDetail(ctx context.Context, req *interfaces.GetSkillDetailReq) (*interfaces.SkillInfo, error) {
 	m.ctrl.T.Helper()

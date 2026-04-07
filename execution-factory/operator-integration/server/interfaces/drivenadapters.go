@@ -672,6 +672,42 @@ type InstallDependenciesReq struct {
 	PythonPackageIndexURL string `json:"python_package_index_url,omitempty"` // Python第三方库索引URL
 }
 
+// UploadSkillArchiveReq 上传 Skill 压缩包请求
+type UploadSkillArchiveReq struct {
+	WorkDir  string `json:"work_dir"`  // 会话工作目录
+	FileName string `json:"file_name"` // 压缩包文件名
+	Content  []byte `json:"content"`   // 压缩包内容
+}
+
+// UploadSkillArchiveResp 上传 Skill 压缩包响应
+type UploadSkillArchiveResp struct {
+	SessionID    string `json:"session_id"`
+	WorkDir      string `json:"work_dir"`
+	FileName     string `json:"file_name"`
+	UploadedPath string `json:"uploaded_path"`
+	Size         int64  `json:"size"`
+	Mocked       bool   `json:"mocked"`
+}
+
+// ExecuteShellReq 执行 shell 请求
+type ExecuteShellReq struct {
+	WorkDir string `json:"work_dir"` // 会话工作目录
+	Command string `json:"command"`  // shell 命令
+	Timeout int    `json:"timeout"`  // 超时时间，单位秒
+}
+
+// ExecuteShellResp 执行 shell 响应
+type ExecuteShellResp struct {
+	SessionID     string `json:"session_id"`
+	WorkDir       string `json:"work_dir"`
+	Command       string `json:"command"`
+	ExitCode      int    `json:"exit_code"`
+	Stdout        string `json:"stdout"`
+	Stderr        string `json:"stderr"`
+	ExecutionTime int64  `json:"execution_time"`
+	Mocked        bool   `json:"mocked"`
+}
+
 // SandBoxControlPlane 沙箱控制服务接口
 type SandBoxControlPlane interface {
 	// 获取模版详情
@@ -688,6 +724,10 @@ type SandBoxControlPlane interface {
 	ExecuteCodeSync(ctx context.Context, sessionID string, req *ExecuteCodeReq) (*ExecuteCodeResp, error)
 	// 增量安装 Python 依赖
 	InstallPythonDependencies(ctx context.Context, sessionID string, req *InstallDependenciesReq) (detail *SessionDetail, err error)
+	// 上传 Skill 压缩包
+	UploadSkillArchive(ctx context.Context, sessionID string, req *UploadSkillArchiveReq) (*UploadSkillArchiveResp, error)
+	// 执行 shell 命令
+	ExecuteShell(ctx context.Context, sessionID string, req *ExecuteShellReq) (*ExecuteShellResp, error)
 }
 
 // ChatCompletionReq 聊天完成请求

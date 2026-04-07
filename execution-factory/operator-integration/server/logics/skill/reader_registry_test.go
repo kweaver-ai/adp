@@ -16,10 +16,34 @@ import (
 	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/infra/logger"
 	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/interfaces"
 	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/interfaces/model"
+	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/logics/sandbox"
 	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/mocks"
 	. "github.com/smartystreets/goconvey/convey"
 	"go.uber.org/mock/gomock"
 )
+
+type fakeSessionPool struct {
+	acquireFunc func(ctx context.Context) (string, error)
+	releaseFunc func(sessionID string)
+}
+
+func (f *fakeSessionPool) ExecuteCode(ctx context.Context, req *interfaces.ExecuteCodeReq) (*interfaces.ExecuteCodeResp, error) {
+	return nil, nil
+}
+
+func (f *fakeSessionPool) GetDependencies(ctx context.Context) (*sandbox.DependenciesInfo, error) {
+	return nil, nil
+}
+
+func (f *fakeSessionPool) AcquireSession(ctx context.Context) (string, error) {
+	return f.acquireFunc(ctx)
+}
+
+func (f *fakeSessionPool) ReleaseSession(sessionID string) {
+	if f.releaseFunc != nil {
+		f.releaseFunc(sessionID)
+	}
+}
 
 func TestSkillReaderAndRegistry(t *testing.T) {
 	Convey("SkillReader and SkillRegistry", t, func() {
@@ -1117,5 +1141,122 @@ func TestRegisterSkillPersistsSkillVersionForZipAssets(t *testing.T) {
 		So(resp.SkillID, ShouldEqual, "skill-versioned")
 		So(resp.Version, ShouldNotBeBlank)
 		So(sqlMock.ExpectationsWereMet(), ShouldBeNil)
+	})
+}
+
+func TestExecuteSkillUploadsBeforeShellExecution(t *testing.T) {
+	Convey("ExecuteSkill uploads archive before executing shell", t, func() {
+		ctrl := gomock.NewController(t)
+		defer ctrl.Finish()
+
+		mockSkillRepo := mocks.NewMockISkillRepository(ctrl)
+		mockFileRepo := mocks.NewMockISkillFileIndex(ctrl)
+		mockAssetStore := mocks.NewMockskillAssetStore(ctrl)
+		mockAuthService := mocks.NewMockIAuthorizationService(ctrl)
+		mockSandbox := mocks.NewMockSandBoxControlPlane(ctrl)
+		callOrder := []string{}
+		sessionPool := &fakeSessionPool{
+			acquireFunc: func(ctx context.Context) (string, error) {
+				callOrder = append(callOrder, "acquire")
+				return "sess_aoi_0", nil
+			},
+			releaseFunc: func(sessionID string) {
+				callOrder = append(callOrder, "release")
+				So(sessionID, ShouldEqual, "sess_aoi_0")
+			},
+		}
+		registry := &skillRegistry{
+			skillRepo:     mockSkillRepo,
+			fileRepo:      mockFileRepo,
+			assetStore:    mockAssetStore,
+			sandboxClient: mockSandbox,
+			sessionPool:   sessionPool,
+			AuthService:   mockAuthService,
+			Logger:        logger.DefaultLogger(),
+		}
+
+		mockAuthService.EXPECT().GetAccessor(gomock.Any(), "user-1").Return(&interfaces.AuthAccessor{ID: "user-1"}, nil)
+		mockAuthService.EXPECT().OperationCheckAny(gomock.Any(), gomock.Any(), "skill-exec-1", interfaces.AuthResourceTypeSkill,
+			interfaces.AuthOperationTypeExecute, interfaces.AuthOperationTypePublicAccess).Return(true, nil)
+		mockSkillRepo.EXPECT().SelectSkillByID(gomock.Any(), gomock.Nil(), "skill-exec-1").Return(&model.SkillRepositoryDB{
+			SkillID:      "skill-exec-1",
+			Name:         "demo-skill",
+			Description:  "demo desc",
+			Version:      "v1",
+			SkillContent: "run this skill",
+		}, nil)
+		mockFileRepo.EXPECT().SelectSkillFileBySkillID(gomock.Any(), gomock.Nil(), "skill-exec-1", "v1").Return([]*model.SkillFileIndexDB{
+			{
+				SkillID:    "skill-exec-1",
+				RelPath:    "refs/guide.md",
+				StorageKey: "obj-1",
+			},
+		}, nil)
+		mockAssetStore.EXPECT().Download(gomock.Any(), &interfaces.OssObject{StorageKey: "obj-1"}).Return([]byte("guide body"), nil)
+
+		mockSandbox.EXPECT().UploadSkillArchive(gomock.Any(), "sess_aoi_0", gomock.Any()).DoAndReturn(
+			func(_ context.Context, sessionID string, req *interfaces.UploadSkillArchiveReq) (*interfaces.UploadSkillArchiveResp, error) {
+				callOrder = append(callOrder, "upload")
+				So(sessionID, ShouldEqual, "sess_aoi_0")
+				So(req.WorkDir, ShouldEqual, "/workspace/skills/sess_aoi_0/skill-exec-1")
+				So(req.FileName, ShouldEqual, "demo-skill.zip")
+
+				zr, zipErr := zip.NewReader(bytes.NewReader(req.Content), int64(len(req.Content)))
+				So(zipErr, ShouldBeNil)
+				entries := map[string]string{}
+				for _, f := range zr.File {
+					rc, openErr := f.Open()
+					So(openErr, ShouldBeNil)
+					body, readErr := io.ReadAll(rc)
+					So(readErr, ShouldBeNil)
+					So(rc.Close(), ShouldBeNil)
+					entries[f.Name] = string(body)
+				}
+				So(entries["SKILL.md"], ShouldContainSubstring, "name: demo-skill")
+				So(entries["refs/guide.md"], ShouldEqual, "guide body")
+				return &interfaces.UploadSkillArchiveResp{
+					SessionID:    sessionID,
+					WorkDir:      "/workspace/skills/" + sessionID + "/demo-skill",
+					FileName:     req.FileName,
+					UploadedPath: "/workspace/skills/" + sessionID + "/demo-skill/demo-skill.zip",
+					Mocked:       true,
+				}, nil
+			},
+		)
+		mockSandbox.EXPECT().ExecuteShell(gomock.Any(), "sess_aoi_0", gomock.Any()).DoAndReturn(
+			func(_ context.Context, sessionID string, req *interfaces.ExecuteShellReq) (*interfaces.ExecuteShellResp, error) {
+				callOrder = append(callOrder, "exec")
+				So(sessionID, ShouldEqual, "sess_aoi_0")
+				So(req.WorkDir, ShouldEqual, "/workspace/skills/sess_aoi_0/demo-skill")
+				So(req.Command, ShouldEqual, "bash run.sh")
+				So(req.Timeout, ShouldEqual, 15)
+				return &interfaces.ExecuteShellResp{
+					SessionID:     sessionID,
+					WorkDir:       req.WorkDir,
+					Command:       req.Command,
+					ExitCode:      0,
+					Stdout:        "ok",
+					ExecutionTime: 8,
+					Mocked:        true,
+				}, nil
+			},
+		)
+
+		resp, err := registry.ExecuteSkill(context.Background(), &interfaces.ExecuteSkillReq{
+			BusinessDomainID: "bd-1",
+			UserID:           "user-1",
+			SkillID:          "skill-exec-1",
+			EntryShell:       "bash run.sh",
+			Timeout:          15,
+		})
+
+		So(err, ShouldBeNil)
+		So(resp, ShouldNotBeNil)
+		So(resp.SessionID, ShouldEqual, "sess_aoi_0")
+		So(resp.WorkDir, ShouldEqual, "/workspace/skills/sess_aoi_0/demo-skill")
+		So(resp.UploadedPath, ShouldEqual, "/workspace/skills/sess_aoi_0/demo-skill/demo-skill.zip")
+		So(resp.Command, ShouldEqual, "bash run.sh")
+		So(resp.Stdout, ShouldEqual, "ok")
+		So(callOrder, ShouldResemble, []string{"acquire", "upload", "exec", "release"})
 	})
 }

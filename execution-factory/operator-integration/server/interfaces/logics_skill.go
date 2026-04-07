@@ -186,11 +186,36 @@ type UpdateSkillStatusResp struct {
 	Status  BizStatus `json:"status"`
 }
 
+// ExecuteSkillReq 执行 Skill 请求
+type ExecuteSkillReq struct {
+	BusinessDomainID string `header:"x-business-domain" validate:"required"`
+	UserID           string `header:"user_id"`
+	SkillID          string `uri:"skill_id" validate:"required"`
+	EntryShell       string `json:"entry_shell" validate:"required"`
+	Timeout          int    `json:"timeout,omitempty"`
+}
+
+// ExecuteSkillResp 执行 Skill 响应
+type ExecuteSkillResp struct {
+	SkillID       string `json:"skill_id"`
+	SessionID     string `json:"session_id"`
+	WorkDir       string `json:"work_dir"`
+	FileName      string `json:"file_name"`
+	UploadedPath  string `json:"uploaded_path"`
+	Command       string `json:"command"`
+	ExitCode      int    `json:"exit_code"`
+	Stdout        string `json:"stdout"`
+	Stderr        string `json:"stderr"`
+	ExecutionTime int64  `json:"execution_time"`
+	Mocked        bool   `json:"mocked"`
+}
+
 // SkillRegistry Skill 管理接口
 type SkillRegistry interface {
 	RegisterSkill(ctx context.Context, req *RegisterSkillReq) (*RegisterSkillResp, error)
 	DeleteSkill(ctx context.Context, req *DeleteSkillReq) error
 	DownloadSkill(ctx context.Context, req *DownloadSkillReq) (*DownloadSkillResp, error)
+	ExecuteSkill(ctx context.Context, req *ExecuteSkillReq) (*ExecuteSkillResp, error)
 	QuerySkillList(ctx context.Context, req *QuerySkillListReq) (*QuerySkillListResp, error)
 	GetSkillDetail(ctx context.Context, req *GetSkillDetailReq) (*SkillInfo, error)
 	// 更新 Skill 状态
