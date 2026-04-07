@@ -10,6 +10,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"runtime"
 	"sync"
 	"time"
 
@@ -291,8 +292,21 @@ func (rs *resourceService) GetByName(ctx context.Context, catalogID string, name
 	return resource, nil
 }
 
+func printMemStats(tag string) {
+	var m runtime.MemStats
+	runtime.ReadMemStats(&m)
+	logger.Infof("[%s] Alloc = %v MiB, TotalAlloc = %v MiB, Sys = %v MiB, NumGC = %v",
+		tag,
+		m.Alloc/1024/1024,
+		m.TotalAlloc/1024/1024,
+		m.Sys/1024/1024,
+		m.NumGC,
+	)
+}
+
 // List lists Resources with filters.
 func (rs *resourceService) List(ctx context.Context, params interfaces.ResourcesQueryParams) ([]*interfaces.Resource, int64, error) {
+	printMemStats("List-start")
 	ctx, span := ar_trace.Tracer.Start(ctx, "List resources")
 	defer span.End()
 
@@ -308,6 +322,7 @@ func (rs *resourceService) List(ctx context.Context, params interfaces.Resources
 		span.SetStatus(codes.Ok, "")
 		return []*interfaces.Resource{}, 0, nil
 	}
+	printMemStats("List-after-ids") // 在获取所有ID后
 
 	// 根据权限过滤有查看权限的ID数组
 	// 分批处理，每批1万个ids, fix权限接口报错prepared statement contains too many placeholders
@@ -335,9 +350,9 @@ func (rs *resourceService) List(ctx context.Context, params interfaces.Resources
 		for _, resourceOps := range batchMatchResources {
 			matchResourceOpsMap[resourceOps.ResourceID] = resourceOps
 		}
-		logger.Infof("List resources, FilterResources success, batch total: %d", len(batchMatchResources))
+		printMemStats("List-after-batch-filter") // 在权限过滤后
 	}
-	logger.Infof("List resources, FilterResources success, total: %d", len(matchResourceOpsMap))
+	printMemStats("List-after-filter") // 在权限过滤后
 
 	// 提取有权限的资源ID，保持与ids的顺序一致
 	authorizedIDs := make([]string, 0, len(matchResourceOpsMap))
@@ -372,12 +387,12 @@ func (rs *resourceService) List(ctx context.Context, params interfaces.Resources
 		authorizedIDs = authorizedIDs[params.Offset:end]
 	}
 
-	logger.Infof("List resources, authorizedIDs:  total: %d", len(authorizedIDs))
+	printMemStats("List-after-page") // 在分页后
 
 	// 根据有权限的ID数组查询完整资源
-	// 分批处理，每批1000个ids, 避免prepared statement contains too many placeholders错误
+	// 分批处理，每批10000个ids, 避免prepared statement contains too many placeholders错误
 	resources := make([]*interfaces.Resource, 0, len(authorizedIDs))
-	queryBatchSize := 1000
+	queryBatchSize := 10000
 	for i := 0; i < len(authorizedIDs); i += queryBatchSize {
 		end := i + queryBatchSize
 		if end > len(authorizedIDs) {
@@ -393,10 +408,9 @@ func (rs *resourceService) List(ctx context.Context, params interfaces.Resources
 		}
 
 		resources = append(resources, batchResources...)
-
-		logger.Infof("List resources, GetByIDs success, batch total: %d", len(batchResources))
+		printMemStats("List-after-batch-detail") // 在获取详情后
 	}
-	logger.Infof("List resources, GetByIDs success, total: %d", len(resources))
+	printMemStats("List-after-detail") // 在获取详情后
 
 	// 设置资源操作权限
 	for _, c := range resources {
@@ -418,7 +432,7 @@ func (rs *resourceService) List(ctx context.Context, params interfaces.Resources
 			WithErrorDetails(err.Error())
 	}
 
-	logger.Infof("List resources, List success, total: %d", len(resources))
+	printMemStats("List-end") // 在返回前
 
 	span.SetStatus(codes.Ok, "")
 	return resources, total, nil
