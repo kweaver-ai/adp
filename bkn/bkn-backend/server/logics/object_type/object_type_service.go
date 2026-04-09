@@ -73,19 +73,38 @@ func NewObjectTypeService(appSetting *common.AppSetting) interfaces.ObjectTypeSe
 	return otService
 }
 
-// validateObjectTypeStrictExternalDeps checks data view, vector embedding models, and logic property metric/operator references.
+// validateObjectTypeStrictExternalDeps checks backing data view or vega resource, vector embedding models, and logic property metric/operator references.
 func (ots *objectTypeService) validateObjectTypeStrictExternalDeps(ctx context.Context, objectType *interfaces.ObjectType) error {
 	if objectType.DataSource != nil && objectType.DataSource.ID != "" {
-		dataView, err := ots.dva.GetDataViewByID(ctx, objectType.DataSource.ID)
-		if err != nil {
-			return rest.NewHTTPError(ctx, http.StatusBadRequest,
-				berrors.BknBackend_ObjectType_InvalidParameter).
-				WithErrorDetails(fmt.Sprintf("对象类[%s]的数据视图[%s]获取失败: %s", objectType.OTName, objectType.DataSource.ID, err.Error()))
+		dsType := objectType.DataSource.Type
+		if dsType == "" {
+			dsType = interfaces.DATA_SOURCE_TYPE_DATA_VIEW
 		}
-		if dataView == nil {
-			return rest.NewHTTPError(ctx, http.StatusBadRequest,
-				berrors.BknBackend_ObjectType_InvalidParameter).
-				WithErrorDetails(fmt.Sprintf("对象类[%s]的数据视图[%s]不存在", objectType.OTName, objectType.DataSource.ID))
+		switch dsType {
+		case interfaces.DATA_SOURCE_TYPE_RESOURCE:
+			res, err := ots.vba.GetResourceByID(ctx, objectType.DataSource.ID)
+			if err != nil {
+				return rest.NewHTTPError(ctx, http.StatusBadRequest,
+					berrors.BknBackend_ObjectType_InvalidParameter).
+					WithErrorDetails(fmt.Sprintf("对象类[%s]的资源[%s]获取失败: %s", objectType.OTName, objectType.DataSource.ID, err.Error()))
+			}
+			if res == nil {
+				return rest.NewHTTPError(ctx, http.StatusBadRequest,
+					berrors.BknBackend_ObjectType_InvalidParameter).
+					WithErrorDetails(fmt.Sprintf("对象类[%s]的资源[%s]不存在", objectType.OTName, objectType.DataSource.ID))
+			}
+		default:
+			dataView, err := ots.dva.GetDataViewByID(ctx, objectType.DataSource.ID)
+			if err != nil {
+				return rest.NewHTTPError(ctx, http.StatusBadRequest,
+					berrors.BknBackend_ObjectType_InvalidParameter).
+					WithErrorDetails(fmt.Sprintf("对象类[%s]的数据视图[%s]获取失败: %s", objectType.OTName, objectType.DataSource.ID, err.Error()))
+			}
+			if dataView == nil {
+				return rest.NewHTTPError(ctx, http.StatusBadRequest,
+					berrors.BknBackend_ObjectType_InvalidParameter).
+					WithErrorDetails(fmt.Sprintf("对象类[%s]的数据视图[%s]不存在", objectType.OTName, objectType.DataSource.ID))
+			}
 		}
 	}
 	if objectType.DataProperties != nil {

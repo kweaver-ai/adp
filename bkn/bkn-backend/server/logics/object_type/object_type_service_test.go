@@ -847,6 +847,7 @@ func Test_objectTypeService_ValidateObjectTypes(t *testing.T) {
 		ps := bmock.NewMockPermissionService(mockCtrl)
 		ota := bmock.NewMockObjectTypeAccess(mockCtrl)
 		dva := bmock.NewMockDataViewAccess(mockCtrl)
+		vba := bmock.NewMockVegaBackendAccess(mockCtrl)
 		mfa := bmock.NewMockModelFactoryAccess(mockCtrl)
 		dda := bmock.NewMockDataModelAccess(mockCtrl)
 		aoa := bmock.NewMockAgentOperatorAccess(mockCtrl)
@@ -858,6 +859,7 @@ func Test_objectTypeService_ValidateObjectTypes(t *testing.T) {
 			ps:  ps,
 			ota: ota,
 			dva: dva,
+			vba: vba,
 			mfa: mfa,
 			dda: dda,
 			aoa: aoa,
@@ -877,6 +879,46 @@ func Test_objectTypeService_ValidateObjectTypes(t *testing.T) {
 			expectImportModeOK()
 			err := service.ValidateObjectTypes(ctx, "kn1", interfaces.MAIN_BRANCH, objectTypes, true, nil, interfaces.ImportMode_Normal)
 			So(err, ShouldBeNil)
+		})
+
+		Convey("Strict mode validates resource data source via GetResourceByID not data view\n", func() {
+			objectTypes := []*interfaces.ObjectType{
+				{
+					ObjectTypeWithKeyField: interfaces.ObjectTypeWithKeyField{
+						OTName: "ot1",
+						DataSource: &interfaces.ResourceInfo{
+							Type: interfaces.DATA_SOURCE_TYPE_RESOURCE,
+							ID:   "res1",
+						},
+					},
+					KNID: "kn1",
+				},
+			}
+			ps.EXPECT().CheckPermission(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
+			expectImportModeOK()
+			vba.EXPECT().GetResourceByID(gomock.Any(), "res1").Return(&interfaces.VegaResource{Name: "r1"}, nil)
+			err := service.ValidateObjectTypes(ctx, "kn1", interfaces.MAIN_BRANCH, objectTypes, true, nil, interfaces.ImportMode_Normal)
+			So(err, ShouldBeNil)
+		})
+
+		Convey("Strict mode fails when resource data source does not exist\n", func() {
+			objectTypes := []*interfaces.ObjectType{
+				{
+					ObjectTypeWithKeyField: interfaces.ObjectTypeWithKeyField{
+						OTName: "ot1",
+						DataSource: &interfaces.ResourceInfo{
+							Type: interfaces.DATA_SOURCE_TYPE_RESOURCE,
+							ID:   "res_missing",
+						},
+					},
+					KNID: "kn1",
+				},
+			}
+			ps.EXPECT().CheckPermission(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
+			expectImportModeOK()
+			vba.EXPECT().GetResourceByID(gomock.Any(), "res_missing").Return(nil, nil)
+			err := service.ValidateObjectTypes(ctx, "kn1", interfaces.MAIN_BRANCH, objectTypes, true, nil, interfaces.ImportMode_Normal)
+			So(err, ShouldNotBeNil)
 		})
 
 		Convey("Strict mode skips logic property checks when strictMode is false\n", func() {
