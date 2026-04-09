@@ -1771,7 +1771,7 @@ paths:
           type: string
         in: path
         required: true
-  /api/bkn-backend/v1/knowledge-networks/{kn_id}/object-types/validate:
+  /api/bkn-backend/v1/knowledge-networks/{kn_id}/object-types/validation:
     post:
       summary: 校验对象类
       description: |
@@ -1779,12 +1779,12 @@ paths:
         校验数据视图、向量索引小模型、逻辑属性绑定的指标模型与算子、概念分组等依赖是否存在（strict_mode=true 时）。
 
         同批次引用（例如关系类引用尚未落库的对象类）：单类 validate 接口的请求体若无法包含被引用方定义，strict 下仍只认已落库资源。
-        此时请使用与创建接口同结构的 **整包知识网络校验**（`POST .../knowledge-networks/{kn_id}/validate`）或 **概念分组校验**（嵌套 object_types / relation_types / action_types），服务端会从现有 JSON 推导 BatchIDIndex，等价于创建事务内的同批可见性。
+        此时请使用与创建接口同结构的 **整包知识网络校验**（`POST .../knowledge-networks/{kn_id}/validation`）或 **概念分组校验**（嵌套 object_types / relation_types / action_types），服务端会从现有 JSON 推导 BatchIDIndex，等价于创建事务内的同批可见性。
         关系映射规则校验需要对象类数据属性；若批次内仅声明 OT ID、无属性定义，存在性可通过但映射规则校验可能降级。
 
         **响应**：HTTP 200 时 body 中 `valid` 为 `true` 表示通过；为 `false` 时带 `detail`（服务端 error.Error()）。请求参数/鉴权/资源不存在等错误仍为非 2xx。
 
-        **内部接口**：`POST /api/bkn-backend/in/v1/.../object-types/validate` 与 `POST /api/ontology-manager/in/v1/.../object-types/validate`，其余相同；Header 解析访问者，无 OAuth。
+        **内部接口**：`POST /api/bkn-backend/in/v1/.../object-types/validation` 与 `POST /api/ontology-manager/in/v1/.../object-types/validation`，其余相同；Header 解析访问者，无 OAuth。
       parameters:
         - name: kn_id
           description: 业务知识网络ID

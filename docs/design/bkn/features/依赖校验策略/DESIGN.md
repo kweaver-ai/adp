@@ -312,11 +312,11 @@ flowchart TB
 
 | 接口 | 方法 | 路径 | 说明 |
 |------|------|------|------|
-| 对象类校验 | POST | `/api/bkn-backend/v1/knowledge-networks/:kn_id/object-types/validate` | 校验对象类配置及依赖，body 同创建接口 |
-| 关系类校验 | POST | `/api/bkn-backend/v1/knowledge-networks/:kn_id/relation-types/validate` | 校验关系类配置及依赖，body 同创建接口 |
-| 行动类校验 | POST | `/api/bkn-backend/v1/knowledge-networks/:kn_id/action-types/validate` | 校验行动类配置及依赖，body 同创建接口 |
-| 概念分组校验 | POST | `/api/bkn-backend/v1/knowledge-networks/:kn_id/concept-groups/validate` | 校验概念分组配置及依赖，body 同创建接口 |
-| 业务知识网络校验 | POST | `/api/bkn-backend/v1/knowledge-networks/:kn_id/validate` | 校验业务知识网络的配置及依赖，body 同创建接口 |
+| 对象类校验 | POST | `/api/bkn-backend/v1/knowledge-networks/:kn_id/object-types/validation` | 校验对象类配置及依赖，body 同创建接口 |
+| 关系类校验 | POST | `/api/bkn-backend/v1/knowledge-networks/:kn_id/relation-types/validation` | 校验关系类配置及依赖，body 同创建接口 |
+| 行动类校验 | POST | `/api/bkn-backend/v1/knowledge-networks/:kn_id/action-types/validation` | 校验行动类配置及依赖，body 同创建接口 |
+| 概念分组校验 | POST | `/api/bkn-backend/v1/knowledge-networks/:kn_id/concept-groups/validation` | 校验概念分组配置及依赖，body 同创建接口 |
+| 业务知识网络校验 | POST | `/api/bkn-backend/v1/knowledge-networks/:kn_id/validation` | 校验业务知识网络的配置及依赖，body 同创建接口 |
 
 **Query 参数**：
 
@@ -342,7 +342,7 @@ flowchart TB
 
 若知识网络创建接口支持一次性提交 KN + ObjectTypes + RelationTypes + ActionTypes + ConceptGroups，可考虑：
 
-- 调用 `POST /knowledge-networks/{kn_id}/validate` 接口：对完整的 KN 载荷进行整体校验，仅校验不保存
+- 调用 `POST /knowledge-networks/{kn_id}/validation` 接口：对完整的 KN 载荷进行整体校验，仅校验不保存
 
 ---
 

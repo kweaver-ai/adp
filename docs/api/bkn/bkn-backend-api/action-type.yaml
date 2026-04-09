@@ -460,7 +460,7 @@ paths:
             type: string
         in: path
         required: true
-  /api/bkn-backend/v1/knowledge-networks/{kn_id}/action-types/validate:
+  /api/bkn-backend/v1/knowledge-networks/{kn_id}/action-types/validation:
     post:
       summary: 校验行动类
       description: |
@@ -468,7 +468,7 @@ paths:
 
         **响应**：HTTP 200 时 `valid`/`detail` 同其它 validate 接口；参数与鉴权错误为非 2xx。
 
-        **内部接口**：`POST /api/bkn-backend/in/v1/.../action-types/validate` 与 `POST /api/ontology-manager/in/v1/.../action-types/validate`；Header 解析访问者，无 OAuth。
+        **内部接口**：`POST /api/bkn-backend/in/v1/.../action-types/validation` 与 `POST /api/ontology-manager/in/v1/.../action-types/validation`；Header 解析访问者，无 OAuth。
       parameters:
         - name: kn_id
           description: 业务知识网络ID
