@@ -73,7 +73,7 @@ depServices:
     port: 9898
     protocol: http
   vega-backend:
-    host: localhost
+    host: vega-backend-svc
     port: 13014
     protocol: http
 
