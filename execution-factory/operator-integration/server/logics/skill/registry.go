@@ -404,7 +404,7 @@ func (r *skillRegistry) ExecuteSkill(ctx context.Context, req *interfaces.Execut
 	}
 	defer r.sessionPool.ReleaseSession(sessionID)
 
-	uploadWorkDir := path.Join("/workspace/skills", sessionID, req.SkillID)
+	uploadWorkDir := path.Join("skills", req.SkillID)
 
 	uploadResp, err := r.sandboxClient.UploadSkillArchive(ctx, sessionID, &interfaces.UploadSkillArchiveReq{
 		WorkDir:  uploadWorkDir,

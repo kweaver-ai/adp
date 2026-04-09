@@ -537,9 +537,10 @@ type BusinessDomainManagement interface {
 // ExecuteCodeReq 执行代码请求
 type ExecuteCodeReq struct {
 	Code                  string            `json:"code" validate:"required"`                                    // 执行代码
-	Event                 map[string]any    `json:"event" validate:"required"`                                   // 事件
+	Event                 map[string]any    `json:"event,omitempty"`                                             // 事件
 	Language              string            `json:"language" default:"python"`                                   // 执行语言
 	Timeout               int               `json:"timeout,omitempty"`                                           // 超时时间，单位秒
+	WorkingDirectory      string            `json:"working_directory,omitempty"`                                 // 工作目录，相对于 workspace 根目录
 	Dependencies          []*DependencyInfo `json:"dependencies,omitempty"`                                      // 依赖资源
 	PythonPackageIndexURL string            `json:"python_package_index_url" default:"https://pypi.org/simple/"` // 安装源URL
 }
@@ -681,12 +682,15 @@ type UploadSkillArchiveReq struct {
 
 // UploadSkillArchiveResp 上传 Skill 压缩包响应
 type UploadSkillArchiveResp struct {
-	SessionID    string `json:"session_id"`
-	WorkDir      string `json:"work_dir"`
-	FileName     string `json:"file_name"`
-	UploadedPath string `json:"uploaded_path"`
-	Size         int64  `json:"size"`
-	Mocked       bool   `json:"mocked"`
+	SessionID          string `json:"session_id"`
+	Mode               string `json:"mode,omitempty"`
+	WorkDir            string `json:"work_dir"`
+	FileName           string `json:"file_name"`
+	UploadedPath       string `json:"uploaded_path"`
+	Size               int64  `json:"size"`
+	ExtractedFileCount int    `json:"extracted_file_count,omitempty"`
+	SkippedFileCount   int    `json:"skipped_file_count,omitempty"`
+	Mocked             bool   `json:"mocked"`
 }
 
 // ExecuteShellReq 执行 shell 请求

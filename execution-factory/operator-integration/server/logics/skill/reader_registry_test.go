@@ -1198,7 +1198,7 @@ func TestExecuteSkillUploadsBeforeShellExecution(t *testing.T) {
 			func(_ context.Context, sessionID string, req *interfaces.UploadSkillArchiveReq) (*interfaces.UploadSkillArchiveResp, error) {
 				callOrder = append(callOrder, "upload")
 				So(sessionID, ShouldEqual, "sess_aoi_0")
-				So(req.WorkDir, ShouldEqual, "/workspace/skills/sess_aoi_0/skill-exec-1")
+				So(req.WorkDir, ShouldEqual, "skills/skill-exec-1")
 				So(req.FileName, ShouldEqual, "demo-skill.zip")
 
 				zr, zipErr := zip.NewReader(bytes.NewReader(req.Content), int64(len(req.Content)))
@@ -1216,9 +1216,9 @@ func TestExecuteSkillUploadsBeforeShellExecution(t *testing.T) {
 				So(entries["refs/guide.md"], ShouldEqual, "guide body")
 				return &interfaces.UploadSkillArchiveResp{
 					SessionID:    sessionID,
-					WorkDir:      "/workspace/skills/" + sessionID + "/demo-skill",
+					WorkDir:      "skills/" + "/demo-skill",
 					FileName:     req.FileName,
-					UploadedPath: "/workspace/skills/" + sessionID + "/demo-skill/demo-skill.zip",
+					UploadedPath: "skills/" + "/demo-skill",
 					Mocked:       true,
 				}, nil
 			},
@@ -1227,7 +1227,7 @@ func TestExecuteSkillUploadsBeforeShellExecution(t *testing.T) {
 			func(_ context.Context, sessionID string, req *interfaces.ExecuteShellReq) (*interfaces.ExecuteShellResp, error) {
 				callOrder = append(callOrder, "exec")
 				So(sessionID, ShouldEqual, "sess_aoi_0")
-				So(req.WorkDir, ShouldEqual, "/workspace/skills/sess_aoi_0/demo-skill")
+				So(req.WorkDir, ShouldEqual, "skills/sess_aoi_0/demo-skill")
 				So(req.Command, ShouldEqual, "bash run.sh")
 				So(req.Timeout, ShouldEqual, 15)
 				return &interfaces.ExecuteShellResp{
@@ -1253,8 +1253,8 @@ func TestExecuteSkillUploadsBeforeShellExecution(t *testing.T) {
 		So(err, ShouldBeNil)
 		So(resp, ShouldNotBeNil)
 		So(resp.SessionID, ShouldEqual, "sess_aoi_0")
-		So(resp.WorkDir, ShouldEqual, "/workspace/skills/sess_aoi_0/demo-skill")
-		So(resp.UploadedPath, ShouldEqual, "/workspace/skills/sess_aoi_0/demo-skill/demo-skill.zip")
+		So(resp.WorkDir, ShouldEqual, "skills/sess_aoi_0/demo-skill")
+		So(resp.UploadedPath, ShouldEqual, "skills/sess_aoi_0/demo-skill")
 		So(resp.Command, ShouldEqual, "bash run.sh")
 		So(resp.Stdout, ShouldEqual, "ok")
 		So(callOrder, ShouldResemble, []string{"acquire", "upload", "exec", "release"})

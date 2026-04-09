@@ -15,7 +15,7 @@
 ### 1.2 目标
 
 - 提供私有 Skill 执行接口，支持调用方指定 Skill 与启动命令。
-- 执行工厂通过 Session Pool 复用可用 Sandbox 会话，完成 Skill 压缩包上传和 shell 执行编排。
+- 执行工厂通过 Session Pool 复用可用 Sandbox 会话，按真实 Sandbox REST 协议完成 Skill 压缩包上传、自动解压和 shell 执行编排。
 - 将 mock 逻辑收敛在 Sandbox driven adapter，避免污染 Skill 业务层。
 - 为真实 Sandbox 接口接入预留清晰替换边界。
 
@@ -65,9 +65,12 @@
 {
   "skill_id": "skill-123",
   "session_id": "sess_aoi_0",
-  "work_dir": "/workspace/skills/sess_aoi_0/demo-skill",
+  "work_dir": "skills/sess_aoi_0/demo-skill",
   "file_name": "demo-skill.zip",
-  "uploaded_path": "/workspace/skills/sess_aoi_0/demo-skill/demo-skill.zip",
+  "mode": "archive_extract",
+  "uploaded_path": "skills/sess_aoi_0/demo-skill",
+  "extracted_file_count": 12,
+  "skipped_file_count": 0,
   "command": "bash run.sh",
   "exit_code": 0,
   "stdout": "ok",
@@ -80,8 +83,8 @@
 字段说明:
 
 - `session_id`: 从 Session Pool 获取的 Sandbox 会话 ID
-- `work_dir`: Sandbox 上传接口返回的工作目录
-- `uploaded_path`: Skill 压缩包在 Sandbox 中的上传路径
+- `work_dir`: Sandbox 上传接口返回的解压目录，相对于 workspace 根目录
+- `uploaded_path`: Sandbox 上传接口返回的路径；自动解压时与 `work_dir` 一致
 - `command`: 实际执行的入口命令
 - `mocked`: 当前是否来自 mock Sandbox 实现
 
@@ -97,8 +100,8 @@ flowchart TD
     D --> E[从对象存储下载文件并重建 Skill ZIP]
     E --> F[从 Session Pool 获取可用 session]
     F --> G[调用 UploadSkillArchive 上传 ZIP]
-    G --> H[Sandbox 返回 work_dir 与 uploaded_path]
-    H --> I[调用 ExecuteShell 执行 entry_shell]
+    G --> H[Sandbox 返回 extract_path 等结果]
+    H --> I[以返回目录作为 working_directory 执行 entry_shell]
     I --> J[归还 session 到 Session Pool]
     J --> K[聚合上传结果与执行结果]
     K --> L[返回 ExecuteSkillResp]
@@ -108,6 +111,7 @@ flowchart TD
 
 - `entry_shell` 由调用方明确指定。
 - `work_dir` 以 Sandbox 上传接口返回结果为准。
+- 上传时通过 `extract=true` 自动解压 ZIP。
 - 当前 Sandbox 侧能力先通过 mock 打通主流程。
 - Session Pool 负责会话分配与归还，Skill 执行逻辑不直接创建会话。
 
@@ -131,9 +135,10 @@ sequenceDiagram
     Storage-->>Registry: 返回 ZIP 内容
     Registry->>Pool: AcquireSession
     Pool-->>Registry: session_id
-    Registry->>Sandbox: UploadSkillArchive(session_id, zip)
-    Sandbox-->>Registry: work_dir, uploaded_path
-    Registry->>Sandbox: ExecuteShell(session_id, work_dir, entry_shell)
+    Registry->>Sandbox: POST /sessions/{session_id}/files/upload?path=...&extract=true
+    Sandbox-->>Registry: extract_path, extracted_file_count, skipped_file_count
+    Registry->>Sandbox: POST /executions/sessions/{session_id}/execute-sync
+    Note over Registry,Sandbox: body.language=shell\nbody.code=entry_shell\nbody.working_directory=extract_path
     Sandbox-->>Registry: exit_code, stdout, stderr, execution_time
     Registry->>Pool: ReleaseSession(session_id)
     Registry-->>API: ExecuteSkillResp
@@ -157,7 +162,7 @@ sequenceDiagram
 - 从对象存储下载文件内容
 - 重建 Skill ZIP 包
 - 从 Session Pool 获取可用会话
-- 调用 Sandbox adapter 完成上传和执行
+- 调用 Sandbox adapter 完成上传、自动解压和执行
 - 执行完成后归还会话到 Session Pool
 - 聚合执行结果并返回统一响应
 
@@ -184,14 +189,31 @@ Sandbox driven adapter 新增两个执行相关能力:
 - mock 与真实接口切换仅发生在 adapter 内
 - Session Pool 负责会话获取、复用和归还
 
+真实 Sandbox 协议映射如下:
+
+- `UploadSkillArchive`
+  - 对接 `POST /api/v1/sessions/{session_id}/files/upload`
+  - 使用 `multipart/form-data`
+  - query 参数:
+    - `path`
+    - `extract=true`
+    - `overwrite=false`
+  - 自动解压时优先消费响应中的 `extract_path`
+- `ExecuteShell`
+  - 对接 `POST /api/v1/executions/sessions/{session_id}/execute-sync`
+  - 请求体:
+    - `language=shell`
+    - `code=entry_shell`
+    - `working_directory=extract_path`
+
 ## 5. Mock 方案
 
 ### 5.1 当前 mock 范围
 
 当前 mock 仅存在于 `server/drivenadapters/sandbox_control_plane.go` 中:
 
-- `UploadSkillArchive`: 返回上传后的 `work_dir`、`uploaded_path`
-- `ExecuteShell`: 返回模拟执行结果
+- `UploadSkillArchive`: 模拟返回上传后的 `work_dir`、`uploaded_path`
+- `ExecuteShell`: 模拟返回执行结果
 
 ### 5.2 Mock 目标
 
@@ -227,7 +249,8 @@ Sandbox driven adapter 新增两个执行相关能力:
 - 工作目录属于 Sandbox 侧运行时结果。
 - 执行工厂不应在业务层硬编码最终目录含义。
 - 后续真实接口若调整目录生成策略，只要上传响应语义不变，Skill 执行流程无需改动。
-- 当前为避免同一 Session 内不同 Skill 执行相互污染，请求上传时会显式传入隔离目录前缀。
+- 当前为避免同一 Session 内不同 Skill 执行相互污染，请求上传时会显式传入隔离目录前缀，如 `skills/{session_id}/{skill_id}`。
+- 真实执行时使用相对于 workspace 根目录的路径，而不是伪造绝对路径。
 
 ### 6.4 mock 收敛在 adapter
 
@@ -267,7 +290,7 @@ Sandbox driven adapter 新增两个执行相关能力:
 - 缺失 `entry_shell` 时参数校验失败
 - Skill ZIP 打包成功
 - 从 Session Pool 成功获取 session 后才允许上传
-- `UploadSkillArchive` 成功后才允许执行 shell
+- `UploadSkillArchive` 成功且返回解压目录后才允许执行 shell
 - 调用顺序必须为 `AcquireSession -> Upload -> Execute -> ReleaseSession`
 - shell 执行结果正确映射到响应
 
@@ -275,7 +298,8 @@ Sandbox driven adapter 新增两个执行相关能力:
 
 真实 Sandbox 接入后需要补充:
 
-- 上传协议与返回目录验证
+- 上传协议、query 参数和 `multipart/form-data` 验证
+- `extract_path -> working_directory` 映射验证
 - shell 执行协议验证
 - 失败分支与超时分支验证
 

@@ -563,13 +563,22 @@ components:
               description: "执行工厂从 Session Pool 获取的 Sandbox 会话 ID"
             work_dir:
               type: string
-              description: "UploadSkillArchive 返回的工作目录"
+              description: "Sandbox 上传接口返回的解压目录，作为 execute-sync 的 `working_directory`"
             file_name:
               type: string
               description: "上传的 Skill 压缩包文件名"
+            mode:
+              type: string
+              description: "Sandbox 上传模式，ZIP 自动解压时为 `archive_extract`"
             uploaded_path:
               type: string
-              description: "Skill 压缩包在 Sandbox 中的上传路径"
+              description: "Sandbox 上传接口返回的路径；自动解压时与 `work_dir` 一致"
+            extracted_file_count:
+              type: integer
+              description: "ZIP 自动解压时成功写入的文件数量"
+            skipped_file_count:
+              type: integer
+              description: "ZIP 自动解压时因冲突被跳过的文件数量"
             command:
               type: string
               description: "实际执行的入口命令"
