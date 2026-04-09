@@ -38,9 +38,23 @@ func NewVegaBackendClient() interfaces.VegaBackendClient {
 	return vegaBackendInstance
 }
 
+func (v *vegaBackendClient) buildHeaders(ctx context.Context) map[string]string {
+	headers := common.GetHeaderFromCtx(ctx)
+	if headers == nil {
+		headers = make(map[string]string)
+	}
+	headers["Content-Type"] = "application/json"
+	if accountID, ok := headers[string(interfaces.HeaderXAccountID)]; !ok || accountID == "" {
+		headers[string(interfaces.HeaderXAccountID)] = interfaces.ADMIN_ACCOUNT_ID
+		headers[string(interfaces.HeaderXAccountType)] = interfaces.ADMIN_ACCOUNT_TYPE
+	}
+	return headers
+}
+
+// GetCatalogByID 获取Vega目录
 func (v *vegaBackendClient) GetCatalogByID(ctx context.Context, id string) (*interfaces.VegaCatalog, error) {
 	src := fmt.Sprintf("%s/v1/catalogs/%s", v.baseURL, url.PathEscape(id))
-	headers := common.GetHeaderFromCtx(ctx)
+	headers := v.buildHeaders(ctx)
 	v.logger.WithContext(ctx).Infof("get vega catalog, catalog_id=%s, url=%s", id, src)
 	respCode, respData, err := v.httpClient.GetNoUnmarshal(ctx, src, nil, headers)
 	if err != nil {
@@ -62,9 +76,10 @@ func (v *vegaBackendClient) GetCatalogByID(ctx context.Context, id string) (*int
 	return catalog, nil
 }
 
+// CreateCatalog 创建Vega目录
 func (v *vegaBackendClient) CreateCatalog(ctx context.Context, req *interfaces.VegaCatalogRequest) (*interfaces.VegaCatalog, error) {
 	src := fmt.Sprintf("%s/v1/catalogs", v.baseURL)
-	headers := common.GetHeaderFromCtx(ctx)
+	headers := v.buildHeaders(ctx)
 	v.logger.WithContext(ctx).Infof("create vega catalog, catalog_id=%s, url=%s", req.ID, src)
 	respCode, respData, err := v.httpClient.PostNoUnmarshal(ctx, src, headers, req)
 	if err != nil {
@@ -85,7 +100,7 @@ func (v *vegaBackendClient) CreateCatalog(ctx context.Context, req *interfaces.V
 
 func (v *vegaBackendClient) GetResourceByID(ctx context.Context, id string) (*interfaces.VegaResource, error) {
 	src := fmt.Sprintf("%s/v1/resources/%s", v.baseURL, url.PathEscape(id))
-	headers := common.GetHeaderFromCtx(ctx)
+	headers := v.buildHeaders(ctx)
 	v.logger.WithContext(ctx).Infof("get vega resource, resource_id=%s, url=%s", id, src)
 	respCode, respData, err := v.httpClient.GetNoUnmarshal(ctx, src, nil, headers)
 	if err != nil {
@@ -119,7 +134,7 @@ func (v *vegaBackendClient) GetResourceByID(ctx context.Context, id string) (*in
 
 func (v *vegaBackendClient) CreateResource(ctx context.Context, req *interfaces.VegaResourceRequest) (*interfaces.VegaResource, error) {
 	src := fmt.Sprintf("%s/v1/resources", v.baseURL)
-	headers := common.GetHeaderFromCtx(ctx)
+	headers := v.buildHeaders(ctx)
 	v.logger.WithContext(ctx).Infof("create vega resource, resource_id=%s, catalog_id=%s, url=%s", req.ID, req.CatalogID, src)
 	respCode, respData, err := v.httpClient.PostNoUnmarshal(ctx, src, headers, req)
 	if err != nil {
@@ -140,7 +155,7 @@ func (v *vegaBackendClient) CreateResource(ctx context.Context, req *interfaces.
 
 func (v *vegaBackendClient) WriteDatasetDocuments(ctx context.Context, datasetID string, documents []map[string]any) error {
 	src := fmt.Sprintf("%s/v1/resources/dataset/%s/docs", v.baseURL, url.PathEscape(datasetID))
-	headers := common.GetHeaderFromCtx(ctx)
+	headers := v.buildHeaders(ctx)
 	v.logger.WithContext(ctx).Infof("write vega dataset documents, resource_id=%s, documents=%d, url=%s", datasetID, len(documents), src)
 	respCode, respData, err := v.httpClient.PostNoUnmarshal(ctx, src, headers, documents)
 	if err != nil {
@@ -155,7 +170,7 @@ func (v *vegaBackendClient) WriteDatasetDocuments(ctx context.Context, datasetID
 
 func (v *vegaBackendClient) DeleteDatasetDocumentByID(ctx context.Context, datasetID string, docID string) error {
 	src := fmt.Sprintf("%s/v1/resources/dataset/%s/docs/%s", v.baseURL, url.PathEscape(datasetID), url.PathEscape(docID))
-	headers := common.GetHeaderFromCtx(ctx)
+	headers := v.buildHeaders(ctx)
 	v.logger.WithContext(ctx).Infof("delete vega dataset document, resource_id=%s, doc_id=%s, url=%s", datasetID, docID, src)
 	respCode, respData, err := v.httpClient.DeleteNoUnmarshal(ctx, src, headers)
 	if err != nil {

@@ -43,6 +43,18 @@ func NewMFModelManager() interfaces.MFModelManager {
 	})
 	return mfModelManagerInstance
 }
+func (m *mfModelManager) buildHeaders(ctx context.Context) map[string]string {
+	headers := common.GetHeaderFromCtx(ctx)
+	if headers == nil {
+		headers = make(map[string]string)
+	}
+	headers["Content-Type"] = "application/json"
+	if accountID, ok := headers[string(interfaces.HeaderXAccountID)]; !ok || accountID == "" {
+		headers[string(interfaces.HeaderXAccountID)] = interfaces.ADMIN_ACCOUNT_ID
+		headers[string(interfaces.HeaderXAccountType)] = interfaces.ADMIN_ACCOUNT_TYPE
+	}
+	return headers
+}
 
 // GetPromptByPromptID 获取提示词
 func (m *mfModelManager) GetPromptByPromptID(ctx context.Context, promptID string) (resp *interfaces.GetPromptResp, err error) {
@@ -77,7 +89,7 @@ func (m *mfModelManager) GetEmbeddingModel(ctx context.Context, modelName string
 	query := url.Values{}
 	query.Set("model_name", modelName)
 	query.Set("model_type", modelType)
-	header := common.GetHeaderFromCtx(ctx)
+	header := m.buildHeaders(ctx)
 	_, respData, err := m.httpClient.Get(ctx, src, query, header)
 	if err != nil {
 		m.logger.WithContext(ctx).Errorf("failed to get embedding model: %v", err)

@@ -10,6 +10,7 @@ import (
 	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/infra/config"
 	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/interfaces"
 	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/interfaces/model"
+	o11y "github.com/kweaver-ai/kweaver-go-lib/observability"
 )
 
 const (
@@ -50,16 +51,18 @@ func NewSkillIndexSyncService() interfaces.SkillIndexSyncService {
 // 如果存在，则检查是否为最新版本
 // 如果不是最新版本，则更新
 // 如果是最新版本，则返回成功
-func (s *skillIndexSync) Init(ctx context.Context) error {
-	log := s.logger
-	log.Infof("init skill index dataset, catalog_id=%s, resource_id=%s", executionFactoryCatalogID, executionFactorySkillDataset)
+func (s *skillIndexSync) Init(ctx context.Context) (err error) {
+	// 记录可观测
+	ctx, _ = o11y.StartInternalSpan(ctx)
+	defer o11y.EndSpan(ctx, err)
+	s.logger.WithContext(ctx).Infof("init skill index dataset, catalog_id=%s, resource_id=%s", executionFactoryCatalogID, executionFactorySkillDataset)
 	catalog, err := s.vegaClient.GetCatalogByID(ctx, executionFactoryCatalogID)
 	if err != nil {
-		log.Errorf("get catalog failed during ensure dataset, catalog_id=%s, err=%v", executionFactoryCatalogID, err)
+		s.logger.WithContext(ctx).Errorf("get catalog failed during ensure dataset, catalog_id=%s, err=%v", executionFactoryCatalogID, err)
 		return err
 	}
 	if catalog == nil {
-		log.Infof("catalog not found, creating catalog, catalog_id=%s", executionFactoryCatalogID)
+		s.logger.WithContext(ctx).Infof("catalog not found, creating catalog, catalog_id=%s", executionFactoryCatalogID)
 		_, err = s.vegaClient.CreateCatalog(ctx, &interfaces.VegaCatalogRequest{
 			ID:          executionFactoryCatalogID,
 			Name:        executionFactoryCatalogID,
@@ -67,27 +70,27 @@ func (s *skillIndexSync) Init(ctx context.Context) error {
 			Description: executionFactoryCatalogDesc,
 		})
 		if err != nil {
-			log.Errorf("create catalog failed, catalog_id=%s, err=%v", executionFactoryCatalogID, err)
+			s.logger.WithContext(ctx).Errorf("create catalog failed, catalog_id=%s, err=%v", executionFactoryCatalogID, err)
 			return err
 		}
 	}
 
 	resource, err := s.vegaClient.GetResourceByID(ctx, executionFactorySkillDataset)
 	if err != nil {
-		log.Errorf("get resource failed during ensure dataset, resource_id=%s, err=%v", executionFactorySkillDataset, err)
+		s.logger.WithContext(ctx).Errorf("get resource failed during ensure dataset, resource_id=%s, err=%v", executionFactorySkillDataset, err)
 		return err
 	}
 	if resource != nil {
-		log.Infof("resource already exists, resource_id=%s", executionFactorySkillDataset)
+		s.logger.WithContext(ctx).Infof("resource already exists, resource_id=%s", executionFactorySkillDataset)
 		return nil
 	}
 
 	embeddingModel, err := s.modelManager.GetEmbeddingModel(ctx, interfaces.SmallModelTypeEmbedding, interfaces.SmallModelTypeEmbedding)
 	if err != nil {
-		log.Errorf("get embedding model failed, resource_id=%s, err=%v", executionFactorySkillDataset, err)
+		s.logger.WithContext(ctx).Errorf("get embedding model failed, resource_id=%s, err=%v", executionFactorySkillDataset, err)
 		return err
 	}
-	log.Infof("creating skill dataset resource, resource_id=%s, dimension=%d", executionFactorySkillDataset, embeddingModel.EmbeddingDim)
+	s.logger.WithContext(ctx).Infof("creating skill dataset resource, resource_id=%s, dimension=%d", executionFactorySkillDataset, embeddingModel.EmbeddingDim)
 	_, err = s.vegaClient.CreateResource(ctx, &interfaces.VegaResourceRequest{
 		ID:               executionFactorySkillDataset,
 		CatalogID:        executionFactoryCatalogID,
@@ -100,7 +103,7 @@ func (s *skillIndexSync) Init(ctx context.Context) error {
 		SchemaDefinition: buildSkillIndexSchema(embeddingModel.EmbeddingDim),
 	})
 	if err != nil {
-		log.Errorf("create skill dataset resource failed, resource_id=%s, err=%v", executionFactorySkillDataset, err)
+		s.logger.WithContext(ctx).Errorf("create skill dataset resource failed, resource_id=%s, err=%v", executionFactorySkillDataset, err)
 	}
 	return err
 }
@@ -153,13 +156,7 @@ func (s *skillIndexSync) buildSkillDocument(ctx context.Context, skill *model.Sk
 }
 
 func buildEmbeddingInput(name string, description string) string {
-	parts := []string{}
-	if strings.TrimSpace(name) != "" {
-		parts = append(parts, fmt.Sprintf("技能名称：%s", strings.TrimSpace(name)))
-	}
-	if strings.TrimSpace(description) != "" {
-		parts = append(parts, fmt.Sprintf("技能描述：%s", strings.TrimSpace(description)))
-	}
+	parts := []string{name, description}
 	return strings.Join(parts, "\n")
 }
 
