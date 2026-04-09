@@ -34,6 +34,7 @@ type skillRegistry struct {
 	skillRepo             model.ISkillRepository
 	fileRepo              model.ISkillFileIndex
 	assetStore            skillAssetStore
+	indexSync             interfaces.SkillIndexSyncService
 	sandboxClient         interfaces.SandBoxControlPlane
 	sessionPool           sandbox.SessionPool
 	dbTx                  model.DBTx
@@ -58,6 +59,7 @@ func NewSkillRegistry() interfaces.SkillRegistry {
 			skillRepo:             dbaccess.NewSkillRepositoryDB(),
 			fileRepo:              dbaccess.NewSkillFileIndexDB(),
 			assetStore:            newOSSGatewaySkillAssetStore(),
+			indexSync:             NewSkillIndexSyncService(),
 			sandboxClient:         drivenadapters.NewSandBoxControlPlaneClient(),
 			sessionPool:           sandbox.GetSessionPool(),
 			dbTx:                  dbaccess.NewBaseTx(),
@@ -193,6 +195,9 @@ func (r *skillRegistry) DeleteSkill(ctx context.Context, req *interfaces.DeleteS
 			fmt.Sprintf("skill can not be deleted in status: %s", skill.Status))
 		return
 	}
+	// if err = r.indexSync.DeleteSkill(ctx, req.SkillID); err != nil {
+	// 	return err
+	// }
 
 	tx, err := r.dbTx.GetTx(ctx)
 	if err != nil {
@@ -280,12 +285,25 @@ func (r *skillRegistry) UpdateSkillStatus(ctx context.Context, req *interfaces.U
 		}
 		// 检查是否重名
 		err = r.checkSkillDuplicateName(ctx, skill.Name, skill.SkillID)
+		if err != nil {
+			return nil, err
+		}
+		defer func() {
+			if syncErr := r.indexSync.UpsertSkill(ctx, skill); syncErr != nil {
+				r.Logger.WithContext(ctx).Errorf("sync published skill index failed, skill_id=%s, err=%v", req.SkillID, syncErr)
+			}
+		}()
 	case interfaces.BizStatusUnpublish, interfaces.BizStatusEditing:
 	case interfaces.BizStatusOffline:
 		err = r.AuthService.CheckUnpublishPermission(ctx, accessor, req.SkillID, interfaces.AuthResourceTypeSkill)
-	}
-	if err != nil {
-		return nil, err
+		if err != nil {
+			return nil, err
+		}
+		defer func() {
+			if syncErr := r.indexSync.DeleteSkill(ctx, req.SkillID); syncErr != nil {
+				r.Logger.WithContext(ctx).Errorf("delete skill index failed after status update, skill_id=%s, err=%v", req.SkillID, syncErr)
+			}
+		}()
 	}
 	// 更新技能状态
 	if err = r.skillRepo.UpdateSkillStatus(ctx, nil, req.SkillID, string(req.Status), req.UserID); err != nil {

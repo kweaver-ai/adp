@@ -3,6 +3,8 @@ package interfaces
 import (
 	"context"
 	"encoding/json"
+
+	"github.com/kweaver-ai/adp/execution-factory/operator-integration/server/interfaces/model"
 )
 
 //go:generate mockgen -source=logics_skill.go -destination=../mocks/logics_skill.go -package=mocks
@@ -232,4 +234,10 @@ type SkillMarket interface {
 type SkillReader interface {
 	GetSkillContent(ctx context.Context, req *GetSkillContentReq) (*GetSkillContentResp, error)
 	ReadSkillFile(ctx context.Context, req *ReadSkillFileReq) (*ReadSkillFileResp, error)
+}
+
+type SkillIndexSyncService interface {
+	Init(ctx context.Context) error
+	UpsertSkill(ctx context.Context, skill *model.SkillRepositoryDB) error
+	DeleteSkill(ctx context.Context, skillID string) error
 }

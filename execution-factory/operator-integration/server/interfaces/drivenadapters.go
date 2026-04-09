@@ -788,6 +788,8 @@ type MFModelAPIClient interface {
 	ChatCompletion(ctx context.Context, req *ChatCompletionReq) (resp *ChatCompletionResp, err error)
 	// 调用模型流式返回
 	StreamChatCompletion(ctx context.Context, req *ChatCompletionReq) (chan string, chan error, error)
+	// 获取 embedding 向量
+	Embeddings(ctx context.Context, req *EmbeddingReq) (resp *EmbeddingResp, err error)
 }
 
 // GetPromptResp 获取提示词响应
@@ -799,10 +801,108 @@ type GetPromptResp struct {
 	Messages   string `json:"messages"`    // 提示词内容
 }
 
+const (
+	SmallModelTypeEmbedding = "embedding"
+)
+
+type EmbeddingModel struct {
+	ModelID      string `json:"model_id"`
+	ModelName    string `json:"model_name"`
+	ModelType    string `json:"model_type"`
+	EmbeddingDim int    `json:"embedding_dim"`
+	BatchSize    int    `json:"batch_size"`
+	MaxTokens    int    `json:"max_tokens"`
+}
+
+type EmbeddingReq struct {
+	Model string   `json:"model"`
+	Input []string `json:"input"`
+}
+
+type EmbeddingData struct {
+	Object    string    `json:"object"`
+	Embedding []float32 `json:"embedding"`
+	Index     int       `json:"index"`
+}
+
+type EmbeddingResp struct {
+	Data []EmbeddingData `json:"data"`
+}
+
 // MFModelManager 模型管理接口
 type MFModelManager interface {
 	// 获取提示词
 	GetPromptByPromptID(ctx context.Context, promptID string) (resp *GetPromptResp, err error)
+	// 获取 embedding 模型信息
+	GetEmbeddingModel(ctx context.Context, modelName string, modelType string) (resp *EmbeddingModel, err error)
+}
+
+type VegaPropertyFeature struct {
+	Name        string         `json:"name"`
+	DisplayName string         `json:"display_name"`
+	FeatureType string         `json:"feature_type"`
+	Description string         `json:"description"`
+	RefProperty string         `json:"ref_property"`
+	IsDefault   bool           `json:"is_default"`
+	IsNative    bool           `json:"is_native"`
+	Config      map[string]any `json:"config,omitempty"`
+}
+
+type VegaProperty struct {
+	Name         string                `json:"name"`
+	Type         string                `json:"type"`
+	DisplayName  string                `json:"display_name"`
+	OriginalName string                `json:"original_name"`
+	Description  string                `json:"description"`
+	Features     []VegaPropertyFeature `json:"features,omitempty"`
+}
+
+type VegaCatalogRequest struct {
+	ID          string   `json:"id"`
+	Name        string   `json:"name"`
+	Tags        []string `json:"tags"`
+	Description string   `json:"description"`
+}
+
+type VegaCatalog struct {
+	ID          string   `json:"id"`
+	Name        string   `json:"name"`
+	Tags        []string `json:"tags"`
+	Description string   `json:"description"`
+	Type        string   `json:"type"`
+}
+
+type VegaResourceRequest struct {
+	ID               string         `json:"id"`
+	CatalogID        string         `json:"catalog_id"`
+	Name             string         `json:"name"`
+	Tags             []string       `json:"tags"`
+	Description      string         `json:"description"`
+	Category         string         `json:"category"`
+	Status           string         `json:"status"`
+	SourceIdentifier string         `json:"source_identifier"`
+	SchemaDefinition []VegaProperty `json:"schema_definition"`
+}
+
+type VegaResource struct {
+	ID               string         `json:"id"`
+	CatalogID        string         `json:"catalog_id"`
+	Name             string         `json:"name"`
+	Tags             []string       `json:"tags"`
+	Description      string         `json:"description"`
+	Category         string         `json:"category"`
+	Status           string         `json:"status"`
+	SourceIdentifier string         `json:"source_identifier"`
+	SchemaDefinition []VegaProperty `json:"schema_definition,omitempty"`
+}
+
+type VegaBackendClient interface {
+	GetCatalogByID(ctx context.Context, id string) (*VegaCatalog, error)
+	CreateCatalog(ctx context.Context, req *VegaCatalogRequest) (*VegaCatalog, error)
+	GetResourceByID(ctx context.Context, id string) (*VegaResource, error)
+	CreateResource(ctx context.Context, req *VegaResourceRequest) (*VegaResource, error)
+	WriteDatasetDocuments(ctx context.Context, datasetID string, documents []map[string]any) error
+	DeleteDatasetDocumentByID(ctx context.Context, datasetID string, docID string) error
 }
 
 // OssObject OSS 对象结构体
