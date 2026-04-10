@@ -6,6 +6,7 @@
 -- ==========================================
 -- 迁移脚本：将 mdl-data-model 相关表从 adp 库迁移至 kweaver 库
 -- ==========================================
+USE kweaver;
 
 RENAME TABLE adp.t_metric_model TO kweaver.t_metric_model;
 RENAME TABLE adp.t_metric_model_group TO kweaver.t_metric_model_group;
