@@ -506,6 +506,24 @@ func (rts *relationTypeService) GetRelationTypesByIDs(ctx context.Context, knID 
 						TargetProp.DisplayName = targetObj.PropertyMap[m.TargetProp.Name]
 				}
 			}
+		// filtered_cross_join: no property mapping to translate; attach endpoint object type names when available
+		case interfaces.RELATION_TYPE_FILTERED_CROSS_JOIN:
+			if sourceObj != nil {
+				relationType.SourceObjectType = interfaces.SimpleObjectType{
+					OTID:   relationType.SourceObjectTypeID,
+					OTName: sourceObj.OTName,
+					Icon:   sourceObj.Icon,
+					Color:  sourceObj.Color,
+				}
+			}
+			if targetObj != nil {
+				relationType.TargetObjectType = interfaces.SimpleObjectType{
+					OTID:   relationType.TargetObjectTypeID,
+					OTName: targetObj.OTName,
+					Icon:   targetObj.Icon,
+					Color:  targetObj.Color,
+				}
+			}
 		}
 	}
 
@@ -1311,7 +1329,40 @@ func (rts *relationTypeService) validateDependency(ctx context.Context, tx *sql.
 					}
 				}
 			}
+		case interfaces.RELATION_TYPE_FILTERED_CROSS_JOIN:
+			rules := relationType.MappingRules.(interfaces.FilteredCrossJoinMapping)
+			if sourceObjectType != nil && rules.SourceCondition != nil {
+				if _, err := cond.NewCondition(ctx, rules.SourceCondition, cond.CUSTOM, objectTypeToCondFieldsMap(sourceObjectType)); err != nil {
+					return rest.NewHTTPError(ctx, http.StatusBadRequest, berrors.BknBackend_RelationType_InvalidParameter).
+						WithErrorDetails(fmt.Sprintf("分侧过滤全连接起点条件无效: %s", err.Error()))
+				}
+			}
+			if targetObjectType != nil && rules.TargetCondition != nil {
+				if _, err := cond.NewCondition(ctx, rules.TargetCondition, cond.CUSTOM, objectTypeToCondFieldsMap(targetObjectType)); err != nil {
+					return rest.NewHTTPError(ctx, http.StatusBadRequest, berrors.BknBackend_RelationType_InvalidParameter).
+						WithErrorDetails(fmt.Sprintf("分侧过滤全连接终点条件无效: %s", err.Error()))
+				}
+			}
 		}
 	}
 	return nil
+}
+
+func objectTypeToCondFieldsMap(ot *interfaces.ObjectType) map[string]*cond.ViewField {
+	m := make(map[string]*cond.ViewField)
+	if ot == nil {
+		return m
+	}
+	for _, dp := range ot.DataProperties {
+		if dp == nil {
+			continue
+		}
+		m[dp.Name] = &cond.ViewField{
+			Name:         dp.Name,
+			Type:         dp.Type,
+			DisplayName:  dp.DisplayName,
+			OriginalName: dp.Name,
+		}
+	}
+	return m
 }

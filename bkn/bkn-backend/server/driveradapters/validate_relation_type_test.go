@@ -500,6 +500,58 @@ func Test_ValidateRelationType(t *testing.T) {
 			err := ValidateRelationType(ctx, rt, true)
 			So(err, ShouldNotBeNil)
 		})
+
+		Convey("Success with filtered_cross_join mapping rules\n", func() {
+			rt := &interfaces.RelationType{
+				RelationTypeWithKeyField: interfaces.RelationTypeWithKeyField{
+					RTID:               "rt-fcj",
+					RTName:             "fcj",
+					SourceObjectTypeID: "ot1",
+					TargetObjectTypeID: "ot2",
+					Type:               interfaces.RELATION_TYPE_FILTERED_CROSS_JOIN,
+					MappingRules: map[string]any{
+						"source_condition": map[string]any{"field": "a", "operation": "==", "value": 1},
+						"target_condition": map[string]any{"field": "b", "operation": "==", "value": 2},
+					},
+				},
+			}
+			err := ValidateRelationType(ctx, rt, true)
+			So(err, ShouldBeNil)
+			_, ok := rt.MappingRules.(interfaces.FilteredCrossJoinMapping)
+			So(ok, ShouldBeTrue)
+		})
+
+		Convey("Success with filtered_cross_join omitting target_condition (optional)\n", func() {
+			rt := &interfaces.RelationType{
+				RelationTypeWithKeyField: interfaces.RelationTypeWithKeyField{
+					RTID:               "rt-fcj2",
+					RTName:             "fcj2",
+					SourceObjectTypeID: "ot1",
+					TargetObjectTypeID: "ot2",
+					Type:               interfaces.RELATION_TYPE_FILTERED_CROSS_JOIN,
+					MappingRules: map[string]any{
+						"source_condition": map[string]any{"field": "a", "operation": "==", "value": 1},
+					},
+				},
+			}
+			err := ValidateRelationType(ctx, rt, true)
+			So(err, ShouldBeNil)
+		})
+
+		Convey("Success with filtered_cross_join empty mapping (both sides unconstrained)\n", func() {
+			rt := &interfaces.RelationType{
+				RelationTypeWithKeyField: interfaces.RelationTypeWithKeyField{
+					RTID:               "rt-fcj3",
+					RTName:             "fcj3",
+					SourceObjectTypeID: "ot1",
+					TargetObjectTypeID: "ot2",
+					Type:               interfaces.RELATION_TYPE_FILTERED_CROSS_JOIN,
+					MappingRules:       map[string]any{},
+				},
+			}
+			err := ValidateRelationType(ctx, rt, true)
+			So(err, ShouldBeNil)
+		})
 	})
 }
 

@@ -6,6 +6,7 @@ server:
   writeTimeOut: 120
   viewDataTimeout: 5m
   defaultSmallModelEnabled: true
+  filteredCrossJoinMaxEdgeExpand: 10000
 log:
   logLevel: debug
   developMode: false

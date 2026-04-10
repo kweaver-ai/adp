@@ -31,6 +31,8 @@ type ServerSetting struct {
 	WriteTimeout             time.Duration `mapstructure:"writeTimeOut"`
 	ViewDataTimeout          string        `mapstructure:"viewDataTimeout"`
 	DefaultSmallModelEnabled bool          `mapstructure:"defaultSmallModelEnabled"`
+	// FilteredCrossJoinMaxEdgeExpand caps virtual edge expansion per filtered_cross_join step in subgraph BFS (silent truncate). 0 uses default in code.
+	FilteredCrossJoinMaxEdgeExpand int `mapstructure:"filteredCrossJoinMaxEdgeExpand"`
 }
 
 // app配置项

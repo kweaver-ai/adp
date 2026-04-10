@@ -88,10 +88,12 @@ func ValidateRelationType(ctx context.Context, relationType *interfaces.Relation
 
 	// 校验type字段
 	if relationType.Type != "" {
-		if relationType.Type != interfaces.RELATION_TYPE_DIRECT && relationType.Type != interfaces.RELATION_TYPE_DATA_VIEW {
+		if relationType.Type != interfaces.RELATION_TYPE_DIRECT && relationType.Type != interfaces.RELATION_TYPE_DATA_VIEW &&
+			relationType.Type != interfaces.RELATION_TYPE_FILTERED_CROSS_JOIN {
 			return rest.NewHTTPError(ctx, http.StatusBadRequest, berrors.BknBackend_RelationType_InvalidParameter).
-				WithErrorDetails(fmt.Sprintf("关系类类型只支持 %s 和 %s，当前类型为: %s",
-					interfaces.RELATION_TYPE_DIRECT, interfaces.RELATION_TYPE_DATA_VIEW, relationType.Type))
+				WithErrorDetails(fmt.Sprintf("关系类类型只支持 %s、%s 和 %s，当前类型为: %s",
+					interfaces.RELATION_TYPE_DIRECT, interfaces.RELATION_TYPE_DATA_VIEW,
+					interfaces.RELATION_TYPE_FILTERED_CROSS_JOIN, relationType.Type))
 		}
 	}
 
@@ -135,6 +137,8 @@ func validateMappingRules(ctx context.Context, relationType string, mappingRules
 		return validateDirectMappingRules(ctx, mappingRules)
 	case interfaces.RELATION_TYPE_DATA_VIEW:
 		return validateInDirectMappingRules(ctx, mappingRules)
+	case interfaces.RELATION_TYPE_FILTERED_CROSS_JOIN:
+		return validateFilteredCrossJoinMappingRules(ctx, mappingRules)
 	default:
 		// 如果type不是direct或data_view，返回错误
 		return nil, rest.NewHTTPError(ctx, http.StatusBadRequest, berrors.BknBackend_RelationType_InvalidParameter).
@@ -268,5 +272,15 @@ func validateInDirectMappingRules(ctx context.Context, mappingRules any) (any, e
 		targetMappingsRuleMap[item.SourceProp.Name+":"+item.TargetProp.Name] = true
 	}
 
+	return mapping, nil
+}
+
+func validateFilteredCrossJoinMappingRules(ctx context.Context, mappingRules any) (any, error) {
+	var mapping interfaces.FilteredCrossJoinMapping
+	if err := mapstructure.Decode(mappingRules, &mapping); err != nil {
+		return nil, rest.NewHTTPError(ctx, http.StatusBadRequest, berrors.BknBackend_RelationType_InvalidParameter).
+			WithErrorDetails("分侧过滤全连接 mapping_rules 解码失败: " + err.Error())
+	}
+	// source_condition / target_condition 均可省略：nil 表示该侧无额外过滤（与查询引擎语义一致）。
 	return mapping, nil
 }
