@@ -92,7 +92,7 @@ const (
 	userMgmtServiceName   string = "user-management"
 	hydraAdminServiceName string = "hydra-admin"
 
-	DATA_BASE_NAME string = "adp"
+	DATA_BASE_NAME string = "kweaver"
 )
 
 var (

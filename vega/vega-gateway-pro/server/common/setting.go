@@ -88,7 +88,7 @@ const (
 	vegaDataConnectionServiceName string = "data-connection"
 	vegaCalculateCoordinatorName  string = "vega-calculate-coordinator"
 
-	DATA_BASE_NAME string = "adp"
+	DATA_BASE_NAME string = "kweaver"
 )
 
 var (
