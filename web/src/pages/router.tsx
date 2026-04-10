@@ -131,7 +131,7 @@ const App = (props: AppProps) => {
               <Route exact path="/data-connect/create" render={() => <DataConnectForm />} />
               <Route exact path="/data-connect/edit/:id" render={() => <DataConnectForm />} />
               <Route exact path="/custom-data-view/row-column-permission/:id" render={() => <RowColumnPermission />} />
-              <Route render={() => <div>not found</div>} />
+              <Route render={() => <div />} />
             </Switch>
           </Suspense>
         </Router>
