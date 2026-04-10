@@ -14,6 +14,7 @@ import (
 	"sync"
 
 	sq "github.com/Masterminds/squirrel"
+	"github.com/bytedance/sonic"
 	"github.com/kweaver-ai/TelemetrySDK-Go/exporter/v2/ar_trace"
 	libCommon "github.com/kweaver-ai/kweaver-go-lib/common"
 	libdb "github.com/kweaver-ai/kweaver-go-lib/db"
@@ -350,13 +351,13 @@ func (ra *resourceAccess) GetByIDs(ctx context.Context, ids []string) ([]*interf
 		resource.Database = database.String
 		resource.SourceIdentifier = sourceIdentifier.String
 		if sourceMetadata.Valid && sourceMetadata.String != "" {
-			_ = json.Unmarshal([]byte(sourceMetadata.String), &resource.SourceMetadata)
+			_ = sonic.Unmarshal([]byte(sourceMetadata.String), &resource.SourceMetadata)
 		}
 		if schemaDefinition.Valid && schemaDefinition.String != "" {
-			_ = json.Unmarshal([]byte(schemaDefinition.String), &resource.SchemaDefinition)
+			_ = sonic.Unmarshal([]byte(schemaDefinition.String), &resource.SchemaDefinition)
 		}
 		if logicDefinition.Valid && logicDefinition.String != "" {
-			_ = json.Unmarshal([]byte(logicDefinition.String), &resource.LogicDefinition)
+			_ = sonic.Unmarshal([]byte(logicDefinition.String), &resource.LogicDefinition)
 		}
 
 		resources = append(resources, resource)
