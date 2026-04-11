@@ -29,11 +29,11 @@ spring:
       datasource:
         default:
           driver-class-name: org.mariadb.jdbc.Driver
-          url: jdbc:mariadb://10.4.110.188:3330/adp?useUnicode=true&useSSL=false&characterEncoding=utf8mb4&serverTimezone=GMT%2B8
+          url: jdbc:mariadb://10.4.110.188:3330/kweaver?useUnicode=true&useSSL=false&characterEncoding=utf8mb4&serverTimezone=GMT%2B8
           username: root
           password: eisoo.com123
           #          driver-class-name: dm.jdbc.driver.DmDriver
-          #          url: jdbc:dm://192.168.173.16:5236?schema=adp
+          #          url: jdbc:dm://192.168.173.16:5236?schema=kweaver
           #          username: SYSDBA
           #          password: HUN_SYSDBA2023
           type: com.alibaba.druid.pool.DruidDataSource #引入自定义的Druid数据源

@@ -33,10 +33,10 @@ data:
             default:
               {{- if eq .Values.depServices.rds.type "DM8" }}
               driver-class-name: dm.jdbc.driver.DmDriver
-              url: jdbc:dm://{{ .Values.depServices.rds.host }}:{{ .Values.depServices.rds.port }}?schema=adp
+              url: jdbc:dm://{{ .Values.depServices.rds.host }}:{{ .Values.depServices.rds.port }}?schema=kweaver
               {{- else }}
               driver-class-name: org.mariadb.jdbc.Driver
-              url: jdbc:mariadb://{{ .Values.depServices.rds.host }}:{{ .Values.depServices.rds.port }}/adp?maxAllowedPacket=134217728&socketTimeout=300000&autoReconnect=true&useUnicode=true&useSSL=false&characterEncoding=utf8mb4&serverTimezone=GMT%2B8
+              url: jdbc:mariadb://{{ .Values.depServices.rds.host }}:{{ .Values.depServices.rds.port }}/kweaver?maxAllowedPacket=134217728&socketTimeout=300000&autoReconnect=true&useUnicode=true&useSSL=false&characterEncoding=utf8mb4&serverTimezone=GMT%2B8
               {{- end }}
               username: {{ .Values.depServices.rds.user }}
               password: {{ .Values.depServices.rds.password }}
